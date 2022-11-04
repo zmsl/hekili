@@ -38,6 +38,8 @@ jobs:
       # once cloned, we just run the GitHub Action for the packager project
       - name: Package and Release
         uses: BigWigsMods/packager@v1
+        with:
+          args: -g wrath -w 0
 
       # another example where we supply additional arguments, this example is specifically to release
       # for the Classic version of the game
