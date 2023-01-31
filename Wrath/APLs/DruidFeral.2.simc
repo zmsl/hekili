@@ -10,7 +10,7 @@ actions.flowershift+=/variable,name=ready_to_shift,value=1>0,if=!variable.flower
 actions.flowershift+=/variable,name=execution_handled,value=1>0
 
 actions.not_cat_lacerate+=/lacerate
-actions.not_cat_lacerate+=/variable,name=not_cat_handled,value=1>0
+actions.not_cat_lacerate+=/variable,name=n_cat_handled,value=1>0
 
 actions.not_cat_shift+=/variable,name=projected_delay,value=mainhand_remains+2*latency
 actions.not_cat_shift+=/variable,name=rip_conflict,value=rip_refresh_pending&debuff.rip.remains<variable.projected_delay+1.5
@@ -18,13 +18,13 @@ actions.not_cat_shift+=/variable,name=next_cat_swing,value=latency+mainhand_rema
 actions.not_cat_shift+=/variable,name=can_delay_shift,value=snek&energy.current+10*variable.projected_delay<=variable.furor_cap&!variable.rip_conflict&mainhand_remains<variable.next_cat_swing
 actions.not_cat_shift+=/variable,name=time_to_next_action,op=setif,value=mainhand_remains,if=variable.can_delay_shift
 actions.not_cat_shift+=/variable,name=ready_to_shift,op=setif,value=1>0,if=!variable.can_delay_shift
-actions.not_cat_shift+=/variable,name=not_cat_handled,value=1>0
+actions.not_cat_shift+=/variable,name=n_cat_handled,value=1>0
 
 actions.not_cat_powerbear+=/dire_bear_form
-actions.not_cat_powerbear+=/variable,name=not_cat_handled,value=1>0
+actions.not_cat_powerbear+=/variable,name=n_cat_handled,value=1>0
 
 actions.not_cat_mangle+=/mangle_bear
-actions.not_cat_mangle+=/variable,name=not_cat_handled,value=1>0
+actions.not_cat_mangle+=/variable,name=n_cat_handled,value=1>0
 
 actions.not_cat+=/variable,name=shift_now,value=energy.current+15+10*latency>variable.furor_cap|rip_refresh_pending&debuff.rip.remains<3.0|buff.berserk.up
 actions.not_cat+=/variable,name=shift_next,value=energy.current+30+10*latency>variable.furor_cap|rip_refresh_pending&debuff.rip.remains<4.5|buff.berserk.up
@@ -38,13 +38,14 @@ actions.not_cat+=/variable,name=energy_to_dump,op=setif,value=energy.current+30+
 actions.not_cat+=/variable,name=dump_seconds,op=setif,value=3.0+latency+variable.energy_to_dump/42,if=!variable.shift_now
 actions.not_cat+=/variable,name=dump_seconds,op=floor
 actions.not_cat+=/variable,name=shift_now,op=setif,value=variable.dump_seconds>=target.time_to_die,if=!variable.shift_now
-actions.not_cat+=/call_action_list,name=not_cat_lacerate,if=!variable.not_cat_handled&variable.emergency_lacerate&rage.current>=action.lacerate.spend
-actions.not_cat+=/call_action_list,name=not_cat_shift,if=!variable.not_cat_handled&variable.shift_now
-actions.not_cat+=/call_action_list,name=not_cat_powerbear,if=!variable.not_cat_handled&variable.powerbear_now
-actions.not_cat+=/call_action_list,name=not_cat_lacerate,if=!variable.not_cat_handled&variable.lacerate_now&rage.current>=action.lacerate.spend
-actions.not_cat+=/call_action_list,name=not_cat_mangle,if=!variable.not_cat_handled&rage.current>=action.mangle_bear.spend&cooldown.mangle_bear.up
-actions.not_cat+=/call_action_list,name=not_cat_lacerate,if=!variable.not_cat_handled&rage.current>=action.lacerate.spend
-actions.not_cat+=/variable,name=time_to_next_action,op=setif,value=mainhand_remains,if=!variable.not_cat_handled
+actions.not_cat+=/variable,name=n_cat_handled,value=0>1
+actions.not_cat+=/call_action_list,name=not_cat_lacerate,if=!variable.n_cat_handled&variable.emergency_lacerate&rage.current>=action.lacerate.spend
+actions.not_cat+=/call_action_list,name=not_cat_shift,if=!variable.n_cat_handled&variable.shift_now
+actions.not_cat+=/call_action_list,name=not_cat_powerbear,if=!variable.n_cat_handled&variable.powerbear_now
+actions.not_cat+=/call_action_list,name=not_cat_lacerate,if=!variable.n_cat_handled&variable.lacerate_now&rage.current>=action.lacerate.spend
+actions.not_cat+=/call_action_list,name=not_cat_mangle,if=!variable.n_cat_handled&rage.current>=action.mangle_bear.spend&cooldown.mangle_bear.up
+actions.not_cat+=/call_action_list,name=not_cat_lacerate,if=!variable.n_cat_handled&rage.current>=action.lacerate.spend
+actions.not_cat+=/variable,name=time_to_next_action,op=setif,value=mainhand_remains,if=!variable.n_cat_handled
 actions.not_cat+=/variable,name=execution_handled,value=1>0
 
 actions.emergency_bearweave+=/variable,name=ready_to_shift,value=1>0
@@ -94,16 +95,18 @@ actions.execute_rotation+=/variable,name=energy_to_dump,value=0
 actions.execute_rotation+=/variable,name=time_to_next_action,value=0
 actions.execute_rotation+=/variable,name=execution_handled,value=1<0
 actions.execute_rotation+=/variable,name=snek,value=1>0
+actions.execute_rotation+=/variable,name=test2,value=variable.test
 actions.execute_rotation+=/variable,name=rip_now,value=combo_points.current>=variable.rip_cp&!debuff.rip.up&target.time_to_die>=variable.end_thresh&!buff.clearcasting.up
 actions.execute_rotation+=/variable,name=bite_at_end,value=combo_points.current>=variable.bite_cp&(target.time_to_die<variable.end_thresh|debuff.rip.up&target.time_to_die-debuff.rip.remains<variable.end_thresh)
 actions.execute_rotation+=/variable,name=mangle_now,value=!variable.rip_now&!debuff.mangle.up
-actions.execute_rotation+=/variable,name=bite_before_rip,value=combo_points.current>=variable.bite_cp&debuff.rip.up&buff.savage_roar.up&ferociousbite_enabled&can_bite
+actions.execute_rotation+=/variable,name=can_bite,value=debuff.rip.remains>=min_bite_rip_remains&buff.savage_roar.remains>=min_bite_sr_remains
+actions.execute_rotation+=/variable,name=bite_before_rip,value=combo_points.current>=variable.bite_cp&debuff.rip.up&buff.savage_roar.up&ferociousbite_enabled&variable.can_bite
 actions.execute_rotation+=/variable,name=bite_now,value=(variable.bite_before_rip|variable.bite_at_end)&!buff.clearcasting.up
 actions.execute_rotation+=/variable,name=bite_now,op=setif,value=energy.current<=max_bite_energy,if=variable.bite_now&buff.berserk.up
 actions.execute_rotation+=/variable,name=rake_now,value=!debuff.rake.up&target.time_to_die>9.0&!buff.clearcasting.up
 actions.execute_rotation+=/variable,name=rake_now,op=setif,value=rake_over_shred,if=variable.rake_now&!set_bonus.tier9_2pc&!set_bonus.tier10_4pc
 actions.execute_rotation+=/variable,name=wait_for_tf,value=cooldown.tigers_fury.remains<=buff.berserk.duration&cooldown.tigers_fury.remains+1.0<target.time_to_die-buff.berserk.duration
-actions.execute_rotation+=/variable,name=berserk_now,value=cooldown.berserk.up&!variable.wait_for_tf # TODO: "Last berserk" logic for lacerateweaving
+actions.execute_rotation+=/variable,name=berserk_now,value=cooldown.berserk.up&!variable.wait_for_tf
 actions.execute_rotation+=/variable,name=roar_now,value=combo_points.current>=1&(!buff.savage_roar.up|clip_roar)
 actions.execute_rotation+=/variable,name=furor_cap,value=20*talent.furor.rank<?85
 actions.execute_rotation+=/variable,name=weave_energy,value=variable.furor_cap-30-20*latency
@@ -134,11 +137,12 @@ actions.execute_rotation+=/call_action_list,name=mangle_now,if=!variable.executi
 actions.execute_rotation+=/call_action_list,name=bearweave_now,if=!variable.execution_handled&variable.bearweave_now
 actions.execute_rotation+=/call_action_list,name=flowershift_now,if=!variable.execution_handled&variable.flowershift_now&energy.current<42
 actions.execute_rotation+=/call_action_list,name=rotation_default,if=!variable.execution_handled
-actions.execute_rotation+=/variable,name=time_to_next_action,op=setif,value=variable.time_to_next_action<?time_to_pending_action,if=has_pending_action
-actions.execute_rotation+=/variable,name=time_to_next_action,value=variable.time_to_next_action<?(100-energy.current)/10-latency
-actions.execute_rotation+=/variable,name=time_to_next_action,op=setif,value=variable.time_to_next_action<?debuff.lacerate.remains-1.5-3*latency,if=bearweaving_enabled&bearweaving_lacerate_enabled&debuff.lacerate.up&debuff.lacerate.remains<target.time_to_die&0<debuff.lacerate.remains-1.5-3*latency
-actions.execute_rotation+=/variable,name=time_to_next_action,value=variable.time_to_next_action+latency
+#actions.execute_rotation+=/variable,name=time_to_next_action,op=setif,value=variable.time_to_next_action<?time_to_pending_action,if=has_pending_action
+#actions.execute_rotation+=/variable,name=time_to_next_action,value=variable.time_to_next_action<?((100-energy.current)/10-latency)
+#actions.execute_rotation+=/variable,name=time_to_next_action,op=setif,value=variable.time_to_next_action<?debuff.lacerate.remains-1.5-3*latency,if=bearweaving_enabled&bearweaving_lacerate_enabled&debuff.lacerate.up&debuff.lacerate.remains<target.time_to_die&0<debuff.lacerate.remains-1.5-3*latency
+#actions.execute_rotation+=/variable,name=time_to_next_action,value=variable.time_to_next_action+latency
 #actions.execute_rotation+=/wait,sec=time_to_next_action
 
 actions+=/call_action_list,name=init
 actions+=/call_action_list,name=execute_rotation
+actions+=/variable,name=test,value=1
