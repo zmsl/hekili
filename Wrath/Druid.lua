@@ -251,6 +251,113 @@ spec:RegisterStateExpr("bearweaving_lacerate_should_maul", function()
     return willMaul and energy.current < 70 and rage.current > rageNeeded
 end)
 
+spec:RegisterStateExpr("clip_roar", function()
+    if debuff.rip.down or target.time_to_die - debuff.rip.remains < 10 then
+        return false
+    end
+
+    if buff.savage_roar.remains > rip_maxremains then
+        return false
+    end
+
+    return 14 + ((combo_points.current-1)*5) >= rip_maxremains + min_roar_offset
+end)
+
+spec:RegisterStateExpr("excess_e", function()
+    local pending_actions = {}
+    local floating_energy = 0
+    local previous_time = 0
+    if debuff.rip.up and debuff.rip.remains < target.time_to_die - end_thresh then
+        local rip_cost = berserk_expected_at(query_time, query_time + debuff.rip.remains) and 15 or 30
+        pending_actions[query_time+debuff.rip.remains] = (pending_actions[query_time+debuff.rip.remains] or 0) + rip_cost
+    end
+    if debuff.rake.up and debuff.rake.remains < target.time_to_die - 9 then
+        local rake_cost = berserk_expected_at(query_time, query_time + debuff.rake.remains) and 17.5 or 35
+        pending_actions[query_time+debuff.rake.remains] = (pending_actions[query_time+debuff.rake.remains] or 0) + rake_cost
+    end
+    if debuff.mangle.up and debuff.mangle.remains < target.time_to_die - 1 then
+        local mangle_cost = berserk_expected_at(query_time, query_time + debuff.mangle.remains) and 40 or 20
+        pending_actions[query_time+debuff.mangle.remains] = (pending_actions[query_time+debuff.mangle.remains] or 0) + mangle_cost
+    end
+    if buff.savage_roar.up then
+        local roar_cost = berserk_expected_at(query_time, query_time + buff.savage_roar.remains) and 12.5 or 25
+        pending_actions[query_time+buff.savage_roar.remains] = (pending_actions[query_time+buff.savage_roar.remains] or 0) + roar_cost
+    end
+
+    local pending_keys = {}
+    for k in pairs(pending_actions) do table.insert(pending_keys, k) end
+    table.sort(pending_keys)
+    for _, k in ipairs(pending_keys) do 
+        local refresh_time = k
+        local refresh_cost = pending_actions[k]
+        local delta_t = refresh_time - previous_time
+
+        if not tf_pending then
+            local tf_pending = tf_expected_before(query_time, refresh_time)
+
+            if tf_pending then
+                refresh_cost = refresh_cost - 60
+            end
+        end
+
+        if delta_t < refresh_cost / 10 then
+            floating_energy = floating_energy + refresh_cost - 10 * delta_t
+            previous_time = refresh_time
+        else
+            previous_time = previous_time + refresh_cost / 10
+        end
+    end
+
+    return energy.current - floating_energy
+end)
+
+spec:RegisterStateExpr("rake_over_shred", function()
+    local armor_pen = stat.armor_pen_rating
+    local att_power = stat.attack_power
+    local crit_pct = stat.crit / 100
+    local boss_armor = 10643*(1-0.05*(debuff.armor_reduction.up and 1 or 0))*(1-0.2*(debuff.major_armor_reduction.up and 1 or 0))*(1-0.2*(debuff.shattering_throw.up and 1 or 0))
+    local tigers_fury = buff.tigers_fury.up and 80 or 0
+    local shred_idol = set_bonus.idol_of_the_ravenous_beast == 1 and 203 or 0
+    local rake_dpe = 3*(358 + 6*att_power/100)/35
+    local shred_dpe = ((54.5 + tigers_fury + att_power/14)*2.25 + 666 + shred_idol - 42/35*(att_power/100 + 176))*(1 + 1.266*crit_pct)*(1 - (boss_armor*(1 - armor_pen/1399))/((boss_armor*(1 - armor_pen/1399)) + 15232.5))/42
+    return rake_dpe >= shred_dpe
+end)
+
+spec:RegisterStateFunction("berserk_expected_at", function(current_time, future_time)
+    if buff.berserk.up then
+        return (
+            future_time - current_time < buff.berserk.remains
+            or future_time > current_time + cooldown.berserk.remains
+        )
+    end
+    if cooldown.berserk.remains > 0 then
+        return future_time > current_time + cooldown.berserk.remains
+    end
+    return future_time > current_time + cooldown.tigers_fury.remains
+end)
+
+spec:RegisterStateFunction("tf_expected_before", function(current_time, future_time)
+    if cooldown.tigers_fury.remains > 0 then
+        return current_time + cooldown.tigers_fury.remains < future_time
+    end
+    if buff.berserk.up then
+        return current_time + buff.berserk.remains < future_time
+    end
+    return true
+end)
+
+spec:RegisterStateExpr("tf_expected_before_weave_end", function()
+    return tf_expected_before(query_time, query_time+weave_end)
+end)
+
+spec:RegisterStateExpr("weave_end", function()
+    return 4.5+2*latency
+end)
+
+spec:RegisterStateExpr("end_thresh", function()
+    return settings.end_thresh
+end)
+
 spec:RegisterStateExpr("min_roar_offset", function()
     return settings.min_roar_offset
 end)
@@ -2494,6 +2601,19 @@ local bearweaving_spells = {}
 local bearweaving_instancetypes = {}
 local predatorsswiftness_spells = {}
 local flowerweaving_modes = {}
+
+spec:RegisterSetting("end_thresh", 10, {
+    type = "range",
+    name = "Fight End Threshold",
+    desc = "Sets the threshold to recognize the ending of a fight",
+    width = "full",
+    min = 0,
+    softMax = 15,
+    step = 1,
+    set = function( _, val )
+        Hekili.DB.profile.specs[ 11 ].settings.end_thresh = val
+    end
+})
 
 spec:RegisterSetting("min_roar_offset", 14, {
     type = "range",

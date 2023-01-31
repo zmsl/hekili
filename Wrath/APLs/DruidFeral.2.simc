@@ -1,0 +1,23 @@
+actions.init+=/variable,name=init_rotation,value=init_rotation
+
+actions.precombat+=/mark_of_the_wild,if=!up&!buff.gift_of_the_wild.up
+actions.precombat+=/thorns,if=!up
+actions.precombat+=/cat_form,if=!up
+actions.precombat+=/potion
+
+actions.execute_rotation+=/variable,name=rip_cp,value=5
+actions.execute_rotation+=/variable,name=bite_cp,value=5
+actions.execute_rotation+=/variable,name=end_thresh,value=10
+actions.execute_rotation+=/variable,name=rip_now,value=combo_points.current>=variable.rip_cp&!debuff.rip.up&target.time_to_die>=variable.end_thresh&!buff.clearcasting.up
+actions.execute_rotation+=/variable,name=bite_at_end,value=combo_points.current>=variable.bite_cp&(target.time_to_die<variable.end_thresh|debuff.rip.up&target.time_to_die-debuff.rip.remains<variable.end_thresh)
+actions.execute_rotation+=/variable,name=mangle_now,value=!variable.rip_now&!debuff.mangle.up
+actions.execute_rotation+=/variable,name=bite_before_rip,value=combo_points.current>=variable.bite_cp&debuff.rip.up&buff.savage_roar.up&ferociousbite_enabled&can_bite
+actions.execute_rotation+=/variable,name=bite_now,value=(variable.bite_before_rip|variable.bite_at_end)&!buff.clearcasting.up
+actions.execute_rotation+=/variable,name=bite_now,op=setif,value=energy.current<=max_bite_energy,if=variable.bite_now&buff.berserk.up
+actions.execute_rotation+=/variable,name=rake_now,value=!debuff.rake.up&target.time_to_die>9.0&!buff.clearcasting.up
+actions.execute_rotation+=/variable,name=rake_now,op=setif,value=rake_over_shred,if=variable.rake_now&!set_bonus.tier9_2pc&!set_bonus.tier10_4pc
+actions.execute_rotation+=/variable,name=wait_for_tf,value=cooldown.tigers_fury.remains<=buff.berserk.duration&cooldown.tigers_fury.remains+1.0<target.time_to_die-buff.berserk.duration
+actions.execute_rotation+=/variable,name=berserk_now,value=cooldown.berserk.up&!variable.wait_for_tf # TODO: "Last berserk" logic for lacerateweaving
+actions.execute_rotation+=/variable,name=roar_now,value=combo_points.current>=1&(!buff.savage_roar.up|clip_roar)
+
+actions+=/call_action_list,name=init
