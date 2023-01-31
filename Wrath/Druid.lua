@@ -217,80 +217,53 @@ spec:RegisterStateExpr( "mainhand_remains", function()
     return next_swing
 end)
 
-spec:RegisterStateExpr("bearweaving_lacerate_should_maul", function()
-    if buff.clearcasting.up then
-        return false
-    end
-
-    local bearRipRemains = max(debuff.rip.remains - 3, 0)
-    local ripGCDs = floor(bearRipRemains / gcd.max)
-    local energyGCDs = floor(energy.time_to_70 / gcd.max)
-    local gcdsRemaining = min(ripGCDs, energyGCDs)
-
-    local rageNeeded = action.maul.spend
-    if gcdsRemaining == 0 then
-        rageNeeded = rageNeeded + (debuff.lacerate.remains < 9 and action.lacerate.spend or 0)
-    else
-        local gcdPool = gcdsRemaining
-        local laceratesNeeded = (debuff.lacerate.max_stack - debuff.lacerate.stack) + (debuff.lacerate.stack == 5 and debuff.lacerate.remains < 9 and 1 or 0)
-        local laceratesUsed = min(gcdPool, laceratesNeeded)
-        rageNeeded = rageNeeded + laceratesUsed * action.lacerate.spend
-        gcdPool = gcdPool - laceratesUsed
-
-        if gcdPool > 0 and cooldown.mangle_bear.up then
-            rageNeeded = rageNeeded + action.mangle_bear.spend
-            gcdPool = gcdPool - 1
-        end
-    end
-
-    local nextSwing = mainhand_remains
-    --[[if nextSwing <= 0 then
-        nextSwing = mainhand_speed
-    end]]--
-    local willMaul = nextSwing <= min(bearRipRemains + 1.5, energy.time_to_85)
-    return willMaul and energy.current < 70 and rage.current > rageNeeded
-end)
-
-spec:RegisterStateExpr("clip_roar", function()
-    if debuff.rip.down or target.time_to_die - debuff.rip.remains < 10 then
-        return false
-    end
-
-    if buff.savage_roar.remains > rip_maxremains then
-        return false
-    end
-
-    return 14 + ((combo_points.current-1)*5) >= rip_maxremains + min_roar_offset
-end)
-
-spec:RegisterStateExpr("excess_e", function()
-    local pending_actions = {}
-    local floating_energy = 0
-    local previous_time = 0
+local pending_actions = {}
+local pending_keys = {}
+local floating_energy = 0
+local previous_time = 0
+local rip_refresh_pending = false
+local has_pending_action = false
+local time_to_next_action = 0
+spec:RegisterStateExpr("init_rotation", function()
+    table.wipe(pending_actions)
+    table.wipe(pending_keys)
+    floating_energy = 0
+    previous_time = 0
+    rip_refresh_pending = false
+    has_pending_action = false
+    time_to_next_action = 0
     if debuff.rip.up and debuff.rip.remains < target.time_to_die - end_thresh then
         local rip_cost = berserk_expected_at(query_time, query_time + debuff.rip.remains) and 15 or 30
         pending_actions[query_time+debuff.rip.remains] = (pending_actions[query_time+debuff.rip.remains] or 0) + rip_cost
+        rip_refresh_pending = true
+        has_pending_action = true
     end
     if debuff.rake.up and debuff.rake.remains < target.time_to_die - 9 then
         local rake_cost = berserk_expected_at(query_time, query_time + debuff.rake.remains) and 17.5 or 35
         pending_actions[query_time+debuff.rake.remains] = (pending_actions[query_time+debuff.rake.remains] or 0) + rake_cost
+        has_pending_action = true
     end
     if debuff.mangle.up and debuff.mangle.remains < target.time_to_die - 1 then
         local mangle_cost = berserk_expected_at(query_time, query_time + debuff.mangle.remains) and 40 or 20
         pending_actions[query_time+debuff.mangle.remains] = (pending_actions[query_time+debuff.mangle.remains] or 0) + mangle_cost
+        has_pending_action = true
     end
     if buff.savage_roar.up then
         local roar_cost = berserk_expected_at(query_time, query_time + buff.savage_roar.remains) and 12.5 or 25
         pending_actions[query_time+buff.savage_roar.remains] = (pending_actions[query_time+buff.savage_roar.remains] or 0) + roar_cost
+        has_pending_action = true
     end
 
-    local pending_keys = {}
     for k in pairs(pending_actions) do table.insert(pending_keys, k) end
     table.sort(pending_keys)
     for _, k in ipairs(pending_keys) do 
         local refresh_time = k
         local refresh_cost = pending_actions[k]
         local delta_t = refresh_time - previous_time
+
+        if time_to_next_action == 0 or k < time_to_next_action then
+            time_to_next_action = k
+        end
 
         if not tf_pending then
             local tf_pending = tf_expected_before(query_time, refresh_time)
@@ -307,7 +280,39 @@ spec:RegisterStateExpr("excess_e", function()
             previous_time = previous_time + refresh_cost / 10
         end
     end
+    return true
+end)
 
+-- TODO: Implement settings toggle
+spec:RegisterStateExpr("snek", function()
+    return true
+end)
+
+spec:RegisterStateExpr("has_pending_action", function()
+    return has_pending_action
+end)
+
+spec:RegisterStateExpr("time_to_pending_action", function()
+    return time_to_next_action
+end)
+
+spec:RegisterStateExpr("rip_refresh_pending", function()
+    return rip_refresh_pending
+end)
+
+spec:RegisterStateExpr("clip_roar", function()
+    if debuff.rip.down or target.time_to_die - debuff.rip.remains < 10 then
+        return false
+    end
+
+    if buff.savage_roar.remains > rip_maxremains then
+        return false
+    end
+
+    return 14 + ((combo_points.current-1)*5) >= rip_maxremains + min_roar_offset
+end)
+
+spec:RegisterStateExpr("excess_e", function()
     return energy.current - floating_energy
 end)
 
@@ -344,6 +349,14 @@ spec:RegisterStateFunction("tf_expected_before", function(current_time, future_t
         return current_time + buff.berserk.remains < future_time
     end
     return true
+end)
+
+spec:RegisterStateExpr("tf_expected_before_flower_end", function()
+    return tf_expected_before(query_time, query_time+flower_end)
+end)
+
+spec:RegisterStateExpr("flower_end", function()
+    return action.gift_of_the_wild.gcd+1.5+2*latency
 end)
 
 spec:RegisterStateExpr("tf_expected_before_weave_end", function()
