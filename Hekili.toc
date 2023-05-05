@@ -2,7 +2,6 @@
 ## Version: @project-version@
 ## Title: Hekili
 ## Author: Hekili
-## X-Flavor: Wrath
 ## Notes: Priority helper for many DPS and tanking specializations, based on SimulationCraft action lists.
 ## SavedVariables: HekiliDB
 ## OptionalDeps: AddOnSkins, ButtonForge, ConsolePort, ElvUI, LibDualSpec-1.0, Masque, WeakAuras
