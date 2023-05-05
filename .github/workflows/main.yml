@@ -38,5 +38,5 @@ jobs:
       # once cloned, we just run the GitHub Action for the packager project
       - name: Package and Release
         uses: BigWigsMods/packager@v2
-        with:
-          args: -g wrath
+        #with:
+          #args: -g wrath
