@@ -724,6 +724,8 @@ spec:RegisterAbilities( {
 
         toggle = "cooldowns",
 
+        nobuff = "cold_blood",
+
         handler = function ()
             applyBuff( "cold_blood" )
         end,
@@ -1493,7 +1495,7 @@ spec:RegisterSetting("maintain_expose", false, {
     desc = "When enabled, expose armor will be recommended when there is no major armor debuff up on the boss",
     width = "full",
     set = function( _, val )
-        Hekili.DB.profile.specs[ 4 ].settings.optimize_rake = val
+        Hekili.DB.profile.specs[ 4 ].settings.maintain_expose = val
     end
 })
 
