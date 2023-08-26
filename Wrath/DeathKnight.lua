@@ -926,6 +926,13 @@ spec:RegisterHook( "reset_precast", function ()
     end
 end )
 
+spec:RegisterStateExpr("ttd", function()
+    if is_training_dummy then
+        return Hekili.Version:match( "^Dev" ) and settings.dummy_ttd or 300
+    end
+    
+    return target.time_to_die
+end)
 
 -- Abilities
 spec:RegisterAbilities( {
@@ -2060,6 +2067,19 @@ spec:RegisterOptions( {
     package = "Blood (IV)",
     usePackSelector = true
 } )
+
+spec:RegisterSetting("dummy_ttd", 300, {
+    type = "range",
+    name = "Training Dummy Time To Die",
+    desc = "Select the time to die to report when targeting a training dummy",
+    width = "full",
+    min = 0,
+    softMax = 300,
+    step = 1,
+    set = function( _, val )
+        Hekili.DB.profile.specs[ 61 ].settings.dummy_ttd = val
+    end
+})
 
 
 spec:RegisterPack( "Blood (IV)", 20230411, [[Hekili:vEvBVTjsq4FlrvkXUoMaoV0xKDQUEN0PK7uQuDuV7taRH1MvgZYblX1vw7V9Bgadl4DDB(sIHz25LNzMNzX1X9z35Heb19Pj2tU2(ghhlhBhNjV3DUyxk1DEkjynzf8JeYg4VFoMZdL(dE4Bdrz7I5Kq0g58ISaqEKqKM)XRUA72TwSGDJFHYsYTc4BUAlxeVECqmjpNfC1c0oJdPer041jSvrIXcsY6XPVqhNXfebJNmoGZJd5BtYhtwWIzcgn3D(IcwS4He3f6d87GyjLg4(e8JiwyiTstAEG78NJy5s)0mgpJj2j9XNwqYPqcXtK(IiQ0)HaqW3WOw6VQGfsTCNhZYf5yws4u4FpvIAKamgrtd5Ghjj0lKgq25oNMqwetdD)SRacou123mpa8mnJrGZXfwlZ45cVL0xOzwcwWAwYkP)5sFuwjc5Lgtwvq7iCG0h99luVEMq6pQJivli9Ncjywb1RwbAcDdGNs)3k9Ni9h2MqP0CblMMaLtibUUxcCqlO46j4fbrQ50zvHUM0c0Axqm1tqYwrbWeWqW43yW4vXSxUiJTMQXb6Wg9E4wJ4FeLelISsdes)7L(3z3dCBaO7lbO97L(G3feazewWHZe1XNvT57aIvr4colgJI7mgf9DguLUU1kQUbTZ7mANSIewGxkFla5H0LSaMO0ytS73Pguftc85LKIyXrD0ByqZ8Ymk9h0xr382eL4MNL4Xx6TLLaY11g1EsbBtv35K(r6QmwQUUe91WPZWIyFB0ID3QMIf5upWiBY7LG31rPKiE8oejs(r)5AZvcnTpoaNeehbceOBmpuY8Q(ThsWurZ4vrZIenG2V)KShgziosygfsI8i0ovDY)mYhvzkh2ejXhmgNMzeQcKkbauqZTWobGtXBd57LneRcc1X3GOO9pZH6zi0ZVGg0XObRS0VqewPOInnpTu33guKb9wIgEBEILAxlYYexIuGRQpsPN1uK(v2EyE2WX84jqiUkExAuTffK0w(oSaQHgDyzuOIBnjkmJA3hXatwgd3Oo7HNRH)VZKNtNb5omK9u0mR7RMT8jN3P61oL6EE18m7adGYOUJbQVVMcQNGH95lPBkZLs982sjPWllP4tZOWDVwqAj513JxSCPfOBooqB1LlVk0oiS0SGHHEUCumE7Rj2FyYDwq4SLKLa9zaP6)8BF9PhE6p)O0x6)mETkgeHzqOVKdxt5cGE7cPFg9)kyzyJuoh3bqke8nWv6GxeerswbPS8X)MLaIUfS0VZtaVwk(I61W)lyfbx55d9MW7h489HW5Lp(qPRXJD9HXmPF5v6aXqEwiG1vUZBV4hcB8LmKU7nVr6xFL3)a7hK()v5LvXBa3O)q5JOE49qhBFZyhh0Rvok3QPcmA2vDHYlzlNDmWRCw4ekRIvFD39ROHQoARgTBqrPiV10jhlVQdg1ODmE6mygwrZMvLDEP6Qrvb9wQDjUoBguUVSAb4mh0zDxrEVJQbAxSuLw6PYo)uR42V3a745Ny1MAm0SRbdHZmyS97nS7AkSvOtgPUSPXIAxERCkvkMYof9RH67md11AQJrNylZ02nmhHtgrDJboqQJUFGHDh7332WD)D2dpxdX4m7EnwhWWotck8)hJdi7nggA47NoX2eCxno)8x(JV8rCShMW2uscvZa81c8HCMOO8RuTQu3q3ZN(0NuDJgI6syst6psZoHr62hmeNSBjCGHTM8V5Rs7l(4PSxt5(8b1tW9o4iLxREUPA(WZ3ozy)GQf468LCvCgMgdpkZ6mTzYqNSjU2sTFcxxcsOFTbaoqHnz)(Z08PHhLIQcpMjC616lJNUnUCHS7)p]] )
