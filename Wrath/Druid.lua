@@ -391,7 +391,9 @@ spec:RegisterStateFunction("berserk_expected_at", function(current_time, future_
 end)
 
 spec:RegisterStateExpr("can_spend_ff", function()
-    local max_shreds_without_ff = floor((energy.current + ttd * 10) / (active_enemies > 2 and action.swipe_cat.spend or action.shred.spend))
+    local swipe_spend = action.swipe_cat.spend > 0 and action.swipe_cat.spend or 45
+    local shred_spend = action.shred.spend > 0 and action.shred.spend or 45
+    local max_shreds_without_ff = floor((energy.current + ttd * 10) / (active_enemies > 2 and swipe_spend or shred_spend))
     local num_shreds_without_ff = min(max_shreds_without_ff, floor(ttd) + 1)
     local num_shreds_with_ff = min(max_shreds_without_ff + 1, floor(ttd))
     return num_shreds_with_ff > num_shreds_without_ff
