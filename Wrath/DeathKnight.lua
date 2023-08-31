@@ -6,6 +6,264 @@ local class, state = Hekili.Class, Hekili.State
 
 local spec = Hekili:NewSpecialization( 6 )
 
+local rune_container = {
+    gain = function(self)
+        self.expiry = 0
+    end,
+    spend = function(self, nextExpiry, cooldown)
+        self.expiry = (nextExpiry > 0 and nextExpiry or state.query_time) + cooldown
+        self.death = false
+    end
+}
+local baseRunes = {
+    { id = 1, type = "blood", death = false, expiry = 0 },
+    { id = 2, type = "blood", death = false, expiry = 0 },
+    { id = 3, type = "frost", death = false, expiry = 0 },
+    { id = 4, type = "frost", death = false, expiry = 0 },
+    { id = 5, type = "unholy", death = false, expiry = 0 },
+    { id = 6, type = "unholy", death = false, expiry = 0 }
+}
+for _, entry in ipairs(baseRunes) do
+    setmetatable(entry, {__index = rune_container})
+end
+local runes_container = {
+    cooldown = 10,
+    reset = function(self)
+        for _, entry in ipairs(self.runes) do
+            local start, duration, ready = GetRuneCooldown( entry.id )
+            local runeType = GetRuneType( entry.id )
+
+            start = start or 0
+            duration = duration or ( 10 * state.haste )
+
+            entry.expiry = ready and 0 or start + duration
+            entry.death = runeType == 4
+            self.cooldown = duration
+        end
+        self:sort()
+    end,
+    gain = function(self, amount)
+        if amount == nil then amount = 0 end
+
+        if amount <= 0 then
+            return
+        end
+
+        for _, entry in ipairs(self.runes) do
+            entry:gain()
+            if amount <= 1 then
+                break;
+            end
+            amount = amount - 1
+        end
+
+        self:sort()
+    end,
+    spend = function(self, amount, death)
+        amount = amount or 0
+        if death == nil then death = false end
+
+        if amount <= 0 then
+            return
+        end
+
+        for i = 1, amount do
+            for j, entry in ipairs(self.runes) do
+                if entry.death == death then
+                    self.runes[j]:spend(j == 1 and self.runes[2].expiry or 0, self.cooldown)
+                    self:sort()
+                end
+            end
+        end
+    end,
+    lastExpiry = function(self, death)
+        if death == nil then death = false end
+
+        local expiry = 0
+        for _, entry in ipairs(self.runes) do
+            if entry.death == death and entry.expiry > expiry then
+                expiry = entry.expiry
+            end
+        end
+        return expiry
+    end,
+    nextInterval = function(self, time, death)
+        time = time or state.query_time
+        if death == nil then death = false end
+
+        for _, entry in ipairs(self.runes) do
+            if entry.death == death and entry.expiry > 0 and entry.expiry > time then
+                return entry.expiry - time
+            end
+        end
+
+        return -1
+    end,
+    readyCount = function(self, time, death)
+        time = time or state.query_time
+        if death == nil then death = false end
+
+        local count = 0
+        for _, entry in ipairs(self.runes) do
+            if (entry.death == death) and entry.expiry <= time then
+                count = count + 1
+            end
+        end
+        return count
+    end,
+    timeTo = function(self, time, amount, death)
+        time = time or state.query_time
+        amount = amount or 0
+        if death == nil then death = false end
+
+        if amount <= 0 then
+            return 0,0
+        end
+
+        local expiry = time
+        local count = self:readyCount(time, death)
+        if amount <= count then
+            return count, expiry - time
+        end
+        for _, entry in ipairs(self.runes) do
+            if (entry.death == death) and entry.expiry > time then
+                count = count + 1
+                expiry = max(expiry, entry.expiry)
+            end
+            if amount <= count then
+                return count, expiry - time
+            end
+        end
+        return count, expiry - time
+    end,
+    runeExpiryCompare = function(a, b)
+        return a.expiry < b.expiry
+    end,
+    sort = function(self, sortDeath)
+        if sortDeath == nil then sortDeath = false end
+
+        table.sort(self.runes, self.runeExpiryCompare)
+        if sortDeath then
+            state.death_table:sortExcept(self.type)
+        end
+    end
+}
+local blood_table = setmetatable({
+    type = "blood",
+    runes = {
+        baseRunes[1],
+        baseRunes[2]
+    }
+}, {__index = runes_container})
+local frost_table = setmetatable({
+    type = "frost",
+    runes = {
+        baseRunes[3],
+        baseRunes[4]
+    }
+}, {__index = runes_container})
+local unholy_table = setmetatable({
+    type = "unholy",
+    runes = {
+        baseRunes[4],
+        baseRunes[5]
+    }
+}, {__index = runes_container})
+
+local death_table = {
+    rune_tables = {
+        blood_table,
+        frost_table,
+        unholy_table
+    },
+    spend = function(self, amount)
+        if amount == nil then
+            amount = 0
+        end
+
+        for _, entry in ipairs(self.rune_tables) do
+            if amount <= 0 then break end
+            local avail = entry:readyCount(state.query_time, true)
+            if avail > 0 then
+                local toSpend = min(amount, avail)
+                entry:spend(toSpend, true)
+                amount = amount - toSpend
+            end
+        end
+    end,
+    lastExpiry = function(self)
+        local expiry = 0
+        for _, entry in ipairs(self.rune_tables) do
+            local rune_expiry = entry:lastExpiry(true)
+            if rune_expiry > expiry then
+                expiry = rune_expiry
+            end
+        end
+        return expiry
+    end,
+    nextInterval = function(self, time)
+        time = time or state.query_time
+
+        local interval = -1
+        for _, entry in ipairs(self.rune_tables) do
+            local death_interval = entry:nextInterval(time, true)
+            interval = min(interval == -1 and death_interval or interval, death_interval)
+        end
+        return interval
+    end,
+    readyCount = function(self, time)
+        time = time or state.query_time
+
+        local count = 0
+        for _, entry in ipairs(self.rune_tables) do
+            count = count + entry:readyCount(time, true)
+        end
+        return count
+    end,
+    timeTo = function(self, time, amount)
+        time = time or state.query_time
+        amount = amount or 0
+
+        if amount <= 0 then return 0,0 end
+
+        local time_to = 0
+        local count = 0
+        for _,entry in ipairs(self.rune_tables) do
+            local rune_count, rune_timeTo = entry:timeTo(time, min(2, amount - count), true)
+            count = count + rune_count
+            time_to = max(time_to, rune_timeTo)
+            if count >= amount then
+                return count, time_to
+            end
+        end
+
+        return count, time_to
+    end,
+    sort = function(self)
+        self:sortExcept("")
+    end,
+    sortExcept = function(self, callingType)
+        for _, entry in ipairs(self.rune_tables) do
+            if entry.type ~= callingType then
+                entry:sort(false)
+            end
+        end
+    end
+}
+
+spec:RegisterStateExpr("blood_table", function()
+    return blood_table
+end)
+spec:RegisterStateExpr("frost_table", function()
+    return frost_table
+end)
+spec:RegisterStateExpr("unholy_table", function()
+    return unholy_table
+end)
+spec:RegisterStateExpr("death_table", function()
+    return death_table
+end)
+
 spec:RegisterResource( Enum.PowerType.RuneBlood, {
     rune_regen = {
         last = function ()
@@ -13,14 +271,17 @@ spec:RegisterResource( Enum.PowerType.RuneBlood, {
         end,
 
         interval = function( time, val )
-            local r = state.blood_runes
+            local blood_interval = state.blood_table:nextInterval(time)
+            local death_interval = state.death_table:nextInterval(time)
 
-            if val == 2 then return -1 end
-            return r.expiry[ val + 1 ] - time
+            blood_interval = blood_interval <= 0 and death_interval or blood_interval
+            death_interval = death_interval <= 0 and blood_interval or death_interval
+
+            return min(blood_interval, death_interval)
         end,
 
         stop = function( x )
-            return x == 2
+            return x == 4
         end,
 
         value = 1
@@ -29,7 +290,7 @@ spec:RegisterResource( Enum.PowerType.RuneBlood, {
     expiry = { 0, 0 },
     cooldown = 10,
     regen = 0,
-    max = 2,
+    max = 4,
     forecast = {},
     fcount = 0,
     times = {},
@@ -37,87 +298,46 @@ spec:RegisterResource( Enum.PowerType.RuneBlood, {
     resource = "blood_runes",
 
     reset = function()
-        local t = state.blood_runes
-
-        for i = 1, 2 do
-            local start, duration, ready = GetRuneCooldown( i )
-
-            start = start or 0
-            duration = duration or ( 10 * state.haste )
-
-            t.expiry[ i ] = ready and 0 or start + duration
-            t.cooldown = duration
-        end
-
-        table.sort( t.expiry )
-
-        t.actual = nil
+        state.blood_table:reset()
+        state.blood_runes.actual = nil
     end,
 
     gain = function( amount )
-        local t = state.blood_runes
-
-        for i = 1, amount do
-            t.expiry[ 3 - i ] = 0
-        end
-        table.sort( t.expiry )
-
-        t.actual = nil
+        state.blood_table:gain(amount)
+        state.blood_runes.actual = nil
     end,
 
     spend = function( amount )
-        local t = state.blood_runes
-
-        for i = 1, amount do
-            t.expiry[ 1 ] = ( t.expiry[ 2 ] > 0 and t.expiry[ 2 ] or state.query_time ) + t.cooldown
-            table.sort( t.expiry )
-        end
-
-        t.actual = nil
+        state.blood_table:spend(amount)
+        state.blood_runes.actual = nil
     end,
 
     timeTo = function( x )
-        return state:TimeToResource( state.blood_runes, x )
+        local possible_blood, t1 = state.blood_table:timeTo(state.query_time, x)
+        if possible_blood >= x then
+            return t1
+        end
+
+        local possible_death, t2 = state.death_table:timeTo(state.query_time, x - possible_blood)
+        if possible_blood + possible_death < x then
+            return 3600
+        end
+
+        return max(t1, t2)
     end,
 }, {
     __index = function( t, k, v )
         if k == "actual" then
-            local amount = 0
+            return state.blood_table:readyCount(state.query_time) + state.death_table:readyCount(state.query_time)
 
-            for i = 1, 2 do
-                if t.expiry[ i ] <= state.query_time then
-                    amount = amount + 1
-                end
-            end
-
-            return amount
+        elseif k == "actual_pure" then
+            return state.blood_table:readyCount(state.query_time)
 
         elseif k == "current" then
-            -- If this is a modeled resource, use our lookup system.
-            if t.forecast and t.fcount > 0 then
-                local q = state.query_time
-                local index, slice
-
-                if t.values[ q ] then return t.values[ q ] end
-
-                for i = 1, t.fcount do
-                    local v = t.forecast[ i ]
-                    if v.t <= q then
-                        index = i
-                        slice = v
-                    else
-                        break
-                    end
-                end
-
-                -- We have a slice.
-                if index and slice then
-                    t.values[ q ] = max( 0, min( t.max, slice.v ) )
-                    return t.values[ q ]
-                end
-            end
-
             return t.actual
+
+        elseif k == "current_pure" then
+            return t.actual_pure
 
         elseif k == "deficit" then
             return t.max - t.current
@@ -126,7 +346,8 @@ spec:RegisterResource( Enum.PowerType.RuneBlood, {
             return t[ "time_to_" .. t.current + 1 ]
 
         elseif k == "time_to_max" then
-            return t.current == 2 and 0 or max( 0, t.expiry[2] - state.query_time )
+            local last_expiry = max(state.blood_table:lastExpiry(), state.death_table:lastExpiry())
+            return t.current == t.max and 0 or max( 0, last_expiry - state.query_time )
 
         elseif k == "add" then
             return t.gain
@@ -138,7 +359,9 @@ spec:RegisterResource( Enum.PowerType.RuneBlood, {
             local amount = k:match( "time_to_(%d+)" )
             amount = amount and tonumber( amount )
 
-            if amount then return state:TimeToResource( t, amount ) end
+            if amount then
+                return t.timeTo(amount)
+            end
         end
     end
 } ) )
@@ -150,14 +373,17 @@ spec:RegisterResource( Enum.PowerType.RuneFrost, {
         end,
 
         interval = function( time, val )
-            local r = state.frost_runes
+            local frost_interval = state.frost_table:nextInterval(time)
+            local death_interval = state.death_table:nextInterval(time)
 
-            if val == 2 then return -1 end
-            return r.expiry[ val + 1 ] - time
+            frost_interval = frost_interval <= 0 and death_interval or frost_interval
+            death_interval = death_interval <= 0 and frost_interval or death_interval
+
+            return min(frost_interval, death_interval)
         end,
 
         stop = function( x )
-            return x == 2
+            return x == 4
         end,
 
         value = 1
@@ -174,91 +400,46 @@ spec:RegisterResource( Enum.PowerType.RuneFrost, {
     resource = "frost_runes",
 
     reset = function()
-        local t = state.frost_runes
-
-        for i = 1, 2 do
-            local start, duration, ready = GetRuneCooldown( i + 4 )
-
-            start = start or 0
-            duration = duration or ( 10 * state.haste )
-
-            t.expiry[ i ] = ready and 0 or start + duration
-            t.cooldown = duration
-        end
-
-        table.sort( t.expiry )
-
-        t.actual = nil
+        state.frost_table:reset()
+        state.frost_runes.actual = nil
     end,
 
     gain = function( amount )
-        local t = state.frost_runes
-
-        amount = min( 2, amount )
-
-        for i = 1, amount do
-            t.expiry[ i ] = 0
-        end
-        table.sort( t.expiry )
-
-        t.actual = nil
+        state.frost_table:gain(amount)
+        state.frost_runes.actual = nil
     end,
 
     spend = function( amount )
-        local t = state.frost_runes
-
-        amount = min( 2, amount )
-
-        for i = 1, amount do
-            t.expiry[ 1 ] = ( t.expiry[ 2 ] > 0 and t.expiry[ 2 ] or state.query_time ) + t.cooldown
-            table.sort( t.expiry )
-        end
-
-        t.actual = nil
+        state.frost_table:spend(amount)
+        state.frost_runes.actual = nil
     end,
 
     timeTo = function( x )
-        return state:TimeToResource( state.frost_runes, x )
+        local possible_frost, t1 = state.frost_table:timeTo(state.query_time, x)
+        if possible_frost >= x then
+            return t1
+        end
+
+        local possible_death, t2 = state.death_table:timeTo(state.query_time, x - possible_frost)
+        if possible_frost + possible_death < x then
+            return 3600
+        end
+
+        return max(t1, t2)
     end,
 }, {
     __index = function( t, k, v )
         if k == "actual" then
-            local amount = 0
+            return state.frost_table:readyCount(state.query_time) + state.death_table:readyCount(state.query_time)
 
-            for i = 1, 2 do
-                if t.expiry[ i ] <= state.query_time then
-                    amount = amount + 1
-                end
-            end
-
-            return amount
+        elseif k == "actual_pure" then
+            return state.frost_table:readyCount(state.query_time)
 
         elseif k == "current" then
-            -- If this is a modeled resource, use our lookup system.
-            if t.forecast and t.fcount > 0 then
-                local q = state.query_time
-                local index, slice
-
-                if t.values[ q ] then return t.values[ q ] end
-
-                for i = 1, t.fcount do
-                    local v = t.forecast[ i ]
-                    if v.t <= q then
-                        index = i
-                        slice = v
-                    else
-                        break
-                    end
-                end
-
-                -- We have a slice.
-                if index and slice then
-                    t.values[ q ] = max( 0, min( t.max, slice.v ) )
-                    return t.values[ q ]
-                end
-            end
-
             return t.actual
+
+        elseif k == "current_pure" then
+            return t.actual_pure
 
         elseif k == "deficit" then
             return t.max - t.current
@@ -267,7 +448,8 @@ spec:RegisterResource( Enum.PowerType.RuneFrost, {
             return t[ "time_to_" .. t.current + 1 ]
 
         elseif k == "time_to_max" then
-            return t.current == 2 and 0 or max( 0, t.expiry[ 2 ] - state.query_time )
+            local last_expiry = max(state.frost_table:lastExpiry(), state.death_table:lastExpiry())
+            return t.current == t.max and 0 or max( 0, last_expiry - state.query_time )
 
         elseif k == "add" then
             return t.gain
@@ -279,7 +461,9 @@ spec:RegisterResource( Enum.PowerType.RuneFrost, {
             local amount = k:match( "time_to_(%d+)" )
             amount = amount and tonumber( amount )
 
-            if amount then return state:TimeToResource( t, amount ) end
+            if amount then
+                return t.timeTo(amount)
+            end
         end
     end
 } ) )
@@ -291,14 +475,17 @@ spec:RegisterResource( Enum.PowerType.RuneUnholy, {
         end,
 
         interval = function( time, val )
-            local r = state.unholy_runes
+            local unholy_interval = state.unholy_table:nextInterval(time)
+            local death_interval = state.death_table:nextInterval(time)
 
-            if val == 2 then return -1 end
-            return r.expiry[ val + 1 ] - time
+            unholy_interval = unholy_interval <= 0 and death_interval or unholy_interval
+            death_interval = death_interval <= 0 and unholy_interval or death_interval
+
+            return min(unholy_interval, death_interval)
         end,
 
         stop = function( x )
-            return x == 2
+            return x == 4
         end,
 
         value = 1
@@ -307,7 +494,7 @@ spec:RegisterResource( Enum.PowerType.RuneUnholy, {
     expiry = { 0, 0 },
     cooldown = 10,
     regen = 0,
-    max = 2,
+    max = 4,
     forecast = {},
     fcount = 0,
     times = {},
@@ -315,91 +502,46 @@ spec:RegisterResource( Enum.PowerType.RuneUnholy, {
     resource = "unholy_runes",
 
     reset = function()
-        local t = state.unholy_runes
-
-        for i = 3, 4 do
-            local start, duration, ready = GetRuneCooldown( i )
-
-            start = start or 0
-            duration = duration or ( 10 * state.haste )
-
-            t.expiry[ i - 2 ] = ready and 0 or start + duration
-            t.cooldown = duration
-        end
-
-        table.sort( t.expiry )
-
-        t.actual = nil
+        state.unholy_table:reset()
+        state.unholy_runes.actual = nil
     end,
 
     gain = function( amount )
-        local t = state.unholy_runes
-
-        amount = min( amount, 2 )
-
-        for i = 1, amount do
-            t.expiry[ i ] = 0
-        end
-        table.sort( t.expiry )
-
-        t.actual = nil
+        state.unholy_table:gain(amount)
+        state.unholy_runes.actual = nil
     end,
 
     spend = function( amount )
-        local t = state.unholy_runes
-
-        amount = min( 2, amount )
-
-        for i = 1, amount do
-            t.expiry[ 1 ] = ( t.expiry[ 2 ] > 0 and t.expiry[ 2 ] or state.query_time ) + t.cooldown
-            table.sort( t.expiry )
-        end
-
-        t.actual = nil
+        state.unholy_table:spend(amount)
+        state.unholy_runes.actual = nil
     end,
 
     timeTo = function( x )
-        return state:TimeToResource( state.unholy_runes, x )
+        local possible_unholy, t1 = state.unholy_table:timeTo(state.query_time, x)
+        if possible_unholy >= x then
+            return t1
+        end
+
+        local possible_death, t2 = state.death_table:timeTo(state.query_time, x - possible_unholy)
+        if possible_unholy + possible_death < x then
+            return 3600
+        end
+
+        return max(t1, t2)
     end,
 }, {
     __index = function( t, k, v )
         if k == "actual" then
-            local amount = 0
+            return state.unholy_table:readyCount(state.query_time) + state.death_table:readyCount(state.query_time)
 
-            for i = 1, 2 do
-                if t.expiry[ i ] <= state.query_time then
-                    amount = amount + 1
-                end
-            end
-
-            return amount
+        elseif k == "actual_pure" then
+            return state.unholy_table:readyCount(state.query_time)
 
         elseif k == "current" then
-            -- If this is a modeled resource, use our lookup system.
-            if t.forecast and t.fcount > 0 then
-                local q = state.query_time
-                local index, slice
-
-                if t.values[ q ] then return t.values[ q ] end
-
-                for i = 1, t.fcount do
-                    local v = t.forecast[ i ]
-                    if v.t <= q then
-                        index = i
-                        slice = v
-                    else
-                        break
-                    end
-                end
-
-                -- We have a slice.
-                if index and slice then
-                    t.values[ q ] = max( 0, min( t.max, slice.v ) )
-                    return t.values[ q ]
-                end
-            end
-
             return t.actual
+
+        elseif k == "current_pure" then
+            return t.actual_pure
 
         elseif k == "deficit" then
             return t.max - t.current
@@ -408,7 +550,8 @@ spec:RegisterResource( Enum.PowerType.RuneUnholy, {
             return t[ "time_to_" .. t.current + 1 ]
 
         elseif k == "time_to_max" then
-            return t.current == 2 and 0 or max( 0, t.expiry[2] - state.query_time )
+            local last_expiry = max(state.unholy_table:lastExpiry(), state.death_table:lastExpiry())
+            return t.current == t.max and 0 or max( 0, last_expiry - state.query_time )
 
         elseif k == "add" then
             return t.gain
@@ -420,7 +563,9 @@ spec:RegisterResource( Enum.PowerType.RuneUnholy, {
             local amount = k:match( "time_to_(%d+)" )
             amount = amount and tonumber( amount )
 
-            if amount then return state:TimeToResource( t, amount ) end
+            if amount then
+                return t.timeTo(amount)
+            end
         end
     end
 } ) )
