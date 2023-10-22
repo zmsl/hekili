@@ -139,15 +139,15 @@ state.player = {
 }
 state.prev = {
     meta = 'castsAll',
-    history = { "no_action", "no_action", "no_action", "no_action", "no_action" }
+    history = { "no_action", "no_action", "no_action", "no_action", "no_action", "no_action", "no_action", "no_action", "no_action", "no_action" }
 }
 state.prev_gcd = {
     meta = 'castsOn',
-    history = { "no_action", "no_action", "no_action", "no_action", "no_action" }
+    history = { "no_action", "no_action", "no_action", "no_action", "no_action", "no_action", "no_action", "no_action", "no_action", "no_action" }
 }
 state.prev_off_gcd = {
     meta = 'castsOff',
-    history = { "no_action", "no_action", "no_action", "no_action", "no_action" }
+    history = { "no_action", "no_action", "no_action", "no_action", "no_action", "no_action", "no_action", "no_action", "no_action", "no_action" }
 }
 state.predictions = {}
 state.predictionsOff = {}
@@ -588,10 +588,15 @@ state.FindLowHpPlayerWithoutBuffByID = ns.FindLowHpPlayerWithoutBuffByID
 -- state.GetActionInfo = GetActionInfo
 state.GetActiveLossOfControlData = C_LossOfControl.GetActiveLossOfControlData
 state.GetActiveLossOfControlDataCount = C_LossOfControl.GetActiveLossOfControlDataCount
---[[ state.GetNumGroupMembers = GetNumGroupMembers
--- state.GetItemCooldown = GetItemCooldown
+-- state.GetNumGroupMembers = GetNumGroupMembers
+state.GetItemCooldown = function( itemID )
+    if not itemID then return 0, 0, 0, 1 end
+    local _, spell = GetItemSpell( itemID )
+    if not spell then return 0, 0, 0, 1 end
+    return GetSpellCooldown( spell )
+end
 state.GetItemCount = GetItemCount
-state.GetItemGem = GetItemGem
+--[[ state.GetItemGem = GetItemGem
 state.GetPlayerAuraBySpellID = GetPlayerAuraBySpellID
 state.GetShapeshiftForm = GetShapeshiftForm
 state.GetShapeshiftFormInfo = GetShapeshiftFormInfo
@@ -1050,15 +1055,30 @@ state.removeDebuffStack = removeDebuffStack
 local function applyDebuff( unit, aura, duration, stacks, value, noPandemic )
     if not aura then aura = unit; unit = "target" end
 
-    if not class.auras[ aura ] then
-        Error( "Attempted to apply unknown aura '%s'.", aura )
+    local auraInfo = class.auras[ aura ]
+
+    if not auraInfo then
         local spec = class.specs[ state.spec.id ]
         if spec then
             spec:RegisterAura( aura, { ["duration"] = duration } )
             class.auras[ aura ] = spec.auras[ aura ]
         end
 
-        if not class.auras[ aura ] then return end
+        auraInfo = class.auras[ aura ]
+        if not auraInfo then return end
+    end
+
+    if auraInfo.alias then
+        if duration == 0 then
+            -- We want to remove all of them.
+            for _, child in ipairs( auraInfo.alias ) do
+                state.applyDebuff( unit, child, 0, stacks, value, noPandemic )
+            end
+            return
+        end
+        -- Otherwise, we'll just apply the first aura in the list.
+        aura = auraInfo.alias[1]
+        auraInfo = class.auras[ aura ]
     end
 
     if state.cycle then
@@ -1073,7 +1093,7 @@ local function applyDebuff( unit, aura, duration, stacks, value, noPandemic )
     end
 
     local d = state.debuff[ aura ]
-    duration = duration or class.auras[ aura ].duration or 15
+    duration = duration or auraInfo.duration or 15
 
     if duration == 0 then
         d.expires = 0
@@ -1102,7 +1122,7 @@ local function applyDebuff( unit, aura, duration, stacks, value, noPandemic )
         d.lastCount = d.count or 0
         d.lastApplied = d.applied or 0
 
-        d.count = min( class.auras[ aura ].max_stack or 1, stacks or 1 )
+        d.count = min( auraInfo.max_stack or 1, stacks or 1 )
         d.value = value or 0
         d.applied = state.query_time
         d.unit = unit or "target"
@@ -1180,6 +1200,15 @@ state.dismissPet = dismissPet
 
 
 local function summonTotem( name, elem, duration )
+    if not elem then
+        local ability = class.abilities[ name ]
+        elem = ability and ability.totem
+    end
+
+    if not duration then
+        local aura = class.auras[ name ]
+        duration = aura and aura.duration or 30
+    end
 
     if elem then
         state.totem[ elem ] = rawget( state.totem, elem ) or {}
@@ -1982,9 +2011,6 @@ do
                 local n = t.true_active_enemies
                 if t.min_targets > 0 then n = max( t.min_targets, n ) end
                 if t.max_targets > 0 then n = min( t.max_targets, n ) end
-                if not n then
-                    print( k, n, t.true_active_enemies, t.min_targets, t.max_targets, ns.getNumberTargets(), debugstack() )
-                end
                 t[k] = max( 1, n or 1 )
 
             elseif k == "cycle_enemies" then
@@ -2258,10 +2284,12 @@ do
                 end
             end
 
+            -- Check for globals before variables/settings/toggles.
+            if _G[ k ] ~= nil then return _G[ k ] end
+
             if t:GetVariableIDs( k ) then return t.variable[ k ] end
             if t.settings[ k ] ~= nil then return t.settings[ k ] end
             if t.toggle[ k ]   ~= nil then return t.toggle[ k ] end
-            if _G[ k ] ~= nil then return _G[ k ] end
 
             if k ~= "scriptID" then
                 Hekili:Error( "Returned unknown string '" .. k .. "' in state metatable [" .. t.scriptID .. "].\n\n" .. debugstack() )
@@ -2700,8 +2728,11 @@ local mt_settings = {
             if t.spec[ k ] ~= nil then return t.spec[ k ] end
 
             if ability then
-                if ability.item and t.spec.items[ state.this_action ] ~= nil then return t.spec.items[ state.this_action ][ k ]
-                elseif not ability.item and t.spec.abilities[ state.this_action ] ~= nil then return t.spec.abilities[ state.this_action ][ k ] end
+                local item = ability.item or 0
+                if item > 0 then
+                    if t.spec.items[ state.this_action ] ~= nil then return t.spec.items[ state.this_action ][ k ]
+                    elseif t.spec.abilities[ state.this_action ] ~= nil then return t.spec.abilities[ state.this_action ][ k ] end
+                end
             end
         end
 
@@ -3282,7 +3313,7 @@ do
         __index = function( t, k )
             if type( k ) == "number" then
                 -- This is a SimulationCraft 7.1.5 or later indexed lookup, we support up to #5.
-                if k < 1 or k > 5 then return false end
+                if k < 1 or k > 10 then return false end
                 prev_lookup.meta = t.meta -- Which data to use? castsAll, castsOn (GCD), castsOff (offGCD)?
                 prev_lookup.index = k
                 return prev_lookup
@@ -6105,9 +6136,9 @@ function state:RunHandler( key, noStart )
 
     self.history.casts[ key ] = self.query_time
 
-    self.predictions[6] = nil
-    self.predictionsOn[6] = nil
-    self.predictionsOff[6] = nil
+    self.predictions[11] = nil
+    self.predictionsOn[11] = nil
+    self.predictionsOff[11] = nil
 
     self.prev.override = nil
     self.prev_gcd.override = nil
@@ -6195,7 +6226,7 @@ do
 
             if res then
                 if k == "combo_points" then
-                    res.actual = UnitExists( "target" ) and GetComboPoints("player", "target") or UnitPower( "player", power.type )
+                    res.actual = UnitExists( "target" ) and GetComboPoints( "player", "target" ) or UnitPower( "player", power.type )
                 else
                     res.actual = UnitPower( "player", power.type )
                 end
@@ -6204,10 +6235,6 @@ do
                 if res.max > 0 then foundResource = true end
 
                 if k == "mana" then
-                    if state.spec.arcane then
-                        res.modmax = res.max / ( 1 + state.mastery_value )
-                    end
-
                     local _, effectiveStat = UnitStat( "player", 4 )
                     local baseInt = min( 20, effectiveStat )
                     local bonusInt = effectiveStat - baseInt
