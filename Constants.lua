@@ -1267,5 +1267,42 @@ elseif Hekili.IsClassic() then
         [120] = { 16542, 16538, 16539, 16540, 16541 }, -- One-Handed Weapon Specialization
         [121] = { 23922, 23923, 23924, 23925 }, -- Shield Slam
 
+        -- Assassination
+        [122] = { 14162, 14163, 14164 }, -- Improved Eviscerate
+        [123] = { 14144, 14148 }, -- Remorseless Attacks
+        [124] = { 14138, 14139, 14140, 14141, 14142 }, -- Malice
+        [125] = { 14156, 14160, 14161 }, -- Ruthlessness
+        [126] = { 14158, 14159 }, -- Murder
+        [127] = { 14168, 14169 }, -- Improved Expose Armor
+        [128] = { 14128, 14132, 14135, 14136, 14137 }, -- Lethality
+        [129] = { 14174, 14175, 14176 }, -- Improved Poisons
+        [130] = { 16513, 16514, 16515 }, -- Vile Poisons
+        [131] = { 14183 }, -- Cold Blood
+        [132] = { 1329 }, -- Mutilate
+
+        -- Combat
+        [133] = { 13732, 13863 }, -- Improved Sinister Strike
+        [134] = { 13713, 13853, 13854 }, -- Deflection
+        [135] = { 13705, 13832, 13843, 13844, 13845 }, -- Precision
+        [136] = { 13706, 13804, 13805, 13806, 13807 }, -- Close Quarters Combat
+        [137] = { 13709, 13800, 13801, 13802, 13803 }, -- Mace Specialization
+        [138] = { 13960, 13961, 13962, 13963, 13964 }, -- Sword Specialization
+        [139] = { 13715, 13848, 13849, 13851, 13852 }, -- Dual Wield Specialization
+        [140] = { 13712, 13788, 13789 }, -- Lightning Reflexes
+        [141] = { 13877 }, -- Blade Flurry
+        [142] = { 13750 }, -- Adrenaline Rush
+
+                -- Subtlety
+        [143] = { 13958, 13970, 13971 }, -- Master of Deception
+        [144] = { 14057, 14072, 14073, 14074, 14075 }, -- Opportunity
+        [145] = { 13741, 13793, 13792 }, -- Improved Gouge
+        [146] = { 14076, 14094 }, -- Dirty Tricks
+        [147] = { 14079, 14080 }, -- Improved Ambush
+        [148] = { 14082, 14083 }, -- Dirty Deeds
+        [149] = { 14143, 14149 }, -- Remorseless Attacks
+        [150] = { 16511 }, -- Hemorrhage
+        [151] = { 14183 }, -- Premeditation
+        [152] = { 1784 }, -- Stealth
+
     }
 end

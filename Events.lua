@@ -1350,22 +1350,30 @@ local function UNIT_POWER_FREQUENT( event, unit, power )
             state.focus.last_tick = now
         end
 
-    elseif power == "ENERGY" and rawget( state, "energy" ) then
-        local now = GetTime()
-        local elapsed = state.energy.last_tick > 0 and now - state.energy.last_tick or 2
-        local current_energy = UnitPower( "player", Enum.PowerType.Energy )
-        local tick_energy = current_energy - lastObservedEnergy
-        if (tick_energy == 20 or current_energy == state.energy.max) and elapsed >= 1.9 and state.action.cat_form.realCast ~= state.now then
-            if elapsed > 1.9 and elapsed < 2.1 then
-                power_tick_data.energy_avg = ( elapsed + ( power_tick_data.energy_avg * power_tick_data.energy_ticks ) ) / ( power_tick_data.energy_ticks + 1 )
-                power_tick_data.energy_ticks = power_tick_data.energy_ticks + 1
-                state.energy.tick_time_avg = power_tick_data.energy_avg
-            end
-            state.energy.last_tick = now
-            Hekili:ForceUpdate( "UNIT_POWER_UPDATE", true )
+   elseif power == "ENERGY" and rawget(state, "energy") then
+    local now = GetTime()
+    local elapsed = state.energy.last_tick > 0 and now - state.energy.last_tick or 2
+    local current_energy = UnitPower("player", Enum.PowerType.Energy)
+    local tick_energy = current_energy - lastObservedEnergy
+    
+    if (tick_energy == 20 or current_energy == state.energy.max) 
+        and elapsed >= 1.9 
+        and ((not state.action.cat_form) or state.action.cat_form.realCast ~= state.now) then
+        
+        if elapsed > 1.9 and elapsed < 2.1 then
+            power_tick_data.energy_avg = (elapsed + (power_tick_data.energy_avg * power_tick_data.energy_ticks)) / (power_tick_data.energy_ticks + 1)
+            power_tick_data.energy_ticks = power_tick_data.energy_ticks + 1
+            state.energy.tick_time_avg = power_tick_data.energy_avg
         end
-        lastObservedEnergy = current_energy
+        
+        state.energy.last_tick = now
+        Hekili:ForceUpdate("UNIT_POWER_UPDATE", true)
     end
+    
+    lastObservedEnergy = current_energy
+end
+
+    
     Hekili:ForceUpdate( event, true )
 end
 Hekili:ProfileCPU( "UNIT_POWER_UPDATE", UNIT_POWER_FREQUENT )
