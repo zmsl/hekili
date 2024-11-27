@@ -19,6 +19,7 @@ actions.ranged+=/faerie_fire_feral,if=debuff.faerie_fire_feral.remains<12&debuff
 
 actions.precombat+=/mark_of_the_wild,if=!up&!buff.gift_of_the_wild.up
 actions.precombat+=/thorns,if=!up
+actions.precombat+=/moonfire,if=!debuff.moonfire.up&target.outside2&mana.current>=action.moonfire.cost+(buff.bear_form.up&action.bear_form.cost|action.cat_form.cost)
 actions.precombat+=/cat_form,if=!buff.form.up
 
 actions+=/use_items,if=!buff.cat_form.up
@@ -36,6 +37,7 @@ actions.bear+=/maul,use_off_gcd=1,if=!buff.maul.up
 actions.bear+=/swipe_bear,if=rage.current>60
 actions.bear+=/faerie_fire_feral
 
+actions.cat_solo+=/moonfire,if=!debuff.moonfire.up&target.outside2
 actions.cat_solo+=/rip,if={{rip_now}}
 actions.cat_solo+=/ferocious_bite,if={{bite_now}}
 actions.cat_solo+=/claw
