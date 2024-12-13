@@ -285,7 +285,6 @@ spec:RegisterAuras( {
         id = 16870,
         duration = 15,
         max_stack = 1,
-        copy = "omen_of_clarity"
     },
     -- Increases movement speed by $s1% while in Cat Form.
     dash = {
@@ -453,6 +452,12 @@ spec:RegisterAuras( {
     natures_swiftness = {
         id = 17116,
         duration = 3600,
+        max_stack = 1,
+    },
+    -- Your next damage or healing spell or offensive ability has its mana, rage or energy cost reduced by $s1%.
+    omen_of_clarity = {
+        id = 16864,
+        duration = 600,
         max_stack = 1,
     },
     -- Stunned.
@@ -1266,6 +1271,26 @@ spec:RegisterAbilities( {
 
         handler = function ()
             applyBuff( "natures_swiftness" )
+        end,
+    },
+
+
+    -- When activated, your next Nature spell with a base casting time less than 10 sec. becomes an instant cast spell.
+    omen_of_clarity = {
+        id = 16864,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 120,
+        spendType = "mana",
+
+        talent = "omen_of_clarity",
+        startsCombat = false,
+        texture = 136017,
+
+        handler = function ()
+            applyBuff( "omen_of_clarity" )
         end,
     },
 

@@ -4,7 +4,7 @@
 # bite_before_rip_next={{bite_before_rip}}&debuff.rip.remains-energy.time_to_tick>=settings.bite_time
 # bite_over_rip=settings.bite_enabled&!settings.rip_enabled
 # bite_now=settings.bite_enabled&({{bite_before_rip}}|{{bite_over_rip}})&combo_points.current>=settings.bite_cp
-# can_powershift=mana.current>=settings.powershift_enabled&(set_bonus.wolfshead=1|talent.furor.rank=5)&mana.current>=action.cat_form.cost
+# can_powershift=settings.powershift_enabled&set_bonus.wolfshead=1&talent.furor.rank=5&mana.current>=action.cat_form.cost
 # no_finisher=!settings.bite_enabled&!settings.rip_enabled
 # bite_at_end=combo_points.current>=settings.bite_cp&(ttd<{{end_thresh}}|(debuff.rip.up&ttd-debuff.rip.remains<{{end_thresh}}))&!{{no_finisher}}
 # rip_next=settings.rip_enabled&({{rip_now}}|(combo_points.current>=settings.rip_cp&debuff.rip.remains<=energy.time_to_tick))&ttd-energy.time_to_tick>={{end_thresh}}
@@ -12,13 +12,14 @@
 actions.innervate_or_shift+=/innervate,if=settings.innervate_enabled&action.innervate.known&mana.pct<=innervate_threshold&ttd>2
 actions.innervate_or_shift+=/best_mana_potion
 actions.innervate_or_shift+=/mana_rune
-actions.innervate_or_shift+=/cat_form
+actions.innervate_or_shift+=/cat_form,if={{can_powershift}}
 
 actions.ranged+=/tigers_fury,if=energy.current=100&target.outside5
 actions.ranged+=/faerie_fire_feral,if=debuff.faerie_fire_feral.remains<12&debuff.faerie_fire.remains<12&target.outside2
 
 actions.precombat+=/mark_of_the_wild,if=!up&!buff.gift_of_the_wild.up
 actions.precombat+=/thorns,if=!up
+actions.precombat+=/omen_of_clarity,if=!buff.omen_of_clarity.up
 actions.precombat+=/moonfire,if=!debuff.moonfire.up&target.outside2&mana.current>=action.moonfire.cost+(buff.bear_form.up&action.bear_form.cost|action.cat_form.cost)
 actions.precombat+=/cat_form,if=!buff.form.up
 
