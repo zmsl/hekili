@@ -396,6 +396,7 @@ spec:RegisterAuras( {
         duration = 12,
         tick_time = 2,
         max_stack = 1,
+        shared = "target",
         copy = { 5570, 24974, 24975, 24976, 24977 },
     },
     maul = {
@@ -530,6 +531,7 @@ spec:RegisterAuras( {
         id = 467,
         duration = 600,
         max_stack = 1,
+        shared = "player",
         copy = { 467, 782, 1075, 8914, 9756, 9910 },
     },
     -- Increases damage done by $s1.

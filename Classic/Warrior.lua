@@ -7,6 +7,10 @@ local FindUnitDebuffByID = ns.FindUnitDebuffByID
 local IsCurrentSpell = _G.IsCurrentSpell
 local spec = Hekili:NewSpecialization( 1 )
 
+local function swingSpend(action)
+    return type(action.swingSpend) == "function" and action.swingSpend() or action.swingSpend
+end
+
 local function rage_amount( isOffhand )
     local d
     if isOffhand then d = select( 3, UnitDamage( "player" ) ) * 0.7
@@ -47,7 +51,9 @@ spec:RegisterResource( Enum.PowerType.Rage, {
 
         interval = "mainhand_speed",
 
-        stop = function () return state.swings.mainhand == 0 end,
+        stop = function ()
+            return state.swings.mainhand == 0 
+        end,
         value = function( now )
             return state.buff.heroic_strike.expires < now and state.buff.cleave.expires < now and rage_amount() or 0
         end,
@@ -65,7 +71,9 @@ spec:RegisterResource( Enum.PowerType.Rage, {
 
         interval = "offhand_speed",
 
-        stop = function () return state.swings.offhand == 0 end,
+        stop = function ()
+            return state.swings.offhand == 0
+        end,
         value = function( now )
             return rage_amount( true ) or 0
         end,
@@ -391,6 +399,9 @@ spec:RegisterAuras( {
 
 local enemy_revenge_trigger = 0
 local enemy_dodged = 0
+local enemy_dodged_target
+local last_overpower = 0
+local last_overpower_target
 
 local misses = {
     DODGE = true,
@@ -428,18 +439,40 @@ local tick_events = {
 }
 
 spec:RegisterEvent( "COMBAT_LOG_EVENT_UNFILTERED", function()
-    local _, subtype, _,  sourceGUID, sourceName, _, _, destGUID, destName, destFlags, _, actionType, _, _, _, _, _, critical = CombatLogGetCurrentEventInfo()
+    local _, subtype, _,  sourceGUID, sourceName, _, _, destGUID, destName, destFlags, _, actionType, _, _, spellMissType, _, _, critical = CombatLogGetCurrentEventInfo()
 
-    if sourceGUID == state.GUID and subtype:match( "_MISSED$" ) and ( actionType == "DODGE" ) then
+    if sourceGUID == state.GUID and subtype:match( "_MISSED$" ) and ( actionType == "DODGE" or spellMissType == "DODGE" ) then
         enemy_dodged = GetTime()
+        enemy_dodged_target = destGUID
     elseif destGUID == state.GUID and subtype:match( "_MISSED$" ) and misses[ actionType ] then
         enemy_revenge_trigger = GetTime()
+    elseif sourceGUID == state.GUID and subtype == "SPELL_CAST_SUCCESS" then
+        if actionType == class.abilities.overpower.id then
+            last_overpower = GetTime()
+            last_overpower_target = destGUID
+        end
     end
 end )
 
 local avg_rage_amount = rage_amount()+rage_amount(true)
 spec:RegisterStateExpr("rage_gain", function()
     return avg_rage_amount+(buff.bloodrage.up and 1 or 0)
+end)
+
+spec:RegisterStateExpr( "mainhand_remains", function()
+    local next_swing, real_swing, pseudo_swing = 0, 0, 0
+    if now == query_time then
+        real_swing = nextMH - now
+        next_swing = real_swing > 0 and real_swing or 0
+    else
+        if query_time <= nextMH then
+            pseudo_swing = nextMH - query_time
+        else
+            pseudo_swing = (query_time - nextMH) % mainhand_speed
+        end
+        next_swing = pseudo_swing
+    end
+    return next_swing
 end)
 
 spec:RegisterStateFunction( "swap_stance", function( stance )
@@ -457,7 +490,7 @@ spec:RegisterStateFunction( "swap_stance", function( stance )
 end )
 
 local finish_heroic_strike = setfenv( function()
-    spend( 15, "rage" )
+    spend( swingSpend(action.heroic_strike), "rage" )
 end, state )
 
 spec:RegisterStateFunction( "start_heroic_strike", function()
@@ -466,13 +499,80 @@ spec:RegisterStateFunction( "start_heroic_strike", function()
 end )
 
 local finish_cleave = setfenv( function()
-    spend( 20, "rage" )
+    spend( swingSpend(action.cleave), "rage" )
 end, state )
 
 spec:RegisterStateFunction( "start_cleave", function()
     applyBuff( "cleave", swings.time_to_next_mainhand )
     state:QueueAuraExpiration( "cleave", finish_cleave, buff.cleave.expires )
 end )
+
+local should_queue_events = {
+    { time = 0, spend = 0, priority = 1, name = "" },
+    { time = 0, spend = 0, priority = 2, name = "" },
+    { time = 0, spend = 0, priority = 3, name = "" }
+}
+spec:RegisterStateFunction( "should_queue", function(queue_cost)
+    Hekili:Debug("Checking if we should queue for "..tostring(queue_cost).." at rage "..tostring(rage.current))
+
+    local primary_action = IsSpellKnown( class.abilities.mortal_strike.id ) and "MS" or "BT"
+    local primary_ttr = query_time + (primary_action == "MS" and cooldown.mortal_strike.remains or cooldown.bloodthirst.remains)
+    local primary_spend = primary_action == "MS" and action.mortal_strike.cost or action.bloodthirst.cost
+    local primary_name = primary_action == "MS" and "Mortal Strike" or "Bloodthirst"
+    for i, event in ipairs(should_queue_events) do
+        if i == 1 then
+            event.time = primary_ttr
+            event.spend = primary_spend
+            event.name = primary_name
+            Hekili:Debug("Set "..tostring(event.name).." at "..tostring(event.time).." for "..tostring(event.spend))
+        elseif i == 2 then
+            event.time = query_time + cooldown.whirlwind.remains
+            event.spend = action.whirlwind.cost
+            event.name = "Whirlwind"
+            Hekili:Debug("Set "..tostring(event.name).." at "..tostring(event.time).." for "..tostring(event.spend))
+        elseif i == 3 then
+            event.time = query_time + mainhand_remains
+            event.spend = queue_cost
+            event.name = "Swing"
+            Hekili:Debug("Set "..tostring(event.name).." at "..tostring(event.time).." for "..tostring(event.spend))
+        end
+    end
+
+    table.sort(should_queue_events, function(a, b)
+        if a.time == b.time then
+            return a.priority < b.priority
+        else
+            return a.time < b.time
+        end
+    end)
+
+    local spent_rage = 0
+    for i, event in ipairs(should_queue_events) do
+        spent_rage = spent_rage + event.spend
+
+        Hekili:Debug("Evaluating "..tostring(event.name).." at "..tostring(event.time).." for "..tostring(event.spend).." (total spent: "..tostring(spent_rage)..")")
+
+        local next_event = should_queue_events[i + 1]
+        if next_event then
+            local required_rage = next_event.spend + spent_rage
+            local time_to_rage = query_time + state:TimeToResource(rage, required_rage)
+
+            Hekili:Debug("Next event is "..tostring(next_event.name).." at "..tostring(next_event.time).." for "..tostring(next_event.spend).." (required rage: "..tostring(required_rage)..", time to rage: "..tostring(time_to_rage)..")")
+            if time_to_rage > next_event.time then
+                Hekili:Debug("Failed due to requiring "..tostring(next_event.spend).." for "..tostring(next_event.name).." at "..tostring(next_event.time).." but gaining it at "..tostring(time_to_rage))
+                return false
+            end
+        end
+    end
+
+    return true
+end)
+spec:RegisterStateExpr( "should_hs", function()
+    return should_queue( swingSpend(action.heroic_strike) )
+end)
+spec:RegisterStateExpr( "should_cleave", function()
+    return should_queue( swingSpend(action.cleave) )
+end)
 
 spec:RegisterHook( "reset_precast", function()
     local form = GetShapeshiftForm()
@@ -492,10 +592,10 @@ spec:RegisterHook( "reset_precast", function()
     end
 
     if now == query_time then
-        if IsUsableSpell( class.abilities.overpower.id ) then
-            if enemy_dodged > 0 and now - enemy_dodged < 6 then
+        if IsSpellKnown( class.abilities.overpower.id ) then
+            if enemy_dodged > 0 and query_time - enemy_dodged < 6 and target.unit and target.unit == enemy_dodged_target and (last_overpower == 0 or enemy_dodged - last_overpower > 5) then
                 applyBuff( "overpower_ready", enemy_dodged + 5 - now )
-            else
+            elseif IsUsableSpell( class.abilities.overpower.id ) then
                 applyBuff( "overpower_ready" )
             end
         end
@@ -707,7 +807,8 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "off",
 
-        spend = 20,
+        spend = 0,
+        swingSpend = 20,
         spendType = "rage",
 
         startsCombat = true,
@@ -716,11 +817,10 @@ spec:RegisterAbilities( {
         nobuff = "cleave",
 
         usable = function()
-            return (not buff.heroic_strike.up) and (not buff.cleave.up)
+            return (not buff.heroic_strike.up) and (not buff.cleave.up) and (rage.current >= swingSpend(action.cleave))
         end,
 
         handler = function( rank )
-            gain( 20, "rage" )
             start_cleave()
         end,
 
@@ -894,10 +994,10 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "off",
 
-        spend = function()
+        spend = 0,
+        swingSpend = function()
             return 15 - talent.improved_heroic_strike.rank
         end,
-
         spendType = "rage",
 
         startsCombat = true,
@@ -906,11 +1006,10 @@ spec:RegisterAbilities( {
         nobuff = "heroic_strike",
 
         usable = function()
-            return (not buff.heroic_strike.up) and (not buff.cleave.up)
+            return (not buff.heroic_strike.up) and (not buff.cleave.up) and (rage.current >= swingSpend(action.heroic_strike))
         end,
 
         handler = function( rank )
-            gain( 15 - talent.improved_heroic_strike.rank, "rage" )
             start_heroic_strike()
         end,
 
@@ -1438,7 +1537,7 @@ spec:RegisterSetting("general_header", nil, {
     name = "General"
 })
 
-spec:RegisterSetting("queueing_threshold", 60, {
+spec:RegisterSetting("queueing_threshold", 40, {
     type = "range",
     name = "Queue Rage Threshold",
     desc = "Select the rage threshold after which heroic strike / cleave will be recommended",
@@ -1446,6 +1545,77 @@ spec:RegisterSetting("queueing_threshold", 60, {
     min = 0,
     softMax = 100,
     step = 1
+})
+
+spec:RegisterSetting("execute_queueing_enabled", true, {
+    type = "toggle",
+    name = "Queue During Execute",
+    desc = "When enabled, recommendations will alwas queue heroic strike or cleave during the execute phase",
+    width = "full"
+})
+
+spec:RegisterSetting("adaptive_queueing_enabled", true, {
+    type = "toggle",
+    name = "Use Queue Prediction",
+    desc = "When enabled, recommendations will use swing timers and rage calculations to determine if heroic strike or cleave should be queued",
+    width = "full"
+})
+
+spec:RegisterSetting("ww_min_enemies", 2, {
+    type = "range",
+    name = "Minimum Enemies For Whirlwind",
+    desc = "Select the minimum number of enemies before recommending Whirlwind over Bloodthirst",
+    width = "full",
+    min = 0,
+    softMax = 4,
+    step = 1
+})
+
+spec:RegisterSetting("ww_cd_diff", 1.5, {
+    type = "range",
+    name = "Whirlwind Cooldown Differential",
+    desc = "Select the remaining time on Bloodthirst before Whirlwind can be recommended",
+    width = "full",
+    min = 0,
+    softMax = 2,
+    step = 0.1
+})
+
+spec:RegisterSetting("overpower_enabled", true, {
+    type = "toggle",
+    name = "Use Overpower",
+    desc = "When enabled, recommendations will include Overpower",
+    width = "full"
+})
+
+spec:RegisterSetting("overpower_threshold", 45, {
+    type = "range",
+    name = "Maximum Rage for Overpower",
+    desc = "Select the maximum rage allowed for Overpower recommendations",
+    width = "full",
+    min = 1,
+    max = 100,
+    step = 1
+})
+
+spec:RegisterSetting("hamstring_threshold", 80, {
+    type = "range",
+    name = "Hamstring Rage Threshold",
+    desc = "Select the rage threshold after which Hamstring will be recommended",
+    width = "full",
+    min = 0,
+    softMax = 100,
+    step = 1
+})
+
+spec:RegisterSetting("hamstring_cd_diff", 1.5, {
+    type = "range",
+    name = "Hamstring Cooldown Differential",
+    desc = "Select the remaining time on Bloodthirst and Whirlwind before Hamstring can be recommended",
+    width = "full",
+    min = 0,
+    softMax = 2,
+    step = 0.1
 })
 
 spec:RegisterSetting("general_footer", nil, {
@@ -1470,6 +1640,26 @@ spec:RegisterSetting("debuff_sunder_enabled", true, {
     width = "full"
 })
 
+spec:RegisterSetting("debuff_sunder_max_stack", 1, {
+    type = "range",
+    name = "Max Sunders",
+    desc = "Select the maximum number of sunder armor stacks for sunder recommendations",
+    width = "full",
+    min = 1,
+    max = 5,
+    step = 1
+})
+
+spec:RegisterSetting("debuff_sunder_min_level", 61, {
+    type = "range",
+    name = "Minimum Sunder Level",
+    desc = "Select the minimum target level before recommending Sunder Armor",
+    width = "full",
+    min = 0,
+    max = 63,
+    step = 1
+})
+
 spec:RegisterSetting("debuff_demoshout_enabled", false, {
     type = "toggle",
     name = "Maintain Demoralizing Shout",
@@ -1478,28 +1668,6 @@ spec:RegisterSetting("debuff_demoshout_enabled", false, {
 })
 
 spec:RegisterSetting("debuffs_footer", nil, {
-    type = "description",
-    name = "\n\n\n"
-})
-
-spec:RegisterSetting("execute_header", nil, {
-    type = "header",
-    name = "Execute"
-})
-
-spec:RegisterSetting("execute_description", nil, {
-    type = "description",
-    name = "Execute settings will change recommendations only during execute phase"
-})
-
-spec:RegisterSetting("execute_queueing_enabled", true, {
-    type = "toggle",
-    name = "Queue During Execute",
-    desc = "When enabled, recommendations will include heroic strike or cleave during the execute phase",
-    width = "full"
-})
-
-spec:RegisterSetting("execute_footer", nil, {
     type = "description",
     name = "\n\n\n"
 })
@@ -1525,9 +1693,9 @@ spec:RegisterOptions( {
 } )
 
 
-spec:RegisterPack( "Arms", 20241121.1, [[Hekili:TAvZUnUnq4NfFXyx0fQwkjB6cSjaTOh6Md5IkqVrlAQXreM6Nssf3eeWN9oKsHIswkB2wFjHE4mFZ)FuKyYFssZPAGCFYMKlJJtIJItU4QysQ(PgGK2qzhOpGhQOL4F)vzPYk8jrnn3ARQUvYWliP7A5c93Qi7MdWlV4lOUnaJCpcDbpph60euSounz)fvk51stwJ9FC9tMS92F(hWbUGJEvwVNlqFrzAEDLkQrcS6YDu9pDZpVtuxNlXi9t893SAx7(9r4fAbSvvu3QJABm3nRDbk5mDjfzfuzh6A7bDeAGINdxVU)3h56cEvYvM78aGM1QGTCnG5xGWMA7Pqj7aPcKha5wLMwXEF(zWCELgW2qJ(h0UM2YsqekrvWbr(2DuvrO46hbzt9rqokO7RD(ioS4zXQTkhZiQSSwAVwbAnV6bvuoyBqB7VhQO7eq(6oPrHwfHyZo81rXCoGxqf8NrOg6BtX2QL7sp8R6X)u7Jgh2mbqFe(KTZvJi9al)MyRlStxrSwPeQ03o4W)UfAblw6cjG4jYxBX6ra9muYb1TXR)qFpOaOcDrudtFBYMxEXJb8paRvdB9y1h0FmmUkaznNHLBj)W)RW7Senhl4sXrEvU13tt4qf7rlue2a0urFMmlOZnMn3k6mtzZngjHskVs9EgKwEkzwqkOL20O6bRTolTH)(w5t4ufjfxBuOMoYWl2KK8zs6rQSYwMjPFRSbleqUjlXK1bPjtWvAvK5osQ7KJFg2tBfA849o(6ovjPEUfsAFhI8Ben6RqL64AMOXfwngKKYq6wqYPiR)yYdt2At2ecKbSNYAzH(YZd0EgnlMxnkHCCwtsOphQrah2e1UounpN2eL(LfZGvMmBt1N(H8Fwl)YIw(2uFUsXI0FMSVAYcknHAy9A8M3TBpHv055vENpl34GNp9AN)Jx0)HCsMSBVXK9g8sUyzmtcAJjl2DXh8dld0wURt2yYE5LaKxI(YK9XHuPJKVBhQNg1UDztNKZy6CMJ6rpbmBWV8M9Cv2bK9mVouUmCpPpYMSLepAPCeJ(unhTCo4OjAD9p6ANF(B5f234TGV7w1YlZF3NiMI987njlV3E6dj(jGxFVHyXi1)fQ(hhwQco3NehutF9ZN9VF8FPtCMEwP7tTDjiMI0wDb2ss)Dy)ZuwHti5F)d]] )
+spec:RegisterPack( "Arms", 20250324.1, [[Hekili:TJvZUnUnq4NLCXibjv12joB3wBd0EQBoKEWPOhkwjXirBrekrvsQ44cd(S3Hu)rzrT2jiBVSlqqSm5mFZmFC0mJP)e)h8xfJKy)7NoE6SXxp9gVjZMDZ0p4VsUlh7Vkhf9eAd8qgkf()VYtf6f3rzOyTYcwbpc2WF1JfeQ8tz(p6aXXZMndKnhh5F)e)vjK4yCPKyrujQQW)cX5egxfMR)Gi3PcxR)6VJFIqjGv5S1ekyluKKWYexU4hffzXyEaINY4xrwVqGLss2gHxm(XI1RdQ2hNHEKIJhvUQNTwEcjeHZhqXu0lbgbgDwLU4xYzcCLUf5JKi(gS0JIFgtxoK9tjzbgju3167XyaceL8VGcbIewH0veOLYSztqu7j91h8hBdeHO0GYVgqjc5v6JWfrmgnMTntOTwxV)2RTvNxK1xB8l4Ocj2s3emIkt8YJKZxmD8rbGZKi9sQ7Ae1RcuqLemNrIakNtEcFvbq0mGd2efVyI2KAfEgdmboLGflMm68ZpRHWqXOCZ2)tbUaRjLAgRoK9actIOvW7XXPisMy5coKG7jjP4ajl4MP73FcyQjCACqI4I97p3jvmQbLQ4RhixCHloiIIrpF0GF5xLGF24xtWx6PV7eq1t2zi1znFtNIyrcFJMJyXaSNX8C2wm35UBtiC6wswSdsPTe72TMkZvBaU47bxzJEuCqmz96tIV6YXZM)LTZLomJBIQJ6UFJcLQ3nBJMSo5WRrRAZ3YmnS)jPMjWJk4CCMCz72YeogYHOXo95hPmwSwtTpBJW8po2TciPKIB7ZEMvVYoYH5cm)jOPn03plYX7ydQzLfgwT2K9MS3MJFtl92L5yu8o98fDyNfLMTvoViMq2rM5oSrdv6Vcwtaiygo7MjtMoXdghBlINPvXF1djeHE(lZGwQq9xsjcbSPkuuKNd5evdLTbERHtIuH6tRNWsHNkuf(jzPsCCelnfdd)edsKGGLHrm47SNTJKfrlG5)GTisOQ(pdf8d)bv4F)NcSgjCQ4ZxPcHKPOeBPrz7ATQkmJPb)LCkjIiPT4gRFsBCCRr)fvi47vM5HsiuHt(Sg0y7LMAz5Tek1kIQGuwlQHnmlLvKczpAdlOmPN6UpLQjm9cxdwWC0Pc1JcbK1D(RmpPNHUojcE(EZe5wjpM5LRss8)n)vrqCaepQCk42YAQWfqKOchPcp383zGBC0Qog5)YVYRcxciFq)pv4(9Nm(n9bvHxuQi4E96gOcNd2bMG0OYX6kyG6I6Fka8lkSNkWxc53VzEC5)B84SXVfESSJ6xrUS0aAs8AnjwVCt9eBEee6gTqNgZUWYB628TjwEFPBhDjFvu(bnLbE9429YbmRfd30GuZFZSj5oyEarF7Ge9XCPourVoWDzZEnVpj1TBbzEfYrJCR3wR3uhwFyWWQlOa1)XXTy0mbGgJFAqmG8PIClTSgdqR4hp5Yehc0bZjObBY4xhADF9S3mbMThyUaxK(I6MmhmFGdzN70UooP6muJVMYwvvg57nREZfy)EZQ3pUCGMv1jPDQGk1334Aubv2K86KKBCcN3IOXph8Me7(U1a3MObIZAq5G7u0SR9nZDqf4bUBX2G32RAsVoPiT3TnEGN68ohBnC)TBoySmFZr3b3pPTJ1p8V96YjMdkVi6MRX01ii1w4GBG0Hb6Ng2Xk1Pr1TPpfByPEZG9MCVCZVHaQO2l77r7AdioW(cbUUGlOjQqMahLR(Jc(UcZs()3p]] )
 
-spec:RegisterPack( "Fury", 20241121.1, [[Hekili:TAvuVnkoq4Fl5LOTARydKKU3j10hoD60T9H(cN09MdoMHGvmyoBtZ2Qk)BFTnuWqHSv3wvPgYmFZ3mE8mFbui6FqXPyfGEiAv0MWWOWGWO1BJqXQNQauCfMCcF08qjUW8))Qw8K14tmoo1gRKxlighO4d1uM6BLOdtr4MnBnyRac6HquConnfAqcssdR6K)fleuUqNuz)GQmMYSF9VHtug1KvbpJYm5ctuuEPmOsaeEXbS6Z7(YbgNNkmv610SDlouNLfyCOyWEzoVwfuxPVFY48a5cDoGKCSOHDL9bvGjajnf(6Y2VFMQYPLrB133rGjSAjSNQGcPVXkU9jFl0sfy6JvQ3vc8yQUOay(wK5uGLU)awM7BM)iiQ4NbHVXdGqcItGyVuHljW4gGLU6YuJFSOGlSULGsrlpkdsbBtEFRFOeFGbPlBSg4hvGHBYPBhu2PGXbMrF2qvFVFm3wuoND0VOL)3gFWWYMWa8JW12Up3W0rs6UqBkStibKAHakv31NW)RgQblxQCby4JLU0Y1JGjZqbfK3fU8tTxd5aMPYdQiQ7Iw9YlDCaFhi1kyFhxTf9v(1voi4uIPDlON(LkVpKQ5CovWotltT5E8b2hylBdMDSlCMbsHunjLdWEHLSjMXMAisafyAP89mgn)mYKKKJlSxhLhTX6I0w(zgjjZmfk2S3iniDYzRxTj8gu8zSO02KrXFROIluqQojsN0qPoHrLkzG(EJqvTkNlqX)jK9mMKJIDUCsUqgUMPmp(GtcUjwuCNCbkU9cd9hiLj5(GAKpgHyTfrVLyIrbfeuSriFOCIozPozKKsp3Dcrwo3miRoPMrzDRpcpPNrWUXhwNu0iqFD2tWcDI9Q4vcglBzd(3Mn4lRy56gZQAPtUvN41D8ryZ6V)UZ6B0YCjErxUNurRpXV1Tn9HRMn)(kj6K72PtUGAIRwgU)BIrNe6C8PUXLEXgN7Ov6KxEXJ55eD0jx1FuAKMBg1Bf)Slb2Jt4h4X5dUQhiCpzXhnBXpvNTN5ofthlR93uARSr7jHdwl90HhJBWYzFAgH6M39ANNkUlY5xyVGc(pBLkC(n5FQW(yUNzRz(T23k)3D))6VsGSCe39MHDk4Z1bN6vrhD7zhU7e5))Ct8bP938kUUdyZFOF8d]] )
+spec:RegisterPack( "Fury", 20250324.1, [[Hekili:TJ1sVnUnq4Fl(IrcAQQTJDAtRLp0dfn5q6bNIEOyLeTeTfrOe1ssfhxyOF7Di1lQxXoPz7LDbwSXMCE(XHZ8z6m15rN1bij25HztMTyY1ZMBnDXI5tw4SwEib7Sob5)eAh8Hyue8))wk)GAXdugkqPSGLY9HnCwVjLqL3f7SPhlozX8BbztW(opm1zDijiaNljw4NB1mV)cX5egpZlr9hIewAR6R)o(jcLaELZ2sOGVq(sclw8D2)GinoaZDr8ig)kYwBbwkjX7ewb4nPB36wSpogTHIdgNVQLPwwcjKHlhqXi0lUAbgpQqx8ljmbUq30KXseFhwArXpJPRgY)rKyxTez3xh7byWeik5FafCfHSuzFzGsk9MvjrzK0vFiEmDGpIsDZ)QlLiKxPocT9zmAaBFSq5TMr)nxBQopnUR24xW(PsSHUHyevgAL4lxApBYjnaNjrQLYUVsuRcJcQeI5mIpa5CYt4RsbGMbyWo)a7PkxQu4zmGe4icwypD8fxmQcWqbOe92FofNIvGsjIvMYwBOmwGmKWfsloocrIfRS5q5TLKeHDLm35ZoE8mSOcUPbUHIlpE8IEbIXvwPi76yKlVSpeWNIrpFYuF1xGuFXK3sQNhNF4PFXNmRokRy(kU8Wac(QS(Wi)zpJ5jS9yEV7Uhsa6EsCqpqsDR1971DKl2OxdzahN2r)3bAZqZpWnGSD7zb2npGwS818YBpe6)oiksD)lENkZpttwPtPLRJLkG8SutNV(PCoowUQEBzihd1D0GHplvAQIytlS82j9RaskP46zYJmMR2qomxG5pbd4bocX(9CRCqnl8WWQvFbPQIV6uxp(VEzogfCqXfPb6yN72A5S8zczdzw2JpQGYXJ0UzlfKvB9r9Ey3yJ6dZ0eN1GnfqeOjcoF60ztTaQF7r8yLlDw)yirO46Pj1L5P(seriGnZ8ePjjmUSGa4o4MkN4N5PoTFclfwzEzE3jZvIJ9zrryGOvairicwgOZOiuwZJKe7ttbUMWwejmf5NHbmEFFM3F)NcSYs4iXNUkZdIF)qtPrXhQ9AMxmtz8xsOeFIKwB3a1Nuohx70FjZdI9c38yUjY8M(jLrdmxAMHN3tOuJmQWKYsr1OHEP40iO6t5ybLjTYU)UifGPw4AWd6J(mpfTlaSU3zT(tk(6LfHWNFqZ(3O4tZnVOiZ5xDw7d5ba8OCg31TsZ8SHmjZBCM3f6)nccJt2Ssl)R1WiZBfy3wZBZ8oE8STE1C3mVlZvecUoZFY8wc(b4QQv5uZH0M6YYF0b8Bxm5G4iHQ73nkU6)juCXK3dkMpb)lisM7afeETcclxUQxKjkccnxj05HR2grtZH91UPQxLY2lmdadqTviCZGHWh5zxFtIFlNFTifahsNYRV3WAa08hheMEdEPZW)MHzhEdNL6Mt)03)6HdHXv9Ynvj1pnys10OayF7Kwftkju242xR(rnYSsldgikfNo5SBY02sT4OOT2534xBTMxV7WhrV9aCs6d1Tlhq1IBspYUSx)wt3tPXOcNxXuPC1b4R0z7MSwAFeuIAQEb5n2(2OZ3zd)Vn68Jcjhy0zzbAJPws1RSUfLsLvfU9cXvbrVVDQooh89tBEtDG3qT8Ix)VKQExZ3JSvd9bEr16K3mQQkUoRmTZBS2ks79LwRDC3TRoymCF1rxRxL1mW6M(3CDo3D38NFV6XB7JquPhA9UR94GULHn8szzujXOZXhgQx9tm01Ej6Fnd0nTt13gZodioG(cbUSzlOjkvgchLR)Ju(Hu9so)7d]] )
 
 spec:RegisterPack( "Protection", 20241121.1, [[Hekili:1fzqVnkmqu4Fl5svR2k2cH2Q9qVuTxsoKwjx1EBkg7HGvbBl7Hnk7b)BVgilHnkrrkAa)EFE49Gu4nGj5ecBYUllpnnlnjnB59zpamAVfbMLl(IVnoO5TX)F1ziuqkJU)O9ngUShH305eXJbwzNQHwPHYZXnp)xrTwuaBsbwTskXrLOx0B26mvQMih(Wv4tSouyAl50pE6NLngJ0f3LBvvpTOSRQkjEa1GF6RnDusNnS(S(MjAW6LekQ5Ur6u)aLen4vs8XRo88ofvR0z3hwpbiARZJFQiS1p)LwZyg9h057h6JHLXyihy74oTsV1dSvTwJJqzOilum6nu0O8KpjSogcDuTXbSFJv)LlQJzl3JYx0ZBHqXhCNtzCHIRx9(naBW(qRIv8UgkoUzOL5hATP1fyOMx2Gs4zGIl4Cr)B9NRG67NdP1e1JcycxeRtXb2IqX5QNJ4NQYPl(sC(pxZW1BC5fnEs)fkUkuCshEe7yTp8bo(d((p]] )
 
