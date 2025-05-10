@@ -4,6 +4,8 @@
 local addon, ns = ...
 local Hekili = _G[ addon ]
 
+local Tooltip = ns.Tooltip
+
 local auras = ns.auras
 
 local formatKey = ns.formatKey
@@ -103,10 +105,22 @@ state.debuff = {}
 state.dot = {}
 state.equipped = {}
 state.main_hand = {
-    size = 0
+    size = 0,
+    speed = 0,
+    damage = {
+        min = 0,
+        avg = 0,
+        max = 0
+    }
 }
 state.off_hand = {
-    size = 0
+    size = 0,
+    speed = 0,
+    damage = {
+        min = 0,
+        avg = 0,
+        max = 0
+    }
 }
 
 state.gcd = {}
@@ -2380,8 +2394,8 @@ local mt_stat = {
 
         elseif k == "attack_power" then
             if Hekili.IsWrath() or Hekili.IsClassic() then
-                local a, b = UnitAttackPower( "player" )
-                t[k] = a + b
+                local a, b, c = UnitAttackPower( "player" )
+                t[k] = a + b + c
             else t[k] = UnitAttackPower("player") + UnitWeaponAttackPower("player") end
 
         elseif k == "crit_rating" then
@@ -2395,6 +2409,11 @@ local mt_stat = {
 
         elseif k == "armor_penetration" then
             t[k] = GetArmorPenetration()
+
+        elseif k == "base_weapon_damage" or k == "base_weapon_speed" then
+            
+            t[k] = dps * speed
+
 
         elseif k == "weapon_dps" or k == "weapon_offhand_dps" then
             local low, high, offlow, offhigh = UnitDamage( "player" )

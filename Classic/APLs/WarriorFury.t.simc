@@ -11,7 +11,7 @@ actions.execute+=/execute
 actions.rotation+=/heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_42|settings.adaptive_queueing_enabled&should_hs)|(target.health.pct<=20&settings.execute_queueing_enabled))
 actions.rotation+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(target.health.pct<=20&settings.execute_queueing_enabled))
 actions.rotation+=/overpower
-actions.rotation+=/whirlwind,if=active_enemies>=settings.ww_min_enemies
+actions.rotation+=/whirlwind,if=active_enemies>=ww_breakpoint
 actions.rotation+=/bloodthirst
 actions.rotation+=/whirlwind,if=!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=settings.ww_cd_diff|settings.adaptive_queueing_enabled&rage.time_to_55<cooldown.bloodthirst.remains&cooldown.bloodthirst.remains>=settings.ww_cd_diff
 actions.rotation+=/hamstring,if=cooldown.bloodthirst.remains>=settings.hamstring_cd_diff&cooldown.whirlwind.remains>=settings.hamstring_cd_diff&rage.current>hamstring_threshold

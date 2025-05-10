@@ -52,7 +52,7 @@ spec:RegisterResource( Enum.PowerType.Rage, {
         interval = "mainhand_speed",
 
         stop = function ()
-            return state.swings.mainhand == 0 
+            return state.combat == 0 and state.swings.mainhand == 0 or state.query_time - state.now > 30
         end,
         value = function( now )
             return state.buff.heroic_strike.expires < now and state.buff.cleave.expires < now and rage_amount() or 0
@@ -72,7 +72,7 @@ spec:RegisterResource( Enum.PowerType.Rage, {
         interval = "offhand_speed",
 
         stop = function ()
-            return state.swings.offhand == 0
+            return state.combat == 0 and state.swings.offhand == 0 or state.query_time - state.now > 30
         end,
         value = function( now )
             return rage_amount( true ) or 0
@@ -573,6 +573,37 @@ end)
 spec:RegisterStateExpr( "should_cleave", function()
     return should_queue( swingSpend(action.cleave) )
 end)
+spec:RegisterStateExpr( "ww_breakpoint", function()
+    if not settings.adaptive_ww_enabled or not main_hand.speed or not main_hand.damage.avg then
+        return settings.ww_min_enemies
+    end
+
+    local baseAP, posBuff, negBuff = UnitAttackPower("player")
+    local ap = baseAP + posBuff + negBuff
+    local avgWeaponDamage = main_hand.damage.avg
+    local speed = main_hand.speed
+
+    -- Bloodthirst DPR
+    local bt_cost = action.bloodthirst.cost
+    local bt_damage = 0.45 * ap
+    local bt_dpr = bt_damage / bt_cost
+
+    -- Whirlwind DPR (per target)
+    local ww_cost = action.whirlwind.cost
+    local ap_contribution = ap * (speed / 14)
+    local ww_damage = avgWeaponDamage + ap_contribution
+    local ww_dpr = ww_damage / ww_cost
+
+    -- Break-even target count
+    local requiredTargets = math.ceil(bt_dpr / ww_dpr)
+
+    --print(string.format("AP: %d", ap))
+    --print(string.format("Weapon Speed: %.2f | Avg Damage: %.1f", speed, avgWeaponDamage))
+    --print(string.format("Bloodthirst DPR: %.2f", bt_dpr))
+    --print(string.format("Whirlwind DPR (per target): %.2f", ww_dpr))
+    --print(string.format("WW beats BT at ≥ %d targets", requiredTargets))
+    return requiredTargets
+end)
 
 spec:RegisterHook( "reset_precast", function()
     local form = GetShapeshiftForm()
@@ -607,10 +638,30 @@ spec:RegisterHook( "reset_precast", function()
             end
         end
     end
+
+    setCooldown("auto_attack", class.abilities.auto_attack.cooldown)
 end )
 
 -- Abilities
 spec:RegisterAbilities( {
+
+    auto_attack = {
+        id = 6603,
+        cast = 0,
+        cooldown = 9,
+        gcd = "off",
+
+        startsCombat = true,
+        texture = 135274,
+
+        usable = function()
+            return query_time - now >= 10
+        end,
+
+        handler = function()
+        end
+    },
+
     -- The warrior shouts, increasing attack power of all raid and party members within 30 yards by 550.  Lasts 2 min.
     battle_shout = {
         id = 6673,
@@ -1570,6 +1621,12 @@ spec:RegisterSetting("ww_min_enemies", 2, {
     softMax = 4,
     step = 1
 })
+spec:RegisterSetting("adaptive_ww_enabled", false, {
+    type = "toggle",
+    name = "Use Whirlwind DPR Calculation",
+    desc = "When enabled, recommendations will use Whirlwind over Bloodthirst based on real-time DPR calculations",
+    width = "full"
+})
 
 spec:RegisterSetting("ww_cd_diff", 1.5, {
     type = "range",
@@ -1695,7 +1752,7 @@ spec:RegisterOptions( {
 
 spec:RegisterPack( "Arms", 20250324.1, [[Hekili:TJvZUnUnq4NLCXibjv12joB3wBd0EQBoKEWPOhkwjXirBrekrvsQ44cd(S3Hu)rzrT2jiBVSlqqSm5mFZmFC0mJP)e)h8xfJKy)7NoE6SXxp9gVjZMDZ0p4VsUlh7Vkhf9eAd8qgkf()VYtf6f3rzOyTYcwbpc2WF1JfeQ8tz(p6aXXZMndKnhh5F)e)vjK4yCPKyrujQQW)cX5egxfMR)Gi3PcxR)6VJFIqjGv5S1ekyluKKWYexU4hffzXyEaINY4xrwVqGLss2gHxm(XI1RdQ2hNHEKIJhvUQNTwEcjeHZhqXu0lbgbgDwLU4xYzcCLUf5JKi(gS0JIFgtxoK9tjzbgju3167XyaceL8VGcbIewH0veOLYSztqu7j91h8hBdeHO0GYVgqjc5v6JWfrmgnMTntOTwxV)2RTvNxK1xB8l4Ocj2s3emIkt8YJKZxmD8rbGZKi9sQ7Ae1RcuqLemNrIakNtEcFvbq0mGd2efVyI2KAfEgdmboLGflMm68ZpRHWqXOCZ2)tbUaRjLAgRoK9actIOvW7XXPisMy5coKG7jjP4ajl4MP73FcyQjCACqI4I97p3jvmQbLQ4RhixCHloiIIrpF0GF5xLGF24xtWx6PV7eq1t2zi1znFtNIyrcFJMJyXaSNX8C2wm35UBtiC6wswSdsPTe72TMkZvBaU47bxzJEuCqmz96tIV6YXZM)LTZLomJBIQJ6UFJcLQ3nBJMSo5WRrRAZ3YmnS)jPMjWJk4CCMCz72YeogYHOXo95hPmwSwtTpBJW8po2TciPKIB7ZEMvVYoYH5cm)jOPn03plYX7ydQzLfgwT2K9MS3MJFtl92L5yu8o98fDyNfLMTvoViMq2rM5oSrdv6Vcwtaiygo7MjtMoXdghBlINPvXF1djeHE(lZGwQq9xsjcbSPkuuKNd5evdLTbERHtIuH6tRNWsHNkuf(jzPsCCelnfdd)edsKGGLHrm47SNTJKfrlG5)GTisOQ(pdf8d)bv4F)NcSgjCQ4ZxPcHKPOeBPrz7ATQkmJPb)LCkjIiPT4gRFsBCCRr)fvi47vM5HsiuHt(Sg0y7LMAz5Tek1kIQGuwlQHnmlLvKczpAdlOmPN6UpLQjm9cxdwWC0Pc1JcbK1D(RmpPNHUojcE(EZe5wjpM5LRss8)n)vrqCaepQCk42YAQWfqKOchPcp383zGBC0Qog5)YVYRcxciFq)pv4(9Nm(n9bvHxuQi4E96gOcNd2bMG0OYX6kyG6I6Fka8lkSNkWxc53VzEC5)B84SXVfESSJ6xrUS0aAs8AnjwVCt9eBEee6gTqNgZUWYB628TjwEFPBhDjFvu(bnLbE9429YbmRfd30GuZFZSj5oyEarF7Ge9XCPourVoWDzZEnVpj1TBbzEfYrJCR3wR3uhwFyWWQlOa1)XXTy0mbGgJFAqmG8PIClTSgdqR4hp5Yehc0bZjObBY4xhADF9S3mbMThyUaxK(I6MmhmFGdzN70UooP6muJVMYwvvg57nREZfy)EZQ3pUCGMv1jPDQGk1334Aubv2K86KKBCcN3IOXph8Me7(U1a3MObIZAq5G7u0SR9nZDqf4bUBX2G32RAsVoPiT3TnEGN68ohBnC)TBoySmFZr3b3pPTJ1p8V96YjMdkVi6MRX01ii1w4GBG0Hb6Ng2Xk1Pr1TPpfByPEZG9MCVCZVHaQO2l77r7AdioW(cbUUGlOjQqMahLR(Jc(UcZs()3p]] )
 
-spec:RegisterPack( "Fury", 20250324.1, [[Hekili:TJ1sVnUnq4Fl(IrcAQQTJDAtRLp0dfn5q6bNIEOyLeTeTfrOe1ssfhxyOF7Di1lQxXoPz7LDbwSXMCE(XHZ8z6m15rN1bij25HztMTyY1ZMBnDXI5tw4SwEib7Sob5)eAh8Hyue8))wk)GAXdugkqPSGLY9HnCwVjLqL3f7SPhlozX8BbztW(opm1zDijiaNljw4NB1mV)cX5egpZlr9hIewAR6R)o(jcLaELZ2sOGVq(sclw8D2)GinoaZDr8ig)kYwBbwkjX7ewb4nPB36wSpogTHIdgNVQLPwwcjKHlhqXi0lUAbgpQqx8ljmbUq30KXseFhwArXpJPRgY)rKyxTez3xh7byWeik5FafCfHSuzFzGsk9MvjrzK0vFiEmDGpIsDZ)QlLiKxPocT9zmAaBFSq5TMr)nxBQopnUR24xW(PsSHUHyevgAL4lxApBYjnaNjrQLYUVsuRcJcQeI5mIpa5CYt4RsbGMbyWo)a7PkxQu4zmGe4icwypD8fxmQcWqbOe92FofNIvGsjIvMYwBOmwGmKWfsloocrIfRS5q5TLKeHDLm35ZoE8mSOcUPbUHIlpE8IEbIXvwPi76yKlVSpeWNIrpFYuF1xGuFXK3sQNhNF4PFXNmRokRy(kU8Wac(QS(Wi)zpJ5jS9yEV7Uhsa6EsCqpqsDR1971DKl2OxdzahN2r)3bAZqZpWnGSD7zb2npGwS818YBpe6)oiksD)lENkZpttwPtPLRJLkG8SutNV(PCoowUQEBzihd1D0GHplvAQIytlS82j9RaskP46zYJmMR2qomxG5pbd4bocX(9CRCqnl8WWQvFbPQIV6uxp(VEzogfCqXfPb6yN72A5S8zczdzw2JpQGYXJ0UzlfKvB9r9Ey3yJ6dZ0eN1GnfqeOjcoF60ztTaQF7r8yLlDw)yirO46Pj1L5P(seriGnZ8ePjjmUSGa4o4MkN4N5PoTFclfwzEzE3jZvIJ9zrryGOvairicwgOZOiuwZJKe7ttbUMWwejmf5NHbmEFFM3F)NcSYs4iXNUkZdIF)qtPrXhQ9AMxmtz8xsOeFIKwB3a1Nuohx70FjZdI9c38yUjY8M(jLrdmxAMHN3tOuJmQWKYsr1OHEP40iO6t5ybLjTYU)UifGPw4AWd6J(mpfTlaSU3zT(tk(6LfHWNFqZ(3O4tZnVOiZ5xDw7d5ba8OCg31TsZ8SHmjZBCM3f6)nccJt2Ssl)R1WiZBfy3wZBZ8oE8STE1C3mVlZvecUoZFY8wc(b4QQv5uZH0M6YYF0b8Bxm5G4iHQ73nkU6)juCXK3dkMpb)lisM7afeETcclxUQxKjkccnxj05HR2grtZH91UPQxLY2lmdadqTviCZGHWh5zxFtIFlNFTifahsNYRV3WAa08hheMEdEPZW)MHzhEdNL6Mt)03)6HdHXv9Ynvj1pnys10OayF7Kwftkju242xR(rnYSsldgikfNo5SBY02sT4OOT2534xBTMxV7WhrV9aCs6d1Tlhq1IBspYUSx)wt3tPXOcNxXuPC1b4R0z7MSwAFeuIAQEb5n2(2OZ3zd)Vn68Jcjhy0zzbAJPws1RSUfLsLvfU9cXvbrVVDQooh89tBEtDG3qT8Ix)VKQExZ3JSvd9bEr16K3mQQkUoRmTZBS2ks79LwRDC3TRoymCF1rxRxL1mW6M(3CDo3D38NFV6XB7JquPhA9UR94GULHn8szzujXOZXhgQx9tm01Ej6Fnd0nTt13gZodioG(cbUSzlOjkvgchLR)Ju(Hu9so)7d]] )
+spec:RegisterPack( "Fury", 20250324.1, [[Hekili:TJ1sVnUnq4Fl(IrcAQQTtC2nT2(qpu0KdPhCk6HIvsmsJIimLOkjvCCrG(TVd1tkzjBNTz7LDbwSrMCEXV5f5yp1(b71(efyF)SjZMp5Yzxzn9MPF8Qz2Rv7sa71jeVnKNWpIjr4))BPID6f3X4eFnZsEQWd3WE9JPuM62y7h7rItUz(hqAtap77NAVoK67dfucsVcPM5(xeHGYfzUj6)qv4sb6F(7WgkJAVMrLkPwNcUIOO8y877Zpbqm5rg4B)R2R9qgbbLyVM4POpdoqmerbzM7Ym3PzUJZCpl)FJYCLGsrJFsAr8jj5e)pPqkGl5ukXC694CMpFBS1Jmo3xfsfsLLaIi0yuSRq5kqeYsrJahf35QzzUV(6jlDzipL57eII68cgrJtrepbkRqGWuHwjEQm3fOEMnPGLkjdVaEPQ(emkQZlGaeMwhcco1ZrQe0nOVkvco8GaNN881aOcDvNmkU6)juC(KVeu0JbKNHVIizHc6dcVudHvKXFgej8TGWevrIU60X5Lgw32Tor04QnBuZwefzBPX(Azp30ama5oMW1dAcVN(stt3Z3XNge8M8NTJfMJoTJP1VuZAa08ddctVbTesI05C4zRgdmnZAf(MyphA8sfciwLNp2qMkuayMaZ3i1VAt9H6JdEOAlueSVzsNGjnfAzCZHIFstm4IOumWrNzQ0moDYjZjiKGydiWkwKyVEt3MoCH)CP1o9UoFSvq2JPbbgBjaI)oRsw7GYOBPW6AO3YJlv9q7IE1BTRjNJrLkpGHCvRZrdec3Z2nHo9b5dHA6Abff6(ERZtSG)3BD(EHKNyRZQa0wDTu6BkgqszQdh4wBu(Go)YrMg73jPVyhRYDiIiUWcty820oZTTaIiV4usurIyPuGxs44XPqkLPPLWgdEgyDkO3rOyl9CQAo8Mw1HdU6ktFiINxQT1HTXs17lim6)Q9q5e2QYX(Bx7y6v97FiV(sdxnHXCk(HJ(w7f3D3P4jevrZYdFHObJ(AuJinEqTufgvDXidDCkSx)eJ8yVeb4XJWQROKYxalRl17A8gh8(derS2LyV(HqQu)mgEaLHPu6FerLsCtmyinjHluLVT5jS6GG6Hrnyp6nGsAL5M5ERQGPC1gbymb6ovHeCzeW1VvQ5js0ypwQVU(cqvy1QFo7Um3FmZ9V)tjOLeej)0fzUyddVqtQjX7A0AMBmxl8xsyupQI1ixF9xALdnk9xYCrBVunpuicS22N0c13CPzgAElLXmorLIuvrAoAKVuCAeEbaTILmUYk7UBJ0aMEHlR6cN5M)yqCtTZjhMR8RYFy5pzMgDbny5HllmEWsclow5GXJ6VqWyZ8JvdP)6caz31y77Nj23jyV09AlP3eDtf0n58cDe)Y6SsT2AB9xFPj7DYAk4UmBZG3M82flXoghtav5ByuvfPvnwqwA1e(cJgilNQvz7gTlNo(SZgD8MFJpuB1vl7CXKxF9eKy9fso)1xpRxGy8rBBE(59Hafnpp2rF1xHJ(8jVLJEHD(UF8l)Ym6OkI5B4Wddi4BY4dJZF9dT6D36xl1dKS0CMagtzPxbzahhxr)3bAttRCeaNey3z6jloKwE7Mq)5GvZzqFYprrU38ngp8OroiBMpaFvpJdzyFPMtTfBkHf3mPFgmgOrU)1OVAl66m(I9ZkhKtZ3V3lBnji7nsJXdmoJ2OZYc12zmgTOzrp6OgkhpQ9GlgpAGrwySrNHvKQcXx3S(psf7sZVoT9N)d]] )
 
 spec:RegisterPack( "Protection", 20241121.1, [[Hekili:1fzqVnkmqu4Fl5svR2k2cH2Q9qVuTxsoKwjx1EBkg7HGvbBl7Hnk7b)BVgilHnkrrkAa)EFE49Gu4nGj5ecBYUllpnnlnjnB59zpamAVfbMLl(IVnoO5TX)F1ziuqkJU)O9ngUShH305eXJbwzNQHwPHYZXnp)xrTwuaBsbwTskXrLOx0B26mvQMih(Wv4tSouyAl50pE6NLngJ0f3LBvvpTOSRQkjEa1GF6RnDusNnS(S(MjAW6LekQ5Ur6u)aLen4vs8XRo88ofvR0z3hwpbiARZJFQiS1p)LwZyg9h057h6JHLXyihy74oTsV1dSvTwJJqzOilum6nu0O8KpjSogcDuTXbSFJv)LlQJzl3JYx0ZBHqXhCNtzCHIRx9(naBW(qRIv8UgkoUzOL5hATP1fyOMx2Gs4zGIl4Cr)B9NRG67NdP1e1JcycxeRtXb2IqX5QNJ4NQYPl(sC(pxZW1BC5fnEs)fkUkuCshEe7yTp8bo(d((p]] )
 

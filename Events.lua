@@ -98,6 +98,40 @@ local function UnitSpecificOnEvent( self, event, unit, ... )
     end
 end
 
+local function GetBaseWeaponStats(slot)
+    ns.Tooltip:SetOwner( UIParent )
+    ns.Tooltip:SetInventoryItem("player", slot)
+    local minDmg, maxDmg, speed = nil, nil, nil
+    local i = 0
+    while( true ) do
+        i = i + 1
+        local ttLeftLine = _G[ "HekiliTooltipTextLeft" .. i ]
+        local ttRightLine = _G[ "HekiliTooltipTextRight" .. i ]
+        if not ttLeftLine and not ttRightLine then break end
+
+        local leftLine = ttLeftLine:GetText()
+        local rightLine = ttRightLine:GetText()
+        if leftLine then
+            if not minDmg and leftLine:find("Damage") then
+                minDmg, maxDmg = leftLine:match("(%d+)%s*-%s*(%d+)")
+                minDmg = tonumber(minDmg)
+                maxDmg = tonumber(maxDmg)
+            end
+        end
+        if rightLine then
+            if not speed then
+                speed = rightLine:match("Speed ([%d%.]+)")
+                speed = tonumber(speed)
+            end
+        end
+        if minDmg and maxDmg and speed then
+            break
+        end
+    end
+    ns.Tooltip:Hide()
+    return minDmg, maxDmg, speed
+end
+
 function ns.StartEventHandler()
     events:SetScript( "OnEvent", GenericOnEvent )
 
@@ -896,7 +930,15 @@ do
         end
 
         state.main_hand.size = 0
+        state.main_hand.damage.min = 0
+        state.main_hand.damage.avg = 0
+        state.main_hand.damage.max = 0
+        state.main_hand.speed = 0
         state.off_hand.size = 0
+        state.off_hand.damage.min = 0
+        state.off_hand.damage.avg = 0
+        state.off_hand.damage.max = 0
+        state.off_hand.speed = 0
         state.off_hand.shield = false
 
         for i = 1, 19 do
@@ -920,6 +962,11 @@ do
                         state.main_hand.size = 1
                         state.set_bonus.mainhand = 1
                     end
+                    local minDmg, maxDmg, speed = GetBaseWeaponStats( i )
+                    state.main_hand.damage.min = minDmg or 0
+                    state.main_hand.damage.avg = minDmg and maxDmg and ( minDmg + maxDmg ) / 2 or 0
+                    state.main_hand.damage.max = maxDmg or 0
+                    state.main_hand.speed = speed or 0
                 elseif i == 17 then
                     if equipLoc == "INVTYPE_2HWEAPON" then
                         state.off_hand.size = 2
@@ -932,6 +979,11 @@ do
                         state.off_hand.shield = true
                         state.set_bonus.shield = 1
                     end
+                    local minDmg, maxDmg, speed = GetBaseWeaponStats( i )
+                    state.off_hand.damage.min = minDmg or 0
+                    state.off_hand.damage.avg = minDmg and maxDmg and ( minDmg + maxDmg ) / 2 or 0
+                    state.off_hand.damage.max = maxDmg or 0
+                    state.off_hand.speed = speed or 0
                 end
 
                 -- Fire any/all GearHooks (may be expansion-driven).
