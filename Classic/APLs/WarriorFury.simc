@@ -6,6 +6,7 @@ actions+=/run_action_list,name=rotation
 
 actions.execute+=/heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_42|settings.adaptive_queueing_enabled&should_hs)|(target.health.pct<=20&settings.execute_queueing_enabled))
 actions.execute+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(target.health.pct<=20&settings.execute_queueing_enabled))
+actions.execute+=/bloodthirst,if=settings.adaptive_exec_enabled&bt_over_exec&target.time_to_die>2
 actions.execute+=/execute
 
 actions.rotation+=/heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_42|settings.adaptive_queueing_enabled&should_hs)|(target.health.pct<=20&settings.execute_queueing_enabled))
@@ -18,4 +19,4 @@ actions.rotation+=/hamstring,if=cooldown.bloodthirst.remains>=settings.hamstring
 actions.rotation+=/bloodrage,if=rage.current<90
 actions.rotation+=/battle_shout,if=!up
 actions.rotation+=/berserker_stance,use_off_gcd=1,if=!up
-actions.rotation+=/battle_stance,use_off_gcd=1,if=!up&settings.overpower_enabled&buff.overpower_ready.up&rage.current>=action.overpower.cost&rage.current<settings.overpower_threshold&!buff.flurry.up&!cooldown.bloodthirst.up&!cooldown.whirlwind.up
+actions.rotation+=/battle_stance,use_off_gcd=1,if=!up&settings.overpower_enabled&buff.overpower_ready.remains>1&rage.current>=action.overpower.cost&rage.current<settings.overpower_threshold&!buff.flurry.up&!cooldown.bloodthirst.up&!cooldown.whirlwind.up

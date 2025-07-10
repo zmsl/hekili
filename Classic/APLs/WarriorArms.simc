@@ -16,5 +16,5 @@ actions.rotation+=/mortal_strike
 actions.rotation+=/hamstring,if=cooldown.mortal_strike.remains>=settings.hamstring_cd_diff&cooldown.whirlwind.remains>=settings.hamstring_cd_diff&rage.current>hamstring_threshold
 actions.rotation+=/bloodrage,if=rage.current<90
 actions.rotation+=/battle_shout,if=!up
-actions.rotation+=/berserker_stance,if=!up
-actions.rotation+=/battle_stance,if=!up&settings.overpower_enabled&buff.overpower_ready.up&rage.current>=action.overpower.cost&rage.current<settings.overpower_threshold
+actions.rotation+=/berserker_stance,use_off_gcd=1,if=!up
+actions.rotation+=/battle_stance,use_off_gcd=1,if=!up&settings.overpower_enabled&buff.overpower_ready.up&rage.current>=action.overpower.cost&rage.current<settings.overpower_threshold
