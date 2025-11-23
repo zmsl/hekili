@@ -85,62 +85,84 @@ spec:RegisterResource( Enum.PowerType.Rage, {
 
 -- Talents
 spec:RegisterTalents( {
-    improved_heroic_strike = { 70, 3, 12282, 12663, 12664 },
-    deflection = { 71, 5, 16462, 16463, 16464, 16465, 16466 },
-    improved_rend = { 72, 3, 772, 6546, 6547, 6548, 11572, 11573, 11574, 12659 },
-    improved_charge = { 73, 2, 12285, 12697 },
-    tactical_mastery = { 74, 5, 12295, 12676, 12677, 12678, 12679 },
-    improved_thunder_clap = { 75, 3, 12287, 12665, 12666 },
-    improved_overpower = { 76, 2, 12290, 12963 },
-    anger_management = { 77, 1, 12296 },
-    deep_wounds = { 78, 3, 12834, 12849, 12867 },
-    two_handed_weapon_specialization = { 79, 5, 12163, 12711, 12712, 12713, 12714 },
-    impale = { 80, 2, 16493, 16494 },
-    axe_specialization = { 81, 5, 12785, 12700, 12781, 12783, 12784 },
-    sweeping_strikes = { 82, 1, 12292 },
-    mace_specialization = { 83, 5, 12704, 12284, 12701, 12702, 12703 },
-    sword_specialization = { 84, 5, 12815, 12281, 12812, 12813, 12814 },
-    polearm_specialization = { 85, 5, 12833, 12165, 12830, 12831, 12832 },
-    improved_hamstring = { 86, 3, 23695, 12289, 12668 },
-    mortal_strike = { 87, 1, 12294, 21551, 21552, 21553 },
-    booming_voice = { 88, 5, 12838, 12321, 12835, 12836, 12837 },
-    cruelty = { 89, 5, 12856, 12320, 12852, 12853, 12855 },
-    improved_demoralizing_shout = { 90, 5, 12879, 12324, 12876, 12877, 12878 },
-    unbridled_wrath = { 91, 5, 13002, 12322, 12999, 13000, 13001 },
-    improved_cleave = { 92, 3, 20496, 12329, 12950 },
-    piercing_howl = { 93, 1, 12323 },
-    blood_craze = { 94, 3, 16492, 16487, 16489 },
-    improved_battle_shout = { 95, 5, 12861, 12318, 12857, 12858, 12860 },
-    dual_wield_specialization = { 96, 5, 23588, 23584, 23585, 23586, 23587 },
-    improved_execute = { 97, 2, 20503, 20502 },
-    enrage = { 98, 5, 13048, 12317, 13045, 13046, 13047 },
-    improved_slam = { 99, 5, 20499, 12330, 12862, 20497, 20498 },
-    death_wish = { 100, 1, 12328 },
-    improved_intercept = { 101, 2, 20505, 20504 },
-    improved_berserker_rage = { 102, 2, 20501, 20500 },
-    flurry = { 103, 5, 12974, 12319, 12971, 12972, 12973 },
-    bloodthirst = { 104, 1, 23881, 23892, 23893, 23894 },
-    shield_specialization = { 105, 5, 12727, 12298, 12724, 12725, 12726 },
-    anticipation = { 106, 5, 12753, 12297, 12750, 12751, 12752 },
-    improved_bloodrage = { 107, 2, 12818, 12301 },
-    toughness = { 108, 5, 12764, 12299, 12761, 12762, 12763 },
-    iron_will = { 109, 5, 12962, 12300, 12959, 12960, 12961 },
-    last_stand = { 110, 1, 12975 },
-    improved_shield_block = { 111, 3, 12945, 12307, 12944 },
-    improved_revenge = { 112, 3, 12800, 12797, 12799 },
-    defiance = { 113, 5, 12792, 12303, 12788, 12789, 12791 },
-    improved_sunder_armor = { 114, 3, 12810, 12308, 12811 },
-    improved_disarm = { 115, 3, 12807, 12313, 12804 },
-    improved_taunt = { 116, 2, 12765, 12302 },
-    improved_shield_wall = { 117, 2, 12803, 12312 },
-    concussion_blow = { 118, 1, 12809 },
-    improved_shield_bash = { 119, 2, 12958, 12311 },
-    one_handed_weapon_specialization = { 120, 5, 16542, 16538, 16539, 16540, 16541 },
-    shield_slam = { 121, 1, 23922, 23923, 23924, 23925 },
+    anger_management                = { 137, 1, 12296, 13800, 13801, 13802, 13803 },
+    anticipation                    = { 138, 5, 12753, 12297, 12750, 12751, 13964 },
+    blood_craze                     = { 661, 3, 16492, 16487, 16489 },
+    blood_frenzy                    = { 1664, 2, 29836, 29859 },
+    bloodthirst                     = { 167, 1, 23881, 23892, 23893, 23894 },
+    booming_voice                   = { 158, 5, 12838, 12321, 12835, 12836 },
+    commanding_presence             = { 154, 5, 12318, 12857, 12858, 12860, 12861 },
+    concussion_blow                 = { 152, 1, 12809 },
+    cruelty                         = { 157, 5, 12856, 12320, 12852, 12853 },
+    death_wish                      = { 133, 1, 12328, 13863 },
+    deep_wounds                     = { 121, 3, 12834, 12849, 12867, 23925 },
+    defiance                        = { 144, 3, 12792, 12303, 12788, 12789, 14075 },
+    deflection                      = { 130, 5, 16462, 16463, 16464, 16465 },
+    devastate                       = { 1666, 1, 20243, 30016, 30022 },
+    dual_wield_specialization       = { 1581, 5, 23588, 23584, 23585, 23586 },
+    endless_rage                    = { 1661, 1, 29623 },
+    enrage                          = { 155, 5, 13048, 12317, 13045, 13046 },
+    flurry                          = { 156, 5, 12974, 12319, 12971, 12972 },
+    focused_rage                    = { 1660, 3, 29787, 29790, 29792 },
+    impale                          = { 662, 2, 16493, 16494 },
+    improved_berserker_rage         = { 1541, 2, 20501, 20500 },
+    improved_berserker_stance       = { 1658, 5, 20500, 20501 },
+    improved_bloodrage              = { 142, 2, 12818, 12301 },
+    improved_charge                 = { 126, 2, 12285, 12697 },
+    improved_cleave                 = { 166, 3, 20496, 12329, 12950 },
+    improved_defensive_stance       = { 1652, 3, 29593, 29594, 29595 },
+    improved_demoralizing_shout     = { 161, 5, 12879, 12324, 12876, 12877 },
+    improved_disarm                 = { 151, 3, 12807, 12313, 12804 },
+    improved_disciplines            = { 1662, 3, 29723, 29724, 29725 },
+    improved_execute                = { 1542, 2, 20503, 20502 },
+    improved_hamstring              = { 129, 3, 23695, 12289, 12668 },
+    improved_heroic_strike          = { 124, 3, 12282, 12663, 12664, 14141, 14142 },
+    improved_intercept              = { 134, 2, 20505, 20504, 13854 },
+    improved_mortal_strike          = { 1824, 5, 35446, 35448, 35449, 35450, 35451 },
+    improved_overpower              = { 131, 2, 12290, 12963 },
+    improved_rend                   = { 127, 3, 772, 6546, 6547, 6548 },
+    improved_revenge                = { 147, 3, 12800, 12797, 12799 },
+    improved_shield_bash            = { 149, 2, 12958, 12311 },
+    improved_shield_block           = { 145, 1, 12945, 12307, 12944 },
+    improved_shield_wall            = { 150, 2, 12803, 12312 },
+    improved_slam                   = { 168, 2, 20499, 12330, 12862, 20497 },
+    improved_sunder_armor           = { 146, 3, 12810, 12308, 12811 },
+    improved_taunt                  = { 143, 2, 12765, 12302, 13971 },
+    improved_thunder_clap           = { 128, 3, 12287, 12665, 12666, 14136, 14137 },
+    improved_whirlwind              = { 1655, 2, 29721, 29776 },
+    iron_will                       = { 641, 5, 12962, 12300, 12959, 12960 },
+    last_stand                      = { 153, 1, 12975 },
+    mace_specialization             = { 125, 5, 12704, 12284, 12701, 12702 },
+    mortal_strike                   = { 135, 1, 12294, 21551, 21552, 21553, 13845 },
+    onehanded_weapon_specialization = { 702, 5, 16538, 16539, 16540, 16541, 16542 },
+    piercing_howl                   = { 160, 1, 12323 },
+    poleaxe_specialization          = { 132, 5, 1329 },
+    precision                       = { 1657, 3, 29590, 29591, 29592 },
+    rampage                         = { 1659, 1, 29801, 30030, 30033 },
+    second_wind                     = { 1663, 2, 29834, 29838 },
+    shield_mastery                  = { 1654, 3, 29598, 29599, 29600 },
+    shield_slam                     = { 148, 1, 23922, 23923, 23924, 23925 },
+    shield_specialization           = { 1601, 5, 12727, 12298, 12724, 12725 },
+    sweeping_strikes                = { 165, 1, 12292 },
+    sword_specialization            = { 123, 5, 12815, 12281, 12812, 12813 },
+    tactical_mastery                = { 141, 3, 12295, 12676, 12677, 12678 },
+    toughness                       = { 140, 5, 12764, 12299, 12761, 12762 },
+    twohanded_weapon_specialization = { 136, 5, 13706, 13804, 13805, 13806, 13807 },
+    unbridled_wrath                 = { 159, 5, 13002, 12322, 12999, 13000 },
+    vitality                        = { 1653, 5, 29140, 29143, 29144, 29145, 29146 },
+    weapon_mastery                  = { 1543, 2, 20504, 20505 },
 } )
 
 -- Auras
 spec:RegisterAuras( {
+    anger_management = {
+        id = 13803,
+        copy = { 13802, 13801, 13800, 13709 },
+    },
+    anticipation = {
+        id = 13964,
+        copy = { 13963, 13962, 13961, 13960 },
+    },
     my_battle_shout = {
         duration = function() return 120 * ( 1 + talent.booming_voice.rank * 0.1 ) end,
         max_stack = 1,
@@ -180,6 +202,9 @@ spec:RegisterAuras( {
         duration = 3600,
         max_stack = 1,
     },
+    bloodthirst = {
+        id = 23894,
+    },
     -- Regenerates $o1% of your total Health over $d.
     blood_craze = {
         id = 16491,
@@ -194,12 +219,16 @@ spec:RegisterAuras( {
         duration = 10,
         tick_time = 1,
         max_stack = 1,
+        copy = { 2687 }
     },
     -- Taunted.
     challenging_shout = {
         id = 1161,
         duration = 6,
         max_stack = 1,
+    },
+    charge = {
+        id = 11578,
     },
     -- Stunned.
     charge_stun = {
@@ -208,6 +237,7 @@ spec:RegisterAuras( {
         max_stack = 1,
     },
     cleave = {
+        id = 20569,
         duration = function () return swings.mainhand_speed end,
         max_stack = 1,
     },
@@ -216,23 +246,36 @@ spec:RegisterAuras( {
         id = 12809,
         duration = 5,
         max_stack = 1,
+        copy = { 1784 }
     },
     -- Increases physical damage by $s1%.  Increases all damage taken by $s3%.
     death_wish = {
         id = 12328,
         duration = 30,
         max_stack = 1,
+        copy = { 13863, 13732 }
     },
     defensive_stance = {
         id = 71,
         duration = 3600,
         max_stack = 1,
     },
+    defiance = {
+        id = 14075,
+        copy = { 14074, 14073, 14072, 14057 },
+    },
+    deflection = {
+        id = 16515,
+        copy = { 16514, 16513 },
+    },
     deep_wound = {
         id = 23255,
         duration = 12,
         max_stack = 1,
-        copy = { 23255, 23256 }
+        copy = { 23255, 23256, 23922 }
+    },
+    demoralizing_shout = {
+        id = 11556,
     },
     -- Disarmed!
     disarm = {
@@ -247,6 +290,9 @@ spec:RegisterAuras( {
         max_stack = 1,
         copy = { 12880, 14201, 14202, 14203, 14204 },
     },
+    execute = {
+        id = 20662,
+    },
     -- Attack speed increased by $s1%.
     flurry = {
         id = 12966,
@@ -259,17 +305,71 @@ spec:RegisterAuras( {
         id = 1715,
         duration = 15,
         max_stack = 1,
+        copy = { 7373 }
     },
     heroic_strike = {
+        id = 25286,
         duration = function () return swings.mainhand_speed end,
         max_stack = 1,
+    },
+    improved_bloodrage = {
+        id = 13750,
+    },
+    improved_charge = {
+        id = 14159,
+        copy = { 14158 },
+    },
+    improved_disarm = {
+        id = 14183,
     },
     -- Immobilized.
     improved_hamstring = {
         id = 12668,
         duration = 5,
         max_stack = 1,
-        copy = { 12668, 12289 },
+        copy = { 12668, 12289, 14176, 14175, 14174 },
+    },
+    improved_heroic_strike = {
+        id = 14142,
+        copy = { 14141, 14140, 14139, 14138 },
+    },
+    improved_intercept = {
+        id = 13854,
+        copy = { 13853, 13713 },
+    },
+    improved_rend = {
+        id = 14169,
+        copy = { 14168 },
+    },
+    improved_shield_bash = {
+        id = 14149,
+        copy = { 14143 },
+    },
+    improved_shield_block = {
+        id = 13793,
+        copy = { 13792, 13741 },
+    },
+    improved_shield_wall = {
+        id = 16511,
+    },
+    improved_sunder_armor = {
+        id = 14094,
+        copy = { 14076 },
+    },
+    improved_taunt = {
+        id = 13971,
+        copy = { 13970, 13958 },
+    },
+    improved_revenge = {
+        id = 14080,
+        copy = { 14079 },
+    },
+    improved_thunder_clap = {
+        id = 14137,
+        copy = { 14136, 14135, 14132, 14128 },
+    },
+    intercept = {
+        id = 20617,
     },
     -- Stunned.
     intercept_stun = {
@@ -290,6 +390,10 @@ spec:RegisterAuras( {
         duration = 20,
         max_stack = 1,
     },
+    mace_specialization = {
+        id = 14161,
+        copy = { 14160, 14156 },
+    },
     -- Taunted.
     mocking_blow = {
         id = 694,
@@ -302,7 +406,10 @@ spec:RegisterAuras( {
         id = 12294,
         duration = 10,
         max_stack = 1,
-        copy = { 12294, 21551, 21552, 21553 },
+        copy = { 12294, 21551, 21552, 21553, 13845, 13844, 13843, 13832, 13705 },
+    },
+    overpower = {
+        id = 11585,
     },
     -- Allows the use of Overpower.
     overpower_ready = {
@@ -313,6 +420,22 @@ spec:RegisterAuras( {
     piercing_howl = {
         id = 12323,
         duration = 6,
+        max_stack = 1,
+    },
+    poleaxe_specialization = {
+        id = 1329,
+    },
+    pummel = {
+        id = 6554,
+    },
+    rampage = {
+        id = 29801,
+        duration = 30,
+        max_stack = 5,
+        copy = { 29801, 30030, 30033 },
+    },
+    rampage_ready = {
+        duration = 5,
         max_stack = 1,
     },
     -- Special ability attacks have an additional $s1% chance to critically hit but all damage taken is increased by $s2%.
@@ -335,6 +458,9 @@ spec:RegisterAuras( {
         duration = 15,
         max_stack = 1,
     },
+    revenge = {
+        id = 25288,
+    },
     revenge_stun = {
         id = 12798,
         duration = 3,
@@ -355,6 +481,10 @@ spec:RegisterAuras( {
         duration = function() return talent.improved_shield_block.enabled and 7 or 5 end,
         max_stack = 1,
     },
+    shield_slam = {
+        id = 14083,
+        copy = { 14082 },
+    },
     -- All damage taken reduced by $s1%.
     shield_wall = {
         id = 871,
@@ -366,6 +496,9 @@ spec:RegisterAuras( {
         id = 12328,
         duration = 30,
         max_stack = 5,
+    },
+    tactical_mastery = {
+        id = 13877,
     },
     -- Taunted.
     taunt = {
@@ -381,16 +514,46 @@ spec:RegisterAuras( {
         shared = "target",
         copy = { 6343, 8198, 8204, 8205, 11580, 11581, 13532 },
     },
+    toughness = {
+        id = 13789,
+        copy = { 13788, 13712 },
+    },
+    twohanded_weapon_specialization = {
+        id = 13807,
+        copy = { 13806, 13805, 13804, 13706 },
+    },
     -- Aliases / polybuffs.
     stance = {
         alias = { "battle_stance", "defensive_stance", "berserker_stance" },
         aliasMode = "first",
         aliasType = "buff",
     },
+    shield_bash = {
+        id = 1672,
+    },
+    shield_block = {
+        id = 2565,
+    },
+    shield_wall = {
+        id = 871,
+    },
     shout = {
         alias = { "my_battle_shout" },
         aliasMode = "first",
         aliasType = "buff"
+    },
+    slam = {
+        id = 11605,
+    },
+    sunder_armor = {
+        id = 11597,
+    },
+    sword_specialization = {
+        id = 14148,
+        copy = { 14144 },
+    },
+    whirlwind = {
+        id = 1680,
     },
     windfury = {
         id = 8512,
@@ -405,6 +568,8 @@ local enemy_dodged = 0
 local enemy_dodged_target
 local last_overpower = 0
 local last_overpower_target
+local last_crit = 0
+local last_rampage = 0
 
 local misses = {
     DODGE = true,
@@ -453,7 +618,11 @@ spec:RegisterEvent( "COMBAT_LOG_EVENT_UNFILTERED", function()
         if actionType == class.abilities.overpower.id then
             last_overpower = GetTime()
             last_overpower_target = destGUID
+        elseif actionType == class.abilities.rampage.id then
+            last_rampage = GetTime()
         end
+    elseif sourceGUID == state.GUID and critical and ( subtype == "SWING_DAMAGE" or subtype == "SPELL_DAMAGE" ) then
+        last_crit = GetTime()
     end
 end )
 
@@ -638,6 +807,11 @@ spec:RegisterHook( "reset_precast", function()
                 applyBuff( "revenge_usable", enemy_revenge_trigger + 5 - now )
             else
                 applyBuff( "revenge_usable" )
+            end
+        end
+        if IsSpellKnown( class.abilities.rampage.id ) then
+            if last_crit > 0 and query_time - last_crit < 5 and (last_rampage == 0 or last_crit > last_rampage) then
+                applyBuff( "rampage_ready", last_crit + 5 - now )
             end
         end
     end
@@ -1254,6 +1428,31 @@ spec:RegisterAbilities( {
         copy = { 6552, 6554 }
     },
 
+    -- Warrior goes on a rampage, increasing attack power by 30 and causing most successful melee attacks to increase attack power by an additional 30.  This effect will stack up to 5 times.  Lasts 30 sec.  This ability can only be used after scoring a critical hit.
+    rampage = {
+        id = 29801,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+        
+        spend = 20,
+        spendType = "rage",
+        
+        talent = "rampage",
+        startsCombat = true,
+        texture = 132352,
+        
+        usable = function ()
+            return buff.rampage_ready.up, "requires a recent critical hit"
+        end,
+        
+        handler = function ()
+            applyBuff( "rampage", nil, 5 )
+            removeBuff( "rampage_ready" )
+        end,
+
+        copy = { 29801, 30030, 30033 }
+    },
 
     -- Your next 3 special ability attacks have an additional 100% to critically hit but all damage taken is increased by 20%.  Lasts 12 sec.
     recklessness = {

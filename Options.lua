@@ -8637,7 +8637,7 @@ do
                     insert( pvptalents, { name = name, talent = tID, spell = sID } )
                 end
 
-            elseif Hekili.IsWrath() or Hekili.IsClassic() then
+            elseif Hekili.IsWrath() or Hekili.IsClassic() or Hekili.IsTBC() then
                 wipe( resources )
                 wipe( auras )
                 wipe( abilities )
@@ -8652,8 +8652,10 @@ do
 
                         local tToS = ns.WrathTalentToSpellID[ talentID ]
 
-                        for rank, spell in ipairs( ns.WrathTalentToSpellID[ talentID ] ) do
-                            EmbedSpellData( spell, key, true, rank )
+                        if tToS then
+                            for rank, spell in ipairs( tToS ) do
+                                EmbedSpellData( spell, key, true, rank )
+                            end
                         end
                     end
                 end
@@ -8849,7 +8851,7 @@ do
                                 for i, tal in ipairs( talents ) do
                                     append( tal.name .. " = { " .. ( tal.talent or "nil" ) .. ", " .. ( tal.spell or "nil" ) .. " }," )
                                 end
-                            elseif Hekili.IsWrath() or Hekili.IsClassic() then
+                            elseif Hekili.IsWrath() or Hekili.IsClassic() or Hekili.IsTBC() then
                                 local maxlength = 0
                                 skeletonHandler( listener, "PLAYER_TALENT_UPDATE" )
                                 table.sort( talents, function( a, b )
@@ -8858,13 +8860,19 @@ do
                                 end )
 
                                 for i, tal in ipairs( talents ) do
-                                    local fmt = "%-" .. maxlength .. "s = { %5d, %d"
-                                    for i = 1, #ns.WrathTalentToSpellID[ tal.talent ] do
-                                        fmt = fmt .. ", %5d"
-                                    end
-                                    fmt = fmt .. " },"
+                                    local tToS = ns.WrathTalentToSpellID[ tal.talent ]
+                                    if tToS then
+                                        local fmt = "%-" .. maxlength .. "s = { %5d, %d"
+                                        for i = 1, #tToS do
+                                            fmt = fmt .. ", %5d"
+                                        end
+                                        fmt = fmt .. " },"
 
-                                    append( format( fmt, tal.name, tal.talent, tal.ranks, unpack( ns.WrathTalentToSpellID[ tal.talent ] ) ) )
+                                        append( format( fmt, tal.name, tal.talent, tal.ranks, unpack( tToS ) ) )
+                                    else
+                                        -- TBC: No spell mapping available, just output talent ID and ranks
+                                        append( format( "%-" .. maxlength .. "s = { %5d, %d }, -- Spell IDs need to be added manually", tal.name, tal.talent, tal.ranks ) )
+                                    end
                                 end
                             else
 
