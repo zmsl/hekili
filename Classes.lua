@@ -2,7 +2,7 @@
 -- July 2014
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G.Hekili or _G[ addon ]
 
 local class = Hekili.Class
 local state = Hekili.State

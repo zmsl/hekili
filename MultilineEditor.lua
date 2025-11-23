@@ -2,7 +2,7 @@
 -- Revised MultiLineEditBox, to allow for my own tweaks.
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G.Hekili or _G[ addon ]
 
 local Type, Version = "HekiliCustomEditor", 4
 local AceGUI = LibStub and LibStub("AceGUI-3.0", true)

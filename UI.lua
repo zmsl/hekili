@@ -2,7 +2,7 @@
 -- Dynamic UI Elements
 
 local addon, ns = ...
-local Hekili = _G[addon]
+local Hekili = _G.Hekili or _G[addon]
 
 local class = Hekili.Class
 local state = Hekili.State
@@ -849,7 +849,7 @@ do
 
         -- These re-register flash frames in SpellFlash (after 0.5 - 1.0s).
         ACTIONBAR_HIDEGRID = 1,
-        LEARNED_SPELL_IN_TAB = 1,
+        --LEARNED_SPELL_IN_TAB = 1,
         CHARACTER_POINTS_CHANGED = 1,
         ACTIVE_TALENT_GROUP_CHANGED = 1,
         UPDATE_MACROS = 1,

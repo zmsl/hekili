@@ -33,6 +33,17 @@ Classic\Shaman.lua
 Classic\Warlock.lua
 Classic\Warrior.lua
 
+TBC\Classes.lua
+TBC\Druid.lua
+TBC\Hunter.lua
+TBC\Mage.lua
+TBC\Paladin.lua
+TBC\Priest.lua
+TBC\Rogue.lua
+TBC\Shaman.lua
+TBC\Warlock.lua
+TBC\Warrior.lua
+
 Targets.lua
 Options.lua
 UI.lua

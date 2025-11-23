@@ -1,0 +1,8 @@
+actions+=/kick,if=target.casting
+actions+=/slice_and_dice,if=buff.slice_and_dice.down&combo_points>=2
+actions+=/slice_and_dice,if=combo_points=5&buff.slice_and_dice.remains<3
+actions+=/adrenaline_rush,if=active_enemies>1&buff.blade_flurry.up|cooldown.blade_flurry.remains>10
+actions+=/blade_flurry,if=active_enemies>1
+actions+=/sinister_strike,if=combo_points<5&buff.slice_and_dice.remains>=3
+actions+=/eviscerate,if=combo_points>=5
+actions+=/sinister_strike

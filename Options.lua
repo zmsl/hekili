@@ -2,7 +2,7 @@
 -- Everything related to building/configuring options.
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G.Hekili or _G[ addon ]
 
 local class = Hekili.Class
 local scripts = Hekili.Scripts

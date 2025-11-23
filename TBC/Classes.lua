@@ -1,7 +1,7 @@
 local addon, ns = ...
 local Hekili = _G.Hekili or _G[ addon ]
 
-if not Hekili.IsClassic() then return end
+if not Hekili.IsTBC() then return end
 
 local class, state = Hekili.Class, Hekili.State
 

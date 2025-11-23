@@ -2,7 +2,7 @@
 -- Modified from For all Indents and Purposes, info below.
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G.Hekili or _G[ addon ]
 
 --[[ For all Indents and Purposes
 

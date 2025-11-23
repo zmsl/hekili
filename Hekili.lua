@@ -5,7 +5,19 @@ local addon, ns = ...
 local GetAddOnMetadata = GetAddOnMetadata or C_AddOns.GetAddOnMetadata
 Hekili = LibStub("AceAddon-3.0"):NewAddon( "Hekili", "AceConsole-3.0", "AceSerializer-3.0" )
 Hekili.Version = GetAddOnMetadata( "Hekili", "Version" )
-Hekili.Flavor = GetAddOnMetadata( "Hekili", "X-Flavor" ) or "Retail"
+
+-- Auto-detect flavor based on WOW_PROJECT_ID, fallback to TOC metadata
+if _G.WOW_PROJECT_ID == _G.WOW_PROJECT_MAINLINE then
+    Hekili.Flavor = "Retail"
+elseif _G.WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC then
+    Hekili.Flavor = "Wrath"
+elseif _G.WOW_PROJECT_ID == _G.WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
+    Hekili.Flavor = "TBC"
+elseif _G.WOW_PROJECT_ID == _G.WOW_PROJECT_CLASSIC then
+    Hekili.Flavor = "Classic"
+else
+    Hekili.Flavor = GetAddOnMetadata( "Hekili", "X-Flavor" ) or "Retail"
+end
 
 local format = string.format
 local insert, concat = table.insert, table.concat
@@ -24,6 +36,9 @@ Hekili.IsWrath = function()
 end
 Hekili.IsClassic = function()
     return Hekili.Flavor == "Classic"
+end
+Hekili.IsTBC = function()
+    return Hekili.Flavor == "TBC"
 end
 Hekili.IsDragonflight = function()
     return select( 4, GetBuildInfo() ) >= 100000
