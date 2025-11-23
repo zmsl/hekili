@@ -1,3 +1,6 @@
+actions.precombat+=/rampage,if=buff.rampage.remains<15&target.time_to_die>buff.rampage.remains
+actions.precombat+=/battle_shout,if=!up
+
 actions+=/sunder_armor,if=settings.debuff_sunder_enabled&debuff.sunder_armor.stack<settings.debuff_sunder_max_stack&!debuff.expose_armor.up&target.level>=settings.debuff_sunder_min_level
 actions+=/demoralizing_shout,if=settings.debuff_demoshout_enabled&!debuff.demoralizing_shout.up
 actions+=/call_action_list,name=cooldowns,if=target.level>=63
@@ -6,18 +9,18 @@ actions+=/run_action_list,name=rotation
 
 actions.execute+=/heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_42|settings.adaptive_queueing_enabled&should_hs)|(target.health.pct<=20&settings.execute_queueing_enabled))
 actions.execute+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(target.health.pct<=20&settings.execute_queueing_enabled))
-actions.execute+=/rampage,if=settings.rampage_execute_enabled&buff.rampage.remains<settings.rampage_refresh_threshold
+actions.execute+=/rampage,if=settings.rampage_execute_enabled&buff.rampage.remains<settings.rampage_refresh_threshold&target.time_to_die>buff.rampage.remains
 actions.execute+=/bloodthirst,if=settings.adaptive_exec_enabled&bt_over_exec&target.time_to_die>2
 actions.execute+=/execute
 
 actions.rotation+=/heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_42|settings.adaptive_queueing_enabled&should_hs)|(target.health.pct<=20&settings.execute_queueing_enabled))
 actions.rotation+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(target.health.pct<=20&settings.execute_queueing_enabled))
-actions.rotation+=/rampage,if=buff.rampage.remains<settings.rampage_refresh_threshold
+actions.rotation+=/rampage,if=buff.rampage.remains<settings.rampage_refresh_threshold&target.time_to_die>buff.rampage.remains
 actions.rotation+=/overpower
 actions.rotation+=/whirlwind,if=active_enemies>=ww_breakpoint
 actions.rotation+=/bloodthirst
 actions.rotation+=/whirlwind,if=!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=settings.ww_cd_diff|settings.adaptive_queueing_enabled&rage.time_to_55<cooldown.bloodthirst.remains&cooldown.bloodthirst.remains>=settings.ww_cd_diff
-actions.rotation+=/rampage,if=buff.rampage.stack<5
+actions.rotation+=/rampage,if=buff.rampage.stack<5&should_rampage&target.time_to_die>buff.rampage.remains
 actions.rotation+=/hamstring,if=cooldown.bloodthirst.remains>=settings.hamstring_cd_diff&cooldown.whirlwind.remains>=settings.hamstring_cd_diff&rage.current>hamstring_threshold
 actions.rotation+=/bloodrage,if=rage.current<90
 actions.rotation+=/battle_shout,if=!up
