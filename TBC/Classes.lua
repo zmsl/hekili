@@ -83,7 +83,7 @@ end
 
 
 function ns.updateGlyphs()
-    if Hekili.IsClassic() then return end
+    if Hekili.IsClassic() or Hekili.IsTBC() then return end
     
     for _, glyph in pairs( state.glyph ) do
         glyph.rank = 0
@@ -104,12 +104,14 @@ function ns.updateGlyphs()
     end
 end
 
-RegisterEvent( "GLYPH_ADDED", ns.updateGlyphs )
-RegisterEvent( "GLYPH_REMOVED", ns.updateGlyphs )
-RegisterEvent( "GLYPH_UPDATED", ns.updateGlyphs )
-RegisterEvent( "USE_GLYPH", ns.updateGlyphs )
-RegisterEvent( "PLAYER_LEVEL_UP", ns.updateGlyphs )
-RegisterEvent( "PLAYER_ENTERING_WORLD", ns.updateGlyphs )
+if not Hekili.IsClassic() and not Hekili.IsTBC() then
+    RegisterEvent( "GLYPH_ADDED", ns.updateGlyphs )
+    RegisterEvent( "GLYPH_REMOVED", ns.updateGlyphs )
+    RegisterEvent( "GLYPH_UPDATED", ns.updateGlyphs )
+    RegisterEvent( "USE_GLYPH", ns.updateGlyphs )
+    RegisterEvent( "PLAYER_LEVEL_UP", ns.updateGlyphs )
+    RegisterEvent( "PLAYER_ENTERING_WORLD", ns.updateGlyphs )
+end
 
 
 all = class.specs[ 0 ]

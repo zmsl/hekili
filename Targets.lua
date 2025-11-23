@@ -232,7 +232,7 @@ do
         end
     end
 
-    if not Hekili.IsDragonflight() and not Hekili.IsWrath() and not Hekili.IsClassic() then
+    if not Hekili.IsDragonflight() and not Hekili.IsWrath() and not Hekili.IsClassic() and not Hekili.IsTBC() then
         RegisterEvent( "CHROMIE_TIME_OPEN", ChromieCheck )
         RegisterEvent( "CHROMIE_TIME_CLOSE", ChromieCheck )
         RegisterEvent( "PLAYER_ENTERING_WORLD", ChromieCheck )
@@ -250,7 +250,7 @@ do
         end
     end
 
-    if not Hekili.IsWrath() and not Hekili.IsClassic() then
+    if not Hekili.IsWrath() and not Hekili.IsClassic() and not Hekili.IsTBC() then
         RegisterEvent( "UI_INFO_MESSAGE", CheckWarMode )
         RegisterEvent( "PLAYER_ENTERING_WORLD", CheckWarMode )
     end

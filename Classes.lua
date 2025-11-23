@@ -2651,7 +2651,7 @@ all:RegisterAbilities( {
         known = function () return true end,
     },
 
-    ancestral_call = not Hekili.IsWrath() and not Hekili.IsClassic() and {
+    ancestral_call = not Hekili.IsWrath() and not Hekili.IsClassic() and not Hekili.IsTBC() and {
         id = 274738,
         cast = 0,
         cooldown = 120,
@@ -2665,7 +2665,7 @@ all:RegisterAbilities( {
         end,
     } or nil,
 
-    arcane_pulse = not Hekili.IsWrath() and not Hekili.IsClassic() and {
+    arcane_pulse = not Hekili.IsWrath() and not Hekili.IsClassic() and not Hekili.IsTBC() and {
         id = 260364,
         cast = 0,
         cooldown = 180,
@@ -2693,7 +2693,7 @@ all:RegisterAbilities( {
         end,
     },
 
-    hyper_organic_light_originator = not Hekili.IsWrath() and not Hekili.IsClassic() and {
+    hyper_organic_light_originator = not Hekili.IsWrath() and not Hekili.IsClassic() and not Hekili.IsTBC() and {
         id = 312924,
         cast = 0,
         cooldown = 180,
@@ -2706,7 +2706,7 @@ all:RegisterAbilities( {
         end
     } or nil,
 
-    bag_of_tricks = not Hekili.IsWrath() and not Hekili.IsClassic() and {
+    bag_of_tricks = not Hekili.IsWrath() and not Hekili.IsClassic() and not Hekili.IsTBC() and {
         id = 312411,
         cast = 0,
         cooldown = 90,
@@ -2715,7 +2715,7 @@ all:RegisterAbilities( {
         toggle = "cooldowns",
     } or nil,
 
-    haymaker = not Hekili.IsWrath() and not Hekili.IsClassic() and {
+    haymaker = not Hekili.IsWrath() and not Hekili.IsClassic() and not Hekili.IsTBC() and {
         id = 287712,
         cast = 1,
         cooldown = 150,
@@ -2799,7 +2799,7 @@ all:RegisterAbilities( {
         end,
     }, ]]
 
-    lights_judgment = not Hekili.IsWrath() and not Hekili.IsClassic() and {
+    lights_judgment = not Hekili.IsWrath() and not Hekili.IsClassic() and not Hekili.IsTBC() and {
         id = 255647,
         cast = 0,
         cooldown = 150,
@@ -2837,7 +2837,7 @@ all:RegisterAbilities( {
     },
 
 
-    fireblood = not Hekili.IsWrath() and not Hekili.IsClassic() and {
+    fireblood = not Hekili.IsWrath() and not Hekili.IsClassic() and not Hekili.IsTBC() and {
         id = 265221,
         cast = 0,
         cooldown = 120,
@@ -4299,7 +4299,7 @@ end
 
 -- Mechagon
 do
-    if not Hekili.IsWrath() and not Hekili.IsClassic() then
+    if not Hekili.IsWrath() and not Hekili.IsClassic() and not Hekili.IsTBC() then
         all:RegisterGear( "pocketsized_computation_device", 167555 )
         all:RegisterGear( "cyclotronic_blast", 167672 )
         all:RegisterGear( "harmonic_dematerializer", 167677 )
@@ -6926,7 +6926,7 @@ Hekili.SpecChangeHistory = {}
 function Hekili:SpecializationChanged()
     local currentSpec, currentID, _, currentClass
 
-    if Hekili.IsWrath() or Hekili.IsClassic() then
+    if Hekili.IsWrath() or Hekili.IsClassic() or Hekili.IsTBC() then
         currentSpec = 1
         _, currentClass, currentID = UnitClass( "player" )
     else
@@ -6981,7 +6981,7 @@ function Hekili:SpecializationChanged()
 
     local specs = { 0 }
 
-    if Hekili.IsWrath() or Hekili.IsClassic() then
+    if Hekili.IsWrath() or Hekili.IsClassic() or Hekili.IsTBC() then
         specs[ 2 ] = currentID
         state.spec.id = currentID
         state.spec.name = currentClass
@@ -7265,7 +7265,7 @@ end
 do
     RegisterEvent( "PLAYER_ENTERING_WORLD", function( event, login, reload )
         if login or reload then
-            if Hekili.IsWrath() or Hekili.IsClassic() then
+            if Hekili.IsWrath() or Hekili.IsClassic() or Hekili.IsTBC() then
                 if state.spec.id ~= select( 3, UnitClass( "player" ) ) then Hekili:SpecializationChanged() end
             else
                 local currentSpec = GetSpecialization()

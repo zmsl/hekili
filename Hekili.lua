@@ -6,7 +6,8 @@ local GetAddOnMetadata = GetAddOnMetadata or C_AddOns.GetAddOnMetadata
 Hekili = LibStub("AceAddon-3.0"):NewAddon( "Hekili", "AceConsole-3.0", "AceSerializer-3.0" )
 Hekili.Version = GetAddOnMetadata( "Hekili", "Version" )
 
--- Auto-detect flavor based on WOW_PROJECT_ID, fallback to TOC metadata
+local interfaceVersion = select(4, GetBuildInfo())
+
 if _G.WOW_PROJECT_ID == _G.WOW_PROJECT_MAINLINE then
     Hekili.Flavor = "Retail"
 elseif _G.WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC then
@@ -14,9 +15,23 @@ elseif _G.WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC then
 elseif _G.WOW_PROJECT_ID == _G.WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
     Hekili.Flavor = "TBC"
 elseif _G.WOW_PROJECT_ID == _G.WOW_PROJECT_CLASSIC then
-    Hekili.Flavor = "Classic"
+    if interfaceVersion >= 20000 and interfaceVersion < 30000 then
+        Hekili.Flavor = "TBC"
+    else
+        Hekili.Flavor = "Classic"
+    end
 else
-    Hekili.Flavor = GetAddOnMetadata( "Hekili", "X-Flavor" ) or "Retail"
+    if interfaceVersion >= 100000 then
+        Hekili.Flavor = "Retail"
+    elseif interfaceVersion >= 30000 and interfaceVersion < 40000 then
+        Hekili.Flavor = "Wrath"
+    elseif interfaceVersion >= 20000 and interfaceVersion < 30000 then
+        Hekili.Flavor = "TBC"
+    elseif interfaceVersion >= 10000 and interfaceVersion < 20000 then
+        Hekili.Flavor = "Classic"
+    else
+        Hekili.Flavor = GetAddOnMetadata( "Hekili", "X-Flavor" ) or "Retail"
+    end
 end
 
 local format = string.format

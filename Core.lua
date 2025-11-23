@@ -70,10 +70,12 @@ function Hekili:OnInitialize()
     self.Options.args.profiles = LibStub( "AceDBOptions-3.0" ):GetOptionsTable( self.DB )
 
     -- Reimplement LibDualSpec; some folks want different layouts w/ specs of the same class.
-    if not Hekili.IsClassic() then
-        local LDS = LibStub( "LibDualSpec-1.0" )
-        LDS:EnhanceDatabase( self.DB, "Hekili" )
-        LDS:EnhanceOptions( self.Options.args.profiles, self.DB )
+    if not Hekili.IsClassic() and not Hekili.IsTBC() then
+        local ok, LDS = pcall(LibStub, "LibDualSpec-1.0")
+        if ok and LDS then
+            LDS:EnhanceDatabase( self.DB, "Hekili" )
+            LDS:EnhanceOptions( self.Options.args.profiles, self.DB )
+        end
     end
 
     self.DB.RegisterCallback( self, "OnProfileChanged", "TotalRefresh" )
