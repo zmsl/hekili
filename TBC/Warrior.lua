@@ -432,7 +432,7 @@ spec:RegisterAuras( {
         id = 29801,
         duration = 30,
         max_stack = 5,
-        copy = { 29801, 30030, 30033 },
+        copy = { 30029, 30030, 30031, 30032, 30033 },
     },
     rampage_ready = {
         duration = 5,
@@ -751,7 +751,7 @@ spec:RegisterStateExpr( "ww_breakpoint", function()
     end
 
     local ap = stat.attack_power
-    local avgWeaponDamage = main_hand.damage.avg
+    local avgWeaponDamage = main_hand.damage.avg + off_hand.damage.avg
     local speed = main_hand.speed
 
     local bt_cost = action.bloodthirst.cost
@@ -782,7 +782,9 @@ local rampage_events = {
     { time = 0, spend = 0, name = "" },
     { time = 0, spend = 0, name = "" }
 }
-spec:RegisterStateExpr( "should_rampage", function()    
+spec:RegisterStateExpr( "should_rampage", function()
+    Hekili:Debug("Checking if we should rampage at rage %.1f", rage.current)
+    
     local has_ms = IsSpellKnown( class.abilities.mortal_strike.id )
     local primary_cd = has_ms and cooldown.mortal_strike.remains or cooldown.bloodthirst.remains
     local primary_cost = has_ms and action.mortal_strike.cost or action.bloodthirst.cost
@@ -790,24 +792,37 @@ spec:RegisterStateExpr( "should_rampage", function()
     local ww_cd = cooldown.whirlwind.remains
     local rampage_gcd = action.rampage.gcd
     
-    local will_clip_primary = primary_cd <= rampage_gcd
-    local will_clip_ww = ww_cd <= rampage_gcd
-    if will_clip_primary or will_clip_ww then
+    Hekili:Debug("Primary CD: %.2f, WW CD: %.2f, Rampage GCD: %.2f", primary_cd, ww_cd, rampage_gcd)
+    
+    if primary_cd <= rampage_gcd then
+        Hekili:Debug("Primary is ready or would clip (CD %.2f <= GCD %.2f) - don't rampage", primary_cd, rampage_gcd)
+        return false
+    end
+    
+    if ww_cd <= rampage_gcd then
+        Hekili:Debug("WW is ready or would clip (CD %.2f <= GCD %.2f) - don't rampage", ww_cd, rampage_gcd)
         return false
     end
 
     local rampage_cost = action.rampage.cost or 20
     local ww_cost = action.whirlwind.cost or 25
     
-    rampage_events[1].time = query_time + rampage_gcd
+    rampage_events[1].time = query_time
     rampage_events[1].spend = rampage_cost
+    rampage_events[1].name = "Rampage"
     rampage_events[2].time = query_time + primary_cd
     rampage_events[2].spend = primary_cost
     rampage_events[2].name = has_ms and "Mortal Strike" or "Bloodthirst"
     rampage_events[3].time = query_time + ww_cd
     rampage_events[3].spend = ww_cost
+    rampage_events[3].name = "Whirlwind"
     
     table.sort(rampage_events, function(a, b) return a.time < b.time end)
+    
+    Hekili:Debug("Event timeline:")
+    for i, event in ipairs(rampage_events) do
+        Hekili:Debug("  %d. %s at %.2f for %d rage", i, event.name, event.time, event.spend)
+    end
     
     local spent_rage = 0
     for i, event in ipairs(rampage_events) do
@@ -818,12 +833,17 @@ spec:RegisterStateExpr( "should_rampage", function()
             local required_rage = next_event.spend + spent_rage
             local time_to_rage = query_time + state:TimeToResource(rage, required_rage)
             
+            Hekili:Debug("  After %s: spent=%d, need %d for %s, will have rage at %.2f, event at %.2f", 
+                event.name, spent_rage, required_rage, next_event.name, time_to_rage, next_event.time)
+            
             if time_to_rage > next_event.time then
+                Hekili:Debug("  Won't have rage in time - don't rampage")
                 return false
             end
         end
     end
     
+    Hekili:Debug("Safe to rampage!")
     return true
 end)
 
@@ -1868,6 +1888,31 @@ spec:RegisterSetting("execute_queueing_enabled", true, {
     width = "full"
 })
 
+spec:RegisterSetting("rampage_execute_enabled", false, {
+    type = "toggle",
+    name = "Use Rampage During Execute",
+    desc = "When enabled, Rampage will be recommended during the execute phase when the buff needs refreshing",
+    width = "full"
+})
+spec:RegisterSetting("rampage_emergency_threshold", 5, {
+    type = "range",
+    name = "Rampage Emergency Threshold",
+    desc = "Use Rampage as first priority when the buff has less than this many seconds remaining",
+    width = "full",
+    min = 0,
+    softMax = 30,
+    step = 1
+})
+spec:RegisterSetting("rampage_refresh_threshold", 15, {
+    type = "range",
+    name = "Rampage Refresh Threshold",
+    desc = "Refresh Rampage when the buff has less than this many seconds remaining",
+    width = "full",
+    min = 0,
+    softMax = 30,
+    step = 1
+})
+
 spec:RegisterSetting("ww_min_enemies", 2, {
     type = "range",
     name = "Minimum Enemies For Whirlwind",
@@ -2008,7 +2053,7 @@ spec:RegisterOptions( {
 
 spec:RegisterPack( "Arms", 20250710.1, [[Hekili:TJ1wVTUnm4Fl9LIw0oVCPxw3scW2tR9HUhsh2ddhBRyRelu5ltsUPziq)2hL8nzB5M0IE2lNdqrQJe5hj)enjJCh7(K7YqKa7(4KrtUE0TJh5aFm96BDxk2LHDxMHcEgTbEibfdF(RSyUAXD0uuOszEAola2WD5QCcvCFI7QwioDYvoJbXYWbUpcpercdXfcH5bfak9)leJrszs)m1)iIDs)1QV(74Njucyqw6Acfmdkqqst4xm)h55jHyMhIfNYUKSEohleKKnCNq8Q81R9k3hNGwrXHNwSQJPwoCbeCZgqXy0REAbo9KsDXVMLYXL6MNDQaX2Gfou8ly6IHSFmjXtlH8HgFpedqGOK)fuWJhLMlSfbkP0BwhevEsF9b)X0abik1R4REucxCP60BEqAknmDBcxzT2E)ntnvNLN0xB8R4GCb2q3imIkICYceZMpz0bbGLkqQLKpulQtjOGkrywkjaOCg5z8L5arNcCWMGW5JvMuPWlyGjWXemF(4tp7StQjmuiktV9)KJZXksPIXQczhGWeiAj8omCmIKWxmNb52ocsm2tK6D1K97pcmveon0lIF((9NzLkoTgLY4RhiNFUnoiGIrVCWGFXxLG)6rVNGVWt)0jGYNmZqQYA(MofXGe(gnhXGbsFbZYs3Izw3DBeHr3sscTqknLy3UvxzUCdWf)m4kt0dc9cjRxFu8vBo(6zVTDUWIzStuTu3(BuOy1UjBuK1rhE1Avz(gMPM9pk10bEqoJHtelA2weXWqoen0QpVIMMgQ0u5ZMim7Ur2vajeuCtF2tm6v2somJJzpdnTH((jbwEhBqnlTWWQ1KSxN9wF8RBP3SmdJc3PMVOf7mVWSnY5eKYfTKzMfButLUlH14acTNlBlILOuXD5treUA(l9GwsF1xIjCoSP0NNNLb5eLdLTbERHrcK(QtRNXcUJ0x6FVOqjgoinogdd)ecseHGLHrmy7mNTJKeqZH5)GTicOQ(pdf89)bP)F)NCScjCm)lxk9HKPGitPrj7ASQ0pjvb(RzusarqBWnu9KY44gJ(lsFW3lnZtfqi9h)ffOHMlnXWYBjuQrevcPOsunBOxkjpgYEugMttfoYhUpwryQfMcwqF0j9vJcbK1dUl1pPgFUkjcE(r9W4LjfU)M7sJ8i9OZbqCaepQyk4MYAs)5qKi9pv6FM(Vta34GvD0Y)2VYl9xai3P)N0F)(Jg)6(Gs)ZlueCVEDdK(Za7atqQv5qDf0qDE1pfa(ffMtf4kG87pmpU4)nE86rFeESOJ6xrUSWaksCQIeRwUUEIjVccDvhM(ny25gEt7MV1XYNlDBPl57IY70ug41dB3lgWSgmCDdsf)DTjj3cZoe9nds0hYLArf96a3Mn718(Ou3SfK(vilnYnEBTAtvyD7GHvBqbQ)UrnyupbGcJFAqmG8P8mdTmgdqP4DhDzIUa1zobfyJh9(qR9RN9MjqV9aZfyJ0Nx1KPZ8bwKDMv7A5KQ1qnUkkBzzzKV3S6dxG97nR(84YbAwvLK2QcQqDFJRr5uHTK3gsU2jSElIA)CWBsS97wdCBIAioPgLo3POExZBMRtf4bUBXMG30RSLEnCK272g74PwVZXgd3F76dgdZxF015(jnDS(H)ntlMy2R4oORVgtBJGuzHo3aPfd0pnSLvQsJQAtFm2Wq96b715Ez6FdburTx23kZAdigW(CoUQGlOjkxebhLl)JC2UC9sU)3p]] )
 
-spec:RegisterPack( "Fury", 20251123.1, [[Hekili:TNvsVnUnu4Fl5IHdAQQLtCMMwBFOhkAYHPh0u0dfJKOLOJic1sjPIJlm0V9(i1gLeLTtAMEzgGGeBY36hFBm0129tUoHib29JZNnFHT98RTS)WI7MDTRJyFg21jdf8e6r4djOy43)AoBVCX90uuOKzEAola2W1ztoHkUpXDJrjcuMHdC)OTRtejmexshMhukZc))eXyKuwHFM8pebS0w5x)n8tekb0jlDlHcAcfiiPjCRmgoinEds8DR(bgkodSYRiBxTjF7wRQVBXWXiscFP9Ijce7rSWsqIXEIuVqcETjslEWK8HFlOypEuAUqQKlYZkEOHuGaEEsiM5HyXPmjbCSqqsEKBfILAXRAFCcAdfhoPCvlDUS4caQxocJXOx8uem5IkEXVKLYXv8MNv7Fu8Zy66X0FmjXtrHUThIbrGOK)byO1f7lbjvQnBCIAlzi)ws4Pvbbik1R8REucxCLmwAvqAknmDxcxQTUw)TxRZolpzi34xWb5cSgVryevezLfiwUA(StkawQajxs7C0QsOalrywkjaGCg5j8v5aqNcyWJbHRSLQuYWZyajWXemFL9KPtVObWqHOm12)DoohlbLAeR2LT2qttdfregxuh4TEftggwhFEZ8dhodjkHBAOxe)YdhMAeiM0iLkVBGqU8stiqafJE(KU(6VaU(IzVgxV0oF3DFTkknsOAnVAjvBjgl5mGlgEldZJ8erY)aOXRVKuR5PHIDmXg4ssARbk8sFww(bw0KwNBsfvFsp)OoNPl(m9n6)ho0HXY6FlQpxRw(YxpkPzLFTMgRbbFvMhR5)Ya)S0DyMXD3boaDhjj0aKSA3oVnmm6PSusIWi7AGWPf))D4TraGLfecPcB3EwqC3JLflpMwE9MG5mpuSmRl5rPNFMISHNAj3Alna5zXMYFdYzmCIyD72nvEg)SKvvttxclVBMzgmnuOj6WmoM9eu)fkXLeyixCuoR0W4S1Mw0eN3TTu7YqKC4(g4ZUliTQu7TKBfKYfDOzPbv12l7cL22sbA3lhh9cJN5D2O9mnpZ1bKjhSa9Rn46SdXsKQ015treU8UbQlbu4l)smHZHnl855zzPmr1fgEeYFzKGcF5H(tyb3QWVW)ErjtQH6JXW0WHafriyzyMt5fqAV3bjjGMd3nb2IiGwi)e0d0)7l8)R)GJLschZ)8vf(G9hePtnkzFRwl8tsLc)LmkjGiOTYnu(jPYXTk9Nl8bBVsnFQuef(2Fwk0q9LMRP5DekvZJQePOMufAOwkjpgccLkMttfwfpCFSeWKlCdOb1rFHVC2yaSEW1r9j5T7QJfHp)r1DfRITC)fxNaWUbGg56mTW3yhz)LGcp5yaf(ho0taQrbuSVOWFciKoJeu4FPA1Hdgu4V2SPuFRrWJk3WvabAJ6qDBeu4VcokuQCQ6Nl0CRrl6QO)yf(aJfKBVPfkbJZu6ntnOqejJtBqL2UNaoc6bUrKILt1fvjQlBXRotq56OvdsgraO41NnkU()juCXS3ckwo)XxqKSubMGWBKqynznfx1rvGOfNpodgzNrxAfEtjxPeVvxTAqBpf)Hrv875jOP5kEnNI9gXrv844A9TAwJGM)4OW0RqldgLPRzoykOZID9M4QSqdtePLWxVP0PUBuNQRqbW(Uz9cMyvLzTNDSaizR)g20gOsX54TC6ZzVrSmLLzpE9EL06MvpyCk12hBKkTcC9q8v19y7nELbAxA0e06vorv4S7Ww1RoYixd2U7Gx9r)XaqzDHYsDhFAGV1888BEE(JG8TMNJ08C85pgm6zV)VDTz0V1bxFhgc9MtB(g)F6vA8A)F9oM1m3CF(6PkQ3Ro9Ut)FH8zA2IYPIJN23yUgFXdL1n6RE0fWh5LpQlJz(9p0D)Yx4OBRXrEhKwNx3QoEQzFzo4Lr6zPgFFKwfpC7Jhwp0jV9ATeLEV1s5L58kF9UMNC54rEJM7Qfb39jv6OL6WiddTEoS3CNtvSxZRWD8OVrtJTx8UKMEIzhgDggLpGYfrqqLZVNZ2NRwY9F)d]] )
+spec:RegisterPack( "Fury", 20251123.1, [[Hekili:TJvtVnUnt4Fl(IGnAQQLt82U912h6HIU5W2dEl6HxSsIrIoIWuIQKuXXfg63EhQpPKPKD2M0l7cSyJSiNVE4mpC0464(j3THij29JlMVyPJZI7Sx4Sy(D35UvEmf7UnffSh9i8qckg()FnJFu9YJugkujSGLXdGfC3(qgHk)qI7dM14TWEtXbUF0XDBejmexUtSiOuR5()jIZjmEUFQ6pej8QDQF(B49ekXDlLiKcLn5mjssyjWZFSicWjOhO4q3FXDBaiiMtqUBNM7pj3)HSD7S5O4uiiSZsZ9pDk3FQH3BD(R54yejrK7Vk3xGLssYJI6f9WXy(J4KGJEYioweXOHLkFavS2Go44Dkr11a4gWtz0qVQnL7pR(FWAseyuPTKeJ9KmVqcS(gZ20DlkOaL2wTGReotgeUuB(jiSsWXem4WG)6uJkLqzJ7JcrPfB(VYWzy4vEvASy)bmiqyhsSFGYyHYicxiBXHnGE5kVSoeUBrjSDLAVcCIefis1HzfQeHruzKDAGSeVxmVuKAnJFghKjnPyf(2IxryoJe4jKCYEi1otG9y7259yqOkFdqXBVAuCZ)rO4Y5FjOyafJEc)gIKLgWeeENccR3g7jmpLDaZ1rvytlVECgCYdh8EGJr7tzKezRYpayh9ajjuPX3PBwnOTNH)Xbn8R5jyJIappiekM3T7fDk2ndyzbp14w9l1Tgan)PbHPxGvIqXQkni2AWaD3SXGViXlGMGmohNilQcB3wdzRwbF9IQG69dguDvka2VFEVKjEfnRZ8XsGYs1edjLuSNQGuwi5WxO1xsmxG57XCGOcLeySkZzy((cT1TQUPmStwwXDlTlbvyHh1olQj46H4WruPJ2kQDatinS3vgDHU3jwFt(oki1X6lSNmq6SHLBtJmH(dbGkEHsQUV1RX3614T4gYV1RXRfsEHEnmcHNhckR1L(t6PiLkwySYIfM7ROUlM61QPt60VHu9Hq7qzu540mnUBiwvf6jYsc7XwxUID1kiEmJBd0Bb77YS0vbXON9Q2ujTzLwWpNYa0SulvexvHpf)eM27Q4EkLK4vSR2Gx3RgNHOVodXXSI7i7eSTEQADoIs(BvcsXg7WZF(YJxADEq(UB1Y0quQx5p8uFuA5NM6v(fY1ftIXZ8gm5xJknlzqRuNgzOj5Rr8MVGUi3lLJdyXWDHJN9n49volFH8)J3duHpbLCc1I1tr4wBhO5teprLv4U9treHAqbSDeku)P(rmriGfH8XS0ugxwn9a4EtWOqPRQbV9yPWo3p3)dYsHkI8ymKwczuYie8A4mxnnI2HqqscOzHkgwmrc81)C(95(FFU)))peyLMWXIpFd85hrKGi9DJso2A1C)eMs5pNsjbejTvVHQNugh3A0)xUp47vM5tLQaW5pRuAO(RwOz5dekvlIQuPSERfOrXRsYIHMhvgwqzs787)qScWuV4U622Y9lg3cSOk)OaMRpWe2njmF36FO6a)gYU1Msqw5Sm)EtYPFOReEcWVCFZwHnOtwO2W4KFwds8T6sKEwtmt3zPZcSzi73qZP77NZ3ykcoJuRXtmsNPBG(uq3OQRx3W9OSwxV)D3QlEpUHsPR4u0KTLDA1A4A5lPGAwfTZX6BV7MOmDsVwIpDAAV3yn1y2010A8PtgfD9LBj2QB7WZMnZ68B73yKh0qa3P1UB0AlzTJce62(2AhRPtNC5wQSgRzTnR71U7PtxHgBAZDgCmy8K36InJnBMjeOSLSlf6BEdc9LZFjHEPF(Qh(AUzNYFJnBAP3OPP0UfMmr1t6vC1vHF9uYPfXFTwZPbbFvw0Pf)nJqY4QnZbYaKSUZeKnkUgiCz1)VhEBuq7OyVkiU3KHxnMvE5UG5kV6zOQI8RuLNn7wRHh77OIPpqXngg17WNL8k(rDnS69ZnlGPwwnTVEtM98AXbLuFEKgfRTS4SP1AvWsoWKAH69oG06sR3B6SD2ZkdMQL3U8(KM5XAnzGjXQTqVzWMjJyC3T)Eg)ywXh95(pp]] )
 
 spec:RegisterPack( "Protection", 20241121.1, [[Hekili:1fzqVnkmqu4Fl5svR2k2cH2Q9qVuTxsoKwjx1EBkg7HGvbBl7Hnk7b)BVgilHnkrrkAa)EFE49Gu4nGj5ecBYUllpnnlnjnB59zpamAVfbMLl(IVnoO5TX)F1ziuqkJU)O9ngUShH305eXJbwzNQHwPHYZXnp)xrTwuaBsbwTskXrLOx0B26mvQMih(Wv4tSouyAl50pE6NLngJ0f3LBvvpTOSRQkjEa1GF6RnDusNnS(S(MjAW6LekQ5Ur6u)aLen4vs8XRo88ofvR0z3hwpbiARZJFQiS1p)LwZyg9h057h6JHLXyihy74oTsV1dSvTwJJqzOilum6nu0O8KpjSogcDuTXbSFJv)LlQJzl3JYx0ZBHqXhCNtzCHIRx9(naBW(qRIv8UgkoUzOL5hATP1fyOMx2Gs4zGIl4Cr)B9NRG67NdP1e1JcycxeRtXb2IqX5QNJ4NQYPl(sC(pxZW1BC5fnEs)fkUkuCshEe7yTp8bo(d((p]] )
 

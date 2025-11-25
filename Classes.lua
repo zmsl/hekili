@@ -1592,13 +1592,6 @@ all:RegisterAuras( {
         aliasMode = "longest"
     },
 
-    rampage = {
-        id = 29801,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player",
-    },
-
     -- Increases your total Strength and Agility by $s1.
     horn_of_winter = {
         id = 57623,
