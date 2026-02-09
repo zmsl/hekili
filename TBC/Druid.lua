@@ -426,7 +426,7 @@ spec:RegisterAuras(
         -- Asleep.
         hibernate = {
             id = 2637,
-            duration = 20,
+            duration = 40,
             max_stack = 1,
             copy = {2637, 18657, 18658}
         },
@@ -537,7 +537,9 @@ spec:RegisterAuras(
         -- Stunned.
         pounce = {
             id = 9005,
-            duration = 3,
+            duration = function()
+                return 3 + (0.5 * talent.brutal_impact.rank)
+            end,
             max_stack = 1,
             copy = {9005, 9823, 9827, 27006}
         },
@@ -1497,7 +1499,7 @@ spec:RegisterAbilities(
         starfire = {
             id = 2912,
             cast = function()
-                return (3.5 - (talent.improved_starfire.rank * 0.1) - (buff.natures_grace.up and 0.5 or 0)) * haste
+                return (3.5 - (talent.starlight_wrath.rank * 0.1) - (buff.natures_grace.up and 0.5 or 0)) * haste
             end,
             cooldown = 0,
             gcd = "spell",
@@ -1581,7 +1583,7 @@ spec:RegisterAbilities(
             cooldown = 300,
             gcd = "spell",
             spend = function()
-                return (buff.clearcasting.up and 0) or 0.7
+                return (buff.clearcasting.up and 0) or (0.7 * (1 - (talent.tranquil_spirit.rank * 0.02)))
             end,
             spendType = "mana",
             usable = function()
