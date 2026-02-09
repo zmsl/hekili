@@ -255,7 +255,7 @@ spec:RegisterAuras( {
     -- All damage taken is reduced by $s2%.  While protected, damaging attacks will not cause spellcasting delays.
     barkskin = {
         id = 22812,
-        duration = 15,
+        duration = 12,
         max_stack = 1,
     },
     -- Stunned.
@@ -294,14 +294,14 @@ spec:RegisterAuras( {
         id = 1850,
         duration = 15,
         max_stack = 1,
-        copy = { 1850, 9821 },
+        copy = { 1850, 9821, 33357 },
     },
     -- Decreases melee attack power by $s1.
     demoralizing_roar = {
         id = 48560,
         duration = 30,
         max_stack = 1,
-        copy = { 99, 1735, 9490, 9747, 9898 },
+        copy = { 99, 1735, 9490, 9747, 9898, 26998 },
     },
     -- Immune to Polymorph effects.  Increases melee attack power by $9635s3, armor contribution from cloth and leather items by $9635s1%, and Stamina by $9635s2%.
     dire_bear_form = {
@@ -321,7 +321,7 @@ spec:RegisterAuras( {
         id = 339,
         duration = 12,
         max_stack = 1,
-        copy = { 339, 1062, 5195, 5196, 9852, 9853 },
+        copy = { 339, 1062, 5195, 5196, 9852, 9853, 26989 },
     },
     feline_grace = {
         id = 20719,
@@ -351,7 +351,7 @@ spec:RegisterAuras( {
         duration = 10,
         tick_time = 1,
         max_stack = 1,
-        copy = { 22842, 22895, 22896 },
+        copy = { 22842, 22895, 22896, 26999 },
     },
     -- Taunted.
     growl = {
@@ -372,13 +372,13 @@ spec:RegisterAuras( {
         duration = function() return 10 * haste end,
         tick_time = function() return 1 * haste end,
         max_stack = 1,
-        copy = { 16914, 17401, 17402 },
+        copy = { 16914, 17401, 17402, 27012 },
     },
     improved_moonfire = {
         id = 16821,
         duration = 3600,
         max_stack = 1,
-        copy = { 16822, 16821, 16823, 16824, 16825 },
+        copy = { 16822, 16821 },
     },
     improved_rejuvenation = {
         id = 17111,
@@ -400,7 +400,7 @@ spec:RegisterAuras( {
         tick_time = 2,
         max_stack = 1,
         shared = "target",
-        copy = { 5570, 24974, 24975, 24976, 24977 },
+        copy = { 5570, 24974, 24975, 24976, 24977, 27013 },
     },
     maul = {
         duration = function () return swings.mainhand_speed end,
@@ -412,7 +412,7 @@ spec:RegisterAuras( {
         duration = 12,
         tick_time = 3,
         max_stack = 1,
-        copy = { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835 },
+        copy = { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835, 26987, 26988 },
     },
     -- Increases spell critical chance by $s1%.
     moonkin_aura = {
@@ -450,7 +450,7 @@ spec:RegisterAuras( {
         id = 16689,
         duration = 45,
         max_stack = 1,
-        copy = { 16689, 16810, 16811, 16812, 16813, 17329 },
+        copy = { 16689, 16810, 16811, 16812, 16813, 17329, 27009 },
     },
     -- Your next Nature spell will be an instant cast spell.
     natures_swiftness = {
@@ -461,7 +461,7 @@ spec:RegisterAuras( {
     -- Your next damage or healing spell or offensive ability has its mana, rage or energy cost reduced by $s1%.
     omen_of_clarity = {
         id = 16864,
-        duration = 600,
+        duration = 1800,
         max_stack = 1,
     },
     -- Stunned.
@@ -469,7 +469,7 @@ spec:RegisterAuras( {
         id = 9005,
         duration = 3,
         max_stack = 1,
-        copy = { 9005, 9823, 9827 },
+        copy = { 9005, 9823, 9827, 27006 },
     },
     -- Bleeding for $s1 damage every $t1 seconds.
     pounce_bleed = {
@@ -477,7 +477,7 @@ spec:RegisterAuras( {
         duration = 18,
         tick_time = 3,
         max_stack = 1,
-        copy = { 9007, 9824, 9826 },
+        copy = { 9007, 9824, 9826, 27007 },
     },
     -- Stealthed.  Movement speed slowed by $s2%.
     prowl = {
@@ -491,14 +491,20 @@ spec:RegisterAuras( {
         id = 1822,
         duration = 9,
         max_stack = 1,
-        copy = { 1822, 1823, 1824, 9904 },
+        copy = { 1822, 1823, 1824, 9904, 27003 },
+    },
+	    -- Bleeding for $s2 damage every $t2 seconds.
+    lacerate = {
+        id = 33745,
+        duration = 15,
+        max_stack = 5,
     },
     -- Heals $s2 every $t2 seconds.
     regrowth = {
         id = 8936,
         duration = 21,
         max_stack = 1,
-        copy = { 8936, 8938, 8939, 8940, 8941, 9750, 9856, 9857, 9858 },
+        copy = { 8936, 8938, 8939, 8940, 8941, 9750, 9856, 9857, 9858, 26980 },
     },
     -- Heals $s1 damage every $t1 seconds.
     rejuvenation = {
@@ -506,7 +512,7 @@ spec:RegisterAuras( {
         duration = 12,
         tick_time = 3,
         max_stack = 1,
-        copy = { 774, 1058, 1430, 2090, 2091, 3627, 8070, 8910, 9839, 9840, 9841, 25299 },
+        copy = { 774, 1058, 1430, 2090, 2091, 3627, 8070, 8910, 9839, 9840, 9841, 25299, 26981, 26982 },
     },
     -- Bleed damage every $t1 seconds.
     rip = {
@@ -514,7 +520,7 @@ spec:RegisterAuras( {
         duration = 12,
         tick_time = 2,
         max_stack = 1,
-        copy = { 1079, 9492, 9493, 9752, 9894, 9896 },
+        copy = { 1079, 9492, 9493, 9752, 9894, 9896, 27008 },
     },
     sharpened_claws = { -- TODO: Check Aura (https://wowhead.com/wotlk/spell=16944)
         id = 16942,
@@ -527,7 +533,7 @@ spec:RegisterAuras( {
         id = 2908,
         duration = 15,
         max_stack = 1,
-        copy = { 2908, 8955, 9901 },
+        copy = { 2908, 8955, 9901, 26995 },
     },
     -- Causes $s1 Nature damage to attackers.
     thorns = {
@@ -535,7 +541,7 @@ spec:RegisterAuras( {
         duration = 600,
         max_stack = 1,
         shared = "player",
-        copy = { 467, 782, 1075, 8914, 9756, 9910 },
+        copy = { 467, 782, 1075, 8914, 9756, 9910, 26992 },
     },
     -- Increases damage done by $s1.
     tigers_fury = {
@@ -556,7 +562,7 @@ spec:RegisterAuras( {
         duration = 10,
         tick_time = 2,
         max_stack = 1,
-        copy = { 740, 8918, 9862, 9863 },
+        copy = { 740, 8918, 9862, 9863, 26983 },
     },
     -- Immune to Polymorph effects.  Movement speed increased by $5419s1%.
     travel_form = {
@@ -575,21 +581,21 @@ spec:RegisterAuras( {
         duration = 6,
         max_stack = 1,
         shared = "target",
-        copy = { 1943, 8639, 8640, 11273, 11274, 11275 }
+        copy = { 1943, 8639, 8640, 11273, 11274, 11275, 26867 }
     },
     garrote = {
         id = 703,
         duration = 18,
         max_stack = 1,
         shared = "target",
-        copy = { 703, 8631, 8632, 8633, 11289, 11290 }
+        copy = { 703, 8631, 8632, 8633, 11289, 11290, 26839, 26884 }
     },
     rend = {
         id = 772,
         duration = 21,
         max_stack = 1,
         shared = "target",
-        copy = { 772, 6546, 6547, 6548, 11572, 11573, 11574 }
+        copy = { 772, 6546, 6547, 6548, 11572, 11573, 11574, 25208 }
     },
     deep_wound = {
         id = 12834,
@@ -614,7 +620,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = 0.16,
+        spend = 0.13,
         spendType = "mana",
 
         startsCombat = true,
@@ -632,7 +638,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = 0.20,
+        spend = 0.13,
         spendType = "mana",
 
         startsCombat = true,
@@ -691,7 +697,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = function() return 0.55 * (1 - (talent.natural_shapeshifter.rank * 0.1)) end,
+        spend = function() return 0.35 * (1 - (talent.natural_shapeshifter.rank * 0.1)) end,
         spendType = "mana",
 
         startsCombat = true,
@@ -741,8 +747,71 @@ spec:RegisterAbilities( {
             gain( 1, "combo_points" )
         end,
 
-        copy = { 1082, 3029, 5201, 9849, 9850 }
+        copy = { 1082, 3029, 5201, 9849, 9850, 27000 }
     },
+	
+	
+	-- Mangle (Bear)
+mangle_bear = {
+    id = 33986,
+    cast = 0,
+    cooldown = 6,
+    gcd = "totem",
+
+    spend = function() return ((buff.clearcasting.up and 0) or 20) - talent.ferocity.rank end,
+    spendType = "rage",
+
+    startsCombat = true,
+    texture = 132135,
+
+    handler = function ()
+        applyDebuff( "target", "mangle_bear" )
+    end,
+
+    copy = { 33986, 33987, 33878 }
+},
+
+
+	-- Mangle (Cat)
+mangle_cat = {
+    id = 33983,
+    cast = 0,
+    cooldown = 0,
+    gcd = "totem",
+
+    spend = function() return ((buff.clearcasting.up and 0) or 45) - talent.ferocity.rank end,
+    spendType = "energy",
+
+    startsCombat = true,
+    texture = 132135,
+
+    handler = function ()
+        applyDebuff( "target", "mangle_cat" )
+    end,
+
+    copy = { 33983, 33876, 33982 }
+},
+
+
+-- Lacerate
+lacerate = {
+    id = 33745,
+    cast = 0,
+    cooldown = 0,
+    gcd = "totem",
+
+    spend = function() return ((buff.clearcasting.up and 0) or 15) - talent.improved_shred.rank end,
+    spendType = "rage",
+
+    startsCombat = true,
+    texture = 132131,
+
+    handler = function ()
+        applyDebuff( "target", "lacerate" )
+    end,
+
+    copy = { 33745 }
+},
 
 
     -- Cower, causing no damage but lowering your threat a large amount, making the enemy less likely to attack you.
@@ -761,7 +830,7 @@ spec:RegisterAbilities( {
         handler = function ()
         end,
 
-        copy = { 8998, 9000, 9892 }
+        copy = { 8998, 9000, 9892, 31709, 27004 }
     },
 
 
@@ -772,7 +841,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = 0.16,
+        spend = 0.13,
         spendType = "mana",
 
         startsCombat = true,
@@ -801,7 +870,7 @@ spec:RegisterAbilities( {
         handler = function ()
         end,
 
-        copy = { 1850, 9821 }
+        copy = { 1850, 9821, 33357 }
     },
 
 
@@ -823,7 +892,7 @@ spec:RegisterAbilities( {
             applyDebuff( "target", "demoralizing_roar" )
         end,
 
-        copy = { 99, 1735, 9490, 9747, 9898 }
+        copy = { 99, 1735, 9490, 9747, 9898, 26998 }
     },
 
 
@@ -834,7 +903,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = function() return 0.55 * (1 - (talent.natural_shapeshifter.rank * 0.1)) end,
+        spend = function() return 0.35 * (1 - (talent.natural_shapeshifter.rank * 0.1)) end,
         spendType = "mana",
 
         startsCombat = true,
@@ -888,7 +957,7 @@ spec:RegisterAbilities( {
             applyDebuff( "target", "entangling_roots", 27 )
         end,
 
-        copy = { 339, 1062, 5195, 5196, 9852, 9853 },
+        copy = { 339, 1062, 5195, 5196, 9852, 9853, 26989 },
     },
 
 
@@ -912,7 +981,7 @@ spec:RegisterAbilities( {
             applyDebuff( "target", "faerie_fire", 300 )
         end,
 
-        copy = { 770, 778, 9749, 9907 }
+        copy = { 770, 778, 9749, 9907, 26993 }
     },
 
 
@@ -934,7 +1003,7 @@ spec:RegisterAbilities( {
             applyDebuff( "target", "faerie_fire_feral", 300 )
         end,
 
-        copy = { 16857, 17390, 17391, 17392 }
+        copy = { 16857, 17390, 17391, 17392, 27011 }
     },
 
 
@@ -959,7 +1028,7 @@ spec:RegisterAbilities( {
             spend( energy.current, "energy" )
         end,
 
-        copy = { 22568, 22827, 22828, 22829, 31018 }
+        copy = { 22568, 22827, 22828, 22829, 31018, 24248 }
     },
 
 
@@ -982,7 +1051,7 @@ spec:RegisterAbilities( {
             applyBuff( "frenzied_regeneration" )
         end,
 
-        copy = { 22842, 22895, 22896 }
+        copy = { 22842, 22895, 22896, 26999 }
     },
 
 
@@ -1004,7 +1073,7 @@ spec:RegisterAbilities( {
             swap_form( "" )
         end,
 
-        copy = { 21849, 21850 },
+        copy = { 21849, 21850, 26991 },
     },
 
 
@@ -1046,7 +1115,7 @@ spec:RegisterAbilities( {
             removeBuff( "natures_swiftness" )
         end,
 
-        copy = { 5185, 5186, 5187, 5188, 5189, 6778, 8903, 9758, 9888, 9889, 25297 },
+        copy = { 5185, 5186, 5187, 5188, 5189, 6778, 8903, 9758, 9888, 9889, 25297, 26978, 26979 },
     },
 
 
@@ -1104,7 +1173,7 @@ spec:RegisterAbilities( {
             removeBuff( "clearcasting" )
         end,
 
-        copy = { 16914, 17401, 17402 },
+        copy = { 16914, 17401, 17402, 27012 },
     },
 
 
@@ -1146,7 +1215,7 @@ spec:RegisterAbilities( {
             removeBuff( "clearcasting" )
         end,
 
-        copy = { 5570, 24974, 24975, 24976, 24977 }
+        copy = { 5570, 24974, 24975, 24976, 24977, 27013 }
     },
 
     -- A strong attack that increases melee damage and causes a high amount of threat. Effects which increase Bleed damage also increase Maul damage.
@@ -1174,7 +1243,7 @@ spec:RegisterAbilities( {
             start_maul()
         end,
 
-        copy = { 6807, 6808, 6809, 8972, 9745, 9880, 9881 }
+        copy = { 6807, 6808, 6809, 8972, 9745, 9880, 9881, 26996 }
     },
 
 
@@ -1195,7 +1264,7 @@ spec:RegisterAbilities( {
             applyBuff( "mark_of_the_wild" )
         end,
 
-        copy = { 1126, 5232, 6756, 5234, 8907, 9884, 9885 },
+        copy = { 1126, 5232, 6756, 5234, 8907, 9884, 9885, 26990 },
     },
 
 
@@ -1217,7 +1286,7 @@ spec:RegisterAbilities( {
             applyDebuff( "target", "moonfire" )
         end,
 
-        copy = { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835 },
+        copy = { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835, 26987, 26988 },
     },
 
 
@@ -1228,7 +1297,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = 0.35,
+        spend = 0.22,
         spendType = "mana",
 
         talent = "moonkin_form",
@@ -1257,7 +1326,7 @@ spec:RegisterAbilities( {
             applyBuff( "natures_grasp" )
         end,
 
-        copy = { 16689, 16810, 16811, 16812, 16813, 17329 },
+        copy = { 16689, 16810, 16811, 16812, 16813, 17329, 27009 },
     },
 
 
@@ -1320,7 +1389,7 @@ spec:RegisterAbilities( {
             gain( 1, "combo_points" )
         end,
 
-        copy = { 9005, 9823, 9827 }
+        copy = { 9005, 9823, 9827, 27006 }
     },
 
 
@@ -1366,7 +1435,7 @@ spec:RegisterAbilities( {
             gain( 1, "combo_points" )
         end,
 
-        copy = { 1822, 1823, 1824, 9904 }
+        copy = { 1822, 1823, 1824, 9904, 27003 }
     },
 
 
@@ -1390,7 +1459,7 @@ spec:RegisterAbilities( {
             gain( 1, "combo_points" )
         end,
 
-        copy = { 6785, 6787, 9866, 9867 }
+        copy = { 6785, 6787, 9866, 9867, 27005 }
     },
 
 
@@ -1401,7 +1470,7 @@ spec:RegisterAbilities( {
         cooldown = 1800,
         gcd = "spell",
 
-        spend = 0.85,
+        spend = 0.68,
         spendType = "mana",
 
         startsCombat = true,
@@ -1413,7 +1482,7 @@ spec:RegisterAbilities( {
             removeBuff( "natures_swiftness" )
         end,
 
-        copy = { 20484, 20739, 20742, 20747, 20748 },
+        copy = { 20484, 20739, 20742, 20747, 20748, 26994 },
     },
 
 
@@ -1437,7 +1506,7 @@ spec:RegisterAbilities( {
             removeBuff( "natures_swiftness")
         end,
 
-        copy = { 8938, 8939, 8940, 8941, 9750, 9856, 9857, 9858 },
+        copy = { 8938, 8939, 8940, 8941, 9750, 9856, 9857, 9858, 26980 },
     },
 
 
@@ -1460,7 +1529,7 @@ spec:RegisterAbilities( {
             removeBuff( "clearcasting" )
         end,
 
-        copy = { 1058, 1430, 2090, 2091, 3627, 8910, 9839, 9840, 9841, 25299 },
+        copy = { 1058, 1430, 2090, 2091, 3627, 8910, 9839, 9840, 9841, 25299, 26981, 26982 },
     },
 
 
@@ -1471,7 +1540,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = 0.1,
+        spend = 0.08,
         spendType = "mana",
 
         startsCombat = true,
@@ -1504,7 +1573,7 @@ spec:RegisterAbilities( {
             spend( combo_points.current, "combo_points" )
         end,
 
-        copy = { 1079, 9492, 9493, 9752, 9894, 9896 }
+        copy = { 1079, 9492, 9493, 9752, 9894, 9896, 27008 }
     },
 
 
@@ -1515,7 +1584,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "totem",
 
-        spend = function () return (buff.clearcasting.up and 0) or (60 - (talent.improved_shred.rank * 6)) end,
+        spend = function () return (buff.clearcasting.up and 0) or (60 - (talent.improved_shred.rank * 9)) end,
         spendType = "energy",
 
         startsCombat = true,
@@ -1526,7 +1595,7 @@ spec:RegisterAbilities( {
             removeBuff( "clearcasting" )
         end,
 
-        copy = { 5221, 6800, 8992, 9829, 9830 }
+        copy = { 5221, 6800, 8992, 9829, 9830, 27001, 27002 }
     },
 
 
@@ -1547,7 +1616,7 @@ spec:RegisterAbilities( {
             removeBuff( "natures_swiftness" )
         end,
 
-        copy = { 2908, 8955, 9901 },
+        copy = { 2908, 8955, 9901, 26995 },
     },
 
 
@@ -1568,7 +1637,7 @@ spec:RegisterAbilities( {
             removeBuff( "clearcasting" )
         end,
 
-        copy = { 2912, 8949, 8950, 8951, 9875, 9876, 25298 },
+        copy = { 2912, 8949, 8950, 8951, 9875, 9876, 25298, 26986 },
     },
 
 
@@ -1589,7 +1658,7 @@ spec:RegisterAbilities( {
             removeBuff( "clearcasting" )
         end,
 
-        copy = { 779, 780, 769, 9754, 9908 }
+        copy = { 779, 780, 769, 9754, 9908, 26997 }
     },
 
 
@@ -1611,7 +1680,7 @@ spec:RegisterAbilities( {
             applyBuff( "thorns" )
         end,
 
-        copy = { 467, 782, 1075, 8914, 9756, 9910 },
+        copy = { 467, 782, 1075, 8914, 9756, 9910, 26992 },
     },
 
 
@@ -1674,7 +1743,7 @@ spec:RegisterAbilities( {
             removeBuff( "clearcasting" )
         end,
 
-        copy = { 740, 8918, 9862, 9863 },
+        copy = { 740, 8918, 9862, 9863, 26983 },
     },
 
 
@@ -1685,7 +1754,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = 0.2,
+        spend = 0.13,
         spendType = "mana",
 
         startsCombat = true,
@@ -1732,7 +1801,7 @@ spec:RegisterAbilities( {
             removeBuff( "natures_swiftness")
         end,
 
-        copy = { 5176, 5177, 5178, 5179, 5180, 6780, 8905, 9912 },
+        copy = { 5176, 5177, 5178, 5179, 5180, 6780, 8905, 9912, 26984, 26985 },
     },
     
 } )
