@@ -187,55 +187,70 @@ spec:RegisterResource( Enum.PowerType.Energy, {
 })
 
 -- Talents
-spec:RegisterTalents( {
-    improved_wrath = { 23, 5, 16814, 16815, 16816, 16817, 16818 },
-    natures_grasp = { 24, 1, 16689, 16810, 16811, 16812, 16813, 17329 },
-    improved_natures_grasp = { 25, 4, 17245, 17247, 17248, 17249 },
-    improved_entangling_roots = { 26, 3, 16918, 16919, 16920 },
-    improved_moonfire = { 27, 5, 16821, 16822, 16823, 16824, 16825 },
-    natural_weapons = { 28, 5, 16902, 16903, 16904, 16905, 16906 },
-    natural_shapeshifter = { 29, 3, 16833, 16834, 16835 },
-    improved_thorns = { 30, 3, 16836, 16839, 16840 },
-    omen_of_clarity = { 31, 1, 16864 },
-    natures_reach = { 32, 2, 16819, 16820 },
-    vengeance = { 33, 5, 16909, 16910, 16911, 16912, 16913 },
-    improved_starfire = { 34, 5, 16850, 16923, 16924, 16925, 16926 },
-    natures_grace = { 35, 1, 16880 },
-    moonglow = { 36, 3, 16845, 16846, 16847 },
-    moonfury = { 37, 5, 16896, 16897, 16899, 16900, 16901 },
-    moonkin_form = { 38, 1, 24858 },
-    ferocity = { 39, 5, 16934, 16935, 16936, 16937, 16938 },
-    feral_aggression = { 40, 5, 16858, 16859, 16860, 16861, 16862 },
-    feral_instinct = { 41, 5, 16947, 16948, 16949, 16950, 16951 },
-    brutal_impact = { 42, 2, 16940, 16941 },
-    thick_hide = { 43, 5, 16929, 16930, 16931, 16932, 16933 },
-    feline_swiftness = { 44, 2, 17002, 24866 },
-    feral_charge = { 45, 1, 16979 },
-    sharpened_claws = { 46, 3, 16942, 16943, 16944 },
-    improved_shred = { 47, 2, 16966, 16968 },
-    predatory_strikes = { 48, 3, 16972, 16974, 16975 },
-    blood_frenzy = { 49, 2, 16952, 16954 },
-    primal_fury = { 50, 2, 16958, 16961 },
-    savage_fury = { 51, 2, 16998, 16999 },
-    faerie_fire_feral = { 52, 4, 16857, 17390, 17391, 17392 },
-    heart_of_the_wild = { 53, 5, 17003, 17004, 17005, 17006, 24894 },
-    leader_of_the_pack = { 54, 1, 17007 },
-    improved_mark_of_the_wild = { 55, 5, 17050, 17051, 17053, 17054, 17055 },
-    furor = { 56, 5, 17056, 17058, 17059, 17060, 17061 },
-    improved_healing_touch = { 57, 5, 17069, 17070, 17071, 17072, 17073 },
-    natures_focus = { 58, 5, 17063, 17065, 17066, 17067, 17068 },
-    improved_enrage = { 59, 2, 17079, 17082 },
-    reflection = { 60, 3, 17106, 17107, 17108 },
-    insect_swarm = { 61, 5, 5570, 24974, 24975, 24976, 24977 },
-    subtlety = { 62, 5, 17118, 17119, 17120, 17121, 17122 },
-    tranquil_spirit = { 63, 5, 24968, 24969, 24970, 24971, 24972 },
-    improved_rejuvenation = { 64, 3, 17111, 17112, 17113 },
-    natures_swiftness = { 65, 1, 17116 },
-    gift_of_nature = { 66, 5, 17104, 24943, 24944, 24945, 24946 },
-    improved_tranquility = { 67, 2, 17123, 17124 },
-    improved_regrowth = { 68, 5, 17074, 17075, 17076, 17077, 17078 },
-    swiftmend = { 69, 1, 18562 },
-} )
+spec:RegisterTalents({
+    starlight_wrath = { 762, 5, 16814, 16815, 16816, 16817, 16818 },
+    natures_grasp = { 761, 1, 16689 },
+    improved_natures_grasp = { 921, 4, 17245, 17247, 17248, 17249 },
+    control_of_nature = { 787, 3, 16918, 16919, 16920 },
+    focused_starlight = { 1822, 2, 35363, 35364 },
+    improved_moonfire = { 763, 2, 16821, 16822 },
+    brambles = { 782, 3, 16836, 16839, 16840 },
+    insect_swarm = { 788, 1, 5570 },
+    natures_reach = { 764, 2, 16819, 16820 },
+    vengeance = { 792, 5, 16909, 16910, 16911, 16912, 16913 },
+    celestial_focus = { 784, 3, 16850, 16923, 16924 },
+    lunar_guidance = { 1782, 3, 33589, 33590, 33591 },
+    natures_grace = { 789, 1, 16880 },
+    moonglow = { 783, 3, 16845, 16846, 16847 },
+    moonfury = { 790, 5, 16896, 16897, 16899, 16900, 16901 },
+    balance_of_power = { 1783, 2, 33592, 33596 },
+    dreamstate = { 1784, 3, 33597, 33599, 33956 },
+    moonkin_form = { 793, 1, 24858 },
+    improved_faerie_fire = { 1785, 3, 33600, 33601, 33602 },
+    wrath_of_cenarius = { 1786, 5, 33603, 33604, 33605, 33606, 33607 },
+    force_of_nature = { 1787, 1, 33831 },
+    ferocity = { 796, 5, 16934, 16935, 16936, 16937, 16938 },
+    feral_aggression = { 795, 5, 16858, 16859, 16860, 16861, 16862 },
+    feral_instinct = { 799, 3, 16947, 16948, 16949 },
+    brutal_impact = { 797, 2, 16940, 16941 },
+    thick_hide = { 794, 3, 16929, 16930, 16931 },
+    feline_swiftness = { 807, 2, 17002, 24866 },
+    feral_charge = { 804, 1, 16979 },
+    sharpened_claws = { 798, 3, 16942, 16943, 16944 },
+    shredding_attacks = { 802, 2, 16966, 16968 },
+    predatory_strikes = { 803, 3, 16972, 16974, 16975 },
+    primal_fury = { 801, 2, 37116, 37117 },
+    savage_fury = { 805, 2, 16998, 16999 },
+    faerie_fire_feral = { 1162, 1, 16857 },
+    nurturing_instinct = { 1792, 2, 33872, 33873 },
+    heart_of_the_wild = { 808, 5, 17003, 17004, 17005, 17006, 24894 },
+    survival_of_the_fittest = { 1794, 3, 33853, 33855, 33856 },
+    primal_tenacity = { 1793, 3, 33851, 33852, 33957 },
+    leader_of_the_pack = { 809, 1, 17007 },
+    improved_leader_of_the_pack = { 1798, 2, 34297, 34300 },
+    predatory_instincts = { 1795, 5, 33859, 33866, 33867, 33868, 33869 },
+    mangle = { 1796, 1, 33917 },
+    improved_mark_of_the_wild = { 821, 5, 17050, 17051, 17053, 17054, 17055 },
+    furor = { 822, 5, 17056, 17058, 17059, 17060, 17061 },
+    naturalist = { 824, 5, 17069, 17070, 17071, 17072, 17073 },
+    natures_focus = { 823, 5, 17063, 17065, 17066, 17067, 17068 },
+    natural_shapeshifter = { 826, 3, 16833, 16834, 16835 },
+    intensity = { 829, 3, 17106, 17107, 17108 },
+    subtlety = { 841, 5, 17118, 17119, 17120, 17121, 17122 },
+    omen_of_clarity = { 827, 1, 16864 },
+    tranquil_spirit = { 843, 5, 24968, 24969, 24970, 24971, 24972 },
+    improved_rejuvenation = { 830, 3, 17111, 17112, 17113 },
+    natures_swiftness = { 831, 1, 17116 },
+    gift_of_nature = { 828, 5, 17104, 24943, 24944, 24945, 24946 },
+    improved_tranquility = { 842, 2, 17123, 17124 },
+    empowered_touch = { 1788, 2, 33879, 33880 },
+    improved_regrowth = { 825, 5, 17074, 17075, 17076, 17077, 17078 },
+    living_spirit = { 1797, 3, 34151, 34152, 34153 },
+    swiftmend = { 844, 1, 18562 },
+    natural_perfection = { 1790, 3, 33881, 33882, 33883 },
+    empowered_rejuvenation = { 1789, 5, 33886, 33887, 33888, 33889, 33890 },
+    tree_of_life = { 1791, 1, 33891 },
+})
 
 -- Auras
 spec:RegisterAuras( {
@@ -766,6 +781,7 @@ mangle_bear = {
 
     handler = function ()
         applyDebuff( "target", "mangle_bear" )
+		removeBuff( "clearcasting" )
     end,
 
     copy = { 33986, 33987, 33878 }
@@ -787,6 +803,7 @@ mangle_cat = {
 
     handler = function ()
         applyDebuff( "target", "mangle_cat" )
+		removeBuff( "clearcasting" )
     end,
 
     copy = { 33983, 33876, 33982 }
@@ -800,7 +817,7 @@ lacerate = {
     cooldown = 0,
     gcd = "totem",
 
-    spend = function() return ((buff.clearcasting.up and 0) or 15) - talent.improved_shred.rank end,
+    spend = function() return ((buff.clearcasting.up and 0) or 15) - talent.shredding_attacks.rank end,
     spendType = "rage",
 
     startsCombat = true,
@@ -808,6 +825,7 @@ lacerate = {
 
     handler = function ()
         applyDebuff( "target", "lacerate" )
+		removeBuff( "clearcasting" )
     end,
 
     copy = { 33745 }
@@ -1098,7 +1116,7 @@ lacerate = {
     -- Heals a friendly target for 40 to 55.
     healing_touch = {
         id = 5185,
-        cast = function() return buff.natures_swiftness.up and 0 or 3.5 - (buff.natures_grace.up and 0.5 or 0) - (talent.improved_healing_touch.rank * 0.1) end,
+        cast = function() return buff.natures_swiftness.up and 0 or 3.5 - (buff.natures_grace.up and 0.5 or 0) - (talent.naturalist.rank * 0.1) end,
         cooldown = 0,
         gcd = "spell",
 
@@ -1584,7 +1602,7 @@ lacerate = {
         cooldown = 0,
         gcd = "totem",
 
-        spend = function () return (buff.clearcasting.up and 0) or (60 - (talent.improved_shred.rank * 9)) end,
+        spend = function () return (buff.clearcasting.up and 0) or (60 - (talent.shredding_attacks.rank * 9)) end,
         spendType = "energy",
 
         startsCombat = true,
@@ -1786,7 +1804,7 @@ lacerate = {
     -- Causes 18 to 21 Nature damage to the target.
     wrath = {
         id = 5176,
-        cast = function() return buff.natures_swiftness.up and 0 or 2 - (talent.improved_wrath.rank * 0.1) - (buff.natures_grace.up and 0.5 or 0) end,
+        cast = function() return buff.natures_swiftness.up and 0 or 2 - (talent.starlight_wrath.rank * 0.1) - (buff.natures_grace.up and 0.5 or 0) end,
         cooldown = 0,
         gcd = "spell",
 
