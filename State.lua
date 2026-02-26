@@ -6839,8 +6839,19 @@ function state:IsKnown( sID, notoggle )
 
     local ability = class.abilities[ sID ]
 
+    -- Numeric ID may be passed (e.g. from cooldown table) before the key path ever registered it (TBC/Classic GetSpellInfo rank resolution).
+    if not ability and type( sID ) == "number" then
+        for key, ab in pairs( class.abilities ) do
+            if type( key ) == "string" and ab.id == sID then
+                class.abilities[ sID ] = ab
+                ability = ab
+                break
+            end
+        end
+    end
+
     if not ability then
-        Error( "IsKnown() - " .. sID .. " not found in abilities table." )
+        Error( "IsKnown() - " .. sID .. " not found in abilities table.\n" .. debugstack() )
         return false
     end
 

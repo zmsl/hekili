@@ -167,9 +167,41 @@ spec:RegisterAuras( {
         duration = function() return 120 * ( 1 + talent.booming_voice.rank * 0.1 ) end,
         max_stack = 1,
         generate = function( t )
-            for i, id in ipairs( class.auras.battle_shout.copy ) do
+            for _, id in ipairs( class.auras.battle_shout.copy ) do
                 local name, _, count, _, duration, expires, caster = FindUnitBuffByID( "player", id, "PLAYER" )
+                if name then
+                    t.name = name
+                    t.count = 1
+                    t.expires = expires
+                    t.applied = expires - duration
+                    t.caster = caster
+                    return
+                end
+            end
 
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.caster = "nobody"
+        end,
+    },
+    my_shout = {
+        duration = function() return 120 * ( 1 + talent.booming_voice.rank * 0.1 ) end,
+        max_stack = 1,
+        generate = function( t )
+            for _, id in ipairs( class.auras.battle_shout.copy ) do
+                local name, _, count, _, duration, expires, caster = FindUnitBuffByID( "player", id, "PLAYER" )
+                if name then
+                    t.name = name
+                    t.count = 1
+                    t.expires = expires
+                    t.applied = expires - duration
+                    t.caster = caster
+                    return
+                end
+            end
+            for _, id in ipairs( class.auras.commanding_shout.copy ) do
+                local name, _, count, _, duration, expires, caster = FindUnitBuffByID( "player", id, "PLAYER" )
                 if name then
                     t.name = name
                     t.count = 1
@@ -415,6 +447,10 @@ spec:RegisterAuras( {
     overpower_ready = {
         duration = 6,
         max_stack = 1,
+    },
+    victory_rush_usable = {
+        duration = 20,
+        max_stack = 1
     },
     -- Dazed.
     piercing_howl = {
@@ -884,6 +920,11 @@ spec:RegisterHook( "reset_precast", function()
                 applyBuff( "rampage_ready", last_crit + 5 - now )
             end
         end
+        if IsSpellKnown( class.abilities.victory_rush.id ) then
+            if IsUsableSpell( class.abilities.victory_rush.id ) then
+                applyBuff( "victory_rush_usable" )
+            end
+        end
     end
 
     setCooldown("auto_attack", class.abilities.auto_attack.cooldown)
@@ -1016,10 +1057,8 @@ spec:RegisterAbilities( {
         spend = 0.2,
         spendType = "health",
 
-        startsCombat = true,
+        startsCombat = false,
         texture = 132277,
-
-        toggle = "cooldowns",
 
         handler = function()
             gain( 10 + (talent.improved_bloodrage.rank == 1 and 2 or talent.improved_bloodrage.rank == 2 and 5 or 0), "rage" )
@@ -1086,7 +1125,7 @@ spec:RegisterAbilities( {
 
         buff = "battle_stance",
         usable = function()
-            return (not combat) and target.minR >= 8 and target.minR <= 25, "cannot be in combat; target must be outside your deadzone"
+            return (combat == 0), "cannot be in combat"
         end,
 
         handler = function( rank )
@@ -1123,6 +1162,31 @@ spec:RegisterAbilities( {
         end,
 
         copy = { 845, 7369, 11608, 11609, 20569 }
+    },
+
+    commanding_shout = {
+        id = 469,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = 10,
+        spendType = "rage",
+
+        startsCombat = false,
+        texture = 132351,
+
+        usable = function()
+        end,
+
+
+        handler = function( rank )
+            applyBuff( "commanding_shout" )
+            applyBuff( "my_shout" )
+            applyBuff( "shout" )
+        end,
+
+        copy = { 469 }
     },
 
 
@@ -1823,6 +1887,29 @@ spec:RegisterAbilities( {
     },
 
 
+    victory_rush = {
+        id = 34428,
+        cast = 0,
+        gcd = "spell",
+
+        spend = 0,
+        spendType = "rage",
+
+        startsCombat = true,
+        texture = 132342,
+
+        nobuff = "defensive_stance",
+
+        usable = function()
+            return buff.victory_rush_usable.up
+        end,
+
+        handler = function()
+            removeBuff("victory_rush_usable")
+        end
+    },
+
+
     -- In a whirlwind of steel you attack up to 4 enemies within 8 yards, causing weapon damage from both melee weapons to each enemy.
     whirlwind = {
         id = 1680,
@@ -2044,25 +2131,31 @@ spec:RegisterOptions( {
     damage = false,
     damageExpiration = 6,
 
-    potion = "",
+    potion = "Haste Potion",
 
     package = "Fury",
     usePackSelector = true
 } )
 
 
-spec:RegisterPack( "Arms", 20250710.1, [[Hekili:TJ1wVTUnm4Fl9LIw0oVCPxw3scW2tR9HUhsh2ddhBRyRelu5ltsUPziq)2hL8nzB5M0IE2lNdqrQJe5hj)enjJCh7(K7YqKa7(4KrtUE0TJh5aFm96BDxk2LHDxMHcEgTbEibfdF(RSyUAXD0uuOszEAola2WD5QCcvCFI7QwioDYvoJbXYWbUpcpercdXfcH5bfak9)leJrszs)m1)iIDs)1QV(74Njucyqw6Acfmdkqqst4xm)h55jHyMhIfNYUKSEohleKKnCNq8Q81R9k3hNGwrXHNwSQJPwoCbeCZgqXy0REAbo9KsDXVMLYXL6MNDQaX2Gfou8ly6IHSFmjXtlH8HgFpedqGOK)fuWJhLMlSfbkP0BwhevEsF9b)X0abik1R4REucxCP60BEqAknmDBcxzT2E)ntnvNLN0xB8R4GCb2q3imIkICYceZMpz0bbGLkqQLKpulQtjOGkrywkjaOCg5z8L5arNcCWMGW5JvMuPWlyGjWXemF(4tp7StQjmuiktV9)KJZXksPIXQczhGWeiAj8omCmIKWxmNb52ocsm2tK6D1K97pcmveon0lIF((9NzLkoTgLY4RhiNFUnoiGIrVCWGFXxLG)6rVNGVWt)0jGYNmZqQYA(MofXGe(gnhXGbsFbZYs3Izw3DBeHr3sscTqknLy3UvxzUCdWf)m4kt0dc9cjRxFu8vBo(6zVTDUWIzStuTu3(BuOy1UjBuK1rhE1Avz(gMPM9pk10bEqoJHtelA2weXWqoen0QpVIMMgQ0u5ZMim7Ur2vajeuCtF2tm6v2somJJzpdnTH((jbwEhBqnlTWWQ1KSxN9wF8RBP3SmdJc3PMVOf7mVWSnY5eKYfTKzMfButLUlH14acTNlBlILOuXD5treUA(l9GwsF1xIjCoSP0NNNLb5eLdLTbERHrcK(QtRNXcUJ0x6FVOqjgoinogdd)ecseHGLHrmy7mNTJKeqZH5)GTicOQ(pdf89)bP)F)NCScjCm)lxk9HKPGitPrj7ASQ0pjvb(RzusarqBWnu9KY44gJ(lsFW3lnZtfqi9h)ffOHMlnXWYBjuQrevcPOsunBOxkjpgYEugMttfoYhUpwryQfMcwqF0j9vJcbK1dUl1pPgFUkjcE(r9W4LjfU)M7sJ8i9OZbqCaepQyk4MYAs)5qKi9pv6FM(Vta34GvD0Y)2VYl9xai3P)N0F)(Jg)6(Gs)ZlueCVEDdK(Za7atqQv5qDf0qDE1pfa(ffMtf4kG87pmpU4)nE86rFeESOJ6xrUSWaksCQIeRwUUEIjVccDvhM(ny25gEt7MV1XYNlDBPl57IY70ug41dB3lgWSgmCDdsf)DTjj3cZoe9nds0hYLArf96a3Mn718(Ou3SfK(vilnYnEBTAtvyD7GHvBqbQ)UrnyupbGcJFAqmG8P8mdTmgdqP4DhDzIUa1zobfyJh9(qR9RN9MjqV9aZfyJ0Nx1KPZ8bwKDMv7A5KQ1qnUkkBzzzKV3S6dxG97nR(84YbAwvLK2QcQqDFJRr5uHTK3gsU2jSElIA)CWBsS97wdCBIAioPgLo3POExZBMRtf4bUBXMG30RSLEnCK272g74PwVZXgd3F76dgdZxF015(jnDS(H)ntlMy2R4oORVgtBJGuzHo3aPfd0pnSLvQsJQAtFm2Wq96b715Ez6FdburTx23kZAdigW(CoUQGlOjkxebhLl)JC2UC9sU)3p]] )
+spec:RegisterPack( "Arms", 20260225.3, [[Hekili:1E1tVTkoq8pl9sUSvSbA7BBLcrA3t7Rh6EGvAVb4atkwXGr2MMMvv8zFTXbJHyiTvAV0s8mZVz88Fh7h)3Xr5ibe)sW6GFSoi4bVa)hEkiiosCQgIJQrzhqVk)Ocvk)7VZk5QdprOOCLWCAdltsioAxdMi(zv8oxi(49pj5TgYIFXpoQaNNdAobEMg120)bXyykRnTw9pS4uB6E1p)t4aMGLALr3JjsDHYeyAf3RMbz0YDiXVe(R7iuAotAP3I3hQ(VxwdJbvInpUU9zNsGeccKWlOncLq3SRz)EVYt6t8AQDlgUsaYBCDNmDISdyCGDayjCbQkdKIUY2c2g6FftOtSbBy0XtrBJ)6vzukjNESYlRaXKKyqjcxX3e67wpA2AF2qvEgVPkxAYiwjLPunhecC1RCVCqzejNPdvODeiFL(upBP8Kgy2HnZiyj69KogwDZzzH3RPC4SSYBLqzucpc8gq2oN(lXvjDCyB75Geceb)VsbgcGtrqXvhrZLO3sUuE7WTYHHiKe9ptiyU4wv2FyVBNBZkRP6soH3HSgrxi98TSaqerHxDMytyW6RcaJkqQJSIzEg1lfsWWvhaH)IudCtTMQr2fTCajksoI5fw2UaxcjcAsog2eExWhFOZsvvCKgU23na357UeScGrXzYSag(aCBJm2tLHLxZYd9vORe4nqgCGsmWd91P59kZF96nQS6cuvEISZbK7sfzea92vXE73c7Jfyg5iUYjrzcKaroF3CXGvkWnM6vdKQ8)HJhb2e3zFMW3WFQYSj5jfCNO9PDDNHrZVtOmxlxY7uc6BaRMEeyoPoJZ1LgDsD(HbpT2TaF(zb2snPX)L(YBMtYrn(Dj2kt3mJRY0gRZ4goMbO8t9Za6t1nZE0AFGDz5oxmEIIdvjkyG8UtK9m702EIK3tlN1UYDEECKevU0gS3iio6iIvPuAC0plRLijRbtFOnvBUTPQwHCV2NJJ6(sTQrV)t(9lDlUC2Fe)hXrzY9faggPxoyi9RnnSn1VnDvBQPAOFbc5Ei2fuXrwXbLgesd(tRMTtuJUAzqv9)(sDC3xshdiA8XkqUxbspfty0gxjtpyZ0OO3eg)HnJd6zmt)2S2TDYvB6M20NwpaNP2uHXJZIXnTPtRbTWWQCvbZtlbZibNuX6kE4VEz00r5zRo7iVufQvUYyh12W(0)jvRo4DJttWu12jrVl0u72F68ZDMYW464PU)5CHc1E97rneXYLQlVYzNXm7ANJDbZS6z)9X9cODuTxcvhcU2IOd(bBRA5UfxD10jwQZfuhu8LKD1iX06zYYS6wQj6h0zw(Z0fX5f4ITyL(FPVkWQWEYESJ0Y5LHmnHCyLljUPZFxUL5LnlNDDrbZJZ1fA(42xQl08nYN7zIZ0eW3Yqnp3C54tVHo9PJUBDiFpQ68zEgPo06px9(0bjAHhpCqmeY)EdRNUUENzpEL9)FhJ)LmGRmC)AtsV)ZoxEATZO4VZM2xTL)GIhQrf2Tf6JF9S1)YZjMwGdEcMWZiNH(vOU8el1aY6PO6007cAt)4J(SFRNKA3TS)nTD3n5Td1ikKTSJ(Rg2PMUJI)Vd]] )
 
-spec:RegisterPack( "Fury", 20251123.1, [[Hekili:TJvtVnUnt4Fl(IGnAQQLt82U912h6HIU5W2dEl6HxSsIrIoIWuIQKuXXfg63EhQpPKPKD2M0l7cSyJSiNVE4mpC0464(j3THij29JlMVyPJZI7Sx4Sy(D35UvEmf7UnffSh9i8qckg()FnJFu9YJugkujSGLXdGfC3(qgHk)qI7dM14TWEtXbUF0XDBejmexUtSiOuR5()jIZjmEUFQ6pej8QDQF(B49ekXDlLiKcLn5mjssyjWZFSicWjOhO4q3FXDBaiiMtqUBNM7pj3)HSD7S5O4uiiSZsZ9pDk3FQH3BD(R54yejrK7Vk3xGLssYJI6f9WXy(J4KGJEYioweXOHLkFavS2Go44Dkr11a4gWtz0qVQnL7pR(FWAseyuPTKeJ9KmVqcS(gZ20DlkOaL2wTGReotgeUuB(jiSsWXem4WG)6uJkLqzJ7JcrPfB(VYWzy4vEvASy)bmiqyhsSFGYyHYicxiBXHnGE5kVSoeUBrjSDLAVcCIefis1HzfQeHruzKDAGSeVxmVuKAnJFghKjnPyf(2IxryoJe4jKCYEi1otG9y7259yqOkFdqXBVAuCZ)rO4Y5FjOyafJEc)gIKLgWeeENccR3g7jmpLDaZ1rvytlVECgCYdh8EGJr7tzKezRYpayh9ajjuPX3PBwnOTNH)Xbn8R5jyJIappiekM3T7fDk2ndyzbp14w9l1Tgan)PbHPxGvIqXQkni2AWaD3SXGViXlGMGmohNilQcB3wdzRwbF9IQG69dguDvka2VFEVKjEfnRZ8XsGYs1edjLuSNQGuwi5WxO1xsmxG57XCGOcLeySkZzy((cT1TQUPmStwwXDlTlbvyHh1olQj46H4WruPJ2kQDatinS3vgDHU3jwFt(oki1X6lSNmq6SHLBtJmH(dbGkEHsQUV1RX3614T4gYV1RXRfsEHEnmcHNhckR1L(t6PiLkwySYIfM7ROUlM61QPt60VHu9Hq7qzu540mnUBiwvf6jYsc7XwxUID1kiEmJBd0Bb77YS0vbXON9Q2ujTzLwWpNYa0SulvexvHpf)eM27Q4EkLK4vSR2Gx3RgNHOVodXXSI7i7eSTEQADoIs(BvcsXg7WZF(YJxADEq(UB1Y0quQx5p8uFuA5NM6v(fY1ftIXZ8gm5xJknlzqRuNgzOj5Rr8MVGUi3lLJdyXWDHJN9n49volFH8)J3duHpbLCc1I1tr4wBhO5teprLv4U9treHAqbSDeku)P(rmriGfH8XS0ugxwn9a4EtWOqPRQbV9yPWo3p3)dYsHkI8ymKwczuYie8A4mxnnI2HqqscOzHkgwmrc81)C(95(FFU)))peyLMWXIpFd85hrKGi9DJso2A1C)eMs5pNsjbejTvVHQNugh3A0)xUp47vM5tLQaW5pRuAO(RwOz5dekvlIQuPSERfOrXRsYIHMhvgwqzs787)qScWuV4U622Y9lg3cSOk)OaMRpWe2njmF36FO6a)gYU1Msqw5Sm)EtYPFOReEcWVCFZwHnOtwO2W4KFwds8T6sKEwtmt3zPZcSzi73qZP77NZ3ykcoJuRXtmsNPBG(uq3OQRx3W9OSwxV)D3QlEpUHsPR4u0KTLDA1A4A5lPGAwfTZX6BV7MOmDsVwIpDAAV3yn1y2010A8PtgfD9LBj2QB7WZMnZ68B73yKh0qa3P1UB0AlzTJce62(2AhRPtNC5wQSgRzTnR71U7PtxHgBAZDgCmy8K36InJnBMjeOSLSlf6BEdc9LZFjHEPF(Qh(AUzNYFJnBAP3OPP0UfMmr1t6vC1vHF9uYPfXFTwZPbbFvw0Pf)nJqY4QnZbYaKSUZeKnkUgiCz1)VhEBuq7OyVkiU3KHxnMvE5UG5kV6zOQI8RuLNn7wRHh77OIPpqXngg17WNL8k(rDnS69ZnlGPwwnTVEtM98AXbLuFEKgfRTS4SP1AvWsoWKAH69oG06sR3B6SD2ZkdMQL3U8(KM5XAnzGjXQTqVzWMjJyC3T)Eg)ywXh95(pp]] )
+spec:RegisterPack( "Fury", 20260225.3, [[Hekili:TN1sVnUnq4Fl5Irm6cvlL1BtaS8HEOOBoKEWfO3KeTeDSG1RsrfhxeOF7DiPefffLSZ2KEjbyXAfY55h58GKE2E)P3Mief79GZcNVTWXzPLJ9Y7SD82qpvG92uGcpGEe(idLc))VvroXg8usokIXCzEfjeMWBZ2Q4e63Z82AsI3(vBG2cCO3dWh7JJIWckXLHcPwh8xicjoNuhuW(jMcdTJ9N)o(qCsmOvs(U4eqxOqACEwPvbbhMNUfr)j3FEBsEEebS0VeVZL9RvyfHGZORUDr99g5arPjy)Y95vugtxTTA3oR0tIrSQkmZwCgfdECbNholBXKsm5aM4xsrzHyG1zQwWAx7ZycC26SHEdRlTv2lMfMNNeLFmZkCpIatrWPO4SYvU2M1JGS67LZcJvwLfbMmIKMtyQUetPXzpwAfHzgHFZ84m02eC0mXOwQCzbgy4HvJWyk6zFobZUQHx8Zf5L4gEbVIYmkQvc(jCY6X0FACMpNcvBpcdIaLe)padDlG6sGrfFsPt0Ajd5xD5MbyOKeFXF6Nexs)cB3VBlSxQskPkBiL4NXHvu(sAJxUhJsO7TkcPRCDwCwbqYPi2qkRzws1dmrjXzhWu7jN1X8Sf5cjBAUYJyCbhvazCaxY8agDpHbqeNgJlxpIoJWi6E)JXL7v8AACk2NM7hfJx5EJZlVi2FZIvtQkfOEN4AqngMGslAILVwet0mcWXlVCT2iZ6pqB0GC)qZe(4umyvzHN8P7jyyDpjQXI0z1DaVe8oglDCoJTVjjYVHG5ZNpBOtV2K0n5W7XK84Wgu)lvqysoSd(XWix7HlbU2ZU(6RKMikcvWN(VRWvy2Ix7(DzEcoIt3htamVXkwlYs2ASFfwCUaj2407lNdldg3AptkLgVBGqMp3eceMGrpDwxF97GRVCXRX1f25BU7RyM9YLjThgPsBzl1p)jw2zyqtB7CmPIMVuJ4AtZ8XjKtXJ)OgZPabFid6u8Fwqur(rmX4Shbhi5yCwKbiX94r)Tem6qro0rOr2vaHZl()7WRuaGLfgbHc72DrqC)LLLRMslVEtWCKhkLf1L9iZZVqrk5PvYD2IeiVi261AE30YSmJVwA84f3TWmdx(Plu5s7OedJmVAmo7DuctS1fKi313vpHzCDdd7RJojbtBTtZi0Eh5qBGL0(NrXGQ6YIlGIDjaTNyLsUY4oGEt0Tcxv4TbKzjybQNW0BZrejJPsVnFpTiNqXr1blRdegBDaR16sR6792W)ID01w0d((b(bHBqdVF1BtiC(tmjg5T566GRQd0k)vh8Yl1bxBy8zdhUTguWQ6GlPaPq4JicxdYyqHsUz0VyzDW82)bZnSSzDWAZ6S942aEjMWJca)OWv)0K1bG9A3IkcO88PK40pvAbWyb5QvlvaBxO0L1u5isZI5GAlc8goUgNLZvJrGVD4vV(l82OetY2VbO4nxmkU()juC5IFeuuuD(DejfkWee(vge2sMmzJkQceT8YXzWi7vyVt4Yuqmj(nv1QaTAk(xgvXVLRGMQ6(Awf1AaGNNAAT(JAwJGM3okm9k0YGc99nZb9iCrSRwuJhfAOFbLa(2jzo1DJ6u9fka23TqBZePjnR9IP2aP3rHIquA(GlNXlVbYPhNAnGykMZE8S)CP1pgFqZg8PNQHdL0DA4VBB9CTMpmq7kJMq)kKTyOSvK2rhPHKbt3VTeD0FmaKYU27DOQe60DEiTFJ3il3yg9wz7daJCZST(J57NvTrbXnW2pIzK7PTdhuTQPBAqxMdU5wnl14932P4HtBQARS4I2D9k6q0x8EhYB4uwSXOdmA9oLUN6FnV90stDqt1QUe2LnYY3BjV4)P3DniC52XYcnz4(LNeA8UDexk8WxrzKua2kgQ81yME9P1q1FzfZjoSx0V2r)xzrS0Apw8E7AOC7fN5(ngq7wY)8ShFE2J3HoM)8ShVvi5zo7X01ZmE79IgGuUb)PclCmFod9SmTPt0tZ0v)QnrtlhTVGO2rwCmqJJgn3OsJ41e1OyCOX0UlLwg0E(XPp9MjiJTuFJJsAm1hBuTfH2xRKJtSZ5vr3d9PS5pQiNQ4d59V]] )
 
-spec:RegisterPack( "Protection", 20241121.1, [[Hekili:1fzqVnkmqu4Fl5svR2k2cH2Q9qVuTxsoKwjx1EBkg7HGvbBl7Hnk7b)BVgilHnkrrkAa)EFE49Gu4nGj5ecBYUllpnnlnjnB59zpamAVfbMLl(IVnoO5TX)F1ziuqkJU)O9ngUShH305eXJbwzNQHwPHYZXnp)xrTwuaBsbwTskXrLOx0B26mvQMih(Wv4tSouyAl50pE6NLngJ0f3LBvvpTOSRQkjEa1GF6RnDusNnS(S(MjAW6LekQ5Ur6u)aLen4vs8XRo88ofvR0z3hwpbiARZJFQiS1p)LwZyg9h057h6JHLXyihy74oTsV1dSvTwJJqzOilum6nu0O8KpjSogcDuTXbSFJv)LlQJzl3JYx0ZBHqXhCNtzCHIRx9(naBW(qRIv8UgkoUzOL5hATP1fyOMx2Gs4zGIl4Cr)B9NRG67NdP1e1JcycxeRtXb2IqX5QNJ4NQYPl(sC(pxZW1BC5fnEs)fkUkuCshEe7yTp8bo(d((p]] )
+spec:RegisterPack( "Protection", 20260225.2, [[Hekili:1fzqVnkmqu4Fl5svR2k2cH2Q9qVuTxsoKwjx1EBkg7HGvbBl7Hnk7b)BVgilHnkrrkAa)EFE49Gu4nGj5ecBYUllpnnlnjnB59zpamAVfbMLl(IVnoO5TX)F1ziuqkJU)O9ngUShH305eXJbwzNQHwPHYZXnp)xrTwuaBsbwTskXrLOx0B26mvQMih(Wv4tSouyAl50pE6NLngJ0f3LBvvpTOSRQkjEa1GF6RnDusNnS(S(MjAW6LekQ5Ur6u)aLen4vs8XRo88ofvR0z3hwpbiARZJFQiS1p)LwZyg9h057h6JHLXyihy74oTsV1dSvTwJJqzOilum6nu0O8KpjSogcDuTXbSFJv)LlQJzl3JYx0ZBHqXhCNtzCHIRx9(naBW(qRIv8UgkoUzOL5hATP1fyOMx2Gs4zGIl4Cr)B9NRG67NdP1e1JcycxeRtXb2IqX5QNJ4NQYPl(sC(pxZW1BC5fnEs)fkUkuCshEe7yTp8bo(d((p]] )
 
+spec:RegisterPack( "Kebab", 20260225.3, [[Hekili:1E1tVTkoq8pl9sUSvSbA7BBLcrA3t7Rh6EGvAVb4atkwXGr2MMMvv8zFTXbJHyiTvAV0s8mZVz88Fh7h)3Xr5ibe)sW6GFSoi4bVa)hE8H4iXPAioQgLDa9Q8JkuP8V)oRKRo8eHIYvYYPnSmjH4ODnyI4NvX7Cc49pj5TgYIFXpoQaNNdAobEMg120)bXyykRnTw9pS4uB6E1p)t4aMGLALr3JjsDHYeyAf3RMbz0YDiXVe(R7iuAotAP3I3hQ(VxwdJbvInpUU9zNsGeccKWlOncLq3SRz)EVYt6t8AQDlgUsaYBCDNmDISdyCGDayjCbQkdKIUY2c2g6FftOtSbBy0XtrBJ)6vzukjNESYlRaXKKyqjcxX3e67wpA2AF2qvEgVPkxAYiwjLPunhecC1RCVCqzejNPdvODeiFL(upBP8Kgy2HnZiyj69KogwDZzzH3RPC4SSYBLqzucpc8gq2oN(lXvjDCyB75Geceb)VsbgcGtrqXvhrZLO3sUuE7WTYHHiKe9ptiyU4wv2FyVBNBZkRP6soH3HSgrxi98TSaqerHxDMytyW6RcaJkqQJSIzEg1lfsWWvhaH)IudCtTMQr2fTCajksoI5fw2UaxcjcAsog2eExWhFOZsvvCKgU23na357UeScGrXzYSag(aCBJm2tLHLxZYd9vORe4nqgCGsmWd91P59kZF96nQS6cuvEISZbK7sfzea92vXE73c7Jfyg5iUYjrzcKaroF3CXGvkWnM6vdKQ8)HJhb2e3zFMW3WFQYSj5jfCNO9PDDNHrZVtOmxlxY7uc6BaRMEeyoPoJZ1LgDsD(HbpT2TaF(zb2snPX)L(YBMtYrn(Dj2kt3mJRY0gRZ4goMbO8t9Za6t1nZE0AFGDz5oxmEIIdvjkyG8UtK9m702EIK3tlN1UYDEECKevU0gS3iio6iIvPuAC0plRLijRbtFOnvBUTPQwHCV2NJJ6(sTQrV)t(9lD7TC2Fe)hXrzY9faggPxoyi9RnnSn1VnDvBQPAOFbc5Ei2fuXrwXbLgesd(tRMTtuJUAzqv9)(sDC3xshdiA8XkqUxbspfty0gxjtpyZ0OO3eg)HnJd6zmt)2S2TDYvB6M20NwpaNP2uHXJZIXnTPtRbTWWQCvbZtlbZibNuX6kE4VEz00r5zRo7iVufQvUYyh12W(0)jvRo4DJttWu12jrVl0u72F68ZDMYW464PU)5CHc1E97rneXYLQlVYzNXm7ANJDbZS6z)9X9cODuTxcvhcU2IOd(bBRA5UfxD10jwQZfuhu8LKD1iX06zYYS6wQj6h0zw(Z0fX5f4ITyL(FPVkWQWEYESJ0Y5LHmnHCyLljUPZFxUL5LnlNDDrbZJZ1fA(42xQl08nYN7zIZ0eW3Yqnp3C54tVHo9PJUBDiFpQ68zEgPo06px9(0bjAHhpCqmeY)EdRNUUENzpEL9)FhJ)LmGRmC)AtsV)ZoxEATZO4VZM2xTL)GIhQrf2Tf6JF9S1)YZjMwGdEcMWZiNH(vOU8el1aY6PO6007cAt)4J(SFRNKA3TS)nTD3n5Td1ikKTSJ(Rg2PMUJI)V)]] )
 
+spec:RegisterPackSelector( "kebab", "Kebab", "|T132347:0|t Kebab",
+   "If you're in Kebab spec, this priority will be automatically selected for you.",
+   function( tab1, tab2, tab3 )
+       return state.action.mortal_strike.known and state.talent.flurry.rank >= 1
+   end )
 
 spec:RegisterPackSelector( "arms", "Arms", "|T132292:0|t Arms",
     "If you have spent more points in |T132292:0|t Arms than in any other tree, this priority will be automatically selected for you.",
     function( tab1, tab2, tab3 )
-        return tab1 > max( tab2, tab3 )
+        return tab1 > max( tab2, tab3 ) and not (state.action.mortal_strike.known and state.talent.flurry.rank >= 1)
     end )
 
 spec:RegisterPackSelector( "fury", "Fury", "|T132347:0|t Fury",

@@ -13,22 +13,21 @@ actions+=/run_action_list,name=rotation
 actions.cooldowns+=/trinket1
 actions.cooldowns+=/trinket2
 actions.cooldowns+=/potion
+actions.cooldowns+=/sweeping_strikes,if=active_enemies>1
 actions.cooldowns+=/death_wish,if=target.time_to_die<=32|buff.bloodlust.up
 
-actions.execute+=/heroic_strike,use_off_gcd=1,if=active_enemies=1&rage.time_to_100<mainhand_speed
-actions.execute+=/cleave,use_off_gcd=1,if=active_enemies>1&rage.time_to_100<mainhand_speed
+actions.execute+=/heroic_strike,use_off_gcd=1,if=active_enemies=1&target.health.pct<=20&settings.execute_queueing_enabled
+actions.execute+=/cleave,use_off_gcd=1,if=active_enemies>1&target.health.pct<=20&settings.execute_queueing_enabled
 actions.execute+=/whirlwind
-actions.execute+=/mortal_strike
-actions.execute+=/execute,if=!cooldown.whirlwind.up&!cooldown.mortal_strike.up
+actions.execute+=/execute
 
 actions.rotation+=/heroic_strike,use_off_gcd=1,if=active_enemies=1&should_hs
 actions.rotation+=/cleave,use_off_gcd=1,if=active_enemies>1&should_cleave
-actions.rotation+=/whirlwind,if=active_enemies>1
 actions.rotation+=/overpower
-actions.rotation+=/mortal_strike
 actions.rotation+=/whirlwind
 actions.rotation+=/victory_rush
-actions.rotation+=/bloodrage,if=rage.current<90&buff.berserker_stance.up
+actions.rotation+=/mortal_strike
+actions.rotation+=/bloodrage,if=rage.current<80&buff.berserker_stance.up
 actions.rotation+=/battle_shout,if=!buff.my_shout.up
 actions.rotation+=/berserker_stance,use_off_gcd=1,if=!up
 actions.rotation+=/battle_stance,use_off_gcd=1,if=!up&settings.overpower_enabled&buff.overpower_ready.remains>1&rage.current>=action.overpower.cost&rage.current<settings.overpower_threshold&!buff.flurry.up&!cooldown.mortal_strike.up&!cooldown.whirlwind.up
