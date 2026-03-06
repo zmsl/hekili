@@ -2149,13 +2149,13 @@ spec:RegisterPack( "Kebab", 20260225.3, [[Hekili:1E1tVTkoq8pl9sUSvSbA7BBLcrA3t7R
 spec:RegisterPackSelector( "kebab", "Kebab", "|T132347:0|t Kebab",
    "If you're in Kebab spec, this priority will be automatically selected for you.",
    function( tab1, tab2, tab3 )
-       return state.action.mortal_strike.known and state.talent.flurry.rank >= 1
+       return (state.action.mortal_strike and state.action.mortal_strike.known and state.talent.flurry and state.talent.flurry.rank >= 1)
    end )
 
 spec:RegisterPackSelector( "arms", "Arms", "|T132292:0|t Arms",
     "If you have spent more points in |T132292:0|t Arms than in any other tree, this priority will be automatically selected for you.",
     function( tab1, tab2, tab3 )
-        return tab1 > max( tab2, tab3 ) and not (state.action.mortal_strike.known and state.talent.flurry.rank >= 1)
+        return tab1 > max( tab2, tab3 ) and not (state.action.mortal_strike and state.action.mortal_strike.known and state.talent.flurry and state.talent.flurry.rank >= 1)
     end )
 
 spec:RegisterPackSelector( "fury", "Fury", "|T132347:0|t Fury",

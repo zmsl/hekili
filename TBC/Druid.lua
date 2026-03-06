@@ -111,7 +111,7 @@ end )
 
 -- Maul Helper
 local finish_maul = setfenv( function()
-    spend( (buff.clearcasting.up and 0) or ((15 - talent.ferocity.rank) * ((buff.berserk.up and 0.5) or 1)), "rage" )
+    spend( (buff.clearcasting.up and 0) or ((15 - talent.ferocity.rank)), "rage" )
 end, state )
 
 spec:RegisterStateFunction( "start_maul", function()
@@ -187,55 +187,70 @@ spec:RegisterResource( Enum.PowerType.Energy, {
 })
 
 -- Talents
-spec:RegisterTalents( {
-    improved_wrath = { 23, 5, 16814, 16815, 16816, 16817, 16818 },
-    natures_grasp = { 24, 1, 16689, 16810, 16811, 16812, 16813, 17329 },
-    improved_natures_grasp = { 25, 4, 17245, 17247, 17248, 17249 },
-    improved_entangling_roots = { 26, 3, 16918, 16919, 16920 },
-    improved_moonfire = { 27, 5, 16821, 16822, 16823, 16824, 16825 },
-    natural_weapons = { 28, 5, 16902, 16903, 16904, 16905, 16906 },
-    natural_shapeshifter = { 29, 3, 16833, 16834, 16835 },
-    improved_thorns = { 30, 3, 16836, 16839, 16840 },
-    omen_of_clarity = { 31, 1, 16864 },
-    natures_reach = { 32, 2, 16819, 16820 },
-    vengeance = { 33, 5, 16909, 16910, 16911, 16912, 16913 },
-    improved_starfire = { 34, 5, 16850, 16923, 16924, 16925, 16926 },
-    natures_grace = { 35, 1, 16880 },
-    moonglow = { 36, 3, 16845, 16846, 16847 },
-    moonfury = { 37, 5, 16896, 16897, 16899, 16900, 16901 },
-    moonkin_form = { 38, 1, 24858 },
-    ferocity = { 39, 5, 16934, 16935, 16936, 16937, 16938 },
-    feral_aggression = { 40, 5, 16858, 16859, 16860, 16861, 16862 },
-    feral_instinct = { 41, 5, 16947, 16948, 16949, 16950, 16951 },
-    brutal_impact = { 42, 2, 16940, 16941 },
-    thick_hide = { 43, 5, 16929, 16930, 16931, 16932, 16933 },
-    feline_swiftness = { 44, 2, 17002, 24866 },
-    feral_charge = { 45, 1, 16979 },
-    sharpened_claws = { 46, 3, 16942, 16943, 16944 },
-    improved_shred = { 47, 2, 16966, 16968 },
-    predatory_strikes = { 48, 3, 16972, 16974, 16975 },
-    blood_frenzy = { 49, 2, 16952, 16954 },
-    primal_fury = { 50, 2, 16958, 16961 },
-    savage_fury = { 51, 2, 16998, 16999 },
-    faerie_fire_feral = { 52, 4, 16857, 17390, 17391, 17392 },
-    heart_of_the_wild = { 53, 5, 17003, 17004, 17005, 17006, 24894 },
-    leader_of_the_pack = { 54, 1, 17007 },
-    improved_mark_of_the_wild = { 55, 5, 17050, 17051, 17053, 17054, 17055 },
-    furor = { 56, 5, 17056, 17058, 17059, 17060, 17061 },
-    improved_healing_touch = { 57, 5, 17069, 17070, 17071, 17072, 17073 },
-    natures_focus = { 58, 5, 17063, 17065, 17066, 17067, 17068 },
-    improved_enrage = { 59, 2, 17079, 17082 },
-    reflection = { 60, 3, 17106, 17107, 17108 },
-    insect_swarm = { 61, 5, 5570, 24974, 24975, 24976, 24977 },
-    subtlety = { 62, 5, 17118, 17119, 17120, 17121, 17122 },
-    tranquil_spirit = { 63, 5, 24968, 24969, 24970, 24971, 24972 },
-    improved_rejuvenation = { 64, 3, 17111, 17112, 17113 },
-    natures_swiftness = { 65, 1, 17116 },
-    gift_of_nature = { 66, 5, 17104, 24943, 24944, 24945, 24946 },
-    improved_tranquility = { 67, 2, 17123, 17124 },
-    improved_regrowth = { 68, 5, 17074, 17075, 17076, 17077, 17078 },
-    swiftmend = { 69, 1, 18562 },
-} )
+spec:RegisterTalents({
+    starlight_wrath = { 762, 5, 16814, 16815, 16816, 16817, 16818 },
+    natures_grasp = { 761, 1, 16689 },
+    improved_natures_grasp = { 921, 4, 17245, 17247, 17248, 17249 },
+    control_of_nature = { 787, 3, 16918, 16919, 16920 },
+    focused_starlight = { 1822, 2, 35363, 35364 },
+    improved_moonfire = { 763, 2, 16821, 16822 },
+    brambles = { 782, 3, 16836, 16839, 16840 },
+    insect_swarm = { 788, 1, 5570 },
+    natures_reach = { 764, 2, 16819, 16820 },
+    vengeance = { 792, 5, 16909, 16910, 16911, 16912, 16913 },
+    celestial_focus = { 784, 3, 16850, 16923, 16924 },
+    lunar_guidance = { 1782, 3, 33589, 33590, 33591 },
+    natures_grace = { 789, 1, 16880 },
+    moonglow = { 783, 3, 16845, 16846, 16847 },
+    moonfury = { 790, 5, 16896, 16897, 16899, 16900, 16901 },
+    balance_of_power = { 1783, 2, 33592, 33596 },
+    dreamstate = { 1784, 3, 33597, 33599, 33956 },
+    moonkin_form = { 793, 1, 24858 },
+    improved_faerie_fire = { 1785, 3, 33600, 33601, 33602 },
+    wrath_of_cenarius = { 1786, 5, 33603, 33604, 33605, 33606, 33607 },
+    force_of_nature = { 1787, 1, 33831 },
+    ferocity = { 796, 5, 16934, 16935, 16936, 16937, 16938 },
+    feral_aggression = { 795, 5, 16858, 16859, 16860, 16861, 16862 },
+    feral_instinct = { 799, 3, 16947, 16948, 16949 },
+    brutal_impact = { 797, 2, 16940, 16941 },
+    thick_hide = { 794, 3, 16929, 16930, 16931 },
+    feline_swiftness = { 807, 2, 17002, 24866 },
+    feral_charge = { 804, 1, 16979 },
+    sharpened_claws = { 798, 3, 16942, 16943, 16944 },
+    shredding_attacks = { 802, 2, 16966, 16968 },
+    predatory_strikes = { 803, 3, 16972, 16974, 16975 },
+    primal_fury = { 801, 2, 37116, 37117 },
+    savage_fury = { 805, 2, 16998, 16999 },
+    faerie_fire_feral = { 1162, 1, 16857 },
+    nurturing_instinct = { 1792, 2, 33872, 33873 },
+    heart_of_the_wild = { 808, 5, 17003, 17004, 17005, 17006, 24894 },
+    survival_of_the_fittest = { 1794, 3, 33853, 33855, 33856 },
+    primal_tenacity = { 1793, 3, 33851, 33852, 33957 },
+    leader_of_the_pack = { 809, 1, 17007 },
+    improved_leader_of_the_pack = { 1798, 2, 34297, 34300 },
+    predatory_instincts = { 1795, 5, 33859, 33866, 33867, 33868, 33869 },
+    mangle = { 1796, 1, 33917 },
+    improved_mark_of_the_wild = { 821, 5, 17050, 17051, 17053, 17054, 17055 },
+    furor = { 822, 5, 17056, 17058, 17059, 17060, 17061 },
+    naturalist = { 824, 5, 17069, 17070, 17071, 17072, 17073 },
+    natures_focus = { 823, 5, 17063, 17065, 17066, 17067, 17068 },
+    natural_shapeshifter = { 826, 3, 16833, 16834, 16835 },
+    intensity = { 829, 3, 17106, 17107, 17108 },
+    subtlety = { 841, 5, 17118, 17119, 17120, 17121, 17122 },
+    omen_of_clarity = { 827, 1, 16864 },
+    tranquil_spirit = { 843, 5, 24968, 24969, 24970, 24971, 24972 },
+    improved_rejuvenation = { 830, 3, 17111, 17112, 17113 },
+    natures_swiftness = { 831, 1, 17116 },
+    gift_of_nature = { 828, 5, 17104, 24943, 24944, 24945, 24946 },
+    improved_tranquility = { 842, 2, 17123, 17124 },
+    empowered_touch = { 1788, 2, 33879, 33880 },
+    improved_regrowth = { 825, 5, 17074, 17075, 17076, 17077, 17078 },
+    living_spirit = { 1797, 3, 34151, 34152, 34153 },
+    swiftmend = { 844, 1, 18562 },
+    natural_perfection = { 1790, 3, 33881, 33882, 33883 },
+    empowered_rejuvenation = { 1789, 5, 33886, 33887, 33888, 33889, 33890 },
+    tree_of_life = { 1791, 1, 33891 },
+})
 
 -- Auras
 spec:RegisterAuras( {
@@ -766,6 +781,7 @@ mangle_bear = {
 
     handler = function ()
         applyDebuff( "target", "mangle_bear" )
+		removeBuff( "clearcasting" )
     end,
 
     copy = { 33986, 33987, 33878 }
@@ -786,7 +802,9 @@ mangle_cat = {
     texture = 132135,
 
     handler = function ()
+        gain( 1, "combo_points" )
         applyDebuff( "target", "mangle_cat" )
+		removeBuff( "clearcasting" )
     end,
 
     copy = { 33983, 33876, 33982 }
@@ -800,7 +818,7 @@ lacerate = {
     cooldown = 0,
     gcd = "totem",
 
-    spend = function() return ((buff.clearcasting.up and 0) or 15) - talent.improved_shred.rank end,
+    spend = function() return ((buff.clearcasting.up and 0) or 15) - talent.shredding_attacks.rank end,
     spendType = "rage",
 
     startsCombat = true,
@@ -808,6 +826,7 @@ lacerate = {
 
     handler = function ()
         applyDebuff( "target", "lacerate" )
+		removeBuff( "clearcasting" )
     end,
 
     copy = { 33745 }
@@ -1098,7 +1117,7 @@ lacerate = {
     -- Heals a friendly target for 40 to 55.
     healing_touch = {
         id = 5185,
-        cast = function() return buff.natures_swiftness.up and 0 or 3.5 - (buff.natures_grace.up and 0.5 or 0) - (talent.improved_healing_touch.rank * 0.1) end,
+        cast = function() return buff.natures_swiftness.up and 0 or 3.5 - (buff.natures_grace.up and 0.5 or 0) - (talent.naturalist.rank * 0.1) end,
         cooldown = 0,
         gcd = "spell",
 
@@ -1382,8 +1401,12 @@ lacerate = {
         startsCombat = true,
         texture = 132142,
 
+        buff = "prowl",
+
         handler = function ()
+            setDistance( 0 )
             removeBuff( "clearcasting" )
+            removeBuff( "prowl" )
             applyDebuff( "target", "pounce", 3)
             applyDebuff( "target", "pounce_bleed", 18 )
             gain( 1, "combo_points" )
@@ -1584,7 +1607,7 @@ lacerate = {
         cooldown = 0,
         gcd = "totem",
 
-        spend = function () return (buff.clearcasting.up and 0) or (60 - (talent.improved_shred.rank * 9)) end,
+        spend = function () return (buff.clearcasting.up and 0) or (60 - (talent.shredding_attacks.rank * 9)) end,
         spendType = "energy",
 
         startsCombat = true,
@@ -1786,7 +1809,7 @@ lacerate = {
     -- Causes 18 to 21 Nature damage to the target.
     wrath = {
         id = 5176,
-        cast = function() return buff.natures_swiftness.up and 0 or 2 - (talent.improved_wrath.rank * 0.1) - (buff.natures_grace.up and 0.5 or 0) end,
+        cast = function() return buff.natures_swiftness.up and 0 or 2 - (talent.starlight_wrath.rank * 0.1) - (buff.natures_grace.up and 0.5 or 0) end,
         cooldown = 0,
         gcd = "spell",
 
@@ -1982,7 +2005,7 @@ if (Hekili.Version:match( "^Dev" )) then
 end
 
 -- Default Packs
-spec:RegisterPack( "Feral", 20241120.4, [[Hekili:TZv3Vnkoq8)w4fer32CH0pUEsj9HtRoPDFyVtkNUhHqatlQemYy2OEQI)2p)bymG5JSjPztlV0TbpE8m)MFZmM0rRLP1)yTYZbdS(28zZVX0CU5uZ53C3TMwRWVedSwf74(SZJKFjYzl5N)ja5esF6lHqhp6UtGPixYkwR2KgeI)sK1gLQ8MBiYgdCT(Mjr5pf45b4IcsCP7ogb9dcjkYXfhaJsMgefbqFNOiBiYo5PaF8VS8xfp8tb(ltayCq0JYIcIC2ec805kPCHPphb3fPV1jYzASlEXYYTGFcbsEcg6PJXEpmp7RDAaBajyBQASJHuX6rCMKO0iqpY56GT9HOTzFTuqKt0JapYI4GhbOeB)u0lu3gq2)JVm1nfHar4LMZMPJDqpcWtHP4KapWTk0HVdafaS9dqKFqdIun5b2K67pTXAtrGTobrjlmNR3ug5vREWZLn)yeWfUDJdhgqpBd9jynWExqOh9W1sJ11y6(rcgiV600y1Qb)eefLKVz1IuaKmH4wo5tmnk2arS0eGDagSnPuUIDkF6ej5H5EfRoVOX5Z5E5bTf58tHYCHjyz1j4nhOE6aokfICo28pzhgKG)envF5gGdIUl2MOFqLx76eg2CRCsxVNa12sGHq6PWJF2BHEa2Zg0MHqUFzidjpuwwigUJK3qZWe1fmilAVbgLMmDhm0p5jGJ3sZxFf7es27uskgertAEE5Tt0RQwvq9KbzNXjY5fuSKfHtd)eLgc99TF0LyfLXi6AvscY3tYUGyGDrKbrQllmV7M1q6gP1Ywrb4tT7GyQ6me4g5bcaJgyGeoDqeorbetf1LKhNxLG8rkfLwiDPH5SjtuEGeJb6gattS3eWRKxE20NugTA55vpnPpLxzsYaz7dhSfm51xBrBAQC8jt6Z1z6WnwTl6g6SRoCtORVPOn)8siT38A224HL3DTkXFphBKaevlqJzSCW8mDMG8loupug3EXVMT3Bc(lmNPqFfmJtc1yYb6aNiRs3ihzO0aBmKqhCF(bvvWz8efoHGFRDYmXl5maIEhMK6geFEb1LjBPbyCvt3yro8OzOTxwEzmxQue5mR)qZB15x4kK0oZ1jHQkI1OKj3SQ1iB4sHnOPkkFGvRgJ(xmr)g59ZVx)ycM6Ah1yJc5Usvlmv7vL3sQYzODmnqse7yQUdXF)jKVvLoixA40uXOFiixdk8XLkWzIdqreLrGJY98gRCEPu504JuLt13pCSY5BhFRk88ESY5fXlJ2Ao5rL7(HQoAZYOkBIw8TdngzVKJS6QsXn1fQGgMTXiYtl0KQVPovFt)VX3NAKUC2OlcfuRJWitzpW7(8RFMzkQ(slMu52OO3H3pAKEVhKK(8Rlp6T27D(9EE9FRvFN8zc1xmOtZMET1QDoOiQ8wR(Y2yictUaX67ZwZZsYwtttsMM9vRvSFJobv8XLG8BFJnow54N1FyTYfrIxOah6dLdizRxMT2C2SS16zRRn7pfdqL1kPXgYctmYwvEoc26yaLTEb54MZoTMYQsQAJfuPn14miwg2AvZsgDdhIGsJj)ID85)bCRn9xSLkMamI1sWqftbg3(XK)9HS1swUqubwwSs9r)r2MjYETSSI56PMq3iluXiMuvgmnq57Kg2d2OLTMfIKguPsvlM7PUzeDQJCVSW16ubfZmKa6fm4fIWuLjQPdyTaMovhyzSHCs3o0tsryJS97AD7S9kppvLkOw3uEjcB(Gxs3bvX)wnfxE4v)oERS58kmKTFFR2fTyR8eynmZQyKxO6(37cYmQhoEGK(PQ2QCESbtK6ZRfV6x26xFLwOP2CBXw82S1tuWaOhPkkar6H7TqilaBoRLarF7poHNllgAXEZMZzZf8oftlPmhU6Gw2BAU8M5Jx5ELyRK9JlrQo9ndjgG0nhyERQE)1in8()fytL7riveFjJgzoJrjKJZbXDdo1B5s10DxxQa231x3GLSdkF1RcYDNR30HAEtNAiI46QmNLMF05jO1g(pPi)zarH8RNwbBRoogn6VXrUQna7SEBEsR0azjX7cD2X5CSsK9LmXqW85RuoTjnK3CmFAmPAPt2H8WxYUQWDZKCqXCA24canVau9M8IsQxW5oJe)cIFLGpJRQkEhN0D0UETi6nTNnWM)kUBDFXUZa5sf)QZcRNhBSGaR4nfzvbA7TfR4E)aHRoV47zhn(yLUloX9zxCGGHJlKHXCv1cKFLAWyHYabNjODairD6DT7(iSwvlBElBZ8xBS2W8vl9wCZPoB6pYQhz1hrwTMAUzx9UB)L4hPNJ0ZJo9SLcRZVVWroHHtHfCYpgv74Q2Uqv7AQpulVDKrHmNqNkNnDApKJhY9oopQnIC9IZNRA3dh6L0VsmCzlXDbiuebALDy0Y7E9d8Yj1)oPh7to2N8KKFlcyJ9jhA1(jd5L2mg7s(XQlPIGXypY(6rkvc6T(R)R9)STN9oSdOCyFRFWP9JnzpILhQWWB0Hv1xJxF)H)hzNJSZ3i2jtG2QoBYwvCanh1)g)vLBoMhJC7rU9pJCBHQRDZJHnysQV1HzNtsXi5FK8FCj)AdG)B04vvRt8ox8YHhBqVXV4YbvdOZPh8CH1J1a2RD9oRgG2yzGFKYafWY(EfIdRccF0mDsaE)vu())bNT(Z)9kIP8L)LQ4u6yhBT6Za))ZX9jM8w)p]] )
+spec:RegisterPack( "Feral", 20260306.1, [[Hekili:T31wVTTos4Fl6fdB0wVwoTzBbSZdlwSa98q2fWl2hLSSeTJqKffOORrbc0V9Lx0fkQHskj2oUjc4GIyYHdNlFZmuYJ5XX25)6SkWJICUF(S53o7Mz3o1EM93(QTZk6VtqoRs88F0Bh7pI92Z(3)fI4fXh93ryVa(QtXhi(SzCwT5qye9NXoBAWYz)W(g75mAtq(o3BZy(dHbbijPOuF(Qti4THrmg55tdXXPttiiF8(nE0pT8VT3J8OlERl9bK7XWOGphUDP1HKrwBoSD70DHBPQZo9qs2FbXg6dysCA(IHjbVhfZ5LFKhjK(BbTInrBcJ7HVh1DlMSVAL8pjixDb4JrmItWhI9rCsLR3Dpoa5MIJWnPL49lMJqLleV4DOaUEfUdrsD3EGieyumIS73t9pqiOy6s7zZgr9i7q0P4d00Wa03a4Xwpeje5UnKW(hUxUsbesatdgfGKkKoPtjO9EHXPlSNdqJ6S1LJ5aYXEmoMVkGT3kN3fKWhttXgT3l2RqZVBPK7vlWhNs)0ybt2G8iU5UMr50vngNWNEkF4cxQy0jQEGWyMP(xmWUlM4M(adhY0GYb5QqkIsdJ3Pskk2BtekOytlNy6JX4JXsniXNUyz1sOpqqPpGJcgrPb3nVdbydkLHKySXnbZjRdYfusoeJ6GovK94s9kbFKH94KuQyS5C3GJpKo9ioAB6diVGL2mpveZNmLbsXeU7(XLg8wgn3mz4qkYnKI2NwbpkjxjIueAX)Rojt3w1iSTMmUasevzxPT8vYNwYIureBFCLFYnkmL(zEk6LCmmFvna51zFuuZLkJb7Moraz5EueE2PKX1jEQTwt312IXyP94sc(6HyLKQMsGBYfaHdrFMJwXB36UZNjdvUs(C1QFKVM0JHji3chiHLTVu8UDwdQHtydK(vjZzZm31Rlv4Im66BMyOzbNf2Za54PtGbyojmPEEj2aLycoAdZcWdJPPvE8AK6xTNSpkQSWY0UCS9Sjta3qg6zxeYLnstlWDlV9MNEAS(G2FBKmvueZd67LY3D2obZFM2I9dXhsD3eklLuPB8rkvUXggVU2O8P8YXkgaX6OH7rtysTHDXcYY(0t6bYtMmPlZTGV(gu7kZkmQmY7Oa2KhUwrUS6PoyMLY4IcoK7xkRCDamSaI8pAUAfJe0e6(ybHWU3eZfPErzQe8tEqBZ13QO88Krtke5q2ZcMDYR0kEMKQrfzm54txkMHt9F8oOI9camGsug4zD2eX3BHMS9QFuoAmZoSGBgylPHb6lnvTf5MmlfPUM2aQmQ4Gxw5uiGrZuSdiKUu1RzeIfKN)vMvBar0LQEvJiAKFy(3hDknWJSoP(la6(cu5pO1cPTSSHJToLciZJDkz3RrFVcXB1HdQPlopzr62eKZbaDCjGDMPaClcOh4KCgXHSPDPQxZzth)rkBk8zlhYME5WB1npVhZM(hXd3AmM8KID)WNBTzQvWITfVgSbVDx66FAE7rqPcShvYcUR3LsyJwWjO3qi03h1f(SydqORkiujd0QMmGE(aJEGEXitQD6wY7WZBna5hG8AqER37y(N5Jy4S6xSpZchk7uZ5tTDwD0JeZP3z1p3NGju2Hpw)JS1YiNS18qN0Pz)LZkXFXBbuzFdX(R7f9tAU9Z5F4SYNW8xKqp(GQoKS1lZwBpBw26rzR1AHVIoa1zLsBn6qzcPrMBLTwycl)QA5Sn3SASzfZwVGjdZnqlevAnVyLG2yp4I7nppX1QukuAVri7Jym1ExkB9Dll8p1B1XS1FkB948DRwVGX5r(kQ30JzRF6PYPQ1muzRNuPXfBdtrPIE39yu7(F9mmvSs2dSLo4IHLFl8QCtSvCPTCNu6Vk(iTBTZ76kfDGnq74k1wWIzLZwF7SQLx1TwD6TbGxn86q9fq7imM1qwBdYYxSq9xzBBXKCK(mzCTRSDVBwDSDdwnyDdF5BJz6(VACphlIoGs(l2vO03YGnTu4AYOSuGm2LgixXyUTLfcj)pfttycxg)2lW99Mj9I5ydbuTreLyQIJqX7eDDBBqK3CDwD3vpmsVMV5U1S2VM4wEOoHmWZn3LeyzY(WxSEA466xpmF5hMtvAEoRskIcB8cvtCoRm4o(cSHAbOtYQHvOHvYOjcgGxtNU9MsPfAABz9zHWQ3EcAH(I3NlhX)3hq8di(RaeVfmUvP8ATUOIdD)(lOU1aOEauFrb1gsvp)7fkYz0vxkbN9TbAfFX0H0mZPUSA5f4gxqZzuPYrtN3n50z5EhhhzciRN4(TkVE)n9k8h0gU0GFV0iu4bmIogR9KED(ap)yOg6liUDOg6fk2V0zoudTVvcM0NhrC8qf0pwvqbCgd1p7Q(PskOZZRB0E217BFPhz96A(xD09qD2lugIAG8gfzHEVH2M)62gGUdq3RgORGatzVTfZwUbnB9rLhiInNa3R)fqw(LPvVdFgcigci(ZlGOK1AhNPpNLr)RxFiWyiW4AlWWQhXgJB8SX6GY3kmB)9nKl8tk1N8d6TcZq(HH8d)jMFWAifXljfrHz55E0JELDHcoERnfA5(14YXuiP5DHQ2fKPyQIljtPrc4IYuX)Waovz6kjTrdNQFtqwV1tLDUyvRJMFnpQruRTAiK1vvDtBEZfk7tAPUOFdgkMRJUb2Cd8wmtvFKk6k3RMojTkE7u3oOMBb13GSfnAeuZiOtEZOvdoNFl6b1lQWgOp2fHBRNOUvltrHPTEQIwB6V8Wx9B3WgVkerV3NF3t3EQwgtRcEeMDGBnBvXU(fUDNbRQlwEnB3z7ElKIMxR2v8rBU2dpkyy(VWH2Y0HX7B3yDnKiWS1goraW7hUFz6gcKnfi)v1azPvTEmS5mLvXWk3ELqHVbOTEhI6o4vMd3R8oSUIxLxj2DgJAMh5N4PxrSQ)eIQFWJfWN7OLJy9CIOFjBy1506YB1zUJg)UekJxn)SZcMQ(7UQ2rIk(PdPxjW8bUuwC(V5Uxyl4keSQFNok8v(t5QLUsQf1vpSSgJlpIj035ApyU2d79wEgAnTIxob6BJZOsPT(KuN8NFAJxkk4FhN))MnYw)p)pRyA9p)F8Suh4vvDwTYJkj35))]] )
 
 spec:RegisterPackSelector( "balance", "Balance (IV)", "|T136096:0|t Balance",
     "If you have spent more points in |T136096:0|t Balance than in any other tree, this priority will be automatically selected for you.",
