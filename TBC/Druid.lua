@@ -74,12 +74,40 @@ spec:RegisterStateExpr("ttd", function()
     return target.time_to_die
 end)
 
-spec:RegisterStateExpr("combat_mode_solo", function()
-    return settings.combat_mode == "solo"
+spec:RegisterStateExpr("combat_mode_group", function()
+    local mode = settings.combat_mode
+    if mode == "group" then return true end
+    if mode == "solo"  then return false end
+    -- dynamic modes
+    if mode == "dynamic_everywhere" then
+        return group
+    elseif mode == "dynamic_raid" then
+        return group and instanceType == "raid"
+    else -- "dynamic_dungeon_raid" (default)
+        return group and ( instanceType == "party" or instanceType == "raid" )
+    end
 end)
 
-spec:RegisterStateExpr("combat_mode_group", function()
-    return settings.combat_mode == "group"
+spec:RegisterStateExpr("combat_mode_solo", function()
+    local mode = settings.combat_mode
+    if mode == "solo"  then return true end
+    if mode == "group" then return false end
+    -- dynamic modes
+    if mode == "dynamic_everywhere" then
+        return not group
+    elseif mode == "dynamic_raid" then
+        return not ( group and instanceType == "raid" )
+    else -- "dynamic_dungeon_raid" (default)
+        return not ( group and ( instanceType == "party" or instanceType == "raid" ) )
+    end
+end)
+
+spec:RegisterStateExpr("preferred_form_cat", function()
+    return settings.preferred_form == "cat"
+end)
+
+spec:RegisterStateExpr("preferred_form_bear", function()
+    return settings.preferred_form == "bear"
 end)
 
 -- Form Helper
@@ -952,7 +980,7 @@ lacerate = {
         toggle = "cooldowns",
 
         handler = function ()
-            gain(20 + (talent.improved_enrage.rank * 5), "rage" )
+            gain( 20 + ( { 0, 4, 7, 10 } )[ talent.intensity.rank + 1 ], "rage" )
             applyBuff( "enrage" )
         end,
     },
@@ -1721,6 +1749,7 @@ lacerate = {
         texture = 132242,
 
         handler = function ()
+            applyBuff( "tigers_fury" )
         end,
 
         copy = { 5217, 6793, 9845, 9846 }
@@ -1861,116 +1890,148 @@ spec:RegisterSetting( "druid_general_header", nil, {
     name = "Druid: General"
 } )
 
-spec:RegisterSetting( "innervate_enabled", true, {
-    type = "toggle",
-    name = strformat( "Use %s", Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ) ),
-    desc = strformat( "If unchecked, %s will not be recommended.", Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ) ),
-    width = "1",
+spec:RegisterSetting( "combat_mode", "dynamic_dungeon_raid", {
+    type = "select",
+    name = "Combat Mode",
+    desc = "Controls whether recommendations are tuned for group or solo play.\n\n"
+        .. "|cFFFFFFFFAlways Group:|r Always use group-tuned recommendations.\n"
+        .. "|cFFFFFFFFAlways Solo:|r Always use solo-tuned recommendations.\n"
+        .. "|cFFFFFFFFDynamic - Everywhere:|r Group mode when in any party or raid group.\n"
+        .. "|cFFFFFFFFDynamic - Dungeon / Raid:|r Group mode only inside a 5-man or raid instance.\n"
+        .. "|cFFFFFFFFDynamic - Raid Only:|r Group mode only inside a 10 or 25-man raid instance.",
+    width = "full",
+    values = {
+        group                = "Always Group",
+        solo                 = "Always Solo",
+        dynamic_everywhere   = "Dynamic - Everywhere",
+        dynamic_dungeon_raid = "Dynamic - Dungeon / Raid",
+        dynamic_raid         = "Dynamic - Raid Only",
+    },
+    sorting = { "group", "solo", "dynamic_everywhere", "dynamic_dungeon_raid", "dynamic_raid" },
 } )
 
-spec:RegisterSetting( "innervate_threshold", 20, {
-    type = "range",
-    name = strformat( "Mana threshold for %s", Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ) ),
-    desc = strformat( "If set to zero or more, %s will be recommended when reaching that mana percentage. Setting to -1 will disable the use of %s.\n\n" ..
-        "Default: 20", Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ) ),
-    width = "double",
-    min = 0,
-    max = 100,
-    step = 1
+spec:RegisterSetting( "preferred_form", "cat", {
+    type = "select",
+    name = "Preferred Form",
+    desc = strformat( "The form to shift into before and during combat.\n\n%s: Default DPS mode.\n%s: Tank mode. Enables the full bear rotation.",
+        Hekili:GetSpellLinkWithTexture( spec.abilities.cat_form.id ),
+        Hekili:GetSpellLinkWithTexture( spec.abilities.dire_bear_form.id ) ),
+    width = "full",
+    values = {
+        cat  = Hekili:GetSpellLinkWithTexture( spec.abilities.cat_form.id ),
+        bear = Hekili:GetSpellLinkWithTexture( spec.abilities.dire_bear_form.id ),
+    },
+    sorting = { "cat", "bear" },
 } )
 
 spec:RegisterSetting( "druid_feral_header", nil, {
     type = "header",
-    name = "Feral: General"
+    name = "Feral: Cat"
 } )
 
-spec:RegisterSetting( "combat_mode", "group", {
-    type = "select",
-    name = "Combat Mode",
-    desc = "When Group mode is active, recommendations will be tuned for group damage. When Solo mode is active, recommendations will be tuned for solo / open world play.",
+spec:RegisterSetting( "rip_subheader", nil, {
+    type = "header",
+    name = strformat( "%s", Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ) ),
+} )
+
+spec:RegisterSetting( "ripweave", true, {
+    type = "toggle",
+    name = "Enable Ripweaving",
+    desc = strformat( "Refresh %s early when sitting on high energy to avoid overcap", Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ) ),
     width = "full",
-    values = {
-        group = "Group",
-        solo = "Solo"
-    },
-    sorting = { "group", "solo" }
 } )
 
-spec:RegisterSetting( "powershift_enabled", true, {
-    type = "toggle",
-    name = "Use Powershifting",
-    desc = "If unchecked, Powershifting will not be recommended.",
-    width = "1",
-} )
-
-spec:RegisterSetting( "powershift_time", 1, {
-    type = "range",
-    name = "Minimum Powershift energy tick time",
-    desc = "Specify the minimum energy tick time allowed to weave powershifting into the rotation",
-    width = "double",
-    min = 0,
-    max = 2,
-    step = 0.1,
-} )
-
-spec:RegisterSetting( "rip_enabled", false, {
-    type = "toggle",
-    name = strformat( "Use %s", Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ) ),
-    desc = strformat( "If unchecked, %s will not be recommended.", Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ) ),
-    width = "1",
+spec:RegisterSetting( "ripweave_desc", nil, {
+    type = "description",
+    name = strformat( "Ripweaving refreshes %s before it expires when you have enough energy to avoid overcapping, squeezing out extra damage without dropping uptime.\n\n", Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ) ),
+    width = "full",
 } )
 
 spec:RegisterSetting( "rip_cp", 5, {
     type = "range",
     name = strformat( "Minimum Combo Points for %s", Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ) ),
-    desc = strformat( "Specify the minimum combo points for %s to be recommended\n\n"..
-        "Default: 0", Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ) ),
+    desc = strformat( "Specify the minimum combo points for %s to be recommended\n\nDefault: 5", Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ) ),
     width = "double",
     min = 1,
     max = 5,
     step = 1,
 } )
 
-spec:RegisterSetting( "bite_enabled", true, {
+spec:RegisterSetting( "bite_subheader", nil, {
+    type = "header",
+    name = strformat( "%s", Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ) ),
+} )
+
+spec:RegisterSetting( "bite_over_rip", false, {
     type = "toggle",
-    name = strformat( "Use %s", Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ) ),
-    desc = strformat( "If unchecked, %s will not be recommended.", Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ) ),
-    width = "1",
+    name = strformat( "Enable %s Over %s", Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ) ),
+    desc = strformat( "%s as *only* finisher", Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ) ),
+    width = "full",
+} )
+
+spec:RegisterSetting( "biteweave", true, {
+    type = "toggle",
+    name = "Enable Biteweaving",
+    desc = strformat( "Prefer %s first if energy is high enough to gain another CP before %s", Hekili:GetSpellLinkWithTexture( spec.abilities.shred.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ) ),
+    width = "full",
+} )
+
+spec:RegisterSetting( "biteweave_desc", nil, {
+    type = "description",
+    name = strformat( "Biteweaving delays %s when you have enough energy to build one more combo point with %s first, improving the average energy value per Bite.\n\n", Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.shred.id ) ),
+    width = "full",
 } )
 
 spec:RegisterSetting( "bite_cp", 5, {
     type = "range",
     name = strformat( "Minimum Combo Points for %s", Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ) ),
-    desc = strformat( "Specify the minimum combo points for %s. Set to 0 to disable %s.\n\n"..
-        "Default: 0", Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ) ),
+    desc = strformat( "Specify the minimum combo points for %s. Set to 0 to disable %s.\n\nDefault: 5", Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ) ),
     width = "double",
     min = 1,
     max = 5,
     step = 1,
 } )
 
-spec:RegisterSetting( "bite_line2", nil, {
-    type = "description",
-    name = "",
-    width = "1"
+spec:RegisterSetting( "tricks_subheader", nil, {
+    type = "header",
+    name = "Tricks",
 } )
 
-spec:RegisterSetting( "bite_time", 0, {
+spec:RegisterSetting( "mangle_trick", false, {
+    type = "toggle",
+    name = strformat( "Enable %s Trick", Hekili:GetSpellLinkWithTexture( spec.abilities.mangle_cat.id ) ),
+    desc = strformat( "Nearing a tick and in the double-%s energy window, prefer a second %s over %s (only relevant in no-Wolfshead / 2pT6 builds)",
+        Hekili:GetSpellLinkWithTexture( spec.abilities.mangle_cat.id ),
+        Hekili:GetSpellLinkWithTexture( spec.abilities.mangle_cat.id ),
+        Hekili:GetSpellLinkWithTexture( spec.abilities.shred.id ) ),
+    width = "full",
+} )
+
+spec:RegisterSetting( "rake_trick", false, {
+    type = "toggle",
+    name = strformat( "Enable %s Trick", Hekili:GetSpellLinkWithTexture( spec.abilities.rake.id ) ),
+    desc = strformat( "Cast %s as energy dump at 35 to (mangleCost-1)", Hekili:GetSpellLinkWithTexture( spec.abilities.rake.id ) ),
+    width = "full",
+} )
+
+spec:RegisterSetting( "druid_bear_header", nil, {
+    type = "header",
+    name = "Feral: Bear"
+} )
+
+spec:RegisterSetting( "bear_swipe_ap", 2700, {
     type = "range",
-    name = strformat( "Minimum time left on %s for %s", Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ) ),
-    desc = strformat( "If set above zero, %s will not be recommended unless %s has this much time remaining.\n\n" ..
-        "Default: 4", Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ) ),
+    name = strformat( "Minimum Attack Power for %s over %s",
+        Hekili:GetSpellLinkWithTexture( spec.abilities.swipe_bear.id ),
+        Hekili:GetSpellLinkWithTexture( spec.abilities.lacerate.id ) ),
+    desc = strformat( "When %s is at 5 stacks and safely maintained, %s is preferred over %s only when your Attack Power is at or above this value.\n\nDefault: 2700",
+        Hekili:GetSpellLinkWithTexture( spec.abilities.lacerate.id ),
+        Hekili:GetSpellLinkWithTexture( spec.abilities.swipe_bear.id ),
+        Hekili:GetSpellLinkWithTexture( spec.abilities.lacerate.id ) ),
     width = "double",
     min = 0,
-    softMax = 14,
-    step = 1
-} )
-
-spec:RegisterSetting( "claw_trick_enabled", true, {
-    type = "toggle",
-    name = strformat( "Use %s trick", Hekili:GetSpellLinkWithTexture( spec.abilities.claw.id ) ),
-    desc = strformat( "If unchecked, %s trick during %s logic will not be recommended.", Hekili:GetSpellLinkWithTexture( spec.abilities.claw.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.shred.id ) ),
-    width = "full",
+    max = 5000,
+    step = 50,
 } )
 
 if (Hekili.Version:match( "^Dev" )) then
@@ -2005,7 +2066,7 @@ if (Hekili.Version:match( "^Dev" )) then
 end
 
 -- Default Packs
-spec:RegisterPack( "Feral", 20260306.1, [[Hekili:T31wVTTos4Fl6fdB0wVwoTzBbSZdlwSa98q2fWl2hLSSeTJqKffOORrbc0V9Lx0fkQHskj2oUjc4GIyYHdNlFZmuYJ5XX25)6SkWJICUF(S53o7Mz3o1EM93(QTZk6VtqoRs88F0Bh7pI92Z(3)fI4fXh93ryVa(QtXhi(SzCwT5qye9NXoBAWYz)W(g75mAtq(o3BZy(dHbbijPOuF(Qti4THrmg55tdXXPttiiF8(nE0pT8VT3J8OlERl9bK7XWOGphUDP1HKrwBoSD70DHBPQZo9qs2FbXg6dysCA(IHjbVhfZ5LFKhjK(BbTInrBcJ7HVh1DlMSVAL8pjixDb4JrmItWhI9rCsLR3Dpoa5MIJWnPL49lMJqLleV4DOaUEfUdrsD3EGieyumIS73t9pqiOy6s7zZgr9i7q0P4d00Wa03a4Xwpeje5UnKW(hUxUsbesatdgfGKkKoPtjO9EHXPlSNdqJ6S1LJ5aYXEmoMVkGT3kN3fKWhttXgT3l2RqZVBPK7vlWhNs)0ybt2G8iU5UMr50vngNWNEkF4cxQy0jQEGWyMP(xmWUlM4M(adhY0GYb5QqkIsdJ3Pskk2BtekOytlNy6JX4JXsniXNUyz1sOpqqPpGJcgrPb3nVdbydkLHKySXnbZjRdYfusoeJ6GovK94s9kbFKH94KuQyS5C3GJpKo9ioAB6diVGL2mpveZNmLbsXeU7(XLg8wgn3mz4qkYnKI2NwbpkjxjIueAX)Rojt3w1iSTMmUasevzxPT8vYNwYIureBFCLFYnkmL(zEk6LCmmFvna51zFuuZLkJb7Moraz5EueE2PKX1jEQTwt312IXyP94sc(6HyLKQMsGBYfaHdrFMJwXB36UZNjdvUs(C1QFKVM0JHji3chiHLTVu8UDwdQHtydK(vjZzZm31Rlv4Im66BMyOzbNf2Za54PtGbyojmPEEj2aLycoAdZcWdJPPvE8AK6xTNSpkQSWY0UCS9Sjta3qg6zxeYLnstlWDlV9MNEAS(G2FBKmvueZd67LY3D2obZFM2I9dXhsD3eklLuPB8rkvUXggVU2O8P8YXkgaX6OH7rtysTHDXcYY(0t6bYtMmPlZTGV(gu7kZkmQmY7Oa2KhUwrUS6PoyMLY4IcoK7xkRCDamSaI8pAUAfJe0e6(ybHWU3eZfPErzQe8tEqBZ13QO88Krtke5q2ZcMDYR0kEMKQrfzm54txkMHt9F8oOI9camGsug4zD2eX3BHMS9QFuoAmZoSGBgylPHb6lnvTf5MmlfPUM2aQmQ4Gxw5uiGrZuSdiKUu1RzeIfKN)vMvBar0LQEvJiAKFy(3hDknWJSoP(la6(cu5pO1cPTSSHJToLciZJDkz3RrFVcXB1HdQPlopzr62eKZbaDCjGDMPaClcOh4KCgXHSPDPQxZzth)rkBk8zlhYME5WB1npVhZM(hXd3AmM8KID)WNBTzQvWITfVgSbVDx66FAE7rqPcShvYcUR3LsyJwWjO3qi03h1f(SydqORkiujd0QMmGE(aJEGEXitQD6wY7WZBna5hG8AqER37y(N5Jy4S6xSpZchk7uZ5tTDwD0JeZP3z1p3NGju2Hpw)JS1YiNS18qN0Pz)LZkXFXBbuzFdX(R7f9tAU9Z5F4SYNW8xKqp(GQoKS1lZwBpBw26rzR1AHVIoa1zLsBn6qzcPrMBLTwycl)QA5Sn3SASzfZwVGjdZnqlevAnVyLG2yp4I7nppX1QukuAVri7Jym1ExkB9Dll8p1B1XS1FkB948DRwVGX5r(kQ30JzRF6PYPQ1muzRNuPXfBdtrPIE39yu7(F9mmvSs2dSLo4IHLFl8QCtSvCPTCNu6Vk(iTBTZ76kfDGnq74k1wWIzLZwF7SQLx1TwD6TbGxn86q9fq7imM1qwBdYYxSq9xzBBXKCK(mzCTRSDVBwDSDdwnyDdF5BJz6(VACphlIoGs(l2vO03YGnTu4AYOSuGm2LgixXyUTLfcj)pfttycxg)2lW99Mj9I5ydbuTreLyQIJqX7eDDBBqK3CDwD3vpmsVMV5U1S2VM4wEOoHmWZn3LeyzY(WxSEA466xpmF5hMtvAEoRskIcB8cvtCoRm4o(cSHAbOtYQHvOHvYOjcgGxtNU9MsPfAABz9zHWQ3EcAH(I3NlhX)3hq8di(RaeVfmUvP8ATUOIdD)(lOU1aOEauFrb1gsvp)7fkYz0vxkbN9TbAfFX0H0mZPUSA5f4gxqZzuPYrtN3n50z5EhhhzciRN4(TkVE)n9k8h0gU0GFV0iu4bmIogR9KED(ap)yOg6liUDOg6fk2V0zoudTVvcM0NhrC8qf0pwvqbCgd1p7Q(PskOZZRB0E217BFPhz96A(xD09qD2lugIAG8gfzHEVH2M)62gGUdq3RgORGatzVTfZwUbnB9rLhiInNa3R)fqw(LPvVdFgcigci(ZlGOK1AhNPpNLr)RxFiWyiW4AlWWQhXgJB8SX6GY3kmB)9nKl8tk1N8d6TcZq(HH8d)jMFWAifXljfrHz55E0JELDHcoERnfA5(14YXuiP5DHQ2fKPyQIljtPrc4IYuX)Waovz6kjTrdNQFtqwV1tLDUyvRJMFnpQruRTAiK1vvDtBEZfk7tAPUOFdgkMRJUb2Cd8wmtvFKk6k3RMojTkE7u3oOMBb13GSfnAeuZiOtEZOvdoNFl6b1lQWgOp2fHBRNOUvltrHPTEQIwB6V8Wx9B3WgVkerV3NF3t3EQwgtRcEeMDGBnBvXU(fUDNbRQlwEnB3z7ElKIMxR2v8rBU2dpkyy(VWH2Y0HX7B3yDnKiWS1goraW7hUFz6gcKnfi)v1azPvTEmS5mLvXWk3ELqHVbOTEhI6o4vMd3R8oSUIxLxj2DgJAMh5N4PxrSQ)eIQFWJfWN7OLJy9CIOFjBy1506YB1zUJg)UekJxn)SZcMQ(7UQ2rIk(PdPxjW8bUuwC(V5Uxyl4keSQFNok8v(t5QLUsQf1vpSSgJlpIj035ApyU2d79wEgAnTIxob6BJZOsPT(KuN8NFAJxkk4FhN))MnYw)p)pRyA9p)F8Suh4vvDwTYJkj35))]] )
+spec:RegisterPack( "Feral", 20260308.1, [[Hekili:TV1wVnQXx8pl5flNMDDbCCYgjB)qvvL29H9FLCvFeymm4GcgqWqY)uzXN9ox4YaZfaBV7wv1xISNlNZVZ9d4tSnT)d7D(ae0(RwgwpyS04tlmTSmmF0Eh69uO9UuG3lGd4pedoI)7VbZarKvFpkb4tUDEsrMhEh7D7lcJqFo2EVesA(K194ZMc9S)QPP9UNd99HSJcZ9i3onljimctiGhkmjoFrAg0l54Ea6Un)8rq2lojboONHoVfg5)HWGn3uKo7M9fbbloegG43DrrA5xKrg0ZjzX5vxw(rsocJj0YlcKfIENEwkt6THsE4bqobjzhBVj5B4JpdFQaywg0NUVd(GYPGFyg0zpeK1JonljHyK9k)cp9sElctR0KIypiHgmY7CmXh6KNeLiE2mWRylnpvYaXhG(efx4bywUtqrgvJaJHzhEFHxbgaXOnMggZqGSdq0IKcuEOpCLeAeaGzHqNaI0fqCJALmkcisLpKPX6F0fzWJGW481Mwsod)UDXHLeCCmjjMCljS)MkAxFeYA9eSzhbXGAjF7gg1BVGxso6U5IMRQZ1Ug5GNovTCTpdD1B5Say4wKdDcrWJ5T4T54C(GuBn5tdES9WCSBawkC6Fb1oQDK61Yq9fXbIArkl6gkiWikpYkIHdYHjldJN0Nl4pRefxu6HwAGfmh23CIcZrFGKCFd5qeYjqTUOoks8QSGRHphnsRHh1XDdImIQIKZsBEmDxonNpTgr2OM4IOpqcVsccCo45VXSvzs2JOhZWzeBJ2xziqKiGhobfI6M4NGwu)9f5iCLZnRM1zXMevlwjqj55hLKTJlrLyIs(Ysve2hEmbVv4FfgFWjlHzKRPai1b7LuW8ylspDs261W2sIom(qeZDKq1UQllr1v(BHPThF0kSTlNH3gTaGihcNw5ny22n5qecltmI7Winqu(1BIwVclZYSrlVEGN35R2x(BIfNJ48Pxy1RxBAu1WKxewg8a5eTNQ7NfMwhULGv4HXOConoExhpcQWYl(ZlqHEVG3OUAjk8i0bL44hc3IBpy2Cgc2UzPXPtkAN6wDWGNXVbbVcNnrGvdGvwkW4GkXjYqfAIktXsfMIzQA2S6In0lg()roeET1ukYRcmXRi2W22npS80P59x0C1mzqsUDPt1R62MO8SfSRNxvjSfm0QGF0Y4wfI)eLsCeqIxysrUZ(qeuJvISnXmjAvw3yuWENRUoCPVVW8GWdpJCQYh8X6TR((TJacTAWbTgv6ElRZqf3L4P5FZssL2VdOMuuso3p6ur8G47DIibf1ez3itdDbjCyEjtnezAbINhpUIHHuaK)mULOoobeoP1lqfuA8cEC2nDpCYRWmh8rhLc46bKLRMaqKRiAUXqyOv4NUqozMi1s2T6Oy9RMKeYlGnPehxCLYlmqSnfb4fmbYW3SNUZI3lOcqBw(0vk1aHTQWblDf(7Y8hRqICnZvcCDDeAGy1YmqwdP5w)0GwP1ZTSUt(PuBixVrg0AcYQ5)9wk97guY07ppnDM8MnUqsi7I27WX654B28QKFCX927EdKftSs27(8X0Kme0V09XsxgtkDjp5F(IYVyVJ(jY7OMXx8N(k9fEdJb7JG(2)cEhSce3RcWE3nLUsBQP0DwPR0nBATP(DwBVtyxBeg7k5jt0lDxx6AA0sLATd5YlvEz(y4s3TBkD71mqdY7MYNUSy5xgjWTFq2EEPBn2iRUeV6PtLUQ8(CVTf8yorW99kXTqhuuoErsdpwxznGaka1v)quXC2(Lg10rPcU5cIXjyQIjQCVNhohrRQcQsHyTGmq9rwXfg0PiebipEParMgg7L2PJUs3p2EWM1U98q8Ng2bUPPRH8Ghsq64)(yTZG8(EAXmTabbQp9dcQ4wRgjufvV44Wrb622qNaW7QpLOXmvxh46YD9(yMQln0wXPPxrzzMLxpF8zRBVifpQR2OcpCPXMRgo44sldAO4zMiZCm1tA6RuH1YsLhCJqqw6PRzYyj2C1LBujj1fy46tEqjrTT46jCearfj1LzK2rTa4NtTn)0K8FQD5SW38o13CixoIj3uz8G6Yw8W)ElTbCYY)OU6YyIUNGnQNaPUubNw1YAsSGpo1sDA9ZGCi6yH8wK(o37)lc2sk20p00dERF7R0rAPLAuwrym9()Z(5e6eb37L7(FpdXzln)76zi6)l8DfZ6pUNVOIAv)4smu)WsMlqJNr3TnzLWKJFL9SOof9vSLfDQ1ZrVPo9)i7X8A9CzQRhmsG8D)5Yyp4GeFHoPZ11HVyLURS5fJfYqcmyDKkFt6KMq5f)4tuLjYGxwlIS3XnWkeYRTUH4iku6siAJLR)OkWmjl4ma1NqFDKVDffvxdOLS9MHfwsgnZXcZ03YyHbKrFgDrRKLHGhj1bqBgYZW4G94ws3wyyy6hHYpqmC9F2mal6ZCkdARPqJQzv54SuUBJ6KDNPkqHaHiMgYCOPpWRFPhA5ud(SQ1Z6zlF4M)v9rC1r1nJ2gvsgyQwzrDwkoRSt1BkxhigsBCRiC5QB2ohSY0p01oYn5JDFQf(zIL(mAZR4wNzlKqJQB0BwjPoBvBvNDT(P64I3Qyt9Jlunh1dM8TxtrsMHC(y6UJF(G(a8xMn05JZoO7Hh7T3Gjhz(rCAzXXkvEZjQZ8DJkdOKXnLl9ANbwLzN8Hb4QzdBLyLLbndYClvBMl6bngQPbB8KhNPrVMusOWA5oVTCV)ysFXwu6u(QdisMiz9WzyxHRVA5y9KxRV85iaWLPp6GdTpLXq4qzKM6kJxPinn93lqEUNPT7yuZ(HuDy)dav38GW7VVv(6o43DUDv9z99N3PI0ijm71eH0(k1v)EI0jWnVviKK3p(yjqAonTh5bda5q))xC1)jvLU)6VVdxy8Z)jPIwbPuH9UDae742)9]] )
 
 spec:RegisterPackSelector( "balance", "Balance (IV)", "|T136096:0|t Balance",
     "If you have spent more points in |T136096:0|t Balance than in any other tree, this priority will be automatically selected for you.",

@@ -1,18 +1,8 @@
-# end_thresh=10
-# rip_now=settings.rip_enabled&combo_points.current>=settings.rip_cp&!debuff.rip.up&ttd>={{end_thresh}}
-# bite_before_rip=settings.bite_enabled&debuff.rip.up&debuff.rip.remains>=settings.bite_time
-# bite_before_rip_next={{bite_before_rip}}&debuff.rip.remains-energy.time_to_tick>=settings.bite_time
-# bite_over_rip=settings.bite_enabled&(!settings.rip_enabled|combat_mode_solo)
-# bite_now=settings.bite_enabled&({{bite_before_rip}}|{{bite_over_rip}})&combo_points.current>=settings.bite_cp
-# can_powershift=settings.powershift_enabled&set_bonus.wolfshead=1&talent.furor.rank=5&mana.current>=action.cat_form.cost
-# no_finisher=!settings.bite_enabled&!settings.rip_enabled
-# bite_at_end=combo_points.current>=settings.bite_cp&(ttd<{{end_thresh}}|(debuff.rip.up&ttd-debuff.rip.remains<{{end_thresh}}))&!{{no_finisher}}
-# rip_next=settings.rip_enabled&({{rip_now}}|(combo_points.current>=settings.rip_cp&debuff.rip.remains<=energy.time_to_tick))&ttd-energy.time_to_tick>={{end_thresh}}
-# jit_shift=energy.time_to_tick>settings.powershift_time
 actions.precombat+=/mark_of_the_wild,if=!up&!buff.gift_of_the_wild.up
 actions.precombat+=/thorns,if=!up
 actions.precombat+=/omen_of_clarity,if=!buff.omen_of_clarity.up
-actions.precombat+=/cat_form,if=!buff.form.up
+actions.precombat+=/cat_form,if=!buff.form.up&preferred_form_cat
+actions.precombat+=/dire_bear_form,if=!buff.bear_form.up&preferred_form_bear
 
 actions.prowl+=/pounce,if=combat_mode_solo
 actions.prowl+=/ravage
@@ -21,60 +11,58 @@ actions.ranged+=/tigers_fury,if=energy.current=100&target.outside5
 actions.ranged+=/faerie_fire_feral,if=!buff.prowl.up&debuff.faerie_fire_feral.remains<12&debuff.faerie_fire.remains<12&target.outside2
 actions.ranged+=/moonfire,if=!buff.prowl.up&!debuff.moonfire.up&target.outside5&mana.current>=action.moonfire.cost+(buff.bear_form.up&action.bear_form.cost|action.cat_form.cost)
 
-actions.innervate_or_shift+=/innervate,if=settings.innervate_enabled&action.innervate.known&mana.pct<=innervate_threshold&ttd>2
-actions.innervate_or_shift+=/best_mana_potion
-actions.innervate_or_shift+=/mana_rune
-actions.innervate_or_shift+=/cat_form,if={{can_powershift}}
-
 actions+=/use_items,if=!buff.cat_form.up
 actions+=/potion,if=!buff.cat_form.up
-actions+=/best_mana_potion,if=!buff.form.up&mana.current<action.cat_form.cost
-actions+=/mana_rune,if=!buff.form.up&mana.current<action.cat_form.cost
-actions+=/cat_form,if=!buff.form.up
+actions+=/best_mana_potion,if=!buff.form.up&preferred_form_cat&mana.current<action.cat_form.cost
+actions+=/best_mana_potion,if=!buff.form.up&preferred_form_bear&mana.current<action.dire_bear_form.cost
+actions+=/mana_rune,if=!buff.form.up&preferred_form_cat&mana.current<action.cat_form.cost
+actions+=/mana_rune,if=!buff.form.up&preferred_form_bear&mana.current<action.dire_bear_form.cost
+actions+=/cat_form,if=!buff.form.up&preferred_form_cat
+actions+=/dire_bear_form,if=!buff.bear_form.up&preferred_form_bear
 actions+=/run_action_list,name=bear,if=buff.bear_form.up
 actions+=/call_action_list,name=ranged
 actions+=/call_action_list,name=prowl,if=buff.prowl.up
 actions+=/run_action_list,name=cat_solo,if=combat_mode_solo
-actions+=/run_action_list,name=cat_oom,if=!{{can_powershift}}
 actions+=/run_action_list,name=cat_ps
 
-actions.bear+=/maul,use_off_gcd=1,if=!buff.maul.up
-actions.bear+=/swipe_bear,if=rage.current>60
+actions.bear+=/maul,use_off_gcd=1,if=!buff.maul.up&rage.current>=50
+actions.bear+=/lacerate,if=dot.lacerate.stack=5&dot.lacerate.remains<1.5
 actions.bear+=/faerie_fire_feral,if=!debuff.faerie_fire.up&!debuff.faerie_fire_feral.up
+actions.bear+=/demoralizing_roar,if=!debuff.ap_reduction.up|debuff.ap_reduction.remains<2
+actions.bear+=/mangle_bear,if=rage.current>=20
+actions.bear+=/swipe_bear,if=dot.lacerate.stack=5&dot.lacerate.remains>3&stat.attack_power>=settings.bear_swipe_ap
+actions.bear+=/lacerate,if=dot.lacerate.stack<5|dot.lacerate.remains<3
+actions.bear+=/swipe_bear,if=dot.lacerate.stack=5&dot.lacerate.remains>3
 
-actions.cat_solo+=/call_action_list,name=innervate_or_shift,if=energy.current<10
 actions.cat_solo+=/faerie_fire_feral,if=!debuff.faerie_fire.up&!debuff.faerie_fire_feral.up
-actions.cat_solo+=/rip,if={{rip_now}}
+actions.cat_solo+=/cat_form,if=energy<10&!buff.clearcasting.up
+actions.cat_solo+=/rip,if=combo_points>=settings.rip_cp&!dot.rip.ticking&target.time_to_die>=10&(energy>=30|buff.omen_of_clarity.up)
+actions.cat_solo+=/rip,if=settings.ripweave&combo_points>=settings.rip_cp&!dot.rip.ticking&energy>=52&target.time_to_die>=10
+actions.cat_solo+=/cat_form,if=combo_points>=settings.rip_cp&!dot.rip.ticking&target.time_to_die>=10&energy<30&!buff.clearcasting.up&!buff.omen_of_clarity.up&energy.time_to_next_tick>1
 actions.cat_solo+=/mangle_cat,if=energy.current>=63|(energy.current>=15&buff.clearcasting.up)
-actions.cat_solo+=/ferocious_bite,if={{bite_now}}
+actions.cat_solo+=/cat_form,if=!debuff.mangle.up&energy<(action.mangle_cat.cost-20)&!buff.clearcasting.up&energy.time_to_next_tick>1
+actions.cat_solo+=/ferocious_bite,if=combo_points>=settings.bite_cp&target.time_to_die<10&energy>=35
+actions.cat_solo+=/ferocious_bite,if=combo_points>=settings.bite_cp&dot.rip.ticking&(fight_remains-dot.rip.remains)<10&energy>=35
 actions.cat_solo+=/mangle_cat
-actions.cat_solo+=/claw,if=!action.mangle_cat.known
+actions.cat_solo+=/cat_form,if=energy<22&!buff.clearcasting.up&energy.time_to_next_tick>1
 
-actions.cat_oom+=/rip,if={{rip_now}}
-actions.cat_oom+=/shred,if=energy.current>=63
-actions.cat_oom+=/ferocious_bite,if={{bite_now}}
-actions.cat_oom+=/shred
-actions.cat_oom+=/claw,if=!action.shred.known
-
-actions.cat_ps+=/call_action_list,name=innervate_or_shift,if=energy.current<10
-actions.cat_ps+=/ravage,if=buff.prowl.up
 actions.cat_ps+=/faerie_fire_feral,if=!debuff.faerie_fire.up&!debuff.faerie_fire_feral.up
-# if0={{rip_now}}
-actions.cat_ps+=/rip,if={{if0}}
-actions.cat_ps+=/call_action_list,name=innervate_or_shift,if={{if0}}&{{jit_shift}}
-# if1={{bite_now}}|{{bite_at_end}}
-actions.cat_ps+=/shred,if=!{{if0}}&{{if1}}&(energy.current>=63|(energy.current>=15&buff.clearcasting.up))
-actions.cat_ps+=/ferocious_bite,if=!{{if0}}&{{if1}}&!buff.clearcasting.up
-# wait1=energy.current>=28&{{bite_before_rip}}&!{{bite_before_rip_next}}
-# wait2=energy.current>=15&(!{{bite_before_rip}}|{{bite_before_rip_next}}|{{bite_at_end}})
-# wait3={{rip_next}}
-actions.cat_ps+=/call_action_list,name=innervate_or_shift,if=!{{if0}}&{{if1}}&!{{wait1}}&!{{wait2}}&!{{wait3}}
-actions.cat_ps+=/call_action_list,name=innervate_or_shift,if=!{{if0}}&{{if1}}&({{wait1}}|{{wait2}}|{{wait3}})&{{jit_shift}}
-# if2=energy.current>=28
-actions.cat_ps+=/shred,if=!{{if0}}&!{{if1}}&{{if2}}
-actions.cat_ps+=/claw,if=!{{if0}}&!{{if1}}&{{if2}}&energy.time_to_tick>1&settings.claw_trick_enabled
-actions.cat_ps+=/run_action_list,name=innervate_or_shift,if=!{{if0}}&!{{if1}}&{{if2}}&energy.time_to_tick>settings.powershift_time
-# if3=!{{rip_next}}
-actions.cat_ps+=/run_action_list,name=innervate_or_shift,if=!{{if0}}&!{{if1}}&!{{if2}}&{{if3}}
-# if4=energy.time_to_tick>settings.powershift_time
-actions.cat_ps+=/run_action_list,name=innervate_or_shift,if=!{{if0}}&!{{if1}}&!{{if2}}&!{{if3}}&{{if4}}
+actions.cat_ps+=/cat_form,if=energy<10
+actions.cat_ps+=/rip,if=combo_points>=settings.rip_cp&!dot.rip.ticking&target.time_to_die>=10&(energy>=30|buff.omen_of_clarity.up)
+actions.cat_ps+=/rip,if=settings.ripweave&combo_points>=settings.rip_cp&!dot.rip.ticking&energy>=52&target.time_to_die>=10
+actions.cat_ps+=/cat_form,if=combo_points>=settings.rip_cp&!dot.rip.ticking&target.time_to_die>=10&energy<30&!buff.omen_of_clarity.up&energy.time_to_next_tick>1
+actions.cat_ps+=/ferocious_bite,if=combo_points>=settings.bite_cp&target.time_to_die<10&energy>=35
+actions.cat_ps+=/ferocious_bite,if=combo_points>=settings.bite_cp&dot.rip.ticking&(fight_remains-dot.rip.remains)<10&energy>=35
+actions.cat_ps+=/shred,if=settings.biteweave&combo_points>=settings.bite_cp&dot.rip.ticking&energy>=57&!settings.bite_over_rip
+actions.cat_ps+=/ferocious_bite,if=settings.biteweave&combo_points>=settings.bite_cp&dot.rip.ticking&energy>=35&!settings.bite_over_rip
+actions.cat_ps+=/shred,if=settings.bite_over_rip&combo_points>=settings.bite_cp&energy>=57
+actions.cat_ps+=/ferocious_bite,if=settings.bite_over_rip&combo_points>=settings.bite_cp&energy>=35
+actions.cat_ps+=/mangle_cat,if=!debuff.mangle.up&(energy>=action.mangle_cat.cost|buff.omen_of_clarity.up)
+actions.cat_ps+=/cat_form,if=!debuff.mangle.up&energy<(action.mangle_cat.cost-20)&energy.time_to_next_tick>1
+actions.cat_ps+=/ferocious_bite,if=settings.rake_trick&combo_points>=2&energy>=35&energy<=39&!buff.omen_of_clarity.up&energy.time_to_next_tick>1
+actions.cat_ps+=/rake,if=settings.rake_trick&!dot.rake.ticking&energy>=35&energy<action.mangle_cat.cost&!buff.omen_of_clarity.up&energy.time_to_next_tick>1
+actions.cat_ps+=/mangle_cat,if=settings.mangle_trick&energy>=(2*action.mangle_cat.cost-20)&energy<(22+action.mangle_cat.cost)&energy.time_to_next_tick<=1
+actions.cat_ps+=/shred,if=energy>=42|buff.omen_of_clarity.up
+actions.cat_ps+=/mangle_cat,if=energy>=action.mangle_cat.cost&energy.time_to_next_tick>1
+actions.cat_ps+=/cat_form,if=energy<22&energy.time_to_next_tick>1
+actions.cat_ps+=/cat_form,if=energy.time_to_next_tick>1
