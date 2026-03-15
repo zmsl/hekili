@@ -153,6 +153,7 @@ end )
 
 -- Gear
 spec:RegisterGear( "wolfshead", 8345 )
+spec:RegisterGear( "staff_of_natural_fury", 31334 )
 
 -- Resources
 spec:RegisterResource( Enum.PowerType.Rage, {
@@ -384,7 +385,7 @@ spec:RegisterAuras( {
         max_stack = 1,
     },
     form = {
-        alias = { "aquatic_form", "cat_form", "bear_form", "dire_bear_form", "moonkin_form", "travel_form"  },
+        alias = { "aquatic_form", "cat_form", "bear_form", "dire_bear_form", "moonkin_form", "travel_form", "tree_of_life" },
         aliasType = "buff",
         aliasMode = "first"
     },
@@ -613,6 +614,12 @@ spec:RegisterAuras( {
         duration = 3600,
         max_stack = 1,
     },
+    -- Increases healing done by 20%.
+    tree_of_life = {
+        id = 33891,
+        duration = 3600,
+        max_stack = 1,
+    },
     -- Stunned.
     war_stomp = {
         id = 20549,
@@ -681,7 +688,10 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = 0.13,
+        spend = function()
+            local base = set_bonus.staff_of_natural_fury == 1 and max(0, 0.13 - 200 / mana.modmax) or 0.13
+            return base * (1 - (talent.natural_shapeshifter.rank * 0.1))
+        end,
         spendType = "mana",
 
         startsCombat = true,
@@ -740,7 +750,10 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = function() return 0.35 * (1 - (talent.natural_shapeshifter.rank * 0.1)) end,
+        spend = function()
+            local base = set_bonus.staff_of_natural_fury == 1 and max(0, 0.35 - 200 / mana.modmax) or 0.35
+            return base * (1 - (talent.natural_shapeshifter.rank * 0.1))
+        end,
         spendType = "mana",
 
         startsCombat = true,
@@ -950,7 +963,10 @@ lacerate = {
         cooldown = 0,
         gcd = "spell",
 
-        spend = function() return 0.35 * (1 - (talent.natural_shapeshifter.rank * 0.1)) end,
+        spend = function()
+            local base = set_bonus.staff_of_natural_fury == 1 and max(0, 0.35 - 200 / mana.modmax) or 0.35
+            return base * (1 - (talent.natural_shapeshifter.rank * 0.1))
+        end,
         spendType = "mana",
 
         startsCombat = true,
@@ -1344,7 +1360,10 @@ lacerate = {
         cooldown = 0,
         gcd = "spell",
 
-        spend = 0.22,
+        spend = function()
+            local base = set_bonus.staff_of_natural_fury == 1 and max(0, 0.22 - 200 / mana.modmax) or 0.22
+            return base * (1 - (talent.natural_shapeshifter.rank * 0.1))
+        end,
         spendType = "mana",
 
         talent = "moonkin_form",
@@ -1806,7 +1825,10 @@ lacerate = {
         cooldown = 0,
         gcd = "spell",
 
-        spend = 0.13,
+        spend = function()
+            local base = set_bonus.staff_of_natural_fury == 1 and max(0, 0.13 - 200 / mana.modmax) or 0.13
+            return base * (1 - (talent.natural_shapeshifter.rank * 0.1))
+        end,
         spendType = "mana",
 
         startsCombat = true,
@@ -1814,6 +1836,29 @@ lacerate = {
 
         handler = function ()
             swap_form( "travel_form" )
+        end,
+    },
+
+
+    -- Shapeshift into Tree of Life Form, increasing healing done by 20% and restricting spells to healing and utility.
+    tree_of_life = {
+        id = 33891,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        spend = function()
+            local base = set_bonus.staff_of_natural_fury == 1 and max(0, 0.14 - 200 / mana.modmax) or 0.14
+            return base * (1 - (talent.natural_shapeshifter.rank * 0.1))
+        end,
+        spendType = "mana",
+
+        talent = "tree_of_life",
+        startsCombat = false,
+        texture = 132145,
+
+        handler = function ()
+            swap_form( "tree_of_life" )
         end,
     },
 
@@ -1890,6 +1935,12 @@ spec:RegisterSetting( "druid_general_header", nil, {
     name = "Druid: General"
 } )
 
+spec:RegisterSetting( "druid_general_desc", nil, {
+    type = "description",
+    name = "Settings that apply across all forms and specializations, including combat context and preferred form.\n\n",
+    width = "full",
+} )
+
 spec:RegisterSetting( "combat_mode", "dynamic_dungeon_raid", {
     type = "select",
     name = "Combat Mode",
@@ -1929,9 +1980,21 @@ spec:RegisterSetting( "druid_feral_header", nil, {
     name = "Feral: Cat"
 } )
 
+spec:RegisterSetting( "druid_feral_desc", nil, {
+    type = "description",
+    name = "Settings that influence the cat form DPS rotation, including finisher thresholds, energy management, and cooldown usage.\n\n",
+    width = "full",
+} )
+
 spec:RegisterSetting( "rip_subheader", nil, {
     type = "header",
     name = strformat( "%s", Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ) ),
+} )
+
+spec:RegisterSetting( "rip_desc", nil, {
+    type = "description",
+    name = "Controls how and when Rip is applied and maintained as a finisher.\n\n",
+    width = "full",
 } )
 
 spec:RegisterSetting( "ripweave", true, {
@@ -1960,6 +2023,12 @@ spec:RegisterSetting( "rip_cp", 5, {
 spec:RegisterSetting( "bite_subheader", nil, {
     type = "header",
     name = strformat( "%s", Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ) ),
+} )
+
+spec:RegisterSetting( "bite_desc", nil, {
+    type = "description",
+    name = "Controls finisher priority and Ferocious Bite usage relative to Rip.\n\n",
+    width = "full",
 } )
 
 spec:RegisterSetting( "bite_over_rip", false, {
@@ -1997,6 +2066,12 @@ spec:RegisterSetting( "tricks_subheader", nil, {
     name = "Tricks",
 } )
 
+spec:RegisterSetting( "tricks_desc", nil, {
+    type = "description",
+    name = "Advanced energy management techniques for specific gear or talent setups. These are disabled by default and unlikely to be relevant for most players.\n\n",
+    width = "full",
+} )
+
 spec:RegisterSetting( "mangle_trick", false, {
     type = "toggle",
     name = strformat( "Enable %s Trick", Hekili:GetSpellLinkWithTexture( spec.abilities.mangle_cat.id ) ),
@@ -2014,9 +2089,49 @@ spec:RegisterSetting( "rake_trick", false, {
     width = "full",
 } )
 
+spec:RegisterSetting( "innervate_subheader", nil, {
+    type = "header",
+    name = strformat( "%s", Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ) ),
+} )
+
+spec:RegisterSetting( "innervate_desc", nil, {
+    type = "description",
+    name = "Controls automatic Innervate usage to recover mana while in cat form, preventing you from being unable to shift.\n\n",
+    width = "full",
+} )
+
+spec:RegisterSetting( "use_innervate", false, {
+    type = "toggle",
+    name = strformat( "Enable %s", Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ) ),
+    desc = strformat( "When enabled, %s will be recommended as top priority when not in Clearcasting and mana drops to or below the threshold below.",
+        Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ) ),
+    width = "1",
+} )
+
+spec:RegisterSetting( "innervate_mana_pct", 20, {
+    type = "range",
+    name = strformat( "%s Mana Threshold (%%)", Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ) ),
+    desc = strformat( "Recommend %s when mana drops to or below this percentage.\n\n"..
+        "If set below the mana cost of Cat Form, %s will be recommended when you have enough mana for only one final shift, "..
+        "protecting against being stuck in humanoid form.\n\n"..
+        "Default: 20",
+        Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ),
+        Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ) ),
+    min = 0,
+    max = 100,
+    step = 1,
+    width = "double",
+} )
+
 spec:RegisterSetting( "druid_bear_header", nil, {
     type = "header",
     name = "Feral: Bear"
+} )
+
+spec:RegisterSetting( "druid_bear_desc", nil, {
+    type = "description",
+    name = "Settings that influence the bear form tanking rotation.\n\n",
+    width = "full",
 } )
 
 spec:RegisterSetting( "bear_swipe_ap", 2700, {
@@ -2067,6 +2182,7 @@ end
 
 -- Default Packs
 spec:RegisterPack( "Feral", 20260308.1, [[Hekili:TV1wVnQXx8pl5flNMDDbCCYgjB)qvvL29H9FLCvFeymm4GcgqWqY)uzXN9ox4YaZfaBV7wv1xISNlNZVZ9d4tSnT)d7D(ae0(RwgwpyS04tlmTSmmF0Eh69uO9UuG3lGd4pedoI)7VbZarKvFpkb4tUDEsrMhEh7D7lcJqFo2EVesA(K194ZMc9S)QPP9UNd99HSJcZ9i3onljimctiGhkmjoFrAg0l54Ea6Un)8rq2lojboONHoVfg5)HWGn3uKo7M9fbbloegG43DrrA5xKrg0ZjzX5vxw(rsocJj0YlcKfIENEwkt6THsE4bqobjzhBVj5B4JpdFQaywg0NUVd(GYPGFyg0zpeK1JonljHyK9k)cp9sElctR0KIypiHgmY7CmXh6KNeLiE2mWRylnpvYaXhG(efx4bywUtqrgvJaJHzhEFHxbgaXOnMggZqGSdq0IKcuEOpCLeAeaGzHqNaI0fqCJALmkcisLpKPX6F0fzWJGW481Mwsod)UDXHLeCCmjjMCljS)MkAxFeYA9eSzhbXGAjF7gg1BVGxso6U5IMRQZ1Ug5GNovTCTpdD1B5Say4wKdDcrWJ5T4T54C(GuBn5tdES9WCSBawkC6Fb1oQDK61Yq9fXbIArkl6gkiWikpYkIHdYHjldJN0Nl4pRefxu6HwAGfmh23CIcZrFGKCFd5qeYjqTUOoks8QSGRHphnsRHh1XDdImIQIKZsBEmDxonNpTgr2OM4IOpqcVsccCo45VXSvzs2JOhZWzeBJ2xziqKiGhobfI6M4NGwu)9f5iCLZnRM1zXMevlwjqj55hLKTJlrLyIs(Ysve2hEmbVv4FfgFWjlHzKRPai1b7LuW8ylspDs261W2sIom(qeZDKq1UQllr1v(BHPThF0kSTlNH3gTaGihcNw5ny22n5qecltmI7Winqu(1BIwVclZYSrlVEGN35R2x(BIfNJ48Pxy1RxBAu1WKxewg8a5eTNQ7NfMwhULGv4HXOConoExhpcQWYl(ZlqHEVG3OUAjk8i0bL44hc3IBpy2Cgc2UzPXPtkAN6wDWGNXVbbVcNnrGvdGvwkW4GkXjYqfAIktXsfMIzQA2S6In0lg()roeET1ukYRcmXRi2W22npS80P59x0C1mzqsUDPt1R62MO8SfSRNxvjSfm0QGF0Y4wfI)eLsCeqIxysrUZ(qeuJvISnXmjAvw3yuWENRUoCPVVW8GWdpJCQYh8X6TR((TJacTAWbTgv6ElRZqf3L4P5FZssL2VdOMuuso3p6ur8G47DIibf1ez3itdDbjCyEjtnezAbINhpUIHHuaK)mULOoobeoP1lqfuA8cEC2nDpCYRWmh8rhLc46bKLRMaqKRiAUXqyOv4NUqozMi1s2T6Oy9RMKeYlGnPehxCLYlmqSnfb4fmbYW3SNUZI3lOcqBw(0vk1aHTQWblDf(7Y8hRqICnZvcCDDeAGy1YmqwdP5w)0GwP1ZTSUt(PuBixVrg0AcYQ5)9wk97guY07ppnDM8MnUqsi7I27WX654B28QKFCX927EdKftSs27(8X0Kme0V09XsxgtkDjp5F(IYVyVJ(jY7OMXx8N(k9fEdJb7JG(2)cEhSce3RcWE3nLUsBQP0DwPR0nBATP(DwBVtyxBeg7k5jt0lDxx6AA0sLATd5YlvEz(y4s3TBkD71mqdY7MYNUSy5xgjWTFq2EEPBn2iRUeV6PtLUQ8(CVTf8yorW99kXTqhuuoErsdpwxznGaka1v)quXC2(Lg10rPcU5cIXjyQIjQCVNhohrRQcQsHyTGmq9rwXfg0PiebipEParMgg7L2PJUs3p2EWM1U98q8Ng2bUPPRH8Ghsq64)(yTZG8(EAXmTabbQp9dcQ4wRgjufvV44Wrb622qNaW7QpLOXmvxh46YD9(yMQln0wXPPxrzzMLxpF8zRBVifpQR2OcpCPXMRgo44sldAO4zMiZCm1tA6RuH1YsLhCJqqw6PRzYyj2C1LBujj1fy46tEqjrTT46jCearfj1LzK2rTa4NtTn)0K8FQD5SW38o13CixoIj3uz8G6Yw8W)ElTbCYY)OU6YyIUNGnQNaPUubNw1YAsSGpo1sDA9ZGCi6yH8wK(o37)lc2sk20p00dERF7R0rAPLAuwrym9()Z(5e6eb37L7(FpdXzln)76zi6)l8DfZ6pUNVOIAv)4smu)WsMlqJNr3TnzLWKJFL9SOof9vSLfDQ1ZrVPo9)i7X8A9CzQRhmsG8D)5Yyp4GeFHoPZ11HVyLURS5fJfYqcmyDKkFt6KMq5f)4tuLjYGxwlIS3XnWkeYRTUH4iku6siAJLR)OkWmjl4ma1NqFDKVDffvxdOLS9MHfwsgnZXcZ03YyHbKrFgDrRKLHGhj1bqBgYZW4G94ws3wyyy6hHYpqmC9F2mal6ZCkdARPqJQzv54SuUBJ6KDNPkqHaHiMgYCOPpWRFPhA5ud(SQ1Z6zlF4M)v9rC1r1nJ2gvsgyQwzrDwkoRSt1BkxhigsBCRiC5QB2ohSY0p01oYn5JDFQf(zIL(mAZR4wNzlKqJQB0BwjPoBvBvNDT(P64I3Qyt9Jlunh1dM8TxtrsMHC(y6UJF(G(a8xMn05JZoO7Hh7T3Gjhz(rCAzXXkvEZjQZ8DJkdOKXnLl9ANbwLzN8Hb4QzdBLyLLbndYClvBMl6bngQPbB8KhNPrVMusOWA5oVTCV)ysFXwu6u(QdisMiz9WzyxHRVA5y9KxRV85iaWLPp6GdTpLXq4qzKM6kJxPinn93lqEUNPT7yuZ(HuDy)dav38GW7VVv(6o43DUDv9z99N3PI0ijm71eH0(k1v)EI0jWnVviKK3p(yjqAonTh5bda5q))xC1)jvLU)6VVdxy8Z)jPIwbPuH9UDae742)9]] )
+spec:RegisterPack( "Restoration", 20260313.1, [[Hekili:fs1YUTToq0VLSjErtDJLlk6nfzr7MwBu4fHo4UOimKsAK1atrQYh11B43EhQh1kgjnWWcYZJZmNzoJ5l4B5SsPh4BYUo7dxVCXY5lwML9()JZ8hBboRvwSxUJErlBON3boVXk9OrN8DuzKLjmCMGTG8Zz5bu5xP55ppWFKITfk4BwSGZQXYsOpuWvWzBRrxuK(kJIHkhfMk63fPsgfk05j3vgBu8nypQW5CwNXoMavYGYtVUPJzGwMRGs(x4Scl6blk5SlII8qv1CVfGhnvpQWkyEOLZ6Rbr8jo4E6dR1cfMMC5RJCOnkUmkgRXoSYNGYxdpEavLpPons7(PoPkTj7Fd(KMS2y1UuklFvMAAaDQqfkj574tAIZ81XxIXhKwnQ354S))Z3Tz1MVEtuefBRP1b20AS(HDWSHr(SOWc)mGwOmkCeO0kl4nnKcGmuul17a3846VJAY1ccT71UqBcPuaJR3ztN9ZO47QyLrPmhO2jbQvs7)dGLShCPCrkpFkSPAKeZ9JXPnDTBq)KOlltbtAuzU0b3exhfVL8nPbitR7LKTwtfQGETzd6CDnZabggf7ann2lsqG69GNOlnYw57tQtbrZ6Yul7RLKz4xG9ycB0Kg9PERqfOlbYfs9ODSN(X9oiHe04E4kIu1yr90OL6JNQ6aDHF3QWc0RoH7u2pw0prNx2XYSThcA)8qc0YPMYMuzsSQMWObi9JH2nn6mPdn5qVKqz806CvZ4gp7SBAYjjkdjznNXK09mByOpQvDZ)7z4BU9DNF8CfwD7fH2lV4LU7IRFoy6pJgs(5d5SlKUyFHZQKGzaIe2tKsNY68)2jDUX)Zd]] )
 
 spec:RegisterPackSelector( "balance", "Balance (IV)", "|T136096:0|t Balance",
     "If you have spent more points in |T136096:0|t Balance than in any other tree, this priority will be automatically selected for you.",
@@ -2075,7 +2191,14 @@ spec:RegisterPackSelector( "balance", "Balance (IV)", "|T136096:0|t Balance",
     end )
 
 spec:RegisterPackSelector( "feral", "Feral", "|T132115:0|t Feral",
-    "If you have spent more points in |T132276:0|t Feral than in any other tree and have not taken Thick Hide, this priority will be automatically selected for you.",
+    "If you have spent more points in |T132276:0|t Feral than in any other tree, this priority will be automatically selected for you.",
     function( tab1, tab2, tab3 )
-        return tab2 > max( tab1, tab3 ) and talent.thick_hide.rank == 0
+        return tab2 > max( tab1, tab3 )
+    end )
+
+
+spec:RegisterPackSelector( "resto", "Restoration", "|T135760:0|t Resto",
+    "If you have spent more points in |T135760:0|t Restoration than in any other tree, this priority will be automatically selected for you.",
+    function( tab1, tab2, tab3 )
+        return tab3 > max( tab1, tab2 )
     end )

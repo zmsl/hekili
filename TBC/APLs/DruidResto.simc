@@ -1,0 +1,5 @@
+actions.precombat+=/mark_of_the_wild,if=!up&!buff.gift_of_the_wild.up
+actions.precombat+=/thorns,if=!up
+actions.precombat+=/omen_of_clarity,if=!buff.omen_of_clarity.up
+
+actions+=/tree_of_life,if=!buff.tree_of_life.up
