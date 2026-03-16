@@ -1,6 +1,6 @@
 actions.innervate_or_shift+=/innervate,if=settings.innervate_enabled&action.innervate.known&mana.pct<=innervate_threshold&ttd>2
 actions.innervate_or_shift+=/best_mana_potion
-actions.innervate_or_shift+=/mana_rune
+actions.innervate_or_shift+=/best_mana_rune
 actions.innervate_or_shift+=/cat_form,if=(settings.powershift_enabled&set_bonus.wolfshead=1&talent.furor.rank=5&mana.current>=action.cat_form.cost)
 
 actions.ranged+=/tigers_fury,if=energy.current=100&target.outside5
@@ -15,7 +15,7 @@ actions.precombat+=/cat_form,if=!buff.form.up
 actions+=/use_items,if=!buff.cat_form.up
 actions+=/potion,if=!buff.cat_form.up
 actions+=/best_mana_potion,if=!buff.form.up&mana.current<action.cat_form.cost
-actions+=/mana_rune,if=!buff.form.up&mana.current<action.cat_form.cost
+actions+=/best_mana_rune,if=!buff.form.up&mana.current<action.cat_form.cost
 actions+=/cat_form,if=!buff.form.up
 actions+=/run_action_list,name=bear,if=buff.bear_form.up
 actions+=/call_action_list,name=ranged

@@ -2014,7 +2014,7 @@ spec:RegisterSetting( "rip_cp", 5, {
     type = "range",
     name = strformat( "Minimum Combo Points for %s", Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ) ),
     desc = strformat( "Specify the minimum combo points for %s to be recommended\n\nDefault: 5", Hekili:GetSpellLinkWithTexture( spec.abilities.rip.id ) ),
-    width = "double",
+    width = "full",
     min = 1,
     max = 5,
     step = 1,
@@ -2055,7 +2055,7 @@ spec:RegisterSetting( "bite_cp", 5, {
     type = "range",
     name = strformat( "Minimum Combo Points for %s", Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ) ),
     desc = strformat( "Specify the minimum combo points for %s. Set to 0 to disable %s.\n\nDefault: 5", Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ), Hekili:GetSpellLinkWithTexture( spec.abilities.ferocious_bite.id ) ),
-    width = "double",
+    width = "full",
     min = 1,
     max = 5,
     step = 1,
@@ -2100,14 +2100,6 @@ spec:RegisterSetting( "innervate_desc", nil, {
     width = "full",
 } )
 
-spec:RegisterSetting( "use_innervate", false, {
-    type = "toggle",
-    name = strformat( "Enable %s", Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ) ),
-    desc = strformat( "When enabled, %s will be recommended as top priority when not in Clearcasting and mana drops to or below the threshold below.",
-        Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ) ),
-    width = "1",
-} )
-
 spec:RegisterSetting( "innervate_mana_pct", 20, {
     type = "range",
     name = strformat( "%s Mana Threshold (%%)", Hekili:GetSpellLinkWithTexture( spec.abilities.innervate.id ) ),
@@ -2120,7 +2112,7 @@ spec:RegisterSetting( "innervate_mana_pct", 20, {
     min = 0,
     max = 100,
     step = 1,
-    width = "double",
+    width = "full",
 } )
 
 spec:RegisterSetting( "druid_bear_header", nil, {
@@ -2143,7 +2135,7 @@ spec:RegisterSetting( "bear_swipe_ap", 2700, {
         Hekili:GetSpellLinkWithTexture( spec.abilities.lacerate.id ),
         Hekili:GetSpellLinkWithTexture( spec.abilities.swipe_bear.id ),
         Hekili:GetSpellLinkWithTexture( spec.abilities.lacerate.id ) ),
-    width = "double",
+    width = "full",
     min = 0,
     max = 5000,
     step = 50,
@@ -2180,8 +2172,49 @@ if (Hekili.Version:match( "^Dev" )) then
     })
 end
 
+-- Potions
+spec:RegisterOptions( { potion = "haste_potion" } )
+
+spec:RegisterPotions( {
+    -- Classic physical DPS
+    mighty_rage_potion = {
+        item     = 13442,
+        buff     = "mighty_rage_potion",
+        duration = 20,
+        aura     = { id = 17528, duration = 20 },
+    },
+
+    -- TBC physical DPS (Feral)
+    insane_strength_potion = {
+        item     = 22828,
+        buff     = "insane_strength_potion",
+        duration = 15,
+        aura     = { id = 28494, duration = 15 },
+    },
+    heroic_potion = {
+        item     = 22837,
+        buff     = "heroic_potion",
+        duration = 15,
+        aura     = { id = 28506, duration = 15 },
+    },
+
+    -- TBC spell DPS (Balance / Resto throughput)
+    destruction_potion = {
+        item     = 22839,
+        buff     = "destruction_potion",
+        duration = 15,
+        aura     = { id = 28508, duration = 15 },
+    },
+    haste_potion = {
+        item     = 22838,
+        buff     = "haste_potion",
+        duration = 15,
+        aura     = { id = 28507, duration = 15 },
+    },
+} )
+
 -- Default Packs
-spec:RegisterPack( "Feral", 20260308.1, [[Hekili:TV1wVnQXx8pl5flNMDDbCCYgjB)qvvL29H9FLCvFeymm4GcgqWqY)uzXN9ox4YaZfaBV7wv1xISNlNZVZ9d4tSnT)d7D(ae0(RwgwpyS04tlmTSmmF0Eh69uO9UuG3lGd4pedoI)7VbZarKvFpkb4tUDEsrMhEh7D7lcJqFo2EVesA(K194ZMc9S)QPP9UNd99HSJcZ9i3onljimctiGhkmjoFrAg0l54Ea6Un)8rq2lojboONHoVfg5)HWGn3uKo7M9fbbloegG43DrrA5xKrg0ZjzX5vxw(rsocJj0YlcKfIENEwkt6THsE4bqobjzhBVj5B4JpdFQaywg0NUVd(GYPGFyg0zpeK1JonljHyK9k)cp9sElctR0KIypiHgmY7CmXh6KNeLiE2mWRylnpvYaXhG(efx4bywUtqrgvJaJHzhEFHxbgaXOnMggZqGSdq0IKcuEOpCLeAeaGzHqNaI0fqCJALmkcisLpKPX6F0fzWJGW481Mwsod)UDXHLeCCmjjMCljS)MkAxFeYA9eSzhbXGAjF7gg1BVGxso6U5IMRQZ1Ug5GNovTCTpdD1B5Say4wKdDcrWJ5T4T54C(GuBn5tdES9WCSBawkC6Fb1oQDK61Yq9fXbIArkl6gkiWikpYkIHdYHjldJN0Nl4pRefxu6HwAGfmh23CIcZrFGKCFd5qeYjqTUOoks8QSGRHphnsRHh1XDdImIQIKZsBEmDxonNpTgr2OM4IOpqcVsccCo45VXSvzs2JOhZWzeBJ2xziqKiGhobfI6M4NGwu)9f5iCLZnRM1zXMevlwjqj55hLKTJlrLyIs(Ysve2hEmbVv4FfgFWjlHzKRPai1b7LuW8ylspDs261W2sIom(qeZDKq1UQllr1v(BHPThF0kSTlNH3gTaGihcNw5ny22n5qecltmI7Winqu(1BIwVclZYSrlVEGN35R2x(BIfNJ48Pxy1RxBAu1WKxewg8a5eTNQ7NfMwhULGv4HXOConoExhpcQWYl(ZlqHEVG3OUAjk8i0bL44hc3IBpy2Cgc2UzPXPtkAN6wDWGNXVbbVcNnrGvdGvwkW4GkXjYqfAIktXsfMIzQA2S6In0lg()roeET1ukYRcmXRi2W22npS80P59x0C1mzqsUDPt1R62MO8SfSRNxvjSfm0QGF0Y4wfI)eLsCeqIxysrUZ(qeuJvISnXmjAvw3yuWENRUoCPVVW8GWdpJCQYh8X6TR((TJacTAWbTgv6ElRZqf3L4P5FZssL2VdOMuuso3p6ur8G47DIibf1ez3itdDbjCyEjtnezAbINhpUIHHuaK)mULOoobeoP1lqfuA8cEC2nDpCYRWmh8rhLc46bKLRMaqKRiAUXqyOv4NUqozMi1s2T6Oy9RMKeYlGnPehxCLYlmqSnfb4fmbYW3SNUZI3lOcqBw(0vk1aHTQWblDf(7Y8hRqICnZvcCDDeAGy1YmqwdP5w)0GwP1ZTSUt(PuBixVrg0AcYQ5)9wk97guY07ppnDM8MnUqsi7I27WX654B28QKFCX927EdKftSs27(8X0Kme0V09XsxgtkDjp5F(IYVyVJ(jY7OMXx8N(k9fEdJb7JG(2)cEhSce3RcWE3nLUsBQP0DwPR0nBATP(DwBVtyxBeg7k5jt0lDxx6AA0sLATd5YlvEz(y4s3TBkD71mqdY7MYNUSy5xgjWTFq2EEPBn2iRUeV6PtLUQ8(CVTf8yorW99kXTqhuuoErsdpwxznGaka1v)quXC2(Lg10rPcU5cIXjyQIjQCVNhohrRQcQsHyTGmq9rwXfg0PiebipEParMgg7L2PJUs3p2EWM1U98q8Ng2bUPPRH8Ghsq64)(yTZG8(EAXmTabbQp9dcQ4wRgjufvV44Wrb622qNaW7QpLOXmvxh46YD9(yMQln0wXPPxrzzMLxpF8zRBVifpQR2OcpCPXMRgo44sldAO4zMiZCm1tA6RuH1YsLhCJqqw6PRzYyj2C1LBujj1fy46tEqjrTT46jCearfj1LzK2rTa4NtTn)0K8FQD5SW38o13CixoIj3uz8G6Yw8W)ElTbCYY)OU6YyIUNGnQNaPUubNw1YAsSGpo1sDA9ZGCi6yH8wK(o37)lc2sk20p00dERF7R0rAPLAuwrym9()Z(5e6eb37L7(FpdXzln)76zi6)l8DfZ6pUNVOIAv)4smu)WsMlqJNr3TnzLWKJFL9SOof9vSLfDQ1ZrVPo9)i7X8A9CzQRhmsG8D)5Yyp4GeFHoPZ11HVyLURS5fJfYqcmyDKkFt6KMq5f)4tuLjYGxwlIS3XnWkeYRTUH4iku6siAJLR)OkWmjl4ma1NqFDKVDffvxdOLS9MHfwsgnZXcZ03YyHbKrFgDrRKLHGhj1bqBgYZW4G94ws3wyyy6hHYpqmC9F2mal6ZCkdARPqJQzv54SuUBJ6KDNPkqHaHiMgYCOPpWRFPhA5ud(SQ1Z6zlF4M)v9rC1r1nJ2gvsgyQwzrDwkoRSt1BkxhigsBCRiC5QB2ohSY0p01oYn5JDFQf(zIL(mAZR4wNzlKqJQB0BwjPoBvBvNDT(P64I3Qyt9Jlunh1dM8TxtrsMHC(y6UJF(G(a8xMn05JZoO7Hh7T3Gjhz(rCAzXXkvEZjQZ8DJkdOKXnLl9ANbwLzN8Hb4QzdBLyLLbndYClvBMl6bngQPbB8KhNPrVMusOWA5oVTCV)ysFXwu6u(QdisMiz9WzyxHRVA5y9KxRV85iaWLPp6GdTpLXq4qzKM6kJxPinn93lqEUNPT7yuZ(HuDy)dav38GW7VVv(6o43DUDv9z99N3PI0ijm71eH0(k1v)EI0jWnVviKK3p(yjqAonTh5bda5q))xC1)jvLU)6VVdxy8Z)jPIwbPuH9UDae742)9]] )
+spec:RegisterPack( "Feral", 20260315.2, [[Hekili:TVv3UTnUs4NLCJHtsRxB64Kwa7CXIdoaTx09a4fNlLmTeTJqKffKOsAwy4N9DiPOeLePK8pPf7IEtqm5Wz(MF4mdTjDM48Nol9XmIZ3qJr3pE6KzJqtqFAkYzj7TyIZYyS3Z4TW)eH3b)9)ssWH8rFlKI95RoLML4bZ4SCDwqi7lroRnZsG0yINZ3MmXz5tb((ejLKup(IJtOBccb(G9yb0O0rXjep6U1y2Tl(TD4KNDPBCzprCFni0)dbBwCvw8GRwNTzZOTbBy6Zokl(WxnXg2t0KO08fBMe6oseNxEH4Ka2BcAfcP2ewLHhM5UHMSRCL8pbKpaOAdjjH4lM3fi0mh8dsiURj4KA8PyidmJp3HVQZp6RHaVIPzrEeopKS3Dh1N4MsdPnPnb)c4O15scoAlXNB4c2sssD3KLiSiKisY23g5LbaiITyY4Xdy4KTe2iAglnWNmZap2Gjjbe3nCTBdpkQuZeiGRv(ePfRoPJsi7WbrPZNGmqJ(SvXbYao2rPr8vzq8xLZBfj8XQPyd2HJWkn)XfsUxUapAk72HnDx50vogNW97ZhwfZig9Anpaa3SuIBaJSlTeVfKRfdEQrENv8wjpsYICLFYnmiL9bEYIfCI4SRb3QI6WWMlv6T6MoHRRqgkhzNiJBQ4BcADJrBloovFFcx3ezPYc)a3Fr3SXDRN)IjLgt(CC7ycSfRm8z24gmje7br8mr4PpLns95rPmit8IzdQmyrK)Ozn4K5nCg2(Of53CNNEEUCg7t2rHPc(RGOTUjuPtwXbCSleLKjdSZI3V304kyJmydJ2gkdh5CTQ5c10CL(AqCj592G940bW0SrygNi3y6RKKhxKsymqNKm3vYACt9VDx08zGoBYhn9YbE9GpvS87IhxJ5Xu(qgNAnjf2abjgDLeXfRipPpztGxqzEY6ecBl(U8ZjWm0eTT8M5pSHK0dUZjRN8oickM9sU3mp)Ai4r8WP8ybUPAOqAXES5LrifllxD8yMRmuj1((960m3ej3G6bFUEGhLg6tFnQehqWb2)nJQOEHbzP75tgpWOUAC9jbXQeLuWXfeXs12RaZ66XJNGiv4)hXc8EgMqv4KfSJ4YOU(bKhHofgmuIGhxmD8(9w6S662GHUGFLGFHm4ibMcaZqwWyNgXJuGwSe5UIPwCfdS13z(cl4xe57mxUSECIrKNNsfgPzVBpU4(P73pS(GtMnWeKm7xQ03HQdkHmlb78H5XXLGrej)r04RTO(hPwc5UOEb0Su31bmslEj(0C3utVY8cNceDo7YiL6Xcd3eS9jMBEM8pQMo)Zx3diuAb70BKB7rOtWexL5XPVBLxeS2uXfXeVBLwQX9lyHfbN)3CzL46N2OOOIb6(zx8qhe)OlD0WqDKIRNfooJseY91hBsTJl15PjJlyItbasFc2OwjiGlPwJcSbLIOGhgCvvIPVqsCbs7Lb4YbKPZocGy2quSIUWqPYF8k5rleJEYQ9Z0SJJIKeMB54OsCC292CMBeltrGFgyqcSYA2oKEuqoGwm9ZxOudCXAdhY0vWNnfpMJeZwMle4QgiuaX8HLGubPHOB60lnFicDRzQS7iNVWe0k2KPK)DiRXDDQzThpFC2mdLTrOZLfMwOZsyVEkSsTFgayWxXjrCVKZYVSlMMWGMNw9WHvsHCyf)BzlD0HV6Su8F8FFbPCH)7BIFScseEDiX353Hzadi0Dj2z5vhwzSn0dRgCyLXjlAgv9do4SSXSoma7CzQOq2zPogakMAfv69sEy1JluQzp6vTuM1PLlY7ohrAUfwtcKtjxCZAZUB8BrGB2hEyLQb3dRMdiPLMCflqVb1ky3tVj1dR2VVoTZTr6nhwHokEFTGABTbxAKkMGBFU3Q9rU9qaWjJlxTsO8f)G1fRNNxI5AnmweDxTTaXWnBrtYcOf1CNJcB8rNowAwTLHA11LGhKeh3FYkUB0LDUn9m0gDSod1Hc2aQF(NIjwZ3pDSIpwnWflOzUuGRatnh9aA7jOB5TzzvlM3qjebjZ0YvwPtfbsSNDUNiXKngItR03)HvFSKWIXU(eHmQ7y4IEZ7kiUlnPsi8dQ4bZThxcArFecSAVmZ7lwHwW7jwnyGTxOYYXvocGx1GAYKzVU1Lv6DeLzV8qzNjfNPWu2zZ991)m2LluGh7vCSHhTuzdTdhyNjASQe6jLmRp1uko)HfVfYweCHsWh6ZxYeYg852l5yttufz0opvNAIDFXLt54as0iS9kngp5vdWpu4BU5OIFuHCiyL3AFLDfYXD5tSTFazVWLo8Vd16god5Fq2lV0ND3hHpQMczVuHMvfHokrOVpfzpT(jWoM4UF9Ay7NWR(T0q)qz8R4uJZQjVntvpRgtkyX6)15j)15j)N95jRKLVMf7xN18K1M)DDwtt7KUqDg0ZZHMZUkBwUFQmgOi0O60tK95ywbS3yBFYNF2n22MH9KSC27sONhf5IDcE7vE6js(XFc(70lNQfouTKAlNeSzhrxyhmJxbeN0z)g5rNIBjQqw6x9X8SrJ111SqNLAx2uo7v9xyugnVEHhwXzAHNR(1mu6sgP5auu0EBkVFnpzVpLs2w7(NkZZ0YDqv66lfCJl3A7DS00lHg3iIuea0AH9tW5arCtft34ISwFhQ(Lzv7Ckfx(02BnWe0MlGMWYAlWzQ5Wg7LYprtGffIXDn87qE7B8Qx9rusDSEAv1f)VuoApgI23XP2vxCT0fAshpXb5UoKfAnrvTN8qh7HADFBt4Qv5S8rryY(igZABXvEGeIZYpmxAvExaCEuCad9NkHmyZsp2A73YfJ6yL5pQMot(wRXidpOi990vFlsDgdOVy5lqQF(H2(sgQnxNjhLXrAw5MpjeZTN09z1A4an8ur0sVw5XMi9tW5lHQzD7LKLLvoFDZrXJKPtNXjBi62FDMgIwCGnyV2XoQ(cvK)U5UY3QNk3EDFyP6v9j1uzX5zpBTQvL0f9KVYVRNopmQ5VRN202IVzhdvz676JtfrK8E2WPe))ik)bpEy1)5)TeYz9L)ppztgFxSZYLyMKCN)o]] )
 spec:RegisterPack( "Restoration", 20260313.1, [[Hekili:fs1YUTToq0VLSjErtDJLlk6nfzr7MwBu4fHo4UOimKsAK1atrQYh11B43EhQh1kgjnWWcYZJZmNzoJ5l4B5SsPh4BYUo7dxVCXY5lwML9()JZ8hBboRvwSxUJErlBON3boVXk9OrN8DuzKLjmCMGTG8Zz5bu5xP55ppWFKITfk4BwSGZQXYsOpuWvWzBRrxuK(kJIHkhfMk63fPsgfk05j3vgBu8nypQW5CwNXoMavYGYtVUPJzGwMRGs(x4Scl6blk5SlII8qv1CVfGhnvpQWkyEOLZ6Rbr8jo4E6dR1cfMMC5RJCOnkUmkgRXoSYNGYxdpEavLpPons7(PoPkTj7Fd(KMS2y1UuklFvMAAaDQqfkj574tAIZ81XxIXhKwnQ354S))Z3Tz1MVEtuefBRP1b20AS(HDWSHr(SOWc)mGwOmkCeO0kl4nnKcGmuul17a3846VJAY1ccT71UqBcPuaJR3ztN9ZO47QyLrPmhO2jbQvs7)dGLShCPCrkpFkSPAKeZ9JXPnDTBq)KOlltbtAuzU0b3exhfVL8nPbitR7LKTwtfQGETzd6CDnZabggf7ann2lsqG69GNOlnYw57tQtbrZ6Yul7RLKz4xG9ycB0Kg9PERqfOlbYfs9ODSN(X9oiHe04E4kIu1yr90OL6JNQ6aDHF3QWc0RoH7u2pw0prNx2XYSThcA)8qc0YPMYMuzsSQMWObi9JH2nn6mPdn5qVKqz806CvZ4gp7SBAYjjkdjznNXK09mByOpQvDZ)7z4BU9DNF8CfwD7fH2lV4LU7IRFoy6pJgs(5d5SlKUyFHZQKGzaIe2tKsNY68)2jDUX)Zd]] )
 
 spec:RegisterPackSelector( "balance", "Balance (IV)", "|T136096:0|t Balance",

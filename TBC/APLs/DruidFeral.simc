@@ -12,11 +12,6 @@ actions.ranged+=/faerie_fire_feral,if=!buff.prowl.up&debuff.faerie_fire_feral.re
 actions.ranged+=/moonfire,if=!buff.prowl.up&!debuff.moonfire.up&target.outside5&mana.current>=action.moonfire.cost+(buff.bear_form.up&action.bear_form.cost|action.cat_form.cost)
 
 actions+=/use_items,if=!buff.cat_form.up
-actions+=/potion,if=!buff.cat_form.up
-actions+=/best_mana_potion,if=!buff.form.up&preferred_form_cat&mana.current<action.cat_form.cost
-actions+=/best_mana_potion,if=!buff.form.up&preferred_form_bear&mana.current<action.dire_bear_form.cost
-actions+=/mana_rune,if=!buff.form.up&preferred_form_cat&mana.current<action.cat_form.cost
-actions+=/mana_rune,if=!buff.form.up&preferred_form_bear&mana.current<action.dire_bear_form.cost
 actions+=/cat_form,if=!buff.form.up&preferred_form_cat
 actions+=/dire_bear_form,if=!buff.bear_form.up&preferred_form_bear
 actions+=/run_action_list,name=bear,if=buff.bear_form.up
@@ -35,7 +30,10 @@ actions.bear+=/lacerate,if=dot.lacerate.stack<5|dot.lacerate.remains<3
 actions.bear+=/swipe_bear,if=dot.lacerate.stack=5&dot.lacerate.remains>3
 
 actions.cat_solo+=/faerie_fire_feral,if=!debuff.faerie_fire.up&!debuff.faerie_fire_feral.up
-actions.cat_solo+=/innervate,if=settings.use_innervate&!buff.clearcasting.up&(mana.pct<=settings.innervate_mana_pct&mana.current>=action.cat_form.cost|mana.current<action.cat_form.cost*2&mana.current>=action.cat_form.cost)&cooldown.innervate.ready
+actions.cat_solo+=/potion
+actions.cat_solo+=/best_mana_potion,if=mana.deficit>=action.best_mana_potion.max_mana_restored
+actions.cat_solo+=/best_mana_rune,if=mana.deficit>=action.best_mana_rune.max_mana_restored
+actions.cat_solo+=/innervate,if=!buff.clearcasting.up&(mana.pct<=settings.innervate_mana_pct&mana.current>=action.cat_form.cost|mana.current<action.cat_form.cost*2&mana.current>=action.cat_form.cost)&cooldown.innervate.ready
 actions.cat_solo+=/cat_form,if=energy<10&!buff.clearcasting.up
 actions.cat_solo+=/rip,if=combo_points>=settings.rip_cp&!dot.rip.ticking&target.time_to_die>=10&(energy>=30|buff.omen_of_clarity.up)
 actions.cat_solo+=/rip,if=settings.ripweave&combo_points>=settings.rip_cp&!dot.rip.ticking&energy>=52&target.time_to_die>=10
@@ -48,7 +46,10 @@ actions.cat_solo+=/mangle_cat
 actions.cat_solo+=/cat_form,if=energy<22&!buff.clearcasting.up&energy.time_to_next_tick>1
 
 actions.cat_ps+=/faerie_fire_feral,if=!debuff.faerie_fire.up&!debuff.faerie_fire_feral.up
-actions.cat_ps+=/innervate,if=settings.use_innervate&!buff.clearcasting.up&(mana.pct<=settings.innervate_mana_pct&mana.current>=action.cat_form.cost|mana.current<action.cat_form.cost*2&mana.current>=action.cat_form.cost)&cooldown.innervate.ready
+actions.cat_ps+=/potion
+actions.cat_ps+=/best_mana_potion,if=mana.deficit>=action.best_mana_potion.max_mana_restored
+actions.cat_ps+=/best_mana_rune,if=mana.deficit>=action.best_mana_rune.max_mana_restored
+actions.cat_ps+=/innervate,if=!buff.clearcasting.up&(mana.pct<=settings.innervate_mana_pct&mana.current>=action.cat_form.cost|mana.current<action.cat_form.cost*2&mana.current>=action.cat_form.cost)&cooldown.innervate.ready
 actions.cat_ps+=/cat_form,if=energy<10
 actions.cat_ps+=/rip,if=combo_points>=settings.rip_cp&!dot.rip.ticking&target.time_to_die>=10&(energy>=30|buff.omen_of_clarity.up)
 actions.cat_ps+=/rip,if=settings.ripweave&combo_points>=settings.rip_cp&!dot.rip.ticking&energy>=52&target.time_to_die>=10

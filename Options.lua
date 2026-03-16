@@ -4455,7 +4455,7 @@ do
 
         for k, v in pairs( class.abilityList ) do
             local a = class.abilities[ k ]
-            if a and ( a.id > 0 or a.id < -100 ) and a.id ~= state.cooldown.global_cooldown.id and not ( a.isItem or a.item ) then
+            if a and ( a.id > 0 or a.id < -100 ) and a.id ~= state.cooldown.global_cooldown.id and not ( a.isItem or a.item ) or a.configurable then
                 abilities[ v ] = k
             end
         end
@@ -4789,7 +4789,7 @@ do
         local toggles = {}
 
         for k, v in pairs( class.abilities ) do
-            if k == "potion" or ( v.item or v.isItem ) and not abilities[ v.itemKey or v.key ] then
+            if not v.configurable and ( k == "potion" or ( v.item or v.isItem ) and not abilities[ v.itemKey or v.key ] ) then
                 local name = class.itemList[ v.item ] or v.name
                 if name then abilities[ name ] = v.itemKey or v.key end
             end
@@ -4960,7 +4960,7 @@ do
         wipe( tAbilities )
         for k, v in pairs( class.abilityList ) do
             local a = class.abilities[ k ]
-            if a and ( a.id > 0 or a.id < -100 ) and a.id ~= state.cooldown.global_cooldown.id and not ( a.isItem or a.item ) then
+            if a and ( a.id > 0 or a.id < -100 ) and a.id ~= state.cooldown.global_cooldown.id and not ( a.isItem or a.item ) or a.configurable then
                 if settings.abilities[ k ].toggle == section or a.toggle == section and settings.abilities[ k ].toggle == 'default' then
                     tAbilities[ k ] = class.abilityList[ k ] or v
                 end
@@ -5139,7 +5139,7 @@ do
 
             for k, v in pairs( class.abilityList ) do
                 local a = class.abilities[ k ]
-                if a and ( a.id > 0 or a.id < -100 ) and a.id ~= state.cooldown.global_cooldown.id and not ( a.isItem or a.item ) then
+                if a and ( a.id > 0 or a.id < -100 ) and a.id ~= state.cooldown.global_cooldown.id and not ( a.isItem or a.item ) or a.configurable then
                     if settings.abilities[ k ].toggle == 'default' or settings.abilities[ k ].toggle == 'none' then
                         list[ k ] = class.abilityList[ k ] or v
                     end
@@ -5176,7 +5176,7 @@ do
         e.func = function ()
             for k, v in pairs( settings.abilities ) do
                 local a = class.abilities[ k ]
-                if a and not ( a.isItem or a.item ) and v.toggle == section or ( class.abilities[ k ].toggle == section ) then v.toggle = 'default' end
+                if a and not ( a.isItem or a.item ) or a.configurable and v.toggle == section or ( class.abilities[ k ].toggle == section ) then v.toggle = 'default' end
             end
             for k, v in pairs( settings.items ) do
                 local a = class.abilities[ k ]

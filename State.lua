@@ -6950,7 +6950,7 @@ do
         local spec = rawget( profile.specs, state.spec.id )
         if not spec then return true end
 
-        local option = ability.item and spec.items[ spell ] or spec.abilities[ spell ]
+        local option = ( not ability.configurable and ability.item ) and spec.items[ spell ] or spec.abilities[ spell ]
 
         if option.disabled then return true, "preference" end
         if option.boss and not state.boss then return true, "boss-only" end
