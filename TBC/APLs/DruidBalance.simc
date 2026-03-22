@@ -11,14 +11,14 @@ actions+=/call_action_list,name=aoe,if=active_enemies>1
 actions+=/call_action_list,name=st
 
 actions.st+=/faerie_fire,if=!debuff.faerie_fire.up
-actions.st+=/moonfire,if=!debuff.moonfire.ticking
-actions.st+=/insect_swarm,if=!debuff.insect_swarm.ticking
-actions.st+=/force_of_nature
-actions.st+=/starfire
+actions.st+=/moonfire,if=!debuff.moonfire.ticking&(!settings.mana_management|settings.drop_moonfire_mana_pct=0|mana.pct>settings.drop_moonfire_mana_pct)
+actions.st+=/insect_swarm,if=!debuff.insect_swarm.ticking&(moving|(settings.mana_management&((settings.add_insect_swarm_mana_pct>0&mana.pct<=settings.add_insect_swarm_mana_pct)|(set_bonus.tier5_balance>=4&settings.drop_moonfire_mana_pct>0&mana.pct<=settings.drop_moonfire_mana_pct))))
+actions.st+=/force_of_nature,if=ttd>25
+actions.st+=/starfire,label=R6,label_if=settings.mana_management&settings.downrank_starfire_mana_pct>0&mana.pct<=settings.downrank_starfire_mana_pct
 actions.st+=/wrath
 
 actions.aoe+=/faerie_fire,if=!debuff.faerie_fire.up
-actions.aoe+=/moonfire,if=active_dot.moonfire<3
+actions.aoe+=/moonfire,if=active_dot.moonfire<3,cycle_targets=1
 actions.aoe+=/hurricane
 actions.aoe+=/force_of_nature
 actions.aoe+=/starfire

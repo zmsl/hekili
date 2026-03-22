@@ -386,9 +386,14 @@ local displayTemplate = {
 
         elvuiCooldown = false,
 
-        --[[ font = ElvUI and 'PT Sans Narrow' or 'Arial Narrow',
-        fontSize = 12,
-        fontStyle = "OUTLINE" ]]
+        labelAnchor = "TOP",
+        labelX = 0,
+        labelY = -2,
+        labelAlign = "CENTER",
+        labelFont = ElvUI and 'PT Sans Narrow' or 'Arial Narrow',
+        labelFontStyle = "OUTLINE",
+        labelFontSize = 12,
+        labelColor = { 1, 1, 0, 1 },
     },
 
     visibility = {
@@ -466,6 +471,15 @@ local displayTemplate = {
 
         color = { 1, 1, 1, 1 },
     },
+
+    labelAnchor = "TOP",
+    labelX = 0,
+    labelY = -2,
+    labelAlign = "CENTER",
+    labelFont = ElvUI and 'PT Sans Narrow' or 'Arial Narrow',
+    labelFontStyle = "OUTLINE",
+    labelFontSize = 12,
+    labelColor = { 1, 1, 0, 1 },
 
     indicators = {
         enabled = true,
@@ -951,6 +965,7 @@ do
         end
 
         if option == "color" or option == "queuedColor" then return unpack( conf.color ) end
+        if option == "labelColor" then return unpack( conf.labelColor or { 1, 1, 0, 1 } ) end
         if option == "frameStrata" then return frameStratas[ conf.frameStrata ] or 3 end
         if option == "name" then return display end
 
@@ -985,7 +1000,7 @@ do
         local conf = self.DB.profile.displays[ display ]
         if category ~= option and category ~= 'main' then conf = conf[ category ] end
 
-        if option == 'color' or option == 'queuedColor' then
+        if option == 'color' or option == 'queuedColor' or option == 'labelColor' then
             conf[ option ] = { val, v2, v3, v4 }
             set = true
         elseif option == 'frameStrata' then
@@ -1767,6 +1782,102 @@ do
                                     }
                                 }
                             },
+
+                            labels = {
+                                type = "group",
+                                inline = true,
+                                name = "Labels",
+                                order = 17,
+                                args = {
+                                    labelAnchor = {
+                                        type = "select",
+                                        name = "Anchor Point",
+                                        order = 1,
+                                        width = 1,
+                                        values = {
+                                            TOP = "Top",
+                                            CENTER = "Center",
+                                            BOTTOM = "Bottom",
+                                        },
+                                    },
+
+                                    labelX = {
+                                        type = "range",
+                                        name = "X Offset",
+                                        order = 2,
+                                        width = 0.99,
+                                        step = 1,
+                                    },
+
+                                    labelY = {
+                                        type = "range",
+                                        name = "Y Offset",
+                                        order = 3,
+                                        width = 0.99,
+                                        step = 1,
+                                    },
+
+                                    break01 = {
+                                        type = "description",
+                                        name = " ",
+                                        order = 3.1,
+                                        width = "full",
+                                    },
+
+                                    labelAlign = {
+                                        type = "select",
+                                        name = "Alignment",
+                                        order = 4,
+                                        width = 1.49,
+                                        values = {
+                                            LEFT = "Left",
+                                            RIGHT = "Right",
+                                            CENTER = "Center",
+                                        },
+                                    },
+
+                                    labelFont = {
+                                        type = "select",
+                                        name = "Font",
+                                        order = 5,
+                                        width = 1.49,
+                                        dialogControl = 'LSM30_Font',
+                                        values = LSM:HashTable("font"),
+                                    },
+
+                                    labelFontStyle = {
+                                        type = "select",
+                                        name = "Style",
+                                        order = 6,
+                                        values = fontStyles,
+                                        width = 1.49,
+                                    },
+
+                                    break02 = {
+                                        type = "description",
+                                        name = " ",
+                                        order = 6.1,
+                                        width = "full",
+                                    },
+
+                                    labelFontSize = {
+                                        type = "range",
+                                        name = "Size",
+                                        order = 7,
+                                        min = 8,
+                                        max = 64,
+                                        step = 1,
+                                        width = 1.49,
+                                    },
+
+                                    labelColor = {
+                                        type = "color",
+                                        name = "Color",
+                                        order = 8,
+                                        width = 1.49,
+                                    },
+                                },
+                            },
                         },
                     },
 
@@ -1899,6 +2010,102 @@ do
                                         width = 2.98
                                     },
                                 }
+                            },
+
+                            labels = {
+                                type = "group",
+                                inline = true,
+                                name = "Labels",
+                                order = 4,
+                                args = {
+                                    labelAnchor = {
+                                        type = "select",
+                                        name = "Anchor Point",
+                                        order = 1,
+                                        width = 1,
+                                        values = {
+                                            TOP = "Top",
+                                            CENTER = "Center",
+                                            BOTTOM = "Bottom",
+                                        },
+                                    },
+
+                                    labelX = {
+                                        type = "range",
+                                        name = "X Offset",
+                                        order = 2,
+                                        width = 0.99,
+                                        step = 1,
+                                    },
+
+                                    labelY = {
+                                        type = "range",
+                                        name = "Y Offset",
+                                        order = 3,
+                                        width = 0.99,
+                                        step = 1,
+                                    },
+
+                                    break01 = {
+                                        type = "description",
+                                        name = " ",
+                                        order = 3.1,
+                                        width = "full",
+                                    },
+
+                                    labelAlign = {
+                                        type = "select",
+                                        name = "Alignment",
+                                        order = 4,
+                                        width = 1.49,
+                                        values = {
+                                            LEFT = "Left",
+                                            RIGHT = "Right",
+                                            CENTER = "Center",
+                                        },
+                                    },
+
+                                    labelFont = {
+                                        type = "select",
+                                        name = "Font",
+                                        order = 5,
+                                        width = 1.49,
+                                        dialogControl = 'LSM30_Font',
+                                        values = LSM:HashTable("font"),
+                                    },
+
+                                    labelFontStyle = {
+                                        type = "select",
+                                        name = "Style",
+                                        order = 6,
+                                        values = fontStyles,
+                                        width = 1.49,
+                                    },
+
+                                    break02 = {
+                                        type = "description",
+                                        name = " ",
+                                        order = 6.1,
+                                        width = "full",
+                                    },
+
+                                    labelFontSize = {
+                                        type = "range",
+                                        name = "Size",
+                                        order = 7,
+                                        min = 8,
+                                        max = 64,
+                                        step = 1,
+                                        width = 1.49,
+                                    },
+
+                                    labelColor = {
+                                        type = "color",
+                                        name = "Color",
+                                        order = 8,
+                                        width = 1.49,
+                                    },
+                                },
                             },
                         },
                     },

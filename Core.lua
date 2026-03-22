@@ -1131,6 +1131,24 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                             slot.wait = state.delay
                                                             slot.resource = state.GetResourceType( rAction )
 
+                                                            if script.Modifiers and script.Modifiers[ 'label' ] then
+                                                                local ok, labelText = pcall( script.Modifiers[ 'label' ] )
+                                                                slot.label = ok and labelText or nil
+                                                            else
+                                                                slot.label = nil
+                                                            end
+
+                                                            if slot.label then
+                                                                if script.Modifiers[ 'label_if' ] then
+                                                                    local ok, result = pcall( script.Modifiers[ 'label_if' ] )
+                                                                    slot.labelVisible = ok and result or false
+                                                                else
+                                                                    slot.labelVisible = true
+                                                                end
+                                                            else
+                                                                slot.labelVisible = false
+                                                            end
+
                                                             rAction = state.this_action
                                                             rWait = state.delay
 
@@ -1196,6 +1214,24 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                             slot.waitSec = sec
 
                                                             slot.resource = state.GetResourceType( rAction )
+
+                                                            if script.Modifiers and script.Modifiers[ 'label' ] then
+                                                                local ok, labelText = pcall( script.Modifiers[ 'label' ] )
+                                                                slot.label = ok and labelText or nil
+                                                            else
+                                                                slot.label = nil
+                                                            end
+
+                                                            if slot.label then
+                                                                if script.Modifiers[ 'label_if' ] then
+                                                                    local ok, result = pcall( script.Modifiers[ 'label_if' ] )
+                                                                    slot.labelVisible = ok and result or false
+                                                                else
+                                                                    slot.labelVisible = true
+                                                                end
+                                                            else
+                                                                slot.labelVisible = false
+                                                            end
 
                                                             rAction = state.this_action
                                                             rWait = state.delay
@@ -1316,6 +1352,24 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                         slot.waitSec = nil
 
                                                         slot.resource = state.GetResourceType( rAction )
+
+                                                        if script.Modifiers and script.Modifiers[ 'label' ] then
+                                                            local ok, labelText = pcall( script.Modifiers[ 'label' ] )
+                                                            slot.label = ok and labelText or nil
+                                                        else
+                                                            slot.label = nil
+                                                        end
+
+                                                        if slot.label then
+                                                            if script.Modifiers[ 'label_if' ] then
+                                                                local ok, result = pcall( script.Modifiers[ 'label_if' ] )
+                                                                slot.labelVisible = ok and result or false
+                                                            else
+                                                                slot.labelVisible = true
+                                                            end
+                                                        else
+                                                            slot.labelVisible = false
+                                                        end
 
                                                         rAction = state.this_action
                                                         rWait = state.delay

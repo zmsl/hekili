@@ -1164,6 +1164,17 @@ do
                                 b.Keybinding:SetText(nil)
                             end
 
+                            local rec = b.Recommendation
+                            if b.Label then
+                                if rec.label and rec.labelVisible then
+                                    b.Label:SetText( rec.label )
+                                    b.Label:Show()
+                                else
+                                    b.Label:SetText( nil )
+                                    b.Label:Hide()
+                                end
+                            end
+
                             if conf.glow.enabled and ( i == 1 or conf.glow.queued ) and IsSpellOverlayed( ability.id ) then
                                 b.glowColor = b.glowColor or {}
 
@@ -2524,6 +2535,17 @@ do
         local kbText = b.Keybinding:GetText()
         b.Keybinding:SetText( nil )
         b.Keybinding:SetText( kbText )
+
+        b.Label = b.Label or b:CreateFontString( bName .. "_Label", "OVERLAY" )
+        local lc = id == 1 and conf or conf.queue
+        b.Label:SetFont( LSM:Fetch( "font", lc.labelFont or conf.font ), lc.labelFontSize or 12, lc.labelFontStyle or "OUTLINE" )
+        b.Label:ClearAllPoints()
+        local labelAnchor = lc.labelAnchor or "TOP"
+        b.Label:SetPoint( labelAnchor, b, labelAnchor, lc.labelX or 0, lc.labelY or -2 )
+        b.Label:SetHeight( b:GetHeight() / 3 )
+        b.Label:SetJustifyH( lc.labelAlign or "CENTER" )
+        b.Label:SetTextColor( unpack( lc.labelColor or { 1, 1, 0, 1 } ) )
+        b.Label:SetWordWrap( false )
 
 
         -- Cooldown Wheel

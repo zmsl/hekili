@@ -1152,6 +1152,8 @@ local newModifiers = {
 
     sync = 'string', -- should be an ability's name.
     buff_name = 'string',
+    label    = 'string',
+    label_if = 'bool',
     list_name = 'string',
     op = 'string',
     potion = 'string',
