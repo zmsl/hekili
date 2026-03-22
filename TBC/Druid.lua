@@ -1041,6 +1041,7 @@ lacerate = {
 
         handler = function ()
             removeDebuff( "armor_reduction" )
+            removeBuff( "natures_grace" )
             applyDebuff( "target", "faerie_fire", 300 )
         end,
 
@@ -1092,6 +1093,25 @@ lacerate = {
         end,
 
         copy = { 22568, 22827, 22828, 22829, 31018, 24248 }
+    },
+
+
+    -- Summons 3 Treants to attack nearby enemies for 30 sec.
+    force_of_nature = {
+        id = 33831,
+        cast = 0,
+        cooldown = 180,
+        gcd = "spell",
+
+        spend = 0.12,
+        spendType = "mana",
+
+        talent = "force_of_nature",
+        startsCombat = true,
+        texture = 132129,
+
+        handler = function ()
+        end,
     },
 
 
@@ -1222,6 +1242,7 @@ lacerate = {
         tick_time = function () return class.auras.hurricane.tick_time end,
 
         start = function ()
+            removeBuff( "natures_grace" )
             applyDebuff( "target", "hurricane" )
         end,
 
@@ -1276,6 +1297,7 @@ lacerate = {
         handler = function ()
             applyDebuff( "target", "insect_swarm" )
             removeBuff( "clearcasting" )
+            removeBuff( "natures_grace" )
         end,
 
         copy = { 5570, 24974, 24975, 24976, 24977, 27013 }
@@ -1341,11 +1363,14 @@ lacerate = {
         spend = function() return ((buff.clearcasting.up and 0 or 0.21) * (1 - talent.moonglow.rank * 0.03)) * (buff.moonkin_form.up and 0.5 or 1) end,
         spendType = "mana",
 
+        cycle = "moonfire",
+
         startsCombat = true,
         texture = 136096,
 
         handler = function ()
             removeBuff( "clearcasting" )
+            removeBuff( "natures_grace" )
             applyDebuff( "target", "moonfire" )
         end,
 
@@ -1693,7 +1718,7 @@ lacerate = {
     -- Causes 127 to 155 Arcane damage to the target.
     starfire = {
         id = 2912,
-        cast = function() return (3.5 - (talent.improved_starfire.rank * 0.1) - (buff.natures_grace.up and 0.5 or 0)) * haste end,
+        cast = function() return (3.5 - (talent.starlight_wrath.rank * 0.1) - (buff.natures_grace.up and 0.5 or 0)) * haste end,
         cooldown = 0,
         gcd = "spell",
 
@@ -1705,6 +1730,7 @@ lacerate = {
 
         handler = function ()
             removeBuff( "clearcasting" )
+            removeBuff( "natures_grace" )
         end,
 
         copy = { 2912, 8949, 8950, 8951, 9875, 9876, 25298, 26986 },
@@ -1895,6 +1921,7 @@ lacerate = {
 
         handler = function ()
             removeBuff( "clearcasting" )
+            removeBuff( "natures_grace" )
             removeBuff( "natures_swiftness")
         end,
 
@@ -2216,6 +2243,7 @@ spec:RegisterPotions( {
 -- Default Packs
 spec:RegisterPack( "Feral", 20260315.2, [[Hekili:TVv3UTnUs4NLCJHtsRxB64Kwa7CXIdoaTx09a4fNlLmTeTJqKffKOsAwy4N9DiPOeLePK8pPf7IEtqm5Wz(MF4mdTjDM48Nol9XmIZ3qJr3pE6KzJqtqFAkYzj7TyIZYyS3Z4TW)eH3b)9)ssWH8rFlKI95RoLML4bZ4SCDwqi7lroRnZsG0yINZ3MmXz5tb((ejLKup(IJtOBccb(G9yb0O0rXjep6U1y2Tl(TD4KNDPBCzprCFni0)dbBwCvw8GRwNTzZOTbBy6Zokl(WxnXg2t0KO08fBMe6oseNxEH4Ka2BcAfcP2ewLHhM5UHMSRCL8pbKpaOAdjjH4lM3fi0mh8dsiURj4KA8PyidmJp3HVQZp6RHaVIPzrEeopKS3Dh1N4MsdPnPnb)c4O15scoAlXNB4c2sssD3KLiSiKisY23g5LbaiITyY4Xdy4KTe2iAglnWNmZap2Gjjbe3nCTBdpkQuZeiGRv(ePfRoPJsi7WbrPZNGmqJ(SvXbYao2rPr8vzq8xLZBfj8XQPyd2HJWkn)XfsUxUapAk72HnDx50vogNW97ZhwfZig9Anpaa3SuIBaJSlTeVfKRfdEQrENv8wjpsYICLFYnmiL9bEYIfCI4SRb3QI6WWMlv6T6MoHRRqgkhzNiJBQ4BcADJrBloovFFcx3ezPYc)a3Fr3SXDRN)IjLgt(CC7ycSfRm8z24gmje7br8mr4PpLns95rPmit8IzdQmyrK)Ozn4K5nCg2(Of53CNNEEUCg7t2rHPc(RGOTUjuPtwXbCSleLKjdSZI3V304kyJmydJ2gkdh5CTQ5c10CL(AqCj592G940bW0SrygNi3y6RKKhxKsymqNKm3vYACt9VDx08zGoBYhn9YbE9GpvS87IhxJ5Xu(qgNAnjf2abjgDLeXfRipPpztGxqzEY6ecBl(U8ZjWm0eTT8M5pSHK0dUZjRN8oickM9sU3mp)Ai4r8WP8ybUPAOqAXES5LrifllxD8yMRmuj1((960m3ej3G6bFUEGhLg6tFnQehqWb2)nJQOEHbzP75tgpWOUAC9jbXQeLuWXfeXs12RaZ66XJNGiv4)hXc8EgMqv4KfSJ4YOU(bKhHofgmuIGhxmD8(9w6S662GHUGFLGFHm4ibMcaZqwWyNgXJuGwSe5UIPwCfdS13z(cl4xe57mxUSECIrKNNsfgPzVBpU4(P73pS(GtMnWeKm7xQ03HQdkHmlb78H5XXLGrej)r04RTO(hPwc5UOEb0Su31bmslEj(0C3utVY8cNceDo7YiL6Xcd3eS9jMBEM8pQMo)Zx3diuAb70BKB7rOtWexL5XPVBLxeS2uXfXeVBLwQX9lyHfbN)3CzL46N2OOOIb6(zx8qhe)OlD0WqDKIRNfooJseY91hBsTJl15PjJlyItbasFc2OwjiGlPwJcSbLIOGhgCvvIPVqsCbs7Lb4YbKPZocGy2quSIUWqPYF8k5rleJEYQ9Z0SJJIKeMB54OsCC292CMBeltrGFgyqcSYA2oKEuqoGwm9ZxOudCXAdhY0vWNnfpMJeZwMle4QgiuaX8HLGubPHOB60lnFicDRzQS7iNVWe0k2KPK)DiRXDDQzThpFC2mdLTrOZLfMwOZsyVEkSsTFgayWxXjrCVKZYVSlMMWGMNw9WHvsHCyf)BzlD0HV6Su8F8FFbPCH)7BIFScseEDiX353Hzadi0Dj2z5vhwzSn0dRgCyLXjlAgv9do4SSXSoma7CzQOq2zPogakMAfv69sEy1JluQzp6vTuM1PLlY7ohrAUfwtcKtjxCZAZUB8BrGB2hEyLQb3dRMdiPLMCflqVb1ky3tVj1dR2VVoTZTr6nhwHokEFTGABTbxAKkMGBFU3Q9rU9qaWjJlxTsO8f)G1fRNNxI5AnmweDxTTaXWnBrtYcOf1CNJcB8rNowAwTLHA11LGhKeh3FYkUB0LDUn9m0gDSod1Hc2aQF(NIjwZ3pDSIpwnWflOzUuGRatnh9aA7jOB5TzzvlM3qjebjZ0YvwPtfbsSNDUNiXKngItR03)HvFSKWIXU(eHmQ7y4IEZ7kiUlnPsi8dQ4bZThxcArFecSAVmZ7lwHwW7jwnyGTxOYYXvocGx1GAYKzVU1Lv6DeLzV8qzNjfNPWu2zZ991)m2LluGh7vCSHhTuzdTdhyNjASQe6jLmRp1uko)HfVfYweCHsWh6ZxYeYg852l5yttufz0opvNAIDFXLt54as0iS9kngp5vdWpu4BU5OIFuHCiyL3AFLDfYXD5tSTFazVWLo8Vd16god5Fq2lV0ND3hHpQMczVuHMvfHokrOVpfzpT(jWoM4UF9Ay7NWR(T0q)qz8R4uJZQjVntvpRgtkyX6)15j)15j)N95jRKLVMf7xN18K1M)DDwtt7KUqDg0ZZHMZUkBwUFQmgOi0O60tK95ywbS3yBFYNF2n22MH9KSC27sONhf5IDcE7vE6js(XFc(70lNQfouTKAlNeSzhrxyhmJxbeN0z)g5rNIBjQqw6x9X8SrJ111SqNLAx2uo7v9xyugnVEHhwXzAHNR(1mu6sgP5auu0EBkVFnpzVpLs2w7(NkZZ0YDqv66lfCJl3A7DS00lHg3iIuea0AH9tW5arCtft34ISwFhQ(Lzv7Ckfx(02BnWe0MlGMWYAlWzQ5Wg7LYprtGffIXDn87qE7B8Qx9rusDSEAv1f)VuoApgI23XP2vxCT0fAshpXb5UoKfAnrvTN8qh7HADFBt4Qv5S8rryY(igZABXvEGeIZYpmxAvExaCEuCad9NkHmyZsp2A73YfJ6yL5pQMot(wRXidpOi990vFlsDgdOVy5lqQF(H2(sgQnxNjhLXrAw5MpjeZTN09z1A4an8ur0sVw5XMi9tW5lHQzD7LKLLvoFDZrXJKPtNXjBi62FDMgIwCGnyV2XoQ(cvK)U5UY3QNk3EDFyP6v9j1uzX5zpBTQvL0f9KVYVRNopmQ5VRN202IVzhdvz676JtfrK8E2WPe))ik)bpEy1)5)TeYz9L)ppztgFxSZYLyMKCN)o]] )
 spec:RegisterPack( "Restoration", 20260313.1, [[Hekili:fs1YUTToq0VLSjErtDJLlk6nfzr7MwBu4fHo4UOimKsAK1atrQYh11B43EhQh1kgjnWWcYZJZmNzoJ5l4B5SsPh4BYUo7dxVCXY5lwML9()JZ8hBboRvwSxUJErlBON3boVXk9OrN8DuzKLjmCMGTG8Zz5bu5xP55ppWFKITfk4BwSGZQXYsOpuWvWzBRrxuK(kJIHkhfMk63fPsgfk05j3vgBu8nypQW5CwNXoMavYGYtVUPJzGwMRGs(x4Scl6blk5SlII8qv1CVfGhnvpQWkyEOLZ6Rbr8jo4E6dR1cfMMC5RJCOnkUmkgRXoSYNGYxdpEavLpPons7(PoPkTj7Fd(KMS2y1UuklFvMAAaDQqfkj574tAIZ81XxIXhKwnQ354S))Z3Tz1MVEtuefBRP1b20AS(HDWSHr(SOWc)mGwOmkCeO0kl4nnKcGmuul17a3846VJAY1ccT71UqBcPuaJR3ztN9ZO47QyLrPmhO2jbQvs7)dGLShCPCrkpFkSPAKeZ9JXPnDTBq)KOlltbtAuzU0b3exhfVL8nPbitR7LKTwtfQGETzd6CDnZabggf7ann2lsqG69GNOlnYw57tQtbrZ6Yul7RLKz4xG9ycB0Kg9PERqfOlbYfs9ODSN(X9oiHe04E4kIu1yr90OL6JNQ6aDHF3QWc0RoH7u2pw0prNx2XYSThcA)8qc0YPMYMuzsSQMWObi9JH2nn6mPdn5qVKqz806CvZ4gp7SBAYjjkdjznNXK09mByOpQvDZ)7z4BU9DNF8CfwD7fH2lV4LU7IRFoy6pJgs(5d5SlKUyFHZQKGzaIe2tKsNY68)2jDUX)Zd]] )
+spec:RegisterPack( "Balance", 20260320.1, [[Hekili:fB1o3Tokq4FlPjnBoAJTtYM9CItrQUjfPr3AKWOr2CSeOdGIx3WV97GEzUeKJZ2Cl8dMhFdZhdZazb5NK0cQbiVV82LpC7QL3MS4FV)X7iPMJnajTHY2t3I)rqRXVFHwrfSo5hRK0cN7AzRYjIKUPLxzEvq2efZvRqBBag59fliP74ffqVPGMrs)5oU2M7(qT5dr1MllX1mdxkS5vCTbvxkv28Fa75v8eCFOKL8km69wPtAuatwVHA(R1)DTuk2ZfzOl13WlxF1M2YYeFPjTn23I6kvTptwMz2bzh4vfEUhObH46EnB5LMan23MGhbTvdzCduR9f2i7sppjBaTjRMkOz96CX2TmPak5mU55192MeAiU3(V(1kuJubfXHv1kGlauNzNhsUqaQpWJ6j0AyMNwRbJHl2QtM0pSlzMRzszvH8G4KUefqlo6d737CdDGrRQY6xM5ktUXvTUMk72xo5FazGaQ5G(5fFTJAJ35wI2vpusbfhYk5QomVQa62tEI)Tsj9y5xOdJYsmCgMmBdCHl0aZKPpqhY8b38LpJRiTWax5NGAAvqGwTHQCXnq8bf1SZpzroliBzhzvqg6(wWOxV4sY(EqMs)iimCMuintmYtRcbyxRsXzub8PT3CPAV6pNR9Y7swskYHcx1jj916gPYGL053f0MjX(gjT7FUoCO74pV31See0nvqb5LXwoKupAGKYu4nCfNssVYMhLNqB8jehUgSv5mGpsp(ihH9S5pzZxfh6vD5WaEtKQF0qJUZ3OacoW079nDKSdS5bFBgiEFdmopJrQxc)fJ4JqHXGk8(xeIEKX(cKIDL8eA(A)ZqVyFDAB1joE06PHqbqU03O(5jbwmpR4piXM)86XBtxWeQtXm02jA7)BiJp)kwaDwor9ZhoC(fEpdd1zgWzZV2Mp3qo)6JbftNMZvUfB23Vx1oQWb1)mludnnggdIuMnFXjCche239lR)vFU(Fi2potlQZ6R20xoo94QV8s)3lHp7L(5EWw3H0O(ipBZlCbotgshARzNurstPyBwNeYVc]] )
 
 spec:RegisterPackSelector( "balance", "Balance (IV)", "|T136096:0|t Balance",
     "If you have spent more points in |T136096:0|t Balance than in any other tree, this priority will be automatically selected for you.",
