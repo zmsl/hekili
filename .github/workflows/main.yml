@@ -9,6 +9,8 @@ on:
   push:
     tags:
       - "v1*"
+      - "v2*"
+      - "v3*"
   workflow_dispatch:
 
 # a workflow is built up as jobs, and within these jobs are steps
@@ -19,6 +21,9 @@ jobs:
 
     # we can run our steps on pretty much anything, but the "ubuntu-latest" image is a safe bet
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # required for GITHUB_TOKEN to publish releases
 
     # specify the environment variables used by the packager, matching the secrets from the project on GitHub
     env:
@@ -33,11 +38,12 @@ jobs:
 
       # we first have to clone the AddOn project, this is a required step
       - name: Clone Project
-        uses: actions/checkout@v1  # note: checkout@v2 breaks git history, so generating a changelog and
-                                   # file naming for non-tagged builds will not work properly
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history required for changelog generation and non-tagged build naming
 
       # once cloned, we just run the GitHub Action for the packager project
       - name: Package and Release
         uses: BigWigsMods/packager@v2
         with:
-          args: -g classic
+          args: -g bcc
