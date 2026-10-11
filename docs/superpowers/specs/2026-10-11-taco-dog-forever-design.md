@@ -188,6 +188,38 @@ never receive a secret.
   The plugin is disabled and reported; the core keeps running.
 - Versioned SavedVariables with migrations. No Lua error escapes in combat.
 
+### 9.1 Drift and self-correction
+
+**Gated inputs can't drift.** The game sets gate alpha from the true secret value, so only a layer matching
+reality can be visible. **Tracked estimates can drift.** They are used to narrow which combinations to run,
+and to feed any input that is only tracked.
+
+Rules:
+- Every secret input that drives an APL decision is **gated**. Tracking is only a narrowing hint, never the
+  source of truth, unless an input can't be gated, in which case the validator flags it as T-only.
+- The planner **sweeps every combination in the background**, with the near-estimate ones first. A mis-narrowed true
+  layer is at most a few hundred ms stale, never empty.
+- **Confidence decays** with time since the last confirming signal.
+
+Correction signals (the timing of an event counts as information):
+
+| Signal | Corrects |
+|---|---|
+| Own `UNIT_SPELLCAST_SUCCEEDED` | Start time of every self-timer |
+| Combo points +1 after a builder (unchanged means a miss) | Rake applied or missed; Shred hits for any extension mechanic |
+| Combo points → 0 after Rip | Rip new or refreshed (the timer restarts) |
+| Combo points kept after a missed finisher (to verify) | Detects Rip misses |
+| `UNIT_POWER_FREQUENT` firing (amount secret) | Exact energy tick phase |
+| `IsSpellUsable` false → true | The exact moment energy crossed that ability's cost |
+| Cooldown `isActive` flip | Cooldown end; start of the TF buff |
+| `PLAYER_TARGET_CHANGED` | Swap or reset per-target timers and combo points |
+| Leaving combat | Full exact re-sync plus calibration |
+| Our child frame's `OnShow`/`OnHide` on an AuraContainer button (if allowed) | Exact "applied" and "fell off" events for Rip and Rake |
+
+Remaining blind spots: refresh or extension without a combo-point signal, dispels and early removal (unless the
+AuraContainer hook works), and per-GUID keying while enemy GUIDs are secret (timers are kept per target switch;
+a returning target waits for its gate).
+
 ## 10. Plugin API (internal in v1)
 
 ```lua
@@ -252,6 +284,10 @@ TDF:RegisterPlugin({ kind = "view"|"spec"|"input"|"apl"|"integration",
    4. Does `StatusBar:SetTimerDuration` accept a secret aura or cooldown duration from addon code?
    5. How much do curve evaluations allocate per call?
    6. How long does one simulation run take for Feral?
+   7. Does our child frame on an AuraContainer button receive `OnShow`/`OnHide`, or are those blocked?
+   8. Does `UNIT_POWER_FREQUENT` fire on energy ticks in combat, with usable timing?
+   9. Do combo points survive a missed or dodged finisher on Forever?
+   10. Can unit tokens be compared (`C_Secrets.CanCompareUnitTokens`, `UnitIsUnit`) to recognise a returning target?
 3. **Permission:** ask Hekili's maintainers about reusing the code with credit. Ask Catnip's author to add the
    MIT LICENSE file that CurseForge already shows.
 
