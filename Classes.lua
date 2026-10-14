@@ -34,7 +34,6 @@ local GetSpellDescription, GetSpellTexture = C_Spell.GetSpellDescription, C_Spel
 local GetSpecialization, GetSpecializationInfo = C_SpecializationInfo.GetSpecialization, C_SpecializationInfo.GetSpecializationInfo
 local GetItemSpell, GetItemCount, IsUsableItem = C_Item.GetItemSpell, C_Item.GetItemCount, C_Item.IsUsableItem
 local GetSpellInfo = C_Spell.GetSpellInfo
-local GetSpellLink = C_Spell.GetSpellLink
 
 local UnitBuff, UnitDebuff = ns.UnitBuff, ns.UnitDebuff
 
@@ -1479,61 +1478,13 @@ local all = Hekili:NewSpecialization( 0, "All", "Interface\\Addons\\Hekili\\Text
 ---@diagnostic disable-next-line: need-check-nil
 all:RegisterAuras( {
 
-    enlisted_a = {
-        id = 282559,
-        duration = 3600,
-    },
-
-    enlisted_b = {
-        id = 289954,
-        duration = 3600,
-    },
-
-    enlisted_c = {
-        id = 269083,
-        duration = 3600,
-    },
-
-    enlisted = {
-        alias = { "enlisted_c", "enlisted_b", "enlisted_a" },
-        aliasMode = "first",
-        aliasType = "buff",
-        duration = 3600,
-    },
-
-    -- The War Within M+ Affix auras
-    -- Haste
-    cosmic_ascension = {
-        id = 461910,
-        duration = 30,
-        max_stack = 1
-    },
-    -- Crit
-    rift_essence = {
-        id = 465136,
-        duration = 30,
-        max_stack = 1
-    },
-    -- Mastery
-    void_essence = {
-        id = 463767,
-        duration = 30,
-        max_stack = 1
-    },
-    -- CDR & Vers
+    -- Retail M+ aura kept because State.lua's GCD maths reads debuff.voidbinding.
     voidbinding = {
         id = 462661,
         duration = 30,
         max_stack = 1,
         shared = "player"
     },
-    -- Priory of the Sacred Flame
-    blessing_of_the_sacred_flame = {
-        id = 435088,
-        duration = 1800,
-        max_stack = 1
-    },
-
     -- Can be used in GCD calculation.
     shadowform = {
         id = 232698,
@@ -1674,121 +1625,6 @@ all:RegisterAuras( {
         max_stack = 1,
     },
 
-    blessing_of_the_bronze = {
-        alias = {
-            "blessing_of_the_bronze_evoker",
-            "blessing_of_the_bronze_deathknight",
-            "blessing_of_the_bronze_demonhunter",
-            "blessing_of_the_bronze_druid",
-            "blessing_of_the_bronze_hunter",
-            "blessing_of_the_bronze_mage",
-            "blessing_of_the_bronze_monk",
-            "blessing_of_the_bronze_paladin",
-            "blessing_of_the_bronze_priest",
-            "blessing_of_the_bronze_rogue",
-            "blessing_of_the_bronze_shaman",
-            "blessing_of_the_bronze_warlock",
-            "blessing_of_the_bronze_warrior",
-        },
-        aliasType = "buff",
-        aliasMode = "longest"
-    },
-    -- Can always be seen and tracked by the Hunter.; Damage taken increased by $428402s4% while above $s3% health.
-    -- https://wowhead.com/beta/spell=257284
-    hunters_mark = {
-        id = 257284,
-        duration = 3600,
-        tick_time = 0.5,
-        type = "Magic",
-        max_stack = 1,
-        shared = "target"
-    },
-    chaos_brand = {
-        id = 1490,
-        duration = 3600,
-        type = "Magic",
-        max_stack = 1,
-        shared = "target"
-    },
-    blessing_of_the_bronze_deathknight = {
-        id = 381732,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player"
-    },
-    blessing_of_the_bronze_demonhunter = {
-        id = 381741,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player"
-    },
-    blessing_of_the_bronze_druid = {
-        id = 381746,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player"
-    },
-    blessing_of_the_bronze_evoker = {
-        id = 381748,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player"
-    },
-    blessing_of_the_bronze_hunter = {
-        id = 364342,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player"
-    },
-    blessing_of_the_bronze_mage = {
-        id = 381750,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player"
-    },
-    blessing_of_the_bronze_monk = {
-        id = 381751,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player"
-    },
-    blessing_of_the_bronze_paladin = {
-        id = 381752,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player"
-    },
-    blessing_of_the_bronze_priest = {
-        id = 381753,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player"
-    },
-    blessing_of_the_bronze_rogue = {
-        id = 381754,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player"
-    },
-    blessing_of_the_bronze_shaman = {
-        id = 381756,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player"
-    },
-    blessing_of_the_bronze_warlock = {
-        id = 381757,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player"
-    },
-    blessing_of_the_bronze_warrior = {
-        id = 381758,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player"
-    },
-
     power_infusion = {
         id = 10060,
         duration = 20,
@@ -1803,126 +1639,6 @@ all:RegisterAuras( {
         max_stack = 1,
         shared = "player",
         dot = "buff"
-    },
-
-    -- Mastery increased by $w1% and auto attacks have a $h% chance to instantly strike again.
-    skyfury = {
-        id = 462854,
-        duration = 3600,
-        max_stack = 1,
-        shared = "player",
-        dot = "buff"
-    },
-
-    -- SL Season 3
-    decrypted_urh_cypher = {
-        id = 368239,
-        duration = 10,
-        max_stack = 1,
-    },
-
-    old_war = {
-        id = 188028,
-        duration = 25,
-    },
-
-    deadly_grace = {
-        id = 188027,
-        duration = 25,
-    },
-
-    prolonged_power = {
-        id = 229206,
-        duration = 60,
-    },
-
-    dextrous = {
-        id = 146308,
-        duration = 20,
-    },
-
-    vicious = {
-        id = 148903,
-        duration = 10,
-    },
-
-    -- WoD Legendaries
-    archmages_incandescence_agi = {
-        id = 177161,
-        duration = 10,
-    },
-
-    archmages_incandescence_int = {
-        id = 177159,
-        duration = 10,
-    },
-
-    archmages_incandescence_str = {
-        id = 177160,
-        duration = 10,
-    },
-
-    archmages_greater_incandescence_agi = {
-        id = 177172,
-        duration = 10,
-    },
-
-    archmages_greater_incandescence_int = {
-        id = 177176,
-        duration = 10,
-    },
-
-    archmages_greater_incandescence_str = {
-        id = 177175,
-        duration = 10,
-    },
-
-    maalus = {
-        id = 187620,
-        duration = 15,
-    },
-
-    thorasus = {
-        id = 187619,
-        duration = 15,
-    },
-
-    sephuzs_secret = {
-        id = 208052,
-        duration = 10,
-        max_stack = 1,
-    },
-
-    str_agi_int = {
-        duration = 3600,
-    },
-
-    stamina = {
-        duration = 3600,
-    },
-
-    attack_power_multiplier = {
-        duration = 3600,
-    },
-
-    haste = {
-        duration = 3600,
-    },
-
-    spell_power_multiplier = {
-        duration = 3600,
-    },
-
-    critical_strike = {
-        duration = 3600,
-    },
-
-    mastery = {
-        duration = 3600,
-    },
-
-    versatility = {
-        duration = 3600,
     },
 
     empowering = {
@@ -2066,23 +1782,12 @@ all:RegisterAuras( {
         end,
     },
 
-    repeat_performance = {
-        id = 304409,
-        duration = 30,
-        max_stack = 1,
-    },
-
     -- Why do we have this, again?
     unknown_buff = {},
 
     berserking = {
         id = 26297,
         duration = 10,
-    },
-
-    hyper_organic_light_originator = {
-        id = 312924,
-        duration = 6,
     },
 
     blood_fury = {
@@ -2093,42 +1798,6 @@ all:RegisterAuras( {
     shadowmeld = {
         id = 58984,
         duration = 3600,
-    },
-
-    ferocity_of_the_frostwolf = {
-        id = 274741,
-        duration = 15,
-    },
-
-    might_of_the_blackrock = {
-        id = 274742,
-        duration = 15,
-    },
-
-    zeal_of_the_burning_blade = {
-        id = 274740,
-        duration = 15,
-    },
-
-    rictus_of_the_laughing_skull = {
-        id = 274739,
-        duration = 15,
-    },
-
-    ancestral_call = {
-        duration = 15,
-        alias = { "ferocity_of_the_frostwolf", "might_of_the_blackrock", "zeal_of_the_burning_blade", "rictus_of_the_laughing_skull" },
-        aliasMode = "first",
-    },
-
-    arcane_pulse = {
-        id = 260369,
-        duration = 12,
-    },
-
-    fireblood = {
-        id = 273104,
-        duration = 8,
     },
 
     out_of_range = {
@@ -2681,52 +2350,11 @@ all:RegisterAuras( {
         end,
         copy = "unravel_absorb"
     },
-
-    devouring_rift = {
-        id = 440313,
-        duration = 15,
-        shared = "player",
-        max_stack = 1
-    }
 } )
 
 do
-    -- Dragonflight Potions
-    -- There are multiple items for each potion, and there are also Toxic potions that people may not want to use.
-    local exp_potions = {
-        {
-            name = "tempered_potion",
-            items = { 212971, 212970, 212969, 212265, 212264, 212263 }
-        },
-        {
-            name = "potion_of_unwavering_focus",
-            items = { 212965, 212964, 212963, 212259, 212258, 212257 }
-        },
-        {
-            name = "frontline_potion",
-            items = { 212968, 212967, 212966, 212262, 212261, 212260 }
-        },
-        {
-            name = "elemental_potion_of_ultimate_power",
-            items = { 191914, 191913, 191912, 191383, 191382, 191381 }
-        },
-        {
-            name = "elemental_potion_of_power",
-            items = { 191907, 191906, 191905, 191389, 191388, 191387 }
-        },
-        {
-            name = "algari_healing_potion",
-            items = { 211878, 211879, 211880 }
-        },
-        {
-            name = "cavedwellers_delight",
-            items = { 212242, 212243, 212244 }
-        },
-        {
-            name = "invigorating_healing_potion",
-            items = { 244835, 244838, 244839 }
-        }        
-    }
+    -- Forever potions arrive with the class files.
+    local exp_potions = {}
 
 ---@diagnostic disable-next-line: need-check-nil
     all:RegisterAura( "fake_potion", {
@@ -2846,7 +2474,7 @@ do
         startsCombat = false,
         toggle = "potions",
 
-        consumable = function() return state.args.potion or settings.potion or first_potion_key or "tempered_potion" end,
+        consumable = function() return state.args.potion or settings.potion or first_potion_key end,
         item = function()
             if state.args.potion and class.abilities[ state.args.potion ] then return class.abilities[ state.args.potion ].item end
             if spec.potion and class.abilities[ spec.potion ] then return class.abilities[ spec.potion ].item end
@@ -2874,41 +2502,6 @@ do
 end
 
 
-
-local gotn_classes = {
-    WARRIOR = 28880,
-    MONK = 121093,
-    DEATHKNIGHT = 59545,
-    SHAMAN = 59547,
-    HUNTER = 59543,
-    PRIEST = 59544,
-    MAGE = 59548,
-    PALADIN = 59542,
-    ROGUE = 370626
-}
-
-local baseClass = UnitClassBase( "player" ) or "WARRIOR"
-local gotnID = gotn_classes[ baseClass ] or 28880
-
-all:RegisterAura( "gift_of_the_naaru", {
-    id = gotnID,
-    duration = 5,
-    max_stack = 1,
-    copy = { 28800, 121093, 59545, 59547, 59543, 59544, 59548, 59542, 370626 }
-} )
-
-all:RegisterAbility( "gift_of_the_naaru", {
-    id = gotnID,
-    cast = 0,
-    cooldown = 180,
-    gcd = "off",
-
-    handler = function ()
-        applyBuff( "gift_of_the_naaru" )
-    end,
-} )
-
-
 all:RegisterAbilities( {
     global_cooldown = {
         id = 61304,
@@ -2918,34 +2511,6 @@ all:RegisterAbilities( {
 
         unlisted = true,
         known = function () return true end,
-    },
-
-    ancestral_call = {
-        id = 274738,
-        cast = 0,
-        cooldown = 120,
-        gcd = "off",
-
-        toggle = "cooldowns",
-
-        -- usable = function () return race.maghar_orc end,
-        handler = function ()
-            applyBuff( "ancestral_call" )
-        end,
-    },
-
-    arcane_pulse = {
-        id = 260364,
-        cast = 0,
-        cooldown = 180,
-        gcd = "spell",
-
-        toggle = "cooldowns",
-
-        -- usable = function () return race.nightborne end,
-        handler = function ()
-            applyDebuff( "target", "arcane_pulse" )
-        end,
     },
 
     berserking = {
@@ -2961,47 +2526,6 @@ all:RegisterAbilities( {
             applyBuff( "berserking" )
         end,
     },
-
-    hyper_organic_light_originator = {
-        id = 312924,
-        cast = 0,
-        cooldown = 180,
-        gcd = "off",
-
-        toggle = "defensives",
-
-        handler = function ()
-            applyBuff( "hyper_organic_light_originator" )
-        end
-    },
-
-    bag_of_tricks = {
-        id = 312411,
-        cast = 0,
-        cooldown = 90,
-        gcd = "spell",
-
-        toggle = "cooldowns",
-    },
-
-    haymaker = {
-        id = 287712,
-        cast = 1,
-        cooldown = 150,
-        gcd = "spell",
-
-        handler = function ()
-            if not target.is_boss then applyDebuff( "target", "haymaker" ) end
-        end,
-
-        auras = {
-            haymaker = {
-                id = 287712,
-                duration = 3,
-                max_stack = 1,
-            },
-        }
-    }
 } )
 
 
@@ -3035,44 +2559,6 @@ all:RegisterAbilities( {
         copy = { 33702, 20572, 33697 },
     },
 
-    arcane_torrent = {
-        id = function ()
-            if class.file == "PALADIN"      then return 155145 end
-            if class.file == "MONK"         then return 129597 end
-            if class.file == "DEATHKNIGHT"  then return  50613 end
-            if class.file == "WARRIOR"      then return  69179 end
-            if class.file == "ROGUE"        then return  25046 end
-            if class.file == "HUNTER"       then return  80483 end
-            if class.file == "DEMONHUNTER"  then return 202719 end
-            if class.file == "PRIEST"       then return 232633 end
-            return 28730
-        end,
-        cast = 0,
-        cooldown = 120,
-        gcd = "spell",
-
-        -- It does start combat if there are enemies in range, but we often use it precombat for resources.
-        startsCombat = false,
-
-        -- usable = function () return race.blood_elf end,
-        toggle = "cooldowns",
-
-        handler = function ()
-            if class.file == "DEATHKNIGHT" then gain( 20, "runic_power" )
-            elseif class.file == "HUNTER" then gain( 15, "focus" )
-            elseif class.file == "MONK" then gain( 1, "chi" )
-            elseif class.file == "PALADIN" then gain( 1, "holy_power" )
-            elseif class.file == "ROGUE" then gain( 15, "energy" )
-            elseif class.file == "WARRIOR" then gain( 15, "rage" )
-            elseif class.file == "DEMONHUNTER" then gain( 15, "fury" )
-            elseif class.file == "PRIEST" and state.spec.shadow then gain( 15, "insanity" ) end
-
-            removeBuff( "dispellable_magic" )
-        end,
-
-        copy = { 155145, 129597, 50613, 69179, 25046, 80483, 202719, 232633 }
-    },
-
     will_to_survive = {
         id = 59752,
         cast = 0,
@@ -3097,18 +2583,6 @@ all:RegisterAbilities( {
         handler = function ()
             applyBuff( "shadowmeld" )
         end,
-    },
-
-
-    lights_judgment = {
-        id = 255647,
-        cast = 0,
-        cooldown = 150,
-        gcd = "spell",
-
-        -- usable = function () return race.lightforged_draenei end,
-
-        toggle = "cooldowns",
     },
 
 
@@ -3151,19 +2625,6 @@ all:RegisterAbilities( {
                 max_stack = 1
             }
         }
-    },
-
-
-    fireblood = {
-        id = 265221,
-        cast = 0,
-        cooldown = 120,
-        gcd = "off",
-
-        toggle = "cooldowns",
-
-        -- usable = function () return race.dark_iron_dwarf end,
-        handler = function () applyBuff( "fireblood" ) end,
     },
 
 
@@ -3260,40 +2721,6 @@ all:RegisterAbilities( {
         handler = function ()
             gain( 0.25 * health.max, "health" )
         end,
-    },
-
-    weyrnstone = {
-        name = function () return ( GetItemInfo( 205146 ) ) or "Weyrnstone" end,
-        listName = function ()
-            local _, link, _, _, _, _, _, _, _, tex = GetItemInfo( 205146 )
-            if link and tex then return "|T" .. tex .. ":0|t " .. link end
-            return "|cff00ccff[Weyrnstone]|r"
-        end,
-        cast = 1.5,
-        cooldown = 120,
-        gcd = "spell",
-
-        item = 205146,
-        bagItem = true,
-
-        startsCombat = false,
-        texture = 5199618,
-
-        usable = function ()
-            if GetItemCount( 205146 ) == 0 then return false, "requires weyrnstone in bags" end
-            if solo then return false, "must have an ally to teleport" end
-            return true
-        end,
-
-        readyTime = function ()
-            local start, duration = GetItemCooldown( 205146 )
-            return max( 0, start + duration - query_time )
-        end,
-
-        handler = function ()
-        end,
-
-        copy = { "use_weyrnstone", "active_weyrnstone" }
     },
 
     cancel_buff = {
@@ -3411,416 +2838,7 @@ do
         usable = false,
         unlisted = true
     } )
-
-    all:RegisterAbility( "heart_essence", {
-        name = function () return ( GetItemInfo( 158075 ) ) or "Heart Essence" end,
-        listName = function ()
-            local _, link, _, _, _, _, _, _, _, tex = GetItemInfo( 158075 )
-            if link and tex then return "|T" .. tex .. ":0|t " .. link end
-            return "|cff00ccff[Heart Essence]|r"
-        end,
-        cast = 0,
-        cooldown = 0,
-        gcd = "off",
-
-        item = 158075,
-        essence = true,
-
-        toggle = "essences",
-
-        usable = function () return false, "your equipped major essence is supported elsewhere in the priority or is not an active ability" end
-    } )
 end
-
-
--- x.x - Heirloom Trinket(s)
-all:RegisterAbility( "touch_of_the_void", {
-    cast = 0,
-    cooldown = 120,
-    gcd = "off",
-
-    item = 128318,
-    toggle = "cooldowns",
-} )
-
-
--- PvP Trinkets
--- Medallions
-do
-    local pvp_medallions = {
-        { "dread_aspirants_medallion", 162897 },
-        { "dread_gladiators_medallion", 161674 },
-        { "sinister_aspirants_medallion", 165220 },
-        { "sinister_gladiators_medallion", 165055 },
-        { "notorious_aspirants_medallion", 167525 },
-        { "notorious_gladiators_medallion", 167377 },
-        { "old_corrupted_gladiators_medallion", 172666 },
-        { "corrupted_aspirants_medallion", 184058 },
-        { "corrupted_gladiators_medallion", 184055 },
-        { "sinful_aspirants_medallion", 184052 },
-        { "sinful_gladiators_medallion", 181333 },
-        { "unchained_aspirants_medallion", 185309 },
-        { "unchained_gladiators_medallion", 185304 },
-        { "cosmic_aspirants_medallion", 186966 },
-        { "cosmic_gladiators_medallion", 186869 },
-        { "eternal_aspirants_medallion", 192412 },
-        { "eternal_gladiators_medallion", 192298 },
-        { "obsidian_combatants_medallion", 204164 },
-        { "obsidian_aspirants_medallion", 205779 },
-        { "obsidian_gladiators_medallion", 205711 },
-        { "forged_aspirants_medallion", 218422 },
-        { "forged_gladiators_medallion", 218716 },
-        { "astral_aspirants_medallion", 230353 },
-        { "astral_gladiators_medallion", 230641 },
-    }
-
-    local pvp_medallions_copy = {}
-
-    for _, v in ipairs( pvp_medallions ) do
-        insert( pvp_medallions_copy, v[1] )
-        all:RegisterGear( v[1], v[2] )
-        all:RegisterGear( "gladiators_medallion", v[2] )
-    end
-
-    all:RegisterAbility( "gladiators_medallion", {
-        name = function ()
-            local data = GetSpellInfo( 277179 )
-            return data and data.name or "Gladiator's Medallion"
-        end,
-        listName = function ()
-            local data = GetSpellInfo( 277179 )
-            if data and data.iconID then return "|T" .. data.iconID .. ":0|t " .. ( GetSpellLink( 277179 ) ) end
-        end,
-        link = function () return ( GetSpellLink( 277179 ) ) end,
-        cast = 0,
-        cooldown = 120,
-        gcd = "off",
-
-        item = function ()
-            local m
-            for _, medallion in ipairs( pvp_medallions ) do
-                m = medallion[ 2 ]
-                if equipped[ m ] then return m end
-            end
-            return m
-        end,
-        items = { 161674, 162897, 165055, 165220, 167377, 167525, 181333, 184052, 184055, 172666, 184058, 185309, 185304, 186966, 186869, 192412, 192298, 204164, 205779, 205711, 205779, 205711, 218422, 218716, 230353, 230641 },
-        toggle = "defensives",
-
-        usable = function () return debuff.loss_of_control.up, "requires loss of control effect" end,
-
-        handler = function ()
-            applyBuff( "gladiators_medallion" )
-        end,
-
-        copy = pvp_medallions_copy
-    } )
-
-    all:RegisterAura( "gladiators_medallion", {
-        id = 277179,
-        duration = 20,
-        max_stack = 1
-    } )
-end
-
--- Badges
-do
-    local pvp_badges = {
-        { "dread_aspirants_badge", 162966 },
-        { "dread_gladiators_badge", 161902 },
-        { "sinister_aspirants_badge", 165223 },
-        { "sinister_gladiators_badge", 165058 },
-        { "notorious_aspirants_badge", 167528 },
-        { "notorious_gladiators_badge", 167380 },
-        { "corrupted_aspirants_badge", 172849 },
-        { "corrupted_gladiators_badge", 172669 },
-        { "sinful_aspirants_badge_of_ferocity", 175884 },
-        { "sinful_gladiators_badge_of_ferocity", 175921 },
-        { "unchained_aspirants_badge_of_ferocity", 185161 },
-        { "unchained_gladiators_badge_of_ferocity", 185197 },
-        { "cosmic_aspirants_badge_of_ferocity", 186906 },
-        { "cosmic_gladiators_badge_of_ferocity", 186866 },
-        { "eternal_aspirants_badge_of_ferocity", 192352 },
-        { "eternal_gladiators_badge_of_ferocity", 192295 },
-        { "crimson_aspirants_badge_of_ferocity", 201449 },
-        { "crimson_gladiators_badge_of_ferocity", 201807 },
-        { "obsidian_aspirants_badge_of_ferocity", 205778 },
-        { "obsidian_gladiator_badge_of_ferocity", 205708 },
-        { "verdant_aspirants_badge_of_ferocity", 209763 },
-        { "verdant_gladiators_badge_of_ferocity", 209343 },
-        { "forged_aspirants_badge_of_ferocity", 218421 },
-        { "forged_gladiators_badge_of_ferocity", 218713 },
-        { "prized_aspirants_badge_of_ferocity", 229491 },
-        { "prized_gladiators_badge_of_ferocity", 229780 },
-        { "astral_aspirants_badge_of_ferocity", 230352 },
-        { "astral_gladiators_badge_of_ferocity", 230638 }  
-    }
-
-    local pvp_badges_copy = {}
-
-    for _, v in ipairs( pvp_badges ) do
-        insert( pvp_badges_copy, v[1] )
-        all:RegisterGear( v[1], v[2] )
-        all:RegisterGear( "gladiators_badge", v[2] )
-    end
-
-    all:RegisterAbility( "gladiators_badge", {
-        name = function ()
-            local data = GetSpellInfo( 277185 )
-            return data and data.name or "Gladiator's Badge"
-        end,
-        listName = function ()
-            local data = GetSpellInfo( 277185 )
-            if data and data.iconID then return "|T" .. data.iconID .. ":0|t " .. ( GetSpellLink( 277185 ) ) end
-        end,
-        link = function () return ( GetSpellLink( 277185 ) ) end,
-        cast = 0,
-        cooldown = 120,
-        gcd = "off",
-
-        items = { 162966, 161902, 165223, 165058, 167528, 167380, 172849, 172669, 175884, 175921, 185161, 185197, 186906, 186866, 192352, 192295, 201449, 201807, 205778, 205708, 209763, 209343, 218421, 218713, 229491, 229780, 230352, 230638 },
-        texture = 135884,
-
-        toggle = "cooldowns",
-        item = function ()
-            local b
-
-            for i = #pvp_badges, 1, -1 do
-                b = pvp_badges[ i ][ 2 ]
-                if equipped[ b ] then
-                    break
-                end
-            end
-            return b
-        end,
-
-        usable = function () return set_bonus.gladiators_badge > 0, "requires Gladiator's Badge" end,
-        handler = function ()
-            applyBuff( "gladiators_badge" )
-        end,
-
-        copy = pvp_badges_copy
-    } )
-
-    all:RegisterAura( "gladiators_badge", {
-        id = 277185,
-        duration = 15,
-        max_stack = 1
-    } )
-end
-
-
--- Insignias -- N/A, not on-use.
-all:RegisterAura( "gladiators_insignia", {
-    id = 277181,
-    duration = 20,
-    max_stack = 1,
-    copy = 345230
-} )
-
-
--- Safeguard (equipped, not on-use)
-all:RegisterAura( "gladiators_safeguard", {
-    id = 286342,
-    duration = 10,
-    max_stack = 1
-} )
-
-
--- Emblems
-do
-    local pvp_emblems = {
-        -- dread_combatants_emblem = 161812,
-        dread_aspirants_emblem = 162898,
-        dread_gladiators_emblem = 161675,
-        sinister_aspirants_emblem = 165221,
-        sinister_gladiators_emblem = 165056,
-        notorious_gladiators_emblem = 167378,
-        notorious_aspirants_emblem = 167526,
-        corrupted_gladiators_emblem = 172667,
-        corrupted_aspirants_emblem = 172847,
-        sinful_aspirants_emblem = 178334,
-        sinful_gladiators_emblem = 178447,
-        unchained_aspirants_emblem = 185242,
-        unchained_gladiators_emblem = 185282,
-        cosmic_aspirants_emblem = 186946,
-        cosmic_gladiators_emblem = 186868,
-        eternal_aspirants_emblem = 192392,
-        eternal_gladiators_emblem = 192297,
-        crimson_aspirants_emblem = 201452,
-        crimson_gladiators_emblem = 201809,
-        obsidian_combatants_emblem = 204166,
-        obsidian_aspirants_emblem = 205781,
-        obsidian_gladiators_emblem = 205710,
-        verdant_aspirants_emblem = 209766,
-        verdant_combatants_emblem = 208309,
-        verdant_gladiators_emblem = 209345,
-        algari_competitors_emblem = 219933,
-        forged_gladiators_emblem = 218715,
-        prized_aspirants_emblem = 229494,
-        prized_gladiators_emblem = 229782,
-        astral_aspirants_emblem = 230355,
-        astral_gladiators_emblem = 230640
-    }
-
-    local pvp_emblems_copy = {}
-
-    for k, v in pairs( pvp_emblems ) do
-        insert( pvp_emblems_copy, k )
-        all:RegisterGear( k, v )
-        all:RegisterGear( "gladiators_emblem", v )
-    end
-
-
-    all:RegisterAbility( "gladiators_emblem", {
-        name = function ()
-            local data = GetSpellInfo( 277187 )
-            return data and data.name or "Gladiator's Emblem"
-        end,
-        listName = function ()
-            local data = GetSpellInfo( 277187 )
-            if data and data.iconID then return "|T" .. data.iconID .. ":0|t " .. ( GetSpellLink( 277187 ) ) end
-        end,
-        link = function () return ( GetSpellLink( 277187 ) ) end,
-        cast = 0,
-        cooldown = 90,
-        gcd = "off",
-
-        item = function ()
-            local e
-            for _, emblem in pairs( pvp_emblems ) do
-                e = emblem
-                if equipped[ e ] then return e end
-            end
-            return e
-        end,
-        items = { 162898, 161675, 165221, 165056, 167378, 167526, 172667, 172847, 178334, 178447, 185242, 185282, 186946, 186868, 192392, 192297, 201452, 201809, 204166, 205781, 205710, 209766, 208309, 209345, 219933, 218715, 229494, 229782, 230355, 230640 },
-        toggle = "cooldowns",
-
-        handler = function ()
-            applyBuff( "gladiators_emblem" )
-        end,
-
-        copy = pvp_emblems_copy
-    } )
-
-    all:RegisterAura( "gladiators_emblem", {
-        id = 277187,
-        duration = 15,
-        max_stack = 1,
-    } )
-end
-
-
--- 8.3 Corrupted On-Use
-
--- DNI, because potentially you have no enemies w/ Corruption w/in range.
---[[
-    all:RegisterAbility( "corrupted_gladiators_breach", {
-        cast = 0,
-        cooldown = 120,
-        gcd = "off",
-
-        item = 174276,
-        toggle = "defensives",
-
-        handler = function ()
-            applyBuff( "void_jaunt" )
-            -- +Debuff?
-        end,
-
-        auras = {
-            void_jaunt = {
-                id = 314517,
-                duration = 6,
-                max_stack = 1,
-            }
-        }
-} )
-]]
-
-
-all:RegisterAbility( "corrupted_gladiators_spite", {
-    cast = 0,
-    cooldown = 60,
-    gcd = "off",
-
-    item = 174472,
-    toggle = "cooldowns",
-
-    handler = function ()
-        applyDebuff( "target", "gladiators_spite" )
-        applyDebuff( "target", "lingering_spite" )
-    end,
-
-    auras = {
-        gladiators_spite = {
-            id = 315391,
-            duration = 15,
-            max_stack = 1,
-        },
-
-        lingering_spite = {
-            id = 320297,
-            duration = 3600,
-            max_stack = 1,
-        }
-    }
-} )
-
-
-all:RegisterAbility( "corrupted_gladiators_maledict", {
-    cast = 0,
-    cooldown = 120,
-    gcd = "off", -- ???
-
-    item = 172672,
-    toggle = "cooldowns",
-
-    handler = function ()
-        applyDebuff( "target", "gladiators_maledict" )
-    end,
-
-    auras = {
-        gladiators_maledict = {
-            id = 305252,
-            duration = 6,
-            max_stack = 1
-        }
-    }
-} )
-
-
--- BREWFEST
-all:RegisterAbility( "brawlers_statue", {
-    cast = 0,
-    cooldown = 120,
-    gcd = "off",
-
-    item = 117357,
-    toggle = "defensives",
-
-    handler = function ()
-        applyBuff( "drunken_evasiveness" )
-    end
-} )
-
-all:RegisterAura( "drunken_evasiveness", {
-    id = 127967,
-    duration = 20,
-    max_stack = 1
-} )
-
-
--- HALLOW'S END
-all:RegisterAbility( "the_horsemans_sinister_slicer", {
-    cast = 0,
-    cooldown = 600,
-    gcd = "off",
-
-    item = 117356,
-    toggle = "cooldowns",
-} )
 
 
 ns.addToggle = function( name, default, optionName, optionDesc )

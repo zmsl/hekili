@@ -198,7 +198,6 @@ stub( "GetTalentInfoByID", nothing, "dead on Forever [W PR5]" )
 -- Spells and spellbook: spell data passes through; globals absent on Forever return nil or false.
 passthrough( "C_Spell.GetSpellDescription", "unprobed" )
 passthrough( "C_Spell.GetSpellInfo", "unprobed" )
-passthrough( "C_Spell.GetSpellLink", "unprobed" )
 passthrough( "C_Spell.GetSpellPowerCost", "plain [W §4]" )
 passthrough( "C_Spell.GetSpellTexture", "unprobed" )
 passthrough( "C_Spell.IsPressHoldReleaseSpell", "unprobed" )

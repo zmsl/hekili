@@ -52,7 +52,6 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `C_Spell.GetSpellCooldown` | present | times secret in combat, flags plain [W PR4, PR11] | stub | shared table `{ startTime = 0, duration = 0, isEnabled = true, modRate = 1, isActive = false, isOnGCD = false }` | State.lua, Events.lua, Options/DevTools.lua, UI.lua |
 | `C_Spell.GetSpellDescription` | present | unprobed | passthrough | — | Classes.lua, Options/DevTools.lua, Options/Options.lua |
 | `C_Spell.GetSpellInfo` | present | unprobed | passthrough | — | Utils.lua, Classes.lua, Options/DevTools.lua |
-| `C_Spell.GetSpellLink` | present | unprobed | passthrough | — | Classes.lua |
 | `C_Spell.GetSpellLossOfControlCooldown` | absent (fallback shim only) | n/a | stub | `nil` | State.lua |
 | `C_Spell.GetSpellPowerCost` | present | plain [W §4] | passthrough | — | Options/DevTools.lua |
 | `C_Spell.GetSpellTexture` | present | unprobed | passthrough | — | State.lua, Classes.lua, UI.lua |

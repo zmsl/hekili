@@ -34,7 +34,6 @@ C_Spell.GetSpellCharges
 C_Spell.GetSpellCooldown
 C_Spell.GetSpellDescription
 C_Spell.GetSpellInfo
-C_Spell.GetSpellLink
 C_Spell.GetSpellLossOfControlCooldown
 C_Spell.GetSpellPowerCost
 C_Spell.GetSpellTexture
