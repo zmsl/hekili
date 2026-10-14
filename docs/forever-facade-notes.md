@@ -1,5 +1,7 @@
 # Forever facade notes
 
+Status (2026-10-14, after the cleanup): 176 names in `tools/api_inventory.txt`: 125 passthrough, 51 stub.
+
 Working notes for Phase 2 (the VirtualGameAPI-1.0 skeleton) and the hand-off to Phases 1 and 3b.
 
 ## Inventory
@@ -254,7 +256,7 @@ Every stub site in the retained files that throws or yields a wrong value. Sites
   - `Classes.lua` 3148-3164: `role` and `primaryStat` from `GetSpecializationInfo( 1 )` are unprobed on Forever; if nil,
     `state.role.healer` and `state.spec.primaryStat = "intellect"` are set for a Warrior. Wrong data, no error.
 - Talents: replace `ns.updateTalents` (`Events.lua` 423) with a `C_Traits` walk (`Options/DevTools.lua` already walks the tree).
-- CLEU: remove or divert the registration at `Events.lua` 2027 (and `Options/DevTools.lua` 460).
+- CLEU: remove or divert the registration at `Events.lua` 1767 (and `Options/DevTools.lua` 1156).
 - Version gates: `Hekili.lua` 18-56 (`IsDragonflight`, `IsTWW`, `IsMidnight` and `ns.PTR` are false on build 16001;
   `BuiltFor = 110200`) and `Core.lua` 205 (`BuiltFor > CurrentBuild` reports Hekili as built for a newer client).
 - Division-by-zero audit: the NaN and `inf` sites in the table above.
