@@ -12,13 +12,12 @@ not list (undocumented C globals, FrameXML Lua, deprecation shims). Secrecy tags
 [W §4] its secrecy model, [SU] the swing/usable probe, "gate spike" the 2026-10 gate spike. "unprobed" means present
 on Forever with no measured secrecy; such reads pass through (a secret result would reach Hekili only in combat, Phase 1
 work). Deprecation shims exist only when the CVar `loadDeprecationFallbacks` is on; the library's `missing` fallback
-covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown`, `C_ActionBar.*`,
-`C_SpecializationInfo.GetSpecialization` and `C_PaperDollInfo.GetTemporaryEnchantmentInfo`.
+covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and `C_ActionBar.*`.
 
 | Name | Forever | Secrecy | Status | Stub returns | Hekili call sites |
 |---|---|---|---|---|---|
 | `AuraUtil.FindAura` | present (FrameXML Lua) | wraps secret aura data [W §4] | stub | `nil` | Utils.lua |
-| `AuraUtil.ForEachAura` | present (FrameXML Lua) | wraps secret aura data [W §4] | stub | no-op, returns nothing | Hekili.lua, Events.lua, TheWarWithin/DeathKnightBlood.lua |
+| `AuraUtil.ForEachAura` | present (FrameXML Lua) | wraps secret aura data [W §4] | stub | no-op, returns nothing | Hekili.lua, Events.lua |
 | `AuraUtil.UnpackAuraData` | present (FrameXML Lua) | pure Lua unpack of a table | passthrough | — | Hekili.lua, Utils.lua, State.lua |
 | `C_AddOns.GetAddOnMetadata` | present | unprobed | passthrough | — | Hekili.lua |
 | `C_AddOns.IsAddOnLoaded` | present | unprobed | passthrough | — | Utils.lua, Events.lua, Targets.lua |
@@ -28,85 +27,80 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown`, `C
 | `C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItemByID` | present | unprobed | passthrough | — | Events.lua |
 | `C_AzeriteEmpoweredItem.IsPowerSelected` | present | unprobed | passthrough | — | Events.lua |
 | `C_AzeriteEssence` | present (namespace table) | unprobed | passthrough | — | Events.lua |
-| `C_AzeriteItem.FindActiveAzeriteItem` | present | unprobed | passthrough | — | State.lua, BfA/AzeritePowers.lua |
+| `C_AzeriteItem.FindActiveAzeriteItem` | present | unprobed | passthrough | — | State.lua |
 | `C_AzeriteItem.IsAzeriteItemEnabled` | present | unprobed | passthrough | — | State.lua |
 | `C_ClassColor.GetClassColor` | present | unprobed | passthrough | — | Options/Options.lua |
-| `C_ClassTalents.GetActiveConfigID` | present | unprobed | passthrough | — | Utils.lua, Options/DevTools.lua, Dragonflight/Classes.lua |
+| `C_ClassTalents.GetActiveConfigID` | present | unprobed | passthrough | — | Utils.lua, Options/DevTools.lua |
 | `C_ClassTalents.GetActiveHeroTalentSpec` | present | unprobed | passthrough | — | Constants.lua |
 | `C_ClassTalents.GetHeroTalentSpecsForClassSpec` | present | unprobed | passthrough | — | Options/DevTools.lua |
-| `C_Covenants.GetActiveCovenantID` | present | unprobed | passthrough | — | Shadowlands/Covenants.lua, Shadowlands/Legendaries.lua |
-| `C_CreatureInfo.GetRaceInfo` | present | unprobed | passthrough | — | TheWarWithin/DruidFeral.lua |
 | `C_Item.GetDetailedItemLevelInfo` | present | plain [W PR13] | passthrough | — | Events.lua |
-| `C_Item.GetItemCooldown` | present | plain [W PR13] | passthrough | — | State.lua, Classes.lua, UI.lua, Shadowlands/Covenants.lua |
-| `C_Item.GetItemCount` | present | plain [W PR13] | passthrough | — | State.lua, Classes.lua, Shadowlands/Covenants.lua |
+| `C_Item.GetItemCooldown` | present | plain [W PR13] | passthrough | — | State.lua, Classes.lua, UI.lua |
+| `C_Item.GetItemCount` | present | plain [W PR13] | passthrough | — | State.lua, Classes.lua |
 | `C_Item.GetItemGem` | present | plain [W PR13] | passthrough | — | Events.lua |
-| `C_Item.GetItemInfo` | present | plain [W PR13] | passthrough | — | Utils.lua, Events.lua, Classes.lua, Shadowlands/Covenants.lua |
+| `C_Item.GetItemInfo` | present | plain [W PR13] | passthrough | — | Utils.lua, Events.lua, Classes.lua |
 | `C_Item.GetItemInfoInstant` | present | plain [W PR13] | passthrough | — | UI.lua |
 | `C_Item.GetItemSpell` | present | plain [W PR13] | passthrough | — | State.lua, Events.lua, Classes.lua |
 | `C_Item.IsCurrentItem` | present | plain [W PR13] | passthrough | — | UI.lua |
 | `C_Item.IsEquippedItem` | present | plain [W PR13] | passthrough | — | Events.lua |
-| `C_Item.IsUsableItem` | present | plain [W PR13] | passthrough | — | State.lua, Events.lua, Classes.lua, UI.lua, Shadowlands/Covenants.lua |
+| `C_Item.IsUsableItem` | present | plain [W PR13] | passthrough | — | State.lua, Events.lua, Classes.lua, UI.lua |
 | `C_LossOfControl.GetActiveLossOfControlData` | present | plain [W PR18] | passthrough | — | State.lua, Classes.lua |
 | `C_LossOfControl.GetActiveLossOfControlDataCount` | present | plain [W PR18] | passthrough | — | State.lua, Classes.lua |
 | `C_PetBattles.IsInBattle` | undocumented C global | unprobed | passthrough | — | UI.lua |
 | `C_PlayerInfo.IsPlayerInChromieTime` | present | unprobed | passthrough | — | Targets.lua |
 | `C_PlayerInfo.IsPlayerInTimerunningHeroicWorldTier` | present | unprobed | passthrough | — | Targets.lua |
 | `C_PvP.IsWarModeDesired` | present | unprobed | passthrough | — | Targets.lua |
-| `C_Soulbinds.GetActiveSoulbindID` | present | unprobed | passthrough | — | Options/Options.lua, Shadowlands/SoulbindConduits.lua |
-| `C_Soulbinds.GetConduitSpellID` | present | unprobed | passthrough | — | Shadowlands/SoulbindConduits.lua |
-| `C_Soulbinds.GetSoulbindData` | present | unprobed | passthrough | — | Options/Options.lua, Shadowlands/SoulbindConduits.lua |
+| `C_Soulbinds.GetActiveSoulbindID` | present | unprobed | passthrough | — | Options/Options.lua |
+| `C_Soulbinds.GetSoulbindData` | present | unprobed | passthrough | — | Options/Options.lua |
 | `C_SpecializationInfo.GetPvpTalentSlotInfo` | present | unprobed | passthrough | — | Options/DevTools.lua |
 | `C_SpecializationInfo.GetSpecialization` | present | plain [W PR15] | passthrough | — | Constants.lua, State.lua, Events.lua, Classes.lua, Options/DevTools.lua, Options/Options.lua, UI.lua |
 | `C_SpecializationInfo.GetSpecializationInfo` | present | plain [W PR15] | passthrough | — | Constants.lua, Events.lua, Classes.lua, Options/DevTools.lua, Options/Options.lua, UI.lua |
 | `C_SpecializationInfo.GetTalentInfo` | present | unprobed | passthrough | — | Events.lua |
-| `C_Spell.GetSpellCastCount` | present | flagged `SecretWhenCooldownsRestricted`; unprobed | stub | `0` | State.lua, Options/DevTools.lua, 39 expansion files (TheWarWithin) |
+| `C_Spell.GetSpellCastCount` | present | flagged `SecretWhenCooldownsRestricted`; unprobed | stub | `0` | State.lua, Options/DevTools.lua |
 | `C_Spell.GetSpellCharges` | present | times secret in combat [W §4 cooldowns] | stub | shared table `{ currentCharges = 1, maxCharges = 1, cooldownStartTime = 0, cooldownDuration = 0, chargeModRate = 1 }` | State.lua, Options/DevTools.lua |
-| `C_Spell.GetSpellCooldown` | present | times secret in combat, flags plain [W PR4, PR11] | stub | shared table `{ startTime = 0, duration = 0, isEnabled = true, modRate = 1, isActive = false, isOnGCD = false }` | State.lua, Events.lua, Options/DevTools.lua, UI.lua, TheWarWithin/PaladinRetribution.lua, TheWarWithin/PriestShadow.lua |
+| `C_Spell.GetSpellCooldown` | present | times secret in combat, flags plain [W PR4, PR11] | stub | shared table `{ startTime = 0, duration = 0, isEnabled = true, modRate = 1, isActive = false, isOnGCD = false }` | State.lua, Events.lua, Options/DevTools.lua, UI.lua |
 | `C_Spell.GetSpellDescription` | present | unprobed | passthrough | — | Classes.lua, Options/DevTools.lua, Options/Options.lua |
-| `C_Spell.GetSpellInfo` | present | unprobed | passthrough | — | Utils.lua, Classes.lua, Options/DevTools.lua, 39 expansion files (TheWarWithin) |
+| `C_Spell.GetSpellInfo` | present | unprobed | passthrough | — | Utils.lua, Classes.lua, Options/DevTools.lua |
 | `C_Spell.GetSpellLink` | present | unprobed | passthrough | — | Classes.lua |
 | `C_Spell.GetSpellLossOfControlCooldown` | absent (fallback shim only) | n/a | stub | `nil, nil` | State.lua |
-| `C_Spell.GetSpellPowerCost` | present | plain [W §4] | passthrough | — | Options/DevTools.lua, TheWarWithin/ShamanElemental.lua |
-| `C_Spell.GetSpellTexture` | present | unprobed | passthrough | — | State.lua, Classes.lua, UI.lua, TheWarWithin/WarlockDestruction.lua |
+| `C_Spell.GetSpellPowerCost` | present | plain [W §4] | passthrough | — | Options/DevTools.lua |
+| `C_Spell.GetSpellTexture` | present | unprobed | passthrough | — | State.lua, Classes.lua, UI.lua |
 | `C_Spell.IsCurrentSpell` | present | plain [W PR1] | passthrough | — | UI.lua |
 | `C_Spell.IsPressHoldReleaseSpell` | present | unprobed | passthrough | — | Options/DevTools.lua |
 | `C_Spell.IsSpellDataCached` | present | unprobed | passthrough | — | Events.lua |
 | `C_Spell.IsSpellHarmful` | present | unprobed | passthrough | — | Options/DevTools.lua |
 | `C_Spell.IsSpellHelpful` | present | unprobed | passthrough | — | Options/DevTools.lua |
 | `C_Spell.IsSpellPassive` | present | unprobed | passthrough | — | Options/DevTools.lua |
-| `C_Spell.IsSpellUsable` | present | plain [W PR14; SU] | passthrough | — | State.lua, UI.lua, Shadowlands/Covenants.lua |
+| `C_Spell.IsSpellUsable` | present | plain [W PR14; SU] | passthrough | — | State.lua, UI.lua |
 | `C_Spell.RequestLoadSpellData` | present | unprobed | passthrough | — | Events.lua |
-| `C_SpellActivationOverlay.IsSpellOverlayed` | present | plain [W PR11] | passthrough | — | Options/DevTools.lua, UI.lua, 39 expansion files (TheWarWithin) |
+| `C_SpellActivationOverlay.IsSpellOverlayed` | present | plain [W PR11] | passthrough | — | Options/DevTools.lua, UI.lua |
 | `C_SpellBook.FindSpellBookSlotForSpell` | present | unprobed | passthrough | — | Utils.lua |
 | `C_SpellBook.GetNumSpellBookSkillLines` | present | unprobed | passthrough | — | Options/DevTools.lua |
 | `C_SpellBook.GetSpellBookItemInfo` | present | unprobed | passthrough | — | Utils.lua, Options/DevTools.lua |
-| `C_SpellBook.GetSpellBookItemName` | present | unprobed | passthrough | — | TheWarWithin/DruidBalance.lua |
 | `C_SpellBook.GetSpellBookSkillLineInfo` | present | unprobed | passthrough | — | Options/DevTools.lua |
-| `C_SpellBook.IsSpellInSpellBook` | present | unprobed | passthrough | — | State.lua, Options/DevTools.lua, 39 expansion files (TheWarWithin) |
+| `C_SpellBook.IsSpellInSpellBook` | present | unprobed | passthrough | — | State.lua, Options/DevTools.lua |
 | `C_SpellBook.IsSpellKnown` | present | unprobed | passthrough | — | State.lua |
 | `C_Texture.GetAtlasInfo` | present | unprobed | passthrough | — | Utils.lua |
 | `C_TooltipInfo.GetConduit` | present | unprobed | passthrough | — | Utils.lua |
 | `C_TooltipInfo.GetInventoryItem` | present | unprobed | passthrough | — | Utils.lua |
 | `C_TooltipInfo.GetItemByID` | present | unprobed | passthrough | — | Utils.lua |
 | `C_TooltipInfo.GetSpellByID` | present | unprobed | passthrough | — | Utils.lua |
-| `C_TooltipInfo.GetUnitBuffByAuraInstanceID` | present | unprobed | passthrough | — | TheWarWithin/MonkBrewmaster.lua |
 | `C_Traits.GetConfigInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Utils.lua, Options/DevTools.lua |
-| `C_Traits.GetDefinitionInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua, Dragonflight/Classes.lua |
-| `C_Traits.GetEntryInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua, Dragonflight/Classes.lua |
+| `C_Traits.GetDefinitionInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua |
+| `C_Traits.GetEntryInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua |
 | `C_Traits.GetLoadoutSerializationVersion` | present | plain, walk identical in combat [W PR5] | passthrough | — | Utils.lua |
 | `C_Traits.GetNodeCost` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua |
-| `C_Traits.GetNodeInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Utils.lua, Options/DevTools.lua, Dragonflight/Classes.lua |
+| `C_Traits.GetNodeInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Utils.lua, Options/DevTools.lua |
 | `C_Traits.GetSubTreeInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua |
 | `C_Traits.GetTreeCurrencyInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua |
 | `C_Traits.GetTreeHash` | present | plain, walk identical in combat [W PR5] | passthrough | — | Utils.lua |
 | `C_Traits.GetTreeNodes` | present | plain, walk identical in combat [W PR5] | passthrough | — | Utils.lua, Options/DevTools.lua |
-| `C_UnitAuras.GetAuraDataByAuraInstanceID` | present | secret in combat; errors when tainted [W §4] | stub | `nil` | Events.lua, TheWarWithin/DeathKnightBlood.lua |
+| `C_UnitAuras.GetAuraDataByAuraInstanceID` | present | secret in combat; errors when tainted [W §4] | stub | `nil` | Events.lua |
 | `C_UnitAuras.GetAuraSlots` | present | secret in combat [W §4] | stub | `nil` (no continuation token, no slots) | State.lua |
 | `C_UnitAuras.GetBuffDataByIndex` | present | secret in combat; errors when tainted [W §4] | stub | `nil` | Hekili.lua, Utils.lua, State.lua |
 | `C_UnitAuras.GetDebuffDataByIndex` | present | secret in combat; errors when tainted [W §4] | stub | `nil` | Hekili.lua, Utils.lua, State.lua |
-| `C_UnitAuras.GetPlayerAuraBySpellID` | present | secret in combat; errors when tainted [W §4] | stub | `nil` | Utils.lua, State.lua, Events.lua, Options/DevTools.lua, 39 expansion files (TheWarWithin) |
+| `C_UnitAuras.GetPlayerAuraBySpellID` | present | secret in combat; errors when tainted [W §4] | stub | `nil` | Utils.lua, State.lua, Events.lua, Options/DevTools.lua |
 | `C_VideoOptions.GetCurrentGameWindowSize` | present | unprobed | passthrough | — | UI.lua |
-| `CombatLogGetCurrentEventInfo` | absent (shim targets `C_CombatLog.GetCurrentEventInfo`, absent) | n/a; registering CLEU is forbidden | stub | `nil` | Events.lua, Options/DevTools.lua, Shadowlands/Trinkets.lua |
+| `CombatLogGetCurrentEventInfo` | absent (shim targets `C_CombatLog.GetCurrentEventInfo`, absent) | n/a; registering CLEU is forbidden | stub | `nil` | Events.lua, Options/DevTools.lua |
 | `GetActionInfo` | undocumented C global | plain [W PR10] | passthrough | — | Events.lua, Targets.lua |
 | `GetBindingKey` | undocumented C global | plain [W PR10] | passthrough | — | Events.lua, Options/Options.lua |
 | `GetBuildInfo` | present | unprobed | passthrough | — | Hekili.lua, Options/DevTools.lua |
@@ -118,10 +112,9 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown`, `C
 | `GetCursorInfo` | present | unprobed | passthrough | — | MultilineEditor.lua |
 | `GetFrameCPUUsage` | present | unprobed | passthrough | — | Core.lua |
 | `GetFramerate` | present | unprobed | passthrough | — | Hekili.lua, Options/Options.lua, UI.lua |
-| `GetHaste` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | Targets.lua, TheWarWithin/RogueAssassination.lua |
+| `GetHaste` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | Targets.lua |
 | `GetInstanceInfo` | present | unprobed | passthrough | — | State.lua, Events.lua |
-| `GetInventoryItemID` | undocumented C global | plain [W PR13] | passthrough | — | State.lua, Events.lua, Shadowlands/Legendaries.lua |
-| `GetInventoryItemLink` | undocumented C global | unprobed | passthrough | — | Shadowlands/Legendaries.lua, TheWarWithin/DeathKnightUnholy.lua |
+| `GetInventoryItemID` | undocumented C global | plain [W PR13] | passthrough | — | State.lua, Events.lua |
 | `GetItemGem` | absent | n/a | stub | `nil` | State.lua |
 | `GetItemInfo` | absent | n/a | stub | `nil` | State.lua |
 | `GetManaRegen` | present | secret in combat [W PR16] | stub | `0, 0` | State.lua |
@@ -131,32 +124,27 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown`, `C
 | `GetNumClasses` | undocumented C global | unprobed | passthrough | — | Constants.lua |
 | `GetNumGroupMembers` | undocumented C global | unprobed | passthrough | — | Utils.lua, State.lua, Targets.lua |
 | `GetNumSubgroupMembers` | undocumented C global | unprobed | passthrough | — | Utils.lua |
-| `GetPlayerAuraBySpellID` | absent | n/a | stub | `nil` | TheWarWithin/MonkWindwalker.lua |
 | `GetPowerRegenForPowerType` | present | secret in combat [W PR16] | stub | `0, 0` | State.lua |
-| `GetPvpTalentInfoByID` | undocumented C global | dead on Forever [W PR5] | stub | `nil` | Events.lua, Options/DevTools.lua, Dragonflight/Classes.lua |
+| `GetPvpTalentInfoByID` | undocumented C global | dead on Forever [W PR5] | stub | `nil` | Events.lua, Options/DevTools.lua |
 | `GetRangedCritChance` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua |
 | `GetRealmName` | present | unprobed | passthrough | — | Options/Options.lua |
-| `GetRuneCooldown` | present | unprobed | passthrough | — | TheWarWithin/DeathKnightBlood.lua, TheWarWithin/DeathKnightFrost.lua, TheWarWithin/DeathKnightUnholy.lua |
-| `GetShapeshiftForm` | undocumented C global | plain [W §4 (stance)] | passthrough | — | State.lua, TheWarWithin/DruidBalance.lua |
-| `GetShapeshiftFormInfo` | undocumented C global | plain [W PR10] | passthrough | — | State.lua, TheWarWithin/DruidBalance.lua |
-| `GetSpecialization` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | Dragonflight/Classes.lua |
-| `GetSpecializationInfoByID` | undocumented C global | unprobed | passthrough | — | Classes.lua, Options/Options.lua, TheWarWithin/ShamanRestoration.lua |
+| `GetShapeshiftForm` | undocumented C global | plain [W §4 (stance)] | passthrough | — | State.lua |
+| `GetShapeshiftFormInfo` | undocumented C global | plain [W PR10] | passthrough | — | State.lua |
+| `GetSpecializationInfoByID` | undocumented C global | unprobed | passthrough | — | Classes.lua, Options/Options.lua |
 | `GetSpellBaseCooldown` | absent | n/a | stub | `nil` | Options/DevTools.lua |
 | `GetSpellBonusDamage` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua |
 | `GetSpellCritChance` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua |
 | `GetSpellLink` | absent | n/a | stub | `nil` | State.lua |
 | `GetStablePetInfo` | undocumented C global | unprobed | passthrough | — | State.lua |
 | `GetTalentInfoByID` | absent | dead on Forever [W PR5] | stub | `nil` | Events.lua |
-| `GetTime` | present | plain [W] | passthrough | — | Hekili.lua, Utils.lua, State.lua, Events.lua, Classes.lua, Targets.lua, Options/DevTools.lua, UI.lua, Core.lua, 29 expansion files (Shadowlands, TheWarWithin) |
-| `GetTotemInfo` | present | secret in combat [W PR12] | stub | `false, "", 0, 0, 0` | State.lua, TheWarWithin/PaladinHoly.lua, TheWarWithin/PaladinRetribution.lua, TheWarWithin/WarlockDemonology.lua, TheWarWithin/WarlockDestruction.lua |
-| `GetUnitChargedPowerPoints` | present | unprobed | passthrough | — | TheWarWithin/RogueAssassination.lua, TheWarWithin/RogueOutlaw.lua, TheWarWithin/RogueSubtlety.lua |
+| `GetTime` | present | plain [W] | passthrough | — | Hekili.lua, Utils.lua, State.lua, Events.lua, Classes.lua, Targets.lua, Options/DevTools.lua, UI.lua, Core.lua |
+| `GetTotemInfo` | present | secret in combat [W PR12] | stub | `false, "", 0, 0, 0` | State.lua |
 | `GetUnitEmpowerHoldAtMaxTime` | present | flagged secret with casts; unprobed | stub | `0` | Events.lua |
 | `GetUnitEmpowerStageDuration` | present | flagged secret with casts; unprobed | stub | `0` | Events.lua |
 | `GetUnitSpeed` | present | secret in combat [W PR14] | stub | `0, 0, 0, 0` | State.lua, Targets.lua |
-| `GetWeaponEnchantInfo` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | TheWarWithin/ShamanElemental.lua, TheWarWithin/ShamanEnhancement.lua, TheWarWithin/ShamanRestoration.lua |
 | `HasOverrideActionBar` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | UI.lua |
 | `HasVehicleActionBar` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | UI.lua |
-| `InCombatLockdown` | present (documented global) | plain [W §3; lags at PLAYER_REGEN_DISABLED] | passthrough | — | State.lua, Events.lua, Classes.lua, Targets.lua, Options/DevTools.lua, Options/ChatCommands.lua, Options/Options.lua, UI.lua, Core.lua, TheWarWithin/ShamanElemental.lua, TheWarWithin/ShamanEnhancement.lua |
+| `InCombatLockdown` | present (documented global) | plain [W §3; lags at PLAYER_REGEN_DISABLED] | passthrough | — | State.lua, Events.lua, Classes.lua, Targets.lua, Options/DevTools.lua, Options/ChatCommands.lua, Options/Options.lua, UI.lua, Core.lua |
 | `IsActionInRange` | deprecation shim (`loadDeprecationFallbacks`) | plain [W PR7] | passthrough | — | Targets.lua |
 | `IsHarmfulSpell` | absent | n/a | stub | `false` | Options/DevTools.lua |
 | `IsHelpfulSpell` | absent | n/a | stub | `false` | Options/DevTools.lua |
@@ -166,13 +154,11 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown`, `C
 | `IsInRaid` | undocumented C global | unprobed | passthrough | — | Utils.lua, State.lua, Targets.lua |
 | `IsMounted` | present | unprobed | passthrough | — | State.lua, UI.lua |
 | `IsPassiveSpell` | absent | n/a | stub | `false` | Options/DevTools.lua |
-| `IsPlayerSpell` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | State.lua, Events.lua, Options/DevTools.lua, Dragonflight/Classes.lua, TheWarWithin/DruidBalance.lua |
+| `IsPlayerSpell` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | State.lua, Events.lua, Options/DevTools.lua |
 | `IsPressHoldReleaseSpell` | absent | n/a | stub | `false` | Options/DevTools.lua |
 | `IsResting` | present | unprobed | passthrough | — | Events.lua |
 | `IsSpellKnown` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | State.lua |
-| `IsSpellKnownOrOverridesKnown` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | State.lua, Shadowlands/Covenants.lua |
-| `IsSpellUsable` | absent | n/a | stub | `false` | TheWarWithin/DruidGuardian.lua |
-| `IsStealthed` | present | unprobed | passthrough | — | TheWarWithin/RogueOutlaw.lua |
+| `IsSpellKnownOrOverridesKnown` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | State.lua |
 | `IsUsableSpell` | absent | n/a | stub | `false` | State.lua |
 | `SecureCmdOptionParse` | undocumented C global | unprobed | passthrough | — | Events.lua |
 | `SpellIsSelfBuff` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | Events.lua |
@@ -186,16 +172,15 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown`, `C
 | `UnitCanAttack` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua, Classes.lua, Targets.lua, Options/DevTools.lua, UI.lua |
 | `UnitCastingInfo` | present | player plain [W PR9]; target flagged secret [W PR8] | stub | the real call when `unit == "player"`, else `nil` | State.lua, Events.lua, Classes.lua, UI.lua |
 | `UnitChannelInfo` | present | player plain [W PR9]; target flagged secret [W PR8] | stub | the real call when `unit == "player"`, else `nil` | State.lua, Events.lua, Classes.lua, UI.lua |
-| `UnitClass` | present | plain in combat [W PR14; gate spike] | passthrough | — | Events.lua, Options/DevTools.lua, Options/Options.lua, UI.lua, TheWarWithin/ShamanRestoration.lua |
-| `UnitClassBase` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua, Classes.lua, Targets.lua, Options/DevTools.lua, 41 expansion files (Shadowlands, TheWarWithin) |
+| `UnitClass` | present | plain in combat [W PR14; gate spike] | passthrough | — | Events.lua, Options/DevTools.lua, Options/Options.lua, UI.lua |
+| `UnitClassBase` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua, Classes.lua, Targets.lua, Options/DevTools.lua |
 | `UnitClassification` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua |
 | `UnitCreatureType` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua |
 | `UnitDamage` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua |
-| `UnitDebuff` | absent | n/a | stub | `nil` | TheWarWithin/DeathKnightBlood.lua, TheWarWithin/HunterBeastMastery.lua |
 | `UnitEffectiveLevel` | present | unprobed | passthrough | — | State.lua, Options/Options.lua |
-| `UnitExists` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua, Events.lua, Targets.lua, UI.lua, TheWarWithin/DeathKnightBlood.lua, TheWarWithin/MageArcane.lua |
+| `UnitExists` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua, Events.lua, Targets.lua, UI.lua |
 | `UnitFactionGroup` | present | unprobed | passthrough | — | State.lua |
-| `UnitGUID` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua, Events.lua, Classes.lua, Targets.lua, TheWarWithin/DruidBalance.lua, TheWarWithin/MageArcane.lua |
+| `UnitGUID` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua, Events.lua, Classes.lua, Targets.lua |
 | `UnitGetTotalAbsorbs` | present | target secret always [W PR14]; player unprobed | stub | `0` | State.lua, Classes.lua, Targets.lua |
 | `UnitHasVehicleUI` | present | unprobed | passthrough | — | UI.lua |
 | `UnitHealth` | present | target secret always [W PR14]; player unprobed | stub | `0` | Utils.lua, State.lua, Targets.lua |
@@ -207,24 +192,23 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown`, `C
 | `UnitIsConnected` | present | unprobed | passthrough | — | State.lua |
 | `UnitIsDead` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua, Targets.lua, UI.lua |
 | `UnitIsDeadOrGhost` | present | unprobed | passthrough | — | State.lua |
-| `UnitIsFriend` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua, Targets.lua, TheWarWithin/DruidBalance.lua |
+| `UnitIsFriend` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua, Targets.lua |
 | `UnitIsPVP` | present | unprobed | passthrough | — | Targets.lua |
 | `UnitIsPlayer` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua, Events.lua, Targets.lua |
 | `UnitIsTrivial` | present | unprobed | passthrough | — | Targets.lua |
-| `UnitIsUnit` | present | plain in combat [W PR14; gate spike] | passthrough | — | Utils.lua, State.lua, Targets.lua, Options/DevTools.lua, TheWarWithin/HunterBeastMastery.lua, TheWarWithin/PaladinProtection.lua, TheWarWithin/WarriorArms.lua, TheWarWithin/WarriorProtection.lua |
+| `UnitIsUnit` | present | plain in combat [W PR14; gate spike] | passthrough | — | Utils.lua, State.lua, Targets.lua, Options/DevTools.lua |
 | `UnitLevel` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua, Events.lua, Targets.lua, Options/Options.lua |
-| `UnitName` | present | plain in combat [W PR14; gate spike] | passthrough | — | Utils.lua, State.lua, Events.lua, Targets.lua, Options/Options.lua, TheWarWithin/DeathKnightBlood.lua |
+| `UnitName` | present | plain in combat [W PR14; gate spike] | passthrough | — | Utils.lua, State.lua, Events.lua, Targets.lua, Options/Options.lua |
 | `UnitOnTaxi` | present | unprobed | passthrough | — | UI.lua |
 | `UnitPartialPower` | present | secret always [W PR16] | stub | `0` | State.lua |
 | `UnitPhaseReason` | present | unprobed | passthrough | — | Targets.lua |
-| `UnitPower` | present | secret always [W PR16] | stub | `0` | State.lua, Events.lua, 13 expansion files (TheWarWithin) |
-| `UnitPowerMax` | present | plain (100 for rage) [W PR16] | passthrough | — | State.lua, Options/DevTools.lua, TheWarWithin/EvokerDevastation.lua, TheWarWithin/EvokerPreservation.lua, TheWarWithin/EvokerAugmentation.lua, TheWarWithin/WarlockDestruction.lua |
+| `UnitPower` | present | secret always [W PR16] | stub | `0` | State.lua, Events.lua |
+| `UnitPowerMax` | present | plain (100 for rage) [W PR16] | passthrough | — | State.lua, Options/DevTools.lua |
 | `UnitPowerType` | present | plain (100 for rage) [W PR16] | passthrough | — | State.lua |
 | `UnitRace` | present | unprobed | passthrough | — | State.lua |
 | `UnitSex` | present | unprobed | passthrough | — | Constants.lua |
 | `UnitSpellHaste` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua, Options/DevTools.lua |
-| `UnitStagger` | present | unprobed | passthrough | — | TheWarWithin/MonkBrewmaster.lua |
 | `UnitStat` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua |
 | `UnitThreatSituation` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua |
-| `UnitTokenFromGUID` | present | unprobed | passthrough | — | Targets.lua, TheWarWithin/DeathKnightBlood.lua |
+| `UnitTokenFromGUID` | present | unprobed | passthrough | — | Targets.lua |
 | `UnitWeaponAttackPower` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua |
