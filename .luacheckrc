@@ -40,6 +40,10 @@ globals = {
 }
 
 -- WoW Lua extensions, FrameXML utilities, other addons and constants that are not game-state reads.
+-- The facade covers game-STATE READS only. Deliberately declared here because they are outside it: writes (SetCVar,
+-- SetOverrideBindingClick, ClearOverrideBindings, ClearCursor, Screenshot), timers (C_Timer), secure hooks
+-- (hooksecurefunc), profiling (debugprofilestop), secrecy predicates (issecretvalue, issecrettable, C_Secrets), and
+-- UI construction (CreateFrame, UIParent), which is not a read.
 read_globals = {
     -- Lua extensions provided by the client
     "wipe", "format", "strupper", "strlower", "strfind", "strsub", "strlen", "strsplit", "strjoin", "strtrim",
