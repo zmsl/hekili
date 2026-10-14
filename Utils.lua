@@ -2,6 +2,13 @@
 -- July 2024
 
 local addon, ns = ...
+local VGA = LibStub( "VirtualGameAPI-1.0" )
+local AuraUtil, C_AddOns, C_ClassTalents, C_Item = VGA.AuraUtil, VGA.C_AddOns, VGA.C_ClassTalents, VGA.C_Item
+local C_Spell, C_SpellBook, C_Texture, C_TooltipInfo = VGA.C_Spell, VGA.C_SpellBook, VGA.C_Texture, VGA.C_TooltipInfo
+local C_Traits, C_UnitAuras = VGA.C_Traits, VGA.C_UnitAuras
+local GetNumGroupMembers, GetNumSubgroupMembers, GetTime, IsInGroup = VGA.GetNumGroupMembers, VGA.GetNumSubgroupMembers, VGA.GetTime, VGA.IsInGroup
+local IsInRaid, UnitHealth, UnitHealthMax, UnitIsUnit = VGA.IsInRaid, VGA.UnitHealth, VGA.UnitHealthMax, VGA.UnitIsUnit
+local UnitName = VGA.UnitName
 local Hekili = _G[ addon ]
 
 local format, gsub, lower = string.format, string.gsub, string.lower

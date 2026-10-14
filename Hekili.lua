@@ -2,6 +2,9 @@
 -- July 2024
 
 local addon, ns = ...
+local VGA = LibStub( "VirtualGameAPI-1.0" )
+local AuraUtil, C_AddOns, C_UnitAuras = VGA.AuraUtil, VGA.C_AddOns, VGA.C_UnitAuras
+local GetBuildInfo, GetFramerate, GetTime = VGA.GetBuildInfo, VGA.GetFramerate, VGA.GetTime
 Hekili = LibStub("AceAddon-3.0"):NewAddon( "Hekili", "AceConsole-3.0", "AceSerializer-3.0" )
 Hekili.Version = C_AddOns.GetAddOnMetadata( "Hekili", "Version" )
 Hekili.Flavor = C_AddOns.GetAddOnMetadata( "Hekili", "X-Flavor" ) or "Retail"
