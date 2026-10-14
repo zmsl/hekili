@@ -104,7 +104,7 @@ local function charges() return CHARGES end
 stub( "UnitPower", zero, "secret always [W PR16]" )
 stub( "UnitPartialPower", zero, "secret always [W PR16]" )
 passthrough( "UnitPowerMax", "plain (100 for rage) [W PR16]" )
-passthrough( "UnitPowerType", "plain (100 for rage) [W PR16]" )
+passthrough( "UnitPowerType", "plain [W PR16]" )
 stub( "GetPowerRegenForPowerType", zero2, "secret in combat [W PR16]" )
 stub( "GetManaRegen", zero2, "secret in combat [W PR16]" )
 

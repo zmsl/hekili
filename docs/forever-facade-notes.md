@@ -62,7 +62,7 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `C_Spell.GetSpellDescription` | present | unprobed | passthrough | — | Classes.lua, Options/DevTools.lua, Options/Options.lua |
 | `C_Spell.GetSpellInfo` | present | unprobed | passthrough | — | Utils.lua, Classes.lua, Options/DevTools.lua |
 | `C_Spell.GetSpellLink` | present | unprobed | passthrough | — | Classes.lua |
-| `C_Spell.GetSpellLossOfControlCooldown` | absent (fallback shim only) | n/a | stub | `nil, nil` | State.lua |
+| `C_Spell.GetSpellLossOfControlCooldown` | absent (fallback shim only) | n/a | stub | `nil` | State.lua |
 | `C_Spell.GetSpellPowerCost` | present | plain [W §4] | passthrough | — | Options/DevTools.lua |
 | `C_Spell.GetSpellTexture` | present | unprobed | passthrough | — | State.lua, Classes.lua, UI.lua |
 | `C_Spell.IsCurrentSpell` | present | plain [W PR1] | passthrough | — | UI.lua |
@@ -205,7 +205,7 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `UnitPhaseReason` | present | unprobed | passthrough | — | Targets.lua |
 | `UnitPower` | present | secret always [W PR16] | stub | `0` | State.lua, Events.lua |
 | `UnitPowerMax` | present | plain (100 for rage) [W PR16] | passthrough | — | State.lua, Options/DevTools.lua |
-| `UnitPowerType` | present | plain (100 for rage) [W PR16] | passthrough | — | State.lua |
+| `UnitPowerType` | present | plain [W PR16] | passthrough | — | State.lua |
 | `UnitRace` | present | unprobed | passthrough | — | State.lua |
 | `UnitSex` | present | unprobed | passthrough | — | Constants.lua |
 | `UnitSpellHaste` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua, Options/DevTools.lua |

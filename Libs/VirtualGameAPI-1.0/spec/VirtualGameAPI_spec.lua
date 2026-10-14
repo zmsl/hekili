@@ -110,13 +110,18 @@ describe("VirtualGameAPI-1.0", function()
     end)
 
     it("never calls the real function from a stub", function()
+        calls = {}
+        for _, m in ipairs(names) do unfake(m); fake(m, calls) end
+        _G.LibStub = fakeLibStub(); VGA = assert(loadfile(LIB))()
         for _, n in ipairs(names) do
             if VGA.Status(n) == "stub" then
-                calls = {}
-                assert.has_no.errors(function() entry(n)("player", 1) end, n)
+                assert.has_no.errors(function() entry(n)("target", 1) end, n)
                 assert.are.equal(0, #calls, n .. " stub must not call the game")
             end
         end
+        VGA.UnitCastingInfo("player")
+        assert.are.equal(1, #calls, "playerOnly passes the player's read to the game")
+        assert.are.equal("UnitCastingInfo", calls[1].name)
     end)
 
     it("returns the documented shapes from the critical stubs", function()
