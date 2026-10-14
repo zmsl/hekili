@@ -10,8 +10,6 @@ exclude_files = {
     "archive/",
     ".claude/",
     ".luacheckrc",
-    -- expansion folders: archived in Task 11, never redirected
-    "TheWarWithin/", "Dragonflight/", "Shadowlands/", "BfA/", "Legion/", "Wrath/", "Cataclysm/", "TheBurningCrusade/",
 }
 
 ignore = {
