@@ -243,7 +243,7 @@ not load, expected) and LibChatAnims (load unknown, see above).
 | 2 | Per-file environment vs file-top locals. `State.lua`'s main chunk is at the 200-locals cap (0 spare), so 34 single-use reads use `VGA.Name(` inline (listed in 4204b99c). A shim that swaps reads per file wants `setfenv` on the chunk; the feasibility Appendix asks whether chunk-level `setfenv(1, env)` works on Forever (one `/run` check) | `State.lua`, every redirected file | 1, 3b |
 | 3 | Event facade. `ns.RegisterEvent` reaches a real frame; virtual events need a diverting `RegisterEvent` or one edit at the call. `UNIT_AURA` (`isFullUpdate` on a secret), `UNIT_POWER_FREQUENT` and target `UNIT_SPELLCAST_*` (secret `spellID`) need payload facades (feasibility C.2.1-2) | `Events.lua` | 1 |
 | 4 | Virtual combat log timing (feasibility C.2.3). Hekili stamps CLEU with `GetTime()` at handler entry, so inferred rows delivered late shift swing and DoT clocks. Conditions: observed rows delivered synchronously; inferred rows carry a back-dated clock (or the facade's `GetTime` returns the event time during delivery); delivery never nests in a Hekili call (the update coroutine runs `state.reset`); the B.4 payload contract holds. Derived events from inside a pack hook are dropped | `Events.lua` `CLEU_HANDLER` 1460-1767 | 1 |
-| 5 | CLEU registration popup. Registering `COMBAT_LOG_EVENT_UNFILTERED` is forbidden on Forever; the registrations at `Events.lua` 1767 and `Options/DevTools.lua` 1156 are still live, and the stubbed `CombatLogGetCurrentEventInfo` makes the handler throw if it ever fires. Unprobed: whether a diverted insecure-frame registration avoids the popup (moot if the diversion is total) | `Events.lua` 1767, `Options/DevTools.lua` 1156 | 3b |
+| 5 | CLEU registration popup. Registering `COMBAT_LOG_EVENT_UNFILTERED` is forbidden on Forever; `ns.RegisterEvent` now skips the frame registration for it (Checkpoint B), but `Options/DevTools.lua` 1156 is still live, and the stubbed `CombatLogGetCurrentEventInfo` makes the handler throw if it ever fires. Unprobed: whether a diverted insecure-frame registration avoids the popup (moot if the diversion is total) | `Events.lua` 1767, `Options/DevTools.lua` 1156 | 3b |
 | 6 | GCD constant 61304 (retail) vs 29515 (Forever). A constant, not a call | `Classes.lua` 2469, `UI.lua` 1493 and 1694, `Events.lua` 1675 | 3b |
 | 7 | Spec identity 1491. `NewSpecialization` takes identity from `ns.Specializations[ 1491 ].forever`. Forever returns id `0` (truthy) for spec slots 2/3, so the `GetSpecializationInfo` loop in `SpecializationChanged` does not break, `all` merges 2-3 times and `reset_precast` runs repeatedly (no error). Fix: `if not id or id == 0 then break end` | `Classes.lua` 3133-3138 | 3b |
 | 8 | `role` and `primaryStat` from `GetSpecializationInfo( 1 )` are unprobed. If nil, a Warrior gets `state.role.healer` and `primaryStat = "intellect"` | `Classes.lua` 3148-3164 | 3b (probe) |
@@ -258,8 +258,8 @@ not load, expected) and LibChatAnims (load unknown, see above).
 
 ### Deferred minors (from the ledger, still open at a49f9f9e)
 
-- `tools/check_api_reads.sh`: ignores luacheck's exit code (a syntax error passes silently); `_G` reads through
-  `rawget` or a variable key are not covered; the `_G.` grep does not skip comments.
+- `tools/check_api_reads.sh`: `_G` reads through `rawget` or a variable key are not covered; the `_G.` grep does not
+  skip comments.
 - `tools/api_inventory.txt`: `C_AddOns.LoadAddOn` and `C_Spell.RequestLoadSpellData` are actions kept by the
   every-`C_*` rule; `C_PetBattles.IsInBattle` presence rests on FrameXML evidence only.
 - `Libs/VirtualGameAPI-1.0`: `zeros()` returns 7 values (harmless at `State.lua` call sites); spec files lint only with `--ignore 212`;
@@ -280,10 +280,13 @@ not load, expected) and LibChatAnims (load unknown, see above).
 - `UI.lua`: `d:RefreshCooldowns` 1711, 1731-1737 dead behind `ability.empowered` (secrecy zone, left alone).
 - `Options/DevTools.lua`: dead `or VGA.IsX` fallbacks (29-31); `SkeletonTalentEnhancements.talentCopies` Monk keys;
   the `GetHeroTalentSpecsForClassSpec` walk (490) is inert.
-- `Hekili.lua`: `ns.Patrons` text claims all specs are supported.
 - `.luacheckrc`: `INVSLOT_NECK` declared, unused.
 - `Libs/`: Ace3 `LICENSE.txt` copied 12 times.
 - `Forever/README.md`: repeats "Phase 3b".
+- Checkpoint B fixes (first clean in-game load): `fix(events): do not register COMBAT_LOG_EVENT_UNFILTERED on the
+  frame (forbidden on Forever)`; `fix(targets): remove the Chromie Time check (event absent on Forever; it aborted
+  Targets.lua)` (drops `C_PlayerInfo.IsPlayerInChromieTime`: 175 names, 124 passthrough); `fix(ui): display frame
+  events that exist on Forever`; `fix(options): display position ranges fall back to the window size on Forever`.
 
 ## How to verify
 

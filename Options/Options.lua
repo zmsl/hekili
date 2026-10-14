@@ -6,7 +6,7 @@ local VGA = LibStub( "VirtualGameAPI-1.0" )
 local C_ClassColor, C_SpecializationInfo, C_Spell = VGA.C_ClassColor, VGA.C_SpecializationInfo, VGA.C_Spell
 local GetBindingKey, GetCVar, GetFramerate, GetRealmName = VGA.GetBindingKey, VGA.GetCVar, VGA.GetFramerate, VGA.GetRealmName
 local GetSpecializationInfoByID, InCombatLockdown, UnitClass, UnitEffectiveLevel = VGA.GetSpecializationInfoByID, VGA.InCombatLockdown, VGA.UnitClass, VGA.UnitEffectiveLevel
-local UnitLevel, UnitName = VGA.UnitLevel, VGA.UnitName
+local C_VideoOptions, UnitLevel, UnitName = VGA.C_VideoOptions, VGA.UnitLevel, VGA.UnitName
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class
@@ -905,6 +905,13 @@ return end
 
         width = tonumber( width )
         height = tonumber( height )
+
+        -- Forever's gxWindowedResolution is not a WxH string; use the window size, then 1280x720.
+        if not width or not height then
+            local size = C_VideoOptions.GetCurrentGameWindowSize and C_VideoOptions.GetCurrentGameWindowSize()
+            width = size and tonumber( size.x ) or 1280
+            height = size and tonumber( size.y ) or 720
+        end
 
         tab.args.x.min = -1 * width
         tab.args.x.max = width
