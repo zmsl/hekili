@@ -305,3 +305,7 @@ lua-language-server --check . --checklevel=Error --logpath=/tmp/luals   # [no pr
 
 `wow_toc_validate Hekili.toc` (wow MCP, flavor `forever`): 0 errors, 4 warnings (backslash paths), at Task 20.
 In game: `/reload` with the AddOns folder named `Hekili` (question 1).
+
+## In-game result
+
+Checkpoint B, 2026-10-14, Forever 1.60.1.70338, commit 667d4748, AddOns folder named `Hekili`: the addon loads at login and on `/reload` with no Lua errors and no forbidden-action popup; `/hekili` opens the options window. Recommendations are not expected (the Warrior stub registers no abilities).
