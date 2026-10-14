@@ -2,6 +2,19 @@
 -- January 2025
 
 local addon, ns = ...
+local VGA = LibStub( "VirtualGameAPI-1.0" )
+local C_AzeriteItem, C_Item, C_LossOfControl, C_Spell = VGA.C_AzeriteItem, VGA.C_Item, VGA.C_LossOfControl, VGA.C_Spell
+local C_SpellBook, C_UnitAuras = VGA.C_SpellBook, VGA.C_UnitAuras
+local GetCombatRating, GetCombatRatingBonus, GetManaRegen, GetNumGroupMembers = VGA.GetCombatRating, VGA.GetCombatRatingBonus, VGA.GetManaRegen, VGA.GetNumGroupMembers
+local GetPowerRegenForPowerType, GetShapeshiftForm, GetShapeshiftFormInfo, GetTime = VGA.GetPowerRegenForPowerType, VGA.GetShapeshiftForm, VGA.GetShapeshiftFormInfo, VGA.GetTime
+local GetTotemInfo, GetUnitSpeed, InCombatLockdown, IsInJailersTower = VGA.GetTotemInfo, VGA.GetUnitSpeed, VGA.InCombatLockdown, VGA.IsInJailersTower
+local IsInRaid, IsMounted, IsPlayerSpell, IsSpellKnown = VGA.IsInRaid, VGA.IsMounted, VGA.IsPlayerSpell, VGA.IsSpellKnown
+local IsSpellKnownOrOverridesKnown, IsUsableSpell, UnitAttackSpeed, UnitAuraBySlot = VGA.IsSpellKnownOrOverridesKnown, VGA.IsUsableSpell, VGA.UnitAttackSpeed, VGA.UnitAuraBySlot
+local UnitCanAttack, UnitClassification, UnitCreatureType, UnitExists = VGA.UnitCanAttack, VGA.UnitClassification, VGA.UnitCreatureType, VGA.UnitExists
+local UnitGUID, UnitGetTotalAbsorbs, UnitHealth, UnitHealthMax = VGA.UnitGUID, VGA.UnitGetTotalAbsorbs, VGA.UnitHealth, VGA.UnitHealthMax
+local UnitInRange, UnitIsConnected, UnitIsDead, UnitIsDeadOrGhost = VGA.UnitInRange, VGA.UnitIsConnected, VGA.UnitIsDead, VGA.UnitIsDeadOrGhost
+local UnitIsPlayer, UnitLevel, UnitPower, UnitPowerMax = VGA.UnitIsPlayer, VGA.UnitLevel, VGA.UnitPower, VGA.UnitPowerMax
+local UnitPowerType, UnitStat, UnitThreatSituation = VGA.UnitPowerType, VGA.UnitStat, VGA.UnitThreatSituation
 local Hekili = _G[ addon ]
 
 local auras = ns.auras
@@ -23,7 +36,7 @@ local GetSpellInfo, GetSpellCharges, GetSpellLossOfControlCooldown = ns.GetUnpac
 local UnitBuff, UnitDebuff = ns.UnitBuff, ns.UnitDebuff
 
 local GetBuffDataByIndex, GetDebuffDataByIndex = C_UnitAuras.GetBuffDataByIndex, C_UnitAuras.GetDebuffDataByIndex
-local UnpackAuraData = AuraUtil.UnpackAuraData
+local UnpackAuraData = VGA.AuraUtil.UnpackAuraData
 
 local GetSpellCharges = function(spellID)
     local spellChargeInfo = GetSpellCharges(spellID);
@@ -33,7 +46,7 @@ local GetSpellCharges = function(spellID)
 end
 local FindPlayerAuraByID, IsAbilityDisabled, IsDisabledCovenantSpell = ns.FindPlayerAuraByID, ns.IsAbilityDisabled, ns.IsDisabledCovenantSpell
 
-local GetSpecialization = C_SpecializationInfo.GetSpecialization
+local GetSpecialization = VGA.C_SpecializationInfo.GetSpecialization
 
 -- Clean up table_x later.
 ---@diagnostic disable-next-line: deprecated
@@ -742,16 +755,16 @@ state.GetActiveLossOfControlDataCount = C_LossOfControl.GetActiveLossOfControlDa
 state.GetNumGroupMembers = GetNumGroupMembers
 -- state.GetItemCooldown = GetItemCooldown
 state.GetItemCount = C_Item.GetItemCount
-state.GetItemGem = GetItemGem
-state.GetItemInfo = GetItemInfo
+state.GetItemGem = VGA.GetItemGem
+state.GetItemInfo = VGA.GetItemInfo
 state.GetPlayerAuraBySpellID = GetPlayerAuraBySpellID
 state.GetShapeshiftForm = GetShapeshiftForm
 state.GetShapeshiftFormInfo = GetShapeshiftFormInfo
 state.GetSpellCount = C_Spell.GetSpellCastCount
 state.GetSpellInfo = ns.GetUnpackedSpellInfo
-state.GetSpellLink = GetSpellLink
+state.GetSpellLink = VGA.GetSpellLink
 state.GetSpellTexture = C_Spell.GetSpellTexture
-state.GetStablePetInfo = GetStablePetInfo
+state.GetStablePetInfo = VGA.GetStablePetInfo
 state.GetTime = GetTime
 state.GetTotemInfo = GetTotemInfo
 state.InCombatLockdown = InCombatLockdown
@@ -761,12 +774,12 @@ state.IsSpellKnown = C_SpellBook.IsSpellInSpellBook
 state.IsSpellKnownOrOverridesKnown = C_SpellBook.IsSpellInSpellBook
 state.IsUsableItem = C_Item.IsUsableItem
 state.IsUsableSpell = C_Spell.IsSpellUsable
-state.UnitAura = UnitAura
+state.UnitAura = VGA.UnitAura
 state.UnitAuraSlots = C_UnitAuras.GetAuraSlots
 state.UnitBuff = UnitBuff
 state.UnitCanAttack = UnitCanAttack
-state.UnitCastingInfo = UnitCastingInfo
-state.UnitChannelInfo = UnitChannelInfo
+state.UnitCastingInfo = VGA.UnitCastingInfo
+state.UnitChannelInfo = VGA.UnitChannelInfo
 state.UnitClassification = UnitClassification
 state.UnitDebuff = UnitDebuff
 state.UnitExists = UnitExists
@@ -774,10 +787,10 @@ state.UnitGetTotalAbsorbs = UnitGetTotalAbsorbs
 state.UnitGUID = UnitGUID
 state.UnitHealth = UnitHealth
 state.UnitHealthMax = UnitHealthMax
-state.UnitName = UnitName
-state.UnitIsFriend = UnitIsFriend
+state.UnitName = VGA.UnitName
+state.UnitIsFriend = VGA.UnitIsFriend
 
-local UnitIsUnit = _G.UnitIsUnit
+local UnitIsUnit = VGA.UnitIsUnit
 
 state.UnitIsUnit = function( a, b )
     return a == b or UnitIsUnit( a, b )
@@ -786,7 +799,7 @@ end
 state.UnitIsPlayer = UnitIsPlayer
 state.UnitLevel = UnitLevel
 state.UnitPower = UnitPower
-state.UnitPartialPower = UnitPartialPower
+state.UnitPartialPower = VGA.UnitPartialPower
 state.UnitPowerMax = UnitPowerMax
 state.abs = math.abs
 state.ceil = math.ceil
@@ -818,8 +831,8 @@ state.safebool = function( val )
 end
 
 state.combat = 0
-state.faction = UnitFactionGroup( "player" )
-state.race[ formatKey( UnitRace("player") ) ] = true
+state.faction = VGA.UnitFactionGroup( "player" )
+state.race[ formatKey( VGA.UnitRace("player") ) ] = true
 
 state.class = Hekili.Class
 state.targets = ns.targets
@@ -2151,7 +2164,7 @@ do
 
             -- Internal processing stuff.
             elseif k == "display" then t[k] = "Primary"
-            elseif k == "latency" then t[k] = select( 4, GetNetStats() ) / 1000
+            elseif k == "latency" then t[k] = select( 4, VGA.GetNetStats() ) / 1000
             elseif k == "resetting" then t[k] = false
             elseif k == "scriptID" then t[k] = "NilScriptID"
             elseif k == "whitelist" then return nil
@@ -2216,7 +2229,7 @@ do
 
                 t[k] = max( 1, count )
 
-            elseif k == "level" then t[k] = UnitEffectiveLevel("player") or MAX_PLAYER_LEVEL
+            elseif k == "level" then t[k] = VGA.UnitEffectiveLevel("player") or MAX_PLAYER_LEVEL
             elseif k == "mounted" or k == "is_mounted" then t[k] = IsMounted()
             elseif k == "moving" then t[k] = ( GetUnitSpeed("player") > 0 )
             elseif k == "raid" then t[k] = IsInRaid() and t.group_members > 5
@@ -2657,13 +2670,13 @@ local mt_stat = {
             return state.runic_power and state.runic_power.max or 0
 
         elseif k == "spell_power" then
-            t[k] = GetSpellBonusDamage(7)
+            t[k] = VGA.GetSpellBonusDamage(7)
 
         elseif k == "mp5" then
             t[k] = state.mana and state.mana.regen or 0
 
         elseif k == "attack_power" then
-            t[k] = UnitAttackPower("player") + UnitWeaponAttackPower("player")
+            t[k] = VGA.UnitAttackPower("player") + VGA.UnitWeaponAttackPower("player")
 
         elseif k == "crit_rating" then
             t[k] = GetCombatRating(CR_CRIT_MELEE)
@@ -2672,7 +2685,7 @@ local mt_stat = {
             t[k] = GetCombatRating(CR_HASTE_MELEE)
 
         elseif k == "weapon_dps" or k == "weapon_offhand_dps" then
-            local low, high, offlow, offhigh = UnitDamage( "player" )
+            local low, high, offlow, offhigh = VGA.UnitDamage( "player" )
             t.weapon_dps = 0.5 * ( low + high )
             t.weapon_offhand_dps = 0.5 * ( low + high )
 
@@ -2682,7 +2695,7 @@ local mt_stat = {
             t.weapon_offhand_speed = off or 0
 
         elseif k == "armor" or k == "bonus_armor" then
-            local _, eff, _, bonus = UnitArmor( "player" )
+            local _, eff, _, bonus = VGA.UnitArmor( "player" )
             t.armor = eff or 0
             t.bonus_armor = bonus or 0
 
@@ -2693,7 +2706,7 @@ local mt_stat = {
             t[k] = GetCombatRating(CR_MASTERY)
 
         elseif k == "mastery_value" then
-            t[k] = GetMasteryEffect() / 100
+            t[k] = VGA.GetMasteryEffect() / 100
 
         elseif k == "versatility_atk_rating" then
             t[k] = GetCombatRating(CR_VERSATILITY_DAMAGE_DONE)
@@ -2711,10 +2724,10 @@ local mt_stat = {
             t[k] = 0
 
         elseif k == "spell_haste" then
-            t[k] = ( UnitSpellHaste( "player" ) + ( t.mod_haste_pct or 0 ) ) / 100
+            t[k] = ( VGA.UnitSpellHaste( "player" ) + ( t.mod_haste_pct or 0 ) ) / 100
 
         elseif k == "melee_haste" then
-            t[k] = ( GetMeleeHaste() + ( t.mod_haste_pct or 0 ) ) / 100
+            t[k] = ( VGA.GetMeleeHaste() + ( t.mod_haste_pct or 0 ) ) / 100
 
         elseif k == "haste" then
             t[k] = t.spell_haste or t.melee_haste
@@ -2723,7 +2736,7 @@ local mt_stat = {
             t[k] = 0
 
         elseif k == "crit" then
-            t[k] = ( max( GetCritChance(), GetSpellCritChance( "player" ), GetRangedCritChance() ) + ( t.mod_crit_pct or 0 ) )
+            t[k] = ( max( VGA.GetCritChance(), VGA.GetSpellCritChance( "player" ), VGA.GetRangedCritChance() ) + ( t.mod_crit_pct or 0 ) )
 
         end
 
@@ -3127,7 +3140,7 @@ do
                 if not t.exists then t[k] = "virtual"
                 elseif not t.is_player then t[k] = "npc"
                 else
-                    local c = UnitClassBase( "target" )
+                    local c = VGA.UnitClassBase( "target" )
                     if c then t[k] = strlower( c )
                     else t[k] = "unknown" end
                 end
@@ -3135,7 +3148,7 @@ do
             elseif k == "health_current" then return t.health.current
             elseif k == "health_max" then return t.health.max
             elseif k == "health_pct" or k == "health_percent" then return t.health.percent
-            elseif k == "has_vehicle_ui" then t[k] = UnitInVehicle( "target" )
+            elseif k == "has_vehicle_ui" then t[k] = VGA.UnitInVehicle( "target" )
             elseif k == "is_add" then t[k] = not t.is_boss
             elseif k == "is_boss" then
                 if UnitExists( "boss1" ) and UnitIsUnit( "target", "boss1" ) or
@@ -3148,9 +3161,9 @@ do
                 end
             elseif k == "is_dead" then t[k] = UnitIsDeadOrGhost("target")
             elseif k == "is_demon" then t[k] = UnitCreatureType( "target" ) == PET_TYPE_DEMON
-            elseif k == "is_friendly" then t[k] = UnitCanAssist( "player", "target" )
-            elseif k == "is_in_party" then t[k] = UnitInParty( "target" )
-            elseif k == "is_in_raid" then t[k] = UnitInRaid( "target" ) ~= nil
+            elseif k == "is_friendly" then t[k] = VGA.UnitCanAssist( "player", "target" )
+            elseif k == "is_in_party" then t[k] = VGA.UnitInParty( "target" )
+            elseif k == "is_in_raid" then t[k] = VGA.UnitInRaid( "target" ) ~= nil
             elseif k == "is_player" then
                 local isPlayer = UnitIsPlayer( "target" )
                 if not isPlayer then isPlayer = PvpDummies[ t.npcid ] end
@@ -4418,7 +4431,7 @@ ns.metatables.mt_talents = mt_talents
 
 
 local function IslandPvP()
-    local _, instanceType, difficulty = GetInstanceInfo()
+    local _, instanceType, difficulty = VGA.GetInstanceInfo()
     return instanceType == "scenario" and difficulty == 45
 end
 
@@ -4520,7 +4533,7 @@ do
     local mt_artifact_traits = {
         __index = function( t, k )
             if k == "active" then
-                local neck = GetInventoryItemID( "player", INVSLOT_NECK )
+                local neck = VGA.GetInventoryItemID( "player", INVSLOT_NECK )
                 if not neck or neck ~= HEART_OF_AZEROTH_ITEM_ID then
                     rawset( t, "active", false )
                     return false
