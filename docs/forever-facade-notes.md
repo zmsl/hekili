@@ -269,7 +269,17 @@ Every stub site in the retained files that throws or yields a wrong value. Sites
 - GCD spell 61304 -> 29515: `Classes.lua` 2911 (`id = 61304`), `UI.lua` 1507 and 1708, `Events.lua` 1935.
 - The enemy-scan health comparison: `Targets.lua` 434 and 511.
 - TTD: `Targets.lua` 1169-1610 needs another source of health deltas.
-- Spec identity (pseudo-spec 1491): `Classes.lua` 4096-4381 `SpecializationChanged`.
+- Spec identity (pseudo-spec 1491): `Classes.lua` 4099-4384 `SpecializationChanged`. `NewSpecialization` now takes
+  identity from the `ns.Specializations[ 1491 ].forever` row (Task 11b); what remains:
+  - `Classes.lua` 4154-4157: Forever returns id `0` (truthy) for spec slots 2 and 3, so the loop does not break and
+    `specs` holds `0` several times; `all` is merged repeatedly and its hooks (`reset_precast`, 4261) run 2-3 times per
+    reset. Wrong cost, no error (the hook is idempotent). Fix: `if not id or id == 0 then break end`.
+  - `Classes.lua` 4170-4183: `role` and `primaryStat` from `GetSpecializationInfo( 1 )` are unprobed on Forever; if nil,
+    `state.role.healer` and `state.spec.primaryStat = "intellect"` are set for a Warrior. Wrong data, no error.
+- `State.lua` 7054 (`state.reset`, secrecy zone): `class.abilities.cyclotronic_blast.id` **throws** whenever the player
+  is casting a spell that is a registered ability, because `cyclotronic_blast` lived in the archived `Items.lua`. With
+  the Warrior stub only `all`-spec abilities are registered, so it needs a cast-time racial or item; Phase 3b abilities
+  with a cast time will hit it every cast. Fix: guard with `class.abilities.cyclotronic_blast and`.
 - Talents: replace `ns.updateTalents` (`Events.lua` 427) with a `C_Traits` walk (`Utils.lua` 970-989 already walks the tree for export).
 - CLEU: remove or divert the registration at `Events.lua` 2027 (and `Options/DevTools.lua` 460).
 - Version gates: `Hekili.lua` 18-56 (`IsDragonflight`, `IsTWW`, `IsMidnight` and `ns.PTR` are false on build 16001;

@@ -274,6 +274,12 @@ ns.Specializations = {
         class = "WARRIOR",
         ranged = false
     },
+    [1491] = { -- Forever pseudo-spec: one per class; Arms, Fury and Protection are talent builds [W PR15]
+        key = "warrior",
+        class = "WARRIOR",
+        ranged = false,
+        forever = "Warrior" -- the spec name; also selects the Forever path in Hekili:NewSpecialization
+    },
     [577] = {
         key = "havoc",
         class = "DEMONHUNTER",

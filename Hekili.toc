@@ -18,6 +18,7 @@ State.lua
 Events.lua
 
 Classes.lua
+Forever\Warrior.lua
 
 Targets.lua
 Options\DevTools.lua
