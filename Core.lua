@@ -2,6 +2,8 @@
 -- April 2014
 
 local addon, ns = ...
+local VGA = LibStub( "VirtualGameAPI-1.0" )
+local GetFrameCPUUsage, GetTime, InCombatLockdown = VGA.GetFrameCPUUsage, VGA.GetTime, VGA.InCombatLockdown
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class

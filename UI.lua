@@ -2,6 +2,13 @@
 -- Dynamic UI Elements
 
 local addon, ns = ...
+local VGA = LibStub( "VirtualGameAPI-1.0" )
+local C_Item, C_PetBattles, C_SpecializationInfo, C_Spell = VGA.C_Item, VGA.C_PetBattles, VGA.C_SpecializationInfo, VGA.C_Spell
+local C_SpellActivationOverlay, C_VideoOptions = VGA.C_SpellActivationOverlay, VGA.C_VideoOptions
+local GetFramerate, GetTime, HasOverrideActionBar, HasVehicleActionBar = VGA.GetFramerate, VGA.GetTime, VGA.HasOverrideActionBar, VGA.HasVehicleActionBar
+local InCombatLockdown, IsInInstance, IsMounted, UnitCanAttack = VGA.InCombatLockdown, VGA.IsInInstance, VGA.IsMounted, VGA.UnitCanAttack
+local UnitCastingInfo, UnitChannelInfo, UnitClass, UnitExists = VGA.UnitCastingInfo, VGA.UnitChannelInfo, VGA.UnitClass, VGA.UnitExists
+local UnitHasVehicleUI, UnitIsDead, UnitOnTaxi = VGA.UnitHasVehicleUI, VGA.UnitIsDead, VGA.UnitOnTaxi
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class
