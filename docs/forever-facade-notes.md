@@ -26,7 +26,8 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `C_AzeriteEmpoweredItem.GetPowerInfo` | present | unprobed | passthrough | — | Events.lua |
 | `C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItemByID` | present | unprobed | passthrough | — | Events.lua |
 | `C_AzeriteEmpoweredItem.IsPowerSelected` | present | unprobed | passthrough | — | Events.lua |
-| `C_AzeriteEssence` | present (namespace table) | unprobed | passthrough | — | Events.lua |
+| `C_AzeriteEssence.GetEssenceInfo` | present | unprobed | passthrough | — | Events.lua |
+| `C_AzeriteEssence.GetMilestoneEssence` | present | unprobed | passthrough | — | Events.lua |
 | `C_AzeriteItem.FindActiveAzeriteItem` | present | unprobed | passthrough | — | State.lua |
 | `C_AzeriteItem.IsAzeriteItemEnabled` | present | unprobed | passthrough | — | State.lua |
 | `C_ClassColor.GetClassColor` | present | unprobed | passthrough | — | Options/Options.lua |
