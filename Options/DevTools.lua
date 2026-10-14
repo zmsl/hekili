@@ -2,6 +2,13 @@
 -- Development-only tools and debug utilities.
 
 local addon, ns = ...
+local VGA = LibStub( "VirtualGameAPI-1.0" )
+local C_ClassTalents, C_SpecializationInfo, C_Spell, C_SpellActivationOverlay = VGA.C_ClassTalents, VGA.C_SpecializationInfo, VGA.C_Spell, VGA.C_SpellActivationOverlay
+local C_SpellBook, C_Traits, C_UnitAuras = VGA.C_SpellBook, VGA.C_Traits, VGA.C_UnitAuras
+local CombatLogGetCurrentEventInfo, GetBuildInfo, GetPvpTalentInfoByID, GetSpellBaseCooldown = VGA.CombatLogGetCurrentEventInfo, VGA.GetBuildInfo, VGA.GetPvpTalentInfoByID, VGA.GetSpellBaseCooldown
+local GetTime, InCombatLockdown, IsPlayerSpell, UnitCanAttack = VGA.GetTime, VGA.InCombatLockdown, VGA.IsPlayerSpell, VGA.UnitCanAttack
+local UnitClass, UnitClassBase, UnitIsUnit, UnitPowerMax = VGA.UnitClass, VGA.UnitClassBase, VGA.UnitIsUnit, VGA.UnitPowerMax
+local UnitSpellHaste = VGA.UnitSpellHaste
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class
@@ -19,10 +26,10 @@ local ResourceInfo = ns.ResourceInfo or {}
 -- Atlas/Textures
 local AtlasToString, GetAtlasFile, GetAtlasCoords = ns.AtlasToString, ns.GetAtlasFile, ns.GetAtlasCoords
 
-local IsPassiveSpell = C_Spell.IsSpellPassive or _G.IsPassiveSpell
-local IsHarmfulSpell = C_Spell.IsSpellHarmful or _G.IsHarmfulSpell
-local IsHelpfulSpell = C_Spell.IsSpellHelpful or _G.IsHelpfulSpell
-local IsPressHoldReleaseSpell = C_Spell.IsPressHoldReleaseSpell or _G.IsPressHoldReleaseSpell
+local IsPassiveSpell = C_Spell.IsSpellPassive or VGA.IsPassiveSpell
+local IsHarmfulSpell = C_Spell.IsSpellHarmful or VGA.IsHarmfulSpell
+local IsHelpfulSpell = C_Spell.IsSpellHelpful or VGA.IsHelpfulSpell
+local IsPressHoldReleaseSpell = C_Spell.IsPressHoldReleaseSpell or VGA.IsPressHoldReleaseSpell
 local GetSpellBookItemInfo = function( index, bookType )
     local spellBank = ( bookType == "spell" or bookType == Enum.SpellBookItemType.Spell ) and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet
     local info = C_SpellBook.GetSpellBookItemInfo(index, spellBank)

@@ -2,6 +2,11 @@
 -- Everything related to building/configuring options.
 
 local addon, ns = ...
+local VGA = LibStub( "VirtualGameAPI-1.0" )
+local C_ClassColor, C_Soulbinds, C_SpecializationInfo, C_Spell = VGA.C_ClassColor, VGA.C_Soulbinds, VGA.C_SpecializationInfo, VGA.C_Spell
+local GetBindingKey, GetCVar, GetFramerate, GetRealmName = VGA.GetBindingKey, VGA.GetCVar, VGA.GetFramerate, VGA.GetRealmName
+local GetSpecializationInfoByID, InCombatLockdown, UnitClass, UnitEffectiveLevel = VGA.GetSpecializationInfoByID, VGA.InCombatLockdown, VGA.UnitClass, VGA.UnitEffectiveLevel
+local UnitLevel, UnitName = VGA.UnitLevel, VGA.UnitName
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class
