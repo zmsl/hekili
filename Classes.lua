@@ -2,6 +2,11 @@
 -- January 2025
 
 local addon, ns = ...
+local VGA = LibStub( "VirtualGameAPI-1.0" )
+local C_Item, C_LossOfControl, C_SpecializationInfo, C_Spell = VGA.C_Item, VGA.C_LossOfControl, VGA.C_SpecializationInfo, VGA.C_Spell
+local GetSpecializationInfoByID, GetTime, InCombatLockdown, UnitAttackSpeed = VGA.GetSpecializationInfoByID, VGA.GetTime, VGA.InCombatLockdown, VGA.UnitAttackSpeed
+local UnitCanAttack, UnitCastingInfo, UnitChannelInfo, UnitClassBase = VGA.UnitCanAttack, VGA.UnitCastingInfo, VGA.UnitChannelInfo, VGA.UnitClassBase
+local UnitGUID, UnitGetTotalAbsorbs = VGA.UnitGUID, VGA.UnitGetTotalAbsorbs
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class

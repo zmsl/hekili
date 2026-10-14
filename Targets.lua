@@ -2,6 +2,16 @@
 -- July 2024
 
 local addon, ns = ...
+local VGA = LibStub( "VirtualGameAPI-1.0" )
+local C_AddOns, C_PlayerInfo, C_PvP = VGA.C_AddOns, VGA.C_PlayerInfo, VGA.C_PvP
+local GetActionInfo, GetCVar, GetHaste, GetNumGroupMembers = VGA.GetActionInfo, VGA.GetCVar, VGA.GetHaste, VGA.GetNumGroupMembers
+local GetTime, GetUnitSpeed, InCombatLockdown, IsActionInRange = VGA.GetTime, VGA.GetUnitSpeed, VGA.InCombatLockdown, VGA.IsActionInRange
+local IsInInstance, IsInRaid, UnitAffectingCombat, UnitCanAttack = VGA.IsInInstance, VGA.IsInRaid, VGA.UnitAffectingCombat, VGA.UnitCanAttack
+local UnitClassBase, UnitExists, UnitGUID, UnitGetTotalAbsorbs = VGA.UnitClassBase, VGA.UnitExists, VGA.UnitGUID, VGA.UnitGetTotalAbsorbs
+local UnitHealth, UnitHealthMax, UnitInParty, UnitInRaid = VGA.UnitHealth, VGA.UnitHealthMax, VGA.UnitInParty, VGA.UnitInRaid
+local UnitIsDead, UnitIsFriend, UnitIsPVP, UnitIsPlayer = VGA.UnitIsDead, VGA.UnitIsFriend, VGA.UnitIsPVP, VGA.UnitIsPlayer
+local UnitIsTrivial, UnitIsUnit, UnitLevel, UnitName = VGA.UnitIsTrivial, VGA.UnitIsUnit, VGA.UnitLevel, VGA.UnitName
+local UnitPhaseReason, UnitTokenFromGUID = VGA.UnitPhaseReason, VGA.UnitTokenFromGUID
 local Hekili = _G[addon]
 
 local class = Hekili.Class
