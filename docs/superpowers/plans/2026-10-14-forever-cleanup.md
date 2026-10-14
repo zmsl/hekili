@@ -16,10 +16,14 @@
 
 ## Execution order
 
-Tasks run 1 to 10, then **10b** (dropped-library call sites), then **19** (vendoring and TOC), then Checkpoint A,
-then 11 to 18, 20 (Checkpoint B), 21. Reason: the checkout cannot load without the libraries, and `embeds.xml`
-cannot drop a library whose `LibStub( "X" )` call sites still exist. The brief's step order assumed a loadable
-checkout at Checkpoint A; this is the smallest change that makes it true.
+Tasks run 1 to 10, then **19** (vendoring and TOC), then Checkpoint A, then 11 to 18, 20 (Checkpoint B), 21.
+Reason: the checkout cannot load without the libraries. The brief's step order assumed a loadable checkout at
+Checkpoint A; this is the smallest change that makes it true.
+
+**Library policy (user decision, 2026-10-14):** every library `embeds.xml` includes is vendored, whether or not
+its upstream declares Forever support. A library is dropped only when it proves invalid in game (a load error or
+a forbidden action), and then in its own commit with the evidence in `docs/forever-cleanup.md`. No library
+call sites are removed in this plan.
 
 ## Global Constraints
 
@@ -41,7 +45,7 @@ checkout at Checkpoint A; this is the smallest change that makes it true.
 2. **A passthrough whose real function is nil on Forever** (deprecated shims such as `SpellIsSelfBuff`, bare `GetItemInfo`). The library must not throw at load; it records `missing` and returns nil. Test: Task 3 test 4.
 3. **A stub returning "nothing" where Hekili divides or indexes.** `UnitPowerMax` stays passthrough (plain on Forever). Stub zeros reach `res.max / ...` only behind `if res.max > 0` (`State.lua:6902`); other sites are listed in `docs/forever-facade-notes.md` (Task 10), not patched.
 4. **Archived files still referenced after the move**: a TOC line, an XML include, or an `ns.X` function defined only in an archived file and called from the engine. Test: Task 11 step 6 grep and Task 20 dangling-reference sweep.
-5. **A vendored library that refuses to load on 16001** (SpellFlashCore does; LibRangeCheck must be the WeakAuras main). Test: Task 19 greps each vendored library for `Interface`/`WOW_PROJECT_ID`/build gates and the TOC validator; Checkpoint B.
+5. **A vendored library that refuses to load or acts forbidden on 16001** (SpellFlashCore returns early; others unknown). Test: Task 19 records each library's load gate in `Libs/CREDITS.md`; Checkpoint B separates library failures from Hekili failures; a library is dropped only on in-game evidence.
 
 ---
 
@@ -863,21 +867,7 @@ git push
 
 - [ ] **Step 5: Checkpoint A (the orchestrator, not a subagent)**
 
-Point the client's checkout at the branch: `git -C ~/src/hekili checkout --detach forever-cleanup` (the main checkout is clean on `forever`; detaching keeps the branch checked out only in the worktree). Ask the user to log in or `/reload` on Forever and paste any Lua errors. Goal: no errors at login and on `/reload`. Checkpoint A runs after Tasks 10b and 19 (see "Execution order"), so the checkout has its libraries and the TOC says 16001. It means "loads with the libraries and the facade; retail content still present".
-
-### Task 10b: Dropped-library call sites (before vendoring)
-
-**Files:**
-- Modify: `Utils.lua:112-117` (LibTranslit), `State.lua:46`, `Classes.lua:20`, `Targets.lua:277`, `UI.lua:972` (LibSpellRange), `UI.lua:958-968, 1346-1420` and `Options/Options.lua:27` plus the `flash` settings group (SpellFlashCore), `Options/Options.lua:9424-9460` (LibCompress legacy decoder)
-- Modify: `tools/api_inventory.txt`, `Libs/VirtualGameAPI-1.0/VirtualGameAPI-1.0.lua`, `docs/forever-facade-notes.md` (add `C_Spell.IsSpellInRange`, passthrough, plain in combat [W PR7])
-- Modify: `.luacheckrc` (remove `SpellFlashCore` from `read_globals`)
-
-- [ ] **Step 1: LibSpellRange**: replace every `LSR.IsSpellInRange( spell, unit )` with `C_Spell.IsSpellInRange( spell, unit )` (each file already has `local C_Spell = VGA.C_Spell`; add it where missing) and delete the `local LSR = LibStub( "SpellRange-1.0" )` lines. Add `C_Spell.IsSpellInRange` to the inventory, the library (`passthrough( "C_Spell.IsSpellInRange", "plain in combat [W PR7]" )`) and the notes table.
-- [ ] **Step 2: LibTranslit**: in `Utils.lua` `formatKey`, drop the `LT:Transliterate` call and the `local LT` line; the key is built from the untransliterated name.
-- [ ] **Step 3: SpellFlashCore**: delete the `hooksecurefunc( LSF, "FlashFrame", ...)` block, the `flash` branch in the display `OnUpdate` (`if self.flashReady and conf.flash.enabled and LSF ...`), the `local LSF = SpellFlashCore` lines, and in `Options/Options.lua` the `SF = SpellFlashCore` local and the `flash` options group (search `flash`). Leave the saved-variable defaults for `flash` in place (harmless) unless the options table references them.
-- [ ] **Step 4: LibCompress**: in `Options/Options.lua` delete the `Compresser = LibStub:GetLibrary("LibCompress")` local and the branch that decodes legacy `Hekili:` strings with it; keep the LibDeflate path (`!` prefixed strings). If the decoder function cannot tell the formats apart without LibCompress, make the legacy branch return `nil, "legacy Hekili: strings are not supported on Forever"`.
-- [ ] **Step 5: Verify**: `luac5.1 -p` on touched files, `$LUACHECK .`, `$BUSTED`, `tools/check_api_reads.sh`, `wow_lua_lint` on touched files, and `grep -rn "LibCompress\|LibTranslit\|SpellRange-1.0\|SpellFlashCore\|LSF\b\|LSR\b" *.lua Options/*.lua UI/*.lua` prints nothing.
-- [ ] **Step 6: Commit** `refactor: drop LibSpellRange, LibTranslit, LibCompress and SpellFlashCore call sites` and push.
+Point the client's checkout at the branch: `git -C ~/src/hekili checkout --detach forever-cleanup` (the main checkout is clean on `forever`; detaching keeps the branch checked out only in the worktree). Ask the user to log in or `/reload` on Forever and paste any Lua errors. Goal: no errors at login and on `/reload`. Checkpoint A runs after Task 19 (see "Execution order"), so the checkout has its libraries and the TOC says 16001. It means "loads with the libraries and the facade; retail content still present".
 
 ---
 
@@ -990,7 +980,7 @@ Verification as Task 12. Commit: `refactor(utils): remove the covenant cache and
 ### Task 17: UI.lua: empowerment and SpellFlash
 
 **Files:**
-- Modify: `UI.lua`: empowerment stage glow and `empower_to` rendering (search `empower`); Masque stays optional (`LibStub("Masque", true)`). SpellFlash was removed in Task 10b.
+- Modify: `UI.lua`: empowerment stage glow and `empower_to` rendering (search `empower`); Masque stays optional (`LibStub("Masque", true)`); the SpellFlash code stays (library policy).
 - Modify: `Core.lua`: `empower_to` writes if any (search `empower`).
 
 Verification as Task 12; the cooldown arithmetic at `OnUpdate` and `RefreshCooldowns` is unchanged. Commit: `refactor(ui): remove empowerment rendering; Masque stays optional`.
@@ -999,21 +989,23 @@ Verification as Task 12; the cooldown arithmetic at `OnUpdate` and `RefreshCoold
 
 **Files:**
 - Delete: `Options/Archive.lua`
-- Modify: `Options/Options.lua`: `oneTimeFixes` (`:44-126`, replace with an empty table and keep the loop), essence, covenant and soulbind toggles and panels (search `essence`, `covenant`, `soulbind`, `C_Soulbinds`), the Wago/Discord/patron text if it points at retail services (keep the help URLs that still make sense); the `SFX-Info-URL` widgets stay (the pack is vendored). The LibCompress, LibTranslit and LibSpellRange call sites were removed in Task 10b.
+- Modify: `Options/Options.lua`: `oneTimeFixes` (`:44-126`, replace with an empty table and keep the loop), essence, covenant and soulbind toggles and panels (search `essence`, `covenant`, `soulbind`, `C_Soulbinds`), the Wago/Discord/patron text if it points at retail services (keep the help URLs that still make sense); the `SFX-Info-URL` widgets stay (the pack is vendored). Library call sites stay (library policy).
 - Modify: `Core.lua:64-67` LibDualSpec: keep (vendored in Task 19).
 - Modify: `Hekili.toc` `OptionalDeps`: drop `AddOnSkins, ButtonForge` only if unreferenced (`grep -n "AddOnSkins\|ButtonForge" *.lua Options/*.lua`).
 
-Verification as Task 12 plus `grep -rn "LibCompress\|LibTranslit\|SpellRange-1.0\|SpellFlashCore\|LibChatAnims\|AceComm" --include=*.lua . | grep -v "^./archive\|^./Libs\|^./.claude"` prints nothing. Commit: `refactor(options): drop Archive.lua, one-time fixes and the retail panels`.
+Verification as Task 12. Commit: `refactor(options): drop Archive.lua, one-time fixes and the retail panels`.
 
 ### Task 19: TOC, vendored libraries, embeds
 
 **Files:**
 - Modify: `Hekili.toc` (`## Interface: 16001`; remove `## X-Curse-Project-ID`, `## X-WoWI-ID`, `## X-Wago-ID`; `## Version: forever-dev`)
-- Modify: `embeds.xml` (only the vendored libraries, in dependency order)
-- Modify: `.pkgmeta` (remove every external that is vendored or dropped; keep `package-as` and `enable-nolib-creation: no`)
-- Delete: `Libs/SpellFlashCore/`, `.travis.yml`, `.github/workflows/` retail release workflows (keep `.github/ISSUE_TEMPLATE` and `FUNDING.yml` as they are)
+- Modify: `embeds.xml` (same includes as today, in the same order, plus the VirtualGameAPI include already added in Task 3; fix any path whose vendored layout differs)
+- Modify: `.pkgmeta` (remove every external now vendored; keep `package-as` and `enable-nolib-creation: no`)
+- Delete: `.travis.yml`, `.github/workflows/` retail release workflows (keep `.github/ISSUE_TEMPLATE` and `FUNDING.yml`)
 - Create: `Libs/CREDITS.md`
-- Vendor into `Libs/`: `LibStub`, `CallbackHandler-1.0`, `AceAddon-3.0`, `AceConsole-3.0`, `AceSerializer-3.0`, `AceGUI-3.0`, `AceConfig-3.0`, `AceDB-3.0`, `AceDBOptions-3.0` (from Ace3 `Release-r1403`; AceTimer, AceEvent, AceComm, AceBucket, AceHook, AceLocale, AceTab are not embedded: zero call sites), `LibSharedMedia-3.0`, `AceGUI-3.0-SharedMediaWidgets`, `AceGUI-3.0_SFX-Widgets`, `LibDataBroker-1.1`, `LibDBIcon-1.0`, `LibDualSpec-1.0`, `LibDeflate`, `LibCustomGlow-1.0`, `LibRangeCheck-3.0`.
+- Vendor into `Libs/` every library `embeds.xml` includes: `LibStub`, `CallbackHandler-1.0`, `AceAddon-3.0`, `AceGUI-3.0`, `AceConsole-3.0`, `AceConfig-3.0`, `AceTimer-3.0`, `AceSerializer-3.0`, `AceComm-3.0` (with its ChatThrottleLib), `AceEvent-3.0`, `AceDB-3.0`, `AceDBOptions-3.0` (all from Ace3 `Release-r1403`), `LibSharedMedia-3.0`, `AceGUI-3.0-SharedMediaWidgets`, `AceGUI-3.0_SFX-Widgets`, `LibSpellRange-1.0`, `LibRangeCheck-3.0`, `LibCompress`, `LibDeflate`, `LibDataBroker-1.1`, `LibDBIcon-1.0`, `LibDualSpec-1.0`, `LibCustomGlow-1.0`, `LibChatAnims`, `LibTranslit-1.0`. `SpellFlashCore` is already in `Libs/` and stays.
+
+Library policy: vendor everything; drop nothing in this task. Record in `Libs/CREDITS.md` which libraries declare Forever support upstream and which do not, and any load gate found in step 2, so Checkpoint B can tell a library failure from a Hekili one.
 
 - [ ] **Step 1: Fetch** (into `$CLAUDE_JOB_DIR/tmp/libs/`, then copy only the needed folders):
 
@@ -1026,47 +1018,24 @@ git clone --depth 1 https://github.com/SafeteeWoW/LibDeflate LibDeflate
 git clone --depth 1 https://github.com/Stanzilla/LibCustomGlow LibCustomGlow
 git clone --depth 1 https://github.com/tekkub/libdatabroker-1-1 LibDataBroker-1.1
 git clone --depth 1 https://github.com/SFX-WoW/AceGUI-3.0_SFX-Widgets AceGUI-3.0_SFX-Widgets
-# wowace SVN repositories serve files over plain HTTPS:
-wget -q -r -np -nH --cut-dirs=3 -R "index.html*" https://repos.wowace.com/wow/libsharedmedia-3-0/trunk/LibSharedMedia-3.0/ -P LibSharedMedia-3.0
-wget -q -r -np -nH --cut-dirs=3 -R "index.html*" https://repos.wowace.com/wow/libdbicon-1-0/trunk/LibDBIcon-1.0/ -P LibDBIcon-1.0
-wget -q -r -np -nH --cut-dirs=3 -R "index.html*" https://repos.wowace.com/wow/ace-gui-3-0-shared-media-widgets/trunk/AceGUI-3.0-SharedMediaWidgets/ -P AceGUI-3.0-SharedMediaWidgets
+git clone --depth 1 https://github.com/ascott18/LibSpellRange-1.0 LibSpellRange-1.0
+git clone --depth 1 https://github.com/Vardex/LibTranslit LibTranslit-1.0
+# wowace SVN repositories serve files over plain HTTPS (directory listings are HTML):
+for r in "libsharedmedia-3-0/trunk/LibSharedMedia-3.0" "libdbicon-1-0/trunk/LibDBIcon-1.0" "ace-gui-3-0-shared-media-widgets/trunk/AceGUI-3.0-SharedMediaWidgets" "libcompress/trunk" "libchatanims/trunk/LibChatAnims"; do
+    wget -q -r -np -nH -R "index.html*" "https://repos.wowace.com/wow/$r/"
+done
 ```
-For each: record the tag or commit (`git rev-parse HEAD`) or, for wowace, the `-- $Id`/`MINOR` revision in the main file's header. Copy each library folder into `Libs/<Name>/` with its licence file (`LICENSE`, `LICENSE.txt` or the licence header; write `Libs/<Name>/LICENSE-NOTE.md` quoting the header when there is no file). Do not copy `.git`, tests or `.pkgmeta` files.
+Check each mirrored folder is complete (`lib.xml`/`widget.xml` and every file they reference exist). For each library record the tag or commit (`git rev-parse HEAD`) or, for wowace, the `$Id`/`MINOR` revision in the main file's header. Copy each library folder into `Libs/<Name>/` matching the paths `embeds.xml` uses, with its licence file (`LICENSE`, `LICENSE.txt`, or `Libs/<Name>/LICENSE-NOTE.md` quoting the header when there is no file). Do not copy `.git`, tests or `.pkgmeta` files. Keep `Libs/SpellFlashCore/` as it is.
 
-- [ ] **Step 2: Check for load gates**: `grep -rn "Interface\|WOW_PROJECT\|GetBuildInfo\|16001" Libs/*/ | grep -v VirtualGameAPI` and read each hit; LibRangeCheck must carry its Forever checks (commit 2026-09-27 "Add checks for 'Forever'"), LibDualSpec its Forever support (2026-09-19). A library that returns early for build 16001 is not vendored; report it.
+- [ ] **Step 2: Note the load gates**: `grep -rln "Interface\|WOW_PROJECT\|GetBuildInfo\|16001\|Forever" Libs/*/` and read each hit. Record per library in `Libs/CREDITS.md`: declares Forever support (yes/no, with the commit or TOC line), and any early return keyed on build or project (`SpellFlashCore` returns for builds below 110000; note it). Do not drop anything.
 
-- [ ] **Step 3: `embeds.xml`**:
-```xml
-<Ui xmlns="http://www.blizzard.com/wow/ui/">
-	<Script file="Libs\LibStub\LibStub.lua"/>
-	<Include file="Libs\VirtualGameAPI-1.0\VirtualGameAPI-1.0.xml"/>
-	<Include file="Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
-	<Include file="Libs\AceAddon-3.0\AceAddon-3.0.xml"/>
-	<Include file="Libs\AceGUI-3.0\AceGUI-3.0.xml"/>
-	<Include file="Libs\AceConsole-3.0\AceConsole-3.0.xml"/>
-	<Include file="Libs\AceConfig-3.0\AceConfig-3.0.xml"/>
-	<Include file="Libs\AceSerializer-3.0\AceSerializer-3.0.xml"/>
-	<Include file="Libs\AceDB-3.0\AceDB-3.0.xml"/>
-	<Include file="Libs\AceDBOptions-3.0\AceDBOptions-3.0.xml"/>
-	<Include file="Libs\LibSharedMedia-3.0\lib.xml"/>
-	<Include file="Libs\AceGUI-3.0-SharedMediaWidgets\widget.xml"/>
-	<Include file="Libs\AceGUI-3.0_SFX-Widgets\AceGUI-3.0_SFX-Widgets.xml"/>
-	<Script file="Libs\LibRangeCheck-3.0\LibRangeCheck-3.0.lua"/>
-	<Script file="Libs\LibDeflate\LibDeflate.lua"/>
-	<Script file="Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua"/>
-	<Script file="Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua"/>
-	<Script file="Libs\LibDualSpec-1.0\LibDualSpec-1.0.lua"/>
-	<Include file="Libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml"/>
-	<Include file="UI\PopupSlider.xml"/>
-</Ui>
-```
-Check each path exists exactly (case and file name; LibRangeCheck's main file may sit in a subfolder, see `.pkgmeta` `move-folders`). AceConfig's XML must include AceConfigRegistry, AceConfigCmd and AceConfigDialog (it does upstream). AceGUI must load before AceConfig and the widget packs.
+- [ ] **Step 3: `embeds.xml`**: keep today's include list and order (with the VirtualGameAPI include second, after LibStub). Verify every `file=` path exists exactly (`for p in $(grep -oE 'file="[^"]+"' embeds.xml | sed 's/file="//; s/"//; s/\\/\//g'); do [ -f "$p" ] || echo "MISSING $p"; done`); LibRangeCheck's main file may sit in a subfolder (see `.pkgmeta` `move-folders`): move it so `Libs\LibRangeCheck-3.0\LibRangeCheck-3.0.lua` exists. AceGUI loads before AceConfig and the widget packs.
 
-- [ ] **Step 4: `Libs/CREDITS.md`**: a table: library, upstream URL, pinned tag or commit, licence, author credit. Include VirtualGameAPI-1.0 (this repository, MIT) and the note that LibDataBroker-1.1 has no licence file (tekkub, public domain by convention).
+- [ ] **Step 4: `Libs/CREDITS.md`**: a table: library, upstream URL, pinned tag or commit, licence, author credit, Forever support upstream, load gate. Include VirtualGameAPI-1.0 (this repository, MIT) and the notes that LibDataBroker-1.1 and LibSpellRange-1.0 have no licence file and that LibCompress is GPL v2.
 
-- [ ] **Step 5: Verify**: `wow_toc_validate` on `Hekili.toc` (interface 16001 accepted, no missing files), `wow_xml_validate` on `embeds.xml`, `Bindings.xml`, `UI/PopupSlider.xml` and every vendored `.xml` listed in `embeds.xml`; `grep -rn "Libs\\\\" Hekili.toc embeds.xml` paths all exist (`for p in $(grep -oE 'file="[^"]+"' embeds.xml | sed 's/file="//; s/"//; s/\\/\//g'); do [ -f "$p" ] || echo "MISSING $p"; done`). `$LUACHECK .` (Libs excluded) and `tools/check_api_reads.sh` pass.
+- [ ] **Step 5: Verify**: `wow_toc_validate` on `Hekili.toc` (interface 16001 accepted, no missing files), `wow_xml_validate` on `embeds.xml`, `Bindings.xml`, `UI/PopupSlider.xml` and every vendored `.xml` listed in `embeds.xml`; the path loop above prints nothing; `$LUACHECK .` (Libs excluded) and `tools/check_api_reads.sh` pass.
 
-- [ ] **Step 6: Commit**: `build: TOC 16001, vendored libraries pinned in Libs/CREDITS.md, dropped externals` and push. Vendored libraries are large: one commit is fine.
+- [ ] **Step 6: Commit**: `build: TOC 16001, every embedded library vendored and pinned in Libs/CREDITS.md` and push. One commit is fine.
 
 ### Task 20: LuaLS, the final sweep, Checkpoint B
 
@@ -1109,7 +1078,7 @@ Content, in this order:
 1. **Facade status table**: counts of passthrough, stub and missing (from `VGA.Stubs()` and the inventory file: `grep -c "^passthrough\|^stub"` of the library), the full stub list with the shape each returns.
 2. **Archived and removed**: per area (expansion folders, Classes, State, Constants, Events, UI, Utils, Options, libraries), lines before and after (`git show forever:FILE | wc -l` against `wc -l FILE`), with the commit hash.
 3. **Kept but flagged for Phase 3b**: the secrecy zone list, the C.5 edits, the stub call sites that would throw (pointer to the notes file plus the table copied in).
-4. **Vendored libraries**: the `Libs/CREDITS.md` table.
+4. **Vendored libraries**: the `Libs/CREDITS.md` table, and which libraries lack upstream Forever support (kept until in-game evidence says otherwise).
 5. **Open questions for Phases 1 and 3b**: per-file environment vs locals (the upvalue limit experience from Task 5), event facade, the virtual combat log timing (feasibility C.2), the GCD constant, spec identity 1491, the talent reader, whether to keep `SavedVariables: HekiliDB` or rename it, combo points and forms (unprobed), the deprecated shims that need `loadDeprecationFallbacks`.
 
 Commit `docs: forever cleanup report` and push.
