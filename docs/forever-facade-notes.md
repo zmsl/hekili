@@ -41,9 +41,6 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `C_PlayerInfo.IsPlayerInChromieTime` | present | unprobed | passthrough | — | Targets.lua |
 | `C_PlayerInfo.IsPlayerInTimerunningHeroicWorldTier` | present | unprobed | passthrough | — | Targets.lua |
 | `C_PvP.IsWarModeDesired` | present | unprobed | passthrough | — | Targets.lua |
-| `C_Soulbinds.GetActiveSoulbindID` | present | unprobed | passthrough | — | Options/Options.lua |
-| `C_Soulbinds.GetSoulbindData` | present | unprobed | passthrough | — | Options/Options.lua |
-| `C_SpecializationInfo.GetPvpTalentSlotInfo` | present | unprobed | passthrough | — | Options/DevTools.lua |
 | `C_SpecializationInfo.GetSpecialization` | present | plain [W PR15] | passthrough | — | Constants.lua, State.lua, Events.lua, Classes.lua, Options/DevTools.lua, Options/Options.lua, UI.lua |
 | `C_SpecializationInfo.GetSpecializationInfo` | present | plain [W PR15] | passthrough | — | Constants.lua, Events.lua, Classes.lua, Options/DevTools.lua, Options/Options.lua, UI.lua |
 | `C_SpecializationInfo.GetTalentInfo` | present | unprobed | passthrough | — | Events.lua |
@@ -112,7 +109,6 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `GetNumGroupMembers` | undocumented C global | unprobed | passthrough | — | Utils.lua, State.lua, Targets.lua |
 | `GetNumSubgroupMembers` | undocumented C global | unprobed | passthrough | — | Utils.lua |
 | `GetPowerRegenForPowerType` | present | secret in combat [W PR16] | stub | `0, 0` | State.lua |
-| `GetPvpTalentInfoByID` | undocumented C global | dead on Forever [W PR5] | stub | `nil` | Options/DevTools.lua |
 | `GetRangedCritChance` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua |
 | `GetRealmName` | present | unprobed | passthrough | — | Options/Options.lua |
 | `GetShapeshiftForm` | undocumented C global | plain [W §4 (stance)] | passthrough | — | State.lua |

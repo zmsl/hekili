@@ -5,7 +5,7 @@ local addon, ns = ...
 local VGA = LibStub( "VirtualGameAPI-1.0" )
 local C_ClassTalents, C_SpecializationInfo, C_Spell, C_SpellActivationOverlay = VGA.C_ClassTalents, VGA.C_SpecializationInfo, VGA.C_Spell, VGA.C_SpellActivationOverlay
 local C_SpellBook, C_Traits, C_UnitAuras = VGA.C_SpellBook, VGA.C_Traits, VGA.C_UnitAuras
-local CombatLogGetCurrentEventInfo, GetBuildInfo, GetPvpTalentInfoByID, GetSpellBaseCooldown = VGA.CombatLogGetCurrentEventInfo, VGA.GetBuildInfo, VGA.GetPvpTalentInfoByID, VGA.GetSpellBaseCooldown
+local CombatLogGetCurrentEventInfo, GetBuildInfo, GetSpellBaseCooldown = VGA.CombatLogGetCurrentEventInfo, VGA.GetBuildInfo, VGA.GetSpellBaseCooldown
 local GetTime, InCombatLockdown, IsPlayerSpell, UnitCanAttack = VGA.GetTime, VGA.InCombatLockdown, VGA.IsPlayerSpell, VGA.UnitCanAttack
 local UnitClass, UnitClassBase, UnitIsUnit, UnitPowerMax = VGA.UnitClass, VGA.UnitClassBase, VGA.UnitIsUnit, VGA.UnitPowerMax
 local UnitSpellHaste = VGA.UnitSpellHaste
@@ -180,7 +180,6 @@ function SkeletonGen:Init()
     self.auras          = {}
     self.abilities      = {}
     self.resources      = {}
-    self.pvptalents     = {}
     self.idToToken      = {}
     self._applications  = {}
     self._removals      = {}
@@ -465,7 +464,6 @@ ns.SkeletonHandler = SkeletonHandler
 function SkeletonGen:PrepareSpecData()
     wipe( self.resources )
     wipe( self.talents )
-    wipe( self.pvptalents )
     wipe( self.auras )
     wipe( self.abilities )
     wipe( self.idToToken )
@@ -764,48 +762,7 @@ function SkeletonGen:PrepareSpecData()
         end
     end
 
-    -- 3. PvP Talents
-    local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo( 1 )
-    if slotInfo then
-        for _, tID in ipairs( slotInfo.availableTalentIDs ) do
-            local _, name, _, _, _, spellID = GetPvpTalentInfoByID( tID )
-            if name and spellID then
-                local name = GetSpellInfo( spellID )
-                local token = name and formatKey( name ) or "s" .. spellID
-
-                local tooltip = self:CleanTooltip( GetSpellDescription( spellID ) )
-
-                self.idToToken[ spellID ] = token
-
-                self.pvptalents[ token ] = {
-                    talent = tID,
-                    id = spellID,
-                    tooltip = tooltip,
-                }
-
-                if not IsPassiveSpell( spellID ) then
-                    local ability = self.abilities[ token ] or {}
-                    ability.id = spellID
-                    ability.pvptalent = token
-                    self.abilities[ token ] = self:EmbedSpellData( spellID, token, ability )
-                end
-            end
-        end
-    end
-
-    -- Sort PvP Talents by name.
-    local sorted = {}
-    for k, v in pairs( self.pvptalents ) do
-        v.name = k
-        table.insert( sorted, v )
-    end
-    table.sort( sorted, function( a, b ) return a.name < b.name end )
-    self.pvptalents = {}
-    for _, v in ipairs( sorted ) do
-        self.pvptalents[ v.name ] = v
-    end
-
-    -- 4. Spellbook Abilities
+    -- 3. Spellbook Abilities
     for tab = 1, GetNumSpellTabs() do
         local _, _, offset, count = GetSpellTabInfo( tab )
         for i = 1, count do
@@ -1016,13 +973,6 @@ function SkeletonGen:Generate()
         end
     end
 
-    self:EndRegistration()
-
-    -- PvP Talents
-    self:StartRegistration( "PvP Talents", "PvpTalents" )
-    for k, v in orderedPairs( self.pvptalents ) do
-        self:Append( string.format( "%-30s = %4d, -- (%d) %s", k, v.talent or 0, v.id or 0, v.tooltip or "" ) )
-    end
     self:EndRegistration()
 
     -- Auras

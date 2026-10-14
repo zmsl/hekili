@@ -1766,7 +1766,6 @@ function scripts:LoadScripts()
         if specData then
             self.PackInfo[ pack ] = {
                 items = {},
-                essences = {},
                 auras = {},
                 hasOffGCD = false
             }
@@ -1788,16 +1787,6 @@ function Hekili:LoadScripts()
     self.Scripts:LoadScripts()
     self:UpdateUseItems()
     -- self:UpdateDisplayVisibility()
-end
-
-
-function Hekili:IsEssenceScripted( token )
-    local pack = self:GetActivePack()
-    pack = pack and self.Scripts.PackInfo[ pack ]
-
-    if not pack then return false end
-
-    return pack.essences[ token ] or false
 end
 
 
@@ -2021,10 +2010,6 @@ function Hekili:LoadScript( pack, list, id )
         if list ~= "precombat" and data.enabled then
             if ( ability.item or data.action == "trinket1" or data.action == "trinket2" or data.action == "main_hand" ) then
                 scripts.PackInfo[ pack ].items[ data.action ] = true
-            end
-
-            if ability.essence then
-                scripts.PackInfo[ pack ].essences[ data.action ] = true
             end
         end
     end

@@ -786,13 +786,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                 else
                     local entryReplaced = false
 
-                    if action == "heart_essence" and class.essence_unscripted and class.active_essence then
-                        action = class.active_essence
-                        ability = class.abilities[ action ]
-                        state.this_action = action
-                        state.this_list = listName
-                        entryReplaced = true
-                    elseif action == "trinket1" then
+                    if action == "trinket1" then
                         if state.trinket.t1.usable and state.trinket.t1.ability then -- and not Hekili:IsItemScripted( state.trinket.t1.ability, true ) then
                             action = state.trinket.t1.ability
                             ability = class.abilities[ action ]

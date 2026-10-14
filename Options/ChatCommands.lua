@@ -59,7 +59,6 @@ function Hekili:CmdLine( input )
         display     = "mode",
         target_swap = "cycle",
         swap        = "cycle",
-        covenants   = "essences",
         apl         = "pack",
         rotation    = "pack",
         lost        = "lostmyui",

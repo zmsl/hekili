@@ -168,12 +168,9 @@ passthrough( "C_SpellActivationOverlay.IsSpellOverlayed", "plain [W PR11]" )
 -- Combat log: CLEU is forbidden on Forever; the stub returns nil.
 stub( "CombatLogGetCurrentEventInfo", nothing, "absent on Forever; registering CLEU is forbidden" )
 
--- Talents, specialization and borrowed powers: plain [W PR5, PR15] or unprobed; the old talent globals are dead (nil).
+-- Talents and specialization: plain [W PR5, PR15] or unprobed; the old talent globals are dead (nil).
 passthrough( "C_ClassTalents.GetActiveConfigID", "unprobed" )
 passthrough( "C_ClassTalents.GetHeroTalentSpecsForClassSpec", "unprobed" )
-passthrough( "C_Soulbinds.GetActiveSoulbindID", "unprobed" )
-passthrough( "C_Soulbinds.GetSoulbindData", "unprobed" )
-passthrough( "C_SpecializationInfo.GetPvpTalentSlotInfo", "unprobed" )
 passthrough( "C_SpecializationInfo.GetSpecialization", "plain [W PR15]" )
 passthrough( "C_SpecializationInfo.GetSpecializationInfo", "plain [W PR15]" )
 passthrough( "C_SpecializationInfo.GetTalentInfo", "unprobed" )
@@ -187,7 +184,6 @@ passthrough( "C_Traits.GetTreeCurrencyInfo", "plain, walk identical in combat [W
 passthrough( "C_Traits.GetTreeNodes", "plain, walk identical in combat [W PR5]" )
 passthrough( "GetClassInfo", "unprobed" )
 passthrough( "GetNumClasses", "unprobed" )
-stub( "GetPvpTalentInfoByID", nothing, "dead on Forever [W PR5]" )
 passthrough( "GetSpecializationInfoByID", "unprobed" )
 stub( "GetTalentInfoByID", nothing, "dead on Forever [W PR5]" )
 

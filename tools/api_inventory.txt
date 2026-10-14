@@ -23,9 +23,6 @@ C_PetBattles.IsInBattle
 C_PlayerInfo.IsPlayerInChromieTime
 C_PlayerInfo.IsPlayerInTimerunningHeroicWorldTier
 C_PvP.IsWarModeDesired
-C_Soulbinds.GetActiveSoulbindID
-C_Soulbinds.GetSoulbindData
-C_SpecializationInfo.GetPvpTalentSlotInfo
 C_SpecializationInfo.GetSpecialization
 C_SpecializationInfo.GetSpecializationInfo
 C_SpecializationInfo.GetTalentInfo
@@ -94,7 +91,6 @@ GetNumClasses
 GetNumGroupMembers
 GetNumSubgroupMembers
 GetPowerRegenForPowerType
-GetPvpTalentInfoByID
 GetRangedCritChance
 GetRealmName
 GetShapeshiftForm

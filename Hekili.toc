@@ -5,7 +5,7 @@
 ## IconTexture: Interface\AddOns\Hekili\Textures\LOGO-ORANGE.blp
 ## Notes: Priority helper based on SimulationCraft action lists.
 ## SavedVariables: HekiliDB
-## OptionalDeps: AddOnSkins, ButtonForge, ConsolePort, ElvUI, LibDualSpec-1.0, Masque, WeakAuras
+## OptionalDeps: ConsolePort, ElvUI, LibDualSpec-1.0, Masque, WeakAuras
 
 embeds.xml
 

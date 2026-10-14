@@ -3,7 +3,7 @@
 
 local addon, ns = ...
 local VGA = LibStub( "VirtualGameAPI-1.0" )
-local C_ClassColor, C_Soulbinds, C_SpecializationInfo, C_Spell = VGA.C_ClassColor, VGA.C_Soulbinds, VGA.C_SpecializationInfo, VGA.C_Spell
+local C_ClassColor, C_SpecializationInfo, C_Spell = VGA.C_ClassColor, VGA.C_SpecializationInfo, VGA.C_Spell
 local GetBindingKey, GetCVar, GetFramerate, GetRealmName = VGA.GetBindingKey, VGA.GetCVar, VGA.GetFramerate, VGA.GetRealmName
 local GetSpecializationInfoByID, InCombatLockdown, UnitClass, UnitEffectiveLevel = VGA.GetSpecializationInfoByID, VGA.InCombatLockdown, VGA.UnitClass, VGA.UnitEffectiveLevel
 local UnitLevel, UnitName = VGA.UnitLevel, VGA.UnitName
@@ -46,89 +46,7 @@ local GetSpecialization = C_SpecializationInfo.GetSpecialization
 local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 
 -- One Time Fixes
-local oneTimeFixes = {
-    resetAberrantPackageDates_20190728_1 = function( p )
-        for _, v in pairs( p.packs ) do
-            if type( v.date ) == 'string' then v.date = tonumber( v.date ) or 0 end
-            if type( v.version ) == 'string' then v.date = tonumber( v.date ) or 0 end
-            if v.date then while( v.date > 21000000 ) do v.date = v.date / 10 end end
-            if v.version then while( v.version > 21000000 ) do v.version = v.version / 10 end end
-        end
-    end,
-
-    forceEnableAllClassesOnceDueToBug_20220225 = function( p )
-        for id, spec in pairs( p.specs ) do
-            spec.enabled = true
-        end
-    end,
-
-    forceReloadAllDefaultPriorities_20220228 = function( p )
-        for name, pack in pairs( p.packs ) do
-            if pack.builtIn then
-                Hekili.DB.profile.packs[ name ] = nil
-                Hekili:RestoreDefault( name )
-            end
-        end
-    end,
-
-    forceReloadClassDefaultOptions_20220306 = function( p )
-        local sendMsg = false
-        for spec, data in pairs( class.specs ) do
-            if spec > 0 and not p.runOnce[ 'forceReloadClassDefaultOptions_20220306_' .. spec ] then
-                local cfg = p.specs[ spec ]
-                for k, v in pairs( data.options ) do
-                    if cfg[ k ] == ns.specTemplate[ k ] and cfg[ k ] ~= v then
-                        cfg[ k ] = v
-                        sendMsg = true
-                    end
-                end
-                p.runOnce[ 'forceReloadClassDefaultOptions_20220306_' .. spec ] = true
-            end
-        end
-        if sendMsg then
-            C_Timer.After( 5, function()
-                if Hekili.DB.profile.notifications.enabled then Hekili:Notify( "Some specialization options were reset.", 6 ) end
-                Hekili:Print( "Some specialization options were reset to default; this can occur once per profile/specialization." )
-            end )
-        end
-        p.runOnce.forceReloadClassDefaultOptions_20220306 = nil
-    end,
-
-    forceDeleteBrokenMultiDisplay_20220319 = function( p )
-        if rawget( p.displays, "Multi" ) then
-            p.displays.Multi = nil
-        end
-
-        p.runOnce.forceDeleteBrokenMultiDisplay_20220319 = nil
-    end,
-
-    forceSpellFlashBrightness_20221030 = function( p )
-        for display, data in pairs( p.displays ) do
-            if data.flash and data.flash.brightness and data.flash.brightness > 100 then
-                data.flash.brightness = 100
-            end
-        end
-    end,
-
-    fixHavocPriorityVersion_20240805 = function( p )
-        local havoc = p.packs[ "Havoc" ]
-        if havoc and ( havoc.date == 20270727 or havoc.version == 20270727 ) then
-            havoc.date = 20240727
-            havoc.version = 20240727
-        end
-    end,
-
-    removeOldThrottles_20241115 = function( p )
-        for id, spec in pairs( p.specs ) do
-            spec.throttleRefresh = nil
-            spec.combatRefresh   = nil
-            spec.regularRefresh  = nil
-
-            spec.throttleTime    = nil
-            spec.maxTime         = nil
-        end
-    end,
-}
+local oneTimeFixes = {}
 function Hekili:RunOneTimeFixes()
     local profile = Hekili.DB.profile
     if not profile then return end
@@ -361,7 +279,6 @@ local displayTemplate = {
 }
 
 local actionTemplate = {
-    action = "heart_essence",
     enabled = true,
     criteria = "",
     caption = "",
@@ -428,13 +345,13 @@ local packTemplate = {
         precombat = {
             {
                 enabled = false,
-                action = "heart_essence",
+                action = "wait",
             },
         },
         default = {
             {
                 enabled = false,
-                action = "heart_essence",
+                action = "wait",
             },
         },
     }
@@ -3719,8 +3636,8 @@ do
             end
         end
 
-        if lists.precombat:len() == 0 then lists.precombat = "actions+=/heart_essence,enabled=0" end
-        if lists.default  :len() == 0 then lists.default   = "actions+=/heart_essence,enabled=0" end
+        if lists.precombat:len() == 0 then lists.precombat = "actions+=/wait,enabled=0" end
+        if lists.default  :len() == 0 then lists.default   = "actions+=/wait,enabled=0" end
 
         local count = 0
         local output = {}
@@ -4036,7 +3953,7 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
                     table.wipe( toggles )
 
                     local t = class.abilities[ v ].toggle or "none"
-                    if t == "essences" then t = "covenants" end
+                    if t == "essences" then t = "Minor CDs" end
 
                     toggles.none = "None"
                     toggles.default = "Default |cffffd100(" .. t .. ")|r"
@@ -4171,7 +4088,7 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
                             table.wipe( toggles )
 
                             local t = class.abilities[ v ].toggle or "none"
-                            if t == "essences" then t = "covenants" end
+                            if t == "essences" then t = "Minor CDs" end
 
                             toggles.none = "None"
                             toggles.default = "Default |cffffd100(" .. t .. ")|r"
@@ -4521,17 +4438,6 @@ found = true end
                 set = "SetItemOption",
                 get = "GetItemOption",
                 args = {
-                    multiItem = {
-                        type = "description",
-                        name = function ()
-                            return "These settings will apply to |cFF00FF00ALL|r of the " .. ability.name .. " PvP trinkets."
-                        end,
-                        fontSize = "medium",
-                        width = "full",
-                        order = 1,
-                        hidden = function () return ability.key ~= "gladiators_badge" and ability.key ~= "gladiators_emblem" and ability.key ~= "gladiators_medallion" end,
-                    },
-
                     disabled = {
                         type = "toggle",
                         name = function () return "Disable " .. ( ability.item and ability.link or k ) end,
@@ -8266,43 +8172,6 @@ function Hekili:GenerateProfile()
         end
     end
 
-    local pvptalents
-    for k,v in orderedPairs( s.pvptalent ) do
-        if v.enabled then
-            if pvptalents then pvptalents = format( "%s\n   %s", pvptalents, k )
-            else pvptalents = k end
-        end
-    end
-
-    local covenants = { "kyrian", "necrolord", "night_fae", "venthyr" }
-    local covenant = "none"
-    for i, v in ipairs( covenants ) do
-        if state.covenant[ v ] then covenant = v
-break end
-    end
-
-    local conduits
-    for k,v in orderedPairs( s.conduit ) do
-        if v.enabled then
-            if conduits then conduits = format( "%s\n   %s = %d", conduits, k, v.rank )
-            else conduits = format( "%s = %d", k, v.rank ) end
-        end
-    end
-
-    local soulbinds
-
-    local activeBind = C_Soulbinds.GetActiveSoulbindID()
-    if activeBind then
-        soulbinds = "[" .. formatKey( C_Soulbinds.GetSoulbindData( activeBind ).name ) .. "]"
-    end
-
-    for k,v in orderedPairs( s.soulbind ) do
-        if v.enabled then
-            if soulbinds then soulbinds = format( "%s\n   %s = %d", soulbinds, k, v.rank )
-            else soulbinds = format( "%s = %d", k, v.rank ) end
-        end
-    end
-
     local sets
     for k, v in orderedPairs( class.gear ) do
         if s.set_bonus[ k ] > 0 then
@@ -8321,14 +8190,6 @@ break end
                 if items then items = format( "%s, %d", items, k )
                 else items = tostring(k) end
             end
-        end
-    end
-
-    local legendaries
-    for k, v in orderedPairs( state.legendary ) do
-        if k ~= "no_trait" and v.rank > 0 then
-            if legendaries then legendaries = format( "%s\n    %s = %d", legendaries, k, v.rank )
-            else legendaries = format( "%s = %d", k, v.rank ) end
         end
     end
 
@@ -8395,15 +8256,7 @@ break end
     "spec: %s\n\n" ..
 
     "### Talents ###\n\n" ..
-    "In-Game Import: %s\n" ..
-
-    "\nPvP Talents: %s\n\n" ..
-
-    "### Legacy Content ###\n\n" ..
-    "covenant: %s\n" ..
-    "conduits: %s\n" ..
-    "soulbinds: %s\n" ..
-    "legendaries: %s\n\n" ..
+    "In-Game Import: %s\n\n" ..
 
     "### Gear & Items ###\n\n" ..
     "sets:\n    %s\n\n" ..
@@ -8423,11 +8276,6 @@ break end
     class.file or "NONE",
     spec or "none",
     talents or "none",
-    pvptalents or "none",
-    covenant or "none",
-    conduits or "none",
-    soulbinds or "none",
-    legendaries or "none",
     sets or "none",
     gear or "none",
     items or "none",
@@ -8533,16 +8381,6 @@ do
                         desc = "Find updates on Curseforge.",
                         order = 11,
                         get = function () return "https://www.curseforge.com/wow/addons/hekili" end,
-                        set = function () end,
-                        width = "full",
-                        dialogControl = "SFX-Info-URL",
-                    },
-                    wago = {
-                        type = "input",
-                        name = "Wago",
-                        desc = "Find updates on Wago.",
-                        order = 12,
-                        get = function () return "https://addons.wago.io/addons/hekili" end,
                         set = function () end,
                         width = "full",
                         dialogControl = "SFX-Info-URL",
@@ -9422,17 +9260,11 @@ do
         { "hyperthread_wristwraps%.([%w_]+)%.first_remains" , "hyperthread_wristwraps.first_remains.%1" },
         { "hyperthread_wristwraps%.([%w_]+)%.count"         , "hyperthread_wristwraps.%1"               },
         { "cooldown"                                        , "action_cooldown"                         },
-        { "covenant%.([%w_]+)%.enabled"                     , "covenant.%1"                             },
         { "talent%.([%w_]+)"                                , "talent.%1.enabled",                      true },
-        { "legendary%.([%w_]+)"                             , "legendary.%1.enabled"                    },
-        { "runeforge%.([%w_]+)"                             , "runeforge.%1.enabled"                    },
         { "rune_word%.([%w_]+)"                             , "buff.rune_word_%1.up"                    },
         { "rune_word%.([%w_]+)%.enabled"                    , "buff.rune_word_%1.up"                    },
-        { "conduit%.([%w_]+)"                               , "conduit.%1.enabled"                      },
-        { "soulbind%.([%w_]+)"                              , "soulbind.%1.enabled"                     },
         { "soul_shard%.deficit"                             , "soul_shard_deficit"                      },
         { "pet.[%w_]+%.([%w_]+)%.([%w%._]+)"                , "%1.%2"                                   },
-        { "essence%.([%w_]+).rank(%d)"                      , "essence.%1.rank>=%2"                     },
         { "target%.1%.time_to_die"                          , "time_to_die"                             },
         { "time_to_pct_(%d+)%.remains"                      , "time_to_pct_%1"                          },
         { "trinket%.(%d)%.([%w%._]+)"                       , "trinket.t%1.%2"                          },
@@ -9875,7 +9707,7 @@ do
             local toggle = Hekili.DB.profile.toggles[ k ]
             if k == "custom1" or k == "custom2" then
                 name = toggle and toggle.name or name
-            elseif k == "essences" or k == "covenants" then
+            elseif k == "essences" then
                 name = "Minor Cooldowns"
                 t[ k ] = name
             elseif k == "cooldowns" then
