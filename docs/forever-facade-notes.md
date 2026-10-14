@@ -56,7 +56,6 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `C_Spell.GetSpellPowerCost` | present | plain [W §4] | passthrough | — | Options/DevTools.lua |
 | `C_Spell.GetSpellTexture` | present | unprobed | passthrough | — | State.lua, Classes.lua, UI.lua |
 | `C_Spell.IsCurrentSpell` | present | plain [W PR1] | passthrough | — | UI.lua |
-| `C_Spell.IsPressHoldReleaseSpell` | present | unprobed | passthrough | — | Options/DevTools.lua |
 | `C_Spell.IsSpellDataCached` | present | unprobed | passthrough | — | Events.lua |
 | `C_Spell.IsSpellHarmful` | present | unprobed | passthrough | — | Options/DevTools.lua |
 | `C_Spell.IsSpellHelpful` | present | unprobed | passthrough | — | Options/DevTools.lua |
@@ -127,8 +126,6 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `GetTalentInfoByID` | absent | dead on Forever [W PR5] | stub | `nil` | Events.lua |
 | `GetTime` | present | plain [W] | passthrough | — | Hekili.lua, Utils.lua, State.lua, Events.lua, Classes.lua, Targets.lua, Options/DevTools.lua, UI.lua, Core.lua |
 | `GetTotemInfo` | present | secret in combat [W PR12] | stub | `false, "", 0, 0, 0` | State.lua |
-| `GetUnitEmpowerHoldAtMaxTime` | present | flagged secret with casts; unprobed | stub | `0` | Events.lua |
-| `GetUnitEmpowerStageDuration` | present | flagged secret with casts; unprobed | stub | `0` | Events.lua |
 | `GetUnitSpeed` | present | secret in combat [W PR14] | stub | `0, 0, 0, 0` | State.lua, Targets.lua |
 | `HasOverrideActionBar` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | UI.lua |
 | `HasVehicleActionBar` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | UI.lua |
@@ -143,7 +140,6 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `IsMounted` | present | unprobed | passthrough | — | State.lua, UI.lua |
 | `IsPassiveSpell` | absent | n/a | stub | `false` | Options/DevTools.lua |
 | `IsPlayerSpell` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | State.lua, Events.lua, Options/DevTools.lua |
-| `IsPressHoldReleaseSpell` | absent | n/a | stub | `false` | Options/DevTools.lua |
 | `IsResting` | present | unprobed | passthrough | — | Events.lua |
 | `IsSpellKnown` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | State.lua |
 | `IsSpellKnownOrOverridesKnown` | deprecation shim (`loadDeprecationFallbacks`) | unprobed | passthrough | — | State.lua |
@@ -225,7 +221,6 @@ Every stub site in the retained files that throws or yields a wrong value. Sites
 
 | Stub | Call site | Effect |
 |---|---|---|
-| `GetUnitEmpowerStageDuration` -> 0 | `Events.lua` 1279-1288, empower-start handler: the stage loop breaks at `i == 1`, so `stages` is empty and `empowerment.finish = stages[ #stages ]` is nil | **throws**: `empowerment.finish + GetUnitEmpowerHoldAtMaxTime( "player" ) * 0.001` is arithmetic on nil (only for an ability Hekili models as empowered) |
 | `CombatLogGetCurrentEventInfo` -> nil | `Events.lua` 2027 `CLEU_HANDLER( event, CombatLogGetCurrentEventInfo() )` | **throws** in combat if the event ever fires: every argument is nil, the out-of-combat early return (1754) is skipped, and `bit.band( destFlags, ... )` (1771) gets nil. Registering CLEU itself is forbidden on Forever; removing or diverting the registration is the real fix |
 | `CombatLogGetCurrentEventInfo` -> nil | `Options/DevTools.lua` 460 `SkeletonCLEU( CombatLogGetCurrentEventInfo() )` | safe: `sourceName` nil returns at 341 |
 | `GetTalentInfoByID` -> nil | `Events.lua` 435-439, `ns.updateTalents`: `name` nil falls back to `IsPlayerSpell( v )` where `v` is a `RegisterTalents` entry (a table) | probably **throws** (`IsPlayerSpell` given a table); unverified on the client. Either way talents come out wrong until the `C_Traits` walk replaces this loop |

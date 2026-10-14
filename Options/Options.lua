@@ -284,23 +284,6 @@ local displayTemplate = {
         color = { 1, 1, 1, 1 },
     },
 
-    empowerment = {
-        enabled = true,
-        queued = true,
-        glow = true,
-
-        align = "CENTER",
-        anchor = "BOTTOM",
-        x = 0,
-        y = 1,
-
-        font = ElvUI and 'PT Sans Narrow' or 'Arial Narrow',
-        fontSize = 16,
-        fontStyle = "THICKOUTLINE",
-
-        color = { 1, 0.8196079, 0, 1 },
-    },
-
     indicators = {
         enabled = true,
         queued = true,
@@ -2601,106 +2584,6 @@ return "Position" end,
                                 type = "group",
                                 inline = true,
                                 name = function( info ) rangeIcon( info ); return "Position" end,
-                                order = 3,
-                                args = {
-                                    anchor = {
-                                        type = "select",
-                                        name = 'Anchor Point',
-                                        order = 1,
-                                        width = 1,
-                                        values = {
-                                            TOP = 'Top',
-                                            BOTTOM = 'Bottom',
-                                        }
-                                    },
-
-                                    x = {
-                                        type = "range",
-                                        name = "X Offset",
-                                        order = 2,
-                                        width = 0.99,
-                                        step = 1,
-                                    },
-
-                                    y = {
-                                        type = "range",
-                                        name = "Y Offset",
-                                        order = 3,
-                                        width = 0.99,
-                                        step = 1,
-                                    },
-
-                                    break01 = {
-                                        type = "description",
-                                        name = " ",
-                                        order = 3.1,
-                                        width = "full",
-                                    },
-
-                                    align = {
-                                        type = "select",
-                                        name = "Alignment",
-                                        order = 4,
-                                        width = 1.49,
-                                        values = {
-                                            LEFT = "Left",
-                                            RIGHT = "Right",
-                                            CENTER = "Center"
-                                        },
-                                    },
-                                }
-                            },
-
-                            textStyle = {
-                                type = "group",
-                                inline = true,
-                                name = "Text",
-                                order = 4,
-                                args = tableCopy( fontElements ),
-                            },
-                        }
-                    },
-
-                    empowerment = {
-                        type = "group",
-                        name =  "Empowerment",
-                        desc = "Empowerment stages are shown with additional text placed on the recommendation icon and can glow upon reaching the desired stage.",
-                        order = 9.1,
-                        hidden = function()
-                            local spec = class.specs[ state.spec.id ]
-                            return not spec or not spec.can_empower
-                        end,
-                        args = {
-                            enabled = {
-                                type = "toggle",
-                                name = "Enabled",
-                                desc = "If enabled, when the first ability shown is an empowered spell, the empowerment stage of the spell will be shown.",
-                                order = 1,
-                                width = 1.49,
-                            },
-
-                            queued = {
-                                type = "toggle",
-                                name = "Enabled for Queued Icons",
-                                desc = "If enabled, empowerment stage text will be shown for queued empowered abilities.",
-                                order = 2,
-                                width = 1.49,
-                                disabled = function () return data.empowerment.enabled == false end,
-                            },
-
-                            glow = {
-                                type = "toggle",
-                                name = "Glow when Empowered",
-                                desc = "If enabled, the ability will glow upon reaching the desired empowerment stage.",
-                                order = 2.5,
-                                width = "full",
-                            },
-
-                            position = {
-                                type = "group",
-                                inline = true,
-                                name = function( info ) rangeIcon( info )
-return "Text Position" end,
                                 order = 3,
                                 args = {
                                     anchor = {
@@ -6489,14 +6372,6 @@ break end
                                                     color = warning and "|cFFFF0000" or "|cFFFFD100"
                                                 end
 
-                                                if entry.empower_to then
-                                                    if entry.empower_to == "max_empower" then
-                                                        action = action .. "(Max)"
-                                                    else
-                                                        action = action .. " (" .. entry.empower_to .. ")"
-                                                    end
-                                                end
-
                                                 if desc then
                                                     v[ key ] = color .. i .. ".|r " .. action .. " - " .. "|cFFFFD100" .. desc .. "|r"
                                                 else
@@ -6763,27 +6638,6 @@ packControl.actionID = format( "%04d", id ) end
                                     hidden = function ()
                                         local e = GetListEntry( pack )
                                         return e.action ~= "ferocious_bite"
-                                    end,
-                                },
-
-                                empower_to = {
-                                    type = "select",
-                                    name = "Empower To",
-                                    order = 3.2,
-                                    width = 1.5,
-                                    desc = "For Empowered spells, specify the empowerment level for this usage (default is max).",
-                                    values = {
-                                        [1] = "I",
-                                        [2] = "II",
-                                        [3] = "III",
-                                        [4] = "IV",
-                                        max_empower = "Max"
-                                    },
-                                    hidden = function ()
-                                        local e = GetListEntry( pack )
-                                        local action = e.action
-                                        local ability = action and class.abilities[ action ]
-                                        return not ( ability and ability.empowered )
                                     end,
                                 },
 
@@ -9867,8 +9721,6 @@ do
 
             if result.target_if then result.target_if = result.target_if:gsub( "min:", "" ):gsub( "max:", "" ) end
 
-            -- As of 11/11/2022 (11/11/2022 in Europe), empower_to is purely a number 1-4.
-            if result.empower_to and ( result.empower_to == "max" or result.empower_to == "maximum" ) then result.empower_to = "max_empower" end
             if result.for_next then result.for_next = tonumber( result.for_next ) end
             if result.cycle_targets then result.cycle_targets = tonumber( result.cycle_targets ) end
             if result.max_energy then result.max_energy = tonumber( result.max_energy ) end

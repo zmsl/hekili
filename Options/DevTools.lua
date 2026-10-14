@@ -29,7 +29,6 @@ local AtlasToString, GetAtlasFile, GetAtlasCoords = ns.AtlasToString, ns.GetAtla
 local IsPassiveSpell = C_Spell.IsSpellPassive or VGA.IsPassiveSpell
 local IsHarmfulSpell = C_Spell.IsSpellHarmful or VGA.IsHarmfulSpell
 local IsHelpfulSpell = C_Spell.IsSpellHelpful or VGA.IsHelpfulSpell
-local IsPressHoldReleaseSpell = C_Spell.IsPressHoldReleaseSpell or VGA.IsPressHoldReleaseSpell
 local GetSpellBookItemInfo = function( index, bookType )
     local spellBank = ( bookType == "spell" or bookType == Enum.SpellBookItemType.Spell ) and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet
     local info = C_SpellBook.GetSpellBookItemInfo(index, spellBank)
@@ -889,14 +888,11 @@ function SkeletonGen:EmbedSpellData( spellID, token, ability )
         cooldown = recharge
     end
 
-    local empowered = IsPressHoldReleaseSpell and IsPressHoldReleaseSpell( spellID )
-
     ability.desc = GetSpellDescription( spellID ):gsub( "\r", " " ):gsub( "\n", " " ):gsub( "%s%s+", " " )
     ability.spend = cost
     ability.spendType = resource
     ability.spendPerSec = spendPerSec
     ability.cast = castTime
-    ability.empowered = empowered
     ability.gcd = gcd or "spell"
     ability.icd = icd
     ability.texture = texture
@@ -1099,11 +1095,7 @@ function SkeletonGen:Generate()
 
         self:AppendField( "id", ability.id )
 
-        if ability.empowered then
-            self:Append( "cast = empowered_cast_time," )
-            self:AppendField( "empowered", true )
-            self:AppendField( "empowerment_default", 1)
-        elseif ability.cast and ability.cast > 0 then
+        if ability.cast and ability.cast > 0 then
             self:AppendField( "cast", ability.cast )
         end
 

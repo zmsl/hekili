@@ -111,16 +111,8 @@ state.buff = {}
 state.consumable = {}
 state.cooldown = {}
 
-state.empowerment = {
-    id = 0,
-    active = false,
-    spell = "none",
-    start = 0,
-    finish = 0,
-    hold = 0,
-    stages = {}
-}
-state.max_empower = 3
+-- Read only behind a never-true ability.empowered guard in UI.lua RefreshCooldowns (protected body).
+state.empowerment = { start = 0 }
 
 state.health = {
     current = 1,

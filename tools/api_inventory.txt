@@ -38,7 +38,6 @@ C_Spell.GetSpellLossOfControlCooldown
 C_Spell.GetSpellPowerCost
 C_Spell.GetSpellTexture
 C_Spell.IsCurrentSpell
-C_Spell.IsPressHoldReleaseSpell
 C_Spell.IsSpellDataCached
 C_Spell.IsSpellHarmful
 C_Spell.IsSpellHelpful
@@ -109,8 +108,6 @@ GetStablePetInfo
 GetTalentInfoByID
 GetTime
 GetTotemInfo
-GetUnitEmpowerHoldAtMaxTime
-GetUnitEmpowerStageDuration
 GetUnitSpeed
 HasOverrideActionBar
 HasVehicleActionBar
@@ -125,7 +122,6 @@ IsInRaid
 IsMounted
 IsPassiveSpell
 IsPlayerSpell
-IsPressHoldReleaseSpell
 IsResting
 IsSpellKnown
 IsSpellKnownOrOverridesKnown

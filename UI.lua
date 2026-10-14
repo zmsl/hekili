@@ -1104,14 +1104,6 @@ do
         end
 
 
-        local RomanNumerals = {
-            "I",
-            "II",
-            "III",
-            "IV"
-        }
-
-
         function d:OnUpdate( elapsed )
             if not self.Recommendations or not Hekili.PLAYER_ENTERING_WORLD or self:IsThreadLocked() then
                 return
@@ -1224,12 +1216,6 @@ do
                             end
 
 
-                            if ability.empowered then
-                                b.EmpowerLevel:SetText( RomanNumerals[ b.Recommendation.empower_to or ability.empowerment_default or state.max_empower ] )
-                            else
-                                b.EmpowerLevel:SetText( nil )
-                            end
-
                             if conf.indicators.enabled and indicator then
                                 if indicator == "cycle" then
                                     b.Icon:SetTexture("Interface\\Addons\\Hekili\\Textures\\Cycle")
@@ -1242,7 +1228,7 @@ do
                                 b.Icon:Hide()
                             end
 
-                            if ( caption and conf.captions.enabled or ability.caption and not ability.empowered ) and ( i == 1 or conf.captions.queued ) then
+                            if ( caption and conf.captions.enabled or ability.caption ) and ( i == 1 or conf.captions.queued ) then
                                 b.Caption:SetText( caption )
                             else
                                 b.Caption:SetText(nil)
@@ -2626,14 +2612,6 @@ do
         -- Cooldown Wheel
         if not b.Cooldown then
             b.Cooldown = CreateFrame( "Cooldown", bName .. "_Cooldown", b, "CooldownFrameTemplate" )
-            if id == 1 then b.Cooldown:HookScript( "OnCooldownDone", function( self )
-                    if b.Ability and b.Ability.empowered and conf.empowerment.glow and state.empowerment.spell == b.Ability.key then
-                        b.Empowerment:Show()
-                    else
-                        b.Empowerment:Hide()
-                    end
-                end )
-            end
         end
         b.Cooldown:ClearAllPoints()
         b.Cooldown:SetAllPoints( b )
@@ -2784,16 +2762,6 @@ do
             b.DelayIcon:SetPoint( delayAnchor, b, delayAnchor, conf.delays.x or 0, conf.delays.y or 0 )
             b.DelayIcon:Hide()
 
-            -- Empowerment
-            b.Empowerment = b.Empowerment or b:CreateTexture( bName .. "_Empower", "OVERLAY" )
-            b.Empowerment:SetAtlas( "bags-glow-artifact" )
-            b.Empowerment:SetVertexColor( 1, 1, 1, 1 )
-
-            b.Empowerment:ClearAllPoints()
-            b.Empowerment:SetPoint( "TOPLEFT", b, "TOPLEFT", -1, 1 )
-            b.Empowerment:SetPoint( "BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, -1 )
-            b.Empowerment:Hide()
-
             -- Overlay (for Pause)
             b.Overlay = b.Overlay or b:CreateTexture( nil, "OVERLAY" )
             b.Overlay:SetAllPoints( b )
@@ -2840,28 +2808,6 @@ do
             end
         end
 
-
-        -- Caption Text.
-        b.EmpowerLevel = b.EmpowerLevel or b:CreateFontString( bName .. "_EmpowerLevel", "OVERLAY" )
-
-        local empowerFont = conf.empowerment.font or conf.font
-        b.EmpowerLevel:SetFont( LSM:Fetch("font", empowerFont), conf.empowerment.fontSize or 12, conf.empowerment.fontStyle or "OUTLINE" )
-
-        local empAnchor = conf.empowerment.anchor or "CENTER"
-        b.EmpowerLevel:ClearAllPoints()
-        b.EmpowerLevel:SetPoint( empAnchor, b, empAnchor, conf.empowerment.x or 0, conf.empowerment.y or 0 )
-        -- b.EmpowerLevel:SetHeight( b:GetHeight() * 0.6 )
-        b.EmpowerLevel:SetJustifyV( empAnchor:match("RIGHT") and "RIGHT" or ( empAnchor:match( "LEFT" ) and "LEFT" or "MIDDLE" ) )
-        b.EmpowerLevel:SetJustifyH( conf.empowerment.align or "CENTER" )
-        b.EmpowerLevel:SetTextColor( unpack( conf.empowerment.color ) )
-        b.EmpowerLevel:SetWordWrap( false )
-
-        local empText = b.EmpowerLevel:GetText()
-        b.EmpowerLevel:SetText( nil )
-        b.EmpowerLevel:SetText( empText )
-
-        if conf.empowerment.enabled then b.EmpowerLevel:Show()
-        else b.EmpowerLevel:Hide() end
 
         -- Mover Stuff.
         b:SetScript( "OnMouseDown", Button_OnMouseDown )

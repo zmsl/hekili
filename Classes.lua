@@ -1030,10 +1030,6 @@ local HekiliSpecMixin = {
             self.dual_cast[ a.key ] = true
         end
 
-        if a.empowered or a.funcs.empowered then
-            self.can_empower = true
-        end
-
         if a.auras then
             self:RegisterAuras( a.auras )
         end
@@ -1641,44 +1637,10 @@ all:RegisterAuras( {
         dot = "buff"
     },
 
-    empowering = {
-        name = "Empowering",
-        duration = 3600,
-        generate = function( t )
-            local e = state.empowerment
-            local ability = class.abilities[ e.spell ]
-            local spell = ability and ability.key or e.spell
-
-            t.name = ability and ability.name or "Empowering"
-            t.count = e.start > 0 and 1 or 0
-            t.expires = e.hold
-            t.applied = e.start - 0.1
-            t.duration = e.hold - t.applied
-            t.v1 = ability and ability.id or 0
-            t.v2 = 0
-            t.v3 = 0
-            t.spell = spell
-            t.caster = "player"
-
-            if t.remains > 0 then
-                local timeDiff = state.now - e.start - 0.1
-                if Hekili.ActiveDebug then
-                    Hekili:Debug( "Empowerment spell: %s[%.2f], unit: %s; rewinding %.2f...", t.name, t.remains, t.caster, timeDiff )
-                end
-                state.now = state.now - timeDiff
-            end
-        end,
-    },
-
     casting = {
         name = "Casting",
         generate = function( t, auraType )
             local unit = auraType == "debuff" and "target" or "player"
-
-            if unit == "player" and state.buff.empowering.up then
-                removeBuff( "casting" )
-                return
-            end
 
             if unit == "player" or UnitCanAttack( "player", unit ) then
                 local spell, _, _, startCast, endCast, _, _, notInterruptible, spellID = UnitCastingInfo( unit )

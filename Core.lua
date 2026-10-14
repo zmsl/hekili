@@ -1372,8 +1372,6 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                         state.selection_time = state.delay
                                                         state.selected_action = rAction
 
-                                                        slot.empower_to = ability.empowered and ( state.args.empower_to or ability.empowerment_default or state.max_empower ) or nil
-
                                                         if debug then
                                                             -- scripts:ImplantDebugData( slot )
                                                             self:Debug( "Action chosen:  %s at %.2f!", rAction, state.delay )
@@ -1955,52 +1953,6 @@ function Hekili.Update()
 
                 state.delay = wait
 
-                if not action then
-                    state.delay = 0
-
-                    if state.buff.empowering.up and not state:IsFiltered( state.buff.empowering.spell ) then
-                        state.delay = 0
-                        action = state.buff.empowering.spell
-
-                        local ability = class.abilities[ action ]
-                        wait = ability.cast or 0
-
-                        slot.scriptType = "simc"
-                        slot.script = nil
-                        slot.hook = nil
-
-                        slot.display = state.display
-                        slot.pack = "Fallthrough"
-                        slot.list = "Fallthrough"
-                        slot.listName = "Empowerment"
-                        slot.action = 1
-                        slot.actionName = ability.key
-                        slot.actionID = ability.id
-
-                        slot.caption = nil
-                        slot.texture = ability.texture
-                        slot.indicator = ability.indicator
-
-                        slot.wait = 0
-                        slot.waitSec = nil
-
-                        slot.resource = state.GetResourceType( action )
-
-                        slot.empower_to = ability.empowerment_default or state.max_empower
-
-                        slot.hook = nil
-                        slot.script = nil
-
-                        if debug then
-                            -- scripts:ImplantDebugData( slot )
-                            Hekili:Debug( "Fallthrough Empowerment:  %s at %.2f!", action, state.delay )
-                            Hekili:Debug( "Texture shown:  %s", slot.texture or "NOT SET" )
-                        end
-                    else
-                        state.delay = wait
-                    end
-                end
-
                 if debug then
                     Hekili:Debug( "Recommendation #%d is %s at %.2fs (%.2fs).", i, action or "NO ACTION", wait or state.delayMax, state.offset + state.delay )
                 end
@@ -2194,7 +2146,7 @@ function Hekili.Update()
                     end
                 end
 
-                WeakAuras.ScanEvents( "HEKILI_RECOMMENDATION_UPDATE", dispName, Queue[ 1 ].actionID, Queue[ 1 ].indicator, Queue[ 1 ].empower_to, UI.EventPayload )
+                WeakAuras.ScanEvents( "HEKILI_RECOMMENDATION_UPDATE", dispName, Queue[ 1 ].actionID, Queue[ 1 ].indicator, nil, UI.EventPayload ) -- nil holds a retired argument slot
             end
 
             if debug then
@@ -2254,7 +2206,7 @@ function Hekili_GetRecommendedAbility( display, entry )
 
     local payload = Hekili.DisplayPool[ display ].EventPayload
 
-    return slot.actionID, slot.empower_to, payload and payload[ entry ]
+    return slot.actionID, nil, payload and payload[ entry ] -- nil holds a retired return slot
 end
 
 local usedCPU = {}

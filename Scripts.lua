@@ -1313,7 +1313,6 @@ local newModifiers = {
     -- Not necessarily a number, but not baby-proofed.
     cycle_targets = 'raw',
     default = 'raw',
-    empower_to = 'raw',
     for_next = 'raw',
     extra_amount = 'raw',
     line_cd = 'raw',
@@ -1338,7 +1337,6 @@ local valueModifiers = {
     value_else = true,
     line_cd = true,
     max_cycle_targets = true,
-    empower_to = true,
     strict_if = true
 }
 
@@ -1549,12 +1547,8 @@ local function ConvertScript( node, hasModifiers, header )
                     emulated = SimToLua( scripts:EmulateSyntax( node[ m ] ) )
 
                 elseif value == 'raw' then
-                    if m == "empower_to" and ( o == "max" or o == "maximum" ) then
-                        emulated = SimToLua( scripts:EmulateSyntax( "max_empower", true ) )
-                    else
-                        emulated = node[ m ] ~= "" and node[ m ]
-                        emulated = SimToLua( scripts:EmulateSyntax( emulated, true ) )
-                    end
+                    emulated = node[ m ] ~= "" and node[ m ]
+                    emulated = SimToLua( scripts:EmulateSyntax( emulated, true ) )
 
                     --[[ if modChecks then modChecks = modChecks .. " | " .. node[ m ]
                     else modChecks = node[ m ] end ]]

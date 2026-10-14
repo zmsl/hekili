@@ -7,7 +7,7 @@ local AuraUtil, C_AddOns = VGA.AuraUtil, VGA.C_AddOns
 local C_Item, C_SpecializationInfo, C_Spell, C_UnitAuras = VGA.C_Item, VGA.C_SpecializationInfo, VGA.C_Spell, VGA.C_UnitAuras
 local CombatLogGetCurrentEventInfo, GetActionInfo, GetBindingKey, GetInstanceInfo = VGA.CombatLogGetCurrentEventInfo, VGA.GetActionInfo, VGA.GetBindingKey, VGA.GetInstanceInfo
 local GetInventoryItemID, GetTalentInfoByID, GetTime = VGA.GetInventoryItemID, VGA.GetTalentInfoByID, VGA.GetTime
-local GetUnitEmpowerHoldAtMaxTime, GetUnitEmpowerStageDuration, InCombatLockdown, IsInGroup = VGA.GetUnitEmpowerHoldAtMaxTime, VGA.GetUnitEmpowerStageDuration, VGA.InCombatLockdown, VGA.IsInGroup
+local InCombatLockdown, IsInGroup = VGA.InCombatLockdown, VGA.IsInGroup
 local IsPlayerSpell, IsResting, SecureCmdOptionParse = VGA.IsPlayerSpell, VGA.IsResting, VGA.SecureCmdOptionParse
 local SpellIsSelfBuff, UnitAttackSpeed, UnitCastingInfo, UnitChannelInfo = VGA.SpellIsSelfBuff, VGA.UnitAttackSpeed, VGA.UnitCastingInfo, VGA.UnitChannelInfo
 local UnitClass, UnitExists, UnitGUID, UnitInParty = VGA.UnitClass, VGA.UnitExists, VGA.UnitGUID, VGA.UnitInParty
@@ -1041,48 +1041,6 @@ RegisterUnitEvent( "UNIT_SPELLCAST_START", "player", "target", function( event, 
         Hekili:ForceUpdate( event, true )
     end
 end )
-
-
-do
-    local empowerment = state.empowerment
-    local stages = empowerment.stages
-
-    RegisterUnitEvent( "UNIT_SPELLCAST_EMPOWER_START", "player", nil, function( event, unit, cast, spellID )
-        local ability = class.abilities[ spellID ]
-        if not ability then return end
-
-        wipe( stages )
-        local start = GetTime()
-
-        empowerment.spell = ability.key
-        empowerment.start = start
-        empowerment.active = true
-
-        for i = 1, 4 do
-            local n = GetUnitEmpowerStageDuration( "player", i - 1 )
-            if n == 0 then break end
-
-            if i == 1 then insert( stages, start + n * 0.001 )
-            else insert( stages, stages[ i - 1 ] + n * 0.001 ) end
-        end
-
-        empowerment.finish = stages[ #stages ]
-        empowerment.hold = empowerment.finish + GetUnitEmpowerHoldAtMaxTime( "player" ) * 0.001
-
-        Hekili:ForceUpdate( event, true )
-    end )
-
-    RegisterUnitEvent( "UNIT_SPELLCAST_EMPOWER_STOP", "player", nil, function( event, unit, cast, spellID )
-        empowerment.spell = "none"
-
-        empowerment.active = false
-        empowerment.start = 0
-        empowerment.finish = 0
-        empowerment.hold = 0
-
-        Hekili:ForceUpdate( event )
-    end )
-end
 
 
 RegisterUnitEvent( "UNIT_SPELLCAST_CHANNEL_START", "player", nil, function( event, unit, cast, spellID )

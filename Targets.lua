@@ -706,11 +706,6 @@ function ns.updateTarget( id, time, mine, spellID )
             end
         end
     else
-        if state.empowerment.start > 0 and state.empowerment.hold > GetTime() then
-            -- Don't expire targets mid-empowerment cast.
-            return
-        end
-
         if targets[id] then
             targetCount = max( 0, targetCount - 1 )
             targets[id] = nil
