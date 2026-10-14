@@ -213,3 +213,66 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `UnitThreatSituation` | present | plain in combat [W PR14; gate spike] | passthrough | — | State.lua |
 | `UnitTokenFromGUID` | present | unprobed | passthrough | — | Targets.lua |
 | `UnitWeaponAttackPower` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua |
+
+## Secrecy zone (bodies unchanged in Phase 2; Phase 3b revisits them)
+
+Line ranges are as of the commit that adds this section.
+
+| Code | Where | What it reads through the facade |
+|---|---|---|
+| cooldown metatable | `State.lua` 3288-3508 (`GetUnpackedSpellCooldown`, `mt_default_cooldown`) | `C_Spell.GetSpellCooldown`, `GetSpellCharges`, `GetSpellLossOfControlCooldown` |
+| `ScrapeUnitAuras` | `State.lua` 5969-6183 (`function state.ScrapeUnitAuras`); slot reader `StoreMatchingAuras` 5897-5966 | `C_UnitAuras.Get{Buff,Debuff}DataByIndex`, `UnitAuraBySlot`, `UnitIsUnit` |
+| `state.reset` | `State.lua` 6800-7149 (`function state.reset`) | `UnitPower`, `UnitPowerMax`, `GetManaRegen`, `GetPowerRegenForPowerType`, `UnitHealth`, `UnitHealthMax`, `UnitAttackSpeed`, `GetTotemInfo`, `UnitCastingInfo` |
+| `UNIT_POWER_FREQUENT` handler | `Events.lua` 1434-1471 | `UnitPower` |
+| `UNIT_AURA` handler | `Events.lua` 1514-1597 | `AuraUtil.ForEachAura`, `C_UnitAuras.GetAuraDataByAuraInstanceID` |
+| combat-log handler | `Events.lua` 1720-2027 (`CLEU_HANDLER` and its registration on 2027) | `CombatLogGetCurrentEventInfo`, `UnitAttackSpeed` |
+| target counting | `Targets.lua` 395-667 (`ns.getNumberTargets`) | `UnitHealth`, `UnitGUID`, `GetUnitSpeed`, `GetHaste` |
+| time to die | `Targets.lua` 1169-1610 (`EliminateEnemy`, `UpdateEnemy`, `GetTTD`, `GetTimeToPct`, `UpdateTTDs`) | `UnitHealth`, `UnitHealthMax`, `UnitGetTotalAbsorbs` |
+| UI cooldown arithmetic | `UI.lua` 1115-1677 (`d:OnUpdate`) and 1707-1754 (`d:RefreshCooldowns`) | `C_Spell.GetSpellCooldown`, `UnitCastingInfo`, `UnitChannelInfo` |
+| spec detection | `Classes.lua` 4096-4381 (`Hekili:SpecializationChanged`) | `C_SpecializationInfo.*` |
+
+## Stub call sites that would throw or misbehave (for Phase 3b; not patched here)
+
+Every stub site in the retained files that throws or yields a wrong value. Sites that read a stub and stay correct
+(nil-guarded, `or` defaults) are left out.
+
+| Stub | Call site | Effect |
+|---|---|---|
+| `GetUnitEmpowerStageDuration` -> 0 | `Events.lua` 1279-1288, empower-start handler: the stage loop breaks at `i == 1`, so `stages` is empty and `empowerment.finish = stages[ #stages ]` is nil | **throws**: `empowerment.finish + GetUnitEmpowerHoldAtMaxTime( "player" ) * 0.001` is arithmetic on nil (only for an ability Hekili models as empowered) |
+| `CombatLogGetCurrentEventInfo` -> nil | `Events.lua` 2027 `CLEU_HANDLER( event, CombatLogGetCurrentEventInfo() )` | **throws** in combat if the event ever fires: every argument is nil, the out-of-combat early return (1754) is skipped, and `bit.band( destFlags, ... )` (1771) gets nil. Registering CLEU itself is forbidden on Forever; removing or diverting the registration is the real fix |
+| `CombatLogGetCurrentEventInfo` -> nil | `Options/DevTools.lua` 460 `SkeletonCLEU( CombatLogGetCurrentEventInfo() )` | safe: `sourceName` nil returns at 341 |
+| `GetTalentInfoByID` -> nil | `Events.lua` 435-439, `ns.updateTalents`: `name` nil falls back to `IsPlayerSpell( v )` where `v` is a `RegisterTalents` entry (a table) | probably **throws** (`IsPlayerSpell` given a table); unverified on the client. Either way talents come out wrong until the `C_Traits` walk replaces this loop |
+| `GetPvpTalentInfoByID` -> nil | `Events.lua` 456-459: falls back to `IsPlayerSpell( v )` with a spell ID | wrong value only (PvP talents read as spells) |
+| `UnitAttackSpeed` -> `2, nil` | `State.lua` 215 and 6978, `Events.lua` 1008 and 1955, `Classes.lua` 4376 | wrong value: main-hand speed is a constant 2.0, so swing projections (`swings.mh_*`) are fiction. `oh_speed` nil is guarded at State.lua 218/5738/6980 and Events.lua 1948/1950 |
+| `UnitAttackSpeed` -> `2, nil` | `State.lua` 2693 `stat.weapon_speed` | wrong value: 2.0 / 0 |
+| `GetPowerRegenForPowerType` -> `0, 0` | `State.lua` 6932 in `state.reset`, feeding `forecastResources` | wrong value: `active or 0.001` keeps the 0 (0 is truthy), so regen is 0, every resource forecast is flat, and `time_to_x` returns 3600 or the next modeled slice (`State.lua` 3798 divides by 0 to `inf` but the comparison that follows still picks `after.t`). Assassination's timeout `energy.max / max( 0.001, regen )` (1541) becomes 100000 s, bounded by the 30-iteration cap |
+| `GetManaRegen` -> `0, 0` | `State.lua` 6925 | wrong value: mana never regenerates in the forecast |
+| `UnitPower` -> 0 | `State.lua` 6912 `res.actual`; `Events.lua` 1434-1469 | wrong value: every resource reads 0, so nothing with a cost is ever recommended. The single largest behavioural gap |
+| `C_UnitAuras.GetAuraSlots` -> nil | `State.lua` 778 `state.UnitAuraSlots` | no retained consumer; spec code calling `UnitAuraSlots` would get no slots |
+| `GetTotemInfo` -> `false, "", 0, 0, 0` | `State.lua` 2772 (totem pets), 4643 (`mt_default_totem.expires`), 4678-4699 (`mt_totem` fire/earth/water/air), 6883 (`summonPet` from totems) | wrong value: `spellID` and `modRate` are nil (`class.abilities[ nil ]` reads nil, no throw), every totem and totem-backed pet is down |
+| `UnitCastingInfo` / `UnitChannelInfo` ("target") -> nil | `Classes.lua` 1965 and 1996, the `casting` aura generator for `unit == "target"` | wrong value: `debuff.casting` is never up on the target, so interrupt recommendations never fire. Player casts pass through |
+| `UnitHealth` / `UnitHealthMax` -> 0 | `Targets.lua` 434 and 511 enemy scan `UnitHealth( unit ) > 1` | wrong value: every nameplate is filtered out unless it is a training dummy, so `active_enemies` stays at 1 |
+| `UnitHealth` / `UnitHealthMax` -> 0 | `Targets.lua` 1604 `UpdateEnemy( guid, health / healthMax, ... )` (1588-1592 clamps `healthMax` to 1, 1604 does not) | wrong value: `0 / 0` is NaN, NaN comparisons are false, `rate` stays 0, and TTD stays at its default |
+| `UnitHealth` / `UnitHealthMax` -> 0 | `Targets.lua` 1309-1317 (`GetTTD`) and 1333-1345 (`GetTimeToPct`) | wrong value: NaN `healthPct`; the `enemy.n < 3` early return hides it, so callers get the default |
+| `UnitHealth` / `UnitHealthMax` -> 0 | `State.lua` 3243-3249 `mt_target_health` | wrong value: `target.health.pct` is 100 (the `t.max ~= 0` guard), so execute-phase conditions never pass |
+| `UnitHealth` / `UnitHealthMax` -> 0 | `State.lua` 2239-2266 `group_health`, `at_risk`; 2945 pet `health_pct`; `Utils.lua` 416-462 | wrong value: `0 / 0` NaN percentages, every `<` test false |
+| `UnitHealth` -> 0 | `State.lua` 2807, 2939 pet alive checks `UnitHealth( "pet" ) > 0` | wrong value: the pet always reads dead |
+| `UnitHealth` -> 0 | `State.lua` 6973-6974 `state.health` | wrong value: player health 0 of max 1 |
+| `IsUsableSpell` -> false | `State.lua` 7668 `usable` check for a numeric `usable` | wrong value: such abilities are never usable (port to `C_Spell.IsSpellUsable`) |
+| `GetUnitSpeed` -> 0 | `State.lua` 2234, 3176; `Targets.lua` 492, 558, 622, 642 | wrong value: nothing is ever moving |
+| `UnitInRange` -> `false, true` | `State.lua` 2223 | wrong value: no group member is in range |
+| `C_Spell.GetSpellCooldown`, `GetSpellCharges`, `GetSpellLossOfControlCooldown` | `State.lua` 3288-3400 | wrong value only: every spell is off cooldown with 1/1 charges; the loss-of-control nil is guarded |
+| stat stubs (`UnitStat`, `GetCombatRating*`, `GetMasteryEffect`, crit, haste, `UnitDamage`, `UnitArmor`, attack power) | `State.lua` 2619-2739, `Targets.lua` 821 | wrong value: 0 everywhere; haste 0 gives a factor of 1, so no division by zero |
+
+## Edits no facade absorbs (feasibility doc C.5)
+
+- GCD spell 61304 -> 29515: `Classes.lua` 2911 (`id = 61304`), `UI.lua` 1507 and 1708, `Events.lua` 1935.
+- The enemy-scan health comparison: `Targets.lua` 434 and 511.
+- TTD: `Targets.lua` 1169-1610 needs another source of health deltas.
+- Spec identity (pseudo-spec 1491): `Classes.lua` 4096-4381 `SpecializationChanged`.
+- Talents: replace `ns.updateTalents` (`Events.lua` 427) with a `C_Traits` walk (`Utils.lua` 970-989 already walks the tree for export).
+- CLEU: remove or divert the registration at `Events.lua` 2027 (and `Options/DevTools.lua` 460).
+- Version gates: `Hekili.lua` 18-56 (`IsDragonflight`, `IsTWW`, `IsMidnight` and `ns.PTR` are false on build 16001;
+  `BuiltFor = 110200`) and `Core.lua` 205 (`BuiltFor > CurrentBuild` reports Hekili as built for a newer client).
+- Division-by-zero audit: the NaN and `inf` sites in the table above.
+- Load-time nils: the stubs above cover reads; globals the facade does not list stay a Phase 3b audit.
