@@ -2,6 +2,17 @@
 -- June 2024
 
 local addon, ns = ...
+local VGA = LibStub( "VirtualGameAPI-1.0" )
+local AuraUtil, C_AddOns, C_AzeriteEmpoweredItem, C_AzeriteEssence = VGA.AuraUtil, VGA.C_AddOns, VGA.C_AzeriteEmpoweredItem, VGA.C_AzeriteEssence
+local C_Item, C_SpecializationInfo, C_Spell, C_UnitAuras = VGA.C_Item, VGA.C_SpecializationInfo, VGA.C_Spell, VGA.C_UnitAuras
+local CombatLogGetCurrentEventInfo, GetActionInfo, GetBindingKey, GetInstanceInfo = VGA.CombatLogGetCurrentEventInfo, VGA.GetActionInfo, VGA.GetBindingKey, VGA.GetInstanceInfo
+local GetInventoryItemID, GetPvpTalentInfoByID, GetTalentInfoByID, GetTime = VGA.GetInventoryItemID, VGA.GetPvpTalentInfoByID, VGA.GetTalentInfoByID, VGA.GetTime
+local GetUnitEmpowerHoldAtMaxTime, GetUnitEmpowerStageDuration, InCombatLockdown, IsInGroup = VGA.GetUnitEmpowerHoldAtMaxTime, VGA.GetUnitEmpowerStageDuration, VGA.InCombatLockdown, VGA.IsInGroup
+local IsInJailersTower, IsPlayerSpell, IsResting, SecureCmdOptionParse = VGA.IsInJailersTower, VGA.IsPlayerSpell, VGA.IsResting, VGA.SecureCmdOptionParse
+local SpellIsSelfBuff, UnitAttackSpeed, UnitCastingInfo, UnitChannelInfo = VGA.SpellIsSelfBuff, VGA.UnitAttackSpeed, VGA.UnitCastingInfo, VGA.UnitChannelInfo
+local UnitClass, UnitExists, UnitGUID, UnitInParty = VGA.UnitClass, VGA.UnitExists, VGA.UnitGUID, VGA.UnitInParty
+local UnitInRaid, UnitIsPlayer, UnitLevel, UnitName = VGA.UnitInRaid, VGA.UnitIsPlayer, VGA.UnitLevel, VGA.UnitName
+local UnitPower = VGA.UnitPower
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class
