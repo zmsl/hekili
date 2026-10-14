@@ -2493,10 +2493,8 @@ all:RegisterAbilities( {
 
 -- Blood Fury spell IDs vary by class (whether you need AP/Int/both).
 local bf_classes = {
-    DEATHKNIGHT = 20572,
     HUNTER = 20572,
     MAGE = 33702,
-    MONK = 33697,
     ROGUE = 20572,
     SHAMAN = 33697,
     WARLOCK = 33702,

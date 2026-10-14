@@ -1918,11 +1918,6 @@ local defaultBarMap = {
         { bonus = 3, bar = 9 },
         { bonus = 4, bar = 10 },
     },
-    MONK = {
-        { bonus = 1, bar = 7 },
-        { bonus = 2, bar = 8 },
-        { bonus = 3, bar = 9 },
-    },
     PRIEST = {
         { bonus = 1, bar = 7 },
     },

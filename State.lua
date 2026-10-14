@@ -3173,8 +3173,6 @@ ns.metatables.mt_dot = mt_dot
 
 
 local one_sec_gcd = {
-    DEMONHUNTER = true,
-    MONK = true,
     ROGUE = true,
 }
 

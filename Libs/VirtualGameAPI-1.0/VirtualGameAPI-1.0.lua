@@ -159,7 +159,7 @@ stub( "C_Spell.GetSpellLossOfControlCooldown", nothing, "absent on Forever" )
 passthrough( "C_LossOfControl.GetActiveLossOfControlData", "plain [W PR18]" )
 passthrough( "C_LossOfControl.GetActiveLossOfControlDataCount", "plain [W PR18]" )
 
--- Casts: the player's own casts are plain [W PR9], other units' are secret [W PR8]; empower timings return 0.
+-- Casts: the player's own casts are plain [W PR9], other units' are secret [W PR8].
 stub( "UnitCastingInfo", playerOnly( "UnitCastingInfo" ), "player plain [W PR9]; target flagged secret [W PR8]" )
 stub( "UnitChannelInfo", playerOnly( "UnitChannelInfo" ), "player plain [W PR9]; target flagged secret [W PR8]" )
 passthrough( "C_Spell.IsCurrentSpell", "plain [W PR1]" )
