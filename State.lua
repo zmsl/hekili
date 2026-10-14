@@ -6389,7 +6389,6 @@ do
 
             if ability then
                 casting = ability.key
-
             end
         end
 

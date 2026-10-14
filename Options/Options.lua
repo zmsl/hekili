@@ -4548,7 +4548,7 @@ found = true end
                 specNameByID[ id ] = sName
                 specIDByName[ sName ] = id
 
-                specs[ id ] = Hekili:ZoomedTextureWithText( texture, name )
+                specs[ id ] = Hekili:ZoomedTextureWithText( texture or ( class.specs[ id ] and class.specs[ id ].texture ), name )
 
                 local options = {
                     type = "group",
@@ -4589,7 +4589,7 @@ found = true end
                                         for key, pkg in pairs( self.DB.profile.packs ) do
                                             local pname = pkg.builtIn and "|cFF00B4FF" .. key .. "|r" or key
                                             if pkg.spec == id then
-                                                packs[ key ] = Hekili:ZoomedTextureWithText( texture, pname )
+                                                packs[ key ] = Hekili:ZoomedTextureWithText( texture or ( class.specs[ id ] and class.specs[ id ].texture ), pname )
                                             end
                                         end
 

@@ -258,8 +258,6 @@ not load, expected) and LibChatAnims (load unknown, see above).
 
 ### Deferred minors (from the ledger, still open at a49f9f9e)
 
-- `tools/list_api_reads.sh`: usage comment says "every .lua in Hekili.toc" but skips the expansion folders (now moot);
-  `files=( $(...) )` word-splits (use `mapfile`); luacheck stderr goes to `/dev/null`, hiding parse failures.
 - `tools/check_api_reads.sh`: ignores luacheck's exit code (a syntax error passes silently); `_G` reads through
   `rawget` or a variable key are not covered; the `_G.` grep does not skip comments.
 - `tools/api_inventory.txt`: `C_AddOns.LoadAddOn` and `C_Spell.RequestLoadSpellData` are actions kept by the
@@ -277,6 +275,8 @@ not load, expected) and LibChatAnims (load unknown, see above).
 - `Core.lua`: dead `DEATHKNIGHT` branches (1644, 1665, 1883).
 - `Events.lua` / `Targets.lua`: the Timerunning block (`Targets.lua` 333-350, `Events.lua` 1489-1491) stays; removing
   it touches the inventory, library and notes.
+  `Events.lua:1904` `defaultBarMap` is dead data with no reader (kept; remove in Phase 3b).
+- Facade notes: the `reset_precast` cite (`Classes.lua` 3242) is a rough locator for the hook-merge loop in `Classes.lua`.
 - `UI.lua`: `d:RefreshCooldowns` 1711, 1731-1737 dead behind `ability.empowered` (secrecy zone, left alone).
 - `Options/DevTools.lua`: dead `or VGA.IsX` fallbacks (29-31); `SkeletonTalentEnhancements.talentCopies` Monk keys;
   the `GetHeroTalentSpecsForClassSpec` walk (490) is inert.

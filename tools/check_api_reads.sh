@@ -12,8 +12,9 @@ mapfile -t files < <(grep -E '\.lua\s*$' Hekili.toc | tr -d '\r' | sed 's/\\/\//
 mapfile -t files < <(printf '%s\n' "${files[@]}" | grep -vE '^(TheWarWithin|Dragonflight|Shadowlands|BfA|Legion|Wrath|Cataclysm|TheBurningCrusade)/')
 globals=$(sed -E 's/\..*//' tools/api_inventory.txt | sort -u | paste -sd'|')
 fail=0
-hits=$("$LUACHECK" --no-config --std none --formatter plain --codes "${files[@]}" \
-    | grep -E "accessing undefined variable '($globals)'")
+out=$("$LUACHECK" --no-config --std none --formatter plain --codes "${files[@]}"); rc=$?
+[ $rc -ge 2 ] && { echo "luacheck failed (syntax error?)" >&2; exit 1; }
+hits=$(grep -E "accessing undefined variable '($globals)'" <<<"$out")
 [ -n "$hits" ] && { echo "$hits"; fail=1; }
 hits=$(grep -nE "_G(\.|\[[\"'])($globals)\b" "${files[@]}")
 [ -n "$hits" ] && { echo "$hits"; fail=1; }
