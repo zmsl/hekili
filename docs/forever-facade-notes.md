@@ -20,10 +20,10 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `AuraUtil.ForEachAura` | present (FrameXML Lua) | wraps secret aura data [W §4] | stub | no-op, returns nothing | Hekili.lua, Events.lua |
 | `AuraUtil.UnpackAuraData` | present (FrameXML Lua) | pure Lua unpack of a table | passthrough | — | Hekili.lua, Utils.lua, State.lua |
 | `C_AddOns.GetAddOnMetadata` | present | unprobed | passthrough | — | Hekili.lua |
-| `C_AddOns.IsAddOnLoaded` | present | unprobed | passthrough | — | Utils.lua, Events.lua, Targets.lua |
+| `C_AddOns.IsAddOnLoaded` | present | unprobed | passthrough | — | Events.lua, Targets.lua |
 | `C_AddOns.LoadAddOn` | present | unprobed | passthrough | — | Targets.lua |
 | `C_ClassColor.GetClassColor` | present | unprobed | passthrough | — | Options/Options.lua |
-| `C_ClassTalents.GetActiveConfigID` | present | unprobed | passthrough | — | Utils.lua, Options/DevTools.lua |
+| `C_ClassTalents.GetActiveConfigID` | present | unprobed | passthrough | — | Options/DevTools.lua |
 | `C_ClassTalents.GetHeroTalentSpecsForClassSpec` | present | unprobed | passthrough | — | Options/DevTools.lua |
 | `C_Item.GetDetailedItemLevelInfo` | present | plain [W PR13] | passthrough | — | Events.lua |
 | `C_Item.GetItemCooldown` | present | plain [W PR13] | passthrough | — | State.lua, Classes.lua, UI.lua |
@@ -71,20 +71,17 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `C_SpellBook.IsSpellInSpellBook` | present | unprobed | passthrough | — | State.lua, Options/DevTools.lua |
 | `C_SpellBook.IsSpellKnown` | present | unprobed | passthrough | — | State.lua |
 | `C_Texture.GetAtlasInfo` | present | unprobed | passthrough | — | Utils.lua |
-| `C_TooltipInfo.GetConduit` | present | unprobed | passthrough | — | Utils.lua |
 | `C_TooltipInfo.GetInventoryItem` | present | unprobed | passthrough | — | Utils.lua |
 | `C_TooltipInfo.GetItemByID` | present | unprobed | passthrough | — | Utils.lua |
 | `C_TooltipInfo.GetSpellByID` | present | unprobed | passthrough | — | Utils.lua |
-| `C_Traits.GetConfigInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Utils.lua, Options/DevTools.lua |
+| `C_Traits.GetConfigInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua |
 | `C_Traits.GetDefinitionInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua |
 | `C_Traits.GetEntryInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua |
-| `C_Traits.GetLoadoutSerializationVersion` | present | plain, walk identical in combat [W PR5] | passthrough | — | Utils.lua |
 | `C_Traits.GetNodeCost` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua |
-| `C_Traits.GetNodeInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Utils.lua, Options/DevTools.lua |
+| `C_Traits.GetNodeInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua |
 | `C_Traits.GetSubTreeInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua |
 | `C_Traits.GetTreeCurrencyInfo` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua |
-| `C_Traits.GetTreeHash` | present | plain, walk identical in combat [W PR5] | passthrough | — | Utils.lua |
-| `C_Traits.GetTreeNodes` | present | plain, walk identical in combat [W PR5] | passthrough | — | Utils.lua, Options/DevTools.lua |
+| `C_Traits.GetTreeNodes` | present | plain, walk identical in combat [W PR5] | passthrough | — | Options/DevTools.lua |
 | `C_UnitAuras.GetAuraDataByAuraInstanceID` | present | secret in combat; errors when tainted [W §4] | stub | `nil` | Events.lua |
 | `C_UnitAuras.GetAuraSlots` | present | secret in combat [W §4] | stub | `nil` (no continuation token, no slots) | State.lua |
 | `C_UnitAuras.GetBuffDataByIndex` | present | secret in combat; errors when tainted [W §4] | stub | `nil` | Hekili.lua, Utils.lua, State.lua |
@@ -269,7 +266,7 @@ Every stub site in the retained files that throws or yields a wrong value. Sites
   is casting a spell that is a registered ability, because `cyclotronic_blast` lived in the archived `Items.lua`. With
   the Warrior stub only `all`-spec abilities are registered, so it needs a cast-time racial or item; Phase 3b abilities
   with a cast time will hit it every cast. Fix: guard with `class.abilities.cyclotronic_blast and`.
-- Talents: replace `ns.updateTalents` (`Events.lua` 427) with a `C_Traits` walk (`Utils.lua` 970-989 already walks the tree for export).
+- Talents: replace `ns.updateTalents` (`Events.lua` 427) with a `C_Traits` walk (`Options/DevTools.lua` already walks the tree).
 - CLEU: remove or divert the registration at `Events.lua` 2027 (and `Options/DevTools.lua` 460).
 - Version gates: `Hekili.lua` 18-56 (`IsDragonflight`, `IsTWW`, `IsMidnight` and `ns.PTR` are false on build 16001;
   `BuiltFor = 110200`) and `Core.lua` 205 (`BuiltFor > CurrentBuild` reports Hekili as built for a newer client).

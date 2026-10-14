@@ -44,7 +44,7 @@ local GetSpellCharges = function(spellID)
         return spellChargeInfo.currentCharges, spellChargeInfo.maxCharges, spellChargeInfo.cooldownStartTime, spellChargeInfo.cooldownDuration, spellChargeInfo.chargeModRate;
     end
 end
-local FindPlayerAuraByID, IsAbilityDisabled, IsDisabledCovenantSpell = ns.FindPlayerAuraByID, ns.IsAbilityDisabled, ns.IsDisabledCovenantSpell
+local FindPlayerAuraByID, IsAbilityDisabled = ns.FindPlayerAuraByID, ns.IsAbilityDisabled
 
 local GetSpecialization = VGA.C_SpecializationInfo.GetSpecialization
 
@@ -6782,8 +6782,6 @@ function state:IsKnown( sID )
 
         return true
     end
-
-    if IsDisabledCovenantSpell( sID ) then return false, "covenant spells are disabled" end
 
     if ability.spec and not state.spec[ ability.spec ] then
         return false, "wrong specialization"

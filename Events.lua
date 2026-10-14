@@ -46,7 +46,6 @@ local GetSpellInfo = ns.GetUnpackedSpellInfo
 local TimerunningCheck = ns.TimerunningCheck
 local FindStringInInventoryItemTooltip = ns.FindStringInInventoryItemTooltip
 local ResetDisabledGearAndSpells = ns.ResetDisabledGearAndSpells
-local WipeCovenantCache = ns.WipeCovenantCache
 
 local RC = LibStub( "LibRangeCheck-3.0" )
 
@@ -445,7 +444,6 @@ function ns.updateTalents()
         end
     end
 
-    WipeCovenantCache()
     ResetDisabledGearAndSpells()
 end
 

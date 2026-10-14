@@ -3,9 +3,9 @@
 
 local addon, ns = ...
 local VGA = LibStub( "VirtualGameAPI-1.0" )
-local AuraUtil, C_AddOns, C_ClassTalents, C_Item = VGA.AuraUtil, VGA.C_AddOns, VGA.C_ClassTalents, VGA.C_Item
+local AuraUtil, C_Item = VGA.AuraUtil, VGA.C_Item
 local C_Spell, C_SpellBook, C_Texture, C_TooltipInfo = VGA.C_Spell, VGA.C_SpellBook, VGA.C_Texture, VGA.C_TooltipInfo
-local C_Traits, C_UnitAuras = VGA.C_Traits, VGA.C_UnitAuras
+local C_UnitAuras = VGA.C_UnitAuras
 local GetNumGroupMembers, GetNumSubgroupMembers, GetTime, IsInGroup = VGA.GetNumGroupMembers, VGA.GetNumSubgroupMembers, VGA.GetTime, VGA.IsInGroup
 local IsInRaid, UnitHealth, UnitHealthMax, UnitIsUnit = VGA.IsInRaid, VGA.UnitHealth, VGA.UnitHealthMax, VGA.UnitIsUnit
 local UnitName = VGA.UnitName
@@ -664,9 +664,8 @@ do
         if ttType == "spell" then data = C_TooltipInfo.GetSpellByID( id )
         elseif ttType == "item" then data = C_TooltipInfo.GetItemByID( id )
         elseif ttType == "inventory" then data = C_TooltipInfo.GetInventoryItem( "player", id )
-        elseif ttType == "conduit" then data = C_TooltipInfo.GetConduit( id, 0 )
         else
-            Hekili:Error( "Usage:  FindStringInTooltip( str, id, { spell | item | inventory | conduit }, reverse, useMatch )\n" ..
+            Hekili:Error( "Usage:  FindStringInTooltip( str, id, { spell | item | inventory }, reverse, useMatch )\n" ..
                 "Invalid tooltip type:  '%s'", ttType or "nil" )
             return
         end
@@ -716,11 +715,6 @@ do
         return FindStringInTooltip( str, slot, "inventory", reverse, useMatch )
     end
     ns.FindStringInInventoryItemTooltip = FindStringInInventoryItemTooltip
-
-    local FindStringInConduitTooltip = function( str, conduit, reverse, useMatch )
-        return FindStringInTooltip( str, conduit, "conduit", reverse, useMatch )
-    end
-    ns.FindStringInConduitTooltip = FindStringInConduitTooltip
 
     local DisabledSpells = {}
 
@@ -776,104 +770,10 @@ do
     Hekili.FindStringInSpellTooltip = FindStringInSpellTooltip
     Hekili.FindStringInItemTooltip = FindStringInItemTooltip
     Hekili.FindStringInInventoryItemTooltip = FindStringInInventoryItemTooltip
-    Hekili.FindStringInConduitTooltip = FindStringInConduitTooltip
 
     Hekili.IsSpellDisabled = IsSpellDisabled
     Hekili.IsItemDisabled = IsItemDisabled
     Hekili.IsInventoryItemDisabled = IsInventoryItemDisabled
-
-
-    -- Check Covenant spells to disable them.
-    local CovenantSpells = {
-        [300728] = 1,
-        [304971] = 1,
-        [306830] = 1,
-        [307443] = 1,
-        [307865] = 1,
-        [308491] = 1,
-        [310454] = 1,
-        [311648] = 1,
-        [312202] = 1,
-        [312321] = 1,
-        [314791] = 1,
-        [314793] = 1,
-        [315443] = 1,
-        [316958] = 1,
-        [317009] = 1,
-        [317485] = 1,
-        [320674] = 1,
-        [321792] = 1,
-        [323546] = 1,
-        [323547] = 1,
-        [323639] = 1,
-        [323654] = 1,
-        [323673] = 1,
-        [323764] = 1,
-        [324128] = 1,
-        [324143] = 1,
-        [324149] = 1,
-        [324220] = 1,
-        [324386] = 1,
-        [324631] = 1,
-        [324724] = 1,
-        [325013] = 1,
-        [325020] = 1,
-        [325028] = 1,
-        [325216] = 1,
-        [325283] = 1,
-        [325289] = 1,
-        [325640] = 1,
-        [325886] = 1,
-        [326059] = 1,
-        [326434] = 1,
-        [326647] = 1,
-        [326860] = 1,
-        [327104] = 1,
-        [327661] = 1,
-        [328204] = 1,
-        [328231] = 1,
-        [328281] = 1,
-        [328282] = 1,
-        [328305] = 1,
-        [328547] = 1,
-        [328620] = 1,
-        [328622] = 1,
-        [328923] = 1,
-        [328930] = 1,
-        [330325] = 1,
-        [355589] = 1,
-        [356532] = 1,
-    }
-
-    local IsCovenantSpell = function( spellID )
-        return CovenantSpells[ spellID ] == 1
-    end
-    ns.IsCovenantSpell = IsCovenantSpell
-
-    local covenantsDisabled = nil
-
-    local AreCovenantsDisabled = function()
-        if covenantsDisabled == nil then
-            if FindStringInConduitTooltip( DisableText, 5, true, true ) then
-                covenantsDisabled = true
-                return true
-            end
-            covenantsDisabled = false
-            return false
-        end
-        return covenantsDisabled
-    end
-    ns.AreCovenantsDisabled = AreCovenantsDisabled
-
-    local IsDisabledCovenantSpell = function( spellID )
-        return CovenantSpells[ spellID ] and AreCovenantsDisabled()
-    end
-    ns.IsDisabledCovenantSpell = IsDisabledCovenantSpell
-
-    local WipeCovenantCache = function()
-        covenantsDisabled = nil
-    end
-    ns.WipeCovenantCache = WipeCovenantCache
 end
 
 
@@ -947,87 +847,6 @@ end
 
 function Hekili:IsValidSpec()
     return state.spec.id and class.specs[ state.spec.id ] ~= nil
-end
-
-
-local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
-
-function Hekili:GetLoadoutExportString()
-    -- Current as of 10.1.0.48480
-    local bitWidthHeaderVersion = 8
-    local bitWidthSpecID = 16
-    local bitWidthRanksPurchased = 6
-
-    -- Cannot force-load as needed without causing taint, so this simply replicates existing Blizzard functionality.
-    if IsAddOnLoaded( "Blizzard_ClassTalentUI" ) then
-        bitWidthHeaderVersion = ClassTalentImportExportMixin.bitWidthHeaderVersion
-        bitWidthSpecID = ClassTalentImportExportMixin.bitWidthSpecID
-        bitWidthRanksPurchased = ClassTalentImportExportMixin.bitWidthRanksPurchased
-    end
-
-    local es = ExportUtil.MakeExportDataStream()
-    local configID = C_ClassTalents.GetActiveConfigID() or -1
-    local configInfo = C_Traits.GetConfigInfo( configID )
-
-    if not configInfo then return "Export Unavailable" end
-
-    local currentSpecID = PlayerUtil.GetCurrentSpecID()
-
-    local treeID = configInfo.treeIDs[ 1 ]
-    local treeHash = C_Traits.GetTreeHash( treeID )
-
-    local serializationVersion = C_Traits.GetLoadoutSerializationVersion()
-
-    es:AddValue( bitWidthHeaderVersion, serializationVersion )
-    es:AddValue( bitWidthSpecID, currentSpecID )
-
-    -- treeHash is a 128bit hash, passed as an array of 16, 8-bit values
-    for i, hashVal in ipairs( treeHash ) do
-        es:AddValue( 8, hashVal )
-    end
-
-	local treeNodes = C_Traits.GetTreeNodes(treeID);
-	for i, treeNodeID in ipairs(treeNodes) do
-		local treeNode = C_Traits.GetNodeInfo(configID, treeNodeID);
-
-		local isNodeGranted = treeNode.activeRank - treeNode.ranksPurchased > 0;
-		local isNodePurchased = treeNode.ranksPurchased > 0;
-		local isNodeSelected = isNodeGranted or isNodePurchased;
-		local isPartiallyRanked = treeNode.ranksPurchased ~= treeNode.maxRanks;
-		local isChoiceNode = treeNode.type == Enum.TraitNodeType.Selection or treeNode.type == Enum.TraitNodeType.SubTreeSelection;
-
-		es:AddValue(1, isNodeSelected and 1 or 0);
-		if(isNodeSelected) then
-			es:AddValue(1, isNodePurchased and 1 or 0);
-
-			if isNodePurchased then
-				es:AddValue(1, isPartiallyRanked and 1 or 0);
-				if(isPartiallyRanked) then
-					es:AddValue(bitWidthRanksPurchased, treeNode.ranksPurchased);
-				end
-
-				es:AddValue(1, isChoiceNode and 1 or 0);
-				if(isChoiceNode) then
-					local entryIndex = 0
-
-                    for i, entryID in ipairs(treeNode.entryIDs) do
-                        if(entryID == treeNode.activeEntry.entryID) then
-                            entryIndex = i
-                        end
-                    end
-
-					if(entryIndex <= 0 or entryIndex > 4) then
-						error("Error exporting tree node " .. treeNode.ID .. ". The active choice node entry index (" .. entryIndex .. ") is out of bounds. ");
-					end
-
-					-- store entry index as zero-index
-					es:AddValue(2, entryIndex - 1);
-				end
-			end
-		end
-	end
-
-    return es:GetExportString()
 end
 
 

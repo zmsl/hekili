@@ -8403,7 +8403,7 @@ function Hekili:GenerateProfile()
 
     local spec = s.spec.key
 
-    local talents = self:GetLoadoutExportString()
+    local talents
 
     for k, v in orderedPairs( s.talent ) do
         if v.enabled then

@@ -3427,10 +3427,7 @@ do
         QUEST_SESSION_LEFT = 1
     }
 
-    local WipeCovenantCache = ns.WipeCovenantCache
-
     local function CheckSpellsAndGear()
-        WipeCovenantCache()
         ResetDisabledGearAndSpells()
         ns.updateGear()
     end
