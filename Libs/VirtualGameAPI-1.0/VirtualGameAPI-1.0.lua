@@ -268,7 +268,6 @@ passthrough( "UnitTokenFromGUID", "unprobed" )
 
 -- Group, world and combat state: passthroughs, unprobed unless noted.
 passthrough( "C_PetBattles.IsInBattle", "unprobed" )
-passthrough( "C_PlayerInfo.IsPlayerInChromieTime", "unprobed" )
 passthrough( "C_PlayerInfo.IsPlayerInTimerunningHeroicWorldTier", "unprobed" )
 passthrough( "C_PvP.IsWarModeDesired", "unprobed" )
 passthrough( "GetInstanceInfo", "unprobed" )

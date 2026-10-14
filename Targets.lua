@@ -290,32 +290,6 @@ local lastCount = 1
 local lastStationary = 1
 
 
--- Chromie Time impacts phasing as well.
-local chromieTime = false
-
-do
-    local IsPlayerInChromieTime = C_PlayerInfo.IsPlayerInChromieTime
-
-    local function UpdateChromieTime()
-        chromieTime = IsPlayerInChromieTime()
-    end
-
-    local function ChromieCheck( self, event, login, reload )
-        if event ~= "PLAYER_ENTERING_WORLD" or login or reload then
-            chromieTime = IsPlayerInChromieTime()
-            C_Timer.After( 2, UpdateChromieTime )
-        end
-    end
-
-    if not Hekili.IsDragonflight() then
-        RegisterEvent( "CHROMIE_TIME_OPEN", ChromieCheck )
-        RegisterEvent( "CHROMIE_TIME_CLOSE", ChromieCheck )
-    end
-
-    RegisterEvent( "PLAYER_ENTERING_WORLD", ChromieCheck )
-end
-
-
 -- War Mode
 local warmode = false
 
@@ -355,7 +329,6 @@ local function UnitInPhase( unit )
     local wm = not IsInInstance() and warmode
 
     if reason == 4 and timeRunningHwt then return true end
-    if reason == 3 and chromieTime then return true end
     if reason == 2 and wm then return true end
     if reason == nil then return true end
 

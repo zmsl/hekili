@@ -1,6 +1,6 @@
 # Forever facade notes
 
-Status (2026-10-14, after the cleanup): 176 names in `tools/api_inventory.txt`: 125 passthrough, 51 stub.
+Status (2026-10-14, after the cleanup and Checkpoint B): 175 names in `tools/api_inventory.txt`: 124 passthrough, 51 stub.
 
 Working notes for Phase 2 (the VirtualGameAPI-1.0 skeleton) and the hand-off to Phases 1 and 3b.
 
@@ -40,7 +40,6 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `C_LossOfControl.GetActiveLossOfControlData` | present | plain [W PR18] | passthrough | — | State.lua, Classes.lua |
 | `C_LossOfControl.GetActiveLossOfControlDataCount` | present | plain [W PR18] | passthrough | — | State.lua, Classes.lua |
 | `C_PetBattles.IsInBattle` | undocumented C global | unprobed | passthrough | — | UI.lua |
-| `C_PlayerInfo.IsPlayerInChromieTime` | present | unprobed | passthrough | — | Targets.lua |
 | `C_PlayerInfo.IsPlayerInTimerunningHeroicWorldTier` | present | unprobed | passthrough | — | Targets.lua |
 | `C_PvP.IsWarModeDesired` | present | unprobed | passthrough | — | Targets.lua |
 | `C_SpecializationInfo.GetSpecialization` | present | plain [W PR15] | passthrough | — | Constants.lua, State.lua, Events.lua, Classes.lua, Options/DevTools.lua, Options/Options.lua, UI.lua |
