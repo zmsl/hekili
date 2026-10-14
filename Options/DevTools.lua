@@ -520,8 +520,7 @@ function SkeletonGen:PrepareSpecData()
                                 isSpec, treeName, validNode = true, specName, true
                             elseif validHeroTrees[ nodeInfo.subTreeID ] then
                                 isHero, validNode = true, true
-                                local heroMeta = ns.HeroTrees[ nodeInfo.subTreeID ]
-                                treeName = heroMeta and heroMeta.name or subTreeInfo.name
+                                treeName = subTreeInfo.name
                             end
                         end
                     end

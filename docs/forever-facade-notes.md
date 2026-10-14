@@ -24,7 +24,6 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `C_AddOns.LoadAddOn` | present | unprobed | passthrough | — | Targets.lua |
 | `C_ClassColor.GetClassColor` | present | unprobed | passthrough | — | Options/Options.lua |
 | `C_ClassTalents.GetActiveConfigID` | present | unprobed | passthrough | — | Utils.lua, Options/DevTools.lua |
-| `C_ClassTalents.GetActiveHeroTalentSpec` | present | unprobed | passthrough | — | Constants.lua |
 | `C_ClassTalents.GetHeroTalentSpecsForClassSpec` | present | unprobed | passthrough | — | Options/DevTools.lua |
 | `C_Item.GetDetailedItemLevelInfo` | present | plain [W PR13] | passthrough | — | Events.lua |
 | `C_Item.GetItemCooldown` | present | plain [W PR13] | passthrough | — | State.lua, Classes.lua, UI.lua |

@@ -172,7 +172,6 @@ stub( "CombatLogGetCurrentEventInfo", nothing, "absent on Forever; registering C
 
 -- Talents, specialization and borrowed powers: plain [W PR5, PR15] or unprobed; the old talent globals are dead (nil).
 passthrough( "C_ClassTalents.GetActiveConfigID", "unprobed" )
-passthrough( "C_ClassTalents.GetActiveHeroTalentSpec", "unprobed" )
 passthrough( "C_ClassTalents.GetHeroTalentSpecsForClassSpec", "unprobed" )
 passthrough( "C_Soulbinds.GetActiveSoulbindID", "unprobed" )
 passthrough( "C_Soulbinds.GetSoulbindData", "unprobed" )

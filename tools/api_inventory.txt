@@ -6,7 +6,6 @@ C_AddOns.IsAddOnLoaded
 C_AddOns.LoadAddOn
 C_ClassColor.GetClassColor
 C_ClassTalents.GetActiveConfigID
-C_ClassTalents.GetActiveHeroTalentSpec
 C_ClassTalents.GetHeroTalentSpecsForClassSpec
 C_Item.GetDetailedItemLevelInfo
 C_Item.GetItemCooldown
