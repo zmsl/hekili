@@ -171,8 +171,6 @@ passthrough( "C_SpellActivationOverlay.IsSpellOverlayed", "plain [W PR11]" )
 stub( "CombatLogGetCurrentEventInfo", nothing, "absent on Forever; registering CLEU is forbidden" )
 
 -- Talents, specialization and borrowed powers: plain [W PR5, PR15] or unprobed; the old talent globals are dead (nil).
-passthrough( "C_AzeriteItem.FindActiveAzeriteItem", "unprobed" )
-passthrough( "C_AzeriteItem.IsAzeriteItemEnabled", "unprobed" )
 passthrough( "C_ClassTalents.GetActiveConfigID", "unprobed" )
 passthrough( "C_ClassTalents.GetActiveHeroTalentSpec", "unprobed" )
 passthrough( "C_ClassTalents.GetHeroTalentSpecsForClassSpec", "unprobed" )

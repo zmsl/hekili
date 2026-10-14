@@ -22,8 +22,6 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `C_AddOns.GetAddOnMetadata` | present | unprobed | passthrough | — | Hekili.lua |
 | `C_AddOns.IsAddOnLoaded` | present | unprobed | passthrough | — | Utils.lua, Events.lua, Targets.lua |
 | `C_AddOns.LoadAddOn` | present | unprobed | passthrough | — | Targets.lua |
-| `C_AzeriteItem.FindActiveAzeriteItem` | present | unprobed | passthrough | — | State.lua |
-| `C_AzeriteItem.IsAzeriteItemEnabled` | present | unprobed | passthrough | — | State.lua |
 | `C_ClassColor.GetClassColor` | present | unprobed | passthrough | — | Options/Options.lua |
 | `C_ClassTalents.GetActiveConfigID` | present | unprobed | passthrough | — | Utils.lua, Options/DevTools.lua |
 | `C_ClassTalents.GetActiveHeroTalentSpec` | present | unprobed | passthrough | — | Constants.lua |

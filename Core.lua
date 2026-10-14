@@ -608,10 +608,6 @@ do
             return true, "internal function"
         end
 
-        if state.buff.empowering.up and not state.empowering[ spell ] then
-            return false, "empowerment: " .. state.buff.empowering.spell
-        end
-
         local disabled, reason = state:IsDisabled( spell )
         return not disabled, reason
     end
@@ -750,10 +746,6 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
             elseif rAction and not packInfo.hasOffGCD and rWait <= state.cooldown.global_cooldown.remains then -- and state.settings.gcdSync then
                 if debug then self:Debug( "The recommended action (%s) is ready within the active GCD; exiting list (%s).", rAction, listName ) end
-                break
-
-            elseif rAction and state.empowering[ rAction ] then
-                if debug then self:Debug( "The recommended action (%s) is currently empowering; exiting list (%s).", rAction, listName ) end
                 break
 
             elseif stop then

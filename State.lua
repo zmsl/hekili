@@ -3,7 +3,7 @@
 
 local addon, ns = ...
 local VGA = LibStub( "VirtualGameAPI-1.0" )
-local C_AzeriteItem, C_Item, C_LossOfControl, C_Spell = VGA.C_AzeriteItem, VGA.C_Item, VGA.C_LossOfControl, VGA.C_Spell
+local C_Item, C_LossOfControl, C_Spell = VGA.C_Item, VGA.C_LossOfControl, VGA.C_Spell
 local C_SpellBook, C_UnitAuras = VGA.C_SpellBook, VGA.C_UnitAuras
 local GetCombatRating, GetCombatRatingBonus, GetManaRegen, GetNumGroupMembers = VGA.GetCombatRating, VGA.GetCombatRatingBonus, VGA.GetManaRegen, VGA.GetNumGroupMembers
 local GetPowerRegenForPowerType, GetShapeshiftForm, GetShapeshiftFormInfo, GetTime = VGA.GetPowerRegenForPowerType, VGA.GetShapeshiftForm, VGA.GetShapeshiftFormInfo, VGA.GetTime
@@ -105,8 +105,6 @@ state.max_targets = 0
 state.action = {}
 state.active_dot = {}
 state.args = {}
-state.azerite = {}
-state.essence = {}
 state.aura = {}
 state.auras = auras
 state.buff = {}
@@ -123,7 +121,6 @@ state.empowerment = {
     stages = {}
 }
 state.max_empower = 3
-state.empowering = {}
 
 state.health = {
     current = 1,
@@ -136,8 +133,6 @@ state.health = {
 
     initialized = false
 }
-state.legendary = {}
-state.runeforge = state.legendary -- Different APLs use runeforge.X.equipped vs. legendary.X.enabled.
 state.debuff = {}
 state.dot = {}
 state.equipped = {}
@@ -149,15 +144,6 @@ state.off_hand = {
 }
 
 state.gcd = {}
-
-state.hero_tree = setmetatable( {
-    current = "none"
-}, {
-    __index = function( t, k )
-        return k == t.current
-    end
-} )
-
 
 state.history = {
     casts = {},
@@ -201,7 +187,6 @@ state.predictions = {}
 state.predictionsOff = {}
 state.predictionsOn = {}
 state.purge = {}
-state.pvptalent = {}
 state.race = {}
 state.script = {}
 state.set_bonus = {}
@@ -259,24 +244,6 @@ state.trinket = {
         __proc = false,
         ilvl = 0,
 
-        --[[ has_cooldown = {
-            slot = "none",
-        }, ]]
-
-        stacking_stat = {
-            slot = "none"
-        },
-        has_stacking_stat = {
-            slot = "none"
-        },
-
-        stat = {
-            slot = "none"
-        },
-        has_stat = {
-            slot = "none",
-        },
-
         is = {
             slot = "none",
         },
@@ -292,24 +259,6 @@ state.trinket = {
         __use_buff_duration = 0.01,
         __proc = false,
         ilvl = 0,
-
-        --[[ has_cooldown = {
-            slot = "t1"
-        }, ]]
-
-        stacking_stat = {
-            slot = "t1"
-        },
-        has_stacking_stat = {
-            slot = "t1"
-        },
-
-        stat = {
-            slot = "t1"
-        },
-        has_stat = {
-            slot = "t1"
-        },
 
         is = {
             slot = "t1"
@@ -327,24 +276,6 @@ state.trinket = {
         __proc = false,
         ilvl = 0,
 
-        --[[ has_cooldown = {
-            slot = "t2",
-        }, ]]
-
-        stacking_stat = {
-            slot = "t2"
-        },
-        has_stacking_stat = {
-            slot = "t2"
-        },
-
-        stat = {
-            slot = "t2"
-        },
-        has_stat = {
-            slot = "t2",
-        },
-
         is = {
             slot = "t2",
         },
@@ -361,24 +292,6 @@ state.trinket = {
         __proc = false,
         ilvl = 0,
 
-        --[[ has_cooldown = {
-            slot = "main_hand",
-        }, ]]
-
-        stacking_stat = {
-            slot = "main_hand"
-        },
-        has_stacking_stat = {
-            slot = "main_hand"
-        },
-
-        stat = {
-            slot = "main_hand"
-        },
-        has_stat = {
-            slot = "main_hand",
-        },
-
         is = {
             slot = "main_hand",
         },
@@ -389,23 +302,7 @@ state.trinket = {
     },
     has_cooldown = {
     },
-
-    stacking_stat = {
-    },
-    has_stacking_stat = {
-    },
-
-    stacking_proc = {
-    },
-    has_stacking_proc = {
-    },
-
-    stat = {
-    },
-    has_stat = {
-    },
 }
-state.trinket.proc = state.trinket.stat
 state.trinket[1] = state.trinket.t1
 state.trinket[2] = state.trinket.t2
 
@@ -422,59 +319,7 @@ state.role = setmetatable( {}, {
     end
 } )
 
-local mt_no_trinket_cooldown = {
-}
-
-local mt_no_trinket_stacking_stat = {
-}
-
-local mt_no_trinket_stat = {
-}
-
-
-local mt_no_trinket = {
-    __index = function( t, k )
-        if k:sub(1,4) == "has_" then
-            return false
-        elseif k == "down" then
-            return true
-        end
-
-        return false
-    end
-}
-
 local no_trinket = state.trinket.none
---[[
-local no_trinket = setmetatable( {
-    slot = "none",
-    __id = 0,
-    __ability = "null_cooldown",
-    __usable = false,
-    __has_use_buff = false,
-    __has_use_damage = false,
-    __use_buff_duration = nil,
-    __proc = false,
-    ilvl = 0,
-
-    stacking_stat = {
-        slot = "none"
-    },
-    has_stacking_stat = {
-        slot = "none"
-    },
-
-    stat = {
-        slot = "none"
-    },
-    has_stat = {
-        slot = "none",
-    },
-
-    is = {
-        slot = "none",
-    }
-}, mt_no_trinket ) ]]
 
 setmetatable( state.trinket, {
     __index = function( t, k )
@@ -488,9 +333,6 @@ setmetatable( state.trinket, {
     end
 } )
 
-state.trinket.stat.any = state.trinket.any
-
-
 local mt_trinket_any = {
     __index = function( t, k )
         return state.trinket.t1[ k ] or state.trinket.t2[ k ]
@@ -498,32 +340,6 @@ local mt_trinket_any = {
 }
 
 setmetatable( state.trinket.any, mt_trinket_any )
-
-local mt_trinket_any_stacking_stat = {
-    __index = function( t, k )
-        if state.trinket.t1.has_stacking_stat[k] then return state.trinket.t1
-            elseif state.trinket.t2.has_stacking_stat[k] then return state.trinket.t2 end
-        return no_trinket
-    end
-}
-
-setmetatable( state.trinket.stacking_stat, mt_trinket_any_stacking_stat )
-setmetatable( state.trinket.stacking_proc, mt_trinket_any_stacking_stat )
-
-local mt_trinket_any_stat = {
-    __index = function( t, k )
-        --[[ if k == "any" then
-        return ( state.trinket.has_stat[
-    end ]]
-
-        if state.trinket.t1.has_stat[k] then return state.trinket.t1
-        elseif state.trinket.t2.has_stat[k] then return state.trinket.t2 end
-        return no_trinket
-    end
-}
-
-setmetatable( state.trinket.stat, mt_trinket_any_stat )
-
 
 local mt_trinket = {
     __index = function( t, k )
@@ -601,136 +417,6 @@ setmetatable( state.trinket.none.is, mt_trinket_is )
 setmetatable( state.trinket.t1.is, mt_trinket_is )
 setmetatable( state.trinket.t2.is, mt_trinket_is )
 setmetatable( state.trinket.main_hand.is, mt_trinket_is )
-
-
---[[ local mt_trinket_cooldown = {
-    __index = function(t, k)
-        if k == "duration" or k == "expires" then
-            -- Refresh the ID in case we changed specs and ability is spec dependent.
-            local start, duration = GetItemCooldown( state.trinket[ t.slot ].id )
-
-            t.duration = duration or 0
-            t.expires = start and ( start + duration ) or 0
-
-            return t[k]
-
-        elseif k == "remains" then
-            return max( 0, t.expires - ( state.query_time ) )
-
-        elseif k == "up" then
-            return t.remains == 0
-
-        elseif k == "down" then
-            return t.remains > 0
-
-        end
-
-        -- return Error( "UNK: " .. k )
-
-    end
-}
-
-setmetatable( state.trinket.t1.cooldown, mt_trinket_cooldown )
-setmetatable( state.trinket.t2.cooldown, mt_trinket_cooldown ) ]]
-
-local mt_trinket_has_stacking_stat = {
-    __index = function( t, k )
-        local trinket = state.trinket[ t.slot ]
-        trinket = trinket and trinket.__ability
-        trinket = trinket and class.abilities[ trinket ]
-
-        if not trinket then return false end
-
-        local buff = trinket.self_buff
-        buff = buff and class.auras[ buff ]
-
-        if not buff or buff.max_stack == 1 then return false end
-
-        if k == "any" then return true end
-
-        local proc = trinket.proc or "none"
-        if not proc then return false end
-
-        if k == "any_dps" then return not ( proc == "damage" or proc == "healing" or proc == "health" or proc == "absorb" or proc == "mana" or proc == "speed" or proc == "leech" or proc == "avoidance" ) end
-        return proc == k
-    end
-}
-
-setmetatable( state.trinket.none.has_stacking_stat, mt_trinket_has_stacking_stat )
-setmetatable( state.trinket.t1.has_stacking_stat, mt_trinket_has_stacking_stat )
-setmetatable( state.trinket.t2.has_stacking_stat, mt_trinket_has_stacking_stat )
-setmetatable( state.trinket.main_hand.has_stacking_stat, mt_trinket_has_stacking_stat )
-
-
-local mt_trinket_has_stat = {
-    __index = function( t, k )
-        local trinket = state.trinket[ t.slot ]
-        trinket = trinket and trinket.__ability
-        trinket = trinket and class.abilities[ trinket ]
-
-        if not trinket then
-            return false
-        end
-
-        local buff = trinket.self_buff
-        buff = buff and class.auras[ buff ]
-
-        if not buff then
-            return false
-        end
-
-        if k == "any" then return true end
-
-        local proc = trinket.proc or "none"
-        if not proc then
-            return false
-        end
-
-        if k == "any_dps" then return not ( proc == "damage" or proc == "healing" or proc == "absorb" or proc == "mana" or proc == "speed" or proc == "leech" or proc == "avoidance" ) end
-        return proc == k
-    end
-}
-
-setmetatable( state.trinket.none.has_stat, mt_trinket_has_stat )
-setmetatable( state.trinket.t1.has_stat, mt_trinket_has_stat )
-setmetatable( state.trinket.t2.has_stat, mt_trinket_has_stat )
-setmetatable( state.trinket.main_hand.has_stat, mt_trinket_has_stat )
-
-
-local mt_trinket_with_stat = {
-    __index = function( t, k )
-        local trinket = state.trinket[ t.slot ]
-        return trinket and trinket.has_stat[ k ] and trinket or no_trinket
-    end
-}
-
-setmetatable( state.trinket.none.stat, mt_trinket_with_stat )
-setmetatable( state.trinket.t1.stat, mt_trinket_with_stat )
-setmetatable( state.trinket.t2.stat, mt_trinket_with_stat )
-setmetatable( state.trinket.main_hand.stat, mt_trinket_with_stat )
-
-state.trinket.none.proc = state.trinket.none.stat
-state.trinket.t1.proc = state.trinket.t1.stat
-state.trinket.t2.proc = state.trinket.t2.stat
-state.trinket.main_hand.proc = state.trinket.main_hand.stat
-
-
-local mt_trinkets_has_stat = {
-    __index = function( t, k )
-        return state.trinket.t1.has_stat[ k ] or state.trinket.t2.has_stat[ k ]
-    end
-}
-
-setmetatable( state.trinket.has_stat, mt_trinkets_has_stat )
-
-
-local mt_trinkets_has_stacking_stat = {
-    __index = function( t, k )
-        return state.trinket.t1.has_stacking_stat[ k ] or state.trinket.t2.has_stacking_stat[ k ]
-    end
-}
-
-setmetatable( state.trinket.has_stacking_stat, mt_trinkets_has_stacking_stat )
 
 
 state.max = safeMax
@@ -1000,33 +686,6 @@ do
             if not quiet then debug( " - cycle aura appears to be down, so we're sticking with our current target." ) end
         end
 
-        --[[ Possible future version:
-            local debuffIsUp = cDebuff.up
-
-            cycle.expires = cDebuff.duration + state.query_time
-
-            cycle.minTTD  = max( state.settings.cycle_min, ability.min_ttd or 0, cDebuff.duration / 2 )
-            cycle.maxTTD  = ability.max_ttd
-            cycle.aura = aura
-
-            if debuffIsUp and not ability.cycle_to and state.active_dot[ aura ] >= state.cycle_enemies then
-                debug( " - we will not use the ability on a different target, as we have enough targets with %s.", cycle.aura )
-                state.ClearCycle()
-                return
-            end
-
-            if not debuffIsUp and not ability.cycle_to then
-                debug( " - we will not use the ability on a different target, as current target does not have %s.", cycle.aura )
-                state.ClearCycle()
-                return
-            end
-
-            if not debuffIsUp and ability.cycle_to and active_dot[ aura ] == 0 then
-                debug( " - we will not use the ability on a different target, as no other target has %s applied.", cycle.aura)
-                state.ClearCycle()
-                return
-            end
-        ]]
     end
 
     function state.GetCycleInfo()
@@ -1564,7 +1223,6 @@ do
                    ( not v.spec or state.spec[ v.spec ] ) and
                    ( not v.equip or state.equipped[ v.equip ] ) and
                    ( not v.talent or state.talent[ v.talent ].enabled ) and
-                   ( not v.pvptalent or state.pvptalent[ v.pvptalent ].enabled ) and
                    ( not v.aura or state[ v.debuff and "debuff" or "buff" ][ v.aura ].remains > 0 ) and
                    ( not v.set_bonus or state.set_bonus[ v.set_bonus ] > 0 ) and
                    ( not v.setting or state.settings[ v.setting ] ) and
@@ -2107,29 +1765,6 @@ do
         ticks_remain = 1,
         time_to_refresh = 1,
 
-        --[[ Macro conditionals.
-        advflyable = 1,
-        canexitvehicle = 1,
-        -- channeling = 1, -- already exists.
-        -- combat = 1, -- already exists.
-        flyable = 1,
-        flying = 1,
-        -- group = 1, -- already exists.
-        indoors = 1,
-        outdoors = 1,
-        -- mounted = 1, -- already exists.
-        petbattle = 1,
-        pvpcombat = 1,
-        resting = 1,
-        bonusbar = 1,
-        cursor = 1,
-        extrabar = 1,
-        mod = 1,
-        modifier = 1,
-        overridebar = 1,
-        possessbar = 1,
-        shapeshift = 1,
-        vehicleui = 1, ]]
     }, {
         __index = function ( t, k )
             -- Make sure to get anything that should be dynamic, in case it was set (via newindex).
@@ -2365,9 +2000,6 @@ do
             elseif k == "channel_remains" then return t.buff.casting.up and t.buff.casting.v3 == 1 and t.buff.casting.remains or 0
             elseif k == "channeling" then return t.buff.casting.up and t.buff.casting.v3 == 1
 
-            -- Workaround for Evoker resource (Essence)
-            elseif k == "essence" then return t.bfa_essence
-
             -- Real incoming damage/healing information.
             elseif type(k) == "string" and k:sub(1, 15) == "incoming_damage" then
                 local remains = k:sub(17)
@@ -2457,9 +2089,6 @@ do
             local ability = class.abilities[ action ]
             local cooldown = t.cooldown[ action ]
 
-            -- Empowerment oddity.
-            if k == "duration" and action and model and model.empowered then return max( t.gcd.max, model.cast_time ) end -- Still ugh.
-
             if k == "action_cooldown" then return ability and ability.cooldown or 0
             elseif k == "cast_delay" then return 0
             elseif k == "cast_regen" then
@@ -2524,10 +2153,6 @@ do
                 return t.target.maxR / v
 
             end
-
-            --[[ None of the Abilities/Actions/Cooldowns block currently sets a value, so there's no need for this.
-            value = rawget( t, k )
-            if value ~= nil then return value end ]]
 
             local aura_name = ability and ability.aura or t.this_action
             local aura = aura_name and class.auras[ aura_name ]
@@ -3343,12 +2968,6 @@ do
                         duration = lossDuration
                     end
 
-                    --[[
-                        Void Emissary: Voidbinding
-                        If Voidbinding has 10s remaining, and the affected spell shows 15s remaining on its cooldown, then
-                        when 10s passes, the spell CD will jump from 5s to 6.5s.
-                    ]]--
-
                     if state.debuff.voidbinding.up and modRate and modRate ~= 1 then
                         local extraTime = start + duration - state.query_time - state.debuff.voidbinding.remains
                         if extraTime > 0 then
@@ -3429,7 +3048,6 @@ do
 
             elseif k == "time_to_max_charges" or k == "full_recharge_time" then
                 if not raw then
-                    -- if state.buff.empowering.up and state.buff.empowering.spell ~= t.key then return 0 end
                     if ( state:IsDisabled( t.key ) or ability.disabled ) then return ( ability.charges or 1 ) * t.duration end
                     if not state:IsKnown( t.key ) then return 0 end
                 end
@@ -3737,21 +3355,6 @@ function state:TimeToResource( t, amount )
     local regen, lastTick, pad = t.regen, nil, 0
     local queryTime = state.query_time
     local deficit = amount - t.current
-
-    --[[ Handle rune-specific logic.
-    if t.resource == "runes" then
-        local totalTime = 0
-
-        -- Check `expiry` to calculate when the required runes will regenerate.
-        for i = 1, deficit do
-            if i > #t.expiry then break end
-            local nextRune = t.expiry[ i ] or 0
-            if nextRune > queryTime then
-                totalTime = max( totalTime, nextRune - queryTime )
-            end
-        end
-        return totalTime
-    end ]]
 
     -- Handle tick-based resources (e.g., energy, focus).
     if t.resource == "energy" or t.resource == "focus" then
@@ -4273,11 +3876,6 @@ do
             if v == nil then return end
 
             class.knownAuraAttributes[ k ] = true
-            -- Prevent a fixed value from being entered if it is calculated by a meta function.
-            -- 20220828:  This was bugged, and fixing it might cause new bugs.  Watch carefully.
-            --[[ if t.meta and t.meta[ k ] then
-                return
-            end ]]
 
             if autoReset[ k ] then Mark( t, k ) end
             rawset( t, k, v )
@@ -4428,144 +4026,6 @@ local mt_talents = {
     end,
 }
 ns.metatables.mt_talents = mt_talents
-
-
-local function IslandPvP()
-    local _, instanceType, difficulty = VGA.GetInstanceInfo()
-    return instanceType == "scenario" and difficulty == 45
-end
-
-local mt_default_pvptalent = {
-    __index = function( t, k )
-        local enlisted = state.bg or state.arena or state.buff.enlisted.up or IslandPvP()
-
-        if k == "enabled" then return enlisted and rawget( t, "_enabled" ) or false
-        elseif k == "_enabled" then return false
-        elseif k == "i_enabled" or k == "rank" then return enlisted and rawget( t, "_enabled" ) and 1 or 0 end
-
-        return k
-    end,
-}
-
-
-local null_pvptalent = setmetatable( {
-    _enabled = false
-}, mt_default_pvptalent )
-
-
-local mt_pvptalents = {
-    __index = function( t, k )
-        return null_pvptalent
-    end,
-
-    __newindex = function( t, k, v )
-        rawset( t, k, setmetatable( v, mt_default_pvptalent ) )
-    end,
-}
-
-
-do
-    local mt_default_gen_trait = {
-        __index = function( t, k )
-            if k == "enabled" or k == "minor" or k == "equipped" then
-                return t.rank and t.rank > 0
-            elseif k == "time_value" then
-                local mod = t.mod
-
-                if mod >= 1000 or mod <= -1000 then
-                    return mod / 1000
-                end
-
-                return mod
-            elseif k == "disabled" then
-                return not t.rank or t.rank == 0
-            end
-        end
-    }
-    ns.metatables.mt_default_gen_trait = mt_default_gen_trait
-
-    local mt_generic_traits = {
-        __index = function( t, k )
-            return t.no_trait
-        end,
-
-        __newindex = function( t, k, v )
-            rawset( t, k, setmetatable( v, mt_default_gen_trait ) )
-            return t[ k ]
-        end
-    }
-    ns.metatables.mt_generic_traits = mt_generic_traits
-
-    setmetatable( state.legendary, mt_generic_traits )
-    state.legendary.no_trait = { rank = 0 }
-
-
-
-    -- Azerite and Essences.
-    local mt_default_trait = {
-        __index = function( t, k )
-            if not state.azerite.active then
-                if k == "enabled" or k == "equipped" or k == "major" or k == "minor" then
-                    return false
-                elseif k == "disabled" then
-                    return true
-                end
-                return 0
-            end
-
-            if k == "enabled" or k == "equipped" then
-                return t.__rank and t.__rank > 0
-            elseif k == "disabled" then
-                return not t.__rank or t.__rank == 0
-            elseif k == "rank" then
-                return t.__rank or 0
-            elseif k == "major" then
-                return t.__major or false
-            elseif k == "minor" then
-                return t.__minor or false
-            end
-        end
-    }
-
-
-    local HEART_OF_AZEROTH_ITEM_ID = 158075
-
-    local mt_artifact_traits = {
-        __index = function( t, k )
-            if k == "active" then
-                local neck = VGA.GetInventoryItemID( "player", INVSLOT_NECK )
-                if not neck or neck ~= HEART_OF_AZEROTH_ITEM_ID then
-                    rawset( t, "active", false )
-                    return false
-                end
-
-                local item = C_AzeriteItem.FindActiveAzeriteItem()
-                rawset( t, "active", item and item:IsEquipmentSlot() and C_AzeriteItem.IsAzeriteItemEnabled( item ) )
-                return t.active
-            end
-
-            return t.no_trait
-        end,
-
-        __newindex = function( t, k, v )
-            if v ~= nil then rawset( t, k, setmetatable( v, mt_default_trait ) ) end
-        end
-    }
-
-    ns.metatables.mt_artifact_traits = mt_artifact_traits
-
-    setmetatable( state.azerite, mt_artifact_traits )
-    state.azerite.no_trait = { rank = 0 }
-    state.artifact = state.azerite
-
-    setmetatable( state.essence, ns.metatables.mt_artifact_traits )
-    state.essence.no_trait = { rank = 0, major = false, minor = false }
-
-    -- DF: essence.X will be used for Evoker resources.
-    -- The state metatable will redirect essence -> bfa_essence for non-Evokers.
-    state.bfa_essence = state.essence
-    rawset( state, "essence", nil )
-end
 
 
 do
@@ -4752,16 +4212,6 @@ do
             end
         end
 
-        --[[ if preclusions then
-            for i, block in ipairs( preclusions ) do
-                local script = block.script
-                if script ~= 0 then
-                    insert( entry.mustFail, script )
-                    fullPath = fullPath .. "-" .. script
-                end
-            end
-        end ]]
-
         entry.fullPath = fullPath
         insert( data, entry )
     end
@@ -4862,15 +4312,6 @@ do
                         end
                     end
 
-                    --[[ if pathState[ currPath ] then
-                        for e, excl in ipairs( entry.mustFail ) do
-                            state.scriptID = excl
-                            if scripts:CheckScript( excl ) then
-                                pathState[ currPath ] = false
-                                break
-                            end
-                        end
-                    end ]]
                 end
 
                 if pathState[ currPath ] then
@@ -4888,21 +4329,6 @@ do
 
                         local conditions = "(none)"
                         local valueString = "(none)"
-
-                        --[[    add = "Add Value",
-                                ceil
-                                x default = "Set Default Value",
-                                div = "Divide Value",
-                                floor
-                                max = "Maximum Value",
-                                min = "Minimum Value",
-                                mod = "Modulo Value",
-                                mul = "Multiply Value",
-                                pow = "Raise Value to X Power",
-                                x reset = "Reset to Default",
-                                x set = "Set Value",
-                                x setif = "Set Value If...",
-                                sub = "Subtract Value" ]]
 
                         if op == "set" or op == "setif" then
                             if passed then
@@ -4981,10 +4407,6 @@ do
             -- Clear cache and clear the flag that we are checking this variable already.
             state.variable[ var ] = nil
 
-            --[[ if debug then
-                Hekili:Debug( "%s Result = %s.", var, tostring( value ) )
-            end ]]
-
             state.scriptID = parent
 
             return value
@@ -5003,35 +4425,17 @@ local mt_set_bonuses = {
     __index = function( t, k )
         if type( k ) == "number" then return 0 end
 
-        -- Match specific set bonus effect checks, 2pc/4pc
-          -- standard (tww2_2pc)
-          -- hero tree (tww3_rider_of_the_apocalypse_2pc)
+        -- Match specific set bonus effect checks, 2pc/4pc (tww2_2pc)
         local prefix, pieces = k:match( "^(.+)_([24])pc$" )
         if prefix and pieces then
             pieces = tonumber( pieces )
 
-            -- Try as hero tree first (contains additional underscore for hero tree name)
-            local heroSet = prefix:match( "^([%w_]+)_" .. state.hero_tree.current .. "$" )
-            if heroSet then
-                heroSet = tierSetAliasMap[ heroSet ] or heroSet
-                return ( rawget( t, heroSet ) or 0 ) >= pieces and 1 or 0
-            end
-
-            -- Try as standard set bonus (no additional hero tree part)
             local standardSet = tierSetAliasMap[ prefix ] or prefix
             return ( rawget( t, standardSet ) or 0 ) >= pieces and 1 or 0
         end
 
         -- Check if this is a basic set name that should be aliased first
         if tierSetAliasMap[ k ] then return rawget( t,  tierSetAliasMap[ k ] ) or 0 end
-
-        -- Match hero tree set name (tww3_rider_of_the_apocalypse)
-        local heroSet = k:match( "^([%w_]-)_" .. state.hero_tree.current .. "$" )
-        if heroSet then
-            -- Hero tree set name
-            heroSet = tierSetAliasMap[ heroSet ] or heroSet
-            return rawget( t, heroSet ) or 0
-        end
 
         -- t[ k ] is nil or this metafunction would not have fired.
         return 0
@@ -5043,7 +4447,7 @@ ns.metatables.mt_set_bonuses = mt_set_bonuses
 local mt_equipped = {
     __index = function(t, k)
         -- if not class.artifacts[ k ] and ( state.bg or state.arena ) then return false end
-        return state.set_bonus[k] > 0 or state.legendary[k].rank > 0
+        return state.set_bonus[k] > 0
     end
 }
 ns.metatables.mt_equipped = mt_equipped
@@ -5789,14 +5193,6 @@ local mt_aura = {
 }
 
 
-local mt_empowering = {
-    __index = function( t, k )
-        if state.buff.empowering.down then return false end
-        return state.buff.empowering.spell == k
-    end
-}
-
-
 setmetatable( state, mt_state )
 setmetatable( state.action, mt_actions )
 setmetatable( state.active_dot, mt_active_dot )
@@ -5805,7 +5201,6 @@ setmetatable( state.buff, mt_buffs )
 setmetatable( state.cooldown, mt_cooldowns )
 setmetatable( state.debuff, mt_debuffs )
 setmetatable( state.dot, mt_dot )
-setmetatable( state.empowering, mt_empowering )
 setmetatable( state.equipped, mt_equipped )
 setmetatable( state.main_hand, mt_weapon_type )
 setmetatable( state.off_hand, mt_weapon_type )
@@ -5815,7 +5210,6 @@ setmetatable( state.pet.fake_pet, mt_default_pet )
 setmetatable( state.prev, mt_prev )
 setmetatable( state.prev_gcd, mt_prev )
 setmetatable( state.prev_off_gcd, mt_prev )
-setmetatable( state.pvptalent, mt_pvptalents )
 setmetatable( state.race, mt_false )
 setmetatable( state.set_bonus, mt_set_bonuses )
 setmetatable( state.settings, mt_settings )
@@ -6222,7 +5616,7 @@ function state.putTrinketsOnCD( val )
     val = val or 10
 
     for i, item in ipairs( state.items ) do
-        if not class.abilities[ item ].essence and not class.abilities[ item ].no_icd and state.cooldown[ item ].remains < val then
+        if not class.abilities[ item ].no_icd and state.cooldown[ item ].remains < val then
             state.setCooldown( item, val )
         end
     end
@@ -6576,7 +5970,7 @@ do
 
             self:SetWhitelist( nil )
 
-            if ability.item and not ( ability.essence or ability.no_icd ) then
+            if ability.item and not ability.no_icd then
                 self.putTrinketsOnCD( cooldown / 6 )
             end
 
@@ -6745,10 +6139,6 @@ function state:RunHandler( key, noStart )
         return
     end
 
-    --[[ if self.channeling and not ability.dual_cast then
-        self.stopChanneling( false, ability.key )
-    end ]]
-
     -- Any ability handler is likely to modify the game state enough to force a reset later.
     if not state.resetting then state.modified = true end
 
@@ -6756,8 +6146,6 @@ function state:RunHandler( key, noStart )
         if ability.start then ability.start() end
         self.channelSpell( key, self.query_time, ability.cast, ability.id )
     elseif ability.handler then ability.handler() end
-
-    if self.buff.empowering.up then removeBuff( "empowering" ) end
 
     self.prev.last = key
     self[ ability.gcd == "off" and "prev_off_gcd" or "prev_gcd" ].last = key
@@ -6993,45 +6381,6 @@ do
             state.setCooldown( "ascendance", state.buff.ascendance.remains + 165 )
         end
 
-        --[[ Trinkets that need special handling.
-        if state.buff.stormeaters_boon.up and state.debuff.rooted.down then
-            state.applyDebuff( "player", "rooted", state.buff.stormeaters_boon.remains )
-        end
-
-        -- BUGS: Windscar Whetstone invisibly keeps trinkets on CD for 6 additional seconds.
-        local ww_cd_remains = state.action.windscar_whetstone.lastCast + 26 - state.now
-        if ww_cd_remains > 0 then
-            state.putTrinketsOnCD( ww_cd_remains )
-        end
-
-        -- TODO: Move this all to those aura generator functions.
-        if state.set_bonus.cache_of_acquired_treasures > 0 then
-            -- This required changing how buffs are tracked (that applied time is greater than the query time, which was always just expected to be true before).
-            -- If this remains problematic, use QueueAuraExpiration instead.
-            if state.buff.acquired_sword.up then
-                state.applyBuff( "acquired_axe" )
-                state.buff.acquired_axe.expires = state.buff.acquired_sword.expires + 12
-                state.buff.acquired_axe.applied = state.buff.acquired_sword.expires
-                state.applyBuff( "acquired_wand" )
-                state.buff.acquired_wand.expires = state.buff.acquired_axe.expires + 12
-                state.buff.acquired_wand.applied = state.buff.acquired_axe.expires
-            elseif state.buff.acquired_axe.up then
-                state.applyBuff( "acquired_wand" )
-                state.buff.acquired_wand.expires = state.buff.acquired_axe.expires + 12
-                state.buff.acquired_wand.applied = state.buff.acquired_axe.expires
-                state.applyBuff( "acquired_sword" )
-                state.buff.acquired_sword.expires = state.buff.acquired_wand.expires + 12
-                state.buff.acquired_sword.applied = state.buff.acquired_wand.expires
-            elseif state.buff.acquired_wand.up then
-                state.applyBuff( "acquired_sword" )
-                state.buff.acquired_sword.expires = state.buff.acquired_wand.expires + 12
-                state.buff.acquired_sword.applied = state.buff.acquired_wand.expires
-                state.applyBuff( "acquired_axe" )
-                state.buff.acquired_axe.expires = state.buff.acquired_sword.expires + 12
-                state.buff.acquired_axe.applied = state.buff.acquired_sword.expires
-            end
-        end ]]
-
         -- Hekili:Yield( "Reset Pre-Cast Hook" )
         ns.callHook( "reset_precast" )
         -- Hekili:Yield( "Reset Pre-Casting" )
@@ -7051,18 +6400,6 @@ do
             if ability then
                 casting = ability.key
 
-                if castID == class.abilities.cyclotronic_blast.id then
-                    -- Set up Pocket-Sized Computation Device.
-                    if state.buff.casting.v3 == 1 then
-                        -- We are in the channeled part of the cast.
-                        setCooldown( "pocketsized_computation_device", state.buff.casting.applied + 120 - state.now )
-                        setCooldown( "global_cooldown", cast_time )
-                    else
-                        -- This is the casting portion.
-                        casting = class.abilities.pocketsized_computation_device.key
-                        state.buff.casting.v1 = class.abilities.pocketsized_computation_device.id
-                    end
-                end
             end
         end
 
@@ -7478,32 +6815,6 @@ function state:IsKnown( sID )
         return false, "talent [ " .. z .. " ] disallowed"
     end
 
-    z = ability.pvptalent
-    if type( z ) == "table" then
-        for _, v in ipairs( z ) do
-            if not state.pvptalent[ v ].enabled then
-                return false, "PvP talent [ " .. v .. " ] missing"
-            end
-        end
-    elseif z and not state.pvptalent[ z ].enabled then
-        return false, "PvP talent [ " .. z .. " ] missing"
-    end
-
-    z = ability.nopvptalent
-    if type( z ) == "table" then
-        for _, v in ipairs( z ) do
-            if state.pvptalent[ v ].enabled then
-                return false, "PvP talent [ " .. v .. " ] disallowed"
-            end
-        end
-    elseif z and state.pvptalent[ z ].enabled then
-        return false, "PvP talent [ " .. z .. " ] disallowed"
-    end
-
-    if ability.trait and not state.artifact[ ability.trait ].enabled then
-        return false, "trait [ " .. ability.trait .. " ] missing"
-    end
-
     if ability.equipped and not state.equipped[ ability.equipped ] then
         return false, "equipment [ " .. ability.equipped .. " ] missing"
     end
@@ -7634,7 +6945,6 @@ do
 
         if ( toggle == "potion" or toggle == "essences" ) and profile.toggles[ toggle ].separate and not profile.toggles[ toggle ].value then toggle = "cooldowns" end
 
-        if state.buff.empowering.up and state.buff.empowering.spell ~= spell then return true, "empowerment" end
         if state.filter ~= "none" and state.filter ~= toggle and not ability[ state.filter ] then return true, "display" end
         if ability.item and not ability.bagItem and not state.equipped[ ability.item ] then return false, "not equipped" end
         if toggleSpell[ spell ] and toggle and toggle ~= "none" then
@@ -7699,10 +7009,6 @@ do
             return false, "ability.disabled returned true"
         end
 
-        if ability.empowered and self.args.empower_to and self.args.empower_to > self.max_empower then
-            return false, "empowerment level " .. self.args.empower_to .. " not available"
-        end
-
         if self.args.only_cwc and ( not self.buff.casting.up or self.buff.casting.v3 ~= 1 or not ability.dual_cast ) then
             return false, "only castable while channeling"
         end
@@ -7761,11 +7067,6 @@ do
             return false, "entry requires no movement and player is moving"
         end
 
-        -- Moved this into TimeToReady; we can see when the buff falls off.
-        --[[ if ability.nobuff and state.buff[ ability.nobuff ].up then
-            return false
-        end ]]
-
         return true
     end
 
@@ -7812,34 +7113,6 @@ end
 local power_tick_rate = 0.115
 
 
---[[ Really dumb timing tool to find what was bottlenecking TTR.
-local longestTTR = 0
-
-local lastTime, lastName = 0, "nothing"
-local longTime, longName = 0, "nothing"
-
-local function profilestop( name, reset )
-    local newTime = debugprofilestop()
-
-    if reset then
-        lastTime = newTime
-        lastName = name
-
-        longTime = 0
-        longName = name
-
-        return lastTime
-    end
-
-    if newTime - lastTime > longTime then
-        longTime = newTime - lastTime
-        longName = name
-    end
-
-    lastTime = newTime
-    return newTime
-end ]]
-
 
 function state:TimeToReady( action, pool )
     local now = self.now + self.offset
@@ -7857,21 +7130,6 @@ function state:TimeToReady( action, pool )
     -- Need to ignore the wait for this part.
     local wait = self.cooldown[ action ].remains
 
-    -- Early exit for timeToReadyOverride. This is to fix the fact that some spells show as unavailable in game even though
-    -- the addon knows that it will become available on the next GCD due to a guaranteed buff/proc
-    --[[ Commenting out for now. After 11.1 review is finished we can revisit
-    if ability.timeToReadyOverride then
-        local override = ability.timeToReadyOverride
-        if override ~= nil then
-            override = max( override, self.cooldown.global_cooldown.remains )
-            if Hekili.ActiveDebug then
-                Hekili:Debug( "%s has a timeToReadyOverride. Returning %.2f.", action, override )
-            end
-            return max( override, self.delayMin )
-        end
-    end
-    --]]
-
     -- Working variable.
     local z = ability.id
 
@@ -7888,11 +7146,6 @@ function state:TimeToReady( action, pool )
         if z > wait then
             wait = z
         end
-    end
-
-    if self.buff.empowering.up then
-        if self.buff.empowering.spell == ability.key then return ability.cast end
-        wait = max( wait, ability.cast )
     end
 
     local spend, resource = ability.spend
@@ -7960,21 +7213,9 @@ function state:TimeToReady( action, pool )
         end
     end
 
-    --[[ Need to house this in an encounter module, really.
-    z = self.debuff.repeat_performance.remains
-    if z and z > 0 and self.prev[1][ action ] then
-        wait = max( wait, z )
-    end
-    profilestop( "post-repeat" ) ]]
-
 
     -- If ready is a function, it returns time.
     -- Ignore this if we are just checking pool_resources.
-
-    --[[ if state.spec.fire and state.buff.casting.up and ( ability.id > 0 or ability.id < -99 ) and ability.gcd ~= "off" and not ability.dual_cast then
-        wait = max( wait, state.buff.casting.remains )
-    end
-    profilestop( "post-casting" ) ]]
 
     z = ability.timeToReady
     if z and z > wait then
@@ -8109,4 +7350,4 @@ for k, v in pairs( state ) do
     ns.commitKey( k )
 end
 
-ns.attr = { "serenity", "active", "active_enemies", "my_enemies", "active_flame_shock", "adds", "agility", "air", "armor", "attack_power", "bonus_armor", "cast_delay", "cast_time", "casting", "cooldown_react", "cooldown_remains", "cooldown_up", "crit_rating", "deficit", "distance", "down", "duration", "earth", "enabled", "energy", "execute_time", "fire", "five", "focus", "four", "gcd", "hardcasts", "haste", "haste_rating", "health", "health_max", "health_pct", "intellect", "level", "mana", "mastery_rating", "mastery_value", "max_nonproc", "max_stack", "maximum_energy", "maximum_focus", "maximum_health", "maximum_mana", "maximum_rage", "maximum_runic", "melee_haste", "miss_react", "moving", "mp5", "multistrike_pct", "multistrike_rating", "one", "pct", "rage", "react", "regen", "remains", "resilience_rating", "runic", "seal", "spell_haste", "spell_power", "spirit", "stack", "stack_pct", "stacks", "stamina", "strength", "this_action", "three", "tick_damage", "tick_dmg", "tick_time", "ticking", "ticks", "ticks_remain", "time", "time_to_die", "time_to_max", "travel_time", "two", "up", "water", "weapon_dps", "weapon_offhand_dps", "weapon_offhand_speed", "weapon_speed", "single", "aoe", "cleave", "percent", "last_judgment_target", "unit", "ready", "refreshable", "pvptalent", "conduit", "legendary", "runeforge", "covenant", "soulbind", "enabled", "full_recharge_time", "time_to_max_charges", "remains_guess", "execute", "actual", "current", "cast_regen", "boss", "exists", "disabled", "fight_remains", "last_used", "time_since", "max" }
+ns.attr = { "serenity", "active", "active_enemies", "my_enemies", "active_flame_shock", "adds", "agility", "air", "armor", "attack_power", "bonus_armor", "cast_delay", "cast_time", "casting", "cooldown_react", "cooldown_remains", "cooldown_up", "crit_rating", "deficit", "distance", "down", "duration", "earth", "enabled", "energy", "execute_time", "fire", "five", "focus", "four", "gcd", "hardcasts", "haste", "haste_rating", "health", "health_max", "health_pct", "intellect", "level", "mana", "mastery_rating", "mastery_value", "max_nonproc", "max_stack", "maximum_energy", "maximum_focus", "maximum_health", "maximum_mana", "maximum_rage", "maximum_runic", "melee_haste", "miss_react", "moving", "mp5", "multistrike_pct", "multistrike_rating", "one", "pct", "rage", "react", "regen", "remains", "resilience_rating", "runic", "seal", "spell_haste", "spell_power", "spirit", "stack", "stack_pct", "stacks", "stamina", "strength", "this_action", "three", "tick_damage", "tick_dmg", "tick_time", "ticking", "ticks", "ticks_remain", "time", "time_to_die", "time_to_max", "travel_time", "two", "up", "water", "weapon_dps", "weapon_offhand_dps", "weapon_offhand_speed", "weapon_speed", "single", "aoe", "cleave", "percent", "last_judgment_target", "unit", "ready", "refreshable", "conduit", "covenant", "soulbind", "enabled", "full_recharge_time", "time_to_max_charges", "remains_guess", "execute", "actual", "current", "cast_regen", "boss", "exists", "disabled", "fight_remains", "last_used", "time_since", "max" }

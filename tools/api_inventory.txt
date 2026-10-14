@@ -4,8 +4,6 @@ AuraUtil.UnpackAuraData
 C_AddOns.GetAddOnMetadata
 C_AddOns.IsAddOnLoaded
 C_AddOns.LoadAddOn
-C_AzeriteItem.FindActiveAzeriteItem
-C_AzeriteItem.IsAzeriteItemEnabled
 C_ClassColor.GetClassColor
 C_ClassTalents.GetActiveConfigID
 C_ClassTalents.GetActiveHeroTalentSpec
