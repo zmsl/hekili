@@ -3,12 +3,12 @@
 
 local addon, ns = ...
 local VGA = LibStub( "VirtualGameAPI-1.0" )
-local AuraUtil, C_AddOns, C_AzeriteEmpoweredItem, C_AzeriteEssence = VGA.AuraUtil, VGA.C_AddOns, VGA.C_AzeriteEmpoweredItem, VGA.C_AzeriteEssence
+local AuraUtil, C_AddOns = VGA.AuraUtil, VGA.C_AddOns
 local C_Item, C_SpecializationInfo, C_Spell, C_UnitAuras = VGA.C_Item, VGA.C_SpecializationInfo, VGA.C_Spell, VGA.C_UnitAuras
 local CombatLogGetCurrentEventInfo, GetActionInfo, GetBindingKey, GetInstanceInfo = VGA.CombatLogGetCurrentEventInfo, VGA.GetActionInfo, VGA.GetBindingKey, VGA.GetInstanceInfo
-local GetInventoryItemID, GetPvpTalentInfoByID, GetTalentInfoByID, GetTime = VGA.GetInventoryItemID, VGA.GetPvpTalentInfoByID, VGA.GetTalentInfoByID, VGA.GetTime
+local GetInventoryItemID, GetTalentInfoByID, GetTime = VGA.GetInventoryItemID, VGA.GetTalentInfoByID, VGA.GetTime
 local GetUnitEmpowerHoldAtMaxTime, GetUnitEmpowerStageDuration, InCombatLockdown, IsInGroup = VGA.GetUnitEmpowerHoldAtMaxTime, VGA.GetUnitEmpowerStageDuration, VGA.InCombatLockdown, VGA.IsInGroup
-local IsInJailersTower, IsPlayerSpell, IsResting, SecureCmdOptionParse = VGA.IsInJailersTower, VGA.IsPlayerSpell, VGA.IsResting, VGA.SecureCmdOptionParse
+local IsPlayerSpell, IsResting, SecureCmdOptionParse = VGA.IsPlayerSpell, VGA.IsResting, VGA.SecureCmdOptionParse
 local SpellIsSelfBuff, UnitAttackSpeed, UnitCastingInfo, UnitChannelInfo = VGA.SpellIsSelfBuff, VGA.UnitAttackSpeed, VGA.UnitCastingInfo, VGA.UnitChannelInfo
 local UnitClass, UnitExists, UnitGUID, UnitInParty = VGA.UnitClass, VGA.UnitExists, VGA.UnitGUID, VGA.UnitInParty
 local UnitInRaid, UnitIsPlayer, UnitLevel, UnitName = VGA.UnitInRaid, VGA.UnitIsPlayer, VGA.UnitLevel, VGA.UnitName
@@ -349,7 +349,6 @@ RegisterEvent( "PLAYER_ENTERING_WORLD", function( event, login, reload )
         local _, zone, _, _, _, _, _, instanceID = GetInstanceInfo()
         state.bg = zone == "pvp"
         state.arena = zone == "arena"
-        state.torghast = IsInJailersTower()
         state.instance_id = instanceID or -1
 
         Hekili:BuildUI()
@@ -395,12 +394,10 @@ do
         local _, zone, _, _, _, _, _, instanceID = GetInstanceInfo()
         state.bg = zone == "pvp"
         state.arena = zone == "arena"
-        state.torghast = IsInJailersTower()
         state.instance_id = instanceID or -1
     end
 
     RegisterEvent( "ZONE_CHANGED", UpdateZoneInfo )
-    RegisterEvent( "ARENA_PREP_OPPONENT_SPECIALIZATIONS", UpdateZoneInfo )
 end
 
 
@@ -448,28 +445,6 @@ function ns.updateTalents()
         end
     end
 
-    for k, _ in pairs( state.pvptalent ) do
-        state.pvptalent[ k ]._enabled = false
-    end
-
-    for k, v in pairs( class.pvptalents ) do
-        local _, name, _, enabled, _, sID, _, _, _, known = GetPvpTalentInfoByID( v, 1 )
-
-        if not name then
-            enabled = IsPlayerSpell( v )
-        end
-
-        enabled = enabled or known
-
-        if rawget( state.pvptalent, k ) then
-            state.pvptalent[ k ]._enabled = enabled
-        else
-            state.pvptalent[ k ] = {
-                _enabled = enabled
-            }
-        end
-    end
-
     WipeCovenantCache()
     ResetDisabledGearAndSpells()
 end
@@ -489,167 +464,6 @@ RegisterEvent( "ENCOUNTER_END", function ()
     state.encounterDifficulty = 0
     state.encounterSize = 0
 end )
-
-
-do
-    local loc = ItemLocation:CreateEmpty()
-
-    local GetAllTierInfo = C_AzeriteEmpoweredItem.GetAllTierInfo
-    local GetPowerInfo = C_AzeriteEmpoweredItem.GetPowerInfo
-    local IsAzeriteEmpoweredItemByID = C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItemByID
-    local IsPowerSelected = C_AzeriteEmpoweredItem.IsPowerSelected
-
-    local MAX_INV_SLOTS = 19
-
-    function ns.updatePowers()
-        local p = state.azerite
-
-        for k, v in pairs( p ) do
-            v.__rank = 0
-        end
-
-        if next( class.powers ) == nil then
-            C_Timer.After( 3, ns.updatePowers )
-            return
-        end
-
-        for slot = 1, MAX_INV_SLOTS do
-            local id = GetInventoryItemID( "player", slot )
-
-            if id and IsAzeriteEmpoweredItemByID( id ) then
-                loc:SetEquipmentSlot( slot )
-                local tiers = GetAllTierInfo( loc )
-
-                for tier, tierInfo in ipairs( tiers ) do
-                    for _, power in ipairs( tierInfo.azeritePowerIDs ) do
-                        local pInfo = GetPowerInfo( power )
-
-                        if IsPowerSelected( loc, power ) then
-                            local name = class.powers[ pInfo.spellID ]
-                            if not name then
-                                Hekili:Error( "Missing Azerite Power info for #" .. pInfo.spellID .. ": " .. GetSpellInfo( pInfo.spellID ) .. "." )
-                            else
-                                p[ name ] = rawget( p, name ) or { __rank = 0 }
-                                p[ name ].__rank = p[ name ].__rank + 1
-                            end
-                        end
-                    end
-                end
-            end
-        end
-
-        loc:Clear()
-    end
-
-    Hekili:ProfileCPU( "updatePowers", ns.updatePowers )
-
-
-    -- Essences
-    local AE = C_AzeriteEssence
-    local GetMilestoneEssence, GetEssenceInfo = AE.GetMilestoneEssence, AE.GetEssenceInfo
-    local milestones = { 115, 116, 117, 119 }
-
-    local essenceKeys = {
-        [2]  = "azeroths_undying_gift",
-        [3]  = "sphere_of_suppression",
-        [4]  = "worldvein_resonance",
-        [5]  = "essence_of_the_focusing_iris",
-        [6]  = "purification_protocol",
-        [7]  = "anima_of_life_and_death",
-        [12] = "the_crucible_of_flame",
-        [13] = "nullification_dynamo",
-        [14] = "condensed_lifeforce",
-        [15] = "ripple_in_space",
-        [16] = "unwavering_ward",
-        [17] = "everrising_tide",
-        [18] = "artifice_of_time",
-        [19] = "well_of_existence",
-        [20] = "lifebinders_invocation",
-        [21] = "vitality_conduit",
-        [22] = "vision_of_perfection",
-        [23] = "blood_of_the_enemy",
-        [24] = "spirit_of_preservation",
-        [25] = "aegis_of_the_deep",
-        [27] = "memory_of_lucid_dreams",
-        [28] = "the_unbound_force",
-        [32] = "conflict_and_strife",
-        [33] = "touch_of_the_everlasting",
-        [34] = "strength_of_the_warden",
-        [35] = "breath_of_the_dying",
-        [36] = "spark_of_inspiration",
-        [37] = "the_formless_void"
-    }
-
-    local essenceMajors = {
-        -- everrising_tide = "",
-        -- lifebinders_invocation = "",
-        -- touch_of_the_everlasting = "",
-        -- vision_of_perfection = "",
-        -- vitality_conduit = "",
-        -- well_of_existence = "",
-        -- conflict_and_strife = "",
-        aegis_of_the_deep = "aegis_of_the_deep",
-        anima_of_life_and_death = "anima_of_death",
-        artifice_of_time = "standstill",
-        azeroths_undying_gift = "azeroths_undying_gift",
-        blood_of_the_enemy = "blood_of_the_enemy",
-        breath_of_the_dying = "reaping_flames",
-        condensed_lifeforce = "guardian_of_azeroth",
-        essence_of_the_focusing_iris = "focused_azerite_beam",
-        memory_of_lucid_dreams = "memory_of_lucid_dreams",
-        nullification_dynamo = "empowered_null_barrier",
-        purification_protocol = "purifying_blast",
-        ripple_in_space = "ripple_in_space",
-        spark_of_inspiration = "moment_of_glory",
-        sphere_of_suppression = "suppressing_pulse",
-        spirit_of_preservation = "spirit_of_preservation",
-        strength_of_the_warden = "vigilant_protector",
-        the_crucible_of_flame = "concentrated_flame",
-        the_formless_void = "replica_of_knowledge",
-        the_unbound_force = "the_unbound_force",
-        unwavering_ward = "guardian_shell",
-        worldvein_resonance = "worldvein_resonance",
-    }
-
-    for _, key in pairs( essenceKeys ) do
-        state.essence[ key ] = { __rank = 0, __major = false }
-    end
-
-
-    function ns.updateEssences()
-        local e = state.bfa_essence
-
-        for k, v in pairs( e ) do
-            v.__rank = 0
-        end
-
-        class.active_essence = nil
-
-        if state.equipped[ 158075 ] then
-            for i, ms in ipairs( milestones ) do
-                local essence = GetMilestoneEssence( ms )
-
-                if essence then
-                    local info = GetEssenceInfo( essence )
-
-                    if info then
-                        local key = essenceKeys[ info.ID ]
-
-                        e[ key ].__rank = info.rank
-                        e[ key ].__minor = true
-
-                        if i == 1 then
-                            e[ key ].__major = true
-                            class.active_essence = essenceMajors[ key ]
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    ns.updateEssences()
-end
 
 
 do
@@ -677,8 +491,6 @@ do
         end
 
         sort( itemList, itemSorter )
-
-        class.essence_unscripted = ( class.active_essence and not Hekili:IsEssenceScripted( class.active_essence ) ) or false
 
         Hekili:LoadItemScripts()
     end
@@ -989,9 +801,7 @@ do
             end
         end
 
-        ns.updatePowers()
         ns.updateTalents()
-        ns.updateEssences()
 
         local sameItems = #wasWearing == #state.items
 
@@ -1038,32 +848,6 @@ do
     for _, event in pairs( talentEvents ) do
         RegisterEvent( event, QueueUpdate )
     end
-end
-
-
--- Update Azerite Essence Data.
-do
-    local azeriteEvents = {
-        "AZERITE_ESSENCE_UPDATE",
-        "AZERITE_ESSENCE_MILESTONE_UNLOCKED",
-        "AZERITE_ESSENCE_FORGE_CLOSE",
-        "AZERITE_ESSENCE_CHANGED",
-        "AZERITE_ESSENCE_ACTIVATED",
-        "AZERITE_ESSENCE_ACTIVATION_FAILED"
-    }
-
-    local function UpdateEssences()
-        local lastEssence = class.active_essence
-        ns.updateEssences()
-
-        if class.active_essence ~= lastEssence then
-            Hekili:UpdateUseItems()
-        end
-    end
-
-    --[[ for i, event in pairs( azeriteEvents ) do
-        RegisterEvent( event, UpdateEssences )
-    end ]]
 end
 
 

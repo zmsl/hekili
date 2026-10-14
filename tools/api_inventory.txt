@@ -4,12 +4,6 @@ AuraUtil.UnpackAuraData
 C_AddOns.GetAddOnMetadata
 C_AddOns.IsAddOnLoaded
 C_AddOns.LoadAddOn
-C_AzeriteEmpoweredItem.GetAllTierInfo
-C_AzeriteEmpoweredItem.GetPowerInfo
-C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItemByID
-C_AzeriteEmpoweredItem.IsPowerSelected
-C_AzeriteEssence.GetEssenceInfo
-C_AzeriteEssence.GetMilestoneEssence
 C_AzeriteItem.FindActiveAzeriteItem
 C_AzeriteItem.IsAzeriteItemEnabled
 C_ClassColor.GetClassColor

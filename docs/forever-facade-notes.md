@@ -22,12 +22,6 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `C_AddOns.GetAddOnMetadata` | present | unprobed | passthrough | — | Hekili.lua |
 | `C_AddOns.IsAddOnLoaded` | present | unprobed | passthrough | — | Utils.lua, Events.lua, Targets.lua |
 | `C_AddOns.LoadAddOn` | present | unprobed | passthrough | — | Targets.lua |
-| `C_AzeriteEmpoweredItem.GetAllTierInfo` | present | unprobed | passthrough | — | Events.lua |
-| `C_AzeriteEmpoweredItem.GetPowerInfo` | present | unprobed | passthrough | — | Events.lua |
-| `C_AzeriteEmpoweredItem.IsAzeriteEmpoweredItemByID` | present | unprobed | passthrough | — | Events.lua |
-| `C_AzeriteEmpoweredItem.IsPowerSelected` | present | unprobed | passthrough | — | Events.lua |
-| `C_AzeriteEssence.GetEssenceInfo` | present | unprobed | passthrough | — | Events.lua |
-| `C_AzeriteEssence.GetMilestoneEssence` | present | unprobed | passthrough | — | Events.lua |
 | `C_AzeriteItem.FindActiveAzeriteItem` | present | unprobed | passthrough | — | State.lua |
 | `C_AzeriteItem.IsAzeriteItemEnabled` | present | unprobed | passthrough | — | State.lua |
 | `C_ClassColor.GetClassColor` | present | unprobed | passthrough | — | Options/Options.lua |
@@ -126,7 +120,7 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `GetNumGroupMembers` | undocumented C global | unprobed | passthrough | — | Utils.lua, State.lua, Targets.lua |
 | `GetNumSubgroupMembers` | undocumented C global | unprobed | passthrough | — | Utils.lua |
 | `GetPowerRegenForPowerType` | present | secret in combat [W PR16] | stub | `0, 0` | State.lua |
-| `GetPvpTalentInfoByID` | undocumented C global | dead on Forever [W PR5] | stub | `nil` | Events.lua, Options/DevTools.lua |
+| `GetPvpTalentInfoByID` | undocumented C global | dead on Forever [W PR5] | stub | `nil` | Options/DevTools.lua |
 | `GetRangedCritChance` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua |
 | `GetRealmName` | present | unprobed | passthrough | — | Options/Options.lua |
 | `GetShapeshiftForm` | undocumented C global | plain [W §4 (stance)] | passthrough | — | State.lua |
@@ -151,7 +145,7 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `IsHelpfulSpell` | absent | n/a | stub | `false` | Options/DevTools.lua |
 | `IsInGroup` | undocumented C global | unprobed | passthrough | — | Utils.lua, Events.lua |
 | `IsInInstance` | present | unprobed | passthrough | — | Targets.lua, UI.lua |
-| `IsInJailersTower` | present | unprobed | passthrough | — | State.lua, Events.lua |
+| `IsInJailersTower` | present | unprobed | passthrough | — | State.lua |
 | `IsInRaid` | undocumented C global | unprobed | passthrough | — | Utils.lua, State.lua, Targets.lua |
 | `IsMounted` | present | unprobed | passthrough | — | State.lua, UI.lua |
 | `IsPassiveSpell` | absent | n/a | stub | `false` | Options/DevTools.lua |
@@ -242,7 +236,6 @@ Every stub site in the retained files that throws or yields a wrong value. Sites
 | `CombatLogGetCurrentEventInfo` -> nil | `Events.lua` 2027 `CLEU_HANDLER( event, CombatLogGetCurrentEventInfo() )` | **throws** in combat if the event ever fires: every argument is nil, the out-of-combat early return (1754) is skipped, and `bit.band( destFlags, ... )` (1771) gets nil. Registering CLEU itself is forbidden on Forever; removing or diverting the registration is the real fix |
 | `CombatLogGetCurrentEventInfo` -> nil | `Options/DevTools.lua` 460 `SkeletonCLEU( CombatLogGetCurrentEventInfo() )` | safe: `sourceName` nil returns at 341 |
 | `GetTalentInfoByID` -> nil | `Events.lua` 435-439, `ns.updateTalents`: `name` nil falls back to `IsPlayerSpell( v )` where `v` is a `RegisterTalents` entry (a table) | probably **throws** (`IsPlayerSpell` given a table); unverified on the client. Either way talents come out wrong until the `C_Traits` walk replaces this loop |
-| `GetPvpTalentInfoByID` -> nil | `Events.lua` 456-459: falls back to `IsPlayerSpell( v )` with a spell ID | wrong value only (PvP talents read as spells) |
 | `UnitAttackSpeed` -> `2, nil` | `State.lua` 215 and 6978, `Events.lua` 1008 and 1955, `Classes.lua` 4376 | wrong value: main-hand speed is a constant 2.0, so swing projections (`swings.mh_*`) are fiction. `oh_speed` nil is guarded at State.lua 218/5738/6980 and Events.lua 1948/1950 |
 | `UnitAttackSpeed` -> `2, nil` | `State.lua` 2693 `stat.weapon_speed` | wrong value: 2.0 / 0 |
 | `GetPowerRegenForPowerType` -> `0, 0` | `State.lua` 6932 in `state.reset`, feeding `forecastResources` | wrong value: `active or 0.001` keeps the 0 (0 is truthy), so regen is 0, every resource forecast is flat, and `time_to_x` returns 3600 or the next modeled slice (`State.lua` 3798 divides by 0 to `inf` but the comparison that follows still picks `after.t`). Assassination's timeout `energy.max / max( 0.001, regen )` (1541) becomes 100000 s, bounded by the 30-iteration cap |
