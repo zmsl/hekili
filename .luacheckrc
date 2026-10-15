@@ -92,3 +92,4 @@ files["Utils.lua"] = { globals = stateEnv }
 files["Hekili.lua"] = { globals = stateEnv }
 files["Constants.lua"] = { globals = stateEnv }
 files["VirtualState/spec/"] = { std = "+busted" }
+files["Forever/Warrior.lua"] = { globals = stateEnv }
