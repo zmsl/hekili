@@ -108,4 +108,14 @@ files["Utils.lua"] = { globals = stateEnv }
 files["Hekili.lua"] = { globals = stateEnv }
 files["Constants.lua"] = { globals = stateEnv }
 files["VirtualState/spec/"] = { std = "+busted" }
-files["Forever/Warrior.lua"] = { globals = stateEnv }
+files["Forever/spec/"] = { std = "+busted" }
+-- The Warrior's handlers, state expressions and state functions run with setfenv( f, state ) as well; these are the
+-- further `state` names they use.
+local warriorEnv = {
+    "rage", "cooldown", "combat", "active_enemies", "active_dot", "setDistance", "interrupt", "swap_stance",
+    "should_queue", "mainhand_remains", "nextMH", "mainhand_speed",
+}
+for _, k in ipairs(stateEnv) do
+    warriorEnv[#warriorEnv + 1] = k
+end
+files["Forever/Warrior.lua"] = { globals = warriorEnv }
