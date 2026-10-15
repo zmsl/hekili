@@ -510,10 +510,11 @@ end
 
 state.combat = 0
 state.faction = Facade.UnitFactionGroup( "player" )
-state.race[ formatKey( Facade.UnitRace("player") ) ] = true
 -- The race token (UnitRace's second return), the same on every client language: race packs match it (Races.lua), and
 -- race.gnome, race.troll ... hold beside the localized key.
-state.race_token = select( 2, Facade.UnitRace( "player" ) )
+local raceName
+raceName, state.race_token = Facade.UnitRace( "player" )
+state.race[ formatKey( raceName ) ] = true
 if state.race_token then state.race[ formatKey( state.race_token ) ] = true end
 
 state.class = Hekili.Class

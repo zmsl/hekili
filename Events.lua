@@ -426,16 +426,24 @@ function ns.updateTalents()
         state.talent[ k ].enabled = false
     end
 
-    -- Forever: GetTalentInfoByID is dead; ranks come from VirtualState's C_Traits walk (cleanup Q9), keyed by the
-    -- talent's registered spell ID (RegisterTalents entries are { node, spell, max rank }).
-    for k, v in pairs( class.talents ) do
-        local rank = type( v ) == "table" and ns.VirtualState.Talent( v[ 2 ] ) or 0
+    -- local specGroup = GetSpecialization()
 
+    for k, v in pairs( class.talents ) do
+        local _, name, _, enabled, _, sID, _, _, _, _, known, rank = GetTalentInfoByID( v, 1 )
+
+        if not name then
+            -- We probably used a spellID.
+            enabled = IsPlayerSpell( v )
+        end
+
+        enabled = enabled or known
+
+        -- Forever: the facade answers a 12th return, the rank (event-facade decision 7); retail has none.
         if rawget( state.talent, k ) then
-            state.talent[ k ].enabled = rank > 0
+            state.talent[ k ].enabled = enabled
             state.talent[ k ].rank = rank
         else
-            state.talent[ k ] = { enabled = rank > 0, rank = rank }
+            state.talent[ k ] = { enabled = enabled, rank = rank }
         end
     end
 
@@ -1667,7 +1675,7 @@ local function CLEU_HANDLER( event, timestamp, subtype, hideCaster, sourceGUID, 
                 end
             end
 
-            state.gcd.lastStart = max( state.gcd.lastStart, ( GetSpellCooldown( 29515 ) ) )
+            state.gcd.lastStart = max( state.gcd.lastStart, ( GetSpellCooldown( 61304 ) ) )
             -- if subtype ~= "SPELL_DAMAGE" then Hekili:ForceUpdate( subtype, true ) end
         end
     end

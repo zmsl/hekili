@@ -143,6 +143,7 @@ end
 
 --- Classes.lua's RegisterAbility: the ability's `spend` answers through the modifiers; `baseSpend` keeps the declared
 --- cost (VirtualState's belief applies the same modifiers to it itself).
+-- shortcut: a spend set later (by an ability's onLoad) skips this wrap; no ability does today, wrap there if one does.
 function M.Wrap( a )
     local declared = rawget( a.funcs, "spend" )
     if declared == nil then declared = rawget( a, "spend" ) end

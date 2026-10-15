@@ -2469,7 +2469,7 @@ end
 
 all:RegisterAbilities( {
     global_cooldown = {
-        id = 29515, -- Forever's GCD spell (retail: 61304; cleanup Q6)
+        id = 61304,
         cast = 0,
         cooldown = 0,
         gcd = "spell",
@@ -3135,8 +3135,7 @@ function Hekili:SpecializationChanged()
     for i = 1, 4 do
         local id, name, _, _, role, primaryStat = GetSpecializationInfo( i )
 
-        -- Forever answers id 0 for spec slots 2 and 3 (cleanup Q7).
-        if not id or id == 0 then break end
+        if not id then break end
 
         if i == currentSpec then
             insert( specs, 1, id )

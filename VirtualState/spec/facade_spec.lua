@@ -116,7 +116,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 124, hybrid = 25, virtual = 27 }, count)
+        assert.are.same({ passthrough = 121, hybrid = 28, virtual = 27 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -326,6 +326,37 @@ describe("ns.Facade", function()
         _G.HasOverrideActionBar = was
         assert.are.equal("virtual", ns2.Facade.Status("HasOverrideActionBar"))
         assert.are.equal(0, select("#", ns2.Facade.HasOverrideActionBar()))
+    end)
+
+    it("answers Forever's GCD spell, empty spec slots and talent ranks in retail's shape (decision 7)", function()
+        local g = Facade.C_Spell.GetSpellCooldown(61304)
+        local f = Facade.C_Spell.GetSpellCooldown(29515)
+        assert.are.same({ f.startTime, f.duration }, { g.startTime, g.duration })
+        assert.are.equal("Spell 29515", Facade.C_Spell.GetSpellInfo(61304).name)
+        local asked
+        answers["C_Spell.GetSpellTexture"] = function(id)
+            asked = id
+            return 1
+        end
+        Facade.C_Spell.GetSpellTexture(61304)
+        assert.are.equal(29515, asked)
+        answers["C_SpecializationInfo.GetSpecializationInfo"] = function(i)
+            if i == 1 then
+                return 1491, "Warrior", "", 1, "DAMAGER", 1
+            end
+            return 0, "", "", 0
+        end
+        assert.are.same({ 1491, "Warrior", "", 1, "DAMAGER", 1 }, { Facade.C_SpecializationInfo.GetSpecializationInfo(1) })
+        assert.is_nil(Facade.C_SpecializationInfo.GetSpecializationInfo(2))
+        local talent = { 0, 12286, 3 }
+        local rank = VS.Talent
+        VS.Talent = function(spell)
+            return spell == 12286 and 2 or 0
+        end
+        local _, name, _, selected, _, spell, _, _, _, known, _, r = Facade.GetTalentInfoByID(talent, 1)
+        local _, _, _, untaken = Facade.GetTalentInfoByID({ 0, 99999, 1 }, 1)
+        VS.Talent = rank
+        assert.are.same({ "", true, 12286, true, 2, false }, { name, selected, spell, known, r, untaken })
     end)
 
     it("aliases IsUsableSpell to C_Spell.IsSpellUsable", function()

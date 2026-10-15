@@ -561,6 +561,9 @@ local function cooldownPolicy(spellID)
     return CD
 end
 kept("C_Spell.GetSpellCooldown", "hybrid", function(spellID)
+    if spellID == 61304 then
+        spellID = I.GCD_SPELL -- retail's GCD spell asked as Forever's (decision 7)
+    end
     local info = realGetSpellCooldown and realGetSpellCooldown(spellID)
     if plainTimes(info, "startTime", "duration") then
         return info
@@ -643,7 +646,20 @@ end, "player plain [W PR9]; target secret [W PR8]; TargetCast()")
 -- Combat log, talents, spells and items: absent on Forever, or replaced
 
 kept("CombatLogGetCurrentEventInfo", "virtual", I.Log.Current, "absent; the row being delivered (event-facade §2.4)")
-kept("GetTalentInfoByID", "virtual", nothing, "dead on Forever [W PR5]; ranks come from VirtualState.Talent")
+-- A talent in retail's GetTalentInfoByID shape from the C_Traits walk (event-facade decision 7): `talent` is a
+-- RegisterTalents entry { node, spell, max rank } or a spell ID; always named (the caller's IsPlayerSpell fallback
+-- would get a table), selected and known with any rank, the rank as a 12th return (Forever's; not in retail's shape).
+kept("GetTalentInfoByID", "virtual", function(talent)
+    local spell = talent
+    if type(talent) == "table" then
+        spell = talent[2]
+    end
+    if type(spell) ~= "number" then
+        return nil
+    end
+    local rank = VS.Talent(spell)
+    return spell, "", 0, rank > 0, true, spell, nil, 0, 0, rank > 0, false, rank
+end, "dead on Forever [W PR5]; VirtualState.Talent (the C_Traits walk)")
 kept("IsUsableSpell", "passthrough", function(spellID)
     if realIsSpellUsable then
         return realIsSpellUsable(spellID)
@@ -669,6 +685,36 @@ kept("GetTime", "hybrid", function()
     end
     return GetTime()
 end, "plain [W]; a back-dated combat-log row's observed time while it is delivered")
+
+----------------------------------------------------------------------------------------------------------------------
+-- Forever's answers in retail's shape (event-facade decision 7): the GCD spell, an empty specialization slot
+
+local realGetSpellTexture = resolve("C_Spell.GetSpellTexture")
+local realGetSpecializationInfo = resolve("C_SpecializationInfo.GetSpecializationInfo")
+
+kept("C_Spell.GetSpellInfo", "hybrid", function(spellID, ...)
+    if spellID == 61304 then
+        spellID = I.GCD_SPELL
+    end
+    return realGetSpellInfo(spellID, ...)
+end, "unprobed; retail's GCD spell 61304 asked as Forever's 29515")
+
+kept("C_Spell.GetSpellTexture", "hybrid", function(spellID, ...)
+    if spellID == 61304 then
+        spellID = I.GCD_SPELL
+    end
+    return realGetSpellTexture(spellID, ...)
+end, "unprobed; retail's GCD spell 61304 asked as Forever's 29515")
+
+local function noEmptySlot(id, ...)
+    if not issecretvalue(id) and id == 0 then
+        return nil -- Forever answers id 0 for an empty slot; retail answers nothing
+    end
+    return id, ...
+end
+kept("C_SpecializationInfo.GetSpecializationInfo", "hybrid", function(...)
+    return noEmptySlot(realGetSpecializationInfo(...))
+end, "plain [W PR15]; Forever's id 0 for an empty slot answered as nil (cleanup Q7)")
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Frames: the event facade's entry point (event-facade spec §2.1)
@@ -703,12 +749,9 @@ local PASSTHROUGH = {
     { "C_PlayerInfo.IsPlayerInTimerunningHeroicWorldTier", "unprobed" },
     { "C_PvP.IsWarModeDesired", "unprobed" },
     { "C_SpecializationInfo.GetSpecialization", "plain [W PR15]" },
-    { "C_SpecializationInfo.GetSpecializationInfo", "plain [W PR15]" },
     { "C_SpecializationInfo.GetTalentInfo", "unprobed" },
     { "C_Spell.GetSpellDescription", "unprobed" },
-    { "C_Spell.GetSpellInfo", "unprobed" },
     { "C_Spell.GetSpellPowerCost", "plain [W §4]" },
-    { "C_Spell.GetSpellTexture", "unprobed" },
     { "C_Spell.IsCurrentSpell", "plain [W PR1]" },
     { "C_Spell.IsSpellDataCached", "unprobed" },
     { "C_Spell.IsSpellHarmful", "unprobed" },
