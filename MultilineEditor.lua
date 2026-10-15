@@ -2,7 +2,8 @@
 -- Revised MultiLineEditBox, to allow for my own tweaks.
 
 local addon, ns = ...
-local GetCursorInfo = GetCursorInfo
+local Facade = ns.Facade
+local GetCursorInfo = Facade.GetCursorInfo
 local Hekili = _G[ addon ]
 
 local Type, Version = "HekiliCustomEditor", 6
@@ -14,7 +15,7 @@ local pairs = pairs
 
 -- WoW APIs
 local GetCursorInfo, GetSpellInfo, ClearCursor = GetCursorInfo, ns.GetUnpackedSpellInfo, ClearCursor
-local CreateFrame, UIParent = CreateFrame, UIParent
+local CreateFrame, UIParent = Facade.CreateFrame, UIParent
 local _G = _G
 
 -- local utilities

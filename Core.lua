@@ -2,7 +2,9 @@
 -- April 2014
 
 local addon, ns = ...
-local GetFrameCPUUsage, GetTime, InCombatLockdown = GetFrameCPUUsage, GetTime, InCombatLockdown
+local Facade = ns.Facade
+local CreateFrame = Facade.CreateFrame
+local GetFrameCPUUsage, GetTime, InCombatLockdown = Facade.GetFrameCPUUsage, Facade.GetTime, Facade.InCombatLockdown
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class

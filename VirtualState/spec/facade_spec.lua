@@ -1,5 +1,6 @@
--- VirtualState/spec/facade_spec.lua: ns.Facade (spec §7): the inventory equals tools/api_inventory.txt, every kept
--- name answers in its real shape, the stubs never call the game, and the GCD numbers are bit-identical.
+-- VirtualState/spec/facade_spec.lua: ns.Facade (spec §7; event-facade spec §1.1): the inventory and each name's class
+-- equal tools/api_inventory.txt, every name answers in its real shape, a virtual row never calls the game, a
+-- passthrough is transparent, a hybrid answers the raw value unless it is secret, and the GCD numbers are bit-identical.
 -- The inventory and shape cases move here from Libs/VirtualGameAPI-1.0/spec/VirtualGameAPI_spec.lua.
 local load = require("VirtualState.spec.helpers.load")
 local fake = require("VirtualState.spec.helpers.fake_api")
@@ -7,15 +8,17 @@ local fs = require("VirtualState.spec.helpers.fake_spec")
 
 local INVENTORY = "tools/api_inventory.txt"
 
+-- The inventory's names in order and their classes ("Name<TAB>class" lines).
 local function readInventory()
-    local names = {}
+    local names, classes = {}, {}
     for line in io.lines(INVENTORY) do
-        line = line:gsub("%s+$", "")
-        if line ~= "" and not line:match("^#") then
-            names[#names + 1] = line
+        local name, class = line:match("^(%S+)\t(%a+)%s*$")
+        if name then
+            names[#names + 1] = name
+            classes[name] = class
         end
     end
-    return names
+    return names, classes
 end
 
 -- The real functions Facade.lua resolves at load, from the fake client; `calls` records any call of a kept name.
@@ -29,10 +32,11 @@ local RESOLVED = {
     "C_Spell.GetSpellInfo",
     "UnitCastingInfo",
     "UnitChannelInfo",
+    "CreateFrame",
 }
 
 describe("ns.Facade", function()
-    local names, ns, Facade, VS, I, api, ctl, calls, saved, powerType
+    local names, classes, ns, Facade, VS, I, api, ctl, calls, saved, powerType, answers
 
     local function entry(name)
         local nsName, key = name:match("^([%w_]+)%.([%w_]+)$")
@@ -43,7 +47,7 @@ describe("ns.Facade", function()
     end
 
     setup(function()
-        names = readInventory()
+        names, classes = readInventory()
     end)
 
     before_each(function()
@@ -56,13 +60,19 @@ describe("ns.Facade", function()
         api.C_Spell.GetSpellInfo = function(id)
             return { name = "Spell " .. id, iconID = 1 }
         end
-        calls = {}
+        calls, answers = {}, {}
         saved = {}
-        -- every kept name in _G records a call; the resolved reals answer from the fake client
+        -- every name in _G records a call and answers as the client does in combat (secret) unless `answers` names
+        -- a plain answer; the resolved reals answer from the fake client
         for _, n in ipairs(names) do
             local nsName, key = n:match("^([%w_]+)%.([%w_]+)$")
-            local f = function()
+            local f = function(...)
                 calls[#calls + 1] = n
+                local a = answers[n]
+                if a then
+                    return a(...)
+                end
+                return fake.SECRET
             end
             if nsName then
                 saved[nsName] = saved[nsName] or rawget(_G, nsName) or false
@@ -96,24 +106,27 @@ describe("ns.Facade", function()
         end
     end)
 
-    it("keeps exactly the inventory's names, each with a status, a reason and a function", function()
+    it("keeps exactly the inventory's names, each with its class, a reason and a function", function()
         assert.are.same(names, Facade.Inventory())
+        local count = { passthrough = 0, hybrid = 0, virtual = 0 }
         for _, n in ipairs(names) do
-            local s = Facade.Status(n)
-            assert.is_true(s == "virtual" or s == "stub", n .. " status is " .. tostring(s))
+            local c = Facade.Status(n)
+            assert.are.equal(classes[n], c, n)
+            count[c] = count[c] + 1
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.equal(51, #names)
-        assert.are.equal(17, #Facade.Stubs())
-        assert.is_nil(Facade.Status("UnitExists"))
+        assert.are.same({ passthrough = 125, hybrid = 24, virtual = 27 }, count)
+        assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
-    it("never calls the game from a stub (absent names never reach _G)", function()
-        for _, n in ipairs(Facade.Stubs()) do
-            assert.has_no.errors(function()
-                entry(n)("target", 1)
-            end, n)
+    it("never calls the game for a virtual row's answer", function()
+        for _, n in ipairs(names) do
+            if classes[n] == "virtual" and n ~= "CreateFrame" then
+                assert.has_no.errors(function()
+                    entry(n)("target", 1)
+                end, n)
+            end
         end
         assert.are.same({}, calls)
         assert.are.same({ false, true }, { Facade.UnitInRange("party1") })
@@ -253,6 +266,46 @@ describe("ns.Facade", function()
         assert.is_nil(Facade.C_UnitAuras.GetPlayerAuraBySpellID(999999))
         assert.is_nil(Facade.C_UnitAuras.GetBuffDataByIndex("focus", 1))
         assert.are.equal(0, Facade.UnitSpellHaste("target"))
+    end)
+
+    it("passes a passthrough's arguments and every result through unchanged", function()
+        local got
+        answers.GetInstanceInfo = function(...)
+            got = { ... }
+            return "Map", "party", 1, "Normal", 5, 0, false, 33, 5
+        end
+        assert.are.same({ "Map", "party", 1, "Normal", 5, 0, false, 33, 5 }, { Facade.GetInstanceInfo("x", 2) })
+        assert.are.same({ "x", 2 }, got)
+        assert.are.equal(9, select("#", Facade.GetInstanceInfo()))
+        assert.are.equal(fake.SECRET, Facade.UnitName("target")) -- transparent: a secret is the trace's to count
+    end)
+
+    it("answers a hybrid's raw value while it is plain and the policy's once it is secret", function()
+        answers.GetHaste = function()
+            return 12.5
+        end
+        assert.are.equal(12.5, Facade.GetHaste())
+        answers.GetHaste = nil
+        assert.are.equal(0, Facade.GetHaste()) -- secret: Haste()
+        answers.UnitAttackSpeed = function(unit)
+            return unit == "target" and 2.4 or nil
+        end
+        assert.are.equal(2.4, Facade.UnitAttackSpeed("target"))
+        ctl.cooldown[fs.REND] = { startTime = 5, duration = 10, isActive = true, isOnGCD = false }
+        assert.are.equal(ctl.cooldown[fs.REND], Facade.C_Spell.GetSpellCooldown(fs.REND)) -- plain times: the client's
+        answers["C_Spell.GetSpellCharges"] = function()
+            return nil -- not a charge spell
+        end
+        assert.is_nil(Facade.C_Spell.GetSpellCharges(fs.REND))
+    end)
+
+    it("makes a passthrough the client lacks a virtual row answering nothing", function()
+        local was = _G.HasOverrideActionBar
+        _G.HasOverrideActionBar = nil
+        local ns2 = load.module()
+        _G.HasOverrideActionBar = was
+        assert.are.equal("virtual", ns2.Facade.Status("HasOverrideActionBar"))
+        assert.are.equal(0, select("#", ns2.Facade.HasOverrideActionBar()))
     end)
 
     it("aliases IsUsableSpell to C_Spell.IsSpellUsable", function()

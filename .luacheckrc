@@ -1,6 +1,6 @@
--- Lint for the Forever branch. Every secret or absent game read goes through ns.Facade (VirtualState/Facade.lua; see
--- tools/check_api_reads.sh): those names (tools/api_inventory.txt) are deliberately NOT declared here, so a bare read
--- shows up as W113 "accessing undefined variable". The plain game reads are declared in read_globals below.
+-- Lint for the Forever branch. Every game read goes through ns.Facade (VirtualState/Facade.lua; see
+-- tools/check_api_reads.sh): the names of tools/api_inventory.txt, CreateFrame among them, are deliberately NOT
+-- declared here, so a bare read shows up as W113 "accessing undefined variable".
 std = "lua51"
 max_line_length = false
 codes = true
@@ -41,7 +41,7 @@ globals = {
 -- The facade covers game-STATE READS only. Deliberately declared here because they are outside it: writes (SetCVar,
 -- SetOverrideBindingClick, ClearOverrideBindings, ClearCursor, Screenshot), timers (C_Timer), secure hooks
 -- (hooksecurefunc), profiling (debugprofilestop), secrecy predicates (issecretvalue, issecrettable, C_Secrets), and
--- UI construction (CreateFrame, UIParent), which is not a read.
+-- UI widgets that read no game state (UIParent, GameTooltip). CreateFrame is the event facade's (Facade.CreateFrame).
 read_globals = {
     -- Lua extensions provided by the client
     "wipe", "format", "strupper", "strlower", "strfind", "strsub", "strlen", "strsplit", "strjoin", "strtrim",
@@ -51,7 +51,7 @@ read_globals = {
     -- libraries and other addons
     "LibStub", "WeakAuras", "ElvUI", "ConsolePort", "SpellFlashCore", "Masque",
     -- FrameXML (Lua-defined UI utilities, not reads)
-    "CreateFrame", "UIParent", "GameTooltip", "GameTooltip_SetTitle", "GameTooltip_AddNormalLine",
+    "UIParent", "GameTooltip", "GameTooltip_SetTitle", "GameTooltip_AddNormalLine",
     "GetAppropriateTooltip", "UIDropDownMenu_SetDisplayMode", "UIDropDownMenu_AddSeparator",
     "UIDropDownMenu_AddButton", "ToggleDropDownMenu", "UIFrameFadeOut", "PixelUtil", "PlayerUtil", "ExportUtil",
     "ClassTalentImportExportMixin", "Item", "ItemLocation", "Mixin", "hooksecurefunc", "CreateAtlasMarkup",
@@ -63,22 +63,6 @@ read_globals = {
     "PET_TYPE_DEMON", "BATTLE_PET_NAME_4", "COMBATLOG_OBJECT_REACTION_FRIENDLY",
     "CR_VERSATILITY_DAMAGE_TAKEN", "CR_VERSATILITY_DAMAGE_DONE", "CR_MASTERY", "CR_HASTE_MELEE",
     "CR_CRIT_TAKEN_SPELL", "CR_CRIT_MELEE",
-    -- plain game reads (spec §7.7): called directly; namespaces declared whole (their kept members are caught by
-    -- tools/check_api_reads.sh's dotted grep)
-    "AuraUtil", "C_AddOns", "C_ClassColor", "C_ClassTalents", "C_Item", "C_LossOfControl", "C_PetBattles",
-    "C_PlayerInfo", "C_PvP", "C_SpecializationInfo", "C_Spell", "C_SpellActivationOverlay", "C_SpellBook",
-    "C_Texture", "C_TooltipInfo", "C_Traits", "C_VideoOptions", "GetActionInfo", "GetBindingKey", "GetBuildInfo",
-    "GetCVar", "GetClassInfo", "GetCursorInfo", "GetFrameCPUUsage", "GetFramerate", "GetInstanceInfo",
-    "GetInventoryItemID", "GetNetStats", "GetNumClasses", "GetNumGroupMembers", "GetNumSubgroupMembers",
-    "GetRealmName", "GetShapeshiftForm", "GetShapeshiftFormInfo", "GetSpecializationInfoByID", "GetStablePetInfo",
-    "GetTime", "HasOverrideActionBar", "HasVehicleActionBar", "InCombatLockdown", "IsActionInRange", "IsInGroup",
-    "IsInInstance", "IsInJailersTower", "IsInRaid", "IsMounted", "IsPlayerSpell", "IsResting", "IsSpellKnown",
-    "IsSpellKnownOrOverridesKnown", "SecureCmdOptionParse", "SpellIsSelfBuff", "UnitAffectingCombat",
-    "UnitCanAssist", "UnitCanAttack", "UnitClass", "UnitClassBase", "UnitClassification", "UnitCreatureType",
-    "UnitEffectiveLevel", "UnitExists", "UnitFactionGroup", "UnitGUID", "UnitHasVehicleUI", "UnitInParty",
-    "UnitInRaid", "UnitInVehicle", "UnitIsConnected", "UnitIsDead", "UnitIsDeadOrGhost", "UnitIsFriend", "UnitIsPVP",
-    "UnitIsPlayer", "UnitIsTrivial", "UnitIsUnit", "UnitLevel", "UnitName", "UnitOnTaxi", "UnitPhaseReason",
-    "UnitPowerMax", "UnitPowerType", "UnitRace", "UnitSex", "UnitThreatSituation", "UnitTokenFromGUID",
     -- client additions to the Lua standard tables
     table = { fields = { "wipe", "unpack" } },
     string = { fields = { "trim" } },

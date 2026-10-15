@@ -1,51 +1,176 @@
-AuraUtil.FindAura
-AuraUtil.ForEachAura
-C_Spell.GetSpellCastCount
-C_Spell.GetSpellCharges
-C_Spell.GetSpellCooldown
-C_Spell.GetSpellLossOfControlCooldown
-C_UnitAuras.GetAuraDataByAuraInstanceID
-C_UnitAuras.GetAuraSlots
-C_UnitAuras.GetBuffDataByIndex
-C_UnitAuras.GetDebuffDataByIndex
-C_UnitAuras.GetPlayerAuraBySpellID
-CombatLogGetCurrentEventInfo
-GetCombatRating
-GetCombatRatingBonus
-GetCritChance
-GetHaste
-GetItemGem
-GetItemInfo
-GetManaRegen
-GetMasteryEffect
-GetMeleeHaste
-GetPowerRegenForPowerType
-GetRangedCritChance
-GetSpellBaseCooldown
-GetSpellBonusDamage
-GetSpellCritChance
-GetSpellLink
-GetTalentInfoByID
-GetTotemInfo
-GetUnitSpeed
-IsHarmfulSpell
-IsHelpfulSpell
-IsPassiveSpell
-IsUsableSpell
-UnitArmor
-UnitAttackPower
-UnitAttackSpeed
-UnitAura
-UnitAuraBySlot
-UnitCastingInfo
-UnitChannelInfo
-UnitDamage
-UnitGetTotalAbsorbs
-UnitHealth
-UnitHealthMax
-UnitInRange
-UnitPartialPower
-UnitPower
-UnitSpellHaste
-UnitStat
-UnitWeaponAttackPower
+AuraUtil.FindAura	virtual
+AuraUtil.ForEachAura	virtual
+AuraUtil.UnpackAuraData	passthrough
+C_AddOns.GetAddOnMetadata	passthrough
+C_AddOns.IsAddOnLoaded	passthrough
+C_AddOns.LoadAddOn	passthrough
+C_ClassColor.GetClassColor	passthrough
+C_ClassTalents.GetActiveConfigID	passthrough
+C_ClassTalents.GetHeroTalentSpecsForClassSpec	passthrough
+C_Item.GetDetailedItemLevelInfo	passthrough
+C_Item.GetItemCooldown	passthrough
+C_Item.GetItemCount	passthrough
+C_Item.GetItemGem	passthrough
+C_Item.GetItemInfo	passthrough
+C_Item.GetItemInfoInstant	passthrough
+C_Item.GetItemSpell	passthrough
+C_Item.IsCurrentItem	passthrough
+C_Item.IsEquippedItem	passthrough
+C_Item.IsUsableItem	passthrough
+C_LossOfControl.GetActiveLossOfControlData	passthrough
+C_LossOfControl.GetActiveLossOfControlDataCount	passthrough
+C_PetBattles.IsInBattle	passthrough
+C_PlayerInfo.IsPlayerInTimerunningHeroicWorldTier	passthrough
+C_PvP.IsWarModeDesired	passthrough
+C_SpecializationInfo.GetSpecialization	passthrough
+C_SpecializationInfo.GetSpecializationInfo	passthrough
+C_SpecializationInfo.GetTalentInfo	passthrough
+C_Spell.GetSpellCastCount	virtual
+C_Spell.GetSpellCharges	hybrid
+C_Spell.GetSpellCooldown	hybrid
+C_Spell.GetSpellDescription	passthrough
+C_Spell.GetSpellInfo	passthrough
+C_Spell.GetSpellLossOfControlCooldown	virtual
+C_Spell.GetSpellPowerCost	passthrough
+C_Spell.GetSpellTexture	passthrough
+C_Spell.IsCurrentSpell	passthrough
+C_Spell.IsSpellDataCached	passthrough
+C_Spell.IsSpellHarmful	passthrough
+C_Spell.IsSpellHelpful	passthrough
+C_Spell.IsSpellPassive	passthrough
+C_Spell.IsSpellUsable	passthrough
+C_Spell.RequestLoadSpellData	passthrough
+C_SpellActivationOverlay.IsSpellOverlayed	passthrough
+C_SpellBook.FindSpellBookSlotForSpell	passthrough
+C_SpellBook.GetNumSpellBookSkillLines	passthrough
+C_SpellBook.GetSpellBookItemInfo	passthrough
+C_SpellBook.GetSpellBookSkillLineInfo	passthrough
+C_SpellBook.IsSpellInSpellBook	passthrough
+C_SpellBook.IsSpellKnown	passthrough
+C_Texture.GetAtlasInfo	passthrough
+C_TooltipInfo.GetInventoryItem	passthrough
+C_TooltipInfo.GetItemByID	passthrough
+C_TooltipInfo.GetSpellByID	passthrough
+C_Traits.GetConfigInfo	passthrough
+C_Traits.GetDefinitionInfo	passthrough
+C_Traits.GetEntryInfo	passthrough
+C_Traits.GetNodeCost	passthrough
+C_Traits.GetNodeInfo	passthrough
+C_Traits.GetSubTreeInfo	passthrough
+C_Traits.GetTreeCurrencyInfo	passthrough
+C_Traits.GetTreeNodes	passthrough
+C_UnitAuras.GetAuraDataByAuraInstanceID	virtual
+C_UnitAuras.GetAuraSlots	virtual
+C_UnitAuras.GetBuffDataByIndex	virtual
+C_UnitAuras.GetDebuffDataByIndex	virtual
+C_UnitAuras.GetPlayerAuraBySpellID	virtual
+C_VideoOptions.GetCurrentGameWindowSize	passthrough
+CombatLogGetCurrentEventInfo	virtual
+CreateFrame	virtual
+GetActionInfo	passthrough
+GetBindingKey	passthrough
+GetBuildInfo	passthrough
+GetCVar	passthrough
+GetClassInfo	passthrough
+GetCombatRating	hybrid
+GetCombatRatingBonus	hybrid
+GetCritChance	hybrid
+GetCursorInfo	passthrough
+GetFrameCPUUsage	passthrough
+GetFramerate	passthrough
+GetHaste	hybrid
+GetInstanceInfo	passthrough
+GetInventoryItemID	passthrough
+GetItemGem	virtual
+GetItemInfo	virtual
+GetManaRegen	hybrid
+GetMasteryEffect	hybrid
+GetMeleeHaste	hybrid
+GetNetStats	passthrough
+GetNumClasses	passthrough
+GetNumGroupMembers	passthrough
+GetNumSubgroupMembers	passthrough
+GetPowerRegenForPowerType	hybrid
+GetRangedCritChance	hybrid
+GetRealmName	passthrough
+GetShapeshiftForm	passthrough
+GetShapeshiftFormInfo	passthrough
+GetSpecializationInfoByID	passthrough
+GetSpellBaseCooldown	virtual
+GetSpellBonusDamage	hybrid
+GetSpellCritChance	hybrid
+GetSpellLink	virtual
+GetStablePetInfo	passthrough
+GetTalentInfoByID	virtual
+GetTime	passthrough
+GetTotemInfo	hybrid
+GetUnitSpeed	hybrid
+HasOverrideActionBar	passthrough
+HasVehicleActionBar	passthrough
+InCombatLockdown	passthrough
+IsActionInRange	passthrough
+IsHarmfulSpell	virtual
+IsHelpfulSpell	virtual
+IsInGroup	passthrough
+IsInInstance	passthrough
+IsInJailersTower	passthrough
+IsInRaid	passthrough
+IsMounted	passthrough
+IsPassiveSpell	virtual
+IsPlayerSpell	passthrough
+IsResting	passthrough
+IsSpellKnown	passthrough
+IsSpellKnownOrOverridesKnown	passthrough
+IsUsableSpell	passthrough
+SecureCmdOptionParse	passthrough
+SpellIsSelfBuff	passthrough
+UnitAffectingCombat	passthrough
+UnitArmor	hybrid
+UnitAttackPower	hybrid
+UnitAttackSpeed	hybrid
+UnitAura	virtual
+UnitAuraBySlot	virtual
+UnitCanAssist	passthrough
+UnitCanAttack	passthrough
+UnitCastingInfo	hybrid
+UnitChannelInfo	hybrid
+UnitClass	passthrough
+UnitClassBase	passthrough
+UnitClassification	passthrough
+UnitCreatureType	passthrough
+UnitDamage	hybrid
+UnitEffectiveLevel	passthrough
+UnitExists	passthrough
+UnitFactionGroup	passthrough
+UnitGUID	passthrough
+UnitGetTotalAbsorbs	virtual
+UnitHasVehicleUI	passthrough
+UnitHealth	virtual
+UnitHealthMax	virtual
+UnitInParty	passthrough
+UnitInRaid	passthrough
+UnitInRange	virtual
+UnitInVehicle	passthrough
+UnitIsConnected	passthrough
+UnitIsDead	passthrough
+UnitIsDeadOrGhost	passthrough
+UnitIsFriend	passthrough
+UnitIsPVP	passthrough
+UnitIsPlayer	passthrough
+UnitIsTrivial	passthrough
+UnitIsUnit	passthrough
+UnitLevel	passthrough
+UnitName	passthrough
+UnitOnTaxi	passthrough
+UnitPartialPower	virtual
+UnitPhaseReason	passthrough
+UnitPower	virtual
+UnitPowerMax	passthrough
+UnitPowerType	passthrough
+UnitRace	passthrough
+UnitSex	passthrough
+UnitSpellHaste	hybrid
+UnitStat	hybrid
+UnitThreatSituation	passthrough
+UnitTokenFromGUID	passthrough
+UnitWeaponAttackPower	hybrid

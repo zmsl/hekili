@@ -3,10 +3,10 @@
 
 local addon, ns = ...
 local Facade = ns.Facade
-local C_Item, C_LossOfControl, C_SpecializationInfo, C_Spell = C_Item, C_LossOfControl, C_SpecializationInfo, C_Spell
-local GetSpecializationInfoByID, GetTime, InCombatLockdown, UnitAttackSpeed = GetSpecializationInfoByID, GetTime, InCombatLockdown, Facade.UnitAttackSpeed
-local UnitCanAttack, UnitCastingInfo, UnitChannelInfo, UnitClassBase = UnitCanAttack, Facade.UnitCastingInfo, Facade.UnitChannelInfo, UnitClassBase
-local UnitGUID, UnitGetTotalAbsorbs = UnitGUID, Facade.UnitGetTotalAbsorbs
+local C_Item, C_LossOfControl, C_SpecializationInfo, C_Spell = Facade.C_Item, Facade.C_LossOfControl, Facade.C_SpecializationInfo, Facade.C_Spell
+local GetSpecializationInfoByID, GetTime, InCombatLockdown, UnitAttackSpeed = Facade.GetSpecializationInfoByID, Facade.GetTime, Facade.InCombatLockdown, Facade.UnitAttackSpeed
+local UnitCanAttack, UnitCastingInfo, UnitChannelInfo, UnitClassBase = Facade.UnitCanAttack, Facade.UnitCastingInfo, Facade.UnitChannelInfo, Facade.UnitClassBase
+local UnitGUID, UnitGetTotalAbsorbs = Facade.UnitGUID, Facade.UnitGetTotalAbsorbs
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class

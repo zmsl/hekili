@@ -1,8 +1,11 @@
 -- VirtualState/Facade.lua
--- ns.Facade (spec §7): the game API names that are secret in combat, partly secret, or absent on WoW Forever. Each is
--- `virtual` (a policy answering from VirtualState, §7.4) or `stub` (a fixed, API-shaped result, §7.3); every other
--- game read in Hekili is a direct call. Namespaces mirror the game (Facade.UnitPower, Facade.C_Spell.GetSpellCooldown,
--- Facade.AuraUtil.ForEachAura). Query with Facade.Status(name), Facade.Why(name), Facade.Stubs(), Facade.Inventory().
+-- ns.Facade (spec §7; event-facade spec §1.1): every game function Hekili core and the class files read, in one of
+-- three classes (event-facade decision 8): `passthrough` (the raw call: plain by probe, or a value Hekili never uses
+-- in a way a secret breaks), `hybrid` (the raw call; a secret answer is replaced by the policy's, for names secret
+-- only sometimes) and `virtual` (the policy only, never the game's answer: secret always, absent on Forever, or
+-- answered from VirtualState for a reason beyond secrecy). Namespaces mirror the game (Facade.UnitPower,
+-- Facade.C_Spell.GetSpellCooldown, Facade.AuraUtil.ForEachAura). Query with Facade.Status(name) (the class),
+-- Facade.Why(name), Facade.Inventory(); tools/api_inventory.txt lists every name with its class.
 -- Every policy uses now = GetTime(), or the clock Drain pins while it applies a cast (spec §5.5 R1), and returns
 -- shared preallocated result tables that callers read at once and never keep or mutate.
 -- Origin: Libs/VirtualGameAPI-1.0, folded into Hekili. Copyright (c) 2026 Zack Samsel. MIT licence, see
@@ -60,6 +63,52 @@ local realIsSpellUsable = resolve("C_Spell.IsSpellUsable")
 local realGetSpellInfo = resolve("C_Spell.GetSpellInfo")
 local realUnitCastingInfo = resolve("UnitCastingInfo")
 local realUnitChannelInfo = resolve("UnitChannelInfo")
+local realGetSpellCharges = resolve("C_Spell.GetSpellCharges")
+
+--- A passthrough: the raw function, wrapped once at load so a later finding changes one row, not Hekili. A name the
+--- client lacks (the deprecation shims while `loadDeprecationFallbacks` is off) answers nothing and is virtual.
+local function passthrough(name, reason)
+    local real = resolve(name)
+    if not real then
+        kept(name, "virtual", function() end, "absent on this client; answers nothing (" .. reason .. ")")
+        return
+    end
+    kept(name, "passthrough", function(...)
+        return real(...)
+    end, reason)
+end
+
+-- The raw answer, or the policy's when any of its first four values is secret. Allocates nothing.
+local function pick(policy, x, y, z, a, b, c, d, ...)
+    if issecretvalue(a) or issecretvalue(b) or issecretvalue(c) or issecretvalue(d) then
+        return policy(x, y, z)
+    end
+    return a, b, c, d, ...
+end
+
+--- A hybrid of up to three arguments: the raw call, its secret answer replaced by `policy`'s (absent: the policy).
+local function hybrid(name, policy, reason)
+    local real = resolve(name)
+    if not real then
+        kept(name, "virtual", policy, reason .. "; absent on this client")
+        return
+    end
+    kept(name, "hybrid", function(x, y, z)
+        return pick(policy, x, y, z, real(x, y, z))
+    end, reason)
+end
+
+-- Whether a cooldown or charge table's two time fields are plain numbers (the hybrid tables' test).
+local function plainTimes(info, startKey, durationKey)
+    if issecretvalue(info) or type(info) ~= "table" then
+        return false
+    end
+    local s, d = info[startKey], info[durationKey]
+    if issecretvalue(s) or issecretvalue(d) then
+        return false
+    end
+    return type(s) == "number" and type(d) == "number"
+end
 
 -- The facade's clock: the pinned cast time during a drain, else GetTime().
 local function now()
@@ -98,22 +147,22 @@ kept("UnitPower", "virtual", function(unit, powerType)
     return floor(powerType == 1 and b.est or b.lo) -- rage answers est (G4, CHECKPOINT 4); others lo
 end, "secret always [W PR16]; rage Power().est (G4), others Power().lo")
 
-kept("GetPowerRegenForPowerType", "virtual", function(powerType)
+hybrid("GetPowerRegenForPowerType", function(powerType)
     local r = I.res.slotOf[powerType]
     if r and I.res.swing[r] > 0 and VS.InCombat() then
         return 0, 0 -- Hekili's swing regen model adds that resource (no double count, G3)
     end
     local est = VS.Regen(powerType, now()).est
     return est, est
-end, "secret in combat [W PR16]; Regen()")
+end, "secret in combat [W PR16]; Regen(), 0 for a swing-paid resource in combat (G3)")
 
-kept("GetManaRegen", "virtual", function()
+hybrid("GetManaRegen", function()
     local t = now()
     local inactive = VS.Regen(0, t).est
     return inactive, VS.Regen(0, t, true).est
 end, "secret in combat [W PR16]; Regen(0)")
 
-kept("UnitPartialPower", "stub", zero, "secret always [W PR16]; no Forever user")
+kept("UnitPartialPower", "virtual", zero, "secret always [W PR16]; no Forever user")
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Health [W PR14]
@@ -135,46 +184,46 @@ kept("UnitHealthMax", "virtual", function(unit)
     return VS.HealthMax(unit)
 end, "target secret always [W PR14]; HealthMax()")
 
-kept("UnitGetTotalAbsorbs", "stub", zero, "target secret always [W PR14]")
+kept("UnitGetTotalAbsorbs", "virtual", zero, "target secret always [W PR14]")
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Stats: the out-of-combat cache [W PR2, PR4]
 
 local STAT = "secret in combat [W PR2, PR4]; Stat()"
-kept("GetCombatRating", "virtual", function(cr)
+hybrid("GetCombatRating", function(cr)
     return VS.Stat("GetCombatRating", cr)
 end, STAT)
-kept("GetCombatRatingBonus", "virtual", function(cr)
+hybrid("GetCombatRatingBonus", function(cr)
     return VS.Stat("GetCombatRatingBonus", cr)
 end, STAT)
-kept("GetCritChance", "virtual", function()
+hybrid("GetCritChance", function()
     return VS.Stat("GetCritChance")
 end, STAT)
-kept("GetMasteryEffect", "virtual", function()
+hybrid("GetMasteryEffect", function()
     return VS.Stat("GetMasteryEffect")
 end, STAT)
-kept("GetRangedCritChance", "virtual", function()
+hybrid("GetRangedCritChance", function()
     return VS.Stat("GetRangedCritChance")
 end, STAT)
-kept("GetSpellBonusDamage", "virtual", function(school)
+hybrid("GetSpellBonusDamage", function(school)
     return VS.Stat("GetSpellBonusDamage", school)
 end, STAT)
-kept("GetSpellCritChance", "virtual", function()
+hybrid("GetSpellCritChance", function()
     return VS.Stat("GetSpellCritChance")
 end, STAT)
-kept("UnitArmor", "virtual", function()
+hybrid("UnitArmor", function()
     return VS.Stat("UnitArmor")
 end, STAT)
-kept("UnitAttackPower", "virtual", function()
+hybrid("UnitAttackPower", function()
     return VS.Stat("UnitAttackPower")
 end, STAT)
-kept("UnitDamage", "virtual", function()
+hybrid("UnitDamage", function()
     return VS.Stat("UnitDamage")
 end, STAT)
-kept("UnitStat", "virtual", function(unit, index)
+hybrid("UnitStat", function(unit, index)
     return VS.Stat("UnitStat", index)
 end, STAT)
-kept("UnitWeaponAttackPower", "virtual", function()
+hybrid("UnitWeaponAttackPower", function()
     return VS.Stat("UnitWeaponAttackPower")
 end, STAT)
 
@@ -184,17 +233,17 @@ end, STAT)
 local function meleeHaste()
     return (VS.Haste(now()).est - 1) * 100
 end
-kept("GetHaste", "virtual", meleeHaste, "secret in combat [W PR2, PR4]; Haste()")
-kept("GetMeleeHaste", "virtual", meleeHaste, "secret in combat [W PR2, PR4]; Haste()")
+hybrid("GetHaste", meleeHaste, "secret in combat [W PR2, PR4]; Haste()")
+hybrid("GetMeleeHaste", meleeHaste, "secret in combat [W PR2, PR4]; Haste()")
 
-kept("UnitSpellHaste", "virtual", function(unit)
+hybrid("UnitSpellHaste", function(unit)
     if unit ~= "player" then
         return 0
     end
     return VS.SpellHaste(now()).est
 end, "secret in combat [W PR2, PR4]; SpellHaste()")
 
-kept("UnitAttackSpeed", "virtual", function(unit)
+hybrid("UnitAttackSpeed", function(unit)
     if unit ~= "player" then
         return 2, nil
     end
@@ -207,7 +256,7 @@ kept("UnitAttackSpeed", "virtual", function(unit)
     return main, nil
 end, "secret in combat [SU PR2]; SwingSpeed()")
 
-kept("GetUnitSpeed", "virtual", function(unit)
+hybrid("GetUnitSpeed", function(unit)
     if unit == "player" and VS.Moving() then
         return 7, 7, 7, 4.72
     elseif unit == "player" then
@@ -216,12 +265,12 @@ kept("GetUnitSpeed", "virtual", function(unit)
     return 0, 0, 0, 0
 end, "secret in combat [W PR14]; Moving()")
 
-kept("UnitInRange", "stub", inRangeUnknown, "secret always [W PR7]; no signal")
+kept("UnitInRange", "virtual", inRangeUnknown, "secret always [W PR7]; no signal")
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Totems [W PR12]
 
-kept("GetTotemInfo", "virtual", function(slot)
+hybrid("GetTotemInfo", function(slot)
     local spellID, name, icon, start = VS.TotemFacts(slot)
     local rec = spellID and VS.Totem(slot, now())
     if not rec then
@@ -364,9 +413,9 @@ kept("AuraUtil.FindAura", "virtual", function(predicate, unit, filter, arg1, arg
     return nil
 end, "wraps secret aura data [W §4]; AuraAt()")
 
-kept("C_UnitAuras.GetAuraSlots", "stub", nothing, "secret in combat [W §4]; no retained consumer")
-kept("UnitAura", "stub", nothing, "absent on Forever")
-kept("UnitAuraBySlot", "stub", nothing, "absent on Forever")
+kept("C_UnitAuras.GetAuraSlots", "virtual", nothing, "secret in combat [W §4]; no retained consumer")
+kept("UnitAura", "virtual", nothing, "absent on Forever")
+kept("UnitAuraBySlot", "virtual", nothing, "absent on Forever")
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Cooldowns [W PR4, PR11]: times secret in combat, flags plain
@@ -390,7 +439,7 @@ local function flags(spellID)
     return active, onGcd
 end
 
-kept("C_Spell.GetSpellCooldown", "virtual", function(spellID)
+local function cooldownPolicy(spellID)
     local t = now()
     if spellID == 61304 or spellID == I.GCD_SPELL then
         local s, d = VS.GcdInfo(t)
@@ -426,9 +475,16 @@ kept("C_Spell.GetSpellCooldown", "virtual", function(spellID)
         CD.isActive = rec.est > t
     end
     return CD
+end
+kept("C_Spell.GetSpellCooldown", "hybrid", function(spellID)
+    local info = realGetSpellCooldown and realGetSpellCooldown(spellID)
+    if plainTimes(info, "startTime", "duration") then
+        return info
+    end
+    return cooldownPolicy(spellID)
 end, "times secret in combat, flags plain [W PR4, PR11]; Cooldown(), GcdInfo()")
 
-kept("C_Spell.GetSpellCharges", "virtual", function(spellID)
+local function chargesPolicy(spellID)
     local cur, nextAt = VS.Charges(spellID, now())
     if not cur then
         return nil
@@ -441,17 +497,27 @@ kept("C_Spell.GetSpellCharges", "virtual", function(spellID)
     CHARGES.cooldownStartTime = nextAt.est > 0 and nextAt.est - recharge or 0
     CHARGES.cooldownDuration = recharge
     return CHARGES
+end
+kept("C_Spell.GetSpellCharges", "hybrid", function(spellID)
+    local info = realGetSpellCharges and realGetSpellCharges(spellID)
+    if not issecretvalue(info) and info == nil then
+        return nil -- not a charge spell (plain)
+    end
+    if plainTimes(info, "cooldownStartTime", "cooldownDuration") then
+        return info
+    end
+    return chargesPolicy(spellID)
 end, "times secret in combat [W §4 cooldowns]; Charges()")
 
-kept("C_Spell.GetSpellCastCount", "stub", zero, "flagged SecretWhenCooldownsRestricted; unprobed, unused")
-kept("C_Spell.GetSpellLossOfControlCooldown", "stub", nothing, "absent on Forever")
+kept("C_Spell.GetSpellCastCount", "virtual", zero, "flagged SecretWhenCooldownsRestricted; unprobed, unused")
+kept("C_Spell.GetSpellLossOfControlCooldown", "virtual", nothing, "absent on Forever")
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Casts: the player's own are plain [W PR9], the target's secret [W PR8]
 
 local CAST_ICON = 136243
 
-kept("UnitCastingInfo", "virtual", function(unit, ...)
+kept("UnitCastingInfo", "hybrid", function(unit, ...)
     if unit == "player" then
         if realUnitCastingInfo then
             return realUnitCastingInfo(unit, ...)
@@ -468,7 +534,7 @@ kept("UnitCastingInfo", "virtual", function(unit, ...)
     return "Casting", "", CAST_ICON, start * 1000, rec.est * 1000, false, castBarID, kick == 0, 0
 end, "player plain [W PR9]; target secret [W PR8]; TargetCast()")
 
-kept("UnitChannelInfo", "virtual", function(unit, ...)
+kept("UnitChannelInfo", "hybrid", function(unit, ...)
     if unit == "player" then
         if realUnitChannelInfo then
             return realUnitChannelInfo(unit, ...)
@@ -488,40 +554,170 @@ end, "player plain [W PR9]; target secret [W PR8]; TargetCast()")
 ----------------------------------------------------------------------------------------------------------------------
 -- Combat log, talents, spells and items: absent on Forever, or replaced
 
-kept("CombatLogGetCurrentEventInfo", "stub", nothing, "absent; registering CLEU is forbidden (Phases 2 and 3)")
-kept("GetTalentInfoByID", "stub", nothing, "dead on Forever [W PR5]; ranks come from VirtualState.Talent")
-kept("IsUsableSpell", "virtual", function(spellID)
+kept("CombatLogGetCurrentEventInfo", "virtual", nothing, "absent; registering CLEU is forbidden (Phases 2 and 3)")
+kept("GetTalentInfoByID", "virtual", nothing, "dead on Forever [W PR5]; ranks come from VirtualState.Talent")
+kept("IsUsableSpell", "passthrough", function(spellID)
     if realIsSpellUsable then
         return realIsSpellUsable(spellID)
     end
     return false
 end, "absent on Forever; alias of C_Spell.IsSpellUsable (plain [W PR14; SU])")
-kept("GetSpellBaseCooldown", "stub", nothing, "absent on Forever")
-kept("GetSpellLink", "stub", nothing, "absent on Forever")
-kept("IsHarmfulSpell", "stub", isFalse, "absent on Forever")
-kept("IsHelpfulSpell", "stub", isFalse, "absent on Forever")
-kept("IsPassiveSpell", "stub", isFalse, "absent on Forever")
-kept("GetItemGem", "stub", nothing, "absent on Forever")
-kept("GetItemInfo", "stub", nothing, "absent on Forever")
+kept("GetSpellBaseCooldown", "virtual", nothing, "absent on Forever")
+kept("GetSpellLink", "virtual", nothing, "absent on Forever")
+kept("IsHarmfulSpell", "virtual", isFalse, "absent on Forever")
+kept("IsHelpfulSpell", "virtual", isFalse, "absent on Forever")
+kept("IsPassiveSpell", "virtual", isFalse, "absent on Forever")
+kept("GetItemGem", "virtual", nothing, "absent on Forever")
+kept("GetItemInfo", "virtual", nothing, "absent on Forever")
+
+----------------------------------------------------------------------------------------------------------------------
+-- Frames: the event facade's entry point (event-facade spec §2.1)
+
+kept("CreateFrame", "virtual", I.Events.CreateFrame, "the event facade: a frame whose events subscribe to the layer")
+
+----------------------------------------------------------------------------------------------------------------------
+-- Passthroughs: the evidence per name from docs/forever-facade-notes.md ("unprobed": present on Forever, never probed;
+-- not combat state, and the trace counts any secret answer, event-facade spec §5)
+
+local PASSTHROUGH = {
+    { "AuraUtil.UnpackAuraData", "pure Lua unpack of a table" },
+    { "C_AddOns.GetAddOnMetadata", "unprobed" },
+    { "C_AddOns.IsAddOnLoaded", "unprobed" },
+    { "C_AddOns.LoadAddOn", "unprobed" },
+    { "C_ClassColor.GetClassColor", "unprobed" },
+    { "C_ClassTalents.GetActiveConfigID", "unprobed" },
+    { "C_ClassTalents.GetHeroTalentSpecsForClassSpec", "unprobed" },
+    { "C_Item.GetDetailedItemLevelInfo", "plain [W PR13]" },
+    { "C_Item.GetItemCooldown", "plain [W PR13]" },
+    { "C_Item.GetItemCount", "plain [W PR13]" },
+    { "C_Item.GetItemGem", "plain [W PR13]" },
+    { "C_Item.GetItemInfo", "plain [W PR13]" },
+    { "C_Item.GetItemInfoInstant", "plain [W PR13]" },
+    { "C_Item.GetItemSpell", "plain [W PR13]" },
+    { "C_Item.IsCurrentItem", "plain [W PR13]" },
+    { "C_Item.IsEquippedItem", "plain [W PR13]" },
+    { "C_Item.IsUsableItem", "plain [W PR13]" },
+    { "C_LossOfControl.GetActiveLossOfControlData", "plain [W PR18]" },
+    { "C_LossOfControl.GetActiveLossOfControlDataCount", "plain [W PR18]" },
+    { "C_PetBattles.IsInBattle", "unprobed" },
+    { "C_PlayerInfo.IsPlayerInTimerunningHeroicWorldTier", "unprobed" },
+    { "C_PvP.IsWarModeDesired", "unprobed" },
+    { "C_SpecializationInfo.GetSpecialization", "plain [W PR15]" },
+    { "C_SpecializationInfo.GetSpecializationInfo", "plain [W PR15]" },
+    { "C_SpecializationInfo.GetTalentInfo", "unprobed" },
+    { "C_Spell.GetSpellDescription", "unprobed" },
+    { "C_Spell.GetSpellInfo", "unprobed" },
+    { "C_Spell.GetSpellPowerCost", "plain [W §4]" },
+    { "C_Spell.GetSpellTexture", "unprobed" },
+    { "C_Spell.IsCurrentSpell", "plain [W PR1]" },
+    { "C_Spell.IsSpellDataCached", "unprobed" },
+    { "C_Spell.IsSpellHarmful", "unprobed" },
+    { "C_Spell.IsSpellHelpful", "unprobed" },
+    { "C_Spell.IsSpellPassive", "unprobed" },
+    { "C_Spell.IsSpellUsable", "plain [W PR14; SU]" },
+    { "C_Spell.RequestLoadSpellData", "unprobed" },
+    { "C_SpellActivationOverlay.IsSpellOverlayed", "plain [W PR11]" },
+    { "C_SpellBook.FindSpellBookSlotForSpell", "unprobed" },
+    { "C_SpellBook.GetNumSpellBookSkillLines", "unprobed" },
+    { "C_SpellBook.GetSpellBookItemInfo", "unprobed" },
+    { "C_SpellBook.GetSpellBookSkillLineInfo", "unprobed" },
+    { "C_SpellBook.IsSpellInSpellBook", "unprobed" },
+    { "C_SpellBook.IsSpellKnown", "unprobed" },
+    { "C_Texture.GetAtlasInfo", "unprobed" },
+    { "C_TooltipInfo.GetInventoryItem", "unprobed" },
+    { "C_TooltipInfo.GetItemByID", "unprobed" },
+    { "C_TooltipInfo.GetSpellByID", "unprobed" },
+    { "C_Traits.GetConfigInfo", "plain, walk identical in combat [W PR5]" },
+    { "C_Traits.GetDefinitionInfo", "plain, walk identical in combat [W PR5]" },
+    { "C_Traits.GetEntryInfo", "plain, walk identical in combat [W PR5]" },
+    { "C_Traits.GetNodeCost", "plain, walk identical in combat [W PR5]" },
+    { "C_Traits.GetNodeInfo", "plain, walk identical in combat [W PR5]" },
+    { "C_Traits.GetSubTreeInfo", "plain, walk identical in combat [W PR5]" },
+    { "C_Traits.GetTreeCurrencyInfo", "plain, walk identical in combat [W PR5]" },
+    { "C_Traits.GetTreeNodes", "plain, walk identical in combat [W PR5]" },
+    { "C_VideoOptions.GetCurrentGameWindowSize", "unprobed" },
+    { "GetActionInfo", "plain [W PR10]" },
+    { "GetBindingKey", "plain [W PR10]" },
+    { "GetBuildInfo", "unprobed" },
+    { "GetCVar", "unprobed" },
+    { "GetClassInfo", "unprobed" },
+    { "GetCursorInfo", "unprobed" },
+    { "GetFrameCPUUsage", "unprobed" },
+    { "GetFramerate", "unprobed" },
+    { "GetInstanceInfo", "unprobed" },
+    { "GetInventoryItemID", "plain [W PR13]" },
+    { "GetNetStats", "unprobed" },
+    { "GetNumClasses", "unprobed" },
+    { "GetNumGroupMembers", "unprobed" },
+    { "GetNumSubgroupMembers", "unprobed" },
+    { "GetRealmName", "unprobed" },
+    { "GetShapeshiftForm", "plain [W §4 (stance)]" },
+    { "GetShapeshiftFormInfo", "plain [W PR10]" },
+    { "GetSpecializationInfoByID", "unprobed" },
+    { "GetStablePetInfo", "unprobed" },
+    { "GetTime", "plain [W]" },
+    { "HasOverrideActionBar", "unprobed" },
+    { "HasVehicleActionBar", "unprobed" },
+    { "InCombatLockdown", "plain [W §3; lags at PLAYER_REGEN_DISABLED]" },
+    { "IsActionInRange", "plain [W PR7]" },
+    { "IsInGroup", "unprobed" },
+    { "IsInInstance", "unprobed" },
+    { "IsInJailersTower", "unprobed" },
+    { "IsInRaid", "unprobed" },
+    { "IsMounted", "unprobed" },
+    { "IsPlayerSpell", "unprobed" },
+    { "IsResting", "unprobed" },
+    { "IsSpellKnown", "unprobed" },
+    { "IsSpellKnownOrOverridesKnown", "unprobed" },
+    { "SecureCmdOptionParse", "unprobed" },
+    { "SpellIsSelfBuff", "unprobed" },
+    { "UnitAffectingCombat", "plain in combat [W PR14; gate spike]" },
+    { "UnitCanAssist", "unprobed" },
+    { "UnitCanAttack", "plain in combat [W PR14; gate spike]" },
+    { "UnitClass", "plain in combat [W PR14; gate spike]" },
+    { "UnitClassBase", "plain in combat [W PR14; gate spike]" },
+    { "UnitClassification", "plain in combat [W PR14; gate spike]" },
+    { "UnitCreatureType", "plain in combat [W PR14; gate spike]" },
+    { "UnitEffectiveLevel", "unprobed" },
+    { "UnitExists", "plain in combat [W PR14; gate spike]" },
+    { "UnitFactionGroup", "unprobed" },
+    { "UnitGUID", "plain in combat [W PR14; gate spike]" },
+    { "UnitHasVehicleUI", "unprobed" },
+    { "UnitInParty", "unprobed" },
+    { "UnitInRaid", "unprobed" },
+    { "UnitInVehicle", "unprobed" },
+    { "UnitIsConnected", "unprobed" },
+    { "UnitIsDead", "plain in combat [W PR14; gate spike]" },
+    { "UnitIsDeadOrGhost", "unprobed" },
+    { "UnitIsFriend", "plain in combat [W PR14; gate spike]" },
+    { "UnitIsPVP", "unprobed" },
+    { "UnitIsPlayer", "plain in combat [W PR14; gate spike]" },
+    { "UnitIsTrivial", "unprobed" },
+    { "UnitIsUnit", "plain in combat [W PR14; gate spike]" },
+    { "UnitLevel", "plain in combat [W PR14; gate spike]" },
+    { "UnitName", "plain in combat [W PR14; gate spike]" },
+    { "UnitOnTaxi", "unprobed" },
+    { "UnitPhaseReason", "unprobed" },
+    { "UnitPowerMax", "plain (100 for rage) [W PR16]" },
+    { "UnitPowerType", "plain [W PR16]" },
+    { "UnitRace", "unprobed" },
+    { "UnitSex", "unprobed" },
+    { "UnitThreatSituation", "plain in combat [W PR14; gate spike]" },
+    { "UnitTokenFromGUID", "unprobed" },
+}
+for i = 1, #PASSTHROUGH do
+    passthrough(PASSTHROUGH[i][1], PASSTHROUGH[i][2])
+end
 
 ----------------------------------------------------------------------------------------------------------------------
 
 table.sort(inventory)
-local stubs = {}
-for _, name in ipairs(inventory) do
-    if status[name] == "stub" then
-        stubs[#stubs + 1] = name
-    end
-end
 
 function Facade.Status(name)
     return status[name]
 end
 function Facade.Why(name)
     return why[name]
-end
-function Facade.Stubs()
-    return stubs
 end
 function Facade.Inventory()
     return inventory

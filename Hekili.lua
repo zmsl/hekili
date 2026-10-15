@@ -3,8 +3,9 @@
 
 local addon, ns = ...
 local Facade = ns.Facade
-local AuraUtil, C_AddOns, C_UnitAuras = AuraUtil, C_AddOns, Facade.C_UnitAuras
-local GetBuildInfo, GetFramerate, GetTime = GetBuildInfo, GetFramerate, GetTime
+local CreateFrame = Facade.CreateFrame
+local AuraUtil, C_AddOns, C_UnitAuras = Facade.AuraUtil, Facade.C_AddOns, Facade.C_UnitAuras
+local GetBuildInfo, GetFramerate, GetTime = Facade.GetBuildInfo, Facade.GetFramerate, Facade.GetTime
 Hekili = LibStub("AceAddon-3.0"):NewAddon( "Hekili", "AceConsole-3.0", "AceSerializer-3.0" )
 Hekili.Version = C_AddOns.GetAddOnMetadata( "Hekili", "Version" )
 Hekili.Flavor = C_AddOns.GetAddOnMetadata( "Hekili", "X-Flavor" ) or "Retail"

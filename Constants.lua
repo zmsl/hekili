@@ -2,8 +2,9 @@
 -- June 2014
 
 local addon, ns = ...
-local C_SpecializationInfo = C_SpecializationInfo
-local GetClassInfo, GetNumClasses, UnitSex = GetClassInfo, GetNumClasses, UnitSex
+local Facade = ns.Facade
+local C_SpecializationInfo = Facade.C_SpecializationInfo
+local GetClassInfo, GetNumClasses, UnitSex = Facade.GetClassInfo, Facade.GetNumClasses, Facade.UnitSex
 local Hekili = _G[ addon ]
 
 local GetSpecialization = C_SpecializationInfo.GetSpecialization

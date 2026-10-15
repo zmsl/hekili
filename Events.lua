@@ -3,15 +3,16 @@
 
 local addon, ns = ...
 local Facade = ns.Facade
-local AuraUtil, C_AddOns = AuraUtil, C_AddOns
-local C_Item, C_SpecializationInfo, C_Spell, C_UnitAuras = C_Item, C_SpecializationInfo, C_Spell, Facade.C_UnitAuras
-local CombatLogGetCurrentEventInfo, GetActionInfo, GetBindingKey, GetInstanceInfo = Facade.CombatLogGetCurrentEventInfo, GetActionInfo, GetBindingKey, GetInstanceInfo
-local GetInventoryItemID, GetTalentInfoByID, GetTime = GetInventoryItemID, Facade.GetTalentInfoByID, GetTime
-local InCombatLockdown, IsInGroup = InCombatLockdown, IsInGroup
-local IsPlayerSpell, IsResting, SecureCmdOptionParse = IsPlayerSpell or function() end, IsResting, SecureCmdOptionParse
-local SpellIsSelfBuff, UnitAttackSpeed, UnitCastingInfo, UnitChannelInfo = SpellIsSelfBuff or function() end, Facade.UnitAttackSpeed, Facade.UnitCastingInfo, Facade.UnitChannelInfo
-local UnitClass, UnitExists, UnitGUID, UnitInParty = UnitClass, UnitExists, UnitGUID, UnitInParty
-local UnitInRaid, UnitIsPlayer, UnitLevel, UnitName = UnitInRaid, UnitIsPlayer, UnitLevel, UnitName
+local CreateFrame = Facade.CreateFrame
+local AuraUtil, C_AddOns = Facade.AuraUtil, Facade.C_AddOns
+local C_Item, C_SpecializationInfo, C_Spell, C_UnitAuras = Facade.C_Item, Facade.C_SpecializationInfo, Facade.C_Spell, Facade.C_UnitAuras
+local CombatLogGetCurrentEventInfo, GetActionInfo, GetBindingKey, GetInstanceInfo = Facade.CombatLogGetCurrentEventInfo, Facade.GetActionInfo, Facade.GetBindingKey, Facade.GetInstanceInfo
+local GetInventoryItemID, GetTalentInfoByID, GetTime = Facade.GetInventoryItemID, Facade.GetTalentInfoByID, Facade.GetTime
+local InCombatLockdown, IsInGroup = Facade.InCombatLockdown, Facade.IsInGroup
+local IsPlayerSpell, IsResting, SecureCmdOptionParse = Facade.IsPlayerSpell, Facade.IsResting, Facade.SecureCmdOptionParse
+local SpellIsSelfBuff, UnitAttackSpeed, UnitCastingInfo, UnitChannelInfo = Facade.SpellIsSelfBuff, Facade.UnitAttackSpeed, Facade.UnitCastingInfo, Facade.UnitChannelInfo
+local UnitClass, UnitExists, UnitGUID, UnitInParty = Facade.UnitClass, Facade.UnitExists, Facade.UnitGUID, Facade.UnitInParty
+local UnitInRaid, UnitIsPlayer, UnitLevel, UnitName = Facade.UnitInRaid, Facade.UnitIsPlayer, Facade.UnitLevel, Facade.UnitName
 local UnitPower = Facade.UnitPower
 local Hekili = _G[ addon ]
 

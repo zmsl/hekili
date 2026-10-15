@@ -3,18 +3,18 @@
 
 local addon, ns = ...
 local Facade = ns.Facade
-local C_Item, C_LossOfControl, C_Spell = C_Item, C_LossOfControl, C_Spell
-local C_SpellBook, C_UnitAuras = C_SpellBook, Facade.C_UnitAuras
-local GetCombatRating, GetCombatRatingBonus, GetManaRegen, GetNumGroupMembers = Facade.GetCombatRating, Facade.GetCombatRatingBonus, Facade.GetManaRegen, GetNumGroupMembers
-local GetPowerRegenForPowerType, GetShapeshiftForm, GetShapeshiftFormInfo, GetTime = Facade.GetPowerRegenForPowerType, GetShapeshiftForm, GetShapeshiftFormInfo, GetTime
-local GetTotemInfo, GetUnitSpeed, InCombatLockdown, IsInJailersTower = Facade.GetTotemInfo, Facade.GetUnitSpeed, InCombatLockdown, IsInJailersTower
-local IsInRaid, IsMounted, IsPlayerSpell, IsSpellKnown = IsInRaid, IsMounted, IsPlayerSpell or function() end, IsSpellKnown or function() end
-local IsSpellKnownOrOverridesKnown, IsUsableSpell, UnitAttackSpeed, UnitAuraBySlot = IsSpellKnownOrOverridesKnown or function() end, Facade.IsUsableSpell, Facade.UnitAttackSpeed, Facade.UnitAuraBySlot
-local UnitCanAttack, UnitClassification, UnitCreatureType, UnitExists = UnitCanAttack, UnitClassification, UnitCreatureType, UnitExists
-local UnitGUID, UnitGetTotalAbsorbs, UnitHealth, UnitHealthMax = UnitGUID, Facade.UnitGetTotalAbsorbs, Facade.UnitHealth, Facade.UnitHealthMax
-local UnitInRange, UnitIsConnected, UnitIsDead, UnitIsDeadOrGhost = Facade.UnitInRange, UnitIsConnected, UnitIsDead, UnitIsDeadOrGhost
-local UnitIsPlayer, UnitLevel, UnitPower, UnitPowerMax = UnitIsPlayer, UnitLevel, Facade.UnitPower, UnitPowerMax
-local UnitPowerType, UnitStat, UnitThreatSituation = UnitPowerType, Facade.UnitStat, UnitThreatSituation
+local C_Item, C_LossOfControl, C_Spell = Facade.C_Item, Facade.C_LossOfControl, Facade.C_Spell
+local C_SpellBook, C_UnitAuras = Facade.C_SpellBook, Facade.C_UnitAuras
+local GetCombatRating, GetCombatRatingBonus, GetManaRegen, GetNumGroupMembers = Facade.GetCombatRating, Facade.GetCombatRatingBonus, Facade.GetManaRegen, Facade.GetNumGroupMembers
+local GetPowerRegenForPowerType, GetShapeshiftForm, GetShapeshiftFormInfo, GetTime = Facade.GetPowerRegenForPowerType, Facade.GetShapeshiftForm, Facade.GetShapeshiftFormInfo, Facade.GetTime
+local GetTotemInfo, GetUnitSpeed, InCombatLockdown, IsInJailersTower = Facade.GetTotemInfo, Facade.GetUnitSpeed, Facade.InCombatLockdown, Facade.IsInJailersTower
+local IsInRaid, IsMounted, IsPlayerSpell, IsSpellKnown = Facade.IsInRaid, Facade.IsMounted, Facade.IsPlayerSpell, Facade.IsSpellKnown
+local IsSpellKnownOrOverridesKnown, IsUsableSpell, UnitAttackSpeed, UnitAuraBySlot = Facade.IsSpellKnownOrOverridesKnown, Facade.IsUsableSpell, Facade.UnitAttackSpeed, Facade.UnitAuraBySlot
+local UnitCanAttack, UnitClassification, UnitCreatureType, UnitExists = Facade.UnitCanAttack, Facade.UnitClassification, Facade.UnitCreatureType, Facade.UnitExists
+local UnitGUID, UnitGetTotalAbsorbs, UnitHealth, UnitHealthMax = Facade.UnitGUID, Facade.UnitGetTotalAbsorbs, Facade.UnitHealth, Facade.UnitHealthMax
+local UnitInRange, UnitIsConnected, UnitIsDead, UnitIsDeadOrGhost = Facade.UnitInRange, Facade.UnitIsConnected, Facade.UnitIsDead, Facade.UnitIsDeadOrGhost
+local UnitIsPlayer, UnitLevel, UnitPower, UnitPowerMax = Facade.UnitIsPlayer, Facade.UnitLevel, Facade.UnitPower, Facade.UnitPowerMax
+local UnitPowerType, UnitStat, UnitThreatSituation = Facade.UnitPowerType, Facade.UnitStat, Facade.UnitThreatSituation
 local Hekili = _G[ addon ]
 
 local auras = ns.auras
@@ -36,7 +36,7 @@ local GetSpellInfo, GetSpellCharges, GetSpellLossOfControlCooldown = ns.GetUnpac
 local UnitBuff, UnitDebuff = ns.UnitBuff, ns.UnitDebuff
 
 local GetBuffDataByIndex, GetDebuffDataByIndex = Facade.C_UnitAuras.GetBuffDataByIndex, Facade.C_UnitAuras.GetDebuffDataByIndex
-local UnpackAuraData = AuraUtil.UnpackAuraData
+local UnpackAuraData = Facade.AuraUtil.UnpackAuraData
 
 local GetSpellCharges = function(spellID)
     local spellChargeInfo = GetSpellCharges(spellID);
@@ -46,7 +46,7 @@ local GetSpellCharges = function(spellID)
 end
 local FindPlayerAuraByID, IsAbilityDisabled = ns.FindPlayerAuraByID, ns.IsAbilityDisabled
 
-local GetSpecialization = C_SpecializationInfo.GetSpecialization
+local GetSpecialization = Facade.C_SpecializationInfo.GetSpecialization
 
 -- Clean up table_x later.
 ---@diagnostic disable-next-line: deprecated
@@ -442,7 +442,7 @@ state.GetSpellCount = Facade.C_Spell.GetSpellCastCount
 state.GetSpellInfo = ns.GetUnpackedSpellInfo
 state.GetSpellLink = Facade.GetSpellLink
 state.GetSpellTexture = C_Spell.GetSpellTexture
-state.GetStablePetInfo = GetStablePetInfo
+state.GetStablePetInfo = Facade.GetStablePetInfo
 state.GetTime = GetTime
 state.GetTotemInfo = GetTotemInfo
 state.InCombatLockdown = InCombatLockdown
@@ -465,10 +465,10 @@ state.UnitGetTotalAbsorbs = UnitGetTotalAbsorbs
 state.UnitGUID = UnitGUID
 state.UnitHealth = UnitHealth
 state.UnitHealthMax = UnitHealthMax
-state.UnitName = UnitName
-state.UnitIsFriend = UnitIsFriend
+state.UnitName = Facade.UnitName
+state.UnitIsFriend = Facade.UnitIsFriend
 
-local UnitIsUnit = UnitIsUnit
+local UnitIsUnit = Facade.UnitIsUnit
 
 state.UnitIsUnit = function( a, b )
     return a == b or UnitIsUnit( a, b )
@@ -509,8 +509,8 @@ state.safebool = function( val )
 end
 
 state.combat = 0
-state.faction = UnitFactionGroup( "player" )
-state.race[ formatKey( UnitRace("player") ) ] = true
+state.faction = Facade.UnitFactionGroup( "player" )
+state.race[ formatKey( Facade.UnitRace("player") ) ] = true
 
 state.class = Hekili.Class
 state.targets = ns.targets
@@ -1791,7 +1791,7 @@ do
 
             -- Internal processing stuff.
             elseif k == "display" then t[k] = "Primary"
-            elseif k == "latency" then t[k] = select( 4, GetNetStats() ) / 1000
+            elseif k == "latency" then t[k] = select( 4, Facade.GetNetStats() ) / 1000
             elseif k == "resetting" then t[k] = false
             elseif k == "scriptID" then t[k] = "NilScriptID"
             elseif k == "whitelist" then return nil
@@ -1856,7 +1856,7 @@ do
 
                 t[k] = max( 1, count )
 
-            elseif k == "level" then t[k] = UnitEffectiveLevel("player") or MAX_PLAYER_LEVEL
+            elseif k == "level" then t[k] = Facade.UnitEffectiveLevel("player") or MAX_PLAYER_LEVEL
             elseif k == "mounted" or k == "is_mounted" then t[k] = IsMounted()
             elseif k == "moving" then t[k] = ( GetUnitSpeed("player") > 0 )
             elseif k == "raid" then t[k] = IsInRaid() and t.group_members > 5
@@ -2757,7 +2757,7 @@ do
                 if not t.exists then t[k] = "virtual"
                 elseif not t.is_player then t[k] = "npc"
                 else
-                    local c = UnitClassBase( "target" )
+                    local c = Facade.UnitClassBase( "target" )
                     if c then t[k] = strlower( c )
                     else t[k] = "unknown" end
                 end
@@ -2765,7 +2765,7 @@ do
             elseif k == "health_current" then return t.health.current
             elseif k == "health_max" then return t.health.max
             elseif k == "health_pct" or k == "health_percent" then return t.health.percent
-            elseif k == "has_vehicle_ui" then t[k] = UnitInVehicle( "target" )
+            elseif k == "has_vehicle_ui" then t[k] = Facade.UnitInVehicle( "target" )
             elseif k == "is_add" then t[k] = not t.is_boss
             elseif k == "is_boss" then
                 if UnitExists( "boss1" ) and UnitIsUnit( "target", "boss1" ) or
@@ -2778,9 +2778,9 @@ do
                 end
             elseif k == "is_dead" then t[k] = UnitIsDeadOrGhost("target")
             elseif k == "is_demon" then t[k] = UnitCreatureType( "target" ) == PET_TYPE_DEMON
-            elseif k == "is_friendly" then t[k] = UnitCanAssist( "player", "target" )
-            elseif k == "is_in_party" then t[k] = UnitInParty( "target" )
-            elseif k == "is_in_raid" then t[k] = UnitInRaid( "target" ) ~= nil
+            elseif k == "is_friendly" then t[k] = Facade.UnitCanAssist( "player", "target" )
+            elseif k == "is_in_party" then t[k] = Facade.UnitInParty( "target" )
+            elseif k == "is_in_raid" then t[k] = Facade.UnitInRaid( "target" ) ~= nil
             elseif k == "is_player" then
                 local isPlayer = UnitIsPlayer( "target" )
                 if not isPlayer then isPlayer = PvpDummies[ t.npcid ] end

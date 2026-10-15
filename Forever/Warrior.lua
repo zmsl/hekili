@@ -16,8 +16,9 @@
 -- (src/TacoDogForever_Warrior/Warrior.lua:21-24).
 
 local addon, ns = ...
-local C_SpellBook, C_Spell, UnitClassBase = C_SpellBook, C_Spell, UnitClassBase
-local GetShapeshiftForm, GetShapeshiftFormInfo = GetShapeshiftForm, GetShapeshiftFormInfo
+local Facade = ns.Facade
+local C_SpellBook, C_Spell, UnitClassBase = Facade.C_SpellBook, Facade.C_Spell, Facade.UnitClassBase
+local GetShapeshiftForm, GetShapeshiftFormInfo = Facade.GetShapeshiftForm, Facade.GetShapeshiftFormInfo
 local Hekili = _G[ addon ]
 
 if UnitClassBase( "player" ) ~= "WARRIOR" then return end

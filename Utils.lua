@@ -3,12 +3,12 @@
 
 local addon, ns = ...
 local Facade = ns.Facade
-local AuraUtil, C_Item = AuraUtil, C_Item
-local C_Spell, C_SpellBook, C_Texture, C_TooltipInfo = C_Spell, C_SpellBook, C_Texture, C_TooltipInfo
+local AuraUtil, C_Item = Facade.AuraUtil, Facade.C_Item
+local C_Spell, C_SpellBook, C_Texture, C_TooltipInfo = Facade.C_Spell, Facade.C_SpellBook, Facade.C_Texture, Facade.C_TooltipInfo
 local C_UnitAuras = Facade.C_UnitAuras
-local GetNumGroupMembers, GetNumSubgroupMembers, GetTime, IsInGroup = GetNumGroupMembers, GetNumSubgroupMembers, GetTime, IsInGroup
-local IsInRaid, UnitHealth, UnitHealthMax, UnitIsUnit = IsInRaid, Facade.UnitHealth, Facade.UnitHealthMax, UnitIsUnit
-local UnitName = UnitName
+local GetNumGroupMembers, GetNumSubgroupMembers, GetTime, IsInGroup = Facade.GetNumGroupMembers, Facade.GetNumSubgroupMembers, Facade.GetTime, Facade.IsInGroup
+local IsInRaid, UnitHealth, UnitHealthMax, UnitIsUnit = Facade.IsInRaid, Facade.UnitHealth, Facade.UnitHealthMax, Facade.UnitIsUnit
+local UnitName = Facade.UnitName
 local Hekili = _G[ addon ]
 
 local format, gsub, lower = string.format, string.gsub, string.lower

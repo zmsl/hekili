@@ -68,6 +68,7 @@ function M.load()
         _G[k] = v
     end
     local ns = {
+        Facade = fakes, -- the class file reads the game through ns.Facade (event-facade spec §1.2)
         VirtualState = {
             Track = function(t)
                 for k, v in pairs(t.talents or {}) do

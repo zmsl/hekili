@@ -1,6 +1,6 @@
 -- VirtualState/spec/alloc_spec.lua (spec §2, §11): 10,000 mixed events (PLAYER_SWING, UNIT_POWER_FREQUENT,
 -- usability, own casts, UNIT_AURA) with a drain every tick against the fake spec, every accessor and every facade
--- policy called: VirtualState allocates nothing.
+-- policy and passthrough called: VirtualState allocates nothing.
 local load = require("VirtualState.spec.helpers.load")
 local fake = require("VirtualState.spec.helpers.fake_api")
 local fs = require("VirtualState.spec.helpers.fake_spec")
@@ -128,6 +128,9 @@ describe("zero allocation", function()
             Facade.UnitCastingInfo("target")
             Facade.UnitChannelInfo("target")
             Facade.IsUsableSpell(fs.REND)
+            Facade.GetTime() -- passthroughs
+            Facade.UnitGUID("target")
+            Facade.GetInstanceInfo() -- absent here: virtual, answers nothing
         end
         local ok, bytes = pcall(alloc.bytes, step, 10000)
         for k, v in pairs(saved) do

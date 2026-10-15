@@ -2,10 +2,12 @@
 -- Everything related to building/configuring options.
 
 local addon, ns = ...
-local C_ClassColor, C_SpecializationInfo, C_Spell = C_ClassColor, C_SpecializationInfo, C_Spell
-local GetBindingKey, GetCVar, GetFramerate, GetRealmName = GetBindingKey, GetCVar, GetFramerate, GetRealmName
-local GetSpecializationInfoByID, InCombatLockdown, UnitClass, UnitEffectiveLevel = GetSpecializationInfoByID, InCombatLockdown, UnitClass, UnitEffectiveLevel
-local C_VideoOptions, UnitLevel, UnitName = C_VideoOptions, UnitLevel, UnitName
+local Facade = ns.Facade
+local CreateFrame = Facade.CreateFrame
+local C_ClassColor, C_SpecializationInfo, C_Spell = Facade.C_ClassColor, Facade.C_SpecializationInfo, Facade.C_Spell
+local GetBindingKey, GetCVar, GetFramerate, GetRealmName = Facade.GetBindingKey, Facade.GetCVar, Facade.GetFramerate, Facade.GetRealmName
+local GetSpecializationInfoByID, InCombatLockdown, UnitClass, UnitEffectiveLevel = Facade.GetSpecializationInfoByID, Facade.InCombatLockdown, Facade.UnitClass, Facade.UnitEffectiveLevel
+local C_VideoOptions, UnitLevel, UnitName = Facade.C_VideoOptions, Facade.UnitLevel, Facade.UnitName
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class

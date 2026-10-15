@@ -2,7 +2,8 @@
 -- Handles /hekili CLI commands.
 
 local addon, ns = ...
-local InCombatLockdown = InCombatLockdown
+local Facade = ns.Facade
+local InCombatLockdown = Facade.InCombatLockdown
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class

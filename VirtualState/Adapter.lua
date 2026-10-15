@@ -14,7 +14,7 @@ local CAST_SUCCESS, CHANNEL_START = Obs.CastSuccess, Obs.ChannelStart
 local Hekili = _G[addon]
 local state, class = Hekili.State, Hekili.Class
 local spendResources = ns.spendResources
-local GetTime, CreateFrame = GetTime, CreateFrame
+local GetTime, CreateFrame = ns.Facade.GetTime, ns.Facade.CreateFrame
 local debugprofilestop = debugprofilestop
 local insert, sort = table.insert, table.sort
 
@@ -32,7 +32,7 @@ I.urgent = function(event)
     Hekili:ForceUpdate(event)
 end
 
--- Start once, at PLAYER_LOGIN, on a frame of its own.
+-- Start once, at PLAYER_LOGIN, on a frame of its own (a subscriber of the event facade like Hekili's frames).
 do
     local boot = CreateFrame("Frame")
     boot:RegisterEvent("PLAYER_LOGIN")

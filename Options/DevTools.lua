@@ -3,11 +3,12 @@
 
 local addon, ns = ...
 local Facade = ns.Facade
-local C_ClassTalents, C_SpecializationInfo, C_Spell, C_SpellActivationOverlay = C_ClassTalents, C_SpecializationInfo, C_Spell, C_SpellActivationOverlay
-local C_SpellBook, C_Traits, C_UnitAuras = C_SpellBook, C_Traits, Facade.C_UnitAuras
-local CombatLogGetCurrentEventInfo, GetBuildInfo, GetSpellBaseCooldown = Facade.CombatLogGetCurrentEventInfo, GetBuildInfo, Facade.GetSpellBaseCooldown
-local GetTime, InCombatLockdown, IsPlayerSpell, UnitCanAttack = GetTime, InCombatLockdown, IsPlayerSpell or function() end, UnitCanAttack
-local UnitClass, UnitClassBase, UnitIsUnit, UnitPowerMax = UnitClass, UnitClassBase, UnitIsUnit, UnitPowerMax
+local CreateFrame = Facade.CreateFrame
+local C_ClassTalents, C_SpecializationInfo, C_Spell, C_SpellActivationOverlay = Facade.C_ClassTalents, Facade.C_SpecializationInfo, Facade.C_Spell, Facade.C_SpellActivationOverlay
+local C_SpellBook, C_Traits, C_UnitAuras = Facade.C_SpellBook, Facade.C_Traits, Facade.C_UnitAuras
+local CombatLogGetCurrentEventInfo, GetBuildInfo, GetSpellBaseCooldown = Facade.CombatLogGetCurrentEventInfo, Facade.GetBuildInfo, Facade.GetSpellBaseCooldown
+local GetTime, InCombatLockdown, IsPlayerSpell, UnitCanAttack = Facade.GetTime, Facade.InCombatLockdown, Facade.IsPlayerSpell, Facade.UnitCanAttack
+local UnitClass, UnitClassBase, UnitIsUnit, UnitPowerMax = Facade.UnitClass, Facade.UnitClassBase, Facade.UnitIsUnit, Facade.UnitPowerMax
 local UnitSpellHaste = Facade.UnitSpellHaste
 local Hekili = _G[ addon ]
 

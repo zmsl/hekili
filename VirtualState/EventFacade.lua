@@ -15,7 +15,7 @@ local _G = _G
 local E = {}
 I.Events = E
 
--- The client table: `_G` in game; a spec sets `_G.CreateFrame` (and `_G.issecretvalue`) to its fake before loading.
+-- The client table: `_G` in game; a spec sets its CreateFrame (and issecretvalue) to the fake's before loading.
 local client = _G
 local realCreateFrame = client.CreateFrame
 

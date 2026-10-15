@@ -2,6 +2,7 @@
 -- Modified from For all Indents and Purposes, info below.
 
 local addon, ns = ...
+local CreateFrame = ns.Facade.CreateFrame
 local Hekili = _G[ addon ]
 
 --[[ For all Indents and Purposes

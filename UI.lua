@@ -3,12 +3,13 @@
 
 local addon, ns = ...
 local Facade = ns.Facade
-local C_Item, C_PetBattles, C_SpecializationInfo, C_Spell = C_Item, C_PetBattles, C_SpecializationInfo, C_Spell
-local C_SpellActivationOverlay, C_VideoOptions = C_SpellActivationOverlay, C_VideoOptions
-local GetFramerate, GetTime, HasOverrideActionBar, HasVehicleActionBar = GetFramerate, GetTime, HasOverrideActionBar or function() end, HasVehicleActionBar or function() end
-local InCombatLockdown, IsInInstance, IsMounted, UnitCanAttack = InCombatLockdown, IsInInstance, IsMounted, UnitCanAttack
-local UnitCastingInfo, UnitChannelInfo, UnitClass, UnitExists = Facade.UnitCastingInfo, Facade.UnitChannelInfo, UnitClass, UnitExists
-local UnitHasVehicleUI, UnitIsDead, UnitOnTaxi = UnitHasVehicleUI, UnitIsDead, UnitOnTaxi
+local CreateFrame = Facade.CreateFrame
+local C_Item, C_PetBattles, C_SpecializationInfo, C_Spell = Facade.C_Item, Facade.C_PetBattles, Facade.C_SpecializationInfo, Facade.C_Spell
+local C_SpellActivationOverlay, C_VideoOptions = Facade.C_SpellActivationOverlay, Facade.C_VideoOptions
+local GetFramerate, GetTime, HasOverrideActionBar, HasVehicleActionBar = Facade.GetFramerate, Facade.GetTime, Facade.HasOverrideActionBar, Facade.HasVehicleActionBar
+local InCombatLockdown, IsInInstance, IsMounted, UnitCanAttack = Facade.InCombatLockdown, Facade.IsInInstance, Facade.IsMounted, Facade.UnitCanAttack
+local UnitCastingInfo, UnitChannelInfo, UnitClass, UnitExists = Facade.UnitCastingInfo, Facade.UnitChannelInfo, Facade.UnitClass, Facade.UnitExists
+local UnitHasVehicleUI, UnitIsDead, UnitOnTaxi = Facade.UnitHasVehicleUI, Facade.UnitIsDead, Facade.UnitOnTaxi
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class

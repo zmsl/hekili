@@ -3,15 +3,15 @@
 
 local addon, ns = ...
 local Facade = ns.Facade
-local C_AddOns, C_PlayerInfo, C_PvP = C_AddOns, C_PlayerInfo, C_PvP
-local GetActionInfo, GetCVar, GetHaste, GetNumGroupMembers = GetActionInfo, GetCVar, Facade.GetHaste, GetNumGroupMembers
-local GetTime, GetUnitSpeed, InCombatLockdown, IsActionInRange = GetTime, Facade.GetUnitSpeed, InCombatLockdown, IsActionInRange or function() end
-local IsInInstance, IsInRaid, UnitAffectingCombat, UnitCanAttack = IsInInstance, IsInRaid, UnitAffectingCombat, UnitCanAttack
-local UnitClassBase, UnitExists, UnitGUID, UnitGetTotalAbsorbs = UnitClassBase, UnitExists, UnitGUID, Facade.UnitGetTotalAbsorbs
-local UnitHealth, UnitHealthMax, UnitInParty, UnitInRaid = Facade.UnitHealth, Facade.UnitHealthMax, UnitInParty, UnitInRaid
-local UnitIsDead, UnitIsFriend, UnitIsPVP, UnitIsPlayer = UnitIsDead, UnitIsFriend, UnitIsPVP, UnitIsPlayer
-local UnitIsTrivial, UnitIsUnit, UnitLevel, UnitName = UnitIsTrivial, UnitIsUnit, UnitLevel, UnitName
-local UnitPhaseReason, UnitTokenFromGUID = UnitPhaseReason, UnitTokenFromGUID
+local C_AddOns, C_PlayerInfo, C_PvP = Facade.C_AddOns, Facade.C_PlayerInfo, Facade.C_PvP
+local GetActionInfo, GetCVar, GetHaste, GetNumGroupMembers = Facade.GetActionInfo, Facade.GetCVar, Facade.GetHaste, Facade.GetNumGroupMembers
+local GetTime, GetUnitSpeed, InCombatLockdown, IsActionInRange = Facade.GetTime, Facade.GetUnitSpeed, Facade.InCombatLockdown, Facade.IsActionInRange
+local IsInInstance, IsInRaid, UnitAffectingCombat, UnitCanAttack = Facade.IsInInstance, Facade.IsInRaid, Facade.UnitAffectingCombat, Facade.UnitCanAttack
+local UnitClassBase, UnitExists, UnitGUID, UnitGetTotalAbsorbs = Facade.UnitClassBase, Facade.UnitExists, Facade.UnitGUID, Facade.UnitGetTotalAbsorbs
+local UnitHealth, UnitHealthMax, UnitInParty, UnitInRaid = Facade.UnitHealth, Facade.UnitHealthMax, Facade.UnitInParty, Facade.UnitInRaid
+local UnitIsDead, UnitIsFriend, UnitIsPVP, UnitIsPlayer = Facade.UnitIsDead, Facade.UnitIsFriend, Facade.UnitIsPVP, Facade.UnitIsPlayer
+local UnitIsTrivial, UnitIsUnit, UnitLevel, UnitName = Facade.UnitIsTrivial, Facade.UnitIsUnit, Facade.UnitLevel, Facade.UnitName
+local UnitPhaseReason, UnitTokenFromGUID = Facade.UnitPhaseReason, Facade.UnitTokenFromGUID
 local Hekili = _G[addon]
 
 local class = Hekili.Class
