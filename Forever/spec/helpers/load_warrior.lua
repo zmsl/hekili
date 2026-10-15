@@ -1,8 +1,8 @@
 -- Forever/spec/helpers/load_warrior.lua
 -- Loads Forever/Warrior.lua headless against a recording stand-in for Hekili: every spec:RegisterX call is kept by
 -- method name, ns.VirtualState.Track's tables are merged, and the plain game reads the file captures at load answer
--- from `game` (known spells, queued spells, usability, the shapeshift form, the level, VirtualState's cached weapon
--- damage). `env()` is a stand-in `state` for running
+-- from `game` (known spells, queued spells, usability, the shapeshift form, VirtualState's per-hand base weapon
+-- speeds). `env()` is a stand-in `state` for running
 -- the file's handlers, state functions and hooks (Hekili runs them with setfenv( f, state )).
 local M = {}
 
@@ -27,9 +27,7 @@ function M.load()
         noMana = {},
         form = 0,
         formSpell = {},
-        damage = { 0, 0, 0, 0 }, -- UnitDamage's first four returns in VirtualState's stat cache
-        level = 22,
-        SECRET = newproxy(), -- a secret value: issecretvalue says so, and arithmetic or comparison on it raises
+        base = { 0, 0 }, -- VS.SwingBase: each hand's unhasted speed (0: no plain read yet)
     }
     local w = { game = game, abilities = {}, auras = {}, track = {}, hooks = {}, funcs = {}, exprs = {} }
     w.state = { main_hand = { size = 2 }, timeToInterrupt = function() end }
@@ -62,12 +60,6 @@ function M.load()
         GetShapeshiftFormInfo = function(i)
             return 0, true, true, game.formSpell[i]
         end,
-        UnitLevel = function()
-            return game.level
-        end,
-        issecretvalue = function(v)
-            return v == game.SECRET
-        end,
         Enum = { PowerType = { Rage = 1 } },
     }
     local saved = {}
@@ -82,12 +74,8 @@ function M.load()
                     w.track[k] = v
                 end
             end,
-            Stat = function(name)
-                if name ~= "UnitDamage" then
-                    return 0, 0, 0, 0, 0, 0, 0
-                end
-                local d = game.damage
-                return d[1], d[2], d[3], d[4], 0, 0, 1
+            SwingBase = function(hand)
+                return game.base[hand]
             end,
         },
     }

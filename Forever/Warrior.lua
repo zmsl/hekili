@@ -12,12 +12,12 @@
 -- Credits: Hekili (registration API and pack format); the abilities, auras, stance swap, queue prediction and the Arms
 -- and Fury priorities are ported from Hekili's Classic profile (origin/classic:Classic/Warrior.lua,
 -- Classic/APLs/WarriorArms.simc, Classic/APLs/WarriorFury.simc); call shapes from archive/TheWarWithin/WarriorArms.lua.
--- The fallback rage rate from Taco Dog Forever's Warrior pack (src/TacoDogForever_Warrior/Warrior.lua:21-24).
+-- The one- and two-hander rage rates as in Taco Dog Forever's Warrior pack
+-- (src/TacoDogForever_Warrior/Warrior.lua:21-24).
 
 local addon, ns = ...
 local C_SpellBook, C_Spell, UnitClassBase = C_SpellBook, C_Spell, UnitClassBase
-local GetShapeshiftForm, GetShapeshiftFormInfo, UnitLevel = GetShapeshiftForm, GetShapeshiftFormInfo, UnitLevel
-local issecretvalue = issecretvalue
+local GetShapeshiftForm, GetShapeshiftFormInfo = GetShapeshiftForm, GetShapeshiftFormInfo
 local Hekili = _G[ addon ]
 
 if UnitClassBase( "player" ) ~= "WARRIOR" then return end
@@ -95,42 +95,25 @@ local function usableNow( ids )
     return r > 0 and IsSpellUsable( ids[ r ] ) == true
 end
 
--- Rage a second of the main hand's unhasted weapon speed before the weapon damage is cached: a white swing brings
--- rate x that speed: 4.5 for a two-hander, 3.46 for a one-hander (Hekili's gear scan sets main_hand.size).
-local function rageRate()
-    return state.main_hand.size == 1 and 3.46 or 4.5
-end
-
--- Rage per white hit, vanilla's formula: 7.5 x average weapon damage / c(level), c(level) = 0.0091 level^2 +
--- 3.23 level + 4.27. TBC's adds a weapon-speed term, hit factor x unhasted weapon speed / 2 (hit factor 3.5 main
--- hand, 1.75 off hand), with half the damage term; RAGE_SPEED_TERM = 1 adds that term to vanilla's, and it is on
--- (checkpoint 2026-10-15: 38/40/44 damage -> 8/9/10 rage at level 22, 2.2 s main hand). The damage is UnitDamage's (VirtualState's out-of-combat cache: secret in combat), whose off-hand range
--- already carries the off-hand penalty (the character pane shows it as is), so it is not halved again. Dual Wield
--- Specialization +10% off-hand rage a rank; Unbridled Wrath 12% a rank for 1 rage a hit, both hands (60% at 5/5,
--- Forever's tooltip).
--- shortcut: misses, dodges and crits are ignored (every swing counts as an average hit); VirtualState's calibration
--- scale absorbs the difference. Upgrade if the checkpoint's rage estimate drifts by more than 10.
-local RAGE_SPEED_TERM = 1
-local HIT_FACTOR = { 3.5, 1.75 }
-
+-- Rage per white swing, as measured on Forever (build 1.60.1; https://github.com/magey/forever-warrior/issues/3 and
+-- the warrior compendium v3.1.0, 2026-10-01, https://ppach-warriorcompendium.share.connect.posit.cloud/rage.html):
+-- the weapon's unhasted speed x a rate by hand, independent of damage, level and haste: 3.46 main hand with a
+-- one-hander, 4.5 with a two-hander, 1.73 off hand. Misses, dodges and parries give none, glancing blows full rage, a
+-- crit one extra base swing. Dual Wield Specialization: the tooltip's +10% off-hand rage a rank (unverified on
+-- Forever). Unbridled Wrath: 1 rage a proc (2 with a two-hander) at a measured ~7.5% a rank (36% at 5/5; the tooltip
+-- says 60%). The two-hander flag is Hekili's gear scan (main_hand.size from C_Item.GetItemInfo's equip location on
+-- PLAYER_EQUIPMENT_CHANGED; the Forever API data marks neither it nor GetInventoryItemID secret).
+-- shortcut: crits (+1 base swing each) and misses are ignored; VirtualState's calibration scale absorbs them. Upgrade
+-- when crit chance is read plainly.
 local function rageOf( hand )
-    local speed = hand == 1 and state.mainhand_speed or state.offhand_speed
-    local haste = state.haste
-    if haste and haste > 0 then speed = speed / haste end
-    local lo, hi, offLo, offHi = VS.Stat( "UnitDamage" )
-    local damage = hand == 1 and ( lo + hi ) / 2 or ( offLo + offHi ) / 2
-    local wrath = 0.12 * state.talent.unbridled_wrath.rank
-    -- VirtualState folds this on every swing in combat: a secret level (the API data shows none, but it under-reports)
-    -- must not reach the arithmetic, so it takes the pre-read fallback too.
-    local level = UnitLevel( "player" )
-    if damage <= 0 or issecretvalue( level ) or type( level ) ~= "number" or level <= 0 then
-        if hand ~= 1 then return 0 end
-        return rageRate() * speed + wrath -- no plain damage or level read yet
+    local speed = VS.SwingBase( hand )
+    if speed <= 0 then speed = hand == 1 and state.mainhand_speed or state.offhand_speed end -- no plain base read yet
+    local twoHand = state.main_hand.size == 2
+    local wrath = 0.075 * state.talent.unbridled_wrath.rank * ( twoHand and 2 or 1 )
+    if hand ~= 1 then
+        return 1.73 * speed * ( 1 + 0.1 * state.talent.dual_wield_specialization.rank ) + wrath
     end
-    local rage = damage / ( 0.0091 * level * level + 3.23 * level + 4.27 ) * 7.5
-        + RAGE_SPEED_TERM * HIT_FACTOR[ hand ] * speed / 2
-    if hand == 2 then rage = rage * ( 1 + 0.1 * state.talent.dual_wield_specialization.rank ) end
-    return rage + wrath
+    return ( twoHand and 4.5 or 3.46 ) * speed + wrath
 end
 
 spec:RegisterResource( Enum.PowerType.Rage, {

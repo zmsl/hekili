@@ -221,41 +221,37 @@ describe("Forever Warrior", function()
         end
     end)
 
-    it("gains rage per hit per hand by vanilla's damage formula plus TBC's weapon-speed term", function()
+    it("gains rage per white swing from the unhasted weapon speed and the hand (Forever's measured rates)", function()
         local models = w.resource[2]
-        w.state.mainhand_speed, w.state.offhand_speed, w.state.haste = 2.6, 1.8, 1
-        w.state.talent = rank(0)
-        w.game.damage = { 40, 60, 15, 25 } -- averages 50 and 20
-        local c = 0.0091 * 22 * 22 + 3.23 * 22 + 4.27 -- 79.7344 at level 22
-        -- damage term + hit factor x speed / 2 (RAGE_SPEED_TERM = 1):
-        local mh = 50 / c * 7.5 + 3.5 * 2.6 / 2 -- 4.7031 + 4.55 = 9.2531
-        local oh = 20 / c * 7.5 + 1.75 * 1.8 / 2 -- 1.8812 + 1.575 = 3.4562
-        assert.is_true(math.abs(models.mainhand.value() - mh) < 1e-9)
-        assert.is_true(math.abs(models.offhand.value() - oh) < 1e-9)
+        local function near(want, got)
+            assert.is_true(math.abs(got - want) < 1e-9, ("want %.4f, got %.4f"):format(want, got))
+        end
         w.state.talent = setmetatable({
-            unbridled_wrath = { rank = 5, enabled = true }, -- 60%: 0.6 rage a hit, both hands
+            unbridled_wrath = { rank = 5, enabled = true }, -- 0.075 x 5 = 0.375 rage a swing (one-hander)
             dual_wield_specialization = { rank = 3, enabled = true }, -- +30% off-hand rage
         }, getmetatable(rank(0)))
-        assert.is_true(math.abs(models.mainhand.value() - (mh + 0.6)) < 1e-9) -- 9.2531 + 0.6 = 9.8531
-        assert.is_true(math.abs(models.offhand.value() - (oh * 1.3 + 0.6)) < 1e-9) -- 3.4562 x 1.3 + 0.6 = 5.0931
+        w.state.main_hand.size = 1
+        w.game.base = { 2.2, 2.5 }
+        w.state.mainhand_speed, w.state.offhand_speed, w.state.haste = 2.2, 2.5, 1
+        near(3.46 * 2.2 + 0.375, models.mainhand.value()) -- 7.612 + 0.375 = 7.987
+        near(1.73 * 2.5 * 1.3 + 0.375, models.offhand.value()) -- 5.6225 + 0.375 = 5.9975
+        -- haste shortens the swing but not its rage: the hasted speeds do not enter
+        w.state.mainhand_speed, w.state.offhand_speed, w.state.haste = 1.76, 2.0, 1.25
+        near(3.46 * 2.2 + 0.375, models.mainhand.value())
+        near(1.73 * 2.5 * 1.3 + 0.375, models.offhand.value())
+        w.state.main_hand.size = 2 -- a two-hander: 4.5 x speed, Unbridled Wrath 2 rage a proc
+        w.game.base = { 3.3, 0 }
+        near(4.5 * 3.3 + 0.75, models.mainhand.value()) -- 14.85 + 0.75 = 15.6
         assert.are.same({ "offhand", "offhand_speed" }, { models.offhand.swing, models.offhand.interval })
     end)
 
-    it("falls back to the weapon-speed rate before the weapon damage is cached", function()
+    it("takes the believed swing speed before a plain base speed is read", function()
         local models = w.resource[2]
-        w.state.mainhand_speed, w.state.offhand_speed, w.state.haste = 3, 0, 1
         w.state.talent = rank(0)
-        assert.are.same({ 4.5 * 3, 0 }, { models.mainhand.value(), models.offhand.value() })
-        w.state.talent = setmetatable({ unbridled_wrath = { rank = 5, enabled = true } }, getmetatable(rank(0)))
-        assert.are.same({ 4.5 * 3 + 0.6, 0 }, { models.mainhand.value(), models.offhand.value() })
-    end)
-
-    it("falls back to the weapon-speed rate when the level reads secret", function()
-        local models = w.resource[2]
-        w.state.mainhand_speed, w.state.offhand_speed, w.state.haste = 3, 1.8, 1
-        w.state.talent = rank(0)
-        w.game.damage, w.game.level = { 40, 60, 15, 25 }, w.game.SECRET
-        assert.are.same({ 4.5 * 3, 0 }, { models.mainhand.value(), models.offhand.value() })
+        w.state.main_hand.size = 1
+        w.game.base = { 0, 0 }
+        w.state.mainhand_speed, w.state.offhand_speed = 2.6, 0
+        assert.are.same({ 3.46 * 2.6, 0 }, { models.mainhand.value(), models.offhand.value() })
     end)
 
     it("gains Anger Management's rage every 3 s in combat through a combat-gated periodic entry", function()

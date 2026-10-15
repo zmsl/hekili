@@ -175,6 +175,12 @@ function VS.LastSwing(hand)
     return last[hand] or 0
 end
 
+--- (spec §3.1) The unhasted base speed of a hand (seconds) from the last plain out-of-combat read, 0 before one.
+--- Allocates nothing.
+function VS.SwingBase(hand)
+    return base[hand] or 0
+end
+
 --- (spec §3.2) The melee haste multiplier.
 function VS.Haste(now)
     if not haste then

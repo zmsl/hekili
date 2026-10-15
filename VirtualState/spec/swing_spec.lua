@@ -73,6 +73,7 @@ describe("swings", function()
         assert.are.same({ 103, 1, "observed" }, { s.est, s.conf, s.basis })
         assert.are.equal(3.0, VS.SwingSpeed(1, 101).est)
         assert.are.equal(100, VS.LastSwing(1))
+        assert.are.same({ 3.6, 0 }, { VS.SwingBase(1), VS.SwingBase(2) }) -- the base, not the hasted 3.0
         assert.is_true(math.abs(VS.Haste(101).est - 1.2) < 1e-9)
         assert.are.equal("modelled", VS.Haste(101).basis)
         assert.is_true(math.abs(VS.Swing(1, 106).conf - 0.4) < 1e-9) -- falls linearly over SWING_DECAY
