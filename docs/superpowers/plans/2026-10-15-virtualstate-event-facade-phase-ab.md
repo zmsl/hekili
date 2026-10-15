@@ -12,18 +12,18 @@
 
 ## How this plan was checked
 
-Every patch below was written and run before the plan was saved, on a scratch clone of `~/src/hekili` with a branch at `forever` = `0d480aa7`: Tasks 1 to 4 and 6 to 11 in order, each spec patch applied and run red, then the implementation patch and the whole verification block; the counts below are that replay's. Then every patch was extracted again from this markdown and the whole plan replayed from `0d480aa7` in a fresh clone: per task the spec patch run red, the implementation patch, the verification block, `git add` with exactly the task's commit list, a commit, and an empty `git status` after it (so each commit holds everything its tests need). Task 12 (the Warrior file) was replayed on top: `forever-warrior-profile` at `fc466148` (its accuracy pass through its Task 4) merged into the replay branch, the conflicts resolved as Task 12 says, then its patches; when `forever-warrior-profile` reaches `forever` later, re-check its conflicts against that head. The base counts at `0d480aa7`: 97 busted successes, luacheck 0 warnings in 63 files, `tools/check_api_reads.sh` 43 loaded files, the inventory diff empty, LuaLS no problems. The in-game checkpoints (Tasks 5 and 13) are the user's.
+Every patch below was written and run before the plan was saved, on a scratch clone of `~/src/hekili` with a branch at `forever` = `75d71c8b` (which already holds the Warrior branch: its accuracy pass, the speed-based rage per swing, the `decay` and `max` fields, Bloodrage's `startsCombat = false`): Tasks 1 to 4 and 6 to 13 in order, each spec patch applied and run red, then the implementation patch and the whole verification block; the counts below are that replay's. Then every patch was extracted again from this markdown and the whole plan replayed from `75d71c8b` in a fresh clone: per task the spec patch run red, the implementation patch, the verification block, `git add` with exactly the task's commit list, a commit, and an empty `git status` after it (so each commit holds everything its tests need). The base counts at `75d71c8b`: 139 busted successes, luacheck 0 warnings in 65 files, `tools/check_api_reads.sh` 43 loaded files, the inventory diff empty, LuaLS no problems. The in-game checkpoints (Tasks 5 and 14) are the user's.
 
 ## Global Constraints
 
-- Repository `~/src/hekili`. Work only in the worktree `~/src/hekili/.claude/worktrees/virtualstate-event-facade`, branch `virtualstate-event-facade`, which the controller creates from `forever` at `0d480aa7` (`git worktree add -b virtualstate-event-facade .claude/worktrees/virtualstate-event-facade 0d480aa7`). Git from WSL only. After each task's green verification and clean review, push the branch (`git push origin virtualstate-event-facade`); never push to `forever` or `classic`; never force-push. The only merge is Task 12 Step 1 (`git merge --no-edit forever`), and only after `forever-warrior-profile` has been merged into `forever`: until then Task 12 and the checkpoint after it (Task 13) are **blocked**; Tasks 1 to 11 do not depend on it.
+- Repository `~/src/hekili`. Work only in the worktree `~/src/hekili/.claude/worktrees/virtualstate-event-facade`, branch `virtualstate-event-facade`, which the controller creates from `forever` at `75d71c8b` (`git worktree add -b virtualstate-event-facade .claude/worktrees/virtualstate-event-facade 75d71c8b`). Git from WSL only. After each task's green verification and clean review, push the branch (`git push origin virtualstate-event-facade`); never push to `forever` or `classic`; never force-push. No task merges: `forever` at `75d71c8b` already holds the Warrior branch, so no task is blocked.
 - Every commit message ends with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`, naming the model that wrote the commit; an implementer on another model replaces `Claude Opus 5.5` with its own model's name.
 - No LICENSE or README changes, in any repository. No changes to `archive/` or `Libs/`.
 - Taco Dog Forever is read only; clean-room direction: TDF mechanics may be ported into Hekili with credit in the file header (spec §13 of the Phase 1 spec), Hekili code never flows into TDF. Files carrying `Plain`, the `issecretvalue` handling or another secret-value technique credit Catnip (Durts) in their header.
 - Secret safety (event-facade spec §8, decision 8): no VirtualState code compares, indexes or does arithmetic on a client value without `issecretvalue()` first; none uses `a and b or c` on a possibly-secret value; every client read in `VirtualState/Sources/` goes through `Plain(api, v)` or carries a `-- secret:` comment saying why the raw value is safe (`VirtualState/spec/secrets_spec.lua` enforces it); every event slot reaches a subscriber through `Plain`; every combat-log row holds plain values or the layer's constants; a hybrid tests its raw answer before using it; a passthrough is raw by its class and the trace counts its secret answers.
 - Performance: receiving, gating, delivering, emitting and queueing rows, `CombatLogGetCurrentEventInfo`, the pairing and attribution, every facade row's wrapper with the trace off: no allocation, no closures or tables in recurring paths; allocations happen at load, at `Start`, at `SpecChanged` or at a subscription. Each task with a recurring path has a 0-byte case (`VirtualState/spec/helpers/alloc.lua`).
-- TOC order (`Hekili.toc`): `VirtualState\Families\Now.lua` (Task 10) goes right after `VirtualState\Families\Enemies.lua`; the other new files go after `VirtualState\AplWarnings.lua` and before `VirtualState\Facade.lua`, in this order: `VirtualState\EventFacade.lua` (Task 1), `VirtualState\CombatLog.lua` (Task 6), `VirtualState\Sources\Rows.lua` (Task 7), `VirtualState\Sources\Attackers.lua` (Task 8). Adding files to the TOC needs a client restart, not a `/reload`, before the next checkpoint.
-- Scope: phases A and B of the spec (§11), `now` handlers (§12a, version 1: cast success) and the decision-7 follow-up. Not phase C (deaths, plates' damage, the believed `UNIT_AURA` lists) or phase D (debuff travel, the compensating removal); not the stance swap into Battle Stance for Overpower (spec §12).
+- TOC order (`Hekili.toc`): `VirtualState\Families\Now.lua` (Task 10) goes right after `VirtualState\Families\Enemies.lua`, and `VirtualState\Families\Modifiers.lua` (Task 11) right after it; `Races.lua` (Task 11) right after `State.lua`; the class file at `Forever\Classes\Warrior.lua` and every race file (`Forever\Races\Gnome.lua`, Task 11) after it; the other new files go after `VirtualState\AplWarnings.lua` and before `VirtualState\Facade.lua`, in this order: `VirtualState\EventFacade.lua` (Task 1), `VirtualState\CombatLog.lua` (Task 6), `VirtualState\Sources\Rows.lua` (Task 7), `VirtualState\Sources\Attackers.lua` (Task 8). Adding files to the TOC needs a client restart, not a `/reload`, before the next checkpoint.
+- Scope: phases A and B of the spec (§11), `now` handlers (§12a, version 1: cast success), the shared racials and resource modifiers (§12b) and the decision-7 follow-up. Not phase C (deaths, plates' damage, the believed `UNIT_AURA` lists) or phase D (debuff travel, the compensating removal); not the stance swap into Battle Stance for Overpower (spec §12).
 - Tools: `BUSTED=~/src/TacoDogForever/.lua/bin/busted`, `LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck`, `LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server`, `lua5.1`, `luac5.1`. All commands run from the worktree root.
 - Every task ends with the verification block, written out per task with its expected results, then a commit:
 
@@ -36,10 +36,10 @@ Every patch below was written and run before the plan was saved, on a scratch cl
   LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
     | diff - <(cut -f1 tools/api_inventory.txt)               # [empty]
   $LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [Diagnosis completed, no problems found]
-  git ls-files -mo --exclude-standard '*.lua' | xargs -r -n1 luac5.1 -p   # [no output]
+  git ls-files -mo --exclude-standard '*.lua' | while read -r f; do [ -f "$f" ] && luac5.1 -p "$f"; done   # [no output]
   ```
 - Patches are applied with `git apply` from the worktree root, in the order given; each was generated by `git diff` in the replay.
-- Style: VirtualState files and specs use the TDF layout (4 spaces, no spaces inside parentheses, 120 columns); edits to Hekili's own files keep Hekili's style (spaces inside parentheses); `Forever/Warrior.lua` keeps Hekili's style, its specs the TDF layout.
+- Style: VirtualState files and specs use the TDF layout (4 spaces, no spaces inside parentheses, 120 columns); edits to Hekili's own files keep Hekili's style (spaces inside parentheses); `Forever/Classes/Warrior.lua` and `Forever/Races/*.lua` keep Hekili's style, the Forever specs the TDF layout.
 - The user runs the game. A **CHECKPOINT** task stops execution: the orchestrator (not a subagent) pushes the branch, points the client's checkout at it with `git -C ~/src/hekili checkout --detach virtualstate-event-facade`, asks the user to run the exact lines given, and waits. Every in-game line is under 255 characters and copies its answer through `VSCopy(` (ForeverProbe's copy box, `/vscopy` reopens it): the user cannot copy chat. When the session ends, `git -C ~/src/hekili checkout forever`.
 
 ## The events this plan handles (signatures)
@@ -80,7 +80,7 @@ VirtualState/Sources/Sources.lua    Task 1  S.Run (gated slots), S.HANDLERS/S.UN
 VirtualState/Facade.lua             Task 2  three classes, passthrough/hybrid helpers, all 176 names, CreateFrame
                                     Task 4  one wrapper per row with the trace branch; Facade.Attach; secret counts
                                     Task 6  GetTime (hybrid: back-dating), CombatLogGetCurrentEventInfo (the current row)
-                                    Task 11 the GCD spell, the empty spec slot, GetTalentInfoByID from the walk
+                                    Task 12 the GCD spell, the empty spec slot, GetTalentInfoByID from the walk
 VirtualState/CombatLog.lua          Task 6  the row pool, Emit/Cast/Deliver/Current, the deferred lane; Task 9  aura and energize rows
 VirtualState/Sources/Casts.lua      Task 6  own-cast rows instead of the feeds; the player's GUID
 VirtualState/Sources/Rows.lua       Task 7  our swings and abilities paired with the target's UNIT_COMBAT
@@ -89,20 +89,27 @@ VirtualState/Sources/Attackers.lua  Task 8  who targets us, attacker clocks, row
 VirtualState/Adapter.lua            Task 2  boot frame and clock from the facade; Task 4  Facade.Attach, SetupDebug wrap
                                     Task 6  cast feeds removed; Task 7  swing feed removed; Task 9  aura and energize rows
                                     Task 10 the apply route (reset, readBefore/readAfter, apply) removed; the drain is the fold
-VirtualState/Families/Now.lua       Task 10 the `now` context, the automatic cost/cooldown/GCD, VS.KnownRank
+VirtualState/Families/Now.lua       Task 10 the `now` context, the automatic cost/cooldown/GCD, VS.KnownRank; Task 11 charged cost modifiers
+VirtualState/Families/Modifiers.lua Task 11 `costMods`: I.CostMod, I.SpendCostCharges (and the `maxMods` contract)
+VirtualState/Families/Resources.lua Task 11 the one maximum evaluator applies `maxMods`
+VirtualState/Families/Casts.lua     Task 11 I.CostOf through the cost modifiers, I.BaseCostOf
+Classes.lua, State.lua              Task 11 RegisterAbility's cost wrap and ns.applyRace after the merge; `state.race_token`, `race.<token>`; the sim's charge call
+Races.lua                           Task 11 Hekili:NewRace (race packs), ns.applyRace (the race wins a key clash); the simulation's half of `costMods`
 VirtualState/Belief.lua, Snapshot.lua, Facade.lua, Sources/Spellbook.lua   Task 10 no stop-at-cast, `now` counters, no pinned clock, A.known
 VirtualState/spec/*                 every task; helpers/fake_api.lua Tasks 1 and 8
-Hekili files (14) and Formatting.lua  Task 2  file-top locals from ns.Facade, CreateFrame from the facade
-Events.lua                          Task 3  UNIT_AURA's original body; Task 6  the CLEU skip reverted; Task 11  GCD 61304, updateTalents
-Classes.lua, UI.lua, Options/Options.lua   Task 11  GCD 61304, the spec loop's original break
-.luacheckrc, tools/check_api_reads.sh, tools/api_inventory.txt   Task 2 (inventory classes again in Tasks 6 and 11; .luacheckrc again in Tasks 10 and 12)
-Hekili.toc                          Tasks 1, 6, 7, 8, 10
-Forever/Warrior.lua, Forever/spec/* Task 12 (blocked until forever-warrior-profile is in forever): windows and `now` lines
+Hekili files (14), Formatting.lua and Forever/Warrior.lua  Task 2  file-top locals from ns.Facade, CreateFrame from the facade
+Events.lua                          Task 3  UNIT_AURA's original body; Task 6  the CLEU skip reverted; Task 12  GCD 61304, updateTalents
+Classes.lua, UI.lua, Options/Options.lua   Task 12  GCD 61304, the spec loop's original break
+.luacheckrc, tools/check_api_reads.sh, tools/api_inventory.txt   Task 2 (inventory classes again in Tasks 6 and 12; .luacheckrc again in Tasks 10 and 11)
+Hekili.toc                          Tasks 1, 6, 7, 8, 10, 11
+Forever/Classes/Warrior.lua         Task 11 moved from Forever/Warrior.lua; Task 13: windows, `now` lines, `knownRank`, no Gnome max
+Forever/spec/*                      Task 2 the loader's ns.Facade; Task 11 its path; Task 13 its fakes and the Warrior's tests
+Forever/Races/Gnome.lua             Task 11 the Gnome race pack: Eureka!, Expansive Mind, Eureka!'s spell-scoped cost modifier
 ```
 
 ## Order and checkpoints
 
-Tasks 1 to 4 (phase A), then Task 5, CHECKPOINT A. Tasks 6 to 9 (phase B's rows), Task 10 (`now` handlers: our casts' effects from the class files' declared now-state, which retires the drain's reset-apply-reset; it comes after Task 9 because it moves Task 9's aura and energize rows from the apply's diff into its verbs, and it needs Task 6's combat log), Task 11 (the decision-7 follow-up), Task 12 (the Warrior file, blocked until `forever-warrior-profile` is merged into `forever`; it also declares the Warrior's `now` lines), then Task 13, CHECKPOINT B, which starts with phase B's two probes and the pairing gap. Decision 7 asks for the follow-up after phase A; it runs here after phase B's code because its patches were replayed in that order, and CHECKPOINT B checks it with the rest.
+Tasks 1 to 4 (phase A), then Task 5, CHECKPOINT A. Tasks 6 to 9 (phase B's rows), Task 10 (`now` handlers: our casts' effects from the class files' declared now-state, which retires the drain's reset-apply-reset; after Task 9 because it moves Task 9's aura and energize rows into its verbs), Task 11 (race packs, the class file's move to `Forever/Classes/`, and the resource definition's `maxMods`/`costMods`; after Task 10 because it extends `I.CostOf` and Task 10's automatic cost step), Task 12 (the decision-7 follow-up), Task 13 (the Warrior file: its windows, its `now` lines, and no Gnome stopgap), then Task 14, CHECKPOINT B, which starts with phase B's two probes and the pairing gap. Decision 7 asks for the follow-up after phase A; it runs here after phase B's code because its patches were replayed in that order, and CHECKPOINT B checks it with the rest.
 
 Deliberately not built (a review should not flag them): `now` handlers for non-cast triggers (`spec:RegisterNow(kind, fn)`: the dodge, the kill, an aura tick; spec §12a, later with phase C's observation kinds); an event inventory file (spec §1.2: registrations depend on runtime; `Snapshot()` lists refused events); a separate trace ring or `/hekili vs` command (decision 3); rows for other units' casts, deaths, plates' damage and the believed `UNIT_AURA` lists (phase C); debuff travel and the compensating removal (phase D); Overpower's stance swap (spec §12); a channel's `SPELL_CAST_SUCCESS` from `UNIT_SPELLCAST_CHANNEL_START` (it comes from `UNIT_SPELLCAST_SUCCEEDED`, like every success; no Forever Warrior ability channels).
 
@@ -124,7 +131,7 @@ Phase A, spec §2.1-§2.3, decisions 1 and 2. Today `VS.Start` creates VirtualSt
 
 - [ ] **Step 0: Put the spec and this plan on the branch**
 
-The controller has committed both on `forever-warrior-profile`; bring them over (they are identical there, so the later merge of `forever` is clean):
+The controller commits the final versions of both on `forever-warrior-profile`, where they were written (`forever` at `75d71c8b` holds earlier drafts); bring them over:
 
 ```bash
 git checkout forever-warrior-profile -- docs/superpowers/specs/2026-10-15-virtualstate-event-facade.md \
@@ -362,10 +369,10 @@ index 00000000..6044375d
 +    end)
 +end)
 diff --git a/VirtualState/spec/helpers/fake_api.lua b/VirtualState/spec/helpers/fake_api.lua
-index 0c4c7959..662fe27f 100644
+index d0daabc8..b83de73e 100644
 --- a/VirtualState/spec/helpers/fake_api.lua
 +++ b/VirtualState/spec/helpers/fake_api.lua
-@@ -55,6 +55,7 @@ function M.new()
+@@ -56,6 +56,7 @@ function M.new()
          traits = nil, -- { config = id, trees = { tree }, nodes = { [node] = info }, entries = {}, defs = {} }
          inRange = {},
          handlers = {},
@@ -373,7 +380,7 @@ index 0c4c7959..662fe27f 100644
      }
      local api = { ctl = ctl }
  
-@@ -206,26 +207,39 @@ function M.new()
+@@ -207,26 +208,39 @@ function M.new()
          end,
      }
  
@@ -420,7 +427,7 @@ index 0c4c7959..662fe27f 100644
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `88 successes / 9 failures / 12 errors`: every `event_facade_spec` case errors with `attempt to index upvalue 'E' (a nil value)`, and the old `VS.Start` fails against the fake's first-frame rule (the adapter's boot frame becomes `api.frame`).
+Expected: `130 successes / 9 failures / 12 errors`: every `event_facade_spec` case errors with `attempt to index upvalue 'E' (a nil value)`, and the old `VS.Start` fails against the fake's first-frame rule (the adapter's boot frame becomes `api.frame`).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -789,20 +796,20 @@ index 59e30b29..a23b43f3 100644
 - [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `109 successes / 0 failures / 0 errors`.
+Expected: `151 successes / 0 failures / 0 errors`.
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [109 successes / 0 failures / 0 errors]
-$LUACHECK .                                                 # [0 warnings / 0 errors in 65 files]
+$BUSTED                                                     # [151 successes / 0 failures / 0 errors]
+$LUACHECK .                                                 # [0 warnings / 0 errors in 67 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct secret or absent game API read in 44 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
   | diff - <(cut -f1 tools/api_inventory.txt)               # [empty]
 $LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [Diagnosis completed, no problems found]
-git ls-files -mo --exclude-standard '*.lua' | xargs -r -n1 luac5.1 -p   # [no output]
+git ls-files -mo --exclude-standard '*.lua' | while read -r f; do [ -f "$f" ] && luac5.1 -p "$f"; done   # [no output]
 ```
 
 - [ ] **Step 6: Commit**
@@ -822,11 +829,13 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 Phase A, spec §1, decisions 1, 4 and 8. `VirtualState/Facade.lua` grows from the 51 kept names to every name Hekili reads: the 124 former passthroughs (from `docs/forever-facade-notes.md`, their secrecy column verbatim as the reason) through `passthrough(name, reason)` (the raw function; a name the client lacks becomes a virtual row answering nothing, which retires the files' `X or function() end` shims); 24 Phase 1 rows become `hybrid` (the raw call; any secret among the first four values, or a cooldown or charge table's secret or non-numeric times, hands over to the Phase 1 policy; `C_Spell.GetSpellCharges` answers a plain nil, "not a charge spell", as the client does, after testing it with `issecretvalue`): the 12 stats, `GetHaste`, `GetMeleeHaste`, `UnitSpellHaste`, `UnitAttackSpeed`, `GetUnitSpeed`, `GetTotemInfo`, `GetPowerRegenForPowerType`, `GetManaRegen`, `C_Spell.GetSpellCooldown`, `C_Spell.GetSpellCharges`, and `UnitCastingInfo`/`UnitChannelInfo` (player raw, target modelled); the rest are `virtual` (Phase 1's 17 stubs included); `IsUsableSpell` is a passthrough of `C_Spell.IsSpellUsable`; `CreateFrame` is the event facade's (virtual). `Facade.Stubs()` goes with the stub status. `tools/api_inventory.txt` lists all 176 names as `Name<TAB>class` (125 passthrough, 24 hybrid, 27 virtual).
 
-Every Hekili file then reads the game only through the facade: each pure alias line at a file's top (`local A, B = A, B`, shims included) points at `Facade.X`, and a file without one gains `local Facade = ns.Facade` after `local addon, ns = ...` (the script below produced this part of the patch: do not run it in this task, the patch already contains its output; Task 12 runs it on the Warrior file); the files that make frames gain `local CreateFrame = Facade.CreateFrame` (`Formatting.lua`: `ns.Facade.CreateFrame`); `State.lua`, at the 200-locals cap, reads its 14 remaining bare names inline as `Facade.Name`; `VirtualState/Adapter.lua` takes `GetTime` and its boot frame's `CreateFrame` from the facade (so `PLAYER_LOGIN` reaches it through the layer, and no loaded file is exempt). `.luacheckrc` drops the plain game reads and `CreateFrame` from `read_globals`; `tools/check_api_reads.sh` returns to "no inventory name is read directly" over every name (W113 on the namespace or bare global, the `_G.Name` grep, and a grep for a frame method reached through `getmetatable`).
+Every Hekili file then reads the game only through the facade: each pure alias line at a file's top (`local A, B = A, B`, shims included) points at `Facade.X`, and a file without one gains `local Facade = ns.Facade` after `local addon, ns = ...` (the script below produced this part of the patch, `Forever/Warrior.lua`'s two alias lines included: do not run it in this task, the patch already contains its output); the files that make frames gain `local CreateFrame = Facade.CreateFrame` (`Formatting.lua`: `ns.Facade.CreateFrame`); `State.lua`, at the 200-locals cap, reads its 14 remaining bare names inline as `Facade.Name`; `VirtualState/Adapter.lua` takes `GetTime` and its boot frame's `CreateFrame` from the facade (so `PLAYER_LOGIN` reaches it through the layer, and no loaded file is exempt). `.luacheckrc` drops the plain game reads and `CreateFrame` from `read_globals`; `tools/check_api_reads.sh` returns to "no inventory name is read directly" over every name (W113 on the namespace or bare global, the `_G.Name` grep, and a grep for a frame method reached through `getmetatable`).
 
 The templates `Facade.CreateFrame` now also creates were checked in the client's FrameXML (spec §2.1): `GameTooltipTemplate` (its OnLoad registers `TOOLTIP_DATA_UPDATE` on the client for Blizzard's own script), `UIPanelButtonTemplate`, `BackdropTemplate`, `UIDropDownMenuTemplate`, `CooldownFrameTemplate`, `HekiliPopupDropdownRangeTemplate`: none registers an event Hekili handles.
 
-The script that rewrote the alias lines, for reference here and for Task 12, which runs it on the Warrior file after its merge; save it as `/tmp/facade_locals.lua` (the script appends a final newline; the replay removed it again from the three files that had none, `Options/ChatCommands.lua`, `Options/DevTools.lua`, `Utils.lua`, so the patch changes no file's ending):
+The Warrior's spec loader (`Forever/spec/helpers/load_warrior.lua`) gives the class file's `ns` its fakes table as `Facade`, so the file's facade locals resolve headless.
+
+The script that rewrote the alias lines, for reference (a later class file runs it the same way), saved as `/tmp/facade_locals.lua` (the script appends a final newline; the replay removed it again from the three files that had none, `Options/ChatCommands.lua`, `Options/DevTools.lua`, `Utils.lua`, so the patch changes no file's ending):
 
 ```lua
 -- One-off: point every pure alias line `local A, B = A, B` of a Hekili file at ns.Facade for inventory names, and
@@ -885,7 +894,7 @@ end
 
 **Files:**
 - Modify: `VirtualState/Facade.lua` (header :2-5; after the resolved reals :63; the rows' classes throughout; the frames and passthrough sections before `table.sort(inventory)` :509; `Stubs` :523-525), `tools/api_inventory.txt` (all names with classes), `tools/check_api_reads.sh` (whole file), `.luacheckrc` (header :1-3; `read_globals` :50-77), `VirtualState/Adapter.lua` (:17), `Classes.lua`, `Constants.lua`, `Core.lua`, `Events.lua`, `Forever/Warrior.lua`, `Formatting.lua`, `Hekili.lua`, `MultilineEditor.lua`, `Options/ChatCommands.lua`, `Options/DevTools.lua`, `Options/Options.lua`, `State.lua`, `Targets.lua`, `UI.lua`, `Utils.lua` (file-top locals; `State.lua` also its 14 inline reads), `VirtualState/EventFacade.lua` (one comment)
-- Test: `VirtualState/spec/facade_spec.lua` (inventory with classes; virtual rows never call the game; passthrough transparency; hybrid raw then model; an absent passthrough), `VirtualState/spec/alloc_spec.lua` (passthrough reads in the loop)
+- Test: `Forever/spec/helpers/load_warrior.lua` (`ns.Facade = fakes`), `VirtualState/spec/facade_spec.lua` (inventory with classes; virtual rows never call the game; passthrough transparency; hybrid raw then model; an absent passthrough), `VirtualState/spec/alloc_spec.lua` (passthrough reads in the loop)
 
 **Interfaces:**
 - Consumes: `I.Events.CreateFrame` (Task 1).
@@ -896,6 +905,18 @@ end
 Apply with `git apply` (from the worktree root):
 
 ```diff
+diff --git a/Forever/spec/helpers/load_warrior.lua b/Forever/spec/helpers/load_warrior.lua
+index ff6ee1f0..2cda0b06 100644
+--- a/Forever/spec/helpers/load_warrior.lua
++++ b/Forever/spec/helpers/load_warrior.lua
+@@ -68,6 +68,7 @@ function M.load()
+         _G[k] = v
+     end
+     local ns = {
++        Facade = fakes, -- the class file reads the game through ns.Facade (event-facade spec §1.2)
+         VirtualState = {
+             Track = function(t)
+                 for k, v in pairs(t.talents or {}) do
 diff --git a/VirtualState/spec/alloc_spec.lua b/VirtualState/spec/alloc_spec.lua
 index 73de2eec..99176104 100644
 --- a/VirtualState/spec/alloc_spec.lua
@@ -1090,7 +1111,7 @@ index af27ae5a..96ac1504 100644
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `96 successes / 1 failure / 15 errors`: every `facade_spec` case errors in its setup (`facade_spec.lua:89: attempt to index field '?' (a nil value)`: a namespace the inventory now names has no facade table yet), and `alloc_spec` fails (`attempt to call field 'GetTime' (a nil value)`).
+Expected: `138 successes / 1 failure / 15 errors`: every `facade_spec` case errors in its setup (`facade_spec.lua:89: attempt to index field '?' (a nil value)`: a namespace the inventory now names has no facade table yet), and `alloc_spec` fails (`attempt to call field 'GetTime' (a nil value)`).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -1098,7 +1119,7 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/.luacheckrc b/.luacheckrc
-index efa5c322..790dd1c8 100644
+index e513f8f7..ceeecb20 100644
 --- a/.luacheckrc
 +++ b/.luacheckrc
 @@ -1,6 +1,6 @@
@@ -1233,16 +1254,18 @@ index 96e46f21..9830f470 100644
  local Hekili = _G[ addon ]
  
 diff --git a/Forever/Warrior.lua b/Forever/Warrior.lua
-index 88705c81..26034375 100644
+index 09d9f952..ff407b70 100644
 --- a/Forever/Warrior.lua
 +++ b/Forever/Warrior.lua
-@@ -8,7 +8,8 @@
- -- Rage per swing from Taco Dog Forever's Warrior pack (src/TacoDogForever_Warrior/Warrior.lua:21-24).
+@@ -16,8 +16,9 @@
+ -- (src/TacoDogForever_Warrior/Warrior.lua:21-24).
  
  local addon, ns = ...
--local C_SpellBook, UnitClassBase = C_SpellBook, UnitClassBase
+-local C_SpellBook, C_Spell, UnitClassBase = C_SpellBook, C_Spell, UnitClassBase
+-local GetShapeshiftForm, GetShapeshiftFormInfo = GetShapeshiftForm, GetShapeshiftFormInfo
 +local Facade = ns.Facade
-+local C_SpellBook, UnitClassBase = Facade.C_SpellBook, Facade.UnitClassBase
++local C_SpellBook, C_Spell, UnitClassBase = Facade.C_SpellBook, Facade.C_Spell, Facade.UnitClassBase
++local GetShapeshiftForm, GetShapeshiftFormInfo = Facade.GetShapeshiftForm, Facade.GetShapeshiftFormInfo
  local Hekili = _G[ addon ]
  
  if UnitClassBase( "player" ) ~= "WARRIOR" then return end
@@ -1566,7 +1589,7 @@ index 8821ffd7..7b65b0ec 100644
  
  local format, gsub, lower = string.format, string.gsub, string.lower
 diff --git a/VirtualState/Adapter.lua b/VirtualState/Adapter.lua
-index c1478d7e..5ea5ae07 100644
+index 24b9fd09..553a11bb 100644
 --- a/VirtualState/Adapter.lua
 +++ b/VirtualState/Adapter.lua
 @@ -14,7 +14,7 @@ local CAST_SUCCESS, CHANNEL_START = Obs.CastSuccess, Obs.ChannelStart
@@ -2359,20 +2382,20 @@ index 9e6b0662..43ca8447 100755
 - [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `112 successes / 0 failures / 0 errors`.
+Expected: `154 successes / 0 failures / 0 errors`.
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [112 successes / 0 failures / 0 errors]
-$LUACHECK .                                                 # [0 warnings / 0 errors in 65 files]
+$BUSTED                                                     # [154 successes / 0 failures / 0 errors]
+$LUACHECK .                                                 # [0 warnings / 0 errors in 67 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 44 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
   | diff - <(cut -f1 tools/api_inventory.txt)               # [empty]
 $LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [Diagnosis completed, no problems found]
-git ls-files -mo --exclude-standard '*.lua' | xargs -r -n1 luac5.1 -p   # [no output]
+git ls-files -mo --exclude-standard '*.lua' | while read -r f; do [ -f "$f" ] && luac5.1 -p "$f"; done   # [no output]
 ```
 
 Also: `grep -c . tools/api_inventory.txt` prints `176`; `cut -f2 tools/api_inventory.txt | sort | uniq -c` prints `24 hybrid`, `125 passthrough`, `27 virtual`.
@@ -2380,7 +2403,7 @@ Also: `grep -c . tools/api_inventory.txt` prints `176`; `cut -f2 tools/api_inven
 - [ ] **Step 6: Commit**
 
 ```bash
-git add VirtualState/Facade.lua VirtualState/Adapter.lua VirtualState/EventFacade.lua tools/api_inventory.txt tools/check_api_reads.sh .luacheckrc Classes.lua Constants.lua Core.lua Events.lua Forever/Warrior.lua Formatting.lua Hekili.lua MultilineEditor.lua Options/ChatCommands.lua Options/DevTools.lua Options/Options.lua State.lua Targets.lua UI.lua Utils.lua VirtualState/spec/facade_spec.lua VirtualState/spec/alloc_spec.lua
+git add VirtualState/Facade.lua VirtualState/Adapter.lua VirtualState/EventFacade.lua tools/api_inventory.txt tools/check_api_reads.sh .luacheckrc Classes.lua Constants.lua Core.lua Events.lua Forever/Warrior.lua Formatting.lua Hekili.lua MultilineEditor.lua Options/ChatCommands.lua Options/DevTools.lua Options/Options.lua State.lua Targets.lua UI.lua Utils.lua VirtualState/spec/facade_spec.lua VirtualState/spec/alloc_spec.lua Forever/spec/helpers/load_warrior.lua
 git commit -m "feat(virtualstate): the full read facade in three classes (125 passthrough, 24 hybrid, 27 virtual); every Hekili file reads the game and makes frames through ns.Facade; the tools enforce it
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
@@ -2488,13 +2511,13 @@ index 9830f470..145c0bd2 100644
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [112 successes / 0 failures / 0 errors]
-$LUACHECK .                                                 # [0 warnings / 0 errors in 65 files]
+$BUSTED                                                     # [154 successes / 0 failures / 0 errors]
+$LUACHECK .                                                 # [0 warnings / 0 errors in 67 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 44 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
   | diff - <(cut -f1 tools/api_inventory.txt)               # [empty]
 $LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [Diagnosis completed, no problems found]
-git ls-files -mo --exclude-standard '*.lua' | xargs -r -n1 luac5.1 -p   # [no output]
+git ls-files -mo --exclude-standard '*.lua' | while read -r f; do [ -f "$f" ] && luac5.1 -p "$f"; done   # [no output]
 ```
 
 - [ ] **Step 3: Commit**
@@ -2648,7 +2671,7 @@ index 00000000..eddbc9fe
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `112 successes / 0 failures / 5 errors` (`trace_spec.lua:43: attempt to call field 'Attach' (a nil value)`).
+Expected: `154 successes / 0 failures / 5 errors` (`trace_spec.lua:43: attempt to call field 'Attach' (a nil value)`).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -2656,7 +2679,7 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/VirtualState/Adapter.lua b/VirtualState/Adapter.lua
-index 5ea5ae07..6cdfc344 100644
+index 553a11bb..cb50d466 100644
 --- a/VirtualState/Adapter.lua
 +++ b/VirtualState/Adapter.lua
 @@ -27,6 +27,19 @@ end
@@ -2878,20 +2901,20 @@ index e356ee44..581db446 100644
 - [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `117 successes / 0 failures / 0 errors`.
+Expected: `159 successes / 0 failures / 0 errors`.
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [117 successes / 0 failures / 0 errors]
-$LUACHECK .                                                 # [0 warnings / 0 errors in 66 files]
+$BUSTED                                                     # [159 successes / 0 failures / 0 errors]
+$LUACHECK .                                                 # [0 warnings / 0 errors in 68 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 44 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
   | diff - <(cut -f1 tools/api_inventory.txt)               # [empty]
 $LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [Diagnosis completed, no problems found]
-git ls-files -mo --exclude-standard '*.lua' | xargs -r -n1 luac5.1 -p   # [no output]
+git ls-files -mo --exclude-standard '*.lua' | while read -r f; do [ -f "$f" ] && luac5.1 -p "$f"; done   # [no output]
 ```
 
 - [ ] **Step 6: Commit**
@@ -2911,7 +2934,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 No code. The orchestrator presents this checkpoint; the user runs the game on the Warrior at a training dummy, ForeverProbe loaded (`VSCopy`). `Hekili.toc` lists a new file, so the client restarts once.
 
-- [ ] **Step 0: The baseline first** (before the branch's TOC is ever loaded): the orchestrator runs `git -C ~/src/hekili checkout --detach 0d480aa7`; the user restarts the client and runs the line of item 3 and the two lines of item 6 below, and keeps the three answers.
+- [ ] **Step 0: The baseline first** (before the branch's TOC is ever loaded): the orchestrator runs `git -C ~/src/hekili checkout --detach 75d71c8b`; the user restarts the client and runs the line of item 3 and the two lines of item 6 below, and keeps the three answers.
 
 - [ ] **Step 1: Point the client at the branch**
 
@@ -2964,7 +2987,7 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/VirtualState/spec/adapter_spec.lua b/VirtualState/spec/adapter_spec.lua
-index bd687964..9047082c 100644
+index d6b015fc..56139a10 100644
 --- a/VirtualState/spec/adapter_spec.lua
 +++ b/VirtualState/spec/adapter_spec.lua
 @@ -1,5 +1,5 @@
@@ -2974,8 +2997,8 @@ index bd687964..9047082c 100644
  -- read-after diff as `modelled` samples, two full resets, the offset restored, `updated` marked). The apply against
  -- the real `state` is verified in game (spec §11).
  local load = require("VirtualState.spec.helpers.load")
-@@ -74,18 +74,15 @@ describe("Adapter", function()
-         assert.are.equal(12286, got.talents[1].spell)
+@@ -104,18 +104,15 @@ describe("Adapter", function()
+         assert.are.same({ 2, 4, 0 }, { I.res.swing[1], I.res.swingValue[1], I.res.swingOff[1] })
      end)
  
 -    it("feeds the cast history and the real queue from our own cast events, and asks for a cycle", function()
@@ -2998,7 +3021,7 @@ index bd687964..9047082c 100644
          ctl.Fire("PLAYER_SWING", 2.6, 0)
          assert.are.same({ 1, 3.6 }, { state.swings.mh_actual, state.swings.mh_projected })
      end)
-@@ -133,12 +130,10 @@ describe("Adapter", function()
+@@ -163,12 +160,10 @@ describe("Adapter", function()
          ctl.now = 10
          ctl.casting = { 10000, 11500 }
          ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-3", 1464)
@@ -3011,7 +3034,7 @@ index bd687964..9047082c 100644
          ctl.Tick(11.55)
          ctl.now = 11.6
          VS.Drain(11.6)
-@@ -149,7 +144,7 @@ describe("Adapter", function()
+@@ -179,7 +174,7 @@ describe("Adapter", function()
          assert.are.same({ 0, 0, 2 }, { state.offset, state.delay, state.resets })
      end)
  
@@ -3020,7 +3043,7 @@ index bd687964..9047082c 100644
          local ran = false
          register("drain_test", {
              id = 5555,
-@@ -166,10 +161,6 @@ describe("Adapter", function()
+@@ -196,10 +191,6 @@ describe("Adapter", function()
          ctl.now = 20
          ctl.channel = { 20000, 23000 }
          ctl.Fire("UNIT_SPELLCAST_CHANNEL_START", "player", "Cast-4", 5555)
@@ -3031,7 +3054,7 @@ index bd687964..9047082c 100644
          ctl.Tick(20.05)
          ctl.now = 20.1
          VS.Drain(20.1)
-@@ -178,8 +169,6 @@ describe("Adapter", function()
+@@ -208,8 +199,6 @@ describe("Adapter", function()
          near(30, cd.est) -- the cooldown step at the channel's start
          assert.are.equal("modelled", cd.basis)
          assert.are.same({ 0, 0, 2 }, { state.offset, state.delay, state.resets })
@@ -3040,7 +3063,7 @@ index bd687964..9047082c 100644
      end)
  
      it("folds a swing staged this frame before poll 3 clears the queued strike: the swing is skipped as paid", function()
-@@ -303,27 +292,6 @@ describe("Adapter", function()
+@@ -333,27 +322,6 @@ describe("Adapter", function()
          assert.are.same({ 2, false, false }, { state.resets, state.player.updated, state.target.updated })
      end)
  
@@ -3309,7 +3332,7 @@ index 96ac1504..29d068fc 100644
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `115 successes / 3 failures / 7 errors` (`cleu_rows_spec`: `attempt to index upvalue 'L' (a nil value)` and no row captured; `adapter_spec.lua:82`: the feeds still write the history; `facade_spec.lua:119`: `GetTime` is still a passthrough).
+Expected: `157 successes / 3 failures / 7 errors` (`cleu_rows_spec`: `attempt to index upvalue 'L' (a nil value)` and no row captured; `adapter_spec.lua:112`: the feeds still write the history; `facade_spec.lua:119`: `GetTime` is still a passthrough).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -3352,7 +3375,7 @@ index cbc49894..bda1d634 100644
  
  Hekili.lua
 diff --git a/VirtualState/Adapter.lua b/VirtualState/Adapter.lua
-index 6cdfc344..47363ffa 100644
+index cb50d466..fbff9cb6 100644
 --- a/VirtualState/Adapter.lua
 +++ b/VirtualState/Adapter.lua
 @@ -1,8 +1,8 @@
@@ -3367,7 +3390,7 @@ index 6cdfc344..47363ffa 100644
  -- Loads after Core.lua. The apply follows Hekili's own simulation (Core.lua:1984-2045) and keeps Hekili's credits.
  
  local addon, ns = ...
-@@ -204,64 +204,6 @@ end
+@@ -218,64 +218,6 @@ end
  ----------------------------------------------------------------------------------------------------------------------
  -- Feeding Hekili's across-reset caches (spec §4.6), synchronously in VirtualState's handlers, where CLEU did it.
  
@@ -3830,20 +3853,20 @@ index d0e26d29..b049f967 100644
 - [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `125 successes / 0 failures / 0 errors`.
+Expected: `167 successes / 0 failures / 0 errors`.
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [125 successes / 0 failures / 0 errors]
-$LUACHECK .                                                 # [0 warnings / 0 errors in 68 files]
+$BUSTED                                                     # [167 successes / 0 failures / 0 errors]
+$LUACHECK .                                                 # [0 warnings / 0 errors in 70 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 45 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
   | diff - <(cut -f1 tools/api_inventory.txt)               # [empty]
 $LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [Diagnosis completed, no problems found]
-git ls-files -mo --exclude-standard '*.lua' | xargs -r -n1 luac5.1 -p   # [no output]
+git ls-files -mo --exclude-standard '*.lua' | while read -r f; do [ -f "$f" ] && luac5.1 -p "$f"; done   # [no output]
 ```
 
 - [ ] **Step 6: Commit**
@@ -3878,11 +3901,11 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/VirtualState/spec/adapter_spec.lua b/VirtualState/spec/adapter_spec.lua
-index 9047082c..5d307552 100644
+index 56139a10..88ed0ce9 100644
 --- a/VirtualState/spec/adapter_spec.lua
 +++ b/VirtualState/spec/adapter_spec.lua
-@@ -74,7 +74,7 @@ describe("Adapter", function()
-         assert.are.equal(12286, got.talents[1].spell)
+@@ -104,7 +104,7 @@ describe("Adapter", function()
+         assert.are.same({ 2, 4, 0 }, { I.res.swing[1], I.res.swingValue[1], I.res.swingOff[1] })
      end)
  
 -    it("leaves the cast history and the real queue to the combat-log rows, asks for a cycle, feeds the swing", function()
@@ -3890,7 +3913,7 @@ index 9047082c..5d307552 100644
          ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
          ctl.casting = { 1000, 2500 }
          ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-3", fs.REND)
-@@ -84,7 +84,7 @@ describe("Adapter", function()
+@@ -114,7 +114,7 @@ describe("Adapter", function()
          assert.are.same({}, state.queue)
          assert.are.same({ "UNIT_SPELLCAST_SUCCEEDED", "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_FAILED" }, h.forced)
          ctl.Fire("PLAYER_SWING", 2.6, 0)
@@ -4036,7 +4059,7 @@ index 6ae54062..fd269361 100644
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `126 successes / 6 failures / 2 errors` (no swing or outcome rows yet; `adapter_spec.lua:87`: the swing feed still writes `mh_actual`).
+Expected: `168 successes / 6 failures / 2 errors` (no swing or outcome rows yet; `adapter_spec.lua:117`: the swing feed still writes `mh_actual`).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -4056,7 +4079,7 @@ index bda1d634..bb5c8caf 100644
  
  Hekili.lua
 diff --git a/VirtualState/Adapter.lua b/VirtualState/Adapter.lua
-index 47363ffa..d0835c81 100644
+index fbff9cb6..0f3586d0 100644
 --- a/VirtualState/Adapter.lua
 +++ b/VirtualState/Adapter.lua
 @@ -1,8 +1,8 @@
@@ -4071,7 +4094,7 @@ index 47363ffa..d0835c81 100644
  -- Loads after Core.lua. The apply follows Hekili's own simulation (Core.lua:1984-2045) and keeps Hekili's credits.
  
  local addon, ns = ...
-@@ -201,19 +201,6 @@ function VS.SpecChanged()
+@@ -215,19 +215,6 @@ function VS.SpecChanged()
      end
  end
  
@@ -4317,20 +4340,20 @@ index ea7c61e9..042be80a 100644
 - [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `134 successes / 0 failures / 0 errors`.
+Expected: `176 successes / 0 failures / 0 errors`.
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [134 successes / 0 failures / 0 errors]
-$LUACHECK .                                                 # [0 warnings / 0 errors in 69 files]
+$BUSTED                                                     # [176 successes / 0 failures / 0 errors]
+$LUACHECK .                                                 # [0 warnings / 0 errors in 71 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 46 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
   | diff - <(cut -f1 tools/api_inventory.txt)               # [empty]
 $LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [Diagnosis completed, no problems found]
-git ls-files -mo --exclude-standard '*.lua' | xargs -r -n1 luac5.1 -p   # [no output]
+git ls-files -mo --exclude-standard '*.lua' | while read -r f; do [ -f "$f" ] && luac5.1 -p "$f"; done   # [no output]
 ```
 
 - [ ] **Step 6: Commit**
@@ -4484,10 +4507,10 @@ index fd269361..bc1008fb 100644
 +    end)
  end)
 diff --git a/VirtualState/spec/helpers/fake_api.lua b/VirtualState/spec/helpers/fake_api.lua
-index 662fe27f..f0a78e02 100644
+index b83de73e..05ec1fa7 100644
 --- a/VirtualState/spec/helpers/fake_api.lua
 +++ b/VirtualState/spec/helpers/fake_api.lua
-@@ -55,6 +55,8 @@ function M.new()
+@@ -56,6 +56,8 @@ function M.new()
          traits = nil, -- { config = id, trees = { tree }, nodes = { [node] = info }, entries = {}, defs = {} }
          inRange = {},
          handlers = {},
@@ -4496,7 +4519,7 @@ index 662fe27f..f0a78e02 100644
          unknownEvents = {}, -- [event] = true: RegisterEvent raises, as the client does for an event it does not know
      }
      local api = { ctl = ctl }
-@@ -112,9 +114,23 @@ function M.new()
+@@ -113,9 +115,23 @@ function M.new()
      function api.GetMeleeHaste()
          return ctl.meleeHaste
      end
@@ -4526,7 +4549,7 @@ index 662fe27f..f0a78e02 100644
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `135 successes / 2 failures / 2 errors` (no rows on us; `L.unattributed` is nil).
+Expected: `177 successes / 2 failures / 2 errors` (no rows on us; `L.unattributed` is nil).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -4762,20 +4785,20 @@ index 00000000..095e1929
 - [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `139 successes / 0 failures / 0 errors`.
+Expected: `181 successes / 0 failures / 0 errors`.
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [139 successes / 0 failures / 0 errors]
-$LUACHECK .                                                 # [0 warnings / 0 errors in 70 files]
+$BUSTED                                                     # [181 successes / 0 failures / 0 errors]
+$LUACHECK .                                                 # [0 warnings / 0 errors in 72 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 47 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
   | diff - <(cut -f1 tools/api_inventory.txt)               # [empty]
 $LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [Diagnosis completed, no problems found]
-git ls-files -mo --exclude-standard '*.lua' | xargs -r -n1 luac5.1 -p   # [no output]
+git ls-files -mo --exclude-standard '*.lua' | while read -r f; do [ -f "$f" ] && luac5.1 -p "$f"; done   # [no output]
 ```
 
 - [ ] **Step 6: Commit**
@@ -4809,10 +4832,10 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/VirtualState/spec/adapter_spec.lua b/VirtualState/spec/adapter_spec.lua
-index 5d307552..96881ad7 100644
+index 88ed0ce9..e5688269 100644
 --- a/VirtualState/spec/adapter_spec.lua
 +++ b/VirtualState/spec/adapter_spec.lua
-@@ -123,6 +123,64 @@ describe("Adapter", function()
+@@ -153,6 +153,64 @@ describe("Adapter", function()
          assert.is_true(math.abs(want - got) < 1e-6, ("want %s, got %s"):format(want, got))
      end
  
@@ -4882,7 +4905,7 @@ index 5d307552..96881ad7 100644
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `140 successes / 1 failure / 0 errors` (`adapter_spec.lua:150`: no aura row after the cast's success).
+Expected: `182 successes / 1 failure / 0 errors` (`adapter_spec.lua:180`: no aura row after the cast's success).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -4890,7 +4913,7 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/VirtualState/Adapter.lua b/VirtualState/Adapter.lua
-index d0835c81..3435184c 100644
+index 0f3586d0..5d23024c 100644
 --- a/VirtualState/Adapter.lua
 +++ b/VirtualState/Adapter.lua
 @@ -101,7 +101,7 @@ local function sortedKeys(t)
@@ -4910,7 +4933,7 @@ index d0835c81..3435184c 100644
      local slotByKey = {}
      for _, k in ipairs(sortedKeys(class.resources)) do
          local r = class.resources[k]
-@@ -159,7 +160,7 @@ local function buildDef()
+@@ -173,7 +174,7 @@ local function buildDef()
              if #ids > 0 then
                  insert(def.auras, a)
                  def.auraIds[#def.auras] = ids
@@ -4919,7 +4942,7 @@ index d0835c81..3435184c 100644
              end
          end
      end
-@@ -237,8 +238,8 @@ local function readBefore(t)
+@@ -251,8 +252,8 @@ local function readBefore(t)
  end
  
  -- Step 3.7: what changed, as `modelled` samples at t.
@@ -4930,7 +4953,7 @@ index d0835c81..3435184c 100644
      for r = 1, R.n do
          local res = rawget(state, resourceKey[r])
          if res then
-@@ -246,6 +247,9 @@ local function readAfter(t, kind)
+@@ -260,6 +261,9 @@ local function readAfter(t, kind)
              if delta > 1e-6 or delta < -1e-6 then
                  I.ResourceShift(r, delta, t, kind)
              end
@@ -4940,7 +4963,7 @@ index d0835c81..3435184c 100644
          end
      end
      local A, cooldown = I.ab, state.cooldown
-@@ -272,9 +276,11 @@ local function readAfter(t, kind)
+@@ -286,9 +290,11 @@ local function readAfter(t, kind)
              local be, de = field(b, "expires"), field(d, "expires")
              if be ~= buffExp[j] or field(b, "count") ~= buffCnt[j] then
                  I.AuraModel(1, j, field(b, "applied"), be, field(b, "count"), t, kind, false)
@@ -4952,7 +4975,7 @@ index d0835c81..3435184c 100644
              end
          end
      end
-@@ -330,7 +336,7 @@ local function apply(kind, a, t)
+@@ -344,7 +350,7 @@ local function apply(kind, a, t)
          spendResources(key)
          state:RunHandler(key)
      end
@@ -5069,20 +5092,20 @@ index 095e1929..91ccebd3 100644
 - [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `141 successes / 0 failures / 0 errors`.
+Expected: `183 successes / 0 failures / 0 errors`.
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [141 successes / 0 failures / 0 errors]
-$LUACHECK .                                                 # [0 warnings / 0 errors in 70 files]
+$BUSTED                                                     # [183 successes / 0 failures / 0 errors]
+$LUACHECK .                                                 # [0 warnings / 0 errors in 72 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 47 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
   | diff - <(cut -f1 tools/api_inventory.txt)               # [empty]
 $LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [Diagnosis completed, no problems found]
-git ls-files -mo --exclude-standard '*.lua' | xargs -r -n1 luac5.1 -p   # [no output]
+git ls-files -mo --exclude-standard '*.lua' | while read -r f; do [ -f "$f" ] && luac5.1 -p "$f"; done   # [no output]
 ```
 
 - [ ] **Step 6: Commit**
@@ -5103,12 +5126,12 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 Spec §12a (the user's approved design, 2026-10-15). Placed after Task 9 because it replaces the route Task 9's aura and energize rows come from (the drain's read-before/apply/read-after diff of Hekili's `state`) and moves those rows into its own verbs, and it needs Task 6's combat log for them.
 
 Today `VS.Drain` stops the fold at each own cast, resets Hekili's `state`, runs the ability's sim `handler` through it and diffs the tracked fields (`Adapter.lua` `readBefore`, `apply`, `readAfter`, a trailing reset). Afterwards no sim handler is read for truth:
-- `VirtualState/Families/Now.lua` registers on `Obs.CastSuccess` only (after the Resources family's ladder pin for the same observation, by load order; a channel stages both `ChannelStart` and `CastSuccess`, so registering both would run it twice) and, for every tracked ability but a `track_<id>` extra (`VS.Track`: no ability, no effects), writes, at the cast's belief time t: (1) the cost, `I.ResourceShift(slot, -I.CostOf(a), t, kind)` (an on-next-swing strike keeps paying at its swing); (2) the declared `cooldown` through `I.CooldownModel`, or a charge through `I.ChargesModel`; the GCD through `I.GcdModel` (a hard cast's GCD began at its start, so it is written only while it still runs); (3) the ability's `now` function, if declared, under `pcall` (an error counted in `I.nowErrors`/`I.nowError`; the fold goes on).
-- Hekili's `RegisterAbility` (`Classes.lua:784-793` at 0d480aa7) setfenv's every function field to `state` and keeps a non-protected one in `ability.funcs` (reading `ability.now` would call it): the family reads it raw, `rawget(ability.funcs, "now")`, at SpecChanged and setfenv's it to one shared context table. Upvalues are untouched, so a class file's constants serve both its sim `handler` and its `now`.
+- `VirtualState/Families/Now.lua` registers on `Obs.CastSuccess` only (after the Resources family's ladder pin for the same observation, by load order; a channel stages both `ChannelStart` and `CastSuccess`, so registering both would run it twice) and, for every tracked ability but a `track_<id>` extra (`VS.Track`: no ability, no effects), writes, at the cast's belief time t: (1) the cost, `I.ResourceShift(slot, -I.CostOf(a), t, kind)`, an on-next-swing strike's included: its `UNIT_SPELLCAST_SUCCEEDED` arrives with the swing it replaces ([V] O16), so paying at its success is paying at its swing (the design brief's "keep paying at their swing; nothing here" would have left the strike's cost unpaid, since the Phase 1 apply was what paid it); (2) the declared `cooldown` through `I.CooldownModel`, or a charge through `I.ChargesModel`; the GCD through `I.GcdModel` (a hard cast's GCD began at its start, so it is written only while it still runs); (3) the ability's `now` function, if declared, under `pcall` (an error counted in `I.nowErrors`/`I.nowError`; the fold goes on).
+- Hekili's `RegisterAbility` (`Classes.lua:784-793` at 75d71c8b) setfenv's every function field to `state` and keeps a non-protected one in `ability.funcs` (reading `ability.now` would call it): the family reads it raw, `rawget(ability.funcs, "now")`, at SpecChanged and setfenv's it to one shared context table. Upvalues are untouched, so a class file's constants serve both its sim `handler` and its `now`.
 - The context carries Hekili's verbs, with Hekili's own signatures (`State.lua`; the user's ruling, superseding the design brief's shorthand), so a Classic handler's lines port by copying: `gain(amount, resource)`/`spend(amount, resource)` → `I.ResourceShift` (a gain also writes Task 9's `SPELL_ENERGIZE` row; a resource the tracked set does not have, or none, raises inside the `now`, which is counted like any error, and writes nothing: no guessed resource); `applyBuff(aura, duration, stacks)`, `applyDebuff(unit, aura, duration, stacks)`, `removeBuff(aura)`, `removeDebuff(unit, aura)`, `addStack(aura, duration, stacks)` → `I.AuraModel` plus Task 9's aura rows (a missing duration takes the aura's registered number; an aura whose duration is a function needs the `now` to pass one); `setCooldown(action, duration)` → `I.CooldownModel`. Every write checks a `live` flag that is set only around the `pcall` of a cast's `now`: Hekili keeps `now` in `ability.funcs`, where DevTools' `RunStressTest` (`Options/DevTools.lua:140`) or an APL reading `action.<x>.now` (`State.lua:5076`) can call it, and such a call writes nothing. Reads, as proxies built at SpecChanged (no allocation per call): `talent.<key>.rank`/`.enabled` (the Talents family), `buff.<key>`/`debuff.<key>` (`up`, `down`, `remains`, `stack`, `count`, `expires`, `applied`, from the aura family at t), `<resource>.current`/`.max` (the belief), `knownRank(ids)` (`VS.KnownRank`, the belief's spellbook), `now` (t), `combat` (the combat start), and Lua's pure helpers (`math`, `min`, `max`, `floor`, `ceil`, `abs`, `type`, `select`, `tonumber`, `error`). No game API and no Hekili state are reachable. `.luacheckrc` declares those names for the specs (`nowEnv`).
 - `VS.KnownRank(ids)` answers the highest known rank of a tracked rank list from the plain `IsSpellKnown` reads the Spellbook source already makes (`A.known[a]`, new), 0 when none is known or the list is untracked.
 - `VS.Drain` becomes: flush, polls, `I.Fold(cutoff)` (the `stopAtCast` parameter goes), `I.Settle`, and Hekili's rescan flags from `AuraGen`; `I.pinned`, the resets, `I.Apply`, `I.applyErrors`/`I.applyError` and the read-before arrays go; `I.drainCasts` counts the casts the fold ran. `Snapshot()`'s drain line reads `casts=<n> errors=<now errors> now=<now runs>` (and `error=` the last). The facade's clock is `GetTime()` (no pinned cast time).
-- Tests: `now_spec` (new) carries the brief's cases, the moved aura/energize-row case, a case running `removeBuff`, `spend`, `addStack` and `setCooldown` through the context, an untracked resource counted as an error, a `now` called outside a cast writing nothing, and a tracked extra getting no effects; `adapter_spec` loses its apply cases (instant, hard cast, channel, raising apply and reset, trailing resets, Task 9's row cases, which move to `now_spec`) and gains "never resets or replays Hekili's state in the drain ..."; `fold_spec` loses "stops right after an own cast"; the fake spec's Rend and Battle Shout declare `now` (in `funcs`, as Hekili stores it).
+- Tests: `now_spec` (new) carries the brief's cases, the moved aura/energize-row case, a case running `removeBuff`, `spend`, `addStack` and `setCooldown` through the context, an untracked resource counted as an error, a `now` called outside a cast writing nothing, a tracked extra getting no effects, and an on-next-swing strike paying at its success; `adapter_spec` loses its apply cases (instant, hard cast, channel, raising apply and reset, trailing resets, Task 9's row cases, which move to `now_spec`) and gains "never resets or replays Hekili's state in the drain ..."; `fold_spec` loses "stops right after an own cast"; the fake spec's Rend and Battle Shout declare `now` (in `funcs`, as Hekili stores it).
 
 The `I.feed.*` writes the design brief says stay were already retired by Tasks 6 and 7 (the combat-log rows write Hekili's cast history, queue and swing fields); nothing of them is left to keep.
 
@@ -5127,7 +5150,7 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/VirtualState/spec/adapter_spec.lua b/VirtualState/spec/adapter_spec.lua
-index 96881ad7..1b14effa 100644
+index e5688269..1e999176 100644
 --- a/VirtualState/spec/adapter_spec.lua
 +++ b/VirtualState/spec/adapter_spec.lua
 @@ -1,7 +1,5 @@
@@ -5139,7 +5162,7 @@ index 96881ad7..1b14effa 100644
  local load = require("VirtualState.spec.helpers.load")
  local fake = require("VirtualState.spec.helpers.fake_api")
  local fs = require("VirtualState.spec.helpers.fake_spec")
-@@ -87,148 +85,6 @@ describe("Adapter", function()
+@@ -117,148 +115,6 @@ describe("Adapter", function()
          assert.are.equal(0, state.swings.mh_actual) -- CLEU_HANDLER writes it from the swing row
      end)
  
@@ -5288,7 +5311,7 @@ index 96881ad7..1b14effa 100644
      it("folds a swing staged this frame before poll 3 clears the queued strike: the swing is skipped as paid", function()
          ctl.current[fs.STRIKE] = true
          ctl.now = 2
-@@ -246,113 +102,15 @@ describe("Adapter", function()
+@@ -276,113 +132,15 @@ describe("Adapter", function()
          assert.are.equal(before, VS.Power(fs.RAGE, 3.1).est) -- no swing income
      end)
  
@@ -5491,10 +5514,10 @@ index cc279150..9ec6e4e5 100644
  
 diff --git a/VirtualState/spec/now_spec.lua b/VirtualState/spec/now_spec.lua
 new file mode 100644
-index 00000000..03eb1d8d
+index 00000000..a35b3193
 --- /dev/null
 +++ b/VirtualState/spec/now_spec.lua
-@@ -0,0 +1,266 @@
+@@ -0,0 +1,274 @@
 +-- VirtualState/spec/now_spec.lua (event-facade spec §12a): a cast's effects on the belief. The automatic ones from the
 +-- ability's declared fields (cost, cooldown, GCD) and the class file's `now` function, run in VirtualState's context
 +-- with Hekili's verb names, as `modelled` samples at the cast's time; never Hekili's `state`.
@@ -5614,6 +5637,14 @@ index 00000000..03eb1d8d
 +        assert.are.same({ "SPELL_AURA_APPLIED", "Player-1", fs.SHOUT, "BUFF" }, { rows[#rows][1], rows[#rows][2], rows[#rows][3], rows[#rows][4] })
 +        local shout = VS.Aura("player", fs.SHOUT, 30.1)
 +        assert.are.equal(150, shout.est) -- the aura's registered duration (120) when the `now` passes none
++    end)
++
++    it("pays an on-next-swing strike's cost at its success, which arrives with its swing", function()
++        start()
++        cast(fs.STRIKE, 14)
++        local rage = VS.Power(fs.RAGE, 14.1)
++        assert.are.equal(14, rage.last.modelled.t)
++        assert.are.equal(-15, I.res.pinDelta[1])
 +    end)
 +
 +    it("lets a later observation win over a `now` write, and not an earlier one", function()
@@ -5766,7 +5797,7 @@ index 00000000..03eb1d8d
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `133 successes / 8 failures / 1 error` (`now_spec`: the GCD and debuff come from the apply, not a modelled `now` write at the cast's time, and the verbs, the error count and the extras do not exist yet; `adapter_spec.lua:112`: the drain still resets Hekili's state).
+Expected: `175 successes / 9 failures / 1 error` (`now_spec`: the GCD and debuff come from the apply, not a modelled `now` write at the cast's time, and the verbs, the error count and the extras do not exist yet; `adapter_spec.lua:142`: the drain still resets Hekili's state).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -5774,10 +5805,10 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/.luacheckrc b/.luacheckrc
-index 790dd1c8..7bc71319 100644
+index ceeecb20..974f3a85 100644
 --- a/.luacheckrc
 +++ b/.luacheckrc
-@@ -91,5 +91,10 @@ files["UI.lua"] = { globals = stateEnv }
+@@ -91,7 +91,12 @@ files["UI.lua"] = { globals = stateEnv }
  files["Utils.lua"] = { globals = stateEnv }
  files["Hekili.lua"] = { globals = stateEnv }
  files["Constants.lua"] = { globals = stateEnv }
@@ -5788,7 +5819,9 @@ index 790dd1c8..7bc71319 100644
 +    "buff", "debuff", "knownRank", "now", "combat", "rage", "energy", "mana", "focus", "runic_power",
 +}
 +files["VirtualState/spec/"] = { std = "+busted", read_globals = nowEnv }
- files["Forever/Warrior.lua"] = { globals = stateEnv }
+ files["Forever/spec/"] = { std = "+busted" }
+ -- The Warrior's handlers, state expressions and state functions run with setfenv( f, state ) as well; these are the
+ -- further `state` names they use.
 diff --git a/Hekili.toc b/Hekili.toc
 index 977beb4b..cc61ef69 100644
 --- a/Hekili.toc
@@ -5802,7 +5835,7 @@ index 977beb4b..cc61ef69 100644
  VirtualState\Sources\Player.lua
  VirtualState\Sources\Spellbook.lua
 diff --git a/VirtualState/Adapter.lua b/VirtualState/Adapter.lua
-index 3435184c..f2f2f525 100644
+index 5d23024c..a8ca263f 100644
 --- a/VirtualState/Adapter.lua
 +++ b/VirtualState/Adapter.lua
 @@ -1,19 +1,16 @@
@@ -5844,15 +5877,15 @@ index 3435184c..f2f2f525 100644
      local slotByKey = {}
      for _, k in ipairs(sortedKeys(class.resources)) do
          local r = class.resources[k]
-@@ -132,7 +124,6 @@ local function buildDef()
-             swingValue = value,
+@@ -146,7 +138,6 @@ local function buildDef()
+             decay = r.state and r.state.meta and r.state.meta.decay, -- out-of-combat loss per second (Resources.lua)
          }
          insert(def.resources, d)
 -        resourceKey[#def.resources] = k
          slotByKey[k] = #def.resources
      end
      for _, k in ipairs(sortedKeys(class.abilities)) do
-@@ -160,7 +151,6 @@ local function buildDef()
+@@ -174,7 +165,6 @@ local function buildDef()
              if #ids > 0 then
                  insert(def.auras, a)
                  def.auraIds[#def.auras] = ids
@@ -5860,7 +5893,7 @@ index 3435184c..f2f2f525 100644
              end
          end
      end
-@@ -182,171 +172,19 @@ local function buildDef()
+@@ -196,171 +186,19 @@ local function buildDef()
      end
  end
  
@@ -6036,7 +6069,7 @@ index 3435184c..f2f2f525 100644
  ---@param cutoff number GetTime() at the drain's entry
  function VS.Drain(cutoff)
      if not I.built then
-@@ -354,51 +192,17 @@ function VS.Drain(cutoff)
+@@ -368,51 +206,17 @@ function VS.Drain(cutoff)
      end
      local t0 = debugprofilestop()
      local genP, genT = VS.AuraGen("player"), VS.AuraGen("target")
@@ -6155,7 +6188,7 @@ index da30a0fa..f23db22e 100644
  
 diff --git a/VirtualState/Families/Now.lua b/VirtualState/Families/Now.lua
 new file mode 100644
-index 00000000..086f12fa
+index 00000000..7a3027f2
 --- /dev/null
 +++ b/VirtualState/Families/Now.lua
 @@ -0,0 +1,302 @@
@@ -6408,7 +6441,7 @@ index 00000000..086f12fa
 +local function automatic(a, t, kind)
 +    local obj = A.obj[a]
 +    local r = A.slot[a]
-+    if r > 0 and not obj.onNextSwing then -- a strike pays at its swing (Families/Resources.lua)
++    if r > 0 then -- an on-next-swing strike's success arrives with its swing, which is when it pays
 +        local c = I.CostOf(a)
 +        if c > 0 then
 +            I.ResourceShift(r, -c, t, kind)
@@ -6489,7 +6522,7 @@ index 22def121..5baaa47e 100644
      local names = {}
      for name in pairs(S.status) do
 diff --git a/VirtualState/Sources/Spellbook.lua b/VirtualState/Sources/Spellbook.lua
-index b41f57b1..17d68950 100644
+index edbd477e..729a5d7e 100644
 --- a/VirtualState/Sources/Spellbook.lua
 +++ b/VirtualState/Sources/Spellbook.lua
 @@ -23,13 +23,16 @@ local last, gcdLast = {}, -1
@@ -6516,20 +6549,20 @@ index b41f57b1..17d68950 100644
 - [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `142 successes / 0 failures / 0 errors`.
+Expected: `185 successes / 0 failures / 0 errors`.
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [142 successes / 0 failures / 0 errors]
-$LUACHECK .                                                 # [0 warnings / 0 errors in 72 files]
+$BUSTED                                                     # [185 successes / 0 failures / 0 errors]
+$LUACHECK .                                                 # [0 warnings / 0 errors in 74 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 48 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
   | diff - <(cut -f1 tools/api_inventory.txt)               # [empty]
 $LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [Diagnosis completed, no problems found]
-git ls-files -mo --exclude-standard '*.lua' | xargs -r -n1 luac5.1 -p   # [no output]
+git ls-files -mo --exclude-standard '*.lua' | while read -r f; do [ -f "$f" ] && luac5.1 -p "$f"; done   # [no output]
 ```
 
 - [ ] **Step 6: Commit**
@@ -6545,7 +6578,1004 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task 11: The follow-up (decision 7): the GCD spell, the empty spec slot and the talent read move into the facade
+### Task 11: Race packs and the resource definition's `maxMods` and `costMods`
+
+Spec §12b (the user's approved design, 2026-10-15: race packs; it supersedes a shared `all`-spec registration with a per-class scope table). Placed right after Task 10 because it extends `I.CostOf` and Task 10's automatic cost step.
+
+Racials are race content, not class content. The layout and the core change:
+- **Folders.** `Forever/Warrior.lua` moves to `Forever/Classes/Warrior.lua` (a `git mv`; its first line names the new path; the TOC, `.luacheckrc`, the loader `Forever/spec/helpers/load_warrior.lua` and the comment in `tools/make_pack.lua` follow; `Forever/spec/` keeps its place). `Forever/Races/Gnome.lua` is new; the TOC lists every race file unconditionally, after the class file. Races with only Hekili's stock racials (Berserking, Blood Fury, Stoneform, Shadowmeld, Will to Survive) stay in the shared `all` spec.
+- **Race token** (named core edit, `State.lua`): at load the core reads UnitRace's second return, the locale-free token, into `state.race_token`, and sets `state.race[ formatKey( token ) ]` beside Hekili's localized key.
+- **`Hekili:NewRace( token )`** (`Races.lua`, new, Hekili core, TOC right after `State.lua`): a registration object with `RegisterAbility( key, def )` and `RegisterAura( key, def )` (into the shared `all` spec, over `all`'s own entry for the same key; the race keeps the keys it registered, `copy` aliases included), `RegisterResourceMod{ max = pct }` (every resource the loaded class registered) and `RegisterCostMod{ aura, pct | flat, charges, spells = { IDs } }`. On a race that is not the player's, every call is accepted and inert, so a race file always runs and loads headless. Hekili's merge in `SpecializationChanged` (`Classes.lua:3258-3268` at `75d71c8b`) takes the class first and `all` last and only adds missing keys, so a race entry would lose to the class's; `ns.applyRace( class )`, one named call after the merge loop, writes the race's keys over `class.abilities` and `class.auras`: a race registration wins a key clash with the class and with `all`. The modifiers go to `ns.raceMods`, which the adapter copies into every resource definition (`maxMods`, `costMods`).
+- **`Forever/Races/Gnome.lua`**: Eureka! (1259813 with the other classes' 1259812, 1259817, 1259821, 1259823 as `copy`; cooldown 120, off the GCD, a handler and a `now` applying `eureka` for 15 s with 3 stacks), its aura, Expansive Mind (`RegisterResourceMod{ max = 0.05 }`), and Eureka!'s cost modifier `{ aura = "eureka", pct = -0.10, charges = 3, spells = { ... } }`. Eureka!'s cost effect is spell-family masked in the DB2 (1784679630 / 5 / 1 / 0 against SpellClassSet 4 for the Warrior), so it lists the 17 Warrior abilities it covers by the class file's own rank-1 IDs (checked against `Forever/Warrior.lua` at `75d71c8b`: 78, 845, 1240193, 5308, 7384, 12294, 23881, 1680, 23922, 6572, 6343, 1715, 20252, 694, 6552, 72, 1310222), higher ranks matching through the class's `copy` lists; not Rend, Sunder Armor, the shouts, Concussion Blow, Death Wish, Disarm, Retaliation, Shield Block or Sweeping Strikes. The comment gives the masks and the wowdb query for a later class.
+- **`maxMods`** (contract in `VirtualState/Families/Modifiers.lua`'s header): the declared `max` (a number or a state-bound function, default 100) × Π(1 + pct) over the modifiers whose `when` holds. One evaluator: the Resources family's `maxOf` applies it, so the build seeds the interval (`hi0`) at the raised maximum, and each CombatEnd re-evaluates it until a plain maximum read wins for good. The adapter copies `maxMods` into every resource but the point resources (`combo_points`, `runes`, `soul_shards`, `holy_power`, `chi`, `arcane_charges`, `essence`): Expansive Mind's percentage does not apply to a count. Until Task 13 drops the Warrior's own Gnome stopgap (`max` 105 for a Gnome), a Gnome Warrior's declared rage maximum is 110.25 (no checkpoint falls in between).
+- **`costMods` in the belief**: `spells` resolve at the build to ability indices through `I.ab.bySpell` (every id and `copy` rank of a tracked ability; an ID the class does not register is absent; no `spells`: every ability paid from the resource). `I.CostOf(a)` passes the declared cost through `I.CostMod(a, slot, cost, I.clock)`: each modifier in a's scope whose aura is believed up applies (`pct` multiplies, `flat` adds; floored at 0), so the ladder's pin and Task 10's automatic cost step pay the modified cost; with `charges`, an in-scope cast whose declared cost is above 0 (`I.BaseCostOf(a) > 0`, so a cast the discount made free still pays: `pct = -1, charges = 1` is Clearcasting's shape) spends one believed stack (`I.SpendCostCharges`, a modelled sample; at 0 the aura goes), and an observed aura read still wins by `I.Basis`.
+- **`costMods` in the simulation: one declaration, two readers** (named core edits). `Races.lua` also wraps every ability's `spend` when `Classes.lua`'s RegisterAbility builds it (one call, `ns.costMods.Wrap( a )`): reading `ability.spend` (what `action.<x>.cost`, `ns.hasRequiredResources`, `state:TimeToReady` and `ns.spendResources` read, `State.lua:2113-2121, 5007-5021, 7062-7092, 7138-7148, 6608-6636` at 75d71c8b) answers the declared cost through the modifiers in the ability's scope (no `spells`: every ability paid from the resource, as in the belief; else its `id` or a `copy` rank listed, cached per ability key once) whose buff is up in the simulated state, a fraction-of-maximum cost (below 1) taking the same `pct` as in the belief; `ability.baseSpend` keeps the declared cost, which `I.CostOf` reads so the belief applies its own modifiers once. `ns.spendResources` calls `ns.costMods.Spend( action.baseSpend, ability )` before its `cost ~= 0` test: when the declared cost is above 0 (the same gate as the belief's), each charged modifier in scope whose buff is up loses a stack (`state.removeStack`), even when the discounted cost is 0. A `spend` hook was not used: `state.spend` also runs for spends that are no ability's cost (the Warrior's stance swap), which must take no charge.
+
+**Files:**
+- Create: `Races.lua`, `Forever/Races/Gnome.lua`, `VirtualState/Families/Modifiers.lua`, `VirtualState/spec/modifiers_spec.lua`, `VirtualState/spec/races_spec.lua`
+- Move: `Forever/Warrior.lua` → `Forever/Classes/Warrior.lua`
+- Modify: `VirtualState/Families/Casts.lua` (`I.CostOf`, `I.BaseCostOf`), `VirtualState/Families/Now.lua` (the automatic cost step), `VirtualState/Families/Resources.lua` (`maxOf` applies `maxMods`), `VirtualState/Adapter.lua` (`buildDef`: `ns.raceMods` into each resource, `POINTS`), `Classes.lua` (RegisterAbility's `ns.costMods.Wrap( a )`; `ns.applyRace( class )` after the merge loop), `State.lua` (the race token; `ns.spendResources`' charge), `Hekili.toc` (`Races.lua` after `State.lua`; `VirtualState\Families\Modifiers.lua` after `VirtualState\Families\Now.lua`; the class file's new path and `Forever\Races\Gnome.lua` after it), `.luacheckrc` (the class file's path; `Forever/Races/`), `Forever/spec/helpers/load_warrior.lua` (the path), `tools/make_pack.lua` (comment :6)
+
+**Interfaces:**
+- Consumes: `I.CostOf`, the automatic cost step (Task 10); `VS.Aura`, `I.AuraModel`, `I.res`, `I.ab.bySpell`, `I.ReadOf.Max` (Phase 1).
+- Produces: `Hekili:NewRace( token )` and its four registration methods; `state.race_token`, `state.race.<token>`; `ns.raceMods`; resource definition fields `maxMods` and `costMods` (with `spells`); `I.mods`, `I.CostMod(a, r, cost, now)`, `I.SpendCostCharges(a, r, t, event)`, `I.BaseCostOf(a)`; `ns.applyRace( class )`; `Hekili.RaceMods` (`ns.raceMods`, for the in-game checkpoint); `ns.costMods` (`Apply`, `Spend( baseCost, key )`, `Wrap`), `ability.baseSpend`; the Gnome's `eureka` ability and aura.
+
+- [ ] **Step 1: Write the failing specs**
+
+Apply with `git apply` (from the worktree root):
+
+```diff
+diff --git a/VirtualState/spec/modifiers_spec.lua b/VirtualState/spec/modifiers_spec.lua
+new file mode 100644
+index 00000000..4fffa752
+--- /dev/null
++++ b/VirtualState/spec/modifiers_spec.lua
+@@ -0,0 +1,149 @@
++-- VirtualState/spec/modifiers_spec.lua (event-facade spec §12b): the resource definition's `maxMods` and `costMods`,
++-- as a race pack declares them (Races.lua's ns.raceMods: Expansive Mind, Eureka!), through the adapter.
++local load = require("VirtualState.spec.helpers.load")
++local fake = require("VirtualState.spec.helpers.fake_api")
++local fs = require("VirtualState.spec.helpers.fake_spec")
++local alloc = require("VirtualState.spec.helpers.alloc")
++
++local EUREKA = 1259813
++
++describe("resource modifiers", function()
++    local ns, VS, I, api, ctl, h, saved
++
++    local function cast(id, t)
++        ctl.now = t
++        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", id)
++        ctl.Tick(t + 0.01)
++        VS.Drain(t + 0.02)
++    end
++
++    before_each(function()
++        api, ctl = fake.new()
++        ctl.now = 1
++        saved = {}
++        for _, k in ipairs({ "GetTime", "UnitGUID", "CreateFrame", "issecretvalue", "debugprofilestop" }) do
++            saved[k] = rawget(_G, k) or false
++        end
++        _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue = api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
++        _G.debugprofilestop = function()
++            return 0
++        end
++        ns = load.module()
++        VS, I = ns.VirtualState, ns.VirtualStateInternal
++        h = fs.new(9)
++        fs.clock = api.GetTime
++        ns.spendResources = fs.spend
++        ns.ResourceRegenerates = function()
++            return false
++        end
++        h.Class.auras.eureka = { key = "eureka", id = EUREKA, duration = 15 }
++        -- the Gnome race pack's declarations (Forever/Races/Gnome.lua through Races.lua), as Adapter.lua reads them
++        ns.raceMods = {
++            maxMods = { { pct = 0.05 } },
++            costMods = { { aura = "eureka", pct = -0.10, charges = 3, spells = { fs.STRIKE, 999999 } } },
++        }
++        function h:ForceUpdate() end
++        load.adapter(ns, h)
++        VS.Start(api)
++        VS.SpecChanged()
++        ctl.Tick(1)
++        I.ObsLog.Clear(I.log)
++    end)
++
++    after_each(function()
++        for k, v in pairs(saved) do
++            _G[k] = v or nil
++        end
++        fs.clock = nil
++    end)
++
++    it("raises the maximum by Expansive Mind through the modifier, until a plain read", function()
++        assert.are.equal(105, I.res.max[1]) -- 100 declared x 1.05
++        assert.are.equal(105, I.res.hi0[1]) -- one evaluator: the interval is seeded at the raised maximum
++        I.Sources.Direct(VS.Obs.CombatEnd, 2)
++        I.Fold(2)
++        assert.are.equal(105, I.res.max[1])
++        I.Sources.Direct(VS.Obs.Read, 3, 1, 120, I.ReadOf.Max)
++        I.Fold(3)
++        I.Sources.Direct(VS.Obs.CombatEnd, 4)
++        I.Fold(4)
++        assert.are.equal(120, I.res.max[1]) -- the plain read keeps winning
++        ns.raceMods = { maxMods = {}, costMods = {} } -- another race: no modifier
++        VS.SpecChanged()
++        assert.are.equal(100, I.res.max[1])
++    end)
++
++    it("takes 10% off Heroic Strike while Eureka! is up and spends a charge a cast; Rend, out of scope, neither", function()
++        local strike, rend = I.ab.bySpell[fs.STRIKE], I.ab.bySpell[fs.REND]
++        assert.are.equal(15, I.CostOf(strike))
++        local j = I.auras.bySpell[EUREKA]
++        I.AuraModel(1, j, 5, 20, 3, 5, VS.Obs.CastSuccess, false) -- Eureka! up with its three charges
++        I.clock = 5
++        assert.are.same({ 13.5, 10 }, { I.CostOf(strike), I.CostOf(rend) })
++        cast(fs.REND, 5.5)
++        local _, stacks = VS.Aura("player", EUREKA, 5.6)
++        assert.are.equal(3, stacks) -- Rend took no charge
++        for k = 1, 3 do
++            cast(fs.STRIKE, 5.5 + k)
++            _, stacks = VS.Aura("player", EUREKA, 5.5 + k + 0.05)
++            assert.are.equal(3 - k > 0 and 3 - k or nil, stacks)
++        end
++        assert.is_nil(VS.Aura("player", EUREKA, 8.6))
++        assert.are.equal(15, I.CostOf(strike))
++    end)
++
++    it("lets an observed aura read win over the charges it modelled", function()
++        local j = I.auras.bySpell[EUREKA]
++        I.AuraModel(1, j, 5, 20, 3, 5, VS.Obs.CastSuccess, false)
++        cast(fs.STRIKE, 6) -- 2 left, modelled
++        I.Sources.Direct(VS.Obs.Read, 6.5, j, 13.5, I.ReadOf.Aura + 3 * I.AURA_STACK) -- the client says 3
++        I.Fold(6.6)
++        local _, stacks = VS.Aura("player", EUREKA, 6.7)
++        assert.are.equal(3, stacks)
++    end)
++
++    it("never raises a point resource's maximum", function()
++        h.Class.resources.combo_points = { type = 4 }
++        VS.SpecChanged()
++        local R = I.res
++        assert.are.same({ 105, 100 }, { R.max[R.slotOfToken.RAGE], R.max[R.slotOfToken.COMBO_POINTS] })
++    end)
++
++    it("matches a listed `copy` rank, and every ability of the resource when `spells` is absent", function()
++        local strike, rend = I.ab.bySpell[fs.STRIKE], I.ab.bySpell[fs.REND]
++        ns.raceMods.costMods = { { aura = "eureka", pct = -0.10, spells = { fs.REND_R2 } } }
++        VS.SpecChanged()
++        I.AuraModel(1, I.auras.bySpell[EUREKA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
++        I.clock = 5
++        assert.are.same({ 15, 9 }, { I.CostOf(strike), I.CostOf(rend) }) -- Rend by its rank 2 ID
++        ns.raceMods.costMods = { { aura = "eureka", pct = -0.10 } }
++        VS.SpecChanged()
++        I.AuraModel(1, I.auras.bySpell[EUREKA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
++        assert.are.same({ 13.5, 9 }, { I.CostOf(strike), I.CostOf(rend) })
++    end)
++
++    it("spends a charge on a cast the modifier made free (pct = -1, the Clearcasting shape)", function()
++        local strike = I.ab.bySpell[fs.STRIKE]
++        ns.raceMods.costMods = { { aura = "eureka", pct = -1, charges = 1, spells = { fs.STRIKE } } }
++        VS.SpecChanged()
++        I.AuraModel(1, I.auras.bySpell[EUREKA], 5, 20, 1, 5, VS.Obs.CastSuccess, false)
++        I.clock = 5
++        assert.are.equal(0, I.CostOf(strike))
++        cast(fs.STRIKE, 6)
++        assert.is_nil(VS.Aura("player", EUREKA, 6.1)) -- the free cast took the charge
++        assert.are.equal(15, I.CostOf(strike))
++    end)
++
++    it("allocates nothing over 1000 casts with both modifiers declared", function()
++        local j = I.auras.bySpell[EUREKA]
++        local t = 10
++        local bytes = alloc.bytes(function()
++            t = t + 1
++            I.AuraModel(1, j, t, t + 15, 3, t, VS.Obs.CastSuccess, false)
++            cast(fs.STRIKE, t + 0.5)
++            cast(fs.REND, t + 0.7)
++        end, 1000)
++        assert.are.equal(0, bytes)
++    end)
++
++end)
+diff --git a/VirtualState/spec/races_spec.lua b/VirtualState/spec/races_spec.lua
+new file mode 100644
+index 00000000..c7544111
+--- /dev/null
++++ b/VirtualState/spec/races_spec.lua
+@@ -0,0 +1,155 @@
++-- VirtualState/spec/races_spec.lua (event-facade spec §12b): race packs. Races.lua's `Hekili:NewRace` and the Gnome's
++-- pack (Forever/Races/Gnome.lua), loaded headless against a stand-in for Hekili: inert for another race, registered for
++-- the Gnome; and the simulation's half of the cost modifier on abilities built as RegisterAbility builds them.
++
++describe("race packs", function()
++    local ns, hekili, state, all, saved
++
++    -- Hekili's state.removeStack (State.lua:857-868), on the fake buff table.
++    local function removeStack(aura, stacks)
++        stacks = stacks or 1
++        local b = state.buff[aura]
++        if b.count > stacks then
++            b.count = math.max(1, b.count - stacks)
++        else
++            state.buff[aura] = nil
++        end
++    end
++
++    local function load(token, seed)
++        state = {
++            race_token = token,
++            buff = setmetatable({}, {
++                __index = function()
++                    return { up = false, count = 0 }
++                end,
++            }),
++            removeStack = removeStack,
++        }
++        all = { abilities = seed or {}, auras = {} } -- `seed`: what Classes.lua's `all` already registered
++        function all:RegisterAbility(key, def)
++            self.abilities[key] = def
++        end
++        function all:RegisterAura(key, def)
++            self.auras[key] = def
++        end
++        hekili = { State = state, Class = { specs = { [0] = all }, abilities = {} } }
++        _G.Hekili = hekili
++        ns = {}
++        assert(loadfile("Races.lua"))("Hekili", ns)
++        assert(loadfile("Forever/Races/Gnome.lua"))("Hekili", ns)
++    end
++
++    -- An ability as Classes.lua's RegisterAbility builds it: function fields in `funcs`, called on access, wrapped.
++    local function ability(key, data)
++        local a = setmetatable({ funcs = {} }, {
++            __index = function(t, k)
++                if t.funcs[k] then
++                    return t.funcs[k]()
++                end
++            end,
++        })
++        a.key = key
++        for k, v in pairs(data) do
++            if type(v) == "function" then
++                a.funcs[k] = v
++            else
++                a[k] = v
++            end
++        end
++        ns.costMods.Wrap(a)
++        hekili.Class.abilities[key] = a
++        return a
++    end
++
++    before_each(function()
++        saved = rawget(_G, "Hekili") or false
++    end)
++
++    after_each(function()
++        _G.Hekili = saved or nil
++    end)
++
++    it("is inert for another race: nothing registered, no modifier", function()
++        load("Human")
++        assert.are.same({}, all.abilities)
++        assert.are.same({}, all.auras)
++        assert.are.same({ maxMods = {}, costMods = {} }, ns.raceMods)
++    end)
++
++    it("registers Eureka!, its aura and both modifiers for a Gnome, into the shared spec (the race wins a clash)", function()
++        load("Gnome", { eureka = { id = 1 } }) -- a stock `all` registration under the same key
++        assert.are.equal(1259813, all.abilities.eureka.id) -- the race file loads later and wins
++        assert.are.equal(3, all.auras.eureka.max_stack)
++        assert.is_function(all.abilities.eureka.now)
++        assert.are.same({ { pct = 0.05 } }, ns.raceMods.maxMods)
++        assert.are.same({ "eureka", -0.10, 3, 17 }, {
++            ns.raceMods.costMods[1].aura,
++            ns.raceMods.costMods[1].pct,
++            ns.raceMods.costMods[1].charges,
++            #ns.raceMods.costMods[1].spells,
++        })
++    end)
++
++    it("writes the race's abilities and auras over the class's after Classes.lua's merge, aliases too", function()
++        load("Gnome")
++        local class = { abilities = { eureka = { id = 2 } }, auras = { eureka = { id = 2 } } } -- the class's own
++        ns.applyRace(class)
++        assert.are.same({ 1259813, 1259813 }, { class.abilities.eureka.id, class.auras.eureka.id })
++        load("Human")
++        class = { abilities = { eureka = { id = 2 } }, auras = {} }
++        ns.applyRace(class)
++        assert.are.equal(2, class.abilities.eureka.id) -- inert for another race
++    end)
++
++    it("covers every ability without `spells`, and spends a charge on a cast made free (pct = -1)", function()
++        load("Gnome")
++        ns.raceMods.costMods[1] = { aura = "eureka", pct = -1, charges = 1 }
++        local rend = ability("rend", { id = 772, spend = 10, spendType = "rage" })
++        state.buff.eureka = { up = true, count = 1 }
++        assert.are.equal(0, rend.spend)
++        ns.costMods.Spend(rend.baseSpend, "rend") -- ns.spendResources passes the declared cost
++        assert.is_false(state.buff.eureka.up)
++        assert.are.equal(10, rend.spend)
++    end)
++
++    it("applies pct to a fraction-of-maximum cost", function()
++        load("Gnome")
++        local strike = ability("heroic_strike", { id = 78, spend = 0.2, spendType = "rage" })
++        state.buff.eureka = { up = true, count = 3 }
++        assert.is_true(math.abs(strike.spend - 0.18) < 1e-9)
++    end)
++
++    it("prices Heroic Strike at 13.5 with Eureka! up in the simulation, three casts remove it; Rend stays 10", function()
++        load("Gnome")
++        local heroic_strike = ability("heroic_strike", { id = 78, copy = { 284, 285 }, spend = 15, spendType = "rage" })
++        local rend = ability("rend", { id = 772, spend = 10, spendType = "rage" })
++        local cleave = ability("cleave", { id = 99999, copy = { 845 }, spend = function() return 20, "rage" end })
++        assert.are.equal(15, heroic_strike.spend)
++        state.buff.eureka = { up = true, count = 3 }
++        assert.are.same({ 13.5, 10, 18 }, { heroic_strike.spend, rend.spend, cleave.spend }) -- cleave by a copy rank
++        assert.are.equal(15, heroic_strike.baseSpend) -- the belief reads the declared cost
++        ns.costMods.Spend(rend.baseSpend, "rend") -- out of scope: no charge
++        assert.are.equal(3, state.buff.eureka.count)
++        for k = 1, 3 do
++            ns.costMods.Spend(heroic_strike.baseSpend, "heroic_strike") -- ns.spendResources' call
++            if k < 3 then
++                assert.are.equal(3 - k, state.buff.eureka.count)
++            end
++        end
++        assert.is_false(state.buff.eureka.up)
++        assert.are.equal(15, heroic_strike.spend)
++    end)
++
++    it("ignores a listed spell the class does not register", function()
++        load("Gnome")
++        local shout = ability("battle_shout", { id = 6673, spend = 10 })
++        state.buff.eureka = { up = true, count = 3 }
++        assert.has_no.errors(function()
++            ns.costMods.Spend(shout.baseSpend, "battle_shout")
++            ns.costMods.Spend(5, "not_an_ability")
++        end)
++        assert.are.equal(10, shout.spend)
++        assert.are.equal(3, state.buff.eureka.count)
++    end)
++end)
+```
+
+- [ ] **Step 2: Run the specs to verify they fail**
+
+Run: `~/src/TacoDogForever/.lua/bin/busted`
+Expected: `187 successes / 12 failures / 0 errors` (`modifiers_spec`: the maximum stays 100, the costs stay 15 and 10 and no charge is spent; `races_spec`: `cannot open Races.lua`).
+
+- [ ] **Step 3: Write the implementation**
+
+Apply with `git apply` (from the worktree root):
+
+```diff
+diff --git a/.luacheckrc b/.luacheckrc
+index 974f3a85..ae56dde1 100644
+--- a/.luacheckrc
++++ b/.luacheckrc
+@@ -107,4 +107,5 @@ local warriorEnv = {
+ for _, k in ipairs(stateEnv) do
+     warriorEnv[#warriorEnv + 1] = k
+ end
+-files["Forever/Warrior.lua"] = { globals = warriorEnv }
++files["Forever/Classes/Warrior.lua"] = { globals = warriorEnv }
++files["Forever/Races/"] = { globals = stateEnv }
+diff --git a/Classes.lua b/Classes.lua
+index 3bd7a121..ffb66d3a 100644
+--- a/Classes.lua
++++ b/Classes.lua
+@@ -793,6 +793,9 @@ local HekiliSpecMixin = {
+             end
+         end
+ 
++        -- The race packs' cost modifiers in the simulation (Races.lua, event-facade spec §12b).
++        ns.costMods.Wrap( a )
++
+         if ( a.velocity or a.flightTime ) and a.impact and a.isProjectile == nil then
+             a.isProjectile = true
+         end
+@@ -3330,6 +3333,9 @@ function Hekili:SpecializationChanged()
+         end
+     end
+ 
++    -- The race pack's abilities and auras win a key clash with the class's and `all`'s (Races.lua, spec §12b).
++    ns.applyRace( class )
++
+     for k in pairs( class.abilityList ) do
+         local ability = class.abilities[ k ]
+ 
+diff --git a/Forever/Warrior.lua b/Forever/Classes/Warrior.lua
+similarity index 99%
+rename from Forever/Warrior.lua
+rename to Forever/Classes/Warrior.lua
+index ff407b70..190446de 100644
+--- a/Forever/Warrior.lua
++++ b/Forever/Classes/Warrior.lua
+@@ -1,4 +1,4 @@
+--- Forever/Warrior.lua
++-- Forever/Classes/Warrior.lua
+ -- The Forever Warrior (pseudo-spec 1491): the Classic Warrior kit with Forever's spell data (ranks, costs, cooldowns,
+ -- cast times and durations from the Forever DB2 at build 1.60.1.70338, wowdb, a cost of 100 there being 10 rage; the
+ -- client is 1.60.1.70374, and its export wins where they differ), Forever's Victory Rush and Spearing Strike, rage per
+diff --git a/Forever/Races/Gnome.lua b/Forever/Races/Gnome.lua
+new file mode 100644
+index 00000000..2e8f1942
+--- /dev/null
++++ b/Forever/Races/Gnome.lua
+@@ -0,0 +1,54 @@
++-- Forever/Races/Gnome.lua
++-- The Gnome's Forever racials (DB2 1.60.1.70338), for every class: Eureka! (15 s: the next 3 abilities in its scope
++-- cost 10% less, +10% damage not modelled; 120 s, off the GCD) and Expansive Mind (+5% maximum resources: 20591
++-- Priest/Mage/Warlock, 1259802 Warrior, 1259803 Rogue). Inert for any other race (Races.lua).
++
++local addon, ns = ...
++local Hekili = _G[ addon ]
++
++local race = Hekili:NewRace( "Gnome" )
++
++local EUREKA = { 1259812, 1259817, 1259821, 1259823 } -- the other classes' Eureka!
++
++race:RegisterAbility( "eureka", {
++    id = 1259813,
++    copy = EUREKA,
++    cast = 0,
++    cooldown = 120,
++    gcd = "off",
++    startsCombat = false,
++    toggle = "cooldowns",
++
++    handler = function ()
++        applyBuff( "eureka", 15, 3 )
++    end,
++    -- VirtualState's now-state of the cast (event-facade spec §12a)
++    now = function ()
++        applyBuff( "eureka", 15, 3 )
++    end,
++} )
++
++race:RegisterAura( "eureka", {
++    id = 1259813,
++    copy = EUREKA,
++    duration = 15,
++    max_stack = 3,
++} )
++
++race:RegisterResourceMod( { max = 0.05 } ) -- Expansive Mind: +5% maximum resources
++
++race:RegisterCostMod( {
++    aura = "eureka",
++    pct = -0.10,
++    charges = 3,
++    -- Eureka! 1259813 effect 0: aura 108 (ADD_PCT_MODIFIER) misc 14 (cost) -10, class masks
++    -- 1784679630 / 5 / 1 / 0 against SpellClassSet 4 (Warrior). Other classes: append their IDs from
++    -- select distinct o.SpellID, n.Name_lang from SpellClassOptions o join SpellName n on n.ID=o.SpellID
++    --   join SpellPower p on p.SpellID=o.SpellID where o.SpellClassSet=<set> and p.ManaCost>0 and not
++    --   ((o.SpellClassMask_0 & 1784679630)=0 and (o.SpellClassMask_1 & 5)=0 and (o.SpellClassMask_2 & 1)=0)
++    -- Warrior: heroic_strike, cleave, slam, execute, overpower, mortal_strike, bloodthirst, whirlwind, shield_slam,
++    -- revenge, thunder_clap, hamstring, intercept, mocking_blow, pummel, shield_bash, spearing_strike (rank 1 IDs;
++    -- higher ranks resolve through the class's `copy` lists). Not: rend, sunder_armor, the shouts, concussion_blow,
++    -- death_wish, disarm, retaliation, shield_block, sweeping_strikes.
++    spells = { 78, 845, 1240193, 5308, 7384, 12294, 23881, 1680, 23922, 6572, 6343, 1715, 20252, 694, 6552, 72, 1310222 },
++} )
+diff --git a/Forever/spec/helpers/load_warrior.lua b/Forever/spec/helpers/load_warrior.lua
+index 2cda0b06..e13a3a43 100644
+--- a/Forever/spec/helpers/load_warrior.lua
++++ b/Forever/spec/helpers/load_warrior.lua
+@@ -1,7 +1,7 @@
+ -- Forever/spec/helpers/load_warrior.lua
+--- Loads Forever/Warrior.lua headless against a recording stand-in for Hekili: every spec:RegisterX call is kept by
+--- method name, ns.VirtualState.Track's tables are merged, and the plain game reads the file captures at load answer
+--- from `game` (known spells, queued spells, usability, the shapeshift form, VirtualState's per-hand base weapon
++-- Loads Forever/Classes/Warrior.lua headless against a recording stand-in for Hekili: each spec:RegisterX call is
++-- kept by method name, ns.VirtualState.Track's tables are merged, and the plain game reads the file captures at load
++-- answer from `game` (known spells, queued spells, usability, the shapeshift form, VirtualState's per-hand base weapon
+ -- speeds). `env()` is a stand-in `state` for running
+ -- the file's handlers, state functions and hooks (Hekili runs them with setfenv( f, state )).
+ local M = {}
+@@ -80,7 +80,7 @@ function M.load()
+             end,
+         },
+     }
+-    local ok, err = pcall(assert(loadfile("Forever/Warrior.lua")), "Hekili", ns)
++    local ok, err = pcall(assert(loadfile("Forever/Classes/Warrior.lua")), "Hekili", ns)
+     for k, v in pairs(saved) do
+         _G[k] = v or nil
+     end
+diff --git a/Hekili.toc b/Hekili.toc
+index cc61ef69..abc90078 100644
+--- a/Hekili.toc
++++ b/Hekili.toc
+@@ -22,6 +22,7 @@ VirtualState\Families\Talents.lua
+ VirtualState\Families\Totems.lua
+ VirtualState\Families\Enemies.lua
+ VirtualState\Families\Now.lua
++VirtualState\Families\Modifiers.lua
+ VirtualState\Sources\Sources.lua
+ VirtualState\Sources\Player.lua
+ VirtualState\Sources\Spellbook.lua
+@@ -47,10 +48,12 @@ Formatting.lua
+ MultilineEditor.lua
+ Constants.lua
+ State.lua
++Races.lua
+ Events.lua
+ 
+ Classes.lua
+-Forever\Warrior.lua
++Forever\Classes\Warrior.lua
++Forever\Races\Gnome.lua
+ 
+ Targets.lua
+ Options\DevTools.lua
+diff --git a/Races.lua b/Races.lua
+new file mode 100644
+index 00000000..703d8380
+--- /dev/null
++++ b/Races.lua
+@@ -0,0 +1,160 @@
++-- Races.lua
++-- Race packs (event-facade spec §12b). `Hekili:NewRace( token )` returns a registration object a race file
++-- (Forever/Races/<Race>.lua) uses like a spec: RegisterAbility, RegisterAura, RegisterResourceMod, RegisterCostMod.
++-- Registrations count only when the token is the player's race (`state.race_token`, UnitRace's locale-free second
++-- return); otherwise they are accepted and inert, so every race file runs unconditionally and loads headless.
++-- Abilities and auras go to the shared `all` spec (over `all`'s own entry for the same key), and ns.applyRace writes
++-- them over the class's after Classes.lua's merge (which takes the class first and only adds missing keys), so a race
++-- registration wins a key clash with the class and with `all`. Resource and cost modifiers go to `ns.raceMods`, one
++-- declaration read by two layers:
++-- VirtualState's belief (VirtualState/Families/Modifiers.lua, through Adapter.lua) and Hekili's simulation (below).
++
++local addon, ns = ...
++local Hekili = _G[ addon ]
++
++local mods = { maxMods = {}, costMods = {} }
++ns.raceMods = mods
++Hekili.RaceMods = mods -- read in game at CHECKPOINT B (ns is not global)
++
++local function all()
++    return Hekili.Class.specs[ 0 ]
++end
++
++-- The keys (and `copy` aliases) the live race registered, by kind: what ns.applyRace writes over the class's.
++local owned = { abilities = {}, auras = {} }
++
++-- Records every key of `all`'s `kind` table that holds the entry just registered under `key` (its aliases too).
++local function own( kind, key )
++    local t = all()[ kind ]
++    local v = t[ key ]
++    for k, w in pairs( t ) do
++        if w == v then owned[ kind ][ k ] = true end
++    end
++end
++
++--- Classes.lua's SpecializationChanged, after merging the specs: the race's abilities and auras win over the class's.
++function ns.applyRace( class )
++    local spec = all()
++    for kind, keys in pairs( owned ) do
++        for k in pairs( keys ) do
++            class[ kind ][ k ] = spec[ kind ][ k ]
++        end
++    end
++end
++
++local Race = {}
++Race.__index = Race
++
++function Race:RegisterAbility( key, def )
++    if self.live then
++        all():RegisterAbility( key, def )
++        own( "abilities", key )
++    end
++end
++
++function Race:RegisterAura( key, def )
++    if self.live then
++        all():RegisterAura( key, def )
++        own( "auras", key )
++    end
++end
++
++--- { max = pct }: every resource the loaded class registered gets pct more maximum.
++function Race:RegisterResourceMod( def )
++    if self.live and type( def.max ) == "number" then
++        mods.maxMods[ #mods.maxMods + 1 ] = { pct = def.max }
++    end
++end
++
++--- { aura = key, pct = n | flat = n, charges = k | nil, spells = { spell IDs } | nil }: an ability whose spell ID (or
++--- one of its `copy` ranks) is listed (every ability paid from the resource when `spells` is nil) costs less while the
++--- aura is up; with charges, each such cast whose declared cost is above 0 takes a stack.
++function Race:RegisterCostMod( def )
++    if self.live then mods.costMods[ #mods.costMods + 1 ] = def end
++end
++
++function Hekili:NewRace( token )
++    return setmetatable( { token = token, live = Hekili.State.race_token == token }, Race )
++end
++
++----------------------------------------------------------------------------------------------------------------------
++-- The simulation's half of the cost modifiers: every ability's `spend` answers through the modifiers in scope whose
++-- buff is up in Hekili's `state`, and a paid ability in the simulation takes a stack of each charged one.
++
++local M = {}
++ns.costMods = M
++
++-- Whether ability `a` is in a modifier's scope: no `spells` (every ability), or its spell ID or a `copy` rank is
++-- listed. Cached per ability key the first time (an allocation once per key, never per read).
++local function inScope( m, a )
++    if not m.spells then return true end
++    local scope = m.scope
++    if not scope then
++        scope = {}
++        m.scope = scope
++    end
++    local key = rawget( a, "key" )
++    local hit = key and scope[ key ]
++    if hit ~= nil then return hit end
++    hit = false
++    local id, copy = rawget( a, "id" ), rawget( a, "copy" )
++    for _, spell in ipairs( m.spells ) do
++        if spell == id or spell == copy then hit = true end
++        if type( copy ) == "table" then
++            for _, c in ipairs( copy ) do
++                if c == spell then hit = true end
++            end
++        end
++    end
++    if key then scope[ key ] = hit end
++    return hit
++end
++
++--- A declared cost of ability `a` after the modifiers in scope whose buff is up in the simulated state; a fraction of
++--- the maximum (cost < 1) takes the same pct as the belief applies to it.
++function M.Apply( cost, a )
++    local list = mods.costMods
++    if #list == 0 or type( cost ) ~= "number" or cost <= 0 then return cost end
++    local buff = Hekili.State.buff
++    for i = 1, #list do
++        local m = list[ i ]
++        if buff[ m.aura ].up and inScope( m, a ) then
++            if type( m.pct ) == "number" then cost = cost * ( 1 + m.pct )
++            elseif type( m.flat ) == "number" then cost = cost + m.flat end
++        end
++    end
++    return cost > 0 and cost or 0
++end
++
++--- Ability `key` was cast in the simulation with declared cost `base` (ns.spendResources, before any discount): when
++--- `base` is above 0, a stack of each charged modifier in scope whose buff is up (gone at the last), even when the
++--- discount brought the paid cost to 0.
++function M.Spend( base, key )
++    local list = mods.costMods
++    if #list == 0 or type( base ) ~= "number" or base <= 0 then return end
++    local state = Hekili.State
++    local a = Hekili.Class.abilities[ key ]
++    if not a then return end
++    for i = 1, #list do
++        local m = list[ i ]
++        if m.charges and state.buff[ m.aura ].up and inScope( m, a ) then state.removeStack( m.aura ) end
++    end
++end
++
++--- Classes.lua's RegisterAbility: the ability's `spend` answers through the modifiers; `baseSpend` keeps the declared
++--- cost (VirtualState's belief applies the same modifiers to it itself).
++function M.Wrap( a )
++    local declared = rawget( a.funcs, "spend" )
++    if declared == nil then declared = rawget( a, "spend" ) end
++    if declared == nil then return end
++    rawset( a, "spend", nil )
++    local function base()
++        if type( declared ) == "function" then return declared() end
++        return declared
++    end
++    a.funcs.baseSpend = base
++    a.funcs.spend = function()
++        local c, r = base()
++        return M.Apply( c, a ), r
++    end
++end
+diff --git a/State.lua b/State.lua
+index a03d3802..19f1081c 100644
+--- a/State.lua
++++ b/State.lua
+@@ -511,6 +511,10 @@ end
+ state.combat = 0
+ state.faction = Facade.UnitFactionGroup( "player" )
+ state.race[ formatKey( Facade.UnitRace("player") ) ] = true
++-- The race token (UnitRace's second return), the same on every client language: race packs match it (Races.lua), and
++-- race.gnome, race.troll ... hold beside the localized key.
++state.race_token = select( 2, Facade.UnitRace( "player" ) )
++if state.race_token then state.race[ formatKey( state.race_token ) ] = true end
+ 
+ state.class = Hekili.Class
+ state.targets = ns.targets
+@@ -6629,6 +6633,9 @@ ns.spendResources = function( ability )
+             cost = ( cost * state[ resource ].modmax )
+         end
+ 
++        -- a charged cost modifier's buff loses a stack when the declared cost is above 0, even at a discounted 0 (Races.lua)
++        ns.costMods.Spend( action.baseSpend, ability )
++
+         if cost ~= 0 then
+             state.spend( cost, resource )
+         end
+diff --git a/VirtualState/Adapter.lua b/VirtualState/Adapter.lua
+index a8ca263f..75a9a4c7 100644
+--- a/VirtualState/Adapter.lua
++++ b/VirtualState/Adapter.lua
+@@ -67,6 +67,16 @@ local def = {
+ }
+ 
+ local HANDS = { mainhand = 1, offhand = 2 }
++-- Point resources (a count, not a pool): a percentage maximum modifier does not apply to them.
++local POINTS = {
++    combo_points = true,
++    runes = true,
++    soul_shards = true,
++    holy_power = true,
++    chi = true,
++    arcane_charges = true,
++    essence = true,
++}
+ 
+ -- The spell IDs of a registration: its `id`, then its `copy` IDs (rank order), positive numbers only.
+ local function idsOf(obj)
+@@ -139,6 +149,12 @@ local function buildDef()
+         }
+         insert(def.resources, d)
+         slotByKey[k] = #def.resources
++        -- the race pack's resource and cost modifiers (Races.lua, event-facade spec §12b): every resource of the class,
++        -- but a maximum modifier never scales a point resource (combo points, runes, ...)
++        local race = ns.raceMods
++        if race then
++            d.maxMods, d.costMods = not POINTS[k] and race.maxMods or nil, race.costMods
++        end
+     end
+     for _, k in ipairs(sortedKeys(class.abilities)) do
+         local a = class.abilities[k]
+diff --git a/VirtualState/Families/Casts.lua b/VirtualState/Families/Casts.lua
+index 97117b1f..60e81763 100644
+--- a/VirtualState/Families/Casts.lua
++++ b/VirtualState/Families/Casts.lua
+@@ -239,7 +239,20 @@ end
+ --- (Hekili's ability table already evaluates a function `spend` on access; a raw one is called here). The plain
+ --- out-of-combat read (`readCost`, Sources/Spellbook.lua) only confirms it, in Snapshot(): its units are the client's.
+ function I.CostOf(a)
+-    local c = I.ab.obj[a].spend
++    local c = I.BaseCostOf(a)
++    if I.CostMod then
++        c = I.CostMod(a, A.slot[a], c, I.clock) -- the resource's cost modifiers in scope (Families/Modifiers.lua)
++    end
++    return c
++end
++
++--- Ability a's declared cost, before any cost modifier (0 when it has none). Allocates nothing.
++function I.BaseCostOf(a)
++    local obj = I.ab.obj[a]
++    local c = obj.baseSpend -- the declared cost before the simulation's modifiers (Races.lua)
++    if c == nil then
++        c = obj.spend
++    end
+     if type(c) == "function" then
+         c = c()
+     end
+diff --git a/VirtualState/Families/Modifiers.lua b/VirtualState/Families/Modifiers.lua
+new file mode 100644
+index 00000000..85d816d8
+--- /dev/null
++++ b/VirtualState/Families/Modifiers.lua
+@@ -0,0 +1,105 @@
++-- VirtualState/Families/Modifiers.lua
++-- Declarative resource modifiers (event-facade spec §12b): two fields of a resource definition, filled by the race
++-- packs (Races.lua, through Adapter.lua) and open to talents and class auras alike.
++-- - `maxMods`: { { pct = n, when = fn|nil }, ... }; the maximum is the declared `max` (a number or a state-bound
++--   function, default 100) x the product of (1 + pct) over the modifiers whose `when` holds. Families/Resources.lua's
++--   one maximum evaluator applies it (at the build, seeding the interval, and at each CombatEnd) until a plain maximum
++--   read arrives, which wins from then on.
++-- - `costMods`: { { aura = "<key>", pct = n | flat = n, charges = k|nil, spells = { IDs }|nil }, ... }; an ability
++--   paying that resource whose spell ID (or a `copy` rank) is in `spells` (every ability when `spells` is nil) costs
++--   less while the aura is believed up on the player (I.CostOf). With `charges`, each cast whose declared cost is above
++--   0 (even one the discount brought to 0) spends one of the aura's believed stacks (a modelled sample at the cast),
++--   and the aura goes at 0; an observed aura read still wins.
++-- Allocates nothing per cast: the lists are the definitions' own tables, resolved to aura indices at the build.
++
++local _, ns = ...
++local VS, I = ns.VirtualState, ns.VirtualStateInternal
++
++local M = { costMods = {}, modAura = {}, modSpell = {}, modScope = {} }
++I.mods = M
++
++I.OnBuild(function(def)
++    local auraByKey = {} -- the build allocates
++    for j = 1, #def.auras do
++        if def.auras[j].key then
++            auraByKey[def.auras[j].key] = j
++        end
++    end
++    for r = 1, #def.resources do
++        local mods = def.resources[r].costMods
++        M.costMods[r] = mods
++        if mods then
++            local ja, js, sc = M.modAura[r] or {}, M.modSpell[r] or {}, M.modScope[r] or {}
++            M.modAura[r], M.modSpell[r], M.modScope[r] = ja, js, sc
++            for k = 1, #mods do
++                local j = auraByKey[mods[k].aura]
++                ja[k], js[k] = j or 0, j and def.auraIds[j][1] or 0
++                -- the scope as ability indices: a listed ID matches an ability's id or a `copy` rank (I.ab.bySpell);
++                -- an ID the class did not register is absent; no `spells`: every ability
++                local spells = mods[k].spells
++                if spells then
++                    local set = {}
++                    for _, id in ipairs(spells) do
++                        local a = I.ab.bySpell[id]
++                        if a then
++                            set[a] = true
++                        end
++                    end
++                    sc[k] = set
++                else
++                    sc[k] = false
++                end
++            end
++        end
++    end
++end)
++
++-- Whether modifier k of slot r covers ability a.
++local function inScope(r, k, a)
++    local set = M.modScope[r][k]
++    return not set or set[a] == true
++end
++
++--- Ability a's cost `c` on slot r after the cost modifiers in its scope whose aura is believed up on the player at
++--- `now`. Allocates nothing.
++function I.CostMod(a, r, c, now)
++    local mods = r and M.costMods[r]
++    if not mods or c <= 0 then
++        return c
++    end
++    local js = M.modSpell[r]
++    for k = 1, #mods do
++        if js[k] > 0 and inScope(r, k, a) and VS.Aura("player", js[k], now) then
++            local mod = mods[k]
++            if type(mod.pct) == "number" then
++                c = c * (1 + mod.pct)
++            elseif type(mod.flat) == "number" then
++                c = c + mod.flat
++            end
++        end
++    end
++    return c > 0 and c or 0
++end
++
++--- A paid cast of ability a at t on slot r spends one believed stack of each charged modifier in its scope whose aura
++--- is up; at 0 the aura goes. Called by the `now` family's cost step (Families/Now.lua). Allocates nothing.
++function I.SpendCostCharges(a, r, t, event)
++    local mods = r and M.costMods[r]
++    if not mods then
++        return
++    end
++    local ja, js = M.modAura[r], M.modSpell[r]
++    for k = 1, #mods do
++        if mods[k].charges and ja[k] > 0 and inScope(r, k, a) then
++            local rec, stacks, applied = VS.Aura("player", js[k], t)
++            if rec then
++                local left = (stacks or 1) - 1
++                if left > 0 then
++                    I.AuraModel(1, ja[k], applied or t, rec.est, left, t, event, false)
++                else
++                    I.AuraModel(1, ja[k], 0, 0, 0, t, event, false)
++                end
++            end
++        end
++    end
++end
+diff --git a/VirtualState/Families/Now.lua b/VirtualState/Families/Now.lua
+index 7a3027f2..28b462be 100644
+--- a/VirtualState/Families/Now.lua
++++ b/VirtualState/Families/Now.lua
+@@ -252,6 +252,10 @@ local function automatic(a, t, kind)
+         if c > 0 then
+             I.ResourceShift(r, -c, t, kind)
+         end
++        -- a charged cost modifier in scope loses a stack, even when its discount made the cast free (Modifiers.lua)
++        if I.BaseCostOf(a) > 0 then
++            I.SpendCostCharges(a, r, t, kind)
++        end
+     end
+     if A.ch[a] then
+         local recharge = type(obj.recharge) == "number" and obj.recharge or 0
+diff --git a/VirtualState/Families/Resources.lua b/VirtualState/Families/Resources.lua
+index 23aa5ff5..fd36385a 100644
+--- a/VirtualState/Families/Resources.lua
++++ b/VirtualState/Families/Resources.lua
+@@ -53,6 +53,7 @@ local R = {
+     decayDef = {},
+     decay = {},
+     maxDef = {},
++    maxMods = {},
+     maxRead = {},
+ }
+ I.res = R
+@@ -78,14 +79,29 @@ local function decayOf(r)
+     return type(d) == "number" and d > 0 and d or 0
+ end
+ 
+--- Slot r's declared maximum from its `max` (a number or a state-bound function; default 100), used until a plain
+--- read arrives. Allocates nothing.
+-local function maxOf(r)
+-    local m = R.maxDef[r]
+-    if type(m) == "function" then
+-        m = m()
++local function eval(v)
++    if type(v) == "function" then
++        v = v()
+     end
+-    return type(m) == "number" and m > 0 and m or 100
++    return v
++end
++
++-- Slot r's declared maximum from its `max` (a number or a state-bound function; default 100) x the product of
++-- (1 + pct) over its `maxMods` whose `when` holds (Families/Modifiers.lua), used until a plain read arrives.
++-- Allocates nothing.
++local function maxOf(r)
++    local m = eval(R.maxDef[r])
++    m = type(m) == "number" and m > 0 and m or 100
++    local mods = R.maxMods[r]
++    if mods then
++        for k = 1, #mods do
++            local mod = mods[k]
++            if mod.when == nil or eval(mod.when) == true then
++                m = m * (1 + (type(mod.pct) == "number" and mod.pct or 0))
++            end
++        end
++    end
++    return m
+ end
+ 
+ -- By ability index a: the last usability answer and the last short report (cost, time).
+@@ -113,7 +129,7 @@ I.OnBuild(function(def, now)
+         local d = list[r]
+         R.type[r], R.token[r] = d.type, d.token
+         R.slotOf[d.type], R.slotOfToken[d.token] = r, r
+-        R.maxDef[r], R.maxRead[r] = d.max, false
++        R.maxDef[r], R.maxMods[r], R.maxRead[r] = d.max, d.maxMods, false
+         R.max[r] = maxOf(r)
+         R.rest[r] = d.rest or 0
+         R.swing[r] = d.swing or 0
+diff --git a/tools/make_pack.lua b/tools/make_pack.lua
+index 79dc7647..f7c119b5 100644
+--- a/tools/make_pack.lua
++++ b/tools/make_pack.lua
+@@ -3,8 +3,8 @@
+ -- vendored libraries. Run from the repository root:
+ --   lua5.1 tools/make_pack.lua
+ -- Edit a pack's SimC-style text below, run it, and paste each printed string into its spec:RegisterPack( ... [[ ]] )
+--- in Forever/Warrior.lua (Forever/spec/warrior_spec.lua fails until they match). Loaded with the argument "lists"
+--- (loadfile(...)("lists")) it returns PACKS with each pack's parsed lists instead, for that spec.
++-- in Forever/Classes/Warrior.lua (Forever/spec/warrior_spec.lua fails until they match). Loaded with the argument
++-- "lists" (loadfile(...)("lists")) it returns PACKS with each pack's parsed lists instead, for that spec.
+ -- The Arms and Fury lists are ported from Hekili's Classic profile (origin/classic:Classic/APLs/WarriorArms.simc,
+ -- WarriorFury.simc); the Protection list's shape is archive/TheWarWithin/Priorities/WarriorProtection.simc's.
+ 
+```
+
+- [ ] **Step 4: Run the specs to verify they pass**
+
+Run: `~/src/TacoDogForever/.lua/bin/busted`
+Expected: `199 successes / 0 failures / 0 errors`.
+
+- [ ] **Step 5: Verify**
+
+```bash
+BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
+LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
+$BUSTED                                                     # [199 successes / 0 failures / 0 errors]
+$LUACHECK .                                                 # [0 warnings / 0 errors in 79 files]
+LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 51 loaded files]
+LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
+  | diff - <(cut -f1 tools/api_inventory.txt)               # [empty]
+$LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [Diagnosis completed, no problems found]
+git ls-files -mo --exclude-standard '*.lua' | while read -r f; do [ -f "$f" ] && luac5.1 -p "$f"; done   # [no output]
+```
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add Races.lua Forever/Races/Gnome.lua Forever/Classes/Warrior.lua Forever/Warrior.lua Forever/spec/helpers/load_warrior.lua tools/make_pack.lua VirtualState/Families/Modifiers.lua VirtualState/Families/Casts.lua VirtualState/Families/Now.lua VirtualState/Families/Resources.lua VirtualState/Adapter.lua Classes.lua State.lua Hekili.toc .luacheckrc VirtualState/spec/modifiers_spec.lua VirtualState/spec/races_spec.lua
+git commit -m "feat(virtualstate): race packs: Hekili:NewRace and the Gnome's (Eureka!, Expansive Mind); maxMods and spell-scoped costMods with charges, one declaration read by the belief and the simulation; race keyed by its token; the class file in Forever/Classes
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+- [ ] **Step 7: Push** (orchestrator, after this task's review is clean): `git push origin virtualstate-event-facade`
+
+---
+
+### Task 12: The follow-up (decision 7): the GCD spell, the empty spec slot and the talent read move into the facade
 
 Spec §7, decision 7. Three Forever edits in Hekili core become facade answers, so the core lines return to Hekili's own:
 - **GCD spell.** Retail's 61304 is back at its five sites (`Classes.lua:2469` the `global_cooldown` ability, `UI.lua:1494, 1695`, `Events.lua:1670`, `Options/Options.lua:4043`); `C_Spell.GetSpellCooldown` (before its raw call), `C_Spell.GetSpellInfo` and `C_Spell.GetSpellTexture` ask for 61304 as Forever's 29515 (`I.GCD_SPELL`). The latter two become hybrid rows.
@@ -6623,7 +7653,7 @@ index 29d068fc..5213d4d3 100644
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `141 successes / 2 failures / 0 errors` (`facade_spec.lua:119`: the counts; `facade_spec.lua:315`: `GetSpellInfo(61304)` asks the client for 61304).
+Expected: `198 successes / 2 failures / 0 errors` (`facade_spec.lua:119`: the counts; `facade_spec.lua:315`: `GetSpellInfo(61304)` asks the client for 61304).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -6631,10 +7661,10 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/Classes.lua b/Classes.lua
-index 3bd7a121..97e33d3f 100644
+index ffb66d3a..3bc861eb 100644
 --- a/Classes.lua
 +++ b/Classes.lua
-@@ -2466,7 +2466,7 @@ end
+@@ -2469,7 +2469,7 @@ end
  
  all:RegisterAbilities( {
      global_cooldown = {
@@ -6643,7 +7673,7 @@ index 3bd7a121..97e33d3f 100644
          cast = 0,
          cooldown = 0,
          gcd = "spell",
-@@ -3132,8 +3132,7 @@ function Hekili:SpecializationChanged()
+@@ -3135,8 +3135,7 @@ function Hekili:SpecializationChanged()
      for i = 1, 4 do
          local id, name, _, _, role, primaryStat = GetSpecializationInfo( i )
  
@@ -6847,20 +7877,20 @@ index b049f967..635e0d98 100644
 - [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `143 successes / 0 failures / 0 errors`.
+Expected: `200 successes / 0 failures / 0 errors`.
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [143 successes / 0 failures / 0 errors]
-$LUACHECK .                                                 # [0 warnings / 0 errors in 72 files]
-LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 48 loaded files]
+$BUSTED                                                     # [200 successes / 0 failures / 0 errors]
+$LUACHECK .                                                 # [0 warnings / 0 errors in 79 files]
+LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 51 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
   | diff - <(cut -f1 tools/api_inventory.txt)               # [empty]
 $LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [Diagnosis completed, no problems found]
-git ls-files -mo --exclude-standard '*.lua' | xargs -r -n1 luac5.1 -p   # [no output]
+git ls-files -mo --exclude-standard '*.lua' | while read -r f; do [ -f "$f" ] && luac5.1 -p "$f"; done   # [no output]
 ```
 
 Also: `grep -n '29515' Classes.lua UI.lua Events.lua Options/Options.lua` prints nothing.
@@ -6878,120 +7908,60 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task 12: The Warrior's Overpower and Revenge back to Classic's event-driven windows, and its `now` lines (BLOCKED until `forever-warrior-profile` is merged into `forever`)
+### Task 13: The Warrior's Overpower and Revenge back to Classic's event-driven windows, and its `now` lines
 
-**Blocked:** this task needs the Warrior file as it stands after the accuracy pass (`docs/superpowers/plans/2026-10-15-forever-warrior-accuracy.md`), which reaches this branch only through `forever`. Do not start it until the controller has merged `forever-warrior-profile` into `forever`; Tasks 1 to 11 do not depend on it. Replayed against `forever-warrior-profile` at `fc466148` (the accuracy pass through its Task 4); if `forever` has moved past that, the conflicts and patch contexts below may differ: resolve by the same rules and apply the hunks with `git apply --3way`.
+Replayed on `forever` at `75d71c8b`, which already holds the Warrior branch (its accuracy pass, the speed-based `rageOf`, the `decay` and `max` fields, Bloodrage's `startsCombat = false`): no merge, plain patches. Task 2 already pointed the file's top locals at `ns.Facade` and gave the loader's `ns` the fakes as its facade; Task 11 moved the file to `Forever/Classes/Warrior.lua` and its loader's path.
 
 Spec §6. The Warrior file models Overpower's and Revenge's windows as Classic did (`origin/classic:Classic/Warrior.lua:400-456, 625-640, 1198-1199`), from the rows the layer now delivers: a `spec:RegisterEvent( "COMBAT_LOG_EVENT_UNFILTERED", ... )` handler records our dodged swing or ability (`enemy_dodged`, its target), a dodge, parry or block on us (`enemy_revenge_trigger`) and our Overpower's success (`last_overpower`), each at `GetTime()`, which is the row's observed time while it is delivered; `reset_precast`, when `now == query_time`, applies `overpower_ready` for the rest of the 5 s after a dodge under 6 s old on the current target and not yet spent (Classic's rules as written), else for 5 s when the client calls Overpower usable (the strict read, `usableNow`), and `revenge_usable` for the rest of 5 s after a trigger, else 5 s, both only while `reactive( REVENGE )`. Overpower's `usable` is `buff.overpower_ready.up` again; the interim plain-read gate (accuracy ruling A8) goes, and so do the comments saying Forever has no combat log. The file reads `CombatLogGetCurrentEventInfo` and `GetTime` through `ns.Facade`.
 
 The `now` lines (spec §12a, Task 10): Charge, Bloodrage, Berserker Rage, Rend, Sunder Armor, Thunder Clap, Hamstring, Demoralizing Shout, Piercing Howl and the three stances each declare `now` beside `handler`, sharing its constants (`CHARGE_RAGE`, `REND_DURATION`, `THUNDER_CLAP_DURATION`; Rend and Thunder Clap pass their rank's duration, since their auras' durations are functions); the stances remove the other two, spend the rage above what a swap keeps and apply theirs. The file's `knownRank` reads `VS.KnownRank` (VirtualState's spellbook), so it answers the same in the sim's `state` environment and in a `now`; Tactical Mastery, a passive, is tracked (`VS.Track{ abilities = { TACTICAL_MASTERY } }`) so the spellbook knows it, and the rage a swap keeps (`stanceKeep( improvedRank )`) is shared by `swap_stance` and the stances' `now`. A `now` reaches only the context's names: a file-local helper it calls runs in the file's environment, so the stances pass their talent rank to `stanceKeep` rather than letting it read `talent`.
 
-The spec loader gains `ns.Facade`, `GetTime`, `CombatLogGetCurrentEventInfo`, `w.events`, the applied durations and a fake `VirtualState.KnownRank` (from `game.known`).
+The Gnome stopgap goes: the rage meta table's `max = function () return state.race.gnome and 105 or 100 end` (c095ded4) is removed, so rage is 100 by default and a Gnome's 105 comes from the Gnome race pack's Expansive Mind (Task 11); its test becomes "declares no rage maximum of its own ...". The class file registers nothing for Eureka! (the race pack owns it).
+
+The spec loader gains `GetTime`, `CombatLogGetCurrentEventInfo`, `w.events`, the applied durations and a fake `VirtualState.KnownRank` (from `game.known`).
 
 **Files:**
-- Modify: `Forever/Warrior.lua` (file-top locals; `knownRank` from `VS.KnownRank`, Tactical Mastery tracked, `stanceKeep`; `now` on twelve abilities; `reactive`/`usableNow` comments; the `overpower_ready` and `revenge_usable` aura comments; the combat-log handler before `reset_precast`; `reset_precast`'s Revenge line; Overpower's `usable`), `Forever/spec/helpers/load_warrior.lua`, `Forever/spec/warrior_spec.lua` (the Overpower usability case becomes describe "the reactive windows from the combat log")
-- Merge: `.luacheckrc` (conflict), `VirtualState/spec/adapter_spec.lua` (conflict), `Forever/Warrior.lua` (conflict)
+- Modify: `Forever/Classes/Warrior.lua` (file-top locals; the rage meta table's `max` removed; `knownRank` from `VS.KnownRank`, Tactical Mastery tracked, `stanceKeep`; `now` on twelve abilities; `reactive`/`usableNow` comments; the `overpower_ready` and `revenge_usable` aura comments; the combat-log handler before `reset_precast`; `reset_precast`'s Revenge line; Overpower's `usable`), `Forever/spec/helpers/load_warrior.lua`, `Forever/spec/warrior_spec.lua` (the Overpower usability case becomes describe "the reactive windows from the combat log")
+- Not touched: `.luacheckrc`. Tasks 2, 10 and 11 left it with no `CreateFrame` and no plain game read in `read_globals`, and with the Warrior's globals as `forever` declares them: `local warriorEnv = { "rage", "cooldown", "combat", "active_enemies", "active_dot", "setDistance", "interrupt", "swap_stance", "should_queue", "mainhand_remains", "nextMH", "mainhand_speed", "offensive_cost" }` plus every `stateEnv` name, `files["Forever/Classes/Warrior.lua"] = { globals = warriorEnv }` and `files["Forever/Races/"] = { globals = stateEnv }`. The new code reads the game only through `ns.Facade` locals, so it needs no new global; never take another branch's whole `.luacheckrc`.
 
 **Interfaces:**
 - Consumes: the own-cast, swing, ability-outcome and on-us rows (Tasks 6-8); `Facade.GetTime`'s back-dating (Task 6). `VS.KnownRank`, `VS.Track`, the `now` context (Task 10).
 - Produces: `w.events[event]` in the Warrior spec loader; `e.durations` in its `env`. The Warrior abilities' `now` fields.
 
-- [ ] **Step 1: Merge `forever`**
-
-```bash
-git -c merge.conflictStyle=diff3 merge --no-edit forever
-```
-
-Expected (replay at `fc466148`): `CONFLICT (content): Merge conflict in .luacheckrc`, `... in Forever/Warrior.lua` and `... in VirtualState/spec/adapter_spec.lua`; `VirtualState/Adapter.lua` and `VirtualState/spec/helpers/fake_api.lua` merge by themselves. Resolve:
-
-1. `Forever/Warrior.lua`: take `forever`'s file, then point its file-top locals at the facade with Task 2's script (save it to `/tmp/facade_locals.lua` from Task 2 if `/tmp` was cleared):
-
-   ```bash
-   git checkout --theirs Forever/Warrior.lua
-   lua5.1 /tmp/facade_locals.lua tools/api_inventory.txt Forever/Warrior.lua   # [Forever/Warrior.lua: 2 lines]
-   ```
-
-   Expected file top: `local Facade = ns.Facade`, `local C_SpellBook, C_Spell, UnitClassBase = Facade.C_SpellBook, Facade.C_Spell, Facade.UnitClassBase`, `local GetShapeshiftForm, GetShapeshiftFormInfo, UnitLevel = Facade.GetShapeshiftForm, Facade.GetShapeshiftFormInfo, Facade.UnitLevel`.
-
-2. `VirtualState/spec/adapter_spec.lua`: keep `forever`'s two new cases ("forwards a resource's player-aura regen entries ..." and "forwards the off hand's swing value ...") followed by this branch's case "leaves the cast history, the real queue and the swing fields to the combat-log rows, asks for a cycle"; drop `forever`'s title line "feeds the cast history and the real queue ...". This script does exactly that:
-
-   ```bash
-   python3 - <<'PY'
-   p = "VirtualState/spec/adapter_spec.lua"
-   s = open(p).read()
-   a = s.index("<<<<<<< HEAD\n"); b = s.index("||||||| ", a); c = s.index("=======\n", b); d = s.index(">>>>>>> ", c)
-   ours, theirs = s[a + len("<<<<<<< HEAD\n"):b], s[c + len("=======\n"):d]
-   lines = theirs.rstrip("\n").split("\n")
-   assert lines[-1].strip().startswith('it("feeds the cast history')
-   s = s[:a] + "\n".join(lines[:-1]) + "\n" + ours + s[s.index("\n", d) + 1:]
-   open(p, "w").write(s)
-   PY
-   ```
-
-   (The script needs the `|||||||` base section, hence `merge.conflictStyle=diff3` above. If `rerere` already resolved the file, check the result has those three cases in that order.)
-
-3. `.luacheckrc`: take `forever`'s file (its `Forever/spec/` entry and `warriorEnv`) with `git checkout --theirs .luacheckrc`, then replace its line `files["VirtualState/spec/"] = { std = "+busted" }` with the six lines Task 10's patch put in its place (the `nowEnv` comment, the four-line `local nowEnv = { ... }` and `files["VirtualState/spec/"] = { std = "+busted", read_globals = nowEnv }`).
-
-4. `Forever/spec/helpers/load_warrior.lua`: the class file now reads the game through `ns.Facade`; give the loader's `ns` the fakes table as its facade:
+- [ ] **Step 1: Write the failing specs**
 
 Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/Forever/spec/helpers/load_warrior.lua b/Forever/spec/helpers/load_warrior.lua
-index e2eeb76f..4898af49 100644
+index e13a3a43..b2772703 100644
 --- a/Forever/spec/helpers/load_warrior.lua
 +++ b/Forever/spec/helpers/load_warrior.lua
-@@ -76,6 +76,7 @@ function M.load()
-         _G[k] = v
-     end
-     local ns = {
-+        Facade = fakes, -- the class file reads the game through ns.Facade (event-facade spec §1.2)
-         VirtualState = {
-             Track = function(t)
-                 for k, v in pairs(t.talents or {}) do
-```
-
-Then:
-
-```bash
-git add .luacheckrc Forever/Warrior.lua VirtualState/spec/adapter_spec.lua Forever/spec/helpers/load_warrior.lua
-git commit -m "Merge branch 'forever' into virtualstate-event-facade: the Warrior class file reads through ns.Facade
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
-```
-
-Run the verification block. Expected: `185 successes / 0 failures / 0 errors`; luacheck `0 warnings / 0 errors in 74 files`; `ok: no direct game API read in 48 loaded files`; the rest as before.
-
-- [ ] **Step 2: Write the failing specs**
-
-Apply with `git apply` (from the worktree root):
-
-```diff
-diff --git a/Forever/spec/helpers/load_warrior.lua b/Forever/spec/helpers/load_warrior.lua
-index 4898af49..33da90a6 100644
---- a/Forever/spec/helpers/load_warrior.lua
-+++ b/Forever/spec/helpers/load_warrior.lua
-@@ -7,7 +7,7 @@
+@@ -7,9 +7,9 @@
  local M = {}
  
  --- Loads the class file. Returns `w`: `w.abilities`, `w.auras` (merged by key), `w.talents`, `w.track`, `w.resource`
 ---- ({ powerType, models }), `w.hooks[name]`, `w.funcs[name]`, `w.exprs[name]`, `w.settings[key]` ({ default,
-+--- ({ powerType, models }), `w.hooks[name]`, `w.events[event]` (spec:RegisterEvent's handlers), `w.funcs[name]`, `w.exprs[name]`, `w.settings[key]` ({ default,
- --- option }), `w.packs` (in order: { name, version, string }), `w.options`, `w.specID`, `w.state` (Hekili.State's
- --- stand-in) and `w.game`.
+---- option }), `w.packs` (in order: { name, version, string }), `w.options`, `w.specID`, `w.state` (Hekili.State's
+---- stand-in) and `w.game`.
++--- ({ powerType, models }), `w.hooks[name]`, `w.events[event]` (spec:RegisterEvent's handlers), `w.funcs[name]`,
++--- `w.exprs[name]`, `w.settings[key]` ({ default, option }), `w.packs` (in order: { name, version, string }),
++--- `w.options`, `w.specID`, `w.state` (Hekili.State's stand-in) and `w.game`.
  function M.load()
-@@ -29,6 +29,8 @@ function M.load()
+     local reg = {}
+     local spec = setmetatable({}, {
+@@ -28,6 +28,8 @@ function M.load()
+         form = 0,
          formSpell = {},
-         damage = { 0, 0, 0, 0 }, -- UnitDamage's first four returns in VirtualState's stat cache
-         level = 22,
+         base = { 0, 0 }, -- VS.SwingBase: each hand's unhasted speed (0: no plain read yet)
 +        now = 0, -- GetTime()
 +        row = {}, -- the combat-log row CombatLogGetCurrentEventInfo answers
-         SECRET = newproxy(), -- a secret value: issecretvalue says so, and arithmetic or comparison on it raises
      }
      local w = { game = game, abilities = {}, auras = {}, track = {}, hooks = {}, funcs = {}, exprs = {} }
-@@ -65,6 +67,12 @@ function M.load()
-         UnitLevel = function()
-             return game.level
+     w.state = { main_hand = { size = 2 }, timeToInterrupt = function() end }
+@@ -60,6 +62,12 @@ function M.load()
+         GetShapeshiftFormInfo = function(i)
+             return 0, true, true, game.formSpell[i]
          end,
 +        GetTime = function()
 +            return game.now
@@ -6999,10 +7969,10 @@ index 4898af49..33da90a6 100644
 +        CombatLogGetCurrentEventInfo = function()
 +            return unpack(game.row, 1, 15)
 +        end,
-         issecretvalue = function(v)
-             return v == game.SECRET
-         end,
-@@ -78,6 +86,14 @@ function M.load()
+         Enum = { PowerType = { Rage = 1 } },
+     }
+     local saved = {}
+@@ -70,6 +78,14 @@ function M.load()
      local ns = {
          Facade = fakes, -- the class file reads the game through ns.Facade (event-facade spec §1.2)
          VirtualState = {
@@ -7017,7 +7987,7 @@ index 4898af49..33da90a6 100644
              Track = function(t)
                  for k, v in pairs(t.talents or {}) do
                      w.track[k] = v
-@@ -109,6 +125,10 @@ function M.load()
+@@ -97,6 +113,10 @@ function M.load()
      end
      w.talents = reg.RegisterTalents and reg.RegisterTalents[1][1]
      w.resource = reg.RegisterResource and reg.RegisterResource[1]
@@ -7028,7 +7998,7 @@ index 4898af49..33da90a6 100644
      for _, call in ipairs(reg.RegisterHook or {}) do
          w.hooks[call[1]] = call[2]
      end
-@@ -138,7 +158,7 @@ end
+@@ -126,7 +146,7 @@ end
  --- A stand-in `state` that records applyBuff/applyDebuff (into `applied`), removeBuff, spend and gain, with every
  --- talent at rank 0, every aura down and every cooldown ready. The class file's state functions are bound to it.
  function M.env(w)
@@ -7037,7 +8007,7 @@ index 4898af49..33da90a6 100644
      e.talent = default({ rank = 0, enabled = false })
      e.buff = default({ up = false, remains = 0, stack = 0 })
      e.debuff = e.buff
-@@ -147,8 +167,9 @@ function M.env(w)
+@@ -135,8 +155,9 @@ function M.env(w)
      e.rage = { current = 50 }
      e.target = { minR = 10, is_boss = false }
      e.combat, e.active_enemies = 0, 1
@@ -7049,7 +8019,7 @@ index 4898af49..33da90a6 100644
      function e.applyDebuff(_, key)
          table.insert(e.applied, key)
 diff --git a/Forever/spec/warrior_spec.lua b/Forever/spec/warrior_spec.lua
-index 3beed3bb..b8af92d8 100644
+index 171e4316..477b80d4 100644
 --- a/Forever/spec/warrior_spec.lua
 +++ b/Forever/spec/warrior_spec.lua
 @@ -181,14 +181,91 @@ describe("Forever Warrior", function()
@@ -7151,30 +8121,45 @@ index 3beed3bb..b8af92d8 100644
      end)
  
      it("gates Thunder Clap, Execute and Spearing Strike on the stances Forever's tooltips name", function()
+@@ -272,12 +349,8 @@ describe("Forever Warrior", function()
+         assert.is_true(math.abs(0.875 - decay()) < 1e-9) -- 1.25 x (1 - 0.3 x 1) = 1.25 x 0.7 = 0.875
+     end)
+ 
+-    it("caps rage at 105 for a Gnome (Expansive Mind, +5% maximum resources) and 100 otherwise", function()
+-        local max = w.resource[4].max
+-        w.state.race = { gnome = true }
+-        assert.are.equal(105, max())
+-        w.state.race = {}
+-        assert.are.equal(100, max())
++    it("declares no rage maximum of its own: a Gnome's 105 is the race pack's Expansive Mind", function()
++        assert.is_nil(w.resource[4].max) -- 100 by default; the Gnome's race pack adds Expansive Mind
+     end)
+ 
+     it("gains Bloodrage's rage over time through an aura-gated regen entry", function()
 ```
 
-- [ ] **Step 3: Run the specs to verify they fail**
+- [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `180 successes / 2 failures / 3 errors` (`warrior_spec`: `w.events.COMBAT_LOG_EVENT_UNFILTERED` is nil; Overpower's `usable` still follows the client's read; no ability declares `now`).
+Expected: `198 successes / 3 failures / 3 errors` (`warrior_spec`: `w.events.COMBAT_LOG_EVENT_UNFILTERED` is nil; Overpower's `usable` still follows the client's read; no ability declares `now`; the rage meta table still declares its own 105).
 
-- [ ] **Step 4: Write the implementation**
+- [ ] **Step 3: Write the implementation**
 
 Apply with `git apply` (from the worktree root):
 
 ```diff
-diff --git a/Forever/Warrior.lua b/Forever/Warrior.lua
-index 6d9be6f7..db08b81b 100644
---- a/Forever/Warrior.lua
-+++ b/Forever/Warrior.lua
-@@ -18,6 +18,7 @@ local addon, ns = ...
+diff --git a/Forever/Classes/Warrior.lua b/Forever/Classes/Warrior.lua
+index 190446de..f708b6fd 100644
+--- a/Forever/Classes/Warrior.lua
++++ b/Forever/Classes/Warrior.lua
+@@ -19,6 +19,7 @@ local addon, ns = ...
  local Facade = ns.Facade
  local C_SpellBook, C_Spell, UnitClassBase = Facade.C_SpellBook, Facade.C_Spell, Facade.UnitClassBase
- local GetShapeshiftForm, GetShapeshiftFormInfo, UnitLevel = Facade.GetShapeshiftForm, Facade.GetShapeshiftFormInfo, Facade.UnitLevel
+ local GetShapeshiftForm, GetShapeshiftFormInfo = Facade.GetShapeshiftForm, Facade.GetShapeshiftFormInfo
 +local CombatLogGetCurrentEventInfo, GetTime = Facade.CombatLogGetCurrentEventInfo, Facade.GetTime
- local issecretvalue = issecretvalue
  local Hekili = _G[ addon ]
  
+ if UnitClassBase( "player" ) ~= "WARRIOR" then return end
 @@ -67,12 +68,19 @@ local function rest( ids )
      return out
  end
@@ -7218,7 +8203,18 @@ index 6d9be6f7..db08b81b 100644
  local function usableNow( ids )
      local r = knownRank( ids )
      return r > 0 and IsSpellUsable( ids[ r ] ) == true
-@@ -413,9 +421,8 @@ spec:RegisterAuras( {
+@@ -184,8 +192,8 @@ spec:RegisterResource( Enum.PowerType.Rage, {
+     -- Out-of-combat rage loss per second, VirtualState's `decay` (in the meta table: Hekili takes every regen entry for
+     -- a model): the client's Rage tooltip, "1.25 Rage is lost every 1 sec" (measured 100 -> 0 in 82.2 s: 80 s plus
+     -- reaction time); Anger Management's tooltip: 30% less.
+-    -- Gnome's Warrior racial Expansive Mind (1259802): +5% maximum resources, so a 105 rage cap.
+-    max = function () return state.race.gnome and 105 or 100 end,
++    -- No `max`: rage is 100, and a Gnome's 105 comes from Expansive Mind in the Gnome's race pack
++    -- (Forever/Races/Gnome.lua, VirtualState's `maxMods`, event-facade spec §12b).
+     decay = function () return 1.25 * ( 1 - 0.3 * state.talent.anger_management.rank ) end,
+ } )
+ 
+@@ -403,9 +411,8 @@ spec:RegisterAuras( {
          duration = 10,
          max_stack = 1,
      },
@@ -7230,7 +8226,7 @@ index 6d9be6f7..db08b81b 100644
      overpower_ready = {
          id = 1282733,
          duration = 5,
-@@ -448,8 +455,7 @@ spec:RegisterAuras( {
+@@ -438,8 +445,7 @@ spec:RegisterAuras( {
          duration = 3,
          max_stack = 1,
      },
@@ -7240,7 +8236,7 @@ index 6d9be6f7..db08b81b 100644
      revenge_usable = {
          duration = 5,
          max_stack = 1,
-@@ -509,8 +515,7 @@ spec:RegisterStateFunction( "swap_stance", function( stance )
+@@ -499,8 +505,7 @@ spec:RegisterStateFunction( "swap_stance", function( stance )
      removeBuff( "defensive_stance" )
      removeBuff( "berserker_stance" )
  
@@ -7250,7 +8246,7 @@ index 6d9be6f7..db08b81b 100644
      if lost > 0 then spend( lost, "rage" ) end
  
      applyBuff( stance )
-@@ -524,6 +529,28 @@ spec:RegisterStateFunction( "offensive_cost", function( cost )
+@@ -514,6 +519,28 @@ spec:RegisterStateFunction( "offensive_cost", function( cost )
      return max( 0, cost - 3 * talent.focused_rage.rank )
  end )
  
@@ -7279,7 +8275,7 @@ index 6d9be6f7..db08b81b 100644
  spec:RegisterHook( "reset_precast", function()
      -- The stance from the plain shapeshift reads (forever-facade-notes: GetShapeshiftForm, GetShapeshiftFormInfo).
      removeBuff( "battle_stance" )
-@@ -540,7 +567,22 @@ spec:RegisterHook( "reset_precast", function()
+@@ -530,7 +557,22 @@ spec:RegisterHook( "reset_precast", function()
      if hs > 0 and IsCurrentSpell( HEROIC_STRIKE[ hs ] ) then applyBuff( "heroic_strike" ) end
      if cl > 0 and IsCurrentSpell( CLEAVE[ cl ] ) then applyBuff( "cleave" ) end
  
@@ -7303,7 +8299,7 @@ index 6d9be6f7..db08b81b 100644
  end )
  
  -- `timeToReady` of the three stances: they share a 1 s category cooldown.
-@@ -578,6 +620,15 @@ spec:RegisterAbilities( {
+@@ -568,6 +610,15 @@ spec:RegisterAbilities( {
          nobuff = "battle_stance",
          timeToReady = stanceReady,
  
@@ -7319,7 +8315,7 @@ index 6d9be6f7..db08b81b 100644
          handler = function ()
              swap_stance( "battle_stance" )
          end,
-@@ -593,6 +644,12 @@ spec:RegisterAbilities( {
+@@ -583,6 +634,12 @@ spec:RegisterAbilities( {
          known = knows( { 18499 } ),
          buff = "berserker_stance",
  
@@ -7332,7 +8328,7 @@ index 6d9be6f7..db08b81b 100644
          handler = function ()
              applyBuff( "berserker_rage" )
              -- DB2 20500: energize 100 (10 rage) a rank.
-@@ -611,6 +668,15 @@ spec:RegisterAbilities( {
+@@ -601,6 +658,15 @@ spec:RegisterAbilities( {
          nobuff = "berserker_stance",
          timeToReady = stanceReady,
  
@@ -7348,7 +8344,7 @@ index 6d9be6f7..db08b81b 100644
          handler = function ()
              swap_stance( "berserker_stance" )
          end,
-@@ -628,6 +694,12 @@ spec:RegisterAbilities( {
+@@ -618,6 +684,12 @@ spec:RegisterAbilities( {
          known = knows( { 2687 } ),
          toggle = "cooldowns",
  
@@ -7361,7 +8357,7 @@ index 6d9be6f7..db08b81b 100644
          handler = function ()
              -- DB2 12301: +50% of the rage Bloodrage generates a rank.
              gain( 10 * ( 1 + 0.5 * talent.improved_bloodrage.rank ), "rage" )
-@@ -687,6 +759,12 @@ spec:RegisterAbilities( {
+@@ -677,6 +749,12 @@ spec:RegisterAbilities( {
              return combat == 0 and target.minR >= 8 and target.minR <= 25, "cannot be in combat; target must be outside your deadzone"
          end,
  
@@ -7374,7 +8370,7 @@ index 6d9be6f7..db08b81b 100644
          handler = function ()
              setDistance( 7 )
              if not target.is_boss then applyDebuff( "target", "charge_stun" ) end
-@@ -765,6 +843,15 @@ spec:RegisterAbilities( {
+@@ -755,6 +833,15 @@ spec:RegisterAbilities( {
          nobuff = "defensive_stance",
          timeToReady = stanceReady,
  
@@ -7390,7 +8386,7 @@ index 6d9be6f7..db08b81b 100644
          handler = function ()
              swap_stance( "defensive_stance" )
          end,
-@@ -783,6 +870,11 @@ spec:RegisterAbilities( {
+@@ -773,6 +860,11 @@ spec:RegisterAbilities( {
          startsCombat = true,
          known = knows( DEMORALIZING_SHOUT ),
  
@@ -7402,7 +8398,7 @@ index 6d9be6f7..db08b81b 100644
          handler = function ()
              applyDebuff( "target", "demoralizing_shout" )
              active_dot.demoralizing_shout = active_enemies
-@@ -844,6 +936,11 @@ spec:RegisterAbilities( {
+@@ -834,6 +926,11 @@ spec:RegisterAbilities( {
          known = knows( HAMSTRING ),
          nobuff = "defensive_stance",
  
@@ -7414,7 +8410,7 @@ index 6d9be6f7..db08b81b 100644
          handler = function ()
              applyDebuff( "target", "hamstring" )
          end,
-@@ -985,8 +1082,7 @@ spec:RegisterAbilities( {
+@@ -975,8 +1072,7 @@ spec:RegisterAbilities( {
          known = knows( OVERPOWER ),
          buff = "battle_stance",
  
@@ -7424,7 +8420,7 @@ index 6d9be6f7..db08b81b 100644
  
          handler = function ()
              removeBuff( "overpower_ready" )
-@@ -1006,6 +1102,11 @@ spec:RegisterAbilities( {
+@@ -996,6 +1092,11 @@ spec:RegisterAbilities( {
          startsCombat = true,
          known = knows( { 12323 } ),
  
@@ -7436,7 +8432,7 @@ index 6d9be6f7..db08b81b 100644
          handler = function ()
              applyDebuff( "target", "piercing_howl" )
          end,
-@@ -1062,6 +1163,11 @@ spec:RegisterAbilities( {
+@@ -1052,6 +1153,11 @@ spec:RegisterAbilities( {
          known = knows( REND ),
          nobuff = "berserker_stance",
  
@@ -7448,7 +8444,7 @@ index 6d9be6f7..db08b81b 100644
          handler = function ()
              applyDebuff( "target", "rend" )
          end,
-@@ -1225,6 +1331,11 @@ spec:RegisterAbilities( {
+@@ -1215,6 +1321,11 @@ spec:RegisterAbilities( {
          startsCombat = true,
          known = knows( SUNDER_ARMOR ),
  
@@ -7460,7 +8456,7 @@ index 6d9be6f7..db08b81b 100644
          handler = function ()
              applyDebuff( "target", "sunder_armor", nil, min( 5, debuff.sunder_armor.stack + 1 ) )
          end,
-@@ -1278,6 +1389,11 @@ spec:RegisterAbilities( {
+@@ -1268,6 +1379,11 @@ spec:RegisterAbilities( {
          known = knows( THUNDER_CLAP ),
          nobuff = "berserker_stance",
  
@@ -7474,39 +8470,41 @@ index 6d9be6f7..db08b81b 100644
              active_dot.thunder_clap = min( active_enemies, 4 + active_dot.thunder_clap )
 ```
 
-- [ ] **Step 5: Run the specs to verify they pass**
+- [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `185 successes / 0 failures / 0 errors`.
+Expected: `204 successes / 0 failures / 0 errors`.
 
-- [ ] **Step 6: Verify**
+- [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [185 successes / 0 failures / 0 errors]
-$LUACHECK .                                                 # [0 warnings / 0 errors in 74 files]
-LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 48 loaded files]
+$BUSTED                                                     # [204 successes / 0 failures / 0 errors]
+$LUACHECK .                                                 # [0 warnings / 0 errors in 79 files]
+LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 51 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
   | diff - <(cut -f1 tools/api_inventory.txt)               # [empty]
 $LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [Diagnosis completed, no problems found]
-git ls-files -mo --exclude-standard '*.lua' | xargs -r -n1 luac5.1 -p   # [no output]
+git ls-files -mo --exclude-standard '*.lua' | while read -r f; do [ -f "$f" ] && luac5.1 -p "$f"; done   # [no output]
 ```
 
-- [ ] **Step 7: Commit**
+Also: `grep -c '"CreateFrame"' .luacheckrc` prints `0` and `git diff HEAD --stat -- .luacheckrc` prints nothing (the task leaves `.luacheckrc` as Task 11 left it).
+
+- [ ] **Step 6: Commit**
 
 ```bash
-git add Forever/Warrior.lua Forever/spec/helpers/load_warrior.lua Forever/spec/warrior_spec.lua
+git add Forever/Classes/Warrior.lua Forever/spec/helpers/load_warrior.lua Forever/spec/warrior_spec.lua
 git commit -m "feat(forever): Overpower and Revenge windows from the combat log as Classic models them (the dodge row, the usability read as fallback); now handlers on Charge, Bloodrage, Berserker Rage, the debuffs and the stances; knownRank from VirtualState's spellbook
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
-- [ ] **Step 8: Push** (orchestrator, after this task's review is clean): `git push origin virtualstate-event-facade`
+- [ ] **Step 7: Push** (orchestrator, after this task's review is clean): `git push origin virtualstate-event-facade`
 
 ---
 
-### Task 13: CHECKPOINT B: the probes, then the rows in game (BLOCKED with Task 12)
+### Task 14: CHECKPOINT B: the probes, then the rows in game
 
 No code unless an answer calls for it. The user runs the game on the Warrior: items 1-3 against a mob that fights back (an open-world enemy), items 4-10 at a training dummy. ForeverProbe loaded (`VSCopy`). `Hekili.toc` lists new files since CHECKPOINT A: restart the client once.
 
@@ -7531,10 +8529,11 @@ The probes come first (spec §9 step 8); their lines use a frame of their own (`
 4. **Overpower after a dodge** (Arms, Battle Stance, dummy): before any dodge, is Overpower recommended? Expected: no. After a floating "Dodge" on the dummy, within a second? Expected: yes; and gone once Overpower is cast, or 5 s after the dodge.
 5. **The cast history**: cast Battle Shout, Rend, Heroic Strike, and wait until the Heroic Strike swing lands (its success arrives with the swing); then `/run local p=Hekili.State.player VSCopy(p.lastcast.." "..p.lastgcd)` and `/run local d=Hekili.EData.COMBAT_LOG_EVENT_UNFILTERED_1 VSCopy(d and format("rows %.3f ms max %.3f",d.total,d.max) or "none")`. Expected: `heroic_strike rend` (the last cast, the last GCD cast), and a `rows` line (each cast once in the history: Rend's recommendation does not repeat right after its cast).
 6. **The swing clock**: auto-attack the dummy for 60 s; five times, between swings, `/run VSCopy(format("%.3f %.3f",Hekili.State.swings.mh_actual,Hekili.VirtualState.LastSwing(1)))`. Expected: the two numbers within 0.050 each time (the second is the `PLAYER_SWING` time VirtualState folded).
-7. **The follow-up (Task 11)**: the GCD sweep on the buttons still shows after a cast; `/run VSCopy(format("%s %d",tostring(Hekili.State.spec.id),Hekili.State.talent.unbridled_wrath.rank))`. Expected: `1491` and the talent's rank from the pane (5 on the export's character).
+7. **The follow-up (Task 12)**: the GCD sweep on the buttons still shows after a cast; `/run VSCopy(format("%s %d",tostring(Hekili.State.spec.id),Hekili.State.talent.unbridled_wrath.rank))`. Expected: `1491` and the talent's rank from the pane (5 on the export's character).
 8. **The dev tools hear modelled rows** (decision 9): `/hekili skeleton`, then 10 s of auto-attack and Rend at the dummy, then `/run VSCopy(Hekili.VirtualState.Snapshot():match("events [^\n]+"))`. Expected: `errors=0` (the skeleton listener took every row without an error).
 9. **`now` handlers (Task 10)**: out of combat at 0 rage, Charge the dummy, then at once `/run VSCopy(format("%.0f %s",Hekili.VirtualState.Power(1,GetTime()).est,Hekili.VirtualState.Snapshot():match("errors=%d+ now=%d+")))`; then Rend it and `/run VSCopy(tostring(Hekili.State.debuff.rend.up))`; then swap to Defensive Stance at about 50 rage and run the first line again. Expected: the rage close to the bar after Charge (the `now` gain) and after the swap (what Tactical Mastery keeps), `errors=0`, `now=` growing, and `true` for Rend.
-10. **A traced snapshot**: inside an Overpower window, `/hekili snapshot`, then `/hekili` → Snapshots → the newest. Expected: `rows ... missed=<n>` in the Snapshot block and `[vs] row SWING_MISSED missed inferred t=...` or `SPELL_MISSED` lines only if a row was delivered during the snapshot (rare); the `overpower_ready` buff up in the snapshot's aura list.
+10. **Race packs (Task 11)**, on a Gnome only: out of combat `/run VSCopy(Hekili.VirtualState.Snapshot():match("resource RAGE[^\n]+"))`. Expected: `max=105`. Then use Eureka! and, with it up: `/run VSCopy(Hekili.VirtualState.Snapshot():match("ability heroic_strike[^\n]+"))` reads `cost=13.5` (15 without it) and the same line for `rend` reads `cost=10` (out of Eureka!'s scope); in the simulation `/run local a=Hekili.State.action VSCopy(format("%s %s",tostring(a.heroic_strike.cost),tostring(a.rend.cost)))` reads `13.5 10`; three Heroic Strikes later Eureka! is gone, a Rend in between took no charge. Another race: report "not a Gnome".
+11. **A traced snapshot**: inside an Overpower window, `/hekili snapshot`, then `/hekili` → Snapshots → the newest. Expected: `rows ... missed=<n>` in the Snapshot block and `[vs] row SWING_MISSED missed inferred t=...` or `SPELL_MISSED` lines only if a row was delivered during the snapshot (rare); the `overpower_ready` buff up in the snapshot's aura list.
 
 | # | Answer → action (each action its own commit with the verification block) |
 |---|---|
@@ -7544,10 +8543,12 @@ The probes come first (spec §9 step 8); their lines use a frame of their own (`
 | 4 | Recommended before a dodge → report `/run VSCopy(tostring(C_Spell.IsSpellUsable(7384)))` (the fallback's read) and the Snapshot's `rows` line. Not recommended after a dodge → report the `rows` line (`missed=0`: no pairing; raise `PAIR_WINDOW` per item 1). |
 | 5 | A cast twice in the history → a feed still writes it: report (Task 6 regression). `none` → no row reached `CLEU_HANDLER`: report `/run VSCopy(Hekili.VirtualState.Snapshot():match("rows [^\n]+"))`. |
 | 6 | Off by more than 0.050 → report the five pairs; a constant lag of about `PAIR_WINDOW` means back-dating did not apply (Task 6 regression). |
-| 7 | Spec id other than 1491 or a rank of 1 for a multi-rank talent → report (Task 11 regression). No GCD sweep after a cast → the facade's 61304 → 29515 answer is not reaching `UI.lua`: report it with the Snapshot's `cast ab=... gcd=...` line (Task 11 regression). |
+| 7 | Spec id other than 1491 or a rank of 1 for a multi-rank talent → report (Task 12 regression). No GCD sweep after a cast → the facade's 61304 → 29515 answer is not reaching `UI.lua`: report it with the Snapshot's `cast ab=... gcd=...` line (Task 12 regression). |
 | 8 | `errors=` above 0 → the skeleton handler raised on a row: report the line's `last error=`. |
 | 9 | Rage far from the bar after Charge or the swap → report both numbers and the Snapshot's `resource RAGE` line; `errors=` above 0 → report the drain line's `error=` (a `now` raised: the named ability's `now` is wrong); Rend `false` → report the Snapshot's `aura target rend` line. |
-| 10 | No `rows` line in the Snapshot block → Task 6 regression: report the snapshot's first lines. No `overpower_ready` inside a window → report item 4's lines. |
+| 10 | `max=100` on a Gnome, or the belief's cost unchanged after Eureka! → the race pack is not live: report `/run local m=Hekili.RaceMods VSCopy(format("%s max=%d cost=%d",tostring(Hekili.State.race_token),#m.maxMods,#m.costMods))` (expected `Gnome max=1 cost=1`), the Snapshot's `ability heroic_strike` line (`/run VSCopy(Hekili.VirtualState.Snapshot():match("ability heroic_strike[^\n]+"))`) and its `aura player eureka` line. |
+| 10b | The simulation's line not `13.5 10` with Eureka! up, or Eureka! still up (in the belief's `aura player eureka` line or `/run VSCopy(tostring(Hekili.State.buff.eureka.stack))`) after three Heroic Strikes → `ns.costMods` misses the ability or its charge: report both lines, the token line above, and `/run local a=Hekili.Class.abilities.heroic_strike VSCopy(format("%s %s",tostring(a.baseSpend),tostring(a.spend)))`. |
+| 11 | No `rows` line in the Snapshot block → Task 6 regression: report the snapshot's first lines. No `overpower_ready` inside a window → report item 4's lines. |
 
 Known limits (say them with the results): attribution of hits on us is a model (decision 6): with several attackers whose clocks align, or spell hits, a hit can stay unattributed (no row) or, rarely, go to the wrong one; our swings' outcomes pair by time only, so in a group another attacker's dodge inside the window can open Overpower's window (the usability read corrects it at the next reset in Battle Stance); aura rows come from the `now` verbs, written at the drain after the cast and back-dated to it; Overpower's stance swap is not modelled.
 
@@ -7564,27 +8565,28 @@ Fix what the user reports, then repeat the affected items. Continue only when th
 | Decision 1: diversion at `Facade.CreateFrame`; every Hekili frame's registrations through the layer; the boot frame a subscriber too | Task 1 (the layer, shadowed methods), Task 2 (`CreateFrame` from the facade in every file, `Adapter.lua`'s boot frame) |
 | Decision 2: every event in the game's shape, Hekili cannot tell; `UNIT_AURA` full update in phase A | Task 1 (`Plain` slots, `UNIT_AURA`'s payload, CLEU with no payload in Task 6), Task 3 (the original handler) |
 | Per-subscriber unit filters; the layer's frame at file load, sources after Start; refused events as stubs; zero allocation | Task 1 (`event_facade_spec`, its 0-byte case) |
-| Decision 8: three classes over all 175 names (plus `CreateFrame`), probe evidence as the reason, `api_inventory.txt` with classes, `check_api_reads.sh` enforcing facade-only reads, file-top locals back in every Hekili file | Task 2; the classes move in Tasks 6 (`GetTime`) and 11 (three Forever shapes) |
+| Decision 8: three classes over all 175 names (plus `CreateFrame`), probe evidence as the reason, `api_inventory.txt` with classes, `check_api_reads.sh` enforcing facade-only reads, file-top locals back in every Hekili file | Task 2; the classes move in Tasks 6 (`GetTime`) and 12 (three Forever shapes) |
 | Decision 3: the trace through `Hekili:Debug` and Hekili's snapshots, no ring or command; the answering class per read | Task 4 (`trace_spec`) |
 | Decision 4: every row wrapped, one branch | Task 4 (`kept`'s wrapper; the 0-byte case off) |
 | Phase A checkpoint: reload clean, every event still arrives, a traced snapshot, drain and cycle cost | Task 5 |
 | Phase B rows: own casts; SWING_DAMAGE/SWING_MISSED incl. DODGE; SPELL_CAST_SUCCESS; SPELL_AURA_APPLIED/REFRESH/REMOVED for our casts; SPELL_ENERGIZE; the slot table per subevent | Tasks 6, 7, 9 (`cleu_rows_spec`, `adapter_spec`) |
 | Decision 5: observed-time back-dating via slot 1 and `Facade.GetTime` during delivery; modelled rows stamped at delivery; the basis per family | Task 6 (the mechanism and its case), Tasks 7-9 (each family's flag), spec §3's table |
-| The swing-pairing window as a constant measured by phase B's first probe | Task 7 (`L.PAIR_WINDOW`), Task 13 item 1 |
-| Decision 6: the "who targets me" set and per-attacker clocks (plain `UnitAttackSpeed` or learned), tolerance, unattributed otherwise; our swings' dodges by the pairing window; the two probes | Task 8, Task 13 items 2-3 |
+| The swing-pairing window as a constant measured by phase B's first probe | Task 7 (`L.PAIR_WINDOW`), Task 14 item 1 |
+| Decision 6: the "who targets me" set and per-attacker clocks (plain `UnitAttackSpeed` or learned), tolerance, unattributed otherwise; our swings' dodges by the pairing window; the two probes | Task 8, Task 14 items 2-3 |
 | The Phase 1 feeds retired in the task that adds their rows | Task 6 (cast feeds), Task 7 (swing feed) |
 | The `COMBAT_LOG_EVENT_UNFILTERED` skip restored in Hekili | Task 6 (`Events.lua:174, 197`) |
-| The Warrior's Overpower/Revenge back to Classic's event-driven windows; the interim usability gate removed; blocked until the Warrior branch is in `forever` | Task 12 |
-| Phase B checkpoint: probes first, Overpower only after a dodge, swing times within 50 ms, a trace | Task 13 |
-| Decision 7: the GCD sites, the spec-1491 loop break and the talent read moved into the facade, a named task | Task 11 |
+| The Warrior's Overpower/Revenge back to Classic's event-driven windows; the interim usability gate removed | Task 13 |
+| Phase B checkpoint: probes first, Overpower only after a dodge, swing times within 50 ms, a trace | Task 14 |
+| Decision 7: the GCD sites, the spec-1491 loop break and the talent read moved into the facade, a named task | Task 12 |
 | Decision 9: the dev-tools listener hears modelled rows | by construction (it subscribes like `CLEU_HANDLER`, Task 2 makes its frame a facade frame); CHECKPOINT B item 8 |
-| `now` handlers (spec §12a): `now` read raw from `funcs` and setfenv'd to one context; Hekili's verbs onto the belief; reads by prebuilt proxies; cost, cooldown and GCD automatic; `pcall` and an error count; the drain without reset-apply-reset; zero allocation; the brief's six tests; Warrior `now` lines and `knownRank` in both environments | Task 10 (`now_spec`), Task 12 (`warrior_spec` "declares the now-state ..."), CHECKPOINT B item 9 |
-| Branch `virtualstate-event-facade` from `forever` at 0d480aa7; the controller creates it | Global Constraints, Task 1 Step 0 |
+| Race packs and resource modifiers (spec §12b): `Forever/Classes/` and `Forever/Races/`; `state.race_token`; `Hekili:NewRace` inert for another race, registering into `all` for the player's and written over the class's after Hekili's merge (`ns.applyRace`: the race wins a clash with the class and with `all`); `maxMods` (105 for a Gnome through the one maximum evaluator, the interval seeded at it, a plain read wins, point resources untouched); `costMods` scoped by `spells` resolved through id and `copy` ranks, every ability of the resource without `spells`, in both layers (Heroic Strike 13.5 and a charge, Rend 10 and none, Rend by its rank-2 ID; an unknown ID ignored; a fraction-of-maximum cost takes the pct), charges gated on the declared cost above 0 in both layers (`pct = -1, charges = 1` spends its charge), from one declaration (named core edits); allocation; the Warrior's 105 constant gone | Task 11 (`modifiers_spec`, `races_spec`), Task 13, CHECKPOINT B item 10 |
+| `now` handlers (spec §12a): `now` read raw from `funcs` and setfenv'd to one context; Hekili's verbs onto the belief; reads by prebuilt proxies; cost, cooldown and GCD automatic; `pcall` and an error count; the drain without reset-apply-reset; zero allocation; the brief's six tests; Warrior `now` lines and `knownRank` in both environments | Task 10 (`now_spec`), Task 13 (`warrior_spec` "declares the now-state ..."), CHECKPOINT B item 9 |
+| Branch `virtualstate-event-facade` from `forever` at 75d71c8b; the controller creates it | Global Constraints, Task 1 Step 0 |
 
-**2. Placeholder scan:** no "TBD", "TODO", "implement later" or "similar to Task N"; every code step is a `git apply` patch generated by the replay, or a script shown in full; every command has its replay output. Task 12's patches were replayed against `forever-warrior-profile` at `fc466148`, not against the `forever` they will meet; the task says how to re-apply them if the context moved.
+**2. Placeholder scan:** no "TBD", "TODO", "implement later" or "similar to Task N"; every code step is a `git apply` patch generated by the replay, or a script shown in full; every command has its replay output. Every task, Task 13 included, was replayed on `forever` at `75d71c8b`, the base the branch is created from.
 
 **3. Names and types across tasks:** `I.Events` (`E.CreateFrame`, `E.Subscribe`, `E.Deliver`, `E.Attach`, `E.STUB`), `S.Run`, `S.HANDLERS`, `S.UNITS`, `I.Log` (`L.Emit`, `L.Cast`, `L.Deliver`, `L.Current`, `L.Tick`, `L.OnTick`, `L.Aura`, `L.Energize`, `L.player`, `L.target`, `L.PAIR_WINDOW`, `L.ATTACK_TOLERANCE`, `L.unattributed`), `I.backdate`, `I.hekili`, `Facade.Attach`, `Facade.secrets`, `Facade.QUIET`, the classes `passthrough`/`hybrid`/`virtual` and the trace's `hybrid:raw`/`hybrid:model`, the read statuses `UnitIsUnit target-of` and `UnitAttackSpeed hostile`, and the Snapshot lines `events ...`, `rows ...`, `rows unattributed hits on us=...`, `facade secret passthrough answers: ...` are spelled the same in every task, spec and checkpoint line.
 
 **4. Review Focus:** each of the six lines has its pinned test in the owning task (Tasks 1, 6, 7, 8, 10).
 
-**Concerns for the orchestrator:** (a) Task 12 (and with it CHECKPOINT B) is blocked until `forever-warrior-profile` is merged into `forever`; its conflict resolution was replayed only against `fc466148`. (b) Decision 7's talent move keeps one Forever line in `ns.updateTalents` (storing the rank, the facade's 12th return): Hekili's original body has no rank, and the Warrior's multi-rank talents need one. (c) The 24 Phase 1 rows that became hybrid answer the client's raw values out of combat, where Phase 1 answered its beliefs; CHECKPOINT A item 4 shows both classes answering, and spec E12 names the edge at combat start. (d) Hits on us need a hostile whose target is the player; a training dummy never attacks, so CHECKPOINT B items 1-3 need an open-world mob. (e) `now` handlers deviate from the design brief in named places, each by the user's ruling or stated here: every verb takes Hekili's own signature (`applyDebuff`/`removeDebuff` unit first, `addStack(aura, duration, stacks)`, `setCooldown(action, duration)`; the user's ruling of 2026-10-15), so Classic handlers port by copying; `now` runs on `CastSuccess` only, not also on `ChannelStart` (ruling: no double run for a channel); a `gain`/`spend` naming no tracked resource is a counted error, never a guess (ruling); writes are live only during a cast's `now` (ruling); tracked extras get no effects (ruling); the brief's "`I.feed.*` writes stay" no longer applies (Tasks 6-7 retired them for the combat-log rows); a `now` may call Lua's pure helpers (`math`, `min`, `error` ...), which the brief's forbidden list does not name. A class file's file-local helper called from a `now` runs in the file's environment (Lua 5.1), so the Warrior passes its talent rank to `stanceKeep`.
+**Concerns for the orchestrator:** (a) Between Tasks 11 and 13 a Gnome Warrior's declared rage maximum is 110.25 (Expansive Mind over the Warrior's own 105 stopgap, which Task 13 removes); no checkpoint falls in between. (b) Decision 7's talent move keeps one Forever line in `ns.updateTalents` (storing the rank, the facade's 12th return): Hekili's original body has no rank, and the Warrior's multi-rank talents need one. (c) The 24 Phase 1 rows that became hybrid answer the client's raw values out of combat, where Phase 1 answered its beliefs; CHECKPOINT A item 4 shows both classes answering, and spec E12 names the edge at combat start. (d) Hits on us need a hostile whose target is the player; a training dummy never attacks, so CHECKPOINT B items 1-3 need an open-world mob. (e) `now` handlers deviate from the design brief in named places, each by the user's ruling or stated here: every verb takes Hekili's own signature (`applyDebuff`/`removeDebuff` unit first, `addStack(aura, duration, stacks)`, `setCooldown(action, duration)`; the user's ruling of 2026-10-15), so Classic handlers port by copying; `now` runs on `CastSuccess` only, not also on `ChannelStart` (ruling: no double run for a channel); a `gain`/`spend` naming no tracked resource is a counted error, never a guess (ruling); writes are live only during a cast's `now` (ruling); tracked extras get no effects (ruling); the brief's "`I.feed.*` writes stay" no longer applies (Tasks 6-7 retired them for the combat-log rows); a `now` may call Lua's pure helpers (`math`, `min`, `error` ...), which the brief's forbidden list does not name. A class file's file-local helper called from a `now` runs in the file's environment (Lua 5.1), so the Warrior passes its talent rank to `stanceKeep`.

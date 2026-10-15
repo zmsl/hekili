@@ -1,7 +1,7 @@
 # VirtualState: the full facade (reads and events)
 
 Date: 2026-10-15; amended the same day with the user's nine decisions (§13). Branch: `forever-warrior-profile` at
-b62beacf (`virtualstate-phase1` merged); the plan builds it on `virtualstate-event-facade` from `forever` at 0d480aa7.
+b62beacf (`virtualstate-phase1` merged); the plan builds it on `virtualstate-event-facade` from `forever` at 75d71c8b.
 This spec amends
 the Phase 1 spec (`docs/superpowers/specs/2026-10-14-hekili-virtualstate-design.md`, "spec §N") and replaces the
 Phase 2 investigation plan and the Phase 3 outline as the plan input for events: what they asked is settled
@@ -547,6 +547,7 @@ not emit a row from the flip; the class file's "usable now" branch, on the stric
 | The APL warning scanner (Task 9b, `VirtualState/AplWarnings.lua:65`, its `Hekili:LoadScript` call) | stays: target health and time to die are still secret or defaulted |
 | GCD 61304 → 29515 (`Classes.lua:2469`, `UI.lua:1494, 1695`, `Events.lua:1670`, `Options/Options.lua:4043`), the spec 1491 loop break (`Classes.lua:3135-3136`), the talent read in `ns.updateTalents` (`Events.lua:424-435`) | moved into the facade by a named follow-up task of the plan (decision 7): the five GCD sites back to 61304, which `C_Spell.GetSpellCooldown`, `GetSpellInfo` and `GetSpellTexture` ask as 29515; the loop back to `if not id then break end`, `GetSpecializationInfo` answering an id-0 slot as nil; `ns.updateTalents` back to its `GetTalentInfoByID( v, 1 )` body, which the facade answers from the `C_Traits` walk. One line of that body stays Forever's: retail and Classic Hekili model talents as on or off and have no rank, so the facade's rank comes as a 12th return and the body stores it (`state.talent[ k ].rank`) |
 | The drain call (`Core.lua:1570-1572`), `SpecChanged` (`Classes.lua:3355-3356`), the version gates | stay |
+| (new, §12b) race packs and their cost modifiers in the simulation: `Races.lua` (`Hekili:NewRace`, `ns.costMods`), `ns.costMods.Wrap( a )` in RegisterAbility, `ns.costMods.Spend( cost, ability )` in `ns.spendResources`, `state.race_token` and `state.race[ <token> ]`; the class files in `Forever/Classes/`, race files in `Forever/Races/` | core edits kept on purpose: one declaration (`all.resourceMods`) read by the belief and by Hekili's simulation, so the recommendation and the belief pay the same cost |
 
 ## 8. Secret safety, performance and the drain
 
@@ -621,7 +622,7 @@ In game (the user runs it; Warrior on a dummy):
    cost (`Events.lua:88-91`); each cast appears once in the history.
 6. Swing clock (phase B): over 60 s on a dummy, `state.swings.mh_actual` matches the time of the `PLAYER_SWING`
    that produced it within 50 ms, both for paired swings and for unpaired ones emitted when their window closes.
-7. The cycle cost with the full read facade against 0d480aa7 (Hekili's thread time per frame), tracing off.
+7. The cycle cost with the full read facade against 75d71c8b (Hekili's thread time per frame), tracing off.
 8. Phase B's two probes, first: `UnitAttackSpeed("target")` of a hostile in combat (plain or secret) and
    `UnitIsUnit("targettarget", "player")` in combat (plain or secret), and the pairing gap (§3).
 
@@ -655,9 +656,9 @@ they answer (G2 order, drain cost, the plain signals of §1.1).
   2, 4, 7.
 - **B. Own casts, swings, avoidance and hits on us (the Warrior's).** The row pool, queue and delivery with
   back-dating; own-cast rows; swing rows and our abilities' outcomes paired within the window; hits on us with the
-  targeting set and the attacker clocks; our casts' aura rows and energize from the drain's apply; the Phase 1 feeds
-  retired; the `COMBAT_LOG_EVENT_UNFILTERED` skip reverted; the Warrior file in Classic's shape (§6), once the
-  Warrior branch is in `forever`. This phase answers the user's example. Its checkpoint starts with the two probes
+  targeting set and the attacker clocks; our casts' aura rows and energize from the `now` family's writes (§12a);
+  the Phase 1 feeds retired; the `COMBAT_LOG_EVENT_UNFILTERED` skip reverted; the Warrior file in Classic's shape
+  (§6). This phase answers the user's example. Its checkpoint starts with the two probes
   and the pairing gap (step 8), which set `PAIR_WINDOW_MS` and confirm the attribution's inputs; then steps 3, 5, 6.
 - **`now` handlers (§12a).** After phase B's rows: a cast's effects from the class files' declared now-state; the
   drain's replay of Hekili's sim handlers retired; the Warrior's `now` lines with its windows.
@@ -742,6 +743,72 @@ charge = {
   zero allocation over 1000 casts; a `now` calling `gain` never touches `state.rage`; the reads through the context;
   the aura and energize rows.
 
+## 12b. Race packs and resource modifiers (approved 2026-10-15)
+
+Racials are race content, not class content: one file per race that has Forever-specific racials, registered for
+every class, and two declarative fields of a resource definition that talents and class auras can use too. The
+user's design (race packs) supersedes a registration in the shared `all` spec with a per-class scope table.
+
+- **Layout.** `Forever/Classes/Warrior.lua` (moved from `Forever/Warrior.lua`; `Forever/spec/` stays where `.busted`
+  finds it, its loader's path follows) and `Forever/Races/Gnome.lua`. The TOC lists every race
+  file unconditionally, after the class files. Races with only Hekili's stock racials (Berserking, Blood Fury,
+  Stoneform, Shadowmeld, Will to Survive) stay in the shared `all` spec; moving them is cosmetic and out of scope.
+- **Race token** (named core edit, `State.lua`): at load the core reads UnitRace once; the second return, the
+  locale-free token, goes into `state.race_token`, and `state.race[ <token, formatKey'd> ] = true` holds beside
+  Hekili's localized key.
+- **`Hekili:NewRace( token )`** (`Races.lua`, new core file after `State.lua`) returns a registration object that
+  mirrors the spec API: `race:RegisterAbility( key, def )`, `race:RegisterAura( key, def )` (both into the shared
+  `all` spec, over `all`'s own entry for the key), `race:RegisterResourceMod{ max = pct }` (every resource the loaded class registered) and
+  `race:RegisterCostMod{ aura = key, pct = n | flat = n, charges = k|nil, spells = { spell IDs }|nil }`. For a race
+  that is not the player's, every call is accepted and inert: the file runs unconditionally and loads headless.
+- **A race wins a key clash.** Hekili's `SpecializationChanged` merges the class's spec first and `all` last and only
+  adds keys still missing, so a race entry in `all` would lose to a class entry under the same key. `Races.lua` keeps
+  the keys the live race registered (`copy` aliases included), and `ns.applyRace( class )`, one named call after the
+  merge loop, writes them over `class.abilities` and `class.auras`: the race's registration overrides both the
+  class's and `all`'s own entry for that key.
+- **The Gnome's pack.** Eureka! (1259813, the other classes' 1259812, 1259817, 1259821, 1259823 as `copy`; 120 s, off
+  the GCD; its handler and its `now` apply `eureka` for 15 s with 3 stacks) and its aura; Expansive Mind
+  (`{ max = 0.05 }`); Eureka!'s cost modifier `{ aura = "eureka", pct = -0.10, charges = 3, spells = { ... } }`.
+  A cost-modifier aura is spell-family masked in the DB2, so the entry lists the abilities it covers: Eureka!
+  1259813's effect 0 masks are 1784679630 / 5 / 1 / 0 against the Warrior's SpellClassSet 4, which covers Heroic
+  Strike, Cleave, Slam, Execute, Overpower, Mortal Strike, Bloodthirst, Whirlwind, Shield Slam, Revenge, Thunder Clap,
+  Hamstring, Intercept, Mocking Blow, Pummel, Shield Bash and Spearing Strike, by the class file's rank-1 IDs, and
+  not Rend, Sunder Armor, the shouts, Concussion Blow, Death Wish, Disarm, Retaliation, Shield Block or Sweeping
+  Strikes. Another class appends its IDs from the wowdb query the file's comment gives. Clearcasting is masked the
+  same way (on Forever it excludes Wrath, Thrash and Savage Roar), so a class's own entry lists `spells` too; an
+  entry without `spells` means every ability paid from the resource.
+- **`maxMods`** (`{ pct = n, when = fn|nil }`): the maximum is the declared `max` (a number or a state-bound function,
+  default 100) × Π(1 + pct) over the holding modifiers. One evaluator, the Resources family's `maxOf`, applies it at
+  the build (so the interval's upper bound is seeded at the raised maximum) and at each CombatEnd, until a plain
+  maximum read arrives, which wins for good. A percentage maximum modifier never applies to a point resource
+  (combo points, runes, soul shards, holy power, chi, arcane charges, essence): the adapter leaves `maxMods` off them.
+- **Scope.** A modifier with `spells` covers the abilities whose `id` or a `copy` rank is listed; one without `spells`
+  covers every ability paid from the resource. Both layers read the scope the same way.
+- **Charges follow the declared cost.** A charged modifier takes a stack from a cast in scope whose declared (base)
+  cost is above 0, even when the discount brought the paid cost to 0 (`pct = -1, charges = 1` is Clearcasting's
+  shape); a cast with no declared cost takes none. Both layers gate on the declared cost, never on the discounted one.
+- **`costMods` in the belief.** `spells` resolve at the build to ability indices through the tracked abilities' ids
+  and `copy` ranks; an ID the class does not register is absent (no error); zero allocation per cast. `I.CostOf(a)`
+  applies every modifier in a's scope whose aura is believed up on the player at the belief time (`pct` multiplies,
+  `flat` adds, floored at 0), so the usability ladder's pin and the `now` family's automatic cost step (§12a) pay the
+  modified cost. With `charges`, each in-scope cast with a declared cost spends one believed stack (a modelled
+  sample), which goes at 0; an observed aura read still wins by the basis rule. Out-of-scope casts get no discount and take no charge.
+- **One declaration, two readers** (named core edits). The simulation reads the same `ns.raceMods`, never
+  per-ability code in a class file: `Races.lua` wraps every ability's `spend` when RegisterAbility builds it, so every
+  reader of `ability.spend` (`action.<x>.cost`, `ns.hasRequiredResources`, `state:TimeToReady`,
+  `ns.spendResources`) gets the declared cost through the modifiers in the ability's scope whose buff is up in
+  Hekili's `state` (a fraction-of-maximum cost takes the same `pct`, as in the belief); `ability.baseSpend` keeps the
+  declared cost for the belief, which applies the modifiers itself. `ns.spendResources` then, given the declared cost,
+  takes one stack of each charged in-scope modifier's buff (`state.removeStack`). Not a `spend` hook: `state.spend` also runs for spends that are no ability's cost (a stance
+  swap's lost rage), which must take no charge.
+- **Tests** (`VirtualState/spec/races_spec.lua`, `modifiers_spec.lua`): the Gnome file inert for another race;
+  registered for the Gnome, winning a key clash with `all` and, after the merge, with the class; max 105 through the
+  modifier with the interval seeded at it, a plain read winning, a point resource left at its own maximum; Heroic
+  Strike at 13.5 with Eureka! up and a charge per cast, Rend at 10 and no charge, in the belief and in the simulation;
+  a listed `copy` rank matching; no `spells` covering every ability, in both layers; `pct = -1, charges = 1` spending
+  its charge on the free cast, in both layers; a fraction-of-maximum cost taking the pct; an unknown ID ignored; an
+  observed aura read winning over modelled charges; zero allocation over 1000 casts.
+
 ## 13. Decisions taken (2026-10-15)
 
 The user settled all nine; each is a rule in the section named.
@@ -767,4 +834,5 @@ The user settled all nine; each is a rule in the section named.
    names the class that answered.
 9. **The dev-tools listener hears modelled rows** (§9), their provenance in the trace.
 
-Approved with them (2026-10-15): **`now` handlers** (§12a), which retire the drain's replay of Hekili's sim handlers.
+Approved with them (2026-10-15): **`now` handlers** (§12a), which retire the drain's replay of Hekili's sim handlers,
+and **race packs with resource modifiers** (§12b).
