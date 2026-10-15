@@ -1,17 +1,21 @@
 -- VirtualState/Adapter.lua
--- VirtualState's glue to Hekili (spec §3.6, §5): VirtualState.Start at PLAYER_LOGIN, the Hekili.VirtualState debug
--- handle, the urgent lane, the tracked set from the active spec's registrations (SpecChanged) and Drain. This first
--- version drains by folding only; the apply through the spec and the across-reset feeds arrive with Task 9.
--- Loads after Core.lua.
+-- VirtualState's glue to Hekili (spec §3.6, §4.6, §5): VirtualState.Start at PLAYER_LOGIN, the tracked set from the
+-- active spec's registrations (SpecChanged), the across-reset feeds (cast history, the real queue's cast and
+-- channel events, the swing fields), and Drain: the fold plus "apply through the spec", which runs each of our real
+-- casts through Hekili's own registered functions on `state` and records what changed as `modelled` samples.
+-- Loads after Core.lua. The apply follows Hekili's own simulation (Core.lua:1984-2045) and keeps Hekili's credits.
 
 local addon, ns = ...
-local GetTime = GetTime
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local S = I.Sources
+local Obs = VS.Obs
+local CAST_SUCCESS, CHANNEL_START = Obs.CastSuccess, Obs.ChannelStart
 
 local Hekili = _G[addon]
-local class = Hekili.Class
-local CreateFrame, debugprofilestop = CreateFrame, debugprofilestop
+local state, class = Hekili.State, Hekili.Class
+local spendResources = ns.spendResources
+local GetTime, UnitGUID, CreateFrame = GetTime, UnitGUID, CreateFrame
+local debugprofilestop = debugprofilestop
 local insert, sort = table.insert, table.sort
 
 local function wipe(t)
@@ -164,22 +168,268 @@ local function buildDef()
     end
 end
 
---- Rebuilds the tracked set from the active spec (decision 8). Called from Hekili:SpecializationChanged, after every
---- registration. Allocates; SpecChanged only.
+-- Read-before arrays for the apply (spec §5.3), sized at SpecChanged.
+local resBefore, cdBefore, buffExp, buffApp, buffCnt, debuffExp, debuffApp, debuffCnt = {}, {}, {}, {}, {}, {}, {}, {}
+local gcdBefore = 0
+
+--- Rebuilds the tracked set from the active spec (decision 8). Called at the end of Hekili:SpecializationChanged,
+--- after every registration. Allocates; SpecChanged only.
 function VS.SpecChanged()
     buildDef()
     I.Build(def, GetTime())
+    for i = 1, #def.resources do
+        resBefore[i] = 0
+    end
+    for a = 1, #def.abilities do
+        cdBefore[a] = 0
+    end
+    for j = 1, #def.auras do
+        buffExp[j], buffApp[j], buffCnt[j], debuffExp[j], debuffApp[j], debuffCnt[j] = 0, 0, 0, 0, 0, 0
+    end
 end
 
---- The fold (spec §5.2 steps 1, 2 and 4 without casts), called only from Hekili.Update after its guards.
+----------------------------------------------------------------------------------------------------------------------
+-- Feeding Hekili's across-reset caches (spec §4.6), synchronously in VirtualState's handlers, where CLEU did it.
+
+local function abilityOf(a)
+    local key = I.ab.key[a]
+    return key, key and class.abilities[key]
+end
+
+I.feed.CastSucceeded = function(a, spellID, guid)
+    local key, ability = abilityOf(a)
+    if not ability then
+        return
+    end
+    state:RemoveSpellEvent(key, true, "CAST_FINISH") -- as CLEU SPELL_CAST_SUCCESS (Events.lua:1613-1614)
+    state:AddToHistory(key, guid) -- the only writer of the cast history (Events.lua:912-943)
+end
+
+I.feed.CastStart = function(a, start, finish, guid)
+    local key, ability = abilityOf(a)
+    if ability and not ability.channeled then
+        -- as CLEU SPELL_CAST_START (Events.lua:1579); UNIT_SPELLCAST_DELAYED re-queues it (Events.lua:1076-1089)
+        state:QueueEvent(key, start, finish, "CAST_FINISH", guid or UnitGUID("target"), true)
+    end
+end
+
+I.feed.CastFailed = function(a)
+    local key, ability = abilityOf(a)
+    if not ability then
+        return
+    end
+    -- as CLEU SPELL_CAST_FAILED (Events.lua:1603-1606)
+    if state:RemoveSpellEvent(key, true, "CAST_FINISH") and ability.isProjectile then
+        state:RemoveSpellEvent(key, true, "PROJECTILE_IMPACT", true)
+    end
+end
+
+I.feed.ChannelStart = function(a, start, finish, guid)
+    local key, ability = abilityOf(a)
+    if not ability then
+        return
+    end
+    -- as CLEU SPELL_CAST_SUCCESS of a channel (Events.lua:1627-1635)
+    state:QueueEvent(key, start, finish, "CHANNEL_FINISH", guid, true)
+    local tickTime = ability.tick_time or (ability.aura and class.auras[ability.aura].tick_time)
+    if tickTime and tickTime > 0 then
+        local tick = tickTime
+        while start + tick < finish do
+            state:QueueEvent(key, start, start + tick, "CHANNEL_TICK", guid, true)
+            tick = tick + tickTime
+        end
+    end
+end
+
+I.feed.ChannelStop = function(a)
+    local key, ability = abilityOf(a)
+    if ability then
+        state:RemoveSpellEvents(key, true) -- ticks, finish, impacts (Events.lua:1609-1610)
+    end
+end
+
+-- The swing fields the dead CLEU SWING_* branch wrote (Events.lua:1684-1699), read by the swing regen models.
+I.feed.Swing = function(hand, t, duration)
+    local sw = state.swings
+    if hand == 1 then
+        sw.mh_actual, sw.mh_speed, sw.mh_projected = t, duration, t + duration
+    else
+        sw.oh_actual, sw.oh_speed, sw.oh_projected = t, duration, t + duration
+    end
+end
+
+----------------------------------------------------------------------------------------------------------------------
+-- Apply through the spec (spec §5.2, §5.3).
+
+local finishEvent = { type = "CAST_FINISH", action = "", time = 0, start = 0 }
+
+local function field(t, k)
+    return t and rawget(t, k) or 0
+end
+
+-- Step 3.5: the tracked fields before the apply. Each tracked resource's `actual` is set to the belief at the cast
+-- first, so a spend is never clipped at 0 by a stale `actual` (the cast succeeded: the game had the cost).
+local function readBefore(t)
+    local R = I.res
+    for r = 1, R.n do
+        local res = rawget(state, resourceKey[r])
+        if res then
+            local v = VS.Power(R.type[r], t).est
+            res.actual, res.fcount = v, 0
+            resBefore[r] = v
+        end
+    end
+    local A, cooldown = I.ab, state.cooldown
+    for a = 1, A.n do
+        cdBefore[a] = field(rawget(cooldown, A.key[a]), "expires")
+    end
+    gcdBefore = field(rawget(cooldown, "global_cooldown"), "expires")
+    local buff, debuff = state.buff, state.debuff
+    for j = 1, I.auras.nAura do
+        local k = auraKey[j]
+        local b, d = k and rawget(buff, k), k and rawget(debuff, k)
+        buffExp[j], buffApp[j], buffCnt[j] = field(b, "expires"), field(b, "applied"), field(b, "count")
+        debuffExp[j], debuffApp[j], debuffCnt[j] = field(d, "expires"), field(d, "applied"), field(d, "count")
+    end
+end
+
+-- Step 3.7: what changed, as `modelled` samples at t.
+local function readAfter(t, kind)
+    local R = I.res
+    for r = 1, R.n do
+        local res = rawget(state, resourceKey[r])
+        if res then
+            local delta = res.actual - resBefore[r]
+            if delta > 1e-6 or delta < -1e-6 then
+                I.ResourceShift(r, delta, t, kind)
+            end
+        end
+    end
+    local A, cooldown = I.ab, state.cooldown
+    for a = 1, A.n do
+        local cd = rawget(cooldown, A.key[a])
+        local e = field(cd, "expires")
+        if e ~= cdBefore[a] then
+            if A.ch[a] then
+                I.ChargesModel(a, field(cd, "charge"), e, t, kind)
+            else
+                I.CooldownModel(a, e, field(cd, "duration"), t, kind)
+            end
+        end
+    end
+    local g = field(rawget(cooldown, "global_cooldown"), "expires")
+    if g ~= gcdBefore then
+        I.GcdModel(g, t, kind)
+    end
+    local buff, debuff = state.buff, state.debuff
+    for j = 1, I.auras.nAura do
+        local k = auraKey[j]
+        if k then
+            local b, d = rawget(buff, k), rawget(debuff, k)
+            local be, de = field(b, "expires"), field(d, "expires")
+            if be ~= buffExp[j] or field(b, "count") ~= buffCnt[j] then
+                I.AuraModel(1, j, field(b, "applied"), be, field(b, "count"), t, kind, false)
+            end
+            if (de ~= debuffExp[j] or field(d, "count") ~= debuffCnt[j]) and I.auras.n >= 2 then
+                I.AuraModel(2, j, field(d, "applied"), de, field(d, "count"), t, kind, true)
+            end
+        end
+    end
+end
+
+local function gcdStep(ability)
+    if ability.gcd ~= "off" and state.cooldown.global_cooldown.remains == 0 then
+        state.setCooldown("global_cooldown", state.gcd.execute)
+    end
+end
+
+local function cooldownStep(key, ability)
+    if ability.charges and ability.charges > 1 and ability.recharge > 0 then
+        state.spendCharges(key, 1)
+    elseif ability.cooldown > 0 then
+        state.setCooldown(key, ability.cooldown)
+    end
+end
+
+-- Steps 3.3-3.7 for one own cast of ability index `a` at t.
+local function apply(kind, a, t)
+    local key = I.ab.key[a]
+    local ability = key and class.abilities[key]
+    if not ability or not ability.id or ability.id <= 0 then
+        return false
+    end
+    -- 3.3: combat start (R2), the value PLAYER_REGEN_DISABLED writes (Events.lua:856-863)
+    if ability.startsCombat and state.combat == 0 then
+        state.combat = t - 0.01
+    end
+    readBefore(t)
+    local now = state.now
+    if kind == CHANNEL_START then
+        state.offset, state.delay = t - now, 0
+        gcdStep(ability)
+        cooldownStep(key, ability)
+        state:RunHandler(key) -- takes the channel path (State.lua:6135-6137)
+        spendResources(key)
+    elseif (ability.cast or 0) > 0 and not ability.channeled then
+        -- a hard cast, at its finish: the GCD at its start, then the CAST_FINISH event at the finish
+        local started = I.ab.castStartT[a]
+        if started > 0 and started < t then
+            state.offset, state.delay = started - now, 0
+            gcdStep(ability)
+        end
+        state.offset, state.delay = t - now, 0
+        finishEvent.action, finishEvent.time, finishEvent.start = key, t, started
+        state:HandleEvent(finishEvent) -- charges/cooldown, spend, handler (State.lua:5921-5953)
+    else
+        state.offset, state.delay = t - now, 0
+        gcdStep(ability)
+        cooldownStep(key, ability)
+        spendResources(key)
+        state:RunHandler(key)
+    end
+    readAfter(t, kind)
+    return true
+end
+I.Apply = apply
+
+--- The fold plus apply through the spec (spec §5.2), called only from Hekili.Update after its guards. Allocates
+--- nothing beyond what Hekili's own reset and handlers allocate.
 ---@param cutoff number GetTime() at the drain's entry
 function VS.Drain(cutoff)
     if not I.built then
         return
     end
     local t0 = debugprofilestop()
-    S.RunPolls(cutoff)
-    I.Fold(cutoff, false)
+    local genP, genT = VS.AuraGen("player"), VS.AuraGen("target")
+    S.RunPolls(cutoff) -- step 1
+    local applied, reset = 0, false
+    while true do
+        local kind, a, t = I.Fold(cutoff, true) -- steps 2 and 3.8
+        if not kind then
+            break
+        end
+        I.pinned = t -- 3.1: the facade answers at the cast's time (R1)
+        if not reset then
+            state.reset() -- 3.2: once, full ("Primary", State.lua:6181-6184)
+            reset = true
+        end
+        if apply(kind, a, t) then
+            applied = applied + 1
+        end
+    end
+    -- 4: restore, unpin, settle, and one more full reset when anything was applied (R2, R3)
+    state.offset, state.delay = 0, 0
+    I.pinned = nil
     I.Settle(cutoff)
-    I.drainMs, I.drainCasts = debugprofilestop() - t0, 0
+    if reset then
+        state.reset()
+    end
+    -- 5: Hekili rescans a unit's auras when its believed set moved (G1)
+    if VS.AuraGen("player") ~= genP then
+        state.player.updated = true
+    end
+    if VS.AuraGen("target") ~= genT then
+        state.target.updated = true
+    end
+    I.drainMs, I.drainCasts = debugprofilestop() - t0, applied
 end
