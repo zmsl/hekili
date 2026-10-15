@@ -1257,10 +1257,66 @@ do
         instanceDB[ aura.auraInstanceID ] = aura.isBossAura or aura.isStealable or model and ( model.shared or model.used and aura.isFromPlayerOrPlayerPet )
     end
 
-    -- Forever: the payload is secret in combat (a boolean test of data.isFullUpdate raises), so the handler no longer
-    -- reads it; VirtualState's drain sets state[ unit ].updated when that unit's believed auras changed (spec G1).
-    RegisterUnitEvent( "UNIT_AURA", "player", "target", function( event, unit )
-        Hekili:ForceUpdate( event )
+    RegisterUnitEvent( "UNIT_AURA", "player", "target", function( event, unit, data )
+        local isPlayer = ( unit == "player" )
+        instanceDB = isPlayer and playerInstances or targetInstances
+
+        if data.isFullUpdate then
+            wipe( instanceDB )
+
+            ForEachAura( unit, "HELPFUL", nil, StoreInstanceInfo, true )
+            ForEachAura( unit, "HARMFUL", nil, StoreInstanceInfo, true )
+
+            state[ unit ].updated = true
+            Hekili:ForceUpdate( "UNIT_AURA_FULL", true )
+            return
+        end
+
+        local forceUpdateNeeded = false
+
+        if data.addedAuras and #data.addedAuras > 0 then
+            for _, aura in ipairs( data.addedAuras ) do
+                local id = aura.spellId
+                local model = class.auras[ id ]
+
+                local ofConcern = aura.isBossAura or aura.isStealable or model and ( model.shared or model.used and aura.isFromPlayerOrPlayerPet )
+                instanceDB[ aura.auraInstanceID ] = ofConcern
+
+                if ofConcern then
+                    forceUpdateNeeded = true
+                end
+            end
+        end
+
+        if data.updatedAuraInstanceIDs and #data.updatedAuraInstanceIDs > 0 then
+            for _, instance in ipairs( data.updatedAuraInstanceIDs ) do
+                local aura = GetAuraDataByAuraInstanceID( unit, instance )
+                local ofConcern = false
+
+                if aura then
+                    local id = aura.spellId
+                    local model = class.auras[ id ]
+
+                    ofConcern = aura.isBossAura or aura.isStealable or model and ( model.shared or model.used and aura.isFromPlayerOrPlayerPet )
+                    instanceDB[ instance ] = ofConcern
+                end
+
+                if ofConcern then
+                    forceUpdateNeeded = true
+                end
+            end
+        end
+
+        if data.removedAuraInstanceIDs and #data.removedAuraInstanceIDs > 0 then
+            for _, instance in ipairs( data.removedAuraInstanceIDs ) do
+                if instanceDB[ instance ] then forceUpdateNeeded = true end
+                instanceDB[ instance ] = nil
+            end
+        end
+
+        state[ unit ].updated = true
+
+        if forceUpdateNeeded then Hekili:ForceUpdate( "UNIT_AURA_ITER" ) end
     end )
 
     RegisterEvent( "PLAYER_TARGET_CHANGED", function( event )
