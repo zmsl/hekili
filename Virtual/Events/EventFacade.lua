@@ -204,7 +204,7 @@ local function deliver(event, a1, a2, a3, a4, a5, a6, a7, a8)
                         E.errors, E.lastError = E.errors + 1, err
                         local handler = client.geterrorhandler
                         if handler then
-                            handler()(err)
+                            pcall(handler(), err) -- a raising handler must not skip the depth count or wedge the log
                         end
                     end
                 end

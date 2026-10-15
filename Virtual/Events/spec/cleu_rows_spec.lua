@@ -135,6 +135,27 @@ describe("the synthesized combat log", function()
         assert.are.equal(1, L.requeued)
     end)
 
+    it("keeps delivering rows when the error handler itself raises", function()
+        saved.geterrorhandler = rawget(_G, "geterrorhandler") or false
+        _G.geterrorhandler = function()
+            return function()
+                error("handler boom")
+            end
+        end
+        local f = I.Events.CreateFrame("Frame")
+        f:SetScript("OnEvent", function()
+            error("subscriber boom")
+        end)
+        f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+        L.Cast("SPELL_CAST_SUCCESS", 1, fs.REND, "")
+        L.Deliver()
+        assert.are.equal(0, I.Events.depth)
+        L.Cast("SPELL_CAST_SUCCESS", 2, fs.SHOUT, "")
+        L.Deliver()
+        assert.are.equal(2, #got)
+        assert.are.equal(fs.SHOUT, got[2].row[12])
+    end)
+
     it("drops the oldest row when the pool is full, and counts it", function()
         for i = 1, L.POOL + 6 do
             L.Cast("SPELL_CAST_SUCCESS", i, fs.REND, "")

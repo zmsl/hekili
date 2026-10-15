@@ -41,6 +41,28 @@ describe("Adapter", function()
         fs.clock = nil
     end)
 
+    it("opens the snapshot log with one failure line when Snapshot raises, and Hekili's setup still runs", function()
+        local lines, setup = {}, 0
+        local hk = fs.new(9)
+        function hk:SetupDebug()
+            setup = setup + 1
+        end
+        function hk:Debug(fmt, ...)
+            lines[#lines + 1] = string.format(fmt, ...)
+        end
+        load.adapter(ns, hk)
+        hk.ActiveDebug = true
+        local snapshot = VS.Snapshot
+        VS.Snapshot = function()
+            error("snap boom", 0)
+        end
+        local ok = pcall(hk.SetupDebug, hk, "Primary")
+        VS.Snapshot = snapshot
+        assert.is_true(ok)
+        assert.are.equal(1, setup)
+        assert.are.same({ "[vs] snapshot failed: snap boom" }, lines)
+    end)
+
     it("builds the tracked set from the registrations", function()
         local out = {}
         assert.are.equal(3, VS.Tracked("ability", out))

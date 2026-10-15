@@ -33,7 +33,8 @@ do
     function Hekili:SetupDebug(display)
         setupDebug(self, display)
         if self.ActiveDebug and display then
-            self:Debug("%s", VS.Snapshot())
+            local ok, s = pcall(VS.Snapshot) -- a raising Snapshot must not abort Hekili's snapshot
+            self:Debug(ok and "%s" or "[vs] snapshot failed: %s", s)
         end
     end
 end
