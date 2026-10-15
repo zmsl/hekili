@@ -13,8 +13,11 @@ VirtualState\VirtualState.lua
 VirtualState\ObsLog.lua
 VirtualState\Belief.lua
 VirtualState\Families\Player.lua
+VirtualState\Families\Casts.lua
 VirtualState\Sources\Sources.lua
 VirtualState\Sources\Player.lua
+VirtualState\Sources\Spellbook.lua
+VirtualState\Sources\Casts.lua
 VirtualState\Snapshot.lua
 
 Hekili.lua

@@ -2466,7 +2466,7 @@ end
 
 all:RegisterAbilities( {
     global_cooldown = {
-        id = 61304,
+        id = 29515, -- Forever's GCD spell (retail: 61304; cleanup Q6)
         cast = 0,
         cooldown = 0,
         gcd = "spell",
