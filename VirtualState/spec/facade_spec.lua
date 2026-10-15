@@ -213,6 +213,13 @@ describe("ns.Facade", function()
         assert.is_nil(Facade.C_Spell.GetSpellCharges(fs.REND))
     end)
 
+    it("answers a believed-ready tracked cooldown in the client's ready shape", function()
+        I.CooldownModel(3, 15, 30, 5, VS.Obs.CastSuccess) -- learned length 30, ready since 15
+        ctl.now = 20
+        local c = Facade.C_Spell.GetSpellCooldown(fs.REND)
+        assert.are.same({ 0, 0, false }, { c.startTime, c.duration, c.isActive })
+    end)
+
     it("passes the player's own casts through and answers the target's from TargetCast", function()
         ctl.casting = { 1000, 2500 }
         assert.are.equal(1000, select(4, Facade.UnitCastingInfo("player")))

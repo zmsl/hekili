@@ -411,6 +411,12 @@ kept("C_Spell.GetSpellCooldown", "virtual", function(spellID)
         CD.isActive = active == true
         return CD
     end
+    if rec.est <= t then
+        -- believed ready: the client's ready shape, not a finished cooldown Hekili would read as running
+        CD.startTime, CD.duration = 0, 0
+        CD.isActive = active == true
+        return CD
+    end
     local len = VS.CooldownLength(spellID)
     CD.startTime, CD.duration = rec.est - len, len
     if active ~= nil then

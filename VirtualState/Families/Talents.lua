@@ -7,7 +7,9 @@
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 
-local T = { n = 0, key = {}, spell = {}, max = {}, rank = {}, bySpell = {}, alias = {} }
+-- unmatched: the last walk's definition spells no talent or alias names (cap UNMATCHED, the walk resets nUnmatched)
+local T = { n = 0, key = {}, spell = {}, max = {}, rank = {}, bySpell = {}, alias = {}, unmatched = {}, nUnmatched = 0 }
+I.TALENT_UNMATCHED = 32
 I.talents = T
 I.talentGen = 0
 
@@ -56,6 +58,11 @@ function VS.TalentGen()
 end
 
 I.OnSnapshot(function(out)
+    local line = string.format("talent walk unmatched: %d", T.nUnmatched)
+    if T.nUnmatched > 0 then
+        line = line .. " [" .. table.concat(T.unmatched, " ", 1, math.min(T.nUnmatched, I.TALENT_UNMATCHED)) .. "]"
+    end
+    out[#out + 1] = line
     for k = 1, T.n do
         out[#out + 1] = string.format("talent %s spell=%d rank=%d/%d", tostring(T.key[k]), T.spell[k], T.rank[k], T.max[k])
     end

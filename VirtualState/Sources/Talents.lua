@@ -78,6 +78,12 @@ local function walkNode(api, cfg, nodeID)
             if k and T.alias[spell] then
                 aliasHits = aliasHits + 1
             end
+            if not k and type(spell) == "number" then
+                T.nUnmatched = T.nUnmatched + 1
+                if T.nUnmatched <= I.TALENT_UNMATCHED then
+                    T.unmatched[T.nUnmatched] = spell
+                end
+            end
             if k then
                 local r = (#entries == 1 or entry == activeId) and rank or 0
                 if r > T.max[k] then
@@ -101,6 +107,7 @@ local function walk(api, t)
         walkRank[k] = 0
     end
     aliasHits = 0
+    T.nUnmatched = 0
     local cfg = call(api, activeConfig)
     local info = type(cfg) == "number" and call(api, configInfo, cfg) or nil
     local trees = type(info) == "table" and Plain(api, info.treeIDs) or nil

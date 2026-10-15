@@ -52,6 +52,17 @@ describe("facts and polls", function()
         assert.are.same({ 3, gen + 1 }, { VS.Talent(12286), VS.TalentGen() })
         assert.are.equal(0, VS.Talent(99999))
         assert.are.equal("unused", S.status["talent walk aliases"])
+        assert.is_truthy(VS.Snapshot():find("talent walk unmatched: 0\n", 1, true))
+    end)
+
+    it("names the definition spells the walk could not match", function()
+        local defs = { [700] = 12286, [710] = 54321 }
+        ctl.traits = { config = 1, trees = { 7 }, nodeIDs = { 70, 71 }, nodes = {}, defs = defs }
+        ctl.traits.nodes[70] = { entryIDs = { 700 }, activeRank = 2 }
+        ctl.traits.nodes[71] = { entryIDs = { 710 }, activeRank = 1 }
+        ctl.Fire("TRAIT_CONFIG_UPDATED")
+        assert.are.equal(2, VS.Talent(12286))
+        assert.is_truthy(VS.Snapshot():find("talent walk unmatched: 1 [54321]", 1, true))
     end)
 
     it("reads totems out of combat and takes an update in combat with no cast as a destruction", function()
