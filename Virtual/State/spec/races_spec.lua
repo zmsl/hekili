@@ -47,7 +47,9 @@ describe("race packs", function()
         _G.Hekili = hekili
         ns = {}
         assert(loadfile("Races.lua"))("Hekili", ns)
-        assert(loadfile("Forever/Races/Gnome.lua"))("Hekili", ns)
+        for _, file in ipairs({ "Gnome", "NightElf", "Tauren" }) do -- every race file runs, as Hekili.toc loads them
+            assert(loadfile("Forever/Races/" .. file .. ".lua"))("Hekili", ns)
+        end
     end
 
     -- An ability as Classes.lua's RegisterAbility builds it: function fields in `funcs`, called on access, wrapped.
@@ -162,6 +164,27 @@ describe("race packs", function()
         assert.are.equal(15, heroic_strike.spend)
     end)
 
+    it("registers Elune's Light and its aura for a Night Elf, War Stomp for a Tauren, and neither elsewhere", function()
+        load("NightElf")
+        local light = all.abilities.elunes_light
+        assert.are.same({ 1259799, 0, 180, "off", "cooldowns" }, { light.id, light.cast, light.cooldown, light.gcd, light.toggle })
+        assert.are.same({ 1259799, 15 }, { all.auras.elunes_light.id, all.auras.elunes_light.duration })
+        assert.is_nil(all.abilities.war_stomp)
+        assert.are.same({ maxMods = {}, costMods = {} }, ns.raceMods) -- no resource or cost modifier
+        load("Tauren")
+        local stomp = all.abilities.war_stomp
+        assert.are.same({ 20549, 0.5, 120, "off" }, { stomp.id, stomp.cast, stomp.cooldown, stomp.gcd })
+        assert.are.same({ 20549, 2 }, { all.auras.war_stomp.id, all.auras.war_stomp.duration })
+        assert.is_nil(all.abilities.elunes_light)
+        for _, a in ipairs({ light, stomp }) do
+            assert.is_function(a.now)
+            assert.are_not.equal(a.handler, a.now) -- two closures: one shared would be refused
+        end
+        load("Gnome")
+        assert.is_not_nil(all.abilities.eureka)
+        assert.is_nil(all.abilities.elunes_light or all.abilities.war_stomp)
+    end)
+
     it("takes a class file's spec:RegisterCostMod (Classes.lua) into the same list, for any race", function()
         load("Human")
         -- the mixin's entry as Classes.lua declares it, compiled with this `ns` as its upvalue
@@ -190,4 +213,92 @@ describe("race packs", function()
         assert.are.equal(10, shout.spend)
         assert.are.equal(3, state.buff.eureka.count)
     end)
+end)
+
+-- The race packs' `now` handlers as VirtualState runs them: bound to Families/Now.lua's context, on our own casts.
+describe("race packs in VirtualState's now context", function()
+    local vload = require("Virtual.State.spec.helpers.load")
+    local fake = require("Virtual.State.spec.helpers.fake_api")
+    local fs = require("Virtual.State.spec.helpers.fake_spec")
+    local saved
+
+    before_each(function()
+        saved = {}
+        for _, k in ipairs({ "Hekili", "GetTime", "UnitGUID", "CreateFrame", "issecretvalue", "debugprofilestop" }) do
+            saved[k] = rawget(_G, k) or false
+        end
+    end)
+
+    after_each(function()
+        for k, v in pairs(saved) do
+            _G[k] = v or nil
+        end
+        fs.clock = nil
+    end)
+
+    -- What the race files register into `all` for the player's race `token` (Races.lua against a stand-in Hekili).
+    local function registrations(token)
+        local all = { abilities = {}, auras = {} }
+        function all:RegisterAbility(key, def)
+            self.abilities[key] = def
+        end
+        function all:RegisterAura(key, def)
+            self.auras[key] = def
+        end
+        _G.Hekili = { State = { race_token = token }, Class = { specs = { [0] = all } } }
+        local rns = {}
+        assert(loadfile("Races.lua"))("Hekili", rns)
+        for _, file in ipairs({ "Gnome", "NightElf", "Tauren" }) do
+            assert(loadfile("Forever/Races/" .. file .. ".lua"))("Hekili", rns)
+        end
+        return all
+    end
+
+    for _, case in ipairs({
+        { "Gnome", "eureka", 1259813, "player" },
+        { "NightElf", "elunes_light", 1259799, "player" },
+        { "Tauren", "war_stomp", 20549, "target" },
+    }) do
+        local token, key, id, unit = case[1], case[2], case[3], case[4]
+        it("runs the " .. token .. "'s `now` (" .. key .. ") in the context without an error", function()
+            local all = registrations(token)
+            local a, aura = all.abilities[key], all.auras[key]
+            local api, ctl = fake.new()
+            ctl.now = 1
+            _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue = api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
+            _G.debugprofilestop = function()
+                return 0
+            end
+            local ns = vload.module()
+            local VS, I = ns.VirtualState, ns.VirtualStateInternal
+            local h = fs.new(9)
+            h.Class.abilities[key] = {
+                key = key,
+                id = a.id,
+                copy = a.copy,
+                cast = 0,
+                cooldown = a.cooldown,
+                gcd = a.gcd,
+                charges = 1,
+                recharge = 0,
+                funcs = { now = a.now, handler = a.handler },
+            }
+            h.Class.auras[key] = { key = key, id = aura.id, copy = aura.copy, duration = aura.duration, max_stack = aura.max_stack }
+            fs.clock = api.GetTime
+            ns.spendResources = fs.spend
+            ns.ResourceRegenerates = function()
+                return false
+            end
+            vload.adapter(ns, h)
+            VS.Start(api)
+            VS.SpecChanged()
+            ctl.Tick(1)
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", id)
+            ctl.Tick(5.01)
+            VS.Drain(5.02)
+            assert.are.same({ 0, 1 }, { I.nowErrors, I.nowRuns }, tostring(I.nowError))
+            assert.is_not_nil(VS.Aura(unit, id, 5.1))
+        end)
+    end
 end)
