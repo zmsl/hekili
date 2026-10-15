@@ -3,9 +3,10 @@
 -- cast times and durations from the Forever DB2 at build 1.60.1.70338, wowdb; a cost of 100 there is 10 rage), Forever's
 -- Victory Rush and Spearing Strike, rage with its main-hand swing model and Bloodrage's rage over time, stances from
 -- the plain shapeshift reads, and the default priorities.
--- Talent modifiers: only rank 1 of each talent is in the Forever DB2, so a cost modifier is rank 1's value x the rank
--- (Classic's own convention), floored at 0; cooldown and duration modifiers are modelled only where every rank is in
--- the DB2 (Improved Taunt, Improved Shield Block). The in-game checkpoint compares the costs (Snapshot cost= / read=).
+-- Talents: the 52 live nodes (a ForeverProbe export of the client, 1.60.1.70374, 2026-10-15). Only rank 1 of each
+-- talent is in the Forever DB2, so a cost modifier is rank 1's value x the rank (Classic's own convention), floored
+-- at 0; no cooldown or duration modifier is modelled. The in-game checkpoint compares the costs (Snapshot cost= /
+-- read=).
 -- Unmodelled: Improved Slam's cast and GCD -0.5 s and cooldown -3 s (12862; only its replacement spells are tracked).
 -- Credits: Hekili (registration API and pack format); the abilities, auras, stance swap, queue prediction and the Arms
 -- and Fury priorities are ported from Hekili's Classic profile (origin/classic:Classic/Warrior.lua,
@@ -54,7 +55,6 @@ local THUNDER_CLAP = { 6343, 8198, 8204, 8205, 11580, 11581 }
 local THUNDER_CLAP_DURATION = { 10, 14, 18, 22, 26, 30 }
 local VICTORY_RUSH = { 402927 }
 local WHIRLWIND = { 1680 }
-local SHIELD_BLOCK_BONUS = { 0.5, 1, 2 } -- Improved Shield Block's seconds by rank (all three in the DB2)
 local TACTICAL_MASTERY = 1310185 -- Forever's level 14 passive: rage kept on a stance swap
 
 local function rest( ids )
@@ -75,7 +75,7 @@ local function knows( ids )
     return function () return knownRank( ids ) > 0 end
 end
 
--- A reactive ability's window (Execute, Overpower's stance, Revenge, Victory Rush) from the plain usability read:
+-- A reactive ability's window (Execute, Revenge, Victory Rush) from the plain usability read:
 -- usable, or unusable only for lack of rage. The client's answer now, not at the simulated time (as Classic's
 -- reset_precast read it); Forever has no combat log to time the window.
 local function reactive( ids )
@@ -83,6 +83,13 @@ local function reactive( ids )
     if r == 0 then return false end
     local usable, noMana = IsSpellUsable( ids[ r ] )
     return usable == true or noMana == true
+end
+
+-- Usable now by the plain read, not merely short of a cost: Overpower's second cost (a combo point a dodge grants)
+-- reads as "short" without a dodge.
+local function usableNow( ids )
+    local r = knownRank( ids )
+    return r > 0 and IsSpellUsable( ids[ r ] ) == true
 end
 
 -- Rage a second of the main hand's unhasted weapon speed: a white swing brings rate x that speed (haste adds swings,
@@ -126,118 +133,73 @@ spec:RegisterResource( Enum.PowerType.Rage, {
     },
 } )
 
--- Talents: { node (unused on Forever), the rank 1 spell, max rank }, all three trees (wowdb talents WARRIOR); keys are
--- Classic's where the DB2's name is blank or shared (Weaponmaster, Iron Will, Defiance, the polearm specialization).
--- VirtualState maps the trait walk's spells to them.
+-- Talents: { node (unused on Forever), the definition spell, max rank }: the 52 nodes of Forever's one talent tree,
+-- grouped by their columns as the pane shows them. Keys are Classic's where the talent exists (Bastion keeps Classic's
+-- one_handed_weapon_specialization), snake_case names for the Forever-only ones. Each node reported one definition
+-- spell at every rank the export saw (owned nodes at ranks 1-5 report their rank 1 spell; Iron Will and Defiance
+-- define themselves by a higher DB2 rank's ID), so there are no rank aliases. VirtualState maps the trait walk's
+-- spells to them.
 spec:RegisterTalents( {
-    -- Arms (18)
+    -- Arms (17)
     improved_heroic_strike           = { 0, 12282, 3 },
     deflection                       = { 0, 16462, 5 },
     improved_rend                    = { 0, 12286, 3 },
     improved_charge                  = { 0, 12285, 2 },
     improved_tactical_mastery        = { 0, 12295, 5 },
-    improved_thunder_clap            = { 0, 12287, 3 },
     improved_overpower               = { 0, 12290, 2 },
     anger_management                 = { 0, 12296, 1 },
     deep_wounds                      = { 0, 12834, 3 },
-    two_handed_weapon_specialization = { 0, 12163, 5 },
+    two_handed_weapon_specialization = { 0, 12163, 3 },
     impale                           = { 0, 16493, 2 },
-    axe_specialization               = { 0, 12700, 5 },
     sweeping_strikes                 = { 0, 12292, 1 },
-    mace_specialization              = { 0, 12284, 5 },
-    sword_specialization             = { 0, 12281, 5 },
-    polearm_specialization           = { 0, 12165, 5 },
     improved_hamstring               = { 0, 12289, 3 },
     mortal_strike                    = { 0, 12294, 1 },
-    -- Fury (18)
+    improved_slam                    = { 0, 12862, 2 }, -- effect unmodelled
+    -- Forever-only; Weaponmaster (in place of the four weapon specializations) and Bloodthrill unmodelled.
+    weaponmaster                     = { 0, 1290261, 5 },
+    spearing_strike                  = { 0, 1310222, 1 },
+    bloodthrill                      = { 0, 1289682, 5 },
+    -- Fury (17)
     booming_voice                    = { 0, 12321, 5 },
     cruelty                          = { 0, 12320, 5 },
-    improved_demoralizing_shout      = { 0, 12324, 5 },
     unbridled_wrath                  = { 0, 12322, 5 },
-    improved_cleave                  = { 0, 12329, 3 },
     piercing_howl                    = { 0, 12323, 1 },
     blood_craze                      = { 0, 16487, 3 },
-    improved_battle_shout            = { 0, 12318, 5 },
     dual_wield_specialization        = { 0, 23584, 5 },
     improved_execute                 = { 0, 20502, 2 },
     enrage                           = { 0, 12317, 5 },
-    improved_slam                    = { 0, 12862, 5 },
     death_wish                       = { 0, 12328, 1 },
     improved_intercept               = { 0, 20504, 2 },
     improved_berserker_rage          = { 0, 20500, 2 },
     flurry                           = { 0, 12319, 5 },
     bloodthirst                      = { 0, 23881, 1 },
-    -- Forever-only, not in the DB2 talent table (DB2 spell_info name); max rank 3 from the talent pane; effect unmodelled.
+    -- Forever-only: Raging Blows (-3 rage on Cleave and Whirlwind); the others unmodelled.
     furious_precision                = { 0, 1323963, 3 },
-    -- Protection (17)
+    raging_blows                     = { 0, 1310315, 1 },
+    lingering_rage                   = { 0, 1323964, 5 },
+    gore_drinker                     = { 0, 1323967, 2 },
+    -- Protection (18)
     shield_specialization            = { 0, 12298, 5 },
     anticipation                     = { 0, 12297, 5 },
     improved_bloodrage               = { 0, 12301, 2 },
-    toughness                        = { 0, 12299, 5 },
-    iron_will                        = { 0, 12300, 5 },
+    improved_thunder_clap            = { 0, 12287, 3 },
+    iron_will                        = { 0, 12962, 5 },
     last_stand                       = { 0, 12975, 1 },
-    improved_shield_block            = { 0, 12945, 3 },
     improved_revenge                 = { 0, 12797, 3 },
-    defiance                         = { 0, 12303, 5 },
+    defiance                         = { 0, 12792, 3 },
     improved_sunder_armor            = { 0, 12308, 3 },
     improved_disarm                  = { 0, 12313, 3 },
-    improved_taunt                   = { 0, 12302, 2 },
     improved_shield_wall             = { 0, 12312, 2 },
     concussion_blow                  = { 0, 12809, 1 },
     improved_shield_bash             = { 0, 12311, 2 },
-    one_handed_weapon_specialization = { 0, 16538, 5 },
+    one_handed_weapon_specialization = { 0, 16538, 5 }, -- "Bastion" on Forever
     shield_slam                      = { 0, 23922, 1 },
+    -- Forever-only: Focused Rage (-3 rage a rank on the offensive abilities), Vanguard (Charge in Defensive Stance);
+    -- Master of Defense unmodelled.
+    focused_rage                     = { 0, 29787, 3 },
+    vanguard                         = { 0, 1310317, 1 },
+    master_of_defense                = { 0, 1310316, 2 },
 } )
-
--- The higher rank spells of each talent, in case the trait walk names a rank rather than rank 1 (spec §3.6 Track).
-ns.VirtualState.Track( { talents = {
-    -- Arms
-    [ 12663 ] = 12282, [ 12664 ] = 12282,
-    [ 16463 ] = 16462, [ 16464 ] = 16462, [ 16465 ] = 16462, [ 16466 ] = 16462,
-    [ 12658 ] = 12286, [ 12659 ] = 12286,
-    [ 12697 ] = 12285,
-    [ 12676 ] = 12295, [ 12677 ] = 12295, [ 12678 ] = 12295, [ 12679 ] = 12295,
-    [ 12665 ] = 12287, [ 12666 ] = 12287,
-    [ 12963 ] = 12290,
-    [ 12849 ] = 12834, [ 12867 ] = 12834,
-    [ 12711 ] = 12163, [ 12712 ] = 12163, [ 12713 ] = 12163, [ 12714 ] = 12163,
-    [ 16494 ] = 16493,
-    [ 12781 ] = 12700, [ 12783 ] = 12700, [ 12784 ] = 12700, [ 12785 ] = 12700,
-    [ 12701 ] = 12284, [ 12702 ] = 12284, [ 12703 ] = 12284, [ 12704 ] = 12284,
-    [ 12812 ] = 12281, [ 12813 ] = 12281, [ 12814 ] = 12281, [ 12815 ] = 12281,
-    [ 12830 ] = 12165, [ 12831 ] = 12165, [ 12832 ] = 12165, [ 12833 ] = 12165,
-    [ 12668 ] = 12289, [ 23695 ] = 12289,
-    -- Fury
-    [ 12835 ] = 12321, [ 12836 ] = 12321, [ 12837 ] = 12321, [ 12838 ] = 12321,
-    [ 12852 ] = 12320, [ 12853 ] = 12320, [ 12855 ] = 12320, [ 12856 ] = 12320,
-    [ 12876 ] = 12324, [ 12877 ] = 12324, [ 12878 ] = 12324, [ 12879 ] = 12324,
-    [ 12999 ] = 12322, [ 13000 ] = 12322, [ 13001 ] = 12322, [ 13002 ] = 12322,
-    [ 12950 ] = 12329, [ 20496 ] = 12329,
-    [ 16489 ] = 16487, [ 16492 ] = 16487,
-    [ 12857 ] = 12318, [ 12858 ] = 12318, [ 12860 ] = 12318, [ 12861 ] = 12318,
-    [ 23585 ] = 23584, [ 23586 ] = 23584, [ 23587 ] = 23584, [ 23588 ] = 23584,
-    [ 20503 ] = 20502,
-    [ 13045 ] = 12317, [ 13046 ] = 12317, [ 13047 ] = 12317, [ 13048 ] = 12317,
-    [ 12330 ] = 12862, [ 20497 ] = 12862, [ 20498 ] = 12862, [ 20499 ] = 12862,
-    [ 20505 ] = 20504,
-    [ 20501 ] = 20500,
-    [ 12971 ] = 12319, [ 12972 ] = 12319, [ 12973 ] = 12319, [ 12974 ] = 12319,
-    -- Protection
-    [ 12724 ] = 12298, [ 12725 ] = 12298, [ 12726 ] = 12298, [ 12727 ] = 12298,
-    [ 12750 ] = 12297, [ 12751 ] = 12297, [ 12752 ] = 12297, [ 12753 ] = 12297,
-    [ 12818 ] = 12301,
-    [ 12761 ] = 12299, [ 12762 ] = 12299, [ 12763 ] = 12299, [ 12764 ] = 12299,
-    [ 12959 ] = 12300, [ 12960 ] = 12300, [ 12961 ] = 12300, [ 12962 ] = 12300,
-    [ 12307 ] = 12945, [ 12944 ] = 12945,
-    [ 12799 ] = 12797, [ 12800 ] = 12797,
-    [ 12788 ] = 12303, [ 12789 ] = 12303, [ 12791 ] = 12303, [ 12792 ] = 12303,
-    [ 12810 ] = 12308, [ 12811 ] = 12308,
-    [ 12804 ] = 12313, [ 12807 ] = 12313,
-    [ 12765 ] = 12302,
-    [ 12803 ] = 12312,
-    [ 12958 ] = 12311,
-    [ 16539 ] = 16538, [ 16540 ] = 16538, [ 16541 ] = 16538, [ 16542 ] = 16538,
-} } )
 
 spec:RegisterAuras( {
     battle_shout = {
@@ -386,8 +348,8 @@ spec:RegisterAuras( {
         max_stack = 1,
     },
     -- Forever's Overpower window: a 5 s player aura (DB2 1282733, "Overpower"). It is unseen on Forever (checkpoint Q6:
-    -- the aura walk raises in combat), so Overpower goes on rage alone in Battle Stance (the client refuses it outside
-    -- the window), and the swap to Battle Stance after a dodge cannot be predicted (no combat log on Forever).
+    -- the aura walk raises in combat), so Overpower's gate is the client's usability read, and the swap to Battle
+    -- Stance after a dodge cannot be predicted (no combat log on Forever).
     overpower_ready = {
         id = 1282733,
         duration = 5,
@@ -433,7 +395,7 @@ spec:RegisterAuras( {
     },
     shield_block = {
         id = 2565,
-        duration = function () return 7 + ( SHIELD_BLOCK_BONUS[ talent.improved_shield_block.rank ] or 0 ) end,
+        duration = 7,
         max_stack = 1,
     },
     shield_wall = {
@@ -486,6 +448,14 @@ spec:RegisterStateFunction( "swap_stance", function( stance )
     if lost > 0 then spend( lost, "rage" ) end
 
     applyBuff( stance )
+end )
+
+-- Focused Rage: -3 rage a rank on the offensive abilities (Forever's tooltip; DB2 29787 -30 at rank 1), floored at 0.
+-- shortcut: which abilities count is a guess (every ability that strikes an enemy, and Disarm; not the shouts),
+-- unseen until someone buys the talent; correct the offensive_cost calls from the client's costs (Snapshot cost= /
+-- read=) then.
+spec:RegisterStateFunction( "offensive_cost", function( cost )
+    return max( 0, cost - 3 * talent.focused_rage.rank )
 end )
 
 spec:RegisterHook( "reset_precast", function()
@@ -606,7 +576,7 @@ spec:RegisterAbilities( {
         cooldown = 6,
         gcd = "spell",
 
-        spend = 30,
+        spend = function () return offensive_cost( 30 ) end,
         spendType = "rage",
 
         talent = "bloodthirst",
@@ -641,7 +611,11 @@ spec:RegisterAbilities( {
 
         startsCombat = true,
         known = knows( CHARGE ),
-        buff = "battle_stance",
+        -- Vanguard: Charge also in Defensive Stance (Forever, 1310317)
+        buff = function ()
+            if talent.vanguard.enabled and buff.defensive_stance.up then return "defensive_stance" end
+            return "battle_stance"
+        end,
 
         usable = function ()
             return combat == 0 and target.minR >= 8 and target.minR <= 25, "cannot be in combat; target must be outside your deadzone"
@@ -661,7 +635,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "off",
 
-        spend = function () return max( 0, 20 - 3 * talent.improved_cleave.rank ) end,
+        spend = function () return offensive_cost( 20 - 3 * talent.raging_blows.rank ) end, -- Raging Blows: -3
         spendType = "rage",
 
         startsCombat = true,
@@ -683,7 +657,7 @@ spec:RegisterAbilities( {
         cooldown = 45,
         gcd = "off",
 
-        spend = 10,
+        spend = function () return offensive_cost( 10 ) end,
         spendType = "rage",
 
         talent = "concussion_blow",
@@ -755,7 +729,7 @@ spec:RegisterAbilities( {
         cooldown = 60,
         gcd = "spell",
 
-        spend = 20,
+        spend = function () return offensive_cost( 20 ) end,
         spendType = "rage",
 
         startsCombat = true,
@@ -776,7 +750,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return max( 0, 15 - 5 * talent.improved_execute.rank ) end,
+        spend = function () return offensive_cost( max( 0, 15 - 5 * talent.improved_execute.rank ) ) end,
         spendType = "rage",
 
         startsCombat = true,
@@ -797,7 +771,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = 10,
+        spend = function () return offensive_cost( 10 ) end,
         spendType = "rage",
 
         startsCombat = true,
@@ -816,7 +790,8 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "off",
 
-        spend = function () return 15 - talent.improved_heroic_strike.rank end, -- Improved Heroic Strike: -1 a rank
+        -- Improved Heroic Strike: -1 a rank
+        spend = function () return offensive_cost( 15 - talent.improved_heroic_strike.rank ) end,
         spendType = "rage",
 
         startsCombat = true,
@@ -843,7 +818,7 @@ spec:RegisterAbilities( {
         cooldown = 30,
         gcd = "off",
 
-        spend = 10,
+        spend = function () return offensive_cost( 10 ) end,
         spendType = "rage",
 
         startsCombat = true,
@@ -898,7 +873,7 @@ spec:RegisterAbilities( {
         cooldown = 120,
         gcd = "spell",
 
-        spend = 10,
+        spend = function () return offensive_cost( 10 ) end,
         spendType = "rage",
 
         startsCombat = true,
@@ -918,7 +893,7 @@ spec:RegisterAbilities( {
         cooldown = 6,
         gcd = "spell",
 
-        spend = 30,
+        spend = function () return offensive_cost( 30 ) end,
         spendType = "rage",
 
         talent = "mortal_strike",
@@ -937,12 +912,15 @@ spec:RegisterAbilities( {
         cooldown = 5,
         gcd = "spell",
 
-        spend = 5,
+        spend = function () return offensive_cost( 5 ) end,
         spendType = "rage",
 
         startsCombat = true,
         known = knows( OVERPOWER ),
         buff = "battle_stance",
+
+        -- interim until the virtual event facade delivers the dodge event
+        usable = function () return usableNow( OVERPOWER ), "no dodge to overpower" end,
 
         handler = function ()
             removeBuff( "overpower_ready" )
@@ -974,7 +952,7 @@ spec:RegisterAbilities( {
         cooldown = 10,
         gcd = "spell", -- the DB2's (start recovery 1500 ms); Classic had it off the GCD (checkpoint question)
 
-        spend = 10,
+        spend = function () return offensive_cost( 10 ) end,
         spendType = "rage",
 
         startsCombat = true,
@@ -1011,7 +989,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = 10,
+        spend = function () return offensive_cost( 10 ) end,
         spendType = "rage",
 
         startsCombat = true,
@@ -1046,7 +1024,7 @@ spec:RegisterAbilities( {
         cooldown = 5,
         gcd = "spell",
 
-        spend = 5,
+        spend = function () return offensive_cost( 5 ) end,
         spendType = "rage",
 
         startsCombat = true,
@@ -1069,7 +1047,7 @@ spec:RegisterAbilities( {
         cooldown = 12,
         gcd = "spell", -- the DB2's (start recovery 1500 ms); Classic had it off the GCD (checkpoint question)
 
-        spend = 10,
+        spend = function () return offensive_cost( 10 ) end,
         spendType = "rage",
 
         startsCombat = true,
@@ -1112,7 +1090,7 @@ spec:RegisterAbilities( {
         cooldown = 6,
         gcd = "spell",
 
-        spend = 20,
+        spend = function () return offensive_cost( 20 ) end,
         spendType = "rage",
 
         startsCombat = true,
@@ -1145,24 +1123,25 @@ spec:RegisterAbilities( {
         cooldown = 18,
         gcd = "spell",
 
-        spend = 15,
+        spend = function () return offensive_cost( 15 ) end,
         spendType = "rage",
 
         startsCombat = true,
         known = knows( SLAM ),
     },
 
-    -- Forever: a strike with a 20 s cooldown, learned at level 1 (DB2 1310222).
+    -- Forever: a strike with a 20 s cooldown, an Arms talent (node 1310222; the DB2's level 1 is not the gate).
     spearing_strike = {
         id = 1310222,
         cast = 0,
         cooldown = 20,
         gcd = "spell",
 
-        spend = 15,
+        spend = function () return offensive_cost( 15 ) end,
         spendType = "rage",
 
         startsCombat = true,
+        talent = "spearing_strike",
         known = knows( { 1310222 } ),
         buff = "battle_stance",
     },
@@ -1174,7 +1153,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return max( 0, 15 - 3 * talent.improved_sunder_armor.rank ) end,
+        spend = function () return offensive_cost( max( 0, 15 - 3 * talent.improved_sunder_armor.rank ) ) end,
         spendType = "rage",
 
         startsCombat = true,
@@ -1207,7 +1186,7 @@ spec:RegisterAbilities( {
     taunt = {
         id = 355,
         cast = 0,
-        cooldown = function () return 8 - talent.improved_taunt.rank end, -- Improved Taunt: -1 s a rank (both in the DB2)
+        cooldown = 8,
         gcd = "off",
 
         startsCombat = true,
@@ -1226,7 +1205,7 @@ spec:RegisterAbilities( {
         cooldown = 6,
         gcd = "spell",
 
-        spend = function () return max( 0, 20 - 6 * talent.improved_thunder_clap.rank ) end,
+        spend = function () return offensive_cost( max( 0, 20 - 6 * talent.improved_thunder_clap.rank ) ) end,
         spendType = "rage",
 
         startsCombat = true,
@@ -1258,7 +1237,7 @@ spec:RegisterAbilities( {
         cooldown = 10,
         gcd = "spell",
 
-        spend = 25,
+        spend = function () return offensive_cost( 25 - 3 * talent.raging_blows.rank ) end, -- Raging Blows: -3
         spendType = "rage",
 
         startsCombat = true,

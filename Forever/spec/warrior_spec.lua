@@ -55,63 +55,71 @@ local KIT = {
     whirlwind = { { 1680 }, 25, 10, "spell" },
 }
 
--- key = the talent's rank spells (wowdb talents WARRIOR, r1..r5): 18 Arms, 18 Fury, 17 Protection;
--- `max` where the DB2 has only rank 1 (Furious Precision: Forever-only, no rank spells to alias).
+-- key = { definition spell, max rank } of each of the 52 live talent nodes (ForeverProbe export, client 1.60.1.70374,
+-- 2026-10-15: 17 Arms, 17 Fury, 18 Protection by the nodes' columns). Every owned multi-rank node reported its rank 1
+-- spell at its current rank, so no rank aliases; Iron Will and Defiance define themselves by a higher DB2 rank's ID.
 local TALENTS = {
-    improved_heroic_strike = { 12282, 12663, 12664 },
-    deflection = { 16462, 16463, 16464, 16465, 16466 },
-    improved_rend = { 12286, 12658, 12659 },
-    improved_charge = { 12285, 12697 },
-    improved_tactical_mastery = { 12295, 12676, 12677, 12678, 12679 },
-    improved_thunder_clap = { 12287, 12665, 12666 },
-    improved_overpower = { 12290, 12963 },
-    anger_management = { 12296 },
-    deep_wounds = { 12834, 12849, 12867 },
-    two_handed_weapon_specialization = { 12163, 12711, 12712, 12713, 12714 },
-    impale = { 16493, 16494 },
-    axe_specialization = { 12700, 12781, 12783, 12784, 12785 },
-    sweeping_strikes = { 12292 },
-    mace_specialization = { 12284, 12701, 12702, 12703, 12704 },
-    sword_specialization = { 12281, 12812, 12813, 12814, 12815 },
-    polearm_specialization = { 12165, 12830, 12831, 12832, 12833 },
-    improved_hamstring = { 12289, 12668, 23695 },
-    mortal_strike = { 12294 },
-    booming_voice = { 12321, 12835, 12836, 12837, 12838 },
-    cruelty = { 12320, 12852, 12853, 12855, 12856 },
-    improved_demoralizing_shout = { 12324, 12876, 12877, 12878, 12879 },
-    unbridled_wrath = { 12322, 12999, 13000, 13001, 13002 },
-    improved_cleave = { 12329, 12950, 20496 },
-    piercing_howl = { 12323 },
-    blood_craze = { 16487, 16489, 16492 },
-    improved_battle_shout = { 12318, 12857, 12858, 12860, 12861 },
-    dual_wield_specialization = { 23584, 23585, 23586, 23587, 23588 },
-    improved_execute = { 20502, 20503 },
-    enrage = { 12317, 13045, 13046, 13047, 13048 },
-    improved_slam = { 12862, 12330, 20497, 20498, 20499 },
-    death_wish = { 12328 },
-    improved_intercept = { 20504, 20505 },
-    improved_berserker_rage = { 20500, 20501 },
-    flurry = { 12319, 12971, 12972, 12973, 12974 },
-    bloodthirst = { 23881 },
-    furious_precision = { 1323963, max = 3 },
-    shield_specialization = { 12298, 12724, 12725, 12726, 12727 },
-    anticipation = { 12297, 12750, 12751, 12752, 12753 },
-    improved_bloodrage = { 12301, 12818 },
-    toughness = { 12299, 12761, 12762, 12763, 12764 },
-    iron_will = { 12300, 12959, 12960, 12961, 12962 },
-    last_stand = { 12975 },
-    improved_shield_block = { 12945, 12307, 12944 },
-    improved_revenge = { 12797, 12799, 12800 },
-    defiance = { 12303, 12788, 12789, 12791, 12792 },
-    improved_sunder_armor = { 12308, 12810, 12811 },
-    improved_disarm = { 12313, 12804, 12807 },
-    improved_taunt = { 12302, 12765 },
-    improved_shield_wall = { 12312, 12803 },
-    concussion_blow = { 12809 },
-    improved_shield_bash = { 12311, 12958 },
-    one_handed_weapon_specialization = { 16538, 16539, 16540, 16541, 16542 },
-    shield_slam = { 23922 },
+    anger_management = { 12296, 1 },
+    bloodthrill = { 1289682, 5 },
+    deep_wounds = { 12834, 3 },
+    deflection = { 16462, 5 },
+    impale = { 16493, 2 },
+    improved_charge = { 12285, 2 },
+    improved_hamstring = { 12289, 3 },
+    improved_heroic_strike = { 12282, 3 },
+    improved_overpower = { 12290, 2 },
+    improved_rend = { 12286, 3 },
+    improved_slam = { 12862, 2 },
+    improved_tactical_mastery = { 12295, 5 },
+    mortal_strike = { 12294, 1 },
+    spearing_strike = { 1310222, 1 },
+    sweeping_strikes = { 12292, 1 },
+    two_handed_weapon_specialization = { 12163, 3 },
+    weaponmaster = { 1290261, 5 },
+    blood_craze = { 16487, 3 },
+    bloodthirst = { 23881, 1 },
+    booming_voice = { 12321, 5 },
+    cruelty = { 12320, 5 },
+    death_wish = { 12328, 1 },
+    dual_wield_specialization = { 23584, 5 },
+    enrage = { 12317, 5 },
+    flurry = { 12319, 5 },
+    furious_precision = { 1323963, 3 },
+    gore_drinker = { 1323967, 2 },
+    improved_berserker_rage = { 20500, 2 },
+    improved_execute = { 20502, 2 },
+    improved_intercept = { 20504, 2 },
+    lingering_rage = { 1323964, 5 },
+    piercing_howl = { 12323, 1 },
+    raging_blows = { 1310315, 1 },
+    unbridled_wrath = { 12322, 5 },
+    anticipation = { 12297, 5 },
+    one_handed_weapon_specialization = { 16538, 5 }, -- "Bastion" on Forever
+    concussion_blow = { 12809, 1 },
+    defiance = { 12792, 3 },
+    focused_rage = { 29787, 3 },
+    improved_bloodrage = { 12301, 2 },
+    improved_disarm = { 12313, 3 },
+    improved_revenge = { 12797, 3 },
+    improved_shield_bash = { 12311, 2 },
+    improved_shield_wall = { 12312, 2 },
+    improved_sunder_armor = { 12308, 3 },
+    improved_thunder_clap = { 12287, 3 },
+    iron_will = { 12962, 5 },
+    last_stand = { 12975, 1 },
+    master_of_defense = { 1310316, 2 },
+    shield_slam = { 23922, 1 },
+    shield_specialization = { 12298, 5 },
+    vanguard = { 1310317, 1 },
 }
+
+local function rank(n)
+    return setmetatable({}, {
+        __index = function()
+            return { rank = n, enabled = n > 0 }
+        end,
+    })
+end
 
 local function idsOf(a)
     local ids = { a.id }
@@ -148,21 +156,39 @@ describe("Forever Warrior", function()
         assert.is_true(w.abilities.heroic_strike.onNextSwing and w.abilities.cleave.onNextSwing)
     end)
 
-    it("models the talent-modified costs and cooldowns from rank 1's DB2 value x the rank", function()
+    it("models the talent-modified costs from rank 1's value x the rank, Focused Rage on the offensive ones", function()
         local e = lw.env(w)
-        e.talent = setmetatable({}, {
-            __index = function()
-                return { rank = 2, enabled = true }
-            end,
-        })
-        local function at(key, field)
-            return lw.run(w.abilities[key][field], e)
+        e.talent = rank(2)
+        local function at(key)
+            return lw.run(w.abilities[key].spend, e)
         end
+        -- Focused Rage -3 a rank; Raging Blows -3 (Cleave, Whirlwind); Improved Heroic Strike -1, Improved Execute -5,
+        -- Improved Sunder Armor -3, Improved Thunder Clap -6 a rank; floored at 0
         assert.are.same(
-            { 13, 14, 5, 9, 8, 6 },
-            { at("heroic_strike", "spend"), at("cleave", "spend"), at("execute", "spend"), at("sunder_armor", "spend"),
-                at("thunder_clap", "spend"), at("taunt", "cooldown") }
+            { 7, 8, 0, 3, 2, 13, 0, 24, 10 },
+            { at("heroic_strike"), at("cleave"), at("execute"), at("sunder_armor"), at("thunder_clap"), at("whirlwind"),
+                at("overpower"), at("mortal_strike"), at("battle_shout") }
         )
+        assert.are.same({ 8, 7 }, { lw.run(w.abilities.taunt.cooldown, e), lw.run(w.auras.shield_block.duration, e) })
+    end)
+
+    it("gates Spearing Strike on its talent, and Charge on Defensive Stance with Vanguard", function()
+        local e = lw.env(w)
+        assert.are.equal("spearing_strike", w.abilities.spearing_strike.talent)
+        e.buff = setmetatable({ defensive_stance = { up = true } }, getmetatable(e.buff))
+        assert.are.equal("battle_stance", lw.run(w.abilities.charge.buff, e))
+        e.talent = rank(1)
+        assert.are.equal("defensive_stance", lw.run(w.abilities.charge.buff, e))
+    end)
+
+    it("recommends Overpower only while the client calls it usable, not when it is short of its combo point", function()
+        local e = lw.env(w)
+        w.game.known[7384] = true
+        assert.is_false(lw.run(w.abilities.overpower.usable, e))
+        w.game.noMana[7384] = true -- no dodge: the second power cost (a combo point) is missing
+        assert.is_false(lw.run(w.abilities.overpower.usable, e))
+        w.game.usable[7384] = true
+        assert.is_true(lw.run(w.abilities.overpower.usable, e))
     end)
 
     it("gates Thunder Clap, Execute and Spearing Strike on the stances Forever's tooltips name", function()
@@ -205,24 +231,17 @@ describe("Forever Warrior", function()
         assert.are.equal("mainhand", models.mainhand.swing)
     end)
 
-    it("registers the three talent trees, and maps every higher rank spell to its rank 1 for the trait walk", function()
-        local n, aliases = 0, 0
-        for key, ranks in pairs(TALENTS) do
+    it("registers the 52 live talent nodes with their definition spells and max ranks, and no rank aliases", function()
+        local n, registered = 0, 0
+        for key, t in pairs(TALENTS) do
             n = n + 1
-            assert.are.same({ 0, ranks[1], ranks.max or #ranks }, w.talents[key], key)
-            for r = 2, #ranks do
-                assert.are.equal(ranks[1], w.track[ranks[r]], key .. " rank " .. r)
-            end
-            aliases = aliases + #ranks - 1
+            assert.are.same({ 0, t[1], t[2] }, w.talents[key], key)
         end
-        local registered, tracked = 0, 0
         for _ in pairs(w.talents) do
             registered = registered + 1
         end
-        for _ in pairs(w.track) do
-            tracked = tracked + 1
-        end
-        assert.are.same({ 53, 53, 120, 120 }, { n, registered, aliases, tracked })
+        assert.are.same({ 52, 52 }, { n, registered })
+        assert.is_nil(next(w.track))
     end)
 
     it("reads the stance, a queued strike and Revenge's window at reset", function()
@@ -237,11 +256,7 @@ describe("Forever Warrior", function()
     it("keeps Tactical Mastery's rage on a stance swap", function()
         local e = lw.env(w)
         w.game.known[1310185] = true
-        e.talent = setmetatable({}, {
-            __index = function()
-                return { rank = 1, enabled = true }
-            end,
-        })
+        e.talent = rank(1)
         e.swap_stance("berserker_stance")
         assert.are.same({ 25 }, e.spent) -- 50 rage, 10 + 1 x 15 kept (DB2 12295: 15 a rank)
         assert.are.same({ "berserker_stance" }, e.applied)
@@ -251,11 +266,7 @@ describe("Forever Warrior", function()
         local e = lw.env(w)
         lw.run(w.abilities.shield_bash.handler, e)
         assert.are.same({}, e.applied)
-        e.talent = setmetatable({}, {
-            __index = function()
-                return { rank = 1, enabled = true }
-            end,
-        })
+        e.talent = rank(1)
         lw.run(w.abilities.shield_bash.handler, e)
         assert.are.same({ "shield_bash_silenced" }, e.applied) -- DB2 12311: 100% at rank 1
     end)

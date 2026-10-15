@@ -113,7 +113,7 @@ files["Forever/spec/"] = { std = "+busted" }
 -- further `state` names they use.
 local warriorEnv = {
     "rage", "cooldown", "combat", "active_enemies", "active_dot", "setDistance", "interrupt", "swap_stance",
-    "should_queue", "mainhand_remains", "nextMH", "mainhand_speed",
+    "should_queue", "mainhand_remains", "nextMH", "mainhand_speed", "offensive_cost",
 }
 for _, k in ipairs(stateEnv) do
     warriorEnv[#warriorEnv + 1] = k
