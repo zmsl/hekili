@@ -425,6 +425,19 @@ describe("Forever Warrior", function()
         assert.are.same({ package = "Arms" }, w.options)
     end)
 
+    it("keeps its priorities in tools/packs/warrior.lua, tools/make_pack.lua's default class", function()
+        local def = dofile("tools/packs/warrior.lua")
+        local names = {}
+        for i, p in ipairs(def.packs) do
+            names[i] = p.name
+        end
+        assert.are.same({ 20261016, 1491, { "Arms", "Fury", "Protection" } }, { def.date, def.spec, names })
+        local byName = assert(loadfile("tools/make_pack.lua"))("lists", "warrior")
+        local byDefault = assert(loadfile("tools/make_pack.lua"))("lists")
+        assert.are.same(byDefault, byName)
+        assert.are.equal(def.packs[1].simc, byName[1].simc)
+    end)
+
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists")
         local secretToken = require("Virtual.State.spec.helpers.load").module().VirtualState.AplSecretToken
