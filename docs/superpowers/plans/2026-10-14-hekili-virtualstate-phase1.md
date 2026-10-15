@@ -68,6 +68,7 @@ VirtualState/
   Sources/Totems.lua      Task 6  totem reads, poll 7
   Snapshot.lua            Task 1  Snapshot()
   Facade.lua              Task 8  ns.Facade (the 51 kept names)
+  AplWarnings.lua         Task 9b VS.AplSecretToken: the health and time-to-die tokens Hekili:LoadScript warns about
   Adapter.lua             Task 2  (fold-only drain), rewritten in Task 9 (apply through the spec, feeds)
   spec/helpers/           Task 1  fake_api.lua, alloc.lua, load.lua, fake_spec.lua
   spec/*_spec.lua         one per task (see each task)
@@ -75,11 +76,11 @@ Forever/Warrior.lua       Task 7  the Forever Warrior class file
 tools/make_pack.lua       Task 7  the share-format priority generator
 ```
 
-Hekili edits outside the folder (spec §10): `Core.lua` (the drain call, Task 2), `Classes.lua` (SpecChanged call and the spec 1491 loop break, Task 2; GCD id, Task 3), `Hekili.lua` (version gates, Task 2), `UI.lua`, `Events.lua`, `Options/Options.lua` (GCD 61304 → 29515, Task 3), `Events.lua` (`ns.updateTalents`, Task 6; the `UNIT_AURA` handler, Task 9), the 15 files with facade reads (14 Hekili files plus `VirtualState/Adapter.lua`; the revert, Task 8), `embeds.xml`, `.busted`, `.luacheckrc`, `tools/api_inventory.txt`, `tools/check_api_reads.sh`, `tools/list_api_reads.sh`, `Hekili.toc`, `.pkgmeta`, `Libs/CREDITS.md` (Task 8).
+Hekili edits outside the folder (spec §10): `Core.lua` (the drain call, Task 2), `Classes.lua` (SpecChanged call and the spec 1491 loop break, Task 2; GCD id, Task 3), `Hekili.lua` (version gates, Task 2), `UI.lua`, `Events.lua`, `Options/Options.lua` (GCD 61304 → 29515, Task 3), `Events.lua` (`ns.updateTalents`, Task 6; the `UNIT_AURA` handler, Task 9), the 15 files with facade reads (14 Hekili files plus `VirtualState/Adapter.lua`; the revert, Task 8), `embeds.xml`, `.busted`, `.luacheckrc`, `tools/api_inventory.txt`, `tools/check_api_reads.sh`, `tools/list_api_reads.sh`, `Hekili.toc`, `.pkgmeta`, `Libs/CREDITS.md` (Task 8), `Scripts.lua` (the `Hekili:LoadScript` warning call; plan addition, Task 9b; not in spec §10).
 
 ## Order and checkpoints
 
-Tasks 1 to 10 in order. CHECKPOINT 1 ends Task 2 (the module loads, Snapshot answers, and the four passthrough probes of spec §7.7 run in combat). CHECKPOINT 2 ends Task 7 (the families in game with the real Warrior class file, before the facade fold). CHECKPOINT 3 ends Task 8 (the facade fold and the passthrough revert load cleanly). Task 10 is the Phase 1 exit criterion (spec §11) plus the G2, G3, G4, G7 and G8 checks.
+Tasks 1 to 9, then 9b, then 10, in order. CHECKPOINT 1 ends Task 2 (the module loads, Snapshot answers, and the four passthrough probes of spec §7.7 run in combat). CHECKPOINT 2 ends Task 7 (the families in game with the real Warrior class file, before the facade fold). CHECKPOINT 3 ends Task 8 (the facade fold and the passthrough revert load cleanly). Task 10 is the Phase 1 exit criterion (spec §11) plus the G2, G3, G4, G7 and G8 checks.
 
 Deliberately not built in Phase 1 (each needs nothing for the exit criterion; do not add them, and a review should not flag them):
 - `VirtualState/spec/helpers/replay.lua` (spec §11): the golden scenarios replay inline (`swing_spec`, `resources_spec`, `casts_spec`); a helper would have no other user.
@@ -8095,6 +8096,242 @@ git commit -m "feat(virtualstate): drain applies our casts through the spec; acr
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 
+### Task 9b: Warn at pack load about conditions that read health or time to die
+
+On Forever the target's health is always secret and the player's is secret too (confirmed in game), so the facade answers `UnitHealth`/`UnitHealthMax` with constants (spec §7.4: the target 100 of 100, the player the default 1.0 × max) and time to die never moves off its default (spec §6.5; `Targets.lua:1162-1164`, `Hekili:GetTTD` at `Targets.lua:1257`). An action-list condition that reads them evaluates against those constants and is silently dead. This task names each such entry once in Hekili's Warnings log (`/hekili` > Warnings, `Options/Options.lua:8121-8123`) when its pack's scripts load. Nothing changes in how beliefs or the facade answer.
+
+**Files:**
+- Create: `VirtualState/AplWarnings.lua`, `VirtualState/spec/apl_warnings_spec.lua`
+- Modify: `Hekili.toc`, `Scripts.lua:1923-1925` (`Hekili:LoadScript`, after its `script.Error` block; Tasks 1-9 leave `Scripts.lua` untouched)
+
+**Interfaces:**
+- Consumes: `ns.VirtualState` (Task 1); Hekili's warning log `Hekili:Error( fmt, ... )` (`Utils.lua:92-94` at 1fddcf8a, which calls `ns.Error`, `Utils.lua:73-89`: it formats, keys the log by the message and counts repeats, so a reload of the same pack adds no new line); `Hekili:LoadScript( pack, list, id )` (`Scripts.lua:1915`), which `scripts:LoadScripts` (`Scripts.lua:1748-1783`) calls for every entry of every pack of the current class on login, spec change and option edits, and `Options/Options.lua:5215` for one edited entry.
+- Produces: `VS.AplSecretToken(condition) -> token, subject, reads` (or nil; `reads` is the message's predicate, e.g. `always reads 100`): the first listed health or time-to-die token the string reads as a whole name. On `ns.VirtualState`, not `ns.VirtualStateInternal`: its caller is Hekili's own `Scripts.lua`, which reaches VirtualState only through the public table (as `Events.lua` does with `ns.VirtualState.Talent`).
+
+The tokens are the names Hekili's `state` resolves through health or time to die (all at 1fddcf8a; target health and time to die always read a constant, player health reads one while it is unreadable, as found in game): `fight_remains`, `interpolated_fight_remains`, `time_to_die` (`State.lua:1806`) and `time_to_pct_<n>` (`State.lua:1821`) on `state`; `target.health_current`, `target.health_pct`, `target.health_percent` (`State.lua:2765-2767`), `target.time_to_die` (`State.lua:2797`), `target.time_to_pct_<n>` (`State.lua:2804`) on `mt_target`; `target.health.current|actual|pct|percent` (`mt_target_health`, `State.lua:2857`); `health.current|actual|pct|percent|deficit|deficit_pct|deficit_percent` on the player's `state.health` (`State.lua:117`, made a resource at `State.lua:6343-6351`; `pct`/`percent` and `deficit_pct`/`deficit_percent` at `State.lua:3434-3438`, `deficit` at `State.lua:3475`); `longest_ttd`, `shortest_ttd` and `expected_combat_length` on `state` (`State.lua:1802-1815`) and `target.real_ttd`, `target.true_ttd` (`State.lua:2794`) for time to die (there is no `ttd` alias). `Scripts.lua:495` and `:512` rewrite `target.health.pct<…` and `…time_to_die<…` for recheck timing only, from the same names. `health.max` and `target.health.max` are left out: a maximum is not what an execute or TTD condition tests. `pet.health_pct` and `stat.health_pct` are left out (the left-boundary rule skips any token after a `.`): the spec covers the target and the player.
+
+- [ ] **Step 1: Write the failing spec**
+
+`VirtualState/spec/apl_warnings_spec.lua`:
+
+```lua
+-- VirtualState/spec/apl_warnings_spec.lua: VS.AplSecretToken (Task 9b), the scan behind Hekili:LoadScript's
+-- "Forever: ... is secret" warnings for conditions that read health or time to die (spec §6.5, §7.4).
+local load = require("VirtualState.spec.helpers.load")
+local alloc = require("VirtualState.spec.helpers.alloc")
+
+describe("APL secret-token scan", function()
+    local scan
+
+    before_each(function()
+        scan = load.module().VirtualState.AplSecretToken
+    end)
+
+    it("finds target health, player health and time to die", function()
+        assert.are.same(
+            { "target.health.pct", "target health is secret", "always reads 100" },
+            { scan("target.health.pct<20") }
+        )
+        assert.are.equal("target.health.pct", scan("!buff.rend.up&target.health.pct<=20"))
+        assert.are.equal("target.health_percent", scan("target.health_percent>80"))
+        assert.are.equal("target.time_to_die", scan("target.time_to_die>12"))
+        assert.are.equal("target.time_to_pct_", scan("target.time_to_pct_35<5"))
+        assert.are.same({
+            "health.current",
+            "player health is secret",
+            "reads the health maximum while player health is unreadable",
+        }, { scan("health.current<5000") })
+        assert.are.equal("health.pct", scan("(health.pct<35)"))
+        assert.are.equal("time_to_die", scan("time_to_die<5"))
+        assert.are.equal("interpolated_fight_remains", scan("interpolated_fight_remains>20"))
+        assert.are.equal("fight_remains", scan("cooldown.recklessness.remains>fight_remains"))
+        assert.are.equal("time_to_pct_", scan("time_to_pct_20>10"))
+        assert.are.equal("health.deficit", scan("health.deficit>5000"))
+        assert.are.equal("longest_ttd", scan("longest_ttd<10"))
+    end)
+
+    it("finds a token in a target_if expression", function()
+        assert.are.equal("target.time_to_die", scan("min:target.time_to_die"))
+    end)
+
+    it("ignores everything else", function()
+        assert.is_nil(scan("buff.rend.up&rage>=30"))
+        assert.is_nil(scan("health.max>0"))
+        assert.is_nil(scan("target.health.max>0"))
+        assert.is_nil(scan("pet.health.pct<50"))
+        assert.is_nil(scan("variable.time_to_die_soon"))
+        assert.is_nil(scan("time_to_dies>1"))
+        assert.is_nil(scan(""))
+        assert.is_nil(scan(nil))
+        assert.is_nil(scan(42))
+    end)
+
+    it("allocates nothing on a hit or a miss", function()
+        local hit, miss = "buff.rend.up&target.health.pct<20", "buff.rend.up&rage>=30&pet.health.pct<50"
+        assert.are.equal(
+            0,
+            alloc.bytes(function()
+                scan(hit)
+                scan(miss)
+            end, 10000)
+        )
+    end)
+end)
+```
+
+- [ ] **Step 2: Run it to see it fail**
+
+Run: `~/src/TacoDogForever/.lua/bin/busted VirtualState/spec/apl_warnings_spec.lua`
+Expected: `0 successes / 0 failures / 4 errors`, each `attempt to call upvalue 'scan' (a nil value)`.
+
+- [ ] **Step 3: Write the scanner and list it in the TOC**
+
+`VirtualState/AplWarnings.lua`:
+
+```lua
+-- VirtualState/AplWarnings.lua
+-- Target and player health are secret on Forever, so the facade answers them with constants and time to die keeps
+-- its default (spec §6.5, §7.4): an action-list condition that reads them is silently dead. VS.AplSecretToken finds
+-- such a token in a condition string; Hekili:LoadScript (Scripts.lua) writes one warning per entry from it. Pure Lua:
+-- no client read, no allocation.
+
+local _, ns = ...
+local VS = ns.VirtualState
+local find, byte = string.find, string.byte
+
+local TARGET_HP = "target health is secret"
+local PLAYER_HP = "player health is secret"
+local TTD = "target health is secret, so time to die never moves"
+local ALWAYS_100 = "always reads 100"
+local ALWAYS_DEFAULT = "always reads a fixed default"
+local MAX_WHILE = "reads the health maximum while player health is unreadable"
+local PCT_WHILE = "reads 100 while player health is unreadable"
+local ZERO_WHILE = "reads 0 while player health is unreadable"
+
+-- { token, subject, what it reads }: the names Hekili's state resolves through health or time to die (State.lua:
+-- mt_state's fight_remains, time_to_die, time_to_pct_, longest_ttd, shortest_ttd, expected_combat_length;
+-- mt_target's health_*, time_to_die, time_to_pct_, real_ttd, true_ttd; mt_target_health; state.health). Qualified
+-- tokens come first; a token ending in "_" is a prefix (a number follows).
+local ROWS = {
+    { "target.health.pct", TARGET_HP, ALWAYS_100 },
+    { "target.health.percent", TARGET_HP, ALWAYS_100 },
+    { "target.health.current", TARGET_HP, ALWAYS_100 },
+    { "target.health.actual", TARGET_HP, ALWAYS_100 },
+    { "target.health_pct", TARGET_HP, ALWAYS_100 },
+    { "target.health_percent", TARGET_HP, ALWAYS_100 },
+    { "target.health_current", TARGET_HP, ALWAYS_100 },
+    { "target.time_to_die", TTD, ALWAYS_DEFAULT },
+    { "target.time_to_pct_", TTD, ALWAYS_DEFAULT },
+    { "target.real_ttd", TTD, ALWAYS_DEFAULT },
+    { "target.true_ttd", TTD, ALWAYS_DEFAULT },
+    { "health.pct", PLAYER_HP, PCT_WHILE },
+    { "health.percent", PLAYER_HP, PCT_WHILE },
+    { "health.current", PLAYER_HP, MAX_WHILE },
+    { "health.actual", PLAYER_HP, MAX_WHILE },
+    { "health.deficit", PLAYER_HP, ZERO_WHILE },
+    { "health.deficit_pct", PLAYER_HP, ZERO_WHILE },
+    { "health.deficit_percent", PLAYER_HP, ZERO_WHILE },
+    { "time_to_die", TTD, ALWAYS_DEFAULT },
+    { "interpolated_fight_remains", TTD, ALWAYS_DEFAULT },
+    { "fight_remains", TTD, ALWAYS_DEFAULT },
+    { "time_to_pct_", TTD, ALWAYS_DEFAULT },
+    { "longest_ttd", TTD, ALWAYS_DEFAULT },
+    { "shortest_ttd", TTD, ALWAYS_DEFAULT },
+    { "expected_combat_length", TTD, ALWAYS_DEFAULT },
+}
+
+local DOT, UNDERSCORE = 46, 95
+
+local function isIdent(b) -- a letter, digit or "_"
+    return b ~= nil and (b == UNDERSCORE or (b >= 48 and b <= 57) or (b >= 65 and b <= 90) or (b >= 97 and b <= 122))
+end
+
+--- The first listed health or time-to-die token `condition` reads as a whole name (`pet.health.pct` is not
+--- `health.pct`, `time_to_die_x` is not `time_to_die`), with what the reading is about and what it reads;
+--- nil for anything else, a non-string included. Allocates nothing.
+---@param condition any
+---@return string? token
+---@return string? subject
+---@return string? reads
+function VS.AplSecretToken(condition)
+    if type(condition) ~= "string" then
+        return nil
+    end
+    for i = 1, #ROWS do
+        local row = ROWS[i]
+        local token = row[1]
+        local prefix = byte(token, #token) == UNDERSCORE
+        local s, e = find(condition, token, 1, true)
+        while s do
+            local before = s > 1 and byte(condition, s - 1) or nil
+            if before ~= DOT and not isIdent(before) and (prefix or not isIdent(byte(condition, e + 1))) then
+                return token, row[2], row[3]
+            end
+            s, e = find(condition, token, e + 1, true)
+        end
+    end
+    return nil
+end
+```
+
+In `Hekili.toc`, after `VirtualState\Snapshot.lua` add `VirtualState\AplWarnings.lua` (so it sits between `VirtualState\Snapshot.lua` and `VirtualState\Facade.lua`, before `Hekili.lua`; it needs only `ns.VirtualState`).
+
+Run: `~/src/TacoDogForever/.lua/bin/busted VirtualState/spec/apl_warnings_spec.lua`
+Expected: `4 successes / 0 failures / 0 errors`.
+
+- [ ] **Step 4: Warn from `Hekili:LoadScript`**
+
+In `Scripts.lua`, replace (lines 1923-1925, in `Hekili:LoadScript`):
+```lua
+    if script.Error then
+        Hekili:Error( "Error in " .. scriptID .. " conditions:  " .. ( script.rs or "null" ) .. "\n\n" .. script.Error )
+    end
+```
+with:
+```lua
+    if script.Error then
+        Hekili:Error( "Error in " .. scriptID .. " conditions:  " .. ( script.rs or "null" ) .. "\n\n" .. script.Error )
+    end
+
+    -- Forever: health and time to die are secret, so VirtualState answers them with constants (spec §6.5, §7.4).
+    local scan = ns.VirtualState.AplSecretToken
+    local token, subject, reads = scan( data.criteria )
+    if not token then token, subject, reads = scan( data.value ) end
+    if not token then token, subject, reads = scan( data.value_else ) end
+    if not token then token, subject, reads = scan( data.target_if ) end
+    if token then
+        Hekili:Error( "Forever: %s; `%s` in pack `%s` list `%s` entry %d (%s) %s.", subject, token, pack, list, id, data.action or "?", reads )
+    end
+```
+`data.criteria` is the entry's condition, `data.value` and `data.value_else` a `variable` entry's expressions (`variable,name=execute,value=target.health.pct<20` is the common SimC form) and `data.target_if` a cycling entry's target expression (`target_if=min:target.time_to_die`); `cycle_targets` is a flag and is not scanned. Pack load is not a recurring path, and the scan allocates nothing anyway. Example line in `/hekili` > Warnings: ``Forever: target health is secret; `target.health.pct` in pack `Warrior` list `default` entry 7 (execute) always reads 100.`` A player-health token reads, e.g., ``… entry 3 (victory_rush) reads 100 while player health is unreadable.`` The Phase 1 Warrior pack (Task 7) has no such condition, so it adds no line.
+
+- [ ] **Step 5: Run the specs to see them pass**
+
+Run: `~/src/TacoDogForever/.lua/bin/busted`
+Expected: `77 successes / 0 failures / 0 errors` (4 more than after Task 9).
+
+- [ ] **Step 6: Verify**
+
+```bash
+cd ~/src/hekili/.claude/worktrees/virtualstate-phase1
+BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
+LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
+$BUSTED                                                     # [77 successes / 0 failures / 0 errors]
+$LUACHECK .                                                 # [0 warnings / 0 errors]
+LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct secret or absent game API read in 43 loaded files]
+LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf tools/api_inventory.txt | sort -u \
+  | diff - tools/api_inventory.txt                          # [empty]
+$LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [no problems found]
+git status --short | grep '\.lua$' | awk '{print $2}' | xargs -r -n1 luac5.1 -p   # [no output]
+```
+- [ ] **Step 7: Commit**
+```bash
+git add Hekili.toc Scripts.lua VirtualState
+git commit -m "feat(virtualstate): warn at pack load about conditions that read secret health or time to die
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
 ### Task 10: The Phase 1 exit criterion (CHECKPOINT 4) and the risk checks
 
 **Files:**
@@ -8110,9 +8347,9 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 cd ~/src/hekili/.claude/worktrees/virtualstate-phase1
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [73 successes / 0 failures / 0 errors]
+$BUSTED                                                     # [77 successes / 0 failures / 0 errors]
 $LUACHECK .                                                 # [0 warnings / 0 errors]
-LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct secret or absent game API read in 42 loaded files]
+LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct secret or absent game API read in 43 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf tools/api_inventory.txt | sort -u \
   | diff - tools/api_inventory.txt                          # [empty]
 $LUALS --check . --checklevel=Error --logpath=/tmp/luals    # [no problems found]
