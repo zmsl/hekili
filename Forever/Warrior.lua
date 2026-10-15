@@ -613,7 +613,7 @@ spec:RegisterAbilities( {
         cooldown = 60,
         gcd = "off",
 
-        startsCombat = true,
+        startsCombat = false,
         known = knows( { 2687 } ),
         toggle = "cooldowns",
 
