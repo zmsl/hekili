@@ -64,6 +64,14 @@ S.On("SPELLS_CHANGED", nil, function(api)
     end
 end)
 
+-- A build or spell change in combat (a /reload mid-fight) skipped the costs; read them at combat end. Player.lua's
+-- handler runs first (TOC order) and clears I.inCombat.
+S.On("PLAYER_REGEN_ENABLED", nil, function(api)
+    if I.built then
+        resolve(api)
+    end
+end)
+
 -- The plain ready flag of one spell: true ready, false on cooldown, nil when unreadable. A spell on the GCD only
 -- reads ready. Allocates nothing (the client allocates the info table).
 local function ready(api, spellID)

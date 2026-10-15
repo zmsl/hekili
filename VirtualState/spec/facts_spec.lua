@@ -50,6 +50,16 @@ describe("facts and polls", function()
         assert.are.equal(0, VS.Power(fs.RAGE, 6).lo) -- nor from its usable answer
     end)
 
+    it("reads the second-cost flag at combat end after a build in combat", function()
+        ctl.costs[fs.REND] = { { type = 1, cost = 10 }, { type = 4, cost = 5, minCost = 1 } }
+        ctl.known[fs.REND] = true
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        I.Build(fs.def(fs.new(9)), 1) -- a /reload in combat
+        assert.is_false(I.ab.multiCost[3])
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        assert.are.same({ true, 10 }, { I.ab.multiCost[3], I.ab.readCost[3] })
+    end)
+
     it("walks the talent tree into ranks by registered spell ID, and defers a walk in combat", function()
         ctl.traits = { config = 1, trees = { 7 }, nodeIDs = { 70 }, nodes = {}, defs = { [700] = 12286 } }
         ctl.traits.nodes[70] = { entryIDs = { 700 }, activeRank = 2 }

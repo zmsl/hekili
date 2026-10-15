@@ -17,6 +17,7 @@
 local addon, ns = ...
 local C_SpellBook, C_Spell, UnitClassBase = C_SpellBook, C_Spell, UnitClassBase
 local GetShapeshiftForm, GetShapeshiftFormInfo, UnitLevel = GetShapeshiftForm, GetShapeshiftFormInfo, UnitLevel
+local issecretvalue = issecretvalue
 local Hekili = _G[ addon ]
 
 if UnitClassBase( "player" ) ~= "WARRIOR" then return end
@@ -118,14 +119,18 @@ local function rageOf( hand )
     if haste and haste > 0 then speed = speed / haste end
     local lo, hi, offLo, offHi = VS.Stat( "UnitDamage" )
     local damage = hand == 1 and ( lo + hi ) / 2 or ( offLo + offHi ) / 2
-    if damage <= 0 then
-        return hand == 1 and rageRate() * speed or 0 -- no plain damage read yet
-    end
+    local wrath = 0.12 * state.talent.unbridled_wrath.rank
+    -- VirtualState folds this on every swing in combat: a secret level (the API data shows none, but it under-reports)
+    -- must not reach the arithmetic, so it takes the pre-read fallback too.
     local level = UnitLevel( "player" )
+    if damage <= 0 or issecretvalue( level ) or type( level ) ~= "number" or level <= 0 then
+        if hand ~= 1 then return 0 end
+        return rageRate() * speed + wrath -- no plain damage or level read yet
+    end
     local rage = damage / ( 0.0091 * level * level + 3.23 * level + 4.27 ) * 7.5
         + RAGE_SPEED_TERM * HIT_FACTOR[ hand ] * speed / 2
     if hand == 2 then rage = rage * ( 1 + 0.1 * state.talent.dual_wield_specialization.rank ) end
-    return rage + 0.12 * state.talent.unbridled_wrath.rank
+    return rage + wrath
 end
 
 spec:RegisterResource( Enum.PowerType.Rage, {

@@ -29,6 +29,7 @@ function M.load()
         formSpell = {},
         damage = { 0, 0, 0, 0 }, -- UnitDamage's first four returns in VirtualState's stat cache
         level = 22,
+        SECRET = newproxy(), -- a secret value: issecretvalue says so, and arithmetic or comparison on it raises
     }
     local w = { game = game, abilities = {}, auras = {}, track = {}, hooks = {}, funcs = {}, exprs = {} }
     w.state = { main_hand = { size = 2 }, timeToInterrupt = function() end }
@@ -63,6 +64,9 @@ function M.load()
         end,
         UnitLevel = function()
             return game.level
+        end,
+        issecretvalue = function(v)
+            return v == game.SECRET
         end,
         Enum = { PowerType = { Rage = 1 } },
     }

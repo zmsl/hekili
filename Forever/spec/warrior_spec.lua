@@ -244,6 +244,16 @@ describe("Forever Warrior", function()
         w.state.mainhand_speed, w.state.offhand_speed, w.state.haste = 3, 0, 1
         w.state.talent = rank(0)
         assert.are.same({ 4.5 * 3, 0 }, { models.mainhand.value(), models.offhand.value() })
+        w.state.talent = setmetatable({ unbridled_wrath = { rank = 5, enabled = true } }, getmetatable(rank(0)))
+        assert.are.same({ 4.5 * 3 + 0.6, 0 }, { models.mainhand.value(), models.offhand.value() })
+    end)
+
+    it("falls back to the weapon-speed rate when the level reads secret", function()
+        local models = w.resource[2]
+        w.state.mainhand_speed, w.state.offhand_speed, w.state.haste = 3, 1.8, 1
+        w.state.talent = rank(0)
+        w.game.damage, w.game.level = { 40, 60, 15, 25 }, w.game.SECRET
+        assert.are.same({ 4.5 * 3, 0 }, { models.mainhand.value(), models.offhand.value() })
     end)
 
     it("gains Anger Management's rage every 3 s in combat through a combat-gated periodic entry", function()
