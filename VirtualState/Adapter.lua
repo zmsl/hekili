@@ -129,6 +129,7 @@ local function buildDef()
             swingValue = value,
             swingOff = offValue,
             auraRegen = auraRegen,
+            decay = r.state and r.state.meta and r.state.meta.decay, -- out-of-combat loss per second (Resources.lua)
         }
         insert(def.resources, d)
         resourceKey[#def.resources] = k

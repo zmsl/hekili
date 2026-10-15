@@ -50,6 +50,8 @@ local R = {
     readable = {},
     power = {},
     regen = {},
+    decayDef = {},
+    decay = {},
 }
 I.res = R
 R.slotOf, R.slotOfToken = {}, {}
@@ -63,6 +65,16 @@ local G = { n = 0, slot = {}, aura = {}, value = {}, interval = {}, talent = {} 
 -- In combat (fold order, for the entries without an aura: aura index 0) and since when.
 local fighting, fightT = false, 0
 R.auraRegen = G
+
+-- Slot r's out-of-combat loss per second from its `decay` (a number or a state-bound function; absent: none),
+-- evaluated at the build and at each combat end (talent ranks change out of combat only). Allocates nothing.
+local function decayOf(r)
+    local d = R.decayDef[r]
+    if type(d) == "function" then
+        d = d()
+    end
+    return type(d) == "number" and d > 0 and d or 0
+end
 
 -- By ability index a: the last usability answer and the last short report (cost, time).
 local usable, shortCost, shortT = {}, {}, {}
@@ -101,6 +113,8 @@ I.OnBuild(function(def, now)
         R.dev[r], R.scale[r], R.spread[r] = 0, 1, I.REGEN_SPREAD
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r] = 0, 0, 0, false
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
+        R.decayDef[r] = d.decay
+        R.decay[r] = decayOf(r)
         R.power[r] = I.NewBelief("power " .. tostring(d.key))
         R.regen[r] = I.NewBelief("regen " .. tostring(d.key))
         I.Sample(R.power[r], "default", R.rest[r], now, 0)
@@ -205,6 +219,30 @@ I.OnAdvance(function(from, to)
             R.lo0[r] = clamp(R.lo0[r] + v, max)
             R.hi0[r] = clamp(R.hi0[r] + v, max)
             R.pinDelta[r] = R.pinDelta[r] + v
+        end
+    end
+    if fighting then
+        return
+    end
+    -- Out of combat a decaying slot falls toward rest at its decay rate (never below it), kept out of the regen
+    -- measurement like the aura-gated ticks.
+    for r = 1, R.n do
+        local d = R.decay[r]
+        if d > 0 then
+            local rest, drop, before = R.rest[r], d * dt, R.est0[r]
+            if before > rest then
+                R.est0[r] = before - drop > rest and before - drop or rest
+            end
+            if R.lo0[r] > rest then
+                R.lo0[r] = R.lo0[r] - drop > rest and R.lo0[r] - drop or rest
+            end
+            if R.hi0[r] > rest then
+                R.hi0[r] = R.hi0[r] - drop > rest and R.hi0[r] - drop or rest
+            end
+            if R.est0[r] ~= before then
+                R.pinDelta[r] = R.pinDelta[r] + R.est0[r] - before
+                I.Sample(R.power[r], "modelled", R.est0[r], to, Obs.CombatEnd)
+            end
         end
     end
 end)
@@ -407,10 +445,12 @@ I.On(Obs.CombatStart, function(o, t)
     fighting, fightT = true, t
 end)
 
--- Out of combat a resource falls toward its rest value: the interval opens down to it (lo never over-promises).
+-- Out of combat a resource falls toward its rest value: the interval opens down to it (lo never over-promises), and
+-- a decaying slot's rate is re-read.
 I.On(Obs.CombatEnd, function()
     fighting = false
     for r = 1, R.n do
+        R.decay[r] = decayOf(r)
         if R.rest[r] < R.lo0[r] then
             R.lo0[r] = R.rest[r]
         end
@@ -494,13 +534,14 @@ I.OnSnapshot(function(out, now)
         VS.Power(R.type[r], now)
         VS.Regen(R.type[r], now)
         out[#out + 1] = string.format(
-            "resource %s type=%d max=%d swing=%d scale=%.2f auraRegen=%d",
+            "resource %s type=%d max=%d swing=%d scale=%.2f auraRegen=%d decay=%g",
             tostring(R.token[r]),
             R.type[r],
             R.max[r],
             R.swing[r],
             R.scale[r],
-            G.n
+            G.n,
+            R.decay[r]
         )
     end
 end)

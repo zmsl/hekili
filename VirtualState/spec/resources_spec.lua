@@ -142,6 +142,48 @@ describe("resources", function()
             assert.are.equal(0, VS.Power(fs.RAGE, 6).lo)
         end)
 
+        it("decays out of combat at the slot's rate down to rest, lo and hi with it, and not in combat", function()
+            local def = fs.def(fs.new(9))
+            def.resources[1].decay = 2
+            boot(def)
+            S.Direct(Obs.CombatStart, 2)
+            I.Fold(2, false)
+            I.ResourceShift(1, 50, 2, Obs.CastSuccess) -- est 50, lo 50, hi 100
+            I.Settle(10)
+            local r = VS.Power(fs.RAGE, 10)
+            assert.are.same({ 50, 50, 100 }, { r.est, r.lo, r.hi }) -- no decay in combat
+            S.Direct(Obs.CombatEnd, 10)
+            I.Fold(10, false)
+            I.Settle(15)
+            r = VS.Power(fs.RAGE, 15)
+            assert.are.same({ 40, 0, 90, "modelled" }, { r.est, r.lo, r.hi, r.basis }) -- 50 - 2 x 5; lo opened to rest
+            I.Settle(40)
+            r = VS.Power(fs.RAGE, 40)
+            assert.are.same({ 0, 0, 40 }, { r.est, r.lo, r.hi }) -- est stops at rest (0) at 35; hi 100 - 2 x 30
+            I.Settle(100)
+            assert.are.equal(0, VS.Power(fs.RAGE, 100).hi)
+            I.ResourceShift(1, 100, 100, Obs.CastSuccess)
+            local t = 100
+            assert.are.equal(0, alloc.bytes(function()
+                t = t + 0.01
+                I.Settle(t)
+            end, 2000))
+            assert.is_true(VS.Power(fs.RAGE, t).est < 100)
+        end)
+
+        it("leaves the estimate unchanged out of combat when the slot's decay is 0", function()
+            local def = fs.def(fs.new(9))
+            def.resources[1].decay = function()
+                return 0
+            end
+            boot(def)
+            I.ResourceShift(1, 50, 2, Obs.CastSuccess)
+            S.Direct(Obs.CombatEnd, 3)
+            I.Fold(3, false)
+            I.Settle(30)
+            assert.are.equal(50, VS.Power(fs.RAGE, 30).est)
+        end)
+
         it("pays nothing for an off-hand swing when only the main hand pays", function()
             obs(Obs.Swing, 5, 2, 1.8, 1)
             I.Fold(5, false)
