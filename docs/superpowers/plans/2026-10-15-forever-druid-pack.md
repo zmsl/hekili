@@ -12,7 +12,7 @@
 
 ## How this plan was checked
 
-Every patch below was written and run before the plan was saved, on a scratch clone of the worktree at `b534caca` (`forever-druid`: the event-facade branch's final `e0bd4ed6` plus the spec's docs commit): Tasks 1 to 6 in order, each spec patch applied and run red, then the implementation patch and the whole verification block. Then every patch was extracted again from this markdown and the whole plan replayed from `b534caca` in a fresh clone: per task the spec patch run red, the implementation patch, the verification block, `git add` with exactly the task's commit list, a commit, and an empty `git status` after it; the counts below are that replay's. The base counts at `b534caca`: 219 busted successes, luacheck 0 warnings in 80 files, `tools/check_api_reads.sh` 51 loaded files, the inventory diff empty, LuaLS no problems. Every row of Task 4's KIT table was re-read from the DB2 (`wowdb`, the query in Task 4 Step 0) and matched. The in-game checkpoints (Tasks 7 and 9) and the export-driven Task 8 are the user's and the orchestrator's; Task 8's generator script was run against the Warrior's export (52 nodes, every key mapped, none gone).
+Every patch below was written and run before the plan was saved, on a scratch clone of the worktree at `b534caca` (`forever-druid`: the event-facade branch's final `e0bd4ed6` plus the spec's docs commit): Tasks 1 to 6 in order, each spec patch applied and run red, then the implementation patch and the whole verification block. Then every patch was extracted again from this markdown and the whole plan replayed from `b534caca` in a fresh clone: per task the spec patch run red, the implementation patch, the verification block, `git add` with exactly the task's commit list, a commit, and an empty `git status` after it; the counts below are that replay's. The base counts at `b534caca`: 219 busted successes, luacheck 0 warnings in 80 files, `tools/check_api_reads.sh` 51 loaded files, the inventory diff empty, LuaLS no problems. Every row of Task 4's KIT table was re-read from the DB2 (`wowdb`, the query in Task 4 Step 0) and matched. The in-game checkpoints (Tasks 7 and 9) and the export-driven Task 8 are the user's and the orchestrator's; Task 8's generator script was run against the Warrior's export with `Forever/Classes/Warrior.lua` (52 nodes, every key mapped, none gone), against the same export with Iron Will and Defiance put back to their Classic rank-1 IDs (both still mapped through their ranks), and against a synthetic two-tree Druid dump with Ferocity defined by its rank-3 spell (mapped to `ferocity`).
 
 ## Global Constraints
 
@@ -22,7 +22,7 @@ Every patch below was written and run before the plan was saved, on a scratch cl
 - Taco Dog Forever is read only; clean-room direction: TDF mechanics may be ported into Hekili with credit in the file header (the Druid file's header names each: `excess_e`, the three priorities, the not-behind window, Enrage's 10 + 2/s, Faerie Fire free in form, the `form` alias), Hekili code never flows into TDF.
 - Secret safety (event-facade spec §8): nothing compares, indexes or does arithmetic on a client value without `issecretvalue()` first, and nothing uses `a and b or c` on a possibly-secret value. The Druid file reads the game only through `ns.Facade` (`tools/check_api_reads.sh` enforces it): `GetShapeshiftForm`, `GetShapeshiftFormInfo` and `C_Spell.IsCurrentSpell` are plain in combat for the Warrior (PR10; Q2 and Q13 confirm them on a Druid), `CombatLogGetCurrentEventInfo` answers the layer's own rows, `UI_ERROR_MESSAGE`'s slots reach a subscriber through `Plain`.
 - `now` handlers (event-facade spec §12a): a `now` names only the context's verbs and reads (`gain`, `spend`, `applyBuff`, `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`; `talent`, `buff`, `debuff`, the resources by key, `knownRank`, `now`, `combat`, Lua's pure `min`/`max`/`floor`); no Hekili `state`, no game API, no file-local helper that reads either (a helper runs in the file's environment, not the context, so a `now` writes its verbs inline: the forms' removal loop is spelled in each). Rank tables and amounts are file-level constants shared as upvalues by `handler`, `now` and the KIT pins (`BASH_STUN`, `ROOTS_DURATION`, `SHIFTING_POWER_ENERGY`, as the Warrior's `CHARGE_RAGE`). `now` and `handler` are two closures (one shared is refused). A `now` passes a duration wherever the aura's registered duration is a function. Task 4's strict-context specs run every Druid `now` through `Families/Now.lua` and require 0 errors.
-- Performance: no allocation in recurring paths (a cast's fold, a swing, the ladder, `excess_e`); allocation only at load or at `SpecChanged`. Each recurring path this plan adds has a 0-byte case (`Virtual/State/spec/helpers/alloc.lua`): Task 1 (swings and casts in and out of the gate), Task 4 (1000 calls of `excess_e`; 1000 rounds of Druid casts with `now`).
+- Performance: no allocation in recurring paths (a cast's fold, a swing, the ladder, `excess_e`); allocation only at load or at `SpecChanged`. Each recurring path this plan adds has a 0-byte case (`Virtual/State/spec/helpers/alloc.lua`): Task 1 (swings and casts in and out of the gate; maximum reads through `setMax` with fractional casts), Task 4 (1000 calls of `excess_e`; 1000 rounds of Druid casts with `now`).
 - TOC order (`Hekili.toc`): `Forever\Classes\Druid.lua` right after `Forever\Classes\Warrior.lua` (Task 4); `Forever\Races\NightElf.lua` and `Forever\Races\Tauren.lua` right after `Forever\Races\Gnome.lua` (Task 6). Adding files to the TOC needs a client restart, not a `/reload`, before the checkpoint.
 - Scope: the spec's §0-§10 and its checkpoint (§11). Not: Restoration's priority, a pack selector, rune-era spells, Tiger's Fury, powershifting, a non-cast `now` trigger (Blood Frenzy, Natural Reaction, the belief's missed-bleed removal), a Clearcasting inference from usability (spec §7 known limit).
 - Tools: `BUSTED=~/src/TacoDogForever/.lua/bin/busted`, `LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck`, `LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server`, `lua5.1`, `luac5.1`, `WOWDB=~/.local/share/wow-db2/bin/wowdb`. All commands run from the worktree root.
@@ -48,7 +48,8 @@ Every patch below was written and run before the plan was saved, on a scratch cl
 1. **The Warrior does not move.** Task 1 changes the resources family under every class: rage rests at 0 (`rest = false`), its maximum read leaves the estimate alone, an entry without `aura` pays every swing; Task 3's make_pack refactor prints the Warrior's three strings byte for byte. Tests: Task 1 `resources_spec` "leaves a slot resting at 0 (rage) unchanged by a maximum read", "pays nothing when the gate names an untracked aura, and as before without a gate"; every `warrior_spec` case in every task; Task 3 Step 4's `cmp`.
 2. **A mana cost is the real number in both layers.** 0.55 is 55% of the believed maximum in the ladder, the cost step and under a `pct` modifier (Task 1 `resources_spec` "prices a cost below 1 ...", "pins the ladder at 660 ...", "pays 660 at the cast's cost step, and 330 ..."), and Hekili's simulation already prices it so (`State.lua`).
 3. **Bear rage only in Bear Form, in the belief too.** Task 1 "pays only while the aura is believed up ..." and "out of the aura: no swing rate to calibrate against, and a zero-width pin"; Task 4 "runs a Feral and a bear sequence ..." (Bear Form's `now` turns the swing on, Cat Form's turns it off).
-4. **Every Druid `now` runs in the strict context.** Task 4 "runs every declared `now` in the context without an error" (33 abilities, `I.nowErrors == 0`), plus the sequence and the allocation cases.
+4. **Every Druid and race `now` runs in the strict context.** Task 4 "runs every declared `now` in the context without an error" (33 abilities, `I.nowErrors == 0`), plus the sequence and the allocation cases; Task 6 "runs the <race>'s `now` ... in the context without an error" (three cases).
+7. **No talent read goes stale.** Task 4 "reads only registered talent keys, in the class file and every race file"; Task 8 depends on it.
 5. **Clearcasting is declared once.** Task 2's mixin case (the class declaration lands in the list both layers read), Task 4 "declares Clearcasting as one cost modifier ..., and no `spend` reads it" (a grep over the file) and "makes a covered cast free while Clearcasting is believed up, which the cast then takes".
 6. **The packs name only what exists and nothing secret.** Task 5 "writes priorities that name only registered abilities, auras, talents, settings and lists" (with `VS.AplSecretToken`), and the strings match `make_pack.lua druid`.
 
@@ -151,7 +152,7 @@ index 92deaf6d..47b13347 100644
          auraIds = { { M.SHOUT }, { M.REND, M.REND_R2 } },
          talents = { { key = "improved_rend", spell = 12286, max = 3 } },
 diff --git a/Virtual/State/spec/resources_spec.lua b/Virtual/State/spec/resources_spec.lua
-index 1a15c5fe..5fd415a6 100644
+index 1a15c5fe..efaf7756 100644
 --- a/Virtual/State/spec/resources_spec.lua
 +++ b/Virtual/State/spec/resources_spec.lua
 @@ -36,7 +36,7 @@ describe("resources", function()
@@ -174,7 +175,7 @@ index 1a15c5fe..5fd415a6 100644
          it("pins an exact plain read and widens a late one by the regen spread", function()
              obs(Obs.Read, 20, 1, 55, I.ReadOf.Resource)
              I.Fold(20, false)
-@@ -338,4 +342,159 @@ describe("resources", function()
+@@ -338,4 +342,171 @@ describe("resources", function()
              assert.are.equal(0, bytes)
          end)
      end)
@@ -250,6 +251,18 @@ index 1a15c5fe..5fd415a6 100644
 +            obs(Obs.CastSuccess, 6, FORM)
 +            I.Fold(6, false)
 +            assert.are.equal(870, VS.Power(MANA, 6).est)
++        end)
++
++        it("allocates nothing over 1000 maximum reads (setMax) and fractional casts", function()
++            local t = 2
++            local bytes = alloc.bytes(function(i)
++                t = t + 1
++                maxRead(t, i % 2 == 0 and 1200 or 1300)
++                obs(Obs.CastSuccess, t + 0.5, FORM)
++                I.Fold(t + 0.5, false)
++                VS.Power(MANA, t + 0.6)
++            end, 1000)
++            assert.are.equal(0, bytes)
 +        end)
 +
 +        it("leaves a slot resting at 0 (rage) unchanged by a maximum read", function()
@@ -339,7 +352,7 @@ index 1a15c5fe..5fd415a6 100644
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `219 successes / 5 failures / 7 errors` (`adapter_spec`: `rest` is still a number and `swingAura` nil; `resources_spec`: three of the energy describe's cases error on `rest = true` in arithmetic, five of the six mana cases fail or error (no fractional pricing, no rest at the maximum; the rage case passes), and the three swing-gate cases fail).
+Expected: `219 successes / 5 failures / 8 errors` (`adapter_spec`: `rest` is still a number and `swingAura` nil; `resources_spec`: three of the energy describe's cases error on `rest = true` in arithmetic, six of the seven mana cases fail or error (no fractional pricing, no rest at the maximum, the 0-byte case; the rage case passes), and the three swing-gate cases fail).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -524,14 +537,14 @@ index f2fb401b..af500ea4 100644
 - [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `231 successes / 0 failures / 0 errors`.
+Expected: `232 successes / 0 failures / 0 errors`.
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [231 successes / 0 failures / 0 errors]
+$BUSTED                                                     # [232 successes / 0 failures / 0 errors]
 $LUACHECK .                                                 # [0 warnings / 0 errors in 80 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 51 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
@@ -606,7 +619,7 @@ index 6cdfd6fb..4c6a6635 100644
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `231 successes / 1 failure / 0 errors` (`races_spec` "takes a class file's spec:RegisterCostMod ...": `Classes.lua` has no such entry).
+Expected: `232 successes / 1 failure / 0 errors` (`races_spec` "takes a class file's spec:RegisterCostMod ...": `Classes.lua` has no such entry).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -665,14 +678,14 @@ index 2a3ac1f7..9f550144 100644
 - [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `232 successes / 0 failures / 0 errors`.
+Expected: `233 successes / 0 failures / 0 errors`.
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [232 successes / 0 failures / 0 errors]
+$BUSTED                                                     # [233 successes / 0 failures / 0 errors]
 $LUACHECK .                                                 # [0 warnings / 0 errors in 80 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 51 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
@@ -741,7 +754,7 @@ index 776f753a..ba520f66 100644
 - [ ] **Step 2: Run the specs to verify they fail, and record the Warrior's strings**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `232 successes / 0 failures / 1 error` (`warrior_spec` "keeps its priorities in tools/packs/warrior.lua ...": no such file).
+Expected: `233 successes / 0 failures / 1 error` (`warrior_spec` "keeps its priorities in tools/packs/warrior.lua ...": no such file).
 
 Then, before the implementation: `lua5.1 tools/make_pack.lua > /tmp/warrior_packs_before.txt && wc -l < /tmp/warrior_packs_before.txt` prints `3`.
 
@@ -1000,7 +1013,7 @@ index 00000000..9bd0b967
 - [ ] **Step 4: Run the specs to verify they pass, and that the Warrior's strings did not move**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `233 successes / 0 failures / 0 errors`.
+Expected: `234 successes / 0 failures / 0 errors`.
 
 Run: `lua5.1 tools/make_pack.lua | cmp - /tmp/warrior_packs_before.txt && lua5.1 tools/make_pack.lua warrior | cmp - /tmp/warrior_packs_before.txt && echo identical`
 Expected: `identical`.
@@ -1010,7 +1023,7 @@ Expected: `identical`.
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [233 successes / 0 failures / 0 errors]
+$BUSTED                                                     # [234 successes / 0 failures / 0 errors]
 $LUACHECK .                                                 # [0 warnings / 0 errors in 81 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 51 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
@@ -1039,10 +1052,10 @@ Spec §1-§7 and §8's state, §10 cases 1-13. `Forever/Classes/Druid.lua` (Heki
 - **Resources** in this order: Energy (no regen model, no decay: the plain out-of-combat read seeds the rate), Combo Points, Rage (`mainhand = { swing = "mainhand", aura = "bear_form", last, interval = "mainhand_speed", stop = swings 0 or not in Bear Form, value = 3.46 x the form's unhasted swing }`, `enrage = { aura = "enrage", last, interval = 1, value = 2 }`, meta `decay = function () return 1.25 end`: Hekili's `RegisterResource` setfenv's every meta field, so it must be a function), Mana. No `max` anywhere.
 - **Abilities**: the 44 of the KIT table, each `known = knows( RANKS )` (VS.KnownRank), its form gate (spec §3), costs from file-level per-rank tables read through `byRank` (the first rank's while nothing is known) and talent modifiers rank 1's value x the rank floored at 0 (Ferocity, Shredding Attacks as `improved_shred` on Shred and Lacerate, Natural Shapeshifter on the forms and Shifting Power), Improved Shifting Power's cooldown `16 - 4 x rank` (D5), Faerie Fire free with a 6 s cooldown while `buff.feral_form.up`. `now` beside `handler` on the 33 abilities spec §4 gives one; no `now` writes combo points; the forms' `now` remove every form and Maul inline and Bear Form's spends all rage; Bite's spends the energy left; Shifting Power's gains `SHIFTING_POWER_ENERGY`; Wrath's adds two Eclipse stacks only while `talent.eclipse.rank > 0`; Starfire's `handler` removes one.
 - **Auras** of spec §5 plus `hurricane` (the channel's aura), the `form`, `feral_form` and `bleed` aliases; **talents**: the DB2's 47 plus `improved_shifting_power`, `natures_splendor`, `eclipse` placeholders.
-- **Clearcasting**: `spec:RegisterCostMod{ aura = "clearcasting", pct = -1, charges = 1, spells = <22 rank-1 IDs> }`, the spec §7 list resolved by name to the rank-1 IDs this file registers: Moonfire 8921, Starfire 2912, Insect Swarm 5570, Hurricane 16914, Healing Touch 5185, Regrowth 8936, Rejuvenation 774, Claw 1082, Rake 1822, Shred 5221, Rip 1079, Ferocious Bite 22568, Pounce 9005, Ravage 6785, Swipe 779, Maul 6807, Lacerate 414644, Bash 5211, Feral Charge 1238122, Entangling Roots 339, Thorns 467, Nature's Grasp 16689. The file comment carries the DB2 query (16870's effect masks 15973374 / 100664659 / 1024 / 142606400 against SpellClassSet 7). The query also matches Primal Bite and Demoralizing Roar, which the spec leaves to Q6; the comment says so. No `spend` mentions Clearcasting.
+- **Clearcasting**: `spec:RegisterCostMod{ aura = "clearcasting", pct = -1, charges = 1, spells = <24 rank-1 IDs> }`, the spec §7 list resolved by name to the rank-1 IDs this file registers: Moonfire 8921, Starfire 2912, Insect Swarm 5570, Hurricane 16914, Healing Touch 5185, Regrowth 8936, Rejuvenation 774, Claw 1082, Rake 1822, Shred 5221, Rip 1079, Ferocious Bite 22568, Pounce 9005, Ravage 6785, Swipe 779, Maul 6807, Lacerate 414644, Bash 5211, Feral Charge 1238122, Entangling Roots 339, Thorns 467, Nature's Grasp 16689, Primal Bite 407995, Demoralizing Roar 99. The file comment carries the DB2 query (16870's effect masks 15973374 / 100664659 / 1024 / 142606400 against SpellClassSet 7), which matches all 24 (Demoralizing Roar by mask0 8, Primal Bite by mask1 64); Q6 removes either if it reads unusable at 0 rage with Clearcasting up. No `spend` mentions Clearcasting.
 - **State**: `swap_form( form )` (the sim's shift); `reset_precast` removes every form, applies the one `GetShapeshiftForm()` -> `GetShapeshiftFormInfo( form )`'s fourth return names (Dire Bear -> `bear_form`), Maul's queue from `IsCurrentSpell`, and, while `now == query_time`, removes a Rake/Rip/Pounce bleed whose miss row is at or after its application and applies `not_behind` for the rest of 5 s after a listed error; a `COMBAT_LOG_EVENT_UNFILTERED` handler records our `SPELL_MISSED` of a bleed rank, a `UI_ERROR_MESSAGE` handler the time of an error whose type is in `NOT_BEHIND_ERRORS` (empty until Q11; on `ns.DruidNotBehindErrors` so the specs can name one); `shred_ok`; `excess_e` (TDF's, ported: up to three events in preallocated arrays, the credit used only if its GCD starts no refresh later, solved backwards, `-huge` when the spender's GCD would delay an on-time refresh, nothing reserved for an unknown Rip/Rake/Shifting Power); the eleven settings; `RegisterOptions{ package = "Feral" }` (the pack lands in Task 5).
 
-`Hekili.toc` lists the file after the Warrior's; `.luacheckrc` gains `druidEnv`. The loader `Forever/spec/helpers/load_druid.lua` is `load_warrior.lua`'s shape (Energy, ComboPoints, Mana in `Enum.PowerType`; every `RegisterResource` call kept by power type; `RegisterCostMod` recorded; `w.ns`; an optional real VirtualState to bind). `druid_spec.lua` pins the KIT and TALENTS against the DB2 and covers cases 1-13; its last describe loads the class file against a real VirtualState, builds Hekili's class from the file's registrations, and casts through the layer, so every Druid `now` runs bound to `Families/Now.lua`'s context (the Warrior plan had no such case).
+`Hekili.toc` lists the file after the Warrior's; `.luacheckrc` gains `druidEnv`. The loader `Forever/spec/helpers/load_druid.lua` is `load_warrior.lua`'s shape (Energy, ComboPoints, Mana in `Enum.PowerType`; every `RegisterResource` call kept by power type; `RegisterCostMod` recorded; `w.ns`; an optional real VirtualState to bind). `druid_spec.lua` pins the KIT and TALENTS against the DB2 and covers cases 1-13, plus one that scans `Forever/Classes/Druid.lua` and every `Forever/Races/*.lua` for `talent%.([%w_]+)` and requires each key to be registered (so a talent Task 8 drops or renames turns red wherever it is still read); its last describe loads the class file against a real VirtualState, builds Hekili's class from the file's registrations, and casts through the layer, so every Druid `now` runs bound to `Families/Now.lua`'s context (the Warrior plan had no such case).
 
 **Files:**
 - Create: `Forever/Classes/Druid.lua`, `Forever/spec/druid_spec.lua`, `Forever/spec/helpers/load_druid.lua`
@@ -1081,10 +1094,10 @@ Apply with `git apply` (from the worktree root):
 ```diff
 diff --git a/Forever/spec/druid_spec.lua b/Forever/spec/druid_spec.lua
 new file mode 100644
-index 00000000..0505434b
+index 00000000..ea2f20bd
 --- /dev/null
 +++ b/Forever/spec/druid_spec.lua
-@@ -0,0 +1,754 @@
+@@ -0,0 +1,772 @@
 +-- Forever/spec/druid_spec.lua: the Forever Druid class file's registrations against the Forever DB2 (build
 +-- 1.60.1.70338, wowdb), loaded headless through a recording stand-in for Hekili (helpers/load_druid.lua), and its `now`
 +-- handlers run by VirtualState itself, in Families/Now.lua's strict context. What Hekili does with the rest is verified
@@ -1239,7 +1252,7 @@ index 00000000..0505434b
 +
 +-- Clearcasting's covered abilities (spec §7), by rank 1's ID.
 +local COVERED = { 8921, 2912, 5570, 16914, 5185, 8936, 774, 1082, 1822, 5221, 1079, 22568, 9005, 6785, 779, 6807,
-+    414644, 5211, 1238122, 339, 467, 16689 }
++    414644, 5211, 1238122, 339, 467, 16689, 407995, 99 }
 +
 +local function rank(n)
 +    return setmetatable({}, {
@@ -1374,6 +1387,24 @@ index 00000000..0505434b
 +            registered = registered + 1
 +        end
 +        assert.are.same({ 50, 50 }, { n, registered })
++    end)
++
++    it("reads only registered talent keys, in the class file and every race file", function()
++        local files = { "Forever/Classes/Druid.lua" }
++        local ls = assert(io.popen("ls Forever/Races/*.lua"))
++        for f in ls:lines() do
++            files[#files + 1] = f
++        end
++        ls:close()
++        local n = 0
++        for _, f in ipairs(files) do
++            local src = assert(io.open(f)):read("*a")
++            for key in src:gmatch("talent%.([%w_]+)") do
++                n = n + 1
++                assert.is_not_nil(w.talents[key], f .. ": talent." .. key .. " is not registered")
++            end
++        end
++        assert.is_true(n > 0)
 +    end)
 +
 +    it("registers every aura a handler, `now`, state function, gate, resource entry or alias names", function()
@@ -2050,7 +2081,7 @@ index 00000000..ad8034c2
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `233 successes / 0 failures / 29 errors` (every `druid_spec` case errors in its `before_each`: no `Forever/Classes/Druid.lua`).
+Expected: `234 successes / 0 failures / 30 errors` (every `druid_spec` case errors in its `before_each`: no `Forever/Classes/Druid.lua`).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -2093,7 +2124,7 @@ index cf63c83d..933afef8 100644
  ns.getSpecializationKey = function ( id )
 diff --git a/Forever/Classes/Druid.lua b/Forever/Classes/Druid.lua
 new file mode 100644
-index 00000000..a2b7f06a
+index 00000000..6ba79491
 --- /dev/null
 +++ b/Forever/Classes/Druid.lua
 @@ -0,0 +1,1707 @@
@@ -2585,15 +2616,15 @@ index 00000000..a2b7f06a
 +--     join SpellPower p on p.SpellID=o.SpellID where o.SpellClassSet=7 and (p.ManaCost>0 or p.PowerCostPct>0) and not
 +--     ((o.SpellClassMask_0 & 15973374)=0 and (o.SpellClassMask_1 & 100664659)=0 and (o.SpellClassMask_2 & 1024)=0
 +--     and (o.SpellClassMask_3 & 142606400)=0)
-+-- Covered but unregistered: Tranquility, Swiftmend, the rune spells. The query also names Primal Bite and Demoralizing
-+-- Roar; the spec leaves them out until checkpoint Q6 sees one usable at 0 rage with Clearcasting up. Not covered:
-+-- Wrath, Faerie Fire, Cower, Challenging Roar, Mark and Gift of the Wild, Shifting Power.
++-- Covered but unregistered: Tranquility, Swiftmend, the rune spells. Not covered: Wrath, Faerie Fire, Cower,
++-- Challenging Roar, Mark and Gift of the Wild, Shifting Power. Checkpoint Q6 confirms Primal Bite and Demoralizing Roar
++-- (usable at 0 rage with Clearcasting up).
 +spec:RegisterCostMod( {
 +    aura = "clearcasting",
 +    pct = -1,
 +    charges = 1,
 +    spells = { 8921, 2912, 5570, 16914, 5185, 8936, 774, 1082, 1822, 5221, 1079, 22568, 9005, 6785, 779, 6807, 414644,
-+        5211, 1238122, 339, 467, 16689 },
++        5211, 1238122, 339, 467, 16689, 407995, 99 },
 +} )
 +
 +-- A shift (Classic's swap_form, Forever's rules): the other forms and a queued Maul go; into Bear all rage is lost
@@ -3821,14 +3852,14 @@ index 2537e2ef..f4c51692 100644
 - [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `262 successes / 0 failures / 0 errors`.
+Expected: `264 successes / 0 failures / 0 errors`.
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [262 successes / 0 failures / 0 errors]
+$BUSTED                                                     # [264 successes / 0 failures / 0 errors]
 $LUACHECK .                                                 # [0 warnings / 0 errors in 84 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 52 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
@@ -3871,10 +3902,10 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/Forever/spec/druid_spec.lua b/Forever/spec/druid_spec.lua
-index 0505434b..8df4a540 100644
+index ea2f20bd..7807ab2a 100644
 --- a/Forever/spec/druid_spec.lua
 +++ b/Forever/spec/druid_spec.lua
-@@ -593,6 +593,56 @@ describe("Forever Druid", function()
+@@ -611,6 +611,56 @@ describe("Forever Druid", function()
          assert.is_true(ok())
      end)
  
@@ -3936,7 +3967,7 @@ index 0505434b..8df4a540 100644
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `262 successes / 1 failure / 1 error` (the strings case: no `RegisterPack`; the lists case: no `tools/packs/druid.lua`).
+Expected: `264 successes / 1 failure / 1 error` (the strings case: no `RegisterPack`; the lists case: no `tools/packs/druid.lua`).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -3944,7 +3975,7 @@ Apply with `git apply` (from the worktree root). The three strings are `lua5.1 t
 
 ```diff
 diff --git a/Forever/Classes/Druid.lua b/Forever/Classes/Druid.lua
-index a2b7f06a..9a3fea31 100644
+index 6ba79491..cb0d9f06 100644
 --- a/Forever/Classes/Druid.lua
 +++ b/Forever/Classes/Druid.lua
 @@ -1705,3 +1705,10 @@ spec:RegisterSetting( "innervate", true, {
@@ -4051,7 +4082,7 @@ index 00000000..1d4bc714
 - [ ] **Step 4: Run the specs to verify they pass, and that the Warrior's strings did not move**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `264 successes / 0 failures / 0 errors`.
+Expected: `266 successes / 0 failures / 0 errors`.
 
 Run: `lua5.1 tools/make_pack.lua druid | wc -l; lua5.1 tools/make_pack.lua | cmp - <(grep -o '\[\[Hekili:[^]]*' Forever/Classes/Warrior.lua | cut -c3-) && echo warrior-identical`
 Expected: `3` then `warrior-identical`.
@@ -4061,7 +4092,7 @@ Expected: `3` then `warrior-identical`.
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [264 successes / 0 failures / 0 errors]
+$BUSTED                                                     # [266 successes / 0 failures / 0 errors]
 $LUACHECK .                                                 # [0 warnings / 0 errors in 85 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 52 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
@@ -4085,7 +4116,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 6: Night Elf and Tauren race packs
 
-Spec §9 (and the controller's brief, which adds a Tauren file the spec had left out). Both files are `Forever/Races/Gnome.lua`'s shape, `Hekili:NewRace( <token> )`, inert for any other race, so they serve every class: `NightElf.lua` registers Elune's Light (1259799: +10% crit, 15 s; 180 s, off the GCD, `toggle = "cooldowns"`, `startsCombat = false`) and its aura; `Tauren.lua` registers War Stomp (20549: 2 s stun, 0.5 s cast, 120 s, off the GCD, `toggle = "cooldowns"`), which Hekili's stock racials lack, and its target aura (Plainsrunning, Endurance and Cultivation have nothing to register). Each ability has `now` beside `handler`, two closures. No resource or cost modifier; no pack names either. `races_spec`'s loader runs every race file, as the TOC does.
+Spec §9 (War Stomp gets a Tauren file because Hekili's `all` spec lacks it). Both files are `Forever/Races/Gnome.lua`'s shape, `Hekili:NewRace( <token> )`, inert for any other race, so they serve every class: `NightElf.lua` registers Elune's Light (1259799: +10% crit, 15 s; 180 s, off the GCD, `toggle = "cooldowns"`, `startsCombat = false`) and its aura; `Tauren.lua` registers War Stomp (20549: 2 s stun, 0.5 s cast, 120 s, off the GCD, `toggle = "cooldowns"`), which Hekili's stock racials lack, and its target aura (Plainsrunning, Endurance and Cultivation have nothing to register). Each ability has `now` beside `handler`, two closures. No resource or cost modifier; no pack names either. `races_spec`'s loader runs every race file, as the TOC does, and a second describe runs each race ability's `now` (Eureka!, Elune's Light, War Stomp) through `Families/Now.lua`'s strict context on a cast, requiring 0 errors and the aura believed up.
 
 **Files:**
 - Create: `Forever/Races/NightElf.lua`, `Forever/Races/Tauren.lua`
@@ -4102,7 +4133,7 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/Virtual/State/spec/races_spec.lua b/Virtual/State/spec/races_spec.lua
-index 4c6a6635..4a1329bf 100644
+index 4c6a6635..f17e15f0 100644
 --- a/Virtual/State/spec/races_spec.lua
 +++ b/Virtual/State/spec/races_spec.lua
 @@ -47,7 +47,9 @@ describe("race packs", function()
@@ -4144,12 +4175,104 @@ index 4c6a6635..4a1329bf 100644
      it("takes a class file's spec:RegisterCostMod (Classes.lua) into the same list, for any race", function()
          load("Human")
          -- the mixin's entry as Classes.lua declares it, compiled with this `ns` as its upvalue
+@@ -191,3 +214,91 @@ describe("race packs", function()
+         assert.are.equal(3, state.buff.eureka.count)
+     end)
+ end)
++
++-- The race packs' `now` handlers as VirtualState runs them: bound to Families/Now.lua's context, on our own casts.
++describe("race packs in VirtualState's now context", function()
++    local vload = require("Virtual.State.spec.helpers.load")
++    local fake = require("Virtual.State.spec.helpers.fake_api")
++    local fs = require("Virtual.State.spec.helpers.fake_spec")
++    local saved
++
++    before_each(function()
++        saved = {}
++        for _, k in ipairs({ "Hekili", "GetTime", "UnitGUID", "CreateFrame", "issecretvalue", "debugprofilestop" }) do
++            saved[k] = rawget(_G, k) or false
++        end
++    end)
++
++    after_each(function()
++        for k, v in pairs(saved) do
++            _G[k] = v or nil
++        end
++        fs.clock = nil
++    end)
++
++    -- What the race files register into `all` for the player's race `token` (Races.lua against a stand-in Hekili).
++    local function registrations(token)
++        local all = { abilities = {}, auras = {} }
++        function all:RegisterAbility(key, def)
++            self.abilities[key] = def
++        end
++        function all:RegisterAura(key, def)
++            self.auras[key] = def
++        end
++        _G.Hekili = { State = { race_token = token }, Class = { specs = { [0] = all } } }
++        local rns = {}
++        assert(loadfile("Races.lua"))("Hekili", rns)
++        for _, file in ipairs({ "Gnome", "NightElf", "Tauren" }) do
++            assert(loadfile("Forever/Races/" .. file .. ".lua"))("Hekili", rns)
++        end
++        return all
++    end
++
++    for _, case in ipairs({
++        { "Gnome", "eureka", 1259813, "player" },
++        { "NightElf", "elunes_light", 1259799, "player" },
++        { "Tauren", "war_stomp", 20549, "target" },
++    }) do
++        local token, key, id, unit = case[1], case[2], case[3], case[4]
++        it("runs the " .. token .. "'s `now` (" .. key .. ") in the context without an error", function()
++            local all = registrations(token)
++            local a, aura = all.abilities[key], all.auras[key]
++            local api, ctl = fake.new()
++            ctl.now = 1
++            _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue = api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
++            _G.debugprofilestop = function()
++                return 0
++            end
++            local ns = vload.module()
++            local VS, I = ns.VirtualState, ns.VirtualStateInternal
++            local h = fs.new(9)
++            h.Class.abilities[key] = {
++                key = key,
++                id = a.id,
++                copy = a.copy,
++                cast = 0,
++                cooldown = a.cooldown,
++                gcd = a.gcd,
++                charges = 1,
++                recharge = 0,
++                funcs = { now = a.now, handler = a.handler },
++            }
++            h.Class.auras[key] = { key = key, id = aura.id, copy = aura.copy, duration = aura.duration, max_stack = aura.max_stack }
++            fs.clock = api.GetTime
++            ns.spendResources = fs.spend
++            ns.ResourceRegenerates = function()
++                return false
++            end
++            vload.adapter(ns, h)
++            VS.Start(api)
++            VS.SpecChanged()
++            ctl.Tick(1)
++            ctl.now = 5
++            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", id)
++            ctl.Tick(5.01)
++            VS.Drain(5.02)
++            assert.are.same({ 0, 1 }, { I.nowErrors, I.nowRuns }, tostring(I.nowError))
++            assert.is_not_nil(VS.Aura(unit, id, 5.1))
++        end)
++    end
++end)
 ```
 
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `256 successes / 9 failures / 0 errors` (every `races_spec` case: its loader asserts on the missing `Forever/Races/NightElf.lua`).
+Expected: `258 successes / 12 failures / 0 errors` (every `races_spec` case: its loaders assert on the missing `Forever/Races/NightElf.lua`).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -4252,14 +4375,14 @@ index f4c51692..7d5efb14 100644
 - [ ] **Step 4: Run the specs to verify they pass**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `265 successes / 0 failures / 0 errors`.
+Expected: `270 successes / 0 failures / 0 errors`.
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [265 successes / 0 failures / 0 errors]
+$BUSTED                                                     # [270 successes / 0 failures / 0 errors]
 $LUACHECK .                                                 # [0 warnings / 0 errors in 87 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 54 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
@@ -4312,7 +4435,7 @@ When the session ends: `git -C ~/src/hekili checkout forever`.
 
 ### Task 8: The live talent tree and the pseudo-spec (after the export)
 
-Gated on Task 7: the export is at `/home/zack/.claude/jobs/080a308e/tmp/druid/export/ForeverProbe.lua` and the spec ID `ID` is read and is not 1491. Spec §6 "Forever-only addendum", ruling D3. The Warrior's accuracy plan (ruling A1) is the precedent: every node becomes `key = { 0, definitionSpell, maxRank }` with no rank aliases; keys stay Classic's where the talent exists, snake_case names for the Forever-only ones; the three placeholders are replaced (same key when the export carries the same spell); a removed talent's readers lose their term (the Warrior's `improved_cleave` became Raging Blows).
+Gated on Task 7: the export is at `/home/zack/.claude/jobs/080a308e/tmp/druid/export/ForeverProbe.lua` and the spec ID `ID` is read and is not 1491. Spec §6 "Forever-only addendum", ruling D3. The Warrior's accuracy plan (ruling A1) is the precedent: every node becomes `key = { 0, definitionSpell, maxRank }` with no rank aliases; keys stay Classic's where the talent exists, snake_case names for the Forever-only ones; the three placeholders are replaced (same key when the export carries the same spell); a removed talent's readers lose their term (the Warrior's `improved_cleave` became Raging Blows). Task 4's talent-key scan turns red for any reader left on a key the new block no longer registers.
 
 **Files:**
 - Modify: `Forever/Classes/Druid.lua` (`DRUID_SPEC`, `RegisterTalents`, the readers of a removed or renamed talent, the three `RegisterPack` strings), `Constants.lua` (the Druid row's key and comment), `tools/packs/druid.lua` (`spec`)
@@ -4336,48 +4459,80 @@ Expected: `cfg <configID> <trees>`, a `TREE` line, and the node count (one line 
 
 - [ ] **Step 2: Generate the talent block**
 
-Write `/home/zack/.claude/jobs/080a308e/tmp/druid/export/talents_block.lua` (run once against the Warrior's export and `Forever/Classes/Warrior.lua` while this plan was written: 52 nodes, every key mapped, nothing gone):
+Write `/home/zack/.claude/jobs/080a308e/tmp/druid/export/talents_block.lua`. It maps a node by any rank of its definition spell, through the DB2's rank lists, since the Warrior's export defined Iron Will and Defiance by a higher rank's ID. It was run while this plan was written against the Warrior's export with `Forever/Classes/Warrior.lua` (52 nodes, every key mapped, nothing gone), against the same export with Iron Will and Defiance put back to their Classic rank-1 IDs (both mapped through their ranks), and against a synthetic two-tree Druid dump with Ferocity defined by its rank-3 spell 16936 (mapped to `ferocity`):
 
 ```lua
 -- talents_block.lua: the Druid's RegisterTalents block from a ForeverProbe export's node dump (t.lua's talents.txt).
--- Usage, from the worktree root: lua5.1 talents_block.lua talents.txt Forever/Classes/Druid.lua
--- Keys: the class file's own key for a node whose spell it already registers, else the node's name in snake_case.
--- Prints the block (nodes by column, then row) and, as comments, the registered keys the export no longer has.
-local dump, classFile = arg[1], arg[2]
-local known = {} -- rank 1's spell -> the key the class file registers
+-- Usage, from the worktree root:
+--   lua5.1 talents_block.lua talents.txt Forever/Classes/Druid.lua ranks.tsv
+-- where ranks.tsv is `wowdb talents DRUID` (each talent's rank spells r1..r5). A node maps to the class file's key when
+-- any rank of its definition spell is a rank of a talent the file registers (a node may define itself by a higher
+-- rank's ID, as the Warrior's Iron Will and Defiance do); else its key is the node's name in snake_case. The value is
+-- the node's own definition spell. Prints the block (nodes by the export's tree index, then column, then row) and, as
+-- comments, the registered keys the export no longer has.
+local dump, classFile, ranksFile = arg[1], arg[2], arg[3]
+local known = {} -- the spell the class file registers (rank 1, or a node's own rank) -> its key
 for line in io.lines(classFile) do
     local key, spell = line:match("^%s+([%w_]+)%s*= { 0, (%d+), %d+ },")
     if key then
         known[tonumber(spell)] = key
     end
 end
-local nodes, seen = {}, {}
+local rank1 = {} -- any rank's spell -> rank 1's (the class file registers rank 1)
+for line in io.lines(ranksFile) do
+    local f = {}
+    for v in (line .. "\t"):gmatch("([^\t]*)\t") do
+        f[#f + 1] = v
+    end
+    local r1 = tonumber(f[7])
+    if r1 then
+        for k = 7, 11 do
+            local r = tonumber(f[k])
+            if r and r > 0 then
+                rank1[r] = r1
+            end
+        end
+    end
+end
+local nodes, seen, tree, names = {}, {}, 0, {}
 for line in io.lines(dump) do
-    local x, y, max, spell, name = line:match("^N%d+ pos=(%-?%d+),(%-?%d+) cur=%S+ max=(%d+) .- spell=(%d+) name==?(.-) |")
+    local id, name = line:match("^TREE%s+(%S+)%s+(%S*)")
+    if id then
+        tree = tree + 1
+        names[tree] = name
+    end
+    local x, y, max, spell, nname = line:match("^N%d+ pos=(%-?%d+),(%-?%d+) cur=%S+ max=(%d+) .- spell=(%d+) name==?(.-) |")
     if x and not seen[spell] then
         seen[spell] = true
         spell = tonumber(spell)
-        local key = known[spell] or name:lower():gsub("'", ""):gsub("[^%w]+", "_"):gsub("^_+", ""):gsub("_+$", "")
-        nodes[#nodes + 1] = { x = tonumber(x), y = tonumber(y), key = key, spell = spell, max = tonumber(max), new = not known[spell] }
-        known[spell] = nil
+        local r1 = rank1[spell] or spell
+        local hit = known[spell] and spell or known[r1] and r1 -- the file may register the node's own rank, or rank 1
+        local key = hit and known[hit] or nname:lower():gsub("'", ""):gsub("[^%w]+", "_"):gsub("^_+", ""):gsub("_+$", "")
+        nodes[#nodes + 1] = { tree = tree, x = tonumber(x), y = tonumber(y), key = key, spell = spell, max = tonumber(max), new = not hit }
+        if hit then
+            known[hit] = nil
+        end
     end
 end
 table.sort(nodes, function(a, b)
-    if a.x ~= b.x then
+    if a.tree ~= b.tree then
+        return a.tree < b.tree
+    elseif a.x ~= b.x then
         return a.x < b.x
     end
     return a.y < b.y
 end)
-local width = 0
+local width, count = 0, {}
 for _, n in ipairs(nodes) do
     width = math.max(width, #n.key)
+    count[n.tree] = (count[n.tree] or 0) + 1
 end
 print(("-- %d nodes"):format(#nodes))
-local col
+local cur
 for _, n in ipairs(nodes) do
-    if n.x ~= col then
-        col = n.x
-        print(("    -- column x=%d"):format(col))
+    if n.tree ~= cur then
+        cur = n.tree
+        print(("    -- tree %d: %s (%d)"):format(cur, tostring(names[cur]), count[cur]))
     end
     print(("    %s = { 0, %d, %d },%s"):format(n.key .. (" "):rep(width - #n.key), n.spell, n.max, n.new and " -- Forever-only" or ""))
 end
@@ -4386,14 +4541,28 @@ for spell, key in pairs(known) do
 end
 ```
 
-Run: `lua5.1 $X/talents_block.lua $X/talents.txt Forever/Classes/Druid.lua > $X/block.txt; head -1 $X/block.txt; grep -c 'Forever-only' $X/block.txt; grep '^-- gone' $X/block.txt`
-Expected: `-- <n> nodes`, the count of nodes this file did not register, and one `-- gone from the tree: <key> (<spell>)` line per registered talent the export no longer has (the spec expects Tiger's Fury-era removals and King of the Jungle among the 47; Furor and Insect Swarm moved, not gone, when their spells match).
+Run:
+
+```bash
+~/.local/share/wow-db2/bin/wowdb talents DRUID > $X/ranks.tsv
+lua5.1 $X/talents_block.lua $X/talents.txt Forever/Classes/Druid.lua $X/ranks.tsv > $X/block.txt
+head -1 $X/block.txt; grep '^    -- tree' $X/block.txt; grep -c 'Forever-only' $X/block.txt; grep '^-- gone' $X/block.txt
+```
+
+Expected: `-- <n> nodes`, one `-- tree <i>: <name> (<count>)` line per tree of the export (in the export's tree order), the count of nodes this file did not register, and one `-- gone from the tree: <key> (<spell>)` line per registered talent the export no longer has under any rank (the spec expects Tiger's Fury-era removals and King of the Jungle among the 47; Furor and Insect Swarm moved, not gone, when their spells match).
 
 Write `$X/reconcile.md`: one table of the export's nodes (key, definition spell, max rank, new / kept / max rank changed against the 47), the gone keys with each one's readers (`grep -n "talent\.<key>\b" Forever/Classes/Druid.lua tools/packs/druid.lua`) and the decision for each (drop the term; or the same talent under another spell: keep the key, take the export's spell), and the max-rank changes the spec names (Shredding Attacks, Sharpened Claws, Feral Instinct, Thick Hide).
 
 - [ ] **Step 3: Pin the export in the spec (red)**
 
-In `Forever/spec/druid_spec.lua`: replace the `TALENTS` table's body with the export's nodes (`key = { spell, max }`, one per line of `block.txt`, the reconciled keys), change its comment to "the live tree's nodes (ForeverProbe export, client 1.60.1.<build>, <date>)", and change the count in "registers the DB2's 47 talent nodes ..." to `{ n, n }` with the case's name "registers the live talent tree's n nodes with their definition spells and max ranks, and no rank aliases"; then the pseudo-spec (`ID` is Task 7's read):
+In `Forever/spec/druid_spec.lua`: replace the `TALENTS` table's body with the export's nodes in the pin's `key = { spell, max }` shape, after the reconciled key changes are made in `block.txt`:
+
+```bash
+grep -E '^ +[a-z_0-9]+ += \{ 0, ' $X/block.txt | sed -E 's/= \{ 0, /= { /; s/ -- Forever-only$//' > $X/pin.txt
+wc -l < $X/pin.txt   # n, the node count of block.txt's first line
+```
+
+paste `pin.txt` as the table's body, change its comment to "the live tree's nodes (ForeverProbe export, client 1.60.1.<build>, <date>)", and change the count in "registers the DB2's 47 talent nodes ..." to `{ n, n }` with the case's name "registers the live talent tree's n nodes with their definition spells and max ranks, and no rank aliases"; then the pseudo-spec (`ID` is Task 7's read):
 
 ```bash
 ID=<the spec ID Task 7 read>
@@ -4402,11 +4571,11 @@ sed -i "s/as a placeholder until checkpoint Q1, and the settings/as the client r
 ```
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `263 successes / 2 failures / 0 errors` (the talents case and the pseudo-spec case), or one more failure per other case that names a talent key the export renamed.
+Expected: `268 successes / 2 failures / 0 errors` (the talents case and the pseudo-spec case; nothing else reads the pin).
 
 - [ ] **Step 4: Apply the export (green)**
 
-1. `Forever/Classes/Druid.lua`: replace `RegisterTalents`' body with `block.txt`'s lines, grouped under `-- Balance (n)`, `-- Feral Combat (n)`, `-- Restoration (n)` by the columns the pane shows (the block's `-- column x=` comments, replaced), each Forever-only key commented as the Warrior's are ("Forever-only; <effect> unmodelled" where nothing reads it); replace the comment above it with "Talents: { node (unused on Forever), the definition spell, max rank }: the n nodes of Forever's live tree (a ForeverProbe export of the client, 1.60.1.<build>, <date>) ... no rank aliases." Apply `reconcile.md`'s reader decisions (a dropped term keeps its ability's KIT cost at rank 0, so the KIT case stays green).
+1. `Forever/Classes/Druid.lua`: replace `RegisterTalents`' body with `block.txt`'s node lines in its order, one group per export tree: each `-- tree <i>: <name> (<count>)` line becomes `-- <name> (<count>)` (the tree's own name from the export; with a single tree, as the Warrior's, one group named by the class), each Forever-only key commented as the Warrior's are ("Forever-only; <effect> unmodelled" where nothing reads it); replace the comment above it with "Talents: { node (unused on Forever), the definition spell, max rank }: the n nodes of Forever's live tree (a ForeverProbe export of the client, 1.60.1.<build>, <date>) ... no rank aliases." Apply `reconcile.md`'s reader decisions (a dropped term keeps its ability's KIT cost at rank 0, so the KIT case stays green). Run `~/src/TacoDogForever/.lua/bin/busted`: each failure of "reads only registered talent keys ..." names a reader still on a key the block dropped; apply its decision, until it passes.
 2. `DRUID_SPEC` and the Constants row's key:
 
    ```bash
@@ -4435,17 +4604,17 @@ EOF
 ```
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `265 successes / 0 failures / 0 errors`.
+Expected: `270 successes / 0 failures / 0 errors`.
 
 Run: `grep -c 'now = function' Forever/Classes/Druid.lua; grep -o 'talent\.[a-z_]*' Forever/Classes/Druid.lua tools/packs/druid.lua | sort -u`
-Expected: `33`, and only keys `RegisterTalents` now registers (the "registers every aura ..." and "names only registered ... talents" cases check the rest).
+Expected: `33`, and only keys `RegisterTalents` now registers (Task 4's "reads only registered talent keys ..." case enforces it for the class and race files, Task 5's "names only registered ..." for the packs).
 
 - [ ] **Step 5: Verify**
 
 ```bash
 BUSTED=~/src/TacoDogForever/.lua/bin/busted; LUACHECK=~/src/TacoDogForever/.lua/bin/luacheck
 LUALS=~/.local/share/mise/installs/lua-language-server/latest/bin/lua-language-server
-$BUSTED                                                     # [265 successes / 0 failures / 0 errors]
+$BUSTED                                                     # [270 successes / 0 failures / 0 errors]
 $LUACHECK .                                                 # [0 warnings / 0 errors in 87 files]
 LUACHECK=$LUACHECK tools/check_api_reads.sh                 # [ok: no direct game API read in 54 loaded files]
 LUACHECK=$LUACHECK tools/list_api_reads.sh | grep -xFf <(cut -f1 tools/api_inventory.txt) | sort -u \
@@ -4486,7 +4655,7 @@ git -C ~/src/hekili checkout --detach forever-druid
 | Q3 | **Energy regen and Furor** | in Cat out of combat `/run VSCopy(GetTime(),GetPowerRegenForPowerType(3))` now and every 20 s for 2 min; then leave Cat at a known energy (the bar), wait 5 s, shift back and read the bar | 10 flat → none; rises 25% → an aura- or talent-gated regen entry for Feral Dedication; ticks → Classic's tick model back; Furor's energy matches 20%/rank + 10/s out → Cat Form's `now` gains it (leave time and energy as file-level upvalues written by the other forms' `now`) |
 | Q4 | **Costs with talents; Shifting Power's cooldown** | `/run for _,i in ipairs({5221,1082,1822,1079,22568,6807,779,407995,414644,1322605}) do local c=C_Spell.GetSpellPowerCost(i) c=c and c[1] VSCopy(i,c and c.type,c and c.minCost) end`; after Shifting Power `/run local c=C_Spell.GetSpellCooldown(1322605) VSCopy(c.duration)` | equal to `spend` at the character's ranks → none; different → that ability's per-rank reduction; cooldown ≠ 16 - 4 x rank → D5's formula |
 | Q5 | **Mana: max, regen, five-second rule** | `/run VSCopy(UnitPowerMax("player",0),GetPowerRegenForPowerType(0),GetManaRegen())` out of combat, again right after a cast; then `/run VSCopy(Hekili.VirtualState.Snapshot():match("resource MANA[^\n]+"))` | plain maximum and the Snapshot's `max=` equal → none (Task 1's costs and rest use it); secret → a `max` in a mana meta table from the reported value (a function returning it), which the costs and rest then use; the regen shape recorded for a Balance follow-up |
-| Q6 | **Clearcasting visibility and coverage** | when it procs in combat: `/run VSCopy(pcall(C_UnitAuras.GetPlayerAuraBySpellID,16870))`; below 60 energy `/run VSCopy(C_Spell.IsSpellUsable(5221))`; with it up in Bear at 0 rage: `/run VSCopy(C_Spell.IsSpellUsable(407995),C_Spell.IsSpellUsable(99))` | readable → none; secret and usable below cost → recorded for the follow-up tracker (spec §7 known limit); Primal Bite or Demoralizing Roar usable at 0 rage → add its rank-1 ID (407995, 99) to `spells` (the DB2 masks already match both) |
+| Q6 | **Clearcasting visibility and coverage** | when it procs in combat: `/run VSCopy(pcall(C_UnitAuras.GetPlayerAuraBySpellID,16870))`; below 60 energy `/run VSCopy(C_Spell.IsSpellUsable(5221))`; with it up in Bear at 0 rage: `/run VSCopy(C_Spell.IsSpellUsable(407995),C_Spell.IsSpellUsable(99))` | readable → none; secret and usable below cost → recorded for the follow-up tracker (spec §7 known limit); Primal Bite or Demoralizing Roar **not** usable at 0 rage with Clearcasting up → remove its rank-1 ID (407995, 99) from `spells` and `COVERED` (the DB2 masks cover both, so they are in by default) |
 | Q7 | **Faerie Fire in forms** | in Bear: `/run local c=C_Spell.GetSpellCooldown(9907) VSCopy(c.startTime,c.duration,C_Spell.IsSpellUsable(9907))`; out of combat after casting on a dummy `/run VSCopy(C_UnitAuras.GetAuraDataByIndex("target",1,"HARMFUL").spellId)` | free and 6 s → none; else `spend`/`cooldown` from the reads; debuff 1288561 → add it to the `faerie_fire` aura's `copy` |
 | Q8 | **Bear swing rage** | in Bear on a dummy `/run VSCopy(UnitAttackSpeed("player"))`, then before and after 10 swings `/run VSCopy(format("%.2f",Hekili.VirtualState.Power(1,GetTime()).est))` and `/run VSCopy(Hekili.VirtualState.Snapshot():match("resource RAGE[^\n]+"))`, comparing with the bar | ~8.65 a swing → none; ~11.25 → `BEAR_RAGE_RATE = 4.5`; other → the measured rate per second of swing; `scale=` far from 1.00 after the fight → report |
 | Q9 | **Bear rage decay and the shift's rage** | in Bear out of combat `/run VSCopy(GetPowerRegenForPowerType(1))` (Warrior -12.499); shift out and back with rage up and read the bar | -12.5 → none; else `decay` from the read; rage kept on a shift → Bear Form's `now` and `swap_form` stop spending it |
@@ -4522,18 +4691,18 @@ Fix what the user reports, then repeat the affected items. Continue only when th
 | §3 forms from the shapeshift read (Dire Bear -> `bear_form`), the aliases, the gates, the shift in `now` and `handler` | Task 4 cases 3, 7, 8 |
 | §4 the kit (44 abilities, KIT pinned against a DB2 re-read), `now` on 33 with constants shared, Maul on the next swing, the misses from the combat log | Task 4 (Step 0; cases 1, 6, 12) |
 | §5 auras | Task 4 case 5 |
-| §6 the 47 DB2 nodes plus three placeholders now; the export as its own commit after Q1 (D3) | Task 4 case 4; Task 8 |
-| §7 Clearcasting through `spec:RegisterCostMod`, the covered rank-1 IDs, no `spend` mentions it, the free cast takes the charge | Task 4 case 11 and the strict-context case |
+| §6 the 47 DB2 nodes plus three placeholders now; the export as its own commit after Q1 (D3); no reader left on a dropped key | Task 4 case 4 and the talent-key scan; Task 8 |
+| §7 Clearcasting through `spec:RegisterCostMod`, the 24 covered rank-1 IDs (the DB2 masks, Primal Bite and Demoralizing Roar included), no `spend` mentions it, the free cast takes the charge | Task 4 case 11 and the strict-context case; Q6 can remove the two |
 | §8 `excess_e`, `shred_ok`, the not-behind window, the eleven settings, Feral default and Guardian/Balance provisional (D2) | Task 4 cases 12-13, Task 5 |
-| §9 Night Elf's Elune's Light, inert for other races | Task 6 (and a Tauren War Stomp file, per the controller's brief) |
+| §9 Night Elf's Elune's Light and Tauren's War Stomp (not in Hekili's `all`), inert for other races, their `now` in the strict context | Task 6 |
 | §10 the `now` functions run in Now.lua's strict context | Task 4's "Forever Druid in VirtualState's now context" describe (every `now`, a sequence, Clearcasting, allocation) |
 | §11 Q1 first with the 1491 stop rule; Q2-Q16 answer → action; every line VSCopy and under 255 characters | Tasks 7 and 9 (lines checked by script: 31 lines, the longest 181) |
 | Rulings D4 (3.46 x 2.5 s) and D5 (16 - 4 x rank) | Task 4 cases 2 and 9 |
 
-**2. Placeholder scan:** no "TBD", "TODO", "implement later" or "similar to Task N"; Tasks 1-6 are `git apply` patches generated by the replay and every command has its replay output. Task 8's values (the export's nodes, the spec ID) exist only after Task 7: its steps are the exact commands and edits, its generator script is given in full and was run, and its expected counts follow from the replay's 265.
+**2. Placeholder scan:** no "TBD", "TODO", "implement later" or "similar to Task N"; Tasks 1-6 are `git apply` patches generated by the replay and every command has its replay output. Task 8's values (the export's nodes, the spec ID) exist only after Task 7: its steps are the exact commands and edits, its generator script is given in full and was run on three inputs, and its expected counts follow from the replay's 270.
 
 **3. Names across tasks:** `I.res.restMax`, `I.res.swingAura`, `setMax`, `d.swingAura`, `rest` (boolean), `ns.RegisterCostMod`, `spec:RegisterCostMod`, `tools/packs/<class>.lua` (`date`, `spec`, `packs`), `DRUID_SPEC`, `swap_form`, `excess_e`, `shred_ok`, `ns.DruidNotBehindErrors`, `load_druid.load( vs )`/`env`/`run`, `w.resources`, `w.order`, `w.costMods`, `w.ns`, the pack names `Feral`/`Guardian`/`Balance` and the pack date 20261015 are spelled the same in every task and checkpoint line.
 
-**4. Review Focus:** each of the six lines has its pinned test in the owning task (Tasks 1-5).
+**4. Review Focus:** each of the seven lines has its pinned test in the owning task (Tasks 1-6).
 
-**Concerns for the orchestrator:** (a) The DB2 mask query for Clearcasting (in the class file's comment) also matches Primal Bite and Demoralizing Roar, which the spec's §7 lists as "unlisted, absent = not covered (Q6)"; the plan follows the spec and Q6's action adds them. (b) Task 6 adds `Forever/Races/Tauren.lua` (War Stomp) per the controller's brief; the spec's §9 says "Tauren: no file" because War Stomp has no rotation line. (c) The checkpoint is split: Task 7 (Q1) before Task 8, Task 9 (Q2-Q16) after, because the Druid only activates in game once `DRUID_SPEC` is the client's ID. (d) The rage meta's `decay` is a function returning 1.25, not the spec's number: Hekili's `RegisterResource` setfenv's every meta field. (e) Bear swing rage in the belief keeps paying after a Bear Form click-off in combat until the next shift or combat end (spec §2.3); Hekili's simulation drops it at once (`buff.bear_form` from the shapeshift read).
+**Concerns for the orchestrator:** (a) The checkpoint is split: Task 7 (Q1) before Task 8, Task 9 (Q2-Q16) after, because the Druid only activates in game once `DRUID_SPEC` is the client's ID. (b) Bear swing rage in the belief keeps paying after a Bear Form click-off in combat until the next shift or combat end (spec §2.3); re-entering Bear spends the believed rage, so the over-credit never reaches a Bear decision. (c) Task 8 runs on data that does not exist yet; its commands were dry-run on copies and its generator on three inputs.

@@ -18,7 +18,7 @@ in-form rule (`Bear.lua`), and the `form` alias over the forms (`Expressions.lua
 kit, handlers and `swap_form` come from Hekili's own `origin/classic:Classic/Druid.lua`.
 
 ## 0. Layer prerequisites (the plan's first task)
-Two gaps in the belief (`Virtual/State`) block the Druid; both are layer edits, named here, built and tested before any
+Three gaps in the belief (`Virtual/State`) block the Druid; all three are layer edits, named here, built and tested before any
 class-file task. No shortcut stands in for them.
 
 1. **A fractional cost is a fraction of the maximum.** Hekili's simulation already treats a declared cost below 1 as
@@ -66,8 +66,8 @@ resources and auras, `now` for the cast effects the client hides, and a default 
 chose Feral or Balance by talent points. Forever reports one pseudo-spec per class (the Warrior's is 1491,
 `Constants.lua:247`, probe PR15), and Hekili's Forever path keys the class off that row's `forever` field. The Druid
 registers one specialization with the ID the client reports for a Druid, written once as the file constant
-`DRUID_SPEC`. Until Q1 reads it, `DRUID_SPEC = 1499` (an unused ID, pinned by no test; the headless specs read it from
-the file); the in-game session runs only after Q1's commit replaces it with the value read. Stop rule: if Q1 reads
+`DRUID_SPEC`. Until Q1 reads it, `DRUID_SPEC = 1499` (an unused ID; the headless specs read it from the file, and the
+pseudo-spec case pins it, which Q1's commit updates with it); the in-game session runs only after Q1's commit replaces it with the value read. Stop rule: if Q1 reads
 1491 (the Warrior's row), stop and report, because `Constants.lua` keys rows by ID alone and would need a class key.
 The row is `[DRUID_SPEC] = { key = "druid", class = "DRUID",
 ranged = false, forever = "Druid" }`, exactly as 1491's. Packs are chosen with `/hekili priority <name>`
@@ -90,6 +90,7 @@ Remove Curse, the poison cures, Track Humanoids, and a pack selector.
 ```
 Forever/Classes/Druid.lua         the class file (pseudo-spec, resources, talents, auras, abilities, state, settings, packs)
 Forever/Races/NightElf.lua        Elune's Light, for every class (§9)
+Forever/Races/Tauren.lua          War Stomp, for every class (§9)
 Forever/spec/druid_spec.lua       KIT and TALENTS pins, the behaviour cases (§10)
 Forever/spec/helpers/load_druid.lua   the recording loader (load_warrior.lua's shape, Energy/ComboPoints/Mana in Enum)
 tools/make_pack.lua               takes the class, default `warrior`: `lua5.1 tools/make_pack.lua druid` (§8)
@@ -101,7 +102,7 @@ Virtual/State/Adapter.lua         layer edit (§0): `rest` as a flag (a regenera
                                   a swing entry's `aura` forwarded as `swingAura`
 Virtual/State/Families/Resources.lua  layer edit (§0): rest = maximum; `I.SwingValue` gated on `swingAura`
 Virtual/State/spec/{casts,resources,adapter}_spec.lua  the layer edits' cases (§0)
-Hekili.toc                        Forever\Classes\Druid.lua after Warrior.lua; Forever\Races\NightElf.lua after Gnome.lua
+Hekili.toc                        Forever\Classes\Druid.lua after Warrior.lua; Forever\Races\NightElf.lua and Tauren.lua after Gnome.lua
 .luacheckrc                       `druidEnv` (the Druid's state names), as `warriorEnv`
 ```
 
@@ -148,7 +149,9 @@ spec:RegisterResource( Enum.PowerType.Rage, {
                  value = function () return BEAR_RAGE_RATE * bearSwing() end },
     enrage = { aura = "enrage", last = <Warrior's bloodrage shape>, interval = 1, value = 2 }, -- 25503: 20 every 1000 ms /10
 }, nil, {
-    decay = 1.25, -- the Warrior's measured out-of-combat loss (tooltip, 100 -> 0 in 82.2 s); Q9 confirms for a bear
+    -- the Warrior's measured out-of-combat loss (tooltip, 100 -> 0 in 82.2 s); Q9 confirms for a bear. A function, not a
+    -- number: RegisterResource setfenv's every meta field (Classes.lua:185-187), so a number would raise.
+    decay = function () return 1.25 end,
 } )
 ```
 - **Max 100** (adapter default; no Gnome Druid, so no `maxMods` reaches it, R §8).
@@ -432,12 +435,12 @@ of the covered abilities the file registers (higher ranks resolve through each a
 ```lua
 -- Clearcasting (16870), aura 108 -100% cost, by its DB2 masks; covered but unregistered: Sunfire, Starfall,
 -- Tranquility, Wild Growth, Skull Bash. Not covered: Wrath, Thrash, Savage Roar, Faerie Fire, Cower, Challenging Roar,
--- Mark/Gift of the Wild, Hibernate, Soothe Animal. Unlisted either way (absent = not covered, Q6): Primal Bite,
--- Demoralizing Roar, Shifting Power.
+-- Mark/Gift of the Wild, Hibernate, Soothe Animal, Shifting Power. Covered by the masks (in by default, Q6 removes
+-- either if unusable at 0 rage with Clearcasting up): Primal Bite (mask1 64), Demoralizing Roar (mask0 8).
 spec:RegisterCostMod( {
     aura = "clearcasting", pct = -1, charges = 1,
     spells = { 8921, 2912, 5570, 16914, 5185, 8936, 774, 1082, 1822, 5221, 1079, 22568, 9005, 6785, 779, 6807, 414644,
-        5211, 1238122, 339, 467, 16689 },
+        5211, 1238122, 339, 467, 16689, 407995, 99 },
 } )
 ```
 - Charges follow the declared cost (§12b): a covered cast whose declared cost is above 0 takes the stack, including
@@ -554,9 +557,10 @@ so `Forever/Races/Gnome.lua` never touches the Druid and the Druid appends nothi
   now = function () applyBuff( "elunes_light" ) end } )` (two closures: one shared would be refused, "now is its handler") and its aura (15 s). No resource or cost modifier. Shadowmeld stays in `all`.
   No pack names it (a race ability is absent for other races, and the spec test "names only registered abilities"
   would fail); the player adds it to a priority if wanted.
-- **Tauren: no file.** Plainsrunning (1259918) is a passive movement-speed ramp: no cast, cost, maximum or rotation
-  effect, so there is nothing to register. War Stomp (20549) is a stun with no rotation line; Endurance and
-  Cultivation are passives.
+- **`Forever/Races/Tauren.lua`** (new; the same shape, inert for any other race): War Stomp (20549: 2 s stun, 0.5 s
+  cast, 120 s, off the GCD) and its target aura, because Hekili's `all` spec has no `war_stomp` (it has Berserking and
+  Shadowmeld only); no pack names it. Plainsrunning (1259918) is a passive movement-speed ramp, and Endurance and
+  Cultivation are passives: nothing to register.
 - **Troll: no file.** Berserking (20554, DRUID in its DB2 class mask) is a stock racial in `all`, so a Troll Druid (if
   any, Q14) already gets it; no Forever-specific Troll racial is known.
 - Skyborne racials (1259416, 1259686, 1259705, 1259707, 1259710): classes unknown; Q14 lists what a Druid knows.
@@ -645,7 +649,8 @@ are the research's; a row that disagrees with the DB2 is corrected, not the DB2)
 14. registers the Feral, Guardian and Balance packs exactly as `tools/make_pack.lua druid` prints them (and the
     Warrior's pack case still passes with the default class), Feral the
     default package; and the packs name only registered abilities, auras, talents, settings and lists.
-15. `Forever/spec/races_spec.lua` (facade suite) gains: NightElf.lua inert for another race, registered for a Night Elf.
+15. `Forever/spec/races_spec.lua` (facade suite) gains: NightElf.lua and Tauren.lua inert for another race, registered for
+    their own, and each race ability's `now` run in the strict context.
 
 Kept by the verification block (the Warrior's): busted, luacheck, `tools/check_api_reads.sh` (the class file reads the
 game only through `ns.Facade`), the api-inventory diff, LuaLS `--checklevel=Error`, `luac5.1 -p`.
@@ -662,7 +667,7 @@ else is judged. Each action is its own commit with the verification block and, w
 | Q3 | **Energy regen and Furor** | in Cat out of combat `/run VSCopy(GetTime(),GetPowerRegenForPowerType(3))` now and every 20 s for 2 min; then leave Cat at a known energy (the bar), wait 5 s, shift back and read the bar | rate rises 25% → an aura- or talent-gated regen entry for Feral Dedication; ticks → keep Classic's tick model; Furor's energy matches 20%/rank + 10/s out → Cat Form's `now` gains it (file-level leave time and energy written by the other forms' `now`) |
 | Q4 | **Costs with talents; Shifting Power's cooldown** | `/run for _,i in ipairs({5221,1082,1822,1079,22568,6807,779,407995,414644,1322605}) do local c=C_Spell.GetSpellPowerCost(i) c=c and c[1] VSCopy(i,c and c.type,c and c.minCost) end`; after Shifting Power `/run local c=C_Spell.GetSpellCooldown(1322605) VSCopy(c.duration)` | equal → none; different → that ability's per-rank reduction; cooldown ≠ 16 - 4 x rank → D5's formula |
 | Q5 | **Mana: max, regen, five-second rule** | `/run VSCopy(UnitPowerMax("player",0),GetPowerRegenForPowerType(0),GetManaRegen())` out of combat, again right after a cast | plain max → none (the belief's fractional costs and rest use it, §0); secret → `max` in the mana meta from the reported value, which §0's costs and rest then use; regen shape recorded for a Balance follow-up |
-| Q6 | **Clearcasting visibility and coverage** | when it procs in combat: `/run VSCopy(pcall(C_UnitAuras.GetPlayerAuraBySpellID,16870))`; below 60 energy `/run VSCopy(C_Spell.IsSpellUsable(5221))`; with it up in Bear: `/run VSCopy(C_Spell.IsSpellUsable(407995),C_Spell.IsSpellUsable(99))` at 0 rage | readable → none; secret and usable below cost → record for the follow-up tracker (§7 known limit); Primal Bite or Demoralizing Roar usable at 0 rage → add its rank-1 ID to `spells` |
+| Q6 | **Clearcasting visibility and coverage** | when it procs in combat: `/run VSCopy(pcall(C_UnitAuras.GetPlayerAuraBySpellID,16870))`; below 60 energy `/run VSCopy(C_Spell.IsSpellUsable(5221))`; with it up in Bear: `/run VSCopy(C_Spell.IsSpellUsable(407995),C_Spell.IsSpellUsable(99))` at 0 rage | readable → none; secret and usable below cost → record for the follow-up tracker (§7 known limit); Primal Bite or Demoralizing Roar not usable at 0 rage → remove its rank-1 ID from `spells` |
 | Q7 | **Faerie Fire in forms** | in Bear: `/run local c=C_Spell.GetSpellCooldown(9907) VSCopy(c.startTime,c.duration,C_Spell.IsSpellUsable(9907))`; out of combat after casting on a dummy `/run VSCopy(C_UnitAuras.GetAuraDataByIndex("target",1,"HARMFUL").spellId)` | free and 6 s → none; else `spend`/`cooldown` from the reads; debuff 1288561 → add it to `faerie_fire`'s `copy` |
 | Q8 | **Bear swing rage** | in Bear on a dummy `/run VSCopy(UnitAttackSpeed("player"))`, then `/run VSCopy(Hekili.VirtualState.Snapshot())` before and after 10 swings, comparing with the bar | ~8.65 a swing → none; ~11.25 → `BEAR_RAGE_RATE = 4.5`; other → the measured rate per second of swing |
 | Q9 | **Bear rage decay and the shift's rage** | in Bear out of combat `/run VSCopy(GetPowerRegenForPowerType(1))` (Warrior -12.499); shift out and back with rage up and read the bar | -12.5 → none; else `decay` from the read; rage kept on a shift → Bear Form's `now` stops spending it |
