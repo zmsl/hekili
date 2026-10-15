@@ -78,8 +78,15 @@ local function walkNode(api, cfg, nodeID)
             if k and T.alias[spell] then
                 aliasHits = aliasHits + 1
             end
+            local r = (#entries == 1 or entry == activeId) and rank or 0
+            -- only entries holding points: spent points bound them, so the cap is not filled by untaken nodes
+            if not k and type(spell) == "number" and r > 0 then
+                T.nUnmatched = T.nUnmatched + 1
+                if T.nUnmatched <= I.TALENT_UNMATCHED then
+                    T.unmatched[T.nUnmatched] = spell
+                end
+            end
             if k then
-                local r = (#entries == 1 or entry == activeId) and rank or 0
                 if r > T.max[k] then
                     r = T.max[k]
                 end
@@ -94,6 +101,7 @@ end
 -- The walk: the active config's trees, node by node; then each changed rank written and logged. Out of combat only.
 local function walk(api, t)
     local T = I.talents
+    T.nUnmatched = 0
     if T.n == 0 then
         return
     end
