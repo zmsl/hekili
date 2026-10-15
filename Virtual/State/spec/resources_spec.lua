@@ -381,6 +381,22 @@ describe("resources", function()
             assert.are.same({ 1000, 1000, 1000 }, { VS.Power(MANA, 4).est, I.res.max[1], I.res.rest[1] })
         end)
 
+        it("follows a maximum raised through maxMods at combat end, and caps at a lowered one", function()
+            local on = false
+            def.resources[1].maxMods = { { pct = 0.2, when = function()
+                return on
+            end } }
+            boot(def)
+            on = true
+            obs(Obs.CombatEnd, 2)
+            I.Fold(2, false)
+            assert.are.same({ 120, 120, 120 }, { I.res.est0[1], I.res.hi0[1], I.res.max[1] })
+            on = false
+            obs(Obs.CombatEnd, 3)
+            I.Fold(3, false)
+            assert.are.same({ 100, 100, 100 }, { I.res.est0[1], I.res.hi0[1], I.res.max[1] })
+        end)
+
         it("prices a cost below 1 as that fraction of the maximum; a cost of 1 or more is unchanged", function()
             within(55, I.CostOf(FORM)) -- 0.55 x the declared 100
             assert.are.equal(1200, I.CostOf(BIG))

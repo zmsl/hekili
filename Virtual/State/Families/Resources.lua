@@ -122,10 +122,13 @@ end
 
 -- Slot r's maximum becomes m. A slot resting at its maximum rests at the new one, and its estimate and upper bound rise
 -- by an increase (seeded at 100, a plain read of 1200 believes 1200), kept out of the regen measurement; a decrease
--- never lowers them here. Allocates nothing.
+-- caps every slot's interval at the new maximum. Allocates nothing.
 local function setMax(r, m)
     local up = m - R.max[r]
     R.max[r] = m
+    if up < 0 then
+        R.est0[r], R.lo0[r], R.hi0[r] = clamp(R.est0[r], m), clamp(R.lo0[r], m), clamp(R.hi0[r], m)
+    end
     if R.restMax[r] then
         R.rest[r] = m
         if up > 0 then

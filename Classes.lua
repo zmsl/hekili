@@ -1074,6 +1074,12 @@ local HekiliSpecMixin = {
         self.options = options
     end,
 
+    -- A class's cost modifier (a proc that makes the next abilities cheaper, e.g. Clearcasting): the race object's
+    -- RegisterCostMod signature, into the list both VirtualState's belief and the simulation read (Races.lua).
+    RegisterCostMod = function( self, def )
+        ns.RegisterCostMod( def )
+    end,
+
     RegisterEvent = function( self, event, func )
         RegisterEvent( event, function( ... )
             if state.spec.id == self.id then func( ... ) end

@@ -1,6 +1,7 @@
 -- Races.lua
 -- Race packs (event-facade spec §12b). `Hekili:NewRace( token )` returns a registration object a race file
--- (Forever/Races/<Race>.lua) uses like a spec: RegisterAbility, RegisterAura, RegisterResourceMod, RegisterCostMod.
+-- (Forever/Races/<Race>.lua) uses like a spec: RegisterAbility, RegisterAura, RegisterResourceMod, RegisterCostMod
+-- (a class file declares its own cost modifiers with spec:RegisterCostMod, into the same list).
 -- Registrations count only when the token is the player's race (`state.race_token`, UnitRace's locale-free second
 -- return); otherwise they are accepted and inert, so every race file runs unconditionally and loads headless.
 -- Abilities and auras go to the shared `all` spec (over `all`'s own entry for the same key), and ns.applyRace writes
@@ -68,9 +69,14 @@ end
 
 --- { aura = key, pct = n | flat = n, charges = k | nil, spells = { spell IDs } | nil }: an ability whose spell ID (or
 --- one of its `copy` ranks) is listed (every ability paid from the resource when `spells` is nil) costs less while the
---- aura is up; with charges, each such cast whose declared cost is above 0 takes a stack.
+--- aura is up; with charges, each such cast whose declared cost is above 0 takes a stack. Also a class file's
+--- `spec:RegisterCostMod` (Classes.lua): the class file has returned for any other class, so its append is the player's.
+function ns.RegisterCostMod( def )
+    mods.costMods[ #mods.costMods + 1 ] = def
+end
+
 function Race:RegisterCostMod( def )
-    if self.live then mods.costMods[ #mods.costMods + 1 ] = def end
+    if self.live then ns.RegisterCostMod( def ) end
 end
 
 function Hekili:NewRace( token )

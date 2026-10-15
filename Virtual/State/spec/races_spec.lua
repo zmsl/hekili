@@ -162,6 +162,23 @@ describe("race packs", function()
         assert.are.equal(15, heroic_strike.spend)
     end)
 
+    it("takes a class file's spec:RegisterCostMod (Classes.lua) into the same list, for any race", function()
+        load("Human")
+        -- the mixin's entry as Classes.lua declares it, compiled with this `ns` as its upvalue
+        local src = assert(io.open("Classes.lua")):read("*a")
+        local entry = assert(src:match("\n(    RegisterCostMod = function%( self, def %).-\n    end,)\n"))
+        local mixin = assert(loadstring("local ns = ...\nreturn {\n" .. entry .. "\n}"))(ns)
+        local def = { aura = "clearcasting", pct = -1, charges = 1, spells = { 5221 } }
+        mixin:RegisterCostMod(def)
+        assert.are.equal(def, ns.raceMods.costMods[1]) -- the list Adapter.lua forwards to the belief
+        local shred = ability("shred", { id = 5221, copy = { 6800 }, spend = 60, spendType = "energy" })
+        local claw = ability("claw", { id = 1082, spend = 45, spendType = "energy" })
+        state.buff.clearcasting = { up = true, count = 1 }
+        assert.are.same({ 0, 45 }, { shred.spend, claw.spend })
+        ns.costMods.Spend(shred.baseSpend, "shred")
+        assert.is_false(state.buff.clearcasting.up)
+    end)
+
     it("ignores a listed spell the class does not register", function()
         load("Gnome")
         local shout = ability("battle_shout", { id = 6673, spend = 10 })
