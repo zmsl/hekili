@@ -8556,6 +8556,142 @@ Fix what the user reports, then repeat the affected items. Continue only when th
 
 ---
 
+### Task 15: Rename VirtualState/ to Virtual/{Events, API, State}
+
+Approved by the user (2026-10-15) after the plan was written. A pure move with path updates and one bridge line: no behaviour changes, `Snapshot()`'s output is unchanged, and the `VS`, `I` and `E` locals inside the files keep their names (so do `ns.VirtualState` and `ns.VirtualStateInternal`). **Run it only after CHECKPOINT B (Task 14) is complete.** The TOC's paths change, so the game needs a **full client restart** (not a `/reload`) afterwards.
+
+Because the branch keeps moving until then, this task is a script and a checklist, not a `git diff` patch. The script was dry-run on the plan's end state (Tasks 1 to 13 replayed from `75d71c8b`): 66 files changed, the verification block green with the same counts as Task 13 (204 busted successes, 79 luacheck files, 51 loaded files), and the leftover-path grep empty.
+
+The layout:
+- `Virtual/Events/` ← `VirtualState/EventFacade.lua`, `CombatLog.lua`, `Sources/Rows.lua`, `Sources/Attackers.lua`; specs `event_facade_spec.lua`, `cleu_rows_spec.lua` into `Virtual/Events/spec/`.
+- `Virtual/API/` ← `VirtualState/Facade.lua`; specs `facade_spec.lua`, `trace_spec.lua` into `Virtual/API/spec/`.
+- `Virtual/State/` ← everything else under `VirtualState/`, structure kept: `VirtualState.lua`, `ObsLog.lua`, `Belief.lua`, `Families/` (`Now.lua`, `Modifiers.lua` included), `Sources/`, `Snapshot.lua`, `AplWarnings.lua`, `Adapter.lua`, the remaining specs and `spec/helpers/` (the helpers stay shared: every spec requires `Virtual.State.spec.helpers.*`).
+
+**Files:**
+- Move: every tracked file under `VirtualState/` (the script derives the list from `git ls-files VirtualState`, so files added after this plan was written move too: anything not named above goes to `Virtual/State/`).
+- Modify (paths only): `Hekili.toc` (same order, new paths), every spec's `require`, `Virtual/State/spec/helpers/load.lua` (the TOC prefix `Virtual\` and Adapter's path), `Virtual/State/spec/secrets_spec.lua` (still scans `Rows.lua` and `Attackers.lua`, now outside `Sources/`), `Forever/spec/warrior_spec.lua` (its `require`), `.busted` (three spec roots), `.luacheckrc` (the spec entry for each of the three folders; any other `VirtualState/` key), `tools/check_api_reads.sh`, `tools/list_api_reads.sh` (comments), every file-header comment, `docs/superpowers/specs/2026-10-15-virtualstate-event-facade.md` and `docs/superpowers/specs/2026-10-14-hekili-virtualstate-design.md` (paths only), `Forever/README.md` (paths only, if any). `tools/api_inventory.txt` lists names, not paths; `.luarc.json` names no path under `VirtualState/`; `Options/DevTools.lua` reads `ns.Facade`, which keeps its name: all three unchanged (the script's sed passes over them).
+- Modify (bridge): `Virtual/State/Adapter.lua`: `Hekili.Virtual = { State = VS, Events = I.Events, API = ns.Facade }`, and `Hekili.VirtualState` kept as an alias of `Hekili.Virtual.State` for one release (ForeverProbe's `Calib.lua` and the user's `/run` lines read it).
+- Test: `Virtual/State/spec/adapter_spec.lua` ("builds the tracked set from the registrations": `Hekili.VirtualState == Hekili.Virtual.State`, and the bridge's `Events` and `API`).
+- Not touched: `archive/`, `Libs/`, the plans under `docs/superpowers/plans/` and `docs/research/` (historical, they keep their text).
+
+- [ ] **Step 1: Check the starting point**
+
+CHECKPOINT B is confirmed by the user; the tree is clean (`git status --short` prints nothing); the verification block is green at the last task's counts. Note the counts: Step 4 expects the same ones.
+
+- [ ] **Step 2: Run the rename script**
+
+Save as `/tmp/virtual_rename.sh` and run `bash /tmp/virtual_rename.sh` from the worktree root:
+
+```bash
+#!/bin/bash
+# Task 15: VirtualState/ becomes Virtual/{Events,API,State}. Run from the worktree root on a clean tree.
+set -euo pipefail
+[ -z "$(git status --porcelain)" ] || { echo "tree not clean"; exit 1; }
+
+# 1. Where each tracked file goes.
+dest() {
+    case "$1" in
+        VirtualState/EventFacade.lua | VirtualState/CombatLog.lua) echo "Virtual/Events/${1#VirtualState/}" ;;
+        VirtualState/Sources/Rows.lua | VirtualState/Sources/Attackers.lua) echo "Virtual/Events/${1#VirtualState/Sources/}" ;;
+        VirtualState/spec/event_facade_spec.lua | VirtualState/spec/cleu_rows_spec.lua) echo "Virtual/Events/spec/${1##*/}" ;;
+        VirtualState/Facade.lua) echo "Virtual/API/Facade.lua" ;;
+        VirtualState/spec/facade_spec.lua | VirtualState/spec/trace_spec.lua) echo "Virtual/API/spec/${1##*/}" ;;
+        VirtualState/*) echo "Virtual/State/${1#VirtualState/}" ;;
+    esac
+}
+
+# 2. The moves, and a sed script of the exact paths (slash and TOC backslash forms), most specific first.
+SED=$(mktemp)
+for old in $(git ls-files VirtualState); do
+    new=$(dest "$old")
+    mkdir -p "$(dirname "$new")"
+    git mv "$old" "$new"
+    printf 's#%s#%s#g\n' "$old" "$new" >>"$SED"
+    printf 's#%s#%s#g\n' "${old//\//\\\\}" "${new//\//\\\\}" >>"$SED"
+done
+cat >>"$SED" <<'SEDEOF'
+s#\([^/]\)Sources/Rows\.lua#\1Virtual/Events/Rows.lua#g
+s#\([^/]\)Sources/Attackers\.lua#\1Virtual/Events/Attackers.lua#g
+s#VirtualState/#Virtual/State/#g
+s#VirtualState\.spec\.helpers#Virtual.State.spec.helpers#g
+SEDEOF
+find VirtualState -depth -type d -empty -delete
+
+# 3. Every path reference: code, tools, configs, the two specs and the Forever README (plans and research keep theirs).
+FILES=$(git ls-files | grep -v '^archive/\|^Libs/\|^docs/' | grep '\.lua$\|\.toc$\|\.sh$\|\.md$\|\.txt$\|^\.luacheckrc$\|^\.busted$\|\.json$')
+FILES="$FILES docs/superpowers/specs/2026-10-15-virtualstate-event-facade.md docs/superpowers/specs/2026-10-14-hekili-virtualstate-design.md"
+# shellcheck disable=SC2086
+sed -i -f "$SED" $FILES
+rm "$SED"
+
+# 4. The spots a path rename cannot express.
+python3 - <<'PY'
+import re
+def edit(p, old, new, count=1):
+    s = open(p).read()
+    assert s.count(old) >= 1, (p, old)
+    open(p, "w").write(s.replace(old, new, count))
+# the spec loader picks the TOC's Virtual\ lines
+edit("Virtual/State/spec/helpers/load.lua", 'if line:match("^VirtualState\\\\") then', 'if line:match("^Virtual\\\\") then')
+# busted runs the three spec folders
+edit(".busted", '"Virtual/State/spec"', '"Virtual/Events/spec", "Virtual/API/spec", "Virtual/State/spec"')
+# luacheck: the State spec folder's entry for the other two
+s = open(".luacheckrc").read()
+line = re.search(r'^files\["Virtual/State/spec/"\] = .*$', s, re.M).group(0)
+extra = "\n".join(line.replace("Virtual/State/spec/", "Virtual/%s/spec/" % d) for d in ("Events", "API"))
+open(".luacheckrc", "w").write(s.replace(line, line + "\n" + extra, 1))
+# the secrets check still covers the two row sources that left Sources/
+edit("Virtual/State/spec/secrets_spec.lua", '"find " .. DIR .. " -name', '"find " .. DIR .. " Virtual/Events/Rows.lua Virtual/Events/Attackers.lua -name')
+# the bridge
+edit("Virtual/State/Adapter.lua",
+     "-- The debug handle: /run print(Hekili.VirtualState.Snapshot())\nHekili.VirtualState = VS\n",
+     "-- The bridge, and the debug handle: /run print(Hekili.Virtual.State.Snapshot())\n"
+     "Hekili.Virtual = { State = VS, Events = I.Events, API = ns.Facade }\n"
+     "Hekili.VirtualState = VS -- alias for one release: ForeverProbe's Calib.lua and the user's /run lines read it\n")
+# its test
+edit("Virtual/State/spec/adapter_spec.lua", "assert.are.equal(h.VirtualState or VS, VS)",
+     "assert.are.same({ VS, VS, I.Events, ns.Facade }, { h.VirtualState, h.Virtual.State, h.Virtual.Events, h.Virtual.API })")
+PY
+git add -A
+git status --short | grep -v '^R  \|^M  ' || true
+```
+
+Expected: no output after the moves (every change is a staged rename or modification), and `ls VirtualState` fails (`No such file or directory`). If an `assert` in step 4 of the script fires, the branch moved a line it edits: make that one edit by hand as the comment above it says, then `git add -A`.
+
+- [ ] **Step 3: Checklist (read the staged diff, `git diff --cached`)**
+
+1. `Hekili.toc`: the same entries in the same order, each `VirtualState\X` now `Virtual\Events\X`, `Virtual\API\Facade.lua` or `Virtual\State\X` per the layout above.
+2. `.busted`: `ROOT = { "Virtual/Events/spec", "Virtual/API/spec", "Virtual/State/spec", "Forever/spec" }`.
+3. `.luacheckrc`: three `files["Virtual/<Events|API|State>/spec/"]` entries with the same fields; no key still names `VirtualState/`.
+4. `Virtual/State/spec/helpers/load.lua`: `line:match("^Virtual\\")` and `loadfile("Virtual/State/Adapter.lua")`.
+5. `Virtual/State/spec/secrets_spec.lua`: `DIR = "Virtual/State/Sources/"` and the `find` also lists `Virtual/Events/Rows.lua Virtual/Events/Attackers.lua`.
+6. `Virtual/State/Adapter.lua`: the three bridge lines (`Hekili.Virtual = { ... }`, `Hekili.VirtualState = VS -- alias for one release ...`); the rest of the file's code unchanged.
+7. No other code line changed: `git diff --cached -M --stat` shows only renames and small edits, and every changed line in the `.lua` files is a path, a `require`, or one of items 4 to 6.
+
+- [ ] **Step 4: Verify**
+
+The verification block; expected: the same busted, luacheck file and loaded-file counts as in Step 1 (Task 13's on the plan's end state: 204, 79, 51), the inventory diff empty, LuaLS no problems, `luac5.1` silent. Then:
+
+```bash
+grep -rn "VirtualState/" --include=*.lua --include=*.toc --include=*.sh --include=*.md . \
+  | grep -v '^\(\./\)\?\(archive\|Libs\|docs/superpowers/plans\|docs/research\)/'   # [no output]
+~/src/TacoDogForever/.lua/bin/busted Virtual/State/spec/adapter_spec.lua              # [0 failures / 0 errors]
+```
+
+(The second line includes the bridge check: `assert.are.same({ VS, VS, I.Events, ns.Facade }, { h.VirtualState, h.Virtual.State, h.Virtual.Events, h.Virtual.API })`.)
+
+- [ ] **Step 5: Commit**
+
+```bash
+git commit -m "refactor: VirtualState/ becomes Virtual/{Events,API,State}; Hekili.Virtual bridge with a VirtualState alias
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+- [ ] **Step 6: Push and restart** (orchestrator): `git push origin virtualstate-event-facade`. The TOC's paths changed: the user does a full client restart (not `/reload`) and checks that Hekili loads with no Lua error and `/run VSCopy(tostring(Hekili.VirtualState == Hekili.Virtual.State))` reads `true`.
+
+---
+
 ## Self-Review
 
 **1. Coverage of the spec (as amended) and the brief**
