@@ -8,7 +8,7 @@
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local Obs = VS.Obs
-local floor = math.floor
+local floor, abs, max = math.floor, math.abs, math.max
 
 -- By ability index a. `obj` is the spec's ability table (Hekili's `class.abilities[key]`): VirtualState reads its
 -- `spend`, `spendType`, `cooldown`, `charges`, `recharge`, `gcd`, `cast` and `onNextSwing` fields.
@@ -38,6 +38,7 @@ A.bySpell = {}
 
 -- Unknown, not ready, ready (the plain isActive flag as last reported).
 local UNKNOWN, NOT, YES = -1, 0, 1
+local GCD_MIN, GCD_MAX = 1.0, 2.0 -- the plausible GCD lengths a falling edge may teach
 
 -- The cast or channel in progress (0: none), and the GCD fixed at its rising edge.
 I.castAb, I.castEnd, I.channel = 0, 0, false
@@ -158,8 +159,9 @@ I.On(Obs.Cooldown, function(o, t)
             gcd.est, gcd.lo, gcd.hi = I.gcdStart + I.gcdDur, I.gcdStart + I.gcdDur, I.gcdStart + I.gcdDur
             I.Sample(gcd, "pinned", gcd.est, t, Obs.Cooldown)
         else
-            if I.gcdStart > 0 and o.t > I.gcdStart then
-                I.gcdLearned = quantise(o.t - I.gcdStart)
+            local len = o.t - I.gcdStart
+            if I.gcdStart > 0 and len >= GCD_MIN and len <= GCD_MAX then -- chained GCDs merge into one long edge
+                I.gcdLearned = quantise(len)
             end
             I.gcdStart, I.gcdDur = 0, 0
             gcd.est, gcd.lo, gcd.hi = o.t, o.t, o.t
@@ -171,7 +173,12 @@ I.On(Obs.Cooldown, function(o, t)
     local was = A.flag[a]
     A.flag[a] = o.b == 1 and YES or NOT
     if o.b == 1 and was == NOT and A.castT[a] > 0 and o.t > A.castT[a] then
-        A.cdLen[a] = o.t - A.castT[a] -- a ready edge after our cast teaches the real length (talents included)
+        -- a ready edge after our cast teaches the real length (talents included), but only near the registered one:
+        -- a flag that also tracks something else (a kill window's usability) would teach minutes
+        local len, reg = o.t - A.castT[a], A.obj[a].cooldown
+        if type(reg) ~= "number" or reg <= 0 or abs(len - reg) <= max(1, reg * 0.1) then
+            A.cdLen[a] = len
+        end
     end
 end)
 
