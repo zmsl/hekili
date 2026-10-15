@@ -401,6 +401,7 @@ function VS.Drain(cutoff)
     end
     local t0 = debugprofilestop()
     local genP, genT = VS.AuraGen("player"), VS.AuraGen("target")
+    S.Flush() -- this frame's staged observations first, whichever OnUpdate runs first (poll 3's Queued(0) follows them)
     S.RunPolls(cutoff) -- step 1
     local applied, reset = 0, false
     while true do

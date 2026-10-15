@@ -182,6 +182,23 @@ describe("Adapter", function()
         assert.are.same({ "drain_test:all" }, state.removed)
     end)
 
+    it("folds a swing staged this frame before poll 3 clears the queued strike: the swing is skipped as paid", function()
+        ctl.current[fs.STRIKE] = true
+        ctl.now = 2
+        VS.Drain(2)
+        assert.is_true(I.queuedStrike)
+        local before = VS.Power(fs.RAGE, 2).est
+        ctl.now = 3
+        ctl.Fire("PLAYER_SWING", 2.6, 0) -- staged; the flush frame has not ticked
+        ctl.current[fs.STRIKE] = nil -- the strike took that swing
+        VS.Drain(3)
+        assert.is_false(I.queuedStrike)
+        ctl.Tick(3.05)
+        ctl.now = 3.1
+        VS.Drain(3.1)
+        assert.are.equal(before, VS.Power(fs.RAGE, 3.1).est) -- no swing income
+    end)
+
     it("runs no reset when the log holds no own cast", function()
         ctl.now = 3
         VS.Drain(3)
