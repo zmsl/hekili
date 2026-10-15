@@ -53,6 +53,7 @@ local SUNDER_ARMOR = { 7386, 7405, 8380, 11596, 11597 }
 local THUNDER_CLAP = { 6343, 8198, 8204, 8205, 11580, 11581 }
 local THUNDER_CLAP_DURATION = { 10, 14, 18, 22, 26, 30 }
 local VICTORY_RUSH = { 402927 }
+local WHIRLWIND = { 1680 }
 local SHIELD_BLOCK_BONUS = { 0.5, 1, 2 } -- Improved Shield Block's seconds by rank (all three in the DB2)
 local TACTICAL_MASTERY = 1310185 -- Forever's level 14 passive: rage kept on a stance swap
 
@@ -1260,7 +1261,7 @@ spec:RegisterAbilities( {
         spendType = "rage",
 
         startsCombat = true,
-        known = knows( { 1680 } ),
+        known = knows( WHIRLWIND ),
         buff = "berserker_stance",
     },
 } )
@@ -1279,7 +1280,8 @@ spec:RegisterStateExpr( "mainhand_remains", function()
         return real > 0 and real or 0
     end
     if query_time <= nextMH then return nextMH - query_time end
-    return ( query_time - nextMH ) % mainhand_speed
+    if mainhand_speed <= 0 then return 0 end -- no swing speed read yet
+    return mainhand_speed - ( query_time - nextMH ) % mainhand_speed
 end )
 
 local queueEvents = {
@@ -1294,15 +1296,18 @@ local function byTime( a, b )
 end
 
 spec:RegisterStateFunction( "should_queue", function( queue_cost )
+    -- An unlearned strike or Whirlwind reserves no rage (none is at the beta cap of 30).
     local ms = knownRank( MORTAL_STRIKE ) > 0
+    local bt = knownRank( BLOODTHIRST ) > 0
+    local ww = knownRank( WHIRLWIND ) > 0
     for i = 1, #queueEvents do
         local e = queueEvents[ i ]
         if e.priority == 1 then
             e.time = query_time + ( ms and cooldown.mortal_strike.remains or cooldown.bloodthirst.remains )
-            e.spend = ms and action.mortal_strike.cost or action.bloodthirst.cost
+            e.spend = ms and action.mortal_strike.cost or bt and action.bloodthirst.cost or 0
         elseif e.priority == 2 then
             e.time = query_time + cooldown.whirlwind.remains
-            e.spend = action.whirlwind.cost
+            e.spend = ww and action.whirlwind.cost or 0
         else
             e.time = query_time + mainhand_remains
             e.spend = queue_cost

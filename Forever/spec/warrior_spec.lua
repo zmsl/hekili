@@ -319,10 +319,41 @@ describe("Forever Warrior", function()
         w.state.TimeToResource = function(_, _, amount)
             return amount / 10 -- 10 rage a second
         end
+        w.game.known[23881], w.game.known[1680] = true, true
         assert.is_false(e.should_queue(15)) -- Bloodthirst and Whirlwind are both ready now: 60 rage needed at once
         w.state.TimeToResource = function()
             return 0
         end
         assert.is_true(e.should_queue(15))
+        -- 40 rage now, Whirlwind in 3 s, the swing in 2 s: Bloodthirst and Whirlwind fit, the queued strike does not
+        e.cooldown = setmetatable({ whirlwind = { remains = 3 } }, getmetatable(e.cooldown))
+        w.state.TimeToResource = function(_, _, amount)
+            return math.max(0, (amount - 40) / 10)
+        end
+        assert.is_true(e.should_queue(0))
+        assert.is_false(e.should_queue(15))
+    end)
+
+    it("reserves no rage for a main strike or Whirlwind the character does not know", function()
+        local e = lw.env(w)
+        e.query_time, e.mainhand_remains = 0, 2
+        e.action = setmetatable({}, {
+            __index = function()
+                return { cost = 30 }
+            end,
+        })
+        w.state.TimeToResource = function(_, _, amount)
+            return amount / 10 -- no rage now, 10 a second
+        end
+        assert.is_true(e.should_queue(15)) -- 15 rage by the swing in 2 s
+        assert.is_false(e.should_queue(30))
+    end)
+
+    it("times the next main-hand swing past the last known one, and 0 with no weapon speed", function()
+        local e = lw.env(w)
+        e.now, e.query_time, e.nextMH, e.mainhand_speed = 0, 5, 1, 3
+        assert.are.equal(2, lw.run(w.exprs.mainhand_remains, e))
+        e.mainhand_speed = 0
+        assert.are.equal(0, lw.run(w.exprs.mainhand_remains, e))
     end)
 end)
