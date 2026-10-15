@@ -55,7 +55,12 @@ local function walk(api, u, unit, t)
                 break
             end
             local id = Plain(api, data.spellId)
-            local j = id and U.bySpell[id]
+            if id == nil then
+                complete = false
+                Note("aura walk", "secret")
+                break
+            end
+            local j = U.bySpell[id]
             if j then
                 local exp, apps = Plain(api, data.expirationTime), Plain(api, data.applications)
                 if type(exp) ~= "number" then

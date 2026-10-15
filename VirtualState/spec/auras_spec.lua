@@ -62,13 +62,27 @@ describe("auras", function()
 
     it("stops at a walk that raises or answers a secret, and logs nothing for it", function()
         ctl.now = 10
+        I.AuraModel(2, REND, 10, 25, 1, 10, Obs.CastSuccess, true)
         ctl.auraError.target = true
         ctl.Fire("UNIT_AURA", "target")
+        assert.are.equal("error", S.status["aura walk"])
         ctl.auraError.target = nil
         ctl.auras.target.HARMFUL[1] = fake.SECRET
         ctl.Fire("UNIT_AURA", "target")
         assert.are.equal(0, I.log.n)
         assert.are.equal("secret", S.status["aura walk"])
+        fold(10)
+        assert.are.equal(25, VS.Aura("target", fs.REND, 10).est) -- an incomplete walk logs nothing down
+    end)
+
+    it("stops at an entry whose spellId is secret, so a modelled debuff is not logged down", function()
+        ctl.now = 10
+        I.AuraModel(2, REND, 10, 25, 1, 10, Obs.CastSuccess, true)
+        ctl.auras.target.HARMFUL[1] = { spellId = fake.SECRET, expirationTime = 130, applications = 0 }
+        ctl.Fire("UNIT_AURA", "target")
+        fold(10)
+        assert.are.equal("secret", S.status["aura walk"])
+        assert.are.equal(25, VS.Aura("target", fs.REND, 10).est)
     end)
 
     it("orders AuraAt by applied time, filters by helpful/harmful and by est > now", function()
