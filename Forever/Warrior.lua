@@ -1,8 +1,9 @@
 -- Forever/Warrior.lua
 -- The Forever Warrior (pseudo-spec 1491): the Classic Warrior kit with Forever's spell data (ranks, costs, cooldowns,
--- cast times and durations from the Forever DB2 at build 1.60.1.70338, wowdb; a cost of 100 there is 10 rage), Forever's
--- Victory Rush and Spearing Strike, rage with its main-hand swing model and Bloodrage's rage over time, stances from
--- the plain shapeshift reads, and the default priorities.
+-- cast times and durations from the Forever DB2 at build 1.60.1.70338, wowdb, a cost of 100 there being 10 rage; the
+-- client is 1.60.1.70374, and its export wins where they differ), Forever's Victory Rush and Spearing Strike, rage per
+-- hit for both hands, Bloodrage's and Anger Management's rage over time, stances from the plain shapeshift reads, and
+-- the default priorities.
 -- Talents: the 52 live nodes (a ForeverProbe export of the client, 1.60.1.70374, 2026-10-15). Only rank 1 of each
 -- talent is in the Forever DB2, so a cost modifier is rank 1's value x the rank (Classic's own convention), floored
 -- at 0; no cooldown or duration modifier is modelled. The in-game checkpoint compares the costs (Snapshot cost= /
@@ -11,16 +12,17 @@
 -- Credits: Hekili (registration API and pack format); the abilities, auras, stance swap, queue prediction and the Arms
 -- and Fury priorities are ported from Hekili's Classic profile (origin/classic:Classic/Warrior.lua,
 -- Classic/APLs/WarriorArms.simc, Classic/APLs/WarriorFury.simc); call shapes from archive/TheWarWithin/WarriorArms.lua.
--- Rage per swing from Taco Dog Forever's Warrior pack (src/TacoDogForever_Warrior/Warrior.lua:21-24).
+-- The fallback rage rate from Taco Dog Forever's Warrior pack (src/TacoDogForever_Warrior/Warrior.lua:21-24).
 
 local addon, ns = ...
 local C_SpellBook, C_Spell, UnitClassBase = C_SpellBook, C_Spell, UnitClassBase
-local GetShapeshiftForm, GetShapeshiftFormInfo = GetShapeshiftForm, GetShapeshiftFormInfo
+local GetShapeshiftForm, GetShapeshiftFormInfo, UnitLevel = GetShapeshiftForm, GetShapeshiftFormInfo, UnitLevel
 local Hekili = _G[ addon ]
 
 if UnitClassBase( "player" ) ~= "WARRIOR" then return end
 
 local state = Hekili.State
+local VS = ns.VirtualState
 local IsSpellKnown, IsCurrentSpell, IsSpellUsable = C_SpellBook.IsSpellKnown, C_Spell.IsCurrentSpell, C_Spell.IsSpellUsable
 local floor, max, min, sort = math.floor, math.max, math.min, table.sort
 
@@ -92,12 +94,38 @@ local function usableNow( ids )
     return r > 0 and IsSpellUsable( ids[ r ] ) == true
 end
 
--- Rage a second of the main hand's unhasted weapon speed: a white swing brings rate x that speed (haste adds swings,
--- never rage per swing): 4.5 for a two-hander, 3.46 for a one-hander (Hekili's gear scan sets main_hand.size).
--- shortcut: no off-hand swing source (VirtualState models one swing-paid hand), so a dual wielder's off hand is left
--- to VirtualState's calibration; upgrade when the resources family takes a second hand.
+-- Rage a second of the main hand's unhasted weapon speed before the weapon damage is cached: a white swing brings
+-- rate x that speed: 4.5 for a two-hander, 3.46 for a one-hander (Hekili's gear scan sets main_hand.size).
 local function rageRate()
     return state.main_hand.size == 1 and 3.46 or 4.5
+end
+
+-- Rage per white hit, vanilla's formula: 7.5 x average weapon damage / c(level), c(level) = 0.0091 level^2 +
+-- 3.23 level + 4.27. TBC's adds a weapon-speed term, hit factor x unhasted weapon speed / 2 (hit factor 3.5 main
+-- hand, 1.75 off hand), with half the damage term; RAGE_SPEED_TERM = 1 adds that term to vanilla's (the checkpoint
+-- decides). The damage is UnitDamage's (VirtualState's out-of-combat cache: secret in combat), whose off-hand range
+-- already carries the off-hand penalty (the character pane shows it as is), so it is not halved again. Dual Wield
+-- Specialization +10% off-hand rage a rank; Unbridled Wrath 12% a rank for 1 rage a hit, both hands (60% at 5/5,
+-- Forever's tooltip).
+-- shortcut: misses, dodges and crits are ignored (every swing counts as an average hit); VirtualState's calibration
+-- scale absorbs the difference. Upgrade if the checkpoint's rage estimate drifts by more than 10.
+local RAGE_SPEED_TERM = 0
+local HIT_FACTOR = { 3.5, 1.75 }
+
+local function rageOf( hand )
+    local speed = hand == 1 and state.mainhand_speed or state.offhand_speed
+    local haste = state.haste
+    if haste and haste > 0 then speed = speed / haste end
+    local lo, hi, offLo, offHi = VS.Stat( "UnitDamage" )
+    local damage = hand == 1 and ( lo + hi ) / 2 or ( offLo + offHi ) / 2
+    if damage <= 0 then
+        return hand == 1 and rageRate() * speed or 0 -- no plain damage read yet
+    end
+    local level = UnitLevel( "player" )
+    local rage = damage / ( 0.0091 * level * level + 3.23 * level + 4.27 ) * 7.5
+        + RAGE_SPEED_TERM * HIT_FACTOR[ hand ] * speed / 2
+    if hand == 2 then rage = rage * ( 1 + 0.1 * state.talent.dual_wield_specialization.rank ) end
+    return rage + 0.12 * state.talent.unbridled_wrath.rank
 end
 
 spec:RegisterResource( Enum.PowerType.Rage, {
@@ -114,7 +142,39 @@ spec:RegisterResource( Enum.PowerType.Rage, {
         interval = "mainhand_speed",
 
         stop = function () return state.swings.mainhand == 0 end,
-        value = function () return rageRate() * state.mainhand_speed / state.haste end,
+        value = function () return rageOf( 1 ) end,
+    },
+
+    offhand = {
+        swing = "offhand",
+
+        last = function ()
+            local swing = state.swings.offhand
+            local t = state.query_time
+            if state.offhand_speed == 0 then return 0 end
+            return swing + floor( ( t - swing ) / state.offhand_speed ) * state.offhand_speed
+        end,
+
+        interval = "offhand_speed",
+
+        stop = function () return state.swings.offhand == 0 end,
+        value = function () return rageOf( 2 ) end,
+    },
+
+    -- Anger Management (12296): 1 rage every 3 s in combat (DB2 m2 = 1, m3 = 3), from the combat start.
+    anger_management = {
+        talent = "anger_management",
+
+        last = function ()
+            local start = state.combat
+            if start == 0 then return state.query_time end
+            return start + floor( ( state.query_time - start ) / 3 ) * 3
+        end,
+
+        interval = 3,
+
+        stop = function () return state.combat == 0 end,
+        value = 1,
     },
 
     -- Bloodrage's aura (29131): 1 rage every second for 10 s (DB2 effect: periodic energize 10 every 1000 ms).
@@ -1313,8 +1373,8 @@ spec:RegisterStateExpr( "should_cleave", function()
 end )
 
 -- The Classic settings the Arms and Fury priorities read (Classic/Warrior.lua:1574-1734, same defaults). Left out:
--- adaptive Whirlwind and Bloodthirst-in-execute (they need attack power and weapon damage, secret on Forever) and the
--- unused queueing threshold.
+-- adaptive Whirlwind and Bloodthirst-in-execute (they need attack power and weapon damage, secret on Forever), the
+-- unused queueing threshold, and the Overpower stance-swap settings (the dodge is unseen from another stance).
 spec:RegisterSetting( "adaptive_queueing_enabled", true, {
     type = "toggle",
     name = "Use Queue Prediction",
@@ -1347,23 +1407,6 @@ spec:RegisterSetting( "ww_cd_diff", 1.5, {
     min = 0,
     softMax = 2,
     step = 0.1,
-} )
-
-spec:RegisterSetting( "overpower_enabled", true, {
-    type = "toggle",
-    name = "Use Overpower",
-    desc = "When enabled, recommendations will include swapping to Battle Stance for Overpower.",
-    width = "full",
-} )
-
-spec:RegisterSetting( "overpower_threshold", 45, {
-    type = "range",
-    name = "Maximum Rage for Overpower",
-    desc = "Select the maximum rage allowed for a stance swap to Overpower.",
-    width = "full",
-    min = 1,
-    max = 100,
-    step = 1,
 } )
 
 spec:RegisterSetting( "hamstring_threshold", 80, {

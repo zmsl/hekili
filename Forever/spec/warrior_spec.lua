@@ -221,6 +221,41 @@ describe("Forever Warrior", function()
         end
     end)
 
+    it("gains rage per hit per hand by vanilla's damage formula from the cached weapon damage and the level", function()
+        local models = w.resource[2]
+        w.state.mainhand_speed, w.state.offhand_speed, w.state.haste = 2.6, 1.8, 1
+        w.state.talent = rank(0)
+        w.game.damage = { 40, 60, 15, 25 } -- averages 50 and 20
+        local c = 0.0091 * 22 * 22 + 3.23 * 22 + 4.27 -- 79.7344 at level 22
+        local mh, oh = 50 / c * 7.5, 20 / c * 7.5 -- no weapon-speed term (RAGE_SPEED_TERM = 0)
+        assert.is_true(math.abs(models.mainhand.value() - mh) < 1e-9)
+        assert.is_true(math.abs(models.offhand.value() - oh) < 1e-9)
+        w.state.talent = setmetatable({
+            unbridled_wrath = { rank = 5, enabled = true }, -- 60%: 0.6 rage a hit, both hands
+            dual_wield_specialization = { rank = 3, enabled = true }, -- +30% off-hand rage
+        }, getmetatable(rank(0)))
+        assert.is_true(math.abs(models.mainhand.value() - (mh + 0.6)) < 1e-9)
+        assert.is_true(math.abs(models.offhand.value() - (oh * 1.3 + 0.6)) < 1e-9)
+        assert.are.same({ "offhand", "offhand_speed" }, { models.offhand.swing, models.offhand.interval })
+    end)
+
+    it("falls back to the weapon-speed rate before the weapon damage is cached", function()
+        local models = w.resource[2]
+        w.state.mainhand_speed, w.state.offhand_speed, w.state.haste = 3, 0, 1
+        w.state.talent = rank(0)
+        assert.are.same({ 4.5 * 3, 0 }, { models.mainhand.value(), models.offhand.value() })
+    end)
+
+    it("gains Anger Management's rage every 3 s in combat through a combat-gated periodic entry", function()
+        local am = w.resource[2].anger_management
+        assert.are.same({ "anger_management", 3, 1 }, { am.talent, am.interval, am.value })
+        assert.is_nil(am.aura)
+        w.state.combat, w.state.query_time = 100, 107.5
+        assert.are.same({ 106, false }, { am.last(), am.stop() })
+        w.state.combat = 0
+        assert.is_true(am.stop())
+    end)
+
     it("gains Bloodrage's rage over time through an aura-gated regen entry", function()
         local models = w.resource[2]
         assert.are.equal(1, w.resource[1])
