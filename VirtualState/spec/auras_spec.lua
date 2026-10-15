@@ -65,14 +65,24 @@ describe("auras", function()
         I.AuraModel(2, REND, 10, 25, 1, 10, Obs.CastSuccess, true)
         ctl.auraError.target = true
         ctl.Fire("UNIT_AURA", "target")
-        assert.are.equal("error", S.status["aura walk"])
+        assert.are.equal("error", S.status["aura walk target"])
         ctl.auraError.target = nil
         ctl.auras.target.HARMFUL[1] = fake.SECRET
         ctl.Fire("UNIT_AURA", "target")
         assert.are.equal(0, I.log.n)
-        assert.are.equal("secret", S.status["aura walk"])
+        assert.are.equal("secret", S.status["aura walk target"])
         fold(10)
         assert.are.equal(25, VS.Aura("target", fs.REND, 10).est) -- an incomplete walk logs nothing down
+    end)
+
+    it("notes the walk per unit: a raising target walk leaves the player's readable", function()
+        ctl.now = 10
+        ctl.auras.player.HELPFUL[1] = { spellId = fs.SHOUT, expirationTime = 130, applications = 0 }
+        ctl.Fire("UNIT_AURA", "player")
+        ctl.auraError.target = true
+        ctl.Fire("UNIT_AURA", "target")
+        assert.are.equal("readable", S.status["aura walk player"])
+        assert.are.equal("error", S.status["aura walk target"])
     end)
 
     it("stops at an entry whose spellId is secret, so a modelled debuff is not logged down", function()
@@ -81,7 +91,7 @@ describe("auras", function()
         ctl.auras.target.HARMFUL[1] = { spellId = fake.SECRET, expirationTime = 130, applications = 0 }
         ctl.Fire("UNIT_AURA", "target")
         fold(10)
-        assert.are.equal("secret", S.status["aura walk"])
+        assert.are.equal("secret", S.status["aura walk target"])
         assert.are.equal(25, VS.Aura("target", fs.REND, 10).est)
     end)
 

@@ -40,9 +40,26 @@ describe("casts and cooldowns", function()
         assert.are.equal(30, VS.CooldownLength(fs.REND)) -- the spec's cooldown first
         I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
         S.Direct(Obs.Cooldown, 10.1, REND, 0)
-        S.Direct(Obs.Cooldown, 35, REND, 1)
-        I.Fold(35, false)
-        assert.are.equal(25, VS.CooldownLength(fs.REND))
+        S.Direct(Obs.Cooldown, 38, REND, 1)
+        I.Fold(38, false)
+        assert.are.equal(28, VS.CooldownLength(fs.REND)) -- within max(1 s, 10%) of the registered 30
+    end)
+
+    it("keeps the registered length when the ready edge is out of tolerance", function()
+        I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
+        S.Direct(Obs.Cooldown, 10.1, REND, 0)
+        S.Direct(Obs.Cooldown, 154, REND, 1) -- a flag that also tracks a kill window: 144 s
+        I.Fold(154, false)
+        assert.are.equal(30, VS.CooldownLength(fs.REND))
+    end)
+
+    it("learns a GCD only from a falling edge within [1.0, 2.0] s", function()
+        S.Direct(Obs.Cooldown, 100, 0, 1, 1)
+        S.Direct(Obs.Cooldown, 101.4, 0, 0, 1)
+        S.Direct(Obs.Cooldown, 110, 0, 1, 1)
+        S.Direct(Obs.Cooldown, 114.38, 0, 0, 1) -- chained GCDs merged into one edge
+        I.Fold(114.4, false)
+        assert.is_true(math.abs(I.gcdLearned - 1.4) < 0.002) -- the earlier, plausible one stands
     end)
 
     it("logs a Cooldown only on a plain flag edge, and the GCD's edges, on the urgent lane", function()

@@ -411,8 +411,9 @@ kept("C_Spell.GetSpellCooldown", "virtual", function(spellID)
         CD.isActive = active == true
         return CD
     end
-    if rec.est <= t then
-        -- believed ready: the client's ready shape, not a finished cooldown Hekili would read as running
+    if rec.est <= t or active == false then
+        -- ready (believed, or the plain flag, which leads the belief by a poll): the client's ready shape, not a
+        -- finished cooldown Hekili would read as running
         CD.startTime, CD.duration = 0, 0
         CD.isActive = active == true
         return CD

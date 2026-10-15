@@ -223,6 +223,14 @@ describe("ns.Facade", function()
         assert.are.same({ 0, 0, true }, { c.startTime, c.duration, c.isActive })
     end)
 
+    it("answers the ready shape when the plain flag says ready though the belief still runs", function()
+        I.CooldownModel(3, 40, 30, 10, VS.Obs.CastSuccess)
+        ctl.now = 39.6 -- the belief's expiry lags the client's by a poll
+        ctl.cooldown[fs.REND] = { isActive = false, isOnGCD = false }
+        local c = Facade.C_Spell.GetSpellCooldown(fs.REND)
+        assert.are.same({ 0, 0, false }, { c.startTime, c.duration, c.isActive })
+    end)
+
     it("passes the player's own casts through and answers the target's from TargetCast", function()
         ctl.casting = { 1000, 2500 }
         assert.are.equal(1000, select(4, Facade.UnitCastingInfo("player")))

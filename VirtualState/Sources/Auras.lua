@@ -16,6 +16,8 @@ local Plain, Direct, Note = S.Plain, S.Direct, S.Note
 
 local SCAN = 40
 local FILTERS = { "HELPFUL", "HARMFUL" }
+-- The walk status per unit index (def.units is player, target), so Snapshot tells the two apart.
+local WALK = { "aura walk player", "aura walk target" }
 
 -- By unit index and aura index: the walk serial that last found it, and whether it was seen plain in combat.
 local found, seen = {}, {}
@@ -42,11 +44,11 @@ local function walk(api, u, unit, t)
         for i = 1, SCAN do
             local ok, raw = pcall(api.C_UnitAuras.GetAuraDataByIndex, unit, i, filter) -- secret: tested next
             if not ok then
-                Note("aura walk", "error")
+                Note(WALK[u], "error")
                 complete = false
                 break
             elseif api.issecretvalue(raw) then
-                Note("aura walk", "secret")
+                Note(WALK[u], "secret")
                 complete = false
                 break
             end
@@ -57,7 +59,7 @@ local function walk(api, u, unit, t)
             local id = Plain(api, data.spellId)
             if id == nil then
                 complete = false
-                Note("aura walk", "secret")
+                Note(WALK[u], "secret")
                 break
             end
             local j = U.bySpell[id]
@@ -65,10 +67,10 @@ local function walk(api, u, unit, t)
                 local exp, apps = Plain(api, data.expirationTime), Plain(api, data.applications)
                 if type(exp) ~= "number" then
                     complete = false
-                    Note("aura walk", "secret")
+                    Note(WALK[u], "secret")
                     break
                 end
-                Note("aura walk", "readable")
+                Note(WALK[u], "readable")
                 found[u][j] = serial
                 if I.inCombat then
                     seen[u][j] = true
