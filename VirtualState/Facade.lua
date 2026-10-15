@@ -94,8 +94,9 @@ kept("UnitPower", "virtual", function(unit, powerType)
             powerType = 0
         end
     end
-    return floor(VS.Power(powerType, now()).lo) -- lo never over-promises a spender (feasibility §D.3)
-end, "secret always [W PR16]; Power().lo")
+    local b = VS.Power(powerType, now())
+    return floor(powerType == 1 and b.est or b.lo) -- rage answers est (G4, CHECKPOINT 4); others lo
+end, "secret always [W PR16]; rage Power().est (G4), others Power().lo")
 
 kept("GetPowerRegenForPowerType", "virtual", function(powerType)
     local r = I.res.slotOf[powerType]
