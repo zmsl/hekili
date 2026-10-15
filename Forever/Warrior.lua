@@ -103,14 +103,14 @@ end
 
 -- Rage per white hit, vanilla's formula: 7.5 x average weapon damage / c(level), c(level) = 0.0091 level^2 +
 -- 3.23 level + 4.27. TBC's adds a weapon-speed term, hit factor x unhasted weapon speed / 2 (hit factor 3.5 main
--- hand, 1.75 off hand), with half the damage term; RAGE_SPEED_TERM = 1 adds that term to vanilla's (the checkpoint
--- decides). The damage is UnitDamage's (VirtualState's out-of-combat cache: secret in combat), whose off-hand range
+-- hand, 1.75 off hand), with half the damage term; RAGE_SPEED_TERM = 1 adds that term to vanilla's, and it is on
+-- (checkpoint 2026-10-15: 38/40/44 damage -> 8/9/10 rage at level 22, 2.2 s main hand). The damage is UnitDamage's (VirtualState's out-of-combat cache: secret in combat), whose off-hand range
 -- already carries the off-hand penalty (the character pane shows it as is), so it is not halved again. Dual Wield
 -- Specialization +10% off-hand rage a rank; Unbridled Wrath 12% a rank for 1 rage a hit, both hands (60% at 5/5,
 -- Forever's tooltip).
 -- shortcut: misses, dodges and crits are ignored (every swing counts as an average hit); VirtualState's calibration
 -- scale absorbs the difference. Upgrade if the checkpoint's rage estimate drifts by more than 10.
-local RAGE_SPEED_TERM = 0
+local RAGE_SPEED_TERM = 1
 local HIT_FACTOR = { 3.5, 1.75 }
 
 local function rageOf( hand )

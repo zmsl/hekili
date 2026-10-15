@@ -2137,3 +2137,5 @@ Fix what the user reports (each fix its own commit, then the verification block)
 **4. Review Focus:** each of the five lines has its pinned test in the owning task (Tasks 1, 2, 3, 4).
 
 **Concerns for the orchestrator:** (a) Task 2 is VirtualState code on the Warrior branch, because the aura-gated regen it extends was committed only there (Warrior plan Task 1); merging `forever-warrior-profile` into `forever` brings it along with Phase 1. (b) Settled by ruling: vanilla's damage term is the default; TBC's weapon-speed term is behind `RAGE_SPEED_TERM = 0`, and checkpoint item 4 decides it. (c) The Focused Rage ability list is a guess, marked `shortcut:` in the code and checked by checkpoint item 8.
+
+Checkpoint 2026-10-15 (Task 5, item 4): level 22, 2.2 s main hand, Unbridled Wrath 5/5, main-hand hits of 38/40/44 damage gave 8/9/10 rage (damage term alone predicts ~4.4, with the speed term ~8.2), so `RAGE_SPEED_TERM` is now 1 and the spec's expected values include the term.

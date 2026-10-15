@@ -221,21 +221,23 @@ describe("Forever Warrior", function()
         end
     end)
 
-    it("gains rage per hit per hand by vanilla's damage formula from the cached weapon damage and the level", function()
+    it("gains rage per hit per hand by vanilla's damage formula plus TBC's weapon-speed term", function()
         local models = w.resource[2]
         w.state.mainhand_speed, w.state.offhand_speed, w.state.haste = 2.6, 1.8, 1
         w.state.talent = rank(0)
         w.game.damage = { 40, 60, 15, 25 } -- averages 50 and 20
         local c = 0.0091 * 22 * 22 + 3.23 * 22 + 4.27 -- 79.7344 at level 22
-        local mh, oh = 50 / c * 7.5, 20 / c * 7.5 -- no weapon-speed term (RAGE_SPEED_TERM = 0)
+        -- damage term + hit factor x speed / 2 (RAGE_SPEED_TERM = 1):
+        local mh = 50 / c * 7.5 + 3.5 * 2.6 / 2 -- 4.7031 + 4.55 = 9.2531
+        local oh = 20 / c * 7.5 + 1.75 * 1.8 / 2 -- 1.8812 + 1.575 = 3.4562
         assert.is_true(math.abs(models.mainhand.value() - mh) < 1e-9)
         assert.is_true(math.abs(models.offhand.value() - oh) < 1e-9)
         w.state.talent = setmetatable({
             unbridled_wrath = { rank = 5, enabled = true }, -- 60%: 0.6 rage a hit, both hands
             dual_wield_specialization = { rank = 3, enabled = true }, -- +30% off-hand rage
         }, getmetatable(rank(0)))
-        assert.is_true(math.abs(models.mainhand.value() - (mh + 0.6)) < 1e-9)
-        assert.is_true(math.abs(models.offhand.value() - (oh * 1.3 + 0.6)) < 1e-9)
+        assert.is_true(math.abs(models.mainhand.value() - (mh + 0.6)) < 1e-9) -- 9.2531 + 0.6 = 9.8531
+        assert.is_true(math.abs(models.offhand.value() - (oh * 1.3 + 0.6)) < 1e-9) -- 3.4562 x 1.3 + 0.6 = 5.0931
         assert.are.same({ "offhand", "offhand_speed" }, { models.offhand.swing, models.offhand.interval })
     end)
 
