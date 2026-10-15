@@ -157,10 +157,17 @@ describe("Forever Warrior", function()
             return lw.run(w.abilities[key][field], e)
         end
         assert.are.same(
-            { 13, 14, 5, 9, 8, 6 },
+            { 13, 20, 5, 9, 8, 6 }, -- Cleave: 20 at any Improved Cleave rank (the client's cost read at 3/3)
             { at("heroic_strike", "spend"), at("cleave", "spend"), at("execute", "spend"), at("sunder_armor", "spend"),
                 at("thunder_clap", "spend"), at("taunt", "cooldown") }
         )
+    end)
+
+    it("gates Thunder Clap, Execute and Spearing Strike on the stances Forever's tooltips name", function()
+        local a = w.abilities
+        assert.are.same({ nil, "berserker_stance" }, { a.thunder_clap.buff, a.thunder_clap.nobuff })
+        assert.are.same({ nil, "defensive_stance" }, { a.execute.buff, a.execute.nobuff })
+        assert.are.same({ "battle_stance", nil }, { a.spearing_strike.buff, a.spearing_strike.nobuff })
     end)
 
     it("uses the corrected Classic IDs and Forever's Overpower window", function()

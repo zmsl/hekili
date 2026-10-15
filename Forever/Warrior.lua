@@ -660,7 +660,7 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "off",
 
-        spend = function () return max( 0, 20 - 3 * talent.improved_cleave.rank ) end,
+        spend = 20, -- the client's cost read is 20 at Improved Cleave 3/3 on Forever: its damage bonus is not modelled
         spendType = "rage",
 
         startsCombat = true,
@@ -780,6 +780,7 @@ spec:RegisterAbilities( {
 
         startsCombat = true,
         known = knows( EXECUTE ),
+        nobuff = "defensive_stance",
 
         usable = function () return reactive( EXECUTE ), "requires target health under 20 percent" end,
 
@@ -1164,6 +1165,7 @@ spec:RegisterAbilities( {
 
         startsCombat = true,
         known = knows( { 1310222 } ),
+        buff = "battle_stance",
     },
 
     sunder_armor = {
@@ -1230,7 +1232,7 @@ spec:RegisterAbilities( {
 
         startsCombat = true,
         known = knows( THUNDER_CLAP ),
-        buff = "battle_stance",
+        nobuff = "berserker_stance",
 
         handler = function ()
             applyDebuff( "target", "thunder_clap" )
