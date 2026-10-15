@@ -219,6 +219,42 @@ describe("Adapter", function()
         assert.are.equal(1, I.applyErrors)
         assert.are.equal(0, I.drainCasts)
         assert.is_truthy(VS.Snapshot():find("errors=1", 1, true))
+        assert.is_truthy(VS.Snapshot():find("spec handler raised", 1, true))
+    end)
+
+    it("counts a raising first reset, skips the apply and still restores", function()
+        local reset, raised = state.reset, false
+        state.reset = function()
+            if not raised then
+                raised = true
+                error("reset raised")
+            end
+            reset()
+        end
+        ctl.now = 32
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-8", fs.REND)
+        ctl.Tick(32.05)
+        ctl.now = 32.1
+        assert.has_no.errors(function()
+            VS.Drain(32.1)
+        end)
+        assert.is_nil(I.pinned)
+        assert.are.same({ 0, 0, 1 }, { state.offset, state.delay, state.resets }) -- only the trailing reset ran
+        assert.are.same({ 1, 0 }, { I.applyErrors, I.drainCasts })
+        assert.is_truthy(VS.Snapshot():find("reset raised", 1, true))
+    end)
+
+    it("runs no reset for an own cast of a tracked extra with no ability", function()
+        I.extra.abilities[1] = 6666
+        VS.SpecChanged()
+        I.extra.abilities[1] = nil
+        I.ObsLog.Clear(I.log)
+        ctl.now = 34
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", 6666)
+        ctl.Tick(34.05)
+        ctl.now = 34.1
+        VS.Drain(34.1)
+        assert.are.same({ 0, 0, 0 }, { state.resets, I.applyErrors, I.drainCasts })
     end)
 
     it("rescans both units at the trailing reset, so an untracked apply-time aura write does not survive", function()
@@ -249,6 +285,22 @@ describe("Adapter", function()
         VS.Drain(40.1)
         assert.are.equal(2, state.resets)
         assert.is_nil(state.buff.untracked_buff)
+    end)
+
+    it("marks no unit after the trailing reset rescanned both, even when the believed auras moved", function()
+        local reset = state.reset
+        state.reset = function() -- a scrape clears `updated` (State.lua:6199-6207)
+            reset()
+            state.player.updated, state.target.updated = false, false
+        end
+        ctl.now = 42
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-10", fs.REND)
+        ctl.Tick(42.05)
+        ctl.now = 42.1
+        local gen = VS.AuraGen("target")
+        VS.Drain(42.1)
+        assert.are_not.equal(gen, VS.AuraGen("target")) -- rend's debuff moved the target's set
+        assert.are.same({ 2, false, false }, { state.resets, state.player.updated, state.target.updated })
     end)
 
     it("queues a hard cast's finish with a nil target when the sent GUID is unknown, reading no GUID", function()

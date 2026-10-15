@@ -467,12 +467,14 @@ One drain folds the log in order (§8) and applies each own cast at its own time
       3.3-3.7 without another reset: between casts `state` carries Hekili's own forward state, as in its
       simulation.
 4. **Restore and reset** (R2, R3): `state.offset = 0`, `state.delay = 0`; unpin the facade's clock; fold the
-   rest of the log up to `T`; if any cast was applied, run one more `state.reset()` (full). No apply-time
+   rest of the log up to `T`; if any cast was applied, mark both `state.player.updated` and
+   `state.target.updated` and run one more `state.reset()` (full), so it rescans both units' auras. No apply-time
    mutation survives into recommendations, except the step 3.3 combat-start write, which stands in for
    `PLAYER_REGEN_DISABLED` (`state.combat` is not rebuilt by a reset; it is set only at `State.lua:511` and in
    event handlers, `Events.lua:346, 860-862, 879`).
-5. Mark `state.player.updated` / `state.target.updated` for each unit whose `AuraGen` moved during the fold,
-   so the cycle's resets rescan its auras (G1).
+5. When step 4 ran no reset, mark `state.player.updated` / `state.target.updated` for each unit whose
+   `AuraGen` moved during the fold, so the cycle's resets rescan its auras (G1). After a trailing reset both units
+   are already rescanned, so step 5 marks nothing.
 
 Preconditions held by the procedure: `state.resetting` is false during step 3.6 (a reset clears it at its end,
 `State.lua:6461`; with it true, `RunHandler` skips `state.modified`, `State.lua:6133`); the drain never calls

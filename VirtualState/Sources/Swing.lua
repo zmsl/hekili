@@ -57,3 +57,9 @@ S.On("UNIT_ATTACK_SPEED", "player", outOfCombat)
 S.On("PLAYER_EQUIPMENT_CHANGED", nil, outOfCombat)
 S.On("PLAYER_REGEN_ENABLED", nil, outOfCombat)
 S.OnStart(outOfCombat)
+-- Build clears what the start read staged (PLAYER_LOGIN precedes the first build): read again
+I.OnBuild(function(_, now)
+    if I.api then
+        outOfCombat(I.api, now)
+    end
+end)

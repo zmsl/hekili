@@ -393,8 +393,9 @@ local function apply(kind, a, t)
 end
 I.Apply = apply
 
--- Applies whose spec code raised (Snapshot's drain line); the drain carries on so its restore always runs.
-I.applyErrors = 0
+-- Applies (or the drain's first reset) whose spec code raised, and the last error (Snapshot's log line); the drain
+-- carries on so its restore always runs.
+I.applyErrors, I.applyError = 0, nil
 
 --- The fold plus apply through the spec (spec §5.2), called only from Hekili.Update after its guards. Allocates
 --- nothing beyond what Hekili's own reset and handlers allocate.
@@ -407,22 +408,31 @@ function VS.Drain(cutoff)
     local genP, genT = VS.AuraGen("player"), VS.AuraGen("target")
     S.Flush() -- this frame's staged observations first, whichever OnUpdate runs first (poll 3's Queued(0) follows them)
     S.RunPolls(cutoff) -- step 1
-    local applied, reset = 0, false
+    local applied, reset, resetOk = 0, false, false
     while true do
         local kind, a, t = I.Fold(cutoff, true) -- steps 2 and 3.8
         if not kind then
             break
         end
-        I.pinned = t -- 3.1: the facade answers at the cast's time (R1)
-        if not reset then
-            state.reset() -- 3.2: once, full ("Primary", State.lua:6181-6184)
-            reset = true
-        end
-        local ok, done = pcall(apply, kind, a, t)
-        if not ok then
-            I.applyErrors = I.applyErrors + 1
-        elseif done then
-            applied = applied + 1
+        local key = I.ab.key[a]
+        if key and class.abilities[key] then -- a track_<id> extra has no ability to apply
+            I.pinned = t -- 3.1: the facade answers at the cast's time (R1)
+            if not reset then
+                reset = true
+                local err
+                resetOk, err = pcall(state.reset) -- 3.2: once, full ("Primary", State.lua:6181-6184)
+                if not resetOk then
+                    I.applyErrors, I.applyError = I.applyErrors + 1, err
+                end
+            end
+            if resetOk then
+                local ok, done = pcall(apply, kind, a, t)
+                if not ok then
+                    I.applyErrors, I.applyError = I.applyErrors + 1, done
+                elseif done then
+                    applied = applied + 1
+                end
+            end
         end
     end
     -- 4: restore, unpin, settle, and one more full reset when anything was applied (R2, R3)
@@ -433,13 +443,14 @@ function VS.Drain(cutoff)
         -- the trailing reset rescans both units' auras, so an apply-time write outside the tracked set never survives
         state.player.updated, state.target.updated = true, true
         state.reset()
-    end
-    -- 5: Hekili rescans a unit's auras when its believed set moved (G1)
-    if VS.AuraGen("player") ~= genP then
-        state.player.updated = true
-    end
-    if VS.AuraGen("target") ~= genT then
-        state.target.updated = true
+    else
+        -- 5: Hekili rescans a unit's auras when its believed set moved (G1)
+        if VS.AuraGen("player") ~= genP then
+            state.player.updated = true
+        end
+        if VS.AuraGen("target") ~= genT then
+            state.target.updated = true
+        end
     end
     I.drainMs, I.drainCasts = debugprofilestop() - t0, applied
 end

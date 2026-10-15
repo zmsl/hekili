@@ -15,11 +15,13 @@ local floor = math.floor
 local W_SWING, W_PAIR, W_COMBAT = 1, 0.5, 0.3
 
 local anchorT, speed, base, last, w0, confAt = { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }
+local prevTick = { 0, 0 }
 local swingRec, speedRec, haste = {}, {}, nil
 I.haste0 = 1
 
 I.OnBuild(function(def, now)
     for h = 1, 2 do
+        anchorT[h], w0[h], prevTick[h], last[h] = 0, 0, 0, 0 -- the old set's clock; Sources/Swing.lua re-reads speeds
         swingRec[h] = I.NewBelief(h == 1 and "swing main" or "swing off")
         speedRec[h] = I.NewBelief(h == 1 and "swing speed main" or "swing speed off")
         I.Sample(speedRec[h], "default", h == 1 and 2 or 0, now, 0)
@@ -87,7 +89,6 @@ end
 -- A paired rage step (spec §6.4): a PowerTick of a swing-paid resource that no PLAYER_SWING and no own cast
 -- explains is a landed swing when it falls one swing after the previous such tick (a pair: anchor at weight 0.5 when
 -- the clock is weaker) or on a predicted swing (a confirmation: the clock re-anchors there).
-local prevTick = { 0, 0 }
 local OWN_TICK = 0.1 -- TDF Belief.OWN_TICK: a tick this close to our cast is the cast's own change
 
 I.On(Obs.PowerTick, function(o, t)

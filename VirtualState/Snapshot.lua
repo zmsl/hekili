@@ -36,6 +36,9 @@ function VS.Snapshot()
         I.drainCasts or 0,
         I.applyErrors or 0
     )
+    if I.applyError ~= nil then
+        out[#out] = out[#out] .. " error=" .. tostring(I.applyError)
+    end
     local names = {}
     for name in pairs(S.status) do
         names[#names + 1] = name

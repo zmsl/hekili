@@ -3,8 +3,9 @@
 -- cost), exact reads, regen calibration between pins (an EMA), swing steps for a swing-paid resource (rage), our own
 -- casts' changes (Adapter.lua, spec §5.3), and the Power/Regen accessors.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Model/Belief/Resources.lua (calibrate :117-136, pin :218-263,
--- ladder :275-315, Applier Usable :327, Reader Resource :365-372, Applier PowerTick :378) and the resource conf of
--- src/TacoDogForever/Model/Belief.lua:695-699.
+-- ladder :275-315, Applier Usable :327, Reader Resource :365-372) and the resource conf of
+-- src/TacoDogForever/Model/Belief.lua:695-699. The power-tick phase (TDF's Applier PowerTick :378) is not modelled in
+-- Phase 1.
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal

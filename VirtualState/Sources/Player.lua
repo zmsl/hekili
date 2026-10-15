@@ -111,6 +111,13 @@ S.OnStart(function(api, t)
     readSpellHaste(api, t, true)
 end)
 
+-- Build clears what the start read logged (PLAYER_LOGIN precedes the first build): read again
+I.OnBuild(function(_, now)
+    if I.api then
+        readSpellHaste(I.api, now, true)
+    end
+end)
+
 S.On("PLAYER_REGEN_DISABLED", nil, function(api, t)
     I.inCombat = true
     Stage(Obs.CombatStart, t)

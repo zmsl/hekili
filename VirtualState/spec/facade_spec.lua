@@ -32,7 +32,7 @@ local RESOLVED = {
 }
 
 describe("ns.Facade", function()
-    local names, ns, Facade, VS, I, api, ctl, calls, saved
+    local names, ns, Facade, VS, I, api, ctl, calls, saved, powerType
 
     local function entry(name)
         local nsName, key = name:match("^([%w_]+)%.([%w_]+)$")
@@ -49,8 +49,9 @@ describe("ns.Facade", function()
     before_each(function()
         api, ctl = fake.new()
         ctl.now = 1
+        powerType = fs.RAGE
         api.UnitPowerType = function()
-            return fs.RAGE
+            return powerType
         end
         api.C_Spell.GetSpellInfo = function(id)
             return { name = "Spell " .. id, iconID = 1 }
@@ -127,6 +128,15 @@ describe("ns.Facade", function()
         assert.are.equal(10, Facade.UnitPower("player", fs.RAGE))
         assert.are.equal(10, Facade.UnitPower("player"))
         assert.are.equal(0, Facade.UnitPower("target", fs.RAGE))
+        local power, asked = VS.Power, nil
+        VS.Power = function(pt, t)
+            asked = pt
+            return power(pt, t)
+        end
+        powerType = fake.SECRET -- a secret UnitPowerType reads as power type 0, never flows on
+        Facade.UnitPower("player")
+        VS.Power = power
+        assert.are.equal(0, asked)
         ctl.Fire("PLAYER_REGEN_DISABLED")
         assert.are.same({ 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) })
         assert.are.equal(2, select("#", Facade.GetManaRegen()))

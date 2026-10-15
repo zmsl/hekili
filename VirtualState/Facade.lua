@@ -89,7 +89,10 @@ kept("UnitPower", "virtual", function(unit, powerType)
         return 0
     end
     if powerType == nil then
-        powerType = realUnitPowerType and realUnitPowerType("player") or 0
+        powerType = realUnitPowerType and realUnitPowerType("player")
+        if issecretvalue(powerType) or type(powerType) ~= "number" then
+            powerType = 0
+        end
     end
     return floor(VS.Power(powerType, now()).lo) -- lo never over-promises a spender (feasibility §D.3)
 end, "secret always [W PR16]; Power().lo")

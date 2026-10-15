@@ -884,6 +884,7 @@ function SkeletonGen:Generate()
 
     -- Standard imports
     self:Append( "local addon, ns = ..." )
+    self:Append( "local Facade = ns.Facade" )
     self:Append( "local Hekili = _G[ addon ]" )
     self:Append( "local class, state = Hekili.Class, Hekili.State" )
     self:Append( "local spec = Hekili:NewSpecialization( " .. self.specID .. ", " .. tostring( isRanged ) .. " )" )
