@@ -1924,6 +1924,16 @@ function Hekili:LoadScript( pack, list, id )
         Hekili:Error( "Error in " .. scriptID .. " conditions:  " .. ( script.rs or "null" ) .. "\n\n" .. script.Error )
     end
 
+    -- Forever: health and time to die are secret, so VirtualState answers them with constants (spec §6.5, §7.4).
+    local scan = ns.VirtualState.AplSecretToken
+    local token, subject, reads = scan( data.criteria )
+    if not token then token, subject, reads = scan( data.value ) end
+    if not token then token, subject, reads = scan( data.value_else ) end
+    if not token then token, subject, reads = scan( data.target_if ) end
+    if token then
+        Hekili:Error( "Forever: %s; `%s` in pack `%s` list `%s` entry %d (%s) %s.", subject, token, pack, list, id, data.action or "?", reads )
+    end
+
     script.action = data.action
     local lua = script.Lua
 

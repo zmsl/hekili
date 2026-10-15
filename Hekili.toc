@@ -33,6 +33,7 @@ VirtualState\Sources\Talents.lua
 VirtualState\Sources\Nameplates.lua
 VirtualState\Sources\Totems.lua
 VirtualState\Snapshot.lua
+VirtualState\AplWarnings.lua
 VirtualState\Facade.lua
 
 Hekili.lua
