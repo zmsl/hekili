@@ -181,14 +181,91 @@ describe("Forever Warrior", function()
         assert.are.equal("defensive_stance", lw.run(w.abilities.charge.buff, e))
     end)
 
-    it("recommends Overpower only while the client calls it usable, not when it is short of its combo point", function()
+    it("declares the now-state of Charge, Bloodrage, Berserker Rage, the debuffs and the stances (spec §12a)", function()
+        for _, k in ipairs({ "charge", "bloodrage", "berserker_rage", "rend", "sunder_armor", "thunder_clap", "hamstring",
+            "demoralizing_shout", "piercing_howl", "battle_stance", "defensive_stance", "berserker_stance" }) do
+            assert.is_function(w.abilities[k].now, k)
+        end
         local e = lw.env(w)
-        w.game.known[7384] = true
-        assert.is_false(lw.run(w.abilities.overpower.usable, e))
-        w.game.noMana[7384] = true -- no dodge: the second power cost (a combo point) is missing
-        assert.is_false(lw.run(w.abilities.overpower.usable, e))
-        w.game.usable[7384] = true
-        assert.is_true(lw.run(w.abilities.overpower.usable, e))
+        w.game.known[100], w.game.known[6178] = true, true -- Charge rank 2
+        lw.run(w.abilities.charge.now, e)
+        assert.are.same({ 12 }, e.gained)
+        assert.are.same({ "charge_stun" }, e.applied)
+        e = lw.env(w)
+        e.rage.current = 60
+        w.game.known[1310185] = true -- Tactical Mastery: 10 kept
+        lw.run(w.abilities.battle_stance.now, e)
+        assert.are.same({ 50 }, e.spent)
+        assert.are.same({ "battle_stance" }, e.applied)
+        assert.are.same({ "defensive_stance", "berserker_stance" }, e.removed)
+    end)
+
+    describe("the reactive windows from the combat log (event-facade spec §6)", function()
+        local ME, MOB = "Player-1", "Creature-1"
+
+        local function row(t, sub, src, dst, a12, a15)
+            w.game.now = t
+            w.game.row = { t, sub, false, src, "", 0, 0, dst, "", 0, 0, a12, "", 1, a15 or 0 }
+            w.events.COMBAT_LOG_EVENT_UNFILTERED()
+        end
+
+        local function reset(t)
+            local e = lw.env(w)
+            e.now, e.query_time, e.target.unit = t, t, MOB
+            lw.run(w.hooks.reset_precast, e)
+            return e
+        end
+
+        before_each(function()
+            w.state.GUID = ME
+            w.game.known[7384], w.game.known[6572] = true, true
+        end)
+
+        it("opens Overpower's window on our dodged swing for the rest of its 5 s, on that target only", function()
+            row(10, "SWING_MISSED", ME, MOB, "DODGE")
+            local e = reset(12)
+            assert.are.equal(3, e.durations.overpower_ready)
+            assert.is_nil(reset(16.5).durations.overpower_ready) -- past Classic's 6 s age test
+            w = lw.load()
+            w.state.GUID = ME
+            w.game.known[7384] = true
+            row(20, "SPELL_MISSED", ME, "Creature-2", 7384, "DODGE") -- another unit dodged
+            assert.is_nil(reset(21).durations.overpower_ready)
+        end)
+
+        it("closes Overpower's window once Overpower is cast, and keeps the usability fallback", function()
+            row(10, "SWING_MISSED", ME, MOB, "DODGE")
+            row(10.5, "SPELL_CAST_SUCCESS", ME, MOB, 7384)
+            row(11, "SWING_MISSED", ME, MOB, "PARRY")
+            local e = reset(12)
+            for _, k in ipairs(e.applied) do
+                assert.are_not.equal("overpower_ready", k) -- the dodge's window was spent
+            end
+            w.game.usable[7384] = true -- the client says usable: a dodge the log did not attribute
+            e = reset(13)
+            assert.are.same({ "overpower_ready" }, { e.applied[#e.applied] })
+            assert.is_nil(e.durations.overpower_ready)
+        end)
+
+        it("gates Overpower on its window, not on the usability read", function()
+            local e = lw.env(w)
+            w.game.usable[7384] = true
+            assert.is_false(lw.run(w.abilities.overpower.usable, e))
+            e.buff = { overpower_ready = { up = true } }
+            assert.is_true(lw.run(w.abilities.overpower.usable, e))
+        end)
+
+        it("opens Revenge's window on a parry on us while Revenge is usable", function()
+            row(20, "SWING_MISSED", MOB, ME, "PARRY")
+            w.game.noMana[6572] = true -- usable but for rage
+            assert.are.equal(4, reset(21).durations.revenge_usable)
+            assert.is_nil(reset(26).durations.revenge_usable) -- older than 5 s: the full window from the read
+            w.game.noMana[6572] = nil
+            local e = reset(21)
+            for _, k in ipairs(e.applied) do
+                assert.are_not.equal("revenge_usable", k)
+            end
+        end)
     end)
 
     it("gates Thunder Clap, Execute and Spearing Strike on the stances Forever's tooltips name", function()
@@ -272,12 +349,8 @@ describe("Forever Warrior", function()
         assert.is_true(math.abs(0.875 - decay()) < 1e-9) -- 1.25 x (1 - 0.3 x 1) = 1.25 x 0.7 = 0.875
     end)
 
-    it("caps rage at 105 for a Gnome (Expansive Mind, +5% maximum resources) and 100 otherwise", function()
-        local max = w.resource[4].max
-        w.state.race = { gnome = true }
-        assert.are.equal(105, max())
-        w.state.race = {}
-        assert.are.equal(100, max())
+    it("declares no rage maximum of its own: a Gnome's 105 is the race pack's Expansive Mind", function()
+        assert.is_nil(w.resource[4].max) -- 100 by default; the Gnome's race pack adds Expansive Mind
     end)
 
     it("gains Bloodrage's rage over time through an aura-gated regen entry", function()

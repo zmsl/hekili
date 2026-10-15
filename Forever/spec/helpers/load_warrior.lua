@@ -7,9 +7,9 @@
 local M = {}
 
 --- Loads the class file. Returns `w`: `w.abilities`, `w.auras` (merged by key), `w.talents`, `w.track`, `w.resource`
---- ({ powerType, models }), `w.hooks[name]`, `w.funcs[name]`, `w.exprs[name]`, `w.settings[key]` ({ default,
---- option }), `w.packs` (in order: { name, version, string }), `w.options`, `w.specID`, `w.state` (Hekili.State's
---- stand-in) and `w.game`.
+--- ({ powerType, models }), `w.hooks[name]`, `w.events[event]` (spec:RegisterEvent's handlers), `w.funcs[name]`,
+--- `w.exprs[name]`, `w.settings[key]` ({ default, option }), `w.packs` (in order: { name, version, string }),
+--- `w.options`, `w.specID`, `w.state` (Hekili.State's stand-in) and `w.game`.
 function M.load()
     local reg = {}
     local spec = setmetatable({}, {
@@ -28,6 +28,8 @@ function M.load()
         form = 0,
         formSpell = {},
         base = { 0, 0 }, -- VS.SwingBase: each hand's unhasted speed (0: no plain read yet)
+        now = 0, -- GetTime()
+        row = {}, -- the combat-log row CombatLogGetCurrentEventInfo answers
     }
     local w = { game = game, abilities = {}, auras = {}, track = {}, hooks = {}, funcs = {}, exprs = {} }
     w.state = { main_hand = { size = 2 }, timeToInterrupt = function() end }
@@ -60,6 +62,12 @@ function M.load()
         GetShapeshiftFormInfo = function(i)
             return 0, true, true, game.formSpell[i]
         end,
+        GetTime = function()
+            return game.now
+        end,
+        CombatLogGetCurrentEventInfo = function()
+            return unpack(game.row, 1, 15)
+        end,
         Enum = { PowerType = { Rage = 1 } },
     }
     local saved = {}
@@ -70,6 +78,14 @@ function M.load()
     local ns = {
         Facade = fakes, -- the class file reads the game through ns.Facade (event-facade spec §1.2)
         VirtualState = {
+            KnownRank = function(ids) -- VirtualState's spellbook: the plain known reads (`game.known`)
+                for i = #ids, 1, -1 do
+                    if game.known[ids[i]] then
+                        return i
+                    end
+                end
+                return 0
+            end,
             Track = function(t)
                 for k, v in pairs(t.talents or {}) do
                     w.track[k] = v
@@ -97,6 +113,10 @@ function M.load()
     end
     w.talents = reg.RegisterTalents and reg.RegisterTalents[1][1]
     w.resource = reg.RegisterResource and reg.RegisterResource[1]
+    w.events = {}
+    for _, call in ipairs(reg.RegisterEvent or {}) do
+        w.events[call[1]] = call[2]
+    end
     for _, call in ipairs(reg.RegisterHook or {}) do
         w.hooks[call[1]] = call[2]
     end
@@ -126,7 +146,7 @@ end
 --- A stand-in `state` that records applyBuff/applyDebuff (into `applied`), removeBuff, spend and gain, with every
 --- talent at rank 0, every aura down and every cooldown ready. The class file's state functions are bound to it.
 function M.env(w)
-    local e = { applied = {}, removed = {}, spent = {}, gained = {} }
+    local e = { applied = {}, durations = {}, removed = {}, spent = {}, gained = {} }
     e.talent = default({ rank = 0, enabled = false })
     e.buff = default({ up = false, remains = 0, stack = 0 })
     e.debuff = e.buff
@@ -135,8 +155,9 @@ function M.env(w)
     e.rage = { current = 50 }
     e.target = { minR = 10, is_boss = false }
     e.combat, e.active_enemies = 0, 1
-    function e.applyBuff(key)
+    function e.applyBuff(key, duration)
         table.insert(e.applied, key)
+        e.durations[key] = duration
     end
     function e.applyDebuff(_, key)
         table.insert(e.applied, key)

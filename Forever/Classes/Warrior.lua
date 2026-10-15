@@ -19,6 +19,7 @@ local addon, ns = ...
 local Facade = ns.Facade
 local C_SpellBook, C_Spell, UnitClassBase = Facade.C_SpellBook, Facade.C_Spell, Facade.UnitClassBase
 local GetShapeshiftForm, GetShapeshiftFormInfo = Facade.GetShapeshiftForm, Facade.GetShapeshiftFormInfo
+local CombatLogGetCurrentEventInfo, GetTime = Facade.CombatLogGetCurrentEventInfo, Facade.GetTime
 local Hekili = _G[ addon ]
 
 if UnitClassBase( "player" ) ~= "WARRIOR" then return end
@@ -67,12 +68,19 @@ local function rest( ids )
     return out
 end
 
--- The highest rank of `ids` the player knows (0: none). C_SpellBook, not the deprecation shims (cleanup Q12).
+-- The highest known rank of a rank list, from VirtualState's spellbook (the plain IsSpellKnown reads it keeps): the
+-- same answer in the sim's `state` environment and in a `now` handler's (event-facade spec §12a).
 local function knownRank( ids )
-    for i = #ids, 1, -1 do
-        if IsSpellKnown( ids[ i ] ) then return i end
-    end
-    return 0
+    return VS.KnownRank( ids )
+end
+
+-- Tactical Mastery is a passive, not an ability: tracked so VirtualState's spellbook knows it.
+local TACTICAL_MASTERY_IDS = { TACTICAL_MASTERY }
+VS.Track( { abilities = { TACTICAL_MASTERY } } )
+
+-- The rage a stance swap keeps (Tactical Mastery and its improvement): shared by swap_stance and the stances' `now`.
+local function stanceKeep( improvedRank )
+    return ( knownRank( TACTICAL_MASTERY_IDS ) > 0 and 10 or 0 ) + 15 * improvedRank
 end
 
 local function knows( ids )
@@ -81,7 +89,7 @@ end
 
 -- A reactive ability's window (Execute, Revenge, Victory Rush) from the plain usability read:
 -- usable, or unusable only for lack of rage. The client's answer now, not at the simulated time (as Classic's
--- reset_precast read it); Forever has no combat log to time the window.
+-- reset_precast read it).
 local function reactive( ids )
     local r = knownRank( ids )
     if r == 0 then return false end
@@ -90,7 +98,7 @@ local function reactive( ids )
 end
 
 -- Usable now by the plain read, not merely short of a cost: Overpower's second cost (a combo point a dodge grants)
--- reads as "short" without a dodge.
+-- reads as "short" without a dodge. reset_precast's fallback when no dodge row timed the window (event-facade §6).
 local function usableNow( ids )
     local r = knownRank( ids )
     return r > 0 and IsSpellUsable( ids[ r ] ) == true
@@ -184,8 +192,8 @@ spec:RegisterResource( Enum.PowerType.Rage, {
     -- Out-of-combat rage loss per second, VirtualState's `decay` (in the meta table: Hekili takes every regen entry for
     -- a model): the client's Rage tooltip, "1.25 Rage is lost every 1 sec" (measured 100 -> 0 in 82.2 s: 80 s plus
     -- reaction time); Anger Management's tooltip: 30% less.
-    -- Gnome's Warrior racial Expansive Mind (1259802): +5% maximum resources, so a 105 rage cap.
-    max = function () return state.race.gnome and 105 or 100 end,
+    -- No `max`: rage is 100, and a Gnome's 105 comes from Expansive Mind in the Gnome's race pack
+    -- (Forever/Races/Gnome.lua, VirtualState's `maxMods`, event-facade spec §12b).
     decay = function () return 1.25 * ( 1 - 0.3 * state.talent.anger_management.rank ) end,
 } )
 
@@ -403,9 +411,8 @@ spec:RegisterAuras( {
         duration = 10,
         max_stack = 1,
     },
-    -- Forever's Overpower window: a 5 s player aura (DB2 1282733, "Overpower"). It is unseen on Forever (checkpoint Q6:
-    -- the aura walk raises in combat), so Overpower's gate is the client's usability read, and the swap to Battle
-    -- Stance after a dodge cannot be predicted (no combat log on Forever).
+    -- Forever's Overpower window: a 5 s player aura (DB2 1282733, "Overpower"), unseen in combat (checkpoint Q6: the
+    -- aura walk raises). Modelled as Classic did, from the dodge in the combat log (reset_precast).
     overpower_ready = {
         id = 1282733,
         duration = 5,
@@ -438,8 +445,7 @@ spec:RegisterAuras( {
         duration = 3,
         max_stack = 1,
     },
-    -- Revenge's window from its plain usability (reset_precast): 5 s from that read, not from the block, dodge or
-    -- parry (no combat log on Forever to time the proc).
+    -- Revenge's window from the block, dodge or parry on us in the combat log, while Revenge is usable (reset_precast).
     revenge_usable = {
         duration = 5,
         max_stack = 1,
@@ -499,8 +505,7 @@ spec:RegisterStateFunction( "swap_stance", function( stance )
     removeBuff( "defensive_stance" )
     removeBuff( "berserker_stance" )
 
-    local kept = ( IsSpellKnown( TACTICAL_MASTERY ) and 10 or 0 ) + 15 * talent.improved_tactical_mastery.rank
-    local lost = rage.current - kept
+    local lost = rage.current - stanceKeep( talent.improved_tactical_mastery.rank )
     if lost > 0 then spend( lost, "rage" ) end
 
     applyBuff( stance )
@@ -512,6 +517,28 @@ end )
 -- read=) then.
 spec:RegisterStateFunction( "offensive_cost", function( cost )
     return max( 0, cost - 3 * talent.focused_rage.rank )
+end )
+
+-- The reactive windows from the combat log, as Classic models them (origin/classic:Classic/Warrior.lua:400-456): our
+-- dodged swing or ability opens Overpower's, a dodge, parry or block on us opens Revenge's. On Forever the rows come
+-- from VirtualState's event facade (docs/superpowers/specs/2026-10-15-virtualstate-event-facade.md §6).
+local enemy_revenge_trigger, enemy_dodged, enemy_dodged_target = 0, 0, nil
+local last_overpower = 0
+local misses = { DODGE = true, PARRY = true, BLOCK = true }
+local overpower_ids = {}
+for _, id in ipairs( OVERPOWER ) do overpower_ids[ id ] = true end
+
+spec:RegisterEvent( "COMBAT_LOG_EVENT_UNFILTERED", function()
+    local _, subtype, _, sourceGUID, _, _, _, destGUID, _, _, _, actionType, _, _, spellMissType = CombatLogGetCurrentEventInfo()
+
+    if sourceGUID == state.GUID and subtype:match( "_MISSED$" ) and ( actionType == "DODGE" or spellMissType == "DODGE" ) then
+        enemy_dodged = GetTime()
+        enemy_dodged_target = destGUID
+    elseif destGUID == state.GUID and subtype:match( "_MISSED$" ) and misses[ actionType ] then
+        enemy_revenge_trigger = GetTime()
+    elseif sourceGUID == state.GUID and subtype == "SPELL_CAST_SUCCESS" and overpower_ids[ actionType ] then
+        last_overpower = GetTime()
+    end
 end )
 
 spec:RegisterHook( "reset_precast", function()
@@ -530,7 +557,22 @@ spec:RegisterHook( "reset_precast", function()
     if hs > 0 and IsCurrentSpell( HEROIC_STRIKE[ hs ] ) then applyBuff( "heroic_strike" ) end
     if cl > 0 and IsCurrentSpell( CLEAVE[ cl ] ) then applyBuff( "cleave" ) end
 
-    if reactive( REVENGE ) then applyBuff( "revenge_usable" ) end
+    if now == query_time then
+        if knownRank( OVERPOWER ) > 0 then
+            if enemy_dodged > 0 and query_time - enemy_dodged < 6 and target.unit == enemy_dodged_target and ( last_overpower == 0 or enemy_dodged - last_overpower > 5 ) then
+                applyBuff( "overpower_ready", enemy_dodged + 5 - now )
+            elseif usableNow( OVERPOWER ) then
+                applyBuff( "overpower_ready" )
+            end
+        end
+        if reactive( REVENGE ) then
+            if enemy_revenge_trigger > 0 and now - enemy_revenge_trigger < 5 then
+                applyBuff( "revenge_usable", enemy_revenge_trigger + 5 - now )
+            else
+                applyBuff( "revenge_usable" )
+            end
+        end
+    end
 end )
 
 -- `timeToReady` of the three stances: they share a 1 s category cooldown.
@@ -568,6 +610,15 @@ spec:RegisterAbilities( {
         nobuff = "battle_stance",
         timeToReady = stanceReady,
 
+        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        now = function ()
+            removeBuff( "defensive_stance" )
+            removeBuff( "berserker_stance" )
+            local lost = rage.current - stanceKeep( talent.improved_tactical_mastery.rank )
+            if lost > 0 then spend( lost, "rage" ) end
+            applyBuff( "battle_stance" )
+        end,
+
         handler = function ()
             swap_stance( "battle_stance" )
         end,
@@ -582,6 +633,12 @@ spec:RegisterAbilities( {
         startsCombat = false,
         known = knows( { 18499 } ),
         buff = "berserker_stance",
+
+        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        now = function ()
+            applyBuff( "berserker_rage" )
+            if talent.improved_berserker_rage.enabled then gain( 10 * talent.improved_berserker_rage.rank, "rage" ) end
+        end,
 
         handler = function ()
             applyBuff( "berserker_rage" )
@@ -601,6 +658,15 @@ spec:RegisterAbilities( {
         nobuff = "berserker_stance",
         timeToReady = stanceReady,
 
+        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        now = function ()
+            removeBuff( "battle_stance" )
+            removeBuff( "defensive_stance" )
+            local lost = rage.current - stanceKeep( talent.improved_tactical_mastery.rank )
+            if lost > 0 then spend( lost, "rage" ) end
+            applyBuff( "berserker_stance" )
+        end,
+
         handler = function ()
             swap_stance( "berserker_stance" )
         end,
@@ -617,6 +683,12 @@ spec:RegisterAbilities( {
         startsCombat = false,
         known = knows( { 2687 } ),
         toggle = "cooldowns",
+
+        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        now = function ()
+            gain( 10 * ( 1 + 0.5 * talent.improved_bloodrage.rank ), "rage" )
+            applyBuff( "bloodrage" )
+        end,
 
         handler = function ()
             -- DB2 12301: +50% of the rage Bloodrage generates a rank.
@@ -675,6 +747,12 @@ spec:RegisterAbilities( {
 
         usable = function ()
             return combat == 0 and target.minR >= 8 and target.minR <= 25, "cannot be in combat; target must be outside your deadzone"
+        end,
+
+        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        now = function ()
+            gain( ( CHARGE_RAGE[ knownRank( CHARGE ) ] or 9 ) + 3 * talent.improved_charge.rank, "rage" )
+            applyDebuff( "target", "charge_stun" )
         end,
 
         handler = function ()
@@ -755,6 +833,15 @@ spec:RegisterAbilities( {
         nobuff = "defensive_stance",
         timeToReady = stanceReady,
 
+        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        now = function ()
+            removeBuff( "battle_stance" )
+            removeBuff( "berserker_stance" )
+            local lost = rage.current - stanceKeep( talent.improved_tactical_mastery.rank )
+            if lost > 0 then spend( lost, "rage" ) end
+            applyBuff( "defensive_stance" )
+        end,
+
         handler = function ()
             swap_stance( "defensive_stance" )
         end,
@@ -772,6 +859,11 @@ spec:RegisterAbilities( {
 
         startsCombat = true,
         known = knows( DEMORALIZING_SHOUT ),
+
+        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        now = function ()
+            applyDebuff( "target", "demoralizing_shout" )
+        end,
 
         handler = function ()
             applyDebuff( "target", "demoralizing_shout" )
@@ -833,6 +925,11 @@ spec:RegisterAbilities( {
         startsCombat = true,
         known = knows( HAMSTRING ),
         nobuff = "defensive_stance",
+
+        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        now = function ()
+            applyDebuff( "target", "hamstring" )
+        end,
 
         handler = function ()
             applyDebuff( "target", "hamstring" )
@@ -975,8 +1072,7 @@ spec:RegisterAbilities( {
         known = knows( OVERPOWER ),
         buff = "battle_stance",
 
-        -- interim until the virtual event facade delivers the dodge event
-        usable = function () return usableNow( OVERPOWER ), "no dodge to overpower" end,
+        usable = function () return buff.overpower_ready.up, "only usable after dodging" end,
 
         handler = function ()
             removeBuff( "overpower_ready" )
@@ -995,6 +1091,11 @@ spec:RegisterAbilities( {
         talent = "piercing_howl",
         startsCombat = true,
         known = knows( { 12323 } ),
+
+        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        now = function ()
+            applyDebuff( "target", "piercing_howl" )
+        end,
 
         handler = function ()
             applyDebuff( "target", "piercing_howl" )
@@ -1051,6 +1152,11 @@ spec:RegisterAbilities( {
         startsCombat = true,
         known = knows( REND ),
         nobuff = "berserker_stance",
+
+        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        now = function ()
+            applyDebuff( "target", "rend", REND_DURATION[ knownRank( REND ) ] or 9 )
+        end,
 
         handler = function ()
             applyDebuff( "target", "rend" )
@@ -1215,6 +1321,11 @@ spec:RegisterAbilities( {
         startsCombat = true,
         known = knows( SUNDER_ARMOR ),
 
+        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        now = function ()
+            applyDebuff( "target", "sunder_armor", nil, min( 5, debuff.sunder_armor.stack + 1 ) )
+        end,
+
         handler = function ()
             applyDebuff( "target", "sunder_armor", nil, min( 5, debuff.sunder_armor.stack + 1 ) )
         end,
@@ -1267,6 +1378,11 @@ spec:RegisterAbilities( {
         startsCombat = true,
         known = knows( THUNDER_CLAP ),
         nobuff = "berserker_stance",
+
+        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        now = function ()
+            applyDebuff( "target", "thunder_clap", THUNDER_CLAP_DURATION[ knownRank( THUNDER_CLAP ) ] or 10 )
+        end,
 
         handler = function ()
             applyDebuff( "target", "thunder_clap" )
