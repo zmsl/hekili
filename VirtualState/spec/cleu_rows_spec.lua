@@ -331,6 +331,7 @@ describe("the synthesized combat log", function()
                 got[1].row
             )
             assert.are.equal("readable", I.Sources.status["UnitIsUnit target-of"])
+            assert.are.equal("secret", I.Sources.status["UnitAttackSpeed hostile"])
         end)
 
         it("emits no row when nobody is known to target us, or the answer is secret", function()
@@ -373,6 +374,32 @@ describe("the synthesized combat log", function()
             assert.are.equal(4, #got)
             assert.are.equal("BLOCK", got[4].row[12])
             assert.are.equal(1, L.unattributed)
+            assert.are.equal("readable", I.Sources.status["UnitAttackSpeed hostile"])
+        end)
+
+        it("follows a lone attacker whose swings shift off its clock, and forgets a removed plate", function()
+            onUs("target", "Creature-1", nil)
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            for _, t in ipairs({ 20, 22, 24, 26.6, 28.6, 30.6 }) do -- learned 2.0, then a 0.6 s shift
+                ctl.now = t
+                ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
+            end
+            assert.are.equal(6, #got)
+            assert.are.equal(0, L.unattributed)
+            onUs("nameplate1", "Creature-2", nil) -- a second hostile: only the clock names Creature-1 now
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+            ctl.now = 32.6 -- on the new phase with the period unchanged
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
+            ctl.now = 33.5 -- on nobody's
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
+            assert.are.equal(7, #got)
+            assert.are.equal("Creature-1", got[7].row[4])
+            assert.are.equal(1, L.unattributed)
+            ctl.Fire("NAME_PLATE_UNIT_REMOVED", "nameplate1") -- the token still answers; the plate is gone
+            ctl.now = 34.0 -- off the clock, but Creature-1 is alone again
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
+            assert.are.equal(8, #got)
+            assert.are.equal("Creature-1", got[8].row[4])
         end)
 
         it("learns an attacker's period from the gaps when its speed is secret", function()
@@ -418,6 +445,8 @@ describe("the synthesized combat log", function()
                 ctl.now = i * 2
                 ctl.Fire("UNIT_COMBAT", "player", i % 2 == 0 and "WOUND" or "PARRY", "", 40, 1)
                 ctl.Fire("UNIT_TARGET", "target")
+                ctl.Fire("NAME_PLATE_UNIT_REMOVED", "nameplate1")
+                ctl.Fire("PLAYER_FOCUS_CHANGED")
                 I.Sources.Flush()
             end, 10000)
             assert.are.equal(0, bytes)

@@ -73,7 +73,9 @@ local function recheck(api, i)
     local guid = Plain(api, api.UnitGUID(tok)) or ""
     local hostile = guid ~= "" and Plain(api, api.UnitCanAttack("player", tok)) == true
     local raw = api.UnitIsUnit(TT[i], "player") -- secret: tested with issecretvalue next, then read through Plain
-    Note("UnitIsUnit target-of", S.StatusOf(api, raw))
+    if guid ~= "" then -- an empty token's answer would overwrite a secret status
+        Note("UnitIsUnit target-of", S.StatusOf(api, raw))
+    end
     tokGUID[i], tokOnMe[i] = guid, hostile and Plain(api, raw) == true
     tokSpeed[i] = 0
     if tokOnMe[i] then
@@ -94,7 +96,12 @@ local function onUnit(api, t, unit)
 end
 S.On("UNIT_TARGET", nil, onUnit)
 S.On("NAME_PLATE_UNIT_ADDED", nil, onUnit)
-S.On("NAME_PLATE_UNIT_REMOVED", nil, onUnit)
+S.On("NAME_PLATE_UNIT_REMOVED", nil, function(_, _, unit)
+    local i = unit and INDEX[unit]
+    if i then -- the token still answers during the event: clear it rather than recheck
+        tokGUID[i], tokOnMe[i], tokSpeed[i] = "", false, 0
+    end
+end)
 S.On("PLAYER_TARGET_CHANGED", nil, function(api)
     recheck(api, 1)
 end)
@@ -163,22 +170,18 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         end
     end
     if not best and n == 1 then
-        local k = find(tokGUID[single])
-        local set = k and atkAnchor[k] > 0 and (tokSpeed[single] > 0 or atkPeriod[k] > 0)
-        if not set or not melee then
-            best = single -- one hostile on us, and no clock to test yet or a non-physical hit: it is that one
-        end
+        -- one hostile on us: it is that one (a spell, no clock yet, or a swing off its clock: a new phase, which
+        -- learn re-anchors without refining the period, since the gap is off by more than the tolerance)
+        best = single
     end
     if not best then
         L.unattributed = L.unattributed + 1
         return
     end
-    local speed = tokSpeed[best]
-    best = clockOf(tokGUID[best])
-    if melee then
-        learn(best, t, speed)
+    local src, dst = tokGUID[best], L.player
+    if melee then -- a spell does not follow the swing clock: no clock made or moved for it
+        learn(clockOf(src), t, tokSpeed[best])
     end
-    local src, dst = atkGUID[best], L.player
     if act == "WOUND" and melee then
         local r = L.Emit("SWING_DAMAGE", 21, t, true, "onus", "inferred", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS)
         r[12], r[13], r[14], r[15], r[16], r[17] = type(amount) == "number" and amount or 0, 0, 1, 0, 0, 0
