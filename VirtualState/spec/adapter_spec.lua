@@ -199,6 +199,79 @@ describe("Adapter", function()
         assert.are.equal(before, VS.Power(fs.RAGE, 3.1).est) -- no swing income
     end)
 
+    it("counts a raising apply and still restores: unpinned, offset 0, the trailing reset run", function()
+        register("boom_test", {
+            id = 7777,
+            cooldown = 0,
+            handler = function()
+                error("spec handler raised")
+            end,
+        })
+        VS.SpecChanged()
+        I.ObsLog.Clear(I.log)
+        ctl.now = 30
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-5", 7777)
+        ctl.Tick(30.05)
+        ctl.now = 30.1
+        VS.Drain(30.1)
+        assert.is_nil(I.pinned)
+        assert.are.same({ 0, 0, 2 }, { state.offset, state.delay, state.resets })
+        assert.are.equal(1, I.applyErrors)
+        assert.are.equal(0, I.drainCasts)
+        assert.is_truthy(VS.Snapshot():find("errors=1", 1, true))
+    end)
+
+    it("rescans both units at the trailing reset, so an untracked apply-time aura write does not survive", function()
+        register("untracked_test", {
+            id = 8888,
+            cooldown = 0,
+            handler = function()
+                state.applyBuff("untracked_buff", 30)
+            end,
+        })
+        VS.SpecChanged()
+        I.ObsLog.Clear(I.log)
+        local reset = state.reset
+        state.reset = function() -- as Hekili's reset: an `updated` unit is scraped afresh (State.lua:6199-6207)
+            reset()
+            if state.player.updated then
+                state.buff.untracked_buff = nil -- the scrape finds no such aura
+                state.player.updated = false
+            end
+            if state.target.updated then
+                state.target.updated = false
+            end
+        end
+        ctl.now = 40
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-6", 8888)
+        ctl.Tick(40.05)
+        ctl.now = 40.1
+        VS.Drain(40.1)
+        assert.are.equal(2, state.resets)
+        assert.is_nil(state.buff.untracked_buff)
+    end)
+
+    it("queues a hard cast's finish with a nil target when the sent GUID is unknown, reading no GUID", function()
+        register("slam_test", { id = 1464, cast = 1.5, cooldown = 0 })
+        VS.SpecChanged()
+        local target, calls = false, 0
+        function state:QueueEvent(key, start, finish, eType, guid)
+            target = guid
+        end
+        local unitGUID = api.UnitGUID
+        api.UnitGUID = function(unit)
+            calls = calls + 1
+            return unitGUID(unit)
+        end
+        I.sentGUID = nil
+        ctl.now = 50
+        ctl.casting = { 50000, 51500 }
+        ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-7", 1464)
+        api.UnitGUID = unitGUID
+        assert.is_nil(target)
+        assert.are.equal(0, calls)
+    end)
+
     it("runs no reset when the log holds no own cast", function()
         ctl.now = 3
         VS.Drain(3)

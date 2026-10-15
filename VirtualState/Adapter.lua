@@ -14,7 +14,7 @@ local CAST_SUCCESS, CHANNEL_START = Obs.CastSuccess, Obs.ChannelStart
 local Hekili = _G[addon]
 local state, class = Hekili.State, Hekili.Class
 local spendResources = ns.spendResources
-local GetTime, UnitGUID, CreateFrame = GetTime, UnitGUID, CreateFrame
+local GetTime, CreateFrame = GetTime, CreateFrame
 local debugprofilestop = debugprofilestop
 local insert, sort = table.insert, table.sort
 
@@ -208,8 +208,9 @@ end
 I.feed.CastStart = function(a, start, finish, guid)
     local key, ability = abilityOf(a)
     if ability and not ability.channeled then
-        -- as CLEU SPELL_CAST_START (Events.lua:1579); UNIT_SPELLCAST_DELAYED re-queues it (Events.lua:1076-1089)
-        state:QueueEvent(key, start, finish, "CAST_FINISH", guid or UnitGUID("target"), true)
+        -- as CLEU SPELL_CAST_START (Events.lua:1579); UNIT_SPELLCAST_DELAYED re-queues it (Events.lua:1076-1089).
+        -- `guid` is nil when the target's GUID was secret or absent: never read it here (it may be secret).
+        state:QueueEvent(key, start, finish, "CAST_FINISH", guid, true)
     end
 end
 
@@ -392,6 +393,9 @@ local function apply(kind, a, t)
 end
 I.Apply = apply
 
+-- Applies whose spec code raised (Snapshot's drain line); the drain carries on so its restore always runs.
+I.applyErrors = 0
+
 --- The fold plus apply through the spec (spec §5.2), called only from Hekili.Update after its guards. Allocates
 --- nothing beyond what Hekili's own reset and handlers allocate.
 ---@param cutoff number GetTime() at the drain's entry
@@ -414,7 +418,10 @@ function VS.Drain(cutoff)
             state.reset() -- 3.2: once, full ("Primary", State.lua:6181-6184)
             reset = true
         end
-        if apply(kind, a, t) then
+        local ok, done = pcall(apply, kind, a, t)
+        if not ok then
+            I.applyErrors = I.applyErrors + 1
+        elseif done then
             applied = applied + 1
         end
     end
@@ -423,6 +430,8 @@ function VS.Drain(cutoff)
     I.pinned = nil
     I.Settle(cutoff)
     if reset then
+        -- the trailing reset rescans both units' auras, so an apply-time write outside the tracked set never survives
+        state.player.updated, state.target.updated = true, true
         state.reset()
     end
     -- 5: Hekili rescans a unit's auras when its believed set moved (G1)
