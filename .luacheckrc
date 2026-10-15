@@ -110,4 +110,12 @@ for _, k in ipairs(stateEnv) do
     warriorEnv[#warriorEnv + 1] = k
 end
 files["Forever/Classes/Warrior.lua"] = { globals = warriorEnv }
+-- The Druid's further `state` names.
+local druidEnv = {
+    "rage", "energy", "mana", "combo_points", "cooldown", "combat", "group", "swap_form", "addStack", "removeStack",
+}
+for _, k in ipairs(stateEnv) do
+    druidEnv[#druidEnv + 1] = k
+end
+files["Forever/Classes/Druid.lua"] = { globals = druidEnv }
 files["Forever/Races/"] = { globals = stateEnv }

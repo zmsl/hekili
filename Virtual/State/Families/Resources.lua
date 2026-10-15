@@ -127,7 +127,9 @@ local function setMax(r, m)
     local up = m - R.max[r]
     R.max[r] = m
     if up < 0 then
-        R.est0[r], R.lo0[r], R.hi0[r] = clamp(R.est0[r], m), clamp(R.lo0[r], m), clamp(R.hi0[r], m)
+        local before = R.est0[r]
+        R.est0[r], R.lo0[r], R.hi0[r] = clamp(before, m), clamp(R.lo0[r], m), clamp(R.hi0[r], m)
+        R.pinDelta[r] = R.pinDelta[r] + R.est0[r] - before -- the capped-away amount stays out of the regen measurement
     end
     if R.restMax[r] then
         R.rest[r] = m

@@ -379,6 +379,7 @@ describe("resources", function()
             assert.are.equal(1140, VS.Power(MANA, 3).est)
             maxRead(4, 1000)
             assert.are.same({ 1000, 1000, 1000 }, { VS.Power(MANA, 4).est, I.res.max[1], I.res.rest[1] })
+            assert.are.equal(-60 + 1100 - 140, I.res.pinDelta[1]) -- the capped-away 140 kept out of the regen measurement
         end)
 
         it("follows a maximum raised through maxMods at combat end, and caps at a lowered one", function()
