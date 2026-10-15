@@ -119,6 +119,7 @@ I.On(Obs.CastStop, function(o)
     if I.castAb == o.a then
         I.castAb = 0
     end
+    A.castStartT[o.a] = 0 -- an interrupted cast's start is no GCD anchor for the next one (Families/Now.lua)
 end)
 
 I.On(Obs.ChannelStart, function(o)

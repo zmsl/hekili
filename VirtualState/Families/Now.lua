@@ -18,9 +18,9 @@ A.now = {} -- by ability index: the `now` function, bound to the context, or fal
 A.extra = {} -- by ability index: a `track_<id>` extra (VS.Track): no ability, no effects
 A.known = A.known or {} -- by ability index: any rank in the spellbook (Sources/Spellbook.lua)
 
--- The one environment of every `now` function: the verbs and reads below, and Lua's own pure helpers (no game API,
--- no Hekili state, nothing that allocates by itself).
-local SAFE = {
+-- The names of every `now` function's environment: the verbs and reads below, and Lua's own pure helpers (no game
+-- API, no Hekili state, nothing that allocates by itself).
+local NAMES = {
     math = math,
     min = math.min,
     max = math.max,
@@ -32,14 +32,21 @@ local SAFE = {
     tonumber = tonumber,
     error = error,
 }
-local ctx = setmetatable({}, { __index = SAFE })
+-- The environment itself stays empty, so every assignment from a `now` raises (a counted error) instead of
+-- shadowing a verb for every later cast.
+local ctx = setmetatable({}, {
+    __index = NAMES,
+    __newindex = function(_, k)
+        error("now: assigns the global " .. tostring(k), 2)
+    end,
+})
 I.nowCtx = ctx
 I.nowErrors, I.nowError, I.nowRuns, I.castsRun = 0, nil, 0, 0
 
 -- The cast's belief time and ability while its effects run; `live` only then: a `now` called from anywhere else (Hekili
 -- keeps it in `ability.funcs`, where RunStressTest or an APL reading `action.x.now` can call it) writes nothing.
 local T, curA, live = 0, 0, false
-local abByKey, auraByKey, auraSpell, auraDur, resByKey = {}, {}, {}, {}, {}
+local abByKey, auraByKey, auraSpell, auraDur, auraMax, resByKey = {}, {}, {}, {}, {}, {}
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Reads: proxies built at SpecChanged, answered from the belief at the cast's time.
@@ -66,8 +73,8 @@ local NO_AURA = setmetatable({ unit = "player", spell = 0 }, auraMeta)
 local function noAura()
     return NO_AURA
 end
-ctx.buff = setmetatable({}, { __index = noAura })
-ctx.debuff = setmetatable({}, { __index = noAura })
+NAMES.buff = setmetatable({}, { __index = noAura })
+NAMES.debuff = setmetatable({}, { __index = noAura })
 
 local talentMeta = {
     __index = function(r, f)
@@ -81,7 +88,7 @@ local talentMeta = {
     end,
 }
 local NO_TALENT = setmetatable({ spell = 0 }, talentMeta)
-ctx.talent = setmetatable({}, {
+NAMES.talent = setmetatable({}, {
     __index = function()
         return NO_TALENT
     end,
@@ -115,7 +122,7 @@ function VS.KnownRank(ids)
     end
     return 0
 end
-ctx.knownRank = VS.KnownRank
+NAMES.knownRank = VS.KnownRank
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Writes: Hekili's verbs, as `modelled` belief samples at T (and the combat log's aura and energize rows).
@@ -136,10 +143,10 @@ local function shift(n, resource)
         I.Log.Energize(A.qid[curA], n, I.res.type[r], I.res.max[r], T)
     end
 end
-function ctx.gain(amount, resource)
+function NAMES.gain(amount, resource)
     shift(amount, resource)
 end
-function ctx.spend(amount, resource)
+function NAMES.spend(amount, resource)
     shift(type(amount) == "number" and -amount or amount, resource)
 end
 
@@ -162,27 +169,28 @@ local function aura(u, key, duration, stacks)
     I.Log.Aura(u, j, auraSpell[j], before, after, T)
 end
 -- Hekili's own signatures (State.lua), so a Classic handler's lines port by copying.
-function ctx.applyBuff(aura_, duration, stacks)
+function NAMES.applyBuff(aura_, duration, stacks)
     aura(1, aura_, duration, stacks)
 end
-function ctx.applyDebuff(unit, aura_, duration, stacks)
+function NAMES.applyDebuff(unit, aura_, duration, stacks)
     aura(unit == "player" and 1 or 2, aura_, duration, stacks)
 end
-function ctx.removeBuff(aura_)
+function NAMES.removeBuff(aura_)
     aura(1, aura_, 0)
 end
-function ctx.removeDebuff(unit, aura_)
+function NAMES.removeDebuff(unit, aura_)
     aura(unit == "player" and 1 or 2, aura_, 0)
 end
-function ctx.addStack(aura_, duration, stacks)
+function NAMES.addStack(aura_, duration, stacks)
     local j = auraByKey[aura_]
     if not live or not j then
         return
     end
     local _, have = VS.Aura("player", auraSpell[j], T)
-    aura(1, aura_, duration, (have or 0) + (stacks or 1))
+    local n = (have or 0) + (stacks or 1)
+    aura(1, aura_, duration, n < auraMax[j] and n or auraMax[j]) -- Hekili's max_stack clamp (State.lua:837-852)
 end
-function ctx.setCooldown(action, duration)
+function NAMES.setCooldown(action, duration)
     local a = abByKey[action]
     if live and a and type(duration) == "number" then
         I.CooldownModel(a, T + duration, duration, T, CAST)
@@ -200,13 +208,14 @@ I.OnBuild(function(def)
         auraByKey[k] = nil
     end
     for k in pairs(resByKey) do
-        ctx[k], resByKey[k] = nil, nil
+        rawset(NAMES, k, nil)
+        resByKey[k] = nil
     end
-    for k in pairs(ctx.buff) do
-        ctx.buff[k], ctx.debuff[k] = nil, nil
+    for k in pairs(NAMES.buff) do
+        NAMES.buff[k], NAMES.debuff[k] = nil, nil
     end
-    for k in pairs(ctx.talent) do
-        ctx.talent[k] = nil
+    for k in pairs(NAMES.talent) do
+        NAMES.talent[k] = nil
     end
     for a = 1, A.n do
         abByKey[A.key[a]] = a
@@ -215,6 +224,11 @@ I.OnBuild(function(def)
         local obj = def.abilities[a]
         local funcs = type(obj) == "table" and rawget(obj, "funcs")
         local f = type(funcs) == "table" and rawget(funcs, "now") -- Hekili keeps unknown functions in `funcs`
+        if type(f) == "function" and (f == rawget(funcs, "handler") or f == rawget(obj, "handler")) then
+            -- rebinding it would move the sim handler into the `now` context
+            I.nowErrors, I.nowError = I.nowErrors + 1, "now: " .. tostring(A.key[a]) .. "'s now is its handler"
+            f = false
+        end
         A.now[a] = type(f) == "function" and setfenv(f, ctx) or false
     end
     for j = 1, #def.auras do
@@ -222,22 +236,24 @@ I.OnBuild(function(def)
         auraSpell[j] = def.auraIds[j][1]
         local d = rawget(def.auras[j], "duration")
         auraDur[j] = type(d) == "number" and d or false
+        local m = rawget(def.auras[j], "max_stack")
+        auraMax[j] = type(m) == "number" and m or 1
         if key then
             auraByKey[key] = j
-            ctx.buff[key] = setmetatable({ unit = "player", spell = auraSpell[j] }, auraMeta)
-            ctx.debuff[key] = setmetatable({ unit = "target", spell = auraSpell[j] }, auraMeta)
+            NAMES.buff[key] = setmetatable({ unit = "player", spell = auraSpell[j] }, auraMeta)
+            NAMES.debuff[key] = setmetatable({ unit = "target", spell = auraSpell[j] }, auraMeta)
         end
     end
     for r = 1, #def.resources do
         local d = def.resources[r]
         if d.key then
             resByKey[d.key] = r
-            ctx[d.key] = setmetatable({ type = d.type }, resourceMeta)
+            rawset(NAMES, d.key, setmetatable({ type = d.type }, resourceMeta))
         end
     end
     for k = 1, #def.talents do
         local d = def.talents[k]
-        ctx.talent[d.key] = setmetatable({ spell = d.spell }, talentMeta)
+        NAMES.talent[d.key] = setmetatable({ spell = d.spell }, talentMeta)
     end
 end)
 
@@ -255,8 +271,11 @@ local function automatic(a, t, kind)
     end
     if A.ch[a] then
         local recharge = type(obj.recharge) == "number" and obj.recharge or 0
-        local charges = A.charges0[a] - 1
-        local nextAt = A.next0[a] > t and A.next0[a] or t + recharge
+        local ch, nx = VS.Charges(A.id[a], t) -- the recharges finished since the last sample, caught up to t
+        local charges, nextAt = ch.est - 1, nx.est
+        if nextAt <= t then
+            nextAt = t + recharge -- it was at max: the recharge starts now
+        end
         I.ChargesModel(a, charges > 0 and charges or 0, nextAt, t, kind)
     else
         local cd = obj.cooldown
@@ -283,12 +302,13 @@ local function run(o, t)
         return
     end
     automatic(a, t, o.kind)
+    A.castStartT[a] = 0 -- consumed: a later instant cast of the same ability starts its own GCD
     I.castsRun = I.castsRun + 1
     local f = A.now[a]
     if f then
         T, curA = t, a
-        ctx.now = t
-        ctx.combat = I.combatT
+        rawset(NAMES, "now", t)
+        rawset(NAMES, "combat", I.combatT)
         live = true
         local ok, err = pcall(f)
         live = false

@@ -442,8 +442,8 @@ I.On(Obs.Swing, function(o, t)
     end
 end)
 
--- Our own cast succeeded: the game had its cost (a rung), before Adapter.lua applies the cast through the spec. An
--- on-next-swing strike is paid at its swing, so its press says nothing.
+-- Our own cast succeeded: the game had its cost (a rung); Families/Now.lua then pays it. An on-next-swing strike's
+-- success arrives with its swing, where Now.lua pays it, so its press says nothing here.
 I.On(Obs.CastSuccess, function(o, t, lag)
     local a = o.a
     local r = I.ab.slot[a]

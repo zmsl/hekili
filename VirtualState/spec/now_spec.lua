@@ -161,6 +161,7 @@ describe("now handlers", function()
                 setCooldown("verbs_test", 30)
             end,
         })
+        h.Class.auras.rend.max_stack = 5 -- addStack clamps at max_stack (1 when none), as Hekili's does
         start()
         cast(fs.SHOUT, 20) -- Battle Shout up (its `now`)
         local before = VS.Power(fs.RAGE, 21)
@@ -249,6 +250,98 @@ describe("now handlers", function()
         ctl.Fire("SPELLS_CHANGED")
         cast(5151, 42)
         assert.are.equal(2, seen.known)
+    end)
+
+    it("anchors a GCD at a hard cast's start once: a later instant cast of the same ability starts its own", function()
+        register("slam_test", { id = 1464, cast = 1.5 })
+        start()
+        ctl.now = 10
+        ctl.casting = { 10000, 11500 }
+        ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-3", 1464)
+        ctl.Tick(10.05)
+        ctl.casting = nil
+        cast(1464, 11.5)
+        assert.are.equal(0, I.ab.castStartT[I.ab.bySpell[1464]])
+        cast(1464, 20) -- instant this time
+        local gcd = VS.Gcd(20.1)
+        assert.are.equal("modelled", gcd.basis)
+        assert.is_true(gcd.est > 20)
+    end)
+
+    it("clears a stopped cast's start", function()
+        register("slam_test", { id = 1464, cast = 1.5 })
+        start()
+        ctl.now = 10
+        ctl.casting = { 10000, 11500 }
+        ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-3", 1464)
+        ctl.Tick(10.05)
+        ctl.casting = nil
+        ctl.Fire("UNIT_SPELLCAST_INTERRUPTED", "player", "Cast-3", 1464)
+        ctl.Tick(10.5)
+        VS.Drain(10.5)
+        assert.are.equal(0, I.ab.castStartT[I.ab.bySpell[1464]])
+    end)
+
+    it("spends a charge from the count caught up to the cast: recharges finished since the last sample count", function()
+        register("charge_test", { id = 3131, charges = 2, recharge = 10 })
+        start()
+        local a = I.ab.bySpell[3131]
+        I.ab.charges0[a], I.ab.next0[a] = 1, 10
+        cast(3131, 25) -- the recharge at 10 finished: 2 charges at the cast
+        local ch, nx = VS.Charges(3131, 25.1)
+        assert.are.same({ 1, 35 }, { ch.est, nx.est })
+    end)
+
+    it("clamps addStack at the aura's max_stack", function()
+        h.Class.auras.sunder_test = { key = "sunder_test", id = 7386, duration = 30, max_stack = 5 }
+        register("stack_test", {
+            id = 7387,
+            now = function()
+                addStack("sunder_test", 30, 3)
+            end,
+        })
+        start()
+        cast(7387, 5)
+        cast(7387, 6)
+        local _, stacks = VS.Aura("player", 7386, 6.1)
+        assert.are.equal(5, stacks)
+    end)
+
+    it("reaches no game API, no Hekili state and no _G from a `now`", function()
+        local seen = {}
+        -- compiled apart, so `state` is the global name, not this file's upvalue
+        local make = loadstring(
+            "local seen = ... return function() seen[1], seen[2], seen[3] = type(state), type(GetTime), type(_G) end"
+        )
+        register("iso_test", { id = 6363, now = make(seen) })
+        start()
+        cast(6363, 5)
+        assert.are.same({ "nil", "nil", "nil" }, seen)
+    end)
+
+    it("counts a `now` assigning a global as its error, and the verbs survive it", function()
+        register("glob_test", {
+            id = 6464,
+            now = function()
+                gain = nil -- luacheck: ignore 121
+            end,
+        })
+        start()
+        cast(6464, 5)
+        assert.are.equal(1, I.nowErrors)
+        assert.is_truthy(tostring(I.nowError):find("gain", 1, true))
+        assert.is_function(I.nowCtx.gain)
+    end)
+
+    it("skips and counts a `now` that is the ability's own handler (its environment stays Hekili's)", function()
+        local f = function() end
+        register("same_test", { id = 6565, now = f })
+        h.Class.abilities.same_test.funcs.handler = f
+        local env = getfenv(f)
+        start()
+        assert.is_false(I.ab.now[I.ab.bySpell[6565]])
+        assert.are.equal(1, I.nowErrors)
+        assert.are.equal(env, getfenv(f))
     end)
 
     it("allocates nothing across 1000 casts with `now` handlers", function()
