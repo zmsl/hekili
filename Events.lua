@@ -426,22 +426,16 @@ function ns.updateTalents()
         state.talent[ k ].enabled = false
     end
 
-    -- local specGroup = GetSpecialization()
-
+    -- Forever: GetTalentInfoByID is dead; ranks come from VirtualState's C_Traits walk (cleanup Q9), keyed by the
+    -- talent's registered spell ID (RegisterTalents entries are { node, spell, max rank }).
     for k, v in pairs( class.talents ) do
-        local _, name, _, enabled, _, sID, _, _, _, _, known = GetTalentInfoByID( v, 1 )
-
-        if not name then
-            -- We probably used a spellID.
-            enabled = IsPlayerSpell( v )
-        end
-
-        enabled = enabled or known
+        local rank = type( v ) == "table" and ns.VirtualState.Talent( v[ 2 ] ) or 0
 
         if rawget( state.talent, k ) then
-            state.talent[ k ].enabled = enabled
+            state.talent[ k ].enabled = rank > 0
+            state.talent[ k ].rank = rank
         else
-            state.talent[ k ] = { enabled = enabled }
+            state.talent[ k ] = { enabled = rank > 0, rank = rank }
         end
     end
 

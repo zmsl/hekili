@@ -18,6 +18,9 @@ VirtualState\Families\Resources.lua
 VirtualState\Families\Swing.lua
 VirtualState\Families\Auras.lua
 VirtualState\Families\TargetCast.lua
+VirtualState\Families\Talents.lua
+VirtualState\Families\Totems.lua
+VirtualState\Families\Enemies.lua
 VirtualState\Sources\Sources.lua
 VirtualState\Sources\Player.lua
 VirtualState\Sources\Spellbook.lua
@@ -26,6 +29,9 @@ VirtualState\Sources\Power.lua
 VirtualState\Sources\Swing.lua
 VirtualState\Sources\Auras.lua
 VirtualState\Sources\Target.lua
+VirtualState\Sources\Talents.lua
+VirtualState\Sources\Nameplates.lua
+VirtualState\Sources\Totems.lua
 VirtualState\Snapshot.lua
 
 Hekili.lua
