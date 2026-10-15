@@ -189,6 +189,15 @@ function VS.Start(api)
     frame:SetScript("OnUpdate", onUpdate)
     local t = api.GetTime()
     for k = 1, #STARTS do
-        STARTS[k](api, t)
+        -- one raising hook (a client without some API) must not stop the hooks after it
+        local ok, err = pcall(STARTS[k], api, t)
+        if not ok then
+            S.Note("start", "error")
+            if api.geterrorhandler then
+                api.geterrorhandler()(err)
+            else
+                print(err)
+            end
+        end
     end
 end

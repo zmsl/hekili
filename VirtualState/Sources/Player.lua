@@ -67,7 +67,11 @@ local function readStats(api, t)
         return
     end
     for i = 1, #I.STATS do
-        readStat(api, i, t)
+        local e = I.STATS[i]
+        -- a client without this function or CR_* constant: skip, the slot keeps its zeros
+        if api[e[1]] ~= nil and (type(e[2]) ~= "string" or e.arg ~= nil) then
+            readStat(api, i, t)
+        end
     end
 end
 
@@ -86,6 +90,7 @@ end
 
 S.OnStart(function(api, t)
     -- the stat arguments: the CR_* constants as this client defines them (a missing one is skipped: zeros)
+    Note("stats CR_* constants", "complete")
     for i, e in ipairs(I.STATS) do
         local arg = e[2]
         if type(arg) == "string" then
@@ -96,6 +101,8 @@ S.OnStart(function(api, t)
         I.statIndex[e[1]] = byArg
         if arg ~= nil or e[2] == nil then
             byArg[arg or 0] = i
+        else
+            Note("stats CR_* constants", "partial")
         end
     end
     I.inCombat = Plain(api, api.InCombatLockdown()) == true
