@@ -55,7 +55,8 @@ local KIT = {
     whirlwind = { { 1680 }, 25, 10, "spell" },
 }
 
--- key = the talent's rank spells (wowdb talents WARRIOR, r1..r5): 18 Arms, 17 Fury, 17 Protection.
+-- key = the talent's rank spells (wowdb talents WARRIOR, r1..r5): 18 Arms, 18 Fury, 17 Protection;
+-- `max` where the DB2 has only rank 1 (Furious Precision: Forever-only, no rank spells to alias).
 local TALENTS = {
     improved_heroic_strike = { 12282, 12663, 12664 },
     deflection = { 16462, 16463, 16464, 16465, 16466 },
@@ -92,6 +93,7 @@ local TALENTS = {
     improved_berserker_rage = { 20500, 20501 },
     flurry = { 12319, 12971, 12972, 12973, 12974 },
     bloodthirst = { 23881 },
+    furious_precision = { 1323963, max = 3 },
     shield_specialization = { 12298, 12724, 12725, 12726, 12727 },
     anticipation = { 12297, 12750, 12751, 12752, 12753 },
     improved_bloodrage = { 12301, 12818 },
@@ -157,7 +159,7 @@ describe("Forever Warrior", function()
             return lw.run(w.abilities[key][field], e)
         end
         assert.are.same(
-            { 13, 20, 5, 9, 8, 6 }, -- Cleave: 20 at any Improved Cleave rank (the client's cost read at 3/3)
+            { 13, 14, 5, 9, 8, 6 },
             { at("heroic_strike", "spend"), at("cleave", "spend"), at("execute", "spend"), at("sunder_armor", "spend"),
                 at("thunder_clap", "spend"), at("taunt", "cooldown") }
         )
@@ -207,7 +209,7 @@ describe("Forever Warrior", function()
         local n, aliases = 0, 0
         for key, ranks in pairs(TALENTS) do
             n = n + 1
-            assert.are.same({ 0, ranks[1], #ranks }, w.talents[key], key)
+            assert.are.same({ 0, ranks[1], ranks.max or #ranks }, w.talents[key], key)
             for r = 2, #ranks do
                 assert.are.equal(ranks[1], w.track[ranks[r]], key .. " rank " .. r)
             end
@@ -220,7 +222,7 @@ describe("Forever Warrior", function()
         for _ in pairs(w.track) do
             tracked = tracked + 1
         end
-        assert.are.same({ 52, 52, 120, 120 }, { n, registered, aliases, tracked })
+        assert.are.same({ 53, 53, 120, 120 }, { n, registered, aliases, tracked })
     end)
 
     it("reads the stance, a queued strike and Revenge's window at reset", function()
@@ -275,7 +277,7 @@ describe("Forever Warrior", function()
         pipe:close()
         assert.are.equal(3, #w.packs)
         for i, name in ipairs({ "Arms", "Fury", "Protection" }) do
-            assert.are.same({ name, 20261015, printed[i] }, w.packs[i])
+            assert.are.same({ name, 20261016, printed[i] }, w.packs[i])
         end
         assert.are.same({ package = "Arms" }, w.options)
     end)

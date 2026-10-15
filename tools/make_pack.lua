@@ -8,7 +8,7 @@
 -- The Arms and Fury lists are ported from Hekili's Classic profile (origin/classic:Classic/APLs/WarriorArms.simc,
 -- WarriorFury.simc); the Protection list's shape is archive/TheWarWithin/Priorities/WarriorProtection.simc's.
 
-local DATE = 20261015
+local DATE = 20261016
 
 -- Shared by Arms and Fury (Classic's head of both lists). Forever changes: the execute phase is the plain usability
 -- read (`execute_phase`), the target's health being secret; `cooldowns` is defined (Classic called it undefined) and
@@ -40,12 +40,12 @@ actions.rotation+=/overpower
 actions.rotation+=/whirlwind,if=active_enemies>=settings.ww_min_enemies|(!settings.adaptive_queueing_enabled&cooldown.mortal_strike.remains>=settings.ww_cd_diff|settings.adaptive_queueing_enabled&rage.time_to_55<cooldown.mortal_strike.remains+settings.ww_cd_diff)
 actions.rotation+=/mortal_strike
 actions.rotation+=/spearing_strike
+actions.rotation+=/slam,if=!talent.mortal_strike.enabled
 actions.rotation+=/rend,if=!debuff.rend.up&!talent.mortal_strike.enabled
 actions.rotation+=/hamstring,if=cooldown.mortal_strike.remains>=settings.hamstring_cd_diff&cooldown.whirlwind.remains>=settings.hamstring_cd_diff&rage.current>settings.hamstring_threshold
 actions.rotation+=/bloodrage,if=rage.current<90
 actions.rotation+=/battle_shout,if=!up
 actions.rotation+=/berserker_stance,use_off_gcd=1,if=!up
-actions.rotation+=/battle_stance,use_off_gcd=1,if=!up&settings.overpower_enabled&buff.overpower_ready.up&rage.current>=action.overpower.cost&rage.current<settings.overpower_threshold
 ]],
     },
     {
@@ -65,12 +65,12 @@ actions.rotation+=/whirlwind,if=active_enemies>=settings.ww_min_enemies
 actions.rotation+=/bloodthirst
 actions.rotation+=/whirlwind,if=!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=settings.ww_cd_diff|settings.adaptive_queueing_enabled&rage.time_to_55<cooldown.bloodthirst.remains&cooldown.bloodthirst.remains>=settings.ww_cd_diff
 actions.rotation+=/spearing_strike
+actions.rotation+=/slam,if=!talent.bloodthirst.enabled
 actions.rotation+=/rend,if=!debuff.rend.up&!talent.bloodthirst.enabled
 actions.rotation+=/hamstring,if=cooldown.bloodthirst.remains>=settings.hamstring_cd_diff&cooldown.whirlwind.remains>=settings.hamstring_cd_diff&rage.current>settings.hamstring_threshold
 actions.rotation+=/bloodrage,if=rage.current<90
 actions.rotation+=/battle_shout,if=!up
 actions.rotation+=/berserker_stance,use_off_gcd=1,if=!up
-actions.rotation+=/battle_stance,use_off_gcd=1,if=!up&settings.overpower_enabled&buff.overpower_ready.remains>1&rage.current>=action.overpower.cost&rage.current<settings.overpower_threshold&!buff.flurry.up&!cooldown.bloodthirst.up&!cooldown.whirlwind.up
 ]],
     },
     {
