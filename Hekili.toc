@@ -14,10 +14,14 @@ VirtualState\ObsLog.lua
 VirtualState\Belief.lua
 VirtualState\Families\Player.lua
 VirtualState\Families\Casts.lua
+VirtualState\Families\Resources.lua
+VirtualState\Families\Swing.lua
 VirtualState\Sources\Sources.lua
 VirtualState\Sources\Player.lua
 VirtualState\Sources\Spellbook.lua
 VirtualState\Sources\Casts.lua
+VirtualState\Sources\Power.lua
+VirtualState\Sources\Swing.lua
 VirtualState\Snapshot.lua
 
 Hekili.lua
