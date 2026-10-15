@@ -272,6 +272,14 @@ describe("Forever Warrior", function()
         assert.is_true(math.abs(0.875 - decay()) < 1e-9) -- 1.25 x (1 - 0.3 x 1) = 1.25 x 0.7 = 0.875
     end)
 
+    it("caps rage at 105 for a Gnome (Expansive Mind, +5% maximum resources) and 100 otherwise", function()
+        local max = w.resource[4].max
+        w.state.race = { gnome = true }
+        assert.are.equal(105, max())
+        w.state.race = {}
+        assert.are.equal(100, max())
+    end)
+
     it("gains Bloodrage's rage over time through an aura-gated regen entry", function()
         local models = w.resource[2]
         assert.are.equal(1, w.resource[1])

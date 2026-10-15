@@ -123,7 +123,7 @@ local function buildDef()
             key = k,
             type = r.type,
             token = k:upper(),
-            max = 100,
+            max = r.state and r.state.meta and r.state.meta.max or 100, -- a number or a state-bound function
             rest = ns.ResourceRegenerates(k) and 100 or 0,
             swing = swing,
             swingValue = value,

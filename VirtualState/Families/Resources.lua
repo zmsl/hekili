@@ -52,6 +52,8 @@ local R = {
     regen = {},
     decayDef = {},
     decay = {},
+    maxDef = {},
+    maxRead = {},
 }
 I.res = R
 R.slotOf, R.slotOfToken = {}, {}
@@ -74,6 +76,16 @@ local function decayOf(r)
         d = d()
     end
     return type(d) == "number" and d > 0 and d or 0
+end
+
+-- Slot r's declared maximum from its `max` (a number or a state-bound function; default 100), used until a plain
+-- read arrives. Allocates nothing.
+local function maxOf(r)
+    local m = R.maxDef[r]
+    if type(m) == "function" then
+        m = m()
+    end
+    return type(m) == "number" and m > 0 and m or 100
 end
 
 -- By ability index a: the last usability answer and the last short report (cost, time).
@@ -101,7 +113,8 @@ I.OnBuild(function(def, now)
         local d = list[r]
         R.type[r], R.token[r] = d.type, d.token
         R.slotOf[d.type], R.slotOfToken[d.token] = r, r
-        R.max[r] = d.max or 100
+        R.maxDef[r], R.maxRead[r] = d.max, false
+        R.max[r] = maxOf(r)
         R.rest[r] = d.rest or 0
         R.swing[r] = d.swing or 0
         R.swingValue[r] = d.swingValue or 0
@@ -399,7 +412,9 @@ I.On(Obs.Read, function(o, t, lag)
             pin(r, o.b, 0, t, "observed", Obs.Read)
         end
     elseif c == ReadOf.Max then
-        R.max[r] = o.b > 0 and o.b or R.max[r]
+        if o.b > 0 then
+            R.max[r], R.maxRead[r] = o.b, true -- a plain read wins over the declared maximum from now on
+        end
     elseif c == ReadOf.Regen and R.swing[r] == 0 then
         R.decl[r], R.readT[r] = o.b, t
         R.regE[r], R.regL[r], R.regH[r] = o.b, o.b, o.b
@@ -451,6 +466,9 @@ I.On(Obs.CombatEnd, function()
     fighting = false
     for r = 1, R.n do
         R.decay[r] = decayOf(r)
+        if not R.maxRead[r] then
+            R.max[r] = maxOf(r)
+        end
         if R.rest[r] < R.lo0[r] then
             R.lo0[r] = R.rest[r]
         end

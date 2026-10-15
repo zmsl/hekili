@@ -171,6 +171,26 @@ describe("resources", function()
             assert.is_true(VS.Power(fs.RAGE, t).est < 100)
         end)
 
+        it("applies a declared maximum at build until a plain max read overrides it for good", function()
+            local def = fs.def(fs.new(9))
+            local declared = 105
+            def.resources[1].max = function()
+                return declared
+            end
+            boot(def)
+            assert.are.equal(105, I.res.max[1])
+            declared = 110
+            S.Direct(Obs.CombatEnd, 2)
+            I.Fold(2, false)
+            assert.are.equal(110, I.res.max[1]) -- re-read at combat end while nothing plain was read
+            S.Direct(Obs.Read, 3, 1, 120, I.ReadOf.Max)
+            I.Fold(3, false)
+            assert.are.equal(120, I.res.max[1])
+            S.Direct(Obs.CombatEnd, 4)
+            I.Fold(4, false)
+            assert.are.equal(120, I.res.max[1]) -- the plain read keeps winning
+        end)
+
         it("leaves the estimate unchanged out of combat when the slot's decay is 0", function()
             local def = fs.def(fs.new(9))
             def.resources[1].decay = function()

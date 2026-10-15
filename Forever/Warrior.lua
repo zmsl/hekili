@@ -183,6 +183,8 @@ spec:RegisterResource( Enum.PowerType.Rage, {
     -- Out-of-combat rage loss per second, VirtualState's `decay` (in the meta table: Hekili takes every regen entry for
     -- a model): the client's Rage tooltip, "1.25 Rage is lost every 1 sec" (measured 100 -> 0 in 82.2 s: 80 s plus
     -- reaction time); Anger Management's tooltip: 30% less.
+    -- Gnome's Warrior racial Expansive Mind (1259802): +5% maximum resources, so a 105 rage cap.
+    max = function () return state.race.gnome and 105 or 100 end,
     decay = function () return 1.25 * ( 1 - 0.3 * state.talent.anger_management.rank ) end,
 } )
 
