@@ -3,7 +3,7 @@
 Status: draft for the user's review. Target: `Forever/Races/<Race>.lua`, one file per Classic race, on branch
 `forever-races` at 688dd350 (the event-facade branch plus the Druid pack: `Races.lua`, `Gnome.lua`, `NightElf.lua`,
 `Tauren.lua` exist). Every value below is the Forever DB2 (build 1.60.1.70338, `wowdb`), read for the research brief
-`/home/zack/.claude/jobs/080a308e/tmp/races/research.md` (cited "R §n"); the Eureka! lists (§4) were re-queried for
+`docs/research/2026-10-15-forever-races/research.md` (cited "R §n"); the Eureka! lists (§4) were re-queried for
 this spec. Race files keep Hekili's style (spaces inside parentheses), `Hekili:NewRace( token )` and the four
 `Register*` calls of `Races.lua`; nothing in `Races.lua`, `Classes.lua` or the layer changes.
 

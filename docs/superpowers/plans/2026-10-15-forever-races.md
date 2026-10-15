@@ -8,7 +8,7 @@
 
 **Tech Stack:** Lua 5.1 (WoW Forever client 1.60.1, interface 16001), busted, luacheck, lua-language-server, `lua5.1`/`luac5.1`, the Forever DB2 through `~/.local/share/wow-db2/bin/wowdb` (build 1.60.1.70338).
 
-**Spec:** `docs/superpowers/specs/2026-10-15-forever-races.md` (binding; §2 the registrations and the GCD rule, §3 the override list, §4 the Eureka! lists and their query, §5 tokens, §6 tests, §7 the checkpoint). Read with it: the research brief `/home/zack/.claude/jobs/080a308e/tmp/races/research.md` ("R §n"), `Races.lua` (the registration object, `ns.applyRace`), the event-facade spec `docs/superpowers/specs/2026-10-15-virtualstate-event-facade.md` (§12a `now`, §12b race packs), and the Druid plan `docs/superpowers/plans/2026-10-15-forever-druid-pack.md` Task 6 (the shape of a race-file task).
+**Spec:** `docs/superpowers/specs/2026-10-15-forever-races.md` (binding; §2 the registrations and the GCD rule, §3 the override list, §4 the Eureka! lists and their query, §5 tokens, §6 tests, §7 the checkpoint). Read with it: the research brief `docs/research/2026-10-15-forever-races/research.md` ("R §n"), `Races.lua` (the registration object, `ns.applyRace`), the event-facade spec `docs/superpowers/specs/2026-10-15-virtualstate-event-facade.md` (§12a `now`, §12b race packs), and the Druid plan `docs/superpowers/plans/2026-10-15-forever-druid-pack.md` Task 6 (the shape of a race-file task).
 
 ## How this plan was checked
 
