@@ -79,6 +79,7 @@ local function passthrough(name, reason)
 end
 
 -- The raw answer, or the policy's when any of its first four values is secret. Allocates nothing.
+-- Tests only those four (the times sit there); later values (GetTotemInfo's icon, modRate, spellID) pass untested.
 local function pick(policy, x, y, z, a, b, c, d, ...)
     if issecretvalue(a) or issecretvalue(b) or issecretvalue(c) or issecretvalue(d) then
         return policy(x, y, z)
@@ -96,6 +97,16 @@ local function hybrid(name, policy, reason)
     kept(name, "hybrid", function(x, y, z)
         return pick(policy, x, y, z, real(x, y, z))
     end, reason)
+end
+
+-- The raw answer when every value is plain, else nothing (no cast). Allocates nothing.
+local function plainAll(...)
+    for i = 1, select("#", ...) do
+        if issecretvalue((select(i, ...))) then
+            return nil
+        end
+    end
+    return ...
 end
 
 -- Whether a cooldown or charge table's two time fields are plain numbers (the hybrid tables' test).
@@ -520,7 +531,7 @@ local CAST_ICON = 136243
 kept("UnitCastingInfo", "hybrid", function(unit, ...)
     if unit == "player" then
         if realUnitCastingInfo then
-            return realUnitCastingInfo(unit, ...)
+            return plainAll(realUnitCastingInfo(unit, ...))
         end
         return nil
     elseif unit ~= "target" then
@@ -537,7 +548,7 @@ end, "player plain [W PR9]; target secret [W PR8]; TargetCast()")
 kept("UnitChannelInfo", "hybrid", function(unit, ...)
     if unit == "player" then
         if realUnitChannelInfo then
-            return realUnitChannelInfo(unit, ...)
+            return plainAll(realUnitChannelInfo(unit, ...))
         end
         return nil
     elseif unit ~= "target" then

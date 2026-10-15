@@ -297,6 +297,26 @@ describe("ns.Facade", function()
             return nil -- not a charge spell
         end
         assert.is_nil(Facade.C_Spell.GetSpellCharges(fs.REND))
+        local secretTimes = { currentCharges = 1, cooldownStartTime = fake.SECRET, cooldownDuration = fake.SECRET }
+        answers["C_Spell.GetSpellCharges"] = function()
+            return secretTimes
+        end
+        local charges = VS.Charges
+        VS.Charges = function() -- no fake ability has charges: a belief of two
+            return { est = 2 }, { est = 0 }
+        end
+        local ch = Facade.C_Spell.GetSpellCharges(fs.REND) -- secret times: Charges()
+        VS.Charges = charges
+        assert.are_not.equal(secretTimes, ch)
+        assert.are.equal(2, ch.currentCharges)
+        ctl.cooldown[fs.REND] = { startTime = fake.SECRET, duration = fake.SECRET, isActive = false, isOnGCD = false }
+        local cd = Facade.C_Spell.GetSpellCooldown(fs.REND) -- secret times: the cooldown policy
+        assert.are_not.equal(ctl.cooldown[fs.REND], cd)
+        assert.are.equal("number", type(cd.startTime))
+        ctl.casting = { 1000, 2500 }
+        assert.are.equal(1000, select(4, Facade.UnitCastingInfo("player"))) -- the player's plain cast: the client's
+        ctl.casting = { fake.SECRET, fake.SECRET }
+        assert.is_nil(Facade.UnitCastingInfo("player")) -- a secret player cast reads as none
     end)
 
     it("makes a passthrough the client lacks a virtual row answering nothing", function()

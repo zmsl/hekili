@@ -18,6 +18,7 @@ hits=$(grep -E "accessing undefined variable '($globals)'" <<<"$out")
 [ -n "$hits" ] && { echo "$hits"; fail=1; }
 hits=$(grep -nE "_G(\.|\[[\"'])($globals)\b" "${files[@]}")
 [ -n "$hits" ] && { echo "$hits"; fail=1; }
+# shortcut: catches only a getmetatable read and a (Un)Register...Event call on one line; a split read needs review.
 hits=$(grep -nE "getmetatable\(.*(Register|Unregister)[A-Za-z]*Event" "${files[@]}")
 [ -n "$hits" ] && { echo "$hits"; fail=1; }
 [ $fail -eq 0 ] && echo "ok: no direct game API read in ${#files[@]} loaded files"
