@@ -313,4 +313,114 @@ describe("the synthesized combat log", function()
             assert.are.equal(0, bytes)
         end)
     end)
+
+    describe("hits on us", function()
+        local function onUs(unit, guid, speed)
+            ctl.guid[unit] = guid
+            ctl.unitIs[unit .. "target"] = "player"
+            ctl.unitSpeed[unit] = speed
+        end
+
+        it("credits a dodge on us to the one hostile targeting us: SWING_MISSED from its GUID", function()
+            onUs("target", "Creature-1", nil)
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.now = 5
+            ctl.Fire("UNIT_COMBAT", "player", "DODGE", "", 0, 1)
+            assert.are.same(
+                { 5, "SWING_MISSED", false, "Creature-1", "", L.HOSTILE_FLAGS, 0, "Player-1", "", L.PLAYER_FLAGS, 0, "DODGE", false, 0, false },
+                got[1].row
+            )
+            assert.are.equal("readable", I.Sources.status["UnitIsUnit target-of"])
+        end)
+
+        it("emits no row when nobody is known to target us, or the answer is secret", function()
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 300, 1)
+            ctl.guid.target = "Creature-1"
+            ctl.unitIs.targettarget = fake.SECRET
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.Fire("UNIT_COMBAT", "player", "PARRY", "", 0, 1)
+            assert.are.equal(0, #got)
+            assert.are.equal(2, L.unattributed)
+            assert.are.equal("secret", I.Sources.status["UnitIsUnit target-of"])
+        end)
+
+        it("credits each hit to the attacker whose plain swing speed predicts it, and none off both clocks", function()
+            onUs("nameplate1", "Creature-A", 2.0)
+            onUs("nameplate2", "Creature-B", 3.0)
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
+            ctl.unitIs.nameplate2target = nil -- B not yet on us: A alone starts its clock
+            ctl.Fire("UNIT_TARGET", "nameplate2")
+            ctl.now = 10
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 100, 1)
+            ctl.unitIs.nameplate2target = "player"
+            ctl.unitIs.nameplate1target = nil
+            ctl.Fire("UNIT_TARGET", "nameplate2")
+            ctl.Fire("UNIT_TARGET", "nameplate1")
+            ctl.now = 10.7
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 90, 1) -- B alone, no clock: B's anchor
+            ctl.unitIs.nameplate1target = "player"
+            ctl.Fire("UNIT_TARGET", "nameplate1")
+            ctl.now = 12.05 -- A's clock: 10 + 2.0
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 80, 1)
+            ctl.now = 13.65 -- B's clock: 10.7 + 3.0
+            ctl.Fire("UNIT_COMBAT", "player", "BLOCK", "", 0, 1)
+            ctl.now = 15.0 -- A predicts 14.05, B 16.7: off both
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 70, 1)
+            assert.are.same({ "Creature-A", "Creature-B", "Creature-A", "Creature-B" }, {
+                got[1].row[4], got[2].row[4], got[3].row[4], got[4].row[4],
+            })
+            assert.are.equal(4, #got)
+            assert.are.equal("BLOCK", got[4].row[12])
+            assert.are.equal(1, L.unattributed)
+        end)
+
+        it("learns an attacker's period from the gaps when its speed is secret", function()
+            onUs("target", "Creature-1", nil)
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            for _, t in ipairs({ 20, 22, 24.02 }) do
+                ctl.now = t
+                ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
+            end
+            onUs("nameplate3", "Creature-2", nil) -- a second hostile joins, no clock
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate3")
+            ctl.now = 26.05
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1) -- on Creature-1's learned clock
+            ctl.now = 27.0
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1) -- on nobody's
+            assert.are.equal(4, #got)
+            assert.are.equal("Creature-1", got[4].row[4])
+            assert.are.equal(1, L.unattributed)
+            ctl.Fire("PLAYER_REGEN_ENABLED") -- combat ends: anchors go, the learned period stays
+            ctl.unitIs.nameplate3target = nil
+            ctl.Fire("UNIT_TARGET", "nameplate3")
+            ctl.now = 100
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1) -- alone again: re-anchors
+            ctl.unitIs.nameplate3target = "player"
+            ctl.Fire("UNIT_TARGET", "nameplate3")
+            ctl.now = 102.02
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1) -- two on us: the kept period names Creature-1
+            assert.are.equal(6, #got)
+            assert.are.equal("Creature-1", got[6].row[4])
+        end)
+
+        it("allocates nothing per hit on us", function()
+            local sink = I.Events.CreateFrame("Frame")
+            local GetInfo = Facade.CombatLogGetCurrentEventInfo
+            sink:SetScript("OnEvent", function()
+                GetInfo()
+            end)
+            sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+            cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+            onUs("target", "Creature-1", 2.0)
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            local bytes = alloc.bytes(function(i)
+                ctl.now = i * 2
+                ctl.Fire("UNIT_COMBAT", "player", i % 2 == 0 and "WOUND" or "PARRY", "", 40, 1)
+                ctl.Fire("UNIT_TARGET", "target")
+                I.Sources.Flush()
+            end, 10000)
+            assert.are.equal(0, bytes)
+        end)
+    end)
 end)

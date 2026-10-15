@@ -56,6 +56,8 @@ function M.new()
         traits = nil, -- { config = id, trees = { tree }, nodes = { [node] = info }, entries = {}, defs = {} }
         inRange = {},
         handlers = {},
+        unitSpeed = {}, -- [unit] = speed for UnitAttackSpeed of a unit other than the player (default: secret)
+        unitIs = {}, -- [unit] = the token UnitIsUnit(unit, x) is true for (SECRET: a secret answer)
         unknownEvents = {}, -- [event] = true: RegisterEvent raises, as the client does for an event it does not know
     }
     local api = { ctl = ctl }
@@ -113,8 +115,22 @@ function M.new()
     function api.GetMeleeHaste()
         return ctl.meleeHaste
     end
-    function api.UnitAttackSpeed()
+    function api.UnitAttackSpeed(unit)
+        if unit ~= nil and unit ~= "player" then
+            local v = ctl.unitSpeed[unit]
+            if v == nil then
+                return SECRET, SECRET
+            end
+            return v, nil
+        end
         return ctl.speed[1], ctl.speed[2]
+    end
+    function api.UnitIsUnit(a, b)
+        local v = ctl.unitIs[a]
+        if v == SECRET then
+            return SECRET
+        end
+        return v == b
     end
     function api.GetTotemInfo(slot)
         local t = ctl.totems[slot]

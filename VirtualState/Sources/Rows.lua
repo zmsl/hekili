@@ -1,11 +1,11 @@
 -- VirtualState/Sources/Rows.lua
 -- The combat-log rows of our swings and of our abilities on the target (event-facade spec §2.4, §3): PLAYER_SWING
 -- (time and hand, plain) and our UNIT_SPELLCAST_SUCCEEDED of an ability that starts combat or strikes on the next
--- swing are paired with the
--- target's UNIT_COMBAT (the outcome, plain, victim-side) when the two arrive within PAIR_WINDOW of each other, in
--- either order: SWING_DAMAGE / SWING_MISSED / SPELL_DAMAGE / SPELL_MISSED, inferred, at the earlier event's time
--- (back-dated). A swing still unpaired when its window closes is emitted as SWING_DAMAGE with amount 0 (its time is
--- still the swing's); an outcome or a cast unpaired then is dropped (someone else's, or no outcome).
+-- swing are paired with the target's UNIT_COMBAT (the outcome, plain, victim-side) when the two arrive within
+-- PAIR_WINDOW of each other, in either order: SWING_DAMAGE / SWING_MISSED / SPELL_DAMAGE / SPELL_MISSED, inferred, at
+-- the earlier event's time (back-dated). A swing still unpaired when its window closes is emitted as SWING_DAMAGE with
+-- amount 0 (its time is still the swing's); an outcome or a cast unpaired then is dropped (someone else's, or no
+-- outcome).
 -- Credits: secret-value handling after Catnip's (Durts) research; the signals are Taco Dog Forever's research
 -- (docs/research/2026-10-14-virtual-combat-log-events.md, C1, C3, C9, D7).
 
@@ -43,7 +43,7 @@ local function free(ts)
             oldest = i
         end
     end
-    return oldest -- full: the oldest gives way
+    return oldest -- full: the oldest gives way, unemitted (8 pending within PAIR_WINDOW cannot happen)
 end
 
 local function oldest(ts, now)
