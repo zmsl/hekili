@@ -121,7 +121,7 @@ describe("ns.Facade", function()
         assert.is_nil(Facade.C_Spell.GetSpellLossOfControlCooldown(1))
     end)
 
-    it("answers resources from the belief: UnitPower is floor(lo); swing-paid regen is 0 in combat", function()
+    it("answers resources: UnitPower floors est for rage, lo otherwise; swing regen 0 in combat", function()
         I.Sources.Direct(VS.Obs.Usable, 5, 3, 1, 0) -- rend usable: rage >= 10
         I.Fold(5, false)
         ctl.now = 5
@@ -137,6 +137,12 @@ describe("ns.Facade", function()
         Facade.UnitPower("player")
         VS.Power = power
         assert.are.equal(0, asked)
+        VS.Power = function()
+            return { est = 98.6, lo = 31.8 } -- the in-game case (G4): lo drifted far below the bar
+        end
+        assert.are.equal(98, Facade.UnitPower("player", fs.RAGE))
+        assert.are.equal(31, Facade.UnitPower("player", 3)) -- energy, a non-rage power type, keeps lo
+        VS.Power = power
         ctl.Fire("PLAYER_REGEN_DISABLED")
         assert.are.same({ 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) })
         assert.are.equal(2, select("#", Facade.GetManaRegen()))
