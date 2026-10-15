@@ -218,6 +218,9 @@ describe("ns.Facade", function()
         ctl.now = 20
         local c = Facade.C_Spell.GetSpellCooldown(fs.REND)
         assert.are.same({ 0, 0, false }, { c.startTime, c.duration, c.isActive })
+        ctl.cooldown[fs.REND] = { isActive = true, isOnGCD = false }
+        c = Facade.C_Spell.GetSpellCooldown(fs.REND)
+        assert.are.same({ 0, 0, true }, { c.startTime, c.duration, c.isActive })
     end)
 
     it("passes the player's own casts through and answers the target's from TargetCast", function()
