@@ -27,6 +27,19 @@ end
 -- The debug handle: /run print(Hekili.VirtualState.Snapshot())
 Hekili.VirtualState = VS
 
+-- The trace (event-facade spec §5): facade reads and events write into Hekili's snapshot while it debugs, and each
+-- display's snapshot log opens with VirtualState's own Snapshot().
+ns.Facade.Attach(Hekili)
+do
+    local setupDebug = Hekili.SetupDebug
+    function Hekili:SetupDebug(display)
+        setupDebug(self, display)
+        if self.ActiveDebug and display then
+            self:Debug("%s", VS.Snapshot())
+        end
+    end
+end
+
 -- The urgent lane (spec §4.4): shortens Hekili's wait before its next cycle; never interrupts one.
 I.urgent = function(event)
     Hekili:ForceUpdate(event)

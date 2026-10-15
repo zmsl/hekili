@@ -40,6 +40,78 @@ local function resolve(name)
     return _G[key]
 end
 
+local GetTime = resolve("GetTime")
+local issecretvalue = resolve("issecretvalue") or function()
+    return false
+end
+
+----------------------------------------------------------------------------------------------------------------------
+-- The trace (event-facade spec §5, decision 3): while Hekili makes a snapshot (`Hekili.ActiveDebug`), every facade
+-- read writes one line through Hekili:Debug into the snapshot: the class that answered (a hybrid says whether the
+-- raw value or the model did), the name, two arguments and four results, a secret shown as S. Off, a read costs one
+-- field test. Facade.Attach(Hekili) (Adapter.lua) names the addon table; until then nothing is traced.
+
+local hk = { ActiveDebug = false }
+function Facade.Attach(hekili)
+    hk, I.hekili = hekili, hekili
+end
+
+local busy, modelled = false, false
+Facade.secrets = {} -- by name: secret answers from a passthrough while tracing (a misfiled name, E11)
+Facade.QUIET = { GetTime = true } -- read so often it would bury the snapshot: counted, not written
+Facade.counts = {} -- by name: reads while tracing
+
+-- A value as trace text: S for a secret, scalars of a table copied now (never the shared table, whose values change
+-- later), each field tested with issecretvalue before it is compared or converted.
+local function field(v)
+    if issecretvalue(v) then
+        return "S"
+    end
+    return tostring(v)
+end
+
+local function show(v)
+    if issecretvalue(v) then
+        return "S"
+    elseif type(v) ~= "table" then
+        return tostring(v)
+    end
+    local id, start = v.spellId, v.startTime
+    if issecretvalue(id) or id ~= nil then
+        return "aura:" .. field(id) .. "/" .. field(v.expirationTime) .. "/" .. field(v.applications)
+    elseif issecretvalue(start) or start ~= nil then
+        return "cd:" .. field(start) .. "/" .. field(v.duration)
+    end
+    return "table"
+end
+
+-- One trace line (run through pcall: a raising Debug or a strange value never reaches the read).
+local function write(name, kind, a1, a2, n, r1, r2, r3, r4)
+    Facade.counts[name] = (Facade.counts[name] or 0) + 1
+    if kind == "passthrough" then
+        if issecretvalue(r1) or issecretvalue(r2) or issecretvalue(r3) or issecretvalue(r4) then
+            Facade.secrets[name] = (Facade.secrets[name] or 0) + 1
+        end
+    elseif kind == "hybrid" then
+        kind = modelled and "hybrid:model" or "hybrid:raw"
+    end
+    if not Facade.QUIET[name] then
+        hk:Debug("[vs] %s %s(%s, %s) -> %s, %s, %s, %s #%d", kind, name, show(a1), show(a2), show(r1), show(r2),
+            show(r3), show(r4), n)
+    end
+end
+
+local function traced(name, kind, a1, a2, ...)
+    if not busy then
+        busy = true
+        local r1, r2, r3, r4 = ...
+        pcall(write, name, kind, a1, a2, select("#", ...), r1, r2, r3, r4)
+        busy = false -- every path: pcall returns whatever write did
+    end
+    return ...
+end
+
+-- Every row is stored behind one wrapper that traces it while Hekili debugs (decision 4: one branch when off).
 local function kept(name, kind, fn, reason)
     local nsName, key = split(name)
     local t = Facade
@@ -47,14 +119,16 @@ local function kept(name, kind, fn, reason)
         Facade[nsName] = Facade[nsName] or {}
         t = Facade[nsName]
     end
-    t[key] = fn
+    t[key] = function(...)
+        if hk.ActiveDebug then
+            local a1, a2 = ...
+            modelled = false
+            return traced(name, kind, a1, a2, fn(...))
+        end
+        return fn(...)
+    end
     inventory[#inventory + 1] = name
     status[name], why[name] = kind, reason
-end
-
-local GetTime = resolve("GetTime")
-local issecretvalue = resolve("issecretvalue") or function()
-    return false
 end
 local realUnitPowerType = resolve("UnitPowerType")
 local realUnitIsDead = resolve("UnitIsDead")
@@ -65,7 +139,7 @@ local realUnitCastingInfo = resolve("UnitCastingInfo")
 local realUnitChannelInfo = resolve("UnitChannelInfo")
 local realGetSpellCharges = resolve("C_Spell.GetSpellCharges")
 
---- A passthrough: the raw function, wrapped once at load so a later finding changes one row, not Hekili. A name the
+--- A passthrough: the raw function behind the row's wrapper, so a later finding changes one row, not Hekili. A name the
 --- client lacks (the deprecation shims while `loadDeprecationFallbacks` is off) answers nothing and is virtual.
 local function passthrough(name, reason)
     local real = resolve(name)
@@ -73,15 +147,14 @@ local function passthrough(name, reason)
         kept(name, "virtual", function() end, "absent on this client; answers nothing (" .. reason .. ")")
         return
     end
-    kept(name, "passthrough", function(...)
-        return real(...)
-    end, reason)
+    kept(name, "passthrough", real, reason)
 end
 
 -- The raw answer, or the policy's when any of its first four values is secret. Allocates nothing.
 -- Tests only those four (the times sit there); later values (GetTotemInfo's icon, modRate, spellID) pass untested.
 local function pick(policy, x, y, z, a, b, c, d, ...)
     if issecretvalue(a) or issecretvalue(b) or issecretvalue(c) or issecretvalue(d) then
+        modelled = true
         return policy(x, y, z)
     end
     return a, b, c, d, ...
@@ -492,6 +565,7 @@ kept("C_Spell.GetSpellCooldown", "hybrid", function(spellID)
     if plainTimes(info, "startTime", "duration") then
         return info
     end
+    modelled = true
     return cooldownPolicy(spellID)
 end, "times secret in combat, flags plain [W PR4, PR11]; Cooldown(), GcdInfo()")
 
@@ -517,6 +591,7 @@ kept("C_Spell.GetSpellCharges", "hybrid", function(spellID)
     if plainTimes(info, "cooldownStartTime", "cooldownDuration") then
         return info
     end
+    modelled = true
     return chargesPolicy(spellID)
 end, "times secret in combat [W §4 cooldowns]; Charges()")
 
@@ -537,6 +612,7 @@ kept("UnitCastingInfo", "hybrid", function(unit, ...)
     elseif unit ~= "target" then
         return nil
     end
+    modelled = true
     local channel, castBarID, start, kick = VS.TargetCastFacts()
     local rec = channel == false and VS.TargetCast(now())
     if not rec then
@@ -554,6 +630,7 @@ kept("UnitChannelInfo", "hybrid", function(unit, ...)
     elseif unit ~= "target" then
         return nil
     end
+    modelled = true
     local channel, _, start, kick = VS.TargetCastFacts()
     local rec = channel == true and VS.TargetCast(now())
     if not rec then
@@ -733,3 +810,13 @@ end
 function Facade.Inventory()
     return inventory
 end
+
+-- Snapshot's line: what the trace counted (allocates; debugging only).
+I.OnSnapshot(function(out)
+    local parts = {}
+    for name, n in pairs(Facade.secrets) do
+        parts[#parts + 1] = name .. "=" .. n
+    end
+    table.sort(parts)
+    out[#out + 1] = "facade secret passthrough answers: " .. (#parts > 0 and table.concat(parts, " ") or "none")
+end)

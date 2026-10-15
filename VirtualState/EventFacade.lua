@@ -188,6 +188,10 @@ local function onEvent(_, event, r1, r2, r3, r4, r5, r6, r7, r8)
     if I.api then
         S.Run(api, event, a1, a2, a3, a4, a5)
     end
+    local h = I.hekili -- the trace (§5): one line per event while Hekili makes a snapshot
+    if h and h.ActiveDebug then
+        pcall(h.Debug, h, "[vs] event %s(%s, %s, %s)", event, tostring(a1), tostring(a2), tostring(a3))
+    end
     local list = SUB[event]
     if not list then
         return
