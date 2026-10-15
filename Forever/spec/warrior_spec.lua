@@ -264,12 +264,12 @@ describe("Forever Warrior", function()
         assert.is_true(am.stop())
     end)
 
-    it("loses rage out of combat at the measured 1.22/s, 30% less with Anger Management", function()
+    it("loses rage out of combat at the tooltip's 1.25/s, 30% less with Anger Management", function()
         local decay = w.resource[4].decay
         w.state.talent = { anger_management = { rank = 0 } }
-        assert.are.equal(1.22, decay())
+        assert.are.equal(1.25, decay())
         w.state.talent.anger_management.rank = 1
-        assert.is_true(math.abs(0.854 - decay()) < 1e-9) -- 1.22 x (1 - 0.3 x 1) = 1.22 x 0.7 = 0.854
+        assert.is_true(math.abs(0.875 - decay()) < 1e-9) -- 1.25 x (1 - 0.3 x 1) = 1.25 x 0.7 = 0.875
     end)
 
     it("gains Bloodrage's rage over time through an aura-gated regen entry", function()

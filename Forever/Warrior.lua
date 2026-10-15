@@ -181,8 +181,9 @@ spec:RegisterResource( Enum.PowerType.Rage, {
     },
 }, nil, {
     -- Out-of-combat rage loss per second, VirtualState's `decay` (in the meta table: Hekili takes every regen entry for
-    -- a model): measured 100 -> 0 in 82.2 s on 2026-10-15 (1.22/s); Anger Management's tooltip: 30% less.
-    decay = function () return 1.22 * ( 1 - 0.3 * state.talent.anger_management.rank ) end,
+    -- a model): the client's Rage tooltip, "1.25 Rage is lost every 1 sec" (measured 100 -> 0 in 82.2 s: 80 s plus
+    -- reaction time); Anger Management's tooltip: 30% less.
+    decay = function () return 1.25 * ( 1 - 0.3 * state.talent.anger_management.rank ) end,
 } )
 
 -- Talents: { node (unused on Forever), the definition spell, max rank }: the 52 nodes of Forever's one talent tree,
