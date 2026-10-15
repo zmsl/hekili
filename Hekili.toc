@@ -35,3 +35,4 @@ Options\Options.lua
 UI.lua
 Scripts.lua
 Core.lua
+VirtualState\Adapter.lua

@@ -38,22 +38,23 @@ Hekili.IsClassic = function()
     return Hekili.IsWrath()
 end
 
+-- Forever (interface 16001) runs the Midnight 12.x API, so the retail gates hold there (cleanup Q15).
 Hekili.IsDragonflight = function()
-    return buildNum >= 100000
+    return true
 end
 
 Hekili.IsTWW = function()
-    return buildNum >= 110000
+    return true
 end
 
 Hekili.IsMidnight = function()
-    return buildNum >= 120000
+    return true
 end
 
-Hekili.BuiltFor = 110200
+Hekili.BuiltFor = 16001
 Hekili.GameBuild = buildStr
 
-ns.PTR = buildNum > 110200
+ns.PTR = false
 Hekili.IsPTR = ns.PTR
 
 ns.Patrons = "|cFFFFD100Current Status|r\n\n"

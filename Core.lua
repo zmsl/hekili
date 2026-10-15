@@ -1568,6 +1568,10 @@ function Hekili.Update()
     local pack = rawget( profile.packs, packName )
     if not pack then return end
 
+    -- VirtualState: fold what was observed since the last cycle and apply our casts through the spec, after the guards
+    -- above and before any reset (docs/superpowers/specs/2026-10-14-hekili-virtualstate-design.md §5.1).
+    ns.VirtualState.Drain( GetTime() )
+
     local debug = Hekili.ActiveDebug
 
     Hekili:GetNumTargets( true )

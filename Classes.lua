@@ -3132,7 +3132,8 @@ function Hekili:SpecializationChanged()
     for i = 1, 4 do
         local id, name, _, _, role, primaryStat = GetSpecializationInfo( i )
 
-        if not id then break end
+        -- Forever answers id 0 for spec slots 2 and 3 (cleanup Q7).
+        if not id or id == 0 then break end
 
         if i == currentSpec then
             insert( specs, 1, id )
@@ -3350,6 +3351,9 @@ function Hekili:SpecializationChanged()
     state.player.unit = UnitGUID( "player" )
 
     ns.callHook( "specializationChanged" )
+
+    -- VirtualState tracks what this spec registered; its talent walk runs here, before ns.updateTalents reads the ranks.
+    ns.VirtualState.SpecChanged()
 
     ns.updateTalents()
     ResetDisabledGearAndSpells()
