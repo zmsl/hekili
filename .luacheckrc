@@ -91,7 +91,12 @@ files["UI.lua"] = { globals = stateEnv }
 files["Utils.lua"] = { globals = stateEnv }
 files["Hekili.lua"] = { globals = stateEnv }
 files["Constants.lua"] = { globals = stateEnv }
-files["VirtualState/spec/"] = { std = "+busted" }
+-- The names a class file's `now` function reads in VirtualState's context (VirtualState/Families/Now.lua).
+local nowEnv = {
+    "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "setCooldown", "talent",
+    "buff", "debuff", "knownRank", "now", "combat", "rage", "energy", "mana", "focus", "runic_power",
+}
+files["VirtualState/spec/"] = { std = "+busted", read_globals = nowEnv }
 files["Forever/spec/"] = { std = "+busted" }
 -- The Warrior's handlers, state expressions and state functions run with setfenv( f, state ) as well; these are the
 -- further `state` names they use.

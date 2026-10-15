@@ -21,6 +21,7 @@ VirtualState\Families\TargetCast.lua
 VirtualState\Families\Talents.lua
 VirtualState\Families\Totems.lua
 VirtualState\Families\Enemies.lua
+VirtualState\Families\Now.lua
 VirtualState\Sources\Sources.lua
 VirtualState\Sources\Player.lua
 VirtualState\Sources\Spellbook.lua

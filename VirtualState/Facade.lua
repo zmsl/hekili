@@ -194,9 +194,9 @@ local function plainTimes(info, startKey, durationKey)
     return type(s) == "number" and type(d) == "number"
 end
 
--- The facade's clock: the pinned cast time during a drain, else GetTime().
+-- The facade's clock.
 local function now()
-    return I.pinned or GetTime()
+    return GetTime()
 end
 Facade.Now = now
 

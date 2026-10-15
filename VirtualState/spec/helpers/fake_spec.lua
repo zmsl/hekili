@@ -70,7 +70,8 @@ function M.new(swingValue)
         talents = { improved_rend = { 0, 12286, 3 } },
     }
     local function ability(key, t)
-        t.key, t.funcs = key, {}
+        t.key, t.funcs = key, { now = t.now } -- Hekili keeps an unknown function field in `funcs`
+        t.now = nil
         t.cast, t.cooldown, t.charges, t.recharge = t.cast or 0, t.cooldown or 0, t.charges or 1, t.recharge or 0
         class.abilities[key] = t
         class.abilities[t.id] = t
@@ -84,6 +85,9 @@ function M.new(swingValue)
         handler = function()
             state.applyDebuff("rend", 15)
         end,
+        now = function()
+            applyDebuff("target", "rend", 15) -- the `now` context's verb (Families/Now.lua)
+        end,
     })
     ability("heroic_strike", { id = M.STRIKE, spend = 15, spendType = "rage", gcd = "off", onNextSwing = true })
     ability("battle_shout", {
@@ -92,6 +96,9 @@ function M.new(swingValue)
         spendType = "rage",
         handler = function()
             state.applyBuff("battle_shout", 120)
+        end,
+        now = function()
+            applyBuff("battle_shout")
         end,
     })
     class.auras.rend = { key = "rend", id = M.REND, copy = { M.REND_R2 }, duration = 15 }
@@ -156,7 +163,7 @@ end
 function M.fold(ns, t)
     local I = ns.VirtualStateInternal
     I.Sources.RunPolls(t)
-    I.Fold(t, false)
+    I.Fold(t)
     I.Settle(t)
 end
 

@@ -27,17 +27,18 @@ function VS.Snapshot()
         tostring(I.moving)
     )
     out[#out + 1] = format(
-        "log %d/%d dropped=%d stage dropped=%d drain=%.2fms casts=%d errors=%d",
+        "log %d/%d dropped=%d stage dropped=%d drain=%.2fms casts=%d errors=%d now=%d",
         I.log.n,
         I.log.cap,
         I.log.dropped,
         S.dropped,
         I.drainMs or 0,
         I.drainCasts or 0,
-        I.applyErrors or 0
+        I.nowErrors or 0,
+        I.nowRuns or 0
     )
-    if I.applyError ~= nil then
-        out[#out] = out[#out] .. " error=" .. tostring(I.applyError)
+    if I.nowError ~= nil then
+        out[#out] = out[#out] .. " error=" .. tostring(I.nowError)
     end
     local names = {}
     for name in pairs(S.status) do

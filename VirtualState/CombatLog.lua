@@ -166,7 +166,7 @@ local function auraRow(sub, u, j, t, backdate, prov)
 end
 
 --- What our cast at `t` did to tracked aura `j` on unit `u` (1 player, 2 target): its expiry before and after the
---- apply through the spec (Adapter.lua). No row without a destination GUID (Hekili would count "" as an enemy).
+--- `now` verbs (Families/Now.lua). No row without a destination GUID (Hekili would count "" as an enemy).
 --- Allocates nothing.
 function L.Aura(u, j, spellID, before, after, t)
     if type(spellID) ~= "number" then
@@ -204,7 +204,7 @@ L.OnTick(function(now)
     end
 end)
 
---- Resource our cast at `t` gave us (Adapter.lua's apply): SPELL_ENERGIZE, back-dated to the cast.
+--- Resource our cast at `t` gave us (a `now` handler's gain, Families/Now.lua): SPELL_ENERGIZE, back-dated to the cast.
 function L.Energize(spellID, amount, powerType, maxPower, t)
     if type(spellID) ~= "number" or L.player == "" then
         return

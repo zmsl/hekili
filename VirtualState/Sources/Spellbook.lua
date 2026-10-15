@@ -23,13 +23,16 @@ local last, gcdLast = {}, -1
 local function resolve(api)
     local A = I.ab
     for a = 1, A.n do
-        local ids, q = A.ids[a], A.ids[a][1]
+        local ids, q, known = A.ids[a], A.ids[a][1], false
         for k = 1, #ids do
             if Plain(api, api.C_SpellBook.IsSpellKnown(ids[k])) == true then
-                q = ids[k]
+                q, known = ids[k], true
             end
         end
         A.qid[a] = q
+        if A.known then
+            A.known[a] = known -- VS.KnownRank (Families/Now.lua)
+        end
         if not I.inCombat and A.slot[a] > 0 then
             local raw = api.C_Spell.GetSpellPowerCost(q) -- secret: Plain next, then each field
             local costs = Plain(api, raw)

@@ -9,7 +9,6 @@ local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local At, Shift = I.ObsLog.At, I.ObsLog.Shift
 local Obs = VS.Obs
-local CAST_SUCCESS, CHANNEL_START = Obs.CastSuccess, Obs.ChannelStart
 
 local APPLY, ADVANCE, SETTLE = {}, {}, {}
 
@@ -47,12 +46,11 @@ local function advance(t)
 end
 I.Advance = advance
 
---- Folds the log in order (spec §5.2 steps 2 and 3.8). With `stopAtCast`, returns right after applying an own cast
---- (CastSuccess or ChannelStart) as `kind, ability, t`; otherwise folds everything stamped at or before `upto` and
---- returns nil. An observation older than the clock is applied at the clock with `lag`. Allocates nothing.
+--- Folds the log in order (spec §5.2 step 2): everything stamped at or before `upto`; an own cast's effects are
+--- written by its appliers (Families/Now.lua). An observation older than the clock is applied at the clock with
+--- `lag`. Allocates nothing.
 ---@param upto number
----@param stopAtCast boolean
-function I.Fold(upto, stopAtCast)
+function I.Fold(upto)
     local log = I.log
     if not I.started then
         -- The clock starts at the first thing heard, not at 0 (TDF Belief.lua:723-728).
@@ -77,9 +75,6 @@ function I.Fold(upto, stopAtCast)
             for k = 1, #list do
                 list[k](o, t, lag)
             end
-        end
-        if stopAtCast and (kind == CAST_SUCCESS or kind == CHANNEL_START) then
-            return kind, o.a, t
         end
     end
     return nil

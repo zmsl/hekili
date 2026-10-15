@@ -1,7 +1,5 @@
 -- VirtualState/spec/adapter_spec.lua: Adapter.lua against the fake spec provider (spec §3.6, §4.6, §5): the tracked
--- set from the registrations, the swing feed, and Drain's apply through the spec (the read-before /
--- read-after diff as `modelled` samples, two full resets, the offset restored, `updated` marked). The apply against
--- the real `state` is verified in game (spec §11).
+-- set from the registrations, and Drain (the fold; our casts' effects are Families/Now.lua's, see now_spec.lua).
 local load = require("VirtualState.spec.helpers.load")
 local fake = require("VirtualState.spec.helpers.fake_api")
 local fs = require("VirtualState.spec.helpers.fake_spec")
@@ -117,148 +115,6 @@ describe("Adapter", function()
         assert.are.equal(0, state.swings.mh_actual) -- CLEU_HANDLER writes it from the swing row
     end)
 
-    it("applies an instant cast through the spec: modelled rage, GCD and debuff, two resets, offset restored", function()
-        ctl.usable[fs.REND] = { true, false } -- rage >= 10 (the poll's rung)
-        ctl.now = 4
-        VS.Drain(4)
-        ctl.usable[fs.REND] = nil -- no answer after the cast
-        ctl.now = 5
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
-        ctl.Tick(5.05)
-        ctl.now = 5.1
-        VS.Drain(5.1)
-        assert.are.equal(2, state.resets)
-        assert.are.same({ 0, 0 }, { state.offset, state.delay })
-        assert.is_nil(I.pinned)
-        assert.are.equal(5 - 0.01, state.combat) -- rend starts combat (R2)
-        local rage = VS.Power(fs.RAGE, 5.1)
-        assert.are.equal("modelled", rage.basis)
-        assert.are.same({ 0, 0 }, { rage.est, rage.lo }) -- 10 seen at the poll, then 10 spent
-        assert.are.same({ 0, 5 }, { rage.last.modelled.v, rage.last.modelled.t })
-        local rend = VS.Aura("target", fs.REND, 5.1)
-        assert.are.same({ 20, "modelled" }, { rend.est, rend.basis })
-        assert.is_true(state.target.updated)
-        assert.are.same({ 6.5, "modelled" }, { VS.Gcd(5.1).est, VS.Gcd(5.1).basis })
-        assert.are.equal(1, I.drainCasts)
-    end)
-
-    -- A test ability on the fake spec, registered under its key and its spell ID.
-    local function register(key, t)
-        t.key, t.funcs = key, {}
-        t.charges, t.recharge = 1, 0
-        h.Class.abilities[key], h.Class.abilities[t.id] = t, t
-    end
-
-    local function near(want, got)
-        assert.is_true(math.abs(want - got) < 1e-6, ("want %s, got %s"):format(want, got))
-    end
-
-    it("emits our casts' aura and energize rows: APPLIED and REFRESH back-dated, REMOVED at the modelled expiry", function()
-        local rows = {}
-        local cleu = I.Events.CreateFrame("Frame")
-        cleu:SetScript("OnEvent", function()
-            local _, sub, _, src, _, _, _, dst, _, _, _, spellID, _, _, a15, _, a17 = ns.Facade.CombatLogGetCurrentEventInfo()
-            rows[#rows + 1] = { sub, dst, spellID, a15, a17, ns.Facade.GetTime() }
-        end)
-        cleu:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-        register("rage_test", {
-            id = 2687,
-            cooldown = 60,
-            handler = function()
-                state.rage.actual = state.rage.actual + 10
-            end,
-        })
-        VS.SpecChanged()
-        I.ObsLog.Clear(I.log)
-        ctl.Fire("PLAYER_TARGET_CHANGED")
-        ctl.now = 5
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
-        ctl.Tick(5.05)
-        VS.Drain(5.1) -- the apply: Rend on the target until 20
-        ctl.Tick(5.15) -- delivered at the next OnUpdate
-        assert.are.same({ "SPELL_CAST_SUCCESS", "Creature-1", fs.REND }, { rows[1][1], rows[1][2], rows[1][3] })
-        assert.are.same({ "SPELL_AURA_APPLIED", "Creature-1", fs.REND, "DEBUFF", nil, 5 }, rows[2])
-        ctl.now = 8
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.REND)
-        ctl.Tick(8.05)
-        VS.Drain(8.1)
-        ctl.Tick(8.15)
-        assert.are.same({ "SPELL_AURA_REFRESH", 8 }, { rows[4][1], rows[4][6] })
-        ctl.now = 9
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-3", 2687)
-        ctl.Tick(9.05)
-        VS.Drain(9.1)
-        ctl.Tick(9.15)
-        assert.are.same({ "SPELL_ENERGIZE", "Player-1", 2687, 10, fs.RAGE, 9 }, rows[6])
-        ctl.Tick(23.5) -- past Rend's modelled expiry (8 + 15)
-        assert.are.same({ "SPELL_AURA_REMOVED", "Creature-1", fs.REND, "DEBUFF", nil, 23.5 }, rows[7])
-    end)
-
-    it("emits no debuff row while there is no target to name", function()
-        local subs = {}
-        local cleu = I.Events.CreateFrame("Frame")
-        cleu:SetScript("OnEvent", function()
-            subs[#subs + 1] = select(2, ns.Facade.CombatLogGetCurrentEventInfo())
-        end)
-        cleu:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-        ctl.guid.target = nil
-        ctl.Fire("PLAYER_TARGET_CHANGED")
-        ctl.now = 5
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
-        ctl.Tick(5.05)
-        VS.Drain(5.1)
-        ctl.Tick(30)
-        assert.are.same({ "SPELL_CAST_SUCCESS" }, subs)
-    end)
-
-    it("applies a hard cast at its finish: the GCD at the start's time, CAST_FINISH through HandleEvent", function()
-        register("slam_test", { id = 1464, cast = 1.5, cooldown = 0, spend = 15, spendType = "rage" })
-        VS.SpecChanged()
-        I.ObsLog.Clear(I.log)
-        ctl.now = 10
-        ctl.casting = { 10000, 11500 }
-        ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-3", 1464)
-        ctl.Tick(10.05)
-        ctl.now = 11.5
-        ctl.casting = nil
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-3", 1464)
-        ctl.Tick(11.55)
-        ctl.now = 11.6
-        VS.Drain(11.6)
-        assert.are.equal("slam_test", state.handled) -- HandleEvent ran the finish
-        near(11.5, state.cooldown.slam_test.expires) -- at the success time
-        near(11.5, VS.Gcd(11.6).est) -- the GCD began at the start (10 + 1.5)
-        assert.are.equal("modelled", VS.Gcd(11.6).basis)
-        assert.are.same({ 0, 0, 2 }, { state.offset, state.delay, state.resets })
-    end)
-
-    it("applies a channel at its start", function()
-        local ran = false
-        register("drain_test", {
-            id = 5555,
-            channeled = true,
-            cast = 3,
-            tick_time = 1,
-            cooldown = 10,
-            handler = function()
-                ran = true
-            end,
-        })
-        VS.SpecChanged()
-        I.ObsLog.Clear(I.log)
-        ctl.now = 20
-        ctl.channel = { 20000, 23000 }
-        ctl.Fire("UNIT_SPELLCAST_CHANNEL_START", "player", "Cast-4", 5555)
-        ctl.Tick(20.05)
-        ctl.now = 20.1
-        VS.Drain(20.1)
-        assert.is_true(ran) -- the handler
-        local cd = VS.Cooldown(5555, 20.1)
-        near(30, cd.est) -- the cooldown step at the channel's start
-        assert.are.equal("modelled", cd.basis)
-        assert.are.same({ 0, 0, 2 }, { state.offset, state.delay, state.resets })
-    end)
-
     it("folds a swing staged this frame before poll 3 clears the queued strike: the swing is skipped as paid", function()
         ctl.current[fs.STRIKE] = true
         ctl.now = 2
@@ -276,113 +132,15 @@ describe("Adapter", function()
         assert.are.equal(before, VS.Power(fs.RAGE, 3.1).est) -- no swing income
     end)
 
-    it("counts a raising apply and still restores: unpinned, offset 0, the trailing reset run", function()
-        register("boom_test", {
-            id = 7777,
-            cooldown = 0,
-            handler = function()
-                error("spec handler raised")
-            end,
-        })
-        VS.SpecChanged()
-        I.ObsLog.Clear(I.log)
-        ctl.now = 30
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-5", 7777)
-        ctl.Tick(30.05)
-        ctl.now = 30.1
-        VS.Drain(30.1)
-        assert.is_nil(I.pinned)
-        assert.are.same({ 0, 0, 2 }, { state.offset, state.delay, state.resets })
-        assert.are.equal(1, I.applyErrors)
-        assert.are.equal(0, I.drainCasts)
-        assert.is_truthy(VS.Snapshot():find("errors=1", 1, true))
-        assert.is_truthy(VS.Snapshot():find("spec handler raised", 1, true))
-    end)
-
-    it("counts a raising first reset, skips the apply and still restores", function()
-        local reset, raised = state.reset, false
-        state.reset = function()
-            if not raised then
-                raised = true
-                error("reset raised")
-            end
-            reset()
-        end
-        ctl.now = 32
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-8", fs.REND)
-        ctl.Tick(32.05)
-        ctl.now = 32.1
-        assert.has_no.errors(function()
-            VS.Drain(32.1)
-        end)
-        assert.is_nil(I.pinned)
-        assert.are.same({ 0, 0, 1 }, { state.offset, state.delay, state.resets }) -- only the trailing reset ran
-        assert.are.same({ 1, 0 }, { I.applyErrors, I.drainCasts })
-        assert.is_truthy(VS.Snapshot():find("reset raised", 1, true))
-    end)
-
-    it("runs no reset for an own cast of a tracked extra with no ability", function()
-        I.extra.abilities[1] = 6666
-        VS.SpecChanged()
-        I.extra.abilities[1] = nil
-        I.ObsLog.Clear(I.log)
-        ctl.now = 34
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", 6666)
-        ctl.Tick(34.05)
-        ctl.now = 34.1
-        VS.Drain(34.1)
-        assert.are.same({ 0, 0, 0 }, { state.resets, I.applyErrors, I.drainCasts })
-    end)
-
-    it("rescans both units at the trailing reset, so an untracked apply-time aura write does not survive", function()
-        register("untracked_test", {
-            id = 8888,
-            cooldown = 0,
-            handler = function()
-                state.applyBuff("untracked_buff", 30)
-            end,
-        })
-        VS.SpecChanged()
-        I.ObsLog.Clear(I.log)
-        local reset = state.reset
-        state.reset = function() -- as Hekili's reset: an `updated` unit is scraped afresh (State.lua:6199-6207)
-            reset()
-            if state.player.updated then
-                state.buff.untracked_buff = nil -- the scrape finds no such aura
-                state.player.updated = false
-            end
-            if state.target.updated then
-                state.target.updated = false
-            end
-        end
-        ctl.now = 40
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-6", 8888)
-        ctl.Tick(40.05)
-        ctl.now = 40.1
-        VS.Drain(40.1)
-        assert.are.equal(2, state.resets)
-        assert.is_nil(state.buff.untracked_buff)
-    end)
-
-    it("marks no unit after the trailing reset rescanned both, even when the believed auras moved", function()
-        local reset = state.reset
-        state.reset = function() -- a scrape clears `updated` (State.lua:6199-6207)
-            reset()
-            state.player.updated, state.target.updated = false, false
-        end
-        ctl.now = 42
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-10", fs.REND)
-        ctl.Tick(42.05)
-        ctl.now = 42.1
-        local gen = VS.AuraGen("target")
-        VS.Drain(42.1)
-        assert.are_not.equal(gen, VS.AuraGen("target")) -- rend's debuff moved the target's set
-        assert.are.same({ 2, false, false }, { state.resets, state.player.updated, state.target.updated })
-    end)
-
-    it("runs no reset when the log holds no own cast", function()
+    it("never resets or replays Hekili's state in the drain, and marks a unit whose believed auras moved", function()
         ctl.now = 3
         VS.Drain(3)
-        assert.are.equal(0, state.resets)
+        ctl.now = 5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
+        ctl.Tick(5.05)
+        VS.Drain(5.1)
+        assert.are.same({ 0, 0, 0 }, { state.resets, state.offset, state.delay })
+        assert.is_true(state.target.updated) -- Rend's `now` moved the target's set
+        assert.are.equal(1, I.drainCasts)
     end)
 end)
