@@ -37,6 +37,19 @@ describe("facts and polls", function()
         assert.are.equal(10, r.lo) -- rend's rung; heroic strike's secret answer is no news
     end)
 
+    it("takes no rung from an ability with a second power cost", function()
+        ctl.costs[fs.REND] = { { type = 1, cost = 10 }, { type = 4, cost = 5, minCost = 1 } } -- rage + combo points
+        ctl.known[fs.REND] = true
+        ctl.Fire("SPELLS_CHANGED")
+        assert.are.same({ true, false }, { I.ab.multiCost[3], I.ab.multiCost[1] })
+        ctl.usable[fs.REND] = { false, true } -- "short": of rage or of the combo point?
+        drain(5)
+        assert.are.equal(100, VS.Power(fs.RAGE, 5).hi) -- no rung
+        ctl.usable[fs.REND] = { true, false }
+        drain(6)
+        assert.are.equal(0, VS.Power(fs.RAGE, 6).lo) -- nor from its usable answer
+    end)
+
     it("walks the talent tree into ranks by registered spell ID, and defers a walk in combat", function()
         ctl.traits = { config = 1, trees = { 7 }, nodeIDs = { 70 }, nodes = {}, defs = { [700] = 12286 } }
         ctl.traits.nodes[70] = { entryIDs = { 700 }, activeRank = 2 }

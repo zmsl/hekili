@@ -3,6 +3,7 @@
 local load = require("VirtualState.spec.helpers.load")
 local fake = require("VirtualState.spec.helpers.fake_api")
 local fs = require("VirtualState.spec.helpers.fake_spec")
+local alloc = require("VirtualState.spec.helpers.alloc")
 
 describe("player start", function()
     local VS, I, S, api
@@ -41,6 +42,38 @@ describe("player start", function()
         assert.are.same({ 2.6, "observed" }, { sp.est, sp.basis })
         local h = VS.SpellHaste(100)
         assert.are.same({ 7, "observed" }, { h.est, h.basis })
+    end)
+
+    it("re-reads the stats out of combat when the weapon damage, attack power or level changes", function()
+        local ctl = api.ctl
+        local damage = { 40, 60, 15, 25, 0, 0, 1 }
+        api.UnitDamage = function()
+            return damage[1], damage[2], damage[3], damage[4], damage[5], damage[6], damage[7]
+        end
+        VS.Start(api)
+        assert.are.same({ 40, 60, 15, 25, 0, 0, 1 }, { VS.Stat("UnitDamage") })
+        damage[1], damage[2] = 44, 66 -- Battle Shout before a pull
+        ctl.Fire("UNIT_ATTACK_POWER", "player")
+        assert.are.same({ 44, 66, 15, 25, 0, 0, 1 }, { VS.Stat("UnitDamage") })
+        damage[1] = 50
+        ctl.Fire("UNIT_DAMAGE", "target") -- another unit: no read
+        assert.are.equal(44, (VS.Stat("UnitDamage")))
+        ctl.Fire("UNIT_DAMAGE", "player")
+        assert.are.equal(50, (VS.Stat("UnitDamage")))
+        damage[1] = 52
+        ctl.Fire("PLAYER_LEVEL_UP", 23)
+        assert.are.equal(52, (VS.Stat("UnitDamage")))
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        damage[1] = 70 -- a weapon swap in combat: secret then, so stale until combat ends
+        ctl.Fire("UNIT_DAMAGE", "player")
+        assert.are.equal(52, (VS.Stat("UnitDamage")))
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        assert.are.equal(70, (VS.Stat("UnitDamage")))
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        assert.are.equal(0, alloc.bytes(function()
+            ctl.Fire("UNIT_DAMAGE", "player")
+        end, 2000))
     end)
 
     it("notes complete when every CR_* constant resolves", function()

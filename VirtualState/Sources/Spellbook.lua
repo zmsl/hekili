@@ -19,7 +19,7 @@ I.GCD_SPELL = 29515
 local last, gcdLast = {}, -1
 
 -- The highest known rank of each ability (rank order: its `id`, then its `copy` IDs) and, out of combat, its plain
--- cost. Out of the hot path: build, SPELLS_CHANGED.
+-- cost and whether it costs a second power type. Out of the hot path: build, SPELLS_CHANGED.
 local function resolve(api)
     local A = I.ab
     for a = 1, A.n do
@@ -36,6 +36,7 @@ local function resolve(api)
             local first = type(costs) == "table" and Plain(api, costs[1])
             local cost = type(first) == "table" and Plain(api, first.cost)
             A.readCost[a] = type(cost) == "number" and cost or 0
+            A.multiCost[a] = type(costs) == "table" and Plain(api, costs[2]) ~= nil -- a second power type (A5)
         end
     end
 end

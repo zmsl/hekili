@@ -85,6 +85,21 @@ describe("auras", function()
         assert.are.equal("error", S.status["aura walk target"])
     end)
 
+    it("names a third unit's walk status, and notes a clean walk readable with no tracked aura up", function()
+        local api2, ctl2 = fake.new()
+        local ns2 = load.module()
+        local def = fs.def(fs.new(9))
+        def.units[3] = "focus"
+        ctl2.auras.focus = { HELPFUL = {}, HARMFUL = {} }
+        ctl2.exists.focus = true
+        ns2.VirtualStateInternal.Build(def, 1)
+        ns2.VirtualState.Start(api2)
+        ctl2.Fire("UNIT_AURA", "player") -- nothing on the player
+        ctl2.Fire("UNIT_AURA", "focus")
+        local status = ns2.VirtualStateInternal.Sources.status
+        assert.are.same({ "readable", "readable" }, { status["aura walk player"], status["aura walk focus"] })
+    end)
+
     it("stops at an entry whose spellId is secret, so a modelled debuff is not logged down", function()
         ctl.now = 10
         I.AuraModel(2, REND, 10, 25, 1, 10, Obs.CastSuccess, true)

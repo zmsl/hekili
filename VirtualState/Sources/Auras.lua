@@ -16,8 +16,9 @@ local Plain, Direct, Note = S.Plain, S.Direct, S.Note
 
 local SCAN = 40
 local FILTERS = { "HELPFUL", "HARMFUL" }
--- The walk status per unit index (def.units is player, target), so Snapshot tells the two apart.
-local WALK = { "aura walk player", "aura walk target" }
+-- The walk status per unit index ("aura walk <unit>", built at OnBuild for every tracked unit), so Snapshot tells
+-- them apart.
+local WALK = {}
 
 -- By unit index and aura index: the walk serial that last found it, and whether it was seen plain in combat.
 local found, seen = {}, {}
@@ -26,6 +27,7 @@ local serial = 0
 I.OnBuild(function(def)
     local U = I.auras
     for u = 1, U.n do
+        WALK[u] = "aura walk " .. tostring(def.units[u])
         local f, s = {}, {}
         for j = 1, U.nAura do
             f[j], s[j] = 0, false
@@ -88,6 +90,7 @@ local function walk(api, u, unit, t)
         end
     end
     if complete then
+        Note(WALK[u], "readable") -- a clean walk, even with no tracked aura up
         local e = U.exp0[u]
         for j = 1, U.nAura do
             if e[j] > 0 and found[u][j] ~= serial and (not I.inCombat or seen[u][j]) then

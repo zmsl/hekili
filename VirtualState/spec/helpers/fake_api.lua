@@ -36,6 +36,7 @@ function M.new()
         powerMax = {}, -- [powerType] = max
         regen = {}, -- [powerType] = { inactive, active }
         usable = {}, -- [spellID] = { ok, short }
+        costs = {}, -- [spellID] = GetSpellPowerCost's list (default: none)
         known = {}, -- [spellID] = true
         cooldown = {}, -- [spellID] = { isActive = bool, isOnGCD = bool, startTime = SECRET, duration = SECRET }
         current = {}, -- [spellID] = true while queued (IsCurrentSpell)
@@ -162,8 +163,8 @@ function M.new()
         IsCurrentSpell = function(id)
             return ctl.current[id] == true
         end,
-        GetSpellPowerCost = function()
-            return COSTS
+        GetSpellPowerCost = function(id)
+            return ctl.costs[id] or COSTS
         end,
         IsSpellInRange = function(id, unit)
             return ctl.inRange[unit] == true

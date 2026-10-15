@@ -1,6 +1,7 @@
 -- VirtualState/Sources/Player.lua
 -- Player sources (spec §4.2): combat start and end, movement, spell haste, the player's health (poll 1.5) and the
--- out-of-combat stat cache (login, PLAYER_REGEN_ENABLED, PLAYER_EQUIPMENT_CHANGED).
+-- out-of-combat stat cache (login, PLAYER_REGEN_ENABLED, PLAYER_EQUIPMENT_CHANGED, UNIT_DAMAGE, UNIT_ATTACK_POWER,
+-- PLAYER_LEVEL_UP).
 -- Credits: secret-value handling after Catnip's (Durts) research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Player.lua.
 
@@ -131,6 +132,20 @@ S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
 end)
 
 S.On("PLAYER_EQUIPMENT_CHANGED", nil, function(api, t)
+    readStats(api, t)
+end)
+
+-- The weapon damage, attack power and level also change out of combat (Battle Shout before a pull, a level-up): read
+-- the stats again (readStats skips while in combat, where they are secret).
+local function onPlayerStats(api, t, unit)
+    if unit == "player" then
+        readStats(api, t)
+    end
+end
+S.On("UNIT_DAMAGE", "player", onPlayerStats)
+S.On("UNIT_ATTACK_POWER", "player", onPlayerStats)
+
+S.On("PLAYER_LEVEL_UP", nil, function(api, t)
     readStats(api, t)
 end)
 
