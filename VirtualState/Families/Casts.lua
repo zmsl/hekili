@@ -21,6 +21,7 @@ local A = {
     slot = {},
     qid = {},
     readCost = {},
+    multiCost = {},
     ready0 = {},
     cdLen = {},
     castT = {},
@@ -38,7 +39,7 @@ A.bySpell = {}
 
 -- Unknown, not ready, ready (the plain isActive flag as last reported).
 local UNKNOWN, NOT, YES = -1, 0, 1
-local GCD_MIN, GCD_MAX = 1.0, 2.0 -- the plausible GCD lengths a falling edge may teach
+local GCD_MIN, GCD_MAX = 1.0, 2.0 -- the plausible GCD lengths a falling edge may teach: [1.0, 2.0)
 
 -- The cast or channel in progress (0: none), and the GCD fixed at its rising edge.
 I.castAb, I.castEnd, I.channel = 0, 0, false
@@ -74,7 +75,7 @@ I.OnBuild(function(def, now)
             A.bySpell[ids[k]] = a
         end
         A.slot[a] = def.abilitySlot[a]
-        A.qid[a], A.readCost[a] = ids[1], 0
+        A.qid[a], A.readCost[a], A.multiCost[a] = ids[1], 0, false
         A.ready0[a], A.cdLen[a], A.castT[a], A.flag[a] = 0, 0, 0, UNKNOWN
         A.charges0[a], A.next0[a] = maxCharges(a), 0
         A.queued[a], A.castStartT[a] = false, 0
@@ -160,7 +161,7 @@ I.On(Obs.Cooldown, function(o, t)
             I.Sample(gcd, "pinned", gcd.est, t, Obs.Cooldown)
         else
             local len = o.t - I.gcdStart
-            if I.gcdStart > 0 and len >= GCD_MIN and len <= GCD_MAX then -- chained GCDs merge into one long edge
+            if I.gcdStart > 0 and len >= GCD_MIN and len < GCD_MAX then -- chained GCDs merge into one long edge
                 I.gcdLearned = quantise(len)
             end
             I.gcdStart, I.gcdDur = 0, 0
@@ -339,13 +340,14 @@ I.OnSnapshot(function(out, now)
         VS.Cooldown(A.id[a], now)
         VS.Charges(A.id[a], now)
         out[#out + 1] = string.format(
-            "ability %s qid=%d cost=%s read=%s len=%.2f flag=%d",
+            "ability %s qid=%d cost=%s read=%s len=%.2f flag=%d multi=%s",
             tostring(A.key[a]),
             A.qid[a],
             tostring(I.CostOf(a)),
             tostring(A.readCost[a]),
             VS.CooldownLength(A.id[a]),
-            A.flag[a]
+            A.flag[a],
+            tostring(A.multiCost[a])
         )
     end
     VS.Gcd(now)

@@ -18,8 +18,9 @@ I.PIN_EXACT = 0.15
 -- Usability as observed: unknown, not usable, usable, not usable for lack of its resource.
 local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 
--- By resource slot r. `swing[r]` is the hand that pays it (1 main, 2 off; 0: continuous regen). Continuous regen is
--- per second (regE/regL/regH); a swing-paid resource's step is the spec's model value x scale (spread around it).
+-- By resource slot r. `swing[r]` is the hand that pays it (1 main, 2 off; 0: continuous regen) and `swingOff[r]` the
+-- off hand's own value when both hands pay it (0: none). Continuous regen is per second (regE/regL/regH); a swing-paid
+-- resource's step is the spec's model value of that hand x scale (spread around it).
 local R = {
     n = 0,
     type = {},
@@ -28,6 +29,7 @@ local R = {
     rest = {},
     swing = {},
     swingValue = {},
+    swingOff = {},
     est0 = {},
     lo0 = {},
     hi0 = {},
@@ -80,6 +82,7 @@ I.OnBuild(function(def, now)
         R.rest[r] = d.rest or 0
         R.swing[r] = d.swing or 0
         R.swingValue[r] = d.swingValue or 0
+        R.swingOff[r] = d.swingOff or 0
         R.est0[r], R.lo0[r], R.hi0[r] = R.rest[r], 0, R.max[r]
         local rate = d.regen or 0
         R.decl[r] = rate
@@ -98,9 +101,13 @@ I.OnBuild(function(def, now)
     end
 end)
 
---- The spec's per-swing value of a swing-paid slot (a number, or the model's state-bound function). Allocates nothing.
-function I.SwingValue(r)
+--- The spec's per-swing value of a swing-paid slot for `hand` (2: the off hand's `swingOff`; else the paying hand's): a
+--- number, or the model's state-bound function. Allocates nothing.
+function I.SwingValue(r, hand)
     local v = R.swingValue[r]
+    if hand == 2 and R.swing[r] == 1 then
+        v = R.swingOff[r]
+    end
     if type(v) == "function" then
         v = v(I.clock)
     end
@@ -120,13 +127,26 @@ I.OnAdvance(function(from, to)
     end
 end)
 
+--- A swing-paid slot's model value per second of swinging: each paying hand's value / its believed speed (a hand
+--- with no speed adds nothing). Allocates nothing.
+function I.SwingPerSecond(r)
+    local per, speed = 0, I.SwingSpeedEst(R.swing[r])
+    if speed > 0 then
+        per = I.SwingValue(r) / speed -- nonzero: speed > 0 checked
+    end
+    local off = R.swing[r] == 1 and R.swingOff[r] ~= 0 and I.SwingSpeedEst(2) or 0
+    if off > 0 then
+        per = per + I.SwingValue(r, 2) / off -- nonzero: off > 0 checked
+    end
+    return per
+end
+
 -- One regen measurement m (per second, between two pins ending at t) into the slot's regen (the EMA, TDF
 -- calibrate). A swing-paid slot calibrates its step scale against the spec's value per second of swinging.
 local function calibrate(r, m, t)
     local ref
     if R.swing[r] > 0 then
-        local speed = I.SwingSpeedEst(R.swing[r])
-        ref = speed > 0 and I.SwingValue(r) / speed or 0 -- nonzero: speed > 0 checked
+        ref = I.SwingPerSecond(r)
     else
         ref = R.decl[r]
     end
@@ -221,8 +241,8 @@ I.On(Obs.Usable, function(o, t, lag)
     local was = usable[a]
     usable[a] = now
     local r = I.ab.slot[a]
-    if r == 0 or now == NOT or R.readable[r] then
-        return
+    if r == 0 or now == NOT or R.readable[r] or I.ab.multiCost[a] then
+        return -- a second power cost (Overpower's combo points) makes a short answer ambiguous: no rung
     end
     local c = I.CostOf(a)
     if c <= 0 then
@@ -231,8 +251,9 @@ I.On(Obs.Usable, function(o, t, lag)
     if was == SHORT and now == YES and lag <= 0 and abs(c - shortCost[a]) <= I.EPS then
         -- It just became affordable at an unchanged cost: it crossed the cost since the last short report.
         if R.swing[r] > 0 then
-            -- a swing-paid resource crosses at a swing: [c, c + one step), measured at its midpoint
-            local step = I.SwingValue(r) * (R.scale[r] + R.spread[r])
+            -- a swing-paid resource crosses at a swing: [c, c + one step of the larger hand), measured at its midpoint
+            local v, off = I.SwingValue(r), R.swingOff[r] ~= 0 and I.SwingValue(r, 2) or 0
+            local step = (v > off and v or off) * (R.scale[r] + R.spread[r])
             pin(r, c, step, t, "pinned", Obs.Usable, true)
         else
             local width = R.regH[r] * (t - shortT[a])
@@ -266,15 +287,17 @@ I.On(Obs.Read, function(o, t, lag)
     end
 end)
 
--- A landed swing pays each slot of its hand one step, unless an on-next-swing strike took that swing (spec §6.4).
+-- A landed swing pays each slot of its hand one step (the off hand its own value), unless an on-next-swing strike
+-- took that swing (spec §6.4).
 I.On(Obs.Swing, function(o, t)
     if o.c ~= 1 then
         return
     end
     local hand = o.a
     for r = 1, R.n do
-        if R.swing[r] == hand and not (hand == 1 and I.queuedStrike) then
-            local v, max = I.SwingValue(r), R.max[r]
+        local pays = R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0)
+        if pays and not (hand == 1 and I.queuedStrike) then
+            local v, max = I.SwingValue(r, hand), R.max[r]
             local s, sp = R.scale[r], R.spread[r]
             R.est0[r] = clamp(R.est0[r] + v * s, max)
             R.lo0[r] = clamp(R.lo0[r] + v * (s - sp), max)
@@ -357,8 +380,7 @@ function VS.Regen(powerType, now, casting)
     end
     local rec = R.regen[r]
     if R.swing[r] > 0 then
-        local speed = I.SwingSpeedEst(R.swing[r])
-        local per = speed > 0 and I.SwingValue(r) / speed or 0 -- nonzero: speed > 0 checked
+        local per = I.SwingPerSecond(r)
         local s, sp = R.scale[r], R.spread[r]
         rec.est, rec.lo, rec.hi = per * s, per * (s - sp), per * (s + sp)
         rec.conf = s > 0 and 1 - sp / s or 0 -- nonzero: s > 0 checked

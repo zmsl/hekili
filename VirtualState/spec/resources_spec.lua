@@ -4,6 +4,7 @@
 local load = require("VirtualState.spec.helpers.load")
 local fake = require("VirtualState.spec.helpers.fake_api")
 local fs = require("VirtualState.spec.helpers.fake_spec")
+local alloc = require("VirtualState.spec.helpers.alloc")
 
 local ENERGY = 3
 
@@ -139,6 +140,43 @@ describe("resources", function()
             obs(Obs.CombatEnd, 6)
             I.Fold(6, false)
             assert.are.equal(0, VS.Power(fs.RAGE, 6).lo)
+        end)
+
+        it("pays nothing for an off-hand swing when only the main hand pays", function()
+            obs(Obs.Swing, 5, 2, 1.8, 1)
+            I.Fold(5, false)
+            assert.are.equal(0, VS.Power(fs.RAGE, 5).est)
+        end)
+
+        it("pays each hand its own value when both hands pay it, and calibrates against their sum", function()
+            local def = fs.def(fs.new(9))
+            def.resources[1].swingOff = 4.5
+            boot(def)
+            obs(Obs.Swing, 5, 1, 2.6, 1)
+            obs(Obs.Swing, 5.5, 2, 1.8, 1)
+            I.Fold(5.5, false)
+            assert.are.equal(13.5, VS.Power(fs.RAGE, 6).est)
+            within(9 / 2.6 + 4.5 / 1.8, I.SwingPerSecond(1))
+            within(9 / 2.6 + 4.5 / 1.8, VS.Regen(fs.RAGE, 6).est)
+            obs(Obs.Queued, 6, 2, 1) -- a queued strike takes the main hand's swing, not the off hand's
+            obs(Obs.Swing, 7.3, 2, 1.8, 1)
+            I.Fold(7.3, false)
+            assert.are.equal(18, VS.Power(fs.RAGE, 7.3).est)
+        end)
+
+        it("allocates nothing paying and projecting two hands", function()
+            local def = fs.def(fs.new(9))
+            def.resources[1].swingOff = 4.5
+            boot(def)
+            local t = 5
+            local bytes = alloc.bytes(function(i)
+                t = t + 0.1
+                obs(Obs.Swing, t, i % 2 + 1, 2, 1)
+                I.Fold(t, false)
+                VS.Power(fs.RAGE, t)
+                VS.Regen(fs.RAGE, t)
+            end, 2000)
+            assert.are.equal(0, bytes)
         end)
 
         it("answers an untracked power type with the unknown record", function()

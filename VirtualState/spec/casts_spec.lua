@@ -53,13 +53,21 @@ describe("casts and cooldowns", function()
         assert.are.equal(30, VS.CooldownLength(fs.REND))
     end)
 
-    it("learns a GCD only from a falling edge within [1.0, 2.0] s", function()
+    it("learns a GCD only from a falling edge within [1.0, 2.0) s", function()
         S.Direct(Obs.Cooldown, 100, 0, 1, 1)
         S.Direct(Obs.Cooldown, 101.4, 0, 0, 1)
         S.Direct(Obs.Cooldown, 110, 0, 1, 1)
         S.Direct(Obs.Cooldown, 114.38, 0, 0, 1) -- chained GCDs merged into one edge
-        I.Fold(114.4, false)
+        S.Direct(Obs.Cooldown, 120, 0, 1, 1)
+        S.Direct(Obs.Cooldown, 122, 0, 0, 1) -- exactly 2.0 s: two chained 1.0 s GCDs, not one
+        I.Fold(122.1, false)
         assert.is_true(math.abs(I.gcdLearned - 1.4) < 0.002) -- the earlier, plausible one stands
+    end)
+
+    it("names an ability with a second power cost in Snapshot", function()
+        I.ab.multiCost[REND] = true
+        local line = "ability rend qid=772 cost=10 read=0 len=30.00 flag=-1 multi=true\n"
+        assert.is_truthy(VS.Snapshot():find(line, 1, true))
     end)
 
     it("logs a Cooldown only on a plain flag edge, and the GCD's edges, on the urgent lane", function()
