@@ -258,4 +258,71 @@ describe("Forever Warrior", function()
         w.game.usable[20658] = true
         assert.is_true(lw.run(w.abilities.execute.usable, e))
     end)
+
+    it("registers the Arms, Fury and Protection priorities exactly as tools/make_pack.lua prints them", function()
+        local printed = {}
+        local pipe = assert(io.popen("lua5.1 tools/make_pack.lua"))
+        for line in pipe:lines() do
+            printed[#printed + 1] = line
+        end
+        pipe:close()
+        assert.are.equal(3, #w.packs)
+        for i, name in ipairs({ "Arms", "Fury", "Protection" }) do
+            assert.are.same({ name, 20261015, printed[i] }, w.packs[i])
+        end
+        assert.are.same({ package = "Arms" }, w.options)
+    end)
+
+    it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
+        local packs = assert(loadfile("tools/make_pack.lua"))("lists")
+        local secretToken = require("VirtualState.spec.helpers.load").module().VirtualState.AplSecretToken
+        local kinds = {
+            buff = w.auras,
+            debuff = w.auras,
+            action = w.abilities,
+            cooldown = w.abilities,
+            talent = w.talents,
+            settings = w.settings,
+        }
+        for _, p in ipairs(packs) do
+            for list, entries in pairs(p.lists) do
+                for i, e in ipairs(entries) do
+                    local where = p.name .. " " .. list .. " " .. i
+                    if e.list_name then
+                        assert.is_not_nil(p.lists[e.list_name], where .. ": no list " .. e.list_name)
+                    else
+                        assert.is_not_nil(w.abilities[e.action], where .. ": no ability " .. e.action)
+                    end
+                    local c = e.criteria or ""
+                    for kind, key in c:gmatch("(%a+)%.([%w_]+)") do
+                        if kinds[kind] then
+                            assert.is_not_nil(kinds[kind][key], where .. ": no " .. kind .. " " .. key)
+                        end
+                    end
+                    assert.is_nil(secretToken(c), where) -- no health or time to die: secret on Forever (Task 9b)
+                end
+            end
+        end
+        for _, name in ipairs({ "execute_phase", "should_hs", "should_cleave", "mainhand_remains" }) do
+            assert.are.equal("function", type(w.exprs[name]), name)
+        end
+    end)
+
+    it("queues a strike only when the rage for the next strike and Whirlwind still arrives in time", function()
+        local e = lw.env(w)
+        e.query_time, e.mainhand_remains = 0, 2
+        e.action = setmetatable({}, {
+            __index = function()
+                return { cost = 30 }
+            end,
+        })
+        w.state.TimeToResource = function(_, _, amount)
+            return amount / 10 -- 10 rage a second
+        end
+        assert.is_false(e.should_queue(15)) -- Bloodthirst and Whirlwind are both ready now: 60 rage needed at once
+        w.state.TimeToResource = function()
+            return 0
+        end
+        assert.is_true(e.should_queue(15))
+    end)
 end)
