@@ -56,6 +56,7 @@ function M.new()
         traits = nil, -- { config = id, trees = { tree }, nodes = { [node] = info }, entries = {}, defs = {} }
         inRange = {},
         handlers = {},
+        unknownEvents = {}, -- [event] = true: RegisterEvent raises, as the client does for an event it does not know
     }
     local api = { ctl = ctl }
 
@@ -207,18 +208,31 @@ function M.new()
         end,
     }
 
-    -- The frame: records registrations; Fire delivers an event to its OnEvent, ctl.Tick runs its OnUpdate.
+    -- Frames: each records its registrations; the first one made is the client's view of VirtualState's frame
+    -- (`api.frame`): Fire delivers an event to its OnEvent when registered, ctl.Tick runs its OnUpdate.
     function api.CreateFrame()
         local f = { events = {}, units = {}, scripts = {} }
         function f:RegisterEvent(e)
+            if ctl.unknownEvents[e] then
+                error("Attempt to register unknown event \"" .. e .. "\"")
+            end
             self.events[e] = true
+            self.units[e] = nil
+            return true
         end
         function f:RegisterUnitEvent(e, u1, u2)
             self.events[e] = true
             self.units[e] = { u1, u2 }
+            return true
+        end
+        function f:UnregisterEvent(e)
+            self.events[e], self.units[e] = nil, nil
         end
         function f:SetScript(name, fn)
             self.scripts[name] = fn
+        end
+        function f:GetScript(name)
+            return self.scripts[name]
         end
         function f:Fire(event, ...)
             local fn = self.scripts.OnEvent
@@ -226,7 +240,7 @@ function M.new()
                 fn(self, event, ...)
             end
         end
-        api.frame = f
+        api.frame = api.frame or f
         return f
     end
     function ctl.Tick(now)

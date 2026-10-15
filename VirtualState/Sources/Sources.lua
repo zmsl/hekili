@@ -1,7 +1,7 @@
 -- VirtualState/Sources/Sources.lua
 -- Sources (spec §4): the only VirtualState code that touches the game, and only through the injected `api` (`_G` in
 -- game, a fake in tests). This file: the `Plain` secrecy gate, staging and the per-frame Flush, the polls, the event
--- registry and the module's own frame (VirtualState.Start).
+-- registry and VirtualState.Start (the frame is the event facade's, VirtualState/EventFacade.lua).
 -- Credits: the `Plain` gate and the issecretvalue/pcall handling follow Catnip's (Durts) secret-value research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Sources.lua (Plain :42-46, STAGE :52, Stage :540, Flush
 -- :552-561, the poll loop :564-588 with Sources.Poll at :576).
@@ -111,8 +111,10 @@ function S.RunPolls(t)
     end
 end
 
--- The event registry: event -> handlers, and event -> the units it is registered for (unit events).
+-- The event registry: event -> handlers, and event -> the units it is registered for (unit events). The event facade
+-- registers them with the client at Start.
 local HANDLERS, UNITS = {}, {}
+S.HANDLERS, S.UNITS = HANDLERS, UNITS
 
 --- Registers `fn(api, t, a1, a2, a3, a4, a5)` for `event`; `unit` ("player" or "target") makes it a unit event
 --- for that unit (the handler still checks a1). Every argument reaches the handler through Plain. Load time only.
@@ -149,44 +151,24 @@ function S.Urgent(event)
     end
 end
 
-function S:OnEvent(event, r1, r2, r3, r4, r5)
-    local api = I.api
+--- Runs the sources for one client event. The event facade has already passed every slot through Plain.
+function S.Run(api, event, a1, a2, a3, a4, a5)
     local list = HANDLERS[event]
     if not list then
         return
     end
     local t = api.GetTime()
-    local a1, a2, a3, a4, a5 = Plain(api, r1), Plain(api, r2), Plain(api, r3), Plain(api, r4), Plain(api, r5)
     for k = 1, #list do
         list[k](api, t, a1, a2, a3, a4, a5)
     end
 end
 
-local function onEvent(_, event, r1, r2, r3, r4, r5)
-    S:OnEvent(event, r1, r2, r3, r4, r5)
-end
-
-local function onUpdate()
-    S.Flush()
-end
-
---- Once, at PLAYER_LOGIN: `api` is `_G` in game and a fake in tests. Creates the module's frame, registers the source
---- events (spec §4.2) and starts the per-frame flush. Allocates; once.
+--- Once, at PLAYER_LOGIN: `api` is `_G` in game and a fake in tests. Adds the source events (spec §4.2) to the event
+--- facade's frame, which also runs the per-frame flush. Allocates; once.
 ---@param api table
 function VS.Start(api)
     I.api = api
-    local frame = api.CreateFrame("Frame")
-    S.frame = frame
-    for event in pairs(HANDLERS) do
-        local u = UNITS[event]
-        if u then
-            frame:RegisterUnitEvent(event, u[1], u[2])
-        else
-            frame:RegisterEvent(event)
-        end
-    end
-    frame:SetScript("OnEvent", onEvent)
-    frame:SetScript("OnUpdate", onUpdate)
+    I.Events.Attach(api)
     local t = api.GetTime()
     for k = 1, #STARTS do
         -- one raising hook (a client without some API) must not stop the hooks after it
