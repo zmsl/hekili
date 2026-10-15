@@ -257,7 +257,7 @@ local function orderedNext( t, state )
     local key = nil
 
     if state == nil then
-        t.__orderedIndex = __genOrderedIndex( t )
+        rawset( t, "__orderedIndex", __genOrderedIndex( t ) )
         key = t.__orderedIndex[ 1 ]
     else
         for i = 1, #t.__orderedIndex do
@@ -271,7 +271,7 @@ local function orderedNext( t, state )
         return key, t[ key ]
     end
 
-    t.__orderedIndex = nil
+    rawset( t, "__orderedIndex", nil )
     return
 end
 
