@@ -353,6 +353,7 @@ describe("now handlers", function()
                 local _ = talent.improved_rend.rank + rage.current
             end,
         })
+        register("charge_test", { id = 3131, charges = 2, recharge = 10 }) -- the charge step too
         start()
         function h:ForceUpdate() end -- the fake records each call; Hekili's own only sets fields
         cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- the capturing subscriber allocates by design
@@ -361,6 +362,7 @@ describe("now handlers", function()
             t = t + 1
             cast(2687, t)
             cast(fs.REND, t + 0.5)
+            cast(3131, t + 0.7)
         end, 1000)
         assert.are.equal(0, bytes)
     end)

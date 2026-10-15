@@ -240,7 +240,20 @@ end
 --- (Hekili's ability table already evaluates a function `spend` on access; a raw one is called here). The plain
 --- out-of-combat read (`readCost`, Sources/Spellbook.lua) only confirms it, in Snapshot(): its units are the client's.
 function I.CostOf(a)
-    local c = I.ab.obj[a].spend
+    local c = I.BaseCostOf(a)
+    if I.CostMod then
+        c = I.CostMod(a, A.slot[a], c, I.clock) -- the resource's cost modifiers in scope (Families/Modifiers.lua)
+    end
+    return c
+end
+
+--- Ability a's declared cost, before any cost modifier (0 when it has none). Allocates nothing.
+function I.BaseCostOf(a)
+    local obj = I.ab.obj[a]
+    local c = obj.baseSpend -- the declared cost before the simulation's modifiers (Races.lua)
+    if c == nil then
+        c = obj.spend
+    end
     if type(c) == "function" then
         c = c()
     end

@@ -511,6 +511,10 @@ end
 state.combat = 0
 state.faction = Facade.UnitFactionGroup( "player" )
 state.race[ formatKey( Facade.UnitRace("player") ) ] = true
+-- The race token (UnitRace's second return), the same on every client language: race packs match it (Races.lua), and
+-- race.gnome, race.troll ... hold beside the localized key.
+state.race_token = select( 2, Facade.UnitRace( "player" ) )
+if state.race_token then state.race[ formatKey( state.race_token ) ] = true end
 
 state.class = Hekili.Class
 state.targets = ns.targets
@@ -6628,6 +6632,9 @@ ns.spendResources = function( ability )
         if cost > 0 and cost < 1 then
             cost = ( cost * state[ resource ].modmax )
         end
+
+        -- a charged cost modifier's buff loses a stack when the declared cost is above 0, even at a discounted 0 (Races.lua)
+        ns.costMods.Spend( action.baseSpend, ability )
 
         if cost ~= 0 then
             state.spend( cost, resource )

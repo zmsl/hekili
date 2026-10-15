@@ -3,8 +3,8 @@
 -- vendored libraries. Run from the repository root:
 --   lua5.1 tools/make_pack.lua
 -- Edit a pack's SimC-style text below, run it, and paste each printed string into its spec:RegisterPack( ... [[ ]] )
--- in Forever/Warrior.lua (Forever/spec/warrior_spec.lua fails until they match). Loaded with the argument "lists"
--- (loadfile(...)("lists")) it returns PACKS with each pack's parsed lists instead, for that spec.
+-- in Forever/Classes/Warrior.lua (Forever/spec/warrior_spec.lua fails until they match). Loaded with the argument
+-- "lists" (loadfile(...)("lists")) it returns PACKS with each pack's parsed lists instead, for that spec.
 -- The Arms and Fury lists are ported from Hekili's Classic profile (origin/classic:Classic/APLs/WarriorArms.simc,
 -- WarriorFury.simc); the Protection list's shape is archive/TheWarWithin/Priorities/WarriorProtection.simc's.
 

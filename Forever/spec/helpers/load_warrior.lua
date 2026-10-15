@@ -1,7 +1,7 @@
 -- Forever/spec/helpers/load_warrior.lua
--- Loads Forever/Warrior.lua headless against a recording stand-in for Hekili: every spec:RegisterX call is kept by
--- method name, ns.VirtualState.Track's tables are merged, and the plain game reads the file captures at load answer
--- from `game` (known spells, queued spells, usability, the shapeshift form, VirtualState's per-hand base weapon
+-- Loads Forever/Classes/Warrior.lua headless against a recording stand-in for Hekili: each spec:RegisterX call is
+-- kept by method name, ns.VirtualState.Track's tables are merged, and the plain game reads the file captures at load
+-- answer from `game` (known spells, queued spells, usability, the shapeshift form, VirtualState's per-hand base weapon
 -- speeds). `env()` is a stand-in `state` for running
 -- the file's handlers, state functions and hooks (Hekili runs them with setfenv( f, state )).
 local M = {}
@@ -80,7 +80,7 @@ function M.load()
             end,
         },
     }
-    local ok, err = pcall(assert(loadfile("Forever/Warrior.lua")), "Hekili", ns)
+    local ok, err = pcall(assert(loadfile("Forever/Classes/Warrior.lua")), "Hekili", ns)
     for k, v in pairs(saved) do
         _G[k] = v or nil
     end

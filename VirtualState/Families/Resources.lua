@@ -53,6 +53,7 @@ local R = {
     decayDef = {},
     decay = {},
     maxDef = {},
+    maxMods = {},
     maxRead = {},
 }
 I.res = R
@@ -78,14 +79,29 @@ local function decayOf(r)
     return type(d) == "number" and d > 0 and d or 0
 end
 
--- Slot r's declared maximum from its `max` (a number or a state-bound function; default 100), used until a plain
--- read arrives. Allocates nothing.
-local function maxOf(r)
-    local m = R.maxDef[r]
-    if type(m) == "function" then
-        m = m()
+local function eval(v)
+    if type(v) == "function" then
+        v = v()
     end
-    return type(m) == "number" and m > 0 and m or 100
+    return v
+end
+
+-- Slot r's declared maximum from its `max` (a number or a state-bound function; default 100) x the product of
+-- (1 + pct) over its `maxMods` whose `when` holds (Families/Modifiers.lua), used until a plain read arrives.
+-- Allocates nothing.
+local function maxOf(r)
+    local m = eval(R.maxDef[r])
+    m = type(m) == "number" and m > 0 and m or 100
+    local mods = R.maxMods[r]
+    if mods then
+        for k = 1, #mods do
+            local mod = mods[k]
+            if mod.when == nil or eval(mod.when) == true then
+                m = m * (1 + (type(mod.pct) == "number" and mod.pct or 0))
+            end
+        end
+    end
+    return m
 end
 
 -- By ability index a: the last usability answer and the last short report (cost, time).
@@ -113,7 +129,7 @@ I.OnBuild(function(def, now)
         local d = list[r]
         R.type[r], R.token[r] = d.type, d.token
         R.slotOf[d.type], R.slotOfToken[d.token] = r, r
-        R.maxDef[r], R.maxRead[r] = d.max, false
+        R.maxDef[r], R.maxMods[r], R.maxRead[r] = d.max, d.maxMods, false
         R.max[r] = maxOf(r)
         R.rest[r] = d.rest or 0
         R.swing[r] = d.swing or 0

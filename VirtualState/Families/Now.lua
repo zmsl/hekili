@@ -268,6 +268,10 @@ local function automatic(a, t, kind)
         if c > 0 then
             I.ResourceShift(r, -c, t, kind)
         end
+        -- a charged cost modifier in scope loses a stack, even when its discount made the cast free (Modifiers.lua)
+        if I.BaseCostOf(a) > 0 then
+            I.SpendCostCharges(a, r, t, kind)
+        end
     end
     if A.ch[a] then
         local recharge = type(obj.recharge) == "number" and obj.recharge or 0

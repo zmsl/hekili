@@ -107,4 +107,5 @@ local warriorEnv = {
 for _, k in ipairs(stateEnv) do
     warriorEnv[#warriorEnv + 1] = k
 end
-files["Forever/Warrior.lua"] = { globals = warriorEnv }
+files["Forever/Classes/Warrior.lua"] = { globals = warriorEnv }
+files["Forever/Races/"] = { globals = stateEnv }

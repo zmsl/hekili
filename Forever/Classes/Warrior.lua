@@ -1,4 +1,4 @@
--- Forever/Warrior.lua
+-- Forever/Classes/Warrior.lua
 -- The Forever Warrior (pseudo-spec 1491): the Classic Warrior kit with Forever's spell data (ranks, costs, cooldowns,
 -- cast times and durations from the Forever DB2 at build 1.60.1.70338, wowdb, a cost of 100 there being 10 rage; the
 -- client is 1.60.1.70374, and its export wins where they differ), Forever's Victory Rush and Spearing Strike, rage per

@@ -22,6 +22,7 @@ VirtualState\Families\Talents.lua
 VirtualState\Families\Totems.lua
 VirtualState\Families\Enemies.lua
 VirtualState\Families\Now.lua
+VirtualState\Families\Modifiers.lua
 VirtualState\Sources\Sources.lua
 VirtualState\Sources\Player.lua
 VirtualState\Sources\Spellbook.lua
@@ -47,10 +48,12 @@ Formatting.lua
 MultilineEditor.lua
 Constants.lua
 State.lua
+Races.lua
 Events.lua
 
 Classes.lua
-Forever\Warrior.lua
+Forever\Classes\Warrior.lua
+Forever\Races\Gnome.lua
 
 Targets.lua
 Options\DevTools.lua

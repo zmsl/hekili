@@ -793,6 +793,9 @@ local HekiliSpecMixin = {
             end
         end
 
+        -- The race packs' cost modifiers in the simulation (Races.lua, event-facade spec §12b).
+        ns.costMods.Wrap( a )
+
         if ( a.velocity or a.flightTime ) and a.impact and a.isProjectile == nil then
             a.isProjectile = true
         end
@@ -3329,6 +3332,9 @@ function Hekili:SpecializationChanged()
             end
         end
     end
+
+    -- The race pack's abilities and auras win a key clash with the class's and `all`'s (Races.lua, spec §12b).
+    ns.applyRace( class )
 
     for k in pairs( class.abilityList ) do
         local ability = class.abilities[ k ]
