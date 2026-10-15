@@ -86,6 +86,24 @@ describe("Adapter", function()
         assert.are.equal(1, I.res.swing[1]) -- the swing source is still found
     end)
 
+    it("forwards the off hand's swing value and a plain periodic entry (combat-gated), with its talent", function()
+        local model = h.Class.resources.rage.state.regenModel
+        model.offhand = { swing = "offhand", value = 4 }
+        model.anger_management = { talent = "improved_rend", interval = 3, value = 1 }
+        VS.SpecChanged()
+        assert.are.same({ 1, 9, 4 }, { I.res.swing[1], I.res.swingValue[1], I.res.swingOff[1] })
+        local G = I.res.auraRegen
+        assert.are.same({ 1, 0, 1, 3, 12286 }, { G.n, G.aura[1], G.value[1], G.interval[1], G.talent[1] })
+        model.shield_test = { equip = "shield", interval = 2, value = 1 } -- a gate VirtualState cannot see: dropped
+        model.channel_test = { channel = "rend", interval = 1, value = 1 }
+        VS.SpecChanged()
+        assert.are.equal(1, I.res.auraRegen.n)
+        model.shield_test, model.channel_test = nil, nil
+        model.mainhand = nil -- an off hand alone pays as the paying hand
+        VS.SpecChanged()
+        assert.are.same({ 2, 4, 0 }, { I.res.swing[1], I.res.swingValue[1], I.res.swingOff[1] })
+    end)
+
     it("feeds the cast history and the real queue from our own cast events, and asks for a cycle", function()
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
         assert.are.same({ "rend" }, state.history)

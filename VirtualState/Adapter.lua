@@ -99,17 +99,25 @@ local function buildDef()
     local slotByKey = {}
     for _, k in ipairs(sortedKeys(class.resources)) do
         local r = class.resources[k]
-        local swing, value, auraRegen = 0, nil, nil
+        local swing, value, offValue, auraRegen = 0, nil, nil, nil
         local model = r.state and r.state.regenModel
         if model then
             for _, m in pairs(model) do
-                if m.swing and HANDS[m.swing] and swing == 0 then
+                if m.swing == "offhand" then
+                    offValue = m.value
+                elseif m.swing and HANDS[m.swing] and swing == 0 then
                     swing, value = HANDS[m.swing], m.value
-                elseif m.aura and not m.debuff then
+                elseif not (m.swing or m.debuff or m.channel or m.spec or m.equip or m.set_bonus or m.setting) then
                     auraRegen = auraRegen or {}
-                    auraRegen[#auraRegen + 1] = m -- a player aura's regen: { aura, interval, value } (Resources.lua)
+                    -- a player aura's regen { aura, interval, value }, or without `aura` a periodic one credited in
+                    -- combat; either may name a `talent` (Resources.lua). Hekili's other gates are unseen here, so an
+                    -- entry with one is not forwarded.
+                    auraRegen[#auraRegen + 1] = m
                 end
             end
+        end
+        if swing == 0 and offValue ~= nil then
+            swing, value, offValue = 2, offValue, nil -- the off hand alone pays it
         end
         local d = {
             key = k,
@@ -119,6 +127,7 @@ local function buildDef()
             rest = ns.ResourceRegenerates(k) and 100 or 0,
             swing = swing,
             swingValue = value,
+            swingOff = offValue,
             auraRegen = auraRegen,
         }
         insert(def.resources, d)

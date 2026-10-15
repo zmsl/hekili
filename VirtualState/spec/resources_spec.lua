@@ -225,6 +225,46 @@ describe("resources", function()
             assert.are.equal(2, VS.Power(fs.RAGE, 20).est)
         end)
 
+        it("credits a plain periodic entry only in combat, from the combat start, and only with its talent", function()
+            local def = fs.def(fs.new(9))
+            def.resources[1].auraRegen = { { talent = "improved_rend", interval = 3, value = 1 } }
+            boot(def)
+            I.Fold(10, false)
+            I.Settle(20)
+            assert.are.equal(0, VS.Power(fs.RAGE, 20).est) -- out of combat
+            S.Direct(Obs.CombatStart, 21)
+            I.Fold(21, false)
+            I.Settle(28)
+            assert.are.equal(0, VS.Power(fs.RAGE, 28).est) -- in combat, but the talent is not taken
+            I.SetTalentRank(1, 1)
+            I.Settle(31)
+            assert.are.equal(1, VS.Power(fs.RAGE, 31).est) -- the tick at 30 (combat start 21 + 3 x 3)
+            assert.are.equal(2, VS.Power(fs.RAGE, 33.5).est) -- projected: 33
+            S.Direct(Obs.CombatEnd, 34)
+            I.Fold(34, false)
+            I.Settle(40)
+            assert.are.equal(2, VS.Power(fs.RAGE, 40).est) -- 33 was the last tick
+            S.Direct(Obs.CombatStart, 50)
+            I.Fold(50, false)
+            local t = 50
+            assert.are.equal(0, alloc.bytes(function()
+                t = t + 0.1
+                I.Settle(t)
+                VS.Power(fs.RAGE, t + 0.5)
+            end, 2000))
+        end)
+
+        it("credits a plain periodic entry after a build in combat, from the build", function()
+            local def = fs.def(fs.new(9))
+            def.resources[1].auraRegen = { { interval = 3, value = 1 } }
+            boot(def)
+            I.inCombat = true -- a /reload or a spec change in combat: no CombatStart comes
+            I.Build(def, 10)
+            I.Fold(10, false)
+            I.Settle(16.5)
+            assert.are.equal(2, VS.Power(fs.RAGE, 16.5).est) -- ticks at 13 and 16
+        end)
+
         it("allocates nothing advancing or projecting through an entry", function()
             I.AuraModel(1, BLOODRAGE, 10, 1e9, 1, 10, 0)
             local t = 10

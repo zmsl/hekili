@@ -1,8 +1,8 @@
 -- VirtualState/Families/Resources.lua
 -- The resources family (spec §6.1): the cost ladder (a usability report pins or bounds a resource at the ability's
 -- cost), exact reads, regen calibration between pins (an EMA), swing steps for a swing-paid resource (rage), our own
--- casts' changes (Adapter.lua, spec §5.3), aura-gated regen (Hekili's regen-model entries with `aura`, `interval`,
--- `value`: Bloodrage's rage over time), and the Power/Regen accessors.
+-- casts' changes (Adapter.lua, spec §5.3), periodic regen (Hekili's regen-model entries with `interval` and `value`:
+-- with an `aura`, Bloodrage's rage over time; without one, in combat: Anger Management), and the Power/Regen accessors.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Model/Belief/Resources.lua (calibrate :117-136, pin :218-263,
 -- ladder :275-315, Applier Usable :327, Reader Resource :365-372) and the resource conf of
 -- src/TacoDogForever/Model/Belief.lua:695-699. The power-tick phase (TDF's Applier PowerTick :378) is not modelled in
@@ -54,11 +54,14 @@ local R = {
 I.res = R
 R.slotOf, R.slotOfToken = {}, {}
 
--- Aura-gated regen entries g of every slot (built from each resource's `auraRegen`): `value` every `interval`
--- seconds from the aura's application while the player's aura j is believed up. Credited only as the clock moves on:
--- an aura first seen after its application loses the ticks before that, and a removal seen late keeps the ticks
--- already credited; both are bounded by the aura's duration and the next pin or rung corrects them.
-local G = { n = 0, slot = {}, aura = {}, value = {}, interval = {} }
+-- Periodic regen entries g of every slot (built from each resource's `auraRegen`): `value` every `interval` seconds
+-- from the aura's application while the player's aura j is believed up, or (no aura: j = 0) from the combat start
+-- while in combat (Anger Management); an entry with a `talent` only while that talent has a rank. Credited only as
+-- the clock moves on: an aura first seen after its application loses the ticks before that, and a removal seen late
+-- keeps the ticks already credited; both are bounded by the aura's duration and the next pin or rung corrects them.
+local G = { n = 0, slot = {}, aura = {}, value = {}, interval = {}, talent = {} }
+-- In combat (fold order, for the entries without an aura: aura index 0) and since when.
+local fighting, fightT = false, 0
 R.auraRegen = G
 
 -- By ability index a: the last usability answer and the last short report (cost, time).
@@ -105,16 +108,29 @@ I.OnBuild(function(def, now)
     end
     I.TRACKED.resource = R.type
     G.n = 0
+    -- shortcut: a build in combat (a /reload, a spec change) times the combat entries from the build, not the pull;
+    -- the next pull's CombatStart sets the real start.
+    fighting, fightT = I.inCombat == true, now
     for r = 1, R.n do
         local entries = list[r].auraRegen
         for k = 1, entries and #entries or 0 do
             local e = entries[k]
-            local ok = type(e.value) == "number" and type(e.interval) == "number" and e.interval > 0
-            for j = 1, #def.auras do
-                if ok and def.auras[j].key == e.aura then
-                    G.n = G.n + 1
-                    G.slot[G.n], G.aura[G.n], G.value[G.n], G.interval[G.n] = r, j, e.value, e.interval
+            local j, tid = e.aura == nil and 0 or -1, e.talent == nil and 0 or -1 -- -1: named but not tracked
+            for i = 1, #def.auras do
+                if def.auras[i].key == e.aura then
+                    j = i
                 end
+            end
+            for i = 1, #def.talents do
+                if def.talents[i].key == e.talent then
+                    tid = def.talents[i].spell
+                end
+            end
+            local ok = type(e.value) == "number" and type(e.interval) == "number" and e.interval > 0
+            if ok and j >= 0 and tid >= 0 then
+                G.n = G.n + 1
+                G.slot[G.n], G.aura[G.n], G.value[G.n], G.interval[G.n] = r, j, e.value, e.interval
+                G.talent[G.n] = tid
             end
         end
     end
@@ -139,12 +155,23 @@ end
 -- What entry g brings in (from, to]: `value` at each `interval` after the player's aura was applied, up to its
 -- believed expiry. Allocates nothing.
 local function auraGain(g, from, to)
-    local j = G.aura[g]
-    local e = I.auras.exp0[1][j] -- unit 1 is always "player" (Adapter.lua's def.units)
+    local j, tid = G.aura[g], G.talent[g]
+    if tid > 0 and VS.Talent(tid) == 0 then
+        return 0
+    end
+    local e, ap
+    if j == 0 then
+        if not fighting then
+            return 0
+        end
+        e, ap = to, fightT
+    else
+        e, ap = I.auras.exp0[1][j], I.auras.applied[1][j] -- unit 1 is always "player" (Adapter.lua's def.units)
+    end
     if e <= from then
         return 0
     end
-    local ap, iv = I.auras.applied[1][j], G.interval[g]
+    local iv = G.interval[g]
     if to > e then
         to = e
     end
@@ -376,8 +403,13 @@ I.On(Obs.CastSuccess, function(o, t, lag)
     end
 end)
 
+I.On(Obs.CombatStart, function(o, t)
+    fighting, fightT = true, t
+end)
+
 -- Out of combat a resource falls toward its rest value: the interval opens down to it (lo never over-promises).
 I.On(Obs.CombatEnd, function()
+    fighting = false
     for r = 1, R.n do
         if R.rest[r] < R.lo0[r] then
             R.lo0[r] = R.rest[r]
