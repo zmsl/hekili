@@ -99,6 +99,30 @@ describe("casts and cooldowns", function()
         assert.are.equal(10, I.CostOf(3)) -- a number cost
     end)
 
+    it("FAILED with another castGUID changes nothing", function()
+        h.forced = {}
+        I.urgent = function(e)
+            h.forced[#h.forced + 1] = e
+        end
+        ctl.casting = { 2000, 4000 }
+        ctl.now = 2
+        ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-A", fs.REND)
+        S.Flush()
+        I.Fold(2, false)
+        assert.are.equal(REND, I.castAb)
+        local n, forced = I.log.n + S.stN, #h.forced
+        ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-B", fs.REND) -- a second press: "another action..."
+        S.Flush()
+        I.Fold(2.5, false)
+        assert.are.equal(REND, I.castAb)
+        assert.are.equal(n, I.log.n + S.stN)
+        assert.are.equal(forced, #h.forced)
+        ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-A", fs.REND) -- the cast in progress
+        S.Flush()
+        I.Fold(3, false)
+        assert.are.equal(0, I.castAb)
+    end)
+
     it("models charges and recharges them by time; a spell without charges has none", function()
         assert.is_nil(VS.Charges(fs.REND, 1))
     end)

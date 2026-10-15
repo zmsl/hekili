@@ -3,7 +3,7 @@
 -- synchronously in the handler, feed Hekili's across-reset caches through the hooks Adapter.lua sets in `I.feed`
 -- (cast history, the real queue's CAST_FINISH and channel events, their removal). Poll 3: the on-next-swing queue.
 -- Credits: secret-value handling after Catnip's (Durts) research.
--- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Casts.lua.
+-- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Casts.lua (castGUID matching: castStopped, isChannel).
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -12,6 +12,10 @@ local Obs = VS.Obs
 local Plain, Stage, Direct, Urgent = S.Plain, S.Stage, S.Direct, S.Urgent
 
 I.sentGUID = nil
+
+-- The castGUIDs of our cast and channel in progress (plain strings; nil none or secret). Only these stop, delay or
+-- update them: a second press that fails ("another action is in progress") has another castGUID.
+local castGUID, chanGUID = nil, nil
 
 local function ability(spellID)
     return spellID and I.ab.bySpell[spellID]
@@ -23,11 +27,12 @@ S.On("UNIT_SPELLCAST_SENT", "player", function(api, t, unit)
     end
 end)
 
-S.On("UNIT_SPELLCAST_START", "player", function(api, t, unit, castGUID, spellID)
+S.On("UNIT_SPELLCAST_START", "player", function(api, t, unit, guid, spellID)
     local a = unit == "player" and ability(spellID)
     if not a then
         return
     end
+    castGUID = Plain(api, guid)
     local _, _, _, rawStart, rawEnd = api.UnitCastingInfo("player") -- secret: both through Plain next
     local start, finish = Plain(api, rawStart), Plain(api, rawEnd)
     if type(start) == "number" and type(finish) == "number" then
@@ -54,11 +59,13 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     Urgent("UNIT_SPELLCAST_SUCCEEDED")
 end)
 
-local function stopped(api, t, unit, castGUID, spellID)
+local function stopped(api, t, unit, guid, spellID)
     local a = unit == "player" and ability(spellID)
-    if not a then
+    local g = Plain(api, guid)
+    if not a or g == nil or g ~= castGUID then
         return
     end
+    castGUID = nil
     Stage(Obs.CastStop, t, a)
     local f = I.feed.CastFailed
     if f then
@@ -69,9 +76,10 @@ end
 S.On("UNIT_SPELLCAST_FAILED", "player", stopped)
 S.On("UNIT_SPELLCAST_INTERRUPTED", "player", stopped)
 
-S.On("UNIT_SPELLCAST_DELAYED", "player", function(api, t, unit, castGUID, spellID)
+S.On("UNIT_SPELLCAST_DELAYED", "player", function(api, t, unit, guid, spellID)
     local a = unit == "player" and ability(spellID)
-    if not a then
+    local g = Plain(api, guid)
+    if not a or g == nil or g ~= castGUID then
         return
     end
     local _, _, _, _, rawEnd = api.UnitCastingInfo("player") -- secret: Plain next
@@ -81,11 +89,12 @@ S.On("UNIT_SPELLCAST_DELAYED", "player", function(api, t, unit, castGUID, spellI
     end
 end)
 
-S.On("UNIT_SPELLCAST_CHANNEL_START", "player", function(api, t, unit, castGUID, spellID)
+S.On("UNIT_SPELLCAST_CHANNEL_START", "player", function(api, t, unit, guid, spellID)
     local a = unit == "player" and ability(spellID)
     if not a then
         return
     end
+    chanGUID = Plain(api, guid)
     local _, _, _, rawStart, rawEnd = api.UnitChannelInfo("player") -- secret: both through Plain next
     local start, finish = Plain(api, rawStart), Plain(api, rawEnd)
     if type(start) == "number" and type(finish) == "number" then
@@ -98,9 +107,19 @@ S.On("UNIT_SPELLCAST_CHANNEL_START", "player", function(api, t, unit, castGUID, 
     Urgent("UNIT_SPELLCAST_CHANNEL_START")
 end)
 
-S.On("UNIT_SPELLCAST_CHANNEL_UPDATE", "player", function(api, t, unit, castGUID, spellID)
+-- Whether an update or stop is our channel's: its castGUID, or any when CHANNEL_START's was secret (TDF isChannel; the
+-- family then matches by ability). A late stop of a channel already replaced by a chained one matches nothing.
+local function ownChannel(api, guid)
+    if chanGUID == nil then
+        return true
+    end
+    local g = Plain(api, guid)
+    return g ~= nil and g == chanGUID
+end
+
+S.On("UNIT_SPELLCAST_CHANNEL_UPDATE", "player", function(api, t, unit, guid, spellID)
     local a = unit == "player" and ability(spellID)
-    if not a then
+    if not a or not ownChannel(api, guid) then
         return
     end
     local _, _, _, _, rawEnd = api.UnitChannelInfo("player") -- secret: Plain next
@@ -110,9 +129,9 @@ S.On("UNIT_SPELLCAST_CHANNEL_UPDATE", "player", function(api, t, unit, castGUID,
     end
 end)
 
-S.On("UNIT_SPELLCAST_CHANNEL_STOP", "player", function(api, t, unit, castGUID, spellID)
+S.On("UNIT_SPELLCAST_CHANNEL_STOP", "player", function(api, t, unit, guid, spellID)
     local a = unit == "player" and ability(spellID)
-    if not a then
+    if not a or not ownChannel(api, guid) then
         return
     end
     Stage(Obs.ChannelStop, t, a)
