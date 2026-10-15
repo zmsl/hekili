@@ -9,6 +9,14 @@
 
 embeds.xml
 
+VirtualState\VirtualState.lua
+VirtualState\ObsLog.lua
+VirtualState\Belief.lua
+VirtualState\Families\Player.lua
+VirtualState\Sources\Sources.lua
+VirtualState\Sources\Player.lua
+VirtualState\Snapshot.lua
+
 Hekili.lua
 Utils.lua
 Formatting.lua
