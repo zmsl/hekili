@@ -7,7 +7,7 @@
 -- them over the class's after Classes.lua's merge (which takes the class first and only adds missing keys), so a race
 -- registration wins a key clash with the class and with `all`. Resource and cost modifiers go to `ns.raceMods`, one
 -- declaration read by two layers:
--- VirtualState's belief (VirtualState/Families/Modifiers.lua, through Adapter.lua) and Hekili's simulation (below).
+-- VirtualState's belief (Virtual/State/Families/Modifiers.lua, through Adapter.lua) and Hekili's simulation (below).
 
 local addon, ns = ...
 local Hekili = _G[ addon ]

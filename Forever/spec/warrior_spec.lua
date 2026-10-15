@@ -427,7 +427,7 @@ describe("Forever Warrior", function()
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists")
-        local secretToken = require("VirtualState.spec.helpers.load").module().VirtualState.AplSecretToken
+        local secretToken = require("Virtual.State.spec.helpers.load").module().VirtualState.AplSecretToken
         local kinds = {
             buff = w.auras,
             debuff = w.auras,

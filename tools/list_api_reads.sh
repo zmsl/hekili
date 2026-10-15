@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Lists the game API names the loaded Hekili files read: bare globals (via luacheck W113, which ignores strings and
 # comments), C_* and AuraUtil namespace members (via grep), _G.Name reads, and Facade.Name / Facade.ns.Name reads
-# (the secret or absent names Hekili reads through ns.Facade, VirtualState/Facade.lua).
+# (the secret or absent names Hekili reads through ns.Facade, Virtual/API/Facade.lua).
 # Usage: tools/list_api_reads.sh [file ...]   (default: every .lua in Hekili.toc minus the archived
 # expansion folders)
 set -euo pipefail

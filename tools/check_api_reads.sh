@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Fails when a file loaded by Hekili.toc reads a game API from tools/api_inventory.txt directly instead of through
-# ns.Facade (VirtualState/Facade.lua; event-facade spec §1.2): every game read goes through the facade. Bare reads,
+# ns.Facade (Virtual/API/Facade.lua; event-facade spec §1.2): every game read goes through the facade. Bare reads,
 # namespace globals included, come from luacheck W113 (which ignores strings and comments; a `local C_Spell =
 # Facade.C_Spell` covers its members); _G.Name and _G["Name"] reads come from grep, and so does a frame method reached
-# through getmetatable, the one way around the event facade's shadowed RegisterEvent. VirtualState/ reads the game
-# only through its injected `api` (VirtualState/spec/secrets_spec.lua checks it).
+# through getmetatable, the one way around the event facade's shadowed RegisterEvent. Virtual/State/ reads the game
+# only through its injected `api` (Virtual/State/spec/secrets_spec.lua checks it).
 set -uo pipefail
 cd "$(dirname "$0")/.."
 LUACHECK="${LUACHECK:-luacheck}"

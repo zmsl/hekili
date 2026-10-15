@@ -69,7 +69,7 @@ policy table (§2.2) makes it virtual (synthesized or reshaped) or the client re
 
 ### 1.1 The read facade (`ns.Facade`)
 
-`VirtualState/Facade.lua` keeps its shape (`kept(name, class, fn, reason)`, `Facade.lua:40-50`; `Status` (now the
+`Virtual/API/Facade.lua` keeps its shape (`kept(name, class, fn, reason)`, `Facade.lua:40-50`; `Status` (now the
 class), `Why`, `Inventory`, `Facade.lua:517-528`; `Stubs` goes with the stub status) and gains two load-time helpers:
 `passthrough(name, reason)` resolves the real function (`resolve`, `Facade.lua:31-38`) and stores it as the row;
 `hybrid(name, policy, reason)` stores the raw call with the policy behind it. `kept` puts every row, of any class,
@@ -78,7 +78,7 @@ nothing, which is how the seven deprecation shims are handled today in each file
 (`local IsPlayerSpell = IsPlayerSpell or function() end`, `Events.lua:10`; spec §7.3); that fallback moves into
 the facade.
 
-The full table is two files: `VirtualState/Facade.lua` holds every row with its class and its evidence as the reason
+The full table is two files: `Virtual/API/Facade.lua` holds every row with its class and its evidence as the reason
 (the 124 former passthroughs carry `docs/forever-facade-notes.md`'s secrecy column verbatim), and
 `tools/api_inventory.txt` lists every name with its class, one `Name<TAB>class` line each, sorted; `facade_spec`
 asserts the two agree. By group (a name the first rows class differently keeps that class where a later group lists
@@ -140,7 +140,7 @@ VirtualState's own Hekili-side file, `Adapter.lua`, does too: its boot frame (`A
 `Facade.CreateFrame` and hears `PLAYER_LOGIN` through the layer like any Hekili frame, so no loaded file is exempt.
 
 - `tools/api_inventory.txt` lists all names of the facade with their class (175 plus `CreateFrame`, plus any name a
-  later probe or file adds); `VirtualState/spec/facade_spec.lua` asserts `Facade.Inventory()` and each name's class
+  later probe or file adds); `Virtual/API/spec/facade_spec.lua` asserts `Facade.Inventory()` and each name's class
   equal it, and that every entry has a reason.
 - `tools/check_api_reads.sh` returns to its pre-Phase-1 rule, "no game API from the inventory is read directly"
   (`fc61b6d9:tools/check_api_reads.sh`: W113 on any inventory global, namespaces included, plus the `_G.Name` grep),
@@ -207,7 +207,7 @@ delivery loop goes on to the next subscriber, as the client isolates frames.
 - `FRAME_UPDATE` is not a game event; it stays on Hekili's `OnUpdate` (`Events.lua:127-152`). `ns.FeignEvent`
   (`Events.lua:260-268`) calls `handlers[event]` directly and stays internal to Hekili.
 
-**Lifecycle.** The event-facade file (`VirtualState/EventFacade.lua`, TOC-loaded with the facade, before
+**Lifecycle.** The event-facade file (`Virtual/Events/EventFacade.lua`, TOC-loaded with the facade, before
 `Hekili.lua`) creates the layer's client frame when it loads, with the real `CreateFrame` resolved once from the
 client table (`_G` in game; the fake api in specs, which the loader sets before it runs any Hekili file). Hekili's
 frames subscribe while their files load (`PLAYER_ENTERING_WORLD` at `Events.lua:336`, `VARIABLES_LOADED` at
@@ -326,7 +326,7 @@ the spell ID, never nil. Source and destination flags are
 constants: ours `0x511` (mine, friendly, player), a hostile's `0xA48`. `cleu_rows_spec` asserts this table.
 
 **Attribution of hits on us (decision 6).** `UNIT_COMBAT` on the player says what landed or was avoided, not who
-swung. The layer keeps two things (`VirtualState/Sources/Attackers.lua`):
+swung. The layer keeps two things (`Virtual/Events/Attackers.lua`):
 - *Who targets me*: for the tokens `target`, `focus` and `nameplate1`-`40`, on `UNIT_TARGET`, `PLAYER_TARGET_CHANGED`,
   `PLAYER_FOCUS_CHANGED` and `NAME_PLATE_UNIT_ADDED/REMOVED`, the token's plain GUID, `UnitCanAttack("player",
   token)` and `UnitIsUnit("<token>target", "player")` (the "<token>target" strings built once at load). Each answer
@@ -544,7 +544,7 @@ not emit a row from the flip; the class file's "usable now" branch, on the stric
 | The interim Overpower and Revenge windows from usability alone (`Forever/Warrior.lua:78-86, 388-395, 421-428, 507`) | Classic's event model plus the usability read (§6) |
 | The drain's apply through the spec (`Adapter.lua` `readBefore`, `apply`, `readAfter`; the reset before and after; `I.pinned`; `I.Fold`'s `stopAtCast`) | retired by `now` handlers (§12a): a cast's effects come from the declared fields and the class file's `now`, never from replaying Hekili's `handler` through `state` |
 | Drain step 5, `updated` from `AuraGen` (`Adapter.lua:452-456`) | kept: a layer-side write, so a belief that moved without a real `UNIT_AURA` (an own cast, a modelled expiry) still rescans in the same cycle (decision 2) |
-| The APL warning scanner (Task 9b, `VirtualState/AplWarnings.lua:65`, its `Hekili:LoadScript` call) | stays: target health and time to die are still secret or defaulted |
+| The APL warning scanner (Task 9b, `Virtual/State/AplWarnings.lua:65`, its `Hekili:LoadScript` call) | stays: target health and time to die are still secret or defaulted |
 | GCD 61304 → 29515 (`Classes.lua:2469`, `UI.lua:1494, 1695`, `Events.lua:1670`, `Options/Options.lua:4043`), the spec 1491 loop break (`Classes.lua:3135-3136`), the talent read in `ns.updateTalents` (`Events.lua:424-435`) | moved into the facade by a named follow-up task of the plan (decision 7): the five GCD sites back to 61304, which `C_Spell.GetSpellCooldown`, `GetSpellInfo` and `GetSpellTexture` ask as 29515; the loop back to `if not id then break end`, `GetSpecializationInfo` answering an id-0 slot as nil; `ns.updateTalents` back to its `GetTalentInfoByID( v, 1 )` body, which the facade answers from the `C_Traits` walk. One line of that body stays Forever's: retail and Classic Hekili model talents as on or off and have no rank, so the facade's rank comes as a 12th return and the body stores it (`state.talent[ k ].rank`) |
 | The drain call (`Core.lua:1570-1572`), `SpecChanged` (`Classes.lua:3355-3356`), the version gates | stay |
 | (new, §12b) race packs and their cost modifiers in the simulation: `Races.lua` (`Hekili:NewRace`, `ns.costMods`), `ns.costMods.Wrap( a )` in RegisterAbility, `ns.costMods.Spend( cost, ability )` in `ns.spendResources`, `state.race_token` and `state.race[ <token> ]`; the class files in `Forever/Classes/`, race files in `Forever/Races/` | core edits kept on purpose: one declaration (`all.resourceMods`) read by the belief and by Hekili's simulation, so the recommendation and the belief pay the same cost |
@@ -559,7 +559,7 @@ not emit a row from the flip; the class file's "usable now" branch, on the stric
   holds plain values or layer constants; virtual reads keep spec §4.5's rules (`pcall` and `issecretvalue` before any field); the trace tests
   `issecretvalue` before storing. No layer code compares, indexes or does arithmetic on a value before that test,
   and none uses `a and b or c` on a possibly-secret value. The ported secrets spec (spec §11) gains the event
-  facade's source files (`Sources/Rows.lua`, `Sources/Attackers.lua`); `EventFacade.lua` and `CombatLog.lua` read
+  facade's source files (`Virtual/Events/Rows.lua`, `Virtual/Events/Attackers.lua`); `EventFacade.lua` and `CombatLog.lua` read
   the client only through `Plain`-gated slots.
 - Zero allocation in recurring paths (§4); everything is allocated at load, at `Start`, at `SpecChanged` or at a
   subscription. The trace, on, allocates as Hekili's own debug lines do (§5).
@@ -571,7 +571,7 @@ not emit a row from the flip; the class file's "usable now" branch, on the stric
 
 ## 9. Testing
 
-Headless (busted, `VirtualState/spec/`, the Phase 1 helpers `fake_api.lua` and `alloc.lua`):
+Headless (busted, `Virtual/State/spec/`, the Phase 1 helpers `fake_api.lua` and `alloc.lua`):
 - `event_facade_spec`: a frame from the layer's `CreateFrame` on the fake api registers events and unit events, sets
   an `OnEvent` that captures; the fake game frame fires. Lifecycle: a subscription made before `VS.Start`, an
   event delivered before `Start` (sources skipped, no error), then `Start`: nothing is registered twice and the
@@ -720,7 +720,7 @@ charge = {
   such a call writes nothing. Every write is a `modelled` sample at the cast's belief time (the fold's lagged time when lagged); by
   `I.Basis` (newest by time, ties observed > pinned > modelled) any later read overrides it. The aura verbs also
   write the combat log's aura rows, `gain` the energize row (§2.4, back-dated to the cast).
-- **Trigger.** `VirtualState/Families/Now.lua` registers on `CastSuccess` only (a channel stages both
+- **Trigger.** `Virtual/State/Families/Now.lua` registers on `CastSuccess` only (a channel stages both
   `ChannelStart` and `CastSuccess`; the user's ruling: one run, never two), after the Resources family's ladder pin
   for the same observation, and writes for ability a at t, unless a is a `track_<id>` extra (`VS.Track`: no ability,
   no effects): (1) the cost, `I.ResourceShift(slot,
@@ -737,7 +737,7 @@ charge = {
   is tracked so the spellbook knows it.
 - **Out of scope** (later, with phase C's observation kinds): non-cast triggers (the dodge, a kill, an aura tick) as
   `spec:RegisterNow(kind, fn)` with the same context. Version 1 is cast success only.
-- **Tests** (`VirtualState/spec/now_spec.lua`): `gain` shifts est, lo and hi as a modelled `CastSuccess` sample;
+- **Tests** (`Virtual/State/spec/now_spec.lua`): `gain` shifts est, lo and hi as a modelled `CastSuccess` sample;
   `applyDebuff` lands as a modelled target expiry with stacks, which a later read overrides and an earlier one does
   not; an ability without `now` changes only cost, cooldown and GCD; a raising `now` is counted and the fold goes on;
   zero allocation over 1000 casts; a `now` calling `gain` never touches `state.rage`; the reads through the context;
@@ -801,7 +801,7 @@ user's design (race packs) supersedes a registration in the shared `all` spec wi
   declared cost for the belief, which applies the modifiers itself. `ns.spendResources` then, given the declared cost,
   takes one stack of each charged in-scope modifier's buff (`state.removeStack`). Not a `spend` hook: `state.spend` also runs for spends that are no ability's cost (a stance
   swap's lost rage), which must take no charge.
-- **Tests** (`VirtualState/spec/races_spec.lua`, `modifiers_spec.lua`): the Gnome file inert for another race;
+- **Tests** (`Virtual/State/spec/races_spec.lua`, `modifiers_spec.lua`): the Gnome file inert for another race;
   registered for the Gnome, winning a key clash with `all` and, after the merge, with the class; max 105 through the
   modifier with the interval seeded at it, a plain read winning, a point resource left at its own maximum; Heroic
   Strike at 13.5 with Eureka! up and a charge per cast, Rend at 10 and no charge, in the belief and in the simulation;

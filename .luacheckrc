@@ -1,4 +1,4 @@
--- Lint for the Forever branch. Every game read goes through ns.Facade (VirtualState/Facade.lua; see
+-- Lint for the Forever branch. Every game read goes through ns.Facade (Virtual/API/Facade.lua; see
 -- tools/check_api_reads.sh): the names of tools/api_inventory.txt, CreateFrame among them, are deliberately NOT
 -- declared here, so a bare read shows up as W113 "accessing undefined variable".
 std = "lua51"
@@ -91,12 +91,14 @@ files["UI.lua"] = { globals = stateEnv }
 files["Utils.lua"] = { globals = stateEnv }
 files["Hekili.lua"] = { globals = stateEnv }
 files["Constants.lua"] = { globals = stateEnv }
--- The names a class file's `now` function reads in VirtualState's context (VirtualState/Families/Now.lua).
+-- The names a class file's `now` function reads in VirtualState's context (Virtual/State/Families/Now.lua).
 local nowEnv = {
     "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "setCooldown", "talent",
     "buff", "debuff", "knownRank", "now", "combat", "rage", "energy", "mana", "focus", "runic_power",
 }
-files["VirtualState/spec/"] = { std = "+busted", read_globals = nowEnv }
+files["Virtual/State/spec/"] = { std = "+busted", read_globals = nowEnv }
+files["Virtual/Events/spec/"] = { std = "+busted", read_globals = nowEnv }
+files["Virtual/API/spec/"] = { std = "+busted", read_globals = nowEnv }
 files["Forever/spec/"] = { std = "+busted" }
 -- The Warrior's handlers, state expressions and state functions run with setfenv( f, state ) as well; these are the
 -- further `state` names they use.

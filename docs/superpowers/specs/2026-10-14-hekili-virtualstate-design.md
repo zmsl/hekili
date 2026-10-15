@@ -25,10 +25,10 @@ totems) or absent on Forever, so Hekili loads but cannot recommend: `UnitPower` 
 cost is ever recommended, `UnitHealth` reads 0 and the enemy scan sees one target, regen is 0, and every spell
 is off cooldown (cleanup Q16; facade notes "Stub call sites that would throw or misbehave").
 
-VirtualState is the missing piece: a module inside Hekili (`ns.VirtualState`, files under `VirtualState/`)
+VirtualState is the missing piece: a module inside Hekili (`ns.VirtualState`, files under `Virtual/State/`)
 that keeps the present game state carried forward from plain observations (our own casts, swings, usability
 flips, cooldown flag edges, aura reads, out-of-combat reads) and answers the secret reads in combat. The
-facade folds into the same folder as `VirtualState/Facade.lua` (`ns.Facade`) and keeps only the names that are
+facade folds into the same folder as `Virtual/API/Facade.lua` (`ns.Facade`) and keeps only the names that are
 secret in combat, partly secret, or absent on Forever; every plain name goes back to a direct call.
 
 Phase 1 covers all state Hekili needs to recommend for a Warrior on a dummy: resources and regen, cooldowns,
@@ -42,7 +42,7 @@ what Phase 1 leaves out.
 
 These ten decisions were made with the user on 2026-10-14. They are fixed for Phase 1.
 
-1. **VirtualState lives inside Hekili.** It is a module of several files under a new `VirtualState/` folder,
+1. **VirtualState lives inside Hekili.** It is a module of several files under a new `Virtual/State/` folder,
    reached as `ns.VirtualState`, not a LibStub package. Rationale (the user's): extracting state tracking out
    of Hekili duplicates the class model Hekili's specs already define. TDF reuse is not a goal. The first
    design draft, saved with the research inputs, was a standalone library named VirtualGameState-1.0 (VGS)
@@ -58,7 +58,7 @@ These ten decisions were made with the user on 2026-10-14. They are fixed for Ph
    identified for Warrior (swing-based rage regen models already exist, e.g.
    `archive/TheWarWithin/WarriorArms.lua:36-56`).
 3. **The facade folds into Hekili and is stripped.** `Libs/VirtualGameAPI-1.0` becomes
-   `VirtualState/Facade.lua` (`ns.Facade`) covering only the 51 names that are secret in combat, partly secret
+   `Virtual/API/Facade.lua` (`ns.Facade`) covering only the 51 names that are secret in combat, partly secret
    or absent on Forever (§7). The 124 plain passthroughs revert to direct calls (about 100 lines across 14
    files, 42 of them in `State.lua`). The absent names cannot be called directly on Forever and stay as
    guarded stubs. `tools/api_inventory.txt`, `tools/check_api_reads.sh` and `.luacheckrc` then enforce only
@@ -92,7 +92,7 @@ These ten decisions were made with the user on 2026-10-14. They are fixed for Ph
    refinement.
 9. **TDF mechanics are ported, not its engine.** The observation log ring, the families' pin, ladder, regen
    EMA, swing and aura logic, the `Sources.Plain` secrecy gate, the test helpers and the secrets static test
-   move into `VirtualState/`, adapted to the Belief record and the functions-only API. TDF's SpecBuilder,
+   move into `Virtual/State/`, adapted to the Belief record and the functions-only API. TDF's SpecBuilder,
    Helpers, Timeline and Forecast are not ported: the effects of a cast come from decision 2. Both
    repositories are the user's; the clean-room rule forbids only Hekili → TDF.
 10. **Three phases.** Phase 1 is this spec: core VirtualState for all the state Hekili needs. Phase 2 is a
@@ -647,7 +647,7 @@ wiring `active_dot` and `spell_targets` to `Count.*` is Phase 2/3 work (Phase 2 
 
 ### 7.1 Fold-in
 
-`Libs/VirtualGameAPI-1.0` becomes `VirtualState/Facade.lua`, which builds `ns.Facade` at load. It keeps the
+`Libs/VirtualGameAPI-1.0` becomes `Virtual/API/Facade.lua`, which builds `ns.Facade` at load. It keeps the
 original's shape: namespaces mirror the game (`ns.Facade.UnitPower`, `ns.Facade.C_Spell.GetSpellCooldown`,
 `ns.Facade.AuraUtil.ForEachAura`) and the query functions stay (`Facade.Status(name)`, `Facade.Why(name)`,
 `Facade.Stubs()`, `Facade.Inventory()`; `VirtualGameAPI-1.0.lua:317-320`). Each kept name has the status
@@ -807,11 +807,11 @@ Tools and lint:
   asserts `Facade.Inventory()` equals it.
 - `tools/check_api_reads.sh` keeps its two checks (luacheck W113 for a bare kept name, grep for `_G.Name` and
   `_G["Name"]`) and adds a grep for each dotted kept name (`C_Spell.GetSpellCooldown`, ...) outside
-  `VirtualState/Facade.lua`, because a declared namespace global hides its members from W113. Its message
+  `Virtual/API/Facade.lua`, because a declared namespace global hides its members from W113. Its message
   names `ns.Facade`. `tools/list_api_reads.sh` lists `Facade.` reads in place of the old facade reads.
 - `.luacheckrc`: lines 1-3 restate the rule ("every secret or absent game read goes through `ns.Facade`");
   every reverted name is declared in `read_globals` (namespaces as whole globals), and the kept names stay
-  undeclared so a bare read still shows as W113; `VirtualState/spec/` gets `std = "+busted"`.
+  undeclared so a bare read still shows as W113; `Virtual/State/spec/` gets `std = "+busted"`.
 
 ## 8. Clock and timing
 
@@ -838,7 +838,7 @@ Tools and lint:
 ## 9. File layout and TOC order
 
 ```
-VirtualState/
+Virtual/State/
   VirtualState.lua      ns.VirtualState, Obs/ReadOf enums, origin strings, Belief factory, projection,
                         debug rings
   ObsLog.lua            the 256-slot ring
@@ -854,18 +854,18 @@ VirtualState/
   spec/                 busted specs and helpers (not in the TOC)
 ```
 
-TOC order (`Hekili.toc`): `embeds.xml`; then `VirtualState\VirtualState.lua`, `ObsLog.lua`, `Belief.lua`, the
+TOC order (`Hekili.toc`): `embeds.xml`; then `Virtual\State\VirtualState.lua`, `ObsLog.lua`, `Belief.lua`, the
 family files, the source files, `Snapshot.lua`, `Facade.lua`, all before `Hekili.lua`, because `Hekili.lua`
 already reads facade names at load (`Hekili.lua:6`); then Hekili's files as today; then
-`VirtualState\Adapter.lua` after `Core.lua`, so it can take `Hekili.State`, `Hekili.Class` and
+`Virtual\State\Adapter.lua` after `Core.lua`, so it can take `Hekili.State`, `Hekili.Class` and
 `ns.spendResources` as file-top locals. Nothing before Adapter.lua touches `state` or `class`; the facade
 policies reach VirtualState only at call time.
 
 What changes outside the folder:
 - `embeds.xml`: line 3 (`<Include file="Libs\VirtualGameAPI-1.0\VirtualGameAPI-1.0.xml"/>`) is deleted.
 - `Libs/VirtualGameAPI-1.0/` is removed. Its spec's inventory and shape cases move to
-  `VirtualState/spec/facade_spec.lua`.
-- `.busted`: `ROOT = { "VirtualState/spec" }` (today `{ "Libs/VirtualGameAPI-1.0/spec" }`).
+  `Virtual/API/spec/facade_spec.lua`.
+- `.busted`: `ROOT = { "Virtual/State/spec" }` (today `{ "Libs/VirtualGameAPI-1.0/spec" }`).
 - `.luacheckrc` and `tools/`: §7.7. VirtualState's own sources read the game only through the injected `api`,
   so the read checks never flag them; the ported secrets spec (§11) enforces the `Plain` rule on them instead.
 
@@ -888,13 +888,13 @@ live plate and 0 for a dead one (§7.4).
 
 ## 11. Testing
 
-**Runner.** busted under Lua 5.1 from the repo root; `.busted` points at `VirtualState/spec` (§9).
+**Runner.** busted under Lua 5.1 from the repo root; `.busted` points at `Virtual/State/spec` (§9).
 
 **Injected `api`.** Sources take the client as `api`: `_G` in game, a fake in tests, so every source runs
 headless (the TDF pattern, `TDF src/TacoDogForever/Game/App.lua:55-99` lists the client functions it
 requires).
 
-**Helpers** (`VirtualState/spec/helpers/`):
+**Helpers** (`Virtual/State/spec/helpers/`):
 - `fake_api.lua`: the `SECRET` proxy that raises on compare, arithmetic, concat, length, index and tostring
   (`TDF tests/helpers/wow.lua:16-25`), plus a fake frame with `Fire(event, ...)` and `Tick(now)`;
 - `alloc.lua`: copied as is (`TDF tests/helpers/alloc.lua:7-33`): 200 warm-ups, two collections, collector
