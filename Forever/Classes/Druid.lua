@@ -109,10 +109,10 @@ local FORM_OF_SPELL = { [ 768 ] = "cat_form", [ 5487 ] = "bear_form", [ 9634 ] =
 -- Shifting Power's energy (DB2 1322605 effect 30, base 40) and bear rage per white swing (spec §2.3, D4): the
 -- Warrior's measured one-hand main-hand rate x the form's unhasted 2.5 s swing, 8.65 a swing, until checkpoint Q8.
 local SHIFTING_POWER_ENERGY = 40
+local BEAR_RAGE_RATE = 3.46
 -- Rip's and Rake's energy (Rake's before Ferocity's -1 a rank), shared by their `spend` and `excess_e`'s reservations.
 local RIP_COST = 30
 local RAKE_COST = 40
-local BEAR_RAGE_RATE = 3.46
 
 local function rest( ids )
     local out = {}
@@ -142,6 +142,8 @@ local function bearSwing()
     return speed
 end
 
+-- shortcut: after a /reload in combat energy's regen rate stays 0 for the rest of the fight (VirtualState's calibrate
+-- returns early at ref == 0); upgrade with a `regen` meta field forwarded by the adapter after checkpoint Q3.
 spec:RegisterResource( Enum.PowerType.Energy )
 spec:RegisterResource( Enum.PowerType.ComboPoints )
 

@@ -85,6 +85,50 @@ describe("resources", function()
         end)
     end)
 
+    describe("the out-of-combat regen read", function()
+        local RAGE = 1
+        local api
+
+        before_each(function()
+            boot({
+                abilities = {},
+                abilityIds = {},
+                abilitySlot = {},
+                resources = {
+                    { key = "energy", type = ENERGY, token = "ENERGY", max = 100, rest = true, regen = 10 },
+                    { key = "rage", type = RAGE, token = "RAGE", max = 100, regen = 2 },
+                },
+                auras = {},
+                auraIds = {},
+                talents = {},
+                units = { "player", "target" },
+            })
+            api = I.api
+            VS.Start(api)
+        end)
+
+        local function poll(t)
+            api.ctl.Tick(t)
+            S.RunPolls(t)
+            I.Fold(t, false)
+        end
+
+        it("skips a 0 for a resource resting at its maximum, and takes a positive read", function()
+            api.ctl.regen[ENERGY] = { 0, 0 }
+            poll(105)
+            assert.are.equal(10, VS.Regen(ENERGY, 105).est)
+            api.ctl.regen[ENERGY] = { 12, 12 }
+            poll(110)
+            assert.are.equal(12, VS.Regen(ENERGY, 110).est)
+        end)
+
+        it("takes a 0 for a resource resting at 0, as before", function()
+            api.ctl.regen[RAGE] = { 0, 0 }
+            poll(105)
+            assert.are.equal(0, VS.Regen(RAGE, 105).est)
+        end)
+    end)
+
     describe("a swing-paid resource (rage, 9 a main-hand swing)", function()
         before_each(function()
             boot(fs.def(fs.new(9)))

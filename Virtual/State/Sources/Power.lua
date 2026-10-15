@@ -111,7 +111,13 @@ S.Poll(1, function(api, t)
         if not I.inCombat and R.swing[r] == 0 then
             local rawIn, rawAct = api.GetPowerRegenForPowerType(R.type[r]) -- secret: Plain next
             local act = Plain(api, rawAct)
-            if Plain(api, rawIn) ~= nil and type(act) == "number" and act ~= R.regE[r] then
+            -- A 0 for a slot resting at its maximum is a form that does not regenerate it (a pull from Bear Form): skip.
+            if
+                Plain(api, rawIn) ~= nil
+                and type(act) == "number"
+                and act ~= R.regE[r]
+                and (act ~= 0 or not R.restMax[r])
+            then
                 Direct(Obs.Read, t, r, act, ReadOf.Regen)
             end
         end

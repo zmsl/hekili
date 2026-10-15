@@ -120,8 +120,10 @@ spec:RegisterResource( Enum.PowerType.Energy )
 - **Regen continuous, 10/s** (Blizzard's class notes; `GetPowerRegenForPowerType(3)` = 10.001 plain out of combat,
   secret in combat, R §2.1). No regen model and no `regen` field: Classic's 20-per-tick model
   (`Classic/Druid.lua:163-185`) is dropped, as Wrath dropped it. The out-of-combat plain read seeds the belief's rate and
-  the belief keeps it through combat. shortcut: a `/reload` in combat starts the rate at 0 until the first pins; upgrade
-  with a one-line `regen` meta field forwarded by the adapter if the checkpoint shows it.
+  the belief keeps it through combat. shortcut: after a `/reload` in combat the rate stays 0 for the rest of the
+  fight (calibrate returns early at a declared rate of 0, so pins never recover it); upgrade with a one-line `regen`
+  meta field forwarded by the adapter after checkpoint Q3. A 0 out-of-combat read (a non-Cat form) is skipped, since
+  energy rests at its maximum.
 - **The usability ladder is the pin source.** `UnitPower(Energy)` is secret always; `C_Spell.IsSpellUsable` and its
   `insufficientPower` are plain. Each energy ability is a rung: Cower 20 < Rip 30 < Ferocious Bite 35 < Rake 40 < Claw
   45 < Pounce 50 < Shred 60 = Ravage 60 (rank-independent in the DB2). Talents move rungs (Ferocity, Shredding Attacks,
