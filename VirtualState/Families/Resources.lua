@@ -1,7 +1,8 @@
 -- VirtualState/Families/Resources.lua
 -- The resources family (spec §6.1): the cost ladder (a usability report pins or bounds a resource at the ability's
 -- cost), exact reads, regen calibration between pins (an EMA), swing steps for a swing-paid resource (rage), our own
--- casts' changes (Adapter.lua, spec §5.3), and the Power/Regen accessors.
+-- casts' changes (Adapter.lua, spec §5.3), aura-gated regen (Hekili's regen-model entries with `aura`, `interval`,
+-- `value`: Bloodrage's rage over time), and the Power/Regen accessors.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Model/Belief/Resources.lua (calibrate :117-136, pin :218-263,
 -- ladder :275-315, Applier Usable :327, Reader Resource :365-372) and the resource conf of
 -- src/TacoDogForever/Model/Belief.lua:695-699. The power-tick phase (TDF's Applier PowerTick :378) is not modelled in
@@ -10,7 +11,7 @@
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local Obs, ReadOf = VS.Obs, I.ReadOf
-local abs = math.abs
+local abs, floor = math.abs, math.floor
 
 --- A flip pin measures regen only when the last short report was at most this long before it (TDF Belief.PIN_EXACT).
 I.PIN_EXACT = 0.15
@@ -50,6 +51,13 @@ local R = {
 }
 I.res = R
 R.slotOf, R.slotOfToken = {}, {}
+
+-- Aura-gated regen entries g of every slot (built from each resource's `auraRegen`): `value` every `interval`
+-- seconds from the aura's application while the player's aura j is believed up. Credited only as the clock moves on:
+-- an aura first seen after its application loses the ticks before that, and a removal seen late keeps the ticks
+-- already credited; both are bounded by the aura's duration and the next pin or rung corrects them.
+local G = { n = 0, slot = {}, aura = {}, value = {}, interval = {} }
+R.auraRegen = G
 
 -- By ability index a: the last usability answer and the last short report (cost, time).
 local usable, shortCost, shortT = {}, {}, {}
@@ -93,6 +101,20 @@ I.OnBuild(function(def, now)
         I.Sample(R.regen[r], "default", rate, now, 0)
     end
     I.TRACKED.resource = R.type
+    G.n = 0
+    for r = 1, R.n do
+        local entries = list[r].auraRegen
+        for k = 1, entries and #entries or 0 do
+            local e = entries[k]
+            local ok = type(e.value) == "number" and type(e.interval) == "number" and e.interval > 0
+            for j = 1, #def.auras do
+                if ok and def.auras[j].key == e.aura then
+                    G.n = G.n + 1
+                    G.slot[G.n], G.aura[G.n], G.value[G.n], G.interval[G.n] = r, j, e.value, e.interval
+                end
+            end
+        end
+    end
     for a = 1, #def.abilities do
         usable[a], shortCost[a], shortT[a] = UNKNOWN, 0, 0
     end
@@ -107,7 +129,29 @@ function I.SwingValue(r)
     return type(v) == "number" and v or 0
 end
 
--- Continuous regen between pins (swing-paid slots move only at swings).
+-- What entry g brings in (from, to]: `value` at each `interval` after the player's aura was applied, up to its
+-- believed expiry. Allocates nothing.
+local function auraGain(g, from, to)
+    local j = G.aura[g]
+    local e = I.auras.exp0[1][j] -- unit 1 is always "player" (Adapter.lua's def.units)
+    if e <= from then
+        return 0
+    end
+    local ap, iv = I.auras.applied[1][j], G.interval[g]
+    if to > e then
+        to = e
+    end
+    if from < ap then
+        from = ap
+    end
+    if to <= from then
+        return 0
+    end
+    return (floor((to - ap) / iv) - floor((from - ap) / iv)) * G.value[g] -- nonzero: interval > 0 (checked at build)
+end
+
+-- Continuous regen between pins (swing-paid slots move only at swings), then aura-gated regen, kept out of the
+-- regen measurement like our own casts' changes (pinDelta).
 I.OnAdvance(function(from, to)
     local dt = to - from
     for r = 1, R.n do
@@ -116,6 +160,17 @@ I.OnAdvance(function(from, to)
             R.est0[r] = clamp(R.est0[r] + R.regE[r] * dt, max)
             R.lo0[r] = clamp(R.lo0[r] + R.regL[r] * dt, max)
             R.hi0[r] = clamp(R.hi0[r] + R.regH[r] * dt, max)
+        end
+    end
+    for g = 1, G.n do
+        local v = auraGain(g, from, to)
+        if v ~= 0 then
+            local r = G.slot[g]
+            local max = R.max[r]
+            R.est0[r] = clamp(R.est0[r] + v, max)
+            R.lo0[r] = clamp(R.lo0[r] + v, max)
+            R.hi0[r] = clamp(R.hi0[r] + v, max)
+            R.pinDelta[r] = R.pinDelta[r] + v
         end
     end
 end)
@@ -319,8 +374,9 @@ function I.ResourceShift(r, delta, t, event)
     I.Sample(R.power[r], "modelled", R.est0[r], t, event)
 end
 
---- (spec §3.2) The believed amount of a power type at `now`: the clock values plus continuous regen x dt, each clamped
---- to [0, max]; conf 1 - (hi - lo) / max, halved within SNAP_HOLD of a snap. Allocates nothing.
+--- (spec §3.2) The believed amount of a power type at `now`: the clock values plus continuous regen x dt and the
+--- aura-gated ticks to `now`, each clamped to [0, max]; conf 1 - (hi - lo) / max, halved within SNAP_HOLD of a snap.
+--- Allocates nothing.
 function VS.Power(powerType, now)
     local r = R.slotOf[powerType]
     if not r then
@@ -330,9 +386,17 @@ function VS.Power(powerType, now)
     if R.swing[r] > 0 then
         dt = 0 -- a swing-paid resource moves only at swings
     end
-    local est = clamp(R.est0[r] + R.regE[r] * dt, max)
-    local lo = clamp(R.lo0[r] + R.regL[r] * dt, max)
-    local hi = clamp(R.hi0[r] + R.regH[r] * dt, max)
+    local gain = 0
+    if now > I.clock then
+        for g = 1, G.n do
+            if G.slot[g] == r then
+                gain = gain + auraGain(g, I.clock, now)
+            end
+        end
+    end
+    local est = clamp(R.est0[r] + R.regE[r] * dt + gain, max)
+    local lo = clamp(R.lo0[r] + R.regL[r] * dt + gain, max)
+    local hi = clamp(R.hi0[r] + R.regH[r] * dt + gain, max)
     if lo > est then
         lo = est
     end
@@ -376,12 +440,13 @@ I.OnSnapshot(function(out, now)
         VS.Power(R.type[r], now)
         VS.Regen(R.type[r], now)
         out[#out + 1] = string.format(
-            "resource %s type=%d max=%d swing=%d scale=%.2f",
+            "resource %s type=%d max=%d swing=%d scale=%.2f auraRegen=%d",
             tostring(R.token[r]),
             R.type[r],
             R.max[r],
             R.swing[r],
-            R.scale[r]
+            R.scale[r],
+            G.n
         )
     end
 end)

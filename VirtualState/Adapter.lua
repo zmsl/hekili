@@ -99,12 +99,15 @@ local function buildDef()
     local slotByKey = {}
     for _, k in ipairs(sortedKeys(class.resources)) do
         local r = class.resources[k]
-        local swing, value = 0, nil
+        local swing, value, auraRegen = 0, nil, nil
         local model = r.state and r.state.regenModel
         if model then
             for _, m in pairs(model) do
                 if m.swing and HANDS[m.swing] and swing == 0 then
                     swing, value = HANDS[m.swing], m.value
+                elseif m.aura and not m.debuff then
+                    auraRegen = auraRegen or {}
+                    auraRegen[#auraRegen + 1] = m -- a player aura's regen: { aura, interval, value } (Resources.lua)
                 end
             end
         end
@@ -116,6 +119,7 @@ local function buildDef()
             rest = ns.ResourceRegenerates(k) and 100 or 0,
             swing = swing,
             swingValue = value,
+            auraRegen = auraRegen,
         }
         insert(def.resources, d)
         resourceKey[#def.resources] = k

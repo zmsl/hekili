@@ -74,6 +74,18 @@ describe("Adapter", function()
         assert.are.equal(12286, got.talents[1].spell)
     end)
 
+    it("forwards a resource's player-aura regen entries to the resources family", function()
+        h.Class.resources.rage.state.regenModel.bloodrage = { aura = "bloodrage", interval = 1, value = 1 }
+        h.Class.resources.rage.state.regenModel.debuff_test = { aura = "rend", debuff = true, interval = 3, value = 2 }
+        h.Class.auras.bloodrage = { key = "bloodrage", id = 29131, duration = 10 }
+        VS.SpecChanged()
+        local G = I.res.auraRegen
+        assert.are.equal(1, G.n) -- the debuff entry is not a player aura
+        assert.are.same({ 1, 1, 1 }, { G.slot[1], G.value[1], G.interval[1] })
+        assert.are.equal(29131, I.auras.id[G.aura[1]])
+        assert.are.equal(1, I.res.swing[1]) -- the swing source is still found
+    end)
+
     it("feeds the cast history and the real queue from our own cast events, and asks for a cycle", function()
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
         assert.are.same({ "rend" }, state.history)

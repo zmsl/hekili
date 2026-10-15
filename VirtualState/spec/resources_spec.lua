@@ -4,6 +4,7 @@
 local load = require("VirtualState.spec.helpers.load")
 local fake = require("VirtualState.spec.helpers.fake_api")
 local fs = require("VirtualState.spec.helpers.fake_spec")
+local alloc = require("VirtualState.spec.helpers.alloc")
 
 local ENERGY = 3
 
@@ -144,6 +145,58 @@ describe("resources", function()
         it("answers an untracked power type with the unknown record", function()
             local u = VS.Power(99, 1)
             assert.are.same({ 0, "unknown" }, { u.conf, u.basis })
+        end)
+    end)
+
+    describe("aura-gated regen (rage, Bloodrage: 1 a second while its aura is up)", function()
+        local BLOODRAGE = 3 -- the aura index
+
+        before_each(function()
+            local def = fs.def(fs.new(9))
+            def.auras[BLOODRAGE] = { key = "bloodrage", id = 29131 }
+            def.auraIds[BLOODRAGE] = { 29131 }
+            def.resources[1].auraRegen = {
+                { aura = "bloodrage", interval = 1, value = 1 },
+                { aura = "not_tracked", interval = 1, value = 5 }, -- no such aura: ignored
+            }
+            boot(def)
+            I.Fold(10, false) -- the clock starts at 10
+        end)
+
+        it("adds value at each interval after the aura's application while it is believed up", function()
+            I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
+            I.Settle(15.5)
+            assert.are.equal(5, VS.Power(fs.RAGE, 15.5).est) -- ticks at 11, 12, 13, 14, 15
+            assert.are.equal(10, VS.Power(fs.RAGE, 25).est) -- projected: 16 to 20, none after the expiry
+            I.Settle(25)
+            local r = VS.Power(fs.RAGE, 30)
+            assert.are.same({ 10, 10 }, { r.est, r.lo })
+            assert.are.equal(10, I.res.pinDelta[1]) -- kept out of the next regen measurement
+            assert.are.equal(1, I.res.auraRegen.n)
+        end)
+
+        it("adds nothing while the aura is down", function()
+            I.Settle(20)
+            assert.are.equal(0, VS.Power(fs.RAGE, 25).est)
+        end)
+
+        it("stops when the aura is believed gone early", function()
+            I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0)
+            I.Settle(12.5)
+            I.AuraModel(1, BLOODRAGE, 0, 0, 0, 12.5, 0) -- gone at 12.5 (expiry 0: down)
+            I.Settle(20)
+            assert.are.equal(2, VS.Power(fs.RAGE, 20).est)
+        end)
+
+        it("allocates nothing advancing or projecting through an entry", function()
+            I.AuraModel(1, BLOODRAGE, 10, 1e9, 1, 10, 0)
+            local t = 10
+            local bytes = alloc.bytes(function()
+                t = t + 0.1
+                I.Settle(t)
+                VS.Power(fs.RAGE, t + 0.5)
+            end, 10000)
+            assert.are.equal(0, bytes)
         end)
     end)
 end)
