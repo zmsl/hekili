@@ -55,6 +55,62 @@ local KIT = {
     whirlwind = { { 1680 }, 25, 10, "spell" },
 }
 
+-- key = the talent's rank spells (wowdb talents WARRIOR, r1..r5): 18 Arms, 17 Fury, 17 Protection.
+local TALENTS = {
+    improved_heroic_strike = { 12282, 12663, 12664 },
+    deflection = { 16462, 16463, 16464, 16465, 16466 },
+    improved_rend = { 12286, 12658, 12659 },
+    improved_charge = { 12285, 12697 },
+    improved_tactical_mastery = { 12295, 12676, 12677, 12678, 12679 },
+    improved_thunder_clap = { 12287, 12665, 12666 },
+    improved_overpower = { 12290, 12963 },
+    anger_management = { 12296 },
+    deep_wounds = { 12834, 12849, 12867 },
+    two_handed_weapon_specialization = { 12163, 12711, 12712, 12713, 12714 },
+    impale = { 16493, 16494 },
+    axe_specialization = { 12700, 12781, 12783, 12784, 12785 },
+    sweeping_strikes = { 12292 },
+    mace_specialization = { 12284, 12701, 12702, 12703, 12704 },
+    sword_specialization = { 12281, 12812, 12813, 12814, 12815 },
+    polearm_specialization = { 12165, 12830, 12831, 12832, 12833 },
+    improved_hamstring = { 12289, 12668, 23695 },
+    mortal_strike = { 12294 },
+    booming_voice = { 12321, 12835, 12836, 12837, 12838 },
+    cruelty = { 12320, 12852, 12853, 12855, 12856 },
+    improved_demoralizing_shout = { 12324, 12876, 12877, 12878, 12879 },
+    unbridled_wrath = { 12322, 12999, 13000, 13001, 13002 },
+    improved_cleave = { 12329, 12950, 20496 },
+    piercing_howl = { 12323 },
+    blood_craze = { 16487, 16489, 16492 },
+    improved_battle_shout = { 12318, 12857, 12858, 12860, 12861 },
+    dual_wield_specialization = { 23584, 23585, 23586, 23587, 23588 },
+    improved_execute = { 20502, 20503 },
+    enrage = { 12317, 13045, 13046, 13047, 13048 },
+    improved_slam = { 12862, 12330, 20497, 20498, 20499 },
+    death_wish = { 12328 },
+    improved_intercept = { 20504, 20505 },
+    improved_berserker_rage = { 20500, 20501 },
+    flurry = { 12319, 12971, 12972, 12973, 12974 },
+    bloodthirst = { 23881 },
+    shield_specialization = { 12298, 12724, 12725, 12726, 12727 },
+    anticipation = { 12297, 12750, 12751, 12752, 12753 },
+    improved_bloodrage = { 12301, 12818 },
+    toughness = { 12299, 12761, 12762, 12763, 12764 },
+    iron_will = { 12300, 12959, 12960, 12961, 12962 },
+    last_stand = { 12975 },
+    improved_shield_block = { 12945, 12307, 12944 },
+    improved_revenge = { 12797, 12799, 12800 },
+    defiance = { 12303, 12788, 12789, 12791, 12792 },
+    improved_sunder_armor = { 12308, 12810, 12811 },
+    improved_disarm = { 12313, 12804, 12807 },
+    improved_taunt = { 12302, 12765 },
+    improved_shield_wall = { 12312, 12803 },
+    concussion_blow = { 12809 },
+    improved_shield_bash = { 12311, 12958 },
+    one_handed_weapon_specialization = { 16538, 16539, 16540, 16541, 16542 },
+    shield_slam = { 23922 },
+}
+
 local function idsOf(a)
     local ids = { a.id }
     for _, v in ipairs(a.copy or {}) do
@@ -138,6 +194,26 @@ describe("Forever Warrior", function()
         w.state.query_time = 13.4
         assert.are.equal(13, models.bloodrage.last())
         assert.are.equal("mainhand", models.mainhand.swing)
+    end)
+
+    it("registers the three talent trees, and maps every higher rank spell to its rank 1 for the trait walk", function()
+        local n, aliases = 0, 0
+        for key, ranks in pairs(TALENTS) do
+            n = n + 1
+            assert.are.same({ 0, ranks[1], #ranks }, w.talents[key], key)
+            for r = 2, #ranks do
+                assert.are.equal(ranks[1], w.track[ranks[r]], key .. " rank " .. r)
+            end
+            aliases = aliases + #ranks - 1
+        end
+        local registered, tracked = 0, 0
+        for _ in pairs(w.talents) do
+            registered = registered + 1
+        end
+        for _ in pairs(w.track) do
+            tracked = tracked + 1
+        end
+        assert.are.same({ 52, 52, 120, 120 }, { n, registered, aliases, tracked })
     end)
 
     it("reads the stance, a queued strike and Revenge's window at reset", function()

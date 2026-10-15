@@ -125,8 +125,11 @@ spec:RegisterResource( Enum.PowerType.Rage, {
     },
 } )
 
--- Talents: { node (unused on Forever), the rank 1 spell, max rank }; VirtualState maps the trait walk's spells to them.
+-- Talents: { node (unused on Forever), the rank 1 spell, max rank }, all three trees (wowdb talents WARRIOR); keys are
+-- Classic's where the DB2's name is blank or shared (Weaponmaster, Iron Will, Defiance, the polearm specialization).
+-- VirtualState maps the trait walk's spells to them.
 spec:RegisterTalents( {
+    -- Arms (18)
     improved_heroic_strike           = { 0, 12282, 3 },
     deflection                       = { 0, 16462, 5 },
     improved_rend                    = { 0, 12286, 3 },
@@ -138,13 +141,54 @@ spec:RegisterTalents( {
     deep_wounds                      = { 0, 12834, 3 },
     two_handed_weapon_specialization = { 0, 12163, 5 },
     impale                           = { 0, 16493, 2 },
+    axe_specialization               = { 0, 12700, 5 },
     sweeping_strikes                 = { 0, 12292, 1 },
+    mace_specialization              = { 0, 12284, 5 },
+    sword_specialization             = { 0, 12281, 5 },
+    polearm_specialization           = { 0, 12165, 5 },
     improved_hamstring               = { 0, 12289, 3 },
     mortal_strike                    = { 0, 12294, 1 },
+    -- Fury (17)
+    booming_voice                    = { 0, 12321, 5 },
+    cruelty                          = { 0, 12320, 5 },
+    improved_demoralizing_shout      = { 0, 12324, 5 },
+    unbridled_wrath                  = { 0, 12322, 5 },
+    improved_cleave                  = { 0, 12329, 3 },
+    piercing_howl                    = { 0, 12323, 1 },
+    blood_craze                      = { 0, 16487, 3 },
+    improved_battle_shout            = { 0, 12318, 5 },
+    dual_wield_specialization        = { 0, 23584, 5 },
+    improved_execute                 = { 0, 20502, 2 },
+    enrage                           = { 0, 12317, 5 },
+    improved_slam                    = { 0, 12862, 5 },
+    death_wish                       = { 0, 12328, 1 },
+    improved_intercept               = { 0, 20504, 2 },
+    improved_berserker_rage          = { 0, 20500, 2 },
+    flurry                           = { 0, 12319, 5 },
+    bloodthirst                      = { 0, 23881, 1 },
+    -- Protection (17)
+    shield_specialization            = { 0, 12298, 5 },
+    anticipation                     = { 0, 12297, 5 },
+    improved_bloodrage               = { 0, 12301, 2 },
+    toughness                        = { 0, 12299, 5 },
+    iron_will                        = { 0, 12300, 5 },
+    last_stand                       = { 0, 12975, 1 },
+    improved_shield_block            = { 0, 12945, 3 },
+    improved_revenge                 = { 0, 12797, 3 },
+    defiance                         = { 0, 12303, 5 },
+    improved_sunder_armor            = { 0, 12308, 3 },
+    improved_disarm                  = { 0, 12313, 3 },
+    improved_taunt                   = { 0, 12302, 2 },
+    improved_shield_wall             = { 0, 12312, 2 },
+    concussion_blow                  = { 0, 12809, 1 },
+    improved_shield_bash             = { 0, 12311, 2 },
+    one_handed_weapon_specialization = { 0, 16538, 5 },
+    shield_slam                      = { 0, 23922, 1 },
 } )
 
 -- The higher rank spells of each talent, in case the trait walk names a rank rather than rank 1 (spec §3.6 Track).
 ns.VirtualState.Track( { talents = {
+    -- Arms
     [ 12663 ] = 12282, [ 12664 ] = 12282,
     [ 16463 ] = 16462, [ 16464 ] = 16462, [ 16465 ] = 16462, [ 16466 ] = 16462,
     [ 12658 ] = 12286, [ 12659 ] = 12286,
@@ -155,7 +199,41 @@ ns.VirtualState.Track( { talents = {
     [ 12849 ] = 12834, [ 12867 ] = 12834,
     [ 12711 ] = 12163, [ 12712 ] = 12163, [ 12713 ] = 12163, [ 12714 ] = 12163,
     [ 16494 ] = 16493,
+    [ 12781 ] = 12700, [ 12783 ] = 12700, [ 12784 ] = 12700, [ 12785 ] = 12700,
+    [ 12701 ] = 12284, [ 12702 ] = 12284, [ 12703 ] = 12284, [ 12704 ] = 12284,
+    [ 12812 ] = 12281, [ 12813 ] = 12281, [ 12814 ] = 12281, [ 12815 ] = 12281,
+    [ 12830 ] = 12165, [ 12831 ] = 12165, [ 12832 ] = 12165, [ 12833 ] = 12165,
     [ 12668 ] = 12289, [ 23695 ] = 12289,
+    -- Fury
+    [ 12835 ] = 12321, [ 12836 ] = 12321, [ 12837 ] = 12321, [ 12838 ] = 12321,
+    [ 12852 ] = 12320, [ 12853 ] = 12320, [ 12855 ] = 12320, [ 12856 ] = 12320,
+    [ 12876 ] = 12324, [ 12877 ] = 12324, [ 12878 ] = 12324, [ 12879 ] = 12324,
+    [ 12999 ] = 12322, [ 13000 ] = 12322, [ 13001 ] = 12322, [ 13002 ] = 12322,
+    [ 12950 ] = 12329, [ 20496 ] = 12329,
+    [ 16489 ] = 16487, [ 16492 ] = 16487,
+    [ 12857 ] = 12318, [ 12858 ] = 12318, [ 12860 ] = 12318, [ 12861 ] = 12318,
+    [ 23585 ] = 23584, [ 23586 ] = 23584, [ 23587 ] = 23584, [ 23588 ] = 23584,
+    [ 20503 ] = 20502,
+    [ 13045 ] = 12317, [ 13046 ] = 12317, [ 13047 ] = 12317, [ 13048 ] = 12317,
+    [ 12330 ] = 12862, [ 20497 ] = 12862, [ 20498 ] = 12862, [ 20499 ] = 12862,
+    [ 20505 ] = 20504,
+    [ 20501 ] = 20500,
+    [ 12971 ] = 12319, [ 12972 ] = 12319, [ 12973 ] = 12319, [ 12974 ] = 12319,
+    -- Protection
+    [ 12724 ] = 12298, [ 12725 ] = 12298, [ 12726 ] = 12298, [ 12727 ] = 12298,
+    [ 12750 ] = 12297, [ 12751 ] = 12297, [ 12752 ] = 12297, [ 12753 ] = 12297,
+    [ 12818 ] = 12301,
+    [ 12761 ] = 12299, [ 12762 ] = 12299, [ 12763 ] = 12299, [ 12764 ] = 12299,
+    [ 12959 ] = 12300, [ 12960 ] = 12300, [ 12961 ] = 12300, [ 12962 ] = 12300,
+    [ 12307 ] = 12945, [ 12944 ] = 12945,
+    [ 12799 ] = 12797, [ 12800 ] = 12797,
+    [ 12788 ] = 12303, [ 12789 ] = 12303, [ 12791 ] = 12303, [ 12792 ] = 12303,
+    [ 12810 ] = 12308, [ 12811 ] = 12308,
+    [ 12804 ] = 12313, [ 12807 ] = 12313,
+    [ 12765 ] = 12302,
+    [ 12803 ] = 12312,
+    [ 12958 ] = 12311,
+    [ 16539 ] = 16538, [ 16540 ] = 16538, [ 16541 ] = 16538, [ 16542 ] = 16538,
 } } )
 
 spec:RegisterAuras( {
