@@ -6,6 +6,7 @@
 -- Talent modifiers: only rank 1 of each talent is in the Forever DB2, so a cost modifier is rank 1's value x the rank
 -- (Classic's own convention), floored at 0; cooldown and duration modifiers are modelled only where every rank is in
 -- the DB2 (Improved Taunt, Improved Shield Block). The in-game checkpoint compares the costs (Snapshot cost= / read=).
+-- Unmodelled: Improved Slam's cast and GCD -0.5 s and cooldown -3 s (12862; only its replacement spells are tracked).
 -- Credits: Hekili (registration API and pack format); the abilities, auras, stance swap, queue prediction and the Arms
 -- and Fury priorities are ported from Hekili's Classic profile (origin/classic:Classic/Warrior.lua,
 -- Classic/APLs/WarriorArms.simc, Classic/APLs/WarriorFury.simc); call shapes from archive/TheWarWithin/WarriorArms.lua.
@@ -118,6 +119,8 @@ spec:RegisterResource( Enum.PowerType.Rage, {
         end,
 
         interval = 1,
+        -- shortcut: Improved Bloodrage's +50% (12301) is unmodelled here, VirtualState's entries take a number fixed at
+        -- build; the handler's instant gain carries it. Upgrade if the regen entries learn talent-scaled values.
         value = 1,
     },
 } )
@@ -392,13 +395,13 @@ spec:RegisterAuras( {
 local STANCE_OF_SPELL = { [ 2457 ] = "battle_stance", [ 71 ] = "defensive_stance", [ 2458 ] = "berserker_stance" }
 
 -- A stance change drops all rage above what is kept: Forever's Tactical Mastery passive keeps 10, Improved Tactical
--- Mastery 5 more a rank (its rank 1 reads 15 in the DB2).
+-- Mastery 15 more a rank (DB2: 1310185 keeps $m1 + $12295m1; 12295's m1 is 15). Rage tops out at 100, so no cap.
 spec:RegisterStateFunction( "swap_stance", function( stance )
     removeBuff( "battle_stance" )
     removeBuff( "defensive_stance" )
     removeBuff( "berserker_stance" )
 
-    local kept = ( IsSpellKnown( TACTICAL_MASTERY ) and 10 or 0 ) + 5 * talent.improved_tactical_mastery.rank
+    local kept = ( IsSpellKnown( TACTICAL_MASTERY ) and 10 or 0 ) + 15 * talent.improved_tactical_mastery.rank
     local lost = rage.current - kept
     if lost > 0 then spend( lost, "rage" ) end
 
@@ -476,7 +479,8 @@ spec:RegisterAbilities( {
 
         handler = function ()
             applyBuff( "berserker_rage" )
-            if talent.improved_berserker_rage.enabled then gain( 5 * talent.improved_berserker_rage.rank, "rage" ) end
+            -- DB2 20500: energize 100 (10 rage) a rank.
+            if talent.improved_berserker_rage.enabled then gain( 10 * talent.improved_berserker_rage.rank, "rage" ) end
         end,
     },
 
@@ -509,7 +513,8 @@ spec:RegisterAbilities( {
         toggle = "cooldowns",
 
         handler = function ()
-            gain( 10 + ( talent.improved_bloodrage.rank == 1 and 2 or talent.improved_bloodrage.rank == 2 and 5 or 0 ), "rage" )
+            -- DB2 12301: +50% of the rage Bloodrage generates a rank.
+            gain( 10 * ( 1 + 0.5 * talent.improved_bloodrage.rank ), "rage" )
             applyBuff( "bloodrage" )
         end,
     },
@@ -998,7 +1003,7 @@ spec:RegisterAbilities( {
 
         handler = function ()
             interrupt()
-            if talent.improved_shield_bash.rank == 2 then applyDebuff( "target", "shield_bash_silenced" ) end
+            if talent.improved_shield_bash.rank >= 1 then applyDebuff( "target", "shield_bash_silenced" ) end
         end,
     },
 

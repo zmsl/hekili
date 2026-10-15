@@ -154,12 +154,25 @@ describe("Forever Warrior", function()
         w.game.known[1310185] = true
         e.talent = setmetatable({}, {
             __index = function()
-                return { rank = 2, enabled = true }
+                return { rank = 1, enabled = true }
             end,
         })
         e.swap_stance("berserker_stance")
-        assert.are.same({ 30 }, e.spent) -- 50 rage, 10 + 2 x 5 kept
+        assert.are.same({ 25 }, e.spent) -- 50 rage, 10 + 1 x 15 kept (DB2 12295: 15 a rank)
         assert.are.same({ "berserker_stance" }, e.applied)
+    end)
+
+    it("silences with Shield Bash from rank 1 of Improved Shield Bash", function()
+        local e = lw.env(w)
+        lw.run(w.abilities.shield_bash.handler, e)
+        assert.are.same({}, e.applied)
+        e.talent = setmetatable({}, {
+            __index = function()
+                return { rank = 1, enabled = true }
+            end,
+        })
+        lw.run(w.abilities.shield_bash.handler, e)
+        assert.are.same({ "shield_bash_silenced" }, e.applied) -- DB2 12311: 100% at rank 1
     end)
 
     it("recommends Execute only inside the client's usability window, at the known rank", function()
