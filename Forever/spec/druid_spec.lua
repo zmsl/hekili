@@ -611,6 +611,56 @@ describe("Forever Druid", function()
         assert.is_true(ok())
     end)
 
+    it("registers the Feral, Guardian and Balance packs exactly as tools/make_pack.lua druid prints them", function()
+        local printed = {}
+        local pipe = assert(io.popen("lua5.1 tools/make_pack.lua druid"))
+        for line in pipe:lines() do
+            printed[#printed + 1] = line
+        end
+        pipe:close()
+        assert.are.equal(3, #w.packs)
+        for i, name in ipairs({ "Feral", "Guardian", "Balance" }) do
+            assert.are.same({ name, 20261015, printed[i] }, w.packs[i])
+        end
+        assert.are.equal(w.specID, dofile("tools/packs/druid.lua").spec) -- the packs' spec is the file's
+    end)
+
+    it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
+        local packs = assert(loadfile("tools/make_pack.lua"))("lists", "druid")
+        local secretToken = require("Virtual.State.spec.helpers.load").module().VirtualState.AplSecretToken
+        local shared = { use_items = true } -- Hekili's `all` (Classes.lua's use_items)
+        local kinds = {
+            buff = w.auras,
+            debuff = w.auras,
+            action = w.abilities,
+            cooldown = w.abilities,
+            talent = w.talents,
+            settings = w.settings,
+        }
+        for _, p in ipairs(packs) do
+            for list, entries in pairs(p.lists) do
+                for i, e in ipairs(entries) do
+                    local where = p.name .. " " .. list .. " " .. i
+                    if e.list_name then
+                        assert.is_not_nil(p.lists[e.list_name], where .. ": no list " .. e.list_name)
+                    else
+                        assert.is_true(w.abilities[e.action] ~= nil or shared[e.action], where .. ": no ability " .. e.action)
+                    end
+                    local c = e.criteria or ""
+                    for kind, key in c:gmatch("(%a+)%.([%w_]+)") do
+                        if kinds[kind] then
+                            assert.is_not_nil(kinds[kind][key], where .. ": no " .. kind .. " " .. key)
+                        end
+                    end
+                    assert.is_nil(secretToken(c), where) -- no health or time to die: secret on Forever
+                end
+            end
+        end
+        for _, name in ipairs({ "excess_e", "shred_ok" }) do
+            assert.are.equal("function", type(w.exprs[name]), name)
+        end
+    end)
+
     it("declares its pseudo-spec once, as a placeholder until checkpoint Q1, and the settings the packs read", function()
         assert.are.equal(1499, w.specID)
         for key, default in pairs({ rip_cp = 5, bite_finisher = false, behind = false, buffs = true, dump_rage = 60,

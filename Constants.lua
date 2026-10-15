@@ -250,8 +250,9 @@ ns.Specializations = {
         ranged = false,
         forever = "Warrior" -- the spec name; also selects the Forever path in Hekili:NewSpecialization
     },
-    [1499] = { -- Forever Druid pseudo-spec (Forever/Classes/Druid.lua's DRUID_SPEC): a placeholder until the client's
-        key = "druid", -- ID is read in game (the Druid plan's checkpoint Q1)
+    -- Forever Druid pseudo-spec (Druid.lua's DRUID_SPEC): a placeholder until the client's ID is read (checkpoint Q1)
+    [1499] = {
+        key = "druid",
         class = "DRUID",
         ranged = false,
         forever = "Druid"
