@@ -1,8 +1,8 @@
 -- VirtualState/Adapter.lua
 -- VirtualState's glue to Hekili (spec §3.6, §4.6, §5): VirtualState.Start at PLAYER_LOGIN, the tracked set from the
--- active spec's registrations (SpecChanged), the across-reset feeds (cast history, the real queue's cast and
--- channel events, the swing fields), and Drain: the fold plus "apply through the spec", which runs each of our real
--- casts through Hekili's own registered functions on `state` and records what changed as `modelled` samples.
+-- active spec's registrations (SpecChanged), the swing feed (the swing fields), and Drain: the fold plus "apply
+-- through the spec", which runs each of our real casts through Hekili's own registered functions on `state` and records
+-- what changed as `modelled` samples.
 -- Loads after Core.lua. The apply follows Hekili's own simulation (Core.lua:1984-2045) and keeps Hekili's credits.
 
 local addon, ns = ...
@@ -217,64 +217,6 @@ end
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Feeding Hekili's across-reset caches (spec §4.6), synchronously in VirtualState's handlers, where CLEU did it.
-
-local function abilityOf(a)
-    local key = I.ab.key[a]
-    return key, key and class.abilities[key]
-end
-
-I.feed.CastSucceeded = function(a, spellID, guid)
-    local key, ability = abilityOf(a)
-    if not ability then
-        return
-    end
-    state:RemoveSpellEvent(key, true, "CAST_FINISH") -- as CLEU SPELL_CAST_SUCCESS (Events.lua:1613-1614)
-    state:AddToHistory(key, guid) -- the only writer of the cast history (Events.lua:912-943)
-end
-
-I.feed.CastStart = function(a, start, finish, guid)
-    local key, ability = abilityOf(a)
-    if ability and not ability.channeled then
-        -- as CLEU SPELL_CAST_START (Events.lua:1579); UNIT_SPELLCAST_DELAYED re-queues it (Events.lua:1076-1089).
-        -- `guid` is nil when the target's GUID was secret or absent: never read it here (it may be secret).
-        state:QueueEvent(key, start, finish, "CAST_FINISH", guid, true)
-    end
-end
-
-I.feed.CastFailed = function(a)
-    local key, ability = abilityOf(a)
-    if not ability then
-        return
-    end
-    -- as CLEU SPELL_CAST_FAILED (Events.lua:1603-1606)
-    if state:RemoveSpellEvent(key, true, "CAST_FINISH") and ability.isProjectile then
-        state:RemoveSpellEvent(key, true, "PROJECTILE_IMPACT", true)
-    end
-end
-
-I.feed.ChannelStart = function(a, start, finish, guid)
-    local key, ability = abilityOf(a)
-    if not ability then
-        return
-    end
-    -- as CLEU SPELL_CAST_SUCCESS of a channel (Events.lua:1627-1635)
-    state:QueueEvent(key, start, finish, "CHANNEL_FINISH", guid, true)
-    local tickTime = ability.tick_time or (ability.aura and class.auras[ability.aura].tick_time)
-    if tickTime and tickTime > 0 then
-        local tick = tickTime
-        while start + tick < finish do
-            state:QueueEvent(key, start, start + tick, "CHANNEL_TICK", guid, true)
-            tick = tick + tickTime
-        end
-    end
-end
-
-I.feed.ChannelStop = function(a)
-    local key, ability = abilityOf(a)
-    if ability then
-        state:RemoveSpellEvents(key, true) -- ticks, finish, impacts (Events.lua:1609-1610)
-    end
-end
 
 -- The swing fields the dead CLEU SWING_* branch wrote (Events.lua:1684-1699), read by the swing regen models.
 I.feed.Swing = function(hand, t, duration)

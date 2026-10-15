@@ -178,26 +178,12 @@ function E.CreateFrame(...)
     return f
 end
 
--- One client event: (1) the sources (once Start has run), (2) the payload, (3) every matching subscriber in
--- subscription order, through its current OnEvent script. Each slot is gated into a local, so a nested client event
--- is delivered in its own call with its own values. Allocates nothing.
-local function onEvent(_, event, r1, r2, r3, r4, r5, r6, r7, r8)
-    local api = I.api or client
-    local a1, a2, a3, a4 = Plain(api, r1), Plain(api, r2), Plain(api, r3), Plain(api, r4)
-    local a5, a6, a7, a8 = Plain(api, r5), Plain(api, r6), Plain(api, r7), Plain(api, r8)
-    if I.api then
-        S.Run(api, event, a1, a2, a3, a4, a5)
-    end
-    local h = I.hekili -- the trace (§5): one line per event while Hekili makes a snapshot
-    if h and h.ActiveDebug then
-        pcall(h.Debug, h, "[vs] event %s(%s, %s, %s)", event, tostring(a1), tostring(a2), tostring(a3))
-    end
+-- Calls every subscriber of `event` whose units match, in subscription order, through its current OnEvent script; a
+-- raising handler is reported and the loop goes on. Allocates nothing.
+local function deliver(event, a1, a2, a3, a4, a5, a6, a7, a8)
     local list = SUB[event]
     if not list then
         return
-    end
-    if event == "UNIT_AURA" then
-        a2 = AURA_INFO[a1]
     end
     E.depth = E.depth + 1
     for k = 1, list.n do -- a subscription made during this delivery is appended and starts with the next event
@@ -208,7 +194,12 @@ local function onEvent(_, event, r1, r2, r3, r4, r5, r6, r7, r8)
                 local fn = f:GetScript("OnEvent")
                 if fn then
                     E.delivered = E.delivered + 1
-                    local ok, err = pcall(fn, f, event, a1, a2, a3, a4, a5, a6, a7, a8)
+                    local ok, err
+                    if event == "COMBAT_LOG_EVENT_UNFILTERED" then
+                        ok, err = pcall(fn, f, event) -- no payload, as the client delivers it
+                    else
+                        ok, err = pcall(fn, f, event, a1, a2, a3, a4, a5, a6, a7, a8)
+                    end
                     if not ok then
                         E.errors, E.lastError = E.errors + 1, err
                         local handler = client.geterrorhandler
@@ -222,9 +213,36 @@ local function onEvent(_, event, r1, r2, r3, r4, r5, r6, r7, r8)
     end
     E.depth = E.depth - 1
 end
+E.Deliver = deliver
+
+-- One client event: (1) the sources (once Start has run), (2) the payload, (3) every matching subscriber, (4) the
+-- combat-log rows it completed (CombatLog.lua). Each slot is gated into a local, so a nested client event is
+-- delivered in its own call with its own values. Allocates nothing.
+local function onEvent(_, event, r1, r2, r3, r4, r5, r6, r7, r8)
+    local api = I.api or client
+    local a1, a2, a3, a4 = Plain(api, r1), Plain(api, r2), Plain(api, r3), Plain(api, r4)
+    local a5, a6, a7, a8 = Plain(api, r5), Plain(api, r6), Plain(api, r7), Plain(api, r8)
+    if I.api then
+        S.Run(api, event, a1, a2, a3, a4, a5)
+    end
+    local h = I.hekili -- the trace (§5): one line per event while Hekili makes a snapshot
+    if h and h.ActiveDebug then
+        pcall(h.Debug, h, "[vs] event %s(%s, %s, %s)", event, tostring(a1), tostring(a2), tostring(a3))
+    end
+    if event == "UNIT_AURA" then
+        a2 = AURA_INFO[a1]
+    end
+    deliver(event, a1, a2, a3, a4, a5, a6, a7, a8)
+    I.Log.Deliver()
+end
 
 local function onUpdate()
     S.Flush()
+    local api = I.api
+    if api then
+        I.Log.Tick(api.GetTime()) -- closes pairing windows (deferred rows)
+    end
+    I.Log.Deliver()
 end
 
 local function makeFrame(createFrame)

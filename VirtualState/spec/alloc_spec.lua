@@ -1,6 +1,6 @@
 -- VirtualState/spec/alloc_spec.lua (spec §2, §11): 10,000 mixed events (PLAYER_SWING, UNIT_POWER_FREQUENT,
 -- usability, own casts, UNIT_AURA) with a drain every tick against the fake spec, every accessor and every facade
--- policy and passthrough called: VirtualState allocates nothing.
+-- policy and passthrough called, every combat-log row delivered to a subscriber: VirtualState allocates nothing.
 local load = require("VirtualState.spec.helpers.load")
 local fake = require("VirtualState.spec.helpers.fake_api")
 local fs = require("VirtualState.spec.helpers.fake_spec")
@@ -48,6 +48,12 @@ describe("zero allocation", function()
             return false
         end
         load.adapter(ns, h)
+        local sink = I.Events.CreateFrame("Frame") -- a combat-log subscriber: the rows ride along
+        local GetInfo = Facade.CombatLogGetCurrentEventInfo
+        sink:SetScript("OnEvent", function()
+            GetInfo()
+        end)
+        sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
         VS.Start(api)
         VS.SpecChanged()
         ctl.auras.player.HELPFUL[1] = { spellId = fs.SHOUT, expirationTime = 1e9, applications = 0 }

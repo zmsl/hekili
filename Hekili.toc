@@ -35,6 +35,7 @@ VirtualState\Sources\Totems.lua
 VirtualState\Snapshot.lua
 VirtualState\AplWarnings.lua
 VirtualState\EventFacade.lua
+VirtualState\CombatLog.lua
 VirtualState\Facade.lua
 
 Hekili.lua

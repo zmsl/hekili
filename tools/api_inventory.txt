@@ -102,7 +102,7 @@ GetSpellCritChance	hybrid
 GetSpellLink	virtual
 GetStablePetInfo	passthrough
 GetTalentInfoByID	virtual
-GetTime	passthrough
+GetTime	hybrid
 GetTotemInfo	hybrid
 GetUnitSpeed	hybrid
 HasOverrideActionBar	passthrough

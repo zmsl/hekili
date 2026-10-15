@@ -1,5 +1,5 @@
 -- VirtualState/spec/adapter_spec.lua: Adapter.lua against the fake spec provider (spec §3.6, §4.6, §5): the tracked
--- set from the registrations, the across-reset feeds, and Drain's apply through the spec (the read-before /
+-- set from the registrations, the swing feed, and Drain's apply through the spec (the read-before /
 -- read-after diff as `modelled` samples, two full resets, the offset restored, `updated` marked). The apply against
 -- the real `state` is verified in game (spec §11).
 local load = require("VirtualState.spec.helpers.load")
@@ -104,18 +104,15 @@ describe("Adapter", function()
         assert.are.same({ 2, 4, 0 }, { I.res.swing[1], I.res.swingValue[1], I.res.swingOff[1] })
     end)
 
-    it("feeds the cast history and the real queue from our own cast events, and asks for a cycle", function()
+    it("leaves the cast history and the real queue to the combat-log rows, asks for a cycle, feeds the swing", function()
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
-        assert.are.same({ "rend" }, state.history)
-        assert.are.same({ "rend:CAST_FINISH" }, state.removed)
-        assert.are.same({ "UNIT_SPELLCAST_SUCCEEDED" }, h.forced)
-        ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-2", fs.REND) -- never STARTed: the source ignores it
-        assert.are.same({ "rend:CAST_FINISH" }, state.removed)
         ctl.casting = { 1000, 2500 }
         ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-3", fs.REND)
-        assert.are.same({ "rend:CAST_FINISH" }, state.queue)
         ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-3", fs.REND)
-        assert.are.same({ "rend:CAST_FINISH", "rend:CAST_FINISH" }, state.removed)
+        assert.are.same({}, state.history) -- CLEU_HANDLER writes them from the rows (cleu_rows_spec)
+        assert.are.same({}, state.removed)
+        assert.are.same({}, state.queue)
+        assert.are.same({ "UNIT_SPELLCAST_SUCCEEDED", "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_FAILED" }, h.forced)
         ctl.Fire("PLAYER_SWING", 2.6, 0)
         assert.are.same({ 1, 3.6 }, { state.swings.mh_actual, state.swings.mh_projected })
     end)
@@ -163,12 +160,10 @@ describe("Adapter", function()
         ctl.now = 10
         ctl.casting = { 10000, 11500 }
         ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-3", 1464)
-        assert.are.same({ "slam_test:CAST_FINISH" }, state.queue) -- the real queue's finish, as CLEU queued it
         ctl.Tick(10.05)
         ctl.now = 11.5
         ctl.casting = nil
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-3", 1464)
-        assert.are.same({ "slam_test:CAST_FINISH" }, state.removed) -- removed on success
         ctl.Tick(11.55)
         ctl.now = 11.6
         VS.Drain(11.6)
@@ -179,7 +174,7 @@ describe("Adapter", function()
         assert.are.same({ 0, 0, 2 }, { state.offset, state.delay, state.resets })
     end)
 
-    it("applies a channel at its start and feeds its finish and ticks; CHANNEL_STOP removes them", function()
+    it("applies a channel at its start", function()
         local ran = false
         register("drain_test", {
             id = 5555,
@@ -196,10 +191,6 @@ describe("Adapter", function()
         ctl.now = 20
         ctl.channel = { 20000, 23000 }
         ctl.Fire("UNIT_SPELLCAST_CHANNEL_START", "player", "Cast-4", 5555)
-        assert.are.same(
-            { "drain_test:CHANNEL_FINISH", "drain_test:CHANNEL_TICK", "drain_test:CHANNEL_TICK" },
-            state.queue
-        )
         ctl.Tick(20.05)
         ctl.now = 20.1
         VS.Drain(20.1)
@@ -208,8 +199,6 @@ describe("Adapter", function()
         near(30, cd.est) -- the cooldown step at the channel's start
         assert.are.equal("modelled", cd.basis)
         assert.are.same({ 0, 0, 2 }, { state.offset, state.delay, state.resets })
-        ctl.Fire("UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-4", 5555)
-        assert.are.same({ "drain_test:all" }, state.removed)
     end)
 
     it("folds a swing staged this frame before poll 3 clears the queued strike: the swing is skipped as paid", function()
@@ -331,27 +320,6 @@ describe("Adapter", function()
         VS.Drain(42.1)
         assert.are_not.equal(gen, VS.AuraGen("target")) -- rend's debuff moved the target's set
         assert.are.same({ 2, false, false }, { state.resets, state.player.updated, state.target.updated })
-    end)
-
-    it("queues a hard cast's finish with a nil target when the sent GUID is unknown, reading no GUID", function()
-        register("slam_test", { id = 1464, cast = 1.5, cooldown = 0 })
-        VS.SpecChanged()
-        local target, calls = false, 0
-        function state:QueueEvent(key, start, finish, eType, guid)
-            target = guid
-        end
-        local unitGUID = api.UnitGUID
-        api.UnitGUID = function(unit)
-            calls = calls + 1
-            return unitGUID(unit)
-        end
-        I.sentGUID = nil
-        ctl.now = 50
-        ctl.casting = { 50000, 51500 }
-        ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-7", 1464)
-        api.UnitGUID = unitGUID
-        assert.is_nil(target)
-        assert.are.equal(0, calls)
     end)
 
     it("runs no reset when the log holds no own cast", function()

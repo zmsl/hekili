@@ -171,8 +171,7 @@ ns.RegisterEvent = function( event, handler )
     handlers[ event ] = handlers[ event ] or {}
     insert( handlers[ event ], handler )
 
-    -- Forever forbids CLEU registration on addon frames; Phase 3b delivers a virtual combat log to the handler.
-    if event ~= "FRAME_UPDATE" and event ~= "COMBAT_LOG_EVENT_UNFILTERED" then events:RegisterEvent( event ) end
+    if event ~= "FRAME_UPDATE" then events:RegisterEvent( event ) end
 
     local key = event .. "_" .. #handlers[event]
     Hekili:ProfileCPU( key, handler )
@@ -195,7 +194,7 @@ ns.UnregisterEvent = function( event, handler )
         end
     end
 
-    if #hands == 0 and event ~= "COMBAT_LOG_EVENT_UNFILTERED" then events:UnregisterEvent( event ) end
+    if #hands == 0 then events:UnregisterEvent( event ) end
 end
 local UnregisterEvent = ns.UnregisterEvent
 

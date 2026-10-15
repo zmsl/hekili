@@ -1,7 +1,8 @@
 -- VirtualState/Sources/Casts.lua
--- Own-cast sources (spec §4.2, §4.6): our UNIT_SPELLCAST_* events become staged observations (urgent lane) and,
--- synchronously in the handler, feed Hekili's across-reset caches through the hooks Adapter.lua sets in `I.feed`
--- (cast history, the real queue's CAST_FINISH and channel events, their removal). Poll 3: the on-next-swing queue.
+-- Own-cast sources (spec §4.2; event-facade spec §2.4): our UNIT_SPELLCAST_* events become staged observations
+-- (urgent lane) and the combat log's own-cast rows (SPELL_CAST_START, _SUCCESS, _FAILED, a channel's
+-- SPELL_AURA_REMOVED), which Hekili's CLEU handler turns into its cast history and real queue as on retail. Poll 3:
+-- the on-next-swing queue.
 -- Credits: secret-value handling after Catnip's (Durts) research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Casts.lua (castGUID matching: castStopped, isChannel).
 
@@ -12,6 +13,12 @@ local Obs = VS.Obs
 local Plain, Stage, Direct, Urgent = S.Plain, S.Stage, S.Direct, S.Urgent
 
 I.sentGUID = nil
+
+local function readPlayer(api)
+    I.Log.player = Plain(api, api.UnitGUID("player")) or ""
+end
+S.OnStart(readPlayer)
+S.On("PLAYER_ENTERING_WORLD", nil, readPlayer)
 
 -- The castGUIDs of our cast and channel in progress (plain strings; nil none or secret). Only these stop, delay or
 -- update them: a second press that fails ("another action is in progress") has another castGUID.
@@ -37,10 +44,7 @@ S.On("UNIT_SPELLCAST_START", "player", function(api, t, unit, guid, spellID)
     local start, finish = Plain(api, rawStart), Plain(api, rawEnd)
     if type(start) == "number" and type(finish) == "number" then
         Stage(Obs.CastStart, t, a, finish / 1000)
-        local f = I.feed.CastStart
-        if f then
-            f(a, start / 1000, finish / 1000, I.sentGUID)
-        end
+        I.Log.Cast("SPELL_CAST_START", t, spellID, I.sentGUID) -- "" when unknown: CLEU falls back to the target
     end
     Urgent("UNIT_SPELLCAST_START")
 end)
@@ -51,10 +55,7 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
         return
     end
     Stage(Obs.CastSuccess, t, a)
-    local f = I.feed.CastSucceeded
-    if f then
-        f(a, spellID, I.sentGUID or Plain(api, api.UnitGUID("target")))
-    end
+    I.Log.Cast("SPELL_CAST_SUCCESS", t, spellID, I.sentGUID or Plain(api, api.UnitGUID("target")))
     I.sentGUID = nil
     Urgent("UNIT_SPELLCAST_SUCCEEDED")
 end)
@@ -67,10 +68,7 @@ local function stopped(api, t, unit, guid, spellID)
     end
     castGUID = nil
     Stage(Obs.CastStop, t, a)
-    local f = I.feed.CastFailed
-    if f then
-        f(a)
-    end
+    I.Log.Cast("SPELL_CAST_FAILED", t, spellID, nil)
     Urgent("UNIT_SPELLCAST_FAILED")
 end
 S.On("UNIT_SPELLCAST_FAILED", "player", stopped)
@@ -98,11 +96,7 @@ S.On("UNIT_SPELLCAST_CHANNEL_START", "player", function(api, t, unit, guid, spel
     local _, _, _, rawStart, rawEnd = api.UnitChannelInfo("player") -- secret: both through Plain next
     local start, finish = Plain(api, rawStart), Plain(api, rawEnd)
     if type(start) == "number" and type(finish) == "number" then
-        Stage(Obs.ChannelStart, t, a, finish / 1000)
-        local f = I.feed.ChannelStart
-        if f then
-            f(a, start / 1000, finish / 1000, I.sentGUID or Plain(api, api.UnitGUID("target")))
-        end
+        Stage(Obs.ChannelStart, t, a, finish / 1000) -- its SPELL_CAST_SUCCESS row comes from UNIT_SPELLCAST_SUCCEEDED
     end
     Urgent("UNIT_SPELLCAST_CHANNEL_START")
 end)
@@ -135,10 +129,7 @@ S.On("UNIT_SPELLCAST_CHANNEL_STOP", "player", function(api, t, unit, guid, spell
         return
     end
     Stage(Obs.ChannelStop, t, a)
-    local f = I.feed.ChannelStop
-    if f then
-        f(a)
-    end
+    I.Log.Cast("SPELL_AURA_REMOVED", t, spellID, I.Log.player)
     Urgent("UNIT_SPELLCAST_CHANNEL_STOP")
 end)
 

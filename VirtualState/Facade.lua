@@ -642,7 +642,7 @@ end, "player plain [W PR9]; target secret [W PR8]; TargetCast()")
 ----------------------------------------------------------------------------------------------------------------------
 -- Combat log, talents, spells and items: absent on Forever, or replaced
 
-kept("CombatLogGetCurrentEventInfo", "virtual", nothing, "absent; registering CLEU is forbidden (Phases 2 and 3)")
+kept("CombatLogGetCurrentEventInfo", "virtual", I.Log.Current, "absent; the row being delivered (event-facade §2.4)")
 kept("GetTalentInfoByID", "virtual", nothing, "dead on Forever [W PR5]; ranks come from VirtualState.Talent")
 kept("IsUsableSpell", "passthrough", function(spellID)
     if realIsSpellUsable then
@@ -657,6 +657,18 @@ kept("IsHelpfulSpell", "virtual", isFalse, "absent on Forever")
 kept("IsPassiveSpell", "virtual", isFalse, "absent on Forever")
 kept("GetItemGem", "virtual", nothing, "absent on Forever")
 kept("GetItemInfo", "virtual", nothing, "absent on Forever")
+
+----------------------------------------------------------------------------------------------------------------------
+-- The clock: the client's, except while a back-dated row is delivered (event-facade spec §3, decision 5)
+
+kept("GetTime", "hybrid", function()
+    local b = I.backdate
+    if b then
+        modelled = true
+        return b
+    end
+    return GetTime()
+end, "plain [W]; a back-dated combat-log row's observed time while it is delivered")
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Frames: the event facade's entry point (event-facade spec §2.1)
@@ -743,7 +755,6 @@ local PASSTHROUGH = {
     { "GetShapeshiftFormInfo", "plain [W PR10]" },
     { "GetSpecializationInfoByID", "unprobed" },
     { "GetStablePetInfo", "unprobed" },
-    { "GetTime", "plain [W]" },
     { "HasOverrideActionBar", "unprobed" },
     { "HasVehicleActionBar", "unprobed" },
     { "InCombatLockdown", "plain [W §3; lags at PLAYER_REGEN_DISABLED]" },
