@@ -247,7 +247,8 @@ function I.CostOf(a)
     return c
 end
 
---- Ability a's declared cost, before any cost modifier (0 when it has none). Allocates nothing.
+--- Ability a's declared cost, before any cost modifier (0 when it has none); a cost between 0 and 1 is that fraction
+--- of its resource's believed maximum, as Hekili's simulation prices it (State.lua's spend). Allocates nothing.
 function I.BaseCostOf(a)
     local obj = I.ab.obj[a]
     local c = obj.baseSpend -- the declared cost before the simulation's modifiers (Races.lua)
@@ -257,7 +258,13 @@ function I.BaseCostOf(a)
     if type(c) == "function" then
         c = c()
     end
-    return type(c) == "number" and c or 0
+    if type(c) ~= "number" then
+        return 0
+    end
+    if c > 0 and c < 1 and A.slot[a] > 0 then
+        c = c * I.res.max[A.slot[a]]
+    end
+    return c
 end
 
 local function ageConf(rec, now)

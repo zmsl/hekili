@@ -127,6 +127,24 @@ describe("Adapter", function()
         assert.are.same({ 2, 4, 0 }, { I.res.swing[1], I.res.swingValue[1], I.res.swingOff[1] })
     end)
 
+    it("forwards a regenerating resource's rest as a flag and a swing entry's `aura` as its gate", function()
+        local got
+        local build = I.Build
+        I.Build = function(def, t)
+            got = def
+            return build(def, t)
+        end
+        VS.SpecChanged()
+        assert.are.same({ false, nil }, { got.resources[1].rest, got.resources[1].swingAura })
+        ns.ResourceRegenerates = function(k)
+            return k == "rage"
+        end
+        h.Class.resources.rage.state.regenModel.mainhand.aura = "bear_form"
+        VS.SpecChanged()
+        I.Build = build
+        assert.are.same({ true, "bear_form" }, { got.resources[1].rest, got.resources[1].swingAura })
+    end)
+
     it("leaves the cast history, the real queue and the swing fields to the combat-log rows, asks for a cycle", function()
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
         ctl.casting = { 1000, 2500 }

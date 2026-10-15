@@ -20,15 +20,19 @@ I.PIN_EXACT = 0.15
 local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 
 -- By resource slot r. `swing[r]` is the hand that pays it (1 main, 2 off; 0: continuous regen) and `swingOff[r]` the
--- off hand's own value when both hands pay it (0: none). Continuous regen is per second (regE/regL/regH); a swing-paid
--- resource's step is the spec's model value of that hand x scale (spread around it).
+-- off hand's own value when both hands pay it (0: none); `swingAura[r]` the player aura index its swings need (0: none;
+-- -1: named but not tracked, so no swing pays). Continuous regen is per second (regE/regL/regH); a swing-paid
+-- resource's step is the spec's model value of that hand x scale (spread around it). `restMax[r]`: a regenerating
+-- resource rests at its maximum (energy, mana), the others at 0 (rage).
 local R = {
     n = 0,
     type = {},
     token = {},
     max = {},
     rest = {},
+    restMax = {},
     swing = {},
+    swingAura = {},
     swingValue = {},
     swingOff = {},
     est0 = {},
@@ -116,6 +120,22 @@ local function clamp(v, max)
     return v
 end
 
+-- Slot r's maximum becomes m. A slot resting at its maximum rests at the new one, and its estimate and upper bound rise
+-- by an increase (seeded at 100, a plain read of 1200 believes 1200), kept out of the regen measurement; a decrease
+-- never lowers them here. Allocates nothing.
+local function setMax(r, m)
+    local up = m - R.max[r]
+    R.max[r] = m
+    if R.restMax[r] then
+        R.rest[r] = m
+        if up > 0 then
+            R.est0[r] = clamp(R.est0[r] + up, m)
+            R.hi0[r] = clamp(R.hi0[r] + up, m)
+            R.pinDelta[r] = R.pinDelta[r] + up
+        end
+    end
+end
+
 I.OnBuild(function(def, now)
     for k in pairs(R.slotOf) do
         R.slotOf[k] = nil
@@ -131,7 +151,8 @@ I.OnBuild(function(def, now)
         R.slotOf[d.type], R.slotOfToken[d.token] = r, r
         R.maxDef[r], R.maxMods[r], R.maxRead[r] = d.max, d.maxMods, false
         R.max[r] = maxOf(r)
-        R.rest[r] = d.rest or 0
+        R.restMax[r] = d.rest == true
+        R.rest[r] = R.restMax[r] and R.max[r] or 0
         R.swing[r] = d.swing or 0
         R.swingValue[r] = d.swingValue or 0
         R.swingOff[r] = d.swingOff or 0
@@ -150,6 +171,16 @@ I.OnBuild(function(def, now)
         I.Sample(R.regen[r], "default", rate, now, 0)
     end
     I.TRACKED.resource = R.type
+    for r = 1, R.n do
+        local name = list[r].swingAura
+        local j = name == nil and 0 or -1
+        for i = 1, #def.auras do
+            if def.auras[i].key == name then
+                j = i
+            end
+        end
+        R.swingAura[r] = j
+    end
     G.n = 0
     -- shortcut: a build in combat (a /reload, a spec change) times the combat entries from the build, not the pull;
     -- the next pull's CombatStart sets the real start.
@@ -183,8 +214,13 @@ I.OnBuild(function(def, now)
 end)
 
 --- The spec's per-swing value of a swing-paid slot for `hand` (2: the off hand's `swingOff`; else the paying hand's): a
---- number, or the model's state-bound function. Allocates nothing.
+--- number, or the model's state-bound function; 0 while the slot's swing aura is not believed up at the clock (its
+--- application after it, or its expiry at or before it). Allocates nothing.
 function I.SwingValue(r, hand)
+    local j = R.swingAura[r]
+    if j < 0 or j > 0 and (I.auras.exp0[1][j] <= I.clock or I.auras.applied[1][j] > I.clock) then
+        return 0 -- unit 1 is always "player" (Adapter.lua's def.units)
+    end
     local v = R.swingValue[r]
     if hand == 2 and R.swing[r] == 1 then
         v = R.swingOff[r]
@@ -429,7 +465,8 @@ I.On(Obs.Read, function(o, t, lag)
         end
     elseif c == ReadOf.Max then
         if o.b > 0 then
-            R.max[r], R.maxRead[r] = o.b, true -- a plain read wins over the declared maximum from now on
+            setMax(r, o.b)
+            R.maxRead[r] = true -- a plain read wins over the declared maximum from now on
         end
     elseif c == ReadOf.Regen and R.swing[r] == 0 then
         R.decl[r], R.readT[r] = o.b, t
@@ -483,7 +520,7 @@ I.On(Obs.CombatEnd, function()
     for r = 1, R.n do
         R.decay[r] = decayOf(r)
         if not R.maxRead[r] then
-            R.max[r] = maxOf(r)
+            setMax(r, maxOf(r))
         end
         if R.rest[r] < R.lo0[r] then
             R.lo0[r] = R.rest[r]

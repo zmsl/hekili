@@ -117,14 +117,14 @@ local function buildDef()
     local slotByKey = {}
     for _, k in ipairs(sortedKeys(class.resources)) do
         local r = class.resources[k]
-        local swing, value, offValue, auraRegen = 0, nil, nil, nil
+        local swing, value, offValue, auraRegen, swingAura = 0, nil, nil, nil, nil
         local model = r.state and r.state.regenModel
         if model then
             for _, m in pairs(model) do
                 if m.swing == "offhand" then
                     offValue = m.value
                 elseif m.swing and HANDS[m.swing] and swing == 0 then
-                    swing, value = HANDS[m.swing], m.value
+                    swing, value, swingAura = HANDS[m.swing], m.value, m.aura -- `aura`: swings pay only while it is up
                 elseif not (m.swing or m.debuff or m.channel or m.spec or m.equip or m.set_bonus or m.setting) then
                     auraRegen = auraRegen or {}
                     -- a player aura's regen { aura, interval, value }, or without `aura` a periodic one credited in
@@ -142,10 +142,11 @@ local function buildDef()
             type = r.type,
             token = k:upper(),
             max = r.state and r.state.meta and r.state.meta.max or 100, -- a number or a state-bound function
-            rest = ns.ResourceRegenerates(k) and 100 or 0,
+            rest = ns.ResourceRegenerates(k) == true, -- a regenerating resource rests at its maximum (Resources.lua)
             swing = swing,
             swingValue = value,
             swingOff = offValue,
+            swingAura = swingAura,
             auraRegen = auraRegen,
             decay = r.state and r.state.meta and r.state.meta.decay, -- out-of-combat loss per second (Resources.lua)
         }

@@ -36,7 +36,7 @@ describe("resources", function()
                 abilities = { { key = "finisher", spend = 25 }, { key = "builder", spend = 40 } },
                 abilityIds = { { 1001 }, { 1002 } },
                 abilitySlot = { 1, 1 },
-                resources = { { key = "energy", type = ENERGY, token = "ENERGY", max = 100, rest = 100, regen = 10 } },
+                resources = { { key = "energy", type = ENERGY, token = "ENERGY", max = 100, rest = true, regen = 10 } },
                 auras = {},
                 auraIds = {},
                 talents = {},
@@ -71,6 +71,10 @@ describe("resources", function()
             within(10 + I.ALPHA * 10, rr.est)
             assert.is_true(rr.lo < rr.est and rr.est < rr.hi)
             assert.are.equal("modelled", rr.basis)
+        end)
+
+        it("rests at its maximum of 100, as before rest became a flag", function()
+            assert.are.same({ 100, 100 }, { VS.Power(ENERGY, 1).est, I.res.rest[1] })
         end)
 
         it("pins an exact plain read and widens a late one by the regen spread", function()
@@ -335,6 +339,173 @@ describe("resources", function()
                 I.Settle(t)
                 VS.Power(fs.RAGE, t + 0.5)
             end, 10000)
+            assert.are.equal(0, bytes)
+        end)
+    end)
+    describe("a resource resting at its maximum, and a fractional cost (mana, 0.55 of the maximum)", function()
+        local MANA, FORM, BIG = 0, 1, 2
+        local def
+
+        before_each(function()
+            def = {
+                abilities = { { key = "form", spend = 0.55 }, { key = "big", spend = 1200 } },
+                abilityIds = { { 768 }, { 1001 } },
+                abilitySlot = { 1, 1 },
+                resources = { { key = "mana", type = MANA, token = "MANA", max = 100, rest = true } },
+                auras = { { key = "clearcasting", id = 16870 } },
+                auraIds = { { 16870 } },
+                talents = {},
+                units = { "player", "target" },
+            }
+            boot(def)
+        end)
+
+        local function maxRead(t, v)
+            obs(Obs.Read, t, 1, v, I.ReadOf.Max)
+            I.Fold(t, false)
+        end
+
+        it("seeds at its declared maximum, and a plain maximum read moves the rest and raises the estimate", function()
+            assert.are.same({ 100, 100, 100 }, { VS.Power(MANA, 1).est, I.res.rest[1], I.res.max[1] })
+            maxRead(2, 1200)
+            local m = VS.Power(MANA, 2)
+            assert.are.same({ 1200, 1200, 1200, 1200 }, { m.est, m.hi, I.res.rest[1], I.res.max[1] })
+            assert.are.equal(1100, I.res.pinDelta[1]) -- kept out of the next regen measurement
+        end)
+
+        it("raises the estimate only by an increase; a lower maximum only caps it", function()
+            I.ResourceShift(1, -60, 2, Obs.CastSuccess) -- 40 of 100
+            maxRead(3, 1200)
+            assert.are.equal(1140, VS.Power(MANA, 3).est)
+            maxRead(4, 1000)
+            assert.are.same({ 1000, 1000, 1000 }, { VS.Power(MANA, 4).est, I.res.max[1], I.res.rest[1] })
+        end)
+
+        it("prices a cost below 1 as that fraction of the maximum; a cost of 1 or more is unchanged", function()
+            within(55, I.CostOf(FORM)) -- 0.55 x the declared 100
+            assert.are.equal(1200, I.CostOf(BIG))
+            maxRead(2, 1200)
+            assert.are.same({ 660, 1200 }, { I.CostOf(FORM), I.CostOf(BIG) })
+        end)
+
+        it("pins the ladder at 660 when the form reads usable and below 660 when it reads short", function()
+            maxRead(2, 1200)
+            I.ResourceShift(1, -1000, 2, Obs.CastSuccess) -- 200 believed
+            obs(Obs.Usable, 3, FORM, 1, 0)
+            I.Fold(3, false)
+            local m = VS.Power(MANA, 3)
+            assert.are.same({ 660, 660 }, { m.est, m.lo })
+            obs(Obs.Usable, 4, FORM, 0, 1)
+            I.Fold(4, false)
+            within(660 - I.EPS, VS.Power(MANA, 4).hi)
+        end)
+
+        it("pays 660 at the cast's cost step, and 330 under a cost modifier pct = -0.5", function()
+            maxRead(2, 1200)
+            obs(Obs.CastSuccess, 3, FORM)
+            I.Fold(3, false)
+            assert.are.equal(540, VS.Power(MANA, 3).est)
+            def.resources[1].costMods = { { aura = "clearcasting", pct = -0.5 } }
+            I.Build(def, 4)
+            maxRead(4, 1200)
+            I.AuraModel(1, 1, 4, 19, 1, 4, Obs.CastSuccess, false)
+            I.Settle(5)
+            assert.are.equal(330, I.CostOf(FORM))
+            obs(Obs.CastSuccess, 6, FORM)
+            I.Fold(6, false)
+            assert.are.equal(870, VS.Power(MANA, 6).est)
+        end)
+
+        it("allocates nothing over 1000 maximum reads (setMax) and fractional casts", function()
+            local t = 2
+            local bytes = alloc.bytes(function(i)
+                t = t + 1
+                maxRead(t, i % 2 == 0 and 1200 or 1300)
+                obs(Obs.CastSuccess, t + 0.5, FORM)
+                I.Fold(t + 0.5, false)
+                VS.Power(MANA, t + 0.6)
+            end, 1000)
+            assert.are.equal(0, bytes)
+        end)
+
+        it("leaves a slot resting at 0 (rage) unchanged by a maximum read", function()
+            boot(fs.def(fs.new(9)))
+            I.ResourceShift(1, 30, 2, Obs.CastSuccess)
+            obs(Obs.Read, 3, 1, 120, I.ReadOf.Max)
+            I.Fold(3, false)
+            assert.are.same({ 30, 0, 120 }, { VS.Power(fs.RAGE, 3).est, I.res.rest[1], I.res.max[1] })
+        end)
+    end)
+
+    describe("a swing entry gated on a player aura (bear rage: swings pay only in Bear Form)", function()
+        local BEAR, REND = 3, 3 -- the aura index; fs.def's ability index of Rend (10 rage)
+
+        local function gated(aura)
+            local def = fs.def(fs.new(9))
+            def.auras[BEAR] = { key = "bear_form", id = 5487 }
+            def.auraIds[BEAR] = { 5487 }
+            def.resources[1].swingAura = aura
+            boot(def)
+            I.Fold(10, false)
+        end
+
+        local function swing(t)
+            obs(Obs.Swing, t, 1, 2.5, 1)
+            I.Fold(t, false)
+            return VS.Power(fs.RAGE, t).est
+        end
+
+        it("pays only while the aura is believed up: never applied, applied (as a `now` writes it), expired", function()
+            gated("bear_form")
+            assert.are.equal(0, swing(11))
+            I.AuraModel(1, BEAR, 12, 30, 1, 12, Obs.CastSuccess, false) -- the shift's applyBuff
+            assert.are.equal(9, swing(13.5))
+            assert.are.equal(18, swing(16))
+            assert.are.equal(18, swing(31)) -- past the believed expiry
+        end)
+
+        it("pays nothing when the gate names an untracked aura, and as before without a gate", function()
+            gated("dire_bear_test")
+            I.AuraModel(1, BEAR, 12, 30, 1, 12, Obs.CastSuccess, false)
+            assert.are.equal(0, swing(13.5))
+            gated(nil)
+            assert.are.equal(9, swing(11))
+        end)
+
+        it("out of the aura: no swing rate to calibrate against, and a zero-width pin on the ladder", function()
+            gated("bear_form")
+            swing(11) -- a speed to divide by
+            I.AuraModel(1, BEAR, 12, 30, 1, 12, Obs.CastSuccess, false)
+            I.Settle(12)
+            within(9 / 2.5, I.SwingPerSecond(1))
+            I.AuraModel(1, BEAR, 0, 0, 0, 13, Obs.CastSuccess, false) -- left Bear Form
+            I.Settle(13)
+            assert.are.equal(0, I.SwingPerSecond(1))
+            obs(Obs.Usable, 14, REND, 0, 1)
+            obs(Obs.Usable, 14, REND, 1, 0) -- the flip pins at Rend's 10 with a step of 0
+            I.Fold(14, false)
+            local r = VS.Power(fs.RAGE, 14)
+            assert.are.same({ 10, 10, 10 }, { r.est, r.lo, r.hi })
+            obs(Obs.Usable, 16, REND, 0, 1)
+            obs(Obs.Usable, 16, REND, 1, 0) -- a second measuring pin: nothing to calibrate against
+            I.Fold(16, false)
+            assert.are.same({ 1, 0 }, { I.res.scale[1], VS.Regen(fs.RAGE, 16).est })
+        end)
+
+        it("allocates nothing over 1000 swings and casts in and out of the aura", function()
+            gated("bear_form")
+            local t = 10
+            local bytes = alloc.bytes(function(i)
+                t = t + 1
+                if i % 2 == 0 then
+                    I.AuraModel(1, BEAR, t, t + 1.5, 1, t, Obs.CastSuccess, false)
+                end
+                obs(Obs.Swing, t + 0.5, 1, 2.5, 1)
+                obs(Obs.CastSuccess, t + 0.6, REND)
+                I.Fold(t + 0.6, false)
+                VS.Power(fs.RAGE, t + 0.7)
+                I.SwingPerSecond(1)
+            end, 1000)
             assert.are.equal(0, bytes)
         end)
     end)

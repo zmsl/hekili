@@ -151,7 +151,7 @@ function M.def(hekili)
         abilities = { class.abilities.battle_shout, class.abilities.heroic_strike, class.abilities.rend },
         abilityIds = { { M.SHOUT }, { M.STRIKE }, { M.REND, M.REND_R2 } },
         abilitySlot = { 1, 1, 1 },
-        resources = { { key = "rage", type = M.RAGE, token = "RAGE", max = 100, rest = 0, swing = 1, swingValue = mh.value } },
+        resources = { { key = "rage", type = M.RAGE, token = "RAGE", max = 100, rest = false, swing = 1, swingValue = mh.value } },
         auras = { class.auras.battle_shout, class.auras.rend },
         auraIds = { { M.SHOUT }, { M.REND, M.REND_R2 } },
         talents = { { key = "improved_rend", spell = 12286, max = 3 } },
