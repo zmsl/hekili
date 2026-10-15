@@ -101,7 +101,7 @@ local function sortedKeys(t)
     return keys
 end
 
-local resourceKey, auraKey = {}, {}
+local resourceKey, auraKey, auraId = {}, {}, {}
 
 local function buildDef()
     for _, list in pairs(def) do
@@ -109,6 +109,7 @@ local function buildDef()
     end
     wipe(resourceKey)
     wipe(auraKey)
+    wipe(auraId)
     local slotByKey = {}
     for _, k in ipairs(sortedKeys(class.resources)) do
         local r = class.resources[k]
@@ -173,7 +174,7 @@ local function buildDef()
             if #ids > 0 then
                 insert(def.auras, a)
                 def.auraIds[#def.auras] = ids
-                auraKey[#def.auras] = k
+                auraKey[#def.auras], auraId[#def.auras] = k, ids[1]
             end
         end
     end
@@ -251,14 +252,17 @@ local function readBefore(t)
 end
 
 -- Step 3.7: what changed, as `modelled` samples at t.
-local function readAfter(t, kind)
-    local R = I.res
+local function readAfter(t, kind, a)
+    local R, spellID = I.res, I.ab.qid[a]
     for r = 1, R.n do
         local res = rawget(state, resourceKey[r])
         if res then
             local delta = res.actual - resBefore[r]
             if delta > 1e-6 or delta < -1e-6 then
                 I.ResourceShift(r, delta, t, kind)
+            end
+            if delta > 1e-6 then
+                I.Log.Energize(spellID, delta, R.type[r], R.max[r], t) -- the cast gave us resource
             end
         end
     end
@@ -286,9 +290,11 @@ local function readAfter(t, kind)
             local be, de = field(b, "expires"), field(d, "expires")
             if be ~= buffExp[j] or field(b, "count") ~= buffCnt[j] then
                 I.AuraModel(1, j, field(b, "applied"), be, field(b, "count"), t, kind, false)
+                I.Log.Aura(1, j, auraId[j], buffExp[j], be, t)
             end
             if (de ~= debuffExp[j] or field(d, "count") ~= debuffCnt[j]) and I.auras.n >= 2 then
                 I.AuraModel(2, j, field(d, "applied"), de, field(d, "count"), t, kind, true)
+                I.Log.Aura(2, j, auraId[j], debuffExp[j], de, t)
             end
         end
     end
@@ -344,7 +350,7 @@ local function apply(kind, a, t)
         spendResources(key)
         state:RunHandler(key)
     end
-    readAfter(t, kind)
+    readAfter(t, kind, a)
     return true
 end
 I.Apply = apply

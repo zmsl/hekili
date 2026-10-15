@@ -153,6 +153,64 @@ describe("Adapter", function()
         assert.is_true(math.abs(want - got) < 1e-6, ("want %s, got %s"):format(want, got))
     end
 
+    it("emits our casts' aura and energize rows: APPLIED and REFRESH back-dated, REMOVED at the modelled expiry", function()
+        local rows = {}
+        local cleu = I.Events.CreateFrame("Frame")
+        cleu:SetScript("OnEvent", function()
+            local _, sub, _, src, _, _, _, dst, _, _, _, spellID, _, _, a15, _, a17 = ns.Facade.CombatLogGetCurrentEventInfo()
+            rows[#rows + 1] = { sub, dst, spellID, a15, a17, ns.Facade.GetTime() }
+        end)
+        cleu:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+        register("rage_test", {
+            id = 2687,
+            cooldown = 60,
+            handler = function()
+                state.rage.actual = state.rage.actual + 10
+            end,
+        })
+        VS.SpecChanged()
+        I.ObsLog.Clear(I.log)
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        ctl.now = 5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
+        ctl.Tick(5.05)
+        VS.Drain(5.1) -- the apply: Rend on the target until 20
+        ctl.Tick(5.15) -- delivered at the next OnUpdate
+        assert.are.same({ "SPELL_CAST_SUCCESS", "Creature-1", fs.REND }, { rows[1][1], rows[1][2], rows[1][3] })
+        assert.are.same({ "SPELL_AURA_APPLIED", "Creature-1", fs.REND, "DEBUFF", nil, 5 }, rows[2])
+        ctl.now = 8
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.REND)
+        ctl.Tick(8.05)
+        VS.Drain(8.1)
+        ctl.Tick(8.15)
+        assert.are.same({ "SPELL_AURA_REFRESH", 8 }, { rows[4][1], rows[4][6] })
+        ctl.now = 9
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-3", 2687)
+        ctl.Tick(9.05)
+        VS.Drain(9.1)
+        ctl.Tick(9.15)
+        assert.are.same({ "SPELL_ENERGIZE", "Player-1", 2687, 10, fs.RAGE, 9 }, rows[6])
+        ctl.Tick(23.5) -- past Rend's modelled expiry (8 + 15)
+        assert.are.same({ "SPELL_AURA_REMOVED", "Creature-1", fs.REND, "DEBUFF", nil, 23.5 }, rows[7])
+    end)
+
+    it("emits no debuff row while there is no target to name", function()
+        local subs = {}
+        local cleu = I.Events.CreateFrame("Frame")
+        cleu:SetScript("OnEvent", function()
+            subs[#subs + 1] = select(2, ns.Facade.CombatLogGetCurrentEventInfo())
+        end)
+        cleu:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+        ctl.guid.target = nil
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        ctl.now = 5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
+        ctl.Tick(5.05)
+        VS.Drain(5.1)
+        ctl.Tick(30)
+        assert.are.same({ "SPELL_CAST_SUCCESS" }, subs)
+    end)
+
     it("applies a hard cast at its finish: the GCD at the start's time, CAST_FINISH through HandleEvent", function()
         register("slam_test", { id = 1464, cast = 1.5, cooldown = 0, spend = 15, spendType = "rage" })
         VS.SpecChanged()

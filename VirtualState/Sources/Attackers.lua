@@ -102,9 +102,12 @@ S.On("NAME_PLATE_UNIT_REMOVED", nil, function(_, _, unit)
         tokGUID[i], tokOnMe[i], tokSpeed[i] = "", false, 0
     end
 end)
-S.On("PLAYER_TARGET_CHANGED", nil, function(api)
+local function readTarget(api)
     recheck(api, 1)
-end)
+    L.target = tokGUID[1]
+end
+S.On("PLAYER_TARGET_CHANGED", nil, readTarget)
+S.OnStart(readTarget)
 S.On("PLAYER_FOCUS_CHANGED", nil, function(api)
     recheck(api, 2)
 end)

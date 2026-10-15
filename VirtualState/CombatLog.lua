@@ -141,6 +141,79 @@ function L.Tick(now)
     end
 end
 
+-- The target's plain GUID (rows' destination for our debuffs), kept by Sources/Attackers.lua.
+L.target = ""
+
+-- Our auras' rows (decision 5: APPLIED and REFRESH at the cast's time, back-dated; REMOVED at the modelled expiry,
+-- stamped at delivery). Per tracked aura and unit (1 player, 2 target): the believed expiry, its spell, its target.
+local auraExp, auraId, auraDst = { {}, {} }, { {}, {} }, { {}, {} }
+I.OnBuild(function(def)
+    for u = 1, 2 do
+        for j = 1, math.max(#def.auras, #auraExp[u]) do
+            auraExp[u][j], auraId[u][j], auraDst[u][j] = 0, 0, ""
+        end
+    end
+end)
+
+local function auraRow(sub, u, j, t, backdate, prov)
+    local dst = auraDst[u][j]
+    local flags = L.HOSTILE_FLAGS
+    if u == 1 then
+        flags = L.PLAYER_FLAGS
+    end
+    local r = L.Emit(sub, 16, t, backdate, "aura", prov, L.player, L.PLAYER_FLAGS, dst, flags)
+    r[12], r[13], r[14], r[15], r[16] = auraId[u][j], "", 1, u == 1 and "BUFF" or "DEBUFF", 0
+end
+
+--- What our cast at `t` did to tracked aura `j` on unit `u` (1 player, 2 target): its expiry before and after the
+--- apply through the spec (Adapter.lua). No row without a destination GUID (Hekili would count "" as an enemy).
+--- Allocates nothing.
+function L.Aura(u, j, spellID, before, after, t)
+    if type(spellID) ~= "number" then
+        return
+    end
+    if after > t then
+        local dst = L.player
+        if u == 2 then
+            dst = L.target
+        end
+        if dst == "" then
+            return
+        end
+        auraId[u][j], auraExp[u][j], auraDst[u][j] = spellID, after, dst
+        if before > t then
+            auraRow("SPELL_AURA_REFRESH", u, j, t, true, "inferred")
+        else
+            auraRow("SPELL_AURA_APPLIED", u, j, t, true, "inferred")
+        end
+    elseif before > t and auraExp[u][j] > 0 then
+        auraExp[u][j] = 0
+        auraRow("SPELL_AURA_REMOVED", u, j, t, true, "inferred") -- the cast removed it (a handler's removeBuff)
+    end
+end
+
+L.OnTick(function(now)
+    for u = 1, 2 do
+        local exp = auraExp[u]
+        for j = 1, #exp do
+            if exp[j] > 0 and now >= exp[j] then
+                exp[j] = 0
+                auraRow("SPELL_AURA_REMOVED", u, j, now, false, "modelled")
+            end
+        end
+    end
+end)
+
+--- Resource our cast at `t` gave us (Adapter.lua's apply): SPELL_ENERGIZE, back-dated to the cast.
+function L.Energize(spellID, amount, powerType, maxPower, t)
+    if type(spellID) ~= "number" or L.player == "" then
+        return
+    end
+    local me, flags = L.player, L.PLAYER_FLAGS
+    local r = L.Emit("SPELL_ENERGIZE", 18, t, true, "energize", "modelled", me, flags, me, flags)
+    r[12], r[13], r[14], r[15], r[16], r[17], r[18] = spellID, "", 1, amount, 0, powerType, maxPower
+end
+
 --- Snapshot's line: the rows (allocates; debugging only).
 I.OnSnapshot(function(out)
     local c = L.counts
