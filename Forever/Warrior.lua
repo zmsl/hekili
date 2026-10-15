@@ -8,8 +8,7 @@
 -- Rage per swing from Taco Dog Forever's Warrior pack (src/TacoDogForever_Warrior/Warrior.lua:21-24).
 
 local addon, ns = ...
-local VGA = LibStub( "VirtualGameAPI-1.0" )
-local C_SpellBook, UnitClassBase = VGA.C_SpellBook, VGA.UnitClassBase
+local C_SpellBook, UnitClassBase = C_SpellBook, UnitClassBase
 local Hekili = _G[ addon ]
 
 if UnitClassBase( "player" ) ~= "WARRIOR" then return end

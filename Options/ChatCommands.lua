@@ -2,8 +2,7 @@
 -- Handles /hekili CLI commands.
 
 local addon, ns = ...
-local VGA = LibStub( "VirtualGameAPI-1.0" )
-local InCombatLockdown = VGA.InCombatLockdown
+local InCombatLockdown = InCombatLockdown
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class

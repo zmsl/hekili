@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Lists the game API names the loaded Hekili files read directly: bare globals (via luacheck W113,
-# which ignores strings and comments), C_* and AuraUtil namespace members (via grep), _G.Name reads, and
-# VGA.Name reads (so a file still reports what it reads after redirection through VirtualGameAPI-1.0).
+# Lists the game API names the loaded Hekili files read: bare globals (via luacheck W113, which ignores strings and
+# comments), C_* and AuraUtil namespace members (via grep), _G.Name reads, and Facade.Name / Facade.ns.Name reads
+# (the secret or absent names Hekili reads through ns.Facade, VirtualState/Facade.lua).
 # Usage: tools/list_api_reads.sh [file ...]   (default: every .lua in Hekili.toc minus the archived
 # expansion folders)
 set -euo pipefail
@@ -18,5 +18,5 @@ fi
         | grep -oE "accessing undefined variable '[^']+'" | sed -E "s/.*'([^']+)'/\1/" || true
     grep -ohE "\b(C_[A-Za-z]+|AuraUtil)\.[A-Za-z_]+" "${files[@]}" || true
     grep -ohE "_G\.[A-Za-z_]+" "${files[@]}" | sed 's/^_G\.//' || true
-    grep -ohE "\bVGA\.[A-Za-z_]+" "${files[@]}" | sed 's/^VGA\.//' || true
+    grep -ohE "\bFacade\.[A-Za-z_]+(\.[A-Za-z_]+)?" "${files[@]}" | sed 's/^Facade\.//' || true
 } | sort -u

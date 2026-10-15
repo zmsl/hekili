@@ -2,16 +2,16 @@
 -- July 2024
 
 local addon, ns = ...
-local VGA = LibStub( "VirtualGameAPI-1.0" )
-local C_AddOns, C_PlayerInfo, C_PvP = VGA.C_AddOns, VGA.C_PlayerInfo, VGA.C_PvP
-local GetActionInfo, GetCVar, GetHaste, GetNumGroupMembers = VGA.GetActionInfo, VGA.GetCVar, VGA.GetHaste, VGA.GetNumGroupMembers
-local GetTime, GetUnitSpeed, InCombatLockdown, IsActionInRange = VGA.GetTime, VGA.GetUnitSpeed, VGA.InCombatLockdown, VGA.IsActionInRange
-local IsInInstance, IsInRaid, UnitAffectingCombat, UnitCanAttack = VGA.IsInInstance, VGA.IsInRaid, VGA.UnitAffectingCombat, VGA.UnitCanAttack
-local UnitClassBase, UnitExists, UnitGUID, UnitGetTotalAbsorbs = VGA.UnitClassBase, VGA.UnitExists, VGA.UnitGUID, VGA.UnitGetTotalAbsorbs
-local UnitHealth, UnitHealthMax, UnitInParty, UnitInRaid = VGA.UnitHealth, VGA.UnitHealthMax, VGA.UnitInParty, VGA.UnitInRaid
-local UnitIsDead, UnitIsFriend, UnitIsPVP, UnitIsPlayer = VGA.UnitIsDead, VGA.UnitIsFriend, VGA.UnitIsPVP, VGA.UnitIsPlayer
-local UnitIsTrivial, UnitIsUnit, UnitLevel, UnitName = VGA.UnitIsTrivial, VGA.UnitIsUnit, VGA.UnitLevel, VGA.UnitName
-local UnitPhaseReason, UnitTokenFromGUID = VGA.UnitPhaseReason, VGA.UnitTokenFromGUID
+local Facade = ns.Facade
+local C_AddOns, C_PlayerInfo, C_PvP = C_AddOns, C_PlayerInfo, C_PvP
+local GetActionInfo, GetCVar, GetHaste, GetNumGroupMembers = GetActionInfo, GetCVar, Facade.GetHaste, GetNumGroupMembers
+local GetTime, GetUnitSpeed, InCombatLockdown, IsActionInRange = GetTime, Facade.GetUnitSpeed, InCombatLockdown, IsActionInRange or function() end
+local IsInInstance, IsInRaid, UnitAffectingCombat, UnitCanAttack = IsInInstance, IsInRaid, UnitAffectingCombat, UnitCanAttack
+local UnitClassBase, UnitExists, UnitGUID, UnitGetTotalAbsorbs = UnitClassBase, UnitExists, UnitGUID, Facade.UnitGetTotalAbsorbs
+local UnitHealth, UnitHealthMax, UnitInParty, UnitInRaid = Facade.UnitHealth, Facade.UnitHealthMax, UnitInParty, UnitInRaid
+local UnitIsDead, UnitIsFriend, UnitIsPVP, UnitIsPlayer = UnitIsDead, UnitIsFriend, UnitIsPVP, UnitIsPlayer
+local UnitIsTrivial, UnitIsUnit, UnitLevel, UnitName = UnitIsTrivial, UnitIsUnit, UnitLevel, UnitName
+local UnitPhaseReason, UnitTokenFromGUID = UnitPhaseReason, UnitTokenFromGUID
 local Hekili = _G[addon]
 
 local class = Hekili.Class

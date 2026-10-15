@@ -5,8 +5,7 @@
 -- Loads after Core.lua.
 
 local addon, ns = ...
-local VGA = LibStub( "VirtualGameAPI-1.0" )
-local GetTime = VGA.GetTime
+local GetTime = GetTime
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local S = I.Sources
 

@@ -2,9 +2,8 @@
 -- June 2014
 
 local addon, ns = ...
-local VGA = LibStub( "VirtualGameAPI-1.0" )
-local C_SpecializationInfo = VGA.C_SpecializationInfo
-local GetClassInfo, GetNumClasses, UnitSex = VGA.GetClassInfo, VGA.GetNumClasses, VGA.UnitSex
+local C_SpecializationInfo = C_SpecializationInfo
+local GetClassInfo, GetNumClasses, UnitSex = GetClassInfo, GetNumClasses, UnitSex
 local Hekili = _G[ addon ]
 
 local GetSpecialization = C_SpecializationInfo.GetSpecialization

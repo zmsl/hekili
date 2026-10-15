@@ -2,13 +2,13 @@
 -- Development-only tools and debug utilities.
 
 local addon, ns = ...
-local VGA = LibStub( "VirtualGameAPI-1.0" )
-local C_ClassTalents, C_SpecializationInfo, C_Spell, C_SpellActivationOverlay = VGA.C_ClassTalents, VGA.C_SpecializationInfo, VGA.C_Spell, VGA.C_SpellActivationOverlay
-local C_SpellBook, C_Traits, C_UnitAuras = VGA.C_SpellBook, VGA.C_Traits, VGA.C_UnitAuras
-local CombatLogGetCurrentEventInfo, GetBuildInfo, GetSpellBaseCooldown = VGA.CombatLogGetCurrentEventInfo, VGA.GetBuildInfo, VGA.GetSpellBaseCooldown
-local GetTime, InCombatLockdown, IsPlayerSpell, UnitCanAttack = VGA.GetTime, VGA.InCombatLockdown, VGA.IsPlayerSpell, VGA.UnitCanAttack
-local UnitClass, UnitClassBase, UnitIsUnit, UnitPowerMax = VGA.UnitClass, VGA.UnitClassBase, VGA.UnitIsUnit, VGA.UnitPowerMax
-local UnitSpellHaste = VGA.UnitSpellHaste
+local Facade = ns.Facade
+local C_ClassTalents, C_SpecializationInfo, C_Spell, C_SpellActivationOverlay = C_ClassTalents, C_SpecializationInfo, C_Spell, C_SpellActivationOverlay
+local C_SpellBook, C_Traits, C_UnitAuras = C_SpellBook, C_Traits, Facade.C_UnitAuras
+local CombatLogGetCurrentEventInfo, GetBuildInfo, GetSpellBaseCooldown = Facade.CombatLogGetCurrentEventInfo, GetBuildInfo, Facade.GetSpellBaseCooldown
+local GetTime, InCombatLockdown, IsPlayerSpell, UnitCanAttack = GetTime, InCombatLockdown, IsPlayerSpell or function() end, UnitCanAttack
+local UnitClass, UnitClassBase, UnitIsUnit, UnitPowerMax = UnitClass, UnitClassBase, UnitIsUnit, UnitPowerMax
+local UnitSpellHaste = Facade.UnitSpellHaste
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class
@@ -26,9 +26,9 @@ local ResourceInfo = ns.ResourceInfo or {}
 -- Atlas/Textures
 local AtlasToString, GetAtlasFile, GetAtlasCoords = ns.AtlasToString, ns.GetAtlasFile, ns.GetAtlasCoords
 
-local IsPassiveSpell = C_Spell.IsSpellPassive or VGA.IsPassiveSpell
-local IsHarmfulSpell = C_Spell.IsSpellHarmful or VGA.IsHarmfulSpell
-local IsHelpfulSpell = C_Spell.IsSpellHelpful or VGA.IsHelpfulSpell
+local IsPassiveSpell = C_Spell.IsSpellPassive or Facade.IsPassiveSpell
+local IsHarmfulSpell = C_Spell.IsSpellHarmful or Facade.IsHarmfulSpell
+local IsHelpfulSpell = C_Spell.IsSpellHelpful or Facade.IsHelpfulSpell
 local GetSpellBookItemInfo = function( index, bookType )
     local spellBank = ( bookType == "spell" or bookType == Enum.SpellBookItemType.Spell ) and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet
     local info = C_SpellBook.GetSpellBookItemInfo(index, spellBank)
@@ -57,12 +57,12 @@ local GetSpellTabInfo = function( index )
 end
 
 local GetSpellInfo = ns.GetUnpackedSpellInfo
-local GetSpellCooldown = C_Spell.GetSpellCooldown
+local GetSpellCooldown = Facade.C_Spell.GetSpellCooldown
 
 local GetSpellDescription = C_Spell.GetSpellDescription
 
 local GetSpellCharges = function( spellID )
-    local spellChargeInfo = C_Spell.GetSpellCharges( spellID )
+    local spellChargeInfo = Facade.C_Spell.GetSpellCharges( spellID )
     if spellChargeInfo then
         return spellChargeInfo.currentCharges, spellChargeInfo.maxCharges, spellChargeInfo.cooldownStartTime, spellChargeInfo.cooldownDuration, spellChargeInfo.chargeModRate
     end
@@ -901,10 +901,10 @@ function SkeletonGen:Generate()
 
     -- WoW API locals (all uncommented)
     self:Append( "-- Common WoW APIs, comment out unneeded per-spec" )
-    self:Append( "local GetSpellCastCount = C_Spell.GetSpellCastCount" )
+    self:Append( "local GetSpellCastCount = Facade.C_Spell.GetSpellCastCount" )
     self:Append( "local GetSpellInfo = C_Spell.GetSpellInfo" )
     self:Append( "local GetSpellInfo = ns.GetUnpackedSpellInfo" )
-    self:Append( "local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID" )
+    self:Append( "local GetPlayerAuraBySpellID = Facade.C_UnitAuras.GetPlayerAuraBySpellID" )
     self:Append( "local FindUnitBuffByID, FindUnitDebuffByID = ns.FindUnitBuffByID, ns.FindUnitDebuffByID" )
     self:Append( "local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed" )
     self:Append( "local IsSpellKnownOrOverridesKnown = C_SpellBook.IsSpellInSpellBook" )

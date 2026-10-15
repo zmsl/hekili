@@ -1,3 +1,3 @@
 return {
-    default = { ROOT = { "Libs/VirtualGameAPI-1.0/spec", "VirtualState/spec" }, pattern = "_spec", lpath = "./?.lua", verbose = true },
+    default = { ROOT = { "VirtualState/spec" }, pattern = "_spec", lpath = "./?.lua", verbose = true },
 }

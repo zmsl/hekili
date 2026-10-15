@@ -2,13 +2,13 @@
 -- July 2024
 
 local addon, ns = ...
-local VGA = LibStub( "VirtualGameAPI-1.0" )
-local AuraUtil, C_Item = VGA.AuraUtil, VGA.C_Item
-local C_Spell, C_SpellBook, C_Texture, C_TooltipInfo = VGA.C_Spell, VGA.C_SpellBook, VGA.C_Texture, VGA.C_TooltipInfo
-local C_UnitAuras = VGA.C_UnitAuras
-local GetNumGroupMembers, GetNumSubgroupMembers, GetTime, IsInGroup = VGA.GetNumGroupMembers, VGA.GetNumSubgroupMembers, VGA.GetTime, VGA.IsInGroup
-local IsInRaid, UnitHealth, UnitHealthMax, UnitIsUnit = VGA.IsInRaid, VGA.UnitHealth, VGA.UnitHealthMax, VGA.UnitIsUnit
-local UnitName = VGA.UnitName
+local Facade = ns.Facade
+local AuraUtil, C_Item = AuraUtil, C_Item
+local C_Spell, C_SpellBook, C_Texture, C_TooltipInfo = C_Spell, C_SpellBook, C_Texture, C_TooltipInfo
+local C_UnitAuras = Facade.C_UnitAuras
+local GetNumGroupMembers, GetNumSubgroupMembers, GetTime, IsInGroup = GetNumGroupMembers, GetNumSubgroupMembers, GetTime, IsInGroup
+local IsInRaid, UnitHealth, UnitHealthMax, UnitIsUnit = IsInRaid, Facade.UnitHealth, Facade.UnitHealthMax, UnitIsUnit
+local UnitName = UnitName
 local Hekili = _G[ addon ]
 
 local format, gsub, lower = string.format, string.gsub, string.lower
@@ -17,9 +17,9 @@ local insert, remove = table.insert, table.remove
 local class = Hekili.Class
 local state = Hekili.State
 
-local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
-local GetBuffDataByIndex, GetDebuffDataByIndex = C_UnitAuras.GetBuffDataByIndex, C_UnitAuras.GetDebuffDataByIndex
-local FindAura = AuraUtil.FindAura
+local GetPlayerAuraBySpellID = Facade.C_UnitAuras.GetPlayerAuraBySpellID
+local GetBuffDataByIndex, GetDebuffDataByIndex = Facade.C_UnitAuras.GetBuffDataByIndex, Facade.C_UnitAuras.GetDebuffDataByIndex
+local FindAura = Facade.AuraUtil.FindAura
 local UnpackAuraData = AuraUtil.UnpackAuraData
 
 local GetSpellBookItemInfo = function( index, bookType )

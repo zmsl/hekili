@@ -2,17 +2,17 @@
 -- June 2024
 
 local addon, ns = ...
-local VGA = LibStub( "VirtualGameAPI-1.0" )
-local AuraUtil, C_AddOns = VGA.AuraUtil, VGA.C_AddOns
-local C_Item, C_SpecializationInfo, C_Spell, C_UnitAuras = VGA.C_Item, VGA.C_SpecializationInfo, VGA.C_Spell, VGA.C_UnitAuras
-local CombatLogGetCurrentEventInfo, GetActionInfo, GetBindingKey, GetInstanceInfo = VGA.CombatLogGetCurrentEventInfo, VGA.GetActionInfo, VGA.GetBindingKey, VGA.GetInstanceInfo
-local GetInventoryItemID, GetTalentInfoByID, GetTime = VGA.GetInventoryItemID, VGA.GetTalentInfoByID, VGA.GetTime
-local InCombatLockdown, IsInGroup = VGA.InCombatLockdown, VGA.IsInGroup
-local IsPlayerSpell, IsResting, SecureCmdOptionParse = VGA.IsPlayerSpell, VGA.IsResting, VGA.SecureCmdOptionParse
-local SpellIsSelfBuff, UnitAttackSpeed, UnitCastingInfo, UnitChannelInfo = VGA.SpellIsSelfBuff, VGA.UnitAttackSpeed, VGA.UnitCastingInfo, VGA.UnitChannelInfo
-local UnitClass, UnitExists, UnitGUID, UnitInParty = VGA.UnitClass, VGA.UnitExists, VGA.UnitGUID, VGA.UnitInParty
-local UnitInRaid, UnitIsPlayer, UnitLevel, UnitName = VGA.UnitInRaid, VGA.UnitIsPlayer, VGA.UnitLevel, VGA.UnitName
-local UnitPower = VGA.UnitPower
+local Facade = ns.Facade
+local AuraUtil, C_AddOns = AuraUtil, C_AddOns
+local C_Item, C_SpecializationInfo, C_Spell, C_UnitAuras = C_Item, C_SpecializationInfo, C_Spell, Facade.C_UnitAuras
+local CombatLogGetCurrentEventInfo, GetActionInfo, GetBindingKey, GetInstanceInfo = Facade.CombatLogGetCurrentEventInfo, GetActionInfo, GetBindingKey, GetInstanceInfo
+local GetInventoryItemID, GetTalentInfoByID, GetTime = GetInventoryItemID, Facade.GetTalentInfoByID, GetTime
+local InCombatLockdown, IsInGroup = InCombatLockdown, IsInGroup
+local IsPlayerSpell, IsResting, SecureCmdOptionParse = IsPlayerSpell or function() end, IsResting, SecureCmdOptionParse
+local SpellIsSelfBuff, UnitAttackSpeed, UnitCastingInfo, UnitChannelInfo = SpellIsSelfBuff or function() end, Facade.UnitAttackSpeed, Facade.UnitCastingInfo, Facade.UnitChannelInfo
+local UnitClass, UnitExists, UnitGUID, UnitInParty = UnitClass, UnitExists, UnitGUID, UnitInParty
+local UnitInRaid, UnitIsPlayer, UnitLevel, UnitName = UnitInRaid, UnitIsPlayer, UnitLevel, UnitName
+local UnitPower = Facade.UnitPower
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class
@@ -29,14 +29,14 @@ local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table
 local CGetItemInfo = C_Item.GetItemInfo
 local IsEquippedItem = C_Item.IsEquippedItem
 local GetDetailedItemLevelInfo = C_Item.GetDetailedItemLevelInfo
-local UA_GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID
+local UA_GetPlayerAuraBySpellID = Facade.C_UnitAuras.GetPlayerAuraBySpellID
 local IsUsableItem = C_Item.IsUsableItem
 local GetItemSpell = C_Item.GetItemSpell
 local GetTalentInfo = C_SpecializationInfo.GetTalentInfo
 local GetSpecialization= C_SpecializationInfo.GetSpecialization
 local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 local GetSpellCooldown = function(spellID)
-    local spellCooldownInfo = C_Spell.GetSpellCooldown(spellID);
+    local spellCooldownInfo = Facade.C_Spell.GetSpellCooldown(spellID);
     if spellCooldownInfo then
         return spellCooldownInfo.startTime, spellCooldownInfo.duration, spellCooldownInfo.isEnabled, spellCooldownInfo.modRate;
     end
@@ -1246,8 +1246,8 @@ do
 
     local instanceDB
 
-    local GetAuraDataByAuraInstanceID = C_UnitAuras.GetAuraDataByAuraInstanceID
-    local ForEachAura = AuraUtil.ForEachAura
+    local GetAuraDataByAuraInstanceID = Facade.C_UnitAuras.GetAuraDataByAuraInstanceID
+    local ForEachAura = Facade.AuraUtil.ForEachAura
 
     local function StoreInstanceInfo( aura )
         local id = aura.spellId

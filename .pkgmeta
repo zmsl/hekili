@@ -3,7 +3,7 @@ package-as: Hekili
 enable-nolib-creation: no
 
 ignore:
-    - Libs/VirtualGameAPI-1.0/spec
+    - VirtualState/spec
     - .busted
     - tools
     - docs

@@ -2,8 +2,7 @@
 -- Revised MultiLineEditBox, to allow for my own tweaks.
 
 local addon, ns = ...
-local VGA = LibStub( "VirtualGameAPI-1.0" )
-local GetCursorInfo = VGA.GetCursorInfo
+local GetCursorInfo = GetCursorInfo
 local Hekili = _G[ addon ]
 
 local Type, Version = "HekiliCustomEditor", 6

@@ -1,6 +1,6 @@
--- Lint for the Forever branch. Game API names are deliberately NOT declared here:
--- every game read must go through LibStub("VirtualGameAPI-1.0") (see tools/check_api_reads.sh),
--- so a bare game API name shows up as W113 "accessing undefined variable".
+-- Lint for the Forever branch. Every secret or absent game read goes through ns.Facade (VirtualState/Facade.lua; see
+-- tools/check_api_reads.sh): those names (tools/api_inventory.txt) are deliberately NOT declared here, so a bare read
+-- shows up as W113 "accessing undefined variable". The plain game reads are declared in read_globals below.
 std = "lua51"
 max_line_length = false
 codes = true
@@ -63,6 +63,22 @@ read_globals = {
     "PET_TYPE_DEMON", "BATTLE_PET_NAME_4", "COMBATLOG_OBJECT_REACTION_FRIENDLY",
     "CR_VERSATILITY_DAMAGE_TAKEN", "CR_VERSATILITY_DAMAGE_DONE", "CR_MASTERY", "CR_HASTE_MELEE",
     "CR_CRIT_TAKEN_SPELL", "CR_CRIT_MELEE",
+    -- plain game reads (spec §7.7): called directly; namespaces declared whole (their kept members are caught by
+    -- tools/check_api_reads.sh's dotted grep)
+    "AuraUtil", "C_AddOns", "C_ClassColor", "C_ClassTalents", "C_Item", "C_LossOfControl", "C_PetBattles",
+    "C_PlayerInfo", "C_PvP", "C_SpecializationInfo", "C_Spell", "C_SpellActivationOverlay", "C_SpellBook",
+    "C_Texture", "C_TooltipInfo", "C_Traits", "C_VideoOptions", "GetActionInfo", "GetBindingKey", "GetBuildInfo",
+    "GetCVar", "GetClassInfo", "GetCursorInfo", "GetFrameCPUUsage", "GetFramerate", "GetInstanceInfo",
+    "GetInventoryItemID", "GetNetStats", "GetNumClasses", "GetNumGroupMembers", "GetNumSubgroupMembers",
+    "GetRealmName", "GetShapeshiftForm", "GetShapeshiftFormInfo", "GetSpecializationInfoByID", "GetStablePetInfo",
+    "GetTime", "HasOverrideActionBar", "HasVehicleActionBar", "InCombatLockdown", "IsActionInRange", "IsInGroup",
+    "IsInInstance", "IsInJailersTower", "IsInRaid", "IsMounted", "IsPlayerSpell", "IsResting", "IsSpellKnown",
+    "IsSpellKnownOrOverridesKnown", "SecureCmdOptionParse", "SpellIsSelfBuff", "UnitAffectingCombat",
+    "UnitCanAssist", "UnitCanAttack", "UnitClass", "UnitClassBase", "UnitClassification", "UnitCreatureType",
+    "UnitEffectiveLevel", "UnitExists", "UnitFactionGroup", "UnitGUID", "UnitHasVehicleUI", "UnitInParty",
+    "UnitInRaid", "UnitInVehicle", "UnitIsConnected", "UnitIsDead", "UnitIsDeadOrGhost", "UnitIsFriend", "UnitIsPVP",
+    "UnitIsPlayer", "UnitIsTrivial", "UnitIsUnit", "UnitLevel", "UnitName", "UnitOnTaxi", "UnitPhaseReason",
+    "UnitPowerMax", "UnitPowerType", "UnitRace", "UnitSex", "UnitThreatSituation", "UnitTokenFromGUID",
     -- client additions to the Lua standard tables
     table = { fields = { "wipe", "unpack" } },
     string = { fields = { "trim" } },

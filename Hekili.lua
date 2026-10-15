@@ -2,9 +2,9 @@
 -- July 2024
 
 local addon, ns = ...
-local VGA = LibStub( "VirtualGameAPI-1.0" )
-local AuraUtil, C_AddOns, C_UnitAuras = VGA.AuraUtil, VGA.C_AddOns, VGA.C_UnitAuras
-local GetBuildInfo, GetFramerate, GetTime = VGA.GetBuildInfo, VGA.GetFramerate, VGA.GetTime
+local Facade = ns.Facade
+local AuraUtil, C_AddOns, C_UnitAuras = AuraUtil, C_AddOns, Facade.C_UnitAuras
+local GetBuildInfo, GetFramerate, GetTime = GetBuildInfo, GetFramerate, GetTime
 Hekili = LibStub("AceAddon-3.0"):NewAddon( "Hekili", "AceConsole-3.0", "AceSerializer-3.0" )
 Hekili.Version = C_AddOns.GetAddOnMetadata( "Hekili", "Version" )
 Hekili.Flavor = C_AddOns.GetAddOnMetadata( "Hekili", "X-Flavor" ) or "Retail"
@@ -12,7 +12,7 @@ Hekili.Flavor = C_AddOns.GetAddOnMetadata( "Hekili", "X-Flavor" ) or "Retail"
 local format = string.format
 local insert, concat = table.insert, table.concat
 
-local GetBuffDataByIndex, GetDebuffDataByIndex = C_UnitAuras.GetBuffDataByIndex, C_UnitAuras.GetDebuffDataByIndex
+local GetBuffDataByIndex, GetDebuffDataByIndex = Facade.C_UnitAuras.GetBuffDataByIndex, Facade.C_UnitAuras.GetDebuffDataByIndex
 local UnpackAuraData = AuraUtil.UnpackAuraData
 
 local buildStr, _, _, buildNum = GetBuildInfo()
@@ -299,7 +299,7 @@ function Hekili:SaveDebugSnapshot( dispName )
 
             local longestKey, longestName = 0, 0
 
-            AuraUtil.ForEachAura( "player", "HELPFUL", nil, function( aura )
+            Facade.AuraUtil.ForEachAura( "player", "HELPFUL", nil, function( aura )
                 if aura.isFromPlayerOrPlayerPet then
                     local model = class.auras[ aura.spellId ]
                     local key = model and model.key or formatKey( aura.name )
@@ -361,7 +361,7 @@ function Hekili:SaveDebugSnapshot( dispName )
             local playerDebuffs = {}
             local pdOrder = {}
 
-            AuraUtil.ForEachAura( "player", "HARMFUL", nil, function( aura )
+            Facade.AuraUtil.ForEachAura( "player", "HARMFUL", nil, function( aura )
                 local model = class.auras[ aura.spellId ]
                 local key = model and model.key or formatKey( aura.name )
 
@@ -420,7 +420,7 @@ function Hekili:SaveDebugSnapshot( dispName )
             local targetBuffs = {}
             local tbOrder = {}
 
-            AuraUtil.ForEachAura( "target", "HELPFUL", nil, function( aura )
+            Facade.AuraUtil.ForEachAura( "target", "HELPFUL", nil, function( aura )
                 local model = class.auras[ aura.spellId ]
                 local key = model and model.key or formatKey( aura.name )
 
@@ -479,7 +479,7 @@ function Hekili:SaveDebugSnapshot( dispName )
             local targetDebuffs = {}
             local tdOrder = {}
 
-            AuraUtil.ForEachAura( "target", "HARMFUL", nil, function( aura )
+            Facade.AuraUtil.ForEachAura( "target", "HARMFUL", nil, function( aura )
                 if aura.isFromPlayerOrPlayerPet then
                     local model = class.auras[ aura.spellId ]
                     local key = model and model.key or formatKey( aura.name )

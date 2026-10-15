@@ -2,13 +2,13 @@
 -- Dynamic UI Elements
 
 local addon, ns = ...
-local VGA = LibStub( "VirtualGameAPI-1.0" )
-local C_Item, C_PetBattles, C_SpecializationInfo, C_Spell = VGA.C_Item, VGA.C_PetBattles, VGA.C_SpecializationInfo, VGA.C_Spell
-local C_SpellActivationOverlay, C_VideoOptions = VGA.C_SpellActivationOverlay, VGA.C_VideoOptions
-local GetFramerate, GetTime, HasOverrideActionBar, HasVehicleActionBar = VGA.GetFramerate, VGA.GetTime, VGA.HasOverrideActionBar, VGA.HasVehicleActionBar
-local InCombatLockdown, IsInInstance, IsMounted, UnitCanAttack = VGA.InCombatLockdown, VGA.IsInInstance, VGA.IsMounted, VGA.UnitCanAttack
-local UnitCastingInfo, UnitChannelInfo, UnitClass, UnitExists = VGA.UnitCastingInfo, VGA.UnitChannelInfo, VGA.UnitClass, VGA.UnitExists
-local UnitHasVehicleUI, UnitIsDead, UnitOnTaxi = VGA.UnitHasVehicleUI, VGA.UnitIsDead, VGA.UnitOnTaxi
+local Facade = ns.Facade
+local C_Item, C_PetBattles, C_SpecializationInfo, C_Spell = C_Item, C_PetBattles, C_SpecializationInfo, C_Spell
+local C_SpellActivationOverlay, C_VideoOptions = C_SpellActivationOverlay, C_VideoOptions
+local GetFramerate, GetTime, HasOverrideActionBar, HasVehicleActionBar = GetFramerate, GetTime, HasOverrideActionBar or function() end, HasVehicleActionBar or function() end
+local InCombatLockdown, IsInInstance, IsMounted, UnitCanAttack = InCombatLockdown, IsInInstance, IsMounted, UnitCanAttack
+local UnitCastingInfo, UnitChannelInfo, UnitClass, UnitExists = Facade.UnitCastingInfo, Facade.UnitChannelInfo, UnitClass, UnitExists
+local UnitHasVehicleUI, UnitIsDead, UnitOnTaxi = UnitHasVehicleUI, UnitIsDead, UnitOnTaxi
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class
@@ -35,7 +35,7 @@ local IsUsableSpell = C_Spell.IsSpellUsable
 local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed
 
 local GetSpellCooldown = function( spellID )
-    local spellCooldownInfo = C_Spell.GetSpellCooldown( spellID )
+    local spellCooldownInfo = Facade.C_Spell.GetSpellCooldown( spellID )
     if spellCooldownInfo then
         return spellCooldownInfo.startTime, spellCooldownInfo.duration, spellCooldownInfo.isEnabled, spellCooldownInfo.modRate
     end
