@@ -13,10 +13,6 @@ local Add = I.ObsLog.Add
 local S = {}
 I.Sources = S
 
--- Adapter.lua's hooks into Hekili's across-reset caches (spec §4.6), called by the own-cast and swing sources; nil
--- until Adapter.lua sets them (and in headless specs that do not).
-I.feed = {}
-
 --- A client value VirtualState may test, compare or use: the value itself, or nil if it is secret. It asks
 --- `issecretvalue` before touching the value in any other way. Allocates nothing.
 function S.Plain(api, v)

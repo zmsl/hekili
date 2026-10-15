@@ -29,6 +29,9 @@ end
 local head, count = 1, 0
 -- the row a dropped emission fills in (its caller still writes slots 12 on): never queued
 local spare = { n = 0, t = 0, backdate = false, family = "", prov = "" }
+for k = 1, 24 do
+    spare[k] = false
+end
 local delivering, current = false, nil
 
 L.emitted, L.dropped, L.requeued, L.delivered = 0, 0, 0, 0
@@ -41,9 +44,6 @@ L.player = ""
 --- the tuple with unpack). A full pool drops the oldest undelivered row (counted); during a delivery, when only the
 --- delivered row's slot is left, the new row is dropped instead. Allocates nothing.
 function L.Emit(sub, last, t, backdate, family, prov, srcGUID, srcFlags, dstGUID, dstFlags)
-    if delivering then
-        L.requeued = L.requeued + 1 -- delivered after the current row, never nested (ns.callHook drops nested ones)
-    end
     local r
     if delivering and count >= L.POOL - 1 then
         -- the row being delivered still holds the slot after the queue: the new row gives way, never that one
@@ -57,12 +57,15 @@ function L.Emit(sub, last, t, backdate, family, prov, srcGUID, srcFlags, dstGUID
         end
         r = rows[(head + count - 1) % L.POOL + 1]
         count = count + 1
+        if delivering then
+            L.requeued = L.requeued + 1 -- delivered after the current row, never nested (ns.callHook drops nested ones)
+        end
+        L.emitted = L.emitted + 1 -- queued rows only: one given way to `spare` counts in `dropped` alone
+        L.counts[family] = L.counts[family] + 1
     end
     r[1], r[2], r[3], r[4], r[5], r[6], r[7] = t, sub, false, srcGUID, "", srcFlags, 0
     r[8], r[9], r[10], r[11] = dstGUID, "", dstFlags, 0
     r.n, r.t, r.backdate, r.family, r.prov = last, t, backdate, family, prov
-    L.emitted = L.emitted + 1
-    L.counts[family] = L.counts[family] + 1
     return r
 end
 

@@ -1,8 +1,8 @@
 -- VirtualState/Adapter.lua
 -- VirtualState's glue to Hekili (spec §3.6, §4.6, §5): VirtualState.Start at PLAYER_LOGIN, the tracked set from the
--- active spec's registrations (SpecChanged), the swing feed (the swing fields), and Drain: the fold plus "apply
--- through the spec", which runs each of our real casts through Hekili's own registered functions on `state` and records
--- what changed as `modelled` samples.
+-- active spec's registrations (SpecChanged), and Drain: the fold plus "apply through the spec", which runs each of
+-- our real casts through Hekili's own registered functions on `state` and records what changed as `modelled` samples.
+-- Hekili's across-reset caches (cast history, the real queue, the swing fields) come from the combat-log rows.
 -- Loads after Core.lua. The apply follows Hekili's own simulation (Core.lua:1984-2045) and keeps Hekili's credits.
 
 local addon, ns = ...
@@ -212,19 +212,6 @@ function VS.SpecChanged()
     end
     for j = 1, #def.auras do
         buffExp[j], buffApp[j], buffCnt[j], debuffExp[j], debuffApp[j], debuffCnt[j] = 0, 0, 0, 0, 0, 0
-    end
-end
-
-----------------------------------------------------------------------------------------------------------------------
--- Feeding Hekili's across-reset caches (spec §4.6), synchronously in VirtualState's handlers, where CLEU did it.
-
--- The swing fields the dead CLEU SWING_* branch wrote (Events.lua:1684-1699), read by the swing regen models.
-I.feed.Swing = function(hand, t, duration)
-    local sw = state.swings
-    if hand == 1 then
-        sw.mh_actual, sw.mh_speed, sw.mh_projected = t, duration, t + duration
-    else
-        sw.oh_actual, sw.oh_speed, sw.oh_projected = t, duration, t + duration
     end
 end
 

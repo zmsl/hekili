@@ -162,6 +162,7 @@ describe("the synthesized combat log", function()
         L.Deliver()
         assert.are.equal(fs.REND, seen)
         assert.are.equal(1, L.dropped) -- 64 emitted into 63 free slots: the last one gave way
+        assert.are.same({ 64, 63 }, { L.emitted, L.requeued }) -- the row given way is counted only as dropped
     end)
 
     it("makes no row without a spell ID, and delivers nothing inside a coroutine", function()
@@ -188,5 +189,128 @@ describe("the synthesized combat log", function()
             I.Sources.Flush()
         end, 10000)
         assert.are.equal(0, bytes)
+    end)
+
+    describe("our swings and abilities on the target", function()
+        local function row(i)
+            return got[i] and got[i].row
+        end
+
+        it("pairs a swing with the target's dodge that follows it: SWING_MISSED at the swing's time", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            assert.are.equal(0, #got)
+            ctl.now = 10.05
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            assert.are.equal(1, #got)
+            assert.are.same(
+                { 10, "SWING_MISSED", false, "Player-1", "", L.PLAYER_FLAGS, 0, "Creature-1", "", L.HOSTILE_FLAGS, 0, "DODGE", false, 0, false },
+                row(1)
+            )
+            assert.are.equal(15, got[1].n)
+            assert.are.equal(10, got[1].now) -- back-dated to the swing
+        end)
+
+        it("pairs a wound that arrives before the swing: SWING_DAMAGE at the wound's time", function()
+            ctl.now = 20
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 120, 1)
+            ctl.now = 20.04
+            ctl.Fire("PLAYER_SWING", 1.8, 1)
+            assert.are.equal(21, got[1].n)
+            assert.are.same({ "SWING_DAMAGE", 120, 0, 1, 0, 0, 0, true, false, false, true }, {
+                row(1)[2], row(1)[12], row(1)[13], row(1)[14], row(1)[15], row(1)[16], row(1)[17],
+                row(1)[18], row(1)[19], row(1)[20], row(1)[21],
+            })
+            assert.are.equal(20, got[1].now)
+        end)
+
+        it("emits an unpaired swing as SWING_DAMAGE 0 once its window closes, at its own time", function()
+            ctl.now = 30
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.Tick(30.15)
+            assert.are.equal(0, #got)
+            ctl.Tick(30.25)
+            assert.are.equal(1, #got)
+            assert.are.same({ "SWING_DAMAGE", 0, 0 }, { row(1)[2], row(1)[12], row(1)[13] })
+            assert.are.equal(30, got[1].now)
+        end)
+
+        it("drops an outcome nothing of ours pairs within the window", function()
+            ctl.now = 40
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            ctl.Tick(40.3)
+            ctl.now = 40.35
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.Tick(40.6)
+            assert.are.equal(1, #got)
+            assert.are.same({ "SWING_DAMAGE", 0 }, { row(1)[2], row(1)[12] })
+            ctl.Fire("UNIT_COMBAT", "nameplate1", "DODGE", "", 0, 1) -- another token: not the target's outcome
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 40.65
+            ctl.Fire("UNIT_COMBAT", "nameplate1", "WOUND", "", 30, 1)
+            assert.are.equal(1, #got)
+        end)
+
+        it("pairs our ability with the target's parry: SPELL_MISSED with the miss type in slot 15", function()
+            ctl.now = 50
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", fs.REND)
+            ctl.now = 50.02
+            ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1)
+            assert.are.equal("SPELL_CAST_SUCCESS", row(1)[2])
+            assert.are.same({ "SPELL_MISSED", fs.REND, "", 1, "PARRY", false, 0, false }, {
+                row(2)[2], row(2)[12], row(2)[13], row(2)[14], row(2)[15], row(2)[16], row(2)[17], row(2)[18],
+            })
+            assert.are.equal(18, got[2].n)
+        end)
+
+        it("gives an on-next-swing strike its swing's outcome: SPELL_DAMAGE, no swing row", function()
+            ctl.now = 60
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-10", fs.STRIKE)
+            ctl.now = 60.03
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 250, 1)
+            ctl.Tick(61)
+            assert.are.equal(2, #got)
+            assert.are.same({ "SPELL_DAMAGE", fs.STRIKE, 250, 24 }, { row(2)[2], row(2)[12], row(2)[15], got[2].n })
+        end)
+
+        it("gives the strike its swing's outcome when the success comes before the swing", function()
+            ctl.now = 70
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-11", fs.STRIKE)
+            ctl.now = 70.02
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 70.04
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            ctl.Tick(71)
+            assert.are.equal(2, #got)
+            assert.are.same({ "SPELL_MISSED", fs.STRIKE, "DODGE" }, { row(2)[2], row(2)[12], row(2)[15] })
+        end)
+
+        it("makes no row without a target", function()
+            ctl.guid.target = nil
+            ctl.now = 80
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.Tick(81)
+            assert.are.equal(0, #got)
+        end)
+
+        it("allocates nothing per paired swing", function()
+            local sink = I.Events.CreateFrame("Frame")
+            local GetInfo = Facade.CombatLogGetCurrentEventInfo
+            sink:SetScript("OnEvent", function()
+                GetInfo()
+            end)
+            sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+            cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+            local bytes = alloc.bytes(function(i)
+                ctl.now = i
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                ctl.Fire("UNIT_COMBAT", "target", i % 2 == 0 and "WOUND" or "DODGE", "", 100, 1)
+                ctl.Fire("PLAYER_SWING", 2.6, 1)
+                ctl.Tick(i + 0.5)
+                I.Sources.Flush()
+            end, 10000)
+            assert.are.equal(0, bytes)
+        end)
     end)
 end)

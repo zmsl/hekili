@@ -1,9 +1,9 @@
 -- VirtualState/Sources/Swing.lua
 -- Swing sources (spec §4.2): PLAYER_SWING (payload swingDuration, swingType; plain in combat) is a `Swing` with
--- a = swingType + 1, b = the duration, c = 1, staged on the urgent lane, and synchronously feeds Hekili's
--- `state.swings.*_actual/_projected` through Adapter.lua's hook (spec §4.6). Out of combat, UNIT_ATTACK_SPEED and
--- PLAYER_EQUIPMENT_CHANGED (and login, and combat end) read both hands' speeds (c = 0), the unhasted base speeds
--- (c = 2, speed x (1 + melee haste / 100)) and the melee haste multiplier (`Haste`, c = 1).
+-- a = swingType + 1, b = the duration, c = 1, staged on the urgent lane (Hekili's `state.swings` come from the swing
+-- rows, Sources/Rows.lua). Out of combat, UNIT_ATTACK_SPEED and PLAYER_EQUIPMENT_CHANGED (and login, and combat end)
+-- read both hands' speeds (c = 0), the unhasted base speeds (c = 2, speed x (1 + melee haste / 100)) and the melee
+-- haste multiplier (`Haste`, c = 1).
 -- Credits: secret-value handling after Catnip's (Durts) research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Swing.lua.
 
@@ -19,10 +19,6 @@ S.On("PLAYER_SWING", nil, function(api, t, duration, swingType)
     end
     local hand = swingType + 1
     Stage(Obs.Swing, t, hand, duration, 1)
-    local f = I.feed.Swing
-    if f then
-        f(hand, t, duration)
-    end
     S.Urgent("PLAYER_SWING")
 end)
 

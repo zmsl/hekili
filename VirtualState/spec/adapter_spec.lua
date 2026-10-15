@@ -104,7 +104,7 @@ describe("Adapter", function()
         assert.are.same({ 2, 4, 0 }, { I.res.swing[1], I.res.swingValue[1], I.res.swingOff[1] })
     end)
 
-    it("leaves the cast history and the real queue to the combat-log rows, asks for a cycle, feeds the swing", function()
+    it("leaves the cast history, the real queue and the swing fields to the combat-log rows, asks for a cycle", function()
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
         ctl.casting = { 1000, 2500 }
         ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-3", fs.REND)
@@ -114,7 +114,7 @@ describe("Adapter", function()
         assert.are.same({}, state.queue)
         assert.are.same({ "UNIT_SPELLCAST_SUCCEEDED", "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_FAILED" }, h.forced)
         ctl.Fire("PLAYER_SWING", 2.6, 0)
-        assert.are.same({ 1, 3.6 }, { state.swings.mh_actual, state.swings.mh_projected })
+        assert.are.equal(0, state.swings.mh_actual) -- CLEU_HANDLER writes it from the swing row
     end)
 
     it("applies an instant cast through the spec: modelled rage, GCD and debuff, two resets, offset restored", function()
