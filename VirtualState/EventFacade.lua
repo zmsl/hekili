@@ -31,6 +31,7 @@ local AURA_INFO = { player = { isFullUpdate = true }, target = { isFullUpdate = 
 local SUB = {}
 E.STUB = {} -- events the client refused at registration: never delivered
 E.delivered, E.errors, E.lastError = 0, 0, nil
+E.depth = 0 -- deliveries in progress (nested client events): a freed slot is not reused while one runs
 
 E.frame = nil
 
@@ -83,13 +84,13 @@ local function sync(e)
     if not any then
         return
     end
-    local ok
+    local ok, res
     if general then
-        ok = pcall(frame.RegisterEvent, frame, e)
+        ok, res = pcall(frame.RegisterEvent, frame, e)
     else
-        ok = pcall(frame.RegisterUnitEvent, frame, e, un1, un2)
+        ok, res = pcall(frame.RegisterUnitEvent, frame, e, un1, un2)
     end
-    if not ok then
+    if not ok or res == false then -- the client raises for an unknown event, or returns false
         E.STUB[e] = true
     end
 end
@@ -107,7 +108,7 @@ function E.Subscribe(frame, e, u1, u2)
         if f == frame then
             free = k
             break
-        elseif not f and not free then
+        elseif not f and not free and E.depth == 0 then
             free = k
         end
     end
@@ -194,11 +195,12 @@ local function onEvent(_, event, r1, r2, r3, r4, r5, r6, r7, r8)
     if event == "UNIT_AURA" then
         a2 = AURA_INFO[a1]
     end
-    for k = 1, list.n do -- a subscription made during this delivery starts with the next event
+    E.depth = E.depth + 1
+    for k = 1, list.n do -- a subscription made during this delivery is appended and starts with the next event
         local f = list.f[k]
         if f then
             local u = list.u1[k]
-            if u == nil or u == a1 or list.u2[k] == a1 then
+            if u == nil or (a1 ~= nil and (u == a1 or list.u2[k] == a1)) then -- a nil unit matches only general
                 local fn = f:GetScript("OnEvent")
                 if fn then
                     E.delivered = E.delivered + 1
@@ -214,6 +216,7 @@ local function onEvent(_, event, r1, r2, r3, r4, r5, r6, r7, r8)
             end
         end
     end
+    E.depth = E.depth - 1
 end
 
 local function onUpdate()

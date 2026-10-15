@@ -103,6 +103,16 @@ describe("the event facade", function()
         assert.are.equal(1, #c)
     end)
 
+    it("hands an event with a secret unit only to general subscribers", function()
+        local general, playerOnly = {}, {}
+        subscriber(general):RegisterEvent("UNIT_TARGET")
+        subscriber(playerOnly):RegisterUnitEvent("UNIT_TARGET", "player")
+        ctl.Fire("UNIT_TARGET", fake.SECRET)
+        assert.are.equal(1, #general)
+        assert.is_nil(general[1].a1)
+        assert.are.equal(0, #playerOnly)
+    end)
+
     it("delivers UNIT_AURA with the layer's full update for the player and target, nil for other units", function()
         local log = {}
         subscriber(log):RegisterUnitEvent("UNIT_AURA", "player", "target")
@@ -179,6 +189,36 @@ describe("the event facade", function()
         assert.are.equal(2, #log)
         assert.are.equal(1, E.errors)
         assert.is_false(boot:IsEventRegistered("PLAYER_LOGIN"))
+    end)
+
+    it("starts a subscription made mid-delivery with the next event, even in a freed slot", function()
+        local late = {}
+        local lateFrame
+        local trigger = E.CreateFrame("Frame")
+        trigger:SetScript("OnEvent", function()
+            if not lateFrame then
+                lateFrame = subscriber(late)
+                lateFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+            end
+        end)
+        trigger:RegisterEvent("PLAYER_TARGET_CHANGED")
+        -- a freed slot after the trigger's
+        local gap = subscriber({})
+        gap:RegisterEvent("PLAYER_TARGET_CHANGED")
+        gap:UnregisterEvent("PLAYER_TARGET_CHANGED")
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        assert.are.equal(0, #late)
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        assert.are.equal(1, #late)
+        assert.are.equal(0, E.depth)
+    end)
+
+    it("makes an event the client declines with false a stub", function()
+        api.frame.RegisterEvent = function()
+            return false
+        end
+        assert.is_false(subscriber({}):RegisterEvent("DECLINED_EVENT"))
+        assert.is_true(E.STUB.DECLINED_EVENT)
     end)
 
     it("re-registers on UnregisterAllEvents only the events the frame had", function()
