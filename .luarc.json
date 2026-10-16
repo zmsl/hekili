@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
   "runtime.version": "Lua 5.1",
   "workspace.library": ["/home/zack/.local/share/vscode-wow-api/Annotations/Core"],
-  "workspace.ignoreDir": ["src/Hekili/Libs", "archive", ".claude", ".git"],
+  "workspace.ignoreDir": ["src/Hekili/Libs", "archive", ".claude", ".git", ".lua"],
   "workspace.checkThirdParty": false,
   "diagnostics.globals": ["LibStub", "Hekili", "ns"],
   "diagnostics.disable": ["lowercase-global", "undefined-field", "need-check-nil", "cast-local-type", "assign-type-mismatch", "param-type-mismatch", "redundant-parameter", "missing-parameter", "inject-field", "duplicate-set-field", "undefined-global"]

@@ -9,6 +9,12 @@
 - `tools/`, `docs/` and `archive/` stay at the repository root, with the lint, test and type-check configs
   (`.busted`, `.luacheckrc`, `.luarc.json`). Run every tool and `busted` from the root.
 
+## Checks
+
+`make bootstrap` once (Lua 5.1 + busted/luacheck/luacov into `.lua/`; StyLua and LuaLS from `mise.toml`), then
+`make check` before every commit. StyLua formats only our files (`.styluaignore` lists upstream Hekili, which keeps
+its own style).
+
 ## In game
 
 The AddOns link must point at `src/Hekili`, not at the repository root. From an elevated Windows prompt, in the

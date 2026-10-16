@@ -1,0 +1,4 @@
+[tools]
+python = "3.13"
+stylua = "2.5.2"
+lua-language-server = "3.19.1"

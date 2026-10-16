@@ -7,7 +7,7 @@
 # only through its injected `api` (tests/Virtual/State/secrets_spec.lua checks it).
 set -uo pipefail
 cd "$(dirname "$0")/.."
-LUACHECK="${LUACHECK:-luacheck}"
+if [ -z "${LUACHECK:-}" ]; then [ -x .lua/bin/luacheck ] && LUACHECK=.lua/bin/luacheck || LUACHECK=luacheck; fi
 command -v "$LUACHECK" >/dev/null || { echo "luacheck not found: set LUACHECK" >&2; exit 1; }
 mapfile -t files < <(grep -E '\.lua\s*$' src/Hekili/Hekili.toc | tr -d '\r' | sed 's/\\/\//g; s/[[:space:]]*$//; s#^#src/Hekili/#')
 globals=$(cut -f1 tools/api_inventory.txt | sed -E 's/\..*//' | sort -u | paste -sd'|')

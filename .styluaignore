@@ -1,0 +1,19 @@
+# Upstream Hekili keeps its own style (spaces inside parentheses, which StyLua cannot produce); format only our files.
+src/Hekili/Constants.lua
+src/Hekili/Core.lua
+src/Hekili/Events.lua
+src/Hekili/Formatting.lua
+src/Hekili/Hekili.lua
+src/Hekili/MultilineEditor.lua
+src/Hekili/Scripts.lua
+src/Hekili/State.lua
+src/Hekili/Targets.lua
+src/Hekili/UI.lua
+src/Hekili/Utils.lua
+src/Hekili/Libs/
+src/Hekili/Options/
+src/Hekili/UI/
+src/Hekili/Engine/Spec.lua
+archive/
+.claude/
+.lua/

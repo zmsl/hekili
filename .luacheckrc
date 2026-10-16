@@ -9,6 +9,7 @@ exclude_files = {
     "src/Hekili/Libs/",
     "archive/",
     ".claude/",
+    ".lua/",
     ".luacheckrc",
 }
 

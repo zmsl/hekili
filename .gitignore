@@ -61,3 +61,7 @@ Dragonflight/APLs/Tier28/
 Specs.md
 
 .claude/
+
+.lua/
+luacov.stats.out
+luacov.report.out
