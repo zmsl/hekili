@@ -13,6 +13,10 @@ describe("the level and armour sweep #slow", function()
                 if dr == 0 then
                     assert.is_true(metrics.rate(m, 1) >= 0.94 and metrics.rate(m, 2) >= 0.94, metrics.line(m))
                     assert.is_true(m.wrong[1] + m.wrong[2] <= 0.02 * (m.own[1] + m.own[2]), metrics.line(m))
+                    assert.is_true(
+                        metrics.falsePer100(m) == 0 and metrics.falsePer100(m, m.falseNet) == 0,
+                        metrics.line(m)
+                    )
                     local drift = metrics.fights({ level = level, dr = dr }, 20)
                     assert.is_true(drift.over == 0, metrics.line(drift))
                 elseif dr == 0.30 then

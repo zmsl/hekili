@@ -1,6 +1,6 @@
 # Combat harness and group-fidelity attribution (design, 2026-10-16)
 
-Status: DRAFT for review. Base: forever 6dd6d6c2. Paths under `src/Hekili/` unless they start with `tests/`, `tools/`
+Status: built on forever-group (2026-10-16); where the text and the code differ, "As built" (§9) rules. Base: forever 6dd6d6c2. Paths under `src/Hekili/` unless they start with `tests/`, `tools/`
 or `docs/`. Inputs: `docs/research/2026-10-16-swing-outcome-pairing.md` (logs 1-2, "P"), the party log 3 and its
 reading (`tmp/group/log3-group.md`, "G"), `docs/research/2026-10-16-unit-combat-event.md` ("U"), `Virtual/Events/Rows.lua`
 and `Attackers.lua` as merged at 08def3ae, `Virtual/State/Sources/Swing.lua`, `Families/Resources.lua`, the replay
@@ -433,3 +433,51 @@ party members beyond what the world emits for realism; the swing timer from `PLA
 carrier); destinations other than the target (plates, phase C); Phase D's compensating aura removal on a missed cast;
 damage-taken rage (Protection spec, unchanged); raid tuning; UNIT_AURA cost beyond the B15 line; the same-ms avoids'
 origin (recorded by the harness as "unexplained" until a capture explains them).
+
+## 9. As built (2026-10-16)
+Where §0-§7 and the code differ, this table rules. "Deviation n" is the plan's; "ruling" is the ledger's; "Tn" is a
+task's review round.
+
+| Topic | Spec text | As built | Source |
+|---|---|---|---|
+| THETA (§1.4, §2.5, D1) | 4 | `L.THETA = 5`; the oracle's theta[16] starts at it | ruling |
+| Glancing / BLOCK_REDUCED (§1.3) | open the range from 0 | open the loose band (class 2) down to 0 only; the exact band is unchanged | ruling |
+| Background (§1.4) | every unclaimed outcome | white outcomes only (school 1); bg[7] counts AVOIDS only; bg[8] (white, any amount) always | ruling |
+| Snapshot (§1.5) | no off-hand reference | `rows credited ... ref=%.0f/%.0f ...`, `rows oracle ...`, `rows onus credited/unattributed/byBand` | Task 5 |
+| Verdict window (§2.2) | checked in Resources | checked in Rows (`I.CreditVerdict`) | Deviation 5 |
+| Rescue test (§2.3) | `R.gain - shortGain` | `est < c` | Deviation 6 |
+| Rescue candidates (§2.3) | any dropped wound | the dropped ring's wounds 0.1-0.6 s (ORACLE_MIN/MAX) before the flip; Resources pays the rescue directly (Rows stages nothing) | Deviation 7 |
+| Retraction (§2.2) | take the credit back | bounded by the credit's pre-credit values (`max(cur - d, min(cur, pre))`, clamped to [0, max]); the crit's step goes with it | T3 round 2 |
+| Rescue suppression (§2.3) | - | no rescue when a confirmed or open record of the slot explains the flip | T3 round 2 |
+| Usability answers (§3.4) | oracle scenarios only | every gate runs `scenarios.oracle`, the sweep included | ruling |
+| Overshoot (§3.4) | measured with the oracle | read from a companion run without answers: a model-only metric (the drift); the oracle's "at most half" became danger == 0 | ruling |
+| False wounds (§3.3, §3.4) | one count | gross (every false credit) and net (less those retracted at their verdict); the spec's bounds apply to net (party <= 4, party+pet <= 6); gross <= measured + 1; false avoids and form wrong <= 3% gated too | ruling |
+| Solo rescue gate (§3.4) | precision | "one miss" (<= 1 wrong rescue) | Deviation 10 |
+| Fixtures (§3.1) | logs 1-3 | logs 1, 2, 3 and 5 (G5); `tools/vslog_fixture.lua` turns a dump into one | Task 5 |
+| RNG (§3.2) | seeded | Park-Miller minimal standard (48271, 2^31 - 1), not xorshift | Task 1 |
+| Attackers, rule 2 (§4.2) | the band that holds it | only when every candidate's band is known, one holds it and more than one hostile is on us; with one, the lone rule credits it and its band learns | T4, Task 5 |
+| Attackers, joiner (§4.1) | - | a joining attacker without a band is found by elimination (every known band excludes the wound) | Task 4 |
+| Same strength (§4.3, §3.4) | precision >= 0.90 | from the pull: `credited == 0` (equal bands never separate); different strength from the pull is never attributed either (T4 #5, open) | T4 |
+| Runtime (D4) | about 1 min | `make check` about 108 s (busted about 95 s); `make test-fast` about 11 s skips the `#slow` gates | final review |
+
+Final gates (deterministic seeds; Task 3 round 2 and Task 4, unchanged at 915b2ca3). Hit rates main / off; false
+wounds and avoids per 100 swings; overshoot from the run without answers.
+
+| Gate | Hit rates | Wrong | False wounds, gross | False wounds, net | False avoids | Overshoot |
+|---|---|---|---|---|---|---|
+| solo, 200 fights | .992 / .989 | 26 / 8 | 0 | 0 | 0.10 | 0 |
+| buff, 100 fights | .897 / .944 | 38 / 80 | 0 | 0 | 0.16 | not gated |
+| form, 100 fights | .966 / .967 | 81 / 61 (2.5% / 2.1%) | 0 | 0 | 0.10 | not gated |
+| party, 100 fights | .831 / .979 | 0 / 7 | 1.76 (<= 2.76) | 1.16 (<= 4) | 0.33 | 22/1200 |
+| party+pet, 100 fights | .774 / .899 | 0 / 1 | 6.35 (<= 7.33) | 5.12 (<= 6) | 0.82 | 47/1200 |
+
+| Oracle | Judged | False credits caught | False retractions | Rescues that were ours | Danger |
+|---|---|---|---|---|---|
+| solo | 5548 | none judged | 1 of 15847 | 1 of 2 | 0 |
+| buff | 1890 | none judged | 0 | 44 of 51 | 0 |
+| form | 1953 | none judged | 0 | 1 of 1 | 0 |
+| party | 2614 | 61 of 82, 74% | 8 of 7225 | 138 of 148, 93.2% (gate 90%) | 0 |
+| party+pet | 2551 | 126 of 238, 53% | 20 of 6703 | 260 of 285, 91.2% (not gated) | 0 |
+
+Hits on us (`onus_spec`): 2x strength, the second joining at 15 s: precision 0.967 (>= 0.95), coverage 0.893
+(>= 0.80); same strength from the pull: 0 of 10592 credited; same strength joining (reported): precision 0.879.

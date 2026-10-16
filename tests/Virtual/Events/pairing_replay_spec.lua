@@ -258,6 +258,16 @@ describe("swing/outcome pairing", function()
             assert.are.same({ "SWING_DAMAGE", 0, 0 }, { got[1][1], got[1][2], landed[1] }) -- the window closed unpaired
         end)
 
+        it("makes a wound with a secret amount, flag or school no candidate, only counted (final review #1)", function()
+            fire(10, "PLAYER_SWING", 2.2, 0)
+            fire(10.47, "UNIT_COMBAT", "target", "WOUND", "", fake.SECRET, 1)
+            fire(10.47, "UNIT_COMBAT", "target", "WOUND", fake.SECRET, 44, 1)
+            fire(10.47, "UNIT_COMBAT", "target", "WOUND", "", 44, fake.SECRET)
+            assert.are.same({ 0, 3 }, { #got, L.background })
+            fire(10.5, "UNIT_COMBAT", "target", "WOUND", "", 44, 1)
+            assert.are.same({ "SWING_DAMAGE", 44, 1 }, { got[1][1], got[1][2], landed[1] })
+        end)
+
         it("counts only white outcomes into the background: no class for a school-8 wound or a RESIST", function()
             fire(12, "PLAYER_REGEN_DISABLED") -- in combat, nothing of ours pending: a quiet window (no decay at one t)
             local before = { unpack(L.bg) }

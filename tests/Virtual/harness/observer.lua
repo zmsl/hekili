@@ -170,7 +170,7 @@ function M.observe(W, k)
         end
         push(t, "PLAYER_TARGET_CHANGED")
     end
-    -- UnitDamage read out of combat only (Protection spec §1.1).
+    -- UnitDamage read out of combat only (docs/superpowers/specs/2026-10-16-forever-protection-design.md §1.1).
     local function cache(t, d)
         push(t, "@damage", d[1], d[2], d[3], d[4])
         push(t, "PLAYER_EQUIPMENT_CHANGED")
@@ -218,7 +218,8 @@ function M.observe(W, k)
                 push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. castN, M.SPELLS[ev.spell])
             end
             outcome(t + 0.001, ev, 1)
-        elseif kind == "cast" and ev.src == us then -- plain IDs (Protection spec §1.1); others' secret (G 49873)
+        -- our cast IDs plain (docs/superpowers/specs/2026-10-16-forever-protection-design.md §1.1)
+        elseif kind == "cast" and ev.src == us then -- others' secret (G 49873)
             castN = castN + 1
             push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. castN, M.SPELLS[ev.spell])
             if ev.onUs then -- P log 1 1345, 4329-4330, 6532: also on targettarget while our target targets us

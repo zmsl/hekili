@@ -234,19 +234,19 @@ describe("the observer", function()
         W.emit(land)
         W.emit({ t = 5, kind = "cast", src = us, dst = mob, spell = "CAST", cost = 10 })
         local got = events(observer.observe(W, setmetatable({ usable = true }, { __index = observer.DEFAULTS })), 1)
-        local shout, rend = observer.COSTS[1][1], observer.COSTS[3][1]
+        local cast, dot = observer.COSTS[1][1], observer.COSTS[3][1]
         assert.are.same({
             { 4, "UNIT_COMBAT", "nameplate1", "WOUND", "", 40, 1, 1 },
             { 4, "UNIT_COMBAT", "target", "WOUND", "", 40, 1, 1 },
             { 4, "@truth", 12, nil, nil, nil, nil, 0 },
-            { 4.1, "@usable", shout, 1, nil, nil, nil, 0 },
-            { 4.1, "@usable", rend, 1, nil, nil, nil, 0 },
+            { 4.1, "@usable", cast, 1, nil, nil, nil, 0 },
+            { 4.1, "@usable", dot, 1, nil, nil, nil, 0 },
             { 4.1, "SPELL_UPDATE_USABLE", nil, nil, nil, nil, nil, 0 },
             { 5, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", observer.SPELLS.CAST, nil, nil, 0 },
             { 5, "UNIT_SPELLCAST_SUCCEEDED", "targettarget", "Cast-1", observer.SPELLS.CAST, nil, nil, 0 },
             { 5, "@truth", 2, nil, nil, nil, nil, 0 },
-            { 5, "@usable", shout, 2, nil, nil, nil, 0 },
-            { 5, "@usable", rend, 2, nil, nil, nil, 0 },
+            { 5, "@usable", cast, 2, nil, nil, nil, 0 },
+            { 5, "@usable", dot, 2, nil, nil, nil, 0 },
             { 5, "SPELL_UPDATE_USABLE", nil, nil, nil, nil, nil, 0 },
         }, got)
     end)

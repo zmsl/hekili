@@ -398,8 +398,11 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         return
     end
     advance(t)
-    amount = type(amount) == "number" and amount or 0
-    flag = type(flag) == "string" and flag or ""
+    -- EventFacade's Plain made a secret slot nil: no candidate (not a WOUND 0), only counted (never seen in game)
+    if type(amount) ~= "number" or type(flag) ~= "string" or type(school) ~= "number" then
+        background(act, 0, "", false, act ~= "WOUND", false)
+        return
+    end
     local white, avoid = school == 1, act ~= "WOUND"
     if act == "WOUND" and amount <= 0 then
         lastW0 = t

@@ -7,7 +7,7 @@ local function mobs(a, b)
     return { { damage = a, period = 2.0 }, { damage = b, period = 2.6 } }
 end
 
-describe("hits on us (harness gates)", function()
+describe("hits on us (harness gates) #slow", function()
     it(
         "two attackers of 2x different strength, the second joining at 15 s: precision >= 0.95, coverage >= 0.80",
         function()
