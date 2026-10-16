@@ -302,8 +302,9 @@ I.OnAdvance(function(from, to)
         -- resumes from the aura's expiry.
         local start = from
         for g = 1, G.n do
-            local j = G.aura[g]
-            if d > 0 and G.slot[g] == r and j > 0 and I.auras.applied[1][j] <= to then
+            local j, tid = G.aura[g], G.talent[g]
+            local learned = tid == 0 or VS.Talent(tid) ~= 0 -- auraGain's talent gate
+            if d > 0 and learned and G.slot[g] == r and j > 0 and I.auras.applied[1][j] <= to then
                 local e = I.auras.exp0[1][j]
                 if e > to then
                     d = 0
