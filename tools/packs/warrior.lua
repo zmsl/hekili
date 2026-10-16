@@ -29,7 +29,7 @@ actions.execute=heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adap
 actions.execute+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.mortal_strike.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(execute_phase&settings.execute_queueing_enabled))
 actions.execute+=/execute
 actions.rotation=victory_rush
-actions.rotation+=/intercept,if=buff.berserker_stance.up&action.intercept.in_range&!action.heroic_strike.in_range
+actions.rotation+=/intercept,if=buff.berserker_stance.up&action.intercept.in_range&!action.rend.in_range
 actions.rotation+=/heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adaptive_queueing_enabled&cooldown.mortal_strike.remains>=rage.time_to_42|settings.adaptive_queueing_enabled&should_hs)|(execute_phase&settings.execute_queueing_enabled))
 actions.rotation+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.mortal_strike.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(execute_phase&settings.execute_queueing_enabled))
 actions.rotation+=/overpower
@@ -55,7 +55,7 @@ actions.execute=heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adap
 actions.execute+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(execute_phase&settings.execute_queueing_enabled))
 actions.execute+=/execute
 actions.rotation=victory_rush
-actions.rotation+=/intercept,if=buff.berserker_stance.up&action.intercept.in_range&!action.heroic_strike.in_range
+actions.rotation+=/intercept,if=buff.berserker_stance.up&action.intercept.in_range&!action.rend.in_range
 actions.rotation+=/heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_42|settings.adaptive_queueing_enabled&should_hs)|(execute_phase&settings.execute_queueing_enabled))
 actions.rotation+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(execute_phase&settings.execute_queueing_enabled))
 actions.rotation+=/overpower
