@@ -1,9 +1,10 @@
 -- Virtual/State/Sources/Forms.lua
 -- Shapeshift form sources: stances are forms, not buffs, so the aura walk never lists them. At the first poll after
--- build and on UPDATE_SHAPESHIFT_FORM, the plain form reads (GetShapeshiftForm, GetShapeshiftFormInfo's 4th return:
--- the form's spell ID) put each tracked player aura that is a form up with no expiry (the active one) or down (the
--- rest), as the walk's own `Read`s. The walk leaves a form aura it did not find alone (I.formAura): the form reads own
--- it. A form the walk also lists (Druid forms) reads the same from both: no expiry, 1 stack.
+-- build and the poll after each UPDATE_SHAPESHIFT_FORM, the plain form reads (GetShapeshiftForm,
+-- GetShapeshiftFormInfo's 4th return: the form's spell ID) put each tracked player aura that is a form up with no
+-- expiry (the active one) or down (the rest), as the walk's own `Read`s. The walk leaves a form aura it did not find
+-- alone (I.formAura): the form reads own it, until a read that is not plain hands it back to the walk. A form the walk
+-- also lists (Druid forms) reads the same from both: no expiry, 1 stack.
 -- Credits: secret-value handling after Catnip's (Durts) research.
 
 local _, ns = ...
@@ -38,6 +39,9 @@ local function read(api, t)
     local okN, rawN = pcall(numForms, api)
     local active, n = okA and Plain(api, rawActive), okN and Plain(api, rawN)
     if type(active) ~= "number" or type(n) ~= "number" then
+        for j in pairs(isForm) do -- unread forms: the walk owns those auras again
+            isForm[j] = nil
+        end
         return
     end
     local bySpell = I.auras.bySpell
@@ -51,13 +55,13 @@ local function read(api, t)
     end
 end
 
-S.On("UPDATE_SHAPESHIFT_FORM", nil, function(api, t)
-    if I.built then
-        read(api, t)
-    end
+-- The read waits for the poll, which runs after the frame's staged casts are flushed: a stance cast's modelled
+-- expiry folds first and the read's no-expiry lands after it.
+S.On("UPDATE_SHAPESHIFT_FORM", nil, function()
+    pending = true
 end)
 
--- Poll 9: the first read after a build.
+-- Poll 9: the first read after a build or a form event.
 S.Poll(9, function(api, t)
     if pending then
         pending = false

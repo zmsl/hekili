@@ -12,9 +12,9 @@ local function def(ids)
         auras[i], auraIds[i] = { key = "a" .. ids[i], id = ids[i] }, { ids[i] }
     end
     return {
-        abilities = {},
-        abilityIds = {},
-        abilitySlot = {},
+        abilities = { { key = "stance" } }, -- the stance cast (ability 1)
+        abilityIds = { { FORM_B } },
+        abilitySlot = { 0 },
         resources = {},
         auras = auras,
         auraIds = auraIds,
@@ -24,13 +24,13 @@ local function def(ids)
 end
 
 describe("forms", function()
-    local VS, I, S, api, ctl
+    local VS, I, S, Obs, api, ctl
 
     before_each(function()
         api, ctl = fake.new()
         local ns = load.module()
         VS, I = ns.VirtualState, ns.VirtualStateInternal
-        S = I.Sources
+        S, Obs = I.Sources, VS.Obs
         ctl.forms = { FORM_A, FORM_B }
         ctl.form = 1
     end)
@@ -103,6 +103,66 @@ describe("forms", function()
         ctl.Fire("UPDATE_SHAPESHIFT_FORM")
         poll(11)
         assert.are.equal(inst, select(4, VS.Aura("player", FORM_A, 11)))
+    end)
+
+    it(
+        "reads the form after a stance cast folded in the same frame (the cast's modelled expiry does not stick)",
+        function()
+            start({ FORM_A, FORM_B })
+            poll(10)
+            I.On(Obs.CastSuccess, function(_, t) -- the stance's `now` applyBuff: a modelled 3600 s expiry
+                I.AuraModel(1, 2, t, t + 3600, 1, t, Obs.CastSuccess, false)
+            end)
+            ctl.now, ctl.form = 11, 2
+            S.Stage(Obs.CastSuccess, 11, 1) -- staged, as Sources/Casts.lua does
+            ctl.Fire("UPDATE_SHAPESHIFT_FORM") -- the same frame
+            poll(11)
+            assert.are.equal(math.huge, VS.Aura("player", FORM_B, 11).est)
+            assert.is_nil(VS.Aura("player", FORM_A, 11))
+        end
+    )
+
+    it("forgets the form marks on a rebuild: a non-form aura at a form's old index goes down on a walk", function()
+        start({ FORM_A, OTHER })
+        poll(10)
+        I.Build(def({ OTHER, FORM_B }), 10) -- OTHER now has FORM_A's index; no form is active
+        ctl.form = 0
+        ctl.auras.player.HELPFUL[1] = { spellId = OTHER, expirationTime = 0, applications = 0 }
+        ctl.now = 11
+        ctl.Fire("UNIT_AURA", "player")
+        poll(11)
+        assert.is_not_nil(VS.Aura("player", OTHER, 11))
+        ctl.auras.player.HELPFUL[1] = nil
+        ctl.Fire("UNIT_AURA", "player")
+        poll(12)
+        assert.is_nil(VS.Aura("player", OTHER, 12))
+    end)
+
+    it("leaves the target's walk alone: a target aura at a form's index still goes down", function()
+        start({ FORM_A, OTHER })
+        poll(10)
+        ctl.now = 11
+        ctl.auras.target.HELPFUL[1] = { spellId = FORM_A, expirationTime = 0, applications = 0 }
+        ctl.Fire("UNIT_AURA", "target")
+        poll(11)
+        assert.is_not_nil(VS.Aura("target", FORM_A, 11))
+        ctl.auras.target.HELPFUL[1] = nil
+        ctl.Fire("UNIT_AURA", "target")
+        poll(12)
+        assert.is_nil(VS.Aura("target", FORM_A, 12))
+    end)
+
+    it("hands the form auras back to the walk when a form read is not plain", function()
+        start({ FORM_A, FORM_B })
+        poll(10)
+        ctl.form = fake.SECRET
+        ctl.now = 11
+        ctl.Fire("UPDATE_SHAPESHIFT_FORM")
+        poll(11)
+        assert.is_not_nil(VS.Aura("player", FORM_A, 11)) -- a secret read changes nothing by itself
+        ctl.Fire("UNIT_AURA", "player") -- a clean walk without it: down
+        poll(12)
+        assert.is_nil(VS.Aura("player", FORM_A, 12))
     end)
 
     it("does nothing for a class with no tracked form aura", function()
