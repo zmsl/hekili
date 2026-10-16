@@ -112,8 +112,8 @@ at or below the gate; does a wrong stance give false,false).
   crowd control on the player (unmeasured, no guard; §7 line 4 extended).
 - A pre-damaged target (group, or a mob already fighting) overestimates M; the next pin or death corrects est, not M.
   shortcut: one anchor per target; upgrade with a per-npcid max learned at kills.
-- Not covered: health above the gate, or classes with no gated ability (Druid), unless the max is plain (§7 line 2). Time to
-  die keeps Hekili's tracker and default.
+- Not covered: health above the gate, or classes with no gated ability (Druid). Time to die keeps Hekili's tracker and default.
+- Closed (W sweep 2026-10-16): `UnitHealthMax("target")` is secret in and out of combat, so the plain-max branch (§2.3b) is out.
 - A future proc making Execute usable at any health would pin wrongly: needs a `buff` guard like the stance one.
 - After a pin the facade's `UnitHealth("target")` jumps (100 → 20), and Hekili's own tracker (Targets.lua, no E4) regresses
   over it: its `time_to_die`, `time_to_pct_` and `fight_remains` are transient junk for a few seconds. Priorities that read

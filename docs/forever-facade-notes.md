@@ -194,6 +194,22 @@ covers them being nil, and Phase 3b ports them to `C_SpellBook.IsSpellKnown` and
 | `UnitTokenFromGUID` | present | unprobed | passthrough | — | Targets.lua |
 | `UnitWeaponAttackPower` | present | secret in combat [W PR2, PR4] | stub | `0` (every return) | State.lua |
 
+## Sweep 2026-10-16
+
+Supersedes the "unprobed" tags in the inventory above for the 72 passthrough reads (the facade's PASSTHROUGH table now
+carries the sweep tags).
+
+- Method: the ForeverProbe `/vsprobe sweep` command called every read tagged "unprobed" once out of combat and once in
+  combat at a dummy (Undead Warrior, Forever 1.60.1), recording per return value secret / plain type / nil.
+- Verdict: 71 called (`C_AddOns.LoadAddOn` skipped as state-changing, assumed plain), none returned a secret in either
+  run, and oc = ic apart from argument-dependent answers (`UnitFactionGroup`, `UnitSex`, `UnitTokenFromGUID` on a
+  creature target). `GetStablePetInfo` is missing on Forever.
+- Caveat: table returns (`GetClassColor`, `C_Spell.GetSpellInfo`, `GetSpellBookItemInfo`, `GetSpellBookSkillLineInfo`,
+  `GetAtlasInfo`, the three `C_TooltipInfo` reads, `GetCurrentGameWindowSize`) were checked as tables only; their
+  fields are unverified.
+- `UnitHealthMax("target")` is secret out of combat and in combat (`C_Secrets.ShouldUnitHealthMaxBeSecret("target")`
+  = true): the max is secret always on other units, so the target-health design's plain-max branch (§2.3b) is closed.
+
 ## Secrecy zone (bodies unchanged in Phase 2; Phase 3b revisits them)
 
 Line ranges are as of the post-cleanup sweep (Task 20).
