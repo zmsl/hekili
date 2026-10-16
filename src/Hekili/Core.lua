@@ -1664,8 +1664,8 @@ function Hekili.Update()
 
                 local action, wait, depth
                 local isMain = ( dispName == "Primary" or dispName == "AOE" )
-                -- Forever E9: the recommendation window is the global forecast window (Options, Performance).
-                local defaultMax = Hekili.DB.profile.performance.forecastWindow or 15
+                -- Forever E9: Primary and AOE use the global forecast window (Options, Performance); other displays their Forecast Period.
+                local defaultMax = isMain and ( Hekili.DB.profile.performance.forecastWindow or 15 ) or ( display.forecastPeriod or 15 )
 
                 if class.file == "DEATHKNIGHT" then
                     defaultMax = max( defaultMax, 0.01 + 20 * state.haste )

@@ -5039,6 +5039,28 @@ found = true end
                                     set = function( _, v ) Hekili.DB.profile.performance.forecastWindow = v end,
                                     order = 11,
                                     width = "full"
+                                },
+                                forecastWindowInfo = {
+                                    type = "description",
+                                    name = function()
+                                        local window = Hekili.DB.profile.performance.forecastWindow or 15
+
+                                        return
+                                            "\nThis setting determines how far ahead the Primary and AOE recommendations look for the next affordable action, " ..
+                                            "and how far the resource forecast runs.\n\n" ..
+                                            "|cFFFFD100• Higher values|r let a rage class show its next action while rage is still building, so the queue " ..
+                                            "|cFF00FF00stays filled at the pull|r, at a small cost per recommendation that grows with the window.\n" ..
+                                            "|cFFFFD100• Lower values|r |cFF00FF00cost less|r and suit energy and mana classes, whose resource arrives steadily.\n\n" ..
+
+                                            "The other displays (Cooldowns, Defensives, Interrupts) keep their own |cFFFFD100Forecast Period|r in their display settings.\n\n" ..
+
+                                            "|cFF00B4FFDefault|r: |cFFFFD10015 s|r\n\n" ..
+
+                                            "Current window: |cFF00FF00" .. window .. " s|r"
+                                    end,
+                                    fontSize = "medium",
+                                    order = 12,
+                                    width = "full",
                                 }
                             }
                         }

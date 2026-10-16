@@ -640,7 +640,8 @@ describe("Forever Warrior", function()
         local core = assert(io.open("src/Hekili/Core.lua")):read("*a")
         assert.is_truthy(
             core:find(
-                "-- Forever E9:[^\n]*\n%s+local defaultMax = Hekili%.DB%.profile%.performance%.forecastWindow or 15\n"
+                "-- Forever E9:[^\n]*\n%s+local defaultMax = isMain and %( Hekili%.DB%.profile%.performance%.forecastWindow or 15 %)"
+                    .. " or %( display%.forecastPeriod or 15 %)\n"
             )
         )
     end)
@@ -650,6 +651,7 @@ describe("Forever Warrior", function()
         assert.is_truthy(opts:find('forecastHeader = {\n%s+type = "header",\n%s+name = "Forecast",'))
         assert.is_truthy(opts:find('forecastWindow = {\n%s+type = "range",\n%s+name = "Forecast window %(s%)",'))
         assert.is_truthy(opts:find("Hekili.DB.profile.performance.forecastWindow = v", 1, true))
+        assert.is_truthy(opts:find('forecastWindowInfo = {\n%s+type = "description",'))
         assert.is_nil(w.settings.forecast_window)
     end)
 end)
