@@ -1,4 +1,5 @@
 -- Forever/Races/Troll.lua
+-- `all` (Engine/Spec.lua) no longer registers this racial: the stock entry named below is what it used to register.
 -- The Troll's Forever racials (DB2 1.60.1.70338), for every class: Berserking (20554: +10% attack and casting speed
 -- for 10 s, one flat value, no health scaling; 180 s, off the GCD), which replaces `all`'s stock entry and aura
 -- (26297, absent on Forever), and Rapid Regeneration (1260270: heals 50% of maximum health over 6 s; a self-channel,

@@ -1,0 +1,455 @@
+-- Forever/Shared/Auras.lua
+-- The auras every class shares on Forever (shared-content spec §4.1), through Engine/Shared.lua into `all`: auras others
+-- put on the player, which the player's aura walk reads in combat (lust, Power Infusion, loss of control, dispellable
+-- debuffs), and four id-less stubs for the keys core still reads by name. Retail's other lusts and lockouts, the
+-- target-side reads (a target's auras are secret in combat) and the absorbs were dropped (spec §4.1); class buffs live in
+-- their class files and racials in the race packs.
+
+local addon, ns = ...
+local Hekili = _G[ addon ]
+
+local C_LossOfControl = ns.Facade.C_LossOfControl
+local GetActiveLossOfControlData, GetActiveLossOfControlDataCount = C_LossOfControl.GetActiveLossOfControlData, C_LossOfControl.GetActiveLossOfControlDataCount
+local UnitDebuff = ns.UnitDebuff
+
+local shared = Hekili:NewShared()
+
+local auras = {
+    -- Core reads these by name (State.lua: the cooldown read, `prowling`, the GCD's length); none exists on Forever, so
+    -- each is a stub with no ID, never up. Smaller than the core edit removing the reads (spec §4.1).
+    voidbinding = {},
+    voidform = {},
+    shadowform = {},
+    adrenaline_rush = {},
+
+    -- State.lua's cooldowns toggle override reads buff.bloodlust.up. Forever's one haste "Bloodlust" (DB2: 3 s cast, no
+    -- duration, no class): kept until the checkpoint shows what a Shaman's lust puts on the player (spec §7 Q1).
+    bloodlust = {
+        alias = { "bloodlust_actual" },
+        aliasMode = "first",
+        aliasType = "buff",
+        duration = 3600,
+    },
+
+    bloodlust_actual = {
+        id = 1245940,
+        duration = 3600, -- until cancelled (DB2 -1); the player walk reads the real expiry
+        shared = "player",
+        max_stack = 1,
+    },
+
+    -- Another Priest's on the player (State.lua's infusion toggle); 15 s on Forever (DB2).
+    power_infusion = {
+        id = 10060,
+        duration = 15,
+        max_stack = 1,
+        shared = "player",
+        dot = "buff"
+    },
+
+    loss_of_control = {
+        duration = 10,
+        generate = function( t )
+            local max_events = GetActiveLossOfControlDataCount()
+
+            if max_events > 0 then
+                local spell, start, duration, remains = 0, 0, 0, 0
+
+                for i = 1, max_events do
+                    local event = GetActiveLossOfControlData( i )
+
+                    if event and event.lockoutSchool == 0 and event.startTime and event.startTime > 0 and event.timeRemaining and event.timeRemaining > 0 and event.timeRemaining > remains then
+                        spell = event.spellID
+                        start = event.startTime
+                        duration = event.duration
+                        remains = event.timeRemaining
+                    end
+                end
+
+                if start + duration > query_time then
+                    t.count = 1
+                    t.expires = start + duration
+                    t.applied = start
+                    t.duration = duration
+                    t.caster = "anybody"
+                    t.v1 = spell
+                    return
+                end
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.duration = 10
+            t.caster = "nobody"
+            t.v1 = 0
+        end,
+    },
+
+    disoriented = {  -- Disorients (e.g., Polymorph, Dragon’s Breath, Blind)
+        duration = 10,
+        generate = function( t )
+            local max_events = GetActiveLossOfControlDataCount()
+
+            if max_events > 0 then
+                local spell, start, duration, remains = 0, 0, 0, 0
+
+                for i = 1, max_events do
+                    local event = GetActiveLossOfControlData( i )
+
+                    if event and event.locType == "CONFUSE"
+                        and event.startTime and event.startTime > 0
+                        and event.timeRemaining and event.timeRemaining > 0
+                        and event.timeRemaining > remains then
+
+                        spell = event.spellID
+                        start = event.startTime
+                        duration = event.duration
+                        remains = event.timeRemaining
+                    end
+                end
+
+                if start + duration > query_time then
+                    t.count = 1
+                    t.expires = start + duration
+                    t.applied = start
+                    t.duration = duration
+                    t.caster = "anybody"
+                    t.v1 = spell
+                    return
+                end
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.duration = 10
+            t.caster = "nobody"
+            t.v1 = 0
+        end,
+    },
+
+    feared = {
+        duration = 10,
+        generate = function( t )
+            local max_events = GetActiveLossOfControlDataCount()
+
+            if max_events > 0 then
+                local spell, start, duration, remains = 0, 0, 0, 0
+
+                for i = 1, max_events do
+                    local event = GetActiveLossOfControlData( i )
+
+                    if event and ( event.locType == "FEAR" or event.locType == "FEAR_MECHANIC" or event.locType == "HORROR" )
+                        and event.startTime and event.startTime > 0
+                        and event.timeRemaining and event.timeRemaining > 0
+                        and event.timeRemaining > remains then
+
+                        spell = event.spellID
+                        start = event.startTime
+                        duration = event.duration
+                        remains = event.timeRemaining
+                    end
+                end
+
+                if start + duration > query_time then
+                    t.count = 1
+                    t.expires = start + duration
+                    t.applied = start
+                    t.duration = duration
+                    t.caster = "anybody"
+                    t.v1 = spell
+                    return
+                end
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.duration = 10
+            t.caster = "nobody"
+            t.v1 = 0
+        end,
+    },
+
+    incapacitated = {  -- Effects like Sap, Freezing Trap, Gouge
+        duration = 10,
+        generate = function( t )
+            local max_events = GetActiveLossOfControlDataCount()
+
+            if max_events > 0 then
+                local spell, start, duration, remains = 0, 0, 0, 0
+
+                for i = 1, max_events do
+                    local event = GetActiveLossOfControlData( i )
+
+                    if event and event.locType == "STUN"
+                        and event.startTime and event.startTime > 0
+                        and event.timeRemaining and event.timeRemaining > 0
+                        and event.timeRemaining > remains then
+
+                        spell = event.spellID
+                        start = event.startTime
+                        duration = event.duration
+                        remains = event.timeRemaining
+                    end
+                end
+
+                if start + duration > query_time then
+                    t.count = 1
+                    t.expires = start + duration
+                    t.applied = start
+                    t.duration = duration
+                    t.caster = "anybody"
+                    t.v1 = spell
+                    return
+                end
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.duration = 10
+            t.caster = "nobody"
+            t.v1 = 0
+        end,
+        copy = "sapped"
+    },
+
+    rooted = {
+        duration = 10,
+        generate = function( t )
+            local max_events = GetActiveLossOfControlDataCount()
+
+            if max_events > 0 then
+                local spell, start, duration, remains = 0, 0, 0, 0
+
+                for i = 1, max_events do
+                    local event = GetActiveLossOfControlData( i )
+
+                    if event and event.locType == "ROOT" and event.startTime and event.startTime > 0 and event.timeRemaining and event.timeRemaining > 0 and event.timeRemaining > remains then
+                        spell = event.spellID
+                        start = event.startTime
+                        duration = event.duration
+                        remains = event.timeRemaining
+                    end
+                end
+
+                if start + duration > query_time then
+                    t.count = 1
+                    t.expires = start + duration
+                    t.applied = start
+                    t.duration = duration
+                    t.caster = "anybody"
+                    t.v1 = spell
+                    return
+                end
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.duration = 10
+            t.caster = "nobody"
+            t.v1 = 0
+        end,
+    },
+
+    snared = {
+        duration = 10,
+        generate = function( t )
+            local max_events = GetActiveLossOfControlDataCount()
+
+            if max_events > 0 then
+                local spell, start, duration, remains = 0, 0, 0, 0
+
+                for i = 1, max_events do
+                    local event = GetActiveLossOfControlData( i )
+
+                    if event and event.locType == "SNARE" and event.startTime and event.startTime > 0 and event.timeRemaining and event.timeRemaining > 0 and event.timeRemaining > remains then
+                        spell = event.spellID
+                        start = event.startTime
+                        duration = event.duration
+                        remains = event.timeRemaining
+                    end
+                end
+
+                if start + duration > query_time then
+                    t.count = 1
+                    t.expires = start + duration
+                    t.applied = start
+                    t.duration = duration
+                    t.caster = "anybody"
+                    t.v1 = spell
+                    return
+                end
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.duration = 10
+            t.caster = "nobody"
+            t.v1 = 0
+        end,
+        copy = "slowed"
+    },
+
+    stunned = {  -- Shorter stuns (e.g., Kidney Shot, Cheap Shot, Bash)
+        duration = 10,
+        generate = function( t )
+            local max_events = GetActiveLossOfControlDataCount()
+
+            if max_events > 0 then
+                local spell, start, duration, remains = 0, 0, 0, 0
+
+                for i = 1, max_events do
+                    local event = GetActiveLossOfControlData( i )
+
+                    if event and event.locType == "STUN_MECHANIC"
+                        and event.startTime and event.startTime > 0
+                        and event.timeRemaining and event.timeRemaining > 0
+                        and event.timeRemaining > remains then
+
+                        spell = event.spellID
+                        start = event.startTime
+                        duration = event.duration
+                        remains = event.timeRemaining
+                    end
+                end
+
+                if start + duration > query_time then
+                    t.count = 1
+                    t.expires = start + duration
+                    t.applied = start
+                    t.duration = duration
+                    t.caster = "anybody"
+                    t.v1 = spell
+                    return
+                end
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.duration = 10
+            t.caster = "nobody"
+            t.v1 = 0
+        end,
+    },
+
+    dispellable_curse = {
+        generate = function( t )
+            local i = 1
+            local name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+
+            while( name ) do
+                if debuffType == "Curse" then break end
+
+                i = i + 1
+                name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+            end
+
+            if name then
+                t.count = count > 0 and count or 1
+                t.expires = expirationTime > 0 and expirationTime or query_time + 5
+                t.applied = expirationTime > 0 and ( expirationTime - duration ) or query_time
+                t.caster = "nobody"
+                return
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.caster = "nobody"
+        end,
+    },
+
+    dispellable_poison = {
+        generate = function( t )
+            local i = 1
+            local name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+
+            while( name ) do
+                if debuffType == "Poison" then break end
+
+                i = i + 1
+                name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+            end
+
+            if name then
+                t.count = count > 0 and count or 1
+                t.expires = expirationTime > 0 and expirationTime or query_time + 5
+                t.applied = expirationTime > 0 and ( expirationTime - duration ) or query_time
+                t.caster = "nobody"
+                return
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.caster = "nobody"
+        end,
+    },
+
+    dispellable_disease = {
+        generate = function( t )
+            local i = 1
+            local name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+
+            while( name ) do
+                if debuffType == "Disease" then break end
+
+                i = i + 1
+                name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+            end
+
+            if name then
+                t.count = count > 0 and count or 1
+                t.expires = expirationTime > 0 and expirationTime or query_time + 5
+                t.applied = expirationTime > 0 and ( expirationTime - duration ) or query_time
+                t.caster = "nobody"
+                return
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.caster = "nobody"
+        end,
+    },
+
+    reversible_magic = {
+        generate = function( t )
+            local i = 1
+            local name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+
+            while( name ) do
+                if debuffType == "Magic" then break end
+
+                i = i + 1
+                name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+            end
+
+            if name then
+                t.count = count > 0 and count or 1
+                t.expires = expirationTime > 0 and expirationTime or query_time + 5
+                t.applied = expirationTime > 0 and ( expirationTime - duration ) or query_time
+                t.caster = "nobody"
+                return
+            end
+
+            t.count = 0
+            t.expires = 0
+            t.applied = 0
+            t.caster = "nobody"
+        end,
+    },
+}
+
+-- The player's magic debuffs only, as reversible_magic: a target's buffs are secret in combat (spec §4.1, rule 4).
+auras.dispellable_magic = { generate = auras.reversible_magic.generate }
+
+for key, def in pairs( auras ) do
+    shared:RegisterAura( key, def )
+end

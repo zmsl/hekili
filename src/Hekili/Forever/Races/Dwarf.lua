@@ -1,4 +1,5 @@
 -- Forever/Races/Dwarf.lua
+-- `all` (Engine/Spec.lua) no longer registers this racial: the stock entry named below is what it used to register.
 -- The Dwarf's Forever racial (DB2 1.60.1.70338), for every class: Stoneform (20594: -10% physical damage taken,
 -- removes poison, disease and bleed effects and grants immunity to them for 8 s; 180 s, on the GCD), which replaces
 -- `all`'s stock entry (120 s, off the GCD, its buff 65116 absent on Forever: the buff is 20594 itself). Kept from

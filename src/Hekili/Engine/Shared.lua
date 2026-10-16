@@ -25,6 +25,7 @@ end
 --- { max = pct }: every resource the loaded class registered gets pct more maximum (the race object's signature).
 function Shared:RegisterResourceMod( def )
     if type( def.max ) == "number" then
+        -- ns.raceMods comes from Engine\Races.lua, which Hekili.toc loads before this file (line 51 before 55).
         local m = ns.raceMods.maxMods
         m[ #m + 1 ] = { pct = def.max }
     end

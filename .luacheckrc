@@ -119,3 +119,4 @@ for _, k in ipairs(stateEnv) do
 end
 files["src/Hekili/Forever/Classes/Druid.lua"] = { globals = druidEnv }
 files["src/Hekili/Forever/Races/"] = { globals = stateEnv }
+files["src/Hekili/Forever/Shared/"] = { globals = stateEnv }
