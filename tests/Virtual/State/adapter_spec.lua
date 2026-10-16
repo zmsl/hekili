@@ -170,7 +170,13 @@ describe("Adapter", function()
             I.Sources.Direct(VS.Obs.PlayerHit, 15, 4, 0, 20)
             I.Fold(15)
             state.time, state.now, state.offset = 5, 16, 1.5
-            assert.are.same({ false, 0.4, 17.5 }, { e.stop(), e.value(), e.last() }) -- 2 + 2 in 10 s; from the reset
+            assert.are.same({ false, 0.4, 17 }, { e.stop(), e.value(), e.last() }) -- 2 + 2 in 10 s; from the reset
+            assert.are.equal(18, e.last() + e.interval) -- 1.5 s on, the next beat is the reset's +2, not +2.5
+            state.offset = 2
+            assert.are.equal(18, e.last()) -- a beat at the forecast's start is already in `actual`
+            model.mainhand.taken = nil
+            VS.SpecChanged()
+            assert.is_nil(model.__taken) -- the paying entry lost its `taken`: removed
         end
     )
 

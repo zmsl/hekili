@@ -123,14 +123,15 @@ end
 
 -- The sim's rage from hits on the player (tank design §1.2.5): a regen-model entry Hekili's forecast steps every
 -- second from the reset, the belief's learned rate (VS.TakenRate) a step, removed out of combat (`stop`). The belief
--- never reads it: real hits are observed. Built once per regen model, at a build.
+-- never reads it: real hits are observed. Built once per regen model, at a build. Its anchor rolls like `__decay`'s:
+-- a re-forecast keeps the reset's grid (the last whole beat at or before the forecast's start is already in `actual`).
 local function takenEntry(key, powerType)
     local e = { resource = key, interval = 1 }
     function e.value()
         return VS.TakenRate(powerType, state.now)
     end
     function e.last()
-        return state.now + state.offset
+        return state.now + floor(state.offset)
     end
     function e.stop()
         return state.time == 0
@@ -215,7 +216,9 @@ local function buildDef()
         if model and type(iv) == "number" and iv > 0 and model[DECAY] == nil then
             model[DECAY] = decayEntry(k, model, meta, r.type)
         end
-        if model and type(taken) == "function" and model[TAKEN] == nil then
+        if model and type(taken) ~= "function" then
+            model[TAKEN] = nil -- a stale entry out of the forecast's event list
+        elseif model and model[TAKEN] == nil then
             model[TAKEN] = takenEntry(k, r.type)
         end
         if swing == 0 and offValue ~= nil then
