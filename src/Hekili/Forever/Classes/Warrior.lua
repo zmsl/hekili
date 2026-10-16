@@ -215,7 +215,7 @@ spec:RegisterResource(
             end,
 
             interval = 1,
-            -- shortcut: Improved Bloodrage's +50% (12301) is unmodelled here, VirtualState's entries take a number fixed at
+            -- shortcut: Improved Bloodrage's +25% (12301) is unmodelled here, VirtualState's entries take a number fixed at
             -- build; the handler's instant gain carries it. Upgrade if the regen entries learn talent-scaled values.
             value = 1,
         },
@@ -758,13 +758,13 @@ spec:RegisterAbilities({
 
         -- what the cast did to the now-state, in VirtualState's context (spec §12a)
         now = function()
-            gain(10 * (1 + 0.5 * talent.improved_bloodrage.rank), "rage")
+            gain(10 * (1 + 0.25 * talent.improved_bloodrage.rank), "rage")
             applyBuff("bloodrage")
         end,
 
         handler = function()
-            -- DB2 12301: +50% of the rage Bloodrage generates a rank.
-            gain(10 * (1 + 0.5 * talent.improved_bloodrage.rank), "rage")
+            -- 12301 (in-game tooltip): +25% of the rage Bloodrage generates a rank.
+            gain(10 * (1 + 0.25 * talent.improved_bloodrage.rank), "rage")
             applyBuff("bloodrage")
         end,
     },
