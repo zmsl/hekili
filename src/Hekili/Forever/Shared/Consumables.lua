@@ -68,12 +68,13 @@ shared:RegisterAbility( "potion", {
 -- Highest heal first: Major, Greater, Healthstone, Lesser, Minor; each as Improved Healthstone 2/2, 1/2, then plain.
 local HEALTHSTONES = { 19013, 19012, 9421, 19011, 19010, 5510, 19009, 19008, 5509, 19007, 19006, 5511, 19005, 19004, 5512 }
 
--- The best Healthstone in the bags (Minor when none: the keybind and icon lookups need an item).
+-- The best Healthstone in the bags and true (Minor and false when none: the keybind and icon lookups need an item). A
+-- field read (`ability.item`) keeps only the first value.
 local function healthstone()
     for i = 1, #HEALTHSTONES do
-        if GetItemCount( HEALTHSTONES[ i ] ) > 0 then return HEALTHSTONES[ i ] end
+        if GetItemCount( HEALTHSTONES[ i ] ) > 0 then return HEALTHSTONES[ i ], true end
     end
-    return HEALTHSTONES[ #HEALTHSTONES ]
+    return HEALTHSTONES[ #HEALTHSTONES ], false
 end
 
 shared:RegisterAbility( "healthstone", {
@@ -90,8 +91,8 @@ shared:RegisterAbility( "healthstone", {
     startsCombat = false,
 
     usable = function ()
-        local item = healthstone()
-        if GetItemCount( item ) == 0 then return false, "requires healthstone in bags"
+        local item, inBags = healthstone()
+        if not inBags then return false, "requires healthstone in bags"
         elseif not IsUsableItem( item ) then return false, "healthstone on CD"
         elseif health.current >= health.max then return false, "must be damaged" end
         return true

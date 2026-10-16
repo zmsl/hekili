@@ -228,6 +228,18 @@ describe("shared content", function()
         assert.are.equal(5509, item())
     end)
 
+    it("offers a Healthstone only with one in the bags, and only below full health", function()
+        load({ "Consumables" })
+        local usable = all.abilities.healthstone.usable
+        local health = { current = 50, max = 100 }
+        setfenv(usable, { health = health }) -- Engine/Spec.lua runs an ability's functions in `state`
+        assert.are.same({ false, "requires healthstone in bags" }, { usable() })
+        bags[19004] = 1
+        assert.is_true(usable())
+        health.current = 100
+        assert.are.same({ false, "must be damaged" }, { usable() })
+    end)
+
     it("registers use_items, the slots Events.lua rebinds and an empty trinket map", function()
         load({ "Items" })
         assert.are.same({ "main_hand", "null_cooldown", "trinket1", "trinket2", "use_items" }, keys("abilities"))
