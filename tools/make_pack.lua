@@ -5,7 +5,10 @@
 --   lua5.1 tools/make_pack.lua [class]
 -- Edit a pack's SimC-style text there, run this, and paste each printed string into its spec:RegisterPack( ... [[ ]] )
 -- in src/Hekili/Forever/Classes/<Class>.lua (the class's spec fails until they match). Loaded with the argument "lists"
--- (loadfile(...)("lists"[, class])) it returns the class's packs with each pack's parsed lists instead, for the specs.
+-- (loadfile(...)("lists"[, class])) it returns the class's packs with each pack's parsed lists and version instead, for
+-- the specs. Each printed line is "<version> <string>": the version is date * 1000 + a checksum of the pack's SimC text
+-- % 1000, so any text change reloads a saved profile (Engine/Spec.lua RestoreDefaults reloads on `~=`; a lower number
+-- on a same-day edit still reloads but reports the pack "reverted" rather than "updated": bump the date to avoid that).
 
 local first, second = ...
 local class = first == "lists" and (second or "warrior") or (first or "warrior")
@@ -37,8 +40,18 @@ local function parse(simc)
     return lists
 end
 
+-- A rotating byte checksum of the SimC text, 0-999.
+local function checksum(text)
+    local h = 0
+    for i = 1, #text do
+        h = (h * 31 + text:byte(i)) % 1000003
+    end
+    return h % 1000
+end
+
 for _, p in ipairs(PACKS) do
     p.lists = parse(p.simc)
+    p.version = DATE * 1000 + checksum(p.simc)
 end
 
 if first == "lists" then
@@ -56,18 +69,22 @@ for _, p in ipairs(PACKS) do
     local pack = {
         type = "package",
         name = p.name,
-        date = DATE,
+        date = p.version,
         payload = {
             spec = def.spec,
             builtIn = false,
             hidden = false,
-            date = DATE,
-            version = DATE,
+            date = p.version,
+            version = p.version,
             author = "Hekili (Forever)",
             desc = p.desc,
             profile = p.simc,
             lists = p.lists,
         },
     }
-    print("Hekili:" .. LibDeflate:EncodeForPrint(LibDeflate:CompressDeflate(Serializer:Serialize(pack), { level = 5 })))
+    print(
+        p.version
+            .. " Hekili:"
+            .. LibDeflate:EncodeForPrint(LibDeflate:CompressDeflate(Serializer:Serialize(pack), { level = 5 }))
+    )
 end

@@ -471,12 +471,12 @@ describe("Forever Warrior", function()
         local printed = {}
         local pipe = assert(io.popen("lua5.1 tools/make_pack.lua"))
         for line in pipe:lines() do
-            printed[#printed + 1] = line
+            printed[#printed + 1] = { line:match("^(%d+) (.+)$") }
         end
         pipe:close()
         assert.are.equal(3, #w.packs)
         for i, name in ipairs({ "Arms", "Fury", "Protection" }) do
-            assert.are.same({ name, 20261016, printed[i] }, w.packs[i])
+            assert.are.same({ name, tonumber(printed[i][1]), printed[i][2] }, w.packs[i])
         end
         assert.are.same({ package = "Arms" }, w.options)
     end)

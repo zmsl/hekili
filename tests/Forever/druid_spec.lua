@@ -761,12 +761,12 @@ describe("Forever Druid", function()
         local printed = {}
         local pipe = assert(io.popen("lua5.1 tools/make_pack.lua druid"))
         for line in pipe:lines() do
-            printed[#printed + 1] = line
+            printed[#printed + 1] = { line:match("^(%d+) (.+)$") }
         end
         pipe:close()
         assert.are.equal(3, #w.packs)
         for i, name in ipairs({ "Feral", "Guardian", "Balance" }) do
-            assert.are.same({ name, 20261015, printed[i] }, w.packs[i])
+            assert.are.same({ name, tonumber(printed[i][1]), printed[i][2] }, w.packs[i])
         end
         assert.are.equal(w.specID, dofile("tools/packs/druid.lua").spec) -- the packs' spec is the file's
     end)
