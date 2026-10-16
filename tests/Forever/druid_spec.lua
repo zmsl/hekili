@@ -937,7 +937,8 @@ describe("Forever Druid in VirtualState's now context", function()
         assert.are.equal(0, power(3, 6.1))
         cast(5487, 7) -- Bear Form
         assert.are.same({ true, false }, { VS.Aura("player", 5487, 7.1) ~= nil, VS.Aura("player", 768, 7.1) ~= nil })
-        I.Sources.Direct(VS.Obs.Swing, 8, 1, 2.5, 1)
+        I.Sources.Direct(VS.Obs.Swing, 8, 1, 2.5, 4) -- PLAYER_SWING, then Rows.lua's landed wound
+        I.Sources.Direct(VS.Obs.Swing, 8, 1, 0, 1)
         VS.Drain(8)
         near(8.65, power(1, 8))
         cast(5229, 9) -- Enrage: 10 now, 2 a second
@@ -947,7 +948,8 @@ describe("Forever Druid in VirtualState's now context", function()
         cast(414644, 14)
         assert.are.equal(2, select(2, VS.Aura("target", 414644, 14.1)))
         cast(768, 15) -- back to Cat Form: the swing pays nothing
-        I.Sources.Direct(VS.Obs.Swing, 16, 1, 2.5, 1)
+        I.Sources.Direct(VS.Obs.Swing, 16, 1, 2.5, 4)
+        I.Sources.Direct(VS.Obs.Swing, 16, 1, 0, 1)
         VS.Drain(16)
         assert.are.equal(power(1, 15.1), power(1, 16))
         assert.are.same({ 0, 9 }, { I.nowErrors, I.nowRuns })

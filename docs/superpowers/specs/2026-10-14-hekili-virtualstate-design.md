@@ -298,7 +298,7 @@ registrations*, distinct from decision 2's registration API.
 | `UNIT_SPELLCAST_START`, `_STOP`, `_INTERRUPTED`, `_CHANNEL_START`, `_CHANNEL_STOP`, `_INTERRUPTIBLE`, `_NOT_INTERRUPTIBLE` (target) | Target | `TargetCast` by `castBarID` (plain; spellID and castGUID are secret on the target) | |
 | `SPELL_UPDATE_USABLE`, `ACTION_USABLE_CHANGED` | Spellbook | triggers the usability ladder poll (§4.3) | yes |
 | `SPELL_UPDATE_COOLDOWN`, `SPELL_UPDATE_CHARGES` | Spellbook | `Cooldown` per tracked spell whose plain `isActive` flag changed (b: 1 ready / 0 not); GCD edges from `isOnGCD` | yes |
-| `PLAYER_SWING` | Swing | `Swing` (a: hand, b: swing duration, c: 1 swung) | yes |
+| `PLAYER_SWING` | Swing | `Swing` (a: hand, b: swing duration, c: 4 swung; c: 1 landed comes from the event facade's pairing, Events/Rows.lua) | yes |
 | `UNIT_ATTACK_SPEED`, `PLAYER_EQUIPMENT_CHANGED` | Swing | `Swing` reads (c: 0) out of combat | yes |
 | `UNIT_POWER_FREQUENT`, `UNIT_MAXPOWER`, `UNIT_DISPLAYPOWER` (player) | Power | `PowerTick` (a: slot); a plain `UnitPower` read as `Read` | |
 | `UNIT_AURA` (player, target) | Auras | the walk of §4.5 into `Read` (c: aura) per tracked aura found | |

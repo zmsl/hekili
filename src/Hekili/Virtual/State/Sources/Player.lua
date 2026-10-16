@@ -60,6 +60,9 @@ local function readStat(api, i, t)
     v[1], v[2], v[3], v[4] = Plain(api, r1) or 0, Plain(api, r2) or 0, Plain(api, r3) or 0, Plain(api, r4) or 0
     v[5], v[6], v[7] = Plain(api, r5) or 0, Plain(api, r6) or 0, Plain(api, r7) or 0
     I.statT[i] = t
+    if e[1] == "UnitDamage" then
+        I.damageForm = Plain(api, api.GetShapeshiftForm()) -- secret: Plain; the form the weapon damage is for (Rows.lua)
+    end
     Note("stats", "readable")
 end
 

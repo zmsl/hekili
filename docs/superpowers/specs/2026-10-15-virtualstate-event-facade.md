@@ -404,20 +404,23 @@ drain folds the walk's observations before those resets (spec §5.1).
   rest up to 1287 ms) and 953 ms on the off hand (694-1070 ms in 22 of 31, up to 1686 ms); the hands are independent
   and stagger; the amount tells the hand (Rend ticks and procs fall outside both hands' damage); avoids carry no
   amount. The rule: a pending swing pairs only with an outcome that follows it, within `PAIR_WINDOW_MS` of its hand
-  (main 1500, off 2000, capped at that hand's swing period). A wound picks its swing by amount against each hand's
-  damage from the out-of-combat `UnitDamage` cache (min and max main, then off): it fits a hand inside
-  [0.6 x min, 1.1 x max], on half the amount for CRITICAL, from 0 for GLANCING and BLOCK_REDUCED; inside the exact
-  [min, max] beats only the loose range, and a tie goes to the older pending swing; before the first cache read, the
-  oldest pending swing of either hand. A wound that fits no pending swing goes to our pending cast, else it is
-  dropped (a tick, a proc, someone else's). An avoid (MISS, DODGE, PARRY, BLOCK, amount 0) goes to our pending cast,
-  else the oldest pending swing of either hand (ambiguous when both hands are pending: accepted; log 2's four orphan
-  wounds came from that). A cast pairs with the outcome that follows it within 0.2 s. An on-next-swing strike's frame
-  carries `PLAYER_SWING`, a WOUND 0 (the white swing it replaced), its success and its own wound, in either order of
-  swing and success (log 1): the strike takes its wound, the WOUND 0 pairs with nothing. The pending actions sit in
-  one preallocated buffer (8 entries) and a row is emitted as soon as its pair arrives (a synchronous row). A swing
-  still unpaired when its window closes is emitted at the next delivery point as `SWING_DAMAGE` with amount 0 (a
-  deferred row, carrying the swing's time, staging nothing for the belief), `destGUID` the current target's plain
-  GUID at the swing (`""` when there was none). The row's time is the swing's or cast's. Replayed headless in
+  (main 1500, off 2000, capped at that hand's swing period). A wound first goes to our cast of the same frame (within
+  0.05 s: a yellow strike's damage can fit a weapon range, Overpower, Shred); otherwise it picks its swing by amount
+  against each hand's damage from the out-of-combat `UnitDamage` cache (min and max main, then off): it fits a hand
+  inside [0.6 x min, 1.1 x max], on half the amount for CRITICAL, from 0 for GLANCING and BLOCK_REDUCED; inside the
+  exact [min, max] beats only the loose range, and a tie goes to the older pending swing; the oldest pending swing of
+  either hand when the cache cannot tell: before the first read, while the shapeshift form differs from the one at the
+  read (`GetShapeshiftForm`, plain in combat), or once 3 white wounds in a row (with a swing pending) fit no range (a
+  stale cache: a damage buff). A wound that fits no pending swing goes to our pending cast, else it is dropped (a
+  tick, a proc, someone else's). An avoid (MISS, DODGE, PARRY, BLOCK, amount 0) goes to our pending cast, else the
+  oldest pending swing of either hand (ambiguous when both hands are pending: accepted; log 2's four orphan wounds
+  came from that). A cast pairs with the outcome that follows it within 0.2 s. An on-next-swing strike's frame carries
+  `PLAYER_SWING`, a WOUND 0 (the white swing it replaced), its success and its own wound, in either order of swing and
+  success (log 1): the strike takes its wound, the WOUND 0 pairs with nothing. The pending actions sit in one
+  preallocated buffer (8 entries) and a row is emitted as soon as its pair arrives (a synchronous row). A swing still
+  unpaired when its window closes is emitted at the next delivery point as `SWING_DAMAGE` with amount 0 (a deferred
+  row, carrying the swing's time, staging nothing for the belief), `destGUID` the current target's plain GUID at the
+  swing (`""` when there was none). The row's time is the swing's or cast's. Replayed headless in
   `tests/Virtual/Events/pairing_replay_spec.lua`. This supersedes the 200 ms default and the phase B checkpoint's
   pairing-gap measurement (step 8's third probe, §11), which set nothing more.
 - **Deferred rows** (unpaired swings, modelled expiries, our casts' aura and energize rows the `now` verbs write
@@ -443,17 +446,17 @@ drain folds the walk's observations before those resets (spec §5.1).
   | Deaths (phase C) | `UNIT_DIED`, `PARTY_KILL` | their time | yes |
   | A usability flip (a class file's, §6) | the plain `IsSpellUsable` read | not a row: the class file reads it now | n/a |
 
-  Back-dating matters most for swings. Every `SWING_DAMAGE`/`SWING_MISSED` row is emitted when its pair
-  arrives or its window closes, up to the hand's `PAIR_WINDOW_MS` after the swing. Once the swing feed (`Adapter.lua:257-264`)
-  is retired, `CLEU_HANDLER`'s swing branch would stamp the delivery time (`time = GetTime()` at `:1421`, written to
+  Back-dating matters most for swings. Every `SWING_DAMAGE`/`SWING_MISSED` row is emitted when its pair arrives or its
+  window closes, up to the hand's `PAIR_WINDOW_MS` after the swing. Once the swing feed (`Adapter.lua:257-264`) is
+  retired, `CLEU_HANDLER`'s swing branch would stamp the delivery time (`time = GetTime()` at `:1421`, written to
   `swings.mh_actual`/`oh_actual` at `:1622-1635`), so the swing clock would run late. The carrier is the row's
   timestamp slot: slot 1 holds the `PLAYER_SWING` observation's `GetTime()` (on the client clock, not the client's
   epoch combat log timestamp; no Hekili reader uses slot 1, `CLEU_HANDLER` ignores it, Phase 2 §4.2). Because
   `CLEU_HANDLER` reads `GetTime()`, not slot 1, the layer makes them agree without a core edit: while it delivers a
-  back-dated row, `Facade.GetTime` (the file-top `GetTime` of `Events.lua` and of the class files, §1.2) returns
-  slot 1, and after delivery it is the real clock again. The handler's `time > sw.mh_actual` test (`:1627-1632`)
-  then keeps a back-dated swing from moving the clock backwards. Class hooks that stamp `GetTime()` (Classic's
-  `enemy_dodged`, `Classic/Warrior.lua:445`) get the swing's time as well.
+  back-dated row, `Facade.GetTime` (the file-top `GetTime` of `Events.lua` and of the class files, §1.2) returns slot
+  1, and after delivery it is the real clock again. The handler's `time > sw.mh_actual` test (`:1627-1632`) then keeps
+  a back-dated swing from moving the clock backwards. Class hooks that stamp `GetTime()` (Classic's `enemy_dodged`,
+  `Classic/Warrior.lua:445`) get the swing's time as well.
 - **Re-entrancy.** A synthesized row emitted while a delivery is in progress is queued, never delivered nested,
   and counted (`requeued`): the delivery loop takes it after the current row; a real client event is delivered as it
   arrives (§2.3). `ns.callHook` returns at once for an event whose hooks are running
@@ -602,14 +605,15 @@ Headless (busted, `Virtual/State/spec/`, the Phase 1 helpers `fake_api.lua` and 
   registration when no source needs it; a third unit switches to a general registration with filtering; an unknown
   event becomes a stub; clearing `OnEvent` silences delivery; `COMBAT_LOG_EVENT_UNFILTERED` is never registered with
   the fake client; 10,000 events through the layer allocate 0 bytes.
-- `cleu_rows_spec`: per emitted subevent, the tuple matches §2.4's slot table (no nil up to the last slot, the
-  result of `ns.callHook`'s rebuild equal to the row, no event payload); `Facade.GetTime` answers a back-dated row's
-  slot 1 during delivery and the clock after, and the delivery time for a modelled row; pairing in both event
-  orders (only the outcome that follows pairs) within the hand's `PAIR_WINDOW_MS`; an unpaired outcome dropped and an unpaired swing emitted at its own time once
-  its window closes; an on-next-swing strike takes its swing's outcome; a row emitted during a delivery follows it,
-  never nested, counted; a full pool drops the oldest, counted. Hits on us: credited to the one hostile targeting
-  us; none and counted when nobody is known to, or `UnitIsUnit` is secret; two attackers told apart by their plain
-  swing speeds, a hit off both clocks unattributed; a period learned from the gaps. 0 bytes per row.
+- `cleu_rows_spec`: per emitted subevent, the tuple matches §2.4's slot table (no nil up to the last slot, the result
+  of `ns.callHook`'s rebuild equal to the row, no event payload); `Facade.GetTime` answers a back-dated row's slot 1
+  during delivery and the clock after, and the delivery time for a modelled row; pairing in both event orders (only
+  the outcome that follows pairs) within the hand's `PAIR_WINDOW_MS`; an unpaired outcome dropped and an unpaired
+  swing emitted at its own time once its window closes; an on-next-swing strike takes its swing's outcome; a row
+  emitted during a delivery follows it, never nested, counted; a full pool drops the oldest, counted. Hits on us:
+  credited to the one hostile targeting us; none and counted when nobody is known to, or `UnitIsUnit` is secret; two
+  attackers told apart by their plain swing speeds, a hit off both clocks unattributed; a period learned from the
+  gaps. 0 bytes per row.
 - `adapter_spec`: the adapter writes no cast history, queue or swing field (the rows do); our casts' aura rows
   (APPLIED and REFRESH back-dated to the cast, REMOVED at the modelled expiry stamped at delivery) and energize.
 - `trace_spec`: while `Hekili.ActiveDebug`, one `Hekili:Debug` line per read naming the answering class

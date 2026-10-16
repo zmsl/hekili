@@ -70,7 +70,7 @@ local LOG = {
 
 describe("swing/outcome pairing", function()
     local api, ctl, VS, I, L, saved, got, record
-    local lastHand, lastAmount, lastLag, crits = 0, 0, 0, { 0, 0 }
+    local lastHand, lastAmount, lastLag, crits, landed = 0, 0, 0, { 0, 0 }, { 0, 0 }
 
     -- Boots with UnitDamage's returns (min and max main, min and max off; zeros: no cache yet).
     local function start(minMain, maxMain, minOff, maxOff)
@@ -93,11 +93,13 @@ describe("swing/outcome pairing", function()
         S.Stage = function(kind, t, a, b, c)
             if kind == Swing and c == 3 then
                 crits[a] = crits[a] + 1
+            elseif kind == Swing and c == 1 then
+                landed[a] = landed[a] + 1
             end
             return stage(kind, t, a, b, c)
         end
         local GetInfo = ns.Facade.CombatLogGetCurrentEventInfo
-        got, record, crits[1], crits[2] = {}, false, 0, 0
+        got, record, crits[1], crits[2], landed[1], landed[2] = {}, false, 0, 0, 0, 0
         local sink = I.Events.CreateFrame("Frame")
         sink:SetScript("OnEvent", function()
             local t, ev, _, _, _, _, _, _, _, _, _, a12, a13, _, a15, _, _, _, _, _, a21 = GetInfo()
@@ -121,6 +123,9 @@ describe("swing/outcome pairing", function()
     -- above 33 the main hand) and whether a SWING_DAMAGE of that hand and amount came of it. Allocates nothing.
     local stats = { main = 0, off = 0, mainOk = 0, offOk = 0, critOk = 0, crits = 0, late = 0 }
     local function replay(base)
+        for key in pairs(stats) do
+            stats[key] = 0
+        end
         for k = 1, #LOG do
             local r = LOG[k]
             local now = base + r[1] / 1000
@@ -210,6 +215,38 @@ describe("swing/outcome pairing", function()
                 { got[4][1], got[4][2], got[4][3], got[4][4] },
             })
             assert.are.equal(4, #got)
+        end)
+
+        it("gives a wound in our cast's frame to the cast, though it fits a pending swing (Overpower)", function()
+            fire(10, "PLAYER_SWING", 2.2, 0)
+            fire(10.2, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND) -- stands in for Overpower
+            fire(10.2, "UNIT_COMBAT", "target", "WOUND", "", 45, 1) -- the strike's damage, inside the main range
+            assert.are.same({ "SPELL_CAST_SUCCESS", "SPELL_DAMAGE", 45 }, { got[1][1], got[2][1], got[2][4] })
+            assert.are.equal(0, landed[1])
+            fire(10.45, "UNIT_COMBAT", "target", "WOUND", "", 44, 1) -- the white swing's own wound
+            assert.are.same({ "SWING_DAMAGE", 44, false }, { got[3][1], got[3][2], got[3][5] })
+            assert.are.equal(1, landed[1])
+        end)
+
+        it("pays a swing whose wound is outside the cached ranges when the form changed since the read", function()
+            ctl.form = 1 -- Bear Form: the cache holds the caster's weapon damage
+            fire(10, "PLAYER_SWING", 2.5, 0)
+            fire(10.45, "UNIT_COMBAT", "target", "WOUND", "", 120, 1)
+            assert.are.same({ "SWING_DAMAGE", 120, 1 }, { got[1][1], got[1][2], landed[1] })
+        end)
+
+        it("treats the cache as stale after 3 white wounds in a row fit no range (a damage buff)", function()
+            fire(10, "PLAYER_SWING", 2.2, 0)
+            fire(10.2, "UNIT_COMBAT", "target", "WOUND", "", 120, 1)
+            fire(10.3, "UNIT_COMBAT", "target", "WOUND", "", 120, 1)
+            assert.are.same({ 0, 0 }, { #got, landed[1] })
+            fire(10.4, "UNIT_COMBAT", "target", "WOUND", "", 120, 1)
+            fire(12.2, "PLAYER_SWING", 2.2, 0)
+            fire(12.6, "UNIT_COMBAT", "target", "WOUND", "", 121, 1)
+            assert.are.same(
+                { "SWING_DAMAGE", 120, "SWING_DAMAGE", 121, 2 },
+                { got[1][1], got[1][2], got[2][1], got[2][2], landed[1] }
+            )
         end)
 
         it("drops a wound that fits neither hand (a Rend tick), and the swing takes the next that fits", function()

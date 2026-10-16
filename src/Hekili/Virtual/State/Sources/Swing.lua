@@ -1,10 +1,10 @@
 -- Virtual/State/Sources/Swing.lua
 -- Swing sources (spec §4.2): PLAYER_SWING (payload swingDuration, swingType; plain in combat) is a `Swing` with
--- a = swingType + 1, b = the duration, c = 4 ("swung": the swing clock's; it fires on avoided swings too, so it pays
--- nothing: Virtual/Events/Rows.lua stages c = 1, landed, when the swing's wound arrives), staged on the urgent lane (Hekili's `state.swings` come from the swing
--- rows, Virtual/Events/Rows.lua). Out of combat, UNIT_ATTACK_SPEED and PLAYER_EQUIPMENT_CHANGED (and login, and combat end)
--- read both hands' speeds (c = 0), the unhasted base speeds (c = 2, speed x (1 + melee haste / 100)) and the melee
--- haste multiplier (`Haste`, c = 1).
+-- a = swingType + 1, b = the duration, c = 4 ("swung": the swing clock's; it fires on avoided swings too, so it
+-- pays nothing: Virtual/Events/Rows.lua stages c = 1, landed, when the swing's wound arrives), staged on the urgent
+-- lane (Hekili's `state.swings` come from the swing rows, Virtual/Events/Rows.lua). Out of combat,
+-- UNIT_ATTACK_SPEED and PLAYER_EQUIPMENT_CHANGED (and login, and combat end) read both hands' speeds (c = 0), the
+-- unhasted base speeds (c = 2, speed x (1 + melee haste / 100)) and the melee haste multiplier (`Haste`, c = 1).
 -- Credits: secret-value handling after Catnip's (Durts) research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Swing.lua.
 

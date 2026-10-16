@@ -28,6 +28,13 @@ L.PAIR_WINDOW_MS = { 1500, 2000 }
 -- Seconds a cast waits for its outcome, and within which an on-next-swing strike's success and its swing are one
 -- event pair (the same frame, log 1).
 local CAST_WINDOW, STRIKE_WINDOW = 0.2, 0.2
+-- Seconds within which a cast's own wound comes (its frame): a yellow strike's damage can fit a weapon range
+-- (Overpower, Shred), so a cast this fresh takes a wound before any pending swing.
+local SAME_FRAME = 0.05
+-- White wounds in a row (with a swing pending) that fit no hand's range before the cache counts as stale (a damage
+-- buff, a form whose damage it never read): from then on a wound that fits nothing takes the oldest pending swing.
+local STALE_AFTER = 3
+local misses = 0
 
 local N = 8
 -- Pending own actions: kind 1 swing (hand in `x`), 2 cast (spell ID in `x`); `w` its window (s); `t` 0 is free.
@@ -62,13 +69,13 @@ local function free()
     return oldest -- full: the oldest gives way, unemitted (8 pending within 2 s cannot happen)
 end
 
--- The pending action of `kind` still in its window at `t` that `score(x, amount, flag)` rates highest (0: not
--- this one; nil: every one rates 1), the oldest among equals.
-local function pick(kind, t, score, amount, flag)
+-- The pending action of `kind` still in its window at `t` (or within `age` s of it) that `score(x, amount, flag)`
+-- rates highest (0: not this one; nil: every one rates 1), the oldest among equals.
+local function pick(kind, t, score, amount, flag, age)
     local best, bestS = nil, 0
     for i = 1, N do
         local at = actT[i]
-        if at > 0 and actKind[i] == kind and t - at <= actW[i] then
+        if at > 0 and actKind[i] == kind and t - at <= (age or actW[i]) then
             local sc = score and score(actX[i], amount, flag) or 1
             if sc > bestS or (sc == bestS and sc > 0 and at < actT[best]) then
                 best, bestS = i, sc
@@ -81,7 +88,8 @@ end
 -- How well a wound of `amount` fits hand h's weapon damage (UnitDamage: min and max main, then min and max off), on
 -- half the amount for a crit: 2 inside [min, max], 1 inside [0.6 x min, 1.1 x max] (from 0 for a glancing or partly
 -- blocked hit), else 0. The exact range decides between hands whose loose ranges overlap (log 2's crit 52: 26 is the
--- off hand's, though inside the main hand's loose range).
+-- off hand's, though inside the main hand's loose range). The ranges are before armour: a heavily armoured target can
+-- push a main-hand hit into the off hand's exact range (per-hand values swap; the count of steps holds).
 local function fits(h, amount, flag)
     local minMain, maxMain, minOff, maxOff = VS.Stat("UnitDamage")
     local lo, hi = minMain, maxMain
@@ -167,11 +175,13 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     hold(2, spellID, Plain(api, api.UnitGUID("target")) or "", CAST_WINDOW, t)
 end)
 
--- The target's outcome at `t` pairs with the action it follows. A wound: the pending swing whose hand's damage it
--- fits best, the older on a tie (the oldest of any hand before the first UnitDamage read), else our pending cast; a
--- WOUND 0 is the white swing an on-next-swing strike replaced (its frame also carries the strike's own wound) and
--- pairs with nothing. An avoid: our pending cast (its outcome comes in the same frame), else the oldest pending swing
--- of either hand.
+-- The target's outcome at `t` pairs with the action it follows. A wound: our cast of this frame, else the pending
+-- swing whose hand's damage it fits best, the older on a tie (the oldest of any hand when the cache cannot tell: no
+-- UnitDamage read yet, read in another form, or stale), else our pending cast; a WOUND 0 is the white swing an
+-- on-next-swing strike replaced (its frame also carries the strike's own wound) and pairs with nothing. An avoid: our
+-- pending cast (its outcome comes in the same frame), else the oldest pending swing of either hand.
+-- shortcut: a startsCombat cast with no outcome of its own (Rend, Sunder) takes a white avoid inside its 0.2 s as
+-- SPELL_MISSED; rare, upgrade to the cast's frame if Phase D's compensating aura removal relies on it.
 -- shortcut: in group play another attacker's outcome inside a window can be credited to our action (and its wound's
 -- rage lift rage's lo above the real rage until the next pin); upgrade when a per-attacker attribution exists.
 S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
@@ -184,8 +194,25 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
     if act ~= "WOUND" then
         p = pick(2, t) or pick(1, t)
     elseif amount > 0 then
-        local _, maxMain = VS.Stat("UnitDamage")
-        p = pick(1, t, maxMain > 0 and fits or nil, amount, flag) or pick(2, t)
+        p = pick(2, t, nil, nil, nil, SAME_FRAME)
+        if not p then
+            local _, maxMain = VS.Stat("UnitDamage")
+            local form = Plain(api, api.GetShapeshiftForm()) -- secret: Plain; plain in combat (Facade.lua's stance row)
+            if maxMain <= 0 or form ~= I.damageForm then
+                p = pick(1, t)
+            else
+                p = pick(1, t, fits, amount, flag)
+                if p then
+                    misses = 0
+                elseif pick(1, t) then
+                    misses = misses + 1
+                    if misses >= STALE_AFTER then
+                        p = pick(1, t)
+                    end
+                end
+            end
+            p = p or pick(2, t)
+        end
     end
     if not p then
         return
@@ -221,5 +248,5 @@ S.On("PLAYER_REGEN_ENABLED", nil, function()
     for i = 1, N do
         actT[i] = 0
     end
-    strikeWait = 0
+    strikeWait, misses = 0, 0
 end)
