@@ -283,6 +283,7 @@ Every stub site in the retained files that throws or yields a wrong value. Sites
 ## Periodic auras
 
 - A periodic tick due at its aura's expiry does not land (2026-10-16, Warrior out of combat: Bloodrage's 10 s aura ticking 1 rage a second ends at 9, never 10). VirtualState's `auraGain` stops TICK_EPS short of the expiry; the sim's forecast drops an event at `expires <= e.next` (core edit E6, `State.lua`).
+- Hekili's forecast counted aura-gated regen entries twice (2026-10-16, Warrior out of combat with Bloodrage up: rage forecast climbed ~2/s): once as tick events and again inside `regen_combined`, its continuous rate. Core edit E7 (`forecastResources`) uses plain `r.regen`, so those entries count through their events only; `regen_combined` itself is unchanged.
 
 ## Known reads outside the inventory
 

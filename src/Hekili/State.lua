@@ -1247,7 +1247,8 @@ do
         local prev = now
         local iter = 0
 
-        local regen = r.regen_combined and r.regen_combined or r.regen or 0
+        -- Forever E7: aura-gated regen entries are already forecast events; regen_combined would count them twice.
+        local regen = r.regen or 0
         regen = regen > 0.001 and regen or 0
 
         while ( #events > 0 and now <= finish and iter < 30 ) do
