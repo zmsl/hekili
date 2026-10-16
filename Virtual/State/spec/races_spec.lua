@@ -439,6 +439,17 @@ describe("race packs in VirtualState's now context", function()
         end, 1000), key)
     end
 
+    it("gives every channelled racial a `start` and no `handler` (Hekili's simulation runs a channel's `start`)", function()
+        for _, r in ipairs(RACES) do
+            for key, a in pairs(registrations(r.token).abilities) do
+                if a.channeled then
+                    assert.is_function(a.start, key)
+                    assert.is_nil(a.handler, key)
+                end
+            end
+        end
+    end)
+
     for _, r in ipairs(RACES) do
         it("runs every `now` the " .. r.token .. " registers in the context without an error", function()
             local all, n = registrations(r.token), 0

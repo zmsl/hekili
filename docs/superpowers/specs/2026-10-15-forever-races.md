@@ -69,8 +69,9 @@ Notes:
 - **Cannibalize and Rapid Regeneration are self-channels.** Cannibalize 20577 triggers 20578 and Rapid Regeneration is
   1260270; both carry `Attributes_1` 0x20000040, and 0x40 is SPELL_ATTR1_IS_SELF_CHANNELLED. The player breaks them by
   acting. Both are registered as Hekili channels, `channeled = true` with `cast` = the DB2 duration (10 s for 20578, 6 s
-  for 1260270) and `fixedCast = true` (not hasted), so the simulation does not recommend breaking them; `handler` and
-  `now` apply the aura as usual (Cannibalize's under ID 20578). The corpse Cannibalize needs is not known to either
+  for 1260270) and `fixedCast = true` (not hasted), so the simulation does not recommend breaking them; `start` (not
+  `handler`: Hekili's simulation runs a channel's `start`, State.lua `runHandler`) and `now` apply the aura
+  (Cannibalize's under ID 20578). The corpse Cannibalize needs is not known to either
   layer, so a priority that names it gates it. If the client's channel reports 20578 rather than 20577 (Q4's
   `UnitChannelInfo` line), `cannibalize` gains `copy = 20578`.
 - **Escape Artist** and **Perception** register their 3 s and 20 s auras so `buff.<key>.up` reads true after a cast.
