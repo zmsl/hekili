@@ -388,6 +388,10 @@ describe("Forever Warrior", function()
         w.state.main_hand.size = 2 -- a two-hander: 4.5 x speed, Unbridled Wrath 2 rage a proc
         w.game.base = { 3.3, 0 }
         near(4.5 * 3.3 + 0.75, models.mainhand.value()) -- 14.85 + 0.75 = 15.6
+        near(3.46 * 3.3, models.mainhand.crit()) -- a white crit: one more base swing, 3.46 x speed with a two-hander too
+        w.state.main_hand.size, w.game.base = 1, { 2.2, 2.5 }
+        near(3.46 * 2.2, models.mainhand.crit())
+        near(1.73 * 2.5, models.offhand.crit()) -- the off hand's own base (unmeasured on Forever)
         assert.are.same({ "offhand", "offhand_speed" }, { models.offhand.swing, models.offhand.interval })
     end)
 

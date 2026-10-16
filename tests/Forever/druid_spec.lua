@@ -604,6 +604,7 @@ describe("Forever Druid", function()
         w.game.base = { 2.5, 0 }
         w.state.mainhand_speed = 2.0 -- hasted: the rage follows the unhasted speed
         near(8.65, models.mainhand.value())
+        near(8.65, models.mainhand.crit()) -- a white crit: one more base swing
         assert.are.same({ "enrage", 1, 2 }, { models.enrage.aura, models.enrage.interval, models.enrage.value })
         w.state.buff.enrage, w.state.query_time = { applied = 10 }, 13.4
         assert.are.equal(13, models.enrage.last())

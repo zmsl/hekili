@@ -21,7 +21,8 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 
 -- By resource slot r. `swing[r]` is the hand that pays it (1 main, 2 off; 0: continuous regen) and `swingOff[r]` the
 -- off hand's own value when both hands pay it (0: none); `swingAura[r]` the player aura index its swings need (0: none;
--- -1: named but not tracked, so no swing pays). Continuous regen is per second (regE/regL/regH); a swing-paid
+-- -1: named but not tracked, so no swing pays); `swingCrit[r]` / `swingOffCrit[r]` the extra a critical white hit of
+-- that hand adds (0: none). Continuous regen is per second (regE/regL/regH); a swing-paid
 -- resource's step is the spec's model value of that hand x scale (spread around it). `restMax[r]`: a regenerating
 -- resource rests at its maximum (energy, mana), the others at 0 (rage).
 local R = {
@@ -35,6 +36,8 @@ local R = {
     swingAura = {},
     swingValue = {},
     swingOff = {},
+    swingCrit = {},
+    swingOffCrit = {},
     est0 = {},
     lo0 = {},
     hi0 = {},
@@ -71,6 +74,8 @@ R.slotOf, R.slotOfToken = {}, {}
 -- while in combat (Anger Management); an entry with a `talent` only while that talent has a rank. Credited only as
 -- the clock moves on: an aura first seen after its application loses the ticks before that, and a removal seen late
 -- keeps the ticks already credited; both are bounded by the aura's duration and the next pin or rung corrects them.
+-- Whether each hand's last landed swing paid (no on-next-swing strike took it): its crit pays only then.
+local paid = { false, false }
 local G = { n = 0, slot = {}, aura = {}, value = {}, interval = {}, talent = {} }
 -- In combat (fold order, for the entries without an aura: aura index 0) and since when.
 local fighting, fightT = false, 0
@@ -157,6 +162,7 @@ I.OnBuild(function(def, now)
     end
     local list = def.resources
     R.n = #list
+    paid[1], paid[2] = false, false
     for r = 1, R.n do
         local d = list[r]
         R.type[r], R.token[r] = d.type, d.token
@@ -168,6 +174,7 @@ I.OnBuild(function(def, now)
         R.swing[r] = d.swing or 0
         R.swingValue[r] = d.swingValue or 0
         R.swingOff[r] = d.swingOff or 0
+        R.swingCrit[r], R.swingOffCrit[r] = d.swingCrit or 0, d.swingOffCrit or 0
         R.est0[r], R.lo0[r], R.hi0[r] = R.rest[r], 0, R.max[r]
         local rate = d.regen or 0
         R.decl[r] = rate
@@ -227,22 +234,33 @@ I.OnBuild(function(def, now)
     end
 end)
 
---- The spec's per-swing value of a swing-paid slot for `hand` (2: the off hand's `swingOff`; else the paying hand's): a
---- number, or the model's state-bound function; 0 while the slot's swing aura is not believed up at the clock (its
---- application after it, or its expiry at or before it). Allocates nothing.
-function I.SwingValue(r, hand)
+-- Slot r's `main` or (the off hand of a main-hand slot) `off` field for `hand`: a number, or the model's state-bound
+-- function; 0 while the slot's swing aura is not believed up at the clock (its application after it, or its expiry at
+-- or before it). Allocates nothing.
+local function perSwing(r, hand, main, off)
     local j = R.swingAura[r]
     if j < 0 or j > 0 and (I.auras.exp0[1][j] <= I.clock or I.auras.applied[1][j] > I.clock) then
         return 0 -- unit 1 is always "player" (Adapter.lua's def.units)
     end
-    local v = R.swingValue[r]
+    local v = main[r]
     if hand == 2 and R.swing[r] == 1 then
-        v = R.swingOff[r]
+        v = off[r]
     end
     if type(v) == "function" then
         v = v(I.clock)
     end
     return type(v) == "number" and v or 0
+end
+
+--- The spec's per-swing value of a swing-paid slot for `hand` (2: the off hand's `swingOff`; else the paying hand's),
+--- 0 while its swing aura is down. Allocates nothing.
+function I.SwingValue(r, hand)
+    return perSwing(r, hand, R.swingValue, R.swingOff)
+end
+
+--- The spec's white-crit extra of a swing-paid slot for `hand` (its swing entry's `crit`), as I.SwingValue.
+function I.SwingCrit(r, hand)
+    return perSwing(r, hand, R.swingCrit, R.swingOffCrit)
 end
 
 -- What entry g brings in (from, to]: `value` at each `interval` after the player's aura was applied, up to its
@@ -550,21 +568,34 @@ I.On(Obs.Read, function(o, t, lag)
 end)
 
 -- A landed swing pays each slot of its hand one step (the off hand its own value), unless an on-next-swing strike
--- took that swing (spec §6.4).
+-- took that swing (spec §6.4). Its crit (c = 3, Events/Rows.lua's pairing with the target's CRITICAL wound) adds the
+-- hand's `crit` once more, unscaled (an exact, documented amount; the scale absorbs the model's error), to a swing
+-- that paid.
 I.On(Obs.Swing, function(o, t)
-    if o.c ~= 1 then
+    local hand, c = o.a, o.c
+    if (c ~= 1 and c ~= 3) or (hand ~= 1 and hand ~= 2) then
         return
     end
-    local hand = o.a
+    if c == 1 then
+        paid[hand] = not (hand == 1 and I.queuedStrike)
+    end
+    if not paid[hand] then
+        return
+    end
     for r = 1, R.n do
-        local pays = R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0)
-        if pays and not (hand == 1 and I.queuedStrike) then
-            local v, max = I.SwingValue(r, hand), R.max[r]
-            local s, sp = R.scale[r], R.spread[r]
-            R.est0[r] = clamp(R.est0[r] + v * s, max)
-            R.lo0[r] = clamp(R.lo0[r] + v * (s - sp), max)
-            R.hi0[r] = clamp(R.hi0[r] + v * (s + sp), max)
-            I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Swing)
+        if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
+            local max, v, s, sp = R.max[r], 0, 1, 0
+            if c == 1 then
+                v, s, sp = I.SwingValue(r, hand), R.scale[r], R.spread[r]
+            else
+                v = I.SwingCrit(r, hand)
+            end
+            if c == 1 or v ~= 0 then -- a slot with no `crit` takes no sample for a crit
+                R.est0[r] = clamp(R.est0[r] + v * s, max)
+                R.lo0[r] = clamp(R.lo0[r] + v * (s - sp), max)
+                R.hi0[r] = clamp(R.hi0[r] + v * (s + sp), max)
+                I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Swing)
+            end
         end
     end
 end)

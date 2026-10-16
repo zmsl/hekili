@@ -155,6 +155,52 @@ describe("resources", function()
             assert.is_true(r.lo <= 100)
         end)
 
+        describe("a white crit (Swing c = 3 after the landed swing)", function()
+            local function crits(crit)
+                local def = fs.def(fs.new(9))
+                def.resources[1].swingCrit = crit
+                boot(def)
+                I.res.scale[1] = 1.2
+            end
+
+            it("adds value x scale for a plain swing and value x scale + crit, unscaled, for a critical one", function()
+                crits(7)
+                obs(Obs.Swing, 5, 1, 2.6, 1)
+                I.Fold(5, false)
+                within(9 * 1.2, VS.Power(fs.RAGE, 5).est)
+                obs(Obs.Swing, 7.6, 1, 2.6, 1)
+                obs(Obs.Swing, 7.6, 1, 0, 3)
+                I.Fold(7.6, false)
+                local r = VS.Power(fs.RAGE, 7.6)
+                within(2 * 9 * 1.2 + 7, r.est)
+                within(2 * 9 * (1.2 - I.REGEN_SPREAD) + 7, r.lo)
+            end)
+
+            it("loses the bonus above the cap", function()
+                crits(7)
+                for k = 1, 9 do
+                    obs(Obs.Swing, 2.6 * k, 1, 2.6, 1) -- 9 x 10.8 = 97.2
+                end
+                obs(Obs.Swing, 2.6 * 9, 1, 0, 3)
+                I.Fold(30, false)
+                assert.are.equal(100, VS.Power(fs.RAGE, 30).est)
+            end)
+
+            it("changes nothing for a swing entry without `crit`, or a swing an on-next-swing strike took", function()
+                crits(nil)
+                obs(Obs.Swing, 5, 1, 2.6, 1)
+                obs(Obs.Swing, 5, 1, 0, 3)
+                I.Fold(5, false)
+                within(9 * 1.2, VS.Power(fs.RAGE, 5).est)
+                crits(7)
+                obs(Obs.Queued, 4, 2, 1)
+                obs(Obs.Swing, 5, 1, 2.6, 1)
+                obs(Obs.Swing, 5, 1, 0, 3)
+                I.Fold(5, false)
+                assert.are.equal(0, VS.Power(fs.RAGE, 5).est)
+            end)
+        end)
+
         it("pays no swing step while an on-next-swing strike is queued", function()
             obs(Obs.Queued, 4, 2, 1) -- heroic_strike (ability 2) queued
             obs(Obs.Swing, 5, 1, 2.6, 1)

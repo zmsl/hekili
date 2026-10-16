@@ -159,7 +159,9 @@ spec:RegisterResource(
     {
         -- Rage per white swing in Bear or Dire Bear Form only (the Warrior's speed rule; Cat and caster swings add none).
         -- `aura` gates it in both layers (VirtualState's swing entry, spec §0.3; Hekili's forecast); `stop` too.
-        -- shortcut: crits, misses, Blood Frenzy, Natural Reaction and rage from damage taken are unmodelled; VirtualState's
+        -- A white crit adds one more base swing, as the Warrior's (magey/forever-warrior issue 3 names the Bear and Dire Bear
+        -- match; unmeasured here): `crit`.
+        -- shortcut: misses, Blood Frenzy, Natural Reaction and rage from damage taken are unmodelled; VirtualState's
         -- swing-scale calibration absorbs a steady bias. Upgrade from the combat-log rows once a non-cast `now` exists.
         mainhand = {
             swing = "mainhand",
@@ -180,6 +182,9 @@ spec:RegisterResource(
                 return state.swings.mainhand == 0 or not state.buff.bear_form.up
             end,
             value = function()
+                return BEAR_RAGE_RATE * bearSwing()
+            end,
+            crit = function()
                 return BEAR_RAGE_RATE * bearSwing()
             end,
         },

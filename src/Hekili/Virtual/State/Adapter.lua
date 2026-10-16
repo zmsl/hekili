@@ -168,13 +168,15 @@ local function buildDef()
     for _, k in ipairs(sortedKeys(class.resources)) do
         local r = class.resources[k]
         local swing, value, offValue, auraRegen, swingAura = 0, nil, nil, nil, nil
+        local crit, offCrit -- a white crit's extra amount by hand (Resources.lua, I.SwingCrit)
         local model = r.state and r.state.regenModel
         if model then
             for name, m in pairs(model) do
                 if m.swing == "offhand" then
-                    offValue = m.value
+                    offValue, offCrit = m.value, m.crit
                 elseif m.swing and HANDS[m.swing] and swing == 0 then
                     swing, value, swingAura = HANDS[m.swing], m.value, m.aura -- `aura`: swings pay only while it is up
+                    crit = m.crit
                 elseif
                     name ~= DECAY
                     and not (m.swing or m.debuff or m.channel or m.spec or m.equip or m.set_bonus or m.setting)
@@ -193,7 +195,7 @@ local function buildDef()
             model[DECAY] = decayEntry(k, model, meta, r.type)
         end
         if swing == 0 and offValue ~= nil then
-            swing, value, offValue = 2, offValue, nil -- the off hand alone pays it
+            swing, value, offValue, crit, offCrit = 2, offValue, nil, offCrit, nil -- the off hand alone pays it
         end
         local d = {
             key = k,
@@ -204,6 +206,8 @@ local function buildDef()
             swing = swing,
             swingValue = value,
             swingOff = offValue,
+            swingCrit = crit,
+            swingOffCrit = offCrit,
             swingAura = swingAura,
             auraRegen = auraRegen,
             decay = r.state and r.state.meta and r.state.meta.decay, -- out-of-combat loss per second (Resources.lua)

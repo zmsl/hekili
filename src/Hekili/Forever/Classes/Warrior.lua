@@ -118,17 +118,21 @@ end
 -- the warrior compendium v3.1.0, 2026-10-01, https://ppach-warriorcompendium.share.connect.posit.cloud/rage.html):
 -- the weapon's unhasted speed x a rate by hand, independent of damage, level and haste: 3.46 main hand with a
 -- one-hander, 4.5 with a two-hander, 1.73 off hand. Misses, dodges and parries give none, glancing blows full rage, a
--- crit one extra base swing. Dual Wield Specialization: the tooltip's +10% off-hand rage a rank (unverified on
+-- white crit one extra base swing (3.46 x speed main hand, two-hander too; yellow crits none): the swing entries'
+-- `crit`. Dual Wield Specialization: the tooltip's +10% off-hand rage a rank (unverified on
 -- Forever). Unbridled Wrath: 1 rage a proc (2 with a two-hander) at a measured ~7.5% a rank (36% at 5/5; the tooltip
 -- says 60%). The two-hander flag is Hekili's gear scan (main_hand.size from C_Item.GetItemInfo's equip location on
 -- PLAYER_EQUIPMENT_CHANGED; the Forever API data marks neither it nor GetInventoryItemID secret).
--- shortcut: crits (+1 base swing each) and misses are ignored; VirtualState's calibration scale absorbs them. Upgrade
--- when crit chance is read plainly.
-local function rageOf(hand)
+local function baseSpeed(hand)
     local speed = VS.SwingBase(hand)
     if speed <= 0 then
         speed = hand == 1 and state.mainhand_speed or state.offhand_speed
     end -- no plain base read yet
+    return speed
+end
+
+local function rageOf(hand)
+    local speed = baseSpeed(hand)
     local twoHand = state.main_hand.size == 2
     local wrath = 0.075 * state.talent.unbridled_wrath.rank * (twoHand and 2 or 1)
     if hand ~= 1 then
@@ -160,6 +164,9 @@ spec:RegisterResource(
             value = function()
                 return rageOf(1)
             end,
+            crit = function()
+                return 3.46 * baseSpeed(1)
+            end,
         },
 
         offhand = {
@@ -181,6 +188,10 @@ spec:RegisterResource(
             end,
             value = function()
                 return rageOf(2)
+            end,
+            -- shortcut: the off hand's crit bonus is unmeasured (issue 3); assumed its own base, 1.73 x speed.
+            crit = function()
+                return 1.73 * baseSpeed(2)
             end,
         },
 

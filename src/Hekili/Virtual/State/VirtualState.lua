@@ -30,7 +30,8 @@ VS.Obs = {
     TargetGone = 12,
     Known = 13, -- reserved
     Queued = 14, -- a: ability index; b: 1 queued for the next swing / 0 not
-    Swing = 15, -- a: hand (1 main, 2 off); b: swing duration or speed; c: 1 swung (PLAYER_SWING), 0 a read, 2 base speed
+    Swing = 15, -- a: hand (1 main, 2 off); b: swing duration or speed; c: 1 swung (PLAYER_SWING), 0 a read, 2 base speed,
+    -- 3 that hand's swing was a critical hit (Events/Rows.lua pairs it with the target's CRITICAL wound; b: 0)
     Haste = 16, -- b: melee multiplier (a plain read); c: 1 melee, 2 spell (b: spell haste percent)
     Moving = 17, -- b: 1 moving / 0 not
     Talent = 18, -- a: talent index; b: its rank

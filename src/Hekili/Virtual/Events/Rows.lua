@@ -5,13 +5,15 @@
 -- PAIR_WINDOW of each other, in either order: SWING_DAMAGE / SWING_MISSED / SPELL_DAMAGE / SPELL_MISSED, inferred, at
 -- the earlier event's time (back-dated). A swing still unpaired when its window closes is emitted as SWING_DAMAGE with
 -- amount 0 (its time is still the swing's); an outcome or a cast unpaired then is dropped (someone else's, or no
--- outcome).
+-- outcome). A swing paired with a CRITICAL wound also stages `Swing` c = 3 (that hand's crit) for VirtualState's
+-- resources (Families/Resources.lua: a white crit's extra rage).
 -- Credits: secret-value handling after Catnip's (Durts) research; the signals are Taco Dog Forever's research
 -- (docs/research/2026-10-14-virtual-combat-log-events.md, C1, C3, C9, D7).
 
 local _, ns = ...
 local I = ns.VirtualStateInternal
 local S = I.Sources
+local Obs = ns.VirtualState.Obs
 local Plain = S.Plain
 local L = I.Log
 
@@ -93,6 +95,13 @@ local function emit(kind, x, dst, action, flag, amount, t)
     end
 end
 
+-- A paired swing's crit, at the pairing's time `t`: staged for the resources family.
+local function crit(kind, x, act, flag, t)
+    if kind == 1 and act == "WOUND" and flag == "CRITICAL" then
+        S.Stage(Obs.Swing, t, x, 0, 3)
+    end
+end
+
 -- An own action at `t`: paired with a pending outcome, else held.
 local function action(kind, x, dst, t)
     local o = oldest(outT, t)
@@ -100,6 +109,7 @@ local function action(kind, x, dst, t)
         local ot = outT[o]
         outT[o] = 0
         emit(kind, x, dst, outAction[o], outFlag[o], outAmount[o], ot < t and ot or t)
+        crit(kind, x, outAction[o], outFlag[o], t)
         return
     end
     local i = free(actT)
@@ -148,6 +158,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
         local at = actT[p]
         actT[p] = 0
         emit(actKind[p], actX[p], actDst[p], act, flag, amount, at)
+        crit(actKind[p], actX[p], act, flag, t)
         return
     end
     local i = free(outT)
