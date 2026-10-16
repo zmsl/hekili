@@ -9,10 +9,10 @@
 **Tech Stack:** Lua 5.1 (WoW), LibStub, busted (headless tests for the library), luacheck, `wow` MCP server tools (`wow_api_search`, `wow_lua_lint`, `wow_toc_validate`, `wow_xml_validate`), lua-language-server.
 
 **Spec:** the session brief (reproduced in the user's task message) plus the inventory documents:
-`~/src/TacoDogForever/docs/research/2026-10-14-hekili-virtual-state-feasibility.md` (sections A, C.5, E),
+`~/src/docs/research/tdf/2026-10-14-hekili-virtual-state-feasibility.md` (sections A, C.5, E),
 `git show origin/research/forever-revival:docs/research/03-cleanup-inventory.md` and `01-api-inventory.md`,
-`~/src/TacoDogForever/docs/research/2026-10-14-hekili-libraries-for-forever.md`,
-`~/src/TacoDogForever/docs/research/2026-10-13-probe-session-W-results.md` §4.
+`~/src/docs/research/tdf/2026-10-14-hekili-libraries-for-forever.md`,
+`~/src/docs/research/tdf/2026-10-13-probe-session-W-results.md` §4.
 
 ## Execution order
 

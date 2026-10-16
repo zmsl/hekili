@@ -8,9 +8,9 @@ Cite conventions (the spec's):
 - A bare `File.lua:N` is Hekili at fc61b6d9.
 - "spec §N" is `docs/superpowers/specs/2026-10-14-hekili-virtualstate-design.md`.
 - "feasibility §X" is section X of
-  `~/src/TacoDogForever/docs/research/2026-10-14-hekili-virtual-state-feasibility.md`. Its Hekili cites are at
+  `~/src/docs/research/tdf/2026-10-14-hekili-virtual-state-feasibility.md`. Its Hekili cites are at
   36daec38; this plan re-cites at fc61b6d9 every line it carries.
-- "[V] §X" is section X of `~/src/TacoDogForever/docs/research/2026-10-14-virtual-combat-log-events.md`, the
+- "[V] §X" is section X of `~/src/docs/research/tdf/2026-10-14-virtual-combat-log-events.md`, the
   137-row virtual combat log. Its row ids (C, M, N), detection patterns (D1-D18) and probe ids (O1-O16) are
   quoted as [V] gives them.
 - "cleanup Qn" is row n of §5 of `docs/forever-cleanup.md`.
@@ -34,8 +34,8 @@ subscription shape Phase 3 needs (push or pull), the delivery mechanism and the 
 | Input | Path | What Phase 2 takes from it |
 |---|---|---|
 | Phase 1 spec | `docs/superpowers/specs/2026-10-14-hekili-virtualstate-design.md` | §4.2 event table, §4.4 urgent lane, §4.6 across-reset feeds, §5 drain, §7.4 AuraData shape, §10 edits, §12 G1-G8, §14 |
-| Feasibility | `~/src/TacoDogForever/docs/research/2026-10-14-hekili-virtual-state-feasibility.md` | §B.1-B.4 (consumers, payload contract), §C.2 (event half), §C.4 (caches), §D.3 (retractions) |
-| Virtual combat log | `~/src/TacoDogForever/docs/research/2026-10-14-virtual-combat-log-events.md` | §2.4 counts, §3 D1-D18, §5 O1-O16 results, §6 consumers |
+| Feasibility | `~/src/docs/research/tdf/2026-10-14-hekili-virtual-state-feasibility.md` | §B.1-B.4 (consumers, payload contract), §C.2 (event half), §C.4 (caches), §D.3 (retractions) |
+| Virtual combat log | `~/src/docs/research/tdf/2026-10-14-virtual-combat-log-events.md` | §2.4 counts, §3 D1-D18, §5 O1-O16 results, §6 consumers |
 | Cleanup questions | `docs/forever-cleanup.md` §5 | Q3 (event facade), Q4 (combat log timing), Q5 (registration popup) |
 | First outline | `docs/research/2026-10-14-virtualstate-inputs/library-design-draft.md` §H | the original Phase 2 question list, superseded in shape |
 | Hekili code | `Events.lua`, `Targets.lua`, `State.lua`, `Classes.lua:2855-2879` | the consumers below |

@@ -10,7 +10,7 @@ task-by-task plan under `docs/superpowers/plans/`, for the event families Phase 
 
 Cite conventions are the Phase 1 spec's (`docs/superpowers/specs/2026-10-14-hekili-virtualstate-design.md`,
 "spec §N"): a bare `File.lua:N` is Hekili at fc61b6d9. "[V] §N" is section N of
-`~/src/TacoDogForever/docs/research/2026-10-14-virtual-combat-log-events.md`; the facts this outline takes
+`~/src/docs/research/tdf/2026-10-14-virtual-combat-log-events.md`; the facts this outline takes
 from it are inlined in §1. "Phase 2 §N" is a section of the Phase 2 investigation plan.
 
 ## 1. Facts from the virtual combat log research

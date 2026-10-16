@@ -11,7 +11,7 @@ Cite conventions:
 - `inputs/<name>.md §N` is a research output saved in this repo under
   `docs/research/2026-10-14-virtualstate-inputs/`.
 - "feasibility §X" is section X of
-  `~/src/TacoDogForever/docs/research/2026-10-14-hekili-virtual-state-feasibility.md`. Its Hekili cites are at
+  `~/src/docs/research/tdf/2026-10-14-hekili-virtual-state-feasibility.md`. Its Hekili cites are at
   36daec38 (before the cleanup); this spec re-cites them at fc61b6d9 where it carries a line. Everything this
   spec needs from it is inlined below.
 - "cleanup Qn" is row n of §5 of `docs/forever-cleanup.md`; "facade notes" is `docs/forever-facade-notes.md`.

@@ -12,7 +12,7 @@ Cite conventions:
 - `Classic/Warrior.lua:N` is `git show origin/classic:Classic/Warrior.lua` (origin/classic at fce4fcf1).
 - "outline §N" is `docs/research/2026-10-14-virtualstate-phase3-event-bus-outline.md`; "Phase 2 §N" is
   `docs/research/2026-10-14-virtualstate-phase2-eventing-investigation.md`.
-- "[V] Cn/Mn/Dn" is a row or detection pattern of `~/src/TacoDogForever/docs/research/2026-10-14-virtual-combat-log-events.md`;
+- "[V] Cn/Mn/Dn" is a row or detection pattern of `~/src/docs/research/tdf/2026-10-14-virtual-combat-log-events.md`;
   its probe ids (O1-O16, session O; W-PRn, session W) are quoted as it gives them.
 - "CP1/CP2/CP4 2026-10-15" are this session's in-game checkpoints. The Overpower facts (Overpower stayed
   recommended past its window; `C_Spell.IsSpellUsable` plain in combat) are CP2/CP4. The other facts reached

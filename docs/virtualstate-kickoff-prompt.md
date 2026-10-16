@@ -36,7 +36,7 @@ branch `virtualstate-phase1` to `origin` when a checkpoint is green.
 The spec inlines every fact it takes from outside the repository. Its `TDF src/TacoDogForever/<path>:<lines>`
 and `TDF tests/<path>:<lines>` cites are Taco Dog Forever (TDF), the user's other repository, at main 7bef7b5;
 it is the repository that holds the feasibility doc the spec cites,
-`~/src/TacoDogForever/docs/research/2026-10-14-hekili-virtual-state-feasibility.md`. Read TDF to port its
+`~/src/docs/research/tdf/2026-10-14-hekili-virtual-state-feasibility.md`. Read TDF to port its
 mechanics; never write to it.
 
 ## How to proceed
