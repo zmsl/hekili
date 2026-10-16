@@ -15,6 +15,9 @@ function M.new()
         wrong = { 0, 0 },
         missed = { 0, 0 },
         falseWounds = { 0, 0 }, -- another source's or an unexplained wound (or our tick or proc) credited: pays rage
+        -- the same, less those the oracle retracted (at the answer the ladder pins from, so before that pin): the rage
+        -- they leave paid
+        falseNet = { 0, 0 },
         falseAvoids = { 0, 0 }, -- another source's or an unexplained avoid credited: mislabels a row, pays nothing
         late = 0,
         windows = 0,
@@ -80,6 +83,9 @@ function M.score(m, c, s, W, step, after)
                 end
             elseif cr > 0 then
                 m.falseWounds[cr] = m.falseWounds[cr] + 1
+                if c.verdict[i] ~= 2 then
+                    m.falseNet[cr] = m.falseNet[cr] + 1
+                end
             end
             local v = c.verdict[i]
             if v > 0 then -- judged: another source's outcome (a false credit) or our own swing's (credited right)
@@ -172,7 +178,8 @@ function M.rate(m, h)
     return m.own[h] > 0 and m.right[h] / m.own[h] or 1
 end
 
---- False credits per 100 of our swings: the wounds (`m.falseWounds`, the default) or the avoids (`m.falseAvoids`).
+--- False credits per 100 of our swings: the wounds as credited (`m.falseWounds`, the default), net of the oracle's
+--- retractions (`m.falseNet`) or the avoids (`m.falseAvoids`).
 function M.falsePer100(m, f)
     f = f or m.falseWounds
     return m.swings > 0 and 100 * (f[1] + f[2]) / m.swings or 0
@@ -228,7 +235,7 @@ end
 --- One line for a report (`busted` prints it in a failing assertion's message).
 function M.line(m)
     return string.format(
-        "fights=%d main %d/%d (wrong %d, missed %d) off %d/%d (wrong %d, missed %d) false wounds %d/%d (%.2f per 100 swings), "
+        "fights=%d main %d/%d (wrong %d, missed %d) off %d/%d (wrong %d, missed %d) false wounds %d/%d (%.2f per 100 swings, net %.2f), "
             .. "false avoids %d/%d (%.2f), "
             .. "avoids right %d wrong %d, over %d/%d windows, err mean %.2f max %.1f",
         m.fights,
@@ -243,6 +250,7 @@ function M.line(m)
         m.falseWounds[1],
         m.falseWounds[2],
         M.falsePer100(m),
+        M.falsePer100(m, m.falseNet),
         m.falseAvoids[1],
         m.falseAvoids[2],
         M.falsePer100(m, m.falseAvoids),
