@@ -607,6 +607,7 @@ describe("Forever Druid", function()
         w.state.buff.enrage, w.state.query_time = { applied = 10 }, 13.4
         assert.are.equal(13, models.enrage.last())
         assert.are.equal(1.25, w.resources[1].meta.decay())
+        assert.are.equal(1, w.resources[1].meta.decayInterval()) -- stepped, as the Warrior's
     end)
 
     it("declares energy with no regen model, combo points and mana with no maximum, in Classic's order", function()

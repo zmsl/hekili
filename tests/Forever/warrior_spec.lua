@@ -399,6 +399,7 @@ describe("Forever Warrior", function()
         assert.are.equal(1.25, decay())
         w.state.talent.anger_management.rank = 1
         assert.is_true(math.abs(0.875 - decay()) < 1e-9) -- 1.25 x (1 - 0.3 x 1) = 1.25 x 0.7 = 0.875
+        assert.are.equal(1, w.resource[4].decayInterval()) -- stepped: lost at the start of each 1 s window
     end)
 
     it("declares no rage maximum of its own: a Gnome's 105 is the race pack's Expansive Mind", function()
@@ -612,11 +613,6 @@ describe("Forever Warrior", function()
             src:gsub('LSR%.IsSpellInRange%( ability%.rangeSpell or ns%.KnownSpellID%( ability%.id %), "target" %)', "")
         assert.are.equal(2, n)
         assert.is_nil(src:find("IsSpellInRange( ability.rangeSpell or ability.id", 1, true))
-    end)
-    it("the forecast drops an aura's periodic event at its expiry (core edit E6)", function()
-        local src = assert(io.open("src/Hekili/State.lua")):read("*a")
-        assert.is_truthy(src:find('state[ e.debuff and "debuff" or "buff" ][ e.aura ].expires <= e.next )', 1, true))
-        assert.is_truthy(src:find("-- Forever E6:", 1, true))
     end)
     it("the forecast's continuous rate excludes the aura-gated entries it ticks as events (core edit E7)", function()
         local src = assert(io.open("src/Hekili/State.lua")):read("*a")

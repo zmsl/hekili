@@ -320,11 +320,11 @@ describe("resources", function()
             I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
             I.Settle(15.5)
             assert.are.equal(5, VS.Power(fs.RAGE, 15.5).est) -- ticks at 11, 12, 13, 14, 15
-            assert.are.equal(9, VS.Power(fs.RAGE, 25).est) -- projected: 16 to 19; the tick at the expiry does not land
+            assert.are.equal(10, VS.Power(fs.RAGE, 25).est) -- projected: 16 to 20, none after the expiry
             I.Settle(25)
             local r = VS.Power(fs.RAGE, 30)
-            assert.are.same({ 9, 9 }, { r.est, r.lo })
-            assert.are.equal(9, I.res.pinDelta[1]) -- kept out of the next regen measurement
+            assert.are.same({ 10, 10 }, { r.est, r.lo })
+            assert.are.equal(10, I.res.pinDelta[1]) -- kept out of the next regen measurement
             assert.are.equal(1, I.res.auraRegen.n)
         end)
 
@@ -354,14 +354,14 @@ describe("resources", function()
             I.Settle(15)
             assert.are.equal(25, VS.Power(fs.RAGE, 15).est) -- 5 ticks, no decay
             I.Settle(22)
-            assert.are.equal(25, VS.Power(fs.RAGE, 22).est) -- 4 more ticks (none at the expiry), then 2 s x 2/s
+            assert.are.equal(26, VS.Power(fs.RAGE, 22).est) -- 5 more ticks, then 2 s x 2/s after the expiry
         end)
 
-        it("drops the tick at the expiry: a 10 s aura ticking 1 a second lands 9 (in game, 2026-10-16)", function()
+        it("lands the tick at the expiry: a 10 s aura ticking 1 a second lands 10", function()
             I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
-            assert.are.equal(5, VS.Power(fs.RAGE, 15).est) -- (10, 15]: before the expiry, unchanged
-            assert.are.equal(9, VS.Power(fs.RAGE, 20).est) -- (10, 20]: 11 to 19, not 20
-            assert.are.equal(9, VS.Power(fs.RAGE, 30).est) -- (10, 30]: nothing after it either
+            assert.are.equal(5, VS.Power(fs.RAGE, 15).est) -- (10, 15]: 11 to 15
+            assert.are.equal(10, VS.Power(fs.RAGE, 20).est) -- (10, 20]: 11 to 20, the expiry's tick too
+            assert.are.equal(10, VS.Power(fs.RAGE, 30).est) -- (10, 30]: nothing after it
         end)
 
         it("leaves decay at the full rate when the tick aura is down or already expired", function()
@@ -434,6 +434,135 @@ describe("resources", function()
             assert.are.equal(0, bytes)
         end)
     end)
+
+    describe("stepped decay (rage: 1.25 lost at the start of each 1 s window out of combat)", function()
+        local BLOODRAGE = 3 -- the aura index
+
+        before_each(function()
+            local def = fs.def(fs.new(9))
+            def.auras[BLOODRAGE] = { key = "bloodrage", id = 29131 }
+            def.auraIds[BLOODRAGE] = { 29131 }
+            def.resources[1].decay = 1.25
+            def.resources[1].decayInterval = function() -- a function, as a class file's meta table declares it
+                return 1
+            end
+            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1 } }
+            boot(def)
+            S.Direct(Obs.CombatStart, 2)
+            I.Fold(2, false)
+        end)
+
+        -- 50 rage in combat from 2; the combat ends at 10.
+        local function combatEnd()
+            I.ResourceShift(1, 50, 2, Obs.CastSuccess)
+            I.Settle(10)
+            S.Direct(Obs.CombatEnd, 10)
+            I.Fold(10, false)
+        end
+
+        it("takes the first quantum at the combat end, then one at each window's start, down to rest", function()
+            combatEnd()
+            assert.are.equal(48.75, VS.Power(fs.RAGE, 10).est) -- at once
+            I.Settle(10.5)
+            assert.are.equal(48.75, VS.Power(fs.RAGE, 10.5).est)
+            I.Settle(11)
+            assert.are.equal(47.5, VS.Power(fs.RAGE, 11).est)
+            I.Settle(12.9)
+            local r = VS.Power(fs.RAGE, 12.9)
+            assert.are.same({ 46.25, 0, 96.25, "modelled" }, { r.est, r.lo, r.hi, r.basis }) -- beats at 10, 11, 12
+            assert.are.same({ 13, 12 }, { I.res.decayNext[1], VS.DecayAnchor(fs.RAGE) })
+            I.Settle(60)
+            assert.are.same({ 0, 0, 0 }, { VS.Power(fs.RAGE, 60).est, I.res.decayNext[1], VS.DecayAnchor(fs.RAGE) })
+        end)
+
+        it("lands Bloodrage's tenth tick at its expiry, then the first quantum at once: 10 - 1.25", function()
+            S.Direct(Obs.CombatEnd, 5)
+            I.Fold(5, false) -- at rest (0): no quantum
+            I.Settle(10)
+            I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
+            I.Settle(15)
+            assert.are.same({ 5, 0 }, { VS.Power(fs.RAGE, 15).est, I.res.decayNext[1] }) -- paused while it is up
+            I.Settle(20)
+            assert.are.same({ 8.75, 21 }, { VS.Power(fs.RAGE, 20).est, I.res.decayNext[1] }) -- the tick, then the step
+            I.Settle(21)
+            assert.are.equal(7.5, VS.Power(fs.RAGE, 21).est)
+        end)
+
+        it("pauses for a tick aura applied while decaying and re-anchors at its expiry", function()
+            combatEnd()
+            I.Settle(12.5) -- 46.25: beats at 10, 11, 12
+            I.AuraModel(1, BLOODRAGE, 13, 23, 1, 12.5, 0) -- applied at 13, expires at 23
+            I.Settle(13)
+            assert.are.same({ 46.25, 0 }, { VS.Power(fs.RAGE, 13).est, I.res.decayNext[1] }) -- no beat at 13
+            I.Settle(18)
+            assert.are.equal(51.25, VS.Power(fs.RAGE, 18).est) -- ticks at 14 to 18
+            I.Settle(23)
+            assert.are.same({ 55, 24 }, { VS.Power(fs.RAGE, 23).est, I.res.decayNext[1] }) -- 19 to 23, then a step
+            I.Settle(24)
+            assert.are.equal(53.75, VS.Power(fs.RAGE, 24).est)
+        end)
+
+        it("stops at a combat start and front-loads again at the next combat end", function()
+            combatEnd()
+            I.Settle(11.5) -- 47.5
+            S.Direct(Obs.CombatStart, 11.5)
+            I.Fold(11.5, false)
+            assert.are.equal(0, I.res.decayNext[1])
+            I.Settle(20)
+            assert.are.equal(47.5, VS.Power(fs.RAGE, 20).est) -- no quantum in combat
+            S.Direct(Obs.CombatEnd, 20.5)
+            I.Fold(20.5, false)
+            assert.are.same({ 46.25, 21.5 }, { VS.Power(fs.RAGE, 20.5).est, I.res.decayNext[1] })
+        end)
+
+        it("stamps each quantum's modelled sample at its beat", function()
+            combatEnd()
+            local m = I.res.power[1].last.modelled
+            assert.are.same({ 48.75, 10 }, { m.v, m.t }) -- the front-loaded one, at the combat end
+            I.Settle(11.9)
+            assert.are.same({ 47.5, 11 }, { m.v, m.t })
+            I.Settle(12.9)
+            assert.are.same({ 46.25, 12 }, { m.v, m.t })
+        end)
+
+        it("clamps the last quantum at rest from an estimate not a multiple of it, the clamp in pinDelta", function()
+            I.ResourceShift(1, 49, 2, Obs.CastSuccess)
+            I.Settle(10)
+            S.Direct(Obs.CombatEnd, 10)
+            I.Fold(10, false)
+            local before = I.res.pinDelta[1] + 1.25 -- before the front-loaded quantum
+            I.Settle(48.5) -- 39 quanta at 10 to 48: 0.25 left
+            assert.are.same({ 0.25, 49 }, { I.res.est0[1], I.res.decayNext[1] })
+            I.Settle(60)
+            assert.are.same({ 0, 0 }, { I.res.est0[1], I.res.decayNext[1] }) -- the 40th lost 0.25, not 1.25
+            assert.are.equal(before - 49, I.res.pinDelta[1]) -- exactly the 49 lost, out of the regen measurement
+        end)
+
+        it("starts from a rise above rest out of combat, and allocates nothing over combat cycles", function()
+            S.Direct(Obs.CombatEnd, 5)
+            I.Fold(5, false)
+            I.Settle(6)
+            I.ResourceShift(1, 20, 6, Obs.CastSuccess) -- out of combat, at the clock
+            I.Settle(6.5)
+            assert.are.same({ 18.75, 7 }, { VS.Power(fs.RAGE, 6.5).est, I.res.decayNext[1] }) -- the first beat at 6
+            local t = 10
+            assert.are.equal(
+                0,
+                alloc.bytes(function(i)
+                    t = t + 0.1
+                    if i % 50 == 0 then
+                        S.Direct(i % 100 == 0 and Obs.CombatEnd or Obs.CombatStart, t)
+                        I.Fold(t, false)
+                        I.ResourceShift(1, 30, t, Obs.CastSuccess)
+                    end
+                    I.Settle(t)
+                    VS.Power(fs.RAGE, t)
+                    VS.DecayAnchor(fs.RAGE)
+                end, 2000)
+            )
+        end)
+    end)
+
     describe("a resource resting at its maximum, and a fractional cost (mana, 0.55 of the maximum)", function()
         local MANA, FORM, BIG = 0, 1, 2
         local def

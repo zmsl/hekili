@@ -1,7 +1,8 @@
 -- tests/Virtual/State/alloc_spec.lua (spec §2, §11): 10,000 mixed events (PLAYER_SWING, UNIT_POWER_FREQUENT,
--- usability flipping on a health-gated spender, own casts, UNIT_AURA after a form swap, the target's UNIT_COMBAT) with
--- a drain every tick against the fake spec, every accessor and every facade policy and passthrough called, every
--- combat-log row delivered to a subscriber: VirtualState allocates nothing.
+-- usability flipping on a health-gated spender, own casts, UNIT_AURA after a form swap, the target's UNIT_COMBAT, combat
+-- ending and starting under a stepped rage decay) with a drain every tick against the fake spec, every accessor and
+-- every facade policy and passthrough called, every combat-log row delivered to a subscriber: VirtualState allocates
+-- nothing.
 local load = require("Virtual.State.helpers.load")
 local fake = require("Virtual.State.helpers.fake_api")
 local fs = require("Virtual.State.helpers.fake_spec")
@@ -57,8 +58,18 @@ describe("zero allocation", function()
         sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
         h.Class.abilities.rend.healthGate = 0.2 -- a health-gated spender (Families/TargetHealth.lua)
         ctl.known[fs.REND] = true -- known: its NOT answers can bound the target's health
+        h.Class.resources.rage.state.meta = { -- a stepped decay (Families/Resources.lua): 1.25 at each 1 s beat
+            decay = function()
+                return 1.25
+            end,
+            decayInterval = function()
+                return 1
+            end,
+        }
         VS.Start(api)
         VS.SpecChanged()
+        local decay = h.Class.resources.rage.state.regenModel.__decay -- the sim's (Adapter.lua), called as a forecast
+        state.time, state.query_time = 0, 1
         ctl.guid.target = "Creature-2" -- a target never held before: its first flip learns M, then WOUNDs move it
         ctl.Fire("PLAYER_TARGET_CHANGED")
         ctl.auras.player.HELPFUL[1] = { spellId = fs.SHOUT, expirationTime = 1e9, applications = 0 }
@@ -87,10 +98,19 @@ describe("zero allocation", function()
             else
                 ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 1)
             end
+            if i % 100 == 50 then
+                ctl.Fire("PLAYER_REGEN_ENABLED") -- out of combat: the rage decays on its beats
+            elseif i % 100 == 0 then
+                ctl.Fire("PLAYER_REGEN_DISABLED")
+            end
             ctl.Tick()
             VS.Drain(ctl.now)
             local t = ctl.now
             VS.Power(fs.RAGE, t)
+            VS.DecayAnchor(fs.RAGE)
+            decay.last()
+            decay.stop()
+            decay.value()
             VS.Regen(fs.RAGE, t)
             VS.Cooldown(fs.REND, t)
             VS.Charges(fs.REND, t)
