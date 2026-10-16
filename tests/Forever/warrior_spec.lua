@@ -677,9 +677,9 @@ describe("Forever Warrior", function()
             end
             assert.are.same({
                 "shield_bash",
+                "mocking_blow",
                 "defensive_stance",
                 "taunt",
-                "mocking_blow",
                 "challenging_shout",
                 "shield_block",
                 "victory_rush",

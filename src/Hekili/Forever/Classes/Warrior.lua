@@ -1877,7 +1877,7 @@ spec:RegisterSetting("debuff_demoshout_enabled", false, {
 spec:RegisterSetting("prot_heroic_strike_rage", 50, {
     type = "range",
     name = "Protection: Heroic Strike Rage",
-    desc = "The Protection priority recommends Heroic Strike on one target at or above this much rage.",
+    desc = "The Protection priority recommends Heroic Strike in the single-target list at or above this much rage.",
     width = "full",
     min = 0,
     max = 100,
@@ -1899,7 +1899,7 @@ spec:RegisterSetting("challenging_shout_loose", 3, {
     name = "Protection: Challenging Shout Enemies",
     desc = "The Protection priority recommends Challenging Shout when at least this many enemies attack someone else.",
     width = "full",
-    min = 0,
+    min = 1,
     max = 10,
     step = 1,
 })
@@ -1920,6 +1920,6 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Protection",
-    20261016287,
-    [[Hekili:TEvBVTTnq4Fl7lDBybAXonPTdrbyDddzddbdtfOFts0sNJimnPbjvm8qH(TV7KKTOEHQ2BbfTnH3Dph5Z9CKNIxe)P4OCMfIFA51lVBX1lUB57FxCK9WoioAhlBd7z8hKST4)(xALfYSCLKmDqOy5u4Rk5c7VlJxnjsMDqw8tlE7hwehvWZZHghbtwC0VP0WlGUkTd5Q0pZ0AUs)tvP)kSgKg(lqvAKLjZGRQs)eRuARs3xaOR2c0KLPFgWLSLAPPkLTNDa9dZfiYRs)OqLTPkDdSdDPChA5VXukFgdKjZ78lsW2sHvkZPn0pR3QW)ZyrgaqZwvv6TO9hbTINr7hnFdIb50ViagTh3ZTfT7jnJsqb3IBOvAU85GQ0NqiYpEIm4X7pzgBZjl3zd)zMq0U3EeycBHXQKaDW0ql67eSdG(BX1YqNdWIHwTMlWkeRMdnb70qMA7kMne)RvajMcvP9k(6WVzv561bURguUR6pgf4pe(JzfeZEvPbsuRxN8CwE4IP980XkX0uN6ftxAh6NBQdn1eqYkMP40IVsyJWyjDZ4yTfAGzdekSu449wu0GvTKvc1(bU9MmLsKR2ldQHmqdBzCP5HfUXJuNqGQmcJtu)jqug4HqdyTOztWiFtQ9WfUJudPLhFgQp(UUeulBVFPleVWZSk9HeDzF6fdqLtY1X4sRgKvQ1G0E)YR7f1fPQWa0LYKMFlrWn2ROluczkGcMwhlBGe2YbZdH38vd0GCLOJHcA(9qDBN9G17iqd2KpL16M(eg1ZtBOCOHsDwULsV9ltzRvcC)ntGTTOXZmbBxnt1cG7696apfzoGyZe8)PNi6KSPbNeYRgvdizReq(BoMHXXpDEYuYSsJHy4A5UN(9t(xuFfi2Lr3aoVQXrLJxrzt6fAs9LKZxn6mJALWZKl)sRGkxz7z6((cTEy7LVpt2SbIrcWMLNu91ykR(TJlJfBIza91MPECxCe(4kvyh8Km1izOxUB4C8NEQEoGwfu8hp(qsCu7jk2Iq4XfNth52n(CZzRfhLP5wqZz0Ka)hB2OK9wpjZTS7MmpkgcQB9a14cVlG)pBhPeFNNepOVmoYrKqfmm03ni0U91L1f2L0E2MkLV)CkVw8prOICoL1fwIoZM65eQZxj)Q1jFcBNweFYXbTidLANxzZPT3rKuV4ufkFYQXfkCYjwPWoxXYz2SPyyhw03SyULH(gNAZpKR7sGZKyoAjAsSPWXxbXD(opO7DoV5USy0SCtc(zn)3u1WoS8oZ34Agz9CU84yCUtkovh)0QvCaXoionu5u59dEYR70JJLudMTKaAX1E3z9VuahP0PDT)aLnVgM08bU0vweWEFnCMyBFlTUJ603gnxp1fFE9DVwZ3PDzTrVo9Pn3ZxAlON0Fe2Wf8Q0VR9R6)(AZX)7p]]
+    20261016044,
+    [[Hekili:1E12UnUnq0VL(sVGgOgNBTBr0c0TffzlkckQwG9njrln2IW0KgKujWfl03ENrs2IsI0RDVGGKyZ5kpZzihMUi9dPjLmlK(8nxFZdlUEXdxF3DPj297G0KDSInS14hKST4F)dTYcfwUssI2luSsY8L1CH99Y0LE9KzhuK(8I7EZI0KkEzj0Piykst(vLgEb0n5dEUj)JmTMR0)yt(VaRaPH)c0KNyzYc4QM8pWQL2M8xRauvBfkYY0RbCjBTwAAYzVY2J6HXceLn5VtOk20KVb2HQuVdL8NyiLRrdzYYb9seSTKz1YskH(j9wf(pJfraafBvn53JYFc0kEbLpA(g0hKs)Sayuo(k3w1NtAgfGkUftOLAUCDut(ZOlkpSJm4273zgB3oR0jH)iti6ZTNaMWwzSkjqBmn079Dc2Eq)v4AfOYryXqRwXfyfI1IHMODAOqTDjZgJ)AfqMPsvBVIVk(lwwVAvK7Qr17A(Tzg(TXFxrfHSxvBGm1QvzRlkJx4xZJBRmtxDAKndHDQEUHo20cazlzMQJlI(Elw)qamBPq9k5jBLgy2iHcbph1(Vifq3yj61CBdeueHecKmr53re(OUkd82ydyTOyt0mDZA1W1DhqaIYophAtFxvIAzNpEJRlEHxyv69z66XOiAGQKyLZ9lTAurTwds7J3C9iRUiYdAGUwM19Tmb3yVIo3iMPaYyADe2bjSLdM3gF7N1qdIvIbekQ77X6(g4jRpaGgSx2N02E7mg1Atjuj0bPol3dP3)jFY0WwgxAE8wp(2w1PzHGTRfP6DG76JA0oAzjG(Mj4)1is0rAtNFYiT6ynGKTuaLF5Him3E)XPqjlQngcHBBLc0wFu)Q2t6WUe6GUtZACy54jr2SrMM1Ew4PRgdIrUs8zILFQNqvQSJe94yI2iFheVpt0SZfZiGDl7L91jQO9kIldf7Szc81hPryxAcEhkvyNCZl1izOlO7WC8tp3EDFpdk9DhUVinPFhLArxeqfNDhP2THuZj1stk0ClO5m6c))HnBuWUlqWCl7UblaJHC19bC18cVRd)x2osb(HabEsFzAIdjHkyOPF)ethYRlRlCiOJK5lK)W5uET4pjiJ8umRlSeDMn1NIOE6k5NTofIy70IeIooPfzkv78kBoT9oKK2f9vOcrRMxOWjFy1c7PkwoJGDke2DKm3TLZus(qsNIqOrXCRIJf6BVpTo4ptgOI0SD(8tOZeMnYM3qCwJ55Run4RGJ2nV0qspNZioyN7aH(AS9tkX5ahCXXzh9f33eiUUdjoV0pzesYrlUoyMnU3hNC0PRC8CJDx6L19Cv6KjYXbV07e22FLzBJZXx6CQwNlE)gQ5Q7vx(G6)V7N6ooV2wr3C)eSHl4n5FD)B0)MwXP)n]]
 )
