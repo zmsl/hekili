@@ -4,12 +4,17 @@
 -- below g of the target's health). Usable bounds the health at or below g; a NOT under every guard of design §5
 -- bounds it above g; a flip from such a NOT to usable pins it at g. M, the damage per full health, is learned at that
 -- flip on a target never held before (full at the swap): M = the WOUND damage since the swap / (1 - g).
+-- Between answers each WOUND moves the health down by amount / M (floor 0.02 while alive); the time to die and to a
+-- percentage are the health left x M / the damage per second since the first WOUND.
 -- Not built until the in-game checkpoint (design §7) answers: a short answer (c = 1) as a health signal (line 4), and
 -- a plain UnitHealthMax("target") read as M (line 2; its hook is marked below).
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local Obs = VS.Obs
+
+--- A live target's health never reads below this fraction (Targets.lua's UpdateTTDs drops an enemy at or below 1%).
+I.TARGET_HEALTH_FLOOR = 0.02
 
 -- What a gated ability's last answer said: nothing about health, above its gate (a guarded NOT), at or below it.
 local UNKNOWN, ABOVE, BELOW = -1, 0, 1
@@ -27,6 +32,7 @@ local H = {
     up = {},
     prev = {},
     notDmg = {},
+    maxBy = {}, -- M by target memory slot: a swap back keeps it
     slot = 0,
     dead = false,
     attackable = false,
@@ -39,7 +45,7 @@ local H = {
     M = 0,
 }
 I.th = H
-local rec
+local rec, ttdRec, pctRec
 
 -- The player aura index of an ability's `buff`/`nobuff` key (Resources.lua's swingAura): 0 none, -1 untracked.
 local function auraIndex(def, key)
@@ -68,6 +74,8 @@ end
 
 I.OnBuild(function(def, now)
     rec = I.NewBelief("health target")
+    ttdRec = I.NewBelief("ttd target")
+    pctRec = I.NewBelief("time to pct target")
     H.n = 0
     for a = 1, #def.abilities do
         local obj = def.abilities[a]
@@ -82,6 +90,9 @@ I.OnBuild(function(def, now)
                 H.aura[k] = auraIndex(def, buff ~= nil and buff or nobuff)
             end
         end
+    end
+    for s = 1, I.TARGET_CAP do
+        H.maxBy[s] = 0
     end
     H.slot, H.dead, H.attackable, H.fresh, H.M = 0, false, false, false, 0
     restart(now)
@@ -167,23 +178,58 @@ I.On(Obs.Usable, function(o, t, lag)
     end
 end)
 
--- A swap (a: the new slot, 0 none; b: 1 never held before; c: 1 attackable) starts the new target over at the
--- default. Families/Auras.lua has already moved I.curSlot; H.slot is still the old slot here.
+-- A swap (a: the new slot, 0 none; b: 1 never held before; c: 1 attackable) keeps the old slot's M and starts the new
+-- target over at the default with its own. Families/Auras.lua has already moved I.curSlot; H.slot is the old one here.
 I.On(Obs.TargetSwap, function(o, t)
-    H.slot, H.dead, H.M = o.a, false, 0
+    if H.slot > 0 then
+        H.maxBy[H.slot] = H.M
+    end
+    H.slot, H.dead = o.a, false
+    H.M = o.a > 0 and H.maxBy[o.a] or 0
     H.fresh, H.attackable = o.b == 1, o.c == 1
     restart(t)
 end)
 
--- WOUND damage the target took (UNIT_COMBAT, plain; everyone's hits): counted from the swap, M's numerator.
+-- WOUND damage the target took (UNIT_COMBAT, plain; everyone's hits): counted from the swap (M's numerator, the time
+-- to die's damage per second); with M known, the health moves down by amount / M, a live target never below the floor.
 I.On(Obs.TargetDamage, function(o, t)
     if H.slot == 0 or H.dead then
         return
     end
     if H.dmgT0 == 0 then
-        H.dmgT0 = o.t
+        H.dmgT0 = t
     end
     H.dmg = H.dmg + o.b
+    if H.M > 0 then
+        local d, floor = o.b / H.M, I.TARGET_HEALTH_FLOOR -- nonzero: M > 0 checked
+        H.est0 = H.est0 - d > floor and H.est0 - d or floor
+        H.lo0 = H.lo0 - d > floor and H.lo0 - d or floor
+        H.hi0 = H.hi0 - d > floor and H.hi0 - d or floor
+        I.Sample(rec, "modelled", H.est0, t, Obs.TargetDamage)
+    end
+end)
+
+-- A death (poll 4) or a slot taken for another GUID: the slot forgets M; the current target reads 0, observed, until
+-- the next swap.
+I.On(Obs.TargetGone, function(o, t)
+    local s = o.a
+    if s <= 0 then
+        return
+    end
+    H.maxBy[s] = 0
+    if s == H.slot then
+        H.dead, H.M = true, 0
+        H.est0, H.lo0, H.hi0 = 0, 0, 0
+        I.Sample(rec, "observed", 0, t, Obs.TargetGone)
+    end
+end)
+
+-- Combat end: an evade heals, so a live target starts over at the default, no longer known to be full.
+I.On(Obs.CombatEnd, function(o, t)
+    if not H.dead then
+        H.fresh = false
+        restart(t)
+    end
 end)
 
 --- (design §3) The current target's health fraction: the interval as folded, conf 1 - its width (0 at the default).
@@ -192,6 +238,43 @@ function I.TargetHealth(now)
     rec.est, rec.lo, rec.hi = H.est0, H.lo0, H.hi0
     rec.conf = 1 - (H.hi0 - H.lo0)
     return rec
+end
+
+-- The damage per second the current target has taken since its first WOUND: 0 without a live target, M, or a second
+-- of damage. Allocates nothing.
+local function dps(now)
+    local dt = now - H.dmgT0
+    if H.slot == 0 or H.dead or H.M <= 0 or H.dmgT0 == 0 or dt < I.PIN_GAP then
+        return 0
+    end
+    return H.dmg / dt -- nonzero: dt >= PIN_GAP (1 s)
+end
+
+--- (design §3) The current target's time to die: the health left x M / dps (lo and hi from the interval), basis
+--- `modelled`; nil while dps is 0 (VS.TTD("target") then answers its default, Families/Player.lua). Allocates nothing.
+function I.TargetTTD(now)
+    local rate = dps(now)
+    if rate <= 0 then
+        return nil
+    end
+    local k = H.M / rate -- nonzero: rate > 0 checked
+    ttdRec.est, ttdRec.lo, ttdRec.hi = H.est0 * k, H.lo0 * k, H.hi0 * k
+    ttdRec.conf, ttdRec.basis = 1 - (H.hi0 - H.lo0), "modelled" -- derived on read from the health: no sample of its own
+    return ttdRec
+end
+
+--- (design §3) Seconds until the current target's health is at fraction `p` (0..1): (est - p) x M / dps, 0 at or
+--- below it; nil while dps is 0. Allocates nothing.
+function VS.TimeToPct(p, now)
+    local rate = dps(now)
+    if rate <= 0 then
+        return nil
+    end
+    local k = H.M / rate -- nonzero: rate > 0 checked
+    local e, l, h = H.est0 - p, H.lo0 - p, H.hi0 - p
+    pctRec.est, pctRec.lo, pctRec.hi = e > 0 and e * k or 0, l > 0 and l * k or 0, h > 0 and h * k or 0
+    pctRec.conf, pctRec.basis = 1 - (H.hi0 - H.lo0), "modelled"
+    return pctRec
 end
 
 I.OnSnapshot(function(out, now)

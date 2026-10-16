@@ -88,6 +88,32 @@ describe("target health", function()
         assert.are.same({ 0.2, 0, 0.2, 0 }, { h.est, h.lo, h.hi, I.th.M })
     end)
 
+    it("takes no bound from a NOT under an untracked guard aura, and one under `buff` only while it is up", function()
+        local d = def()
+        d.abilities[GATED].nobuff, d.abilities[GATED].buff = nil, "ghost" -- named but untracked: index -1
+        I.Build(d, 1)
+        obs(Obs.Read, 2, 1, 50, ReadOf.Resource)
+        obs(Obs.Usable, 9, GATED, 0, 0)
+        I.Fold(9)
+        local h = VS.Health("target", 9)
+        assert.are.same({ 1, 0, 1, "default" }, { h.est, h.lo, h.hi, h.basis })
+
+        d = def()
+        d.abilities[GATED].nobuff, d.abilities[GATED].buff = nil, "stance" -- usable only while Stance is up
+        I.Build(d, 1)
+        obs(Obs.Read, 2, 1, 50, ReadOf.Resource)
+        obs(Obs.Usable, 9, GATED, 0, 0) -- Stance down: unguarded
+        I.Fold(9)
+        h = VS.Health("target", 9)
+        assert.are.same({ 1, 0, 1, "default" }, { h.est, h.lo, h.hi, h.basis })
+        obs(Obs.Read, 9.5, 1, 3600, ReadOf.Aura + I.AURA_STACK) -- Stance up
+        obs(Obs.Usable, 10, GATED, 0, 0) -- guarded: above the gate
+        I.Fold(10)
+        h = VS.Health("target", 10)
+        within(0.2 + I.EPS, h.lo)
+        assert.are.same({ 1, 1 }, { h.est, h.hi }) -- est already above the gate: bounded, no sample
+    end)
+
     it("takes no bound from a NOT while the gated ability is not known", function()
         ctl.known[SMITE] = false
         I.Build(def(), 1)
@@ -107,5 +133,58 @@ describe("target health", function()
         I.Fold(10)
         h = VS.Health("target", 10)
         assert.are.same({ 0.2, 0, 0.2, 0 }, { h.est, h.lo, h.hi, I.th.M })
+    end)
+
+    it("moves the health by WOUND damage over M and answers the time to die from the damage per second", function()
+        anchor()
+        obs(Obs.TargetDamage, 11, 0, 50)
+        obs(Obs.TargetDamage, 12, 0, 50)
+        I.Fold(12)
+        local h = VS.Health("target", 12)
+        within(0.1, h.est, 1e-6)
+        within(0.1, h.lo, 1e-6)
+        within(0.1, h.hi, 1e-6)
+        assert.are.equal("modelled", h.basis)
+        local dps = 900 / (12 - 3) -- every WOUND since the first, at 3
+        local ttd = VS.TTD("target", 12)
+        assert.are.equal("modelled", ttd.basis)
+        within(h.est * I.th.M / dps, ttd.est, 1e-6)
+        within((h.est - 0.05) * I.th.M / dps, VS.TimeToPct(0.05, 12).est, 1e-6)
+    end)
+
+    it("keeps a live target at the floor and reads a dead one as 0, observed", function()
+        anchor()
+        obs(Obs.TargetDamage, 11, 0, 500)
+        I.Fold(11)
+        local h = VS.Health("target", 11)
+        assert.are.same({ 0.02, 0.02, 0.02, "modelled" }, { h.est, h.lo, h.hi, h.basis })
+        obs(Obs.TargetGone, 12, 1)
+        I.Fold(12)
+        h = VS.Health("target", 12)
+        assert.are.same({ 0, 0, 0, "observed" }, { h.est, h.lo, h.hi, h.basis })
+        assert.are.equal(30, VS.TTD("target", 12).est) -- dead: the default
+    end)
+
+    it("starts a new target over at the default and keeps M for a target swapped back to", function()
+        anchor()
+        VS.Start(api) -- the start's swap at 100: Creature-1 keeps slot 1 (held before)
+        ctl.guid.target = "Creature-2"
+        api.UnitCanAttack = function()
+            return false
+        end
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 70, 1)
+        ctl.Tick() -- the staged WOUND into the log
+        I.Fold(100)
+        -- M unknown on the new target: its WOUND moves nothing
+        local h = VS.Health("target", 100)
+        assert.are.same({ 1, 0, 1, "default" }, { h.est, h.lo, h.hi, h.basis })
+        assert.are.same({ 2, true, false, 70, 0 }, { I.th.slot, I.th.fresh, I.th.attackable, I.th.dmg, I.th.M })
+        ctl.now = 101
+        ctl.guid.target = "Creature-1"
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        I.Fold(101)
+        assert.are.same({ 1, false, 0, "default" }, { I.th.slot, I.th.fresh, I.th.dmg, VS.Health("target", 101).basis })
+        within(1000, I.th.M, 1e-6)
     end)
 end)

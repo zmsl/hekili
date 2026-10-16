@@ -4,6 +4,7 @@
 -- UnitCanAttack) straight to the log, then walks the new target's auras; poll 4 logs `TargetGone` for a dead target;
 -- the target's UNIT_SPELLCAST_* events become `TargetCast` observations by castBarID (plain; the spellID and castGUID
 -- are secret on the target).
+-- The target's UNIT_COMBAT WOUND amounts become `TargetDamage` (b: the amount; target-health design §2.3c).
 -- Credits: secret-value handling after Catnip's (Durts) research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Target.lua.
 
@@ -80,6 +81,15 @@ S.Poll(4, function(api, t)
         Direct(Obs.TargetGone, t, I.curSlot)
     end
     dead = d
+end)
+
+-- The target's damage taken (target-health design §2.3c): UNIT_COMBAT's WOUND amount, plain and victim-side (every
+-- attacker's hits count, as a time to die needs). Registered for every unit, as Events/Rows.lua and Attackers.lua
+-- register it: a "target" registration would narrow the client's to the target and starve Attackers.lua of the player's.
+S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
+    if unit == "target" and act == "WOUND" and type(amount) == "number" and amount > 0 then
+        Stage(Obs.TargetDamage, t, 0, amount)
+    end
 end)
 
 -- `fifth`: the event carries interruptedBy before its castBarID (INTERRUPTED, CHANNEL_STOP).
