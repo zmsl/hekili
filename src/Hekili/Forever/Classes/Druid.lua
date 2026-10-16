@@ -1119,6 +1119,10 @@ spec:RegisterAbilities({
         nobuff = "feral_form",
         aura = "hurricane",
 
+        now = function()
+            applyDebuff("target", "hurricane")
+        end,
+
         start = function()
             applyDebuff("target", "hurricane")
         end,

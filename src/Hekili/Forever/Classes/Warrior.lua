@@ -650,6 +650,10 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows(BATTLE_SHOUT),
 
+        now = function()
+            applyBuff("battle_shout")
+        end,
+
         handler = function()
             applyBuff("battle_shout")
         end,
@@ -791,6 +795,10 @@ spec:RegisterAbilities({
         known = knows({ 1161 }),
         toggle = "defensives",
 
+        now = function()
+            applyDebuff("target", "challenging_shout")
+        end,
+
         handler = function()
             applyDebuff("target", "challenging_shout")
         end,
@@ -873,6 +881,10 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows({ 12809 }),
 
+        now = function()
+            applyDebuff("target", "concussion_blow")
+        end,
+
         handler = function()
             applyDebuff("target", "concussion_blow")
         end,
@@ -891,6 +903,10 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows({ 12328 }),
         toggle = "cooldowns",
+
+        now = function()
+            applyBuff("death_wish")
+        end,
 
         handler = function()
             applyBuff("death_wish")
@@ -963,6 +979,10 @@ spec:RegisterAbilities({
         known = knows({ 676 }),
         toggle = "cooldowns",
         buff = "defensive_stance",
+
+        now = function()
+            applyDebuff("target", "disarm")
+        end,
 
         handler = function()
             applyDebuff("target", "disarm")
@@ -1097,6 +1117,10 @@ spec:RegisterAbilities({
         known = knows({ 5246 }),
         toggle = "cooldowns",
 
+        now = function()
+            applyDebuff("target", "intimidating_shout")
+        end,
+
         handler = function()
             applyDebuff("target", "intimidating_shout")
         end,
@@ -1113,6 +1137,10 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows({ 12975 }),
         toggle = "defensives",
+
+        now = function()
+            applyBuff("last_stand")
+        end,
 
         handler = function()
             applyBuff("last_stand")
@@ -1136,6 +1164,10 @@ spec:RegisterAbilities({
         toggle = "cooldowns",
         buff = "battle_stance",
 
+        now = function()
+            applyDebuff("target", "mocking_blow")
+        end,
+
         handler = function()
             applyDebuff("target", "mocking_blow")
         end,
@@ -1156,6 +1188,10 @@ spec:RegisterAbilities({
         talent = "mortal_strike",
         startsCombat = true,
         known = knows(MORTAL_STRIKE),
+
+        now = function()
+            applyDebuff("target", "mortal_strike")
+        end,
 
         handler = function()
             applyDebuff("target", "mortal_strike")
@@ -1180,6 +1216,10 @@ spec:RegisterAbilities({
 
         usable = function()
             return buff.overpower_ready.up, "only usable after dodging"
+        end,
+
+        now = function()
+            removeBuff("overpower_ready")
         end,
 
         handler = function()
@@ -1244,6 +1284,10 @@ spec:RegisterAbilities({
         toggle = "cooldowns",
         buff = "berserker_stance",
 
+        now = function()
+            applyBuff("recklessness")
+        end,
+
         handler = function()
             applyBuff("recklessness")
         end,
@@ -1285,6 +1329,10 @@ spec:RegisterAbilities({
         known = knows({ 20230 }),
         toggle = "cooldowns",
         buff = "battle_stance",
+
+        now = function()
+            applyBuff("retaliation")
+        end,
 
         handler = function()
             applyBuff("retaliation")
@@ -1340,6 +1388,12 @@ spec:RegisterAbilities({
         debuff = "casting",
         readyTime = state.timeToInterrupt,
 
+        now = function()
+            if talent.improved_shield_bash.rank >= 1 then
+                applyDebuff("target", "shield_bash_silenced")
+            end
+        end,
+
         handler = function()
             interrupt()
             if talent.improved_shield_bash.rank >= 1 then
@@ -1361,6 +1415,10 @@ spec:RegisterAbilities({
         known = knows({ 2565 }),
         buff = "defensive_stance",
         equipped = "shield",
+
+        now = function()
+            applyBuff("shield_block")
+        end,
 
         handler = function()
             applyBuff("shield_block")
@@ -1395,6 +1453,10 @@ spec:RegisterAbilities({
         toggle = "defensives",
         buff = "defensive_stance",
         equipped = "shield",
+
+        now = function()
+            applyBuff("shield_wall")
+        end,
 
         handler = function()
             applyBuff("shield_wall")
@@ -1475,6 +1537,10 @@ spec:RegisterAbilities({
         known = knows({ 12292 }),
         buff = "battle_stance",
 
+        now = function()
+            applyBuff("sweeping_strikes", nil, 5)
+        end,
+
         handler = function()
             applyBuff("sweeping_strikes", nil, 5)
         end,
@@ -1489,6 +1555,10 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows({ 355 }),
         buff = "defensive_stance",
+
+        now = function()
+            applyDebuff("target", "taunt")
+        end,
 
         handler = function()
             applyDebuff("target", "taunt")

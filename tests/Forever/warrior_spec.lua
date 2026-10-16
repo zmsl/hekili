@@ -233,6 +233,23 @@ describe("Forever Warrior", function()
                 "battle_stance",
                 "defensive_stance",
                 "berserker_stance",
+                "battle_shout",
+                "challenging_shout",
+                "concussion_blow",
+                "death_wish",
+                "disarm",
+                "intimidating_shout",
+                "last_stand",
+                "mocking_blow",
+                "mortal_strike",
+                "overpower",
+                "recklessness",
+                "retaliation",
+                "shield_bash",
+                "shield_block",
+                "shield_wall",
+                "sweeping_strikes",
+                "taunt",
             }) do
                 assert.is_function(w.abilities[k].now, k)
             end

@@ -188,6 +188,7 @@ local NOW = {
     "mark_of_the_wild",
     "gift_of_the_wild",
     "thorns",
+    "hurricane",
 }
 
 -- Clearcasting's covered abilities (spec §7), by rank 1's ID.

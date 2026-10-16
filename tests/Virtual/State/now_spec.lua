@@ -159,6 +159,83 @@ describe("now handlers", function()
         assert.are.equal(n + 1, #rows) -- only the cast's own SPELL_CAST_SUCCESS row
     end)
 
+    it("believes Warrior.lua's Battle Shout up on us for its 180 s from a rank 3 cast (6192)", function()
+        local w = require("Forever.helpers.load_warrior").load()
+        local a, aura = w.abilities.battle_shout, w.auras.battle_shout
+        register("battle_shout", { id = a.id, copy = a.copy, spend = 10, spendType = "rage", now = a.now })
+        h.Class.auras.battle_shout = { key = "battle_shout", id = aura.id, copy = aura.copy, duration = aura.duration }
+        start()
+        cast(6192, 40)
+        local rec = VS.Aura("player", fs.SHOUT, 40.1)
+        assert.are.same({ 220, "modelled" }, { rec.est, rec.basis })
+        assert.are.equal(0, I.nowErrors)
+    end)
+
+    -- Every Forever ability whose sim `handler` (or a channel's `start`) changes an aura or gains a resource declares
+    -- a `now`: the belief never runs the sim handler, and own auras are secret in combat. A text scan of the files.
+    local EXEMPT = {
+        heroic_strike = "the queued-strike pseudo-aura has no spell id: untracked; poll 3 reads the queue",
+        cleave = "as heroic_strike",
+        maul = "as heroic_strike",
+        revenge = "revenge_usable has no spell id: untracked",
+        starfire = "removeStack is no `now` verb; the charges end with the 15 s aura",
+        claw = "combo points are read plainly in combat (poll 1)",
+        shred = "as claw",
+        potion = "dispatches to the chosen potion's handler; none is registered on Forever",
+        healthstone = "health is no tracked resource",
+    }
+    it("declares a `now` beside every handler with an aura or resource effect", function()
+        local VERB = {
+            "applyBuff%(",
+            "applyDebuff%(",
+            "removeBuff%(",
+            "removeDebuff%(",
+            "addStack%(",
+            "removeStack%(",
+            "gain%(",
+            "swap_stance%(",
+            "swap_form%(",
+        }
+        local missing, scanned = {}, 0
+        local files = {}
+        for line in io.lines("src/Hekili/Hekili.toc") do
+            local f = line:gsub("\r", ""):match("^(Forever\\%w+\\%w+%.lua)")
+            if f then
+                files[#files + 1] = "src/Hekili/" .. f:gsub("\\", "/")
+            end
+        end
+        for _, path in ipairs(files) do
+            local fh = assert(io.open(path))
+            local text = fh:read("*a")
+            fh:close()
+            local function check(key, body, ind)
+                local sim = body:match("\n" .. ind .. "handler = function%(%)(.-)\n" .. ind .. "end,")
+                    or body:match("\n" .. ind .. "start = function%(%)(.-)\n" .. ind .. "end,")
+                if not sim then
+                    return
+                end
+                for _, v in ipairs(VERB) do
+                    if sim:find(v) then
+                        scanned = scanned + 1
+                        if not body:find("\n" .. ind .. "now = function") and not EXEMPT[key] then
+                            missing[#missing + 1] = path .. ": " .. key
+                        end
+                        return
+                    end
+                end
+            end
+            for key, body in text:gmatch("\n    ([%w_]+) = {(.-)\n    },") do
+                check(key, body, "        ")
+            end
+            for key, body in text:gmatch('RegisterAbility%("([%w_]+)", {(.-)\n}%)') do
+                check(key, body, "    ")
+            end
+        end
+        assert.is_true(scanned > 60, "the scan found " .. scanned .. " handlers") -- the patterns still match
+        table.sort(missing)
+        assert.are.same({}, missing)
+    end)
+
     it("runs removeBuff, spend, addStack and setCooldown through the context with Hekili's signatures", function()
         register("verbs_test", {
             id = 6161,
