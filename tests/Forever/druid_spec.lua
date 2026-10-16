@@ -827,6 +827,7 @@ describe("Forever Druid", function()
                 starfire_filler = false,
                 hurricane_targets = 4,
                 innervate = true,
+                forecast_window = 10,
             }) do
                 assert.are.equal(default, w.settings[key].default, key)
             end

@@ -1664,7 +1664,8 @@ function Hekili.Update()
 
                 local action, wait, depth
                 local isMain = ( dispName == "Primary" or dispName == "AOE" )
-                local defaultMax = 15
+                -- Forever E9: the recommendation window is the spec's forecast window setting.
+                local defaultMax = state.settings.forecast_window or 15
 
                 if class.file == "DEATHKNIGHT" then
                     defaultMax = max( defaultMax, 0.01 + 20 * state.haste )

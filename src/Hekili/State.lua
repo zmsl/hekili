@@ -1177,9 +1177,6 @@ do
         return b == nil or ( a.next < b.next )
     end
 
-    -- Increase max forecast duration because Assassination is pooling hard this tier.
-    local FORECAST_DURATION = 10.01
-
     forecastResources = function( resource )
         if not resource then return end
 
@@ -1188,7 +1185,9 @@ do
         wipe( remains )
 
         local now = state.now + state.offset
-        local timeout = FORECAST_DURATION * state.haste
+        -- Forever E9: the horizon is the spec's forecast window (Core.lua's delayMax), read here because a pass can
+        -- shorten delayMax and the reset forecast would inherit that.
+        local timeout = state.settings.forecast_window or 15
 
         if state.class.file == "DEATHKNIGHT" and state.runes then
             -- Adjust timeout based on rune cooldowns and regen models for Frost DK
@@ -1246,12 +1245,13 @@ do
         local finish = now + timeout
         local prev = now
         local iter = 0
+        local maxIter = ceil( 2 * timeout + 10 )
 
         -- Forever E7: aura-gated regen entries are already forecast events; regen_combined would count them twice.
         local regen = r.regen or 0
         regen = regen > 0.001 and regen or 0
 
-        while ( #events > 0 and now <= finish and iter < 30 ) do
+        while ( #events > 0 and now <= finish and iter < maxIter ) do
             local e = events[ 1 ]
             iter = iter + 1
 
@@ -6373,6 +6373,13 @@ do
 
         state.nextMH = ( state.combat > 0 and state.swings.mh_actual > state.combat and state.swings.mh_actual + state.mainhand_speed ) or 0
         state.nextOH = ( state.combat > 0 and state.swings.oh_actual > state.combat and state.swings.oh_actual + state.offhand_speed ) or 0
+
+        -- Forever E8: until the fight's first swing lands, anchor the swings at the combat start as StartCombat does.
+        if state.combat > 0 and state.swings.mh_actual == 0 then
+            state.swings.mh_pseudo = state.combat
+            if state.offhand_speed > 0 then state.swings.oh_pseudo = state.combat + state.offhand_speed / 2 end
+            state:ForecastSwingbasedResources()
+        end
 
         -- Special case spells that suck.
         if class.abilities[ "ascendance" ] and state.buff.ascendance.up then
