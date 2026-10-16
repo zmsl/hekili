@@ -548,4 +548,16 @@ describe("Forever Warrior", function()
         e.mainhand_speed = 0
         assert.are.equal(0, lw.run(w.exprs.mainhand_remains, e))
     end)
+    it(
+        "state.reset clears the pseudo-swing anchors before it rebuilds the resource forecasts (core edit E3)",
+        function()
+            local src = assert(io.open("src/Hekili/State.lua")):read("*a")
+            local clear = src:find("state.swings.mh_pseudo = nil", 1, true)
+            local loop = src:find("for k, power in pairs( class.resources ) do", 1, true)
+            assert.is_truthy(clear and loop and clear < loop)
+            assert.is_truthy(
+                src:find("seed this pass's swing forecast (Forever E3)\n        state.swings.mh_pseudo = nil", 1, true)
+            )
+        end
+    )
 end)

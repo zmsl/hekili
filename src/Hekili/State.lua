@@ -6288,6 +6288,10 @@ do
 
         -- Hekili:Yield( "Reset Pre-Powers" )
 
+        -- before the forecasts: the previous pass's StartCombat anchor must not seed this pass's swing forecast (Forever E3)
+        state.swings.mh_pseudo = nil
+        state.swings.oh_pseudo = nil
+
         for k, power in pairs( class.resources ) do
             local res = rawget( state, k )
 
@@ -6367,9 +6371,6 @@ do
 
         state.nextMH = ( state.combat > 0 and state.swings.mh_actual > state.combat and state.swings.mh_actual + state.mainhand_speed ) or 0
         state.nextOH = ( state.combat > 0 and state.swings.oh_actual > state.combat and state.swings.oh_actual + state.offhand_speed ) or 0
-
-        state.swings.mh_pseudo = nil
-        state.swings.oh_pseudo = nil
 
         -- Special case spells that suck.
         if class.abilities[ "ascendance" ] and state.buff.ascendance.up then
