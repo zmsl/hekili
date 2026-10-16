@@ -1,7 +1,7 @@
 -- tests/Virtual/State/alloc_spec.lua (spec §2, §11): 10,000 mixed events (PLAYER_SWING, UNIT_POWER_FREQUENT,
--- usability flipping on a health-gated spender, own casts, UNIT_AURA, the target's UNIT_COMBAT) with a drain every
--- tick against the fake spec, every accessor and every facade policy and passthrough called, every combat-log row
--- delivered to a subscriber: VirtualState allocates nothing.
+-- usability flipping on a health-gated spender, own casts, UNIT_AURA after a form swap, the target's UNIT_COMBAT) with
+-- a drain every tick against the fake spec, every accessor and every facade policy and passthrough called, every
+-- combat-log row delivered to a subscriber: VirtualState allocates nothing.
 local load = require("Virtual.State.helpers.load")
 local fake = require("Virtual.State.helpers.fake_api")
 local fs = require("Virtual.State.helpers.fake_spec")
@@ -62,6 +62,7 @@ describe("zero allocation", function()
         ctl.guid.target = "Creature-2" -- a target never held before: its first flip learns M, then WOUNDs move it
         ctl.Fire("PLAYER_TARGET_CHANGED")
         ctl.auras.player.HELPFUL[1] = { spellId = fs.SHOUT, expirationTime = 1e9, applications = 0 }
+        ctl.forms = { fs.SHOUT } -- a tracked form aura (Sources/Forms.lua)
         local USABLE, NOT_USABLE = { true, false }, { false, false }
         ctl.usable[fs.REND] = USABLE
         ctl.cooldown[fs.REND] = { isActive = false, isOnGCD = true }
@@ -80,6 +81,8 @@ describe("zero allocation", function()
             elseif k == 3 then
                 ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast", fs.REND)
             elseif k == 4 then
+                ctl.form = i % 12 == 4 and 1 or 0 -- the shout as a form: every other walk follows a form swap
+                ctl.Fire("UPDATE_SHAPESHIFT_FORM")
                 ctl.Fire("UNIT_AURA", "player")
             else
                 ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 1)
