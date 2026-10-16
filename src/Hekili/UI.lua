@@ -1491,7 +1491,7 @@ do
                         local start, duration = 0, 0
 
                         if a.gcd ~= "off" then
-                            start, duration = GetSpellCooldown( 61304 )
+                            start, duration = GetSpellCooldown( ns.VirtualStateInternal.GCD_SPELL )
                             if start > 0 then earliest_time = start + duration - now end
                         end
 
@@ -1692,7 +1692,7 @@ do
         end
 
         function d:RefreshCooldowns( event )
-            local gStart = GetSpellCooldown( 61304 )
+            local gStart = GetSpellCooldown( ns.VirtualStateInternal.GCD_SPELL )
             local cStart = ( select( 4, UnitCastingInfo( "player" ) ) or select( 4, UnitChannelInfo( "player" ) ) or 0 ) / 1000
 
             local now = GetTime()

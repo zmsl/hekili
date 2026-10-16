@@ -4040,7 +4040,7 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
 
         for k, v in pairs( class.abilityList ) do
             local a = class.abilities[ k ]
-            if a and a.id and ( a.id > 0 or a.id < -100 ) and a.id ~= 61304 and not a.item then
+            if a and a.id and ( a.id > 0 or a.id < -100 ) and a.id ~= ns.VirtualStateInternal.GCD_SPELL and not a.item then
                 abilities[ v ] = k
             end
         end

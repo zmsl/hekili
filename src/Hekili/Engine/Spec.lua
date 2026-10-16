@@ -2477,7 +2477,7 @@ end
 
 all:RegisterAbilities( {
     global_cooldown = {
-        id = 61304,
+        id = ns.VirtualStateInternal.GCD_SPELL,
         cast = 0,
         cooldown = 0,
         gcd = "spell",

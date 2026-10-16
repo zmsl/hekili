@@ -12,7 +12,7 @@ local S = I.Sources
 local Obs = VS.Obs
 local Plain, Stage, Note = S.Plain, S.Stage, S.Note
 
---- Forever's GCD spell (cleanup Q6).
+--- Forever's GCD spell (cleanup Q6): the one constant core and the facade ask the GCD by (shared-content spec §5).
 I.GCD_SPELL = 29515
 
 -- By ability index: the last ready flag reported (-1 none, 0 not ready, 1 ready); the GCD's (-1, 0 idle, 1 active).

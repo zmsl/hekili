@@ -525,7 +525,7 @@ end
 
 local function cooldownPolicy(spellID)
     local t = now()
-    if spellID == 61304 or spellID == I.GCD_SPELL then
+    if spellID == I.GCD_SPELL then
         local s, d = VS.GcdInfo(t)
         CD.startTime, CD.duration, CD.isActive, CD.isOnGCD = s, d, d > 0, false
         return CD
@@ -561,9 +561,6 @@ local function cooldownPolicy(spellID)
     return CD
 end
 kept("C_Spell.GetSpellCooldown", "hybrid", function(spellID)
-    if spellID == 61304 then
-        spellID = I.GCD_SPELL -- retail's GCD spell asked as Forever's (decision 7)
-    end
     local info = realGetSpellCooldown and realGetSpellCooldown(spellID)
     if plainTimes(info, "startTime", "duration") then
         return info
@@ -687,24 +684,10 @@ kept("GetTime", "hybrid", function()
 end, "plain [W]; a back-dated combat-log row's observed time while it is delivered")
 
 ----------------------------------------------------------------------------------------------------------------------
--- Forever's answers in retail's shape (event-facade decision 7): the GCD spell, an empty specialization slot
+-- Forever's answers in retail's shape (event-facade decision 7): an empty specialization slot. Hekili asks the GCD as
+-- Forever's own spell, I.GCD_SPELL (shared-content spec §5).
 
-local realGetSpellTexture = resolve("C_Spell.GetSpellTexture")
 local realGetSpecializationInfo = resolve("C_SpecializationInfo.GetSpecializationInfo")
-
-kept("C_Spell.GetSpellInfo", "hybrid", function(spellID, ...)
-    if spellID == 61304 then
-        spellID = I.GCD_SPELL
-    end
-    return realGetSpellInfo(spellID, ...)
-end, "unprobed; retail's GCD spell 61304 asked as Forever's 29515")
-
-kept("C_Spell.GetSpellTexture", "hybrid", function(spellID, ...)
-    if spellID == 61304 then
-        spellID = I.GCD_SPELL
-    end
-    return realGetSpellTexture(spellID, ...)
-end, "unprobed; retail's GCD spell 61304 asked as Forever's 29515")
 
 local function noEmptySlot(id, ...)
     if not issecretvalue(id) and id == 0 then
@@ -751,7 +734,9 @@ local PASSTHROUGH = {
     { "C_SpecializationInfo.GetSpecialization", "plain [W PR15]" },
     { "C_SpecializationInfo.GetTalentInfo", "unprobed" },
     { "C_Spell.GetSpellDescription", "unprobed" },
+    { "C_Spell.GetSpellInfo", "unprobed" },
     { "C_Spell.GetSpellPowerCost", "plain [W §4]" },
+    { "C_Spell.GetSpellTexture", "unprobed" },
     { "C_Spell.IsCurrentSpell", "plain [W PR1]" },
     { "C_Spell.IsSpellDataCached", "unprobed" },
     { "C_Spell.IsSpellHarmful", "unprobed" },

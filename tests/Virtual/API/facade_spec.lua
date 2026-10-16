@@ -116,7 +116,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 121, hybrid = 28, virtual = 27 }, count)
+        assert.are.same({ passthrough = 123, hybrid = 26, virtual = 27 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -328,18 +328,21 @@ describe("ns.Facade", function()
         assert.are.equal(0, select("#", ns2.Facade.HasOverrideActionBar()))
     end)
 
-    it("answers Forever's GCD spell, empty spec slots and talent ranks in retail's shape (decision 7)", function()
-        local g = Facade.C_Spell.GetSpellCooldown(61304)
-        local f = Facade.C_Spell.GetSpellCooldown(29515)
-        assert.are.same({ f.startTime, f.duration }, { g.startTime, g.duration })
-        assert.are.equal("Spell 29515", Facade.C_Spell.GetSpellInfo(61304).name)
-        local asked
-        answers["C_Spell.GetSpellTexture"] = function(id)
-            asked = id
-            return 1
+    it("names the GCD by one constant: Forever's GCD spell, I.GCD_SPELL, and retail's GCD ID in no file the TOC loads", function()
+        local retail = tostring(61303 + 1) -- retail's GCD spell, spelled so this file does not name it either
+        for line in io.lines("src/Hekili/Hekili.toc") do
+            local file = line:match("^([%w_\\]+%.lua)%s*$")
+            if file then
+                local src = assert(io.open("src/Hekili/" .. file:gsub("\\", "/"))):read("*a")
+                assert.is_nil(src:find(retail, 1, true), file)
+            end
         end
-        Facade.C_Spell.GetSpellTexture(61304)
-        assert.are.equal(29515, asked)
+        local spec = assert(io.open("src/Hekili/Engine/Spec.lua")):read("*a")
+        assert.is_truthy(spec:find("global_cooldown = {\n        id = ns.VirtualStateInternal.GCD_SPELL,", 1, true))
+        assert.are.equal(29515, I.GCD_SPELL)
+    end)
+
+    it("answers empty spec slots and talent ranks in retail's shape (decision 7)", function()
         answers["C_SpecializationInfo.GetSpecializationInfo"] = function(i)
             if i == 1 then
                 return 1491, "Warrior", "", 1, "DAMAGER", 1

@@ -130,7 +130,6 @@ describe("zero allocation", function()
             Facade.C_UnitAuras.GetAuraDataByAuraInstanceID("player", 1)
             Facade.C_Spell.GetSpellCooldown(fs.REND)
             Facade.C_Spell.GetSpellCooldown(29515)
-            Facade.C_Spell.GetSpellCooldown(61304) -- retail's GCD spell, asked as Forever's
             Facade.C_Spell.GetSpellCharges(fs.REND)
             Facade.UnitCastingInfo("target")
             Facade.UnitChannelInfo("target")
