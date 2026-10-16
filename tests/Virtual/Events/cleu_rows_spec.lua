@@ -225,6 +225,29 @@ describe("the synthesized combat log", function()
         assert.are.equal(0, bytes)
     end)
 
+    it(
+        "writes the rows credited, oracle and onus lines in Snapshot() (combat harness design §1.5, §2, §4)",
+        function()
+            ctl.guid.target = "Creature-1"
+            ctl.unitIs.targettarget = "player"
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.47
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 40, 1)
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 12, 1)
+            local snap = VS.Snapshot()
+            for _, line in ipairs({
+                "rows credited main=1 off=0 cast=0 background=0 avoidsBack=0 lag main=474/60 off=703/20 ref=1686/20 "
+                    .. "lambda exact=0.01/0.01 avoid=0.01\n",
+                "rows oracle judged=0 confirmed=0 retracted=0 soft=0 rescued=0 rescuedLate=0\n",
+                "rows onus credited=1 unattributed=0 byBand=0\n",
+            }) do
+                assert.is_truthy(snap:find(line, 1, true), line)
+            end
+        end
+    )
+
     describe("our swings and abilities on the target", function()
         local function row(i)
             return got[i] and got[i].row
@@ -615,6 +638,16 @@ describe("the synthesized combat log", function()
                     assert.are.same({ "Creature-A", "Creature-B" }, { source(3), source(5) })
                 end)
             end
+
+            it("counts no band credit with one hostile on us (byBand: the bands chose between several)", function()
+                onUs("target", "Creature-A", nil)
+                ctl.Fire("PLAYER_TARGET_CHANGED")
+                hit(20, 20)
+                hit(22, 22)
+                hit(24, 24)
+                hit(25, 22) -- off A's clock (26), inside its band: the lone hostile's, not the band's
+                assert.are.same({ "Creature-A", 0 }, { source(4), L.onus.byBand })
+            end)
 
             it("never widens a band from its own credits", function()
                 twoBands()

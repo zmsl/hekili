@@ -575,3 +575,36 @@ S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
     end
     strikeWait = 0
 end)
+
+--- Snapshot's lines (allocates; debugging only): the credits and the background, the learned lags (ms: median/spread
+--- of the main hand, the off hand's own reference and its main reference) and background rates (per second: main and
+--- off exact, avoid); the oracle's counts.
+I.OnSnapshot(function(out)
+    local c, med, spr, o = L.credited, L.med, L.spr, L.oracle
+    out[#out + 1] = string.format(
+        "rows credited main=%d off=%d cast=%d background=%d avoidsBack=%d lag main=%.0f/%.0f off=%.0f/%.0f ref=%.0f/%.0f lambda exact=%.2f/%.2f avoid=%.2f",
+        c[1],
+        c[2],
+        c[3],
+        L.background,
+        L.avoidsBack,
+        med[1] * 1000,
+        spr[1] * 1000,
+        med[2] * 1000,
+        spr[2] * 1000,
+        med[3] * 1000,
+        spr[3] * 1000,
+        lambda(1),
+        lambda(4),
+        lambda(7)
+    )
+    out[#out + 1] = string.format(
+        "rows oracle judged=%d confirmed=%d retracted=%d soft=%d rescued=%d rescuedLate=%d",
+        o.judged,
+        o.confirmed,
+        o.retracted,
+        o.soft,
+        o.rescued,
+        o.rescuedLate
+    )
+end)

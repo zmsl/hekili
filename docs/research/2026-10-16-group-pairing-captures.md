@@ -181,3 +181,5 @@ Raw dump: in the job transcript (vslog n=451, second fight rows 171089-229713).
 
 ## Token semantics (confirmed with the user 2026-10-16)
 One event fires once per unit token resolving to the same unit (target/nameplateN/softinteract; player/targettarget): dedupe by reading one token. `player PARRY/DODGE/BLOCK/WOUND` = an attack ON the player (victim-side), not our attack; the same event drives Revenge and damage-taken rage.
+
+Fixtures: log 3 and G5 are harness fixtures, every token row kept (`tests/Virtual/harness/fixtures/log3.lua`, `log5.lua`).

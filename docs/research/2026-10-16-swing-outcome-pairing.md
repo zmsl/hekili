@@ -205,3 +205,6 @@ Facts for the design:
 116581 UNIT_COMBAT nameplate1 WOUND CRITICAL 52 1
 116734 UNIT_COMBAT nameplate1 MISS  0 1
 ```
+
+Fixtures: logs 1 and 2 are harness fixtures, every token row kept (`tests/Virtual/harness/fixtures/log1.lua`,
+`log2.lua`); the pairing they measured is now a score (combat harness design, §1).

@@ -6,6 +6,13 @@
 - `tests/` holds the busted specs and their helpers, mirroring the source tree: the specs for
   `src/Hekili/Virtual/State/` are in `tests/Virtual/State/`, their helpers in `tests/Virtual/State/helpers/`, and so
   on. `tests/Virtual/State/helpers/load.lua` names the addon root once (`ROOT = "src/Hekili/"`).
+- `tests/Virtual/harness/` is the combat harness (combat harness design §3): a seeded model of the Forever client
+  (entities, behaviours, the world, the observer, scenarios) that drives VirtualState through the fakes, with the
+  attribution gates (`solo_spec`, `group_spec`, `onus_spec`, `sweep_spec`). Its `fixtures/` are in-game /vslog dumps,
+  every token row kept; `fixtures_spec` replays them and fits the observer's defaults to them. A new capture becomes a
+  fixture with `lua5.1 tools/vslog_fixture.lua dump.txt "min,max,min,max" STRIKE=<id> DOT=<id>` (the weapon damage
+  UnitDamage read, our strike's and DoT's spell IDs) plus a header comment; a fit outside tolerance is retuned in the
+  same change. The gates make `busted` take about a minute.
 - `tools/`, `docs/` and `archive/` stay at the repository root, with the lint, test and type-check configs
   (`.busted`, `.luacheckrc`, `.luarc.json`). Run every tool and `busted` from the root.
 

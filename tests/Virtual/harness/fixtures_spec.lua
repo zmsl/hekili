@@ -183,3 +183,29 @@ describe("the fixtures replayed through Rows.lua", function()
         assert.is_true(main == 22 and off >= 18, ("main %d/22 off %d/20"):format(main, off))
     end)
 end)
+
+describe("tools/vslog_fixture.lua", function()
+    it("turns a /vslog dump into the fixture's rows, our spells and secrets named as the fixtures do", function()
+        local dump = table.concat({
+            "<pasted_content>",
+            "     0 UNIT_SPELLCA player Cast-3-4615-1-2-100-7FFD244B25 100 nil nil",
+            "   771 PLAYER_SWING 2.2000000476837 0 nil nil nil",
+            "  1297 UNIT_COMBAT player PARRY  0 1",
+            "  2463 UNIT_COMBAT target WOUND CRITICAL 90 1",
+            "  4330 UNIT_SPELLCA player Cast-3-4615-1-2-285-4C4F5AEFDD 285 nil nil",
+            " 49873 UNIT_SPELLCA party1 S S CastBar-9296D9AA6601D8FE nil",
+            "vslog n=6 dropped=0",
+        }, "\n")
+        local rows = assert(loadfile("tools/vslog_fixture.lua"))("rows", dump, { ["285"] = "STRIKE" })
+        assert.are.same({
+            { 0, "C", "player", "OTHER" },
+            { 771, "S", 2.2, 0 },
+            { 1297, "U", "player", "PARRY", "", 0, 1 },
+            { 2463, "U", "target", "WOUND", "CRITICAL", 90, 1 },
+            { 4330, "C", "player", "STRIKE" },
+            { 49873, "C", "party1", "SECRET" },
+        }, rows)
+        local log1 = require("Virtual.harness.fixtures.log1").rows
+        assert.are.same({ log1[1], log1[2], log1[5] }, { rows[1], rows[2], rows[3] })
+    end)
+end)

@@ -25,7 +25,7 @@ L.unattributed = 0
 -- A band fits a wound within [BAND_LO x its min, BAND_HI x its max] once BAND_N wounds taught it (margins UNMEASURED
 -- in game; set from the harness only).
 L.BAND_LO, L.BAND_HI, L.BAND_N = 0.8, 1.2, 3
-L.onus = { credited = 0, byBand = 0 }
+L.onus = { credited = 0, byBand = 0 } -- byBand: the credits the bands chose among several hostiles on us
 
 -- The tokens whose target is checked: target, focus, nameplate1-40; each with "<token>target" built once.
 local TOKENS, TT, INDEX = { "target", "focus" }, {}, {}
@@ -239,7 +239,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
             if k and atkN[k] >= L.BAND_N and not fits(k, a) and nFit == 1 and nNew == 0 then
                 best, byBand = fitI, true
             end
-        elseif nFit == 1 and nNew == 0 then -- every band known, one holds it
+        elseif nFit == 1 and nNew == 0 and n > 1 then -- every band known, one holds it (alone: the lone rule's)
             best, byBand = fitI, true
         elseif nFit == 0 and nNew == 1 and n > 1 then -- every known band excludes it: the one without a band
             best = newI
@@ -291,5 +291,6 @@ S.On("PLAYER_REGEN_ENABLED", nil, function()
 end)
 
 I.OnSnapshot(function(out)
-    out[#out + 1] = string.format("rows unattributed hits on us=%d", L.unattributed)
+    out[#out + 1] =
+        string.format("rows onus credited=%d unattributed=%d byBand=%d", L.onus.credited, L.unattributed, L.onus.byBand)
 end)
