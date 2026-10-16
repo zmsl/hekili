@@ -26,6 +26,8 @@ local OWN = {
     Gnome = { { "escape_artist", "eureka" }, 1, 1 },
     NightElf = { { "elunes_light", "shadowmeld" }, 0, 0 },
     Tauren = { { "war_stomp" }, 0, 0 },
+    Human = { { "perception", "will_to_survive" }, 0, 0 },
+    Dwarf = { { "stoneform" }, 0, 0 },
 }
 
 describe("race packs", function()
@@ -271,6 +273,23 @@ describe("race packs", function()
         local class = { abilities = { shadowmeld = stock }, auras = { shadowmeld = { id = 58984 } } }
         ns.applyRace(class)
         assert.are.same({ 20580, 20580 }, { class.abilities.shadowmeld.id, class.auras.shadowmeld.id })
+    end)
+
+    it("registers Will to Survive 1259718 and Stoneform 20594 (180 s, on the GCD) over `all`'s stale entries", function()
+        local wts, stone = { id = 59752, gcd = "off" }, { id = 20594, cooldown = 120, gcd = "off" }
+        load("Human", { will_to_survive = wts, [59752] = wts })
+        local w = all.abilities.will_to_survive
+        assert.are.same({ 1259718, 180, "spell", "defensives" }, { w.id, w.cooldown, w.gcd, w.toggle })
+        assert.is_nil(w.handler or w.now) -- a stun removal: nothing to model beyond its cooldown and GCD
+        assert.are.same({ 20600, 180, "spell" }, { all.abilities.perception.id, all.abilities.perception.cooldown, all.abilities.perception.gcd })
+        assert.are.same({ 20600, 20 }, { all.auras.perception.id, all.auras.perception.duration })
+        load("Dwarf", { stoneform = stone, [20594] = stone })
+        local s = all.abilities.stoneform
+        assert.are.same({ 20594, 180, "spell", "defensives" }, { s.id, s.cooldown, s.gcd, s.toggle })
+        assert.are.same({ 20594, 8 }, { all.auras.stoneform.id, all.auras.stoneform.duration }) -- not 65116
+        local class = { abilities = { stoneform = stone }, auras = { stoneform = { id = 65116 } } }
+        ns.applyRace(class)
+        assert.are.same({ 180, 20594 }, { class.abilities.stoneform.cooldown, class.auras.stoneform.id })
     end)
 
     it("takes a class file's spec:RegisterCostMod (Classes.lua) into the same list, for any race", function()

@@ -57,6 +57,8 @@ Forever\Classes\Druid.lua
 Forever\Races\Gnome.lua
 Forever\Races\NightElf.lua
 Forever\Races\Tauren.lua
+Forever\Races\Human.lua
+Forever\Races\Dwarf.lua
 
 Targets.lua
 Options\DevTools.lua

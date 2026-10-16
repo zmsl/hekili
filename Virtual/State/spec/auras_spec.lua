@@ -50,6 +50,7 @@ describe("auras", function()
         ctl.auras.player.HELPFUL[41] = { spellId = fs.SHOUT, expirationTime = 130, applications = 0 }
         ctl.Fire("UNIT_AURA", "player")
         fold(10)
+        assert.is_not_nil(VS.Aura("player", fs.SHOUT, 10))
         assert.are.equal(130, VS.Aura("player", fs.SHOUT, 10).est)
     end)
 
