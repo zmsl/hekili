@@ -78,7 +78,7 @@ Resources.lua:462 vs :513); death `observed`; before any, `default`.
 
 ## 4. Allocation
 Records, per-ability arrays (prev, guard aura index) and maxBy[1..TARGET_CAP] allocated at build/load; appliers and accessors
-do scalar arithmetic; UNIT_COMBAT stages numbers (S.Stage, Sources.lua:36-46).
+do scalar arithmetic; the target WOUND is logged straight (S.Direct) with its amount, no table.
 
 ## 5. Guards on the "above the gate" pin (a NOT answer)
 1. known (`I.ab.known[a] ~= false`); 2. power believed sufficient: `I.res.lo0[slot] >= I.CostOf(a)`; 3. `nobuff` aura believed
@@ -101,6 +101,11 @@ TargetGone → 0 `observed`. 6 swap reset default 1.0, dmg 0; swap back keeps M.
 `/run local s=0 local f=CreateFrame("Frame")f:RegisterUnitEvent("UNIT_COMBAT","target")f:RegisterEvent("PLAYER_TARGET_CHANGED")f:SetScript("OnEvent",function(_,e,u,a,_,n)if e=="UNIT_COMBAT"then if a=="WOUND"then s=s+n end else VSCopy("sum",s)s=0 end end)`
 4. Short vs health: with under 15 rage, line 1 on a mob above 20% and below 20%; repeat in Defensive Stance (does short mean
 at or below the gate; does a wrong stance give false,false).
+
+5. Stance aura visibility (guard 3; ruling R3): in Defensive Stance, out of combat and again in combat: pass = a number
+   (the believed expiry) for 71; nil means the belief never sees the stance and NOT answers in Defensive Stance would read
+   as "above the gate" until the next usable answer.
+`/run local t=GetTime() VSCopy(GetShapeshiftForm(),Hekili.VirtualState.Aura("player",71,t),Hekili.VirtualState.Aura("player",2457,t))`
 
 ## 8. Open questions and risks
 - IsSpellUsable false for non-health reasons: wrong stance, not known, no/friendly/dead target, short of power, possibly
