@@ -65,3 +65,4 @@ Specs.md
 .lua/
 luacov.stats.out
 luacov.report.out
+.superpowers/
