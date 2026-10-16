@@ -821,9 +821,9 @@ spec:RegisterAbilities({
             return "battle_stance"
         end,
 
+        -- LibRangeCheck resolves nothing on Forever (target.minR/maxR stay at their defaults), so no gate may read them.
         usable = function()
-            return combat == 0 and target.minR >= 8 and target.minR <= 25,
-                "cannot be in combat; target must be outside your deadzone"
+            return combat == 0 and action.charge.in_range, "cannot be in combat; target must be within Charge's range"
         end,
 
         -- what the cast did to the now-state, in VirtualState's context (spec §12a)

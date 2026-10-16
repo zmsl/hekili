@@ -190,6 +190,19 @@ describe("Forever Warrior", function()
         assert.are.equal("defensive_stance", lw.run(w.abilities.charge.buff, e))
     end)
 
+    it("gates Charge on being out of combat and the client's spell range, not LibRangeCheck", function()
+        local e = lw.env(w)
+        e.target.minR = 100 -- what LibRangeCheck leaves on Forever: nothing resolved
+        e.action = { charge = { in_range = true } }
+        assert.is_true(lw.run(w.abilities.charge.usable, e))
+        e.combat = 5
+        local ok, why = lw.run(w.abilities.charge.usable, e)
+        assert.is_false(ok)
+        assert.are.equal("cannot be in combat; target must be within Charge's range", why)
+        e.combat, e.action.charge.in_range = 0, false
+        assert.is_false(lw.run(w.abilities.charge.usable, e))
+    end)
+
     it(
         "declares the now-state of Charge, Bloodrage, Berserker Rage, the debuffs and the stances (spec §12a)",
         function()
