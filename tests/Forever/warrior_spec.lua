@@ -452,6 +452,17 @@ describe("Forever Warrior", function()
         assert.are.same({ package = "Arms" }, w.options)
     end)
 
+    it("opens Arms and Fury with Charge after Battle Shout, before combat", function()
+        local packs = assert(loadfile("tools/make_pack.lua"))("lists", "warrior")
+        for i = 1, 2 do
+            local actions = {}
+            for j, e in ipairs(packs[i].lists.precombat) do
+                actions[j] = e.action
+            end
+            assert.are.same({ "battle_shout", "charge" }, actions, packs[i].name)
+        end
+    end)
+
     it("keeps its priorities in tools/packs/warrior.lua, tools/make_pack.lua's default class", function()
         local def = dofile("tools/packs/warrior.lua")
         local names = {}

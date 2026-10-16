@@ -8,6 +8,7 @@
 -- called on bosses and on targets 3 levels above (Classic: target.level>=63 at level 60).
 local HEAD = [[
 actions.precombat=battle_shout,if=!buff.battle_shout.up
+actions.precombat+=/charge
 actions=sunder_armor,if=settings.debuff_sunder_enabled&debuff.sunder_armor.stack<settings.debuff_sunder_max_stack&!debuff.expose_armor.up&target.level>=settings.debuff_sunder_min_level
 actions+=/demoralizing_shout,if=settings.debuff_demoshout_enabled&!debuff.demoralizing_shout.up
 actions+=/call_action_list,name=cooldowns,if=boss|target.level>=level+3
