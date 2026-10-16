@@ -42,6 +42,17 @@ describe("auras", function()
         assert.are.same({ fs.SHOUT, 130 }, { id, r2.est })
     end)
 
+    it("finds a tracked aura past the 40th slot of one filter", function()
+        ctl.now = 10
+        for i = 1, 40 do
+            ctl.auras.player.HELPFUL[i] = { spellId = 999999, expirationTime = 130, applications = 0 } -- untracked
+        end
+        ctl.auras.player.HELPFUL[41] = { spellId = fs.SHOUT, expirationTime = 130, applications = 0 }
+        ctl.Fire("UNIT_AURA", "player")
+        fold(10)
+        assert.are.equal(130, VS.Aura("player", fs.SHOUT, 10).est)
+    end)
+
     it("in combat, counts a missing aura down only after it was seen readable in combat", function()
         ctl.now = 10
         ctl.auras.player.HELPFUL[1] = { spellId = fs.SHOUT, expirationTime = 130, applications = 0 }

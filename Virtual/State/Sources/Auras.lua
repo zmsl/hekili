@@ -14,7 +14,9 @@ local S = I.Sources
 local Obs, ReadOf = VS.Obs, I.ReadOf
 local Plain, Direct, Note = S.Plain, S.Direct, S.Note
 
-local SCAN = 40
+-- A safety cap: the walk stops at the first empty slot, so the cap costs nothing; a unit with more auras than the cap
+-- in one filter would hide a tracked aura past it.
+local SCAN = 128
 local FILTERS = { "HELPFUL", "HARMFUL" }
 -- The walk status per unit index ("aura walk <unit>", built at OnBuild for every tracked unit), so Snapshot tells
 -- them apart.
