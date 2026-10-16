@@ -40,8 +40,8 @@ actions.rotation+=/slam,if=!talent.mortal_strike.enabled
 actions.rotation+=/rend,if=!debuff.rend.up&!talent.mortal_strike.enabled
 actions.rotation+=/hamstring,if=cooldown.mortal_strike.remains>=settings.hamstring_cd_diff&cooldown.whirlwind.remains>=settings.hamstring_cd_diff&rage.current>settings.hamstring_threshold
 actions.rotation+=/bloodrage,if=rage.current<90
-actions.rotation+=/battle_shout,if=!up
-actions.rotation+=/berserker_stance,use_off_gcd=1,if=!up
+actions.rotation+=/battle_shout,if=!buff.battle_shout.up
+actions.rotation+=/berserker_stance,use_off_gcd=1,if=!buff.berserker_stance.up
 ]],
     },
     {
@@ -67,8 +67,8 @@ actions.rotation+=/slam,if=!talent.bloodthirst.enabled
 actions.rotation+=/rend,if=!debuff.rend.up&!talent.bloodthirst.enabled
 actions.rotation+=/hamstring,if=cooldown.bloodthirst.remains>=settings.hamstring_cd_diff&cooldown.whirlwind.remains>=settings.hamstring_cd_diff&rage.current>settings.hamstring_threshold
 actions.rotation+=/bloodrage,if=rage.current<90
-actions.rotation+=/battle_shout,if=!up
-actions.rotation+=/berserker_stance,use_off_gcd=1,if=!up
+actions.rotation+=/battle_shout,if=!buff.battle_shout.up
+actions.rotation+=/berserker_stance,use_off_gcd=1,if=!buff.berserker_stance.up
 ]],
     },
     {
