@@ -537,6 +537,69 @@ describe("the synthesized combat log", function()
             assert.are.equal("Creature-1", got[6].row[4])
         end)
 
+        describe("per-attacker amount bands (combat harness design §4)", function()
+            local function hit(t, amount, flag)
+                ctl.now = t
+                ctl.Fire("UNIT_COMBAT", "player", "WOUND", flag or "", amount, 1)
+            end
+            local function source(i)
+                return got[i] and got[i].row[4]
+            end
+            -- A (the target) alone hits 20, 22, 24; then B (nameplate1) alone hits 60, 61, 62; then both are on us.
+            local function twoBands()
+                onUs("target", "Creature-A", nil)
+                ctl.Fire("PLAYER_TARGET_CHANGED")
+                hit(20, 20)
+                hit(22, 22)
+                hit(24, 24)
+                ctl.unitIs.targettarget = nil
+                ctl.Fire("UNIT_TARGET", "target")
+                onUs("nameplate1", "Creature-B", nil)
+                ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+                hit(25.9, 60)
+                hit(27.9, 61)
+                hit(29.9, 62)
+                ctl.unitIs.targettarget = "player"
+                ctl.Fire("UNIT_TARGET", "target")
+            end
+
+            it(
+                "learns each attacker's band from three clean credits; a wound off both clocks goes to the band that holds it",
+                function()
+                    twoBands()
+                    hit(31, 21) -- A's clock: 30, 32; B's: 31.9
+                    hit(34.6, 63)
+                    assert.are.same({ "Creature-A", "Creature-B" }, { source(7), source(8) })
+                    assert.are.equal(2, L.onus.byBand)
+                end
+            )
+
+            it("gives a wound inside two clocks' tolerance to the one whose band holds it", function()
+                twoBands()
+                hit(31.95, 59) -- A's clock (32) and B's (31.9): only B's band holds 59
+                assert.are.same({ "Creature-B", 1 }, { source(7), L.onus.byBand })
+            end)
+
+            it("leaves a wound unattributed while a hostile on us has no band and no clock names it", function()
+                onUs("target", "Creature-A", nil)
+                onUs("nameplate1", "Creature-B", nil)
+                ctl.Fire("PLAYER_TARGET_CHANGED")
+                ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+                hit(20, 20)
+                hit(21, 60)
+                assert.are.same({ 0, 2 }, { #got, L.unattributed })
+            end)
+
+            it("never widens a band from its own credits, nor from a partly blocked wound", function()
+                twoBands()
+                hit(33, 5, "BLOCK_REDUCED") -- A's clock (32), off by more than the tolerance: alone? no: unattributed
+                hit(35.1, 28) -- off both clocks, inside A's band (up to 1.2 x 24 = 28.8): A's by band, not learned
+                hit(37.6, 29.5) -- off both clocks (A re-anchored at 35.1), outside the band: it was not widened to 28
+                assert.are.same({ "Creature-A" }, { source(7) })
+                assert.are.equal(2, L.unattributed)
+            end)
+        end)
+
         it("allocates nothing per hit on us", function()
             local sink = I.Events.CreateFrame("Frame")
             local GetInfo = Facade.CombatLogGetCurrentEventInfo

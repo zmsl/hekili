@@ -6,8 +6,10 @@
 -- UnitAttackSpeed(unit) when plain, else learned from the gaps between hits on us. A hit is credited to the attacker
 -- whose clock predicts a swing nearest it within ATTACK_TOLERANCE; while a single hostile targets us and its clock is
 -- not set yet, to that one (which starts its clock); otherwise it stays unattributed and makes no row (no phantom
--- enemy for the tank branch, Events.lua's `ns.updateTarget( sourceGUID, ... )`). The same per-token reads count the
--- hostiles attacking someone else (VirtualState.LooseEnemies, tank design §2).
+-- enemy for the tank branch, Events.lua's `ns.updateTarget( sourceGUID, ... )`). A physical wound also has each
+-- attacker's amount band to go by (combat harness design §4): learned from the wounds its clock or the lone-hostile
+-- rule credited, it separates two attackers of different strength. The same per-token reads count the hostiles
+-- attacking someone else (VirtualState.LooseEnemies, tank design §2).
 -- Credits: secret-value handling after Catnip's (Durts) research; the signals are Taco Dog Forever's research
 -- (docs/research/2026-10-14-virtual-combat-log-events.md, C2, C4, M1-M4, D13).
 
@@ -20,6 +22,9 @@ local floor = math.floor
 
 L.ATTACK_TOLERANCE = 0.2 -- seconds between a clock's predicted swing and a hit credited to it
 L.unattributed = 0
+-- A band fits a wound within [BAND_LO x its min, BAND_HI x its max] once BAND_N wounds taught it (UNMEASURED margins).
+L.BAND_LO, L.BAND_HI, L.BAND_N = 0.8, 1.2, 3
+L.onus = { credited = 0, byBand = 0 }
 
 -- The tokens whose target is checked: target, focus, nameplate1-40; each with "<token>target" built once.
 local TOKENS, TT, INDEX = { "target", "focus" }, {}, {}
@@ -34,11 +39,12 @@ for i = 1, #TOKENS do
     tokGUID[i], tokOnMe[i], tokSpeed[i], tokLoose[i] = "", false, 0, false
 end
 
--- Attacker clocks by GUID (8, the oldest anchor gives way).
+-- Attacker clocks by GUID (8, the oldest anchor gives way), each with its amount band (min and max over the slot's
+-- life, of `atkN` wounds).
 local N = 8
-local atkGUID, atkAnchor, atkPeriod = {}, {}, {}
+local atkGUID, atkAnchor, atkPeriod, atkLo, atkHi, atkN = {}, {}, {}, {}, {}, {}
 for k = 1, N do
-    atkGUID[k], atkAnchor[k], atkPeriod[k] = "", 0, 0
+    atkGUID[k], atkAnchor[k], atkPeriod[k], atkLo[k], atkHi[k], atkN[k] = "", 0, 0, 0, 0, 0
 end
 
 -- The clock of `guid`, or nil. Allocates nothing.
@@ -65,7 +71,7 @@ local function clockOf(guid)
             slot = j
         end
     end
-    atkGUID[slot], atkAnchor[slot], atkPeriod[slot] = guid, 0, 0
+    atkGUID[slot], atkAnchor[slot], atkPeriod[slot], atkLo[slot], atkHi[slot], atkN[slot] = guid, 0, 0, 0, 0, 0
     return slot
 end
 
@@ -166,13 +172,34 @@ end
 
 local MISSES = { DODGE = true, PARRY = true, BLOCK = true, MISS = true }
 
+-- A wound's amount as its attacker's unmodified hit: a crit halved, a crushing blow / 1.5; nil for a partly blocked one
+-- (the blocked part is not given).
+local function base(amount, flag)
+    if type(amount) ~= "number" or flag == "BLOCK_REDUCED" then
+        return nil
+    elseif flag == "CRITICAL" then
+        return amount / 2
+    elseif flag == "CRUSHING" then
+        return amount / 1.5
+    end
+    return amount
+end
+
+-- Whether clock k's band is usable and holds `a`.
+local function fits(k, a)
+    return k ~= nil and a ~= nil and atkN[k] >= L.BAND_N and a >= L.BAND_LO * atkLo[k] and a <= L.BAND_HI * atkHi[k]
+end
+
 S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     if unit ~= "player" or (act ~= "WOUND" and not MISSES[act]) then
         return
     end
     local melee = act ~= "WOUND" or school == 1
+    local wound = act == "WOUND" and school == 1
+    local a = wound and base(amount, flag) or nil
     -- the candidates: each hostile targeting us once (a GUID can be the target and a plate); no clock is made here
-    local best, bestErr, single, n = nil, L.ATTACK_TOLERANCE, nil, 0
+    local best, bestErr, single, n, nTol, tolI, nFit, fitI = nil, L.ATTACK_TOLERANCE, nil, 0, 0, nil, 0, nil
+    local nNew, newI = 0, nil -- candidates whose band is not usable yet
     for i = 1, #TOKENS do
         if tokOnMe[i] then
             local guid, seen = tokGUID[i], false
@@ -187,10 +214,33 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
                     period = atkPeriod[k]
                 end
                 local err = clockError(k, period, t)
-                if melee and err <= bestErr then
-                    best, bestErr = i, err
+                if melee and err <= L.ATTACK_TOLERANCE then
+                    nTol, tolI = nTol + 1, i
+                    if err <= bestErr then
+                        best, bestErr = i, err
+                    end
+                end
+                if not (k and atkN[k] >= L.BAND_N) then
+                    nNew, newI = nNew + 1, i
+                elseif fits(k, a) then
+                    nFit, fitI = nFit + 1, i
                 end
             end
+        end
+    end
+    local byBand = false
+    if wound and a then -- harness design §4.2: the clock, unless the bands say another; else the bands; else the lone one
+        best = nil
+        if nTol == 1 then
+            best = tolI
+            local k = find(tokGUID[tolI])
+            if k and atkN[k] >= L.BAND_N and not fits(k, a) and nFit == 1 and nNew == 0 then
+                best, byBand = fitI, true
+            end
+        elseif nFit == 1 and nNew == 0 then -- every band known, one holds it
+            best, byBand = fitI, true
+        elseif nFit == 0 and nNew == 1 and n > 1 then -- every known band excludes it: the one without a band
+            best = newI
         end
     end
     if not best and n == 1 then
@@ -202,9 +252,18 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         L.unattributed = L.unattributed + 1
         return
     end
+    L.onus.credited = L.onus.credited + 1
     local src, dst = tokGUID[best], L.player
     if melee then -- a spell does not follow the swing clock: no clock made or moved for it
-        learn(clockOf(src), t, tokSpeed[best])
+        local k = clockOf(src)
+        learn(k, t, tokSpeed[best])
+        if byBand then
+            L.onus.byBand = L.onus.byBand + 1
+        elseif a then -- a band learns from the clock's, the lone hostile's and the elimination's credits, never its own
+            atkLo[k] = (atkN[k] == 0 or a < atkLo[k]) and a or atkLo[k]
+            atkHi[k] = a > atkHi[k] and a or atkHi[k]
+            atkN[k] = atkN[k] + 1
+        end
     end
     if act == "WOUND" and melee then
         local r = L.Emit("SWING_DAMAGE", 21, t, true, "onus", "inferred", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS)

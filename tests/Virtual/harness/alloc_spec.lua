@@ -1,13 +1,21 @@
 -- tests/Virtual/harness/alloc_spec.lua (harness design §3.6): one generated party fight (two other sources on our
--- target, a mob on us, our presses, usability answered from our true power: the oracle's verdicts, a retraction and a
--- rescue among them) replayed through VirtualState: after a warm-up, the replays allocate nothing.
+-- target, two mobs on us of different strength, the second joining: amount bands; our presses and usability answered
+-- from our true power: the oracle's verdicts, a retraction and a rescue among them) replayed through VirtualState:
+-- after a warm-up, the replays allocate nothing.
 local scenarios = require("Virtual.harness.scenarios")
 local drive = require("Virtual.harness.drive")
 local alloc = require("Virtual.State.helpers.alloc")
 
 describe("the harness drive", function()
     it("allocates nothing in VirtualState replaying a generated party fight", function()
-        local s = scenarios.stream(scenarios.oracle({ duration = 30, others = { "melee", "caster" } }), 2)
+        local o = scenarios.oracle({
+            duration = 60,
+            others = { "melee", "caster" },
+            attackers = 2,
+            joinAt = { [2] = 10 },
+            mobs = { { damage = { 10, 14 }, period = 2.0 }, { damage = { 20, 28 }, period = 2.6 } },
+        })
+        local s = scenarios.stream(o, 4)
         local c = drive.boot({ max = 100 })
         local ok, bytes = pcall(alloc.bytes, function(i)
             drive.run(c, s, i * 100)
@@ -15,7 +23,7 @@ describe("the harness drive", function()
         drive.restore(c)
         assert.is_true(ok, tostring(bytes))
         assert.are.equal(0, bytes)
-        local o = c.I.Log.oracle
-        assert.is_true(o.retracted > 0 and o.rescued > 0, "the fight exercises a retraction and a rescue")
+        local L = c.I.Log
+        assert.is_true(L.oracle.retracted > 0 and L.oracle.rescued > 0 and L.onus.byBand > 0, "every path exercised")
     end)
 end)
