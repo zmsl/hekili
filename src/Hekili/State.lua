@@ -1185,9 +1185,9 @@ do
         wipe( remains )
 
         local now = state.now + state.offset
-        -- Forever E9: the horizon is the spec's forecast window (Core.lua's delayMax), read here because a pass can
+        -- Forever E9: the horizon is the global forecast window (Core.lua's delayMax), read here because a pass can
         -- shorten delayMax and the reset forecast would inherit that.
-        local timeout = state.settings.forecast_window or 15
+        local timeout = Hekili.DB.profile.performance.forecastWindow or 15
 
         if state.class.file == "DEATHKNIGHT" and state.runes then
             -- Adjust timeout based on rune cooldowns and regen models for Frost DK

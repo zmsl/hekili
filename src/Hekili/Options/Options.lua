@@ -379,6 +379,7 @@ do
                 flashTexture = "Interface\\Cooldown\\star4",
                 performance = {
                     frameBudget = 0.7,
+                    forecastWindow = 15, -- Forever E9
                 },
                 toggles = {
                     pause = {
@@ -5020,6 +5021,24 @@ found = true end
                                     fontSize = "medium",
                                     order = 2,
                                     width = "full",
+                                },
+                                -- Forever E9: the forecast window, global for every class.
+                                forecastHeader = {
+                                    type = "header",
+                                    name = "Forecast",
+                                    order = 10,
+                                },
+                                forecastWindow = {
+                                    type = "range",
+                                    name = "Forecast window (s)",
+                                    desc = "How far ahead the recommendations look for the next affordable action. A rage class can wait longer for its resource than an energy class; raise it if the queue sits empty while rage builds.",
+                                    min = 5,
+                                    max = 30,
+                                    step = 1,
+                                    get = function( _ ) return Hekili.DB.profile.performance.forecastWindow or 15 end,
+                                    set = function( _, v ) Hekili.DB.profile.performance.forecastWindow = v end,
+                                    order = 11,
+                                    width = "full"
                                 }
                             }
                         }
