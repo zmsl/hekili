@@ -49,7 +49,7 @@ Every patch below was written and run before the plan was saved, on a scratch cl
 1. **Inert for every other race.** Task 1 "lists Hekili.toc's race files after the class files, each registering only its own keys and modifiers": every race file runs for every token, so a key leaking to another race fails it; "is inert for another race" on a token no file answers (`BloodElf`).
 2. **The stale `all` entries are replaced for the live race only.** One override case per task over a seeded stale entry, through `ns.applyRace` (spec §3's eight rows).
 3. **Every race `now` runs in the strict context and allocates nothing.** Task 1 "runs every `now` the <token> registers in the context without an error" (one case per race file, every ability with a `now`; `I.nowErrors == 0`, the aura believed up; 1000 more casts at 0 bytes).
-4. **Eureka! covers the right spells, per class, and nothing for a class without it.** Task 1 "scopes Eureka! by the loaded class": 17 / 10 / 16 / 13 / 16, a percent cost in scope, no modifier for a Druid (a `spells = nil` modifier would discount every ability).
+4. **Eureka! covers the right spells, per class, and nothing for a class without it.** Task 1 "scopes Eureka! by the loaded class": 18 / 10 / 16 / 13 / 16, a percent cost in scope, no modifier for a Druid (a `spells = nil` modifier would discount every ability).
 5. **The GCD rule.** Every ability's `gcd` against spec §2 (the DB2's `gcd_ms`); Q5 confirms in game.
 
 ## File structure
@@ -63,22 +63,22 @@ Virtual/State/spec/races_spec.lua Task 1  TOC-driven race list, OWN table, per-t
 Forever/Races/Human.lua           Task 2  Will to Survive 1259718 (over all's 59752), Perception
 Forever/Races/Dwarf.lua           Task 2  Stoneform 180 s on the GCD, aura 20594 (over all's 65116)
 Forever/Races/Orc.lua             Task 3  Blood Fury 20572 for every class, Shatter Curse
-Forever/Races/Troll.lua           Task 3  Berserking 20554 (over all's 26297), Rapid Regeneration
-Forever/Races/Undead.lua          Task 4  token Scourge: Will of the Forsaken, Cannibalize (aura 20578)
+Forever/Races/Troll.lua           Task 3  Berserking 20554 (over all's 26297), Rapid Regeneration (6 s channel)
+Forever/Races/Undead.lua          Task 4  token Scourge: Will of the Forsaken, Cannibalize (10 s channel, aura 20578)
 Hekili.toc                        Tasks 2-4  the new race files after Forever\Races\Tauren.lua
 ```
 
 ## Order and checkpoints
 
-Task 1 (the amendments and the TOC-driven spec every later task extends), Tasks 2-4 (independent new files; each extends `OWN` and the TOC), then Task 5, CHECKPOINT: Q1 (tokens) first on every character the user has, then Q2-Q9. A wrong token is a one-word fix in the file's `NewRace` argument (and `TOKEN` in the spec) after the checkpoint.
+Task 1 (the amendments and the TOC-driven spec every later task extends), Tasks 2-4 (independent new files; each extends `OWN` and the TOC), then Task 5, CHECKPOINT: Q1 (tokens) first on every character the user has, then Q2-Q10. A wrong token is a one-word fix in the file's `NewRace` argument (and `TOKEN` in the spec) after the checkpoint.
 
-Deliberately not built (a review should not flag them): a Skyborne file; a `handler`/`now` on Will to Survive or Will of the Forsaken (nothing to write); a `usable` gate on Cannibalize (corpse) or the cleanses (Stoneform keeps `all`'s); Quick Strike and Execute 20647 in the Warrior's Eureka! list; a test of the real `Classes.lua` `all` (the spec's stand-in seeds the stale entries); removal of `all`'s stale numeric aliases.
+Deliberately not built (a review should not flag them): a Skyborne file; a `handler`/`now` on Will to Survive or Will of the Forsaken (nothing to write); a `usable` gate on Cannibalize (corpse) or the cleanses (Stoneform keeps `all`'s); Execute 20647 in the Warrior's Eureka! list (the triggered damage, not a cast); a test of the real `Classes.lua` `all` (the spec's stand-in seeds the stale entries); removal of `all`'s stale numeric aliases.
 
 ---
 
 ### Task 1: Gnome and Night Elf amendments; the TOC-driven races spec
 
-Spec §2 (Escape Artist, Shadowmeld), §3 (Shadowmeld's two rows), §4 (the lists), §6. `Gnome.lua` keeps Eureka! and Expansive Mind and gains `EUREKA_SPELLS` keyed by class file (the Warrior's 17 unchanged, Rogue 10, Mage 16, Warlock 13, Priest 16: rank-1 IDs from spec §4's query), one cost modifier on `EUREKA_SPELLS[ Hekili.Class.file ]` and none for a class without a list, and Escape Artist (20589, 120 s, on the GCD, aura 3 s). `NightElf.lua` registers Shadowmeld 20580 (10 s, off the GCD, `all`'s `usable` gate verbatim, aura 20580 for 3600 s) over `all`'s 58984. `Tauren.lua` is unchanged (spec §1). `races_spec.lua`: the race files come from `Hekili.toc`; `load` takes a class (default `WARRIOR`, as `Classes.lua` sets `class.file` before the race files); the inert case uses `BloodElf` (Human becomes a race in Task 2); new cases for the TOC/`OWN` table, Eureka! per class, and Escape Artist + Shadowmeld; the strict-context describe runs every `now` of every token (replacing its three fixed cases) and measures 1000 further casts at 0 bytes.
+Spec §2 (Escape Artist, Shadowmeld), §3 (Shadowmeld's two rows), §4 (the lists), §6. `Gnome.lua` keeps Eureka! and Expansive Mind and gains `EUREKA_SPELLS` keyed by class file (the Warrior's 17 plus Quick Strike 429765: 18, Rogue 10, Mage 16, Warlock 13, Priest 16: rank-1 IDs from spec §4's query), one cost modifier on `EUREKA_SPELLS[ Hekili.Class.file ]` and none for a class without a list, and Escape Artist (20589, 120 s, on the GCD, aura 3 s). `NightElf.lua` registers Shadowmeld 20580 (10 s, off the GCD, `all`'s `usable` gate verbatim, aura 20580 for 3600 s) over `all`'s 58984. `Tauren.lua` is unchanged (spec §1). `races_spec.lua`: the race files come from `Hekili.toc`; `load` takes a class (default `WARRIOR`, as `Classes.lua` sets `class.file` before the race files); the inert case and the applyRace case's other-race half use `BloodElf` (Human becomes a race in Task 2); new cases for the TOC/`OWN` table, Eureka! per class, and Escape Artist + Shadowmeld; the strict-context describe runs every `now` of every token (replacing its three fixed cases) and measures 1000 further casts at 0 bytes.
 
 **Files:**
 - Modify: `Forever/Races/Gnome.lua`, `Forever/Races/NightElf.lua`
@@ -94,7 +94,7 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/Virtual/State/spec/races_spec.lua b/Virtual/State/spec/races_spec.lua
-index f17e15f0..71559fe6 100644
+index f17e15f0..94508343 100644
 --- a/Virtual/State/spec/races_spec.lua
 +++ b/Virtual/State/spec/races_spec.lua
 @@ -1,6 +1,32 @@
@@ -168,6 +168,24 @@ index f17e15f0..71559fe6 100644
          assert.are.same({}, all.abilities)
          assert.are.same({}, all.auras)
          assert.are.same({ maxMods = {}, costMods = {} }, ns.raceMods)
+@@ -97,7 +122,7 @@ describe("race packs", function()
+         assert.are.equal(3, all.auras.eureka.max_stack)
+         assert.is_function(all.abilities.eureka.now)
+         assert.are.same({ { pct = 0.05 } }, ns.raceMods.maxMods)
+-        assert.are.same({ "eureka", -0.10, 3, 17 }, {
++        assert.are.same({ "eureka", -0.10, 3, 18 }, {
+             ns.raceMods.costMods[1].aura,
+             ns.raceMods.costMods[1].pct,
+             ns.raceMods.costMods[1].charges,
+@@ -119,7 +144,7 @@ describe("race packs", function()
+             class.abilities[1],
+         })
+         assert.are.equal(class.auras.eureka, class.auras[1259817])
+-        load("Human")
++        load("BloodElf")
+         class = { abilities = { eureka = { id = 2 } }, auras = {} }
+         ns.applyRace(class)
+         assert.are.equal(2, class.abilities.eureka.id) -- inert for another race
 @@ -185,6 +210,69 @@ describe("race packs", function()
          assert.is_nil(all.abilities.elunes_light or all.abilities.war_stomp)
      end)
@@ -206,8 +224,8 @@ index f17e15f0..71559fe6 100644
 +        assert.are.same(want, files) -- every race file is in Hekili.toc
 +    end)
 +
-+    it("scopes Eureka! by the loaded class: 17 Warrior, 10 Rogue, 16 Mage, 13 Warlock, 16 Priest, none for a Druid", function()
-+        for class, n in pairs({ WARRIOR = 17, ROGUE = 10, MAGE = 16, WARLOCK = 13, PRIEST = 16 }) do
++    it("scopes Eureka! by the loaded class: 18 Warrior, 10 Rogue, 16 Mage, 13 Warlock, 16 Priest, none for a Druid", function()
++        for class, n in pairs({ WARRIOR = 18, ROGUE = 10, MAGE = 16, WARLOCK = 13, PRIEST = 16 }) do
 +            load("Gnome", nil, class)
 +            assert.are.same({ 1, n }, { #ns.raceMods.costMods, #ns.raceMods.costMods[1].spells }, class)
 +        end
@@ -375,7 +393,7 @@ index f17e15f0..71559fe6 100644
 - [ ] **Step 2: Run the specs to verify they fail**
 
 Run: `~/src/TacoDogForever/.lua/bin/busted`
-Expected: `273 successes / 2 failures / 1 error` (the TOC/`OWN` case: Gnome and Night Elf register one key fewer; Eureka! per class: no list for the Rogue; Escape Artist: nil). The three strict-context cases pass already (the shipped `now`s allocate nothing).
+Expected: `272 successes / 3 failures / 1 error` (the shipped Eureka! case: 17 spells, not 18; the TOC/`OWN` case: Gnome and Night Elf register one key fewer; Eureka! per class: no list for the Rogue; Escape Artist: nil). The three strict-context cases pass already (the shipped `now`s allocate nothing).
 
 - [ ] **Step 3: Write the implementation**
 
@@ -383,7 +401,7 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/Forever/Races/Gnome.lua b/Forever/Races/Gnome.lua
-index 2e8f1942..ed9db32a 100644
+index 2e8f1942..2e12dbdf 100644
 --- a/Forever/Races/Gnome.lua
 +++ b/Forever/Races/Gnome.lua
 @@ -1,7 +1,9 @@
@@ -399,7 +417,7 @@ index 2e8f1942..ed9db32a 100644
  
  local addon, ns = ...
  local Hekili = _G[ addon ]
-@@ -10,6 +12,34 @@ local race = Hekili:NewRace( "Gnome" )
+@@ -10,6 +12,38 @@ local race = Hekili:NewRace( "Gnome" )
  
  local EUREKA = { 1259812, 1259817, 1259821, 1259823 } -- the other classes' Eureka!
  
@@ -411,12 +429,16 @@ index 2e8f1942..ed9db32a 100644
 +--   and ((o.SpellClassMask_2 & 4294967295)&<m2>)=0)
 +-- (no ManaCost filter: a percent cost reads 0 there). Higher ranks resolve through the class's `copy` lists; an ID the
 +-- loaded class does not register is absent (Races.lua, Modifiers.lua). Not listed: Rebuke 425609 (a Paladin spell in
-+-- the Rogue's set), Felfire 24530 (no class), the Warrior's Quick Strike 429765 and unranked Execute 20647 (unverified).
++-- the Rogue's set), Felfire 24530 (no class), the Warrior's Execute 20647 (the triggered damage: no GCD, no rank; the
++-- cast is 5308's ranks).
 +local EUREKA_SPELLS = {
 +    -- set 4, masks 1784679630 / 5 / 1: Heroic Strike, Cleave, Slam, Execute, Overpower, Mortal Strike, Bloodthirst,
 +    -- Whirlwind, Shield Slam, Revenge, Thunder Clap, Hamstring, Intercept, Mocking Blow, Pummel, Shield Bash, Spearing
-+    -- Strike. Not: Rend, Sunder Armor, the shouts, Concussion Blow, Death Wish, Disarm, Retaliation, Shield Block.
-+    WARRIOR = { 78, 845, 1240193, 5308, 7384, 12294, 23881, 1680, 23922, 6572, 6343, 1715, 20252, 694, 6552, 72, 1310222 },
++    -- Strike, Quick Strike. Not: Rend, Sunder Armor, the shouts, Concussion Blow, Death Wish, Disarm, Retaliation, Shield
++    -- Block.
++    WARRIOR = {
++        78, 845, 1240193, 5308, 7384, 12294, 23881, 1680, 23922, 6572, 6343, 1715, 20252, 694, 6552, 72, 1310222, 429765,
++    },
 +    -- set 8, masks 100794910 / 2097408 / 0: Ambush, Backstab, Eviscerate, Ghostly Strike, Gouge, Hemorrhage, Kick,
 +    -- Mutilate, Riposte, Sinister Strike
 +    ROGUE = { 8676, 53, 2098, 14278, 1776, 16511, 1766, 1310707, 14251, 1752 },
@@ -434,7 +456,7 @@ index 2e8f1942..ed9db32a 100644
  race:RegisterAbility( "eureka", {
      id = 1259813,
      copy = EUREKA,
-@@ -35,20 +65,38 @@ race:RegisterAura( "eureka", {
+@@ -35,20 +69,38 @@ race:RegisterAura( "eureka", {
      max_stack = 3,
  } )
  
@@ -592,7 +614,7 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/Virtual/State/spec/races_spec.lua b/Virtual/State/spec/races_spec.lua
-index 71559fe6..d3b19557 100644
+index 94508343..b39c040b 100644
 --- a/Virtual/State/spec/races_spec.lua
 +++ b/Virtual/State/spec/races_spec.lua
 @@ -26,6 +26,8 @@ local OWN = {
@@ -642,16 +664,18 @@ Apply with `git apply` (from the worktree root):
 ```diff
 diff --git a/Forever/Races/Dwarf.lua b/Forever/Races/Dwarf.lua
 new file mode 100644
-index 00000000..480c516b
+index 00000000..4be717dc
 --- /dev/null
 +++ b/Forever/Races/Dwarf.lua
-@@ -0,0 +1,55 @@
+@@ -0,0 +1,57 @@
 +-- Forever/Races/Dwarf.lua
 +-- The Dwarf's Forever racial (DB2 1.60.1.70338), for every class: Stoneform (20594: -10% physical damage taken,
 +-- removes poison, disease and bleed effects and grants immunity to them for 8 s; 180 s, on the GCD), which replaces
 +-- `all`'s stock entry (120 s, off the GCD, its buff 65116 absent on Forever: the buff is 20594 itself). Kept from
-+-- `all`: usable only while a dispellable effect it removes is up. Find Treasure, Mace Specialization and Big Game
-+-- Hunter have no rotation effect. No resource or cost modifier. No pack names it. Inert for any other race (Races.lua).
++-- `all`: usable only while a dispellable effect it removes is up. No `dispellable_bleed` aura exists in `all`: the gate
++-- covers poison and disease until one does (the bleed lines stay, as Forever's real dispel). Find Treasure, Mace
++-- Specialization and Big Game Hunter have no rotation effect. No resource or cost modifier. No pack names it. Inert for
++-- any other race (Races.lua).
 +
 +local addon, ns = ...
 +local Hekili = _G[ addon ]
@@ -800,7 +824,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 3: Orc and Troll race packs
 
-Spec §2 (Orc, Troll), §3 (Blood Fury, Berserking rows). `Orc.lua`: Blood Fury `id = 20572` for every class (no `bf_classes`, no `copy`) over `all`'s ID function, its aura 20572 for 15 s registered so the race owns it, and Shatter Curse 1299026 (180 s, on the GCD; removes `dispellable_curse`, aura 8 s). `Troll.lua`: Berserking 20554 (180 s, off the GCD) and its aura (10 s) over `all`'s 26297, and Rapid Regeneration 1260270 (180 s, off the GCD, aura 6 s).
+Spec §2 (Orc, Troll), §3 (Blood Fury, Berserking rows). `Orc.lua`: Blood Fury `id = 20572` for every class (no `bf_classes`, no `copy`) over `all`'s ID function, its aura 20572 for 15 s registered so the race owns it, and Shatter Curse 1299026 (180 s, on the GCD; removes `dispellable_curse`, aura 8 s). `Troll.lua`: Berserking 20554 (180 s, off the GCD) and its aura (10 s) over `all`'s 26297, and Rapid Regeneration 1260270 (180 s, off the GCD, aura 6 s), a self-channel registered `channeled = true`, `cast = 6`, `fixedCast = true` (spec §2) so the simulation does not recommend breaking it.
 
 **Files:**
 - Create: `Forever/Races/Orc.lua`, `Forever/Races/Troll.lua`
@@ -817,7 +841,7 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/Virtual/State/spec/races_spec.lua b/Virtual/State/spec/races_spec.lua
-index d3b19557..e0d3806c 100644
+index b39c040b..6854c139 100644
 --- a/Virtual/State/spec/races_spec.lua
 +++ b/Virtual/State/spec/races_spec.lua
 @@ -28,6 +28,8 @@ local OWN = {
@@ -829,7 +853,7 @@ index d3b19557..e0d3806c 100644
  }
  
  describe("race packs", function()
-@@ -292,6 +294,31 @@ describe("race packs", function()
+@@ -292,6 +294,32 @@ describe("race packs", function()
          assert.are.same({ 180, 20594 }, { class.abilities.stoneform.cooldown, class.auras.stoneform.id })
      end)
  
@@ -852,6 +876,7 @@ index d3b19557..e0d3806c 100644
 +        assert.are.same({ 20554, 10 }, { all.auras.berserking.id, all.auras.berserking.duration })
 +        local rr = all.abilities.rapid_regeneration
 +        assert.are.same({ 1260270, 180, "off", "defensives" }, { rr.id, rr.cooldown, rr.gcd, rr.toggle })
++        assert.are.same({ true, 6, true }, { rr.channeled, rr.cast, rr.fixedCast }) -- a 6 s self-channel (DB2)
 +        assert.are.same({ 1260270, 6 }, { all.auras.rapid_regeneration.id, all.auras.rapid_regeneration.duration })
 +        local class = { abilities = { berserking = zerk }, auras = { berserking = { id = 26297 } } }
 +        ns.applyRace(class)
@@ -940,17 +965,18 @@ index 00000000..138fcbe1
 +} )
 diff --git a/Forever/Races/Troll.lua b/Forever/Races/Troll.lua
 new file mode 100644
-index 00000000..41ebca94
+index 00000000..ba9879ce
 --- /dev/null
 +++ b/Forever/Races/Troll.lua
-@@ -0,0 +1,57 @@
+@@ -0,0 +1,60 @@
 +-- Forever/Races/Troll.lua
 +-- The Troll's Forever racials (DB2 1.60.1.70338), for every class: Berserking (20554: +10% attack and casting speed
 +-- for 10 s, one flat value, no health scaling; 180 s, off the GCD), which replaces `all`'s stock entry and aura
-+-- (26297, absent on Forever), and Rapid Regeneration (1260270: heals 50% of maximum health over 6 s, cancelled by
-+-- movement, action or damage; 180 s, off the GCD). The haste itself is the game's (Hekili reads haste); a priority
-+-- reads `buff.berserking.up`. Regeneration and Beast Slaying are passives. No resource or cost modifier. No pack names
-+-- either. Inert for any other race (Races.lua).
++-- (26297, absent on Forever), and Rapid Regeneration (1260270: heals 50% of maximum health over 6 s; a self-channel,
++-- SPELL_ATTR1_IS_SELF_CHANNELLED, broken by movement, action or damage; 180 s, off the GCD), registered as a 6 s
++-- channel so the simulation does not recommend breaking it. The haste itself is the game's (Hekili reads haste); a
++-- priority reads `buff.berserking.up`. Regeneration and Beast Slaying are passives. No resource or cost modifier. No
++-- pack names either. Inert for any other race (Races.lua).
 +
 +local addon, ns = ...
 +local Hekili = _G[ addon ]
@@ -982,7 +1008,9 @@ index 00000000..41ebca94
 +
 +race:RegisterAbility( "rapid_regeneration", {
 +    id = 1260270,
-+    cast = 0,
++    cast = 6,
++    channeled = true,
++    fixedCast = true, -- the DB2's duration, not hasted
 +    cooldown = 180,
 +    gcd = "off",
 +    startsCombat = false,
@@ -1050,7 +1078,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 4: Undead race pack (token `Scourge`); the Skyborne decision
 
-Spec §1 (Skyborne: no file, the deferred note stands; nothing to build), §2 (Undead), §5. `Undead.lua` answers `Hekili:NewRace( "Scourge" )` (the retail token, assumed; Q1 confirms) and registers Will of the Forsaken 7744 (120 s, on the GCD, no `handler` or `now`) and Cannibalize 20577 (120 s, on the GCD) with its heal aura under the key `cannibalize` and ID 20578 for 10 s. Touch of the Grave is not modelled (spec §2). `races_spec`'s `TOKEN` already maps `Undead` to `Scourge` (Task 1).
+Spec §1 (Skyborne: no file, the deferred note stands; nothing to build), §2 (Undead), §5. `Undead.lua` answers `Hekili:NewRace( "Scourge" )` (the retail token, assumed; Q1 confirms) and registers Will of the Forsaken 7744 (120 s, on the GCD, no `handler` or `now`) and Cannibalize 20577 (120 s, on the GCD), a self-channel (its 20578) registered `channeled = true`, `cast = 10`, `fixedCast = true`, with its heal aura under the key `cannibalize` and ID 20578 for 10 s. Touch of the Grave is not modelled (spec §2). `races_spec`'s `TOKEN` already maps `Undead` to `Scourge` (Task 1).
 
 **Files:**
 - Create: `Forever/Races/Undead.lua`
@@ -1067,7 +1095,7 @@ Apply with `git apply` (from the worktree root):
 
 ```diff
 diff --git a/Virtual/State/spec/races_spec.lua b/Virtual/State/spec/races_spec.lua
-index e0d3806c..d582e290 100644
+index 6854c139..7848df65 100644
 --- a/Virtual/State/spec/races_spec.lua
 +++ b/Virtual/State/spec/races_spec.lua
 @@ -30,6 +30,7 @@ local OWN = {
@@ -1078,7 +1106,7 @@ index e0d3806c..d582e290 100644
  }
  
  describe("race packs", function()
-@@ -319,6 +320,17 @@ describe("race packs", function()
+@@ -320,6 +321,18 @@ describe("race packs", function()
          assert.are.same({ 20554, 20554 }, { class.abilities.berserking.id, class.auras.berserking.id })
      end)
  
@@ -1090,6 +1118,7 @@ index e0d3806c..d582e290 100644
 +        assert.are.same({ 7744, 120, "spell", "defensives" }, { w.id, w.cooldown, w.gcd, w.toggle })
 +        assert.is_nil(w.handler or w.now) -- nothing to model beyond its cooldown and GCD
 +        assert.are.same({ 20577, 120, "spell", "defensives" }, { c.id, c.cooldown, c.gcd, c.toggle })
++        assert.are.same({ true, 10, true }, { c.channeled, c.cast, c.fixedCast }) -- 20578's 10 s self-channel (DB2)
 +        assert.are.same({ 20578, 10 }, { all.auras.cannibalize.id, all.auras.cannibalize.duration }) -- the heal's aura
 +    end)
 +
@@ -1110,16 +1139,17 @@ Apply with `git apply` (from the worktree root):
 ```diff
 diff --git a/Forever/Races/Undead.lua b/Forever/Races/Undead.lua
 new file mode 100644
-index 00000000..7a9c3bcc
+index 00000000..0d0440b0
 --- /dev/null
 +++ b/Forever/Races/Undead.lua
-@@ -0,0 +1,45 @@
+@@ -0,0 +1,48 @@
 +-- Forever/Races/Undead.lua
 +-- The Undead's Forever racials (DB2 1.60.1.70338), for every class; race token "Scourge" (UnitRace's second return):
 +-- Will of the Forsaken (7744: removes charm, fear and sleep, immune for 0.1 s; 120 s, on the GCD), whose cast leaves
-+-- nothing to model beyond its cooldown and GCD (no `handler` or `now`), and Cannibalize (20577: heals 7% of maximum
-+-- health and mana every 2 s for 10 s through its aura 20578, near a corpse; 120 s, on the GCD; whether a corpse is near
-+-- is not known, a priority gates it). Touch of the Grave (1260189 Warrior/Paladin/Rogue, 1260201 Priest/Mage/Warlock: a
++-- nothing to model beyond its cooldown and GCD (no `handler` or `now`), and Cannibalize (20577: triggers 20578, a 10 s
++-- self-channel, SPELL_ATTR1_IS_SELF_CHANNELLED, healing 7% of maximum health and mana every 2 s, near a corpse; 120 s,
++-- on the GCD), registered as a 10 s channel so the simulation does not recommend breaking it; whether a corpse is near
++-- is not known, a priority gates it. Touch of the Grave (1260189 Warrior/Paladin/Rogue, 1260201 Priest/Mage/Warlock: a
 +-- proc that drains health) and Underwater Breathing are passives with no rotation effect. No resource or cost modifier.
 +-- No pack names either. Inert for any other race (Races.lua).
 +
@@ -1139,7 +1169,9 @@ index 00000000..7a9c3bcc
 +
 +race:RegisterAbility( "cannibalize", {
 +    id = 20577,
-+    cast = 0,
++    cast = 10,
++    channeled = true,
++    fixedCast = true, -- 20578's duration, not hasted
 +    cooldown = 120,
 +    gcd = "spell",
 +    startsCombat = false,
@@ -1219,7 +1251,7 @@ git -C ~/src/hekili checkout --detach forever-races
 - [ ] **Step 2: Check the lines' lengths** (every line under 255 characters):
 
 ```bash
-grep '^/run ' docs/superpowers/plans/2026-10-15-forever-races.md | awk 'length >= 255 { print "too long: " $0; bad = 1 } END { print NR " lines"; exit bad }'   # [9 lines]
+grep '^/run ' docs/superpowers/plans/2026-10-15-forever-races.md | awk 'length >= 255 { print "too long: " $0; bad = 1 } END { print NR " lines"; exit bad }'   # [12 lines]
 ```
 
 - [ ] **Step 3: CHECKPOINT: stop and ask the user to run the following in game, and report each box**
@@ -1231,8 +1263,12 @@ Q2 (the stale stock IDs):
 /run local f=function(i) return tostring(C_Spell.GetSpellInfo(i)~=nil) end VSCopy(f(26297),f(58984),f(59752),f(65116),f(33702),f(33697))
 Q3 (the race's entries over all's):
 /run local a=Hekili.Class.abilities VSCopy(a.berserking.id,a.blood_fury.id,a.shadowmeld.id,a.will_to_survive.id,a.stoneform.cooldown,a.stoneform.gcd)
+Q3b (the race's auras over all's):
+/run local u=Hekili.Class.auras VSCopy(u.berserking.id,u.shadowmeld.id,u.stoneform.id,u.blood_fury.id)
 Q4 (after casting the race's buff racial):
 /run local i=1 while true do local a=C_UnitAuras.GetAuraDataByIndex("player",i,"HELPFUL") if not a then break end VSCopy(a.spellId,a.name,a.duration) i=i+1 end
+Q4b (Undead, Troll: while Cannibalize or Rapid Regeneration channels):
+/run local n,_,_,s,e,_,_,id=UnitChannelInfo("player") VSCopy(n,id,s,e)
 Q5 (a macro: /cast <racial> on its first line, this on the second; for each racial of the race):
 /run local g=C_Spell.GetSpellCooldown(61304) VSCopy(g and g.duration,g and g.startTime,GetTime())
 Q6 (Night Elf, after Shadowmeld):
@@ -1243,6 +1279,8 @@ Q8 (Blood Fury's and Wind Blessed's text):
 /run VSCopy(C_Spell.GetSpellDescription(20572),C_Spell.GetSpellDescription(1259710))
 Q9 (Gnome: Eureka!'s scope):
 /run local e=Hekili.RaceMods.costMods[1] VSCopy(e and e.aura,e and #e.spells,Hekili.Class.file)
+Q10 (Gnome Warrior: Quick Strike's cost, first without, then with Eureka! up):
+/run local c=C_Spell.GetSpellPowerCost(429765) VSCopy(c and c[1] and c[1].cost)
 ```
 
 | Answer | → action |
@@ -1251,18 +1289,27 @@ Q9 (Gnome: Eureka!'s scope):
 | Q1 token differs (e.g. `Undead` for `Scourge`) | a follow-up task: rename that file's `NewRace` argument and `races_spec`'s `TOKEN` entry; re-run the verification block; commit; push |
 | Q1 a Skyborne token | record it in spec §1's deferred note (no file this pass) |
 | Q1 Gnome counts not `1 1` on a Warrior, Rogue, Mage, Warlock or Priest; or Q9 `nil` there | **stop and report**: `Hekili.Class.file` was not set when `Gnome.lua` ran |
+| Q1 costMods `1` on a (non-Gnome) Druid | its Clearcasting (`Druid.lua`'s `spec:RegisterCostMod`): none |
 | Q2 all `false` | the overrides are needed as written |
 | Q2 any `true` | note the ID; the override stays (the DB2 values are Forever's) |
 | Q3 the own race shows spec §2's value (Troll 20554, Orc 20572, Night Elf 20580, Human 1259718, Dwarf 180 and `spell`), others `all`'s | none |
 | Q3 the own race shows `all`'s stale value | **stop and report**: `ns.applyRace` did not write the race's entry |
+| Q3b the own race's aura shows spec §3's ID (Troll 20554, Night Elf 20580, Dwarf 20594, Orc 20572); another race shows `all`'s stale ID or the key string (onLoad found the ID invalid) | none |
+| Q3b the own race's aura shows `all`'s stale ID | **stop and report**: the aura override did not reach the class |
 | Q4 aura ID and duration as spec §2 | none |
 | Q4 a different aura ID | a follow-up task: that aura's `id` in the race file and its spec case |
+| Q4b a channel with spell ID 20578 / 1260270 and end - start 10000 / 6000 ms | none |
+| Q4b `nil` (no channel) | a follow-up task: drop `channeled` (and the `cast`) from that ability |
+| Q4b Cannibalize channels as 20578 | a follow-up task: `copy = 20578` on `cannibalize`, so Hekili maps the channel to it |
+| Q4b another length | a follow-up task: that ability's `cast` |
 | Q5 GCD 1.5 for spec §2's `spell` racials, 0 for the `off` ones | none |
 | Q5 otherwise | a follow-up task: flip that ability's `gcd` and its spec case |
 | Q6 10 | none |
 | Q6 another value | a follow-up task: Shadowmeld's `cooldown` |
 | Q7 a `false` for the own race's racial | note it in spec §8 (race/class availability) |
 | Q8 | notes only (neither is modelled) |
+| Q10 `20` then `18` | none (Quick Strike in Eureka!'s scope) |
+| Q10 `20` both times | a follow-up task: drop 429765 from the Warrior's list (and the spec's count 18 → 17) |
 
 When the session ends: `git -C ~/src/hekili checkout forever`.
 

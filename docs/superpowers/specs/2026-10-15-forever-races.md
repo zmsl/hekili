@@ -47,10 +47,10 @@ Regeneration, Eureka!, Elune's Light, War Stomp.
 | Orc (`Orc`) | `blood_fury` | 20572 | 0 / 120 / off | cooldowns | `applyBuff( "blood_fury", 15 )` | 20572, 15 |
 | | `shatter_curse` | 1299026 | 0 / 180 / spell | defensives | `removeBuff( "dispellable_curse" )`; `applyBuff( "shatter_curse" )` | 1299026, 8 |
 | Undead (`Scourge`) | `will_of_the_forsaken` | 7744 | 0 / 120 / spell | defensives | none (fear/charm/sleep break, 0.1 s immunity) | none |
-| | `cannibalize` | 20577 | 0 / 120 / spell | defensives | `applyBuff( "cannibalize" )` | 20578, 10 |
+| | `cannibalize` | 20577 | 10 channel / 120 / spell | defensives | `applyBuff( "cannibalize" )` | 20578, 10 |
 | Tauren (`Tauren`) | `war_stomp` | 20549 | 0.5 / 120 / off | cooldowns | as is: `applyDebuff( "target", "war_stomp" )` | 20549, 2 |
 | Troll (`Troll`) | `berserking` | 20554 | 0 / 180 / off | cooldowns | `applyBuff( "berserking" )` | 20554, 10 |
-| | `rapid_regeneration` | 1260270 | 0 / 180 / off | defensives | `applyBuff( "rapid_regeneration" )` | 1260270, 6 |
+| | `rapid_regeneration` | 1260270 | 6 channel / 180 / off | defensives | `applyBuff( "rapid_regeneration" )` | 1260270, 6 |
 
 Notes:
 - **Blood Fury** has one ID for every class on Forever (R §2.5): `id = 20572`, no `bf_classes` map, no `copy`. Its
@@ -62,9 +62,17 @@ Notes:
 - **Stoneform** on Forever dispels poison, disease and bleed (not curse or magic; R §2.2) and reduces physical damage
   taken by 10%. `all`'s `buff` gate (usable only while a dispellable effect it removes is up) is kept over those three,
   from a file-level list `CLEARS` with a numeric loop (no table built per call; `all`'s built one per call). `handler`
-  and `now` spell the three `removeBuff` lines inline (a `now` has no `ipairs`).
-- **Cannibalize** heals through its triggered aura 20578 (7% health and mana per 2 s for 10 s); the corpse it needs is not
-  known to either layer, so a priority that names it gates it. It is not a channel in the DB2 (no channel attribute).
+  and `now` spell the three `removeBuff` lines inline (a `now` has no `ipairs`). No `dispellable_bleed` aura exists in
+  `all` (it registers curse, poison, disease, magic, enrage): until one does, the gate covers poison and disease, the
+  bleed `removeBuff` is a no-op and `buff.dispellable_bleed` reads Hekili's unknown buff, as `all`'s entry already did.
+  The bleed lines stay (Forever's real dispel); the file header says so.
+- **Cannibalize and Rapid Regeneration are self-channels.** Cannibalize 20577 triggers 20578 and Rapid Regeneration is
+  1260270; both carry `Attributes_1` 0x20000040, and 0x40 is SPELL_ATTR1_IS_SELF_CHANNELLED. The player breaks them by
+  acting. Both are registered as Hekili channels, `channeled = true` with `cast` = the DB2 duration (10 s for 20578, 6 s
+  for 1260270) and `fixedCast = true` (not hasted), so the simulation does not recommend breaking them; `handler` and
+  `now` apply the aura as usual (Cannibalize's under ID 20578). The corpse Cannibalize needs is not known to either
+  layer, so a priority that names it gates it. If the client's channel reports 20578 rather than 20577 (Q4's
+  `UnitChannelInfo` line), `cannibalize` gains `copy = 20578`.
 - **Escape Artist** and **Perception** register their 3 s and 20 s auras so `buff.<key>.up` reads true after a cast.
 - **Passives as modifiers.** Expansive Mind: `race:RegisterResourceMod( { max = 0.05 } )`, unchanged. Every Gnome class
   on Forever (Warrior, Rogue, Mage, Warlock, Priest: the Eureka! and Expansive Mind class masks, R §2.4) has an
@@ -111,23 +119,26 @@ Rank-1 IDs (the `Rank 1` row, or the unranked one): higher ranks resolve through
 
 | class (set; masks) | n | rank-1 IDs |
 |---|---|---|
-| WARRIOR (4; 1784679630/5/1) | 17 | unchanged: 78, 845, 1240193, 5308, 7384, 12294, 23881, 1680, 23922, 6572, 6343, 1715, 20252, 694, 6552, 72, 1310222 |
+| WARRIOR (4; 1784679630/5/1) | 18 | the shipped 17: 78, 845, 1240193, 5308, 7384, 12294, 23881, 1680, 23922, 6572, 6343, 1715, 20252, 694, 6552, 72, 1310222; plus Quick Strike 429765 |
 | ROGUE (8; 100794910/2097408/0) | 10 | Ambush 8676, Backstab 53, Eviscerate 2098, Ghostly Strike 14278, Gouge 1776, Hemorrhage 16511, Kick 1766, Mutilate 1310707, Riposte 14251, Sinister Strike 1752 |
 | MAGE (3; 549591799/4096/0) | 16 | Arcane Blast 400574, Arcane Explosion 1449, Arcane Missiles 5143, Blast Wave 11113, Blizzard 10, Cone of Cold 120, Fire Blast 2136 and 400618, Fireball 133, Flamestrike 2120, Frost Nova 122, Frostbolt 116, Frostfire Bolt 401502, Ice Lance 1312002, Pyroblast 11366, Scorch 2948 |
 | WARLOCK (5; 541165/8650880/0) | 13 | Conflagrate 1293817, Death Coil 6789, Drain Life 689 and 403677, Drain Soul 1120, Hellfire 1949, Immolate 348, Rain of Fire 5740, Searing Pain 5676, Shadow Bolt 686, Shadowburn 17877, Soul Fire 6353, Wrack 1316697 |
 | PRIEST (6; 150224528/8388614/0) | 16 | Binding Heal 401937, Flash Heal 2061, Greater Heal 2060, Heal 2054, Holy Fire 14914, Holy Nova 15237, Lesser Heal 2050, Mana Burn 8129, Mind Blast 8092, Mind Flay 15407, Penance 402174, Prayer of Healing 596, Shadow Word: Death 401955 and 1309595, Smite 585, Starshards 10797 |
 
-Left out: Rebuke 425609 (the query's Rogue set, a Paladin skill line), Felfire 24530 (Mage set, no class, level 0), the
-Warrior's Quick Strike 429765 and unranked Execute 20647 (in the Warrior's mask; the Warrior list stays as shipped
-until Q9 or a Warrior export says otherwise). Haunt is in no Warlock skill line in the DB2, so not listed.
+Quick Strike 429765 is in by the same rule as the other four lists: in the mask, taught by the Arms skill line, 20
+rage, on the GCD (Q10 reads its cost with Eureka! up). Left out: Rebuke 425609 (the query's Rogue set, a Paladin skill
+line), Felfire 24530 (Mage set, no class, level 0), the Warrior's unranked Execute 20647 (the triggered damage: no
+GCD, cost 1, no rank; the cast is 5308's ranks, Warrior.lua). Haunt is in no Warlock skill line in the DB2, so not
+listed.
 
 `Gnome.lua` holds the five lists in `EUREKA_SPELLS` keyed by class file name and declares one cost modifier with
 `spells = EUREKA_SPELLS[ Hekili.Class.file ]` (`Classes.lua` sets `class.file` from `UnitClassBase` before any race file
 runs). A class with no list (Hunter, Shaman, Paladin, Druid: no Gnome Eureka! exists for them) declares no cost
 modifier rather than one with `spells = nil`, which would cover every ability. A listed ID the loaded class does not
 register (any Mage ID today: no Mage pack) is absent from both layers' scope with no error (`Races.lua`'s `inScope`,
-`Modifiers.lua`'s build). Eviscerate's combo-point cost: no Rogue pack exists; when one does, check that the modifier
-only touches energy.
+`Modifiers.lua`'s build). The modifier applies only to the ability's declared `spend`/`spendType` (its own slot:
+Casts.lua:245, Now.lua:266-273, Adapter.lua:169; the simulation wraps only the declared `spend`, Races.lua:153), so
+Eviscerate's combo points are untouched.
 
 ## 5. Race tokens
 
@@ -149,8 +160,9 @@ character the user has, and the answer table renames the `NewRace` argument when
 - Per race: the IDs, cooldowns, GCDs and toggles of §2, auras' IDs and durations, and the override over a seeded stale
   `all` entry (`ns.applyRace` writes the race's over the class's): Escape Artist and Shadowmeld (Task 1), Will to Survive
   and Stoneform (Task 2), Blood Fury for Warrior/Mage/Shaman/Druid and Berserking (Task 3), Will of the Forsaken and
-  Cannibalize for `Scourge`, nothing for `Undead` (Task 4).
-- Eureka! per class: 17 / 10 / 16 / 13 / 16 spells for Warrior / Rogue / Mage / Warlock / Priest, none and no cost
+  Cannibalize for `Scourge`, nothing for `Undead` (Task 4). Rapid Regeneration and Cannibalize are registered
+  `channeled` with `cast` 6 / 10 and `fixedCast` (Tasks 3, 4).
+- Eureka! per class: 18 / 10 / 16 / 13 / 16 spells for Warrior / Rogue / Mage / Warlock / Priest, none and no cost
   modifier for a Druid; a percent-cost Arcane Blast (`spend = 0.15`) is priced 0.135 under Eureka!.
 - Strict context: for each race token, every registered ability with a `now` (and `now ~= handler`) is cast through
   Families/Now.lua in a fresh VirtualState: `I.nowErrors == 0`, `I.nowRuns == 1`, the ability's aura believed up on the
@@ -163,27 +175,32 @@ The client checkout points at `forever-races`; the TOC gained five files, so a f
 
 | # | line (run on each character the user has, Q1 first) | answer → action |
 |---|---|---|
-| Q1 | `/run VSCopy(UnitRace("player"),select(2,UnitRace("player")),UnitClassBase("player"),Hekili.State.race_token,#Hekili.RaceMods.maxMods,#Hekili.RaceMods.costMods)` | token as §5 → none. Token differs (e.g. `Undead`) → rename that file's `NewRace` argument (and `TOKEN` in the spec), re-test. A Skyborne token → record it in §1's deferred note. Gnome with counts not 1/1 (Warrior, Rogue, Mage, Warlock, Priest) → `Class.file` was not set at load: stop and report. |
+| Q1 | `/run VSCopy(UnitRace("player"),select(2,UnitRace("player")),UnitClassBase("player"),Hekili.State.race_token,#Hekili.RaceMods.maxMods,#Hekili.RaceMods.costMods)` | token as §5 → none. Token differs (e.g. `Undead`) → rename that file's `NewRace` argument (and `TOKEN` in the spec), re-test. A Skyborne token → record it in §1's deferred note. Gnome with counts not 1/1 (Warrior, Rogue, Mage, Warlock, Priest) → `Class.file` was not set at load: stop and report. costMods 1 on a non-Gnome Druid → its Clearcasting (Druid.lua), none. |
 | Q2 | `/run local f=function(i) return tostring(C_Spell.GetSpellInfo(i)~=nil) end VSCopy(f(26297),f(58984),f(59752),f(65116),f(33702),f(33697))` | all `false` → the overrides are needed as written. Any `true` → that stock ID exists on the client: note it; the override stays (the DB2 values are Forever's). |
 | Q3 | `/run local a=Hekili.Class.abilities VSCopy(a.berserking.id,a.blood_fury.id,a.shadowmeld.id,a.will_to_survive.id,a.stoneform.cooldown,a.stoneform.gcd)` | the own race's key shows §2's value, the others `all`'s → none. Own race shows the stale value → `ns.applyRace` did not run: stop and report. |
+| Q3b | `/run local u=Hekili.Class.auras VSCopy(u.berserking.id,u.shadowmeld.id,u.stoneform.id,u.blood_fury.id)` | the own race's aura shows §3's ID (Troll 20554, Night Elf 20580, Dwarf 20594, Orc 20572); another race shows `all`'s stale ID or its key string (onLoad found the ID invalid) → none. Own race stale → stop and report. |
 | Q4 | cast the race's buff racial, then `/run local i=1 while true do local a=C_UnitAuras.GetAuraDataByIndex("player",i,"HELPFUL") if not a then break end VSCopy(a.spellId,a.name,a.duration) i=i+1 end` | aura ID and duration as §2 → none. A different ID (e.g. Stoneform not 20594, Cannibalize not 20578) → change that aura's `id`, re-test. |
+| Q4b | (Undead, Troll) while Cannibalize or Rapid Regeneration channels: `/run local n,_,_,s,e,_,_,id=UnitChannelInfo("player") VSCopy(n,id,s,e)` | a channel with spell ID 20578 / 1260270 and end - start of 10000 / 6000 ms → none. `nil` (no channel) → drop `channeled` from that ability. Cannibalize channels as 20578 → add `copy = 20578`. Another length → set `cast`. |
 | Q5 | a macro `/cast <racial>` then `/run local g=C_Spell.GetSpellCooldown(61304) VSCopy(g and g.duration,g and g.startTime,GetTime())`, for each racial of the race | duration 1.5 for §2's "spell" ones and 0 for "off" → none. Otherwise flip that ability's `gcd`. |
 | Q6 | (Night Elf) Shadowmeld, then `/run local s=C_Spell.GetSpellCooldown(20580) VSCopy(20580,s and s.duration,s and s.startTime,GetTime())` | 10 → none. Another value → set `cooldown` to it. |
 | Q7 | `/run VSCopy(UnitClass("player"),IsPlayerSpell(1260189),IsPlayerSpell(1260201),IsPlayerSpell(20554),IsPlayerSpell(1259718),IsPlayerSpell(20589))` | which racials the character knows: confirms race/class availability (R §5 Q4). An unexpected `false` for the own race's racial → note it in §8. |
 | Q8 | `/run VSCopy(C_Spell.GetSpellDescription(20572),C_Spell.GetSpellDescription(1259710))` | Blood Fury's percent and Wind Blessed's haste: notes only (neither is modelled). |
 | Q9 | (Gnome) `/run local e=Hekili.RaceMods.costMods[1] VSCopy(e and e.aura,e and #e.spells,Hekili.Class.file)` | `eureka`, the class's §4 count, the class file → none. `nil` for a Gnome of a §4 class → stop and report. |
+| Q10 | (Gnome Warrior) without and then with Eureka! up: `/run local c=C_Spell.GetSpellPowerCost(429765) VSCopy(c and c[1] and c[1].cost)` | 20 then 18 → none (Quick Strike in scope). 20 both times → drop 429765 from the Warrior's list. |
 
 ## 8. Not modelled, and why
 
 - **Passives on stats the game reports**: The Human Spirit, Sword / Mace / Axe Specialization, Quickness, Endurance,
-  Hardiness, Regeneration, Wind Blessed. Hekili reads crit, haste, hit and health from the client.
+  Hardiness, Regeneration, Wind Blessed. Hekili reads crit, haste, hit and health from the client. Wisp Spirit (death
+  form), Engineering Specialization (profession), Underwater Breathing and Plainsrunning (movement speed) change nothing a
+  rotation reads.
 - **Eureka!'s +10% damage** and **Berserking's / Blood Fury's / Elune's Light's stat change**: no damage or stat model in
   Hekili's simulation of these classes; the buffs are tracked so priorities can read `buff.<key>.up`.
 - **Touch of the Grave**, **Big Game Hunter**, **Beast Slaying**, **Elemental Insight**: procs or target-type damage; no
   rotation input.
 - **Utility actives**: Find Treasure, Cultivation, Skysight, Walk on Air, Read Ley Line (and the Skyborne races, §1).
-- **Cannibalize's corpse** and **Rapid Regeneration's cancellation** on movement or damage: neither layer knows a corpse
-  is near or that the heal was broken; the aura runs its full duration in the belief until an observation ends it.
+- **Cannibalize's corpse** and a channel broken by damage or movement: neither layer knows a corpse is near; a broken
+  channel's aura runs its full duration in the belief until an observation ends it (the channel itself is modelled, §2).
 - **Will to Survive's / Will of the Forsaken's / Escape Artist's / Stoneform's need**: whether a stun, fear, root or
   dispellable effect is on the player. Stoneform keeps `all`'s `buff` gate; the others are `defensives` for the player
   to toggle.
