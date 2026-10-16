@@ -13,6 +13,7 @@ local C_Item = ns.Facade.C_Item
 local GetItemCount, IsUsableItem = C_Item.GetItemCount, C_Item.IsUsableItem
 
 local class = Hekili.Class
+local state = Hekili.State -- upvalue: Hekili setfenv's ability functions to `state`, where the name `state` is not a key
 
 local shared = Hekili:NewShared()
 

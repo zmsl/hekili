@@ -240,6 +240,19 @@ describe("shared content", function()
         assert.are.same({ false, "must be damaged" }, { usable() })
     end)
 
+    it("potion's item and consumable run under Hekili's setfenv without touching a global state", function()
+        load({ "Consumables" })
+        local state = _G.Hekili.State -- the env is the state table itself, as in game: no `state` or `class` key
+        state.args, state.settings, state.spec = {}, {}, {}
+        for _, field in ipairs({ "item", "consumable" }) do
+            local fn = all.abilities.potion[field]
+            setfenv(fn, state)
+            local ok, result = pcall(fn)
+            assert.is_true(ok, field .. ": " .. tostring(result))
+            assert.is_nil(result, field) -- no potion chosen
+        end
+    end)
+
     it("registers use_items, the slots Events.lua rebinds and an empty trinket map", function()
         load({ "Items" })
         assert.are.same({ "main_hand", "null_cooldown", "trinket1", "trinket2", "use_items" }, keys("abilities"))
