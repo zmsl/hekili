@@ -275,9 +275,19 @@ kept("UnitHealth", "virtual", function(unit)
     return 100 -- keeps the enemy scan's UnitHealth( unit ) > 1 (Targets.lua:407, 484) meaningful
 end, "target secret always [W PR14]; Health()")
 
-kept("UnitHealthMax", "virtual", function(unit)
+-- The player's maximum: the raw read while plain, the belief's when secret; another unit's (secret always) the belief's,
+-- without a call. Allocates nothing.
+local realUnitHealthMax = resolve("UnitHealthMax")
+kept("UnitHealthMax", realUnitHealthMax and "hybrid" or "virtual", function(unit)
+    if unit == "player" and realUnitHealthMax then
+        local v = realUnitHealthMax(unit)
+        if not issecretvalue(v) then
+            return v
+        end
+        modelled = true
+    end
     return VS.HealthMax(unit)
-end, "target secret always [W PR14]; HealthMax()")
+end, "player plain in combat [probe 2026-10-16], HealthMax() when secret; target secret always [W PR14]; HealthMax()")
 
 kept("UnitGetTotalAbsorbs", "virtual", zero, "target secret always [W PR14]")
 

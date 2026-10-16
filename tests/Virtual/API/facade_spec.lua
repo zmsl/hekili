@@ -116,7 +116,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 123, hybrid = 26, virtual = 27 }, count)
+        assert.are.same({ passthrough = 123, hybrid = 27, virtual = 26 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -165,6 +165,16 @@ describe("ns.Facade", function()
     it("answers health, speed, haste and stats in the real shapes", function()
         assert.are.equal(100, Facade.UnitHealth("target"))
         assert.are.equal(100, Facade.UnitHealthMax("target"))
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        answers.UnitHealthMax = function()
+            return 624
+        end
+        assert.are.equal(624, Facade.UnitHealthMax("player")) -- plain in combat [probe 2026-10-16]: passed through
+        answers.UnitHealthMax, I.healthMax = nil, 500 -- secret: the belief's last plain read
+        assert.are.equal(500, Facade.UnitHealthMax("player"))
+        local n = #calls
+        Facade.UnitHealthMax("target")
+        assert.are.equal(n, #calls) -- the target's is never read
         ctl.dead.nameplate4 = true
         assert.are.equal(0, Facade.UnitHealth("nameplate4"))
         assert.are.equal(100, Facade.UnitHealth("nameplate5"))

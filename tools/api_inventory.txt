@@ -146,7 +146,7 @@ UnitGUID	passthrough
 UnitGetTotalAbsorbs	virtual
 UnitHasVehicleUI	passthrough
 UnitHealth	virtual
-UnitHealthMax	virtual
+UnitHealthMax	hybrid
 UnitInParty	passthrough
 UnitInRaid	passthrough
 UnitInRange	virtual
