@@ -230,7 +230,7 @@ function M.new()
         local f = { events = {}, units = {}, scripts = {} }
         function f:RegisterEvent(e)
             if ctl.unknownEvents[e] then
-                error("Attempt to register unknown event \"" .. e .. "\"")
+                error('Attempt to register unknown event "' .. e .. '"')
             end
             self.events[e] = true
             self.units[e] = nil

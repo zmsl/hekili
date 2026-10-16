@@ -133,22 +133,25 @@ describe("auras", function()
         assert.is_nil(VS.Aura("target", fs.REND, 21)) -- expired by time
     end)
 
-    it("gives a target already held at a /reload its memory slot (Start, then the first build), so its death is seen", function()
-        local api2, ctl2 = fake.new()
-        ctl2.now = 1
-        local ns2 = load.module()
-        local VS2, I2 = ns2.VirtualState, ns2.VirtualStateInternal
-        VS2.Start(api2) -- PLAYER_LOGIN: a target is held (ctl2.guid.target), nothing built yet
-        I2.Build(fs.def(fs.new(9)), 1) -- the first SpecChanged (PLAYER_ENTERING_WORLD); no PLAYER_TARGET_CHANGED comes
-        ctl2.Tick(1)
-        I2.Fold(1, false)
-        assert.is_true(I2.curSlot > 0)
-        I2.AuraModel(2, REND, 1, 20, 1, 1, Obs.CastSuccess, true)
-        ctl2.dead.target = true
-        I2.Sources.RunPolls(2)
-        I2.Fold(2, false)
-        assert.is_nil(VS2.Aura("target", fs.REND, 2))
-    end)
+    it(
+        "gives a target already held at a /reload its memory slot (Start, then the first build), so its death is seen",
+        function()
+            local api2, ctl2 = fake.new()
+            ctl2.now = 1
+            local ns2 = load.module()
+            local VS2, I2 = ns2.VirtualState, ns2.VirtualStateInternal
+            VS2.Start(api2) -- PLAYER_LOGIN: a target is held (ctl2.guid.target), nothing built yet
+            I2.Build(fs.def(fs.new(9)), 1) -- the first SpecChanged (PLAYER_ENTERING_WORLD); no PLAYER_TARGET_CHANGED comes
+            ctl2.Tick(1)
+            I2.Fold(1, false)
+            assert.is_true(I2.curSlot > 0)
+            I2.AuraModel(2, REND, 1, 20, 1, 1, Obs.CastSuccess, true)
+            ctl2.dead.target = true
+            I2.Sources.RunPolls(2)
+            I2.Fold(2, false)
+            assert.is_nil(VS2.Aura("target", fs.REND, 2))
+        end
+    )
 
     it("forgets the target's auras when the target is cleared or dies", function()
         ctl.now = 10

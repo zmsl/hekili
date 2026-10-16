@@ -71,9 +71,12 @@ describe("player start", function()
         assert.are.equal(70, (VS.Stat("UnitDamage")))
         ctl.Fire("PLAYER_REGEN_DISABLED")
         ctl.Fire("PLAYER_REGEN_ENABLED")
-        assert.are.equal(0, alloc.bytes(function()
-            ctl.Fire("UNIT_DAMAGE", "player")
-        end, 2000))
+        assert.are.equal(
+            0,
+            alloc.bytes(function()
+                ctl.Fire("UNIT_DAMAGE", "player")
+            end, 2000)
+        )
     end)
 
     it("notes complete when every CR_* constant resolves", function()

@@ -5,36 +5,36 @@
 -- the class's own win in the merge (Engine/Spec.lua) and a race pack's replace (ns.applyRace).
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G[addon]
 
 local function all()
-    return Hekili.Class.specs[ 0 ]
+    return Hekili.Class.specs[0]
 end
 
 local Shared = {}
 Shared.__index = Shared
 
-function Shared:RegisterAbility( key, def )
-    all():RegisterAbility( key, def )
+function Shared:RegisterAbility(key, def)
+    all():RegisterAbility(key, def)
 end
 
-function Shared:RegisterAura( key, def )
-    all():RegisterAura( key, def )
+function Shared:RegisterAura(key, def)
+    all():RegisterAura(key, def)
 end
 
 --- { max = pct }: every resource the loaded class registered gets pct more maximum (the race object's signature).
-function Shared:RegisterResourceMod( def )
-    if type( def.max ) == "number" then
+function Shared:RegisterResourceMod(def)
+    if type(def.max) == "number" then
         -- ns.raceMods comes from Engine\Races.lua, which Hekili.toc loads before this file (line 51 before 55).
         local m = ns.raceMods.maxMods
-        m[ #m + 1 ] = { pct = def.max }
+        m[#m + 1] = { pct = def.max }
     end
 end
 
-function Shared:RegisterCostMod( def )
-    ns.RegisterCostMod( def )
+function Shared:RegisterCostMod(def)
+    ns.RegisterCostMod(def)
 end
 
 function Hekili:NewShared()
-    return setmetatable( {}, Shared )
+    return setmetatable({}, Shared)
 end

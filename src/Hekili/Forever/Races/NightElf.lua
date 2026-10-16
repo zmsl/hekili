@@ -8,11 +8,11 @@
 -- Inert for any other race (Engine/Races.lua).
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G[addon]
 
-local race = Hekili:NewRace( "NightElf" )
+local race = Hekili:NewRace("NightElf")
 
-race:RegisterAbility( "elunes_light", {
+race:RegisterAbility("elunes_light", {
     id = 1259799,
     cast = 0,
     cooldown = 180,
@@ -20,22 +20,22 @@ race:RegisterAbility( "elunes_light", {
     startsCombat = false,
     toggle = "cooldowns",
 
-    handler = function ()
-        applyBuff( "elunes_light" )
+    handler = function()
+        applyBuff("elunes_light")
     end,
     -- VirtualState's now-state of the cast (event-facade spec §12a)
-    now = function ()
-        applyBuff( "elunes_light" )
+    now = function()
+        applyBuff("elunes_light")
     end,
-} )
+})
 
-race:RegisterAura( "elunes_light", {
+race:RegisterAura("elunes_light", {
     id = 1259799,
     duration = 15,
     max_stack = 1,
-} )
+})
 
-race:RegisterAbility( "shadowmeld", {
+race:RegisterAbility("shadowmeld", {
     id = 20580,
     cast = 0,
     cooldown = 10,
@@ -43,22 +43,26 @@ race:RegisterAbility( "shadowmeld", {
     startsCombat = false,
 
     -- `all`'s gate, kept
-    usable = function ()
-        if not boss or solo then return false, "requires boss fight or group (to avoid resetting)" end
-        if moving then return false, "can't shadowmeld while moving" end
+    usable = function()
+        if not boss or solo then
+            return false, "requires boss fight or group (to avoid resetting)"
+        end
+        if moving then
+            return false, "can't shadowmeld while moving"
+        end
         return true
     end,
 
-    handler = function ()
-        applyBuff( "shadowmeld" )
+    handler = function()
+        applyBuff("shadowmeld")
     end,
-    now = function ()
-        applyBuff( "shadowmeld" )
+    now = function()
+        applyBuff("shadowmeld")
     end,
-} )
+})
 
-race:RegisterAura( "shadowmeld", {
+race:RegisterAura("shadowmeld", {
     id = 20580,
     duration = 3600, -- until cancelled (DB2 -1), as `all`'s
     max_stack = 1,
-} )
+})

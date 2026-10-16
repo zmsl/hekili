@@ -9,11 +9,11 @@
 -- pack names either. Inert for any other race (Engine/Races.lua).
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G[addon]
 
-local race = Hekili:NewRace( "Troll" )
+local race = Hekili:NewRace("Troll")
 
-race:RegisterAbility( "berserking", {
+race:RegisterAbility("berserking", {
     id = 20554,
     cast = 0,
     cooldown = 180,
@@ -21,22 +21,22 @@ race:RegisterAbility( "berserking", {
     startsCombat = false,
     toggle = "cooldowns",
 
-    handler = function ()
-        applyBuff( "berserking" )
+    handler = function()
+        applyBuff("berserking")
     end,
     -- VirtualState's now-state of the cast (event-facade spec §12a)
-    now = function ()
-        applyBuff( "berserking" )
+    now = function()
+        applyBuff("berserking")
     end,
-} )
+})
 
-race:RegisterAura( "berserking", {
+race:RegisterAura("berserking", {
     id = 20554,
     duration = 10,
     max_stack = 1,
-} )
+})
 
-race:RegisterAbility( "rapid_regeneration", {
+race:RegisterAbility("rapid_regeneration", {
     id = 1260270,
     cast = 6,
     channeled = true,
@@ -46,16 +46,16 @@ race:RegisterAbility( "rapid_regeneration", {
     startsCombat = false,
     toggle = "defensives",
 
-    start = function () -- a channel: Hekili's simulation runs `start`, not `handler` (State.lua runHandler)
-        applyBuff( "rapid_regeneration" )
+    start = function() -- a channel: Hekili's simulation runs `start`, not `handler` (State.lua runHandler)
+        applyBuff("rapid_regeneration")
     end,
-    now = function ()
-        applyBuff( "rapid_regeneration" )
+    now = function()
+        applyBuff("rapid_regeneration")
     end,
-} )
+})
 
-race:RegisterAura( "rapid_regeneration", {
+race:RegisterAura("rapid_regeneration", {
     id = 1260270,
     duration = 6,
     max_stack = 1,
-} )
+})

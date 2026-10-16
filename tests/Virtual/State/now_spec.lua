@@ -31,7 +31,8 @@ describe("now handlers", function()
         for _, k in ipairs({ "GetTime", "UnitGUID", "CreateFrame", "issecretvalue", "debugprofilestop" }) do
             saved[k] = rawget(_G, k) or false
         end
-        _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue = api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
+        _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue =
+            api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
         _G.debugprofilestop = function()
             return 0
         end
@@ -48,7 +49,8 @@ describe("now handlers", function()
         rows = {}
         cleu = I.Events.CreateFrame("Frame")
         cleu:SetScript("OnEvent", function()
-            local _, sub, _, _, _, _, _, dst, _, _, _, spellID, _, _, a15, _, a17 = ns.Facade.CombatLogGetCurrentEventInfo()
+            local _, sub, _, _, _, _, _, dst, _, _, _, spellID, _, _, a15, _, a17 =
+                ns.Facade.CombatLogGetCurrentEventInfo()
             rows[#rows + 1] = { sub, dst, spellID, a15, a17, ns.Facade.GetTime() }
         end)
         cleu:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -98,7 +100,10 @@ describe("now handlers", function()
         cast(2687, 9)
         local after = VS.Power(fs.RAGE, 9.1)
         assert.are.same({ est + 10, lo + 10, math.min(hi + 10, 100) }, { after.est, after.lo, after.hi })
-        assert.are.same({ "modelled", 9, VS.Obs.CastSuccess }, { after.basis, after.last.modelled.t, after.last.modelled.event })
+        assert.are.same(
+            { "modelled", 9, VS.Obs.CastSuccess },
+            { after.basis, after.last.modelled.t, after.last.modelled.event }
+        )
         assert.are.equal(0, state.rage.actual) -- the `now` never touches Hekili's state
         assert.are.same({ "SPELL_ENERGIZE", "Player-1", 2687, 10, fs.RAGE, 9 }, rows[#rows])
         assert.is_true(VS.Cooldown(2687, 9.1).est > 60) -- the declared cooldown
@@ -114,7 +119,10 @@ describe("now handlers", function()
         ctl.Tick(23.5) -- past Rend's modelled expiry (8 + 15)
         assert.are.same({ "SPELL_AURA_REMOVED", "Creature-1", fs.REND, "DEBUFF", nil, 23.5 }, rows[#rows])
         cast(fs.SHOUT, 30)
-        assert.are.same({ "SPELL_AURA_APPLIED", "Player-1", fs.SHOUT, "BUFF" }, { rows[#rows][1], rows[#rows][2], rows[#rows][3], rows[#rows][4] })
+        assert.are.same(
+            { "SPELL_AURA_APPLIED", "Player-1", fs.SHOUT, "BUFF" },
+            { rows[#rows][1], rows[#rows][2], rows[#rows][3], rows[#rows][4] }
+        )
         local shout = VS.Aura("player", fs.SHOUT, 30.1)
         assert.are.equal(150, shout.est) -- the aura's registered duration (120) when the `now` passes none
     end)
@@ -282,15 +290,18 @@ describe("now handlers", function()
         assert.are.equal(0, I.ab.castStartT[I.ab.bySpell[1464]])
     end)
 
-    it("spends a charge from the count caught up to the cast: recharges finished since the last sample count", function()
-        register("charge_test", { id = 3131, charges = 2, recharge = 10 })
-        start()
-        local a = I.ab.bySpell[3131]
-        I.ab.charges0[a], I.ab.next0[a] = 1, 10
-        cast(3131, 25) -- the recharge at 10 finished: 2 charges at the cast
-        local ch, nx = VS.Charges(3131, 25.1)
-        assert.are.same({ 1, 35 }, { ch.est, nx.est })
-    end)
+    it(
+        "spends a charge from the count caught up to the cast: recharges finished since the last sample count",
+        function()
+            register("charge_test", { id = 3131, charges = 2, recharge = 10 })
+            start()
+            local a = I.ab.bySpell[3131]
+            I.ab.charges0[a], I.ab.next0[a] = 1, 10
+            cast(3131, 25) -- the recharge at 10 finished: 2 charges at the cast
+            local ch, nx = VS.Charges(3131, 25.1)
+            assert.are.same({ 1, 35 }, { ch.est, nx.est })
+        end
+    )
 
     it("clamps addStack at the aura's max_stack", function()
         h.Class.auras.sunder_test = { key = "sunder_test", id = 7386, duration = 30, max_stack = 5 }

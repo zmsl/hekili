@@ -8,20 +8,20 @@
 -- other race (Engine/Races.lua).
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G[addon]
 
-local race = Hekili:NewRace( "Human" )
+local race = Hekili:NewRace("Human")
 
-race:RegisterAbility( "will_to_survive", {
+race:RegisterAbility("will_to_survive", {
     id = 1259718,
     cast = 0,
     cooldown = 180,
     gcd = "spell",
     startsCombat = false,
     toggle = "defensives",
-} )
+})
 
-race:RegisterAbility( "perception", {
+race:RegisterAbility("perception", {
     id = 20600,
     cast = 0,
     cooldown = 180,
@@ -29,17 +29,17 @@ race:RegisterAbility( "perception", {
     startsCombat = false,
     toggle = "defensives",
 
-    handler = function ()
-        applyBuff( "perception" )
+    handler = function()
+        applyBuff("perception")
     end,
     -- VirtualState's now-state of the cast (event-facade spec §12a)
-    now = function ()
-        applyBuff( "perception" )
+    now = function()
+        applyBuff("perception")
     end,
-} )
+})
 
-race:RegisterAura( "perception", {
+race:RegisterAura("perception", {
     id = 20600,
     duration = 20,
     max_stack = 1,
-} )
+})

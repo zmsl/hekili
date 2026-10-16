@@ -9,7 +9,8 @@ local Obs = VS.Obs
 
 -- By slot 1-4: the believed expiry (0: empty) and the facts of the last plain read.
 local exp0, rec = { 0, 0, 0, 0 }, {}
-I.totemSpell, I.totemName, I.totemIcon, I.totemStart = { 0, 0, 0, 0 }, { "", "", "", "" }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
+I.totemSpell, I.totemName, I.totemIcon, I.totemStart =
+    { 0, 0, 0, 0 }, { "", "", "", "" }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
 
 I.OnBuild(function(def, now)
     for s = 1, 4 do

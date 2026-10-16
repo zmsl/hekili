@@ -39,8 +39,20 @@ local KIT = {
     frenzied_regeneration = { { 22842 }, 0, nil, 180, "spell" },
     feral_charge = { { 1238122, 16979 }, 5, "rage", 15, "off" },
     faerie_fire = { { 770, 778, 9749, 9907 }, { 55, 75, 95, 115 }, "mana", 0, "spell" },
-    wrath = { { 5176, 5177, 5178, 5179, 5180, 6780, 8905, 9912 }, { 10, 20, 40, 50, 70, 80, 100, 120 }, "mana", 0, "spell" },
-    starfire = { { 2912, 8949, 8950, 8951, 9875, 9876, 25298 }, { 95, 135, 180, 230, 275, 315, 340 }, "mana", 0, "spell" },
+    wrath = {
+        { 5176, 5177, 5178, 5179, 5180, 6780, 8905, 9912 },
+        { 10, 20, 40, 50, 70, 80, 100, 120 },
+        "mana",
+        0,
+        "spell",
+    },
+    starfire = {
+        { 2912, 8949, 8950, 8951, 9875, 9876, 25298 },
+        { 95, 135, 180, 230, 275, 315, 340 },
+        "mana",
+        0,
+        "spell",
+    },
     moonfire = {
         { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835 },
         { 25, 50, 75, 105, 150, 190, 235, 280, 325, 375 },
@@ -143,16 +155,68 @@ local TALENTS = {
 
 -- The abilities whose cast changes the now-state beyond its declared cost, cooldown and GCD (spec §4).
 local NOW = {
-    "rake", "rip", "ferocious_bite", "ravage", "pounce", "prowl", "dash", "shifting_power", "berserk", "cat_form",
-    "bear_form", "moonkin_form", "travel_form", "aquatic_form", "lacerate", "demoralizing_roar", "growl", "bash",
-    "challenging_roar", "enrage", "frenzied_regeneration", "feral_charge", "faerie_fire", "wrath", "moonfire",
-    "insect_swarm", "entangling_roots", "innervate", "barkskin", "natures_grasp", "mark_of_the_wild",
-    "gift_of_the_wild", "thorns",
+    "rake",
+    "rip",
+    "ferocious_bite",
+    "ravage",
+    "pounce",
+    "prowl",
+    "dash",
+    "shifting_power",
+    "berserk",
+    "cat_form",
+    "bear_form",
+    "moonkin_form",
+    "travel_form",
+    "aquatic_form",
+    "lacerate",
+    "demoralizing_roar",
+    "growl",
+    "bash",
+    "challenging_roar",
+    "enrage",
+    "frenzied_regeneration",
+    "feral_charge",
+    "faerie_fire",
+    "wrath",
+    "moonfire",
+    "insect_swarm",
+    "entangling_roots",
+    "innervate",
+    "barkskin",
+    "natures_grasp",
+    "mark_of_the_wild",
+    "gift_of_the_wild",
+    "thorns",
 }
 
 -- Clearcasting's covered abilities (spec §7), by rank 1's ID.
-local COVERED = { 8921, 2912, 5570, 16914, 5185, 8936, 774, 1082, 1822, 5221, 1079, 22568, 9005, 6785, 779, 6807,
-    414644, 5211, 1238122, 339, 467, 16689, 407995, 99 }
+local COVERED = {
+    8921,
+    2912,
+    5570,
+    16914,
+    5185,
+    8936,
+    774,
+    1082,
+    1822,
+    5221,
+    1079,
+    22568,
+    9005,
+    6785,
+    779,
+    6807,
+    414644,
+    5211,
+    1238122,
+    339,
+    467,
+    16689,
+    407995,
+    99,
+}
 
 local function rank(n)
     return setmetatable({}, {
@@ -190,41 +254,60 @@ describe("Forever Druid", function()
         w = ld.load()
     end)
 
-    it("registers the kit with the DB2's ranks, costs, cooldowns and GCDs, and no rune or Tiger's Fury spell", function()
-        local e = ld.env(w)
-        local n = 0
-        for key, a in pairs(w.abilities) do
-            n = n + 1
-            local want = KIT[key]
-            assert.is_not_nil(want, "unexpected ability " .. key)
-            assert.are.same(want[1], idsOf(a), key)
-            assert.are.same({ want[3], want[4], want[5] }, { a.spendType, ld.run(a.cooldown, e), a.gcd }, key)
-            assert.are.equal("function", type(a.known), key)
-            if type(want[2]) == "table" then
-                for r, cost in ipairs(want[2]) do -- the cost of each rank, as the spellbook learns it
-                    w.game.known[want[1][r]] = true
-                    assert.are.equal(cost, ld.run(a.spend, e), key .. " rank " .. r)
+    it(
+        "registers the kit with the DB2's ranks, costs, cooldowns and GCDs, and no rune or Tiger's Fury spell",
+        function()
+            local e = ld.env(w)
+            local n = 0
+            for key, a in pairs(w.abilities) do
+                n = n + 1
+                local want = KIT[key]
+                assert.is_not_nil(want, "unexpected ability " .. key)
+                assert.are.same(want[1], idsOf(a), key)
+                assert.are.same({ want[3], want[4], want[5] }, { a.spendType, ld.run(a.cooldown, e), a.gcd }, key)
+                assert.are.equal("function", type(a.known), key)
+                if type(want[2]) == "table" then
+                    for r, cost in ipairs(want[2]) do -- the cost of each rank, as the spellbook learns it
+                        w.game.known[want[1][r]] = true
+                        assert.are.equal(cost, ld.run(a.spend, e), key .. " rank " .. r)
+                    end
+                else
+                    assert.are.equal(want[2], ld.run(a.spend, e) or 0, key)
                 end
-            else
-                assert.are.equal(want[2], ld.run(a.spend, e) or 0, key)
             end
-        end
-        assert.are.equal(44, n)
-        local stale = { tigers_fury = true }
-        for _, id in ipairs({ 5217, 417045, 407988, 417157, 414684, 439748, 408124, 408247, 408120, 410176, 411128, 414924 }) do
-            stale[id] = true
-        end
-        for key, a in pairs(w.abilities) do
-            assert.is_nil(stale[key], key)
-            for _, id in ipairs(idsOf(a)) do
-                assert.is_nil(stale[id], key .. " " .. id)
+            assert.are.equal(44, n)
+            local stale = { tigers_fury = true }
+            for _, id in ipairs({
+                5217,
+                417045,
+                407988,
+                417157,
+                414684,
+                439748,
+                408124,
+                408247,
+                408120,
+                410176,
+                411128,
+                414924,
+            }) do
+                stale[id] = true
             end
+            for key, a in pairs(w.abilities) do
+                assert.is_nil(stale[key], key)
+                for _, id in ipairs(idsOf(a)) do
+                    assert.is_nil(stale[id], key .. " " .. id)
+                end
+            end
+            assert.is_true(w.abilities.maul.onNextSwing)
+            assert.are.same({ true, 10 }, { w.abilities.hurricane.channeled, w.abilities.hurricane.cast })
+            -- Wrath's cast at its top rank (the cost loop above learned every rank)
+            assert.are.same(
+                { 2, 3.5, 2 },
+                { ld.run(w.abilities.wrath.cast, e), w.abilities.starfire.cast, w.abilities.regrowth.cast }
+            )
         end
-        assert.is_true(w.abilities.maul.onNextSwing)
-        assert.are.same({ true, 10 }, { w.abilities.hurricane.channeled, w.abilities.hurricane.cast })
-        -- Wrath's cast at its top rank (the cost loop above learned every rank)
-        assert.are.same({ 2, 3.5, 2 }, { ld.run(w.abilities.wrath.cast, e), w.abilities.starfire.cast, w.abilities.regrowth.cast })
-    end)
+    )
 
     it("models the talent-modified costs from rank 1's value x the rank, floored at 0", function()
         local e = ld.env(w)
@@ -233,49 +316,101 @@ describe("Forever Druid", function()
             return ld.run(w.abilities[key].spend, e)
         end
         -- Ferocity -1 a rank; Shredding Attacks -6 a rank (Shred; Lacerate by its DB2 text, checkpoint Q12)
-        assert.are.same({ 43, 38, 13, 18, 18, 48, 3 },
-            { at("claw"), at("rake"), at("maul"), at("swipe_bear"), at("primal_bite"), at("shred"), at("lacerate") })
+        assert.are.same(
+            { 43, 38, 13, 18, 18, 48, 3 },
+            { at("claw"), at("rake"), at("maul"), at("swipe_bear"), at("primal_bite"), at("shred"), at("lacerate") }
+        )
         -- Natural Shapeshifter -10% a rank on the forms and Shifting Power
-        for key, cost in pairs({ cat_form = 0.44, bear_form = 0.44, shifting_power = 0.44, moonkin_form = 0.28,
-            travel_form = 0.16, aquatic_form = 0.16 }) do
+        for key, cost in pairs({
+            cat_form = 0.44,
+            bear_form = 0.44,
+            shifting_power = 0.44,
+            moonkin_form = 0.28,
+            travel_form = 0.16,
+            aquatic_form = 0.16,
+        }) do
             near(cost, at(key))
         end
-        assert.are.same({ 8, 1.3 }, { ld.run(w.abilities.shifting_power.cooldown, e), ld.run(w.abilities.wrath.cast, e) })
+        assert.are.same(
+            { 8, 1.3 },
+            { ld.run(w.abilities.shifting_power.cooldown, e), ld.run(w.abilities.wrath.cast, e) }
+        )
         e.talent = rank(5)
         assert.are.same({ 40, 0, 30 }, { at("claw"), at("lacerate"), at("shred") })
     end)
 
-    it("gates every ability on the form it needs, Ravage and Pounce on Prowl, Faerie Fire free only in Cat or Bear", function()
-        local a = w.abilities
-        local gates = {
-            cat_form = { "claw", "shred", "rake", "rip", "ferocious_bite", "cower", "prowl", "dash", "shifting_power" },
-            prowl = { "ravage", "pounce" },
-            bear_form = { "maul", "swipe_bear", "primal_bite", "lacerate", "demoralizing_roar", "growl", "bash",
-                "challenging_roar", "enrage", "frenzied_regeneration", "feral_charge" },
-        }
-        for gate, keys in pairs(gates) do
-            for _, k in ipairs(keys) do
-                assert.are.same({ gate, nil }, { a[k].buff, a[k].nobuff }, k)
+    it(
+        "gates every ability on the form it needs, Ravage and Pounce on Prowl, Faerie Fire free only in Cat or Bear",
+        function()
+            local a = w.abilities
+            local gates = {
+                cat_form = {
+                    "claw",
+                    "shred",
+                    "rake",
+                    "rip",
+                    "ferocious_bite",
+                    "cower",
+                    "prowl",
+                    "dash",
+                    "shifting_power",
+                },
+                prowl = { "ravage", "pounce" },
+                bear_form = {
+                    "maul",
+                    "swipe_bear",
+                    "primal_bite",
+                    "lacerate",
+                    "demoralizing_roar",
+                    "growl",
+                    "bash",
+                    "challenging_roar",
+                    "enrage",
+                    "frenzied_regeneration",
+                    "feral_charge",
+                },
+            }
+            for gate, keys in pairs(gates) do
+                for _, k in ipairs(keys) do
+                    assert.are.same({ gate, nil }, { a[k].buff, a[k].nobuff }, k)
+                end
             end
+            for _, k in ipairs({
+                "wrath",
+                "starfire",
+                "moonfire",
+                "insect_swarm",
+                "hurricane",
+                "entangling_roots",
+                "healing_touch",
+                "regrowth",
+                "rejuvenation",
+                "mark_of_the_wild",
+                "gift_of_the_wild",
+                "thorns",
+                "innervate",
+                "natures_grasp",
+            }) do
+                assert.are.same({ nil, "feral_form" }, { a[k].buff, a[k].nobuff }, k)
+            end
+            for _, k in ipairs({ "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form" }) do
+                assert.are.same({ nil, k }, { a[k].buff, a[k].nobuff }, k)
+            end
+            for _, k in ipairs({ "faerie_fire", "barkskin" }) do
+                assert.are.same({ nil, nil }, { a[k].buff, a[k].nobuff }, k)
+            end
+            local e = ld.env(w)
+            assert.are.same(
+                { "cat_form", 55, 0 },
+                { ld.run(a.berserk.buff, e), ld.run(a.faerie_fire.spend, e), ld.run(a.faerie_fire.cooldown, e) }
+            )
+            e.buff = auras({ bear_form = { up = true }, feral_form = { up = true } })
+            assert.are.same(
+                { "bear_form", 0, 6 },
+                { ld.run(a.berserk.buff, e), ld.run(a.faerie_fire.spend, e), ld.run(a.faerie_fire.cooldown, e) }
+            )
         end
-        for _, k in ipairs({ "wrath", "starfire", "moonfire", "insect_swarm", "hurricane", "entangling_roots",
-            "healing_touch", "regrowth", "rejuvenation", "mark_of_the_wild", "gift_of_the_wild", "thorns", "innervate",
-            "natures_grasp" }) do
-            assert.are.same({ nil, "feral_form" }, { a[k].buff, a[k].nobuff }, k)
-        end
-        for _, k in ipairs({ "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form" }) do
-            assert.are.same({ nil, k }, { a[k].buff, a[k].nobuff }, k)
-        end
-        for _, k in ipairs({ "faerie_fire", "barkskin" }) do
-            assert.are.same({ nil, nil }, { a[k].buff, a[k].nobuff }, k)
-        end
-        local e = ld.env(w)
-        assert.are.same({ "cat_form", 55, 0 }, { ld.run(a.berserk.buff, e), ld.run(a.faerie_fire.spend, e),
-            ld.run(a.faerie_fire.cooldown, e) })
-        e.buff = auras({ bear_form = { up = true }, feral_form = { up = true } })
-        assert.are.same({ "bear_form", 0, 6 }, { ld.run(a.berserk.buff, e), ld.run(a.faerie_fire.spend, e),
-            ld.run(a.faerie_fire.cooldown, e) })
-    end)
+    )
 
     it("registers the DB2's 47 talent nodes and the three placeholders, and no rank aliases", function()
         local n, registered = 0, 0
@@ -350,35 +485,41 @@ describe("Forever Druid", function()
             end
         end)
 
-        it("writes the debuffs, Lacerate's stack to 5, Pounce's stun with Brutal Impact and Bash's at rank 0", function()
-            local e = ld.env(w)
-            for _, k in ipairs({ "rake", "rip", "demoralizing_roar", "faerie_fire" }) do
-                ld.run(w.abilities[k].now, e)
+        it(
+            "writes the debuffs, Lacerate's stack to 5, Pounce's stun with Brutal Impact and Bash's at rank 0",
+            function()
+                local e = ld.env(w)
+                for _, k in ipairs({ "rake", "rip", "demoralizing_roar", "faerie_fire" }) do
+                    ld.run(w.abilities[k].now, e)
+                end
+                assert.are.same({ "rake", "rip", "demoralizing_roar", "faerie_fire" }, e.applied)
+                e = ld.env(w)
+                e.debuff = auras({ lacerate = { up = true, stack = 4 } })
+                ld.run(w.abilities.lacerate.now, e)
+                assert.are.same({ 15, 5 }, { e.durations.lacerate, e.stacks.lacerate })
+                e.debuff = auras({ lacerate = { up = true, stack = 5 } })
+                ld.run(w.abilities.lacerate.now, e)
+                assert.are.equal(5, e.stacks.lacerate)
+                e = ld.env(w)
+                e.talent = rank(2)
+                ld.run(w.abilities.pounce.now, e)
+                assert.are.same(
+                    { { "pounce", "pounce_bleed" }, { "prowl" }, 3 },
+                    { e.applied, e.removed, e.durations.pounce }
+                )
+                e = ld.env(w)
+                ld.run(w.abilities.bash.now, e) -- the spellbook answers 0: rank 1's 2 s
+                assert.are.equal(2, e.durations.bash)
+                w.game.known[5211], w.game.known[6798] = true, true
+                e.talent = rank(1)
+                ld.run(w.abilities.bash.now, e)
+                assert.are.equal(3.5, e.durations.bash)
+                w.game.known[8921], w.game.known[8924] = true, true
+                ld.run(w.abilities.moonfire.now, e)
+                ld.run(w.abilities.insect_swarm.now, e)
+                assert.are.same({ 15, 14 }, { e.durations.moonfire, e.durations.insect_swarm }) -- Nature's Splendor
             end
-            assert.are.same({ "rake", "rip", "demoralizing_roar", "faerie_fire" }, e.applied)
-            e = ld.env(w)
-            e.debuff = auras({ lacerate = { up = true, stack = 4 } })
-            ld.run(w.abilities.lacerate.now, e)
-            assert.are.same({ 15, 5 }, { e.durations.lacerate, e.stacks.lacerate })
-            e.debuff = auras({ lacerate = { up = true, stack = 5 } })
-            ld.run(w.abilities.lacerate.now, e)
-            assert.are.equal(5, e.stacks.lacerate)
-            e = ld.env(w)
-            e.talent = rank(2)
-            ld.run(w.abilities.pounce.now, e)
-            assert.are.same({ { "pounce", "pounce_bleed" }, { "prowl" }, 3 }, { e.applied, e.removed, e.durations.pounce })
-            e = ld.env(w)
-            ld.run(w.abilities.bash.now, e) -- the spellbook answers 0: rank 1's 2 s
-            assert.are.equal(2, e.durations.bash)
-            w.game.known[5211], w.game.known[6798] = true, true
-            e.talent = rank(1)
-            ld.run(w.abilities.bash.now, e)
-            assert.are.equal(3.5, e.durations.bash)
-            w.game.known[8921], w.game.known[8924] = true, true
-            ld.run(w.abilities.moonfire.now, e)
-            ld.run(w.abilities.insect_swarm.now, e)
-            assert.are.same({ 15, 14 }, { e.durations.moonfire, e.durations.insect_swarm }) -- Nature's Splendor
-        end)
+        )
 
         it("gains Shifting Power's 40 energy and Enrage's 10 rage, and Bite spends the energy left", function()
             local e = ld.env(w)
@@ -451,8 +592,10 @@ describe("Forever Druid", function()
         local models = w.resources[1].models
         w.state.buff.bear_form = { up = false }
         w.state.swings.mainhand, w.state.mainhand_speed = 5, 2.5
-        assert.are.same({ "mainhand", "bear_form", "mainhand_speed" }, { models.mainhand.swing, models.mainhand.aura,
-            models.mainhand.interval })
+        assert.are.same(
+            { "mainhand", "bear_form", "mainhand_speed" },
+            { models.mainhand.swing, models.mainhand.aura, models.mainhand.interval }
+        )
         assert.is_true(models.mainhand.stop()) -- out of Bear Form
         w.state.buff.bear_form.up = true
         assert.is_false(models.mainhand.stop())
@@ -591,9 +734,12 @@ describe("Forever Druid", function()
         end)
 
         it("allocates nothing over 1000 calls", function()
-            assert.are.equal(0, alloc.bytes(function()
-                excess()
-            end, 1000))
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    excess()
+                end, 1000)
+            )
         end)
     end)
 
@@ -644,7 +790,10 @@ describe("Forever Druid", function()
                     if e.list_name then
                         assert.is_not_nil(p.lists[e.list_name], where .. ": no list " .. e.list_name)
                     else
-                        assert.is_true(w.abilities[e.action] ~= nil or shared[e.action], where .. ": no ability " .. e.action)
+                        assert.is_true(
+                            w.abilities[e.action] ~= nil or shared[e.action],
+                            where .. ": no ability " .. e.action
+                        )
                     end
                     local c = e.criteria or ""
                     for kind, key in c:gmatch("(%a+)%.([%w_]+)") do
@@ -661,15 +810,28 @@ describe("Forever Druid", function()
         end
     end)
 
-    it("declares its pseudo-spec once, as a placeholder until checkpoint Q1, and the settings the packs read", function()
-        assert.are.equal(1499, w.specID)
-        for key, default in pairs({ rip_cp = 5, bite_finisher = false, behind = false, buffs = true, dump_rage = 60,
-            use_enrage = false, moonkin = true, trash_dots = true, starfire_filler = false, hurricane_targets = 4,
-            innervate = true }) do
-            assert.are.equal(default, w.settings[key].default, key)
+    it(
+        "declares its pseudo-spec once, as a placeholder until checkpoint Q1, and the settings the packs read",
+        function()
+            assert.are.equal(1499, w.specID)
+            for key, default in pairs({
+                rip_cp = 5,
+                bite_finisher = false,
+                behind = false,
+                buffs = true,
+                dump_rage = 60,
+                use_enrage = false,
+                moonkin = true,
+                trash_dots = true,
+                starfire_filler = false,
+                hurricane_targets = 4,
+                innervate = true,
+            }) do
+                assert.are.equal(default, w.settings[key].default, key)
+            end
+            assert.are.same({ package = "Feral" }, w.options)
         end
-        assert.are.same({ package = "Feral" }, w.options)
-    end)
+    )
 end)
 
 -- The Druid's `now` handlers as VirtualState runs them: bound to Families/Now.lua's context (Hekili's verbs onto the
@@ -698,7 +860,8 @@ describe("Forever Druid in VirtualState's now context", function()
         for _, k in ipairs({ "GetTime", "UnitGUID", "CreateFrame", "issecretvalue", "debugprofilestop" }) do
             saved[k] = rawget(_G, k) or false
         end
-        _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue = api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
+        _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue =
+            api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
         _G.debugprofilestop = function()
             return 0
         end

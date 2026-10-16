@@ -6,10 +6,11 @@
 -- their class files and racials in the race packs.
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G[addon]
 
 local C_LossOfControl = ns.Facade.C_LossOfControl
-local GetActiveLossOfControlData, GetActiveLossOfControlDataCount = C_LossOfControl.GetActiveLossOfControlData, C_LossOfControl.GetActiveLossOfControlDataCount
+local GetActiveLossOfControlData, GetActiveLossOfControlDataCount =
+    C_LossOfControl.GetActiveLossOfControlData, C_LossOfControl.GetActiveLossOfControlDataCount
 local UnitDebuff = ns.UnitDebuff
 
 local shared = Hekili:NewShared()
@@ -44,21 +45,29 @@ local auras = {
         duration = 15,
         max_stack = 1,
         shared = "player",
-        dot = "buff"
+        dot = "buff",
     },
 
     loss_of_control = {
         duration = 10,
-        generate = function( t )
+        generate = function(t)
             local max_events = GetActiveLossOfControlDataCount()
 
             if max_events > 0 then
                 local spell, start, duration, remains = 0, 0, 0, 0
 
                 for i = 1, max_events do
-                    local event = GetActiveLossOfControlData( i )
+                    local event = GetActiveLossOfControlData(i)
 
-                    if event and event.lockoutSchool == 0 and event.startTime and event.startTime > 0 and event.timeRemaining and event.timeRemaining > 0 and event.timeRemaining > remains then
+                    if
+                        event
+                        and event.lockoutSchool == 0
+                        and event.startTime
+                        and event.startTime > 0
+                        and event.timeRemaining
+                        and event.timeRemaining > 0
+                        and event.timeRemaining > remains
+                    then
                         spell = event.spellID
                         start = event.startTime
                         duration = event.duration
@@ -86,22 +95,26 @@ local auras = {
         end,
     },
 
-    disoriented = {  -- Disorients (e.g., Polymorph, Dragon’s Breath, Blind)
+    disoriented = { -- Disorients (e.g., Polymorph, Dragon’s Breath, Blind)
         duration = 10,
-        generate = function( t )
+        generate = function(t)
             local max_events = GetActiveLossOfControlDataCount()
 
             if max_events > 0 then
                 local spell, start, duration, remains = 0, 0, 0, 0
 
                 for i = 1, max_events do
-                    local event = GetActiveLossOfControlData( i )
+                    local event = GetActiveLossOfControlData(i)
 
-                    if event and event.locType == "CONFUSE"
-                        and event.startTime and event.startTime > 0
-                        and event.timeRemaining and event.timeRemaining > 0
-                        and event.timeRemaining > remains then
-
+                    if
+                        event
+                        and event.locType == "CONFUSE"
+                        and event.startTime
+                        and event.startTime > 0
+                        and event.timeRemaining
+                        and event.timeRemaining > 0
+                        and event.timeRemaining > remains
+                    then
                         spell = event.spellID
                         start = event.startTime
                         duration = event.duration
@@ -131,20 +144,24 @@ local auras = {
 
     feared = {
         duration = 10,
-        generate = function( t )
+        generate = function(t)
             local max_events = GetActiveLossOfControlDataCount()
 
             if max_events > 0 then
                 local spell, start, duration, remains = 0, 0, 0, 0
 
                 for i = 1, max_events do
-                    local event = GetActiveLossOfControlData( i )
+                    local event = GetActiveLossOfControlData(i)
 
-                    if event and ( event.locType == "FEAR" or event.locType == "FEAR_MECHANIC" or event.locType == "HORROR" )
-                        and event.startTime and event.startTime > 0
-                        and event.timeRemaining and event.timeRemaining > 0
-                        and event.timeRemaining > remains then
-
+                    if
+                        event
+                        and (event.locType == "FEAR" or event.locType == "FEAR_MECHANIC" or event.locType == "HORROR")
+                        and event.startTime
+                        and event.startTime > 0
+                        and event.timeRemaining
+                        and event.timeRemaining > 0
+                        and event.timeRemaining > remains
+                    then
                         spell = event.spellID
                         start = event.startTime
                         duration = event.duration
@@ -172,22 +189,26 @@ local auras = {
         end,
     },
 
-    incapacitated = {  -- Effects like Sap, Freezing Trap, Gouge
+    incapacitated = { -- Effects like Sap, Freezing Trap, Gouge
         duration = 10,
-        generate = function( t )
+        generate = function(t)
             local max_events = GetActiveLossOfControlDataCount()
 
             if max_events > 0 then
                 local spell, start, duration, remains = 0, 0, 0, 0
 
                 for i = 1, max_events do
-                    local event = GetActiveLossOfControlData( i )
+                    local event = GetActiveLossOfControlData(i)
 
-                    if event and event.locType == "STUN"
-                        and event.startTime and event.startTime > 0
-                        and event.timeRemaining and event.timeRemaining > 0
-                        and event.timeRemaining > remains then
-
+                    if
+                        event
+                        and event.locType == "STUN"
+                        and event.startTime
+                        and event.startTime > 0
+                        and event.timeRemaining
+                        and event.timeRemaining > 0
+                        and event.timeRemaining > remains
+                    then
                         spell = event.spellID
                         start = event.startTime
                         duration = event.duration
@@ -213,21 +234,29 @@ local auras = {
             t.caster = "nobody"
             t.v1 = 0
         end,
-        copy = "sapped"
+        copy = "sapped",
     },
 
     rooted = {
         duration = 10,
-        generate = function( t )
+        generate = function(t)
             local max_events = GetActiveLossOfControlDataCount()
 
             if max_events > 0 then
                 local spell, start, duration, remains = 0, 0, 0, 0
 
                 for i = 1, max_events do
-                    local event = GetActiveLossOfControlData( i )
+                    local event = GetActiveLossOfControlData(i)
 
-                    if event and event.locType == "ROOT" and event.startTime and event.startTime > 0 and event.timeRemaining and event.timeRemaining > 0 and event.timeRemaining > remains then
+                    if
+                        event
+                        and event.locType == "ROOT"
+                        and event.startTime
+                        and event.startTime > 0
+                        and event.timeRemaining
+                        and event.timeRemaining > 0
+                        and event.timeRemaining > remains
+                    then
                         spell = event.spellID
                         start = event.startTime
                         duration = event.duration
@@ -257,16 +286,24 @@ local auras = {
 
     snared = {
         duration = 10,
-        generate = function( t )
+        generate = function(t)
             local max_events = GetActiveLossOfControlDataCount()
 
             if max_events > 0 then
                 local spell, start, duration, remains = 0, 0, 0, 0
 
                 for i = 1, max_events do
-                    local event = GetActiveLossOfControlData( i )
+                    local event = GetActiveLossOfControlData(i)
 
-                    if event and event.locType == "SNARE" and event.startTime and event.startTime > 0 and event.timeRemaining and event.timeRemaining > 0 and event.timeRemaining > remains then
+                    if
+                        event
+                        and event.locType == "SNARE"
+                        and event.startTime
+                        and event.startTime > 0
+                        and event.timeRemaining
+                        and event.timeRemaining > 0
+                        and event.timeRemaining > remains
+                    then
                         spell = event.spellID
                         start = event.startTime
                         duration = event.duration
@@ -292,25 +329,29 @@ local auras = {
             t.caster = "nobody"
             t.v1 = 0
         end,
-        copy = "slowed"
+        copy = "slowed",
     },
 
-    stunned = {  -- Shorter stuns (e.g., Kidney Shot, Cheap Shot, Bash)
+    stunned = { -- Shorter stuns (e.g., Kidney Shot, Cheap Shot, Bash)
         duration = 10,
-        generate = function( t )
+        generate = function(t)
             local max_events = GetActiveLossOfControlDataCount()
 
             if max_events > 0 then
                 local spell, start, duration, remains = 0, 0, 0, 0
 
                 for i = 1, max_events do
-                    local event = GetActiveLossOfControlData( i )
+                    local event = GetActiveLossOfControlData(i)
 
-                    if event and event.locType == "STUN_MECHANIC"
-                        and event.startTime and event.startTime > 0
-                        and event.timeRemaining and event.timeRemaining > 0
-                        and event.timeRemaining > remains then
-
+                    if
+                        event
+                        and event.locType == "STUN_MECHANIC"
+                        and event.startTime
+                        and event.startTime > 0
+                        and event.timeRemaining
+                        and event.timeRemaining > 0
+                        and event.timeRemaining > remains
+                    then
                         spell = event.spellID
                         start = event.startTime
                         duration = event.duration
@@ -339,21 +380,23 @@ local auras = {
     },
 
     dispellable_curse = {
-        generate = function( t )
+        generate = function(t)
             local i = 1
-            local name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+            local name, _, count, debuffType, duration, expirationTime = UnitDebuff("player", i, "RAID")
 
-            while( name ) do
-                if debuffType == "Curse" then break end
+            while name do
+                if debuffType == "Curse" then
+                    break
+                end
 
                 i = i + 1
-                name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+                name, _, count, debuffType, duration, expirationTime = UnitDebuff("player", i, "RAID")
             end
 
             if name then
                 t.count = count > 0 and count or 1
                 t.expires = expirationTime > 0 and expirationTime or query_time + 5
-                t.applied = expirationTime > 0 and ( expirationTime - duration ) or query_time
+                t.applied = expirationTime > 0 and (expirationTime - duration) or query_time
                 t.caster = "nobody"
                 return
             end
@@ -366,21 +409,23 @@ local auras = {
     },
 
     dispellable_poison = {
-        generate = function( t )
+        generate = function(t)
             local i = 1
-            local name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+            local name, _, count, debuffType, duration, expirationTime = UnitDebuff("player", i, "RAID")
 
-            while( name ) do
-                if debuffType == "Poison" then break end
+            while name do
+                if debuffType == "Poison" then
+                    break
+                end
 
                 i = i + 1
-                name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+                name, _, count, debuffType, duration, expirationTime = UnitDebuff("player", i, "RAID")
             end
 
             if name then
                 t.count = count > 0 and count or 1
                 t.expires = expirationTime > 0 and expirationTime or query_time + 5
-                t.applied = expirationTime > 0 and ( expirationTime - duration ) or query_time
+                t.applied = expirationTime > 0 and (expirationTime - duration) or query_time
                 t.caster = "nobody"
                 return
             end
@@ -393,21 +438,23 @@ local auras = {
     },
 
     dispellable_disease = {
-        generate = function( t )
+        generate = function(t)
             local i = 1
-            local name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+            local name, _, count, debuffType, duration, expirationTime = UnitDebuff("player", i, "RAID")
 
-            while( name ) do
-                if debuffType == "Disease" then break end
+            while name do
+                if debuffType == "Disease" then
+                    break
+                end
 
                 i = i + 1
-                name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+                name, _, count, debuffType, duration, expirationTime = UnitDebuff("player", i, "RAID")
             end
 
             if name then
                 t.count = count > 0 and count or 1
                 t.expires = expirationTime > 0 and expirationTime or query_time + 5
-                t.applied = expirationTime > 0 and ( expirationTime - duration ) or query_time
+                t.applied = expirationTime > 0 and (expirationTime - duration) or query_time
                 t.caster = "nobody"
                 return
             end
@@ -420,21 +467,23 @@ local auras = {
     },
 
     reversible_magic = {
-        generate = function( t )
+        generate = function(t)
             local i = 1
-            local name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+            local name, _, count, debuffType, duration, expirationTime = UnitDebuff("player", i, "RAID")
 
-            while( name ) do
-                if debuffType == "Magic" then break end
+            while name do
+                if debuffType == "Magic" then
+                    break
+                end
 
                 i = i + 1
-                name, _, count, debuffType, duration, expirationTime = UnitDebuff( "player", i, "RAID" )
+                name, _, count, debuffType, duration, expirationTime = UnitDebuff("player", i, "RAID")
             end
 
             if name then
                 t.count = count > 0 and count or 1
                 t.expires = expirationTime > 0 and expirationTime or query_time + 5
-                t.applied = expirationTime > 0 and ( expirationTime - duration ) or query_time
+                t.applied = expirationTime > 0 and (expirationTime - duration) or query_time
                 t.caster = "nobody"
                 return
             end
@@ -450,6 +499,6 @@ local auras = {
 -- The player's magic debuffs only, as reversible_magic: a target's buffs are secret in combat (spec §4.1, rule 4).
 auras.dispellable_magic = { generate = auras.reversible_magic.generate }
 
-for key, def in pairs( auras ) do
-    shared:RegisterAura( key, def )
+for key, def in pairs(auras) do
+    shared:RegisterAura(key, def)
 end

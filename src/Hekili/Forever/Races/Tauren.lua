@@ -5,11 +5,11 @@
 -- nothing to register. No pack names it. Inert for any other race (Engine/Races.lua).
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G[addon]
 
-local race = Hekili:NewRace( "Tauren" )
+local race = Hekili:NewRace("Tauren")
 
-race:RegisterAbility( "war_stomp", {
+race:RegisterAbility("war_stomp", {
     id = 20549,
     cast = 0.5,
     cooldown = 120,
@@ -17,17 +17,17 @@ race:RegisterAbility( "war_stomp", {
     startsCombat = true,
     toggle = "cooldowns",
 
-    handler = function ()
-        applyDebuff( "target", "war_stomp" )
+    handler = function()
+        applyDebuff("target", "war_stomp")
     end,
     -- VirtualState's now-state of the cast (event-facade spec §12a)
-    now = function ()
-        applyDebuff( "target", "war_stomp" )
+    now = function()
+        applyDebuff("target", "war_stomp")
     end,
-} )
+})
 
-race:RegisterAura( "war_stomp", {
+race:RegisterAura("war_stomp", {
     id = 20549,
     duration = 2,
     max_stack = 1,
-} )
+})

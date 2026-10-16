@@ -9,20 +9,20 @@
 -- No pack names either. Inert for any other race (Engine/Races.lua).
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G[addon]
 
-local race = Hekili:NewRace( "Scourge" )
+local race = Hekili:NewRace("Scourge")
 
-race:RegisterAbility( "will_of_the_forsaken", {
+race:RegisterAbility("will_of_the_forsaken", {
     id = 7744,
     cast = 0,
     cooldown = 120,
     gcd = "spell",
     startsCombat = false,
     toggle = "defensives",
-} )
+})
 
-race:RegisterAbility( "cannibalize", {
+race:RegisterAbility("cannibalize", {
     id = 20577,
     cast = 10,
     channeled = true,
@@ -32,17 +32,17 @@ race:RegisterAbility( "cannibalize", {
     startsCombat = false,
     toggle = "defensives",
 
-    start = function () -- a channel: Hekili's simulation runs `start`, not `handler` (State.lua runHandler)
-        applyBuff( "cannibalize" )
+    start = function() -- a channel: Hekili's simulation runs `start`, not `handler` (State.lua runHandler)
+        applyBuff("cannibalize")
     end,
     -- VirtualState's now-state of the cast (event-facade spec §12a)
-    now = function ()
-        applyBuff( "cannibalize" )
+    now = function()
+        applyBuff("cannibalize")
     end,
-} )
+})
 
-race:RegisterAura( "cannibalize", {
+race:RegisterAura("cannibalize", {
     id = 20578,
     duration = 10,
     max_stack = 1,
-} )
+})

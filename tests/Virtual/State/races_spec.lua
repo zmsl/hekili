@@ -119,21 +119,24 @@ describe("race packs", function()
         assert.are.same({ maxMods = {}, costMods = {} }, ns.raceMods)
     end)
 
-    it("registers Eureka!, its aura and both modifiers for a Gnome, into the shared spec (the race wins a clash)", function()
-        local stock = { id = 1 }
-        load("Gnome", { eureka = stock, [1] = stock }) -- a stock `all` registration under the same key
-        assert.are.equal(1259813, all.abilities.eureka.id) -- the race file loads later and wins
-        assert.are.equal(all.abilities.eureka, all.abilities[1259817]) -- a `copy` alias
-        assert.are.equal(3, all.auras.eureka.max_stack)
-        assert.is_function(all.abilities.eureka.now)
-        assert.are.same({ { pct = 0.05 } }, ns.raceMods.maxMods)
-        assert.are.same({ "eureka", -0.10, 3, 18 }, {
-            ns.raceMods.costMods[1].aura,
-            ns.raceMods.costMods[1].pct,
-            ns.raceMods.costMods[1].charges,
-            #ns.raceMods.costMods[1].spells,
-        })
-    end)
+    it(
+        "registers Eureka!, its aura and both modifiers for a Gnome, into the shared spec (the race wins a clash)",
+        function()
+            local stock = { id = 1 }
+            load("Gnome", { eureka = stock, [1] = stock }) -- a stock `all` registration under the same key
+            assert.are.equal(1259813, all.abilities.eureka.id) -- the race file loads later and wins
+            assert.are.equal(all.abilities.eureka, all.abilities[1259817]) -- a `copy` alias
+            assert.are.equal(3, all.auras.eureka.max_stack)
+            assert.is_function(all.abilities.eureka.now)
+            assert.are.same({ { pct = 0.05 } }, ns.raceMods.maxMods)
+            assert.are.same({ "eureka", -0.10, 3, 18 }, {
+                ns.raceMods.costMods[1].aura,
+                ns.raceMods.costMods[1].pct,
+                ns.raceMods.costMods[1].charges,
+                #ns.raceMods.costMods[1].spells,
+            })
+        end
+    )
 
     it("writes the race's abilities and auras over the class's after Engine/Spec.lua's merge, aliases too", function()
         load("Gnome")
@@ -173,31 +176,44 @@ describe("race packs", function()
         assert.is_true(math.abs(strike.spend - 0.18) < 1e-9)
     end)
 
-    it("prices Heroic Strike at 13.5 with Eureka! up in the simulation, three casts remove it; Rend stays 10", function()
-        load("Gnome")
-        local heroic_strike = ability("heroic_strike", { id = 78, copy = { 284, 285 }, spend = 15, spendType = "rage" })
-        local rend = ability("rend", { id = 772, spend = 10, spendType = "rage" })
-        local cleave = ability("cleave", { id = 99999, copy = { 845 }, spend = function() return 20, "rage" end })
-        assert.are.equal(15, heroic_strike.spend)
-        state.buff.eureka = { up = true, count = 3 }
-        assert.are.same({ 13.5, 10, 18 }, { heroic_strike.spend, rend.spend, cleave.spend }) -- cleave by a copy rank
-        assert.are.equal(15, heroic_strike.baseSpend) -- the belief reads the declared cost
-        ns.costMods.Spend(rend.baseSpend, "rend") -- out of scope: no charge
-        assert.are.equal(3, state.buff.eureka.count)
-        for k = 1, 3 do
-            ns.costMods.Spend(heroic_strike.baseSpend, "heroic_strike") -- ns.spendResources' call
-            if k < 3 then
-                assert.are.equal(3 - k, state.buff.eureka.count)
+    it(
+        "prices Heroic Strike at 13.5 with Eureka! up in the simulation, three casts remove it; Rend stays 10",
+        function()
+            load("Gnome")
+            local heroic_strike =
+                ability("heroic_strike", { id = 78, copy = { 284, 285 }, spend = 15, spendType = "rage" })
+            local rend = ability("rend", { id = 772, spend = 10, spendType = "rage" })
+            local cleave = ability("cleave", {
+                id = 99999,
+                copy = { 845 },
+                spend = function()
+                    return 20, "rage"
+                end,
+            })
+            assert.are.equal(15, heroic_strike.spend)
+            state.buff.eureka = { up = true, count = 3 }
+            assert.are.same({ 13.5, 10, 18 }, { heroic_strike.spend, rend.spend, cleave.spend }) -- cleave by a copy rank
+            assert.are.equal(15, heroic_strike.baseSpend) -- the belief reads the declared cost
+            ns.costMods.Spend(rend.baseSpend, "rend") -- out of scope: no charge
+            assert.are.equal(3, state.buff.eureka.count)
+            for k = 1, 3 do
+                ns.costMods.Spend(heroic_strike.baseSpend, "heroic_strike") -- ns.spendResources' call
+                if k < 3 then
+                    assert.are.equal(3 - k, state.buff.eureka.count)
+                end
             end
+            assert.is_false(state.buff.eureka.up)
+            assert.are.equal(15, heroic_strike.spend)
         end
-        assert.is_false(state.buff.eureka.up)
-        assert.are.equal(15, heroic_strike.spend)
-    end)
+    )
 
     it("registers Elune's Light and its aura for a Night Elf, War Stomp for a Tauren, and neither elsewhere", function()
         load("NightElf")
         local light = all.abilities.elunes_light
-        assert.are.same({ 1259799, 0, 180, "off", "cooldowns" }, { light.id, light.cast, light.cooldown, light.gcd, light.toggle })
+        assert.are.same(
+            { 1259799, 0, 180, "off", "cooldowns" },
+            { light.id, light.cast, light.cooldown, light.gcd, light.toggle }
+        )
         assert.are.same({ 1259799, 15 }, { all.auras.elunes_light.id, all.auras.elunes_light.duration })
         assert.is_nil(all.abilities.war_stomp)
         assert.are.same({ maxMods = {}, costMods = {} }, ns.raceMods) -- no resource or cost modifier
@@ -215,52 +231,58 @@ describe("race packs", function()
         assert.is_nil(all.abilities.elunes_light or all.abilities.war_stomp)
     end)
 
-    it("lists Hekili.toc's race files after the class files, each registering only its own keys and modifiers", function()
-        local n, lastClass, firstRace = 0, 0, math.huge
-        for line in io.lines("src/Hekili/Hekili.toc") do
-            n = n + 1
-            if line:match("^Forever\\Classes\\") then
-                lastClass = n
-            elseif line:match("^Forever\\Races\\") then
-                firstRace = math.min(firstRace, n)
-            end
-        end
-        assert.is_true(lastClass < firstRace)
-        local files, want = {}, {}
-        for _, r in ipairs(RACES) do
-            files[#files + 1] = r.file
-            load(r.token)
-            local keys = {}
-            for k in pairs(all.abilities) do
-                if type(k) == "string" then
-                    keys[#keys + 1] = k
+    it(
+        "lists Hekili.toc's race files after the class files, each registering only its own keys and modifiers",
+        function()
+            local n, lastClass, firstRace = 0, 0, math.huge
+            for line in io.lines("src/Hekili/Hekili.toc") do
+                n = n + 1
+                if line:match("^Forever\\Classes\\") then
+                    lastClass = n
+                elseif line:match("^Forever\\Races\\") then
+                    firstRace = math.min(firstRace, n)
                 end
             end
-            table.sort(keys)
-            local own = OWN[r.file] or {}
-            local mods = hekili.RaceMods -- the table read in game (Engine/Races.lua)
-            assert.are.same(own, { keys, #mods.maxMods, #mods.costMods }, r.file)
+            assert.is_true(lastClass < firstRace)
+            local files, want = {}, {}
+            for _, r in ipairs(RACES) do
+                files[#files + 1] = r.file
+                load(r.token)
+                local keys = {}
+                for k in pairs(all.abilities) do
+                    if type(k) == "string" then
+                        keys[#keys + 1] = k
+                    end
+                end
+                table.sort(keys)
+                local own = OWN[r.file] or {}
+                local mods = hekili.RaceMods -- the table read in game (Engine/Races.lua)
+                assert.are.same(own, { keys, #mods.maxMods, #mods.costMods }, r.file)
+            end
+            for file in pairs(OWN) do
+                want[#want + 1] = file
+            end
+            table.sort(files)
+            table.sort(want)
+            assert.are.same(want, files) -- every race file is in Hekili.toc
         end
-        for file in pairs(OWN) do
-            want[#want + 1] = file
-        end
-        table.sort(files)
-        table.sort(want)
-        assert.are.same(want, files) -- every race file is in Hekili.toc
-    end)
+    )
 
-    it("scopes Eureka! by the loaded class: 18 Warrior, 10 Rogue, 16 Mage, 13 Warlock, 16 Priest, none for a Druid", function()
-        for class, n in pairs({ WARRIOR = 18, ROGUE = 10, MAGE = 16, WARLOCK = 13, PRIEST = 16 }) do
-            load("Gnome", nil, class)
-            assert.are.same({ 1, n }, { #ns.raceMods.costMods, #ns.raceMods.costMods[1].spells }, class)
+    it(
+        "scopes Eureka! by the loaded class: 18 Warrior, 10 Rogue, 16 Mage, 13 Warlock, 16 Priest, none for a Druid",
+        function()
+            for class, n in pairs({ WARRIOR = 18, ROGUE = 10, MAGE = 16, WARLOCK = 13, PRIEST = 16 }) do
+                load("Gnome", nil, class)
+                assert.are.same({ 1, n }, { #ns.raceMods.costMods, #ns.raceMods.costMods[1].spells }, class)
+            end
+            load("Gnome", nil, "MAGE")
+            local blast = ability("arcane_blast", { id = 400574, spend = 0.15, spendType = "mana" })
+            state.buff.eureka = { up = true, count = 3 }
+            assert.is_true(math.abs(blast.spend - 0.135) < 1e-9) -- a percent cost (ManaCost 0 in SpellPower) is in scope
+            load("Gnome", nil, "DRUID")
+            assert.are.same({ 1, 0 }, { #ns.raceMods.maxMods, #ns.raceMods.costMods })
         end
-        load("Gnome", nil, "MAGE")
-        local blast = ability("arcane_blast", { id = 400574, spend = 0.15, spendType = "mana" })
-        state.buff.eureka = { up = true, count = 3 }
-        assert.is_true(math.abs(blast.spend - 0.135) < 1e-9) -- a percent cost (ManaCost 0 in SpellPower) is in scope
-        load("Gnome", nil, "DRUID")
-        assert.are.same({ 1, 0 }, { #ns.raceMods.maxMods, #ns.raceMods.costMods })
-    end)
+    )
 
     it("registers Escape Artist on the GCD, and Shadowmeld 20580 over `all`'s stale 58984", function()
         load("Gnome")
@@ -278,22 +300,28 @@ describe("race packs", function()
         assert.are.same({ 20580, 20580 }, { class.abilities.shadowmeld.id, class.auras.shadowmeld.id })
     end)
 
-    it("registers Will to Survive 1259718 and Stoneform 20594 (180 s, on the GCD) over `all`'s stale entries", function()
-        local wts, stone = { id = 59752, gcd = "off" }, { id = 20594, cooldown = 120, gcd = "off" }
-        load("Human", { will_to_survive = wts, [59752] = wts })
-        local w = all.abilities.will_to_survive
-        assert.are.same({ 1259718, 180, "spell", "defensives" }, { w.id, w.cooldown, w.gcd, w.toggle })
-        assert.is_nil(w.handler or w.now) -- a stun removal: nothing to model beyond its cooldown and GCD
-        assert.are.same({ 20600, 180, "spell" }, { all.abilities.perception.id, all.abilities.perception.cooldown, all.abilities.perception.gcd })
-        assert.are.same({ 20600, 20 }, { all.auras.perception.id, all.auras.perception.duration })
-        load("Dwarf", { stoneform = stone, [20594] = stone })
-        local s = all.abilities.stoneform
-        assert.are.same({ 20594, 180, "spell", "defensives" }, { s.id, s.cooldown, s.gcd, s.toggle })
-        assert.are.same({ 20594, 8 }, { all.auras.stoneform.id, all.auras.stoneform.duration }) -- not 65116
-        local class = { abilities = { stoneform = stone }, auras = { stoneform = { id = 65116 } } }
-        ns.applyRace(class)
-        assert.are.same({ 180, 20594 }, { class.abilities.stoneform.cooldown, class.auras.stoneform.id })
-    end)
+    it(
+        "registers Will to Survive 1259718 and Stoneform 20594 (180 s, on the GCD) over `all`'s stale entries",
+        function()
+            local wts, stone = { id = 59752, gcd = "off" }, { id = 20594, cooldown = 120, gcd = "off" }
+            load("Human", { will_to_survive = wts, [59752] = wts })
+            local w = all.abilities.will_to_survive
+            assert.are.same({ 1259718, 180, "spell", "defensives" }, { w.id, w.cooldown, w.gcd, w.toggle })
+            assert.is_nil(w.handler or w.now) -- a stun removal: nothing to model beyond its cooldown and GCD
+            assert.are.same(
+                { 20600, 180, "spell" },
+                { all.abilities.perception.id, all.abilities.perception.cooldown, all.abilities.perception.gcd }
+            )
+            assert.are.same({ 20600, 20 }, { all.auras.perception.id, all.auras.perception.duration })
+            load("Dwarf", { stoneform = stone, [20594] = stone })
+            local s = all.abilities.stoneform
+            assert.are.same({ 20594, 180, "spell", "defensives" }, { s.id, s.cooldown, s.gcd, s.toggle })
+            assert.are.same({ 20594, 8 }, { all.auras.stoneform.id, all.auras.stoneform.duration }) -- not 65116
+            local class = { abilities = { stoneform = stone }, auras = { stoneform = { id = 65116 } } }
+            ns.applyRace(class)
+            assert.are.same({ 180, 20594 }, { class.abilities.stoneform.cooldown, class.auras.stoneform.id })
+        end
+    )
 
     it("registers Blood Fury 20572 for every class and Berserking 20554 over `all`'s stale entries", function()
         local fury = { id = function() end, copy = { 33702, 20572, 33697 } }
@@ -407,7 +435,8 @@ describe("race packs in VirtualState's now context", function()
         local a, aura = all.abilities[key], all.auras[key]
         local api, ctl = fake.new()
         ctl.now = 1
-        _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue = api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
+        _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue =
+            api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
         _G.debugprofilestop = function()
             return 0
         end
@@ -425,7 +454,8 @@ describe("race packs in VirtualState's now context", function()
             recharge = 0,
             funcs = { now = a.now, handler = a.handler },
         }
-        h.Class.auras[key] = { key = key, id = aura.id, copy = aura.copy, duration = aura.duration, max_stack = aura.max_stack }
+        h.Class.auras[key] =
+            { key = key, id = aura.id, copy = aura.copy, duration = aura.duration, max_stack = aura.max_stack }
         fs.clock = api.GetTime
         ns.spendResources = fs.spend
         ns.ResourceRegenerates = function()
@@ -443,25 +473,32 @@ describe("race packs in VirtualState's now context", function()
         assert.is_not_nil(VS.Aura("player", aura.id, 5.1) or VS.Aura("target", aura.id, 5.1), key)
         function h:ForceUpdate() end -- the fake records each call; Hekili's own only sets fields
         local t = 5
-        assert.are.equal(0, alloc.bytes(function() -- the same cast again, each past the cooldown
-            t = t + 200
-            ctl.now = t
-            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", a.id)
-            ctl.Tick(t + 0.01)
-            VS.Drain(t + 0.02)
-        end, 1000), key)
+        assert.are.equal(
+            0,
+            alloc.bytes(function() -- the same cast again, each past the cooldown
+                t = t + 200
+                ctl.now = t
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", a.id)
+                ctl.Tick(t + 0.01)
+                VS.Drain(t + 0.02)
+            end, 1000),
+            key
+        )
     end
 
-    it("gives every channelled racial a `start` and no `handler` (Hekili's simulation runs a channel's `start`)", function()
-        for _, r in ipairs(RACES) do
-            for key, a in pairs(registrations(r.token).abilities) do
-                if a.channeled then
-                    assert.is_function(a.start, key)
-                    assert.is_nil(a.handler, key)
+    it(
+        "gives every channelled racial a `start` and no `handler` (Hekili's simulation runs a channel's `start`)",
+        function()
+            for _, r in ipairs(RACES) do
+                for key, a in pairs(registrations(r.token).abilities) do
+                    if a.channeled then
+                        assert.is_function(a.start, key)
+                        assert.is_nil(a.handler, key)
+                    end
                 end
             end
         end
-    end)
+    )
 
     for _, r in ipairs(RACES) do
         it("runs every `now` the " .. r.token .. " registers in the context without an error", function()

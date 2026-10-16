@@ -8,11 +8,11 @@
 -- modifier. No pack names either. Inert for any other race (Engine/Races.lua).
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G[addon]
 
-local race = Hekili:NewRace( "Orc" )
+local race = Hekili:NewRace("Orc")
 
-race:RegisterAbility( "blood_fury", {
+race:RegisterAbility("blood_fury", {
     id = 20572,
     cast = 0,
     cooldown = 120,
@@ -20,22 +20,22 @@ race:RegisterAbility( "blood_fury", {
     startsCombat = false,
     toggle = "cooldowns",
 
-    handler = function ()
-        applyBuff( "blood_fury", 15 )
+    handler = function()
+        applyBuff("blood_fury", 15)
     end,
     -- VirtualState's now-state of the cast (event-facade spec §12a)
-    now = function ()
-        applyBuff( "blood_fury", 15 )
+    now = function()
+        applyBuff("blood_fury", 15)
     end,
-} )
+})
 
-race:RegisterAura( "blood_fury", {
+race:RegisterAura("blood_fury", {
     id = 20572,
     duration = 15,
     max_stack = 1,
-} )
+})
 
-race:RegisterAbility( "shatter_curse", {
+race:RegisterAbility("shatter_curse", {
     id = 1299026,
     cast = 0,
     cooldown = 180,
@@ -43,18 +43,18 @@ race:RegisterAbility( "shatter_curse", {
     startsCombat = false,
     toggle = "defensives",
 
-    handler = function ()
-        removeBuff( "dispellable_curse" )
-        applyBuff( "shatter_curse" )
+    handler = function()
+        removeBuff("dispellable_curse")
+        applyBuff("shatter_curse")
     end,
-    now = function ()
-        removeBuff( "dispellable_curse" )
-        applyBuff( "shatter_curse" )
+    now = function()
+        removeBuff("dispellable_curse")
+        applyBuff("shatter_curse")
     end,
-} )
+})
 
-race:RegisterAura( "shatter_curse", {
+race:RegisterAura("shatter_curse", {
     id = 1299026,
     duration = 8,
     max_stack = 1,
-} )
+})

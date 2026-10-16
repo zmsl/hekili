@@ -21,9 +21,11 @@ local Facade = ns.Facade
 local C_Spell, UnitClassBase = Facade.C_Spell, Facade.UnitClassBase
 local GetShapeshiftForm, GetShapeshiftFormInfo = Facade.GetShapeshiftForm, Facade.GetShapeshiftFormInfo
 local CombatLogGetCurrentEventInfo, GetTime = Facade.CombatLogGetCurrentEventInfo, Facade.GetTime
-local Hekili = _G[ addon ]
+local Hekili = _G[addon]
 
-if UnitClassBase( "player" ) ~= "DRUID" then return end
+if UnitClassBase("player") ~= "DRUID" then
+    return
+end
 
 local state = Hekili.State
 local VS = ns.VirtualState
@@ -33,8 +35,10 @@ local floor, max, min, huge = math.floor, math.max, math.min, math.huge
 -- The pseudo-spec the client reports for a Druid (Constants.lua's row). A placeholder until checkpoint Q1 reads it.
 local DRUID_SPEC = 1499
 
-local spec = Hekili:NewSpecialization( DRUID_SPEC, false, 132115 ) -- ability_druid_catform
-if not spec then return end
+local spec = Hekili:NewSpecialization(DRUID_SPEC, false, 132115) -- ability_druid_catform
+if not spec then
+    return
+end
 
 -- Rank IDs, lowest first (the DB2's), and the per-rank values the DB2 gives.
 local CLAW = { 1082, 3029, 5201, 9849, 9850 }
@@ -103,8 +107,14 @@ local REJUVENATION_COST = { 25, 40, 75, 105, 135, 160, 195, 235, 280, 335, 360 }
 
 -- The forms, in `buff.form`'s member order (one is up at a time), and each form's spell -> its aura.
 local FORMS = { "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form" }
-local FORM_OF_SPELL = { [ 768 ] = "cat_form", [ 5487 ] = "bear_form", [ 9634 ] = "bear_form",
-    [ 24858 ] = "moonkin_form", [ 783 ] = "travel_form", [ 1066 ] = "aquatic_form" }
+local FORM_OF_SPELL = {
+    [768] = "cat_form",
+    [5487] = "bear_form",
+    [9634] = "bear_form",
+    [24858] = "moonkin_form",
+    [783] = "travel_form",
+    [1066] = "aquatic_form",
+}
 
 -- Shifting Power's energy (DB2 1322605 effect 30, base 40) and bear rage per white swing (spec §2.3, D4): the
 -- Warrior's measured one-hand main-hand rate x the form's unhasted 2.5 s swing, 8.65 a swing, until checkpoint Q8.
@@ -114,143 +124,162 @@ local BEAR_RAGE_RATE = 3.46
 local RIP_COST = 30
 local RAKE_COST = 40
 
-local function rest( ids )
+local function rest(ids)
     local out = {}
-    for i = 2, #ids do out[ #out + 1 ] = ids[ i ] end
+    for i = 2, #ids do
+        out[#out + 1] = ids[i]
+    end
     return out
 end
 
 -- The highest known rank of a rank list, from VirtualState's spellbook: the same answer in the sim's `state`
 -- environment and in a `now` handler's (event-facade spec §12a).
-local function knownRank( ids )
-    return VS.KnownRank( ids )
+local function knownRank(ids)
+    return VS.KnownRank(ids)
 end
 
-local function knows( ids )
-    return function () return knownRank( ids ) > 0 end
+local function knows(ids)
+    return function()
+        return knownRank(ids) > 0
+    end
 end
 
 -- A per-rank value at the highest known rank, else the first rank's (nothing known yet).
-local function byRank( values, ids )
-    return values[ knownRank( ids ) ] or values[ 1 ]
+local function byRank(values, ids)
+    return values[knownRank(ids)] or values[1]
 end
 
 -- The form's unhasted swing (2.5 s in Bear Form): VirtualState's plain base read, else the believed swing speed.
 local function bearSwing()
-    local speed = VS.SwingBase( 1 )
-    if speed <= 0 then speed = state.mainhand_speed end -- no plain base read yet
+    local speed = VS.SwingBase(1)
+    if speed <= 0 then
+        speed = state.mainhand_speed
+    end -- no plain base read yet
     return speed
 end
 
 -- shortcut: after a /reload in combat energy's regen rate stays 0 for the rest of the fight (VirtualState's calibrate
 -- returns early at ref == 0); upgrade with a `regen` meta field forwarded by the adapter after checkpoint Q3.
-spec:RegisterResource( Enum.PowerType.Energy )
-spec:RegisterResource( Enum.PowerType.ComboPoints )
+spec:RegisterResource(Enum.PowerType.Energy)
+spec:RegisterResource(Enum.PowerType.ComboPoints)
 
-spec:RegisterResource( Enum.PowerType.Rage, {
-    -- Rage per white swing in Bear or Dire Bear Form only (the Warrior's speed rule; Cat and caster swings add none).
-    -- `aura` gates it in both layers (VirtualState's swing entry, spec §0.3; Hekili's forecast); `stop` too.
-    -- shortcut: crits, misses, Blood Frenzy, Natural Reaction and rage from damage taken are unmodelled; VirtualState's
-    -- swing-scale calibration absorbs a steady bias. Upgrade from the combat-log rows once a non-cast `now` exists.
-    mainhand = {
-        swing = "mainhand",
-        aura = "bear_form",
+spec:RegisterResource(
+    Enum.PowerType.Rage,
+    {
+        -- Rage per white swing in Bear or Dire Bear Form only (the Warrior's speed rule; Cat and caster swings add none).
+        -- `aura` gates it in both layers (VirtualState's swing entry, spec §0.3; Hekili's forecast); `stop` too.
+        -- shortcut: crits, misses, Blood Frenzy, Natural Reaction and rage from damage taken are unmodelled; VirtualState's
+        -- swing-scale calibration absorbs a steady bias. Upgrade from the combat-log rows once a non-cast `now` exists.
+        mainhand = {
+            swing = "mainhand",
+            aura = "bear_form",
 
-        last = function ()
-            local swing = state.swings.mainhand
-            local t = state.query_time
-            if state.mainhand_speed == 0 then return 0 end
-            return swing + floor( ( t - swing ) / state.mainhand_speed ) * state.mainhand_speed
-        end,
+            last = function()
+                local swing = state.swings.mainhand
+                local t = state.query_time
+                if state.mainhand_speed == 0 then
+                    return 0
+                end
+                return swing + floor((t - swing) / state.mainhand_speed) * state.mainhand_speed
+            end,
 
-        interval = "mainhand_speed",
+            interval = "mainhand_speed",
 
-        stop = function () return state.swings.mainhand == 0 or not state.buff.bear_form.up end,
-        value = function () return BEAR_RAGE_RATE * bearSwing() end,
+            stop = function()
+                return state.swings.mainhand == 0 or not state.buff.bear_form.up
+            end,
+            value = function()
+                return BEAR_RAGE_RATE * bearSwing()
+            end,
+        },
+
+        -- Enrage's aura (25503): 2 rage every second for 10 s (DB2: periodic energize 20 every 1000 ms).
+        enrage = {
+            aura = "enrage",
+
+            last = function()
+                local app = state.buff.enrage.applied
+                return app + floor(state.query_time - app)
+            end,
+
+            interval = 1,
+            value = 2,
+        },
     },
-
-    -- Enrage's aura (25503): 2 rage every second for 10 s (DB2: periodic energize 20 every 1000 ms).
-    enrage = {
-        aura = "enrage",
-
-        last = function ()
-            local app = state.buff.enrage.applied
-            return app + floor( state.query_time - app )
+    nil,
+    {
+        -- Out-of-combat rage loss per second: the Warrior's measured 1.25 (its Rage tooltip), until checkpoint Q9 reads
+        -- it in Bear Form.
+        decay = function()
+            return 1.25
         end,
-
-        interval = 1,
-        value = 2,
-    },
-}, nil, {
-    -- Out-of-combat rage loss per second: the Warrior's measured 1.25 (its Rage tooltip), until checkpoint Q9 reads
-    -- it in Bear Form.
-    decay = function () return 1.25 end,
-} )
+    }
+)
 
 -- Mana: secret even out of combat; costs below 1 are fractions of the maximum in both layers (spec §0.1).
-spec:RegisterResource( Enum.PowerType.Mana )
+spec:RegisterResource(Enum.PowerType.Mana)
 
 -- Talents: { node (unused on Forever), rank 1's spell, max rank }: the DB2's 47 Classic nodes (16 Balance, 16 Feral
 -- Combat, 15 Restoration), keys Classic's, until the live export (checkpoint Q1) replaces them. The last three are
 -- placeholders the export replaces, so no reader names an unregistered key.
-spec:RegisterTalents( {
+spec:RegisterTalents({
     -- Balance (16)
-    improved_wrath            = { 0, 16814, 5 },
-    natures_grasp             = { 0, 16689, 1 },
-    improved_natures_grasp    = { 0, 17245, 4 },
+    improved_wrath = { 0, 16814, 5 },
+    natures_grasp = { 0, 16689, 1 },
+    improved_natures_grasp = { 0, 17245, 4 },
     improved_entangling_roots = { 0, 16918, 3 },
-    improved_moonfire         = { 0, 16821, 5 },
-    natural_weapons           = { 0, 16902, 5 },
-    natural_shapeshifter      = { 0, 16833, 3 },
-    improved_thorns           = { 0, 16836, 3 },
-    omen_of_clarity           = { 0, 16864, 1 },
-    natures_reach             = { 0, 16819, 2 },
-    vengeance                 = { 0, 16909, 5 },
-    improved_starfire         = { 0, 16850, 5 },
-    natures_grace             = { 0, 16880, 1 },
-    moonglow                  = { 0, 16845, 3 },
-    moonfury                  = { 0, 16896, 5 },
-    moonkin_form              = { 0, 24858, 1 },
+    improved_moonfire = { 0, 16821, 5 },
+    natural_weapons = { 0, 16902, 5 },
+    natural_shapeshifter = { 0, 16833, 3 },
+    improved_thorns = { 0, 16836, 3 },
+    omen_of_clarity = { 0, 16864, 1 },
+    natures_reach = { 0, 16819, 2 },
+    vengeance = { 0, 16909, 5 },
+    improved_starfire = { 0, 16850, 5 },
+    natures_grace = { 0, 16880, 1 },
+    moonglow = { 0, 16845, 3 },
+    moonfury = { 0, 16896, 5 },
+    moonkin_form = { 0, 24858, 1 },
     -- Feral Combat (16)
-    ferocity                  = { 0, 16934, 5 },
-    feral_aggression          = { 0, 16858, 5 },
-    feral_instinct            = { 0, 16947, 5 },
-    brutal_impact             = { 0, 16940, 2 },
-    thick_hide                = { 0, 16929, 5 },
-    feline_swiftness          = { 0, 17002, 2 },
-    feral_charge              = { 0, 16979, 1 },
-    sharpened_claws           = { 0, 16942, 3 },
-    improved_shred            = { 0, 16966, 2 }, -- Shredding Attacks
-    predatory_strikes         = { 0, 16972, 3 },
-    blood_frenzy              = { 0, 16952, 2 },
-    primal_fury               = { 0, 16958, 2 }, -- "Blood Frenzy" on Forever
-    savage_fury               = { 0, 16998, 2 },
-    faerie_fire_feral         = { 0, 16857, 1 },
-    heart_of_the_wild         = { 0, 17003, 5 },
-    leader_of_the_pack        = { 0, 17007, 1 },
+    ferocity = { 0, 16934, 5 },
+    feral_aggression = { 0, 16858, 5 },
+    feral_instinct = { 0, 16947, 5 },
+    brutal_impact = { 0, 16940, 2 },
+    thick_hide = { 0, 16929, 5 },
+    feline_swiftness = { 0, 17002, 2 },
+    feral_charge = { 0, 16979, 1 },
+    sharpened_claws = { 0, 16942, 3 },
+    improved_shred = { 0, 16966, 2 }, -- Shredding Attacks
+    predatory_strikes = { 0, 16972, 3 },
+    blood_frenzy = { 0, 16952, 2 },
+    primal_fury = { 0, 16958, 2 }, -- "Blood Frenzy" on Forever
+    savage_fury = { 0, 16998, 2 },
+    faerie_fire_feral = { 0, 16857, 1 },
+    heart_of_the_wild = { 0, 17003, 5 },
+    leader_of_the_pack = { 0, 17007, 1 },
     -- Restoration (15)
     improved_mark_of_the_wild = { 0, 17050, 5 },
-    furor                     = { 0, 17056, 5 },
-    improved_healing_touch    = { 0, 17069, 5 },
-    natures_focus             = { 0, 17063, 5 },
-    improved_enrage           = { 0, 17079, 2 },
-    reflection                = { 0, 17106, 3 },
-    insect_swarm              = { 0, 5570, 1 },
-    subtlety                  = { 0, 17118, 5 },
-    tranquil_spirit           = { 0, 24968, 5 },
-    improved_rejuvenation     = { 0, 17111, 3 },
-    natures_swiftness         = { 0, 17116, 1 },
-    gift_of_nature            = { 0, 17104, 5 },
-    improved_tranquility      = { 0, 17123, 2 },
-    improved_regrowth         = { 0, 17074, 5 },
-    swiftmend                 = { 0, 18562, 1 },
+    furor = { 0, 17056, 5 },
+    improved_healing_touch = { 0, 17069, 5 },
+    natures_focus = { 0, 17063, 5 },
+    improved_enrage = { 0, 17079, 2 },
+    reflection = { 0, 17106, 3 },
+    insect_swarm = { 0, 5570, 1 },
+    subtlety = { 0, 17118, 5 },
+    tranquil_spirit = { 0, 24968, 5 },
+    improved_rejuvenation = { 0, 17111, 3 },
+    natures_swiftness = { 0, 17116, 1 },
+    gift_of_nature = { 0, 17104, 5 },
+    improved_tranquility = { 0, 17123, 2 },
+    improved_regrowth = { 0, 17074, 5 },
+    swiftmend = { 0, 18562, 1 },
     -- Forever-only placeholders, replaced by the export (checkpoint Q1).
-    improved_shifting_power   = { 0, 1322670, 2 },
-    natures_splendor          = { 0, 1223083, 1 },
-    eclipse                   = { 0, 408248, 3 },
-} )
+    improved_shifting_power = { 0, 1322670, 2 },
+    natures_splendor = { 0, 1223083, 1 },
+    eclipse = { 0, 408248, 3 },
+})
 
-spec:RegisterAuras( {
+spec:RegisterAuras({
     aquatic_form = {
         id = 1066,
         duration = 3600,
@@ -263,8 +292,10 @@ spec:RegisterAuras( {
     },
     bash = {
         id = 5211,
-        copy = rest( BASH ),
-        duration = function () return ( BASH_STUN[ knownRank( BASH ) ] or 2 ) + 0.5 * talent.brutal_impact.rank end,
+        copy = rest(BASH),
+        duration = function()
+            return (BASH_STUN[knownRank(BASH)] or 2) + 0.5 * talent.brutal_impact.rank
+        end,
         max_stack = 1,
     },
     bear_form = {
@@ -302,13 +333,13 @@ spec:RegisterAuras( {
     },
     dash = {
         id = 1850,
-        copy = rest( DASH ),
+        copy = rest(DASH),
         duration = 15,
         max_stack = 1,
     },
     demoralizing_roar = {
         id = 99,
-        copy = rest( DEMORALIZING_ROAR ),
+        copy = rest(DEMORALIZING_ROAR),
         duration = 30,
         max_stack = 1,
     },
@@ -320,8 +351,10 @@ spec:RegisterAuras( {
     },
     entangling_roots = {
         id = 339,
-        copy = rest( ROOTS ),
-        duration = function () return ROOTS_DURATION[ knownRank( ROOTS ) ] or 12 end,
+        copy = rest(ROOTS),
+        duration = function()
+            return ROOTS_DURATION[knownRank(ROOTS)] or 12
+        end,
         max_stack = 1,
     },
     -- The rage entry's aura: 25503 is the 10 s buff, 5229 the cast.
@@ -334,7 +367,7 @@ spec:RegisterAuras( {
     },
     faerie_fire = {
         id = 770,
-        copy = rest( FAERIE_FIRE ),
+        copy = rest(FAERIE_FIRE),
         duration = 40,
         max_stack = 1,
     },
@@ -362,7 +395,7 @@ spec:RegisterAuras( {
     },
     gift_of_the_wild = {
         id = 21849,
-        copy = rest( GIFT_OF_THE_WILD ),
+        copy = rest(GIFT_OF_THE_WILD),
         duration = 3600,
         max_stack = 1,
     },
@@ -373,7 +406,7 @@ spec:RegisterAuras( {
     },
     hurricane = {
         id = 16914,
-        copy = rest( HURRICANE ),
+        copy = rest(HURRICANE),
         duration = 10,
         tick_time = 1,
         max_stack = 1,
@@ -386,33 +419,39 @@ spec:RegisterAuras( {
     },
     insect_swarm = {
         id = 5570,
-        copy = rest( INSECT_SWARM ),
-        duration = function () return 12 + 2 * talent.natures_splendor.rank end,
+        copy = rest(INSECT_SWARM),
+        duration = function()
+            return 12 + 2 * talent.natures_splendor.rank
+        end,
         tick_time = 2,
         max_stack = 1,
     },
     lacerate = {
         id = 414644,
-        copy = rest( LACERATE ),
+        copy = rest(LACERATE),
         duration = 15,
         tick_time = 3,
         max_stack = 5,
     },
     mark_of_the_wild = {
         id = 1126,
-        copy = rest( MARK_OF_THE_WILD ),
+        copy = rest(MARK_OF_THE_WILD),
         duration = 3600,
         max_stack = 1,
     },
     -- Maul queued on the next swing (C_Spell.IsCurrentSpell, applied in reset_precast), a full swing long.
     maul = {
-        duration = function () return state.mainhand_speed end,
+        duration = function()
+            return state.mainhand_speed
+        end,
         max_stack = 1,
     },
     moonfire = {
         id = 8921,
-        copy = rest( MOONFIRE ),
-        duration = function () return ( knownRank( MOONFIRE ) > 1 and 12 or 9 ) + 3 * talent.natures_splendor.rank end,
+        copy = rest(MOONFIRE),
+        duration = function()
+            return (knownRank(MOONFIRE) > 1 and 12 or 9) + 3 * talent.natures_splendor.rank
+        end,
         tick_time = 3,
         max_stack = 1,
     },
@@ -428,7 +467,7 @@ spec:RegisterAuras( {
     },
     natures_grasp = {
         id = 16689,
-        copy = rest( NATURES_GRASP ),
+        copy = rest(NATURES_GRASP),
         duration = 45,
         max_stack = 1,
     },
@@ -439,40 +478,42 @@ spec:RegisterAuras( {
     },
     pounce = {
         id = 9005,
-        copy = rest( POUNCE ),
-        duration = function () return 2 + 0.5 * talent.brutal_impact.rank end,
+        copy = rest(POUNCE),
+        duration = function()
+            return 2 + 0.5 * talent.brutal_impact.rank
+        end,
         max_stack = 1,
     },
     pounce_bleed = {
         id = 9007,
-        copy = rest( POUNCE_BLEED ),
+        copy = rest(POUNCE_BLEED),
         duration = 18,
         tick_time = 3,
         max_stack = 1,
     },
     prowl = {
         id = 5215,
-        copy = rest( PROWL ),
+        copy = rest(PROWL),
         duration = 3600,
         max_stack = 1,
     },
     rake = {
         id = 1822,
-        copy = rest( RAKE ),
+        copy = rest(RAKE),
         duration = 9,
         tick_time = 3,
         max_stack = 1,
     },
     rip = {
         id = 1079,
-        copy = rest( RIP ),
+        copy = rest(RIP),
         duration = 12,
         tick_time = 2,
         max_stack = 1,
     },
     thorns = {
         id = 467,
-        copy = rest( THORNS ),
+        copy = rest(THORNS),
         duration = 600,
         max_stack = 1,
     },
@@ -481,7 +522,7 @@ spec:RegisterAuras( {
         duration = 3600,
         max_stack = 1,
     },
-} )
+})
 
 -- Clearcasting (16870): aura 108 misc 14 (cost) -100% on the abilities its class masks name (15973374 / 100664659 /
 -- 1024 / 142606400 against SpellClassSet 7), so the next one is free; a covered cast whose declared cost is above 0
@@ -494,30 +535,64 @@ spec:RegisterAuras( {
 -- Covered but unregistered: Tranquility, Swiftmend, the rune spells. Not covered: Wrath, Faerie Fire, Cower,
 -- Challenging Roar, Mark and Gift of the Wild, Shifting Power. Checkpoint Q6 confirms Primal Bite and Demoralizing Roar
 -- (usable at 0 rage with Clearcasting up).
-spec:RegisterCostMod( {
+spec:RegisterCostMod({
     aura = "clearcasting",
     pct = -1,
     charges = 1,
-    spells = { 8921, 2912, 5570, 16914, 5185, 8936, 774, 1082, 1822, 5221, 1079, 22568, 9005, 6785, 779, 6807, 414644,
-        5211, 1238122, 339, 467, 16689, 407995, 99 },
-} )
+    spells = {
+        8921,
+        2912,
+        5570,
+        16914,
+        5185,
+        8936,
+        774,
+        1082,
+        1822,
+        5221,
+        1079,
+        22568,
+        9005,
+        6785,
+        779,
+        6807,
+        414644,
+        5211,
+        1238122,
+        339,
+        467,
+        16689,
+        407995,
+        99,
+    },
+})
 
 -- A shift (Classic's swap_form, Forever's rules): the other forms and a queued Maul go; into Bear all rage is lost
 -- (Furor's 20%-a-rank chance of 10 is unknowable at the cast: none); into Cat the energy is kept (Furor's Forever
 -- restore is unmodelled until checkpoint Q3). The forms' `now` write the same lines.
-spec:RegisterStateFunction( "swap_form", function( form )
-    for i = 1, #FORMS do removeBuff( FORMS[ i ] ) end
-    removeBuff( "maul" )
-    if form == "bear_form" then spend( rage.current, "rage" ) end
-    applyBuff( form )
-end )
+spec:RegisterStateFunction("swap_form", function(form)
+    for i = 1, #FORMS do
+        removeBuff(FORMS[i])
+    end
+    removeBuff("maul")
+    if form == "bear_form" then
+        spend(rage.current, "rage")
+    end
+    applyBuff(form)
+end)
 
 -- The bleeds' misses, as Classic's combat-log windows (event-facade spec §6): a dodged, parried or missed Rake, Rip or
 -- Pounce still raised SPELL_CAST_SUCCESS, so its `now` applied the debuff; the miss row removes it at the next reset.
 local bleedOf = {} -- spell ID -> the debuff its miss leaves off the target
-for _, id in ipairs( RAKE ) do bleedOf[ id ] = "rake" end
-for _, id in ipairs( RIP ) do bleedOf[ id ] = "rip" end
-for _, id in ipairs( POUNCE ) do bleedOf[ id ] = "pounce_bleed" end
+for _, id in ipairs(RAKE) do
+    bleedOf[id] = "rake"
+end
+for _, id in ipairs(RIP) do
+    bleedOf[id] = "rip"
+end
+for _, id in ipairs(POUNCE) do
+    bleedOf[id] = "pounce_bleed"
+end
 local missedAt = { rake = 0, rip = 0, pounce_bleed = 0 }
 
 -- The UI_ERROR_MESSAGE types of "You must be behind your target" (checkpoint Q11 records it; until then none, and the
@@ -527,65 +602,79 @@ ns.DruidNotBehindErrors = NOT_BEHIND_ERRORS
 local NOT_BEHIND_WINDOW = 5
 local behindErrAt = 0
 
-spec:RegisterEvent( "COMBAT_LOG_EVENT_UNFILTERED", function()
+spec:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function()
     local _, subtype, _, sourceGUID, _, _, _, _, _, _, _, spellID = CombatLogGetCurrentEventInfo()
 
-    if sourceGUID == state.GUID and subtype == "SPELL_MISSED" and bleedOf[ spellID ] then
-        missedAt[ bleedOf[ spellID ] ] = GetTime()
+    if sourceGUID == state.GUID and subtype == "SPELL_MISSED" and bleedOf[spellID] then
+        missedAt[bleedOf[spellID]] = GetTime()
     end
-end )
+end)
 
-spec:RegisterEvent( "UI_ERROR_MESSAGE", function( _, errorType )
-    if NOT_BEHIND_ERRORS[ errorType ] then behindErrAt = GetTime() end
-end )
+spec:RegisterEvent("UI_ERROR_MESSAGE", function(_, errorType)
+    if NOT_BEHIND_ERRORS[errorType] then
+        behindErrAt = GetTime()
+    end
+end)
 
-spec:RegisterHook( "reset_precast", function()
+spec:RegisterHook("reset_precast", function()
     -- The form from the plain shapeshift reads, as the Warrior's stance (forever-facade-notes: GetShapeshiftForm,
     -- GetShapeshiftFormInfo); Dire Bear Form reads as bear_form.
-    for i = 1, #FORMS do removeBuff( FORMS[ i ] ) end
+    for i = 1, #FORMS do
+        removeBuff(FORMS[i])
+    end
     local form = GetShapeshiftForm()
     if form and form > 0 then
-        local _, _, _, spellID = GetShapeshiftFormInfo( form )
-        local aura = FORM_OF_SPELL[ spellID ]
-        if aura then applyBuff( aura ) end
+        local _, _, _, spellID = GetShapeshiftFormInfo(form)
+        local aura = FORM_OF_SPELL[spellID]
+        if aura then
+            applyBuff(aura)
+        end
     end
 
-    local maul = knownRank( MAUL )
-    if maul > 0 and IsCurrentSpell( MAUL[ maul ] ) then applyBuff( "maul" ) end
+    local maul = knownRank(MAUL)
+    if maul > 0 and IsCurrentSpell(MAUL[maul]) then
+        applyBuff("maul")
+    end
 
     if now == query_time then
-        for key, t in pairs( missedAt ) do
-            if t > 0 and debuff[ key ].up and t >= debuff[ key ].applied then removeDebuff( "target", key ) end
+        for key, t in pairs(missedAt) do
+            if t > 0 and debuff[key].up and t >= debuff[key].applied then
+                removeDebuff("target", key)
+            end
         end
         if behindErrAt > 0 and now - behindErrAt < NOT_BEHIND_WINDOW then
-            applyBuff( "not_behind", behindErrAt + NOT_BEHIND_WINDOW - now )
+            applyBuff("not_behind", behindErrAt + NOT_BEHIND_WINDOW - now)
         end
     end
-end )
+end)
 
-spec:RegisterAbilities( {
+spec:RegisterAbilities({
     aquatic_form = {
         id = 1066,
         cast = 0,
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return 0.20 * ( 1 - 0.1 * talent.natural_shapeshifter.rank ) end,
+        spend = function()
+            return 0.20 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+        end,
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( AQUATIC_FORM ),
+        known = knows(AQUATIC_FORM),
         nobuff = "aquatic_form",
 
         -- what the cast did to the now-state, in VirtualState's context (spec §12a)
-        now = function ()
-            for i = 1, #FORMS do removeBuff( FORMS[ i ] ) end
-            removeBuff( "maul" )
-            applyBuff( "aquatic_form" )
+        now = function()
+            for i = 1, #FORMS do
+                removeBuff(FORMS[i])
+            end
+            removeBuff("maul")
+            applyBuff("aquatic_form")
         end,
 
-        handler = function ()
-            swap_form( "aquatic_form" )
+        handler = function()
+            swap_form("aquatic_form")
         end,
     },
 
@@ -596,21 +685,21 @@ spec:RegisterAbilities( {
         gcd = "spell",
 
         startsCombat = false,
-        known = knows( BARKSKIN ),
+        known = knows(BARKSKIN),
         toggle = "defensives",
 
-        now = function ()
-            applyBuff( "barkskin" )
+        now = function()
+            applyBuff("barkskin")
         end,
 
-        handler = function ()
-            applyBuff( "barkskin" )
+        handler = function()
+            applyBuff("barkskin")
         end,
     },
 
     bash = {
         id = 5211,
-        copy = rest( BASH ),
+        copy = rest(BASH),
         cast = 0,
         cooldown = 60, -- Brutal Impact's -30 s unmodelled (a cooldown modifier)
         gcd = "spell",
@@ -619,15 +708,15 @@ spec:RegisterAbilities( {
         spendType = "rage",
 
         startsCombat = true,
-        known = knows( BASH ),
+        known = knows(BASH),
         buff = "bear_form",
 
-        now = function ()
-            applyDebuff( "target", "bash", ( BASH_STUN[ knownRank( BASH ) ] or 2 ) + 0.5 * talent.brutal_impact.rank )
+        now = function()
+            applyDebuff("target", "bash", (BASH_STUN[knownRank(BASH)] or 2) + 0.5 * talent.brutal_impact.rank)
         end,
 
-        handler = function ()
-            applyDebuff( "target", "bash" )
+        handler = function()
+            applyDebuff("target", "bash")
         end,
     },
 
@@ -638,22 +727,26 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return 0.55 * ( 1 - 0.1 * talent.natural_shapeshifter.rank ) end,
+        spend = function()
+            return 0.55 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+        end,
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( BEAR_FORM ),
+        known = knows(BEAR_FORM),
         nobuff = "bear_form",
 
-        now = function ()
-            for i = 1, #FORMS do removeBuff( FORMS[ i ] ) end
-            removeBuff( "maul" )
-            spend( rage.current, "rage" )
-            applyBuff( "bear_form" )
+        now = function()
+            for i = 1, #FORMS do
+                removeBuff(FORMS[i])
+            end
+            removeBuff("maul")
+            spend(rage.current, "rage")
+            applyBuff("bear_form")
         end,
 
-        handler = function ()
-            swap_form( "bear_form" )
+        handler = function()
+            swap_form("bear_form")
         end,
     },
 
@@ -664,20 +757,22 @@ spec:RegisterAbilities( {
         gcd = "off",
 
         startsCombat = false,
-        known = knows( BERSERK ),
+        known = knows(BERSERK),
         toggle = "cooldowns",
         -- "Requires Cat Form, Bear Form, Dire Bear Form" (DB2 text): whichever is up.
-        buff = function ()
-            if buff.bear_form.up then return "bear_form" end
+        buff = function()
+            if buff.bear_form.up then
+                return "bear_form"
+            end
             return "cat_form"
         end,
 
-        now = function ()
-            applyBuff( "berserk" )
+        now = function()
+            applyBuff("berserk")
         end,
 
-        handler = function ()
-            applyBuff( "berserk" )
+        handler = function()
+            applyBuff("berserk")
         end,
     },
 
@@ -687,21 +782,25 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return 0.55 * ( 1 - 0.1 * talent.natural_shapeshifter.rank ) end,
+        spend = function()
+            return 0.55 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+        end,
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( CAT_FORM ),
+        known = knows(CAT_FORM),
         nobuff = "cat_form",
 
-        now = function ()
-            for i = 1, #FORMS do removeBuff( FORMS[ i ] ) end
-            removeBuff( "maul" )
-            applyBuff( "cat_form" )
+        now = function()
+            for i = 1, #FORMS do
+                removeBuff(FORMS[i])
+            end
+            removeBuff("maul")
+            applyBuff("cat_form")
         end,
 
-        handler = function ()
-            swap_form( "cat_form" )
+        handler = function()
+            swap_form("cat_form")
         end,
     },
 
@@ -715,40 +814,42 @@ spec:RegisterAbilities( {
         spendType = "rage",
 
         startsCombat = true,
-        known = knows( CHALLENGING_ROAR ),
+        known = knows(CHALLENGING_ROAR),
         buff = "bear_form",
 
-        now = function ()
-            applyDebuff( "target", "challenging_roar" )
+        now = function()
+            applyDebuff("target", "challenging_roar")
         end,
 
-        handler = function ()
-            applyDebuff( "target", "challenging_roar" )
+        handler = function()
+            applyDebuff("target", "challenging_roar")
         end,
     },
 
     claw = {
         id = 1082,
-        copy = rest( CLAW ),
+        copy = rest(CLAW),
         cast = 0,
         cooldown = 0,
         gcd = "totem",
 
-        spend = function () return max( 0, 45 - talent.ferocity.rank ) end,
+        spend = function()
+            return max(0, 45 - talent.ferocity.rank)
+        end,
         spendType = "energy",
 
         startsCombat = true,
-        known = knows( CLAW ),
+        known = knows(CLAW),
         buff = "cat_form",
 
-        handler = function ()
-            gain( 1, "combo_points" )
+        handler = function()
+            gain(1, "combo_points")
         end,
     },
 
     cower = {
         id = 8998,
-        copy = rest( COWER ),
+        copy = rest(COWER),
         cast = 0,
         cooldown = 10,
         gcd = "totem",
@@ -757,33 +858,33 @@ spec:RegisterAbilities( {
         spendType = "energy",
 
         startsCombat = true,
-        known = knows( COWER ),
+        known = knows(COWER),
         buff = "cat_form",
     },
 
     dash = {
         id = 1850,
-        copy = rest( DASH ),
+        copy = rest(DASH),
         cast = 0,
         cooldown = 300,
         gcd = "off",
 
         startsCombat = false,
-        known = knows( DASH ),
+        known = knows(DASH),
         buff = "cat_form",
 
-        now = function ()
-            applyBuff( "dash" )
+        now = function()
+            applyBuff("dash")
         end,
 
-        handler = function ()
-            applyBuff( "dash" )
+        handler = function()
+            applyBuff("dash")
         end,
     },
 
     demoralizing_roar = {
         id = 99,
-        copy = rest( DEMORALIZING_ROAR ),
+        copy = rest(DEMORALIZING_ROAR),
         cast = 0,
         cooldown = 0,
         gcd = "spell",
@@ -792,15 +893,15 @@ spec:RegisterAbilities( {
         spendType = "rage",
 
         startsCombat = true,
-        known = knows( DEMORALIZING_ROAR ),
+        known = knows(DEMORALIZING_ROAR),
         buff = "bear_form",
 
-        now = function ()
-            applyDebuff( "target", "demoralizing_roar" )
+        now = function()
+            applyDebuff("target", "demoralizing_roar")
         end,
 
-        handler = function ()
-            applyDebuff( "target", "demoralizing_roar" )
+        handler = function()
+            applyDebuff("target", "demoralizing_roar")
         end,
     },
 
@@ -812,66 +913,72 @@ spec:RegisterAbilities( {
         gcd = "off",
 
         startsCombat = false,
-        known = knows( ENRAGE ),
+        known = knows(ENRAGE),
         buff = "bear_form",
 
-        now = function ()
-            gain( 10, "rage" )
-            applyBuff( "enrage" )
+        now = function()
+            gain(10, "rage")
+            applyBuff("enrage")
         end,
 
-        handler = function ()
-            gain( 10, "rage" )
-            applyBuff( "enrage" )
+        handler = function()
+            gain(10, "rage")
+            applyBuff("enrage")
         end,
     },
 
     entangling_roots = {
         id = 339,
-        copy = rest( ROOTS ),
+        copy = rest(ROOTS),
         cast = 1.5,
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return byRank( ROOTS_COST, ROOTS ) end,
+        spend = function()
+            return byRank(ROOTS_COST, ROOTS)
+        end,
         spendType = "mana",
 
         startsCombat = true,
-        known = knows( ROOTS ),
+        known = knows(ROOTS),
         nobuff = "feral_form",
 
-        now = function ()
-            applyDebuff( "target", "entangling_roots", ROOTS_DURATION[ knownRank( ROOTS ) ] or 12 )
+        now = function()
+            applyDebuff("target", "entangling_roots", ROOTS_DURATION[knownRank(ROOTS)] or 12)
         end,
 
-        handler = function ()
-            applyDebuff( "target", "entangling_roots" )
+        handler = function()
+            applyDebuff("target", "entangling_roots")
         end,
     },
 
     faerie_fire = {
         id = 770,
-        copy = rest( FAERIE_FIRE ),
+        copy = rest(FAERIE_FIRE),
         cast = 0,
         -- Free with a 6 s cooldown in Cat or Bear Form (TDF Bear.lua; checkpoint Q7 confirms).
-        cooldown = function () return buff.feral_form.up and 6 or 0 end,
+        cooldown = function()
+            return buff.feral_form.up and 6 or 0
+        end,
         gcd = "spell",
 
-        spend = function ()
-            if buff.feral_form.up then return 0 end
-            return byRank( FAERIE_FIRE_COST, FAERIE_FIRE )
+        spend = function()
+            if buff.feral_form.up then
+                return 0
+            end
+            return byRank(FAERIE_FIRE_COST, FAERIE_FIRE)
         end,
         spendType = "mana",
 
         startsCombat = true,
-        known = knows( FAERIE_FIRE ),
+        known = knows(FAERIE_FIRE),
 
-        now = function ()
-            applyDebuff( "target", "faerie_fire" )
+        now = function()
+            applyDebuff("target", "faerie_fire")
         end,
 
-        handler = function ()
-            applyDebuff( "target", "faerie_fire" )
+        handler = function()
+            applyDebuff("target", "faerie_fire")
         end,
     },
 
@@ -886,22 +993,22 @@ spec:RegisterAbilities( {
         spendType = "rage",
 
         startsCombat = true,
-        known = knows( FERAL_CHARGE ),
+        known = knows(FERAL_CHARGE),
         buff = "bear_form",
 
-        now = function ()
-            applyDebuff( "target", "feral_charge_effect" )
+        now = function()
+            applyDebuff("target", "feral_charge_effect")
         end,
 
-        handler = function ()
-            applyDebuff( "target", "feral_charge_effect" )
+        handler = function()
+            applyDebuff("target", "feral_charge_effect")
         end,
     },
 
     -- Bite converts all the energy left after its cost (DB2 22568 text), Clearcasting's free Bite too.
     ferocious_bite = {
         id = 22568,
-        copy = rest( FEROCIOUS_BITE ),
+        copy = rest(FEROCIOUS_BITE),
         cast = 0,
         cooldown = 0,
         gcd = "totem",
@@ -910,18 +1017,20 @@ spec:RegisterAbilities( {
         spendType = "energy",
 
         startsCombat = true,
-        known = knows( FEROCIOUS_BITE ),
+        known = knows(FEROCIOUS_BITE),
         buff = "cat_form",
 
-        usable = function () return combo_points.current > 0, "requires combo points" end,
-
-        now = function ()
-            spend( energy.current, "energy" )
+        usable = function()
+            return combo_points.current > 0, "requires combo points"
         end,
 
-        handler = function ()
-            spend( combo_points.current, "combo_points" )
-            spend( energy.current, "energy" )
+        now = function()
+            spend(energy.current, "energy")
+        end,
+
+        handler = function()
+            spend(combo_points.current, "combo_points")
+            spend(energy.current, "energy")
         end,
     },
 
@@ -933,39 +1042,41 @@ spec:RegisterAbilities( {
         gcd = "spell",
 
         startsCombat = false,
-        known = knows( FRENZIED_REGENERATION ),
+        known = knows(FRENZIED_REGENERATION),
         toggle = "defensives",
         buff = "bear_form",
 
-        now = function ()
-            applyBuff( "frenzied_regeneration" )
+        now = function()
+            applyBuff("frenzied_regeneration")
         end,
 
-        handler = function ()
-            applyBuff( "frenzied_regeneration" )
+        handler = function()
+            applyBuff("frenzied_regeneration")
         end,
     },
 
     gift_of_the_wild = {
         id = 21849,
-        copy = rest( GIFT_OF_THE_WILD ),
+        copy = rest(GIFT_OF_THE_WILD),
         cast = 0,
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return byRank( GIFT_OF_THE_WILD_COST, GIFT_OF_THE_WILD ) end,
+        spend = function()
+            return byRank(GIFT_OF_THE_WILD_COST, GIFT_OF_THE_WILD)
+        end,
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( GIFT_OF_THE_WILD ),
+        known = knows(GIFT_OF_THE_WILD),
         nobuff = "feral_form",
 
-        now = function ()
-            applyBuff( "gift_of_the_wild" )
+        now = function()
+            applyBuff("gift_of_the_wild")
         end,
 
-        handler = function ()
-            applyBuff( "gift_of_the_wild" )
+        handler = function()
+            applyBuff("gift_of_the_wild")
         end,
     },
 
@@ -976,52 +1087,58 @@ spec:RegisterAbilities( {
         gcd = "off",
 
         startsCombat = true,
-        known = knows( GROWL ),
+        known = knows(GROWL),
         buff = "bear_form",
 
-        now = function ()
-            applyDebuff( "target", "growl" )
+        now = function()
+            applyDebuff("target", "growl")
         end,
 
-        handler = function ()
-            applyDebuff( "target", "growl" )
+        handler = function()
+            applyDebuff("target", "growl")
         end,
     },
 
     -- No pack line: registered so a cast spends Clearcasting.
     healing_touch = {
         id = 5185,
-        copy = rest( HEALING_TOUCH ),
-        cast = function () return byRank( HEALING_TOUCH_CAST, HEALING_TOUCH ) end,
+        copy = rest(HEALING_TOUCH),
+        cast = function()
+            return byRank(HEALING_TOUCH_CAST, HEALING_TOUCH)
+        end,
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return byRank( HEALING_TOUCH_COST, HEALING_TOUCH ) end,
+        spend = function()
+            return byRank(HEALING_TOUCH_COST, HEALING_TOUCH)
+        end,
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( HEALING_TOUCH ),
+        known = knows(HEALING_TOUCH),
         nobuff = "feral_form",
     },
 
     hurricane = {
         id = 16914,
-        copy = rest( HURRICANE ),
+        copy = rest(HURRICANE),
         cast = 10,
         channeled = true,
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return byRank( HURRICANE_COST, HURRICANE ) end,
+        spend = function()
+            return byRank(HURRICANE_COST, HURRICANE)
+        end,
         spendType = "mana",
 
         startsCombat = true,
-        known = knows( HURRICANE ),
+        known = knows(HURRICANE),
         nobuff = "feral_form",
         aura = "hurricane",
 
-        start = function ()
-            applyDebuff( "target", "hurricane" )
+        start = function()
+            applyDebuff("target", "hurricane")
         end,
     },
 
@@ -1035,134 +1152,146 @@ spec:RegisterAbilities( {
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( INNERVATE ),
+        known = knows(INNERVATE),
         toggle = "cooldowns",
         nobuff = "feral_form",
 
-        now = function ()
-            applyBuff( "innervate" )
+        now = function()
+            applyBuff("innervate")
         end,
 
-        handler = function ()
-            applyBuff( "innervate" )
+        handler = function()
+            applyBuff("innervate")
         end,
     },
 
     insect_swarm = {
         id = 5570,
-        copy = rest( INSECT_SWARM ),
+        copy = rest(INSECT_SWARM),
         cast = 0,
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return byRank( INSECT_SWARM_COST, INSECT_SWARM ) end,
+        spend = function()
+            return byRank(INSECT_SWARM_COST, INSECT_SWARM)
+        end,
         spendType = "mana",
 
         startsCombat = true,
-        known = knows( INSECT_SWARM ),
+        known = knows(INSECT_SWARM),
         nobuff = "feral_form",
 
-        now = function ()
-            applyDebuff( "target", "insect_swarm", 12 + 2 * talent.natures_splendor.rank )
+        now = function()
+            applyDebuff("target", "insect_swarm", 12 + 2 * talent.natures_splendor.rank)
         end,
 
-        handler = function ()
-            applyDebuff( "target", "insect_swarm" )
+        handler = function()
+            applyDebuff("target", "insect_swarm")
         end,
     },
 
     lacerate = {
         id = 414644,
-        copy = rest( LACERATE ),
+        copy = rest(LACERATE),
         cast = 0,
         cooldown = 0,
         gcd = "spell",
 
         -- Shredding Attacks: -6 rage a rank by its DB2 text (m2 = -60; checkpoint Q12)
-        spend = function () return max( 0, 15 - 6 * talent.improved_shred.rank ) end,
+        spend = function()
+            return max(0, 15 - 6 * talent.improved_shred.rank)
+        end,
         spendType = "rage",
 
         startsCombat = true,
-        known = knows( LACERATE ),
+        known = knows(LACERATE),
         buff = "bear_form",
 
-        now = function ()
-            applyDebuff( "target", "lacerate", 15, min( 5, debuff.lacerate.stack + 1 ) )
+        now = function()
+            applyDebuff("target", "lacerate", 15, min(5, debuff.lacerate.stack + 1))
         end,
 
-        handler = function ()
-            applyDebuff( "target", "lacerate", 15, min( 5, debuff.lacerate.stack + 1 ) )
+        handler = function()
+            applyDebuff("target", "lacerate", 15, min(5, debuff.lacerate.stack + 1))
         end,
     },
 
     mark_of_the_wild = {
         id = 1126,
-        copy = rest( MARK_OF_THE_WILD ),
+        copy = rest(MARK_OF_THE_WILD),
         cast = 0,
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return byRank( MARK_OF_THE_WILD_COST, MARK_OF_THE_WILD ) end,
+        spend = function()
+            return byRank(MARK_OF_THE_WILD_COST, MARK_OF_THE_WILD)
+        end,
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( MARK_OF_THE_WILD ),
+        known = knows(MARK_OF_THE_WILD),
         nobuff = "feral_form",
 
-        now = function ()
-            applyBuff( "mark_of_the_wild" )
+        now = function()
+            applyBuff("mark_of_the_wild")
         end,
 
-        handler = function ()
-            applyBuff( "mark_of_the_wild" )
+        handler = function()
+            applyBuff("mark_of_the_wild")
         end,
     },
 
     maul = {
         id = 6807,
-        copy = rest( MAUL ),
+        copy = rest(MAUL),
         cast = 0,
         cooldown = 0,
         gcd = "off",
 
-        spend = function () return max( 0, 15 - talent.ferocity.rank ) end,
+        spend = function()
+            return max(0, 15 - talent.ferocity.rank)
+        end,
         spendType = "rage",
 
         startsCombat = true,
         -- VirtualState: paid at the main hand's next swing, which then brings no rage. Hekili's own simulation pays
         -- at the press (the Warrior's Heroic Strike alike), so the two differ by up to one swing.
         onNextSwing = true,
-        known = knows( MAUL ),
+        known = knows(MAUL),
         buff = "bear_form",
 
-        usable = function () return not buff.maul.up, "Maul is already queued" end,
+        usable = function()
+            return not buff.maul.up, "Maul is already queued"
+        end,
 
-        handler = function ()
-            applyBuff( "maul" )
+        handler = function()
+            applyBuff("maul")
         end,
     },
 
     moonfire = {
         id = 8921,
-        copy = rest( MOONFIRE ),
+        copy = rest(MOONFIRE),
         cast = 0,
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return byRank( MOONFIRE_COST, MOONFIRE ) end,
+        spend = function()
+            return byRank(MOONFIRE_COST, MOONFIRE)
+        end,
         spendType = "mana",
 
         startsCombat = true,
-        known = knows( MOONFIRE ),
+        known = knows(MOONFIRE),
         nobuff = "feral_form",
 
-        now = function ()
-            local base = knownRank( MOONFIRE ) > 1 and 12 or 9 -- rank 1 lasts 9 s
-            applyDebuff( "target", "moonfire", base + 3 * talent.natures_splendor.rank )
+        now = function()
+            local base = knownRank(MOONFIRE) > 1 and 12 or 9 -- rank 1 lasts 9 s
+            applyDebuff("target", "moonfire", base + 3 * talent.natures_splendor.rank)
         end,
 
-        handler = function ()
-            applyDebuff( "target", "moonfire" )
+        handler = function()
+            applyDebuff("target", "moonfire")
         end,
     },
 
@@ -1172,50 +1301,56 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return 0.35 * ( 1 - 0.1 * talent.natural_shapeshifter.rank ) end,
+        spend = function()
+            return 0.35 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+        end,
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( MOONKIN_FORM ),
+        known = knows(MOONKIN_FORM),
         nobuff = "moonkin_form",
 
-        now = function ()
-            for i = 1, #FORMS do removeBuff( FORMS[ i ] ) end
-            removeBuff( "maul" )
-            applyBuff( "moonkin_form" )
+        now = function()
+            for i = 1, #FORMS do
+                removeBuff(FORMS[i])
+            end
+            removeBuff("maul")
+            applyBuff("moonkin_form")
         end,
 
-        handler = function ()
-            swap_form( "moonkin_form" )
+        handler = function()
+            swap_form("moonkin_form")
         end,
     },
 
     natures_grasp = {
         id = 16689,
-        copy = rest( NATURES_GRASP ),
+        copy = rest(NATURES_GRASP),
         cast = 0,
         cooldown = 60,
         gcd = "spell",
 
-        spend = function () return byRank( NATURES_GRASP_COST, NATURES_GRASP ) end,
+        spend = function()
+            return byRank(NATURES_GRASP_COST, NATURES_GRASP)
+        end,
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( NATURES_GRASP ),
+        known = knows(NATURES_GRASP),
         nobuff = "feral_form",
 
-        now = function ()
-            applyBuff( "natures_grasp" )
+        now = function()
+            applyBuff("natures_grasp")
         end,
 
-        handler = function ()
-            applyBuff( "natures_grasp" )
+        handler = function()
+            applyBuff("natures_grasp")
         end,
     },
 
     pounce = {
         id = 9005,
-        copy = rest( POUNCE ),
+        copy = rest(POUNCE),
         cast = 0,
         cooldown = 0,
         gcd = "totem",
@@ -1224,87 +1359,93 @@ spec:RegisterAbilities( {
         spendType = "energy",
 
         startsCombat = true,
-        known = knows( POUNCE ),
+        known = knows(POUNCE),
         buff = "prowl",
 
-        now = function ()
-            removeBuff( "prowl" )
-            applyDebuff( "target", "pounce", 2 + 0.5 * talent.brutal_impact.rank )
-            applyDebuff( "target", "pounce_bleed" )
+        now = function()
+            removeBuff("prowl")
+            applyDebuff("target", "pounce", 2 + 0.5 * talent.brutal_impact.rank)
+            applyDebuff("target", "pounce_bleed")
         end,
 
-        handler = function ()
-            removeBuff( "prowl" )
-            applyDebuff( "target", "pounce" )
-            applyDebuff( "target", "pounce_bleed" )
-            gain( 1, "combo_points" )
+        handler = function()
+            removeBuff("prowl")
+            applyDebuff("target", "pounce")
+            applyDebuff("target", "pounce_bleed")
+            gain(1, "combo_points")
         end,
     },
 
     primal_bite = {
         id = 407995,
-        copy = rest( PRIMAL_BITE ),
+        copy = rest(PRIMAL_BITE),
         cast = 0,
         cooldown = 6, -- Berserk's no-cooldown rule unmodelled
         gcd = "spell",
 
-        spend = function () return max( 0, 20 - talent.ferocity.rank ) end,
+        spend = function()
+            return max(0, 20 - talent.ferocity.rank)
+        end,
         spendType = "rage",
 
         startsCombat = true,
-        known = knows( PRIMAL_BITE ),
+        known = knows(PRIMAL_BITE),
         buff = "bear_form",
     },
 
     prowl = {
         id = 5215,
-        copy = rest( PROWL ),
+        copy = rest(PROWL),
         cast = 0,
         cooldown = 10,
         gcd = "off",
 
         startsCombat = false,
-        known = knows( PROWL ),
+        known = knows(PROWL),
         buff = "cat_form",
 
-        usable = function () return combat == 0, "cannot be in combat" end,
-
-        now = function ()
-            applyBuff( "prowl" )
+        usable = function()
+            return combat == 0, "cannot be in combat"
         end,
 
-        handler = function ()
-            applyBuff( "prowl" )
+        now = function()
+            applyBuff("prowl")
+        end,
+
+        handler = function()
+            applyBuff("prowl")
         end,
     },
 
     rake = {
         id = 1822,
-        copy = rest( RAKE ),
+        copy = rest(RAKE),
         cast = 0,
         cooldown = 0,
         gcd = "totem",
 
-        spend = function () return max( 0, RAKE_COST - talent.ferocity.rank ) end,
+        spend = function()
+            return max(0, RAKE_COST - talent.ferocity.rank)
+        end,
         spendType = "energy",
 
         startsCombat = true,
-        known = knows( RAKE ),
+        known = knows(RAKE),
         buff = "cat_form",
 
-        now = function ()
-            applyDebuff( "target", "rake" )
+        now = function()
+            applyDebuff("target", "rake")
         end,
 
-        handler = function ()
-            applyDebuff( "target", "rake" )
-            gain( 1, "combo_points" )
+        handler = function()
+            applyDebuff("target", "rake")
+            gain(1, "combo_points")
         end,
     },
 
     ravage = {
         id = 6785,
-        copy = rest( RAVAGE ),
+        copy = rest(RAVAGE),
         cast = 0,
         cooldown = 0,
         gcd = "totem",
@@ -1313,53 +1454,57 @@ spec:RegisterAbilities( {
         spendType = "energy",
 
         startsCombat = true,
-        known = knows( RAVAGE ),
+        known = knows(RAVAGE),
         buff = "prowl",
 
-        now = function ()
-            removeBuff( "prowl" )
+        now = function()
+            removeBuff("prowl")
         end,
 
-        handler = function ()
-            removeBuff( "prowl" )
-            gain( 1, "combo_points" )
+        handler = function()
+            removeBuff("prowl")
+            gain(1, "combo_points")
         end,
     },
 
     -- No pack line: registered so a cast spends Clearcasting.
     regrowth = {
         id = 8936,
-        copy = rest( REGROWTH ),
+        copy = rest(REGROWTH),
         cast = 2,
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return byRank( REGROWTH_COST, REGROWTH ) end,
+        spend = function()
+            return byRank(REGROWTH_COST, REGROWTH)
+        end,
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( REGROWTH ),
+        known = knows(REGROWTH),
         nobuff = "feral_form",
     },
 
     rejuvenation = {
         id = 774,
-        copy = rest( REJUVENATION ),
+        copy = rest(REJUVENATION),
         cast = 0,
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return byRank( REJUVENATION_COST, REJUVENATION ) end,
+        spend = function()
+            return byRank(REJUVENATION_COST, REJUVENATION)
+        end,
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( REJUVENATION ),
+        known = knows(REJUVENATION),
         nobuff = "feral_form",
     },
 
     rip = {
         id = 1079,
-        copy = rest( RIP ),
+        copy = rest(RIP),
         cast = 0,
         cooldown = 0,
         gcd = "totem",
@@ -1368,18 +1513,20 @@ spec:RegisterAbilities( {
         spendType = "energy",
 
         startsCombat = true,
-        known = knows( RIP ),
+        known = knows(RIP),
         buff = "cat_form",
 
-        usable = function () return combo_points.current > 0, "requires combo points" end,
-
-        now = function ()
-            applyDebuff( "target", "rip" )
+        usable = function()
+            return combo_points.current > 0, "requires combo points"
         end,
 
-        handler = function ()
-            applyDebuff( "target", "rip" )
-            spend( combo_points.current, "combo_points" )
+        now = function()
+            applyDebuff("target", "rip")
+        end,
+
+        handler = function()
+            applyDebuff("target", "rip")
+            spend(combo_points.current, "combo_points")
         end,
     },
 
@@ -1387,99 +1534,113 @@ spec:RegisterAbilities( {
     shifting_power = {
         id = 1322605,
         cast = 0,
-        cooldown = function () return 16 - 4 * talent.improved_shifting_power.rank end, -- spec D5; checkpoint Q4
+        cooldown = function()
+            return 16 - 4 * talent.improved_shifting_power.rank
+        end, -- spec D5; checkpoint Q4
         gcd = "totem",
 
-        spend = function () return 0.55 * ( 1 - 0.1 * talent.natural_shapeshifter.rank ) end,
+        spend = function()
+            return 0.55 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+        end,
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( SHIFTING_POWER ),
+        known = knows(SHIFTING_POWER),
         buff = "cat_form",
 
-        now = function ()
-            gain( SHIFTING_POWER_ENERGY, "energy" )
+        now = function()
+            gain(SHIFTING_POWER_ENERGY, "energy")
         end,
 
-        handler = function ()
-            gain( SHIFTING_POWER_ENERGY, "energy" )
+        handler = function()
+            gain(SHIFTING_POWER_ENERGY, "energy")
         end,
     },
 
     shred = {
         id = 5221,
-        copy = rest( SHRED ),
+        copy = rest(SHRED),
         cast = 0,
         cooldown = 0,
         gcd = "totem",
 
-        spend = function () return max( 0, 60 - 6 * talent.improved_shred.rank ) end, -- Shredding Attacks
+        spend = function()
+            return max(0, 60 - 6 * talent.improved_shred.rank)
+        end, -- Shredding Attacks
         spendType = "energy",
 
         startsCombat = true,
-        known = knows( SHRED ),
+        known = knows(SHRED),
         buff = "cat_form",
 
-        handler = function ()
-            gain( 1, "combo_points" )
+        handler = function()
+            gain(1, "combo_points")
         end,
     },
 
     starfire = {
         id = 2912,
-        copy = rest( STARFIRE ),
+        copy = rest(STARFIRE),
         cast = 3.5, -- shorter with an Eclipse charge (unmodelled)
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return byRank( STARFIRE_COST, STARFIRE ) end,
+        spend = function()
+            return byRank(STARFIRE_COST, STARFIRE)
+        end,
         spendType = "mana",
 
         startsCombat = true,
-        known = knows( STARFIRE ),
+        known = knows(STARFIRE),
         nobuff = "feral_form",
 
         -- No `now`: spending a charge is no `now` verb; the belief's charges end with the 15 s aura.
-        handler = function ()
-            if buff.eclipse.up then removeStack( "eclipse" ) end
+        handler = function()
+            if buff.eclipse.up then
+                removeStack("eclipse")
+            end
         end,
     },
 
     swipe_bear = {
         id = 779,
-        copy = rest( SWIPE ),
+        copy = rest(SWIPE),
         cast = 0,
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return max( 0, 20 - talent.ferocity.rank ) end,
+        spend = function()
+            return max(0, 20 - talent.ferocity.rank)
+        end,
         spendType = "rage",
 
         startsCombat = true,
-        known = knows( SWIPE ),
+        known = knows(SWIPE),
         buff = "bear_form",
     },
 
     thorns = {
         id = 467,
-        copy = rest( THORNS ),
+        copy = rest(THORNS),
         cast = 0,
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return byRank( THORNS_COST, THORNS ) end,
+        spend = function()
+            return byRank(THORNS_COST, THORNS)
+        end,
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( THORNS ),
+        known = knows(THORNS),
         nobuff = "feral_form",
 
-        now = function ()
-            applyBuff( "thorns" )
+        now = function()
+            applyBuff("thorns")
         end,
 
-        handler = function ()
-            applyBuff( "thorns" )
+        handler = function()
+            applyBuff("thorns")
         end,
     },
 
@@ -1489,55 +1650,67 @@ spec:RegisterAbilities( {
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return 0.20 * ( 1 - 0.1 * talent.natural_shapeshifter.rank ) end,
+        spend = function()
+            return 0.20 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+        end,
         spendType = "mana",
 
         startsCombat = false,
-        known = knows( TRAVEL_FORM ),
+        known = knows(TRAVEL_FORM),
         nobuff = "travel_form",
 
-        now = function ()
-            for i = 1, #FORMS do removeBuff( FORMS[ i ] ) end
-            removeBuff( "maul" )
-            applyBuff( "travel_form" )
+        now = function()
+            for i = 1, #FORMS do
+                removeBuff(FORMS[i])
+            end
+            removeBuff("maul")
+            applyBuff("travel_form")
         end,
 
-        handler = function ()
-            swap_form( "travel_form" )
+        handler = function()
+            swap_form("travel_form")
         end,
     },
 
     wrath = {
         id = 5176,
-        copy = rest( WRATH ),
-        cast = function () return byRank( WRATH_CAST, WRATH ) - 0.1 * talent.improved_wrath.rank end,
+        copy = rest(WRATH),
+        cast = function()
+            return byRank(WRATH_CAST, WRATH) - 0.1 * talent.improved_wrath.rank
+        end,
         cooldown = 0,
         gcd = "spell",
 
-        spend = function () return byRank( WRATH_COST, WRATH ) end,
+        spend = function()
+            return byRank(WRATH_COST, WRATH)
+        end,
         spendType = "mana",
 
         startsCombat = true,
-        known = knows( WRATH ),
+        known = knows(WRATH),
         nobuff = "feral_form",
 
         -- Eclipse's charges (R §9 open: +1 or +2 a Wrath) while the talent is known.
-        now = function ()
-            if talent.eclipse.rank > 0 then addStack( "eclipse", nil, 2 ) end
+        now = function()
+            if talent.eclipse.rank > 0 then
+                addStack("eclipse", nil, 2)
+            end
         end,
 
-        handler = function ()
-            if talent.eclipse.rank > 0 then addStack( "eclipse", nil, 2 ) end
+        handler = function()
+            if talent.eclipse.rank > 0 then
+                addStack("eclipse", nil, 2)
+            end
         end,
     },
-} )
+})
 
 -- Shred needs us behind the target, which the game tells only by refusing: in a group the tank holds it, so Shred;
 -- otherwise Claw. settings.behind says the player stands behind; a "must be behind" error says the target faces us
 -- for 5 s (TDF Feral.lua; Classic's combat_mode setting replaced by Hekili's `group`).
-spec:RegisterStateExpr( "shred_ok", function()
-    return settings.behind or ( group and not buff.not_behind.up )
-end )
+spec:RegisterStateExpr("shred_ok", function()
+    return settings.behind or (group and not buff.not_behind.up)
+end)
 
 -- excess_e (ported from Taco Dog Forever's Expressions.excess_e, credited above): the energy a GCD-triggering spender
 -- (Shred, Claw) may use now and still pay the coming Rip (at settings.rip_cp combo points) and Rake refreshes, with
@@ -1552,78 +1725,92 @@ local CAT_GCD = 1 -- gcd = "totem"
 local evT, evC, evK = { 0, 0, 0 }, { 0, 0, 0 }, { false, false, false } -- due, energy (negative: the credit), credit
 local evS, evS0 = { 0, 0, 0 }, { 0, 0, 0 } -- start times with and without the credit
 
-local function insertEvent( n, at, c, k )
+local function insertEvent(n, at, c, k)
     local j = n
-    while j >= 1 and evT[ j ] > at do
-        evT[ j + 1 ], evC[ j + 1 ], evK[ j + 1 ] = evT[ j ], evC[ j ], evK[ j ]
+    while j >= 1 and evT[j] > at do
+        evT[j + 1], evC[j + 1], evK[j + 1] = evT[j], evC[j], evK[j]
         j = j - 1
     end
-    evT[ j + 1 ], evC[ j + 1 ], evK[ j + 1 ] = at, c, k
+    evT[j + 1], evC[j + 1], evK[j + 1] = at, c, k
     return n + 1
 end
 
 -- Forward pass into `out`: nothing starts before the GCD before it ends (every event is on the GCD).
-local function starts( n, gcdFree, useCredit, out )
+local function starts(n, gcdFree, useCredit, out)
     for k = 1, n do
-        if useCredit or not evK[ k ] then
-            local st = evT[ k ]
-            if st < gcdFree then st = gcdFree end
-            out[ k ] = st
+        if useCredit or not evK[k] then
+            local st = evT[k]
+            if st < gcdFree then
+                st = gcdFree
+            end
+            out[k] = st
             gcdFree = st + CAT_GCD
         end
     end
 end
 
-spec:RegisterStateExpr( "excess_e", function()
+spec:RegisterStateExpr("excess_e", function()
     local cur, cap, regen = energy.current, energy.max, energy.regen
     local gcdFree = CAT_GCD
     local n = 0
     -- Rip, then Rake: due when the debuff falls off; -math.huge when it could start on time but for the spender's GCD
     -- (Clearcasting may make it free then: action.x.cost); reserved at the full price.
-    if knownRank( RIP ) > 0 and combo_points.current >= settings.rip_cp then
+    if knownRank(RIP) > 0 and combo_points.current >= settings.rip_cp then
         local due = debuff.rip.remains
-        if due < gcdFree - TOLERANCE and min( cap, cur + regen * due ) >= action.rip.cost then return -huge end
-        n = insertEvent( n, due, RIP_COST, false )
+        if due < gcdFree - TOLERANCE and min(cap, cur + regen * due) >= action.rip.cost then
+            return -huge
+        end
+        n = insertEvent(n, due, RIP_COST, false)
     end
-    if knownRank( RAKE ) > 0 then
+    if knownRank(RAKE) > 0 then
         local due = debuff.rake.remains
-        if due < gcdFree - TOLERANCE and min( cap, cur + regen * due ) >= action.rake.cost then return -huge end
-        n = insertEvent( n, due, max( 0, RAKE_COST - talent.ferocity.rank ), false )
+        if due < gcdFree - TOLERANCE and min(cap, cur + regen * due) >= action.rake.cost then
+            return -huge
+        end
+        n = insertEvent(n, due, max(0, RAKE_COST - talent.ferocity.rank), false)
     end
-    if knownRank( SHIFTING_POWER ) > 0 then
-        n = insertEvent( n, cooldown.shifting_power.remains, -SHIFTING_POWER_ENERGY, true )
+    if knownRank(SHIFTING_POWER) > 0 then
+        n = insertEvent(n, cooldown.shifting_power.remains, -SHIFTING_POWER_ENERGY, true)
     end
     -- Use the credit only if its GCD starts no refresh later than without it.
-    starts( n, gcdFree, false, evS0 )
-    starts( n, gcdFree, true, evS )
+    starts(n, gcdFree, false, evS0)
+    starts(n, gcdFree, true, evS)
     local useCredit = true
     for k = 1, n do
-        if not evK[ k ] and evS[ k ] > evS0[ k ] + TOLERANCE then useCredit = false end
+        if not evK[k] and evS[k] > evS0[k] + TOLERANCE then
+            useCredit = false
+        end
     end
     local st = useCredit and evS or evS0
     -- Backward: the energy needed just before each event so it and everything after it are paid for.
     local need, nextStart = 0, nil
     for k = n, 1, -1 do
-        if useCredit or not evK[ k ] then
+        if useCredit or not evK[k] then
             local carry = need
             if nextStart then
-                carry = need - regen * ( nextStart - st[ k ] )
-                if carry < 0 then carry = 0 end
+                carry = need - regen * (nextStart - st[k])
+                if carry < 0 then
+                    carry = 0
+                end
             end
-            need = evC[ k ] + carry
-            if need < 0 then need = 0 end
-            nextStart = st[ k ]
+            need = evC[k] + carry
+            if need < 0 then
+                need = 0
+            end
+            nextStart = st[k]
         end
     end
     if nextStart then
         need = need - regen * nextStart
-        if need < 0 then need = 0 end
+        if need < 0 then
+            need = 0
+        end
     end
     return cur - need
-end )
+end)
 
 -- The settings the priorities read (TDF's names and defaults).
-spec:RegisterSetting( "rip_cp", 5, {
+spec:RegisterSetting("rip_cp", 5, {
     type = "range",
     name = "Rip Combo Points",
     desc = "Select the combo points at which Rip is applied and its energy reserved.",
@@ -1631,30 +1818,30 @@ spec:RegisterSetting( "rip_cp", 5, {
     min = 1,
     max = 5,
     step = 1,
-} )
+})
 
-spec:RegisterSetting( "bite_finisher", false, {
+spec:RegisterSetting("bite_finisher", false, {
     type = "toggle",
     name = "Ferocious Bite Finisher",
     desc = "When enabled, Ferocious Bite spends 5 combo points while Rip is up and no energy is held back.",
     width = "full",
-} )
+})
 
-spec:RegisterSetting( "behind", false, {
+spec:RegisterSetting("behind", false, {
     type = "toggle",
     name = "Always Behind",
     desc = "When enabled, Shred is recommended over Claw as if you always stand behind the target.",
     width = "full",
-} )
+})
 
-spec:RegisterSetting( "buffs", true, {
+spec:RegisterSetting("buffs", true, {
     type = "toggle",
     name = "Out-of-Combat Buffs",
     desc = "When enabled, Mark of the Wild and Thorns are recommended before combat when missing.",
     width = "full",
-} )
+})
 
-spec:RegisterSetting( "dump_rage", 60, {
+spec:RegisterSetting("dump_rage", 60, {
     type = "range",
     name = "Swipe Rage Threshold",
     desc = "Select the rage at or above which the Guardian priority spends rage on Swipe.",
@@ -1662,37 +1849,37 @@ spec:RegisterSetting( "dump_rage", 60, {
     min = 0,
     max = 100,
     step = 1,
-} )
+})
 
-spec:RegisterSetting( "use_enrage", false, {
+spec:RegisterSetting("use_enrage", false, {
     type = "toggle",
     name = "Use Enrage",
     desc = "When enabled, the Guardian priority uses Enrage when rage is short.",
     width = "full",
-} )
+})
 
-spec:RegisterSetting( "moonkin", true, {
+spec:RegisterSetting("moonkin", true, {
     type = "toggle",
     name = "Moonkin Form",
     desc = "When enabled, the Balance priority recommends Moonkin Form before combat.",
     width = "full",
-} )
+})
 
-spec:RegisterSetting( "trash_dots", true, {
+spec:RegisterSetting("trash_dots", true, {
     type = "toggle",
     name = "Moonfire on Trash",
     desc = "When enabled, the Balance priority keeps Moonfire on targets that are not bosses.",
     width = "full",
-} )
+})
 
-spec:RegisterSetting( "starfire_filler", false, {
+spec:RegisterSetting("starfire_filler", false, {
     type = "toggle",
     name = "Starfire Filler",
     desc = "When enabled, the Balance priority fills with Starfire instead of Wrath.",
     width = "full",
-} )
+})
 
-spec:RegisterSetting( "hurricane_targets", 4, {
+spec:RegisterSetting("hurricane_targets", 4, {
     type = "range",
     name = "Hurricane Targets",
     desc = "Select the number of enemies at which the Balance priority channels Hurricane (0: never).",
@@ -1700,20 +1887,32 @@ spec:RegisterSetting( "hurricane_targets", 4, {
     min = 0,
     max = 10,
     step = 1,
-} )
+})
 
-spec:RegisterSetting( "innervate", true, {
+spec:RegisterSetting("innervate", true, {
     type = "toggle",
     name = "Innervate",
     desc = "When enabled, the Balance priority uses Innervate when mana runs low.",
     width = "full",
-} )
+})
 
-spec:RegisterOptions( { package = "Feral" } )
+spec:RegisterOptions({ package = "Feral" })
 
 -- The three priorities, generated by tools/make_pack.lua from tools/packs/druid.lua (lua5.1 tools/make_pack.lua druid
 -- prints these strings, in this order; tests/Forever/druid_spec.lua checks they match). Pick one with
 -- /hekili priority <name>. Guardian and Balance are provisional (their descriptions say why); Restoration is deferred.
-spec:RegisterPack( "Feral", 20261015, [[Hekili:1wzuVnnmqC8pl8sfvmfwhRdgIUhaec4Hj0cp7yhNZTw11oY2HsFXF25StAjPDzunjuLADT)F)VZN)fhYmYpj5vmpqU)QlV6MzxoBoj3VRgi51m(A2sCGMTb)(lGLPIZUtzyvXWkBKk)30KYtDWvdCY9ZU(2Bj5RKvvqRkWXrJmw4xGnqtogOF22iRc0xYz(PVpqr9cVuVmq)HzBuwjOmBd05xgOGgSl3DrG(GSoqz(a1VccuhGJ4MnLMaT2i1EhUOg98b2ACzMlPBxGkykmHgHaTq3weCLSUgt3fDEzbhAg6HjwkwiwzFsXWcy7kq3jYZSlJ5uW4aA(otZum(vgvvQWtAAR1dUkqJxffRHKNWVXqDfW0mSNAncPc7XmUxA0USAle3om)Inm76cJOaDPyRuvDHuSa3UXgKlRSriCtEr8NSJfM1u3TYsSFE0kHVFsME1Ix7xzSA3OzOD5rJgp(keg7My8TbSFM(HS48KH(564GI6igeL32rZ4nwlO9FabIEYBCqH0dBC9NSeSoWUU)uwzD0ReTu0cl7D8U)UVrvfCSbwbPse)7rvNfjR0wyVc8)hjrawdxAACfLyHnSTItuiKAjIe2jpETmFYGKpzpWC3r9HH9meytzkoOWSUxuTQYsRKXnUbbYrcpTDgpWOKU4i54JooCY(pYRKoVlDBciynkpo8(0TlGMvQGkYh3Z3K89h54il2kSsgj)eyG4r7hXGHWrFBobsI28MrS5a0efD9iI6GOOK5JibpI6xdph4kA)nJzpcxdAvdHUyOVDKqhcH9n5)cmglL3n6zgIwdQGZasJgE7yuesKdAlNb8sIFYpCV1tbPhFJ6J38EUxb)u0D7nT)Z8D4c5NcXp3h1s9fwt0ts(xH1sLeFlv37QNMwM8Nd]] )
-spec:RegisterPack( "Guardian", 20261015, [[Hekili:9A12UTjtq4NLCt0FvS4pojoTPkKlIQ6j1Avv61lSadoRmSlA3LeLQkE27ma2EnyCtDI6ng8C8BN5BNb2u2pybPClWMF2PND50tNoJfyFSeybL8KL8f4lsEb(7hQ46ubxskEmxXtjpJRe52pjzXddIPesyZNEXvxXcUtKMcTwbMewW7vA4EqxhTkO1rVtxjsRJ(VyGRNuhvQv3lmcLKN)26isyDKgrtDKqMOkWNCjAEkKWFeFxJcQKfa3uPH0xHU8oOqP55IFkKlQJ(UQjQFHNaAeN1rwvD0muY30IcEED0TcsQcbsIsLNQEqIk)kVkVlrbpikrdEqyVRoYu2KqcpEy5qRYe5yfINyraB8k1acXyU1NWDyMsxmrK5FuCvwM3ArEvL1FUZLNSHN4))6kzy7)cZfg7eQ74Zva5jj)EieKqHam34FMRJXG2a6LUIQmqiEWlmUctDQCHAQWrykfAq1aL9qxExfM8PZLvI8mwKrDJ)SJ7RqdfCH0CT)fEZCdwztZjmM6noIZ4GwaHzcn4cnhX7buXkJzaaAq21BL7cS3pHQpQSSWfjP(tjVBA5jvAniT343AThzQxIYypPtGdUBK)RJ2HILsKK5MrdrXcB4)dYKbSwSIB8sRkkdBUi44jijjKxRTJqER4JDJ01JGWTkVOH)uaPHAybYKWceQyTbEivZ)WPiK7B4I7IZEEFBhss7uSl6rNQn1Y(AEo91nr9aB3hFq5P)r4jY)zb4iwAeQ7uzAKHHMCJHcFmVz(pi5X5qk72vZWO509AISGenEo0colyFDAMft3ibTRR7gQbDFY)ZhX)1mbYOlgXiNIoz2SrmBtnMS6YEwTbGhuh7FfZyZXHSSTa1XRPwlEWE9ihFhYYU6SBZLWazjkrgMe7(ynR3zTvmhSoBxCKXPeNTj(9291sNdB)(eIqVhUZkU3EyoBrVgJ38SUy0NMTkORwe5gRdA75(A59Uy8MxiMX8R(lou7B7lfRPN(mVi(0VX9NV7mDmAUZSJrb4Wn2nHCSrJT7QDd3HUkVjnJDlyN72BVEV(RwFzUG3etEL9ofwK(iSuKlWVUV7d)FvJA2Vd]] )
-spec:RegisterPack( "Balance", 20261015, [[Hekili:LAvtVTnmm0Fl9sw7wHxtxB36WspuSn0oG1lEa7MSzKLJfISKHKCkkWG)Tps)vDsTtaAVKetY3JmKpkz2C2FyHjGxWE48Zo)Q5Nn)swO)PcblSa4RHv4p0qo(5TGc08A7pPmqcbCzPu5VxZw(soCfco7H5xC91SWmzsIOjkHJZc)PXk2iSvXTCwf)DBPmPk(4cRzJ0jnAq91Q4CqdvXsxvSUjERasGLkeaOXW)bxjlCI3HbWZa7k0UTK8sqk1CJovAZfjNGC9BJrVwQRIXKNFAZZO3oQUx7eCFvC4JGnVkETOaFOSadm0d2Man6(u2LqhgWFTGpRk2BQItLkfA5UsRvYbDlg8VXtOFkEVlaBGwdgi2jbUh)R6ckScUjFj4xK3uLrPurktx4eEVuVYf06y2rllttdggwqzr1VEbtFyXhZb76itAKpte9OuLSfFenUo22jqKXwpRKP(D8mEU8zgR2nzgACpe9cPwlSBqrZwG6ToJM9bCSrk0(V1akW1okc4gN)9N3tgwaLorK0lYDdnYbLkQ5XiL05pLuYlaZ25mRBAf1oIU5SzeOnIiHwKlfUB2tWdZxERMIO)Oer)OQUMXM6Xlno3)65YBbxwuIX7ozilYAPyKJuIdzAODInISH466o1yYX9i9Qz1afnAwQ9XxFZI5hcuFb25mI014(3aCpsI(bGEwwGT3fhOrSvWiz9n1TiKfI780zbdpwHgJo6Ohej(1d1NFj00HcjSB7wPyHDzJfYTOUWkbw4ivcZJKpbf9v1wC0uDiopDAwkuQ87Ro6f0dj51j33xT2l)PG(0obnsIFBA(NZ7UByndOOMBmOrewox82gr7zRHy)YjB8pVTmwggBBI47Qj4RBymIyy8TmISp)kiBQTpIVVmbF1BJtkt7pO(qlmDxPmQKzV3aTpT5UxVmk7V67JgtW3L5MRDoy(6VDQUDHnmOKmXcVtSwQK4RL0(clNu7M9)d]] )
+spec:RegisterPack(
+    "Feral",
+    20261015,
+    [[Hekili:1wzuVnnmqC8pl8sfvmfwhRdgIUhaec4Hj0cp7yhNZTw11oY2HsFXF25StAjPDzunjuLADT)F)VZN)fhYmYpj5vmpqU)QlV6MzxoBoj3VRgi51m(A2sCGMTb)(lGLPIZUtzyvXWkBKk)30KYtDWvdCY9ZU(2Bj5RKvvqRkWXrJmw4xGnqtogOF22iRc0xYz(PVpqr9cVuVmq)HzBuwjOmBd05xgOGgSl3DrG(GSoqz(a1VccuhGJ4MnLMaT2i1EhUOg98b2ACzMlPBxGkykmHgHaTq3weCLSUgt3fDEzbhAg6HjwkwiwzFsXWcy7kq3jYZSlJ5uW4aA(otZum(vgvvQWtAAR1dUkqJxffRHKNWVXqDfW0mSNAncPc7XmUxA0USAle3om)Inm76cJOaDPyRuvDHuSa3UXgKlRSriCtEr8NSJfM1u3TYsSFE0kHVFsME1Ix7xzSA3OzOD5rJgp(keg7My8TbSFM(HS48KH(564GI6igeL32rZ4nwlO9FabIEYBCqH0dBC9NSeSoWUU)uwzD0ReTu0cl7D8U)UVrvfCSbwbPse)7rvNfjR0wyVc8)hjrawdxAACfLyHnSTItuiKAjIe2jpETmFYGKpzpWC3r9HH9meytzkoOWSUxuTQYsRKXnUbbYrcpTDgpWOKU4i54JooCY(pYRKoVlDBciynkpo8(0TlGMvQGkYh3Z3K89h54il2kSsgj)eyG4r7hXGHWrFBobsI28MrS5a0efD9iI6GOOK5JibpI6xdph4kA)nJzpcxdAvdHUyOVDKqhcH9n5)cmglL3n6zgIwdQGZasJgE7yuesKdAlNb8sIFYpCV1tbPhFJ6J38EUxb)u0D7nT)Z8D4c5NcXp3h1s9fwt0ts(xH1sLeFlv37QNMwM8Nd]]
+)
+spec:RegisterPack(
+    "Guardian",
+    20261015,
+    [[Hekili:9A12UTjtq4NLCt0FvS4pojoTPkKlIQ6j1Avv61lSadoRmSlA3LeLQkE27ma2EnyCtDI6ng8C8BN5BNb2u2pybPClWMF2PND50tNoJfyFSeybL8KL8f4lsEb(7hQ46ubxskEmxXtjpJRe52pjzXddIPesyZNEXvxXcUtKMcTwbMewW7vA4EqxhTkO1rVtxjsRJ(VyGRNuhvQv3lmcLKN)26isyDKgrtDKqMOkWNCjAEkKWFeFxJcQKfa3uPH0xHU8oOqP55IFkKlQJ(UQjQFHNaAeN1rwvD0muY30IcEED0TcsQcbsIsLNQEqIk)kVkVlrbpikrdEqyVRoYu2KqcpEy5qRYe5yfINyraB8k1acXyU1NWDyMsxmrK5FuCvwM3ArEvL1FUZLNSHN4))6kzy7)cZfg7eQ74Zva5jj)EieKqHam34FMRJXG2a6LUIQmqiEWlmUctDQCHAQWrykfAq1aL9qxExfM8PZLvI8mwKrDJ)SJ7RqdfCH0CT)fEZCdwztZjmM6noIZ4GwaHzcn4cnhX7buXkJzaaAq21BL7cS3pHQpQSSWfjP(tjVBA5jvAniT343AThzQxIYypPtGdUBK)RJ2HILsKK5MrdrXcB4)dYKbSwSIB8sRkkdBUi44jijjKxRTJqER4JDJ01JGWTkVOH)uaPHAybYKWceQyTbEivZ)WPiK7B4I7IZEEFBhss7uSl6rNQn1Y(AEo91nr9aB3hFq5P)r4jY)zb4iwAeQ7uzAKHHMCJHcFmVz(pi5X5qk72vZWO509AISGenEo0colyFDAMft3ibTRR7gQbDFY)ZhX)1mbYOlgXiNIoz2SrmBtnMS6YEwTbGhuh7FfZyZXHSSTa1XRPwlEWE9ihFhYYU6SBZLWazjkrgMe7(ynR3zTvmhSoBxCKXPeNTj(9291sNdB)(eIqVhUZkU3EyoBrVgJ38SUy0NMTkORwe5gRdA75(A59Uy8MxiMX8R(lou7B7lfRPN(mVi(0VX9NV7mDmAUZSJrb4Wn2nHCSrJT7QDd3HUkVjnJDlyN72BVEV(RwFzUG3etEL9ofwK(iSuKlWVUV7d)FvJA2Vd]]
+)
+spec:RegisterPack(
+    "Balance",
+    20261015,
+    [[Hekili:LAvtVTnmm0Fl9sw7wHxtxB36WspuSn0oG1lEa7MSzKLJfISKHKCkkWG)Tps)vDsTtaAVKetY3JmKpkz2C2FyHjGxWE48Zo)Q5Nn)swO)PcblSa4RHv4p0qo(5TGc08A7pPmqcbCzPu5VxZw(soCfco7H5xC91SWmzsIOjkHJZc)PXk2iSvXTCwf)DBPmPk(4cRzJ0jnAq91Q4CqdvXsxvSUjERasGLkeaOXW)bxjlCI3HbWZa7k0UTK8sqk1CJovAZfjNGC9BJrVwQRIXKNFAZZO3oQUx7eCFvC4JGnVkETOaFOSadm0d2Man6(u2LqhgWFTGpRk2BQItLkfA5UsRvYbDlg8VXtOFkEVlaBGwdgi2jbUh)R6ckScUjFj4xK3uLrPurktx4eEVuVYf06y2rllttdggwqzr1VEbtFyXhZb76itAKpte9OuLSfFenUo22jqKXwpRKP(D8mEU8zgR2nzgACpe9cPwlSBqrZwG6ToJM9bCSrk0(V1akW1okc4gN)9N3tgwaLorK0lYDdnYbLkQ5XiL05pLuYlaZ25mRBAf1oIU5SzeOnIiHwKlfUB2tWdZxERMIO)Oer)OQUMXM6Xlno3)65YBbxwuIX7ozilYAPyKJuIdzAODInISH466o1yYX9i9Qz1afnAwQ9XxFZI5hcuFb25mI014(3aCpsI(bGEwwGT3fhOrSvWiz9n1TiKfI780zbdpwHgJo6Ohej(1d1NFj00HcjSB7wPyHDzJfYTOUWkbw4ivcZJKpbf9v1wC0uDiopDAwkuQ87Ro6f0dj51j33xT2l)PG(0obnsIFBA(NZ7UByndOOMBmOrewox82gr7zRHy)YjB8pVTmwggBBI47Qj4RBymIyy8TmISp)kiBQTpIVVmbF1BJtkt7pO(qlmDxPmQKzV3aTpT5UxVmk7V67JgtW3L5MRDoy(6VDQUDHnmOKmXcVtSwQK4RL0(clNu7M9)d]]
+)

@@ -53,7 +53,10 @@ describe("swings", function()
                 end
                 want = want or swings[#swings] + 2.6
                 local got = VS.Swing(1, now)
-                assert.is_true(math.abs(got.est - want) <= I.SWING_TOL, ("at %.2f: %.3f vs %.3f"):format(now, got.est, want))
+                assert.is_true(
+                    math.abs(got.est - want) <= I.SWING_TOL,
+                    ("at %.2f: %.3f vs %.3f"):format(now, got.est, want)
+                )
                 checked = checked + 1
             end
         end

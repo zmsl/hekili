@@ -9,8 +9,13 @@ local DIR = "src/Hekili/Virtual/State/Sources/"
 
 local function discover()
     local out = {}
-    local p =
-        assert(io.popen("find " .. DIR .. " src/Hekili/Virtual/Events/Rows.lua src/Hekili/Virtual/Events/Attackers.lua -name '*.lua' | sort"))
+    local p = assert(
+        io.popen(
+            "find "
+                .. DIR
+                .. " src/Hekili/Virtual/Events/Rows.lua src/Hekili/Virtual/Events/Attackers.lua -name '*.lua' | sort"
+        )
+    )
     for path in p:lines() do
         out[#out + 1] = path
     end

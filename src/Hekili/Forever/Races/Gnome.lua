@@ -6,9 +6,9 @@
 -- Engineering Specialization is a profession passive. Inert for any other race (Engine/Races.lua).
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G[addon]
 
-local race = Hekili:NewRace( "Gnome" )
+local race = Hekili:NewRace("Gnome")
 
 local EUREKA = { 1259812, 1259817, 1259821, 1259823 } -- the other classes' Eureka!
 
@@ -28,7 +28,24 @@ local EUREKA_SPELLS = {
     -- Strike, Quick Strike. Not: Rend, Sunder Armor, the shouts, Concussion Blow, Death Wish, Disarm, Retaliation, Shield
     -- Block.
     WARRIOR = {
-        78, 845, 1240193, 5308, 7384, 12294, 23881, 1680, 23922, 6572, 6343, 1715, 20252, 694, 6552, 72, 1310222, 429765,
+        78,
+        845,
+        1240193,
+        5308,
+        7384,
+        12294,
+        23881,
+        1680,
+        23922,
+        6572,
+        6343,
+        1715,
+        20252,
+        694,
+        6552,
+        72,
+        1310222,
+        429765,
     },
     -- set 8, masks 100794910 / 2097408 / 0: Ambush, Backstab, Eviscerate, Ghostly Strike, Gouge, Hemorrhage, Kick,
     -- Mutilate, Riposte, Sinister Strike
@@ -41,10 +58,27 @@ local EUREKA_SPELLS = {
     WARLOCK = { 1293817, 6789, 689, 403677, 1120, 1949, 348, 5740, 5676, 686, 17877, 6353, 1316697 },
     -- set 6, masks 150224528 / 8388614 / 0: Binding Heal, Flash Heal, Greater Heal, Heal, Holy Fire, Holy Nova, Lesser
     -- Heal, Mana Burn, Mind Blast, Mind Flay, Penance, Prayer of Healing, Shadow Word: Death (both), Smite, Starshards
-    PRIEST = { 401937, 2061, 2060, 2054, 14914, 15237, 2050, 8129, 8092, 15407, 402174, 596, 401955, 1309595, 585, 10797 },
+    PRIEST = {
+        401937,
+        2061,
+        2060,
+        2054,
+        14914,
+        15237,
+        2050,
+        8129,
+        8092,
+        15407,
+        402174,
+        596,
+        401955,
+        1309595,
+        585,
+        10797,
+    },
 }
 
-race:RegisterAbility( "eureka", {
+race:RegisterAbility("eureka", {
     id = 1259813,
     copy = EUREKA,
     cast = 0,
@@ -53,23 +87,23 @@ race:RegisterAbility( "eureka", {
     startsCombat = false,
     toggle = "cooldowns",
 
-    handler = function ()
-        applyBuff( "eureka", 15, 3 )
+    handler = function()
+        applyBuff("eureka", 15, 3)
     end,
     -- VirtualState's now-state of the cast (event-facade spec §12a)
-    now = function ()
-        applyBuff( "eureka", 15, 3 )
+    now = function()
+        applyBuff("eureka", 15, 3)
     end,
-} )
+})
 
-race:RegisterAura( "eureka", {
+race:RegisterAura("eureka", {
     id = 1259813,
     copy = EUREKA,
     duration = 15,
     max_stack = 3,
-} )
+})
 
-race:RegisterAbility( "escape_artist", {
+race:RegisterAbility("escape_artist", {
     id = 20589,
     cast = 0,
     cooldown = 120,
@@ -77,30 +111,30 @@ race:RegisterAbility( "escape_artist", {
     startsCombat = false,
     toggle = "defensives",
 
-    handler = function ()
-        applyBuff( "escape_artist" )
+    handler = function()
+        applyBuff("escape_artist")
     end,
-    now = function ()
-        applyBuff( "escape_artist" )
+    now = function()
+        applyBuff("escape_artist")
     end,
-} )
+})
 
-race:RegisterAura( "escape_artist", {
+race:RegisterAura("escape_artist", {
     id = 20589,
     duration = 3,
     max_stack = 1,
-} )
+})
 
-race:RegisterResourceMod( { max = 0.05 } ) -- Expansive Mind: +5% maximum resources
+race:RegisterResourceMod({ max = 0.05 }) -- Expansive Mind: +5% maximum resources
 
 -- The loaded class's scope (Engine/Spec.lua sets class.file before any race file runs); a class with no Eureka! (none
 -- exists for a Hunter, Shaman, Paladin or Druid) declares no cost modifier.
-local spells = EUREKA_SPELLS[ Hekili.Class.file ]
+local spells = EUREKA_SPELLS[Hekili.Class.file]
 if spells then
-    race:RegisterCostMod( {
+    race:RegisterCostMod({
         aura = "eureka",
         pct = -0.10,
         charges = 3,
         spells = spells,
-    } )
+    })
 end

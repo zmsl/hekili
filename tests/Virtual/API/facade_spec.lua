@@ -194,9 +194,12 @@ describe("ns.Facade", function()
             seen = seen + aura.spellId
         end, true)
         assert.are.equal(fs.SHOUT, seen)
-        local found = select(10, Facade.AuraUtil.FindAura(function(_, _, _, ...)
-            return select(10, ...) == fs.SHOUT
-        end, "player", "HELPFUL"))
+        local found = select(
+            10,
+            Facade.AuraUtil.FindAura(function(_, _, _, ...)
+                return select(10, ...) == fs.SHOUT
+            end, "player", "HELPFUL")
+        )
         assert.are.equal(fs.SHOUT, found)
     end)
 
@@ -253,7 +256,10 @@ describe("ns.Facade", function()
         ctl.Tick(10)
         I.Fold(10, false)
         local name, _, _, s, e, _, bar, notKick = Facade.UnitCastingInfo("target")
-        assert.are.same({ "Casting", 10000, (10 + I.TARGET_CAST_DEFAULT) * 1000, 77, false }, { name, s, e, bar, notKick })
+        assert.are.same(
+            { "Casting", 10000, (10 + I.TARGET_CAST_DEFAULT) * 1000, 77, false },
+            { name, s, e, bar, notKick }
+        )
         assert.is_nil(Facade.UnitChannelInfo("target"))
     end)
 
@@ -328,19 +334,22 @@ describe("ns.Facade", function()
         assert.are.equal(0, select("#", ns2.Facade.HasOverrideActionBar()))
     end)
 
-    it("names the GCD by one constant: Forever's GCD spell, I.GCD_SPELL, and retail's GCD ID in no file the TOC loads", function()
-        local retail = tostring(61303 + 1) -- retail's GCD spell, spelled so this file does not name it either
-        for line in io.lines("src/Hekili/Hekili.toc") do
-            local file = line:match("^([%w_\\]+%.lua)%s*$")
-            if file then
-                local src = assert(io.open("src/Hekili/" .. file:gsub("\\", "/"))):read("*a")
-                assert.is_nil(src:find(retail, 1, true), file)
+    it(
+        "names the GCD by one constant: Forever's GCD spell, I.GCD_SPELL, and retail's GCD ID in no file the TOC loads",
+        function()
+            local retail = tostring(61303 + 1) -- retail's GCD spell, spelled so this file does not name it either
+            for line in io.lines("src/Hekili/Hekili.toc") do
+                local file = line:match("^([%w_\\]+%.lua)%s*$")
+                if file then
+                    local src = assert(io.open("src/Hekili/" .. file:gsub("\\", "/"))):read("*a")
+                    assert.is_nil(src:find(retail, 1, true), file)
+                end
             end
+            local spec = assert(io.open("src/Hekili/Engine/Spec.lua")):read("*a")
+            assert.is_truthy(spec:find("global_cooldown = {\n        id = ns.VirtualStateInternal.GCD_SPELL,", 1, true))
+            assert.are.equal(29515, I.GCD_SPELL)
         end
-        local spec = assert(io.open("src/Hekili/Engine/Spec.lua")):read("*a")
-        assert.is_truthy(spec:find("global_cooldown = {\n        id = ns.VirtualStateInternal.GCD_SPELL,", 1, true))
-        assert.are.equal(29515, I.GCD_SPELL)
-    end)
+    )
 
     it("answers empty spec slots and talent ranks in retail's shape (decision 7)", function()
         answers["C_SpecializationInfo.GetSpecializationInfo"] = function(i)
@@ -349,7 +358,10 @@ describe("ns.Facade", function()
             end
             return 0, "", "", 0
         end
-        assert.are.same({ 1491, "Warrior", "", 1, "DAMAGER", 1 }, { Facade.C_SpecializationInfo.GetSpecializationInfo(1) })
+        assert.are.same(
+            { 1491, "Warrior", "", 1, "DAMAGER", 1 },
+            { Facade.C_SpecializationInfo.GetSpecializationInfo(1) }
+        )
         assert.is_nil(Facade.C_SpecializationInfo.GetSpecializationInfo(2))
         local talent = { 0, 12286, 3 }
         local rank = VS.Talent

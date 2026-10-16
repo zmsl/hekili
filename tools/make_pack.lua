@@ -45,7 +45,8 @@ if first == "lists" then
     return PACKS
 end
 
-_G.strbyte, _G.strchar, _G.strsub, _G.strfind, _G.format = string.byte, string.char, string.sub, string.find, string.format
+_G.strbyte, _G.strchar, _G.strsub, _G.strfind, _G.format =
+    string.byte, string.char, string.sub, string.find, string.format
 dofile("src/Hekili/Libs/LibStub/LibStub.lua")
 dofile("src/Hekili/Libs/LibDeflate/LibDeflate.lua")
 dofile("src/Hekili/Libs/AceSerializer-3.0/AceSerializer-3.0.lua")

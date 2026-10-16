@@ -244,7 +244,10 @@ describe("shared content", function()
         load({ "Items" })
         assert.are.same({ "main_hand", "null_cooldown", "trinket1", "trinket2", "use_items" }, keys("abilities"))
         local a = all.abilities
-        assert.are.same({ a.trinket1, a.trinket2, a.main_hand }, { a.actual_trinket1, a.actual_trinket2, a.actual_main_hand })
+        assert.are.same(
+            { a.trinket1, a.trinket2, a.main_hand },
+            { a.actual_trinket1, a.actual_trinket2, a.actual_main_hand }
+        )
         assert.are.same({ "|cff00ccff[Main Hand]|r", false }, { a.main_hand.name, a.main_hand.usable })
         assert.are.same({}, _G.Hekili.Class.trinkets[12345])
     end)
@@ -261,26 +264,29 @@ describe("shared content", function()
         end
     end)
 
-    it("leaves no dropped key in a priority, a class, race, engine or shared file, and no stub outside its own", function()
-        local ls = assert(io.popen("find src/Hekili/Engine src/Hekili/Forever tools/packs -name '*.lua' | sort"))
-        local n = 0
-        for path in ls:lines() do
-            local src = read(path)
-            for _, k in ipairs(DROPPED) do
-                assert.is_false(names(src, k), path .. ": " .. k)
-            end
-            -- A class file (a future Priest or Rogue) may register a stubbed key for real; its registration wins.
-            if path ~= "src/Hekili/Forever/Shared/Auras.lua" then
-                local class = path:find("^src/Hekili/Forever/Classes/")
-                for _, k in ipairs(STUBS) do
-                    assert.is_true(class and registers(src, k) or not names(src, k), path .. ": " .. k)
+    it(
+        "leaves no dropped key in a priority, a class, race, engine or shared file, and no stub outside its own",
+        function()
+            local ls = assert(io.popen("find src/Hekili/Engine src/Hekili/Forever tools/packs -name '*.lua' | sort"))
+            local n = 0
+            for path in ls:lines() do
+                local src = read(path)
+                for _, k in ipairs(DROPPED) do
+                    assert.is_false(names(src, k), path .. ": " .. k)
                 end
+                -- A class file (a future Priest or Rogue) may register a stubbed key for real; its registration wins.
+                if path ~= "src/Hekili/Forever/Shared/Auras.lua" then
+                    local class = path:find("^src/Hekili/Forever/Classes/")
+                    for _, k in ipairs(STUBS) do
+                        assert.is_true(class and registers(src, k) or not names(src, k), path .. ": " .. k)
+                    end
+                end
+                n = n + 1
             end
-            n = n + 1
+            ls:close()
+            assert.is_true(n > 10)
         end
-        ls:close()
-        assert.is_true(n > 10)
-    end)
+    )
 
     it("leaves each key `all` gave up registered by its class or race file", function()
         local spec = read("src/Hekili/Engine/Spec.lua")

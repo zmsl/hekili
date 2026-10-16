@@ -24,7 +24,8 @@ describe("resource modifiers", function()
         for _, k in ipairs({ "GetTime", "UnitGUID", "CreateFrame", "issecretvalue", "debugprofilestop" }) do
             saved[k] = rawget(_G, k) or false
         end
-        _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue = api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
+        _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue =
+            api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
         _G.debugprofilestop = function()
             return 0
         end
@@ -73,24 +74,27 @@ describe("resource modifiers", function()
         assert.are.equal(100, I.res.max[1])
     end)
 
-    it("takes 10% off Heroic Strike while Eureka! is up and spends a charge a cast; Rend, out of scope, neither", function()
-        local strike, rend = I.ab.bySpell[fs.STRIKE], I.ab.bySpell[fs.REND]
-        assert.are.equal(15, I.CostOf(strike))
-        local j = I.auras.bySpell[EUREKA]
-        I.AuraModel(1, j, 5, 20, 3, 5, VS.Obs.CastSuccess, false) -- Eureka! up with its three charges
-        I.clock = 5
-        assert.are.same({ 13.5, 10 }, { I.CostOf(strike), I.CostOf(rend) })
-        cast(fs.REND, 5.5)
-        local _, stacks = VS.Aura("player", EUREKA, 5.6)
-        assert.are.equal(3, stacks) -- Rend took no charge
-        for k = 1, 3 do
-            cast(fs.STRIKE, 5.5 + k)
-            _, stacks = VS.Aura("player", EUREKA, 5.5 + k + 0.05)
-            assert.are.equal(3 - k > 0 and 3 - k or nil, stacks)
+    it(
+        "takes 10% off Heroic Strike while Eureka! is up and spends a charge a cast; Rend, out of scope, neither",
+        function()
+            local strike, rend = I.ab.bySpell[fs.STRIKE], I.ab.bySpell[fs.REND]
+            assert.are.equal(15, I.CostOf(strike))
+            local j = I.auras.bySpell[EUREKA]
+            I.AuraModel(1, j, 5, 20, 3, 5, VS.Obs.CastSuccess, false) -- Eureka! up with its three charges
+            I.clock = 5
+            assert.are.same({ 13.5, 10 }, { I.CostOf(strike), I.CostOf(rend) })
+            cast(fs.REND, 5.5)
+            local _, stacks = VS.Aura("player", EUREKA, 5.6)
+            assert.are.equal(3, stacks) -- Rend took no charge
+            for k = 1, 3 do
+                cast(fs.STRIKE, 5.5 + k)
+                _, stacks = VS.Aura("player", EUREKA, 5.5 + k + 0.05)
+                assert.are.equal(3 - k > 0 and 3 - k or nil, stacks)
+            end
+            assert.is_nil(VS.Aura("player", EUREKA, 8.6))
+            assert.are.equal(15, I.CostOf(strike))
         end
-        assert.is_nil(VS.Aura("player", EUREKA, 8.6))
-        assert.are.equal(15, I.CostOf(strike))
-    end)
+    )
 
     it("lets an observed aura read win over the charges it modelled", function()
         local j = I.auras.bySpell[EUREKA]
@@ -145,5 +149,4 @@ describe("resource modifiers", function()
         end, 1000)
         assert.are.equal(0, bytes)
     end)
-
 end)

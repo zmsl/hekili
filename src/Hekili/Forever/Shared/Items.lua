@@ -6,7 +6,7 @@
 -- unusable-trinket stub were dropped.
 
 local addon, ns = ...
-local Hekili = _G[ addon ]
+local Hekili = _G[addon]
 
 local class = Hekili.Class
 
@@ -16,13 +16,13 @@ local shared = Hekili:NewShared()
 -- 1.  Check APLs and don't try to recommend items that have their own APL entries.
 -- 2.  Respect item preferences registered in spec options.
 
-shared:RegisterAbility( "use_items", {
+shared:RegisterAbility("use_items", {
     name = "Use Items",
     listName = "|T136243:0|t |cff00ccff[Use Items]|r",
     cast = 0,
     cooldown = 120,
     gcd = "off",
-} )
+})
 
 local items = {
     null_cooldown = {
@@ -34,7 +34,7 @@ local items = {
 
         startsCombat = false,
 
-        unlisted = true
+        unlisted = true,
     },
 
     trinket1 = {
@@ -74,8 +74,8 @@ local items = {
     },
 }
 
-for key, def in pairs( items ) do
-    shared:RegisterAbility( key, def )
+for key, def in pairs(items) do
+    shared:RegisterAbility(key, def)
 end
 
 class.trinkets = {
@@ -83,8 +83,8 @@ class.trinkets = {
     },
 }
 
-setmetatable( class.trinkets, {
-    __index = function( t, k )
-    return t[0]
-end
-} )
+setmetatable(class.trinkets, {
+    __index = function(t, k)
+        return t[0]
+    end,
+})

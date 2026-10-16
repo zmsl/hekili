@@ -136,25 +136,28 @@ describe("Forever Warrior", function()
         w = lw.load()
     end)
 
-    it("registers the Classic kit plus Victory Rush and Spearing Strike with the DB2's ranks, costs and cooldowns", function()
-        local e = lw.env(w)
-        local n = 0
-        for key, a in pairs(w.abilities) do
-            n = n + 1
-            local want = KIT[key]
-            assert.is_not_nil(want, "unexpected ability " .. key)
-            assert.are.same(want[1], idsOf(a), key)
-            assert.are.same(
-                { want[2], want[3], want[4] },
-                { lw.run(a.spend, e) or 0, lw.run(a.cooldown, e), a.gcd },
-                key
-            )
-            assert.are.equal("function", type(a.known), key)
+    it(
+        "registers the Classic kit plus Victory Rush and Spearing Strike with the DB2's ranks, costs and cooldowns",
+        function()
+            local e = lw.env(w)
+            local n = 0
+            for key, a in pairs(w.abilities) do
+                n = n + 1
+                local want = KIT[key]
+                assert.is_not_nil(want, "unexpected ability " .. key)
+                assert.are.same(want[1], idsOf(a), key)
+                assert.are.same(
+                    { want[2], want[3], want[4] },
+                    { lw.run(a.spend, e) or 0, lw.run(a.cooldown, e), a.gcd },
+                    key
+                )
+                assert.are.equal("function", type(a.known), key)
+            end
+            assert.are.equal(41, n)
+            assert.are.equal(1.5, w.abilities.slam.cast)
+            assert.is_true(w.abilities.heroic_strike.onNextSwing and w.abilities.cleave.onNextSwing)
         end
-        assert.are.equal(41, n)
-        assert.are.equal(1.5, w.abilities.slam.cast)
-        assert.is_true(w.abilities.heroic_strike.onNextSwing and w.abilities.cleave.onNextSwing)
-    end)
+    )
 
     it("models the talent-modified costs from rank 1's value x the rank, Focused Rage on the offensive ones", function()
         local e = lw.env(w)
@@ -164,11 +167,17 @@ describe("Forever Warrior", function()
         end
         -- Focused Rage -3 a rank; Raging Blows -3 (Cleave, Whirlwind); Improved Heroic Strike -1, Improved Execute -5,
         -- Improved Sunder Armor -3, Improved Thunder Clap -6 a rank; floored at 0
-        assert.are.same(
-            { 7, 8, 0, 3, 2, 13, 0, 24, 10 },
-            { at("heroic_strike"), at("cleave"), at("execute"), at("sunder_armor"), at("thunder_clap"), at("whirlwind"),
-                at("overpower"), at("mortal_strike"), at("battle_shout") }
-        )
+        assert.are.same({ 7, 8, 0, 3, 2, 13, 0, 24, 10 }, {
+            at("heroic_strike"),
+            at("cleave"),
+            at("execute"),
+            at("sunder_armor"),
+            at("thunder_clap"),
+            at("whirlwind"),
+            at("overpower"),
+            at("mortal_strike"),
+            at("battle_shout"),
+        })
         assert.are.same({ 8, 7 }, { lw.run(w.abilities.taunt.cooldown, e), lw.run(w.auras.shield_block.duration, e) })
     end)
 
@@ -181,24 +190,39 @@ describe("Forever Warrior", function()
         assert.are.equal("defensive_stance", lw.run(w.abilities.charge.buff, e))
     end)
 
-    it("declares the now-state of Charge, Bloodrage, Berserker Rage, the debuffs and the stances (spec §12a)", function()
-        for _, k in ipairs({ "charge", "bloodrage", "berserker_rage", "rend", "sunder_armor", "thunder_clap", "hamstring",
-            "demoralizing_shout", "piercing_howl", "battle_stance", "defensive_stance", "berserker_stance" }) do
-            assert.is_function(w.abilities[k].now, k)
+    it(
+        "declares the now-state of Charge, Bloodrage, Berserker Rage, the debuffs and the stances (spec §12a)",
+        function()
+            for _, k in ipairs({
+                "charge",
+                "bloodrage",
+                "berserker_rage",
+                "rend",
+                "sunder_armor",
+                "thunder_clap",
+                "hamstring",
+                "demoralizing_shout",
+                "piercing_howl",
+                "battle_stance",
+                "defensive_stance",
+                "berserker_stance",
+            }) do
+                assert.is_function(w.abilities[k].now, k)
+            end
+            local e = lw.env(w)
+            w.game.known[100], w.game.known[6178] = true, true -- Charge rank 2
+            lw.run(w.abilities.charge.now, e)
+            assert.are.same({ 12 }, e.gained)
+            assert.are.same({ "charge_stun" }, e.applied)
+            e = lw.env(w)
+            e.rage.current = 60
+            w.game.known[1310185] = true -- Tactical Mastery: 10 kept
+            lw.run(w.abilities.battle_stance.now, e)
+            assert.are.same({ 50 }, e.spent)
+            assert.are.same({ "battle_stance" }, e.applied)
+            assert.are.same({ "defensive_stance", "berserker_stance" }, e.removed)
         end
-        local e = lw.env(w)
-        w.game.known[100], w.game.known[6178] = true, true -- Charge rank 2
-        lw.run(w.abilities.charge.now, e)
-        assert.are.same({ 12 }, e.gained)
-        assert.are.same({ "charge_stun" }, e.applied)
-        e = lw.env(w)
-        e.rage.current = 60
-        w.game.known[1310185] = true -- Tactical Mastery: 10 kept
-        lw.run(w.abilities.battle_stance.now, e)
-        assert.are.same({ 50 }, e.spent)
-        assert.are.same({ "battle_stance" }, e.applied)
-        assert.are.same({ "defensive_stance", "berserker_stance" }, e.removed)
-    end)
+    )
 
     describe("the reactive windows from the combat log (event-facade spec §6)", function()
         local ME, MOB = "Player-1", "Creature-1"
@@ -356,7 +380,10 @@ describe("Forever Warrior", function()
     it("gains Bloodrage's rage over time through an aura-gated regen entry", function()
         local models = w.resource[2]
         assert.are.equal(1, w.resource[1])
-        assert.are.same({ "bloodrage", 1, 1 }, { models.bloodrage.aura, models.bloodrage.interval, models.bloodrage.value })
+        assert.are.same(
+            { "bloodrage", 1, 1 },
+            { models.bloodrage.aura, models.bloodrage.interval, models.bloodrage.value }
+        )
         w.state.buff = { bloodrage = { applied = 10 } }
         w.state.query_time = 13.4
         assert.are.equal(13, models.bloodrage.last())

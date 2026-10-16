@@ -76,15 +76,18 @@ describe("the fold", function()
         assert.is_nil(got)
     end)
 
-    it("drops every held and staged observation when the tracked set is rebuilt (their indices are the old set's)", function()
-        S.Direct(VS.Obs.Moving, 101, 0, 1)
-        S.Stage(VS.Obs.Moving, 101, 0, 1)
-        I.Build(fs.def(fs.new()), 102)
-        ctl.Tick(102)
-        for i = 1, I.log.n do -- (a rebuild may log a target swap of its own, Sources/Target.lua)
-            assert.are_not.equal(VS.Obs.Moving, I.ObsLog.At(I.log, i).kind)
+    it(
+        "drops every held and staged observation when the tracked set is rebuilt (their indices are the old set's)",
+        function()
+            S.Direct(VS.Obs.Moving, 101, 0, 1)
+            S.Stage(VS.Obs.Moving, 101, 0, 1)
+            I.Build(fs.def(fs.new()), 102)
+            ctl.Tick(102)
+            for i = 1, I.log.n do -- (a rebuild may log a target swap of its own, Sources/Target.lua)
+                assert.are_not.equal(VS.Obs.Moving, I.ObsLog.At(I.log, i).kind)
+            end
         end
-    end)
+    )
 
     it("starts in combat after a /reload in combat (no PLAYER_REGEN_DISABLED comes)", function()
         local api2, ctl2 = fake.new()

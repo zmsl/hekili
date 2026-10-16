@@ -19,7 +19,8 @@ local PACKS = {
     {
         name = "Arms",
         desc = "Forever Arms Warrior, ported from Hekili's Classic Arms priority.",
-        simc = HEAD .. [[
+        simc = HEAD
+            .. [[
 actions.cooldowns=sweeping_strikes,if=active_enemies>1
 actions.cooldowns+=/death_wish
 actions.cooldowns+=/recklessness
@@ -44,7 +45,8 @@ actions.rotation+=/berserker_stance,use_off_gcd=1,if=!up
     {
         name = "Fury",
         desc = "Forever Fury Warrior, ported from Hekili's Classic Fury priority.",
-        simc = HEAD .. [[
+        simc = HEAD
+            .. [[
 actions.cooldowns=death_wish
 actions.cooldowns+=/recklessness
 actions.execute=heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_42|settings.adaptive_queueing_enabled&should_hs)|(execute_phase&settings.execute_queueing_enabled))

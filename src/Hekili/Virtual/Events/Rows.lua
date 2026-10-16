@@ -31,8 +31,17 @@ end
 
 local strikeWait = 0 -- an on-next-swing strike's success still waiting for its main-hand swing
 
-local MISSES = { DODGE = true, PARRY = true, MISS = true, BLOCK = true, DEFLECT = true, EVADE = true, IMMUNE = true,
-    RESIST = true, ABSORB = true }
+local MISSES = {
+    DODGE = true,
+    PARRY = true,
+    MISS = true,
+    BLOCK = true,
+    DEFLECT = true,
+    EVADE = true,
+    IMMUNE = true,
+    RESIST = true,
+    ABSORB = true,
+}
 
 local function free(ts)
     local oldest = 1

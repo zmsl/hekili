@@ -162,18 +162,21 @@ describe("resources", function()
             assert.are.equal(0, VS.Power(fs.RAGE, 5).est)
         end)
 
-        it("alternates pinned (the ladder) and modelled (a swing, a cast) and keeps lo at or above what was seen", function()
-            obs(Obs.Usable, 5, 3, 1, 0) -- rend (10) usable
-            obs(Obs.Usable, 5, 2, 0, 1) -- heroic strike (15) short
-            I.Fold(5, false)
-            local r = VS.Power(fs.RAGE, 5)
-            assert.are.equal("pinned", r.basis)
-            assert.is_true(r.lo >= 10 and r.hi < 15)
-            I.ResourceShift(1, -10, 6, Obs.CastSuccess)
-            r = VS.Power(fs.RAGE, 6)
-            assert.are.equal("modelled", r.basis)
-            assert.is_true(r.hi - r.lo <= 15)
-        end)
+        it(
+            "alternates pinned (the ladder) and modelled (a swing, a cast) and keeps lo at or above what was seen",
+            function()
+                obs(Obs.Usable, 5, 3, 1, 0) -- rend (10) usable
+                obs(Obs.Usable, 5, 2, 0, 1) -- heroic strike (15) short
+                I.Fold(5, false)
+                local r = VS.Power(fs.RAGE, 5)
+                assert.are.equal("pinned", r.basis)
+                assert.is_true(r.lo >= 10 and r.hi < 15)
+                I.ResourceShift(1, -10, 6, Obs.CastSuccess)
+                r = VS.Power(fs.RAGE, 6)
+                assert.are.equal("modelled", r.basis)
+                assert.is_true(r.hi - r.lo <= 15)
+            end
+        )
 
         it("keeps basis default at rest when a rung bounds the interval without moving the estimate", function()
             obs(Obs.Usable, 5, 1, 0, 1) -- battle shout (10) short at 0 rage, out of combat
@@ -212,10 +215,13 @@ describe("resources", function()
             assert.are.equal(0, VS.Power(fs.RAGE, 100).hi)
             I.ResourceShift(1, 100, 100, Obs.CastSuccess)
             local t = 100
-            assert.are.equal(0, alloc.bytes(function()
-                t = t + 0.01
-                I.Settle(t)
-            end, 2000))
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    t = t + 0.01
+                    I.Settle(t)
+                end, 2000)
+            )
             assert.is_true(VS.Power(fs.RAGE, t).est < 100)
         end)
 
@@ -357,11 +363,14 @@ describe("resources", function()
             S.Direct(Obs.CombatStart, 50)
             I.Fold(50, false)
             local t = 50
-            assert.are.equal(0, alloc.bytes(function()
-                t = t + 0.1
-                I.Settle(t)
-                VS.Power(fs.RAGE, t + 0.5)
-            end, 2000))
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    t = t + 0.1
+                    I.Settle(t)
+                    VS.Power(fs.RAGE, t + 0.5)
+                end, 2000)
+            )
         end)
 
         it("credits a plain periodic entry after a build in combat, from the build", function()
@@ -428,9 +437,14 @@ describe("resources", function()
 
         it("follows a maximum raised through maxMods at combat end, and caps at a lowered one", function()
             local on = false
-            def.resources[1].maxMods = { { pct = 0.2, when = function()
-                return on
-            end } }
+            def.resources[1].maxMods = {
+                {
+                    pct = 0.2,
+                    when = function()
+                        return on
+                    end,
+                },
+            }
             boot(def)
             on = true
             obs(Obs.CombatEnd, 2)

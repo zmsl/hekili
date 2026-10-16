@@ -22,7 +22,8 @@ describe("the event facade", function()
 
     before_each(function()
         api, ctl = fake.new()
-        saved = { CreateFrame = rawget(_G, "CreateFrame") or false, issecretvalue = rawget(_G, "issecretvalue") or false }
+        saved =
+            { CreateFrame = rawget(_G, "CreateFrame") or false, issecretvalue = rawget(_G, "issecretvalue") or false }
         _G.CreateFrame, _G.issecretvalue = api.CreateFrame, api.issecretvalue -- the client, as the game has it at load
         ns = load.module()
         VS, I = ns.VirtualState, ns.VirtualStateInternal

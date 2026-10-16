@@ -145,35 +145,41 @@ describe("Adapter", function()
         assert.are.same({ true, "bear_form" }, { got.resources[1].rest, got.resources[1].swingAura })
     end)
 
-    it("leaves the cast history, the real queue and the swing fields to the combat-log rows, asks for a cycle", function()
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
-        ctl.casting = { 1000, 2500 }
-        ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-3", fs.REND)
-        ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-3", fs.REND)
-        assert.are.same({}, state.history) -- CLEU_HANDLER writes them from the rows (cleu_rows_spec)
-        assert.are.same({}, state.removed)
-        assert.are.same({}, state.queue)
-        assert.are.same({ "UNIT_SPELLCAST_SUCCEEDED", "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_FAILED" }, h.forced)
-        ctl.Fire("PLAYER_SWING", 2.6, 0)
-        assert.are.equal(0, state.swings.mh_actual) -- CLEU_HANDLER writes it from the swing row
-    end)
+    it(
+        "leaves the cast history, the real queue and the swing fields to the combat-log rows, asks for a cycle",
+        function()
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
+            ctl.casting = { 1000, 2500 }
+            ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-3", fs.REND)
+            ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-3", fs.REND)
+            assert.are.same({}, state.history) -- CLEU_HANDLER writes them from the rows (cleu_rows_spec)
+            assert.are.same({}, state.removed)
+            assert.are.same({}, state.queue)
+            assert.are.same({ "UNIT_SPELLCAST_SUCCEEDED", "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_FAILED" }, h.forced)
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            assert.are.equal(0, state.swings.mh_actual) -- CLEU_HANDLER writes it from the swing row
+        end
+    )
 
-    it("folds a swing staged this frame before poll 3 clears the queued strike: the swing is skipped as paid", function()
-        ctl.current[fs.STRIKE] = true
-        ctl.now = 2
-        VS.Drain(2)
-        assert.is_true(I.queuedStrike)
-        local before = VS.Power(fs.RAGE, 2).est
-        ctl.now = 3
-        ctl.Fire("PLAYER_SWING", 2.6, 0) -- staged; the flush frame has not ticked
-        ctl.current[fs.STRIKE] = nil -- the strike took that swing
-        VS.Drain(3)
-        assert.is_false(I.queuedStrike)
-        ctl.Tick(3.05)
-        ctl.now = 3.1
-        VS.Drain(3.1)
-        assert.are.equal(before, VS.Power(fs.RAGE, 3.1).est) -- no swing income
-    end)
+    it(
+        "folds a swing staged this frame before poll 3 clears the queued strike: the swing is skipped as paid",
+        function()
+            ctl.current[fs.STRIKE] = true
+            ctl.now = 2
+            VS.Drain(2)
+            assert.is_true(I.queuedStrike)
+            local before = VS.Power(fs.RAGE, 2).est
+            ctl.now = 3
+            ctl.Fire("PLAYER_SWING", 2.6, 0) -- staged; the flush frame has not ticked
+            ctl.current[fs.STRIKE] = nil -- the strike took that swing
+            VS.Drain(3)
+            assert.is_false(I.queuedStrike)
+            ctl.Tick(3.05)
+            ctl.now = 3.1
+            VS.Drain(3.1)
+            assert.are.equal(before, VS.Power(fs.RAGE, 3.1).est) -- no swing income
+        end
+    )
 
     it("never resets or replays Hekili's state in the drain, and marks a unit whose believed auras moved", function()
         ctl.now = 3

@@ -96,8 +96,18 @@ local function write(name, kind, a1, a2, n, r1, r2, r3, r4)
         kind = modelled and "hybrid:model" or "hybrid:raw"
     end
     if not Facade.QUIET[name] then
-        hk:Debug("[vs] %s %s(%s, %s) -> %s, %s, %s, %s #%d", kind, name, show(a1), show(a2), show(r1), show(r2),
-            show(r3), show(r4), n)
+        hk:Debug(
+            "[vs] %s %s(%s, %s) -> %s, %s, %s, %s #%d",
+            kind,
+            name,
+            show(a1),
+            show(a2),
+            show(r1),
+            show(r2),
+            show(r3),
+            show(r4),
+            n
+        )
     end
 end
 

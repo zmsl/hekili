@@ -94,24 +94,27 @@ describe("casts and cooldowns", function()
         assert.are.equal(4, n + I.Sources.stN)
     end)
 
-    it("fixes the GCD's start and duration at the rising edge, quantised so they survive Hekili's round trip", function()
-        S.Direct(Obs.Cooldown, 1000.123456, 0, 1, 1)
-        I.Fold(1000.2, false)
-        local s, d = VS.GcdInfo(1000.2)
-        assert.are.equal(s, (s + d) - d)
-        assert.are.equal(s * 1024, math.floor(s * 1024))
-        assert.are.same({ s, d }, { VS.GcdInfo(1000.9) }) -- unchanged between edges
-        S.Direct(Obs.Cooldown, 1001.6, 0, 0, 1)
-        I.Fold(1001.6, false)
-        assert.are.same({ 0, 0 }, { VS.GcdInfo(1001.6) })
-        assert.is_true(math.abs(I.gcdLearned - 1.477) < 0.002) -- learned from the falling edge
-        for _ = 1, 2000 do
-            local t = math.random() * 1e6
-            local q = I.Quantise(t)
-            local dq = I.Quantise(1.5 * math.random())
-            assert.are.equal(q, (q + dq) - dq)
+    it(
+        "fixes the GCD's start and duration at the rising edge, quantised so they survive Hekili's round trip",
+        function()
+            S.Direct(Obs.Cooldown, 1000.123456, 0, 1, 1)
+            I.Fold(1000.2, false)
+            local s, d = VS.GcdInfo(1000.2)
+            assert.are.equal(s, (s + d) - d)
+            assert.are.equal(s * 1024, math.floor(s * 1024))
+            assert.are.same({ s, d }, { VS.GcdInfo(1000.9) }) -- unchanged between edges
+            S.Direct(Obs.Cooldown, 1001.6, 0, 0, 1)
+            I.Fold(1001.6, false)
+            assert.are.same({ 0, 0 }, { VS.GcdInfo(1001.6) })
+            assert.is_true(math.abs(I.gcdLearned - 1.477) < 0.002) -- learned from the falling edge
+            for _ = 1, 2000 do
+                local t = math.random() * 1e6
+                local q = I.Quantise(t)
+                local dq = I.Quantise(1.5 * math.random())
+                assert.are.equal(q, (q + dq) - dq)
+            end
         end
-    end)
+    )
 
     it("evaluates a function cost (a talent that lowers it) and uses it for the ladder", function()
         local rank = 2

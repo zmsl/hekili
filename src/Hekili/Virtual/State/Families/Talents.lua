@@ -64,6 +64,7 @@ I.OnSnapshot(function(out)
     end
     out[#out + 1] = line
     for k = 1, T.n do
-        out[#out + 1] = string.format("talent %s spell=%d rank=%d/%d", tostring(T.key[k]), T.spell[k], T.rank[k], T.max[k])
+        out[#out + 1] =
+            string.format("talent %s spell=%d rank=%d/%d", tostring(T.key[k]), T.spell[k], T.rank[k], T.max[k])
     end
 end)

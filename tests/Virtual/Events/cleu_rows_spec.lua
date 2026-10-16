@@ -36,7 +36,8 @@ describe("the synthesized combat log", function()
         cleu:SetScript("OnEvent", function(_, event, ...)
             order = order + 1
             local n, vars = viaCallHook(Facade.CombatLogGetCurrentEventInfo())
-            got[#got + 1] = { event = event, args = select("#", ...), n = n, row = vars, now = Facade.GetTime(), at = order }
+            got[#got + 1] =
+                { event = event, args = select("#", ...), n = n, row = vars, now = Facade.GetTime(), at = order }
         end)
         cleu:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     end)
@@ -62,10 +63,22 @@ describe("the synthesized combat log", function()
         assert.are.equal("COMBAT_LOG_EVENT_UNFILTERED", r.event)
         assert.are.equal(0, r.args) -- no payload, as the client delivers it
         assert.are.equal(14, r.n) -- no nil up to the last slot
-        assert.are.same(
-            { 10, "SPELL_CAST_SUCCESS", false, "Player-1", "", L.PLAYER_FLAGS, 0, "Creature-1", "", L.HOSTILE_FLAGS, 0, fs.REND, "", 1 },
-            r.row
-        )
+        assert.are.same({
+            10,
+            "SPELL_CAST_SUCCESS",
+            false,
+            "Player-1",
+            "",
+            L.PLAYER_FLAGS,
+            0,
+            "Creature-1",
+            "",
+            L.HOSTILE_FLAGS,
+            0,
+            fs.REND,
+            "",
+            1,
+        }, r.row)
         assert.is_true(seen < r.at)
         assert.is_nil(Facade.CombatLogGetCurrentEventInfo()) -- nothing outside a delivery
     end)
@@ -224,10 +237,23 @@ describe("the synthesized combat log", function()
             ctl.now = 10.05
             ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
             assert.are.equal(1, #got)
-            assert.are.same(
-                { 10, "SWING_MISSED", false, "Player-1", "", L.PLAYER_FLAGS, 0, "Creature-1", "", L.HOSTILE_FLAGS, 0, "DODGE", false, 0, false },
-                row(1)
-            )
+            assert.are.same({
+                10,
+                "SWING_MISSED",
+                false,
+                "Player-1",
+                "",
+                L.PLAYER_FLAGS,
+                0,
+                "Creature-1",
+                "",
+                L.HOSTILE_FLAGS,
+                0,
+                "DODGE",
+                false,
+                0,
+                false,
+            }, row(1))
             assert.are.equal(15, got[1].n)
             assert.are.equal(10, got[1].now) -- back-dated to the swing
         end)
@@ -239,8 +265,17 @@ describe("the synthesized combat log", function()
             ctl.Fire("PLAYER_SWING", 1.8, 1)
             assert.are.equal(21, got[1].n)
             assert.are.same({ "SWING_DAMAGE", 120, 0, 1, 0, 0, 0, true, false, false, true }, {
-                row(1)[2], row(1)[12], row(1)[13], row(1)[14], row(1)[15], row(1)[16], row(1)[17],
-                row(1)[18], row(1)[19], row(1)[20], row(1)[21],
+                row(1)[2],
+                row(1)[12],
+                row(1)[13],
+                row(1)[14],
+                row(1)[15],
+                row(1)[16],
+                row(1)[17],
+                row(1)[18],
+                row(1)[19],
+                row(1)[20],
+                row(1)[21],
             })
             assert.are.equal(20, got[1].now)
         end)
@@ -279,7 +314,14 @@ describe("the synthesized combat log", function()
             ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1)
             assert.are.equal("SPELL_CAST_SUCCESS", row(1)[2])
             assert.are.same({ "SPELL_MISSED", fs.REND, "", 1, "PARRY", false, 0, false }, {
-                row(2)[2], row(2)[12], row(2)[13], row(2)[14], row(2)[15], row(2)[16], row(2)[17], row(2)[18],
+                row(2)[2],
+                row(2)[12],
+                row(2)[13],
+                row(2)[14],
+                row(2)[15],
+                row(2)[16],
+                row(2)[17],
+                row(2)[18],
             })
             assert.are.equal(18, got[2].n)
         end)
@@ -347,10 +389,23 @@ describe("the synthesized combat log", function()
             ctl.Fire("PLAYER_TARGET_CHANGED")
             ctl.now = 5
             ctl.Fire("UNIT_COMBAT", "player", "DODGE", "", 0, 1)
-            assert.are.same(
-                { 5, "SWING_MISSED", false, "Creature-1", "", L.HOSTILE_FLAGS, 0, "Player-1", "", L.PLAYER_FLAGS, 0, "DODGE", false, 0, false },
-                got[1].row
-            )
+            assert.are.same({
+                5,
+                "SWING_MISSED",
+                false,
+                "Creature-1",
+                "",
+                L.HOSTILE_FLAGS,
+                0,
+                "Player-1",
+                "",
+                L.PLAYER_FLAGS,
+                0,
+                "DODGE",
+                false,
+                0,
+                false,
+            }, got[1].row)
             assert.are.equal("readable", I.Sources.status["UnitIsUnit target-of"])
             assert.are.equal("secret", I.Sources.status["UnitAttackSpeed hostile"])
         end)
@@ -390,7 +445,10 @@ describe("the synthesized combat log", function()
             ctl.now = 15.0 -- A predicts 14.05, B 16.7: off both
             ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 70, 1)
             assert.are.same({ "Creature-A", "Creature-B", "Creature-A", "Creature-B" }, {
-                got[1].row[4], got[2].row[4], got[3].row[4], got[4].row[4],
+                got[1].row[4],
+                got[2].row[4],
+                got[3].row[4],
+                got[4].row[4],
             })
             assert.are.equal(4, #got)
             assert.are.equal("BLOCK", got[4].row[12])
