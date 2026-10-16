@@ -28,7 +28,7 @@ I.On(Obs.CombatStart, function(o, t)
     I.combatT = t
 end)
 
--- Health (player: plain reads; every other unit: the default 1.0), spell haste, time to die.
+-- Health (player: plain reads; target: Families/TargetHealth.lua; others: the default 1.0), spell haste, time to die.
 local health, otherHealth, spellHaste, ttd
 I.healthMax = 0
 
@@ -68,11 +68,14 @@ I.On(Obs.Haste, function(o, t)
     end
 end)
 
---- (spec §3.2) Health fraction 0..1: the player's last plain read (conf decaying as an aura), else default 1.0.
+--- (spec §3.2) Health fraction 0..1: the player's last plain read (conf decaying as an aura); the target's belief
+--- (Families/TargetHealth.lua); every other unit the default 1.0.
 function VS.Health(unit, now)
     if unit == "player" then
         decay(health, now)
         return health
+    elseif unit == "target" then
+        return I.TargetHealth(now)
     end
     return otherHealth
 end

@@ -23,7 +23,7 @@ VS.Obs = {
     Read = 5, -- a: resource slot or aura index (c: ReadOf); b: the exact value (amount; aura time remaining)
     Cooldown = 6, -- a: ability index; b: 1 ready / 0 not (the plain isActive flag); c: 1 the GCD flag edge
     PowerTick = 7, -- a: resource slot
-    TargetSwap = 8,
+    TargetSwap = 8, -- a: memory slot (0 none); b: 1 a slot newly taken; c: 1 attackable (plain UnitCanAttack)
     CombatStart = 9,
     CombatEnd = 10,
     Group = 11, -- reserved
@@ -50,6 +50,7 @@ VS.Obs = {
     ItemCooldown = 32, -- reserved
     Range = 33, -- a: plate index; b: count in range of the range spell
     TargetCast = 34, -- a: TargetCastOf; b: castBarID; c: interruptible 1 / 0 / -1 unknown
+    TargetDamage = 35, -- b: a WOUND amount the target took (UNIT_COMBAT, plain); VirtualState's own, past TDF's range
 }
 
 --- What a `Read` observation read (its `c`): TDF's Enum.ReadOf integers (5 and 7-9 reserved), plus Health = 10, a
