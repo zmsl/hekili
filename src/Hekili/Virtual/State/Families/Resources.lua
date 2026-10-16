@@ -76,7 +76,7 @@ R.slotOf, R.slotOfToken = {}, {}
 -- keeps the ticks already credited; both are bounded by the aura's duration and the next pin or rung corrects them.
 -- Whether each hand's last landed swing paid (no on-next-swing strike took it): its crit pays only then.
 local paid = { false, false }
-local G = { n = 0, slot = {}, aura = {}, value = {}, interval = {}, talent = {} }
+local G = { n = 0, slot = {}, aura = {}, value = {}, interval = {}, talent = {}, pause = {} }
 -- In combat (fold order, for the entries without an aura: aura index 0) and since when.
 local fighting, fightT = false, 0
 R.auraRegen = G
@@ -225,7 +225,7 @@ I.OnBuild(function(def, now)
             if ok and j >= 0 and tid >= 0 then
                 G.n = G.n + 1
                 G.slot[G.n], G.aura[G.n], G.value[G.n], G.interval[G.n] = r, j, e.value, e.interval
-                G.talent[G.n] = tid
+                G.talent[G.n], G.pause[G.n] = tid, e.pausesDecay == true
             end
         end
     end
@@ -295,14 +295,14 @@ local function auraGain(g, from, to)
     return (floor((to - ap) / iv) - floor((from - ap) / iv)) * G.value[g] -- nonzero: interval > 0 (checked at build)
 end
 
--- No decay while a tick-paying player aura of slot r is up (Bloodrage: +1/s and no decay for 10 s, in game): false
--- while one is up through `to`, else when in (from, to] the decay runs from (the latest expiry in it, or `from`).
+-- No decay while a `pausesDecay` entry's player aura of slot r is up (Bloodrage: +1/s and no decay for 10 s, in game):
+-- false while one is up through `to`, else when in (from, to] the decay runs from (the latest expiry in it, or `from`).
 local function decayFrom(r, from, to)
     local start = from
     for g = 1, G.n do
         local j, tid = G.aura[g], G.talent[g]
         local learned = tid == 0 or VS.Talent(tid) ~= 0 -- auraGain's talent gate
-        if learned and G.slot[g] == r and j > 0 and I.auras.applied[1][j] <= to then
+        if learned and G.pause[g] and G.slot[g] == r and j > 0 and I.auras.applied[1][j] <= to then
             local e = I.auras.exp0[1][j]
             if e > to then
                 return false

@@ -190,6 +190,7 @@ spec:RegisterResource(
         },
 
         -- Enrage's aura (25503): 2 rage every second for 10 s (DB2: periodic energize 20 every 1000 ms).
+        -- No `pausesDecay`: whether Enrage pauses the out-of-combat decay is unverified (checkpoint Q9).
         enrage = {
             aura = "enrage",
 

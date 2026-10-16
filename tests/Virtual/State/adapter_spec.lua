@@ -129,7 +129,7 @@ describe("Adapter", function()
 
     it("generates the sim's stepped decay entry, on the belief's beats and from a tick aura's expiry", function()
         local model, rank = h.Class.resources.rage.state.regenModel, 0
-        model.bloodrage = { aura = "bloodrage", interval = 1, value = 1 }
+        model.bloodrage = { aura = "bloodrage", interval = 1, value = 1, pausesDecay = true }
         h.Class.auras.bloodrage = { key = "bloodrage", id = 29131, duration = 10 }
         h.Class.resources.rage.state.meta = {
             decay = function()
@@ -176,6 +176,9 @@ describe("Adapter", function()
         state.offset = 18.7 -- the sim advanced to 23.7, past the expiry the reset saw: beats at 20.5 to 23.5
         state.buff.bloodrage.up = false
         assert.are.equal(23.5, e.last()) -- not the belief's anchor's beats (23): it is paused while the aura is up
+        model.bloodrage.pausesDecay = nil -- unflagged: an aura up in the sim moves no beat
+        state.now, state.offset, state.buff.bloodrage = 5, 2.5, { up = true, expires = 20 }
+        assert.are.equal(7, e.last())
     end)
 
     it("forwards a regenerating resource's rest as a flag and a swing entry's `aura` as its gate", function()

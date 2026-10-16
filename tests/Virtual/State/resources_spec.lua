@@ -392,7 +392,7 @@ describe("resources", function()
             def.auras[BLOODRAGE] = { key = "bloodrage", id = 29131 }
             def.auraIds[BLOODRAGE] = { 29131 }
             def.resources[1].decay = 2
-            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1 } }
+            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1, pausesDecay = true } }
             boot(def)
             I.Fold(10, false)
             I.ResourceShift(1, 20, 10, Obs.CastSuccess) -- est 20, out of combat
@@ -401,6 +401,20 @@ describe("resources", function()
             assert.are.equal(25, VS.Power(fs.RAGE, 15).est) -- 5 ticks, no decay
             I.Settle(22)
             assert.are.equal(26, VS.Power(fs.RAGE, 22).est) -- 5 more ticks, then 2 s x 2/s after the expiry
+        end)
+
+        it("does not pause the decay for an aura entry without `pausesDecay`", function()
+            local def = fs.def(fs.new(9))
+            def.auras[BLOODRAGE] = { key = "bloodrage", id = 29131 }
+            def.auraIds[BLOODRAGE] = { 29131 }
+            def.resources[1].decay = 2
+            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1 } }
+            boot(def)
+            I.Fold(10, false)
+            I.ResourceShift(1, 20, 10, Obs.CastSuccess) -- est 20, out of combat
+            I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
+            I.Settle(15)
+            assert.are.equal(15, VS.Power(fs.RAGE, 15).est) -- 5 ticks and 5 s x 2/s of decay
         end)
 
         it("lands the tick at the expiry: a 10 s aura ticking 1 a second lands 10", function()
@@ -492,7 +506,7 @@ describe("resources", function()
             def.resources[1].decayInterval = function() -- a function, as a class file's meta table declares it
                 return 1
             end
-            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1 } }
+            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1, pausesDecay = true } }
             boot(def)
             S.Direct(Obs.CombatStart, 2)
             I.Fold(2, false)
@@ -814,7 +828,7 @@ describe("resources", function()
             def.auraIds[BLOODRAGE] = { 29131 }
             def.resources[1].decay = 1.25
             def.resources[1].decayInterval = 1
-            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1 } }
+            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1, pausesDecay = true } }
             boot(def)
             I.Fold(50, false)
         end)

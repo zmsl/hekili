@@ -431,8 +431,8 @@ describe("Forever Warrior", function()
         local models = w.resource[2]
         assert.are.equal(1, w.resource[1])
         assert.are.same(
-            { "bloodrage", 1, 1 },
-            { models.bloodrage.aura, models.bloodrage.interval, models.bloodrage.value }
+            { "bloodrage", 1, 1, true },
+            { models.bloodrage.aura, models.bloodrage.interval, models.bloodrage.value, models.bloodrage.pausesDecay }
         )
         w.state.buff = { bloodrage = { applied = 10 } }
         w.state.query_time = 13.4

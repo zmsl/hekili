@@ -606,6 +606,7 @@ describe("Forever Druid", function()
         near(8.65, models.mainhand.value())
         near(8.65, models.mainhand.crit()) -- a white crit: one more base swing
         assert.are.same({ "enrage", 1, 2 }, { models.enrage.aura, models.enrage.interval, models.enrage.value })
+        assert.is_nil(models.enrage.pausesDecay) -- unverified (checkpoint Q9)
         w.state.buff.enrage, w.state.query_time = { applied = 10 }, 13.4
         assert.are.equal(13, models.enrage.last())
         assert.are.equal(1.25, w.resources[1].meta.decay())

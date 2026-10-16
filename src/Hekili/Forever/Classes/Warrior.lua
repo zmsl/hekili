@@ -219,6 +219,7 @@ spec:RegisterResource(
         -- Its ten ticks all land; the tenth, at the expiry, meets the decay's first quantum (the meta table below).
         bloodrage = {
             aura = "bloodrage",
+            pausesDecay = true, -- no out-of-combat decay while it is up (in game, user-confirmed)
 
             last = function()
                 local app = state.buff.bloodrage.applied

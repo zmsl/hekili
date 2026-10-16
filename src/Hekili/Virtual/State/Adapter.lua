@@ -81,8 +81,9 @@ end
 
 -- The sim's stepped decay (stepped-decay design §3.3): a regen-model entry Hekili's forecast steps like a class's,
 -- `value` (negative, talent-scaled) every `interval`, never in combat. Its beats are the belief's (from its last
--- quantum), or start at a tick aura's expiry while one is up in the sim: Hekili's forecast removes an entry whose
--- `stop` holds, so the pause is in `last`, not `stop`. Built once per regen model, at a build.
+-- quantum), or start at a pausing aura's expiry (an entry flagged `pausesDecay`) while one is up in the sim: Hekili's
+-- forecast removes an entry whose `stop` holds, so the pause is in `last`, not `stop`. Built once per regen model, at a
+-- build.
 local function decayEntry(key, model, meta, powerType)
     local e = { resource = key, interval = meta.decayInterval }
     function e.value()
@@ -94,8 +95,8 @@ local function decayEntry(key, model, meta, powerType)
         -- swing entries do).
         local iv, t, a = eval(meta.decayInterval), state.now + state.offset, 0
         for _, m in pairs(model) do
-            -- a tick aura present at the reset (up, or expired in the sim since): the beats start at its expiry
-            local b = m.aura and not (m.swing or m.debuff) and state.buff[m.aura]
+            -- a pausing aura present at the reset (up, or expired in the sim since): the beats start at its expiry
+            local b = m.pausesDecay and m.aura and not (m.swing or m.debuff) and state.buff[m.aura]
             if b and b.expires > a then
                 a = b.expires
             end
