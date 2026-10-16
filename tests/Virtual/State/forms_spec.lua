@@ -24,11 +24,15 @@ local function def(ids)
 end
 
 describe("forms", function()
-    local VS, I, S, Obs, api, ctl
+    local VS, I, S, Obs, api, ctl, warnings
 
     before_each(function()
         api, ctl = fake.new()
         local ns = load.module()
+        warnings = {}
+        ns.Error = function(msg, ...) -- Utils.lua's error channel, stubbed
+            warnings[#warnings + 1] = string.format(msg, ...)
+        end
         VS, I = ns.VirtualState, ns.VirtualStateInternal
         S, Obs = I.Sources, VS.Obs
         ctl.forms = { FORM_A, FORM_B }
@@ -173,5 +177,26 @@ describe("forms", function()
         poll(11)
         assert.are.equal(gen, VS.AuraGen("player"))
         assert.are.equal(0, I.log.n)
+    end)
+
+    it("warns once per build about a client form whose spell matches no registered aura", function()
+        start({ FORM_A })
+        poll(10)
+        assert.are.same(
+            { "Forever: shapeshift form 2 (spell 2458) matches no registered aura; the belief cannot see this form" },
+            warnings
+        )
+        ctl.Fire("UPDATE_SHAPESHIFT_FORM")
+        poll(11)
+        assert.are.equal(1, #warnings) -- the same build: no repeat
+        I.Build(def({ FORM_A }), 11)
+        poll(12)
+        assert.are.equal(2, #warnings)
+    end)
+
+    it("does not warn when every client form is registered", function()
+        start({ FORM_A, FORM_B })
+        poll(10)
+        assert.are.same({}, warnings)
     end)
 end)

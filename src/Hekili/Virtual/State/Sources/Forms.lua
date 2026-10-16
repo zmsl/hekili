@@ -17,10 +17,16 @@ local Plain, Direct = S.Plain, S.Direct
 local isForm = {}
 I.formAura = isForm
 local pending = false
+-- By spell ID: true once this build warned that the form's spell matches no registered aura.
+local warned = {}
+local UNTRACKED = "Forever: shapeshift form %d (spell %d) matches no registered aura; the belief cannot see this form"
 
 I.OnBuild(function()
     for j in pairs(isForm) do
         isForm[j] = nil
+    end
+    for id in pairs(warned) do
+        warned[id] = nil
     end
     pending = true
 end)
@@ -33,7 +39,8 @@ local function numForms(api)
     return api.GetNumShapeshiftForms() -- secret: Plain by the caller
 end
 
--- Logs every tracked form aura up (the active form) or down at t. Allocates nothing.
+-- Logs every tracked form aura up (the active form) or down at t; warns once per build about an untracked form.
+-- Allocates nothing but that warning.
 local function read(api, t)
     local okA, rawActive = pcall(activeForm, api)
     local okN, rawN = pcall(numForms, api)
@@ -47,10 +54,14 @@ local function read(api, t)
     local bySpell = I.auras.bySpell
     for i = 1, n do
         local ok, _, _, _, rawSpell = pcall(api.GetShapeshiftFormInfo, i) -- secret: Plain next
-        local j = ok and bySpell[Plain(api, rawSpell) or false]
+        local spell = ok and Plain(api, rawSpell)
+        local j = bySpell[spell or false]
         if j then
             isForm[j] = true
             Direct(Obs.Read, t, j, i == active and -1 or 0, ReadOf.Aura) -- a = j: unit 1, the player
+        elseif type(spell) == "number" and not warned[spell] and ns.Error then -- Utils.lua loads after Virtual/
+            warned[spell] = true
+            ns.Error(UNTRACKED, i, spell) -- formats only here: once per spell per build
         end
     end
 end
