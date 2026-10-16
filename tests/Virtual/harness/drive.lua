@@ -160,6 +160,8 @@ local function op(c, ctl, ev, a1, a2, a3, a4)
         ctl.unitSpeed[a1] = a2
     elseif ev == "@combat" then
         ctl.combat = a1
+    elseif ev == "@auraError" then
+        ctl.auraError[a1] = a2 or nil
     end
 end
 
@@ -189,6 +191,7 @@ end
 --- crits, landed, rows, win) are reset first. Allocates nothing.
 function M.run(c, s, offset)
     offset = offset or 0
+    assert(s.n <= CAP, "stream longer than the preallocated captures")
     local ctl = c.ctl
     c.stream = s
     for i = 1, s.n do

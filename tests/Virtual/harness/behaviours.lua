@@ -73,7 +73,7 @@ function M.melee(p)
                         hand = 1,
                         act = "WOUND",
                         flag = "",
-                        amount = W.rng.int(p.strike[1], p.strike[2]),
+                        amount = W.rng.int((p.strike or w)[1], (p.strike or w)[2]),
                         school = 1,
                         spell = q.spell,
                         cost = q.cost,

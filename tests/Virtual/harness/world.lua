@@ -49,8 +49,10 @@ function M.new(seed)
             local o = w[2] or { 0, 0 }
             ev.damage = { w[1][1] * m, w[1][2] * m, o[1] * m, o[2] * m }
         end
-        if ev.act == "WOUND" and ev.dst and ev.kind ~= "swing" then
+        if ev.act == "WOUND" and ev.dst and (ev.kind ~= "swing" or not ev.ours) then -- ours take it at `land`
             ev.dst.health = math.max(0, ev.dst.health - (ev.amount or 0))
+        elseif ev.act == "HEAL" and ev.dst then
+            ev.dst.health = math.min(ev.dst.healthMax, ev.dst.health + (ev.amount or 0))
         end
         local us = W.ents[1]
         if ev.src == us and (ev.rage or ev.cost) then

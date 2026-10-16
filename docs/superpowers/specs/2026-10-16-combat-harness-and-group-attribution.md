@@ -282,7 +282,7 @@ the pairing of §1 is its first customer, not its purpose. Nothing in it is clas
    file (the test loader's pack path), the world's truth exposed as the client's usability answers through `fake_api`
    (`IsSpellUsable`, cooldowns), and a time budget per GCD in busted.
 
-Files beside the layers: `harness/rng.lua` (a seeded xorshift32: Lua 5.1's `math.random` is the C library's and
+Files beside the layers: `harness/rng.lua` (a seeded Park-Miller generator, multiplier 48271: Lua 5.1's `math.random` is the C library's and
 differs between machines); `harness/drive.lua` (boots VirtualState on `fake_api` + `fake_spec` as
 `pairing_replay_spec` does; captures rows through a `COMBAT_LOG_EVENT_UNFILTERED` sink and `Swing` c = 1/c = 3
 through the `S.Stage` wrapper; samples `VS.Power(RAGE, t)` each tick); `harness/metrics.lua` (§3.3);
@@ -332,7 +332,7 @@ per outcome: source (ours by hand / cast / other), and per own swing: landed, av
 ### 3.5 Fixtures and the model's fit
 Every pasted log is replayed through the real Rows.lua (as today) and also fitted: `fixtures_spec` computes, from the
 log's own rows, the main and off lag medians and core shares, the avoid rate, the crit share and the amount envelope,
-and asserts the behaviour and observer defaults within tolerance: main median 474 +- 25 ms with core share >= 0.85; off-hand
+and asserts the behaviour and observer defaults within tolerance: main median 474 +- 25 ms with core share 0.85 +- 0.10; off-hand
 own-reference median 703 +- 15 ms and main-reference median 1686 +- 15 ms, their shares within 0.15 of the log's
 (G5 11:7 of 20; log 2 9:21 of 33), tail share <= 0.15;
 avoid rate 0.22 +- 0.06; crit share 0.12 +- 0.05; every white wound inside the configured ranges. A new capture (§5)

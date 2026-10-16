@@ -243,6 +243,7 @@ describe("the observer", function()
             { 4.1, "@usable", rend, 1, nil, nil, nil, 0 },
             { 4.1, "SPELL_UPDATE_USABLE", nil, nil, nil, nil, nil, 0 },
             { 5, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", observer.SPELLS.CAST, nil, nil, 0 },
+            { 5, "UNIT_SPELLCAST_SUCCEEDED", "targettarget", "Cast-1", observer.SPELLS.CAST, nil, nil, 0 },
             { 5, "@truth", 2, nil, nil, nil, nil, 0 },
             { 5, "@usable", shout, 2, nil, nil, nil, 0 },
             { 5, "@usable", rend, 2, nil, nil, nil, 0 },
@@ -271,4 +272,38 @@ describe("the observer", function()
             assert.are.equal(3, form)
         end
     )
+
+    it("makes the target's auras raise in combat, and answers UnitIsUnit secret under its knob", function()
+        setup()
+        W.emit({ t = 2, kind = "pull" })
+        W.emit({ t = 9, kind = "stop" })
+        local k = setmetatable({ secretUnitIs = true }, { __index = observer.DEFAULTS })
+        local s = observer.observe(W, k)
+        local aura, unitIs = {}, nil
+        for i = 1, s.n do
+            if s.ev[i] == "@auraError" then
+                aura[#aura + 1] = { s.t[i], s.a1[i], s.a2[i] }
+            elseif s.ev[i] == "@unitIs" and s.a1[i] == "nameplate1target" then
+                unitIs = s.a2[i]
+            end
+        end
+        assert.are.same({ { 2, "target", true }, { 9, "target", false } }, aura)
+        assert.is_true(rawequal(fake.SECRET, unitIs))
+    end)
+end)
+
+describe("the world", function()
+    it("takes health for every wound but our white swing's (ours at its land), and gives it for heals", function()
+        local W = world.new(7)
+        local us = W.add(entities.new({ guid = "Player-1", health = 500 }))
+        local mob = W.add(entities.new({ guid = "Creature-1", kind = "mob", health = 500 }))
+        W.emit({ kind = "swing", src = mob, dst = us, hand = 1, act = "WOUND", amount = 40 })
+        W.emit({ kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30, ours = true })
+        assert.are.equal(460, us.health)
+        assert.are.equal(500, mob.health)
+        W.emit({ kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30 })
+        W.emit({ kind = "spell", src = mob, dst = us, act = "HEAL", amount = 100 })
+        assert.are.equal(470, mob.health)
+        assert.are.equal(500, us.health)
+    end)
 end)

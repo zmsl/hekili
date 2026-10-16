@@ -5,6 +5,7 @@
 local drive = require("Virtual.harness.drive")
 local observer = require("Virtual.harness.observer")
 local behaviours = require("Virtual.harness.behaviours")
+local entities = require("Virtual.harness.entities")
 
 local K, RATES = observer.DEFAULTS, behaviours.RATES
 local CORE = { 0.43, 0.56 } -- the main hand's measured band (log 2's 435-552, G5's 436-556)
@@ -12,9 +13,8 @@ local CORE = { 0.43, 0.56 } -- the main hand's measured band (log 2's 435-552, G
 -- The log's own statistics: one row per outcome on the target; a white wound's hand by amount (a crit halved), the
 -- lags of each hand, the off hand's reference (own swing within 30 ms of 0.703 s, the latest main swing at or before it
 -- within 30 ms of 1.686 s, the main hit's frame, else the tail).
-local function fit(fix)
+local function fit(fix, d)
     local s = drive.fixtureStream(fix, 10, true)
-    local d = fix.damage
     local split = (d[4] + d[1]) / 2
     local f =
         { main = {}, own = {}, mref = {}, off = 0, frame = 0, swings = 0, avoids = 0, wounds = 0, crits = 0, out = 0 }
@@ -67,9 +67,14 @@ local function near(want, got, tol, what)
 end
 
 describe("the fixtures and the model's fit", function()
+    -- The amount bands the model swings with for each log: log 2 is the scenarios' default profile (level 22).
+    -- shortcut: G5's gear has no model profile, so its bands are the session's own; add one when a scenario needs it.
+    local w = entities.weapons(22)
+    local BANDS =
+        { log2 = { w[1][1], w[1][2], w[2][1], w[2][2] }, log5 = require("Virtual.harness.fixtures.log5").damage }
     for _, name in ipairs({ "log2", "log5" }) do
         it("fits the observer's and behaviours' defaults to " .. name, function()
-            local f = fit(require("Virtual.harness.fixtures." .. name))
+            local f = fit(require("Virtual.harness.fixtures." .. name), BANDS[name])
             near(K.main.med, median(f.main), 0.025, "main median")
             local core = 0
             for _, lag in ipairs(f.main) do

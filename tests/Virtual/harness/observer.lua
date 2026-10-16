@@ -21,6 +21,7 @@ M.DEFAULTS = {
     usableDelay = 0.1, -- SPELL_UPDATE_USABLE after a true gain that flips an answer (UNMEASURED until G7); a spend at once
     targetTokens = { "plate", "target" }, -- "plate": the target's nameplateN (P logs 1-2: nameplate1 then target)
     plainSpeed = false, -- UnitAttackSpeed of a hostile plain (Attackers.lua notes: secret on Forever)
+    secretUnitIs = false, -- UnitIsUnit("<plate>target", "player") answers secret (spec §3.1: plain or secret, UNMEASURED)
 }
 
 -- Our spells as the fake spec's (its costs: the usability answers).
@@ -78,7 +79,7 @@ end
 --- The client stream of world `W` for our character (W.ents[1]) under knobs `k`: { n, t[], ev[], a1..a5[], src[]
 --- (1 ours, 2 another source, 3 unexplained, 0 not an outcome), hand[] (our swing's hand; 0 a cast's), swingT[] (our
 --- swing's true time), actor[] (the entity index of a hit on us) }. An `ev` starting with "@" is a client-answer change
---- for the drive (`@damage` UnitDamage, `@usable`, `@form`, `@guid`, `@unitIs`, `@speed`, `@combat`), or `@truth` our
+--- for the drive (`@damage` UnitDamage, `@usable`, `@form`, `@guid`, `@unitIs`, `@speed`, `@combat`, `@auraError`), or `@truth` our
 --- true power after an event (for the metrics).
 function M.observe(W, k)
     k = k or M.DEFAULTS
@@ -102,6 +103,7 @@ function M.observe(W, k)
         seq = seq + 1
         list[#list + 1] = { t, seq, ev, a1, a2, a3, a4, a5, src or 0, hand or 0, swingT or 0, actor or 0 }
     end
+    -- player then targettarget (P log 1 1297); another player's on partyN (G).
     local function tokensOf(v, ev)
         local out = {}
         if v == us then
@@ -118,6 +120,9 @@ function M.observe(W, k)
         elseif party[v] then
             out[1] = party[v]
         end
+        table.sort(out, function(a, b)
+            return M.rank(a) < M.rank(b)
+        end)
         return out
     end
     local function outcome(t, ev, src, hand, swingT)
@@ -145,7 +150,11 @@ function M.observe(W, k)
         for _, e in ipairs(mobs) do
             local tok = plate[e]
             push(t, "@guid", tok, e.guid)
-            push(t, "@unitIs", tok .. "target", tt[e] == us and "player" or nil)
+            if k.secretUnitIs then
+                push(t, "@unitIs", tok .. "target", fake.SECRET)
+            else
+                push(t, "@unitIs", tok .. "target", tt[e] == us and "player" or nil)
+            end
             if k.plainSpeed then
                 push(t, "@speed", tok, e.weapons[1][3])
             end
@@ -161,6 +170,7 @@ function M.observe(W, k)
         end
         push(t, "PLAYER_TARGET_CHANGED")
     end
+    -- UnitDamage read out of combat only (Protection spec §1.1).
     local function cache(t, d)
         push(t, "@damage", d[1], d[2], d[3], d[4])
         push(t, "PLAYER_EQUIPMENT_CHANGED")
@@ -172,9 +182,11 @@ function M.observe(W, k)
             cache(t - 0.5, ev.damage)
             targets(t - 0.4, ev)
             push(t, "@combat", true)
+            push(t, "@auraError", "target", true) -- spec §3.1: the target's auras raise in combat
             push(t, "PLAYER_REGEN_DISABLED")
         elseif kind == "stop" then
             push(t, "@combat", false)
+            push(t, "@auraError", "target", false)
             cache(t, ev.damage)
             push(t, "PLAYER_REGEN_ENABLED")
         elseif kind == "form" then
@@ -206,12 +218,15 @@ function M.observe(W, k)
                 push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. castN, M.SPELLS[ev.spell])
             end
             outcome(t + 0.001, ev, 1)
-        elseif kind == "cast" and ev.src == us then
+        elseif kind == "cast" and ev.src == us then -- plain IDs (Protection spec §1.1); others' secret (G 49873)
             castN = castN + 1
             push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. castN, M.SPELLS[ev.spell])
+            if ev.onUs then -- P log 1 1345, 4329-4330, 6532: also on targettarget while our target targets us
+                push(t, "UNIT_SPELLCAST_SUCCEEDED", "targettarget", "Cast-" .. castN, M.SPELLS[ev.spell])
+            end
         elseif kind == "cast" and party[ev.src] then
             push(t, "UNIT_SPELLCAST_SUCCEEDED", party[ev.src], fake.SECRET, fake.SECRET)
-        elseif kind == "proc" then -- G5: the wound on the target, then a heal of the same amount on us, same ms
+        elseif kind == "proc" and ev.src == us then -- G5: the wound on the target, then a heal of the same amount on us, same ms
             outcome(t, ev, 1)
             outcome(t, { dst = us, onUs = ev.onUs, act = "HEAL", amount = ev.amount, school = 1 }, 0)
         elseif ev.act and ev.dst then -- another source's outcome, our DoT's tick, a hit on us or on someone else
