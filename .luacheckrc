@@ -100,6 +100,7 @@ local nowEnv = {
 files["tests/Virtual/State/"] = { std = "+busted", read_globals = nowEnv }
 files["tests/Virtual/Events/"] = { std = "+busted", read_globals = nowEnv }
 files["tests/Virtual/API/"] = { std = "+busted", read_globals = nowEnv }
+files["tests/Virtual/harness/"] = { std = "+busted" }
 files["tests/Forever/"] = { std = "+busted" }
 -- The Warrior's handlers, state expressions and state functions run with setfenv( f, state ) as well; these are the
 -- further `state` names they use.

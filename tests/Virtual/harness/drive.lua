@@ -1,0 +1,267 @@
+-- tests/Virtual/harness/drive.lua (harness design §3.1): boots VirtualState on fake_api and the fake spec as
+-- pairing_replay_spec does, fires an observed stream through `ctl`, ticks and folds every TICK seconds, and captures
+-- what the addon concluded: each `Swing` c = 1 / c = 3 staged (through an S.Stage wrapper, tagged with the stream event
+-- being fired), the combat-log rows (a COMBAT_LOG_EVENT_UNFILTERED sink) and the believed rage at each 10 s window.
+-- The run loop allocates nothing: the stream and every capture array are built before it.
+local load = require("Virtual.State.helpers.load")
+local fake = require("Virtual.State.helpers.fake_api")
+local fs = require("Virtual.State.helpers.fake_spec")
+
+local M = {}
+
+M.TICK = 0.1 -- seconds between OnUpdate + drain (in game every frame; poll 2 at 0.2 s in combat)
+M.WINDOW = 10 -- seconds per rage window (harness design §3.3)
+M.STEP = 9 -- one main-hand step: the overshoot bar
+local CAP = 4096
+
+local USABLE, SHORT = { true, false }, { false, true }
+
+--- A booted VirtualState: { api, ctl, ns, VS, I, L, captures }. `o.rage` { main, off } per landed swing [9, 5],
+--- `o.max` the rage cap [1e6]; `o.damage` the UnitDamage cache's first values (default zeros: read at the pull);
+--- `o.oracle == false` unregisters Rows' oracle hooks (the no-oracle run).
+function M.boot(o)
+    o = o or {}
+    local api, ctl = fake.new()
+    ctl.now = 0.1
+    local c = { api = api, ctl = ctl, saved = {}, cur = 0 }
+    for k, v in pairs({ CreateFrame = api.CreateFrame, issecretvalue = api.issecretvalue, GetTime = api.GetTime }) do
+        c.saved[k] = rawget(_G, k) or false
+        _G[k] = v
+    end
+    ctl.powerMax[fs.RAGE] = o.max or 1e6
+    if o.damage then
+        for i = 1, 4 do
+            ctl.damage[i] = o.damage[i]
+        end
+    end
+    local ns = load.module()
+    c.ns, c.VS, c.I = ns, ns.VirtualState, ns.VirtualStateInternal
+    c.L = c.I.Log
+    local def = fs.def(fs.new((o.rage or { 9, 5 })[1]))
+    def.resources[1].swingOff = (o.rage or { 9, 5 })[2]
+    def.resources[1].max = o.max or 1e6
+    c.I.Build(def, 0.1)
+    c.VS.Start(api)
+    -- captures, by stream index: the hand credited and the swing time it was credited at (0: none)
+    c.crHand, c.crAt, c.crTok, c.verdict, c.recIdx, c.onus = {}, {}, {}, {}, {}, {}
+    c.lateHand, c.lateAt = {}, {} -- credits staged outside an event (the oracle's rescue)
+    c.win, c.winT, c.loOver, c.estOver, c.danger = {}, {}, {}, {}, {}
+    for i = 1, CAP do
+        c.crHand[i], c.crAt[i], c.crTok[i], c.lateHand[i], c.lateAt[i], c.win[i], c.winT[i] = 0, 0, false, 0, 0, 0, 0
+        c.loOver[i], c.estOver[i], c.danger[i] = 0, 0, 0
+        c.verdict[i], c.onus[i] = 0, ""
+    end
+    for k = 1, 8 do
+        c.recIdx[k] = 0
+    end
+    c.crits, c.landed = { 0, 0 }, { 0, 0 }
+    c.rows = { swing = 0, missed = 0, spell = 0, noDst = 0, order = 0 }
+    c.lastRow = { 0, 0 }
+    local S, Swing = c.I.Sources, c.VS.Obs.Swing
+    local stage = S.Stage
+    c.stream = nil
+    c.I.On(c.VS.Obs.PlayerHit, function() -- every hit on us reaches the belief, attributed or not
+        c.hits = c.hits + 1
+    end)
+    S.Stage = function(kind, t, a, b, cc)
+        if kind == Swing and (cc == 1 or cc == 3) then
+            local i = c.cur
+            if cc == 3 then
+                c.crits[a] = c.crits[a] + 1
+            elseif i > 0 then
+                c.landed[a] = c.landed[a] + 1
+                c.crHand[i], c.crAt[i], c.crTok[i] = a, t, c.stream.a1[i] == "target"
+                if b >= 1 and b <= 8 then
+                    c.recIdx[b] = i
+                end
+            end
+        end
+        return stage(kind, t, a, b, cc)
+    end
+    -- the oracle's verdicts by stream index (1 confirmed, 2 retracted, 3 soft) and its rescues (hand, swing time)
+    local verdict, rescue = c.I.CreditVerdict, c.I.Rescue
+    if o.oracle == false then
+        c.I.CreditVerdict, c.I.Rescue = nil, nil
+    elseif verdict then
+        c.I.CreditVerdict = function(id, ok, t, firm)
+            local v = verdict(id, ok, t, firm)
+            local i = c.recIdx[id]
+            if v and i > 0 then
+                c.verdict[i] = ok and 1 or (firm and 2 or 3)
+            end
+            return v
+        end
+        c.I.Rescue = function(r, need, since, t)
+            local h, crit, at = rescue(r, need, since, t)
+            if h then
+                c.landed[h] = c.landed[h] + 1
+                c.nLate = c.nLate + 1
+                c.lateHand[c.nLate], c.lateAt[c.nLate] = h, at
+            end
+            return h, crit, at
+        end
+    end
+    local GetInfo = ns.Facade.CombatLogGetCurrentEventInfo
+    local sink = c.I.Events.CreateFrame("Frame")
+    local rows, last = c.rows, c.lastRow
+    sink:SetScript("OnEvent", function()
+        local t, ev, _, src, _, _, _, dst, _, _, _, a12, a13, _, _, _, _, _, _, _, a21 = GetInfo()
+        if src ~= "Player-1" then
+            if dst == "Player-1" and c.cur > 0 then
+                c.onus[c.cur] = src -- a hit on us credited to an attacker
+            end
+            return
+        end
+        if dst == "" then
+            rows.noDst = rows.noDst + 1
+        end
+        local hand = 0
+        if ev == "SWING_DAMAGE" then
+            rows.swing, hand = rows.swing + 1, a21 and 2 or 1
+        elseif ev == "SWING_MISSED" then
+            rows.missed, hand = rows.missed + 1, a13 and 2 or 1
+        elseif ev == "SPELL_DAMAGE" or ev == "SPELL_MISSED" then
+            rows.spell = rows.spell + 1
+        end
+        if hand > 0 then
+            if t < last[hand] then
+                rows.order = rows.order + 1
+            end
+            last[hand] = t
+        end
+    end)
+    sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+    c.nLate, c.nWin, c.truth, c.hits = 0, 0, 0, 0
+    return c
+end
+
+--- Puts back the globals the boot replaced.
+function M.restore(c)
+    for k, v in pairs(c.saved) do
+        _G[k] = v or nil
+    end
+end
+
+-- One client-answer change (or the truth's power for the metrics). Allocates nothing.
+local function op(c, ctl, ev, a1, a2, a3, a4)
+    if ev == "@truth" then
+        c.truth = a1
+    elseif ev == "@damage" then
+        ctl.damage[1], ctl.damage[2], ctl.damage[3], ctl.damage[4] = a1, a2, a3, a4
+    elseif ev == "@usable" then
+        ctl.usable[a1] = a2 == 1 and USABLE or SHORT
+    elseif ev == "@form" then
+        ctl.form = a1
+    elseif ev == "@guid" then
+        ctl.guid[a1] = a2
+    elseif ev == "@unitIs" then
+        ctl.unitIs[a1] = a2
+    elseif ev == "@speed" then
+        ctl.unitSpeed[a1] = a2
+    elseif ev == "@combat" then
+        ctl.combat = a1
+    end
+end
+
+local function tick(c, t)
+    c.ctl.Tick(t)
+    fs.fold(c.ns, t)
+    local p = c.VS.Power(fs.RAGE, t)
+    if t >= c.nextWin then
+        c.nWin = c.nWin + 1
+        c.win[c.nWin], c.winT[c.nWin], c.loOver[c.nWin] = p.est, t, 0
+        c.estOver[c.nWin], c.danger[c.nWin] = 0, 0
+        c.nextWin = c.nextWin + M.WINDOW
+    end
+    if c.nWin > 0 and p.lo - c.truth >= M.STEP then
+        c.loOver[c.nWin] = 1 -- the dangerous sign: the floor a step above the true power
+    end
+    if c.nWin > 0 and p.est - c.truth >= M.STEP then
+        c.estOver[c.nWin] = 1
+    end
+    if c.nWin > 0 and ((p.lo >= 10 and c.truth < 10) or (p.lo >= 15 and c.truth < 15)) then
+        c.danger[c.nWin] = 1
+    end
+end
+
+--- Fires stream `s` (observer.lua) through the booted VirtualState, `offset` seconds later than its times (a replay
+--- on the same boot), ticking every TICK seconds, then 3 s past its end. The captures (crHand/crAt by stream index,
+--- crits, landed, rows, win) are reset first. Allocates nothing.
+function M.run(c, s, offset)
+    offset = offset or 0
+    local ctl = c.ctl
+    c.stream = s
+    for i = 1, s.n do
+        c.crHand[i], c.crAt[i], c.verdict[i], c.onus[i] = 0, 0, 0, ""
+    end
+    c.hits = 0
+    c.crits[1], c.crits[2], c.landed[1], c.landed[2], c.nLate, c.nWin, c.truth = 0, 0, 0, 0, 0, 0, 0
+    local rows = c.rows
+    rows.swing, rows.missed, rows.spell, rows.noDst, rows.order = 0, 0, 0, 0, 0
+    c.lastRow[1], c.lastRow[2] = 0, 0
+    local nextTick = M.TICK * math.floor((s.t[1] + offset) / M.TICK) + M.TICK
+    c.nextWin = nextTick
+    for i = 1, s.n do
+        local t = s.t[i] + offset
+        while nextTick < t do
+            tick(c, nextTick)
+            nextTick = nextTick + M.TICK
+        end
+        ctl.now = t
+        local ev = s.ev[i]
+        if ev:byte(1) == 64 then -- "@"
+            op(c, ctl, ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i])
+        else
+            c.cur = i
+            ctl.Fire(ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
+            c.cur = 0
+        end
+    end
+    local stop = s.t[s.n] + offset + 3
+    while nextTick <= stop do
+        tick(c, nextTick)
+        nextTick = nextTick + M.TICK
+    end
+end
+
+--- A fixture (fixtures/logN.lua) as a stream: its rows from `base` seconds, the cache read out of combat first.
+--- `dedupe`: one row per outcome on the target, fed as "target" (the research doc's table: the target-side tokens of
+--- one outcome within 1 ms collapse; an outcome only seen on a nameplate or soft token counts). Our casts as the fake
+--- spec's (STRIKE, DOT), other spell IDs as 1; a secret ID as fake_api's SECRET.
+function M.fixtureStream(fix, base, dedupe)
+    local s = { n = 0, t = {}, ev = {}, a1 = {}, a2 = {}, a3 = {}, a4 = {}, a5 = {}, src = {}, hand = {}, swingT = {} }
+    local function push(t, ev, a1, a2, a3, a4, a5)
+        local n = s.n + 1
+        s.n = n
+        s.t[n], s.ev[n], s.a1[n], s.a2[n], s.a3[n], s.a4[n], s.a5[n] = t, ev, a1, a2, a3, a4, a5
+        s.src[n], s.hand[n], s.swingT[n] = 0, 0, 0
+    end
+    local d = fix.damage
+    push(base - 1, "@damage", d[1], d[2], d[3], d[4])
+    push(base - 1, "PLAYER_EQUIPMENT_CHANGED")
+    local IDS = { STRIKE = fs.STRIKE, DOT = fs.REND, OTHER = 1, SECRET = fake.SECRET }
+    local TARGET_SIDE = { target = true, softenemy = true, softinteract = true }
+    local last = {}
+    for _, r in ipairs(fix.rows) do
+        local t = base + r[1] / 1000
+        if r[2] == "S" then
+            push(t, "PLAYER_SWING", r[3], r[4])
+        elseif r[2] == "C" then
+            push(t, "UNIT_SPELLCAST_SUCCEEDED", r[3], r[4] == "SECRET" and fake.SECRET or "Cast", IDS[r[4]])
+        else
+            local unit = r[3]
+            if dedupe and (TARGET_SIDE[unit] or unit:match("^nameplate")) then
+                local key = r[4] .. r[5] .. r[6] .. "/" .. r[7]
+                if not (last.key == key and r[1] - last.ms <= 1) then
+                    push(t, "UNIT_COMBAT", "target", r[4], r[5], r[6], r[7])
+                end
+                last.key, last.ms = key, r[1]
+            elseif not dedupe then
+                push(t, "UNIT_COMBAT", unit, r[4], r[5], r[6], r[7])
+            end
+        end
+    end
+    return s
+end
+
+return M

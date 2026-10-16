@@ -1,72 +1,16 @@
 -- tests/Virtual/Events/pairing_replay_spec.lua (event-facade spec §3, pairing): log 2 of
--- docs/research/2026-10-16-swing-outcome-pairing.md replayed through the real Rows.lua, with the weapon damage the
--- character had (main 36-50, off 24-32). Every UNIT_COMBAT row is fed as the token "target": the log is already
--- deduplicated (one row per outcome, a few kept under softinteract or nameplate1), and in game Rows.lua reads only
--- "target", which dedupes the tokens.
+-- docs/research/2026-10-16-swing-outcome-pairing.md (the harness fixture tests/Virtual/harness/fixtures/log2.lua)
+-- replayed through the real Rows.lua, with the weapon damage the character had (main 36-50, off 24-32). Every
+-- outcome on the target is fed once as the token "target" (a few were recorded only under softinteract or nameplate1),
+-- as in game Rows.lua reads only "target", which dedupes the tokens.
 local load = require("Virtual.State.helpers.load")
 local fake = require("Virtual.State.helpers.fake_api")
 local alloc = require("Virtual.State.helpers.alloc")
 local fs = require("Virtual.State.helpers.fake_spec")
+local drive = require("Virtual.harness.drive")
 
--- ms since the first event, then: "S" PLAYER_SWING duration swingType; "U" UNIT_COMBAT action flag amount;
--- "C" our UNIT_SPELLCAST_SUCCEEDED spellID (Charge: not an ability of the fake spec, so it pairs with nothing).
--- stylua: ignore
-local LOG = {
-    { 0, "C", 100 }, { 998, "S", 2.2, 0 }, { 1296, "S", 2.5, 1 }, { 1472, "U", "WOUND", "", 40 },
-    { 2695, "U", "WOUND", "", 31 }, { 3158, "S", 2.2, 0 }, { 3612, "U", "WOUND", "", 41 }, { 3775, "S", 2.5, 1 },
-    { 4844, "U", "WOUND", "", 30 }, { 5404, "S", 2.2, 0 }, { 5841, "U", "WOUND", "", 43 }, { 6289, "S", 2.5, 1 },
-    { 7091, "U", "WOUND", "", 31 }, { 7556, "S", 2.2, 0 }, { 7992, "U", "WOUND", "", 49 }, { 8788, "S", 2.5, 1 },
-    { 9491, "U", "DODGE", "", 0 }, { 9788, "S", 2.2, 0 }, { 10308, "U", "WOUND", "", 49 }, { 11221, "S", 2.5, 1 },
-    { 11924, "U", "WOUND", "", 28 }, { 11988, "S", 2.2, 0 }, { 12122, "U", "WOUND", "CRITICAL", 91 },
-    { 17786, "C", 100 }, { 18518, "S", 2.5, 1 }, { 18785, "S", 2.2, 0 }, { 19221, "U", "WOUND", "", 30 },
-    { 19221, "U", "MISS", "", 0 }, { 21085, "S", 2.2, 0 }, { 21085, "S", 2.5, 1 }, { 21521, "U", "WOUND", "", 45 },
-    { 22771, "U", "WOUND", "", 25 }, { 23251, "S", 2.2, 0 }, { 23635, "S", 2.5, 1 },
-    { 23788, "U", "WOUND", "BLOCK_REDUCED", 48 }, { 24938, "U", "WOUND", "", 26 }, { 25401, "S", 2.2, 0 },
-    { 25938, "U", "WOUND", "", 42 }, { 26118, "S", 2.5, 1 }, { 27088, "U", "WOUND", "CRITICAL", 56 },
-    { 27685, "S", 2.2, 0 }, { 28138, "U", "WOUND", "", 39 }, { 28635, "S", 2.5, 1 },
-    { 29371, "U", "WOUND", "", 25 }, { 29835, "S", 2.2, 0 }, { 30271, "U", "WOUND", "", 48 },
-    { 31051, "S", 2.5, 1 }, { 31755, "U", "WOUND", "", 31 }, { 32069, "S", 2.2, 0 },
-    { 32505, "U", "WOUND", "", 43 }, { 33651, "S", 2.5, 1 }, { 38086, "C", 100 }, { 38935, "S", 2.5, 1 },
-    { 39086, "S", 2.2, 0 }, { 39638, "U", "WOUND", "", 29 }, { 39638, "U", "WOUND", "", 49 },
-    { 41368, "S", 2.2, 0 }, { 41369, "S", 2.5, 1 }, { 41905, "U", "WOUND", "", 48 },
-    { 43055, "U", "WOUND", "", 28 }, { 43585, "S", 2.2, 0 }, { 43935, "S", 2.5, 1 },
-    { 44122, "U", "WOUND", "", 50 }, { 45272, "U", "WOUND", "", 30 }, { 45785, "S", 2.2, 0 },
-    { 46323, "U", "WOUND", "", 45 }, { 46452, "S", 2.5, 1 }, { 47472, "U", "WOUND", "", 27 },
-    { 48002, "S", 2.2, 0 }, { 48522, "U", "WOUND", "CRITICAL", 97 }, { 48885, "S", 2.5, 1 },
-    { 49689, "U", "WOUND", "", 30 }, { 50202, "S", 2.2, 0 }, { 50638, "U", "WOUND", "", 45 },
-    { 51452, "S", 2.5, 1 }, { 52146, "U", "WOUND", "CRITICAL", 48 }, { 58607, "C", 100 }, { 59592, "S", 2.5, 1 },
-    { 59891, "S", 2.2, 0 }, { 59891, "U", "MISS", "", 0 }, { 60294, "U", "WOUND", "", 28 },
-    { 61095, "U", "WOUND", "", 48 }, { 62091, "S", 2.2, 0 }, { 62091, "S", 2.5, 1 },
-    { 62628, "U", "WOUND", "", 49 }, { 63777, "U", "WOUND", "", 26 }, { 64291, "S", 2.2, 0 },
-    { 64641, "S", 2.5, 1 }, { 64728, "U", "WOUND", "CRITICAL", 100 }, { 65978, "U", "WOUND", "", 28 },
-    { 66508, "S", 2.2, 0 }, { 66944, "U", "WOUND", "", 38 }, { 67141, "S", 2.5, 1 },
-    { 68194, "U", "WOUND", "", 26 }, { 68708, "S", 2.2, 0 }, { 69178, "U", "WOUND", "", 50 },
-    { 69641, "S", 2.5, 1 }, { 70395, "U", "WOUND", "", 31 }, { 70909, "S", 2.2, 0 },
-    { 71433, "U", "WOUND", "", 41 }, { 74361, "C", 100 }, { 75361, "S", 2.2, 0 }, { 75611, "S", 2.5, 1 },
-    { 75897, "U", "WOUND", "", 42 }, { 76694, "S", 2.2, 0 }, { 77048, "U", "WOUND", "", 29 },
-    { 77781, "U", "MISS", "", 0 }, { 78061, "S", 2.5, 1 }, { 78862, "S", 2.2, 0 }, { 79014, "U", "WOUND", "", 27 },
-    { 79731, "U", "WOUND", "CRITICAL", 89 }, { 80628, "S", 2.5, 1 }, { 81111, "S", 2.2, 0 },
-    { 81331, "U", "WOUND", "", 30 }, { 82048, "U", "MISS", "", 0 }, { 83128, "S", 2.5, 1 }, { 83311, "S", 2.2, 0 },
-    { 83831, "U", "WOUND", "", 27 }, { 84548, "U", "WOUND", "", 49 }, { 85511, "S", 2.2, 0 },
-    { 85611, "S", 2.5, 1 }, { 85611, "U", "MISS", "", 0 }, { 85948, "U", "PARRY", "", 0 },
-    { 87198, "U", "WOUND", "", 27 }, { 87728, "S", 2.2, 0 }, { 88128, "S", 2.5, 1 }, { 88247, "U", "PARRY", "", 0 },
-    { 89415, "U", "WOUND", "", 31 }, { 89928, "S", 2.2, 0 }, { 90381, "U", "WOUND", "", 45 },
-    { 90611, "S", 2.5, 1 }, { 91614, "U", "WOUND", "", 28 }, { 92128, "S", 2.2, 0 },
-    { 92582, "U", "WOUND", "", 47 }, { 95362, "C", 100 }, { 96178, "S", 2.2, 0 }, { 96495, "S", 2.5, 1 },
-    { 96715, "U", "WOUND", "", 41 }, { 97864, "U", "DODGE", "", 0 }, { 98462, "S", 2.2, 0 },
-    { 98915, "U", "WOUND", "", 39 }, { 98995, "S", 2.5, 1 }, { 99778, "S", 2.2, 0 },
-    { 100148, "U", "PARRY", "", 0 }, { 100882, "U", "MISS", "", 0 }, { 101512, "S", 2.5, 1 },
-    { 101928, "S", 2.2, 0 }, { 102215, "U", "DODGE", "", 0 }, { 102934, "U", "MISS", "", 0 },
-    { 103962, "S", 2.5, 1 }, { 104128, "S", 2.2, 0 }, { 104665, "U", "WOUND", "CRITICAL", 55 },
-    { 105415, "U", "WOUND", "", 39 }, { 106379, "S", 2.2, 0 }, { 106512, "S", 2.5, 1 },
-    { 106833, "U", "WOUND", "", 47 }, { 108065, "U", "MISS", "", 0 }, { 108595, "S", 2.2, 0 },
-    { 109012, "S", 2.5, 1 }, { 109132, "U", "WOUND", "", 41 }, { 110282, "U", "WOUND", "", 31 },
-    { 110795, "S", 2.2, 0 }, { 110796, "U", "MISS", "", 0 }, { 111232, "U", "WOUND", "", 50 },
-    { 111512, "S", 2.5, 1 }, { 112482, "U", "WOUND", "", 30 }, { 113012, "S", 2.2, 0 },
-    { 113447, "U", "WOUND", "", 42 }, { 114012, "S", 2.5, 1 }, { 114714, "U", "WOUND", "", 29 },
-    { 116212, "S", 2.2, 0 }, { 116478, "S", 2.5, 1 }, { 116581, "U", "WOUND", "CRITICAL", 52 },
-    { 116734, "U", "MISS", "", 0 },
-}
+-- One row per outcome on the target, fed as "target" (harness/drive.lua's dedupe of the fixture's token rows).
+local LOG = drive.fixtureStream(require("Virtual.harness.fixtures.log2"), 0, true)
 
 describe("swing/outcome pairing", function()
     local api, ctl, VS, I, L, saved, got, record
@@ -126,17 +70,16 @@ describe("swing/outcome pairing", function()
         for key in pairs(stats) do
             stats[key] = 0
         end
-        for k = 1, #LOG do
-            local r = LOG[k]
-            local now = base + r[1] / 1000
+        for k = 1, LOG.n do
+            local now = base + LOG.t[k]
+            local kind = LOG.ev[k]
             ctl.Tick(now)
-            local kind = r[2]
-            if kind == "S" then
-                ctl.Fire("PLAYER_SWING", r[3], r[4])
-            elseif kind == "C" then
-                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", r[3])
-            else
-                local act, flag, amount = r[3], r[4], r[5]
+            if kind == "PLAYER_SWING" then
+                ctl.Fire("PLAYER_SWING", LOG.a1[k], LOG.a2[k])
+            elseif kind == "UNIT_SPELLCAST_SUCCEEDED" then
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", LOG.a3[k])
+            elseif kind == "UNIT_COMBAT" then
+                local act, flag, amount = LOG.a2[k], LOG.a3[k], LOG.a4[k]
                 lastAmount = 0
                 local c1, c2 = crits[1], crits[2]
                 ctl.Fire("UNIT_COMBAT", "target", act, flag, amount, 1)

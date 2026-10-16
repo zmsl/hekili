@@ -62,6 +62,7 @@ function M.new()
         unknownEvents = {}, -- [event] = true: RegisterEvent raises, as the client does for an event it does not know
         form = 0, -- GetShapeshiftForm (0: none)
         forms = {}, -- [form index] = its spell ID (GetShapeshiftFormInfo's 4th return)
+        damage = { 0, 0, 0, 0 }, -- UnitDamage's min and max main, min and max off (the harness's out-of-combat cache)
     }
     local api = { ctl = ctl }
 
@@ -177,7 +178,11 @@ function M.new()
         return stats[1], stats[2], stats[3], stats[4], stats[5], stats[6], stats[7]
     end
     api.UnitStat, api.GetSpellBonusDamage, api.UnitAttackPower, api.UnitWeaponAttackPower = zeros, zeros, zeros, zeros
-    api.UnitDamage, api.UnitArmor, api.GetMasteryEffect, api.GetCritChance = zeros, zeros, zeros, zeros
+    api.UnitArmor, api.GetMasteryEffect, api.GetCritChance = zeros, zeros, zeros
+    function api.UnitDamage()
+        local d = ctl.damage
+        return d[1], d[2], d[3], d[4], 0, 0, 1
+    end
     api.GetShieldBlock = zeros
     api.GetSpellCritChance, api.GetRangedCritChance, api.GetCombatRating, api.GetCombatRatingBonus =
         zeros, zeros, zeros, zeros
