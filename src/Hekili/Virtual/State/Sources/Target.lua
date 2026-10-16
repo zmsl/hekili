@@ -84,8 +84,9 @@ S.Poll(4, function(api, t)
 end)
 
 -- The target's damage taken (target-health design §2.3c): UNIT_COMBAT's WOUND amount, plain and victim-side (every
--- attacker's hits count, as a time to die needs). Registered for every unit, as Events/Rows.lua and Attackers.lua
--- register it: a "target" registration would narrow the client's to the target and starve Attackers.lua of the player's.
+-- attacker's hits count: the health moves by everyone's damage). Registered for every unit, as Events/Rows.lua and
+-- Attackers.lua register it: a "target" registration would narrow the client's to the target and starve Attackers.lua
+-- of the player's.
 S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
     if unit == "target" and act == "WOUND" and type(amount) == "number" and amount > 0 then
         Direct(Obs.TargetDamage, t, 0, amount) -- logged straight, as the swap: a same-frame WOUND keeps its target

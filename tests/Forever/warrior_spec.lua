@@ -323,6 +323,7 @@ describe("Forever Warrior", function()
         local a = w.abilities
         assert.are.same({ nil, "berserker_stance" }, { a.thunder_clap.buff, a.thunder_clap.nobuff })
         assert.are.same({ nil, "defensive_stance" }, { a.execute.buff, a.execute.nobuff })
+        assert.are.equal(0.2, a.execute.healthGate) -- VirtualState's target health (Families/TargetHealth.lua)
         assert.are.same({ "battle_stance", nil }, { a.spearing_strike.buff, a.spearing_strike.nobuff })
     end)
 

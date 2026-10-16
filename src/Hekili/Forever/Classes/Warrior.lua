@@ -993,6 +993,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(EXECUTE),
         nobuff = "defensive_stance",
+        healthGate = 0.2, -- usable at or below 20% of the target's health: VirtualState's target health reads it
 
         usable = function()
             return reactive(EXECUTE), "requires target health under 20 percent"

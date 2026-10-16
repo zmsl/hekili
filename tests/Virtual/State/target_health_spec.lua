@@ -198,6 +198,43 @@ describe("target health", function()
         within(0.1, h.est, 1e-6)
     end)
 
+    it("takes no anchor from a guarded NOT after a swap back to a known slot", function()
+        anchor() -- M 1000 on slot 1
+        obs(Obs.TargetSwap, 11, 2, 1, 1)
+        obs(Obs.TargetSwap, 12, 1, 0, 1) -- back to slot 1: no anchor
+        obs(Obs.Read, 13, 1, 50, ReadOf.Resource)
+        obs(Obs.Usable, 13, GATED, 0, 0) -- guarded: a bound above the gate, not an anchor
+        obs(Obs.TargetDamage, 14, 0, 100)
+        I.Fold(14)
+        assert.are.same({ false, "default" }, { I.th.anchored, VS.Health("target", 14).basis })
+    end)
+
+    it("takes no anchor from a rung that does not move the estimate", function()
+        anchor() -- M 1000 on slot 1
+        obs(Obs.TargetSwap, 11, 2, 1, 1)
+        obs(Obs.TargetSwap, 12, 1, 0, 1) -- back to slot 1: no anchor
+        obs(Obs.TargetDamage, 13, 0, 850) -- the estimate to 0.15, below the gate
+        obs(Obs.Usable, 14, GATED, 1, 0) -- a rung at 0.2: the estimate stays, no anchor
+        obs(Obs.TargetDamage, 15, 0, 10)
+        I.Fold(15)
+        assert.are.same({ false, "default" }, { I.th.anchored, VS.Health("target", 15).basis })
+        within(0.14, I.th.est0, 1e-6)
+    end)
+
+    it("credits a WOUND fired before a same-frame target swap to the old target", function()
+        local seen = {}
+        I.On(Obs.TargetDamage, function()
+            seen[#seen + 1] = { I.th.slot, I.th.dmg }
+        end)
+        VS.Start(api)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 70, 1)
+        ctl.guid.target = "Creature-2"
+        ctl.Fire("PLAYER_TARGET_CHANGED") -- the same frame: no tick between
+        I.Fold(100)
+        assert.are.same({ { 1, 70 } }, seen)
+        assert.are.same({ 2, 0 }, { I.th.slot, I.th.dmg })
+    end)
+
     it("starts a live target over full at combat end, an anchor", function()
         anchor()
         obs(Obs.TargetDamage, 11, 0, 100)

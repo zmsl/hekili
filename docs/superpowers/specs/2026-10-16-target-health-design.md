@@ -1,7 +1,8 @@
 # Target health from health-gated usability (design note, 2026-10-16)
 
-Status: TTD dropped by the user (2026-10-16): a warning at script load instead; health pin and slope implemented. §7 lines 2
-and 4 still decide §2.3b and §2.3a. Base: 605b6dcb.
+Status: IMPLEMENTED, the conservative branches: health pin and slope, Execute's `healthGate = 0.2`; a short answer (c = 1)
+is no health signal (§2.3a) and no plain max is read (§2.3b); §7 lines 2 and 4 decide those two follow-ups. TTD dropped by
+the user (2026-10-16): a warning at script load instead. Base: 605b6dcb.
 Paths are under `src/Hekili/` unless they start with `tests/`, `tools/` or `docs/`.
 
 Corrections to the audit (docs/research/2026-10-15-api-events-audit.md): Execute IS recommended when the client says it is
@@ -88,8 +89,8 @@ no cooldown.
 ## 6. Tests (tests/Virtual/State/target_health_spec.lua; fake api and a fake spec with a gated spender)
 1 flip pin → est 0.2, hi 0.2, `pinned`; fresh dmg 800 → M 1000. 2 no pin when power short (`{false,true}` with lo < cost); a
 NOT with low rage changes nothing. 3 no pin when the stance guard fails. 4 slope: WOUNDs 50+50 at M 1000 → est 0.1,
-`modelled`; a swap back has no anchor (basis `default`) until a pin; CombatEnd anchors. 5 floor 0.02 alive; TargetGone → 0 `observed`. 6 swap reset default 1.0, dmg 0; swap back keeps
-M. 7 facade: UnitHealth("target") = est*100, UnitHealthMax 100. 8 alloc_spec: target UNIT_COMBAT, gated flips, VS.Health("target").
+`modelled`; a swap back has no anchor (basis `default`) until a pin; CombatEnd anchors. 5 floor 0.02 alive;
+TargetGone → 0 `observed`. 6 swap reset default 1.0, dmg 0; swap back keeps M. 7 facade: UnitHealth("target") = est*100, UnitHealthMax 100. 8 alloc_spec: target UNIT_COMBAT, gated flips, VS.Health("target").
 
 ## 7. Checkpoint lines (open-world mob; dummies answer a fixed 180 and may never drop below 20%)
 1. Execute flips vs health (in combat, watch the bar; the frame prints each change):
@@ -109,6 +110,11 @@ at or below the gate; does a wrong stance give false,false).
 - Not covered: health above the gate, or classes with no gated ability (Druid), unless the max is plain (§7 line 2). Time to
   die keeps Hekili's tracker and default.
 - A future proc making Execute usable at any health would pin wrongly: needs a `buff` guard like the stance one.
+- After a pin the facade's `UnitHealth("target")` jumps (100 → 20), and Hekili's own tracker (Targets.lua, no E4) regresses
+  over it: its `time_to_die`, `time_to_pct_` and `fight_remains` are transient junk for a few seconds. Priorities that read
+  them are warned (AplWarnings.lua).
+- A swap back to a known slot has no anchor, yet its WOUNDs still move `target.health.pct` from an assumed 1.0 (no sample
+  is written, the basis stays `default`): est rides hi, a true upper bound, so it overestimates the health.
 - Unchecked: that VirtualState sees stance auras through UNIT_AURA (guard 3); Hammer of Wrath (no Paladin file).
 
 ## 9. Placement

@@ -11,10 +11,11 @@ describe("APL secret-token scan", function()
     end)
 
     it("finds target health, player health and time to die", function()
-        assert.are.same(
-            { "target.health.pct", "target health is secret", "always reads 100" },
-            { scan("target.health.pct<20") }
-        )
+        assert.are.same({
+            "target.health.pct",
+            "target health is secret",
+            "reads 100 until a health-gated ability pins it, always on a spec without one",
+        }, { scan("target.health.pct<20") })
         assert.are.equal("target.health.pct", scan("!buff.rend.up&target.health.pct<=20"))
         assert.are.equal("target.health_percent", scan("target.health_percent>80"))
         assert.are.equal("target.time_to_die", scan("target.time_to_die>12"))
