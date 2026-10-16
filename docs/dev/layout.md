@@ -13,7 +13,8 @@
 
 `make bootstrap` once (Lua 5.1 + busted/luacheck/luacov into `.lua/`; StyLua and LuaLS from `mise.toml`), then
 `make check` before every commit. StyLua formats only our files (`.styluaignore` lists upstream Hekili, which keeps
-its own style).
+its own style). If `fmt-check` still fails after `make fmt`, run `make fmt` again: StyLua 2.5.2 takes two passes on a
+call whose argument is a long single-line table.
 
 ## In game
 
