@@ -142,6 +142,38 @@ describe("Adapter", function()
         assert.is_false(I.res.taken[1])
     end)
 
+    it(
+        "generates the sim's `__taken` entry: every second from the reset, the learned rate, out of combat removed",
+        function()
+            local model = h.Class.resources.rage.state.regenModel
+            VS.SpecChanged()
+            assert.is_nil(model.__taken) -- no `taken`: none
+            model.mainhand.taken = function()
+                return 2
+            end
+            local got
+            local build = I.Build
+            I.Build = function(def, t)
+                got = def
+                return build(def, t)
+            end
+            VS.SpecChanged()
+            local e = model.__taken
+            VS.SpecChanged()
+            I.Build = build
+            assert.are.same({ e, "rage", 1 }, { model.__taken, e.resource, e.interval }) -- built once
+            assert.is_nil(got.resources[1].auraRegen) -- the walk skips it: not a regen entry of the belief
+            state.time, state.now, state.offset = 0, 20, 0
+            assert.are.same({ true, 0 }, { e.stop(), e.value() }) -- out of combat
+            I.Sources.Direct(VS.Obs.CombatStart, 10)
+            I.Sources.Direct(VS.Obs.PlayerHit, 12, 1, 40, 20)
+            I.Sources.Direct(VS.Obs.PlayerHit, 15, 4, 0, 20)
+            I.Fold(15)
+            state.time, state.now, state.offset = 5, 16, 1.5
+            assert.are.same({ false, 0.4, 17.5 }, { e.stop(), e.value(), e.last() }) -- 2 + 2 in 10 s; from the reset
+        end
+    )
+
     it("generates the sim's stepped decay entry, on the belief's beats and from a tick aura's expiry", function()
         local model, rank = h.Class.resources.rage.state.regenModel, 0
         model.bloodrage = { aura = "bloodrage", interval = 1, value = 1, pausesDecay = true }

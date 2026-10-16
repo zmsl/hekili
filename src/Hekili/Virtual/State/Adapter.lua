@@ -71,6 +71,7 @@ local def = {
 
 local HANDS = { mainhand = 1, offhand = 2 }
 local DECAY = "__decay" -- the generated entry's reserved name in a regen model
+local TAKEN = "__taken" -- the generated incoming-rage entry's (tank design §1.2.5)
 
 local function eval(v)
     if type(v) == "function" then
@@ -116,6 +117,23 @@ local function decayEntry(key, model, meta, powerType)
     end
     function e.stop()
         return state.time > 0
+    end
+    return e
+end
+
+-- The sim's rage from hits on the player (tank design §1.2.5): a regen-model entry Hekili's forecast steps every
+-- second from the reset, the belief's learned rate (VS.TakenRate) a step, removed out of combat (`stop`). The belief
+-- never reads it: real hits are observed. Built once per regen model, at a build.
+local function takenEntry(key, powerType)
+    local e = { resource = key, interval = 1 }
+    function e.value()
+        return VS.TakenRate(powerType, state.now)
+    end
+    function e.last()
+        return state.now + state.offset
+    end
+    function e.stop()
+        return state.time == 0
     end
     return e
 end
@@ -181,6 +199,7 @@ local function buildDef()
                     crit, taken = m.crit, m.taken
                 elseif
                     name ~= DECAY
+                    and name ~= TAKEN
                     and not (m.swing or m.debuff or m.channel or m.spec or m.equip or m.set_bonus or m.setting)
                 then
                     auraRegen = auraRegen or {}
@@ -195,6 +214,9 @@ local function buildDef()
         local iv = meta and meta.decay ~= nil and eval(meta.decayInterval)
         if model and type(iv) == "number" and iv > 0 and model[DECAY] == nil then
             model[DECAY] = decayEntry(k, model, meta, r.type)
+        end
+        if model and type(taken) == "function" and model[TAKEN] == nil then
+            model[TAKEN] = takenEntry(k, r.type)
         end
         if swing == 0 and offValue ~= nil then
             swing, value, offValue, crit, offCrit = 2, offValue, nil, offCrit, nil -- the off hand alone pays it
