@@ -193,13 +193,13 @@ describe("Forever Warrior", function()
     it("gates Charge on being out of combat and outside melee range, not LibRangeCheck", function()
         local e = lw.env(w)
         e.target.minR = 100 -- what LibRangeCheck leaves on Forever: nothing resolved
-        e.action = { heroic_strike = { in_range = false } }
+        e.action = { rend = { in_range = false } }
         assert.is_true(lw.run(w.abilities.charge.usable, e))
         e.combat = 5
         local ok, why = lw.run(w.abilities.charge.usable, e)
         assert.is_false(ok)
         assert.are.equal("cannot be in combat; target must be outside melee range", why)
-        e.combat, e.action.heroic_strike.in_range = 0, true
+        e.combat, e.action.rend.in_range = 0, true
         assert.is_false(lw.run(w.abilities.charge.usable, e))
     end)
 
