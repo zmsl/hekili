@@ -88,6 +88,17 @@ describe("target health", function()
         assert.are.same({ 0.2, 0, 0.2, 0 }, { h.est, h.lo, h.hi, I.th.M })
     end)
 
+    it("takes no bound from a NOT while the guard stance is up through the form reads (Sources/Forms.lua)", function()
+        ctl.forms, ctl.form = { STANCE }, 1 -- a stance: a shapeshift form the aura walk never lists
+        S.RunPolls(2) -- the first poll after build reads the forms
+        obs(Obs.Read, 2, 1, 50, ReadOf.Resource)
+        obs(Obs.Usable, 9, GATED, 0, 0)
+        I.Fold(9)
+        assert.are.equal(math.huge, VS.Aura("player", STANCE, 9).est)
+        local h = VS.Health("target", 9)
+        assert.are.same({ 1, 0, 1, "default" }, { h.est, h.lo, h.hi, h.basis })
+    end)
+
     it("takes no bound from a NOT under an untracked guard aura, and one under `buff` only while it is up", function()
         local d = def()
         d.abilities[GATED].nobuff, d.abilities[GATED].buff = nil, "ghost" -- named but untracked: index -1

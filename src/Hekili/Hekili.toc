@@ -31,6 +31,7 @@ Virtual\State\Sources\Casts.lua
 Virtual\State\Sources\Power.lua
 Virtual\State\Sources\Swing.lua
 Virtual\State\Sources\Auras.lua
+Virtual\State\Sources\Forms.lua
 Virtual\State\Sources\Target.lua
 Virtual\State\Sources\Talents.lua
 Virtual\State\Sources\Nameplates.lua

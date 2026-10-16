@@ -1,0 +1,66 @@
+-- Virtual/State/Sources/Forms.lua
+-- Shapeshift form sources: stances are forms, not buffs, so the aura walk never lists them. At the first poll after
+-- build and on UPDATE_SHAPESHIFT_FORM, the plain form reads (GetShapeshiftForm, GetShapeshiftFormInfo's 4th return:
+-- the form's spell ID) put each tracked player aura that is a form up with no expiry (the active one) or down (the
+-- rest), as the walk's own `Read`s. The walk leaves a form aura it did not find alone (I.formAura): the form reads own
+-- it. A form the walk also lists (Druid forms) reads the same from both: no expiry, 1 stack.
+-- Credits: secret-value handling after Catnip's (Durts) research.
+
+local _, ns = ...
+local VS, I = ns.VirtualState, ns.VirtualStateInternal
+local S = I.Sources
+local Obs, ReadOf = VS.Obs, I.ReadOf
+local Plain, Direct = S.Plain, S.Direct
+
+-- By player aura index: true once a form read named it. Sources/Auras.lua's walk skips these when logging misses.
+local isForm = {}
+I.formAura = isForm
+local pending = false
+
+I.OnBuild(function()
+    for j in pairs(isForm) do
+        isForm[j] = nil
+    end
+    pending = true
+end)
+
+-- The client calls, where they are read (the secrets check sees them); each is pcall'd and its answer Plained.
+local function activeForm(api)
+    return api.GetShapeshiftForm() -- secret: Plain by the caller
+end
+local function numForms(api)
+    return api.GetNumShapeshiftForms() -- secret: Plain by the caller
+end
+
+-- Logs every tracked form aura up (the active form) or down at t. Allocates nothing.
+local function read(api, t)
+    local okA, rawActive = pcall(activeForm, api)
+    local okN, rawN = pcall(numForms, api)
+    local active, n = okA and Plain(api, rawActive), okN and Plain(api, rawN)
+    if type(active) ~= "number" or type(n) ~= "number" then
+        return
+    end
+    local bySpell = I.auras.bySpell
+    for i = 1, n do
+        local ok, _, _, _, rawSpell = pcall(api.GetShapeshiftFormInfo, i) -- secret: Plain next
+        local j = ok and bySpell[Plain(api, rawSpell) or false]
+        if j then
+            isForm[j] = true
+            Direct(Obs.Read, t, j, i == active and -1 or 0, ReadOf.Aura) -- a = j: unit 1, the player
+        end
+    end
+end
+
+S.On("UPDATE_SHAPESHIFT_FORM", nil, function(api, t)
+    if I.built then
+        read(api, t)
+    end
+end)
+
+-- Poll 9: the first read after a build.
+S.Poll(9, function(api, t)
+    if pending then
+        pending = false
+        read(api, t)
+    end
+end)

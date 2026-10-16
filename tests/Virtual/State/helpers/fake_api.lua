@@ -59,6 +59,8 @@ function M.new()
         unitSpeed = {}, -- [unit] = speed for UnitAttackSpeed of a unit other than the player (default: secret)
         unitIs = {}, -- [unit] = the token UnitIsUnit(unit, x) is true for (SECRET: a secret answer)
         unknownEvents = {}, -- [event] = true: RegisterEvent raises, as the client does for an event it does not know
+        form = 0, -- GetShapeshiftForm (0: none)
+        forms = {}, -- [form index] = its spell ID (GetShapeshiftFormInfo's 4th return)
     }
     local api = { ctl = ctl }
 
@@ -131,6 +133,15 @@ function M.new()
             return SECRET
         end
         return v == b
+    end
+    function api.GetShapeshiftForm()
+        return ctl.form
+    end
+    function api.GetNumShapeshiftForms()
+        return #ctl.forms
+    end
+    function api.GetShapeshiftFormInfo(i)
+        return 0, i == ctl.form, true, ctl.forms[i]
     end
     function api.GetTotemInfo(slot)
         local t = ctl.totems[slot]

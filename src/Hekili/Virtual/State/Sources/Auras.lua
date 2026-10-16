@@ -95,7 +95,13 @@ local function walk(api, u, unit, t)
         Note(WALK[u], "readable") -- a clean walk, even with no tracked aura up
         local e = U.exp0[u]
         for j = 1, U.nAura do
-            if e[j] > 0 and found[u][j] ~= serial and (not I.inCombat or seen[u][j]) then
+            -- a form aura is left to the form reads (Sources/Forms.lua): stances are never walked
+            if
+                e[j] > 0
+                and found[u][j] ~= serial
+                and (not I.inCombat or seen[u][j])
+                and not (u == 1 and I.formAura[j])
+            then
                 Direct(Obs.Read, t, (u - 1) * I.AURA_UNIT + j, 0, ReadOf.Aura)
             end
         end
