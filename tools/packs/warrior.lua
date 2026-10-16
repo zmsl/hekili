@@ -29,6 +29,7 @@ actions.execute=heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adap
 actions.execute+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.mortal_strike.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(execute_phase&settings.execute_queueing_enabled))
 actions.execute+=/execute
 actions.rotation=victory_rush
+actions.rotation+=/intercept,if=buff.berserker_stance.up&action.intercept.in_range&!action.heroic_strike.in_range
 actions.rotation+=/heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adaptive_queueing_enabled&cooldown.mortal_strike.remains>=rage.time_to_42|settings.adaptive_queueing_enabled&should_hs)|(execute_phase&settings.execute_queueing_enabled))
 actions.rotation+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.mortal_strike.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(execute_phase&settings.execute_queueing_enabled))
 actions.rotation+=/overpower
@@ -54,6 +55,7 @@ actions.execute=heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adap
 actions.execute+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(execute_phase&settings.execute_queueing_enabled))
 actions.execute+=/execute
 actions.rotation=victory_rush
+actions.rotation+=/intercept,if=buff.berserker_stance.up&action.intercept.in_range&!action.heroic_strike.in_range
 actions.rotation+=/heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_42|settings.adaptive_queueing_enabled&should_hs)|(execute_phase&settings.execute_queueing_enabled))
 actions.rotation+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(execute_phase&settings.execute_queueing_enabled))
 actions.rotation+=/overpower
@@ -75,6 +77,7 @@ actions.rotation+=/berserker_stance,use_off_gcd=1,if=!up
             .. "Sunder Armor stacked to 5, Heroic Strike or Cleave with spare rage.",
         simc = [[
 actions.precombat=battle_shout,if=!buff.battle_shout.up
+actions.precombat+=/charge
 actions.precombat+=/defensive_stance,if=!buff.defensive_stance.up
 actions=shield_bash
 actions+=/defensive_stance,use_off_gcd=1,if=!buff.defensive_stance.up

@@ -203,6 +203,20 @@ describe("Forever Warrior", function()
         assert.is_false(lw.run(w.abilities.charge.usable, e))
     end)
 
+    it("gates Intercept on the client's spell range, not LibRangeCheck", function()
+        local e = lw.env(w)
+        e.target.minR = 100 -- what LibRangeCheck leaves on Forever: nothing resolved
+        e.action = { intercept = { in_range = true } }
+        assert.is_true(lw.run(w.abilities.intercept.usable, e))
+        e.action.intercept.in_range = false
+        local ok, why = lw.run(w.abilities.intercept.usable, e)
+        assert.is_false(ok)
+        assert.are.equal("target must be within Intercept's range", why)
+        e = lw.env(w)
+        lw.run(w.abilities.intercept.now, e)
+        assert.are.same({ "intercept_stun" }, e.applied)
+    end)
+
     it(
         "declares the now-state of Charge, Bloodrage, Berserker Rage, the debuffs and the stances (spec §12a)",
         function()
@@ -465,15 +479,21 @@ describe("Forever Warrior", function()
         assert.are.same({ package = "Arms" }, w.options)
     end)
 
-    it("opens Arms and Fury with Charge after Battle Shout, before combat", function()
+    it("opens with Charge before combat and closes the gap with Intercept in Arms and Fury", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists", "warrior")
-        for i = 1, 2 do
-            local actions = {}
-            for j, e in ipairs(packs[i].lists.precombat) do
-                actions[j] = e.action
+        local function actions(list, n)
+            local out = {}
+            for j = 1, n or #list do
+                out[j] = list[j].action
             end
-            assert.are.same({ "battle_shout", "charge" }, actions, packs[i].name)
+            return out
         end
+        for i = 1, 2 do
+            assert.are.same({ "battle_shout", "charge" }, actions(packs[i].lists.precombat), packs[i].name)
+            assert.are.same({ "victory_rush", "intercept" }, actions(packs[i].lists.rotation, 2), packs[i].name)
+        end
+        -- Protection charges in Battle Stance, then swaps to Defensive Stance
+        assert.are.same({ "battle_shout", "charge", "defensive_stance" }, actions(packs[3].lists.precombat))
     end)
 
     it("keeps its priorities in tools/packs/warrior.lua, tools/make_pack.lua's default class", function()
