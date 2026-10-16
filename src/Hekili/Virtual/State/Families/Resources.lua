@@ -75,7 +75,9 @@ R.slotOf, R.slotOfToken = {}, {}
 -- the clock moves on: an aura first seen after its application loses the ticks before that, and a removal seen late
 -- keeps the ticks already credited; both are bounded by the aura's duration and the next pin or rung corrects them.
 -- Whether each hand's last landed swing paid (no on-next-swing strike took it): its crit pays only then.
-local paid = { false, false }
+-- The share of each hand's swings that land: an EMA over swings (a swing, c = 4, decays it; a landed one, c = 1, adds
+-- HIT_ALPHA). It scales the model's swing rate, so the step scale calibrates the value of a landed swing.
+local hitRate, HIT_ALPHA = { 1, 1 }, 0.1
 local G = { n = 0, slot = {}, aura = {}, value = {}, interval = {}, talent = {}, pause = {} }
 -- In combat (fold order, for the entries without an aura: aura index 0) and since when.
 local fighting, fightT = false, 0
@@ -162,7 +164,7 @@ I.OnBuild(function(def, now)
     end
     local list = def.resources
     R.n = #list
-    paid[1], paid[2] = false, false
+    hitRate[1], hitRate[2] = 1, 1
     for r = 1, R.n do
         local d = list[r]
         R.type[r], R.token[r] = d.type, d.token
@@ -393,16 +395,17 @@ I.OnAdvance(function(from, to)
     end
 end)
 
---- A swing-paid slot's model value per second of swinging: each paying hand's value / its believed speed (a hand
---- with no speed adds nothing). Allocates nothing.
+--- A swing-paid slot's model value per second of swinging: each paying hand's value x its hit rate / its believed
+--- speed (a hand with no speed adds nothing). Allocates nothing.
 function I.SwingPerSecond(r)
-    local per, speed = 0, I.SwingSpeedEst(R.swing[r])
+    local h = R.swing[r]
+    local per, speed = 0, I.SwingSpeedEst(h)
     if speed > 0 then
-        per = I.SwingValue(r) / speed -- nonzero: speed > 0 checked
+        per = I.SwingValue(r) * hitRate[h] / speed -- nonzero: speed > 0 checked
     end
-    local off = R.swing[r] == 1 and R.swingOff[r] ~= 0 and I.SwingSpeedEst(2) or 0
+    local off = h == 1 and R.swingOff[r] ~= 0 and I.SwingSpeedEst(2) or 0
     if off > 0 then
-        per = per + I.SwingValue(r, 2) / off -- nonzero: off > 0 checked
+        per = per + I.SwingValue(r, 2) * hitRate[2] / off -- nonzero: off > 0 checked
     end
     return per
 end
@@ -567,19 +570,24 @@ I.On(Obs.Read, function(o, t, lag)
     end
 end)
 
--- A landed swing pays each slot of its hand one step (the off hand its own value), unless an on-next-swing strike
--- took that swing (spec §6.4). Its crit (c = 3, Events/Rows.lua's pairing with the target's CRITICAL wound) adds the
--- hand's `crit` once more, unscaled (an exact, documented amount; the scale absorbs the model's error), to a swing
--- that paid.
+-- A landed swing (c = 1: Events/Rows.lua paired the target's wound with our white swing, so never an avoid and never
+-- a swing an on-next-swing strike took) pays each slot of its hand one step (the off hand its own value). It is
+-- staged when the wound arrives, one swing's lag after PLAYER_SWING (about 0.45 s main, about 1 s off, research
+-- 2026-10-16-swing-outcome-pairing): believed rage trails the game's by that step, and lo stays a floor. Its crit
+-- (c = 3, the same pairing with a CRITICAL wound, right after its c = 1) adds the hand's `crit` once more, unscaled (an
+-- exact, documented amount; the scale absorbs the model's error). A swing (c = 4) pays nothing; it and c = 1
+-- keep the hand's hit rate.
 I.On(Obs.Swing, function(o, t)
     local hand, c = o.a, o.c
-    if (c ~= 1 and c ~= 3) or (hand ~= 1 and hand ~= 2) then
+    if hand ~= 1 and hand ~= 2 then
         return
-    end
-    if c == 1 then
-        paid[hand] = not (hand == 1 and I.queuedStrike)
-    end
-    if not paid[hand] then
+    elseif c == 4 then
+        hitRate[hand] = hitRate[hand] * (1 - HIT_ALPHA)
+        return
+    elseif c == 1 then
+        local h = hitRate[hand] + HIT_ALPHA
+        hitRate[hand] = h < 1 and h or 1
+    elseif c ~= 3 then
         return
     end
     for r = 1, R.n do

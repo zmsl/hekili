@@ -47,7 +47,7 @@ I.On(Obs.Swing, function(o, t)
     if h ~= 1 and h ~= 2 then
         return
     end
-    if c == 1 then
+    if c == 4 then -- PLAYER_SWING, landed or not (c = 1, landed, is the resources family's)
         anchor(h, o.t, W_SWING)
         last[h] = o.t
         if o.b > 0 then

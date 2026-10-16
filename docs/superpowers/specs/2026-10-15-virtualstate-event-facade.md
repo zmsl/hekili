@@ -283,17 +283,19 @@ Provenance is [V]'s: observed (a plain signal says it happened), inferred (plain
 | Family | Rows | Source | Provenance | Consumer |
 |---|---|---|---|---|
 | Own casts | `SPELL_CAST_START`, `SPELL_CAST_SUCCESS`, `SPELL_CAST_FAILED`; a channel's `SPELL_AURA_REMOVED` | our `UNIT_SPELLCAST_START/SUCCEEDED/FAILED/INTERRUPTED/CHANNEL_STOP` with the `UNIT_SPELLCAST_SENT` target GUID ([V] C36, C38, C40, D1; O16: 134 successes plain) | observed | `:1505-1601`: `realQueue` `CAST_FINISH`/`CHANNEL_*`/`PROJECTILE_IMPACT`, `AddToHistory` (`:1601`) |
-| Our swings | `SWING_DAMAGE` (amount, critical), `SWING_MISSED` (missType `DODGE`/`PARRY`/`MISS`, isOffHand) | `PLAYER_SWING` per hand for time and hand; the target's `UNIT_COMBAT` within `PAIR_WINDOW_MS` for the outcome (§3) ([V] C1, C3, D7; O3: `PLAYER_SWING` also fires on avoided swings; O1: the target's MISS, DODGE, PARRY plain, 374 firings); an on-next-swing strike's success takes its swing's outcome as `SPELL_DAMAGE`/`SPELL_MISSED` and no swing row | observed time; the outcome's attribution to us is inferred (`UNIT_COMBAT` is victim-side) | swing timers `:1622-1635`; class hooks (Overpower, §6) |
-| Our ability missed | `SPELL_MISSED` (missType) | our `UNIT_SPELLCAST_SUCCEEDED` of an ability that starts combat or strikes on the next swing, plus the target's `UNIT_COMBAT` DODGE/PARRY/MISS within `PAIR_WINDOW_MS` ([V] C9, M2; O16: a dodged Heroic Strike still fired its success) | inferred | class hooks |
+| Our swings | `SWING_DAMAGE` (amount, critical), `SWING_MISSED` (missType `DODGE`/`PARRY`/`MISS`, isOffHand) | `PLAYER_SWING` per hand for time and hand; the target's `UNIT_COMBAT` that follows it within the hand's `PAIR_WINDOW_MS` for the outcome, a wound's hand told by its amount (§3) ([V] C1, C3, D7; O3: `PLAYER_SWING` also fires on avoided swings; O1: the target's MISS, DODGE, PARRY plain, 374 firings); an on-next-swing strike's success takes its swing's outcome as `SPELL_DAMAGE`/`SPELL_MISSED` and no swing row | observed time; the outcome's attribution to us is inferred (`UNIT_COMBAT` is victim-side) | swing timers `:1622-1635`; class hooks (Overpower, §6) |
+| Our ability missed | `SPELL_MISSED` (missType) | our `UNIT_SPELLCAST_SUCCEEDED` of an ability that starts combat or strikes on the next swing, plus the target's `UNIT_COMBAT` DODGE/PARRY/MISS that follows it within 0.2 s ([V] C9, M2; O16: a dodged Heroic Strike still fired its success) | inferred | class hooks |
 | Avoided on us | `SWING_MISSED`/`SPELL_MISSED` with `destGUID` = ours | the player's `UNIT_COMBAT` DODGE, PARRY, BLOCK, MISS ([V] C4, M1-M4, D13; O1: 165 firings plain); the attacker is not in the event, so the row is emitted only when attribution names it (decision 6, below); otherwise no row | observed type, inferred source | class hooks (Revenge, §6); tank attacker counting `:1619-1620` |
 | Deaths | `UNIT_DIED`, `PARTY_KILL` | `UNIT_DIED`, `PARTY_KILL`, `PLAYER_TARGET_DIED` with plain GUIDs ([V] C66-C68, D11; O6: 34/23/23 firings) | observed | `ns.eliminateUnit` (`:1403-1419`); Victory Rush window (§6) |
-| Damage we deal | `SWING_DAMAGE`, `SPELL_DAMAGE` on the target (phase B, with our swings and abilities above) and on plates (phase C) | the unit's `UNIT_COMBAT` WOUND paired with our swing or cast within `PAIR_WINDOW_MS` | inferred | enemy counting `:1693-1701` (`ns.updateTarget`) |
+| Damage we deal | `SWING_DAMAGE`, `SPELL_DAMAGE` on the target (phase B, with our swings and abilities above) and on plates (phase C) | the unit's `UNIT_COMBAT` WOUND paired with the swing or cast it follows (§3) | inferred | enemy counting `:1693-1701` (`ns.updateTarget`) |
 | Damage on us | `SWING_DAMAGE`, `SPELL_DAMAGE` with `destGUID` = ours | the player's `UNIT_COMBAT` WOUND (amount, school) ([V] C2, C4; O1); emitted only when attribution names the source, as above; physical (`schoolMask` 1) as `SWING_DAMAGE`, other schools as `SPELL_DAMAGE` with spellId 0 | observed (source inferred, as above) | `ns.storeDamage` (`:1451-1495`) |
 | Our casts' auras | `SPELL_AURA_APPLIED`/`_REFRESH`/`_REMOVED` on the target (debuffs) and on us (buffs) | phase B: what our cast's `now` verbs wrote (§12a: `applyBuff`, `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, against the aura's believed expiry before the cast), APPLIED or REFRESH at the cast's time, REMOVED when the cast removed it or at the modelled expiry ([V] C27, D3). Phase D adds travel time and the compensating `SPELL_AURA_REMOVED` when the cast's outcome was DODGE/PARRY/MISS | inferred / modelled | `ns.trackDebuff`, `active_dot` (`:1652-1687`) |
 | Energize | `SPELL_ENERGIZE` on us | phase B: a resource our cast's `now` gained (§12a's `gain`) ([V] C14, D6) | modelled | none in core ([V] §6; outline §1); class hooks |
 
-Rows.lua also stages one State observation: a swing it pairs with a CRITICAL wound becomes `Swing` c = 3 (that
-hand's crit), from which VirtualState's resources family adds the swing entry's `crit` (white-crit rage).
+Rows.lua also stages State observations: a swing it pairs with a wound becomes `Swing` c = 1 (landed, at the swing's
+time), from which VirtualState's resources family pays the swing's rage, and a CRITICAL wound adds c = 3 (that hand's
+crit, the swing entry's `crit`). `PLAYER_SWING` itself is `Swing` c = 4 (swung: the swing clock's, it fires on avoided
+swings too) and pays nothing (2026-10-16: paying on every `PLAYER_SWING` paid rage for misses and avoids).
 
 **Payload contract.** Every synthesized event has the client's name and positional payload as the `wow` MCP
 event docs for Forever give it (the plan carries a per-event signature table; for `COMBAT_LOG_EVENT_UNFILTERED`
@@ -351,7 +353,7 @@ made only when a hit is credited (a free slot first, else the oldest anchor's), 
 anchors' reset at combat end.
 Otherwise the hit stays unattributed: no row (counted, `Snapshot()`'s `unattributed`), so it stays out of the enemy
 counter. The credited hit re-anchors that clock. Dodges and parries of our own swings are not attributed this way:
-they are the target's `UNIT_COMBAT` paired with our swing within `PAIR_WINDOW_MS` (§3).
+they are the target's `UNIT_COMBAT` paired with our swing (§3).
 
 **No row on us with an unknown source.** The tank branch (`Events.lua:1619-1620`: tank role, `destGUID` ours, a
 `SWING` subevent) calls `ns.updateTarget( sourceGUID, time, true )`, and `updateTarget` rejects only nil and our
@@ -396,18 +398,28 @@ drain folds the walk's observations before those resets (spec §5.1).
 - **Synchronous rows** are emitted by the sources in step (1) and delivered in step (4) of the event that completes
   them: a target `UNIT_COMBAT` within the window of our `PLAYER_SWING` emits the swing row; our
   `UNIT_SPELLCAST_SUCCEEDED` emits `SPELL_CAST_SUCCESS`.
-- **Pairing window.** The swing (or our cast) and its outcome arrive as separate client events, in either order,
-  and nobody has measured how far apart: [V] C1 calls matching a WOUND to the swing "design work, not yet measured
-  jointly", and D8 notes the Overpower flip can lag past one frame. The window is a named constant,
-  `PAIR_WINDOW_MS`, default 200 ms (the only pairing window [V] gives, D10a's interrupt pairing "within 0.2 s",
-  until measured). Phase B's first checkpoint measures it with a probe line that prints, per target `UNIT_COMBAT`
-  in combat, the ms since our last `PLAYER_SWING` and our last `UNIT_SPELLCAST_SUCCEEDED`
-  (`debugprofilestop()` stamps), and sets the constant from the largest observed gap plus a frame. The layer holds
-  pending swings, casts and outcomes in two preallocated buffers (8 entries each) and emits a row as soon as its
-  pair arrives (a synchronous row). A swing still unpaired when its window closes is emitted at the next delivery
-  point as `SWING_DAMAGE` with amount 0 (a deferred row, carrying the swing's time), `destGUID` the current
-  target's plain GUID at the swing (`""` when there was none); an outcome unpaired when its window closes is
-  dropped (someone else's). The row's time is the earlier event's.
+- **Pairing (measured 2026-10-16).** The swing (or our cast) and its outcome arrive as separate client events.
+  Measured in game (`docs/research/2026-10-16-swing-outcome-pairing.md`, log 2: dual wield, main 2.2 s, off 2.5 s):
+  the outcome always FOLLOWS its `PLAYER_SWING`, by a median 474 ms on the main hand (435-552 ms in 31 of 34 hits, the
+  rest up to 1287 ms) and 953 ms on the off hand (694-1070 ms in 22 of 31, up to 1686 ms); the hands are independent
+  and stagger; the amount tells the hand (Rend ticks and procs fall outside both hands' damage); avoids carry no
+  amount. The rule: a pending swing pairs only with an outcome that follows it, within `PAIR_WINDOW_MS` of its hand
+  (main 1500, off 2000, capped at that hand's swing period). A wound picks its swing by amount against each hand's
+  damage from the out-of-combat `UnitDamage` cache (min and max main, then off): it fits a hand inside
+  [0.6 x min, 1.1 x max], on half the amount for CRITICAL, from 0 for GLANCING and BLOCK_REDUCED; inside the exact
+  [min, max] beats only the loose range, and a tie goes to the older pending swing; before the first cache read, the
+  oldest pending swing of either hand. A wound that fits no pending swing goes to our pending cast, else it is
+  dropped (a tick, a proc, someone else's). An avoid (MISS, DODGE, PARRY, BLOCK, amount 0) goes to our pending cast,
+  else the oldest pending swing of either hand (ambiguous when both hands are pending: accepted; log 2's four orphan
+  wounds came from that). A cast pairs with the outcome that follows it within 0.2 s. An on-next-swing strike's frame
+  carries `PLAYER_SWING`, a WOUND 0 (the white swing it replaced), its success and its own wound, in either order of
+  swing and success (log 1): the strike takes its wound, the WOUND 0 pairs with nothing. The pending actions sit in
+  one preallocated buffer (8 entries) and a row is emitted as soon as its pair arrives (a synchronous row). A swing
+  still unpaired when its window closes is emitted at the next delivery point as `SWING_DAMAGE` with amount 0 (a
+  deferred row, carrying the swing's time, staging nothing for the belief), `destGUID` the current target's plain
+  GUID at the swing (`""` when there was none). The row's time is the swing's or cast's. Replayed headless in
+  `tests/Virtual/Events/pairing_replay_spec.lua`. This supersedes the 200 ms default and the phase B checkpoint's
+  pairing-gap measurement (step 8's third probe, §11), which set nothing more.
 - **Deferred rows** (unpaired swings, modelled expiries, our casts' aura and energize rows the `now` verbs write
   when the drain folds the cast (§12a), later a debuff applied after travel) go into the queue (§4) and are delivered at the next delivery
   point: the layer's own `OnUpdate` (after `S.Flush` and the deferred lane's `Tick`, which closes pairing windows and
@@ -432,7 +444,7 @@ drain folds the walk's observations before those resets (spec §5.1).
   | A usability flip (a class file's, §6) | the plain `IsSpellUsable` read | not a row: the class file reads it now | n/a |
 
   Back-dating matters most for swings. Every `SWING_DAMAGE`/`SWING_MISSED` row is emitted when its pair
-  arrives or its window closes, up to `PAIR_WINDOW_MS` after the swing. Once the swing feed (`Adapter.lua:257-264`)
+  arrives or its window closes, up to the hand's `PAIR_WINDOW_MS` after the swing. Once the swing feed (`Adapter.lua:257-264`)
   is retired, `CLEU_HANDLER`'s swing branch would stamp the delivery time (`time = GetTime()` at `:1421`, written to
   `swings.mh_actual`/`oh_actual` at `:1622-1635`), so the swing clock would run late. The carrier is the row's
   timestamp slot: slot 1 holds the `PLAYER_SWING` observation's `GetTime()` (on the client clock, not the client's
@@ -460,7 +472,7 @@ drain folds the walk's observations before those resets (spec §5.1).
   types, `""`); GUIDs are the plain strings the client handed the layer. Allocated when `CombatLog.lua` loads.
 - The queue is a ring over the pool's slot indices (one reader, the delivery point: Hekili and class files hear
   rows through the same frame subscription, so per-reader cursors are unnecessary; outline §4).
-- One `UNIT_AURA` info table per unit, two in all; the two pairing buffers of §3 (8 entries each); the attacker
+- One `UNIT_AURA` info table per unit, two in all; the pairing buffer of §3 (8 entries); the attacker
   clocks (8) and the 42 target-of tokens of §2.4; per tracked aura and unit, its believed expiry for the aura rows.
   Passthrough payloads are locals (§2.3), never stored.
 - Plain by construction: every value placed in a row or a slot has passed `Plain` or is the layer's own constant.
@@ -593,7 +605,7 @@ Headless (busted, `Virtual/State/spec/`, the Phase 1 helpers `fake_api.lua` and 
 - `cleu_rows_spec`: per emitted subevent, the tuple matches §2.4's slot table (no nil up to the last slot, the
   result of `ns.callHook`'s rebuild equal to the row, no event payload); `Facade.GetTime` answers a back-dated row's
   slot 1 during delivery and the clock after, and the delivery time for a modelled row; pairing in both event
-  orders within `PAIR_WINDOW_MS`; an unpaired outcome dropped and an unpaired swing emitted at its own time once
+  orders (only the outcome that follows pairs) within the hand's `PAIR_WINDOW_MS`; an unpaired outcome dropped and an unpaired swing emitted at its own time once
   its window closes; an on-next-swing strike takes its swing's outcome; a row emitted during a delivery follows it,
   never nested, counted; a full pool drops the oldest, counted. Hits on us: credited to the one hostile targeting
   us; none and counted when nobody is known to, or `UnitIsUnit` is secret; two attackers told apart by their plain
@@ -629,7 +641,8 @@ In game (the user runs it; Warrior on a dummy):
    that produced it within 50 ms, both for paired swings and for unpaired ones emitted when their window closes.
 7. The cycle cost with the full read facade against 75d71c8b (Hekili's thread time per frame), tracing off.
 8. Phase B's two probes, first: `UnitAttackSpeed("target")` of a hostile in combat (plain or secret) and
-   `UnitIsUnit("targettarget", "player")` in combat (plain or secret), and the pairing gap (§3).
+   `UnitIsUnit("targettarget", "player")` in combat (plain or secret), and the pairing gap (§3; measured 2026-10-16,
+   superseded).
 
 ## 10. Risks with closers
 
@@ -637,14 +650,14 @@ In game (the user runs it; Warrior on a dummy):
 |---|---|---|
 | E1 | Row wrappers slow hot reads (`GetTime`, `UnitExists` in the cycle; a hybrid adds a raw call) | in-game step 7; if the cycle grows by more than 5 %, the user decides between keeping the always-on wrapper (decision 4) and giving the hottest names the raw function |
 | E2 | A frame Hekili does not create through the facade registers events directly (a library, an XML template, a metatable call) | `check_api_reads.sh` greps the loaded files (§1.2); libraries are not Hekili core and keep their own frames |
-| E3 | Victim-side outcomes misattributed in groups (another attacker's dodge credited to our swing; a hit on us credited to the wrong attacker) | pairing within `PAIR_WINDOW_MS` only (§3); hits on us credited only by a clock within `ATTACK_TOLERANCE` or to the one hostile targeting us (§2.4), else no row; rows marked inferred; in Battle Stance the strict usability read corrects Overpower on the next reset (§6) |
+| E3 | Victim-side outcomes misattributed in groups (another attacker's dodge credited to our swing; a hit on us credited to the wrong attacker) | pairing within the hand's `PAIR_WINDOW_MS` and by amount only (§3); hits on us credited only by a clock within `ATTACK_TOLERANCE` or to the one hostile targeting us (§2.4), else no row; rows marked inferred; in Battle Stance the strict usability read corrects Overpower on the next reset (§6) |
 | E4 | Own-cast and swing writes doubled while the Phase 1 feeds and the rows coexist | retire each feed in the same task as its rows (§7); in-game step 5 and a headless count of `AddToHistory` calls |
 | E5 | Hekili's dispatch allocates per delivered row (`Events.lua:84, 88-91`) | Hekili's retail cost; measured per row in in-game step 5; rows are emitted only for §11's families |
 | E6 | Registering an event the client does not know raises | `pcall` at subscription; stub entry (§2.1) |
 | E7 | A row delivered inside a hook is dropped by `ns.callHook` (`Classes.lua:2869`) | no nested delivery; queued and counted (§3) |
 | E8 | `UNIT_AURA` fires often in combat (O12: 226 firings), each a full rescan request | `ForceUpdate(…, true)` only adds 0.1 s to the refresh timer (`UI.lua:2459-2461`); the scrape still runs once per cycle |
 | E9 | Gated payloads change a handler's input (nil instead of a secret) | the only handlers that received secrets are the target arms of `UNIT_SPELLCAST_*`, which read neither slot (`Events.lua:1017`, `:1029`); the trace shows any other |
-| E10 | A deferred row's time skew shifts a time-stamping consumer: the swing clock (up to `PAIR_WINDOW_MS`) or `trackDebuff` (up to one cycle) | every row with an observed basis is back-dated (§3, decision 5: slot 1 plus `Facade.GetTime` during delivery), checked by in-game step 6; modelled expiries are stamped at delivery |
+| E10 | A deferred row's time skew shifts a time-stamping consumer: the swing clock (up to the hand's `PAIR_WINDOW_MS`) or `trackDebuff` (up to one cycle) | every row with an observed basis is back-dated (§3, decision 5: slot 1 plus `Facade.GetTime` during delivery), checked by in-game step 6; modelled expiries are stamped at delivery |
 | E11 | A passthrough name is secret in some state nobody probed | the trace counts secrets per passthrough (§5); the name becomes a hybrid row |
 | E12 | A hybrid's raw answer out of combat and its model's in combat disagree at the edge (a cooldown read raw just before combat, the model's right after) | the model is seeded from the same plain reads (spec §4); the checkpoint's snapshot shows both classes answering (step 2) |
 | E13 | `UnitIsUnit("<token>target", "player")` or a hostile's `UnitAttackSpeed` is secret in combat | each goes through `Plain` and its status is noted (`Snapshot()`'s `read UnitIsUnit target-of`, `read UnitAttackSpeed hostile`); secret targeting means no row on us (the Revenge fallback, §6); a secret speed means a learned period (§2.4); phase B's probes measure both first |
@@ -664,7 +677,7 @@ they answer (G2 order, drain cost, the plain signals of §1.1).
   targeting set and the attacker clocks; our casts' aura rows and energize from the `now` family's writes (§12a);
   the Phase 1 feeds retired; the `COMBAT_LOG_EVENT_UNFILTERED` skip reverted; the Warrior file in Classic's shape
   (§6). This phase answers the user's example. Its checkpoint starts with the two probes
-  and the pairing gap (step 8), which set `PAIR_WINDOW_MS` and confirm the attribution's inputs; then steps 3, 5, 6.
+  and the pairing gap (step 8; measured 2026-10-16, which set the per-hand `PAIR_WINDOW_MS`, §3) and confirm the attribution's inputs; then steps 3, 5, 6.
 - **`now` handlers (§12a).** After phase B's rows: a cast's effects from the class files' declared now-state; the
   drain's replay of Hekili's sim handlers retired; the Warrior's `now` lines with its windows.
 - **The follow-up (decision 7).** The GCD spell, the spec slot and the talent read move into the facade (§7).

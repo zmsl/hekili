@@ -186,26 +186,28 @@ describe("resources", function()
                 assert.are.equal(100, VS.Power(fs.RAGE, 30).est)
             end)
 
-            it("changes nothing for a swing entry without `crit`, or a swing an on-next-swing strike took", function()
+            it("changes nothing for a swing entry without `crit`", function()
                 crits(nil)
                 obs(Obs.Swing, 5, 1, 2.6, 1)
                 obs(Obs.Swing, 5, 1, 0, 3)
                 I.Fold(5, false)
                 within(9 * 1.2, VS.Power(fs.RAGE, 5).est)
-                crits(7)
-                obs(Obs.Queued, 4, 2, 1)
-                obs(Obs.Swing, 5, 1, 2.6, 1)
-                obs(Obs.Swing, 5, 1, 0, 3)
-                I.Fold(5, false)
-                assert.are.equal(0, VS.Power(fs.RAGE, 5).est)
             end)
         end)
 
-        it("pays no swing step while an on-next-swing strike is queued", function()
-            obs(Obs.Queued, 4, 2, 1) -- heroic_strike (ability 2) queued
-            obs(Obs.Swing, 5, 1, 2.6, 1)
+        it("pays nothing for a swing that did not land (PLAYER_SWING, c = 4), and models the hit rate", function()
+            obs(Obs.Swing, 5, 1, 2.6, 4)
             I.Fold(5, false)
             assert.are.equal(0, VS.Power(fs.RAGE, 5).est)
+            within(9 / 2.6 * 0.9, I.SwingPerSecond(1))
+            for k = 1, 40 do -- three of four land
+                obs(Obs.Swing, 5 + 2.6 * k, 1, 2.6, 4)
+                if k % 4 ~= 0 then
+                    obs(Obs.Swing, 5.4 + 2.6 * k, 1, 0, 1)
+                end
+            end
+            I.Fold(120, false)
+            within(9 / 2.6 * 0.75, I.SwingPerSecond(1), 9 / 2.6 * 0.1)
         end)
 
         it(
@@ -314,14 +316,15 @@ describe("resources", function()
             local def = fs.def(fs.new(9))
             def.resources[1].swingOff = 4.5
             boot(def)
-            obs(Obs.Swing, 5, 1, 2.6, 1)
-            obs(Obs.Swing, 5.5, 2, 1.8, 1)
+            obs(Obs.Swing, 5, 1, 2.6, 4) -- each hand's swing, then its landed wound
+            obs(Obs.Swing, 5, 1, 0, 1)
+            obs(Obs.Swing, 5.5, 2, 1.8, 4)
+            obs(Obs.Swing, 5.5, 2, 0, 1)
             I.Fold(5.5, false)
             assert.are.equal(13.5, VS.Power(fs.RAGE, 6).est)
             within(9 / 2.6 + 4.5 / 1.8, I.SwingPerSecond(1))
             within(9 / 2.6 + 4.5 / 1.8, VS.Regen(fs.RAGE, 6).est)
-            obs(Obs.Queued, 6, 2, 1) -- a queued strike takes the main hand's swing, not the off hand's
-            obs(Obs.Swing, 7.3, 2, 1.8, 1)
+            obs(Obs.Swing, 7.3, 2, 0, 1)
             I.Fold(7.3, false)
             assert.are.equal(18, VS.Power(fs.RAGE, 7.3).est)
         end)
@@ -753,7 +756,8 @@ describe("resources", function()
         end
 
         local function swing(t)
-            obs(Obs.Swing, t, 1, 2.5, 1)
+            obs(Obs.Swing, t, 1, 2.5, 4)
+            obs(Obs.Swing, t, 1, 0, 1)
             I.Fold(t, false)
             return VS.Power(fs.RAGE, t).est
         end

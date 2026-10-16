@@ -172,8 +172,8 @@ end)
 -- WOUND 0 is the white swing an on-next-swing strike replaced (its frame also carries the strike's own wound) and
 -- pairs with nothing. An avoid: our pending cast (its outcome comes in the same frame), else the oldest pending swing
 -- of either hand.
--- shortcut: in group play another attacker's outcome inside a window can be credited to our action (and a crit lift
--- rage's lo above the real rage until the next pin); upgrade when a per-attacker attribution exists.
+-- shortcut: in group play another attacker's outcome inside a window can be credited to our action (and its wound's
+-- rage lift rage's lo above the real rage until the next pin); upgrade when a per-attacker attribution exists.
 S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
     if unit ~= "target" or type(act) ~= "string" or (act ~= "WOUND" and not MISSES[act]) then
         return
@@ -193,8 +193,12 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
     local kind, x, at = actKind[p], actX[p], actT[p]
     actT[p] = 0
     emit(kind, x, actDst[p], act, flag, amount, at)
-    if kind == 1 and act == "WOUND" and flag == "CRITICAL" then
-        S.Stage(Obs.Swing, t, x, 0, 3)
+    if kind == 1 and act == "WOUND" then
+        S.Stage(Obs.Swing, at, x, 0, 1) -- landed, at the swing's time: the resources family pays its rage
+        if flag == "CRITICAL" then
+            S.Stage(Obs.Swing, t, x, 0, 3)
+        end
+        S.Urgent("VS_SWING_LANDED")
     end
 end)
 

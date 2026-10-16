@@ -283,20 +283,25 @@ describe("the synthesized combat log", function()
             assert.are.equal(20.04, got[1].now)
         end)
 
-        it("stages a swing paired with a CRITICAL wound as that hand's crit (Swing c = 3), a plain one not", function()
-            local def = fs.def(fs.new(9))
-            def.resources[1].swingCrit = 7
-            I.Build(def, 1)
-            ctl.now = 20
-            ctl.Fire("PLAYER_SWING", 2.6, 0)
-            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 120, 1)
-            ctl.now = 22.6
-            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 80, 1)
-            ctl.Fire("PLAYER_SWING", 2.6, 0)
-            ctl.Tick(22.6)
-            I.Fold(22.6, false)
-            assert.are.equal(9 + 7 + 9, VS.Power(fs.RAGE, 22.6).est)
-        end)
+        it(
+            "stages a swing paired with a wound as landed (Swing c = 1), and a CRITICAL one as a crit (c = 3)",
+            function()
+                local def = fs.def(fs.new(9))
+                def.resources[1].swingCrit = 7
+                I.Build(def, 1)
+                ctl.now = 20
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 120, 1)
+                ctl.now = 22.6
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                ctl.now = 23
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 80, 1)
+                ctl.Fire("PLAYER_SWING", 2.2, 1) -- swung, never landed: pays nothing
+                ctl.Tick(25)
+                I.Fold(25, false)
+                assert.are.equal(9 + 7 + 9, VS.Power(fs.RAGE, 25).est)
+            end
+        )
 
         it("emits an unpaired swing as SWING_DAMAGE 0 once its window closes, at its own time", function()
             ctl.now = 30
