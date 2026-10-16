@@ -717,7 +717,7 @@ Belief = {
 | Kept name(s) | Policy | Accessors |
 |---|---|---|
 | `UnitPower(unit, pt)` | player: `floor(Power(pt or UnitPowerType("player"), now).lo)`; other units: 0. `lo` never over-promises a spender (feasibility §D.3) | `Power` |
-| `GetPowerRegenForPowerType(pt)` | `est, est` of `Regen(pt, now)`; for a swing-paid resource `0, 0` (in combat Hekili's swing model adds it; out of combat nothing swings), because Hekili's swing regen model adds that rage (no double count, G3) | `Regen`, `InCombat` |
+| `GetPowerRegenForPowerType(pt)` | `est, est` of `Regen(pt, now)`; for a swing-paid resource `0, 0` (in combat Hekili's swing model adds it; out of combat nothing swings), because Hekili's swing regen model adds that rage (no double count, G3) | `Regen` |
 | `GetManaRegen()` | `Regen(0, now).est`, then `Regen(0, now, true).est` (the first value copied before the second call) | `Regen` |
 | `UnitHealth(unit)`, `UnitHealthMax(unit)` | player: `Health("player", now).est · HealthMax("player")` and `HealthMax("player")`; target: `Health("target", now).est · 100` and 100; plates and pet: 100 and 100 when plain `UnitIsDead(unit)` is false, else 0 and 100, which keeps the enemy scan's `UnitHealth( unit ) > 1` test (`Targets.lua:407, 484`) meaningful | `Health`, `HealthMax` |
 | the 12 stat names | the cached returns in the real return order | `Stat` |

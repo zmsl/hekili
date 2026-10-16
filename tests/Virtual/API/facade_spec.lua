@@ -134,7 +134,7 @@ describe("ns.Facade", function()
         assert.is_nil(Facade.C_Spell.GetSpellLossOfControlCooldown(1))
     end)
 
-    it("answers resources: UnitPower floors est for rage, lo otherwise; swing regen 0 in combat", function()
+    it("answers resources: UnitPower floors est for rage, lo otherwise; swing regen 0 in and out of combat", function()
         I.Sources.Direct(VS.Obs.Usable, 5, 3, 1, 0) -- rend usable: rage >= 10
         I.Fold(5, false)
         ctl.now = 5
