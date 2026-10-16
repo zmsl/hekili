@@ -56,6 +56,8 @@ local R = {
     regen = {},
     decayDef = {},
     decay = {},
+    decayIv = {},
+    decayNext = {},
     maxDef = {},
     maxMods = {},
     maxRead = {},
@@ -74,7 +76,10 @@ local fighting, fightT = false, 0
 R.auraRegen = G
 
 -- Slot r's out-of-combat loss per second from its `decay` (a number or a state-bound function; absent: none),
--- evaluated at the build and at each combat end (talent ranks change out of combat only). Allocates nothing.
+-- evaluated at the build and at each combat end (talent ranks change out of combat only). With a `decayInterval`
+-- (seconds, `decayIv[r]`; 0: continuous) it is lost in quanta of decay x interval, the first at once when the decay
+-- starts and one at the start of each interval after it (`decayNext[r]`: the next one's time, 0 while inactive;
+-- stepped-decay design §3.2). Allocates nothing.
 local function decayOf(r)
     local d = R.decayDef[r]
     if type(d) == "function" then
@@ -170,6 +175,8 @@ I.OnBuild(function(def, now)
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
         R.decayDef[r] = d.decay
         R.decay[r] = decayOf(r)
+        local iv = eval(d.decayInterval)
+        R.decayIv[r], R.decayNext[r] = type(iv) == "number" and iv > 0 and iv or 0, 0
         R.power[r] = I.NewBelief("power " .. tostring(d.key))
         R.regen[r] = I.NewBelief("regen " .. tostring(d.key))
         I.Sample(R.power[r], "default", R.rest[r], now, 0)
@@ -237,8 +244,7 @@ function I.SwingValue(r, hand)
 end
 
 -- What entry g brings in (from, to]: `value` at each `interval` after the player's aura was applied, up to its
--- believed expiry. A tick due at the expiry itself does not land (the removal wins; in game 2026-10-16, Bloodrage's ten
--- ticks give 9), so an aura-gated window stops TICK_EPS short of it. Allocates nothing.
+-- believed expiry. Allocates nothing.
 local function auraGain(g, from, to)
     local j, tid = G.aura[g], G.talent[g]
     if tid > 0 and VS.Talent(tid) == 0 then
@@ -257,8 +263,8 @@ local function auraGain(g, from, to)
         return 0
     end
     local iv = G.interval[g]
-    if j ~= 0 and to > e - I.TICK_EPS then
-        to = e - I.TICK_EPS
+    if to > e then
+        to = e
     end
     if from < ap then
         from = ap
@@ -269,8 +275,47 @@ local function auraGain(g, from, to)
     return (floor((to - ap) / iv) - floor((from - ap) / iv)) * G.value[g] -- nonzero: interval > 0 (checked at build)
 end
 
+-- No decay while a tick-paying player aura of slot r is up (Bloodrage: +1/s and no decay for 10 s, in game): false
+-- while one is up through `to`, else when in (from, to] the decay runs from (the latest expiry in it, or `from`).
+local function decayFrom(r, from, to)
+    local start = from
+    for g = 1, G.n do
+        local j, tid = G.aura[g], G.talent[g]
+        local learned = tid == 0 or VS.Talent(tid) ~= 0 -- auraGain's talent gate
+        if learned and G.slot[g] == r and j > 0 and I.auras.applied[1][j] <= to then
+            local e = I.auras.exp0[1][j]
+            if e > to then
+                return false
+            elseif e > start then
+                start = e
+            end
+        end
+    end
+    return start
+end
+
+-- One stepped decay quantum of slot r at t: the interval down by decay x interval, never below rest, as a `modelled`
+-- sample at t, kept out of the regen measurement; the next one an interval later, none once the estimate rests.
+local function beat(r, t)
+    local rest, step, before = R.rest[r], R.decay[r] * R.decayIv[r], R.est0[r]
+    if before > rest then
+        R.est0[r] = before - step > rest and before - step or rest
+    end
+    if R.lo0[r] > rest then
+        R.lo0[r] = R.lo0[r] - step > rest and R.lo0[r] - step or rest
+    end
+    if R.hi0[r] > rest then
+        R.hi0[r] = R.hi0[r] - step > rest and R.hi0[r] - step or rest
+    end
+    if R.est0[r] ~= before then
+        R.pinDelta[r] = R.pinDelta[r] + R.est0[r] - before
+        I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.CombatEnd)
+    end
+    R.decayNext[r] = R.est0[r] > rest and t + R.decayIv[r] or 0
+end
+
 -- Continuous regen between pins (swing-paid slots move only at swings), then aura-gated regen, kept out of the
--- regen measurement like our own casts' changes (pinDelta).
+-- regen measurement like our own casts' changes (pinDelta), then the decay: ticks before quanta at the same instant.
 I.OnAdvance(function(from, to)
     local dt = to - from
     for r = 1, R.n do
@@ -296,25 +341,20 @@ I.OnAdvance(function(from, to)
         return
     end
     -- Out of combat a decaying slot falls toward rest at its decay rate (never below it), kept out of the regen
-    -- measurement like the aura-gated ticks.
+    -- measurement like the aura-gated ticks; it resumes from a tick aura's expiry.
     for r = 1, R.n do
         local d = R.decay[r]
-        -- No decay while a tick-paying player aura is up (Bloodrage: +1/s and no decay for 10 s, in game); it
-        -- resumes from the aura's expiry.
-        local start = from
-        for g = 1, G.n do
-            local j, tid = G.aura[g], G.talent[g]
-            local learned = tid == 0 or VS.Talent(tid) ~= 0 -- auraGain's talent gate
-            if d > 0 and learned and G.slot[g] == r and j > 0 and I.auras.applied[1][j] <= to then
-                local e = I.auras.exp0[1][j]
-                if e > to then
-                    d = 0
-                elseif e > start then
-                    start = e
-                end
+        local start = d > 0 and decayFrom(r, from, to)
+        if R.decayIv[r] > 0 then
+            if not start then
+                R.decayNext[r] = 0
+            elseif start > from or R.decayNext[r] == 0 and R.est0[r] > R.rest[r] then
+                R.decayNext[r] = start -- it starts: at a tick aura's expiry, or at a rise above rest
             end
-        end
-        if d > 0 then
+            while R.decayNext[r] > 0 and R.decayNext[r] <= to do
+                beat(r, R.decayNext[r])
+            end
+        elseif start then
             local rest, drop, before = R.rest[r], d * (to - start), R.est0[r]
             if before > rest then
                 R.est0[r] = before - drop > rest and before - drop or rest
@@ -532,11 +572,14 @@ end)
 
 I.On(Obs.CombatStart, function(o, t)
     fighting, fightT = true, t
+    for r = 1, R.n do
+        R.decayNext[r] = 0
+    end
 end)
 
 -- Out of combat a resource falls toward its rest value: the interval opens down to it (lo never over-promises), and
--- a decaying slot's rate is re-read.
-I.On(Obs.CombatEnd, function()
+-- a decaying slot's rate is re-read; a stepped one loses its first quantum at once (front-loaded).
+I.On(Obs.CombatEnd, function(o, t)
     fighting = false
     for r = 1, R.n do
         R.decay[r] = decayOf(r)
@@ -547,6 +590,10 @@ I.On(Obs.CombatEnd, function()
             R.lo0[r] = R.rest[r]
         end
         R.pinValid[r] = false
+        local stepped = R.decayIv[r] > 0 and R.decayNext[r] == 0 and R.decay[r] > 0
+        if stepped and R.est0[r] > R.rest[r] and decayFrom(r, t, t) then
+            beat(r, t)
+        end
     end
 end)
 
@@ -597,6 +644,14 @@ function VS.Power(powerType, now)
     end
     rec.conf = conf
     return rec
+end
+
+--- (stepped-decay design §3.3) The time of a power type's last stepped decay quantum, the anchor of the sim's
+--- `__decay` entry (Adapter.lua): 0 while its decay is inactive or continuous, or the type untracked. Allocates nothing.
+function VS.DecayAnchor(powerType)
+    local r = R.slotOf[powerType]
+    local n = r and R.decayNext[r] or 0
+    return n > 0 and n - R.decayIv[r] or 0
 end
 
 --- (spec §3.2) The believed regen per second of a power type. A swing-paid resource's is its calibrated step per

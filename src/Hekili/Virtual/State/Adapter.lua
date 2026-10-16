@@ -149,6 +149,7 @@ local function buildDef()
             swingAura = swingAura,
             auraRegen = auraRegen,
             decay = r.state and r.state.meta and r.state.meta.decay, -- out-of-combat loss per second (Resources.lua)
+            decayInterval = r.state and r.state.meta and r.state.meta.decayInterval, -- seconds per quantum (stepped)
         }
         insert(def.resources, d)
         slotByKey[k] = #def.resources
