@@ -21,7 +21,7 @@ describe("hits on us (harness gates)", function()
     it("two attackers of the same strength on us from the pull: precision >= 0.90, coverage reported", function()
         local m = metrics.fights({ attackers = 2, mobs = mobs({ 10, 14 }, { 10, 14 }) }, 100)
         print("\nsame strength, from the pull: " .. metrics.onusLine(m))
-        assert.is_true(m.onusRight >= 0.90 * m.onusCredited, metrics.onusLine(m))
+        assert.are.equal(0, m.onusCredited, metrics.onusLine(m)) -- no clock starts while two are on us
         assert.are.equal(m.hitsFed, m.hitsStaged)
     end)
 

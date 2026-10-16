@@ -22,7 +22,8 @@ local floor = math.floor
 
 L.ATTACK_TOLERANCE = 0.2 -- seconds between a clock's predicted swing and a hit credited to it
 L.unattributed = 0
--- A band fits a wound within [BAND_LO x its min, BAND_HI x its max] once BAND_N wounds taught it (UNMEASURED margins).
+-- A band fits a wound within [BAND_LO x its min, BAND_HI x its max] once BAND_N wounds taught it (margins UNMEASURED
+-- in game; set from the harness only).
 L.BAND_LO, L.BAND_HI, L.BAND_N = 0.8, 1.2, 3
 L.onus = { credited = 0, byBand = 0 }
 
@@ -173,9 +174,9 @@ end
 local MISSES = { DODGE = true, PARRY = true, BLOCK = true, MISS = true }
 
 -- A wound's amount as its attacker's unmodified hit: a crit halved, a crushing blow / 1.5; nil for a partly blocked one
--- (the blocked part is not given).
+-- (the blocked part is not given), or for a secret amount or flag (read through Plain: nil).
 local function base(amount, flag)
-    if type(amount) ~= "number" or flag == "BLOCK_REDUCED" then
+    if type(amount) ~= "number" or type(flag) ~= "string" or flag == "BLOCK_REDUCED" then
         return nil
     elseif flag == "CRITICAL" then
         return amount / 2
@@ -194,6 +195,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     if unit ~= "player" or (act ~= "WOUND" and not MISSES[act]) then
         return
     end
+    flag, amount = Plain(api, flag), Plain(api, amount) -- a secret one is neither banded nor learned
     local melee = act ~= "WOUND" or school == 1
     local wound = act == "WOUND" and school == 1
     local a = wound and base(amount, flag) or nil
@@ -256,7 +258,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     local src, dst = tokGUID[best], L.player
     if melee then -- a spell does not follow the swing clock: no clock made or moved for it
         local k = clockOf(src)
-        learn(k, t, tokSpeed[best])
+        learn(k, t, tokSpeed[best]) -- a band credit moves the clock too (it keeps the phase); the band learns later
         if byBand then
             L.onus.byBand = L.onus.byBand + 1
         elseif a then -- a band learns from the clock's, the lone hostile's and the elimination's credits, never its own

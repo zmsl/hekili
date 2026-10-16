@@ -546,7 +546,8 @@ describe("the synthesized combat log", function()
                 return got[i] and got[i].row[4]
             end
             -- A (the target) alone hits 20, 22, 24; then B (nameplate1) alone hits 60, 61, 62; then both are on us.
-            local function twoBands()
+            local function twoBands(bAt)
+                bAt = bAt or 25.9
                 onUs("target", "Creature-A", nil)
                 ctl.Fire("PLAYER_TARGET_CHANGED")
                 hit(20, 20)
@@ -556,9 +557,9 @@ describe("the synthesized combat log", function()
                 ctl.Fire("UNIT_TARGET", "target")
                 onUs("nameplate1", "Creature-B", nil)
                 ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
-                hit(25.9, 60)
-                hit(27.9, 61)
-                hit(29.9, 62)
+                hit(bAt, 60)
+                hit(bAt + 2, 61)
+                hit(bAt + 4, 62)
                 ctl.unitIs.targettarget = "player"
                 ctl.Fire("UNIT_TARGET", "target")
             end
@@ -590,13 +591,37 @@ describe("the synthesized combat log", function()
                 assert.are.same({ 0, 2 }, { #got, L.unattributed })
             end)
 
-            it("never widens a band from its own credits, nor from a partly blocked wound", function()
+            it("credits a wound on one clock to the other whose band alone holds it", function()
+                twoBands(25) -- B's clock 1 s off A's: A predicts 30, B 31
+                hit(30, 61) -- A's clock only; A's band (up to 28.8) excludes 61, B's holds it
+                assert.are.same({ "Creature-B", 1 }, { source(7), L.onus.byBand })
+            end)
+
+            for _, v in ipairs({
+                { "a partly blocked wound", 5, "BLOCK_REDUCED" },
+                { "a wound with a secret flag", 5, fake.SECRET },
+                { "a wound with a secret amount", fake.SECRET, "" },
+            }) do
+                it("never learns a band from " .. v[1], function()
+                    onUs("target", "Creature-A", nil)
+                    ctl.Fire("PLAYER_TARGET_CHANGED")
+                    hit(20, 20)
+                    hit(22, 22)
+                    hit(24, v[2], v[3]) -- the lone hostile's, on its clock: A's, but teaches nothing
+                    hit(26, 24)
+                    onUs("nameplate1", "Creature-B", nil)
+                    ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+                    hit(27, 6) -- off A's clock; A's band [16, 28.8] excludes 6 (a learned 5 would hold it): B by elimination
+                    assert.are.same({ "Creature-A", "Creature-B" }, { source(3), source(5) })
+                end)
+            end
+
+            it("never widens a band from its own credits", function()
                 twoBands()
-                hit(33, 5, "BLOCK_REDUCED") -- A's clock (32), off by more than the tolerance: alone? no: unattributed
                 hit(35.1, 28) -- off both clocks, inside A's band (up to 1.2 x 24 = 28.8): A's by band, not learned
                 hit(37.6, 29.5) -- off both clocks (A re-anchored at 35.1), outside the band: it was not widened to 28
                 assert.are.same({ "Creature-A" }, { source(7) })
-                assert.are.equal(2, L.unattributed)
+                assert.are.equal(1, L.unattributed)
             end)
         end)
 
