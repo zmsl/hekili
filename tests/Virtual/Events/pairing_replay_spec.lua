@@ -258,6 +258,21 @@ describe("swing/outcome pairing", function()
             assert.are.same({ "SWING_DAMAGE", 0, 0 }, { got[1][1], got[1][2], landed[1] }) -- the window closed unpaired
         end)
 
+        it("counts only white outcomes into the background: no class for a school-8 wound or a RESIST", function()
+            fire(12, "PLAYER_REGEN_DISABLED") -- in combat, nothing of ours pending: a quiet window (no decay at one t)
+            local before = { unpack(L.bg) }
+            fire(12, "UNIT_COMBAT", "target", "WOUND", "", 40, 8) -- a caster's spell in the main hand's exact range
+            fire(12, "UNIT_COMBAT", "target", "RESIST", "", 0, 1) -- a cast-only miss, not a swing's avoid
+            assert.are.same(before, L.bg)
+            assert.are.equal(2, L.background) -- still counted as unclaimed
+            fire(12, "UNIT_COMBAT", "target", "WOUND", "", 40, 1)
+            fire(12, "UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            assert.are.same(
+                { 1, 1, 1 }, -- main exact, the avoid class, white any amount
+                { L.bg[1] - before[1], L.bg[7] - before[7], L.bg[8] - before[8] }
+            )
+        end)
+
         it("credits an avoid provisionally, and the swing goes to the hand's wound that scores higher", function()
             fire(10, "PLAYER_SWING", 2.2, 0)
             fire(10.4, "UNIT_COMBAT", "target", "DODGE", "", 0, 1)

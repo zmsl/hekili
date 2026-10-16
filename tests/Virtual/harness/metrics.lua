@@ -1,6 +1,7 @@
 -- tests/Virtual/harness/metrics.lua (harness design §3.3): scores a run against the world's truth. Own hits per hand
--- (credited to the right swing, to the wrong one, missed), false credits (another source's outcome, our tick or proc,
--- or an unexplained avoid credited to a swing of ours), the rage error per 10 s window (believed est minus truth, each
+-- (credited to the right swing, to the wrong one, missed), false credits split by what they cost (a wound of another
+-- source, our tick or proc credited to a swing of ours pays rage; an avoid of another source or an unexplained one
+-- only mislabels a SWING_MISSED row), the rage error per 10 s window (believed est minus truth, each
 -- window as if pinned at its start) and the row checks.
 local M = {}
 
@@ -13,7 +14,8 @@ function M.new()
         right = { 0, 0 },
         wrong = { 0, 0 },
         missed = { 0, 0 },
-        falses = { 0, 0 },
+        falseWounds = { 0, 0 }, -- another source's or an unexplained wound (or our tick or proc) credited: pays rage
+        falseAvoids = { 0, 0 }, -- another source's or an unexplained avoid credited: mislabels a row, pays nothing
         late = 0,
         windows = 0,
         over = 0,
@@ -77,7 +79,7 @@ function M.score(m, c, s, W, step, after)
                     m.missed[h] = m.missed[h] + 1
                 end
             elseif cr > 0 then
-                m.falses[cr] = m.falses[cr] + 1
+                m.falseWounds[cr] = m.falseWounds[cr] + 1
             end
             local v = c.verdict[i]
             if v > 0 then -- judged: another source's outcome (a false credit) or our own swing's (credited right)
@@ -113,7 +115,7 @@ function M.score(m, c, s, W, step, after)
                     m.avoidWrong = m.avoidWrong + 1
                 end
             else
-                m.falses[h] = m.falses[h] + 1
+                m.falseAvoids[h] = m.falseAvoids[h] + 1
             end
         end
     end
@@ -170,9 +172,10 @@ function M.rate(m, h)
     return m.own[h] > 0 and m.right[h] / m.own[h] or 1
 end
 
---- False credits per 100 of our swings.
-function M.falsePer100(m)
-    return m.swings > 0 and 100 * (m.falses[1] + m.falses[2]) / m.swings or 0
+--- False credits per 100 of our swings: the wounds (`m.falseWounds`, the default) or the avoids (`m.falseAvoids`).
+function M.falsePer100(m, f)
+    f = f or m.falseWounds
+    return m.swings > 0 and 100 * (f[1] + f[2]) / m.swings or 0
 end
 
 --- Runs `n` fights of scenario `o` (seeds 1..n), each on a fresh VirtualState, and returns their tally (outcomes
@@ -225,7 +228,8 @@ end
 --- One line for a report (`busted` prints it in a failing assertion's message).
 function M.line(m)
     return string.format(
-        "fights=%d main %d/%d (wrong %d, missed %d) off %d/%d (wrong %d, missed %d) false %d/%d (%.2f per 100 swings) "
+        "fights=%d main %d/%d (wrong %d, missed %d) off %d/%d (wrong %d, missed %d) false wounds %d/%d (%.2f per 100 swings), "
+            .. "false avoids %d/%d (%.2f), "
             .. "avoids right %d wrong %d, over %d/%d windows, err mean %.2f max %.1f",
         m.fights,
         m.right[1],
@@ -236,9 +240,12 @@ function M.line(m)
         m.own[2],
         m.wrong[2],
         m.missed[2],
-        m.falses[1],
-        m.falses[2],
+        m.falseWounds[1],
+        m.falseWounds[2],
         M.falsePer100(m),
+        m.falseAvoids[1],
+        m.falseAvoids[2],
+        M.falsePer100(m, m.falseAvoids),
         m.avoidRight,
         m.avoidWrong,
         m.over,

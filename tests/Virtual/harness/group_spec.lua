@@ -12,13 +12,17 @@ describe("group attribution (harness gates) #slow", function()
         local m = metrics.fights({ others = { "melee", "caster" } }, 100)
         check(metrics.rate(m, 1) >= 0.75 and metrics.rate(m, 2) >= 0.85, m)
         check(metrics.falsePer100(m) <= 4 and m.over <= 0.05 * m.windows, m)
+        -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
+        check(metrics.falsePer100(m, m.falseAvoids) <= 0.84, m) -- measured 0.34
     end)
 
     it("party of 5 with a pet and a ranged stand-in on our target as well (100 fights)", function()
         local m = metrics.fights({ others = { "melee", "caster", "pet", "ranged" } }, 100)
         check(metrics.rate(m, 1) >= 0.70 and metrics.rate(m, 2) >= 0.70, m)
-        -- provisional: Task 3's oracle restores the spec's 6 (measured 7.06 with the spec's background and avoid counting)
-        check(metrics.falsePer100(m) <= 7.56 and m.over <= 0.10 * m.windows, m)
+        -- provisional: Task 3's oracle restores the spec's 6 (measured 6.16 with the spec's background counting)
+        check(metrics.falsePer100(m) <= 6.66 and m.over <= 0.10 * m.windows, m)
+        -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
+        check(metrics.falsePer100(m, m.falseAvoids) <= 1.4, m) -- measured 0.90
     end)
 
     it("raid, 12 on our target: reported (30 fights)", function()

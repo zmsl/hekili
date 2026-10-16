@@ -13,28 +13,31 @@ describe("solo attribution (harness gates) #slow", function()
             local m = metrics.fights({}, 200)
             check(metrics.rate(m, 1) >= 0.94 and metrics.rate(m, 2) >= 0.94, m)
             check(m.wrong[1] <= 0.02 * m.own[1] and m.wrong[2] <= 0.02 * m.own[2], m)
-            -- provisional: Task 3's oracle restores the spec's 0 (measured 0.10: unexplained avoids taken by a swing)
-            check(m.over == 0 and metrics.falsePer100(m) <= 0.6, m)
+            check(m.over == 0 and metrics.falsePer100(m) == 0, m)
+            -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
+            check(metrics.falsePer100(m, m.falseAvoids) <= 0.6, m) -- measured 0.10
             check(m.noDst == 0 and m.order == 0 and m.nonTarget == 0, m)
         end
     )
 
     it(
-        "credits >= 85% of the main hand's hits after a +20% damage buff in combat, few false credits (100 fights)",
+        "credits >= 85% of the main hand's hits after a +20% damage buff in combat, no false wound credit (100 fights)",
         function()
             local m = metrics.fights({ damageBuff = 30 }, 100, 31)
-            -- provisional: Task 3's oracle restores the spec's 0 (measured 0.16: unexplained avoids taken by a swing)
-            check(metrics.rate(m, 1) >= 0.85 and metrics.falsePer100(m) <= 0.66, m)
+            check(metrics.rate(m, 1) >= 0.85 and metrics.falsePer100(m) == 0, m)
+            -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
+            check(metrics.falsePer100(m, m.falseAvoids) <= 0.66, m) -- measured 0.16
         end
     )
 
     it(
-        "credits >= 85% of the hits after a form change (amount unknown: timing alone), <= 3% wrong (100 fights)",
+        "credits >= 85% of the hits after a form change (amount unknown: timing alone), <= 3% wrong, no false wound credit (100 fights)",
         function()
             local m = metrics.fights({ formAt = 30 }, 100, 31)
             check(metrics.rate(m, 1) >= 0.85 and metrics.rate(m, 2) >= 0.85, m)
-            -- provisional: Task 3's oracle restores the spec's 0 (measured 0.10: unexplained avoids taken by a swing)
-            check(metrics.falsePer100(m) <= 0.6, m)
+            check(metrics.falsePer100(m) == 0, m)
+            -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
+            check(metrics.falsePer100(m, m.falseAvoids) <= 0.6, m) -- measured 0.10
             check(m.wrong[1] <= 0.03 * m.own[1] and m.wrong[2] <= 0.03 * m.own[2], m)
         end
     )
