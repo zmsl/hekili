@@ -1,7 +1,8 @@
 -- Virtual/State/Families/Auras.lua
 -- The auras family (spec §6.3): per unit and tracked aura, the believed expiry, stacks, applied time and an invented
 -- stable instance ID; plain walk reads (observed), our casts' handler writes (modelled, Adapter.lua), expiry by time;
--- per-target memory by GUID slot (TARGET_CAP); the index order for AuraAt; AuraGen; Count.WithAura.
+-- per-target memory by GUID slot (TARGET_CAP); the index order for AuraAt; AuraGen; Count.WithAura; a player aura's
+-- stacks spent by hits on the player (its `consumedBy`, tank design §3).
 -- Ported from Taco Dog Forever, src/TacoDogForever/Model/Belief/Auras.lua and Belief/Targets.lua (Applier TargetSwap
 -- :147); the aura conf of src/TacoDogForever/Model/Belief.lua:709.
 
@@ -41,6 +42,9 @@ I.nextInst = 0
 local memExp, memApplied, memStacks, memInst = {}, {}, {}, {}
 I.curSlot = 0
 
+-- The player auras with a `consumedBy` (a set of I.HitKind names): their indices, and each one's kinds by I.HitKind.
+local CONS, consKinds = { n = 0 }, {}
+
 I.OnBuild(function(def, now)
     for k in pairs(U.bySpell) do
         U.bySpell[k] = nil
@@ -77,6 +81,22 @@ I.OnBuild(function(def, now)
         memExp[s], memApplied[s], memStacks[s], memInst[s] = e, ap, st, ins
     end
     I.curSlot = 0
+    CONS.n = 0
+    for j = 1, U.nAura do
+        local by = rawget(auras[j], "consumedBy")
+        if type(by) == "table" then
+            CONS.n = CONS.n + 1
+            CONS[CONS.n] = j
+            local kinds = {}
+            for name in pairs(by) do
+                local kind = I.HitKind[name]
+                if kind then
+                    kinds[kind] = true
+                end
+            end
+            consKinds[CONS.n] = kinds
+        end
+    end
     I.TRACKED.aura = U.id
     I.TRACKED.unit = U.token
 end)
@@ -150,6 +170,22 @@ end)
 function I.AuraModel(u, j, applied, expires, stacks, t, event, harmful)
     set(u, j, expires, applied, stacks > 0 and stacks or 1, t, "modelled", event, harmful)
 end
+
+-- A hit of a listed kind spends one stack of each `consumedBy` player aura believed up (a modelled sample at the hit),
+-- and takes it down at 0. Allocates nothing.
+I.On(Obs.PlayerHit, function(o, t)
+    for k = 1, CONS.n do
+        local j = CONS[k]
+        if consKinds[k][o.a] and U.exp0[1][j] > t then -- unit 1 is always "player" (Adapter.lua's def.units)
+            local n = U.stacks[1][j] - 1
+            if n > 0 then
+                set(1, j, U.exp0[1][j], U.applied[1][j], n, t, "modelled", Obs.PlayerHit)
+            else
+                set(1, j, 0, 0, 0, t, "modelled", Obs.PlayerHit)
+            end
+        end
+    end
+end)
 
 -- Per-target memory: the target's arrays into slot s, and back.
 local function save(s)

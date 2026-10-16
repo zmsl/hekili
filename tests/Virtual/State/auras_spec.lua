@@ -249,4 +249,55 @@ describe("auras", function()
         I.Fold(12, false)
         assert.are.equal(30, VS.Aura("target", fs.REND, 12).est)
     end)
+
+    describe("an aura spent by hits on the player (`consumedBy`, tank design §3)", function()
+        local BLOCKED, BLOCK, DODGE = 2, 3, 4
+
+        local function hit(t, kind)
+            S.Direct(Obs.PlayerHit, t, kind, 0, 20)
+            I.Fold(t, false)
+        end
+
+        before_each(function()
+            local def = fs.def(fs.new(9))
+            def.auras[SHOUT] =
+                { key = "battle_shout", id = fs.SHOUT, max_stack = 2, consumedBy = { BLOCK = true, BLOCKED = true } }
+            I.Build(def, 1)
+            I.ObsLog.Clear(I.log)
+            I.AuraModel(1, SHOUT, 10, 17, 2, 10, 0) -- up from 10 to 17 with 2 stacks (its `now`)
+        end)
+
+        it("takes one stack per hit of a listed kind and removes the aura at 0", function()
+            hit(11, BLOCK)
+            local rec, stacks = VS.Aura("player", fs.SHOUT, 11)
+            assert.are.same({ 17, 1, "modelled" }, { rec.est, stacks, rec.basis })
+            hit(12, BLOCKED)
+            assert.is_nil(VS.Aura("player", fs.SHOUT, 12))
+            hit(13, BLOCK) -- down: nothing to spend
+            assert.is_nil(VS.Aura("player", fs.SHOUT, 13))
+        end)
+
+        it("ignores the other kinds, an expired aura, and an aura without `consumedBy`", function()
+            hit(11, DODGE)
+            assert.are.equal(2, select(2, VS.Aura("player", fs.SHOUT, 11)))
+            I.AuraModel(1, REND, 10, 30, 1, 10, 0) -- no `consumedBy`
+            hit(12, BLOCK)
+            assert.are.equal(1, select(2, VS.Aura("player", fs.REND, 12)))
+            hit(18, BLOCK) -- past the shout's expiry
+            assert.is_nil(VS.Aura("player", fs.SHOUT, 18))
+        end)
+
+        it("allocates nothing over 1000 hits", function()
+            local alloc = require("Virtual.State.helpers.alloc")
+            local t = 11
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    t = t + 0.01
+                    I.AuraModel(1, SHOUT, t, t + 7, 2, t, 0)
+                    hit(t, BLOCK)
+                end, 1000)
+            )
+        end)
+    end)
 end)
