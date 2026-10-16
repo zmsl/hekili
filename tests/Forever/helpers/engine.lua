@@ -122,8 +122,9 @@ local function newState(class, race)
 end
 
 --- Loads the engine for a player of class token `classToken` (UnitClassBase) and race token `race` (UnitRace's second
---- return; default "Scourge"). Returns `{ Hekili, ns, state, class, errors, loadErrors }`: `errors` the Hekili:Error
---- calls, `loadErrors` one "<file>: <error>" per file whose main chunk raised (the rest still load).
+--- return; default "Scourge"). Returns `{ Hekili, ns, state, class, errors, loadErrors, client }`: `errors` the
+--- Hekili:Error calls, `loadErrors` one "<file>: <error>" per file whose main chunk raised (the rest still load),
+--- `client` the threat reads' answers (`threat`, `isUnit[unit]`, `exists[unit]`; `client.SECRET` a secret answer).
 function M.load(classToken, race)
     race = race or "Scourge"
     -- Hekili.lua's Class (Hekili.lua:102-130), strict: a misspelt field (class.abilites) raises at the reader
@@ -163,7 +164,8 @@ function M.load(classToken, race)
     class.itemPack = { lists = { items = {} } }
     strict(class, "class")
     local state = newState(class, race)
-    local env = { errors = {}, loadErrors = {}, class = class, state = state }
+    local client = { SECRET = {}, isUnit = {}, exists = {} }
+    local env = { errors = {}, loadErrors = {}, class = class, state = state, client = client }
     local hekili = { Class = class, State = state }
     function hekili.IsRetail()
         return false
@@ -231,6 +233,18 @@ function M.load(classToken, race)
         end,
         GetShapeshiftFormInfo = noop,
         CombatLogGetCurrentEventInfo = noop,
+        UnitThreatSituation = function()
+            return client.threat
+        end,
+        UnitIsUnit = function(a)
+            return client.isUnit[a]
+        end,
+        UnitExists = function(u)
+            return client.exists[u]
+        end,
+        issecretvalue = function(v)
+            return v == client.SECRET
+        end,
     }
     ns.commitKey = noop
     ns.metatables = { mt_resource = {} }

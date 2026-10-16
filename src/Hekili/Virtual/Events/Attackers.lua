@@ -6,12 +6,13 @@
 -- UnitAttackSpeed(unit) when plain, else learned from the gaps between hits on us. A hit is credited to the attacker
 -- whose clock predicts a swing nearest it within ATTACK_TOLERANCE; while a single hostile targets us and its clock is
 -- not set yet, to that one (which starts its clock); otherwise it stays unattributed and makes no row (no phantom
--- enemy for the tank branch, Events.lua's `ns.updateTarget( sourceGUID, ... )`).
+-- enemy for the tank branch, Events.lua's `ns.updateTarget( sourceGUID, ... )`). The same per-token reads count the
+-- hostiles attacking someone else (VirtualState.LooseEnemies, tank design §2).
 -- Credits: secret-value handling after Catnip's (Durts) research; the signals are Taco Dog Forever's research
 -- (docs/research/2026-10-14-virtual-combat-log-events.md, C2, C4, M1-M4, D13).
 
 local _, ns = ...
-local I = ns.VirtualStateInternal
+local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local S = I.Sources
 local Plain, Note = S.Plain, S.Note
 local L = I.Log
@@ -28,9 +29,9 @@ end
 for i = 1, #TOKENS do
     TT[i], INDEX[TOKENS[i]] = TOKENS[i] .. "target", i
 end
-local tokGUID, tokOnMe, tokSpeed = {}, {}, {}
+local tokGUID, tokOnMe, tokSpeed, tokLoose = {}, {}, {}, {}
 for i = 1, #TOKENS do
-    tokGUID[i], tokOnMe[i], tokSpeed[i] = "", false, 0
+    tokGUID[i], tokOnMe[i], tokSpeed[i], tokLoose[i] = "", false, 0, false
 end
 
 -- Attacker clocks by GUID (8, the oldest anchor gives way).
@@ -77,6 +78,8 @@ local function recheck(api, i)
         Note("UnitIsUnit target-of", S.StatusOf(api, raw))
     end
     tokGUID[i], tokOnMe[i] = guid, hostile and Plain(api, raw) == true
+    -- attacking someone else: its target exists and is plainly not us (a secret answer counts as neither)
+    tokLoose[i] = hostile and Plain(api, raw) == false and Plain(api, api.UnitExists(TT[i])) == true
     tokSpeed[i] = 0
     if tokOnMe[i] then
         local rawSpeed = api.UnitAttackSpeed(tok) -- secret: tested with issecretvalue next, then read through Plain
@@ -99,7 +102,7 @@ S.On("NAME_PLATE_UNIT_ADDED", nil, onUnit)
 S.On("NAME_PLATE_UNIT_REMOVED", nil, function(_, _, unit)
     local i = unit and INDEX[unit]
     if i then -- the token still answers during the event: clear it rather than recheck
-        tokGUID[i], tokOnMe[i], tokSpeed[i] = "", false, 0
+        tokGUID[i], tokOnMe[i], tokSpeed[i], tokLoose[i] = "", false, 0, false
     end
 end)
 local function readTarget(api)
@@ -111,6 +114,24 @@ S.OnStart(readTarget)
 S.On("PLAYER_FOCUS_CHANGED", nil, function(api)
     recheck(api, 2)
 end)
+
+--- (tank design §2) The hostiles (target, focus, nameplates) whose target exists and is not the player, each GUID
+--- once, as of their last UNIT_TARGET, plate or target/focus change. Allocates nothing.
+function VS.LooseEnemies()
+    local n = 0
+    for i = 1, #TOKENS do
+        if tokLoose[i] then
+            local seen = false
+            for j = 1, i - 1 do
+                seen = seen or (tokLoose[j] and tokGUID[j] == tokGUID[i])
+            end
+            if not seen then
+                n = n + 1
+            end
+        end
+    end
+    return n
+end
 
 -- How far `t` lies from the nearest swing a clock predicts (huge when the clock is not set). Allocates nothing.
 local function clockError(k, period, t)

@@ -9,6 +9,7 @@ local C_Item, C_SpecializationInfo, C_Spell = Facade.C_Item, Facade.C_Specializa
 local GetSpecializationInfoByID, GetTime, InCombatLockdown, UnitAttackSpeed = Facade.GetSpecializationInfoByID, Facade.GetTime, Facade.InCombatLockdown, Facade.UnitAttackSpeed
 local UnitCanAttack, UnitCastingInfo, UnitChannelInfo, UnitClassBase = Facade.UnitCanAttack, Facade.UnitCastingInfo, Facade.UnitChannelInfo, Facade.UnitClassBase
 local UnitGUID = Facade.UnitGUID
+local UnitExists, UnitIsUnit, UnitThreatSituation, issecretvalue = Facade.UnitExists, Facade.UnitIsUnit, Facade.UnitThreatSituation, Facade.issecretvalue
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class
@@ -1708,6 +1709,31 @@ all:RegisterAbilities( {
         end,
     }
 } )
+
+-- Threat (tank design §2), read on demand through the facade's plain rows, a secret answer as 0 or false:
+-- `situation` UnitThreatSituation( "player", "target" ) (0-3); `on_me` the target attacks us; `lost` the target attacks
+-- someone else; `loose` the hostiles attacking someone else (VirtualState.LooseEnemies). No
+-- caching, no allocation. Every name is upvalued: Register's setfenv( __index, state ) leaves upvalues alone.
+local LooseEnemies = ns.VirtualState.LooseEnemies
+
+local function plain( v )
+    if issecretvalue( v ) then return nil end
+    return v
+end
+
+all:RegisterStateTable( "threat", setmetatable( {}, {
+    __index = function( t, k )
+        if k == "situation" then
+            return plain( UnitThreatSituation( "player", "target" ) ) or 0
+        elseif k == "on_me" then
+            return plain( UnitIsUnit( "targettarget", "player" ) ) == true
+        elseif k == "lost" then
+            return plain( UnitExists( "targettarget" ) ) == true and plain( UnitIsUnit( "targettarget", "player" ) ) == false
+        elseif k == "loose" then
+            return LooseEnemies()
+        end
+    end,
+} ) )
 
 
 ns.addToggle = function( name, default, optionName, optionDesc )

@@ -254,4 +254,28 @@ describe("the event facade", function()
         end, 10000)
         assert.are.equal(0, bytes)
     end)
+
+    it("counts the hostiles attacking someone else once by GUID (VirtualState.LooseEnemies)", function()
+        VS.Start(api)
+        ctl.guid.nameplate1, ctl.guid.nameplate2, ctl.guid.nameplate3 = "Creature-7", "Creature-8", "Creature-9"
+        ctl.exists.nameplate1target, ctl.exists.nameplate2target = true, true
+        ctl.unitIs.nameplate1target = "party1" -- attacks a party member
+        ctl.unitIs.nameplate2target = "player" -- attacks us
+        ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+        ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
+        ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate3") -- no target
+        assert.are.equal(1, VS.LooseEnemies())
+        ctl.guid.target, ctl.exists.targettarget, ctl.unitIs.targettarget = "Creature-7", true, "party1"
+        ctl.Fire("PLAYER_TARGET_CHANGED") -- the same mob as nameplate1: counted once
+        assert.are.equal(1, VS.LooseEnemies())
+        ctl.unitIs.nameplate2target = fake.SECRET
+        ctl.Fire("UNIT_TARGET", "nameplate2") -- a secret answer: neither on us nor loose
+        assert.are.equal(1, VS.LooseEnemies())
+        ctl.unitIs.nameplate2target = "party1"
+        ctl.Fire("UNIT_TARGET", "nameplate2")
+        assert.are.equal(2, VS.LooseEnemies())
+        ctl.Fire("NAME_PLATE_UNIT_REMOVED", "nameplate1")
+        assert.are.equal(2, VS.LooseEnemies()) -- the target still holds Creature-7
+        assert.are.equal(0, alloc.bytes(VS.LooseEnemies, 2000))
+    end)
 end)

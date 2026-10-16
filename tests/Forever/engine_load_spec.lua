@@ -124,3 +124,31 @@ describe("Forever content through the real Engine/Spec.lua", function()
         end
     end
 end)
+
+describe("the engine's threat table (tank design §2)", function()
+    local env, threat
+
+    before_each(function()
+        env = engine.load("WARRIOR")
+        threat = env.class.stateTables.threat
+    end)
+
+    it("reads the situation, whether the target attacks us or someone else, and the loose hostiles", function()
+        local c = env.client
+        assert.are.same({ 0, false, false }, { threat.situation, threat.on_me, threat.lost }) -- no target
+        c.threat, c.exists.targettarget, c.isUnit.targettarget = 3, true, true
+        assert.are.same({ 3, true, false }, { threat.situation, threat.on_me, threat.lost })
+        c.threat, c.isUnit.targettarget = 1, false
+        assert.are.same({ 1, false, true }, { threat.situation, threat.on_me, threat.lost })
+        assert.are.equal(0, threat.loose) -- VirtualState.LooseEnemies: no hostile seen
+        assert.is_nil(threat.other)
+    end)
+
+    it("reads a secret answer as 0 or false, never as lost", function()
+        local c = env.client
+        c.threat, c.exists.targettarget, c.isUnit.targettarget = c.SECRET, true, c.SECRET
+        assert.are.same({ 0, false, false }, { threat.situation, threat.on_me, threat.lost })
+        c.exists.targettarget, c.isUnit.targettarget = c.SECRET, false
+        assert.is_false(threat.lost)
+    end)
+end)
