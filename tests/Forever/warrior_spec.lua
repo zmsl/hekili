@@ -395,6 +395,102 @@ describe("Forever Warrior", function()
         assert.are.same({ "offhand", "offhand_speed" }, { models.offhand.swing, models.offhand.interval })
     end)
 
+    describe("rage from damage taken (the main-hand entry's `taken`, Protection design §1.3)", function()
+        local taken, e
+
+        -- The belief's `now` context as `taken` sees it: these auras up, these talent ranks.
+        local function ctx(auras, ranks)
+            e = {
+                buff = setmetatable({}, {
+                    __index = function(_, k)
+                        return { up = auras[k] == true }
+                    end,
+                }),
+                talent = setmetatable({}, {
+                    __index = function(_, k)
+                        return { rank = ranks[k] or 0 }
+                    end,
+                }),
+            }
+        end
+
+        local function run(kind, amount, level)
+            return lw.run(taken, e, kind, amount, level)
+        end
+
+        before_each(function()
+            taken = w.resource[2].mainhand.taken
+            w.game.stat.UnitArmor = { 593, 593 } -- base, effective: the second is the armor
+            w.game.healthMax = 203
+            ctx({}, {})
+        end)
+
+        it(
+            "gives magey's log 01: 110 pre-armor from a level-5 attacker at 593 armor and 203 health is 5.4 rage",
+            function()
+                local sum, band = 0, 0
+                for _ = 1, 20 do
+                    local g, wd = run("WOUND", 3.2, 5) -- 64 post-armor over 20 hits: 64 / (1 - 593 / 1418) = 110
+                    sum, band = sum + g, band + wd
+                end
+                assert.is_true(math.abs(sum - 110 * 10 / 203) < 1e-3, tostring(sum)) -- 5.419
+                assert.is_true(math.abs(band - 0.15 * sum) < 1e-9)
+                assert.is_true(math.abs(sum - 5.4) <= band)
+            end
+        )
+
+        it(
+            "adds the cached block value to a partial block, and estimates a full block from the unblocked amounts",
+            function()
+                w.game.stat.UnitArmor = { 0, 0 }
+                w.game.healthMax = 100
+                w.game.stat.GetShieldBlock = { 20 }
+                assert.are.same({ 3, 0.15 * 3 }, { run("BLOCKED", 10, 5) }) -- (10 + 20) x 10 / 100
+                local full = run("BLOCK", 0, 5)
+                assert.is_true(full > 0 and full <= 2) -- min(block value 20, the average unblocked amount) x 10 / 100
+                local g, wd = run("BLOCK", 0, 5)
+                assert.are.equal(g, wd) -- a full block's band is its whole estimate
+            end
+        )
+
+        it("divides back Defensive Stance's 10% and Shield Wall's reduction (rage from the unreduced hit)", function()
+            local open = run("WOUND", 50, 20)
+            ctx({ defensive_stance = true }, {})
+            assert.is_true(math.abs(run("WOUND", 50, 20) - open / 0.9) < 1e-9)
+            ctx({ defensive_stance = true, shield_wall = true }, {})
+            assert.is_true(math.abs(run("WOUND", 50, 20) - open / 0.36) < 1e-9)
+        end)
+
+        it("adds Shield Specialization's 20% a rank of 5 rage on a block, partial or full", function()
+            w.game.stat.GetShieldBlock = { 0 }
+            ctx({}, { shield_specialization = 1 })
+            assert.are.same({ 1, 4 }, { run("BLOCK", 0, 20) }) -- p = 0.2: 1 expected, half-width max(p, 1 - p) x 5
+            ctx({}, { shield_specialization = 5 })
+            assert.are.same({ 5, 5 }, { run("BLOCK", 0, 20) })
+            assert.are.same({ 0, 0 }, { run("DODGE", 0, 20) })
+        end)
+
+        it("adds Master of Defense's 50% a rank of 5 rage on a dodge or parry, only with a shield", function()
+            ctx({}, { master_of_defense = 1 })
+            assert.are.same({ 0, 0 }, { run("DODGE", 0, 20) }) -- no shield
+            w.state.equipped.shield = true
+            assert.are.same({ 2.5, 2.5 }, { run("DODGE", 0, 20) })
+            ctx({}, { master_of_defense = 2 })
+            assert.are.same({ 5, 5 }, { run("PARRY", 0, 20) })
+            assert.are.same({ 0, 0 }, { run("MISS", 0, 20) })
+        end)
+    end)
+
+    it("blocks twice per Shield Block: aura stacks spent by blocks, not ability charges", function()
+        local aura, ability = w.auras.shield_block, w.abilities.shield_block
+        assert.are.same({ 2, { BLOCK = true, BLOCKED = true } }, { aura.max_stack, aura.consumedBy })
+        assert.is_nil(ability.charges)
+        local env = lw.env(w)
+        lw.run(ability.handler, env)
+        lw.run(ability.now, env)
+        assert.are.same({ { "shield_block", "shield_block" }, 2 }, { env.applied, env.stacks.shield_block })
+    end)
+
     it("takes the believed swing speed before a plain base speed is read", function()
         local models = w.resource[2]
         w.state.talent = rank(0)

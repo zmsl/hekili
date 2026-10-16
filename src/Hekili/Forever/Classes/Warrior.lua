@@ -4,7 +4,9 @@
 -- client is 1.60.1.70374, and its export wins where they differ), Forever's Victory Rush and Spearing Strike, rage per
 -- hit for both hands, Bloodrage's and Anger Management's rage over time, stances from the belief's Forms source, and
 -- the default priorities.
--- Talents: the 52 live nodes (a ForeverProbe export of the client, 1.60.1.70374, 2026-10-15). Only rank 1 of each
+-- Talents: the 52 live nodes (a ForeverProbe export of the client, 1.60.1.70374, 2026-10-15; confirmed by the trait
+-- walk of 2026-10-16, docs/research/2026-10-16-warrior-talent-dump.md: no Improved Shield Block, Improved Taunt or
+-- Toughness, Defiance max 3, so Shield Block stays 7 s and Taunt 8 s). Only rank 1 of each
 -- talent is in the Forever DB2, so a cost modifier is rank 1's value x the rank (Classic's own convention), floored
 -- at 0; no cooldown or duration modifier is modelled. The in-game checkpoint compares the costs (Snapshot cost= /
 -- read=).
@@ -141,6 +143,37 @@ local function rageOf(hand)
     return (twoHand and 4.5 or 3.46) * speed + wrath
 end
 
+-- Rage from damage taken (Protection design §1.3; magey/forever-warrior issue 3, level 8-9): the hit before every
+-- reduction x 10 / maximum health; a blocked hit gives the rage of its unblocked amount; attacker level made no
+-- difference. The pre-armor amount is the post-armor one / (1 - armor / (armor + 400 + 85 x attacker level)), with the
+-- armor and block value from VirtualState's out-of-combat stat cache. Defensive Stance's 10% and Shield Wall's
+-- reduction come off before the rage too (user ruling 2026-10-16: rage is from the unreduced hit): their factors divide
+-- the amount back. Shield Specialization (a 20% chance a rank to gain 5 on a block) and Master of Defense (50% a rank on
+-- a dodge or parry with a shield) as their expected values, the band carrying the spread (tooltips read in game
+-- 2026-10-16). Not modelled: Berserker Rage's extra rage taken.
+-- shortcut: below about 130-170 armor magey's rate was exactly double (checkpoint Q6, design D2); a tank wears more by
+-- level 10, so it is not modelled. Upgrade if Q6 reproduces it at the tank's level.
+local RAGE_TAKEN_FACTOR = 10
+local TAKEN_SPREAD = 0.15 -- the fit's scatter (9.6-11 around 10) and a stale cached armor
+local DEFENSIVE_STANCE_TAKEN, SHIELD_WALL_TAKEN = 0.9, 0.4
+local PROC_RAGE = 5
+local SHIELD_SPECIALIZATION_CHANCE, MASTER_OF_DEFENSE_CHANCE = 0.2, 0.5 -- a rank
+local unblockedAvg, UNBLOCKED_WEIGHT = 0, 0.2 -- an EMA of the unblocked post-armor amounts (a full block's estimate)
+
+-- The rage of a post-armor amount `post` from an attacker of `level`, divided back by `reduced` (the percentage
+-- reductions' product). Allocates nothing.
+local function rageTaken(post, level, reduced)
+    local armor = select(2, VS.Stat("UnitArmor"))
+    local mitigated = armor / (armor + 400 + 85 * level) -- nonzero: 400 + 85 x level > 0
+    return post / (1 - mitigated) / reduced * RAGE_TAKEN_FACTOR / VS.HealthMax("player") -- nonzero: max > 0 (100)
+end
+
+-- A proc's expected rage at chance p and its half-width.
+local function proc(p)
+    p = min(p, 1)
+    return p * PROC_RAGE, max(p, 1 - p) * PROC_RAGE
+end
+
 spec:RegisterResource(
     Enum.PowerType.Rage,
     {
@@ -166,6 +199,41 @@ spec:RegisterResource(
             end,
             crit = function()
                 return 3.46 * baseSpeed(1)
+            end,
+            -- VirtualState's rage from a hit on us (kind: "WOUND", "BLOCKED", "BLOCK", "DODGE", "PARRY", "MISS"): the
+            -- expected gain and its half-width. Run in the belief's `now` context: `buff` and `talent` read the belief
+            -- at the hit; the helpers it calls get those values as arguments (their own environment is the file's).
+            taken = function(kind, amount, level)
+                local reduced = 1
+                if buff.defensive_stance.up then
+                    reduced = reduced * DEFENSIVE_STANCE_TAKEN
+                end
+                if buff.shield_wall.up then
+                    reduced = reduced * SHIELD_WALL_TAKEN
+                end
+                local gain, width = 0, 0
+                if kind == "WOUND" or kind == "BLOCKED" then
+                    local post = amount
+                    if kind == "BLOCKED" then
+                        post = post + VS.Stat("GetShieldBlock") -- the unblocked amount
+                    end
+                    unblockedAvg = unblockedAvg + UNBLOCKED_WEIGHT * (post - unblockedAvg)
+                    gain = rageTaken(post, level, reduced)
+                    width = TAKEN_SPREAD * gain
+                elseif kind == "BLOCK" then
+                    gain = rageTaken(min(VS.Stat("GetShieldBlock"), unblockedAvg), level, reduced)
+                    width = gain
+                end
+                local rank = talent.shield_specialization.rank
+                if (kind == "BLOCK" or kind == "BLOCKED") and rank > 0 then
+                    local g, w = proc(SHIELD_SPECIALIZATION_CHANCE * rank)
+                    gain, width = gain + g, width + w
+                end
+                rank = talent.master_of_defense.rank
+                if (kind == "DODGE" or kind == "PARRY") and rank > 0 and state.equipped.shield then
+                    gain, width = proc(MASTER_OF_DEFENSE_CHANCE * rank)
+                end
+                return gain, width
             end,
         },
 
@@ -312,8 +380,8 @@ spec:RegisterTalents({
     improved_shield_bash = { 0, 12311, 2 },
     one_handed_weapon_specialization = { 0, 16538, 5 }, -- "Bastion" on Forever
     shield_slam = { 0, 23922, 1 },
-    -- Forever-only: Focused Rage (-3 rage a rank on the offensive abilities), Vanguard (Charge in Defensive Stance);
-    -- Master of Defense unmodelled.
+    -- Forever-only: Focused Rage (-3 rage a rank on the offensive abilities), Vanguard (Charge in Defensive Stance),
+    -- Master of Defense (rage on a dodge or parry: the rage resource's `taken`).
     focused_rage = { 0, 29787, 3 },
     vanguard = { 0, 1310317, 1 },
     master_of_defense = { 0, 1310316, 2 },
@@ -515,10 +583,13 @@ spec:RegisterAuras({
         duration = 3,
         max_stack = 1,
     },
+    -- Shield Block's blocks are the aura's charges (DB2: SpellAuraOptions.ProcCharges = 2, no charge category): its
+    -- stacks, each block or partial block on us spending one (VirtualState's `consumedBy`).
     shield_block = {
         id = 2565,
         duration = 7,
-        max_stack = 1,
+        max_stack = 2,
+        consumedBy = { BLOCK = true, BLOCKED = true },
     },
     shield_wall = {
         id = 871,
@@ -1429,11 +1500,11 @@ spec:RegisterAbilities({
         equipped = "shield",
 
         now = function()
-            applyBuff("shield_block")
+            applyBuff("shield_block", nil, 2)
         end,
 
         handler = function()
-            applyBuff("shield_block")
+            applyBuff("shield_block", nil, 2)
         end,
     },
 

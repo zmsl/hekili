@@ -9,7 +9,8 @@ local M = {}
 --- Loads the class file. Returns `w`: `w.abilities`, `w.auras` (merged by key), `w.talents`, `w.track`, `w.resource`
 --- ({ powerType, models }), `w.hooks[name]`, `w.events[event]` (spec:RegisterEvent's handlers), `w.funcs[name]`,
 --- `w.exprs[name]`, `w.settings[key]` ({ default, option }), `w.packs` (in order: { name, version, string }),
---- `w.options`, `w.specID`, `w.state` (Hekili.State's stand-in) and `w.game`.
+--- `w.options`, `w.specID`, `w.state` (Hekili.State's stand-in) and `w.game` (its `stat` and `healthMax` answer
+--- VS.Stat and VS.HealthMax).
 function M.load()
     local reg = {}
     local spec = setmetatable({}, {
@@ -28,11 +29,13 @@ function M.load()
         form = 0,
         formSpell = {},
         base = { 0, 0 }, -- VS.SwingBase: each hand's unhasted speed (0: no plain read yet)
+        stat = {}, -- VS.Stat: [api name] = its cached returns (default zeros)
+        healthMax = 100, -- VS.HealthMax("player")
         now = 0, -- GetTime()
         row = {}, -- the combat-log row CombatLogGetCurrentEventInfo answers
     }
     local w = { game = game, abilities = {}, auras = {}, track = {}, hooks = {}, funcs = {}, exprs = {} }
-    w.state = { main_hand = { size = 2 }, timeToInterrupt = function() end }
+    w.state = { main_hand = { size = 2 }, equipped = {}, timeToInterrupt = function() end }
     local hekili = { State = w.state }
     function hekili:NewSpecialization(id)
         w.specID = id
@@ -94,6 +97,13 @@ function M.load()
             SwingBase = function(hand)
                 return game.base[hand]
             end,
+            Stat = function(name)
+                local v = game.stat[name] or {}
+                return v[1] or 0, v[2] or 0, v[3] or 0, v[4] or 0
+            end,
+            HealthMax = function()
+                return game.healthMax
+            end,
         },
     }
     local ok, err = pcall(assert(loadfile("src/Hekili/Forever/Classes/Warrior.lua")), "Hekili", ns)
@@ -143,10 +153,10 @@ local function default(value)
     })
 end
 
---- A stand-in `state` that records applyBuff/applyDebuff (into `applied`), removeBuff, spend and gain, with every
+--- A stand-in `state` that records applyBuff/applyDebuff (into `applied`; applyBuff's stacks into `stacks`), removeBuff, spend and gain, with every
 --- talent at rank 0, every aura down and every cooldown ready. The class file's state functions are bound to it.
 function M.env(w)
-    local e = { applied = {}, durations = {}, removed = {}, spent = {}, gained = {} }
+    local e = { applied = {}, durations = {}, stacks = {}, removed = {}, spent = {}, gained = {} }
     e.talent = default({ rank = 0, enabled = false })
     e.buff = default({ up = false, remains = 0, stack = 0 })
     e.debuff = e.buff
@@ -155,9 +165,9 @@ function M.env(w)
     e.rage = { current = 50 }
     e.target = { minR = 10, is_boss = false }
     e.combat, e.active_enemies = 0, 1
-    function e.applyBuff(key, duration)
+    function e.applyBuff(key, duration, stacks)
         table.insert(e.applied, key)
-        e.durations[key] = duration
+        e.durations[key], e.stacks[key] = duration, stacks
     end
     function e.applyDebuff(_, key)
         table.insert(e.applied, key)
