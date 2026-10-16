@@ -258,11 +258,14 @@ describe("the synthesized combat log", function()
             assert.are.equal(10, got[1].now) -- back-dated to the swing
         end)
 
-        it("pairs a wound that arrives before the swing: SWING_DAMAGE at the wound's time", function()
+        it("pairs a swing only with a wound that follows it: SWING_DAMAGE at the swing's time", function()
             ctl.now = 20
-            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 120, 1)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 120, 1) -- before any swing: nobody's
             ctl.now = 20.04
             ctl.Fire("PLAYER_SWING", 1.8, 1)
+            assert.are.equal(0, #got)
+            ctl.now = 20.9 -- the off hand's lag (research: median 953 ms)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 120, 1)
             assert.are.equal(21, got[1].n)
             assert.are.same({ "SWING_DAMAGE", 120, 0, 1, 0, 0, 0, true, false, false, true }, {
                 row(1)[2],
@@ -277,7 +280,7 @@ describe("the synthesized combat log", function()
                 row(1)[20],
                 row(1)[21],
             })
-            assert.are.equal(20, got[1].now)
+            assert.are.equal(20.04, got[1].now)
         end)
 
         it("stages a swing paired with a CRITICAL wound as that hand's crit (Swing c = 3), a plain one not", function()
@@ -298,26 +301,25 @@ describe("the synthesized combat log", function()
         it("emits an unpaired swing as SWING_DAMAGE 0 once its window closes, at its own time", function()
             ctl.now = 30
             ctl.Fire("PLAYER_SWING", 2.6, 0)
-            ctl.Tick(30.15)
+            ctl.Tick(31.45) -- the main hand's window, 1.5 s (shorter than its 2.6 s period)
             assert.are.equal(0, #got)
-            ctl.Tick(30.25)
+            ctl.Tick(31.55)
             assert.are.equal(1, #got)
             assert.are.same({ "SWING_DAMAGE", 0, 0 }, { row(1)[2], row(1)[12], row(1)[13] })
             assert.are.equal(30, got[1].now)
         end)
 
-        it("drops an outcome nothing of ours pairs within the window", function()
+        it("drops an outcome that follows nothing of ours", function()
             ctl.now = 40
             ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
             ctl.Tick(40.3)
             ctl.now = 40.35
             ctl.Fire("PLAYER_SWING", 2.6, 0)
-            ctl.Tick(40.6)
+            ctl.Tick(41.9)
             assert.are.equal(1, #got)
             assert.are.same({ "SWING_DAMAGE", 0 }, { row(1)[2], row(1)[12] })
             ctl.Fire("UNIT_COMBAT", "nameplate1", "DODGE", "", 0, 1) -- another token: not the target's outcome
             ctl.Fire("PLAYER_SWING", 2.6, 0)
-            ctl.now = 40.65
             ctl.Fire("UNIT_COMBAT", "nameplate1", "WOUND", "", 30, 1)
             assert.are.equal(1, #got)
         end)
