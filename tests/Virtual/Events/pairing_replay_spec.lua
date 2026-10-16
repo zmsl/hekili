@@ -51,7 +51,7 @@ describe("swing/outcome pairing", function()
                 lastHand, lastAmount, lastLag = a21 and 2 or 1, a12, ctl.now - t
             end
             if record then
-                got[#got + 1] = { ev, a12, a13, a15, a21 }
+                got[#got + 1] = { ev, a12, a13, a15, a21, t }
             end
         end)
         sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -106,13 +106,15 @@ describe("swing/outcome pairing", function()
         ctl.Tick(base + 130)
     end
 
-    it("pairs log 2's wounds with their own hand's swing, within the hand's window", function()
+    it("credits log 2's wounds to their own hand's swing, within the hand's window (harness design §3.4)", function()
         start(36, 50, 24, 32)
         replay(10)
         assert.are.same({ 36, 33 }, { stats.main, stats.off }) -- the 34 and 31 hits plus the 4 orphans of the doc
-        assert.is_true(stats.mainOk >= 30, "main hand paired: " .. stats.mainOk)
-        assert.is_true(stats.offOk >= 28, "off hand paired: " .. stats.offOk)
-        assert.are.same({ 8, 8 }, { stats.crits, stats.critOk })
+        assert.is_true(stats.mainOk >= 34, "main hand paired: " .. stats.mainOk)
+        assert.is_true(stats.offOk >= 31, "off hand paired: " .. stats.offOk)
+        -- the last crit (52 at 116581: 369 ms after the main swing, 103 ms after the off swing) scores as the main
+        -- hand's by its lag, though its amount is the off hand's
+        assert.are.same({ 8, 7 }, { stats.crits, stats.critOk })
         assert.are.equal(0, stats.late)
     end)
 
@@ -171,28 +173,30 @@ describe("swing/outcome pairing", function()
             assert.are.equal(1, landed[1])
         end)
 
-        it("pays a swing whose wound is outside the cached ranges when the form changed since the read", function()
-            ctl.form = 1 -- Bear Form: the cache holds the caster's weapon damage
+        it("credits a wound outside the cached ranges by timing alone when the form changed since the read", function()
+            ctl.form = 1 -- a form whose weapon damage the cache never read
             fire(10, "PLAYER_SWING", 2.5, 0)
             fire(10.45, "UNIT_COMBAT", "target", "WOUND", "", 120, 1)
             assert.are.same({ "SWING_DAMAGE", 120, 1 }, { got[1][1], got[1][2], landed[1] })
         end)
 
-        it("treats the cache as stale after 3 white wounds in a row fit no range (a damage buff)", function()
-            fire(10, "PLAYER_SWING", 2.2, 0)
-            fire(10.2, "UNIT_COMBAT", "target", "WOUND", "", 120, 1)
-            fire(10.3, "UNIT_COMBAT", "target", "WOUND", "", 120, 1)
-            assert.are.same({ 0, 0 }, { #got, landed[1] })
-            fire(10.4, "UNIT_COMBAT", "target", "WOUND", "", 120, 1)
-            fire(12.2, "PLAYER_SWING", 2.2, 0)
-            fire(12.6, "UNIT_COMBAT", "target", "WOUND", "", 121, 1)
-            assert.are.same(
-                { "SWING_DAMAGE", 120, "SWING_DAMAGE", 121, 2 },
-                { got[1][1], got[1][2], got[2][1], got[2][2], landed[1] }
-            )
-        end)
+        it(
+            "credits an above-range wound in the core band solo, and rejects it once that class's background is up",
+            function()
+                fire(10, "PLAYER_SWING", 2.2, 0)
+                fire(10.47, "UNIT_COMBAT", "target", "WOUND", "", 70, 1) -- above the main hand's 50 (a buff since the read)
+                assert.are.same({ "SWING_DAMAGE", 70, 1 }, { got[1][1], got[1][2], landed[1] })
+                fire(12, "PLAYER_REGEN_DISABLED")
+                for k = 1, 10 do -- in combat with nothing of ours pending: background
+                    fire(12 + k, "UNIT_COMBAT", "target", "WOUND", "", 70, 1)
+                end
+                fire(23, "PLAYER_SWING", 2.2, 0)
+                fire(23.47, "UNIT_COMBAT", "target", "WOUND", "", 70, 1)
+                assert.are.same({ 1, 11 }, { landed[1], L.background })
+            end
+        )
 
-        it("drops a wound that fits neither hand (a Rend tick), and the swing takes the next that fits", function()
+        it("drops a wound that fits neither hand (a DoT tick), and the swing takes the next that fits", function()
             fire(10, "PLAYER_SWING", 2.2, 0)
             fire(10.3, "UNIT_COMBAT", "target", "WOUND", "", 13, 1)
             assert.are.equal(0, #got)
@@ -200,42 +204,107 @@ describe("swing/outcome pairing", function()
             assert.are.same({ "SWING_DAMAGE", 45, false }, { got[1][1], got[1][2], got[1][5] })
         end)
 
-        it("gives a wound to the hand whose exact range holds it, else the older pending swing", function()
+        it(
+            "gives a wound to the hand whose exact range holds it when both lags fit, else to the better-timed swing",
+            function()
+                fire(9.77, "PLAYER_SWING", 2.5, 1)
+                fire(10, "PLAYER_SWING", 2.2, 0)
+                fire(10.473, "UNIT_COMBAT", "target", "WOUND", "", 30, 1) -- loosely both hands', exactly the off hand's
+                fire(20, "PLAYER_SWING", 2.5, 1)
+                fire(20.2, "PLAYER_SWING", 2.2, 0)
+                fire(20.703, "UNIT_COMBAT", "target", "WOUND", "", 34, 1) -- loosely both, exactly neither: the off hand's lag
+                assert.are.same(
+                    { "SWING_DAMAGE", 30, true, "SWING_DAMAGE", 34, true },
+                    { got[1][1], got[1][2], got[1][5], got[3][1], got[3][2], got[3][5] }
+                )
+            end
+        )
+
+        it("credits the off hand 0.703 s after its own swing or 1.686 s after the main swing before it", function()
             fire(10, "PLAYER_SWING", 2.2, 0)
-            fire(10.2, "PLAYER_SWING", 2.5, 1)
-            fire(10.6, "UNIT_COMBAT", "target", "WOUND", "", 30, 1) -- loosely both hands', exactly the off hand's
+            fire(10.3, "PLAYER_SWING", 2.5, 1)
+            fire(11.686, "UNIT_COMBAT", "target", "WOUND", "", 28, 1) -- 1.386 s after its own: the main reference
             fire(20, "PLAYER_SWING", 2.5, 1)
-            fire(20.2, "PLAYER_SWING", 2.2, 0)
-            fire(20.6, "UNIT_COMBAT", "target", "WOUND", "", 34, 1) -- loosely both (21.6-55, 14.4-35.2), exactly neither
-            assert.are.same(
-                { "SWING_DAMAGE", 30, true, "SWING_DAMAGE", 34, true },
-                { got[1][1], got[1][2], got[1][5], got[3][1], got[3][2], got[3][5] }
-            )
+            fire(20.703, "UNIT_COMBAT", "target", "WOUND", "", 29, 1)
+            assert.are.same({ 28, true, 29, true }, { got[2][2], got[2][5], got[3][2], got[3][5] }) -- got[1]: main's 0
+            assert.are.same({ 0, 2 }, landed)
         end)
 
-        it("pairs an avoid with the older of two pending swings", function()
+        it(
+            "makes a glancing 4 at 7 ms and a MISS at 53 ms background, and credits our 50 at 369 ms (G's frame)",
+            function()
+                fire(10, "PLAYER_SWING", 2.2, 0)
+                fire(10.007, "UNIT_COMBAT", "target", "WOUND", "GLANCING", 4, 1)
+                fire(10.053, "UNIT_COMBAT", "target", "MISS", "", 0, 1)
+                fire(10.369, "UNIT_COMBAT", "target", "WOUND", "", 50, 1)
+                ctl.Tick(12)
+                assert.are.same({ { "SWING_DAMAGE", 50, 0, 0, false, 10 } }, got)
+            end
+        )
+
+        it("drops another player's strike frame (a WOUND 0, its damage 1 ms later, no success of ours)", function()
             fire(10, "PLAYER_SWING", 2.2, 0)
-            fire(10.1, "PLAYER_SWING", 2.5, 1)
+            fire(10.2, "UNIT_COMBAT", "target", "WOUND", "", 0, 1)
+            fire(10.201, "UNIT_COMBAT", "target", "WOUND", "", 40, 1)
+            assert.are.same({ 0, 0 }, { #got, landed[1] }) -- the swing is still pending
+            fire(10.47, "UNIT_COMBAT", "target", "WOUND", "", 44, 1)
+            assert.are.same({ "SWING_DAMAGE", 44, 1 }, { got[1][1], got[1][2], landed[1] })
+        end)
+
+        it("gives no swing a wound of another school inside its range (a party caster's spell)", function()
+            fire(10, "PLAYER_SWING", 2.2, 0)
+            fire(10.47, "UNIT_COMBAT", "target", "WOUND", "", 40, 8)
+            ctl.Tick(12)
+            assert.are.same({ "SWING_DAMAGE", 0, 0 }, { got[1][1], got[1][2], landed[1] }) -- the window closed unpaired
+        end)
+
+        it("credits an avoid provisionally, and the swing goes to the hand's wound that scores higher", function()
+            fire(10, "PLAYER_SWING", 2.2, 0)
             fire(10.4, "UNIT_COMBAT", "target", "DODGE", "", 0, 1)
-            fire(30, "PLAYER_SWING", 2.5, 1)
-            fire(30.1, "PLAYER_SWING", 2.2, 0)
-            fire(30.4, "UNIT_COMBAT", "target", "PARRY", "", 0, 1)
-            assert.are.same(
-                { "SWING_MISSED", "DODGE", false, "SWING_MISSED", "PARRY", true },
-                { got[1][1], got[1][2], got[1][3], got[3][1], got[3][2], got[3][3] }
-            )
+            fire(10.47, "UNIT_COMBAT", "target", "WOUND", "", 44, 1)
+            ctl.Tick(12)
+            assert.are.same({ { "SWING_DAMAGE", 44, 0, 0, false, 10 } }, got) -- no SWING_MISSED
+            assert.are.same({ 1, 1 }, { landed[1], L.avoidsBack })
+        end)
+
+        it("keeps an avoid nothing beats: SWING_MISSED when the window closes, back-dated to the swing", function()
+            fire(10, "PLAYER_SWING", 2.2, 0)
+            fire(10.47, "UNIT_COMBAT", "target", "PARRY", "", 0, 1)
+            ctl.Tick(11.45)
+            assert.are.equal(0, #got)
+            ctl.Tick(11.55)
+            assert.are.same({ { "SWING_MISSED", "PARRY", false, false, nil, 10 } }, got)
+        end)
+
+        it("makes an avoid at neither hand's lag background", function()
+            fire(10, "PLAYER_SWING", 2.2, 0)
+            fire(10.05, "UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- the same-ms avoids of log 2
+            ctl.Tick(12)
+            assert.are.same({ "SWING_DAMAGE", 0 }, { got[1][1], got[1][2] })
+        end)
+
+        it("moves the main lag's median and spread toward a stream of 520 ms lags, not on tail credits", function()
+            for k = 0, 39 do
+                fire(10 + 2.2 * k, "PLAYER_SWING", 2.2, 0)
+                fire(10.52 + 2.2 * k, "UNIT_COMBAT", "target", "WOUND", "", 44, 1)
+            end
+            assert.is_true(math.abs(L.med[1] - 0.52) <= 0.006 and L.spr[1] < 0.03, L.med[1] .. " " .. L.spr[1])
+            local med, spr = L.med[1], L.spr[1]
+            fire(200, "PLAYER_SWING", 2.2, 0)
+            fire(201.2, "UNIT_COMBAT", "target", "WOUND", "", 44, 1) -- in the tail: credited, not learned
+            assert.are.same({ 41, med, spr }, { landed[1], L.med[1], L.spr[1] })
         end)
     end)
 
-    it("pairs a wound with the oldest pending swing of either hand before the first UnitDamage read", function()
+    it("credits a wound by timing alone before the first UnitDamage read", function()
         start(0, 0, 0, 0)
         record = true
         ctl.Tick(10)
         ctl.Fire("PLAYER_SWING", 2.5, 1)
         ctl.Tick(10.2)
         ctl.Fire("PLAYER_SWING", 2.2, 0)
-        ctl.Tick(10.6)
-        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 45, 1) -- a main-hand amount, but no range to tell
-        assert.are.same({ "SWING_DAMAGE", 45, true }, { got[1][1], got[1][2], got[1][5] })
+        ctl.Tick(10.62)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 45, 1) -- no range to tell: the main hand's lag
+        assert.are.same({ "SWING_DAMAGE", 45, false }, { got[1][1], got[1][2], got[1][5] })
     end)
 end)

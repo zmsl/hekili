@@ -230,33 +230,38 @@ describe("the synthesized combat log", function()
             return got[i] and got[i].row
         end
 
-        it("pairs a swing with the target's dodge that follows it: SWING_MISSED at the swing's time", function()
-            ctl.now = 10
-            ctl.Fire("PLAYER_SWING", 2.6, 0)
-            assert.are.equal(0, #got)
-            ctl.now = 10.05
-            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
-            assert.are.equal(1, #got)
-            assert.are.same({
-                10,
-                "SWING_MISSED",
-                false,
-                "Player-1",
-                "",
-                L.PLAYER_FLAGS,
-                0,
-                "Creature-1",
-                "",
-                L.HOSTILE_FLAGS,
-                0,
-                "DODGE",
-                false,
-                0,
-                false,
-            }, row(1))
-            assert.are.equal(15, got[1].n)
-            assert.are.equal(10, got[1].now) -- back-dated to the swing
-        end)
+        it(
+            "credits a swing the target's dodge at its lag: SWING_MISSED at the swing's time when its window closes",
+            function()
+                ctl.now = 10
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                assert.are.equal(0, #got)
+                ctl.now = 10.47 -- the main hand's lag (harness design §1.1: median 474 ms)
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                assert.are.equal(0, #got) -- provisional: a wound of that swing could still take it
+                ctl.Tick(11.55)
+                assert.are.equal(1, #got)
+                assert.are.same({
+                    10,
+                    "SWING_MISSED",
+                    false,
+                    "Player-1",
+                    "",
+                    L.PLAYER_FLAGS,
+                    0,
+                    "Creature-1",
+                    "",
+                    L.HOSTILE_FLAGS,
+                    0,
+                    "DODGE",
+                    false,
+                    0,
+                    false,
+                }, row(1))
+                assert.are.equal(15, got[1].n)
+                assert.are.equal(10, got[1].now) -- back-dated to the swing
+            end
+        )
 
         it("pairs a swing only with a wound that follows it: SWING_DAMAGE at the swing's time", function()
             ctl.now = 20

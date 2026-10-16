@@ -1,8 +1,8 @@
 -- tests/Virtual/State/alloc_spec.lua (spec §2, §11): 10,000 mixed events (PLAYER_SWING, UNIT_POWER_FREQUENT,
--- usability flipping on a health-gated spender, own casts, UNIT_AURA after a form swap, the target's UNIT_COMBAT, hits
--- on the player paying rage through a `taken`, combat ending and starting under a stepped rage decay) with a drain every
--- tick against the fake spec, every accessor and every facade policy and passthrough called, every combat-log row
--- delivered to a subscriber: VirtualState allocates nothing.
+-- usability flipping on a health-gated spender, own casts, UNIT_AURA after a form swap, the target's UNIT_COMBAT (wounds
+-- and provisional avoids), hits on the player paying rage through a `taken`, combat ending and starting under a stepped
+-- rage decay) with a drain every tick against the fake spec, every accessor and every facade policy and passthrough
+-- called, every combat-log row delivered to a subscriber: VirtualState allocates nothing.
 local load = require("Virtual.State.helpers.load")
 local fake = require("Virtual.State.helpers.fake_api")
 local fs = require("Virtual.State.helpers.fake_spec")
@@ -100,7 +100,8 @@ describe("zero allocation", function()
                 ctl.Fire("UPDATE_SHAPESHIFT_FORM")
                 ctl.Fire("UNIT_AURA", "player")
             else
-                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 1)
+                local dodge = i % 12 == 5 -- an avoid at the swing's lag: provisional, SWING_MISSED at the window's close
+                ctl.Fire("UNIT_COMBAT", "target", dodge and "DODGE" or "WOUND", "", dodge and 0 or 10, 1)
                 ctl.Fire("UNIT_COMBAT", "player", "WOUND", i % 12 == 5 and "BLOCK" or "", 12, 1)
             end
             if i % 100 == 50 then

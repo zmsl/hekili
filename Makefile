@@ -5,7 +5,7 @@ BUSTED := $(LUA_ENV)/bin/busted
 LUACHECK := $(LUA_ENV)/bin/luacheck
 LUAC := $(LUA_ENV)/bin/luac
 
-.PHONY: bootstrap lint fmt fmt-check typecheck test syntax api-check check
+.PHONY: bootstrap lint fmt fmt-check typecheck test test-fast syntax api-check check
 
 bootstrap:
 	scripts/bootstrap.sh
@@ -24,6 +24,10 @@ typecheck:
 
 test:
 	$(BUSTED)
+
+# The edit loop: skips the harness gate specs tagged #slow (hundreds of simulated fights); `make check` runs them.
+test-fast:
+	$(BUSTED) --exclude-tags=slow
 
 syntax:
 	git ls-files -z '*.lua' | xargs -0 -n 200 $(LUAC) -p

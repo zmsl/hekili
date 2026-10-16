@@ -1,15 +1,17 @@
 -- Virtual/Events/Rows.lua
 -- The combat-log rows of our swings and of our abilities on the target (event-facade spec §2.4, §3): PLAYER_SWING
 -- (time and hand, plain) and our UNIT_SPELLCAST_SUCCEEDED of an ability that starts combat or strikes on the next
--- swing are held, and the target's UNIT_COMBAT (the outcome, plain, victim-side) that FOLLOWS one within its window
--- pairs with it: SWING_DAMAGE / SWING_MISSED / SPELL_DAMAGE / SPELL_MISSED, inferred, at the action's time
--- (back-dated). A wound picks its swing by amount against each hand's weapon damage (the out-of-combat UnitDamage
--- cache); an avoid has no amount and takes our pending cast, else the oldest pending swing of either hand (ambiguous
--- when both hands are pending: accepted). A swing still unpaired when its window closes is emitted as SWING_DAMAGE
--- with amount 0 at its own time; an outcome nothing pairs is dropped (someone else's, a tick, a proc). A wound paired
--- with a swing stages `Swing` c = 1 (landed, at the swing's time) and, when CRITICAL, c = 3 (that hand's crit) for
--- VirtualState's resources (Families/Resources.lua: swing rage and a white crit's extra).
--- Measured: docs/research/2026-10-16-swing-outcome-pairing.md.
+-- swing are held, and the target's UNIT_COMBAT (the outcome, plain, victim-side, from ANY source: G fact 1) that
+-- FOLLOWS one is attributed to it by score (combat harness design §1): our cast claims the outcomes of its frame first;
+-- a white (school 1) outcome is then scored against every pending swing, LR = q(amount class) x f(landing lag) /
+-- lambda(the learned background rate of that class), and credited to the best swing when LR >= THETA, else it is
+-- background (no row). SWING_DAMAGE / SWING_MISSED / SPELL_DAMAGE / SPELL_MISSED are inferred, at the action's time
+-- (back-dated). A credited wound stages `Swing` c = 1 (landed, at the swing's time) and, when CRITICAL, c = 3 (that
+-- hand's crit) for VirtualState's resources (Families/Resources.lua). An avoid credited to a swing is provisional: a
+-- later wound that scores that swing higher takes it; otherwise the swing's window closes as SWING_MISSED. A swing
+-- still unpaired when its window closes is emitted as SWING_DAMAGE with amount 0 at its own time.
+-- Measured: docs/research/2026-10-16-swing-outcome-pairing.md (P), docs/research/2026-10-16-group-pairing-captures.md
+-- (G, G5).
 -- Credits: secret-value handling after Catnip's (Durts) research; the signals are Taco Dog Forever's research
 -- (docs/research/2026-10-14-virtual-combat-log-events.md, C1, C3, C9, D7).
 
@@ -21,30 +23,49 @@ local Obs = VS.Obs
 local Plain = S.Plain
 local L = I.Log
 
--- Per hand (1 main, 2 off), how long a swing waits for its outcome (ms), capped at the hand's swing period. Measured
--- lag after PLAYER_SWING (research doc above): main median 474 ms (435-552 in 31 of 34, the rest up to 1287), off
--- median 953 ms (694-1070 in 22 of 31, up to 1686).
+-- Per hand (1 main, 2 off), the support of a swing's landing lag (ms), capped at the hand's swing period: measured
+-- maximum lags 1287 / 1686 ms plus a margin (P log 2).
 L.PAIR_WINDOW_MS = { 1500, 2000 }
 -- Seconds a cast waits for its outcome, and within which an on-next-swing strike's success and its swing are one
 -- event pair (the same frame, log 1).
 local CAST_WINDOW, STRIKE_WINDOW = 0.2, 0.2
--- Seconds within which a cast's own wound comes (its frame): a yellow strike's damage can fit a weapon range
--- (Overpower, Shred), so a cast this fresh takes a wound before any pending swing.
+-- Seconds within which a cast's own wound comes (its frame): a yellow strike's damage can fit a weapon range, so a
+-- cast this fresh takes a wound before any pending swing. Also the foreign strike frame: a wound this soon after a
+-- WOUND 0 that no cast of ours claimed is someone else's on-next-swing strike (G 177249/177250).
 local SAME_FRAME = 0.05
--- White wounds in a row (with a swing pending) that fit no hand's range before the cache counts as stale (a damage
--- buff, a form whose damage it never read): from then on a wound that fits nothing takes the oldest pending swing.
-local STALE_AFTER = 3
-local misses = 0
+
+-- The score (harness design §1.2-§1.4, decision D1; PROTOTYPE values, the harness's gates hold them): THETA the
+-- credit bar; q per amount class (exact, loose, above) and for an avoid; the lag density's tail weight per hand; the
+-- background prior LAMBDA0 (outcomes per second) worth T0 seconds; TAU the decay of the background counts (s).
+L.THETA = 5
+L.Q = { 0.90, 0.08, 0.02 }
+L.Q_AVOID = 0.22
+L.EPS = { 0.12, 0.10 }
+L.LAMBDA0, L.T0, L.TAU = 0.01, 5, 10
+-- The landing lag per reference (1 main from its swing; 2 off from its own swing; 3 off from the latest main swing at
+-- or before it: G5's two sharp references), seeds (MEASURED: P log 2, G5) learned online from clean credits.
+L.MED0, L.SPR0 = { 0.474, 0.703, 1.686 }, { 0.060, 0.020, 0.020 }
+L.med, L.spr = { 0.474, 0.703, 1.686 }, { 0.060, 0.020, 0.020 }
+-- The background: per class, the outcomes that arrived while nothing of ours was pending (1-3 main exact, loose,
+-- above; 4-6 off; 7 avoid; 8 white with no usable cache), and the quiet time they came in; both decay with combat
+-- time (decision D6: they persist across pulls).
+L.bg, L.quiet = { 0, 0, 0, 0, 0, 0, 0, 0 }, 0
+local lastT, lastW0, lastMain = 0, -1, 0
+L.credited, L.background, L.avoidsBack = { 0, 0, 0 }, 0, 0
 
 local N = 8
 -- Pending own actions: kind 1 swing (hand in `x`), 2 cast (spell ID in `x`); `w` its window (s); `t` 0 is free.
-local actT, actKind, actX, actDst, actW = {}, {}, {}, {}, {}
+-- `ref` an off-hand swing's main reference (the latest main swing at or before it; 0 none); `lr` and `avoid` the LR
+-- and action of an avoid credited to it provisionally ("" none).
+local actT, actKind, actX, actDst, actW, actRef, actLR, actAvoid = {}, {}, {}, {}, {}, {}, {}, {}
 for i = 1, N do
-    actT[i], actKind[i], actX[i], actDst[i], actW[i] = 0, 0, 0, "", 0
+    actT[i], actKind[i], actX[i], actDst[i], actW[i], actRef[i], actLR[i], actAvoid[i] = 0, 0, 0, "", 0, 0, 0, ""
 end
 
 local strikeWait = 0 -- an on-next-swing strike's success still waiting for its main-hand swing
 
+-- The avoids a swing can have (school 1) and the further ones a cast can (MISSES).
+local AVOIDS = { DODGE = true, PARRY = true, MISS = true, BLOCK = true, DEFLECT = true, EVADE = true }
 local MISSES = {
     DODGE = true,
     PARRY = true,
@@ -69,28 +90,54 @@ local function free()
     return oldest -- full: the oldest gives way, unemitted (8 pending within 2 s cannot happen)
 end
 
--- The pending action of `kind` still in its window at `t` (or within `age` s of it) that `score(x, amount, flag)`
--- rates highest (0: not this one; nil: every one rates 1), the oldest among equals.
-local function pick(kind, t, score, amount, flag, age)
-    local best, bestS = nil, 0
+-- Our pending cast still in its window at `t` (or within `age` s of it), the oldest first.
+local function cast(t, age)
+    local best
     for i = 1, N do
         local at = actT[i]
-        if at > 0 and actKind[i] == kind and t - at <= (age or actW[i]) then
-            local sc = score and score(actX[i], amount, flag) or 1
-            if sc > bestS or (sc == bestS and sc > 0 and at < actT[best]) then
-                best, bestS = i, sc
-            end
+        if at > 0 and actKind[i] == 2 and t - at <= (age or actW[i]) and (not best or at < actT[best]) then
+            best = i
         end
     end
     return best
 end
 
--- How well a wound of `amount` fits hand h's weapon damage (UnitDamage: min and max main, then min and max off), on
--- half the amount for a crit: 2 inside [min, max], 1 inside [0.6 x min, 1.1 x max] (from 0 for a glancing or partly
--- blocked hit), else 0. The exact range decides between hands whose loose ranges overlap (log 2's crit 52: 26 is the
--- off hand's, though inside the main hand's loose range). The ranges are before armour: a heavily armoured target can
--- push a main-hand hit into the off hand's exact range (per-hand values swap; the count of steps holds).
-local function fits(h, amount, flag)
+local function pending()
+    for i = 1, N do
+        if actT[i] > 0 then
+            return true
+        end
+    end
+    return false
+end
+
+-- The clock of the background: in combat, the counts and the quiet time decay by exp(-dt / TAU), and the quiet time
+-- grows while nothing of ours is pending. Allocates nothing.
+local function advance(t)
+    if t <= lastT then
+        return
+    end
+    if I.inCombat then
+        local dt = t - lastT
+        local k = math.exp(-dt / L.TAU)
+        local bg = L.bg
+        for c = 1, 8 do
+            bg[c] = bg[c] * k
+        end
+        L.quiet = L.quiet * k + (pending() and 0 or dt)
+    end
+    lastT = t
+end
+
+local function lambda(c)
+    return (L.bg[c] + L.LAMBDA0 * L.T0) / (L.quiet + L.T0) -- nonzero: T0 > 0
+end
+
+-- The amount class of a wound for hand h against the weapon damage (UnitDamage: min and max main, then min and max
+-- off), on half the amount for a crit: 1 exact [min, max], 2 loose [0.6 x min, 1.1 x max], 3 above (1.1 x max,
+-- 2 x max] (a damage buff since the read), else 0. A glancing or partly blocked hit opens the loose band down to 0
+-- (G's glancing 1-5 are another player's; log 2's BLOCK_REDUCED 48 is exact). The ranges are before armour.
+local function classOf(h, amount, flag)
     local minMain, maxMain, minOff, maxOff = VS.Stat("UnitDamage")
     local lo, hi = minMain, maxMain
     if h == 2 then
@@ -98,13 +145,54 @@ local function fits(h, amount, flag)
     end
     if flag == "CRITICAL" then
         amount = amount / 2
-    elseif flag == "GLANCING" or flag == "BLOCK_REDUCED" then
-        lo = 0
     end
-    if hi <= 0 or amount < 0.6 * lo or amount > 1.1 * hi then
+    local looseLo = 0.6 * lo
+    if flag == "GLANCING" or flag == "BLOCK_REDUCED" then
+        looseLo = 0
+    end
+    if hi <= 0 or amount < looseLo or amount > 2 * hi then
         return 0
+    elseif amount >= lo and amount <= hi then
+        return 1
     end
-    return (amount >= lo and amount <= hi) and 2 or 1
+    return amount <= 1.1 * hi and 2 or 3
+end
+
+local function normal(d, m, s)
+    local z = (d - m) / s -- nonzero: spr clamped at 0.02 s
+    return math.exp(-0.5 * z * z) / (s * 2.5066283)
+end
+
+-- The landing-lag density of pending swing i for an outcome at t (0 outside its window), and the reference that
+-- scored: the main hand from its swing; the off hand the better of its own swing and its main reference, plus the
+-- hand's tail over the window.
+local function density(i, t)
+    local d, w = t - actT[i], actW[i]
+    if d < 0 or d > w then
+        return 0, 0
+    end
+    local med, spr = L.med, L.spr
+    if actX[i] == 1 then
+        return (1 - L.EPS[1]) * normal(d, med[1], spr[1]) + L.EPS[1] / w, 1 -- nonzero: w > 0 (a window)
+    end
+    local f, ref = normal(d, med[2], spr[2]), 2
+    if actRef[i] > 0 then
+        local m = normal(t - actRef[i], med[3], spr[3])
+        if m > f then
+            f, ref = m, 3
+        end
+    end
+    return (1 - L.EPS[2]) * f + L.EPS[2] / w, ref -- nonzero: w > 0 (a window)
+end
+
+-- A clean credit moves its reference's median and spread (a running median; mean absolute deviation to SD).
+local function learn(ref, d)
+    local med, spr = L.med, L.spr
+    med[ref] = med[ref] + 0.005 * (d > med[ref] and 1 or -1)
+    local s = spr[ref] + 0.05 * (1.2533 * math.abs(d - med[ref]) - spr[ref])
+    spr[ref] = s < 0.02 and 0.02 or (s > 0.4 and 0.4 or s)
+    local w = L.PAIR_WINDOW_MS[ref == 1 and 1 or 2] / 1000
+    med[ref] = med[ref] < 0 and 0 or (med[ref] > w and w or med[ref])
 end
 
 -- One row from an own action and its outcome, at the earlier time. None without a destination: Hekili's handler would
@@ -134,14 +222,21 @@ local function emit(kind, x, dst, action, flag, amount, t)
     end
 end
 
+-- Holds an own action in a free slot (the oldest gives way) and returns the slot.
 local function hold(kind, x, dst, w, t)
     local i = free()
     actT[i], actKind[i], actX[i], actDst[i], actW[i] = t, kind, x, dst, w
+    actRef[i], actLR[i], actAvoid[i] = kind == 1 and x == 2 and lastMain or 0, 0, ""
+    return i
 end
 
 S.On("PLAYER_SWING", nil, function(api, t, duration, swingType)
     if type(swingType) ~= "number" or swingType > 1 then
         return
+    end
+    advance(t)
+    if swingType == 0 then
+        lastMain = t
     end
     if swingType == 0 and strikeWait > 0 and t - strikeWait <= STRIKE_WINDOW then
         strikeWait = 0 -- the on-next-swing strike whose success came first is this swing: its outcome is the ability's
@@ -161,6 +256,7 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     if not obj or not (obj.startsCombat or obj.onNextSwing) then
         return
     end
+    advance(t)
     if obj.onNextSwing then -- the strike replaces its swing, in the same frame before or after this success
         local found = false
         for i = 1, N do
@@ -175,78 +271,150 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     hold(2, spellID, Plain(api, api.UnitGUID("target")) or "", CAST_WINDOW, t)
 end)
 
--- The target's outcome at `t` pairs with the action it follows. A wound: our cast of this frame, else the pending
--- swing whose hand's damage it fits best, the older on a tie (the oldest of any hand when the cache cannot tell: no
--- UnitDamage read yet, read in another form, or stale), else our pending cast; a WOUND 0 is the white swing an
--- on-next-swing strike replaced (its frame also carries the strike's own wound) and pairs with nothing. An avoid: our
--- pending cast (its outcome comes in the same frame), else the oldest pending swing of either hand.
--- shortcut: a startsCombat cast with no outcome of its own (Rend, Sunder) takes a white avoid inside its 0.2 s as
+-- The best pending swing for an outcome at t (amount class per hand from `classOf`, or q = 1 for every hand when
+-- `unknown`; an avoid when `avoid`): its slot, LR, reference and lag, and the runner-up's LR. Allocates nothing.
+local function score(t, amount, flag, avoid, unknown)
+    local best, bestLR, ref, lag, second = nil, 0, 0, 0, 0
+    for i = 1, N do
+        if actT[i] > 0 and actKind[i] == 1 and not (avoid and actAvoid[i] ~= "") then
+            local f, r = density(i, t)
+            local q, c = L.Q_AVOID, 7
+            if not avoid then
+                local cls = 0
+                if unknown then
+                    q, c = 1, 8
+                else
+                    cls = classOf(actX[i], amount, flag)
+                    q, c = cls > 0 and L.Q[cls] or 0, (actX[i] - 1) * 3 + cls
+                end
+            end
+            local lr = f > 0 and q > 0 and q * f / lambda(c) or 0
+            if lr > actLR[i] or actAvoid[i] == "" then -- a wound takes a provisionally avoided swing only by beating it
+                if lr > bestLR then
+                    best, bestLR, ref, lag, second = i, lr, r, t - actT[i], bestLR
+                elseif lr > second then
+                    second = lr
+                end
+            end
+        end
+    end
+    return best, bestLR, ref, lag, second
+end
+
+-- An outcome nobody of ours claimed: counted, and while in combat with nothing of ours pending (the quiet time it is a
+-- rate over), it teaches the background rate of each class it qualifies for (a white wound in every hand's class it
+-- fits).
+local function background(amount, flag, avoid, unknown)
+    L.background = L.background + 1
+    if pending() or not I.inCombat then
+        return
+    end
+    local bg = L.bg
+    if avoid then
+        bg[7] = bg[7] + 1
+    elseif unknown then
+        bg[8] = bg[8] + 1
+    else
+        for h = 1, 2 do
+            local cls = classOf(h, amount, flag)
+            if cls > 0 then
+                bg[(h - 1) * 3 + cls] = bg[(h - 1) * 3 + cls] + 1
+            end
+        end
+    end
+end
+
+-- The target's outcome at `t`. Our pending cast claims first: an avoid within its window, a wound within its frame.
+-- A WOUND 0 is the white swing an on-next-swing strike replaced and pairs with nothing; a wound right after one that
+-- no cast of ours claimed is another player's strike frame (background). A white outcome (school 1) is then scored
+-- against our pending swings; a wound no swing takes goes to our pending cast, else to the background.
+-- shortcut: a startsCombat cast with no outcome of its own (a DoT, a debuff) takes an avoid inside its 0.2 s as
 -- SPELL_MISSED; rare, upgrade to the cast's frame if Phase D's compensating aura removal relies on it.
--- shortcut: in group play another attacker's outcome inside a window can be credited to our action (and its wound's
--- rage lift rage's lo above the real rage until the next pin); upgrade when a per-attacker attribution exists.
-S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
+S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     if unit ~= "target" or type(act) ~= "string" or (act ~= "WOUND" and not MISSES[act]) then
         return
     end
+    advance(t)
     amount = type(amount) == "number" and amount or 0
     flag = type(flag) == "string" and flag or ""
-    local p
-    if act ~= "WOUND" then
-        p = pick(2, t) or pick(1, t)
-    elseif amount > 0 then
-        p = pick(2, t, nil, nil, nil, SAME_FRAME)
-        if not p then
-            local _, maxMain = VS.Stat("UnitDamage")
-            local form = Plain(api, api.GetShapeshiftForm()) -- secret: Plain; plain in combat (Facade.lua's stance row)
-            if maxMain <= 0 or form ~= I.damageForm then
-                p = pick(1, t)
-            else
-                p = pick(1, t, fits, amount, flag)
-                if p then
-                    misses = 0
-                elseif pick(1, t) then
-                    misses = misses + 1
-                    if misses >= STALE_AFTER then
-                        p = pick(1, t)
-                    end
-                end
-            end
-            p = p or pick(2, t)
-        end
-    end
-    if not p then
+    local white, avoid = school == 1, act ~= "WOUND"
+    if act == "WOUND" and amount <= 0 then
+        lastW0 = t
         return
     end
-    local kind, x, at = actKind[p], actX[p], actT[p]
-    actT[p] = 0
-    emit(kind, x, actDst[p], act, flag, amount, at)
-    if kind == 1 and act == "WOUND" then
-        S.Stage(Obs.Swing, at, x, 0, 1) -- landed, at the swing's time: the resources family pays its rage
-        if flag == "CRITICAL" then
-            S.Stage(Obs.Swing, t, x, 0, 3)
+    local p = cast(t, not avoid and SAME_FRAME or nil)
+    local credited, lr, ref, lag, second = nil, 0, 0, 0, 0
+    local unknown = false
+    if not p and white and (AVOIDS[act] or not avoid) and not (not avoid and t - lastW0 <= SAME_FRAME) then
+        if not avoid then
+            local _, maxMain = VS.Stat("UnitDamage")
+            local form = Plain(api, api.GetShapeshiftForm()) -- secret: Plain; plain in combat (Facade.lua's stance row)
+            unknown = maxMain <= 0 or form ~= I.damageForm
         end
-        S.Urgent("VS_SWING_LANDED")
+        credited, lr, ref, lag, second = score(t, amount, flag, avoid, unknown)
+        if credited and lr < L.THETA then
+            credited = nil
+        end
     end
+    if not p and not credited and not avoid then
+        p = cast(t)
+    end
+    if p then
+        local x, at = actX[p], actT[p]
+        actT[p] = 0
+        L.credited[3] = L.credited[3] + 1
+        emit(2, x, actDst[p], act, flag, amount, at)
+        return
+    elseif not credited then
+        background(amount, flag, avoid, unknown)
+        return
+    end
+    local x, at = actX[credited], actT[credited]
+    if avoid then
+        actLR[credited], actAvoid[credited] = lr, act -- provisional: emitted when the window closes
+        return
+    end
+    if actAvoid[credited] ~= "" then
+        L.avoidsBack = L.avoidsBack + 1 -- the avoid it held was someone else's after all
+    end
+    actT[credited], actAvoid[credited], actLR[credited] = 0, "", 0
+    L.credited[x] = L.credited[x] + 1
+    if not unknown and classOf(x, amount, flag) == 1 and second < L.THETA then
+        local d = ref == 3 and t - actRef[credited] or lag
+        if math.abs(d - L.med[ref]) < 3 * L.spr[ref] then
+            learn(ref, d)
+        end
+    end
+    emit(1, x, actDst[credited], act, flag, amount, at)
+    S.Stage(Obs.Swing, at, x, 0, 1) -- landed, at the swing's time: the resources family pays its rage
+    if flag == "CRITICAL" then
+        S.Stage(Obs.Swing, t, x, 0, 3)
+    end
+    S.Urgent("VS_SWING_LANDED")
 end)
 
--- Closes the windows at `now`: an unpaired swing becomes SWING_DAMAGE with amount 0 at its own time (and stages
--- nothing: no rage); an unpaired cast is dropped. Every OnUpdate (the deferred lane, CombatLog.lua). Allocates nothing.
+-- Closes the windows at `now`: a swing holding a provisional avoid becomes SWING_MISSED, an unpaired one SWING_DAMAGE
+-- with amount 0, each at its own time (and stages nothing: no rage); an unpaired cast is dropped. Every OnUpdate (the
+-- deferred lane, CombatLog.lua). Allocates nothing.
 L.OnTick(function(now)
+    advance(now)
     for i = 1, N do
         local t = actT[i]
         if t > 0 and now - t > actW[i] then
             actT[i] = 0
             if actKind[i] == 1 then
-                emit(1, actX[i], actDst[i], "WOUND", "", 0, t)
+                emit(1, actX[i], actDst[i], actAvoid[i] ~= "" and actAvoid[i] or "WOUND", "", 0, t)
             end
+            actAvoid[i], actLR[i] = "", 0
         end
     end
 end)
 
--- Combat end: nothing pending survives into the next pull.
-S.On("PLAYER_REGEN_ENABLED", nil, function()
+-- Combat end: nothing pending survives into the next pull; the background and the lags are kept (decision D6).
+S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
+    advance(t)
     for i = 1, N do
-        actT[i] = 0
+        actT[i], actAvoid[i], actLR[i] = 0, "", 0
     end
-    strikeWait, misses = 0, 0
+    strikeWait = 0
 end)

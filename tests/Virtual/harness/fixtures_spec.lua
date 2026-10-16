@@ -117,3 +117,69 @@ describe("the fixtures and the model's fit", function()
         end
     end)
 end)
+
+describe("the fixtures replayed through Rows.lua", function()
+    -- Replays fixture `name` (its token rows as recorded, or one row per outcome as "target" when `dedupe`).
+    local function replay(name, dedupe)
+        local fix = require("Virtual.harness.fixtures." .. name)
+        local s = drive.fixtureStream(fix, 10, dedupe)
+        local c = drive.boot()
+        drive.run(c, s)
+        drive.restore(c)
+        return c, s
+    end
+
+    -- The stream index of the target's `act` of `amount` at `ms`.
+    local function at(s, ms, act, amount)
+        for i = 1, s.n do
+            local hit = s.ev[i] == "UNIT_COMBAT" and s.a1[i] == "target" and s.a2[i] == act and s.a4[i] == amount
+            if hit and math.abs(s.t[i] - 10 - ms / 1000) < 1e-6 then
+                return i
+            end
+        end
+        error(("no target %s %d at %d"):format(act, amount, ms))
+    end
+
+    it(
+        "log 1: the strike frames' wounds are the casts', the DoT tick background, the crit 90 the main hand's",
+        function()
+            local c, s = replay("log1")
+            assert.are.same({ 0, 0 }, { c.crHand[at(s, 4331, "WOUND", 77)], c.crHand[at(s, 6532, "WOUND", 84)] })
+            assert.are.equal(2, c.rows.spell) -- SPELL_DAMAGE 77 and 84
+            assert.are.equal(0, c.crHand[at(s, 5847, "WOUND", 13)])
+            local crit = at(s, 2463, "WOUND", 90)
+            assert.are.same({ 1, 12.110 }, { c.crHand[crit], c.crAt[crit] }) -- 353 ms after the main swing (P's reading)
+            assert.is_true(c.crHand[at(s, 2463, "WOUND", 30)] ~= 1) -- background, or the off hand's (1.692 s after main)
+        end
+    )
+
+    it("log 3: our 50 credited to the main hand; the partner's glancing, miss and strike frames background", function()
+        local c, s = replay("log3")
+        local ours = at(s, 165485, "WOUND", 50)
+        assert.are.same({ 1, 175.116 }, { c.crHand[ours], c.crAt[ours] })
+        assert.are.same({ 0, 0 }, { c.crHand[at(s, 165124, "WOUND", 4)], c.crHand[at(s, 165169, "MISS", 0)] })
+        for i = 1, s.n do
+            if s.t[i] >= 10 + 160.779 and s.ev[i] == "UNIT_COMBAT" and s.a5[i] ~= 1 then
+                assert.are.equal(0, c.crHand[i]) -- the partner's school-8 spells
+            elseif s.t[i] >= 10 + 174.816 and s.t[i] <= 10 + 205.518 then
+                assert.are.equal(0, c.crHand[i]) -- segment C: we idle, his strike frames on nameplate2 included
+            end
+        end
+    end)
+
+    it("log 5 (G5): the main hand's 22 wounds, >= 18 of the off hand's 20, never the on-swing proc", function()
+        local c, s = replay("log5", true)
+        local main, off = 0, 0
+        for i = 1, s.n do
+            if s.ev[i] == "UNIT_COMBAT" and s.a2[i] == "WOUND" and s.a4[i] > 0 and c.crHand[i] > 0 then
+                local a = s.a3[i] == "CRITICAL" and s.a4[i] / 2 or s.a4[i]
+                assert.are.equal(1, s.a5[i]) -- the school-32 proc is no swing's
+                local hand = a > 38 and 1 or 2
+                main, off =
+                    main + (hand == 1 and c.crHand[i] == 1 and 1 or 0),
+                    off + (hand == 2 and c.crHand[i] == 2 and 1 or 0)
+            end
+        end
+        assert.is_true(main == 22 and off >= 18, ("main %d/22 off %d/20"):format(main, off))
+    end)
+end)
