@@ -752,4 +752,73 @@ describe("resources", function()
             assert.are.equal(0, bytes)
         end)
     end)
+
+    describe(
+        "the in-game Bloodrage trace (2026-10-16): a usability answer bounds the estimate, never moves it",
+        function()
+            local BLOODRAGE = 3 -- the aura index
+            local FIVE = 1 -- the abilities cost 5, 10 (Battle Shout), 10 (Rend), 15 (Heroic Strike): pins before caps
+            local COST = { 5, 10, 10, 15 }
+
+            before_each(function()
+                local def = fs.def(fs.new(9))
+                local five = { key = "five", spend = 5, spendType = "rage" }
+                def.abilities = { five, def.abilities[1], def.abilities[3], def.abilities[2] }
+                def.abilityIds = { { 7384 }, def.abilityIds[1], def.abilityIds[3], def.abilityIds[2] }
+                def.abilitySlot = { 1, 1, 1, 1 }
+                def.auras[BLOODRAGE] = { key = "bloodrage", id = 29131 }
+                def.auraIds[BLOODRAGE] = { 29131 }
+                def.resources[1].decay = 1.25
+                def.resources[1].decayInterval = 1
+                def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1 } }
+                boot(def)
+                I.Fold(50, false)
+            end)
+
+            -- The truth: 0; Bloodrage at 50.3 (+10, then +1 a second); Battle Shout at 51.0 (-10).
+            local function truth(t)
+                if t < 50.3 then
+                    return 0
+                elseif t < 51 then
+                    return 10
+                end
+                return math.floor(t - 50.3)
+            end
+
+            it("keeps est on the modelled chain (= lo) while hi follows the short caps", function()
+                local t, raged, shouted = 50.1, false, false
+                while t < 59 do
+                    if not raged and t >= 50.3 then
+                        raged = true
+                        I.Settle(50.3)
+                        I.ResourceShift(1, 10, 50.3, Obs.CastSuccess) -- Bloodrage's `now` gain
+                        I.AuraModel(1, BLOODRAGE, 50.3, 60.3, 1, 50.3, 0)
+                    end
+                    if not shouted and t >= 51 then
+                        shouted = true
+                        I.Settle(51)
+                        I.ResourceShift(1, -10, 51, Obs.CastSuccess) -- Battle Shout's spend
+                    end
+                    local v, cap = truth(t), 100
+                    for a = 1, 4 do
+                        if v >= COST[a] then
+                            obs(Obs.Usable, t, a, 1, 0)
+                        elseif a == FIVE and t < 51 then
+                            obs(Obs.Usable, t, a, 0, 0) -- not usable for another reason: no rung
+                        else
+                            obs(Obs.Usable, t, a, 0, 1)
+                            cap = math.min(cap, COST[a] - I.EPS)
+                        end
+                    end
+                    I.Fold(t, false)
+                    I.Settle(t)
+                    local r = VS.Power(fs.RAGE, t)
+                    local got = ("%.2f est=%.2f lo=%.2f hi=%.2f"):format(t, r.est, r.lo, r.hi)
+                    local want = ("%.2f est=%.2f lo=%.2f hi=%.2f"):format(t, v, v, cap)
+                    assert.are.equal(want, got)
+                    t = t + 0.25
+                end
+            end)
+        end
+    )
 end)

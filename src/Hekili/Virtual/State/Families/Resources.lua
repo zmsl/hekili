@@ -421,7 +421,8 @@ local function calibrate(r, m, t)
 end
 
 -- Pins slot r at t to [v, v + width]; when this pin and the previous one both measure (exact, or `mid`), the regen
--- between them is a measurement. `origin` is "pinned" (a usability flip) or "observed" (an exact read).
+-- between them is a measurement. `origin` is "pinned" (a usability flip) or "observed" (an exact read). A wide flip
+-- is a bound: it clamps the estimate into the range, never moves one already inside it; a read takes the midpoint.
 local function pin(r, v, width, t, origin, event, mid)
     local exact = width <= 0
     local measures = exact or mid == true
@@ -431,7 +432,11 @@ local function pin(r, v, width, t, origin, event, mid)
         calibrate(r, (vm - R.pinV[r] - R.pinDelta[r]) / dt, t) -- nonzero: dt >= PIN_GAP (1 s)
     end
     local max = R.max[r]
-    R.est0[r], R.lo0[r], R.hi0[r] = clamp(v + width / 2, max), clamp(v, max), clamp(v + width, max)
+    local est = v + width / 2
+    if origin == "pinned" then
+        est = R.est0[r] < v and v or (R.est0[r] > v + width and v + width or R.est0[r])
+    end
+    R.est0[r], R.lo0[r], R.hi0[r] = clamp(est, max), clamp(v, max), clamp(v + width, max)
     R.snapT[r] = -1e9 -- an anchor, not a snap
     R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r] = t, vm, 0, measures
     I.Sample(R.power[r], origin, R.est0[r], t, event)
