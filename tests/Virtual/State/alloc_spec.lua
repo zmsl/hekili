@@ -1,6 +1,7 @@
 -- tests/Virtual/State/alloc_spec.lua (spec §2, §11): 10,000 mixed events (PLAYER_SWING, UNIT_POWER_FREQUENT,
--- usability, own casts, UNIT_AURA) with a drain every tick against the fake spec, every accessor and every facade
--- policy and passthrough called, every combat-log row delivered to a subscriber: VirtualState allocates nothing.
+-- usability flipping on a health-gated spender, own casts, UNIT_AURA, the target's UNIT_COMBAT) with a drain every
+-- tick against the fake spec, every accessor and every facade policy and passthrough called, every combat-log row
+-- delivered to a subscriber: VirtualState allocates nothing.
 local load = require("Virtual.State.helpers.load")
 local fake = require("Virtual.State.helpers.fake_api")
 local fs = require("Virtual.State.helpers.fake_spec")
@@ -54,26 +55,34 @@ describe("zero allocation", function()
             GetInfo()
         end)
         sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+        h.Class.abilities.rend.healthGate = 0.2 -- a health-gated spender (Families/TargetHealth.lua)
+        ctl.known[fs.REND] = true -- known: its NOT answers can bound the target's health
         VS.Start(api)
         VS.SpecChanged()
+        ctl.guid.target = "Creature-2" -- a target never held before: its first flip learns M, then WOUNDs move it
+        ctl.Fire("PLAYER_TARGET_CHANGED")
         ctl.auras.player.HELPFUL[1] = { spellId = fs.SHOUT, expirationTime = 1e9, applications = 0 }
-        ctl.usable[fs.REND] = { true, false }
+        local USABLE, NOT_USABLE = { true, false }, { false, false }
+        ctl.usable[fs.REND] = USABLE
         ctl.cooldown[fs.REND] = { isActive = false, isOnGCD = true }
         ctl.Fire("PLAYER_REGEN_DISABLED")
         local POWER = "RAGE"
         local function step(i)
             ctl.now = ctl.now + 0.1
-            local k = i % 5
+            local k = i % 6
             if k == 0 then
                 ctl.Fire("PLAYER_SWING", 2.6, 0)
             elseif k == 1 then
                 ctl.Fire("UNIT_POWER_FREQUENT", "player", POWER)
             elseif k == 2 then
+                ctl.usable[fs.REND] = i % 4 == 2 and NOT_USABLE or USABLE -- every other usability event flips
                 ctl.Fire("SPELL_UPDATE_USABLE")
             elseif k == 3 then
                 ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast", fs.REND)
-            else
+            elseif k == 4 then
                 ctl.Fire("UNIT_AURA", "player")
+            else
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 1)
             end
             ctl.Tick()
             VS.Drain(ctl.now)
@@ -95,6 +104,7 @@ describe("zero allocation", function()
             VS.SpellHaste(t)
             VS.Health("player", t)
             VS.HealthMax("player")
+            VS.Health("target", t)
             VS.TTD("target", t)
             VS.Totem(1, t)
             VS.TotemFacts(1)
@@ -114,6 +124,7 @@ describe("zero allocation", function()
             Facade.GetManaRegen()
             Facade.UnitHealth("player")
             Facade.UnitHealth("nameplate1")
+            Facade.UnitHealth("target")
             Facade.UnitHealthMax("target")
             Facade.UnitStat("player", 1)
             Facade.GetCombatRating(10)

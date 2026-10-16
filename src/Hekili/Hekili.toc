@@ -18,6 +18,7 @@ Virtual\State\Families\Resources.lua
 Virtual\State\Families\Swing.lua
 Virtual\State\Families\Auras.lua
 Virtual\State\Families\TargetCast.lua
+Virtual\State\Families\TargetHealth.lua
 Virtual\State\Families\Talents.lua
 Virtual\State\Families\Totems.lua
 Virtual\State\Families\Enemies.lua

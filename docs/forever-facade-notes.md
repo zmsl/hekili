@@ -233,6 +233,7 @@ Every stub site in the retained files that throws or yields a wrong value. Sites
 | `UnitHealth` / `UnitHealthMax` -> 0 | `Targets.lua` 1600 `UpdateEnemy( guid, health / healthMax, ... )` (1583-1587 clamps `healthMax` to 1, 1600 does not) | wrong value: `0 / 0` is NaN, NaN comparisons are false, `rate` stays 0, and TTD stays at its default |
 | `UnitHealth` / `UnitHealthMax` -> 0 | `Targets.lua` 1304-1312 (`GetTTD`) and 1328-1340 (`GetTimeToPct`) | wrong value: NaN `healthPct`; the `enemy.n < 3` early return hides it, so callers get the default |
 | `UnitHealth` / `UnitHealthMax` -> 0 | `State.lua` 2860-2866 `mt_target_health` | wrong value: `target.health.pct` is 100 (the `t.max ~= 0` guard), so execute-phase conditions never pass |
+| `UnitHealth( "target" )` -> the TargetHealth belief x 100 | `State.lua` 2860-2866 `mt_target_health` | follows VirtualState's target health (Families/TargetHealth.lua: a pin at a health gate, then a plain WOUND slope); 100 until a pin |
 | `UnitHealth` / `UnitHealthMax` -> 0 | `State.lua` 1866-1893 `group_health`, `at_risk`; 2562 pet `health_pct`; `Utils.lua` 416-462 | wrong value: `0 / 0` NaN percentages, every `<` test false |
 | `UnitHealth` -> 0 | `State.lua` 2424, 2556 pet alive checks `UnitHealth( "pet" ) > 0` | wrong value: the pet always reads dead |
 | `UnitHealth` -> 0 | `State.lua` 6351-6352 `state.health` | wrong value: player health 0 of max 1 |

@@ -11,10 +11,11 @@ describe("APL secret-token scan", function()
     end)
 
     it("finds target health, player health and time to die", function()
-        assert.are.same(
-            { "target.health.pct", "target health is secret", "always reads 100" },
-            { scan("target.health.pct<20") }
-        )
+        assert.are.same({
+            "target.health.pct",
+            "target health is secret",
+            "reads 100 until a health-gated ability pins it, always on a spec without one",
+        }, { scan("target.health.pct<20") })
         assert.are.equal("target.health.pct", scan("!buff.rend.up&target.health.pct<=20"))
         assert.are.equal("target.health_percent", scan("target.health_percent>80"))
         assert.are.equal("target.time_to_die", scan("target.time_to_die>12"))
@@ -31,6 +32,9 @@ describe("APL secret-token scan", function()
         assert.are.equal("time_to_pct_", scan("time_to_pct_20>10"))
         assert.are.equal("health.deficit", scan("health.deficit>5000"))
         assert.are.equal("longest_ttd", scan("longest_ttd<10"))
+        assert.are.equal("target.time_to_die", scan("target.time_to_die<5"))
+        assert.are.equal("fight_remains", scan("fight_remains>10"))
+        assert.are.equal("target.time_to_pct_", scan("target.time_to_pct_20"))
     end)
 
     it("finds a token in a target_if expression", function()
@@ -44,6 +48,8 @@ describe("APL secret-token scan", function()
         assert.is_nil(scan("pet.health.pct<50"))
         assert.is_nil(scan("variable.time_to_die_soon"))
         assert.is_nil(scan("time_to_dies>1"))
+        assert.is_nil(scan("rage.time_to_42"))
+        assert.is_nil(scan("debuff.rend.remains"))
         assert.is_nil(scan(""))
         assert.is_nil(scan(nil))
         assert.is_nil(scan(42))

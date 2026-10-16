@@ -1,6 +1,8 @@
 -- Virtual/State/AplWarnings.lua
--- Target and player health are secret on Forever, so the facade answers them with constants and time to die keeps
--- its default (spec §6.5, §7.4): an action-list condition that reads them is silently dead. VS.AplSecretToken finds
+-- Target and player health are secret on Forever (spec §6.5, §7.4): the player's reads a constant; the target's reads
+-- 100 until a health-gated ability pins it (Families/TargetHealth.lua), always on a spec without one; time to die is
+-- not modelled, and for a few seconds after a pin Hekili's own tracker derives a transient junk value from that jump.
+-- An action-list condition that reads them is dead or misled. VS.AplSecretToken finds
 -- such a token in a condition string; Hekili:LoadScript (Scripts.lua) writes one warning per entry from it. Pure Lua:
 -- no client read, no allocation.
 
@@ -10,9 +12,9 @@ local find, byte = string.find, string.byte
 
 local TARGET_HP = "target health is secret"
 local PLAYER_HP = "player health is secret"
-local TTD = "target health is secret, so time to die never moves"
-local ALWAYS_100 = "always reads 100"
-local ALWAYS_DEFAULT = "always reads a fixed default"
+local TTD = "time to die is not modelled"
+local ALWAYS_100 = "reads 100 until a health-gated ability pins it, always on a spec without one"
+local ALWAYS_DEFAULT = "reads a fixed default, or a transient junk value for a few seconds after a target health pin"
 local MAX_WHILE = "reads the health maximum while player health is unreadable"
 local PCT_WHILE = "reads 100 while player health is unreadable"
 local ZERO_WHILE = "reads 0 while player health is unreadable"
