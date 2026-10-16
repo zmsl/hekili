@@ -2,7 +2,7 @@
 
 Read-only research for a spec of `Forever/Classes/Priest.lua` beside the Warrior, Druid and (researched) Mage. Build: Forever DB2 1.60.1.70338 (`wowdb`), client 1.60.1.70374, beta cap 30, launch 2026-11-04. Hekili HEAD 799bd49e.
 Tags: [DB2] = queried here (queries in section 10); [TDF] = Taco Dog Forever file; [H] = Hekili file; [MAGE] = `HK/docs/research/2026-10-15-forever-mage/research.md` section N (engine findings reused, not re-derived); [DRUID] = the Druid brief
-`HK/docs/research/2026-10-15-forever-druid/research.md`; [P] = in-game probe recorded in a repo doc; [G] = guide or Blizzard post relayed by `docs/research/2026-10-15-forever-priest/tdf-priest-shadow-rotations.md` (not verified by us); [I] = my inference.
+`HK/docs/research/2026-10-15-forever-druid/research.md`; [P] = in-game probe recorded in a repo doc; [G] = guide or Blizzard post relayed by `docs/research/tdf/2026-10-13-forever-priest-shadow-rotations.md` (not verified by us); [I] = my inference.
 Paths: `HK` = `/home/zack/src/hekili`, `TDF` = `/home/zack/src/TacoDogForever`. Costs: mana points, or "% base" where `SpellPower.PowerCostPct` is set. Pack shape = `HK/src/Hekili/Forever/Classes/{Warrior,Druid}.lua`; priorities = `HK/tools/packs/{warrior,druid}.lua`.
 
 ## 0. Not found / cannot be settled from the repos (read this first)
@@ -12,7 +12,7 @@ Paths: `HK` = `/home/zack/src/hekili`, `TDF` = `/home/zack/src/TacoDogForever`. 
 - **Talent rank values are ambiguous.** Only rank 1 of a talent is in `spell_info` (ranks 2..5 absent except three: Improved Power Word: Fortitude 14767, Blackout 15323, Force of Will 18547). Several rank-1 rows read the **full-rank** value (Improved Mind Blast 15273 = -2500 ms, Improved SW:P 15275
   = +6000 ms, Meditation 14521 = 50, Darkness 15259 = 10, Mental Agility 14520 = -10, Divine Fury 18530 = -500) while others read the Era per-rank value (Holy Specialization 14889 = 1, Spiritual Healing 14898 = 2, Improved Renew 14908 = 5) [DB2 effects]. The Warrior's "rank 1 x rank" rule is therefore **wrong for
   the Shadow talents that matter**; Q8 reads the description at the learned rank.
-- **Mana is secret even out of combat** [P, `TDF/docs/research/2026-10-13-research-findings-for-lanes.md:51`]; the Spirit regen formula, the five-second rule, `GetManaRegen` pair and Spirit are unprobed on a Priest (Q6). Nothing in the DB2 gives rates.
+- **Mana is secret even out of combat** [P, `docs/research/tdf/2026-10-13-research-findings-for-lanes.md:51`]; the Spirit regen formula, the five-second rule, `GetManaRegen` pair and Spirit are unprobed on a Priest (Q6). Nothing in the DB2 gives rates.
 - **The Season of Discovery spells in the DB2 are leftovers, not Forever spells** [G, FDB: "no Forever trainer, quest or talent teaches them"]: Vampiric Touch 402668, Shadowfiend 401977, Mind Sear 413259, Mind Spike 431655, Dispersion 425294, Void Plague 425204, Eye of the Void 402789, Homunculi 402799, Pain Suppression 402004, Power Word: Barrier 425207, Circle of Healing 401946 (all
   `base_level` 0, one rank, percent costs) [DB2]. The pack ignores them (Mage and Druid precedent). Q9 confirms with `IsSpellKnown`. **The shared data in TDF, and `Forever/Shared`, must not leak them**: the SWD rune 401955 is NOT the Forever spell (section 3).
 - **Priority numbers are judgment**: Shadow guides are level-30 beta; levels 40-60 (Shadowform, Shadow Word: Death) are untested [G].

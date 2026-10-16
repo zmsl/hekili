@@ -1,7 +1,7 @@
 # Forever Rogue class pack in the Hekili fork: research brief (2026-10-15)
 
 Read-only research for a spec of `src/Hekili/Forever/Classes/Rogue.lua` beside Warrior.lua and Druid.lua. Hekili HEAD 3e906ad0. Build: Forever DB2 1.60.1.70338 (`wowdb`), client 1.60.1.70374, beta cap 30, launch 2026-11-04. Tags: [DB2]
-queried here; [TDF] `~/src/TacoDogForever/docs/research/2026-10-13-forever-rogue-rotations.md` ("TDF rogue", guides + Blizzard 2026-10-07 deep dive, not re-verified); [HK] Hekili file; [P] in-game probe relayed by a repo doc; [I] my
+queried here; [TDF] `~/src/docs/research/tdf/2026-10-13-forever-rogue-rotations.md` ("TDF rogue", guides + Blizzard 2026-10-07 deep dive, not re-verified); [HK] Hekili file; [P] in-game probe relayed by a repo doc; [I] my
 inference. Energy/mana costs are DB2 points. Template: `docs/research/2026-10-15-forever-druid/research.md` ("Druid R").
 
 ## 0. Not found / cannot be settled from the repos (read this first)

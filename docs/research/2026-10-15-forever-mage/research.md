@@ -1,7 +1,7 @@
 # Forever Mage class pack in the Hekili fork: research brief (2026-10-15)
 
 Read-only research for a spec of `Forever/Classes/Mage.lua` beside the Warrior and Druid. Build: Forever DB2 1.60.1.70338 (`wowdb`), client 1.60.1.70374, beta cap 30, launch 2026-11-04. Hekili HEAD 3e906ad0. Tags: [DB2] = queried here
-(queries in section 11); [TDF] = Taco Dog Forever file; [H] = Hekili file; [P] = in-game probe recorded in a repo doc; [G] = guide or Blizzard post relayed by `TDF/docs/research/2026-10-13-forever-mage-rotations.md` (not verified by
+(queries in section 11); [TDF] = Taco Dog Forever file; [H] = Hekili file; [P] = in-game probe recorded in a repo doc; [G] = guide or Blizzard post relayed by `docs/research/tdf/2026-10-13-forever-mage-rotations.md` (not verified by
 us); [I] = my inference. Costs: mana is DB2 points, or "% base" where `SpellPower.PowerCostPct` is set. Paths: `HK` = `/home/zack/src/hekili`, `TDF` = `/home/zack/src/TacoDogForever`, template =
 `HK/docs/research/2026-10-15-forever-druid/research.md`, pack shape = `HK/src/Hekili/Forever/Classes/{Warrior,Druid}.lua`.
 
@@ -9,7 +9,7 @@ us); [I] = my inference. Costs: mana is DB2 points, or "% base" where `SpellPowe
 
 - **The live Forever Mage talent tree is not in the DB2.** `wowdb talents MAGE` returns the old 49-node tree (Arcane 16, Fire 16, Frost 17) and none of Forever's talent-granted spells (Arcane Blast 400574, Missile Barrage 400588, Ice
   Lance 1312002, Fingers of Frost 400647, Heating Up 400624). No Mage ForeverProbe export exists (`~/src/ForeverProbe/results` has only the W and O runs). Q1 produces it.
-- **Mana is secret even out of combat** [P, `TDF/docs/research/2026-10-13-research-findings-for-lanes.md:51`]. Max, base mana and the regen rates, the five-second rule and Spirit are unprobed on a Mage. Nothing in the DB2 gives a Spirit
+- **Mana is secret even out of combat** [P, `docs/research/tdf/2026-10-13-research-findings-for-lanes.md:51`]. Max, base mana and the regen rates, the five-second rule and Spirit are unprobed on a Mage. Nothing in the DB2 gives a Spirit
   regen formula.
 - **Only rank 1 of each talent is in the DB2** (ranks 2..5 are absent from `spell_info`), and two rank-1 rows contradict the Forever rank text: Improved Fireball 11069 reads -500 ms (the text: -0.5 s at 5/5) and Arcane Meditation 18462
   reads 50 (the text: 17/33/50).

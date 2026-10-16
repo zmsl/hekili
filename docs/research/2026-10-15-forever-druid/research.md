@@ -2,7 +2,7 @@
 
 Read-only research for a spec of `Forever/Classes/Druid.lua` (path as in the facade branch, Task 11) beside the Warrior.
 Build: Forever DB2 1.60.1.70338 (`wowdb`), client 1.60.1.70374, beta level cap 30, launch 2026-11-04 (level 60 content not
-open: `TacoDogForever/docs/research/2026-10-13-forever-druid-balance-bear-rotations.md` header). Evidence tags: [DB2] = queried
+open: `docs/research/tdf/2026-10-13-forever-druid-balance-bear-rotations.md` header). Evidence tags: [DB2] = queried
 here; [TDF] = Taco Dog Forever file; [H] = Hekili file; [P] = in-game probe recorded in a repo doc; [G] = third-party guide
 relayed by the TDF research (not verified by us); [I] = my inference. Costs: energy/mana are DB2 points, rage is DB2 cost / 10
 (`wowdb` shows Maul 150 = 15 rage, as the Warrior plan: "a cost of 100 there being 10 rage").
@@ -23,7 +23,7 @@ Paths: `HK` = `/home/zack/src/hekili`, `FW` = `HK/.claude/worktrees/virtualstate
   priorities exist only on other branches (section 1).
 - Energy/mana/rage numbers in combat are secret; energy regen shape in combat, mana base and regen, bear rage income and Clearcasting
   visibility have never been probed on a Druid (the Warrior probe file says "Mana and energy max and regen are for the Druid
-  session", `TDF/docs/research/2026-10-13-probe-session-W-results.md:396`).
+  session", `docs/research/tdf/2026-10-13-probe-session-W-results.md:396`).
 - Per-rank values of talents (only rank 1 of each talent is in the DB2, as the Warrior plan found). No Forever data for Druid
   talent ranks 2..n.
 
@@ -37,7 +37,7 @@ priority, TDF ships none, and the Forever research covers only Feral, Balance an
 | Branch / file | Specs and packs | Notes |
 |---|---|---|
 | `origin/classic:Classic/Druid.lua` (1924 lines; the port base) | `NewSpecialization( 11 )`; one pack `Feral` (20241120.4) plus pack selectors `balance` ("Balance (IV)") and `feral` | `Classic/APLs/DruidFeral.simc` (51 lines; `.t.simc` is 70 lines): lists `precombat`, `bear` (3 lines), `ranged`, `cat_solo`, `cat_oom`, `cat_ps` (powershift), `innervate_or_shift` |
-| `origin/wrath_release:Wrath/Druid.lua` | packs "Balance (IV)", "Feral DPS (IV)", "Feral Tank (IV)", `APLs/DruidBalance/Feral/Guardian.simc` | the user's `excess_e` Feral pooling lives here (`TDF/docs/research/2026-10-11-wrath-feral-pooling.md`); energy has NO tick model there (`RegisterResource( Enum.PowerType.Energy )`, L663) |
+| `origin/wrath_release:Wrath/Druid.lua` | packs "Balance (IV)", "Feral DPS (IV)", "Feral Tank (IV)", `APLs/DruidBalance/Feral/Guardian.simc` | the user's `excess_e` Feral pooling lives here (`docs/research/tdf/2026-10-11-wrath-feral-pooling.md`); energy has NO tick model there (`RegisterResource( Enum.PowerType.Energy )`, L663) |
 | `origin/tbc:TBC/Druid.lua` | packs Feral, Restoration, Balance (20260327.1) | `TBC/APLs/DruidBalance/Feral/Resto.simc` |
 | `forever` / `forever-warrior-profile` | `Forever/Warrior.lua` only | spec 1491 is a generic pseudo-spec every Forever class file registers (`HK/docs/forever-cleanup.md:5`, `Constants.lua` 1491 row); the Warrior registers three packs (Arms, Fury, Protection) on that one spec |
 
@@ -52,7 +52,7 @@ manual; TDF's own spec choice (most points in a tree, trait-tree walk, `Register
 ### 2.1 Energy (Feral)
 - Max 100 (Classic default; no Druid max modifier found in the DB2; rogue Vigor is rogue-only) [DB2].
 - **Regen is continuous, 10/s, not 20 per 2 s tick.** Basis: Blizzard 2026-09-30 class highlights as relayed in
-  `TDF/docs/research/2026-10-13-forever-rogue-rotations.md:17` and `research-findings-for-lanes.md:50`; `GetPowerRegenForPowerType`
+  `docs/research/tdf/2026-10-13-forever-rogue-rotations.md:17` and `research-findings-for-lanes.md:50`; `GetPowerRegenForPowerType`
   energy read **10.001 plain out of combat, secret in combat** [P] (`probe-session-W-results.md:390`). Classic's Druid tick model
   (`value = 20` per `energy.tick_time_avg`, `Classic/Druid.lua:163-185`) must be dropped; copy Wrath's bare
   `spec:RegisterResource( Enum.PowerType.Energy )` and let VirtualState calibrate (`d.regen` default, EMA between ladder pins,
@@ -322,7 +322,7 @@ DB2, 4 in Classic), tier 5 col 2 of Resto is Improved Regrowth.
 
 ### 5.2 What Forever changed (not in the DB2; from TDF research, Blizzard notes relayed -- no Druid export exists)
 
-Sources: `TDF/docs/research/2026-10-13-forever-druid-balance-bear-rotations.md` §1-2, `TDF/tools/data/classes/DRUID.json`
+Sources: `docs/research/tdf/2026-10-13-forever-druid-balance-bear-rotations.md` §1-2, `TDF/tools/data/classes/DRUID.json`
 (Forever Era talent pages, 2026-10-13), `TDF/src/TacoDogForever_Druid/Register.lua` (`TALENT_MOVES`).
 
 - **Forever-only (new) talents:** Shifting Power 1322605 (Feral row 4, needs Shredding Attacks), Improved Shifting Power 1322670 (2, row 5),
