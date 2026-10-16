@@ -298,8 +298,22 @@ I.OnAdvance(function(from, to)
     -- measurement like the aura-gated ticks.
     for r = 1, R.n do
         local d = R.decay[r]
+        -- No decay while a tick-paying player aura is up (Bloodrage: +1/s and no decay for 10 s, in game); it
+        -- resumes from the aura's expiry.
+        local start = from
+        for g = 1, G.n do
+            local j = G.aura[g]
+            if d > 0 and G.slot[g] == r and j > 0 and I.auras.applied[1][j] <= to then
+                local e = I.auras.exp0[1][j]
+                if e > to then
+                    d = 0
+                elseif e > start then
+                    start = e
+                end
+            end
+        end
         if d > 0 then
-            local rest, drop, before = R.rest[r], d * dt, R.est0[r]
+            local rest, drop, before = R.rest[r], d * (to - start), R.est0[r]
             if before > rest then
                 R.est0[r] = before - drop > rest and before - drop or rest
             end

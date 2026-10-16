@@ -341,6 +341,22 @@ describe("resources", function()
             assert.are.equal(2, VS.Power(fs.RAGE, 20).est)
         end)
 
+        it("pauses the out-of-combat decay while an aura-gated entry's aura is up, resumes after it expires", function()
+            local def = fs.def(fs.new(9))
+            def.auras[BLOODRAGE] = { key = "bloodrage", id = 29131 }
+            def.auraIds[BLOODRAGE] = { 29131 }
+            def.resources[1].decay = 2
+            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1 } }
+            boot(def)
+            I.Fold(10, false)
+            I.ResourceShift(1, 20, 10, Obs.CastSuccess) -- est 20, out of combat
+            I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
+            I.Settle(15)
+            assert.are.equal(25, VS.Power(fs.RAGE, 15).est) -- 5 ticks, no decay
+            I.Settle(22)
+            assert.are.equal(26, VS.Power(fs.RAGE, 22).est) -- 5 more ticks, then 2 s x 2/s after the expiry
+        end)
+
         it("credits a plain periodic entry only in combat, from the combat start, and only with its talent", function()
             local def = fs.def(fs.new(9))
             def.resources[1].auraRegen = { { talent = "improved_rend", interval = 3, value = 1 } }
