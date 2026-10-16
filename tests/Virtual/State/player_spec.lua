@@ -174,6 +174,13 @@ describe("player start", function()
             )
         end)
 
+        it("drops a wound whose amount is a secret value, with a note", function()
+            fire("player", "WOUND", "", fake.SECRET, 1)
+            fire("player", "WOUND", fake.SECRET, 12, 1) -- a secret flag: a plain wound, not BLOCKED
+            assert.are.same({ { 1, 12, 20 } }, seen)
+            assert.equal("secret", S.status["UNIT_COMBAT player amount"])
+        end)
+
         it("caches the shield's block value out of combat only", function()
             local block = 31
             api.GetShieldBlock = function()

@@ -137,16 +137,16 @@ Owns: `Warrior.lua` (aura, `now`, comments), `Families/Auras.lua` + `Adapter.lua
 
 ## 4. The Protection priority (`tools/packs/warrior.lua`)
 Settings (Warrior.lua, `RegisterSetting`): `prot_heroic_strike_rage` 50 (0-100), `prot_cleave_rage` 40 (0-100),
-`challenging_shout_loose` 3 (0-10). The priority recommends no defensives: Last Stand, Shield Wall and the Healthstone
+`challenging_shout_loose` 3 (1-10). The priority recommends no defensives: Last Stand, Shield Wall and the Healthstone
 stay out of it, and Bloodrage has no health gate; the player decides those.
 ```
 actions.precombat=battle_shout,if=!buff.battle_shout.up
 actions.precombat+=/charge,use_off_gcd=1
 actions.precombat+=/defensive_stance,use_off_gcd=1,if=!buff.defensive_stance.up
 actions=shield_bash
+actions+=/mocking_blow,if=threat.lost
 actions+=/defensive_stance,use_off_gcd=1,if=!buff.defensive_stance.up
 actions+=/taunt,use_off_gcd=1,if=threat.lost
-actions+=/mocking_blow,if=threat.lost&cooldown.taunt.remains>1
 actions+=/challenging_shout,if=threat.loose>=settings.challenging_shout_loose
 actions+=/shield_block,use_off_gcd=1,if=buff.shield_block.stack<2
 actions+=/victory_rush
@@ -176,7 +176,8 @@ rotation is driven by the rage model: §1's damage-taken rage and its learned ra
 Strike and Cleave thresholds and `rage.time_to_x` see incoming rage. The toggles come from the abilities (Challenging
 Shout: `defensives`; Mocking Blow: `cooldowns`; Shield Bash: `interrupts`), so the list does not repeat them. Mocking
 Blow is Battle Stance only (`buff = "battle_stance"`): in Defensive Stance it never shows; no stance dance is
-recommended (D4). Revenge is gated by `revenge_usable` (the attributed rows or the plain usability read); Shield Slam
+recommended (D4). It sits above the stance swap so that in Battle Stance with the target lost it comes first; Taunt
+(Defensive Stance only) follows the swap. Revenge is gated by `revenge_usable` (the attributed rows or the plain usability read); Shield Slam
 waits for level 40 and its talent. Sunder stacks to 5 then refreshes under 3 s, and fills last. Every name exists
 after §2-§3 (`threat.*`, `buff.shield_block.stack`, the three settings); no `health.*` token, so the "only registered
 names" test's secret-token check stays as it is. The description drops "(provisional)". The pack is regenerated

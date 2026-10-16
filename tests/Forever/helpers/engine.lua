@@ -124,7 +124,7 @@ end
 --- Loads the engine for a player of class token `classToken` (UnitClassBase) and race token `race` (UnitRace's second
 --- return; default "Scourge"). Returns `{ Hekili, ns, state, class, errors, loadErrors, client }`: `errors` the
 --- Hekili:Error calls, `loadErrors` one "<file>: <error>" per file whose main chunk raised (the rest still load),
---- `client` the threat reads' answers (`threat`, `isUnit[unit]`, `exists[unit]`; `client.SECRET` a secret answer).
+--- `client` the threat reads' answers (`threat`, `isUnit[unit]`, `exists[unit]`, `canAttack`; `client.SECRET` a secret answer).
 function M.load(classToken, race)
     race = race or "Scourge"
     -- Hekili.lua's Class (Hekili.lua:102-130), strict: a misspelt field (class.abilites) raises at the reader
@@ -241,6 +241,9 @@ function M.load(classToken, race)
         end,
         UnitExists = function(u)
             return client.exists[u]
+        end,
+        UnitCanAttack = function()
+            return client.canAttack
         end,
         issecretvalue = function(v)
             return v == client.SECRET

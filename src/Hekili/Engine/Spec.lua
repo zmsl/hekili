@@ -1711,9 +1711,9 @@ all:RegisterAbilities( {
 } )
 
 -- Threat (tank design §2), read on demand through the facade's plain rows, a secret answer as 0 or false:
--- `situation` UnitThreatSituation( "player", "target" ) (0-3); `on_me` the target attacks us; `lost` the target attacks
--- someone else; `loose` the hostiles attacking someone else (VirtualState.LooseEnemies). No
--- caching, no allocation. Every name is upvalued: Register's setfenv( __index, state ) leaves upvalues alone.
+-- `situation` UnitThreatSituation( "player", "target" ) (0-3); `on_me` the hostile target attacks us; `lost` the
+-- hostile target attacks someone else (a friendly or secret UnitCanAttack: neither); `loose` the hostiles attacking
+-- someone else (VirtualState.LooseEnemies). No caching, no allocation. Every name is upvalued: Register's setfenv( __index, state ) leaves upvalues alone.
 local LooseEnemies = ns.VirtualState.LooseEnemies
 
 local function plain( v )
@@ -1726,9 +1726,9 @@ all:RegisterStateTable( "threat", setmetatable( {}, {
         if k == "situation" then
             return plain( UnitThreatSituation( "player", "target" ) ) or 0
         elseif k == "on_me" then
-            return plain( UnitIsUnit( "targettarget", "player" ) ) == true
+            return plain( UnitCanAttack( "player", "target" ) ) == true and plain( UnitIsUnit( "targettarget", "player" ) ) == true
         elseif k == "lost" then
-            return plain( UnitExists( "targettarget" ) ) == true and plain( UnitIsUnit( "targettarget", "player" ) ) == false
+            return plain( UnitCanAttack( "player", "target" ) ) == true and plain( UnitExists( "targettarget" ) ) == true and plain( UnitIsUnit( "targettarget", "player" ) ) == false
         elseif k == "loose" then
             return LooseEnemies()
         end

@@ -157,10 +157,14 @@ end)
 -- Every hit on the player, attributed or not (Events/Attackers.lua names the attacker only when it can): the kind, the
 -- amount and the attacker's level, the target's while its target is the player, else the player's own (a secret answer
 -- falls to the next). Registered for every unit, as Sources/Target.lua's: a "player" registration would narrow the
--- client's and starve Rows/Attackers. A WOUND without a plain amount is dropped. Allocates nothing.
+-- client's and starve Rows/Attackers. Every argument goes through Plain; a WOUND without a plain amount is dropped. Allocates nothing.
 local HIT, BLOCKS = I.HitKind, { BLOCK = true, BLOCK_REDUCED = true }
 S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
-    local kind = unit == "player" and type(act) == "string" and HIT[act]
+    if unit ~= "player" then
+        return
+    end
+    act, flag, amount = Plain(api, act), Plain(api, flag), Plain(api, amount) -- a secret number answers "number" to type
+    local kind = type(act) == "string" and HIT[act]
     if not kind then
         return
     elseif kind == HIT.WOUND and type(amount) ~= "number" then

@@ -136,7 +136,7 @@ describe("the engine's threat table (tank design §2)", function()
     it("reads the situation, whether the target attacks us or someone else, and the loose hostiles", function()
         local c = env.client
         assert.are.same({ 0, false, false }, { threat.situation, threat.on_me, threat.lost }) -- no target
-        c.threat, c.exists.targettarget, c.isUnit.targettarget = 3, true, true
+        c.threat, c.exists.targettarget, c.isUnit.targettarget, c.canAttack = 3, true, true, true
         assert.are.same({ 3, true, false }, { threat.situation, threat.on_me, threat.lost })
         c.threat, c.isUnit.targettarget = 1, false
         assert.are.same({ 1, false, true }, { threat.situation, threat.on_me, threat.lost })
@@ -146,9 +146,21 @@ describe("the engine's threat table (tank design §2)", function()
 
     it("reads a secret answer as 0 or false, never as lost", function()
         local c = env.client
-        c.threat, c.exists.targettarget, c.isUnit.targettarget = c.SECRET, true, c.SECRET
+        c.threat, c.exists.targettarget, c.isUnit.targettarget, c.canAttack = c.SECRET, true, c.SECRET, true
         assert.are.same({ 0, false, false }, { threat.situation, threat.on_me, threat.lost })
         c.exists.targettarget, c.isUnit.targettarget = c.SECRET, false
         assert.is_false(threat.lost)
+    end)
+
+    it("never reads a friendly target, or a secret UnitCanAttack, as attacking us or lost", function()
+        local c = env.client
+        c.exists.targettarget, c.isUnit.targettarget, c.canAttack = true, false, false -- a friend's target is someone else
+        assert.are.same({ false, false }, { threat.on_me, threat.lost })
+        c.isUnit.targettarget = true
+        assert.is_false(threat.on_me)
+        c.canAttack, c.isUnit.targettarget = c.SECRET, false
+        assert.are.same({ false, false }, { threat.on_me, threat.lost })
+        c.canAttack = true
+        assert.is_true(threat.lost)
     end)
 end)
