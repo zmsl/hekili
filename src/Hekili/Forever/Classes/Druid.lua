@@ -1878,10 +1878,10 @@ spec:RegisterSetting("innervate", true, {
     width = "full",
 })
 
-spec:RegisterSetting("forecast_window", 10, {
+spec:RegisterSetting("forecast_window", 15, {
     type = "range",
     name = "Forecast window (s)",
-    desc = "How far ahead Hekili looks for the next affordable action; energy regenerates steadily, so a short window suffices.",
+    desc = "How far ahead Hekili looks for the next affordable action; shorter windows cost less but can miss an action that waits on resources.",
     width = "full",
     min = 5,
     max = 30,

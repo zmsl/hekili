@@ -1245,7 +1245,7 @@ do
         local finish = now + timeout
         local prev = now
         local iter = 0
-        local maxIter = ceil( 2 * timeout + 10 )
+        local maxIter = ceil( 3 * timeout ) + 10
 
         -- Forever E7: aura-gated regen entries are already forecast events; regen_combined would count them twice.
         local regen = r.regen or 0
