@@ -59,6 +59,8 @@ Forever\Races\NightElf.lua
 Forever\Races\Tauren.lua
 Forever\Races\Human.lua
 Forever\Races\Dwarf.lua
+Forever\Races\Orc.lua
+Forever\Races\Troll.lua
 
 Targets.lua
 Options\DevTools.lua

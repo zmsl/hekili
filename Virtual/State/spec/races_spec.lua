@@ -28,6 +28,8 @@ local OWN = {
     Tauren = { { "war_stomp" }, 0, 0 },
     Human = { { "perception", "will_to_survive" }, 0, 0 },
     Dwarf = { { "stoneform" }, 0, 0 },
+    Orc = { { "blood_fury", "shatter_curse" }, 0, 0 },
+    Troll = { { "berserking", "rapid_regeneration" }, 0, 0 },
 }
 
 describe("race packs", function()
@@ -290,6 +292,32 @@ describe("race packs", function()
         local class = { abilities = { stoneform = stone }, auras = { stoneform = { id = 65116 } } }
         ns.applyRace(class)
         assert.are.same({ 180, 20594 }, { class.abilities.stoneform.cooldown, class.auras.stoneform.id })
+    end)
+
+    it("registers Blood Fury 20572 for every class and Berserking 20554 over `all`'s stale entries", function()
+        local fury = { id = function() end, copy = { 33702, 20572, 33697 } }
+        for _, class in ipairs({ "WARRIOR", "MAGE", "SHAMAN", "DRUID" }) do
+            load("Orc", { blood_fury = fury, [33702] = fury, [20572] = fury, [33697] = fury }, class)
+            local b = all.abilities.blood_fury
+            assert.are.same({ 20572, 120, "off", "cooldowns" }, { b.id, b.cooldown, b.gcd, b.toggle }, class)
+            assert.are.equal(b, all.abilities[20572])
+        end
+        assert.are.same({ 20572, 15 }, { all.auras.blood_fury.id, all.auras.blood_fury.duration })
+        local sc = all.abilities.shatter_curse
+        assert.are.same({ 1299026, 180, "spell", "defensives" }, { sc.id, sc.cooldown, sc.gcd, sc.toggle })
+        assert.are.same({ 1299026, 8 }, { all.auras.shatter_curse.id, all.auras.shatter_curse.duration })
+        local zerk = { id = 26297 }
+        load("Troll", { berserking = zerk, [26297] = zerk })
+        local z = all.abilities.berserking
+        assert.are.same({ 20554, 180, "off", "cooldowns" }, { z.id, z.cooldown, z.gcd, z.toggle })
+        assert.are.same({ 20554, 10 }, { all.auras.berserking.id, all.auras.berserking.duration })
+        local rr = all.abilities.rapid_regeneration
+        assert.are.same({ 1260270, 180, "off", "defensives" }, { rr.id, rr.cooldown, rr.gcd, rr.toggle })
+        assert.are.same({ true, 6, true }, { rr.channeled, rr.cast, rr.fixedCast }) -- a 6 s self-channel (DB2)
+        assert.are.same({ 1260270, 6 }, { all.auras.rapid_regeneration.id, all.auras.rapid_regeneration.duration })
+        local class = { abilities = { berserking = zerk }, auras = { berserking = { id = 26297 } } }
+        ns.applyRace(class)
+        assert.are.same({ 20554, 20554 }, { class.abilities.berserking.id, class.auras.berserking.id })
     end)
 
     it("takes a class file's spec:RegisterCostMod (Classes.lua) into the same list, for any race", function()
