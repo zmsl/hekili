@@ -153,8 +153,8 @@ event-facade decision 7 for the GCD only: the spec slot and the talent read stay
 | E1 | `Core.lua:822-838` | the `potion` verb's fallback to the retail `tempered_potion` goes: no chosen potion, or one not registered, gives `wait` as before; the dead `or "tempered_potion"` after a found action goes |
 | E2 | `Engine/Spec.lua`, `UI.lua` (2), `Events.lua`, `Options/Options.lua` | 61304 → `ns.VirtualStateInternal.GCD_SPELL` (§5) |
 
-No State.lua edit (§4.1). `Options/DevTools.lua:1117` (a generator template's `potion = tempered_potion` line) is a dev
-tool's text, not a read: untouched.
+No State.lua edit (§4.1). `Options/DevTools.lua:1117` (the skeleton generator's `potion = "tempered_potion"` default)
+goes with E1 (ruling G, 2026-10-15): a generated spec has no potion option, so the verb resolves to `wait` like Core.
 
 ## 7. Checkpoint
 
@@ -183,7 +183,8 @@ research's question 4 (the aura entry fields), first because two families depend
 - Task 3: `NewShared` writes all four registrations for any race; Shared/Auras registers exactly its 19 keys (stubs
   id-less, Power Infusion 15 s, the lust alias and 1245940); `dispellable_magic` reads only the player's debuffs; the
   key test: no dropped key in `tools/packs/*.lua`, `Engine/*.lua` or `Forever/**/*.lua`, no stub outside
-  Shared/Auras.lua, and each key `all` gave up registered by its owner and absent from Engine/Spec.lua.
+  Shared/Auras.lua except in a class file that registers the key itself (a future Priest/Rogue pack), and each key
+  `all` gave up registered by its owner and absent from Engine/Spec.lua.
 - Task 4: Shared/Consumables registers `potion` (with `potion_default`), `healthstone`, `fake_potion` and the `potion`
   alias, the 15 Forever items, no `now`; the best Healthstone in the bags, Minor when none; `tempered_potion`, 191387,
   224464 and `pact_of_gluttony` join the drop list; Core.lua no longer names `tempered_potion`.
@@ -198,4 +199,5 @@ Forever potions, flasks, elixirs and food (the default priorities leave consumab
 trinket effects (`class.trinkets` empty); a lust lockout (`sated`) unless Q3 finds one; target-side dispels, purges and
 enrage removal (R4); absorbs; spell range (`out_of_range`); a Healthstone's heal amount (the sim keeps 25%); the
 `incapacitated` generator's retail `STUN` locType (kept verbatim; a mapping fix needs Forever's locTypes in game); the
-race files' headers still say a racial "replaces `all`'s stock entry" (true of the retail entry this pass removed).
+race files' code (Dwarf, Human, NightElf, Orc and Troll got a one-line header noting the stock `all` entry this pass
+removed; Gnome, Tauren and Undead never had one).

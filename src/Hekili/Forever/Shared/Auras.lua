@@ -23,7 +23,7 @@ local auras = {
     adrenaline_rush = {},
 
     -- State.lua's cooldowns toggle override reads buff.bloodlust.up. Forever's one haste "Bloodlust" (DB2: 3 s cast, no
-    -- duration, no class): kept until the checkpoint shows what a Shaman's lust puts on the player (spec §7 Q1).
+    -- duration, no class): kept until the checkpoint shows what a Shaman's lust puts on the player (spec §7 Q2).
     bloodlust = {
         alias = { "bloodlust_actual" },
         aliasMode = "first",
