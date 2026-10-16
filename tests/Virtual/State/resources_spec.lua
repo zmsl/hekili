@@ -1180,6 +1180,41 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         assert.are.same({ { "SWING_DAMAGE", 45, 10 }, { "SWING_MISSED", "MISS", 10 } }, rows)
     end)
 
+    it(
+        "retracts after a short answer before ORACLE_MIN clamped the step: est, lo and hi back to 8, not below",
+        function()
+            setup(8)
+            credit(10)
+            answer(10.5, SHOUT, false) -- 0.03 s after the outcome: no verdict yet; the ladder clamps under 10
+            answer(10.6, SHOUT, false)
+            assert.are.equal(1, L.oracle.retracted)
+            assert.are.same({ 8, 8, 8 }, power(10.6))
+        end
+    )
+
+    it("retracts a credited crit with its swing: lo back at its pre-credit value", function()
+        setup(2)
+        R.swingCrit[1] = 4
+        at(10, "PLAYER_SWING", 2.2, 0)
+        at(10.47, "UNIT_COMBAT", "target", "WOUND", "CRITICAL", 90, 1)
+        assert.are.same({ 2 + 9 * 0.9 + 4, 15, 2 + 9 * 1.1 + 4 }, power(10.5))
+        answer(10.6, SHOUT, false)
+        assert.are.equal(1, L.oracle.retracted)
+        assert.are.same({ 2, 2, 2 }, power(10.6))
+    end)
+
+    it("rescues nothing for a flip our confirmed credit explains, after a stale short clamped it", function()
+        setup(5)
+        answer(9.95, SHOUT, false)
+        L.theta[2] = 8 -- main, exact, tail: the 45 at 1.3 s is dropped
+        credit(10, 45, 1.3)
+        credit(11, 45, 0.47) -- ours, credited: 5 + 9 crosses 10
+        answer(11.5, SHOUT, false) -- stale (0.03 s after the outcome): the ladder clamps under 10
+        answer(11.67, SHOUT, true)
+        assert.are.same({ 1, 0 }, { L.oracle.confirmed, L.oracle.rescued })
+        assert.are.equal(10, power(11.67)[1]) -- the swing-paid pin [10, 10 + a step)
+    end)
+
     it("labels a soft credit (only its estimate crossed) at half weight and retracts nothing", function()
         setup(8, 0, 8)
         credit(10)

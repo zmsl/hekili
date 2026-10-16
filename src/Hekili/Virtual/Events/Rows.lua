@@ -461,7 +461,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     emit(1, x, actDst[credited], act, flag, amount, at)
     S.Stage(Obs.Swing, at, x, id, 1) -- landed, at the swing's time: the resources family pays its rage (record id)
     if flag == "CRITICAL" then
-        S.Stage(Obs.Swing, t, x, 0, 3)
+        S.Stage(Obs.Swing, t, x, id, 3) -- the same record: a retraction takes the crit back too
     end
     S.Urgent("VS_SWING_LANDED")
 end)

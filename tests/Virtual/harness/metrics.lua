@@ -15,8 +15,7 @@ function M.new()
         wrong = { 0, 0 },
         missed = { 0, 0 },
         falseWounds = { 0, 0 }, -- another source's or an unexplained wound (or our tick or proc) credited: pays rage
-        -- the same, less those the oracle retracted (at the answer the ladder pins from, so before that pin): the rage
-        -- they leave paid
+        -- the same, less those the oracle retracted at their verdict: the rage they leave paid
         falseNet = { 0, 0 },
         falseAvoids = { 0, 0 }, -- another source's or an unexplained avoid credited: mislabels a row, pays nothing
         late = 0,

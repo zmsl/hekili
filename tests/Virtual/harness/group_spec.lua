@@ -33,7 +33,7 @@ describe("group attribution (harness gates) #slow", function()
         check(metrics.rate(m, 1) >= 0.70 and metrics.rate(m, 2) >= 0.70, m)
         check(metrics.falsePer100(m, m.falseNet) <= 6 and drift.over <= 0.10 * drift.windows, m)
         -- model-only error; the oracle removes the difference
-        check(metrics.falsePer100(m) <= 7.33, m) -- measured 6.33
+        check(metrics.falsePer100(m) <= 7.33, m) -- measured 6.35
         -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
         check(metrics.falsePer100(m, m.falseAvoids) <= 1.4, m) -- measured 0.82
     end)

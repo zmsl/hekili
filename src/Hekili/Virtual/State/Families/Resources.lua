@@ -134,14 +134,16 @@ end
 local usable, shortCost, shortT, shortGain, shortEst = {}, {}, {}, {}, {}
 
 -- The usability oracle (harness design §2): per credit record k (Events/Rows.lua's record id, a landed swing's `b`),
--- the slot it paid (0: none), the hand, the deltas it added to est, lo and hi, its hit-rate step, the ability whose
--- next answer judges it (0: not judged: it crossed no rung), whether the prediction is firm (the post-credit floor
--- reaches the cost) and the slot's spend count at the credit. Rows registers I.CreditVerdict and I.Rescue.
+-- the slot it paid (0: none), the hand, est, lo and hi before it and the deltas it added (its crit included), its
+-- hit-rate step, the ability whose next answer judges it (0: not judged: it crossed no rung), whether the prediction
+-- is firm (the post-credit floor reaches the cost) and the slot's spend count at the credit. Rows registers
+-- I.CreditVerdict and I.Rescue.
 local RECORDS = 8
 local recR, recHand, recEst, recLo, recHi, recHit, recA, recFirm, recSpends = {}, {}, {}, {}, {}, {}, {}, {}, {}
+local recE0, recLo0, recHi0 = {}, {}, {}
 for k = 1, RECORDS do
     recR[k], recHand[k], recEst[k], recLo[k], recHi[k], recHit[k], recA[k] = 0, 0, 0, 0, 0, 0, 0
-    recFirm[k], recSpends[k] = false, 0
+    recFirm[k], recSpends[k], recE0[k], recLo0[k], recHi0[k] = false, 0, 0, 0, 0
 end
 
 local function clamp(v, max)
@@ -555,9 +557,11 @@ end
 
 -- Credit record k paid slot r for `hand` (from e, lo and hi before it): its deltas, and which answer will judge it.
 -- The cheapest tracked spender of the slot whose cost the credit's estimate step crosses (e < c <= e + step), firm
--- when the new floor reaches it; a credit crossing no rung is not judged. Allocates nothing.
+-- when the new floor reaches it; a credit crossing no rung is not judged. Its crit calls it again with the same
+-- pre-credit values: the deltas and the crossing then cover both steps. Allocates nothing.
 local function predict(k, r, hand, e, lo, hi, hit)
     recR[k], recHand[k], recHit[k], recSpends[k] = r, hand, hit, R.spends[r]
+    recE0[k], recLo0[k], recHi0[k] = e, lo, hi
     recEst[k], recLo[k], recHi[k] = R.est0[r] - e, R.lo0[r] - lo, R.hi0[r] - hi
     local best, cost = 0, 0
     if not R.readable[r] then
@@ -575,13 +579,24 @@ end
 
 -- The oracle's verdict on the records ability a judges, from its answer `now` at t (harness design §2.2), before the
 -- ladder reads it (§2.6): Rows decides whether the answer falls in the record's window and labels it; a firm credit
--- answered short is retracted here (est, lo, hi and the hit rate lose what it added). One of our spends from the slot
--- since the credit voids it, and so does a NOT answer in its window. Allocates nothing.
-local function judge(a, now, t)
+-- answered short is retracted here (est, lo, hi and the hit rate lose what it added, but never below their pre-credit
+-- values: a short answer before the verdict may already have clamped the step away). One of our spends from the slot
+-- since the credit voids it, and so does a NOT answer in its window. Returns whether a credit of slot r explains a
+-- crossing of cost c: confirmed by this answer, or still awaiting its verdict with its step across c (no rescue then).
+-- Allocates nothing.
+local function back(cur, d, pre, max)
+    local v = cur - d
+    if v < pre then
+        v = cur < pre and cur or pre
+    end
+    return clamp(v, max)
+end
+
+local function judge(a, now, t, r, c)
+    local explained = false
     for k = 1, RECORDS do
         if recA[k] == a then
-            local r = recR[k]
-            if R.spends[r] ~= recSpends[k] then
+            if R.spends[recR[k]] ~= recSpends[k] then
                 recA[k] = 0
             else
                 local ok = nil -- a NOT answer is no rung: in the window it closes the record unjudged
@@ -592,17 +607,25 @@ local function judge(a, now, t)
                 if v ~= nil then
                     recA[k] = 0
                 end
+                local s = recR[k]
                 if v and now ~= YES and recFirm[k] then
-                    local max = R.max[r]
-                    R.est0[r] = clamp(R.est0[r] - recEst[k], max)
-                    R.lo0[r] = clamp(R.lo0[r] - recLo[k], max)
-                    R.hi0[r] = clamp(R.hi0[r] - recHi[k], max)
-                    hitRate[recHand[k]] = hitRate[recHand[k]] - recHit[k]
-                    I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Usable)
+                    local max = R.max[s]
+                    R.est0[s] = back(R.est0[s], recEst[k], recE0[k], max)
+                    R.lo0[s] = back(R.lo0[s], recLo[k], recLo0[k], max)
+                    R.hi0[s] = back(R.hi0[s], recHi[k], recHi0[k], max)
+                    local h = hitRate[recHand[k]] - recHit[k]
+                    hitRate[recHand[k]] = h > 0 and h or 0
+                    I.Sample(R.power[s], "modelled", R.est0[s], t, Obs.Usable)
+                elseif s == r and (v and now == YES or v == nil) then
+                    explained = explained or (recE0[k] < c and c <= recE0[k] + recEst[k])
                 end
             end
+        elseif recA[k] > 0 and recR[k] == r and R.spends[r] == recSpends[k] then
+            -- awaiting another spender's verdict: its step across c explains this one's flip as well
+            explained = explained or (recE0[k] < c and c <= recE0[k] + recEst[k])
         end
     end
+    return explained
 end
 
 I.On(Obs.Usable, function(o, t, lag)
@@ -610,14 +633,12 @@ I.On(Obs.Usable, function(o, t, lag)
     local now = o.b == 1 and YES or (o.c == 1 and SHORT or NOT)
     local was = usable[a]
     usable[a] = now
-    if I.CreditVerdict then
-        judge(a, now, t)
-    end
     local r = I.ab.slot[a]
+    local c = r ~= 0 and I.CostOf(a) or 0
+    local explained = I.CreditVerdict and judge(a, now, t, r, c)
     if r == 0 or now == NOT or R.readable[r] or I.ab.multiCost[a] then
         return -- a second power cost (Overpower's combo points) makes a short answer ambiguous: no rung
     end
-    local c = I.CostOf(a)
     if c <= 0 then
         return
     end
@@ -631,9 +652,11 @@ I.On(Obs.Usable, function(o, t, lag)
             R.pinValid[r] = false
         elseif R.swing[r] > 0 then
             -- below the cost by every gain we modelled: a wound Rows dropped just before this flip may be the swing
-            -- that crossed it (the oracle's rescue): paid now, the crossing is explained and pins exactly
+            -- that crossed it (the oracle's rescue): paid now, the crossing is explained and pins exactly; a credit of
+            -- ours across c (confirmed now, or awaiting its verdict) already explains it. Pays slot r only (one
+            -- swing-paid slot per spec today).
             local hand, crit = nil, false
-            if I.Rescue and R.est0[r] < c then
+            if I.Rescue and not explained and R.est0[r] < c then
                 hand, crit = I.Rescue(r, c - R.est0[r], shortT[a], t)
             end
             if hand then
@@ -695,7 +718,8 @@ end)
 -- 2026-10-16-swing-outcome-pairing): believed rage trails the game's by that step, and lo stays a floor. Its crit
 -- (c = 3, the same credit with a CRITICAL wound, right after its c = 1) adds the hand's `crit` once more, unscaled (an
 -- exact, documented amount; the scale absorbs the model's error). A swing (c = 4) pays nothing; it and c = 1
--- keep the hand's hit rate. A credit's `b` names its record (the oracle): the first slot it pays keeps its deltas.
+-- keep the hand's hit rate. A credit's `b` names its record (the oracle): the first slot it pays keeps its deltas, and
+-- its crit (the same `b`) adds to them.
 I.On(Obs.Swing, function(o, t)
     local hand, c = o.a, o.c
     local hit = 0
@@ -711,13 +735,19 @@ I.On(Obs.Swing, function(o, t)
     elseif c ~= 3 then
         return
     end
-    local k = c == 1 and o.b >= 1 and o.b <= RECORDS and o.b or 0
+    local k = o.b >= 1 and o.b <= RECORDS and o.b or 0
+    if k > 0 and c == 1 then
+        recA[k], recR[k] = 0, 0 -- a fresh record: no stale prediction when its hand pays no slot
+    end
     for r = 1, R.n do
         if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
             local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
             swingStep(r, hand, c, t)
-            if k > 0 then
+            if k > 0 and c == 1 then
                 predict(k, r, hand, e, lo, hi, hit)
+                k = 0
+            elseif k > 0 and recR[k] == r and recHand[k] == hand then
+                predict(k, r, hand, recE0[k], recLo0[k], recHi0[k], recHit[k]) -- its crit: both steps
                 k = 0
             end
         end
