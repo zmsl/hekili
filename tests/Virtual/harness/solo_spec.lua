@@ -1,6 +1,7 @@
 -- tests/Virtual/harness/solo_spec.lua (harness design §3.4, decisions D4-D5): solo fights of the log-2 profile, a
 -- damage buff in combat and a form change, through the real Rows.lua; the gates of §3.4.
 local metrics = require("Virtual.harness.metrics")
+local scenarios = require("Virtual.harness.scenarios")
 
 local function check(ok, m)
     assert.is_true(ok, metrics.line(m))
@@ -39,6 +40,17 @@ describe("solo attribution (harness gates) #slow", function()
             -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
             check(metrics.falsePer100(m, m.falseAvoids) <= 0.6, m) -- measured 0.10
             check(m.wrong[1] <= 0.03 * m.own[1] and m.wrong[2] <= 0.03 * m.own[2], m)
+        end
+    )
+
+    it(
+        "oracle: retracts <= 0.5% of our own credits; its rescues are ours (>= 95%, or one miss) (200 fights)",
+        function()
+            local m = metrics.fights(scenarios.oracle({}), 200)
+            assert.is_true(m.falseRetracted <= 0.005 * (m.right[1] + m.right[2]), metrics.oracleLine(m))
+            -- solo leaves the oracle little to rescue (2 in 200 fights): one wrong rescue is within the gate
+            assert.is_true(m.rescued - m.rescuedOurs <= math.max(1, 0.05 * m.rescued), metrics.oracleLine(m))
+            assert.is_true(m.judged > 0 and m.danger == 0, metrics.oracleLine(m))
         end
     )
 end)

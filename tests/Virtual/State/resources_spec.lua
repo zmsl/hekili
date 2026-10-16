@@ -1087,3 +1087,148 @@ describe("resources", function()
         end)
     end)
 end)
+
+describe("the usability oracle (harness design §2: Rows' credits judged by the next usability answer)", function()
+    local api, ctl, ns, VS, I, L, R, saved, rows
+    local SHOUT, STRIKE = fs.SHOUT, fs.STRIKE -- the fake spec's spenders at 10 and 15
+    local USABLE, SHORT = { true, false }, { false, true }
+
+    before_each(function()
+        api, ctl = fake.new()
+        saved = {}
+        for k, v in pairs({ CreateFrame = api.CreateFrame, issecretvalue = api.issecretvalue, GetTime = api.GetTime }) do
+            saved[k] = rawget(_G, k) or false
+            _G[k] = v
+        end
+        ns = load.module()
+        VS, I = ns.VirtualState, ns.VirtualStateInternal
+        L, R = I.Log, I.res
+        I.Build(fs.def(fs.new(9)), 1)
+        ctl.damage[1], ctl.damage[2], ctl.damage[3], ctl.damage[4] = 36, 50, 24, 32
+        ctl.now = 2
+        VS.Start(api)
+        rows = {}
+        local GetInfo = ns.Facade.CombatLogGetCurrentEventInfo
+        local sink = I.Events.CreateFrame("Frame")
+        sink:SetScript("OnEvent", function()
+            local t, ev, _, _, _, _, _, _, _, _, _, a12 = GetInfo()
+            if ev == "SWING_DAMAGE" or ev == "SWING_MISSED" then
+                rows[#rows + 1] = { ev, a12, t }
+            end
+        end)
+        sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+    end)
+
+    after_each(function()
+        for k, v in pairs(saved) do
+            _G[k] = v or nil
+        end
+    end)
+
+    -- The client event at t, then a drain, then the rows it queued.
+    local function at(t, event, ...)
+        ctl.Tick(t)
+        ctl.Fire(event, ...)
+        ctl.Tick(t)
+        fs.fold(ns, t)
+        ctl.Tick(t)
+    end
+    local function answer(t, spell, ok)
+        ctl.usable[spell] = ok and USABLE or SHORT
+        at(t, "SPELL_UPDATE_USABLE")
+    end
+    -- In combat from 9.9 s at `est` (lo `lo`, hi `hi`); no spender has answered yet (no rung).
+    local function setup(est, lo, hi)
+        at(9.9, "PLAYER_REGEN_DISABLED")
+        R.est0[1], R.lo0[1], R.hi0[1] = est, lo or est, hi or est
+    end
+    local function credit(t, amount, lag)
+        at(t, "PLAYER_SWING", 2.2, 0)
+        at(t + (lag or 0.47), "UNIT_COMBAT", "target", "WOUND", "", amount or 45, 1)
+    end
+    local function power(t)
+        local p = VS.Power(fs.RAGE, t)
+        return { p.lo, p.est, p.hi }
+    end
+
+    it("confirms a firm credit across a cost when the answer flips usable, and lowers its class's bar", function()
+        setup(8)
+        credit(10)
+        assert.are.same({ 8 + 9 * 0.9, 17, 8 + 9 * 1.1 }, power(10.5))
+        answer(10.52, SHOUT, true) -- before ORACLE_MIN after the outcome: no verdict yet
+        assert.are.equal(0, L.oracle.judged)
+        answer(10.6, SHOUT, true)
+        assert.are.same({ 1, 1 }, { L.oracle.judged, L.oracle.confirmed })
+        assert.are.equal(L.THETA / 1.1, L.theta[1]) -- main, exact, core band
+    end)
+
+    it("retracts a firm credit answered short: est, lo and hi back, the swing pending again", function()
+        setup(8)
+        credit(10)
+        answer(10.6, SHOUT, false)
+        assert.are.same({ 1, 1 }, { L.oracle.judged, L.oracle.retracted })
+        assert.are.same({ 8, 8, 8 }, power(10.6)) -- lo never above its pre-credit value
+        assert.are.equal(L.THETA * 1.5, L.theta[1])
+        at(10.9, "UNIT_COMBAT", "target", "WOUND", "", 44, 1) -- in the tail: the re-held swing takes it
+        assert.are.same({ { "SWING_DAMAGE", 45, 10 }, { "SWING_DAMAGE", 44, 10 } }, rows)
+    end)
+
+    it("closes a retracted swing past its window as SWING_MISSED (two rows for that swing, decision D9)", function()
+        setup(8)
+        credit(10, 45, 1.2)
+        answer(11.6, SHOUT, false) -- 0.4 s after the outcome, 1.6 s after the swing
+        assert.are.same({ { "SWING_DAMAGE", 45, 10 }, { "SWING_MISSED", "MISS", 10 } }, rows)
+    end)
+
+    it("labels a soft credit (only its estimate crossed) at half weight and retracts nothing", function()
+        setup(8, 0, 8)
+        credit(10)
+        answer(10.6, SHOUT, false)
+        assert.are.same({ 1, 0 }, { L.oracle.soft, L.oracle.retracted })
+        assert.are.equal(L.THETA * 1.22, L.theta[1])
+        assert.are.equal(8.1, power(10.6)[1]) -- the credit's floor stays; the ladder clamped est and hi under 10
+    end)
+
+    it("gives no verdict when one of our casts spent from the slot between the outcome and the answer", function()
+        setup(8)
+        credit(10)
+        at(10.55, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", SHOUT)
+        answer(10.6, SHOUT, false)
+        assert.are.equal(0, L.oracle.judged)
+    end)
+
+    it(
+        "rescues a dropped wound for a flip nothing explains: its swing paid, its row out; without one, today's pin",
+        function()
+            setup(5)
+            answer(9.95, SHOUT, false)
+            L.theta[2] = 8 -- main, exact, tail: the 45 at 1.3 s (LR 7.2) is dropped
+            credit(10, 45, 1.3)
+            assert.are.same({ 0, 0 }, { #rows, L.oracle.rescued })
+            answer(11.45, SHOUT, true)
+            assert.are.same({ 1, 0 }, { L.oracle.rescued, L.oracle.rescuedLate })
+            assert.are.same({ { "SWING_DAMAGE", 45, 10 } }, rows)
+            assert.are.same({ 14, 14, 14 }, power(11.45)) -- 5 + 9, then the explained flip pins exactly
+            answer(12, SHOUT, false)
+            R.est0[1], R.lo0[1], R.hi0[1] = 5, 5, 5
+            answer(12.5, SHOUT, true) -- nothing dropped: the swing-paid pin [10, 10 + a step)
+            assert.are.same({ 10, 10, 10 + 9 * 1.1 }, power(12.5))
+        end
+    )
+
+    it("caps a class's bar at THETA_MAX after ten negatives and floors it at THETA_MIN after positives", function()
+        setup(8)
+        for k = 0, 9 do
+            credit(10 + 3 * k)
+            answer(10.6 + 3 * k, SHOUT, false)
+        end
+        assert.are.equal(L.THETA_MAX, L.theta[1])
+        for k = 10, 39 do
+            R.est0[1], R.lo0[1], R.hi0[1] = 8, 8, 8
+            credit(10 + 3 * k)
+            answer(10.6 + 3 * k, SHOUT, true)
+            answer(11 + 3 * k, SHOUT, false)
+        end
+        assert.are.equal(L.THETA_MIN, L.theta[1])
+    end)
+end)

@@ -55,6 +55,36 @@ L.credited, L.background, L.avoidsBack = { 0, 0, 0 }, 0, 0
 -- the provisional avoids taken, and the latest one's swing (hand, time): what the harness scores avoid credits by
 L.avoids, L.avoidX, L.avoidT = 0, 0, 0
 
+-- The usability oracle (harness design §2, decision D8): a credit's record is judged by the first usability answer
+-- ORACLE_MIN to ORACLE_MAX s after its outcome (UNMEASURED until G7); labels move the credit bar of the record's class,
+-- theta[k] for k = hand x amount class (exact, loose, above, unknown) x lag band (core: within 2 spr; tail), between
+-- THETA_MIN and THETA_MAX (start THETA; kept across pulls, reset at load).
+L.ORACLE_MIN, L.ORACLE_MAX = 0.1, 0.6
+L.THETA_MIN, L.THETA_MAX = 2, 16
+L.theta = {}
+for k = 1, 16 do
+    L.theta[k] = L.THETA
+end
+L.oracle = { judged = 0, confirmed = 0, retracted = 0, soft = 0, rescued = 0, rescuedLate = 0 }
+-- Credit records (ids 1-8, a ring; `Swing` c = 1's b): the outcome's time, amount and flag, the swing's time, hand,
+-- destination, window and main reference, the class index, LR, and whether a verdict is still open.
+local RECORDS = 8
+local recT, recAmount, recFlag, recAt, recHand, recDst, recW, recRef, recK, recLR, recOpen =
+    {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
+for k = 1, RECORDS do
+    recT[k], recAmount[k], recFlag[k], recAt[k], recHand[k], recDst[k], recW[k], recRef[k] = 0, 0, "", 0, 0, "", 0, 0
+    recK[k], recLR[k], recOpen[k] = 1, 0, false
+end
+local recNext = 0
+-- The wounds dropped as background (DROP, a ring), each for one off-hand window: time, amount, flag, its best
+-- candidate swing's hand and time, the class index, LR, and whether that swing was claimed since (credited, rescued).
+local DROP = 8
+local dT, dAmount, dFlag, dHand, dAt, dK, dLR, dUsed = {}, {}, {}, {}, {}, {}, {}, {}
+for i = 1, DROP do
+    dT[i], dAmount[i], dFlag[i], dHand[i], dAt[i], dK[i], dLR[i], dUsed[i] = 0, 0, "", 0, 0, 1, 0, true
+end
+local dNext = 0
+
 local N = 8
 -- Pending own actions: kind 1 swing (hand in `x`), 2 cast (spell ID in `x`); `w` its window (s); `t` 0 is free.
 -- `ref` an off-hand swing's main reference (the latest main swing at or before it; 0 none); `lr` and `avoid` the LR
@@ -273,16 +303,23 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     hold(2, spellID, Plain(api, api.UnitGUID("target")) or "", CAST_WINDOW, t)
 end)
 
+-- The theta index of hand h's amount class `cls` (1-3, 4 unknown) at lag d from reference `ref`: core band (within 2
+-- spr of the median) or tail.
+local function thetaIndex(h, cls, ref, d)
+    local band = math.abs(d - L.med[ref]) <= 2 * L.spr[ref] and 1 or 2
+    return (h - 1) * 8 + (cls - 1) * 2 + band
+end
+
 -- The best pending swing for an outcome at t (amount class per hand from `classOf`, or q = 1 for every hand when
--- `unknown`; an avoid when `avoid`): its slot, LR, reference and lag, and the runner-up's LR. Allocates nothing.
+-- `unknown`; an avoid when `avoid`): its slot, LR, reference, lag, the runner-up's LR and its theta index (wounds).
+-- Allocates nothing.
 local function score(t, amount, flag, avoid, unknown)
-    local best, bestLR, ref, lag, second = nil, 0, 0, 0, 0
+    local best, bestLR, ref, lag, second, idx = nil, 0, 0, 0, 0, 1
     for i = 1, N do
         if actT[i] > 0 and actKind[i] == 1 and not (avoid and actAvoid[i] ~= "") then
             local f, r = density(i, t)
-            local q, c = L.Q_AVOID, 7
+            local q, c, cls = L.Q_AVOID, 7, 4
             if not avoid then
-                local cls = 0
                 if unknown then
                     q, c = 1, 8
                 else
@@ -293,14 +330,32 @@ local function score(t, amount, flag, avoid, unknown)
             local lr = f > 0 and q > 0 and q * f / lambda(c) or 0
             if lr > actLR[i] or actAvoid[i] == "" then -- a wound takes a provisionally avoided swing only by beating it
                 if lr > bestLR then
+                    local d = r == 3 and t - actRef[i] or t - actT[i]
                     best, bestLR, ref, lag, second = i, lr, r, t - actT[i], bestLR
+                    idx = thetaIndex(actX[i], cls, r, d)
                 elseif lr > second then
                     second = lr
                 end
             end
         end
     end
-    return best, bestLR, ref, lag, second
+    return best, bestLR, ref, lag, second, idx
+end
+
+-- A wound nobody took into the dropped ring, with its best candidate swing (none: not kept).
+local function drop(t, amount, flag, hand, at, k, lr)
+    dNext = dNext % DROP + 1
+    dT[dNext], dAmount[dNext], dFlag[dNext], dHand[dNext], dAt[dNext] = t, amount, flag, hand, at
+    dK[dNext], dLR[dNext], dUsed[dNext] = k, lr, false
+end
+
+-- The swing of `hand` at `at` was claimed: its dropped wounds are no rescue's.
+local function claimed(hand, at)
+    for i = 1, DROP do
+        if dHand[i] == hand and dAt[i] == at then
+            dUsed[i] = true
+        end
+    end
 end
 
 -- An outcome nobody of ours claimed: counted, and while in combat with nothing of ours pending (the quiet time it is a
@@ -351,7 +406,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         return
     end
     local p = cast(t, not avoid and SAME_FRAME or nil)
-    local credited, lr, ref, lag, second = nil, 0, 0, 0, 0
+    local credited, lr, ref, lag, second, k, short = nil, 0, 0, 0, 0, 1, nil
     local unknown = false
     if not p and white and (AVOIDS[act] or not avoid) and not (not avoid and t - lastW0 <= SAME_FRAME) then
         if not avoid then
@@ -359,9 +414,9 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
             local form = Plain(api, api.GetShapeshiftForm()) -- secret: Plain; plain in combat (Facade.lua's stance row)
             unknown = maxMain <= 0 or form ~= I.damageForm
         end
-        credited, lr, ref, lag, second = score(t, amount, flag, avoid, unknown)
-        if credited and lr < L.THETA then
-            credited = nil
+        credited, lr, ref, lag, second, k = score(t, amount, flag, avoid, unknown)
+        if credited and lr < (avoid and L.THETA or L.theta[k]) then
+            short, credited = not avoid and credited or nil, nil
         end
     end
     if not p and not credited and not avoid and white then
@@ -374,6 +429,9 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         emit(2, x, actDst[p], act, flag, amount, at)
         return
     elseif not credited then
+        if short then -- a wound that fell short of its best swing's bar: kept for a rescue
+            drop(t, amount, flag, actX[short], actT[short], k, lr)
+        end
         background(act, amount, flag, white, avoid, unknown)
         return
     end
@@ -386,7 +444,13 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     if actAvoid[credited] ~= "" then
         L.avoidsBack = L.avoidsBack + 1 -- the avoid it held was someone else's after all
     end
+    recNext = recNext % RECORDS + 1
+    local id = recNext
+    recT[id], recAmount[id], recFlag[id], recAt[id], recHand[id] = t, amount, flag, at, x
+    recDst[id], recW[id], recRef[id], recK[id], recLR[id], recOpen[id] =
+        actDst[credited], actW[credited], actRef[credited], k, lr, true
     actT[credited], actAvoid[credited], actLR[credited] = 0, "", 0
+    claimed(x, at)
     L.credited[x] = L.credited[x] + 1
     if not unknown and classOf(x, amount, flag) == 1 and second < L.THETA then
         local d = ref == 3 and t - actRef[credited] or lag
@@ -395,12 +459,96 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         end
     end
     emit(1, x, actDst[credited], act, flag, amount, at)
-    S.Stage(Obs.Swing, at, x, 0, 1) -- landed, at the swing's time: the resources family pays its rage
+    S.Stage(Obs.Swing, at, x, id, 1) -- landed, at the swing's time: the resources family pays its rage (record id)
     if flag == "CRITICAL" then
         S.Stage(Obs.Swing, t, x, 0, 3)
     end
     S.Urgent("VS_SWING_LANDED")
 end)
+
+--- (harness design §2.2) The verdict on credit record `id` from a usability answer at t (`ok`: usable, false: short,
+--- nil: not usable for another reason; `firm`: the credit's floor reached the cost), asked by Families/Resources.lua:
+--- nil before ORACLE_MIN after the outcome (no verdict yet), false once ORACLE_MAX has passed, on a nil `ok` or when the
+--- record is closed, true when judged. Usable confirms it (theta of its class / 1.1). Short and firm retracts it
+--- (theta x 1.5): its swing is pending again inside its window, else closed as SWING_MISSED (the SWING_DAMAGE row
+--- already went out: two rows for that swing, decision D9), and its wound joins the dropped ring as background. Short
+--- and soft labels it at half weight (x 1.22). Allocates nothing.
+function I.CreditVerdict(id, ok, t, firm)
+    if not recOpen[id] then
+        return false
+    end
+    local d = t - recT[id]
+    if d < L.ORACLE_MIN then
+        return nil
+    end
+    recOpen[id] = false
+    if d > L.ORACLE_MAX or ok == nil then
+        return false -- past its window, or a NOT answer (no rung): no verdict
+    end
+    local o, th, k = L.oracle, L.theta, recK[id]
+    o.judged = o.judged + 1
+    if ok then
+        o.confirmed = o.confirmed + 1
+        th[k] = th[k] / 1.1 > L.THETA_MIN and th[k] / 1.1 or L.THETA_MIN
+    elseif firm then
+        o.retracted = o.retracted + 1
+        th[k] = th[k] * 1.5 < L.THETA_MAX and th[k] * 1.5 or L.THETA_MAX
+        local hand, at = recHand[id], recAt[id]
+        if t - at <= recW[id] then
+            actRef[hold(1, hand, recDst[id], recW[id], at)] = recRef[id]
+        else
+            emit(1, hand, recDst[id], "MISS", "", 0, at)
+        end
+        L.background = L.background + 1
+        drop(recT[id], recAmount[id], recFlag[id], hand, at, k, recLR[id])
+    else
+        o.soft = o.soft + 1
+        th[k] = th[k] * 1.22 < L.THETA_MAX and th[k] * 1.22 or L.THETA_MAX
+    end
+    return true
+end
+
+--- (harness design §2.3) A flip of slot r to usable that leaves `need` unexplained (Families/Resources.lua): the dropped
+--- wound that arrived ORACLE_MIN to ORACLE_MAX before it (the flip trails the wound that caused it, as a verdict does;
+--- and not before `since`, the short report, less that window), whose swing nothing claimed and whose step covers
+--- `need`, the best by LR. Its swing's row goes out if it is still pending (else rage only: rescuedLate); a
+--- positive label. Returns its hand, whether it was a crit (Resources pays it) and its swing's time, or nil. Allocates
+--- nothing.
+function I.Rescue(r, need, since, t)
+    local best
+    for i = 1, DROP do
+        local h = dHand[i]
+        local age = t - dT[i]
+        if not dUsed[i] and dT[i] >= since - L.ORACLE_MAX and age >= L.ORACLE_MIN and age <= L.ORACLE_MAX then
+            local step = I.SwingValue(r, h) * I.res.scale[r]
+            if dFlag[i] == "CRITICAL" then
+                step = step + I.SwingCrit(r, h)
+            end
+            if step >= need - I.EPS and (not best or dLR[i] > dLR[best]) then
+                best = i
+            end
+        end
+    end
+    if not best then
+        return nil
+    end
+    local h, at, o = dHand[best], dAt[best], L.oracle
+    claimed(h, at)
+    o.rescued = o.rescued + 1
+    local late = true
+    for i = 1, N do
+        if actT[i] == at and actKind[i] == 1 and actX[i] == h then
+            actT[i], actAvoid[i], actLR[i], late = 0, "", 0, false
+            emit(1, h, actDst[i], "WOUND", dFlag[best], dAmount[best], at)
+        end
+    end
+    if late then
+        o.rescuedLate = o.rescuedLate + 1
+    end
+    local k = dK[best]
+    L.theta[k] = L.theta[k] / 1.1 > L.THETA_MIN and L.theta[k] / 1.1 or L.THETA_MIN
+    return h, dFlag[best] == "CRITICAL", at
+end
 
 -- Closes the windows at `now`: a swing holding a provisional avoid becomes SWING_MISSED, an unpaired one SWING_DAMAGE
 -- with amount 0, each at its own time (and stages nothing: no rage); an unpaired cast is dropped. Every OnUpdate (the
