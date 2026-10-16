@@ -595,7 +595,7 @@ do
 
             if tSpell then
                 class.abilities.trinket1 = class.abilities[ tSpell ]
-                class.specs[ 0 ].abilities.trinket2 = class.abilities[ tSpell ]
+                class.specs[ 0 ].abilities.trinket1 = class.abilities[ tSpell ]
 
                 state.trinket.t1.__usable = isUsable
                 state.trinket.t1.__ability = tSpell
@@ -1773,7 +1773,7 @@ RegisterEvent( "COMBAT_LOG_EVENT_UNFILTERED", function ( event ) CLEU_HANDLER( e
 
 do
     local function UNIT_COMBAT( event, unit, action, _, amount )
-        if amount > 0 and action == 'HEAL' then
+        if amount and amount > 0 and action == 'HEAL' then
             ns.storeHealing( GetTime(), amount )
         end
     end

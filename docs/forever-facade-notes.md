@@ -1,6 +1,6 @@
 # Forever facade notes
 
-Status (2026-10-14, after the cleanup and Checkpoint B): 175 names in `tools/api_inventory.txt`: 124 passthrough, 51 stub.
+Status (2026-10-15, after the shared-content pass): 176 names in `tools/api_inventory.txt`: 123 passthrough, 26 hybrid, 27 virtual (counts from the facade's own summary).
 
 Working notes for Phase 2 (the VirtualGameAPI-1.0 skeleton) and the hand-off to Phases 1 and 3b.
 
@@ -262,3 +262,8 @@ Every stub site in the retained files that throws or yields a wrong value. Sites
   `BuiltFor = 110200`) and `Core.lua` 205 (`BuiltFor > CurrentBuild` reports Hekili as built for a newer client).
 - Division-by-zero audit: the NaN and `inf` sites in the table above.
 - Load-time nils: the stubs above cover reads; globals the facade does not list stay a Phase 3b audit.
+
+## Known reads outside the inventory
+
+- `Libs/LibSpellRange-1.0` calls `C_Spell.IsSpellInRange` directly (Libs are excluded from tools/check_api_reads.sh); probed plain OUT of combat (2026-10-15, Charge 100 → true/false); in combat unprobed. `action.<key>.in_range` (State.lua ~5070) reads it through `ability.rangeSpell or ability.id`: for a RANKED spell `ability.id` is rank 1, the client answers nil for an unknown rank, and Hekili treats nil as "in range". Only single-rank abilities (Charge) or ones with `rangeSpell` set to the known rank get a real answer.
+- `LibRangeCheck-3.0:GetRange("target")` answers `100, nil` on Forever (2026-10-15, one sample contradicted by CheckInteractDistance): `target.minR/maxR/distance` and the `within`/`outside` conditions are unusable; no pack reads them.
