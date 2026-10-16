@@ -61,6 +61,7 @@ local R = {
     maxDef = {},
     maxMods = {},
     maxRead = {},
+    gain = {},
 }
 I.res = R
 R.slotOf, R.slotOfToken = {}, {}
@@ -113,8 +114,9 @@ local function maxOf(r)
     return m
 end
 
--- By ability index a: the last usability answer and the last short report (cost, time).
-local usable, shortCost, shortT = {}, {}, {}
+-- By ability index a: the last usability answer and the last short report (cost, time, the slot's own gains so far
+-- and its estimate then).
+local usable, shortCost, shortT, shortGain, shortEst = {}, {}, {}, {}, {}
 
 local function clamp(v, max)
     if v < 0 then
@@ -171,7 +173,7 @@ I.OnBuild(function(def, now)
         R.decl[r] = rate
         R.regE[r], R.regL[r], R.regH[r] = rate, rate * (1 - I.REGEN_SPREAD), rate * (1 + I.REGEN_SPREAD)
         R.dev[r], R.scale[r], R.spread[r] = 0, 1, I.REGEN_SPREAD
-        R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r] = 0, 0, 0, false
+        R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r] = 0, 0, 0, false, 0
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
         R.decayDef[r] = d.decay
         R.decay[r] = decayOf(r)
@@ -221,7 +223,7 @@ I.OnBuild(function(def, now)
         end
     end
     for a = 1, #def.abilities do
-        usable[a], shortCost[a], shortT[a] = UNKNOWN, 0, 0
+        usable[a], shortCost[a], shortT[a], shortGain[a], shortEst[a] = UNKNOWN, 0, 0, 0, 0
     end
 end)
 
@@ -501,7 +503,13 @@ I.On(Obs.Usable, function(o, t, lag)
     end
     if was == SHORT and now == YES and lag <= 0 and abs(c - shortCost[a]) <= I.EPS then
         -- It just became affordable at an unchanged cost: it crossed the cost since the last short report.
-        if R.swing[r] > 0 then
+        if R.gain[r] - shortGain[a] >= c - shortEst[a] then
+            -- our own gain since then explains the crossing: exact at the estimate (at least c), no regen measurement
+            local e = R.est0[r]
+            R.pinValid[r] = false
+            pin(r, e > c and e or c, 0, t, "pinned", Obs.Usable)
+            R.pinValid[r] = false
+        elseif R.swing[r] > 0 then
             -- a swing-paid resource crosses at a swing: [c, c + one step of the larger hand), measured at its midpoint
             local v, off = I.SwingValue(r), R.swingOff[r] ~= 0 and I.SwingValue(r, 2) or 0
             local step = (v > off and v or off) * (R.scale[r] + R.spread[r])
@@ -514,7 +522,7 @@ I.On(Obs.Usable, function(o, t, lag)
         I.Sample(R.power[r], "pinned", R.est0[r], t, Obs.Usable)
     end
     if now == SHORT then
-        shortCost[a], shortT[a] = c, t - lag
+        shortCost[a], shortT[a], shortGain[a], shortEst[a] = c, t - lag, R.gain[r], R.est0[r]
     end
 end)
 
@@ -610,6 +618,9 @@ function I.ResourceShift(r, delta, t, event)
     R.lo0[r] = clamp(R.lo0[r] + delta, max)
     R.hi0[r] = clamp(R.hi0[r] + delta, max)
     R.pinDelta[r] = R.pinDelta[r] + delta
+    if delta > 0 then
+        R.gain[r] = R.gain[r] + delta -- explains a flip (the Usable apply)
+    end
     I.Sample(R.power[r], "modelled", R.est0[r], t, event)
 end
 
