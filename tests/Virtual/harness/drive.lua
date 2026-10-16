@@ -45,9 +45,12 @@ function M.boot(o)
     -- captures, by stream index: the hand credited and the swing time it was credited at (0: none)
     c.crHand, c.crAt, c.crTok, c.verdict, c.recIdx, c.onus = {}, {}, {}, {}, {}, {}
     c.lateHand, c.lateAt = {}, {} -- credits staged outside an event (the oracle's rescue)
+    c.missHand, c.missAt = {}, {} -- the SWING_MISSED rows (hand, swing time): avoids credited to our swings
+    c.avIdx, c.avHand, c.avAt = {}, {}, {} -- each provisional avoid taken: its stream index and the swing's hand, time
     c.win, c.winT, c.loOver, c.estOver, c.danger = {}, {}, {}, {}, {}
     for i = 1, CAP do
         c.crHand[i], c.crAt[i], c.crTok[i], c.lateHand[i], c.lateAt[i], c.win[i], c.winT[i] = 0, 0, false, 0, 0, 0, 0
+        c.missHand[i], c.missAt[i], c.avIdx[i], c.avHand[i], c.avAt[i] = 0, 0, 0, 0, 0
         c.loOver[i], c.estOver[i], c.danger[i] = 0, 0, 0
         c.verdict[i], c.onus[i] = 0, ""
     end
@@ -120,6 +123,9 @@ function M.boot(o)
             rows.swing, hand = rows.swing + 1, a21 and 2 or 1
         elseif ev == "SWING_MISSED" then
             rows.missed, hand = rows.missed + 1, a13 and 2 or 1
+            if rows.missed <= CAP then
+                c.missHand[rows.missed], c.missAt[rows.missed] = hand, t
+            end
         elseif ev == "SPELL_DAMAGE" or ev == "SPELL_MISSED" then
             rows.spell = rows.spell + 1
         end
@@ -131,7 +137,7 @@ function M.boot(o)
         end
     end)
     sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-    c.nLate, c.nWin, c.truth, c.hits = 0, 0, 0, 0
+    c.nLate, c.nWin, c.truth, c.hits, c.nAv = 0, 0, 0, 0, 0
     return c
 end
 
@@ -198,7 +204,7 @@ function M.run(c, s, offset)
         c.crHand[i], c.crAt[i], c.verdict[i], c.onus[i] = 0, 0, 0, ""
     end
     c.hits = 0
-    c.crits[1], c.crits[2], c.landed[1], c.landed[2], c.nLate, c.nWin, c.truth = 0, 0, 0, 0, 0, 0, 0
+    c.crits[1], c.crits[2], c.landed[1], c.landed[2], c.nLate, c.nWin, c.truth, c.nAv = 0, 0, 0, 0, 0, 0, 0, 0
     local rows = c.rows
     rows.swing, rows.missed, rows.spell, rows.noDst, rows.order = 0, 0, 0, 0, 0
     c.lastRow[1], c.lastRow[2] = 0, 0
@@ -216,7 +222,12 @@ function M.run(c, s, offset)
             op(c, ctl, ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i])
         else
             c.cur = i
+            local avoids = c.L.avoids
             ctl.Fire(ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
+            if c.L.avoids > avoids and c.nAv < CAP then
+                c.nAv = c.nAv + 1
+                c.avIdx[c.nAv], c.avHand[c.nAv], c.avAt[c.nAv] = i, c.L.avoidX, c.L.avoidT
+            end
             c.cur = 0
         end
     end

@@ -36,6 +36,8 @@ function M.new()
         onusRight = 0,
         hitsFed = 0,
         hitsStaged = 0,
+        avoidRight = 0,
+        avoidWrong = 0,
     }
 end
 
@@ -61,7 +63,7 @@ function M.score(m, c, s, W, step, after)
     m.fights = m.fights + 1
     for i = 1, s.n do
         local ev = s.ev[i]
-        if ev == "PLAYER_SWING" then
+        if ev == "PLAYER_SWING" and s.t[i] >= after then -- the same window as the false credits
             m.swings = m.swings + 1
         elseif ev == "UNIT_COMBAT" and s.a1[i] == "target" and s.t[i] >= after then
             local h, cr = s.hand[i], c.crHand[i]
@@ -90,6 +92,29 @@ function M.score(m, c, s, W, step, after)
         end
         if c.crHand[i] > 0 and not c.crTok[i] then
             m.nonTarget = m.nonTarget + 1
+        end
+    end
+    -- the avoids credited to our swings (SWING_MISSED rows), each by the outcome its swing took: that swing's own
+    -- avoid (right), another swing's of ours (wrong), or another source's or an unexplained one (a false credit)
+    for k = 1, math.min(c.rows.missed, #c.missHand) do
+        local h, at = c.missHand[k], c.missAt[k]
+        if at >= after then
+            local i = 0
+            for a = c.nAv, 1, -1 do
+                if c.avHand[a] == h and c.avAt[a] == at then
+                    i = c.avIdx[a]
+                    break
+                end
+            end
+            if i > 0 and s.src[i] == 1 then
+                if s.hand[i] == h and s.swingT[i] == at then
+                    m.avoidRight = m.avoidRight + 1
+                else
+                    m.avoidWrong = m.avoidWrong + 1
+                end
+            else
+                m.falses[h] = m.falses[h] + 1
+            end
         end
     end
     local HIT = { WOUND = true, BLOCK = true, DODGE = true, PARRY = true, MISS = true, HEAL = true }
@@ -201,7 +226,7 @@ end
 function M.line(m)
     return string.format(
         "fights=%d main %d/%d (wrong %d, missed %d) off %d/%d (wrong %d, missed %d) false %d/%d (%.2f per 100 swings) "
-            .. "over %d/%d windows, err mean %.2f max %.1f",
+            .. "avoids right %d wrong %d, over %d/%d windows, err mean %.2f max %.1f",
         m.fights,
         m.right[1],
         m.own[1],
@@ -214,6 +239,8 @@ function M.line(m)
         m.falses[1],
         m.falses[2],
         M.falsePer100(m),
+        m.avoidRight,
+        m.avoidWrong,
         m.over,
         m.windows,
         m.windows > 0 and m.errSum / m.windows or 0,

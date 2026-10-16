@@ -46,12 +46,14 @@ L.LAMBDA0, L.T0, L.TAU = 0.01, 5, 10
 -- or before it: G5's two sharp references), seeds (MEASURED: P log 2, G5) learned online from clean credits.
 L.MED0, L.SPR0 = { 0.474, 0.703, 1.686 }, { 0.060, 0.020, 0.020 }
 L.med, L.spr = { 0.474, 0.703, 1.686 }, { 0.060, 0.020, 0.020 }
--- The background: per class, the outcomes that arrived while nothing of ours was pending (1-3 main exact, loose,
--- above; 4-6 off; 7 avoid; 8 white with no usable cache), and the quiet time they came in; both decay with combat
+-- The background: per class, the white outcomes that arrived while nothing of ours was pending (1-3 main exact, loose,
+-- above; 4-6 off; 7 avoid; 8 white, any amount), and the quiet time they came in; both decay with combat
 -- time (decision D6: they persist across pulls).
 L.bg, L.quiet = { 0, 0, 0, 0, 0, 0, 0, 0 }, 0
 local lastT, lastW0, lastMain = 0, -1, 0
 L.credited, L.background, L.avoidsBack = { 0, 0, 0 }, 0, 0
+-- the provisional avoids taken, and the latest one's swing (hand, time): what the harness scores avoid credits by
+L.avoids, L.avoidX, L.avoidT = 0, 0, 0
 
 local N = 8
 -- Pending own actions: kind 1 swing (hand in `x`), 2 cast (spell ID in `x`); `w` its window (s); `t` 0 is free.
@@ -302,19 +304,23 @@ local function score(t, amount, flag, avoid, unknown)
 end
 
 -- An outcome nobody of ours claimed: counted, and while in combat with nothing of ours pending (the quiet time it is a
--- rate over), it teaches the background rate of each class it qualifies for (a white wound in every hand's class it
--- fits).
-local function background(amount, flag, avoid, unknown)
+-- rate over), it teaches the background rate of each white class it qualifies for: a white avoid the avoid class, a
+-- white wound the any-amount class always (its rate is over the same quiet time) and every hand's class it fits while
+-- the cache is usable. A non-physical outcome, or a RESIST / IMMUNE / ABSORB, counts in no class (§1.3, §1.4).
+local function background(act, amount, flag, white, avoid, unknown)
     L.background = L.background + 1
-    if pending() or not I.inCombat then
+    if pending() or not I.inCombat or not white then
         return
     end
     local bg = L.bg
     if avoid then
-        bg[7] = bg[7] + 1
-    elseif unknown then
-        bg[8] = bg[8] + 1
-    else
+        if AVOIDS[act] then
+            bg[7] = bg[7] + 1
+        end
+        return
+    end
+    bg[8] = bg[8] + 1
+    if not unknown then
         for h = 1, 2 do
             local cls = classOf(h, amount, flag)
             if cls > 0 then
@@ -330,6 +336,8 @@ end
 -- against our pending swings; a wound no swing takes goes to our pending cast, else to the background.
 -- shortcut: a startsCombat cast with no outcome of its own (a DoT, a debuff) takes an avoid inside its 0.2 s as
 -- SPELL_MISSED; rare, upgrade to the cast's frame if Phase D's compensating aura removal relies on it.
+-- shortcut: in group play another attacker's white wound inside our pending cast's 0.2 s that no swing of ours takes
+-- is credited to that cast as SPELL_DAMAGE; upgrade when a per-attacker attribution exists.
 S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     if unit ~= "target" or type(act) ~= "string" or (act ~= "WOUND" and not MISSES[act]) then
         return
@@ -356,7 +364,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
             credited = nil
         end
     end
-    if not p and not credited and not avoid then
+    if not p and not credited and not avoid and white then
         p = cast(t)
     end
     if p then
@@ -366,12 +374,13 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         emit(2, x, actDst[p], act, flag, amount, at)
         return
     elseif not credited then
-        background(amount, flag, avoid, unknown)
+        background(act, amount, flag, white, avoid, unknown)
         return
     end
     local x, at = actX[credited], actT[credited]
     if avoid then
         actLR[credited], actAvoid[credited] = lr, act -- provisional: emitted when the window closes
+        L.avoids, L.avoidX, L.avoidT = L.avoids + 1, x, at
         return
     end
     if actAvoid[credited] ~= "" then
