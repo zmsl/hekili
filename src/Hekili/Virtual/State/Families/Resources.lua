@@ -656,6 +656,7 @@ I.On(Obs.PlayerHit, function(o, t)
                 R.est0[r] = clamp(R.est0[r] + gain, max)
                 R.lo0[r] = clamp(R.lo0[r] + (gain > width and gain - width or 0), max)
                 R.hi0[r] = clamp(R.hi0[r] + gain + width, max)
+                -- the full gain even when capped, as I.ResourceShift does (review minor 3: skipped for both)
                 R.pinDelta[r], R.gain[r] = R.pinDelta[r] + gain, R.gain[r] + gain
                 I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.PlayerHit)
                 local sec = floor(t)

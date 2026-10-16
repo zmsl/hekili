@@ -52,6 +52,7 @@ local T, curA, live = 0, 0, false
 function I.NowAt(t)
     T = t
     rawset(NAMES, "now", t)
+    rawset(NAMES, "combat", I.combatT) -- as `run` does
 end
 local abByKey, auraByKey, auraSpell, auraDur, auraMax, resByKey = {}, {}, {}, {}, {}, {}
 

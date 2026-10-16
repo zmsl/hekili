@@ -1002,12 +1002,17 @@ describe("resources", function()
 
         it("reads the belief at the hit's time through the `now` context (buff, talent, the resources)", function()
             taken(function()
-                return buff.battle_shout.up and 4 or 1 -- luacheck: ignore 113 (the `now` context's names)
+                -- luacheck: ignore 113 (the `now` context's names)
+                calls[#calls + 1] = talent.improved_rend.rank .. " " .. rage.current .. " " .. combat
+                return buff.battle_shout.up and 4 or 1
             end)
             I.AuraModel(1, 1, 10, 20, 1, 10, 0) -- Battle Shout (aura 1) up from 10 to 20
+            obs(Obs.CombatStart, 11)
             hit(12, WOUND, 40)
+            I.SetTalentRank(1, 2)
             hit(25, WOUND, 40)
             assert.are.equal(5, VS.Power(fs.RAGE, 25).est)
+            assert.are.same({ "0 0 11", "2 4 11" }, calls) -- the talent's rank, the rage before the hit, combat's start
         end)
 
         it("explains a later flip by its gain: an exact pin, no swing calibration (the scale stays 1)", function()
@@ -1023,6 +1028,21 @@ describe("resources", function()
             local r = VS.Power(fs.RAGE, 12.1)
             assert.are.same({ 16, 16, 16, "pinned" }, { r.est, r.lo, r.hi, r.basis })
             assert.are.same({ 1, false }, { I.res.scale[1], I.res.pinValid[1] })
+        end)
+
+        it("keeps a hit's gain out of the swing calibration between two measuring pins (pinDelta)", function()
+            taken(function()
+                return 5
+            end)
+            obs(Obs.Swing, 10, 1, 2.6, 1) -- a landed swing: 9, and a speed to calibrate against
+            obs(Obs.Read, 10.5, 1, 9, I.ReadOf.Resource) -- an exact read: a measuring pin
+            I.Fold(10.5, false)
+            hit(11, WOUND, 40)
+            assert.are.equal(14, VS.Power(fs.RAGE, 12.5).est) -- the read below is explained by the hit's 5
+            obs(Obs.Read, 12.5, 1, 14, I.ReadOf.Resource) -- 2 s on: no swing, so a swings-only regen of 0 (noise)
+            I.Fold(12.5, false)
+            -- with the 5 leaking into the measurement, 2.5/s against 9/2.6 would pull the scale to about 0.92
+            assert.are.same({ 1, "observed" }, { I.res.scale[1], VS.Power(fs.RAGE, 12.5).basis })
         end)
 
         it("learns the rate: the last 10 s of gains / 10, in combat only, cleared at combat end", function()
