@@ -215,6 +215,10 @@ spec:RegisterResource(
             end,
 
             interval = 1,
+
+            stop = function()
+                return state.time == 0 -- out of combat the 1.25/s decay outruns the tick; count ticks only once combat starts
+            end,
             -- shortcut: Improved Bloodrage's +50% (12301) is unmodelled here, VirtualState's entries take a number fixed at
             -- build; the handler's instant gain carries it. Upgrade if the regen entries learn talent-scaled values.
             value = 1,

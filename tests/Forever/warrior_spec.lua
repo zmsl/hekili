@@ -390,6 +390,14 @@ describe("Forever Warrior", function()
         assert.are.equal("mainhand", models.mainhand.swing)
     end)
 
+    it("stops counting Bloodrage's tick while the sim is out of combat, where the decay outruns it", function()
+        local br = w.resource[2].bloodrage
+        w.state.time = 0
+        assert.is_true(br.stop())
+        w.state.time = 2.5
+        assert.is_false(br.stop())
+    end)
+
     it("registers the 52 live talent nodes with their definition spells and max ranks, and no rank aliases", function()
         local n, registered = 0, 0
         for key, t in pairs(TALENTS) do
