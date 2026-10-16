@@ -96,7 +96,9 @@ local function decayEntry(key, model, meta, powerType)
             end
         end
         if up > 0 then
-            return up - iv -- with its last tick: State.lua keeps one point per instant, 10 - 1.25 in either order
+            -- with its last tick: State.lua keeps one point per instant, 10 - 1.25 in either order (not at a cap: above
+            -- 99 or below 1.25 rage the order changes what the clamp keeps)
+            return up - iv
         end
         local a = VS.DecayAnchor(powerType)
         return a > 0 and a or state.query_time - iv -- the belief inactive: a quantum at the forecast's start

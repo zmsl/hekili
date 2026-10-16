@@ -282,7 +282,9 @@ Every stub site in the retained files that throws or yields a wrong value. Sites
 
 ## Periodic auras
 
-- A periodic tick due at its aura's expiry does not land (2026-10-16, Warrior out of combat: Bloodrage's 10 s aura ticking 1 rage a second ends at 9, never 10). VirtualState's `auraGain` stops TICK_EPS short of the expiry; the sim's forecast drops an event at `expires <= e.next` (core edit E6, `State.lua`).
+- A periodic aura's ticks land in full, the one at its expiry too (Bloodrage: 10 ticks of 1 rage over 10 s). VirtualState's `auraGain` counts through the expiry; Hekili's forecast keeps its own `expires < e.next` (the 2026-10-16 core edit E6 is reverted).
+- Out-of-combat decay is stepped and front-loaded (`docs/superpowers/specs/2026-10-16-stepped-decay-design.md`): a class's meta table declares `decay` (per second) and `decayInterval` (seconds, a function: Engine/Spec.lua setfenv's every meta field). The quantum `decay x decayInterval` is lost at once when the decay starts (combat end, the last tick aura's expiry, a rise above rest) and at the start of each interval after it; a tick and a quantum at the same instant resolve tick first (Bloodrage, then Battle Shout, out of combat: the bar ends the buff at 10 - 1.25 = 8.75, shown 9). Without `decayInterval` a decay stays continuous.
+- The sim: the Adapter generates a regen-model entry `__decay` (`value` -quantum every `decayInterval`) whose beats are the belief's (`VS.DecayAnchor`), or start at a tick aura's expiry while one is up in the sim; `stop` in combat only, because Hekili's forecast removes a stopped entry for the rest of the forecast.
 
 ## Known reads outside the inventory
 

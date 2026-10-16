@@ -204,6 +204,10 @@ spec:RegisterResource(
         decay = function()
             return 1.25
         end,
+        -- Stepped and front-loaded, as the Warrior's (a function: Engine/Spec.lua setfenv's every meta field).
+        decayInterval = function()
+            return 1
+        end,
     }
 )
 

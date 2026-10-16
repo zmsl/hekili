@@ -205,8 +205,7 @@ spec:RegisterResource(
         },
 
         -- Bloodrage's aura (29131): 1 rage every second for 10 s (DB2 effect: periodic energize 10 every 1000 ms).
-        -- Its ten ticks land nine times: the tick at the expiry does not (in game 2026-10-16, 10 instant + 9 = 19); both
-        -- models drop it (VirtualState's auraGain, core edit E6).
+        -- Its ten ticks all land; the tenth, at the expiry, meets the decay's first quantum (the meta table below).
         bloodrage = {
             aura = "bloodrage",
 
@@ -230,6 +229,12 @@ spec:RegisterResource(
         -- (Forever/Races/Gnome.lua, VirtualState's `maxMods`, event-facade spec §12b).
         decay = function()
             return 1.25 * (1 - 0.3 * state.talent.anger_management.rank)
+        end,
+        -- Stepped and front-loaded (stepped-decay design): 1.25 lost at once at the start of each 1 s window, the first
+        -- when the decay starts (combat end, a tick aura's expiry), so Bloodrage's last tick ends at 10 - 1.25.
+        -- A function, not a number: Engine/Spec.lua setfenv's every meta field, and setfenv(1) re-envs its caller.
+        decayInterval = function()
+            return 1
         end,
     }
 )
@@ -750,8 +755,7 @@ spec:RegisterAbilities({
         end,
 
         handler = function()
-            -- 12301 (in-game tooltip): +25% of the rage Bloodrage generates a rank. The aura's ten ticks then land nine
-            -- times, the one at the expiry does not (in game 2026-10-16; the regen entry above).
+            -- 12301 (in-game tooltip): +25% of the rage Bloodrage generates a rank.
             gain(10 * (1 + 0.25 * talent.improved_bloodrage.rank), "rage")
             applyBuff("bloodrage")
         end,

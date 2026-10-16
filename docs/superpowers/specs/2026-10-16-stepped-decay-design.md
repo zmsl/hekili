@@ -1,6 +1,10 @@
 # Stepped, front-loaded resource decay (design, 2026-10-16)
 
-Status: approved direction (user, 2026-10-16: "assume my theory and build it into the model instead of hacking it").
+Status: IMPLEMENTED (belief, sim entry, class data); the in-game checkpoint (§5) is the user's. Deviations:
+`decayInterval` is a function in the class files (Engine/Spec.lua setfenv's every meta field); the sim entry is
+generated in Adapter.lua (Spec.lua is upstream) and pauses through `last()`, not `stop()` (Hekili's forecast removes a
+stopped entry for the rest of the forecast); its test is in adapter_spec, not warrior_spec.
+Direction: user, 2026-10-16: "assume my theory and build it into the model instead of hacking it".
 Base: forever 2dd4902a. Paths under `src/Hekili/` unless they start with `tests/`, `tools/` or `docs/`.
 
 ## 1. The observation and the theory

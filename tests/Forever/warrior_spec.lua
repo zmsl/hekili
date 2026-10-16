@@ -399,6 +399,7 @@ describe("Forever Warrior", function()
         assert.are.equal(1.25, decay())
         w.state.talent.anger_management.rank = 1
         assert.is_true(math.abs(0.875 - decay()) < 1e-9) -- 1.25 x (1 - 0.3 x 1) = 1.25 x 0.7 = 0.875
+        assert.are.equal(1, w.resource[4].decayInterval()) -- stepped: lost at the start of each 1 s window
     end)
 
     it("declares no rage maximum of its own: a Gnome's 105 is the race pack's Expansive Mind", function()

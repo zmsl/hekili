@@ -144,8 +144,16 @@ describe("Adapter", function()
         assert.are.same({ "rage", 1, -1.25 }, { e.resource, e.interval(), e.value() })
         rank = 1
         assert.is_true(math.abs(-0.875 - e.value()) < 1e-9) -- Anger Management's 30% less
+        local got
+        local build = I.Build
+        I.Build = function(def, t)
+            got = def
+            return build(def, t)
+        end
         VS.SpecChanged()
+        I.Build = build
         assert.are.same({ e, 1 }, { model.__decay, I.res.auraRegen.n }) -- built once; not a regen entry of the belief
+        assert.are.same({ model.bloodrage }, got.resources[1].auraRegen) -- the walk skips it, the second build too
         state.time, state.query_time, state.buff.bloodrage = 0, 4.5, { up = false, expires = 0 }
         assert.are.same({ false, 3.5 }, { e.stop(), e.last() }) -- the belief at rest: a quantum at the forecast's start
         state.time = 5
