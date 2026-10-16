@@ -1,0 +1,259 @@
+-- tests/Forever/helpers/engine.lua
+-- Loads Hekili's REAL spec engine headless: Constants.lua, then every Engine\ and Forever\ file Hekili.toc lists, in its
+-- order (Engine/Races.lua, Engine/Spec.lua, Engine/Shared.lua, Forever/Shared, Classes, Races), so each Register* call
+-- runs Engine/Spec.lua's own code (setfenv( f, state ), the `funcs`/__index wrapper, the `item` resolution). Around it,
+-- the smallest stub client: a plain ns.Facade, `Item`, `Enum`, a Hekili without Ace3, an auto-filling Hekili.Class and a
+-- STRICT stand-in `state`: a key it lacks raises, so an ability function reading a name State.lua does not provide (a
+-- bare `state`, `math`, `error`) fails the caller instead of reading nil.
+local vload = require("Virtual.State.helpers.load")
+
+local M = {}
+
+-- A table whose missing keys raise "<what> lacks <key>" at the reader.
+local function strict(t, what)
+    return setmetatable(t, {
+        __index = function(_, k)
+            error(("stub %s lacks %q"):format(what, tostring(k)), 2)
+        end,
+    })
+end
+
+-- A table answering `value` for every key (State.lua builds buff.x, talent.x, cooldown.x... on demand).
+local function every(value)
+    return setmetatable({}, {
+        __index = function()
+            return value
+        end,
+    })
+end
+
+local function noop() end
+
+-- The files the engine loads after Constants.lua: every Engine\ and Forever\ line of Hekili.toc, in order.
+function M.files()
+    local out = {}
+    for line in io.lines(vload.ROOT .. "Hekili.toc") do
+        line = line:gsub("\r", ""):gsub("%s+$", "")
+        if line:match("^Engine\\") or line:match("^Forever\\") then
+            out[#out + 1] = vload.ROOT .. line:gsub("\\", "/")
+        end
+    end
+    return out
+end
+
+-- The stand-in `state`: the Lua names State.lua puts on the real one (State.lua:199, 414-497, 520), the tables ability
+-- functions read, and no-op verbs; anything else raises (strict) unless the class registered it as a state expression,
+-- function or table, which State.lua's mt_state answers the same way.
+local function newState(class, race)
+    -- an aura, talent, cooldown or action entry: the fields the loaded functions read (strict, like the state)
+    local leaf =
+        strict({ up = false, down = true, remains = 0, stack = 0, rank = 0, enabled = false, in_range = true }, "leaf")
+    local resource = strict({ current = 0, max = 100 }, "resource")
+    local s = {
+        table = table,
+        max = math.max,
+        min = math.min,
+        abs = math.abs,
+        ceil = math.ceil,
+        floor = math.floor,
+        format = string.format,
+        ipairs = ipairs,
+        pairs = pairs,
+        rawget = rawget,
+        rawset = rawset,
+        select = select,
+        tinsert = table.insert,
+        insert = table.insert,
+        remove = table.remove,
+        tonumber = tonumber,
+        tostring = tostring,
+        type = type,
+        unpack = unpack,
+        class = class,
+        race_token = race,
+        timeToInterrupt = noop,
+        args = {},
+        spec = {},
+        settings = {},
+        buff = every(leaf),
+        debuff = every(leaf),
+        talent = every(leaf),
+        cooldown = every(leaf),
+        action = every(leaf),
+        active_dot = every(0),
+        boss = false,
+        history = { casts = {}, units = {} },
+        target = strict({ is_boss = false }, "target"),
+        health = resource,
+        mana = resource,
+        rage = resource,
+        energy = resource,
+        combo_points = resource,
+        gcd = strict({ remains = 0 }, "gcd"),
+        combat = 0,
+        time = 0,
+        now = 0,
+        offset = 0,
+        delay = 0,
+        query_time = 0,
+        level = 60,
+        haste = 1,
+        active_enemies = 1,
+        display = "Primary",
+    }
+    for _, verb in ipairs({ "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "removeStack", "addStack" }) do
+        s[verb] = noop
+    end
+    for _, verb in ipairs({ "spend", "gain", "setCooldown", "setDistance", "interrupt" }) do
+        s[verb] = noop
+    end
+    return setmetatable(s, {
+        __index = function(_, k)
+            if class.stateExprs[k] then
+                return class.stateExprs[k]()
+            end
+            local v = class.stateFuncs[k] or class.stateTables[k]
+            if v ~= nil then
+                return v
+            end
+            error(("stub state lacks %q"):format(tostring(k)), 2)
+        end,
+    })
+end
+
+--- Loads the engine for a player of class token `classToken` (UnitClassBase) and race token `race` (UnitRace's second
+--- return; default "Scourge"). Returns `{ Hekili, ns, state, class, errors, loadErrors }`: `errors` the Hekili:Error
+--- calls, `loadErrors` one "<file>: <error>" per file whose main chunk raised (the rest still load).
+function M.load(classToken, race)
+    race = race or "Scourge"
+    local class = setmetatable({ specs = {}, num = 0 }, {
+        __index = function(t, k) -- Hekili.lua's Class: specs, num and tables (abilities, itemMap, stateExprs...)
+            local v = {}
+            rawset(t, k, v)
+            return v
+        end,
+    })
+    local state = newState(class, race)
+    local env = { errors = {}, loadErrors = {}, class = class, state = state }
+    local hekili = { Class = class, State = state }
+    function hekili.IsRetail()
+        return false
+    end
+    function hekili:Error(...)
+        table.insert(env.errors, select("#", ...) > 1 and string.format(...) or (...))
+    end
+    function hekili:Loadstring(str)
+        return loadstring(str)
+    end
+    function hekili:ContinueOnSpellLoad(_, fn)
+        fn(true)
+    end
+    env.Hekili = hekili
+
+    local ns = vload.module() -- the real VirtualState (KnownRank, I.GCD_SPELL); Facade replaced below
+    env.ns = ns
+    local function spellInfo(id)
+        return { name = "Spell " .. tostring(id), iconID = 0 }
+    end
+    ns.Facade = {
+        C_Item = {
+            GetItemCount = function()
+                return 0
+            end,
+            GetItemSpell = noop,
+            IsUsableItem = function()
+                return true
+            end,
+        },
+        C_Spell = {
+            GetSpellInfo = spellInfo,
+            GetSpellTexture = function()
+                return 0
+            end,
+            GetSpellDescription = function()
+                return ""
+            end,
+            IsCurrentSpell = function()
+                return false
+            end,
+        },
+        C_SpellBook = {},
+        C_SpecializationInfo = { GetSpecialization = noop, GetSpecializationInfo = noop },
+        C_LossOfControl = {
+            GetActiveLossOfControlData = noop,
+            GetActiveLossOfControlDataCount = function()
+                return 0
+            end,
+        },
+        GetNumClasses = function()
+            return 0
+        end,
+        GetTime = function()
+            return 0
+        end,
+        UnitClassBase = function()
+            return classToken
+        end,
+        UnitRace = function()
+            return "Undead", race
+        end,
+        GetShapeshiftForm = function()
+            return 0
+        end,
+        GetShapeshiftFormInfo = noop,
+        CombatLogGetCurrentEventInfo = noop,
+    }
+    ns.commitKey = noop
+    ns.metatables = { mt_resource = {} }
+    ns.RegisterEvent, ns.RegisterUnitEvent = noop, noop
+    ns.UnitDebuff = noop
+
+    local function item(id)
+        return {
+            IsItemEmpty = function()
+                return false
+            end,
+            ContinueOnItemLoad = function(_, fn)
+                fn(true)
+            end,
+            GetItemName = function()
+                return "Item " .. id
+            end,
+            GetItemLink = function()
+                return "[Item " .. id .. "]"
+            end,
+            GetItemIcon = function()
+                return 0
+            end,
+        }
+    end
+    local fakes = {
+        Hekili = hekili,
+        Item = {
+            CreateFromItemID = function(_, id)
+                return item(id)
+            end,
+        },
+        -- Classic's power types (Constants.lua's ResourceInfo; the class files' RegisterResource)
+        INVTYPE_WEAPONMAINHAND = "Main Hand", -- Forever/Shared/Items.lua's main_hand name (a GlobalStrings constant)
+        Enum = { PowerType = { None = -1, Mana = 0, Rage = 1, Focus = 2, Energy = 3, ComboPoints = 4 } },
+    }
+    local saved = {}
+    for k, v in pairs(fakes) do
+        saved[k] = rawget(_G, k) or false
+        _G[k] = v
+    end
+    assert(loadfile(vload.ROOT .. "Constants.lua"))("Hekili", ns)
+    for _, path in ipairs(M.files()) do
+        local ok, err = pcall(assert(loadfile(path)), "Hekili", ns)
+        if not ok then
+            table.insert(env.loadErrors, path .. ": " .. tostring(err))
+        end
+    end
+    for k, v in pairs(saved) do
+        _G[k] = v or nil
+    end
+    return env
+end
+
+return M
