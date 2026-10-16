@@ -32,6 +32,7 @@ local DROPPED = {
     "dispellable_enrage",
     "all_absorbs",
     "unravel_absorb",
+    "unusable_trinket",
     -- retail's consumables: Tempered Potion, Pact of Gluttony's Healthstone and talent
     "tempered_potion",
     "191387",
@@ -137,11 +138,12 @@ describe("shared content", function()
     end
 
     before_each(function()
-        saved = rawget(_G, "Hekili") or false
+        saved = { rawget(_G, "Hekili") or false, rawget(_G, "INVTYPE_WEAPONMAINHAND") or false }
+        _G.INVTYPE_WEAPONMAINHAND = "Main Hand" -- the client's global string, read at load
     end)
 
     after_each(function()
-        _G.Hekili = saved or nil
+        _G.Hekili, _G.INVTYPE_WEAPONMAINHAND = saved[1] or nil, saved[2] or nil
     end)
 
     it("writes every registration into `all`, for any race, and the modifiers into the race packs' lists", function()
@@ -224,6 +226,27 @@ describe("shared content", function()
         assert.are.equal(5512, item())
         bags[5509], bags[19007] = 1, 2
         assert.are.equal(5509, item())
+    end)
+
+    it("registers use_items, the slots Events.lua rebinds and an empty trinket map", function()
+        load({ "Items" })
+        assert.are.same({ "main_hand", "null_cooldown", "trinket1", "trinket2", "use_items" }, keys("abilities"))
+        local a = all.abilities
+        assert.are.same({ a.trinket1, a.trinket2, a.main_hand }, { a.actual_trinket1, a.actual_trinket2, a.actual_main_hand })
+        assert.are.same({ "|cff00ccff[Main Hand]|r", false }, { a.main_hand.name, a.main_hand.usable })
+        assert.are.same({}, _G.Hekili.Class.trinkets[12345])
+    end)
+
+    it("registers each shared key in one file only, every file Hekili.toc lists", function()
+        load()
+        assert.are.same({ "Auras", "Consumables", "Items" }, SHARED)
+        for _, kind in ipairs({ "abilities", "auras" }) do
+            local seen = {}
+            for _, k in ipairs(all.keys[kind]) do
+                assert.is_nil(seen[k], kind .. ": " .. k)
+                seen[k] = true
+            end
+        end
     end)
 
     it("leaves no dropped key in a priority, a class, race, engine or shared file, and no stub outside its own", function()

@@ -1472,9 +1472,9 @@ end
 class.file = UnitClassBase( "player" )
 local all = Hekili:NewSpecialization( 0, "All", "Interface\\Addons\\Hekili\\Textures\\LOGO-WHITE.blp" )
 
-------------------------------
--- SHARED SPELLS/BUFFS/ETC. --
-------------------------------
+------------------------------------------------------------------------------------------------------------------------
+-- The `all` spec's engine keys: what core reads by name (the cast and movement auras, the GCD, the APL verbs). Shared game
+-- content (auras, consumables, items) is in Forever/Shared/*.lua, racials in the race packs.
 
 ---@diagnostic disable-next-line: need-check-nil
 all:RegisterAuras( {
@@ -1706,83 +1706,8 @@ all:RegisterAbilities( {
 
             removeBuff( args.buff_name )
         end,
-    },
-
-    null_cooldown = {
-        name = "|cff00ccff[Null Cooldown]|r",
-        listName = "|T136243:0|t |cff00ccff[Null Cooldown]|r",
-        cast = 0,
-        cooldown = 0.001,
-        gcd = "off",
-
-        startsCombat = false,
-
-        unlisted = true
-    },
-
-    trinket1 = {
-        name = "|cff00ccff[Trinket #1]|r",
-        listName = "|T136243:0|t |cff00ccff[Trinket #1]|r",
-        cast = 0,
-        cooldown = 600,
-        gcd = "off",
-
-        usable = false,
-
-        copy = "actual_trinket1",
-    },
-
-    trinket2 = {
-        name = "|cff00ccff[Trinket #2]|r",
-        listName = "|T136243:0|t |cff00ccff[Trinket #2]|r",
-        cast = 0,
-        cooldown = 600,
-        gcd = "off",
-
-        usable = false,
-
-        copy = "actual_trinket2",
-    },
-
-    main_hand = {
-        name = "|cff00ccff[" .. INVTYPE_WEAPONMAINHAND .. "]|r",
-        listName = "|T136243:0|t |cff00ccff[" .. INVTYPE_WEAPONMAINHAND .. "]|r",
-        cast = 0,
-        cooldown = 600,
-        gcd = "off",
-
-        usable = false,
-
-        copy = "actual_main_hand",
     }
 } )
-
-
--- Use Items
-do
-    -- Should handle trinkets/items internally.
-    -- 1.  Check APLs and don't try to recommend items that have their own APL entries.
-    -- 2.  Respect item preferences registered in spec options.
-
-    all:RegisterAbility( "use_items", {
-        name = "Use Items",
-        listName = "|T136243:0|t |cff00ccff[Use Items]|r",
-        cast = 0,
-        cooldown = 120,
-        gcd = "off",
-    } )
-
-    all:RegisterAbility( "unusable_trinket", {
-        name = "Unusable Trinket",
-        listName = "|T136240:0|t |cff00ccff[Unusable Trinket]|r",
-        cast = 0,
-        cooldown = 180,
-        gcd = "off",
-
-        usable = false,
-        unlisted = true
-    } )
-end
 
 
 ns.addToggle = function( name, default, optionName, optionDesc )
@@ -1918,89 +1843,6 @@ local function modifyElement( t, k, elem, value )
 end
 ns.modifyElement = modifyElement
 
-
-
-local function setUsableItemCooldown( cd )
-    state.setCooldown( "usable_items", cd or 10 )
-end
-
-
--- For Trinket Settings.
-class.itemSettings = {}
-
-local function addItemSettings( key, itemID, options )
-
-    options = options or {}
-
-    --[[ options.icon = {
-        type = "description",
-        name = function () return select( 2, GetItemInfo( itemID ) ) or format( "[%d]", itemID )  end,
-        order = 1,
-        image = function ()
-            local tex = select( 10, GetItemInfo( itemID ) )
-            if tex then
-                return tex, 50, 50
-            end
-            return nil
-        end,
-        imageCoords = { 0.1, 0.9, 0.1, 0.9 },
-        width = "full",
-        fontSize = "large"
-    } ]]
-
-    options.disabled = {
-        type = "toggle",
-        name = function () return format( "Disable %s via |cff00ccff[Use Items]|r", select( 2, GetItemInfo( itemID ) ) or ( "[" .. itemID .. "]" ) ) end,
-        desc = function( info )
-            local output = "If disabled, the addon will not recommend this item via the |cff00ccff[Use Items]|r action.  " ..
-                "You can still manually include the item in your action lists with your own tailored criteria."
-            return output
-        end,
-        order = 25,
-        width = "full"
-    }
-
-    options.minimum = {
-        type = "range",
-        name = "Minimum Targets",
-        desc = "The addon will only recommend this trinket (via |cff00ccff[Use Items]|r) when there are at least this many targets available to hit.",
-        order = 26,
-        width = "full",
-        min = 1,
-        max = 10,
-        step = 1
-    }
-
-    options.maximum = {
-        type = "range",
-        name = "Maximum Targets",
-        desc = "The addon will only recommend this trinket (via |cff00ccff[Use Items]|r) when there are no more than this many targets detected.\n\n" ..
-            "This setting is ignored if set to 0.",
-        order = 27,
-        width = "full",
-        min = 0,
-        max = 10,
-        step = 1
-    }
-
-    class.itemSettings[ itemID ] = {
-        key = key,
-        name = function () return select( 2, GetItemInfo( itemID ) ) or ( "[" .. itemID .. "]" ) end,
-        item = itemID,
-        options = options,
-    }
-
-end
-
-
---[[ local function addUsableItem( key, id )
-    class.items = class.items or {}
-    class.items[ key ] = id
-
-    addGearSet( key, id )
-    addItemSettings( key, id )
-end
-ns.addUsableItem = addUsableItem ]]
 
 
 function Hekili:GetAbilityInfo( index )
@@ -2388,16 +2230,3 @@ do
         end )
     end
 end
-
-
-class.trinkets = {
-    [0] = { -- for when nothing is equipped.
-    },
-}
-
-
-setmetatable( class.trinkets, {
-    __index = function( t, k )
-    return t[0]
-end
-} )
