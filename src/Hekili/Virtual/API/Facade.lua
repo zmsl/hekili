@@ -243,12 +243,12 @@ end, "secret always [W PR16]; rage Power().est (G4), others Power().lo")
 
 hybrid("GetPowerRegenForPowerType", function(powerType)
     local r = I.res.slotOf[powerType]
-    if r and I.res.swing[r] > 0 and VS.InCombat() then
-        return 0, 0 -- Hekili's swing regen model adds that resource (no double count, G3)
+    if r and I.res.swing[r] > 0 then
+        return 0, 0 -- Hekili's swing regen model adds that resource in combat; no swings out of combat (G3)
     end
     local est = VS.Regen(powerType, now()).est
     return est, est
-end, "secret in combat [W PR16]; Regen(), 0 for a swing-paid resource in combat (G3)")
+end, "secret in combat [W PR16]; Regen(), 0 for a swing-paid resource (G3)")
 
 hybrid("GetManaRegen", function()
     local t = now()

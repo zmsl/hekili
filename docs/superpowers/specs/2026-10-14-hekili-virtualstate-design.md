@@ -717,7 +717,7 @@ Belief = {
 | Kept name(s) | Policy | Accessors |
 |---|---|---|
 | `UnitPower(unit, pt)` | player: `floor(Power(pt or UnitPowerType("player"), now).lo)`; other units: 0. `lo` never over-promises a spender (feasibility §D.3) | `Power` |
-| `GetPowerRegenForPowerType(pt)` | `est, est` of `Regen(pt, now)`; for a swing-paid resource in combat `0, 0`, because Hekili's swing regen model adds that rage (no double count, G3) | `Regen`, `InCombat` |
+| `GetPowerRegenForPowerType(pt)` | `est, est` of `Regen(pt, now)`; for a swing-paid resource `0, 0` (in combat Hekili's swing model adds it; out of combat nothing swings), because Hekili's swing regen model adds that rage (no double count, G3) | `Regen`, `InCombat` |
 | `GetManaRegen()` | `Regen(0, now).est`, then `Regen(0, now, true).est` (the first value copied before the second call) | `Regen` |
 | `UnitHealth(unit)`, `UnitHealthMax(unit)` | player: `Health("player", now).est · HealthMax("player")` and `HealthMax("player")`; target: `Health("target", now).est · 100` and 100; plates and pet: 100 and 100 when plain `UnitIsDead(unit)` is false, else 0 and 100, which keeps the enemy scan's `UnitHealth( unit ) > 1` test (`Targets.lua:407, 484`) meaningful | `Health`, `HealthMax` |
 | the 12 stat names | the cached returns in the real return order | `Stat` |
@@ -941,7 +941,7 @@ test asserts `alloc.bytes == 0`.
 |---|---|---|
 | G1 | Hekili never rescans auras in combat: its `UNIT_AURA` handler tests the secret `data.isFullUpdate` (`Events.lua:1269`) and is the only setter of `state[unit].updated` (`State.lua:6199-6207`) | §10 edit: the handler stops reading the payload; the drain sets `updated` when `AuraGen` moved (§5.2 step 5) |
 | G2 | Event order between VirtualState's frame and Hekili's for the same event | probe: stamp `debugprofilestop()` in both `PLAYER_SWING` and `UNIT_SPELLCAST_SUCCEEDED` handlers; if Hekili's fires first, the one-cycle staleness of §8 is accepted |
-| G3 | Rage counted twice (regen from the facade plus Hekili's swing model) | the 0-in-combat regen rule for swing-paid resources (§7.4); confirm on the dummy by comparing Hekili's forecast with the next pin |
+| G3 | Rage counted twice (regen from the facade plus Hekili's swing model) | the 0-in-combat regen rule for swing-paid resources (§7.4); confirm on the dummy by comparing Hekili's forecast with the next pin; out of combat also 0 (2026-10-15: a positive out-of-combat regen made the sim forecast rage up while the belief decayed it, flipping Rend) |
 | G4 | Returning `lo` for resources makes Hekili too passive near costs | log picks on a dummy where `lo < cost ≤ est`; choose `lo` or `est` per resource as a facade constant |
 | G5 | `/reload` in combat loses VirtualState | persistence is out of scope for Phase 1 (§14); after a reload reads start wide and re-anchor from the next observations |
 | G6 | The target's cast length is unknown (its spellID and times are secret) | time `START`/`STOP`/`INTERRUPTED` by `castBarID`; the default length meanwhile (§6.8) |

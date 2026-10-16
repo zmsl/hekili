@@ -156,6 +156,7 @@ describe("ns.Facade", function()
         assert.are.equal(98, Facade.UnitPower("player", fs.RAGE))
         assert.are.equal(31, Facade.UnitPower("player", 3)) -- energy, a non-rage power type, keeps lo
         VS.Power = power
+        assert.are.same({ 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) }) -- out of combat too: no swings (G3)
         ctl.Fire("PLAYER_REGEN_DISABLED")
         assert.are.same({ 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) })
         assert.are.equal(2, select("#", Facade.GetManaRegen()))
