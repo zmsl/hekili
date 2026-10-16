@@ -1,7 +1,7 @@
 -- tests/Virtual/State/target_health_spec.lua: the target health family (target-health design, 2026-10-16, §6). A
 -- health-gated spender's flip pins the target's health at its gate and teaches M (the damage per full health) on a
--- target never held before; the guards keep a NOT from bounding it; WOUND damage moves it between answers; the time to
--- die and to a percentage follow; the facade and Targets.lua's GetTTD/GetTimeToPct (named core edit E4) answer it.
+-- target never held before; the guards keep a NOT from bounding it; WOUND damage moves it between answers, sampled only
+-- from an anchor (R5); the resets. No time to die (dropped by the user, 2026-10-16).
 local load = require("Virtual.State.helpers.load")
 local fake = require("Virtual.State.helpers.fake_api")
 
@@ -135,7 +135,7 @@ describe("target health", function()
         assert.are.same({ 0.2, 0, 0.2, 0 }, { h.est, h.lo, h.hi, I.th.M })
     end)
 
-    it("moves the health by WOUND damage over M and answers the time to die from the damage per second", function()
+    it("moves the health by WOUND damage over M from a pin on a target never held before", function()
         anchor()
         obs(Obs.TargetDamage, 11, 0, 50)
         obs(Obs.TargetDamage, 12, 0, 50)
@@ -145,11 +145,6 @@ describe("target health", function()
         within(0.1, h.lo, 1e-6)
         within(0.1, h.hi, 1e-6)
         assert.are.equal("modelled", h.basis)
-        local dps = 900 / (12 - 3) -- every WOUND since the first, at 3
-        local ttd = VS.TTD("target", 12)
-        assert.are.equal("modelled", ttd.basis)
-        within(h.est * I.th.M / dps, ttd.est, 1e-6)
-        within((h.est - 0.05) * I.th.M / dps, VS.TimeToPct(0.05, 12).est, 1e-6)
     end)
 
     it("keeps a live target at the floor and reads a dead one as 0, observed", function()
@@ -162,7 +157,6 @@ describe("target health", function()
         I.Fold(12)
         h = VS.Health("target", 12)
         assert.are.same({ 0, 0, 0, "observed" }, { h.est, h.lo, h.hi, h.basis })
-        assert.are.equal(30, VS.TTD("target", 12).est) -- dead: the default
     end)
 
     it("starts a new target over at the default and keeps M for a target swapped back to", function()
@@ -174,7 +168,6 @@ describe("target health", function()
         end
         ctl.Fire("PLAYER_TARGET_CHANGED")
         ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 70, 1)
-        ctl.Tick() -- the staged WOUND into the log
         I.Fold(100)
         -- M unknown on the new target: its WOUND moves nothing
         local h = VS.Health("target", 100)
@@ -186,5 +179,64 @@ describe("target health", function()
         I.Fold(101)
         assert.are.same({ 1, false, 0, "default" }, { I.th.slot, I.th.fresh, I.th.dmg, VS.Health("target", 101).basis })
         within(1000, I.th.M, 1e-6)
+    end)
+
+    it("writes no modelled sample after a swap back to a known slot until a pin", function()
+        anchor() -- M 1000 on slot 1
+        obs(Obs.TargetSwap, 11, 2, 1, 1) -- slot 2, never held before
+        obs(Obs.TargetSwap, 12, 1, 0, 1) -- back to slot 1: M kept, no anchor
+        obs(Obs.TargetDamage, 13, 0, 100)
+        I.Fold(13)
+        assert.are.same({ 1000, false, "default" }, { I.th.M, I.th.anchored, VS.Health("target", 13).basis })
+        within(0.9, I.th.est0, 1e-6) -- the damage still moves the interval
+        obs(Obs.Read, 14, 1, 50, ReadOf.Resource)
+        obs(Obs.Usable, 14, GATED, 1, 0) -- a rung: the health at or below the gate, an anchor
+        obs(Obs.TargetDamage, 15, 0, 100)
+        I.Fold(15)
+        local h = VS.Health("target", 15)
+        assert.are.equal("modelled", h.basis)
+        within(0.1, h.est, 1e-6)
+    end)
+
+    it("starts a live target over full at combat end, an anchor", function()
+        anchor()
+        obs(Obs.TargetDamage, 11, 0, 100)
+        obs(Obs.CombatEnd, 12)
+        I.Fold(12)
+        local h = VS.Health("target", 12)
+        assert.are.same({ 1, 0, 1, "default" }, { h.est, h.lo, h.hi, h.basis })
+        assert.are.same({ 0, true, false }, { I.th.dmg, I.th.anchored, I.th.fresh })
+        obs(Obs.TargetDamage, 13, 0, 100)
+        I.Fold(13)
+        h = VS.Health("target", 13)
+        assert.are.equal("modelled", h.basis)
+        within(0.9, h.est, 1e-6)
+    end)
+
+    it("counts only the target's WOUNDs", function()
+        VS.Start(api)
+        ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 70, 1)
+        ctl.Fire("UNIT_COMBAT", "target", "HEAL", "", 70, 1)
+        I.Fold(100)
+        assert.are.equal(0, I.th.dmg)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 70, 1)
+        I.Fold(100)
+        assert.are.equal(70, I.th.dmg)
+    end)
+
+    it("forgets a slot's M on its TargetGone without touching the current target", function()
+        anchor() -- M 1000 on slot 1
+        obs(Obs.TargetSwap, 11, 2, 1, 1)
+        I.Fold(11)
+        assert.are.equal(1000, math.floor(I.th.maxBy[1] + 0.5))
+        obs(Obs.TargetGone, 12, 1)
+        I.Fold(12)
+        assert.are.same(
+            { 0, 2, false, "default" },
+            { I.th.maxBy[1], I.th.slot, I.th.dead, VS.Health("target", 12).basis }
+        )
+        obs(Obs.TargetSwap, 13, 1, 0, 1)
+        I.Fold(13)
+        assert.are.equal(0, I.th.M)
     end)
 end)

@@ -88,7 +88,7 @@ end)
 -- register it: a "target" registration would narrow the client's to the target and starve Attackers.lua of the player's.
 S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
     if unit == "target" and act == "WOUND" and type(amount) == "number" and amount > 0 then
-        Stage(Obs.TargetDamage, t, 0, amount)
+        Direct(Obs.TargetDamage, t, 0, amount) -- logged straight, as the swap: a same-frame WOUND keeps its target
     end
 end)
 

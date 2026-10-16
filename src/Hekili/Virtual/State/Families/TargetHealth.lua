@@ -4,8 +4,9 @@
 -- below g of the target's health). Usable bounds the health at or below g; a NOT under every guard of design §5
 -- bounds it above g; a flip from such a NOT to usable pins it at g. M, the damage per full health, is learned at that
 -- flip on a target never held before (full at the swap): M = the WOUND damage since the swap / (1 - g).
--- Between answers each WOUND moves the health down by amount / M (floor 0.02 while alive); the time to die and to a
--- percentage are the health left x M / the damage per second since the first WOUND.
+-- Between answers each WOUND moves the health down by amount / M (floor 0.02 while alive), written as a `modelled`
+-- sample only from an anchor (R5): a target never held before (full), a combat end (an evade heals it full), or a pin.
+-- No time to die: the user dropped it (2026-10-16); AplWarnings.lua warns when a priority reads one.
 -- Not built until the in-game checkpoint (design §7) answers: a short answer (c = 1) as a health signal (line 4), and
 -- a plain UnitHealthMax("target") read as M (line 2; its hook is marked below).
 
@@ -22,8 +23,9 @@ local UNKNOWN, ABOVE, BELOW = -1, 0, 1
 -- By gated ability k (n of them): its ability index, gate, guard aura (the player aura index of its `buff` or `nobuff`:
 -- 0 none, -1 named but untracked, which allows no NOT bound), whether that aura must be up (`buff`), its last answer,
 -- and the damage taken at its last guarded NOT. The current target: its memory slot (0 none), dead, attackable
--- (TargetSwap c), fresh (TargetSwap b: never held before, so full at the swap), the health interval, the WOUND damage
--- since the swap and the first WOUND's time, M (the damage per full health; 0 unknown).
+-- (TargetSwap c), fresh (TargetSwap b: never held before, so full at the swap), anchored (the health is known from a
+-- full start or a pin since the last restart), the health interval, the WOUND damage since the swap, M (the damage per
+-- full health; 0 unknown).
 local H = {
     n = 0,
     ab = {},
@@ -37,15 +39,15 @@ local H = {
     dead = false,
     attackable = false,
     fresh = false,
+    anchored = false,
     est0 = 1,
     lo0 = 0,
     hi0 = 1,
     dmg = 0,
-    dmgT0 = 0,
     M = 0,
 }
 I.th = H
-local rec, ttdRec, pctRec
+local rec
 
 -- The player aura index of an ability's `buff`/`nobuff` key (Resources.lua's swingAura): 0 none, -1 untracked.
 local function auraIndex(def, key)
@@ -60,10 +62,10 @@ local function auraIndex(def, key)
     return -1
 end
 
--- Back to the default: 1.0 in [0, 1], no damage seen, no answer standing; only the default sample counts (basis
--- "default"). Allocates nothing.
+-- Back to the default: 1.0 in [0, 1], no damage seen, no answer standing, no anchor; only the default sample counts
+-- (basis "default"). Allocates nothing.
 local function restart(t)
-    H.est0, H.lo0, H.hi0, H.dmg, H.dmgT0 = 1, 0, 1, 0, 0
+    H.est0, H.lo0, H.hi0, H.dmg, H.anchored = 1, 0, 1, 0, false
     for k = 1, H.n do
         H.prev[k] = UNKNOWN
     end
@@ -74,8 +76,6 @@ end
 
 I.OnBuild(function(def, now)
     rec = I.NewBelief("health target")
-    ttdRec = I.NewBelief("ttd target")
-    pctRec = I.NewBelief("time to pct target")
     H.n = 0
     for a = 1, #def.abilities do
         local obj = def.abilities[a]
@@ -143,6 +143,7 @@ I.On(Obs.Usable, function(o, t, lag)
             if H.fresh and H.dmg > 0 and H.M == 0 then
                 H.M = H.dmg / (1 - g) -- nonzero: g < 1 (checked at the build)
             end
+            H.anchored = true
             I.Sample(rec, "pinned", H.est0, t, Obs.Usable)
         else
             if H.hi0 > g then
@@ -152,7 +153,7 @@ I.On(Obs.Usable, function(o, t, lag)
                 H.lo0 = g -- the newest bound wins
             end
             if H.est0 > g then
-                H.est0 = g
+                H.est0, H.anchored = g, true
                 I.Sample(rec, "pinned", g, t, Obs.Usable)
             end
         end
@@ -188,16 +189,14 @@ I.On(Obs.TargetSwap, function(o, t)
     H.M = o.a > 0 and H.maxBy[o.a] or 0
     H.fresh, H.attackable = o.b == 1, o.c == 1
     restart(t)
+    H.anchored = H.fresh -- a swap back has no anchor until a pin (R5)
 end)
 
--- WOUND damage the target took (UNIT_COMBAT, plain; everyone's hits): counted from the swap (M's numerator, the time
--- to die's damage per second); with M known, the health moves down by amount / M, a live target never below the floor.
+-- WOUND damage the target took (UNIT_COMBAT, plain; everyone's hits): counted from the swap (M's numerator); with M
+-- known, the health moves down by amount / M, a live target never below the floor, sampled only from an anchor (R5).
 I.On(Obs.TargetDamage, function(o, t)
     if H.slot == 0 or H.dead then
         return
-    end
-    if H.dmgT0 == 0 then
-        H.dmgT0 = t
     end
     H.dmg = H.dmg + o.b
     if H.M > 0 then
@@ -205,7 +204,9 @@ I.On(Obs.TargetDamage, function(o, t)
         H.est0 = H.est0 - d > floor and H.est0 - d or floor
         H.lo0 = H.lo0 - d > floor and H.lo0 - d or floor
         H.hi0 = H.hi0 - d > floor and H.hi0 - d or floor
-        I.Sample(rec, "modelled", H.est0, t, Obs.TargetDamage)
+        if H.anchored then
+            I.Sample(rec, "modelled", H.est0, t, Obs.TargetDamage)
+        end
     end
 end)
 
@@ -224,11 +225,12 @@ I.On(Obs.TargetGone, function(o, t)
     end
 end)
 
--- Combat end: an evade heals, so a live target starts over at the default, no longer known to be full.
+-- Combat end: an evade heals, so a live target starts over full: an anchor, though M is no longer learnable.
 I.On(Obs.CombatEnd, function(o, t)
     if not H.dead then
         H.fresh = false
         restart(t)
+        H.anchored = true
     end
 end)
 
@@ -240,52 +242,16 @@ function I.TargetHealth(now)
     return rec
 end
 
--- The damage per second the current target has taken since its first WOUND: 0 without a live target, M, or a second
--- of damage. Allocates nothing.
-local function dps(now)
-    local dt = now - H.dmgT0
-    if H.slot == 0 or H.dead or H.M <= 0 or H.dmgT0 == 0 or dt < I.PIN_GAP then
-        return 0
-    end
-    return H.dmg / dt -- nonzero: dt >= PIN_GAP (1 s)
-end
-
---- (design §3) The current target's time to die: the health left x M / dps (lo and hi from the interval), basis
---- `modelled`; nil while dps is 0 (VS.TTD("target") then answers its default, Families/Player.lua). Allocates nothing.
-function I.TargetTTD(now)
-    local rate = dps(now)
-    if rate <= 0 then
-        return nil
-    end
-    local k = H.M / rate -- nonzero: rate > 0 checked
-    ttdRec.est, ttdRec.lo, ttdRec.hi = H.est0 * k, H.lo0 * k, H.hi0 * k
-    ttdRec.conf, ttdRec.basis = 1 - (H.hi0 - H.lo0), "modelled" -- derived on read from the health: no sample of its own
-    return ttdRec
-end
-
---- (design §3) Seconds until the current target's health is at fraction `p` (0..1): (est - p) x M / dps, 0 at or
---- below it; nil while dps is 0. Allocates nothing.
-function VS.TimeToPct(p, now)
-    local rate = dps(now)
-    if rate <= 0 then
-        return nil
-    end
-    local k = H.M / rate -- nonzero: rate > 0 checked
-    local e, l, h = H.est0 - p, H.lo0 - p, H.hi0 - p
-    pctRec.est, pctRec.lo, pctRec.hi = e > 0 and e * k or 0, l > 0 and l * k or 0, h > 0 and h * k or 0
-    pctRec.conf, pctRec.basis = 1 - (H.hi0 - H.lo0), "modelled"
-    return pctRec
-end
-
 I.OnSnapshot(function(out, now)
     I.TargetHealth(now)
     out[#out + 1] = string.format(
-        "target health slot=%d gates=%d M=%.0f dmg=%.0f fresh=%s attackable=%s dead=%s",
+        "target health slot=%d gates=%d M=%.0f dmg=%.0f fresh=%s anchored=%s attackable=%s dead=%s",
         H.slot,
         H.n,
         H.M,
         H.dmg,
         tostring(H.fresh),
+        tostring(H.anchored),
         tostring(H.attackable),
         tostring(H.dead)
     )

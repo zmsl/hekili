@@ -94,15 +94,8 @@ function VS.SpellHaste(now)
     return spellHaste
 end
 
---- (spec §3.2) Time to die: the target's from its damage taken once known (Families/TargetHealth.lua), else the
---- default 30 s (Hekili's DEFAULT_TTD), conf 0.
+--- (spec §3.2) Time to die: the default 30 s (Hekili's DEFAULT_TTD), conf 0.
 function VS.TTD(unit, now)
-    if unit == "target" then
-        local r = I.TargetTTD(now)
-        if r then
-            return r
-        end
-    end
     return ttd
 end
 

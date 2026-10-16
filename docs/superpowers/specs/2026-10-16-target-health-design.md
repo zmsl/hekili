@@ -1,6 +1,7 @@
 # Target health from health-gated usability (design note, 2026-10-16)
 
-Status: DRAFT, awaiting the user's checkpoint results (§7, lines 2 and 4 decide §2.3b and §2.3a). Base: 605b6dcb.
+Status: TTD dropped by the user (2026-10-16): a warning at script load instead; health pin and slope implemented. §7 lines 2
+and 4 still decide §2.3b and §2.3a. Base: 605b6dcb.
 Paths are under `src/Hekili/` unless they start with `tests/`, `tools/` or `docs/`.
 
 Corrections to the audit (docs/research/2026-10-15-api-events-audit.md): Execute IS recommended when the client says it is
@@ -41,9 +42,9 @@ Warrior.lua:994) to a player aura index like `swingAura` (Resources.lua:179-188)
 names in the engine.
 
 2.2 Family `Virtual/State/Families/TargetHealth.lua`, current target only, health as a fraction 0..1. Scalars: est0/lo0/hi0;
-`dmg` (WOUND total since the swap), `dmgT0` (first WOUND); `M` (damage per full health, 0 unknown); `fresh` (an anchor at
-1.0 is valid: the slot was never targeted before); `prev[a]` (last usability per gated ability). Per memory slot `maxBy[s]`
-so a swap back keeps M. Records `health target` and `ttd target` from `I.NewBelief`.
+`dmg` (WOUND total since the swap); `M` (damage per full health, 0 unknown); `fresh` (the slot was never targeted before, so
+M is learnable); `anchored` (§2.3d); `prev[a]` (last usability per gated ability). Per memory slot `maxBy[s]` so a swap back
+keeps M. Record `health target` from `I.NewBelief`.
 
 2.3 Observations:
 (a) `Obs.Usable` for gated ability a with `I.curSlot > 0`: usable (b=1) — or short (c=1) if §7 line 4 shows short implies
@@ -53,11 +54,15 @@ M = dmg / (1 - g). Otherwise a ladder rung: hi0 = min(hi0, g), est snapped (`pin
 NOT (b=0, c=0): health > g only under every guard of §5: lo0 = max(lo0, g + EPS), est raised if below.
 (b) Plain max (only if §7 line 2 shows UnitHealthMax("target") plain): read at the swap and in poll 1 as Read/ReadOf.Max
 (a = 0), sets M `observed`; an observed max wins over a learned one (`maxRead`, as Resources.lua:486-490).
-(c) New `Obs.TargetDamage = 35` (b = amount), staged from `S.On("UNIT_COMBAT","target")` WOUND in Sources/Target.lua: add to
-dmg; if M > 0 move est0/lo0/hi0 down by amount/M, floor 0.02 while alive (Targets.lua:1552 drops an enemy at ≤ 1), write
-`modelled`; if M unknown nothing moves.
+(c) New `Obs.TargetDamage = 35` (b = amount), logged straight (as TargetSwap) from `S.On("UNIT_COMBAT", nil)`: registered
+for every unit (Rows.lua and Attackers.lua need the player's), the handler keeps unit == "target" and WOUND only. Add to dmg;
+if M > 0 move est0/lo0/hi0 down by amount/M, floor 0.02 while alive (Targets.lua:1552 drops an enemy at ≤ 1), write
+`modelled` if anchored; if M unknown nothing moves.
 (d) Resets: TargetSwap → store maxBy[old] = M, load the new slot's M, default 1/[0,1], dmg = 0, `fresh` = slot was empty
 (Target.lua:28-38 gains a first-use flag). TargetGone for curSlot → 0, `observed`. CombatEnd → default (an evade heals).
+Anchor rule (R5): a `modelled` sample needs an anchor since the last restart: a fresh slot (full), CombatEnd on a live target
+(full), or a usable pin (flip or rung). A swap back to a known slot has none until a pin; its WOUNDs still add to dmg and
+move the interval, but the basis stays `default`.
 Basis as I.Basis: a flip pin is `pinned`; later WOUNDs are newer `modelled` samples from that anchor (as swings after a pin,
 Resources.lua:462 vs :513); death `observed`; before any, `default`.
 
@@ -65,10 +70,10 @@ Resources.lua:462 vs :513); death `observed`; before any, `default`.
 - `VS.Health("target")` returns the family's record (Player.lua:77 dispatches unit == "target"; other units keep otherHealth).
 - Facade unchanged: `UnitHealth("target")` = est*100, `UnitHealthMax` = 100 (Facade.lua:267-268, 277-279) → `target.health.pct`
   = est*100; `execute_phase` stays on the client's answer (already exact).
-- ttd: `VS.TTD("target", now)` = est*M / dps, dps = dmg / (now - dmgT0), basis `modelled` when M > 0 and dps > 0; else the
-  default record. Add `VS.TimeToPct(p, now)` = (est - p)*M / dps.
-- Named core edit, Targets.lua:1257 `GetTTD` and :1288 `GetTimeToPct`: after the dummy check, for unit == "target" return the
-  VS answer (ceil, n = 3) when its basis is not `default` (otherwise the jump at a pin poisons Hekili's 10-sample mean ~5 s).
+- No time to die (user, 2026-10-16): `VS.TTD` stays the default record and Targets.lua is unchanged. Instead E4': at script
+  load Hekili:LoadScript (Scripts.lua) warns once per pack/list/entry through `Hekili:Error` (the snapshot's Warnings) when
+  a condition reads `time_to_die`, `fight_remains`, `time_to_pct_N` or another ttd name (`VS.AplSecretToken`,
+  Virtual/State/AplWarnings.lua).
 
 ## 4. Allocation
 Records, per-ability arrays (prev, guard aura index) and maxBy[1..TARGET_CAP] allocated at build/load; appliers and accessors
@@ -83,9 +88,8 @@ no cooldown.
 ## 6. Tests (tests/Virtual/State/target_health_spec.lua; fake api and a fake spec with a gated spender)
 1 flip pin → est 0.2, hi 0.2, `pinned`; fresh dmg 800 → M 1000. 2 no pin when power short (`{false,true}` with lo < cost); a
 NOT with low rage changes nothing. 3 no pin when the stance guard fails. 4 slope: WOUNDs 50+50 at M 1000 → est 0.1,
-`modelled`; TTD = est*M/dps. 5 floor 0.02 alive; TargetGone → 0 `observed`. 6 swap reset default 1.0, dmg 0; swap back keeps
-M. 7 facade: UnitHealth("target") = est*100, UnitHealthMax 100; GetTTD("target") returns the VS answer once basis ≠ default.
-8 alloc_spec: target UNIT_COMBAT, gated flips, VS.TTD/VS.Health("target").
+`modelled`; a swap back has no anchor (basis `default`) until a pin; CombatEnd anchors. 5 floor 0.02 alive; TargetGone → 0 `observed`. 6 swap reset default 1.0, dmg 0; swap back keeps
+M. 7 facade: UnitHealth("target") = est*100, UnitHealthMax 100. 8 alloc_spec: target UNIT_COMBAT, gated flips, VS.Health("target").
 
 ## 7. Checkpoint lines (open-world mob; dummies answer a fixed 180 and may never drop below 20%)
 1. Execute flips vs health (in combat, watch the bar; the frame prints each change):
@@ -102,12 +106,11 @@ at or below the gate; does a wrong stance give false,false).
   crowd control on the player (unmeasured, no guard; §7 line 4 extended).
 - A pre-damaged target (group, or a mob already fighting) overestimates M; the next pin or death corrects est, not M.
   shortcut: one anchor per target; upgrade with a per-npcid max learned at kills.
-- Not covered: ttd above the gate, or classes with no gated ability (Druid), unless the max is plain (§7 line 2).
-  `fight_remains`/`GetGreatestTTD` (State.lua:1811-1828) keep Hekili's tracker.
+- Not covered: health above the gate, or classes with no gated ability (Druid), unless the max is plain (§7 line 2). Time to
+  die keeps Hekili's tracker and default.
 - A future proc making Execute usable at any health would pin wrongly: needs a `buff` guard like the stance one.
 - Unchecked: that VirtualState sees stance auras through UNIT_AURA (guard 3); Hammer of Wrath (no Paladin file).
 
 ## 9. Placement
 VirtualState.lua `Obs.TargetDamage = 35`; new Families/TargetHealth.lua (TOC after Families\TargetCast.lua); Player.lua
-VS.Health/VS.TTD dispatch for "target"; Sources/Target.lua UNIT_COMBAT handler and TargetSwap c; Warrior.lua `healthGate`;
-Targets.lua GetTTD/GetTimeToPct edit; tests as §6.
+VS.Health dispatch for "target"; Sources/Target.lua UNIT_COMBAT handler and TargetSwap c; Warrior.lua `healthGate`; tests as §6.
