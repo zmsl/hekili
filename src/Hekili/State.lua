@@ -5068,7 +5068,8 @@ local mt_default_action = {
             return min( 3600, max( 0, state.query_time - ability.lastCast ) )
 
         elseif k == "in_range" then
-            if UnitExists( "target" ) and UnitCanAttack( "player", "target" ) and LSR.IsSpellInRange( ability.rangeSpell or ability.id, "target" ) == 0 then
+            -- Forever E5: ask the known rank's ID; the client answers nil (read as in range) for an unknown rank.
+            if UnitExists( "target" ) and UnitCanAttack( "player", "target" ) and LSR.IsSpellInRange( ability.rangeSpell or ns.KnownSpellID( ability.id ), "target" ) == 0 then
                 return false
             end
 
@@ -6982,7 +6983,8 @@ do
         local z -- scratch variable
 
         if self.rangefilter and UnitExists( "target" ) then
-            if LSR.IsSpellInRange( ability.rangeSpell or ability.id, "target" ) == 0 then
+            -- Forever E5: ask the known rank's ID; the client answers nil (read as in range) for an unknown rank.
+            if LSR.IsSpellInRange( ability.rangeSpell or ns.KnownSpellID( ability.id ), "target" ) == 0 then
                 return false, "filtered out of range"
             end
 

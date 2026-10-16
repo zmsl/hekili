@@ -124,6 +124,17 @@ function VS.KnownRank(ids)
 end
 NAMES.knownRank = VS.KnownRank
 
+--- The known rank's spell ID for any rank ID of a tracked ability with a known rank, else `spellID` unchanged (nil,
+--- untracked or unknown). The client answers range only for a known rank (core edit E5). Allocates nothing.
+function VS.KnownID(spellID)
+    local a = spellID and A.bySpell[spellID]
+    if a and A.known[a] then
+        return A.qid[a]
+    end
+    return spellID
+end
+ns.KnownSpellID = VS.KnownID -- State.lua's range reads (E5) reach it through `ns`, not Hekili.Virtual
+
 ----------------------------------------------------------------------------------------------------------------------
 -- Writes: Hekili's verbs, as `modelled` belief samples at T (and the combat log's aura and energize rows).
 

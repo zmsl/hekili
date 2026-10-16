@@ -584,4 +584,11 @@ describe("Forever Warrior", function()
             )
         end
     )
+    it("both State.lua range reads ask the known rank's spell id (core edit E5)", function()
+        local src = assert(io.open("src/Hekili/State.lua")):read("*a")
+        local _, n =
+            src:gsub('LSR%.IsSpellInRange%( ability%.rangeSpell or ns%.KnownSpellID%( ability%.id %), "target" %)', "")
+        assert.are.equal(2, n)
+        assert.is_nil(src:find("IsSpellInRange( ability.rangeSpell or ability.id", 1, true))
+    end)
 end)

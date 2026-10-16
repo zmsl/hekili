@@ -260,6 +260,19 @@ describe("now handlers", function()
         assert.are.equal(2, seen.known)
     end)
 
+    it("KnownID answers a tracked ability's known rank id, else its input unchanged (core edit E5)", function()
+        start()
+        assert.are.equal(fs.REND, VS.KnownID(fs.REND)) -- no rank known yet
+        ctl.known[fs.REND_R2] = true
+        ctl.Fire("SPELLS_CHANGED")
+        assert.are.equal(fs.REND_R2, VS.KnownID(fs.REND))
+        assert.are.equal(fs.REND_R2, VS.KnownID(fs.REND_R2))
+        assert.are.equal(424242, VS.KnownID(424242)) -- untracked
+        assert.is_nil(VS.KnownID(nil))
+        assert.are.equal("Rend", VS.KnownID("Rend"))
+        assert.are.equal(VS.KnownID, ns.KnownSpellID)
+    end)
+
     it("anchors a GCD at a hard cast's start once: a later instant cast of the same ability starts its own", function()
         register("slam_test", { id = 1464, cast = 1.5 })
         start()
