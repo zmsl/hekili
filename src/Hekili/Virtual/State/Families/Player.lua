@@ -100,7 +100,7 @@ function VS.TTD(unit, now)
 end
 
 -- The stat cache (spec §6.5): the 12 stat names with the arguments Hekili reads them with (State.lua:2236-2356),
--- read out of combat; up to 7 returns each.
+-- and the shield's block value (a class's rage from a blocked hit), read out of combat; up to 7 returns each.
 I.STATS = {
     { "UnitStat", 1 },
     { "UnitStat", 2 },
@@ -112,6 +112,7 @@ I.STATS = {
     { "UnitWeaponAttackPower" },
     { "UnitDamage" },
     { "UnitArmor" },
+    { "GetShieldBlock" },
     { "GetMasteryEffect" },
     { "GetCritChance" },
     { "GetSpellCritChance" },

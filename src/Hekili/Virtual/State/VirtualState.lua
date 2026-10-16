@@ -53,7 +53,13 @@ VS.Obs = {
     Range = 33, -- a: plate index; b: count in range of the range spell
     TargetCast = 34, -- a: TargetCastOf; b: castBarID; c: interruptible 1 / 0 / -1 unknown
     TargetDamage = 35, -- b: a WOUND amount the target took (UNIT_COMBAT, plain); VirtualState's own, past TDF's range
+    PlayerHit = 36, -- a: I.HitKind; b: the amount (0: none); c: the attacker's level (UNIT_COMBAT on the player, plain)
 }
+
+--- What a `PlayerHit` observation reports (its `a`), and each kind's name (the `taken` and `consumedBy` keys): a WOUND
+--- flagged BLOCK or BLOCK_REDUCED is BLOCKED (part of it blocked), the BLOCK action a full block.
+I.HitKind = { WOUND = 1, BLOCKED = 2, BLOCK = 3, DODGE = 4, PARRY = 5, MISS = 6, HEAL = 7 }
+I.HitName = { "WOUND", "BLOCKED", "BLOCK", "DODGE", "PARRY", "MISS", "HEAL" }
 
 --- What a `Read` observation read (its `c`): TDF's Enum.ReadOf integers (5 and 7-9 reserved), plus Health = 10, a
 --- VirtualState kind past TDF's range.

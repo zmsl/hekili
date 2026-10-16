@@ -58,6 +58,7 @@ function M.new()
         handlers = {},
         unitSpeed = {}, -- [unit] = speed for UnitAttackSpeed of a unit other than the player (default: secret)
         unitIs = {}, -- [unit] = the token UnitIsUnit(unit, x) is true for (SECRET: a secret answer)
+        level = { player = 20 }, -- [unit] = UnitLevel (nil: a secret answer)
         unknownEvents = {}, -- [event] = true: RegisterEvent raises, as the client does for an event it does not know
         form = 0, -- GetShapeshiftForm (0: none)
         forms = {}, -- [form index] = its spell ID (GetShapeshiftFormInfo's 4th return)
@@ -127,6 +128,13 @@ function M.new()
         end
         return ctl.speed[1], ctl.speed[2]
     end
+    function api.UnitLevel(unit)
+        local v = ctl.level[unit]
+        if v == nil then
+            return SECRET
+        end
+        return v
+    end
     function api.UnitIsUnit(a, b)
         local v = ctl.unitIs[a]
         if v == SECRET then
@@ -170,6 +178,7 @@ function M.new()
     end
     api.UnitStat, api.GetSpellBonusDamage, api.UnitAttackPower, api.UnitWeaponAttackPower = zeros, zeros, zeros, zeros
     api.UnitDamage, api.UnitArmor, api.GetMasteryEffect, api.GetCritChance = zeros, zeros, zeros, zeros
+    api.GetShieldBlock = zeros
     api.GetSpellCritChance, api.GetRangedCritChance, api.GetCombatRating, api.GetCombatRatingBonus =
         zeros, zeros, zeros, zeros
     api.CR_CRIT_MELEE, api.CR_HASTE_MELEE, api.CR_CRIT_TAKEN_SPELL, api.CR_MASTERY = 10, 18, 11, 26

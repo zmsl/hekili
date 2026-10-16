@@ -1,7 +1,7 @@
 -- Virtual/State/Sources/Player.lua
--- Player sources (spec §4.2): combat start and end, movement, spell haste, the player's health (poll 1.5) and the
+-- Player sources (spec §4.2): combat start and end, movement, spell haste, the player's health (poll 1.5), the
 -- out-of-combat stat cache (login, PLAYER_REGEN_ENABLED, PLAYER_EQUIPMENT_CHANGED, UNIT_DAMAGE, UNIT_ATTACK_POWER,
--- PLAYER_LEVEL_UP).
+-- PLAYER_LEVEL_UP) and every hit on the player (UNIT_COMBAT, plain) as a `PlayerHit`.
 -- Credits: secret-value handling after Catnip's (Durts) research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Player.lua.
 
@@ -25,6 +25,8 @@ local function statCall(api, name, arg)
         return api.UnitDamage("player") -- secret: readStat tests every return
     elseif name == "UnitArmor" then
         return api.UnitArmor("player") -- secret: readStat tests every return
+    elseif name == "GetShieldBlock" then
+        return api.GetShieldBlock() -- secret: readStat tests every return
     elseif name == "GetMasteryEffect" then
         return api.GetMasteryEffect() -- secret: readStat tests every return
     elseif name == "GetCritChance" then
@@ -150,6 +152,31 @@ S.On("UNIT_ATTACK_POWER", "player", onPlayerStats)
 
 S.On("PLAYER_LEVEL_UP", nil, function(api, t)
     readStats(api, t)
+end)
+
+-- Every hit on the player, attributed or not (Events/Attackers.lua names the attacker only when it can): the kind, the
+-- amount and the attacker's level, the target's while its target is the player, else the player's own (a secret answer
+-- falls to the next). Registered for every unit, as Sources/Target.lua's: a "player" registration would narrow the
+-- client's and starve Rows/Attackers. A WOUND without a plain amount is dropped. Allocates nothing.
+local HIT, BLOCKS = I.HitKind, { BLOCK = true, BLOCK_REDUCED = true }
+S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
+    local kind = unit == "player" and type(act) == "string" and HIT[act]
+    if not kind then
+        return
+    elseif kind == HIT.WOUND and type(amount) ~= "number" then
+        Note("UNIT_COMBAT player amount", "secret")
+        return
+    elseif kind == HIT.WOUND and type(flag) == "string" and BLOCKS[flag] then
+        kind = HIT.BLOCKED
+    end
+    local level = 0
+    if Plain(api, api.UnitIsUnit("targettarget", "player")) == true then
+        level = Plain(api, api.UnitLevel("target")) or 0
+    end
+    if type(level) ~= "number" or level <= 0 then
+        level = Plain(api, api.UnitLevel("player")) or 0
+    end
+    Stage(Obs.PlayerHit, t, kind, type(amount) == "number" and amount or 0, type(level) == "number" and level or 0)
 end)
 
 S.On("PLAYER_STARTED_MOVING", nil, function(api, t)
