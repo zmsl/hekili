@@ -170,6 +170,7 @@ local function buildDef()
         local r = class.resources[k]
         local swing, value, offValue, auraRegen, swingAura = 0, nil, nil, nil, nil
         local crit, offCrit -- a white crit's extra amount by hand (Resources.lua, I.SwingCrit)
+        local taken -- the paying entry's gain from a hit on the player (Resources.lua, tank design §1.2)
         local model = r.state and r.state.regenModel
         if model then
             for name, m in pairs(model) do
@@ -177,7 +178,7 @@ local function buildDef()
                     offValue, offCrit = m.value, m.crit
                 elseif m.swing and HANDS[m.swing] and swing == 0 then
                     swing, value, swingAura = HANDS[m.swing], m.value, m.aura -- `aura`: swings pay only while it is up
-                    crit = m.crit
+                    crit, taken = m.crit, m.taken
                 elseif
                     name ~= DECAY
                     and not (m.swing or m.debuff or m.channel or m.spec or m.equip or m.set_bonus or m.setting)
@@ -210,6 +211,7 @@ local function buildDef()
             swingCrit = crit,
             swingOffCrit = offCrit,
             swingAura = swingAura,
+            taken = taken,
             auraRegen = auraRegen,
             decay = r.state and r.state.meta and r.state.meta.decay, -- out-of-combat loss per second (Resources.lua)
             decayInterval = r.state and r.state.meta and r.state.meta.decayInterval, -- seconds per quantum (stepped)

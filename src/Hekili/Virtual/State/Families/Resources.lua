@@ -2,7 +2,8 @@
 -- The resources family (spec §6.1): the cost ladder (a usability report pins or bounds a resource at the ability's
 -- cost), exact reads, regen calibration between pins (an EMA), swing steps for a swing-paid resource (rage), our own
 -- casts' changes (Adapter.lua, spec §5.3), periodic regen (Hekili's regen-model entries with `interval` and `value`:
--- with an `aura`, Bloodrage's rage over time; without one, in combat: Anger Management), and the Power/Regen accessors.
+-- with an `aura`, Bloodrage's rage over time; without one, in combat: Anger Management), the gain from a hit on the
+-- player (the paying entry's `taken`, tank design §1.2) and its learned rate, and the Power/Regen accessors.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Model/Belief/Resources.lua (calibrate :117-136, pin :218-263,
 -- ladder :275-315, Applier Usable :327, Reader Resource :365-372) and the resource conf of
 -- src/TacoDogForever/Model/Belief.lua:695-699. The power-tick phase (TDF's Applier PowerTick :378) is not modelled in
@@ -65,6 +66,9 @@ local R = {
     maxMods = {},
     maxRead = {},
     gain = {},
+    taken = {},
+    takenBin = {},
+    takenSec = {},
 }
 I.res = R
 R.slotOf, R.slotOfToken = {}, {}
@@ -79,6 +83,9 @@ R.slotOf, R.slotOfToken = {}, {}
 -- HIT_ALPHA). It scales the model's swing rate, so the step scale calibrates the value of a landed swing.
 local hitRate, HIT_ALPHA = { 1, 1 }, 0.1
 local G = { n = 0, slot = {}, aura = {}, value = {}, interval = {}, talent = {}, pause = {} }
+-- `taken[r]`: the paying entry's `taken(kind, amount, level)` bound to the `now` context (Families/Now.lua), or false.
+-- Its gains in one-second bins: `takenBin[r][i]` the gain of the second `takenSec[r][i]` (-1: empty), i = sec % 10 + 1.
+I.TAKEN_WINDOW = 10
 -- In combat (fold order, for the entries without an aura: aura index 0) and since when.
 local fighting, fightT = false, 0
 R.auraRegen = G
@@ -188,6 +195,11 @@ I.OnBuild(function(def, now)
         R.decay[r] = decayOf(r)
         local iv = eval(d.decayInterval)
         R.decayIv[r], R.decayNext[r] = type(iv) == "number" and iv > 0 and iv or 0, 0
+        R.taken[r] = type(d.taken) == "function" and setfenv(d.taken, I.nowCtx) or false
+        R.takenBin[r], R.takenSec[r] = {}, {}
+        for i = 1, I.TAKEN_WINDOW do
+            R.takenBin[r][i], R.takenSec[r][i] = 0, -1
+        end
         R.power[r] = I.NewBelief("power " .. tostring(d.key))
         R.regen[r] = I.NewBelief("regen " .. tostring(d.key))
         I.Sample(R.power[r], "default", R.rest[r], now, 0)
@@ -622,6 +634,59 @@ I.On(Obs.CastSuccess, function(o, t, lag)
     end
 end)
 
+-- A hit on the player (kinds 1-6; a heal brings no rage): each slot with a `taken` gains what it returns, the interval
+-- by its half-width (lo never below the estimate's gain minus it), clamped to [0, max]; kept out of the regen
+-- measurement and counted as our own gain (a flip it explains pins exactly, as I.ResourceShift's); one `modelled`
+-- sample at the hit, and the gain into its second's bin. A `taken` that raises is counted as a `now`'s error.
+I.On(Obs.PlayerHit, function(o, t)
+    local kind = o.a
+    if kind < I.HitKind.WOUND or kind > I.HitKind.MISS then
+        return
+    end
+    for r = 1, R.n do
+        local f = R.taken[r]
+        if f then
+            I.NowAt(t)
+            local ok, gain, width = pcall(f, I.HitName[kind], o.b, o.c)
+            if not ok then
+                I.nowErrors, I.nowError = I.nowErrors + 1, gain
+            elseif type(gain) == "number" and gain > 0 then
+                width = type(width) == "number" and width > 0 and width or 0
+                local max = R.max[r]
+                R.est0[r] = clamp(R.est0[r] + gain, max)
+                R.lo0[r] = clamp(R.lo0[r] + (gain > width and gain - width or 0), max)
+                R.hi0[r] = clamp(R.hi0[r] + gain + width, max)
+                R.pinDelta[r], R.gain[r] = R.pinDelta[r] + gain, R.gain[r] + gain
+                I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.PlayerHit)
+                local sec = floor(t)
+                local i = sec % I.TAKEN_WINDOW + 1
+                local bin, stamp = R.takenBin[r], R.takenSec[r]
+                if stamp[i] ~= sec then
+                    bin[i], stamp[i] = 0, sec
+                end
+                bin[i] = bin[i] + gain
+            end
+        end
+    end
+end)
+
+--- (tank design §1.2.4) A power type's learned gain per second from hits on the player: its `taken` gains of
+--- the last TAKEN_WINDOW whole seconds to `now` / TAKEN_WINDOW, in combat only (0 out of combat, or with no `taken`).
+--- Allocates nothing.
+function VS.TakenRate(powerType, now)
+    local r = R.slotOf[powerType]
+    if not r or not R.taken[r] or not fighting then
+        return 0
+    end
+    local sec, sum, bin, stamp = floor(now), 0, R.takenBin[r], R.takenSec[r]
+    for i = 1, I.TAKEN_WINDOW do
+        if stamp[i] > sec - I.TAKEN_WINDOW and stamp[i] <= sec then
+            sum = sum + bin[i]
+        end
+    end
+    return sum / I.TAKEN_WINDOW -- nonzero: a constant
+end
+
 I.On(Obs.CombatStart, function(o, t)
     fighting, fightT = true, t
     for r = 1, R.n do
@@ -634,6 +699,9 @@ end)
 I.On(Obs.CombatEnd, function(o, t)
     fighting = false
     for r = 1, R.n do
+        for i = 1, I.TAKEN_WINDOW do
+            R.takenSec[r][i] = -1
+        end
         R.decay[r] = decayOf(r)
         if not R.maxRead[r] then
             setMax(r, maxOf(r))

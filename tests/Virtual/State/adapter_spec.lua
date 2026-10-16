@@ -127,6 +127,21 @@ describe("Adapter", function()
         assert.are.same({ 2, 4, 0 }, { I.res.swing[1], I.res.swingValue[1], I.res.swingOff[1] })
     end)
 
+    it("forwards the paying entry's `taken`, bound to the `now` context, and no other entry's", function()
+        local model = h.Class.resources.rage.state.regenModel
+        local function taken()
+            return buff.battle_shout.up and 3 or 1 -- luacheck: ignore 113 (the `now` context's names)
+        end
+        model.mainhand.taken = taken
+        model.offhand = { swing = "offhand", value = 4, taken = function() end } -- not the paying entry: unread
+        VS.SpecChanged()
+        assert.are.equal(taken, I.res.taken[1])
+        assert.are.equal(I.nowCtx, getfenv(taken))
+        model.mainhand.taken, model.offhand = nil, nil
+        VS.SpecChanged()
+        assert.is_false(I.res.taken[1])
+    end)
+
     it("generates the sim's stepped decay entry, on the belief's beats and from a tick aura's expiry", function()
         local model, rank = h.Class.resources.rage.state.regenModel, 0
         model.bloodrage = { aura = "bloodrage", interval = 1, value = 1, pausesDecay = true }

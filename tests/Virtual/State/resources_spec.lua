@@ -910,4 +910,160 @@ describe("resources", function()
             within(15 + 9.9, r.hi)
         end)
     end)
+
+    describe("rage from damage taken (tank design §1.2: the paying entry's `taken`)", function()
+        local WOUND, BLOCKED, BLOCK, DODGE, PARRY, MISS, HEAL = 1, 2, 3, 4, 5, 6, 7
+        local calls
+
+        local function taken(fn)
+            local def = fs.def(fs.new(9))
+            def.resources[1].taken = fn
+            boot(def)
+            I.Fold(10, false)
+        end
+
+        local function hit(t, kind, amount, level)
+            obs(Obs.PlayerHit, t, kind, amount or 0, level or 20)
+            I.Fold(t, false)
+        end
+
+        before_each(function()
+            calls = {}
+        end)
+
+        it("gains on every kind but a heal, with the kind's name, the amount and the level", function()
+            taken(function(kind, amount, level)
+                calls[#calls + 1] = kind .. " " .. amount .. " " .. level
+                return 2, 0.5
+            end)
+            hit(11, WOUND, 40, 12)
+            hit(12, BLOCKED, 30)
+            hit(13, BLOCK)
+            hit(14, DODGE)
+            hit(15, PARRY)
+            hit(16, MISS)
+            hit(17, HEAL, 50)
+            assert.are.same({
+                "WOUND 40 12",
+                "BLOCKED 30 20",
+                "BLOCK 0 20",
+                "DODGE 0 20",
+                "PARRY 0 20",
+                "MISS 0 20",
+            }, calls)
+            local r = VS.Power(fs.RAGE, 17)
+            assert.are.same({ 12, 9, 100, "modelled" }, { r.est, r.lo, r.hi, r.basis }) -- lo += 1.5 a hit; hi was 100
+            assert.are.equal(12, I.res.gain[1]) -- our own gain: a flip it explains pins exactly
+        end)
+
+        it("moves lo by gain - width (never below 0) and hi by gain + width, clamped to the maximum", function()
+            taken(function()
+                return 3, 5
+            end)
+            obs(Obs.Usable, 10, 2, 0, 1) -- heroic strike (15) short: hi 14.99
+            I.Fold(10, false)
+            hit(11, WOUND, 40)
+            local r = VS.Power(fs.RAGE, 11)
+            within(3, r.est)
+            within(0, r.lo)
+            within(15 - I.EPS + 8, r.hi)
+            for k = 1, 40 do
+                hit(11 + k, WOUND, 40)
+            end
+            r = VS.Power(fs.RAGE, 60)
+            assert.are.same({ 100, 100 }, { r.est, r.hi })
+        end)
+
+        it("ignores a gain that is not a positive number, and a `taken` that raises counts as a now error", function()
+            local answer
+            taken(function()
+                if answer == "raise" then
+                    error("boom")
+                end
+                return answer
+            end)
+            for _, a in ipairs({ 0, -4, "5" }) do
+                answer = a
+                hit(11, WOUND, 40)
+            end
+            answer = "raise"
+            hit(12, WOUND, 40)
+            local r = VS.Power(fs.RAGE, 12)
+            assert.are.same({ 0, "default" }, { r.est, r.basis })
+            assert.are.equal(1, I.nowErrors)
+        end)
+
+        it("changes nothing for a slot without `taken`", function()
+            boot(fs.def(fs.new(9)))
+            hit(11, WOUND, 40)
+            local r = VS.Power(fs.RAGE, 11)
+            assert.are.same({ 0, "default" }, { r.est, r.basis })
+        end)
+
+        it("reads the belief at the hit's time through the `now` context (buff, talent, the resources)", function()
+            taken(function()
+                return buff.battle_shout.up and 4 or 1 -- luacheck: ignore 113 (the `now` context's names)
+            end)
+            I.AuraModel(1, 1, 10, 20, 1, 10, 0) -- Battle Shout (aura 1) up from 10 to 20
+            hit(12, WOUND, 40)
+            hit(25, WOUND, 40)
+            assert.are.equal(5, VS.Power(fs.RAGE, 25).est)
+        end)
+
+        it("explains a later flip by its gain: an exact pin, no swing calibration (the scale stays 1)", function()
+            taken(function()
+                return 8
+            end)
+            obs(Obs.Usable, 10, 2, 0, 1) -- heroic strike (15) short at 0
+            I.Fold(10, false)
+            hit(11, WOUND, 40)
+            hit(12, WOUND, 40)
+            obs(Obs.Usable, 12.1, 2, 1, 0) -- usable: the hits crossed 15
+            I.Fold(12.1, false)
+            local r = VS.Power(fs.RAGE, 12.1)
+            assert.are.same({ 16, 16, 16, "pinned" }, { r.est, r.lo, r.hi, r.basis })
+            assert.are.same({ 1, false }, { I.res.scale[1], I.res.pinValid[1] })
+        end)
+
+        it("learns the rate: the last 10 s of gains / 10, in combat only, cleared at combat end", function()
+            taken(function()
+                return 2
+            end)
+            assert.are.equal(0, VS.TakenRate(fs.RAGE, 10))
+            obs(Obs.CombatStart, 10)
+            hit(11.5, WOUND, 40)
+            hit(14.2, WOUND, 40)
+            hit(18.9, WOUND, 40)
+            within(0.6, VS.TakenRate(fs.RAGE, 19))
+            within(0.4, VS.TakenRate(fs.RAGE, 21.5)) -- the second 11 left the window
+            within(0.2, VS.TakenRate(fs.RAGE, 27.9))
+            assert.are.equal(0, VS.TakenRate(fs.RAGE, 28)) -- ten quiet seconds
+            hit(30, WOUND, 40)
+            within(0.2, VS.TakenRate(fs.RAGE, 30))
+            obs(Obs.CombatEnd, 31)
+            I.Fold(31, false)
+            assert.are.equal(0, VS.TakenRate(fs.RAGE, 31))
+            obs(Obs.CombatStart, 32)
+            I.Fold(32, false)
+            assert.are.equal(0, VS.TakenRate(fs.RAGE, 32)) -- nothing kept from the last fight
+            assert.are.equal(0, VS.TakenRate(ENERGY, 32)) -- an untracked type
+        end)
+
+        it("allocates nothing over 100 hits and rate reads", function()
+            taken(function(kind, amount)
+                return amount / 10, amount / 40
+            end)
+            obs(Obs.CombatStart, 10)
+            I.Fold(10, false)
+            local t = 10
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    t = t + 0.7
+                    hit(t, WOUND, 40)
+                    VS.TakenRate(fs.RAGE, t)
+                end, 100)
+            )
+        end)
+    end)
 end)

@@ -1,8 +1,8 @@
 -- tests/Virtual/State/alloc_spec.lua (spec §2, §11): 10,000 mixed events (PLAYER_SWING, UNIT_POWER_FREQUENT,
--- usability flipping on a health-gated spender, own casts, UNIT_AURA after a form swap, the target's UNIT_COMBAT, combat
--- ending and starting under a stepped rage decay) with a drain every tick against the fake spec, every accessor and
--- every facade policy and passthrough called, every combat-log row delivered to a subscriber: VirtualState allocates
--- nothing.
+-- usability flipping on a health-gated spender, own casts, UNIT_AURA after a form swap, the target's UNIT_COMBAT, hits
+-- on the player paying rage through a `taken`, combat ending and starting under a stepped rage decay) with a drain every
+-- tick against the fake spec, every accessor and every facade policy and passthrough called, every combat-log row
+-- delivered to a subscriber: VirtualState allocates nothing.
 local load = require("Virtual.State.helpers.load")
 local fake = require("Virtual.State.helpers.fake_api")
 local fs = require("Virtual.State.helpers.fake_spec")
@@ -66,6 +66,9 @@ describe("zero allocation", function()
                 return 1
             end,
         }
+        h.Class.resources.rage.state.regenModel.mainhand.taken = function(kind, amount) -- rage from hits on us
+            return buff.battle_shout.up and amount / 10 or 1, 0.5 -- luacheck: ignore 113 (the `now` context's names)
+        end
         VS.Start(api)
         VS.SpecChanged()
         local decay = h.Class.resources.rage.state.regenModel.__decay -- the sim's (Adapter.lua), called as a forecast
@@ -97,6 +100,7 @@ describe("zero allocation", function()
                 ctl.Fire("UNIT_AURA", "player")
             else
                 ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 1)
+                ctl.Fire("UNIT_COMBAT", "player", "WOUND", i % 12 == 5 and "BLOCK" or "", 12, 1)
             end
             if i % 100 == 50 then
                 ctl.Fire("PLAYER_REGEN_ENABLED") -- out of combat: the rage decays on its beats
@@ -108,6 +112,7 @@ describe("zero allocation", function()
             local t = ctl.now
             VS.Power(fs.RAGE, t)
             VS.DecayAnchor(fs.RAGE)
+            VS.TakenRate(fs.RAGE, t)
             decay.last()
             decay.stop()
             decay.value()

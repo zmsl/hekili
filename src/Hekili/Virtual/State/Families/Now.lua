@@ -46,6 +46,13 @@ I.nowErrors, I.nowError, I.nowRuns, I.castsRun = 0, nil, 0, 0
 -- The cast's belief time and ability while its effects run; `live` only then: a `now` called from anywhere else (Hekili
 -- keeps it in `ability.funcs`, where RunStressTest or an APL reading `action.x.now` can call it) writes nothing.
 local T, curA, live = 0, 0, false
+
+--- The context's reads answer at `t` from now on (a resource's `taken`, run at a hit: Families/Resources.lua); its
+--- verbs stay inert outside a cast. Allocates nothing.
+function I.NowAt(t)
+    T = t
+    rawset(NAMES, "now", t)
+end
 local abByKey, auraByKey, auraSpell, auraDur, auraMax, resByKey = {}, {}, {}, {}, {}, {}
 
 ----------------------------------------------------------------------------------------------------------------------
