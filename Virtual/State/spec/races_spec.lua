@@ -30,6 +30,7 @@ local OWN = {
     Dwarf = { { "stoneform" }, 0, 0 },
     Orc = { { "blood_fury", "shatter_curse" }, 0, 0 },
     Troll = { { "berserking", "rapid_regeneration" }, 0, 0 },
+    Undead = { { "cannibalize", "will_of_the_forsaken" }, 0, 0 },
 }
 
 describe("race packs", function()
@@ -318,6 +319,18 @@ describe("race packs", function()
         local class = { abilities = { berserking = zerk }, auras = { berserking = { id = 26297 } } }
         ns.applyRace(class)
         assert.are.same({ 20554, 20554 }, { class.abilities.berserking.id, class.auras.berserking.id })
+    end)
+
+    it("registers Will of the Forsaken and Cannibalize for the Scourge token, not for `Undead`", function()
+        load("Undead")
+        assert.is_nil(all.abilities.cannibalize)
+        load("Scourge")
+        local w, c = all.abilities.will_of_the_forsaken, all.abilities.cannibalize
+        assert.are.same({ 7744, 120, "spell", "defensives" }, { w.id, w.cooldown, w.gcd, w.toggle })
+        assert.is_nil(w.handler or w.now) -- nothing to model beyond its cooldown and GCD
+        assert.are.same({ 20577, 120, "spell", "defensives" }, { c.id, c.cooldown, c.gcd, c.toggle })
+        assert.are.same({ true, 10, true }, { c.channeled, c.cast, c.fixedCast }) -- 20578's 10 s self-channel (DB2)
+        assert.are.same({ 20578, 10 }, { all.auras.cannibalize.id, all.auras.cannibalize.duration }) -- the heal's aura
     end)
 
     it("takes a class file's spec:RegisterCostMod (Classes.lua) into the same list, for any race", function()
