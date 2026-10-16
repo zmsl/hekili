@@ -318,6 +318,7 @@ independently (risk G2 covers the order).
 Once per drain, before the fold, the polls run in this order, each straight into the log at the drain's time
 (port of `TDF src/TacoDogForever/Sources/Sources.lua:563-588`, `Sources.Poll` and its order list):
 1. readable resources (types plain in combat, e.g. combo points);
+1.5. the player's health, when plain, and its maximum;
 2. the usability ladder: `C_Spell.IsSpellUsable` per tracked spending ability, each answer a `Usable`
    observation (b: usable, c: 1 when unusable for lack of its resource); a secret in either return means no
    news (`TDF src/TacoDogForever/Sources/Power.lua:62-95`);
@@ -326,8 +327,8 @@ Once per drain, before the fold, the polls run in this order, each straight into
 5. the nameplate walk (`Enemies`);
 6. the deferred talent walk;
 7. the four totem slots (out of combat);
-8. range (`C_Spell.IsSpellInRange` per tracked plate for `Count.InRange`); TDF runs it as order 9 after its
-   item answers (order 8), which are not ported.
+8. range (`C_Spell.IsSpellInRange` per tracked plate for `Count.InRange`); TDF runs range after its item
+   answers, which are not ported.
 9. the form read after a build or a form event;
 10. once combat has ended, the player's (and an existing target's) aura walk of §4.5 again, retried until the
     player walk completes: the in-combat down-states stand until a plain walk, and no `UNIT_AURA` comes while

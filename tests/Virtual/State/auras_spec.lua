@@ -229,4 +229,24 @@ describe("auras", function()
         I.Fold(12, false)
         assert.are.equal(130, VS.Aura("player", fs.SHOUT, 12).est)
     end)
+
+    it("walks nothing when combat starts again before the poll, and walks an existing target after combat", function()
+        local get, calls = api.C_UnitAuras.GetAuraDataByIndex, 0
+        api.C_UnitAuras.GetAuraDataByIndex = function(...)
+            calls = calls + 1
+            return get(...)
+        end
+        ctl.now = 10
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        calls = 0
+        S.RunPolls(11) -- pending, but in combat
+        assert.are.equal(0, calls)
+        ctl.auras.target.HARMFUL[1] = { spellId = fs.REND, expirationTime = 30, applications = 0 }
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        S.RunPolls(12)
+        I.Fold(12, false)
+        assert.are.equal(30, VS.Aura("target", fs.REND, 12).est)
+    end)
 end)

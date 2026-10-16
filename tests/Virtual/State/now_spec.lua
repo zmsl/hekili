@@ -181,7 +181,6 @@ describe("now handlers", function()
         starfire = "removeStack is no `now` verb; the charges end with the 15 s aura",
         claw = "combo points are read plainly in combat (poll 1)",
         shred = "as claw",
-        potion = "dispatches to the chosen potion's handler; none is registered on Forever",
         healthstone = "health is no tracked resource",
     }
     it("declares a `now` beside every handler with an aura or resource effect", function()
@@ -224,7 +223,8 @@ describe("now handlers", function()
                     end
                 end
             end
-            for key, body in text:gmatch("\n    ([%w_]+) = {(.-)\n    },") do
+            -- multi-line opens only: a one-line entry (a talent row) must not swallow the next ability
+            for key, body in text:gmatch("\n    ([%w_]+) = ({\n.-)\n    },") do
                 check(key, body, "        ")
             end
             for key, body in text:gmatch('RegisterAbility%("([%w_]+)", {(.-)\n}%)') do
