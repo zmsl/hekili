@@ -20,7 +20,7 @@ actions.precombat+=/cat_form,if=!buff.cat_form.up
 actions=cat_form,if=!buff.cat_form.up
 actions+=/shifting_power,if=energy.current<50
 actions+=/use_items
-actions+=/berserk
+actions+=/berserk,use_off_gcd=1
 actions+=/rip,if=combo_points.current>=settings.rip_cp&!debuff.rip.up
 actions+=/rake,if=!debuff.rake.up
 actions+=/ferocious_bite,if=settings.bite_finisher&combo_points.current>=5&debuff.rip.up&excess_e>=energy.current
@@ -36,7 +36,7 @@ actions+=/claw,if=!shred_ok&excess_e>=action.claw.cost
 actions.precombat=bear_form,if=!buff.bear_form.up
 actions=bear_form,if=!buff.bear_form.up
 actions+=/run_action_list,name=aoe,if=active_enemies>=2
-actions+=/berserk
+actions+=/berserk,use_off_gcd=1
 actions+=/use_items
 actions+=/demoralizing_roar,if=!debuff.demoralizing_roar.up
 actions+=/lacerate,if=debuff.lacerate.stack>=5&debuff.lacerate.remains<=4.5
@@ -45,10 +45,10 @@ actions+=/faerie_fire,if=!debuff.faerie_fire.up
 actions+=/lacerate,if=boss&debuff.lacerate.stack<5
 actions+=/maul,use_off_gcd=1,if=rage.current>=action.maul.cost+action.primal_bite.cost|!action.primal_bite.known
 actions+=/swipe_bear,if=rage.current>=settings.dump_rage
-actions+=/enrage,if=settings.use_enrage&rage.current<action.primal_bite.cost
+actions+=/enrage,use_off_gcd=1,if=settings.use_enrage&rage.current<action.primal_bite.cost
 actions+=/frenzied_regeneration
 actions.aoe=demoralizing_roar,if=!debuff.demoralizing_roar.up
-actions.aoe+=/berserk,if=active_enemies>=3
+actions.aoe+=/berserk,use_off_gcd=1,if=active_enemies>=3
 actions.aoe+=/use_items
 actions.aoe+=/primal_bite
 actions.aoe+=/swipe_bear
