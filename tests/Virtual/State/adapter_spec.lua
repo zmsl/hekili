@@ -154,7 +154,7 @@ describe("Adapter", function()
         I.Build = build
         assert.are.same({ e, 1 }, { model.__decay, I.res.auraRegen.n }) -- built once; not a regen entry of the belief
         assert.are.same({ model.bloodrage }, got.resources[1].auraRegen) -- the walk skips it, the second build too
-        state.time, state.query_time, state.buff.bloodrage = 0, 4.5, { up = false, expires = 0 }
+        state.time, state.now, state.buff.bloodrage = 0, 4.5, { up = false, expires = 0 }
         assert.are.same({ false, 3.5 }, { e.stop(), e.last() }) -- the belief at rest: a quantum at the forecast's start
         state.time = 5
         assert.is_true(e.stop()) -- in combat
@@ -164,9 +164,18 @@ describe("Adapter", function()
         I.Sources.Direct(VS.Obs.CombatEnd, 2)
         I.Fold(2)
         I.Settle(3.5) -- the belief's quanta at 2 and 3, the next at 4
+        state.now = 3.5 -- the reset at the belief's clock
         assert.are.same({ 3, 3 }, { VS.DecayAnchor(fs.RAGE), e.last() }) -- the sim's next beat: 4, the belief's
         state.buff.bloodrage = { up = true, expires = 20 }
         assert.are.equal(19, e.last()) -- a tick aura up in the sim: the first quantum at its expiry, after its tick
+        state.buff.bloodrage = { up = false, expires = 0 }
+        state.now, state.offset = 5, 2.5 -- after an advance: actual holds the beats at 4 to 7
+        assert.are.equal(7, e.last()) -- the forecast's first beat at 8, none re-applied
+        state.buff.bloodrage = { up = true, expires = 20.5 }
+        assert.are.equal(19.5, e.last())
+        state.offset = 18.7 -- the sim advanced to 23.7, past the expiry the reset saw: beats at 20.5 to 23.5
+        state.buff.bloodrage.up = false
+        assert.are.equal(23.5, e.last()) -- not the belief's anchor's beats (23): it is paused while the aura is up
     end)
 
     it("forwards a regenerating resource's rest as a flag and a swing entry's `aura` as its gate", function()

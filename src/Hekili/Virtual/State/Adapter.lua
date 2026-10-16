@@ -14,6 +14,7 @@ local state, class = Hekili.State, Hekili.Class
 local GetTime, CreateFrame = ns.Facade.GetTime, ns.Facade.CreateFrame
 local debugprofilestop = debugprofilestop
 local insert, sort = table.insert, table.sort
+local floor = math.floor
 
 local function wipe(t)
     for k in pairs(t) do
@@ -88,20 +89,29 @@ local function decayEntry(key, model, meta, powerType)
         return -eval(meta.decay) * eval(meta.decayInterval)
     end
     function e.last()
-        local iv, up = eval(meta.decayInterval), 0
+        -- Hekili's forecast starts at now + offset and steps every beat after `last`; after an advance `actual` holds
+        -- every beat to there already, so the anchor rolls forward to the last beat at or before it (as Warrior.lua's
+        -- swing entries do).
+        local iv, t, a = eval(meta.decayInterval), state.now + state.offset, 0
         for _, m in pairs(model) do
+            -- a tick aura present at the reset (up, or expired in the sim since): the beats start at its expiry
             local b = m.aura and not (m.swing or m.debuff) and state.buff[m.aura]
-            if b and b.up and b.expires > up then
-                up = b.expires
+            if b and b.expires > a then
+                a = b.expires
             end
         end
-        if up > 0 then
-            -- with its last tick: State.lua keeps one point per instant, 10 - 1.25 in either order (not at a cap: above
-            -- 99 or below 1.25 rage the order changes what the clamp keeps)
-            return up - iv
+        if a == 0 then
+            a = VS.DecayAnchor(powerType)
+            if a == 0 then
+                return t - iv -- the belief inactive: a quantum at the forecast's start
+            end
         end
-        local a = VS.DecayAnchor(powerType)
-        return a > 0 and a or state.query_time - iv -- the belief inactive: a quantum at the forecast's start
+        if a > t then
+            -- a beat at the expiry, with its last tick: State.lua keeps one point per instant, 10 - 1.25 in either
+            -- order (not at a cap: above 99 or below 1.25 rage the order changes what the clamp keeps)
+            return a - iv
+        end
+        return a + floor((t - a) / iv) * iv
     end
     function e.stop()
         return state.time > 0

@@ -3,7 +3,9 @@
 Status: IMPLEMENTED (belief, sim entry, class data); the in-game checkpoint (§5) is the user's. Deviations:
 `decayInterval` is a function in the class files (Engine/Spec.lua setfenv's every meta field); the sim entry is
 generated in Adapter.lua (Spec.lua is upstream) and pauses through `last()`, not `stop()` (Hekili's forecast removes a
-stopped entry for the rest of the forecast); its test is in adapter_spec, not warrior_spec.
+stopped entry for the rest of the forecast); its test is in adapter_spec, not warrior_spec; `decayInterval` has no
+default (nil or 0: continuous; D5); `last()` rolls its anchor, or a tick aura's expiry, forward to the last beat at or
+before the forecast's start (`actual` already holds the beats an advance passed).
 Direction: user, 2026-10-16: "assume my theory and build it into the model instead of hacking it".
 Base: forever 2dd4902a. Paths under `src/Hekili/` unless they start with `tests/`, `tools/` or `docs/`.
 
@@ -32,8 +34,8 @@ State.lua E6 `expires <= e.next`) was a hack for the same symptom. This design R
 
 ## 3. Design
 3.1 Declaration (class file, data only). The meta table keeps `decay` (units per second; function or number) and adds
-`decayInterval` (seconds per quantum; default 1 when `decay` is set; `0` or nil for a continuous decay keeps today's
-behaviour for resources that want it). The quantum is `decay * decayInterval`. Warrior: `decayInterval = 1`
+`decayInterval` (seconds per quantum; no default: `0` or nil is a continuous decay, today's behaviour, for resources
+that want it; ruling D5). The quantum is `decay * decayInterval`. Warrior: `decayInterval = 1`
 (tooltip: "1.25 every 1 sec"). Druid bear rage: the same two fields. No other class file change.
 
 3.2 Belief (Families/Resources.lua). Per slot: `R.decayStep[r]` (units), `R.decayIv[r]` (s), `R.decayNext[r]` (the
