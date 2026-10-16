@@ -73,30 +73,38 @@ actions.rotation+=/berserker_stance,use_off_gcd=1,if=!buff.berserker_stance.up
     },
     {
         name = "Protection",
-        desc = "Forever Protection Warrior (provisional): Defensive Stance, Shield Block up, Revenge and Shield Slam, "
-            .. "Sunder Armor stacked to 5, Heroic Strike or Cleave with spare rage.",
+        desc = "Forever Protection Warrior: Defensive Stance, Taunt when the target turns away, Shield Block kept up, "
+            .. "Revenge and Shield Slam, Sunder Armor stacked to 5, Heroic Strike or Cleave with the rage hits bring. "
+            .. "No defensives: Last Stand, Shield Wall and Healthstones are the player's call.",
         simc = [[
 actions.precombat=battle_shout,if=!buff.battle_shout.up
 actions.precombat+=/charge,use_off_gcd=1
 actions.precombat+=/defensive_stance,use_off_gcd=1,if=!buff.defensive_stance.up
 actions=shield_bash
 actions+=/defensive_stance,use_off_gcd=1,if=!buff.defensive_stance.up
+actions+=/taunt,use_off_gcd=1,if=threat.lost
+actions+=/mocking_blow,if=threat.lost&cooldown.taunt.remains>1
+actions+=/challenging_shout,if=threat.loose>=settings.challenging_shout_loose
+actions+=/shield_block,use_off_gcd=1,if=buff.shield_block.stack<2
 actions+=/victory_rush
-actions+=/shield_block,use_off_gcd=1,if=!buff.shield_block.up
 actions+=/bloodrage,use_off_gcd=1,if=rage.current<20
 actions+=/battle_shout,if=!buff.battle_shout.up
 actions+=/run_action_list,name=aoe,if=active_enemies>=3
-actions+=/call_action_list,name=generic
-actions.aoe=demoralizing_shout,if=!debuff.demoralizing_shout.up
+actions+=/run_action_list,name=single
+actions.single=revenge
+actions.single+=/shield_slam
+actions.single+=/sunder_armor,if=debuff.sunder_armor.stack<5|debuff.sunder_armor.remains<3
+actions.single+=/thunder_clap,if=!debuff.thunder_clap.up
+actions.single+=/demoralizing_shout,if=settings.debuff_demoshout_enabled&!debuff.demoralizing_shout.up
+actions.single+=/concussion_blow,use_off_gcd=1
+actions.single+=/heroic_strike,use_off_gcd=1,if=rage.current>=settings.prot_heroic_strike_rage
+actions.single+=/sunder_armor
+actions.aoe=thunder_clap,if=!debuff.thunder_clap.up|active_dot.thunder_clap<active_enemies
+actions.aoe+=/demoralizing_shout,if=!debuff.demoralizing_shout.up
 actions.aoe+=/revenge
 actions.aoe+=/shield_slam
-actions.aoe+=/cleave,use_off_gcd=1,if=rage.current>=40
+actions.aoe+=/cleave,use_off_gcd=1,if=rage.current>=settings.prot_cleave_rage
 actions.aoe+=/sunder_armor
-actions.generic=revenge
-actions.generic+=/shield_slam
-actions.generic+=/sunder_armor,if=debuff.sunder_armor.stack<5|debuff.sunder_armor.remains<3
-actions.generic+=/heroic_strike,use_off_gcd=1,if=rage.current>=50
-actions.generic+=/sunder_armor
 ]],
     },
 }

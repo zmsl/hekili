@@ -639,6 +639,7 @@ describe("Forever Warrior", function()
             cooldown = w.abilities,
             talent = w.talents,
             settings = w.settings,
+            threat = { situation = true, on_me = true, lost = true, loose = true }, -- Engine/Spec.lua's `threat` table
         }
         for _, p in ipairs(packs) do
             for list, entries in pairs(p.lists) do
@@ -663,6 +664,47 @@ describe("Forever Warrior", function()
             assert.are.equal("function", type(w.exprs[name]), name)
         end
     end)
+
+    it(
+        "tanks in Protection: threat first, Shield Block kept up, no defensives, the rage thresholds as settings",
+        function()
+            local packs = assert(loadfile("tools/make_pack.lua"))("lists")
+            local prot = packs[3]
+            assert.are.equal("Protection", prot.name)
+            local order = {}
+            for i, e in ipairs(prot.lists.default) do
+                order[i] = e.action
+            end
+            assert.are.same({
+                "shield_bash",
+                "defensive_stance",
+                "taunt",
+                "mocking_blow",
+                "challenging_shout",
+                "shield_block",
+                "victory_rush",
+                "bloodrage",
+                "battle_shout",
+                "run_action_list",
+                "run_action_list",
+            }, order)
+            assert.are.equal("buff.shield_block.stack<2", prot.lists.default[6].criteria)
+            for list, entries in pairs(prot.lists) do
+                for _, e in ipairs(entries) do
+                    for _, never in ipairs({ "last_stand", "shield_wall", "healthstone" }) do
+                        assert.are_not.equal(never, e.action, list)
+                    end
+                end
+            end
+            local d = dofile("tools/packs/warrior.lua").packs[3].desc
+            assert.is_nil(d:find("provisional"))
+            assert.are.same({ 50, 40, 3 }, {
+                w.settings.prot_heroic_strike_rage.default,
+                w.settings.prot_cleave_rage.default,
+                w.settings.challenging_shout_loose.default,
+            })
+        end
+    )
 
     it("queues a strike only when the rage for the next strike and Whirlwind still arrives in time", function()
         local e = lw.env(w)
