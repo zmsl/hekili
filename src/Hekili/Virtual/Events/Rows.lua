@@ -96,6 +96,8 @@ local function emit(kind, x, dst, action, flag, amount, t)
 end
 
 -- A paired swing's crit, at the pairing's time `t`: staged for the resources family.
+-- shortcut: in group play another attacker's crit inside the pairing window can be credited to our swing and lift
+-- rage's lo above the real rage until the next pin; upgrade when a per-attacker attribution exists.
 local function crit(kind, x, act, flag, t)
     if kind == 1 and act == "WOUND" and flag == "CRITICAL" then
         S.Stage(Obs.Swing, t, x, 0, 3)

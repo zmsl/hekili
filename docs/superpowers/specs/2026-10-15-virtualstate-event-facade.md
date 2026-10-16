@@ -62,7 +62,7 @@ the layer. Each read has one of three classes (decision 8), chosen per name from
   shape in retail's (decision 7: the GCD spell, an empty specialization slot) and the clock of a back-dated row (§3).
 - **virtual**: never the game's answer, the model only. For a name secret always, absent on Forever (a fixed,
   API-shaped answer: Phase 1's stubs are virtual rows), or answered from VirtualState for a reason beyond secrecy (the
-  auras' one instance-ID space, §2.5; rage's believed estimate, G4).
+  auras' one instance-ID space, §2.5).
 
 Events have the same split: an event is passthrough (the real event, its payload through `Plain`, §2.3) unless the
 policy table (§2.2) makes it virtual (synthesized or reshaped) or the client refuses it (a stub, never delivered).
@@ -86,9 +86,10 @@ it):
 
 | Group | Names | Class | Evidence |
 |---|---|---|---|
-| Phase 1 kept, secret always or absent | `UnitPower`, `UnitPartialPower`, `UnitHealth`, `UnitHealthMax`, `UnitGetTotalAbsorbs`, `UnitInRange`, the absent or dead names (`UnitAura`, `UnitAuraBySlot`, `GetSpellLink`, `GetItemInfo` ...), `C_Spell.GetSpellCastCount`, `C_UnitAuras.GetAuraSlots` | virtual | spec §7.2-§7.4 |
+| Phase 1 kept, secret always or absent | `UnitPower`, `UnitPartialPower`, `UnitHealth`, `UnitGetTotalAbsorbs`, `UnitInRange`, the absent or dead names (`UnitAura`, `UnitAuraBySlot`, `GetSpellLink`, `GetItemInfo` ...), `C_Spell.GetSpellCastCount`, `C_UnitAuras.GetAuraSlots` | virtual | spec §7.2-§7.4 |
 | Phase 1 kept, beyond secrecy | the six aura reads (`C_UnitAuras.*`, `AuraUtil.ForEachAura`/`FindAura`): one instance-ID space in and out of combat (§2.5); `CombatLogGetCurrentEventInfo` (the row being delivered, §2.4); `GetTalentInfoByID` (the `C_Traits` walk, decision 7) | virtual | spec §7.2; [W §4] errors when tainted |
 | Phase 1 kept, secret in combat | the 12 stats, `GetHaste`, `GetMeleeHaste`, `UnitSpellHaste`, `UnitAttackSpeed`, `GetUnitSpeed`, `GetTotemInfo`, `GetPowerRegenForPowerType`, `GetManaRegen`, `C_Spell.GetSpellCooldown`, `C_Spell.GetSpellCharges`, `UnitCastingInfo` and `UnitChannelInfo` (player plain, target secret) | hybrid | [W PR2, PR4, PR7, PR12, PR14, PR16; SU PR2]: out of combat the raw answer is the truth, in combat the Phase 1 policy answers |
+| Maximum health | `UnitHealthMax` (player plain, target secret) | hybrid | player plain in and out of combat [probe 2026-10-16]: the raw read while plain, the belief's when secret; another unit's answered from the belief without a call |
 | The clock | `GetTime` | hybrid | plain [W]; a back-dated row's observed time while it is delivered (§3) |
 | Forever shapes (decision 7) | `C_Spell.GetSpellInfo`, `C_Spell.GetSpellTexture` (61304 asked as 29515), `C_SpecializationInfo.GetSpecializationInfo` (id 0 answered as nil) | hybrid | cleanup Q6, Q7 |
 | `IsUsableSpell` | `IsUsableSpell` | passthrough | absent on Forever; the raw `C_Spell.IsSpellUsable` (plain [W PR14; SU]) |
@@ -105,7 +106,8 @@ it):
 | Deprecation shims | `HasOverrideActionBar`, `HasVehicleActionBar`, `IsActionInRange`, `IsPlayerSpell`, `IsSpellKnown`, `IsSpellKnownOrOverridesKnown`, `SpellIsSelfBuff` | passthrough; a virtual row answering nothing when the global is nil | only while `loadDeprecationFallbacks` is on (spec §7.3; cleanup Q12) |
 | Frames | `CreateFrame` | virtual (§2.1) | the event facade's entry point |
 
-Counts after the plan's follow-up task: 121 passthrough, 28 hybrid, 27 virtual (176 names with `CreateFrame`).
+Counts now (`tools/api_inventory.txt`, 2026-10-16, `UnitHealthMax` hybrid): 123 passthrough, 27 hybrid, 26 virtual
+(176 names with `CreateFrame`). After the plan's follow-up task they were 121/28/27.
 Phase A ends at 125/24/27; `GetTime` turns hybrid in phase B, the three Forever shapes in the follow-up.
 
 Out of the inventory: Lua and library calls (`LibStub`, `C_Timer`, `debugprofilestop`, `hooksecurefunc`, the
@@ -289,6 +291,9 @@ Provenance is [V]'s: observed (a plain signal says it happened), inferred (plain
 | Damage on us | `SWING_DAMAGE`, `SPELL_DAMAGE` with `destGUID` = ours | the player's `UNIT_COMBAT` WOUND (amount, school) ([V] C2, C4; O1); emitted only when attribution names the source, as above; physical (`schoolMask` 1) as `SWING_DAMAGE`, other schools as `SPELL_DAMAGE` with spellId 0 | observed (source inferred, as above) | `ns.storeDamage` (`:1451-1495`) |
 | Our casts' auras | `SPELL_AURA_APPLIED`/`_REFRESH`/`_REMOVED` on the target (debuffs) and on us (buffs) | phase B: what our cast's `now` verbs wrote (§12a: `applyBuff`, `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, against the aura's believed expiry before the cast), APPLIED or REFRESH at the cast's time, REMOVED when the cast removed it or at the modelled expiry ([V] C27, D3). Phase D adds travel time and the compensating `SPELL_AURA_REMOVED` when the cast's outcome was DODGE/PARRY/MISS | inferred / modelled | `ns.trackDebuff`, `active_dot` (`:1652-1687`) |
 | Energize | `SPELL_ENERGIZE` on us | phase B: a resource our cast's `now` gained (§12a's `gain`) ([V] C14, D6) | modelled | none in core ([V] §6; outline §1); class hooks |
+
+Rows.lua also stages one State observation: a swing it pairs with a CRITICAL wound becomes `Swing` c = 3 (that
+hand's crit), from which VirtualState's resources family adds the swing entry's `crit` (white-crit rage).
 
 **Payload contract.** Every synthesized event has the client's name and positional payload as the `wow` MCP
 event docs for Forever give it (the plan carries a per-event signature table; for `COMBAT_LOG_EVENT_UNFILTERED`
