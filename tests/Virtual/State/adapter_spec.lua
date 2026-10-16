@@ -127,6 +127,40 @@ describe("Adapter", function()
         assert.are.same({ 2, 4, 0 }, { I.res.swing[1], I.res.swingValue[1], I.res.swingOff[1] })
     end)
 
+    it("generates the sim's stepped decay entry, on the belief's beats and from a tick aura's expiry", function()
+        local model, rank = h.Class.resources.rage.state.regenModel, 0
+        model.bloodrage = { aura = "bloodrage", interval = 1, value = 1 }
+        h.Class.auras.bloodrage = { key = "bloodrage", id = 29131, duration = 10 }
+        h.Class.resources.rage.state.meta = {
+            decay = function()
+                return 1.25 * (1 - 0.3 * rank)
+            end,
+            decayInterval = function()
+                return 1
+            end,
+        }
+        VS.SpecChanged()
+        local e = model.__decay
+        assert.are.same({ "rage", 1, -1.25 }, { e.resource, e.interval(), e.value() })
+        rank = 1
+        assert.is_true(math.abs(-0.875 - e.value()) < 1e-9) -- Anger Management's 30% less
+        VS.SpecChanged()
+        assert.are.same({ e, 1 }, { model.__decay, I.res.auraRegen.n }) -- built once; not a regen entry of the belief
+        state.time, state.query_time, state.buff.bloodrage = 0, 4.5, { up = false, expires = 0 }
+        assert.are.same({ false, 3.5 }, { e.stop(), e.last() }) -- the belief at rest: a quantum at the forecast's start
+        state.time = 5
+        assert.is_true(e.stop()) -- in combat
+        I.Sources.Direct(VS.Obs.CombatStart, 1.5)
+        I.Fold(1.5)
+        I.ResourceShift(1, 50, 1.5, VS.Obs.CastSuccess)
+        I.Sources.Direct(VS.Obs.CombatEnd, 2)
+        I.Fold(2)
+        I.Settle(3.5) -- the belief's quanta at 2 and 3, the next at 4
+        assert.are.same({ 3, 3 }, { VS.DecayAnchor(fs.RAGE), e.last() }) -- the sim's next beat: 4, the belief's
+        state.buff.bloodrage = { up = true, expires = 20 }
+        assert.are.equal(19, e.last()) -- a tick aura up in the sim: the first quantum at its expiry, after its tick
+    end)
+
     it("forwards a regenerating resource's rest as a flag and a swing entry's `aura` as its gate", function()
         local got
         local build = I.Build

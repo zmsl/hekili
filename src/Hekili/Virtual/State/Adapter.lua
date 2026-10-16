@@ -69,6 +69,44 @@ local def = {
 }
 
 local HANDS = { mainhand = 1, offhand = 2 }
+local DECAY = "__decay" -- the generated entry's reserved name in a regen model
+
+local function eval(v)
+    if type(v) == "function" then
+        return v()
+    end
+    return v
+end
+
+-- The sim's stepped decay (stepped-decay design §3.3): a regen-model entry Hekili's forecast steps like a class's,
+-- `value` (negative, talent-scaled) every `interval`, never in combat. Its beats are the belief's (from its last
+-- quantum), or start at a tick aura's expiry while one is up in the sim: Hekili's forecast removes an entry whose
+-- `stop` holds, so the pause is in `last`, not `stop`. Built once per regen model, at a build.
+local function decayEntry(key, model, meta, powerType)
+    local e = { resource = key, interval = meta.decayInterval }
+    function e.value()
+        return -eval(meta.decay) * eval(meta.decayInterval)
+    end
+    function e.last()
+        local iv, up = eval(meta.decayInterval), 0
+        for _, m in pairs(model) do
+            local b = m.aura and not (m.swing or m.debuff) and state.buff[m.aura]
+            if b and b.up and b.expires > up then
+                up = b.expires
+            end
+        end
+        if up > 0 then
+            return up - iv -- with its last tick: State.lua keeps one point per instant, 10 - 1.25 in either order
+        end
+        local a = VS.DecayAnchor(powerType)
+        return a > 0 and a or state.query_time - iv -- the belief inactive: a quantum at the forecast's start
+    end
+    function e.stop()
+        return state.time > 0
+    end
+    return e
+end
+
 -- Point resources (a count, not a pool): a percentage maximum modifier does not apply to them.
 local POINTS = {
     combo_points = true,
@@ -120,12 +158,15 @@ local function buildDef()
         local swing, value, offValue, auraRegen, swingAura = 0, nil, nil, nil, nil
         local model = r.state and r.state.regenModel
         if model then
-            for _, m in pairs(model) do
+            for name, m in pairs(model) do
                 if m.swing == "offhand" then
                     offValue = m.value
                 elseif m.swing and HANDS[m.swing] and swing == 0 then
                     swing, value, swingAura = HANDS[m.swing], m.value, m.aura -- `aura`: swings pay only while it is up
-                elseif not (m.swing or m.debuff or m.channel or m.spec or m.equip or m.set_bonus or m.setting) then
+                elseif
+                    name ~= DECAY
+                    and not (m.swing or m.debuff or m.channel or m.spec or m.equip or m.set_bonus or m.setting)
+                then
                     auraRegen = auraRegen or {}
                     -- a player aura's regen { aura, interval, value }, or without `aura` a periodic one credited in
                     -- combat; either may name a `talent` (Resources.lua). Hekili's other gates are unseen here, so an
@@ -133,6 +174,11 @@ local function buildDef()
                     auraRegen[#auraRegen + 1] = m
                 end
             end
+        end
+        local meta = r.state and r.state.meta
+        local iv = meta and meta.decay ~= nil and eval(meta.decayInterval)
+        if model and type(iv) == "number" and iv > 0 and model[DECAY] == nil then
+            model[DECAY] = decayEntry(k, model, meta, r.type)
         end
         if swing == 0 and offValue ~= nil then
             swing, value, offValue = 2, offValue, nil -- the off hand alone pays it

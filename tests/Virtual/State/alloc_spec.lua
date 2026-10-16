@@ -68,6 +68,8 @@ describe("zero allocation", function()
         }
         VS.Start(api)
         VS.SpecChanged()
+        local decay = h.Class.resources.rage.state.regenModel.__decay -- the sim's (Adapter.lua), called as a forecast
+        state.time, state.query_time = 0, 1
         ctl.guid.target = "Creature-2" -- a target never held before: its first flip learns M, then WOUNDs move it
         ctl.Fire("PLAYER_TARGET_CHANGED")
         ctl.auras.player.HELPFUL[1] = { spellId = fs.SHOUT, expirationTime = 1e9, applications = 0 }
@@ -106,6 +108,9 @@ describe("zero allocation", function()
             local t = ctl.now
             VS.Power(fs.RAGE, t)
             VS.DecayAnchor(fs.RAGE)
+            decay.last()
+            decay.stop()
+            decay.value()
             VS.Regen(fs.RAGE, t)
             VS.Cooldown(fs.REND, t)
             VS.Charges(fs.REND, t)

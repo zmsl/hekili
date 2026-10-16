@@ -515,6 +515,29 @@ describe("resources", function()
             assert.are.same({ 46.25, 21.5 }, { VS.Power(fs.RAGE, 20.5).est, I.res.decayNext[1] })
         end)
 
+        it("stamps each quantum's modelled sample at its beat", function()
+            combatEnd()
+            local m = I.res.power[1].last.modelled
+            assert.are.same({ 48.75, 10 }, { m.v, m.t }) -- the front-loaded one, at the combat end
+            I.Settle(11.9)
+            assert.are.same({ 47.5, 11 }, { m.v, m.t })
+            I.Settle(12.9)
+            assert.are.same({ 46.25, 12 }, { m.v, m.t })
+        end)
+
+        it("clamps the last quantum at rest from an estimate not a multiple of it, the clamp in pinDelta", function()
+            I.ResourceShift(1, 49, 2, Obs.CastSuccess)
+            I.Settle(10)
+            S.Direct(Obs.CombatEnd, 10)
+            I.Fold(10, false)
+            local before = I.res.pinDelta[1] + 1.25 -- before the front-loaded quantum
+            I.Settle(48.5) -- 39 quanta at 10 to 48: 0.25 left
+            assert.are.same({ 0.25, 49 }, { I.res.est0[1], I.res.decayNext[1] })
+            I.Settle(60)
+            assert.are.same({ 0, 0 }, { I.res.est0[1], I.res.decayNext[1] }) -- the 40th lost 0.25, not 1.25
+            assert.are.equal(before - 49, I.res.pinDelta[1]) -- exactly the 49 lost, out of the regen measurement
+        end)
+
         it("starts from a rise above rest out of combat, and allocates nothing over combat cycles", function()
             S.Direct(Obs.CombatEnd, 5)
             I.Fold(5, false)
