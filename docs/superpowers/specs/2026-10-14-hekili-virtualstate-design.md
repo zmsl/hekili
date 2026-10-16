@@ -328,6 +328,10 @@ Once per drain, before the fold, the polls run in this order, each straight into
 7. the four totem slots (out of combat);
 8. range (`C_Spell.IsSpellInRange` per tracked plate for `Count.InRange`); TDF runs it as order 9 after its
    item answers (order 8), which are not ported.
+9. the form read after a build or a form event;
+10. once combat has ended, the player's (and an existing target's) aura walk of §4.5 again, retried until the
+    player walk completes: the in-combat down-states stand until a plain walk, and no `UNIT_AURA` comes while
+    the buffs stay unchanged.
 
 ### 4.4 Staging, flush and the urgent lane
 

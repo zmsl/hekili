@@ -4,11 +4,10 @@ local fake = require("Virtual.State.helpers.fake_api")
 local fs = require("Virtual.State.helpers.fake_spec")
 
 describe("auras", function()
-    local VS, I, S, Obs, ctl
+    local VS, I, S, Obs, ctl, api
     local SHOUT, REND = 1, 2 -- aura indices in fs.def
 
     before_each(function()
-        local api
         api, ctl = fake.new()
         local ns = load.module()
         VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -187,5 +186,47 @@ describe("auras", function()
         ctl.Fire("PLAYER_TARGET_CHANGED")
         fold(12)
         assert.are.equal(25, VS.Aura("target", fs.REND, 12).est)
+    end)
+
+    it("walks the player and target again once combat ends, so an aura hidden in combat reads up", function()
+        local get, calls = api.C_UnitAuras.GetAuraDataByIndex, 0
+        api.C_UnitAuras.GetAuraDataByIndex = function(...)
+            calls = calls + 1
+            return get(...)
+        end
+        ctl.now = 10
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.auras.player.HELPFUL[1] = { spellId = fs.SHOUT, expirationTime = 130, applications = 0 }
+        ctl.auraError.player = true
+        ctl.Fire("UNIT_AURA", "player")
+        fold(10)
+        assert.is_nil(VS.Aura("player", fs.SHOUT, 10)) -- the in-combat walk raised: believed down
+        calls = 0
+        S.RunPolls(11) -- in combat: no pending walk
+        assert.are.equal(0, calls)
+        ctl.auraError.player = nil
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        S.RunPolls(12)
+        I.Fold(12, false)
+        assert.are.equal(130, VS.Aura("player", fs.SHOUT, 12).est)
+        assert.is_true(calls > 0)
+        calls = 0
+        S.RunPolls(13) -- the walk completed: nothing pending
+        assert.are.equal(0, calls)
+    end)
+
+    it("retries the after-combat walk until the player walk completes", function()
+        ctl.now = 10
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.auras.player.HELPFUL[1] = { spellId = fs.SHOUT, expirationTime = 130, applications = 0 }
+        ctl.auraError.player = true
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        S.RunPolls(11)
+        I.Fold(11, false)
+        assert.is_nil(VS.Aura("player", fs.SHOUT, 11))
+        ctl.auraError.player = nil
+        S.RunPolls(12)
+        I.Fold(12, false)
+        assert.are.equal(130, VS.Aura("player", fs.SHOUT, 12).est)
     end)
 end)

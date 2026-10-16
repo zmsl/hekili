@@ -3,7 +3,7 @@
 -- harmful, each call pcall'd; the walk stops at the first error, secret or nil (in combat that is one call per
 -- filter). Entries whose spellId is tracked become `Read` observations straight to the log (remaining time, stacks).
 -- After a complete walk, a believed-up aura it did not find is logged down, but in combat only once that aura was
--- seen readable in combat (before that, a miss may be the client hiding it).
+-- seen readable in combat (before that, a miss may be the client hiding it). Combat's end queues one more walk (poll 10).
 -- Credits: the pcall-then-issecretvalue handling and the "seen readable in combat" rule follow Catnip's (Durts)
 -- secret-value research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Auras.lua (:42, :58-61, :74, :148).
@@ -25,6 +25,9 @@ local WALK = {}
 -- By unit index and aura index: the walk serial that last found it, and whether it was seen plain in combat.
 local found, seen = {}, {}
 local serial = 0
+-- Set when combat ends: the belief's in-combat down-states stand until a plain walk, and no UNIT_AURA comes while the
+-- buffs stay unchanged.
+local pending = false
 
 I.OnBuild(function(def)
     local U = I.auras
@@ -38,7 +41,7 @@ I.OnBuild(function(def)
     end
 end)
 
--- One unit's walk at t. Allocates nothing (the client allocates its aura tables).
+-- One unit's walk at t; returns whether it completed. Allocates nothing (the client allocates its aura tables).
 local function walk(api, u, unit, t)
     local U = I.auras
     serial = serial + 1
@@ -106,6 +109,7 @@ local function walk(api, u, unit, t)
             end
         end
     end
+    return complete
 end
 I.WalkAuras = walk
 
@@ -128,5 +132,20 @@ S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
         for j = 1, U.nAura do
             seen[u][j] = false
         end
+    end
+    pending = true
+end)
+
+-- Poll 10 (after the form read, 9, so a walk's form-aura skip sees this frame's form): once combat has ended, walk the
+-- player and an existing target again; retried each poll until the player walk completes.
+S.Poll(10, function(api, t)
+    if not pending or I.inCombat or not I.built then
+        return
+    end
+    if walk(api, 1, "player", t) then
+        pending = false
+    end
+    if I.auras.n >= 2 and Plain(api, api.UnitExists("target")) == true then
+        walk(api, 2, "target", t)
     end
 end)
