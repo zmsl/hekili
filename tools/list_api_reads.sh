@@ -9,9 +9,9 @@ cd "$(dirname "$0")/.."
 LUACHECK="${LUACHECK:-luacheck}"
 command -v "$LUACHECK" >/dev/null || { echo "luacheck not found: set LUACHECK" >&2; exit 1; }
 if [ $# -gt 0 ]; then files=("$@"); else
-    mapfile -t files < <(grep -E '\.lua\s*$' Hekili.toc | tr -d '\r' | sed 's/\\/\//g; s/[[:space:]]*$//')
+    mapfile -t files < <(grep -E '\.lua\s*$' src/Hekili/Hekili.toc | tr -d '\r' | sed 's/\\/\//g; s/[[:space:]]*$//; s#^#src/Hekili/#')
     # archived expansion folders are never redirected, so their reads are not inventoried
-    mapfile -t files < <(printf '%s\n' "${files[@]}" | grep -vE '^(TheWarWithin|Dragonflight|Shadowlands|BfA|Legion|Wrath|Cataclysm|TheBurningCrusade)/')
+    mapfile -t files < <(printf '%s\n' "${files[@]}" | grep -vE '^src/Hekili/(TheWarWithin|Dragonflight|Shadowlands|BfA|Legion|Wrath|Cataclysm|TheBurningCrusade)/')
 fi
 {
     "$LUACHECK" --no-config --std none --formatter plain --codes "${files[@]}" \

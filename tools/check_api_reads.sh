@@ -4,12 +4,12 @@
 # namespace globals included, come from luacheck W113 (which ignores strings and comments; a `local C_Spell =
 # Facade.C_Spell` covers its members); _G.Name and _G["Name"] reads come from grep, and so does a frame method reached
 # through getmetatable, the one way around the event facade's shadowed RegisterEvent. Virtual/State/ reads the game
-# only through its injected `api` (Virtual/State/spec/secrets_spec.lua checks it).
+# only through its injected `api` (tests/Virtual/State/secrets_spec.lua checks it).
 set -uo pipefail
 cd "$(dirname "$0")/.."
 LUACHECK="${LUACHECK:-luacheck}"
 command -v "$LUACHECK" >/dev/null || { echo "luacheck not found: set LUACHECK" >&2; exit 1; }
-mapfile -t files < <(grep -E '\.lua\s*$' Hekili.toc | tr -d '\r' | sed 's/\\/\//g; s/[[:space:]]*$//')
+mapfile -t files < <(grep -E '\.lua\s*$' src/Hekili/Hekili.toc | tr -d '\r' | sed 's/\\/\//g; s/[[:space:]]*$//; s#^#src/Hekili/#')
 globals=$(cut -f1 tools/api_inventory.txt | sed -E 's/\..*//' | sort -u | paste -sd'|')
 fail=0
 out=$("$LUACHECK" --no-config --std none --formatter plain --codes "${files[@]}"); rc=$?

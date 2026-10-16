@@ -1,4 +1,4 @@
--- Lint for the Forever branch. Every game read goes through ns.Facade (Virtual/API/Facade.lua; see
+-- Lint for the Forever branch. Every game read goes through ns.Facade (src/Hekili/Virtual/API/Facade.lua; see
 -- tools/check_api_reads.sh): the names of tools/api_inventory.txt, CreateFrame among them, are deliberately NOT
 -- declared here, so a bare read shows up as W113 "accessing undefined variable".
 std = "lua51"
@@ -6,7 +6,7 @@ max_line_length = false
 codes = true
 
 exclude_files = {
-    "Libs/",
+    "src/Hekili/Libs/",
     "archive/",
     ".claude/",
     ".luacheckrc",
@@ -78,28 +78,28 @@ local stateEnv = {
     "next_ation", "name", "listName", "id", "event", "boss", "alphaCheck", "abilitty", "display", "args", "v", "p",
     "val", "treeToString", "QueueRebuildUI",
 }
-files["Classes.lua"] = { globals = stateEnv }
-files["State.lua"] = { globals = stateEnv }
-files["Scripts.lua"] = { globals = stateEnv }
-files["Core.lua"] = { globals = stateEnv }
-files["Events.lua"] = { globals = stateEnv }
-files["Options/Options.lua"] = { globals = stateEnv }
-files["Options/DevTools.lua"] = { globals = stateEnv }
-files["Options/ChatCommands.lua"] = { globals = stateEnv }
-files["Targets.lua"] = { globals = stateEnv }
-files["UI.lua"] = { globals = stateEnv }
-files["Utils.lua"] = { globals = stateEnv }
-files["Hekili.lua"] = { globals = stateEnv }
-files["Constants.lua"] = { globals = stateEnv }
--- The names a class file's `now` function reads in VirtualState's context (Virtual/State/Families/Now.lua).
+files["src/Hekili/Classes.lua"] = { globals = stateEnv }
+files["src/Hekili/State.lua"] = { globals = stateEnv }
+files["src/Hekili/Scripts.lua"] = { globals = stateEnv }
+files["src/Hekili/Core.lua"] = { globals = stateEnv }
+files["src/Hekili/Events.lua"] = { globals = stateEnv }
+files["src/Hekili/Options/Options.lua"] = { globals = stateEnv }
+files["src/Hekili/Options/DevTools.lua"] = { globals = stateEnv }
+files["src/Hekili/Options/ChatCommands.lua"] = { globals = stateEnv }
+files["src/Hekili/Targets.lua"] = { globals = stateEnv }
+files["src/Hekili/UI.lua"] = { globals = stateEnv }
+files["src/Hekili/Utils.lua"] = { globals = stateEnv }
+files["src/Hekili/Hekili.lua"] = { globals = stateEnv }
+files["src/Hekili/Constants.lua"] = { globals = stateEnv }
+-- The names a class file's `now` function reads in VirtualState's context (src/Hekili/Virtual/State/Families/Now.lua).
 local nowEnv = {
     "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "setCooldown", "talent",
     "buff", "debuff", "knownRank", "now", "combat", "rage", "energy", "mana", "focus", "runic_power",
 }
-files["Virtual/State/spec/"] = { std = "+busted", read_globals = nowEnv }
-files["Virtual/Events/spec/"] = { std = "+busted", read_globals = nowEnv }
-files["Virtual/API/spec/"] = { std = "+busted", read_globals = nowEnv }
-files["Forever/spec/"] = { std = "+busted" }
+files["tests/Virtual/State/"] = { std = "+busted", read_globals = nowEnv }
+files["tests/Virtual/Events/"] = { std = "+busted", read_globals = nowEnv }
+files["tests/Virtual/API/"] = { std = "+busted", read_globals = nowEnv }
+files["tests/Forever/"] = { std = "+busted" }
 -- The Warrior's handlers, state expressions and state functions run with setfenv( f, state ) as well; these are the
 -- further `state` names they use.
 local warriorEnv = {
@@ -109,7 +109,7 @@ local warriorEnv = {
 for _, k in ipairs(stateEnv) do
     warriorEnv[#warriorEnv + 1] = k
 end
-files["Forever/Classes/Warrior.lua"] = { globals = warriorEnv }
+files["src/Hekili/Forever/Classes/Warrior.lua"] = { globals = warriorEnv }
 -- The Druid's further `state` names.
 local druidEnv = {
     "rage", "energy", "mana", "combo_points", "cooldown", "combat", "group", "swap_form", "addStack", "removeStack",
@@ -117,5 +117,5 @@ local druidEnv = {
 for _, k in ipairs(stateEnv) do
     druidEnv[#druidEnv + 1] = k
 end
-files["Forever/Classes/Druid.lua"] = { globals = druidEnv }
-files["Forever/Races/"] = { globals = stateEnv }
+files["src/Hekili/Forever/Classes/Druid.lua"] = { globals = druidEnv }
+files["src/Hekili/Forever/Races/"] = { globals = stateEnv }

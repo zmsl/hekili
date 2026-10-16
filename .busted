@@ -1,3 +1,8 @@
 return {
-    default = { ROOT = { "Virtual/Events/spec", "Virtual/API/spec", "Virtual/State/spec", "Forever/spec" }, pattern = "_spec", lpath = "./?.lua", verbose = true },
+    default = {
+        ROOT = { "tests/Virtual/Events", "tests/Virtual/API", "tests/Virtual/State", "tests/Forever" },
+        pattern = "_spec",
+        lpath = "./src/Hekili/?.lua;./tests/?.lua;./?.lua",
+        verbose = true,
+    },
 }

@@ -4,7 +4,7 @@
 -- desc, simc } } }). Run from the repository root, the class defaulting to warrior:
 --   lua5.1 tools/make_pack.lua [class]
 -- Edit a pack's SimC-style text there, run this, and paste each printed string into its spec:RegisterPack( ... [[ ]] )
--- in Forever/Classes/<Class>.lua (the class's spec fails until they match). Loaded with the argument "lists"
+-- in src/Hekili/Forever/Classes/<Class>.lua (the class's spec fails until they match). Loaded with the argument "lists"
 -- (loadfile(...)("lists"[, class])) it returns the class's packs with each pack's parsed lists instead, for the specs.
 
 local first, second = ...
@@ -46,9 +46,9 @@ if first == "lists" then
 end
 
 _G.strbyte, _G.strchar, _G.strsub, _G.strfind, _G.format = string.byte, string.char, string.sub, string.find, string.format
-dofile("Libs/LibStub/LibStub.lua")
-dofile("Libs/LibDeflate/LibDeflate.lua")
-dofile("Libs/AceSerializer-3.0/AceSerializer-3.0.lua")
+dofile("src/Hekili/Libs/LibStub/LibStub.lua")
+dofile("src/Hekili/Libs/LibDeflate/LibDeflate.lua")
+dofile("src/Hekili/Libs/AceSerializer-3.0/AceSerializer-3.0.lua")
 local LibDeflate, Serializer = LibStub("LibDeflate"), LibStub("AceSerializer-3.0")
 
 for _, p in ipairs(PACKS) do
