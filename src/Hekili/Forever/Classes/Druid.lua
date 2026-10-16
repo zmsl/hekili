@@ -2,8 +2,8 @@
 -- The Forever Druid (one pseudo-spec, DRUID_SPEC below): the Classic Druid kit with Forever's spell data (ranks,
 -- costs, cooldowns, cast times and durations from the Forever DB2 at build 1.60.1.70338, wowdb; energy and mana costs
 -- are DB2 points, rage the DB2 cost / 10), Forever's Shifting Power, Berserk, Primal Bite and Lacerate, bear rage per
--- white swing in Bear Form only, Enrage's rage over time, Clearcasting as a cost modifier, forms from the plain
--- shapeshift reads, the bleeds' misses from the combat log, and the default priorities (Feral; Guardian and Balance
+-- white swing in Bear Form only, Enrage's rage over time, Clearcasting as a cost modifier, forms from the belief's
+-- Forms source, the bleeds' misses from the combat log, and the default priorities (Feral; Guardian and Balance
 -- provisional). Design: docs/superpowers/specs/2026-10-15-forever-druid-pack.md.
 -- Talents: the DB2's 47 Classic nodes plus three placeholders the live export replaces (checkpoint Q1). Only rank 1 of
 -- each talent is in the Forever DB2, so a modifier is rank 1's value x the rank (Classic's convention), floored at 0;
@@ -19,7 +19,6 @@
 local addon, ns = ...
 local Facade = ns.Facade
 local C_Spell, UnitClassBase = Facade.C_Spell, Facade.UnitClassBase
-local GetShapeshiftForm, GetShapeshiftFormInfo = Facade.GetShapeshiftForm, Facade.GetShapeshiftFormInfo
 local CombatLogGetCurrentEventInfo, GetTime = Facade.CombatLogGetCurrentEventInfo, Facade.GetTime
 local Hekili = _G[addon]
 
@@ -105,16 +104,8 @@ local REGROWTH_COST = { 70, 125, 170, 210, 250, 305, 370, 445, 525 }
 local REJUVENATION = { 774, 1058, 1430, 2090, 2091, 3627, 8910, 9839, 9840, 9841, 25299 }
 local REJUVENATION_COST = { 25, 40, 75, 105, 135, 160, 195, 235, 280, 335, 360 }
 
--- The forms, in `buff.form`'s member order (one is up at a time), and each form's spell -> its aura.
+-- The forms, in `buff.form`'s member order (one is up at a time).
 local FORMS = { "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form" }
-local FORM_OF_SPELL = {
-    [768] = "cat_form",
-    [5487] = "bear_form",
-    [9634] = "bear_form",
-    [24858] = "moonkin_form",
-    [783] = "travel_form",
-    [1066] = "aquatic_form",
-}
 
 -- Shifting Power's energy (DB2 1322605 effect 30, base 40) and bear rage per white swing (spec §2.3, D4): the
 -- Warrior's measured one-hand main-hand rate x the form's unhasted 2.5 s swing, 8.65 a swing, until checkpoint Q8.
@@ -617,20 +608,7 @@ spec:RegisterEvent("UI_ERROR_MESSAGE", function(_, errorType)
 end)
 
 spec:RegisterHook("reset_precast", function()
-    -- The form from the plain shapeshift reads, as the Warrior's stance (forever-facade-notes: GetShapeshiftForm,
-    -- GetShapeshiftFormInfo); Dire Bear Form reads as bear_form.
-    for i = 1, #FORMS do
-        removeBuff(FORMS[i])
-    end
-    local form = GetShapeshiftForm()
-    if form and form > 0 then
-        local _, _, _, spellID = GetShapeshiftFormInfo(form)
-        local aura = FORM_OF_SPELL[spellID]
-        if aura then
-            applyBuff(aura)
-        end
-    end
-
+    -- The form comes from the belief's Forms source (Virtual/State/Sources/Forms.lua) through the aura walk.
     local maul = knownRank(MAUL)
     if maul > 0 and IsCurrentSpell(MAUL[maul]) then
         applyBuff("maul")

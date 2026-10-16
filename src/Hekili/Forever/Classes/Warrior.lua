@@ -2,7 +2,7 @@
 -- The Forever Warrior (pseudo-spec 1491): the Classic Warrior kit with Forever's spell data (ranks, costs, cooldowns,
 -- cast times and durations from the Forever DB2 at build 1.60.1.70338, wowdb, a cost of 100 there being 10 rage; the
 -- client is 1.60.1.70374, and its export wins where they differ), Forever's Victory Rush and Spearing Strike, rage per
--- hit for both hands, Bloodrage's and Anger Management's rage over time, stances from the plain shapeshift reads, and
+-- hit for both hands, Bloodrage's and Anger Management's rage over time, stances from the belief's Forms source, and
 -- the default priorities.
 -- Talents: the 52 live nodes (a ForeverProbe export of the client, 1.60.1.70374, 2026-10-15). Only rank 1 of each
 -- talent is in the Forever DB2, so a cost modifier is rank 1's value x the rank (Classic's own convention), floored
@@ -18,7 +18,6 @@
 local addon, ns = ...
 local Facade = ns.Facade
 local C_SpellBook, C_Spell, UnitClassBase = Facade.C_SpellBook, Facade.C_Spell, Facade.UnitClassBase
-local GetShapeshiftForm, GetShapeshiftFormInfo = Facade.GetShapeshiftForm, Facade.GetShapeshiftFormInfo
 local CombatLogGetCurrentEventInfo, GetTime = Facade.CombatLogGetCurrentEventInfo, Facade.GetTime
 local Hekili = _G[addon]
 
@@ -540,8 +539,6 @@ spec:RegisterAuras({
     },
 })
 
-local STANCE_OF_SPELL = { [2457] = "battle_stance", [71] = "defensive_stance", [2458] = "berserker_stance" }
-
 -- A stance change drops all rage above what is kept: Forever's Tactical Mastery passive keeps 10, Improved Tactical
 -- Mastery 15 more a rank (DB2: 1310185 keeps $m1 + $12295m1; 12295's m1 is 15). Rage tops out at 100, so no cap.
 spec:RegisterStateFunction("swap_stance", function(stance)
@@ -595,19 +592,7 @@ spec:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function()
 end)
 
 spec:RegisterHook("reset_precast", function()
-    -- The stance from the plain shapeshift reads (forever-facade-notes: GetShapeshiftForm, GetShapeshiftFormInfo).
-    removeBuff("battle_stance")
-    removeBuff("defensive_stance")
-    removeBuff("berserker_stance")
-    local form = GetShapeshiftForm()
-    if form and form > 0 then
-        local _, _, _, spellID = GetShapeshiftFormInfo(form)
-        local stance = STANCE_OF_SPELL[spellID]
-        if stance then
-            applyBuff(stance)
-        end
-    end
-
+    -- The stance comes from the belief's Forms source (Virtual/State/Sources/Forms.lua) through the aura walk.
     local hs, cl = knownRank(HEROIC_STRIKE), knownRank(CLEAVE)
     if hs > 0 and IsCurrentSpell(HEROIC_STRIKE[hs]) then
         applyBuff("heroic_strike")

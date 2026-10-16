@@ -431,13 +431,14 @@ describe("Forever Warrior", function()
         assert.is_nil(next(w.track))
     end)
 
-    it("reads the stance, a queued strike and Revenge's window at reset", function()
+    it("reads a queued strike and Revenge's window at reset, leaving the stance to the Forms source", function()
         local e = lw.env(w)
         w.game.form, w.game.formSpell[2] = 2, 71
         w.game.known[78], w.game.current[78] = true, true
         w.game.known[6572], w.game.noMana[6572] = true, true -- usable but for rage
         lw.run(w.hooks.reset_precast, e)
-        assert.are.same({ "defensive_stance", "heroic_strike", "revenge_usable" }, e.applied)
+        assert.are.same({ "heroic_strike", "revenge_usable" }, e.applied)
+        assert.are.same({}, e.removed)
     end)
 
     it("keeps Tactical Mastery's rage on a stance swap", function()

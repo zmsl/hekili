@@ -578,14 +578,14 @@ describe("Forever Druid", function()
         assert.are.same({ { 30, "rage" } }, e.spent)
     end)
 
-    it("reads the form at reset from the shapeshift read (Dire Bear is bear_form), and Maul's queue", function()
+    it("reads Maul's queue at reset, leaving the form to the Forms source", function()
         local e = ld.env(w)
         w.game.form, w.game.formSpell[2] = 2, 9634
         w.game.known[6807], w.game.current[6807] = true, true
         e.now, e.query_time = 10, 10
         ld.run(w.hooks.reset_precast, e)
-        assert.are.same({ "bear_form", "maul" }, e.applied)
-        assert.are.same({ "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form" }, e.removed)
+        assert.are.same({ "maul" }, e.applied)
+        assert.are.same({}, e.removed)
     end)
 
     it("gains rage per white swing in Bear Form only, at the form's 2.5 s x 3.46; Enrage 2/s; decay 1.25", function()
