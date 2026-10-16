@@ -1114,8 +1114,6 @@ function SkeletonGen:Generate()
     self:AppendField( "damage", true )
     self:AppendField( "damageExpiration", 6 )
     self:Blank()
-    self:AppendField( "potion", "tempered_potion" )
-    self:Blank()
     self:AppendField( "package", specName )
 
     self:EndRegistration()

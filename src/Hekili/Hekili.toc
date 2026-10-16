@@ -54,6 +54,7 @@ Events.lua
 Engine\Spec.lua
 Engine\Shared.lua
 Forever\Shared\Auras.lua
+Forever\Shared\Consumables.lua
 Forever\Classes\Warrior.lua
 Forever\Classes\Druid.lua
 Forever\Races\Gnome.lua

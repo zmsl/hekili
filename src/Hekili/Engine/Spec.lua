@@ -28,10 +28,9 @@ local insert, wipe = table.insert, table.wipe
 
 local mt_resource = ns.metatables.mt_resource
 
-local GetItemCooldown = C_Item.GetItemCooldown
 local GetSpellDescription, GetSpellTexture = C_Spell.GetSpellDescription, C_Spell.GetSpellTexture
 local GetSpecialization, GetSpecializationInfo = C_SpecializationInfo.GetSpecialization, C_SpecializationInfo.GetSpecializationInfo
-local GetItemSpell, GetItemCount, IsUsableItem = C_Item.GetItemSpell, C_Item.GetItemCount, C_Item.IsUsableItem
+local GetItemSpell = C_Item.GetItemSpell
 local GetSpellInfo = C_Spell.GetSpellInfo
 
 local specTemplate = {
@@ -1591,156 +1590,6 @@ all:RegisterAuras( {
     unknown_buff = {},
 } )
 
-do
-    -- Forever potions arrive with the class files.
-    local exp_potions = {}
-
----@diagnostic disable-next-line: need-check-nil
-    all:RegisterAura( "fake_potion", {
-        duration = 30,
-        max_stack = 1,
-    } )
-
-    local first_potion, first_potion_key
-    local potion_items = {}
-
-    all:RegisterHook( "reset_precast", function ()
-        wipe( potion_items )
-        for _, potion in ipairs( exp_potions ) do
-            for _, item in ipairs( potion.items ) do
-                if GetItemCount( item, false ) > 0 then
-                    potion_items[ potion.name ] = item
-                    break
-                end
-            end
-        end
-    end )
-
-    all:RegisterAura( "potion", {
-        alias = { "fake_potion" },
-        aliasMode = "first",
-        aliasType = "buff",
-        duration = 30
-    } )
-
-    local GetItemInfo = C_Item.GetItemInfo
-
-    for _, potion in ipairs( exp_potions ) do
-        local potionItem = Item:CreateFromItemID( potion.items[ #potion.items ] )
-
-        -- all:RegisterAbility( potion.name, {} ) -- Create stub.
-
-        potionItem:ContinueOnItemLoad( function()
-            all:RegisterAbility( potion.name, {
-                name = potionItem:GetItemName(),
-                listName = potionItem:GetItemLink(),
-                cast = 0,
-                cooldown = 300,
-                gcd = "off",
-
-                startsCombat = false,
-                toggle = "potions",
-
-                item = function ()
-                    return potion_items[ potion.name ] or potion.items[ #potion.items ]
-                end,
-                items = potion.items,
-                bagItem = true,
-                texture = potionItem:GetItemIcon(),
-
-                handler = function ()
-                    applyBuff( potion.name )
-                end,
-            } )
-
-            class.abilities[ potion.name ] = all.abilities[ potion.name ]
-
-            class.potions[ potion.name ] = {
-                name = potionItem:GetItemName(),
-                link = potionItem:GetItemLink(),
-                item = potion.items[ #potion.items ]
-            }
-
-            class.potionList[ potion.name ] = "|T" .. potionItem:GetItemIcon() .. ":0|t |cff00ccff[" .. potionItem:GetItemName() .. "]|r"
-
-            for i, item in ipairs( potion.items ) do
-                if not first_potion then
-                    first_potion_key = potion.name
-                    first_potion = item
-                end
-
-                local each_potion = Item:CreateFromItemID( item )
-
-                if not each_potion:IsItemEmpty() then
-                    each_potion:ContinueOnItemLoad( function()
-                        local _, spell = GetItemSpell( item )
-
-                        if not spell then Hekili:Error( "No spell found for item %d.", item ) return false end
-
-                        if not all.auras[ potion.name ] then
-                            all:RegisterAura( potion.name, {
-                                id = spell,
-                                duration = 30,
-                                max_stack = 1,
-                                copy = { spell }
-                            } )
-
-                            class.auras[ spell ] = all.auras[ potion.name ]
-                        else
-                            local existing = all.auras[ potion.name ]
-                            if not existing.copy then existing.copy = {} end
-                            insert( existing.copy, spell )
-                            all.auras[ spell ] = all.auras[ potion.name ]
-                            class.auras[ spell ] = all.auras[ potion.name ]
-                        end
-
-                        return true
-                    end )
-                else
-                    Hekili:Error( "Item %d is empty.", item )
-                end
-            end
-        end )
-    end
-
-    all:RegisterAbility( "potion", {
-        name = "Potion",
-        listName = '|T136243:0|t |cff00ccff[Potion]|r',
-        cast = 0,
-        cooldown = 300,
-        gcd = "off",
-
-        startsCombat = false,
-        toggle = "potions",
-
-        consumable = function() return state.args.potion or settings.potion or first_potion_key end,
-        item = function()
-            if state.args.potion and class.abilities[ state.args.potion ] then return class.abilities[ state.args.potion ].item end
-            if spec.potion and class.abilities[ spec.potion ] then return class.abilities[ spec.potion ].item end
-            if first_potion and class.abilities[ first_potion ] then return class.abilities[ first_potion ].item end
-            return 191387
-        end,
-        bagItem = true,
-
-        handler = function ()
-            local use = all.abilities.potion
-            use = use and use.consumable
-
-            if use and use ~= "global_cooldown" then
-                class.abilities[ use ].handler()
-                setCooldown( use, action[ use ].cooldown )
-            end
-        end,
-
-        usable = function ()
-            return potion_items[ all.abilities.potion.item ], "no valid potions found in inventory"
-        end,
-
-        copy = "potion_default"
-    } )
-end
-
-
 all:RegisterAbilities( {
     global_cooldown = {
         id = ns.VirtualStateInternal.GCD_SPELL,
@@ -1816,38 +1665,6 @@ all:RegisterAbilities( {
         cooldown = 0,
         gcd = "off",
         essential = true,
-    },
-
-    healthstone = {
-        name = "Healthstone",
-        listName = "|T538745:0|t |cff00ccff[Healthstone]|r",
-        cast = 0,
-        cooldown = function () return time > 0 and 3600 or 60 end,
-        gcd = "off",
-
-        item = function() return talent.pact_of_gluttony.enabled and 224464 or 5512 end,
-        items = { 224464, 5512 },
-        bagItem = true,
-
-        startsCombat = false,
-        texture = function() return talent.pact_of_gluttony.enabled and 538744 or 538745 end,
-
-        usable = function ()
-            local item = talent.pact_of_gluttony.enabled and 224464 or 5512
-            if GetItemCount( item ) == 0 then return false, "requires healthstone in bags"
-            elseif not IsUsableItem( item ) then return false, "healthstone on CD"
-            elseif health.current >= health.max then return false, "must be damaged" end
-            return true
-        end,
-
-        readyTime = function ()
-            local start, duration = GetItemCooldown( talent.pact_of_gluttony.enabled and 224464 or 5512 )
-            return max( 0, start + duration - query_time )
-        end,
-
-        handler = function ()
-            gain( 0.25 * health.max, "health" )
-        end,
     },
 
     cancel_buff = {

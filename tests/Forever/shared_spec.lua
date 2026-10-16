@@ -32,6 +32,11 @@ local DROPPED = {
     "dispellable_enrage",
     "all_absorbs",
     "unravel_absorb",
+    -- retail's consumables: Tempered Potion, Pact of Gluttony's Healthstone and talent
+    "tempered_potion",
+    "191387",
+    "224464",
+    "pact_of_gluttony",
 }
 -- Keys core reads by name (State.lua): id-less stubs in Forever/Shared/Auras.lua, never up.
 local STUBS = { "voidbinding", "voidform", "shadowform", "adrenaline_rush" }
@@ -58,8 +63,13 @@ local function names(src, key)
     return src:find("%f[%w_]" .. key .. "%f[^%w_]") ~= nil
 end
 
+-- Whether `src` registers `key` with an id (`key = { id =` or `RegisterAura( "key", { id =`).
+local function registers(src, key)
+    return src:find("%f[%w_]" .. key .. '"?%s*[=,]%s*{[^}]-%f[%w_]id%s*=') ~= nil
+end
+
 describe("shared content", function()
-    local all, ns, saved, debuffs
+    local all, ns, saved, debuffs, bags
 
     -- Runs Engine/Races.lua, Engine/Shared.lua and the named shared files (default: every one Hekili.toc lists) against
     -- a stand-in `all` that registers as Engine/Spec.lua's RegisterAbility/RegisterAura: under the key, its id and
@@ -83,9 +93,17 @@ describe("shared content", function()
             register(self.auras, key, def)
         end
         _G.Hekili = { State = { race_token = "BloodElf" }, Class = { specs = { [0] = all }, file = "WARRIOR" } }
-        debuffs = {}
+        debuffs, bags = {}, {}
         ns = {
             Facade = {
+                C_Item = {
+                    GetItemCount = function(id)
+                        return bags[id] or 0
+                    end,
+                    IsUsableItem = function()
+                        return true
+                    end,
+                },
                 C_LossOfControl = {
                     GetActiveLossOfControlData = function() end,
                     GetActiveLossOfControlDataCount = function()
@@ -183,6 +201,31 @@ describe("shared content", function()
         end
     end)
 
+    it("registers the potion action and auras core reads, and the Healthstone from Forever's items only", function()
+        load({ "Consumables" })
+        assert.are.same({ "healthstone", "potion" }, keys("abilities"))
+        assert.are.same({ "fake_potion", "potion" }, keys("auras"))
+        assert.are.equal(all.abilities.potion, all.abilities.potion_default)
+        assert.are.same({ "fake_potion" }, all.auras.potion.alias)
+        assert.are.same(
+            { 19013, 19012, 9421, 19011, 19010, 5510, 19009, 19008, 5509, 19007, 19006, 5511, 19005, 19004, 5512 },
+            all.abilities.healthstone.items
+        )
+        assert.are.same({ 120, "off" }, { all.abilities.healthstone.cooldown, all.abilities.healthstone.gcd })
+        assert.is_nil(all.abilities.healthstone.now or all.abilities.potion.now) -- item actions: no cast the belief sees
+        for _, path in ipairs({ "src/Hekili/Core.lua", "src/Hekili/Options/DevTools.lua" }) do
+            assert.is_false(names(read(path), "tempered_potion"), path) -- the `potion` verb's old fallback
+        end
+    end)
+
+    it("uses the best Healthstone in the bags, and the Minor one when there is none", function()
+        load({ "Consumables" })
+        local item = all.abilities.healthstone.item
+        assert.are.equal(5512, item())
+        bags[5509], bags[19007] = 1, 2
+        assert.are.equal(5509, item())
+    end)
+
     it("leaves no dropped key in a priority, a class, race, engine or shared file, and no stub outside its own", function()
         local ls = assert(io.popen("find src/Hekili/Engine src/Hekili/Forever tools/packs -name '*.lua' | sort"))
         local n = 0
@@ -192,9 +235,10 @@ describe("shared content", function()
                 assert.is_false(names(src, k), path .. ": " .. k)
             end
             -- A class file (a future Priest or Rogue) may register a stubbed key for real; its registration wins.
-            if path ~= "src/Hekili/Forever/Shared/Auras.lua" and not path:find("^src/Hekili/Forever/Classes/") then
+            if path ~= "src/Hekili/Forever/Shared/Auras.lua" then
+                local class = path:find("^src/Hekili/Forever/Classes/")
                 for _, k in ipairs(STUBS) do
-                    assert.is_false(names(src, k), path .. ": " .. k)
+                    assert.is_true(class and registers(src, k) or not names(src, k), path .. ": " .. k)
                 end
             end
             n = n + 1
