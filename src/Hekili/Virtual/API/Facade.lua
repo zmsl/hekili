@@ -238,8 +238,9 @@ kept("UnitPower", "virtual", function(unit, powerType)
         end
     end
     local b = VS.Power(powerType, now())
-    return floor(powerType == 1 and b.est or b.lo) -- rage answers est (G4, CHECKPOINT 4); others lo
-end, "secret always [W PR16]; rage Power().est (G4), others Power().lo")
+    -- lo for every resource: rage's speed-based model has a zero band and errs upward only, so lo is a true floor (G4)
+    return floor(b.lo)
+end, "secret always [W PR16]; Power().lo for every resource (G4's rage exception dropped 2026-10-16)")
 
 hybrid("GetPowerRegenForPowerType", function(powerType)
     local r = I.res.slotOf[powerType]

@@ -134,7 +134,7 @@ describe("ns.Facade", function()
         assert.is_nil(Facade.C_Spell.GetSpellLossOfControlCooldown(1))
     end)
 
-    it("answers resources: UnitPower floors est for rage, lo otherwise; swing regen 0 in and out of combat", function()
+    it("answers resources: UnitPower floors lo for every resource; swing regen 0 in and out of combat", function()
         I.Sources.Direct(VS.Obs.Usable, 5, 3, 1, 0) -- rend usable: rage >= 10
         I.Fold(5, false)
         ctl.now = 5
@@ -151,10 +151,10 @@ describe("ns.Facade", function()
         VS.Power = power
         assert.are.equal(0, asked)
         VS.Power = function()
-            return { est = 98.6, lo = 31.8 } -- the in-game case (G4): lo drifted far below the bar
+            return { est = 98.6, lo = 31.8 }
         end
-        assert.are.equal(98, Facade.UnitPower("player", fs.RAGE))
-        assert.are.equal(31, Facade.UnitPower("player", 3)) -- energy, a non-rage power type, keeps lo
+        assert.are.equal(31, Facade.UnitPower("player", fs.RAGE)) -- rage too: G4's est exception is gone
+        assert.are.equal(31, Facade.UnitPower("player", 3))
         VS.Power = power
         assert.are.same({ 0, 0 }, { Facade.GetPowerRegenForPowerType(fs.RAGE) }) -- out of combat too: no swings (G3)
         ctl.Fire("PLAYER_REGEN_DISABLED")
