@@ -205,6 +205,8 @@ spec:RegisterResource(
         },
 
         -- Bloodrage's aura (29131): 1 rage every second for 10 s (DB2 effect: periodic energize 10 every 1000 ms).
+        -- Its ten ticks land nine times: the tick at the expiry does not (in game 2026-10-16, 10 instant + 9 = 19); both
+        -- models drop it (VirtualState's auraGain, core edit E6).
         bloodrage = {
             aura = "bloodrage",
 
@@ -748,7 +750,8 @@ spec:RegisterAbilities({
         end,
 
         handler = function()
-            -- 12301 (in-game tooltip): +25% of the rage Bloodrage generates a rank.
+            -- 12301 (in-game tooltip): +25% of the rage Bloodrage generates a rank. The aura's ten ticks then land nine
+            -- times, the one at the expiry does not (in game 2026-10-16; the regen entry above).
             gain(10 * (1 + 0.25 * talent.improved_bloodrage.rank), "rage")
             applyBuff("bloodrage")
         end,

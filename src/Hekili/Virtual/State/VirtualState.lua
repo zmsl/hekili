@@ -68,6 +68,7 @@ I.REGEN_SPREAD = 0.1
 I.REGEN_SPREAD_MIN = 0.02
 I.REGEN_RATIO = 2
 I.EPS = 0.01
+I.TICK_EPS = 0.001 -- a periodic tick due at its aura's expiry does not land (Resources.lua auraGain)
 I.CD_PROBE = 0.5
 I.SNAP_HOLD = 1
 I.AURA_HALF_LIFE = 10

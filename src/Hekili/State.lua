@@ -1307,8 +1307,9 @@ do
                     remains[ e.resource ] = finish - e.next
                     e.next = e.next + step
 
+                    -- Forever E6: a tick due at the aura's expiry does not land (Bloodrage gives 9, not 10).
                     if e.next > finish or step < 0 or
-                       ( e.aura and state[ e.debuff and "debuff" or "buff" ][ e.aura ].expires < e.next ) or
+                       ( e.aura and state[ e.debuff and "debuff" or "buff" ][ e.aura ].expires <= e.next ) or
                        ( e.channel and state.buff.casting.expires < e.next ) then
                         table.remove( events, 1 )
                     end

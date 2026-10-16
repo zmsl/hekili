@@ -280,6 +280,10 @@ Every stub site in the retained files that throws or yields a wrong value. Sites
 - Division-by-zero audit: the NaN and `inf` sites in the table above.
 - Load-time nils: the stubs above cover reads; globals the facade does not list stay a Phase 3b audit.
 
+## Periodic auras
+
+- A periodic tick due at its aura's expiry does not land (2026-10-16, Warrior out of combat: Bloodrage's 10 s aura ticking 1 rage a second ends at 9, never 10). VirtualState's `auraGain` stops TICK_EPS short of the expiry; the sim's forecast drops an event at `expires <= e.next` (core edit E6, `State.lua`).
+
 ## Known reads outside the inventory
 
 - `Libs/LibSpellRange-1.0` calls `C_Spell.IsSpellInRange` directly (Libs are excluded from tools/check_api_reads.sh); probed plain OUT of combat (2026-10-15, Charge 100 → true/false); in combat unprobed. `action.<key>.in_range` (State.lua ~5070) reads it through `ability.rangeSpell or ability.id`: for a RANKED spell `ability.id` is rank 1, the client answers nil for an unknown rank, and Hekili treats nil as "in range". Only single-rank abilities (Charge) or ones with `rangeSpell` set to the known rank get a real answer.

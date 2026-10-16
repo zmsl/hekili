@@ -320,11 +320,11 @@ describe("resources", function()
             I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
             I.Settle(15.5)
             assert.are.equal(5, VS.Power(fs.RAGE, 15.5).est) -- ticks at 11, 12, 13, 14, 15
-            assert.are.equal(10, VS.Power(fs.RAGE, 25).est) -- projected: 16 to 20, none after the expiry
+            assert.are.equal(9, VS.Power(fs.RAGE, 25).est) -- projected: 16 to 19; the tick at the expiry does not land
             I.Settle(25)
             local r = VS.Power(fs.RAGE, 30)
-            assert.are.same({ 10, 10 }, { r.est, r.lo })
-            assert.are.equal(10, I.res.pinDelta[1]) -- kept out of the next regen measurement
+            assert.are.same({ 9, 9 }, { r.est, r.lo })
+            assert.are.equal(9, I.res.pinDelta[1]) -- kept out of the next regen measurement
             assert.are.equal(1, I.res.auraRegen.n)
         end)
 
@@ -354,7 +354,14 @@ describe("resources", function()
             I.Settle(15)
             assert.are.equal(25, VS.Power(fs.RAGE, 15).est) -- 5 ticks, no decay
             I.Settle(22)
-            assert.are.equal(26, VS.Power(fs.RAGE, 22).est) -- 5 more ticks, then 2 s x 2/s after the expiry
+            assert.are.equal(25, VS.Power(fs.RAGE, 22).est) -- 4 more ticks (none at the expiry), then 2 s x 2/s
+        end)
+
+        it("drops the tick at the expiry: a 10 s aura ticking 1 a second lands 9 (in game, 2026-10-16)", function()
+            I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
+            assert.are.equal(5, VS.Power(fs.RAGE, 15).est) -- (10, 15]: before the expiry, unchanged
+            assert.are.equal(9, VS.Power(fs.RAGE, 20).est) -- (10, 20]: 11 to 19, not 20
+            assert.are.equal(9, VS.Power(fs.RAGE, 30).est) -- (10, 30]: nothing after it either
         end)
 
         it("leaves decay at the full rate when the tick aura is down or already expired", function()

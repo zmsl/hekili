@@ -237,7 +237,8 @@ function I.SwingValue(r, hand)
 end
 
 -- What entry g brings in (from, to]: `value` at each `interval` after the player's aura was applied, up to its
--- believed expiry. Allocates nothing.
+-- believed expiry. A tick due at the expiry itself does not land (the removal wins; in game 2026-10-16, Bloodrage's ten
+-- ticks give 9), so an aura-gated window stops TICK_EPS short of it. Allocates nothing.
 local function auraGain(g, from, to)
     local j, tid = G.aura[g], G.talent[g]
     if tid > 0 and VS.Talent(tid) == 0 then
@@ -256,8 +257,8 @@ local function auraGain(g, from, to)
         return 0
     end
     local iv = G.interval[g]
-    if to > e then
-        to = e
+    if j ~= 0 and to > e - I.TICK_EPS then
+        to = e - I.TICK_EPS
     end
     if from < ap then
         from = ap
