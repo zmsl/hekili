@@ -48,10 +48,11 @@ Formatting.lua
 MultilineEditor.lua
 Constants.lua
 State.lua
-Races.lua
+Engine\Races.lua
 Events.lua
 
-Classes.lua
+Engine\Spec.lua
+Engine\Shared.lua
 Forever\Classes\Warrior.lua
 Forever\Classes\Druid.lua
 Forever\Races\Gnome.lua

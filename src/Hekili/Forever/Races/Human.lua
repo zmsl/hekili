@@ -4,7 +4,7 @@
 -- detection for 20 s; 180 s, on the GCD). Will to Survive leaves no aura and no resource: no `handler` or `now`, its
 -- cooldown and GCD are the declared fields'. The Human Spirit (+5% Spirit) and Sword Specialization (+2% crit with a
 -- sword) are passives on stats the game reports. No resource or cost modifier. No pack names either. Inert for any
--- other race (Races.lua).
+-- other race (Engine/Races.lua).
 
 local addon, ns = ...
 local Hekili = _G[ addon ]

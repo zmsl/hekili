@@ -3,7 +3,7 @@
 -- +10% damage not modelled; 120 s, off the GCD; one ID per class: 1259813 Warrior, 1259812 Rogue, 1259817 Mage,
 -- 1259821 Warlock, 1259823 Priest), Expansive Mind (+5% maximum resources: 20591 Priest/Mage/Warlock, 1259802
 -- Warrior, 1259803 Rogue) and Escape Artist (20589: roots and snares removed, immune for 3 s; 120 s, on the GCD).
--- Engineering Specialization is a profession passive. Inert for any other race (Races.lua).
+-- Engineering Specialization is a profession passive. Inert for any other race (Engine/Races.lua).
 
 local addon, ns = ...
 local Hekili = _G[ addon ]
@@ -19,7 +19,7 @@ local EUREKA = { 1259812, 1259817, 1259821, 1259823 } -- the other classes' Eure
 --   and not (((o.SpellClassMask_0 & 4294967295)&<m0>)=0 and ((o.SpellClassMask_1 & 4294967295)&<m1>)=0
 --   and ((o.SpellClassMask_2 & 4294967295)&<m2>)=0)
 -- (no ManaCost filter: a percent cost reads 0 there). Higher ranks resolve through the class's `copy` lists; an ID the
--- loaded class does not register is absent (Races.lua, Modifiers.lua). Not listed: Rebuke 425609 (a Paladin spell in
+-- loaded class does not register is absent (Engine/Races.lua, Modifiers.lua). Not listed: Rebuke 425609 (a Paladin spell in
 -- the Rogue's set), Felfire 24530 (no class), the Warrior's Execute 20647 (the triggered damage: no GCD, no rank; the
 -- cast is 5308's ranks).
 local EUREKA_SPELLS = {
@@ -93,7 +93,7 @@ race:RegisterAura( "escape_artist", {
 
 race:RegisterResourceMod( { max = 0.05 } ) -- Expansive Mind: +5% maximum resources
 
--- The loaded class's scope (Classes.lua sets class.file before any race file runs); a class with no Eureka! (none
+-- The loaded class's scope (Engine/Spec.lua sets class.file before any race file runs); a class with no Eureka! (none
 -- exists for a Hunter, Shaman, Paladin or Druid) declares no cost modifier.
 local spells = EUREKA_SPELLS[ Hekili.Class.file ]
 if spells then

@@ -78,7 +78,7 @@ local stateEnv = {
     "next_ation", "name", "listName", "id", "event", "boss", "alphaCheck", "abilitty", "display", "args", "v", "p",
     "val", "treeToString", "QueueRebuildUI",
 }
-files["src/Hekili/Classes.lua"] = { globals = stateEnv }
+files["src/Hekili/Engine/Spec.lua"] = { globals = stateEnv }
 files["src/Hekili/State.lua"] = { globals = stateEnv }
 files["src/Hekili/Scripts.lua"] = { globals = stateEnv }
 files["src/Hekili/Core.lua"] = { globals = stateEnv }

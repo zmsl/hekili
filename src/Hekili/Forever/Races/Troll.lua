@@ -5,7 +5,7 @@
 -- SPELL_ATTR1_IS_SELF_CHANNELLED, broken by movement, action or damage; 180 s, off the GCD), registered as a 6 s
 -- channel so the simulation does not recommend breaking it. The haste itself is the game's (Hekili reads haste); a
 -- priority reads `buff.berserking.up`. Regeneration and Beast Slaying are passives. No resource or cost modifier. No
--- pack names either. Inert for any other race (Races.lua).
+-- pack names either. Inert for any other race (Engine/Races.lua).
 
 local addon, ns = ...
 local Hekili = _G[ addon ]

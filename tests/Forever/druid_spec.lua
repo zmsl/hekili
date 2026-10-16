@@ -628,7 +628,7 @@ describe("Forever Druid", function()
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists", "druid")
         local secretToken = require("Virtual.State.helpers.load").module().VirtualState.AplSecretToken
-        local shared = { use_items = true } -- Hekili's `all` (Classes.lua's use_items)
+        local shared = { use_items = true } -- Hekili's `all` (Engine/Spec.lua's use_items)
         local kinds = {
             buff = w.auras,
             debuff = w.auras,

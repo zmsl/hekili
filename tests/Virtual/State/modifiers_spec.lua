@@ -1,5 +1,5 @@
 -- tests/Virtual/State/modifiers_spec.lua (event-facade spec §12b): the resource definition's `maxMods` and `costMods`,
--- as a race pack declares them (Races.lua's ns.raceMods: Expansive Mind, Eureka!), through the adapter.
+-- as a race pack declares them (Engine/Races.lua's ns.raceMods: Expansive Mind, Eureka!), through the adapter.
 local load = require("Virtual.State.helpers.load")
 local fake = require("Virtual.State.helpers.fake_api")
 local fs = require("Virtual.State.helpers.fake_spec")
@@ -37,7 +37,7 @@ describe("resource modifiers", function()
             return false
         end
         h.Class.auras.eureka = { key = "eureka", id = EUREKA, duration = 15 }
-        -- the Gnome race pack's declarations (Forever/Races/Gnome.lua through Races.lua), as Adapter.lua reads them
+        -- the Gnome race pack's declarations (Forever/Races/Gnome.lua through Engine/Races.lua), as Adapter.lua reads them
         ns.raceMods = {
             maxMods = { { pct = 0.05 } },
             costMods = { { aura = "eureka", pct = -0.10, charges = 3, spells = { fs.STRIKE, 999999 } } },

@@ -152,7 +152,7 @@ local function buildDef()
         }
         insert(def.resources, d)
         slotByKey[k] = #def.resources
-        -- the race pack's resource and cost modifiers (Races.lua, event-facade spec §12b): every resource of the class,
+        -- the race pack's resource and cost modifiers (Engine/Races.lua, event-facade spec §12b): every resource of the class,
         -- but a maximum modifier never scales a point resource (combo points, runes, ...)
         local race = ns.raceMods
         if race then

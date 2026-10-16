@@ -5,7 +5,7 @@
 -- `all`: usable only while a dispellable effect it removes is up. No `dispellable_bleed` aura exists in `all`: the gate
 -- covers poison and disease until one does (the bleed lines stay, as Forever's real dispel). Find Treasure, Mace
 -- Specialization and Big Game Hunter have no rotation effect. No resource or cost modifier. No pack names it. Inert for
--- any other race (Races.lua).
+-- any other race (Engine/Races.lua).
 
 local addon, ns = ...
 local Hekili = _G[ addon ]

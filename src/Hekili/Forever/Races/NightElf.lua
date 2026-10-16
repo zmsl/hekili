@@ -4,7 +4,7 @@
 -- `all`'s stock entry (58984, absent on Forever): 20580, no cooldown of its own but a 10 s category recovery (871),
 -- off the GCD, the stealth aura 20580 until cancelled. Quickness and Wisp Spirit are passives. No resource or cost
 -- modifier. No pack names either: a race ability is absent for other races; a player adds it to a priority if wanted.
--- Inert for any other race (Races.lua).
+-- Inert for any other race (Engine/Races.lua).
 
 local addon, ns = ...
 local Hekili = _G[ addon ]
