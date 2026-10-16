@@ -7,8 +7,11 @@
 -- `state` in Forever/Shared/Consumables.lua once aborted that file in game).
 local engine = require("Forever.helpers.engine")
 
-local CLASSES, RACES = {}, {}
+local CLASSES, RACES, RACE_LINES = {}, {}, 0
 for line in io.lines("src/Hekili/Hekili.toc") do
+    if line:match("^Forever\\Races\\") then
+        RACE_LINES = RACE_LINES + 1
+    end
     local kind, file = line:match("^Forever\\(%w+)\\(%w+)%.lua")
     if kind == "Classes" then
         CLASSES[#CLASSES + 1] = file:upper()
@@ -39,7 +42,7 @@ end
 describe("Forever content through the real Engine/Spec.lua", function()
     it("lists the class and race files Hekili.toc loads", function()
         assert.is_true(#CLASSES >= 2)
-        assert.are.equal(8, #RACES)
+        assert.are.equal(RACE_LINES, #RACES) -- every race line parsed, its NewRace token found
     end)
 
     for _, classToken in ipairs(CLASSES) do
@@ -95,6 +98,22 @@ describe("Forever content through the real Engine/Spec.lua", function()
                             end)
                             if not ok then
                                 failed[#failed + 1] = a.key .. "." .. k .. ": " .. tostring(err)
+                            end
+                        end
+                    end
+                    table.sort(failed)
+                    assert.are.same({}, failed)
+                end)
+
+                it("runs every ability's meta functions under state", function()
+                    local failed = {}
+                    for _, a in ipairs(abilities(env)) do
+                        for k, f in pairs(rawget(a, "meta") or {}) do -- Spec.lua's RegisterAbility setfenv's them
+                            if type(f) == "function" then
+                                local ok, err = pcall(f)
+                                if not ok then
+                                    failed[#failed + 1] = a.key .. ".meta." .. k .. ": " .. tostring(err)
+                                end
                             end
                         end
                     end

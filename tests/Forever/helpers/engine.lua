@@ -2,8 +2,8 @@
 -- Loads Hekili's REAL spec engine headless: Constants.lua, then every Engine\ and Forever\ file Hekili.toc lists, in its
 -- order (Engine/Races.lua, Engine/Spec.lua, Engine/Shared.lua, Forever/Shared, Classes, Races), so each Register* call
 -- runs Engine/Spec.lua's own code (setfenv( f, state ), the `funcs`/__index wrapper, the `item` resolution). Around it,
--- the smallest stub client: a plain ns.Facade, `Item`, `Enum`, a Hekili without Ace3, an auto-filling Hekili.Class and a
--- STRICT stand-in `state`: a key it lacks raises, so an ability function reading a name State.lua does not provide (a
+-- the smallest stub client: a plain ns.Facade, `Item`, `Enum`, a Hekili without Ace3, and STRICT stand-ins for
+-- Hekili.Class, Enum.PowerType and `state`: a key they lack raises, so an ability function reading a name State.lua does not provide (a
 -- bare `state`, `math`, `error`) fails the caller instead of reading nil.
 local vload = require("Virtual.State.helpers.load")
 
@@ -126,13 +126,42 @@ end
 --- calls, `loadErrors` one "<file>: <error>" per file whose main chunk raised (the rest still load).
 function M.load(classToken, race)
     race = race or "Scourge"
-    local class = setmetatable({ specs = {}, num = 0 }, {
-        __index = function(t, k) -- Hekili.lua's Class: specs, num and tables (abilities, itemMap, stateExprs...)
-            local v = {}
-            rawset(t, k, v)
-            return v
-        end,
-    })
+    -- Hekili.lua's Class (Hekili.lua:102-130), strict: a misspelt field (class.abilites) raises at the reader
+    local class = { specs = {}, num = 0, file = "NONE", initialized = false, range = 8 }
+    for _, k in ipairs({
+        "resources",
+        "resourceAuras",
+        "talents",
+        "pvptalents",
+        "auras",
+        "auraList",
+        "powers",
+        "gear",
+        "setBonuses",
+        "knownAuraAttributes",
+        "stateExprs",
+        "stateFuncs",
+        "stateTables",
+        "abilities",
+        "abilityByName",
+        "abilityList",
+        "itemList",
+        "itemMap",
+        "packs",
+        "pets",
+        "totems",
+        "potions",
+        "potionList",
+        "hooks",
+        "settings",
+        "stances",
+        "toggles",
+        "variables",
+    }) do
+        class[k] = {}
+    end
+    class.itemPack = { lists = { items = {} } }
+    strict(class, "class")
     local state = newState(class, race)
     local env = { errors = {}, loadErrors = {}, class = class, state = state }
     local hekili = { Class = class, State = state }
@@ -234,9 +263,34 @@ function M.load(classToken, race)
                 return item(id)
             end,
         },
-        -- Classic's power types (Constants.lua's ResourceInfo; the class files' RegisterResource)
         INVTYPE_WEAPONMAINHAND = "Main Hand", -- Forever/Shared/Items.lua's main_hand name (a GlobalStrings constant)
-        Enum = { PowerType = { None = -1, Mana = 0, Rage = 1, Focus = 2, Energy = 3, ComboPoints = 4 } },
+        -- the client's power types, every one Constants.lua's ResourceInfo reads; strict, so a misspelt type raises
+        Enum = {
+            PowerType = strict({
+                HealthCost = -2,
+                None = -1,
+                Mana = 0,
+                Rage = 1,
+                Focus = 2,
+                Energy = 3,
+                ComboPoints = 4,
+                Runes = 5,
+                RunicPower = 6,
+                SoulShards = 7,
+                LunarPower = 8,
+                HolyPower = 9,
+                Alternate = 10,
+                Maelstrom = 11,
+                Chi = 12,
+                Insanity = 13,
+                Obsolete = 14,
+                Obsolete2 = 15,
+                ArcaneCharges = 16,
+                Fury = 17,
+                Pain = 18,
+                Essence = 19,
+            }, "Enum.PowerType"),
+        },
     }
     local saved = {}
     for k, v in pairs(fakes) do
