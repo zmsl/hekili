@@ -25,11 +25,11 @@ function ns.LoadContent()
     if done then
         return
     end
-    done = true
     local token = select(2, UnitClass("player"))
     if type(token) ~= "string" or token == "" then
-        return
+        return -- no class token yet: not done, so the next call retries
     end
+    done = true
     local class = token:sub(1, 1) .. token:sub(2):lower() -- WARRIOR -> Warrior
     local name = "Hekili_Forever_" .. class
 

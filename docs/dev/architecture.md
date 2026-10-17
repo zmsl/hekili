@@ -1,0 +1,171 @@
+# Architecture
+
+How the pieces fit, as built after the restructure (`docs/dev/layout.md` has the folders and the in-game setup). Paths
+are relative to `src/Hekili/` unless they start with another top-level folder.
+
+## 1. The layers
+
+```
+ Forever client (WoW API, events)
+        |  read only through ns.Facade (Virtual/API/Facade.lua), exposed to content as Hekili.Client
+        v
+ Virtual/        facade, synthesized events, the belief (VirtualState: observed / pinned / modelled values)
+        |
+        v
+ Engine/         Schema/  the registration API (Spec, Races, Shared)
+                 Sim/     upstream's simulation (Core, State, Scripts, Events, Targets, Constants, Utils)
+                 Driver   the HekiliEngine frame: frame budget, the recommendation thread
+                 Output   per-display records, publish/subscribe        Settings   the profile port
+                 Registry what content registered (read-only views)     Snapshot   the debug snapshot
+                 Content  loads the class pack                          WeakAuras  a passive subscriber
+        |  Hekili.Engine.Subscribe(name, fn)          ^ Hekili.Engine.Configure(profile)
+        v                                             |
+ subscribers: UI/ (displays), Engine/WeakAuras.lua,   Options/ (owns the AceDB profile, Options.lua, Profile.lua)
+ the headless loop (tests)
+
+ Content addons (Hekili_Forever, Hekili_Forever_<Class>) call the public Hekili object: Hekili:NewSpecialization,
+ NewShared, NewRace, Hekili.State, Hekili.Class, Hekili.Client.
+```
+
+The client is read through the facade only. `Virtual/` turns client reads and events into a belief about the game.
+`Engine/` runs the simulation against that belief and publishes, per display, a set of recommendation records. The UI,
+WeakAuras and the headless test loop are subscribers; none of them reads the simulation. Content addons declare
+abilities, auras and priorities through the public `Hekili` object and never touch `ns`. Options owns the saved profile
+and hands it to the engine; the engine never names `Hekili.DB`.
+
+## 2. The `Hekili.Engine` port
+
+`Hekili.Engine` is a plain table made in `Hekili.lua`; the Engine files fill it. UI and Options reach the engine only
+through it.
+
+**`Engine.Output[name]`**, for `name` in `Interrupts`, `Defensives`, `Cooldowns`, `Primary`, `AOE`:
+- `version` (bumps each publish), `count` (records in `recs`), `recs` (the last complete set, up to 10 records).
+- A record holds the recommendation: `display`, `pack`, `list`, `listName`, `action`, `actionName`, `actionID`
+  (negative for an item), `texture`, `caption`, `indicator`, `item`, `interrupt`, `castStart`, `wait`, `waitSec`,
+  `resource`, `scriptType`, `script`, `hook`, plus the tables `resources` and `belief` (empty until an annotator fills it).
+- `payload`: the WeakAuras copy, set by `Engine/WeakAuras.lua` only when WeakAuras is loaded.
+- Read it in a subscriber, or between publishes. Records are reused: copy a field you need to keep.
+
+**`Engine.Output.status`**: the engine's own record, published once (`count` is 1) when one of its fields changes:
+`combat`, `combatStart` (0 out of combat), `numTargets`, `specID`, `specKey`, `specName`, `packName`. Combat, target
+count, spec and pack are read here and nowhere else.
+
+**`Engine.Subscribe(name, fn, passive)`** returns true, or false when the display's 4 slots are full. `fn(name, version,
+output)` runs after each publish of `name` (`name` may be `"status"`). Subscribing the same `fn` again only updates its
+`passive` flag. A passive subscriber listens without asking for the display to be computed: the engine builds a display
+only when a non-passive subscriber exists. WeakAuras is passive, so it never makes the engine compute a hidden display.
+**`Engine.Unsubscribe(name, fn)`** is safe inside a subscriber; later subscribers are not skipped.
+
+**`Engine.Registry`**: read-only views of what content registered, each the engine's live table, never a copy:
+`Specs()`, `Abilities()`, `AbilityList()`, `ItemList()`, `Auras()`, `AuraList()`, `Potions()`, `PotionList()`, `Gear()`,
+`Talents()`, `SetBonus()`, `ClassFile()`. Also `Settings(specID)` (the AceOption entries a spec registered with
+`RegisterSetting`, or nil) and `IsDisabled(key, strict)` (true plus a reason when the profile disables the ability).
+
+**`Engine.Snapshot(isAuto)`** runs one update with debugging on, so the displays' reports are saved. `isAuto` is the
+engine's own call and runs only when `settings.autoSnapshot` is on. It also drops a suspended build thread, so the
+stale thread cannot write into the set it just published.
+
+**`Engine.Evaluate(pack, list, action, mod, results)`** is the pack editor's preview: resets the state, then fills
+`results` with the values of the entry's conditions (`mod` nil) or of one modifier (`"value"`, `"value_else"`,
+`"strict_if"`). Returns `results, list, action`.
+
+**`Engine.Configure(profile)`** and **`Engine.settings`** (`Engine/Settings.lua`). The engine reads configuration only
+from `Engine.settings`. `Configure` assigns `specs`, `packs`, `toggles`, `displays`, `performance` and
+`notifications` by reference: an edit inside them is live with no call. It copies the scalars `enabled`,
+`autoSnapshot` and `screenshot`: a setter that writes one must call `Configure` again. Each call bumps
+`settings.version`. `Options/Profile.lua` calls it at load and on every AceDB profile change (change, copy, reset).
+
+**Private, on `ns`**, because only the engine and its tests use them:
+- `ns.Output.Begin(name)`, `Publish(name, count)`, `Wanted(name)`: the build side of publish/subscribe. Only `Sim/Core.lua`
+  builds records. `Begin` returns the scratch set; `Publish` runs the annotators, swaps scratch and `recs`, and calls
+  the subscribers, so a reader never sees a half-built set.
+- `ns.Output.Annotate(fn)` / `Unannotate(fn)`: run `fn(name, rec, i)` over each record before the swap. Reserved for the
+  belief annotator (section 7); 4 slots. Not on the port until that feature exists.
+- `ns.EngineFrame`: the `HekiliEngine` frame (`Engine/Driver.lua`) that `Snapshot` and the profiler use.
+- `ns.LoadContent`, `ns.ContentNotice` (`Engine/Content.lua`): called by `OnInitialize` and `OnEnable` only.
+
+Output allocates nothing in `Begin`, `Publish`, `Subscribe` or `Unsubscribe` (`tests/Forever/output_spec.lua` checks
+1000 rounds).
+
+## 3. The content surface
+
+What a content addon may use, and nothing else (`tests/boundary_spec.lua` enforces it):
+- `Hekili:NewSpecialization(id, ...)`, `Hekili:NewShared(...)`, `Hekili:NewRace(...)` and the `Register*` calls on the
+  object they return (abilities, auras, hooks, settings, packs, ...).
+- `Hekili.State` (the simulation's `state`) and `Hekili.Class` (the registry the class file fills).
+- `Hekili.Client`: the game client as an addon may read it, the same table as `ns.Facade`. Content never names a WoW
+  global (`tools/check_api_reads.sh`).
+
+The belief's plain reads, names in every content function's environment: `knownRank`, `stat`, `swingBase`, `healthMax`.
+Two environments have them:
+- the sim's `state` (`Engine/Sim/State.lua`): `knownRank`, `swingBase`, `healthMax` are plain functions; `stat` is the
+  sim's stat table (`stat.crit`) and also callable (`stat(name, arg)`, the belief's out-of-combat stat cache);
+- the belief's `now` context (`Virtual/State/Families/Now.lua`, `NAMES`): the same four names, where `stat` is only the
+  plain function `stat(name, arg)`. A `now` handler cannot read `stat.crit`.
+
+`RegisterAbility{ passive = true, id = <number> }` (`Engine/Schema/Spec.lua`) is a spell the spellbook knows and the
+player never casts. The belief tracks its known rank (`knownRank` reads it); the sim never sees it.
+
+**Addons and load order.** `Hekili` (core), `Hekili_Forever` (`## Dependencies: Hekili`; Shared auras, consumables,
+items, and the race packs), then one load-on-demand pack per class: `Hekili_Forever_Warrior`, `Hekili_Forever_Druid`
+(`## Dependencies: Hekili, Hekili_Forever`, `## LoadOnDemand: 1`). `tests/helpers/addons.lua` lists them in this order.
+`ns.LoadContent` runs in `OnInitialize`, before `InitializeProfile`, so the profile's defaults see the class's spec and
+packs. It reads the player's class token, finds `Hekili_Forever_<Class>`, loads it if its `## X-Hekili-ContentAPI`
+equals `CONTENT_API` in `Engine/Content.lua` (the client loads `Hekili_Forever` as its dependency), and does this once
+per session once it has a class token. A missing pack, a mismatch or a failed load keeps one notice, which
+`ns.ContentNotice` shows at `OnEnable`; the core then runs with no class spec.
+
+**What bumps what.** A class release bumps `## Version` in its pack's TOC. `CONTENT_API` and every content TOC's
+`## X-Hekili-ContentAPI` change together, only when the content surface changes: the Register* API, `Hekili.Client`,
+or the environment names above. `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
+
+## 4. `Hekili.Virtual`
+
+`Hekili.Virtual = { State, Events }` (`Virtual/State/Adapter.lua`) is the probe and debug handle, for example
+`/run print(Hekili.Virtual.State.Snapshot())` and ForeverProbe's `Calib.lua`. It is not for content, which has the
+facade and the environment names. The boundary scan rejects `Hekili.Virtual` and `VirtualState` in a content file.
+
+## 5. The checks
+
+- `tests/boundary_spec.lua`:
+  - strict scan: `Virtual/`, `Engine/Schema/` and `tests/Virtual/harness/` (its fixtures excluded) name no ability, aura
+    or talent key, no spell ID, and no class or form name that the content registers; the keys are extracted from the
+    content at test time;
+  - Sim baseline: each `Engine/Sim/` file may hold no more of each content name than `tests/boundary_baseline.lua`
+    (a per-token ceiling; regenerate with `tools/boundary_baseline.lua` only to remove a leak);
+  - content allowlist: files of the three content addons may use only `Hekili:NewSpecialization/NewShared/NewRace` and
+    `Hekili.State/Class/Client`, and contain none of `ns.`, `ns = ...`, `VirtualState`, `Hekili.Virtual`,
+    `Hekili.Engine`. Pack share strings are data and skipped.
+- `tools/check_engine_reads.sh` (in `make api-check`), both directions: the engine files (`Sim/{Core,State,Targets,
+  Scripts}`, `Output`, `Registry`, `Snapshot`, `Driver`, `WeakAuras`) name no `HekiliDisplay*`, `ns.UI.` or
+  `DisplayPool`, and nothing in `Engine/` names `Hekili.DB` or `.profile` (exempt: `Settings.lua`, comments). UI,
+  Options and `Hekili.lua` read no `state.`, `class.`, `Hekili.State/Class`, `ns.queue`, `VirtualStateInternal` or
+  `HekiliEngine`. The exemptions are anchored to the whole line: `Hekili.lua`'s two definitions, DevTools' generated-text
+  line, and UI.lua's own `Hekili.DisplayPool`.
+- `tools/check_api_reads.sh`: no file of any addon TOC reads a game API from `tools/api_inventory.txt` except through
+  `ns.Facade`. It uses luacheck for bare reads and grep for `_G.Name`; `git diff` guards `api_inventory.txt`.
+- Headless gates: `make test` (everything except the tagged gates), `make test-fast` (skips `#slow`), `make test-loop`
+  (the 20-fight Arms loop and its `Arms solo:` line), `make test-party`, `make test-druid` (about 190 s). `make check`
+  runs lint, format, type check, `make test`, syntax and `api-check`.
+
+## 6. The pack pipeline
+
+Default priorities are written as SimC text: `tools/packs/<class>/<Pack>.simc` (leading `#` lines are the description)
+and the manifest `tools/packs/<class>.lua` (`date`, `spec`, `packs` in block order). `make packs` runs
+`lua5.1 tools/make_pack.lua write <class>` for each manifest. It parses the text, serializes and encodes it as the share
+string `RegisterPack` takes, and rewrites the generated `RegisterPack` blocks in `src/Hekili_Forever_<Class>/<Class>.lua`.
+`lua5.1 tools/make_pack.lua decode <string>` prints a share string back as SimC. The pack version is the manifest date
+times 1000 plus a checksum of the text, so any text change reloads a saved profile. `make packs` on a clean tree is a
+no-op (`tests/Forever/make_pack_spec.lua`), and encode then decode returns the normalized text. `make packs` is not
+part of `make check`.
+
+## 7. Follow-ups
+
+- **Belief annotator** (needs its own short design): `Virtual/Annotate.lua`, registered with `ns.Output.Annotate`. Per
+  record: the gating resource's est/lo/hi at the record's time, the basis of the usability read (observed, pinned or
+  modelled, plus the event), the band width relative to cost as a confidence, the gating aura or cooldown and its basis,
+  and the GCD kind. It fills `rec.belief`, which exists and is cleared by `Begin`.
+- **In-game checks owed after the merge** (the user): a full client restart; the four `mklink` lines in `layout.md`;
+  icons, minimap and compartment entries, the pack editor, `/hekili snapshot`, combat alpha, a spec swap, the minimap
+  position surviving `/reload`, and a third class (neither Warrior nor Druid) seeing the "no Forever pack" notice.
+- **ForeverProbe**: `Hekili.VirtualState` became `Hekili.Virtual.State`; update its calls.

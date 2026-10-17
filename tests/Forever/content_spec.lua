@@ -35,9 +35,12 @@ describe("Engine/Content.lua", function()
             end,
         }
         assert(loadfile("src/Hekili/Engine/Content.lua"))("Hekili", ns)
-        for _ = 1, again and 2 or 1 do
+        for i = 1, again and 2 or 1 do
             ns.LoadContent()
             ns.ContentNotice()
+            if i == 1 and type(again) == "function" then
+                again()
+            end
         end
     end
 
@@ -110,5 +113,16 @@ describe("Engine/Content.lua", function()
         end
         local src = assert(io.open("src/Hekili/Engine/Content.lua")):read("*a")
         assert.is_truthy(src:find("\nlocal CONTENT_API = 1\n", 1, true))
+    end)
+
+    it("does nothing without a class token, then loads on the next call that has one", function()
+        classToken = nil
+        local first
+        run(function()
+            first = #calls
+            classToken = "WARRIOR"
+        end)
+        assert.are.equal(0, first)
+        assert.are.same({ "meta Hekili_Forever_Warrior X-Hekili-ContentAPI", "load Hekili_Forever_Warrior" }, calls)
     end)
 end)

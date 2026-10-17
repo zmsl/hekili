@@ -1,5 +1,7 @@
 # Repository layout
 
+How the layers and the engine port fit together: `docs/dev/architecture.md`.
+
 - `src/` holds the addons exactly as WoW loads them, each in its own folder with its TOC (paths inside a TOC are
   relative to its folder); nothing else ships, and nothing dev-only goes in them. `tests/helpers/addons.lua` lists them
   in dependency order, and every headless loader, spec and tool reads their files from it:
