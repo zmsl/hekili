@@ -2215,6 +2215,14 @@ function Hekili:SpecializationChanged()
     state.swings.mh_speed, state.swings.oh_speed = UnitAttackSpeed( "player" )
 
     ns.EngineFrame.activeThread = nil
+
+    -- The UI and Options read the spec from the status record: publish the change now, not at the next update.
+    local status = ns.Output.status
+    if status.specID ~= state.spec.id then
+        status.specID, status.specKey, status.specName = state.spec.id, state.spec.key, state.spec.name
+        ns.Output.Publish( "status", 1 )
+    end
+
     self:UpdateDisplayVisibility()
     self:UpdateDamageDetectionForCLEU()
 end

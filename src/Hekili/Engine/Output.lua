@@ -56,6 +56,7 @@ local Output = {
         numTargets = 0,
         specID = nil,
         specKey = nil,
+        specName = nil,
         packName = nil,
     },
 }

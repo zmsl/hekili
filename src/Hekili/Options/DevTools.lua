@@ -12,8 +12,8 @@ local UnitClass, UnitClassBase, UnitIsUnit, UnitPowerMax = Facade.UnitClass, Fac
 local UnitSpellHaste = Facade.UnitSpellHaste
 local Hekili = _G[ addon ]
 
-local class = Hekili.Class
-local state = Hekili.State
+local Registry = Hekili.Engine.Registry
+local Status = Hekili.Engine.Output.status
 
 local format, lower, match = string.format, string.lower, string.match
 local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table.wipe
@@ -84,13 +84,13 @@ function Hekili:RunStressTest()
     end
 
     local results, count, specs = "", 0, {}
-    for i in ipairs( class.specs ) do
+    for i in ipairs( Registry.Specs() ) do
         if i ~= 0 then insert( specs, i ) end
     end
     sort( specs )
 
     for i, specID in ipairs( specs ) do
-        local spec = class.specs[ specID ]
+        local spec = Registry.Specs()[ specID ]
         results = format( "%sSpecialization: %s\n", results, spec.name )
 
         for key, aura in ipairs( spec.auras ) do

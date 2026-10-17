@@ -6,9 +6,9 @@ local Facade = ns.Facade
 local InCombatLockdown = Facade.InCombatLockdown
 local Hekili = _G[ addon ]
 
-local class = Hekili.Class
+local Registry = Hekili.Engine.Registry
 local scripts = Hekili.Scripts
-local state = Hekili.State
+local Status = Hekili.Engine.Output.status
 
 local format, lower, match = string.format, string.lower, string.match
 local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table.wipe
@@ -19,7 +19,7 @@ local ACD = LibStub( "AceConfigDialog-3.0" )
 
 function Hekili:countPriorities()
     local priorities = {}
-    local spec = state.spec.id
+    local spec = Status.specID
 
     for priority, data in pairs( Hekili.DB.profile.packs ) do
         if data.spec == spec then
@@ -124,17 +124,17 @@ function Hekili:HandleSetCommand( args )
         -- Check for whole number minimum time to die (from 0 to 20 seconds)
         local cycleValue = tonumber( subToggleOrState )
         if cycleValue and cycleValue >= 0 and cycleValue <= 20 and floor( cycleValue ) == cycleValue then
-            profile.specs[ state.spec.id ].cycle_min = cycleValue
+            profile.specs[ Status.specID ].cycle_min = cycleValue
             self:Print( format( "Target Swap minimum time to die set to %d seconds.", cycleValue ) )
         elseif subToggleOrState == nil then
             -- Toggle cycle if no state is provided
-            profile.specs[ state.spec.id ].cycle = not profile.specs[ state.spec.id ].cycle
-            local toggleStateText = profile.specs[ state.spec.id ].cycle and "|cFF00FF00ON|r" or "|cFFFF0000OFF|r"
+            profile.specs[ Status.specID ].cycle = not profile.specs[ Status.specID ].cycle
+            local toggleStateText = profile.specs[ Status.specID ].cycle and "|cFF00FF00ON|r" or "|cFFFF0000OFF|r"
             self:Print( format( "Target Swap toggle set to %s.", toggleStateText ) )
         elseif subToggleOrState == "on" or subToggleOrState == "off" then
             -- Explicitly set cycle to on or off
             local toggleState = ( subToggleOrState == "on" )
-            profile.specs[ state.spec.id ].cycle = toggleState
+            profile.specs[ Status.specID ].cycle = toggleState
             local toggleStateText = toggleState and "|cFF00FF00ON|r" or "|cFFFF0000OFF|r"
             self:Print( format( "Target Swap toggle set to %s.", toggleStateText ) )
         else
@@ -195,7 +195,7 @@ function Hekili:HandleSetCommand( args )
                 elseif explicitState == nil then
                     lowerToggleCategory[ subToggleOrState ] = not lowerToggleCategory[ subToggleOrState ]
                 else
-                    self:Print( "Invalid explicit state. Use 'on' or 'off'." )
+                    self:Print( "Invalid explicit state; use 'on' or 'off'." )
                     return true
                 end
 
@@ -232,7 +232,7 @@ function Hekili:HandleFixCommand( args )
     local fixType = args[2] and args[2]:lower()  -- Convert to lowercase
 
     if fixType == "pack" then
-        local packName = state.system.packName
+        local packName = Status.packName
         local pack = profile.packs[ packName ]
 
         if not pack or not pack.builtIn then
@@ -334,7 +334,7 @@ end
 
 function Hekili:HandleSpecSetting( specSetting, specValue )
     local profile = self.DB.profile
-    local settings = class.specs[ state.spec.id ].settings
+    local settings = Registry.Settings( Status.specID )
 
     -- Search for the spec setting within the settings table
     for i, setting in ipairs( settings ) do
@@ -342,15 +342,15 @@ function Hekili:HandleSpecSetting( specSetting, specValue )
             if setting.info.type == "toggle" then
                 -- If specValue is nil, treat it as a toggle command
                 if specValue == nil or specValue == "toggle" then
-                    local newValue = not profile.specs[ state.spec.id ].settings[ setting.name ]
-                    profile.specs[ state.spec.id ].settings[ setting.name ] = newValue
+                    local newValue = not profile.specs[ Status.specID ].settings[ setting.name ]
+                    profile.specs[ Status.specID ].settings[ setting.name ] = newValue
                     local stateText = newValue and "|cFF00FF00ON|r" or "|cFFFF0000OFF|r"
                     self:Print( format( "%s set to %s.", setting.name, stateText ) )
                 elseif specValue == "on" then
-                    profile.specs[state.spec.id].settings[setting.name] = true
+                    profile.specs[Status.specID].settings[setting.name] = true
                     self:Print( format( "%s set to |cFF00FF00ON|r.", setting.name ) )
                 elseif specValue == "off" then
-                    profile.specs[state.spec.id].settings[setting.name] = false
+                    profile.specs[Status.specID].settings[setting.name] = false
                     self:Print( format( "%s set to |cFFFF0000OFF|r.", setting.name ) )
                 else
                     self:Print( "Invalid input. Use 'on', 'off', or leave blank to toggle for toggle settings." )
@@ -361,7 +361,7 @@ function Hekili:HandleSpecSetting( specSetting, specValue )
                 -- Ensure specValue is a number within the allowed range
                 local newValue = tonumber( specValue )
                 if newValue and newValue >= ( setting.info.min or -math.huge ) and newValue <= ( setting.info.max or math.huge ) then
-                    profile.specs[ state.spec.id ].settings[ setting.name ] = newValue
+                    profile.specs[ Status.specID ].settings[ setting.name ] = newValue
                     self:Print( format( "%s set to |cFF00B4FF%.2f|r.", setting.name, newValue ) )
                 else
                     self:Print( format( "Invalid value for %s. Must be between %.2f and %.2f.", setting.name, setting.info.min or 0, setting.info.max or 100 ) )
@@ -416,19 +416,19 @@ function Hekili:DisplayChatCommandList( list )
 
     -- Specialization Settings Section
     local function getSpecializationChunk()
-        local output = "Specialization Settings for " .. ( state.spec.name or "your specialization" ) .. ":\n"
+        local output = "Specialization Settings for " .. ( Status.specName or "your specialization" ) .. ":\n"
         local hasToggle, hasNumber = false, false
         local exToggle, exNumber, exMin, exMax, exStep
 
         -- Loop through specialization settings if they exist
-        local settings = class.specs[ state.spec.id ] and class.specs[ state.spec.id ].settings or {}
+        local settings = Registry.Settings( Status.specID ) or {}
         for i, setting in ipairs( settings ) do
             if not setting.info.arg or setting.info.arg() then
                 if setting.info.type == "toggle" then
                     output = output .. format(
                         " - |cFFFFD100%s|r = %s|r (%s)\n",
                         setting.name,
-                        profile.specs[ state.spec.id ].settings[ setting.name ] and "|cFF00FF00ON" or "|cFFFF0000OFF",
+                        profile.specs[ Status.specID ].settings[ setting.name ] and "|cFF00FF00ON" or "|cFFFF0000OFF",
                         type( setting.info.name ) == "function" and setting.info.name() or setting.info.name
                     )
                     hasToggle = true
@@ -437,7 +437,7 @@ function Hekili:DisplayChatCommandList( list )
                     output = output .. format(
                         " - |cFFFFD100%s|r = |cFF00FF00%.2f|r, min: %.2f, max: %.2f\n",
                         setting.name,
-                        profile.specs[ state.spec.id ].settings[ setting.name ],
+                        profile.specs[ Status.specID ].settings[ setting.name ],
                         setting.info.min and format( "%.2f", setting.info.min ) or "N/A",
                         setting.info.max and format( "%.2f", setting.info.max ) or "N/A"
                     )
@@ -586,7 +586,7 @@ end
 
 function Hekili:HandlePriorityCommand( args )
     local priorities = self:countPriorities()
-    local spec = state.spec.id
+    local spec = Status.specID
 
     -- Check for "default" keyword as the second argument
     if args[2] == "default" then

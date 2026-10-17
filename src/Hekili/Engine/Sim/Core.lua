@@ -1498,6 +1498,7 @@ function Hekili.Update()
     local combat = state.combat > 0
     if status.combatStart ~= state.combat or status.numTargets ~= numTargets or status.specID ~= specID or status.packName ~= packName or status.specKey ~= state.spec.key then
         status.combat, status.combatStart, status.numTargets, status.specID, status.specKey, status.packName = combat, state.combat, numTargets, specID, state.spec.key, packName
+        status.specName = state.spec.name
         Output.Publish( "status", 1 )
     end
 

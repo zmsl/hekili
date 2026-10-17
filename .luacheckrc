@@ -81,12 +81,16 @@ local stateEnv = {
 }
 files["src/Hekili/Engine/Schema/Spec.lua"] = { globals = stateEnv }
 files["src/Hekili/Engine/Sim/"] = { globals = stateEnv }
-files["src/Hekili/Options/Options.lua"] = { globals = stateEnv }
-files["src/Hekili/Options/DevTools.lua"] = { globals = stateEnv }
-files["src/Hekili/Options/ChatCommands.lua"] = { globals = stateEnv }
+-- Options and Hekili.lua read no engine state either (Engine.Registry, the commands, Output.status); each keeps only
+-- upstream's stray global reads.
+files["src/Hekili/Options/Options.lua"] = {
+    globals = { "actual_trinket1", "actual_trinket2", "actual_main_hand", "QueueRebuildUI" },
+}
+files["src/Hekili/Options/DevTools.lua"] = {
+    globals = { "assignAuraToLastCast", "trackAuraApplication", "trackAuraRemoval" },
+}
 -- UI.lua reads no engine state (Engine.Registry, Engine.Output.status): not stateEnv, so a bare state/class fails.
 files["src/Hekili/UI/UI.lua"] = { globals = { "p", "alphaCheck" } } -- upstream's two stray global reads
-files["src/Hekili/Hekili.lua"] = { globals = stateEnv }
 -- The names a class file's `now` function reads in VirtualState's context (src/Hekili/Virtual/State/Families/Now.lua).
 local nowEnv = {
     "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "setCooldown", "talent",

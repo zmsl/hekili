@@ -10,9 +10,9 @@ local GetSpecializationInfoByID, InCombatLockdown, UnitClass, UnitEffectiveLevel
 local C_VideoOptions, UnitLevel, UnitName = Facade.C_VideoOptions, Facade.UnitLevel, Facade.UnitName
 local Hekili = _G[ addon ]
 
-local class = Hekili.Class
+local Registry = Hekili.Engine.Registry
 local scripts = Hekili.Scripts
-local state = Hekili.State
+local Status = Hekili.Engine.Output.status
 
 local format, lower, match = string.format, string.lower, string.match
 local insert, remove, sort, wipe = table.insert, table.remove, table.sort, table.wipe
@@ -37,7 +37,7 @@ local GreenPlus = "Interface\\AddOns\\Hekili\\Textures\\GreenPlus"
 local RedX = "Interface\\AddOns\\Hekili\\Textures\\RedX"
 local BlizzBlue = "|cFF00B4FF"
 local Bullet = AtlasToString( "characterupdate_arrow-bullet-point" )
-local ClassColor = C_ClassColor.GetClassColor( class.file )
+local ClassColor = C_ClassColor.GetClassColor( Registry.ClassFile() )
 
 local GetSpellInfo = ns.GetUnpackedSpellInfo
 
@@ -627,7 +627,7 @@ do
             },
         }
 
-        for id, spec in pairs( class.specs ) do
+        for id, spec in pairs( Registry.Specs() ) do
             if id > 0 then
                 defaults.profile.specs[ id ] = defaults.profile.specs[ id ] or tableCopy( specTemplate )
                 for k, v in pairs( spec.options ) do
@@ -3824,8 +3824,8 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
         if option == "potion" then
             local p = self.DB.profile.specs[ spec ].potion
 
-            if not class.potionList[ p ] then
-                return class.potions[ p ] and class.potions[ p ].key or p
+            if not Registry.PotionList()[ p ] then
+                return Registry.Potions()[ p ] and Registry.Potions()[ p ].key or p
             end
         end
 
@@ -3880,17 +3880,17 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
         db = db or self.Options
         if not db or not key then return end
 
-        local ability = class.abilities[ key ]
+        local ability = Registry.Abilities()[ key ]
         if not ability then return end
 
         local toggles = {}
 
-        local k = class.abilityList[ ability.key ]
+        local k = Registry.AbilityList()[ ability.key ]
         local v = ability.key
 
         if not k or not v then return end
 
-        local useName = class.abilityList[ v ] and class.abilityList[v]:match("|t (.+)$") or ability.name
+        local useName = Registry.AbilityList()[ v ] and Registry.AbilityList()[v]:match("|t (.+)$") or ability.name
 
         if not useName then
             Hekili:Error( "No name available for %s (id:%d) in EmbedAbilityOption.", ability.key or "no_id", ability.id or 0 )
@@ -3900,7 +3900,7 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
         local option = db.args.abilities.plugins.actions[ v ] or {}
 
         option.type = "group"
-        option.name = function () return useName .. ( state:IsDisabled( v, true ) and "|cFFFF0000*|r" or "" ) end
+        option.name = function () return useName .. ( Registry.IsDisabled( v, true ) and "|cFFFF0000*|r" or "" ) end
         option.order = 1
         option.set = "SetAbilityOption"
         option.get = "GetAbilityOption"
@@ -3961,7 +3961,7 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
                 values = function ()
                     table.wipe( toggles )
 
-                    local t = class.abilities[ v ].toggle or "none"
+                    local t = Registry.Abilities()[ v ].toggle or "none"
                     if t == "essences" then t = "Minor CDs" end
 
                     toggles.none = "None"
@@ -4039,16 +4039,16 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
         local abilities = {}
         local toggles = {}
 
-        for k, v in pairs( class.abilityList ) do
-            local a = class.abilities[ k ]
-            if a and a.id and ( a.id > 0 or a.id < -100 ) and a.id ~= ns.VirtualStateInternal.GCD_SPELL and not a.item then
+        for k, v in pairs( Registry.AbilityList() ) do
+            local a = Registry.Abilities()[ k ]
+            if a and a.id and ( a.id > 0 or a.id < -100 ) and a.id ~= Registry.GCD_SPELL and not a.item then
                 abilities[ v ] = k
             end
         end
 
         for k, v in orderedPairs( abilities ) do
-            local ability = class.abilities[ v ]
-            local useName = class.abilityList[ v ] and class.abilityList[v]:match("|t (.+)$") or ability.name
+            local ability = Registry.Abilities()[ v ]
+            local useName = Registry.AbilityList()[ v ] and Registry.AbilityList()[v]:match("|t (.+)$") or ability.name
 
             if not useName then
                 Hekili:Error( "No name available for %s (id:%d) in EmbedAbilityOptions.", ability.key or "no_id", ability.id or 0 )
@@ -4057,7 +4057,7 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
 
             local option = {
                 type = "group",
-                name = function () return useName .. ( state:IsDisabled( v, true ) and "|cFFFF0000*|r" or "" ) end,
+                name = function () return useName .. ( Registry.IsDisabled( v, true ) and "|cFFFF0000*|r" or "" ) end,
                 order = 1,
                 set = "SetAbilityOption",
                 get = "GetAbilityOption",
@@ -4096,7 +4096,7 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
                         values = function ()
                             table.wipe( toggles )
 
-                            local t = class.abilities[ v ].toggle or "none"
+                            local t = Registry.Abilities()[ v ].toggle or "none"
                             if t == "essences" then t = "Minor CDs" end
 
                             toggles.none = "None"
@@ -4129,10 +4129,10 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
                             "between the Cooldowns display and your other displays.\n\n" ..
                             "See |cFFFFD100Toggles|r > |cFFFFD100Cooldowns|r for the |cFFFFD100Cooldown: Show Separately|r feature.",
                         set = function()
-                            self.DB.profile.specs[ state.spec.id ].noFeignedCooldown = not self.DB.profile.specs[ state.spec.id ].noFeignedCooldown
+                            self.DB.profile.specs[ Status.specID ].noFeignedCooldown = not self.DB.profile.specs[ Status.specID ].noFeignedCooldown
                         end,
                         get = function()
-                            return self.DB.profile.specs[ state.spec.id ].noFeignedCooldown
+                            return self.DB.profile.specs[ Status.specID ].noFeignedCooldown
                         end,
                         order = 1.3,
                         width = 3,
@@ -4323,10 +4323,10 @@ found = true end
         db = db or self.Options
         if not db then return end
 
-        local ability = class.abilities[ item ]
+        local ability = Registry.Abilities()[ item ]
         local toggles = {}
 
-        local k = class.itemList[ ability.item ] or ability.name
+        local k = Registry.ItemList()[ ability.item ] or ability.name
         local v = ability.itemKey or ability.key
 
         if not item or not ability.item or not k then
@@ -4337,7 +4337,7 @@ found = true end
         local option = db.args.items.plugins.equipment[ v ] or {}
 
         option.type = "group"
-        option.name = function () return ability.name .. ( state:IsDisabled( v, true ) and "|cFFFF0000*|r" or "" ) end
+        option.name = function () return ability.name .. ( Registry.IsDisabled( v, true ) and "|cFFFF0000*|r" or "" ) end
         option.order = 1
         option.set = "SetItemOption"
         option.get = "GetItemOption"
@@ -4384,7 +4384,7 @@ found = true end
                     table.wipe( toggles )
 
                     toggles.none = "None"
-                    toggles.default = "Default" .. ( class.abilities[ v ].toggle and ( " |cffffd100(" .. class.abilities[ v ].toggle .. ")|r" ) or " |cffffd100(none)|r" )
+                    toggles.default = "Default" .. ( Registry.Abilities()[ v ].toggle and ( " |cffffd100(" .. Registry.Abilities()[ v ].toggle .. ")|r" ) or " |cffffd100(none)|r" )
                     toggles.cooldowns = "Cooldowns"
                     toggles.essences = "Minor CDs"
                     toggles.defensives = "Defensives"
@@ -4431,18 +4431,18 @@ found = true end
         local abilities = {}
         local toggles = {}
 
-        for k, v in pairs( class.abilities ) do
+        for k, v in pairs( Registry.Abilities() ) do
             if k == "potion" or v.item and not abilities[ v.itemKey or v.key ] then
-                local name = class.itemList[ v.item ] or v.name
+                local name = Registry.ItemList()[ v.item ] or v.name
                 if name then abilities[ name ] = v.itemKey or v.key end
             end
         end
 
         for k, v in orderedPairs( abilities ) do
-            local ability = class.abilities[ v ]
+            local ability = Registry.Abilities()[ v ]
             local option = {
                 type = "group",
-                name = function () return ability.name .. ( state:IsDisabled( v, true ) and "|cFFFF0000*|r" or "" ) end,
+                name = function () return ability.name .. ( Registry.IsDisabled( v, true ) and "|cFFFF0000*|r" or "" ) end,
                 order = 1,
                 set = "SetItemOption",
                 get = "GetItemOption",
@@ -4489,7 +4489,7 @@ found = true end
                             table.wipe( toggles )
 
                             toggles.none = "None"
-                            toggles.default = "Default" .. ( class.abilities[ v ].toggle and ( " |cffffd100(" .. class.abilities[ v ].toggle .. ")|r" ) or " |cffffd100(none)|r" )
+                            toggles.default = "Default" .. ( Registry.Abilities()[ v ].toggle and ( " |cffffd100(" .. Registry.Abilities()[ v ].toggle .. ")|r" ) or " |cffffd100(none)|r" )
                             toggles.cooldowns = "Cooldowns"
                             toggles.essences = "Minor CDs"
                             toggles.defensives = "Defensives"
@@ -4550,14 +4550,14 @@ found = true end
             if not id or id == 0 then break end
             if description then description = description:match( "^(.-)\n" ) end
 
-            local spec = class.specs[ id ]
+            local spec = Registry.Specs()[ id ]
 
             if spec then
                 local sName = lower( name )
                 specNameByID[ id ] = sName
                 specIDByName[ sName ] = id
 
-                specs[ id ] = Hekili:ZoomedTextureWithText( texture or ( class.specs[ id ] and class.specs[ id ].texture ), name )
+                specs[ id ] = Hekili:ZoomedTextureWithText( texture or ( Registry.Specs()[ id ] and Registry.Specs()[ id ].texture ), name )
 
                 local options = {
                     type = "group",
@@ -4598,7 +4598,7 @@ found = true end
                                         for key, pkg in pairs( self.DB.profile.packs ) do
                                             local pname = pkg.builtIn and "|cFF00B4FF" .. key .. "|r" or key
                                             if pkg.spec == id then
-                                                packs[ key ] = Hekili:ZoomedTextureWithText( texture or ( class.specs[ id ] and class.specs[ id ].texture ), pname )
+                                                packs[ key ] = Hekili:ZoomedTextureWithText( texture or ( Registry.Specs()[ id ] and Registry.Specs()[ id ].texture ), pname )
                                             end
                                         end
 
@@ -4633,10 +4633,10 @@ found = true end
                                     desc = "Unless otherwise specified in the priority, the selected potion will be recommended.",
                                     order = 3,
                                     width = 1.5,
-                                    values = class.potionList,
+                                    values = Registry.PotionList(),
                                     get = function()
-                                        local p = self.DB.profile.specs[ id ].potion or class.specs[ id ].options.potion or "default"
-                                        if not class.potionList[ p ] then p = "default" end
+                                        local p = self.DB.profile.specs[ id ].potion or Registry.Specs()[ id ].options.potion or "default"
+                                        if not Registry.PotionList()[ p ] then p = "default" end
                                         return p
                                     end,
                                 },
@@ -5022,7 +5022,7 @@ found = true end
                                     order = 2,
                                     width = "full",
                                 },
-                                -- Forever E9: the forecast window, global for every class.
+                                -- Forever E9: the forecast window, global across classes.
                                 forecastHeader = {
                                     type = "header",
                                     name = "Forecast",
@@ -5067,7 +5067,7 @@ found = true end
                     }
                 }
 
-                local specCfg = class.specs[ id ] and class.specs[ id ].settings
+                local specCfg = Registry.Specs()[ id ] and Registry.Specs()[ id ].settings
                 local specProf = self.DB.profile.specs[ id ]
 
                 if #specCfg > 0 then
@@ -5195,8 +5195,8 @@ found = true end
 
         if option == "potion" then
             if not data.potion then return "default" end
-            if not class.potionList[ data.potion ] then
-                return class.potions[ data.potion ] and class.potions[ data.potion ].key or data.potion
+            if not Registry.PotionList()[ data.potion ] then
+                return Registry.Potions()[ data.potion ] and Registry.Potions()[ data.potion ].key or data.potion
             end
         end
 
@@ -5642,7 +5642,7 @@ found = true end
                                         local v = {}
 
                                         for k, pack in pairs( Hekili.DB.profile.packs ) do
-                                            if pack.spec and class.specs[ pack.spec ] then
+                                            if pack.spec and Registry.Specs()[ pack.spec ] then
                                                 v[ k ] = k
                                             end
                                         end
@@ -5686,7 +5686,7 @@ found = true end
         local count = 0
 
         for pack, data in orderedPairs( self.DB.profile.packs ) do
-            if data.spec and class.specs[ data.spec ] and not data.hidden then
+            if data.spec and Registry.Specs()[ data.spec ] and not data.hidden then
                 packs.plugins.links.packButtons = packs.plugins.links.packButtons or {
                     type = "header",
                     name = "Installed Packs",
@@ -5710,7 +5710,7 @@ found = true end
                         return pack
                     end,
                     icon = function()
-                        return class.specs[ data.spec ].texture
+                        return Registry.Specs()[ data.spec ].texture
                     end,
                     iconCoords = { 0.15, 0.85, 0.15, 0.85 },
                     childGroups = "tab",
@@ -6026,10 +6026,10 @@ found = true end
                                     type = "execute",
                                     name = function()
                                         local p = rawget( Hekili.DB.profile.packs, pack )
-                                        if p.spec ~= state.spec.id then
+                                        if p.spec ~= Status.specID then
                                             return "|A:UI-LFG-DeclineMark:16:16|a Import"
                                         end
-                                        return format( "%sImport", p.spec ~= state.spec.id and "|A:UI-LFG-DeclineMark:16:16|a" or "" )
+                                        return format( "%sImport", p.spec ~= Status.specID and "|A:UI-LFG-DeclineMark:16:16|a" or "" )
                                     end,
                                     desc = "Clear existing action list(s) and load the priority above.",
                                     order = 5.1,
@@ -6058,7 +6058,7 @@ found = true end
                                     end,
                                     disabled = function()
                                         local p = rawget( Hekili.DB.profile.packs, pack )
-                                        return p.spec ~= state.spec.id
+                                        return p.spec ~= Status.specID
                                     end,
                                 },
                                 importWarningSpace = {
@@ -6071,7 +6071,7 @@ found = true end
                                     type = "description",
                                     name = function()
                                         local p = rawget( Hekili.DB.profile.packs, pack )
-                                        return format( "You must be in the |T%d:0|t |cFFFFD100%s|r specialization to import this priority.", class.specs[ p.spec ].texture, class.specs[ p.spec ].name )
+                                        return format( "You must be in the |T%d:0|t |cFFFFD100%s|r specialization to import this priority.", Registry.Specs()[ p.spec ].texture, Registry.Specs()[ p.spec ].name )
                                     end,
                                     image = GetAtlasFile( "Ping_Chat_Warning" ),
                                     imageCoords = GetAtlasCoords( "Ping_Chat_Warning" ),
@@ -6080,7 +6080,7 @@ found = true end
                                     order = 5.12,
                                     hidden = function()
                                         local p = rawget( Hekili.DB.profile.packs, pack )
-                                        return p.spec == state.spec.id
+                                        return p.spec == Status.specID
                                     end
                                 },
                                 profileConsiderations = {
@@ -6223,15 +6223,15 @@ break end
                                                     action = "Unassigned"
                                                     warning = true
                                                 else
-                                                    if not class.abilities[ action ] then warning = true
+                                                    if not Registry.Abilities()[ action ] then warning = true
                                                     else
                                                         if action == "trinket1" or action == "trinket2" or action == "main_hand" then
                                                             local passthru = "actual_" .. action
-                                                            if state:IsDisabled( passthru, true ) then warning = true end
-                                                            action = class.abilityList[ passthru ] and class.abilityList[ passthru ] or class.abilities[ passthru ] and class.abilities[ passthru ].name or action
+                                                            if Registry.IsDisabled( passthru, true ) then warning = true end
+                                                            action = Registry.AbilityList()[ passthru ] and Registry.AbilityList()[ passthru ] or Registry.Abilities()[ passthru ] and Registry.Abilities()[ passthru ].name or action
                                                         else
-                                                            if state:IsDisabled( action, true ) then warning = true end
-                                                            action = class.abilityList[ action ] and class.abilityList[ action ]:match( "|t (.+)$" ) or class.abilities[ action ] and class.abilities[ action ].name or action
+                                                            if Registry.IsDisabled( action, true ) then warning = true end
+                                                            action = Registry.AbilityList()[ action ] and Registry.AbilityList()[ action ]:match( "|t (.+)$" ) or Registry.Abilities()[ action ] and Registry.Abilities()[ action ].name or action
                                                         end
                                                     end
                                                 end
@@ -6278,7 +6278,7 @@ break end
                                                         desc = "|cff00ccff(not set)|r"
                                                         warning = true
                                                     else
-                                                        local a = class.auras[ entry.buff_name ]
+                                                        local a = Registry.Auras()[ entry.buff_name ]
 
                                                         if a then
                                                             desc = "|cff00ccff" .. a.name .. "|r"
@@ -6297,7 +6297,7 @@ break end
                                                         desc = "|cff00ccff(not set)|r"
                                                         warning = true
                                                     else
-                                                        local a = class.abilities[ entry.action_name ]
+                                                        local a = Registry.Abilities()[ entry.action_name ]
 
                                                         if a then
                                                             desc = "|cff00ccff" .. a.name .. "|r"
@@ -6473,7 +6473,7 @@ packControl.actionID = format( "%04d", id ) end
                                             main_hand = actual_main_hand
                                         }
 
-                                        for k, v in pairs( class.abilityList ) do
+                                        for k, v in pairs( Registry.AbilityList() ) do
                                             list[ k ] = bypass[ k ] or v
                                         end
 
@@ -6482,7 +6482,7 @@ packControl.actionID = format( "%04d", id ) end
                                     sorting = function( a, b )
                                         local list = {}
 
-                                        for k in pairs( class.abilityList ) do
+                                        for k in pairs( Registry.AbilityList() ) do
                                             insert( list, k )
                                         end
 
@@ -6492,8 +6492,8 @@ packControl.actionID = format( "%04d", id ) end
                                                 trinket2 = actual_trinket2,
                                                 main_hand = actual_main_hand
                                             }
-                                            local aName = bypass[ a ] or class.abilities[ a ].name
-                                            local bName = bypass[ b ] or class.abilities[ b ].name
+                                            local aName = bypass[ a ] or Registry.Abilities()[ a ].name
+                                            local bName = bypass[ b ] or Registry.Abilities()[ b ].name
                                             if aName ~= nil and type( aName.name ) == "string" then aName = aName.name end
                                             if bName ~= nil and type( bName.name ) == "string" then bName = bName.name end
                                             return aName < bName
@@ -6540,7 +6540,7 @@ packControl.actionID = format( "%04d", id ) end
                                     order = 3.2,
                                     width = 1.5,
                                     desc = "Specify the buff to remove.",
-                                    values = class.auraList,
+                                    values = Registry.AuraList(),
                                     hidden = function ()
                                         local e = GetListEntry( pack )
                                         return e.action ~= "cancel_buff"
@@ -6553,7 +6553,7 @@ packControl.actionID = format( "%04d", id ) end
                                     order = 3.2,
                                     width = 1.5,
                                     desc = "Specify the action to cancel; the result is that the addon will allow the channel to be removed immediately.",
-                                    values = class.abilityList,
+                                    values = Registry.AbilityList(),
                                     hidden = function ()
                                         local e = GetListEntry( pack )
                                         return e.action ~= "cancel_action"
@@ -6565,7 +6565,7 @@ packControl.actionID = format( "%04d", id ) end
                                     name = "Potion",
                                     order = 3.2,
                                     -- width = "full",
-                                    values = class.potionList,
+                                    values = Registry.PotionList(),
                                     hidden = function ()
                                         local e = GetListEntry( pack )
                                         return e.action ~= "potion"
@@ -6619,7 +6619,7 @@ packControl.actionID = format( "%04d", id ) end
                                     end,
                                     hidden = function()
                                         local e = GetListEntry( pack )
-                                        local ability = e.action and class.abilities[ e.action ]
+                                        local ability = e.action and Registry.Abilities()[ e.action ]
 
                                         return not ability or ( ability.id < 0 and ability.id > -10 )
                                     end,
@@ -6701,7 +6701,7 @@ packControl.actionID = format( "%04d", id ) end
 n = tonumber( n ) + 1
                                                 local e = Hekili.DB.profile.packs[ pack ].lists[ packControl.listName ][ n ]
 
-                                                local ability = e and e.action and class.abilities[ e.action ]
+                                                local ability = e and e.action and Registry.Abilities()[ e.action ]
                                                 ability = ability and ability.name or "Not Set"
 
                                                 return "Pool for Next Entry (" .. ability ..")"
@@ -6756,37 +6756,7 @@ n = tonumber( n ) + 1
                                     multiline = 6,
                                     dialogControl = "HekiliCustomEditor",
                                     arg = function( info )
-                                        local pack, list, action = info[ 2 ], packControl.listName, tonumber( packControl.actionID )
-                                        local results = {}
-
-                                        state.reset( "Primary", true )
-
-                                        local apack = rawget( self.DB.profile.packs, pack )
-
-                                        -- Let's load variables, just in case.
-                                        for name, alist in pairs( apack.lists ) do
-                                            state.this_list = name
-
-                                            for i, entry in ipairs( alist ) do
-                                                if name ~= list or i ~= action then
-                                                    if entry.action == "variable" and entry.var_name then
-                                                        state:RegisterVariable( entry.var_name, pack .. ":" .. name .. ":" .. i, name )
-                                                    end
-                                                end
-                                            end
-                                        end
-
-                                        local entry = apack and apack.lists[ list ]
-                                        entry = entry and entry[ action ]
-
-                                        state.this_action = entry.action
-                                        state.this_list = list
-
-                                        local scriptID = pack .. ":" .. list .. ":" .. action
-                                        state.scriptID = scriptID
-                                        scripts:StoreValues( results, scriptID )
-
-                                        return results, list, action
+                                        return Hekili.Engine.Evaluate( info[ 2 ], packControl.listName, tonumber( packControl.actionID ), nil, {} )
                                     end,
                                 },
 
@@ -6800,36 +6770,7 @@ n = tonumber( n ) + 1
                                     multiline = 3,
                                     dialogControl = "HekiliCustomEditor",
                                     arg = function( info )
-                                        local pack, list, action = info[ 2 ], packControl.listName, tonumber( packControl.actionID )
-                                        local results = {}
-
-                                        state.reset( "Primary", true )
-
-                                        local apack = rawget( self.DB.profile.packs, pack )
-
-                                        -- Let's load variables, just in case.
-                                        for name, alist in pairs( apack.lists ) do
-                                            state.this_list = name
-                                            for i, entry in ipairs( alist ) do
-                                                if name ~= list or i ~= action then
-                                                    if entry.action == "variable" and entry.var_name then
-                                                        state:RegisterVariable( entry.var_name, pack .. ":" .. name .. ":" .. i, name )
-                                                    end
-                                                end
-                                            end
-                                        end
-
-                                        local entry = apack and apack.lists[ list ]
-                                        entry = entry and entry[ action ]
-
-                                        state.this_action = entry.action
-                                        state.this_list = list
-
-                                        local scriptID = pack .. ":" .. list .. ":" .. action
-                                        state.scriptID = scriptID
-                                        scripts:StoreValues( results, scriptID, "value" )
-
-                                        return results, list, action
+                                        return Hekili.Engine.Evaluate( info[ 2 ], packControl.listName, tonumber( packControl.actionID ), "value", {} )
                                     end,
                                     hidden = function ()
                                         local e = GetListEntry( pack )
@@ -6846,36 +6787,7 @@ n = tonumber( n ) + 1
                                     multiline = 3,
                                     dialogControl = "HekiliCustomEditor",
                                     arg = function( info )
-                                        local pack, list, action = info[ 2 ], packControl.listName, tonumber( packControl.actionID )
-                                        local results = {}
-
-                                        state.reset( "Primary", true )
-
-                                        local apack = rawget( self.DB.profile.packs, pack )
-
-                                        -- Let's load variables, just in case.
-                                        for name, alist in pairs( apack.lists ) do
-                                            state.this_list = name
-                                            for i, entry in ipairs( alist ) do
-                                                if name ~= list or i ~= action then
-                                                    if entry.action == "variable" and entry.var_name then
-                                                        state:RegisterVariable( entry.var_name, pack .. ":" .. name .. ":" .. i, name )
-                                                    end
-                                                end
-                                            end
-                                        end
-
-                                        local entry = apack and apack.lists[ list ]
-                                        entry = entry and entry[ action ]
-
-                                        state.this_action = entry.action
-                                        state.this_list = list
-
-                                        local scriptID = pack .. ":" .. list .. ":" .. action
-                                        state.scriptID = scriptID
-                                        scripts:StoreValues( results, scriptID, "value_else" )
-
-                                        return results, list, action
+                                        return Hekili.Engine.Evaluate( info[ 2 ], packControl.listName, tonumber( packControl.actionID ), "value_else", {} )
                                     end,
                                     hidden = function ()
                                         local e = GetListEntry( pack )
@@ -6892,7 +6804,7 @@ n = tonumber( n ) + 1
                                     width = "full",
                                     hidden = function ()
                                         local e = GetListEntry( pack )
-                                        local ability = e.action and class.abilities[ e.action ]
+                                        local ability = e.action and Registry.Abilities()[ e.action ]
 
                                         return not ability -- or ( ability.id < 0 and ability.id > -100 )
                                     end,
@@ -6926,7 +6838,7 @@ n = tonumber( n ) + 1
                                     },
                                     hidden = function ()
                                         local e = GetListEntry( pack )
-                                        local ability = e.action and class.abilities[ e.action ]
+                                        local ability = e.action and Registry.Abilities()[ e.action ]
 
                                         return not e.cycle_targets and
                                             not e.max_cycle_targets and
@@ -6965,7 +6877,7 @@ n = tonumber( n ) + 1
                                     },
                                     hidden = function ()
                                         local e = GetListEntry( pack )
-                                        local ability = e.action and class.abilities[ e.action ]
+                                        local ability = e.action and Registry.Abilities()[ e.action ]
 
                                         return not e.enable_moving and
                                             not packControl.showModifiers or ( not ability or ( ability.id < 0 and ability.id > -100 ) )
@@ -7002,7 +6914,7 @@ n = tonumber( n ) + 1
                                     },
                                     hidden = function ()
                                         local e = GetListEntry( pack )
-                                        local ability = e.action and class.abilities[ e.action ]
+                                        local ability = e.action and Registry.Abilities()[ e.action ]
 
                                         return not e.use_off_gcd and
                                             not e.use_while_casting and
@@ -7028,7 +6940,7 @@ n = tonumber( n ) + 1
                                     },
                                     hidden = function ()
                                         local e = GetListEntry( pack )
-                                        local ability = e.action and class.abilities[ e.action ]
+                                        local ability = e.action and Registry.Abilities()[ e.action ]
 
                                         return not e.line_cd and
                                             not packControl.showModifiers or ( not ability or ( ability.id < 0 and ability.id > -100 ) )
@@ -7055,37 +6967,7 @@ n = tonumber( n ) + 1
                                             multiline = 3,
                                             dialogControl = "HekiliCustomEditor",
                                             arg = function( info )
-                                                local pack, list, action = info[ 2 ], packControl.listName, tonumber( packControl.actionID )
-                                                local results = {}
-
-                                                state.reset( "Primary", true )
-
-                                                local apack = rawget( self.DB.profile.packs, pack )
-
-                                                -- Let's load variables, just in case.
-                                                for name, alist in pairs( apack.lists ) do
-                                                    state.this_list = name
-
-                                                    for i, entry in ipairs( alist ) do
-                                                        if name ~= list or i ~= action then
-                                                            if entry.action == "variable" and entry.var_name then
-                                                                state:RegisterVariable( entry.var_name, pack .. ":" .. name .. ":" .. i, name )
-                                                            end
-                                                        end
-                                                    end
-                                                end
-
-                                                local entry = apack and apack.lists[ list ]
-                                                entry = entry and entry[ action ]
-
-                                                state.this_action = entry.action
-                                                state.this_list = list
-
-                                                local scriptID = pack .. ":" .. list .. ":" .. action
-                                                state.scriptID = scriptID
-                                                scripts:StoreValues( results, scriptID, "strict_if" )
-
-                                                return results, list, action
+                                                return Hekili.Engine.Evaluate( info[ 2 ], packControl.listName, tonumber( packControl.actionID ), "strict_if", {} )
                                             end,
                                             order = 2,
                                             width = "full",
@@ -7093,7 +6975,7 @@ n = tonumber( n ) + 1
                                     },
                                     hidden = function ()
                                         local e = GetListEntry( pack )
-                                        local ability = e.action and class.abilities[ e.action ]
+                                        local ability = e.action and Registry.Abilities()[ e.action ]
 
                                         return not e.strict and
                                             not e.strict_if and
@@ -7875,7 +7757,7 @@ do
                                     name = "AOE (Multi-Target)",
                                     desc = function ()
                                         return format( "If checked, the Display Mode toggle can select AOE mode.\n\nThe Primary display shows recommendations as though you have at least |cFFFFD100%d|r targets (even if fewer are detected).\n\n" ..
-                                                        "The number of targets is set in your specialization's options.", self.DB.profile.specs[ state.spec.id ].aoe or 3 )
+                                                        "The number of targets is set in your specialization's options.", self.DB.profile.specs[ Status.specID ].aoe or 3 )
                                     end,
                                     width = "full",
                                     order = 5,
@@ -7892,7 +7774,7 @@ do
                                     type = "description",
                                     name = function()
                                         return format( "%s Uses Primary Display\n"
-                                        .. "%s Recommendations based on at least |cFFFFD100%d|r Targets\n", Bullet, Bullet, self.DB.profile.specs[ state.spec.id ].aoe or 3 )
+                                        .. "%s Recommendations based on at least |cFFFFD100%d|r Targets\n", Bullet, Bullet, self.DB.profile.specs[ Status.specID ].aoe or 3 )
                                     end,
                                     fontSize = "medium",
                                     width = 2.85,
@@ -7904,7 +7786,7 @@ do
                                     name = "Dual",
                                     desc = function ()
                                         return format( "If checked, the Display Mode toggle can select Dual mode.\n\nThe Primary display shows single-target recommendations and the AOE display shows recommendations for |cFFFFD100%d|r or more targets (even if fewer are detected).\n\n" ..
-                                                        "The number of AOE targets is set in your specialization's options.", self.DB.profile.specs[ state.spec.id ].aoe or 3 )
+                                                        "The number of AOE targets is set in your specialization's options.", self.DB.profile.specs[ Status.specID ].aoe or 3 )
                                     end,
                                     width = "full",
                                     order = 6,
@@ -7923,7 +7805,7 @@ do
                                         return format( "%s Uses Two Displays: Primary and AOE\n"
                                         .. "%s Primary Display's Recommendations based on 1 Target\n"
                                         .. "%s AOE Display's Recommendations based on at least |cFFFFD100%d|r Targets\n"
-                                        .. "%s Useful for Ranged Specializations using Damage-Based Target Detection\n", Bullet, Bullet, Bullet, self.DB.profile.specs[ state.spec.id ].aoe or 3, Bullet )
+                                        .. "%s Useful for Ranged Specializations using Damage-Based Target Detection\n", Bullet, Bullet, Bullet, self.DB.profile.specs[ Status.specID ].aoe or 3, Bullet )
                                     end,
                                     fontSize = "medium",
                                     width = 2.85,
@@ -7934,7 +7816,7 @@ do
                                     type = "toggle",
                                     name = "Reactive Dual Display",
                                     desc = function ()
-                                        return format( "If checked, the Display Mode toggle can select Reactive mode.\n\nThe Primary display shows single-target recommendations, while the AOE display remains hidden until/unless |cFFFFD100%d|r or more targets are detected.", self.DB.profile.specs[ state.spec.id ].aoe or 3 )
+                                        return format( "If checked, the Display Mode toggle can select Reactive mode.\n\nThe Primary display shows single-target recommendations, while the AOE display remains hidden until/unless |cFFFFD100%d|r or more targets are detected.", self.DB.profile.specs[ Status.specID ].aoe or 3 )
                                     end,
                                     width = "full",
                                     order = 7,
@@ -7951,7 +7833,7 @@ do
                                     type = "description",
                                     name = function() return format( "%s Uses Two Displays: Primary and AOE\n"
                                         .. "%s Primary Display's Recommendations based on 1 Target\n"
-                                        .. "%s AOE Display Shown when |cFFFFD100%d|r+ Targets Detected", Bullet, Bullet, Bullet, self.DB.profile.specs[ state.spec.id ].aoe or 3 )
+                                        .. "%s AOE Display Shown when |cFFFFD100%d|r+ Targets Detected", Bullet, Bullet, Bullet, self.DB.profile.specs[ Status.specID ].aoe or 3 )
                                     end,
                                     fontSize = "medium",
                                     width = 2.85,
@@ -8207,134 +8089,6 @@ do
     end
 end
 
-function Hekili:GenerateProfile()
-    local s = state
-
-    local spec = s.spec.key
-
-    local talents
-
-    for k, v in orderedPairs( s.talent ) do
-        if v.enabled then
-            if talents then talents = format( "%s\n    %s = %d/%d", talents, k, v.rank, v.max )
-            else talents = format( "%s = %d/%d", k, v.rank, v.max ) end
-        end
-    end
-
-    local sets
-    for k, v in orderedPairs( class.gear ) do
-        if s.set_bonus[ k ] > 0 then
-            if sets then sets = format( "%s\n    %s = %d", sets, k, s.set_bonus[k] )
-            else sets = format( "%s = %d", k, s.set_bonus[k] ) end
-        end
-    end
-
-    local gear, items
-    for k, v in orderedPairs( state.set_bonus ) do
-        if type(v) == "number" and v > 0 then
-            if type(k) == 'string' then
-                if gear then gear = format( "%s\n    %s = %d", gear, k, v )
-                else gear = format( "%s = %d", k, v ) end
-            elseif type(k) == 'number' then
-                if items then items = format( "%s, %d", items, k )
-                else items = tostring(k) end
-            end
-        end
-    end
-
-    local settings
-    if state.settings.spec then
-        for k, v in orderedPairs( state.settings.spec ) do
-            if type( v ) ~= "table" then
-                if settings then settings = format( "%s\n    %s = %s", settings, k, tostring( v ) )
-                else settings = format( "%s = %s", k, tostring( v ) ) end
-            end
-        end
-        for k, v in orderedPairs( state.settings.spec.settings ) do
-            if type( v ) ~= "table" then
-                if settings then settings = format( "%s\n    %s = %s", settings, k, tostring( v ) )
-                else settings = format( "%s = %s", k, tostring( v ) ) end
-            end
-        end
-    end
-
-    local toggles
-    for k, v in orderedPairs( self.DB.profile.toggles ) do
-        if type( v ) == "table" and rawget( v, "value" ) ~= nil then
-            if toggles then toggles = format( "%s\n    %s = %s %s", toggles, k, tostring( v.value ), ( v.separate and "[separate]" or ( k ~= "cooldowns" and v.override and self.DB.profile.toggles.cooldowns.value and "[overridden]" ) or "" ) )
-            else toggles = format( "%s = %s %s", k, tostring( v.value ), ( v.separate and "[separate]" or ( k ~= "cooldowns" and v.override and self.DB.profile.toggles.cooldowns.value and "[overridden]" ) or "" ) ) end
-        end
-    end
-
-    local keybinds = ""
-    local bindLength = 1
-
-    for name in pairs( Hekili.KeybindInfo ) do
-        if name:len() > bindLength then
-            bindLength = name:len()
-        end
-    end
-
-    for name, data in orderedPairs( Hekili.KeybindInfo ) do
-        local action = format( "%-" .. bindLength .. "s =", name )
-        local count = 0
-        for i = 1, 12 do
-            local bar = data.upper[ i ]
-            if bar then
-                if count > 0 then action = action .. "," end
-                action = format( "%s %-4s[%02d]", action, bar, i )
-                count = count + 1
-            end
-        end
-        keybinds = keybinds .. "\n    " .. action
-    end
-
-
-    local warnings
-
-    for i, err in ipairs( Hekili.ErrorKeys ) do
-        if warnings then warnings = format( "%s\n[#%d] %s", warnings, i, err:gsub( "\n\n", "\n" ) )
-        else warnings = format( "[#%d] %s", i, err:gsub( "\n\n", "\n" ) ) end
-    end
-
-
-    return format(
-    "build: %s\n" ..
-    "level: %d (%d)\n" ..
-    "class: %s\n" ..
-    "spec: %s\n\n" ..
-
-    "### Talents ###\n\n" ..
-    "In-Game Import: %s\n\n" ..
-
-    "### Gear & Items ###\n\n" ..
-    "sets:\n    %s\n\n" ..
-    "gear:\n    %s\n\n" ..
-    "itemIDs: %s\n\n" ..
-
-    "### Settings ###\n\n" ..
-    "Settings:\n    %s\n\n" ..
-
-    "Toggles:\n    %s\n\n" ..
-
-    "Keybinds:%s\n\n" ..
-
-    "### Warnings ###\n\n%s\n",
-    self.Version or "no info",
-    UnitLevel( 'player' ) or 0, UnitEffectiveLevel( 'player' ) or 0,
-    class.file or "NONE",
-    spec or "none",
-    talents or "none",
-    sets or "none",
-    gear or "none",
-    items or "none",
-    settings or "none",
-    toggles or "none",
-    keybinds or "none",
-    warnings or "none"
-)
-
-end
 
 do
     local Options = {
@@ -8844,7 +8598,7 @@ function Hekili:TotalRefresh( noOptions )
 
     callHook( "onInitialize" )
 
-    for specID, spec in pairs( class.specs ) do
+    for specID, spec in pairs( Registry.Specs() ) do
         if specID > 0 then
             local options = self.DB.profile.specs[ specID ]
 
@@ -9334,15 +9088,15 @@ do
 
             if not item then return "equipped.none" end
 
-            if class.abilities[ item ] then
-                return "equipped." .. ( class.abilities[ item ].key or "none" )
+            if Registry.Abilities()[ item ] then
+                return "equipped." .. ( Registry.Abilities()[ item ].key or "none" )
             end
 
             return "equipped[" .. item .. "]"
         end },
 
         { "trinket%.([%w_]+)%.cooldown%.([%w_]+)", nil, function( trinket, token )
-            if class.abilities[ trinket ] then
+            if Registry.Abilities()[ trinket ] then
                 return "cooldown." .. trinket .. "." .. token
             end
 
@@ -9489,14 +9243,14 @@ do
 
         local n = 0
         for aura in list:gmatch( "buff%.([a-zA-Z0-9_]+)" ) do
-            if not class.auras[ aura ] then
+            if not Registry.Auras()[ aura ] then
                 missing[ aura ] = true
                 n = n + 1
             end
         end
 
         for aura in list:gmatch( "active_dot%.([a-zA-Z0-9_]+)" ) do
-            if not class.auras[ aura ] then
+            if not Registry.Auras()[ aura ] then
                 missing[ aura ] = true
                 n = n + 1
             end
@@ -9555,7 +9309,7 @@ do
                 if a == 1 then
                     local ability = str:trim()
 
-                    if ability and ( ability == "use_item" or class.abilities[ ability ] ) then
+                    if ability and ( ability == "use_item" or Registry.Abilities()[ ability ] ) then
                         if ability == "pocketsized_computation_device" then ability = "cyclotronic_blast"
                         else result.action = ability end
                     elseif not ignore_actions[ ability ] then
@@ -9613,11 +9367,11 @@ do
             end
 
             if result.action == "use_item" then
-                if result.effect_name and class.abilities[ result.effect_name ] then
-                    result.action = class.abilities[ result.effect_name ].key
-                elseif result.name and class.abilities[ result.name ] then
+                if result.effect_name and Registry.Abilities()[ result.effect_name ] then
+                    result.action = Registry.Abilities()[ result.effect_name ].key
+                elseif result.name and Registry.Abilities()[ result.name ] then
                     result.action = result.name
-                elseif ( result.slot or result.slots ) and class.abilities[ result.slot or result.slots ] then
+                elseif ( result.slot or result.slots ) and Registry.Abilities()[ result.slot or result.slots ] then
                     result.action = result.slot or result.slots
                 end
 
@@ -9705,18 +9459,7 @@ end
 
 -- Key Bindings
 function Hekili:MakeSnapshot( isAuto )
-    if isAuto and not Hekili.DB.profile.autoSnapshot then
-        return
-    end
-
-    self.ManualSnapshot = not isAuto
-    self.ActiveDebug = true
-    Hekili.Update()
-    self.ActiveDebug = false
-    self.ManualSnapshot = nil
-
-    -- The suspended build's thread would write into the set this snapshot just published; drop it (R1).
-    ns.EngineFrame.activeThread = nil
+    return Hekili.Engine.Snapshot( isAuto )
 end
 
 function Hekili:Notify( str, duration )

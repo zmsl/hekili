@@ -1755,7 +1755,7 @@ do
 
         function d:RefreshCooldowns( event )
             local gStart = GetSpellCooldown( Registry.GCD_SPELL )
-            -- The last GCD start seen, the stock state.gcd.lastStart (which the combat log kept), for the extend below.
+            -- The last GCD start seen, what the stock engine kept from the combat log (gcd.lastStart), for the extend below.
             if gStart > lastGcdStart then lastGcdStart = gStart end
             local cStart = ( select( 4, UnitCastingInfo( "player" ) ) or select( 4, UnitChannelInfo( "player" ) ) or 0 ) / 1000
 

@@ -5,6 +5,7 @@ src/Hekili/Libs/
 src/Hekili/Options/
 src/Hekili/UI/
 src/Hekili/Engine/Schema/Spec.lua
+src/Hekili/Engine/Snapshot.lua
 archive/
 .claude/
 .lua/

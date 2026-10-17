@@ -57,6 +57,7 @@ Engine\Schema\Spec.lua
 Engine\Schema\Shared.lua
 Engine\Output.lua
 Engine\Registry.lua
+Engine\Snapshot.lua
 Forever\Shared\Auras.lua
 Forever\Shared\Consumables.lua
 Forever\Shared\Items.lua
