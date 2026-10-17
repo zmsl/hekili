@@ -22,7 +22,7 @@ describe("group attribution (harness gates) #slow", function()
         -- model-only error; the oracle removes the difference
         check(metrics.falsePer100(m) <= 2.76, m) -- measured 1.76
         -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
-        check(metrics.falsePer100(m, m.falseAvoids) <= 0.84, m) -- measured 0.33
+        check(metrics.falsePer100(m, m.falseAvoids) <= 0.84, m) -- measured 0.36
     end)
 
     it("party of 5 with a pet and a ranged stand-in on our target as well (100 fights)", function()
@@ -35,7 +35,7 @@ describe("group attribution (harness gates) #slow", function()
         -- model-only error; the oracle removes the difference
         check(metrics.falsePer100(m) <= 7.33, m) -- measured 6.35
         -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
-        check(metrics.falsePer100(m, m.falseAvoids) <= 1.4, m) -- measured 0.82
+        check(metrics.falsePer100(m, m.falseAvoids) <= 1.4, m) -- measured 0.81
     end)
 
     it("raid, 12 on our target: reported (30 fights)", function()

@@ -604,6 +604,13 @@ describe("the synthesized combat log", function()
                 assert.are.same({ "Creature-B", 1 }, { source(7), L.onus.byBand })
             end)
 
+            it("leaves a wound inside two clocks' tolerance unattributed when no band separates them", function()
+                twoBands()
+                local u = L.unattributed
+                hit(31.95, 40) -- A's clock (32) and B's (31.9); neither band holds 40: not the nearest clock's
+                assert.are.same({ 6, u + 1 }, { #got, L.unattributed })
+            end)
+
             it("leaves a wound unattributed while a hostile on us has no band and no clock names it", function()
                 onUs("target", "Creature-A", nil)
                 onUs("nameplate1", "Creature-B", nil)

@@ -8,6 +8,7 @@
 local load = require("Virtual.State.helpers.load")
 local fake = require("Virtual.State.helpers.fake_api")
 local fs = require("Virtual.State.helpers.fake_spec")
+local COSTS = require("Virtual.harness.observer").COSTS
 
 local M = {}
 
@@ -271,8 +272,11 @@ local function tick(c, t)
     if c.nWin > 0 and p.est - c.truth >= M.STEP then
         c.estOver[c.nWin] = 1
     end
-    if c.nWin > 0 and ((p.lo >= 10 and c.truth < 10) or (p.lo >= 15 and c.truth < 15)) then
-        c.danger[c.nWin] = 1
+    for i = 1, c.nWin > 0 and #COSTS or 0 do -- a spender believed affordable that the true power cannot pay
+        local cost = COSTS[i][2]
+        if p.lo >= cost and c.truth < cost then
+            c.danger[c.nWin] = 1
+        end
     end
     for pt, r in pairs(c.trk) do
         if r.n < CAP then

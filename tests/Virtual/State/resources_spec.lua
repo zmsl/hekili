@@ -1118,7 +1118,7 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         local sink = I.Events.CreateFrame("Frame")
         sink:SetScript("OnEvent", function()
             local t, ev, _, _, _, _, _, _, _, _, _, a12 = GetInfo()
-            if ev == "SWING_DAMAGE" or ev == "SWING_MISSED" then
+            if rows and (ev == "SWING_DAMAGE" or ev == "SWING_MISSED") then -- nil: not recorded (the alloc case)
                 rows[#rows + 1] = { ev, a12, t }
             end
         end)
@@ -1256,6 +1256,35 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
             assert.are.same({ 10, 10, 10 + 9 * 1.1 }, power(12.5))
         end
     )
+
+    it("allocates nothing over a retraction past its window, a soft verdict and a late rescue", function()
+        setup(8)
+        rows = nil
+        local o, b = L.oracle, 0
+        local function cycle()
+            b = b + 20
+            answer(b - 1, SPENDER_A, false) -- the last cycle's usable rung forgotten
+            R.est0[1], R.lo0[1], R.hi0[1] = 8, 8, 8
+            for k = 1, #L.theta do -- every class's bar back at THETA: each cycle credits as the first
+                L.theta[k] = L.THETA
+            end
+            credit(b, 45, 1.2)
+            answer(b + 1.6, SPENDER_A, false) -- retracted 0.4 s after the outcome, past the swing's window: MISS
+            R.est0[1], R.lo0[1], R.hi0[1] = 8, 0, 8
+            credit(b + 4)
+            answer(b + 4.6, SPENDER_A, false) -- soft: only the estimate crossed
+            R.est0[1], R.lo0[1], R.hi0[1] = 5, 5, 5
+            answer(b + 7.95, SPENDER_A, false)
+            L.theta[2] = math.huge -- main, exact, tail: the 45 at 1.3 s is dropped
+            credit(b + 8, 45, 1.3)
+            answer(b + 9.6, SPENDER_A, true) -- after the swing's window closed: rescued late (rage only)
+        end
+        local before = { o.retracted, o.soft, o.rescuedLate }
+        cycle()
+        assert.are.same({ before[1] + 1, before[2] + 1, before[3] + 1 }, { o.retracted, o.soft, o.rescuedLate })
+        assert.are.equal(0, alloc.bytes(cycle, 100))
+        assert.are.same({ before[1] + 302, before[2] + 302, before[3] + 302 }, { o.retracted, o.soft, o.rescuedLate })
+    end)
 
     it("caps a class's bar at THETA_MAX after ten negatives and floors it at THETA_MIN after positives", function()
         setup(8)

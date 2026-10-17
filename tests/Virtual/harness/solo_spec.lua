@@ -20,7 +20,7 @@ describe("solo attribution (harness gates) #slow", function()
             check(metrics.falsePer100(m, m.falseNet) == 0 and metrics.falsePer100(m) == 0, m)
             check(metrics.fights({}, 200).over == 0, m) -- the model's drift, no answers
             -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
-            check(metrics.falsePer100(m, m.falseAvoids) <= 0.6, m) -- measured 0.10
+            check(metrics.falsePer100(m, m.falseAvoids) <= 0.6, m) -- measured 0.08
             check(m.noDst == 0 and m.order == 0 and m.nonTarget == 0, m)
             assert.is_true(m.falseRetracted <= 0.005 * (m.right[1] + m.right[2]), metrics.oracleLine(m))
             -- solo leaves the oracle little to rescue (2 in 200 fights): one wrong rescue is within the gate
@@ -36,7 +36,7 @@ describe("solo attribution (harness gates) #slow", function()
             check(metrics.rate(m, 1) >= 0.85 and metrics.falsePer100(m, m.falseNet) == 0, m)
             check(metrics.falsePer100(m) == 0, m) -- gross: measured 0 (measured + 1 would loosen it)
             -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
-            check(metrics.falsePer100(m, m.falseAvoids) <= 0.66, m) -- measured 0.16
+            check(metrics.falsePer100(m, m.falseAvoids) <= 0.66, m) -- measured 0.18
         end
     )
 
@@ -48,7 +48,7 @@ describe("solo attribution (harness gates) #slow", function()
             check(metrics.falsePer100(m, m.falseNet) == 0, m)
             check(metrics.falsePer100(m) == 0, m) -- gross: measured 0 (measured + 1 would loosen it)
             -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
-            check(metrics.falsePer100(m, m.falseAvoids) <= 0.6, m) -- measured 0.10
+            check(metrics.falsePer100(m, m.falseAvoids) <= 0.6, m) -- measured 0.09
             check(m.wrong[1] <= 0.03 * m.own[1] and m.wrong[2] <= 0.03 * m.own[2], m)
         end
     )

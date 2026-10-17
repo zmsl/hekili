@@ -440,8 +440,8 @@ task's review round.
 
 | Topic | Spec text | As built | Source |
 |---|---|---|---|
-| THETA (§1.4, §2.5, D1) | 4 | `L.THETA = 5`; the oracle's theta[16] starts at it | ruling |
-| Glancing / BLOCK_REDUCED (§1.3) | open the range from 0 | open the loose band (class 2) down to 0 only; the exact band is unchanged | ruling |
+| THETA (§1.4, §2.5, D1) | 4 | `L.THETA = 5`; the oracle's theta[16] starts at it | Deviation 1 |
+| Glancing / BLOCK_REDUCED (§1.3) | open the range from 0 | open the loose band (class 2) down to 0 only; the exact band is unchanged | Deviation 2 |
 | Background (§1.4) | every unclaimed outcome | white outcomes only (school 1); bg[7] counts AVOIDS only; bg[8] (white, any amount) always | ruling |
 | Snapshot (§1.5) | no off-hand reference | `rows credited ... ref=%.0f/%.0f ...`, `rows oracle ...`, `rows onus credited/unattributed/byBand` | Task 5 |
 | Verdict window (§2.2) | checked in Resources | checked in Rows (`I.CreditVerdict`) | Deviation 5 |
@@ -450,11 +450,11 @@ task's review round.
 | Retraction (§2.2) | take the credit back | bounded by the credit's pre-credit values (`max(cur - d, min(cur, pre))`, clamped to [0, max]); the crit's step goes with it | T3 round 2 |
 | Rescue suppression (§2.3) | - | no rescue when a confirmed or open record of the slot explains the flip | T3 round 2 |
 | Usability answers (§3.4) | oracle scenarios only | every gate runs `scenarios.oracle`, the sweep included | ruling |
-| Overshoot (§3.4) | measured with the oracle | read from a companion run without answers: a model-only metric (the drift); the oracle's "at most half" became danger == 0 | ruling |
+| Overshoot (§3.4) | measured with the oracle | read from a companion run without answers: a model-only metric (the drift); the oracle's "at most half" became danger == 0 | ruling (no answers); Deviation 9 (danger) |
 | False wounds (§3.3, §3.4) | one count | gross (every false credit) and net (less those retracted at their verdict); the spec's bounds apply to net (party <= 4, party+pet <= 6); gross <= measured + 1; false avoids and form wrong <= 3% gated too | ruling |
 | Solo rescue gate (§3.4) | precision | "one miss" (<= 1 wrong rescue) | Deviation 10 |
 | Fixtures (§3.1) | logs 1-3 | logs 1, 2, 3 and 5 (G5); `tools/vslog_fixture.lua` turns a dump into one | Task 5 |
-| RNG (§3.2) | seeded | Park-Miller minimal standard (48271, 2^31 - 1), not xorshift | Task 1 |
+| RNG (§3.1) | seeded | Park-Miller minimal standard (48271, 2^31 - 1), not xorshift | Task 1 |
 | Observation draws (§3.1) | the observer rolls the same-ms avoid and the strike frame's order | the melee behaviour rolls both from the world's second generator `W.crng` (seed + 7919) and records them on the truth event (`sameMs`, `order`); the observer draws nothing, so its incremental and batch streams are equal | headless loop plan, Task 2 |
 | Attackers, rule 2 (§4.2) | the band that holds it | only when every candidate's band is known, one holds it and more than one hostile is on us; with one, the lone rule credits it and its band learns | T4, Task 5 |
 | Attackers, joiner (§4.1) | - | a joining attacker without a band is found by elimination (every known band excludes the wound) | Task 4 |
