@@ -12,6 +12,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `src/Hekili_Forever_Warrior/`, `src/Hekili_Forever_Druid/`: one class pack each (the class file, its RegisterPack
     blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's `Engine/Content.lua` for the
     player's class.
+    `## Group: Hekili` nests each content addon under Hekili in the in-game addon list.
 
   Content reaches the engine only through the public `Hekili` object (the registration API, `State`, `Class`,
   `Client`; `tests/boundary_spec.lua`). A class release bumps the pack addon's `## Version`; the core's ContentAPI

@@ -4,6 +4,7 @@
 ## Author: Hekili
 ## Notes: Hekili's Forever content every class shares: the shared auras, consumables and items, and the race packs.
 ## Dependencies: Hekili
+## Group: Hekili
 ## LoadOnDemand: 1
 ## X-Hekili-ContentAPI: 1
 

@@ -4,6 +4,7 @@
 ## Author: Hekili
 ## Notes: Hekili's Forever Warrior: the class kit and its default priorities. Loaded by Hekili for a Warrior.
 ## Dependencies: Hekili, Hekili_Forever
+## Group: Hekili
 ## LoadOnDemand: 1
 ## X-Hekili-ContentAPI: 1
 
