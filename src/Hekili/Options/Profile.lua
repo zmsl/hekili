@@ -38,6 +38,15 @@ function Hekili:InitializeProfile()
 end
 
 
+-- The class pack registers its spec at OnEnable (Engine/Content.lua), after OnInitialize built the profile's
+-- defaults from the specs then registered: registered again, so profile.specs[id] gets the spec template. AceDB
+-- rebuilds the profile's default subtables, so the engine is handed them again.
+function Hekili:RegisterSpecDefaults()
+    self.DB:RegisterDefaults( self:GetDefaults() )
+    Engine.Configure( self.DB.profile )
+end
+
+
 function Hekili:ReInitialize()
     self:OverrideBinds()
     self:RestoreDefaults()

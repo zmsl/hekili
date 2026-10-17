@@ -2,6 +2,7 @@
 -- The boundary scanner (moved out of tests/boundary_spec.lua, which describes it): the content's keys and IDs, a
 -- Lua tokenizer and the leak checks, shared by the spec and tools/boundary_baseline.lua. No `_spec` suffix: busted
 -- does not run it.
+local addons = require("helpers.addons")
 local loaders = {
     Warrior = require("Forever.helpers.load_warrior"),
     Druid = require("Forever.helpers.load_druid"),
@@ -130,25 +131,25 @@ local function content()
         end
     end
 
-    -- the class files, through their recording loaders (tests/Forever/helpers)
-    local classFiles = io.popen("ls src/Hekili/Forever/Classes")
-    for file in classFiles:lines() do
-        local name = assert(file:match("^(%w+)%.lua$"), file)
-        local loader = assert(loaders[name], "no recording loader for Forever/Classes/" .. file)
-        local w = loader.load()
-        local where = "Forever/Classes/" .. file
-        for kind in pairs({ abilities = true, auras = true }) do
-            for k, d in pairs(w[kind]) do
-                def(k, d, where)
+    -- the class packs' files, through their recording loaders (tests/Forever/helpers)
+    for _, addon in ipairs(addons.CONTENT) do
+        local name = addon:match("^Hekili_Forever_(%w+)$")
+        if name then
+            local loader = assert(loaders[name], "no recording loader for " .. addon)
+            local w = loader.load()
+            local where = addon .. "/" .. name .. ".lua"
+            for kind in pairs({ abilities = true, auras = true }) do
+                for k, d in pairs(w[kind]) do
+                    def(k, d, where)
+                end
             end
+            for k, t in pairs(w.talents or {}) do
+                def(k, nil, where)
+                id(t[2], where)
+            end
+            costMods(w.costMods, where)
         end
-        for k, t in pairs(w.talents or {}) do
-            def(k, nil, where)
-            id(t[2], where)
-        end
-        costMods(w.costMods, where)
     end
-    classFiles:close()
 
     -- the race and shared files, through Engine/Schema/Races.lua and Engine/Schema/Shared.lua against a recording `all`
     local saved = rawget(_G, "Hekili") or false
@@ -177,7 +178,7 @@ local function content()
         assert(loadfile("src/Hekili/Engine/Schema/Races.lua"))("Hekili", ns)
         assert(loadfile("src/Hekili/Engine/Schema/Shared.lua"))("Hekili", ns)
         -- a global the file reads at load (INVTYPE_*) answers `any`; Hekili and the Lua library stay real
-        local chunk = assert(loadfile("src/Hekili/" .. path))
+        local chunk = assert(loadfile("src/" .. path))
         setfenv(
             chunk,
             setmetatable({}, {
@@ -193,12 +194,9 @@ local function content()
         chunk("Hekili", ns)
         costMods(ns.raceMods.costMods, path)
     end
-    for line in io.lines("src/Hekili/Hekili.toc") do
-        local path = line:gsub("\r", ""):match("^(Forever\\%w+\\%w+%.lua)")
-        if path and not path:match("^Forever\\Classes\\") then
-            path = path:gsub("\\", "/")
-            run(path, read("src/Hekili/" .. path):match('NewRace%("(%w+)"%)'))
-        end
+    for _, file in ipairs(addons.lua({ "Hekili_Forever" })) do -- the race and shared files
+        local path = file:gsub("^src/", "")
+        run(path, read(file):match('NewRace%("(%w+)"%)'))
     end
     _G.Hekili = saved or nil
     return { keys = keys, ids = ids }

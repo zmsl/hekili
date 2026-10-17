@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fails when a file loaded by Hekili.toc reads a game API from tools/api_inventory.txt directly instead of through
+# Fails when a file an addon TOC loads (tests/helpers/addons.lua: the core and the content) reads a game API from tools/api_inventory.txt directly instead of through
 # ns.Facade (Virtual/API/Facade.lua; event-facade spec §1.2): every game read goes through the facade. Bare reads,
 # namespace globals included, come from luacheck W113 (which ignores strings and comments; a `local C_Spell =
 # Facade.C_Spell` covers its members); _G.Name and _G["Name"] reads come from grep, and so does a frame method reached
@@ -9,7 +9,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 if [ -z "${LUACHECK:-}" ]; then [ -x .lua/bin/luacheck ] && LUACHECK=.lua/bin/luacheck || LUACHECK=luacheck; fi
 command -v "$LUACHECK" >/dev/null || { echo "luacheck not found: set LUACHECK" >&2; exit 1; }
-mapfile -t files < <(grep -E '\.lua\s*$' src/Hekili/Hekili.toc | tr -d '\r' | sed 's/\\/\//g; s/[[:space:]]*$//; s#^#src/Hekili/#')
+mapfile -t files < <(lua5.1 tests/helpers/addons.lua lua) # every addon's TOC, in dependency order
 globals=$(cut -f1 tools/api_inventory.txt | sed -E 's/\..*//' | sort -u | paste -sd'|')
 fail=0
 out=$("$LUACHECK" --no-config --std none --formatter plain --codes "${files[@]}"); rc=$?

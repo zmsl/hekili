@@ -198,11 +198,8 @@ describe("now handlers", function()
         }
         local missing, scanned = {}, 0
         local files = {}
-        for line in io.lines("src/Hekili/Hekili.toc") do
-            local f = line:gsub("\r", ""):match("^(Forever\\%w+\\%w+%.lua)")
-            if f then
-                files[#files + 1] = "src/Hekili/" .. f:gsub("\\", "/")
-            end
+        for _, path in ipairs(require("helpers.addons").lua(require("helpers.addons").CONTENT)) do
+            files[#files + 1] = path
         end
         for _, path in ipairs(files) do
             local fh = assert(io.open(path))

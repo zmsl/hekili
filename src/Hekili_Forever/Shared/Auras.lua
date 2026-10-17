@@ -1,4 +1,4 @@
--- Forever/Shared/Auras.lua
+-- Hekili_Forever/Shared/Auras.lua
 -- The auras every class shares on Forever (shared-content spec §4.1), through Engine/Schema/Shared.lua into `all`: auras others
 -- put on the player, which the player's aura walk reads in combat (lust, Power Infusion, loss of control, dispellable
 -- debuffs), and four id-less stubs for the keys core still reads by name. Retail's other lusts and lockouts, the

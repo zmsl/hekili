@@ -67,11 +67,11 @@ describe("Engine.Configure (pure)", function()
 end)
 
 describe("Engine.Configure (headless Arms boot)", function()
-    it("runs once from the fixture profile through OnInitialize -> InitializeProfile", function()
+    it("runs from InitializeProfile (OnInitialize), and again once the class pack's spec defaults are in", function()
         local H = headless.new({ character = ww.character(), pack = ww.PACK })
         assert.are.same({}, H.loadErrors)
         local s, p = H.Hekili.Engine.settings, H.Hekili.DB.profile
-        assert.are.equal(1, s.version)
+        assert.are.equal(2, s.version) -- Options/Profile.lua's RegisterSpecDefaults, from Engine/Content.lua
         for _, k in ipairs(SUBTABLES) do
             assert.are.equal(p[k], s[k], k)
         end

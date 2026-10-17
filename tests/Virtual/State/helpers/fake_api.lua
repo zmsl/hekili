@@ -402,19 +402,17 @@ function M.new()
                 p[3]
         end,
     }
-    local toc = {} -- C_AddOns.GetAddOnMetadata answers the TOC's `## Key: value` lines (State.lua reads Version)
-    local fh = assert(io.open("src/Hekili/Hekili.toc")) -- run from the repository root
-    for line in fh:lines() do
-        local k, v = line:match("^## ([%w%-]+): (.-)%s*$")
-        if k then
-            toc[k] = v
-        end
+    -- C_AddOns.GetAddOnMetadata answers each shipped addon's TOC `## Key: value` lines (State.lua reads Hekili's
+    -- Version; Engine/Content.lua a class pack's X-Hekili-ContentAPI), nil for an addon not installed
+    local addons = require("helpers.addons") -- run from the repository root
+    local toc = {}
+    for _, name in ipairs(addons.ADDONS) do
+        toc[name] = addons.meta(name)
     end
-    fh:close()
-    assert(toc.Version, "src/Hekili/Hekili.toc: no ## Version line")
+    assert(toc.Hekili.Version, "src/Hekili/Hekili.toc: no ## Version line")
     api.C_AddOns = {
-        GetAddOnMetadata = function(_, k)
-            return toc[k]
+        GetAddOnMetadata = function(name, k)
+            return toc[name] and toc[name][k]
         end,
         IsAddOnLoaded = no,
         LoadAddOn = no,

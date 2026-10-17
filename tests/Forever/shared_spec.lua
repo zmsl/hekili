@@ -1,11 +1,13 @@
 -- tests/Forever/shared_spec.lua (shared-content spec §3, §4, §8): Engine/Schema/Shared.lua's `Hekili:NewShared` and the shared
--- content files Hekili.toc lists (Forever/Shared/*.lua), loaded headless against a stand-in for Hekili's `all`; and no
+-- content files Hekili_Forever.toc lists (Shared/*.lua), loaded headless against a stand-in for Hekili's `all`; and no
 -- priority, class, race, engine or shared file names a key the pass dropped, nor one it stubbed outside its stub.
 
--- Every shared content file Hekili.toc lists, in its order.
+local addons = require("helpers.addons")
+
+-- Every shared content file Hekili_Forever.toc lists, in its order.
 local SHARED = {}
-for line in io.lines("src/Hekili/Hekili.toc") do
-    local file = line:match("^Forever\\Shared\\(%w+)%.lua")
+for _, path in ipairs(addons.files("Hekili_Forever")) do
+    local file = path:match("/Shared/(%w+)%.lua$")
     if file then
         SHARED[#SHARED + 1] = file
     end
@@ -39,17 +41,17 @@ local DROPPED = {
     "224464",
     "pact_of_gluttony",
 }
--- Keys core reads by name (State.lua): id-less stubs in Forever/Shared/Auras.lua, never up.
+-- Keys core reads by name (State.lua): id-less stubs in Hekili_Forever/Shared/Auras.lua, never up.
 local STUBS = { "voidbinding", "voidform", "shadowform", "adrenaline_rush" }
 -- Keys `all` gave up to the class or race file that registers them.
 local OWNERS = {
-    mark_of_the_wild = "Forever/Classes/Druid.lua",
-    battle_shout = "Forever/Classes/Warrior.lua",
-    berserking = "Forever/Races/Troll.lua",
-    blood_fury = "Forever/Races/Orc.lua",
-    shadowmeld = "Forever/Races/NightElf.lua",
-    will_to_survive = "Forever/Races/Human.lua",
-    stoneform = "Forever/Races/Dwarf.lua",
+    mark_of_the_wild = "Hekili_Forever_Druid/Druid.lua",
+    battle_shout = "Hekili_Forever_Warrior/Warrior.lua",
+    berserking = "Hekili_Forever/Races/Troll.lua",
+    blood_fury = "Hekili_Forever/Races/Orc.lua",
+    shadowmeld = "Hekili_Forever/Races/NightElf.lua",
+    will_to_survive = "Hekili_Forever/Races/Human.lua",
+    stoneform = "Hekili_Forever/Races/Dwarf.lua",
 }
 
 local function read(path)
@@ -72,7 +74,7 @@ end
 describe("shared content", function()
     local all, ns, saved, debuffs, bags
 
-    -- Runs Engine/Schema/Races.lua, Engine/Schema/Shared.lua and the named shared files (default: every one Hekili.toc lists) against
+    -- Runs Engine/Schema/Races.lua, Engine/Schema/Shared.lua and the named shared files (default: every one Hekili_Forever.toc lists) against
     -- a stand-in `all` that registers as Engine/Schema/Spec.lua's RegisterAbility/RegisterAura: under the key, its id and
     -- every `copy` alias.
     local function load(files)
@@ -131,7 +133,7 @@ describe("shared content", function()
         assert(loadfile("src/Hekili/Engine/Schema/Races.lua"))("Hekili", ns)
         assert(loadfile("src/Hekili/Engine/Schema/Shared.lua"))("Hekili", ns)
         for _, f in ipairs(files or SHARED) do
-            assert(loadfile("src/Hekili/Forever/Shared/" .. f .. ".lua"))()
+            assert(loadfile(addons.root("Hekili_Forever") .. "Shared/" .. f .. ".lua"))()
         end
     end
 
@@ -270,7 +272,7 @@ describe("shared content", function()
         assert.are.same({}, _G.Hekili.Class.trinkets[12345])
     end)
 
-    it("registers each shared key in one file only, every file Hekili.toc lists", function()
+    it("registers each shared key in one file only, every file Hekili_Forever.toc lists", function()
         load()
         assert.are.same({ "Auras", "Consumables", "Items" }, SHARED)
         for _, kind in ipairs({ "abilities", "auras" }) do
@@ -285,8 +287,11 @@ describe("shared content", function()
     it(
         "leaves no dropped key in a priority, a class, race, engine or shared file, and no stub outside its own",
         function()
-            local ls =
-                assert(io.popen("find src/Hekili/Engine/Schema src/Hekili/Forever tools/packs -name '*.lua' | sort"))
+            local roots = { "src/Hekili/Engine/Schema", "tools/packs" }
+            for _, name in ipairs(addons.CONTENT) do
+                roots[#roots + 1] = addons.root(name)
+            end
+            local ls = assert(io.popen("find " .. table.concat(roots, " ") .. " -name '*.lua' | sort"))
             local n = 0
             for path in ls:lines() do
                 local src = read(path)
@@ -294,8 +299,8 @@ describe("shared content", function()
                     assert.is_false(names(src, k), path .. ": " .. k)
                 end
                 -- A class file (a future Priest or Rogue) may register a stubbed key for real; its registration wins.
-                if path ~= "src/Hekili/Forever/Shared/Auras.lua" then
-                    local class = path:find("^src/Hekili/Forever/Classes/")
+                if path ~= addons.root("Hekili_Forever") .. "Shared/Auras.lua" then
+                    local class = path:find("^src/Hekili_Forever_%w+/")
                     for _, k in ipairs(STUBS) do
                         assert.is_true(class and registers(src, k) or not names(src, k), path .. ": " .. k)
                     end
@@ -310,7 +315,7 @@ describe("shared content", function()
     it("leaves each key `all` gave up registered by its class or race file", function()
         local spec = read("src/Hekili/Engine/Schema/Spec.lua")
         for k, owner in pairs(OWNERS) do
-            assert.is_true(names(read("src/Hekili/" .. owner), k), owner .. ": " .. k)
+            assert.is_true(names(read("src/" .. owner), k), owner .. ": " .. k)
             assert.is_false(names(spec, k), "Engine/Schema/Spec.lua: " .. k)
         end
     end)

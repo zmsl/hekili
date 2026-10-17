@@ -1,0 +1,19 @@
+## Interface: 16001
+## Version: forever-dev
+## Title: Hekili Forever
+## Author: Hekili
+## Notes: Hekili's Forever content every class shares: the shared auras, consumables and items, and the race packs.
+## Dependencies: Hekili
+## X-Hekili-ContentAPI: 1
+
+Shared\Auras.lua
+Shared\Consumables.lua
+Shared\Items.lua
+Races\Gnome.lua
+Races\NightElf.lua
+Races\Tauren.lua
+Races\Human.lua
+Races\Dwarf.lua
+Races\Orc.lua
+Races\Troll.lua
+Races\Undead.lua

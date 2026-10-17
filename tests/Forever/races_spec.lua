@@ -1,22 +1,24 @@
--- tests/Forever/races_spec.lua (event-facade spec §12b): the race packs. Every race file Hekili.toc lists
--- (Forever/Races/*.lua), loaded through Engine/Schema/Races.lua headless against a stand-in for Hekili: inert for another race,
+-- tests/Forever/races_spec.lua (event-facade spec §12b): the race packs. Every race file Hekili_Forever.toc lists
+-- (Races/*.lua), loaded through Engine/Schema/Races.lua headless against a stand-in for Hekili: inert for another race,
 -- registered for its own, over `all`'s stale entries, and its cost modifier's numbers in the simulation. Engine/Schema/Races.lua's
 -- own rules, with a fake race, are tests/Virtual/State/races_spec.lua.
 
--- Every race file Hekili.toc lists, in its order, and the race token (UnitRace's second return) each answers to.
+local addons = require("helpers.addons")
+
+-- Every race file Hekili_Forever.toc lists, in its order, and the race token (UnitRace's second return) each answers to.
 local TOKEN = { Undead = "Scourge" } -- a file named otherwise than its token
 local RACES = {}
-for line in io.lines("src/Hekili/Hekili.toc") do
-    local file = line:match("^Forever\\Races\\(%w+)%.lua")
+for _, path in ipairs(addons.files("Hekili_Forever")) do
+    local file = path:match("/Races/(%w+)%.lua$")
     if file then
         RACES[#RACES + 1] = { file = file, token = TOKEN[file] or file }
     end
 end
 
--- Runs every race file, as Hekili.toc loads them.
+-- Runs every race file, as Hekili_Forever.toc loads them.
 local function loadRaces(rns)
     for _, r in ipairs(RACES) do
-        assert(loadfile("src/Hekili/Forever/Races/" .. r.file .. ".lua"))("Hekili", rns)
+        assert(loadfile(addons.root("Hekili_Forever") .. "Races/" .. r.file .. ".lua"))("Hekili_Forever", rns)
     end
 end
 
@@ -194,18 +196,11 @@ describe("race packs", function()
     end)
 
     it(
-        "lists Hekili.toc's race files after the class files, each registering only its own keys and modifiers",
+        "loads the race files after the core's `all` (Hekili_Forever depends on Hekili), each registering only its own",
         function()
-            local n, lastClass, firstRace = 0, 0, math.huge
-            for line in io.lines("src/Hekili/Hekili.toc") do
-                n = n + 1
-                if line:match("^Forever\\Classes\\") then
-                    lastClass = n
-                elseif line:match("^Forever\\Races\\") then
-                    firstRace = math.min(firstRace, n)
-                end
-            end
-            assert.is_true(lastClass < firstRace)
+            -- a race entry replaces `all`'s under the same key, so it must register after Engine/Schema/Spec.lua; a
+            -- class pack registers into its own spec, and SpecializationChanged's ns.applyRace orders the two
+            assert.are.equal("Hekili", addons.meta("Hekili_Forever").Dependencies)
             local files, want = {}, {}
             for _, r in ipairs(RACES) do
                 files[#files + 1] = r.file
@@ -226,7 +221,7 @@ describe("race packs", function()
             end
             table.sort(files)
             table.sort(want)
-            assert.are.same(want, files) -- every race file is in Hekili.toc
+            assert.are.same(want, files) -- every race file is in Hekili_Forever.toc
         end
     )
 

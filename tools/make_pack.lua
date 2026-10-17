@@ -13,7 +13,7 @@
 -- (Engine/Schema/Spec.lua RestoreDefaults reloads on `~=`; a lower number on a same-day edit still reloads but reports
 -- the pack "reverted" rather than "updated": bump the manifest's date to avoid that).
 
-local CLASS_FILES = "src/Hekili/Forever/Classes/" -- <Class>.lua holds the RegisterPack blocks
+local CLASS_FILES = "src/Hekili_Forever_" -- <Class>/<Class>.lua (the class pack addon) holds the RegisterPack blocks
 
 local OPTIONS = { name = "list_name", use_off_gcd = "use_off_gcd" } -- plus if=, which runs to the end of the line
 
@@ -251,7 +251,8 @@ elseif mode == "decode" then
     end
 elseif mode == "write" then
     local class = arg2 or "warrior"
-    local path = CLASS_FILES .. class:sub(1, 1):upper() .. class:sub(2) .. ".lua"
+    local Class = class:sub(1, 1):upper() .. class:sub(2)
+    local path = CLASS_FILES .. Class .. "/" .. Class .. ".lua"
     local src = slurp(path)
     local ok, out, report = pcall(function()
         return sync(src, load(class))

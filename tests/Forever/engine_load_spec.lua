@@ -1,23 +1,25 @@
 -- tests/Forever/engine_load_spec.lua
 -- Every Forever content file loads through Hekili's REAL Engine/Schema/Spec.lua (tests/Forever/helpers/engine.lua), once per
--- class file and race file Hekili.toc lists (each class file registers only for its class, each race file only for
+-- class pack and race file the content addons' TOCs list (each class file registers only for its class, each race file only for
 -- its race): no file's main chunk raises, every `item` resolves at registration under setfenv( f, state ), and every
 -- function-valued ability field runs once under the stub state through the ability's own __index. shared_spec.lua's
 -- stand-in `all` only stores defs; this is the spec that catches a function reading a name `state` lacks (a bare
--- `state` in Forever/Shared/Consumables.lua once aborted that file in game).
+-- `state` in Hekili_Forever/Shared/Consumables.lua once aborted that file in game).
 local engine = require("Forever.helpers.engine")
+local addons = require("helpers.addons")
 
 local CLASSES, RACES, RACE_LINES = {}, {}, 0
-for line in io.lines("src/Hekili/Hekili.toc") do
-    if line:match("^Forever\\Races\\") then
-        RACE_LINES = RACE_LINES + 1
+for _, name in ipairs(addons.CONTENT) do
+    local class = name:match("^Hekili_Forever_(%w+)$")
+    if class then
+        CLASSES[#CLASSES + 1] = class:upper()
     end
-    local kind, file = line:match("^Forever\\(%w+)\\(%w+)%.lua")
-    if kind == "Classes" then
-        CLASSES[#CLASSES + 1] = file:upper()
-    elseif kind == "Races" then
-        local f = assert(io.open("src/Hekili/Forever/Races/" .. file .. ".lua"))
-        RACES[#RACES + 1] = assert(f:read("*a"):match('NewRace%("(%w+)"%)'), file)
+end
+for _, path in ipairs(addons.files("Hekili_Forever")) do
+    if path:match("/Races/") then
+        RACE_LINES = RACE_LINES + 1
+        local f = assert(io.open(path))
+        RACES[#RACES + 1] = assert(f:read("*a"):match('NewRace%("(%w+)"%)'), path)
         f:close()
     end
 end
@@ -50,7 +52,7 @@ describe("Forever content through the real Engine/Schema/Spec.lua", function()
         end
     end)
 
-    it("lists the class and race files Hekili.toc loads", function()
+    it("lists the class packs and race files the content addons load", function()
         assert.is_true(#CLASSES >= 2)
         assert.are.equal(RACE_LINES, #RACES) -- every race line parsed, its NewRace token found
     end)

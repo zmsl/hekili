@@ -113,7 +113,7 @@ local warriorEnv = {
 for _, k in ipairs(stateEnv) do
     warriorEnv[#warriorEnv + 1] = k
 end
-files["src/Hekili/Forever/Classes/Warrior.lua"] = { globals = warriorEnv }
+files["src/Hekili_Forever_Warrior/Warrior.lua"] = { globals = warriorEnv }
 -- The Druid's further `state` names.
 local druidEnv = {
     "rage", "energy", "mana", "combo_points", "cooldown", "combat", "group", "swap_form", "addStack", "removeStack",
@@ -121,6 +121,6 @@ local druidEnv = {
 for _, k in ipairs(stateEnv) do
     druidEnv[#druidEnv + 1] = k
 end
-files["src/Hekili/Forever/Classes/Druid.lua"] = { globals = druidEnv }
-files["src/Hekili/Forever/Races/"] = { globals = stateEnv }
-files["src/Hekili/Forever/Shared/"] = { globals = stateEnv }
+files["src/Hekili_Forever_Druid/Druid.lua"] = { globals = druidEnv }
+files["src/Hekili_Forever/Races/"] = { globals = stateEnv }
+files["src/Hekili_Forever/Shared/"] = { globals = stateEnv }

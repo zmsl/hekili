@@ -9,10 +9,9 @@ M.ROOT = "src/Hekili/"
 --- The VirtualState files Hekili.toc lists, in order, as repository-relative paths (ROOT included).
 function M.files()
     local out = {}
-    for line in io.lines(M.ROOT .. "Hekili.toc") do
-        line = line:gsub("\r", ""):gsub("%s+$", "")
-        if line:match("^Virtual\\") then
-            out[#out + 1] = M.ROOT .. line:gsub("\\", "/")
+    for _, path in ipairs(require("helpers.addons").files("Hekili")) do
+        if path:find("^" .. M.ROOT .. "Virtual/") then
+            out[#out + 1] = path
         end
     end
     return out

@@ -1,6 +1,0 @@
-## Interface: 16001
-## Title: Hekili Forever Spike Loader
-## Notes: Throwaway spike (restructure plan Task 8): loads Hekili_Forever_Spike on demand at PLAYER_LOGIN.
-## Dependencies: Hekili
-
-Loader.lua

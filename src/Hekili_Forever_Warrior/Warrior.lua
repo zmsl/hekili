@@ -1,4 +1,4 @@
--- Forever/Classes/Warrior.lua
+-- Hekili_Forever_Warrior/Warrior.lua
 -- The Forever Warrior (pseudo-spec 1491): the Classic Warrior kit with Forever's spell data (ranks, costs, cooldowns,
 -- cast times and durations from the Forever DB2 at build 1.60.1.70338, wowdb, a cost of 100 there being 10 rage; the
 -- client is 1.60.1.70374, and its export wins where they differ), Forever's Victory Rush and Spearing Strike, rage per
@@ -308,7 +308,7 @@ spec:RegisterResource(
         -- a model): the client's Rage tooltip, "1.25 Rage is lost every 1 sec" (measured 100 -> 0 in 82.2 s: 80 s plus
         -- reaction time); Anger Management's tooltip: 30% less.
         -- No `max`: rage is 100, and a Gnome's 105 comes from Expansive Mind in the Gnome's race pack
-        -- (Forever/Races/Gnome.lua, the belief's `maxMods`, event-facade spec §12b).
+        -- (Hekili_Forever/Races/Gnome.lua, the belief's `maxMods`, event-facade spec §12b).
         decay = function()
             return 1.25 * (1 - 0.3 * state.talent.anger_management.rank)
         end,

@@ -1,12 +1,13 @@
 -- tests/Forever/helpers/engine.lua
--- Loads Hekili's REAL spec engine headless: Engine/Sim/Constants.lua, then every Engine\Schema\ and Forever\ file
--- Hekili.toc lists, in its order (Engine/Schema/Races.lua, Engine/Schema/Spec.lua, Engine/Schema/Shared.lua,
--- Forever/Shared, Classes, Races), so each Register* call runs Engine/Schema/Spec.lua's own code (setfenv( f, state ),
+-- Loads Hekili's REAL spec engine headless: Engine/Sim/Constants.lua, then every Engine\Schema\ file Hekili.toc
+-- lists (Engine/Schema/Races.lua, Engine/Schema/Spec.lua, Engine/Schema/Shared.lua), then every content addon's files
+-- in dependency order (tests/helpers/addons.lua: Hekili_Forever's Shared and Races, then the class packs), so each Register* call runs Engine/Schema/Spec.lua's own code (setfenv( f, state ),
 -- the `funcs`/__index wrapper, the `item` resolution). Around it,
 -- the smallest stub client: a plain ns.Facade, `Item`, `Enum`, a Hekili without Ace3, and STRICT stand-ins for
 -- Hekili.Class, Enum.PowerType and `state`: a key they lack raises, so an ability function reading a name State.lua does not provide (a
 -- bare `state`, `math`, `error`) fails the caller instead of reading nil.
 local vload = require("Virtual.State.helpers.load")
+local addons = require("helpers.addons")
 
 local M = {}
 
@@ -30,14 +31,16 @@ end
 
 local function noop() end
 
--- The files the engine loads after Constants.lua: every Engine\Schema\ and Forever\ line of Hekili.toc, in order.
+-- The files the engine loads after Constants.lua: the core's Engine/Schema/ files, then the content addons'.
 function M.files()
     local out = {}
-    for line in io.lines(vload.ROOT .. "Hekili.toc") do
-        line = line:gsub("\r", ""):gsub("%s+$", "")
-        if line:match("^Engine\\Schema\\") or line:match("^Forever\\") then
-            out[#out + 1] = vload.ROOT .. line:gsub("\\", "/")
+    for _, path in ipairs(addons.files(addons.CORE)) do
+        if path:match("/Engine/Schema/") then
+            out[#out + 1] = path
         end
+    end
+    for _, path in ipairs(addons.lua(addons.CONTENT)) do
+        out[#out + 1] = path
     end
     return out
 end
@@ -292,7 +295,7 @@ function M.load(classToken, race)
                 return item(id)
             end,
         },
-        INVTYPE_WEAPONMAINHAND = "Main Hand", -- Forever/Shared/Items.lua's main_hand name (a GlobalStrings constant)
+        INVTYPE_WEAPONMAINHAND = "Main Hand", -- Hekili_Forever/Shared/Items.lua's main_hand name (a GlobalStrings constant)
         -- the client's power types, every one Constants.lua's ResourceInfo reads; strict, so a misspelt type raises
         Enum = {
             PowerType = strict({

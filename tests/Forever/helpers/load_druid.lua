@@ -1,5 +1,5 @@
 -- tests/Forever/helpers/load_druid.lua
--- Loads Forever/Classes/Druid.lua headless against a recording stand-in for Hekili (load_warrior.lua's shape): each
+-- Loads Hekili_Forever_Druid/Druid.lua headless against a recording stand-in for Hekili (load_warrior.lua's shape): each
 -- spec:RegisterX call is kept by method name, and the plain game reads the file captures at load answer from `game`
 -- (known spells, queued spells, the shapeshift form, the time, the combat-log row, the belief's per-hand base weapon
 -- speeds). `env()` is a stand-in `state` for running the file's handlers, state functions, expressions and hooks
@@ -79,7 +79,7 @@ function M.load(vs)
             end
             return 0
         end
-    local ok, err = pcall(assert(loadfile("src/Hekili/Forever/Classes/Druid.lua")))
+    local ok, err = pcall(assert(loadfile("src/Hekili_Forever_Druid/Druid.lua")))
     for k, v in pairs(saved) do
         _G[k] = v or nil
     end

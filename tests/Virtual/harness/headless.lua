@@ -1,5 +1,6 @@
 -- tests/Virtual/harness/headless.lua (headless loop design §1): stock Hekili loaded headless under busted, one
--- instance per Lua environment. Every chunk of Hekili.toc runs with setfenv( chunk, H.env ), so two instances (ours and
+-- instance per Lua environment, with its content addons (tests/helpers/addons.lua). Every chunk of every addon TOC
+-- runs with setfenv( chunk, H.env ), so two instances (ours and
 -- the oracle, §4) keep their own `Hekili`, `LibStub`, frames and saved variables, and the real _G gains nothing. The
 -- client is fake_api (copied per instance, each with its own `ctl`); this file holds only load and UI scaffolding
 -- (WoW's Lua aliases, frames, C_Timer, constants), never a client answer a secret could touch (§1.2).
@@ -7,6 +8,7 @@
 -- reads the one string metatable), idempotent additions to the real `string` table.
 -- Class-neutral (the boundary rule): the character (class, spec, spells, talents) comes from the content.
 local fake = require("Virtual.State.helpers.fake_api")
+local addons = require("helpers.addons")
 
 local M = {}
 
@@ -820,7 +822,7 @@ function M.new(o)
         end,
     })
 
-    -- the loader: Hekili.toc in order, an .xml line's Script/Include tags; a raising file is recorded, the load goes on
+    -- the loader: an addon TOC in order, an .xml line's Script/Include tags; a raising file is recorded, the load goes on
     -- ns.Error, counted (the engine-health metric) from the moment Utils.lua defines it, so the copies files take
     -- at load (State.lua's `local Error = ns.Error`) and Hekili:Error all count
     local ns = setmetatable({}, {
@@ -836,7 +838,7 @@ function M.new(o)
         end,
     })
     H.ns = ns
-    local function loadLua(path)
+    local function loadLua(path, name, addonNs)
         local f, err = loadfile(path)
         if not f then
             H.loadErrors[#H.loadErrors + 1] = path .. ": " .. tostring(err)
@@ -844,7 +846,7 @@ function M.new(o)
         end
         setfenv(f, env)
         local ok, e = xpcall(function()
-            return f("Hekili", ns)
+            return f(name or "Hekili", addonNs or ns)
         end, debug.traceback)
         if not ok then
             H.loadErrors[#H.loadErrors + 1] = path .. ": " .. tostring(e)
@@ -913,22 +915,49 @@ function M.new(o)
         end
         ctl.form = c.form or 0
     end
-    for line in io.lines(M.ROOT .. "Hekili.toc") do
-        line = line:gsub("\r", ""):gsub("%s+$", "")
-        if line ~= "" and not line:match("^##") then
-            local p = M.ROOT .. line:gsub("\\", "/")
+    -- An addon as the client loads it (tests/helpers/addons.lua): its TOC's files, the content each with its own
+    -- (name, ns), then its ADDON_LOADED. The class packs are load-on-demand: Engine/Content.lua asks C_AddOns.LoadAddOn
+    -- at OnEnable, which loads a shipped one here (false, "MISSING" for any other).
+    local loaded = {}
+    local function loadAddon(name)
+        local addonNs = name ~= addons.CORE and {} or nil
+        for _, p in ipairs(addons.files(name)) do
             if p:match("%.xml$") then
                 loadXml(p)
             else
-                loadLua(p)
+                loadLua(p, name, addonNs)
             end
         end
+        loaded[name] = true
     end
+    local shipped = {}
+    for _, name in ipairs(addons.ADDONS) do
+        shipped[name] = addons.meta(name)
+    end
+    function env.C_AddOns.LoadAddOn(name)
+        if loaded[name] then
+            return true
+        end
+        if not shipped[name] then
+            return false, "MISSING"
+        end
+        loadAddon(name)
+        H.Fire("ADDON_LOADED", name)
+        return true
+    end
+    loadAddon(addons.CORE)
 
-    -- login: ADDON_LOADED (OnInitialize, the AceDB profile), PLAYER_LOGIN (OnEnable, VS.Start), PLAYER_ENTERING_WORLD
+    -- login: ADDON_LOADED (OnInitialize, the AceDB profile), then the always-loaded content addons (the ones that are
+    -- not load-on-demand, after their dependency, the core), PLAYER_LOGIN (OnEnable, VS.Start, the class pack) and
+    -- PLAYER_ENTERING_WORLD
     H.phase = "login"
     local ok, err = xpcall(function()
         H.Fire("ADDON_LOADED", "Hekili")
+        for _, name in ipairs(addons.CONTENT) do
+            if shipped[name].LoadOnDemand ~= "1" then
+                env.C_AddOns.LoadAddOn(name)
+            end
+        end
         loggedIn = true
         H.Fire("PLAYER_LOGIN")
         H.Fire("PLAYER_ENTERING_WORLD", true, false)

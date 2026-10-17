@@ -87,6 +87,7 @@ end
 function Hekili:OnEnable()
     ns.StartEventHandler()
     self:TotalRefresh( true )
+    ns.LoadContent() -- Engine/Content.lua: the class pack, before PLAYER_ENTERING_WORLD's SpecializationChanged; after the UI, which its notice needs
 
     ns.ReadKeybindings()
 

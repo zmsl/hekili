@@ -1,4 +1,4 @@
--- Forever/Races/Tauren.lua
+-- Hekili_Forever/Races/Tauren.lua
 -- The Tauren's castable racial on Forever (DB2 1.60.1.70338), for every class: War Stomp (20549: stuns up to 5 enemies
 -- within 8 yards for 2 s; 0.5 s cast, 120 s, off the GCD), which Hekili's stock racials (`all`) lack. Plainsrunning
 -- (1259918, Forever's movement-speed ramp), Endurance and Cultivation have no cast, cost, maximum or rotation effect:

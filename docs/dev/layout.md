@@ -1,14 +1,26 @@
 # Repository layout
 
-- `src/Hekili/` is the addon exactly as WoW loads it; paths inside `Hekili.toc` are relative to it. Nothing else
-  ships, and nothing dev-only goes in it. Its modules:
+- `src/` holds the addons exactly as WoW loads them, each in its own folder with its TOC (paths inside a TOC are
+  relative to its folder); nothing else ships, and nothing dev-only goes in them. `tests/helpers/addons.lua` lists them
+  in dependency order, and every headless loader, spec and tool reads their files from it:
+  - `src/Hekili/`: the core (the engine, the belief, the UI and options);
+  - `src/Hekili_Forever/`: the content every class shares (`Shared/`: auras, consumables, items) and the race packs
+    (`Races/`); `## Dependencies: Hekili`, so always loaded after the core;
+  - `src/Hekili_Forever_Warrior/`, `src/Hekili_Forever_Druid/`: one class pack each (the class file, its RegisterPack
+    blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's `Engine/Content.lua` for the
+    player's class.
+
+  Content reaches the engine only through the public `Hekili` object (the registration API, `State`, `Class`,
+  `Client`; `tests/boundary_spec.lua`). A class release bumps the pack addon's `## Version`; the core's ContentAPI
+  (`CONTENT_API` in `Engine/Content.lua`, matched against each content TOC's `## X-Hekili-ContentAPI`) bumps only when
+  the Schema or the content surface changes. The core's modules:
   - root: `Hekili.toc`, `Hekili.lua` (the addon object), `Bindings.xml`, `embeds.xml`;
   - `Engine/Sim/`: upstream's simulation (`Core`, `State`, `Scripts`, `Events`, `Targets`, `Constants`, `Utils`);
   - `Engine/Schema/`: the class/race/shared registration API (`Spec`, `Races`, `Shared`), the engine core the
     boundary spec scans;
   - `UI/`: the display and editor widgets (`UI`, `Formatting`, `MultilineEditor`, `PopupSlider`);
-  - `Options/` (the options panel and chat commands), `Virtual/` (VirtualState, the event and API facades),
-    `Forever/` (the class, race and shared content), `Libs/` (embedded, untouched) and `Textures/`.
+  - `Options/` (the options panel and chat commands), `Virtual/` (VirtualState, the event and API facades), `Libs/`
+    (embedded, untouched) and `Textures/`.
 
   An upstream merge lands new root files at the root; re-home them by hand.
   The profile port (restructure Task 6) edited ~70 upstream lines in `Engine/` (each `Hekili.DB.profile` read became
@@ -44,12 +56,15 @@ Sim identifier already uses (`git blame` the Sim line and say so in the commit);
 
 ## In game
 
-The AddOns link must point at `src/Hekili`, not at the repository root. From an elevated Windows prompt, in the
-client's `Interface\AddOns` folder, remove the old link and re-create it:
+Each addon gets its own AddOns link, at its folder in `src/`, not at the repository root. From an elevated Windows
+prompt, in the client's `Interface\AddOns` folder, remove the old link and create the four:
 
 ```
 rmdir Hekili
 mklink /D Hekili \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili
+mklink /D Hekili_Forever \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Forever
+mklink /D Hekili_Forever_Warrior \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Forever_Warrior
+mklink /D Hekili_Forever_Druid \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Forever_Druid
 ```
 
 Then restart the client fully (a moved addon is not picked up by `/reload`).

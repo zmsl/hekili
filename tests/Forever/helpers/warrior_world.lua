@@ -100,7 +100,7 @@ end
 -- 3 minutes by this build: measured 13700-17700 damage in 3 minutes over seeds 1-3).
 M.WORLD = { level = 60, weapons = { { 150, 230, 3.6 } }, max = 100, mobHealth = 15000 }
 
--- True rage per landed white wound: the class file's own model restated (Forever/Classes/Warrior.lua, "Rage per white
+-- True rage per landed white wound: the class file's own model restated (Hekili_Forever_Warrior/Warrior.lua, "Rage per white
 -- swing": 4.5 x the unhasted speed with a two-hander; a crit one more base swing, 3.46 x speed). Circular on purpose:
 -- the loop measures recommendations, not the rage model (its own specs measure that).
 function M.rage(hand, _, flag)

@@ -59,19 +59,6 @@ Engine\Schema\Shared.lua
 Engine\Output.lua
 Engine\Registry.lua
 Engine\Snapshot.lua
-Forever\Shared\Auras.lua
-Forever\Shared\Consumables.lua
-Forever\Shared\Items.lua
-Forever\Classes\Warrior.lua
-Forever\Classes\Druid.lua
-Forever\Races\Gnome.lua
-Forever\Races\NightElf.lua
-Forever\Races\Tauren.lua
-Forever\Races\Human.lua
-Forever\Races\Dwarf.lua
-Forever\Races\Orc.lua
-Forever\Races\Troll.lua
-Forever\Races\Undead.lua
 
 Engine\Sim\Targets.lua
 Options\DevTools.lua
@@ -79,6 +66,7 @@ Options\ChatCommands.lua
 Options\Options.lua
 Options\Profile.lua
 Engine\Driver.lua
+Engine\Content.lua
 Engine\WeakAuras.lua
 UI\UI.lua
 Engine\Sim\Scripts.lua

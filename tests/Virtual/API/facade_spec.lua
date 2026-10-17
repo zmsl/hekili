@@ -347,15 +347,12 @@ describe("ns.Facade", function()
     end)
 
     it(
-        "names the GCD by one constant: Forever's GCD spell, I.GCD_SPELL, and retail's GCD ID in no file the TOC loads",
+        "names the GCD by one constant: Forever's GCD spell, I.GCD_SPELL, and retail's GCD ID in no file an addon TOC loads",
         function()
             local retail = tostring(61303 + 1) -- retail's GCD spell, spelled so this file does not name it either
-            for line in io.lines("src/Hekili/Hekili.toc") do
-                local file = line:match("^([%w_\\]+%.lua)%s*$")
-                if file then
-                    local src = assert(io.open("src/Hekili/" .. file:gsub("\\", "/"))):read("*a")
-                    assert.is_nil(src:find(retail, 1, true), file)
-                end
+            for _, file in ipairs(require("helpers.addons").lua()) do
+                local src = assert(io.open(file)):read("*a")
+                assert.is_nil(src:find(retail, 1, true), file)
             end
             local spec = assert(io.open("src/Hekili/Engine/Schema/Spec.lua")):read("*a")
             assert.is_truthy(spec:find("global_cooldown = {\n        id = ns.VirtualStateInternal.GCD_SPELL,", 1, true))

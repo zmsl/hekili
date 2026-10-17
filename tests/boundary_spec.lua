@@ -1,8 +1,8 @@
 -- tests/boundary_spec.lua
 -- The core/content boundary (core leakage audit, docs/research/2026-10-16-core-leakage-audit.md): the core engine
 -- (src/Hekili/Virtual/**, src/Hekili/Engine/Schema/**) and the harness core (tests/Virtual/harness/**, GCD kinds design D7)
--- name no ability, aura or talent key and no spell ID that the Forever content (src/Hekili/Forever/**: Classes, Races,
--- Shared) registers, and no class or form/stance name. Ported from Taco Dog Forever's tests/boundary_spec.lua, which
+-- name no ability, aura or talent key and no spell ID that the Forever content (src/Hekili_Forever*/**: the class packs,
+-- Races, Shared) registers, and no class or form/stance name. Ported from Taco Dog Forever's tests/boundary_spec.lua, which
 -- scans for a fixed word list; here the keys and IDs are extracted from the content at test time, so a new ability is
 -- checked without being listed.
 -- Code only: comments are skipped, and so is a string with whitespace (a message or a description); each word of any
@@ -16,7 +16,10 @@ local CORE = { "src/Hekili/Virtual", "src/Hekili/Engine/Schema", "tests/Virtual/
 local SKIP = { "^tests/Virtual/harness/fixtures/" }
 local SIM = { "src/Hekili/Engine/Sim" }
 -- The content (restructure plan, Task 8): it reaches the engine through the public Hekili object only.
-local CONTENT = { "src/Hekili/Forever" }
+local CONTENT = {}
+for _, name in ipairs(require("helpers.addons").CONTENT) do
+    CONTENT[#CONTENT + 1] = require("helpers.addons").root(name)
+end
 local PUBLIC = { NewSpecialization = true, NewShared = true, NewRace = true, State = true, Class = true, Client = true }
 local PRIVATE = { "%f[%w_]ns%.", "ns%s*=%s*%.%.%.", "VirtualState", "Hekili%.Virtual", "Hekili%.Engine" }
 
@@ -34,7 +37,7 @@ describe("core/content boundary", function()
         end
         assert.is_true(n > 150, n)
         assert.is_true(m > 400, m)
-        assert.are.equal("Forever/Races/Orc.lua", c.keys.blood_fury)
+        assert.are.equal("Hekili_Forever/Races/Orc.lua", c.keys.blood_fury)
         assert.is_not_nil(c.keys.bloodlust) -- Shared/Auras.lua
         assert.is_not_nil(words.cat and words.battle)
     end)

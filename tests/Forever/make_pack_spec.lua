@@ -26,7 +26,7 @@ describe("tools/make_pack.lua", function()
         end)
 
         it("leaves the checked-in " .. CLASSES[class] .. ".lua alone (every pack unchanged)", function()
-            local src = slurp("src/Hekili/Forever/Classes/" .. CLASSES[class] .. ".lua")
+            local src = slurp("src/Hekili_Forever_" .. CLASSES[class] .. "/" .. CLASSES[class] .. ".lua")
             local out, report = mp.sync(src, mp.load(class))
             assert.is_true(src == out, "the source changed")
             for _, r in ipairs(report) do
@@ -39,7 +39,7 @@ describe("tools/make_pack.lua", function()
     describe("sync on an in-memory Warrior.lua", function()
         local src, packs, furyBlock
         before_each(function()
-            src = slurp("src/Hekili/Forever/Classes/Warrior.lua")
+            src = slurp("src/Hekili_Forever_Warrior/Warrior.lua")
             packs = mp.load("warrior")
             furyBlock = src:match('spec:RegisterPack%(\n    "Fury",\n.-\n%)\n')
             assert.is_not_nil(furyBlock)
