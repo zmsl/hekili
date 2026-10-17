@@ -27,32 +27,32 @@ describe("facts and polls", function()
     end
 
     it("asks the highest known rank, and skips a secret usability answer", function()
-        ctl.known[fs.REND], ctl.known[fs.REND_R2] = true, true
+        ctl.known[fs.SPENDER_C], ctl.known[fs.SPENDER_C_R2] = true, true
         ctl.Fire("SPELLS_CHANGED")
-        assert.are.equal(fs.REND_R2, I.ab.qid[3])
-        ctl.usable[fs.REND_R2] = { true, false }
-        ctl.usable[fs.STRIKE] = { fake.SECRET, false }
+        assert.are.equal(fs.SPENDER_C_R2, I.ab.qid[3])
+        ctl.usable[fs.SPENDER_C_R2] = { true, false }
+        ctl.usable[fs.SPENDER_B] = { fake.SECRET, false }
         drain(5)
         local r = VS.Power(fs.RAGE, 5)
-        assert.are.equal(10, r.lo) -- rend's rung; heroic strike's secret answer is no news
+        assert.are.equal(10, r.lo) -- spender_c's rung; heroic strike's secret answer is no news
     end)
 
     it("takes no rung from an ability with a second power cost", function()
-        ctl.costs[fs.REND] = { { type = 1, cost = 10 }, { type = 4, cost = 5, minCost = 1 } } -- rage + combo points
-        ctl.known[fs.REND] = true
+        ctl.costs[fs.SPENDER_C] = { { type = 1, cost = 10 }, { type = 4, cost = 5, minCost = 1 } } -- rage + combo points
+        ctl.known[fs.SPENDER_C] = true
         ctl.Fire("SPELLS_CHANGED")
         assert.are.same({ true, false }, { I.ab.multiCost[3], I.ab.multiCost[1] })
-        ctl.usable[fs.REND] = { false, true } -- "short": of rage or of the combo point?
+        ctl.usable[fs.SPENDER_C] = { false, true } -- "short": of rage or of the combo point?
         drain(5)
         assert.are.equal(100, VS.Power(fs.RAGE, 5).hi) -- no rung
-        ctl.usable[fs.REND] = { true, false }
+        ctl.usable[fs.SPENDER_C] = { true, false }
         drain(6)
         assert.are.equal(0, VS.Power(fs.RAGE, 6).lo) -- nor from its usable answer
     end)
 
     it("reads the second-cost flag at combat end after a build in combat", function()
-        ctl.costs[fs.REND] = { { type = 1, cost = 10 }, { type = 4, cost = 5, minCost = 1 } }
-        ctl.known[fs.REND] = true
+        ctl.costs[fs.SPENDER_C] = { { type = 1, cost = 10 }, { type = 4, cost = 5, minCost = 1 } }
+        ctl.known[fs.SPENDER_C] = true
         ctl.Fire("PLAYER_REGEN_DISABLED")
         I.Build(fs.def(fs.new(9)), 1) -- a /reload in combat
         assert.is_false(I.ab.multiCost[3])
@@ -61,31 +61,31 @@ describe("facts and polls", function()
     end)
 
     it("walks the talent tree into ranks by registered spell ID, and defers a walk in combat", function()
-        ctl.traits = { config = 1, trees = { 7 }, nodeIDs = { 70 }, nodes = {}, defs = { [700] = 12286 } }
+        ctl.traits = { config = 1, trees = { 7 }, nodeIDs = { 70 }, nodes = {}, defs = { [700] = 1011 } }
         ctl.traits.nodes[70] = { entryIDs = { 700 }, activeRank = 2 }
         ctl.Fire("TRAIT_CONFIG_UPDATED")
-        assert.are.equal(2, VS.Talent(12286))
+        assert.are.equal(2, VS.Talent(1011))
         local gen = VS.TalentGen()
         ctl.Fire("PLAYER_REGEN_DISABLED")
         ctl.traits.nodes[70].activeRank = 3
         ctl.Fire("TRAIT_CONFIG_UPDATED")
-        assert.are.equal(2, VS.Talent(12286))
+        assert.are.equal(2, VS.Talent(1011))
         ctl.Fire("PLAYER_REGEN_ENABLED")
         drain(6)
-        assert.are.same({ 3, gen + 1 }, { VS.Talent(12286), VS.TalentGen() })
+        assert.are.same({ 3, gen + 1 }, { VS.Talent(1011), VS.TalentGen() })
         assert.are.equal(0, VS.Talent(99999))
         assert.are.equal("unused", S.status["talent walk aliases"])
         assert.is_truthy(VS.Snapshot():find("talent walk unmatched: 0\n", 1, true))
     end)
 
     it("names the definition spells the walk could not match", function()
-        local defs = { [700] = 12286, [710] = 54321, [720] = 65432 }
+        local defs = { [700] = 1011, [710] = 54321, [720] = 65432 }
         ctl.traits = { config = 1, trees = { 7 }, nodeIDs = { 70, 71, 72 }, nodes = {}, defs = defs }
         ctl.traits.nodes[70] = { entryIDs = { 700 }, activeRank = 2 }
         ctl.traits.nodes[71] = { entryIDs = { 710 }, activeRank = 1 }
         ctl.traits.nodes[72] = { entryIDs = { 720 }, activeRank = 0 } -- untaken: not listed
         ctl.Fire("TRAIT_CONFIG_UPDATED")
-        assert.are.equal(2, VS.Talent(12286))
+        assert.are.equal(2, VS.Talent(1011))
         assert.is_truthy(VS.Snapshot():find("talent walk unmatched: 1 [54321]\n", 1, true))
         I.TALENT_UNMATCHED = 1 -- overflow: the true count, only `cap` IDs
         ctl.traits.nodes[72].activeRank = 1
@@ -133,7 +133,7 @@ describe("facts and polls", function()
         drain(3)
         local e = VS.Count.Enemies(3)
         assert.are.same({ 2, "observed" }, { e.est, e.basis })
-        assert.are.equal(1, VS.Count.InRange(fs.REND, 3))
+        assert.are.equal(1, VS.Count.InRange(fs.SPENDER_C, 3))
     end)
 
     it("reads the player's health when plain and caches the stats out of combat", function()

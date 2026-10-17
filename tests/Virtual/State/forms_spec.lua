@@ -4,7 +4,7 @@
 local load = require("Virtual.State.helpers.load")
 local fake = require("Virtual.State.helpers.fake_api")
 
-local FORM_A, FORM_B, OTHER = 2457, 2458, 6673
+local FORM_A, FORM_B, OTHER = 2457, 2458, 1099
 
 local function def(ids)
     local auras, auraIds = {}, {}

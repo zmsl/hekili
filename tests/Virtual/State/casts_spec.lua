@@ -14,7 +14,7 @@ describe("casts and cooldowns", function()
         VS, I = ns.VirtualState, ns.VirtualStateInternal
         S, Obs = I.Sources, VS.Obs
         h = fs.new(9)
-        h.Class.abilities.rend.cooldown = 30
+        h.Class.abilities.spender_c.cooldown = 30
         I.Build(fs.def(h), 1)
         VS.Start(api)
         ctl.Tick(1)
@@ -26,23 +26,23 @@ describe("casts and cooldowns", function()
         S.Direct(Obs.Cooldown, 20, REND, 1) -- but the game says it's ready (something reset it)
         I.Fold(20, false)
         I.Settle(20)
-        assert.are.equal(20, VS.Cooldown(fs.REND, 20).est)
-        assert.are.equal("pinned", VS.Cooldown(fs.REND, 20).basis)
+        assert.are.equal(20, VS.Cooldown(fs.SPENDER_C, 20).est)
+        assert.are.equal("pinned", VS.Cooldown(fs.SPENDER_C, 20).basis)
         S.Direct(Obs.Cooldown, 21, REND, 0) -- and now it isn't, while the model thinks it is
         I.Fold(21, false)
         I.Settle(21)
-        assert.are.equal(21 + I.CD_PROBE, VS.Cooldown(fs.REND, 21).est)
-        assert.are.equal(VS.Cooldown(fs.REND_R2, 21), VS.Cooldown(fs.REND, 21)) -- every rank ID is the ability
+        assert.are.equal(21 + I.CD_PROBE, VS.Cooldown(fs.SPENDER_C, 21).est)
+        assert.are.equal(VS.Cooldown(fs.SPENDER_C_R2, 21), VS.Cooldown(fs.SPENDER_C, 21)) -- every rank ID is the ability
         assert.is_nil(VS.Cooldown(424242, 21))
     end)
 
     it("learns the real length from the ready edge after our cast", function()
-        assert.are.equal(30, VS.CooldownLength(fs.REND)) -- the spec's cooldown first
+        assert.are.equal(30, VS.CooldownLength(fs.SPENDER_C)) -- the spec's cooldown first
         I.CooldownModel(REND, 40, 30, 10, Obs.CastSuccess)
         S.Direct(Obs.Cooldown, 10.1, REND, 0)
         S.Direct(Obs.Cooldown, 38, REND, 1)
         I.Fold(38, false)
-        assert.are.equal(28, VS.CooldownLength(fs.REND)) -- within max(1 s, 10%) of the registered 30
+        assert.are.equal(28, VS.CooldownLength(fs.SPENDER_C)) -- within max(1 s, 10%) of the registered 30
     end)
 
     it("keeps the registered length when the ready edge is out of tolerance", function()
@@ -50,7 +50,7 @@ describe("casts and cooldowns", function()
         S.Direct(Obs.Cooldown, 10.1, REND, 0)
         S.Direct(Obs.Cooldown, 154, REND, 1) -- a flag that also tracks a kill window: 144 s
         I.Fold(154, false)
-        assert.are.equal(30, VS.CooldownLength(fs.REND))
+        assert.are.equal(30, VS.CooldownLength(fs.SPENDER_C))
     end)
 
     it("learns a GCD only from a falling edge within [1.0, 2.0) s", function()
@@ -66,7 +66,7 @@ describe("casts and cooldowns", function()
 
     it("names an ability with a second power cost in Snapshot", function()
         I.ab.multiCost[REND] = true
-        local line = "ability rend qid=772 cost=10 read=0 len=30.00 flag=-1 multi=true\n"
+        local line = "ability spender_c qid=1003 cost=10 read=0 len=30.00 flag=-1 multi=true\n"
         assert.is_truthy(VS.Snapshot():find(line, 1, true))
     end)
 
@@ -75,7 +75,7 @@ describe("casts and cooldowns", function()
         I.urgent = function(e)
             h.forced[#h.forced + 1] = e
         end
-        ctl.cooldown[fs.REND] = { isActive = true, isOnGCD = false }
+        ctl.cooldown[fs.SPENDER_C] = { isActive = true, isOnGCD = false }
         ctl.cooldown[29515] = { isActive = true, isOnGCD = false }
         ctl.now = 5
         ctl.Fire("SPELL_UPDATE_COOLDOWN")
@@ -87,9 +87,9 @@ describe("casts and cooldowns", function()
                 n = n + 1
             end
         end
-        assert.are.equal(4, n) -- shout, strike ready; rend not; the GCD up (a second event repeats nothing)
+        assert.are.equal(4, n) -- shout, strike ready; spender_c not; the GCD up (a second event repeats nothing)
         assert.are.same({ "VS_COOLDOWN" }, h.forced)
-        ctl.cooldown[fs.REND] = { isActive = fake.SECRET, isOnGCD = false }
+        ctl.cooldown[fs.SPENDER_C] = { isActive = fake.SECRET, isOnGCD = false }
         ctl.Fire("SPELL_UPDATE_COOLDOWN") -- a secret flag is no news
         assert.are.equal(4, n + I.Sources.stN)
     end)
@@ -118,8 +118,8 @@ describe("casts and cooldowns", function()
 
     it("evaluates a function cost (a talent that lowers it) and uses it for the ladder", function()
         local rank = 2
-        h.Class.abilities.heroic_strike.spend = function()
-            return 15 - rank -- Improved Heroic Strike: -1 a rank
+        h.Class.abilities.spender_b.spend = function()
+            return 15 - rank -- Improved spender_b: -1 a rank
         end
         assert.are.equal(13, I.CostOf(2))
         rank = 3
@@ -134,24 +134,24 @@ describe("casts and cooldowns", function()
         end
         ctl.casting = { 2000, 4000 }
         ctl.now = 2
-        ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-A", fs.REND)
+        ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-A", fs.SPENDER_C)
         S.Flush()
         I.Fold(2, false)
         assert.are.equal(REND, I.castAb)
         local n, forced = I.log.n + S.stN, #h.forced
-        ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-B", fs.REND) -- a second press: "another action..."
+        ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-B", fs.SPENDER_C) -- a second press: "another action..."
         S.Flush()
         I.Fold(2.5, false)
         assert.are.equal(REND, I.castAb)
         assert.are.equal(n, I.log.n + S.stN)
         assert.are.equal(forced, #h.forced)
-        ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-A", fs.REND) -- the cast in progress
+        ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-A", fs.SPENDER_C) -- the cast in progress
         S.Flush()
         I.Fold(3, false)
         assert.are.equal(0, I.castAb)
     end)
 
     it("models charges and recharges them by time; a spell without charges has none", function()
-        assert.is_nil(VS.Charges(fs.REND, 1))
+        assert.is_nil(VS.Charges(fs.SPENDER_C, 1))
     end)
 end)

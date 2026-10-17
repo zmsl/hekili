@@ -72,15 +72,15 @@ describe("now handlers", function()
 
     it("writes the cost, the GCD and the `now` debuff as modelled samples at the cast's time", function()
         start()
-        ctl.usable[fs.REND] = { true, false } -- rage >= 10 (the poll's rung)
+        ctl.usable[fs.SPENDER_C] = { true, false } -- rage >= 10 (the poll's rung)
         ctl.now = 4
         VS.Drain(4)
-        ctl.usable[fs.REND] = nil
-        cast(fs.REND, 5)
+        ctl.usable[fs.SPENDER_C] = nil
+        cast(fs.SPENDER_C, 5)
         local rage = VS.Power(fs.RAGE, 5.1)
         assert.are.same({ 0, "modelled", 5 }, { rage.est, rage.basis, rage.last.modelled.t })
-        local rend, stacks = VS.Aura("target", fs.REND, 5.1)
-        assert.are.same({ 20, "modelled", 1 }, { rend.est, rend.basis, stacks })
+        local spender_c, stacks = VS.Aura("target", fs.SPENDER_C, 5.1)
+        assert.are.same({ 20, "modelled", 1 }, { spender_c.est, spender_c.basis, stacks })
         assert.are.equal("modelled", VS.Gcd(5.1).basis)
         assert.is_true(VS.Gcd(5.1).est > 5)
         assert.are.same({ 0, 0, 0 }, { state.resets, state.offset, state.delay }) -- Hekili's state untouched
@@ -112,24 +112,24 @@ describe("now handlers", function()
     it("emits our casts' aura rows: APPLIED, REFRESH back-dated, REMOVED at the modelled expiry", function()
         start()
         ctl.Fire("PLAYER_TARGET_CHANGED")
-        cast(fs.REND, 5)
-        assert.are.same({ "SPELL_AURA_APPLIED", "Creature-1", fs.REND, "DEBUFF", nil, 5 }, rows[#rows])
-        cast(fs.REND, 8)
+        cast(fs.SPENDER_C, 5)
+        assert.are.same({ "SPELL_AURA_APPLIED", "Creature-1", fs.SPENDER_C, "DEBUFF", nil, 5 }, rows[#rows])
+        cast(fs.SPENDER_C, 8)
         assert.are.same({ "SPELL_AURA_REFRESH", 8 }, { rows[#rows][1], rows[#rows][6] })
-        ctl.Tick(23.5) -- past Rend's modelled expiry (8 + 15)
-        assert.are.same({ "SPELL_AURA_REMOVED", "Creature-1", fs.REND, "DEBUFF", nil, 23.5 }, rows[#rows])
-        cast(fs.SHOUT, 30)
+        ctl.Tick(23.5) -- past spender_c's modelled expiry (8 + 15)
+        assert.are.same({ "SPELL_AURA_REMOVED", "Creature-1", fs.SPENDER_C, "DEBUFF", nil, 23.5 }, rows[#rows])
+        cast(fs.SPENDER_A, 30)
         assert.are.same(
-            { "SPELL_AURA_APPLIED", "Player-1", fs.SHOUT, "BUFF" },
+            { "SPELL_AURA_APPLIED", "Player-1", fs.SPENDER_A, "BUFF" },
             { rows[#rows][1], rows[#rows][2], rows[#rows][3], rows[#rows][4] }
         )
-        local shout = VS.Aura("player", fs.SHOUT, 30.1)
+        local shout = VS.Aura("player", fs.SPENDER_A, 30.1)
         assert.are.equal(150, shout.est) -- the aura's registered duration (120) when the `now` passes none
     end)
 
     it("pays an on-next-swing strike's cost at its success, which arrives with its swing", function()
         start()
-        cast(fs.STRIKE, 14)
+        cast(fs.SPENDER_B, 14)
         local rage = VS.Power(fs.RAGE, 14.1)
         assert.are.equal(14, rage.last.modelled.t)
         assert.are.equal(-15, I.res.pinDelta[1])
@@ -137,13 +137,13 @@ describe("now handlers", function()
 
     it("lets a later observation win over a `now` write, and not an earlier one", function()
         start()
-        local j = I.auras.bySpell[fs.REND]
+        local j = I.auras.bySpell[fs.SPENDER_C]
         I.Sources.Direct(VS.Obs.Read, 4.9, I.AURA_UNIT + j, 0, I.ReadOf.Aura) -- an earlier read: down
-        cast(fs.REND, 5)
-        assert.are.equal("modelled", VS.Aura("target", fs.REND, 5.5).basis)
+        cast(fs.SPENDER_C, 5)
+        assert.are.equal("modelled", VS.Aura("target", fs.SPENDER_C, 5.5).basis)
         I.Sources.Direct(VS.Obs.Read, 6, I.AURA_UNIT + j, 0, I.ReadOf.Aura) -- a newer read: down
         I.Fold(6.5)
-        assert.is_nil(VS.Aura("target", fs.REND, 6.5))
+        assert.is_nil(VS.Aura("target", fs.SPENDER_C, 6.5))
     end)
 
     it("changes only cost, cooldown and GCD for an ability without `now`", function()
@@ -166,7 +166,7 @@ describe("now handlers", function()
         h.Class.auras.battle_shout = { key = "battle_shout", id = aura.id, copy = aura.copy, duration = aura.duration }
         start()
         cast(6192, 40)
-        local rec = VS.Aura("player", fs.SHOUT, 40.1)
+        local rec = VS.Aura("player", aura.id, 40.1)
         assert.are.same({ 220, "modelled" }, { rec.est, rec.basis })
         assert.are.equal(0, I.nowErrors)
     end)
@@ -240,22 +240,22 @@ describe("now handlers", function()
         register("verbs_test", {
             id = 6161,
             now = function()
-                removeBuff("battle_shout")
+                removeBuff("spender_a")
                 spend(4, "rage")
-                addStack("rend", 15, 2)
+                addStack("spender_c", 15, 2)
                 setCooldown("verbs_test", 30)
             end,
         })
-        h.Class.auras.rend.max_stack = 5 -- addStack clamps at max_stack (1 when none), as Hekili's does
+        h.Class.auras.spender_c.max_stack = 5 -- addStack clamps at max_stack (1 when none), as Hekili's does
         start()
-        cast(fs.SHOUT, 20) -- Battle Shout up (its `now`)
+        cast(fs.SPENDER_A, 20) -- spender_a up (its `now`)
         local before = VS.Power(fs.RAGE, 21)
         local est = before.est
         cast(6161, 21)
-        assert.is_nil(VS.Aura("player", fs.SHOUT, 21.1)) -- removeBuff
+        assert.is_nil(VS.Aura("player", fs.SPENDER_A, 21.1)) -- removeBuff
         assert.are.equal(math.max(est - 4, 0), VS.Power(fs.RAGE, 21.1).est) -- spend
-        local rend, stacks = VS.Aura("player", fs.REND, 21.1)
-        assert.are.same({ 36, 2 }, { rend.est, stacks }) -- addStack( aura, duration, stacks ) on us
+        local spender_c, stacks = VS.Aura("player", fs.SPENDER_C, 21.1)
+        assert.are.same({ 36, 2 }, { spender_c.est, stacks }) -- addStack( aura, duration, stacks ) on us
         local cd = VS.Cooldown(6161, 21.1)
         assert.are.same({ 51, "modelled" }, { cd.est, cd.basis }) -- setCooldown( action, duration )
         assert.are.equal("SPELL_AURA_REMOVED", rows[#rows - 1][1])
@@ -278,11 +278,11 @@ describe("now handlers", function()
 
     it("writes nothing when a `now` runs outside a cast (RunStressTest, an APL reading action.x.now)", function()
         start()
-        local a = I.ab.bySpell[fs.REND]
+        local a = I.ab.bySpell[fs.SPENDER_C]
         local gen = VS.AuraGen("target")
         pcall(I.ab.now[a]) -- as DevTools' RunStressTest calls every function in ability.funcs
         assert.are.equal(gen, VS.AuraGen("target"))
-        assert.is_nil(VS.Aura("target", fs.REND, 1.5))
+        assert.is_nil(VS.Aura("target", fs.SPENDER_C, 1.5))
     end)
 
     it("gives a tracked extra (VS.Track) no effects: no GCD, no cooldown", function()
@@ -305,8 +305,8 @@ describe("now handlers", function()
         cast(7777, 30)
         assert.are.equal(1, I.nowErrors)
         assert.is_truthy(tostring(I.nowError):find("now raised"))
-        cast(fs.REND, 31)
-        assert.are.equal(31 + 15, VS.Aura("target", fs.REND, 31.1).est)
+        cast(fs.SPENDER_C, 31)
+        assert.are.equal(31 + 15, VS.Aura("target", fs.SPENDER_C, 31.1).est)
         assert.is_truthy(VS.Snapshot():find("errors=1", 1, true))
     end)
 
@@ -315,23 +315,23 @@ describe("now handlers", function()
         register("read_test", {
             id = 5151,
             now = function()
-                seen.rank = talent.improved_rend.rank
+                seen.rank = talent.talent_a.rank
                 seen.none = talent.not_a_talent.rank
-                seen.rend = debuff.rend.up
-                seen.shout = buff.battle_shout.remains
+                seen.spender_c = debuff.spender_c.up
+                seen.shout = buff.spender_a.remains
                 seen.rage = rage.current
-                seen.known = knownRank({ 772, 6546 })
+                seen.known = knownRank({ fs.SPENDER_C, fs.SPENDER_C_R2 })
                 seen.t = now
             end,
         })
         start()
         I.SetTalentRank(1, 2)
-        cast(fs.REND, 40)
+        cast(fs.SPENDER_C, 40)
         cast(5151, 41)
-        assert.are.same({ 2, 0, true, 0, 41 }, { seen.rank, seen.none, seen.rend, seen.shout, seen.t })
+        assert.are.same({ 2, 0, true, 0, 41 }, { seen.rank, seen.none, seen.spender_c, seen.shout, seen.t })
         assert.is_number(seen.rage)
         assert.are.equal(0, seen.known) -- no rank in the fake spellbook
-        ctl.known[fs.REND_R2] = true
+        ctl.known[fs.SPENDER_C_R2] = true
         ctl.Fire("SPELLS_CHANGED")
         cast(5151, 42)
         assert.are.equal(2, seen.known)
@@ -339,14 +339,14 @@ describe("now handlers", function()
 
     it("KnownID answers a tracked ability's known rank id, else its input unchanged (core edit E5)", function()
         start()
-        assert.are.equal(fs.REND, VS.KnownID(fs.REND)) -- no rank known yet
-        ctl.known[fs.REND_R2] = true
+        assert.are.equal(fs.SPENDER_C, VS.KnownID(fs.SPENDER_C)) -- no rank known yet
+        ctl.known[fs.SPENDER_C_R2] = true
         ctl.Fire("SPELLS_CHANGED")
-        assert.are.equal(fs.REND_R2, VS.KnownID(fs.REND))
-        assert.are.equal(fs.REND_R2, VS.KnownID(fs.REND_R2))
+        assert.are.equal(fs.SPENDER_C_R2, VS.KnownID(fs.SPENDER_C))
+        assert.are.equal(fs.SPENDER_C_R2, VS.KnownID(fs.SPENDER_C_R2))
         assert.are.equal(424242, VS.KnownID(424242)) -- untracked
         assert.is_nil(VS.KnownID(nil))
-        assert.are.equal("Rend", VS.KnownID("Rend"))
+        assert.are.equal("spender_c", VS.KnownID("spender_c"))
         assert.are.equal(VS.KnownID, ns.KnownSpellID)
     end)
 
@@ -450,8 +450,8 @@ describe("now handlers", function()
             id = 2687,
             now = function()
                 gain(1, "rage")
-                applyDebuff("target", "rend", 15)
-                local _ = talent.improved_rend.rank + rage.current
+                applyDebuff("target", "spender_c", 15)
+                local _ = talent.talent_a.rank + rage.current
             end,
         })
         register("charge_test", { id = 3131, charges = 2, recharge = 10 }) -- the charge step too
@@ -462,7 +462,7 @@ describe("now handlers", function()
         local bytes = alloc.bytes(function()
             t = t + 1
             cast(2687, t)
-            cast(fs.REND, t + 0.5)
+            cast(fs.SPENDER_C, t + 0.5)
             cast(3131, t + 0.7)
         end, 1000)
         assert.are.equal(0, bytes)
@@ -478,14 +478,14 @@ describe("now handlers", function()
         start()
         function h:ForceUpdate() end
         cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-        ctl.Fire("PLAYER_TARGET_CHANGED") -- a target GUID, so Rend's rows have a destination
+        ctl.Fire("PLAYER_TARGET_CHANGED") -- a target GUID, so spender_c's rows have a destination
         local t = 50
         local emitted = I.Log.emitted
         local bytes = alloc.bytes(function()
             t = t + 20
-            cast(fs.REND, t) -- SPELL_AURA_APPLIED
+            cast(fs.SPENDER_C, t) -- SPELL_AURA_APPLIED
             cast(2687, t + 1) -- SPELL_ENERGIZE
-            ctl.Tick(t + 16) -- past Rend's modelled expiry: SPELL_AURA_REMOVED
+            ctl.Tick(t + 16) -- past spender_c's modelled expiry: SPELL_AURA_REMOVED
         end, 1000)
         assert.are.equal(0, bytes)
         assert.is_true(I.Log.emitted - emitted >= 1200 * 5) -- two casts, an aura, an energize and a removal each

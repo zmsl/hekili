@@ -66,7 +66,7 @@ describe("Adapter", function()
     it("builds the tracked set from the registrations", function()
         local out = {}
         assert.are.equal(3, VS.Tracked("ability", out))
-        assert.are.same({ fs.SHOUT, fs.STRIKE, fs.REND }, out)
+        assert.are.same({ fs.SPENDER_A, fs.SPENDER_B, fs.SPENDER_C }, out)
         assert.are.equal(2, VS.Tracked("aura", out))
         assert.are.equal(1, VS.Tracked("resource", out))
         assert.are.same({ fs.RAGE }, out)
@@ -85,40 +85,44 @@ describe("Adapter", function()
             got = def
             return build(def, t)
         end
-        h.Class.talents.improved_rend_alias = { 0, 12286, 3 } -- the same talent spell under a second key
-        h.Class.abilities.heroic_strike.copy = 285 -- a number `copy`
-        h.Class.abilities.charge_test = { key = "charge_test", id = 100, funcs = {} } -- no spend: slot 0
+        h.Class.talents.talent_a_alias = { 0, 1011, 3 } -- the same talent spell under a second key
+        h.Class.abilities.spender_b.copy = 1006 -- a number `copy`
+        h.Class.abilities.spender_a_nospend = { key = "spender_a_nospend", id = 1005, funcs = {} } -- no spend: slot 0
         VS.SpecChanged()
         I.Build = build
-        assert.are.same({ { fs.SHOUT }, { 100 }, { fs.STRIKE, 285 }, { fs.REND, fs.REND_R2 } }, got.abilityIds)
+        assert.are.same(
+            { { fs.SPENDER_A }, { 1005 }, { fs.SPENDER_B, 1006 }, { fs.SPENDER_C, fs.SPENDER_C_R2 } },
+            got.abilityIds
+        )
         assert.are.same({ 1, 0, 1, 1 }, got.abilitySlot)
-        assert.are.same({ { fs.SHOUT }, { fs.REND, fs.REND_R2 } }, got.auraIds)
+        assert.are.same({ { fs.SPENDER_A }, { fs.SPENDER_C, fs.SPENDER_C_R2 } }, got.auraIds)
         assert.are.equal(1, #got.talents)
-        assert.are.equal(12286, got.talents[1].spell)
+        assert.are.equal(1011, got.talents[1].spell)
     end)
 
     it("forwards a resource's player-aura regen entries to the resources family", function()
-        h.Class.resources.rage.state.regenModel.bloodrage = { aura = "bloodrage", interval = 1, value = 1 }
-        h.Class.resources.rage.state.regenModel.debuff_test = { aura = "rend", debuff = true, interval = 3, value = 2 }
-        h.Class.auras.bloodrage = { key = "bloodrage", id = 29131, duration = 10 }
+        h.Class.resources.rage.state.regenModel.regen_aura_a = { aura = "regen_aura_a", interval = 1, value = 1 }
+        h.Class.resources.rage.state.regenModel.debuff_test =
+            { aura = "spender_c", debuff = true, interval = 3, value = 2 }
+        h.Class.auras.regen_aura_a = { key = "regen_aura_a", id = 1021, duration = 10 }
         VS.SpecChanged()
         local G = I.res.auraRegen
         assert.are.equal(1, G.n) -- the debuff entry is not a player aura
         assert.are.same({ 1, 1, 1 }, { G.slot[1], G.value[1], G.interval[1] })
-        assert.are.equal(29131, I.auras.id[G.aura[1]])
+        assert.are.equal(1021, I.auras.id[G.aura[1]])
         assert.are.equal(1, I.res.swing[1]) -- the swing source is still found
     end)
 
     it("forwards the off hand's swing value and a plain periodic entry (combat-gated), with its talent", function()
         local model = h.Class.resources.rage.state.regenModel
         model.offhand = { swing = "offhand", value = 4 }
-        model.anger_management = { talent = "improved_rend", interval = 3, value = 1 }
+        model.regen_talent_a = { talent = "talent_a", interval = 3, value = 1 }
         VS.SpecChanged()
         assert.are.same({ 1, 9, 4 }, { I.res.swing[1], I.res.swingValue[1], I.res.swingOff[1] })
         local G = I.res.auraRegen
-        assert.are.same({ 1, 0, 1, 3, 12286 }, { G.n, G.aura[1], G.value[1], G.interval[1], G.talent[1] })
+        assert.are.same({ 1, 0, 1, 3, 1011 }, { G.n, G.aura[1], G.value[1], G.interval[1], G.talent[1] })
         model.shield_test = { equip = "shield", interval = 2, value = 1 } -- a gate VirtualState cannot see: dropped
-        model.channel_test = { channel = "rend", interval = 1, value = 1 }
+        model.channel_test = { channel = "spender_c", interval = 1, value = 1 }
         VS.SpecChanged()
         assert.are.equal(1, I.res.auraRegen.n)
         model.shield_test, model.channel_test = nil, nil
@@ -130,7 +134,7 @@ describe("Adapter", function()
     it("forwards the paying entry's `taken`, bound to the `now` context, and no other entry's", function()
         local model = h.Class.resources.rage.state.regenModel
         local function taken()
-            return buff.battle_shout.up and 3 or 1 -- luacheck: ignore 113 (the `now` context's names)
+            return buff.spender_a.up and 3 or 1 -- luacheck: ignore 113 (the `now` context's names)
         end
         model.mainhand.taken = taken
         model.offhand = { swing = "offhand", value = 4, taken = function() end } -- not the paying entry: unread
@@ -182,11 +186,11 @@ describe("Adapter", function()
 
     it("generates the sim's stepped decay entry, on the belief's beats and from a tick aura's expiry", function()
         local model, rank = h.Class.resources.rage.state.regenModel, 0
-        model.bloodrage = { aura = "bloodrage", interval = 1, value = 1, pausesDecay = true }
-        h.Class.auras.bloodrage = { key = "bloodrage", id = 29131, duration = 10 }
+        model.regen_aura_a = { aura = "regen_aura_a", interval = 1, value = 1, pausesDecay = true }
+        h.Class.auras.regen_aura_a = { key = "regen_aura_a", id = 1021, duration = 10 }
         h.Class.resources.rage.state.meta = {
             decay = function()
-                return 1.25 * (1 - 0.3 * rank)
+                return 2 * (1 - 0.3 * rank)
             end,
             decayInterval = function()
                 return 1
@@ -194,9 +198,9 @@ describe("Adapter", function()
         }
         VS.SpecChanged()
         local e = model.__decay
-        assert.are.same({ "rage", 1, -1.25 }, { e.resource, e.interval(), e.value() })
+        assert.are.same({ "rage", 1, -2 }, { e.resource, e.interval(), e.value() })
         rank = 1
-        assert.is_true(math.abs(-0.875 - e.value()) < 1e-9) -- Anger Management's 30% less
+        assert.is_true(math.abs(-1.4 - e.value()) < 1e-9) -- the talent's 30% less
         local got
         local build = I.Build
         I.Build = function(def, t)
@@ -206,8 +210,8 @@ describe("Adapter", function()
         VS.SpecChanged()
         I.Build = build
         assert.are.same({ e, 1 }, { model.__decay, I.res.auraRegen.n }) -- built once; not a regen entry of the belief
-        assert.are.same({ model.bloodrage }, got.resources[1].auraRegen) -- the walk skips it, the second build too
-        state.time, state.now, state.buff.bloodrage = 0, 4.5, { up = false, expires = 0 }
+        assert.are.same({ model.regen_aura_a }, got.resources[1].auraRegen) -- the walk skips it, the second build too
+        state.time, state.now, state.buff.regen_aura_a = 0, 4.5, { up = false, expires = 0 }
         assert.are.same({ false, 3.5 }, { e.stop(), e.last() }) -- the belief at rest: a quantum at the forecast's start
         state.time = 5
         assert.is_true(e.stop()) -- in combat
@@ -219,18 +223,18 @@ describe("Adapter", function()
         I.Settle(3.5) -- the belief's quanta at 2 and 3, the next at 4
         state.now = 3.5 -- the reset at the belief's clock
         assert.are.same({ 3, 3 }, { VS.DecayAnchor(fs.RAGE), e.last() }) -- the sim's next beat: 4, the belief's
-        state.buff.bloodrage = { up = true, expires = 20 }
+        state.buff.regen_aura_a = { up = true, expires = 20 }
         assert.are.equal(19, e.last()) -- a tick aura up in the sim: the first quantum at its expiry, after its tick
-        state.buff.bloodrage = { up = false, expires = 0 }
+        state.buff.regen_aura_a = { up = false, expires = 0 }
         state.now, state.offset = 5, 2.5 -- after an advance: actual holds the beats at 4 to 7
         assert.are.equal(7, e.last()) -- the forecast's first beat at 8, none re-applied
-        state.buff.bloodrage = { up = true, expires = 20.5 }
+        state.buff.regen_aura_a = { up = true, expires = 20.5 }
         assert.are.equal(19.5, e.last())
         state.offset = 18.7 -- the sim advanced to 23.7, past the expiry the reset saw: beats at 20.5 to 23.5
-        state.buff.bloodrage.up = false
+        state.buff.regen_aura_a.up = false
         assert.are.equal(23.5, e.last()) -- not the belief's anchor's beats (23): it is paused while the aura is up
-        model.bloodrage.pausesDecay = nil -- unflagged: an aura up in the sim moves no beat
-        state.now, state.offset, state.buff.bloodrage = 5, 2.5, { up = true, expires = 20 }
+        model.regen_aura_a.pausesDecay = nil -- unflagged: an aura up in the sim moves no beat
+        state.now, state.offset, state.buff.regen_aura_a = 5, 2.5, { up = true, expires = 20 }
         assert.are.equal(7, e.last())
     end)
 
@@ -255,10 +259,10 @@ describe("Adapter", function()
     it(
         "leaves the cast history, the real queue and the swing fields to the combat-log rows, asks for a cycle",
         function()
-            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
             ctl.casting = { 1000, 2500 }
-            ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-3", fs.REND)
-            ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-3", fs.REND)
+            ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-3", fs.SPENDER_C)
+            ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-3", fs.SPENDER_C)
             assert.are.same({}, state.history) -- CLEU_HANDLER writes them from the rows (cleu_rows_spec)
             assert.are.same({}, state.removed)
             assert.are.same({}, state.queue)
@@ -271,14 +275,14 @@ describe("Adapter", function()
     it(
         "folds a swing staged this frame before poll 3 clears the queued strike: the swing is skipped as paid",
         function()
-            ctl.current[fs.STRIKE] = true
+            ctl.current[fs.SPENDER_B] = true
             ctl.now = 2
             VS.Drain(2)
             assert.is_true(I.queuedStrike)
             local before = VS.Power(fs.RAGE, 2).est
             ctl.now = 3
             ctl.Fire("PLAYER_SWING", 2.6, 0) -- staged; the flush frame has not ticked
-            ctl.current[fs.STRIKE] = nil -- the strike took that swing
+            ctl.current[fs.SPENDER_B] = nil -- the strike took that swing
             VS.Drain(3)
             assert.is_false(I.queuedStrike)
             ctl.Tick(3.05)
@@ -292,11 +296,11 @@ describe("Adapter", function()
         ctl.now = 3
         VS.Drain(3)
         ctl.now = 5
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
         ctl.Tick(5.05)
         VS.Drain(5.1)
         assert.are.same({ 0, 0, 0 }, { state.resets, state.offset, state.delay })
-        assert.is_true(state.target.updated) -- Rend's `now` moved the target's set
+        assert.is_true(state.target.updated) -- spender_c's `now` moved the target's set
         assert.are.equal(1, I.drainCasts)
     end)
 end)

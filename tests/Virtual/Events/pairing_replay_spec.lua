@@ -141,18 +141,18 @@ describe("swing/outcome pairing", function()
         it("gives an on-next-swing strike its own wound and drops the frame's WOUND 0, in either order", function()
             fire(10, "PLAYER_SWING", 2.2, 0) -- the brief's order: swing, WOUND 0, success, the strike's wound
             fire(10, "UNIT_COMBAT", "target", "WOUND", "", 0, 1)
-            fire(10, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.STRIKE)
+            fire(10, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_B)
             fire(10.001, "UNIT_COMBAT", "target", "WOUND", "", 77, 1)
-            fire(20, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.STRIKE) -- log 1's order
+            fire(20, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_B) -- log 1's order
             fire(20, "UNIT_COMBAT", "target", "WOUND", "", 0, 1)
             fire(20, "PLAYER_SWING", 2.2, 0)
             fire(20.001, "UNIT_COMBAT", "target", "WOUND", "", 84, 1)
             ctl.Tick(25)
             assert.are.same({
                 { "SPELL_CAST_SUCCESS" },
-                { "SPELL_DAMAGE", fs.STRIKE, "", 77 },
+                { "SPELL_DAMAGE", fs.SPENDER_B, "", 77 },
                 { "SPELL_CAST_SUCCESS" },
-                { "SPELL_DAMAGE", fs.STRIKE, "", 84 },
+                { "SPELL_DAMAGE", fs.SPENDER_B, "", 84 },
             }, {
                 { got[1][1] },
                 { got[2][1], got[2][2], got[2][3], got[2][4] },
@@ -164,7 +164,7 @@ describe("swing/outcome pairing", function()
 
         it("gives a wound in our cast's frame to the cast, though it fits a pending swing (Overpower)", function()
             fire(10, "PLAYER_SWING", 2.2, 0)
-            fire(10.2, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND) -- stands in for Overpower
+            fire(10.2, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- stands in for Overpower
             fire(10.2, "UNIT_COMBAT", "target", "WOUND", "", 45, 1) -- the strike's damage, inside the main range
             assert.are.same({ "SPELL_CAST_SUCCESS", "SPELL_DAMAGE", 45 }, { got[1][1], got[2][1], got[2][4] })
             assert.are.equal(0, landed[1])

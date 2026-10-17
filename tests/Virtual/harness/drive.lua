@@ -253,7 +253,7 @@ function M.fixtureStream(fix, base, dedupe)
     local d = fix.damage
     push(base - 1, "@damage", d[1], d[2], d[3], d[4])
     push(base - 1, "PLAYER_EQUIPMENT_CHANGED")
-    local IDS = { STRIKE = fs.STRIKE, DOT = fs.REND, OTHER = 1, SECRET = fake.SECRET }
+    local IDS = { STRIKE = fs.SPENDER_B, DOT = fs.SPENDER_C, OTHER = 1, SECRET = fake.SECRET }
     local TARGET_SIDE = { target = true, softenemy = true, softinteract = true }
     local last = {}
     for _, r in ipairs(fix.rows) do

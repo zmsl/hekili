@@ -57,7 +57,7 @@ describe("the synthesized combat log", function()
         end)
         f:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
         ctl.now = 10
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
         assert.are.equal(1, #got)
         local r = got[1]
         assert.are.equal("COMBAT_LOG_EVENT_UNFILTERED", r.event)
@@ -75,7 +75,7 @@ describe("the synthesized combat log", function()
             "",
             L.HOSTILE_FLAGS,
             0,
-            fs.REND,
+            fs.SPENDER_C,
             "",
             1,
         }, r.row)
@@ -91,20 +91,20 @@ describe("the synthesized combat log", function()
         end
         I.sentGUID = nil
         ctl.casting = { 50000, 51500 }
-        ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-7", fs.REND)
+        ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-7", fs.SPENDER_C)
         api.UnitGUID = unitGUID
         assert.are.equal(0, calls)
         assert.are.equal("SPELL_CAST_START", got[1].row[2])
         assert.are.equal("", got[1].row[8])
-        ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-7", fs.REND)
+        ctl.Fire("UNIT_SPELLCAST_FAILED", "player", "Cast-7", fs.SPENDER_C)
         assert.are.same({ "SPELL_CAST_FAILED", 15, "" }, { got[2].row[2], got[2].n, got[2].row[15] })
     end)
 
     it("ends a channel with its SPELL_AURA_REMOVED on us", function()
         ctl.channel = { 20000, 23000 }
-        ctl.Fire("UNIT_SPELLCAST_CHANNEL_START", "player", "Cast-4", fs.REND)
+        ctl.Fire("UNIT_SPELLCAST_CHANNEL_START", "player", "Cast-4", fs.SPENDER_C)
         assert.are.equal(0, #got) -- its success row comes from UNIT_SPELLCAST_SUCCEEDED
-        ctl.Fire("UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-4", fs.REND)
+        ctl.Fire("UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-4", fs.SPENDER_C)
         assert.are.same({ "SPELL_AURA_REMOVED", "Player-1", 16, "BUFF", 0 }, {
             got[1].row[2],
             got[1].row[8],
@@ -135,15 +135,15 @@ describe("the synthesized combat log", function()
             depth = depth + 1
             maxDepth = math.max(maxDepth, depth)
             if #got == 1 then
-                L.Cast("SPELL_CAST_SUCCESS", 2, fs.SHOUT, "")
+                L.Cast("SPELL_CAST_SUCCESS", 2, fs.SPENDER_A, "")
             end
             depth = depth - 1
         end)
         f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-        L.Cast("SPELL_CAST_SUCCESS", 1, fs.REND, "")
+        L.Cast("SPELL_CAST_SUCCESS", 1, fs.SPENDER_C, "")
         L.Deliver()
         assert.are.equal(2, #got)
-        assert.are.equal(fs.SHOUT, got[2].row[12])
+        assert.are.equal(fs.SPENDER_A, got[2].row[12])
         assert.are.equal(1, maxDepth)
         assert.are.equal(1, L.requeued)
     end)
@@ -160,18 +160,18 @@ describe("the synthesized combat log", function()
             error("subscriber boom")
         end)
         f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-        L.Cast("SPELL_CAST_SUCCESS", 1, fs.REND, "")
+        L.Cast("SPELL_CAST_SUCCESS", 1, fs.SPENDER_C, "")
         L.Deliver()
         assert.are.equal(0, I.Events.depth)
-        L.Cast("SPELL_CAST_SUCCESS", 2, fs.SHOUT, "")
+        L.Cast("SPELL_CAST_SUCCESS", 2, fs.SPENDER_A, "")
         L.Deliver()
         assert.are.equal(2, #got)
-        assert.are.equal(fs.SHOUT, got[2].row[12])
+        assert.are.equal(fs.SPENDER_A, got[2].row[12])
     end)
 
     it("drops the oldest row when the pool is full, and counts it", function()
         for i = 1, L.POOL + 6 do
-            L.Cast("SPELL_CAST_SUCCESS", i, fs.REND, "")
+            L.Cast("SPELL_CAST_SUCCESS", i, fs.SPENDER_C, "")
         end
         L.Deliver()
         assert.are.equal(L.POOL, #got)
@@ -186,15 +186,15 @@ describe("the synthesized combat log", function()
             if not seen then
                 seen = "pending"
                 for i = 1, L.POOL do
-                    L.Cast("SPELL_CAST_SUCCESS", 100 + i, fs.SHOUT, "")
+                    L.Cast("SPELL_CAST_SUCCESS", 100 + i, fs.SPENDER_A, "")
                 end
                 seen = select(12, Facade.CombatLogGetCurrentEventInfo())
             end
         end)
         f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-        L.Cast("SPELL_CAST_SUCCESS", 1, fs.REND, "")
+        L.Cast("SPELL_CAST_SUCCESS", 1, fs.SPENDER_C, "")
         L.Deliver()
-        assert.are.equal(fs.REND, seen)
+        assert.are.equal(fs.SPENDER_C, seen)
         assert.are.equal(1, L.dropped) -- 64 emitted into 63 free slots: the last one gave way
         assert.are.same({ 64, 63 }, { L.emitted, L.requeued }) -- the row given way is counted only as dropped
     end)
@@ -202,7 +202,7 @@ describe("the synthesized combat log", function()
     it("makes no row without a spell ID, and delivers nothing inside a coroutine", function()
         L.Cast("SPELL_CAST_SUCCESS", 1, nil, "")
         assert.are.equal(0, L.emitted)
-        L.Cast("SPELL_CAST_SUCCESS", 2, fs.REND, "")
+        L.Cast("SPELL_CAST_SUCCESS", 2, fs.SPENDER_C, "")
         coroutine.wrap(L.Deliver)() -- Hekili.Update's coroutine
         assert.are.equal(0, #got)
         L.Deliver()
@@ -219,7 +219,7 @@ describe("the synthesized combat log", function()
         cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- the capturing one allocates by design
         local bytes = alloc.bytes(function(i)
             ctl.now = i
-            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.REND)
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
             I.Sources.Flush()
         end, 10000)
         assert.are.equal(0, bytes)
@@ -359,11 +359,11 @@ describe("the synthesized combat log", function()
 
         it("pairs our ability with the target's parry: SPELL_MISSED with the miss type in slot 15", function()
             ctl.now = 50
-            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", fs.REND)
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", fs.SPENDER_C)
             ctl.now = 50.02
             ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1)
             assert.are.equal("SPELL_CAST_SUCCESS", row(1)[2])
-            assert.are.same({ "SPELL_MISSED", fs.REND, "", 1, "PARRY", false, 0, false }, {
+            assert.are.same({ "SPELL_MISSED", fs.SPENDER_C, "", 1, "PARRY", false, 0, false }, {
                 row(2)[2],
                 row(2)[12],
                 row(2)[13],
@@ -379,24 +379,24 @@ describe("the synthesized combat log", function()
         it("gives an on-next-swing strike its swing's outcome: SPELL_DAMAGE, no swing row", function()
             ctl.now = 60
             ctl.Fire("PLAYER_SWING", 2.6, 0)
-            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-10", fs.STRIKE)
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-10", fs.SPENDER_B)
             ctl.now = 60.03
             ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 250, 1)
             ctl.Tick(61)
             assert.are.equal(2, #got)
-            assert.are.same({ "SPELL_DAMAGE", fs.STRIKE, 250, 24 }, { row(2)[2], row(2)[12], row(2)[15], got[2].n })
+            assert.are.same({ "SPELL_DAMAGE", fs.SPENDER_B, 250, 24 }, { row(2)[2], row(2)[12], row(2)[15], got[2].n })
         end)
 
         it("gives the strike its swing's outcome when the success comes before the swing", function()
             ctl.now = 70
-            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-11", fs.STRIKE)
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-11", fs.SPENDER_B)
             ctl.now = 70.02
             ctl.Fire("PLAYER_SWING", 2.6, 0)
             ctl.now = 70.04
             ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
             ctl.Tick(71)
             assert.are.equal(2, #got)
-            assert.are.same({ "SPELL_MISSED", fs.STRIKE, "DODGE" }, { row(2)[2], row(2)[12], row(2)[15] })
+            assert.are.same({ "SPELL_MISSED", fs.SPENDER_B, "DODGE" }, { row(2)[2], row(2)[12], row(2)[15] })
         end)
 
         it("makes no row without a target", function()

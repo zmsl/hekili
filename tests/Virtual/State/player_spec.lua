@@ -53,7 +53,7 @@ describe("player start", function()
         end
         VS.Start(api)
         assert.are.same({ 40, 60, 15, 25, 0, 0, 1 }, { VS.Stat("UnitDamage") })
-        damage[1], damage[2] = 44, 66 -- Battle Shout before a pull
+        damage[1], damage[2] = 44, 66 -- spender_a before a pull
         ctl.Fire("UNIT_ATTACK_POWER", "player")
         assert.are.same({ 44, 66, 15, 25, 0, 0, 1 }, { VS.Stat("UnitDamage") })
         damage[1] = 50

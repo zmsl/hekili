@@ -56,18 +56,18 @@ describe("zero allocation", function()
             GetInfo()
         end)
         sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-        h.Class.abilities.rend.healthGate = 0.2 -- a health-gated spender (Families/TargetHealth.lua)
-        ctl.known[fs.REND] = true -- known: its NOT answers can bound the target's health
-        h.Class.resources.rage.state.meta = { -- a stepped decay (Families/Resources.lua): 1.25 at each 1 s beat
+        h.Class.abilities.spender_c.healthGate = 0.2 -- a health-gated spender (Families/TargetHealth.lua)
+        ctl.known[fs.SPENDER_C] = true -- known: its NOT answers can bound the target's health
+        h.Class.resources.rage.state.meta = { -- a stepped decay (Families/Resources.lua): 2 at each 1 s beat
             decay = function()
-                return 1.25
+                return 2
             end,
             decayInterval = function()
                 return 1
             end,
         }
         h.Class.resources.rage.state.regenModel.mainhand.taken = function(kind, amount) -- rage from hits on us
-            return buff.battle_shout.up and amount / 10 or 1, 0.5 -- luacheck: ignore 113 (the `now` context's names)
+            return buff.spender_a.up and amount / 10 or 1, 0.5 -- luacheck: ignore 113 (the `now` context's names)
         end
         VS.Start(api)
         VS.SpecChanged()
@@ -76,11 +76,11 @@ describe("zero allocation", function()
         state.time, state.query_time = 0, 1
         ctl.guid.target = "Creature-2" -- a target never held before: its first flip learns M, then WOUNDs move it
         ctl.Fire("PLAYER_TARGET_CHANGED")
-        ctl.auras.player.HELPFUL[1] = { spellId = fs.SHOUT, expirationTime = 1e9, applications = 0 }
-        ctl.forms = { fs.SHOUT } -- a tracked form aura (Sources/Forms.lua)
+        ctl.auras.player.HELPFUL[1] = { spellId = fs.SPENDER_A, expirationTime = 1e9, applications = 0 }
+        ctl.forms = { fs.SPENDER_A } -- a tracked form aura (Sources/Forms.lua)
         local USABLE, NOT_USABLE = { true, false }, { false, false }
-        ctl.usable[fs.REND] = USABLE
-        ctl.cooldown[fs.REND] = { isActive = false, isOnGCD = true }
+        ctl.usable[fs.SPENDER_C] = USABLE
+        ctl.cooldown[fs.SPENDER_C] = { isActive = false, isOnGCD = true }
         ctl.Fire("PLAYER_REGEN_DISABLED")
         local POWER = "RAGE"
         local function step(i)
@@ -91,12 +91,12 @@ describe("zero allocation", function()
             elseif k == 1 then
                 ctl.Fire("UNIT_POWER_FREQUENT", "player", POWER)
             elseif k == 2 then
-                ctl.usable[fs.REND] = i % 4 == 2 and NOT_USABLE or USABLE -- every other usability event flips
+                ctl.usable[fs.SPENDER_C] = i % 4 == 2 and NOT_USABLE or USABLE -- every other usability event flips
                 ctl.Fire("SPELL_UPDATE_USABLE")
             elseif k == 3 then
-                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast", fs.REND)
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast", fs.SPENDER_C)
             elseif k == 4 then
-                ctl.form = i % 12 == 4 and 1 or 0 -- the shout as a form: every other walk follows a form swap
+                ctl.form = i % 12 == 4 and 1 or 0 -- spender_a's aura as a form: every other walk follows a form swap
                 ctl.Fire("UPDATE_SHAPESHIFT_FORM")
                 ctl.Fire("UNIT_AURA", "player")
             else
@@ -122,11 +122,11 @@ describe("zero allocation", function()
             taken.stop()
             taken.value()
             VS.Regen(fs.RAGE, t)
-            VS.Cooldown(fs.REND, t)
-            VS.Charges(fs.REND, t)
+            VS.Cooldown(fs.SPENDER_C, t)
+            VS.Charges(fs.SPENDER_C, t)
             VS.Gcd(t)
             VS.GcdInfo(t)
-            VS.Aura("player", fs.SHOUT, t)
+            VS.Aura("player", fs.SPENDER_A, t)
             VS.AuraAt("target", "HARMFUL", 1, t)
             VS.AuraByInstance("player", 1, t)
             VS.AuraGen("player")
@@ -143,15 +143,15 @@ describe("zero allocation", function()
             VS.TotemFacts(1)
             VS.TargetCast(t)
             VS.TargetCastFacts()
-            VS.Talent(12286)
+            VS.Talent(1011)
             VS.TalentGen()
             VS.Stat("UnitStat", 1)
             VS.InCombat()
             VS.Moving()
-            VS.CooldownLength(fs.REND)
+            VS.CooldownLength(fs.SPENDER_C)
             VS.Count.Enemies(t)
-            VS.Count.WithAura(fs.REND, t)
-            VS.Count.InRange(fs.REND, t)
+            VS.Count.WithAura(fs.SPENDER_C, t)
+            VS.Count.InRange(fs.SPENDER_C, t)
             Facade.UnitPower("player", fs.RAGE)
             Facade.GetPowerRegenForPowerType(fs.RAGE)
             Facade.GetManaRegen()
@@ -170,14 +170,14 @@ describe("zero allocation", function()
             Facade.GetTotemInfo(1)
             Facade.C_UnitAuras.GetBuffDataByIndex("player", 1)
             Facade.C_UnitAuras.GetDebuffDataByIndex("target", 1)
-            Facade.C_UnitAuras.GetPlayerAuraBySpellID(fs.SHOUT)
+            Facade.C_UnitAuras.GetPlayerAuraBySpellID(fs.SPENDER_A)
             Facade.C_UnitAuras.GetAuraDataByAuraInstanceID("player", 1)
-            Facade.C_Spell.GetSpellCooldown(fs.REND)
+            Facade.C_Spell.GetSpellCooldown(fs.SPENDER_C)
             Facade.C_Spell.GetSpellCooldown(29515)
-            Facade.C_Spell.GetSpellCharges(fs.REND)
+            Facade.C_Spell.GetSpellCharges(fs.SPENDER_C)
             Facade.UnitCastingInfo("target")
             Facade.UnitChannelInfo("target")
-            Facade.IsUsableSpell(fs.REND)
+            Facade.IsUsableSpell(fs.SPENDER_C)
             Facade.GetTime() -- passthroughs
             Facade.UnitGUID("target")
             Facade.GetInstanceInfo() -- absent here: virtual, answers nothing

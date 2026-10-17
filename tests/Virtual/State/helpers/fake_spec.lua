@@ -6,7 +6,9 @@
 local M = {}
 
 M.RAGE = 1 -- Enum.PowerType.Rage
-M.REND, M.REND_R2, M.STRIKE, M.SHOUT = 772, 6546, 78, 6673
+-- Neutral fixtures, no class's facts: spender_a puts a 120 s buff on us, spender_b waits for the next swing (off the
+-- GCD), spender_c puts a 15 s debuff on the target and has a rank 2. The keys sort in that order, as the slots do.
+M.SPENDER_A, M.SPENDER_B, M.SPENDER_C, M.SPENDER_C_R2 = 1001, 1002, 1003, 1004
 
 --- A fake Hekili: { State, Class, ForceUpdate, forced }, and `spendResources` for ns. `swingValue` is rage per swing.
 function M.new(swingValue)
@@ -67,7 +69,7 @@ function M.new(swingValue)
         },
         abilities = {},
         auras = {},
-        talents = { improved_rend = { 0, 12286, 3 } },
+        talents = { talent_a = { 0, 1011, 3 } },
     }
     local function ability(key, t)
         t.key, t.funcs = key, { now = t.now } -- Hekili keeps an unknown function field in `funcs`
@@ -76,33 +78,33 @@ function M.new(swingValue)
         class.abilities[key] = t
         class.abilities[t.id] = t
     end
-    ability("rend", {
-        id = M.REND,
-        copy = { M.REND_R2 },
+    ability("spender_c", {
+        id = M.SPENDER_C,
+        copy = { M.SPENDER_C_R2 },
         spend = 10,
         spendType = "rage",
         startsCombat = true,
         handler = function()
-            state.applyDebuff("rend", 15)
+            state.applyDebuff("spender_c", 15)
         end,
         now = function()
-            applyDebuff("target", "rend", 15) -- the `now` context's verb (Families/Now.lua)
+            applyDebuff("target", "spender_c", 15) -- the `now` context's verb (Families/Now.lua)
         end,
     })
-    ability("heroic_strike", { id = M.STRIKE, spend = 15, spendType = "rage", gcd = "off", onNextSwing = true })
-    ability("battle_shout", {
-        id = M.SHOUT,
+    ability("spender_b", { id = M.SPENDER_B, spend = 15, spendType = "rage", gcd = "off", onNextSwing = true })
+    ability("spender_a", {
+        id = M.SPENDER_A,
         spend = 10,
         spendType = "rage",
         handler = function()
-            state.applyBuff("battle_shout", 120)
+            state.applyBuff("spender_a", 120)
         end,
         now = function()
-            applyBuff("battle_shout")
+            applyBuff("spender_a")
         end,
     })
-    class.auras.rend = { key = "rend", id = M.REND, copy = { M.REND_R2 }, duration = 15 }
-    class.auras.battle_shout = { key = "battle_shout", id = M.SHOUT, duration = 120 }
+    class.auras.spender_c = { key = "spender_c", id = M.SPENDER_C, copy = { M.SPENDER_C_R2 }, duration = 15 }
+    class.auras.spender_a = { key = "spender_a", id = M.SPENDER_A, duration = 120 }
     function state:RunHandler(key)
         local a = class.abilities[key]
         if a.handler then
@@ -148,15 +150,15 @@ function M.def(hekili)
     local rage = class.resources.rage
     local mh = rage.state.regenModel.mainhand
     return {
-        abilities = { class.abilities.battle_shout, class.abilities.heroic_strike, class.abilities.rend },
-        abilityIds = { { M.SHOUT }, { M.STRIKE }, { M.REND, M.REND_R2 } },
+        abilities = { class.abilities.spender_a, class.abilities.spender_b, class.abilities.spender_c },
+        abilityIds = { { M.SPENDER_A }, { M.SPENDER_B }, { M.SPENDER_C, M.SPENDER_C_R2 } },
         abilitySlot = { 1, 1, 1 },
         resources = {
             { key = "rage", type = M.RAGE, token = "RAGE", max = 100, rest = false, swing = 1, swingValue = mh.value },
         },
-        auras = { class.auras.battle_shout, class.auras.rend },
-        auraIds = { { M.SHOUT }, { M.REND, M.REND_R2 } },
-        talents = { { key = "improved_rend", spell = 12286, max = 3 } },
+        auras = { class.auras.spender_a, class.auras.spender_c },
+        auraIds = { { M.SPENDER_A }, { M.SPENDER_C, M.SPENDER_C_R2 } },
+        talents = { { key = "talent_a", spell = 1011, max = 3 } },
         units = { "player", "target" },
     }
 end

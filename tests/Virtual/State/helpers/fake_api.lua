@@ -31,7 +31,7 @@ function M.new()
     local ctl = {
         now = 100,
         combat = false,
-        class = "WARRIOR",
+        class = "CLASS_A",
         power = {}, -- [powerType] = value (SECRET for a secret read)
         powerMax = {}, -- [powerType] = max
         regen = {}, -- [powerType] = { inactive, active }

@@ -213,7 +213,7 @@ describe("resources", function()
         it(
             "alternates pinned (the ladder) and modelled (a swing, a cast) and keeps lo at or above what was seen",
             function()
-                obs(Obs.Usable, 5, 3, 1, 0) -- rend (10) usable
+                obs(Obs.Usable, 5, 3, 1, 0) -- spender_c (10) usable
                 obs(Obs.Usable, 5, 2, 0, 1) -- heroic strike (15) short
                 I.Fold(5, false)
                 local r = VS.Power(fs.RAGE, 5)
@@ -350,15 +350,15 @@ describe("resources", function()
         end)
     end)
 
-    describe("aura-gated regen (rage, Bloodrage: 1 a second while its aura is up)", function()
-        local BLOODRAGE = 3 -- the aura index
+    describe("aura-gated regen (rage, regen_aura_a: 1 a second while its aura is up)", function()
+        local REGEN_AURA_A = 3 -- the aura index
 
         before_each(function()
             local def = fs.def(fs.new(9))
-            def.auras[BLOODRAGE] = { key = "bloodrage", id = 29131 }
-            def.auraIds[BLOODRAGE] = { 29131 }
+            def.auras[REGEN_AURA_A] = { key = "regen_aura_a", id = 1021 }
+            def.auraIds[REGEN_AURA_A] = { 1021 }
             def.resources[1].auraRegen = {
-                { aura = "bloodrage", interval = 1, value = 1 },
+                { aura = "regen_aura_a", interval = 1, value = 1 },
                 { aura = "not_tracked", interval = 1, value = 5 }, -- no such aura: ignored
             }
             boot(def)
@@ -366,7 +366,7 @@ describe("resources", function()
         end)
 
         it("adds value at each interval after the aura's application while it is believed up", function()
-            I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
+            I.AuraModel(1, REGEN_AURA_A, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
             I.Settle(15.5)
             assert.are.equal(5, VS.Power(fs.RAGE, 15.5).est) -- ticks at 11, 12, 13, 14, 15
             assert.are.equal(10, VS.Power(fs.RAGE, 25).est) -- projected: 16 to 20, none after the expiry
@@ -383,23 +383,23 @@ describe("resources", function()
         end)
 
         it("stops when the aura is believed gone early", function()
-            I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0)
+            I.AuraModel(1, REGEN_AURA_A, 10, 20, 1, 10, 0)
             I.Settle(12.5)
-            I.AuraModel(1, BLOODRAGE, 0, 0, 0, 12.5, 0) -- gone at 12.5 (expiry 0: down)
+            I.AuraModel(1, REGEN_AURA_A, 0, 0, 0, 12.5, 0) -- gone at 12.5 (expiry 0: down)
             I.Settle(20)
             assert.are.equal(2, VS.Power(fs.RAGE, 20).est)
         end)
 
         it("pauses the out-of-combat decay while an aura-gated entry's aura is up, resumes after it expires", function()
             local def = fs.def(fs.new(9))
-            def.auras[BLOODRAGE] = { key = "bloodrage", id = 29131 }
-            def.auraIds[BLOODRAGE] = { 29131 }
+            def.auras[REGEN_AURA_A] = { key = "regen_aura_a", id = 1021 }
+            def.auraIds[REGEN_AURA_A] = { 1021 }
             def.resources[1].decay = 2
-            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1, pausesDecay = true } }
+            def.resources[1].auraRegen = { { aura = "regen_aura_a", interval = 1, value = 1, pausesDecay = true } }
             boot(def)
             I.Fold(10, false)
             I.ResourceShift(1, 20, 10, Obs.CastSuccess) -- est 20, out of combat
-            I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
+            I.AuraModel(1, REGEN_AURA_A, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
             I.Settle(15)
             assert.are.equal(25, VS.Power(fs.RAGE, 15).est) -- 5 ticks, no decay
             I.Settle(22)
@@ -408,20 +408,20 @@ describe("resources", function()
 
         it("does not pause the decay for an aura entry without `pausesDecay`", function()
             local def = fs.def(fs.new(9))
-            def.auras[BLOODRAGE] = { key = "bloodrage", id = 29131 }
-            def.auraIds[BLOODRAGE] = { 29131 }
+            def.auras[REGEN_AURA_A] = { key = "regen_aura_a", id = 1021 }
+            def.auraIds[REGEN_AURA_A] = { 1021 }
             def.resources[1].decay = 2
-            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1 } }
+            def.resources[1].auraRegen = { { aura = "regen_aura_a", interval = 1, value = 1 } }
             boot(def)
             I.Fold(10, false)
             I.ResourceShift(1, 20, 10, Obs.CastSuccess) -- est 20, out of combat
-            I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
+            I.AuraModel(1, REGEN_AURA_A, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
             I.Settle(15)
             assert.are.equal(15, VS.Power(fs.RAGE, 15).est) -- 5 ticks and 5 s x 2/s of decay
         end)
 
         it("lands the tick at the expiry: a 10 s aura ticking 1 a second lands 10", function()
-            I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
+            I.AuraModel(1, REGEN_AURA_A, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
             assert.are.equal(5, VS.Power(fs.RAGE, 15).est) -- (10, 15]: 11 to 15
             assert.are.equal(10, VS.Power(fs.RAGE, 20).est) -- (10, 20]: 11 to 20, the expiry's tick too
             assert.are.equal(10, VS.Power(fs.RAGE, 30).est) -- (10, 30]: nothing after it
@@ -429,23 +429,23 @@ describe("resources", function()
 
         it("leaves decay at the full rate when the tick aura is down or already expired", function()
             local def = fs.def(fs.new(9))
-            def.auras[BLOODRAGE] = { key = "bloodrage", id = 29131 }
-            def.auraIds[BLOODRAGE] = { 29131 }
+            def.auras[REGEN_AURA_A] = { key = "regen_aura_a", id = 1021 }
+            def.auraIds[REGEN_AURA_A] = { 1021 }
             def.resources[1].decay = 2
-            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1 } }
+            def.resources[1].auraRegen = { { aura = "regen_aura_a", interval = 1, value = 1 } }
             boot(def)
             I.Fold(10, false)
             I.ResourceShift(1, 50, 10, Obs.CastSuccess) -- est 50, out of combat, aura never applied
             I.Settle(15)
             assert.are.equal(40, VS.Power(fs.RAGE, 15).est) -- 2/s x 5
-            I.AuraModel(1, BLOODRAGE, 5, 12, 1, 15, 0) -- applied at 5, expired at 12, before this advance
+            I.AuraModel(1, REGEN_AURA_A, 5, 12, 1, 15, 0) -- applied at 5, expired at 12, before this advance
             I.Settle(20)
             assert.are.equal(30, VS.Power(fs.RAGE, 20).est) -- still 2/s x 5
         end)
 
         it("credits a plain periodic entry only in combat, from the combat start, and only with its talent", function()
             local def = fs.def(fs.new(9))
-            def.resources[1].auraRegen = { { talent = "improved_rend", interval = 3, value = 1 } }
+            def.resources[1].auraRegen = { { talent = "talent_a", interval = 3, value = 1 } }
             boot(def)
             I.Fold(10, false)
             I.Settle(20)
@@ -487,7 +487,7 @@ describe("resources", function()
         end)
 
         it("allocates nothing advancing or projecting through an entry", function()
-            I.AuraModel(1, BLOODRAGE, 10, 1e9, 1, 10, 0)
+            I.AuraModel(1, REGEN_AURA_A, 10, 1e9, 1, 10, 0)
             local t = 10
             local bytes = alloc.bytes(function()
                 t = t + 0.1
@@ -499,17 +499,17 @@ describe("resources", function()
     end)
 
     describe("stepped decay (rage: 1.25 lost at the start of each 1 s window out of combat)", function()
-        local BLOODRAGE = 3 -- the aura index
+        local REGEN_AURA_A = 3 -- the aura index
 
         before_each(function()
             local def = fs.def(fs.new(9))
-            def.auras[BLOODRAGE] = { key = "bloodrage", id = 29131 }
-            def.auraIds[BLOODRAGE] = { 29131 }
+            def.auras[REGEN_AURA_A] = { key = "regen_aura_a", id = 1021 }
+            def.auraIds[REGEN_AURA_A] = { 1021 }
             def.resources[1].decay = 1.25
             def.resources[1].decayInterval = function() -- a function, as a class file's meta table declares it
                 return 1
             end
-            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1, pausesDecay = true } }
+            def.resources[1].auraRegen = { { aura = "regen_aura_a", interval = 1, value = 1, pausesDecay = true } }
             boot(def)
             S.Direct(Obs.CombatStart, 2)
             I.Fold(2, false)
@@ -538,11 +538,11 @@ describe("resources", function()
             assert.are.same({ 0, 0, 0 }, { VS.Power(fs.RAGE, 60).est, I.res.decayNext[1], VS.DecayAnchor(fs.RAGE) })
         end)
 
-        it("lands Bloodrage's tenth tick at its expiry, then the first quantum at once: 10 - 1.25", function()
+        it("lands regen_aura_a's tenth tick at its expiry, then the first quantum at once: 10 - 1.25", function()
             S.Direct(Obs.CombatEnd, 5)
             I.Fold(5, false) -- at rest (0): no quantum
             I.Settle(10)
-            I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
+            I.AuraModel(1, REGEN_AURA_A, 10, 20, 1, 10, 0) -- applied at 10, expires at 20
             I.Settle(15)
             assert.are.same({ 5, 0 }, { VS.Power(fs.RAGE, 15).est, I.res.decayNext[1] }) -- paused while it is up
             I.Settle(20)
@@ -554,7 +554,7 @@ describe("resources", function()
         it("pauses for a tick aura applied while decaying and re-anchors at its expiry", function()
             combatEnd()
             I.Settle(12.5) -- 46.25: beats at 10, 11, 12
-            I.AuraModel(1, BLOODRAGE, 13, 23, 1, 12.5, 0) -- applied at 13, expires at 23
+            I.AuraModel(1, REGEN_AURA_A, 13, 23, 1, 12.5, 0) -- applied at 13, expires at 23
             I.Settle(13)
             assert.are.same({ 46.25, 0 }, { VS.Power(fs.RAGE, 13).est, I.res.decayNext[1] }) -- no beat at 13
             I.Settle(18)
@@ -744,7 +744,7 @@ describe("resources", function()
     end)
 
     describe("a swing entry gated on a player aura (bear rage: swings pay only in Bear Form)", function()
-        local BEAR, REND = 3, 3 -- the aura index; fs.def's ability index of Rend (10 rage)
+        local BEAR, REND = 3, 3 -- the aura index; fs.def's ability index of spender_c (10 rage)
 
         local function gated(aura)
             local def = fs.def(fs.new(9))
@@ -789,7 +789,7 @@ describe("resources", function()
             I.Settle(13)
             assert.are.equal(0, I.SwingPerSecond(1))
             obs(Obs.Usable, 14, REND, 0, 1)
-            obs(Obs.Usable, 14, REND, 1, 0) -- the flip pins at Rend's 10 with a step of 0
+            obs(Obs.Usable, 14, REND, 1, 0) -- the flip pins at spender_c's 10 with a step of 0
             I.Fold(14, false)
             local r = VS.Power(fs.RAGE, 14)
             assert.are.same({ 10, 10, 10 }, { r.est, r.lo, r.hi })
@@ -817,9 +817,9 @@ describe("resources", function()
         end)
     end)
 
-    describe("the in-game Bloodrage trace (2026-10-16): a usability answer bounds the estimate", function()
-        local BLOODRAGE = 3 -- the aura index
-        local FIVE = 1 -- the abilities cost 5, 10 (Battle Shout), 10 (Rend), 15 (Heroic Strike): pins before caps
+    describe("the in-game regen_aura_a trace (2026-10-16): a usability answer bounds the estimate", function()
+        local REGEN_AURA_A = 3 -- the aura index
+        local FIVE = 1 -- the abilities cost 5, 10 (spender_a), 10 (spender_c), 15 (spender_b): pins before caps
         local COST = { 5, 10, 10, 15 }
 
         before_each(function()
@@ -828,16 +828,16 @@ describe("resources", function()
             def.abilities = { five, def.abilities[1], def.abilities[3], def.abilities[2] }
             def.abilityIds = { { 7384 }, def.abilityIds[1], def.abilityIds[3], def.abilityIds[2] }
             def.abilitySlot = { 1, 1, 1, 1 }
-            def.auras[BLOODRAGE] = { key = "bloodrage", id = 29131 }
-            def.auraIds[BLOODRAGE] = { 29131 }
+            def.auras[REGEN_AURA_A] = { key = "regen_aura_a", id = 1021 }
+            def.auraIds[REGEN_AURA_A] = { 1021 }
             def.resources[1].decay = 1.25
             def.resources[1].decayInterval = 1
-            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 1, pausesDecay = true } }
+            def.resources[1].auraRegen = { { aura = "regen_aura_a", interval = 1, value = 1, pausesDecay = true } }
             boot(def)
             I.Fold(50, false)
         end)
 
-        -- The truth: 0; Bloodrage at 50.3 (+10, then +1 a second); Battle Shout at 51.0 (-10).
+        -- The truth: 0; regen_aura_a at 50.3 (+10, then +1 a second); spender_a at 51.0 (-10).
         local function truth(t)
             if t < 50.3 then
                 return 0
@@ -853,13 +853,13 @@ describe("resources", function()
                 if not raged and t >= 50.3 then
                     raged = true
                     I.Settle(50.3)
-                    I.ResourceShift(1, 10, 50.3, Obs.CastSuccess) -- Bloodrage's `now` gain
-                    I.AuraModel(1, BLOODRAGE, 50.3, 60.3, 1, 50.3, 0)
+                    I.ResourceShift(1, 10, 50.3, Obs.CastSuccess) -- regen_aura_a's `now` gain
+                    I.AuraModel(1, REGEN_AURA_A, 50.3, 60.3, 1, 50.3, 0)
                 end
                 if not shouted and t >= 51 then
                     shouted = true
                     I.Settle(51)
-                    I.ResourceShift(1, -10, 51, Obs.CastSuccess) -- Battle Shout's spend
+                    I.ResourceShift(1, -10, 51, Obs.CastSuccess) -- spender_a's spend
                 end
                 local v, cap = truth(t), 100
                 for a = 1, 4 do
@@ -875,13 +875,13 @@ describe("resources", function()
                 I.Fold(t, false)
                 I.Settle(t)
                 local r = VS.Power(fs.RAGE, t)
-                -- from the Bloodrage flip (exact at 10) hi is the chain itself, until the 5-cost's swing-width flip
+                -- from the regen_aura_a flip (exact at 10) hi is the chain itself, until the 5-cost's swing-width flip
                 local hi = (t >= 50.3 and t < 55.3) and v or cap
                 local got = ("%.2f est=%.2f lo=%.2f hi=%.2f"):format(t, r.est, r.lo, r.hi)
                 local want = ("%.2f est=%.2f lo=%.2f hi=%.2f"):format(t, v, v, hi)
                 assert.are.equal(want, got)
                 if t == 50.35 then
-                    assert.is_false(I.res.pinValid[1]) -- the Bloodrage flip is no regen measurement
+                    assert.is_false(I.res.pinValid[1]) -- the regen_aura_a flip is no regen measurement
                 end
                 t = t + 0.25
             end
@@ -890,16 +890,16 @@ describe("resources", function()
 
         it("clamps a wide flip's estimate down to its top when a tick took it past cost + step", function()
             local def = fs.def(fs.new(9))
-            def.auras[BLOODRAGE] = { key = "bloodrage", id = 29131 }
-            def.auraIds[BLOODRAGE] = { 29131 }
-            def.resources[1].auraRegen = { { aura = "bloodrage", interval = 1, value = 10 } }
+            def.auras[REGEN_AURA_A] = { key = "regen_aura_a", id = 1021 }
+            def.auraIds[REGEN_AURA_A] = { 1021 }
+            def.resources[1].auraRegen = { { aura = "regen_aura_a", interval = 1, value = 10 } }
             boot(def)
             I.Fold(10, false)
             I.ResourceShift(1, 20, 10, Obs.CastSuccess)
             obs(Obs.Usable, 10, 2, 0, 1) -- heroic strike (15) short: est 14.99
             I.Fold(10, false)
             within(15 - I.EPS, VS.Power(fs.RAGE, 10).est)
-            I.AuraModel(1, BLOODRAGE, 10, 20, 1, 10, 0)
+            I.AuraModel(1, REGEN_AURA_A, 10, 20, 1, 10, 0)
             I.Settle(11) -- a +10 tick, not our own gain: 24.99
             within(25 - I.EPS, VS.Power(fs.RAGE, 11).est)
             obs(Obs.Usable, 11, 2, 1, 0) -- usable: the swing-width flip [15, 15 + 9 x 1.1]
@@ -1003,10 +1003,10 @@ describe("resources", function()
         it("reads the belief at the hit's time through the `now` context (buff, talent, the resources)", function()
             taken(function()
                 -- luacheck: ignore 113 (the `now` context's names)
-                calls[#calls + 1] = talent.improved_rend.rank .. " " .. rage.current .. " " .. combat
-                return buff.battle_shout.up and 4 or 1
+                calls[#calls + 1] = talent.talent_a.rank .. " " .. rage.current .. " " .. combat
+                return buff.spender_a.up and 4 or 1
             end)
-            I.AuraModel(1, 1, 10, 20, 1, 10, 0) -- Battle Shout (aura 1) up from 10 to 20
+            I.AuraModel(1, 1, 10, 20, 1, 10, 0) -- spender_a (aura 1) up from 10 to 20
             obs(Obs.CombatStart, 11)
             hit(12, WOUND, 40)
             I.SetTalentRank(1, 2)
@@ -1090,7 +1090,7 @@ end)
 
 describe("the usability oracle (harness design §2: Rows' credits judged by the next usability answer)", function()
     local api, ctl, ns, VS, I, L, R, saved, rows
-    local SHOUT, STRIKE = fs.SHOUT, fs.STRIKE -- the fake spec's spenders at 10 and 15
+    local SHOUT, STRIKE = fs.SPENDER_A, fs.SPENDER_B -- the fake spec's spenders at 10 and 15
     local USABLE, SHORT = { true, false }, { false, true }
 
     before_each(function()

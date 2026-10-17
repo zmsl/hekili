@@ -135,7 +135,7 @@ describe("ns.Facade", function()
     end)
 
     it("answers resources: UnitPower floors lo for every resource; swing regen 0 in and out of combat", function()
-        I.Sources.Direct(VS.Obs.Usable, 5, 3, 1, 0) -- rend usable: rage >= 10
+        I.Sources.Direct(VS.Obs.Usable, 5, 3, 1, 0) -- spender_c usable: rage >= 10
         I.Fold(5, false)
         ctl.now = 5
         assert.are.equal(10, Facade.UnitPower("player", fs.RAGE))
@@ -190,7 +190,7 @@ describe("ns.Facade", function()
         I.AuraModel(1, 1, 5, 125, 1, 5, VS.Obs.CastSuccess, false)
         ctl.now = 6
         local a = Facade.C_UnitAuras.GetBuffDataByIndex("player", 1)
-        assert.are.same({ fs.SHOUT, 125, 120, 1, "player" }, {
+        assert.are.same({ fs.SPENDER_A, 125, 120, 1, "player" }, {
             a.spellId,
             a.expirationTime,
             a.duration,
@@ -199,19 +199,19 @@ describe("ns.Facade", function()
         })
         assert.are.equal(a, Facade.C_UnitAuras.GetBuffDataByIndex("player", 1)) -- shared, not allocated per call
         assert.is_nil(Facade.C_UnitAuras.GetBuffDataByIndex("player", 2))
-        assert.are.equal(fs.SHOUT, Facade.C_UnitAuras.GetPlayerAuraBySpellID(fs.SHOUT).spellId)
+        assert.are.equal(fs.SPENDER_A, Facade.C_UnitAuras.GetPlayerAuraBySpellID(fs.SPENDER_A).spellId)
         local seen = 0
         Facade.AuraUtil.ForEachAura("player", "HELPFUL", nil, function(aura)
             seen = seen + aura.spellId
         end, true)
-        assert.are.equal(fs.SHOUT, seen)
+        assert.are.equal(fs.SPENDER_A, seen)
         local found = select(
             10,
             Facade.AuraUtil.FindAura(function(_, _, _, ...)
-                return select(10, ...) == fs.SHOUT
+                return select(10, ...) == fs.SPENDER_A
             end, "player", "HELPFUL")
         )
-        assert.are.equal(fs.SHOUT, found)
+        assert.are.equal(fs.SPENDER_A, found)
     end)
 
     it("returns the same two GCD numbers for the GCD spell and a GCD-locked spell, surviving the round trip", function()
@@ -223,8 +223,8 @@ describe("ns.Facade", function()
             local g = Facade.C_Spell.GetSpellCooldown(29515)
             local gs, gd = g.startTime, g.duration
             assert.are.equal(gs, (gs + gd) - gd)
-            ctl.cooldown[fs.REND] = { isActive = true, isOnGCD = true }
-            local c = Facade.C_Spell.GetSpellCooldown(fs.REND)
+            ctl.cooldown[fs.SPENDER_C] = { isActive = true, isOnGCD = true }
+            local c = Facade.C_Spell.GetSpellCooldown(fs.SPENDER_C)
             assert.are.same({ gs, gd }, { c.startTime, c.duration })
             I.Sources.Direct(VS.Obs.Cooldown, t + 1.5, 0, 0, 1)
             I.Fold(t + 1.5, false)
@@ -234,27 +234,27 @@ describe("ns.Facade", function()
     it("answers a cooldown from the belief and the plain flag", function()
         I.CooldownModel(3, 40, 30, 10, VS.Obs.CastSuccess)
         ctl.now = 20
-        ctl.cooldown[fs.REND] = { isActive = true, isOnGCD = false }
-        local c = Facade.C_Spell.GetSpellCooldown(fs.REND)
+        ctl.cooldown[fs.SPENDER_C] = { isActive = true, isOnGCD = false }
+        local c = Facade.C_Spell.GetSpellCooldown(fs.SPENDER_C)
         assert.are.same({ 10, 30, true }, { c.startTime, c.duration, c.isActive })
-        assert.is_nil(Facade.C_Spell.GetSpellCharges(fs.REND))
+        assert.is_nil(Facade.C_Spell.GetSpellCharges(fs.SPENDER_C))
     end)
 
     it("answers a believed-ready tracked cooldown in the client's ready shape", function()
         I.CooldownModel(3, 15, 30, 5, VS.Obs.CastSuccess) -- learned length 30, ready since 15
         ctl.now = 20
-        local c = Facade.C_Spell.GetSpellCooldown(fs.REND)
+        local c = Facade.C_Spell.GetSpellCooldown(fs.SPENDER_C)
         assert.are.same({ 0, 0, false }, { c.startTime, c.duration, c.isActive })
-        ctl.cooldown[fs.REND] = { isActive = true, isOnGCD = false }
-        c = Facade.C_Spell.GetSpellCooldown(fs.REND)
+        ctl.cooldown[fs.SPENDER_C] = { isActive = true, isOnGCD = false }
+        c = Facade.C_Spell.GetSpellCooldown(fs.SPENDER_C)
         assert.are.same({ 0, 0, true }, { c.startTime, c.duration, c.isActive })
     end)
 
     it("answers the ready shape when the plain flag says ready though the belief still runs", function()
         I.CooldownModel(3, 40, 30, 10, VS.Obs.CastSuccess)
         ctl.now = 39.6 -- the belief's expiry lags the client's by a poll
-        ctl.cooldown[fs.REND] = { isActive = false, isOnGCD = false }
-        local c = Facade.C_Spell.GetSpellCooldown(fs.REND)
+        ctl.cooldown[fs.SPENDER_C] = { isActive = false, isOnGCD = false }
+        local c = Facade.C_Spell.GetSpellCooldown(fs.SPENDER_C)
         assert.are.same({ 0, 0, false }, { c.startTime, c.duration, c.isActive })
     end)
 
@@ -308,12 +308,12 @@ describe("ns.Facade", function()
             return unit == "target" and 2.4 or nil
         end
         assert.are.equal(2.4, Facade.UnitAttackSpeed("target"))
-        ctl.cooldown[fs.REND] = { startTime = 5, duration = 10, isActive = true, isOnGCD = false }
-        assert.are.equal(ctl.cooldown[fs.REND], Facade.C_Spell.GetSpellCooldown(fs.REND)) -- plain times: the client's
+        ctl.cooldown[fs.SPENDER_C] = { startTime = 5, duration = 10, isActive = true, isOnGCD = false }
+        assert.are.equal(ctl.cooldown[fs.SPENDER_C], Facade.C_Spell.GetSpellCooldown(fs.SPENDER_C)) -- plain times: the client's
         answers["C_Spell.GetSpellCharges"] = function()
             return nil -- not a charge spell
         end
-        assert.is_nil(Facade.C_Spell.GetSpellCharges(fs.REND))
+        assert.is_nil(Facade.C_Spell.GetSpellCharges(fs.SPENDER_C))
         local secretTimes = { currentCharges = 1, cooldownStartTime = fake.SECRET, cooldownDuration = fake.SECRET }
         answers["C_Spell.GetSpellCharges"] = function()
             return secretTimes
@@ -322,13 +322,14 @@ describe("ns.Facade", function()
         VS.Charges = function() -- no fake ability has charges: a belief of two
             return { est = 2 }, { est = 0 }
         end
-        local ch = Facade.C_Spell.GetSpellCharges(fs.REND) -- secret times: Charges()
+        local ch = Facade.C_Spell.GetSpellCharges(fs.SPENDER_C) -- secret times: Charges()
         VS.Charges = charges
         assert.are_not.equal(secretTimes, ch)
         assert.are.equal(2, ch.currentCharges)
-        ctl.cooldown[fs.REND] = { startTime = fake.SECRET, duration = fake.SECRET, isActive = false, isOnGCD = false }
-        local cd = Facade.C_Spell.GetSpellCooldown(fs.REND) -- secret times: the cooldown policy
-        assert.are_not.equal(ctl.cooldown[fs.REND], cd)
+        ctl.cooldown[fs.SPENDER_C] =
+            { startTime = fake.SECRET, duration = fake.SECRET, isActive = false, isOnGCD = false }
+        local cd = Facade.C_Spell.GetSpellCooldown(fs.SPENDER_C) -- secret times: the cooldown policy
+        assert.are_not.equal(ctl.cooldown[fs.SPENDER_C], cd)
         assert.are.equal("number", type(cd.startTime))
         ctl.casting = { 1000, 2500 }
         assert.are.equal(1000, select(4, Facade.UnitCastingInfo("player"))) -- the player's plain cast: the client's
@@ -374,15 +375,15 @@ describe("ns.Facade", function()
             { Facade.C_SpecializationInfo.GetSpecializationInfo(1) }
         )
         assert.is_nil(Facade.C_SpecializationInfo.GetSpecializationInfo(2))
-        local talent = { 0, 12286, 3 }
+        local talent = { 0, 1011, 3 }
         local rank = VS.Talent
         VS.Talent = function(spell)
-            return spell == 12286 and 2 or 0
+            return spell == 1011 and 2 or 0
         end
         local _, name, _, selected, _, spell, _, _, _, known, _, r = Facade.GetTalentInfoByID(talent, 1)
         local _, _, _, untaken = Facade.GetTalentInfoByID({ 0, 99999, 1 }, 1)
         VS.Talent = rank
-        assert.are.same({ "", true, 12286, true, 2, false }, { name, selected, spell, known, r, untaken })
+        assert.are.same({ "", true, 1011, true, 2, false }, { name, selected, spell, known, r, untaken })
     end)
 
     it("aliases IsUsableSpell to C_Spell.IsSpellUsable", function()

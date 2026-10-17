@@ -16,7 +16,7 @@ describe("APL secret-token scan", function()
             "target health is secret",
             "reads 100 until a health-gated ability pins it, always on a spec without one",
         }, { scan("target.health.pct<20") })
-        assert.are.equal("target.health.pct", scan("!buff.rend.up&target.health.pct<=20"))
+        assert.are.equal("target.health.pct", scan("!buff.spender_c.up&target.health.pct<=20"))
         assert.are.equal("target.health_percent", scan("target.health_percent>80"))
         assert.are.equal("target.time_to_die", scan("target.time_to_die>12"))
         assert.are.equal("target.time_to_pct_", scan("target.time_to_pct_35<5"))
@@ -42,21 +42,21 @@ describe("APL secret-token scan", function()
     end)
 
     it("ignores everything else", function()
-        assert.is_nil(scan("buff.rend.up&rage>=30"))
+        assert.is_nil(scan("buff.spender_c.up&rage>=30"))
         assert.is_nil(scan("health.max>0"))
         assert.is_nil(scan("target.health.max>0"))
         assert.is_nil(scan("pet.health.pct<50"))
         assert.is_nil(scan("variable.time_to_die_soon"))
         assert.is_nil(scan("time_to_dies>1"))
         assert.is_nil(scan("rage.time_to_42"))
-        assert.is_nil(scan("debuff.rend.remains"))
+        assert.is_nil(scan("debuff.spender_c.remains"))
         assert.is_nil(scan(""))
         assert.is_nil(scan(nil))
         assert.is_nil(scan(42))
     end)
 
     it("allocates nothing on a hit or a miss", function()
-        local hit, miss = "buff.rend.up&target.health.pct<20", "buff.rend.up&rage>=30&pet.health.pct<50"
+        local hit, miss = "buff.spender_c.up&target.health.pct<20", "buff.spender_c.up&rage>=30&pet.health.pct<50"
         assert.are.equal(
             0,
             alloc.bytes(function()

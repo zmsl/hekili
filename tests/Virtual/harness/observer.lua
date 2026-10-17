@@ -25,8 +25,8 @@ M.DEFAULTS = {
 }
 
 -- Our spells as the fake spec's (its costs: the usability answers).
-M.SPELLS = { STRIKE = fs.STRIKE, DOT = fs.REND, CAST = fs.SHOUT, OTHER = 1 }
-M.COSTS = { { fs.SHOUT, 10 }, { fs.STRIKE, 15 }, { fs.REND, 10 } }
+M.SPELLS = { STRIKE = fs.SPENDER_B, DOT = fs.SPENDER_C, CAST = fs.SPENDER_A, OTHER = 1 }
+M.COSTS = { { fs.SPENDER_A, 10 }, { fs.SPENDER_B, 15 }, { fs.SPENDER_C, 10 } }
 
 --- Our landing lag (the `land` of behaviours.melee) under knobs `k`: the time from a swing of `hand` at `t` to its
 --- outcome.

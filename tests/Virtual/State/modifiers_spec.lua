@@ -1,11 +1,11 @@
 -- tests/Virtual/State/modifiers_spec.lua (event-facade spec §12b): the resource definition's `maxMods` and `costMods`,
--- as a race pack declares them (Engine/Races.lua's ns.raceMods: Expansive Mind, Eureka!), through the adapter.
+-- as a race pack declares them (Engine/Races.lua's ns.raceMods: a +5% maximum, a charged discount), through the adapter.
 local load = require("Virtual.State.helpers.load")
 local fake = require("Virtual.State.helpers.fake_api")
 local fs = require("Virtual.State.helpers.fake_spec")
 local alloc = require("Virtual.State.helpers.alloc")
 
-local EUREKA = 1259813
+local MOD_AURA = 1031
 
 describe("resource modifiers", function()
     local ns, VS, I, api, ctl, h, saved
@@ -40,11 +40,11 @@ describe("resource modifiers", function()
         ns.ResourceIsPoints = function(k) -- Constants.lua's, for the one point resource here
             return k == "combo_points"
         end
-        h.Class.auras.eureka = { key = "eureka", id = EUREKA, duration = 15 }
-        -- the Gnome race pack's declarations (Forever/Races/Gnome.lua through Engine/Races.lua), as Adapter.lua reads them
+        h.Class.auras.mod_aura_a = { key = "mod_aura_a", id = MOD_AURA, duration = 15 }
+        -- a race pack's declarations (Engine/Races.lua), as Adapter.lua reads them
         ns.raceMods = {
             maxMods = { { pct = 0.05 } },
-            costMods = { { aura = "eureka", pct = -0.10, charges = 3, spells = { fs.STRIKE, 999999 } } },
+            costMods = { { aura = "mod_aura_a", pct = -0.10, charges = 3, spells = { fs.SPENDER_B, 999999 } } },
         }
         function h:ForceUpdate() end
         load.adapter(ns, h)
@@ -61,7 +61,7 @@ describe("resource modifiers", function()
         fs.clock = nil
     end)
 
-    it("raises the maximum by Expansive Mind through the modifier, until a plain read", function()
+    it("raises the maximum by a +5% maximum modifier through the modifier, until a plain read", function()
         assert.are.equal(105, I.res.max[1]) -- 100 declared x 1.05
         assert.are.equal(105, I.res.hi0[1]) -- one evaluator: the interval is seeded at the raised maximum
         I.Sources.Direct(VS.Obs.CombatEnd, 2)
@@ -78,34 +78,34 @@ describe("resource modifiers", function()
     end)
 
     it(
-        "takes 10% off Heroic Strike while Eureka! is up and spends a charge a cast; Rend, out of scope, neither",
+        "takes 10% off spender_b while mod_aura_a is up and spends a charge a cast; spender_c, out of scope, neither",
         function()
-            local strike, rend = I.ab.bySpell[fs.STRIKE], I.ab.bySpell[fs.REND]
-            assert.are.equal(15, I.CostOf(strike))
-            local j = I.auras.bySpell[EUREKA]
-            I.AuraModel(1, j, 5, 20, 3, 5, VS.Obs.CastSuccess, false) -- Eureka! up with its three charges
+            local spender_b, spender_c = I.ab.bySpell[fs.SPENDER_B], I.ab.bySpell[fs.SPENDER_C]
+            assert.are.equal(15, I.CostOf(spender_b))
+            local j = I.auras.bySpell[MOD_AURA]
+            I.AuraModel(1, j, 5, 20, 3, 5, VS.Obs.CastSuccess, false) -- mod_aura_a up with its three charges
             I.clock = 5
-            assert.are.same({ 13.5, 10 }, { I.CostOf(strike), I.CostOf(rend) })
-            cast(fs.REND, 5.5)
-            local _, stacks = VS.Aura("player", EUREKA, 5.6)
-            assert.are.equal(3, stacks) -- Rend took no charge
+            assert.are.same({ 13.5, 10 }, { I.CostOf(spender_b), I.CostOf(spender_c) })
+            cast(fs.SPENDER_C, 5.5)
+            local _, stacks = VS.Aura("player", MOD_AURA, 5.6)
+            assert.are.equal(3, stacks) -- spender_c took no charge
             for k = 1, 3 do
-                cast(fs.STRIKE, 5.5 + k)
-                _, stacks = VS.Aura("player", EUREKA, 5.5 + k + 0.05)
+                cast(fs.SPENDER_B, 5.5 + k)
+                _, stacks = VS.Aura("player", MOD_AURA, 5.5 + k + 0.05)
                 assert.are.equal(3 - k > 0 and 3 - k or nil, stacks)
             end
-            assert.is_nil(VS.Aura("player", EUREKA, 8.6))
-            assert.are.equal(15, I.CostOf(strike))
+            assert.is_nil(VS.Aura("player", MOD_AURA, 8.6))
+            assert.are.equal(15, I.CostOf(spender_b))
         end
     )
 
     it("lets an observed aura read win over the charges it modelled", function()
-        local j = I.auras.bySpell[EUREKA]
+        local j = I.auras.bySpell[MOD_AURA]
         I.AuraModel(1, j, 5, 20, 3, 5, VS.Obs.CastSuccess, false)
-        cast(fs.STRIKE, 6) -- 2 left, modelled
+        cast(fs.SPENDER_B, 6) -- 2 left, modelled
         I.Sources.Direct(VS.Obs.Read, 6.5, j, 13.5, I.ReadOf.Aura + 3 * I.AURA_STACK) -- the client says 3
         I.Fold(6.6)
-        local _, stacks = VS.Aura("player", EUREKA, 6.7)
+        local _, stacks = VS.Aura("player", MOD_AURA, 6.7)
         assert.are.equal(3, stacks)
     end)
 
@@ -117,38 +117,38 @@ describe("resource modifiers", function()
     end)
 
     it("matches a listed `copy` rank, and every ability of the resource when `spells` is absent", function()
-        local strike, rend = I.ab.bySpell[fs.STRIKE], I.ab.bySpell[fs.REND]
-        ns.raceMods.costMods = { { aura = "eureka", pct = -0.10, spells = { fs.REND_R2 } } }
+        local spender_b, spender_c = I.ab.bySpell[fs.SPENDER_B], I.ab.bySpell[fs.SPENDER_C]
+        ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -0.10, spells = { fs.SPENDER_C_R2 } } }
         VS.SpecChanged()
-        I.AuraModel(1, I.auras.bySpell[EUREKA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
+        I.AuraModel(1, I.auras.bySpell[MOD_AURA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
         I.clock = 5
-        assert.are.same({ 15, 9 }, { I.CostOf(strike), I.CostOf(rend) }) -- Rend by its rank 2 ID
-        ns.raceMods.costMods = { { aura = "eureka", pct = -0.10 } }
+        assert.are.same({ 15, 9 }, { I.CostOf(spender_b), I.CostOf(spender_c) }) -- spender_c by its rank 2 ID
+        ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -0.10 } }
         VS.SpecChanged()
-        I.AuraModel(1, I.auras.bySpell[EUREKA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
-        assert.are.same({ 13.5, 9 }, { I.CostOf(strike), I.CostOf(rend) })
+        I.AuraModel(1, I.auras.bySpell[MOD_AURA], 5, 20, 3, 5, VS.Obs.CastSuccess, false)
+        assert.are.same({ 13.5, 9 }, { I.CostOf(spender_b), I.CostOf(spender_c) })
     end)
 
-    it("spends a charge on a cast the modifier made free (pct = -1, the Clearcasting shape)", function()
-        local strike = I.ab.bySpell[fs.STRIKE]
-        ns.raceMods.costMods = { { aura = "eureka", pct = -1, charges = 1, spells = { fs.STRIKE } } }
+    it("spends a charge on a cast the modifier made free (pct = -1, a proc's shape)", function()
+        local spender_b = I.ab.bySpell[fs.SPENDER_B]
+        ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -1, charges = 1, spells = { fs.SPENDER_B } } }
         VS.SpecChanged()
-        I.AuraModel(1, I.auras.bySpell[EUREKA], 5, 20, 1, 5, VS.Obs.CastSuccess, false)
+        I.AuraModel(1, I.auras.bySpell[MOD_AURA], 5, 20, 1, 5, VS.Obs.CastSuccess, false)
         I.clock = 5
-        assert.are.equal(0, I.CostOf(strike))
-        cast(fs.STRIKE, 6)
-        assert.is_nil(VS.Aura("player", EUREKA, 6.1)) -- the free cast took the charge
-        assert.are.equal(15, I.CostOf(strike))
+        assert.are.equal(0, I.CostOf(spender_b))
+        cast(fs.SPENDER_B, 6)
+        assert.is_nil(VS.Aura("player", MOD_AURA, 6.1)) -- the free cast took the charge
+        assert.are.equal(15, I.CostOf(spender_b))
     end)
 
     it("allocates nothing over 1000 casts with both modifiers declared", function()
-        local j = I.auras.bySpell[EUREKA]
+        local j = I.auras.bySpell[MOD_AURA]
         local t = 10
         local bytes = alloc.bytes(function()
             t = t + 1
             I.AuraModel(1, j, t, t + 15, 3, t, VS.Obs.CastSuccess, false)
-            cast(fs.STRIKE, t + 0.5)
-            cast(fs.REND, t + 0.7)
+            cast(fs.SPENDER_B, t + 0.5)
+            cast(fs.SPENDER_C, t + 0.7)
         end, 1000)
         assert.are.equal(0, bytes)
     end)
