@@ -193,6 +193,7 @@ function M.press(key, R, o)
         m.extra(p, R, o or {})
     end
     local need, avoid = M.FORM[a.buff], M.FORM[a.nobuff]
+    assert((a.buff == nil or need) and (a.nobuff == nil or avoid), "an unmapped form requirement: " .. key)
     p.requires = function(_, us)
         if need and us.form ~= need then
             return false, a.buff

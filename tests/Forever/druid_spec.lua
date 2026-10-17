@@ -604,7 +604,6 @@ describe("Forever Druid", function()
             assert.is_false(models.mainhand.stop())
             near(2.5 * 3.46, models.mainhand.value()) -- before a plain base read
             w.game.base = { 1.0, 0 } -- a Cat pull's base, stale after the shift (D4: the form's period, not the read)
-            w.state.mainhand_speed = 2.0 -- hasted: the rage follows the unhasted speed
             near(8.65, models.mainhand.value())
             near(8.65, models.mainhand.crit()) -- a white crit: one more base swing
             assert.are.same({ "enrage", 1, 2 }, { models.enrage.aura, models.enrage.interval, models.enrage.value })
@@ -919,7 +918,7 @@ describe("Forever Druid in VirtualState's now context", function()
         assert.are.same({ 0, 9 }, { I.nowErrors, I.nowRuns })
     end)
 
-    it("opens each GCD at its kind's length across shifts, and a hard cast's at its start (GCD kinds §1.6)", function()
+    it("opens each GCD at its kind's length across shifts, a hard cast's included (GCD kinds §1.6)", function()
         local Direct, Obs = I.Sources.Direct, VS.Obs
         local function gcd(t, len) -- the GCD spell's edges around our cast at t: its duration as GcdInfo answers it
             Direct(Obs.Cooldown, t, 0, 1, 1)

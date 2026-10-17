@@ -3,7 +3,8 @@
 -- what the addon concluded: each `Swing` c = 1 / c = 3 staged (through an S.Stage wrapper, tagged with the stream event
 -- being fired), the combat-log rows (a COMBAT_LOG_EVENT_UNFILTERED sink), the believed rage at each 10 s window, each
 -- tracked power type's believed value at every tick, each GCD as GcdInfo first answered it, and per stream index the
--- crits staged and the white wounds Rows.lua scored on timing alone (a stale form cache). The run loop allocates
+-- crits staged and the white wounds Rows.lua would score on timing alone (its stale-form test mirrored here, not its
+-- path captured: a wound it skipped for another reason still counts). The run loop allocates
 -- nothing: the stream and every capture array are built before it.
 local load = require("Virtual.State.helpers.load")
 local fake = require("Virtual.State.helpers.fake_api")
@@ -285,6 +286,7 @@ local function tick(c, t)
             r.n, r.t[n], r.est[n], r.lo[n] = n, t, b.est, b.lo
         end
     end
+    -- the read engages the belief's claim guard (I.gcdRead), as Hekili's read every frame does in game
     local gs, gd = c.VS.GcdInfo(t)
     if gs > 0 and gs ~= c.gcdS[c.gcdN] and c.gcdN < CAP then
         local n = c.gcdN + 1

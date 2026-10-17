@@ -178,7 +178,7 @@ describe("the engine's threat table (tank design §2)", function()
 end)
 
 -- Hekili's own GCD in the simulation (GCD kinds design §1.4, core edit E10), from the whole addon headless
--- (tests/Virtual/harness/headless.lua) as a level 60 Druid in Cat Form, its power energy.
+-- (tests/Virtual/harness/headless.lua) as a level 60 Druid whose power is energy (all the stock clause reads; no form).
 describe("the simulation's GCD by kind in energy (core edit E10)", function()
     local headless = require("Virtual.harness.headless")
 

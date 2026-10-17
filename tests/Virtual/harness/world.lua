@@ -59,7 +59,7 @@ function M.new(seed)
         if ev.kind == "prepull" and me then -- our form at the start (the client's first form answer)
             ev.form = me.form
         end
-        if ev.kind == "pull" or ev.kind == "stop" then
+        if ev.kind == "pull" or ev.kind == "stop" then -- the world's combat runs pull to stop (a kill does not end it)
             W.combat = ev.kind == "pull"
         end
         -- out of combat: the weapon damage UnitDamage reads now, the attack speeds and the regen rates
@@ -304,6 +304,9 @@ function M.new(seed)
     function W.startDecay(e, d)
         local q = d.rate * d.interval
         local function beat()
+            if W.combat then -- out of combat only: the next stop starts it again
+                return
+            end
             local a = d.pausedBy and e.auras[d.pausedBy]
             if a then
                 W.at(a.expires, beat)
