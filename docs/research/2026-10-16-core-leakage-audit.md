@@ -39,6 +39,7 @@ Counts: 4 structural, 6 cosmetic (one reverse-direction).
 Inherited from stock Hekili (not counted, pre-fork by blame): `State.lua:3180-3212` Rogue 1 s GCD table and
 Druid-in-energy branch, Adrenaline Rush, Voidform; `Events.lua:2334-2406` Druid/Rogue blocks; Death Knight branches
 in `Core.lua` and `State.lua:1192`.
+Now frozen by `tests/boundary_baseline.lua` (per-file token counts; boundary_spec's Engine/Sim check).
 
 ## Already correct (checked)
 

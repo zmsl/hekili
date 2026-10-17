@@ -33,6 +33,10 @@
 `make check` before every commit. StyLua formats only our files (`.styluaignore` lists upstream Hekili, which keeps
 its own style). If `fmt-check` still fails after `make fmt`, run `make fmt` again: StyLua 2.5.2 takes two passes on a
 call whose argument is a long single-line table.
+`tests/boundary_spec.lua` scans `Virtual/` and `Engine/Schema/` strictly, and holds each `Engine/Sim/` file to its
+per-token counts in `tests/boundary_baseline.lua` (a ceiling per file, not a line lock). Regenerate the baseline with
+`.lua/bin/lua tools/boundary_baseline.lua` only when removing an inherited leak, or when new content registers a key a
+Sim identifier already uses (`git blame` the Sim line and say so in the commit); never to admit a leak.
 
 ## In game
 
