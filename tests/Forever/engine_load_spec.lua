@@ -174,3 +174,29 @@ describe("the engine's threat table (tank design §2)", function()
         assert.is_true(threat.lost)
     end)
 end)
+
+-- Hekili's own GCD in the simulation (GCD kinds design §1.4, core edit E10), from the whole addon headless
+-- (tests/Virtual/harness/headless.lua) as a level 60 Druid in Cat Form, its power energy.
+describe("the simulation's GCD by kind in energy (core edit E10)", function()
+    local headless = require("Virtual.harness.headless")
+
+    it("prices a spell-kind press at 1.5 x haste and a totem-kind one at 1.0; gcd.max stays the typical 1.0", function()
+        local H = headless.new({
+            character = {
+                class = "DRUID",
+                classID = 11,
+                specID = 1499,
+                level = 60,
+                known = { 768, 5487, 5221 },
+                power = { type = 3, token = "ENERGY", max = 100 },
+            },
+        })
+        assert.are.same({}, H.loadErrors)
+        local S = H.Hekili.State
+        S.this_action = "bear_form"
+        assert.are.equal(1.5 * S.haste, S.gcd.execute)
+        S.this_action = "shred"
+        assert.are.equal(1, S.gcd.execute)
+        assert.are.equal(1, S.gcd.max) -- no ability context: the clause E10 keeps
+    end)
+end)

@@ -262,6 +262,12 @@ Every stub site in the retained files that throws or yields a wrong value. Sites
 ## Edits no facade absorbs (feasibility doc C.5)
 
 - GCD spell 61304 -> 29515: `Classes.lua` 2469 (`id = 61304`), `UI.lua` 1493 and 1694, `Events.lua` 1675.
+- The GCD by kind (core edit E10, `State.lua` `mt_gcd`, `execute`): stock gives every spell-kind press made with
+  energy as the power type 1.0 s; E10 drops that clause from `execute` only, so such a press (a form or a spell cast
+  from an energy form) keeps 1.5 s x haste as the DB2 says (checkpoint G1), and a 1 s ability declares
+  `gcd = "totem"` as before. `max`/`duration` (no ability context: `gcd.max` in cycle and time-to expressions) keep
+  the stock clause, the typical 1 s GCD in energy. VirtualState's belief prices each GCD by the same kinds
+  (`Families/Casts.lua`, `I.GcdLen`; GCD kinds design §1.2). Revert: restore the one `if` line.
 - The enemy-scan health comparison: `Targets.lua` 434 and 511.
 - TTD: `Targets.lua` 1164-1605 needs another source of health deltas.
 - Spec identity (pseudo-spec 1491): `Classes.lua` 3077-3362 `SpecializationChanged`. `NewSpecialization` now takes

@@ -3194,7 +3194,8 @@ local mt_gcd = {
             if gcd == "off" then return 0 end
             if gcd == "totem" then return 1 end
 
-            if one_sec_gcd[ class.file ] or class.file == "DRUID" and UnitPowerType( "player" ) == Enum.PowerType.Energy then
+            -- Forever E10: a spell-kind press keeps 1.5 s x haste in every power type; a 1 s ability declares gcd = "totem" (checkpoint G1).
+            if one_sec_gcd[ class.file ] then
                 return state.buff.adrenaline_rush.up and max( 0.75, state.haste ) or 1
             end
 
