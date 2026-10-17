@@ -167,3 +167,51 @@ describe("the headless Arms loop", function()
         assert.are.same({}, L.us.loadErrors)
     end)
 end)
+
+-- The gates (headless loop design §5.2; as built: the plan's Deviations 7-8, 14-15). Measured on the plan's replay: 20
+-- fights, agreement 0.966, react median 0 / p90 0 / never 0.060, cost refusals 16.5 per 100 attempts (the oracle's own
+-- 15.8), DPS A/B 0.993, GCD idle 0.742 / 0.739, Sunder Armor up 0.95 / 0.95, flicker 0.69/min, CPU mean 2.77 ms.
+-- DPS A/B per fight spans 0.84-1.28 on these seeds (the runs' rolls part at the first differing press; sd about 0.11),
+-- so 10 fights (standard error about 0.035) gate it at 0.95: measured 0.967 there; 20 fights keep 0.97.
+local function gate(n, dps)
+    local m = loop.tally(loop.new(ww), n)
+    local r, line = loop.summary(m), loop.line(m)
+    print("\nArms solo: " .. line)
+    assert.is_true(r.agreement >= 0.85, line)
+    assert.is_true(r.reactMedian <= 1 and r.reactP90 <= 3 and r.never <= 0.08, line)
+    assert.is_true((r.per100.gcd or 0) == 0 and (r.per100.cooldown or 0) == 0, line)
+    assert.is_true((r.per100.cost or 0) <= (r.per100B.cost or 0) + 3, line)
+    assert.is_true(r.dps >= dps, line)
+    assert.is_true(r.fullA <= r.fullB + 0.03 and r.idleA <= r.idleB + 0.03, line)
+    for key, up in pairs(r.upB) do
+        assert.is_true((r.upA[key] or 0) >= up - 0.03, key .. ": " .. line)
+    end
+    assert.is_true(r.flicker <= 2, line)
+    assert.are.same({ 0, 0, 0 }, { m.errors, m.raises, m.selfCheck })
+    assert.are.same({}, m.misses)
+    assert.are.same({}, m.secrets) -- no facade passthrough answered a secret (the traced first fight)
+    assert.is_true(r.cpuMean <= 10, line) -- D5: about 4x the measured mean; p99 reported
+end
+
+-- `make check` runs 10 fights (#slow); `make test-loop` the full 20 (#loop), outside `make check` for its time.
+describe("the headless Arms gates #slow", function()
+    it("Arms solo, level 60, one mob, 10 fights of up to 3 minutes: the first icon against the oracle's", function()
+        gate(10, 0.95)
+    end)
+end)
+
+describe("the headless Arms gates, 20 fights #loop", function()
+    it("Arms solo, level 60, one mob, 20 fights of up to 3 minutes: the first icon against the oracle's", function()
+        gate(20, 0.97)
+    end)
+end)
+
+-- The party report (§5.2): reported, engine health gated; `make test-party`, not `make check` (D2).
+describe("the headless Arms party report #party", function()
+    it("Arms in a party of 5, a melee and a caster on our target, 10 fights: reported", function()
+        local m = loop.tally(loop.new(ww), 10, { others = { "melee", "caster" } })
+        print("\nArms party: " .. loop.line(m))
+        assert.are.same({ 0, 0, 0 }, { m.errors, m.raises, m.selfCheck })
+        assert.are.same({}, m.misses)
+    end)
+end)

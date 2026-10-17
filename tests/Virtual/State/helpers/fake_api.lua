@@ -237,6 +237,13 @@ function M.new()
             return list and list[i]
         end,
     }
+    -- absent on Forever (the facade's virtual rows); a secret-free client's, for the headless loop's oracle (o.raw)
+    function api.C_UnitAuras.GetBuffDataByIndex(unit, i)
+        return api.C_UnitAuras.GetAuraDataByIndex(unit, i, "HELPFUL")
+    end
+    function api.C_UnitAuras.GetDebuffDataByIndex(unit, i)
+        return api.C_UnitAuras.GetAuraDataByIndex(unit, i, "HARMFUL")
+    end
     api.C_ClassTalents = {
         GetActiveConfigID = function()
             return ctl.traits and ctl.traits.config
