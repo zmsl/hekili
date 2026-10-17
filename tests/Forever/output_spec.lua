@@ -369,4 +369,42 @@ describe("Engine.Output (headless Arms)", function()
             assert.are.same({}, headless.unexpected(H, "run"))
         end
     )
+
+    it(
+        "WeakAuras: slots past count are blank tables, payload reads blank at 0, and a publish allocates nothing",
+        function()
+            local scans = 0
+            H.env.WeakAuras = {
+                ScanEvents = function()
+                    scans = scans + 1
+                end,
+            }
+            H.Fire("PLAYER_ENTERING_WORLD", false, false)
+            local Out = H.ns.Output
+            local s = Out.Begin("Primary")
+            s[1].actionName, s[1].actionID, s[2].actionName, s[2].actionID = "a", 1, "b", 2
+            Out.Publish("Primary", 2)
+            local p = out.payload
+            assert.are.equal("a", p.actionName)
+            assert.are.equal("b", p[2].actionName)
+            Out.Begin("Primary")
+            Out.Publish("Primary", 0)
+            assert.is_nil(p.actionName)
+            assert.is_table(p[2])
+            assert.is_nil(p[2].actionID)
+            assert.are.equal(out.payload, p)
+
+            local fill = { "a", "b" }
+            local bytes = alloc.bytes(function(r)
+                local sc = Out.Begin("Primary")
+                for i = 1, 2 do
+                    sc[i].actionName, sc[i].actionID = fill[i], r
+                end
+                Out.Publish("Primary", 2)
+            end, 1000)
+            assert.are.equal(0, bytes)
+            assert.is_true(scans >= 1202)
+            assert.are.same({}, H.errors)
+        end
+    )
 end)

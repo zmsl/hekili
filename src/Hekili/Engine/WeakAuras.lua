@@ -34,10 +34,14 @@ local function OnPublish(name, version, out)
             end
             payload[i] = p
         else
-            payload[i] = nil
+            -- blank past count (stock copied numRecs records, the extras blank); at 0, payload's __index reads blank
+            local p = tables[i]
+            wipe(p)
+            payload[i] = p
         end
     end
 
+    -- Also fires on Core's rule-off Publish(name, 0), unlike stock (which left the aura on a stale recommendation).
     -- nil holds a retired argument slot
     WeakAuras.ScanEvents("HEKILI_RECOMMENDATION_UPDATE", name, recs[1].actionID, recs[1].indicator, nil, payload)
 end
@@ -45,7 +49,7 @@ end
 ns.RegisterEvent("PLAYER_ENTERING_WORLD", function()
     if WeakAuras and WeakAuras.ScanEvents then
         for i = 1, #NAMES do
-            Engine.Subscribe(NAMES[i], OnPublish, true)
+            Engine.Subscribe(NAMES[i], OnPublish, true) -- false (slots full) is left silent: WeakAuras just misses it
         end
     end
 end)
