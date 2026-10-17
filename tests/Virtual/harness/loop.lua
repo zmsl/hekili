@@ -16,8 +16,8 @@ M.REACT = 0.05 -- a first icon whose wait is at most this is shown as ready: pre
 M.PULL = 3 -- the world starts this long before the pull, the target selected (precombat presses)
 M.GAP = 30 -- out of combat between two fights on one boot (consecutive pulls)
 -- The oracle's facade rows answered by the client (§4's override): the target's health, and the debuff row Hekili's
--- aura scan reads (VirtualState counts a modelled stack on top of a plain read that arrives before the cast's drain:
--- the self-check measured a stacking debuff at 2 believed stacks with 1 up). The buff row stays VirtualState's: our
+-- aura scan reads (raw since VirtualState counted a modelled stack on top of a plain read that arrived before the
+-- cast's drain, fixed in Auras.lua's I.AuraModel and pinned in loop_warrior_spec). The buff row stays VirtualState's: our
 -- forms become buffs in the belief, and the client's list does not hold them.
 M.RAW = { "UnitHealth", "UnitHealthMax", "C_UnitAuras.GetDebuffDataByIndex" }
 

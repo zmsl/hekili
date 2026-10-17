@@ -409,6 +409,57 @@ describe("now handlers", function()
         assert.are.equal(5, stacks)
     end)
 
+    describe("a stacking aura's cast beside a plain read of it", function()
+        local j
+        local function stackCast()
+            h.Class.auras.sunder_test = { key = "sunder_test", id = 7386, duration = 30, max_stack = 5 }
+            register("stack_test", {
+                id = 7387,
+                now = function()
+                    addStack("sunder_test", 30, 1)
+                end,
+            })
+            start()
+            j = I.auras.bySpell[7386]
+        end
+        local function read(t, stacks) -- a plain read of the player's aura, logged at once (the cast is staged)
+            I.Sources.Direct(VS.Obs.Read, t, j, 30, I.ReadOf.Aura + stacks * I.AURA_STACK)
+        end
+        local function stacks(t)
+            return select(2, VS.Aura("player", 7386, t))
+        end
+
+        it("lets a read in the cast's frame win: the cast's stack is not added on top of it", function()
+            stackCast()
+            read(5, 1)
+            cast(7387, 5)
+            assert.are.same({ 1, "observed" }, { stacks(5.1), VS.Aura("player", 7386, 5.1).basis })
+            read(6, 2)
+            cast(7387, 6)
+            assert.are.equal(2, stacks(6.1))
+            assert.are.equal(2, I.auraReadsWon)
+            assert.is_truthy(VS.Snapshot():find("aura reads won=2", 1, true))
+        end)
+
+        it("adds a stack per cast when no read is in the frame", function()
+            stackCast()
+            cast(7387, 5)
+            assert.are.equal(1, stacks(5.1))
+            read(5.5, 1) -- an older frame's read does not stop the next cast
+            cast(7387, 6)
+            assert.are.same({ 2, "modelled" }, { stacks(6.1), VS.Aura("player", 7386, 6.1).basis })
+            assert.are.equal(0, I.auraReadsWon)
+        end)
+
+        it("lets a read after the modelled change win, as before", function()
+            stackCast()
+            cast(7387, 5)
+            read(5.5, 3)
+            I.Fold(5.6)
+            assert.are.same({ 3, "observed" }, { stacks(5.6), VS.Aura("player", 7386, 5.6).basis })
+        end)
+    end)
+
     it("reaches no game API, no Hekili state and no _G from a `now`", function()
         local seen = {}
         -- compiled apart, so `state` is the global name, not this file's upvalue

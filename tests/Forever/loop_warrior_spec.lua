@@ -156,6 +156,36 @@ describe("the headless Arms loop", function()
         assert.are.same({ "bloodrage", "battle_shout", "berserker_stance" }, { first[2], first[3], first[4] })
     end)
 
+    it(
+        "believes Sunder Armor's true stacks on the oracle across two forced presses (a read in the cast's frame)",
+        function()
+            local H = L.oracle
+            local id = H.Hekili.Class.auras.sunder_armor.id
+            local VS = H.ns.VirtualState
+            local wrong, presses = {}, 0
+            loop.run(L, 1, {
+                duration = 12,
+                react = -1, -- watch: only the forced presses below
+                on = function(run, steps, t)
+                    local us = run.us
+                    local a = us.target and us.target.auras[id]
+                    local truth = a and a.expires > t + 1e-6 and a.stacks or nil
+                    local belief = select(2, VS.Aura("target", id, steps[1].base + t))
+                    if truth ~= belief and presses > 0 then
+                        wrong[#wrong + 1] = ("t=%.1f truth %s belief %s"):format(t, tostring(truth), tostring(belief))
+                    end
+                    if math.abs(t - 4) < 1e-6 or math.abs(t - 6) < 1e-6 then
+                        us.power = math.max(us.power, 30)
+                        assert.is_true(run.W.press(us, "sunder_armor", ww.resolve("sunder_armor", H)))
+                        presses = presses + 1
+                    end
+                end,
+            }, { { H = H, plain = true } })
+            assert.are.equal(2, presses)
+            assert.are.same({}, wrong)
+        end
+    )
+
     it("smoke: one 30 s fight, ours driving, the oracle shadowing and then driving (fast)", function()
         local a, b = loop.fight(L, 1, { duration = 30 })
         for _, r in ipairs({ a, b }) do

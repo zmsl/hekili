@@ -166,8 +166,17 @@ I.On(Obs.Read, function(o, t)
     end
 end)
 
---- Our own cast changed aura j on unit u (spec §5.3): a `modelled` expiry with its stacks and applied time.
+I.auraReadsWon = 0
+
+--- Our own cast changed aura j on unit u (spec §5.3): a `modelled` expiry with its stacks and applied time. A plain
+--- read that saw the aura up in the cast's frame or later already includes the cast (its stack, say): the read wins
+--- and the modelled change is dropped (counted), so the cast is not applied twice.
 function I.AuraModel(u, j, applied, expires, stacks, t, event, harmful)
+    local seen = U.rec[u][j].last.observed
+    if seen.event == Obs.Read and seen.v > 0 and seen.t >= t - I.SAME_FRAME then
+        I.auraReadsWon = I.auraReadsWon + 1
+        return
+    end
     set(u, j, expires, applied, stacks > 0 and stacks or 1, t, "modelled", event, harmful)
 end
 
@@ -322,6 +331,7 @@ function VS.Count.WithAura(spellID, now)
 end
 
 I.OnSnapshot(function(out, now)
+    out[#out + 1] = string.format("aura reads won=%d", I.auraReadsWon)
     for u = 1, U.n do
         out[#out + 1] = string.format("auras %s gen=%d up=%d", U.token[u], U.gen[u], U.ordN[u])
         for j = 1, U.nAura do

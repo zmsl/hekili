@@ -85,6 +85,7 @@ I.FALSE_START = 1
 I.READ_HOLD = 2
 I.SWING_DECAY = 10
 I.SWING_TOL = 0.15
+I.SAME_FRAME = 0.05 -- a plain aura read this close after our cast already shows its effect (Auras.lua)
 I.RING = 8 -- debug ring slots per origin (spec §2)
 
 I.ORIGINS = { "observed", "pinned", "modelled", "default" }
