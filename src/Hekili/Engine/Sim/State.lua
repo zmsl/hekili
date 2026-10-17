@@ -6949,7 +6949,6 @@ do
             end
         end
 
-        local settings = Hekili.Engine.settings
         local z -- scratch variable
 
         if self.rangefilter and UnitExists( "target" ) then

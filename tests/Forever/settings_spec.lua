@@ -81,7 +81,7 @@ describe("Engine.Configure (headless Arms boot)", function()
         H.ctl.inRange.target, H.ctl.level.target = true, 60
         H.Fire("PLAYER_TARGET_CHANGED")
         assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
-        assert.is_table(H.Hekili.Engine.Output.Primary.recs[1].actionName and H.Hekili.Engine.Output.Primary.recs[1])
+        assert.is_string(H.Hekili.Engine.Output.Primary.recs[1].actionName)
         assert.are.same({}, H.errors)
         assert.are.same({}, headless.unexpected(H, "run"))
     end)

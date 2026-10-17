@@ -17,7 +17,6 @@ end
 -- Called from OnInitialize (1x): the saved variables, LibDualSpec, the profile callbacks and the options table.
 function Hekili:InitializeProfile()
     self.DB = LibStub( "AceDB-3.0" ):New( "HekiliDB", self:GetDefaults(), true )
-    Engine.Configure( self.DB.profile )
 
     self.Options = self:GetOptions()
     self.Options.args.profiles = LibStub( "AceDBOptions-3.0" ):GetOptionsTable( self.DB )
@@ -26,6 +25,9 @@ function Hekili:InitializeProfile()
     local LDS = LibStub( "LibDualSpec-1.0" )
     LDS:EnhanceDatabase( self.DB, "Hekili" )
     LDS:EnhanceOptions( self.Options.args.profiles, self.DB )
+
+    -- After EnhanceDatabase: it may switch to the spec's profile before the callbacks below exist.
+    Engine.Configure( self.DB.profile )
 
     self.DB.RegisterCallback( self, "OnProfileChanged", "ProfileChanged" )
     self.DB.RegisterCallback( self, "OnProfileCopied", "ProfileChanged" )
