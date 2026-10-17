@@ -33,12 +33,12 @@ local function display()
         passive = slots(),
         wanted = 0,
         publishing = false,
-        payload = nil, -- the WeakAuras event copy, set by Engine/WeakAuras.lua only when WeakAuras is loaded
+        payload = nil, -- the WeakAuras event copy, set by Integrations/WeakAuras.lua only when WeakAuras is loaded
     }
 end
 
 --- Per display name the published output; `status` is the engine's own record (combat, targets, spec, pack).
-local Output = {
+local Displays = {
     Interrupts = display(),
     Defensives = display(),
     Cooldowns = display(),
@@ -61,14 +61,17 @@ local Output = {
     },
 }
 
-Engine.Output = Output
+-- Hekili.Engine.Output is the display table only; ns.Output (engine-private) holds the functions below and reads the
+-- displays through __index, so ns.Output.Primary still works while Begin/Publish stay off the public port.
+Engine.Output = Displays
+local Output = setmetatable({}, { __index = Displays })
 ns.Output = Output
 
 local annotators = slots()
 
 --- Clears `name`'s scratch set (every non-table field of every record, and each record's belief) and returns it.
 function Output.Begin(name)
-    local scratch = Output[name].scratch
+    local scratch = Displays[name].scratch
     for i = 1, SLOTS do
         local rec = scratch[i]
         for k, v in pairs(rec) do
@@ -103,7 +106,7 @@ end
 --- Publishes `count` records of `name`'s scratch set: the annotators run over them, scratch and recs swap, the version
 --- bumps, then each subscriber gets (name, version, output). No yield inside.
 function Output.Publish(name, count)
-    local o = Output[name]
+    local o = Displays[name]
     local built = o.scratch
     if built then
         for a = 1, annotators.n do
@@ -131,14 +134,14 @@ end
 
 --- True when `name` has a non-passive subscriber, i.e. someone wants it computed.
 function Output.Wanted(name)
-    return Output[name].wanted > 0
+    return Displays[name].wanted > 0
 end
 
 --- Subscribes `fn(name, version, output)` to `name`'s publishes; a `passive` subscriber listens without asking the
 --- engine to compute the display. Subscribing an already subscribed fn only updates its passive flag. Returns false
 --- when the slots are full.
 function Engine.Subscribe(name, fn, passive)
-    local o = Output[name]
+    local o = Displays[name]
     local subs = o.subs
     passive = passive and true or false
     for i = 1, subs.n do
@@ -167,7 +170,7 @@ end
 
 --- Removes `fn` from `name`'s subscribers, keeping the others' order.
 function Engine.Unsubscribe(name, fn)
-    local o = Output[name]
+    local o = Displays[name]
     local subs = o.subs
     for i = 1, subs.n do
         if subs[i] == fn then

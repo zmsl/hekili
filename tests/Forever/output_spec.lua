@@ -31,15 +31,22 @@ describe("Engine.Output (pure)", function()
         Engine, Out = load()
     end)
 
-    it("is one table behind two handles, with every display and the status record", function()
-        assert.are.equal(Out, Engine.Output)
-        for _, name in ipairs({ "Interrupts", "Defensives", "Cooldowns", "Primary", "AOE", "status" }) do
-            assert.is_table(Out[name], name)
-            assert.are.equal(0, Out[name].version)
+    it(
+        "keeps the functions on ns.Output, off the public display table, with every display and the status record",
+        function()
+            for _, name in ipairs({ "Interrupts", "Defensives", "Cooldowns", "Primary", "AOE", "status" }) do
+                assert.is_table(Out[name], name)
+                assert.are.equal(Engine.Output[name], Out[name], name)
+                assert.are.equal(0, Out[name].version)
+            end
+            for _, fn in ipairs({ "Begin", "Publish", "Wanted", "Annotate", "Unannotate" }) do
+                assert.is_function(Out[fn], fn)
+                assert.is_nil(Engine.Output[fn], fn)
+            end
+            assert.is_nil(Engine.Publish)
+            assert.is_nil(Engine.Begin)
         end
-        assert.is_nil(Engine.Publish)
-        assert.is_nil(Engine.Begin)
-    end)
+    )
 
     it(
         "Begin hands out scratch (not recs) cleared of its scalars; Publish swaps them and bumps version and count",

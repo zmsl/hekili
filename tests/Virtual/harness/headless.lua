@@ -917,9 +917,10 @@ function M.new(o)
         ctl.form = c.form or 0
     end
     -- An addon as the client loads it (tests/helpers/addons.lua): its TOC's files, the content each with its own
-    -- (name, ns), then its ADDON_LOADED. The class packs are load-on-demand: Engine/Content.lua asks C_AddOns.LoadAddOn
-    -- at OnInitialize, which loads a shipped one here after its unloaded dependencies, as the client does (false,
-    -- "MISSING" for any other).
+    -- (name, ns), then its ADDON_LOADED. Every content addon is load-on-demand: Engine/Content.lua's LoadAddOn calls at
+    -- OnInitialize (Hekili_Forever, then the class pack) load a shipped one here. A dependency is never loaded for it:
+    -- one not loaded yet answers false, "DEP_DEMAND_LOADED" (the client's reason for a load-on-demand dependency), so
+    -- the explicit order is what the tests run. Any other name answers false, "MISSING".
     local loaded = {}
     local function loadAddon(name)
         local addonNs = name ~= addons.CORE and {} or nil
@@ -944,7 +945,9 @@ function M.new(o)
             return false, "MISSING"
         end
         for dep in (shipped[name].Dependencies or ""):gmatch("[%w_]+") do
-            env.C_AddOns.LoadAddOn(dep)
+            if not loaded[dep] then
+                return false, "DEP_DEMAND_LOADED"
+            end
         end
         loadAddon(name)
         H.Fire("ADDON_LOADED", name)
@@ -953,17 +956,11 @@ function M.new(o)
     env.HekiliDB = o.saved -- saved variables, as the client sets them before the addon's ADDON_LOADED (nil: fresh)
     loadAddon(addons.CORE)
 
-    -- login: ADDON_LOADED (OnInitialize: the class pack with Hekili_Forever, then the AceDB profile), then the
-    -- always-loaded content addons not loaded yet, PLAYER_LOGIN (OnEnable, VS.Start, the content notice) and
-    -- PLAYER_ENTERING_WORLD
+    -- login: ADDON_LOADED (OnInitialize: Hekili_Forever, the class pack, then the AceDB profile), PLAYER_LOGIN
+    -- (OnEnable, VS.Start, the content notice) and PLAYER_ENTERING_WORLD
     H.phase = "login"
     local ok, err = xpcall(function()
         H.Fire("ADDON_LOADED", "Hekili")
-        for _, name in ipairs(addons.CONTENT) do
-            if shipped[name].LoadOnDemand ~= "1" then
-                env.C_AddOns.LoadAddOn(name)
-            end
-        end
         loggedIn = true
         H.Fire("PLAYER_LOGIN")
         H.Fire("PLAYER_ENTERING_WORLD", true, false)

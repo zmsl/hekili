@@ -1,5 +1,5 @@
 local _, ns = ...
--- Engine/WeakAuras.lua: the HEKILI_RECOMMENDATION_UPDATE event for WeakAuras, as a passive subscriber to the engine's
+-- Integrations/WeakAuras.lua: the HEKILI_RECOMMENDATION_UPDATE event for WeakAuras, as a passive subscriber to the engine's
 -- output (restructure plan, Task 4; it was a block in Core's Update). Passive: WeakAuras alone never makes the engine
 -- compute a hidden display, as stock.
 

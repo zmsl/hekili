@@ -13,7 +13,8 @@ local UnitHasVehicleUI, UnitIsDead, UnitOnTaxi = Facade.UnitHasVehicleUI, Facade
 local Hekili = _G[ addon ]
 
 local Registry = Hekili.Engine.Registry
-local Status = Hekili.Engine.Output.status
+local Published = Hekili.Engine.Output -- the published displays (the port), indexed by display id
+local Status = Published.status
 
 local FindUnitBuffByID, FindUnitDebuffByID = ns.FindUnitBuffByID, ns.FindUnitDebuffByID
 
@@ -933,7 +934,7 @@ do
     -- Unsubscribed: hide the icons and draw nothing until the next publish, so a re-shown display starts blank
     -- (stock cleared every queue each cycle) instead of showing the set it last drew.
     local function unsubscribe( d )
-        local out = ns.Output[ d.id ]
+        local out = Published[ d.id ]
         if out then Hekili.Engine.Unsubscribe( d.id, d.OnPublish ) end
         d.blankVersion = ( out or noOutput ).version
         if d.HasRecommendations then
@@ -1166,7 +1167,7 @@ do
 
 
         function d:OnUpdate( elapsed )
-            local out = ns.Output[ self.id ] or noOutput
+            local out = Published[ self.id ] or noOutput
             if not Hekili.PLAYER_ENTERING_WORLD then
                 return
             end
@@ -1752,7 +1753,7 @@ do
 
             -- Subscribed (the engine computes this display) exactly while Active and visible.
             if newAlpha == 0 then unsubscribe( self )
-            elseif ns.Output[ self.id ] then Hekili.Engine.Subscribe( self.id, self.OnPublish ) end
+            elseif Published[ self.id ] then Hekili.Engine.Subscribe( self.id, self.OnPublish ) end
         end
 
         function d:RefreshCooldowns( event )
@@ -1764,7 +1765,7 @@ do
             local now = GetTime()
             local conf = Hekili.DB.profile.displays[ self.id ]
 
-            local out = ns.Output[ self.id ] or noOutput
+            local out = Published[ self.id ] or noOutput
 
             for i = 1, out.count do
                 local rec = out.recs[ i ]
@@ -2131,7 +2132,7 @@ do
         ns.UI.Buttons[id] = ns.UI.Buttons[id] or {}
         d.Buttons = ns.UI.Buttons[id]
 
-        local out = ns.Output[ id ]
+        local out = Published[ id ]
 
         for i = 1, 10 do
             d.Buttons[ i ] = self:CreateButton( id, i )
@@ -2191,7 +2192,7 @@ do
         ns.UI.Buttons[id] = ns.UI.Buttons[id] or {}
         d.Buttons = ns.UI.Buttons[id]
 
-        local out = ns.Output[ id ]
+        local out = Published[ id ]
 
         for i = 1, 10 do
             d.Buttons[i] = self:CreateButton(id, i)
@@ -2340,21 +2341,6 @@ do
 
     function Hekili:DumpActionActive()
         DevTools_Dump( actsActive )
-    end
-
-
-    function Hekili:ForceUpdate( event, super )
-        local engine = ns.EngineFrame
-        engine.criticalUpdate = true
-        if super then engine.refreshTimer = engine.refreshTimer + 0.1 end
-
-        if engine.firstForce == 0 then
-            engine.firstForce = GetTime()
-        end
-
-        if event then
-            engine.eventsTriggered[ event ] = true
-        end
     end
 
 

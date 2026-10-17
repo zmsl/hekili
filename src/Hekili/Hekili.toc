@@ -67,8 +67,8 @@ Options\Options.lua
 Options\Profile.lua
 Engine\Driver.lua
 Engine\Content.lua
-Engine\WeakAuras.lua
 UI\UI.lua
+Integrations\WeakAuras.lua
 Engine\Sim\Scripts.lua
 Engine\Sim\Core.lua
 Virtual\State\Adapter.lua

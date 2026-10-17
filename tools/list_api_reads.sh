@@ -9,7 +9,9 @@ cd "$(dirname "$0")/.."
 LUACHECK="${LUACHECK:-luacheck}"
 command -v "$LUACHECK" >/dev/null || { echo "luacheck not found: set LUACHECK" >&2; exit 1; }
 if [ $# -gt 0 ]; then files=("$@"); else
-    mapfile -t files < <(lua5.1 tests/helpers/addons.lua lua) # every addon's TOC, in dependency order
+    [ -x .lua/bin/lua ] && LUA=.lua/bin/lua || LUA=lua5.1
+    mapfile -t files < <("$LUA" tests/helpers/addons.lua lua) # every addon's TOC, in dependency order
+    [ ${#files[@]} -gt 0 ] || { echo "no addon files listed (is $LUA working?)" >&2; exit 1; }
     # archived expansion folders are never redirected, so their reads are not inventoried
     mapfile -t files < <(printf '%s\n' "${files[@]}" | grep -vE '^src/Hekili/(TheWarWithin|Dragonflight|Shadowlands|BfA|Legion|Wrath|Cataclysm|TheBurningCrusade)/')
 fi

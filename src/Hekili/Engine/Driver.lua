@@ -258,3 +258,21 @@ Hekili:ProfileFrame("HekiliEngine", ns.EngineFrame)
 function ns.EngineFrame:IsThreadActive()
     return self.activeThread and coroutine.status(self.activeThread) == "suspended"
 end
+
+--- Asks the driver for an update on its next frame (moved from UI/UI.lua with the frame it writes); `super` also
+--- pushes the refresh timer on.
+function Hekili:ForceUpdate(event, super)
+    local engine = ns.EngineFrame
+    engine.criticalUpdate = true
+    if super then
+        engine.refreshTimer = engine.refreshTimer + 0.1
+    end
+
+    if engine.firstForce == 0 then
+        engine.firstForce = GetTime()
+    end
+
+    if event then
+        engine.eventsTriggered[event] = true
+    end
+end

@@ -6,7 +6,8 @@
 local M = {}
 
 M.CORE = "Hekili"
--- the shared content (a hard dependency of every class pack), then the class packs (load-on-demand)
+-- the shared content (a dependency of every class pack), then the class packs; all load-on-demand, loaded by the
+-- core's Engine/Content.lua in this order
 M.CONTENT = { "Hekili_Forever", "Hekili_Forever_Warrior", "Hekili_Forever_Druid" }
 M.ADDONS = { M.CORE }
 for _, name in ipairs(M.CONTENT) do

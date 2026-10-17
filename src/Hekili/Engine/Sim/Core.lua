@@ -12,6 +12,7 @@ local class = Hekili.Class
 local state = Hekili.State
 local scripts = Hekili.Scripts
 local Output = ns.Output
+local Displays = Hekili.Engine.Output -- the display table itself: the hot path skips ns.Output's __index
 
 local callHook = ns.callHook
 local clashOffset = ns.clashOffset
@@ -1455,7 +1456,7 @@ function Hekili.Update()
     local numTargets = Hekili:GetNumTargets( true )
 
     -- The engine's status record: published only when one of its fields changed.
-    local status = Output.status
+    local status = Displays.status
     local combat = state.combat > 0
     if status.combatStart ~= state.combat or status.numTargets ~= numTargets or status.specID ~= specID or status.packName ~= packName or status.specKey ~= state.spec.key then
         status.combat, status.combatStart, status.numTargets, status.specID, status.specKey, status.packName = combat, state.combat, numTargets, specID, state.spec.key, packName
@@ -1487,7 +1488,7 @@ function Hekili.Update()
         end
 
         local wanted = Output.Wanted( dispName )
-        local out = Output[ dispName ]
+        local out = Displays[ dispName ]
 
         if wanted and rule( settings ) then
             -- Only the scratch set is written until Publish: every yield below leaves out.recs the last complete set.

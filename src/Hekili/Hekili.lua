@@ -158,7 +158,8 @@ Hekili.State = {}
 -- name the content addons use besides the registration API, State and Class (restructure plan, Task 8).
 Hekili.Client = Facade
 
--- The engine's public surface (Engine/Output.lua fills it): Output, Subscribe, Unsubscribe.
+-- The engine's public surface, filled by the Engine/ files: Output.lua (Output, Subscribe, Unsubscribe),
+-- Registry.lua (Registry, Evaluate), Snapshot.lua (Snapshot), Settings.lua (Configure, settings).
 Hekili.Engine = {}
 
 ns.hotkeys = {}

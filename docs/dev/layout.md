@@ -7,7 +7,8 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   in dependency order, and every headless loader, spec and tool reads their files from it:
   - `src/Hekili/`: the core (the engine, the belief, the UI and options);
   - `src/Hekili_Forever/`: the content every class shares (`Shared/`: auras, consumables, items) and the race packs
-    (`Races/`); `## Dependencies: Hekili`, so always loaded after the core;
+    (`Races/`); `## Dependencies: Hekili`, `## LoadOnDemand: 1`, loaded on demand by the core's `Engine/Content.lua`
+    at login, first (before the class pack, and for a class with no pack too);
   - `src/Hekili_Forever_Warrior/`, `src/Hekili_Forever_Druid/`: one class pack each (the class file, its RegisterPack
     blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's `Engine/Content.lua` for the
     player's class.
@@ -21,6 +22,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `Engine/Schema/`: the class/race/shared registration API (`Spec`, `Races`, `Shared`), the engine core the
     boundary spec scans;
   - `UI/`: the display and editor widgets (`UI`, `Formatting`, `MultilineEditor`, `PopupSlider`);
+  - `Integrations/`: bridges to other addons that subscribe to the engine like the UI does (`WeakAuras`);
   - `Options/` (the options panel and chat commands), `Virtual/` (VirtualState, the event and API facades), `Libs/`
     (embedded, untouched) and `Textures/`.
 

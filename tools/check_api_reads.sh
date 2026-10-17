@@ -9,7 +9,9 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 if [ -z "${LUACHECK:-}" ]; then [ -x .lua/bin/luacheck ] && LUACHECK=.lua/bin/luacheck || LUACHECK=luacheck; fi
 command -v "$LUACHECK" >/dev/null || { echo "luacheck not found: set LUACHECK" >&2; exit 1; }
-mapfile -t files < <(lua5.1 tests/helpers/addons.lua lua) # every addon's TOC, in dependency order
+[ -x .lua/bin/lua ] && LUA=.lua/bin/lua || LUA=lua5.1
+mapfile -t files < <("$LUA" tests/helpers/addons.lua lua) # every addon's TOC, in dependency order
+[ ${#files[@]} -gt 0 ] || { echo "no addon files listed (is $LUA working?)" >&2; exit 1; }
 globals=$(cut -f1 tools/api_inventory.txt | sed -E 's/\..*//' | sort -u | paste -sd'|')
 fail=0
 out=$("$LUACHECK" --no-config --std none --formatter plain --codes "${files[@]}"); rc=$?
