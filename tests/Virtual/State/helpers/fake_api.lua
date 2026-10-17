@@ -292,8 +292,10 @@ function M.new()
     function api.GetNumClasses()
         return 11
     end
-    function api.GetClassInfo()
-        return ctl.class, ctl.class, ctl.classID
+    function api.GetClassInfo(i)
+        if i == ctl.classID then
+            return ctl.class, ctl.class, i
+        end
     end
     function api.UnitClass()
         return ctl.class, ctl.class, ctl.classID
@@ -383,16 +385,15 @@ function M.new()
         end,
     }
     local toc = {} -- C_AddOns.GetAddOnMetadata answers the TOC's `## Key: value` lines (State.lua reads Version)
-    local fh = io.open("src/Hekili/Hekili.toc")
-    if fh then
-        for line in fh:lines() do
-            local k, v = line:match("^## ([%w%-]+): (.-)%s*$")
-            if k then
-                toc[k] = v
-            end
+    local fh = assert(io.open("src/Hekili/Hekili.toc")) -- run from the repository root
+    for line in fh:lines() do
+        local k, v = line:match("^## ([%w%-]+): (.-)%s*$")
+        if k then
+            toc[k] = v
         end
-        fh:close()
     end
+    fh:close()
+    assert(toc.Version, "src/Hekili/Hekili.toc: no ## Version line")
     api.C_AddOns = {
         GetAddOnMetadata = function(_, k)
             return toc[k]

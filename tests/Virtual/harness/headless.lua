@@ -69,11 +69,19 @@ M.KNOWN_LOAD_NILS = {
     WOW_PROJECT_MISTS_CLASSIC = "the flavour probes",
     id = "Hekili reads an unset global `id` (an upstream slip, nil in game too)",
     squawk = "Scripts.lua:1032 reads an unset global (upstream, nil in game too)",
+    -- namespace members: the facade's five passthrough rows absent on Forever, and LibSpellRange's load probes
+    ["C_SpellBook.GetSpellBookItemInfo"] = "facade row absent on Forever (retail spellbook item API)",
+    ["C_SpellBook.GetSpellBookSkillLineInfo"] = "facade row absent on Forever (retail spellbook tabs API)",
+    ["C_Traits.GetNodeCost"] = "facade row absent on Forever (retail talent currency)",
+    ["C_Traits.GetSubTreeInfo"] = "facade row absent on Forever (retail hero talents)",
+    ["C_Traits.GetTreeCurrencyInfo"] = "facade row absent on Forever (retail talent currency)",
+    ["C_Spell.SpellHasRange"] = "LibSpellRange-1.0.lua:47 probe (fake_api has no row; not on the queue path)",
+    ["C_SpellBook.GetSpellBookItemName"] = "LibSpellRange-1.0.lua:64 fallback probe (not on the queue path)",
 }
 -- Reads of unset globals at recommendation time (upstream slips, nil in game too: SPIKE risk 10).
 M.KNOWN_RUN_NILS = {
-    overcap = "State.lua:1386",
-    id = "State.lua:3766",
+    overcap = "State.lua:1385",
+    id = "State.lua:3765",
     listName = "Core.lua:1992",
     alphaCheck = "UI.lua:1121",
     squawk = "Scripts.lua:1032",
@@ -283,7 +291,18 @@ function M.new(o)
     -- the client: fake_api's functions, namespaces copied so an instance's writes stay its own
     for k, v in pairs(api) do
         if k ~= "ctl" then
-            env[k] = type(v) == "table" and setmetatable({}, { __index = v }) or v
+            local mt = { __index = v }
+            if k:match("^C_") then -- an absent member read through a namespace counts as a miss (§1.4)
+                function mt.__index(_, key)
+                    local x = v[key]
+                    if x == nil then
+                        local t, name = H.misses[H.phase], k .. "." .. tostring(key)
+                        t[name] = (t[name] or 0) + 1
+                    end
+                    return x
+                end
+            end
+            env[k] = type(v) == "table" and setmetatable({}, mt) or v
         end
     end
 
@@ -333,9 +352,6 @@ function M.new(o)
         end
     end
     env.seterrorhandler = function() end
-    function env.securecall(f, ...)
-        return pcall(f, ...)
-    end
     function env.securecallfunction(f, ...)
         return f(...)
     end
@@ -508,29 +524,36 @@ function M.new(o)
         end,
     }
     --- Runs every timer due at or before `now`, in due order (a raise is recorded in H.errors).
+    --- Each callback sees its own due time as GetTime(); the clock is restored after it.
     function H.RunTimers(now)
-        local ran = true
-        while ran do
-            ran = false
-            for i, t in ipairs(H.timers) do
-                if t.cancelled then
+        while true do
+            local t, ti
+            for i = #H.timers, 1, -1 do
+                local x = H.timers[i]
+                if x.cancelled then
                     table.remove(H.timers, i)
-                    ran = true
-                    break
-                elseif t.at <= now then
-                    t.iter = t.iter - 1
-                    if t.iter <= 0 then
-                        table.remove(H.timers, i)
-                    else
-                        t.at = t.at + t.d
+                    if ti then
+                        ti = ti - 1
                     end
-                    local ok, err = pcall(t.fn, t)
-                    if not ok then
-                        H.errors[#H.errors + 1] = "timer: " .. tostring(err)
-                    end
-                    ran = true
-                    break
+                elseif x.at <= now and (not t or x.at < t.at or (x.at == t.at and x.seq < t.seq)) then
+                    t, ti = x, i
                 end
+            end
+            if not t then
+                return
+            end
+            local at, saved = t.at, ctl.now
+            t.iter = t.iter - 1
+            if t.iter <= 0 then
+                table.remove(H.timers, ti)
+            else
+                t.at = t.at + t.d
+            end
+            ctl.now = at
+            local ok, err = pcall(t.fn, t)
+            ctl.now = saved
+            if not ok then
+                H.errors[#H.errors + 1] = "timer: " .. tostring(err)
             end
         end
     end
@@ -799,7 +822,20 @@ function M.new(o)
     })
 
     -- the loader: Hekili.toc in order, an .xml line's Script/Include tags; a raising file is recorded, the load goes on
-    local ns = {}
+    -- ns.Error, counted (the engine-health metric) from the moment Utils.lua defines it, so the copies files take
+    -- at load (State.lua's `local Error = ns.Error`) and Hekili:Error all count
+    local ns = setmetatable({}, {
+        __newindex = function(t, k, v)
+            if k == "Error" and type(v) == "function" then
+                local onError = v
+                v = function(output, ...)
+                    H.errors[#H.errors + 1] = tostring(output)
+                    return onError(output, ...)
+                end
+            end
+            rawset(t, k, v)
+        end,
+    })
     H.ns = ns
     local function loadLua(path)
         local f, err = loadfile(path)
@@ -893,15 +929,8 @@ function M.new(o)
     H.RunTimers(ctl.now)
     H.Hekili = rawget(env, "Hekili")
     local hk = H.Hekili
-    if hk then
-        local onError = hk.Error -- Hekili:Error, counted (the engine-health metric)
-        function hk.Error(s, ...)
-            H.errors[#H.errors + 1] = tostring((...))
-            return onError(s, ...)
-        end
-        if o.pack and ctl.specID then
-            rawget(hk.DB.profile.specs, ctl.specID).package = o.pack
-        end
+    if hk and o.pack and ctl.specID then
+        rawget(hk.DB.profile.specs, ctl.specID).package = o.pack
     end
     H.phase = "run"
     return H

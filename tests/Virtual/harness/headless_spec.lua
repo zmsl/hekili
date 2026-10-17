@@ -49,10 +49,37 @@ describe("headless Hekili", function()
         assert.are.equal(2, n)
     end)
 
+    it("runs due timers in due order, each callback at its own due time", function()
+        local now, seen = H.ctl.now, {}
+        H.env.C_Timer.After(3, function()
+            seen[#seen + 1] = H.env.GetTime() - now
+        end)
+        H.env.C_Timer.After(1, function()
+            seen[#seen + 1] = H.env.GetTime() - now
+        end)
+        H.RunTimers(now + 5)
+        assert.are.same({ 1, 3 }, seen)
+        assert.are.equal(now, H.ctl.now)
+    end)
+
+    it("counts every Hekili error path: the copy State.lua takes at load and Hekili:Error", function()
+        local n = #H.errors
+        H.Hekili.State.applyBuff(nil) -- State.lua's load-time `Error` copy (the nameless-aura report)
+        assert.are.equal(n + 1, #H.errors)
+        H.Hekili:Error("probe %s", "x")
+        assert.are.equal(n + 2, #H.errors)
+        H.errors[n + 1], H.errors[n + 2] = nil, nil
+    end)
+
     it("keeps two instances apart and adds no global to the real _G", function()
-        local before = {}
+        local before, shared = {}, { "string", "math", "os", "coroutine", "debug" }
         for k in pairs(_G) do
             before[k] = true
+        end
+        for _, lib in ipairs(shared) do
+            for k in pairs(_G[lib]) do
+                before[lib .. "." .. k] = true
+            end
         end
         local other = headless.new({ now = 50 })
         assert.are_not.equal(H.Hekili, other.Hekili)
@@ -64,6 +91,13 @@ describe("headless Hekili", function()
         for k in pairs(_G) do
             if not before[k] then
                 added[#added + 1] = tostring(k)
+            end
+        end
+        for _, lib in ipairs(shared) do
+            for k in pairs(_G[lib]) do
+                if not before[lib .. "." .. k] then
+                    added[#added + 1] = lib .. "." .. tostring(k)
+                end
             end
         end
         assert.are.same({}, added)
