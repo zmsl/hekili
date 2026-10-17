@@ -589,29 +589,32 @@ describe("Forever Druid", function()
         assert.are.same({}, e.removed)
     end)
 
-    it("gains rage per white swing in Bear Form only, at the form's 2.5 s x 3.46; Enrage 2/s; decay 1.25", function()
-        local models = w.resources[1].models
-        w.state.buff.bear_form = { up = false }
-        w.state.swings.mainhand, w.state.mainhand_speed = 5, 2.5
-        assert.are.same(
-            { "mainhand", "bear_form", "mainhand_speed" },
-            { models.mainhand.swing, models.mainhand.aura, models.mainhand.interval }
-        )
-        assert.is_true(models.mainhand.stop()) -- out of Bear Form
-        w.state.buff.bear_form.up = true
-        assert.is_false(models.mainhand.stop())
-        near(2.5 * 3.46, models.mainhand.value()) -- the believed swing speed before a plain base read
-        w.game.base = { 2.5, 0 }
-        w.state.mainhand_speed = 2.0 -- hasted: the rage follows the unhasted speed
-        near(8.65, models.mainhand.value())
-        near(8.65, models.mainhand.crit()) -- a white crit: one more base swing
-        assert.are.same({ "enrage", 1, 2 }, { models.enrage.aura, models.enrage.interval, models.enrage.value })
-        assert.is_nil(models.enrage.pausesDecay) -- unverified (checkpoint Q9)
-        w.state.buff.enrage, w.state.query_time = { applied = 10 }, 13.4
-        assert.are.equal(13, models.enrage.last())
-        assert.are.equal(1.25, w.resources[1].meta.decay())
-        assert.are.equal(1, w.resources[1].meta.decayInterval()) -- stepped, as the Warrior's
-    end)
+    it(
+        "gains rage per white swing in Bear Form only, at the form's fixed 2.5 s x 3.46; Enrage 2/s; decay 1.25",
+        function()
+            local models = w.resources[1].models
+            w.state.buff.bear_form = { up = false }
+            w.state.swings.mainhand, w.state.mainhand_speed = 5, 2.5
+            assert.are.same(
+                { "mainhand", "bear_form", "mainhand_speed" },
+                { models.mainhand.swing, models.mainhand.aura, models.mainhand.interval }
+            )
+            assert.is_true(models.mainhand.stop()) -- out of Bear Form
+            w.state.buff.bear_form.up = true
+            assert.is_false(models.mainhand.stop())
+            near(2.5 * 3.46, models.mainhand.value()) -- before a plain base read
+            w.game.base = { 1.0, 0 } -- a Cat pull's base, stale after the shift (D4: the form's period, not the read)
+            w.state.mainhand_speed = 2.0 -- hasted: the rage follows the unhasted speed
+            near(8.65, models.mainhand.value())
+            near(8.65, models.mainhand.crit()) -- a white crit: one more base swing
+            assert.are.same({ "enrage", 1, 2 }, { models.enrage.aura, models.enrage.interval, models.enrage.value })
+            assert.is_nil(models.enrage.pausesDecay) -- unverified (checkpoint Q9)
+            w.state.buff.enrage, w.state.query_time = { applied = 10 }, 13.4
+            assert.are.equal(13, models.enrage.last())
+            assert.are.equal(1.25, w.resources[1].meta.decay())
+            assert.are.equal(1, w.resources[1].meta.decayInterval()) -- stepped, as the Warrior's
+        end
+    )
 
     it("declares energy with no regen model, combo points and mana with no maximum, in Classic's order", function()
         assert.are.same({ 3, 4, 1, 0 }, w.order)
@@ -956,6 +959,37 @@ describe("Forever Druid in VirtualState's now context", function()
         VS.Drain(16)
         assert.are.equal(power(1, 15.1), power(1, 16))
         assert.are.same({ 0, 9 }, { I.nowErrors, I.nowRuns })
+    end)
+
+    it("opens each GCD at its kind's length across shifts, and a hard cast's at its start (GCD kinds §1.6)", function()
+        local Direct, Obs = I.Sources.Direct, VS.Obs
+        local function gcd(t, len) -- the GCD spell's edges around our cast at t: its duration as GcdInfo answers it
+            Direct(Obs.Cooldown, t, 0, 1, 1)
+            VS.Drain(t + 0.03)
+            local _, d = VS.GcdInfo(t + 0.03)
+            Direct(Obs.Cooldown, t + len, 0, 0, 1)
+            VS.Drain(t + len + 0.01)
+            return d
+        end
+        cast(5221, 2) -- Shred x2: the totem kind learns 1.0
+        gcd(2, 1)
+        cast(5221, 4)
+        gcd(4, 1)
+        assert.are.same({ 0, 1 }, I.gcdLearned)
+        cast(5487, 6) -- Bear Form: the spell kind, not the last learned length
+        assert.are.equal(1.5, gcd(6, 1.5))
+        cast(768, 8) -- Cat Form
+        gcd(8, 1.5)
+        cast(5221, 10)
+        assert.are.equal(1, gcd(10, 1))
+        ctl.form = 0 -- a manual unshift (no cast), then Healing Touch's hard cast
+        ctl.Fire("UPDATE_SHAPESHIFT_FORM")
+        ctl.now, ctl.casting = 12, { 12000, 15500 }
+        ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-2", 5185)
+        ctl.Tick(12.01)
+        ctl.casting = nil
+        assert.are.equal(1.5, gcd(12.02, 1.5))
+        assert.is_truthy(VS.Snapshot():find("learned=1.5000/1.0000", 1, true))
     end)
 
     it("runs every declared `now` in the context without an error", function()

@@ -109,8 +109,11 @@ local FORMS = { "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic
 
 -- Shifting Power's energy (DB2 1322605 effect 30, base 40) and bear rage per white swing (spec §2.3, D4): the
 -- Warrior's measured one-hand main-hand rate x the form's unhasted 2.5 s swing, 8.65 a swing, until checkpoint Q8.
+-- The swing is the form's fixed period, not VirtualState's out-of-combat base read, which holds the pull's form (1.0 s
+-- after a Cat pull) through an in-combat shift (GCD kinds design D4; checkpoint G6 reads both forms' speeds).
 local SHIFTING_POWER_ENERGY = 40
 local BEAR_RAGE_RATE = 3.46
+local BEAR_SWING = 2.5
 -- Rip's and Rake's energy (Rake's before Ferocity's -1 a rank), shared by their `spend` and `excess_e`'s reservations.
 local RIP_COST = 30
 local RAKE_COST = 40
@@ -138,15 +141,6 @@ end
 -- A per-rank value at the highest known rank, else the first rank's (nothing known yet).
 local function byRank(values, ids)
     return values[knownRank(ids)] or values[1]
-end
-
--- The form's unhasted swing (2.5 s in Bear Form): VirtualState's plain base read, else the believed swing speed.
-local function bearSwing()
-    local speed = VS.SwingBase(1)
-    if speed <= 0 then
-        speed = state.mainhand_speed
-    end -- no plain base read yet
-    return speed
 end
 
 -- shortcut: after a /reload in combat energy's regen rate stays 0 for the rest of the fight (VirtualState's calibrate
@@ -182,10 +176,10 @@ spec:RegisterResource(
                 return state.swings.mainhand == 0 or not state.buff.bear_form.up
             end,
             value = function()
-                return BEAR_RAGE_RATE * bearSwing()
+                return BEAR_RAGE_RATE * BEAR_SWING
             end,
             crit = function()
-                return BEAR_RAGE_RATE * bearSwing()
+                return BEAR_RAGE_RATE * BEAR_SWING
             end,
         },
 
