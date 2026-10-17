@@ -22,9 +22,9 @@ local function wipe(t)
     end
 end
 
--- The bridge, and the debug handle: /run print(Hekili.Virtual.State.Snapshot())
-Hekili.Virtual = { State = VS, Events = I.Events, API = ns.Facade }
-Hekili.VirtualState = VS -- alias for one release: ForeverProbe's Calib.lua and the user's /run lines read it
+-- The bridge, and the debug handle (/run print(Hekili.Virtual.State.Snapshot()); ForeverProbe's Calib.lua). Not for
+-- content: the content addons read the client through Hekili.Client and the belief through their environment names.
+Hekili.Virtual = { State = VS, Events = I.Events }
 
 -- The trace (event-facade spec §5): facade reads and events write into Hekili's snapshot while it debugs, and each
 -- display's snapshot log opens with VirtualState's own Snapshot().

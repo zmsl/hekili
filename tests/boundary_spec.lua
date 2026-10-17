@@ -15,6 +15,10 @@ local B = require("boundary_lib")
 local CORE = { "src/Hekili/Virtual", "src/Hekili/Engine/Schema", "tests/Virtual/harness" }
 local SKIP = { "^tests/Virtual/harness/fixtures/" }
 local SIM = { "src/Hekili/Engine/Sim" }
+-- The content (restructure plan, Task 8): it reaches the engine through the public Hekili object only.
+local CONTENT = { "src/Hekili/Forever" }
+local PUBLIC = { NewSpecialization = true, NewShared = true, NewRace = true, State = true, Class = true, Client = true }
+local PRIVATE = { "%f[%w_]ns%.", "ns%s*=%s*%.%.%.", "VirtualState", "Hekili%.Virtual", "Hekili%.Engine" }
 
 describe("core/content boundary", function()
     local c = B.content()
@@ -90,6 +94,26 @@ describe("core/content boundary", function()
             assert.are.same({}, found)
         end
     )
+    it("keeps the content on the public surface: the registration API, State, Class and Client", function()
+        local found = {}
+        local files = B.coreFiles(CONTENT, {})
+        assert.is_true(#files >= 13)
+        for _, path in ipairs(files) do
+            local src = B.read(path):gsub("%[(=*)%[.-%]%1%]", "") -- a pack's share string is data
+            for name in src:gmatch("Hekili[.:]([%w_]+)") do
+                if not PUBLIC[name] then
+                    found[#found + 1] = path .. ": Hekili." .. name
+                end
+            end
+            for _, pat in ipairs(PRIVATE) do
+                if src:find(pat) then
+                    found[#found + 1] = path .. ": " .. pat
+                end
+            end
+        end
+        assert.are.same({}, found)
+    end)
+
     -- Engine/Sim/** is stock Hekili with its inherited class branches and field names a Forever key shares (`charge`,
     -- `execute`, `form`): frozen per file by tests/boundary_baseline.lua (tools/boundary_baseline.lua). Shortcut: a
     -- per-file token ceiling, not a line lock; an edit that adds one `charge` and removes another passes.

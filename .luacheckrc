@@ -78,6 +78,8 @@ local stateEnv = {
     "trackAuraApplication", "toggleSpell", "target", "state", "squawk", "set_bonus", "setCooldown", "safeAbs",
     "next_ation", "name", "listName", "id", "event", "boss", "alphaCheck", "abilitty", "display", "args", "v", "p",
     "val", "treeToString", "QueueRebuildUI",
+    -- the belief's reads content uses (State.lua, restructure plan Task 8)
+    "knownRank", "stat", "swingBase", "healthMax",
 }
 files["src/Hekili/Engine/Schema/Spec.lua"] = { globals = stateEnv }
 files["src/Hekili/Engine/Sim/"] = { globals = stateEnv }
@@ -94,7 +96,8 @@ files["src/Hekili/UI/UI.lua"] = { globals = { "p", "alphaCheck" } } -- upstream'
 -- The names a class file's `now` function reads in VirtualState's context (src/Hekili/Virtual/State/Families/Now.lua).
 local nowEnv = {
     "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "setCooldown", "talent",
-    "buff", "debuff", "knownRank", "now", "combat", "rage", "energy", "mana", "focus", "runic_power",
+    "buff", "debuff", "knownRank", "stat", "swingBase", "healthMax", "now", "combat", "rage", "energy", "mana", "focus",
+    "runic_power",
 }
 files["tests/Virtual/State/"] = { std = "+busted", read_globals = nowEnv }
 files["tests/Virtual/Events/"] = { std = "+busted", read_globals = nowEnv }

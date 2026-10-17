@@ -72,10 +72,10 @@ describe("Adapter", function()
         assert.are.same({ fs.RAGE }, out)
         assert.are.equal(2, VS.Tracked("unit", out))
         assert.are.equal(1, I.res.swing[1]) -- the mainhand swing model makes rage swing-paid
-        assert.are.same(
-            { VS, VS, I.Events, ns.Facade },
-            { h.VirtualState, h.Virtual.State, h.Virtual.Events, h.Virtual.API }
-        )
+        -- the debug handle only: the client is Hekili.Client (Facade.lua), and the alias is gone
+        assert.are.same({ VS, I.Events }, { h.Virtual.State, h.Virtual.Events })
+        assert.is_nil(h.Virtual.API)
+        assert.is_nil(h.VirtualState)
     end)
 
     it("builds the tracked set's contents: ids from id and copy, spender slots, talents de-duplicated", function()

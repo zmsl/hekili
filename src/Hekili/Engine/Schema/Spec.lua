@@ -707,6 +707,12 @@ local HekiliSpecMixin = {
     end,
 
     RegisterAbility = function( self, ability, data )
+        -- A passive (a spell the spellbook knows, never cast): the belief tracks its known rank; the sim never sees it.
+        if data.passive then
+            ns.VirtualState.Track( { abilities = { data.id } } )
+            return
+        end
+
         CommitKey( ability )
 
         local a = setmetatable( {

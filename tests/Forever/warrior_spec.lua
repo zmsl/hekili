@@ -399,9 +399,10 @@ describe("Forever Warrior", function()
     describe("rage from damage taken (the main-hand entry's `taken`, Protection design §1.3)", function()
         local taken, e
 
-        -- The belief's `now` context as `taken` sees it: these auras up, these talent ranks.
+        -- The belief's `now` context as `taken` sees it: these auras up, these talent ranks, the stat cache.
         local function ctx(auras, ranks)
             e = {
+                stat = w.state.stat,
                 buff = setmetatable({}, {
                     __index = function(_, k)
                         return { up = auras[k] == true }
@@ -481,6 +482,7 @@ describe("Forever Warrior", function()
             w.game.stat.GetShieldBlock = { 20 }
             w.state.equipped.shield = true
             e = { -- plain tables: the belief's proxies are preallocated, so only `taken` itself is measured
+                stat = w.state.stat,
                 buff = { defensive_stance = { up = true }, shield_wall = { up = false } },
                 talent = { shield_specialization = { rank = 1 }, master_of_defense = { rank = 1 } },
             }
@@ -570,7 +572,8 @@ describe("Forever Warrior", function()
             registered = registered + 1
         end
         assert.are.same({ 52, 52 }, { n, registered })
-        assert.is_nil(next(w.track))
+        -- Tactical Mastery, a passive: declared, and the Schema tells the belief to watch it (Engine/Schema/Spec.lua)
+        assert.are.same({ id = 1310185, passive = true }, w.passives.tactical_mastery)
     end)
 
     it("reads a queued strike and Revenge's window at reset, leaving the stance to the Forms source", function()

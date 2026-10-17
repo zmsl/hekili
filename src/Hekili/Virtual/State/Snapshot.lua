@@ -1,7 +1,7 @@
 -- Virtual/State/Snapshot.lua
 -- VirtualState.Snapshot() (spec §3.5): every tracked record projected to now (est, lo, hi, conf, basis, the four
 -- `last` slots), the facts, the log's fill and drop counts, the read statuses per source, the drain cost and, with
--- debug on, the rings. It allocates and is for debugging only: /run print(Hekili.VirtualState.Snapshot())
+-- debug on, the rings. It allocates and is for debugging only: /run print(Hekili.Virtual.State.Snapshot())
 
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal

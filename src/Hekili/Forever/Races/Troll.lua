@@ -8,9 +8,6 @@
 -- priority reads `buff.berserking.up`. Regeneration and Beast Slaying are passives. No resource or cost modifier. No
 -- pack names either. Inert for any other race (Engine/Schema/Races.lua).
 
-local addon, ns = ...
-local Hekili = _G[addon]
-
 local race = Hekili:NewRace("Troll")
 
 race:RegisterAbility("berserking", {
@@ -24,7 +21,7 @@ race:RegisterAbility("berserking", {
     handler = function()
         applyBuff("berserking")
     end,
-    -- VirtualState's now-state of the cast (event-facade spec §12a)
+    -- The belief's now-state of the cast (event-facade spec §12a)
     now = function()
         applyBuff("berserking")
     end,

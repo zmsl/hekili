@@ -8,9 +8,6 @@
 -- Specialization and Big Game Hunter have no rotation effect. No resource or cost modifier. No pack names it. Inert for
 -- any other race (Engine/Schema/Races.lua).
 
-local addon, ns = ...
-local Hekili = _G[addon]
-
 local race = Hekili:NewRace("Dwarf")
 
 local CLEARS = { "dispellable_poison", "dispellable_disease", "dispellable_bleed" } -- Stoneform's dispels on Forever
@@ -42,7 +39,7 @@ race:RegisterAbility("stoneform", {
         removeBuff("dispellable_bleed")
         applyBuff("stoneform")
     end,
-    -- VirtualState's now-state of the cast (event-facade spec §12a)
+    -- The belief's now-state of the cast (event-facade spec §12a)
     now = function()
         removeBuff("dispellable_poison")
         removeBuff("dispellable_disease")

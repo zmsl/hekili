@@ -4,7 +4,7 @@
 -- fields (its cost, its cooldown or charge, the GCD), then runs the ability's `now` function, if the class file
 -- declared one beside `handler`, in one shared context whose names are Hekili's verbs (`gain`, `spend`, `applyBuff`,
 -- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`) and reads (`talent`, `buff`, `debuff`, the
--- resources by key, `knownRank`, `now`, `combat`) with belief meanings. Every write is a `modelled` sample at the
+-- resources by key, `knownRank`, `stat`, `swingBase`, `healthMax`, `now`, `combat`) with belief meanings. Every write is a `modelled` sample at the
 -- cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
 
@@ -133,6 +133,8 @@ function VS.KnownRank(ids)
     return 0
 end
 NAMES.knownRank = VS.KnownRank
+-- The belief's other plain reads content uses (Families/Player.lua, Swing.lua), as in the sim's `state` (State.lua).
+NAMES.stat, NAMES.swingBase, NAMES.healthMax = VS.Stat, VS.SwingBase, VS.HealthMax
 
 --- The known rank's spell ID for any rank ID of a tracked ability with a known rank, else `spellID` unchanged (nil,
 --- untracked or unknown). The client answers range only for a known rank (core edit E5). Allocates nothing.

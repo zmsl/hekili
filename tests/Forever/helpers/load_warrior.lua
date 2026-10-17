@@ -1,16 +1,15 @@
 -- tests/Forever/helpers/load_warrior.lua
 -- Loads Forever/Classes/Warrior.lua headless against a recording stand-in for Hekili: each spec:RegisterX call is
--- kept by method name, ns.VirtualState.Track's tables are merged, and the plain game reads the file captures at load
--- answer from `game` (known spells, queued spells, usability, the shapeshift form, VirtualState's per-hand base weapon
--- speeds). `env()` is a stand-in `state` for running
+-- kept by method name, and the plain game reads the file captures at load answer from `game` (known spells, queued
+-- spells, usability, the shapeshift form, the belief's per-hand base weapon speeds). `env()` is a stand-in `state` for running
 -- the file's handlers, state functions and hooks (Hekili runs them with setfenv( f, state )).
 local M = {}
 
---- Loads the class file. Returns `w`: `w.abilities`, `w.auras` (merged by key), `w.talents`, `w.track`, `w.resource`
+--- Loads the class file. Returns `w`: `w.abilities`, `w.auras` (merged by key), `w.talents`, `w.resource`
 --- ({ powerType, models }), `w.hooks[name]`, `w.events[event]` (spec:RegisterEvent's handlers), `w.funcs[name]`,
 --- `w.exprs[name]`, `w.settings[key]` ({ default, option }), `w.packs` (in order: { name, version, string }),
---- `w.options`, `w.specID`, `w.state` (Hekili.State's stand-in) and `w.game` (its `stat` and `healthMax` answer
---- VS.Stat and VS.HealthMax).
+--- `w.options`, `w.specID`, `w.state` (Hekili.State's stand-in, its knownRank, swingBase, stat and healthMax answering
+--- from `game`) and `w.game`. `w.passives`: spec:RegisterAbility's single registrations (the passives).
 function M.load()
     local reg = {}
     local spec = setmetatable({}, {
@@ -34,7 +33,7 @@ function M.load()
         now = 0, -- GetTime()
         row = {}, -- the combat-log row CombatLogGetCurrentEventInfo answers
     }
-    local w = { game = game, abilities = {}, auras = {}, track = {}, hooks = {}, funcs = {}, exprs = {} }
+    local w = { game = game, abilities = {}, auras = {}, hooks = {}, funcs = {}, exprs = {} }
     w.state = { main_hand = { size = 2 }, equipped = {}, timeToInterrupt = function() end }
     local hekili = { State = w.state }
     function hekili:NewSpecialization(id)
@@ -78,35 +77,27 @@ function M.load()
         saved[k] = rawget(_G, k) or false
         _G[k] = v
     end
-    local ns = {
-        Facade = fakes, -- the class file reads the game through ns.Facade (event-facade spec §1.2)
-        VirtualState = {
-            KnownRank = function(ids) -- VirtualState's spellbook: the plain known reads (`game.known`)
-                for i = #ids, 1, -1 do
-                    if game.known[ids[i]] then
-                        return i
-                    end
-                end
-                return 0
-            end,
-            Track = function(t)
-                for k, v in pairs(t.talents or {}) do
-                    w.track[k] = v
-                end
-            end,
-            SwingBase = function(hand)
-                return game.base[hand]
-            end,
-            Stat = function(name)
-                local v = game.stat[name] or {}
-                return v[1] or 0, v[2] or 0, v[3] or 0, v[4] or 0
-            end,
-            HealthMax = function()
-                return game.healthMax
-            end,
-        },
-    }
-    local ok, err = pcall(assert(loadfile("src/Hekili/Forever/Classes/Warrior.lua")), "Hekili", ns)
+    hekili.Client = fakes -- the class file reads the game through Hekili.Client (Hekili.lua)
+    -- the belief's reads, as the file's helpers call them through `state` (State.lua's names)
+    function w.state.knownRank(ids) -- the belief's spellbook: the plain known reads (`game.known`)
+        for i = #ids, 1, -1 do
+            if game.known[ids[i]] then
+                return i
+            end
+        end
+        return 0
+    end
+    function w.state.swingBase(hand)
+        return game.base[hand]
+    end
+    function w.state.stat(name)
+        local v = game.stat[name] or {}
+        return v[1] or 0, v[2] or 0, v[3] or 0, v[4] or 0
+    end
+    function w.state.healthMax()
+        return game.healthMax
+    end
+    local ok, err = pcall(assert(loadfile("src/Hekili/Forever/Classes/Warrior.lua")))
     for k, v in pairs(saved) do
         _G[k] = v or nil
     end
@@ -115,6 +106,10 @@ function M.load()
         for k, v in pairs(call[1]) do
             w.abilities[k] = v
         end
+    end
+    w.passives = {}
+    for _, call in ipairs(reg.RegisterAbility or {}) do
+        w.passives[call[1]] = call[2]
     end
     for _, call in ipairs(reg.RegisterAuras or {}) do
         for k, v in pairs(call[1]) do

@@ -88,11 +88,13 @@ local function slurp(path)
     return s
 end
 
--- The class's pack records, in the manifest's order; a listed pack without a file or a file not listed is refused.
-local function load(class)
-    local def = dofile("tools/packs/" .. class .. ".lua")
+-- The class's pack records, in the manifest's order; a listed pack without a file or a file not listed is refused, and
+-- a line parse refuses is reported with its .simc file. `root` (default "tools/packs/") is for the specs.
+local function load(class, root)
+    root = root or "tools/packs/"
+    local def = dofile(root .. class .. ".lua")
     local files = {}
-    local pipe = assert(io.popen("ls tools/packs/" .. class .. "/ 2>/dev/null"))
+    local pipe = assert(io.popen("ls " .. root .. class .. "/ 2>/dev/null"))
     for file in pipe:lines() do
         files[file] = true
     end
@@ -101,11 +103,12 @@ local function load(class)
     for i, name in ipairs(def.packs) do
         local file = name .. ".simc"
         if not files[file] then
-            error("pack " .. name .. " has no tools/packs/" .. class .. "/" .. file, 0)
+            error("pack " .. name .. " has no " .. root .. class .. "/" .. file, 0)
         end
         files[file] = nil
         local desc, simc, head = {}, {}, true
-        for line in slurp("tools/packs/" .. class .. "/" .. file):gmatch("([^\n]*)\n?") do
+        local path = root .. class .. "/" .. file
+        for line in slurp(path):gmatch("([^\n]*)\n?") do
             head = head and line:sub(1, 1) == "#"
             if head then
                 desc[#desc + 1] = line:gsub("^#%s?", ""):gsub("%s+$", "")
@@ -114,14 +117,18 @@ local function load(class)
             end
         end
         local p = { name = name, desc = table.concat(desc, " "), simc = table.concat(simc, "\n") .. "\n" }
-        p.lists = parse(p.simc)
+        local ok, lists = pcall(parse, p.simc)
+        if not ok then
+            error(path .. ": " .. lists, 0)
+        end
+        p.lists = lists
         p.version = def.date * 1000 + checksum(p.simc)
         p.spec = def.spec
         packs[i] = p
     end
     local stray = next(files)
     if stray then
-        error("tools/packs/" .. class .. "/" .. stray .. " is not in tools/packs/" .. class .. ".lua", 0)
+        error(root .. class .. "/" .. stray .. " is not in " .. root .. class .. ".lua", 0)
     end
     return packs
 end

@@ -7,9 +7,6 @@
 -- sword) are passives on stats the game reports. No resource or cost modifier. No pack names either. Inert for any
 -- other race (Engine/Schema/Races.lua).
 
-local addon, ns = ...
-local Hekili = _G[addon]
-
 local race = Hekili:NewRace("Human")
 
 race:RegisterAbility("will_to_survive", {
@@ -32,7 +29,7 @@ race:RegisterAbility("perception", {
     handler = function()
         applyBuff("perception")
     end,
-    -- VirtualState's now-state of the cast (event-facade spec §12a)
+    -- The belief's now-state of the cast (event-facade spec §12a)
     now = function()
         applyBuff("perception")
     end,

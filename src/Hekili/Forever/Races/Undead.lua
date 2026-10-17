@@ -8,9 +8,6 @@
 -- proc that drains health) and Underwater Breathing are passives with no rotation effect. No resource or cost modifier.
 -- No pack names either. Inert for any other race (Engine/Schema/Races.lua).
 
-local addon, ns = ...
-local Hekili = _G[addon]
-
 local race = Hekili:NewRace("Scourge")
 
 race:RegisterAbility("will_of_the_forsaken", {
@@ -35,7 +32,7 @@ race:RegisterAbility("cannibalize", {
     start = function() -- a channel: Hekili's simulation runs `start`, not `handler` (State.lua runHandler)
         applyBuff("cannibalize")
     end,
-    -- VirtualState's now-state of the cast (event-facade spec §12a)
+    -- The belief's now-state of the cast (event-facade spec §12a)
     now = function()
         applyBuff("cannibalize")
     end,

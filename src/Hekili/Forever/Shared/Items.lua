@@ -5,9 +5,6 @@
 -- per-item buff map (empty: no Forever trinket is modelled). Hekili's unused item-settings helpers and its unlisted
 -- unusable-trinket stub were dropped.
 
-local addon, ns = ...
-local Hekili = _G[addon]
-
 local class = Hekili.Class
 
 local shared = Hekili:NewShared()

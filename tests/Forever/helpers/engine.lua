@@ -210,6 +210,8 @@ function M.load(classToken, race)
             end,
         },
         C_SpellBook = {},
+        C_UnitAuras = { GetDebuffDataByIndex = noop },
+        AuraUtil = { UnpackAuraData = noop },
         C_SpecializationInfo = { GetSpecialization = noop, GetSpecializationInfo = noop },
         C_LossOfControl = {
             GetActiveLossOfControlData = noop,
@@ -256,7 +258,13 @@ function M.load(classToken, race)
     ns.commitKey = noop
     ns.metatables = { mt_resource = {} }
     ns.RegisterEvent, ns.RegisterUnitEvent = noop, noop
-    ns.UnitDebuff = noop
+    hekili.Client = ns.Facade -- the content's one engine name for the client (Hekili.lua)
+    -- the belief's reads content calls through `state` (State.lua's names), from the real VirtualState
+    local VS = ns.VirtualState
+    rawset(state, "knownRank", VS.KnownRank)
+    rawset(state, "swingBase", VS.SwingBase)
+    rawset(state, "healthMax", VS.HealthMax)
+    rawset(state, "stat", VS.Stat)
 
     local function item(id)
         return {

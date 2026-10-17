@@ -172,7 +172,8 @@ local function content()
                 return ""
             end,
         })
-        local ns = { Facade = any, UnitDebuff = any, UnitBuff = any }
+        local ns = { Facade = any }
+        _G.Hekili.Client = any
         assert(loadfile("src/Hekili/Engine/Schema/Races.lua"))("Hekili", ns)
         assert(loadfile("src/Hekili/Engine/Schema/Shared.lua"))("Hekili", ns)
         -- a global the file reads at load (INVTYPE_*) answers `any`; Hekili and the Lua library stay real

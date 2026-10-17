@@ -3,13 +3,10 @@
 -- `potion` action and auras core reads by name, and the Healthstone from Forever's items (DB2 1.60.1.70338: the five
 -- ranks and their Improved Healthstone variants). No Forever potion, flask or food is registered: the default
 -- priorities leave consumables out, and retail's (Tempered Potion, Pact of Gluttony's Healthstone) do not exist here.
--- Neither action has a `now`: VirtualState sees only spell casts (an item action has no spell ID), and a Healthstone's
+-- Neither action has a `now`: the belief sees only spell casts (an item action has no spell ID), and a Healthstone's
 -- heal is health, which the belief does not track (spec §4.3).
 
-local addon, ns = ...
-local Hekili = _G[addon]
-
-local C_Item = ns.Facade.C_Item
+local C_Item = Hekili.Client.C_Item
 local GetItemCount, IsUsableItem = C_Item.GetItemCount, C_Item.IsUsableItem
 
 local class = Hekili.Class

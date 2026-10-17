@@ -154,6 +154,10 @@ Hekili.Scripts = {
 
 Hekili.State = {}
 
+-- The game client as an addon may read it: ns.Facade (Virtual/API/Facade.lua) under its public name, the one engine
+-- name the content addons use besides the registration API, State and Class (restructure plan, Task 8).
+Hekili.Client = Facade
+
 -- The engine's public surface (Engine/Output.lua fills it): Output, Subscribe, Unsubscribe.
 Hekili.Engine = {}
 

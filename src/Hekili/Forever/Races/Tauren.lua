@@ -4,9 +4,6 @@
 -- (1259918, Forever's movement-speed ramp), Endurance and Cultivation have no cast, cost, maximum or rotation effect:
 -- nothing to register. No pack names it. Inert for any other race (Engine/Schema/Races.lua).
 
-local addon, ns = ...
-local Hekili = _G[addon]
-
 local race = Hekili:NewRace("Tauren")
 
 race:RegisterAbility("war_stomp", {
@@ -20,7 +17,7 @@ race:RegisterAbility("war_stomp", {
     handler = function()
         applyDebuff("target", "war_stomp")
     end,
-    -- VirtualState's now-state of the cast (event-facade spec §12a)
+    -- The belief's now-state of the cast (event-facade spec §12a)
     now = function()
         applyDebuff("target", "war_stomp")
     end,

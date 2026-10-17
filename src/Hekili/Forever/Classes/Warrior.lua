@@ -17,18 +17,15 @@
 -- The one- and two-hander rage rates as in Taco Dog Forever's Warrior pack
 -- (src/TacoDogForever_Warrior/Warrior.lua:21-24).
 
-local addon, ns = ...
-local Facade = ns.Facade
+local Facade = Hekili.Client
 local C_SpellBook, C_Spell, UnitClassBase = Facade.C_SpellBook, Facade.C_Spell, Facade.UnitClassBase
 local CombatLogGetCurrentEventInfo, GetTime = Facade.CombatLogGetCurrentEventInfo, Facade.GetTime
-local Hekili = _G[addon]
 
 if UnitClassBase("player") ~= "WARRIOR" then
     return
 end
 
 local state = Hekili.State
-local VS = ns.VirtualState
 local IsSpellKnown, IsCurrentSpell, IsSpellUsable =
     C_SpellBook.IsSpellKnown, C_Spell.IsCurrentSpell, C_Spell.IsSpellUsable
 local floor, max, min, sort = math.floor, math.max, math.min, table.sort
@@ -76,15 +73,16 @@ local function rest(ids)
     return out
 end
 
--- The highest known rank of a rank list, from VirtualState's spellbook (the plain IsSpellKnown reads it keeps): the
--- same answer in the sim's `state` environment and in a `now` handler's (event-facade spec §12a).
+-- The highest known rank of a rank list, from the belief's spellbook (the plain IsSpellKnown reads it keeps): the
+-- same answer in the sim's `state` environment and in a `now` handler's (event-facade spec §12a). `state.knownRank`, as
+-- this file's plain helpers run in the file's own environment.
 local function knownRank(ids)
-    return VS.KnownRank(ids)
+    return state.knownRank(ids)
 end
 
--- Tactical Mastery is a passive, not an ability: tracked so VirtualState's spellbook knows it.
+-- Tactical Mastery is a passive, not an ability: declared so the belief's spellbook knows it.
 local TACTICAL_MASTERY_IDS = { TACTICAL_MASTERY }
-VS.Track({ abilities = { TACTICAL_MASTERY } })
+spec:RegisterAbility("tactical_mastery", { id = TACTICAL_MASTERY, passive = true })
 
 -- The rage a stance swap keeps (Tactical Mastery and its improvement): shared by swap_stance and the stances' `now`.
 local function stanceKeep(improvedRank)
@@ -126,7 +124,7 @@ end
 -- says 60%). The two-hander flag is Hekili's gear scan (main_hand.size from C_Item.GetItemInfo's equip location on
 -- PLAYER_EQUIPMENT_CHANGED; the Forever API data marks neither it nor GetInventoryItemID secret).
 local function baseSpeed(hand)
-    local speed = VS.SwingBase(hand)
+    local speed = state.swingBase(hand)
     if speed <= 0 then
         speed = hand == 1 and state.mainhand_speed or state.offhand_speed
     end -- no plain base read yet
@@ -146,7 +144,7 @@ end
 -- Rage from damage taken (Protection design §1.3; magey/forever-warrior issue 3, level 8-9): the hit before every
 -- reduction x 10 / maximum health; a blocked hit gives the rage of its unblocked amount; attacker level made no
 -- difference. The pre-armor amount is the post-armor one / (1 - armor / (armor + 400 + 85 x attacker level)), with the
--- armor and block value from VirtualState's out-of-combat stat cache. Defensive Stance's 10% and Shield Wall's
+-- armor and block value from the belief's out-of-combat stat cache. Defensive Stance's 10% and Shield Wall's
 -- reduction come off before the rage too (user ruling 2026-10-16: rage is from the unreduced hit): their factors divide
 -- the amount back. Shield Specialization (a 20% chance a rank to gain 5 on a block) and Master of Defense (50% a rank on
 -- a dodge or parry with a shield) as their expected values, the band carrying the spread (tooltips read in game
@@ -167,9 +165,9 @@ end)
 -- The rage of a post-armor amount `post` from an attacker of `level`, divided back by `reduced` (the percentage
 -- reductions' product). Allocates nothing.
 local function rageTaken(post, level, reduced)
-    local armor = select(2, VS.Stat("UnitArmor"))
+    local armor = select(2, state.stat("UnitArmor"))
     local mitigated = armor / (armor + 400 + 85 * level) -- nonzero: 400 + 85 x level > 0
-    return post / (1 - mitigated) / reduced * RAGE_TAKEN_FACTOR / VS.HealthMax("player") -- nonzero: max > 0 (100)
+    return post / (1 - mitigated) / reduced * RAGE_TAKEN_FACTOR / state.healthMax("player") -- nonzero: max > 0 (100)
 end
 
 -- A proc's expected rage at chance p and its half-width.
@@ -204,8 +202,8 @@ spec:RegisterResource(
             crit = function()
                 return 3.46 * baseSpeed(1)
             end,
-            -- VirtualState's rage from a hit on us (kind: "WOUND", "BLOCKED", "BLOCK", "DODGE", "PARRY", "MISS"): the
-            -- expected gain and its half-width. Run in the belief's `now` context: `buff` and `talent` read the belief
+            -- The belief's rage from a hit on us (kind: "WOUND", "BLOCKED", "BLOCK", "DODGE", "PARRY", "MISS"): the
+            -- expected gain and its half-width. Run in the belief's `now` context: `buff`, `talent` and `stat` read the belief
             -- at the hit; the helpers it calls get those values as arguments (their own environment is the file's).
             taken = function(kind, amount, level)
                 local reduced = 1
@@ -219,13 +217,13 @@ spec:RegisterResource(
                 if kind == "WOUND" or kind == "BLOCKED" then
                     local post = amount
                     if kind == "BLOCKED" then
-                        post = post + VS.Stat("GetShieldBlock") -- the unblocked amount
+                        post = post + stat("GetShieldBlock") -- the unblocked amount
                     end
                     unblockedAvg = unblockedAvg + UNBLOCKED_WEIGHT * (post - unblockedAvg)
                     gain = rageTaken(post, level, reduced)
                     width = TAKEN_SPREAD * gain
                 elseif kind == "BLOCK" then
-                    gain = rageTaken(min(VS.Stat("GetShieldBlock"), unblockedAvg), level, reduced)
+                    gain = rageTaken(min(stat("GetShieldBlock"), unblockedAvg), level, reduced)
                     width = gain
                 end
                 local rank = talent.shield_specialization.rank
@@ -299,18 +297,18 @@ spec:RegisterResource(
             end,
 
             interval = 1,
-            -- shortcut: Improved Bloodrage's +25% (12301) is unmodelled here, VirtualState's entries take a number fixed at
+            -- shortcut: Improved Bloodrage's +25% (12301) is unmodelled here, the belief's entries take a number fixed at
             -- build; the handler's instant gain carries it. Upgrade if the regen entries learn talent-scaled values.
             value = 1,
         },
     },
     nil,
     {
-        -- Out-of-combat rage loss per second, VirtualState's `decay` (in the meta table: Hekili takes every regen entry for
+        -- Out-of-combat rage loss per second, the belief's `decay` (in the meta table: Hekili takes every regen entry for
         -- a model): the client's Rage tooltip, "1.25 Rage is lost every 1 sec" (measured 100 -> 0 in 82.2 s: 80 s plus
         -- reaction time); Anger Management's tooltip: 30% less.
         -- No `max`: rage is 100, and a Gnome's 105 comes from Expansive Mind in the Gnome's race pack
-        -- (Forever/Races/Gnome.lua, VirtualState's `maxMods`, event-facade spec §12b).
+        -- (Forever/Races/Gnome.lua, the belief's `maxMods`, event-facade spec §12b).
         decay = function()
             return 1.25 * (1 - 0.3 * state.talent.anger_management.rank)
         end,
@@ -327,7 +325,7 @@ spec:RegisterResource(
 -- grouped by their columns as the pane shows them. Keys are Classic's where the talent exists (Bastion keeps Classic's
 -- one_handed_weapon_specialization), snake_case names for the Forever-only ones. Each node reported one definition
 -- spell at every rank the export saw (owned nodes at ranks 1-5 report their rank 1 spell; Iron Will and Defiance
--- define themselves by a higher DB2 rank's ID), so there are no rank aliases. VirtualState maps the trait walk's
+-- define themselves by a higher DB2 rank's ID), so there are no rank aliases. The belief maps the trait walk's
 -- spells to them.
 spec:RegisterTalents({
     -- Arms (17)
@@ -588,7 +586,7 @@ spec:RegisterAuras({
         max_stack = 1,
     },
     -- Shield Block's blocks are the aura's charges (DB2: SpellAuraOptions.ProcCharges = 2, no charge category): its
-    -- stacks, each block or partial block on us spending one (VirtualState's `consumedBy`).
+    -- stacks, each block or partial block on us spending one (the belief's `consumedBy`).
     shield_block = {
         id = 2565,
         duration = 7,
@@ -658,7 +656,7 @@ end)
 
 -- The reactive windows from the combat log, as Classic models them (origin/classic:Classic/Warrior.lua:400-456): our
 -- dodged swing or ability opens Overpower's, a dodge, parry or block on us opens Revenge's. On Forever the rows come
--- from VirtualState's event facade (docs/superpowers/specs/2026-10-15-virtualstate-event-facade.md §6).
+-- from the belief's event facade (docs/superpowers/specs/2026-10-15-virtualstate-event-facade.md §6).
 local enemy_revenge_trigger, enemy_dodged, enemy_dodged_target = 0, 0, nil
 local last_overpower = 0
 local misses = { DODGE = true, PARRY = true, BLOCK = true }
@@ -757,7 +755,7 @@ spec:RegisterAbilities({
         nobuff = "battle_stance",
         timeToReady = stanceReady,
 
-        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             removeBuff("defensive_stance")
             removeBuff("berserker_stance")
@@ -783,7 +781,7 @@ spec:RegisterAbilities({
         known = knows({ 18499 }),
         buff = "berserker_stance",
 
-        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             applyBuff("berserker_rage")
             if talent.improved_berserker_rage.enabled then
@@ -811,7 +809,7 @@ spec:RegisterAbilities({
         nobuff = "berserker_stance",
         timeToReady = stanceReady,
 
-        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             removeBuff("battle_stance")
             removeBuff("defensive_stance")
@@ -839,7 +837,7 @@ spec:RegisterAbilities({
         known = knows({ 2687 }),
         toggle = "cooldowns",
 
-        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             gain(10 * (1 + 0.25 * talent.improved_bloodrage.rank), "rage")
             applyBuff("bloodrage")
@@ -913,7 +911,7 @@ spec:RegisterAbilities({
             return combat == 0 and not action.rend.in_range, "cannot be in combat; target must be outside melee range"
         end,
 
-        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             gain((CHARGE_RAGE[knownRank(CHARGE)] or 9) + 3 * talent.improved_charge.rank, "rage")
             applyDebuff("target", "charge_stun")
@@ -941,7 +939,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
-        onNextSwing = true, -- VirtualState: paid at the main hand's next swing, which then brings no rage
+        onNextSwing = true, -- The belief: paid at the main hand's next swing, which then brings no rage
         known = knows(CLEAVE),
 
         usable = function()
@@ -1011,7 +1009,7 @@ spec:RegisterAbilities({
         nobuff = "defensive_stance",
         timeToReady = stanceReady,
 
-        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             removeBuff("battle_stance")
             removeBuff("berserker_stance")
@@ -1040,7 +1038,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(DEMORALIZING_SHOUT),
 
-        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             applyDebuff("target", "demoralizing_shout")
         end,
@@ -1092,7 +1090,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(EXECUTE),
         nobuff = "defensive_stance",
-        healthGate = 0.2, -- usable at or below 20% of the target's health: VirtualState's target health reads it
+        healthGate = 0.2, -- usable at or below 20% of the target's health: the belief's target health reads it
 
         usable = function()
             return reactive(EXECUTE), "requires target health under 20 percent"
@@ -1119,7 +1117,7 @@ spec:RegisterAbilities({
         known = knows(HAMSTRING),
         nobuff = "defensive_stance",
 
-        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             applyDebuff("target", "hamstring")
         end,
@@ -1143,9 +1141,9 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
-        -- VirtualState: paid at the main hand's next swing, which then brings no rage. Hekili's own simulation ignores
+        -- The belief: paid at the main hand's next swing, which then brings no rage. Hekili's own simulation ignores
         -- onNextSwing: it spends the cost at the press and still adds the replaced swing's rage, so its forward
-        -- projection is one swing of rage optimistic per queued strike until VirtualState's next drain corrects the
+        -- projection is one swing of rage optimistic per queued strike until the belief's next drain corrects the
         -- belief (checkpoint Q9). Cleave alike.
         onNextSwing = true,
         known = knows(HEROIC_STRIKE),
@@ -1180,7 +1178,7 @@ spec:RegisterAbilities({
             return action.intercept.in_range, "target must be within Intercept's range"
         end,
 
-        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             applyDebuff("target", "intercept_stun")
         end,
@@ -1327,7 +1325,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows({ 12323 }),
 
-        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             applyDebuff("target", "piercing_howl")
         end,
@@ -1396,7 +1394,7 @@ spec:RegisterAbilities({
         known = knows(REND),
         nobuff = "berserker_stance",
 
-        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             applyDebuff("target", "rend", REND_DURATION[knownRank(REND)] or 9)
         end,
@@ -1600,7 +1598,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(SUNDER_ARMOR),
 
-        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             applyDebuff("target", "sunder_armor", nil, min(5, debuff.sunder_armor.stack + 1))
         end,
@@ -1668,7 +1666,7 @@ spec:RegisterAbilities({
         known = knows(THUNDER_CLAP),
         nobuff = "berserker_stance",
 
-        -- what the cast did to the now-state, in VirtualState's context (spec §12a)
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
             applyDebuff("target", "thunder_clap", THUNDER_CLAP_DURATION[knownRank(THUNDER_CLAP)] or 10)
         end,
@@ -1910,8 +1908,9 @@ spec:RegisterSetting("challenging_shout_loose", 3, {
 
 spec:RegisterOptions({ package = "Arms" })
 
--- The three priorities, generated by tools/make_pack.lua (lua5.1 tools/make_pack.lua prints these strings, in this
--- order; tests/Forever/warrior_spec.lua checks they match). Pick one with /hekili priority <name>.
+-- The three priorities, written by `make packs` (tools/make_pack.lua) from tools/packs/warrior.lua and
+-- tools/packs/warrior/*.simc; edit those and run it, never these blocks (tests/Forever/warrior_spec.lua checks they
+-- match). Pick one with /hekili priority <name>.
 spec:RegisterPack(
     "Arms",
     20261017596,

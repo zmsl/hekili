@@ -144,4 +144,59 @@ describe("headless Hekili", function()
         ctl.unitIs.targettarget = fake.SECRET
         assert.is_true(api.issecretvalue(api.UnitIsUnit("targettarget", "player")))
     end)
+
+    -- The content surface (restructure plan, Task 8): content reads the belief through four environment names, never
+    -- through VirtualState, and declares a passive instead of calling VS.Track.
+    describe("the content's environment names", function()
+        local VS, I, S
+        local function probe()
+            return knownRank, swingBase, healthMax, stat("UnitArmor") -- luacheck: ignore 113 (the env names)
+        end
+        setup(function()
+            VS, I, S = H.ns.VirtualState, H.ns.VirtualStateInternal, H.Hekili.State
+        end)
+
+        local function answers(env)
+            local kr, sb, hm, a, b = setfenv(probe, env)()
+            local x, y = VS.Stat("UnitArmor")
+            assert.are.same({ VS.KnownRank, VS.SwingBase, VS.HealthMax, x, y }, { kr, sb, hm, a, b })
+        end
+
+        it("answers knownRank, stat, swingBase and healthMax from the belief in a sim handler's `state`", function()
+            answers(S)
+            assert.is_number(S.stat.crit) -- `stat` stays Hekili's stat table; calling it reads the belief's cache
+        end)
+
+        it("answers them in a `now` handler's context, which a resource's `taken` runs in too", function()
+            answers(I.nowCtx)
+        end)
+
+        it("answers them in a resource model function: RegisterResource binds its meta functions to `state`", function()
+            local meta = { probe = probe }
+            H.Hekili.Class.specs[0]:RegisterResource(H.env.Enum.PowerType.Rage, {}, nil, meta)
+            local kr, sb, hm = meta.probe()
+            assert.are.same({ VS.KnownRank, VS.SwingBase, VS.HealthMax }, { kr, sb, hm })
+        end)
+
+        it("calls stat without allocating", function()
+            local alloc = require("Virtual.State.helpers.alloc")
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    S.stat("UnitArmor")
+                end, 100)
+            )
+        end)
+
+        it("forwards a passive ability to the belief's tracked set and registers no ability", function()
+            local track, seen = VS.Track, nil
+            VS.Track = function(t)
+                seen = t
+            end
+            H.Hekili.Class.specs[0]:RegisterAbility("passive_probe", { id = 999003, passive = true })
+            VS.Track = track
+            assert.are.same({ abilities = { 999003 } }, seen)
+            assert.is_nil(rawget(H.Hekili.Class.specs[0].abilities, "passive_probe"))
+        end)
+    end)
 end)

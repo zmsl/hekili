@@ -111,22 +111,27 @@ describe("shared content", function()
                         return 0
                     end,
                 },
+                -- the player's debuffs by index (name, count, dispel type, duration, expiration), unpacked in
+                -- AuraUtil.UnpackAuraData's order: name, icon, count, dispel type, duration, expiration
+                C_UnitAuras = {
+                    GetDebuffDataByIndex = function(unit, i)
+                        return unit == "player" and debuffs[i] or nil
+                    end,
+                },
+                AuraUtil = {
+                    UnpackAuraData = function(d)
+                        if d then
+                            return d[1], nil, d[2], d[3], d[4], d[5]
+                        end
+                    end,
+                },
             },
-            -- the player's debuffs by index: name, icon, count, dispel type, duration, expiration
-            UnitDebuff = function(unit, i)
-                local d = unit == "player" and debuffs[i]
-                if d then
-                    return d[1], nil, d[2], d[3], d[4], d[5]
-                end
-            end,
-            UnitBuff = function()
-                error("a shared aura reads the target's buffs")
-            end,
         }
+        _G.Hekili.Client = ns.Facade
         assert(loadfile("src/Hekili/Engine/Schema/Races.lua"))("Hekili", ns)
         assert(loadfile("src/Hekili/Engine/Schema/Shared.lua"))("Hekili", ns)
         for _, f in ipairs(files or SHARED) do
-            assert(loadfile("src/Hekili/Forever/Shared/" .. f .. ".lua"))("Hekili", ns)
+            assert(loadfile("src/Hekili/Forever/Shared/" .. f .. ".lua"))()
         end
     end
 

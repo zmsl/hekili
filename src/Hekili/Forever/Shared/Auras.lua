@@ -5,13 +5,16 @@
 -- target-side reads (a target's auras are secret in combat) and the absorbs were dropped (spec §4.1); class buffs live in
 -- their class files and racials in the race packs.
 
-local addon, ns = ...
-local Hekili = _G[addon]
-
-local C_LossOfControl = ns.Facade.C_LossOfControl
+local Client = Hekili.Client
+local C_LossOfControl = Client.C_LossOfControl
 local GetActiveLossOfControlData, GetActiveLossOfControlDataCount =
     C_LossOfControl.GetActiveLossOfControlData, C_LossOfControl.GetActiveLossOfControlDataCount
-local UnitDebuff = ns.UnitDebuff
+local GetDebuffDataByIndex, UnpackAuraData = Client.C_UnitAuras.GetDebuffDataByIndex, Client.AuraUtil.UnpackAuraData
+
+-- The classic UnitDebuff over the client's aura rows (Engine/Sim/Utils.lua's, which content does not reach).
+local function UnitDebuff(unit, index, filter)
+    return UnpackAuraData(GetDebuffDataByIndex(unit, index, filter))
+end
 
 local shared = Hekili:NewShared()
 

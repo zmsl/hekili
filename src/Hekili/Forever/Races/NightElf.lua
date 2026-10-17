@@ -7,9 +7,6 @@
 -- modifier. No pack names either: a race ability is absent for other races; a player adds it to a priority if wanted.
 -- Inert for any other race (Engine/Schema/Races.lua).
 
-local addon, ns = ...
-local Hekili = _G[addon]
-
 local race = Hekili:NewRace("NightElf")
 
 race:RegisterAbility("elunes_light", {
@@ -23,7 +20,7 @@ race:RegisterAbility("elunes_light", {
     handler = function()
         applyBuff("elunes_light")
     end,
-    -- VirtualState's now-state of the cast (event-facade spec §12a)
+    -- The belief's now-state of the cast (event-facade spec §12a)
     now = function()
         applyBuff("elunes_light")
     end,

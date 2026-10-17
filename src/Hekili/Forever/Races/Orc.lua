@@ -7,9 +7,6 @@
 -- GCD). Hardiness (-20% stun duration) and Axe Specialization (+1% crit with an axe) are passives. No resource or cost
 -- modifier. No pack names either. Inert for any other race (Engine/Schema/Races.lua).
 
-local addon, ns = ...
-local Hekili = _G[addon]
-
 local race = Hekili:NewRace("Orc")
 
 race:RegisterAbility("blood_fury", {
@@ -23,7 +20,7 @@ race:RegisterAbility("blood_fury", {
     handler = function()
         applyBuff("blood_fury", 15)
     end,
-    -- VirtualState's now-state of the cast (event-facade spec §12a)
+    -- The belief's now-state of the cast (event-facade spec §12a)
     now = function()
         applyBuff("blood_fury", 15)
     end,

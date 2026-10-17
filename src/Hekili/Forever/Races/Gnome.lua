@@ -5,9 +5,6 @@
 -- Warrior, 1259803 Rogue) and Escape Artist (20589: roots and snares removed, immune for 3 s; 120 s, on the GCD).
 -- Engineering Specialization is a profession passive. Inert for any other race (Engine/Schema/Races.lua).
 
-local addon, ns = ...
-local Hekili = _G[addon]
-
 local race = Hekili:NewRace("Gnome")
 
 local EUREKA = { 1259812, 1259817, 1259821, 1259823 } -- the other classes' Eureka!
@@ -90,7 +87,7 @@ race:RegisterAbility("eureka", {
     handler = function()
         applyBuff("eureka", 15, 3)
     end,
-    -- VirtualState's now-state of the cast (event-facade spec §12a)
+    -- The belief's now-state of the cast (event-facade spec §12a)
     now = function()
         applyBuff("eureka", 15, 3)
     end,

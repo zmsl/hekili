@@ -487,6 +487,11 @@ state.pairs = pairs
 state.rawget = rawget
 state.rawset = rawset
 state.select = select
+-- The belief's plain reads, as names in every content function's environment (restructure plan, Task 8; the `now`
+-- context has the same four, Virtual/State/Families/Now.lua). `stat` is Hekili's stat table; calling it, stat(name,
+-- arg), answers VirtualState's out-of-combat stat cache (mt_stat's __call below).
+local VS = ns.VirtualState
+state.knownRank, state.swingBase, state.healthMax = VS.KnownRank, VS.SwingBase, VS.HealthMax
 state.tinsert = table.insert
 state.insert = table.insert
 state.remove = table.remove
@@ -2236,6 +2241,9 @@ ns.metatables.mt_spec = mt_spec
 
 
 local mt_stat = {
+    __call = function( _, name, arg )
+        return VS.Stat( name, arg )
+    end,
     __index = function(t, k)
         if k == "strength" then
             t[k] = UnitStat( "player", 1 )

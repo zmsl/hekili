@@ -1,17 +1,17 @@
 -- tests/Forever/helpers/load_druid.lua
 -- Loads Forever/Classes/Druid.lua headless against a recording stand-in for Hekili (load_warrior.lua's shape): each
 -- spec:RegisterX call is kept by method name, and the plain game reads the file captures at load answer from `game`
--- (known spells, queued spells, the shapeshift form, the time, the combat-log row, VirtualState's per-hand base weapon
+-- (known spells, queued spells, the shapeshift form, the time, the combat-log row, the belief's per-hand base weapon
 -- speeds). `env()` is a stand-in `state` for running the file's handlers, state functions, expressions and hooks
 -- (Hekili runs them with setfenv( f, state )).
 local M = {}
 
---- Loads the class file. `vs` (optional) is the VirtualState the file binds as ns.VirtualState (a real one, for the
---- strict-context specs); by default a fake whose KnownRank answers from `game.known`. Returns `w`: `w.abilities`,
+--- Loads the class file. `vs` (optional) is the VirtualState whose KnownRank the file's knownRank reads through
+--- `state.knownRank` (a real one, for the strict-context specs); by default a fake answering from `game.known`. Returns `w`: `w.abilities`,
 --- `w.auras` (merged by key), `w.talents`, `w.resources[powerType]` ({ models, meta }), `w.costMods` (the
 --- RegisterCostMod declarations), `w.hooks[name]`, `w.events[event]`, `w.funcs[name]`, `w.exprs[name]`,
 --- `w.settings[key]` ({ default, option }), `w.packs` (in order: { name, version, string }), `w.options`, `w.specID`,
---- `w.ns`, `w.spec` (the recording spec object), `w.state` (Hekili.State's stand-in) and `w.game`.
+--- `w.spec` (the recording spec object), `w.state` (Hekili.State's stand-in) and `w.game`.
 function M.load(vs)
     local reg = {}
     local spec = setmetatable({}, {
@@ -68,24 +68,18 @@ function M.load(vs)
         saved[k] = rawget(_G, k) or false
         _G[k] = v
     end
-    local ns = {
-        Facade = fakes, -- the class file reads the game through ns.Facade (event-facade spec §1.2)
-        VirtualState = vs or {
-            KnownRank = function(ids) -- VirtualState's spellbook: the plain known reads (`game.known`)
-                for i = #ids, 1, -1 do
-                    if game.known[ids[i]] then
-                        return i
-                    end
+    hekili.Client = fakes -- the class file reads the game through Hekili.Client (Hekili.lua)
+    -- the belief's spellbook, as the file's knownRank calls it through `state` (State.lua's name)
+    w.state.knownRank = vs and vs.KnownRank
+        or function(ids) -- the plain known reads (`game.known`)
+            for i = #ids, 1, -1 do
+                if game.known[ids[i]] then
+                    return i
                 end
-                return 0
-            end,
-            SwingBase = function(hand)
-                return game.base[hand]
-            end,
-        },
-    }
-    w.ns = ns
-    local ok, err = pcall(assert(loadfile("src/Hekili/Forever/Classes/Druid.lua")), "Hekili", ns)
+            end
+            return 0
+        end
+    local ok, err = pcall(assert(loadfile("src/Hekili/Forever/Classes/Druid.lua")))
     for k, v in pairs(saved) do
         _G[k] = v or nil
     end
