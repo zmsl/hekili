@@ -3,7 +3,7 @@
 -- handlers run by VirtualState itself, in Families/Now.lua's strict context. What Hekili does with the rest is verified
 -- in game (the plan's checkpoint).
 local ld = require("Forever.helpers.load_druid")
-local alloc = require("Virtual.State.helpers.alloc")
+local alloc = require("Game.State.helpers.alloc")
 
 -- key = { spell IDs in rank order, cost with every talent at rank 0 (a list: by rank; below 1: a fraction of maximum
 -- mana), spendType, cooldown, gcd }, from the DB2: energy and mana costs as points, rage as the cost / 10; the
@@ -779,7 +779,7 @@ describe("Forever Druid", function()
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists", "druid")
-        local secretToken = require("Virtual.State.helpers.load").module().VirtualState.AplSecretToken
+        local secretToken = require("Game.State.helpers.load").module().VirtualState.AplSecretToken
         local shared = { use_items = true } -- Hekili's `all` (Hekili_Forever/Shared/Items.lua's use_items)
         local kinds = {
             buff = w.auras,
@@ -843,9 +843,9 @@ end)
 -- The Druid's `now` handlers as VirtualState runs them: bound to Families/Now.lua's context (Hekili's verbs onto the
 -- belief, nothing else reachable), on our own casts' success.
 describe("Forever Druid in VirtualState's now context", function()
-    local load = require("Virtual.State.helpers.load")
-    local fake = require("Virtual.State.helpers.fake_api")
-    local fs = require("Virtual.State.helpers.fake_spec")
+    local load = require("Game.State.helpers.load")
+    local fake = require("Game.State.helpers.fake_api")
+    local fs = require("Game.State.helpers.fake_spec")
     local dvs = require("Forever.helpers.druid_vs")
     local ns, VS, I, api, ctl, w, h, saved
 

@@ -1,4 +1,4 @@
--- Lint for the Forever branch. Every game read goes through ns.Facade (src/Hekili/Virtual/API/Facade.lua; see
+-- Lint for the Forever branch. Every game read goes through ns.Facade (src/Hekili/Game/API/Facade.lua; see
 -- tools/check_api_reads.sh): the names of tools/api_inventory.txt, CreateFrame among them, are deliberately NOT
 -- declared here, so a bare read shows up as W113 "accessing undefined variable".
 std = "lua51"
@@ -93,16 +93,16 @@ files["src/Hekili/Options/DevTools.lua"] = {
 }
 -- UI.lua reads no engine state (Engine.Registry, Engine.Output.status): not stateEnv, so a bare state/class fails.
 files["src/Hekili/UI/UI.lua"] = { globals = { "p", "alphaCheck" } } -- upstream's two stray global reads
--- The names a class file's `now` function reads in VirtualState's context (src/Hekili/Virtual/State/Families/Now.lua).
+-- The names a class file's `now` function reads in VirtualState's context (src/Hekili/Game/State/Families/Now.lua).
 local nowEnv = {
     "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "setCooldown", "talent",
     "buff", "debuff", "knownRank", "stat", "swingBase", "healthMax", "now", "combat", "rage", "energy", "mana", "focus",
     "runic_power",
 }
-files["tests/Virtual/State/"] = { std = "+busted", read_globals = nowEnv }
-files["tests/Virtual/Events/"] = { std = "+busted", read_globals = nowEnv }
-files["tests/Virtual/API/"] = { std = "+busted", read_globals = nowEnv }
-files["tests/Virtual/harness/"] = { std = "+busted" }
+files["tests/Game/State/"] = { std = "+busted", read_globals = nowEnv }
+files["tests/Game/Events/"] = { std = "+busted", read_globals = nowEnv }
+files["tests/Game/API/"] = { std = "+busted", read_globals = nowEnv }
+files["tests/Game/harness/"] = { std = "+busted" }
 files["tests/Forever/"] = { std = "+busted" }
 -- The Warrior's handlers, state expressions and state functions run with setfenv( f, state ) as well; these are the
 -- further `state` names they use.

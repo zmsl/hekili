@@ -607,7 +607,7 @@ spec:RegisterEvent("UI_ERROR_MESSAGE", function(_, errorType)
 end)
 
 spec:RegisterHook("reset_precast", function()
-    -- The form comes from the belief's Forms source (Virtual/State/Sources/Forms.lua) through the aura walk.
+    -- The form comes from the belief's Forms source (Game/State/Sources/Forms.lua) through the aura walk.
     local maul = knownRank(MAUL)
     if maul > 0 and IsCurrentSpell(MAUL[maul]) then
         applyBuff("maul")

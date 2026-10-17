@@ -5,7 +5,7 @@
 -- fights; the design's counts run behind make test-druid (#druid). Each gate prints its tally line, which is also its
 -- failure message.
 local dw = require("Forever.helpers.druid_world")
-local metrics = require("Virtual.harness.metrics")
+local metrics = require("Game.harness.metrics")
 
 local function count(t, key, v)
     t[key] = (t[key] or 0) + (v or 1)

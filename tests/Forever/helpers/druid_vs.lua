@@ -3,12 +3,12 @@
 -- built from the class file's registrations (load_druid.lua's recording load; values evaluated at talent rank 0,
 -- functions kept in `funcs`) and handed to the Adapter through the fake spec provider.
 local ld = require("Forever.helpers.load_druid")
-local load = require("Virtual.State.helpers.load")
-local fs = require("Virtual.State.helpers.fake_spec")
+local load = require("Game.State.helpers.load")
+local fs = require("Game.State.helpers.fake_spec")
 
 local M = {}
 
---- Builds the Druid's class into the VirtualState `ns` loaded (Virtual.State.helpers.load) on fake_api `api` and
+--- Builds the Druid's class into the VirtualState `ns` loaded (Game.State.helpers.load) on fake_api `api` and
 --- starts it at SpecChanged. `edit(class, w)` (optional) changes the class before the build (a scenario's declaration
 --- variant). Returns `w` (the recording load, bound to this VirtualState) and `h` (the fake Hekili). The caller sets
 --- the globals the build reads (GetTime, UnitGUID, CreateFrame, issecretvalue, debugprofilestop) and clears

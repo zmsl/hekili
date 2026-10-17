@@ -2,8 +2,8 @@
 -- Begin/Publish/Subscribe/Annotate on the file alone, then stock Hekili headless as Arms: a build suspended at every
 -- yield never shows a half-built set, a snapshot during a suspended build drops the stale thread (R1), and the status
 -- record bumps on a combat flip only.
-local alloc = require("Virtual.State.helpers.alloc")
-local headless = require("Virtual.harness.headless")
+local alloc = require("Game.State.helpers.alloc")
+local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 
 -- A fresh Output.lua: returns Hekili.Engine (public) and ns.Output (private).

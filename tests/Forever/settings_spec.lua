@@ -2,7 +2,7 @@
 -- Configure hands the engine the profile's subtables by reference (an edit inside one is live) and copies its
 -- scalars (a scalar edit needs another Configure); the headless boot runs OnInitialize -> InitializeProfile ->
 -- Configure from the fresh AceDB profile, and the engine recommends from it.
-local headless = require("Virtual.harness.headless")
+local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 
 local SUBTABLES = { "specs", "packs", "toggles", "displays", "performance", "notifications" }

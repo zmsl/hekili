@@ -1,7 +1,7 @@
 -- tests/Forever/races_spec.lua (event-facade spec §12b): the race packs. Every race file Hekili_Forever.toc lists
 -- (Races/*.lua), loaded through Engine/Schema/Races.lua headless against a stand-in for Hekili: inert for another race,
 -- registered for its own, over `all`'s stale entries, and its cost modifier's numbers in the simulation. Engine/Schema/Races.lua's
--- own rules, with a fake race, are tests/Virtual/State/races_spec.lua.
+-- own rules, with a fake race, are tests/Game/State/races_spec.lua.
 
 local addons = require("helpers.addons")
 
@@ -321,10 +321,10 @@ end)
 
 -- The race packs' `now` handlers as VirtualState runs them: bound to Families/Now.lua's context, on our own casts.
 describe("race packs in VirtualState's now context", function()
-    local vload = require("Virtual.State.helpers.load")
-    local fake = require("Virtual.State.helpers.fake_api")
-    local fs = require("Virtual.State.helpers.fake_spec")
-    local alloc = require("Virtual.State.helpers.alloc")
+    local vload = require("Game.State.helpers.load")
+    local fake = require("Game.State.helpers.fake_api")
+    local fs = require("Game.State.helpers.fake_spec")
+    local alloc = require("Game.State.helpers.alloc")
     local saved
 
     before_each(function()

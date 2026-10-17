@@ -1,9 +1,9 @@
 -- tools/vslog_fixture.lua: turns a ForeverProbe /vslog dump (the in-game checkpoint's captures, combat harness design
--- §5) into a harness fixture (tests/Virtual/harness/fixtures/): every token row kept, in ms since the first event
+-- §5) into a harness fixture (tests/Game/harness/fixtures/): every token row kept, in ms since the first event
 -- (/vslog's t0 is its first record); our spells as the fake spec's (`STRIKE` the on-next-swing strike, `DOT`, else
 -- `OTHER`, by the IDs given), another player's (secret) as `SECRET`; a row that is not raw /vslog raises. Run from the
 -- repository root:
---   lua5.1 tools/vslog_fixture.lua dump.txt "min,max,min,max" STRIKE=<id> DOT=<id> > tests/Virtual/harness/fixtures/x.lua
+--   lua5.1 tools/vslog_fixture.lua dump.txt "min,max,min,max" STRIKE=<id> DOT=<id> > tests/Game/harness/fixtures/x.lua
 -- then write the fixture's header comment (what was captured, where it is described). Loaded with the argument "rows"
 -- (loadfile(...)("rows", text, ids)) it returns the parsed rows instead, for the specs.
 

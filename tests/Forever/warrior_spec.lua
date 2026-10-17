@@ -2,7 +2,7 @@
 -- 1.60.1.70338, wowdb), loaded headless through a recording stand-in for Hekili (helpers/load_warrior.lua). What Hekili
 -- does with them is verified in game (the plan's checkpoint).
 local lw = require("Forever.helpers.load_warrior")
-local alloc = require("Virtual.State.helpers.alloc")
+local alloc = require("Game.State.helpers.alloc")
 
 -- key = { spell IDs in rank order, cost in rage with every talent at rank 0, cooldown, gcd }, from the DB2 (the cost
 -- column / 10; the cooldown is the larger of RecoveryTime and CategoryRecoveryTime; gcd "off" where StartRecoveryTime
@@ -654,7 +654,7 @@ describe("Forever Warrior", function()
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists")
-        local secretToken = require("Virtual.State.helpers.load").module().VirtualState.AplSecretToken
+        local secretToken = require("Game.State.helpers.load").module().VirtualState.AplSecretToken
         local kinds = {
             buff = w.auras,
             debuff = w.auras,

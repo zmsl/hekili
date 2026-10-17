@@ -7,9 +7,10 @@ are relative to `src/Hekili/` unless they start with another top-level folder.
 
 ```
  Forever client (WoW API, events)
-        |  read only through ns.Facade (Virtual/API/Facade.lua), exposed to content as Hekili.Client
+        |  read only through ns.Facade (Game/API/Facade.lua), exposed to content as Hekili.Client
         v
- Virtual/        facade, synthesized events, the belief (VirtualState: observed / pinned / modelled values)
+ Game/        the game as the addon knows it: API (the facade), Events (synthesized), State (the belief,
+              VirtualState: observed / pinned / modelled values)
         |
         v
  Engine/         Schema/  the registration API (Spec, Races, Shared)
@@ -27,7 +28,7 @@ are relative to `src/Hekili/` unless they start with another top-level folder.
  NewShared, NewRace, Hekili.State, Hekili.Class, Hekili.Client.
 ```
 
-The client is read through the facade only. `Virtual/` turns client reads and events into a belief about the game.
+The client is read through the facade only. `Game/` turns client reads and events into a belief about the game.
 `Engine/` runs the simulation against that belief and publishes, per display, a set of recommendation records. The UI,
 WeakAuras and the headless test loop are subscribers; none of them reads the simulation. Content addons declare
 abilities, auras and priorities through the public `Hekili` object and never touch `ns`. Options owns the saved profile
@@ -106,7 +107,7 @@ The belief's plain reads, names in every content function's environment: `knownR
 Two environments have them:
 - the sim's `state` (`Engine/Sim/State.lua`): `knownRank`, `swingBase`, `healthMax` are plain functions; `stat` is the
   sim's stat table (`stat.crit`) and also callable (`stat(name, arg)`, the belief's out-of-combat stat cache);
-- the belief's `now` context (`Virtual/State/Families/Now.lua`, `NAMES`): the same four names, where `stat` is only the
+- the belief's `now` context (`Game/State/Families/Now.lua`, `NAMES`): the same four names, where `stat` is only the
   plain function `stat(name, arg)`. A `now` handler cannot read `stat.crit`.
 
 `RegisterAbility{ passive = true, id = <number> }` (`Engine/Schema/Spec.lua`) is a spell the spellbook knows and the
@@ -130,14 +131,14 @@ or the environment names above. `tests/Forever/content_spec.lua` checks the TOCs
 
 ## 4. `Hekili.Virtual`
 
-`Hekili.Virtual = { State, Events }` (`Virtual/State/Adapter.lua`) is the probe and debug handle, for example
+`Hekili.Virtual = { State, Events }` (`Game/State/Adapter.lua`) is the probe and debug handle, for example
 `/run print(Hekili.Virtual.State.Snapshot())` and ForeverProbe's `Calib.lua`. It is not for content, which has the
 facade and the environment names. The boundary scan rejects `Hekili.Virtual` and `VirtualState` in a content file.
 
 ## 5. The checks
 
 - `tests/boundary_spec.lua`:
-  - strict scan: `Virtual/`, `Engine/Schema/` and `tests/Virtual/harness/` (its fixtures excluded) name no ability, aura
+  - strict scan: `Game/`, `Engine/Schema/` and `tests/Game/harness/` (its fixtures excluded) name no ability, aura
     or talent key, no spell ID, and no class or form name that the content registers; the keys are extracted from the
     content at test time;
   - Sim baseline: each `Engine/Sim/` file may hold no more of each content name than `tests/boundary_baseline.lua`
@@ -170,7 +171,7 @@ part of `make check`.
 
 ## 7. Follow-ups
 
-- **Belief annotator** (needs its own short design): `Virtual/Annotate.lua`, registered with `ns.Output.Annotate`. Per
+- **Belief annotator** (needs its own short design): `Game/Annotate.lua`, registered with `ns.Output.Annotate`. Per
   record: the gating resource's est/lo/hi at the record's time, the basis of the usability read (observed, pinned or
   modelled, plus the event), the band width relative to cost as a confidence, the gating aura or cooldown and its basis,
   and the GCD kind. It fills `rec.belief`, which exists and is cleared by `Begin`.

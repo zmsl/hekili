@@ -682,7 +682,7 @@ spec:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function()
 end)
 
 spec:RegisterHook("reset_precast", function()
-    -- The stance comes from the belief's Forms source (Virtual/State/Sources/Forms.lua) through the aura walk.
+    -- The stance comes from the belief's Forms source (Game/State/Sources/Forms.lua) through the aura walk.
     local hs, cl = knownRank(HEROIC_STRIKE), knownRank(CLEAVE)
     if hs > 0 and IsCurrentSpell(HEROIC_STRIKE[hs]) then
         applyBuff("heroic_strike")

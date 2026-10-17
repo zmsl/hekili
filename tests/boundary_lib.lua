@@ -31,7 +31,7 @@ local ALLOW_NAMES = {
     GetActiveLossOfControlDataCount = "a WoW API name",
     GetSpellLossOfControlCooldown = "a WoW API name",
     IsInBattle = "a WoW API name",
-    -- WoW globals the headless shell stubs (tests/Virtual/harness/headless.lua), matched by their parts
+    -- WoW globals the headless shell stubs (tests/Game/harness/headless.lua), matched by their parts
     C_BattleNet = "a WoW API name",
     SPELL_FAILED_NOT_IN_MAGE_TOWER = "a WoW GlobalStrings name",
     TOOLTIP_NOT_IN_MAGE_TOWER = "a WoW GlobalStrings name",

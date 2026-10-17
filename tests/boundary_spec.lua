@@ -1,6 +1,6 @@
 -- tests/boundary_spec.lua
 -- The core/content boundary (core leakage audit, docs/research/2026-10-16-core-leakage-audit.md): the core engine
--- (src/Hekili/Virtual/**, src/Hekili/Engine/Schema/**) and the harness core (tests/Virtual/harness/**, GCD kinds design D7)
+-- (src/Hekili/Game/**, src/Hekili/Engine/Schema/**) and the harness core (tests/Game/harness/**, GCD kinds design D7)
 -- name no ability, aura or talent key and no spell ID that the Forever content (src/Hekili_Forever*/**: the class packs,
 -- Races, Shared) registers, and no class or form/stance name. Ported from Taco Dog Forever's tests/boundary_spec.lua, which
 -- scans for a fixed word list; here the keys and IDs are extracted from the content at test time, so a new ability is
@@ -10,10 +10,10 @@
 -- (`heroic_strike`) also matches as parts of an identifier (`HEROIC_STRIKE_COST`); a one-word key matches whole only.
 local B = require("boundary_lib")
 
--- The harness core too (GCD kinds design D7), but its captured logs (tests/Virtual/harness/fixtures/): their numbers
+-- The harness core too (GCD kinds design D7), but its captured logs (tests/Game/harness/fixtures/): their numbers
 -- are times in ms and amounts, never IDs.
-local CORE = { "src/Hekili/Virtual", "src/Hekili/Engine/Schema", "tests/Virtual/harness" }
-local SKIP = { "^tests/Virtual/harness/fixtures/" }
+local CORE = { "src/Hekili/Game", "src/Hekili/Engine/Schema", "tests/Game/harness" }
+local SKIP = { "^tests/Game/harness/fixtures/" }
 local SIM = { "src/Hekili/Engine/Sim" }
 -- The content (restructure plan, Task 8): it reaches the engine through the public Hekili object only.
 local CONTENT = {}
@@ -84,7 +84,7 @@ describe("core/content boundary", function()
     end)
 
     it(
-        "keeps content keys, spell IDs, class and form names out of Virtual/**, Engine/Schema/** and the harness core",
+        "keeps content keys, spell IDs, class and form names out of Game/**, Engine/Schema/** and the harness core",
         function()
             local found = {}
             local files = B.coreFiles(CORE, SKIP)

@@ -1,10 +1,10 @@
 return {
     default = {
         ROOT = {
-            "tests/Virtual/Events",
-            "tests/Virtual/API",
-            "tests/Virtual/State",
-            "tests/Virtual/harness",
+            "tests/Game/Events",
+            "tests/Game/API",
+            "tests/Game/State",
+            "tests/Game/harness",
             "tests/Forever",
             "tests/boundary_spec.lua",
         },

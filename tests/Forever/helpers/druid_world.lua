@@ -7,9 +7,9 @@
 -- scenarios score the belief, not the damage.
 local ld = require("Forever.helpers.load_druid")
 local dvs = require("Forever.helpers.druid_vs")
-local drive = require("Virtual.harness.drive")
-local scenarios = require("Virtual.harness.scenarios")
-local fs = require("Virtual.State.helpers.fake_spec")
+local drive = require("Game.harness.drive")
+local scenarios = require("Game.harness.scenarios")
+local fs = require("Game.State.helpers.fake_spec")
 
 local M = {}
 

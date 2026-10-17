@@ -6,7 +6,7 @@
 -- the smallest stub client: a plain ns.Facade, `Item`, `Enum`, a Hekili without Ace3, and STRICT stand-ins for
 -- Hekili.Class, Enum.PowerType and `state`: a key they lack raises, so an ability function reading a name State.lua does not provide (a
 -- bare `state`, `math`, `error`) fails the caller instead of reading nil.
-local vload = require("Virtual.State.helpers.load")
+local vload = require("Game.State.helpers.load")
 local addons = require("helpers.addons")
 
 local M = {}

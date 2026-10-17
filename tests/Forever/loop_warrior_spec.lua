@@ -1,7 +1,7 @@
 -- tests/Forever/loop_warrior_spec.lua (headless loop design §5, §7, §9): stock Hekili headless as a level 60 Arms
 -- Warrior (tests/Forever/helpers/warrior_world.lua) against the harness's world.
-local headless = require("Virtual.harness.headless")
-local loop = require("Virtual.harness.loop")
+local headless = require("Game.harness.headless")
+local loop = require("Game.harness.loop")
 local ww = require("Forever.helpers.warrior_world")
 
 describe("headless Arms", function()

@@ -1,6 +1,6 @@
 -- tests/Forever/registry_spec.lua (restructure plan, Task 5): Engine.Registry's views and the pack editor's
 -- Engine.Evaluate, stock Hekili headless as Arms.
-local headless = require("Virtual.harness.headless")
+local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 
 -- The pack editor's inline sequence before Task 5 (Options.lua's criteria/value/value_else/strict_if `arg`), verbatim

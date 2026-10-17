@@ -24,8 +24,8 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
     boundary spec scans;
   - `UI/`: the display and editor widgets (`UI`, `Formatting`, `MultilineEditor`, `PopupSlider`);
   - `Integrations/`: bridges to other addons that subscribe to the engine like the UI does (`WeakAuras`);
-  - `Options/` (the options panel and chat commands), `Virtual/` (VirtualState, the event and API facades), `Libs/`
-    (embedded, untouched) and `Textures/`.
+  - `Options/` (the options panel and chat commands), `Game/` (the game as the addon knows it: `API/` the facade,
+    `Events/`, `State/` the belief, VirtualState), `Libs/` (embedded, untouched) and `Textures/`.
 
   An upstream merge lands new root files at the root; re-home them by hand.
   The profile port (restructure Task 6) edited ~70 upstream lines in `Engine/` (each `Hekili.DB.profile` read became
@@ -33,9 +33,9 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   `Options/Profile.lua` at load and on each AceDB profile change) hands the engine the profile's subtables by reference
   and copies its scalars (`enabled`, `autoSnapshot`, `screenshot`), so a setter that writes one of those calls it again.
 - `tests/` holds the busted specs and their helpers, mirroring the source tree: the specs for
-  `src/Hekili/Virtual/State/` are in `tests/Virtual/State/`, their helpers in `tests/Virtual/State/helpers/`, and so
-  on. `tests/Virtual/State/helpers/load.lua` names the addon root once (`ROOT = "src/Hekili/"`).
-- `tests/Virtual/harness/` is the combat harness (combat harness design §3): a seeded model of the Forever client
+  `src/Hekili/Game/State/` are in `tests/Game/State/`, their helpers in `tests/Game/State/helpers/`, and so
+  on. `tests/Game/State/helpers/load.lua` names the addon root once (`ROOT = "src/Hekili/"`).
+- `tests/Game/harness/` is the combat harness (combat harness design §3): a seeded model of the Forever client
   (entities, behaviours, the world, the observer, scenarios) that drives VirtualState through the fakes, with the
   attribution gates (`solo_spec`, `group_spec`, `onus_spec`, `sweep_spec`). Its `fixtures/` are in-game /vslog dumps,
   every token row kept; `fixtures_spec` replays them and fits the observer's defaults to them. A new capture becomes a
@@ -54,7 +54,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
 `make check` before every commit. StyLua formats only our files (`.styluaignore` lists upstream Hekili, which keeps
 its own style). If `fmt-check` still fails after `make fmt`, run `make fmt` again: StyLua 2.5.2 takes two passes on a
 call whose argument is a long single-line table.
-`tests/boundary_spec.lua` scans `Virtual/` and `Engine/Schema/` strictly, and holds each `Engine/Sim/` file to its
+`tests/boundary_spec.lua` scans `Game/` and `Engine/Schema/` strictly, and holds each `Engine/Sim/` file to its
 per-token counts in `tests/boundary_baseline.lua` (a ceiling per file, not a line lock). Regenerate the baseline with
 `.lua/bin/lua tools/boundary_baseline.lua` only when removing an inherited leak, or when new content registers a key a
 Sim identifier already uses (`git blame` the Sim line and say so in the commit); never to admit a leak.
