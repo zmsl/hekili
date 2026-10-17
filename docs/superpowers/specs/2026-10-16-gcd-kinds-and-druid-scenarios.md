@@ -331,18 +331,25 @@ Measured (the design's fight counts, `make test-druid`):
 | Solo cat (200) | rage error 0; energy mean abs 1.78, max 40.0 (the pull), over windows 0/2600; points exact 226603 of 226603 settled ticks; GCDs 8407, end error 0.0004 s, ownerless 0 (orders 4193 / 4214); white pairing at 1.0 s: main .912 | rage 0; energy mean <= 10, over <= 2%; points 100%; GCD (within 0.01 s, ownerless 0, both orders) |
 | Solo cat, `regenAfter` 5 s x 1.25 (100) | energy mean abs 2.41 after 20 s, over 0/1100 | mean <= 15, over <= 5% |
 | Solo cat, a /reload in combat (50) | energy mean abs 11.4, over 0/650 | report |
-| Shift fight (100) | Bear sections main 1680/1719 (.977), false wounds 0 in both; timing alone: 1719/1719 in Bear, 0/4670 in Cat; Bear rage over windows 0 (lo over the truth at most 1.26), mean abs 2.92; every swing the belief paid 8.65 (before D4: every one 3.46, mean abs 3.94, entry under by up to 5.08); entry over 0.84, under -7.31; energy mean abs 0.28; GCDs 3036, ownerless 0 | Bear main >= .85; false 0; unknown 0 / 1; rage over 0 and every swing 8.65; entry over <= 1.3; GCD |
-| Furor: Cat entry zero (50) | energy error at each Cat entry 99, within 5 after 35.7 s on average (the fight's end if never); energy over windows 200; Bear rage over 0, entry over 1.18 | report; Bear never over |
-| Furor rank 5 (50) | Bear entry under by 10 (the truth's chance, the belief's 0), lo over the truth at most 4.99 (below a swing), over windows 0 | report; Bear never over |
+| Shift fight (100) | Bear sections main 1680/1719 (.977), false wounds 0 in both; timing alone: 1719/1719 in Bear, 0/4670 in Cat; Bear rage over windows 0 (lo over the truth at most 1.26), mean abs 2.92; every swing the belief paid 8.65 (before D4: every one 3.46, mean abs 3.94, entry under by up to 5.08); entry over 0.84, under -7.31; energy mean abs 0.83 (0.28 before the observer answered usability with the form as of the answer's time: the Cat answers were all "not" and the model alone was exact); GCDs 3036, ownerless 0 | Bear main >= .85; false 0; unknown 0 / 1; rage over 0 and every swing 8.65; entry over <= 1.3; GCD |
+| Furor: Cat entry zero (50) | energy error at each Cat entry 28.99 (the cheapest short rung's top, 29.99, against a truth near 0), within 5 after 2.45 s on average; energy mean abs 1.51, over windows 50 (one an entry); Bear rage over 0, entry over 1.18 (before the observer fix: 99, 35.7 s, 6.98, 200) | report; Bear never over |
+| Furor rank 5 (50) | Bear entry under by 10 (the truth's chance, the belief's 0), lo over the truth at most 4.99 (below a swing), over windows 0; energy mean abs 0.82 (0.28 before the observer fix) | report; Bear never over |
 | Enrage decay (4 x 20) | matched: errors 0, no fight low, in both pairs; declared over a decaying truth: up to +7.5; none over a pausing truth: down to -7.5 (six quanta: the error counts from stop + 1.5 s, so §4.5's 8.75 = 7 quanta is not reached) | matched within 1.25, none low; signs asserted (over the dangerous sign, under the safe one) |
 
 D4 confirmed by the harness (the stale 1.0 s base priced every Bear swing at 3.46 through the shift fight); D5 stands:
 a wrong `pausesDecay` overshoots, its absence undershoots.
 
 Follow-ups (not built here):
-- Furor's "Cat entry zero" variant: the energy belief sits 99 over the truth at each Cat entry (the dangerous sign) and
-  only a usability flip after a spend corrects it, about 36 s on average. Open: a faster correction of an energy belief
-  above the truth after a mismatched entry rule.
+- Furor's "Cat entry zero" variant: the 99 over and 36 s recovery first measured were a harness artifact, not the
+  belief. The observer observes a built world in one batch and the content's answers read our live form, the form the
+  fight ended in (Bear), so every Cat spender answered "not" (no rung) through the whole fight. Fixed in
+  `tests/Virtual/harness/observer.lua`: the answers see our form as of their time (form changes join the power
+  changes' queue, in time order) and one answer per instant (a shift's form and its entry rule's resource change
+  together). Now 28.99 at the entry and 2.45 s. Open, a belief question needing its own design: the ladder's
+  not-enough-power branch (`Resources.lua` `ladder`) sets lo to the short rung's top, a floor the truth near 0 breaks
+  by up to 30 (the 50 over windows; Furor rank 5's rage lo over 4.99). `lo = 0` there removes both but breaks
+  `resources_spec`'s oracle retraction case (lo must return to its pre-credit 8); e.g. void lo only when no credit
+  awaits a verdict, or drop it to the next lower known rung.
 - The Cat /reload in combat: energy mean abs error 11.4, never over (the safe sign). Not the entry rule: with no regen
   read the belief's regen stays 0 (the class file's `shortcut:`, Druid.lua), so the error is a 10/s sawtooth between
   cost rungs; its upgrade is a regen meta field after Q3.

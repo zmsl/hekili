@@ -243,9 +243,22 @@ function M.new(W, k)
     end
     local castN = 0
     local deltas, dseq = {}, 0 -- our power's changes as the client's usability sees them: { t, delta, seq }
+    -- the answers' view of us: our form as of the answer's time (a form change is a delta), the rest live
+    local now = setmetatable({}, { __index = us })
+    for _, ev in ipairs(W.truth) do
+        if ev.kind == "prepull" then
+            now.form = ev.form
+            break
+        end
+    end
+    local function formDelta(t, form)
+        dseq = dseq + 1
+        deltas[#deltas + 1] = { t, form, "form", dseq }
+    end
     local function read(ev)
         local t, kind = ev.t, ev.kind
         if kind == "prepull" then -- 0.5 s before the pull: the cache, then the target 0.1 s later
+            formDelta(t, ev.form)
             if ev.form ~= 0 then -- a fight that starts in a form (the loop's consecutive fights)
                 push(t, "@form", ev.form)
                 push(t, "UPDATE_SHAPESHIFT_FORM")
@@ -272,6 +285,7 @@ function M.new(W, k)
             cache(t, ev)
             push(t, "PLAYER_REGEN_ENABLED")
         elseif kind == "form" then -- after its cast's success (Forms.lua, Q2)
+            formDelta(t, ev.form)
             push(t, "@form", ev.form)
             push(t, "UPDATE_SHAPESHIFT_FORM")
             if ev.damage then -- out of combat: the caches read the form's own
@@ -413,7 +427,7 @@ function M.new(W, k)
     local function answer(t)
         local flipped = false
         for _, u in ipairs(answers) do
-            local ok, short = u[2](W, us, power, view)
+            local ok, short = u[2](W, now, power, view)
             local st = ok and 1 or (short and 2 or 3)
             if usable[u[1]] ~= st then
                 usable[u[1]] = st
@@ -427,7 +441,7 @@ function M.new(W, k)
     end
     if answers then -- the answers before anything happens (no event: the client's state at login)
         for _, u in ipairs(answers) do
-            local ok, short = u[2](W, us, 0, view)
+            local ok, short = u[2](W, now, 0, view)
             usable[u[1]] = ok and 1 or (short and 2 or 3)
             push(0, "@usable", u[1], usable[u[1]])
         end
@@ -460,15 +474,20 @@ function M.new(W, k)
         if answers then
             table.sort(deltas, byTime)
             local keep = {}
-            for _, d in ipairs(deltas) do
+            for i, d in ipairs(deltas) do
                 if d[1] <= tEnd then
                     -- unclamped below: a spend can land before a delayed gain
-                    if d[3] == us.pt or not us.res[d[3]] then
+                    if d[3] == "form" then
+                        now.form = d[2]
+                    elseif d[3] == us.pt or not us.res[d[3]] then
                         power = math.min(us.powerMax, power + d[2])
                     else
                         view[d[3]] = math.min(us.res[d[3]].max, view[d[3]] + d[2])
                     end
-                    answer(d[1])
+                    local nx = deltas[i + 1]
+                    if not (nx and nx[1] == d[1]) then -- one answer per instant: a shift's form and its entry rule together
+                        answer(d[1])
+                    end
                 else
                     keep[#keep + 1] = d
                 end

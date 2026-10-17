@@ -542,6 +542,21 @@ describe("the observer's resources, GCD and forms", function()
         local s = observer.observe(W, knobs({ usable = { { 21, pool } }, usableDelay = 0.1 }))
         assert.are.same({ "1 @usable 21 2", "2.1 @usable 21 1" }, lines(s, { ["@usable"] = true }))
     end)
+
+    it("answers usability with our form as of the answer's time, a shift's form and resource change as one", function()
+        setup()
+        local function pool(_, now, _, view) -- needs form 1: short below 60 there, not usable elsewhere
+            return now.form == 1 and view[POOL] >= 60, now.form == 1 and view[POOL] < 60
+        end
+        W.t = 0.5
+        W.emit({ kind = "prepull" })
+        W.t = 1
+        W.emit({ kind = "gain", src = us, pt = POOL, cost = 30 }) -- 70 in form 0: not usable; no transient yes at 3
+        W.t = 3
+        W.press(us, "shift", { spell = 12, gcd = 1.5, shift = { form = 1, onEnter = { [POOL] = "zero" } } })
+        local s = observer.observe(W, knobs({ usable = { { 21, pool } }, usableDelay = 0 }))
+        assert.are.same({ "3 @usable 21 2" }, lines(s, { ["@usable"] = true }))
+    end)
 end)
 
 describe("the world", function()

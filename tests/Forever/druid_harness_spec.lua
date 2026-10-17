@@ -294,6 +294,34 @@ local GATES = {
     end,
 }
 
+describe("the shift fight's usability answers", function()
+    it("answers the Cat spenders short in Cat after a Bear section (seed 1: the 61.05 Cat entry)", function()
+        dw.fights("shift", 1, {}, function(f)
+            local W, s, R = f.W, f.s, f.R
+            local spenders = {}
+            for _, key in ipairs({ "claw", "shred", "rake", "rip", "ferocious_bite", "shifting_power" }) do
+                spenders[dw.press(key, R).spell] = true
+            end
+            local entry, leave -- the second Cat entry and the next shift
+            for _, ev in ipairs(W.truth) do
+                if ev.kind == "form" and ev.form == dw.CAT and ev.t > 31 and not entry then
+                    entry = ev.t
+                elseif ev.kind == "form" and entry and not leave then
+                    leave = ev.t
+                end
+            end
+            assert.is_true(math.abs(entry - 61.05) < 1e-6, tostring(entry))
+            local short = 0
+            for i = 1, s.n do
+                if s.ev[i] == "@usable" and spenders[s.a1[i]] and s.a2[i] == 2 then
+                    short = short + ((s.t[i] >= entry and s.t[i] < leave) and 1 or 0)
+                end
+            end
+            assert.is_true(short > 0)
+        end)
+    end)
+end)
+
 describe("Druid harness scenarios, a tenth of the fights (GCD kinds design §4.6) #slow", function()
     for _, name in ipairs({ "bear", "cat", "regenAfter", "reload", "shift", "furor", "decay" }) do
         it(name, function()
