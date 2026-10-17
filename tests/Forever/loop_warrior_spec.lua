@@ -170,7 +170,7 @@ end)
 
 -- The gates (headless loop design §5.2; as built: the plan's Deviations 7-8, 14-15). Measured on the plan's replay:
 -- 6 fights (in `make check`, about 150 s in all): agreement 0.953, react median 0 / p90 1 / never 0.073, cost refusals
--- 17.1 per 100 (the oracle's 16.4), DPS A/B 0.999 (reported), CPU mean 2.95 ms.
+-- 17.1 per 100 (the oracle's 16.4), DPS A/B 0.999 (reported), never-reacts 0.073 (reported), CPU mean 2.95 ms.
 -- 20 fights (`make test-loop`): agreement 0.966, react median 0 / p90 0 / never 0.060, cost refusals 16.5 per 100
 -- attempts (the oracle's own 15.8), DPS A/B 0.993, GCD idle 0.742 / 0.739, Sunder Armor up 0.95 / 0.95, flicker
 -- 0.69/min, CPU mean 2.70 ms.
@@ -181,7 +181,7 @@ local REPORTED = { demoralizing_shout = true }
 -- The engine and the first icon, gated at any fight count.
 local function gate(m, r, line)
     assert.is_true(r.agreement >= 0.85, line)
-    assert.is_true(r.reactMedian <= 1 and r.reactP90 <= 3 and r.never <= 0.08, line)
+    assert.is_true(r.reactMedian <= 1 and r.reactP90 <= 3, line)
     assert.is_true((r.per100.gcd or 0) == 0 and (r.per100.cooldown or 0) == 0, line)
     assert.is_true((r.per100.cost or 0) <= (r.per100B.cost or 0) + 3, line)
     assert.are.same({ 0, 0, 0 }, { m.errors, m.raises, m.selfCheck })
@@ -198,7 +198,8 @@ local function solo(n)
     return r, line
 end
 
--- `make check` runs 6 fights (#slow): DPS A/B is reported there, not gated (per fight its sd is about 0.11).
+-- `make check` runs 6 fights (#slow): DPS A/B (per fight its sd is about 0.11) and never-reacts (13 of 179 there against
+-- an allowance of 14) are reported there, not gated.
 describe("the headless Arms gates #slow", function()
     it("Arms solo, level 60, one mob, 6 fights of up to 3 minutes: the first icon against the oracle's", function()
         solo(6)
@@ -209,6 +210,7 @@ end)
 describe("the headless Arms gates, 20 fights #loop", function()
     it("Arms solo, level 60, one mob, 20 fights of up to 3 minutes: the first icon against the oracle's", function()
         local r, line = solo(20)
+        assert.is_true(r.never <= 0.08, line)
         assert.is_true(r.dps >= 0.97, line)
         assert.is_true(r.idleA <= r.idleB + 0.03, line)
         for key, up in pairs(r.upB) do
