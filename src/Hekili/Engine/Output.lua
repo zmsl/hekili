@@ -52,6 +52,7 @@ local Output = {
         wanted = 0,
         publishing = false,
         combat = false,
+        combatStart = 0, -- the combat start time (state.combat), 0 out of combat
         numTargets = 0,
         specID = nil,
         specKey = nil,

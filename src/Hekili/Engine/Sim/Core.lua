@@ -5,6 +5,7 @@ local addon, ns = ...
 local Facade = ns.Facade
 local CreateFrame = Facade.CreateFrame
 local GetFrameCPUUsage, GetTime, InCombatLockdown = Facade.GetFrameCPUUsage, Facade.GetTime, Facade.InCombatLockdown
+local GetItemInfoInstant, GetSpellTexture = Facade.C_Item.GetItemInfoInstant, Facade.C_Spell.GetSpellTexture
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class
@@ -82,88 +83,7 @@ function Hekili:OnInitialize()
     self:RegisterChatCommand( "hekili", "CmdLine" )
     self:RegisterChatCommand( "hek", "CmdLine" )
 
-    local LDB = LibStub( "LibDataBroker-1.1", true )
-    local LDBIcon = LDB and LibStub( "LibDBIcon-1.0", true )
-
-    Hekili_OnAddonCompartmentClick = function( btn, arg1, arg2, checked, button )
-        button = button or arg1
-        if button == "RightButton" then ns.StartConfiguration()
-        else
-            ToggleDropDownMenu( 1, nil, ns.UI.Menu, "cursor", 8, 5 )
-        end
-        GameTooltip:Hide()
-    end
-
-    local function GetDataText()
-        local p = Hekili.DB.profile
-        local m = p.toggles.mode.value
-        local color = "FFFFD100"
-
-        if p.toggles.essences.override then
-            -- Don't show Essences here if it's overridden by CDs anyway?
-            return format( "|c%s%s|r %sCD|r %sInt|r %sDef|r", color,
-                m == "single" and "ST" or ( m == "aoe" and "AOE" or ( m == "dual" and "Dual" or ( m == "reactive" and "React" or "Auto" ) ) ),
-                p.toggles.cooldowns.value and "|cFF00FF00" or "|cFFFF0000",
-                p.toggles.interrupts.value and "|cFF00FF00" or "|cFFFF0000",
-                p.toggles.defensives.value and "|cFF00FF00" or "|cFFFF0000" )
-        else
-            return format( "|c%s%s|r %sCD|r %smCD|r %sInt|r",
-                color,
-                m == "single" and "ST" or ( m == "aoe" and "AOE" or ( m == "dual" and "Dual" or ( m == "reactive" and "React" or "Auto" ) ) ),
-                p.toggles.cooldowns.value and "|cFF00FF00" or "|cFFFF0000",
-                p.toggles.essences.value and "|cFF00FF00" or "|cFFFF0000",
-                p.toggles.interrupts.value and "|cFF00FF00" or "|cFFFF0000" )
-        end
-    end
-
-    Hekili_OnAddonCompartmentEnter = function( addonName, button )
-        GameTooltip:SetOwner( AddonCompartmentFrame )
-        GameTooltip:AddDoubleLine( "Hekili", GetDataText() )
-        GameTooltip:AddLine( "|cFFFFFFFFLeft-click to make quick adjustments.|r" )
-        GameTooltip:AddLine( "|cFFFFFFFFRight-click to open the options interface.|r" )
-        GameTooltip:Show()
-    end
-
-    Hekili_OnAddonCompartmentLeave = function( addonName, button )
-        GameTooltip:Hide()
-    end
-
-    AddonCompartmentFrame:RegisterAddon({
-        text = "Hekili",
-        icon = "Interface\\AddOns\\Hekili\\Textures\\LOGO-ORANGE.blp",
-        registerForAnyClick = true,
-        notCheckable = true,
-        func = Hekili_OnAddonCompartmentClick,
-        funcOnEnter = Hekili_OnAddonCompartmentEnter,
-        funcOnLeave = Hekili_OnAddonCompartmentLeave
-    } )
-
-    if LDB then
-        ns.UI.Minimap = ns.UI.Minimap or LDB:NewDataObject( "Hekili", {
-            type = "data source",
-            text = "Hekili",
-            icon = "Interface\\ICONS\\spell_nature_bloodlust",
-            OnClick = Hekili_OnAddonCompartmentClick,
-            OnEnter = function( self )
-                GameTooltip:SetOwner( self )
-                GameTooltip:AddDoubleLine( "Hekili", ns.UI.Minimap.text )
-                GameTooltip:AddLine( "|cFFFFFFFFLeft-click to make quick adjustments.|r" )
-                GameTooltip:AddLine( "|cFFFFFFFFRight-click to open the options interface.|r" )
-                GameTooltip:Show()
-            end,
-            OnLeave = Hekili_OnAddonCompartmentLeave
-        } )
-
-        function ns.UI.Minimap:RefreshDataText()
-            self.text = GetDataText()
-        end
-
-        ns.UI.Minimap:RefreshDataText()
-
-        if LDBIcon then
-            LDBIcon:Register( "Hekili", ns.UI.Minimap, self.DB.profile.iconStore )
-        end
-    end
+    self:CreateLaunchers() -- UI.lua: the compartment entry, the LDB data object and the minimap button
 
     self:RestoreDefaults()
     self:RunOneTimeFixes()
@@ -1576,8 +1496,8 @@ function Hekili.Update()
     -- The engine's status record: published only when one of its fields changed.
     local status = Output.status
     local combat = state.combat > 0
-    if status.combat ~= combat or status.numTargets ~= numTargets or status.specID ~= specID or status.packName ~= packName or status.specKey ~= state.spec.key then
-        status.combat, status.numTargets, status.specID, status.specKey, status.packName = combat, numTargets, specID, state.spec.key, packName
+    if status.combatStart ~= state.combat or status.numTargets ~= numTargets or status.specID ~= specID or status.packName ~= packName or status.specKey ~= state.spec.key then
+        status.combat, status.combatStart, status.numTargets, status.specID, status.specKey, status.packName = combat, state.combat, numTargets, specID, state.spec.key, packName
         Output.Publish( "status", 1 )
     end
 
@@ -1630,6 +1550,7 @@ function Hekili.Update()
             local actualStartTime = debugprofilestop()
 
             local numRecs = display.numIcons or 3
+            local abilityOpts = Hekili:GetActiveSpecOption( "abilities" )
 
             if display.flash.enabled and display.flash.suppress then
                 numRecs = 1
@@ -1961,6 +1882,19 @@ function Hekili.Update()
                     state.scriptID = slot.script
 
                     local ability = class.abilities[ action ]
+
+                    -- What the UI shows, resolved once per record: the icon (the spec's per-ability override first),
+                    -- the item id (truthy for items), off-GCD and the name.
+                    if ability.item then
+                        slot.item = ability.item
+                        slot.texture = slot.texture or ability.texture or select( 5, GetItemInfoInstant( ability.item ) )
+                    else
+                        local override = abilityOpts and rawget( abilityOpts, action )
+                        slot.texture = override and override.icon or slot.texture or ability.texture or GetSpellTexture( ability.id )
+                    end
+                    slot.offGCD = ability.gcd == "off"
+                    slot.name = ability.name
+
                     local cast_target = i == 1 and state.cast_target ~= "nobody" and state.cast_target or state.target.unit
 
                     if slot.indicator == "cycle" then

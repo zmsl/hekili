@@ -332,6 +332,26 @@ describe("Engine.Output (headless Arms)", function()
         assert.are.equal(v + 1, st.version)
     end)
 
+    it("records carry texture (the spec's icon override first), item, offGCD and name", function()
+        local abilities = H.Hekili.Class.abilities
+        local opts = H.Hekili:GetActiveSpecOption("abilities")
+        local first = out.recs[1].actionName
+        opts[first].icon = 4242
+        t = t + 0.2
+        assert(headless.cycle(H, t))
+        assert.are.equal(first, out.recs[1].actionName)
+        for i = 1, out.count do
+            local r = out.recs[i]
+            local a = abilities[r.actionName]
+            assert.are.equal(r.actionName == first and 4242 or (a.texture or 136000), r.texture, r.actionName)
+            assert.is_nil(r.item, r.actionName)
+            assert.are.equal(a.gcd == "off", r.offGCD, r.actionName)
+            assert.are.equal(a.name, r.name, r.actionName)
+        end
+        opts[first].icon = nil
+        assert.are.same({}, H.errors)
+    end)
+
     it(
         "WeakAuras: a passive subscriber from PLAYER_ENTERING_WORLD fills payload and scans the six arguments",
         function()

@@ -84,7 +84,8 @@ files["src/Hekili/Engine/Sim/"] = { globals = stateEnv }
 files["src/Hekili/Options/Options.lua"] = { globals = stateEnv }
 files["src/Hekili/Options/DevTools.lua"] = { globals = stateEnv }
 files["src/Hekili/Options/ChatCommands.lua"] = { globals = stateEnv }
-files["src/Hekili/UI/UI.lua"] = { globals = stateEnv }
+-- UI.lua reads no engine state (Engine.Registry, Engine.Output.status): not stateEnv, so a bare state/class fails.
+files["src/Hekili/UI/UI.lua"] = { globals = { "p", "alphaCheck" } } -- upstream's two stray global reads
 files["src/Hekili/Hekili.lua"] = { globals = stateEnv }
 -- The names a class file's `now` function reads in VirtualState's context (src/Hekili/Virtual/State/Families/Now.lua).
 local nowEnv = {

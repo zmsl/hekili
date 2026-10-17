@@ -12,8 +12,8 @@ local UnitCastingInfo, UnitChannelInfo, UnitClass, UnitExists = Facade.UnitCasti
 local UnitHasVehicleUI, UnitIsDead, UnitOnTaxi = Facade.UnitHasVehicleUI, Facade.UnitIsDead, Facade.UnitOnTaxi
 local Hekili = _G[ addon ]
 
-local class = Hekili.Class
-local state = Hekili.State
+local Registry = Hekili.Engine.Registry
+local Status = Hekili.Engine.Output.status
 
 local FindUnitBuffByID, FindUnitDebuffByID = ns.FindUnitBuffByID, ns.FindUnitDebuffByID
 
@@ -30,8 +30,6 @@ local IsCurrentItem = C_Item.IsCurrentItem
 local IsUsableItem = C_Item.IsUsableItem
 local IsCurrentSpell = C_Spell.IsCurrentSpell
 local GetItemCooldown = C_Item.GetItemCooldown
-local GetItemInfoInstant = C_Item.GetItemInfoInstant
-local GetSpellTexture = C_Spell.GetSpellTexture
 local IsUsableSpell = C_Spell.IsSpellUsable
 local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed
 
@@ -535,17 +533,17 @@ do
         if level == 1 then
             if not specsParsed then
                 -- Add specialization toggles where applicable.
-                for i, spec in pairs( Hekili.Class.specs ) do
+                for i, spec in pairs( Registry.Specs() ) do
                     if i > 0 then
                         insert( menuData, {
                             isSeparator = 1,
-                            hidden = function () return Hekili.State.spec.id ~= i end,
+                            hidden = function () return Status.specID ~= i end,
                         } )
                         insert( menuData, {
                             isTitle = 1,
                             text = spec.name,
                             notCheckable = 1,
-                            hidden = function () return Hekili.State.spec.id ~= i end,
+                            hidden = function () return Status.specID ~= i end,
                         } )
                         insert( menuData, {
                             text = "|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t Recommend Target Swaps",
@@ -567,7 +565,7 @@ do
                                 local spec = rawget( Hekili.DB.profile.specs, i )
                                 return spec.cycle
                             end,
-                            hidden = function () return Hekili.State.spec.id ~= i end,
+                            hidden = function () return Status.specID ~= i end,
                         } )
 
                         local potionMenu = {
@@ -578,20 +576,20 @@ do
                             hasArrow = true,
                             menuList = {},
                             notCheckable = true,
-                            hidden = function () return Hekili.State.spec.id ~= i end,
+                            hidden = function () return Status.specID ~= i end,
                         }
 
-                        for k, v in orderedPairs( class.potionList ) do
+                        for k, v in orderedPairs( Registry.PotionList() ) do
                             insert( potionMenu.menuList, {
                                 text = v,
                                 func = function ()
-                                    Hekili.DB.profile.specs[ Hekili.State.spec.id ].potion = k
+                                    Hekili.DB.profile.specs[ Status.specID ].potion = k
                                     for _, display in pairs( Hekili.DisplayPool ) do
                                         display:OnEvent( "HEKILI_MENU" )
                                     end
                                 end,
                                 checked = function ()
-                                    return Hekili.DB.profile.specs[ Hekili.State.spec.id ].potion == k
+                                    return Hekili.DB.profile.specs[ Status.specID ].potion == k
                                 end,
                             } )
                         end
@@ -629,7 +627,7 @@ do
                                             menu.args[1] = setting.name
                                             return setting.info.get( menu.args )
                                         end,
-                                        hidden = function () return Hekili.State.spec.id ~= i end,
+                                        hidden = function () return Status.specID ~= i end,
                                     }
                                     insert( menuData, submenu )
 
@@ -644,7 +642,7 @@ do
                                         hasArrow = true,
                                         menuList = {},
                                         notCheckable = true,
-                                        hidden = function () return Hekili.State.spec.id ~= i end,
+                                        hidden = function () return Status.specID ~= i end,
                                     }
 
                                     local values = setting.info.values
@@ -673,7 +671,7 @@ do
                                                         menu.args[1] = setting.name
                                                         return setting.info.get( menu.args ) == k
                                                     end,
-                                                    hidden = function () return Hekili.State.spec.id ~= i end,
+                                                    hidden = function () return Status.specID ~= i end,
                                                 } )
                                             end
                                         else
@@ -697,7 +695,7 @@ do
                                                         menu.args[1] = setting.name
                                                         return setting.info.get( menu.args ) == k
                                                     end,
-                                                    hidden = function () return Hekili.State.spec.id ~= i end,
+                                                    hidden = function () return Status.specID ~= i end,
                                                 } )
                                             end
                                         end
@@ -713,7 +711,7 @@ do
                                         tooltipText = type( setting.info.desc ) == "function" and setting.info.desc() or setting.info.desc,
                                         tooltipOnButton = true,
                                         notCheckable = true,
-                                        hidden = function () return Hekili.State.spec.id ~= i end,
+                                        hidden = function () return Status.specID ~= i end,
                                         hasArrow = true,
                                         menuList = {}
                                     }
@@ -724,7 +722,7 @@ do
                                         tooltipText = type( setting.info.desc ) == "function" and setting.info.desc() or setting.info.desc,
                                         tooltipOnButton = true,
                                         notCheckable = true,
-                                        hidden = function () return Hekili.State.spec.id ~= i end,
+                                        hidden = function () return Status.specID ~= i end,
                                     }
                                     local cn = "HekiliSpec" .. i .. "Option" .. n
                                     local cf = CreateFrame( "Frame", cn, UIParent, "HekiliPopupDropdownRangeTemplate" )
@@ -795,7 +793,7 @@ do
                                                 menu.args[1] = setting.name
                                                 return setting.info.get( menu.args ) == actual
                                             end,
-                                            hidden = function () return Hekili.State.spec.id ~= i end,
+                                            hidden = function () return Status.specID ~= i end,
                                         } )
                                     end ]]
 
@@ -822,6 +820,94 @@ do
                     menu.AddButton( data, level )
                 end
             end
+        end
+    end
+end
+
+
+-- The addon compartment entry, the LDB data object and the minimap button (Core's OnInitialize calls this where
+-- it built them before, so the order is unchanged).
+function Hekili:CreateLaunchers()
+    local LDB = LibStub( "LibDataBroker-1.1", true )
+    local LDBIcon = LDB and LibStub( "LibDBIcon-1.0", true )
+
+    Hekili_OnAddonCompartmentClick = function( btn, arg1, arg2, checked, button )
+        button = button or arg1
+        if button == "RightButton" then ns.StartConfiguration()
+        else
+            ToggleDropDownMenu( 1, nil, ns.UI.Menu, "cursor", 8, 5 )
+        end
+        GameTooltip:Hide()
+    end
+
+    local function GetDataText()
+        local p = Hekili.DB.profile
+        local m = p.toggles.mode.value
+        local color = "FFFFD100"
+
+        if p.toggles.essences.override then
+            -- Don't show Essences here if it's overridden by CDs anyway?
+            return format( "|c%s%s|r %sCD|r %sInt|r %sDef|r", color,
+                m == "single" and "ST" or ( m == "aoe" and "AOE" or ( m == "dual" and "Dual" or ( m == "reactive" and "React" or "Auto" ) ) ),
+                p.toggles.cooldowns.value and "|cFF00FF00" or "|cFFFF0000",
+                p.toggles.interrupts.value and "|cFF00FF00" or "|cFFFF0000",
+                p.toggles.defensives.value and "|cFF00FF00" or "|cFFFF0000" )
+        else
+            return format( "|c%s%s|r %sCD|r %smCD|r %sInt|r",
+                color,
+                m == "single" and "ST" or ( m == "aoe" and "AOE" or ( m == "dual" and "Dual" or ( m == "reactive" and "React" or "Auto" ) ) ),
+                p.toggles.cooldowns.value and "|cFF00FF00" or "|cFFFF0000",
+                p.toggles.essences.value and "|cFF00FF00" or "|cFFFF0000",
+                p.toggles.interrupts.value and "|cFF00FF00" or "|cFFFF0000" )
+        end
+    end
+
+    Hekili_OnAddonCompartmentEnter = function( addonName, button )
+        GameTooltip:SetOwner( AddonCompartmentFrame )
+        GameTooltip:AddDoubleLine( "Hekili", GetDataText() )
+        GameTooltip:AddLine( "|cFFFFFFFFLeft-click to make quick adjustments.|r" )
+        GameTooltip:AddLine( "|cFFFFFFFFRight-click to open the options interface.|r" )
+        GameTooltip:Show()
+    end
+
+    Hekili_OnAddonCompartmentLeave = function( addonName, button )
+        GameTooltip:Hide()
+    end
+
+    AddonCompartmentFrame:RegisterAddon({
+        text = "Hekili",
+        icon = "Interface\\AddOns\\Hekili\\Textures\\LOGO-ORANGE.blp",
+        registerForAnyClick = true,
+        notCheckable = true,
+        func = Hekili_OnAddonCompartmentClick,
+        funcOnEnter = Hekili_OnAddonCompartmentEnter,
+        funcOnLeave = Hekili_OnAddonCompartmentLeave
+    } )
+
+    if LDB then
+        ns.UI.Minimap = ns.UI.Minimap or LDB:NewDataObject( "Hekili", {
+            type = "data source",
+            text = "Hekili",
+            icon = "Interface\\ICONS\\spell_nature_bloodlust",
+            OnClick = Hekili_OnAddonCompartmentClick,
+            OnEnter = function( self )
+                GameTooltip:SetOwner( self )
+                GameTooltip:AddDoubleLine( "Hekili", ns.UI.Minimap.text )
+                GameTooltip:AddLine( "|cFFFFFFFFLeft-click to make quick adjustments.|r" )
+                GameTooltip:AddLine( "|cFFFFFFFFRight-click to open the options interface.|r" )
+                GameTooltip:Show()
+            end,
+            OnLeave = Hekili_OnAddonCompartmentLeave
+        } )
+
+        function ns.UI.Minimap:RefreshDataText()
+            self.text = GetDataText()
+        end
+
+        ns.UI.Minimap:RefreshDataText()
+
+        if LDBIcon then
+            LDBIcon:Register( "Hekili", ns.UI.Minimap, self.DB.profile.iconStore )
         end
     end
 end
@@ -939,6 +1025,7 @@ do
     end
 
     local LSR = LibStub("SpellRange-1.0")
+    local lastGcdStart = 0
     local Glower = LibStub("LibCustomGlow-1.0")
 
     local function CalculateAlpha( id )
@@ -948,7 +1035,7 @@ do
 
         local prof = Hekili.DB.profile
         local conf = prof.displays[ id ]
-        local spec = state.spec.id and prof.specs[ state.spec.id ]
+        local spec = Status.specID and prof.specs[ Status.specID ]
         local aoe  = spec and spec.aoe or 3
 
         local _, zoneType = IsInInstance()
@@ -964,9 +1051,9 @@ do
 
             if conf.visibility.pvp.hideMounted and IsMounted() then return 0 end
 
-            if conf.visibility.pvp.combatTarget > 0 and state.combat > 0 and UnitExists( "target" ) and not UnitIsDead( "target" ) and UnitCanAttack( "player", "target" ) then
+            if conf.visibility.pvp.combatTarget > 0 and Status.combat and UnitExists( "target" ) and not UnitIsDead( "target" ) and UnitCanAttack( "player", "target" ) then
                 return conf.visibility.pvp.combatTarget
-            elseif conf.visibility.pvp.combat > 0 and state.combat > 0 then
+            elseif conf.visibility.pvp.combat > 0 and Status.combat then
                 return conf.visibility.pvp.combat
             elseif conf.visibility.pvp.target > 0 and UnitExists( "target" ) and not UnitIsDead( "target" ) and UnitCanAttack( "player", "target" ) then
                 return conf.visibility.pvp.target
@@ -981,9 +1068,9 @@ do
 
         if conf.visibility.pve.hideMounted and IsMounted() then return 0 end
 
-        if conf.visibility.pve.combatTarget > 0 and state.combat > 0 and UnitExists( "target" ) and not UnitIsDead( "target" ) and UnitCanAttack( "player", "target" ) then
+        if conf.visibility.pve.combatTarget > 0 and Status.combat and UnitExists( "target" ) and not UnitIsDead( "target" ) and UnitCanAttack( "player", "target" ) then
             return conf.visibility.pve.combatTarget
-        elseif conf.visibility.pve.combat > 0 and state.combat > 0 then
+        elseif conf.visibility.pve.combat > 0 and Status.combat then
             return conf.visibility.pve.combat
         elseif conf.visibility.pve.target > 0 and UnitExists( "target" ) and not UnitIsDead( "target" ) and UnitCanAttack( "player", "target" ) then
             return conf.visibility.pve.target
@@ -997,9 +1084,22 @@ do
     local numDisplays = 0
 
     -- The engine raises TARGET_COUNT_CHANGED (Targets.lua); registered on the all-specs spec so a spec change, which
-    -- rebuilds class.hooks from the specs without rebuilding the UI, keeps it.
-    class.specs[ 0 ]:RegisterHook( "TARGET_COUNT_CHANGED", function()
+    -- rebuilds the spec hooks without rebuilding the UI, keeps it.
+    Registry.Specs()[ 0 ]:RegisterHook( "TARGET_COUNT_CHANGED", function()
         if Hekili:GetToggleState( "mode" ) == "reactive" then HekiliDisplayAOE:UpdateAlpha() end
+    end, true )
+
+    -- Visibility reads the spec and combat from Engine.Output.status, which the engine publishes from its next update
+    -- (after PLAYER_REGEN_* or a spec change ran UpdateAlpha/UpdateDisplayVisibility): redo them when either moves.
+    local seenSpec, seenCombat
+    Hekili.Engine.Subscribe( "status", function( _, _, st )
+        if st.specID ~= seenSpec then
+            seenSpec, seenCombat = st.specID, st.combat
+            Hekili:UpdateDisplayVisibility()
+        elseif st.combat ~= seenCombat then
+            seenCombat = st.combat
+            for _, d in pairs( dPool ) do d:UpdateAlpha() end
+        end
     end, true )
 
     function Hekili:CreateDisplay( id )
@@ -1109,7 +1209,6 @@ do
                 madeUpdate = true
 
                 local alpha = self.alpha
-                local options = Hekili:GetActiveSpecOption( "abilities" )
 
                 if out.count == 0 or out.version == self.blankVersion then
                     for i, b in ipairs( self.Buttons ) do
@@ -1131,9 +1230,10 @@ do
                         local keybind = b.Recommendation.keybind
                         local exact_time = b.Recommendation.exact_time
 
-                        local ability = class.abilities[ action ]
+                        -- The published record is the button's ability: actionID, item, offGCD, texture (Core resolved it).
+                        local ability = action and b.Recommendation or nil
 
-                        if ability and ability.id < 0 and ability.id > -100 and action ~= "cancel_buff" or exact_time == nil then ability = nil end
+                        if ability and ability.actionID < 0 and ability.actionID > -100 and action ~= "cancel_buff" or exact_time == nil then ability = nil end
 
                         if ability then
                             if ( conf.flash.enabled and conf.flash.suppress ) then b:Hide()
@@ -1143,14 +1243,7 @@ do
                                 -- print( "Changing", GetTime() )
                             end ]]
 
-                            local image -- texture to be shown on the button for the current action
-
-                            if ability.item then
-                                image = b.Recommendation.texture or ability.texture or select( 5, GetItemInfoInstant( ability.item ) )
-                            else
-                                local override = options and rawget( options, action )
-                                image = override and override.icon or b.Recommendation.texture or ability.texture or GetSpellTexture( ability.id )
-                            end
+                            local image = ability.texture -- texture to be shown on the button for the current action
 
                             if action ~= b.lastAction or image ~= b.lastImage or self.NewRecommendations or not b.Image then
                                 b.Image = image
@@ -1164,7 +1257,7 @@ do
 
                             if i == 1 then
                                 if conf.glow.highlight then
-                                    local id = ability.item or ability.id
+                                    local id = ability.item or ability.actionID
                                     local isItem = ability.item ~= nil
 
                                     if id and ( isItem and IsCurrentItem( id ) or IsCurrentSpell( id ) ) and exact_time > GetTime() then
@@ -1191,7 +1284,7 @@ do
                                 b.Icon:Hide()
                             end
 
-                            if ( caption and conf.captions.enabled or ability.caption ) and ( i == 1 or conf.captions.queued ) then
+                            if ( caption and conf.captions.enabled or Registry.Abilities()[ action ].caption ) and ( i == 1 or conf.captions.queued ) then
                                 b.Caption:SetText( caption )
                             else
                                 b.Caption:SetText(nil)
@@ -1203,11 +1296,11 @@ do
                                 b.Keybinding:SetText(nil)
                             end
 
-                            if conf.glow.enabled and ( i == 1 or conf.glow.queued ) and IsSpellOverlayed( ability.id ) then
+                            if conf.glow.enabled and ( i == 1 or conf.glow.queued ) and IsSpellOverlayed( ability.actionID ) then
                                 b.glowColor = b.glowColor or {}
 
                                 if conf.glow.coloring == "class" then
-                                    b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = RAID_CLASS_COLORS[ class.file ]:GetRGBA()
+                                    b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = RAID_CLASS_COLORS[ Registry.ClassFile() ]:GetRGBA()
                                 elseif conf.glow.coloring == "custom" then
                                     b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = unpack(conf.glow.color)
                                 else
@@ -1259,13 +1352,13 @@ do
                         local a = b.Ability
 
                         if i == 1 or conf.glow.queued then
-                            local glowing = a.id > 0 and IsSpellOverlayed( a.id )
+                            local glowing = a.actionID > 0 and IsSpellOverlayed( a.actionID )
 
                             if glowing and not b.glowing then
                                 b.glowColor = b.glowColor or {}
 
                                 if conf.glow.coloring == "class" then
-                                    b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = RAID_CLASS_COLORS[ class.file ]:GetRGBA()
+                                    b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = RAID_CLASS_COLORS[ Registry.ClassFile() ]:GetRGBA()
                                 elseif conf.glow.coloring == "custom" then
                                     b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = unpack(conf.glow.color)
                                 else
@@ -1320,7 +1413,7 @@ do
 
                         self.flashTimer = conf.flash.speed or 0.4
 
-                        local ability = class.abilities[ a ]
+                        local ability = Registry.Abilities()[ a ]
 
                         self.flashColor = self.flashColor or {}
                         self.flashColor.r, self.flashColor.g, self.flashColor.b = unpack( conf.flash.color )
@@ -1405,14 +1498,14 @@ do
 
                         local tMin, tMax = 0, 0
                         local mode = profile.toggles.mode.value
-                        local spec = state.spec.id and profile.specs[ state.spec.id ]
+                        local spec = Status.specID and profile.specs[ Status.specID ]
 
                         if self.id == 'Primary' then
                             if ( mode == 'dual' or mode == 'single' or mode == 'reactive' ) then tMax = 1
                             elseif mode == 'aoe' then tMin = spec and spec.aoe or 3 end
                         elseif self.id == 'AOE' then tMin = spec and spec.aoe or 3 end
 
-                        local detected = ns.getNumberTargets()
+                        local detected = Status.numTargets
                         local shown = detected
 
                         if tMin > 0 then
@@ -1452,8 +1545,8 @@ do
                     if delay > 0 then
                         local start, duration = 0, 0
 
-                        if a.gcd ~= "off" then
-                            start, duration = GetSpellCooldown( ns.VirtualStateInternal.GCD_SPELL )
+                        if not a.offGCD then
+                            start, duration = GetSpellCooldown( Registry.GCD_SPELL )
                             if start > 0 then earliest_time = start + duration - now end
                         end
 
@@ -1464,8 +1557,9 @@ do
                         if a.item then
                             rStart, rDuration = C_Item.GetItemCooldown( a.item )
                         else
-                            if a.cooldown > 0 or a.spendType ~= "runes" then
-                                rStart, rDuration = GetSpellCooldown( a.id )
+                            local def = Registry.Abilities()[ b.Action ]
+                            if def.cooldown > 0 or def.spendType ~= "runes" then
+                                rStart, rDuration = GetSpellCooldown( a.actionID )
                             end
                         end
                         if rStart > 0 then earliest_time = max( earliest_time, rStart + rDuration - now ) end
@@ -1530,7 +1624,8 @@ do
                     for i, b in ipairs( self.Buttons ) do
                         local a = b.Ability
 
-                        if a and a.id then
+                        if a and a.actionID then
+                            local def = Registry.Abilities()[ b.Action ]
                             local outOfRange = false
                             local desaturated = false
 
@@ -1538,7 +1633,7 @@ do
                                 if conf.range.type == "melee" then
                                     outOfRange = ( LRC:GetRange( "target" ) or 10 ) > 7
                                 elseif conf.range.type == "ability" then
-                                    local name = a.rangeSpell or a.itemSpellName or a.actualName or a.name
+                                    local name = def.rangeSpell or def.itemSpellName or def.actualName or def.name
                                     if name then outOfRange = LSR.IsSpellInRange( name, "target" ) == 0 end
                                 end
                             end
@@ -1556,10 +1651,10 @@ do
                             if not b.outOfRange then
                                 local _, unusable
 
-                                if a.itemCd or a.item then
-                                    unusable = not IsUsableItem( a.itemCd or a.item )
+                                if def.itemCd or a.item then
+                                    unusable = not IsUsableItem( def.itemCd or a.item )
                                 else
-                                    _, unusable = IsUsableSpell( a.actualName or a.name )
+                                    _, unusable = IsUsableSpell( def.actualName or def.name )
                                 end
 
                                 if i == 1 and ( conf.delays.fade or conf.delays.desaturate ) then
@@ -1659,7 +1754,9 @@ do
         end
 
         function d:RefreshCooldowns( event )
-            local gStart = GetSpellCooldown( ns.VirtualStateInternal.GCD_SPELL )
+            local gStart = GetSpellCooldown( Registry.GCD_SPELL )
+            -- The last GCD start seen, the stock state.gcd.lastStart (which the combat log kept), for the extend below.
+            if gStart > lastGcdStart then lastGcdStart = gStart end
             local cStart = ( select( 4, UnitCastingInfo( "player" ) ) or select( 4, UnitChannelInfo( "player" ) ) or 0 ) / 1000
 
             local now = GetTime()
@@ -1679,12 +1776,12 @@ do
 
                     if ability.item then
                         start, duration, enabled, modRate = GetItemCooldown( ability.item )
-                    elseif not ability.empowered then
-                        start, duration, enabled, modRate = GetSpellCooldown( ability.id )
+                    else
+                        start, duration, enabled, modRate = GetSpellCooldown( ability.actionID )
                     end
 
                     if i == 1 and conf.delays.extend and rec.exact_time > max( now, start + duration ) then
-                        start = ( start > 0 and start ) or ( cStart > 0 and cStart ) or ( gStart > 0 and gStart ) or max( state.gcd.lastStart, state.combat )
+                        start = ( start > 0 and start ) or ( cStart > 0 and cStart ) or ( gStart > 0 and gStart ) or max( lastGcdStart, Status.combatStart )
                         duration = rec.exact_time - start
 
                     elseif enabled and enabled == 0 then
@@ -1697,14 +1794,6 @@ do
                         cd:SetCooldown( start, duration, modRate )
                         cd.lastStart = start
                         cd.lastDuration = duration
-                    end
-
-                    if i == 1 and ability.empowered and conf.empowerment.glow then
-                        if state.empowerment.start > 0 and duration == 0 then
-                            button.Empowerment:Show()
-                        else
-                            button.Empowerment:Hide()
-                        end
                     end
                 end
             end
@@ -1728,11 +1817,11 @@ do
 
                         local a = b.Ability
 
-                        if not b.glowing and a and a.id == ... then
+                        if not b.glowing and a and a.actionID == ... then
                             b.glowColor = b.glowColor or {}
 
                             if conf.glow.coloring == "class" then
-                                b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = RAID_CLASS_COLORS[ class.file ]:GetRGBA()
+                                b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = RAID_CLASS_COLORS[ Registry.ClassFile() ]:GetRGBA()
                             elseif conf.glow.coloring == "custom" then
                                 b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = unpack(conf.glow.color)
                             else
@@ -1767,7 +1856,7 @@ do
 
                         local a = b.Ability
 
-                        if b.glowing and ( not a or a.id == ... ) then
+                        if b.glowing and ( not a or a.actionID == ... ) then
                             b:glowStop()
                             b.glowing = false
                         end
@@ -1801,7 +1890,7 @@ do
 
                 if conf.glow.highlight then
                     local ability = b.Ability
-                    local isItem, id = false, ability and ability.id
+                    local isItem, id = false, ability and ability.actionID
 
                     if id and id < 0 then
                         isItem = true
@@ -2141,7 +2230,7 @@ do
         local specEnabled = GetSpecialization()
         specEnabled = specEnabled and GetSpecializationInfo( specEnabled )
 
-        if class.specs[ specEnabled ] then
+        if Registry.Specs()[ specEnabled ] then
             specEnabled = specEnabled and rawget( profile.specs, specEnabled )
             specEnabled = specEnabled and rawget( specEnabled, "enabled" ) or false
         else
@@ -2179,7 +2268,7 @@ do
             end
 
             for packName, pack in pairs( profile.packs ) do
-                if pack.spec == 0 or pack.spec == state.spec.id then
+                if pack.spec == 0 or pack.spec == Status.specID then
                     for listName, list in pairs( pack.lists ) do
                         listActive[ packName .. ":" .. listName ] = true
 
@@ -2217,13 +2306,13 @@ do
         end
 
         for packName, pack in pairs( profile.packs ) do
-            if pack.spec == 0 or pack.spec == state.spec.id then
+            if pack.spec == 0 or pack.spec == Status.specID then
                 for listName, list in pairs( pack.lists ) do
                     listActive[ packName .. ":" .. listName ] = true
 
                     -- NYI:  We can cache if abilities are disabled here as well to reduce checking in ProcessHooks.
                     for a, entry in ipairs( list ) do
-                        if entry.enabled and entry.action and class.abilities[ entry.action ] then
+                        if entry.enabled and entry.action and Registry.Abilities()[ entry.action ] then
                             actsActive[ packName .. ":" .. listName .. ":" .. a ] = true
                         end
                     end
@@ -2461,7 +2550,7 @@ do
             if conf.border.coloring == 'custom' then
                 b.Backdrop:SetBackdropBorderColor( unpack( conf.border.color ) )
             else
-                b.Backdrop:SetBackdropBorderColor( RAID_CLASS_COLORS[ class.file ]:GetRGBA() )
+                b.Backdrop:SetBackdropBorderColor( RAID_CLASS_COLORS[ Registry.ClassFile() ]:GetRGBA() )
             end
             b.Backdrop:Show()
         else
@@ -2843,13 +2932,13 @@ local key_cache = setmetatable( {}, {
 
 
 function Hekili:ShowDiagnosticTooltip( q )
-    if not q.actionName or not class.abilities[ q.actionName ].name then return end
+    if not q.actionName or not q.name then return end
 
     local tt = HekiliTooltip
     local fmt = ns.lib.Format
 
     tt:SetOwner( UIParent, "ANCHOR_CURSOR" )
-    tt:SetText( class.abilities[ q.actionName ].name )
+    tt:SetText( q.name )
     tt:AddDoubleLine( q.listName .. " #" .. q.action, "+" .. ns.formatValue(round(q.time or 0, 2)), 1, 1, 1, 1, 1, 1 )
 
     if q.resources and q.resources[q.resource_type] then
