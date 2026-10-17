@@ -413,7 +413,6 @@ setmetatable( state.trinket.main_hand.is, mt_trinket_is )
 
 state.max = safeMax
 state.min = safeMin
-state.abs = safeAbs
 
 if Hekili.Version:match( "^Dev" ) then
     state.print = print

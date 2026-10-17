@@ -63,6 +63,10 @@ function M.new()
         form = 0, -- GetShapeshiftForm (0: none)
         forms = {}, -- [form index] = its spell ID (GetShapeshiftFormInfo's 4th return)
         damage = { 0, 0, 0, 0 }, -- UnitDamage's min and max main, min and max off (the harness's out-of-combat cache)
+        classID = 0, -- UnitClass's third return
+        specID = nil, -- C_SpecializationInfo.GetSpecializationInfo(1)'s ID (nil: no specialization)
+        powerType = { 0, "MANA" }, -- UnitPowerType("player")
+        role = "DAMAGER",
     }
     local api = { ctl = ctl }
 
@@ -137,6 +141,9 @@ function M.new()
         return v
     end
     function api.UnitIsUnit(a, b)
+        if a == b then -- the client: a unit is itself, never a secret (headless loop design §6.1)
+            return true
+        end
         local v = ctl.unitIs[a]
         if v == SECRET then
             return SECRET
@@ -248,6 +255,236 @@ function M.new()
             return ctl.traits and { spellID = ctl.traits.defs[def] }
         end,
     }
+
+    -- The rest of the client the facade resolves (headless loop design §6.2): every passthrough and hybrid row of
+    -- ns.Facade.Inventory() but the five absent on Forever, so the client model is this one file. Each answers a plain
+    -- constant or a `ctl` field: none is secret on Forever by the facade's probes.
+    local function none() end
+    local function no()
+        return false
+    end
+    local function zero()
+        return 0
+    end
+    function api.GetBuildInfo()
+        return "1.60.1", "70338", "Oct 1 2026", 16001
+    end
+    function api.GetLocale()
+        return "enUS"
+    end
+    api.GetCVar, api.GetCursorInfo, api.GetActionInfo, api.GetBindingKey = none, none, none, none
+    api.GetInventoryItemID, api.GetSpecializationInfoByID, api.GetStablePetInfo = none, none, none
+    api.UnitPhaseReason, api.UnitThreatSituation, api.UnitTokenFromGUID, api.IsActionInRange = none, none, none, none
+    api.HasOverrideActionBar, api.HasVehicleActionBar, api.IsInJailersTower, api.SpellIsSelfBuff = no, no, no, no
+    api.IsMounted, api.IsResting, api.IsInGroup, api.IsInRaid, api.UnitCanAssist = no, no, no, no, no
+    api.UnitIsTrivial, api.UnitIsPVP, api.UnitInVehicle, api.UnitHasVehicleUI, api.UnitOnTaxi = no, no, no, no, no
+    api.UnitInParty, api.UnitInRaid = no, none
+    api.GetHaste, api.GetFrameCPUUsage, api.GetNumGroupMembers, api.GetNumSubgroupMembers = zero, zero, zero, zero
+    function api.GetFramerate()
+        return 60
+    end
+    function api.GetNetStats()
+        return 0, 0, 50, 50
+    end
+    function api.GetRealmName()
+        return "Realm"
+    end
+    function api.GetNumClasses()
+        return 11
+    end
+    function api.GetClassInfo()
+        return ctl.class, ctl.class, ctl.classID
+    end
+    function api.UnitClass()
+        return ctl.class, ctl.class, ctl.classID
+    end
+    function api.UnitRace()
+        return "Race", "Race", 1
+    end
+    function api.UnitName(u)
+        return u == "player" and "Player" or "Unit"
+    end
+    function api.UnitSex()
+        return 2
+    end
+    function api.UnitFactionGroup()
+        return "Horde", "Horde"
+    end
+    function api.UnitEffectiveLevel(u)
+        return api.UnitLevel(u)
+    end
+    function api.UnitPowerType()
+        return ctl.powerType[1], ctl.powerType[2]
+    end
+    function api.UnitAffectingCombat()
+        return ctl.combat
+    end
+    function api.UnitIsPlayer(u)
+        return u == "player"
+    end
+    function api.UnitIsFriend(_, u)
+        return u == "player"
+    end
+    function api.UnitIsDeadOrGhost(u)
+        return ctl.dead[u] == true
+    end
+    function api.UnitClassification()
+        return "normal"
+    end
+    function api.UnitCreatureType()
+        return "Beast"
+    end
+    function api.UnitIsConnected()
+        return true
+    end
+    function api.GetUnitSpeed()
+        return 0, 7, 7, 4.72
+    end
+    function api.IsInInstance()
+        return false, "none"
+    end
+    function api.GetInstanceInfo()
+        return "World", "none", 0, "", 5, 0, false, 1
+    end
+    function api.IsPlayerSpell(id)
+        return ctl.known[id] == true
+    end
+    api.IsSpellKnown, api.IsSpellKnownOrOverridesKnown = api.IsPlayerSpell, api.IsPlayerSpell
+    function api.GetManaRegen()
+        return 0, 0
+    end
+    function api.SecureCmdOptionParse(s)
+        return s
+    end
+    api.AuraUtil = {
+        UnpackAuraData = function(a)
+            if not a then
+                return nil
+            end
+            local p = a.points or {}
+            return a.name,
+                a.icon,
+                a.applications,
+                a.dispelName,
+                a.duration,
+                a.expirationTime,
+                a.sourceUnit,
+                a.isStealable,
+                a.nameplateShowPersonal,
+                a.spellId,
+                a.canApplyAura,
+                a.isBossAura,
+                a.isFromPlayerOrPlayerPet,
+                a.nameplateShowAll,
+                a.timeMod,
+                p[1],
+                p[2],
+                p[3]
+        end,
+    }
+    local toc = {} -- C_AddOns.GetAddOnMetadata answers the TOC's `## Key: value` lines (State.lua reads Version)
+    local fh = io.open("src/Hekili/Hekili.toc")
+    if fh then
+        for line in fh:lines() do
+            local k, v = line:match("^## ([%w%-]+): (.-)%s*$")
+            if k then
+                toc[k] = v
+            end
+        end
+        fh:close()
+    end
+    api.C_AddOns = {
+        GetAddOnMetadata = function(_, k)
+            return toc[k]
+        end,
+        IsAddOnLoaded = no,
+        LoadAddOn = no,
+    }
+    local white = { r = 1, g = 1, b = 1 }
+    function white.GenerateHexColor()
+        return "ffffffff"
+    end
+    api.C_ClassColor = {
+        GetClassColor = function()
+            return white
+        end,
+    }
+    api.C_ClassTalents.GetHeroTalentSpecsForClassSpec = none
+    api.C_Item = {
+        GetItemCount = zero,
+        GetItemSpell = none,
+        IsUsableItem = no,
+        GetItemInfo = none,
+        GetItemInfoInstant = none,
+        GetItemCooldown = function()
+            return 0, 0, 1
+        end,
+        IsEquippedItem = no,
+        IsCurrentItem = no,
+        GetDetailedItemLevelInfo = none,
+        GetItemGem = none,
+    }
+    api.C_LossOfControl = { GetActiveLossOfControlData = none, GetActiveLossOfControlDataCount = zero }
+    api.C_PetBattles = { IsInBattle = no }
+    api.C_PvP = { IsWarModeDesired = no }
+    api.C_PlayerInfo = { IsPlayerInTimerunningHeroicWorldTier = no }
+    api.C_SpecializationInfo = {
+        GetSpecialization = function()
+            return ctl.specID and 1 or nil
+        end,
+        GetSpecializationInfo = function(i) -- Forever: one pseudo-spec per class (Constants.lua), at index 1
+            if i == 1 and ctl.specID then
+                return ctl.specID, ctl.class, "", 0, ctl.role, 1
+            end
+        end,
+        GetTalentInfo = none,
+    }
+    api.C_SpellActivationOverlay = { IsSpellOverlayed = no }
+    api.C_Texture = { GetAtlasInfo = none }
+    api.C_TooltipInfo = { GetInventoryItem = none, GetItemByID = none, GetSpellByID = none }
+    local window = { x = 1920, y = 1080 }
+    api.C_VideoOptions = {
+        GetCurrentGameWindowSize = function()
+            return window
+        end,
+    }
+    local C = api.C_Spell
+    local info = {} -- [spellID] = GetSpellInfo's table, built once
+    function C.GetSpellInfo(id)
+        local i = info[id]
+        if not i then
+            i = {
+                name = "Spell " .. tostring(id),
+                iconID = 136000,
+                spellID = id,
+                castTime = 0,
+                minRange = 0,
+                maxRange = 5,
+            }
+            info[id] = i
+        end
+        return i
+    end
+    function C.GetSpellTexture()
+        return 136000
+    end
+    function C.GetSpellDescription()
+        return ""
+    end
+    C.GetSpellCharges, C.RequestLoadSpellData, C.IsSpellPassive, C.IsSpellHelpful = none, none, no, no
+    function C.IsSpellHarmful()
+        return true
+    end
+    function C.IsSpellDataCached()
+        return true
+    end
+    function api.IsUsableSpell(id)
+        return C.IsSpellUsable(id)
+    end
+    local B = api.C_SpellBook
+    B.IsSpellInSpellBook = B.IsSpellKnown
+    B.FindSpellBookSlotForSpell = none
+    B.GetNumSpellBookSkillLines = zero
 
     -- Frames: each records its registrations; the first one made is the client's view of VirtualState's frame
     -- (`api.frame`): Fire delivers an event to its OnEvent when registered, ctl.Tick runs its OnUpdate.
