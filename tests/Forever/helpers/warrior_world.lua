@@ -340,6 +340,7 @@ function M.resolve(key, H)
     if not m then
         error("unmapped key " .. tostring(key), 2)
     end
+    assert(next(M.IDS), "M.character() fills M.IDS before a press resolves")
     local a = H.Hekili.Class.abilities[key]
     local X = classData(H)
     local p = {

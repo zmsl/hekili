@@ -26,7 +26,7 @@ M.RAW = { "UnitHealth", "UnitHealthMax", "C_UnitAuras.GetDebuffDataByIndex" }
 function M.new(content)
     local L = { content = content }
     local character = content.character()
-    L.form = character.form
+    L.form, L.power = character.form, character.power
     L.us = headless.new({ character = character, pack = content.PACK })
     L.oracle = headless.new({ character = character, pack = content.PACK, raw = M.RAW })
     for _, H in ipairs({ L.us, L.oracle }) do
@@ -82,8 +82,9 @@ end
 --- each tick), on(run, steps, t) (a per-tick hook). Returns the run { W, us, ticks, presses, refused (by reason),
 --- attempts, episodes, errors, raises, misses (unexpected run names), secrets (Facade.secrets), selfCheck (ticks where
 --- the oracle's belief missed the truth, by field), combat, full, idle, up (by debuff key: in-combat ticks), ours and
---- theirs (first icons by in-combat tick), gap (believed minus true power where they differ), cpu (ms per Update of
---- the first instance), damage, t }.
+--- theirs (first icons by in-combat tick), gap (believed minus true power where they differ), cpu (ms per tick of
+--- the first instance, timed around headless.cycle: VirtualState's flush and the timers as well as Update, so it errs
+--- high), damage, t }.
 function M.run(L, seed, o, drivers)
     o = o or {}
     local content = L.content
@@ -120,7 +121,12 @@ function M.run(L, seed, o, drivers)
         ctl.auraError.target = nil
         -- UnitLevel is plain in combat on Forever (the facade's passthrough row); fake_api answers an unset unit secret
         ctl.level.target, ctl.level.nameplate1 = wo.level, wo.level
-        local k = setmetatable({ usable = L.answers, gcdSpell = d.H.ns.VirtualStateInternal.GCD_SPELL }, {
+        local k = setmetatable({
+            usable = L.answers,
+            gcdSpell = d.H.ns.VirtualStateInternal.GCD_SPELL,
+            powerType = L.power.type, -- the content's power, not the observer's default
+            powerToken = L.power.token,
+        }, {
             __index = observer.DEFAULTS,
         })
         if d.plain then
@@ -135,7 +141,7 @@ function M.run(L, seed, o, drivers)
     end
     local stopAt = W.stopAt
     local t = 0
-    local lastAttempt, lastRefused, readySince = -1, false, {}
+    local lastRefused, readySince = false, {}
     local traced = {}
     if o.trace then -- the facade's trace (§5.1): Hekili's own debug pass, its lines counted and dropped
         for i, st in ipairs(steps) do
@@ -173,7 +179,7 @@ function M.run(L, seed, o, drivers)
             if st.plain then
                 local VS = st.H.ns.VirtualState
                 local now = st.base + t
-                local p = VS.Power(observer.DEFAULTS.powerType, now)
+                local p = VS.Power(L.power.type, now)
                 if math.abs(p.est - us.power) > 1e-6 then
                     run.selfCheck.power = (run.selfCheck.power or 0) + 1
                 end
@@ -212,8 +218,7 @@ function M.run(L, seed, o, drivers)
                 readySince[k] = nil
             end
         end
-        if shown and t - readySince[key] >= (o.reaction or 0) - 1e-9 and lastAttempt < t then
-            lastAttempt = t
+        if shown and t - readySince[key] >= (o.reaction or 0) - 1e-9 then -- one attempt a tick
             local p = content.resolve(key, L.oracle)
             local ok, why = W.press(us, key, p)
             if inCombat then
@@ -223,7 +228,9 @@ function M.run(L, seed, o, drivers)
                 run.presses = run.presses + 1
                 gcdPress = not p.offGcd
             else
-                run.refused[why] = (run.refused[why] or 0) + 1
+                if inCombat then -- over the in-combat attempts (per100)
+                    run.refused[why] = (run.refused[why] or 0) + 1
+                end
                 refusedKey = key
                 if inCombat and lastRefused ~= key then
                     run.episodes = run.episodes + 1 -- a refusal episode: consecutive refused ticks of one key
@@ -244,7 +251,7 @@ function M.run(L, seed, o, drivers)
             run.theirs[n] = steps[2] and steps[2].q.name[1] or false
             if steps[2] and run.ours[n] ~= run.theirs[n] then -- the belief's power error where they disagree
                 local VS = steps[1].H.ns.VirtualState
-                run.gap[#run.gap + 1] = VS.Power(observer.DEFAULTS.powerType, steps[1].base + t).est - us.power
+                run.gap[#run.gap + 1] = VS.Power(L.power.type, steps[1].base + t).est - us.power
             end
         end
         if o.on then
@@ -254,7 +261,9 @@ function M.run(L, seed, o, drivers)
     -- the out-of-combat gap: each instance's clock moves past the fight
     for i, st in ipairs(steps) do
         st.H.ctl.now = st.base + t
-        headless.cycle(st.H, st.H.ctl.now)
+        if not headless.cycle(st.H, st.H.ctl.now) then
+            run.raises = run.raises + 1
+        end
         if traced[i] then
             st.H.Hekili.Debug, st.H.Hekili.SaveDebugSnapshot = traced[i][1], traced[i][2]
         end

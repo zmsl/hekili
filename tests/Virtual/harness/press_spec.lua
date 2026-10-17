@@ -103,6 +103,47 @@ describe("the world's press", function()
         assert.are.equal("@current " .. fs.SPENDER_B .. " false", last)
     end)
 
+    it(
+        "drops a queued strike the power no longer covers at the swing: unqueued, a white swing, nothing paid",
+        function()
+            setup()
+            behaviours.melee({ land = observer.lag(), phase = { 2, 9 } })(W, us)
+            W.run(1)
+            assert.is_true(
+                W.press(us, "spender_b", { spell = fs.SPENDER_B, cost = 15, offGcd = true, onNextSwing = true })
+            )
+            us.power = 10 -- spent elsewhere before the swing
+            W.run(2.5)
+            assert.are.same({ 10, nil }, { us.power, us.queued })
+            local kinds = {}
+            for _, ev in ipairs(W.truth) do
+                kinds[ev.kind] = (kinds[ev.kind] or 0) + 1
+            end
+            assert.are.same({ 1, nil }, { kinds.unqueue, kinds.strike })
+        end
+    )
+
+    it(
+        "rolls the same-ms avoid from the client-detail generator: on every swing at 1, W.rng's draws unchanged",
+        function()
+            local function swings(sameMs)
+                setup()
+                behaviours.melee({ land = observer.lag(), phase = { 2, 9 }, sameMs = sameMs })(W, us)
+                W.run(20)
+                local n, same = 0, 0
+                for _, ev in ipairs(W.truth) do
+                    if ev.kind == "swing" and ev.src == us then
+                        n, same = n + 1, same + (ev.sameMs and 1 or 0)
+                    end
+                end
+                return n, same, W.rng.next()
+            end
+            local n, same, draw = swings(1)
+            assert.are.same({ n, 0, draw }, { swings(nil) })
+            assert.is_true(n > 0 and same == n, same .. " of " .. n)
+        end
+    )
+
     it("puts an aura on the clock: ours on the player plain until its expiry; a refresh keeps it up", function()
         setup()
         W.t = 1

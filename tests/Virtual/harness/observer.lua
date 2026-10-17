@@ -101,7 +101,8 @@ end
 --- for the drive (`@damage` UnitDamage, `@usable`, `@form`, `@guid`, `@unitIs`, `@speed`, `@combat`, `@auraError`,
 --- `@current` IsCurrentSpell, `@aura` an aura list entry, `@dead`, `@cooldown`, `@power`, `@regen`, `@attackSpeed`,
 --- `@forms`), or `@truth` our true power after an event. It draws nothing from `W.rng` (the behaviours roll every
---- random choice and record it on the truth event), so batch and incremental streams of one world are equal.
+--- random choice and record it on the truth event), so batch and incremental streams of one world are equal for
+--- power-only answers (in batch, a list answer that reads `W` sees the finished world at every time).
 --- `k.usable`: true (the fake spec's COSTS against our power) or a list { { spellID, fn(W, us, power, view) -> ok,
 --- short } } (the content's): IsSpellUsable's two answers (usable; unusable for lack of power), `@usable` 1, 2 or 3
 --- (unusable for another reason); `power` is the client's view of our swing-paid power and `view[pt]` of each other

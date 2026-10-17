@@ -191,7 +191,7 @@ describe("the headless Arms loop", function()
         for _, r in ipairs({ a, b }) do
             assert.are.same({ 0, 0 }, { r.errors, r.raises })
             assert.are.same({}, r.misses)
-            assert.is_true(r.presses > 0)
+            assert.is_true(r.presses >= 5 and r.damage > 0, r.presses .. " presses, " .. r.damage .. " damage")
             assert.are.same({}, r.selfCheck) -- the oracle's belief is the truth at every tick
         end
         assert.are.same({}, L.us.loadErrors)

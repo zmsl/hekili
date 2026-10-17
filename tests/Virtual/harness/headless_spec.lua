@@ -60,6 +60,13 @@ describe("headless Hekili", function()
         H.RunTimers(now + 5)
         assert.are.same({ 1, 3 }, seen)
         assert.are.equal(now, H.ctl.now)
+        H.env.C_Timer.After(1, function() -- overdue: it runs at the clock, never before it
+            seen[#seen + 1] = H.env.GetTime() - now
+        end)
+        H.ctl.now = now + 5
+        H.RunTimers(now + 5)
+        assert.are.same({ 1, 3, 5 }, seen)
+        assert.are.equal(now + 5, H.ctl.now)
     end)
 
     it("counts every Hekili error path: the copy State.lua takes at load and Hekili:Error", function()

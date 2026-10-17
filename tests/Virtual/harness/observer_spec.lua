@@ -299,11 +299,13 @@ describe("the observer", function()
         local batch = observer.observe(scenarios.build(o, 3), k)
         local W2 = scenarios.build(o, 3)
         local obs = observer.new(W2, k)
-        local steps = 0
+        local prev = -math.huge
         for t = 0, 50, 0.2 do
             local first, last = obs.step(t)
-            assert.is_true(last >= first - 1)
-            steps = steps + 1
+            for i = first, last do -- each step appends only up to its time, never before the last step's
+                assert.is_true(obs.s.t[i] <= t + 1e-9 and obs.s.t[i] >= prev, i .. " at " .. t)
+                prev = obs.s.t[i]
+            end
         end
         obs.step(math.huge)
         for _, f in ipairs({ "t", "ev", "a1", "a2", "a3", "a4", "a5", "src", "hand", "swingT", "actor" }) do
