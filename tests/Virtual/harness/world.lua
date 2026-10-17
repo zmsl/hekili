@@ -2,9 +2,13 @@
 -- and records the TRUE event stream, with the effects the world applies itself (health, our rage). Test code: it
 -- allocates freely; the drive loop (drive.lua) reads the observer's flat arrays, never this.
 local rng = require("Virtual.harness.rng")
-local roll = require("Virtual.harness.behaviours").roll
+local behaviours = require("Virtual.harness.behaviours")
+local roll = behaviours.roll
 
 local M = {}
+
+-- Our crit rate on an instant hit (W.hit): the white swings' measured rate.
+M.CRIT = behaviours.RATES.crit
 
 --- A new world. `seed` seeds its generator. Truth events: { t, kind, src, dst, hand, act, flag, amount, school, spell }
 --- with kind "swing" (a white swing, its outcome rolled; ours land later as "land"), "land", "strike" (an
@@ -82,14 +86,17 @@ function M.new(seed)
     -- the generic ones below.
 
     --- The player `e` pressed `key` now. `p` is the content's resolved press { spell, cost, cooldown, gcd (seconds),
-    --- offGcd, onNextSwing, amount ({ lo, hi } of a queued strike), requires = fn(W, e) -> ok, why, effect =
-    --- fn(W, e, p) }. Checked against the true state in order: the GCD, the cooldown, the cost, a strike already queued,
-    --- `requires`; a refusal returns false and its reason ("gcd", "cooldown", "cost", "queued", "requires:<why>") and
-    --- changes nothing. An accept spends (a queued strike at its swing), starts the GCD and the cooldown, emits the
-    --- cast (or queues the strike) and runs `effect`; it returns true.
+    --- offGcd, onNextSwing, amount ({ lo, hi } of a queued strike), cast (a cast time in seconds), requires = fn(W, e)
+    --- -> ok, why, effect = fn(W, e, p) }. Checked against the true state in order: a cast in progress, the GCD, the
+    --- cooldown, the cost, a strike already queued, `requires`; a refusal returns false and its reason ("casting",
+    --- "gcd", "cooldown", "cost", "queued", "requires:<why>") and changes nothing. An accept starts the GCD and the
+    --- cooldown, then spends, emits the cast and runs `effect` (a cast time: all three when the cast completes; a queued
+    --- strike: queues it, paid at its swing); it returns true.
     function W.press(e, key, p)
         local t = W.t
-        if not p.offGcd and t < e.gcdUntil then
+        if not p.onNextSwing and t < (e.castUntil or 0) then
+            return false, "casting"
+        elseif not p.offGcd and t < e.gcdUntil then
             return false, "gcd"
         elseif t < (e.cdUntil[key] or 0) then
             return false, "cooldown"
@@ -110,13 +117,24 @@ function M.new(seed)
         if (p.cooldown or 0) > 0 then
             e.cdUntil[key] = t + p.cooldown
         end
+        local function land()
+            W.emit({ kind = "cast", src = e, dst = e.target, spell = p.spell, cost = p.cost })
+            if p.effect then
+                p.effect(W, e, p)
+            end
+        end
         if p.onNextSwing then
             W.queueStrike(e, p)
+            if p.effect then
+                p.effect(W, e, p)
+            end
+        elseif (p.cast or 0) > 0 then
+            -- shortcut: the client sees only the success at the cast's end (no UNIT_SPELLCAST_START or
+            -- UnitCastingInfo, no swing-timer pause); upgrade when a cast-time ability's recommendations need them.
+            e.castUntil = t + p.cast
+            W.at(e.castUntil, land)
         else
-            W.emit({ kind = "cast", src = e, dst = e.target, spell = p.spell, cost = p.cost })
-        end
-        if p.effect then
-            p.effect(W, e, p)
+            land()
         end
         return true
     end

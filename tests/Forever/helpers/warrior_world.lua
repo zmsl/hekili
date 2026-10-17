@@ -28,7 +28,9 @@ M.KIT = {
     "mortal_strike",
     "overpower",
     "pummel",
+    "recklessness",
     "rend",
+    "slam",
     "sunder_armor",
     "thunder_clap",
     "victory_rush",
@@ -37,6 +39,9 @@ M.KIT = {
 -- An Arms build by definition spell (the SPIKE's): Mortal Strike, Anger Management, Deep Wounds 3, Tactical Mastery 5,
 -- Impale 2, Improved Rend 3.
 M.TALENTS = { [12294] = 1, [12296] = 1, [12834] = 3, [12295] = 5, [16493] = 2, [12163] = 3 }
+-- How many of an ability's rank list (`id`, then `copy`) the character knows when the list runs past its trained ranks:
+-- Slam's list ends in Improved Slam's override IDs, which this build (no Improved Slam) does not know.
+M.RANKS = { slam = 5 }
 
 -- The stances as the client's forms, in order (GetShapeshiftForm's index).
 M.FORMS = { "battle_stance", "defensive_stance", "berserker_stance" }
@@ -53,8 +58,10 @@ function M.character()
     for _, key in ipairs(M.KIT) do
         local a = assert(w.abilities[key], key)
         known[#known + 1] = a.id
-        for _, id in ipairs(type(a.copy) == "table" and a.copy or {}) do
-            known[#known + 1] = id
+        for i, id in ipairs(type(a.copy) == "table" and a.copy or {}) do
+            if i < (M.RANKS[key] or math.huge) then
+                known[#known + 1] = id
+            end
         end
     end
     local forms = {}
@@ -105,11 +112,28 @@ local function aura(W, X, dst, key, stacks)
 end
 local function stance(key)
     return {
-        effect = function(W, e)
+        effect = function(W, e, _, X)
             W.setForm(e, M.FORM[key])
-            if e.power > 25 then -- Tactical Mastery 5/5 keeps 25 rage through a stance change
-                W.gain(e, 25 - e.power)
+            if e.power > X.keep then -- the class file's swap_stance keep (Tactical Mastery and its talent)
+                W.gain(e, X.keep - e.power)
             end
+        end,
+    }
+end
+local function selfAura(key)
+    return {
+        effect = function(W, e, _, X)
+            aura(W, X, e, key)
+        end,
+    }
+end
+local function strike(amount, key) -- a hit on the target for `amount`, and debuff `key` on it
+    return {
+        effect = function(W, e, _, X)
+            if key then
+                aura(W, X, e.target, key)
+            end
+            W.hit(e, e.target, amount)
         end,
     }
 end
@@ -133,14 +157,17 @@ M.MAP = {
             end
         end,
     },
-    -- shortcut: no positions, so Charge only pays its rage (rank 3: 15); the pull starts combat. Upgrade with positions.
+    -- shortcut: no positions, so Charge only pays its rage (rank 3: 15); the pull starts combat; its function-valued
+    -- stance `buff` and its out-of-combat, in-range `usable` are not checked. Upgrade with positions.
     charge = {
         effect = function(W, e)
             W.gain(e, 15)
         end,
     },
-    cleave = { amount = 50, onNextSwing = true },
-    heroic_strike = { amount = 157, onNextSwing = true },
+    -- shortcut: a queued strike always wounds (no avoid, crit or armour), so it never opens Overpower. Upgrade if the
+    -- loop's Overpower windows matter.
+    cleave = { amount = 50 },
+    heroic_strike = { amount = 157 },
     demoralizing_shout = {
         effect = function(W, e, _, X)
             aura(W, X, e.target, "demoralizing_shout")
@@ -164,9 +191,46 @@ M.MAP = {
             W.dot(e, e.target, 3, math.floor(d / 3), math.floor(147 * 3 / d))
         end,
     },
-    recklessness = {
+    recklessness = selfAura("recklessness"),
+    sweeping_strikes = selfAura("sweeping_strikes"),
+    death_wish = selfAura("death_wish"),
+    shield_block = selfAura("shield_block"),
+    spearing_strike = { -- UNMEASURED amount: a plain weapon hit
+        effect = function(W, e)
+            W.hit(e, e.target, weapon(W, e, 0))
+        end,
+    },
+    bloodthirst = strike(450), -- 45% of attack power, at about 1000
+    shield_slam = strike(342),
+    thunder_clap = strike(103, "thunder_clap"),
+    mocking_blow = strike(93, "mocking_blow"),
+    concussion_blow = {
         effect = function(W, e, _, X)
-            aura(W, X, e, "recklessness")
+            aura(W, X, e.target, "concussion_blow")
+        end,
+    },
+    -- threat and interrupts are not modelled: these only press
+    shield_bash = {},
+    taunt = {},
+    challenging_shout = {},
+    revenge = { -- a dodge, parry or block of a swing at us within 5 s (the class file's window)
+        requires = function(W, e)
+            for i = #W.truth, 1, -1 do
+                local ev = W.truth[i]
+                if W.t - ev.t > 5 then
+                    break
+                elseif
+                    ev.kind == "swing"
+                    and ev.dst == e
+                    and (ev.act == "DODGE" or ev.act == "PARRY" or ev.act == "BLOCK")
+                then
+                    return true
+                end
+            end
+            return false, "no avoid"
+        end,
+        effect = function(W, e)
+            W.hit(e, e.target, 80)
         end,
     },
     mortal_strike = {
@@ -189,6 +253,8 @@ M.MAP = {
             W.hit(e, e.target, 65)
         end,
     },
+    -- shortcut: `avoidAt` and `W.killAt` are not per target or source (any dodge of ours opens Overpower, any death
+    -- Victory Rush); right solo, upgrade for the party report.
     overpower = { -- a dodge of ours on the target within 5 s opens it; the press uses it up
         requires = function(W, e)
             return W.t - (e.avoidAt.DODGE or -1e9) <= 5, "no dodge"
@@ -201,7 +267,7 @@ M.MAP = {
     execute = { -- the target's true health under 20%; rank 5: 600, and 15 a point of the rage it spends past its cost
         requires = function(_, e)
             local v = e.target
-            return v ~= nil and v.health < 0.2 * v.healthMax, "not in execute range"
+            return v ~= nil and v.health <= 0.2 * v.healthMax, "not in execute range"
         end,
         effect = function(W, e)
             local extra = e.power
@@ -219,7 +285,9 @@ M.MAP = {
     },
 }
 
--- The class data the mapping reads, from a booted instance `H` (once per instance).
+-- The class data the mapping reads, from a booted instance `H` (once per instance): each aura's ID, duration and
+-- stacks; `keep`, the rage a stance swap keeps, from the class file's own swap_stance run on the character's known
+-- spells and talents.
 local cache = setmetatable({}, { __mode = "k" })
 local function classData(H)
     if cache[H] then
@@ -232,6 +300,12 @@ local function classData(H)
             X.aura[key] = { id = a.id, duration = a.duration, max_stack = a.max_stack }
         end
     end
+    local w = loadWarrior.load()
+    w.game.known = H.ctl.known
+    local env = loadWarrior.env(w)
+    env.talent, env.rage.current = H.Hekili.State.talent, 100
+    env.swap_stance("battle_stance")
+    X.keep = 100 - (env.spent[1] or 0)
     return X
 end
 
@@ -261,7 +335,8 @@ function M.resolve(key, H)
         cooldown = tonumber(a.cooldown) or 0,
         gcd = 1.5,
         offGcd = a.gcd == "off",
-        onNextSwing = m.onNextSwing or a.onNextSwing or a.nextSwing,
+        cast = tonumber(a.cast) or 0,
+        onNextSwing = a.onNextSwing or a.nextSwing,
     }
     if m.amount then
         local w = M.WORLD.weapons[1]

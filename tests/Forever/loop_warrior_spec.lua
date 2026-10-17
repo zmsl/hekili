@@ -42,6 +42,53 @@ describe("the Warrior world mapping", function()
         assert.is_truthy(tostring(err):find("unmapped key not_an_ability", 1, true))
     end)
 
+    it("maps every ability of the Arms, Fury and Protection packs, known or not", function()
+        local unmapped, packs = {}, {}
+        for _, name in ipairs({ "Arms", "Fury", "Protection" }) do
+            local pack = H.Hekili.DB.profile.packs[name]
+            packs[#packs + 1] = pack ~= nil
+            for _, list in pairs(pack and pack.lists or {}) do
+                for _, entry in ipairs(list) do
+                    local a = entry.action and H.Hekili.Class.abilities[entry.action]
+                    if a and (a.id or 0) > 0 and not ww.MAP[entry.action] then -- a spell (internal handlers: id <= 0)
+                        unmapped[#unmapped + 1] = name .. ":" .. entry.action
+                    end
+                end
+            end
+        end
+        assert.are.same({ true, true, true }, packs)
+        table.sort(unmapped)
+        assert.are.same({}, unmapped)
+    end)
+
+    it("knows Recklessness and Slam; Slam resolves with the class file's cast time", function()
+        local a = H.Hekili.Class.abilities
+        assert.is_truthy(H.ctl.known[a.recklessness.id])
+        assert.is_truthy(H.ctl.known[a.slam.id])
+        assert.is_falsy(H.ctl.known[a.slam.copy[#a.slam.copy]]) -- Improved Slam's override: not this build
+        local slam = ww.resolve("slam", H)
+        assert.are.same({ a.slam.cast, a.slam.cooldown }, { slam.cast, slam.cooldown })
+        assert.is_true(slam.cast > 0)
+    end)
+
+    it("keeps the rage the class file's swap_stance keeps on a stance swap", function()
+        local s = H.Hekili.State
+        s.rage.current, s.rage.actual = 100, 100
+        s.swap_stance("berserker_stance") -- the booted class file, on the character's talents and spells
+        local keep = s.rage.actual
+        assert.is_true(keep > 0 and keep < 100)
+        local W = { t = 0 }
+        local e = { power = 100, form = 1 }
+        function W.setForm(x, f)
+            x.form = f
+        end
+        function W.gain(x, n)
+            x.power = x.power + n
+        end
+        ww.resolve("berserker_stance", H).effect(W, e)
+        assert.are.same({ keep, ww.FORM.berserker_stance }, { e.power, e.form })
+    end)
+
     it(
         "resolves a press from the class file: cost, cooldown and GCD as the state has them; a strike on the next swing",
         function()

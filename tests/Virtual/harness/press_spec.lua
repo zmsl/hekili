@@ -133,10 +133,8 @@ describe("the world's press", function()
         mob.health = 30
         W.t = 2
         W.emit({ kind = "pull" })
+        mob.avoid = { miss = 0, dodge = 0, parry = 0 }
         W.hit(us, mob, 50)
-        if not mob.dead then -- an avoid: hit again (seed 5's roll)
-            W.hit(us, mob, 50)
-        end
         assert.is_true(mob.dead)
         assert.are.equal(2, W.killAt)
         local got, at = seen(), nil
@@ -149,5 +147,40 @@ describe("the world's press", function()
             "@auraError target false",
             "PLAYER_REGEN_ENABLED nil nil",
         }, { got[at + 1], got[at + 2], got[at + 3], got[at + 4] })
+    end)
+
+    it("crits an instant hit at world.CRIT, doubled", function()
+        setup()
+        mob.avoid = { miss = 0, dodge = 0, parry = 0 }
+        local crits = 0
+        for _ = 1, 400 do
+            W.hit(us, mob, 100)
+            local ev = W.truth[#W.truth]
+            crits = crits + (ev.flag == "CRITICAL" and 1 or 0)
+            assert.are.equal(ev.flag == "CRITICAL" and 200 or 100, ev.amount)
+        end
+        assert.is_true(world.CRIT > 0)
+        assert.is_true(math.abs(crits / 400 - world.CRIT) < 0.05, tostring(crits))
+    end)
+
+    it("completes a cast-time press after its cast: spent and cast then, other presses refused meanwhile", function()
+        setup()
+        W.t = 1
+        local done = 0
+        local p = {
+            spell = fs.SPENDER_A,
+            cost = 10,
+            cast = 1.5,
+            effect = function()
+                done = done + 1
+            end,
+        }
+        assert.is_true(W.press(us, "spender_a", p))
+        assert.are.same({ 20, 0 }, { us.power, done })
+        assert.are.same({ false, "casting" }, { W.press(us, "spender_b", { spell = fs.SPENDER_B, offGcd = true }) })
+        W.run(2.5)
+        assert.are.same({ 10, 1 }, { us.power, done })
+        local cast = W.truth[#W.truth]
+        assert.are.same({ "cast", 2.5 }, { cast.kind, cast.t })
     end)
 end)
