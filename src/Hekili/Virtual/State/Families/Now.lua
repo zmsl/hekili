@@ -306,13 +306,12 @@ local function automatic(a, t, kind)
             I.CooldownModel(a, t + cd, cd, t, kind)
         end
     end
-    if obj.gcd ~= "off" then
+    if A.gcdKind[a] > 0 then
         local start = t
         if kind == CAST and A.castStartT[a] > 0 and A.castStartT[a] < t then
             start = A.castStartT[a] -- a hard cast's GCD began at its start
         end
-        local h = VS.Haste(t).est
-        local len = I.gcdLearned > 0 and I.gcdLearned or 1.5 / (h > 0 and h or 1) -- nonzero: h > 0 checked
+        local len = I.GcdLen(a, t) -- its kind's (Families/Casts.lua)
         if start + len > t then
             I.GcdModel(start + len, t, kind)
         end

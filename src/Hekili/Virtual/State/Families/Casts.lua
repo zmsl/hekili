@@ -1,7 +1,8 @@
 -- Virtual/State/Families/Casts.lua
 -- The casts family (spec §6.2): the tracked abilities, our casts and channels in progress, cooldown ready times
 -- snapped to the game's plain ready flags (the constrain step), charges, the GCD from its flag edges with
--- bit-identical start and duration (spec §7.5), the on-next-swing queue, and the Cooldown/Charges/Gcd accessors.
+-- bit-identical start and duration (spec §7.5), its length by GCD kind and the ability that opened it, the
+-- on-next-swing queue, and the Cooldown/Charges/Gcd accessors.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Model/Belief/Casts.lua (step :34-78, Applier Cooldown :385,
 -- Queued :391) and src/TacoDogForever/Model/Belief.lua (constrain :652-684).
 
@@ -11,7 +12,7 @@ local Obs = VS.Obs
 local floor, abs, max = math.floor, math.abs, math.max
 
 -- By ability index a. `obj` is the spec's ability table (Hekili's `class.abilities[key]`): VirtualState reads its
--- `spend`, `spendType`, `cooldown`, `charges`, `recharge`, `gcd`, `cast` and `onNextSwing` fields.
+-- `spend`, `spendType`, `cooldown`, `charges`, `recharge`, `gcd`, `gcdTime`, `cast` and `onNextSwing` fields.
 local A = {
     n = 0,
     key = {},
@@ -33,17 +34,28 @@ local A = {
     cd = {},
     ch = {},
     chNext = {},
+    gcdKind = {}, -- 0 off the GCD, 1 spell (1.5 s / haste), 2 totem (Hekili's fixed 1.0 s)
 }
 I.ab = A
 A.bySpell = {}
 
 -- Unknown, not ready, ready (the plain isActive flag as last reported).
 local UNKNOWN, NOT, YES = -1, 0, 1
-local GCD_MIN, GCD_MAX = 1.0, 2.0 -- the plausible GCD lengths a falling edge may teach: [1.0, 2.0)
+-- The plausible lengths a falling edge may teach, by kind: spell [1.0, 2.0), totem [0.9, 1.2) (two chained GCDs merge
+-- into one long edge: 2.0 and more is never one).
+local GCD_MIN, GCD_MAX = { 1.0, 0.9 }, { 2.0, 1.2 }
+-- An own cast within this of the GCD's rising edge, before or after it, opened it (UNMEASURED until checkpoint G3).
+local GCD_EDGE = 0.1
+I.GCD_EDGE = GCD_EDGE
 
--- The cast or channel in progress (0: none), and the GCD fixed at its rising edge.
+-- The cast or channel in progress (0: none), and the GCD fixed at its rising edge: its opener (ability index, 0
+-- none), the opener kind a GCD without one takes (the last opener's), whether GcdInfo has answered it, and the
+-- learned length by kind ({ spell, totem }, 0 unlearned).
 I.castAb, I.castEnd, I.channel = 0, 0, false
-I.gcdStart, I.gcdDur, I.gcdLearned = 0, 0, 0
+I.gcdStart, I.gcdDur, I.gcdLearned = 0, 0, { 0, 0 }
+I.gcdOwner, I.gcdKindLast, I.gcdRead = 0, 1, false
+local lastGcdA, lastGcdT = 0, 0 -- the last own on-GCD CastSuccess no GCD has taken yet
+local gcdEdge = 0 -- the rising edge's own time (gcdStart is it quantised, up to 2^-11 s later)
 I.queuedStrike = false
 I.lastCastT = 0
 local gcd
@@ -54,6 +66,28 @@ local function quantise(x)
     return floor(x * Q + 0.5) / Q
 end
 I.Quantise = quantise
+
+--- The length of a GCD that ability a (0: none known, the last opener's kind) opens at t: its declared `gcdTime`,
+--- else its kind's learned length, else 1.0 for the totem kind and 1.5 / haste for the spell kind. Allocates nothing.
+function I.GcdLen(a, t)
+    local kind = I.gcdKindLast
+    if a > 0 then
+        local g = A.obj[a].gcdTime
+        if type(g) == "number" and g > 0 then
+            return g
+        end
+        kind = A.gcdKind[a]
+    end
+    if kind == 0 then
+        return 0
+    elseif I.gcdLearned[kind] > 0 then
+        return I.gcdLearned[kind]
+    elseif kind == 2 then
+        return 1.0
+    end
+    local h = VS.Haste and VS.Haste(t).est or 1 -- Families/Swing.lua measures it
+    return 1.5 / (h > 0 and h or 1) -- nonzero: h > 0 checked
+end
 
 local function maxCharges(a)
     local c = A.obj[a].charges
@@ -79,6 +113,8 @@ I.OnBuild(function(def, now)
         A.ready0[a], A.cdLen[a], A.castT[a], A.flag[a] = 0, 0, 0, UNKNOWN
         A.charges0[a], A.next0[a] = maxCharges(a), 0
         A.queued[a], A.castStartT[a] = false, 0
+        local g, extra = obj.gcd, type(obj.key) == "string" and obj.key:sub(1, 6) == "track_" -- VS.Track: no GCD
+        A.gcdKind[a] = (g == "off" or extra) and 0 or (g == "totem" and 2 or 1) -- anything else: State.lua's "spell"
         A.cd[a] = I.NewBelief("cooldown " .. tostring(obj.key))
         I.Sample(A.cd[a], "default", 0, now, 0)
         if maxCharges(a) > 1 then
@@ -92,11 +128,39 @@ I.OnBuild(function(def, now)
     I.TRACKED.ability = A.id
     gcd = I.NewBelief("gcd")
     I.castAb, I.castEnd, I.channel, I.gcdStart, I.gcdDur, I.queuedStrike = 0, 0, false, 0, 0, false
+    I.gcdOwner, I.gcdKindLast, I.gcdRead, lastGcdA, lastGcdT = 0, 1, false, 0, 0
 end)
+
+-- The GCD's current sample at its fixed end.
+local function pinGcd(t)
+    local e = I.gcdStart + I.gcdDur
+    gcd.est, gcd.lo, gcd.hi = e, e, e
+    I.Sample(gcd, "pinned", e, t, Obs.Cooldown)
+end
+
+-- An own cast of on-GCD ability a at time `at`: it claims an ownerless GCD that rose within GCD_EDGE before it (the
+-- edge came first), re-fixing the duration only while GcdInfo has not answered this GCD (spec §7.5); else it is kept
+-- for the next rising edge.
+local function opener(a, at, t)
+    if A.gcdKind[a] == 0 then
+        return -- off the GCD (an on-next-swing strike's success at its swing): never an opener
+    end
+    if I.gcdStart > 0 and I.gcdOwner == 0 and at >= gcdEdge and at - gcdEdge <= GCD_EDGE then
+        I.gcdOwner, I.gcdKindLast = a, A.gcdKind[a]
+        if not I.gcdRead then
+            I.gcdDur = quantise(I.GcdLen(a, t))
+            pinGcd(t)
+        end
+        lastGcdA = 0
+    else
+        lastGcdA, lastGcdT = a, at
+    end
+end
 
 I.On(Obs.CastStart, function(o, t)
     I.castAb, I.castEnd, I.channel = o.a, o.b, false
     A.castStartT[o.a] = o.t
+    opener(o.a, o.t, t)
 end)
 
 I.On(Obs.CastDelay, function(o)
@@ -105,10 +169,12 @@ I.On(Obs.CastDelay, function(o)
     end
 end)
 
-I.On(Obs.CastSuccess, function(o)
+I.On(Obs.CastSuccess, function(o, t)
     I.lastCastT = o.t
     if I.castAb == o.a and not I.channel then
         I.castAb = 0
+    elseif A.castStartT[o.a] == 0 then -- a hard cast's GCD opened at its start
+        opener(o.a, o.t, t)
     end
     if A.obj[o.a].onNextSwing then
         A.queued[o.a] = false
@@ -122,9 +188,10 @@ I.On(Obs.CastStop, function(o)
     A.castStartT[o.a] = 0 -- an interrupted cast's start is no GCD anchor for the next one (Families/Now.lua)
 end)
 
-I.On(Obs.ChannelStart, function(o)
+I.On(Obs.ChannelStart, function(o, t)
     I.castAb, I.castEnd, I.channel = o.a, o.b, true
     A.castStartT[o.a] = o.t
+    opener(o.a, o.t, t)
 end)
 
 I.On(Obs.ChannelUpdate, function(o)
@@ -154,18 +221,32 @@ end)
 I.On(Obs.Cooldown, function(o, t)
     if o.c == 1 then
         if o.b == 1 then
-            -- the GCD began: start and duration fixed until the falling edge (spec §7.5)
-            local h = VS.Haste and VS.Haste(t).est or 1 -- Families/Swing.lua measures it
-            local dur = I.gcdLearned > 0 and I.gcdLearned or 1.5 / (h > 0 and h or 1) -- nonzero: h > 0 checked
-            I.gcdStart, I.gcdDur = quantise(o.t), quantise(dur)
-            gcd.est, gcd.lo, gcd.hi = I.gcdStart + I.gcdDur, I.gcdStart + I.gcdDur, I.gcdStart + I.gcdDur
-            I.Sample(gcd, "pinned", gcd.est, t, Obs.Cooldown)
-        else
-            local len = o.t - I.gcdStart
-            if I.gcdStart > 0 and len >= GCD_MIN and len < GCD_MAX then -- chained GCDs merge into one long edge
-                I.gcdLearned = quantise(len)
+            -- the GCD began: its opener is the cast in progress or an own cast just before the edge; start and
+            -- duration fixed until the falling edge (spec §7.5), but a later opener's claim before GcdInfo's first read
+            local owner = 0
+            if I.castAb > 0 and A.gcdKind[I.castAb] > 0 then
+                owner = I.castAb
+            elseif lastGcdA > 0 and o.t - lastGcdT <= GCD_EDGE then
+                owner = lastGcdA
             end
-            I.gcdStart, I.gcdDur = 0, 0
+            lastGcdA = 0
+            I.gcdOwner, I.gcdRead = owner, false
+            if owner > 0 then
+                I.gcdKindLast = A.gcdKind[owner]
+            end
+            I.gcdStart, I.gcdDur, gcdEdge = quantise(o.t), quantise(I.GcdLen(owner, t)), o.t
+            pinGcd(t)
+        else
+            local len, owner = o.t - I.gcdStart, I.gcdOwner
+            local kind = owner > 0 and A.gcdKind[owner] or 0
+            local g = owner > 0 and A.obj[owner].gcdTime
+            -- an ownerless GCD, or one of a declared length, teaches nothing
+            if I.gcdStart > 0 and kind > 0 and not (type(g) == "number" and g > 0) then
+                if len >= GCD_MIN[kind] and len < GCD_MAX[kind] then
+                    I.gcdLearned[kind] = quantise(len)
+                end
+            end
+            I.gcdStart, I.gcdDur, I.gcdOwner, I.gcdRead = 0, 0, 0, false
             gcd.est, gcd.lo, gcd.hi = o.t, o.t, o.t
             I.Sample(gcd, "pinned", o.t, t, Obs.Cooldown)
         end
@@ -341,6 +422,7 @@ end
 --- (spec §3.1, §7.5) start, duration of the current GCD as plain numbers fixed between its edges; 0, 0 when none.
 function VS.GcdInfo(now)
     if I.gcdStart > 0 and I.gcdStart + I.gcdDur > now then
+        I.gcdRead = true -- answered: a later opener's claim no longer changes the duration
         return I.gcdStart, I.gcdDur
     end
     return 0, 0
@@ -348,13 +430,15 @@ end
 
 I.OnSnapshot(function(out, now)
     out[#out + 1] = string.format(
-        "cast ab=%s end=%.2f channel=%s gcd=%.4f+%.4f learned=%.4f queued=%s",
+        "cast ab=%s end=%.2f channel=%s gcd=%.4f+%.4f learned=%.4f/%.4f owner=%s queued=%s",
         I.castAb > 0 and tostring(A.key[I.castAb]) or "none",
         I.castEnd,
         tostring(I.channel),
         I.gcdStart,
         I.gcdDur,
-        I.gcdLearned,
+        I.gcdLearned[1],
+        I.gcdLearned[2],
+        I.gcdOwner > 0 and tostring(A.key[I.gcdOwner]) or "none",
         tostring(I.queuedStrike)
     )
     for a = 1, A.n do

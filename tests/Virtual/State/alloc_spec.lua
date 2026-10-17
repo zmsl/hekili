@@ -190,4 +190,56 @@ describe("zero allocation", function()
         assert.is_true(ok, tostring(bytes))
         assert.are.equal(0, bytes)
     end)
+
+    it(
+        "allocates nothing over 1000 casts mixing GCD kinds, the GCD's rising edge before and after each success",
+        function()
+            local api, ctl = fake.new()
+            local saved = {}
+            for k, v in pairs({
+                CreateFrame = api.CreateFrame,
+                issecretvalue = api.issecretvalue,
+                GetTime = api.GetTime,
+            }) do
+                saved[k] = rawget(_G, k) or false
+                _G[k] = v
+            end
+            ctl.now = 1
+            local ns = load.module()
+            local VS, I = ns.VirtualState, ns.VirtualStateInternal
+            I.Build(fs.def(fs.new(9, true)), 1)
+            VS.Start(api)
+            local IDS = { fs.SPENDER_C, fs.SPENDER_T, fs.SPENDER_U } -- spell, totem, a declared gcdTime
+            local UP, DOWN = { isActive = true, isOnGCD = false }, { isActive = false, isOnGCD = false }
+            local function tick()
+                ctl.Tick(ctl.now)
+                fs.fold(ns, ctl.now)
+                VS.GcdInfo(ctl.now)
+            end
+            local function step(i)
+                ctl.now = ctl.now + 0.5
+                local id = IDS[i % 3 + 1]
+                if i % 2 == 0 then
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast", id)
+                end
+                ctl.cooldown[I.GCD_SPELL] = UP
+                ctl.Fire("SPELL_UPDATE_COOLDOWN")
+                if i % 2 == 1 then
+                    ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast", id)
+                end
+                tick()
+                ctl.now = ctl.now + 1.0
+                ctl.cooldown[I.GCD_SPELL] = DOWN
+                ctl.Fire("SPELL_UPDATE_COOLDOWN")
+                tick()
+            end
+            local ok, bytes = pcall(alloc.bytes, step, 1000)
+            for k, v in pairs(saved) do
+                _G[k] = v or nil
+            end
+            assert.is_true(ok, tostring(bytes))
+            assert.are.equal(0, bytes)
+            assert.is_true(I.gcdLearned[1] > 0 and I.gcdLearned[2] > 0, "both kinds learned")
+        end
+    )
 end)

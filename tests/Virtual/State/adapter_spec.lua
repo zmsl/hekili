@@ -100,6 +100,18 @@ describe("Adapter", function()
         assert.are.equal(1011, got.talents[1].spell)
     end)
 
+    it("reads each ability's GCD kind and a declared gcdTime from Hekili's ability table as it is", function()
+        h.Class.abilities.spender_t = { key = "spender_t", id = fs.SPENDER_T, gcd = "totem", funcs = {} }
+        h.Class.abilities.spender_u = { key = "spender_u", id = fs.SPENDER_U, gcdTime = 0.8, funcs = {} }
+        VS.SpecChanged()
+        local A, kinds = I.ab, {}
+        for a = 1, A.n do
+            kinds[A.key[a]] = A.gcdKind[a]
+        end
+        assert.are.same({ spender_a = 1, spender_b = 0, spender_c = 1, spender_t = 2, spender_u = 1 }, kinds)
+        assert.are.equal(0.8, A.obj[A.bySpell[fs.SPENDER_U]].gcdTime)
+    end)
+
     it("forwards a resource's player-aura regen entries to the resources family", function()
         h.Class.resources.rage.state.regenModel.regen_aura_a = { aura = "regen_aura_a", interval = 1, value = 1 }
         h.Class.resources.rage.state.regenModel.debuff_test =

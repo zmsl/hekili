@@ -54,6 +54,9 @@ describe("casts and cooldowns", function()
     end)
 
     it("learns a GCD only from a falling edge within [1.0, 2.0) s", function()
+        for _, t in ipairs({ 100, 110, 120 }) do
+            S.Direct(Obs.CastSuccess, t, REND) -- a spell-kind cast opens each one (an ownerless GCD teaches nothing)
+        end
         S.Direct(Obs.Cooldown, 100, 0, 1, 1)
         S.Direct(Obs.Cooldown, 101.4, 0, 0, 1)
         S.Direct(Obs.Cooldown, 110, 0, 1, 1)
@@ -61,7 +64,7 @@ describe("casts and cooldowns", function()
         S.Direct(Obs.Cooldown, 120, 0, 1, 1)
         S.Direct(Obs.Cooldown, 122, 0, 0, 1) -- exactly 2.0 s: two chained 1.0 s GCDs, not one
         I.Fold(122.1, false)
-        assert.is_true(math.abs(I.gcdLearned - 1.4) < 0.002) -- the earlier, plausible one stands
+        assert.is_true(math.abs(I.gcdLearned[1] - 1.4) < 0.002) -- the earlier, plausible one stands
     end)
 
     it("names an ability with a second power cost in Snapshot", function()
@@ -97,6 +100,7 @@ describe("casts and cooldowns", function()
     it(
         "fixes the GCD's start and duration at the rising edge, quantised so they survive Hekili's round trip",
         function()
+            S.Direct(Obs.CastSuccess, 1000.1, REND)
             S.Direct(Obs.Cooldown, 1000.123456, 0, 1, 1)
             I.Fold(1000.2, false)
             local s, d = VS.GcdInfo(1000.2)
@@ -106,7 +110,7 @@ describe("casts and cooldowns", function()
             S.Direct(Obs.Cooldown, 1001.6, 0, 0, 1)
             I.Fold(1001.6, false)
             assert.are.same({ 0, 0 }, { VS.GcdInfo(1001.6) })
-            assert.is_true(math.abs(I.gcdLearned - 1.477) < 0.002) -- learned from the falling edge
+            assert.is_true(math.abs(I.gcdLearned[1] - 1.477) < 0.002) -- learned from the falling edge
             for _ = 1, 2000 do
                 local t = math.random() * 1e6
                 local q = I.Quantise(t)
@@ -153,5 +157,143 @@ describe("casts and cooldowns", function()
 
     it("models charges and recharges them by time; a spell without charges has none", function()
         assert.is_nil(VS.Charges(fs.SPENDER_C, 1))
+    end)
+end)
+
+-- The GCD by kind (GCD kinds design §1.2): its length from the ability that opened it, an opener on either side of the
+-- rising edge, learning per kind, and the read guard that keeps GcdInfo's numbers fixed between edges (spec §7.5).
+describe("the GCD by kind", function()
+    local VS, I, S, Obs, api, ctl
+    local SPELL, OFF, TOTEM, FIXED = 3, 2, 4, 5 -- spender_c, spender_b (off the GCD), spender_t, spender_u (0.8 s)
+
+    before_each(function()
+        api, ctl = fake.new()
+        local ns = load.module()
+        VS, I = ns.VirtualState, ns.VirtualStateInternal
+        S, Obs = I.Sources, VS.Obs
+        I.Build(fs.def(fs.new(9, true)), 1)
+        VS.Start(api)
+        ctl.Tick(1)
+        I.ObsLog.Clear(I.log)
+    end)
+
+    local function success(a, t)
+        S.Direct(Obs.CastSuccess, t, a)
+    end
+    local function edge(t, up)
+        S.Direct(Obs.Cooldown, t, 0, up and 1 or 0, 1)
+    end
+    local function info(t)
+        I.Fold(t, false)
+        return { VS.GcdInfo(t) }
+    end
+    local function near(want, got)
+        assert.is_true(math.abs(want - got) < 0.002, tostring(got))
+    end
+
+    it("opens a totem-kind GCD of 1.0 s with the success after the edge and before it (same t)", function()
+        edge(10, true)
+        success(TOTEM, 10) -- the edge first: the success claims it (provisional: the spell kind's 1.5)
+        assert.are.same({ 10, 1 }, info(10.05))
+        assert.are.equal(TOTEM, I.gcdOwner)
+        edge(11, false)
+        success(TOTEM, 20) -- the success first
+        edge(20, true)
+        assert.are.same({ 20, 1 }, info(20.05))
+        assert.are.equal(TOTEM, I.gcdOwner)
+        edge(21, false)
+        edge(30.65, true) -- off the 2^-10 grid: the quantised start (30.650390625) is later than the edge
+        success(TOTEM, 30.65)
+        assert.are.same({ I.Quantise(30.65), 1 }, info(30.7))
+        assert.are.equal(TOTEM, I.gcdOwner)
+    end)
+
+    it("opens a spell-kind GCD of 1.5 / haste (haste 1.25: 1.2)", function()
+        S.Direct(Obs.Haste, 9, 0, 1.25, 1)
+        success(SPELL, 10)
+        edge(10.03, true)
+        near(1.2, info(10.1)[2])
+        assert.are.equal(SPELL, I.gcdOwner)
+    end)
+
+    it("lets a hard cast in progress own the edge at its start, after a totem-kind GCD", function()
+        success(TOTEM, 5)
+        edge(5, true)
+        edge(6, false)
+        S.Direct(Obs.CastStart, 10, SPELL, 11.5)
+        edge(10.02, true)
+        near(1.5, info(10.1)[2])
+        assert.are.equal(SPELL, I.gcdOwner)
+    end)
+
+    it("lets a declared gcdTime (0.8) win, and never learns from it", function()
+        success(FIXED, 10)
+        edge(10, true)
+        near(0.8, info(10.1)[2])
+        edge(10.85, false)
+        I.Fold(11, false)
+        assert.are.same({ 0, 0 }, I.gcdLearned)
+    end)
+
+    it("learns per kind: a totem GCD falling at +1.02 and a spell GCD at +1.43 set the next of each kind", function()
+        success(TOTEM, 10)
+        edge(10, true)
+        edge(11.02, false)
+        success(SPELL, 20)
+        edge(20, true)
+        edge(21.43, false)
+        success(TOTEM, 30)
+        edge(30, true)
+        near(1.02, info(30.1)[2])
+        edge(31.02, false)
+        success(SPELL, 40)
+        edge(40, true)
+        near(1.43, info(40.1)[2])
+        assert.is_truthy(VS.Snapshot():find("learned=1.4297/1.0195 owner=spender_c", 1, true))
+    end)
+
+    it("takes the last opener's kind for an ownerless edge, and learns nothing from it", function()
+        success(TOTEM, 10)
+        edge(10, true)
+        edge(11, false)
+        edge(20, true) -- no cast near it
+        assert.are.same({ 20, 1 }, info(20.1))
+        assert.are.equal(0, I.gcdOwner)
+        edge(21.4, false)
+        I.Fold(21.5, false)
+        assert.are.same({ 0, 1 }, I.gcdLearned)
+    end)
+
+    it(
+        "keeps the duration after GcdInfo's first answer when the opener's success comes later, and still learns its kind",
+        function()
+            edge(10, true)
+            assert.are.same({ 10, 1.5 }, info(10.01)) -- read: the provisional spell kind's
+            success(TOTEM, 10.05)
+            assert.are.same({ 10, 1.5 }, info(10.1)) -- unchanged between edges
+            assert.are.equal(TOTEM, I.gcdOwner)
+            edge(11.03, false)
+            I.Fold(11.1, false)
+            near(1.03, I.gcdLearned[2])
+        end
+    )
+
+    it("never lets an off-GCD success inside the window open the GCD", function()
+        success(OFF, 10)
+        edge(10.02, true)
+        success(OFF, 10.05)
+        info(10.1)
+        assert.are.equal(0, I.gcdOwner)
+    end)
+
+    it("rejects a totem-kind fall of 2.0 s (two chained GCDs) and of 0.85 s", function()
+        success(TOTEM, 10)
+        edge(10, true)
+        edge(12, false)
+        success(TOTEM, 20)
+        edge(20, true)
+        edge(20.85, false)
+        I.Fold(21, false)
+        assert.are.same({ 0, 0 }, I.gcdLearned)
     end)
 end)

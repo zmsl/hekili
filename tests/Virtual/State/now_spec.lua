@@ -367,6 +367,45 @@ describe("now handlers", function()
         assert.is_true(gcd.est > 20)
     end)
 
+    it(
+        "models the automatic GCD by kind: totem t + 1.0, spell t + 1.5 / haste, a declared gcdTime, the learned slot",
+        function()
+            register("totem_test", { id = 4501, gcd = "totem" })
+            register("fixed_test", { id = 4502, gcdTime = 0.8 })
+            start()
+            cast(4501, 10)
+            assert.are.equal(11, VS.Gcd(10.1).est)
+            cast(fs.SPENDER_C, 20)
+            assert.are.equal(21.5, VS.Gcd(20.1).est) -- haste 1
+            cast(4502, 30)
+            assert.are.equal(30.8, VS.Gcd(30.1).est)
+            I.gcdLearned[1] = 1.4 -- the spell kind's learned length (Families/Casts.lua's falling edge)
+            cast(fs.SPENDER_C, 40)
+            assert.are.equal(41.4, VS.Gcd(40.1).est)
+            cast(4501, 50)
+            assert.are.equal(51, VS.Gcd(50.1).est) -- the totem kind keeps its own
+        end
+    )
+
+    it(
+        "models a spell-kind cast at t + 1.5 after three totem ones learned 1.0, and the next totem one at t + 1.0",
+        function()
+            register("totem_test", { id = 4501, gcd = "totem" })
+            start()
+            for _, t in ipairs({ 10, 12, 14 }) do
+                cast(4501, t)
+                I.Sources.Direct(VS.Obs.Cooldown, t, 0, 1, 1) -- the GCD's edges, 1.0 s apart
+                I.Sources.Direct(VS.Obs.Cooldown, t + 1, 0, 0, 1)
+                VS.Drain(t + 1.01)
+            end
+            assert.are.same({ 0, 1 }, I.gcdLearned)
+            cast(fs.SPENDER_C, 16)
+            assert.are.equal(17.5, VS.Gcd(16.1).est)
+            cast(4501, 18)
+            assert.are.equal(19, VS.Gcd(18.1).est)
+        end
+    )
+
     it("clears a stopped cast's start", function()
         register("slam_test", { id = 1464, cast = 1.5 })
         start()

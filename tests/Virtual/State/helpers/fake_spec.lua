@@ -8,10 +8,14 @@ local M = {}
 M.RAGE = 1 -- Enum.PowerType.Rage
 -- Neutral fixtures, no class's facts: spender_a puts a 120 s buff on us, spender_b waits for the next swing (off the
 -- GCD), spender_c puts a 15 s debuff on the target and has a rank 2. The keys sort in that order, as the slots do.
+-- With `kinds` (M.new's second argument) two free casts on Hekili's other GCD kinds follow: spender_t on the fixed
+-- 1.0 s one ("totem"), spender_u on a declared `gcdTime` of 0.8 s.
 M.SPENDER_A, M.SPENDER_B, M.SPENDER_C, M.SPENDER_C_R2 = 1001, 1002, 1003, 1004
+M.SPENDER_T, M.SPENDER_U = 1005, 1006
 
---- A fake Hekili: { State, Class, ForceUpdate, forced }, and `spendResources` for ns. `swingValue` is rage per swing.
-function M.new(swingValue)
+--- A fake Hekili: { State, Class, ForceUpdate, forced }, and `spendResources` for ns. `swingValue` is rage per swing;
+--- `kinds` adds spender_t and spender_u.
+function M.new(swingValue, kinds)
     local state = {
         offset = 0,
         delay = 0,
@@ -103,6 +107,10 @@ function M.new(swingValue)
             applyBuff("spender_a")
         end,
     })
+    if kinds then
+        ability("spender_t", { id = M.SPENDER_T, gcd = "totem" })
+        ability("spender_u", { id = M.SPENDER_U, gcdTime = 0.8 })
+    end
     class.auras.spender_c = { key = "spender_c", id = M.SPENDER_C, copy = { M.SPENDER_C_R2 }, duration = 15 }
     class.auras.spender_a = { key = "spender_a", id = M.SPENDER_A, duration = 120 }
     function state:RunHandler(key)
@@ -149,7 +157,7 @@ function M.def(hekili)
     local class = hekili.Class
     local rage = class.resources.rage
     local mh = rage.state.regenModel.mainhand
-    return {
+    local def = {
         abilities = { class.abilities.spender_a, class.abilities.spender_b, class.abilities.spender_c },
         abilityIds = { { M.SPENDER_A }, { M.SPENDER_B }, { M.SPENDER_C, M.SPENDER_C_R2 } },
         abilitySlot = { 1, 1, 1 },
@@ -161,6 +169,14 @@ function M.def(hekili)
         talents = { { key = "talent_a", spell = 1011, max = 3 } },
         units = { "player", "target" },
     }
+    for _, k in ipairs({ "spender_t", "spender_u" }) do
+        local a = class.abilities[k]
+        if a then
+            def.abilities[#def.abilities + 1], def.abilityIds[#def.abilityIds + 1] = a, { a.id }
+            def.abilitySlot[#def.abilitySlot + 1] = 0
+        end
+    end
+    return def
 end
 
 --- One drain without Hekili: the polls, the fold, the settle (Adapter's Drain minus the apply).
