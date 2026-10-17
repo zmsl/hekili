@@ -45,6 +45,7 @@ syntax:
 
 api-check:
 	LUACHECK=$(LUACHECK) bash tools/check_api_reads.sh
+	bash tools/check_engine_reads.sh
 	git diff --exit-code tools/api_inventory.txt
 
 check: lint fmt-check typecheck test syntax api-check

@@ -33,7 +33,7 @@ local function display()
         passive = slots(),
         wanted = 0,
         publishing = false,
-        payload = nil, -- the WeakAuras event copy, set by Core only when WeakAuras is loaded
+        payload = nil, -- the WeakAuras event copy, set by Engine/WeakAuras.lua only when WeakAuras is loaded
     }
 end
 
@@ -147,6 +147,10 @@ function Engine.Subscribe(name, fn, passive)
             end
             return true
         end
+    end
+    -- A publish cut short by a subscriber error leaves its blanked slots (and `publishing`) behind: drop them first.
+    if subs.n == SUBS then
+        compact(o)
     end
     if subs.n == SUBS then
         return false

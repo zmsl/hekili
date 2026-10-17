@@ -2108,31 +2108,6 @@ function Hekili.Update()
 
             Output.Publish( dispName, numFilled )
 
-            if WeakAuras and WeakAuras.ScanEvents then
-                local recs = out.recs
-
-                if not out.payload then
-                    out.payload = {
-                        {}, -- [1]
-                    }
-                    setmetatable( out.payload, {
-                        __index = out.payload[ 1 ],
-                        __mode  = "kv"
-                    } )
-                end
-
-                for i = 1, numRecs do
-                    if out.payload[ i ] then wipe( out.payload[ i ] )
-                    else out.payload[ i ] = {} end
-
-                    for k, v in pairs( recs[ i ] ) do
-                        out.payload[ i ][ k ] = v
-                    end
-                end
-
-                WeakAuras.ScanEvents( "HEKILI_RECOMMENDATION_UPDATE", dispName, recs[ 1 ].actionID, recs[ 1 ].indicator, nil, out.payload ) -- nil holds a retired argument slot
-            end
-
             if debug then
                 Hekili:Debug( "Time spent generating recommendations:  %.2fms",  debugprofilestop() - actualStartTime )
                 Hekili:Yield( "Yield before saving the snapshot for " .. dispName .. "." )

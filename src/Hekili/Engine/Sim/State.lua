@@ -6183,10 +6183,7 @@ do
     local firstTime = true
 
     function state.reset( dispName, full )
-        local started = debugprofilestop()
-
         dispName = dispName or "Primary"
-        local displayFrame = _G[ "HekiliDisplay" .. dispName ]
 
         full = dispName == "Primary" or state.offset > 0
 
@@ -6242,18 +6239,6 @@ do
         -- Trying again to have partial resets for the low-impact (single icon displays).
         if not full then
             state.resetting = false
-
-            displayFrame.resetShortLast = debugprofilestop() - started
-
-            if displayFrame.resetShortN then
-                displayFrame.resetShortMean = ( displayFrame.resetShortMean * displayFrame.resetShortN + displayFrame.resetShortLast ) / ( displayFrame.resetShortN + 1 )
-                displayFrame.resetShortN = displayFrame.resetShortN + 1
-            else
-                displayFrame.resetShortMean = displayFrame.resetShortLast
-                displayFrame.resetShortN = 1
-            end
-
-            displayFrame.resetTypeLast = "short"
             return
         end
 
@@ -6334,17 +6319,6 @@ do
 
         if not foundResource then
             state.resetting = false
-            displayFrame.resetAbortLast = debugprofilestop() - started
-
-            if displayFrame.resetAbortN then
-                displayFrame.resetAbortMean = ( displayFrame.resetAbortMean * displayFrame.resetAbortN + displayFrame.resetAbortLast ) / ( displayFrame.resetAbortN + 1 )
-                displayFrame.resetAbortN = displayFrame.resetAbortN + 1
-            else
-                displayFrame.resetAbortMean = displayFrame.resetAbortLast
-                displayFrame.resetAbortN = 1
-            end
-
-            displayFrame.resetTypeLast = "abort"
             return false, "no available resources"
         end
 
@@ -6474,18 +6448,6 @@ do
         -- Hekili:Yield( "Reset Post-Casting" )
 
         state.resetting = false
-
-        displayFrame.resetFullLast = debugprofilestop() - started
-
-        if displayFrame.resetFullN then
-            displayFrame.resetFullMean = ( displayFrame.resetFullMean * displayFrame.resetFullN + displayFrame.resetFullLast ) / ( displayFrame.resetFullN + 1 )
-            displayFrame.resetFullN = displayFrame.resetFullN + 1
-        else
-            displayFrame.resetFullMean = displayFrame.resetFullLast
-            displayFrame.resetFullN = 1
-        end
-
-        displayFrame.resetTypeLast = "full"
         return true
     end
 end

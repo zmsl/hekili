@@ -629,7 +629,7 @@ do
         if count ~= lastCount or stationary ~= lastStationary then
             lastCount = count
             lastStationary = stationary
-            if Hekili:GetToggleState( "mode" ) == "reactive" then HekiliDisplayAOE:UpdateAlpha() end
+            ns.callHook( "TARGET_COUNT_CHANGED" )
         end
 
         if details then

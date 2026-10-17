@@ -74,6 +74,8 @@ Engine\Sim\Targets.lua
 Options\DevTools.lua
 Options\ChatCommands.lua
 Options\Options.lua
+Engine\Driver.lua
+Engine\WeakAuras.lua
 UI\UI.lua
 Engine\Sim\Scripts.lua
 Engine\Sim\Core.lua

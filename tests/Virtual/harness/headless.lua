@@ -83,7 +83,6 @@ M.KNOWN_RUN_NILS = {
     listName = "Core.lua:1992",
     alphaCheck = "UI.lua:1121",
     squawk = "Scripts.lua:1032",
-    WeakAuras = "another addon's probe on the display path",
 }
 
 -- WoW's string additions, process-wide (the header's one shared effect).
