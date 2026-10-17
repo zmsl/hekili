@@ -133,7 +133,7 @@ local function content()
 
     -- the class packs' files, through their recording loaders (tests/Forever/helpers)
     for _, addon in ipairs(addons.CONTENT) do
-        local name = addon:match("^Hekili_Forever_(%w+)$")
+        local name = addon ~= "Hekili_Shared" and addon:match("^Hekili_(%w+)$") -- a class pack, not the shared addon
         if name then
             local loader = assert(loaders[name], "no recording loader for " .. addon)
             local w = loader.load()
@@ -194,7 +194,7 @@ local function content()
         chunk("Hekili", ns)
         costMods(ns.raceMods.costMods, path)
     end
-    for _, file in ipairs(addons.lua({ "Hekili_Forever" })) do -- the race and shared files
+    for _, file in ipairs(addons.lua({ "Hekili_Shared" })) do -- the race and shared files
         local path = file:gsub("^src/", "")
         run(path, read(file):match('NewRace%("(%w+)"%)'))
     end

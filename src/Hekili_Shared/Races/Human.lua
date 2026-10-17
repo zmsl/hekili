@@ -1,4 +1,4 @@
--- Hekili_Forever/Races/Human.lua
+-- Hekili_Shared/Races/Human.lua
 -- `all` (Engine/Schema/Spec.lua) no longer registers this racial: the stock entry named below is what it used to register.
 -- The Human's Forever racials (DB2 1.60.1.70338), for every class: Will to Survive (1259718: removes stun effects;
 -- 180 s, on the GCD), which replaces `all`'s stock entry (59752, absent on Forever), and Perception (20600: stealth

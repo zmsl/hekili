@@ -1,6 +1,6 @@
 -- Engine/Schema/Spec.lua
 -- The spec engine (was Classes.lua): the spec mixin and its Register* API, the shared `all` spec and the keys core reads
--- by name, and SpecializationChanged's merge. Game content shared by every class lives in Hekili_Forever/Shared/*.lua
+-- by name, and SpecializationChanged's merge. Game content shared by every class lives in Hekili_Shared/Shared/*.lua
 -- (registered through Engine/Schema/Shared.lua) and the race packs.
 
 local addon, ns = ...
@@ -1482,7 +1482,7 @@ local all = Hekili:NewSpecialization( 0, "All", "Interface\\Addons\\Hekili\\Text
 
 ------------------------------------------------------------------------------------------------------------------------
 -- The `all` spec's engine keys: what core reads by name (the cast and movement auras, the GCD, the APL verbs). Shared game
--- content (auras, consumables, items) is in Hekili_Forever/Shared/*.lua, racials in the race packs.
+-- content (auras, consumables, items) is in Hekili_Shared/Shared/*.lua, racials in the race packs.
 
 ---@diagnostic disable-next-line: need-check-nil
 all:RegisterAuras( {

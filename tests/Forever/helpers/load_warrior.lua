@@ -1,5 +1,5 @@
 -- tests/Forever/helpers/load_warrior.lua
--- Loads Hekili_Forever_Warrior/Warrior.lua headless against a recording stand-in for Hekili: each spec:RegisterX call is
+-- Loads Hekili_Warrior/Warrior.lua headless against a recording stand-in for Hekili: each spec:RegisterX call is
 -- kept by method name, and the plain game reads the file captures at load answer from `game` (known spells, queued
 -- spells, usability, the shapeshift form, the belief's per-hand base weapon speeds). `env()` is a stand-in `state` for running
 -- the file's handlers, state functions and hooks (Hekili runs them with setfenv( f, state )).
@@ -97,7 +97,7 @@ function M.load()
     function w.state.healthMax()
         return game.healthMax
     end
-    local ok, err = pcall(assert(loadfile("src/Hekili_Forever_Warrior/Warrior.lua")))
+    local ok, err = pcall(assert(loadfile("src/Hekili_Warrior/Warrior.lua")))
     for k, v in pairs(saved) do
         _G[k] = v or nil
     end

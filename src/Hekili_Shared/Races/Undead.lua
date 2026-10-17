@@ -1,4 +1,4 @@
--- Hekili_Forever/Races/Undead.lua
+-- Hekili_Shared/Races/Undead.lua
 -- The Undead's Forever racials (DB2 1.60.1.70338), for every class; race token "Scourge" (UnitRace's second return):
 -- Will of the Forsaken (7744: removes charm, fear and sleep, immune for 0.1 s; 120 s, on the GCD), whose cast leaves
 -- nothing to model beyond its cooldown and GCD (no `handler` or `now`), and Cannibalize (20577: triggers 20578, a 10 s

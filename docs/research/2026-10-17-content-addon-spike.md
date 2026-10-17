@@ -66,7 +66,7 @@ Hekili spike: class.specs[999001] = true activeSpec = false
 The spike proved less than the production path needs: `LoadAddOn` called from a sibling addon's main chunk (just after
 Hekili's `ADDON_LOADED`), for a load-on-demand addon whose only dependency is Hekili, already loaded. The production
 path differs in two ways: `Engine/Content.lua` calls `LoadAddOn` from inside Hekili's own `ADDON_LOADED`
-(`OnInitialize`), and each class pack also depends on `Hekili_Forever`. So `Hekili_Forever` is load-on-demand too and
+(`OnInitialize`), and each class pack also depends on `Hekili_Shared`. So `Hekili_Shared` is load-on-demand too and
 `LoadContent` loads it explicitly before the class pack (Taco Dog Forever's pattern for its shared data addon), so no
 step relies on the client loading a dependency for `LoadAddOn` mid-startup. That path is confirmed only by the user's
 in-game check after the merge (`docs/dev/architecture.md`, section 7).

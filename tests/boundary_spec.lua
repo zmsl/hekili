@@ -1,7 +1,7 @@
 -- tests/boundary_spec.lua
 -- The core/content boundary (core leakage audit, docs/research/2026-10-16-core-leakage-audit.md): the core engine
 -- (src/Hekili/Game/**, src/Hekili/Engine/Schema/**) and the harness core (tests/Game/harness/**, GCD kinds design D7)
--- name no ability, aura or talent key and no spell ID that the Forever content (src/Hekili_Forever*/**: the class packs,
+-- name no ability, aura or talent key and no spell ID that the Forever content (src/Hekili_Shared/**, src/Hekili_<Class>/**: the class packs,
 -- Races, Shared) registers, and no class or form/stance name. Ported from Taco Dog Forever's tests/boundary_spec.lua, which
 -- scans for a fixed word list; here the keys and IDs are extracted from the content at test time, so a new ability is
 -- checked without being listed.
@@ -37,7 +37,7 @@ describe("core/content boundary", function()
         end
         assert.is_true(n > 150, n)
         assert.is_true(m > 400, m)
-        assert.are.equal("Hekili_Forever/Races/Orc.lua", c.keys.blood_fury)
+        assert.are.equal("Hekili_Shared/Races/Orc.lua", c.keys.blood_fury)
         assert.is_not_nil(c.keys.bloodlust) -- Shared/Auras.lua
         assert.is_not_nil(words.cat and words.battle)
     end)

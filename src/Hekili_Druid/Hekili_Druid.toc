@@ -3,7 +3,7 @@
 ## Title: Hekili Forever - Druid
 ## Author: Hekili
 ## Notes: Hekili's Forever Druid: the class kit and its default priorities. Loaded by Hekili for a Druid.
-## Dependencies: Hekili, Hekili_Forever
+## Dependencies: Hekili, Hekili_Shared
 ## Group: Hekili
 ## LoadOnDemand: 1
 ## X-Hekili-ContentAPI: 1

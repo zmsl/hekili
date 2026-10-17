@@ -918,7 +918,7 @@ function M.new(o)
     end
     -- An addon as the client loads it (tests/helpers/addons.lua): its TOC's files, the content each with its own
     -- (name, ns), then its ADDON_LOADED. Every content addon is load-on-demand: Engine/Content.lua's LoadAddOn calls at
-    -- OnInitialize (Hekili_Forever, then the class pack) load a shipped one here. A dependency is never loaded for it:
+    -- OnInitialize (Hekili_Shared, then the class pack) load a shipped one here. A dependency is never loaded for it:
     -- one not loaded yet answers false, "DEP_DEMAND_LOADED" (the client's reason for a load-on-demand dependency), so
     -- the explicit order is what the tests run. Any other name answers false, "MISSING".
     local loaded = {}
@@ -956,7 +956,7 @@ function M.new(o)
     env.HekiliDB = o.saved -- saved variables, as the client sets them before the addon's ADDON_LOADED (nil: fresh)
     loadAddon(addons.CORE)
 
-    -- login: ADDON_LOADED (OnInitialize: Hekili_Forever, the class pack, then the AceDB profile), PLAYER_LOGIN
+    -- login: ADDON_LOADED (OnInitialize: Hekili_Shared, the class pack, then the AceDB profile), PLAYER_LOGIN
     -- (OnEnable, VS.Start, the content notice) and PLAYER_ENTERING_WORLD
     H.phase = "login"
     local ok, err = xpcall(function()

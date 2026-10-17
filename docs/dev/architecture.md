@@ -24,7 +24,7 @@ are relative to `src/Hekili/` unless they start with another top-level folder.
  subscribers: UI/ (displays), Integrations/WeakAuras, Options/ (owns the AceDB profile, Options.lua, Profile.lua)
  the headless loop (tests)
 
- Content addons (Hekili_Forever, Hekili_Forever_<Class>) call the public Hekili object: Hekili:NewSpecialization,
+ Content addons (Hekili_Shared, Hekili_<Class>) call the public Hekili object: Hekili:NewSpecialization,
  NewShared, NewRace, Hekili.State, Hekili.Class, Hekili.Client.
 ```
 
@@ -113,13 +113,13 @@ Two environments have them:
 `RegisterAbility{ passive = true, id = <number> }` (`Engine/Schema/Spec.lua`) is a spell the spellbook knows and the
 player never casts. The belief tracks its known rank (`knownRank` reads it); the sim never sees it.
 
-**Addons and load order.** `Hekili` (core, the only addon the client loads by itself), `Hekili_Forever`
+**Addons and load order.** `Hekili` (core, the only addon the client loads by itself), `Hekili_Shared`
 (`## Dependencies: Hekili`, `## LoadOnDemand: 1`; Shared auras, consumables, items, and the race packs), then one pack
-per class: `Hekili_Forever_Warrior`, `Hekili_Forever_Druid` (`## Dependencies: Hekili, Hekili_Forever`,
+per class: `Hekili_Warrior`, `Hekili_Druid` (`## Dependencies: Hekili, Hekili_Shared`,
 `## LoadOnDemand: 1`). `tests/helpers/addons.lua` lists them in this order. `ns.LoadContent` runs once, in
 `OnInitialize`, before `InitializeProfile`, so the profile's defaults see the class's spec and packs. It loads
-`Hekili_Forever` explicitly first (every class, with or without a pack, gets the shared and race content), then reads
-the player's class token, finds `Hekili_Forever_<Class>` and loads it if its `## X-Hekili-ContentAPI` equals
+`Hekili_Shared` explicitly first (every class, with or without a pack, gets the shared and race content), then reads
+the player's class token, finds `Hekili_<Class>` and loads it if its `## X-Hekili-ContentAPI` equals
 `CONTENT_API` in `Engine/Content.lua`. Nothing relies on the client loading a dependency for `LoadAddOn`; the headless
 fake refuses a pack whose dependency is not loaded yet. A failed shared load (then no pack is tried), an unreadable
 class token, a missing pack, a mismatch or a failed pack load keeps one notice, which `ns.ContentNotice` shows at
@@ -163,7 +163,7 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
 Default priorities are written as SimC text: `tools/packs/<class>/<Pack>.simc` (leading `#` lines are the description)
 and the manifest `tools/packs/<class>.lua` (`date`, `spec`, `packs` in block order). `make packs` runs
 `.lua/bin/lua tools/make_pack.lua write <class>` (`lua5.1` without `.lua/`) for each manifest. It parses the text, serializes and encodes it as the share
-string `RegisterPack` takes, and rewrites the generated `RegisterPack` blocks in `src/Hekili_Forever_<Class>/<Class>.lua`.
+string `RegisterPack` takes, and rewrites the generated `RegisterPack` blocks in `src/Hekili_<Class>/<Class>.lua`.
 `lua5.1 tools/make_pack.lua decode <string>` prints a share string back as SimC. The pack version is the manifest date
 times 1000 plus a checksum of the text, so any text change reloads a saved profile. `make packs` on a clean tree is a
 no-op (`tests/Forever/make_pack_spec.lua`), and encode then decode returns the normalized text. `make packs` is not
@@ -176,7 +176,7 @@ part of `make check`.
   modelled, plus the event), the band width relative to cost as a confidence, the gating aura or cooldown and its basis,
   and the GCD kind. It fills `rec.belief`, which exists and is cleared by `Begin`.
 - **In-game checks owed after the merge** (the user): a full client restart; the four `mklink` lines in `layout.md`;
-  that `LoadAddOn` from inside Hekili's `ADDON_LOADED` loads `Hekili_Forever` then the class pack (the spike did not
+  that `LoadAddOn` from inside Hekili's `ADDON_LOADED` loads `Hekili_Shared` then the class pack (the spike did not
   test this path; see `docs/research/2026-10-17-content-addon-spike.md`);
   icons, minimap and compartment entries, the pack editor, `/hekili snapshot`, combat alpha, a spec swap, the minimap
   position surviving `/reload`, and a third class (neither Warrior nor Druid) seeing the "no Forever pack" notice.

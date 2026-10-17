@@ -4,18 +4,18 @@
 -- its race): no file's main chunk raises, every `item` resolves at registration under setfenv( f, state ), and every
 -- function-valued ability field runs once under the stub state through the ability's own __index. shared_spec.lua's
 -- stand-in `all` only stores defs; this is the spec that catches a function reading a name `state` lacks (a bare
--- `state` in Hekili_Forever/Shared/Consumables.lua once aborted that file in game).
+-- `state` in Hekili_Shared/Shared/Consumables.lua once aborted that file in game).
 local engine = require("Forever.helpers.engine")
 local addons = require("helpers.addons")
 
 local CLASSES, RACES, RACE_LINES = {}, {}, 0
 for _, name in ipairs(addons.CONTENT) do
-    local class = name:match("^Hekili_Forever_(%w+)$")
+    local class = name ~= "Hekili_Shared" and name:match("^Hekili_(%w+)$") -- a class pack, not the shared addon
     if class then
         CLASSES[#CLASSES + 1] = class:upper()
     end
 end
-for _, path in ipairs(addons.files("Hekili_Forever")) do
+for _, path in ipairs(addons.files("Hekili_Shared")) do
     if path:match("/Races/") then
         RACE_LINES = RACE_LINES + 1
         local f = assert(io.open(path))

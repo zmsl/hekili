@@ -426,8 +426,8 @@ describe("Forever Druid", function()
     end)
 
     it("reads only registered talent keys, in the class file and every race file", function()
-        local files = { "src/Hekili_Forever_Druid/Druid.lua" }
-        local ls = assert(io.popen("ls src/Hekili_Forever/Races/*.lua"))
+        local files = { "src/Hekili_Druid/Druid.lua" }
+        local ls = assert(io.popen("ls src/Hekili_Shared/Races/*.lua"))
         for f in ls:lines() do
             files[#files + 1] = f
         end
@@ -634,7 +634,7 @@ describe("Forever Druid", function()
         for _, id in ipairs(m.spells) do
             assert.is_true(first[id], tostring(id)) -- each is the rank-1 ID of a registered ability
         end
-        local src = assert(io.open("src/Hekili_Forever_Druid/Druid.lua")):read("*a")
+        local src = assert(io.open("src/Hekili_Druid/Druid.lua")):read("*a")
         assert.is_nil(src:find("buff%.clearcasting")) -- the modifier, not each `spend`, prices it
     end)
 
@@ -780,7 +780,7 @@ describe("Forever Druid", function()
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists", "druid")
         local secretToken = require("Game.State.helpers.load").module().VirtualState.AplSecretToken
-        local shared = { use_items = true } -- Hekili's `all` (Hekili_Forever/Shared/Items.lua's use_items)
+        local shared = { use_items = true } -- Hekili's `all` (Hekili_Shared/Shared/Items.lua's use_items)
         local kinds = {
             buff = w.auras,
             debuff = w.auras,

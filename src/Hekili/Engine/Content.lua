@@ -1,7 +1,7 @@
 -- Engine/Content.lua
 -- The class content loader (restructure plan, Task 8). The Forever content lives in separate addons, all
--- load-on-demand: Hekili_Forever (the shared and race content, a dependency of every pack) and one pack per class,
--- Hekili_Forever_<Class>. At OnInitialize, before InitializeProfile, ns.LoadContent loads Hekili_Forever itself first
+-- load-on-demand: Hekili_Shared (the shared and race content, a dependency of every pack) and one pack per class,
+-- Hekili_<Class>. At OnInitialize, before InitializeProfile, ns.LoadContent loads Hekili_Shared itself first
 -- (a class with no pack still gets the shared and race content), then the player's class pack when its TOC's
 -- X-Hekili-ContentAPI is this core's CONTENT_API: the version of the content surface (the Register* API,
 -- Hekili.Client, the belief's environment names), bumped only when that surface changes. So the profile's defaults
@@ -31,7 +31,7 @@ local function load(name)
     end
 end
 
---- Loads Hekili_Forever, then the player's class pack, once per session (OnInitialize, its only caller; a later call
+--- Loads Hekili_Shared, then the player's class pack, once per session (OnInitialize, its only caller; a later call
 --- does nothing). Keeps a notice when the shared content fails to load (then no pack is tried: it depends on it), the
 --- class cannot be read, or the pack is not installed, declares another content API (then it is not loaded) or fails
 --- to load.
@@ -40,7 +40,7 @@ function ns.LoadContent()
         return
     end
     done = true
-    notice = load("Hekili_Forever")
+    notice = load("Hekili_Shared")
     if notice then
         return
     end
@@ -50,7 +50,7 @@ function ns.LoadContent()
         return
     end
     local class = token:sub(1, 1) .. token:sub(2):lower() -- WARRIOR -> Warrior
-    local name = "Hekili_Forever_" .. class
+    local name = "Hekili_" .. class
 
     -- an addon that is not installed answers nil, or raises on some clients
     local ok, api = pcall(C_AddOns.GetAddOnMetadata, name, "X-Hekili-ContentAPI")

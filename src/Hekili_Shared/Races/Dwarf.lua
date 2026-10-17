@@ -1,4 +1,4 @@
--- Hekili_Forever/Races/Dwarf.lua
+-- Hekili_Shared/Races/Dwarf.lua
 -- `all` (Engine/Schema/Spec.lua) no longer registers this racial: the stock entry named below is what it used to register.
 -- The Dwarf's Forever racial (DB2 1.60.1.70338), for every class: Stoneform (20594: -10% physical damage taken,
 -- removes poison, disease and bleed effects and grants immunity to them for 8 s; 180 s, on the GCD), which replaces

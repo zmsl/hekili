@@ -8,15 +8,15 @@ local M = {}
 M.CORE = "Hekili"
 -- the shared content (a dependency of every class pack), then the class packs; all load-on-demand, loaded by the
 -- core's Engine/Content.lua in this order
-M.CONTENT = { "Hekili_Forever", "Hekili_Forever_Warrior", "Hekili_Forever_Druid" }
+M.CONTENT = { "Hekili_Shared", "Hekili_Warrior", "Hekili_Druid" }
 M.ADDONS = { M.CORE }
 for _, name in ipairs(M.CONTENT) do
     M.ADDONS[#M.ADDONS + 1] = name
 end
 
---- The class pack addon of a class ("Warrior": Hekili_Forever_Warrior) and its one file.
+--- The class pack addon of a class ("Warrior": Hekili_Warrior) and its one file.
 function M.pack(class)
-    return "Hekili_Forever_" .. class
+    return "Hekili_" .. class
 end
 function M.classFile(class)
     return M.root(M.pack(class)) .. class .. ".lua"

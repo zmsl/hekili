@@ -1,4 +1,4 @@
--- Hekili_Forever_Druid/Druid.lua
+-- Hekili_Druid/Druid.lua
 -- The Forever Druid (one pseudo-spec, DRUID_SPEC below): the Classic Druid kit with Forever's spell data (ranks,
 -- costs, cooldowns, cast times and durations from the Forever DB2 at build 1.60.1.70338, wowdb; energy and mana costs
 -- are DB2 points, rage the DB2 cost / 10), Forever's Shifting Power, Berserk, Primal Bite and Lacerate, bear rage per

@@ -1,24 +1,24 @@
--- tests/Forever/races_spec.lua (event-facade spec §12b): the race packs. Every race file Hekili_Forever.toc lists
+-- tests/Forever/races_spec.lua (event-facade spec §12b): the race packs. Every race file Hekili_Shared.toc lists
 -- (Races/*.lua), loaded through Engine/Schema/Races.lua headless against a stand-in for Hekili: inert for another race,
 -- registered for its own, over `all`'s stale entries, and its cost modifier's numbers in the simulation. Engine/Schema/Races.lua's
 -- own rules, with a fake race, are tests/Game/State/races_spec.lua.
 
 local addons = require("helpers.addons")
 
--- Every race file Hekili_Forever.toc lists, in its order, and the race token (UnitRace's second return) each answers to.
+-- Every race file Hekili_Shared.toc lists, in its order, and the race token (UnitRace's second return) each answers to.
 local TOKEN = { Undead = "Scourge" } -- a file named otherwise than its token
 local RACES = {}
-for _, path in ipairs(addons.files("Hekili_Forever")) do
+for _, path in ipairs(addons.files("Hekili_Shared")) do
     local file = path:match("/Races/(%w+)%.lua$")
     if file then
         RACES[#RACES + 1] = { file = file, token = TOKEN[file] or file }
     end
 end
 
--- Runs every race file, as Hekili_Forever.toc loads them.
+-- Runs every race file, as Hekili_Shared.toc loads them.
 local function loadRaces(rns)
     for _, r in ipairs(RACES) do
-        assert(loadfile(addons.root("Hekili_Forever") .. "Races/" .. r.file .. ".lua"))("Hekili_Forever", rns)
+        assert(loadfile(addons.root("Hekili_Shared") .. "Races/" .. r.file .. ".lua"))("Hekili_Shared", rns)
     end
 end
 
@@ -196,11 +196,11 @@ describe("race packs", function()
     end)
 
     it(
-        "loads the race files after the core's `all` (Hekili_Forever depends on Hekili), each registering only its own",
+        "loads the race files after the core's `all` (Hekili_Shared depends on Hekili), each registering only its own",
         function()
             -- a race entry replaces `all`'s under the same key, so it must register after Engine/Schema/Spec.lua; a
             -- class pack registers into its own spec, and SpecializationChanged's ns.applyRace orders the two
-            assert.are.equal("Hekili", addons.meta("Hekili_Forever").Dependencies)
+            assert.are.equal("Hekili", addons.meta("Hekili_Shared").Dependencies)
             local files, want = {}, {}
             for _, r in ipairs(RACES) do
                 files[#files + 1] = r.file
@@ -221,7 +221,7 @@ describe("race packs", function()
             end
             table.sort(files)
             table.sort(want)
-            assert.are.same(want, files) -- every race file is in Hekili_Forever.toc
+            assert.are.same(want, files) -- every race file is in Hekili_Shared.toc
         end
     )
 

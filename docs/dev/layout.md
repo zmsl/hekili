@@ -6,10 +6,10 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   relative to its folder); nothing else ships, and nothing dev-only goes in them. `tests/helpers/addons.lua` lists them
   in dependency order, and every headless loader, spec and tool reads their files from it:
   - `src/Hekili/`: the core (the engine, the belief, the UI and options);
-  - `src/Hekili_Forever/`: the content every class shares (`Shared/`: auras, consumables, items) and the race packs
+  - `src/Hekili_Shared/`: the content every class shares (`Shared/`: auras, consumables, items) and the race packs
     (`Races/`); `## Dependencies: Hekili`, `## LoadOnDemand: 1`, loaded on demand by the core's `Engine/Content.lua`
     at login, first (before the class pack, and for a class with no pack too);
-  - `src/Hekili_Forever_Warrior/`, `src/Hekili_Forever_Druid/`: one class pack each (the class file, its RegisterPack
+  - `src/Hekili_Warrior/`, `src/Hekili_Druid/`: one class pack each (the class file, its RegisterPack
     blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's `Engine/Content.lua` for the
     player's class.
     `## Group: Hekili` nests each content addon under Hekili in the in-game addon list.
@@ -67,9 +67,9 @@ prompt, in the client's `Interface\AddOns` folder, remove the old link and creat
 ```
 rmdir Hekili
 mklink /D Hekili \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili
-mklink /D Hekili_Forever \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Forever
-mklink /D Hekili_Forever_Warrior \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Forever_Warrior
-mklink /D Hekili_Forever_Druid \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Forever_Druid
+mklink /D Hekili_Shared \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Shared
+mklink /D Hekili_Warrior \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Warrior
+mklink /D Hekili_Druid \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Druid
 ```
 
 Then restart the client fully (a moved addon is not picked up by `/reload`).

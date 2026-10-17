@@ -1,7 +1,7 @@
 -- tests/Forever/helpers/engine.lua
 -- Loads Hekili's REAL spec engine headless: Engine/Sim/Constants.lua, then every Engine\Schema\ file Hekili.toc
 -- lists (Engine/Schema/Races.lua, Engine/Schema/Spec.lua, Engine/Schema/Shared.lua), then every content addon's files
--- in dependency order (tests/helpers/addons.lua: Hekili_Forever's Shared and Races, then the class packs), so each Register* call runs Engine/Schema/Spec.lua's own code (setfenv( f, state ),
+-- in dependency order (tests/helpers/addons.lua: Hekili_Shared's Shared and Races, then the class packs), so each Register* call runs Engine/Schema/Spec.lua's own code (setfenv( f, state ),
 -- the `funcs`/__index wrapper, the `item` resolution). Around it,
 -- the smallest stub client: a plain ns.Facade, `Item`, `Enum`, a Hekili without Ace3, and STRICT stand-ins for
 -- Hekili.Class, Enum.PowerType and `state`: a key they lack raises, so an ability function reading a name State.lua does not provide (a
@@ -295,7 +295,7 @@ function M.load(classToken, race)
                 return item(id)
             end,
         },
-        INVTYPE_WEAPONMAINHAND = "Main Hand", -- Hekili_Forever/Shared/Items.lua's main_hand name (a GlobalStrings constant)
+        INVTYPE_WEAPONMAINHAND = "Main Hand", -- Hekili_Shared/Shared/Items.lua's main_hand name (a GlobalStrings constant)
         -- the client's power types, every one Constants.lua's ResourceInfo reads; strict, so a misspelt type raises
         Enum = {
             PowerType = strict({

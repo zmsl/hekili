@@ -1,4 +1,4 @@
--- Hekili_Forever/Shared/Items.lua
+-- Hekili_Shared/Shared/Items.lua
 -- The equipped-item actions every class shares (shared-content spec §4.4), through Engine/Schema/Shared.lua into `all`:
 -- `use_items` (the APL verb Core.lua expands into the equipped trinkets) and the slots Events.lua rebinds on an equipment
 -- change (trinket1, trinket2, main_hand; null_cooldown while a slot has no on-use), and class.trinkets, State.lua's
