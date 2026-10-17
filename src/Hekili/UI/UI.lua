@@ -704,7 +704,7 @@ do
 
                                     insert( menuData, submenu )
 
-                                elseif setting.info.type == "range" then
+                                elseif setting.info.type == "range" and type( setting.info.max or setting.info.softMax ) == "number" then -- no numeric ceiling: no slider
 
                                     local submenu = {
                                         text = type( setting.info.name ) == "function" and setting.info.name() or setting.info.name,
@@ -738,7 +738,7 @@ do
                                         return setting.info.set( menu.args, val )
                                     end )
 
-                                    cf.Slider:SetMinMaxValues( setting.info.min, setting.info.max )
+                                    cf.Slider:SetMinMaxValues( setting.info.min or setting.info.softMin or 0, setting.info.max or setting.info.softMax )
                                     cf.Slider:SetValueStep( setting.info.step or 1 )
                                     cf.Slider:SetObeyStepOnDrag( true )
 

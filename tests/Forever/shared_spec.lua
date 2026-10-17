@@ -319,4 +319,19 @@ describe("shared content", function()
             assert.is_false(names(spec, k), "Engine/Schema/Spec.lua: " .. k)
         end
     end)
+
+    it(
+        "every range setting of every class declares a numeric min and ceiling (the quick menu's slider needs both)",
+        function()
+            for _, loader in ipairs({ "Forever.helpers.load_warrior", "Forever.helpers.load_druid" }) do
+                for key, s in pairs(require(loader).load().settings) do
+                    local info = s.option
+                    if info.type == "range" then
+                        assert.are.equal("number", type(info.min), key .. " min")
+                        assert.are.equal("number", type(info.max), key .. " max")
+                    end
+                end
+            end
+        end
+    )
 end)

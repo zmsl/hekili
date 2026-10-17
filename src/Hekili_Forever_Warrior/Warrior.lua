@@ -1805,6 +1805,7 @@ spec:RegisterSetting("ww_min_enemies", 2, {
     width = "full",
     min = 0,
     softMax = 4,
+    max = 10,
     step = 1,
 })
 
@@ -1815,6 +1816,7 @@ spec:RegisterSetting("ww_cd_diff", 1.5, {
     width = "full",
     min = 0,
     softMax = 2,
+    max = 5,
     step = 0.1,
 })
 
@@ -1825,6 +1827,7 @@ spec:RegisterSetting("hamstring_threshold", 80, {
     width = "full",
     min = 0,
     softMax = 100,
+    max = 100,
     step = 1,
 })
 
@@ -1835,6 +1838,7 @@ spec:RegisterSetting("hamstring_cd_diff", 1.5, {
     width = "full",
     min = 0,
     softMax = 2,
+    max = 5,
     step = 0.1,
 })
 
