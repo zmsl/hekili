@@ -1,6 +1,6 @@
 -- tests/Forever/races_spec.lua (event-facade spec §12b): the race packs. Every race file Hekili.toc lists
--- (Forever/Races/*.lua), loaded through Engine/Races.lua headless against a stand-in for Hekili: inert for another race,
--- registered for its own, over `all`'s stale entries, and its cost modifier's numbers in the simulation. Engine/Races.lua's
+-- (Forever/Races/*.lua), loaded through Engine/Schema/Races.lua headless against a stand-in for Hekili: inert for another race,
+-- registered for its own, over `all`'s stale entries, and its cost modifier's numbers in the simulation. Engine/Schema/Races.lua's
 -- own rules, with a fake race, are tests/Virtual/State/races_spec.lua.
 
 -- Every race file Hekili.toc lists, in its order, and the race token (UnitRace's second return) each answers to.
@@ -57,8 +57,8 @@ describe("race packs", function()
             }),
             removeStack = removeStack,
         }
-        all = { abilities = seed or {}, auras = {} } -- `seed`: what Engine/Spec.lua's `all` already registered
-        -- as Engine/Spec.lua's RegisterAbility/RegisterAura: the entry under its key, its id and every `copy` alias
+        all = { abilities = seed or {}, auras = {} } -- `seed`: what Engine/Schema/Spec.lua's `all` already registered
+        -- as Engine/Schema/Spec.lua's RegisterAbility/RegisterAura: the entry under its key, its id and every `copy` alias
         local function register(t, key, def)
             t[key] = def
             if def.id then
@@ -74,15 +74,15 @@ describe("race packs", function()
         function all:RegisterAura(key, def)
             register(self.auras, key, def)
         end
-        -- Engine/Spec.lua sets class.file before any race file runs
+        -- Engine/Schema/Spec.lua sets class.file before any race file runs
         hekili = { State = state, Class = { specs = { [0] = all }, abilities = {}, file = class or "WARRIOR" } }
         _G.Hekili = hekili
         ns = {}
-        assert(loadfile("src/Hekili/Engine/Races.lua"))("Hekili", ns)
+        assert(loadfile("src/Hekili/Engine/Schema/Races.lua"))("Hekili", ns)
         loadRaces(ns)
     end
 
-    -- An ability as Engine/Spec.lua's RegisterAbility builds it: function fields in `funcs`, called on access, wrapped.
+    -- An ability as Engine/Schema/Spec.lua's RegisterAbility builds it: function fields in `funcs`, called on access, wrapped.
     local function ability(key, data)
         local a = setmetatable({ funcs = {} }, {
             __index = function(t, k)
@@ -218,7 +218,7 @@ describe("race packs", function()
                 end
                 table.sort(keys)
                 local own = OWN[r.file] or {}
-                local mods = hekili.RaceMods -- the table read in game (Engine/Races.lua)
+                local mods = hekili.RaceMods -- the table read in game (Engine/Schema/Races.lua)
                 assert.are.same(own, { keys, #mods.maxMods, #mods.costMods }, r.file)
             end
             for file in pairs(OWN) do
@@ -346,7 +346,7 @@ describe("race packs in VirtualState's now context", function()
         fs.clock = nil
     end)
 
-    -- What the race files register into `all` for the player's race `token` (Engine/Races.lua against a stand-in Hekili).
+    -- What the race files register into `all` for the player's race `token` (Engine/Schema/Races.lua against a stand-in Hekili).
     local function registrations(token)
         local all = { abilities = {}, auras = {} }
         function all:RegisterAbility(key, def)
@@ -357,7 +357,7 @@ describe("race packs in VirtualState's now context", function()
         end
         _G.Hekili = { State = { race_token = token }, Class = { specs = { [0] = all }, file = "WARRIOR" } }
         local rns = {}
-        assert(loadfile("src/Hekili/Engine/Races.lua"))("Hekili", rns)
+        assert(loadfile("src/Hekili/Engine/Schema/Races.lua"))("Hekili", rns)
         loadRaces(rns)
         return all
     end

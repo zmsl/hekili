@@ -41,7 +41,7 @@ Read-only research for a spec of `src/Hekili/Forever/Classes/Hunter.lua` beside 
 - DB2 `CastTime` for Arcane Shot, Serpent Sting, Concussive Shot, Scorpid/Viper Sting, Distracting Shot, Scatter Shot, Chimera Shot, Tranquilizing Shot, Summon Hawk is **-1000000** (a sentinel, not seconds) [DB2 Q4]; Aimed
   Shot **2000** ms (ranks 1-6; the TBC rank-6 spell 27632 and the extra rows 1236188/1294124 say 3000), **Multi-Shot 500 ms**, Steady Shot 437123 **1500**, Sniper Shot 1310687-1310786 **4000** (15 s CD, 365 mana),
   everything else 0. The -1000000 spells are the "instant, next ranged action" family; Hekili must treat them as `cast = 0` with the GCD only. Q12 reads `GetSpellInfo(3044).castTime`.
-- Numeric `cast` is hasted by the engine (`Engine/Spec.lua:772`, Mage R 6): Aimed Shot is `cast = 2`, hasted by **spell haste** (`UnitSpellHaste`), but the client hastes ranged casts by **ranged haste** (Quick Shots, Rapid
+- Numeric `cast` is hasted by the engine (`Engine/Schema/Spec.lua:772`, Mage R 6): Aimed Shot is `cast = 2`, hasted by **spell haste** (`UnitSpellHaste`), but the client hastes ranged casts by **ranged haste** (Quick Shots, Rapid
   Fire). `UnitSpellHaste` is a secret in combat and the facade returns the last plain read (Mage R 6): Rapid Fire's +40% is **invisible to the cast time**. Use `fixedCast = true` plus a function that reads the aura
   (`cast = 2 / (buff.rapid_fire.up and 1.4 or 1)`), or accept the lag. **Improved Aimed Shot** (Forever 1299437: aura 108 +50% damage, aura 107 misc 10 = +2000 ms cast) turns Aimed Shot into a 4 s cast.
 - GCD: 1.5 s for every shot, sting, trap, aspect and mark; **GCD 0**: Rapid Fire, Feign Death, Raptor Strike r1-8 (2973 chain), Bestial Wrath, Kill Command, Readiness (1.0 s) [DB2 Q6].

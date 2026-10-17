@@ -11,7 +11,7 @@ describe("ns.orderedPairs", function()
         _G.LibStub = function()
             return {}
         end
-        assert(loadfile("src/Hekili/Utils.lua"))("Hekili", ns)
+        assert(loadfile("src/Hekili/Engine/Sim/Utils.lua"))("Hekili", ns)
         _G.Hekili, _G.LibStub = savedHekili, savedLibStub
 
         -- mt_talents' __newindex and mt_default_talent's __index, as State.lua has them

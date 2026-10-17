@@ -12,8 +12,8 @@ The shared `all` spec held two things in one 3,428-line file: the spec engine (t
 SpecializationChanged's merge) and retail's shared content (lusts, racials, potions, healthstones, trinkets, dispels).
 This pass splits them and keeps only content that exists and is observable on Forever:
 
-- the engine becomes `src/Hekili/Engine/Spec.lua` (renamed `Classes.lua`), beside `Engine/Races.lua` (renamed
-  `Races.lua`) and a new `Engine/Shared.lua`;
+- the engine becomes `src/Hekili/Engine/Schema/Spec.lua` (renamed `Classes.lua`), beside `Engine/Schema/Races.lua` (renamed
+  `Races.lua`) and a new `Engine/Schema/Shared.lua`;
 - shared game content moves to `src/Hekili/Forever/Shared/{Auras,Consumables,Items}.lua`, registered through
   `Hekili:NewShared()`;
 - dead retail content is dropped, every drop checked against every priority, class, race, engine and shared file by a
@@ -34,22 +34,22 @@ Binding (user). Each `all` key is decided by the first that applies:
 | R3 | external, on the player | keep: the player's aura walk reads it in combat |
 | R4 | external, on the target | keep only with a reason to read it out of combat; else drop (a target's auras are secret in combat) |
 | R5 | does not exist on Forever | drop, or replace the ID with the same-named Forever spell |
-| core | engine state core reads by name | stays in the engine (`Engine/Spec.lua`) |
+| core | engine state core reads by name | stays in the engine (`Engine/Schema/Spec.lua`) |
 
 ## 3. The engine rename and `Hekili:NewShared`
 
-`git mv src/Hekili/Classes.lua src/Hekili/Engine/Spec.lua` and `git mv src/Hekili/Races.lua src/Hekili/Engine/Races.lua`;
+`git mv src/Hekili/Classes.lua src/Hekili/Engine/Schema/Spec.lua` and `git mv src/Hekili/Races.lua src/Hekili/Engine/Schema/Races.lua`;
 `Hekili.toc` names them in their old places (`Engine\Races.lua` before `Events.lua`, `Engine\Spec.lua` after it), then
 `Engine\Shared.lua` and the three content files, before the class files (a race file still loads after every shared
 file, so a race registration still wins its key in `all`). `.luacheckrc` moves `Classes.lua`'s entry and gives
 `src/Hekili/Forever/Shared/` the `stateEnv` globals. Every path and comment naming the two files follows
 (`tests/Virtual/State/races_spec.lua` reads both by path).
 
-`Engine/Spec.lua` keeps: the mixin and Register* API, `NewSpecialization`, the helpers that were already there
+`Engine/Schema/Spec.lua` keeps: the mixin and Register* API, `NewSpecialization`, the helpers that were already there
 (`ns.addToggle` .. `ns.setRole`, `GetAbilityInfo`, `GetActiveSpecOption`), `all`'s creation with the engine keys core
 reads by name (§4.5), SpecializationChanged and the merge, the spell/gear reset events. Nothing else.
 
-`Engine/Shared.lua` (~40 lines): `Hekili:NewShared()` returns an object with the race object's four calls,
+`Engine/Schema/Shared.lua` (~40 lines): `Hekili:NewShared()` returns an object with the race object's four calls,
 `RegisterAbility( key, def )`, `RegisterAura( key, def )`, `RegisterResourceMod( { max = pct } )`,
 `RegisterCostMod( def )`. Always live (any class, any race), writing into `all` (`Hekili.Class.specs[ 0 ]`, resolved at
 call time) and into `ns.raceMods`; it records no ownership, so a class's entry still wins the merge and a race pack's
@@ -81,7 +81,7 @@ Forever ID: `wowdb` at build 1.60.1.70338; "none" = no spell of that ID or name 
 | stealable_magic, dispellable_enrage | target buff walks | drop | - | - | R4: no class reads them, nothing to read in combat |
 | all_absorbs (copy unravel_absorb) | `UnitGetTotalAbsorbs` | drop | - | unprobed (Q7) | R4 for the target; no reader, an unguarded compare on a possibly secret total |
 | out_of_range | LibSpellRange | drop | - | - | no reader in core or any pack |
-| casting, movement, unknown_buff | generators | keep | Engine/Spec.lua | - | core (the target half of `casting` is answered by the layer's TargetCast family through the facade) |
+| casting, movement, unknown_buff | generators | keep | Engine/Schema/Spec.lua | - | core (the target half of `casting` is answered by the layer's TargetCast family through the facade) |
 
 **Stubs or a core edit** (the four keys State.lua reads by name, plus voidbinding). Chosen: id-less stubs
 (`voidform = {}`), never found on a unit, so never up. Smaller: four lines in one content file against five hunks in
@@ -130,7 +130,7 @@ reads an item action's cooldown through `GetItemCooldown( item )`.
 
 No retail trinket ID was registered (`class.trinkets` held only `[0]`): nothing to drop there.
 
-### 4.5 Engine keys (stay in `Engine/Spec.lua`)
+### 4.5 Engine keys (stay in `Engine/Schema/Spec.lua`)
 
 `casting`, `movement`, `unknown_buff`; `global_cooldown` (§5), `call_action_list`, `run_action_list`, `wait`,
 `pool_resource`, `cancel_action`, `variable`, `cancel_buff`. These are core's vocabulary, not game content, so the
@@ -140,7 +140,7 @@ GCD action stays engine content rather than moving to Shared/Auras.
 
 `I.GCD_SPELL = 29515` (`Virtual/State/Sources/Spellbook.lua`, Forever's GCD spell, cleanup Q6) is the one name. The five
 core sites read it as `ns.VirtualStateInternal.GCD_SPELL` in place of 61304: `global_cooldown`'s `id`
-(Engine/Spec.lua), `UI.lua:1494` and `:1695`, `Events.lua:1679`, `Options/Options.lua:4043`. The facade drops its remap
+(Engine/Schema/Spec.lua), `UI.lua:1494` and `:1695`, `Events.lua:1679`, `Options/Options.lua:4043`. The facade drops its remap
 rows: `C_Spell.GetSpellCooldown` and its policy answer 29515 only; `C_Spell.GetSpellInfo` and `C_Spell.GetSpellTexture`,
 hybrid only to remap, become passthroughs (`tools/api_inventory.txt` and the facade spec's counts follow: 123
 passthrough, 26 hybrid, 27 virtual). Nothing in a file the TOC loads names 61304 afterwards (a test). This reverses
@@ -151,7 +151,7 @@ event-facade decision 7 for the GCD only: the spec slot and the talent read stay
 | Edit | Where | What |
 |---|---|---|
 | E1 | `Core.lua:822-838` | the `potion` verb's fallback to the retail `tempered_potion` goes: no chosen potion, or one not registered, gives `wait` as before; the dead `or "tempered_potion"` after a found action goes |
-| E2 | `Engine/Spec.lua`, `UI.lua` (2), `Events.lua`, `Options/Options.lua` | 61304 → `ns.VirtualStateInternal.GCD_SPELL` (§5) |
+| E2 | `Engine/Schema/Spec.lua`, `UI.lua` (2), `Events.lua`, `Options/Options.lua` | 61304 → `ns.VirtualStateInternal.GCD_SPELL` (§5) |
 
 No State.lua edit (§4.1). `Options/DevTools.lua:1117` (the skeleton generator's `potion = "tempered_potion"` default)
 goes with E1 (ruling G, 2026-10-15): a generated spec has no potion option, so the verb resolves to `wait` like Core.
@@ -184,7 +184,7 @@ research's question 4 (the aura entry fields), first because two families depend
   id-less, Power Infusion 15 s, the lust alias and 1245940); `dispellable_magic` reads only the player's debuffs; the
   key test: no dropped key in `tools/packs/*.lua`, `Engine/*.lua` or `Forever/**/*.lua`, no stub outside
   Shared/Auras.lua except in a class file that registers the key itself (a future Priest/Rogue pack), and each key
-  `all` gave up registered by its owner and absent from Engine/Spec.lua.
+  `all` gave up registered by its owner and absent from Engine/Schema/Spec.lua.
 - Task 4: Shared/Consumables registers `potion` (with `potion_default`), `healthstone`, `fake_potion` and the `potion`
   alias, the 15 Forever items, no `now`; the best Healthstone in the bags, Minor when none; `tempered_potion`, 191387,
   224464 and `pact_of_gluttony` join the drop list; Core.lua no longer names `tempered_potion`.

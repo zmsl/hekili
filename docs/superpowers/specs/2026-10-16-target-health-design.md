@@ -27,7 +27,7 @@ callers: Hekili's `time_to_die` comes from Targets.lua's own tracker (`GetTTD` :
 - Pattern to mirror: the cost ladder (Families/Resources.lua:402-440), the flip pin (:384-397, 456-466), NOT answers give
   no rung (:449); basis = newest of observed/pinned/modelled by t, else default (VirtualState.lua:130-144).
 - The ability table reaches the belief unchanged: buildDef keeps Hekili's table (Adapter.lua:162-172), Casts stores it as
-  `I.ab.obj[a]` (Families/Casts.lua:69); RegisterAbility stores non-function fields raw (Engine/Spec.lua:780-788). No
+  `I.ab.obj[a]` (Families/Casts.lua:69); RegisterAbility stores non-function fields raw (Engine/Schema/Spec.lua:780-788). No
   Adapter change for a new declarative field.
 - Target identity: `UnitGUID("target")` → a memory slot (16, LRU) then `Obs.TargetSwap` (a = slot) (Sources/Target.lua:22-55);
   death from plain `UnitIsDead` → `TargetGone` (:69-78); Auras keep `I.curSlot` (Families/Auras.lua:183-198).

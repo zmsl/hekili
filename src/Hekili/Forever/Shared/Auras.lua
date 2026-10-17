@@ -1,5 +1,5 @@
 -- Forever/Shared/Auras.lua
--- The auras every class shares on Forever (shared-content spec §4.1), through Engine/Shared.lua into `all`: auras others
+-- The auras every class shares on Forever (shared-content spec §4.1), through Engine/Schema/Shared.lua into `all`: auras others
 -- put on the player, which the player's aura walk reads in combat (lust, Power Infusion, loss of control, dispellable
 -- debuffs), and four id-less stubs for the keys core still reads by name. Retail's other lusts and lockouts, the
 -- target-side reads (a target's auras are secret in combat) and the absorbs were dropped (spec §4.1); class buffs live in

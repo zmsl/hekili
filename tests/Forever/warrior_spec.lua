@@ -663,7 +663,7 @@ describe("Forever Warrior", function()
             cooldown = w.abilities,
             talent = w.talents,
             settings = w.settings,
-            threat = { situation = true, on_me = true, lost = true, loose = true }, -- Engine/Spec.lua's `threat` table
+            threat = { situation = true, on_me = true, lost = true, loose = true }, -- Engine/Schema/Spec.lua's `threat` table
         }
         for _, p in ipairs(packs) do
             for list, entries in pairs(p.lists) do
@@ -781,7 +781,7 @@ describe("Forever Warrior", function()
     it(
         "state.reset clears the pseudo-swing anchors before it rebuilds the resource forecasts (core edit E3)",
         function()
-            local src = assert(io.open("src/Hekili/State.lua")):read("*a")
+            local src = assert(io.open("src/Hekili/Engine/Sim/State.lua")):read("*a")
             local clear = src:find("state.swings.mh_pseudo = nil", 1, true)
             local loop = src:find("for k, power in pairs( class.resources ) do", 1, true)
             assert.is_truthy(clear and loop and clear < loop)
@@ -791,19 +791,19 @@ describe("Forever Warrior", function()
         end
     )
     it("both State.lua range reads ask the known rank's spell id (core edit E5)", function()
-        local src = assert(io.open("src/Hekili/State.lua")):read("*a")
+        local src = assert(io.open("src/Hekili/Engine/Sim/State.lua")):read("*a")
         local _, n =
             src:gsub('LSR%.IsSpellInRange%( ability%.rangeSpell or ns%.KnownSpellID%( ability%.id %), "target" %)', "")
         assert.are.equal(2, n)
         assert.is_nil(src:find("IsSpellInRange( ability.rangeSpell or ability.id", 1, true))
     end)
     it("the forecast's continuous rate excludes the aura-gated entries it ticks as events (core edit E7)", function()
-        local src = assert(io.open("src/Hekili/State.lua")):read("*a")
+        local src = assert(io.open("src/Hekili/Engine/Sim/State.lua")):read("*a")
         assert.is_truthy(src:find("-- Forever E7:[^\n]*\n        local regen = r%.regen or 0\n"))
         assert.is_nil(src:find("local regen = r.regen_combined", 1, true))
     end)
     it("a real pull with no swing seen anchors the first swing at the combat start (core edit E8)", function()
-        local src = assert(io.open("src/Hekili/State.lua")):read("*a")
+        local src = assert(io.open("src/Hekili/Engine/Sim/State.lua")):read("*a")
         local next_oh = src:find("state.nextOH = ", 1, true)
         local anchor = src:find(
             "-- Forever E8:[^\n]*\n        if state%.combat > 0 and state%.swings%.mh_actual == 0 then\n"
@@ -815,12 +815,12 @@ describe("Forever Warrior", function()
         assert.is_truthy(block:find("state:ForecastSwingbasedResources()", 1, true))
     end)
     it("the forecast horizon follows the forecast window, its loop guard scaled to it (core edit E9)", function()
-        local src = assert(io.open("src/Hekili/State.lua")):read("*a")
+        local src = assert(io.open("src/Hekili/Engine/Sim/State.lua")):read("*a")
         assert.is_truthy(src:find("local timeout = Hekili.DB.profile.performance.forecastWindow or 15\n", 1, true))
         assert.is_truthy(src:find("local maxIter = ceil( 3 * timeout ) + 10", 1, true))
         assert.is_truthy(src:find("iter < maxIter ) do", 1, true))
         assert.is_nil(src:find("FORECAST_DURATION", 1, true))
-        local core = assert(io.open("src/Hekili/Core.lua")):read("*a")
+        local core = assert(io.open("src/Hekili/Engine/Sim/Core.lua")):read("*a")
         assert.is_truthy(
             core:find(
                 "-- Forever E9:[^\n]*\n%s+local defaultMax = isMain and %( Hekili%.DB%.profile%.performance%.forecastWindow or 15 %)"

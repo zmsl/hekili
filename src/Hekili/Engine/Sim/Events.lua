@@ -177,6 +177,7 @@ ns.RegisterEvent = function( event, handler )
     Hekili:ProfileCPU( key, handler )
 
     local stack = debugstack(2)
+    -- file is the path under Hekili/ (e.g. Engine/Sim/Events.lua); EventSources is only shown, never parsed.
     local file, line = stack:match([[Hekili/(.-)"%]:(%d+)]])
     Hekili.EventSources[ key ] = file and ( file .. ":" .. ( line or 0 ) ) or stack:match( "^(.*)\n" )
 end
@@ -216,6 +217,7 @@ ns.RegisterUnitEvent = function( event, unit1, unit2, handler )
     insert( unitFrame.events[ event ], handler )
 
     local stack = debugstack(2)
+    -- file is the path under Hekili/ (e.g. Engine/Sim/Events.lua); EventSources is only shown, never parsed.
     local file, line = stack:match([[Hekili/(.-)"%]:(%d+)]])
     Hekili.EventSources[ event .. "_" .. unit1 .. "_" .. #unitFrame.events[ event ] ] = file and ( file .. ":" .. ( line or 0 ) ) or stack:match( "^(.*)\n" )
 

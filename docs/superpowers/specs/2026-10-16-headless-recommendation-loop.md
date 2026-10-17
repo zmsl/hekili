@@ -232,7 +232,7 @@ State.lua:29 localizes only `ns.safeMin, ns.safeMax`; line 416 reads `safeAbs`, 
 boot `Hekili.State.abs == math.abs` and `safeAbs` is not in the `load` misses; `safeAbs` is absent from
 `KNOWN_LOAD_NILS`.
 
-Owns: `tests/Virtual/State/helpers/fake_api.lua`, `src/Hekili/State.lua` (one line), `headless_spec.lua`.
+Owns: `tests/Virtual/State/helpers/fake_api.lua`, `src/Hekili/Engine/Sim/State.lua` (one line), `headless_spec.lua`.
 
 ## 7. Warrior content (`tests/Forever/helpers/warrior_world.lua`)
 The class-neutral loop takes a `content` table; the Warrior one is test content beside `load_warrior.lua`:

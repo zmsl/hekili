@@ -160,13 +160,13 @@ heating_up = { 0, 400624, 1 },
 
 ## 6. Cast-time modelling
 
-- **Numeric `cast` is hasted by the engine**: `Engine/Spec.lua:772` rewrites a number to `return N * haste` unless `fixedCast`; a function must multiply by `haste` itself. `haste` = `1/(1 + spell_haste)`, with `spell_haste =
+- **Numeric `cast` is hasted by the engine**: `Engine/Schema/Spec.lua:772` rewrites a number to `return N * haste` unless `fixedCast`; a function must multiply by `haste` itself. `haste` = `1/(1 + spell_haste)`, with `spell_haste =
   Facade.UnitSpellHaste( "player" ) / 100` (`State.lua:2348`); the facade's `UnitSpellHaste` is **hybrid**: `VS.SpellHaste( now ).est`, the last plain read (default 0, so haste is stale in combat) [`Families/Player.lua:89`]. Berserking
   (Troll, +10% cast and attack speed, 10 s) and gear change it; the stock casts need no haste code.
 - **`cast_time`**: `action.X.cast_time` is `ability.cast` (`State.lua:4963`); `execute_time` = `max( gcd.execute, cast )`. Casts: Frostbolt `cast = 3 - 0.1 * talent.improved_frostbolt.rank` (per rank table), Fireball `3.5 - 0.1 *
   talent.improved_fireball.rank` (Q10: DB2 says -0.5 per rank), Pyroblast `6 * ( 1 - 0.25 * buff.heating_up.stack )` (reads the client cast time; Q13), Arcane Blast 2.5, Presence of Mind `buff.presence_of_mind.up and 0 or ...`. All
   times are then `* haste` in the function form. `gcd = "spell"` (1.5 s, hasted) for everything but Counterspell, Presence of Mind, Arcane Power, Combustion, Cold Snap (GCD 0 in the DB2, `gcd = "off"`).
-- **`casting` / `channeling`**: the `casting` aura reads `UnitCastingInfo/UnitChannelInfo( "player" )` (`Engine/Spec.lua:1488-1519`; channels over 10 s are ignored, so Evocation's 8 s and Blizzard's 8 s pass); `state.casting` is the
+- **`casting` / `channeling`**: the `casting` aura reads `UnitCastingInfo/UnitChannelInfo( "player" )` (`Engine/Schema/Spec.lua:1488-1519`; channels over 10 s are ignored, so Evocation's 8 s and Blizzard's 8 s pass); `state.casting` is the
   ability key, `channeling` is `buff.casting.v3 == 1`. At reset the sim queues `CAST_FINISH` (or `CHANNEL_FINISH` and a `CHANNEL_TICK` every `tick_time`) and **delays to the cast end** (`State.lua:6405-6455`). A channeled ability's
   **`handler` is not run** (`RunHandler`, `State.lua:6140`): use `start` (at the cast), `tick` and `finish`; the Druid's Hurricane uses `start`. Declare `channeled = true`, `cast = <seconds>`, `tick_time = 1` for Arcane Missiles
   (Barrage: 0.5 s ticks, 2.5 s), Blizzard and Evocation.
@@ -275,7 +275,7 @@ Run on a Mage (a Gnome or Troll helps). `VSCopy` is ForeverProbe's (`~/src/Forev
 
 ## 11. DB2 queries used (all `~/.local/share/wow-db2/bin/wowdb`, build 1.60.1.70338)
 
-- Items and races: `ItemSparse` by `Display_lang like '%Mana Agate%'` etc.; `wowdb spell "Replenish Mana"`; `SpellCooldowns` for 1303599 and 12051; `spell_skill` by `skill_line like 'Racial - Human%'` (Gnome, Undead, Troll). Engine reads: `Facade.lua` 230-260, 616-650; `Families/{Resources,Casts,Now,Player}.lua`; `State.lua` 3513, 4963, 6140, 6312, 6405-6455; `Engine/Spec.lua` 760-775, 1480-1535.
+- Items and races: `ItemSparse` by `Display_lang like '%Mana Agate%'` etc.; `wowdb spell "Replenish Mana"`; `SpellCooldowns` for 1303599 and 12051; `spell_skill` by `skill_line like 'Racial - Human%'` (Gnome, Undead, Troll). Engine reads: `Facade.lua` 230-260, 616-650; `Families/{Resources,Casts,Now,Player}.lua`; `State.lua` 3513, 4963, 6140, 6312, 6405-6455; `Engine/Schema/Spec.lua` 760-775, 1480-1535.
 - Tree: `wowdb talents MAGE` (ranks = non-zero `r1..r5`; `select tab,count(*) from talent_info where class='MAGE' group by tab` -> 16/16/17). Spells: `select
   s.id,s.name,s.rank,s.base_level,s.school_mask,s.cast_ms,s.duration_ms,s.power,s.cost,s.cost_pct,s.cooldown_ms,s.category_cd_ms,s.gcd_ms,s.range_max from spell_info s join spell_skill k on k.spell_id=s.id where k.classes like '%MAGE%'
   and k.skill_line in ('Frost','Fire','Arcane')`.

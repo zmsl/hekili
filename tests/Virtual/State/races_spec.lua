@@ -1,9 +1,9 @@
--- tests/Virtual/State/races_spec.lua (event-facade spec §12b): Engine/Races.lua's rules with a fake race defined here,
+-- tests/Virtual/State/races_spec.lua (event-facade spec §12b): Engine/Schema/Races.lua's rules with a fake race defined here,
 -- headless against a stand-in for Hekili: `Hekili:NewRace` is inert for another race and registers into the shared
 -- `all` for its own (over `all`'s entry), ns.applyRace writes the race's keys over the class's, and the simulation's half
 -- of a cost modifier on abilities built as RegisterAbility builds them. The real race files: tests/Forever/races_spec.lua.
 
-describe("Engine/Races.lua", function()
+describe("Engine/Schema/Races.lua", function()
     local ns, hekili, state, all, saved
 
     -- Hekili's state.removeStack (State.lua:857-868), on the fake buff table.
@@ -17,7 +17,7 @@ describe("Engine/Races.lua", function()
         end
     end
 
-    -- Loads Engine/Races.lua for a player of race `token` with `all` already holding `seed`, then runs the fake race
+    -- Loads Engine/Schema/Races.lua for a player of race `token` with `all` already holding `seed`, then runs the fake race
     -- "Fake": ability and aura `racial_a` (1001, `copy` 1002), +5% maximum resources, and `mod` (default: -10% on
     -- spell 1011 while racial_a is up, 3 charges) as its cost modifier.
     local function load(token, seed, mod)
@@ -31,7 +31,7 @@ describe("Engine/Races.lua", function()
             removeStack = removeStack,
         }
         all = { abilities = seed or {}, auras = {} }
-        -- as Engine/Spec.lua's RegisterAbility/RegisterAura: the entry under its key, its id and every `copy` alias
+        -- as Engine/Schema/Spec.lua's RegisterAbility/RegisterAura: the entry under its key, its id and every `copy` alias
         local function register(t, key, def)
             t[key] = def
             if def.id then
@@ -50,7 +50,7 @@ describe("Engine/Races.lua", function()
         hekili = { State = state, Class = { specs = { [0] = all }, abilities = {}, file = "CLASS_A" } }
         _G.Hekili = hekili
         ns = {}
-        assert(loadfile("src/Hekili/Engine/Races.lua"))("Hekili", ns)
+        assert(loadfile("src/Hekili/Engine/Schema/Races.lua"))("Hekili", ns)
         local race = hekili:NewRace("Fake")
         race:RegisterAbility("racial_a", { id = 1001, copy = { 1002 }, cooldown = 120 })
         race:RegisterAura("racial_a", { id = 1001, copy = { 1002 }, duration = 15, max_stack = 3 })
@@ -58,7 +58,7 @@ describe("Engine/Races.lua", function()
         race:RegisterCostMod(mod or { aura = "racial_a", pct = -0.10, charges = 3, spells = { 1011 } })
     end
 
-    -- An ability as Engine/Spec.lua's RegisterAbility builds it: function fields in `funcs`, called on access, wrapped.
+    -- An ability as Engine/Schema/Spec.lua's RegisterAbility builds it: function fields in `funcs`, called on access, wrapped.
     local function ability(key, data)
         local a = setmetatable({ funcs = {} }, {
             __index = function(t, k)
@@ -114,20 +114,23 @@ describe("Engine/Races.lua", function()
         end
     )
 
-    it("writes the race's abilities and auras over the class's after Engine/Spec.lua's merge, aliases too", function()
-        load("Fake")
-        local own = { id = 2 }
-        local class = { abilities = { racial_a = own, [1002] = own, [1] = own }, auras = { racial_a = { id = 2 } } }
-        ns.applyRace(class)
-        assert.are.same({ 1001, 1001 }, { class.abilities.racial_a.id, class.auras.racial_a.id })
-        local race = class.abilities.racial_a -- every key the race registered, its id and `copy` aliases, wins too
-        assert.are.same({ race, race, own }, { class.abilities[1001], class.abilities[1002], class.abilities[1] })
-        assert.are.equal(class.auras.racial_a, class.auras[1002])
-        load("Other")
-        class = { abilities = { racial_a = { id = 2 } }, auras = {} }
-        ns.applyRace(class)
-        assert.are.equal(2, class.abilities.racial_a.id) -- inert for another race
-    end)
+    it(
+        "writes the race's abilities and auras over the class's after Engine/Schema/Spec.lua's merge, aliases too",
+        function()
+            load("Fake")
+            local own = { id = 2 }
+            local class = { abilities = { racial_a = own, [1002] = own, [1] = own }, auras = { racial_a = { id = 2 } } }
+            ns.applyRace(class)
+            assert.are.same({ 1001, 1001 }, { class.abilities.racial_a.id, class.auras.racial_a.id })
+            local race = class.abilities.racial_a -- every key the race registered, its id and `copy` aliases, wins too
+            assert.are.same({ race, race, own }, { class.abilities[1001], class.abilities[1002], class.abilities[1] })
+            assert.are.equal(class.auras.racial_a, class.auras[1002])
+            load("Other")
+            class = { abilities = { racial_a = { id = 2 } }, auras = {} }
+            ns.applyRace(class)
+            assert.are.equal(2, class.abilities.racial_a.id) -- inert for another race
+        end
+    )
 
     it("prices a listed spell (by id or a `copy` rank) through the modifier while its aura is up", function()
         load("Fake")
@@ -185,10 +188,10 @@ describe("Engine/Races.lua", function()
         assert.are.equal(3, state.buff.racial_a.count)
     end)
 
-    it("takes a class file's spec:RegisterCostMod (Engine/Spec.lua) into the same list, for any race", function()
+    it("takes a class file's spec:RegisterCostMod (Engine/Schema/Spec.lua) into the same list, for any race", function()
         load("Other")
-        -- the mixin's entry as Engine/Spec.lua declares it, compiled with this `ns` as its upvalue
-        local src = assert(io.open("src/Hekili/Engine/Spec.lua")):read("*a")
+        -- the mixin's entry as Engine/Schema/Spec.lua declares it, compiled with this `ns` as its upvalue
+        local src = assert(io.open("src/Hekili/Engine/Schema/Spec.lua")):read("*a")
         local entry = assert(src:match("\n(    RegisterCostMod = function%( self, def %).-\n    end,)\n"))
         local mixin = assert(loadstring("local ns = ...\nreturn {\n" .. entry .. "\n}"))(ns)
         local def = { aura = "proc_a", pct = -1, charges = 1, spells = { 1021 } }

@@ -509,7 +509,7 @@ end
 
 state.combat = 0
 state.faction = Facade.UnitFactionGroup( "player" )
--- The race token (UnitRace's second return), the same on every client language: race packs match it (Engine/Races.lua), and
+-- The race token (UnitRace's second return), the same on every client language: race packs match it (Engine/Schema/Races.lua), and
 -- race.gnome, race.troll ... hold beside the localized key.
 local raceName
 raceName, state.race_token = Facade.UnitRace( "player" )
@@ -6644,7 +6644,7 @@ ns.spendResources = function( ability )
             cost = ( cost * state[ resource ].modmax )
         end
 
-        -- a charged cost modifier's buff loses a stack when the declared cost is above 0, even at a discounted 0 (Engine/Races.lua)
+        -- a charged cost modifier's buff loses a stack when the declared cost is above 0, even at a discounted 0 (Engine/Schema/Races.lua)
         ns.costMods.Spend( action.baseSpend, ability )
 
         if cost ~= 0 then

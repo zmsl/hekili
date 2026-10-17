@@ -1,4 +1,4 @@
--- tests/Forever/shared_spec.lua (shared-content spec §3, §4, §8): Engine/Shared.lua's `Hekili:NewShared` and the shared
+-- tests/Forever/shared_spec.lua (shared-content spec §3, §4, §8): Engine/Schema/Shared.lua's `Hekili:NewShared` and the shared
 -- content files Hekili.toc lists (Forever/Shared/*.lua), loaded headless against a stand-in for Hekili's `all`; and no
 -- priority, class, race, engine or shared file names a key the pass dropped, nor one it stubbed outside its stub.
 
@@ -72,8 +72,8 @@ end
 describe("shared content", function()
     local all, ns, saved, debuffs, bags
 
-    -- Runs Engine/Races.lua, Engine/Shared.lua and the named shared files (default: every one Hekili.toc lists) against
-    -- a stand-in `all` that registers as Engine/Spec.lua's RegisterAbility/RegisterAura: under the key, its id and
+    -- Runs Engine/Schema/Races.lua, Engine/Schema/Shared.lua and the named shared files (default: every one Hekili.toc lists) against
+    -- a stand-in `all` that registers as Engine/Schema/Spec.lua's RegisterAbility/RegisterAura: under the key, its id and
     -- every `copy` alias.
     local function load(files)
         all = { abilities = {}, auras = {}, keys = { abilities = {}, auras = {} } }
@@ -123,8 +123,8 @@ describe("shared content", function()
                 error("a shared aura reads the target's buffs")
             end,
         }
-        assert(loadfile("src/Hekili/Engine/Races.lua"))("Hekili", ns)
-        assert(loadfile("src/Hekili/Engine/Shared.lua"))("Hekili", ns)
+        assert(loadfile("src/Hekili/Engine/Schema/Races.lua"))("Hekili", ns)
+        assert(loadfile("src/Hekili/Engine/Schema/Shared.lua"))("Hekili", ns)
         for _, f in ipairs(files or SHARED) do
             assert(loadfile("src/Hekili/Forever/Shared/" .. f .. ".lua"))("Hekili", ns)
         end
@@ -215,7 +215,7 @@ describe("shared content", function()
         )
         assert.are.same({ 120, "off" }, { all.abilities.healthstone.cooldown, all.abilities.healthstone.gcd })
         assert.is_nil(all.abilities.healthstone.now or all.abilities.potion.now) -- item actions: no cast the belief sees
-        for _, path in ipairs({ "src/Hekili/Core.lua", "src/Hekili/Options/DevTools.lua" }) do
+        for _, path in ipairs({ "src/Hekili/Engine/Sim/Core.lua", "src/Hekili/Options/DevTools.lua" }) do
             assert.is_false(names(read(path), "tempered_potion"), path) -- the `potion` verb's old fallback
         end
     end)
@@ -232,7 +232,7 @@ describe("shared content", function()
         load({ "Consumables" })
         local usable = all.abilities.healthstone.usable
         local health = { current = 50, max = 100 }
-        setfenv(usable, { health = health }) -- Engine/Spec.lua runs an ability's functions in `state`
+        setfenv(usable, { health = health }) -- Engine/Schema/Spec.lua runs an ability's functions in `state`
         assert.are.same({ false, "requires healthstone in bags" }, { usable() })
         bags[19004] = 1
         assert.is_true(usable())
@@ -280,7 +280,8 @@ describe("shared content", function()
     it(
         "leaves no dropped key in a priority, a class, race, engine or shared file, and no stub outside its own",
         function()
-            local ls = assert(io.popen("find src/Hekili/Engine src/Hekili/Forever tools/packs -name '*.lua' | sort"))
+            local ls =
+                assert(io.popen("find src/Hekili/Engine/Schema src/Hekili/Forever tools/packs -name '*.lua' | sort"))
             local n = 0
             for path in ls:lines() do
                 local src = read(path)
@@ -302,10 +303,10 @@ describe("shared content", function()
     )
 
     it("leaves each key `all` gave up registered by its class or race file", function()
-        local spec = read("src/Hekili/Engine/Spec.lua")
+        local spec = read("src/Hekili/Engine/Schema/Spec.lua")
         for k, owner in pairs(OWNERS) do
             assert.is_true(names(read("src/Hekili/" .. owner), k), owner .. ": " .. k)
-            assert.is_false(names(spec, k), "Engine/Spec.lua: " .. k)
+            assert.is_false(names(spec, k), "Engine/Schema/Spec.lua: " .. k)
         end
     end)
 end)

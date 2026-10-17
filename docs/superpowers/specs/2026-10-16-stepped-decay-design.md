@@ -1,7 +1,7 @@
 # Stepped, front-loaded resource decay (design, 2026-10-16)
 
 Status: IMPLEMENTED (belief, sim entry, class data); the in-game checkpoint (§5) is the user's. Deviations:
-`decayInterval` is a function in the class files (Engine/Spec.lua setfenv's every meta field); the sim entry is
+`decayInterval` is a function in the class files (Engine/Schema/Spec.lua setfenv's every meta field); the sim entry is
 generated in Adapter.lua (Spec.lua is upstream) and pauses through `last()`, not `stop()` (Hekili's forecast removes a
 stopped entry for the rest of the forecast); its test is in adapter_spec, not warrior_spec; `decayInterval` has no
 default (nil or 0: continuous; D5); `last()` rolls its anchor, or a tick aura's expiry, forward to the last beat at or
@@ -29,7 +29,7 @@ State.lua E6 `expires <= e.next`) was a hack for the same symptom. This design R
   `v = max(0, min(r.max, v + value))` ~:1283) and a continuous `regen` forced to 0 when <= 0.001. The sim's out-of-combat
   clock: `state.time == 0` until combat or `StartCombat` (State.lua:1821-1825).
 - The class declares the rage model in `spec:RegisterResource(Enum.PowerType.Rage, { entries }, { meta })`: the regen
-  entries reach `r.state.regenModel`, the meta table (`decay`) reaches `r.state.meta` (Engine/Spec.lua:174-192).
+  entries reach `r.state.regenModel`, the meta table (`decay`) reaches `r.state.meta` (Engine/Schema/Spec.lua:174-192).
 - Combat end: Resources.lua:539-541 sets `fighting = false`; the decay loop's `fighting` return at :295.
 
 ## 3. Design
@@ -49,7 +49,7 @@ BEFORE the decay quanta of the same advance, so a tick and a quantum at the same
 (9 + 1 - 1.25 = 8.75 at Bloodrage's end). Continuous mode (`decayInterval` nil/0) keeps the current code path.
 Zero allocation: three preallocated arrays, scalar loop.
 
-3.3 Sim (generated entry, no class code). Where the Adapter/Spec wires the resource (the cleanest site: Engine/Spec.lua
+3.3 Sim (generated entry, no class code). Where the Adapter/Spec wires the resource (the cleanest site: Engine/Schema/Spec.lua
 RegisterResource after `r.state.regenModel = regen`, or the Adapter's OnBuild walk), inject a regenModel entry
 `__decay` for a resource whose meta has `decay` with a positive `decayInterval`: `{ interval = <iv>, value = -<step>,
 last = function() return <anchor> end, stop = function() return <active?> end }`. The sim's `last()` returns the
@@ -85,6 +85,6 @@ buff at ~8.75 while the bar shows 9 (display rounding) and then steps down on a 
 bar steps every 0.8 s instead, `decayInterval = 0.8` with `decay = 1.25` (quantum 1) is the correction: data, not code.
 
 ## 6. Placement
-Families/Resources.lua (3.2, 3.4), Engine/Spec.lua or Adapter.lua (3.3), State.lua (3.4 revert only), Warrior.lua +
+Families/Resources.lua (3.2, 3.4), Engine/Schema/Spec.lua or Adapter.lua (3.3), State.lua (3.4 revert only), Warrior.lua +
 Druid.lua (`decayInterval`), resources_spec/alloc_spec/warrior_spec, docs/forever-facade-notes.md ("Periodic auras"
 section rewritten: ticks land in full; decay is stepped and front-loaded).

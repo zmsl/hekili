@@ -1,8 +1,16 @@
 # Repository layout
 
-- `src/Hekili/` is the addon exactly as WoW loads it: `Hekili.toc`, the root `.lua` and `.xml` files, `Libs/`,
-  `Options/`, `UI/`, `Textures/`, `Virtual/` and `Forever/`. Paths inside `Hekili.toc` are relative to it. Nothing
-  else ships, and nothing dev-only goes in it.
+- `src/Hekili/` is the addon exactly as WoW loads it; paths inside `Hekili.toc` are relative to it. Nothing else
+  ships, and nothing dev-only goes in it. Its modules:
+  - root: `Hekili.toc`, `Hekili.lua` (the addon object), `Bindings.xml`, `embeds.xml`;
+  - `Engine/Sim/`: upstream's simulation (`Core`, `State`, `Scripts`, `Events`, `Targets`, `Constants`, `Utils`);
+  - `Engine/Schema/`: the class/race/shared registration API (`Spec`, `Races`, `Shared`), the engine core the
+    boundary spec scans;
+  - `UI/`: the display and editor widgets (`UI`, `Formatting`, `MultilineEditor`, `PopupSlider`);
+  - `Options/` (the options panel and chat commands), `Virtual/` (VirtualState, the event and API facades),
+    `Forever/` (the class, race and shared content), `Libs/` (embedded, untouched) and `Textures/`.
+
+  An upstream merge lands new root files at the root; re-home them by hand.
 - `tests/` holds the busted specs and their helpers, mirroring the source tree: the specs for
   `src/Hekili/Virtual/State/` are in `tests/Virtual/State/`, their helpers in `tests/Virtual/State/helpers/`, and so
   on. `tests/Virtual/State/helpers/load.lua` names the addon root once (`ROOT = "src/Hekili/"`).

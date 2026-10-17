@@ -93,9 +93,9 @@ Owns: `VirtualState.lua` (Obs, HitKind), `Sources/Player.lua` (the stage, the st
 - **Pass through already:** `aggro` (State.lua:1842, `UnitThreatSituation("player") > 1`, highest over every mob;
   `UnitThreatSituation` is a plain passthrough row, Facade.lua:853 "plain in combat [W PR14]"); `state.UnitIsUnit`
   (State.lua:471-474, passthrough row :844). `tanking` (State.lua:1870) is `role.tank and aggro`, and `role.tank` is
-  set only from `GetSpecializationInfo`'s role (Engine/Spec.lua:1974-1980); the pseudo-spec 1491's role is unread
+  set only from `GetSpecializationInfo`'s role (Engine/Schema/Spec.lua:1974-1980); the pseudo-spec 1491's role is unread
   (checkpoint Q10). Priorities do not use `tanking`.
-- **New, generic** (`Engine/Spec.lua`, an engine state table on `all` beside `casting`/`movement`, no State.lua edit;
+- **New, generic** (`Engine/Schema/Spec.lua`, an engine state table on `all` beside `casting`/`movement`, no State.lua edit;
   computed on read, no caching, no allocation): `threat.situation` = `UnitThreatSituation("player", "target") or 0`;
   `threat.on_me` = `UnitIsUnit("targettarget", "player")`; `threat.lost` = `UnitExists("targettarget") and not
   threat.on_me` (the target attacks someone else: Taunt's own condition, "no effect if the target is already attacking
@@ -106,7 +106,7 @@ Owns: `VirtualState.lua` (Obs, HitKind), `Sources/Player.lua` (the stage, the st
   `UnitExists(TT[i])` read added there). No facade row: a VS accessor. Whether a nameplate's target-of read is plain
   is recorded by the existing `Note("UnitIsUnit target-of", ...)`; checkpoint Q8 reads it.
 
-Owns: `Engine/Spec.lua` (`threat`), `Events/Attackers.lua` (`LooseEnemies`). No Warrior code.
+Owns: `Engine/Schema/Spec.lua` (`threat`), `Events/Attackers.lua` (`LooseEnemies`). No Warrior code.
 
 ## 3. Kit corrections (`Warrior.lua`)
 - **Improved Shield Block, Improved Taunt, Toughness: not registered.** The brief asked for them; the live tree has no

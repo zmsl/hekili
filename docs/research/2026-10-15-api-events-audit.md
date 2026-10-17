@@ -70,7 +70,7 @@ Safety net, not verification: while tracing, Facade.secrets counts any secret an
 | A7 | Game range APIs reached through LibSpellRange (Libs/LibSpellRange-1.0.lua:32 uses C_Spell.IsSpellInRange) | State.lua:59,5071,6985 (`LSR.IsSpellInRange(...) == 0`) | NOT in api_inventory.txt, so check_api_reads.sh cannot see it, and no probe tag exists; a secret result would be compared |
 | A8 | Other non-inventory globals loaded files use (luacheck sweep): C_Timer, SetCVar, debugprofilestop, UIParent, GameTooltip, hooksecurefunc etc. | UI/Options/Core | not state reads; outside the facade's remit |
 
-## 2. Events table (registrations: src/Hekili/Events.lua unless noted)
+## 2. Events table (registrations: src/Hekili/Engine/Sim/Events.lua unless noted)
 Delivery path: every Hekili frame is Facade.CreateFrame (EF:174); EF registers the union of subscribers with the client (EF:56-95) and delivers
 anything the client fires (EF:183-216) with each payload slot through Plain (secret -> nil, EF:221-230). So "delivered" = the client fires it.
 Never registered with the client (NEVER, EF:24): COMBAT_LOG_EVENT_UNFILTERED (synthesized, CombatLog.lua/Rows.lua/Attackers.lua), FRAME_UPDATE.
@@ -94,8 +94,8 @@ Forever column = wow_api_event_search flavor forever (result "exists"); "not che
 | Branch guard: `Hekili.IsWrath()` (361, 2324) picks which talent events register | n/a | n/a | not verified here what IsWrath() returns on build 16001 (N says version gates false); if true, the specialization/TRAIT events above are NOT registered |
 | UI.lua 1905-1923: SPELL_ACTIVATION_OVERLAY_GLOW_SHOW/HIDE | client | exist | plain |
 | UI.lua alphaUpdateEvents/kbEvents/flashEvents (UI.lua:901-960): PET_BATTLE_OPENING_START, BARBER_SHOP_*, VEHICLE_ANGLE_SHOW, UPDATE_OVERRIDE_ACTIONBAR, CLIENT_SCENE_OPENED, UPDATE_ALL_UI_WIDGETS, PLAYER_MOUNT_DISPLAY_CHANGED, ACTIONBAR_PAGE_CHANGED, ACTIONBAR_UPDATE_STATE, UPDATE_SHAPESHIFT_FORM, LEARNED_SPELL_IN_SKILL_LINE, CHARACTER_POINTS_CHANGED, UPDATE_MACROS, ACTIVE_TALENT_GROUP_CHANGED | client | exist (all queried) | plain. VEHICLE_UPDATE, UNIT_ENTERING/ENTERED/EXITED/EXITING_VEHICLE, PLAYER_GAINS/LOSES_VEHICLE_DATA, ZONE_CHANGED_INDOORS/NEW_AREA, PET_BATTLE_CLOSE, CLIENT_SCENE_CLOSED, PLAYER_CONTROL_*: not checked |
-| Engine/Spec.lua:2209-2229 SpellDisableEvents: CHALLENGE_MODE_START/RESET/COMPLETED, ZONE_CHANGED_NEW_AREA, QUEST_SESSION_*, PLAYER_ALIVE | client | CHALLENGE_MODE_START and QUEST_SESSION_CREATED exist; the rest not checked | plain |
-| Engine/Spec.lua:1080-1090 class RegisterEvent/RegisterUnitEvent wrappers; Druid.lua/Warrior.lua spec-level handlers | pass-through of the above | n/a | n/a |
+| Engine/Schema/Spec.lua:2209-2229 SpellDisableEvents: CHALLENGE_MODE_START/RESET/COMPLETED, ZONE_CHANGED_NEW_AREA, QUEST_SESSION_*, PLAYER_ALIVE | client | CHALLENGE_MODE_START and QUEST_SESSION_CREATED exist; the rest not checked | plain |
+| Engine/Schema/Spec.lua:1080-1090 class RegisterEvent/RegisterUnitEvent wrappers; Druid.lua/Warrior.lua spec-level handlers | pass-through of the above | n/a | n/a |
 
 Events used only by VirtualState sources (Virtual/State/Sources/*, Virtual/Events/*.lua; delivered through EF onEvent -> S.Run, EF:221-228):
 PLAYER_SWING (Swing.lua:16, Rows.lua:109; exists, swingDuration/swingType plain in combat per Swing.lua:2), UNIT_MAXPOWER, UNIT_DISPLAYPOWER,

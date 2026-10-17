@@ -1,5 +1,5 @@
 -- Forever/Shared/Consumables.lua
--- The consumables every class shares on Forever (shared-content spec §4.3), through Engine/Shared.lua into `all`: the
+-- The consumables every class shares on Forever (shared-content spec §4.3), through Engine/Schema/Shared.lua into `all`: the
 -- `potion` action and auras core reads by name, and the Healthstone from Forever's items (DB2 1.60.1.70338: the five
 -- ranks and their Improved Healthstone variants). No Forever potion, flask or food is registered: the default
 -- priorities leave consumables out, and retail's (Tempered Potion, Pact of Gluttony's Healthstone) do not exist here.

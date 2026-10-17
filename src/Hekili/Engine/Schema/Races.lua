@@ -1,11 +1,11 @@
--- Engine/Races.lua
+-- Engine/Schema/Races.lua
 -- Race packs (event-facade spec §12b). `Hekili:NewRace( token )` returns a registration object a race file
 -- (Forever/Races/<Race>.lua) uses like a spec: RegisterAbility, RegisterAura, RegisterResourceMod, RegisterCostMod
 -- (a class file declares its own cost modifiers with spec:RegisterCostMod, into the same list).
 -- Registrations count only when the token is the player's race (`state.race_token`, UnitRace's locale-free second
 -- return); otherwise they are accepted and inert, so every race file runs unconditionally and loads headless.
 -- Abilities and auras go to the shared `all` spec (over `all`'s own entry for the same key), and ns.applyRace writes
--- them over the class's after Engine/Spec.lua's merge (which takes the class first and only adds missing keys), so a race
+-- them over the class's after Engine/Schema/Spec.lua's merge (which takes the class first and only adds missing keys), so a race
 -- registration wins a key clash with the class and with `all`. Resource and cost modifiers go to `ns.raceMods`, one
 -- declaration read by two layers:
 -- VirtualState's belief (Virtual/State/Families/Modifiers.lua, through Adapter.lua) and Hekili's simulation (below).
@@ -35,7 +35,7 @@ local function own(kind, key)
     end
 end
 
---- Engine/Spec.lua's SpecializationChanged, after merging the specs: the race's abilities and auras win over the class's.
+--- Engine/Schema/Spec.lua's SpecializationChanged, after merging the specs: the race's abilities and auras win over the class's.
 function ns.applyRace(class)
     local spec = all()
     for kind, keys in pairs(owned) do
@@ -72,7 +72,7 @@ end
 --- { aura = key, pct = n | flat = n, charges = k | nil, spells = { spell IDs } | nil }: an ability whose spell ID (or
 --- one of its `copy` ranks) is listed (every ability paid from the resource when `spells` is nil) costs less while the
 --- aura is up; with charges, each such cast whose declared cost is above 0 takes a stack. Also a class file's
---- `spec:RegisterCostMod` (Engine/Spec.lua): the class file has returned for any other class, so its append is the player's.
+--- `spec:RegisterCostMod` (Engine/Schema/Spec.lua): the class file has returned for any other class, so its append is the player's.
 function ns.RegisterCostMod(def)
     mods.costMods[#mods.costMods + 1] = def
 end
@@ -172,7 +172,7 @@ function M.Spend(base, key)
     end
 end
 
---- Engine/Spec.lua's RegisterAbility: the ability's `spend` answers through the modifiers; `baseSpend` keeps the declared
+--- Engine/Schema/Spec.lua's RegisterAbility: the ability's `spend` answers through the modifiers; `baseSpend` keeps the declared
 --- cost (VirtualState's belief applies the same modifiers to it itself).
 -- shortcut: a spend set later (by an ability's onLoad) skips this wrap; no ability does today, wrap there if one does.
 function M.Wrap(a)

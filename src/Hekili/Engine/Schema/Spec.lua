@@ -1,7 +1,7 @@
--- Engine/Spec.lua
+-- Engine/Schema/Spec.lua
 -- The spec engine (was Classes.lua): the spec mixin and its Register* API, the shared `all` spec and the keys core reads
 -- by name, and SpecializationChanged's merge. Game content shared by every class lives in Forever/Shared/*.lua
--- (registered through Engine/Shared.lua) and the race packs.
+-- (registered through Engine/Schema/Shared.lua) and the race packs.
 
 local addon, ns = ...
 local Facade = ns.Facade
@@ -790,7 +790,7 @@ local HekiliSpecMixin = {
             end
         end
 
-        -- The race packs' cost modifiers in the simulation (Engine/Races.lua, event-facade spec §12b).
+        -- The race packs' cost modifiers in the simulation (Engine/Schema/Races.lua, event-facade spec §12b).
         ns.costMods.Wrap( a )
 
         if ( a.velocity or a.flightTime ) and a.impact and a.isProjectile == nil then
@@ -1072,7 +1072,7 @@ local HekiliSpecMixin = {
     end,
 
     -- A class's cost modifier (a proc that makes the next abilities cheaper, e.g. Clearcasting): the race object's
-    -- RegisterCostMod signature, into the list both VirtualState's belief and the simulation read (Engine/Races.lua).
+    -- RegisterCostMod signature, into the list both VirtualState's belief and the simulation read (Engine/Schema/Races.lua).
     RegisterCostMod = function( self, def )
         ns.RegisterCostMod( def )
     end,
@@ -2181,7 +2181,7 @@ function Hekili:SpecializationChanged()
         end
     end
 
-    -- The race pack's abilities and auras win a key clash with the class's and `all`'s (Engine/Races.lua, spec §12b).
+    -- The race pack's abilities and auras win a key clash with the class's and `all`'s (Engine/Schema/Races.lua, spec §12b).
     ns.applyRace( class )
 
     for k in pairs( class.abilityList ) do

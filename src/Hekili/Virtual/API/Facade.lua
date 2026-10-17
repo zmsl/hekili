@@ -44,7 +44,7 @@ local GetTime = resolve("GetTime")
 local issecretvalue = resolve("issecretvalue") or function()
     return false
 end
-Facade.issecretvalue = issecretvalue -- the secrecy test a passthrough row's reader needs (Engine/Spec.lua's `threat`)
+Facade.issecretvalue = issecretvalue -- the secrecy test a passthrough row's reader needs (Engine/Schema/Spec.lua's `threat`)
 
 ----------------------------------------------------------------------------------------------------------------------
 -- The trace (event-facade spec §5, decision 3): while Hekili makes a snapshot (`Hekili.ActiveDebug`), every facade

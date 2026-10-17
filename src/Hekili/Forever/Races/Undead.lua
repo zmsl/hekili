@@ -6,7 +6,7 @@
 -- on the GCD), registered as a 10 s channel so the simulation does not recommend breaking it; whether a corpse is near
 -- is not known, a priority gates it. Touch of the Grave (1260189 Warrior/Paladin/Rogue, 1260201 Priest/Mage/Warlock: a
 -- proc that drains health) and Underwater Breathing are passives with no rotation effect. No resource or cost modifier.
--- No pack names either. Inert for any other race (Engine/Races.lua).
+-- No pack names either. Inert for any other race (Engine/Schema/Races.lua).
 
 local addon, ns = ...
 local Hekili = _G[addon]

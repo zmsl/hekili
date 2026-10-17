@@ -44,7 +44,7 @@ the Forever fact base; this brief reuses its numbers where DB2 confirms them and
 - **Adrenaline Rush (13750)** is the one regen modifier: aura 110 (MOD_POWER_REGEN_PERCENT), misc 3 energy, base 100 => +100% (+10/s) for 15 s, 300 s cooldown, 25-free (cost 0), on the GCD (1000 ms) [DB2 `wowdb effects 13750`, spell_info].
   Model it as an aura-gated regen entry (the Adapter forwards entries with `{ aura, interval, value }`, Adapter.lua:121-135; the Warrior's `bloodrage` entry is the shape): `adrenaline_rush = { aura = "adrenaline_rush", last = <applied +
   floor(t - applied)>, interval = 1, value = 10 }`. Credited ticks stay out of the regen calibration (Resources.lua:271). Shared/Auras.lua stubs `adrenaline_rush = {}` (no id, never up); the Rogue file registers a real `adrenaline_rush`
-  aura and **must be loaded so its registration wins over the shared stub** (check the merge order in Engine/Shared.lua when specing).
+  aura and **must be loaded so its registration wins over the shared stub** (check the merge order in Engine/Schema/Shared.lua when specing).
 - **Relentless Strikes** (14179, one rank in the DB2): "20% per combo point to restore 25 energy" (effect 14181 = 25) [DB2]. A 5-point finisher refunds 25 for certain; below 5 it is a 20% x cp chance. Model only the certain part in
   `now`/`handler` (`if combo_points.current >= 5 and talent.relentless_strikes.enabled then gain( 25, "energy" )`); do **not** port Classic's `math.random` hook (a random value in a recommendation path flickers the display and allocates
   nothing but is non-reproducible). Other finisher refunds exist in the DB2 but are of unknown source: Fallen Regality 1231492 (aura 109 chance per CP, restores 1231491 energy), Restless Blades 1241797 (finishers cut Adrenaline Rush/Blade
@@ -304,7 +304,7 @@ Toggles: cooldowns = Adrenaline Rush, Blade Flurry, Cold Blood, Premeditation, P
 Out of scope: runes (424785 399986 399985 424799 398196 400009 400012 425012 438040 399968), S03 sets, poisons creation, Pick Pocket, traps
 ```
 
-Sources: Hekili `Forever/Classes/Warrior.lua`, `Druid.lua`, `Races/Gnome.lua`, `Shared/Auras.lua`, `Virtual/State/Adapter.lua`, `Virtual/State/Families/Resources.lua`, `Virtual/State/Sources/Power.lua`, `Engine/Races.lua`,
+Sources: Hekili `Forever/Classes/Warrior.lua`, `Druid.lua`, `Races/Gnome.lua`, `Shared/Auras.lua`, `Virtual/State/Adapter.lua`, `Virtual/State/Families/Resources.lua`, `Virtual/State/Sources/Power.lua`, `Engine/Schema/Races.lua`,
 `tools/packs/{warrior,druid}.lua`, `docs/forever-facade-notes.md`, `docs/research/2026-10-15-forever-druid/research.md`, `docs/superpowers/specs/2026-10-15-forever-druid-pack.md`, `origin/classic:Classic/Rogue.lua` and its two Rogue
 `.simc`; TDF rogue research; DB2 via `wowdb` (spell_info, effects, talents ROGUE, SpellPower, SpellDuration, ItemSparse) and `wow_api_search` (flavor forever) for `GetWeaponEnchantInfo`, `IsStealthed`, `GetComboPoints`. No web access was
 needed.

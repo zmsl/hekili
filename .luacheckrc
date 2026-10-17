@@ -79,19 +79,13 @@ local stateEnv = {
     "next_ation", "name", "listName", "id", "event", "boss", "alphaCheck", "abilitty", "display", "args", "v", "p",
     "val", "treeToString", "QueueRebuildUI",
 }
-files["src/Hekili/Engine/Spec.lua"] = { globals = stateEnv }
-files["src/Hekili/State.lua"] = { globals = stateEnv }
-files["src/Hekili/Scripts.lua"] = { globals = stateEnv }
-files["src/Hekili/Core.lua"] = { globals = stateEnv }
-files["src/Hekili/Events.lua"] = { globals = stateEnv }
+files["src/Hekili/Engine/Schema/Spec.lua"] = { globals = stateEnv }
+files["src/Hekili/Engine/Sim/"] = { globals = stateEnv }
 files["src/Hekili/Options/Options.lua"] = { globals = stateEnv }
 files["src/Hekili/Options/DevTools.lua"] = { globals = stateEnv }
 files["src/Hekili/Options/ChatCommands.lua"] = { globals = stateEnv }
-files["src/Hekili/Targets.lua"] = { globals = stateEnv }
-files["src/Hekili/UI.lua"] = { globals = stateEnv }
-files["src/Hekili/Utils.lua"] = { globals = stateEnv }
+files["src/Hekili/UI/UI.lua"] = { globals = stateEnv }
 files["src/Hekili/Hekili.lua"] = { globals = stateEnv }
-files["src/Hekili/Constants.lua"] = { globals = stateEnv }
 -- The names a class file's `now` function reads in VirtualState's context (src/Hekili/Virtual/State/Families/Now.lua).
 local nowEnv = {
     "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "setCooldown", "talent",

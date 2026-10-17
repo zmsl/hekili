@@ -332,7 +332,7 @@ end
 --- of its resource's believed maximum, as Hekili's simulation prices it (State.lua's spend). Allocates nothing.
 function I.BaseCostOf(a)
     local obj = I.ab.obj[a]
-    local c = obj.baseSpend -- the declared cost before the simulation's modifiers (Engine/Races.lua)
+    local c = obj.baseSpend -- the declared cost before the simulation's modifiers (Engine/Schema/Races.lua)
     if c == nil then
         c = obj.spend
     end

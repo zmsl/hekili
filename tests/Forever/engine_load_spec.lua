@@ -1,5 +1,5 @@
 -- tests/Forever/engine_load_spec.lua
--- Every Forever content file loads through Hekili's REAL Engine/Spec.lua (tests/Forever/helpers/engine.lua), once per
+-- Every Forever content file loads through Hekili's REAL Engine/Schema/Spec.lua (tests/Forever/helpers/engine.lua), once per
 -- class file and race file Hekili.toc lists (each class file registers only for its class, each race file only for
 -- its race): no file's main chunk raises, every `item` resolves at registration under setfenv( f, state ), and every
 -- function-valued ability field runs once under the stub state through the ability's own __index. shared_spec.lua's
@@ -39,7 +39,7 @@ local function abilities(env)
     return out
 end
 
-describe("Forever content through the real Engine/Spec.lua", function()
+describe("Forever content through the real Engine/Schema/Spec.lua", function()
     it("answers Constants.lua's ns.ResourceIsPoints: point resources true, pooled ones false", function()
         local is = engine.load(CLASSES[1]).ns.ResourceIsPoints
         for _, k in ipairs({ "combo_points", "runes", "soul_shards", "holy_power", "chi", "arcane_charges", "essence" }) do

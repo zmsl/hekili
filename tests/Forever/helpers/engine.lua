@@ -1,7 +1,8 @@
 -- tests/Forever/helpers/engine.lua
--- Loads Hekili's REAL spec engine headless: Constants.lua, then every Engine\ and Forever\ file Hekili.toc lists, in its
--- order (Engine/Races.lua, Engine/Spec.lua, Engine/Shared.lua, Forever/Shared, Classes, Races), so each Register* call
--- runs Engine/Spec.lua's own code (setfenv( f, state ), the `funcs`/__index wrapper, the `item` resolution). Around it,
+-- Loads Hekili's REAL spec engine headless: Engine/Sim/Constants.lua, then every Engine\Schema\ and Forever\ file
+-- Hekili.toc lists, in its order (Engine/Schema/Races.lua, Engine/Schema/Spec.lua, Engine/Schema/Shared.lua,
+-- Forever/Shared, Classes, Races), so each Register* call runs Engine/Schema/Spec.lua's own code (setfenv( f, state ),
+-- the `funcs`/__index wrapper, the `item` resolution). Around it,
 -- the smallest stub client: a plain ns.Facade, `Item`, `Enum`, a Hekili without Ace3, and STRICT stand-ins for
 -- Hekili.Class, Enum.PowerType and `state`: a key they lack raises, so an ability function reading a name State.lua does not provide (a
 -- bare `state`, `math`, `error`) fails the caller instead of reading nil.
@@ -29,12 +30,12 @@ end
 
 local function noop() end
 
--- The files the engine loads after Constants.lua: every Engine\ and Forever\ line of Hekili.toc, in order.
+-- The files the engine loads after Constants.lua: every Engine\Schema\ and Forever\ line of Hekili.toc, in order.
 function M.files()
     local out = {}
     for line in io.lines(vload.ROOT .. "Hekili.toc") do
         line = line:gsub("\r", ""):gsub("%s+$", "")
-        if line:match("^Engine\\") or line:match("^Forever\\") then
+        if line:match("^Engine\\Schema\\") or line:match("^Forever\\") then
             out[#out + 1] = vload.ROOT .. line:gsub("\\", "/")
         end
     end
@@ -317,7 +318,7 @@ function M.load(classToken, race)
         saved[k] = rawget(_G, k) or false
         _G[k] = v
     end
-    assert(loadfile(vload.ROOT .. "Constants.lua"))("Hekili", ns)
+    assert(loadfile(vload.ROOT .. "Engine/Sim/Constants.lua"))("Hekili", ns)
     for _, path in ipairs(M.files()) do
         local ok, err = pcall(assert(loadfile(path)), "Hekili", ns)
         if not ok then

@@ -316,7 +316,7 @@ spec:RegisterResource(
         end,
         -- Stepped and front-loaded (stepped-decay design): 1.25 lost at once at the start of each 1 s window, the first
         -- when the decay starts (combat end, a tick aura's expiry), so Bloodrage's last tick ends at 10 - 1.25.
-        -- A function, not a number: Engine/Spec.lua setfenv's every meta field, and setfenv(1) re-envs its caller.
+        -- A function, not a number: Engine/Schema/Spec.lua setfenv's every meta field, and setfenv(1) re-envs its caller.
         decayInterval = function()
             return 1
         end,

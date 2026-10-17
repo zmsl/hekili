@@ -1,6 +1,6 @@
 -- tests/boundary_spec.lua
 -- The core/content boundary (core leakage audit, docs/research/2026-10-16-core-leakage-audit.md): the core engine
--- (src/Hekili/Virtual/**, src/Hekili/Engine/**) and the harness core (tests/Virtual/harness/**, GCD kinds design D7)
+-- (src/Hekili/Virtual/**, src/Hekili/Engine/Schema/**) and the harness core (tests/Virtual/harness/**, GCD kinds design D7)
 -- name no ability, aura or talent key and no spell ID that the Forever content (src/Hekili/Forever/**: Classes, Races,
 -- Shared) registers, and no class or form/stance name. Ported from Taco Dog Forever's tests/boundary_spec.lua, which
 -- scans for a fixed word list; here the keys and IDs are extracted from the content at test time, so a new ability is
@@ -15,7 +15,7 @@ local loaders = {
 
 -- The harness core too (GCD kinds design D7), but its captured logs (tests/Virtual/harness/fixtures/): their numbers
 -- are times in ms and amounts, never IDs.
-local CORE = { "src/Hekili/Virtual", "src/Hekili/Engine", "tests/Virtual/harness" }
+local CORE = { "src/Hekili/Virtual", "src/Hekili/Engine/Schema", "tests/Virtual/harness" }
 local SKIP = { "^tests/Virtual/harness/fixtures/" }
 
 -- Content names core may use, each with its reason.
@@ -30,7 +30,7 @@ local ALLOW_KEYS = {
     runic_power = "a resource name",
     -- generic words a content file also uses as a key
     form = "the Druid's any-form aura; core reads the client's shapeshift form generically",
-    potion = "the shared potion ability; stock Engine/Spec.lua's RegisterPotion names its argument so",
+    potion = "the shared potion ability; stock Engine/Schema/Spec.lua's RegisterPotion names its argument so",
 }
 -- Identifiers core may use whole although a part matches content, each with its reason.
 local ALLOW_NAMES = {
@@ -161,7 +161,7 @@ local function content()
     end
     classFiles:close()
 
-    -- the race and shared files, through Engine/Races.lua and Engine/Shared.lua against a recording `all`
+    -- the race and shared files, through Engine/Schema/Races.lua and Engine/Schema/Shared.lua against a recording `all`
     local saved = rawget(_G, "Hekili") or false
     local function run(path, token)
         local all = { abilities = {}, auras = {} }
@@ -184,8 +184,8 @@ local function content()
             end,
         })
         local ns = { Facade = any, UnitDebuff = any, UnitBuff = any }
-        assert(loadfile("src/Hekili/Engine/Races.lua"))("Hekili", ns)
-        assert(loadfile("src/Hekili/Engine/Shared.lua"))("Hekili", ns)
+        assert(loadfile("src/Hekili/Engine/Schema/Races.lua"))("Hekili", ns)
+        assert(loadfile("src/Hekili/Engine/Schema/Shared.lua"))("Hekili", ns)
         -- a global the file reads at load (INVTYPE_*) answers `any`; Hekili and the Lua library stay real
         local chunk = assert(loadfile("src/Hekili/" .. path))
         setfenv(
@@ -370,7 +370,7 @@ describe("core/content boundary", function()
     end)
 
     it(
-        "keeps content keys, spell IDs, class and form names out of Virtual/**, Engine/** and the harness core",
+        "keeps content keys, spell IDs, class and form names out of Virtual/**, Engine/Schema/** and the harness core",
         function()
             local found = {}
             local files = coreFiles()

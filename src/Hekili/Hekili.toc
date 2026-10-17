@@ -45,16 +45,16 @@ Virtual\Events\Attackers.lua
 Virtual\API\Facade.lua
 
 Hekili.lua
-Utils.lua
-Formatting.lua
-MultilineEditor.lua
-Constants.lua
-State.lua
-Engine\Races.lua
-Events.lua
+Engine\Sim\Utils.lua
+UI\Formatting.lua
+UI\MultilineEditor.lua
+Engine\Sim\Constants.lua
+Engine\Sim\State.lua
+Engine\Schema\Races.lua
+Engine\Sim\Events.lua
 
-Engine\Spec.lua
-Engine\Shared.lua
+Engine\Schema\Spec.lua
+Engine\Schema\Shared.lua
 Forever\Shared\Auras.lua
 Forever\Shared\Consumables.lua
 Forever\Shared\Items.lua
@@ -69,11 +69,11 @@ Forever\Races\Orc.lua
 Forever\Races\Troll.lua
 Forever\Races\Undead.lua
 
-Targets.lua
+Engine\Sim\Targets.lua
 Options\DevTools.lua
 Options\ChatCommands.lua
 Options\Options.lua
-UI.lua
-Scripts.lua
-Core.lua
+UI\UI.lua
+Engine\Sim\Scripts.lua
+Engine\Sim\Core.lua
 Virtual\State\Adapter.lua

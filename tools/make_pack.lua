@@ -7,7 +7,7 @@
 -- in src/Hekili/Forever/Classes/<Class>.lua (the class's spec fails until they match). Loaded with the argument "lists"
 -- (loadfile(...)("lists"[, class])) it returns the class's packs with each pack's parsed lists and version instead, for
 -- the specs. Each printed line is "<version> <string>": the version is date * 1000 + a checksum of the pack's SimC text
--- % 1000, so any text change reloads a saved profile (Engine/Spec.lua RestoreDefaults reloads on `~=`; a lower number
+-- % 1000, so any text change reloads a saved profile (Engine/Schema/Spec.lua RestoreDefaults reloads on `~=`; a lower number
 -- on a same-day edit still reloads but reports the pack "reverted" rather than "updated": bump the date to avoid that).
 
 local first, second = ...
