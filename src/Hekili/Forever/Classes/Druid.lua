@@ -597,9 +597,9 @@ end
 local missedAt = { rake = 0, rip = 0, pounce_bleed = 0 }
 
 -- The UI_ERROR_MESSAGE types of "You must be behind your target" (checkpoint Q11 records it; until then none, and the
--- window never opens). On ns so the headless specs can name one.
+-- window never opens). On the spec object so the headless specs can name one.
 local NOT_BEHIND_ERRORS = {}
-ns.DruidNotBehindErrors = NOT_BEHIND_ERRORS
+spec.notBehindErrors = NOT_BEHIND_ERRORS
 local NOT_BEHIND_WINDOW = 5
 local behindErrAt = 0
 

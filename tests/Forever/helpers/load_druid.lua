@@ -11,7 +11,7 @@ local M = {}
 --- `w.auras` (merged by key), `w.talents`, `w.resources[powerType]` ({ models, meta }), `w.costMods` (the
 --- RegisterCostMod declarations), `w.hooks[name]`, `w.events[event]`, `w.funcs[name]`, `w.exprs[name]`,
 --- `w.settings[key]` ({ default, option }), `w.packs` (in order: { name, version, string }), `w.options`, `w.specID`,
---- `w.ns`, `w.state` (Hekili.State's stand-in) and `w.game`.
+--- `w.ns`, `w.spec` (the recording spec object), `w.state` (Hekili.State's stand-in) and `w.game`.
 function M.load(vs)
     local reg = {}
     local spec = setmetatable({}, {
@@ -34,6 +34,7 @@ function M.load(vs)
     local w = { game = game, abilities = {}, auras = {}, resources = {}, hooks = {}, funcs = {}, exprs = {} }
     w.state = { buff = {}, swings = {} }
     local hekili = { State = w.state }
+    w.spec = spec
     function hekili:NewSpecialization(id)
         w.specID = id
         return spec

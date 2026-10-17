@@ -677,7 +677,7 @@ describe("Forever Druid", function()
         end)
 
         it("opens not_behind for the rest of 5 s after a listed error, never for another", function()
-            w.ns.DruidNotBehindErrors[51] = true -- the type checkpoint Q11 records
+            w.spec.notBehindErrors[51] = true -- the type checkpoint Q11 records
             w.game.now = 20
             w.events.UI_ERROR_MESSAGE("UI_ERROR_MESSAGE", 50, "Another error.")
             assert.is_nil(reset(21).durations.not_behind)
@@ -907,6 +907,9 @@ describe("Forever Druid in VirtualState's now context", function()
         ns.spendResources = fs.spend
         ns.ResourceRegenerates = function(k)
             return k == "energy" or k == "mana"
+        end
+        ns.ResourceIsPoints = function(k) -- Constants.lua's, for the one point resource here
+            return k == "combo_points"
         end
         ns.raceMods = { maxMods = {}, costMods = w.costMods } -- Clearcasting, as spec:RegisterCostMod appends it
         load.adapter(ns, h)

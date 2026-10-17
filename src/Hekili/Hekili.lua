@@ -59,7 +59,6 @@ ns.PTR = false
 Hekili.IsPTR = ns.PTR
 
 ns.Patrons = "|cFFFFD100Current Status|r\n\n"
-    .. "This Forever build currently registers only a load-only Warrior stub; class support arrives in later phases.\n\n"
     .. "If you find odd recommendations or other issues, please follow the |cFFFFD100Report Issue|r link below and submit all the necessary information to have your issue investigated.\n\n"
     .. "Please |cffff0000do not|r submit tickets for routine priority updates (i.e., from SimulationCraft). They are routinely updated."
 

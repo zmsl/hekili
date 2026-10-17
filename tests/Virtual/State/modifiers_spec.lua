@@ -37,6 +37,9 @@ describe("resource modifiers", function()
         ns.ResourceRegenerates = function()
             return false
         end
+        ns.ResourceIsPoints = function(k) -- Constants.lua's, for the one point resource here
+            return k == "combo_points"
+        end
         h.Class.auras.eureka = { key = "eureka", id = EUREKA, duration = 15 }
         -- the Gnome race pack's declarations (Forever/Races/Gnome.lua through Engine/Races.lua), as Adapter.lua reads them
         ns.raceMods = {

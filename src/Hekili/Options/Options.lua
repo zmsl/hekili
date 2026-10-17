@@ -5031,7 +5031,7 @@ found = true end
                                 forecastWindow = {
                                     type = "range",
                                     name = "Forecast window (s)",
-                                    desc = "How far ahead the recommendations look for the next affordable action. A rage class can wait longer for its resource than an energy class; raise it if the queue sits empty while rage builds.",
+                                    desc = "How far ahead the recommendations look for the next affordable action. A resource paid by swings can take longer to arrive than one that regenerates steadily; raise it if the queue sits empty while that resource builds.",
                                     min = 5,
                                     max = 30,
                                     step = 1,
@@ -5048,9 +5048,9 @@ found = true end
                                         return
                                             "\nThis setting determines how far ahead the Primary and AOE recommendations look for the next affordable action, " ..
                                             "and how far the resource forecast runs.\n\n" ..
-                                            "|cFFFFD100• Higher values|r let a rage class show its next action while rage is still building, so the queue " ..
+                                            "|cFFFFD100• Higher values|r show the next action while a resource paid by swings is still building, so the queue " ..
                                             "|cFF00FF00stays filled at the pull|r, at a small cost per recommendation that grows with the window.\n" ..
-                                            "|cFFFFD100• Lower values|r |cFF00FF00cost less|r and suit energy and mana classes, whose resource arrives steadily.\n\n" ..
+                                            "|cFFFFD100• Lower values|r |cFF00FF00cost less|r and suit a resource that regenerates steadily.\n\n" ..
 
                                             "The other displays (Cooldowns, Defensives, Interrupts) keep their own |cFFFFD100Forecast Period|r in their display settings.\n\n" ..
 

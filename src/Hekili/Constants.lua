@@ -102,6 +102,21 @@ function ns.ResourceRegenerates( key )
     return false
 end
 
+-- Forever: point resources (a count, not a pool), which a percentage maximum modifier does not scale (Adapter.lua).
+local points = {
+    combo_points = 1,
+    runes = 1,
+    soul_shards = 1,
+    holy_power = 1,
+    chi = 1,
+    arcane_charges = 1,
+    essence = 1
+}
+
+function ns.ResourceIsPoints( key )
+    return points[ key ] ~= nil
+end
+
 -- Primary purpose of this table is to store information we know about a spec, but is not directly retrieveable via API calls in-game.
 ns.Specializations = {
     [102] = {

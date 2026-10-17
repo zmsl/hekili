@@ -139,17 +139,6 @@ local function takenEntry(key, powerType)
     return e
 end
 
--- Point resources (a count, not a pool): a percentage maximum modifier does not apply to them.
-local POINTS = {
-    combo_points = true,
-    runes = true,
-    soul_shards = true,
-    holy_power = true,
-    chi = true,
-    arcane_charges = true,
-    essence = true,
-}
-
 -- The spell IDs of a registration: its `id`, then its `copy` IDs (rank order), positive numbers only.
 local function idsOf(obj)
     local ids = {}
@@ -244,10 +233,10 @@ local function buildDef()
         insert(def.resources, d)
         slotByKey[k] = #def.resources
         -- the race pack's resource and cost modifiers (Engine/Races.lua, event-facade spec §12b): every resource of the class,
-        -- but a maximum modifier never scales a point resource (combo points, runes, ...)
+        -- but a maximum modifier never scales a point resource (ns.ResourceIsPoints, Constants.lua)
         local race = ns.raceMods
         if race then
-            d.maxMods, d.costMods = not POINTS[k] and race.maxMods or nil, race.costMods
+            d.maxMods, d.costMods = not ns.ResourceIsPoints(k) and race.maxMods or nil, race.costMods
         end
     end
     for _, k in ipairs(sortedKeys(class.abilities)) do
