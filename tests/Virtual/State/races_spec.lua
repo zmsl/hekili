@@ -1,39 +1,9 @@
--- tests/Virtual/State/races_spec.lua (event-facade spec §12b): race packs. Engine/Races.lua's `Hekili:NewRace` and every race
--- file Hekili.toc lists (Forever/Races/*.lua), loaded headless against a stand-in for Hekili: inert for another race,
--- registered for its own, over `all`'s stale entries; and the simulation's half of the cost modifier on abilities
--- built as RegisterAbility builds them.
+-- tests/Virtual/State/races_spec.lua (event-facade spec §12b): Engine/Races.lua's rules with a fake race defined here,
+-- headless against a stand-in for Hekili: `Hekili:NewRace` is inert for another race and registers into the shared
+-- `all` for its own (over `all`'s entry), ns.applyRace writes the race's keys over the class's, and the simulation's half
+-- of a cost modifier on abilities built as RegisterAbility builds them. The real race files: tests/Forever/races_spec.lua.
 
--- Every race file Hekili.toc lists, in its order, and the race token (UnitRace's second return) each answers to.
-local TOKEN = { Undead = "Scourge" } -- a file named otherwise than its token
-local RACES = {}
-for line in io.lines("src/Hekili/Hekili.toc") do
-    local file = line:match("^Forever\\Races\\(%w+)%.lua")
-    if file then
-        RACES[#RACES + 1] = { file = file, token = TOKEN[file] or file }
-    end
-end
-
--- Runs every race file, as Hekili.toc loads them.
-local function loadRaces(rns)
-    for _, r in ipairs(RACES) do
-        assert(loadfile("src/Hekili/Forever/Races/" .. r.file .. ".lua"))("Hekili", rns)
-    end
-end
-
--- By race file: the ability keys it registers for its own token, and its resource and cost modifiers' counts (for a
--- Warrior).
-local OWN = {
-    Gnome = { { "escape_artist", "eureka" }, 1, 1 },
-    NightElf = { { "elunes_light", "shadowmeld" }, 0, 0 },
-    Tauren = { { "war_stomp" }, 0, 0 },
-    Human = { { "perception", "will_to_survive" }, 0, 0 },
-    Dwarf = { { "stoneform" }, 0, 0 },
-    Orc = { { "blood_fury", "shatter_curse" }, 0, 0 },
-    Troll = { { "berserking", "rapid_regeneration" }, 0, 0 },
-    Undead = { { "cannibalize", "will_of_the_forsaken" }, 0, 0 },
-}
-
-describe("race packs", function()
+describe("Engine/Races.lua", function()
     local ns, hekili, state, all, saved
 
     -- Hekili's state.removeStack (State.lua:857-868), on the fake buff table.
@@ -47,7 +17,10 @@ describe("race packs", function()
         end
     end
 
-    local function load(token, seed, class)
+    -- Loads Engine/Races.lua for a player of race `token` with `all` already holding `seed`, then runs the fake race
+    -- "Fake": ability and aura `racial_a` (1001, `copy` 1002), +5% maximum resources, and `mod` (default: -10% on
+    -- spell 1011 while racial_a is up, 3 charges) as its cost modifier.
+    local function load(token, seed, mod)
         state = {
             race_token = token,
             buff = setmetatable({}, {
@@ -57,7 +30,7 @@ describe("race packs", function()
             }),
             removeStack = removeStack,
         }
-        all = { abilities = seed or {}, auras = {} } -- `seed`: what Engine/Spec.lua's `all` already registered
+        all = { abilities = seed or {}, auras = {} }
         -- as Engine/Spec.lua's RegisterAbility/RegisterAura: the entry under its key, its id and every `copy` alias
         local function register(t, key, def)
             t[key] = def
@@ -74,12 +47,15 @@ describe("race packs", function()
         function all:RegisterAura(key, def)
             register(self.auras, key, def)
         end
-        -- Engine/Spec.lua sets class.file before any race file runs
-        hekili = { State = state, Class = { specs = { [0] = all }, abilities = {}, file = class or "WARRIOR" } }
+        hekili = { State = state, Class = { specs = { [0] = all }, abilities = {}, file = "CLASS_A" } }
         _G.Hekili = hekili
         ns = {}
         assert(loadfile("src/Hekili/Engine/Races.lua"))("Hekili", ns)
-        loadRaces(ns)
+        local race = hekili:NewRace("Fake")
+        race:RegisterAbility("racial_a", { id = 1001, copy = { 1002 }, cooldown = 120 })
+        race:RegisterAura("racial_a", { id = 1001, copy = { 1002 }, duration = 15, max_stack = 3 })
+        race:RegisterResourceMod({ max = 0.05 })
+        race:RegisterCostMod(mod or { aura = "racial_a", pct = -0.10, charges = 3, spells = { 1011 } })
     end
 
     -- An ability as Engine/Spec.lua's RegisterAbility builds it: function fields in `funcs`, called on access, wrapped.
@@ -113,23 +89,23 @@ describe("race packs", function()
     end)
 
     it("is inert for another race: nothing registered, no modifier", function()
-        load("BloodElf")
+        load("Other")
         assert.are.same({}, all.abilities)
         assert.are.same({}, all.auras)
         assert.are.same({ maxMods = {}, costMods = {} }, ns.raceMods)
+        assert.are.equal(ns.raceMods, hekili.RaceMods) -- the table read in game
     end)
 
     it(
-        "registers Eureka!, its aura and both modifiers for a Gnome, into the shared spec (the race wins a clash)",
+        "registers its abilities, auras and modifiers into the shared spec for its race (the race wins a clash)",
         function()
             local stock = { id = 1 }
-            load("Gnome", { eureka = stock, [1] = stock }) -- a stock `all` registration under the same key
-            assert.are.equal(1259813, all.abilities.eureka.id) -- the race file loads later and wins
-            assert.are.equal(all.abilities.eureka, all.abilities[1259817]) -- a `copy` alias
-            assert.are.equal(3, all.auras.eureka.max_stack)
-            assert.is_function(all.abilities.eureka.now)
+            load("Fake", { racial_a = stock, [1] = stock })
+            assert.are.equal(1001, all.abilities.racial_a.id)
+            assert.are.equal(all.abilities.racial_a, all.abilities[1002]) -- a `copy` alias
+            assert.are.equal(3, all.auras.racial_a.max_stack)
             assert.are.same({ { pct = 0.05 } }, ns.raceMods.maxMods)
-            assert.are.same({ "eureka", -0.10, 3, 18 }, {
+            assert.are.same({ "racial_a", -0.10, 3, 1 }, {
                 ns.raceMods.costMods[1].aura,
                 ns.raceMods.costMods[1].pct,
                 ns.raceMods.costMods[1].charges,
@@ -139,378 +115,90 @@ describe("race packs", function()
     )
 
     it("writes the race's abilities and auras over the class's after Engine/Spec.lua's merge, aliases too", function()
-        load("Gnome")
+        load("Fake")
         local own = { id = 2 }
-        local class = { abilities = { eureka = own, [1259812] = own, [1] = own }, auras = { eureka = { id = 2 } } }
+        local class = { abilities = { racial_a = own, [1002] = own, [1] = own }, auras = { racial_a = { id = 2 } } }
         ns.applyRace(class)
-        assert.are.same({ 1259813, 1259813 }, { class.abilities.eureka.id, class.auras.eureka.id })
-        local race = class.abilities.eureka -- every key the race registered, its id and `copy` aliases, wins too
-        assert.are.same({ race, race, race, own }, {
-            class.abilities[1259813],
-            class.abilities[1259812],
-            class.abilities[1259823],
-            class.abilities[1],
-        })
-        assert.are.equal(class.auras.eureka, class.auras[1259817])
-        load("BloodElf")
-        class = { abilities = { eureka = { id = 2 } }, auras = {} }
+        assert.are.same({ 1001, 1001 }, { class.abilities.racial_a.id, class.auras.racial_a.id })
+        local race = class.abilities.racial_a -- every key the race registered, its id and `copy` aliases, wins too
+        assert.are.same({ race, race, own }, { class.abilities[1001], class.abilities[1002], class.abilities[1] })
+        assert.are.equal(class.auras.racial_a, class.auras[1002])
+        load("Other")
+        class = { abilities = { racial_a = { id = 2 } }, auras = {} }
         ns.applyRace(class)
-        assert.are.equal(2, class.abilities.eureka.id) -- inert for another race
+        assert.are.equal(2, class.abilities.racial_a.id) -- inert for another race
     end)
 
-    it("covers every ability without `spells`, and spends a charge on a cast made free (pct = -1)", function()
-        load("Gnome")
-        ns.raceMods.costMods[1] = { aura = "eureka", pct = -1, charges = 1 }
-        local rend = ability("rend", { id = 772, spend = 10, spendType = "rage" })
-        state.buff.eureka = { up = true, count = 1 }
-        assert.are.equal(0, rend.spend)
-        ns.costMods.Spend(rend.baseSpend, "rend") -- ns.spendResources passes the declared cost
-        assert.is_false(state.buff.eureka.up)
-        assert.are.equal(10, rend.spend)
+    it("prices a listed spell (by id or a `copy` rank) through the modifier while its aura is up", function()
+        load("Fake")
+        local a = ability("spender_a", { id = 1011, spend = 15, spendType = "resource_a" })
+        local b = ability("spender_b", { id = 1012, spend = 10, spendType = "resource_a" })
+        local c = ability("spender_c", {
+            id = 1013,
+            copy = { 1011 },
+            spend = function()
+                return 20, "resource_a"
+            end,
+        })
+        assert.are.equal(15, a.spend)
+        state.buff.racial_a = { up = true, count = 3 }
+        assert.are.same({ 13.5, 10, 18 }, { a.spend, b.spend, c.spend }) -- c by a copy rank
+        assert.are.equal(15, a.baseSpend) -- the belief reads the declared cost
+        ns.costMods.Spend(b.baseSpend, "spender_b") -- out of scope: no charge
+        assert.are.equal(3, state.buff.racial_a.count)
+        for k = 1, 3 do
+            ns.costMods.Spend(a.baseSpend, "spender_a") -- ns.spendResources' call
+            if k < 3 then
+                assert.are.equal(3 - k, state.buff.racial_a.count)
+            end
+        end
+        assert.is_false(state.buff.racial_a.up)
+        assert.are.equal(15, a.spend)
     end)
 
     it("applies pct to a fraction-of-maximum cost", function()
-        load("Gnome")
-        local strike = ability("heroic_strike", { id = 78, spend = 0.2, spendType = "rage" })
-        state.buff.eureka = { up = true, count = 3 }
-        assert.is_true(math.abs(strike.spend - 0.18) < 1e-9)
+        load("Fake")
+        local a = ability("spender_a", { id = 1011, spend = 0.2, spendType = "resource_a" })
+        state.buff.racial_a = { up = true, count = 3 }
+        assert.is_true(math.abs(a.spend - 0.18) < 1e-9)
     end)
 
-    it(
-        "prices Heroic Strike at 13.5 with Eureka! up in the simulation, three casts remove it; Rend stays 10",
-        function()
-            load("Gnome")
-            local heroic_strike =
-                ability("heroic_strike", { id = 78, copy = { 284, 285 }, spend = 15, spendType = "rage" })
-            local rend = ability("rend", { id = 772, spend = 10, spendType = "rage" })
-            local cleave = ability("cleave", {
-                id = 99999,
-                copy = { 845 },
-                spend = function()
-                    return 20, "rage"
-                end,
-            })
-            assert.are.equal(15, heroic_strike.spend)
-            state.buff.eureka = { up = true, count = 3 }
-            assert.are.same({ 13.5, 10, 18 }, { heroic_strike.spend, rend.spend, cleave.spend }) -- cleave by a copy rank
-            assert.are.equal(15, heroic_strike.baseSpend) -- the belief reads the declared cost
-            ns.costMods.Spend(rend.baseSpend, "rend") -- out of scope: no charge
-            assert.are.equal(3, state.buff.eureka.count)
-            for k = 1, 3 do
-                ns.costMods.Spend(heroic_strike.baseSpend, "heroic_strike") -- ns.spendResources' call
-                if k < 3 then
-                    assert.are.equal(3 - k, state.buff.eureka.count)
-                end
-            end
-            assert.is_false(state.buff.eureka.up)
-            assert.are.equal(15, heroic_strike.spend)
-        end
-    )
-
-    it("registers Elune's Light and its aura for a Night Elf, War Stomp for a Tauren, and neither elsewhere", function()
-        load("NightElf")
-        local light = all.abilities.elunes_light
-        assert.are.same(
-            { 1259799, 0, 180, "off", "cooldowns" },
-            { light.id, light.cast, light.cooldown, light.gcd, light.toggle }
-        )
-        assert.are.same({ 1259799, 15 }, { all.auras.elunes_light.id, all.auras.elunes_light.duration })
-        assert.is_nil(all.abilities.war_stomp)
-        assert.are.same({ maxMods = {}, costMods = {} }, ns.raceMods) -- no resource or cost modifier
-        load("Tauren")
-        local stomp = all.abilities.war_stomp
-        assert.are.same({ 20549, 0.5, 120, "off" }, { stomp.id, stomp.cast, stomp.cooldown, stomp.gcd })
-        assert.are.same({ 20549, 2 }, { all.auras.war_stomp.id, all.auras.war_stomp.duration })
-        assert.is_nil(all.abilities.elunes_light)
-        for _, a in ipairs({ light, stomp }) do
-            assert.is_function(a.now)
-            assert.are_not.equal(a.handler, a.now) -- two closures: one shared would be refused
-        end
-        load("Gnome")
-        assert.is_not_nil(all.abilities.eureka)
-        assert.is_nil(all.abilities.elunes_light or all.abilities.war_stomp)
+    it("covers every ability without `spells`, and spends a charge on a cast made free (pct = -1)", function()
+        load("Fake", nil, { aura = "racial_a", pct = -1, charges = 1 })
+        local a = ability("spender_b", { id = 1012, spend = 10, spendType = "resource_a" })
+        state.buff.racial_a = { up = true, count = 1 }
+        assert.are.equal(0, a.spend)
+        ns.costMods.Spend(a.baseSpend, "spender_b") -- ns.spendResources passes the declared cost
+        assert.is_false(state.buff.racial_a.up)
+        assert.are.equal(10, a.spend)
     end)
 
-    it(
-        "lists Hekili.toc's race files after the class files, each registering only its own keys and modifiers",
-        function()
-            local n, lastClass, firstRace = 0, 0, math.huge
-            for line in io.lines("src/Hekili/Hekili.toc") do
-                n = n + 1
-                if line:match("^Forever\\Classes\\") then
-                    lastClass = n
-                elseif line:match("^Forever\\Races\\") then
-                    firstRace = math.min(firstRace, n)
-                end
-            end
-            assert.is_true(lastClass < firstRace)
-            local files, want = {}, {}
-            for _, r in ipairs(RACES) do
-                files[#files + 1] = r.file
-                load(r.token)
-                local keys = {}
-                for k in pairs(all.abilities) do
-                    if type(k) == "string" then
-                        keys[#keys + 1] = k
-                    end
-                end
-                table.sort(keys)
-                local own = OWN[r.file] or {}
-                local mods = hekili.RaceMods -- the table read in game (Engine/Races.lua)
-                assert.are.same(own, { keys, #mods.maxMods, #mods.costMods }, r.file)
-            end
-            for file in pairs(OWN) do
-                want[#want + 1] = file
-            end
-            table.sort(files)
-            table.sort(want)
-            assert.are.same(want, files) -- every race file is in Hekili.toc
-        end
-    )
-
-    it(
-        "scopes Eureka! by the loaded class: 18 Warrior, 10 Rogue, 16 Mage, 13 Warlock, 16 Priest, none for a Druid",
-        function()
-            for class, n in pairs({ WARRIOR = 18, ROGUE = 10, MAGE = 16, WARLOCK = 13, PRIEST = 16 }) do
-                load("Gnome", nil, class)
-                assert.are.same({ 1, n }, { #ns.raceMods.costMods, #ns.raceMods.costMods[1].spells }, class)
-            end
-            load("Gnome", nil, "MAGE")
-            local blast = ability("arcane_blast", { id = 400574, spend = 0.15, spendType = "mana" })
-            state.buff.eureka = { up = true, count = 3 }
-            assert.is_true(math.abs(blast.spend - 0.135) < 1e-9) -- a percent cost (ManaCost 0 in SpellPower) is in scope
-            load("Gnome", nil, "DRUID")
-            assert.are.same({ 1, 0 }, { #ns.raceMods.maxMods, #ns.raceMods.costMods })
-        end
-    )
-
-    it("registers Escape Artist on the GCD, and Shadowmeld 20580 over `all`'s stale 58984", function()
-        load("Gnome")
-        local ea = all.abilities.escape_artist
-        assert.are.same({ 20589, 120, "spell", "defensives" }, { ea.id, ea.cooldown, ea.gcd, ea.toggle })
-        assert.are.same({ 20589, 3 }, { all.auras.escape_artist.id, all.auras.escape_artist.duration })
-        local stock = { id = 58984, cooldown = 120 }
-        load("NightElf", { shadowmeld = stock, [58984] = stock })
-        local meld = all.abilities.shadowmeld
-        assert.are.same({ 20580, 10, "off" }, { meld.id, meld.cooldown, meld.gcd })
-        assert.is_function(meld.usable) -- `all`'s boss-or-group and not-moving gate, kept
-        assert.are.same({ 20580, 3600 }, { all.auras.shadowmeld.id, all.auras.shadowmeld.duration })
-        local class = { abilities = { shadowmeld = stock }, auras = { shadowmeld = { id = 58984 } } }
-        ns.applyRace(class)
-        assert.are.same({ 20580, 20580 }, { class.abilities.shadowmeld.id, class.auras.shadowmeld.id })
-    end)
-
-    it(
-        "registers Will to Survive 1259718 and Stoneform 20594 (180 s, on the GCD) over `all`'s stale entries",
-        function()
-            local wts, stone = { id = 59752, gcd = "off" }, { id = 20594, cooldown = 120, gcd = "off" }
-            load("Human", { will_to_survive = wts, [59752] = wts })
-            local w = all.abilities.will_to_survive
-            assert.are.same({ 1259718, 180, "spell", "defensives" }, { w.id, w.cooldown, w.gcd, w.toggle })
-            assert.is_nil(w.handler or w.now) -- a stun removal: nothing to model beyond its cooldown and GCD
-            assert.are.same(
-                { 20600, 180, "spell" },
-                { all.abilities.perception.id, all.abilities.perception.cooldown, all.abilities.perception.gcd }
-            )
-            assert.are.same({ 20600, 20 }, { all.auras.perception.id, all.auras.perception.duration })
-            load("Dwarf", { stoneform = stone, [20594] = stone })
-            local s = all.abilities.stoneform
-            assert.are.same({ 20594, 180, "spell", "defensives" }, { s.id, s.cooldown, s.gcd, s.toggle })
-            assert.are.same({ 20594, 8 }, { all.auras.stoneform.id, all.auras.stoneform.duration }) -- not 65116
-            local class = { abilities = { stoneform = stone }, auras = { stoneform = { id = 65116 } } }
-            ns.applyRace(class)
-            assert.are.same({ 180, 20594 }, { class.abilities.stoneform.cooldown, class.auras.stoneform.id })
-        end
-    )
-
-    it("registers Blood Fury 20572 for every class and Berserking 20554 over `all`'s stale entries", function()
-        local fury = { id = function() end, copy = { 33702, 20572, 33697 } }
-        for _, class in ipairs({ "WARRIOR", "MAGE", "SHAMAN", "DRUID" }) do
-            load("Orc", { blood_fury = fury, [33702] = fury, [20572] = fury, [33697] = fury }, class)
-            local b = all.abilities.blood_fury
-            assert.are.same({ 20572, 120, "off", "cooldowns" }, { b.id, b.cooldown, b.gcd, b.toggle }, class)
-            assert.are.equal(b, all.abilities[20572])
-        end
-        assert.are.same({ 20572, 15 }, { all.auras.blood_fury.id, all.auras.blood_fury.duration })
-        local sc = all.abilities.shatter_curse
-        assert.are.same({ 1299026, 180, "spell", "defensives" }, { sc.id, sc.cooldown, sc.gcd, sc.toggle })
-        assert.are.same({ 1299026, 8 }, { all.auras.shatter_curse.id, all.auras.shatter_curse.duration })
-        local zerk = { id = 26297 }
-        load("Troll", { berserking = zerk, [26297] = zerk })
-        local z = all.abilities.berserking
-        assert.are.same({ 20554, 180, "off", "cooldowns" }, { z.id, z.cooldown, z.gcd, z.toggle })
-        assert.are.same({ 20554, 10 }, { all.auras.berserking.id, all.auras.berserking.duration })
-        local rr = all.abilities.rapid_regeneration
-        assert.are.same({ 1260270, 180, "off", "defensives" }, { rr.id, rr.cooldown, rr.gcd, rr.toggle })
-        assert.are.same({ true, 6, true }, { rr.channeled, rr.cast, rr.fixedCast }) -- a 6 s self-channel (DB2)
-        assert.are.same({ 1260270, 6 }, { all.auras.rapid_regeneration.id, all.auras.rapid_regeneration.duration })
-        local class = { abilities = { berserking = zerk }, auras = { berserking = { id = 26297 } } }
-        ns.applyRace(class)
-        assert.are.same({ 20554, 20554 }, { class.abilities.berserking.id, class.auras.berserking.id })
-    end)
-
-    it("registers Will of the Forsaken and Cannibalize for the Scourge token, not for `Undead`", function()
-        load("Undead")
-        assert.is_nil(all.abilities.cannibalize)
-        load("Scourge")
-        local w, c = all.abilities.will_of_the_forsaken, all.abilities.cannibalize
-        assert.are.same({ 7744, 120, "spell", "defensives" }, { w.id, w.cooldown, w.gcd, w.toggle })
-        assert.is_nil(w.handler or w.now) -- nothing to model beyond its cooldown and GCD
-        assert.are.same({ 20577, 120, "spell", "defensives" }, { c.id, c.cooldown, c.gcd, c.toggle })
-        assert.are.same({ true, 10, true }, { c.channeled, c.cast, c.fixedCast }) -- 20578's 10 s self-channel (DB2)
-        assert.are.same({ 20578, 10 }, { all.auras.cannibalize.id, all.auras.cannibalize.duration }) -- the heal's aura
+    it("ignores a listed spell the class does not register, and a key it does not know", function()
+        load("Fake")
+        local a = ability("spender_b", { id = 1012, spend = 10 })
+        state.buff.racial_a = { up = true, count = 3 }
+        assert.has_no.errors(function()
+            ns.costMods.Spend(a.baseSpend, "spender_b")
+            ns.costMods.Spend(5, "not_an_ability")
+        end)
+        assert.are.equal(10, a.spend)
+        assert.are.equal(3, state.buff.racial_a.count)
     end)
 
     it("takes a class file's spec:RegisterCostMod (Engine/Spec.lua) into the same list, for any race", function()
-        load("Human")
+        load("Other")
         -- the mixin's entry as Engine/Spec.lua declares it, compiled with this `ns` as its upvalue
         local src = assert(io.open("src/Hekili/Engine/Spec.lua")):read("*a")
         local entry = assert(src:match("\n(    RegisterCostMod = function%( self, def %).-\n    end,)\n"))
         local mixin = assert(loadstring("local ns = ...\nreturn {\n" .. entry .. "\n}"))(ns)
-        local def = { aura = "clearcasting", pct = -1, charges = 1, spells = { 5221 } }
+        local def = { aura = "proc_a", pct = -1, charges = 1, spells = { 1021 } }
         mixin:RegisterCostMod(def)
         assert.are.equal(def, ns.raceMods.costMods[1]) -- the list Adapter.lua forwards to the belief
-        local shred = ability("shred", { id = 5221, copy = { 6800 }, spend = 60, spendType = "energy" })
-        local claw = ability("claw", { id = 1082, spend = 45, spendType = "energy" })
-        state.buff.clearcasting = { up = true, count = 1 }
-        assert.are.same({ 0, 45 }, { shred.spend, claw.spend })
-        ns.costMods.Spend(shred.baseSpend, "shred")
-        assert.is_false(state.buff.clearcasting.up)
+        local a = ability("spender_a", { id = 1021, copy = { 1022 }, spend = 60, spendType = "resource_b" })
+        local b = ability("spender_b", { id = 1023, spend = 45, spendType = "resource_b" })
+        state.buff.proc_a = { up = true, count = 1 }
+        assert.are.same({ 0, 45 }, { a.spend, b.spend })
+        ns.costMods.Spend(a.baseSpend, "spender_a")
+        assert.is_false(state.buff.proc_a.up)
     end)
-
-    it("ignores a listed spell the class does not register", function()
-        load("Gnome")
-        local shout = ability("battle_shout", { id = 6673, spend = 10 })
-        state.buff.eureka = { up = true, count = 3 }
-        assert.has_no.errors(function()
-            ns.costMods.Spend(shout.baseSpend, "battle_shout")
-            ns.costMods.Spend(5, "not_an_ability")
-        end)
-        assert.are.equal(10, shout.spend)
-        assert.are.equal(3, state.buff.eureka.count)
-    end)
-end)
-
--- The race packs' `now` handlers as VirtualState runs them: bound to Families/Now.lua's context, on our own casts.
-describe("race packs in VirtualState's now context", function()
-    local vload = require("Virtual.State.helpers.load")
-    local fake = require("Virtual.State.helpers.fake_api")
-    local fs = require("Virtual.State.helpers.fake_spec")
-    local alloc = require("Virtual.State.helpers.alloc")
-    local saved
-
-    before_each(function()
-        saved = {}
-        for _, k in ipairs({ "Hekili", "GetTime", "UnitGUID", "CreateFrame", "issecretvalue", "debugprofilestop" }) do
-            saved[k] = rawget(_G, k) or false
-        end
-    end)
-
-    after_each(function()
-        for k, v in pairs(saved) do
-            _G[k] = v or nil
-        end
-        fs.clock = nil
-    end)
-
-    -- What the race files register into `all` for the player's race `token` (Engine/Races.lua against a stand-in Hekili).
-    local function registrations(token)
-        local all = { abilities = {}, auras = {} }
-        function all:RegisterAbility(key, def)
-            self.abilities[key] = def
-        end
-        function all:RegisterAura(key, def)
-            self.auras[key] = def
-        end
-        _G.Hekili = { State = { race_token = token }, Class = { specs = { [0] = all }, file = "WARRIOR" } }
-        local rns = {}
-        assert(loadfile("src/Hekili/Engine/Races.lua"))("Hekili", rns)
-        loadRaces(rns)
-        return all
-    end
-
-    -- One cast of race ability `key` (its aura: the same key) in a fresh VirtualState: 0 errors, 1 run, the aura believed
-    -- up; then 1000 more allocate nothing.
-    local function cast(all, key)
-        local a, aura = all.abilities[key], all.auras[key]
-        local api, ctl = fake.new()
-        ctl.now = 1
-        _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue =
-            api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
-        _G.debugprofilestop = function()
-            return 0
-        end
-        local ns = vload.module()
-        local VS, I = ns.VirtualState, ns.VirtualStateInternal
-        local h = fs.new(9)
-        h.Class.abilities[key] = {
-            key = key,
-            id = a.id,
-            copy = a.copy,
-            cast = 0,
-            cooldown = a.cooldown,
-            gcd = a.gcd,
-            charges = 1,
-            recharge = 0,
-            funcs = { now = a.now, handler = a.handler },
-        }
-        h.Class.auras[key] =
-            { key = key, id = aura.id, copy = aura.copy, duration = aura.duration, max_stack = aura.max_stack }
-        fs.clock = api.GetTime
-        ns.spendResources = fs.spend
-        ns.ResourceRegenerates = function()
-            return false
-        end
-        vload.adapter(ns, h)
-        VS.Start(api)
-        VS.SpecChanged()
-        ctl.Tick(1)
-        ctl.now = 5
-        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", a.id)
-        ctl.Tick(5.01)
-        VS.Drain(5.02)
-        assert.are.same({ 0, 1 }, { I.nowErrors, I.nowRuns }, key .. ": " .. tostring(I.nowError))
-        assert.is_not_nil(VS.Aura("player", aura.id, 5.1) or VS.Aura("target", aura.id, 5.1), key)
-        function h:ForceUpdate() end -- the fake records each call; Hekili's own only sets fields
-        local t = 5
-        assert.are.equal(
-            0,
-            alloc.bytes(function() -- the same cast again, each past the cooldown
-                t = t + 200
-                ctl.now = t
-                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", a.id)
-                ctl.Tick(t + 0.01)
-                VS.Drain(t + 0.02)
-            end, 1000),
-            key
-        )
-    end
-
-    it(
-        "gives every channelled racial a `start` and no `handler` (Hekili's simulation runs a channel's `start`)",
-        function()
-            for _, r in ipairs(RACES) do
-                for key, a in pairs(registrations(r.token).abilities) do
-                    if a.channeled then
-                        assert.is_function(a.start, key)
-                        assert.is_nil(a.handler, key)
-                    end
-                end
-            end
-        end
-    )
-
-    for _, r in ipairs(RACES) do
-        it("runs every `now` the " .. r.token .. " registers in the context without an error", function()
-            local all, n = registrations(r.token), 0
-            for key, a in pairs(all.abilities) do
-                if a.now then
-                    assert.are_not.equal(a.handler, a.now, key) -- two closures: one shared would be refused
-                    cast(all, key)
-                    n = n + 1
-                end
-            end
-            assert.is_true(n > 0)
-        end)
-    end
 end)
