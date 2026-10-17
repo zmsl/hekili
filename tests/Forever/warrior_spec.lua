@@ -642,15 +642,11 @@ describe("Forever Warrior", function()
 
     it("keeps its priorities in tools/packs/warrior.lua, tools/make_pack.lua's default class", function()
         local def = dofile("tools/packs/warrior.lua")
-        local names = {}
-        for i, p in ipairs(def.packs) do
-            names[i] = p.name
-        end
-        assert.are.same({ 20261016, 1491, { "Arms", "Fury", "Protection" } }, { def.date, def.spec, names })
+        assert.are.same({ 20261017, 1491, { "Arms", "Fury", "Protection" } }, { def.date, def.spec, def.packs })
         local byName = assert(loadfile("tools/make_pack.lua"))("lists", "warrior")
         local byDefault = assert(loadfile("tools/make_pack.lua"))("lists")
         assert.are.same(byDefault, byName)
-        assert.are.equal(def.packs[1].simc, byName[1].simc)
+        assert.are.equal("Arms", byName[1].name)
     end)
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
@@ -720,7 +716,7 @@ describe("Forever Warrior", function()
                     end
                 end
             end
-            local d = dofile("tools/packs/warrior.lua").packs[3].desc
+            local d = prot.desc
             assert.is_nil(d:find("provisional"))
             assert.are.same({ 50, 40, 3 }, {
                 w.settings.prot_heroic_strike_rage.default,

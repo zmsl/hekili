@@ -5,7 +5,7 @@ BUSTED := $(LUA_ENV)/bin/busted
 LUACHECK := $(LUA_ENV)/bin/luacheck
 LUAC := $(LUA_ENV)/bin/luac
 
-.PHONY: bootstrap lint fmt fmt-check typecheck test test-fast test-loop test-party test-druid syntax api-check check
+.PHONY: bootstrap lint fmt fmt-check typecheck test test-fast test-loop test-party test-druid syntax api-check check packs
 
 bootstrap:
 	scripts/bootstrap.sh
@@ -49,3 +49,7 @@ api-check:
 	git diff --exit-code tools/api_inventory.txt
 
 check: lint fmt-check typecheck test syntax api-check
+
+# Rewrites each class file's RegisterPack blocks from tools/packs/ (tools/make_pack.lua write); not part of `check`.
+packs:
+	for f in tools/packs/*.lua; do lua5.1 tools/make_pack.lua write $$(basename $$f .lua) || exit 1; done

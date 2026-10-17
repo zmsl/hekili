@@ -1,0 +1,16 @@
+# Forever Balance Druid (provisional: mana is never readable and Eclipse's charge rule is unconfirmed): Moonkin
+# Form, Moonfire and Insect Swarm kept up, Starfire on Eclipse charges, Wrath to fill, Hurricane on many targets.
+
+actions.precombat=moonkin_form,if=settings.moonkin&!buff.moonkin_form.up
+actions.precombat+=/mark_of_the_wild,if=settings.buffs&!buff.mark_of_the_wild.up&!buff.gift_of_the_wild.up
+actions.precombat+=/thorns,if=settings.buffs&!buff.thorns.up
+actions=innervate,if=settings.innervate&mana.current<action.starfire.cost*2
+actions+=/use_items
+actions+=/call_action_list,name=aoe,if=settings.hurricane_targets>0&active_enemies>=settings.hurricane_targets
+actions+=/moonfire,if=!debuff.moonfire.up&(boss|settings.trash_dots)
+actions+=/insect_swarm,if=!debuff.insect_swarm.up&boss
+actions+=/starfire,if=!moving&buff.eclipse.stack>=1
+actions+=/starfire,if=!moving&settings.starfire_filler
+actions+=/wrath,if=!moving
+actions.aoe=moonfire,if=!debuff.moonfire.up
+actions.aoe+=/hurricane,if=!moving

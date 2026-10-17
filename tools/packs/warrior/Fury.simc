@@ -1,0 +1,34 @@
+# Forever Fury Warrior, ported from Hekili's Classic Fury priority.
+
+# The first seven lines (precombat and the default list) are shared with Arms.simc: edit both.
+# Forever changes to Classic's head: the execute phase is the plain usability read (`execute_phase`), the
+# target's health being secret; `cooldowns` is defined (Classic called it undefined) and called on bosses and
+# on targets 3 levels above (Classic: target.level>=63 at level 60).
+
+actions.precombat=battle_shout,if=!buff.battle_shout.up
+actions.precombat+=/charge,use_off_gcd=1
+actions=sunder_armor,if=settings.debuff_sunder_enabled&debuff.sunder_armor.stack<settings.debuff_sunder_max_stack&!debuff.expose_armor.up&target.level>=settings.debuff_sunder_min_level
+actions+=/demoralizing_shout,if=settings.debuff_demoshout_enabled&!debuff.demoralizing_shout.up
+actions+=/call_action_list,name=cooldowns,if=boss|target.level>=level+3
+actions+=/run_action_list,name=execute,if=execute_phase
+actions+=/run_action_list,name=rotation
+actions.cooldowns=death_wish
+actions.cooldowns+=/recklessness
+actions.execute=heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_42|settings.adaptive_queueing_enabled&should_hs)|(execute_phase&settings.execute_queueing_enabled))
+actions.execute+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(execute_phase&settings.execute_queueing_enabled))
+actions.execute+=/execute
+actions.rotation=victory_rush
+actions.rotation+=/intercept,use_off_gcd=1,if=buff.berserker_stance.up&action.intercept.in_range&!action.rend.in_range
+actions.rotation+=/heroic_strike,use_off_gcd=1,if=active_enemies=1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_42|settings.adaptive_queueing_enabled&should_hs)|(execute_phase&settings.execute_queueing_enabled))
+actions.rotation+=/cleave,use_off_gcd=1,if=active_enemies>1&((!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=rage.time_to_50|settings.adaptive_queueing_enabled&should_cleave)|(execute_phase&settings.execute_queueing_enabled))
+actions.rotation+=/overpower
+actions.rotation+=/whirlwind,if=active_enemies>=settings.ww_min_enemies
+actions.rotation+=/bloodthirst
+actions.rotation+=/whirlwind,if=!settings.adaptive_queueing_enabled&cooldown.bloodthirst.remains>=settings.ww_cd_diff|settings.adaptive_queueing_enabled&rage.time_to_55<cooldown.bloodthirst.remains&cooldown.bloodthirst.remains>=settings.ww_cd_diff
+actions.rotation+=/spearing_strike
+actions.rotation+=/slam,if=!talent.bloodthirst.enabled
+actions.rotation+=/rend,if=!debuff.rend.up&!talent.bloodthirst.enabled
+actions.rotation+=/hamstring,if=cooldown.bloodthirst.remains>=settings.hamstring_cd_diff&cooldown.whirlwind.remains>=settings.hamstring_cd_diff&rage.current>settings.hamstring_threshold
+actions.rotation+=/bloodrage,use_off_gcd=1,if=rage.current<90
+actions.rotation+=/battle_shout,if=!buff.battle_shout.up
+actions.rotation+=/berserker_stance,use_off_gcd=1,if=!buff.berserker_stance.up
