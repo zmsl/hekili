@@ -43,7 +43,7 @@ end
 function Hekili.Engine.Evaluate(pack, list, action, mod, results)
     state.reset("Primary", true)
 
-    local apack = rawget(Hekili.DB.profile.packs, pack)
+    local apack = rawget(Hekili.Engine.settings.packs, pack)
 
     -- Let's load variables, just in case.
     for name, alist in pairs(apack.lists) do

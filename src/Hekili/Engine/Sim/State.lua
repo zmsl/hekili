@@ -1000,7 +1000,7 @@ local function timeToInterrupt()
     local casting = state.debuff.casting
     if casting.down or casting.v2 == 1 then return 3600 end
     if casting.v3 == 1 then return 0 end
-    return max( 0, casting.remains - ( Hekili.DB.profile.toggles.interrupts.castRemainingThreshold or 0.25 ) )
+    return max( 0, casting.remains - ( Hekili.Engine.settings.toggles.interrupts.castRemainingThreshold or 0.25 ) )
 end
 state.timeToInterrupt = timeToInterrupt
 
@@ -1186,7 +1186,7 @@ do
         local now = state.now + state.offset
         -- Forever E9: the horizon is the global forecast window (Core.lua's delayMax), read here because a pass can
         -- shorten delayMax and the reset forecast would inherit that.
-        local timeout = Hekili.DB.profile.performance.forecastWindow or 15
+        local timeout = Hekili.Engine.settings.performance.forecastWindow or 15
 
         if state.class.file == "DEATHKNIGHT" and state.runes then
             -- Adjust timeout based on rune cooldowns and regen models for Frost DK
@@ -2641,10 +2641,10 @@ local mt_toggle = {
     __index = function( t, k )
         if not k then return end
 
-        local db = Hekili.DB
-        if not db then return end
+        local toggles = Hekili.Engine.settings.toggles
+        if not toggles then return end
 
-        local toggle = db.profile.toggles[ k ]
+        local toggle = toggles[ k ]
 
         if k == "cooldowns" and ( toggle.override and state.buff.bloodlust.up or toggle.infusion and state.buff.power_infusion.up ) then return true end
         if k == "essences" and toggle.override and state.toggle.cooldowns then return true end
@@ -2920,7 +2920,7 @@ do
             local ability = rawget( t, "key" ) and class.abilities[ t.key ] or class.abilities.null_cooldown
 
             local GetCooldown = GetUnpackedSpellCooldown
-            local profile = Hekili.DB.profile
+            local settings = Hekili.Engine.settings
             local id = ability.id
 
             if ability then
@@ -2942,10 +2942,10 @@ do
                 return id
             end
 
-            local noFeignCD = rawget( profile.specs, state.spec.id )
+            local noFeignCD = rawget( settings.specs, state.spec.id )
             noFeignCD = noFeignCD and noFeignCD.noFeignedCooldown
 
-            local raw = ( state.display ~= "Primary" and state.display ~= "AOE" ) or ( profile.toggles.cooldowns.value and profile.toggles.cooldowns.separate and noFeignCD )
+            local raw = ( state.display ~= "Primary" and state.display ~= "AOE" ) or ( settings.toggles.cooldowns.value and settings.toggles.cooldowns.separate and noFeignCD )
 
             if k:sub(1, 5) == "true_" then
                 k = k:sub(6)
@@ -6210,7 +6210,7 @@ do
             state.player.updated = false
         end
 
-        local p = Hekili.DB.profile
+        local p = Hekili.Engine.settings
 
         local display = dispName and p.displays[ dispName ]
         local spec = state.spec.id and p.specs[ state.spec.id ]
@@ -6827,14 +6827,14 @@ do
 
         spell = ability.key
 
-        local profile = Hekili.DB.profile
-        local spec = rawget( profile.specs, state.spec.id )
+        local settings = Hekili.Engine.settings
+        local spec = rawget( settings.specs, state.spec.id )
         if not spec then return true end
 
         local option = ability.item and spec.items[ spell ] or spec.abilities[ spell ]
 
         if ability.item and ability.toggle ~= "potions" then
-            local sp = rawget( profile.specs, state.spec.id )
+            local sp = rawget( settings.specs, state.spec.id )
             if sp and sp.disable_items then
                 return true, "preference - spec disables gear/items"
             end
@@ -6844,9 +6844,9 @@ do
             local toggle = option.toggle
             if not toggle or toggle == "default" then toggle = ability.toggle end
 
-            if ( toggle == "potion" or toggle == "essences" ) and profile.toggles[ toggle ].separate and not profile.toggles[ toggle ].value then toggle = "cooldowns" end
+            if ( toggle == "potion" or toggle == "essences" ) and settings.toggles[ toggle ].separate and not settings.toggles[ toggle ].value then toggle = "cooldowns" end
 
-            if toggle and toggle ~= "none" and ( not self.toggle[ toggle ] or ( profile.toggles[ toggle ].separate and state.filter ~= toggle ) ) then return true, format( "toggle %s", toggle ) end
+            if toggle and toggle ~= "none" and ( not self.toggle[ toggle ] or ( settings.toggles[ toggle ].separate and state.filter ~= toggle ) ) then return true, format( "toggle %s", toggle ) end
 
             if ability.id < -100 or ability.id > 0 or toggleSpells[ spell ] then
                 if state.filter ~= "none" and state.filter ~= toggle and not ability[ state.filter ] then return true, "display"
@@ -6902,20 +6902,20 @@ do
 
         if state.filter == "none" then return false end
 
-        local profile = Hekili.DB.profile
-        local spec = rawget( profile.specs, state.spec.id )
+        local settings = Hekili.Engine.settings
+        local spec = rawget( settings.specs, state.spec.id )
         if not spec then return true end
 
         local option = ability.item and spec.items[ spell ] or spec.abilities[ spell ]
         local toggle = option.toggle
         if not toggle or toggle == "default" then toggle = ability.toggle end
 
-        if ( toggle == "potion" or toggle == "essences" ) and profile.toggles[ toggle ].separate and not profile.toggles[ toggle ].value then toggle = "cooldowns" end
+        if ( toggle == "potion" or toggle == "essences" ) and settings.toggles[ toggle ].separate and not settings.toggles[ toggle ].value then toggle = "cooldowns" end
 
         if state.filter ~= "none" and state.filter ~= toggle and not ability[ state.filter ] then return true, "display" end
         if ability.item and not ability.bagItem and not state.equipped[ ability.item ] then return false, "not equipped" end
         if toggleSpell[ spell ] and toggle and toggle ~= "none" then
-            if not self.toggle[ toggle ] or ( profile.toggles[ toggle ].separate and state.filter ~= toggle and not spec.noFeignedCooldown ) then return true, format( "%s filtered", toggle ) end
+            if not self.toggle[ toggle ] or ( settings.toggles[ toggle ].separate and state.filter ~= toggle and not spec.noFeignedCooldown ) then return true, format( "%s filtered", toggle ) end
         end
 
         return false
@@ -6949,7 +6949,7 @@ do
             end
         end
 
-        local profile = Hekili.DB.profile
+        local settings = Hekili.Engine.settings
         local z -- scratch variable
 
         if self.rangefilter and UnitExists( "target" ) then
@@ -7260,8 +7260,8 @@ function state:IsReadyNow( action )
     if not a then return false end
 
     action = a.key
-    local profile = Hekili.DB.profile
-    local spec = rawget( profile.specs, state.spec.id )
+    local settings = Hekili.Engine.settings
+    local spec = rawget( settings.specs, state.spec.id )
     if not spec then return false end
 
     local option = spec.abilities[ action ]
@@ -7306,7 +7306,7 @@ function state:ClashOffset( action )
     if not a then return 0 end
     action = a.key
 
-    local spec = rawget( Hekili.DB.profile.specs, state.spec.id )
+    local spec = rawget( Hekili.Engine.settings.specs, state.spec.id )
     if not spec then return 0 end
 
     local option = spec.abilities[ action ]

@@ -45,6 +45,7 @@ Virtual\Events\Attackers.lua
 Virtual\API\Facade.lua
 
 Hekili.lua
+Engine\Settings.lua
 Engine\Sim\Utils.lua
 UI\Formatting.lua
 UI\MultilineEditor.lua
@@ -76,6 +77,7 @@ Engine\Sim\Targets.lua
 Options\DevTools.lua
 Options\ChatCommands.lua
 Options\Options.lua
+Options\Profile.lua
 Engine\Driver.lua
 Engine\WeakAuras.lua
 UI\UI.lua

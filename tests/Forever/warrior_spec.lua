@@ -816,14 +816,14 @@ describe("Forever Warrior", function()
     end)
     it("the forecast horizon follows the forecast window, its loop guard scaled to it (core edit E9)", function()
         local src = assert(io.open("src/Hekili/Engine/Sim/State.lua")):read("*a")
-        assert.is_truthy(src:find("local timeout = Hekili.DB.profile.performance.forecastWindow or 15\n", 1, true))
+        assert.is_truthy(src:find("local timeout = Hekili.Engine.settings.performance.forecastWindow or 15\n", 1, true))
         assert.is_truthy(src:find("local maxIter = ceil( 3 * timeout ) + 10", 1, true))
         assert.is_truthy(src:find("iter < maxIter ) do", 1, true))
         assert.is_nil(src:find("FORECAST_DURATION", 1, true))
         local core = assert(io.open("src/Hekili/Engine/Sim/Core.lua")):read("*a")
         assert.is_truthy(
             core:find(
-                "-- Forever E9:[^\n]*\n%s+local defaultMax = isMain and %( Hekili%.DB%.profile%.performance%.forecastWindow or 15 %)"
+                "-- Forever E9:[^\n]*\n%s+local defaultMax = isMain and %( Hekili%.Engine%.settings%.performance%.forecastWindow or 15 %)"
                     .. " or %( display%.forecastPeriod or 15 %)\n"
             )
         )

@@ -228,6 +228,7 @@ function Hekili:HandleFixCommand( args )
     local profile = DB.profile
     local defaults = DB.defaults
     profile.enabled = true
+    Hekili.Engine.Configure( profile )
 
     local fixType = args[2] and args[2]:lower()  -- Convert to lowercase
 
@@ -534,6 +535,7 @@ end
 function Hekili:HandleEnableDisableCommand( args )
     local enable = args[1] == "enable"
     self.DB.profile.enabled = enable
+    Hekili.Engine.Configure( self.DB.profile )
 
     for _, buttons in ipairs( ns.UI.Buttons ) do
         for _, button in ipairs( buttons ) do

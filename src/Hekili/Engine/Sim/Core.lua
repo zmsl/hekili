@@ -61,22 +61,7 @@ end
 -- OnInitialize()
 -- Addon has been loaded by the WoW client (1x).
 function Hekili:OnInitialize()
-    self.DB = LibStub( "AceDB-3.0" ):New( "HekiliDB", self:GetDefaults(), true )
-
-    self.Options = self:GetOptions()
-    self.Options.args.profiles = LibStub( "AceDBOptions-3.0" ):GetOptionsTable( self.DB )
-
-    -- Reimplement LibDualSpec; some folks want different layouts w/ specs of the same class.
-    local LDS = LibStub( "LibDualSpec-1.0" )
-    LDS:EnhanceDatabase( self.DB, "Hekili" )
-    LDS:EnhanceOptions( self.Options.args.profiles, self.DB )
-
-    self.DB.RegisterCallback( self, "OnProfileChanged", "TotalRefresh" )
-    self.DB.RegisterCallback( self, "OnProfileCopied", "TotalRefresh" )
-    self.DB.RegisterCallback( self, "OnProfileReset", "TotalRefresh" )
-
-    local AceConfig = LibStub( "AceConfig-3.0" )
-    AceConfig:RegisterOptionsTable( "Hekili", self.Options )
+    self:InitializeProfile() -- Options/Profile.lua: the AceDB profile, handed to the engine by Engine.Configure
 
     -- EmbedBlizOptions()
 
@@ -96,23 +81,7 @@ function Hekili:OnInitialize()
 end
 
 
-function Hekili:ReInitialize()
-    self:OverrideBinds()
-    self:RestoreDefaults()
-
-    checkImports()
-    self:RunOneTimeFixes()
-
-    self.PendingSpecializationChange = true
-
-    callHook( "onInitialize" )
-
-    if self.DB.profile.enabled == false and self.DB.profile.AutoDisabled then
-        self.DB.profile.AutoDisabled = nil
-        self.DB.profile.enabled = true
-        self:Enable()
-    end
-end
+-- Hekili:ReInitialize() moved to Options/Profile.lua (it writes the profile).
 
 
 function Hekili:OnEnable()
@@ -145,17 +114,7 @@ function Hekili:OnDisable()
 end
 
 
-function Hekili:Toggle()
-    self.DB.profile.enabled = not self.DB.profile.enabled
-
-    if self.DB.profile.enabled then
-        self:Enable()
-    else
-        self:Disable()
-    end
-
-    self:UpdateDisplayVisibility()
-end
+-- Hekili:Toggle() moved to Options/Profile.lua (it writes the profile).
 
 
 local z_PVP = {
@@ -614,7 +573,7 @@ local invalidActionWarnings = {}
 
 function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth, caller )
     local specID = state.spec.id
-    local spec = rawget( self.DB.profile.specs, specID )
+    local spec = rawget( Hekili.Engine.settings.specs, specID )
     local module = class.specs[ specID ]
 
     packName = packName or spec and spec.package
@@ -623,7 +582,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
     local pack
     if ( packName == "UseItems" ) then pack = class.itemPack
-    else pack = self.DB.profile.packs[ packName ] end
+    else pack = Hekili.Engine.settings.packs[ packName ] end
 
     local packInfo = scripts.PackInfo[ spec.package ]
     local list = pack.lists[ listName ]
@@ -1365,8 +1324,8 @@ function Hekili:GetNextPrediction( dispName, packName, slot )
     self:ResetSpellCaches()
     state:ResetVariables()
 
-    local display = rawget( self.DB.profile.displays, dispName )
-    local pack = rawget( self.DB.profile.packs, packName )
+    local display = rawget( Hekili.Engine.settings.displays, dispName )
+    local pack = rawget( Hekili.Engine.settings.packs, packName )
 
     if not pack then return end
 
@@ -1432,7 +1391,7 @@ local pvpZones = {
 
 
 function Hekili:GetDisplayByName( name )
-    return rawget( self.DB.profile.displays, name ) and name or nil
+    return rawget( Hekili.Engine.settings.displays, name ) and name or nil
 end
 
 
@@ -1471,18 +1430,18 @@ function Hekili.Update()
         return
     end
 
-    local profile = Hekili.DB.profile
+    local settings = Hekili.Engine.settings
 
     local specID = state.spec.id
     if not specID then return end
 
-    local spec = rawget( profile.specs, specID )
+    local spec = rawget( settings.specs, specID )
     if not spec then return end
 
     local packName = spec.package
     if not packName then return end
 
-    local pack = rawget( profile.packs, packName )
+    local pack = rawget( settings.packs, packName )
     if not pack then return end
 
     -- VirtualState: fold what was observed since the last cycle and apply our casts through the spec, after the guards
@@ -1509,7 +1468,7 @@ function Hekili.Update()
 
     for round = 1, 5 do
         local rule, fullReset, nextDisplay = unpack( displayRules[ dispName ] )
-        local display = rawget( profile.displays, dispName )
+        local display = rawget( settings.displays, dispName )
 
         fullReset = fullReset or state.offset > 0
 
@@ -1528,7 +1487,7 @@ function Hekili.Update()
         local wanted = Output.Wanted( dispName )
         local out = Output[ dispName ]
 
-        if wanted and rule( profile ) then
+        if wanted and rule( settings ) then
             -- Only the scratch set is written until Publish: every yield below leaves out.recs the last complete set.
             local Queue = Output.Begin( dispName )
             local numFilled = 0
@@ -1580,7 +1539,7 @@ function Hekili.Update()
                 local action, wait, depth
                 local isMain = ( dispName == "Primary" or dispName == "AOE" )
                 -- Forever E9: Primary and AOE use the global forecast window (Options, Performance); other displays their Forecast Period.
-                local defaultMax = isMain and ( Hekili.DB.profile.performance.forecastWindow or 15 ) or ( display.forecastPeriod or 15 )
+                local defaultMax = isMain and ( Hekili.Engine.settings.performance.forecastWindow or 15 ) or ( display.forecastPeriod or 15 )
 
                 if class.file == "DEATHKNIGHT" then
                     defaultMax = max( defaultMax, 0.01 + 20 * state.haste )
@@ -2030,7 +1989,7 @@ function Hekili.Update()
                             Hekili:Debug( resInfo )
                         end
                     else
-                        if i < 5 and not hasSnapped and profile.autoSnapshot and InCombatLockdown() and state.level >= 70 and ( dispName == "Primary" or dispName == "AOE" ) then
+                        if i < 5 and not hasSnapped and settings.autoSnapshot and InCombatLockdown() and state.level >= 70 and ( dispName == "Primary" or dispName == "AOE" ) then
                             Hekili:Print( "Unable to make recommendation for " .. dispName .. " #" .. i .. "; triggering auto-snapshot..." )
                             hasSnapped = dispName
                             -- Not published (stock did not either): the synchronous snapshot run that follows publishes.

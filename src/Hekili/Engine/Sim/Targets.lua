@@ -380,7 +380,7 @@ do
         if debugging then details = format( "Nameplates are %s.", showNPs and "enabled" or "disabled" ) end
 
         local spec = state.spec.id
-        spec = spec and rawget( Hekili.DB.profile.specs, spec )
+        spec = spec and rawget( Hekili.Engine.settings.specs, spec )
 
         local inRaid = IsInRaid()
         local inGroup = GetNumGroupMembers() > 0
@@ -651,7 +651,7 @@ end
 
 
 function ns.updateTarget( id, time, mine, spellID )
-    local spec = rawget( Hekili.DB.profile.specs, state.spec.id )
+    local spec = rawget( Hekili.Engine.settings.specs, state.spec.id )
     if not spec or not spec.damage then return end
 
     id, time, mine, spellID = ns.callHook( "filter_target", id, time, mine, spellID )
@@ -1075,14 +1075,14 @@ do
             special = nil
         end
 
-        if not special and not Hekili.DB.profile.enabled or not Hekili:IsValidSpec() then
+        if not special and not Hekili.Engine.settings.enabled or not Hekili:IsValidSpec() then
             return
         end
 
         Hekili:ExpireTTDs()
 
         local now = GetTime()
-        local spec = state.spec.id and rawget( Hekili.DB.profile.specs, state.spec.id )
+        local spec = state.spec.id and rawget( Hekili.Engine.settings.specs, state.spec.id )
         local grace = spec and spec.damageExpiration or 6
 
         for whom, when in pairs( targets ) do

@@ -8780,6 +8780,7 @@ function Hekili:SetOption( info, input, ... )
     if category == 'general' then
         -- We'll preset the option here; works for most options.
         profile[ option ] = input
+        Hekili.Engine.Configure( profile ) -- the engine copies its scalars (enabled)
 
         if option == 'enabled' then
             if input then
@@ -8805,6 +8806,7 @@ function Hekili:SetOption( info, input, ... )
 
     elseif category == "snapshots" then
         profile[ option ] = input
+        Hekili.Engine.Configure( profile ) -- the engine copies its scalars (autoSnapshot, screenshot)
     end
 
     if Rebuild then

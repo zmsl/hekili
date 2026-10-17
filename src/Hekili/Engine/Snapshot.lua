@@ -18,7 +18,7 @@ local insert, concat = table.insert, table.concat
 --- Runs one update with debugging on, so the displays' reports are saved; `isAuto` (the engine's own call) only when
 --- the profile's autoSnapshot is on.
 function Hekili.Engine.Snapshot( isAuto )
-    if isAuto and not Hekili.DB.profile.autoSnapshot then
+    if isAuto and not Hekili.Engine.settings.autoSnapshot then
         return
     end
 
@@ -395,7 +395,7 @@ function Hekili:SaveDebugSnapshot( dispName )
 
             local custom = ""
 
-            local pack = self.DB.profile.packs[ state.system.packName ]
+            local pack = Hekili.Engine.settings.packs[ state.system.packName ]
             if not pack.builtIn then
                 custom = format( " |cFFFFA700(*%s[%d])|r", state.spec.name, state.spec.id )
             end
@@ -428,7 +428,7 @@ function Hekili:SaveDebugSnapshot( dispName )
 
     -- Limit screenshot to once per login.
     if snapped then
-        if Hekili.DB.profile.screenshot and ( not hasScreenshotted or Hekili.ManualSnapshot ) then
+        if Hekili.Engine.settings.screenshot and ( not hasScreenshotted or Hekili.ManualSnapshot ) then
             Screenshot()
             hasScreenshotted = true
         end
@@ -493,10 +493,10 @@ function Hekili:GenerateProfile()
     end
 
     local toggles
-    for k, v in orderedPairs( self.DB.profile.toggles ) do
+    for k, v in orderedPairs( Hekili.Engine.settings.toggles ) do
         if type( v ) == "table" and rawget( v, "value" ) ~= nil then
-            if toggles then toggles = format( "%s\n    %s = %s %s", toggles, k, tostring( v.value ), ( v.separate and "[separate]" or ( k ~= "cooldowns" and v.override and self.DB.profile.toggles.cooldowns.value and "[overridden]" ) or "" ) )
-            else toggles = format( "%s = %s %s", k, tostring( v.value ), ( v.separate and "[separate]" or ( k ~= "cooldowns" and v.override and self.DB.profile.toggles.cooldowns.value and "[overridden]" ) or "" ) ) end
+            if toggles then toggles = format( "%s\n    %s = %s %s", toggles, k, tostring( v.value ), ( v.separate and "[separate]" or ( k ~= "cooldowns" and v.override and Hekili.Engine.settings.toggles.cooldowns.value and "[overridden]" ) or "" ) )
+            else toggles = format( "%s = %s %s", k, tostring( v.value ), ( v.separate and "[separate]" or ( k ~= "cooldowns" and v.override and Hekili.Engine.settings.toggles.cooldowns.value and "[overridden]" ) or "" ) ) end
         end
     end
 

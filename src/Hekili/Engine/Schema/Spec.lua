@@ -1192,12 +1192,12 @@ local HekiliSpecMixin = {
 
     GetSetting = function( self, info )
         local setting = info[ #info ]
-        return Hekili.DB.profile.specs[ self.id ].settings[ setting ]
+        return Hekili.Engine.settings.specs[ self.id ].settings[ setting ]
     end,
 
     SetSetting = function( self, info, val )
         local setting = info[ #info ]
-        Hekili.DB.profile.specs[ self.id ].settings[ setting ] = val
+        Hekili.Engine.settings.specs[ self.id ].settings[ setting ] = val
     end,
 
     -- option should be an AceOption table.
@@ -1214,7 +1214,7 @@ local HekiliSpecMixin = {
 
         option.get = option.get or function( info )
             local setting = info[ #info ]
-            local val = Hekili.DB.profile.specs[ self.id ].settings[ setting ]
+            local val = Hekili.Engine.settings.specs[ self.id ].settings[ setting ]
 
             if val ~= nil then return val end
             return value
@@ -1222,7 +1222,7 @@ local HekiliSpecMixin = {
 
         option.set = option.set or function( info, val )
             local setting = info[ #info ]
-            Hekili.DB.profile.specs[ self.id ].settings[ setting ] = val
+            Hekili.Engine.settings.specs[ self.id ].settings[ setting ] = val
         end
     end,
 
@@ -1235,7 +1235,7 @@ local HekiliSpecMixin = {
 
 
 function Hekili:RestoreDefaults()
-    local p = self.DB.profile
+    local p = Hekili.Engine.settings
     local reverted = {}
     local changed = {}
 
@@ -1300,7 +1300,7 @@ function Hekili:RestoreDefaults()
         if msg then
             C_Timer.After( 5, function()
                 Hekili:ReviewPacks()
-                if Hekili.DB.profile.notifications.enabled then Hekili:Notify( msg, 6 ) end
+                if Hekili.Engine.settings.notifications.enabled then Hekili:Notify( msg, 6 ) end
                 Hekili:Print( msg )
             end )
         end
@@ -1326,7 +1326,7 @@ function Hekili:RestoreDefaults()
         if msg then
             C_Timer.After( 6, function()
                 Hekili:ReviewPacks()
-                if Hekili.DB.profile.notifications.enabled then Hekili:Notify( msg, 6 ) end
+                if Hekili.Engine.settings.notifications.enabled then Hekili:Notify( msg, 6 ) end
                 Hekili:Print( msg )
             end )
         end
@@ -1335,7 +1335,7 @@ end
 
 
 function Hekili:RestoreDefault( name )
-    local p = self.DB.profile
+    local p = Hekili.Engine.settings
 
     local default = class.packs[ name ]
 
@@ -1509,7 +1509,7 @@ all:RegisterAuras( {
                         if Hekili.ActiveDebug then Hekili:Debug( "Cast '%s' is fake-interruptible", spell ) end
                         t.v2 = 0
 
-                    elseif Hekili.DB.profile.toggles.interrupts.filterCasts and class.spellFilters[ state.instance_id ] and class.interruptibleFilters and not class.interruptibleFilters[ spellID ] then
+                    elseif Hekili.Engine.settings.toggles.interrupts.filterCasts and class.spellFilters[ state.instance_id ] and class.interruptibleFilters and not class.interruptibleFilters[ spellID ] then
                         if Hekili.ActiveDebug then Hekili:Debug( "Cast '%s' not interruptible per user preference.", spell ) end
                         t.v2 = 1
                     end
@@ -1546,7 +1546,7 @@ all:RegisterAuras( {
                         if Hekili.ActiveDebug then Hekili:Debug( "Channel '%s' is fake-interruptible", spell ) end
                         t.v2 = 0
 
-                    elseif Hekili.DB.profile.toggles.interrupts.filterCasts and class.spellFilters[ state.instance_id ] and class.interruptibleFilters and not class.interruptibleFilters[ spellID ] then
+                    elseif Hekili.Engine.settings.toggles.interrupts.filterCasts and class.spellFilters[ state.instance_id ] and class.interruptibleFilters and not class.interruptibleFilters[ spellID ] then
                         if Hekili.ActiveDebug then Hekili:Debug( "Channel '%s' not interruptible per user preference.", spell ) end
                         t.v2 = 1
                     end
@@ -1736,35 +1736,8 @@ all:RegisterStateTable( "threat", setmetatable( {}, {
 } ) )
 
 
-ns.addToggle = function( name, default, optionName, optionDesc )
-
-    table.insert( class.toggles, {
-        name = name,
-        state = default,
-        option = optionName,
-        oDesc = optionDesc
-    } )
-
-    if Hekili.DB.profile[ 'Toggle State: ' .. name ] == nil then
-        Hekili.DB.profile[ 'Toggle State: ' .. name ] = default
-    end
-
-end
-
-
-ns.addSetting = function( name, default, options )
-
-    table.insert( class.settings, {
-        name = name,
-        state = default,
-        option = options
-    } )
-
-    if Hekili.DB.profile[ 'Class Option: ' .. name ] == nil then
-        Hekili.DB.profile[ 'Class Option: ' ..name ] = default
-    end
-
-end
+-- ns.addToggle and ns.addSetting (uncalled; they wrote "Toggle State: "/"Class Option: " keys onto the profile root)
+-- removed with the profile port (Task 6): the engine no longer holds the AceDB table.
 
 
 ns.addWhitespace = function( name, size )
@@ -2057,7 +2030,7 @@ function Hekili:SpecializationChanged()
         if spec then
             if specID == currentID then
                 self.currentSpec = spec
-                self.currentSpecOpts = rawget( self.DB.profile.specs, specID )
+                self.currentSpecOpts = rawget( Hekili.Engine.settings.specs, specID )
                 state.settings.spec = self.currentSpecOpts
 
                 state.spec.can_dual_cast = spec.can_dual_cast
@@ -2170,7 +2143,7 @@ function Hekili:SpecializationChanged()
             end
 
             if spec.id > 0 then
-                local s = rawget( Hekili.DB.profile.specs, spec.id )
+                local s = rawget( Hekili.Engine.settings.specs, spec.id )
 
                 if s then
                     for k, v in pairs( spec.settings ) do

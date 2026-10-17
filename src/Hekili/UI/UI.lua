@@ -1332,6 +1332,8 @@ do
                         b.Text = caption
                         b.Indicator = indicator
                         b.Keybind = keybind
+                        -- The published record is reused between publishes (Output.Begin clears it); this redraw on
+                        -- NewRecommendations runs before any reuse.
                         b.Ability = ability
                         b.ExactTime = exact_time
                     end

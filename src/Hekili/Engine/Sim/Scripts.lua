@@ -1751,7 +1751,7 @@ function scripts:LoadScripts()
         return
     end
 
-    local profile = Hekili.DB.profile
+    local settings = Hekili.Engine.settings
     wipe( self.DB )
     wipe( self.Channels )
     wipe( self.PackInfo )
@@ -1760,7 +1760,7 @@ function scripts:LoadScripts()
 
     state.reset()
 
-    for pack, pData in pairs( profile.packs ) do
+    for pack, pData in pairs( settings.packs ) do
         local specData = pData.spec and class.specs[ pData.spec ]
 
         if specData then
@@ -1913,7 +1913,7 @@ end
 
 
 function Hekili:LoadScript( pack, list, id )
-    local pData = self.DB.profile.packs[ pack ]
+    local pData = Hekili.Engine.settings.packs[ pack ]
     local data = pData.lists[ list ][ id ]
     local specData = pData.spec and class.specs[ pData.spec ]
     local scriptID = pack .. ":" .. list .. ":" .. id

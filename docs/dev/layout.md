@@ -11,6 +11,10 @@
     `Forever/` (the class, race and shared content), `Libs/` (embedded, untouched) and `Textures/`.
 
   An upstream merge lands new root files at the root; re-home them by hand.
+  The profile port (restructure Task 6) edited ~70 upstream lines in `Engine/` (each `Hekili.DB.profile` read became
+  `Hekili.Engine.settings`): merge-friction cost on every upstream merge. Contract: `Engine.Configure(profile)` (called by
+  `Options/Profile.lua` at load and on each AceDB profile change) hands the engine the profile's subtables by reference
+  and copies its scalars (`enabled`, `autoSnapshot`, `screenshot`), so a setter that writes one of those calls it again.
 - `tests/` holds the busted specs and their helpers, mirroring the source tree: the specs for
   `src/Hekili/Virtual/State/` are in `tests/Virtual/State/`, their helpers in `tests/Virtual/State/helpers/`, and so
   on. `tests/Virtual/State/helpers/load.lua` names the addon root once (`ROOT = "src/Hekili/"`).

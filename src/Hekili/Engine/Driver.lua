@@ -55,7 +55,7 @@ end
 -- Calculate frame budget based on user percentage
 local function calculateFrameBudget()
     local smoothedFPS = updateSmoothedFPS()
-    local frameBudget = Hekili.DB.profile.performance.frameBudget or 0.7
+    local frameBudget = Hekili.Engine.settings.performance.frameBudget or 0.7
     -- local rawFPS = GetFramerate()
 
     -- Calculate frame time
@@ -167,7 +167,7 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
         self.refreshTimer = self.refreshTimer + elapsed
     end
 
-    if Hekili.DB.profile.enabled and not Hekili.Pause then
+    if Hekili.Engine.settings.enabled and not Hekili.Pause then
         -- Set refresh rates to default values
         self.refreshRate = self.refreshRate or 0.25
         self.combatRate = self.combatRate or 0.2
@@ -247,7 +247,7 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
 
             if ok and err == "AutoSnapshot" then
                 self.DontProfile = true
-                Hekili:MakeSnapshot(true)
+                Hekili.Engine.Snapshot(true)
                 self.DontProfile = false
             end
         end
