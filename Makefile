@@ -5,7 +5,7 @@ BUSTED := $(LUA_ENV)/bin/busted
 LUACHECK := $(LUA_ENV)/bin/luacheck
 LUAC := $(LUA_ENV)/bin/luac
 
-.PHONY: bootstrap lint fmt fmt-check typecheck test test-fast test-loop test-party syntax api-check check
+.PHONY: bootstrap lint fmt fmt-check typecheck test test-fast test-loop test-party test-druid syntax api-check check
 
 bootstrap:
 	scripts/bootstrap.sh
@@ -22,19 +22,23 @@ fmt-check:
 typecheck:
 	lua-language-server --check . --checklevel=Error --logpath $(LUA_ENV)/lsp-log
 
-# The headless loop's 20-fight Arms gate (#loop) and party report (#party) run only behind their own targets.
+# The headless loop's 20-fight Arms gate (#loop) and party report (#party), and the Druid harness gates at the GCD
+# kinds design's fight counts (#druid), run only behind their own targets.
 test:
-	$(BUSTED) --exclude-tags=party,loop
+	$(BUSTED) --exclude-tags=party,loop,druid
 
 # The edit loop: skips the harness gate specs tagged #slow (hundreds of simulated fights); `make check` runs them.
 test-fast:
-	$(BUSTED) --exclude-tags=slow,party,loop
+	$(BUSTED) --exclude-tags=slow,party,loop,druid
 
 test-loop:
 	$(BUSTED) --tags=loop
 
 test-party:
 	$(BUSTED) --tags=party
+
+test-druid:
+	$(BUSTED) --tags=druid
 
 syntax:
 	git ls-files -z '*.lua' | xargs -0 -n 200 $(LUAC) -p

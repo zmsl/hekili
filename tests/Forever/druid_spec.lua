@@ -847,6 +847,7 @@ describe("Forever Druid in VirtualState's now context", function()
     local load = require("Virtual.State.helpers.load")
     local fake = require("Virtual.State.helpers.fake_api")
     local fs = require("Virtual.State.helpers.fake_spec")
+    local dvs = require("Forever.helpers.druid_vs")
     local ns, VS, I, api, ctl, w, h, saved
 
     local function cast(id, t)
@@ -874,50 +875,7 @@ describe("Forever Druid in VirtualState's now context", function()
         end
         ns = load.module()
         VS, I = ns.VirtualState, ns.VirtualStateInternal
-        w = ld.load(VS) -- the class file's knownRank and swing base read this VirtualState
-        w.state.mainhand_speed = 2.5
-        -- Hekili's class from the file's registrations: values evaluated at talent rank 0, functions kept in `funcs`
-        local e = ld.env(w)
-        local class = { primaryResource = "energy", abilities = {}, auras = {}, talents = w.talents }
-        class.resources = {
-            energy = { type = 3, state = {} },
-            combo_points = { type = 4, state = {} },
-            rage = { type = 1, state = { regenModel = w.resources[1].models, meta = w.resources[1].meta } },
-            mana = { type = 0, state = {} },
-        }
-        for key, a in pairs(w.abilities) do
-            class.abilities[key] = {
-                key = key,
-                id = a.id,
-                copy = a.copy,
-                spend = a.spend ~= nil and ld.run(a.spend, e) or nil,
-                spendType = a.spendType,
-                cooldown = ld.run(a.cooldown, e),
-                gcd = a.gcd,
-                onNextSwing = a.onNextSwing,
-                cast = 0,
-                charges = 1,
-                recharge = 0,
-                funcs = { now = a.now, handler = a.handler },
-            }
-        end
-        for key, a in pairs(w.auras) do
-            class.auras[key] = { key = key, id = a.id, copy = a.copy, duration = a.duration, max_stack = a.max_stack }
-        end
-        h = fs.new(9)
-        h.Class = class
-        fs.clock = api.GetTime
-        ns.spendResources = fs.spend
-        ns.ResourceRegenerates = function(k)
-            return k == "energy" or k == "mana"
-        end
-        ns.ResourceIsPoints = function(k) -- Constants.lua's, for the one point resource here
-            return k == "combo_points"
-        end
-        ns.raceMods = { maxMods = {}, costMods = w.costMods } -- Clearcasting, as spec:RegisterCostMod appends it
-        load.adapter(ns, h)
-        VS.Start(api)
-        VS.SpecChanged()
+        w, h = dvs.boot(ns, api)
         ctl.Tick(1)
         I.ObsLog.Clear(I.log)
     end)
