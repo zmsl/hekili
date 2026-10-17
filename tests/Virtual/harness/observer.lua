@@ -83,8 +83,8 @@ end
 --- a later step); it returns the first and last index it appended. The stream `obs.s`: { n, t[], ev[], a1..a5[], src[]
 --- (1 ours, 2 another source, 3 unexplained, 0 not an outcome), hand[] (our swing's hand; 0 a cast's), swingT[] (our
 --- swing's true time), actor[] (the entity index of a hit on us) }. An `ev` starting with "@" is a client-answer change
---- for the drive (`@damage` UnitDamage, `@usable`, `@form`, `@guid`, `@unitIs`, `@speed`, `@combat`, `@auraError`), or
---- `@truth` our true power after an event (for the metrics). It draws nothing from `W.rng` (the behaviours roll every
+--- for the drive (`@damage` UnitDamage, `@usable`, `@form`, `@guid`, `@unitIs`, `@speed`, `@combat`, `@auraError`,
+--- `@current` IsCurrentSpell, `@aura` an aura list entry, `@dead`), or `@truth` our true power after an event. It draws nothing from `W.rng` (the behaviours roll every
 --- random choice and record it on the truth event), so batch and incremental streams of one world are equal.
 --- `k.usable`: true (the fake spec's COSTS against our power) or a list { { spellID, fn(W, us, power) -> bool } }
 --- (the content's); `power` is the client's view of ours (a gain `usableDelay` late, a spend at once). Each answer is
@@ -230,6 +230,29 @@ function M.new(W, k)
                 push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. castN, spellID(ev.spell))
             end
             outcome(t + 0.001, ev, 1)
+            push(t, "@current", spellID(ev.spell), false) -- IsCurrentSpell: no longer queued
+        elseif kind == "queue" or kind == "unqueue" then -- our on-next-swing press (IsCurrentSpell, plain)
+            push(t, "@current", spellID(ev.spell), kind == "queue")
+        elseif kind == "aura" then -- ours on the player (plain), ours on the target (raising in combat)
+            local unit = ev.dst == us and "player" or (ev.dst == ev.ourTarget and "target" or nil)
+            if unit then
+                push(t, "@aura", unit, ev.aura, ev.stacks, ev.expires, ev.duration)
+                push(t, "UNIT_AURA", unit)
+            end
+        elseif kind == "kill" then -- our target gone; out of combat when no living attacker is left
+            if ev.dst == ev.ourTarget then
+                push(t, "@dead", "target", true)
+                push(t, "UNIT_HEALTH", "target")
+            end
+            local left = false
+            for _, e in ipairs(mobs) do
+                left = left or (not e.dead and e.target == us)
+            end
+            if not left then
+                push(t, "@combat", false)
+                push(t, "@auraError", "target", false)
+                push(t, "PLAYER_REGEN_ENABLED")
+            end
         -- our cast IDs plain (docs/superpowers/specs/2026-10-16-forever-protection-design.md §1.1)
         elseif kind == "cast" and ev.src == us then -- others' secret (G 49873)
             castN = castN + 1

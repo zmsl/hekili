@@ -148,9 +148,37 @@ function M.restore(c)
     end
 end
 
+-- An aura list entry of `unit` (the player's helpful, the target's harmful), from the player. Allocates (headless
+-- loop only: the 0-byte drives fire no aura).
+local function aura(ctl, unit, id, stacks, expires, duration)
+    local list = ctl.auras[unit][unit == "player" and "HELPFUL" or "HARMFUL"]
+    for i, a in ipairs(list) do
+        if a.spellId == id then
+            if stacks == 0 then
+                table.remove(list, i)
+            else
+                a.applications, a.expirationTime, a.duration = stacks, expires, duration
+            end
+            return
+        end
+    end
+    if stacks > 0 then
+        list[#list + 1] = {
+            name = "Aura " .. id,
+            icon = 0,
+            spellId = id,
+            applications = stacks,
+            duration = duration,
+            expirationTime = expires,
+            sourceUnit = "player",
+            isFromPlayerOrPlayerPet = true,
+        }
+    end
+end
+
 --- One client-answer change (or the truth's power for the metrics) on `ctl`; `c.truth` takes `@truth`. Allocates
 --- nothing. The headless loop applies its streams' ops through this too.
-local function op(c, ctl, ev, a1, a2, a3, a4)
+local function op(c, ctl, ev, a1, a2, a3, a4, a5)
     if ev == "@truth" then
         c.truth = a1
     elseif ev == "@damage" then
@@ -169,6 +197,12 @@ local function op(c, ctl, ev, a1, a2, a3, a4)
         ctl.combat = a1
     elseif ev == "@auraError" then
         ctl.auraError[a1] = a2 or nil
+    elseif ev == "@current" then
+        ctl.current[a1] = a2 or nil
+    elseif ev == "@dead" then
+        ctl.dead[a1] = a2 or nil
+    elseif ev == "@aura" then -- unit, spellID, stacks (0: gone), expires, duration: ours, from the player
+        aura(ctl, a1, a2, a3, a4, a5)
     end
 end
 
@@ -222,7 +256,7 @@ function M.run(c, s, offset)
         ctl.now = t
         local ev = s.ev[i]
         if ev:byte(1) == 64 then -- "@"
-            op(c, ctl, ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i])
+            op(c, ctl, ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
         else
             c.cur = i
             local avoids = c.L.avoids

@@ -127,7 +127,7 @@ describe("the observer", function()
     end)
 
     it(
-        "fires a queued strike's frame: our swing, a WOUND 0 and our success in its rolled order, its wound 1 ms later",
+        "fires a queued strike's frame: our swing, a WOUND 0 and our success in its rolled order, then no longer current, its wound 1 ms later",
         function()
             local orders = {}
             for order = 1, 2 do
@@ -155,8 +155,8 @@ describe("the observer", function()
                 assert.are.same({ 6.001, "target", 80, 1 }, { got[#got][1], got[#got][3], got[#got][6], got[#got][8] })
             end
             assert.are.same({
-                "UNIT_SPELLCAST_SUCCEEDED nameplate10 target0 PLAYER_SWING nameplate180 target80",
-                "PLAYER_SWING nameplate10 target0 UNIT_SPELLCAST_SUCCEEDED nameplate180 target80",
+                "UNIT_SPELLCAST_SUCCEEDED nameplate10 target0 PLAYER_SWING @current nameplate180 target80",
+                "PLAYER_SWING nameplate10 target0 UNIT_SPELLCAST_SUCCEEDED @current nameplate180 target80",
             }, orders)
         end
     )

@@ -67,6 +67,8 @@ function M.new()
         specID = nil, -- C_SpecializationInfo.GetSpecializationInfo(1)'s ID (nil: no specialization)
         powerType = { 0, "MANA" }, -- UnitPowerType("player")
         role = "DAMAGER",
+        inventory = {}, -- [slot] = itemID (GetInventoryItemID("player", slot))
+        items = {}, -- [itemID] = { name, equipLoc } (C_Item.GetItemInfo's first and ninth returns)
     }
     local api = { ctl = ctl }
 
@@ -273,7 +275,10 @@ function M.new()
         return "enUS"
     end
     api.GetCVar, api.GetCursorInfo, api.GetActionInfo, api.GetBindingKey = none, none, none, none
-    api.GetInventoryItemID, api.GetSpecializationInfoByID, api.GetStablePetInfo = none, none, none
+    api.GetSpecializationInfoByID, api.GetStablePetInfo = none, none
+    function api.GetInventoryItemID(_, slot)
+        return ctl.inventory[slot]
+    end
     api.UnitPhaseReason, api.UnitThreatSituation, api.UnitTokenFromGUID, api.IsActionInRange = none, none, none, none
     api.HasOverrideActionBar, api.HasVehicleActionBar, api.IsInJailersTower, api.SpellIsSelfBuff = no, no, no, no
     api.IsMounted, api.IsResting, api.IsInGroup, api.IsInRaid, api.UnitCanAssist = no, no, no, no, no
@@ -415,7 +420,12 @@ function M.new()
         GetItemCount = zero,
         GetItemSpell = none,
         IsUsableItem = no,
-        GetItemInfo = none,
+        GetItemInfo = function(id)
+            local i = ctl.items[id]
+            if i then
+                return i[1], nil, nil, nil, nil, nil, nil, nil, i[2]
+            end
+        end,
         GetItemInfoInstant = none,
         GetItemCooldown = function()
             return 0, 0, 1

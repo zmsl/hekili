@@ -33,6 +33,9 @@ function M.new(o)
         target = o.target,
         form = 0,
         dmgMult = 1,
+        gcdUntil = 0, -- the true GCD's end (W.press)
+        cdUntil = {}, -- [key] = the true cooldown's end
+        avoidAt = {}, -- [act] = the last time an outcome of ours on a target was that avoid (MISS, DODGE, PARRY)
     }
     return e
 end

@@ -246,7 +246,8 @@ end
 
 --- A new instance: Hekili loaded and logged in. `o.character` (the content's, set before login: §1.3) {
 --- class, classID, specID, level, known = { spellID... }, talents = { [spellID] = rank }, power = { type, token, max,
---- value }, speed = { main, off }, forms = { spellID... }, form }; `o.pack` the priority to select; `o.now` the clock [1000].
+--- value (nil: secret, as on Forever) }, speed = { main, off }, items = { [slot] = { itemID, name, equipLoc } },
+--- forms = { spellID... }, form }; `o.pack` the priority to select; `o.now` the clock [1000].
 --- Returns `H = { env, api, ctl, ns, Hekili, frames, timers, misses, errors, loadErrors, prints }`.
 function M.new(o)
     o = o or {}
@@ -889,10 +890,13 @@ function M.new(o)
         local p = c.power
         if p then
             ctl.powerType[1], ctl.powerType[2] = p.type, p.token
-            ctl.powerMax[p.type], ctl.power[p.type] = p.max, p.value or 0
+            ctl.powerMax[p.type], ctl.power[p.type] = p.max, p.value
         end
         if c.speed then
             ctl.speed = c.speed
+        end
+        for slot, item in pairs(c.items or {}) do -- { [slot] = { itemID, name, equipLoc } }: the gear scan's reads
+            ctl.inventory[slot], ctl.items[item[1]] = item[1], { item[2], item[3] }
         end
         for i, id in ipairs(c.forms or {}) do
             ctl.forms[i] = id

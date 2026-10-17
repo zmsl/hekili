@@ -45,7 +45,8 @@ end
 
 --- A melee player: per weapon hand, a swing every speed / haste from a random phase, its outcome rolled from `p.rates`
 --- (default RATES). `p.land(W, e, hand, t)`: ours only, the lag before the outcome lands (observer.lua); without it the
---- outcome is at the swing (another player's). `p.rage` { main, off }: what a landed swing of ours pays.
+--- outcome is at the swing (another player's). `p.rage` { main, off } or fn(hand, amount, flag): what a landed wound
+--- of ours pays. A queued strike (W.queueStrike) our power no longer covers at the swing is dropped (a white swing).
 --- `p.presses` { { t, spell, cost, kind } }: kind "queue" (the next main-hand swing is a strike of `p.strike`
 --- { lo, hi }), "dot" (`p.dot` { every, n, amount } ticks, school 1), "cast" (no outcome); each only if our power
 --- covers its cost.
@@ -66,6 +67,10 @@ function M.melee(p)
                 end
                 local w = e.weapons[h]
                 local foreign = h == 1 and p.strikes and W.rng.chance(p.strikes)
+                if h == 1 and e.queued and e.power < (e.queued.cost or 0) then -- short at the swing: a white one
+                    W.emit({ kind = "unqueue", src = e, spell = e.queued.spell })
+                    e.queued = nil
+                end
                 if h == 1 and (e.queued or foreign) then
                     local q = e.queued or {}
                     e.queued = nil
@@ -78,7 +83,7 @@ function M.melee(p)
                         hand = 1,
                         act = "WOUND",
                         flag = "",
-                        amount = W.rng.int((p.strike or w)[1], (p.strike or w)[2]),
+                        amount = W.rng.int((q.amount or p.strike or w)[1], (q.amount or p.strike or w)[2]),
                         school = 1,
                         spell = q.spell,
                         cost = q.cost,
@@ -109,6 +114,15 @@ function M.melee(p)
                         local lag = p.land(W, e, h, W.t)
                         e.landAt[h] = W.t + lag
                         W.at(W.t + lag, function()
+                            if act ~= "WOUND" then
+                                e.avoidAt[act] = W.t -- the world's truth a content requirement reads (an opening)
+                            end
+                            local rage = p.rage
+                            if type(rage) == "function" then
+                                rage = act == "WOUND" and rage(h, amt, flag) or nil
+                            else
+                                rage = act == "WOUND" and rage and rage[h] or nil
+                            end
                             W.emit({
                                 kind = "land",
                                 src = e,
@@ -119,7 +133,7 @@ function M.melee(p)
                                 amount = amt,
                                 school = 1,
                                 swing = sw,
-                                rage = act == "WOUND" and p.rage and p.rage[h] or nil,
+                                rage = rage,
                             })
                         end)
                     end
