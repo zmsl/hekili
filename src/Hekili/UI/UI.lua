@@ -898,6 +898,12 @@ do
     local dPool = ns.UI.Displays
     Hekili.DisplayPool = dPool
 
+    -- Every display's subscriber to the engine's publishes (Engine/Output.lua), one function so a rebuilt display
+    -- resubscribes the same one; the draw happens on the display's next OnUpdate.
+    local function onPublish( name )
+        dPool[ name ].NewRecommendations = true
+    end
+
     local alphaUpdateEvents = {
         PET_BATTLE_OPENING_START = 1,
         PET_BATTLE_CLOSE = 1,
@@ -1052,7 +1058,6 @@ do
         d.alpha = 0
         d.numIcons = conf.numIcons
         d.firstForce = 0
-        d.threadLocked = false
 
         local scale = self:GetScale()
         local border = 2
@@ -1096,17 +1101,12 @@ do
             end
         end
 
-        function d:IsThreadLocked()
-            return self.threadLocked
-        end
-
-        function d:SetThreadLocked( locked )
-            self.threadLocked = locked
-        end
+        d.OnPublish = onPublish
 
 
         function d:OnUpdate( elapsed )
-            if not self.Recommendations or not Hekili.PLAYER_ENTERING_WORLD or self:IsThreadLocked() then
+            local out = ns.Output[ self.id ]
+            if not out or not Hekili.PLAYER_ENTERING_WORLD then
                 return
             end
 
@@ -1150,18 +1150,19 @@ do
                 local alpha = self.alpha
                 local options = Hekili:GetActiveSpecOption( "abilities" )
 
-                if self.HasRecommendations and self.RecommendationsStr and self.RecommendationsStr:len() == 0 then
-                    for i, b in ipairs( self.Buttons ) do b:Hide() end
+                if self.HasRecommendations and out.count == 0 then
+                    for i, b in ipairs( self.Buttons ) do
+                        b:Hide()
+                        b.Action = nil
+                    end
                     self.HasRecommendations = false
-
-                elseif self:IsThreadLocked() then
-                    self.HasRecommendations = true
 
                 else
                     self.HasRecommendations = true
 
+                    -- Records past out.count hold no action (Begin cleared them), so their buttons hide.
                     for i, b in ipairs( self.Buttons ) do
-                        b.Recommendation = self.Recommendations[ i ]
+                        b.Recommendation = out.recs[ i ]
 
                         local action = b.Recommendation.actionName
                         local caption = b.Recommendation.caption
@@ -1670,6 +1671,7 @@ do
                 self:SetAlpha( 0 )
                 self:Hide()
                 self.alpha = 0
+                if ns.Output[ self.id ] then Hekili.Engine.Unsubscribe( self.id, self.OnPublish ) end
                 return
             end
 
@@ -1689,6 +1691,12 @@ do
             end
 
             self.alpha = newAlpha
+
+            -- Subscribed (the engine computes this display) exactly while Active and visible.
+            if ns.Output[ self.id ] then
+                if newAlpha > 0 then Hekili.Engine.Subscribe( self.id, self.OnPublish )
+                else Hekili.Engine.Unsubscribe( self.id, self.OnPublish ) end
+            end
         end
 
         function d:RefreshCooldowns( event )
@@ -1698,7 +1706,10 @@ do
             local now = GetTime()
             local conf = Hekili.DB.profile.displays[ self.id ]
 
-            for i, rec in ipairs( self.Recommendations ) do
+            local out = ns.Output[ self.id ]
+
+            for i = 1, out and out.count or 0 do
+                local rec = out.recs[ i ]
                 local button = self.Buttons[ i ]
 
                 if button.Action and button.Action == rec.actionName then
@@ -1741,7 +1752,7 @@ do
         end
 
         function d:OnEvent( event, ... )
-            if not self.Recommendations then
+            if not ns.Output[ self.id ] then
                 return
             end
             local conf = Hekili.DB.profile.displays[ self.id ]
@@ -1876,7 +1887,6 @@ do
             if not self.Active then
                 self.Active = true
 
-                self.Recommendations = self.Recommendations or ( ns.queue and ns.queue[ self.id ] )
                 self.NewRecommendations = true
 
                 self.alphaCheck = 0
@@ -2071,18 +2081,17 @@ do
             end ]]
         -- end
 
-        ns.queue[id] = ns.queue[id] or {}
-        d.Recommendations = ns.queue[id]
-
         ns.UI.Buttons[id] = ns.UI.Buttons[id] or {}
         d.Buttons = ns.UI.Buttons[id]
+
+        local out = ns.Output[ id ]
 
         for i = 1, 10 do
             d.Buttons[ i ] = self:CreateButton( id, i )
             d.Buttons[ i ]:Hide()
 
             if self:IsDisplayActive( id ) and i <= conf.numIcons then
-                if d.Recommendations[ i ] and d.Recommendations[ i ].actionName then
+                if out and i <= out.count then
                     d.Buttons[ i ]:Show()
                 end
             end
@@ -2132,18 +2141,17 @@ do
         d.UpdateAlpha = HekiliDisplayPrimary.UpdateAlpha
         d.UpdateKeybindings = HekiliDisplayPrimary.UpdateKeybindings
 
-        ns.queue[id] = ns.queue[id] or {}
-        d.Recommendations = ns.queue[id]
-
         ns.UI.Buttons[id] = ns.UI.Buttons[id] or {}
         d.Buttons = ns.UI.Buttons[id]
+
+        local out = ns.Output[ id ]
 
         for i = 1, 10 do
             d.Buttons[i] = self:CreateButton(id, i)
             d.Buttons[i]:Hide()
 
             if self.DB.profile.enabled and self:IsDisplayActive(id) and i <= conf.numIcons then
-                if d.Recommendations[i] and d.Recommendations[i].actionName then
+                if out and i <= out.count then
                     d.Buttons[i]:Show()
                 end
             end
@@ -2289,15 +2297,15 @@ do
 
 
     -- Separate the recommendations engine from each display.
-    Hekili.Engine = CreateFrame( "Frame", "HekiliEngine" )
+    ns.EngineFrame = CreateFrame( "Frame", "HekiliEngine" )
 
-    Hekili.Engine.refreshTimer = 1
-    Hekili.Engine.eventsTriggered = {}
+    ns.EngineFrame.refreshTimer = 1
+    ns.EngineFrame.eventsTriggered = {}
 
     local framesUsed = 0
     local framesTimes = 0
 
-    function Hekili.Engine:UpdatePerformance( wasted )
+    function ns.EngineFrame:UpdatePerformance( wasted )
         -- Only track in combat.
         if not ( self.firstThreadCompleted and InCombatLockdown() ) then
             self.activeThreadTime = 0
@@ -2368,7 +2376,7 @@ do
     end
 
 
-    Hekili.Engine:SetScript( "OnUpdate", function( self, elapsed )
+    ns.EngineFrame:SetScript( "OnUpdate", function( self, elapsed )
         if not self.activeThread then
             self.refreshTimer = self.refreshTimer + elapsed
         end
@@ -2411,7 +2419,7 @@ do
                 self.activeThreadFrames = self.activeThreadFrames + 1
                 Hekili.activeFrameStart = debugprofilestop()
 
-                -- if HekiliEngine.threadUpdates then print( 1000 * elapsed, Hekili.maxFrameTime, HekiliEngine.threadUpdates.meanWorkTime, HekiliEngine.threadUpdates.meanFrames ) end
+                -- if ns.EngineFrame.threadUpdates then print( 1000 * elapsed, Hekili.maxFrameTime, ns.EngineFrame.threadUpdates.meanWorkTime, ns.EngineFrame.threadUpdates.meanFrames ) end
                 local ok, err = coroutine.resume( thread )
 
                 if not ok then
@@ -2449,24 +2457,25 @@ do
             end
         end
     end )
-    Hekili:ProfileFrame( "HekiliEngine", Hekili.Engine )
+    Hekili:ProfileFrame( "HekiliEngine", ns.EngineFrame )
 
 
-    function HekiliEngine:IsThreadActive()
+    function ns.EngineFrame:IsThreadActive()
         return self.activeThread and coroutine.status( self.activeThread ) == "suspended"
     end
 
 
     function Hekili:ForceUpdate( event, super )
-        self.Engine.criticalUpdate = true
-        if super then self.Engine.refreshTimer = self.Engine.refreshTimer + 0.1 end
+        local engine = ns.EngineFrame
+        engine.criticalUpdate = true
+        if super then engine.refreshTimer = engine.refreshTimer + 0.1 end
 
-        if self.Engine.firstForce == 0 then
-            self.Engine.firstForce = GetTime()
+        if engine.firstForce == 0 then
+            engine.firstForce = GetTime()
         end
 
         if event then
-            self.Engine.eventsTriggered[ event ] = true
+            engine.eventsTriggered[ event ] = true
         end
     end
 
@@ -2481,8 +2490,6 @@ do
 
         local conf = rawget( self.DB.profile.displays, dispID )
         if not conf then return end
-
-        ns.queue[ dispID ][ id ] = ns.queue[ dispID ][ id ] or {}
 
         local bName = "Hekili_" .. dispID .. "_B" .. id
         local b = d.Buttons[ id ] or CreateFrame( "Button", bName, d )

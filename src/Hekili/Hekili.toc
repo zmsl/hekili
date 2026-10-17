@@ -55,6 +55,7 @@ Engine\Sim\Events.lua
 
 Engine\Schema\Spec.lua
 Engine\Schema\Shared.lua
+Engine\Output.lua
 Forever\Shared\Auras.lua
 Forever\Shared\Consumables.lua
 Forever\Shared\Items.lua

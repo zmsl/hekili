@@ -2214,7 +2214,7 @@ function Hekili:SpecializationChanged()
 
     state.swings.mh_speed, state.swings.oh_speed = UnitAttackSpeed( "player" )
 
-    HekiliEngine.activeThread = nil
+    ns.EngineFrame.activeThread = nil
     self:UpdateDisplayVisibility()
     self:UpdateDamageDetectionForCLEU()
 end

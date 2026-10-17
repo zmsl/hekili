@@ -10,6 +10,7 @@ local Hekili = _G[ addon ]
 local class = Hekili.Class
 local state = Hekili.State
 local scripts = Hekili.Scripts
+local Output = ns.Output
 
 local callHook = ns.callHook
 local clashOffset = ns.clashOffset
@@ -671,7 +672,7 @@ do
         time = time or debugprofilestop()
 
         if msg then
-            self.Engine.lastYieldReason = msg
+            ns.EngineFrame.lastYieldReason = msg
         end
 
         if self.maxFrameTime > 0 and time - self.activeFrameStart > self.maxFrameTime then
@@ -1523,10 +1524,6 @@ local aoeDisplayRule = function( p )
 
     if mode == "dual" then return true end
     if mode == "reactive" and ns.getNumberTargets() < ( spec.aoe or 3 ) then
-        if HekiliDisplayAOE.RecommendationsStr then
-            HekiliDisplayAOE.RecommendationsStr = nil
-            HekiliDisplayAOE.NewRecommendations = true
-        end
         return false
     end
 
@@ -1574,7 +1571,15 @@ function Hekili.Update()
 
     local debug = Hekili.ActiveDebug
 
-    Hekili:GetNumTargets( true )
+    local numTargets = Hekili:GetNumTargets( true )
+
+    -- The engine's status record: published only when one of its fields changed.
+    local status = Output.status
+    local combat = state.combat > 0
+    if status.combat ~= combat or status.numTargets ~= numTargets or status.specID ~= specID or status.packName ~= packName or status.specKey ~= state.spec.key then
+        status.combat, status.numTargets, status.specID, status.specKey, status.packName = combat, numTargets, specID, state.spec.key, packName
+        Output.Publish( "status", 1 )
+    end
 
     local snaps
 
@@ -1599,24 +1604,14 @@ function Hekili.Update()
             Hekili:Debug( "*** START OF NEW DISPLAY: %s ***", dispName )
         end
 
-        local UI = ns.UI.Displays[ dispName ]
-        local Queue = UI.Recommendations
+        local wanted = Output.Wanted( dispName )
+        local out = Output[ dispName ]
 
-        UI:SetThreadLocked( true )
+        if wanted and rule( profile ) then
+            -- Only the scratch set is written until Publish: every yield below leaves out.recs the last complete set.
+            local Queue = Output.Begin( dispName )
+            local numFilled = 0
 
-        if Queue then
-            for k, v in pairs( Queue ) do
-                for l, w in pairs( v ) do
-                    if type( Queue[ k ][ l ] ) ~= "table" then
-                        Queue[ k ][ l ] = nil
-                    end
-                end
-            end
-        end
-
-        local checkstr = ""
-
-        if UI.Active and UI.alpha > 0 and rule( profile ) then
             for i = #Stack, 1, -1 do tinsert( StackPool, tremove( Stack, i ) ) end
             for i = #Block, 1, -1 do tinsert( StackPool, tremove( Block, i ) ) end
 
@@ -1653,8 +1648,6 @@ function Hekili.Update()
 
             for i = 1, numRecs do
                 local chosen_depth = 0
-
-                Queue[ i ] = Queue[ i ] or {}
 
                 local slot = Queue[ i ]
                 slot.index = i
@@ -1957,6 +1950,7 @@ function Hekili.Update()
                 end
 
                 if action then
+                    numFilled = i
                     slot.time = state.offset + wait
                     slot.exact_time = state.now + state.offset + wait
                     slot.delay = i > 1 and wait or ( state.offset + wait )
@@ -1975,8 +1969,6 @@ function Hekili.Update()
                     end
 
                     if debug then scripts:ImplantDebugData( slot ) end
-
-                    checkstr = checkstr and ( checkstr .. ':' .. action ) or action
 
                     slot.keybind, slot.keybindFrom = Hekili:GetBindingForAction( action, display, i )
 
@@ -2074,8 +2066,6 @@ function Hekili.Update()
 
                 else
                     for s = i, numRecs do
-                        action = action or ''
-                        checkstr = checkstr and ( checkstr .. ':' .. action ) or action
                         slot[s] = nil
                     end
 
@@ -2108,7 +2098,7 @@ function Hekili.Update()
                         if i < 5 and not hasSnapped and profile.autoSnapshot and InCombatLockdown() and state.level >= 70 and ( dispName == "Primary" or dispName == "AOE" ) then
                             Hekili:Print( "Unable to make recommendation for " .. dispName .. " #" .. i .. "; triggering auto-snapshot..." )
                             hasSnapped = dispName
-                            UI:SetThreadLocked( false )
+                            -- Not published (stock did not either): the synchronous snapshot run that follows publishes.
                             return "AutoSnapshot"
                         end
                     end
@@ -2116,36 +2106,31 @@ function Hekili.Update()
                 end
             end
 
-            UI.NewRecommendations = true
-            UI:SetThreadLocked( false )
-
-            if UI.RecommendationsStr ~= checkstr then
-                UI.RecommendationsStr = checkstr
-                -- Recommendation(s) changed, let's force an update.
-                UI:OnUpdate( 1000 )
-            end
+            Output.Publish( dispName, numFilled )
 
             if WeakAuras and WeakAuras.ScanEvents then
-                if not UI.EventPayload then
-                    UI.EventPayload = {
+                local recs = out.recs
+
+                if not out.payload then
+                    out.payload = {
                         {}, -- [1]
                     }
-                    setmetatable( UI.EventPayload, {
-                        __index = UI.EventPayload[ 1 ],
+                    setmetatable( out.payload, {
+                        __index = out.payload[ 1 ],
                         __mode  = "kv"
                     } )
                 end
 
                 for i = 1, numRecs do
-                    if UI.EventPayload[ i ] then wipe( UI.EventPayload[ i ] )
-                    else UI.EventPayload[ i ] = {} end
+                    if out.payload[ i ] then wipe( out.payload[ i ] )
+                    else out.payload[ i ] = {} end
 
-                    for k, v in pairs( Queue[ i ] ) do
-                        UI.EventPayload[ i ][ k ] = v
+                    for k, v in pairs( recs[ i ] ) do
+                        out.payload[ i ][ k ] = v
                     end
                 end
 
-                WeakAuras.ScanEvents( "HEKILI_RECOMMENDATION_UPDATE", dispName, Queue[ 1 ].actionID, Queue[ 1 ].indicator, nil, UI.EventPayload ) -- nil holds a retired argument slot
+                WeakAuras.ScanEvents( "HEKILI_RECOMMENDATION_UPDATE", dispName, recs[ 1 ].actionID, recs[ 1 ].indicator, nil, out.payload ) -- nil holds a retired argument slot
             end
 
             if debug then
@@ -2169,9 +2154,10 @@ function Hekili.Update()
             state.display = dispName
 
         else
-            if UI.RecommendationsStr then
-                UI.RecommendationsStr = nil
-                UI.NewRecommendations = true
+            -- Subscribed but its rule is off: publish an empty set (once). Unsubscribed: skipped untouched.
+            if wanted and out.count > 0 then
+                Output.Begin( dispName )
+                Output.Publish( dispName, 0 )
             end
 
             dispName = nextDisplay
@@ -2185,28 +2171,6 @@ function Hekili.Update()
 end
 Hekili:ProfileCPU( "ThreadedUpdate", Hekili.Update )
 
-
-function Hekili_GetRecommendedAbility( display, entry )
-    entry = entry or 1
-
-    if not rawget( Hekili.DB.profile.displays, display ) then
-        return nil, "Display not found."
-    end
-
-    if not ns.queue[ display ] then
-        return nil, "No queue for that display."
-    end
-
-    local slot = ns.queue[ display ][ entry ]
-
-    if not slot or not slot.actionID then
-        return nil, "No entry #" .. entry .. " for that display."
-    end
-
-    local payload = Hekili.DisplayPool[ display ].EventPayload
-
-    return slot.actionID, nil, payload and payload[ entry ] -- nil holds a retired return slot
-end
 
 local usedCPU = {}
 

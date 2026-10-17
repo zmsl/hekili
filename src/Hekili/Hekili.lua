@@ -157,9 +157,11 @@ Hekili.Scripts = {
 
 Hekili.State = {}
 
+-- The engine's public surface (Engine/Output.lua fills it): Output, Subscribe, Unsubscribe.
+Hekili.Engine = {}
+
 ns.hotkeys = {}
 ns.keys = {}
-ns.queue = {}
 ns.targets = {}
 ns.TTD = {}
 
@@ -603,7 +605,7 @@ function Hekili:SaveDebugSnapshot( dispName )
 
 
             local performance
-            local pInfo = HekiliEngine.threadUpdates
+            local pInfo = ns.EngineFrame.threadUpdates
 
             -- TODO: Include # of active displays, number of icons displayed.
 
@@ -624,15 +626,14 @@ function Hekili:SaveDebugSnapshot( dispName )
             end
 
             local overview = format( "%s%s; %s|r", state.system.packName, custom, dispName or state.display )
-            local recs = Hekili.DisplayPool[ dispName or state.display ].Recommendations
+            local out = Hekili.Engine.Output[ dispName or state.display ]
 
-            for i, rec in ipairs( recs ) do
-                if not rec.actionName then
-                    if i == 1 then
-                        overview = format( "%s - |cFF666666N/A|r", overview )
-                    end
-                    break
-                end
+            if out.count == 0 then
+                overview = format( "%s - |cFF666666N/A|r", overview )
+            end
+
+            for i = 1, out.count do
+                local rec = out.recs[ i ]
                 overview = format( "%s%s%s|cFFFFD100(%0.2f)|r", overview, ( i == 1 and " - " or ", " ), rec.actionName, rec.time or rec.exact_time or -1 )
             end
 

@@ -12,7 +12,9 @@ describe("headless Arms", function()
         H.ctl.inRange.target, H.ctl.level.target = true, 60
         H.Fire("PLAYER_TARGET_CHANGED")
         assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
-        local q = H.ns.UI.Displays.Primary.Recommendations
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(out.count >= 3)
+        local q = out.recs
         for i = 1, 3 do
             assert.is_table(H.Hekili.Class.abilities[q[i].actionName], tostring(q[i].actionName))
         end

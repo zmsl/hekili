@@ -61,14 +61,11 @@ end
 
 -- The first `n` entries of an instance's Primary queue into `q` (names, waits); returns how many.
 local function queue(H, q, n)
-    local recs = H.ns.UI.Displays.Primary.Recommendations
-    local k = 0
-    for i = 1, n do
-        local r = recs[i]
-        if r and r.actionName then
-            k = k + 1
-            q.name[k], q.time[k] = r.actionName, r.time or 0
-        end
+    local out = H.Hekili.Engine.Output.Primary
+    local k = math.min(n, out.count)
+    for i = 1, k do
+        local r = out.recs[i]
+        q.name[i], q.time[i] = r.actionName, r.time or 0
     end
     for i = k + 1, n do
         q.name[i], q.time[i] = false, 0

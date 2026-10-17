@@ -8842,13 +8842,6 @@ function Hekili:TotalRefresh( noOptions )
         self:RestoreDefaults()
     end
 
-    for i, queue in pairs( ns.queue ) do
-        for j, _ in pairs( queue ) do
-            ns.queue[ i ][ j ] = nil
-        end
-        ns.queue[ i ] = nil
-    end
-
     callHook( "onInitialize" )
 
     for specID, spec in pairs( class.specs ) do
@@ -9722,7 +9715,8 @@ function Hekili:MakeSnapshot( isAuto )
     self.ActiveDebug = false
     self.ManualSnapshot = nil
 
-    HekiliDisplayPrimary.activeThread = nil
+    -- The suspended build's thread would write into the set this snapshot just published; drop it (R1).
+    ns.EngineFrame.activeThread = nil
 end
 
 function Hekili:Notify( str, duration )

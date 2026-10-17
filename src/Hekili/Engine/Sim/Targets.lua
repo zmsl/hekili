@@ -1067,7 +1067,7 @@ end
 do
     ns.Audit = function( special )
         -- Don't audit while recommendations are being generated.
-        if HekiliEngine:IsThreadActive() then
+        if ns.EngineFrame:IsThreadActive() then
             return
         end
 
