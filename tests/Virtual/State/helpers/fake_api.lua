@@ -479,6 +479,9 @@ function M.new()
     function C.IsSpellDataCached()
         return true
     end
+    function C.SpellHasRange() -- LibSpellRange's load probe
+        return true
+    end
     function api.IsUsableSpell(id)
         return C.IsSpellUsable(id)
     end
@@ -486,6 +489,7 @@ function M.new()
     B.IsSpellInSpellBook = B.IsSpellKnown
     B.FindSpellBookSlotForSpell = none
     B.GetNumSpellBookSkillLines = zero
+    B.GetSpellBookItemName = none -- LibSpellRange's fallback probe: an empty book
 
     -- Frames: each records its registrations; the first one made is the client's view of VirtualState's frame
     -- (`api.frame`): Fire delivers an event to its OnEvent when registered, ctl.Tick runs its OnUpdate.

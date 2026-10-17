@@ -74,11 +74,15 @@ function M.build(o, seed)
         others[i] = { e = W.add(e), b = b }
     end
     local pull, stop = 1, (o.duration or 120) + 1
+    W.at(pull - 0.5, function() -- out of combat: the weapon damage cache and the target (observer.lua)
+        W.emit({ kind = "prepull" })
+    end)
     W.at(pull, function()
         W.emit({ kind = "pull" })
         behaviours.melee({
             rates = o.rates,
             land = observer.lag(o.lag),
+            sameMs = (o.lag or observer.DEFAULTS).sameMs,
             rage = o.rage or { 9, 5 },
             presses = o.presses,
             strike = { 70, 90 },

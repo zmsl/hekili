@@ -2,6 +2,8 @@
 local world = require("Virtual.harness.world")
 local entities = require("Virtual.harness.entities")
 local observer = require("Virtual.harness.observer")
+local behaviours = require("Virtual.harness.behaviours")
+local scenarios = require("Virtual.harness.scenarios")
 local fake = require("Virtual.State.helpers.fake_api")
 
 describe("the observer", function()
@@ -54,7 +56,7 @@ describe("the observer", function()
             school = 1,
             swing = sw,
         })
-        local s = observer.observe(W, setmetatable({ sameMs = 0 }, { __index = observer.DEFAULTS }))
+        local s = observer.observe(W)
         assert.are.same({
             { 5, "PLAYER_SWING", 2.5, 1, nil, nil, nil, 0 },
             { 5.7, "UNIT_COMBAT", "nameplate1", "WOUND", "", 30, 1, 1 },
@@ -125,12 +127,11 @@ describe("the observer", function()
     end)
 
     it(
-        "fires a queued strike's frame: our swing, a WOUND 0 and our success in either order, its wound 1 ms later",
+        "fires a queued strike's frame: our swing, a WOUND 0 and our success in its rolled order, its wound 1 ms later",
         function()
             local orders = {}
-            for seed = 1, 8 do
+            for order = 1, 2 do
                 setup()
-                W.rng = require("Virtual.harness.rng").new(seed)
                 W.emit({
                     t = 6,
                     kind = "strike",
@@ -143,18 +144,19 @@ describe("the observer", function()
                     school = 1,
                     spell = "STRIKE",
                     speed = 2.2,
+                    order = order, -- the behaviour's roll
                 })
                 local got = events(observer.observe(W))
                 local o = {}
                 for _, e in ipairs(got) do
                     o[#o + 1] = e[2] == "UNIT_COMBAT" and (e[3] .. e[6]) or e[2]
                 end
-                orders[table.concat(o, " ")] = true
+                orders[order] = table.concat(o, " ")
                 assert.are.same({ 6.001, "target", 80, 1 }, { got[#got][1], got[#got][3], got[#got][6], got[#got][8] })
             end
             assert.are.same({
-                ["PLAYER_SWING nameplate10 target0 UNIT_SPELLCAST_SUCCEEDED nameplate180 target80"] = true,
-                ["UNIT_SPELLCAST_SUCCEEDED nameplate10 target0 PLAYER_SWING nameplate180 target80"] = true,
+                "UNIT_SPELLCAST_SUCCEEDED nameplate10 target0 PLAYER_SWING nameplate180 target80",
+                "PLAYER_SWING nameplate10 target0 UNIT_SPELLCAST_SUCCEEDED nameplate180 target80",
             }, orders)
         end
     )
@@ -189,13 +191,27 @@ describe("the observer", function()
         assert.are.equal(7.002, got[4][1])
     end)
 
-    it("adds an unexplained avoid in the swing event's ms at its share, and lands our hands at their lags", function()
+    it("fires the avoid our swing rolled in its ms (at its share), and lands our hands at their lags", function()
         setup()
-        local lag, sameMs, swings = observer.lag(), 0, 3000
-        local main, own, mref = {}, 0, 0
-        us.lastSwing, us.landAt = { 0, 0 }, { 0, 0 }
-        for k = 1, swings / 2 do -- a main swing, then an off swing 0.3 s later
-            local t = k * 2.5
+        mob.health = 1e9
+        behaviours.melee({ land = observer.lag(), sameMs = observer.DEFAULTS.sameMs })(W, us)
+        W.run(3600)
+        local rolled, swings, sameMs = 0, 0, 0
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "swing" then
+                swings, rolled = swings + 1, rolled + (ev.sameMs and 1 or 0)
+            end
+        end
+        local s = observer.observe(W)
+        for i = 1, s.n do
+            sameMs = sameMs + (s.src[i] == 3 and s.a1[i] == "target" and 1 or 0)
+        end
+        assert.are.equal(rolled, sameMs)
+        assert.is_true(math.abs(sameMs / swings - 3 / 87) < 0.01, "same-ms share " .. sameMs / swings)
+        local lag, main, own, mref = observer.lag(), {}, 0, 0
+        local n = 1500
+        for k = 1, n do -- a main swing, then an off swing 0.3 s later
+            local t = 4000 + k * 2.5
             local d = lag(W, us, 1, t)
             us.lastSwing[1], us.landAt[1], main[#main + 1] = t, t + d, d
             d = lag(W, us, 2, t + 0.3)
@@ -204,27 +220,11 @@ describe("the observer", function()
             elseif math.abs(0.3 + d - 1.686) < 0.03 then
                 mref = mref + 1
             end
-            for h = 1, 2 do
-                W.emit({
-                    t = t + 0.3 * (h - 1),
-                    kind = "swing",
-                    src = us,
-                    dst = mob,
-                    hand = h,
-                    act = "MISS",
-                    speed = 2.5,
-                })
-            end
         end
-        local s = observer.observe(W)
-        for i = 1, s.n do
-            sameMs = sameMs + (s.src[i] == 3 and s.a1[i] == "target" and 1 or 0)
-        end
-        assert.is_true(math.abs(sameMs / swings - 3 / 87) < 0.01, "same-ms share " .. sameMs / swings)
         table.sort(main)
-        assert.is_true(math.abs(main[#main / 2] - 0.474) < 0.01, "main median " .. main[#main / 2])
-        assert.is_true(math.abs(own / (swings / 2) - observer.DEFAULTS.off.pOwn) < 0.05, "off own share")
-        assert.is_true(math.abs(mref / (swings / 2) - observer.DEFAULTS.off.pMain) < 0.05, "off main-reference share")
+        assert.is_true(math.abs(main[n / 2] - 0.474) < 0.01, "main median " .. main[n / 2])
+        assert.is_true(math.abs(own / n - observer.DEFAULTS.off.pOwn) < 0.05, "off own share")
+        assert.is_true(math.abs(mref / n - observer.DEFAULTS.off.pMain) < 0.05, "off main-reference share")
     end)
 
     it("answers usability from our true power: a gain flips it a knob's delay later, our spend at once", function()
@@ -255,6 +255,7 @@ describe("the observer", function()
         "reads the weapon damage cache out of combat only: before the pull and at the stop, not at a form change",
         function()
             setup()
+            W.emit({ t = 1.5, kind = "prepull" })
             W.emit({ t = 2, kind = "pull" })
             us.dmgMult = 1.2 -- a damage buff in combat: no read until the stop
             W.emit({ t = 3, kind = "form", form = 1 })
@@ -275,6 +276,7 @@ describe("the observer", function()
 
     it("makes the target's auras raise in combat, and answers UnitIsUnit secret under its knob", function()
         setup()
+        W.emit({ t = 1.5, kind = "prepull" })
         W.emit({ t = 2, kind = "pull" })
         W.emit({ t = 9, kind = "stop" })
         local k = setmetatable({ secretUnitIs = true }, { __index = observer.DEFAULTS })
@@ -290,6 +292,71 @@ describe("the observer", function()
         assert.are.same({ { 2, "target", true }, { 9, "target", false } }, aura)
         assert.is_true(rawequal(fake.SECRET, unitIs))
     end)
+
+    it("steps to the batch's stream in 0.2 s steps, and draws nothing from the world's generator", function()
+        local o = scenarios.oracle({ duration = 40, others = { "melee", "caster" } })
+        local k = setmetatable({ usable = true }, { __index = observer.DEFAULTS })
+        local batch = observer.observe(scenarios.build(o, 3), k)
+        local W2 = scenarios.build(o, 3)
+        local obs = observer.new(W2, k)
+        local steps = 0
+        for t = 0, 50, 0.2 do
+            local first, last = obs.step(t)
+            assert.is_true(last >= first - 1)
+            steps = steps + 1
+        end
+        obs.step(math.huge)
+        for _, f in ipairs({ "t", "ev", "a1", "a2", "a3", "a4", "a5", "src", "hand", "swingT", "actor" }) do
+            for i = 1, batch.n do
+                assert.is_true(rawequal(batch[f][i], obs.s[f][i]), f .. " " .. i)
+            end
+        end
+        assert.are.equal(batch.n, obs.s.n)
+        local W3 = scenarios.build(o, 3) -- the same world, never observed
+        assert.are.equal(W3.rng.next(), W2.rng.next())
+    end)
+
+    it(
+        "answers the content's usability: a power answer a delay after the gain, a world answer at the step's end",
+        function()
+            setup()
+            mob.health = 1000
+            local k = setmetatable({
+                usable = {
+                    {
+                        101,
+                        function(_, _, p)
+                            return p >= 10
+                        end,
+                    },
+                    {
+                        102,
+                        function(_, e)
+                            return e.target.health < 200
+                        end,
+                    },
+                },
+            }, { __index = observer.DEFAULTS })
+            local obs = observer.new(W, k)
+            local land = { t = 4, kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", flag = "", amount = 40 }
+            land.school, land.swing, land.rage = 1, { t = 3.5 }, 12
+            W.emit(land)
+            local got = {}
+            local function step(t)
+                local first, last = obs.step(t)
+                for i = first, last do
+                    if obs.s.ev[i] == "@usable" and obs.s.t[i] > 0 then
+                        got[#got + 1] = { t, obs.s.t[i], obs.s.a1[i], obs.s.a2[i] }
+                    end
+                end
+            end
+            step(4.0)
+            step(4.2)
+            W.emit({ t = 6, kind = "spell", src = W.ents[2], dst = mob, act = "WOUND", flag = "", amount = 900 })
+            step(6.2)
+            assert.are.same({ { 4.2, 4.1, 101, 1 }, { 6.2, 6.2, 102, 1 } }, got)
+        end
+    )
 end)
 
 describe("the world", function()

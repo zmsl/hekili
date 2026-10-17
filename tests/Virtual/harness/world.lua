@@ -7,10 +7,11 @@ local M = {}
 
 --- A new world. `seed` seeds its generator. Truth events: { t, kind, src, dst, hand, act, flag, amount, school, spell }
 --- with kind "swing" (a white swing, its outcome rolled; ours land later as "land"), "land", "strike" (an
---- on-next-swing strike frame), "spell" (a spell's outcome), "tick", "proc", "cast", "pull", "stop", "form", "buff",
---- "target".
+--- on-next-swing strike frame), "spell" (a spell's outcome), "tick", "proc", "cast", "prepull" (the cache and
+--- target reads 0.5 s before the pull), "pull", "stop", "form", "buff", "target".
 function M.new(seed)
-    local W = { t = 0, q = {}, seq = 0, truth = {}, rng = rng.new(seed), ents = {} }
+    -- crng: the client-detail draws (the same-ms avoid, a strike frame's order) apart from the fight's own
+    local W = { t = 0, q = {}, seq = 0, truth = {}, rng = rng.new(seed), crng = rng.new(seed + 7919), ents = {} }
 
     --- Runs `fn(W)` at time `t` (after everything already queued for `t`).
     function W.at(t, fn)
@@ -38,13 +39,13 @@ function M.new(seed)
         if me then -- who our target is, and whether it targets us, at this event (the tokens that fire for it)
             ev.ourTarget, ev.onUs = me.target, me.target ~= nil and me.target.target == me
         end
-        if ev.kind == "pull" or ev.kind == "target" then -- whom each entity targets now (its tokens' answers)
+        if ev.kind == "prepull" or ev.kind == "target" then -- whom each entity targets now (its tokens' answers)
             ev.targets = {}
             for _, e in ipairs(W.ents) do
                 ev.targets[e] = e.target or false
             end
         end
-        if (ev.kind == "pull" or ev.kind == "stop") and me then -- the weapon damage UnitDamage would read now
+        if (ev.kind == "prepull" or ev.kind == "stop") and me then -- the weapon damage UnitDamage would read now
             local w, m = me.weapons, me.dmgMult
             local o = w[2] or { 0, 0 }
             ev.damage = { w[1][1] * m, w[1][2] * m, o[1] * m, o[2] * m }

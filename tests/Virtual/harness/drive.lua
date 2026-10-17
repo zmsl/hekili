@@ -148,7 +148,8 @@ function M.restore(c)
     end
 end
 
--- One client-answer change (or the truth's power for the metrics). Allocates nothing.
+--- One client-answer change (or the truth's power for the metrics) on `ctl`; `c.truth` takes `@truth`. Allocates
+--- nothing. The headless loop applies its streams' ops through this too.
 local function op(c, ctl, ev, a1, a2, a3, a4)
     if ev == "@truth" then
         c.truth = a1
@@ -170,6 +171,8 @@ local function op(c, ctl, ev, a1, a2, a3, a4)
         ctl.auraError[a1] = a2 or nil
     end
 end
+
+M.op = op
 
 local function tick(c, t)
     c.ctl.Tick(t)

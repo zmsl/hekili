@@ -69,14 +69,12 @@ M.KNOWN_LOAD_NILS = {
     WOW_PROJECT_MISTS_CLASSIC = "the flavour probes",
     id = "Hekili reads an unset global `id` (an upstream slip, nil in game too)",
     squawk = "Scripts.lua:1032 reads an unset global (upstream, nil in game too)",
-    -- namespace members: the facade's five passthrough rows absent on Forever, and LibSpellRange's load probes
+    -- namespace members: the facade's five passthrough rows absent on Forever
     ["C_SpellBook.GetSpellBookItemInfo"] = "facade row absent on Forever (retail spellbook item API)",
     ["C_SpellBook.GetSpellBookSkillLineInfo"] = "facade row absent on Forever (retail spellbook tabs API)",
     ["C_Traits.GetNodeCost"] = "facade row absent on Forever (retail talent currency)",
     ["C_Traits.GetSubTreeInfo"] = "facade row absent on Forever (retail hero talents)",
     ["C_Traits.GetTreeCurrencyInfo"] = "facade row absent on Forever (retail talent currency)",
-    ["C_Spell.SpellHasRange"] = "LibSpellRange-1.0.lua:47 probe (fake_api has no row; not on the queue path)",
-    ["C_SpellBook.GetSpellBookItemName"] = "LibSpellRange-1.0.lua:64 fallback probe (not on the queue path)",
 }
 -- Reads of unset globals at recommendation time (upstream slips, nil in game too: SPIKE risk 10).
 M.KNOWN_RUN_NILS = {
@@ -524,7 +522,7 @@ function M.new(o)
         end,
     }
     --- Runs every timer due at or before `now`, in due order (a raise is recorded in H.errors).
-    --- Each callback sees its own due time as GetTime(); the clock is restored after it.
+    --- Each callback sees its due time as GetTime() (never before the clock); the clock is restored after it.
     function H.RunTimers(now)
         while true do
             local t, ti
@@ -549,7 +547,7 @@ function M.new(o)
             else
                 t.at = t.at + t.d
             end
-            ctl.now = at
+            ctl.now = math.max(at, saved) -- an overdue timer runs now: time never steps back within a cycle
             local ok, err = pcall(t.fn, t)
             ctl.now = saved
             if not ok then

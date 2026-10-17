@@ -8,6 +8,7 @@ local M = {}
 M.RATES = { miss = 0.14, dodge = 0.04, parry = 0.04, glancing = 0, crit = 0.12 }
 -- A mob's swings at a player: the player's avoid table is the victim's (`entity.avoid`); this is the mob's crit.
 M.MOB_CRIT = 0.05
+local SAME_MS = { "MISS", "DODGE", "PARRY" }
 
 -- One outcome from `rates` (miss, dodge, parry, block, glancing, crit): the action and its flag.
 local function roll(r, rates)
@@ -50,6 +51,8 @@ end
 --- covers its cost.
 --- `p.strikes`: another player's chance per main-hand swing to make it a strike frame (G: WOUND 0 + damage).
 --- `p.proc` { chance, amount }: a school-32 wound on the swing event (1-2 ms after it). `p.glance` { lo, hi }.
+--- `p.sameMs`: the chance per swing of ours of an unexplained avoid in its ms (`ev.sameMs`, the observer's knob);
+--- our strike frames carry their order (`ev.order`). Both come from `W.crng`; every draw is the behaviour's.
 function M.melee(p)
     p = p or {}
     return function(W, e)
@@ -66,6 +69,8 @@ function M.melee(p)
                 if h == 1 and (e.queued or foreign) then
                     local q = e.queued or {}
                     e.queued = nil
+                    -- our strike frame's order (P log 1's, then the brief's): 1 the success first, 2 the swing first
+                    local order = p.land and (W.crng.chance(0.5) and 1 or 2) or nil
                     W.emit({
                         kind = "strike",
                         src = e,
@@ -78,10 +83,15 @@ function M.melee(p)
                         spell = q.spell,
                         cost = q.cost,
                         speed = w[3],
+                        order = order,
                     })
                 else
                     local act, flag = roll(W.rng, rates)
                     local amt = act == "WOUND" and amount(W.rng, w, e, tgt, flag, p.glance) or 0
+                    -- an unexplained avoid on the target in our swing event's ms (P log 2), rolled here from the
+                    -- client-detail generator so the observer draws nothing (a press changes the fight's future,
+                    -- never how its past is observed) and W.rng's draws per seed stay as they were
+                    local same = p.sameMs and W.crng.chance(p.sameMs) and W.crng.pick(SAME_MS) or nil
                     local sw = W.emit({
                         kind = "swing",
                         src = e,
@@ -93,6 +103,7 @@ function M.melee(p)
                         school = 1,
                         speed = w[3],
                         ours = p.land ~= nil,
+                        sameMs = same,
                     })
                     if p.land then
                         local lag = p.land(W, e, h, W.t)
