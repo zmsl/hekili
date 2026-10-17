@@ -83,7 +83,7 @@ actions.precombat+=/defensive_stance,use_off_gcd=1,if=!buff.defensive_stance.up
 actions=shield_bash
 actions+=/mocking_blow,if=threat.lost
 actions+=/defensive_stance,use_off_gcd=1,if=!buff.defensive_stance.up
-actions+=/taunt,use_off_gcd=1,if=threat.lost
+actions+=/taunt,use_off_gcd=1,if=threat.lost&!debuff.mocking_blow.up
 actions+=/challenging_shout,if=threat.loose>=settings.challenging_shout_loose
 actions+=/shield_block,use_off_gcd=1,if=buff.shield_block.stack<2
 actions+=/victory_rush

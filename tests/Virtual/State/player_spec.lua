@@ -169,6 +169,7 @@ describe("player start", function()
                 0,
                 alloc.bytes(function()
                     ctl.Fire("UNIT_COMBAT", "player", "WOUND", "BLOCK", 12, 1)
+                    ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", nil, 1) -- the drop and its note
                     S.Flush()
                 end, 2000)
             )

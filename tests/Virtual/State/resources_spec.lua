@@ -1047,7 +1047,7 @@ describe("resources", function()
             assert.are.equal(14, VS.Power(fs.RAGE, 12.5).est) -- the read below is explained by the hit's 5
             obs(Obs.Read, 12.5, 1, 14, I.ReadOf.Resource) -- 2 s on: no swing, so a swings-only regen of 0 (noise)
             I.Fold(12.5, false)
-            -- with the 5 leaking into the measurement, 2.5/s against 9/2.6 would pull the scale to about 0.92
+            -- with the 5 leaking into the measurement, 2.5/s against 9/2.6 would pull the scale to about 0.87
             assert.are.same({ 1, "observed" }, { I.res.scale[1], VS.Power(fs.RAGE, 12.5).basis })
         end)
 

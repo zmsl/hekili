@@ -276,6 +276,15 @@ describe("the event facade", function()
         assert.are.equal(2, VS.LooseEnemies())
         ctl.Fire("NAME_PLATE_UNIT_REMOVED", "nameplate1")
         assert.are.equal(2, VS.LooseEnemies()) -- the target still holds Creature-7
+        ctl.exists.nameplate2target = fake.SECRET
+        ctl.Fire("UNIT_TARGET", "nameplate2") -- a secret UnitExists: not loose
+        assert.are.equal(1, VS.LooseEnemies())
+        ctl.exists.nameplate2target, ctl.friendly.nameplate2 = true, true
+        ctl.Fire("UNIT_TARGET", "nameplate2") -- a friendly plate attacking someone else: not loose
+        assert.are.equal(1, VS.LooseEnemies())
+        ctl.friendly.nameplate2 = nil
+        ctl.Fire("UNIT_TARGET", "nameplate2")
+        assert.are.equal(2, VS.LooseEnemies())
         assert.are.equal(0, alloc.bytes(VS.LooseEnemies, 2000))
     end)
 end)

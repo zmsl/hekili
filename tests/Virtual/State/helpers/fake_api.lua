@@ -60,6 +60,7 @@ function M.new()
         handlers = {},
         unitSpeed = {}, -- [unit] = speed for UnitAttackSpeed of a unit other than the player (default: secret)
         unitIs = {}, -- [unit] = the token UnitIsUnit(unit, x) is true for (SECRET: a secret answer)
+        friendly = {}, -- [unit] = true: UnitCanAttack("player", unit) answers false (default: hostile)
         level = { player = 20 }, -- [unit] = UnitLevel (nil: a secret answer)
         unknownEvents = {}, -- [event] = true: RegisterEvent raises, as the client does for an event it does not know
         form = 0, -- GetShapeshiftForm (0: none)
@@ -90,13 +91,16 @@ function M.new()
         return ctl.guid[unit]
     end
     function api.UnitExists(unit)
+        if ctl.exists[unit] == SECRET then
+            return SECRET
+        end
         return ctl.exists[unit] == true
     end
     function api.UnitIsDead(unit)
         return ctl.dead[unit] == true
     end
-    function api.UnitCanAttack()
-        return true
+    function api.UnitCanAttack(_, unit)
+        return ctl.friendly[unit] ~= true
     end
     function api.UnitPower(_, pt)
         local v = ctl.power[pt]

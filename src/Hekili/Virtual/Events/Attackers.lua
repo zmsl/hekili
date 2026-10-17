@@ -84,9 +84,10 @@ local function recheck(api, i)
     if guid ~= "" then -- an empty token's answer would overwrite a secret status
         Note("UnitIsUnit target-of", S.StatusOf(api, raw))
     end
-    tokGUID[i], tokOnMe[i] = guid, hostile and Plain(api, raw) == true
+    local onMe = Plain(api, raw)
+    tokGUID[i], tokOnMe[i] = guid, hostile and onMe == true
     -- attacking someone else: its target exists and is plainly not us (a secret answer counts as neither)
-    tokLoose[i] = hostile and Plain(api, raw) == false and Plain(api, api.UnitExists(TT[i])) == true
+    tokLoose[i] = hostile and onMe == false and Plain(api, api.UnitExists(TT[i])) == true
     tokSpeed[i] = 0
     if tokOnMe[i] then
         local rawSpeed = api.UnitAttackSpeed(tok) -- secret: tested with issecretvalue next, then read through Plain
@@ -130,7 +131,10 @@ function VS.LooseEnemies()
         if tokLoose[i] then
             local seen = false
             for j = 1, i - 1 do
-                seen = seen or (tokLoose[j] and tokGUID[j] == tokGUID[i])
+                if tokLoose[j] and tokGUID[j] == tokGUID[i] then
+                    seen = true
+                    break
+                end
             end
             if not seen then
                 n = n + 1

@@ -251,7 +251,7 @@ describe("auras", function()
     end)
 
     describe("an aura spent by hits on the player (`consumedBy`, tank design §3)", function()
-        local BLOCKED, BLOCK, DODGE = 2, 3, 4
+        local BLOCKED, BLOCK, DODGE -- I.HitKind's, read once I is loaded (a tag-filtered run skips the earlier cases)
 
         local function hit(t, kind)
             S.Direct(Obs.PlayerHit, t, kind, 0, 20)
@@ -259,6 +259,7 @@ describe("auras", function()
         end
 
         before_each(function()
+            BLOCKED, BLOCK, DODGE = I.HitKind.BLOCKED, I.HitKind.BLOCK, I.HitKind.DODGE
             local def = fs.def(fs.new(9))
             def.auras[SHOUT] =
                 { key = "spender_a", id = fs.SPENDER_A, max_stack = 2, consumedBy = { BLOCK = true, BLOCKED = true } }
@@ -283,8 +284,9 @@ describe("auras", function()
             I.AuraModel(1, REND, 10, 30, 1, 10, 0) -- no `consumedBy`
             hit(12, BLOCK)
             assert.are.equal(1, select(2, VS.Aura("player", fs.SPENDER_C, 12)))
-            hit(18, BLOCK) -- past the shout's expiry
+            hit(18, BLOCK) -- past the shout's expiry: its last stack is not spent
             assert.is_nil(VS.Aura("player", fs.SPENDER_A, 18))
+            assert.are.equal(1, I.auras.stacks[1][SHOUT])
         end)
 
         it("allocates nothing over 1000 hits", function()

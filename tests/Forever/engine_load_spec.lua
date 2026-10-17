@@ -146,6 +146,8 @@ describe("the engine's threat table (tank design §2)", function()
     it("reads the situation, whether the target attacks us or someone else, and the loose hostiles", function()
         local c = env.client
         assert.are.same({ 0, false, false }, { threat.situation, threat.on_me, threat.lost }) -- no target
+        c.exists.targettarget, c.isUnit.targettarget, c.canAttack = false, false, true -- the game's no-target answers
+        assert.are.same({ false, false }, { threat.on_me, threat.lost })
         c.threat, c.exists.targettarget, c.isUnit.targettarget, c.canAttack = 3, true, true, true
         assert.are.same({ 3, true, false }, { threat.situation, threat.on_me, threat.lost })
         c.threat, c.isUnit.targettarget = 1, false

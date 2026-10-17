@@ -31,6 +31,8 @@ local NAMES = {
     select = select,
     tonumber = tonumber,
     error = error,
+    now = 0, -- set per cast and per I.NowAt; seeded so the first set adds no key on a per-event path
+    combat = 0,
 }
 -- The environment itself stays empty, so every assignment from a `now` raises (a counted error) instead of
 -- shadowing a verb for every later cast.

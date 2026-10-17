@@ -236,7 +236,10 @@ function M.load(classToken, race)
         UnitThreatSituation = function()
             return client.threat
         end,
-        UnitIsUnit = function(a)
+        UnitIsUnit = function(a, b)
+            if b ~= "player" then -- only the "is it us" reads are scripted
+                return nil
+            end
             return client.isUnit[a]
         end,
         UnitExists = function(u)

@@ -793,7 +793,7 @@ I.On(Obs.PlayerHit, function(o, t)
                 -- the full gain even when capped, as I.ResourceShift does (review minor 3: skipped for both)
                 R.pinDelta[r], R.gain[r] = R.pinDelta[r] + gain, R.gain[r] + gain
                 I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.PlayerHit)
-                local sec = floor(t)
+                local sec = floor(t) -- out of combat too: the pull's own hits count once combat starts
                 local i = sec % I.TAKEN_WINDOW + 1
                 local bin, stamp = R.takenBin[r], R.takenSec[r]
                 if stamp[i] ~= sec then

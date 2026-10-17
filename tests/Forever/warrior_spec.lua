@@ -2,6 +2,7 @@
 -- 1.60.1.70338, wowdb), loaded headless through a recording stand-in for Hekili (helpers/load_warrior.lua). What Hekili
 -- does with them is verified in game (the plan's checkpoint).
 local lw = require("Forever.helpers.load_warrior")
+local alloc = require("Virtual.State.helpers.alloc")
 
 -- key = { spell IDs in rank order, cost in rage with every talent at rank 0, cooldown, gcd }, from the DB2 (the cost
 -- column / 10; the cooldown is the larger of RecoveryTime and CategoryRecoveryTime; gcd "off" where StartRecoveryTime
@@ -447,9 +448,12 @@ describe("Forever Warrior", function()
                 w.game.stat.GetShieldBlock = { 20 }
                 assert.are.same({ 3, 0.15 * 3 }, { run("BLOCKED", 10, 5) }) -- (10 + 20) x 10 / 100
                 local full = run("BLOCK", 0, 5)
-                assert.is_true(full > 0 and full <= 2) -- min(block value 20, the average unblocked amount) x 10 / 100
+                -- min(block value 20, the average unblocked amount 0.2 x 30) x 10 / 100
+                assert.is_true(math.abs(full - 0.6) < 1e-9, tostring(full))
                 local g, wd = run("BLOCK", 0, 5)
                 assert.are.equal(g, wd) -- a full block's band is its whole estimate
+                w.events.PLAYER_REGEN_ENABLED() -- the fight ends: the next fight learns its own unblocked amounts
+                assert.are.same({ 0, 0 }, { run("BLOCK", 0, 5) })
             end
         )
 
@@ -468,6 +472,26 @@ describe("Forever Warrior", function()
             ctx({}, { shield_specialization = 5 })
             assert.are.same({ 5, 5 }, { run("BLOCK", 0, 20) })
             assert.are.same({ 0, 0 }, { run("DODGE", 0, 20) })
+            w.game.stat.UnitArmor, w.game.healthMax = { 0, 0 }, 100
+            ctx({}, { shield_specialization = 1 })
+            assert.are.same({ 3 + 1, 0.15 * 3 + 4 }, { run("BLOCKED", 30, 20) }) -- a partial block: the hit's, plus the proc
+        end)
+
+        it("allocates nothing over every kind", function()
+            w.game.stat.GetShieldBlock = { 20 }
+            w.state.equipped.shield = true
+            e = { -- plain tables: the belief's proxies are preallocated, so only `taken` itself is measured
+                buff = { defensive_stance = { up = true }, shield_wall = { up = false } },
+                talent = { shield_specialization = { rank = 1 }, master_of_defense = { rank = 1 } },
+            }
+            local f = setfenv(taken, e)
+            local KINDS = { "WOUND", "BLOCKED", "BLOCK", "DODGE", "PARRY", "MISS" }
+            assert.are.equal(
+                0,
+                alloc.bytes(function(i)
+                    f(KINDS[i % 6 + 1], 40, 20)
+                end, 100)
+            )
         end)
 
         it("adds Master of Defense's 50% a rank of 5 rage on a dodge or parry, only with a shield", function()

@@ -177,10 +177,10 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
     if Plain(api, api.UnitIsUnit("targettarget", "player")) == true then
         level = Plain(api, api.UnitLevel("target")) or 0
     end
-    if type(level) ~= "number" or level <= 0 then
+    if level <= 0 then
         level = Plain(api, api.UnitLevel("player")) or 0
     end
-    Stage(Obs.PlayerHit, t, kind, type(amount) == "number" and amount or 0, type(level) == "number" and level or 0)
+    Stage(Obs.PlayerHit, t, kind, type(amount) == "number" and amount or 0, level)
 end)
 
 S.On("PLAYER_STARTED_MOVING", nil, function(api, t)
