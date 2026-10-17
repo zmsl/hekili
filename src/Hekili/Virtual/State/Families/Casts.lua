@@ -226,7 +226,7 @@ I.On(Obs.Cooldown, function(o, t)
             local owner = 0
             if I.castAb > 0 and A.gcdKind[I.castAb] > 0 then
                 owner = I.castAb
-            elseif lastGcdA > 0 and o.t - lastGcdT <= GCD_EDGE then
+            elseif lastGcdA > 0 and abs(o.t - lastGcdT) <= GCD_EDGE then
                 owner = lastGcdA
             end
             lastGcdA = 0

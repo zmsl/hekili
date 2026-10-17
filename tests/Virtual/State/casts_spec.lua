@@ -54,15 +54,14 @@ describe("casts and cooldowns", function()
     end)
 
     it("learns a GCD only from a falling edge within [1.0, 2.0) s", function()
-        for _, t in ipairs({ 100, 110, 120 }) do
-            S.Direct(Obs.CastSuccess, t, REND) -- a spell-kind cast opens each one (an ownerless GCD teaches nothing)
+        -- a spell-kind cast opens each one (an ownerless GCD teaches nothing), so the window alone rejects
+        for _, e in ipairs({ { 100, 101.4 }, { 110, 114.38 }, { 120, 122 } }) do -- chained GCDs merge into one edge
+            S.Direct(Obs.CastSuccess, e[1], REND)
+            S.Direct(Obs.Cooldown, e[1], 0, 1, 1)
+            I.Fold(e[1], false)
+            assert.are.equal(REND, I.gcdOwner)
+            S.Direct(Obs.Cooldown, e[2], 0, 0, 1) -- 122: exactly 2.0 s, two chained 1.0 s GCDs, not one
         end
-        S.Direct(Obs.Cooldown, 100, 0, 1, 1)
-        S.Direct(Obs.Cooldown, 101.4, 0, 0, 1)
-        S.Direct(Obs.Cooldown, 110, 0, 1, 1)
-        S.Direct(Obs.Cooldown, 114.38, 0, 0, 1) -- chained GCDs merged into one edge
-        S.Direct(Obs.Cooldown, 120, 0, 1, 1)
-        S.Direct(Obs.Cooldown, 122, 0, 0, 1) -- exactly 2.0 s: two chained 1.0 s GCDs, not one
         I.Fold(122.1, false)
         assert.is_true(math.abs(I.gcdLearned[1] - 1.4) < 0.002) -- the earlier, plausible one stands
     end)
@@ -230,8 +229,8 @@ describe("the GCD by kind", function()
         success(FIXED, 10)
         edge(10, true)
         near(0.8, info(10.1)[2])
-        edge(10.85, false)
-        I.Fold(11, false)
+        edge(11.3, false) -- inside the spell window: only the gcdTime guard keeps it from teaching
+        I.Fold(11.4, false)
         assert.are.same({ 0, 0 }, I.gcdLearned)
     end)
 
@@ -259,7 +258,7 @@ describe("the GCD by kind", function()
         edge(20, true) -- no cast near it
         assert.are.same({ 20, 1 }, info(20.1))
         assert.are.equal(0, I.gcdOwner)
-        edge(21.4, false)
+        edge(21.1, false) -- inside the totem window: only the missing owner keeps it from teaching
         I.Fold(21.5, false)
         assert.are.same({ 0, 1 }, I.gcdLearned)
     end)
@@ -277,6 +276,13 @@ describe("the GCD by kind", function()
             near(1.03, I.gcdLearned[2])
         end
     )
+
+    it("never lets a pending success later than the edge by more than GCD_EDGE open it", function()
+        success(SPELL, 10.5) -- logged ahead of the edge (an out-of-order log)
+        edge(10, true)
+        info(10.6)
+        assert.are.equal(0, I.gcdOwner)
+    end)
 
     it("never lets an off-GCD success inside the window open the GCD", function()
         success(OFF, 10)
