@@ -44,23 +44,31 @@ M.ARCHETYPES = ARCHETYPES
 --- target), mobPeriod [2.0], mobDamage { lo, hi } [10-14], plainSpeed, damageBuff (t: +20% in combat), formAt (t),
 --- presses ({ t, spell, cost, kind }), rage ({ main, off } [9, 5]), max (our power cap [1e6]), proc, mobs (per
 --- attacker { damage = { lo, hi }, period }) and joinAt ({ [attacker] = t: on us from t }) for hits on us, switches.
-function M.build(o, seed)
+--- The headless loop's knobs: weapons (ours [entities.weapons(level)]), mobHealth (our target's [1e9]: a kill ends
+--- the fight), pull (its time [1]), prepull (the cache and target reads [pull - 0.5]), form (ours at the start [0]),
+--- tag (appended to the mobs' GUIDs: a fresh target per fight on one boot).
+--- Returns the world with every behaviour scheduled, not run (`M.build` runs it).
+function M.world(o, seed)
     local W = world.new(seed)
     local lvl = o.level or 22
-    local us = W.add(
-        entities.new({ guid = "Player-1", level = lvl, weapons = entities.weapons(lvl), powerMax = o.max or 1e6 })
-    )
+    local us = W.add(entities.new({
+        guid = "Player-1",
+        level = lvl,
+        weapons = o.weapons or entities.weapons(lvl),
+        powerMax = o.max or 1e6,
+    }))
+    us.form = o.form or 0
     local mobs = {}
     for i = 1, math.max(1, o.attackers or 1) do
         local m = o.mobs and o.mobs[i] or {}
         local dmg = m.damage or o.mobDamage or { 10, 14 }
         local mob = W.add(entities.new({
-            guid = "Creature-" .. i,
+            guid = "Creature-" .. i .. (o.tag or ""),
             kind = "mob",
             level = lvl,
             dr = i == 1 and (o.dr or 0) or 0,
             weapons = { { dmg[1], dmg[2], m.period or o.mobPeriod or 2.0 } },
-            health = 1e9,
+            health = i == 1 and o.mobHealth or 1e9,
         }))
         mob.target = (i <= (o.attackers or 1) and not (o.joinAt and o.joinAt[i])) and us or nil
         mobs[i] = mob
@@ -73,8 +81,9 @@ function M.build(o, seed)
         e.target = mobs[1]
         others[i] = { e = W.add(e), b = b }
     end
-    local pull, stop = 1, (o.duration or 120) + 1
-    W.at(pull - 0.5, function() -- out of combat: the weapon damage cache and the target (observer.lua)
+    local pull = o.pull or 1
+    local stop = (o.duration or 120) + pull
+    W.at(o.prepull or pull - 0.5, function() -- out of combat: the weapon damage cache and the target (observer.lua)
         W.emit({ kind = "prepull" })
     end)
     W.at(pull, function()
@@ -131,7 +140,14 @@ function M.build(o, seed)
         end
         W.emit({ kind = "stop" })
     end)
-    W.run(stop + 3)
+    W.stopAt = stop
+    return W
+end
+
+--- The world of one fight (M.world's knobs), run to 3 s past its end.
+function M.build(o, seed)
+    local W = M.world(o, seed)
+    W.run(W.stopAt + 3)
     return W
 end
 

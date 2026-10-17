@@ -52,6 +52,8 @@ function M.new()
         spellHaste = 0,
         health = 1000,
         healthMax = 1000,
+        unitHealth = {}, -- [unit] = UnitHealth (default: health)
+        unitHealthMax = {}, -- [unit] = UnitHealthMax (default: healthMax)
         totems = {},
         traits = nil, -- { config = id, trees = { tree }, nodes = { [node] = info }, entries = {}, defs = {} }
         inRange = {},
@@ -113,11 +115,11 @@ function M.new()
         end
         return r[1], r[2]
     end
-    function api.UnitHealth()
-        return ctl.health
+    function api.UnitHealth(unit)
+        return ctl.unitHealth[unit] or ctl.health
     end
-    function api.UnitHealthMax()
-        return ctl.healthMax
+    function api.UnitHealthMax(unit)
+        return ctl.unitHealthMax[unit] or ctl.healthMax
     end
     function api.UnitSpellHaste()
         return ctl.spellHaste

@@ -68,7 +68,7 @@ function M.melee(p)
                 local w = e.weapons[h]
                 local foreign = h == 1 and p.strikes and W.rng.chance(p.strikes)
                 if h == 1 and e.queued and e.power < (e.queued.cost or 0) then -- short at the swing: a white one
-                    W.emit({ kind = "unqueue", src = e, spell = e.queued.spell })
+                    W.emit({ kind = "unqueue", src = e, spell = e.queued.spell, ids = e.queued.ids })
                     e.queued = nil
                 end
                 if h == 1 and (e.queued or foreign) then
@@ -86,6 +86,7 @@ function M.melee(p)
                         amount = W.rng.int((q.amount or p.strike or w)[1], (q.amount or p.strike or w)[2]),
                         school = 1,
                         spell = q.spell,
+                        ids = q.ids,
                         cost = q.cost,
                         speed = w[3],
                         order = order,

@@ -50,6 +50,9 @@ function M.new(seed)
                 ev.targets[e] = e.target or false
             end
         end
+        if ev.kind == "prepull" and me then -- our form at the start (the client's first form answer)
+            ev.form = me.form
+        end
         if (ev.kind == "prepull" or ev.kind == "stop") and me then -- the weapon damage UnitDamage would read now
             local w, m = me.weapons, me.dmgMult
             local o = w[2] or { 0, 0 }
@@ -58,6 +61,7 @@ function M.new(seed)
         if ev.act == "WOUND" and ev.dst and (ev.kind ~= "swing" or not ev.ours) then -- ours take it at `land`
             local v = ev.dst
             v.health = math.max(0, v.health - (ev.amount or 0))
+            ev.health = v.health -- after the wound (a secret-free client's UnitHealth)
             if v.health <= 0 and not v.dead then -- a kill (headless loop design §2.1.5): the fight's end
                 v.dead, W.killAt = true, W.t
                 W.emit({ kind = "kill", dst = v })
@@ -85,7 +89,8 @@ function M.new(seed)
     -- Runtime presses (headless loop design §2.1.4): the world's verbs, class-neutral; the content's `effect` uses only
     -- the generic ones below.
 
-    --- The player `e` pressed `key` now. `p` is the content's resolved press { spell, cost, cooldown, gcd (seconds),
+    --- The player `e` pressed `key` now. `p` is the content's resolved press { spell, ids (every rank's: the client
+    --- answers their cooldown and IsCurrentSpell together; default { spell }), cost, cooldown, gcd (seconds),
     --- offGcd, onNextSwing, amount ({ lo, hi } of a queued strike), cast (a cast time in seconds), requires = fn(W, e)
     --- -> ok, why, effect = fn(W, e, p) }. Checked against the true state in order: a cast in progress, the GCD, the
     --- cooldown, the cost, a strike already queued, `requires`; a refusal returns false and its reason ("casting",
@@ -118,7 +123,19 @@ function M.new(seed)
             e.cdUntil[key] = t + p.cooldown
         end
         local function land()
-            W.emit({ kind = "cast", src = e, dst = e.target, spell = p.spell, cost = p.cost })
+            -- shortcut: a cast time's GCD is over at its success, so the client sees no GCD flag for it; upgrade
+            -- with UNIT_SPELLCAST_START.
+            local gcd = not p.offGcd and (p.cast or 0) == 0 and (p.gcd or 1.5) or nil
+            W.emit({
+                kind = "cast",
+                src = e,
+                dst = e.target,
+                spell = p.spell,
+                ids = p.ids,
+                cost = p.cost,
+                cd = p.cooldown,
+                gcd = gcd,
+            })
             if p.effect then
                 p.effect(W, e, p)
             end
@@ -141,8 +158,8 @@ function M.new(seed)
 
     --- Queues `p` as `e`'s next main-hand swing (the melee behaviour turns it into a strike frame, paid then).
     function W.queueStrike(e, p)
-        e.queued = { spell = p.spell, cost = p.cost, amount = p.amount }
-        W.emit({ kind = "queue", src = e, spell = p.spell })
+        e.queued = { spell = p.spell, ids = p.ids, cost = p.cost, amount = p.amount }
+        W.emit({ kind = "queue", src = e, spell = p.spell, ids = p.ids })
     end
 
     --- Puts aura `id` on `dst` (ours, from the player) for `duration` s, adding `stacks` [1] up to `maxStacks` [1];

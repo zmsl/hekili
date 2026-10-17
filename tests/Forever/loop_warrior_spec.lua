@@ -1,6 +1,7 @@
 -- tests/Forever/loop_warrior_spec.lua (headless loop design §5, §7, §9): stock Hekili headless as a level 60 Arms
 -- Warrior (tests/Forever/helpers/warrior_world.lua) against the harness's world.
 local headless = require("Virtual.harness.headless")
+local loop = require("Virtual.harness.loop")
 local ww = require("Forever.helpers.warrior_world")
 
 describe("headless Arms", function()
@@ -76,7 +77,7 @@ describe("the Warrior world mapping", function()
         s.rage.current, s.rage.actual = 100, 100
         s.swap_stance("berserker_stance") -- the booted class file, on the character's talents and spells
         local keep = s.rage.actual
-        assert.is_true(keep > 0 and keep < 100)
+        assert.are.equal(85, keep) -- Forever's Tactical Mastery passive 10, the talent's 5 ranks 15 each
         local W = { t = 0 }
         local e = { power = 100, form = 1 }
         function W.setForm(x, f)
@@ -94,10 +95,14 @@ describe("the Warrior world mapping", function()
         function()
             local ms, hs = ww.resolve("mortal_strike", H), ww.resolve("heroic_strike", H)
             local a = H.Hekili.Class.abilities
-            assert.are.same(
-                { a.mortal_strike.id, H.Hekili.State.action.mortal_strike.cost, a.mortal_strike.cooldown, false },
-                { ms.spell, ms.cost, ms.cooldown, ms.offGcd }
-            )
+            assert.are.same({ -- the rank the client casts, the highest known; every rank answers its cooldown
+                H.ns.VirtualState.KnownID(a.mortal_strike.id),
+                H.Hekili.State.action.mortal_strike.cost,
+                a.mortal_strike.cooldown,
+                false,
+            }, { ms.spell, ms.cost, ms.cooldown, ms.offGcd })
+            assert.are.equal(a.mortal_strike.id, ms.ids[1])
+            assert.are.equal(ms.spell, ms.ids[#ms.ids])
             assert.are.same(
                 { true, true, H.Hekili.State.action.heroic_strike.cost },
                 { hs.onNextSwing, hs.offGcd, hs.cost }
@@ -127,4 +132,38 @@ describe("the Warrior world mapping", function()
             assert.is_true(by[a.whirlwind.id](W, e, 100))
         end
     )
+end)
+
+describe("the headless Arms loop", function()
+    local L
+    setup(function()
+        L = loop.new(ww)
+    end)
+
+    it("shows the precombat queue checkpoint C1 compares: no Battle Shout, a hostile target, no rage", function()
+        local first
+        loop.run(L, 1, {
+            duration = 0,
+            react = -1, -- watch, press nothing
+            on = function(_, steps, t)
+                if not first and steps[1].q.name[1] then
+                    local q = steps[1].q
+                    first = { t, q.name[1], q.name[2], q.name[3] }
+                end
+            end,
+        }, { { H = L.us } })
+        print(("\nC1 headless precombat queue at %.1f s: %s %s %s"):format(unpack(first)))
+        assert.are.same({ "bloodrage", "battle_shout", "berserker_stance" }, { first[2], first[3], first[4] })
+    end)
+
+    it("smoke: one 30 s fight, ours driving, the oracle shadowing and then driving (fast)", function()
+        local a, b = loop.fight(L, 1, { duration = 30 })
+        for _, r in ipairs({ a, b }) do
+            assert.are.same({ 0, 0 }, { r.errors, r.raises })
+            assert.are.same({}, r.misses)
+            assert.is_true(r.presses > 0)
+            assert.are.same({}, r.selfCheck) -- the oracle's belief is the truth at every tick
+        end
+        assert.are.same({}, L.us.loadErrors)
+    end)
 end)

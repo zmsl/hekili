@@ -42,6 +42,11 @@ M.TALENTS = { [12294] = 1, [12296] = 1, [12834] = 3, [12295] = 5, [16493] = 2, [
 -- How many of an ability's rank list (`id`, then `copy`) the character knows when the list runs past its trained ranks:
 -- Slam's list ends in Improved Slam's override IDs, which this build (no Improved Slam) does not know.
 M.RANKS = { slam = 5 }
+-- Forever's Tactical Mastery passive (the user's Warrior knows it): the stance keep is 85 (the class file's swap_stance).
+M.PASSIVES = { 1310185 }
+
+-- Every known rank's spell ID of each kit ability (the class file reads the usability of the highest rank known).
+M.IDS = {}
 
 -- The stances as the client's forms, in order (GetShapeshiftForm's index).
 M.FORMS = { "battle_stance", "defensive_stance", "berserker_stance" }
@@ -57,12 +62,19 @@ function M.character()
     local known = {}
     for _, key in ipairs(M.KIT) do
         local a = assert(w.abilities[key], key)
-        known[#known + 1] = a.id
+        local ids = { a.id }
         for i, id in ipairs(type(a.copy) == "table" and a.copy or {}) do
             if i < (M.RANKS[key] or math.huge) then
-                known[#known + 1] = id
+                ids[#ids + 1] = id
             end
         end
+        M.IDS[key] = ids
+        for _, id in ipairs(ids) do
+            known[#known + 1] = id
+        end
+    end
+    for _, id in ipairs(M.PASSIVES) do
+        known[#known + 1] = id
     end
     local forms = {}
     for i, key in ipairs(M.FORMS) do
@@ -84,8 +96,9 @@ function M.character()
 end
 
 -- The world the loop fights in (scenarios.world's knobs): level 60 against a level 60 mob in melee range, the
--- two-hander's damage (Arcanite Reaper's range, rounded), rage capped at 100.
-M.WORLD = { level = 60, weapons = { { 150, 230, 3.6 } }, max = 100 }
+-- two-hander's damage (Arcanite Reaper's range, rounded), rage capped at 100, a mob of 15000 health (killed in about
+-- 3 minutes by this build: measured 13700-17700 damage in 3 minutes over seeds 1-3).
+M.WORLD = { level = 60, weapons = { { 150, 230, 3.6 } }, max = 100, mobHealth = 15000 }
 
 -- True rage per landed white wound: the class file's own model restated (Forever/Classes/Warrior.lua, "Rage per white
 -- swing": 4.5 x the unhasted speed with a two-hander; a crit one more base swing, 3.46 x speed). Circular on purpose:
@@ -320,8 +333,8 @@ local function stanceOk(a, e)
 end
 
 --- The resolved press of `key` (headless loop design §7), read from instance `H` (the loop passes the oracle's: its
---- state is true): the ability's ID, its cost as the state resolves it, its cooldown and GCD, on-next-swing; the
---- mapping's requirement (after the stance's) and effect. Raises "unmapped key" for a key the mapping lacks.
+--- state is true): the ability's highest known rank's ID and every known rank's, its cost as the state resolves it, its
+--- cooldown and GCD, on-next-swing; the mapping's requirement (after the stance's) and effect. Raises "unmapped key" for a key the mapping lacks.
 function M.resolve(key, H)
     local m = M.MAP[key]
     if not m then
@@ -330,7 +343,8 @@ function M.resolve(key, H)
     local a = H.Hekili.Class.abilities[key]
     local X = classData(H)
     local p = {
-        spell = a.id,
+        spell = H.ns.VirtualState.KnownID(a.id), -- the rank the client casts: the highest known
+        ids = M.IDS[key],
         cost = H.Hekili.State.action[key].cost or 0,
         cooldown = tonumber(a.cooldown) or 0,
         gcd = 1.5,
@@ -357,22 +371,26 @@ function M.resolve(key, H)
     return p
 end
 
---- The client's usability answers (observer `k.usable`) for every mapped ability the character knows, from instance
---- `H`: the power (the client's view) covers the cost, the stance fits and the mapping's requirement holds in the true
---- world (Execute's phase and Overpower's opening read these, as in game).
+--- The client's usability answers (observer `k.usable`) for every rank of every mapped ability the character knows,
+--- from instance `H`: unusable (not for power) when the stance or the mapping's requirement fails in the true world
+--- (Execute's phase, Overpower's opening, Victory Rush's kill: the class file reads these, as in game), else usable
+--- when the power (the client's view) covers the cost, short when it does not.
 function M.usable(H)
     local out = {}
+    local X = classData(H)
     for key, m in pairs(M.MAP) do
         local a = H.Hekili.Class.abilities[key]
-        if a and H.ctl.known[a.id] then
+        if a and M.IDS[key] then
             local cost = H.Hekili.State.action[key].cost or 0
-            local X = classData(H)
-            out[#out + 1] = {
-                a.id,
-                function(W, e, power)
-                    return power >= cost and stanceOk(a, e) and (not m.requires or m.requires(W, e, X)) or false
-                end,
-            }
+            local function answer(W, e, power)
+                if not stanceOk(a, e) or (m.requires and not m.requires(W, e, X)) then
+                    return false, false
+                end
+                return power >= cost, power < cost
+            end
+            for _, id in ipairs(M.IDS[key]) do
+                out[#out + 1] = { id, answer }
+            end
         end
     end
     table.sort(out, function(x, y)

@@ -357,6 +357,54 @@ describe("the observer", function()
             assert.are.same({ { 4.2, 4.1, 101, 1 }, { 6.2, 6.2, 102, 1 } }, got)
         end
     )
+
+    it(
+        "answers a secret-free client under k.plain: power, target health, cooldown times plain, no aura error",
+        function()
+            setup()
+            local k = setmetatable({ plain = true, usableDelay = 0, gcdSpell = 900 }, { __index = observer.DEFAULTS })
+            local obs = observer.new(W, k) -- stepped as the world runs: each answer is the world's at its time
+            W.emit({ t = 1.5, kind = "prepull" })
+            obs.step(1.6)
+            W.emit({ t = 2, kind = "pull" })
+            local land = { t = 4, kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", flag = "", amount = 40 }
+            land.school, land.swing, land.rage = 1, { t = 3.5 }, 12
+            W.emit(land)
+            W.emit({
+                t = 5,
+                kind = "cast",
+                src = us,
+                dst = mob,
+                spell = 77,
+                ids = { 77, 78 },
+                cost = 10,
+                cd = 6,
+                gcd = 1.5,
+            })
+            local got = {}
+            obs.step(math.huge)
+            local s = obs.s
+            for i = 1, s.n do
+                local ev = s.ev[i]
+                if ev == "@power" or ev == "@health" or ev == "@cooldown" or ev == "@auraError" then
+                    got[#got + 1] = { s.t[i], ev, s.a1[i], s.a2[i], s.a3[i] }
+                end
+            end
+            assert.are.same({
+                { 0, "@power", 1, 0 },
+                { 1.6, "@health", "target", 1000, 1000 },
+                { 4, "@health", "target", 960, 1000 },
+                { 4, "@power", 1, 12 },
+                { 5, "@cooldown", 77, 5, 6 },
+                { 5, "@cooldown", 78, 5, 6 },
+                { 5, "@cooldown", 900, 5, 1.5 },
+                { 5, "@power", 1, 2 },
+                { 6.5, "@cooldown", 900, 0, 0 },
+                { 11, "@cooldown", 77, 0, 0 },
+                { 11, "@cooldown", 78, 0, 0 },
+            }, got)
+        end
+    )
 end)
 
 describe("the world", function()

@@ -5,6 +5,7 @@ local entities = require("Virtual.harness.entities")
 local behaviours = require("Virtual.harness.behaviours")
 local observer = require("Virtual.harness.observer")
 local fs = require("Virtual.State.helpers.fake_spec")
+local fake = require("Virtual.State.helpers.fake_api")
 
 describe("the world's press", function()
     local W, us, mob
@@ -21,7 +22,8 @@ describe("the world's press", function()
     local function seen()
         local s, out = observer.observe(W), {}
         for i = 1, s.n do
-            out[#out + 1] = table.concat({ s.ev[i], tostring(s.a1[i]), tostring(s.a2[i]) }, " ")
+            local a2 = rawequal(s.a2[i], fake.SECRET) and "SECRET" or tostring(s.a2[i])
+            out[#out + 1] = table.concat({ s.ev[i], tostring(s.a1[i]), a2 }, " ")
         end
         return out
     end
@@ -67,13 +69,15 @@ describe("the world's press", function()
         }
         assert.is_true(W.press(us, "spender_c", p))
         assert.are.same({ 15, 4.5, 9, 1 }, { us.power, us.gcdUntil, us.cdUntil.spender_c, hit })
-        local got = seen() -- our target targets us: the success fires on targettarget too
+        local got = seen() -- the cooldown's flag (its times secret); our target targets us: targettarget too
         assert.are.same({
             "UNIT_SPELLCAST_SUCCEEDED player Cast-1",
+            "@cooldown " .. fs.SPENDER_C .. " SECRET",
+            "SPELL_UPDATE_COOLDOWN nil nil",
             "UNIT_SPELLCAST_SUCCEEDED targettarget Cast-1",
             "@truth 10 nil",
             "@truth 15 nil",
-        }, { got[1], got[2], got[3], got[4] })
+        }, { got[1], got[2], got[3], got[4], got[5], got[6] })
         local s = observer.observe(W)
         assert.are.equal(fs.SPENDER_C, s.a3[1])
     end)

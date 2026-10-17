@@ -120,6 +120,16 @@ describe("headless Hekili", function()
         assert.are.same({}, missing)
     end)
 
+    it(
+        "answers the facade rows `o.raw` names with the client's raw function (the oracle's secret-free reads)",
+        function()
+            local raw = headless.new({ raw = { "UnitHealth", "C_Spell.GetSpellCooldown" } })
+            assert.are.equal(raw.env.UnitHealth, raw.ns.Facade.UnitHealth)
+            assert.are.equal(raw.env.C_Spell.GetSpellCooldown, raw.ns.Facade.C_Spell.GetSpellCooldown)
+            assert.are_not.equal(H.env.UnitHealth, H.ns.Facade.UnitHealth)
+        end
+    )
+
     it("answers UnitIsUnit true for a unit and itself; a secret answer for two tokens stays secret", function()
         local api, ctl = fake.new()
         assert.is_true(api.UnitIsUnit("player", "player"))

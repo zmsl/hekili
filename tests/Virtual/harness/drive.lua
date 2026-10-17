@@ -14,7 +14,8 @@ M.WINDOW = 10 -- seconds per rage window (harness design §3.3)
 M.STEP = 9 -- one main-hand step: the overshoot bar
 local CAP = 4096
 
-local USABLE, SHORT = { true, false }, { false, true }
+local USABLE, SHORT, UNUSABLE = { true, false }, { false, true }, { false, false }
+local PLAIN_READY = { isActive = false, isOnGCD = false, startTime = 0, duration = 0 } -- a secret-free client's
 
 --- A booted VirtualState: { api, ctl, ns, VS, I, L, captures }. `o.rage` { main, off } per landed swing [9, 5],
 --- `o.max` the rage cap [1e6]; `o.damage` the UnitDamage cache's first values (default zeros: read at the pull);
@@ -184,7 +185,7 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
     elseif ev == "@damage" then
         ctl.damage[1], ctl.damage[2], ctl.damage[3], ctl.damage[4] = a1, a2, a3, a4
     elseif ev == "@usable" then
-        ctl.usable[a1] = a2 == 1 and USABLE or SHORT
+        ctl.usable[a1] = a2 == 1 and USABLE or (a2 == 2 and SHORT or UNUSABLE)
     elseif ev == "@form" then
         ctl.form = a1
     elseif ev == "@guid" then
@@ -203,6 +204,18 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         ctl.dead[a1] = a2 or nil
     elseif ev == "@aura" then -- unit, spellID, stacks (0: gone), expires, duration: ours, from the player
         aura(ctl, a1, a2, a3, a4, a5)
+    elseif ev == "@power" then
+        ctl.power[a1] = a2
+    elseif ev == "@health" then
+        ctl.unitHealth[a1], ctl.unitHealthMax[a1] = a2, a3
+    elseif ev == "@cooldown" then -- spellID, start, duration: on cooldown; start 0: ready (plain); nil: ready (secret)
+        if a2 == nil then
+            ctl.cooldown[a1] = nil
+        elseif a2 == 0 then
+            ctl.cooldown[a1] = PLAIN_READY
+        else
+            ctl.cooldown[a1] = { isActive = true, isOnGCD = false, startTime = a2, duration = a3 }
+        end
     end
 end
 

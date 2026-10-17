@@ -23,6 +23,13 @@ M.DEFAULTS = {
     targetTokens = { "plate", "target" }, -- "plate": the target's nameplateN (P logs 1-2: nameplate1 then target)
     plainSpeed = false, -- UnitAttackSpeed of a hostile plain (Attackers.lua notes: secret on Forever)
     secretUnitIs = false, -- UnitIsUnit("<plate>target", "player") answers secret (spec §3.1: plain or secret, UNMEASURED)
+    -- A secret-free client (the headless loop's oracle, design §4/D4): our power (`powerType`, its event token
+    -- `powerToken`), the target's health and our cooldown times plain, the target's auras listed (no auraError). The
+    -- events are the same; usability without delay is the caller's `usableDelay = 0`.
+    plain = false,
+    gcdSpell = nil, -- the spell whose cooldown is the GCD (the addon's constant; nil: no GCD answers)
+    powerType = 1,
+    powerToken = "RAGE",
 }
 
 -- Our spells as the fake spec's (its costs: the usability answers).
@@ -86,9 +93,10 @@ end
 --- for the drive (`@damage` UnitDamage, `@usable`, `@form`, `@guid`, `@unitIs`, `@speed`, `@combat`, `@auraError`,
 --- `@current` IsCurrentSpell, `@aura` an aura list entry, `@dead`), or `@truth` our true power after an event. It draws nothing from `W.rng` (the behaviours roll every
 --- random choice and record it on the truth event), so batch and incremental streams of one world are equal.
---- `k.usable`: true (the fake spec's COSTS against our power) or a list { { spellID, fn(W, us, power) -> bool } }
---- (the content's); `power` is the client's view of ours (a gain `usableDelay` late, a spend at once). Each answer is
---- evaluated at every power change and, stepping, at each step's end (an aura or a target's health may flip it).
+--- `k.usable`: true (the fake spec's COSTS against our power) or a list { { spellID, fn(W, us, power) -> ok, short } }
+--- (the content's): IsSpellUsable's two answers (usable; unusable for lack of power), `@usable` 1, 2 or 3 (unusable
+--- for another reason); `power` is the client's view of ours (a gain `usableDelay` late, a spend at once). Each answer
+--- is evaluated at every power change and, stepping, at each step's end (an aura or a target's health may flip it).
 function M.new(W, k)
     k = k or M.DEFAULTS
     local us = W.ents[1]
@@ -191,15 +199,27 @@ function M.new(W, k)
     local function read(ev)
         local t, kind = ev.t, ev.kind
         if kind == "prepull" then -- 0.5 s before the pull: the cache, then the target 0.1 s later
+            if ev.form ~= 0 then -- a fight that starts in a form (the loop's consecutive fights)
+                push(t, "@form", ev.form)
+                push(t, "UPDATE_SHAPESHIFT_FORM")
+            end
             cache(t, ev.damage)
             targets(t + 0.1, ev)
+            local v = ev.targets[us]
+            if k.plain and v then
+                push(t + 0.1, "@health", "target", v.health, v.healthMax)
+            end
         elseif kind == "pull" then
             push(t, "@combat", true)
-            push(t, "@auraError", "target", true) -- spec §3.1: the target's auras raise in combat
+            if not k.plain then
+                push(t, "@auraError", "target", true) -- spec §3.1: the target's auras raise in combat
+            end
             push(t, "PLAYER_REGEN_DISABLED")
         elseif kind == "stop" then
             push(t, "@combat", false)
-            push(t, "@auraError", "target", false)
+            if not k.plain then
+                push(t, "@auraError", "target", false)
+            end
             cache(t, ev.damage)
             push(t, "PLAYER_REGEN_ENABLED")
         elseif kind == "form" then
@@ -230,9 +250,13 @@ function M.new(W, k)
                 push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. castN, spellID(ev.spell))
             end
             outcome(t + 0.001, ev, 1)
-            push(t, "@current", spellID(ev.spell), false) -- IsCurrentSpell: no longer queued
+            for _, id in ipairs(ev.ids or { spellID(ev.spell) }) do
+                push(t, "@current", id, false) -- IsCurrentSpell: no longer queued
+            end
         elseif kind == "queue" or kind == "unqueue" then -- our on-next-swing press (IsCurrentSpell, plain)
-            push(t, "@current", spellID(ev.spell), kind == "queue")
+            for _, id in ipairs(ev.ids or { spellID(ev.spell) }) do
+                push(t, "@current", id, kind == "queue")
+            end
         elseif kind == "aura" then -- ours on the player (plain), ours on the target (raising in combat)
             local unit = ev.dst == us and "player" or (ev.dst == ev.ourTarget and "target" or nil)
             if unit then
@@ -250,13 +274,36 @@ function M.new(W, k)
             end
             if not left then
                 push(t, "@combat", false)
-                push(t, "@auraError", "target", false)
+                if not k.plain then
+                    push(t, "@auraError", "target", false)
+                end
                 push(t, "PLAYER_REGEN_ENABLED")
             end
         -- our cast IDs plain (docs/superpowers/specs/2026-10-16-forever-protection-design.md §1.1)
         elseif kind == "cast" and ev.src == us then -- others' secret (G 49873)
             castN = castN + 1
             push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. castN, spellID(ev.spell))
+            -- on cooldown and the GCD (the client's GCD spell, `k.gcdSpell`): the flags plain, the times secret but
+            -- to a secret-free client
+            local function cooldown(id, d)
+                if k.plain then
+                    push(t, "@cooldown", id, t, d)
+                    push(t + d, "@cooldown", id, 0, 0)
+                else
+                    push(t, "@cooldown", id, fake.SECRET, fake.SECRET)
+                    push(t + d, "@cooldown", id)
+                end
+                push(t, "SPELL_UPDATE_COOLDOWN")
+                push(t + d, "SPELL_UPDATE_COOLDOWN")
+            end
+            if (ev.cd or 0) > 0 then -- every rank answers the spell's cooldown (`ev.ids`, the content's)
+                for _, id in ipairs(ev.ids or { spellID(ev.spell) }) do
+                    cooldown(id, ev.cd)
+                end
+            end
+            if ev.gcd and k.gcdSpell then
+                cooldown(k.gcdSpell, ev.gcd)
+            end
             if ev.onUs then -- P log 1 1345, 4329-4330, 6532: also on targettarget while our target targets us
                 push(t, "UNIT_SPELLCAST_SUCCEEDED", "targettarget", "Cast-" .. castN, spellID(ev.spell))
             end
@@ -268,7 +315,14 @@ function M.new(W, k)
         elseif ev.act and ev.dst then -- another source's outcome, our DoT's tick, a hit on us or on someone else
             outcome(t, ev, (ev.src == us) and 1 or 2)
         end
+        if k.plain and ev.health and ev.dst == ev.ourTarget then -- a secret-free client's target health
+            push(t, "@health", "target", ev.health, ev.dst.healthMax)
+        end
         if ev.power then
+            if k.plain then -- a secret-free client's power, and its event
+                push(t, "@power", k.powerType, ev.power)
+                push(t, "UNIT_POWER_FREQUENT", "player", k.powerToken)
+            end
             dseq = dseq + 1
             deltas[#deltas + 1] = { t + (ev.cost and 0 or k.usableDelay), (ev.rage or 0) - (ev.cost or 0), dseq }
             push(t, "@truth", ev.power) -- the metrics' truth (harness design §3.3), no client answer
@@ -283,7 +337,7 @@ function M.new(W, k)
             answers[i] = {
                 c[1],
                 function(_, _, p)
-                    return p >= cost
+                    return p >= cost, p < cost
                 end,
             }
         end
@@ -292,7 +346,8 @@ function M.new(W, k)
     local function answer(t)
         local flipped = false
         for _, u in ipairs(answers) do
-            local st = u[2](W, us, power) and 1 or 2
+            local ok, short = u[2](W, us, power)
+            local st = ok and 1 or (short and 2 or 3)
             if usable[u[1]] ~= st then
                 usable[u[1]] = st
                 push(t, "@usable", u[1], st)
@@ -303,11 +358,15 @@ function M.new(W, k)
             push(t, "SPELL_UPDATE_USABLE")
         end
     end
-    if answers then
+    if answers then -- the answers before anything happens (no event: the client's state at login)
         for _, u in ipairs(answers) do
-            usable[u[1]] = 2
-            push(0, "@usable", u[1], 2)
+            local ok, short = u[2](W, us, 0)
+            usable[u[1]] = ok and 1 or (short and 2 or 3)
+            push(0, "@usable", u[1], usable[u[1]])
         end
+    end
+    if k.plain then
+        push(0, "@power", k.powerType, us.power)
     end
     local function byTime(a, b)
         return a[1] < b[1] or (a[1] == b[1] and a[#a] < b[#b])
