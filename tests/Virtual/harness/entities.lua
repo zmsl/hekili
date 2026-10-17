@@ -16,7 +16,9 @@ function M.weapons(level, speeds)
 end
 
 --- A new actor. `o`: guid, kind ("player", "mob", "pet"), level, weapons ({ { min, max, speed }, ... }), dr (the
---- damage its armour takes away, 0-1), avoid ({ miss, dodge, parry, block } on swings at it), health, powerMax.
+--- damage its armour takes away, 0-1), avoid ({ miss, dodge, parry, block } on swings at it), health, powerMax, pt (the
+--- power type of `power`, the swing-paid resource [1]), res ({ [powerType] = { cur, max } }: the other resources),
+--- formSpeed ({ [form] = the main hand's period in that form }).
 function M.new(o)
     local e = {
         guid = o.guid,
@@ -29,6 +31,10 @@ function M.new(o)
         healthMax = o.health or 1000,
         power = 0,
         powerMax = o.powerMax or 100,
+        pt = o.pt or 1,
+        res = o.res or {},
+        formSpeed = o.formSpeed or {},
+        formSince = 0, -- when the current form began (W.shift; a regen ramp's clock)
         auras = {},
         target = o.target,
         form = 0,
@@ -37,6 +43,10 @@ function M.new(o)
         cdUntil = {}, -- [key] = the true cooldown's end
         avoidAt = {}, -- [act] = the last time an outcome of ours on a target was that avoid (MISS, DODGE, PARRY)
     }
+    e.res0 = {} -- each other resource's value at the start (the observer's first view; the world changes `res`)
+    for pt, r in pairs(e.res) do
+        e.res0[pt] = r.cur
+    end
     return e
 end
 

@@ -46,7 +46,8 @@ end
 --- A melee player: per weapon hand, a swing every speed / haste from a random phase, its outcome rolled from `p.rates`
 --- (default RATES). `p.land(W, e, hand, t)`: ours only, the lag before the outcome lands (observer.lua); without it the
 --- outcome is at the swing (another player's). `p.rage` { main, off } or fn(hand, amount, flag): what a landed wound
---- of ours pays. A queued strike (W.queueStrike) our power no longer covers at the swing is dropped (a white swing).
+--- of ours pays; `p.critRage` { main, off }: the extra a CRITICAL one pays; `p.payIn`: the form whose landed wounds pay
+--- (nil: every form). A queued strike (W.queueStrike) our power no longer covers at the swing is dropped (a white swing).
 --- `p.presses` { { t, spell, cost, kind } }: kind "queue" (the next main-hand swing is a strike of `p.strike`
 --- { lo, hi }), "dot" (`p.dot` { every, n, amount } ticks, school 1), "cast" (no outcome); each only if our power
 --- covers its cost.
@@ -123,6 +124,12 @@ function M.melee(p)
                                 rage = act == "WOUND" and rage(h, amt, flag) or nil
                             else
                                 rage = act == "WOUND" and rage and rage[h] or nil
+                            end
+                            if act == "WOUND" and flag == "CRITICAL" and p.critRage then
+                                rage = (rage or 0) + (p.critRage[h] or 0)
+                            end
+                            if p.payIn and e.form ~= p.payIn then
+                                rage = nil
                             end
                             W.emit({
                                 kind = "land",

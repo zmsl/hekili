@@ -47,6 +47,11 @@ M.ARCHETYPES = ARCHETYPES
 --- The headless loop's knobs: weapons (ours [entities.weapons(level)]), mobHealth (our target's [1e9]: a kill ends
 --- the fight), pull (its time [1]), prepull (the cache and target reads [pull - 0.5]), form (ours at the start [0]),
 --- tag (appended to the mobs' GUIDs: a fresh target per fight on one boot).
+--- Several resources (GCD kinds design §2): pt (the swing-paid power type [1]), res ({ [pt] = { cur, max } }: the
+--- others), regen ({ [pt] = per second }, from the prepull), regenTick [0.1], regenAfter ({ s, k }), decay ({ pt, rate,
+--- interval, pausedBy }: from the stop), formSpeed ({ [form] = period }), payIn (the form whose swings pay), critRage
+--- ({ main, off }), gcdOrder (1, 2 or "mixed") and gcdLatency [0] (W.press), script (fn(W, us): our presses, started
+--- at the pull), after (seconds the world runs past the stop [3]).
 --- Returns the world with every behaviour scheduled, not run (`M.build` runs it).
 function M.world(o, seed)
     local W = world.new(seed)
@@ -56,8 +61,12 @@ function M.world(o, seed)
         level = lvl,
         weapons = o.weapons or entities.weapons(lvl),
         powerMax = o.max or 1e6,
+        pt = o.pt,
+        res = o.res,
+        formSpeed = o.formSpeed,
     }))
     us.form = o.form or 0
+    us.gcdOrder, us.gcdLatency = o.gcdOrder, o.gcdLatency
     local mobs = {}
     for i = 1, math.max(1, o.attackers or 1) do
         local m = o.mobs and o.mobs[i] or {}
@@ -83,6 +92,11 @@ function M.world(o, seed)
     end
     local pull = o.pull or 1
     local stop = (o.duration or 120) + pull
+    if o.regen then -- before the prepull: its reads answer the rates
+        W.at(0, function()
+            W.startRegen(us, o.regen, o.regenTick, o.regenAfter)
+        end)
+    end
     W.at(o.prepull or pull - 0.5, function() -- out of combat: the weapon damage cache and the target (observer.lua)
         W.emit({ kind = "prepull" })
     end)
@@ -93,6 +107,8 @@ function M.world(o, seed)
             land = observer.lag(o.lag),
             sameMs = (o.lag or observer.DEFAULTS).sameMs,
             rage = o.rage or { 9, 5 },
+            critRage = o.critRage,
+            payIn = o.payIn,
             presses = o.presses,
             strike = { 70, 90 },
             dot = { 3, 5, 13 },
@@ -105,6 +121,9 @@ function M.world(o, seed)
         end
         for _, x in ipairs(others) do
             x.b(W, x.e)
+        end
+        if o.script then
+            o.script(W, us)
         end
     end)
     if o.damageBuff then
@@ -139,22 +158,30 @@ function M.world(o, seed)
             e.stopped = true
         end
         W.emit({ kind = "stop" })
+        if o.decay then
+            W.startDecay(us, o.decay)
+        end
     end)
-    W.stopAt = stop
+    W.stopAt, W.after = stop, o.after or 3
     return W
 end
 
---- The world of one fight (M.world's knobs), run to 3 s past its end.
+--- The world of one fight (M.world's knobs), run to `o.after` (3) s past its end.
 function M.build(o, seed)
     local W = M.world(o, seed)
-    W.run(W.stopAt + 3)
+    W.run(W.stopAt + W.after)
     return W
 end
 
---- The observed stream of a built world (knobs `o.lag` for the observer; `o.plainSpeed`, `o.usable` over them).
+--- The observed stream of a built world (knobs `o.lag` for the observer; `o.plainSpeed`, `o.usable` and the table
+--- `o.observe` over them).
 function M.stream(o, seed)
     local W = M.build(o, seed)
-    local k = setmetatable({ plainSpeed = o.plainSpeed, usable = o.usable }, { __index = o.lag or observer.DEFAULTS })
+    local k = { plainSpeed = o.plainSpeed, usable = o.usable }
+    for key, v in pairs(o.observe or {}) do
+        k[key] = v
+    end
+    setmetatable(k, { __index = o.lag or observer.DEFAULTS })
     return observer.observe(W, k), W
 end
 

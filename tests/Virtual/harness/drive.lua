@@ -1,8 +1,10 @@
 -- tests/Virtual/harness/drive.lua (harness design §3.1): boots VirtualState on fake_api and the fake spec as
 -- pairing_replay_spec does, fires an observed stream through `ctl`, ticks and folds every TICK seconds, and captures
 -- what the addon concluded: each `Swing` c = 1 / c = 3 staged (through an S.Stage wrapper, tagged with the stream event
--- being fired), the combat-log rows (a COMBAT_LOG_EVENT_UNFILTERED sink) and the believed rage at each 10 s window.
--- The run loop allocates nothing: the stream and every capture array are built before it.
+-- being fired), the combat-log rows (a COMBAT_LOG_EVENT_UNFILTERED sink), the believed rage at each 10 s window, each
+-- tracked power type's believed value at every tick, each GCD as GcdInfo first answered it, and per stream index the
+-- crits staged and the white wounds Rows.lua scored on timing alone (a stale form cache). The run loop allocates
+-- nothing: the stream and every capture array are built before it.
 local load = require("Virtual.State.helpers.load")
 local fake = require("Virtual.State.helpers.fake_api")
 local fs = require("Virtual.State.helpers.fake_spec")
@@ -19,7 +21,9 @@ local PLAIN_READY = { isActive = false, isOnGCD = false, startTime = 0, duration
 
 --- A booted VirtualState: { api, ctl, ns, VS, I, L, captures }. `o.rage` { main, off } per landed swing [9, 5],
 --- `o.max` the rage cap [1e6]; `o.damage` the UnitDamage cache's first values (default zeros: read at the pull);
---- `o.oracle == false` unregisters Rows' oracle hooks (the no-oracle run).
+--- `o.oracle == false` unregisters Rows' oracle hooks (the no-oracle run). `o.boot(c)`: the content builds the
+--- definition and starts VirtualState itself (`c.ns`, `c.api`, `c.ctl`; default: the fake spec's, as today).
+--- `o.track` { powerType... }: the types whose believed est and lo are captured at every tick (`c.trk[pt]`).
 function M.boot(o)
     o = o or {}
     local api, ctl = fake.new()
@@ -38,11 +42,15 @@ function M.boot(o)
     local ns = load.module()
     c.ns, c.VS, c.I = ns, ns.VirtualState, ns.VirtualStateInternal
     c.L = c.I.Log
-    local def = fs.def(fs.new((o.rage or { 9, 5 })[1]))
-    def.resources[1].swingOff = (o.rage or { 9, 5 })[2]
-    def.resources[1].max = o.max or 1e6
-    c.I.Build(def, 0.1)
-    c.VS.Start(api)
+    if o.boot then
+        o.boot(c)
+    else
+        local def = fs.def(fs.new((o.rage or { 9, 5 })[1]))
+        def.resources[1].swingOff = (o.rage or { 9, 5 })[2]
+        def.resources[1].max = o.max or 1e6
+        c.I.Build(def, 0.1)
+        c.VS.Start(api)
+    end
     -- captures, by stream index: the hand credited and the swing time it was credited at (0: none)
     c.crHand, c.crAt, c.crTok, c.verdict, c.recIdx, c.onus = {}, {}, {}, {}, {}, {}
     c.lateHand, c.lateAt = {}, {} -- credits staged outside an event (the oracle's rescue)
@@ -58,6 +66,23 @@ function M.boot(o)
     for k = 1, 8 do
         c.recIdx[k] = 0
     end
+    c.crit3, c.unk = {}, {} -- by stream index: a c = 3 staged at it; a white wound of ours scored on timing alone
+    for i = 1, CAP do
+        c.crit3[i], c.unk[i] = 0, 0
+    end
+    c.trk = {} -- [pt] = { n, t[], est[], lo[] } per tick
+    for _, pt in ipairs(o.track or {}) do
+        local r = { n = 0, t = {}, est = {}, lo = {} }
+        for i = 1, CAP do
+            r.t[i], r.est[i], r.lo[i] = 0, 0, 0
+        end
+        c.trk[pt] = r
+    end
+    -- each GCD GcdInfo answered: its start and end, and whether an opener owned it at that tick
+    c.gcdN, c.gcdS, c.gcdE, c.gcdOwned = 0, {}, {}, {}
+    for i = 1, CAP do
+        c.gcdS[i], c.gcdE[i], c.gcdOwned[i] = 0, 0, 0
+    end
     c.crits, c.landed = { 0, 0 }, { 0, 0 }
     c.rows = { swing = 0, missed = 0, spell = 0, noDst = 0, order = 0 }
     c.lastRow = { 0, 0 }
@@ -72,6 +97,9 @@ function M.boot(o)
             local i = c.cur
             if cc == 3 then
                 c.crits[a] = c.crits[a] + 1
+                if i > 0 then
+                    c.crit3[i] = c.crit3[i] + 1
+                end
             elseif i > 0 then
                 c.landed[a] = c.landed[a] + 1
                 c.crHand[i], c.crAt[i], c.crTok[i] = a, t, c.stream.a1[i] == "target"
@@ -216,6 +244,12 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         else
             ctl.cooldown[a1] = { isActive = true, isOnGCD = false, startTime = a2, duration = a3 }
         end
+    elseif ev == "@forms" then -- the client's forms, index to spell ID (the content's list)
+        ctl.forms = a1
+    elseif ev == "@regen" then -- powerType, the rate (nil: secret); allocates (no 0-byte drive fires one)
+        ctl.regen[a1] = a2 and { a2, a2 } or nil
+    elseif ev == "@attackSpeed" then -- the player's main and off hand
+        ctl.speed[1], ctl.speed[2] = a1, a2
     end
 end
 
@@ -240,6 +274,18 @@ local function tick(c, t)
     if c.nWin > 0 and ((p.lo >= 10 and c.truth < 10) or (p.lo >= 15 and c.truth < 15)) then
         c.danger[c.nWin] = 1
     end
+    for pt, r in pairs(c.trk) do
+        if r.n < CAP then
+            local b = c.VS.Power(pt, t)
+            local n = r.n + 1
+            r.n, r.t[n], r.est[n], r.lo[n] = n, t, b.est, b.lo
+        end
+    end
+    local gs, gd = c.VS.GcdInfo(t)
+    if gs > 0 and gs ~= c.gcdS[c.gcdN] and c.gcdN < CAP then
+        local n = c.gcdN + 1
+        c.gcdN, c.gcdS[n], c.gcdE[n], c.gcdOwned[n] = n, gs, gs + gd, c.I.gcdOwner > 0 and 1 or 0
+    end
 end
 
 --- Fires stream `s` (observer.lua) through the booted VirtualState, `offset` seconds later than its times (a replay
@@ -251,8 +297,12 @@ function M.run(c, s, offset)
     local ctl = c.ctl
     c.stream = s
     for i = 1, s.n do
-        c.crHand[i], c.crAt[i], c.verdict[i], c.onus[i] = 0, 0, 0, ""
+        c.crHand[i], c.crAt[i], c.verdict[i], c.onus[i], c.crit3[i], c.unk[i] = 0, 0, 0, "", 0, 0
     end
+    for _, r in pairs(c.trk) do
+        r.n = 0
+    end
+    c.gcdN = 0
     c.hits = 0
     c.crits[1], c.crits[2], c.landed[1], c.landed[2], c.nLate, c.nWin, c.truth, c.nAv = 0, 0, 0, 0, 0, 0, 0, 0
     local rows = c.rows
@@ -272,6 +322,10 @@ function M.run(c, s, offset)
             op(c, ctl, ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
         else
             c.cur = i
+            if ev == "UNIT_COMBAT" and s.src[i] == 1 and s.hand[i] > 0 and s.a1[i] == "target" and s.a4[i] > 0 then
+                local _, maxMain = c.VS.Stat("UnitDamage") -- Rows.lua's stale-form test, as it reads it now
+                c.unk[i] = (maxMain <= 0 or ctl.form ~= c.I.damageForm) and 1 or 0
+            end
             local avoids = c.L.avoids
             ctl.Fire(ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
             if c.L.avoids > avoids and c.nAv < CAP then

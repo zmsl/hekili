@@ -30,6 +30,14 @@ M.DEFAULTS = {
     gcdSpell = nil, -- the spell whose cooldown is the GCD (the addon's constant; nil: no GCD answers)
     powerType = 1,
     powerToken = "RAGE",
+    -- Power reads by type: { [powerType] = "always" | "ooc" | "never" } (UnitPower plain always, out of combat only, or
+    -- never: the swing-paid type's default, as measured in combat); "always" and "ooc" answer each change with
+    -- UNIT_POWER_FREQUENT and the type's token in `powerTokens` ({ [powerType] = token }; default `powerToken`).
+    plainPower = false,
+    powerTokens = false,
+    regenRead = true, -- GetPowerRegenForPowerType answers the true rate out of combat (probe W), secret in combat
+    playerSpeed = false, -- UnitAttackSpeed("player") answers our weapons' periods with the damage cache (out of combat)
+    forms = false, -- the client's forms (index to spell ID: the content's), answered once
 }
 
 -- Our spells as the fake spec's (its costs: the usability answers).
@@ -91,12 +99,14 @@ end
 --- (1 ours, 2 another source, 3 unexplained, 0 not an outcome), hand[] (our swing's hand; 0 a cast's), swingT[] (our
 --- swing's true time), actor[] (the entity index of a hit on us) }. An `ev` starting with "@" is a client-answer change
 --- for the drive (`@damage` UnitDamage, `@usable`, `@form`, `@guid`, `@unitIs`, `@speed`, `@combat`, `@auraError`,
---- `@current` IsCurrentSpell, `@aura` an aura list entry, `@dead`), or `@truth` our true power after an event. It draws nothing from `W.rng` (the behaviours roll every
+--- `@current` IsCurrentSpell, `@aura` an aura list entry, `@dead`, `@cooldown`, `@power`, `@regen`, `@attackSpeed`,
+--- `@forms`), or `@truth` our true power after an event. It draws nothing from `W.rng` (the behaviours roll every
 --- random choice and record it on the truth event), so batch and incremental streams of one world are equal.
---- `k.usable`: true (the fake spec's COSTS against our power) or a list { { spellID, fn(W, us, power) -> ok, short } }
---- (the content's): IsSpellUsable's two answers (usable; unusable for lack of power), `@usable` 1, 2 or 3 (unusable
---- for another reason); `power` is the client's view of ours (a gain `usableDelay` late, a spend at once). Each answer
---- is evaluated at every power change and, stepping, at each step's end (an aura or a target's health may flip it).
+--- `k.usable`: true (the fake spec's COSTS against our power) or a list { { spellID, fn(W, us, power, view) -> ok,
+--- short } } (the content's): IsSpellUsable's two answers (usable; unusable for lack of power), `@usable` 1, 2 or 3
+--- (unusable for another reason); `power` is the client's view of our swing-paid power and `view[pt]` of each other
+--- type's (a gain `usableDelay` late, a spend at once). Each answer is evaluated at every power change and, stepping,
+--- at each step's end (an aura or a target's health may flip it).
 function M.new(W, k)
     k = k or M.DEFAULTS
     local us = W.ents[1]
@@ -186,10 +196,46 @@ function M.new(W, k)
         end
         push(t, "PLAYER_TARGET_CHANGED")
     end
-    -- UnitDamage read out of combat only (docs/superpowers/specs/2026-10-16-forever-protection-design.md §1.1).
-    local function cache(t, d)
+    -- UnitDamage read out of combat only (docs/superpowers/specs/2026-10-16-forever-protection-design.md §1.1); the
+    -- attack speeds (Sources/Swing.lua, probe W PR2) and the regen rates (probe W: 10.001 a second out of combat) too.
+    local function cache(t, ev)
+        local d = ev.damage
         push(t, "@damage", d[1], d[2], d[3], d[4])
+        if k.playerSpeed and ev.speed then
+            push(t, "@attackSpeed", ev.speed[1], ev.speed[2])
+        end
+        if k.regenRead and ev.regen then
+            for pt, r in pairs(ev.regen) do
+                push(t, "@regen", pt, r)
+            end
+        end
         push(t, "PLAYER_EQUIPMENT_CHANGED")
+    end
+    local modes, tokens = k.plainPower or {}, k.powerTokens or {}
+    local cur, inCombat = {}, false -- our true power by type as the stream has told it; the client's combat flag
+    local function plainPower(t, pt) -- a plain read of `pt` now, if its mode answers it
+        local m = modes[pt]
+        if m == "always" or (m == "ooc" and not inCombat) then
+            push(t, "@power", pt, cur[pt])
+            push(t, "UNIT_POWER_FREQUENT", "player", tokens[pt] or k.powerToken)
+        end
+    end
+    local function combat(t, on) -- the plain-out-of-combat reads turn secret in combat and plain again after it
+        inCombat = on
+        for pt, m in pairs(modes) do
+            if m == "ooc" then
+                if on then
+                    push(t, "@power", pt, nil)
+                else
+                    plainPower(t, pt)
+                end
+            end
+        end
+        if on and k.regenRead then
+            for pt in pairs(W.rates or {}) do
+                push(t, "@regen", pt, nil)
+            end
+        end
     end
     local function spellID(name)
         return M.SPELLS[name] or name -- a real ID (the content's) passes as is
@@ -203,13 +249,14 @@ function M.new(W, k)
                 push(t, "@form", ev.form)
                 push(t, "UPDATE_SHAPESHIFT_FORM")
             end
-            cache(t, ev.damage)
+            cache(t, ev)
             targets(t + 0.1, ev)
             local v = ev.targets[us]
             if k.plain and v then
                 push(t + 0.1, "@health", "target", v.health, v.healthMax)
             end
         elseif kind == "pull" then
+            combat(t, true)
             push(t, "@combat", true)
             if not k.plain then
                 push(t, "@auraError", "target", true) -- spec §3.1: the target's auras raise in combat
@@ -217,14 +264,18 @@ function M.new(W, k)
             push(t, "PLAYER_REGEN_DISABLED")
         elseif kind == "stop" then
             push(t, "@combat", false)
+            combat(t, false)
             if not k.plain then
                 push(t, "@auraError", "target", false)
             end
-            cache(t, ev.damage)
+            cache(t, ev)
             push(t, "PLAYER_REGEN_ENABLED")
-        elseif kind == "form" then
+        elseif kind == "form" then -- after its cast's success (Forms.lua, Q2)
             push(t, "@form", ev.form)
             push(t, "UPDATE_SHAPESHIFT_FORM")
+            if ev.damage then -- out of combat: the caches read the form's own
+                cache(t, ev)
+            end
         elseif kind == "target" then
             targets(t, ev)
         elseif kind == "swing" and ev.src == us then
@@ -274,6 +325,7 @@ function M.new(W, k)
             end
             if not left then
                 push(t, "@combat", false)
+                combat(t, false)
                 if not k.plain then
                     push(t, "@auraError", "target", false)
                 end
@@ -282,9 +334,9 @@ function M.new(W, k)
         -- our cast IDs plain (docs/superpowers/specs/2026-10-16-forever-protection-design.md §1.1)
         elseif kind == "cast" and ev.src == us then -- others' secret (G 49873)
             castN = castN + 1
-            push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. castN, spellID(ev.spell))
-            -- on cooldown and the GCD (the client's GCD spell, `k.gcdSpell`): the flags plain, the times secret but
-            -- to a secret-free client
+            -- on cooldown and the GCD (the client's GCD spell, `k.gcdSpell`): the flags plain (probe W PR4), the times
+            -- secret but to a secret-free client; the GCD's rising edge after the success or before it (`ev.order`,
+            -- the world's roll: UNMEASURED until checkpoint G3)
             local function cooldown(id, d)
                 if k.plain then
                     push(t, "@cooldown", id, t, d)
@@ -296,12 +348,17 @@ function M.new(W, k)
                 push(t, "SPELL_UPDATE_COOLDOWN")
                 push(t + d, "SPELL_UPDATE_COOLDOWN")
             end
+            local gcdFirst = ev.gcd and k.gcdSpell and ev.order == 2
+            if gcdFirst then
+                cooldown(k.gcdSpell, ev.gcd)
+            end
+            push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. castN, spellID(ev.spell))
             if (ev.cd or 0) > 0 then -- every rank answers the spell's cooldown (`ev.ids`, the content's)
                 for _, id in ipairs(ev.ids or { spellID(ev.spell) }) do
                     cooldown(id, ev.cd)
                 end
             end
-            if ev.gcd and k.gcdSpell then
+            if ev.gcd and k.gcdSpell and not gcdFirst then
                 cooldown(k.gcdSpell, ev.gcd)
             end
             if ev.onUs then -- P log 1 1345, 4329-4330, 6532: also on targettarget while our target targets us
@@ -318,14 +375,20 @@ function M.new(W, k)
         if k.plain and ev.health and ev.dst == ev.ourTarget then -- a secret-free client's target health
             push(t, "@health", "target", ev.health, ev.dst.healthMax)
         end
-        if ev.power then
-            if k.plain then -- a secret-free client's power, and its event
+        if ev.power or ev.resCur then
+            local pt = ev.resCur and ev.pt or us.pt
+            cur[pt] = ev.resCur or ev.power
+            if k.plain and ev.power then -- a secret-free client's power, and its event
                 push(t, "@power", k.powerType, ev.power)
                 push(t, "UNIT_POWER_FREQUENT", "player", k.powerToken)
             end
+            plainPower(t, pt)
             dseq = dseq + 1
-            deltas[#deltas + 1] = { t + (ev.cost and 0 or k.usableDelay), (ev.rage or 0) - (ev.cost or 0), dseq }
-            push(t, "@truth", ev.power) -- the metrics' truth (harness design §3.3), no client answer
+            local d = (ev.rage or 0) - (ev.cost or 0)
+            deltas[#deltas + 1] = { t + (ev.cost and 0 or k.usableDelay), d, pt, dseq }
+            if ev.power then
+                push(t, "@truth", ev.power) -- the metrics' truth (harness design §3.3), no client answer
+            end
         end
     end
     -- usability: the content's answers, or the fake spec's costs against our power (as the client answers them)
@@ -342,11 +405,14 @@ function M.new(W, k)
             }
         end
     end
-    local usable, power = {}, 0
+    local usable, power, view = {}, 0, {}
+    for pt, v in pairs(us.res0 or {}) do
+        view[pt], cur[pt] = v, v
+    end
     local function answer(t)
         local flipped = false
         for _, u in ipairs(answers) do
-            local ok, short = u[2](W, us, power)
+            local ok, short = u[2](W, us, power, view)
             local st = ok and 1 or (short and 2 or 3)
             if usable[u[1]] ~= st then
                 usable[u[1]] = st
@@ -360,13 +426,22 @@ function M.new(W, k)
     end
     if answers then -- the answers before anything happens (no event: the client's state at login)
         for _, u in ipairs(answers) do
-            local ok, short = u[2](W, us, 0)
+            local ok, short = u[2](W, us, 0, view)
             usable[u[1]] = ok and 1 or (short and 2 or 3)
             push(0, "@usable", u[1], usable[u[1]])
         end
     end
     if k.plain then
         push(0, "@power", k.powerType, us.power)
+    end
+    if k.forms then
+        push(0, "@forms", k.forms)
+    end
+    for pt in pairs(modes) do -- the client's state at login (no event)
+        cur[pt] = cur[pt] or 0
+        if modes[pt] ~= "never" then
+            push(0, "@power", pt, cur[pt])
+        end
     end
     local function byTime(a, b)
         return a[1] < b[1] or (a[1] == b[1] and a[#a] < b[#b])
@@ -386,7 +461,12 @@ function M.new(W, k)
             local keep = {}
             for _, d in ipairs(deltas) do
                 if d[1] <= tEnd then
-                    power = math.min(us.powerMax, power + d[2]) -- unclamped below: a spend can land before a delayed gain
+                    -- unclamped below: a spend can land before a delayed gain
+                    if d[3] == us.pt or not us.res[d[3]] then
+                        power = math.min(us.powerMax, power + d[2])
+                    else
+                        view[d[3]] = math.min(us.res[d[3]].max, view[d[3]] + d[2])
+                    end
                     answer(d[1])
                 else
                     keep[#keep + 1] = d

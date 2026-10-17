@@ -375,8 +375,8 @@ describe("the observer", function()
                 kind = "cast",
                 src = us,
                 dst = mob,
-                spell = 77,
-                ids = { 77, 78 },
+                spell = 9077,
+                ids = { 9077, 9078 },
                 cost = 10,
                 cd = 6,
                 gcd = 1.5,
@@ -395,16 +395,151 @@ describe("the observer", function()
                 { 1.6, "@health", "target", 1000, 1000 },
                 { 4, "@health", "target", 960, 1000 },
                 { 4, "@power", 1, 12 },
-                { 5, "@cooldown", 77, 5, 6 },
-                { 5, "@cooldown", 78, 5, 6 },
+                { 5, "@cooldown", 9077, 5, 6 },
+                { 5, "@cooldown", 9078, 5, 6 },
                 { 5, "@cooldown", 900, 5, 1.5 },
                 { 5, "@power", 1, 2 },
                 { 6.5, "@cooldown", 900, 0, 0 },
-                { 11, "@cooldown", 77, 0, 0 },
-                { 11, "@cooldown", 78, 0, 0 },
+                { 11, "@cooldown", 9077, 0, 0 },
+                { 11, "@cooldown", 9078, 0, 0 },
             }, got)
         end
     )
+end)
+
+-- The client facts several resources, the GCD and form shifts add (GCD kinds design §2.3), one rule per case.
+describe("the observer's resources, GCD and forms", function()
+    local W, us, mob
+    local POOL, POINTS, GCD = 3, 4, 900 -- power types and the GCD spell, as bare numbers
+
+    local function setup()
+        W = world.new(7)
+        us = W.add(entities.new({
+            guid = "Player-1",
+            weapons = { { 10, 10, 2.0 } },
+            res = { [POOL] = { cur = 100, max = 100 }, [POINTS] = { cur = 0, max = 5 } },
+            formSpeed = { [1] = 2.5 },
+        }))
+        mob = W.add(entities.new({ guid = "Creature-1", kind = "mob", weapons = { { 10, 14, 2 } }, health = 1e6 }))
+        us.target = mob -- not on us: no targettarget rows
+    end
+
+    local function knobs(o)
+        return setmetatable(o, { __index = observer.DEFAULTS })
+    end
+
+    -- The stream as "t ev a1 a2" lines (ops included, the time-0 answers left out), only the events `keep` names.
+    local function lines(s, keep)
+        local out = {}
+        for i = 1, s.n do
+            if s.t[i] > 0 and (not keep or keep[s.ev[i]]) then
+                local a2 = rawequal(s.a2[i], fake.SECRET) and "SECRET" or tostring(s.a2[i])
+                out[#out + 1] = table.concat({ s.t[i], s.ev[i], tostring(s.a1[i]), a2 }, " ")
+            end
+        end
+        return out
+    end
+
+    it("fires the GCD flag's edges after the success or before it, by the press's order", function()
+        setup()
+        us.gcdOrder = 2
+        W.t = 2
+        W.press(us, "a", { spell = 11, gcd = 1.0 })
+        us.gcdOrder = 1
+        W.t = 4
+        W.press(us, "a", { spell = 11, gcd = 1.0 })
+        local keep = { UNIT_SPELLCAST_SUCCEEDED = true, ["@cooldown"] = true, SPELL_UPDATE_COOLDOWN = true }
+        assert.are.same({
+            "2 @cooldown 900 SECRET",
+            "2 SPELL_UPDATE_COOLDOWN nil nil",
+            "2 UNIT_SPELLCAST_SUCCEEDED player Cast-1",
+            "3 @cooldown 900 nil",
+            "3 SPELL_UPDATE_COOLDOWN nil nil",
+            "4 UNIT_SPELLCAST_SUCCEEDED player Cast-2",
+            "4 @cooldown 900 SECRET",
+            "4 SPELL_UPDATE_COOLDOWN nil nil",
+            "5 @cooldown 900 nil",
+            "5 SPELL_UPDATE_COOLDOWN nil nil",
+        }, lines(observer.observe(W, knobs({ gcdSpell = GCD })), keep))
+    end)
+
+    it("answers each power type by its mode: always, out of combat only, never", function()
+        setup()
+        local modes = { [POOL] = "ooc", [POINTS] = "always", [1] = "never" }
+        local tokens = { [POOL] = "POOL", [POINTS] = "POINTS" }
+        W.t = 1
+        W.emit({ kind = "gain", src = us, pt = POOL, cost = 10 })
+        W.emit({ kind = "pull" })
+        W.t = 2
+        W.emit({ kind = "gain", src = us, pt = POOL, cost = 20 })
+        W.emit({ kind = "gain", src = us, pt = POINTS, rage = 1 })
+        W.emit({ kind = "gain", src = us, rage = 5 })
+        W.t = 3
+        W.emit({ kind = "stop" })
+        local s = observer.observe(W, knobs({ plainPower = modes, powerTokens = tokens }))
+        assert.are.same({
+            "1 @power 3 90",
+            "1 UNIT_POWER_FREQUENT player POOL",
+            "1 @power 3 nil", -- in combat: secret
+            "2 @power 4 1",
+            "2 UNIT_POWER_FREQUENT player POINTS",
+            "3 @power 3 70", -- out of combat again
+            "3 UNIT_POWER_FREQUENT player POOL",
+        }, lines(s, { ["@power"] = true, UNIT_POWER_FREQUENT = true }))
+    end)
+
+    it("reads the regen rate out of combat with the caches, secret in combat; none without the read", function()
+        setup()
+        W.startRegen(us, { [POOL] = 10 })
+        W.at(1, function()
+            W.emit({ kind = "prepull" })
+        end)
+        W.at(2, function()
+            W.emit({ kind = "pull" })
+        end)
+        W.at(5, function()
+            W.emit({ kind = "stop" })
+        end)
+        W.run(5.5)
+        assert.are.same(
+            { "1 @regen 3 10", "2 @regen 3 nil", "5 @regen 3 10" },
+            lines(observer.observe(W, knobs({})), { ["@regen"] = true })
+        )
+        assert.are.same({}, lines(observer.observe(W, knobs({ regenRead = false })), { ["@regen"] = true }))
+    end)
+
+    it("fires a shift's success, then the form; the player's attack speed out of combat only", function()
+        setup()
+        W.t = 1
+        W.press(us, "shift", { spell = 12, gcd = 1.5, shift = { form = 1 } })
+        W.emit({ kind = "pull" })
+        W.t = 3
+        W.press(us, "shift", { spell = 13, gcd = 1.5, shift = { form = 0, speed = 1.0 } })
+        local keep = { UNIT_SPELLCAST_SUCCEEDED = true, ["@form"] = true, UPDATE_SHAPESHIFT_FORM = true }
+        keep["@attackSpeed"] = true
+        assert.are.same({
+            "1 UNIT_SPELLCAST_SUCCEEDED player Cast-1",
+            "1 @form 1 nil",
+            "1 UPDATE_SHAPESHIFT_FORM nil nil",
+            "1 @attackSpeed 2.5 nil", -- out of combat: the form's period, with the damage cache
+            "3 UNIT_SPELLCAST_SUCCEEDED player Cast-2",
+            "3 @form 0 nil",
+            "3 UPDATE_SHAPESHIFT_FORM nil nil", -- in combat: no read
+        }, lines(observer.observe(W, knobs({ playerSpeed = true })), keep))
+    end)
+
+    it("answers usability against each rung's own type, the client's view a gain late", function()
+        setup()
+        local function pool(_, _, _, view)
+            return view[POOL] >= 60, view[POOL] < 60
+        end
+        W.t = 1
+        W.emit({ kind = "gain", src = us, pt = POOL, cost = 50 })
+        W.t = 2
+        W.emit({ kind = "gain", src = us, pt = POOL, rage = 20 })
+        local s = observer.observe(W, knobs({ usable = { { 21, pool } }, usableDelay = 0.1 }))
+        assert.are.same({ "1 @usable 21 2", "2.1 @usable 21 1" }, lines(s, { ["@usable"] = true }))
+    end)
 end)
 
 describe("the world", function()

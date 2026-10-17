@@ -192,11 +192,11 @@ describe("tools/vslog_fixture.lua", function()
             "   771 PLAYER_SWING 2.2000000476837 0 nil nil nil",
             "  1297 UNIT_COMBAT player PARRY  0 1",
             "  2463 UNIT_COMBAT target WOUND CRITICAL 90 1",
-            "  4330 UNIT_SPELLCA player Cast-3-4615-1-2-285-4C4F5AEFDD 285 nil nil",
+            "  4330 UNIT_SPELLCA player Cast-3-4615-1-2-4242-4C4F5AEFDD 4242 nil nil",
             " 49873 UNIT_SPELLCA party1 S S CastBar-9296D9AA6601D8FE nil",
             "vslog n=6 dropped=0",
         }, "\n")
-        local rows = assert(loadfile("tools/vslog_fixture.lua"))("rows", dump, { ["285"] = "STRIKE" })
+        local rows = assert(loadfile("tools/vslog_fixture.lua"))("rows", dump, { ["4242"] = "STRIKE" })
         assert.are.same({
             { 0, "C", "player", "OTHER" },
             { 771, "S", 2.2, 0 },

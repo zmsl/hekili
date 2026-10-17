@@ -1,9 +1,10 @@
 -- tests/boundary_spec.lua
 -- The core/content boundary (core leakage audit, docs/research/2026-10-16-core-leakage-audit.md): the core engine
--- (src/Hekili/Virtual/**, src/Hekili/Engine/**) names no ability, aura or talent key and no spell ID that the Forever
--- content (src/Hekili/Forever/**: Classes, Races, Shared) registers, and no class or form/stance name. Ported from Taco
--- Dog Forever's tests/boundary_spec.lua, which scans for a fixed word list; here the keys and IDs are
--- extracted from the content at test time, so a new ability is checked without being listed.
+-- (src/Hekili/Virtual/**, src/Hekili/Engine/**) and the harness core (tests/Virtual/harness/**, GCD kinds design D7)
+-- name no ability, aura or talent key and no spell ID that the Forever content (src/Hekili/Forever/**: Classes, Races,
+-- Shared) registers, and no class or form/stance name. Ported from Taco Dog Forever's tests/boundary_spec.lua, which
+-- scans for a fixed word list; here the keys and IDs are extracted from the content at test time, so a new ability is
+-- checked without being listed.
 -- Code only: comments are skipped, and so is a string with whitespace (a message or a description); each word of any
 -- other string (`buff["rend"]`, `"buff.rend.up"`, `"772"`) is checked like an identifier or a number. A multi-part key
 -- (`heroic_strike`) also matches as parts of an identifier (`HEROIC_STRIKE_COST`); a one-word key matches whole only.
@@ -12,7 +13,10 @@ local loaders = {
     Druid = require("Forever.helpers.load_druid"),
 }
 
-local CORE = { "src/Hekili/Virtual", "src/Hekili/Engine" }
+-- The harness core too (GCD kinds design D7), but its captured logs (tests/Virtual/harness/fixtures/): their numbers
+-- are times in ms and amounts, never IDs.
+local CORE = { "src/Hekili/Virtual", "src/Hekili/Engine", "tests/Virtual/harness" }
+local SKIP = { "^tests/Virtual/harness/fixtures/" }
 
 -- Content names core may use, each with its reason.
 local ALLOW_KEYS = {
@@ -37,6 +41,11 @@ local ALLOW_NAMES = {
     GetActiveLossOfControlDataCount = "a WoW API name",
     GetSpellLossOfControlCooldown = "a WoW API name",
     IsInBattle = "a WoW API name",
+    -- WoW globals the headless shell stubs (tests/Virtual/harness/headless.lua), matched by their parts
+    C_BattleNet = "a WoW API name",
+    SPELL_FAILED_NOT_IN_MAGE_TOWER = "a WoW GlobalStrings name",
+    TOOLTIP_NOT_IN_MAGE_TOWER = "a WoW GlobalStrings name",
+    BATTLE_PET_NAME_4 = "a WoW GlobalStrings name",
 }
 local ALLOW_IDS = {
     [29515] = "the client's GCD spell (Constants), not content",
@@ -234,7 +243,13 @@ local function coreFiles()
     local p = assert(io.popen("find " .. table.concat(CORE, " ") .. " -type f -name '*.lua' | sort"))
     local list = {}
     for path in p:lines() do
-        list[#list + 1] = path
+        local skip = false
+        for _, pat in ipairs(SKIP) do
+            skip = skip or path:match(pat) ~= nil
+        end
+        if not skip then
+            list[#list + 1] = path
+        end
     end
     p:close()
     return list
@@ -354,15 +369,18 @@ describe("core/content boundary", function()
         assert.are.same({ 1, 2, 3, 4, 5, 6, 7, 7, 8, 9 }, lines)
     end)
 
-    it("keeps content keys, spell IDs, class and form names out of Virtual/** and Engine/**", function()
-        local found = {}
-        local files = coreFiles()
-        assert.is_true(#files > 30)
-        for _, path in ipairs(files) do
-            for _, hit in ipairs(leaks(path, read(path), c, words)) do
-                found[#found + 1] = hit
+    it(
+        "keeps content keys, spell IDs, class and form names out of Virtual/**, Engine/** and the harness core",
+        function()
+            local found = {}
+            local files = coreFiles()
+            assert.is_true(#files > 30)
+            for _, path in ipairs(files) do
+                for _, hit in ipairs(leaks(path, read(path), c, words)) do
+                    found[#found + 1] = hit
+                end
             end
+            assert.are.same({}, found)
         end
-        assert.are.same({}, found)
-    end)
+    )
 end)
