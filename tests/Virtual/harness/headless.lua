@@ -249,7 +249,8 @@ end
 --- class, classID, specID, level, known = { spellID... }, talents = { [spellID] = rank }, power = { type, token, max,
 --- value (nil: secret, as on Forever) }, speed = { main, off }, items = { [slot] = { itemID, name, equipLoc } },
 --- forms = { spellID... }, form }; `o.pack` the priority to select; `o.now` the clock [1000]; `o.raw` facade rows
---- answered by the raw client (names: the oracle's secret-free client, §4), replaced as Facade.lua loads.
+--- answered by the raw client (names: the oracle's secret-free client, §4), replaced as Facade.lua loads; `o.saved` the
+--- HekiliDB saved variables (default nil: a fresh profile).
 --- Returns `H = { env, api, ctl, ns, Hekili, frames, timers, misses, errors, loadErrors, prints }`.
 function M.new(o)
     o = o or {}
@@ -917,7 +918,8 @@ function M.new(o)
     end
     -- An addon as the client loads it (tests/helpers/addons.lua): its TOC's files, the content each with its own
     -- (name, ns), then its ADDON_LOADED. The class packs are load-on-demand: Engine/Content.lua asks C_AddOns.LoadAddOn
-    -- at OnEnable, which loads a shipped one here (false, "MISSING" for any other).
+    -- at OnInitialize, which loads a shipped one here after its unloaded dependencies, as the client does (false,
+    -- "MISSING" for any other).
     local loaded = {}
     local function loadAddon(name)
         local addonNs = name ~= addons.CORE and {} or nil
@@ -941,14 +943,18 @@ function M.new(o)
         if not shipped[name] then
             return false, "MISSING"
         end
+        for dep in (shipped[name].Dependencies or ""):gmatch("[%w_]+") do
+            env.C_AddOns.LoadAddOn(dep)
+        end
         loadAddon(name)
         H.Fire("ADDON_LOADED", name)
         return true
     end
+    env.HekiliDB = o.saved -- saved variables, as the client sets them before the addon's ADDON_LOADED (nil: fresh)
     loadAddon(addons.CORE)
 
-    -- login: ADDON_LOADED (OnInitialize, the AceDB profile), then the always-loaded content addons (the ones that are
-    -- not load-on-demand, after their dependency, the core), PLAYER_LOGIN (OnEnable, VS.Start, the class pack) and
+    -- login: ADDON_LOADED (OnInitialize: the class pack with Hekili_Forever, then the AceDB profile), then the
+    -- always-loaded content addons not loaded yet, PLAYER_LOGIN (OnEnable, VS.Start, the content notice) and
     -- PLAYER_ENTERING_WORLD
     H.phase = "login"
     local ok, err = xpcall(function()

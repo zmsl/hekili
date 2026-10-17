@@ -134,6 +134,8 @@ function VS.KnownRank(ids)
 end
 NAMES.knownRank = VS.KnownRank
 -- The belief's other plain reads content uses (Families/Player.lua, Swing.lua), as in the sim's `state` (State.lua).
+-- Here `stat` is a plain function, stat(name, arg); in the sim it is also the stat table (`stat.crit`), which a `now`
+-- handler cannot read.
 NAMES.stat, NAMES.swingBase, NAMES.healthMax = VS.Stat, VS.SwingBase, VS.HealthMax
 
 --- The known rank's spell ID for any rank ID of a tracked ability with a known rank, else `spellID` unchanged (nil,

@@ -74,11 +74,9 @@ local function rest(ids)
 end
 
 -- The highest known rank of a rank list, from the belief's spellbook (the plain IsSpellKnown reads it keeps): the
--- same answer in the sim's `state` environment and in a `now` handler's (event-facade spec §12a). `state.knownRank`, as
--- this file's plain helpers run in the file's own environment.
-local function knownRank(ids)
-    return state.knownRank(ids)
-end
+-- same answer in the sim's `state` environment and in a `now` handler's (event-facade spec §12a). An upvalue, as this
+-- file's plain helpers run in the file's own environment.
+local knownRank = state.knownRank
 
 -- Tactical Mastery is a passive, not an ability: declared so the belief's spellbook knows it.
 local TACTICAL_MASTERY_IDS = { TACTICAL_MASTERY }

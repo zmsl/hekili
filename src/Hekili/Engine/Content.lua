@@ -1,11 +1,13 @@
 -- Engine/Content.lua
 -- The class content loader (restructure plan, Task 8). The Forever content lives in separate addons: Hekili_Forever
--- (the shared and race content, a hard dependency of every pack, so the client loads it after the core) and one
--- load-on-demand pack per class, Hekili_Forever_<Class>. At OnEnable (PLAYER_LOGIN, before PLAYER_ENTERING_WORLD's
--- SpecializationChanged picks the spec up) ns.LoadContent loads the player's class pack when its TOC's
--- X-Hekili-ContentAPI is this core's CONTENT_API: the version of the content surface (the Register* API, Hekili.Client,
--- the belief's environment names), bumped only when that surface changes. Missing pack, mismatch or failed load: one
--- notice, and the core runs with no class spec.
+-- (the shared and race content, a hard dependency of every pack) and one load-on-demand pack per class,
+-- Hekili_Forever_<Class>. At OnInitialize, before InitializeProfile, ns.LoadContent loads the player's class pack (the
+-- client loads Hekili_Forever with it, as its dependency) when its TOC's X-Hekili-ContentAPI is this core's
+-- CONTENT_API: the version of the content surface (the Register* API, Hekili.Client, the belief's environment names),
+-- bumped only when that surface changes. So the profile's defaults (GetDefaults) and OnInitialize's RestoreDefaults see
+-- the class's spec and packs, as when the class files were in the core's TOC. Missing pack, mismatch or failed load:
+-- one notice, shown by ns.ContentNotice at OnEnable (Hekili:Notify reads the profile, which does not exist yet), and
+-- the core runs with no class spec.
 -- Pattern after Taco Dog Forever's Boot.lua class-pack loader (a pcall'd LoadAddOn, a notice for a class without one).
 
 local addon, ns = ...
@@ -15,9 +17,15 @@ local Hekili = _G[addon]
 
 local CONTENT_API = 1
 
---- Loads the player's class pack (once, from OnEnable); Notifies when it is not installed, declares another content
---- API (then it is not loaded) or fails to load.
+local done, notice = false, nil
+
+--- Loads the player's class pack, once per session (OnInitialize; a later call does nothing). Keeps a notice when it
+--- is not installed, declares another content API (then it is not loaded) or fails to load.
 function ns.LoadContent()
+    if done then
+        return
+    end
+    done = true
     local token = select(2, UnitClass("player"))
     if type(token) ~= "string" or token == "" then
         return
@@ -28,18 +36,16 @@ function ns.LoadContent()
     -- an addon that is not installed answers nil, or raises on some clients
     local ok, api = pcall(C_AddOns.GetAddOnMetadata, name, "X-Hekili-ContentAPI")
     if not ok or api == nil then
-        Hekili:Notify("no Forever pack for " .. class .. "; install " .. name)
+        notice = "no Forever pack for " .. class .. "; install " .. name
         return
     end
     if tonumber(api) ~= CONTENT_API then
-        Hekili:Notify(
-            name
-                .. " is for content API "
-                .. tostring(api)
-                .. ", this Hekili for "
-                .. CONTENT_API
-                .. "; update the older one"
-        )
+        notice = name
+            .. " is for content API "
+            .. tostring(api)
+            .. ", this Hekili for "
+            .. CONTENT_API
+            .. "; update the older one"
         return
     end
 
@@ -49,8 +55,14 @@ function ns.LoadContent()
         reason = loaded
     end
     if not ok or not loaded then
-        Hekili:Notify("could not load " .. name .. " (" .. tostring(reason) .. ")")
-        return
+        notice = "could not load " .. name .. " (" .. tostring(reason) .. ")"
     end
-    Hekili:RegisterSpecDefaults() -- Options/Profile.lua: the new spec's profile defaults
+end
+
+--- Shows LoadContent's notice, once (OnEnable: the profile and the notice frame exist by then).
+function ns.ContentNotice()
+    if notice then
+        Hekili:Notify(notice)
+        notice = nil
+    end
 end

@@ -67,11 +67,11 @@ describe("Engine.Configure (pure)", function()
 end)
 
 describe("Engine.Configure (headless Arms boot)", function()
-    it("runs from InitializeProfile (OnInitialize), and again once the class pack's spec defaults are in", function()
+    it("runs once from the fixture profile through OnInitialize -> InitializeProfile", function()
         local H = headless.new({ character = ww.character(), pack = ww.PACK })
         assert.are.same({}, H.loadErrors)
         local s, p = H.Hekili.Engine.settings, H.Hekili.DB.profile
-        assert.are.equal(2, s.version) -- Options/Profile.lua's RegisterSpecDefaults, from Engine/Content.lua
+        assert.are.equal(1, s.version)
         for _, k in ipairs(SUBTABLES) do
             assert.are.equal(p[k], s[k], k)
         end
@@ -84,5 +84,24 @@ describe("Engine.Configure (headless Arms boot)", function()
         assert.is_string(H.Hekili.Engine.Output.Primary.recs[1].actionName)
         assert.are.same({}, H.errors)
         assert.are.same({}, headless.unexpected(H, "run"))
+    end)
+
+    -- The class pack loads in OnInitialize before the profile (Engine/Content.lua): its spec's defaults are in the
+    -- AceDB defaults from the start, so nothing re-registers them and every early holder of a profile subtable keeps
+    -- the live one (LibDBIcon's iconStore: the minimap button's position and lock).
+    it("keeps a saved spec setting and the minimap button's db (an all-default iconStore) across the boot", function()
+        local saved = {
+            profiles = { Default = { specs = { [1491] = { settings = { ww_min_enemies = 4 } } }, iconStore = {} } },
+        }
+        local H = headless.new({ character = ww.character(), pack = ww.PACK, saved = saved })
+        assert.are.same({}, H.loadErrors)
+        local p = H.Hekili.DB.profile
+        assert.are.equal(4, p.specs[1491].settings.ww_min_enemies)
+        assert.is_true(p.specs[1491].settings.adaptive_queueing_enabled) -- a default the spec registered
+        assert.are.equal(p.iconStore, saved.profiles.Default.iconStore)
+        local icon = H.env.LibStub("LibDBIcon-1.0", true)
+        local button = icon and icon:GetMinimapButton("Hekili")
+        assert.is_not_nil(button)
+        assert.are.equal(p.iconStore, button.db)
     end)
 end)

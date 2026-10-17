@@ -1,14 +1,16 @@
--- tests/Forever/content_spec.lua (restructure plan, Task 8): Engine/Content.lua, the class pack loader OnEnable runs:
--- it picks Hekili_Forever_<Class> by the player's class, loads it when its X-Hekili-ContentAPI matches, and Notifies
--- (without loading) when the pack is missing, of another content API, or fails to load. A fake C_AddOns records the
--- calls.
+-- tests/Forever/content_spec.lua (restructure plan, Task 8): Engine/Content.lua, the class pack loader OnInitialize
+-- runs: it picks Hekili_Forever_<Class> by the player's class, loads it when its X-Hekili-ContentAPI matches, and keeps
+-- a notice (shown at OnEnable by ns.ContentNotice) when the pack is missing, of another content API (not loaded), or
+-- fails to load; once per session. A fake C_AddOns records the calls.
 local addons = require("helpers.addons")
 
 describe("Engine/Content.lua", function()
-    local calls, notes, meta, loadResult, classToken, defaults
+    local calls, notes, meta, loadResult, classToken, saved
 
-    local function run()
-        calls, notes, defaults = {}, {}, 0
+    -- a fresh load of Content.lua (its once-per-session flag reset), LoadContent, then ContentNotice; `again` repeats
+    -- both calls on the same load, as OnInitialize and a disable/enable's OnEnable would
+    local function run(again)
+        calls, notes = {}, {}
         local ns = {
             Facade = {
                 UnitClass = function(unit)
@@ -27,21 +29,24 @@ describe("Engine/Content.lua", function()
                 },
             },
         }
-        local saved = rawget(_G, "Hekili")
         _G.Hekili = {
             Notify = function(_, text)
                 notes[#notes + 1] = text
             end,
-            RegisterSpecDefaults = function()
-                defaults = defaults + 1
-            end,
         }
         assert(loadfile("src/Hekili/Engine/Content.lua"))("Hekili", ns)
-        ns.LoadContent()
-        _G.Hekili = saved
+        for _ = 1, again and 2 or 1 do
+            ns.LoadContent()
+            ns.ContentNotice()
+        end
     end
 
+    after_each(function()
+        _G.Hekili = saved or nil
+    end)
+
     before_each(function()
+        saved = rawget(_G, "Hekili") or false
         meta = {}
         for _, name in ipairs(addons.CONTENT) do
             meta[name] = addons.meta(name)
@@ -56,7 +61,6 @@ describe("Engine/Content.lua", function()
         run()
         assert.are.same({ "meta Hekili_Forever_Warrior X-Hekili-ContentAPI", "load Hekili_Forever_Warrior" }, calls)
         assert.are.same({}, notes)
-        assert.are.equal(1, defaults) -- the pack's spec gets its profile defaults
         classToken = "DRUID"
         run()
         assert.are.same({ "meta Hekili_Forever_Druid X-Hekili-ContentAPI", "load Hekili_Forever_Druid" }, calls)
@@ -67,7 +71,6 @@ describe("Engine/Content.lua", function()
         run()
         assert.are.same({ "meta Hekili_Forever_Paladin X-Hekili-ContentAPI" }, calls)
         assert.are.same({ "no Forever pack for Paladin; install Hekili_Forever_Paladin" }, notes)
-        assert.are.equal(0, defaults)
     end)
 
     it("Notifies a content API mismatch and does not load the pack", function()
@@ -90,6 +93,15 @@ describe("Engine/Content.lua", function()
         end
         run()
         assert.are.same({ "could not load Hekili_Forever_Warrior (boom)" }, notes)
+    end)
+
+    it("runs once per session: a second call loads nothing and repeats no notice", function()
+        run(true)
+        assert.are.same({ "meta Hekili_Forever_Warrior X-Hekili-ContentAPI", "load Hekili_Forever_Warrior" }, calls)
+        classToken = "PALADIN"
+        run(true)
+        assert.are.same({ "meta Hekili_Forever_Paladin X-Hekili-ContentAPI" }, calls)
+        assert.are.same({ "no Forever pack for Paladin; install Hekili_Forever_Paladin" }, notes)
     end)
 
     it("declares one content API in every content TOC", function()

@@ -61,6 +61,7 @@ end
 -- OnInitialize()
 -- Addon has been loaded by the WoW client (1x).
 function Hekili:OnInitialize()
+    ns.LoadContent() -- Engine/Content.lua: the class pack first, so the profile's defaults and RestoreDefaults see its spec
     self:InitializeProfile() -- Options/Profile.lua: the AceDB profile, handed to the engine by Engine.Configure
 
     -- EmbedBlizOptions()
@@ -87,7 +88,7 @@ end
 function Hekili:OnEnable()
     ns.StartEventHandler()
     self:TotalRefresh( true )
-    ns.LoadContent() -- Engine/Content.lua: the class pack, before PLAYER_ENTERING_WORLD's SpecializationChanged; after the UI, which its notice needs
+    ns.ContentNotice() -- Engine/Content.lua: the class pack's notice, if any; after the UI, which shows it
 
     ns.ReadKeybindings()
 

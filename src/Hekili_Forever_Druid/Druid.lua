@@ -125,9 +125,7 @@ end
 
 -- The highest known rank of a rank list, from the belief's spellbook: the same answer in the sim's `state`
 -- environment and in a `now` handler's (event-facade spec §12a).
-local function knownRank(ids)
-    return state.knownRank(ids)
-end
+local knownRank = state.knownRank
 
 local function knows(ids)
     return function()

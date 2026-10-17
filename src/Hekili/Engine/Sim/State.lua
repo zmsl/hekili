@@ -488,8 +488,9 @@ state.rawget = rawget
 state.rawset = rawset
 state.select = select
 -- The belief's plain reads, as names in every content function's environment (restructure plan, Task 8; the `now`
--- context has the same four, Virtual/State/Families/Now.lua). `stat` is Hekili's stat table; calling it, stat(name,
--- arg), answers VirtualState's out-of-combat stat cache (mt_stat's __call below).
+-- context has the same four, Virtual/State/Families/Now.lua). Here `stat` is two things: `stat.<field>` (stat.crit) is
+-- the sim's stat table, as upstream; calling it, stat(name, arg), is the belief's out-of-combat stat cache (mt_stat's
+-- __call below). In a `now` handler `stat` is only the plain function.
 local VS = ns.VirtualState
 state.knownRank, state.swingBase, state.healthMax = VS.KnownRank, VS.SwingBase, VS.HealthMax
 state.tinsert = table.insert
