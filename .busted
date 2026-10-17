@@ -1,6 +1,13 @@
 return {
     default = {
-        ROOT = { "tests/Virtual/Events", "tests/Virtual/API", "tests/Virtual/State", "tests/Virtual/harness", "tests/Forever" },
+        ROOT = {
+            "tests/Virtual/Events",
+            "tests/Virtual/API",
+            "tests/Virtual/State",
+            "tests/Virtual/harness",
+            "tests/Forever",
+            "tests/boundary_spec.lua",
+        },
         pattern = "_spec",
         lpath = "./src/Hekili/?.lua;./tests/?.lua;./?.lua",
         verbose = true,
