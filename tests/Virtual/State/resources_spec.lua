@@ -214,7 +214,7 @@ describe("resources", function()
             "alternates pinned (the ladder) and modelled (a swing, a cast) and keeps lo at or above what was seen",
             function()
                 obs(Obs.Usable, 5, 3, 1, 0) -- spender_c (10) usable
-                obs(Obs.Usable, 5, 2, 0, 1) -- heroic strike (15) short
+                obs(Obs.Usable, 5, 2, 0, 1) -- spender_b (15) short
                 I.Fold(5, false)
                 local r = VS.Power(fs.RAGE, 5)
                 assert.are.equal("pinned", r.basis)
@@ -227,7 +227,7 @@ describe("resources", function()
         )
 
         it("keeps basis default at rest when a rung bounds the interval without moving the estimate", function()
-            obs(Obs.Usable, 5, 1, 0, 1) -- battle shout (10) short at 0 rage, out of combat
+            obs(Obs.Usable, 5, 1, 0, 1) -- spender_a (10) short at 0 rage, out of combat
             I.Fold(5, false)
             local r = VS.Power(fs.RAGE, 5)
             assert.are.same({ 0, "default" }, { r.est, r.basis })
@@ -743,13 +743,13 @@ describe("resources", function()
         end)
     end)
 
-    describe("a swing entry gated on a player aura (bear rage: swings pay only in Bear Form)", function()
-        local BEAR, REND = 3, 3 -- the aura index; fs.def's ability index of spender_c (10 rage)
+    describe("a swing entry gated on a player aura (swings pay only while form_a is up)", function()
+        local GATE, SPENDER_C = 3, 3 -- the aura index; fs.def's ability index of spender_c (10 rage)
 
         local function gated(aura)
             local def = fs.def(fs.new(9))
-            def.auras[BEAR] = { key = "bear_form", id = 5487 }
-            def.auraIds[BEAR] = { 5487 }
+            def.auras[GATE] = { key = "form_a", id = 1041 }
+            def.auraIds[GATE] = { 1041 }
             def.resources[1].swingAura = aura
             boot(def)
             I.Fold(10, false)
@@ -763,52 +763,52 @@ describe("resources", function()
         end
 
         it("pays only while the aura is believed up: never applied, applied (as a `now` writes it), expired", function()
-            gated("bear_form")
+            gated("form_a")
             assert.are.equal(0, swing(11))
-            I.AuraModel(1, BEAR, 12, 30, 1, 12, Obs.CastSuccess, false) -- the shift's applyBuff
+            I.AuraModel(1, GATE, 12, 30, 1, 12, Obs.CastSuccess, false) -- the shift's applyBuff
             assert.are.equal(9, swing(13.5))
             assert.are.equal(18, swing(16))
             assert.are.equal(18, swing(31)) -- past the believed expiry
         end)
 
         it("pays nothing when the gate names an untracked aura, and as before without a gate", function()
-            gated("dire_bear_test")
-            I.AuraModel(1, BEAR, 12, 30, 1, 12, Obs.CastSuccess, false)
+            gated("form_b_test")
+            I.AuraModel(1, GATE, 12, 30, 1, 12, Obs.CastSuccess, false)
             assert.are.equal(0, swing(13.5))
             gated(nil)
             assert.are.equal(9, swing(11))
         end)
 
         it("out of the aura: no swing rate to calibrate against, and a zero-width pin on the ladder", function()
-            gated("bear_form")
+            gated("form_a")
             swing(11) -- a speed to divide by
-            I.AuraModel(1, BEAR, 12, 30, 1, 12, Obs.CastSuccess, false)
+            I.AuraModel(1, GATE, 12, 30, 1, 12, Obs.CastSuccess, false)
             I.Settle(12)
             within(9 / 2.5, I.SwingPerSecond(1))
-            I.AuraModel(1, BEAR, 0, 0, 0, 13, Obs.CastSuccess, false) -- left Bear Form
+            I.AuraModel(1, GATE, 0, 0, 0, 13, Obs.CastSuccess, false) -- left form_a
             I.Settle(13)
             assert.are.equal(0, I.SwingPerSecond(1))
-            obs(Obs.Usable, 14, REND, 0, 1)
-            obs(Obs.Usable, 14, REND, 1, 0) -- the flip pins at spender_c's 10 with a step of 0
+            obs(Obs.Usable, 14, SPENDER_C, 0, 1)
+            obs(Obs.Usable, 14, SPENDER_C, 1, 0) -- the flip pins at spender_c's 10 with a step of 0
             I.Fold(14, false)
             local r = VS.Power(fs.RAGE, 14)
             assert.are.same({ 10, 10, 10 }, { r.est, r.lo, r.hi })
-            obs(Obs.Usable, 16, REND, 0, 1)
-            obs(Obs.Usable, 16, REND, 1, 0) -- a second measuring pin: nothing to calibrate against
+            obs(Obs.Usable, 16, SPENDER_C, 0, 1)
+            obs(Obs.Usable, 16, SPENDER_C, 1, 0) -- a second measuring pin: nothing to calibrate against
             I.Fold(16, false)
             assert.are.same({ 1, 0 }, { I.res.scale[1], VS.Regen(fs.RAGE, 16).est })
         end)
 
         it("allocates nothing over 1000 swings and casts in and out of the aura", function()
-            gated("bear_form")
+            gated("form_a")
             local t = 10
             local bytes = alloc.bytes(function(i)
                 t = t + 1
                 if i % 2 == 0 then
-                    I.AuraModel(1, BEAR, t, t + 1.5, 1, t, Obs.CastSuccess, false)
+                    I.AuraModel(1, GATE, t, t + 1.5, 1, t, Obs.CastSuccess, false)
                 end
                 obs(Obs.Swing, t + 0.5, 1, 2.5, 1)
-                obs(Obs.CastSuccess, t + 0.6, REND)
+                obs(Obs.CastSuccess, t + 0.6, SPENDER_C)
                 I.Fold(t + 0.6, false)
                 VS.Power(fs.RAGE, t + 0.7)
                 I.SwingPerSecond(1)
@@ -817,99 +817,105 @@ describe("resources", function()
         end)
     end)
 
-    describe("the in-game regen_aura_a trace (2026-10-16): a usability answer bounds the estimate", function()
-        local REGEN_AURA_A = 3 -- the aura index
-        local FIVE = 1 -- the abilities cost 5, 10 (spender_a), 10 (spender_c), 15 (spender_b): pins before caps
-        local COST = { 5, 10, 10, 15 }
+    describe(
+        "the in-game trace (2026-10-16, recorded on a Warrior's Bloodrage): a usability answer bounds the estimate",
+        function()
+            local REGEN_AURA_A = 3 -- the aura index
+            local FIVE = 1 -- the abilities cost 5, 10 (spender_a), 10 (spender_c), 15 (spender_b): pins before caps
+            local COST = { 5, 10, 10, 15 }
 
-        before_each(function()
-            local def = fs.def(fs.new(9))
-            local five = { key = "five", spend = 5, spendType = "rage" }
-            def.abilities = { five, def.abilities[1], def.abilities[3], def.abilities[2] }
-            def.abilityIds = { { 7384 }, def.abilityIds[1], def.abilityIds[3], def.abilityIds[2] }
-            def.abilitySlot = { 1, 1, 1, 1 }
-            def.auras[REGEN_AURA_A] = { key = "regen_aura_a", id = 1021 }
-            def.auraIds[REGEN_AURA_A] = { 1021 }
-            def.resources[1].decay = 1.25
-            def.resources[1].decayInterval = 1
-            def.resources[1].auraRegen = { { aura = "regen_aura_a", interval = 1, value = 1, pausesDecay = true } }
-            boot(def)
-            I.Fold(50, false)
-        end)
+            before_each(function()
+                local def = fs.def(fs.new(9))
+                local five = { key = "five", spend = 5, spendType = "rage" }
+                def.abilities = { five, def.abilities[1], def.abilities[3], def.abilities[2] }
+                def.abilityIds = { { 1007 }, def.abilityIds[1], def.abilityIds[3], def.abilityIds[2] }
+                def.abilitySlot = { 1, 1, 1, 1 }
+                def.auras[REGEN_AURA_A] = { key = "regen_aura_a", id = 1021 }
+                def.auraIds[REGEN_AURA_A] = { 1021 }
+                def.resources[1].decay = 1.25
+                def.resources[1].decayInterval = 1
+                def.resources[1].auraRegen = { { aura = "regen_aura_a", interval = 1, value = 1, pausesDecay = true } }
+                boot(def)
+                I.Fold(50, false)
+            end)
 
-        -- The truth: 0; regen_aura_a at 50.3 (+10, then +1 a second); spender_a at 51.0 (-10).
-        local function truth(t)
-            if t < 50.3 then
-                return 0
-            elseif t < 51 then
-                return 10
+            -- The truth: 0; regen_aura_a at 50.3 (+10, then +1 a second); spender_a at 51.0 (-10).
+            local function truth(t)
+                if t < 50.3 then
+                    return 0
+                elseif t < 51 then
+                    return 10
+                end
+                return math.floor(t - 50.3)
             end
-            return math.floor(t - 50.3)
-        end
 
-        it("keeps est on the modelled chain (= lo); a gain-explained flip pins exactly and measures nothing", function()
-            local t, raged, shouted = 50.1, false, false
-            while t < 59 do
-                if not raged and t >= 50.3 then
-                    raged = true
-                    I.Settle(50.3)
-                    I.ResourceShift(1, 10, 50.3, Obs.CastSuccess) -- regen_aura_a's `now` gain
-                    I.AuraModel(1, REGEN_AURA_A, 50.3, 60.3, 1, 50.3, 0)
-                end
-                if not shouted and t >= 51 then
-                    shouted = true
-                    I.Settle(51)
-                    I.ResourceShift(1, -10, 51, Obs.CastSuccess) -- spender_a's spend
-                end
-                local v, cap = truth(t), 100
-                for a = 1, 4 do
-                    if v >= COST[a] then
-                        obs(Obs.Usable, t, a, 1, 0)
-                    elseif a == FIVE and t < 51 then
-                        obs(Obs.Usable, t, a, 0, 0) -- not usable for another reason: no rung
-                    else
-                        obs(Obs.Usable, t, a, 0, 1)
-                        cap = math.min(cap, COST[a] - I.EPS)
+            it(
+                "keeps est on the modelled chain (= lo); a gain-explained flip pins exactly and measures nothing",
+                function()
+                    local t, raged, shouted = 50.1, false, false
+                    while t < 59 do
+                        if not raged and t >= 50.3 then
+                            raged = true
+                            I.Settle(50.3)
+                            I.ResourceShift(1, 10, 50.3, Obs.CastSuccess) -- regen_aura_a's `now` gain
+                            I.AuraModel(1, REGEN_AURA_A, 50.3, 60.3, 1, 50.3, 0)
+                        end
+                        if not shouted and t >= 51 then
+                            shouted = true
+                            I.Settle(51)
+                            I.ResourceShift(1, -10, 51, Obs.CastSuccess) -- spender_a's spend
+                        end
+                        local v, cap = truth(t), 100
+                        for a = 1, 4 do
+                            if v >= COST[a] then
+                                obs(Obs.Usable, t, a, 1, 0)
+                            elseif a == FIVE and t < 51 then
+                                obs(Obs.Usable, t, a, 0, 0) -- not usable for another reason: no rung
+                            else
+                                obs(Obs.Usable, t, a, 0, 1)
+                                cap = math.min(cap, COST[a] - I.EPS)
+                            end
+                        end
+                        I.Fold(t, false)
+                        I.Settle(t)
+                        local r = VS.Power(fs.RAGE, t)
+                        -- from the regen_aura_a flip (exact at 10) hi is the chain itself, until the 5-cost's swing-width flip
+                        local hi = (t >= 50.3 and t < 55.3) and v or cap
+                        local got = ("%.2f est=%.2f lo=%.2f hi=%.2f"):format(t, r.est, r.lo, r.hi)
+                        local want = ("%.2f est=%.2f lo=%.2f hi=%.2f"):format(t, v, v, hi)
+                        assert.are.equal(want, got)
+                        if t == 50.35 then
+                            assert.is_false(I.res.pinValid[1]) -- the regen_aura_a flip is no regen measurement
+                        end
+                        t = t + 0.25
                     end
+                    assert.are.equal(0, I.res.regen[1].last.modelled.t) -- no calibration from any flip
                 end
-                I.Fold(t, false)
-                I.Settle(t)
-                local r = VS.Power(fs.RAGE, t)
-                -- from the regen_aura_a flip (exact at 10) hi is the chain itself, until the 5-cost's swing-width flip
-                local hi = (t >= 50.3 and t < 55.3) and v or cap
-                local got = ("%.2f est=%.2f lo=%.2f hi=%.2f"):format(t, r.est, r.lo, r.hi)
-                local want = ("%.2f est=%.2f lo=%.2f hi=%.2f"):format(t, v, v, hi)
-                assert.are.equal(want, got)
-                if t == 50.35 then
-                    assert.is_false(I.res.pinValid[1]) -- the regen_aura_a flip is no regen measurement
-                end
-                t = t + 0.25
-            end
-            assert.are.equal(0, I.res.regen[1].last.modelled.t) -- no calibration from any flip
-        end)
+            )
 
-        it("clamps a wide flip's estimate down to its top when a tick took it past cost + step", function()
-            local def = fs.def(fs.new(9))
-            def.auras[REGEN_AURA_A] = { key = "regen_aura_a", id = 1021 }
-            def.auraIds[REGEN_AURA_A] = { 1021 }
-            def.resources[1].auraRegen = { { aura = "regen_aura_a", interval = 1, value = 10 } }
-            boot(def)
-            I.Fold(10, false)
-            I.ResourceShift(1, 20, 10, Obs.CastSuccess)
-            obs(Obs.Usable, 10, 2, 0, 1) -- heroic strike (15) short: est 14.99
-            I.Fold(10, false)
-            within(15 - I.EPS, VS.Power(fs.RAGE, 10).est)
-            I.AuraModel(1, REGEN_AURA_A, 10, 20, 1, 10, 0)
-            I.Settle(11) -- a +10 tick, not our own gain: 24.99
-            within(25 - I.EPS, VS.Power(fs.RAGE, 11).est)
-            obs(Obs.Usable, 11, 2, 1, 0) -- usable: the swing-width flip [15, 15 + 9 x 1.1]
-            I.Fold(11, false)
-            local r = VS.Power(fs.RAGE, 11)
-            within(15 + 9.9, r.est)
-            within(15, r.lo)
-            within(15 + 9.9, r.hi)
-        end)
-    end)
+            it("clamps a wide flip's estimate down to its top when a tick took it past cost + step", function()
+                local def = fs.def(fs.new(9))
+                def.auras[REGEN_AURA_A] = { key = "regen_aura_a", id = 1021 }
+                def.auraIds[REGEN_AURA_A] = { 1021 }
+                def.resources[1].auraRegen = { { aura = "regen_aura_a", interval = 1, value = 10 } }
+                boot(def)
+                I.Fold(10, false)
+                I.ResourceShift(1, 20, 10, Obs.CastSuccess)
+                obs(Obs.Usable, 10, 2, 0, 1) -- spender_b (15) short: est 14.99
+                I.Fold(10, false)
+                within(15 - I.EPS, VS.Power(fs.RAGE, 10).est)
+                I.AuraModel(1, REGEN_AURA_A, 10, 20, 1, 10, 0)
+                I.Settle(11) -- a +10 tick, not our own gain: 24.99
+                within(25 - I.EPS, VS.Power(fs.RAGE, 11).est)
+                obs(Obs.Usable, 11, 2, 1, 0) -- usable: the swing-width flip [15, 15 + 9 x 1.1]
+                I.Fold(11, false)
+                local r = VS.Power(fs.RAGE, 11)
+                within(15 + 9.9, r.est)
+                within(15, r.lo)
+                within(15 + 9.9, r.hi)
+            end)
+        end
+    )
 
     describe("rage from damage taken (tank design §1.2: the paying entry's `taken`)", function()
         local WOUND, BLOCKED, BLOCK, DODGE, PARRY, MISS, HEAL = 1, 2, 3, 4, 5, 6, 7
@@ -960,7 +966,7 @@ describe("resources", function()
             taken(function()
                 return 3, 5
             end)
-            obs(Obs.Usable, 10, 2, 0, 1) -- heroic strike (15) short: hi 14.99
+            obs(Obs.Usable, 10, 2, 0, 1) -- spender_b (15) short: hi 14.99
             I.Fold(10, false)
             hit(11, WOUND, 40)
             local r = VS.Power(fs.RAGE, 11)
@@ -1019,7 +1025,7 @@ describe("resources", function()
             taken(function()
                 return 8
             end)
-            obs(Obs.Usable, 10, 2, 0, 1) -- heroic strike (15) short at 0
+            obs(Obs.Usable, 10, 2, 0, 1) -- spender_b (15) short at 0
             I.Fold(10, false)
             hit(11, WOUND, 40)
             hit(12, WOUND, 40)
@@ -1090,7 +1096,7 @@ end)
 
 describe("the usability oracle (harness design §2: Rows' credits judged by the next usability answer)", function()
     local api, ctl, ns, VS, I, L, R, saved, rows
-    local SHOUT, STRIKE = fs.SPENDER_A, fs.SPENDER_B -- the fake spec's spenders at 10 and 15
+    local SPENDER_A, SPENDER_B = fs.SPENDER_A, fs.SPENDER_B -- the fake spec's spenders at 10 and 15
     local USABLE, SHORT = { true, false }, { false, true }
 
     before_each(function()
@@ -1155,9 +1161,9 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         setup(8)
         credit(10)
         assert.are.same({ 8 + 9 * 0.9, 17, 8 + 9 * 1.1 }, power(10.5))
-        answer(10.52, SHOUT, true) -- before ORACLE_MIN after the outcome: no verdict yet
+        answer(10.52, SPENDER_A, true) -- before ORACLE_MIN after the outcome: no verdict yet
         assert.are.equal(0, L.oracle.judged)
-        answer(10.6, SHOUT, true)
+        answer(10.6, SPENDER_A, true)
         assert.are.same({ 1, 1 }, { L.oracle.judged, L.oracle.confirmed })
         assert.are.equal(L.THETA / 1.1, L.theta[1]) -- main, exact, core band
     end)
@@ -1165,7 +1171,7 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
     it("retracts a firm credit answered short: est, lo and hi back, the swing pending again", function()
         setup(8)
         credit(10)
-        answer(10.6, SHOUT, false)
+        answer(10.6, SPENDER_A, false)
         assert.are.same({ 1, 1 }, { L.oracle.judged, L.oracle.retracted })
         assert.are.same({ 8, 8, 8 }, power(10.6)) -- lo never above its pre-credit value
         assert.are.equal(L.THETA * 1.5, L.theta[1])
@@ -1176,7 +1182,7 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
     it("closes a retracted swing past its window as SWING_MISSED (two rows for that swing, decision D9)", function()
         setup(8)
         credit(10, 45, 1.2)
-        answer(11.6, SHOUT, false) -- 0.4 s after the outcome, 1.6 s after the swing
+        answer(11.6, SPENDER_A, false) -- 0.4 s after the outcome, 1.6 s after the swing
         assert.are.same({ { "SWING_DAMAGE", 45, 10 }, { "SWING_MISSED", "MISS", 10 } }, rows)
     end)
 
@@ -1185,8 +1191,8 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         function()
             setup(8)
             credit(10)
-            answer(10.5, SHOUT, false) -- 0.03 s after the outcome: no verdict yet; the ladder clamps under 10
-            answer(10.6, SHOUT, false)
+            answer(10.5, SPENDER_A, false) -- 0.03 s after the outcome: no verdict yet; the ladder clamps under 10
+            answer(10.6, SPENDER_A, false)
             assert.are.equal(1, L.oracle.retracted)
             assert.are.same({ 8, 8, 8 }, power(10.6))
         end
@@ -1198,19 +1204,19 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         at(10, "PLAYER_SWING", 2.2, 0)
         at(10.47, "UNIT_COMBAT", "target", "WOUND", "CRITICAL", 90, 1)
         assert.are.same({ 2 + 9 * 0.9 + 4, 15, 2 + 9 * 1.1 + 4 }, power(10.5))
-        answer(10.6, SHOUT, false)
+        answer(10.6, SPENDER_A, false)
         assert.are.equal(1, L.oracle.retracted)
         assert.are.same({ 2, 2, 2 }, power(10.6))
     end)
 
     it("rescues nothing for a flip our confirmed credit explains, after a stale short clamped it", function()
         setup(5)
-        answer(9.95, SHOUT, false)
+        answer(9.95, SPENDER_A, false)
         L.theta[2] = 8 -- main, exact, tail: the 45 at 1.3 s is dropped
         credit(10, 45, 1.3)
         credit(11, 45, 0.47) -- ours, credited: 5 + 9 crosses 10
-        answer(11.5, SHOUT, false) -- stale (0.03 s after the outcome): the ladder clamps under 10
-        answer(11.67, SHOUT, true)
+        answer(11.5, SPENDER_A, false) -- stale (0.03 s after the outcome): the ladder clamps under 10
+        answer(11.67, SPENDER_A, true)
         assert.are.same({ 1, 0 }, { L.oracle.confirmed, L.oracle.rescued })
         assert.are.equal(10, power(11.67)[1]) -- the swing-paid pin [10, 10 + a step)
     end)
@@ -1218,7 +1224,7 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
     it("labels a soft credit (only its estimate crossed) at half weight and retracts nothing", function()
         setup(8, 0, 8)
         credit(10)
-        answer(10.6, SHOUT, false)
+        answer(10.6, SPENDER_A, false)
         assert.are.same({ 1, 0 }, { L.oracle.soft, L.oracle.retracted })
         assert.are.equal(L.THETA * 1.22, L.theta[1])
         assert.are.equal(8.1, power(10.6)[1]) -- the credit's floor stays; the ladder clamped est and hi under 10
@@ -1227,8 +1233,8 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
     it("gives no verdict when one of our casts spent from the slot between the outcome and the answer", function()
         setup(8)
         credit(10)
-        at(10.55, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", SHOUT)
-        answer(10.6, SHOUT, false)
+        at(10.55, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", SPENDER_A)
+        answer(10.6, SPENDER_A, false)
         assert.are.equal(0, L.oracle.judged)
     end)
 
@@ -1236,17 +1242,17 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         "rescues a dropped wound for a flip nothing explains: its swing paid, its row out; without one, today's pin",
         function()
             setup(5)
-            answer(9.95, SHOUT, false)
+            answer(9.95, SPENDER_A, false)
             L.theta[2] = 8 -- main, exact, tail: the 45 at 1.3 s (LR 7.2) is dropped
             credit(10, 45, 1.3)
             assert.are.same({ 0, 0 }, { #rows, L.oracle.rescued })
-            answer(11.45, SHOUT, true)
+            answer(11.45, SPENDER_A, true)
             assert.are.same({ 1, 0 }, { L.oracle.rescued, L.oracle.rescuedLate })
             assert.are.same({ { "SWING_DAMAGE", 45, 10 } }, rows)
             assert.are.same({ 14, 14, 14 }, power(11.45)) -- 5 + 9, then the explained flip pins exactly
-            answer(12, SHOUT, false)
+            answer(12, SPENDER_A, false)
             R.est0[1], R.lo0[1], R.hi0[1] = 5, 5, 5
-            answer(12.5, SHOUT, true) -- nothing dropped: the swing-paid pin [10, 10 + a step)
+            answer(12.5, SPENDER_A, true) -- nothing dropped: the swing-paid pin [10, 10 + a step)
             assert.are.same({ 10, 10, 10 + 9 * 1.1 }, power(12.5))
         end
     )
@@ -1255,14 +1261,14 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         setup(8)
         for k = 0, 9 do
             credit(10 + 3 * k)
-            answer(10.6 + 3 * k, SHOUT, false)
+            answer(10.6 + 3 * k, SPENDER_A, false)
         end
         assert.are.equal(L.THETA_MAX, L.theta[1])
         for k = 10, 39 do
             R.est0[1], R.lo0[1], R.hi0[1] = 8, 8, 8
             credit(10 + 3 * k)
-            answer(10.6 + 3 * k, SHOUT, true)
-            answer(11 + 3 * k, SHOUT, false)
+            answer(10.6 + 3 * k, SPENDER_A, true)
+            answer(11 + 3 * k, SPENDER_A, false)
         end
         assert.are.equal(L.THETA_MIN, L.theta[1])
     end)

@@ -4,8 +4,9 @@
 -- content (src/Hekili/Forever/**: Classes, Races, Shared) registers, and no class or form/stance name. Ported from Taco
 -- Dog Forever's tests/boundary_spec.lua, which scans for a fixed word list; here the keys and IDs are
 -- extracted from the content at test time, so a new ability is checked without being listed.
--- Code only: comments are skipped, and so is a string literal that is not a single identifier (a message or a
--- description); a one-word string (`buff["rend"]`, `"WARRIOR"`) is checked like an identifier.
+-- Code only: comments are skipped, and so is a string with whitespace (a message or a description); each word of any
+-- other string (`buff["rend"]`, `"buff.rend.up"`, `"772"`) is checked like an identifier or a number. A multi-part key
+-- (`heroic_strike`) also matches as parts of an identifier (`HEROIC_STRIKE_COST`); a one-word key matches whole only.
 local loaders = {
     Warrior = require("Forever.helpers.load_warrior"),
     Druid = require("Forever.helpers.load_druid"),
@@ -27,9 +28,19 @@ local ALLOW_KEYS = {
     form = "the Druid's any-form aura; core reads the client's shapeshift form generically",
     potion = "the shared potion ability; stock Engine/Spec.lua's RegisterPotion names its argument so",
 }
+-- Identifiers core may use whole although a part matches content, each with its reason.
+local ALLOW_NAMES = {
+    GetShieldBlock = "a WoW API name (the client's block value), not the shield_block key",
+    -- WoW API names in the Facade's read table, matched by their CamelCase parts (loss_of_control, battle)
+    C_LossOfControl = "a WoW API name",
+    GetActiveLossOfControlData = "a WoW API name",
+    GetActiveLossOfControlDataCount = "a WoW API name",
+    GetSpellLossOfControlCooldown = "a WoW API name",
+    IsInBattle = "a WoW API name",
+}
 local ALLOW_IDS = {
     [29515] = "the client's GCD spell (Constants), not content",
-    [100] = "Charge's rank 1 ID, and the percent scale core divides by",
+    [100] = "the percent scale and default maximum core uses; it collides with Charge rank 1's ID",
 }
 
 local CLASS_WORDS =
@@ -209,10 +220,14 @@ local function nameWords(keys)
     return words
 end
 
--- Whether identifier `name` contains `word` as snake_case or CamelCase parts (`DRUID_SPEC`, `isCat`, `dire_bear`).
+-- `name` as "_part_part_" (snake_case and CamelCase split, lowercased): `DRUID_SPEC`, `isCat`, `dire_bear`.
+local function snake(name)
+    return ("_" .. name:gsub("(%l)(%u)", "%1_%2"):lower() .. "_")
+end
+
+-- Whether identifier `name` contains `word` (one or more parts) as snake_case or CamelCase parts.
 local function hasWord(name, word)
-    local snake = ("_" .. name:gsub("(%l)(%u)", "%1_%2"):lower() .. "_")
-    return snake:find("_" .. word .. "_", 1, true) ~= nil
+    return snake(name):find("_" .. word .. "_", 1, true) ~= nil
 end
 
 local function coreFiles()
@@ -225,30 +240,57 @@ local function coreFiles()
     return list
 end
 
--- One "<file>:<line>: <token> (<why>)" per content name or ID core code uses.
+-- Why identifier-like `text` names content, or nil: a key (whole, or a multi-part key as parts: `HEROIC_STRIKE_COST`),
+-- or a class or form/stance word as parts.
+local function nameLeak(text, c, words)
+    if ALLOW_NAMES[text] then
+        return nil
+    end
+    local lower = text:lower()
+    if c.keys[lower] and not ALLOW_KEYS[lower] then
+        return "key of " .. c.keys[lower]
+    end
+    local parts = snake(text)
+    for k, where in pairs(c.keys) do
+        if k:find("_", 1, true) and not ALLOW_KEYS[k] and parts:find("_" .. k .. "_", 1, true) then
+            return "key " .. k .. " of " .. where
+        end
+    end
+    for w, reason in pairs(words) do
+        if parts:find("_" .. w .. "_", 1, true) then
+            return reason
+        end
+    end
+end
+
+local function idLeak(text, c)
+    local v = tonumber(text)
+    return v and c.ids[v] and not ALLOW_IDS[v] and ("spell ID of " .. c.ids[v]) or nil
+end
+
+-- One "<file>:<line>: <token> (<why>)" per content name or ID core code uses. A string with no whitespace is code-like
+-- (`"buff.rend.up"`, `"772"`, `"WARRIOR,DRUID"`): each word in it is checked; one with spaces is a message.
 local function leaks(path, src, c, words)
     local found = {}
-    for _, t in ipairs(tokens(src)) do
-        local kind, text, line = t[1], t[2], t[3]
-        local why
-        if kind == "number" then
-            local v = tonumber(text)
-            why = v and c.ids[v] and not ALLOW_IDS[v] and ("spell ID of " .. c.ids[v])
-        elseif kind == "name" or text:match("^[%a_][%w_]*$") then
-            local lower = text:lower()
-            if c.keys[lower] and not ALLOW_KEYS[lower] then
-                why = "key of " .. c.keys[lower]
-            else
-                for w, reason in pairs(words) do
-                    if hasWord(text, w) then
-                        why = reason
-                        break
-                    end
-                end
-            end
-        end
+    local function hit(text, line, why)
         if why then
             found[#found + 1] = ("%s:%d: %s (%s)"):format(path, line, text, why)
+        end
+    end
+    for _, t in ipairs(tokens(src)) do
+        local kind, text, line = t[1], t[2], t[3]
+        if kind == "number" then
+            hit(text, line, idLeak(text, c))
+        elseif kind == "name" then
+            hit(text, line, nameLeak(text, c, words))
+        elseif not text:find("%s") then
+            for word in text:gmatch("[%w_]+") do
+                if word:match("^%d+$") then
+                    hit(word, line, idLeak(word, c))
+                else
+                    hit(word, line, nameLeak(word, c, words))
+                end
+            end
         end
     end
     return found
@@ -286,11 +328,30 @@ describe("core/content boundary", function()
         assert.are.equal(2, t[#t][3])
         assert.is_true(hasWord("DRUID_SPEC", "druid") and hasWord("isCatForm", "cat") and hasWord("dire_bear", "bear"))
         assert.is_false(hasWord("scatter", "cat") or hasWord("magenta", "mage"))
-        local found = leaks("x.lua", 'local a = buff.rend; local b = "rend"; local c = 772; local d = "WARRIOR"', {
-            keys = { rend = "R" },
+        local probe = {
+            "local a = buff.rend",
+            'local b = "rend"',
+            "local c = 772",
+            'local d = "WARRIOR"',
+            'f("buff.rend.up")',
+            'x = "772"',
+            'y = "WARRIOR,DRUID"',
+            "local HEROIC_STRIKE_COST",
+            "local heroicStrikeCost",
+            'z = "a rend in a message"',
+            "local GetShieldBlock",
+            "local rendTicks",
+        }
+        local found = leaks("x.lua", table.concat(probe, "\n"), {
+            keys = { rend = "R", heroic_strike = "R", shield_block = "R" },
             ids = { [772] = "R" },
-        }, { warrior = "a class name" })
-        assert.are.equal(4, #found)
+        }, { warrior = "a class name", druid = "a class name" })
+        local lines = {}
+        for _, f in ipairs(found) do
+            lines[#lines + 1] = tonumber(f:match("^x%.lua:(%d+):"))
+        end
+        -- one-word keys match whole only (`rendTicks` passes: `charge`, `form` are plain words in core)
+        assert.are.same({ 1, 2, 3, 4, 5, 6, 7, 7, 8, 9 }, lines)
     end)
 
     it("keeps content keys, spell IDs, class and form names out of Virtual/** and Engine/**", function()

@@ -246,7 +246,7 @@ describe("the event facade", function()
         sink:RegisterEvent("PLAYER_TARGET_CHANGED")
         local bytes = alloc.bytes(function(i)
             ctl.now = i
-            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 6673)
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 1001)
             ctl.Fire("UNIT_AURA", i % 2 == 0 and "player" or "target", fake.SECRET)
             ctl.Fire("PLAYER_TARGET_CHANGED")
             ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "target", fake.SECRET, fake.SECRET)

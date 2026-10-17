@@ -159,6 +159,7 @@ describe("now handlers", function()
         assert.are.equal(n + 1, #rows) -- only the cast's own SPELL_CAST_SUCCESS row
     end)
 
+    -- reads the real Warrior.lua by design: this checks a content file's `now` in the core context (as the scan below)
     it("believes Warrior.lua's Battle Shout up on us for its 180 s from a rank 3 cast (6192)", function()
         local w = require("Forever.helpers.load_warrior").load()
         local a, aura = w.abilities.battle_shout, w.auras.battle_shout

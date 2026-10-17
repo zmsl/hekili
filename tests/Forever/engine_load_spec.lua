@@ -40,6 +40,16 @@ local function abilities(env)
 end
 
 describe("Forever content through the real Engine/Spec.lua", function()
+    it("answers Constants.lua's ns.ResourceIsPoints: point resources true, pooled ones false", function()
+        local is = engine.load(CLASSES[1]).ns.ResourceIsPoints
+        for _, k in ipairs({ "combo_points", "runes", "soul_shards", "holy_power", "chi", "arcane_charges", "essence" }) do
+            assert.is_true(is(k), k)
+        end
+        for _, k in ipairs({ "rage", "energy", "mana", "focus", "runic_power" }) do
+            assert.is_false(is(k), k)
+        end
+    end)
+
     it("lists the class and race files Hekili.toc loads", function()
         assert.is_true(#CLASSES >= 2)
         assert.are.equal(RACE_LINES, #RACES) -- every race line parsed, its NewRace token found
