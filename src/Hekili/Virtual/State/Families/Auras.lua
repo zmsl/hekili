@@ -220,6 +220,8 @@ local function load(s)
         end
         local rec = U.rec[2][j]
         rec.est, rec.lo, rec.hi = e[j], e[j], e[j]
+        local seen = rec.last.observed -- the old target's read: it must not stop or outrank a cast on this one
+        seen.t, seen.event = 0, 0
     end
     changed(2)
 end

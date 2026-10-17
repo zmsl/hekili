@@ -451,6 +451,17 @@ describe("now handlers", function()
             assert.are.equal(0, I.auraReadsWon)
         end)
 
+        it("applies a cast on a new target despite the old target's read in the same frame", function()
+            start()
+            local k = I.auras.bySpell[fs.SPENDER_C]
+            I.Sources.Direct(VS.Obs.Read, 5, I.AURA_UNIT + k, 30, I.ReadOf.Aura + I.AURA_STACK) -- target A: up
+            I.Sources.Direct(VS.Obs.TargetSwap, 5, 2, 1, 1) -- to target B (slot 2)
+            cast(fs.SPENDER_C, 5)
+            local rec, n = VS.Aura("target", fs.SPENDER_C, 5.1)
+            assert.are.same({ "modelled", 1 }, { rec.basis, n })
+            assert.are.equal(0, I.auraReadsWon)
+        end)
+
         it("lets a read after the modelled change win, as before", function()
             stackCast()
             cast(7387, 5)
