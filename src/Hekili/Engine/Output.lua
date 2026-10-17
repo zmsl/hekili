@@ -32,6 +32,7 @@ local function display()
         subs = slots(),
         passive = slots(),
         wanted = 0,
+        publishing = false,
         payload = nil, -- the WeakAuras event copy, set by Core only when WeakAuras is loaded
     }
 end
@@ -45,10 +46,11 @@ local Output = {
     AOE = display(),
     status = {
         version = 0,
-        count = 0,
+        count = 1, -- status is itself the one record it publishes (Publish("status", 1)); always 1
         subs = slots(),
         passive = slots(),
         wanted = 0,
+        publishing = false,
         combat = false,
         numTargets = 0,
         specID = nil,
@@ -80,6 +82,22 @@ function Output.Begin(name)
     return scratch
 end
 
+-- Drops the blanked (false) subscriber slots, keeping the others' order.
+local function compact(o)
+    local subs, passive = o.subs, o.passive
+    local n, j = subs.n, 0
+    for i = 1, n do
+        if subs[i] then
+            j = j + 1
+            subs[j], passive[j] = subs[i], passive[i]
+        end
+    end
+    for i = j + 1, n do
+        subs[i], passive[i] = false, false
+    end
+    subs.n = j
+end
+
 --- Publishes `count` records of `name`'s scratch set: the annotators run over them, scratch and recs swap, the version
 --- bumps, then each subscriber gets (name, version, output). No yield inside.
 function Output.Publish(name, count)
@@ -96,9 +114,17 @@ function Output.Publish(name, count)
     end
     o.version = o.version + 1
     local subs, version = o.subs, o.version
+    -- A subscriber may unsubscribe (itself or another) mid-loop: Unsubscribe then only blanks its slot, and the
+    -- slots are compacted after the loop, so no later subscriber is skipped.
+    o.publishing = true
     for i = 1, subs.n do
-        subs[i](name, version, o)
+        local fn = subs[i]
+        if fn then
+            fn(name, version, o)
+        end
     end
+    o.publishing = false
+    compact(o)
 end
 
 --- True when `name` has a non-passive subscriber, i.e. someone wants it computed.
@@ -107,12 +133,18 @@ function Output.Wanted(name)
 end
 
 --- Subscribes `fn(name, version, output)` to `name`'s publishes; a `passive` subscriber listens without asking the
---- engine to compute the display. Subscribing an already subscribed fn does nothing. Returns false when the slots are full.
+--- engine to compute the display. Subscribing an already subscribed fn only updates its passive flag. Returns false
+--- when the slots are full.
 function Engine.Subscribe(name, fn, passive)
     local o = Output[name]
     local subs = o.subs
+    passive = passive and true or false
     for i = 1, subs.n do
         if subs[i] == fn then
+            if o.passive[i] ~= passive then
+                o.passive[i] = passive
+                o.wanted = o.wanted + (passive and -1 or 1)
+            end
             return true
         end
     end
@@ -120,7 +152,7 @@ function Engine.Subscribe(name, fn, passive)
         return false
     end
     local n = subs.n + 1
-    subs[n], o.passive[n], subs.n = fn, passive and true or false, n
+    subs[n], o.passive[n], subs.n = fn, passive, n
     if not passive then
         o.wanted = o.wanted + 1
     end
@@ -130,17 +162,16 @@ end
 --- Removes `fn` from `name`'s subscribers, keeping the others' order.
 function Engine.Unsubscribe(name, fn)
     local o = Output[name]
-    local subs, passive = o.subs, o.passive
-    local n = subs.n
-    for i = 1, n do
+    local subs = o.subs
+    for i = 1, subs.n do
         if subs[i] == fn then
-            if not passive[i] then
+            if not o.passive[i] then
                 o.wanted = o.wanted - 1
             end
-            for j = i, n - 1 do
-                subs[j], passive[j] = subs[j + 1], passive[j + 1]
+            subs[i] = false
+            if not o.publishing then
+                compact(o)
             end
-            subs[n], passive[n], subs.n = false, false, n - 1
             return
         end
     end

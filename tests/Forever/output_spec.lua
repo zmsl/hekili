@@ -97,6 +97,50 @@ describe("Engine.Output (pure)", function()
         assert.is_false(Engine.Subscribe("AOE", function() end)) -- four slots
     end)
 
+    it("calls every subscriber once when one unsubscribes itself mid-publish; the next publish skips it", function()
+        local calls = { 0, 0, 0 }
+        local s2
+        local function s1()
+            calls[1] = calls[1] + 1
+        end
+        s2 = function()
+            calls[2] = calls[2] + 1
+            Engine.Unsubscribe("Primary", s2)
+        end
+        local function s3()
+            calls[3] = calls[3] + 1
+        end
+        Engine.Subscribe("Primary", s1)
+        Engine.Subscribe("Primary", s2)
+        Engine.Subscribe("Primary", s3)
+        build(Out, "Primary", 1)
+        assert.are.same({ 1, 1, 1 }, calls)
+        assert.are.equal(2, Out.Primary.subs.n)
+        assert.are.equal(2, Out.Primary.wanted)
+        build(Out, "Primary", 1)
+        assert.are.same({ 2, 1, 2 }, calls)
+    end)
+
+    it("re-subscribing with another passive flag updates Wanted", function()
+        local function s() end
+        Engine.Subscribe("AOE", s, true)
+        assert.is_false(Out.Wanted("AOE"))
+        Engine.Subscribe("AOE", s)
+        assert.is_true(Out.Wanted("AOE"))
+        assert.are.equal(1, Out.AOE.subs.n)
+        Engine.Subscribe("AOE", s, true)
+        assert.is_false(Out.Wanted("AOE"))
+        Engine.Unsubscribe("AOE", s)
+        assert.are.equal(0, Out.AOE.wanted)
+    end)
+
+    it("status is the one record it publishes: count is always 1", function()
+        assert.are.equal(1, Out.status.count)
+        Out.Publish("status", 1)
+        assert.are.equal(1, Out.status.version)
+        assert.are.equal(1, Out.status.count)
+    end)
+
     it("allocates nothing over 1000 build rounds with two subscribers", function()
         local n = 0
         local function s1()
@@ -241,8 +285,13 @@ describe("Engine.Output (headless Arms)", function()
         assert.are.equal(v0 + 1, out.version)
         local recs, after = out.recs, names(out.count)
         complete()
-        -- the engine frame starts a fresh thread instead of resuming the stale one
-        assert.is_false(H.ns.EngineFrame:IsThreadActive() and true or false)
+        -- one engine frame tick (before its refresh is due): the stale thread is not resumed, recs stay the snapshot's
+        local f = H.ns.EngineFrame
+        f.refreshTimer = 0
+        f.__scripts.OnUpdate(f, 0.01)
+        assert.is_nil(f.activeThread)
+        assert.are.equal("suspended", coroutine.status(co))
+        assert.are.equal(v0 + 1, out.version)
         assert.are.equal(recs, out.recs)
         assert.are.same(after, names(out.count))
     end)

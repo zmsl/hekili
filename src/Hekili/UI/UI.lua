@@ -904,6 +904,24 @@ do
         dPool[ name ].NewRecommendations = true
     end
 
+    -- A custom display has no engine output: it draws this empty one (stock gave it an empty queue).
+    local noOutput = { version = 0, count = 0, recs = {} }
+
+    -- Unsubscribed: hide the icons and draw nothing until the next publish, so a re-shown display starts blank
+    -- (stock cleared every queue each cycle) instead of showing the set it last drew.
+    local function unsubscribe( d )
+        local out = ns.Output[ d.id ]
+        if out then Hekili.Engine.Unsubscribe( d.id, d.OnPublish ) end
+        d.blankVersion = ( out or noOutput ).version
+        if d.HasRecommendations then
+            for _, b in ipairs( d.Buttons ) do
+                b:Hide()
+                b.Action = nil
+            end
+            d.HasRecommendations = false
+        end
+    end
+
     local alphaUpdateEvents = {
         PET_BATTLE_OPENING_START = 1,
         PET_BATTLE_CLOSE = 1,
@@ -1105,8 +1123,8 @@ do
 
 
         function d:OnUpdate( elapsed )
-            local out = ns.Output[ self.id ]
-            if not out or not Hekili.PLAYER_ENTERING_WORLD then
+            local out = ns.Output[ self.id ] or noOutput
+            if not Hekili.PLAYER_ENTERING_WORLD then
                 return
             end
 
@@ -1150,7 +1168,7 @@ do
                 local alpha = self.alpha
                 local options = Hekili:GetActiveSpecOption( "abilities" )
 
-                if self.HasRecommendations and out.count == 0 then
+                if out.count == 0 or out.version == self.blankVersion then
                     for i, b in ipairs( self.Buttons ) do
                         b:Hide()
                         b.Action = nil
@@ -1671,7 +1689,7 @@ do
                 self:SetAlpha( 0 )
                 self:Hide()
                 self.alpha = 0
-                if ns.Output[ self.id ] then Hekili.Engine.Unsubscribe( self.id, self.OnPublish ) end
+                unsubscribe( self )
                 return
             end
 
@@ -1693,10 +1711,8 @@ do
             self.alpha = newAlpha
 
             -- Subscribed (the engine computes this display) exactly while Active and visible.
-            if ns.Output[ self.id ] then
-                if newAlpha > 0 then Hekili.Engine.Subscribe( self.id, self.OnPublish )
-                else Hekili.Engine.Unsubscribe( self.id, self.OnPublish ) end
-            end
+            if newAlpha == 0 then unsubscribe( self )
+            elseif ns.Output[ self.id ] then Hekili.Engine.Subscribe( self.id, self.OnPublish ) end
         end
 
         function d:RefreshCooldowns( event )
@@ -1706,9 +1722,9 @@ do
             local now = GetTime()
             local conf = Hekili.DB.profile.displays[ self.id ]
 
-            local out = ns.Output[ self.id ]
+            local out = ns.Output[ self.id ] or noOutput
 
-            for i = 1, out and out.count or 0 do
+            for i = 1, out.count do
                 local rec = out.recs[ i ]
                 local button = self.Buttons[ i ]
 
@@ -1752,9 +1768,6 @@ do
         end
 
         function d:OnEvent( event, ... )
-            if not ns.Output[ self.id ] then
-                return
-            end
             local conf = Hekili.DB.profile.displays[ self.id ]
 
             local init = debugprofilestop()
