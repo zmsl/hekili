@@ -1,0 +1,7 @@
+## Interface: 16001
+## Title: Hekili Forever Spike
+## Notes: Throwaway spike (restructure plan Task 8): a load-on-demand addon that registers a fake spec.
+## Dependencies: Hekili
+## LoadOnDemand: 1
+
+Spike.lua
