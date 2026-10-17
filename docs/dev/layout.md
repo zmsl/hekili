@@ -12,7 +12,10 @@
   every token row kept; `fixtures_spec` replays them and fits the observer's defaults to them. A new capture becomes a
   fixture with `lua5.1 tools/vslog_fixture.lua dump.txt "min,max,min,max" STRIKE=<id> DOT=<id>` (the weapon damage
   UnitDamage read, our strike's and DoT's spell IDs) plus a header comment; a fit outside tolerance is retuned in the
-  same change. The gates make `busted` take about 95 s; `make test-fast` (about 11 s) skips the `#slow` gates.
+  same change. The Druid scenarios (`tests/Forever/druid_world.lua`, `druid_vs.lua`, `druid_harness_spec.lua`) run on the same
+  harness, the class read from `Druid.lua`: a tenth of their fights is `#slow`, the design's counts are `#druid`, run
+  only by `make test-druid` (about 190 s). The gates make `busted` take about 160 s; `make test-fast` skips the
+  `#slow` gates.
 - `tools/`, `docs/` and `archive/` stay at the repository root, with the lint, test and type-check configs
   (`.busted`, `.luacheckrc`, `.luarc.json`). Run every tool and `busted` from the root.
 

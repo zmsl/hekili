@@ -279,9 +279,8 @@ local GATES = {
             local t = decay(20 * k, v)
             local msg = line(("decay, paused %s, declared %s"):format(tostring(v.pausedBy), tostring(v.declared)), t)
             print(msg)
-            -- as built: one fight in 20 (seed 15) loses Enrage's expiry tick (2) in both pairs, below the truth (a
-            -- VirtualState finding: the tick and the decay's first quantum at the aura's expiry; its own change)
-            assert.is_true(t.errMax <= 1.25 and t.errMin >= -2 and t.lowFights <= math.max(1, 0.05 * 20 * k), msg)
+            -- no fight low: Enrage's expiry tick, once lost against the decay's first quantum (seed 15), kept since ffc300da
+            assert.is_true(t.errMax <= 1.25 and t.errMin >= -1.25 and t.lowFights == 0, msg)
         end
         local over = decay(20 * k, { pausedBy = false, declared = true })
         local overMsg = line("decay, a declared pause over a decaying truth", over)

@@ -302,3 +302,47 @@ Bear (the calibration absorbs them, as the class file's shortcut says).
 ## Decisions (accepted as recommended 2026-10-16, controller under the user's standing approval)
 D1-D9 as recommended. Sequencing: this spec's plan runs AFTER the headless recommendation loop plan (it reuses that
 plan's press and usability pieces, D8); the in-game checkpoint G1-G8 needs a Druid character and is the user's.
+
+## 9. As built (2026-10-17)
+Where §1-§7 and the code differ, this table rules ("Deviation n" is the plan's,
+`docs/superpowers/plans/2026-10-17-gcd-kinds-and-druid-scenarios.md`).
+
+| Topic | Spec text | As built | Source |
+|---|---|---|---|
+| The opener's window (§1.2 item 3) | within `GCD_EDGE` of the edge | measured from the edge's own time; the quantised `gcdStart` is up to 2^-11 s later, and an edge-first claim at an off-grid time failed against it | Deviation 2 |
+| The fake spec's kinds (§1.6) | two abilities in `fake_spec` | opt-in, `fs.new(swingValue, true)`: in every fake spec they moved the adapter's tracked counts and the flag count | Deviation 1 |
+| E10 (§1.4) | in energy, `execute` only | as proposed; the clause's line comments `-- Forever E10:` without a class name; `docs/forever-facade-notes.md` has the row | Task 2 |
+| Resources (§2.1) | `res = { [pt] = { cur, max } }`, `power` an alias | `power` stays the swing-paid type's value (`e.pt`); `res` holds the others | Deviation 4 |
+| Press fields (§2.1) | `points = 1 \| "all"` | `points = { pt, 1 \| "all" }`; `aura.tick` has named fields `{ pt, every, amount }`; `gcd = 0` is off the GCD | Deviation 5 |
+| Regen (§2.2) | continuous | a "regen" gain every `regenTick` (0.1 s), capped; it runs in every form (UNMEASURED), so Furor's Cat restore equals keep | Deviation 6 |
+| Shift (§2.2) | set piece / press | a press field and `W.shift` only: the shifts respect the GCD | Deviation 7 |
+| The old worlds (§2.5) | the new draws move fights, re-measure | nothing moves: the GCD order has its own generator (`W.grng`), every new behaviour is knob-gated and the attack speed read is behind `k.playerSpeed`; nine streams byte-identical before and after, so the harness design's §9 tables stand | Deviation 3 |
+| Boundary (D7) | `tests/Virtual/harness` in `CORE` | with its captured logs (`fixtures/`) skipped (their numbers are times and amounts), four WoW global names allow-listed, two test IDs that collided with content IDs changed | Task 3 |
+| Fight counts (§4.6, §4.7) | in `make check` | a tenth of each in `make check` (`#slow`, about 19 s); the design's counts behind `make test-druid` (`#druid`, about 192 s) | Deviation 10 |
+| Bear drift (§4.6) | overshoot windows 0 | windows a step over that end with the belief above the truth: 0; all windows a step over: 4 of 2400, each a window that starts with the belief 17 below the truth and a Maul's 15 clamped at 0 | Deviation 11 |
+| Rage after a Bear entry (§4.6) | 0 | believed minus true at the first tick after the entry <= 1.3 (a swing landing after the entry pays both, at the calibrated scale): measured 0.84 | Deviation 12 |
+| Decay, matched (§4.5) | within 1.25 every second | the change since 1.5 s after the stop (our last swings landed) within 1.25, no fight low; the plan's seed 15 losing Enrage's expiry tick (2) was fixed on `forever` by ffc300da (Auras.lua) before the patches landed | Deviation 13 |
+
+Measured (the design's fight counts, `make test-druid`):
+
+| Scenario (fights) | Measured | Gate |
+|---|---|---|
+| Solo bear (200) | main 6000/6047 (.992), wrong 0, false wounds 0; drift windows ending over 0 (raw 4/2400); danger 0; Mauls 1936: 1936 `SPELL_DAMAGE`/`SPELL_MISSED` rows, 1936 paid; crits 920, staged 920, on a non-crit 0; GCDs 2067 seen at their start, end error 0.0004 s, ownerless 0 (orders 1043 / 1024) | main >= .94, wrong 0, false 0, drift 0, danger 0, every Maul one row and paid once, staged >= 94% and 0 false, GCD |
+| Solo cat (200) | rage error 0; energy mean abs 1.78, max 40.0 (the pull), over windows 0/2600; points exact 226603 of 226603 settled ticks; GCDs 8407, end error 0.0004 s, ownerless 0 (orders 4193 / 4214); white pairing at 1.0 s: main .912 | rage 0; energy mean <= 10, over <= 2%; points 100%; GCD (within 0.01 s, ownerless 0, both orders) |
+| Solo cat, `regenAfter` 5 s x 1.25 (100) | energy mean abs 2.41 after 20 s, over 0/1100 | mean <= 15, over <= 5% |
+| Solo cat, a /reload in combat (50) | energy mean abs 11.4, over 0/650 | report |
+| Shift fight (100) | Bear sections main 1680/1719 (.977), false wounds 0 in both; timing alone: 1719/1719 in Bear, 0/4670 in Cat; Bear rage over windows 0 (lo over the truth at most 1.26), mean abs 2.92; every swing the belief paid 8.65 (before D4: every one 3.46, mean abs 3.94, entry under by up to 5.08); entry over 0.84, under -7.31; energy mean abs 0.28; GCDs 3036, ownerless 0 | Bear main >= .85; false 0; unknown 0 / 1; rage over 0 and every swing 8.65; entry over <= 1.3; GCD |
+| Furor: Cat entry zero (50) | energy error at each Cat entry 99, within 5 after 35.7 s on average (the fight's end if never); energy over windows 200; Bear rage over 0, entry over 1.18 | report; Bear never over |
+| Furor rank 5 (50) | Bear entry under by 10 (the truth's chance, the belief's 0), lo over the truth at most 4.99 (below a swing), over windows 0 | report; Bear never over |
+| Enrage decay (4 x 20) | matched: errors 0, no fight low, in both pairs; declared over a decaying truth: up to +7.5; none over a pausing truth: down to -7.5 (six quanta: the error counts from stop + 1.5 s, so §4.5's 8.75 = 7 quanta is not reached) | matched within 1.25, none low; signs asserted (over the dangerous sign, under the safe one) |
+
+D4 confirmed by the harness (the stale 1.0 s base priced every Bear swing at 3.46 through the shift fight); D5 stands:
+a wrong `pausesDecay` overshoots, its absence undershoots.
+
+Follow-ups (not built here):
+- Furor's "Cat entry zero" variant: the energy belief sits 99 over the truth at each Cat entry (the dangerous sign) and
+  only a usability flip after a spend corrects it, about 36 s on average. Open: a faster correction of an energy belief
+  above the truth after a mismatched entry rule.
+- The Cat /reload in combat: energy mean abs error 11.4, never over (the safe sign). Not the entry rule: with no regen
+  read the belief's regen stays 0 (the class file's `shortcut:`, Druid.lua), so the error is a 10/s sawtooth between
+  cost rungs; its upgrade is a regen meta field after Q3.
