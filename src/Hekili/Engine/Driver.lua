@@ -244,9 +244,9 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
 
             self.activeThreadTime = self.activeThreadTime + debugprofilestop() - Hekili.activeFrameStart
 
-            if not ok or err == DONE then
+            if not ok or err == DONE or coroutine.status(thread) == "dead" then
                 self.activeThread = nil
-                parked = ok
+                parked = err == DONE
 
                 self.refreshRate = 0.5
                 self.combatRate = 0.2

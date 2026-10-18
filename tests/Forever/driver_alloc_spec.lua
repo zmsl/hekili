@@ -6,7 +6,7 @@ local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
 
 describe("Engine/Driver.lua through the engine frame", function()
-    local H, f, upd, runs, t
+    local H, f, upd, runs, ran, t
 
     before_each(function()
         H = headless.new({ character = ww.character(), pack = ww.PACK })
@@ -18,7 +18,7 @@ describe("Engine/Driver.lua through the engine frame", function()
         f = H.ns.EngineFrame
         upd, runs = H.Hekili.Update, 0
         H.Hekili.Update = function(...)
-            runs = runs + 1
+            runs, ran = runs + 1, coroutine.running()
             return upd(...)
         end
     end)
@@ -90,7 +90,8 @@ describe("Engine/Driver.lua through the engine frame", function()
         assert.are.equal(n + 1, runs)
         assert.are.equal(v + 1, out.version)
         assert.are.equal("suspended", coroutine.status(stale))
-        assert.are_not.equal(stale, f.activeThread)
+        assert.is_truthy(ran) -- the Update ran in a thread, and not the dropped one
+        assert.are_not.equal(stale, ran)
     end)
 
     it("runs the next Update after one raises", function()
