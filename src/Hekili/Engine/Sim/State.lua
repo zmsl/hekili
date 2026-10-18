@@ -6245,7 +6245,8 @@ do
             elseif dispName == 'Defensives' then state.filter = "defensives"
             end
 
-            state.rangefilter = display.classic.range.enabled and display.classic.range.type == "xclude"
+            local range = Hekili.Engine.StyleGroup( display, "range" )
+            state.rangefilter = range.enabled and range.type == "xclude"
         end
 
         -- every reset path (the pack editor's Evaluate, the scripts' load) starts fresh, after the display's filter

@@ -1581,7 +1581,8 @@ function Hekili.Update()
             local numRecs = display.numIcons or 3
             local abilityOpts = Hekili:GetActiveSpecOption( "abilities" )
 
-            if display.classic.flash.enabled and display.classic.flash.suppress then
+            local flash = Hekili.Engine.StyleGroup( display, "flash" )
+            if flash.enabled and flash.suppress then
                 numRecs = 1
             end
 

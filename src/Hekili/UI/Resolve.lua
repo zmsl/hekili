@@ -11,6 +11,7 @@ local UnitCanAttack, UnitCastingInfo = Facade.UnitCanAttack, Facade.UnitCastingI
 
 local Registry = Hekili.Engine.Registry
 local Status = Hekili.Engine.Output.status
+local StyleGroup = Hekili.Engine.StyleGroup
 
 local IsUsableItem = C_Item.IsUsableItem
 local IsUsableSpell = C_Spell.IsSpellUsable
@@ -32,9 +33,10 @@ local max, min = math.max, math.min
 local SLOTS = 10 -- Output's records per display
 
 --- Fills d.resolved[ 1 .. out.count ] (preallocated on the first call), per record: `inRange` (the ability's range),
---- `inMelee` (the target within 7 yd), `usable`, `delay` (exact_time - now), `earliest` (when the GCD, the cast and the
---- ability's cooldown allow it, from now), `desaturate` (delay past earliest: a wait to show), `targets` (the count
---- shown, clamped by the toggle mode), `detected` (the count seen), `single` (clamped to one) and `glow` (overlayed).
+--- `inMelee` (the target within 7 yd, asked only while the bound style's range check is `melee`, true otherwise),
+--- `usable`, `delay` (exact_time - now), `earliest` (when the GCD, the cast and the ability's cooldown allow it, from
+--- now), `desaturate` (delay past earliest: a wait to show), `targets` (the count shown, clamped by the toggle mode),
+--- `detected` (the count seen), `single` (clamped to one) and `glow` (overlayed).
 --- A record with no action or time answers in range, usable, no delay and no glow.
 function ns.UI.Resolve( d, conf, out, now )
     local res = d.resolved
@@ -65,7 +67,11 @@ function ns.UI.Resolve( d, conf, out, now )
     if tMax > 0 then shown = min( tMax, shown ) end
 
     local hostile = UnitCanAttack( "player", "target" )
-    local inMelee = not ( hostile and ( LRC:GetRange( "target" ) or 10 ) > 7 )
+    local range = StyleGroup( conf, "range" )
+    local inMelee = true
+    if hostile and range.enabled and range.type == "melee" then -- the only range check that asks LibRangeCheck
+        inMelee = ( LRC:GetRange( "target" ) or 10 ) <= 7
+    end
 
     local gStart, gDuration = GetSpellCooldown( Registry.GCD_SPELL )
     local cStart, cEnd = select( 4, UnitCastingInfo( "player" ) )

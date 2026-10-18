@@ -64,6 +64,7 @@ Engine\Snapshot.lua
 Engine\Sim\Targets.lua
 Options\DevTools.lua
 Options\ChatCommands.lua
+Options\StyleOptions.lua
 Options\Options.lua
 Options\Profile.lua
 Engine\Driver.lua

@@ -627,6 +627,7 @@ return end
         local conf = optionConf( self.DB.profile.displays[ display ], info )
 
         if option == "color" or option == "queuedColor" then return unpack( conf.color ) end
+        if info.type == "color" then return unpack( conf[ option ] ) end -- a later zone's colour (StyleOptions: nextColor)
         if option == "frameStrata" then return frameStratas[ conf.frameStrata ] or 3 end
         if option == "name" then return display end
 
@@ -656,7 +657,7 @@ return end
 
         local conf = optionConf( self.DB.profile.displays[ display ], info )
 
-        if option == 'color' or option == 'queuedColor' then
+        if option == 'color' or option == 'queuedColor' or info.type == "color" then
             conf[ option ] = { val, v2, v3, v4 }
             set = true
         elseif option == 'frameStrata' then

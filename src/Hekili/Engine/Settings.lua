@@ -35,3 +35,14 @@ function Engine.Configure(profile)
     settings.screenshot = profile.screenshot
     settings.version = settings.version + 1
 end
+
+--- The settings group `group` (range, flash, keybindings: what the engine and the shared resolve act on) of the style
+--- `display` (a display's config) draws with: `display[ style ][ group ]`, or classic's when that style offers none.
+function Engine.StyleGroup(display, group)
+    local own = display[display.style or "classic"]
+    local g = type(own) == "table" and own[group]
+    if type(g) == "table" then
+        return g
+    end
+    return display.classic[group]
+end

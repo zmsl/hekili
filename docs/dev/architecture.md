@@ -207,6 +207,12 @@ display whose profile already names the style binds it.
 | `UpdateKeybindings(d)` | keybinding changes | |
 | `Options(id, conf)` | building the options | the style's tabs, new tables each call; they land in one group keyed by `name`, so their options resolve to `displays[id].<name>.<option>` (keys flat and unique within the style) |
 
+**Shared option builders.** `Hekili.StyleOptions` (`Options/StyleOptions.lua`) builds classic's tabs for any style's
+subtable: `keybindings`, `captions`, `border`, `range`, `glow`, `flash`, `delays`, `targets`, `indicators` as
+`(styleKey, zones, order, id, conf)`, `icon(zone, order, id)` and `defaults(groups, zones)` for the matching
+`defaults`; the engine's range, flash and keybinding reads take the bound style's group (`Hekili.Engine.StyleGroup`),
+classic's when the style has none.
+
 **What a style may read.** `conf` is the whole display table: core fields (`numIcons`, `enabled`, ...) and its own
 subtable `conf[name]`, never another style's. `d.styleState` is its per-display scratch. `out` is
 `Hekili.Engine.Output[id]`: `out.count`, `out.version` and `out.recs[1..count]`, each record with `actionName`,
