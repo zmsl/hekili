@@ -121,7 +121,8 @@ describe("tools/make_pack.lua", function()
 
         it("re-dates only the class whose text changed, by one character, and is then a no-op", function()
             local apls = "src/Hekili_Warrior/APLs/"
-            local fury, n = slurp(apls .. "Fury.simc"):gsub("if=rage.current>=", "if=rage.current>", 1) -- one character
+            local fury, n =
+                slurp(apls .. "Fury.simc"):gsub("rage>=settings.hs_threshold", "rage>settings.hs_threshold", 1) -- one character
             assert.are.equal(1, n)
             local root = scratch(apls, { ["packs.lua"] = true, ["Arms.simc"] = true, ["Protection.simc"] = true })
             local f = assert(io.open(root .. "Fury.simc", "wb"))
@@ -166,5 +167,18 @@ describe("tools/make_pack.lua", function()
         assert.are.equal(1, lists.st[1].focus)
         assert.are.equal(simc, mp.unparse(lists))
         assert.are.same(lists, mp.parse(mp.unparse(lists)))
+    end)
+
+    it("round-trips focus=N for any positive integer tier and refuses 0, negatives and non-integers", function()
+        local simc = "actions=heroic_strike,use_off_gcd=1,focus=2,if=a\nactions+=/cleave,focus=12\n"
+        local lists = mp.parse(simc)
+        assert.are.same({ 2, 12 }, { lists.default[1].focus, lists.default[2].focus })
+        assert.are.equal(simc, mp.unparse(lists))
+        for _, bad in ipairs({ "0", "-1", "1.5", "2.0", "01" }) do
+            local line = "actions=rip,focus=" .. bad
+            assert.has_error(function()
+                mp.parse(line .. "\n")
+            end, "bad value focus=" .. bad .. " in: " .. line)
+        end
     end)
 end)

@@ -237,3 +237,54 @@ Keep each set small, so the Now circle means "look here" rather than "always occ
 - **Arms**: overpower, victory_rush, execute, rend, battle_shout (the in-combat line 33, not precombat 8).
 - **Protection**: revenge (both lists), shield_block, shield_bash, taunt, mocking_blow, victory_rush, thunder_clap
   (both lists).
+
+## Added from wowsims (Task 3a, user ruling 2026-10-18)
+
+The user ruled that Fury models every ability wowsims's Fury rotation casts, placed in wowsims's order wherever the
+user's list does not already fix it. The list is `src/Hekili_Warrior/APLs/Fury.simc`. Citations are
+`ui/specs/warrior/dps/apls/fury.apl.json` entries (by line) in the clone at `d33930d0`. Spell IDs come from
+`sim/warrior/spell_data_auto_gen.go`. The default setup is from `ui/specs/warrior/dps/presets.ts`: Orc, Mighty
+Rage Potion, the talents at line 73 and Berserker Stance.
+
+| Ability | wowsims | Where in Fury.simc | Condition |
+|---|---|---|---|
+| Trinkets (`use_items`) | CD: Trinkets (14, group 50) | `cooldowns` list, first | Arms's cooldowns gate (`boss\|target.level>=level+3`) |
+| Death Wish | 19 | `cooldowns` list, after the trinkets | Same gate, plus its `cooldowns` toggle |
+| Sweeping Strikes | 21, more than 1 target | `cooldowns` list, last | `active_enemies>1`. Its talent and Battle Stance make it inert in the preset build. |
+| (cooldowns call) | 14-21 sit between Sunder (15) and Bloodthirst (23) | Right after Sunder Armor | — |
+| Execute | 25, `isExecutePhase E20` | After Bloodthirst and Whirlwind | `execute_phase`, Arms's key (target health is secret) |
+| Hamstring | 28, Windfury Totem (10612) known, Delay Check, not execute | After Execute | `buff.windfury.up`, the Delay Check, `!execute_phase` |
+| Berserker Stance | 29, out of Berserker and BT or WW ready within the input delay (`reactionTime` 100 ms, `presets.ts:174`) | After Hamstring | `.known` and `cooldown.X.remains<=0.1` for either one |
+| Bloodrage | 32, rage < 90 | After the stance return | `rage.current<90`, plus its `cooldowns` toggle |
+| Berserker Rage | 33, Delay Check and Improved Berserker Rage (20500) | After Bloodrage | `talent.improved_berserker_rage.enabled` and the Delay Check |
+| Battle Shout | 34, Delay Check and <= 10 s left | Last | `buff.battle_shout.remains<=10` and the Delay Check |
+| Battle Shout (pre-pull) | prepull at -3 s (6) | `precombat`, first | `buff.battle_shout.remains<=10` |
+| Intercept (pre-pull move) | "Pre-pull: Move" (7, group 42): Charge in Battle Stance, Intercept in Berserker | `precombat`, after Charge | Arms's Intercept condition |
+
+The Delay Check (`valueVariables` 54) is "Bloodthirst and Whirlwind each at least 1.5 s from ready". In the fork's
+keys that is `(!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(the same for whirlwind)`. `.known`
+keeps an unlearned one from holding the line forever, as in the no-clip rule.
+
+Heroic Strike and Cleave now come in two focus tiers (user ruling). Tier 1 dumps at `settings.rage_cap_threshold`
+(80) whatever the no-clip rule says. Tier 2 keeps the threshold and the no-clip rule. wowsims's own dumps (HS 40
+and > 60 with the Delay Check, Cleave 40: lines 26, 30, 31) are not copied, because the user's lines fix them.
+
+**Not modelled** (wowsims casts these, but the fork cannot model them, or the user's list fixes the alternative):
+- **Racials** (CD: Racials, 18, group 47: Blood Fury 20572, Berserking 20554, Eureka 1259813, Elune's Light
+  1259799). The fork registers all four (`src/Hekili_Shared/Races/`), but only for the player's race. A pack that
+  names one raises "action not found" for every other race (`Engine/Sim/Core.lua`), and the race files' rule is
+  that no pack names them (`Races/NightElf.lua` header). A player can add their own.
+- **Potions** (17, 18; the preset is Mighty Rage Potion). The fork's `potion` action exists, but no Forever potion
+  is registered (`src/Hekili_Shared/Shared/Consumables.lua` header), so the line could never resolve.
+- **Engineering items** (13, group 46: sapper charge and dynamite, item IDs). The fork has no such abilities.
+- **Recklessness** (20). Its ON/OFF group (10) is hidden, so the default rotation never casts it.
+- **The Overpower stance dance** (27, group 51: Battle Stance, Overpower, Rend, back to Berserker). The user's list
+  fixes Overpower to "when already in Battle Stance", so no Battle Stance swap is added. Only the return to
+  Berserker (29) is.
+- **Whirlwind above Bloodthirst on more than 1 target** (22), and **Whirlwind only when BT is 1.5 s away** (24).
+  The user's list fixes BT, then WW.
+- **The pre-pull Berserker Rage (-4.5 s) and Bloodrage (-3 s)** (4, 5). Hekili's precombat list has no pull timer,
+  so they would be recommended the whole time out of combat. The in-combat lines cover them.
+- **Battle Shout's "another warrior's rank 7 shout" check** (34, `auraIsKnown 25289 rank 7, tag -1`). The fork has
+  no source for it.
+- **The Sunder refresh at <= 10 s** (16, 49). It's hidden, so off by default.

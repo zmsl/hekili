@@ -628,21 +628,25 @@ describe("Forever Warrior", function()
         assert.are.same({ package = "Arms" }, w.options)
     end)
 
-    it("opens with Charge before combat in Arms and Fury, and closes the gap with Intercept in Arms", function()
-        local packs = assert(loadfile("tools/make_pack.lua"))("lists", "warrior")
-        local function actions(list, n)
-            local out = {}
-            for j = 1, n or #list do
-                out[j] = list[j].action
+    it(
+        "opens with Charge before combat in Arms and Fury (Fury with Intercept too), and closes the gap with Intercept in Arms",
+        function()
+            local packs = assert(loadfile("tools/make_pack.lua"))("lists", "warrior")
+            local function actions(list, n)
+                local out = {}
+                for j = 1, n or #list do
+                    out[j] = list[j].action
+                end
+                return out
             end
-            return out
+            assert.are.same({ "battle_shout", "charge" }, actions(packs[1].lists.precombat))
+            assert.are.same({ "victory_rush", "intercept" }, actions(packs[1].lists.rotation, 2))
+            -- Fury: Battle Shout, then Charge in Battle Stance or Intercept in Berserker Stance (wowsims's pre-pull move)
+            assert.are.same({ "battle_shout", "charge", "intercept" }, actions(packs[2].lists.precombat))
+            -- Protection charges in Battle Stance, then swaps to Defensive Stance
+            assert.are.same({ "battle_shout", "charge", "defensive_stance" }, actions(packs[3].lists.precombat))
         end
-        assert.are.same({ "battle_shout", "charge" }, actions(packs[1].lists.precombat))
-        assert.are.same({ "victory_rush", "intercept" }, actions(packs[1].lists.rotation, 2))
-        assert.are.same({ "charge" }, actions(packs[2].lists.precombat)) -- Fury: no Intercept in the user's list
-        -- Protection charges in Battle Stance, then swaps to Defensive Stance
-        assert.are.same({ "battle_shout", "charge", "defensive_stance" }, actions(packs[3].lists.precombat))
-    end)
+    )
 
     it("keeps its priorities in src/Hekili_Warrior/APLs/, tools/make_pack.lua's default class", function()
         local def = dofile("src/Hekili_Warrior/APLs/packs.lua")
@@ -672,7 +676,11 @@ describe("Forever Warrior", function()
                     if e.list_name then
                         assert.is_not_nil(p.lists[e.list_name], where .. ": no list " .. e.list_name)
                     else
-                        assert.is_not_nil(w.abilities[e.action], where .. ": no ability " .. e.action)
+                        -- use_items is Hekili's `all` (Hekili_Shared/Shared/Items.lua), as in druid_spec
+                        assert.is_true(
+                            w.abilities[e.action] ~= nil or e.action == "use_items",
+                            where .. ": no ability " .. e.action
+                        )
                     end
                     local c = e.criteria or ""
                     for kind, key in c:gmatch("(%a+)%.([%w_]+)") do

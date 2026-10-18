@@ -1886,6 +1886,17 @@ spec:RegisterSetting("maintain_thunder_clap", false, {
 })
 
 -- Fury's rage floors for the on-next-swing strikes (wowsims/forever's Fury APL dumps at 40 rage for both).
+spec:RegisterSetting("rage_cap_threshold", 80, {
+    type = "range",
+    name = "Fury: Rage Cap",
+    desc = "At or above this much rage the Fury priority dumps rage into Heroic Strike (one target) or Cleave (more), "
+        .. "without holding rage for Bloodthirst or Whirlwind.",
+    width = "full",
+    min = 0,
+    max = 100,
+    step = 1,
+})
+
 spec:RegisterSetting("hs_threshold", 40, {
     type = "range",
     name = "Fury: Heroic Strike Rage",
@@ -1948,8 +1959,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Fury",
-    20261018467,
-    [[Hekili:TFvtVTnmm0Fl9swlwQxCxx)yyjh6HHTEOx8a2nBRitxlezjdj5KMHc)BFu2ojkU2TlaDy7qpKahrYhFIu6X4q)WFegKqmq4DNn5Sl8N4F15xCzyGzDbeguqOli3Jpii543FTuT2U4AUKKydCEjJB(UiCEVyOlaA4D(NFTFyqgljbACe0uekPcwcQQylMvX)KOumP6ZvXMmOkUudQ3PRIlSlYmOdhBr(u)jN6F1jJRItvY8Q4Baf64clmbgIGcEi7uYughjlHAysH2Rqbuz(CIzknJOUhgJGhjttJUNMm1V62w)MUKrns16ivPoBCQKwQDS((PFqI0TqUcuBmoMLoDEzAQhITHdr6gkuw4gLDxkWK2nMeifeA2YbcldusgfTPyl6WyxOuyZXJwQuGWmBQgmgM4ETxMoYKPaDMKNmYckMgqa5maJB0Xh1KhV5CPmXKXuAJ3cHCL4rQeJaFyptkiNWe6z2VZiIKO2fE0n7N2I5Ee3Jk1iV6jDwdNSJjRWv5RyIKU8yNHxlwSdXAo4w0PCGS8WR2nHnyfF2F5kEt6)NvQ7l9ptngdnXwlpQ5MZMlW7Ufm6OeO2M1Zo3k0LIe0xIkxQSGSTf0esuRDqqMZHKrTa5gLhMh6IVmqG5KhIQDyljGhkK4XHMyrYzSkigpoERMpBO8NZer1E4YDtwJrkNuSh3TLwd(jY1JrVC9X19o1PeaPlHZ(fMGi8mzPPVQL1RAJBlyBG(PX3jboNVCxEBFV62WauUuJR3zMaNPn66zoqkPKBWhVREgulhcVzJYnIGJICyq9frRZgeYorqXHeGIrStK6rqEhKBfX3hVp(841Jy9oiBv43hWZheW3KSpyw0roXPsh4Ovx)7nnL9qZ2q(0H2qEtv)fu1)tAdnWyR)xmWDCRkVB34L19ANlyb9Yba1vX3f8)3Nxy3txnWEYvUV390R0CelhUEao805cpx19aNVytS)KbYSZr)A)gAKX2ZOHw)c2(F)7BmZGhARFnHAaqiiLMm7POVblyCg(IiTV5Yj1Md)9d]]
+    20261018900,
+    [[Hekili:TNvWYTTnq0VfNdQ2tSPfDstT7y6zAo0Pnh8f1z6nsbbUseJij4aakz3Xd)27cqksqkcllNmj(qoihjGDF7d7cU4bMq)W)jCwmrbH3F10R(K)u)RVz60WzQhlGWzfe6AYk8l5Km8V)zP4r9GpMYjXAhxuYsv)DE4IrXqwa0W79)4n(HZsyXXqTHGKIqXfWgqunxJz18)LiemU43RMRsGQ5Lsq8lYQ5f6bzk0Gt1iFH)0l8V(SZRMVuWZQM)zqGgUwdZmfjNc4mBzQKQ5ASrVilyPg33Y3kzzYlxwhwn21bwWvefJNxnNsKkC4tJ5u5Lcqcebn5YUWEXs0Hl2iVOblVSymCV7pW1v8oc1m17oZdttc(swkM1iuDaKEfcGYZwqub4hvkejt4LQZzldwuUCPN9GEciJWYL3g4pT6l7bW7dUKMqeRGZXeveF5YOv04a)XTKLRabfku9nUlU7sIrsto0RSysnoETUIFlsqYxbtoPzkbKh3oABGd2WOkU4XirPm58LCAP0Iwiz4yYVGVfe7MCVL)ooy7LUMHHzpFIHLqUKTXHBjGGZO4Cc26oN3llODaHaYHmgGwmrGB5VlqckflFL0t)ZikPisLGBls4PXhkixD8bjr2b)Kt3LLxKY5XQeMqQ8wNZ3M)eLJgGFP3un7wUt)3esECuZapPdIhTuGvl1fny2JWEuUuDxWiHtpXzDmzloA6wgw0hWJUj(wXIoenCWozttbYMxCP8UJSu2d9dwd3h9A))EvhRJ2pSc4yH)zQC6(f6C4jo75CsmyMZ0zP)dYYY8y0wIiJl0G0MXRDjQzEiNSifIN0aKTxEyCORV1HJzKhImg0sc4Hcow(R9fjNs3Tv5LInIsVZv8ZW(Hgl6TPIKMgv)ZOuMuDU(O0GDzFPPxgxkFQFem)Z7)GnqQK6Oqtjf9sc6AKc)ezBXKdNOTnFqcpgW1njL9Fya6oMA4YwBLzY2m)oO33)bbWAJQ9WTBGSheEaOLkqZGMVgvKqKqVUWKmDRK8vTNnOrrFITzf3ZVx9JLb(E)6R7jkJN9w)dQlJ3Szmko55O4Tbt98FAC(nXn)mUTx5r)u)(8YUxWT3mD8fLXv0yfjfnZJLHIH2aXr9TWB32M3cfKJrs2pCc712)iqxGykitoYKMNKjQKOTmzY4Zl3cqH5PuZjXYdFQx1xcNHQ4Kiud07RBVj1xlOna4pU3CdJMkD4N3jhoCwlXdvioomQJ(AR(WaRS4QooTEnCrHmcVfbiyKABSxoiUkDCwsktvphFTL2goZisqB8iKVlyJQSTdYw1W9XB4YCaEJO6TdYgPY9b8Jows9eHz5YEjwxPVxIyznb(1JIax91qGFkK2LCmDH4toke1Q5EnBbEjIS1r(3Ezr(iQ9)ua(HeGRZ7x7iVRLzBNBpSEXgH5AqVXbO2sUTb)TUGD9AYFQ72UofOBTpEGo)6JdJQFXzDhiQdKRtySfKpA27BKsFdjCFI7qP7pxH8iVcGjYdpEBxKTE2XyNRtTA3KBSY1rlns(TjFVBbyC2v7W2RtS3HVV9UwHzHmS7QlLrd3LmS7631BCyy(W(toz(URKyt5bxgXaOREt9V7HnkVTVLIrH5WEtTlkRBO4u45BLRVul1U9Dt)CITFvRRX0I7A7u97p)yUur7ldFF(81)g0nPgezsPkrF05FbRzPSQ5N28)tsDUl8)p]]
 )
 spec:RegisterPack(
     "Protection",

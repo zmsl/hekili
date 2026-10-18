@@ -31,7 +31,7 @@ end
 local OPTIONS = { name = "list_name", use_off_gcd = "use_off_gcd", focus = "focus" } -- plus if=, which runs to the end of the line
 
 -- SimC-style lines into their lists and entries:
--- actions[.list](=|+=/)action[,name=list][,use_off_gcd=N][,focus=N][,if=criteria].
+-- actions[.list](=|+=/)action[,name=list][,use_off_gcd=N][,focus=N][,if=criteria]; focus is a tier, 1 highest.
 local function parse(simc)
     local lists = {}
     for line in simc:gmatch("[^\n]+") do
@@ -50,6 +50,9 @@ local function parse(simc)
                 error("unknown option " .. (k or opt) .. " in: " .. line, 0)
             end
             local value = k == "name" and v or tonumber(v)
+            if k == "focus" and not v:match("^[1-9]%d*$") then
+                value = nil -- a focus tier is a positive integer, 1 highest
+            end
             if value == nil then
                 error("bad value " .. opt .. " in: " .. line, 0)
             end
