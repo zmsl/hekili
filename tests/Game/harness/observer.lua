@@ -242,6 +242,7 @@ function M.new(W, k)
         return M.SPELLS[name] or name -- a real ID (the content's) passes as is
     end
     local castN = 0
+    local gcdEnd -- the latest GCD's falling edge: its flag and its event (the list entries)
     local deltas, dseq = {}, 0 -- our power's changes as the client's usability sees them: { t, delta, seq }
     -- the answers' view of us: our form as of the answer's time (a form change is a delta), the rest live
     local now = setmetatable({}, { __index = us })
@@ -353,6 +354,12 @@ function M.new(W, k)
             -- secret but to a secret-free client; the GCD's rising edge after the success or before it (`ev.order`,
             -- the world's roll: UNMEASURED until checkpoint G3)
             local function cooldown(id, d)
+                local gcdFlag = id == k.gcdSpell
+                -- a GCD pressed on the last one's end: that end's float sum can land a ulp after this rise, so it moves
+                -- back to it (its lower seq keeps it first)
+                if gcdFlag and gcdEnd and gcdEnd[1][1] > t and gcdEnd[1][1] - t < 1e-6 then
+                    gcdEnd[1][1], gcdEnd[2][1] = t, t
+                end
                 if k.plain then
                     push(t, "@cooldown", id, t, d)
                     push(t + d, "@cooldown", id, 0, 0)
@@ -360,8 +367,12 @@ function M.new(W, k)
                     push(t, "@cooldown", id, fake.SECRET, fake.SECRET)
                     push(t + d, "@cooldown", id)
                 end
+                local flag = list[#list]
                 push(t, "SPELL_UPDATE_COOLDOWN")
                 push(t + d, "SPELL_UPDATE_COOLDOWN")
+                if gcdFlag then
+                    gcdEnd = { flag, list[#list] }
+                end
             end
             local gcdFirst = ev.gcd and k.gcdSpell and ev.order == 2
             if gcdFirst then
@@ -420,7 +431,7 @@ function M.new(W, k)
             }
         end
     end
-    local usable, power, view = {}, 0, {}
+    local usable, power, view = {}, us.power0 or 0, {} -- the client's view of our power from the start (`power0`)
     for pt, v in pairs(us.res0 or {}) do
         view[pt], cur[pt] = v, v
     end
@@ -441,7 +452,7 @@ function M.new(W, k)
     end
     if answers then -- the answers before anything happens (no event: the client's state at login)
         for _, u in ipairs(answers) do
-            local ok, short = u[2](W, now, 0, view)
+            local ok, short = u[2](W, now, power, view)
             usable[u[1]] = ok and 1 or (short and 2 or 3)
             push(0, "@usable", u[1], usable[u[1]])
         end

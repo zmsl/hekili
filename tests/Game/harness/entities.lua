@@ -32,7 +32,7 @@ function M.new(o)
         power = 0,
         powerMax = o.powerMax or 100,
         pt = o.pt or 1,
-        res = o.res or {},
+        res = {}, -- a copy of `o.res`: a content's knobs serve every fight
         formSpeed = o.formSpeed or {},
         formSince = 0, -- when the current form began (W.shift; a regen ramp's clock)
         auras = {},
@@ -44,8 +44,8 @@ function M.new(o)
         avoidAt = {}, -- [act] = the last time an outcome of ours on a target was that avoid (MISS, DODGE, PARRY)
     }
     e.res0 = {} -- each other resource's value at the start (the observer's first view; the world changes `res`)
-    for pt, r in pairs(e.res) do
-        e.res0[pt] = r.cur
+    for pt, r in pairs(o.res or {}) do
+        e.res[pt], e.res0[pt] = { cur = r.cur, max = r.max }, r.cur
     end
     return e
 end

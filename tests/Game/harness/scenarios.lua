@@ -46,7 +46,7 @@ M.ARCHETYPES = ARCHETYPES
 --- attacker { damage = { lo, hi }, period }) and joinAt ({ [attacker] = t: on us from t }) for hits on us, switches.
 --- The headless loop's knobs: weapons (ours [entities.weapons(level)]), mobHealth (our target's [1e9]: a kill ends
 --- the fight), pull (its time [1]), prepull (the cache and target reads [pull - 0.5]), form (ours at the start [0]),
---- tag (appended to the mobs' GUIDs: a fresh target per fight on one boot).
+--- power (ours at the start [0]), tag (appended to the mobs' GUIDs: a fresh target per fight on one boot).
 --- Several resources (GCD kinds design §2): pt (the swing-paid power type [1]), res ({ [pt] = { cur, max } }: the
 --- others), regen ({ [pt] = per second }, from the prepull), regenTick [0.1], regenAfter ({ s, k }), decay ({ pt, rate,
 --- interval, pausedBy }: from the stop), formSpeed ({ [form] = period }), payIn (the form whose swings pay), critRage
@@ -65,7 +65,8 @@ function M.world(o, seed)
         res = o.res,
         formSpeed = o.formSpeed,
     }))
-    us.form = o.form or 0
+    us.form, us.power = o.form or 0, o.power or 0
+    us.power0 = us.power -- the observer's first view (a batch stream reads the finished world)
     us.gcdOrder, us.gcdLatency = o.gcdOrder, o.gcdLatency
     local mobs = {}
     for i = 1, math.max(1, o.attackers or 1) do

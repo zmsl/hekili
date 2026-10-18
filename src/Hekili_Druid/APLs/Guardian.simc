@@ -1,13 +1,14 @@
-# Forever Guardian Druid (bear, provisional: bear rage income and decay are unmeasured): Demoralizing Roar, Lacerate
-# to 5, Primal Bite on cooldown, Maul and Swipe with spare rage.
+# Forever Guardian Druid (bear, provisional: bear rage income and decay are unmeasured), after wowsims/forever's bear APL
+# (reference only): Berserk after Primal Bite, Demoralizing Roar, Lacerate to 5 and refreshed in the set window,
+# Primal Bite on cooldown, Maul and Swipe with spare rage.
 
 actions.precombat=bear_form,if=!buff.bear_form.up
 actions=bear_form,if=!buff.bear_form.up
 actions+=/run_action_list,name=aoe,if=active_enemies>=2
-actions+=/berserk,use_off_gcd=1
+actions+=/berserk,use_off_gcd=1,if=debuff.demoralizing_roar.up&cooldown.primal_bite.remains>=4
 actions+=/use_items
 actions+=/demoralizing_roar,if=!debuff.demoralizing_roar.up
-actions+=/lacerate,if=debuff.lacerate.stack>=5&debuff.lacerate.remains<=4.5
+actions+=/lacerate,focus=2,if=debuff.lacerate.stack>=5&debuff.lacerate.remains<=settings.lacerate_refresh
 actions+=/primal_bite
 actions+=/faerie_fire,if=!debuff.faerie_fire.up
 actions+=/lacerate,if=boss&debuff.lacerate.stack<5

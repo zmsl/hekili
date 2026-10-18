@@ -100,6 +100,17 @@ Arms solo: fights=3 agreement 0.968 (2266 ticks); react median 0 p90 1 never 0.0
 Arms solo: fights=3 agreement 0.938 (2258 ticks); react median 0 p90 1 never 0.095; refused per 100 [cost 16.8 (oracle 15.4)], episodes 2.52/min; dps A/B 1.044; ... [seeds 4-6]
 ```
 
+`tests/Forever/loop_druid_spec.lua` runs 3 fights a Druid pack in `make check` (seeds 1-3, the `#slow` tag) and 20 in
+`make test-druid` (`#druid`), each asserting its flagged lines ran (`r.focus > 0`). Feral and Balance are gated by
+`pack_gate.gate`; Guardian is reported (engine health and focus asserted, not the agreement): its first icon waits on
+rage the usability ladder cannot place. The first passing run (class-completion Task 2):
+
+```
+Feral solo: fights=3 agreement 0.974 (2697 ticks); react median 0 p90 0 never 0.015; refused per 100 [], episodes 0.00/min; dps A/B 1.000; ... [seeds 1-3]
+Guardian solo: fights=3 agreement 0.718 (2574 ticks); react median 0 p90 1 never 0.186; refused per 100 [cost 31.2 (oracle 19.3), gcd 3.8 (oracle 3.5)], episodes 2.68/min; dps A/B 0.955; ... [seeds 1-3] (reported)
+Balance solo: fights=3 agreement 0.985 (864 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 91.2 (oracle 91.4)], episodes 8.13/min; dps A/B 0.996; ... [seeds 1-3]
+```
+
 A deliberate pack or APL change re-records the fixture in the same commit:
 `ARMS_RECS=record .lua/bin/busted tests/Forever/arms_recs_spec.lua`.
 

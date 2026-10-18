@@ -136,7 +136,7 @@ function M.new(seed)
         local offGcd = p.offGcd or p.gcd == 0
         if not p.onNextSwing and t < (e.castUntil or 0) then
             return false, "casting"
-        elseif not offGcd and t < e.gcdUntil then
+        elseif not offGcd and t < e.gcdUntil - 1e-9 then -- the loop's ticks are a float sum: a 1.0 s GCD ends on one
             return false, "gcd"
         elseif t < (e.cdUntil[key] or 0) then
             return false, "cooldown"

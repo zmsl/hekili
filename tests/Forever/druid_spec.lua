@@ -391,11 +391,11 @@ describe("Forever Druid", function()
                 "mark_of_the_wild",
                 "gift_of_the_wild",
                 "thorns",
-                "innervate",
                 "natures_grasp",
             }) do
                 assert.are.same({ nil, "feral_form" }, { a[k].buff, a[k].nobuff }, k)
             end
+            assert.are.same({ nil, nil }, { a.innervate.buff, a.innervate.nobuff }) -- leaves the form (below)
             for _, k in ipairs({ "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form" }) do
                 assert.are.same({ nil, k }, { a[k].buff, a[k].nobuff }, k)
             end
@@ -548,6 +548,17 @@ describe("Forever Druid", function()
             e.buff = auras({ eclipse = { up = true, stack = 2 } })
             ld.run(w.abilities.starfire.handler, e)
             assert.are.same({ "eclipse" }, e.removed)
+        end)
+
+        it('leaves any form on Innervate, as Classic\'s swap_form("") (the client unshifts to cast it)', function()
+            for _, f in ipairs({ "now", "handler" }) do
+                local e = ld.env(w)
+                ld.run(w.abilities.innervate[f], e)
+                assert.are.same({ "innervate" }, e.applied, f)
+                for _, form in ipairs({ "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form" }) do
+                    assert.is_truthy(table.concat(e.removed, " "):find(form, 1, true), f .. " " .. form)
+                end
+            end
         end)
 
         it("writes no combo points from any `now`", function()
@@ -834,12 +845,94 @@ describe("Forever Druid", function()
                 starfire_filler = false,
                 hurricane_targets = 4,
                 innervate = true,
+                lacerate_refresh = 4.5,
+                feral_innervate_mana = 40,
+                balance_innervate_mana = 10,
             }) do
                 assert.are.equal(default, w.settings[key].default, key)
             end
             assert.are.same({ package = "Feral" }, w.options)
         end
     )
+end)
+
+-- The priorities' wowsims-aligned lines (class-completion plan Task 2; research §1, the sim's default APLs as a
+-- reference, no code copied) and their D1 focus tiers: 1 a proc or reactive window, 2 predictable upkeep.
+describe("Forever Druid priorities against wowsims/forever", function()
+    local packs = {}
+    setup(function()
+        for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "druid")) do
+            packs[p.name] = p.lists.default
+        end
+    end)
+
+    -- The first entry of `pack`'s default list pressing `action` whose criteria are `criteria`: its index and entry.
+    local function line(pack, action, criteria)
+        for i, e in ipairs(packs[pack]) do
+            if e.action == action and e.criteria == criteria then
+                return i, e
+            end
+        end
+        error(pack .. ": no " .. action .. " if " .. tostring(criteria))
+    end
+
+    it("Feral: Shred (Claw out of position) on Clearcasting at tier 1, before Rip (1) and Rake (2)", function()
+        local shred, s = line("Feral", "shred", "buff.clearcasting.up&shred_ok")
+        local claw, c = line("Feral", "claw", "buff.clearcasting.up&!shred_ok")
+        local rip, r = line("Feral", "rip", "combo_points.current>=settings.rip_cp&!debuff.rip.up")
+        local rake, k = line("Feral", "rake", "!debuff.rake.up")
+        assert.are.same({ 1, 1, 1, 2 }, { s.focus, c.focus, r.focus, k.focus })
+        assert.is_true(shred < claw and claw < rip and rip < rake)
+    end)
+
+    it("Feral: Shifting Power below 40 energy under Clearcasting, below 50 without", function()
+        line("Feral", "shifting_power", "energy.current<40||!buff.clearcasting.up&energy.current<50")
+    end)
+
+    it("Feral: Berserk ahead of a due Rake when Rip is not due, unflagged", function()
+        local i, b = line("Feral", "berserk", "!debuff.rake.up&!(combo_points.current>=settings.rip_cp&!debuff.rip.up)")
+        assert.are.same({ 1, nil }, { b.use_off_gcd, b.focus })
+        assert.is_true(i < line("Feral", "rake", "!debuff.rake.up"))
+    end)
+
+    it(
+        "Feral: Innervate in Cat at tier 2 when mana is short and energy low, outside Clearcasting and Berserk",
+        function()
+            local _, e = line(
+                "Feral",
+                "innervate",
+                "settings.innervate&buff.cat_form.up&mana.pct<settings.feral_innervate_mana&energy.current<=30"
+                    .. "&!buff.clearcasting.up&!buff.berserk.up"
+            )
+            assert.are.equal(2, e.focus)
+        end
+    )
+
+    it("Guardian: Berserk after Primal Bite, the Lacerate refresh window a setting at tier 2", function()
+        local _, b = line("Guardian", "berserk", "debuff.demoralizing_roar.up&cooldown.primal_bite.remains>=4")
+        local _, l =
+            line("Guardian", "lacerate", "debuff.lacerate.stack>=5&debuff.lacerate.remains<=settings.lacerate_refresh")
+        assert.are.same({ 1, nil, 2 }, { b.use_off_gcd, b.focus, l.focus })
+    end)
+
+    it("Balance: Innervate at a mana fraction, Starfire on Eclipse at tier 1, the DoTs at tier 2", function()
+        local _, i = line("Balance", "innervate", "settings.innervate&mana.pct<settings.balance_innervate_mana")
+        local _, sf = line("Balance", "starfire", "!moving&buff.eclipse.stack>=1")
+        local _, mf = line("Balance", "moonfire", "!debuff.moonfire.up&(boss||settings.trash_dots)")
+        local _, is = line("Balance", "insect_swarm", "!debuff.insect_swarm.up&boss")
+        assert.are.same({ nil, 1, 2, 2 }, { i.focus, sf.focus, mf.focus, is.focus })
+    end)
+
+    it("describes the Lacerate window's default and the sim's 1.5 s, and the mana settings as fractions", function()
+        local w = ld.load()
+        local lr = w.settings.lacerate_refresh.option
+        assert.are.same({ "range", 0, 15 }, { lr.type, lr.min, lr.max })
+        assert.is_truthy(lr.desc:find("1.5", 1, true))
+        for _, key in ipairs({ "feral_innervate_mana", "balance_innervate_mana" }) do
+            local o = w.settings[key].option
+            assert.are.same({ "range", 0, 100 }, { o.type, o.min, o.max }, key)
+        end
+    end)
 end)
 
 -- The Druid's `now` handlers as VirtualState runs them: bound to Families/Now.lua's context (Hekili's verbs onto the

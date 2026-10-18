@@ -1135,13 +1135,22 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows(INNERVATE),
         toggle = "cooldowns",
-        nobuff = "feral_form",
 
+        -- From any form: the client leaves it to cast (Classic's handler, swap_form( "" )); the Feral priority shifts
+        -- back after it.
         now = function()
+            for i = 1, #FORMS do
+                removeBuff(FORMS[i])
+            end
+            removeBuff("maul")
             applyBuff("innervate")
         end,
 
         handler = function()
+            for i = 1, #FORMS do
+                removeBuff(FORMS[i])
+            end
+            removeBuff("maul")
             applyBuff("innervate")
         end,
     },
@@ -1873,8 +1882,40 @@ spec:RegisterSetting("hurricane_targets", 4, {
 spec:RegisterSetting("innervate", true, {
     type = "toggle",
     name = "Innervate",
-    desc = "When enabled, the Balance priority uses Innervate when mana runs low.",
+    desc = "When enabled, the Feral and Balance priorities use Innervate when mana runs low.",
     width = "full",
+})
+
+-- Lacerate's refresh window and the Innervate mana fractions (class-completion D7: a fraction of the maximum per line).
+spec:RegisterSetting("lacerate_refresh", 4.5, {
+    type = "range",
+    name = "Lacerate Refresh Window",
+    desc = "Select the seconds left on a 5-stack Lacerate at which the Guardian priority refreshes it (wowsims uses 1.5; "
+        .. "the default 4.5 allows for the debuff being modelled, not read).",
+    width = "full",
+    min = 0,
+    max = 15,
+    step = 0.5,
+})
+
+spec:RegisterSetting("feral_innervate_mana", 40, {
+    type = "range",
+    name = "Feral Innervate Mana",
+    desc = "Select the mana percentage below which the Feral priority uses Innervate (wowsims: 1400 mana).",
+    width = "full",
+    min = 0,
+    max = 100,
+    step = 1,
+})
+
+spec:RegisterSetting("balance_innervate_mana", 10, {
+    type = "range",
+    name = "Balance Innervate Mana",
+    desc = "Select the mana percentage below which the Balance priority uses Innervate.",
+    width = "full",
+    min = 0,
+    max = 100,
+    step = 1,
 })
 
 spec:RegisterOptions({ package = "Feral" })
@@ -1885,16 +1926,16 @@ spec:RegisterOptions({ package = "Feral" })
 -- Restoration is deferred.
 spec:RegisterPack(
     "Feral",
-    20261018931,
-    [[Hekili:1wztVTnoqy4Fl9IrnQH248vJlQZHTlw02dbfr9mLOOgAtyArbsQ66l83ENHY2rsjkRraweGykoVZ7mC0JPzZz)KLwY9a7HlV4YBNFX87wC1CwQFFnWsR5In8v4Ik(w8))ly5AA39AdVKYSOrP9FRIv8IM4Qbb7H5xVyblDTQSeAfcob6LXc)cSH8OPH8)X2Okd5VxW9t)uih1l9QQvH8Fy2rYkaTzxi)Mlc5qfyxTFwi)rvDiN7d5(1qi3b4kHzBHjKxBuvEhgSc98r(gmm3f1TpKl5ASGgPeTOQTjeAvDnwUzh8Yco0m0dd1kwG6SVO5ydSBnuDqKNBxr1uYfaA(EtZum)1gDzSXJAA71tUkrJxtIRGONWVXuDzW0eCSAnsLghZCHxzQCj1wGooC)YTC7MmJmdDjBNsxotjxIhxAa5skAKs3K3rFKmuyst9HiRW55GiHV)Sk9HL)LFTXw5gTcTHhnB81xM0y3s53MWXD6MYYZtg6N7ahKvtyajVDIMiASwOY)zei6iVXbzkpS11DZcW6a7Mzuq8TE2kr5Y5Dfyv1ZKgrJB5CQcrgkRfHowN7FAAGQZe4yTeIno(4GE2I8w8GDub(8ajsWAektJlRaB3(dBCJmPQsHGIDYl3l3mPxXNCeJUFW0P)KeX4yLOfzMnDYQvvsmsIW46LOa5(4Xz8ejjhYJLIFHYHBo4UaTY5DXlBajVr7XLpeV8bQ4fAOK93hbFw6rwaxzXPHvXzPpJsyEScJyqFQPRnpJEiBUAeBortKORhiQdnrNKtjDG2OuUzqkp1gVfe7PsGpZsJalvzSq3oYbGiVEdX(ejL6hhj1(eAxt(FHuPw5UrFBICxVo4miyYWfJXxiU2BSCgKnJ(l90vDVg(o8s4xE49wV1(14(2lN)pR3P7WFn4)C)syCUWBipzPFf2O0k8h2o8Z7tJHz)j]]
+    20261018313,
+    [[Hekili:fF17VTTnq0)wYx8AWmuTJt6AgQlWAhgwh2ckQ2NPen1jBcttkqsfpdmO)27DuYksYwPEbByFjHH8DV7h8DNyyZz)jloJ7b2d3m7M3mF283Uy(cwS)qbWIl4IT814cnFh(ZFbSCfT7bLHNrwUQuQ8FsZwDwsCfGG9W8BV)Ew8gzwgudeCcKlJfEeSvPbsRs)zBPmRk9vcU)6PvPCLCTgWn2l9BWFA27K7CVoV2QVZvL(hgTbbxL(tF(3r7SqoybTaQsnA1HR)XQ04nwIbJUk9JkGBfCNxQxJG)OIVhpOeT2KxLwyCsV0OjhJbAEnQpB2tX3kqzqW3oRkf0GD9HQ0sDgDsFs5A0x3nRoIrQrU(ayDGDlE2gGNv7lEvAwjgKFHVfqiFrwG7HXHFdUPdWvcZUvgkOKAVRHxcnU0fWHrqoxPi(Yrk011rHswuGrY0gUSGdjd5W0wjAY79BaDdip3UM8zoxai5hmLunyJrLfYPaMJzDdR5iXBiWAiWj8xOPUeiCRrX6N0ObpIQbY7yvIYUAxUJRX03wQrRDBmwFekMSMCPcfxCbDf4IkSavb4(L742TjM8e0Xj7LQSPY8LyfIk3UOvL55Ujxr)kAiWOYIMtwJxMdoP63oXtF)YxJxzwTBupuF8OwJ6WeuAUJSV2GJ701KLxgmKpxJimPG0Ge86lHirPff5(3D7S)UHGoAqkThGd1JDOT0bjspSZ1DZv1I0P0HOGkzTiB58qeMbbxyrTxOI(QGYmPwyE0fV)PcMvwKiqChTtwGMDD)8c1HtZnIsxTpoBoeqLy221sbQC)MgE15SedJUg(sYHE0r9T18DZzQsDHIdKmcPP0LScR691w4gj5sTeBLStoFmD3KEbXKJnAVFGy40cm5PMkrhRQrffojsyC(tQVu6mUHeKtStESzVBnPnnBpDYq1(eAwquHW)UwW50hcsAnjHqmupVCXSjNx4xVBJyoCrWIX5Iomoh8vjL05DHp7b58sLhx(q4ZGGMVsbzSpCCyel(yeJRS4vMvYzXN05Y8OhgHG(DYDP50o6lTLM83Ir8xBlob62bG60ItPCRrnvTEj5)on)uuC3GO4jN8SD)DRH4oS4GaJIBKZ38pJZRoLusn3NZFyuoFjP(tEc)7(o6TJ6Obv9oCGB0sYnej3pIaO)qNUK)FYWhkuMpBuXF4IRtiCbtLcmoA)y4wRtb7cgxfiCy)5zkl)poS6PeSLXE32E6Dsnp345gxn8HqN)6)L(YPNBox9dK(M(R9Dup3mSlDOBOUWljozX)kSvQK47rB(hlUoCm7R]]
 )
 spec:RegisterPack(
     "Guardian",
-    20261018450,
-    [[Hekili:TEvBpnooq4Fl7xq7kQYsb6UlNi8be627oDx1Pl3NDItYeWQj2r2oGaTk)23zssBDZlDlf(cTmV8mpzMhpoLnN9)SGuUfylp)SZ)Y8ZM)TlxCglW(CjWck5jR43JFrYlW)(9kUovWLKJNZv8uk54krU9pLS4rXXucjSLZV8QRybpistH2abtcl43vA4rqxhTg36O70vI06OpgdC9S6OsT6rHrOK88FRoImwhPrcvhjKjQc8tUedpfs4pJFxJgQKfa3uPH0pHPChuO08CXlc591r)NQb1)MNaAKQ1rwvD0c0Y)Qff886OBfKvfsKeLkpv9KeD(p8Q8Ucf8KOed4jH9H6itztbj(4HDeTktKJnjEIfjSXRudifJ5wFI3HzkDXmrM)hIRYY82yYRQS(V6s5Gd8u)pRRKHT)xyUWyNrdiFUcOmj7pcHGekeG5g)ZDtmg0gqVAwLbcvzzH3NK6p3naYb2gkmUgtD6JHAQnsmmfA44aN94AEx)MYPlL1M8mwuIDJ)It67qdfCH0CT)LElCbRSzufgttkhZzCqlGWmHgCPMJ59qQyLXmGanm76DQDbQe2TXrz3iasQ0AqAVXVnApkuVeLXEANbhE3y)hFyehRKOKZTIgsWf2CAyqLmG1IDCJxAvrzyZXcNmbjzziB3Kf5PnOtCX96j47onBmWxeqAOgUhvzy7cDSjapug6F8cgk9P0PJPUVOFMdfWDogt605ABFUVN3YmFlQhPu4KJQo9FeoWZgSaCzmTST3kCA)IH20JOHFSS5kdqYJZHu2TRx4rl17nvzbjA8rrl4SG9n6zwSI9a1PJtvCtr6KfUqpqqq4DXeKCJ4Gc6YjcYzoqHTyIW222PO(Yb(eqtpx6FuJ4jLsV3Aj6j7Rt887iGgBuVR(IrqHAKmSG29jJ2CJ3oyo4YWXentRjoFl(9U5SvFh2(coKcFeXZVsmUhP0o6TPesVPto91DRbD9fzUyDu3(UpjqVtkF7DsPS8QxXd1(U9MWA(zh4484oz(koc2WMP09oBtMKddVYVbYdD5z719UWFSVnqtzNAh7OVEq75)nVu87ZgGgm5v2huyt7pGvICb(Jh6(DfFQXn7Np]]
+    20261018907,
+    [[Hekili:TE12UTnoq0VL(s2nOgQXUjTjlIcWweS3qAqr1(mLOKgftejsbsQy4If6BFNrswMwYYW1jVe7mxoZTZqsZMZ(xwqk3cShxCXIpn)I5xFZfFMfyxxcSGsEYZ8NWVi5f4F)ZkUovWLKI15kEk5CCLi3(3sw8EXXucjShNF5n3WcwkstHwdbtcl4puA4fqxhTb36O71vI06OFng46z1rLA1lcJqj55)wDejSosJjuDKqMOkWp5s08uiHVg)UgfujlaUPsdPNJaWZSuawPwzefMpK1gXFXSbSF)BpGrtdzGgKjO7kz(6ZXy9fqBa9Z9i8nTOGNJYfwaX9EOqP55IFiKpvh9Dvt2(apb0ylOoYQQJUQl5qW1GzjKsjnQAjQ3awmPeYu1Qz7InLb1rjkvoQtIk)kVkVdPGvIsG8ZUeHOSPCPUHhop0QmrooI4jwSDz8k1a2GI5wFQqdXcVyMiZ)DXvzzE9I8QkR)NoxoAdFV)h0vYW2)lmxySZi6HpxbKNK8xGqqcfcWCN)cxhJBBRZQmqOkll8PKu)5KxPqtatD6RHASTIb(SnDdSOOgvym2N80qbxir8V0fFcxuBHXv4iqBkWderxNZ7gQZYujvg)foj7gvEglUNCN)vNnurxsERpoWTyam9Qc7OfUHYP8CfNXbTacZeAWnXDepvkJwhRmMrPvt(E7vU(uG0SXtLg2vsLgxoS353AThzQxIYyFFNa3Xcj))E3Eu8SeNGUr0qS5WMf9rrQVDLwvug2SX74jijjJZ2EVinTgDMlU3or(UtZgn8hcifNppHuySDHk6nWd54(NoDIC)qlbdxD(4qphtV7uSpQtNQT95HAEnZ8TOEIuHZoP4mSeoYDdwaEQpDpYGBNOdVm0LyiA4hp2CBii5X5qk7lBonLUVAWuLfKOXsrl4SGdn6zwmIda1PJtrSpiD0cxOhrii8(4ejzp5Gm6YjmYzoqMD1eMTTTtw9PJScOPNB6FsJ4jPsV1CjQY(8e1VdbAFJ6D5xmckKJKHb0EiAu)1P7G5OBA3hPzAoXIT4p4A5w(Dy7B3ig(Eip)eKXxXv0hIrUdTDk(4RAbCi9Duj9wCr(2CDJgKfrpzGMLhGPnyH863ic5J3mbqBZUTOCOhjqyn)IJK1CAha8tSP3KntTE5CO1K5W4xw0a5XEgD7RkCH)uF0rtyN6O89(kK2Jz6Fy)BZbnnyYRSlvyt7VGNf5c8he19lZoVrn7)p]]
 )
 spec:RegisterPack(
     "Balance",
-    20261018555,
-    [[Hekili:LAvtVTnmm0Fl9sw7wHxtxtx7WCpuSn0nG1lEa7MSzKLJfISKHKCkkWG)Tps)vDYCsa6UKetY3JmKpkz2C2VyrPGxWE8YlU865xm)MflwWI8pxkyrLaFnSc)HgkWpVhuGM3y)zLbsjSlRKk)31SLtsJRuWzpo)QBVLfLlttfTbkCCw03mwXgHToPJ26KVyRKP1jNwAnBKoPrdQpvNuaAOor6Qt0TXBfqkSuHaang(x5kzPt8gmaEoyxH2TvKxcsLMB0zsBHi9mKRFAm61sDDcM8IZBFg92t131ob3xNe9eylQtwlkXhQkXaJ8GTnqJEiL9j0Hb8Bl4ZRt8M6KmPsHwEOYALCq3Hb)B8m6NI37cWEO1GbIntG7X)QUGsRGBkwc(WI2QmoJkszwOt49s9kxqNJzNSSkllyCybvL1)4Fy6DHVVaSRJnzX(Cr8tsv6w8r046zBNarg78SsM53XZ05YNBSA3EZqR7XOdLATWUb1nBbAW6mA2hWXgPq7)ClOax3OiGBC(3E5azybu5eXsVOWn2ihuQ42hJvsN)CsmhcMTZzE)0kUBeD3fZiqBeXcTOqkC3DGGhNVIonfr)jPIHrvtnJn1txACU)mWL3cU84uJ3D2ywKnsXyhPehZ0y7eBezJX13DAWuG7r6vZAakA1Su7JV(UW5hd0qb27mM014(3iCprI(rGErwGT3WJ0i2kyKSHM6weYIWDE6SGDozHMKo6aiem(1JnhKj005cPS773Qyr9jKfXTO0Wkbw0efdZJ8VhkgkST4OTarCE6aTmOs5puDmOPhtYRtXFOADydGc6d7e0ej()t2)sE3DjRDaf3EVbnIWY5Q)Vru3IZKBoe9l2BN)LnMPsXuBueFxVh(6NgtOgMEtJi7JVcY23giX3n7HVMnY9QthoS(yBm9xRmPM5G3cDiX5UxXmj7V67KMsX3N52REoA(gUHQPDHnmOImXIEqSwQK4RM09slN14M93]]
+    20261018598,
+    [[Hekili:LA1BRTTpq4pl9nznSqAtxB)1oMlSYVnAhBLbEWENSvKLterwYij3qGH)SV78FuStTtH13KyR7UNNt3DpsMSG8lsyc1XjpDX5xC9IZxCZv3Edj0TlNtcZPSn0vWdkAg879ujvXQwFNuttWyxwiKUhvKLdcJnNZipT4YBVLeUwKKWRDKBzKWVQn8N5MY4gylJ)FtHiPm(0CJ(zHvOvu5hlJZOkAzSWwgRQ93WPj0LsiaQcC)lmPi3YFh4aBn1Scw3uGwXqkumTkvyY4jtbS(HwR2iuLXa5zZQFhS2c1JklN5kJd3snzLXB45Wlf5GJHoQP2rTYtzlHwWHFBOU1LXoDzCQqkHvEOWyemQQjgyBSdSJ(7WaEuP4MNHsgWnWIBn8GL7A3VPgkZjWapLM6WT9w9wRiZEwADDd3V(k3N)53NHfMuUHxTGwj3nDo0PmAiDGwwnA255gotNTK6cYQRfrPyPqKgaK7eQv25ngMCYYI005DDBErE53EbsVp4SmQztKonc2frBfYKE4HWyBr7ahbeBSSsK6oWYWC5wRnk7OmuBUB0bI2sDVG8RobR4ZZzUpThW6cBK3NOQUslIqwuybRoEMT7ImQugv)AKuyDZqDtav3N41Tdgrntd3D(emON5rCfptWT3DeN7YxwZ47SunRWgCbsZjjCFFdTHv4txQT2)4X0zO21rjANDAx0evt)rwC4Fie7AhrfbTB82gnstSlQIndKYQvtQaGxlBMdoY2CxWIbdUtq(eU1yekTaTqN42I6UobTFMbk7b(c0WfMEodG5l29aKecYn84OdoCd7Ww8mqiy4VNQolLRWJMsi33k5iHTesczgyKXiOKWbsgIdWFei8jwpmQtqiohEMAkTq6owE4hM7cYBqoCSe2lpqN(Wbona7VnnXEEpubw3LIQV)c7tq6C5OPZ4ANbfpd1IRM9X6cq0vVkrdjP62W2BTpYxpoYhtWTh6wfLh2fiS)3iDZ9E)sIgtKI4DZi4vjAhDu2Fy)RjQAVwAWjQJEl2XgDp8kQbr)F(oTH0dTmxF11RYN)gUQYfuWOf4sKWh4Besb8fdnFA10kZK)c]]
 )

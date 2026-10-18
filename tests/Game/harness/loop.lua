@@ -24,7 +24,8 @@ M.RAW = { "UnitHealth", "UnitHealthMax", "C_UnitAuras.GetDebuffDataByIndex" }
 
 --- Boots the two instances for `content` (one boot per busted block, §1.3): { content, us, oracle }. `content`:
 --- character(), PACK, resolve(key, H), usable(H), gain(pt, hand, amount, flag) (what a landed wound of ours pays in
---- power type `pt`, the character's), WORLD (scenario knobs), uptime(H).
+--- power type `pt`, the character's), WORLD (scenario knobs), uptime(H); optional OBSERVE (observer knobs over the
+--- loop's: another power's reads, the forms).
 function M.new(content)
     local L = { content = content }
     local character = content.character()
@@ -124,7 +125,8 @@ function M.run(L, seed, o, drivers)
         end
         ctl.auraError.target = nil
         -- UnitLevel is plain in combat on Forever (the facade's passthrough row); fake_api answers an unset unit secret
-        ctl.level.target, ctl.level.nameplate1 = wo.level, wo.level
+        -- `targetLevel` the content's answer for the target (-1: a boss, as Hekili's `boss` reads it)
+        ctl.level.target, ctl.level.nameplate1 = wo.targetLevel or wo.level, wo.targetLevel or wo.level
         local k = setmetatable({
             usable = L.answers,
             gcdSpell = d.H.ns.VirtualStateInternal.GCD_SPELL,
@@ -133,6 +135,9 @@ function M.run(L, seed, o, drivers)
         }, {
             __index = observer.DEFAULTS,
         })
+        for key, v in pairs(content.OBSERVE or {}) do -- the content's client knobs (other powers' reads, forms)
+            k[key] = v
+        end
         if d.plain then
             k.plain, k.usableDelay = true, 0
         end
