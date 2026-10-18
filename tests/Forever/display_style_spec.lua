@@ -701,7 +701,8 @@ local TL_SET = {
     { "sunder_armor", 12.0, nil, 15, 40, 1.5 },
 }
 
-local function tlPublish(H)
+-- `focus`: the record flagged as a focus candidate (the APL entry's focus=1), if any.
+local function tlPublish(H, focus)
     local abilities = H.Hekili.Engine.Registry.Abilities()
     local now = H.ctl.now
     local s = H.ns.Output.Begin("Primary")
@@ -719,6 +720,9 @@ local function tlPublish(H)
     a.n, a[1].actionName, a[1].texture = 1, "slam", "alt1a"
     a = s[2].alts
     a.n, a[1].actionName, a[1].texture, a[2].actionName, a[2].texture = 2, "rend", "alt2a", "whirlwind", "alt2b"
+    if focus then
+        s[focus].focus = 1
+    end
     H.ns.Output.Publish("Primary", #TL_SET)
 end
 
@@ -831,24 +835,152 @@ describe("the timeline display style", function()
     )
 
     it("allocates nothing over 1,000 display frames after the first publish, on a moving clock", function()
-        local H, d = tlBoot(true)
+        for _, focus in ipairs({ false, 3 }) do -- today's layout, then a focus record in the now circle
+            local H, d = tlBoot(true)
+            tlPublish(H, focus or nil)
+            local f = d.__scripts.OnUpdate
+            for _ = 1, 3 do
+                H.ctl.now = H.ctl.now + 0.2
+                f(d, 0.2)
+            end
+            assert.are.equal(focus and "slam" or "mortal_strike", d.styleFrames.timeline.cells[1].Action)
+            collectgarbage("collect")
+            collectgarbage("stop")
+            local before = collectgarbage("count")
+            for _ = 1, 1000 do
+                H.ctl.now = H.ctl.now + 0.01
+                f(d, 0.01)
+            end
+            local bytes = (collectgarbage("count") - before) * 1024
+            collectgarbage("restart")
+            assert.are.same({}, H.errors)
+            assert.are.equal(0, bytes, tostring(focus))
+        end
+    end)
+
+    -- Task 2 (timeline focus): the zone rule. Record 3 (slam, 4 s) flagged within the focus horizon takes the now
+    -- circle with its ETA, no keybind and the gold ring; record 1 (mortal_strike) moves to the next box with every
+    -- press affordance; the lane draws records 2, 4.. (never 3).
+    local function tlFrame(H, d)
+        H.ctl.now = H.ctl.now + 0.2
+        d.__scripts.OnUpdate(d, 0.2)
+    end
+
+    local function actions(T)
+        local list = {}
+        for i, b in ipairs(T.cells) do
+            list[i] = b.Action or false
+        end
+        return list
+    end
+
+    local TODAY =
+        { "mortal_strike", "overpower", "slam", "rend", "whirlwind", "sunder_armor", false, false, false, false }
+    local FOCUS3 =
+        { "slam", "mortal_strike", "overpower", "rend", "whirlwind", "sunder_armor", false, false, false, false }
+
+    it("draws a flagged record within the focus horizon in the now circle and the press in the next box", function()
+        local H, d, T = tlBoot()
+        local abilities = H.Hekili.Engine.Registry.Abilities()
+        local ms, slam = abilities.mortal_strike, abilities.slam
+        overlayed[ms.id] = true -- record 1 glows; glow.queued is off, so only its cell may
+        H.ctl.usable[ms.actualName or ms.name] = { false, true } -- record 1 unusable: its cell tints grey
+        local flashed = {}
+        local flash = H.ns.UI.FlashRecommendation
+        H.ns.UI.FlashRecommendation = function(st, conf, a, elapsed)
+            flashed[#flashed + 1] = a
+            return flash(st, conf, a, elapsed)
+        end
+        H.Hekili.Engine.Output.status.numTargets = 3 -- a target count to show
+        tlPublish(H, 3)
+        tlFrame(H, d)
+        tlFrame(H, d) -- Tick (the ETAs) runs before Draw: the publish's ETAs show on the frame after
+        local c = T.cells
+        assert.are.same(FOCUS3, actions(T))
+        assert.is_true(c[1]:IsShown() and c[2]:IsShown())
+        -- the now circle: the focus record, its countdown, no keybind, the ring
+        assert.are.equal("tex3", c[1].Texture:GetTexture())
+        assert.are.equal("3.6", c[1].Eta:GetText()) -- slam at 4 s, 0.4 s on
+        assert.is_nil(c[1].Keybinding:GetText())
+        assert.is_true(c[1].Ring:IsShown())
+        assert.is_false(c[1].glowing)
+        assert.are.equal(1, rawget(c[1].Texture, "__r")) -- slam usable
+        assert.is_nil(c[1].Targets:GetText())
+        assert.is_false(c[1].Alts[1]:IsShown())
+        -- the next box: the press record with its keybind, glow, tint, target count, alternatives and flash
+        assert.are.equal("tex1", c[2].Texture:GetTexture())
+        assert.are.equal("K1", c[2].Keybinding:GetText())
+        assert.is_true(c[2].glowing)
+        assert.are.equal(0.4, rawget(c[2].Texture, "__r"))
+        assert.are.equal("3|r", c[2].Targets:GetText())
+        assert.is_true(c[2].Alts[1]:IsShown())
+        assert.are.equal("alt1a", c[2].Alts[1]:GetTexture())
+        assert.are.equal("mortal_strike", flashed[#flashed])
+        -- the lane: records 2, 4, 5, 6
+        assert.are.equal("tex2", c[3].Texture:GetTexture())
+        assert.are.equal("tex4", c[4].Texture:GetTexture())
+        -- the overlay glow and the cast highlight follow the press record's cell
+        d:OnEvent("SPELL_ACTIVATION_OVERLAY_GLOW_HIDE", ms.id)
+        assert.is_false(c[2].glowing)
+        d:OnEvent("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", ms.id)
+        assert.is_true(c[2].glowing)
+        assert.is_false(c[1].glowing)
+        d:OnEvent("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", slam.id)
+        assert.is_false(c[1].glowing) -- not the press, glow.queued off
+        H.ctl.current[ms.id] = true
+        d:OnEvent("CURRENT_SPELL_CAST_CHANGED")
+        assert.is_true(c[2].Highlight:IsShown())
+        assert.is_false(c[1].Highlight:IsShown())
+        d.style.UpdateKeybindings(d)
+        assert.is_nil(c[1].Keybinding:GetText())
+        assert.truthy(c[2].Keybinding:GetText())
+
+        -- unflagged again: today's layout, the press affordances back on cell 1
         tlPublish(H)
-        local f = d.__scripts.OnUpdate
-        for _ = 1, 3 do
-            H.ctl.now = H.ctl.now + 0.2
-            f(d, 0.2)
-        end
-        collectgarbage("collect")
-        collectgarbage("stop")
-        local before = collectgarbage("count")
-        for _ = 1, 1000 do
-            H.ctl.now = H.ctl.now + 0.01
-            f(d, 0.01)
-        end
-        local bytes = (collectgarbage("count") - before) * 1024
-        collectgarbage("restart")
+        tlFrame(H, d)
+        assert.are.same(TODAY, actions(T))
+        assert.is_false(c[1].Ring:IsShown())
+        assert.are.equal("K1", c[1].Keybinding:GetText())
+        assert.is_true(c[1].glowing)
+        assert.is_false(c[2].glowing)
+        assert.is_nil(c[2].Targets:GetText())
+        assert.are.equal("3|r", c[1].Targets:GetText())
+        assert.is_false(c[2].Highlight:IsShown())
+        assert.are.equal("mortal_strike", flashed[#flashed])
+        H.ns.UI.FlashRecommendation = flash
+        overlayed[ms.id] = nil
         assert.are.same({}, H.errors)
-        assert.are.equal(0, bytes)
+    end)
+
+    it("keeps today's layout with focus off, a flagged record 1, or a flag past the focus horizon", function()
+        local H, d, T = tlBoot()
+        local tl = H.Hekili.DB.profile.displays.Primary.timeline
+        assert.is_true(tl.focusEnabled)
+        assert.are.equal(10, tl.focusHorizon)
+        assert.are.same({ 1, 0.8, 0.1, 1 }, tl.focusColor)
+        tl.focusEnabled = false
+        tlPublish(H, 3)
+        tlFrame(H, d)
+        assert.are.same(TODAY, actions(T))
+        assert.is_false(T.cells[1].Ring:IsShown())
+        assert.are.equal("K1", T.cells[1].Keybinding:GetText())
+        tl.focusEnabled = true
+        tlPublish(H, 1) -- record 1 never counts
+        tlFrame(H, d)
+        assert.are.same(TODAY, actions(T))
+        tl.focusHorizon = 3 -- slam is 4 s out
+        tlPublish(H, 3)
+        tlFrame(H, d)
+        assert.are.same(TODAY, actions(T))
+        tl.focusHorizon = 20 -- clamped to the 10 s lane horizon: sunder_armor at 12 s does not count
+        tlPublish(H, 6)
+        tlFrame(H, d)
+        assert.are.same(TODAY, actions(T))
+        tlPublish(H, 5) -- whirlwind at 8.3 s does
+        tlFrame(H, d)
+        assert.are.equal("whirlwind", T.cells[1].Action)
+        assert.are.equal("mortal_strike", T.cells[2].Action)
+        assert.are.same({}, H.errors)
     end)
 
     it("switching classic -> timeline -> classic hides every widget of the style left", function()
@@ -954,10 +1086,12 @@ describe("the timeline display style", function()
         assert.are.equal(2, get({ "displays", "Primary", "timeline", "layout", "sec_alts", "alts", "max" }))
         H.Hekili:SetDisplayOption({ "displays", "Primary", "timeline", "layout", "sec_lane", "horizon" }, 8)
         assert.are.equal(8, tl.horizon)
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "timeline", "layout", "sec_focus", "focusHorizon" }, 6)
+        assert.are.equal(6, tl.focusHorizon)
         H.Hekili:EmbedDisplayOptions()
         local args = H.Hekili.Options.args.displays.plugins.Primary.Primary.args.timeline.args
         local layout = args.layout.args
-        for _, k in ipairs({ "sec_now", "sec_next", "sec_lane", "sec_alts" }) do
+        for _, k in ipairs({ "sec_now", "sec_next", "sec_lane", "sec_alts", "sec_focus" }) do
             assert.truthy(layout[k], k)
             assert.is_true(layout[k].inline, k)
             assert.is_nil(tl[k], k) -- presentational, not a config key

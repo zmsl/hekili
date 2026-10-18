@@ -1,6 +1,7 @@
 local _, ns = ...
 -- UI/Styles/Timeline.lua: the timeline display style (display styles plan, Task 4). Record 1 in a "now" circle, record 2
--- in a "next" box, records 3.. on a lane at ( exact_time - GetTime() ) * pxPerSec (a second row for a pick within
+-- in a "next" box, records 3.. on a lane (or a focus record in the circle, record 1 in the box and the rest on the lane:
+-- `roles`, timeline focus plan Task 2) at ( exact_time - GetTime() ) * pxPerSec (a second row for a pick within
 -- rowGap of the one before, hidden past the horizon), ETA text, a resource-gate mark (the record's simulated resource
 -- below its cost), a cooldown-wait frame (the pick waits past the previous pick's busy time with the resource there),
 -- the ruler, and the alternatives Core fills for a style that asks (recs[ 1 .. 2 ].alts).
@@ -104,6 +105,9 @@ do
     d.laneDim = 0.6
     d.glide = 0.08
     d.alts = { enabled = true, max = 2, size = 16, spacing = 2, zones = "both" }
+    d.focusEnabled = true
+    d.focusHorizon = 10 -- clamped to the lane's horizon where it is used
+    d.focusColor = { GOLD[ 1 ], GOLD[ 2 ], GOLD[ 3 ], 1 }
 end
 
 local function track( T, region, label )
@@ -137,6 +141,11 @@ local function newCell( d, T, i )
         b.RingMask:SetTexture( CIRCLE, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE" )
         b.RingMask:SetAllPoints( b.Border )
         b.Border:AddMaskTexture( b.RingMask )
+        b.Ring = track( T, b:CreateTexture( nil, "BACKGROUND", nil, 1 ), L .. ".Ring" ) -- the focus ring, over the border
+        b.FocusMask = b:CreateMaskTexture()
+        b.FocusMask:SetTexture( CIRCLE, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE" )
+        b.FocusMask:SetAllPoints( b.Ring )
+        b.Ring:AddMaskTexture( b.FocusMask )
     end
     if i <= 2 then
         b.Cooldown = track( T, CreateFrame( "Cooldown", name .. "_Cooldown", b, "CooldownFrameTemplate" ), L .. ".Cooldown" )
@@ -185,12 +194,14 @@ local function newCell( d, T, i )
     b.Eta = track( T, top:CreateFontString( name .. "_ETA", "OVERLAY" ), L .. ".Eta" )
     b.Keybinding = track( T, top:CreateFontString( name .. "_KB", "OVERLAY" ), L .. ".Keybinding" )
     b.Caption = track( T, top:CreateFontString( name .. "_Caption", "OVERLAY" ), L .. ".Caption" )
-    if i == 1 then
+    if i <= 2 then -- either may draw the press record (roles)
         b.Targets = track( T, top:CreateFontString( name .. "_Targets", "OVERLAY" ), L .. ".Targets" )
         b.Highlight = track( T, top:CreateTexture( nil, "OVERLAY" ), L .. ".Highlight" )
         b.Highlight:SetTexture( "Interface\\Buttons\\ButtonHilight-Square" )
         b.Highlight:SetAllPoints( b )
         b.Highlight:SetBlendMode( "ADD" )
+    end
+    if i == 1 then
         b.Overlay = track( T, top:CreateTexture( nil, "OVERLAY" ), L .. ".Overlay" )
         b.Overlay:SetAllPoints( b )
         b.Overlay:SetAtlas( "creditsscreen-assets-buttons-pause" )
@@ -250,6 +261,14 @@ local function dress( T, b, i, size, tl )
     b.Border:ClearAllPoints()
     b.Border:SetPoint( "TOPLEFT", b, "TOPLEFT", -th, th )
     b.Border:SetPoint( "BOTTOMRIGHT", b, "BOTTOMRIGHT", th, -th )
+    if b.Ring then
+        local rt, fc = mmax( 2, th ), tl.focusColor
+        b.Ring:ClearAllPoints()
+        b.Ring:SetPoint( "TOPLEFT", b, "TOPLEFT", -rt, rt )
+        b.Ring:SetPoint( "BOTTOMRIGHT", b, "BOTTOMRIGHT", rt, -rt )
+        b.Ring:SetColorTexture( fc[ 1 ], fc[ 2 ], fc[ 3 ], fc[ 4 ] )
+        b.Ring:Hide()
+    end
     if tl.border.coloring == "custom" then
         local c = tl.border.color
         b.Border:SetColorTexture( c[ 1 ], c[ 2 ], c[ 3 ], c[ 4 ] )
@@ -307,8 +326,8 @@ local function dress( T, b, i, size, tl )
         b.Targets:SetJustifyH( justifyH( tg.anchor ) )
         b.Targets:SetText( nil )
         b.Highlight:Hide()
-        b.Overlay:Hide()
     end
+    if b.Overlay then b.Overlay:Hide() end
 
     if b.Alts then
         local a = tl.alts
@@ -328,7 +347,7 @@ function Timeline.Build( d, conf )
     local tl, st = conf.timeline, d.styleState
     local T = d.styleFrames.timeline
     if not T then
-        T = { widgets = {}, labels = {}, cells = {}, ticks = {}, at = {}, x = {}, row = {}, inLane = {}, want = {}, dim = {} }
+        T = { widgets = {}, labels = {}, cells = {}, ticks = {}, at = {}, x = {}, row = {}, inLane = {}, want = {}, dim = {}, rec = {} }
         d.styleFrames.timeline = T
         T.d = d
         for i = 1, SLOTS do T.cells[ i ] = newCell( d, T, i ) end
@@ -364,6 +383,8 @@ function Timeline.Build( d, conf )
         b.Action, b.Ability, b.ExactTime, b.Recommendation = nil, nil, nil, nil
         T.inLane[ i ], T.want[ i ], T.x[ i ], T.row[ i ] = false, false, -1, 1
     end
+    for i = 1, SLOTS do T.rec[ i ] = i end
+    T.press, T.focused = 1, false
     T.has, T.paused = false, false
 
     -- the ruler: a baseline over the lane's rows and a tick a second (taller every majorEvery)
@@ -463,9 +484,43 @@ local function highlight( b, tl, ability, exact )
     b.Highlight:SetShown( tl.glow.highlight and id ~= nil and ( isItem and IsCurrentItem( id ) or IsCurrentSpell( id ) ) and exact > GetTime() or false )
 end
 
+-- The zone rule, on a publish: T.rec[ c ] is the record cell c draws, T.press the cell drawing record 1 (every "key to
+-- press" affordance goes there), T.focused whether cell 1 draws a focus record. The focus record is the earliest record
+-- 2.. flagged `focus` due within the focus horizon (never past the lane's): it takes the now circle, record 1 the next
+-- box and the lane the rest in order. Else cell c draws record c.
+local function roles( T, tl, recs, count, now )
+    local map, f = T.rec, 0
+    if tl.focusEnabled then
+        local h = mmin( tl.focusHorizon, tl.horizon )
+        for i = 2, count do
+            local r = recs[ i ]
+            if r.focus and r.exact_time and r.exact_time - now <= h then
+                f = i
+                break
+            end
+        end
+    end
+    if f == 0 then
+        for c = 1, SLOTS do map[ c ] = c end
+        T.press, T.focused = 1, false
+    else
+        map[ 1 ], map[ 2 ] = f, 1
+        local c = 3
+        for i = 2, SLOTS do
+            if i ~= f then
+                map[ c ] = i
+                c = c + 1
+            end
+        end
+        T.press, T.focused = 2, true
+    end
+end
+
 -- A publish: what each cell shows until the next one.
 local function assign( d, T, tl, conf, out, now )
     local cells, recs = T.cells, out.recs
+    roles( T, tl, recs, out.count, now )
+    cells[ 1 ].Ring:SetShown( T.focused )
     if out.count == 0 or out.version == d.blankVersion then
         for i = 1, SLOTS do
             local b = cells[ i ]
@@ -484,8 +539,9 @@ local function assign( d, T, tl, conf, out, now )
     local px, abilities = tl.pxPerSec, Registry.Abilities()
     local gated1 -- the first pick short of its resource: the picks after it may slip (dimmed)
 
-    for i = 1, SLOTS do
-        local b, r = cells[ i ], recs[ i ]
+    for c = 1, SLOTS do
+        local i = T.rec[ c ] -- record i, drawn by cell c
+        local b, r = cells[ c ], recs[ i ]
         b.Recommendation = r
         local action, exact = r.actionName, r.exact_time
         local ability = action and r or nil
@@ -507,7 +563,7 @@ local function assign( d, T, tl, conf, out, now )
             else
                 b.Caption:SetText( nil )
             end
-            b.Keybinding:SetText( kb.enabled and ( not queued or kb.queued ) and r.keybind or nil )
+            b.Keybinding:SetText( kb.enabled and ( not queued or kb.queued and c ~= 1 ) and r.keybind or nil ) -- none on a focus
 
             -- the gate: the resource at the start of the pick's wait below its cost; else a wait past the previous
             -- pick's busy time is a cooldown's (record 1's from the live delay, at Draw)
@@ -525,10 +581,10 @@ local function assign( d, T, tl, conf, out, now )
                 wait = not gated and p.exact_time ~= nil and exact - ( p.exact_time + p.busy ) > 0.1
             end
             for k = 1, 4 do b.Edges[ k ]:SetShown( wait ) end
-            if gated and not gated1 then gated1 = i end
+            if gated and not ( gated1 and gated1 < i ) then gated1 = i end -- cells 1-2 may draw records out of order
 
             if b.Alts then
-                local show = a.enabled and ( a.zones == "both" or a.zones == ( i == 1 and "now" or "next" ) )
+                local show = a.enabled and ( a.zones == "both" or a.zones == ( c == 1 and "now" or "next" ) )
                 local list = r.alts
                 for k = 1, 2 do
                     local t = b.Alts[ k ]
@@ -541,26 +597,32 @@ local function assign( d, T, tl, conf, out, now )
                 end
             end
 
-            if i >= 3 then
-                T.row[ i ] = ( tl.rows >= 2 and i > 3 and T.row[ i - 1 ] == 1 and ( r.since or 0 ) * px < tl.rowGap ) and 2 or 1
-                if not T.want[ i ] or not b.Action then T.at[ i ] = exact end -- newly on the lane: no glide
-                T.want[ i ] = not suppress
-                T.x[ i ] = -1
-                if suppress and T.inLane[ i ] then
-                    T.inLane[ i ] = false
+            if c >= 3 then
+                -- the gap to the lane's previous pick (not r.since: the focus record between them is not on the lane)
+                T.row[ c ] = ( tl.rows >= 2 and c > 3 and T.row[ c - 1 ] == 1 and ( exact - cells[ c - 1 ].ExactTime ) * px < tl.rowGap ) and 2 or 1
+                if not T.want[ c ] or not b.Action then T.at[ c ] = exact end -- newly on the lane: no glide
+                T.want[ c ] = not suppress
+                T.x[ c ] = -1
+                if suppress and T.inLane[ c ] then
+                    T.inLane[ c ] = false
                     b:Hide()
                 end
                 b:SetAlpha( gated1 and gated1 < i and tl.laneDim or tl.laneAlpha )
             else
                 b:SetShown( not suppress )
-                if i == 1 then highlight( b, tl, ability, exact ) end
+                if i == 1 then
+                    highlight( b, tl, ability, exact )
+                else
+                    b.Highlight:Hide()
+                    b.Targets:SetText( nil ) -- Draw sets the press cell's
+                end
             end
             b.etaK = -1
         else
             b:Hide()
             glowOff( b )
-            T.want[ i ], T.inLane[ i ] = false, false
-            T.row[ i ] = 0 -- no row: the next pick has nothing here to dodge
+            T.want[ c ], T.inLane[ c ] = false, false
+            T.row[ c ] = 0 -- no row: the next pick has nothing here to dodge
         end
 
         b.Action = action
@@ -641,9 +703,10 @@ function Timeline.Draw( d, conf, out, status )
         end
     end
 
-    local range, delays, glow = tl.range, tl.delays, tl.glow
-    for i = 1, 2 do
-        local b, r = T.cells[ i ], d.resolved[ i ]
+    local range, delays, glow, press = tl.range, tl.delays, tl.glow, T.press
+    for c = 1, 2 do
+        local b, r = T.cells[ c ], d.resolved[ T.rec[ c ] ]
+        local i = c == press and 1 or 2 -- record 1, or a queued one
         if b.Ability then
             local far = range.enabled and ( range.type == "melee" and not r.inMelee or range.type == "ability" and not r.inRange )
             local unusable, desat = not r.usable, false
@@ -668,7 +731,7 @@ function Timeline.Draw( d, conf, out, status )
         end
     end
 
-    local b = T.cells[ 1 ]
+    local b = T.cells[ press ]
     if tl.targets.enabled then
         local r = d.resolved[ 1 ]
         local detected, shown = r.detected, r.targets
@@ -691,15 +754,16 @@ function Timeline.OnGameEvent( d, conf, event, ... )
         local glow = tl.glow
         if glow.enabled then
             local show, id = event == "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", ...
-            for i = 1, glow.queued and 2 or 1 do
-                local b = T.cells[ i ]
+            for c = 1, 2 do
+                local b = T.cells[ c ]
                 local a = b.Ability
-                if show and a and a.actionID == id and not b.glowing then glowOn( b, glow )
+                if c ~= T.press and not glow.queued then -- glows only on the press cell
+                elseif show and a and a.actionID == id and not b.glowing then glowOn( b, glow )
                 elseif not show and b.glowing and ( not a or a.actionID == id ) then glowOff( b ) end
             end
         end
     elseif event == "CURRENT_SPELL_CAST_CHANGED" then
-        local b = T.cells[ 1 ]
+        local b = T.cells[ T.press ]
         highlight( b, tl, b.Ability, b.ExactTime or 0 )
     end
     if flashEvents[ event ] then
@@ -713,11 +777,11 @@ function Timeline.UpdateKeybindings( d )
     local conf = Hekili.DB.profile.displays[ d.id ]
     local kb = conf.timeline.keybindings
     if not kb.enabled then return end
-    for i, b in ipairs( T.cells ) do
-        local a = b.Action
+    for c, b in ipairs( T.cells ) do
+        local a, i = b.Action, T.rec[ c ]
         if a then
             b.Keybind, b.KeybindFrom = Hekili:GetBindingForAction( a, conf, i )
-            b.Keybinding:SetText( ( i == 1 or kb.queued ) and b.Keybind or nil )
+            b.Keybinding:SetText( ( i == 1 or kb.queued and not ( c == 1 and T.focused ) ) and b.Keybind or nil )
         else
             b.Keybinding:SetText( nil )
         end
@@ -810,6 +874,11 @@ function Timeline.Options( id, conf )
                 style = optSelect( "Mark", "How a pick short of its resource is marked.", { veil = "Veil", alpha = "Fade", marker = "Corner Mark" }, 1 ),
                 color = { type = "color", name = "Color", hasAlpha = true, order = 2, width = 1.49 },
             } ),
+        } ),
+        sec_focus = section( "Focus", 5, {
+            focusEnabled = optToggle( "Focus Abilities", "An ability marked focus=1 in the priority takes the now circle with a countdown when it comes up within the focus horizon; what to press now moves to the next box.", 1 ),
+            focusHorizon = optRange( "Focus Horizon", "Seconds ahead a focus ability takes the now circle (never past the lane's horizon).", 1, 30, 1, 2 ),
+            focusColor = { type = "color", name = "Ring Color", desc = "The now circle's ring while it shows a focus ability.", hasAlpha = true, order = 3, width = 1.49 },
         } ),
         sec_alts = section( "Alternatives", 4, {
             alts = section( "Alternative Picks", 1, {
