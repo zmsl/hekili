@@ -111,6 +111,7 @@ do
     d.laneDim = 0.6
     d.glide = 0.08
     d.oocPinned = true -- out of combat the lane and ETAs on press-relative times (rec.time - recs[ 1 ].time), Task 2c
+    d.oocTimers = false -- out of combat no sweeps and no ETAs (T.quiet)
     d.alts = { enabled = true, max = 2, size = 16, spacing = 2, zones = "both" }
     d.focusEnabled = true
     d.nowFallback = "empty" -- no focus record: the now circle stays empty (or "press": record 1 there, record 2 next)
@@ -273,7 +274,7 @@ local function reveal( T, tl )
         b.Texture:Show()
         b.Top:Show()
         if b.Cooldown then b.Cooldown:Show() end
-        b.Eta:Show()
+        b.Eta:SetShown( not T.quiet )
         b.Keybinding:Show()
         b.Caption:Show()
         if b.Targets then b.Targets:Show() end
@@ -459,7 +460,7 @@ function Timeline.Build( d, conf )
             place( T, t, T.laneX0 + sec * px, baseY - h )
         end
     end
-    T.combat = nil -- the ruler's alpha is set on the next Draw
+    T.combat, T.quiet = nil, nil -- the ruler's alpha and the quiet state are set on the next Draw
     reveal( T, tl )
 
     if st.flashReady == nil then C_Timer.After( 3, T.flashOn ) end
@@ -484,7 +485,7 @@ end
 local function moveLane( T, tl, now, elapsed )
     local px, glide, cells = tl.pxPerSec, tl.glide, T.cells
     local keep = glide > 0 and exp( -elapsed / glide ) or 0
-    local laneEta, int = tl.laneEta.enabled, tl.eta.format == "int"
+    local laneEta, int = tl.laneEta.enabled and not T.quiet, tl.eta.format == "int"
     for i = 3, SLOTS do
         if T.want[ i ] then
             local b, target = cells[ i ], cells[ i ].Key
@@ -804,7 +805,7 @@ function Timeline.Tick( d, conf, out, now, elapsed )
     local tl = conf.timeline
     if T.pinned then now = T.clock end -- still between publishes
     local int = tl.eta.format == "int"
-    if tl.eta.enabled then
+    if tl.eta.enabled and not T.quiet then
         for i = 1, 2 do
             local b = T.cells[ i ]
             if b.Ability then showEta( b, b.Key - now, int ) end
@@ -826,13 +827,26 @@ function Timeline.Draw( d, conf, out, status )
         for k = 1, MAX_TICKS do T.ticks[ k ]:SetAlpha( a ) end
         if tl.oocPinned then d.NewRecommendations = true end -- re-assign on the other clock
     end
+    local quiet = not combat and not tl.oocTimers -- out of combat: no sweeps, no ETAs
+    if quiet ~= T.quiet then -- on a flip only: the ETAs hide or show, the sweeps clear or come back on this publish
+        T.quiet = quiet
+        for i = 1, SLOTS do
+            local b = T.cells[ i ]
+            b.Eta:SetShown( not quiet )
+            if quiet and b.Cooldown then
+                b.Cooldown:SetCooldown( 0, 0 )
+                b.cdStart, b.cdEnd, b.cdAction = -1, -1, nil -- the held start goes: combat starts the sweep fresh
+            end
+        end
+        d.NewRecommendations = true
+    end
     local fresh = d.NewRecommendations
     if fresh then
         d.NewRecommendations = nil
         assign( d, T, tl, conf, out, now, combat )
     end
     if not T.has then return end
-    if fresh then -- the sweeps, as classic's on a publish
+    if fresh and not quiet then -- the sweeps, as classic's on a publish
         for i = 1, 2 do
             if T.cells[ i ].Ability then sweep( T.cells[ i ], i == 1 or T.extend2, tl, now ) end
         end
@@ -1056,6 +1070,7 @@ function Timeline.Options( id, conf )
             laneDim = optRange( "Dimmed Opacity", "The opacity of the picks after one short of its resource (they may slip).", 0, 1, 0.05, 8 ),
             glide = optRange( "Glide", "Seconds a lane pick takes to settle on a new predicted time (0: jump).", 0, 1, 0.01, 9 ),
             oocPinned = optToggle( "Pin out of Combat", "Out of combat the lane and the countdowns hold still between updates, timed from the first recommendation; in combat they follow the clock.", 10 ),
+            oocTimers = optToggle( "Timers Out of Combat", "Show the cooldown sweeps and the countdown numbers out of combat. Off: the now circle, the next box and the lane show no sweep and no numbers until combat starts.", 11 ),
         } ),
         sec_ruler = section( "Ruler", 2, {
             rulerStyle = optSelect( "Style", "Ruler: a baseline and a tick each second. Dots or Lines: a dot or a short line each second. Center: one line through the lane.",

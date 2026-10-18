@@ -682,6 +682,7 @@ local function tlBoot(plain, setup, saved)
     tl.glow.enabled, tl.delays.desaturate = true, true
     tl.laneEta.enabled = true
     tl.oocPinned = false -- the wall clock the fixture and the tests before Task 2c expect (status.combat is false)
+    tl.oocTimers = true -- the sweeps and ETAs out of combat, as the fixture and the tests before it expect
     tl.nowFallback = "press" -- the layout before the empty now circle (the fixture's); its own tests set "empty"
     if setup then
         setup(tl)
@@ -1895,5 +1896,85 @@ describe("the timeline's out-of-combat pinning", function()
         H.Hekili:EmbedDisplayOptions()
         local tabs = H.Hekili.Options.args.displays.plugins.Primary.Primary.args.timeline.args
         assert.is_table(tabs.tab_timeline.args.sec_lane.args.oocPinned)
+    end)
+end)
+
+-- Out of combat with oocTimers off (the default): no sweep on the now and next cells and no ETA in any zone; the
+-- sweeps are cleared once on the flip, not per frame, and come back in combat or with the option on.
+describe("the timeline's out-of-combat timers", function()
+    local function run(combat, timers)
+        local H, d, T = tlBoot(false, function(tl)
+            tl.oocTimers = timers
+        end)
+        local calls = 0
+        local set = T.cells[1].Cooldown.SetCooldown
+        T.cells[1].Cooldown.SetCooldown = function(self, ...)
+            calls = calls + 1
+            return set(self, ...)
+        end
+        H.Hekili.Engine.Output.status.combat = combat
+        for _ = 1, 3 do -- three publishes, three frames each
+            tlPublish(H)
+            for _ = 1, 3 do
+                H.ctl.now = H.ctl.now + 0.1
+                d.__scripts.OnUpdate(d, 0.1)
+            end
+        end
+        assert.are.same({}, H.errors)
+        return H, d, T, function()
+            return calls
+        end
+    end
+
+    local function timersShown(T)
+        local c = T.cells
+        assert.is_true(c[1].Eta:IsShown() and c[2].Eta:IsShown() and c[3].Eta:IsShown())
+        assert.is_true(rawget(c[1].Cooldown, "__cdDuration") > 0) -- mortal_strike's extended sweep
+        assert.are.equal("3.7", c[3].Eta:GetText()) -- slam at 4 s, 0.3 s after the last publish
+    end
+
+    it("draws no sweep and hides every ETA out of combat, clearing the sweep once", function()
+        local H, d, T, calls = run(false, false)
+        local c = T.cells
+        for i = 1, 3 do
+            assert.is_false(c[i].Eta:IsShown(), "cell " .. i)
+        end
+        for i = 1, 2 do
+            assert.are.equal(0, rawget(c[i].Cooldown, "__cdStart"), "cell " .. i)
+            assert.are.equal(0, rawget(c[i].Cooldown, "__cdDuration"), "cell " .. i)
+            assert.is_nil(c[i].cdAction, "cell " .. i)
+        end
+        assert.are.equal(1, calls())
+        assert.is_true(c[1]:IsShown() and c[3]:IsShown()) -- the icons stay
+        assert.are.equal("K1", c[1].Keybinding:GetText())
+        -- entering combat: the sweeps and the numbers come back on the next draw
+        H.Hekili.Engine.Output.status.combat = true
+        H.ctl.now = H.ctl.now + 0.1
+        d.__scripts.OnUpdate(d, 0.1)
+        assert.is_true(c[1].Eta:IsShown() and c[2].Eta:IsShown() and c[3].Eta:IsShown())
+        assert.is_true(rawget(c[1].Cooldown, "__cdDuration") > 0)
+        assert.are.equal(2, calls())
+        H.Hekili.Engine.Output.status.combat = false
+    end)
+
+    it("is unchanged in combat", function()
+        local H, _, T = run(true, false)
+        timersShown(T)
+        H.Hekili.Engine.Output.status.combat = false
+    end)
+
+    it("keeps the sweeps and ETAs out of combat with the option on", function()
+        local _, _, T = run(false, true)
+        timersShown(T)
+    end)
+
+    it("defaults off, in the Timeline tab", function()
+        local H = boot()
+        assert.is_false(H.Hekili.DB.profile.displays.Primary.timeline.oocTimers)
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "timeline", "tab_timeline", "sec_lane", "oocTimers" }, true)
+        assert.is_true(H.Hekili.DB.profile.displays.Primary.timeline.oocTimers)
+        H.Hekili:EmbedDisplayOptions()
+        local tabs = H.Hekili.Options.args.displays.plugins.Primary.Primary.args.timeline.args
+        assert.is_table(tabs.tab_timeline.args.sec_lane.args.oocTimers)
     end)
 end)

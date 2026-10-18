@@ -233,7 +233,8 @@ record 1 the next box, else now, next and lane draw records 1, 2 and 3... Every 
 glow, flash, range, cast highlight, targets, alternatives, pause overlay, extend sweep) sits on the cell drawing
 record 1. With `oocPinned`
 (default on) and out of combat, lane positions, countdowns and the focus test use `rec.time - recs[1].time` instead
-of the clock, so the display holds still between updates; the lane never draws left of its first mark.
+of the clock, so the display holds still between updates; the lane never draws left of its first mark. With `oocTimers` off
+(the default) and out of combat, the now and next cells show no cooldown sweep and no zone shows an ETA.
 
 **Shared option builders.** `Hekili.StyleOptions` (`Options/StyleOptions.lua`) builds classic's tabs for any style's
 subtable: `keybindings`, `captions`, `border`, `range`, `glow`, `flash`, `delays`, `targets`, `indicators` as
