@@ -672,15 +672,18 @@ local function tlInstrument(T)
 end
 
 -- Primary bound to the timeline with six icons, its widgets recording unless `plain` (the recorders build strings);
--- the second build records Build's anchors.
-local function tlBoot(plain)
-    local H, d = boot()
+-- the second build records Build's anchors. `setup( tl )` changes the config before it; `saved` is the saved profile.
+local function tlBoot(plain, setup, saved)
+    local H, d = boot(saved)
     local conf = H.Hekili.DB.profile.displays.Primary
     conf.style, conf.numIcons = "timeline", 6
     local tl = conf.timeline
     tl.captions.enabled, tl.captions.queued = true, true
     tl.glow.enabled, tl.delays.desaturate = true, true
     tl.laneEta.enabled = true
+    if setup then
+        setup(tl)
+    end
     H.Hekili:BuildUI()
     local T = d.styleFrames.timeline
     if not plain then
@@ -846,13 +849,18 @@ describe("the timeline display style", function()
             assert.are.equal(focus and "slam" or "mortal_strike", d.styleFrames.timeline.cells[1].Action)
             collectgarbage("collect")
             collectgarbage("stop")
+            local status = H.Hekili.Engine.Output.status
             local before = collectgarbage("count")
-            for _ = 1, 1000 do
+            for n = 1, 1000 do
+                if n % 250 == 0 then
+                    status.combat = not status.combat -- the ruler's alpha switches on a flip
+                end
                 H.ctl.now = H.ctl.now + 0.01
                 f(d, 0.01)
             end
             local bytes = (collectgarbage("count") - before) * 1024
             collectgarbage("restart")
+            status.combat = false
             assert.are.same({}, H.errors)
             assert.are.equal(0, bytes, tostring(focus))
         end
@@ -1082,20 +1090,16 @@ describe("the timeline display style", function()
         end
         assert.are.equal(false, get({ "displays", "Primary", "timeline", "glow", "enabled" }))
         assert.are.equal(12, get({ "displays", "Primary", "timeline", "keybindings", "nextFontSize" }))
-        assert.are.equal(16, get({ "displays", "Primary", "timeline", "layout", "sec_now", "eta", "size" }))
-        assert.are.equal(2, get({ "displays", "Primary", "timeline", "layout", "sec_alts", "alts", "max" }))
-        H.Hekili:SetDisplayOption({ "displays", "Primary", "timeline", "layout", "sec_lane", "horizon" }, 8)
+        assert.are.equal(16, get({ "displays", "Primary", "timeline", "tab_now", "eta", "size" }))
+        assert.are.equal(2, get({ "displays", "Primary", "timeline", "tab_next", "alts", "max" }))
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "timeline", "tab_timeline", "sec_lane", "horizon" }, 8)
         assert.are.equal(8, tl.horizon)
-        H.Hekili:SetDisplayOption({ "displays", "Primary", "timeline", "layout", "sec_focus", "focusHorizon" }, 6)
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "timeline", "tab_timeline", "sec_focus", "focusHorizon" }, 6)
         assert.are.equal(6, tl.focusHorizon)
         H.Hekili:EmbedDisplayOptions()
-        local args = H.Hekili.Options.args.displays.plugins.Primary.Primary.args.timeline.args
-        local layout = args.layout.args
-        for _, k in ipairs({ "sec_now", "sec_next", "sec_lane", "sec_alts", "sec_focus" }) do
-            assert.truthy(layout[k], k)
-            assert.is_true(layout[k].inline, k)
-            assert.is_nil(tl[k], k) -- presentational, not a config key
-        end
+        local tabs = H.Hekili.Options.args.displays.plugins.Primary.Primary.args.timeline.args
+        assert.is_true(tabs.tab_timeline.args.sec_focus.inline) -- Task 2's Focus section, in the Timeline tab
+        local now = tabs.tab_now.args
         for _, k in ipairs({
             "keybindings",
             "border",
@@ -1107,9 +1111,142 @@ describe("the timeline display style", function()
             "delays",
             "indicators",
         }) do
-            assert.truthy(args[k], k)
+            assert.is_true(now[k].inline, k) -- the shared groups' now zone, after the zone's layout
+            assert.is_true(now.nowSize.order < now[k].order, k)
         end
-        assert.is_true(args.layout.order < args.border.order)
+        assert.are.same({}, H.errors)
+    end)
+end)
+
+-- Timeline focus plan, Task 2b: the ruler styles, equal gaps and the ruler's alpha on a combat flip.
+-- A region's anchor (x, y) in config pixels from the display's start corner (place: x * scale, -y * scale).
+local function anchor(H, region)
+    local x, y = rawget(region, "__point"):match("(%S+) (%S+)$")
+    local s = H.Hekili:GetScale()
+    return tonumber(x) / s, -tonumber(y) / s
+end
+
+local function near(want, got, what)
+    assert.is_true(math.abs(want - got) < 1e-6, ("%s: want %s, got %s"):format(what, tostring(want), tostring(got)))
+end
+
+-- The ruler's pool: base and ticks, shown count. The defaults put t = 0 at 48 + 12 + 48 + 12 = 120, the rows' top at
+-- 56 - 2 * 20 = 16 (the ruler's baseline 7 above it, at 9), 24 px a second, 11 ticks for the 10 s horizon.
+local function shownMarks(T)
+    local n = T.base:IsShown() and 1 or 0
+    for k = 1, #T.ticks do
+        n = n + (T.ticks[k]:IsShown() and 1 or 0)
+    end
+    return n
+end
+
+local RULERS = {
+    ruler = { shown = 12, base = { 120, 9 }, tick1 = { 120, 3 }, tick2 = { 144, 6 } }, -- a major tick at 0 s
+    dots = { shown = 11, tick1 = { 120, 7 }, tick2 = { 144, 7 } },
+    lines = { shown = 11, tick1 = { 120, 5 }, tick2 = { 144, 5 } },
+    center = { shown = 1, base = { 120, 36 } }, -- through the middle of the two rows (16 .. 56)
+}
+
+for _, style in ipairs({ "ruler", "dots", "lines", "center" }) do
+    describe("the timeline's " .. style .. " ruler", function()
+        it("draws its marks from the one pool, the first at the lane's t = 0", function()
+            local H, d, T = tlBoot(false, function(tl)
+                tl.rulerStyle = style
+            end)
+            tlPublish(H)
+            H.ctl.now = H.ctl.now + 0.2
+            d.__scripts.OnUpdate(d, 0.2)
+            local want = RULERS[style]
+            assert.are.equal(want.shown, shownMarks(T))
+            assert.are.equal(want.base ~= nil, T.base:IsShown())
+            assert.are.equal(want.tick1 ~= nil, T.ticks[1]:IsShown())
+            assert.is_false(T.ticks[12]:IsShown()) -- past the horizon
+            for _, k in ipairs({ "base", "tick1", "tick2" }) do
+                if want[k] then
+                    local x, y = anchor(H, k == "base" and T.base or T.ticks[k == "tick1" and 1 or 2])
+                    near(want[k][1], x, style .. " " .. k .. " x")
+                    near(want[k][2], y, style .. " " .. k .. " y")
+                end
+            end
+            assert.are.same({}, H.errors)
+        end)
+    end)
+end
+
+describe("the timeline's gaps", function()
+    it("are one gap from the now circle to the next box and from the next box to the lane", function()
+        for _, case in ipairs({ { 48, 48, 12 }, { 40, 56, 20 } }) do
+            local H, _, T = tlBoot(false, function(tl)
+                tl.nowSize, tl.nextSize, tl.gap = case[1], case[2], case[3]
+            end)
+            local x1 = anchor(H, T.cells[1])
+            local x2 = anchor(H, T.cells[2])
+            local x0 = anchor(H, T.ticks[1]) -- the ruler's first mark: the lane's t = 0
+            near(case[3], x2 - (x1 + case[1]), "now -> next")
+            near(case[3], x0 - (x2 + case[2]), "next -> lane")
+            near(x0, T.laneX0, "laneX0")
+            assert.are.same({}, H.errors)
+        end
+    end)
+
+    it("come from a saved profile's nextOffset once, the cells where they were", function()
+        local saved =
+            { profiles = { Default = { displays = { Primary = { timeline = { nextOffset = 70, nowSize = 50 } } } } } }
+        local H, _, T = tlBoot(false, nil, saved)
+        local tl = H.Hekili.DB.profile.displays.Primary.timeline
+        assert.is_nil(rawget(tl, "nextOffset"))
+        assert.are.equal(20, tl.gap)
+        -- where the base commit's Build put them: the circle at 0, the box at nextOffset, both centred in the band
+        local band = math.max(50, 48, 56)
+        local x1, y1 = anchor(H, T.cells[1])
+        local x2, y2 = anchor(H, T.cells[2])
+        near(0, x1, "now x")
+        near((band - 50) / 2, y1, "now y")
+        near(70, x2, "next x")
+        near((band - 48) / 2, y2, "next y")
+        H.Hekili:RunOneTimeFixes() -- once: nothing left to derive from
+        assert.are.equal(20, tl.gap)
+        assert.are.same({}, H.errors)
+    end)
+end)
+
+describe("the timeline's ruler alpha", function()
+    it("switches between its combat and out-of-combat values when status.combat flips, in Draw only", function()
+        local H, d, T = tlBoot()
+        local status = H.Hekili.Engine.Output.status
+        local sets, setAlpha = 0, rawget(T.base, "SetAlpha")
+        rawset(T.base, "SetAlpha", function(self, a)
+            sets = sets + 1
+            return setAlpha(self, a)
+        end)
+        status.combat = false
+        tlPublish(H)
+        local f = d.__scripts.OnUpdate
+        for _ = 1, 3 do
+            H.ctl.now = H.ctl.now + 0.2
+            f(d, 0.2)
+        end
+        assert.are.equal(0.25, rawget(T.base, "__alpha"))
+        assert.are.equal(0.25, rawget(T.ticks[1], "__alpha"))
+        assert.are.equal(1, sets)
+        for _ = 1, 30 do -- frames and pulses with no flip set nothing
+            H.ctl.now = H.ctl.now + 0.05
+            f(d, 0.05)
+        end
+        assert.are.equal(1, sets)
+        status.combat = true
+        for _ = 1, 3 do
+            H.ctl.now = H.ctl.now + 0.2
+            f(d, 0.2)
+        end
+        assert.are.equal(0.5, rawget(T.base, "__alpha"))
+        assert.are.equal(0.5, rawget(T.ticks[11], "__alpha"))
+        assert.are.equal(2, sets)
+        status.combat = false
+        H.ctl.now = H.ctl.now + 0.3
+        f(d, 0.3)
+        assert.are.equal(0.25, rawget(T.base, "__alpha"))
+        assert.are.equal(3, sets)
         assert.are.same({}, H.errors)
     end)
 end)

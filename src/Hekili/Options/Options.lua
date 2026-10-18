@@ -70,6 +70,12 @@ local function migrateDisplay( conf )
             conf[ k ] = nil
         end
     end
+    -- the timeline's nextOffset (the next box's x) became the gap after the now circle (timeline focus plan, Task 2b)
+    local tl = rawget( conf, "timeline" )
+    if type( tl ) == "table" and rawget( tl, "nextOffset" ) ~= nil then
+        tl.gap = tl.nextOffset - ( tl.nowSize or ns.UI.Styles.timeline.defaults.nowSize )
+        tl.nextOffset = nil
+    end
 end
 
 function Hekili:RunOneTimeFixes()

@@ -333,3 +333,132 @@ describe("the engine's and the shared resolve's range, flash and keybinding sett
         assert.are.same({}, H.errors)
     end)
 end)
+
+-- Timeline focus plan, Task 2b: the timeline's options are four tabs (Now, Next, Lane, Timeline) whose keys are not
+-- config keys; every option in them reads and writes one field of displays.Primary.timeline, no two the same field.
+describe("the timeline's option tabs", function()
+    local NOT_OPTIONS = { group = true, description = true, header = true, execute = true }
+
+    -- Every option leaf under `node` as { info path, option type, tab key }.
+    local function leaves(node, info, tab, out)
+        for k, v in pairs(node.args or {}) do
+            local ci = {}
+            for i, s in ipairs(info) do
+                ci[i] = s
+            end
+            ci[#ci + 1] = k
+            if v.type == "group" then
+                leaves(v, ci, tab or k, out)
+            elseif not NOT_OPTIONS[v.type] then
+                ci.type = v.type
+                out[#out + 1] = { info = ci, tab = tab }
+            end
+        end
+        return out
+    end
+
+    it("are tab_now, tab_next, tab_lane and tab_timeline, each option resolving to its own timeline field", function()
+        local H = boot()
+        H.Hekili.BuildUI = function() end
+        H.Hekili:EmbedDisplayOptions()
+        local group = H.Hekili.Options.args.displays.plugins.Primary.Primary.args.timeline
+        local keys = {}
+        for k, v in pairs(group.args) do
+            keys[#keys + 1] = k
+            assert.are.equal("group", v.type, k)
+        end
+        table.sort(keys)
+        assert.are.same({ "tab_lane", "tab_next", "tab_now", "tab_timeline" }, keys)
+        assert.are.same({ "Now", "Next", "Lane", "Timeline" }, {
+            group.args.tab_now.name,
+            group.args.tab_next.name,
+            group.args.tab_lane.name,
+            group.args.tab_timeline.name,
+        })
+        local display = H.Hekili.DB.profile.displays.Primary
+        for _, k in ipairs(keys) do
+            assert.is_nil(display.timeline[k], k) -- a tab key is never a config key
+        end
+
+        local where, byTab = {}, {}
+        for _, leaf in ipairs(leaves(group, { "displays", "Primary", "timeline" }, nil, {})) do
+            local info, option = leaf.info, leaf.info[#leaf.info]
+            local old = { H.Hekili:GetDisplayOption(info) }
+            local sentinel = {}
+            H.Hekili:SetDisplayOption(info, sentinel, 0, 0, 1)
+            local at = find(display, sentinel, "display.", 5)
+            local path = table.concat(info, ".")
+            assert.truthy(at, path)
+            if info.type == "color" then
+                at = at:gsub("%.1$", "")
+            end
+            assert.are.equal("display.timeline.", at:sub(1, 17), path)
+            assert.are.equal(option, at:match("([^.]+)$"), path)
+            assert.are.equal(sentinel, (H.Hekili:GetDisplayOption(info)), path)
+            assert.is_nil(where[at], path .. " and " .. tostring(where[at]))
+            where[at] = path
+            H.Hekili:SetDisplayOption(info, unpack(old))
+            byTab[leaf.tab] = byTab[leaf.tab] or {}
+            byTab[leaf.tab][at:sub(18)] = true
+        end
+        local want = {
+            tab_now = {
+                "nowSize",
+                "eta.size",
+                "sweep.mode",
+                "keybindings.fontSize",
+                "glow.highlight",
+                "targets.enabled",
+                "flash.enabled",
+                "border.enabled",
+            },
+            tab_next = {
+                "nextSize",
+                "gap",
+                "alts.max",
+                "keybindings.queued",
+                "keybindings.nextFontSize",
+                "captions.nextAnchor",
+            },
+            tab_lane = {
+                "laneIconSize",
+                "laneEta.enabled",
+                "gate.style",
+                "keybindings.laneFontSize",
+                "indicators.laneWidth",
+            },
+            tab_timeline = {
+                "horizon",
+                "pxPerSec",
+                "direction",
+                "rows",
+                "rowGap",
+                "laneHeight",
+                "rulerStyle",
+                "rulerColor",
+                "rulerAlphaCombat",
+                "rulerAlphaOOC",
+                "ruler.ticks",
+                "ruler.majorEvery",
+                "laneAlpha",
+                "laneDim",
+                "glide",
+                "focusEnabled",
+                "focusHorizon",
+                "focusColor",
+            },
+        }
+        for tab, list in pairs(want) do
+            for _, f in ipairs(list) do
+                assert.is_true(byTab[tab][f], tab .. ": " .. f)
+            end
+        end
+        assert.is_nil(where["display.timeline.nextOffset"])
+        local n = 0
+        for _ in pairs(where) do
+            n = n + 1
+        end
+        assert.is_true(n > 100, tostring(n)) -- every option was walked (126 at Task 2b)
+        assert.are.same({}, H.errors)
+    end)
+end)

@@ -39,7 +39,6 @@ local mmax, mmin = math.max, math.min
 
 local SLOTS = 10 -- Output's records per display
 local MAX_TICKS = 31 -- the ruler's ticks for the horizon's maximum (30 s)
-local LANE_GAP = 4 -- between the next box and the lane's t = 0
 local SWIPE_EPS = 0.1 -- TDF Render.SWIPE_EPS: the sweep is re-set when its end moves this much (seconds)
 local MOVE_EPS = 0.25 -- a lane icon is re-anchored when it moved this many pixels
 local CROP = 0.08 -- TDF Render.NewCell's texture crop
@@ -95,12 +94,16 @@ do
     d.direction = "RIGHT"
     d.nowSize = 48
     d.nextSize = 48
-    d.nextOffset = 60
+    d.gap = 12 -- now circle -> next box -> lane; replaces nextOffset (60 = 48 + 12), see Options.lua migrateDisplay
     d.eta = { enabled = true, font = "Friz Quadrata TT", size = 16, style = "THICKOUTLINE", color = { 1, 1, 1, 1 }, format = "0.1" } -- the font is STANDARD_TEXT_FONT's
     d.laneEta = { enabled = false, fontSize = 10 }
     d.sweep = { mode = "extend" }
     d.gate = { style = "veil", color = { 0, 0, 0, 0.55 } }
     d.ruler = { ticks = true, majorEvery = 5 }
+    d.rulerStyle = "ruler" -- ruler (baseline and ticks), dots, lines (no baseline) or center (one line, no ticks)
+    d.rulerColor = { 1, 1, 1 }
+    d.rulerAlphaCombat = 0.5
+    d.rulerAlphaOOC = 0.25
     d.laneAlpha = 0.95
     d.laneDim = 0.6
     d.glide = 0.08
@@ -247,8 +250,8 @@ local function reveal( T, tl )
         b.Caption:Show()
         if b.Targets then b.Targets:Show() end
     end
-    T.base:Show()
-    for k = 1, MAX_TICKS do T.ticks[ k ]:SetShown( tl.ruler.ticks and k - 1 <= tl.horizon ) end
+    T.base:SetShown( T.baseOn )
+    for k = 1, MAX_TICKS do T.ticks[ k ]:SetShown( T.ticksOn and k - 1 <= tl.horizon ) end
     T.cleared = false
 end
 
@@ -363,7 +366,8 @@ function Timeline.Build( d, conf )
     local nowS, nextS, laneH, iconS = tl.nowSize, tl.nextSize, tl.laneHeight, tl.laneIconSize
     local band = mmax( nowS, nextS, laneH )
     local extra = tl.alts.enabled and ( tl.alts.size + tl.alts.spacing ) or 0
-    T.laneX0 = tl.nextOffset + nextS + LANE_GAP
+    local nextX = nowS + tl.gap
+    T.laneX0 = nextX + nextS + tl.gap -- the lane's t = 0 (and the ruler's first mark)
     T.laneLength = tl.horizon * tl.pxPerSec
     T.laneTop = ( band - laneH ) / 2
     T.rowTop1 = T.laneTop + laneH - ( tl.rows >= 2 and 2 or 1 ) * iconS
@@ -375,7 +379,7 @@ function Timeline.Build( d, conf )
         local size = i == 1 and nowS or ( i == 2 and nextS or iconS )
         dress( T, b, i, size, tl )
         if i == 1 then place( T, b, 0, ( band - nowS ) / 2 )
-        elseif i == 2 then place( T, b, tl.nextOffset, ( band - nextS ) / 2 ) end
+        elseif i == 2 then place( T, b, nextX, ( band - nextS ) / 2 ) end
         b:SetAlpha( i < 3 and 1 or tl.laneAlpha )
         if b.glowing then b:glowStop() end
         b.glowing = false
@@ -387,22 +391,28 @@ function Timeline.Build( d, conf )
     T.press, T.focused = 1, false
     T.has, T.paused = false, false
 
-    -- the ruler: a baseline over the lane's rows and a tick a second (taller every majorEvery)
+    -- the ruler, from one pool (T.base, T.ticks): a baseline over the lane's rows and a tick a second (taller every
+    -- majorEvery); dots or short lines a second and no baseline; or one line through the rows' middle and no ticks
+    local style, rc, px = tl.rulerStyle, tl.rulerColor, tl.pxPerSec
     local baseY = T.rowTop1 - 7
-    T.base:SetColorTexture( 1, 1, 1, 0.5 )
+    T.baseOn = style == "ruler" or style == "center"
+    T.ticksOn = style ~= "center" and tl.ruler.ticks
+    T.base:SetColorTexture( rc[ 1 ], rc[ 2 ], rc[ 3 ], 1 )
     T.base:SetSize( T.laneLength * s, s )
-    place( T, T.base, T.laneX0, baseY )
+    place( T, T.base, T.laneX0, style == "center" and T.rowTop1 + ( tl.rows >= 2 and 2 or 1 ) * iconS / 2 or baseY )
     for k = 1, MAX_TICKS do
         local t = T.ticks[ k ]
         local sec = k - 1
-        if tl.ruler.ticks and sec <= tl.horizon then
-            local major = sec % mmax( 1, tl.ruler.majorEvery ) == 0
-            local h = major and 6 or 3
-            t:SetColorTexture( 1, 1, 1, major and 0.8 or 0.5 )
-            t:SetSize( s, h * s )
-            place( T, t, T.laneX0 + sec * tl.pxPerSec, baseY - h )
+        if T.ticksOn and sec <= tl.horizon then
+            local w, h = 1, 4 -- lines
+            if style == "ruler" then h = sec % mmax( 1, tl.ruler.majorEvery ) == 0 and 6 or 3
+            elseif style == "dots" then w, h = 2, 2 end
+            t:SetColorTexture( rc[ 1 ], rc[ 2 ], rc[ 3 ], 1 )
+            t:SetSize( w * s, h * s )
+            place( T, t, T.laneX0 + sec * px, baseY - h )
         end
     end
+    T.combat = nil -- the ruler's alpha is set on the next Draw
     reveal( T, tl )
 
     if st.flashReady == nil then C_Timer.After( 3, T.flashOn ) end
@@ -691,6 +701,13 @@ end
 function Timeline.Draw( d, conf, out, status )
     local T, st, tl = d.styleFrames.timeline, d.styleState, conf.timeline
     local now = GetTime()
+    local combat = status.combat
+    if combat ~= T.combat then -- the ruler's alpha, on a combat flip only
+        T.combat = combat
+        local a = combat and tl.rulerAlphaCombat or tl.rulerAlphaOOC
+        T.base:SetAlpha( a )
+        for k = 1, MAX_TICKS do T.ticks[ k ]:SetAlpha( a ) end
+    end
     local fresh = d.NewRecommendations
     if fresh then
         d.NewRecommendations = nil
@@ -823,8 +840,38 @@ local function section( name, order, args )
     return { type = "group", inline = true, name = name, order = order, args = args }
 end
 
---- The Layout tab (its own keys, in inline sections whose keys are not config keys), then the shared groups in
---- classic's order. A nested group keyed like a config subtable (eta, alts) holds that subtable's options.
+-- The zone (1 now, 2 next, 3 lane) of a shared builder's option key: a later zone's blocks carry its prefix (nextFont,
+-- laneTextStyle), the queued toggles go to the next box, the rest (every zone's common settings) to the now circle.
+local function zoneOf( k )
+    if k == "queued" then return 2 end
+    for z = 2, #ZONES do
+        if k:match( "^" .. ZONES[ z ] .. "%u" ) then return z end
+    end
+    return 1
+end
+
+-- Zone z's part of every shared group, inline after the zone's layout fields (a group with nothing there is left out).
+local function zoneGroups( args, z, id, conf )
+    for n, g in ipairs( SHARED ) do
+        local grp = SO[ g ]( "timeline", ZONES, 10 + n, id, conf )
+        for k in pairs( grp.args ) do
+            if zoneOf( k ) ~= z then grp.args[ k ] = nil end
+        end
+        if next( grp.args ) then
+            grp.inline = true
+            args[ g ] = grp
+        end
+    end
+    return args
+end
+
+local function tab( name, desc, order, args )
+    return { type = "group", name = name, desc = desc, order = order, args = args }
+end
+
+--- Four tabs, keyed so no key is a config key (option keys stay flat in displays[ id ].timeline; a nested group keyed
+--- like a config subtable, eta or alts, holds that subtable's options): Now, Next and Lane hold the zone's layout then
+--- its part of the shared groups; Timeline the lane's time axis, the ruler and the focus zone.
 function Timeline.Options( id, conf )
     local P = ns.UI.DisplayOptionParts
     local fe = P.fontElements
@@ -838,70 +885,74 @@ function Timeline.Options( id, conf )
     }
     etaFont.font.order, etaFont.style.order, etaFont.size.order, etaFont.color.order = 3, 4, 5, 6
 
-    local layout = {
-        sec_now = section( "Now", 1, {
-            nowSize = optRange( "Size", "The diameter of the now circle (the first recommendation).", 16, 200, 1, 1 ),
-            eta = section( "ETA", 2, etaFont ),
-            sweep = section( "Sweep", 3, {
-                mode = optSelect( "Cooldown Sweep", "Extend: the sweep runs until the pick should be used. Cooldown: the ability's own cooldown. Off: none.",
-                    { extend = "Extend", gcd = "Cooldown", off = "Off" }, 1 ),
-            } ),
+    local now = zoneGroups( {
+        nowSize = optRange( "Size", "The diameter of the now circle (the first recommendation).", 16, 200, 1, 1 ),
+        eta = section( "ETA", 2, etaFont ),
+        sweep = section( "Sweep", 3, {
+            mode = optSelect( "Cooldown Sweep", "Extend: the sweep runs until the pick should be used. Cooldown: the ability's own cooldown. Off: none.",
+                { extend = "Extend", gcd = "Cooldown", off = "Off" }, 1 ),
         } ),
-        sec_next = section( "Next", 2, {
-            nextSize = optRange( "Size", "The size of the next box (the second recommendation).", 16, 200, 1, 1 ),
-            nextOffset = optRange( "Offset", "Where the next box starts, from the display's start edge.", 0, 300, 1, 2 ),
+    }, 1, id, conf )
+
+    local nextBox = zoneGroups( {
+        nextSize = optRange( "Size", "The size of the next box (the second recommendation).", 16, 200, 1, 1 ),
+        gap = optRange( "Gap", "The space between the now circle and the next box, and between the next box and the lane.", 0, 100, 1, 2 ),
+        alts = section( "Alternatives", 3, {
+            enabled = optToggle( "Show Alternatives", "Show what the rotation would pick instead if the gating resource came in lower or higher than expected.", 1 ),
+            zones = optSelect( "Show On", "Which cells show their alternatives.", { now = "Now", next = "Next", both = "Both" }, 2 ),
+            max = optRange( "Count", "How many alternatives each cell shows.", 1, 2, 1, 3 ),
+            size = optRange( "Size", "The alternatives' icon size.", 8, 48, 1, 4 ),
+            spacing = optRange( "Spacing", "The gap between the cell and its alternatives, and between them.", 0, 20, 1, 5 ),
         } ),
-        sec_lane = section( "Lane", 3, {
+    }, 2, id, conf )
+
+    local lane = zoneGroups( {
+        laneIconSize = optRange( "Icon Size", "The size of the picks on the lane.", 8, 64, 1, 1 ),
+        laneEta = section( "ETA", 2, {
+            enabled = optToggle( "Show ETA", "Show the seconds under each pick on the lane.", 1 ),
+            fontSize = optRange( "Size", "The lane ETA's font size.", 6, 32, 1, 2 ),
+        } ),
+        gate = section( "Resource Gate", 3, {
+            style = optSelect( "Mark", "How a pick short of its resource is marked.", { veil = "Veil", alpha = "Fade", marker = "Corner Mark" }, 1 ),
+            color = { type = "color", name = "Color", hasAlpha = true, order = 2, width = 1.49 },
+        } ),
+    }, 3, id, conf )
+
+    local timeline = {
+        sec_lane = section( "Lane", 1, {
             horizon = optRange( "Horizon", "Seconds the lane shows; later picks are hidden.", 2, 30, 1, 1 ),
             pxPerSec = optRange( "Pixels per Second", "How far apart picks one second apart sit.", 4, 100, 1, 2 ),
-            laneHeight = optRange( "Height", "The lane's height.", 20, 200, 1, 3 ),
-            laneIconSize = optRange( "Icon Size", "The size of the picks on the lane.", 8, 64, 1, 4 ),
-            rows = optRange( "Rows", "With two rows, a pick close to the one before it hangs on the second row.", 1, 2, 1, 5 ),
-            rowGap = optRange( "Row Gap", "Picks closer than this many pixels to the one before them take the second row.", 0, 100, 1, 6 ),
-            direction = optSelect( "Direction", "Which way time runs.", { RIGHT = "Left to Right", LEFT = "Right to Left" }, 7 ),
-            laneAlpha = optRange( "Opacity", "The opacity of the picks on the lane.", 0, 1, 0.05, 8 ),
-            laneDim = optRange( "Dimmed Opacity", "The opacity of the picks after one short of its resource (they may slip).", 0, 1, 0.05, 9 ),
-            glide = optRange( "Glide", "Seconds a lane pick takes to settle on a new predicted time (0: jump).", 0, 1, 0.01, 10 ),
-            laneEta = section( "ETA", 11, {
-                enabled = optToggle( "Show ETA", "Show the seconds under each pick on the lane.", 1 ),
-                fontSize = optRange( "Size", "The lane ETA's font size.", 6, 32, 1, 2 ),
-            } ),
-            ruler = section( "Ruler", 12, {
-                ticks = optToggle( "Ticks", "A tick each second along the lane.", 1 ),
-                majorEvery = optRange( "Major Tick Every", "Seconds between the taller ticks.", 1, 10, 1, 2 ),
-            } ),
-            gate = section( "Resource Gate", 13, {
-                style = optSelect( "Mark", "How a pick short of its resource is marked.", { veil = "Veil", alpha = "Fade", marker = "Corner Mark" }, 1 ),
-                color = { type = "color", name = "Color", hasAlpha = true, order = 2, width = 1.49 },
+            direction = optSelect( "Direction", "Which way time runs.", { RIGHT = "Left to Right", LEFT = "Right to Left" }, 3 ),
+            rows = optRange( "Rows", "With two rows, a pick close to the one before it hangs on the second row.", 1, 2, 1, 4 ),
+            rowGap = optRange( "Row Gap", "Picks closer than this many pixels to the one before them take the second row.", 0, 100, 1, 5 ),
+            laneHeight = optRange( "Height", "The lane's height.", 20, 200, 1, 6 ),
+            laneAlpha = optRange( "Opacity", "The opacity of the picks on the lane.", 0, 1, 0.05, 7 ),
+            laneDim = optRange( "Dimmed Opacity", "The opacity of the picks after one short of its resource (they may slip).", 0, 1, 0.05, 8 ),
+            glide = optRange( "Glide", "Seconds a lane pick takes to settle on a new predicted time (0: jump).", 0, 1, 0.01, 9 ),
+        } ),
+        sec_ruler = section( "Ruler", 2, {
+            rulerStyle = optSelect( "Style", "Ruler: a baseline and a tick each second. Dots or Lines: a dot or a short line each second. Center: one line through the lane.",
+                { ruler = "Ruler", dots = "Dots", lines = "Lines", center = "Center" }, 1 ),
+            rulerColor = { type = "color", name = "Color", desc = "The ruler's color.", order = 2, width = 1.49 },
+            rulerAlphaCombat = optRange( "Opacity in Combat", "The ruler's opacity in combat.", 0, 1, 0.05, 3 ),
+            rulerAlphaOOC = optRange( "Opacity out of Combat", "The ruler's opacity out of combat.", 0, 1, 0.05, 4 ),
+            ruler = section( "Ticks", 5, {
+                ticks = optToggle( "Ticks", "A mark each second along the lane (not with the Center style).", 1 ),
+                majorEvery = optRange( "Major Tick Every", "Seconds between the taller ticks (the Ruler style).", 1, 10, 1, 2 ),
             } ),
         } ),
-        sec_focus = section( "Focus", 5, {
+        sec_focus = section( "Focus", 3, {
             focusEnabled = optToggle( "Focus Abilities", "An ability marked focus=1 in the priority takes the now circle with a countdown when it comes up within the focus horizon; what to press now moves to the next box.", 1 ),
             focusHorizon = optRange( "Focus Horizon", "Seconds ahead a focus ability takes the now circle (never past the lane's horizon).", 1, 30, 1, 2 ),
             focusColor = { type = "color", name = "Ring Color", desc = "The now circle's ring while it shows a focus ability.", hasAlpha = true, order = 3, width = 1.49 },
         } ),
-        sec_alts = section( "Alternatives", 4, {
-            alts = section( "Alternative Picks", 1, {
-                enabled = optToggle( "Show Alternatives", "Show what the rotation would pick instead if the gating resource came in lower or higher than expected.", 1 ),
-                zones = optSelect( "Show On", "Which cells show their alternatives.", { now = "Now", next = "Next", both = "Both" }, 2 ),
-                max = optRange( "Count", "How many alternatives each cell shows.", 1, 2, 1, 3 ),
-                size = optRange( "Size", "The alternatives' icon size.", 8, 48, 1, 4 ),
-                spacing = optRange( "Spacing", "The gap between the cell and its alternatives, and between them.", 0, 20, 1, 5 ),
-            } ),
-        } ),
     }
 
     return {
-        layout = { type = "group", name = "Layout", desc = "The now circle, the next box, the lane and the alternatives.", order = 1, args = layout },
-        keybindings = SO.keybindings( "timeline", ZONES, 7, id, conf ),
-        border = SO.border( "timeline", ZONES, 4, id, conf ),
-        range = SO.range( "timeline", ZONES, 5, id, conf ),
-        glow = SO.glow( "timeline", ZONES, 6, id, conf ),
-        flash = SO.flash( "timeline", ZONES, 8, id, conf ),
-        captions = SO.captions( "timeline", ZONES, 9, id, conf ),
-        targets = SO.targets( "timeline", ZONES, 10, id, conf ),
-        delays = SO.delays( "timeline", ZONES, 11, id, conf ),
-        indicators = SO.indicators( "timeline", ZONES, 11, id, conf ),
+        tab_now = tab( "Now", "The now circle: the first recommendation, or a focus ability coming up.", 1, now ),
+        tab_next = tab( "Next", "The next box and the alternatives.", 2, nextBox ),
+        tab_lane = tab( "Lane", "The picks on the lane.", 3, lane ),
+        tab_timeline = tab( "Timeline", "The lane's time axis, the ruler and the focus zone.", 4, timeline ),
     }
 end
 
