@@ -518,7 +518,7 @@ end
 
 -- The zone rule, on a publish: T.rec[ c ] is the record cell c draws (0: none), T.press the cell drawing record 1
 -- (every "key to press" affordance goes there), T.focused whether cell 1 draws a focus record, T.ready whether that is
--- record 1 (the gold ring; else the pending one), T.extend2 whether cell 2's sweep is extended. With focusEnabled a
+-- record 1 (the gold ring; else the pending one), T.extend2 whether cell 2's sweep is extended (to its record's time whenever it holds one). With focusEnabled a
 -- record is flagged when `focus` is a tier (N >= 1, 1 highest); the focus record is record 1 if flagged (any tier), else
 -- among the flagged records 2.. due within the focus horizon (never past the lane's) the lowest tier, then the soonest.
 -- It takes the now circle (else empty); the next box takes the first
@@ -562,7 +562,7 @@ local function roles( T, tl, recs, count, now )
             end
             T.press, T.focused = 2, true
         end
-        T.ready, T.extend2 = true, false
+        T.ready, T.extend2 = true, f ~= 0
         return
     end
     local n = 0
@@ -582,7 +582,7 @@ local function roles( T, tl, recs, count, now )
     end
     for k = c, SLOTS do map[ k ] = 0 end
     T.press = f == 1 and 1 or 2 -- record 1 is the focus record or, unflagged, the first one for the next box
-    T.focused, T.ready, T.extend2 = f ~= 0, f == 1, n == 1
+    T.focused, T.ready, T.extend2 = f ~= 0, f == 1, n ~= 0
 end
 
 local NONE = {} -- record 0: an empty cell
@@ -725,7 +725,7 @@ local function assign( d, T, tl, conf, out, now, combat )
 end
 
 -- Cell `b`'s sweep (now and next): the spell's cooldown, stretched to its time in mode extend when `extend` (the now
--- circle, or the press in the next box beside an empty one), re-set only when its start changed or its end moved (TDF
+-- circle, or the next box whenever it holds a record), re-set only when its start changed or its end moved (TDF
 -- Render.SetSwipe). With nothing running the stretch starts when the ability's wait began (its first draw here), so
 -- the swipe shows the remaining fraction of its countdown, not of the time since 0 or a stale GCD; once held, that
 -- start wins over a cast's or a GCD's, so a long wait does not restart its swipe every GCD.

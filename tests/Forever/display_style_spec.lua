@@ -1327,6 +1327,9 @@ describe("the timeline display style", function()
         assert.are.same(TODAY, actions(T))
         assert.are.same(tl.focusColor, rawget(c[1].Ring, "__color"))
         assert.are.equal("K1", c[1].Keybinding:GetText())
+        -- the next box (record 2) still counts down to its own time beside a ready focus
+        local cd2 = c[2].Cooldown
+        assert.are.equal(c[2].ExactTime - rawget(cd2, "__cdStart"), rawget(cd2, "__cdDuration"))
         -- a tier past the focus horizon does not count: the tier-2 record 3 wins over a tier-1 record 6
         tlPublish(H, nil, tiers({ [3] = 2, [6] = 1 }))
         tlFrame(H, d)
