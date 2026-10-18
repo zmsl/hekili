@@ -5,6 +5,7 @@
 -- a sentinel after each Update as Engine/Driver.lua runs it, and each UNIT_COMBAT dispatch. Prints the table; asserts only that the fights ran.
 local loop = require("Game.harness.loop")
 local ww = require("Forever.helpers.warrior_world")
+local alts = require("Forever.helpers.alts")
 
 local FIGHTS = 6
 
@@ -33,68 +34,88 @@ local function bytes(fn, ...)
     return d
 end
 
+-- The three modes: no subscriber needing alternatives; one (passive) on Primary; one with the band widened, so the
+-- two alternative passes of records 1 and 2 run on most Updates (Task 3c's worst case).
+local MODES = {
+    { "need off" },
+    { "need on", need = true },
+    { "need on, band widened", need = true, widen = true },
+}
+
 describe("headless Arms per-Update cost #bench", function()
-    it("prints ms per Update and bytes per Update (direct, coroutine) and per UNIT_COMBAT over 6 fights", function()
-        local L = loop.new(ww)
-        local H = L.us
-        local hk = H.Hekili
-        local upd = hk.Update
+    for _, mode in ipairs(MODES) do
+        it(
+            "prints ms per Update and bytes per Update (direct, coroutine) and per UNIT_COMBAT over 6 fights, "
+                .. mode[1],
+            function()
+                local L = loop.new(ww)
+                local H = L.us
+                local hk = H.Hekili
+                if mode.widen then
+                    alts.widen(H.ns.VirtualState)
+                end
+                if mode.need then
+                    assert.is_true(hk.Engine.Subscribe("Primary", function() end, true, { alts = true }))
+                end
+                local upd = hk.Update
 
-        local ms = {}
-        hk.Update = function(...)
-            local c0 = os.clock()
-            local r = upd(...)
-            ms[#ms + 1] = (os.clock() - c0) * 1000
-            return r
-        end
-        fights(L)
+                local ms = {}
+                hk.Update = function(...)
+                    local c0 = os.clock()
+                    local r = upd(...)
+                    ms[#ms + 1] = (os.clock() - c0) * 1000
+                    return r
+                end
+                fights(L)
 
-        local direct, co, uc = {}, {}, {}
-        local DONE = {}
-        local thread = coroutine.create(function()
-            while true do
-                coroutine.yield(DONE, upd())
-            end
-        end)
-        local function viaDriver()
-            hk.maxFrameTime, hk.activeFrameStart = 1e9, 0 -- the Driver's frame budget, never reached here
-            local ok, r
-            repeat
-                ok, r = coroutine.resume(thread)
-                assert(ok, r)
-            until r == DONE
-        end
-        hk.Update = function()
-            if (#direct + #co) % 2 == 0 then
-                co[#co + 1] = bytes(viaDriver)
-            else
-                direct[#direct + 1] = bytes(upd)
-            end
-            return true
-        end
-        local fire = H.Fire
-        H.Fire = function(ev, ...)
-            if ev == "UNIT_COMBAT" then
-                uc[#uc + 1] = bytes(fire, ev, ...)
-            else
-                fire(ev, ...)
-            end
-        end
-        fights(L)
-        hk.Update, H.Fire = upd, fire
+                local direct, co, uc = {}, {}, {}
+                local DONE = {}
+                local thread = coroutine.create(function()
+                    while true do
+                        coroutine.yield(DONE, upd())
+                    end
+                end)
+                local function viaDriver()
+                    hk.maxFrameTime, hk.activeFrameStart = 1e9, 0 -- the Driver's frame budget, never reached here
+                    local ok, r
+                    repeat
+                        ok, r = coroutine.resume(thread)
+                        assert(ok, r)
+                    until r == DONE
+                end
+                hk.Update = function()
+                    if (#direct + #co) % 2 == 0 then
+                        co[#co + 1] = bytes(viaDriver)
+                    else
+                        direct[#direct + 1] = bytes(upd)
+                    end
+                    return true
+                end
+                local fire = H.Fire
+                H.Fire = function(ev, ...)
+                    if ev == "UNIT_COMBAT" then
+                        uc[#uc + 1] = bytes(fire, ev, ...)
+                    else
+                        fire(ev, ...)
+                    end
+                end
+                fights(L)
+                hk.Update, H.Fire = upd, fire
 
-        local rows = {
-            { "ms per Update", ms, "%8.3f" },
-            { "B per Update, direct", direct, "%8.0f" },
-            { "B per Update, Driver coroutine", co, "%8.0f" },
-            { "B per UNIT_COMBAT", uc, "%8.1f" },
-        }
-        print(("\nbench (%d fights)                      n     mean      p95      max"):format(FIGHTS))
-        for _, row in ipairs(rows) do
-            local f = row[3]
-            local mean, p95, mx = stats(row[2])
-            print(("%-32s %7d " .. f .. " " .. f .. " " .. f):format(row[1], #row[2], mean, p95, mx))
-        end
-        assert.is_true(#ms > 1000 and #direct > 500 and #uc > 500)
-    end)
+                local rows = {
+                    { "ms per Update", ms, "%8.3f" },
+                    { "B per Update, direct", direct, "%8.0f" },
+                    { "B per Update, Driver coroutine", co, "%8.0f" },
+                    { "B per UNIT_COMBAT", uc, "%8.1f" },
+                }
+                print(("\nbench (%d fights, %s)\n%-32s       n     mean      p95      max"):format(FIGHTS, mode[1], ""))
+                for _, row in ipairs(rows) do
+                    local f = row[3]
+                    local mean, p95, mx = stats(row[2])
+                    print(("%-32s %7d " .. f .. " " .. f .. " " .. f):format(row[1], #row[2], mean, p95, mx))
+                end
+                assert.is_true(#ms > 1000 and #direct > 500 and #uc > 500)
+            end
+        )
+    end
 end)

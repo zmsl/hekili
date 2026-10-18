@@ -197,6 +197,7 @@ display whose profile already names the style binds it.
 | `api` | registration | the interface version it was written for |
 | `label` | dropdown | the name the style dropdown shows |
 | `defaults` | registration | optional; the template of `displays[id].<name>` |
+| `needs` | subscribing | optional; `{ alts = true }` asks the engine for `recs[1..2].alts` (below), which costs extra simulation passes |
 | `Build(d, conf)` | every `BuildUI` | creates or reuses (`d.styleFrames[name]`) its frames on `d`; returns the button list (may be empty) |
 | `Draw(d, conf, out, status)` | on a publish or the 0.25 s pulse | draws `out` |
 | `Tick(d, conf, out, now, elapsed)` | every frame, before `Draw` | timers, flashes, range |
@@ -210,7 +211,10 @@ display whose profile already names the style binds it.
 subtable `conf[name]`, never another style's. `d.styleState` is its per-display scratch. `out` is
 `Hekili.Engine.Output[id]`: `out.count`, `out.version` and `out.recs[1..count]`, each record with `actionName`,
 `actionID`, `texture`, `caption`, `indicator`, `keybind`, `offGCD`, `time`, `exact_time`, `delay`, `since`, `wait`,
-`resource_type`, `resources`, `script`, `list`, `action`, `pack`; `status` is `Output.status`. `d.resolved[i]` (range,
+`resource_type`, `resources`, `cost`, `busy`, `script`, `list`, `action`, `pack`, and `alts` (`alts.n` entries of
+`actionName`, `actionID`, `texture`, `action`, `list`, `bound` = `"lo"` or `"hi"`: the pick with the gating resource
+at the belief's low or high bound, when it differs from the record's own, sorted by APL entry; filled for records 1
+and 2 only while a subscriber's style declares `needs.alts`, otherwise `n = 0`); `status` is `Output.status`. `d.resolved[i]` (range,
 usable, desaturation, delay, targets, glow per record) comes with the shared resolve and is the place to read those
 instead of asking the game again. A style never reads `state.*`, `class.*`, `Hekili.State`, `Hekili.Class` or
 `HekiliEngine`: `tools/check_engine_reads.sh` enforces it inside Hekili, and an external style must keep it by

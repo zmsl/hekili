@@ -385,6 +385,23 @@ describe("a display's style", function()
         assert.are.same({}, H.errors)
     end)
 
+    it("subscribes the display with its style's needs: alts are asked for while it draws the display", function()
+        local H, d = boot()
+        stub(H)
+        H.ns.UI.Styles.stub.needs = { alts = true }
+        local out = H.Hekili.Engine.Output.Primary
+        assert.are.equal(0, out.needAlts)
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "main", "style" }, "stub")
+        H.Hekili:BuildUI()
+        d:UpdateAlpha()
+        assert.are.equal(1, out.needAlts)
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "main", "style" }, "classic")
+        H.Hekili:BuildUI()
+        d:UpdateAlpha()
+        assert.are.equal(0, out.needAlts)
+        assert.are.same({}, H.errors)
+    end)
+
     it("rebuilds, enters and leaves config mode with a display that has no buttons", function()
         local H, d = boot()
         stub(H)

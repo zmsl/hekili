@@ -1181,7 +1181,7 @@ do
 
             -- Subscribed (the engine computes this display) exactly while Active and visible.
             if newAlpha == 0 then unsubscribe( self )
-            elseif Published[ self.id ] then Hekili.Engine.Subscribe( self.id, self.OnPublish ) end
+            elseif Published[ self.id ] then Hekili.Engine.Subscribe( self.id, self.OnPublish, nil, self.style and self.style.needs ) end
         end
 
         function d:OnEvent( event, ... )

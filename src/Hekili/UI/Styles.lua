@@ -5,7 +5,9 @@ local _, ns = ...
 
 ns.UI.Styles = ns.UI.Styles or {}
 
--- Every member a style must implement (`defaults`, its config subtable template, is optional).
+-- Every member a style must implement (`defaults`, its config subtable template, is optional; so is `needs`, what it
+-- asks the engine to compute beyond the records: `needs.alts` fills recs[1..2].alts, the picks at the gating
+-- resource's belief bounds).
 local MEMBERS = {
     label = "string",
     Build = "function", -- ( d, conf ): creates or reuses its frames on d, returns the button list (may be empty)
@@ -50,6 +52,9 @@ function ns.UI.RegisterStyle( name, impl )
     end
     if impl.defaults ~= nil and type( impl.defaults ) ~= "table" then
         error( ( "display style '%s': defaults must be a table" ):format( tostring( name ) ), 2 )
+    end
+    if impl.needs ~= nil and type( impl.needs ) ~= "table" then
+        error( ( "display style '%s': needs must be a table" ):format( tostring( name ) ), 2 )
     end
     ns.UI.Styles[ name ] = impl
 end

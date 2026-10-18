@@ -1415,6 +1415,69 @@ local displayRules = {
     AOE        = { aoeDisplayRule                                                                       , true , "Interrupts" },
 }
 
+-- Alternatives under resource uncertainty (display styles plan, Task 3c), for a display a subscriber asked them of
+-- (needs.alts): after the slot loop, so the main records never depend on them, records 1 and 2 each get the picks the
+-- APL makes on a fresh reset with the record's gating resource pinned at the belief's low, then high bound, advanced
+-- to the record's time. A pick other than the record's own goes into rec.alts (preallocated in Output.lua), sorted by
+-- APL entry. Skipped when the band does not straddle the record's cost. shortcut: record 2's pass does not replay
+-- record 1's cast first, so an alternative of record 2 can repeat record 1; replay it if the Timeline needs it.
+local altProbe = {} -- GetNextPrediction's slot for a bound pass: one table, its fields overwritten by every pick
+
+local function altPick( dispName, packName, rec, i, bound, value, maxTime, abilityOpts )
+    state.reset( dispName )
+    local rt = rec.resource_type
+    local res = state[ rt ]
+    local keep = res.actual
+    res.actual = value
+    state.forecastResources( rt )
+    if rec.time > 0 then state.advance( rec.time ) end
+
+    altProbe.index, state.index = i, i
+    state.delay = 0
+    state:SetConstraint( 0, maxTime )
+    local action = Hekili:GetNextPrediction( dispName, packName, altProbe )
+
+    -- unpinned: a following display's partial reset (no offset) keeps the resource it finds
+    res.actual = keep
+    state.forecastResources( rt )
+
+    if not action or action == "wait" or action == rec.actionName then return end
+    local ability = class.abilities[ action ]
+    local alts = rec.alts
+    local n = alts.n + 1
+    local e = alts[ n ]
+    e.actionName, e.actionID, e.action, e.list, e.bound = action, altProbe.actionID, altProbe.action, altProbe.list, bound
+    if ability.item then
+        e.texture = altProbe.texture or ability.texture or select( 5, GetItemInfoInstant( ability.item ) )
+    else
+        local override = abilityOpts and rawget( abilityOpts, action )
+        e.texture = override and override.icon or altProbe.texture or ability.texture or GetSpellTexture( ability.id )
+    end
+    alts.n = n
+end
+
+local function altPasses( dispName, packName, display, Queue, numFilled, abilityOpts )
+    local isMain = dispName == "Primary" or dispName == "AOE"
+    local maxTime = isMain and ( Hekili.Engine.settings.performance.forecastWindow or 15 ) or ( display.forecastPeriod or 15 )
+    for i = 1, numFilled < 2 and numFilled or 2 do
+        local rec = Queue[ i ]
+        local rt, cost = rec.resource_type, rec.cost
+        local resource = rt and class.resources[ rt ]
+        if resource and cost > 0 then
+            local band = ns.VirtualState.Power( resource.type, state.now )
+            local lo, hi = band.lo, band.hi
+            if lo < cost and hi >= cost then
+                altPick( dispName, packName, rec, i, "lo", lo, maxTime, abilityOpts )
+                altPick( dispName, packName, rec, i, "hi", hi, maxTime, abilityOpts )
+                local alts = rec.alts
+                if alts.n == 2 and alts[ 1 ].action > alts[ 2 ].action then
+                    alts[ 1 ], alts[ 2 ] = alts[ 2 ], alts[ 1 ]
+                end
+            end
+        end
+    end
+end
+
 local hasSnapped
 local lastSnapshot = {}
 
@@ -2005,6 +2068,10 @@ function Hekili.Update()
                     end
                     break
                 end
+            end
+
+            if out.needAlts > 0 and numFilled > 0 then
+                altPasses( dispName, packName, display, Queue, numFilled, abilityOpts )
             end
 
             Output.Publish( dispName, numFilled )

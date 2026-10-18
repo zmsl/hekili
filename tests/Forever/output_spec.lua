@@ -141,6 +141,49 @@ describe("Engine.Output (pure)", function()
         assert.are.equal(0, Out.AOE.wanted)
     end)
 
+    it(
+        "counts subscribers needing alts, rising and falling with Subscribe/Unsubscribe; Wanted ignores needs",
+        function()
+            local function a() end
+            local function b() end
+            local o = Out.Primary
+            assert.are.equal(0, o.needAlts)
+            Engine.Subscribe("Primary", a, true, { alts = true })
+            assert.are.equal(1, o.needAlts)
+            assert.is_false(Out.Wanted("Primary"))
+            Engine.Subscribe("Primary", b, false, { alts = true })
+            assert.are.equal(2, o.needAlts)
+            assert.are.equal(1, o.wanted)
+            Engine.Subscribe("Primary", b, false, {}) -- re-subscribing updates the need
+            assert.are.equal(1, o.needAlts)
+            Engine.Subscribe("Primary", b, false, { alts = true })
+            assert.are.equal(2, o.needAlts)
+            Engine.Unsubscribe("Primary", a)
+            assert.are.equal(1, o.needAlts)
+            assert.is_true(Out.Wanted("Primary"))
+            Engine.Unsubscribe("Primary", b)
+            assert.are.equal(0, o.needAlts)
+            Engine.Unsubscribe("Primary", b) -- not subscribed: no change
+            assert.are.equal(0, o.needAlts)
+        end
+    )
+
+    it("every record has an alts list (n = 0, two preallocated entries) that Begin empties", function()
+        local o = Out.Primary
+        for _, set in ipairs({ o.recs, o.scratch }) do
+            for i = 1, 10 do
+                assert.are.equal(0, set[i].alts.n)
+                assert.is_table(set[i].alts[1])
+                assert.is_table(set[i].alts[2])
+            end
+        end
+        local alts = o.scratch[1].alts
+        alts.n, alts[1].actionName = 1, "x"
+        Out.Begin("Primary")
+        assert.are.equal(0, o.scratch[1].alts.n)
+        assert.are.equal(alts, o.scratch[1].alts)
+    end)
+
     it("status is the one record it publishes: count is always 1", function()
         assert.are.equal(1, Out.status.count)
         Out.Publish("status", 1)
@@ -357,6 +400,17 @@ describe("Engine.Output (headless Arms)", function()
         end
         opts[first].icon = nil
         assert.are.same({}, H.errors)
+    end)
+
+    it("alts is empty on every record when no subscriber declares the need", function()
+        assert.are.equal(0, out.needAlts)
+        for _ = 1, 5 do
+            t = t + 0.2
+            assert(headless.cycle(H, t))
+            for i = 1, out.count do
+                assert.are.equal(0, out.recs[i].alts.n, i)
+            end
+        end
     end)
 
     it("records carry cost (the spend of resource_type, 0 when none) and busy (GCD, or cast if longer)", function()

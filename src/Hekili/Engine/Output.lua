@@ -9,11 +9,16 @@ local Engine = Hekili.Engine
 
 local SLOTS = 10 -- recommendation records per display: a display has at most 10 buttons
 local SUBS = 4 -- subscriber slots per display, and annotator slots
+local ALTS = 2 -- alternatives per record: the picks at the low and the high bound of the gating resource
 
 local function records()
     local t = {}
     for i = 1, SLOTS do
-        t[i] = { resources = {}, belief = {}, cost = 0, busy = 0 } -- cost, busy: Core writes them on every published record
+        t[i] = { resources = {}, belief = {}, cost = 0, busy = 0, alts = { n = 0 } } -- cost, busy: Core writes them on every published record
+        -- alts[1..n]: { actionName, actionID, texture, action, list, bound = "lo"|"hi" }, filled for a needs.alts subscriber
+        for j = 1, ALTS do
+            t[i].alts[j] = {}
+        end
     end
     return t
 end
@@ -31,7 +36,9 @@ local function display()
         scratch = records(),
         subs = slots(),
         passive = slots(),
+        alts = slots(), -- per subscriber slot: it declared needs.alts
         wanted = 0,
+        needAlts = 0, -- subscribers that declared needs.alts (passive or not): Core then fills recs[1..2].alts
         publishing = false,
         payload = nil, -- the WeakAuras event copy, set by Integrations/WeakAuras.lua only when WeakAuras is loaded
     }
@@ -83,22 +90,29 @@ function Output.Begin(name)
         for k in pairs(belief) do
             belief[k] = nil
         end
+        rec.alts.n = 0
     end
     return scratch
 end
 
 -- Drops the blanked (false) subscriber slots, keeping the others' order.
 local function compact(o)
-    local subs, passive = o.subs, o.passive
+    local subs, passive, alts = o.subs, o.passive, o.alts
     local n, j = subs.n, 0
     for i = 1, n do
         if subs[i] then
             j = j + 1
             subs[j], passive[j] = subs[i], passive[i]
+            if alts then
+                alts[j] = alts[i]
+            end
         end
     end
     for i = j + 1, n do
         subs[i], passive[i] = false, false
+        if alts then
+            alts[i] = false
+        end
     end
     subs.n = j
 end
@@ -137,19 +151,30 @@ function Output.Wanted(name)
     return Displays[name].wanted > 0
 end
 
+-- Sets subscriber slot i's needs.alts flag, keeping the display's count.
+local function setAlts(o, i, alts)
+    if o.alts and o.alts[i] ~= alts then
+        o.alts[i] = alts
+        o.needAlts = o.needAlts + (alts and 1 or -1)
+    end
+end
+
 --- Subscribes `fn(name, version, output)` to `name`'s publishes; a `passive` subscriber listens without asking the
---- engine to compute the display. Subscribing an already subscribed fn only updates its passive flag. Returns false
---- when the slots are full.
-function Engine.Subscribe(name, fn, passive)
+--- engine to compute the display. `needs` (optional): `needs.alts` asks Core to fill recs[1..2].alts (the picks at
+--- the gating resource's belief bounds). Subscribing an already subscribed fn only updates its passive flag and needs.
+--- Returns false when the slots are full.
+function Engine.Subscribe(name, fn, passive, needs)
     local o = Displays[name]
     local subs = o.subs
     passive = passive and true or false
+    local alts = needs and needs.alts and true or false
     for i = 1, subs.n do
         if subs[i] == fn then
             if o.passive[i] ~= passive then
                 o.passive[i] = passive
                 o.wanted = o.wanted + (passive and -1 or 1)
             end
+            setAlts(o, i, alts)
             return true
         end
     end
@@ -165,6 +190,7 @@ function Engine.Subscribe(name, fn, passive)
     if not passive then
         o.wanted = o.wanted + 1
     end
+    setAlts(o, n, alts)
     return true
 end
 
@@ -177,6 +203,7 @@ function Engine.Unsubscribe(name, fn)
             if not o.passive[i] then
                 o.wanted = o.wanted - 1
             end
+            setAlts(o, i, false)
             subs[i] = false
             if not o.publishing then
                 compact(o)
