@@ -86,10 +86,11 @@ displays.Primary = {
   numIcons,              -- how many records the engine publishes (Core.lua:1500); each style says how it uses them
   visibility = { ... },  -- advanced/pve/pvp alpha rules
   style = "classic",     -- NEW: which renderer draws this display
-  -- classic's fields stay exactly where they are (primaryWidth/Height, zoom, queue, border, range,
-  -- glow, flash, captions, indicators, targets, delays, keybindings): no migration, old profiles load
-  -- a new style owns ONE subtable named after itself; nothing of classic's applies to it
-  timeline = { nowSize = 48, nextSize = 40, laneLength = 300, laneHeight = 28, pxPerSec = 24, ... },
+  -- every style owns ONE subtable named after itself (Task 2b normalizes classic into this shape
+  -- with a one-time migration of its legacy flat fields; Tasks 1-2 still read them flat)
+  classic  = { primaryWidth, primaryHeight, zoom, keepAspectRatio, queue, border, range, glow, flash,
+               captions, indicators, targets, delays, keybindings },
+  timeline = { nowSize = 48, nextSize = 40, laneLength = 240, horizon = 10, ... },
 }
 ```
 
@@ -224,6 +225,69 @@ Each task is one reviewed commit set on `forever-styles`; `make check` green; `d
 - [ ] Implement; the dropdown's `values` enumerate `ns.UI.Styles` with `label`; classic's size/zoom/queue fields in `main` and classic's tabs get `hidden = function() return conf.style ~= "classic" end`; each style's `Options(id, conf)` tabs appended with the matching hidden function; Multi shows a style's tabs only when all selected displays share it.
 - [ ] `make check`, commit.
 
+### Task 2b: normalize storage, every style under its own subtable (user, 2026-10-18)
+
+Why: classic's style fields are flat on the display table for legacy reasons; the user wants
+`displays[id].classic` and `displays[id].timeline` to have the same shape so no style is special.
+
+**Files:**
+- Modify: `src/Hekili/Options/Options.lua` (`displayTemplate`: the style groups move out of the flat
+  template into `Classic.defaults`, so `GetDefaults` merges classic exactly like any other style;
+  `GetDisplayOption`/`SetDisplayOption` walk the full nested path for style tabs: display → style key
+  → group → option, instead of display → tab → option; `newDisplayOption`: each style's option group
+  is one child group keyed by the style name, hidden unless `conf.style == name`, containing that
+  style's tabs; the classic size/zoom/queue fields leave `main` for the classic group),
+  `src/Hekili/Options/Profile.lua` or wherever the profile upgrade hook lives (one-time migration: for
+  each display, if `conf.classic == nil` and any legacy flat style field exists, move
+  `primaryWidth/Height`, `zoom`, `keepAspectRatio`, `queue`, `border`, `range`, `glow`, `flash`,
+  `captions`, `indicators`, `targets`, `delays`, `keybindings` under `conf.classic` and nil the flat
+  keys; core fields stay), `src/Hekili/UI/Styles/Classic.lua` (reads `conf.classic.*`; `defaults`
+  registered), `src/Hekili/UI/UI.lua` (frame size from the style's Build, not `conf.primaryWidth`)
+- Test: `tests/Forever/display_style_spec.lua` (migration describe), the Task 1 fixture (unchanged after migration)
+
+- [ ] Migration spec first: a profile with flat legacy fields and no `classic` key → after load every
+  listed field is under `classic` with the same values, the flat keys are gone, core fields untouched; a
+  profile already migrated is left alone; a fresh profile gets `classic` from `Classic.defaults`.
+- [ ] The Task 1 classic fixture still compares byte-identical after migration (the renderer reads the
+  same values from the new place).
+- [ ] Getter spec: `Hekili:GetDisplayOption({ "displays", "Primary", "classic", "keybindings", "font" })`
+  and the timeline equivalent resolve by walking the path; the Task 2 inline-section case still passes
+  (an inline section inside a style group is skipped because it has no matching config key: the walker
+  descends only into keys that exist in the config table, so section groups must use keys that do NOT
+  exist in the config, e.g. prefixed `sec_now`).
+- [ ] `make check`, commit. Changelog line: display settings moved under `classic`; migrated on load.
+
+### Task 2c: styles as external plug-ins (user, 2026-10-18)
+
+Why: a UI pack (its own addon) must be able to register a style that appears in the dropdown like a
+built-in one. Internally the registry already supports this; what is missing is a public entry point,
+a versioned contract, and a late-registration path, because a dependent addon's files load AFTER
+Hekili's `OnInitialize` (ADDON_LOADED for Hekili fires when Hekili's own files finish) so its defaults
+miss the `GetDefaults` merge, and a load-on-demand pack may register after `BuildUI`.
+
+**Files:**
+- Modify: `src/Hekili/UI/Styles.lua` (public `Hekili:RegisterDisplayStyle(name, impl)` wrapping
+  `ns.UI.RegisterStyle`; `Hekili.DisplayStyleAPI = 1`; `impl.api` must equal it or the registration is
+  refused with one `Notify` naming the style and both numbers; built-in styles register through the same
+  public function), `src/Hekili/Options/Options.lua` (late defaults: after the DB exists, a registration
+  calls `Hekili.DB:RegisterDefaults` again with the style's subtable added to `displayTemplate`, which
+  AceDB-3.0 supports; verify by reading `Libs/AceDB-3.0`), `src/Hekili/UI/UI.lua` (late bind: a
+  registration after `BuildUI` queues a rebuild so displays whose `conf.style == name` that fell back to
+  classic bind the real style; the fallback Notify is suppressed for names that later register, or stays
+  once: ruling, once is fine), `docs/dev/architecture.md` (the public contract: the interface table, the
+  record fields a style may read, `d.resolved`, the "never read `state.*`/`class.*`" rule as
+  documentation since it cannot be enforced on external code), `tools/apiref_surface.lua` if the fork
+  keeps a documented public surface (check; `make check` may require it)
+- Test: `tests/Forever/display_style_spec.lua` (external describe)
+
+- [ ] Spec: a style registered through `Hekili:RegisterDisplayStyle` AFTER the headless boot (simulating a
+  dependent addon) appears in the dropdown values, its defaults exist on every display
+  (`displays.Primary.<name>.foo`), a display whose profile already names it rebinds from classic to it
+  after the queued rebuild, and `api` mismatch refuses with one Notify and leaves classic bound.
+- [ ] The shared option builders from Task 3d are exposed on the same public table so an external style can
+  offer classic-fidelity groups without copying them.
+- [ ] `make check`, commit.
+
 ### Task 3: shared resolve
 
 **Files:**
@@ -278,13 +342,55 @@ engine must evaluate the bounds too. Only displays whose bound style asked pay f
   reports the per-Update cost with the need on (expect under 0.5 ms extra), recorded in the report.
 - [ ] `make check`, gate lines unchanged, commit.
 
+### Task 3d: option builders shared by styles (options only; after Task 2)
+
+Why (user, 2026-10-18): a new style's configurable options must match the fidelity classic allows
+(fonts, colours, anchors, borders, captions, keybind text, glow, flash, range tint, delay text and
+icon, target count, indicators, zoom). Styles stay isolated in data, so the sharing happens at the
+option-table level: classic's tab tables become builders that take the config subtable key and the
+zone names, and every style calls the same builders for its own subtable.
+
+**Files:**
+- Create: `src/Hekili/Options/StyleOptions.lua` (TOC before `Options\Options.lua`; `ns.StyleOptions.<group>(styleKey, zones, order)` for `keybindings`, `captions`, `border`, `range`, `glow`, `flash`, `delays`, `targets`, `indicators`, plus `icon(zone)` for size/zoom/keepAspectRatio)
+- Modify: `src/Hekili/UI/Styles/Classic.lua` (`Options` calls the builders with `styleKey = nil` (flat legacy fields) and `zones = { "primary", "queued" }`), `src/Hekili/Options/Options.lua` (`displayTemplate` group defaults become a function `ns.StyleOptions.defaults(zones)` so a style's `defaults` can include the same groups)
+- Test: `tests/Forever/style_options_spec.lua`
+
+Granularity is set by `.superpowers/sdd/2026-10-18-display-styles/analysis-classic-vs-timeline.md`
+section D (read it; it scores every classic setting per zone): reuse whole with a zone parameter: glow
+(now, next; lane opt-in; `queued` gates next+lane; `highlight` now only), range (now, next), flash
+(now only), targets (now only), indicators (per-zone size). Reuse partially: keybindings (enabled,
+queued, lowercase, cPort*; font block per zone), captions (enabled, queued, font, color; anchor/x/y per
+zone), border (enabled, coloring, color; thickness = ring width; no `fit`), delays (fade, desaturate
+only). Not shared: queue layout fields, delays.type and its font block, keepAspectRatio, dead fields.
+
+- [ ] Builders produce, for classic, option tables deep-equal to the ones Task 2b re-pathed (assert with
+  a recorded dump of `Classic.Options("Primary", conf)` taken before this task; order, names, get/set
+  paths, hidden results all equal). Profile paths unchanged.
+- [ ] Each builder takes `(styleKey, zones, order)` and emits one block per zone where section B of the
+  analysis says Z, one shared block where it says A; classic passes `{ "primary", "queued" }` and its
+  existing fields map 1:1 (primary = unsuffixed, queued = `queued*`/`separateQueueStyle`).
+- [ ] `ns.StyleOptions.defaults(groups, zones)` returns the default subtables (same values as
+  `displayTemplate` today); the Timeline's `defaults` merges them.
+- [ ] `make check`, commit.
+
 ### Task 4: the Timeline style
 
 **Files:**
 - Create: `src/Hekili/UI/Styles/Timeline.lua` (TOC after `UI\Styles\Classic.lua`), fixture `tests/Forever/fixtures/timeline_draw.lua`
 - Test: `tests/Forever/display_style_spec.lua` (timeline describe)
 
-- [ ] Design brief with the user before dispatch: final field list for `defaults` (`nowSize`, `nextSize`, `laneLength`, `laneHeight`, `pxPerSec`, `stackSize`, `rows`), colours, fonts, what the "now" circle shows (icon, sweep, ETA), what the "next" box shows, lane stacking rule.
+- [ ] Field list (user, 2026-10-18: fidelity must match classic; decided from the analysis, section C
+  for timeline-only keys with their defaults and section D for the shared groups). Timeline-only keys
+  in `displays[id].timeline`: `horizon` 10, `pxPerSec` 24 (laneLength derived), `laneHeight` 56,
+  `laneIconSize` 20, `rows` 2, `rowGap` 24, `direction` RIGHT, `nowSize` 48, `nextSize` 48,
+  `nextOffset` 60, `eta` { enabled, font, size 16, style, color, format }, `laneEta` { enabled false,
+  fontSize 10 }, `sweep` { mode extend }, `gate` { style veil, color }, `ruler` { ticks true,
+  majorEvery 5 }, `laneAlpha` 0.95, `laneDim` 0.6, `glide` 0.08, `alts` { enabled true, max 2, size
+  16, spacing 2, zones both }. Shared groups through the Task 3d builders exactly as section D lists
+  them, zones `{ "now", "next", "lane" }` (alts inherit lane's text settings). Tab layout: the style's
+  group holds tabs Layout (timeline-only keys, inline sections Now / Next / Lane / Alternatives) then
+  the shared groups in classic's order. Core asks the style for the display frame size (analysis D,
+  "tangled": `primaryWidth/Height` must not size a timeline frame).
 - [ ] Build: "now" circle (record 1), "next" box (record 2), lane (records 3..count at `(exact_time - GetTime()) * pxPerSec`, second row when `since * pxPerSec < stackSize`), ETA text, resource-gate marker when `resources[resource_type] < cost`, cooldown marker from `busy`, clip beyond `laneLength`. Primitives ported from TDF `src/TacoDogForever/Render/Render.lua` (credit header). Options: one `timeline` tab, inline sections Now / Next / Lane.
 - [ ] Fixture spec over a fixed published set (record once, compare); alloc spec 0 B over 1,000 frames.
 - [ ] `make check`, commit.
