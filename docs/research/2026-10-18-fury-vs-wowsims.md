@@ -27,7 +27,7 @@ Berserker Rage (33); Battle Shout (34).
 |---|---|---|---|
 | Victory Rush (focus) | No | — | Registered but never in the APL: "This spell works but the Sim never kills a target" (`sim/warrior/victory_rush.go:15`). There's nothing to compare. |
 | Overpower in Battle Stance (focus) | Yes, as a stance dance | Below BT/WW/Execute/Cleave (27) | wowsims *switches into* Battle Stance for it: wait for the GCD, then Battle Stance, Overpower, Rend if due, then back to Berserker (`fury.apl.json:51`). The variable `Overpower: Can Cast` (55) needs the window aura 1282733, BT and WW both at least 1.5 s away, no execute phase, and rage 5-100. The user's line only fires when already in Battle Stance and has no BT/WW timing guard. |
-| Revenge in Defensive Stance (focus) | No (Protection only) | — | It's only in `ui/specs/warrior/protection/apls/default.apl.json:24,31`. |
+| Revenge in Defensive Stance (focus) | No (Protection only) | — | It's only in `ui/specs/warrior/protection/apls/default.apl.json:31`. |
 | Heroic Strike, `rage>=hs_threshold`, 1 target (focus) | Yes | Last of the damage lines (30, 31), below BT/WW | Line 30: 1 target, not execute phase, rage >= 40. Line 31: the `Delay Check` (BT and WW both at least 1.5 s away, line 54) and rage > 60, any target count, execute included. |
 | Cleave, `rage>=cleave_threshold`, >1 target (focus) | Yes | Below BT/WW/Execute (26) | >1 target and rage >= 40. It has no cooldown guard. |
 | Keep Rend up | Only inside the Overpower weave | In group 51 | `Rend: Can Cast` (56): the Rend Weave toggle (on by default; its group isn't hidden, line 11), the Delay Check, no execute phase, Rend's remaining time <= 3 s, rage >= 10. It's cast only while already in Battle Stance (51). |
@@ -61,7 +61,7 @@ wowsims has **no rage reservation** for Bloodthirst or Whirlwind. Its protection
 
 So wowsims does *not* implement the user's rule: "after HS/Cleave's cost, enough rage remains for BT/WW if either
 comes off cooldown before the next swing". It relies on the floors and the game's drop-at-swing. Note that at
-40 rage, HS (15) leaves 25, which is below Bloodthirst's 30. The 1.5 s `Delay Check` is one GCD, not the swing
+40 rage, HS (15 minus Improved Heroic Strike's rank in the fork, `offensive_cost(15 - talent.improved_heroic_strike.rank)`) leaves 25 to 28, which is below Bloodthirst's 30. The 1.5 s `Delay Check` is one GCD, not the swing
 time.
 
 **The user's rule in the fork's keys.** The fork already exposes these keys: `mainhand_remains` (the time to the
@@ -144,11 +144,11 @@ plan's Design has the full rules (`docs/superpowers/plans/2026-10-18-timeline-fo
   (Bloodrage, Shield Block, Death Wish) and rage-gated dumps (`rage.time_to_*`). Each one still shows only if it
   falls inside the records the engine publishes. A refresh 8 s out shows only when the sequence reaches that far.
 
-### Fury (`tools/packs/warrior/Fury.simc`, today's list; Task 4 replaces it)
+### Fury (`tools/packs/warrior/Fury.simc`, today's list; Task 3 replaces it)
 
 | Line | Score | Why |
 |---|---|---|
-| 8 precombat battle_shout | FOCUS | Buff upkeep. It's out of combat, so the Timeline countdown rarely matters. |
+| 8 precombat battle_shout | EITHER | Buff upkeep, but out of combat, so the Timeline countdown rarely matters. The in-combat refresh (33) is the focus one. |
 | 9 precombat charge | EITHER | Opener in range. It's a one-off, not a window. |
 | 10 sunder_armor (stack < max) | EITHER | Stack ramp is steady. It would be FOCUS as a near-expiry refresh, which this line doesn't test. |
 | 11 demoralizing_shout `!up` | FOCUS | Refresh on expiry, predictable. |
@@ -172,7 +172,23 @@ plan's Design has the full rules (`docs/superpowers/plans/2026-10-18-timeline-fo
 | 33 battle_shout `!up` | FOCUS | Refresh, predictable (player buff). |
 | 34 berserker_stance | EITHER | A stance fix, steady, but easy to miss after an Overpower dance. |
 
-Check on the user's new Fury focus set (Victory Rush, Overpower, Revenge, Heroic Strike, Cleave): Victory Rush,
+Scoring of the user's new Fury lines (the plan's Design list), which Task 3 writes:
+
+| User's line | Score | Why |
+|---|---|---|
+| victory_rush (focus) | FOCUS | After a kill, gold on arrival. |
+| overpower in Battle Stance (focus) | FOCUS | After a dodge, gold on arrival, or a short countdown once open. |
+| revenge in Defensive Stance (focus) | FOCUS | After a block, dodge or parry, gold on arrival. |
+| heroic_strike, 1 target (focus) | EITHER | Swing-timed, but steady while rage is high (see below). |
+| cleave, >1 target (focus) | EITHER | Same as Heroic Strike. |
+| rend (keep up) | FOCUS | Refresh, predictable. Silent in Berserker Stance. |
+| sunder_armor (`maintain_sunder`) | EITHER | The ramp is steady, a refresh would be focus. |
+| thunder_clap (`maintain_thunder_clap`) | FOCUS | Refresh, predictable. Silent in Berserker Stance. |
+| demoralizing_shout (`maintain_demo_shout`) | FOCUS | Refresh, predictable. |
+| bloodthirst | ROTATION | Steady press. |
+| whirlwind | ROTATION | Steady press. |
+
+Check on the user's focus set (Victory Rush, Overpower, Revenge, Heroic Strike, Cleave): Victory Rush,
 Overpower and Revenge fit, and all three are gold-on-arrival windows. **Heroic Strike and Cleave are the questionable
 part.** They're timing-bound to the swing, but with rage above the threshold they're predicted almost all the time,
 so they'd hold the Now circle and push the real press (BT/WW) to the Next box most of the fight. That works against
@@ -191,33 +207,33 @@ FOCUS (predictable). 34 berserker_stance: EITHER.
 
 | Line | Score | Why |
 |---|---|---|
-| 39 precombat battle_shout | FOCUS | Buff, predictable. |
-| 40 charge | EITHER | Opener. |
-| 41, 44 defensive_stance | EITHER | A stance fix. |
-| 42 shield_bash | FOCUS | Interrupt window, gold on arrival. |
-| 43 mocking_blow `threat.lost` | FOCUS | Gold on arrival. |
-| 45 taunt `threat.lost` | FOCUS | Gold on arrival. |
-| 46 challenging_shout | FOCUS | Loose-threat event, gold on arrival. |
-| 47 shield_block `stack<2` | FOCUS | Timing, predictable (cooldown and buff). |
-| 48 victory_rush | FOCUS | Gold on arrival. |
-| 49 bloodrage `rage<20` | FOCUS | Predictable. |
-| 50 battle_shout | FOCUS | Predictable. |
-| 51-52 run_action_list | — | Not picks. |
-| 53, 63 revenge | FOCUS | After a block, dodge or parry, gold on arrival. |
-| 54, 64 shield_slam | ROTATION | Steady press. |
-| 55 sunder_armor `stack<5\|remains<3` | EITHER | The ramp is steady and the `remains<3` refresh is focus. Splitting the line would let only the refresh carry `focus=1`. |
-| 56, 61 thunder_clap `!up` | FOCUS | Refresh, predictable. |
-| 57, 62 demoralizing_shout `!up` | FOCUS | Refresh, predictable. 57 is setting-gated. |
-| 58 concussion_blow | ROTATION | Cooldown press. |
-| 59, 65 heroic_strike / cleave | ROTATION | Rage dumps. |
-| 60, 66 sunder_armor | ROTATION | Filler. |
+| 5 precombat battle_shout | EITHER | Buff, but out of combat. The in-combat refresh (16) is the focus one. |
+| 6 charge | EITHER | Opener. |
+| 7, 10 defensive_stance | EITHER | A stance fix. |
+| 8 shield_bash | FOCUS | Interrupt window, gold on arrival. |
+| 9 mocking_blow `threat.lost` | FOCUS | Gold on arrival. |
+| 11 taunt `threat.lost` | FOCUS | Gold on arrival. |
+| 12 challenging_shout | FOCUS | Loose-threat event, gold on arrival. |
+| 13 shield_block `stack<2` | FOCUS | Timing, predictable (cooldown and buff). |
+| 14 victory_rush | FOCUS | Gold on arrival. |
+| 15 bloodrage `rage<20` | FOCUS | Predictable. |
+| 16 battle_shout | FOCUS | Predictable. |
+| 17-18 run_action_list | — | Not picks. |
+| 19, 29 revenge | FOCUS | After a block, dodge or parry, gold on arrival. |
+| 20, 30 shield_slam | ROTATION | Steady press. |
+| 21 sunder_armor `stack<5\|remains<3` | EITHER | The ramp is steady and the `remains<3` refresh is focus. Splitting the line would let only the refresh carry `focus=1`. |
+| 22, 27 thunder_clap `!up` | FOCUS | Refresh, predictable. |
+| 23, 28 demoralizing_shout `!up` | FOCUS | Refresh, predictable. 23 is setting-gated. |
+| 24 concussion_blow | ROTATION | Cooldown press. |
+| 25, 31 heroic_strike / cleave | ROTATION | Rage dumps. |
+| 26, 32 sunder_armor | ROTATION | Filler. |
 
 ### Recommended `focus=1` sets
 
 Keep each set small, so the Now circle means "look here" rather than "always occupied".
 
 - **Fury** (the user's list fixes it): victory_rush, overpower, revenge, heroic_strike, cleave. Advisory: drop
-  heroic_strike/cleave from focus (they'd occupy Now most of the fight). If Execute is added, give it focus.
-- **Arms**: overpower, victory_rush, execute, rend, battle_shout.
+  heroic_strike/cleave from focus (they'd occupy Now most of the fight). If Execute is added, give it focus. Rend and bloodrage score FOCUS on today's list but stay out: the user's list has no Bloodrage line and fixes its focus lines, and Rend is silent in Berserker Stance.
+- **Arms**: overpower, victory_rush, execute, rend, battle_shout (the in-combat line 33, not precombat 8).
 - **Protection**: revenge (both lists), shield_block, shield_bash, taunt, mocking_blow, victory_rush, thunder_clap
   (both lists).
