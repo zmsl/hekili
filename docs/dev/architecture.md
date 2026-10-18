@@ -43,9 +43,9 @@ through it.
 - `version` (bumps each publish), `count` (records in `recs`), `recs` (the last complete set, up to 10 records).
 - A record holds the recommendation (`Sim/Core.lua`'s `slot.*` writes are the list): `index`, `depth`, `display`,
   `pack`, `list`, `listName`, `action`, `actionName`, `actionID` (negative for an item), `name`, `texture`, `caption`,
-  `indicator`, `item` (the item id), `keybind`, `keybindFrom`, `time`, `exact_time`, `delay`, `since`, `wait`,
-  `waitSec`, `offGCD`, `interrupt`, `castStart`, `resource`, `resource_type`, `cost`, `busy`, `scriptType`, `script`,
-  `hook`, plus the tables `resources`, `alts` (§7) and `belief` (empty until an annotator fills it).
+  `indicator`, `focus` (1 from a `focus=1` entry), `item` (the item id), `keybind`, `keybindFrom`, `time`, `exact_time`,
+  `delay`, `since`, `wait`, `waitSec`, `offGCD`, `interrupt`, `castStart`, `resource`, `resource_type`, `cost`, `busy`,
+  `scriptType`, `script`, `hook`, plus the tables `resources`, `alts` (§7) and `belief` (empty until an annotator fills it).
 - `payload`: the WeakAuras copy, set by `Integrations/WeakAuras.lua` (a passive subscriber, outside `Engine/`) only
   when WeakAuras is loaded.
 - Read it in a subscriber, or between publishes. Records are reused: copy a field you need to keep.
@@ -229,7 +229,7 @@ and the display reset in `ChatCommands.lua` name `classic` directly.
 `d.styleState` is per-display scratch shared by every style the display has bound; state of the style's own goes on
 `d.styleFrames[name]`. `out` is
 `Hekili.Engine.Output[id]`: `out.count`, `out.version` and `out.recs[1..count]`, each record with `actionName`,
-`actionID`, `texture`, `caption`, `indicator`, `keybind`, `offGCD`, `time`, `exact_time`, `delay`, `since`, `wait`,
+`actionID`, `texture`, `caption`, `indicator`, `focus`, `keybind`, `offGCD`, `time`, `exact_time`, `delay`, `since`, `wait`,
 `resource_type`, `resources`, `cost` (the amount of `resource_type` the pick spends; a fractional spend is multiplied by the resource's maximum),
 `busy` (seconds the pick keeps the player busy: its GCD, or its cast when longer), `script`, `list`, `action`, `pack`,
 and `alts` (`alts.n` entries of

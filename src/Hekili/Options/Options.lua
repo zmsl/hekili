@@ -3978,6 +3978,7 @@ found = true end
 
     local toggleToNumber = {
         cycle_targets = true,
+        focus = true,
         for_next = true,
         max_energy = true,
         only_cwc = true,
@@ -4048,6 +4049,7 @@ found = true end
     -- Options to nil if val is false.
     local review_options = {
         enable_moving = 1,
+        focus = 1,
         line_cd = 1,
         only_cwc = 1,
         strict = 1,
@@ -5751,6 +5753,13 @@ n = tonumber( n ) + 1
                                             desc = "If checked, this entry can only be used if you are channeling another spell.",
                                             order = 3,
                                             width = 0.99
+                                        },
+                                        focus = {
+                                            type = "toggle",
+                                            name = "Focus candidate",
+                                            desc = "Timeline style: when this entry is predicted within the focus horizon it takes the Now circle.",
+                                            order = 4,
+                                            width = 0.99
                                         }
                                     },
                                     hidden = function ()
@@ -5760,6 +5769,7 @@ n = tonumber( n ) + 1
                                         return not e.use_off_gcd and
                                             not e.use_while_casting and
                                             not e.only_cwc and
+                                            not e.focus and
                                             not packControl.showModifiers or ( not ability or ( ability.id < 0 and ability.id > -100 ) )
                                     end,
                                 },
@@ -8198,6 +8208,7 @@ do
             if result.max_energy then result.max_energy = tonumber( result.max_energy ) end
 
             if result.use_off_gcd then result.use_off_gcd = tonumber( result.use_off_gcd ) end
+            if result.focus then result.focus = tonumber( result.focus ) end
             if result.use_while_casting then result.use_while_casting = tonumber( result.use_while_casting ) end
             if result.strict then result.strict = tonumber( result.strict ) end
             if result.moving then

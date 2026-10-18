@@ -402,6 +402,40 @@ describe("Engine.Output (headless Arms)", function()
         assert.are.same({}, H.errors)
     end)
 
+    it("records carry the entry's focus flag, and a reused record drops it when the entry has none", function()
+        local r = out.recs[1]
+        local entry = H.Hekili.DB.profile.packs[r.pack].lists[r.list][r.action]
+        assert.are.equal(r.actionName, entry.action)
+        assert.is_nil(r.focus)
+        entry.focus = 1
+        t = t + 0.2
+        assert(headless.cycle(H, t))
+        local flagged = 0
+        for i = 1, out.count do
+            local ri = out.recs[i]
+            local e = H.Hekili.DB.profile.packs[ri.pack].lists[ri.list][ri.action]
+            assert.are.equal(e.focus, ri.focus, ri.actionName)
+            flagged = flagged + (ri.focus or 0)
+        end
+        assert.is_true(flagged > 0, "no published record came from the flagged entry")
+        entry.focus = nil
+        t = t + 0.2
+        assert(headless.cycle(H, t)) -- this publish reuses the records the flagged set was built into last time
+        t = t + 0.2
+        assert(headless.cycle(H, t))
+        for i = 1, out.count do
+            assert.is_nil(out.recs[i].focus, out.recs[i].actionName)
+        end
+        assert.are.same({}, H.errors)
+    end)
+
+    it("the in-game importer stores focus=1 as the number 1, and only when the line sets it", function()
+        local out1 = H.Hekili:ParseActionList("actions=mortal_strike,focus=1,if=rage>30\nactions+=/slam\n")
+        assert.are.equal("mortal_strike", out1[1].action)
+        assert.are.equal(1, out1[1].focus)
+        assert.is_nil(out1[2].focus)
+    end)
+
     it("alts is empty on every record when no subscriber declares the need", function()
         assert.are.equal(0, out.needAlts)
         for _ = 1, 5 do

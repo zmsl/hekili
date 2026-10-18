@@ -15,9 +15,10 @@
 
 local CLASS_FILES = "src/Hekili_" -- <Class>/<Class>.lua (the class pack addon) holds the RegisterPack blocks
 
-local OPTIONS = { name = "list_name", use_off_gcd = "use_off_gcd" } -- plus if=, which runs to the end of the line
+local OPTIONS = { name = "list_name", use_off_gcd = "use_off_gcd", focus = "focus" } -- plus if=, which runs to the end of the line
 
--- SimC-style lines into their lists and entries: actions[.list](=|+=/)action[,name=list][,use_off_gcd=N][,if=criteria].
+-- SimC-style lines into their lists and entries:
+-- actions[.list](=|+=/)action[,name=list][,use_off_gcd=N][,focus=N][,if=criteria].
 local function parse(simc)
     local lists = {}
     for line in simc:gmatch("[^\n]+") do
@@ -35,7 +36,7 @@ local function parse(simc)
             if not OPTIONS[k] then
                 error("unknown option " .. (k or opt) .. " in: " .. line, 0)
             end
-            e[OPTIONS[k]] = k == "use_off_gcd" and tonumber(v) or v
+            e[OPTIONS[k]] = k == "name" and v or tonumber(v)
         end
         lists[list] = lists[list] or {}
         table.insert(lists[list], e)
@@ -63,6 +64,7 @@ local function unparse(lists)
                 .. e.action
                 .. (e.list_name and ",name=" .. e.list_name or "")
                 .. (e.use_off_gcd and ",use_off_gcd=" .. e.use_off_gcd or "")
+                .. (e.focus and ",focus=" .. e.focus or "")
                 .. (e.criteria and ",if=" .. e.criteria or "")
         end
     end

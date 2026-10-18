@@ -1107,6 +1107,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                             slot.caption = ability.caption or entry.caption
                                                             slot.texture = ability.texture
                                                             slot.indicator = ability.indicator
+                                                            slot.focus = entry.focus
 
                                                             if ability.interrupt and state.buff.casting.up then
                                                                 slot.interrupt = true
@@ -1224,6 +1225,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                                                         slot.caption = ability.caption or entry.caption
                                                         slot.texture = ability.texture
                                                         slot.indicator = ability.indicator
+                                                        slot.focus = entry.focus
 
                                                         if ability.interrupt and state.buff.casting.up then
                                                             slot.interrupt = true

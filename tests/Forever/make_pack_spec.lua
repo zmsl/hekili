@@ -108,4 +108,13 @@ describe("tools/make_pack.lua", function()
             mp.parse("actions=charge,use_off_gcd=1,if=a&b\n")
         )
     end)
+
+    it("round-trips focus=1 as a number, written before if=", function()
+        local simc = "actions=rip,focus=1,if=a&b\nactions.st=rake,name=x,use_off_gcd=1,focus=1\n"
+        local lists = mp.parse(simc)
+        assert.are.same({ action = "rip", enabled = true, focus = 1, criteria = "a&b" }, lists.default[1])
+        assert.are.equal(1, lists.st[1].focus)
+        assert.are.equal(simc, mp.unparse(lists))
+        assert.are.same(lists, mp.parse(mp.unparse(lists)))
+    end)
 end)
