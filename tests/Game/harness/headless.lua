@@ -404,8 +404,10 @@ function M.new(o)
         return f
     end
     H.stub, H.CreateFrame = stub, frame
+    -- keys found not to be methods (a frame's own unset fields): a repeat lookup returns nil without isVerb's substrings
+    local plain = {}
     stubMT.__index = function(_, k)
-        if type(k) ~= "string" then
+        if type(k) ~= "string" or plain[k] then
             return nil
         end
         local m = methods[k]
@@ -434,6 +436,7 @@ function M.new(o)
                 return self
             end
         else
+            plain[k] = true
             return nil
         end
         methods[k] = m
