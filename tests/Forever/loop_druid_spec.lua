@@ -10,22 +10,11 @@ local PACKS = { "Feral", "Guardian", "Balance" }
 -- Guardian is reported, not gated (DONE_WITH_CONCERNS, class-completion Task 2): starved of rage (8.65 a 2.5 s swing,
 -- no rage from damage taken in the class file), its first icon is a wait for rage between Primal Bite and Lacerate,
 -- which the usability ladder's rage rungs (10, 15, 20) cannot split: agreement 0.718 and cost refusals 31.2 (the
--- oracle's 19.3) at seeds 1-3 (0.762 on the priority before this task). Its engine health and focus are still asserted.
+-- oracle's 19.3) at seeds 1-3. The sim's Berserk gate (Primal Bite >= 4 s away) costs 0.762 -> 0.718 here and 0.765 ->
+-- 0.750 over 20 fights; the old priority fails the gate too. Its engine health and focus are still asserted.
 local REPORTED = { Guardian = true }
-local loop = require("Game.harness.loop")
-
 local function solo(name, n, seed0, tag)
-    if not REPORTED[name] then
-        return pack_gate.solo(name, dlw[name], n, seed0, tag)
-    end
-    local m = loop.tally(loop.new(dlw[name]), n, { seed0 = seed0 })
-    local r, line = loop.summary(m), loop.line(m)
-    print("\n" .. name .. " solo: " .. line .. (tag and " [" .. tag .. "]" or "") .. " (reported)")
-    assert.are.same({ 0, 0, 0 }, { m.errors, m.raises, m.selfCheck })
-    assert.are.same({}, m.misses)
-    assert.are.same({}, m.secrets)
-    assert.is_true(r.cpuMean <= 10, line)
-    return r, line
+    return pack_gate.solo(name, dlw[name], n, seed0, tag, REPORTED[name])
 end
 
 describe("the Druid loop worlds", function()
