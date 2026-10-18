@@ -3845,6 +3845,7 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
         local spec = GetCurrentSpec()
 
         self.DB.profile.specs[ spec ].abilities[ ability ][ option ] = val
+        self:ResetSpellCaches() -- a suspended prediction re-reads the preference
         if option == "toggle" then Hekili:EmbedAbilityOption( nil, ability ) end
     end
 
@@ -3864,6 +3865,7 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
         local spec = GetCurrentSpec()
 
         self.DB.profile.specs[ spec ].items[ item ][ option ] = val
+        self:ResetSpellCaches() -- a suspended prediction re-reads the preference
         if option == "toggle" then Hekili:EmbedItemOption( nil, item ) end
     end
 
@@ -7271,6 +7273,8 @@ do
             toggle[ option ] = val
 
         end
+
+        self:ResetSpellCaches() -- override, infusion, separate: IsDisabled's cached toggle inputs
     end
 
     local function GetToggle( info )

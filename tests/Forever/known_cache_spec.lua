@@ -196,6 +196,29 @@ describe("the per-prediction memos of IsKnown and IsDisabled", function()
             toggles[key].override = was
         end)
 
+        it("wipes the caches in state.reset after the display's filter is set", function()
+            local a = H.Hekili.Class.abilities.mortal_strike
+            st.reset("Primary", true)
+            assert.is_false((st:IsDisabled("mortal_strike")))
+            assert.is_not_nil(H.ns.SpellCaches.disabled.mortal_strike)
+            assert.is_falsy(a.interrupts) -- not an interrupt: the Interrupts display's filter disables it
+            assert.is_table(H.Hekili.Engine.settings.displays.Interrupts)
+            -- a read inside reset before the filter is assigned (the reset_preauras hook) caches the old filter's answer
+            local hooks = H.Hekili.Class.hooks
+            local had = hooks.reset_preauras
+            hooks.reset_preauras = {
+                function()
+                    st:IsDisabled("mortal_strike")
+                end,
+            }
+            st.reset("Interrupts", true)
+            hooks.reset_preauras = had
+            assert.are.equal("interrupts", st.filter)
+            assert.is_true((st:IsDisabled("mortal_strike")))
+            st.reset("Primary", true)
+            assert.is_false((st:IsDisabled("mortal_strike")))
+        end)
+
         it("caches the target-count check for one prediction and re-reads it in the next", function()
             local ms = H.Hekili.Engine.settings.specs[ww.SPEC].abilities.mortal_strike
             st.reset("Primary", true)

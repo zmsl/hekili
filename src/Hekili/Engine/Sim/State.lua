@@ -6194,7 +6194,6 @@ do
 
     function state.reset( dispName, full )
         dispName = dispName or "Primary"
-        Hekili:ResetSpellCaches() -- every reset path (the pack editor's Evaluate, the scripts' load) starts fresh
 
         full = dispName == "Primary" or state.offset > 0
 
@@ -6246,6 +6245,9 @@ do
 
             state.rangefilter = display.range.enabled and display.range.type == "xclude"
         end
+
+        -- every reset path (the pack editor's Evaluate, the scripts' load) starts fresh, after the display's filter
+        Hekili:ResetSpellCaches()
 
         -- Trying again to have partial resets for the low-impact (single icon displays).
         if not full then
