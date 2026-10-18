@@ -62,7 +62,7 @@ only when a non-passive subscriber exists. WeakAuras is passive, so it never mak
 
 **`Engine.Registry`**: read-only views of what content registered, each the engine's live table, never a copy:
 `Specs()`, `Abilities()`, `AbilityList()`, `ItemList()`, `Auras()`, `AuraList()`, `Potions()`, `PotionList()`, `Gear()`,
-`Talents()`, `SetBonus()`, `ClassFile()`. Also `Settings(specID)` (the AceOption entries a spec registered with
+`Talents()`, `ClassFile()`. Also `Settings(specID)` (the AceOption entries a spec registered with
 `RegisterSetting`, or nil) and `IsDisabled(key, strict)` (true plus a reason when the profile disables the ability).
 
 **`Engine.Snapshot(isAuto)`** runs one update with debugging on, so the displays' reports are saved. `isAuto` is the

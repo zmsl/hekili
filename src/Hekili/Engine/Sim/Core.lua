@@ -32,13 +32,6 @@ local tcopy = ns.tableCopy
 local tinsert, tremove, twipe = table.insert, table.remove, table.wipe
 
 
--- checkImports()
--- Remove any displays or action lists that were unsuccessfully imported.
-local function checkImports()
-end
-ns.checkImports = checkImports
-
-
 local function EmbedBlizOptions()
     local panel = CreateFrame( "Frame", "HekiliDummyPanel", UIParent )
     panel.name = "Hekili"
@@ -75,7 +68,6 @@ function Hekili:OnInitialize()
     self:RestoreDefaults()
     self:RunOneTimeFixes()
 
-    checkImports()
     ns.primeTooltipColors()
 
     self.PendingSpecializationChange = true

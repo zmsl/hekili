@@ -22,7 +22,6 @@ function Registry.Potions() return class.potions end
 function Registry.PotionList() return class.potionList end
 function Registry.Gear() return class.gear end
 function Registry.Talents() return class.talents end
-function Registry.SetBonus() return class.setBonuses end
 function Registry.ClassFile() return class.file end
 -- stylua: ignore end
 

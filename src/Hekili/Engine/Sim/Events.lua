@@ -341,7 +341,6 @@ RegisterEvent( "PLAYER_ENTERING_WORLD", function( event, login, reload )
         Hekili:SpecializationChanged()
         Hekili:RestoreDefaults()
 
-        ns.checkImports()
         ns.updateGear()
 
         if state.combat == 0 and InCombatLockdown() then

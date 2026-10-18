@@ -8609,7 +8609,6 @@ function Hekili:TotalRefresh( noOptions )
     end
 
     self:RunOneTimeFixes()
-    ns.checkImports()
 
     -- self:LoadScripts()
     if Hekili.OptionsReady then

@@ -43,7 +43,6 @@ local function resolve(api)
         end
     end
 end
-I.ResolveSpells = resolve
 
 I.OnBuild(function(def)
     for a = 1, #def.abilities do

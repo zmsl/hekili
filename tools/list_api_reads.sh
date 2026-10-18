@@ -2,8 +2,7 @@
 # Lists the game API names the loaded Hekili files read: bare globals (via luacheck W113, which ignores strings and
 # comments), C_* and AuraUtil namespace members (via grep), _G.Name reads, and Facade.Name / Facade.ns.Name reads
 # (the secret or absent names Hekili reads through ns.Facade, Game/API/Facade.lua).
-# Usage: tools/list_api_reads.sh [file ...]   (default: every .lua the addon TOCs list, tests/helpers/addons.lua, minus the archived
-# expansion folders)
+# Usage: tools/list_api_reads.sh [file ...]   (default: every .lua the addon TOCs list, tests/helpers/addons.lua)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 LUACHECK="${LUACHECK:-luacheck}"
@@ -12,8 +11,6 @@ if [ $# -gt 0 ]; then files=("$@"); else
     [ -x .lua/bin/lua ] && LUA=.lua/bin/lua || LUA=lua5.1
     mapfile -t files < <("$LUA" tests/helpers/addons.lua lua) # every addon's TOC, in dependency order
     [ ${#files[@]} -gt 0 ] || { echo "no addon files listed (is $LUA working?)" >&2; exit 1; }
-    # archived expansion folders are never redirected, so their reads are not inventoried
-    mapfile -t files < <(printf '%s\n' "${files[@]}" | grep -vE '^src/Hekili/(TheWarWithin|Dragonflight|Shadowlands|BfA|Legion|Wrath|Cataclysm|TheBurningCrusade)/')
 fi
 {
     "$LUACHECK" --no-config --std none --formatter plain --codes "${files[@]}" \

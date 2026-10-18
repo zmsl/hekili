@@ -536,7 +536,6 @@ local function ladder(r, c, affordable, t, lag)
     end
     return snapped
 end
-I.Ladder = ladder
 
 -- One swing step of slot r for `hand` at t: c = 1 a landed swing (the hand's value x scale, spread around it), c = 3
 -- its crit (the hand's `crit`, unscaled); none for a crit of a slot without one. Allocates nothing.

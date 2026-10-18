@@ -44,7 +44,6 @@ local function advance(t)
         I.clock = t
     end
 end
-I.Advance = advance
 
 --- Folds the log in order (spec §5.2 step 2): everything stamped at or before `upto`; an own cast's effects are
 --- written by its appliers (Families/Now.lua). An observation older than the clock is applied at the clock with

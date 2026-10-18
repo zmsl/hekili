@@ -44,7 +44,6 @@ L.EPS = { 0.12, 0.10 }
 L.LAMBDA0, L.T0, L.TAU = 0.01, 5, 10
 -- The landing lag per reference (1 main from its swing; 2 off from its own swing; 3 off from the latest main swing at
 -- or before it: G5's two sharp references), seeds (MEASURED: P log 2, G5) learned online from clean credits.
-L.MED0, L.SPR0 = { 0.474, 0.703, 1.686 }, { 0.060, 0.020, 0.020 }
 L.med, L.spr = { 0.474, 0.703, 1.686 }, { 0.060, 0.020, 0.020 }
 -- The background: per class, the white outcomes that arrived while nothing of ours was pending (1-3 main exact, loose,
 -- above; 4-6 off; 7 avoid; 8 white, any amount), and the quiet time they came in; both decay with combat

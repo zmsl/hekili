@@ -42,7 +42,6 @@ function Hekili:ReInitialize()
     self:OverrideBinds()
     self:RestoreDefaults()
 
-    ns.checkImports()
     self:RunOneTimeFixes()
 
     self.PendingSpecializationChange = true
