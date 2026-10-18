@@ -4,6 +4,8 @@
 -- in game (the plan's checkpoint).
 local ld = require("Forever.helpers.load_druid")
 local alloc = require("Game.State.helpers.alloc")
+-- the project interpreter when bootstrapped, else the system one (as tools/list_api_reads.sh picks it)
+local LUA = io.open(".lua/bin/lua") and ".lua/bin/lua" or "lua5.1"
 
 -- key = { spell IDs in rank order, cost with every talent at rank 0 (a list: by rank; below 1: a fraction of maximum
 -- mana), spendType, cooldown, gcd }, from the DB2: energy and mana costs as points, rage as the cost / 10; the
@@ -765,7 +767,7 @@ describe("Forever Druid", function()
 
     it("registers the Feral, Guardian and Balance packs exactly as tools/make_pack.lua druid prints them", function()
         local printed = {}
-        local pipe = assert(io.popen("lua5.1 tools/make_pack.lua druid"))
+        local pipe = assert(io.popen(LUA .. " tools/make_pack.lua druid"))
         for line in pipe:lines() do
             printed[#printed + 1] = { line:match("^(%d+) (.+)$") }
         end

@@ -3,6 +3,8 @@
 -- does with them is verified in game (the plan's checkpoint).
 local lw = require("Forever.helpers.load_warrior")
 local alloc = require("Game.State.helpers.alloc")
+-- the project interpreter when bootstrapped, else the system one (as tools/list_api_reads.sh picks it)
+local LUA = io.open(".lua/bin/lua") and ".lua/bin/lua" or "lua5.1"
 
 -- key = { spell IDs in rank order, cost in rage with every talent at rank 0, cooldown, gcd }, from the DB2 (the cost
 -- column / 10; the cooldown is the larger of RecoveryTime and CategoryRecoveryTime; gcd "off" where StartRecoveryTime
@@ -614,7 +616,7 @@ describe("Forever Warrior", function()
 
     it("registers the Arms, Fury and Protection priorities exactly as tools/make_pack.lua prints them", function()
         local printed = {}
-        local pipe = assert(io.popen("lua5.1 tools/make_pack.lua"))
+        local pipe = assert(io.popen(LUA .. " tools/make_pack.lua"))
         for line in pipe:lines() do
             printed[#printed + 1] = { line:match("^(%d+) (.+)$") }
         end
