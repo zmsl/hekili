@@ -4,9 +4,9 @@ local _, ns = ...
 -- `roles`, timeline focus plan Task 2) at laneX0 + max( 0, exact_time - GetTime() ) * pxPerSec (out of combat with
 -- oocPinned, time - recs[ 1 ].time in place of exact_time - GetTime(); a second row for a pick within rowGap of the one
 -- before, hidden past the horizon), ETA text, a resource-gate mark (the record's simulated resource
--- below its cost), a cooldown-wait frame (the pick waits past the previous pick's busy time with the resource there),
+-- below its cost),
 -- the ruler, and the alternatives Core fills for a style that asks (recs[ 1 .. 2 ].alts).
--- Its primitives (the prebuilt ETA labels, the cell's cropped texture and border, the veil and the gold wait frame, the
+-- Its primitives (the prebuilt ETA labels, the cell's cropped texture and border, the veil, the
 -- sweep re-set only when it moved, the lane's glide) are ported from Taco Dog Forever (Render/Render.lua and
 -- Views/TwoZones.lua, by Taco Dog Forever's authors). What it shares with classic (keybinds, captions, indicators, target
 -- count, glow and cast highlight, flash, range and usability, the delay's fade) follows Hekili's classic renderer
@@ -42,7 +42,7 @@ local MAX_TICKS = 31 -- the ruler's ticks for the horizon's maximum (30 s)
 local SWIPE_EPS = 0.1 -- TDF Render.SWIPE_EPS: the sweep is re-set when its end moves this much (seconds)
 local MOVE_EPS = 0.25 -- a lane icon is re-anchored when it moved this many pixels
 local CROP = 0.08 -- TDF Render.NewCell's texture crop
-local GOLD = { 1, 0.8, 0.1 } -- TDF Render.GOLD, the wait frame
+local GOLD = { 1, 0.8, 0.1 } -- TDF Render.GOLD
 local CIRCLE = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
 local WHITE = "Interface\\Buttons\\WHITE8X8" -- tinted with SetVertexColor: a mask does not apply to a SetColorTexture fill
 local GOLD_RING, GOLD_FRAME = "Interface\\AddOns\\Hekili\\Textures\\GoldRing", "Interface\\AddOns\\Hekili\\Textures\\GoldFrame"
@@ -195,24 +195,6 @@ local function newCell( d, T, i )
     end
     b.Marker = track( T, top:CreateTexture( nil, "OVERLAY" ), L .. ".Marker" )
     b.Marker:SetPoint( "BOTTOMLEFT", b, "BOTTOMLEFT", 1, 1 )
-    b.Edges = {}
-    for k = 1, 4 do
-        local e = track( T, top:CreateTexture( nil, "OVERLAY" ), L .. ".Edge" .. k )
-        e:SetColorTexture( GOLD[ 1 ], GOLD[ 2 ], GOLD[ 3 ], 1 )
-        b.Edges[ k ] = e
-    end
-    b.Edges[ 1 ]:SetPoint( "TOPLEFT", b, "TOPLEFT", 0, 0 )
-    b.Edges[ 1 ]:SetPoint( "TOPRIGHT", b, "TOPRIGHT", 0, 0 )
-    b.Edges[ 1 ]:SetHeight( 2 )
-    b.Edges[ 2 ]:SetPoint( "BOTTOMLEFT", b, "BOTTOMLEFT", 0, 0 )
-    b.Edges[ 2 ]:SetPoint( "BOTTOMRIGHT", b, "BOTTOMRIGHT", 0, 0 )
-    b.Edges[ 2 ]:SetHeight( 2 )
-    b.Edges[ 3 ]:SetPoint( "TOPLEFT", b, "TOPLEFT", 0, 0 )
-    b.Edges[ 3 ]:SetPoint( "BOTTOMLEFT", b, "BOTTOMLEFT", 0, 0 )
-    b.Edges[ 3 ]:SetWidth( 2 )
-    b.Edges[ 4 ]:SetPoint( "TOPRIGHT", b, "TOPRIGHT", 0, 0 )
-    b.Edges[ 4 ]:SetPoint( "BOTTOMRIGHT", b, "BOTTOMRIGHT", 0, 0 )
-    b.Edges[ 4 ]:SetWidth( 2 )
     b.Icon = track( T, top:CreateTexture( nil, "OVERLAY" ), L .. ".Icon" )
     b.Eta = track( T, top:CreateFontString( name .. "_ETA", "OVERLAY" ), L .. ".Eta" )
     b.Keybinding = track( T, top:CreateFontString( name .. "_KB", "OVERLAY" ), L .. ".Keybinding" )
@@ -331,7 +313,6 @@ local function dress( T, b, i, size, tl )
     b.Marker:SetColorTexture( gc[ 1 ], gc[ 2 ], gc[ 3 ], 1 )
     b.Marker:SetSize( mmax( 4, size / 5 ), mmax( 4, size / 5 ) )
     b.Marker:Hide()
-    for k = 1, 4 do b.Edges[ k ]:Hide() end
 
     local w, h = ind[ zkey( z, "width" ) ], ind[ zkey( z, "height" ) ]
     b.Icon:SetSize( w, h )
@@ -687,8 +668,7 @@ local function assign( d, T, tl, conf, out, now, combat )
             end
             b.Keybinding:SetText( kb.enabled and ( not queued or kb.queued and c ~= 1 ) and r.keybind or nil ) -- none on a focus
 
-            -- the gate: the resource at the start of the pick's wait below its cost; else a wait past the previous
-            -- pick's busy time is a cooldown's (record 1's from the live delay, at Draw)
+            -- the gate: the resource at the start of the pick's wait below its cost
             local rt = r.resource_type
             local have = rt and r.resources[ rt ]
             local gated = have ~= nil and have < r.cost
@@ -697,12 +677,6 @@ local function assign( d, T, tl, conf, out, now, combat )
             b.Veil:SetShown( gated and style == "veil" )
             b.Marker:SetShown( gated and style == "marker" )
             b.Texture:SetAlpha( gated and style == "alpha" and 1 - tl.gate.color[ 4 ] or 1 )
-            local wait = false
-            if queued then
-                local p = recs[ i - 1 ]
-                wait = not gated and p.exact_time ~= nil and exact - ( p.exact_time + p.busy ) > 0.1
-            end
-            for k = 1, 4 do b.Edges[ k ]:SetShown( wait and c ~= 1 ) end -- a square frame: never on the circle
             if gated and not ( gated1 and gated1 < i ) then gated1 = i end -- cells 1-2 may draw records out of order
 
             if b.Alts then
@@ -873,10 +847,6 @@ function Timeline.Draw( d, conf, out, status )
                 if not b.glowing then glowOn( b, glow ) end
             else
                 glowOff( b )
-            end
-            if i == 1 then
-                local wait = not b.gated and r.desaturate and c ~= 1 -- a square frame: never on the circle
-                for k = 1, 4 do b.Edges[ k ]:SetShown( wait ) end
             end
         end
     end

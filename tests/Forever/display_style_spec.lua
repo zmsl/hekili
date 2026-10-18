@@ -835,8 +835,6 @@ describe("the timeline display style", function()
             assert.are.equal(2, T.row[5]) -- 0.3 s after 4: 7.2 px < rowGap 24
             assert.is_true(c[3].Veil:IsShown()) -- 10 rage short of 15
             assert.is_false(c[4].Veil:IsShown())
-            assert.is_true(c[4].Edges[1]:IsShown()) -- idle 8.0 - (4.0 + 1.5) with the rage there
-            assert.is_false(c[3].Edges[1]:IsShown())
             assert.is_true(c[2].Alts[2]:IsShown())
             assert.are.equal("alt2b", c[2].Alts[2]:GetTexture())
             assert.is_false(c[1].Alts[2]:IsShown())
@@ -1281,9 +1279,6 @@ describe("the timeline display style", function()
             tlFrame(H, d)
             assert.is_true(c[1].Ring:IsShown())
             assert.are.same(tl.focusPendingColor, rawget(c[1].Ring, "__color"))
-            for k = 1, 4 do
-                assert.is_false(c[1].Edges[k]:IsShown(), "edge " .. k)
-            end
             -- the Cooldown's own digits are off (the cells are built before any test can hook them)
             local src = assert(io.open("src/Hekili/UI/Styles/Timeline.lua")):read("*a")
             assert.is_truthy(src:find("SetHideCountdownNumbers( true )", 1, true))
