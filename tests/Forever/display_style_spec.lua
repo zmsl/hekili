@@ -681,6 +681,7 @@ local function tlBoot(plain, setup, saved)
     tl.captions.enabled, tl.captions.queued = true, true
     tl.glow.enabled, tl.delays.desaturate = true, true
     tl.laneEta.enabled = true
+    tl.oocPinned = false -- the wall clock the fixture and the tests before Task 2c expect (status.combat is false)
     if setup then
         setup(tl)
     end
@@ -705,7 +706,8 @@ local TL_SET = {
 }
 
 -- `focus`: the record flagged as a focus candidate (the APL entry's focus=1), if any.
-local function tlPublish(H, focus)
+-- `edit( s )` changes the records before the publish.
+local function tlPublish(H, focus, edit)
     local abilities = H.Hekili.Engine.Registry.Abilities()
     local now = H.ctl.now
     local s = H.ns.Output.Begin("Primary")
@@ -725,6 +727,9 @@ local function tlPublish(H, focus)
     a.n, a[1].actionName, a[1].texture, a[2].actionName, a[2].texture = 2, "rend", "alt2a", "whirlwind", "alt2b"
     if focus then
         s[focus].focus = 1
+    end
+    if edit then
+        edit(s)
     end
     H.ns.Output.Publish("Primary", #TL_SET)
 end
@@ -838,8 +843,12 @@ describe("the timeline display style", function()
     )
 
     it("allocates nothing over 1,000 display frames after the first publish, on a moving clock", function()
-        for _, focus in ipairs({ false, 3 }) do -- today's layout, then a focus record in the now circle
-            local H, d = tlBoot(true)
+        -- today's layout, a focus record in the now circle, then pinned out of combat (Task 2c)
+        for _, case in ipairs({ { false }, { 3 }, { false, true } }) do
+            local focus = case[1]
+            local H, d = tlBoot(true, function(tl)
+                tl.oocPinned = case[2] or false
+            end)
             tlPublish(H, focus or nil)
             local f = d.__scripts.OnUpdate
             for _ = 1, 3 do
@@ -1248,5 +1257,87 @@ describe("the timeline's ruler alpha", function()
         assert.are.equal(0.25, rawget(T.base, "__alpha"))
         assert.are.equal(3, sets)
         assert.are.same({}, H.errors)
+    end)
+end)
+
+-- Timeline focus plan, Task 2c: the lane never left of laneX0; out of combat (oocPinned) the lane and the ETAs on the
+-- press-relative times (rec.time - recs[ 1 ].time), still between publishes.
+describe("the timeline's out-of-combat pinning", function()
+    local function laneXs(H, T)
+        local xs = {}
+        for c = 3, 5 do
+            xs[c] = anchor(H, T.cells[c])
+        end
+        return xs
+    end
+
+    -- Four publishes 0.2 s apart (each set's exact_times 0.2 s later, its time offsets unchanged), three frames between.
+    local function run(combat)
+        local H, d, T = tlBoot(false, function(tl)
+            tl.oocPinned = true
+        end)
+        local status = H.Hekili.Engine.Output.status
+        status.combat = combat
+        local seen = {}
+        for _ = 1, 4 do
+            tlPublish(H)
+            for _ = 1, 3 do
+                H.ctl.now = H.ctl.now + 0.05
+                d.__scripts.OnUpdate(d, 0.05)
+                seen[#seen + 1] = laneXs(H, T)
+            end
+            H.ctl.now = H.ctl.now + 0.05
+        end
+        status.combat = false
+        assert.are.same({}, H.errors)
+        return seen, T
+    end
+
+    it("holds the lane and the ETAs still between publishes out of combat", function()
+        local seen, T = run(false)
+        for n = 2, #seen do
+            assert.are.same(seen[1], seen[n], "frame " .. n)
+        end
+        -- pick 3 (slam) 3 s after the press: 120 + 3 * 24 - 10
+        near(T.laneX0 + 3 * 24 - 10, seen[1][3], "slam")
+        assert.are.equal("", T.cells[1].Eta:GetText()) -- the press: 0 when pinned
+        assert.are.equal("1.5", T.cells[2].Eta:GetText()) -- overpower 1.5 s after it
+        assert.are.equal("3.0", T.cells[3].Eta:GetText())
+    end)
+
+    it("moves with the clock in combat", function()
+        local seen = run(true)
+        assert.is_true(seen[2][3] < seen[1][3])
+        assert.is_true(seen[3][3] < seen[2][3])
+    end)
+
+    it("anchors a pick before the press at laneX0 and hides one past the horizon", function()
+        for _, combat in ipairs({ false, true }) do
+            local H, d, T = tlBoot(false, function(tl)
+                tl.oocPinned, tl.glide = true, 0
+            end)
+            local status = H.Hekili.Engine.Output.status
+            status.combat = combat
+            tlPublish(H, nil, function(s)
+                s[3].time, s[3].exact_time = 0.5, s[3].exact_time - 3.5 - (combat and 1 or 0) -- before the press
+            end)
+            H.ctl.now = H.ctl.now + 0.2
+            d.__scripts.OnUpdate(d, 0.2)
+            near(T.laneX0 - 10, anchor(H, T.cells[3]), "past pick " .. tostring(combat))
+            assert.is_true(T.cells[3]:IsShown())
+            assert.is_false(T.cells[6]:IsShown()) -- 11 s after the press, 11.8 s on the clock: past the 10 s horizon
+            status.combat = false
+            assert.are.same({}, H.errors)
+        end
+    end)
+
+    it("defaults on, in the Timeline tab", function()
+        local H = boot()
+        assert.is_true(H.Hekili.DB.profile.displays.Primary.timeline.oocPinned)
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "timeline", "tab_timeline", "sec_lane", "oocPinned" }, false)
+        assert.is_false(H.Hekili.DB.profile.displays.Primary.timeline.oocPinned)
+        H.Hekili:EmbedDisplayOptions()
+        local tabs = H.Hekili.Options.args.displays.plugins.Primary.Primary.args.timeline.args
+        assert.is_table(tabs.tab_timeline.args.sec_lane.args.oocPinned)
     end)
 end)

@@ -107,6 +107,7 @@ do
     d.laneAlpha = 0.95
     d.laneDim = 0.6
     d.glide = 0.08
+    d.oocPinned = true -- out of combat the lane and ETAs on press-relative times (rec.time - recs[ 1 ].time), Task 2c
     d.alts = { enabled = true, max = 2, size = 16, spacing = 2, zones = "both" }
     d.focusEnabled = true
     d.focusHorizon = 10 -- clamped to the lane's horizon where it is used
@@ -432,14 +433,15 @@ local function showEta( b, t, int )
     end
 end
 
--- Moves the lane's cells toward their times (TDF's glide) and hides those past the horizon.
+-- Moves the lane's cells toward their times (TDF's glide) and hides those past the horizon. `now` is the clock the
+-- cells' Key is on: GetTime(), or record 1's time when pinned.
 local function moveLane( T, tl, now, elapsed )
     local px, glide, cells = tl.pxPerSec, tl.glide, T.cells
     local keep = glide > 0 and exp( -elapsed / glide ) or 0
     local laneEta, int = tl.laneEta.enabled, tl.eta.format == "int"
     for i = 3, SLOTS do
         if T.want[ i ] then
-            local b, target = cells[ i ], cells[ i ].ExactTime
+            local b, target = cells[ i ], cells[ i ].Key
             local at = target + ( T.at[ i ] - target ) * keep
             T.at[ i ] = at
             local t = at - now
@@ -504,7 +506,7 @@ local function roles( T, tl, recs, count, now )
         local h = mmin( tl.focusHorizon, tl.horizon )
         for i = 2, count do
             local r = recs[ i ]
-            if r.focus and r.exact_time and r.exact_time - now <= h then
+            if r.focus and r.exact_time and ( T.pinned and r.time or r.exact_time ) - now <= h then
                 f = i
                 break
             end
@@ -527,8 +529,14 @@ local function roles( T, tl, recs, count, now )
 end
 
 -- A publish: what each cell shows until the next one.
-local function assign( d, T, tl, conf, out, now )
+local function assign( d, T, tl, conf, out, now, combat )
     local cells, recs = T.cells, out.recs
+    -- pinned: every time is press-relative (each cell's Key r.time on the clock recs[ 1 ].time), else exact_time on GetTime()
+    local pinned = tl.oocPinned and not combat and out.count > 0 and recs[ 1 ].time ~= nil
+    local reset = pinned ~= T.pinned -- the lane's glide positions are on the other clock
+    T.pinned = pinned
+    if pinned then now = recs[ 1 ].time end
+    T.clock = now
     roles( T, tl, recs, out.count, now )
     cells[ 1 ].Ring:SetShown( T.focused )
     if out.count == 0 or out.version == d.blankVersion then
@@ -554,6 +562,7 @@ local function assign( d, T, tl, conf, out, now )
         local b, r = cells[ c ], recs[ i ]
         b.Recommendation = r
         local action, exact = r.actionName, r.exact_time
+        local key = pinned and r.time or exact
         local ability = action and r or nil
         if ability and ability.actionID < 0 and ability.actionID > -100 and action ~= "cancel_buff" or exact == nil then ability = nil end
 
@@ -609,8 +618,8 @@ local function assign( d, T, tl, conf, out, now )
 
             if c >= 3 then
                 -- the gap to the lane's previous pick (not r.since: the focus record between them is not on the lane)
-                T.row[ c ] = ( tl.rows >= 2 and c > 3 and T.row[ c - 1 ] == 1 and ( exact - cells[ c - 1 ].ExactTime ) * px < tl.rowGap ) and 2 or 1
-                if not T.want[ c ] or not b.Action then T.at[ c ] = exact end -- newly on the lane: no glide
+                T.row[ c ] = ( tl.rows >= 2 and c > 3 and T.row[ c - 1 ] == 1 and ( key - cells[ c - 1 ].Key ) * px < tl.rowGap ) and 2 or 1
+                if reset or not T.want[ c ] or not b.Action then T.at[ c ] = key end -- newly on the lane: no glide
                 T.want[ c ] = not suppress
                 T.x[ c ] = -1
                 if suppress and T.inLane[ c ] then
@@ -641,6 +650,7 @@ local function assign( d, T, tl, conf, out, now )
         b.Keybind = r.keybind
         b.Ability = ability
         b.ExactTime = exact
+        b.Key = key
     end
     moveLane( T, tl, now, 0 )
 end
@@ -686,11 +696,12 @@ function Timeline.Tick( d, conf, out, now, elapsed )
     end
     if not T.has then return end
     local tl = conf.timeline
+    if T.pinned then now = T.clock end -- still between publishes
     local int = tl.eta.format == "int"
     if tl.eta.enabled then
         for i = 1, 2 do
             local b = T.cells[ i ]
-            if b.Ability then showEta( b, b.ExactTime - now, int ) end
+            if b.Ability then showEta( b, b.Key - now, int ) end
         end
     end
     moveLane( T, tl, now, elapsed )
@@ -707,11 +718,12 @@ function Timeline.Draw( d, conf, out, status )
         local a = combat and tl.rulerAlphaCombat or tl.rulerAlphaOOC
         T.base:SetAlpha( a )
         for k = 1, MAX_TICKS do T.ticks[ k ]:SetAlpha( a ) end
+        if tl.oocPinned then d.NewRecommendations = true end -- re-assign on the other clock
     end
     local fresh = d.NewRecommendations
     if fresh then
         d.NewRecommendations = nil
-        assign( d, T, tl, conf, out, now )
+        assign( d, T, tl, conf, out, now, combat )
     end
     if not T.has then return end
     if fresh then -- the sweeps, as classic's on a publish
@@ -929,6 +941,7 @@ function Timeline.Options( id, conf )
             laneAlpha = optRange( "Opacity", "The opacity of the picks on the lane.", 0, 1, 0.05, 7 ),
             laneDim = optRange( "Dimmed Opacity", "The opacity of the picks after one short of its resource (they may slip).", 0, 1, 0.05, 8 ),
             glide = optRange( "Glide", "Seconds a lane pick takes to settle on a new predicted time (0: jump).", 0, 1, 0.01, 9 ),
+            oocPinned = optToggle( "Pin out of Combat", "Out of combat the lane and the countdowns hold still between updates, timed from the first recommendation; in combat they follow the clock.", 10 ),
         } ),
         sec_ruler = section( "Ruler", 2, {
             rulerStyle = optSelect( "Style", "Ruler: a baseline and a tick each second. Dots or Lines: a dot or a short line each second. Center: one line through the lane.",

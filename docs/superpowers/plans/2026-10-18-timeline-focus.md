@@ -137,3 +137,26 @@ Each task is one reviewed commit set on `forever-focus`; `make check` green; gat
 ## Verification
 - `make check` green; `Arms solo:` unchanged; `arms_recs` and classic fixtures untouched; Druid gate green; timeline fixture compare green after re-record.
 - In game (`/reload`): Feral Primary on Timeline: with Rip up and ~4 s left, Now shows Rip counting down with the gold ring, Next shows the actual press with keybind and glow; when Rip is the press, Now shows Rip as before; classic display unchanged; the entry editor shows the Focus toggle on the rip entry; every style tab reads "Style"; ruler style switches live; Now→Next and Next→lane gaps equal.
+
+### Task 2c: no lane overlap with the Next box; out-of-combat pinning (user, 2026-10-18, in-game screenshot)
+
+**Files:** `src/Hekili/UI/Styles/Timeline.lua`; tests `tests/Forever/display_style_spec.lua` (timeline describe), fixture re-record allowed.
+
+**No overlap.** A lane icon's x is `max(0, tRel) * pxPerSec` from `laneX0`, so an icon whose predicted time is
+already past (negative `tRel`) sits at the lane start, never left of it; icons beyond `horizon` stay hidden.
+`laneX0` is after the Next box plus `gap` (Task 2b), so the lane can never reach the Next cell. Row stacking
+(`rowGap`) still separates icons that land on the same x.
+
+**Out-of-combat pinning.** When `status.combat` is false, lane positions and countdowns use press-relative
+time, `tRel = rec.time - recs[1].time` (the engine's simulated offsets, which only change when the
+recommendation set changes), instead of `exact_time - GetTime()`. In combat, wall-clock as today. Option
+`oocPinned` (default true) in the Timeline tab. Effect: out of combat the lane is still between publishes
+and moves only when a different sequence is published; the per-refresh slide-then-jump ("bounce") from
+the simulated swing timer disappears. The Now/Next cells keep showing the press (record 1) and its ETA
+relative to the press (0 when pinned).
+
+- [x] Spec: with `status.combat = false`, a published set whose `exact_time`s shift by 0.2 s per publish
+  with unchanged `time` offsets produces identical lane anchors across publishes and frames (no
+  movement); the same set in combat moves with the clock; a record with negative relative time anchors
+  at `laneX0`; a record beyond `horizon` is hidden; alloc 0 B.
+- [x] `make check`, commit; the implementer commits this plan section's file with its work.
