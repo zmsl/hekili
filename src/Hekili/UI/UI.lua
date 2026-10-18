@@ -830,7 +830,7 @@ function Hekili:CreateLaunchers()
         local color = "FFFFD100"
 
         if p.toggles.essences.override then
-            -- Don't show Essences here if it's overridden by CDs anyway?
+            -- Don't show Minor CDs (the `essences` toggle) here if it's overridden by CDs anyway?
             return format( "|c%s%s|r %sCD|r %sInt|r %sDef|r", color,
                 m == "single" and "ST" or ( m == "aoe" and "AOE" or ( m == "dual" and "Dual" or ( m == "reactive" and "React" or "Auto" ) ) ),
                 p.toggles.cooldowns.value and "|cFF00FF00" or "|cFFFF0000",

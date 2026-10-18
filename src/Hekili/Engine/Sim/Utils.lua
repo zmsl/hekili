@@ -645,7 +645,7 @@ function state.debugformat( val )
 end
 
 
--- Tooltip Parsing Utilities (10.0.2)
+-- Tooltip Parsing Utilities
 do
     local CurrentBuild = Hekili.CurrentBuild
     local tooltip = ns.Tooltip

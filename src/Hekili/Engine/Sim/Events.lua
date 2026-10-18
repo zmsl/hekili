@@ -505,7 +505,7 @@ do
 
     local GearHooks = {}
 
-    -- This is a simple way to separate expansion-based gear into separate systems.
+    -- A simple way to keep special gear handling in its own system.
     function Hekili:RegisterGearHook( r, u )
         insert( GearHooks, {
             reset = r,
@@ -765,7 +765,7 @@ do
 
 
 
-                -- Fire any/all GearHooks (may be expansion-driven).
+                -- Fire any/all GearHooks.
                 for _, hook in ipairs( GearHooks ) do
                     if hook.update then hook.update( i, item ) end
                 end
