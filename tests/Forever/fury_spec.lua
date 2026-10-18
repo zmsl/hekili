@@ -293,4 +293,22 @@ describe("the Fury priority", function()
         pin(50, 1.5, 9, 0.5)
         assert.is_false(check("berserker_stance"))
     end)
+
+    -- The window (Victorious, 20 s) and the 30 s cooldown run apart: a cast is predicted only while both allow it.
+    it("refuses Victory Rush when its cooldown ends after Victorious, and allows it when it ends inside", function()
+        boot("berserker_stance")
+        st.applyBuff("victorious", 5)
+        st.cooldown.victory_rush.expires = st.query_time + 12
+        st.advance(12)
+        assert.is_true(st.cooldown.victory_rush.ready)
+        assert.is_false(st.buff.victorious.up)
+        assert.is_false((st:IsUsable("victory_rush")))
+        st.reset("Primary", true)
+        st.applyBuff("victorious", 5)
+        st.cooldown.victory_rush.expires = st.query_time + 3
+        st.advance(3)
+        assert.is_true(st.cooldown.victory_rush.ready)
+        assert.is_true(st.buff.victorious.up)
+        assert.is_true((st:IsUsable("victory_rush")))
+    end)
 end)
