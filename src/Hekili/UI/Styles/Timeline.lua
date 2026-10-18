@@ -1,8 +1,9 @@
 local _, ns = ...
 -- UI/Styles/Timeline.lua: the timeline display style (display styles plan, Task 4). Record 1 in a "now" circle, record 2
 -- in a "next" box, records 3.. on a lane (or a focus record in the circle, record 1 in the box and the rest on the lane:
--- `roles`, timeline focus plan Task 2) at ( exact_time - GetTime() ) * pxPerSec (a second row for a pick within
--- rowGap of the one before, hidden past the horizon), ETA text, a resource-gate mark (the record's simulated resource
+-- `roles`, timeline focus plan Task 2) at laneX0 + max( 0, exact_time - GetTime() ) * pxPerSec (out of combat with
+-- oocPinned, time - recs[ 1 ].time in place of exact_time - GetTime(); a second row for a pick within rowGap of the one
+-- before, hidden past the horizon), ETA text, a resource-gate mark (the record's simulated resource
 -- below its cost), a cooldown-wait frame (the pick waits past the previous pick's busy time with the resource there),
 -- the ruler, and the alternatives Core fills for a style that asks (recs[ 1 .. 2 ].alts).
 -- Its primitives (the prebuilt ETA labels, the cell's cropped texture and border, the veil and the gold wait frame, the
@@ -345,8 +346,8 @@ local function dress( T, b, i, size, tl )
     end
 end
 
---- Builds (or reuses) the cells, the lane's ruler and the layout on `d`, sizes `d` and returns the ten cells (record i's
---- cell is button i: config mode, the tooltip and the movers use them).
+--- Builds (or reuses) the cells, the lane's ruler and the layout on `d`, sizes `d` and returns the ten cells (the record
+--- cell c draws is T.rec[ c ], see `roles`: config mode, the tooltip and the movers use them).
 function Timeline.Build( d, conf )
     local tl, st = conf.timeline, d.styleState
     local T = d.styleFrames.timeline
@@ -508,7 +509,7 @@ local function roles( T, tl, recs, count, now )
             local r = recs[ i ]
             local t = r.exact_time and r.exact_time - now
             if T.pinned and t then t = r.time and r.time - T.pressTime end
-            if r.focus and t and t <= h then
+            if r.focus == 1 and t and t <= h then
                 f = i
                 break
             end

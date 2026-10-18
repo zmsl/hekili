@@ -997,6 +997,11 @@ describe("the timeline display style", function()
         tlFrame(H, d)
         assert.are.equal("whirlwind", T.cells[1].Action)
         assert.are.equal("mortal_strike", T.cells[2].Action)
+        tlPublish(H, nil, function(s)
+            s[3].focus = 0 -- focus=0 in hand-written SimC is off
+        end)
+        tlFrame(H, d)
+        assert.are.same(TODAY, actions(T))
         assert.are.same({}, H.errors)
     end)
 
@@ -1344,6 +1349,26 @@ describe("the timeline's out-of-combat pinning", function()
             status.combat = false
             assert.are.same({}, H.errors)
         end
+    end)
+
+    it("pins the focus zone too: a flag within the horizon by press-relative time takes the now circle", function()
+        local H, d, T = tlBoot(false, function(tl)
+            tl.oocPinned, tl.focusHorizon = true, 7.5
+        end)
+        H.Hekili.Engine.Output.status.combat = false
+        -- rend: 8 s out on the clock (past 7.5 s), 7 s after the press (within it)
+        tlPublish(H, 4)
+        for _ = 1, 2 do -- Tick (the ETAs) runs before Draw
+            H.ctl.now = H.ctl.now + 0.2
+            d.__scripts.OnUpdate(d, 0.2)
+        end
+        local c = T.cells
+        assert.are.equal("rend", c[1].Action)
+        assert.are.equal("7.0", c[1].Eta:GetText()) -- press-relative, still 0.4 s on
+        assert.is_true(c[1].Ring:IsShown())
+        assert.are.equal("mortal_strike", c[2].Action)
+        assert.are.equal("K1", c[2].Keybinding:GetText())
+        assert.are.same({}, H.errors)
     end)
 
     it("defaults on, in the Timeline tab", function()

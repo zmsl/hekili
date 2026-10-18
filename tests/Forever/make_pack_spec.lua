@@ -103,6 +103,12 @@ describe("tools/make_pack.lua", function()
         assert.has_error(function()
             mp.parse("actions=charge,foo=1\n")
         end, "unknown option foo in: actions=charge,foo=1")
+        assert.has_error(function()
+            mp.parse("actions=rip,focus=yes\n")
+        end, "bad value focus=yes in: actions=rip,focus=yes")
+        assert.has_error(function()
+            mp.parse("actions=charge,use_off_gcd=x\n")
+        end, "bad value use_off_gcd=x in: actions=charge,use_off_gcd=x")
         assert.are.same(
             { default = { { action = "charge", enabled = true, use_off_gcd = 1, criteria = "a&b" } } },
             mp.parse("actions=charge,use_off_gcd=1,if=a&b\n")

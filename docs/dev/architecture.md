@@ -177,10 +177,11 @@ times 1000 plus a checksum of the text, so any text change reloads a saved profi
 no-op (`tests/Forever/make_pack_spec.lua`), and encode then decode returns the normalized text. `make packs` is not
 part of `make check`.
 
-**APL line options.** `make_pack.lua` accepts these on a line before `if=` (an unknown option errors; `unparse` writes them in this order):
-`name=<list>` (for `call_action_list`/`run_action_list`), `use_off_gcd=1` (recommendable off the GCD) and
-`focus=1` (the record carries `focus = 1`; the timeline shows it in the now circle ahead of time, below). The flag is
-per line, not per ability. The Druid pack flags Feral's `rip`.
+**APL line options.** `make_pack.lua` and the in-game importer accept these on a line before `if=` (in the tool,
+an unknown option or a non-numeric value errors; `unparse` writes them in this order): `name=<list>` (for
+`call_action_list`/`run_action_list`), `use_off_gcd=1` (recommendable off the GCD) and `focus=1` (the record carries
+`focus = 1`; the timeline shows it in the now circle ahead of time, below; `focus=0` is off). The flag is per line,
+not per ability. The Druid pack flags Feral's `rip`.
 
 ## 7. Display styles
 

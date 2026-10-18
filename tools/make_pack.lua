@@ -36,7 +36,11 @@ local function parse(simc)
             if not OPTIONS[k] then
                 error("unknown option " .. (k or opt) .. " in: " .. line, 0)
             end
-            e[OPTIONS[k]] = k == "name" and v or tonumber(v)
+            local value = k == "name" and v or tonumber(v)
+            if value == nil then
+                error("bad value " .. opt .. " in: " .. line, 0)
+            end
+            e[OPTIONS[k]] = value
         end
         lists[list] = lists[list] or {}
         table.insert(lists[list], e)
