@@ -45,6 +45,8 @@ local CROP = 0.08 -- TDF Render.NewCell's texture crop
 local GOLD = { 1, 0.8, 0.1 } -- TDF Render.GOLD, the wait frame
 local CIRCLE = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
 local WHITE = "Interface\\Buttons\\WHITE8X8" -- tinted with SetVertexColor: a mask does not apply to a SetColorTexture fill
+local GOLD_RING, GOLD_FRAME = "Interface\\AddOns\\Hekili\\Textures\\GoldRing", "Interface\\AddOns\\Hekili\\Textures\\GoldFrame"
+local GOLD_RING_IN, GOLD_FRAME_IN = 0.737, 0.691 -- the art's inner opening, a fraction of its width
 local CYCLE, CANCEL = "Interface\\Addons\\Hekili\\Textures\\Cycle", "Interface\\Addons\\Hekili\\Textures\\Cancel"
 
 -- TDF Render.ETA: labels in 0.1 s steps up to 10 s, built once ("" for none, "10+" past); whole seconds for "int".
@@ -115,7 +117,8 @@ do
     d.focusHorizon = 10 -- clamped to the lane's horizon where it is used
     d.focusColor = { GOLD[ 1 ], GOLD[ 2 ], GOLD[ 3 ], 1 } -- the focus ability is the press (ready)
     d.focusPendingColor = { 1, 1, 1, 0.35 } -- the focus ability still counting down
-    d.focusReadyStyle = "ring" -- a ready focus ability: the ring in focusColor, a glow in it ("glow") or Blizzard's helper art ("blizzard")
+    d.focusReadyStyle = "ring" -- a ready focus ability: the ring in focusColor, a glow in it ("glow") or the Gold Ring art ("gold")
+    d.nextFrame = "none" -- the next box's frame: the colour border, or the Gold Frame art over the icon ("gold")
 end
 
 local function track( T, region, label )
@@ -179,30 +182,15 @@ local function newCell( d, T, i )
     b.Veil:SetAllPoints( b.Texture )
     if i == 1 then
         b.Veil:AddMaskTexture( b.Mask )
-        -- focusReadyStyle "blizzard": the rotation helper's button art (ActionBarButtonAssistedCombatRotationTemplate),
-        -- sized from the circle in dress; the active border and its rotating glow when ready, the inactive frame pending
-        b.HelperOn = top:CreateTexture( nil, "BORDER" )
-        b.HelperOn:SetAtlas( "UI-HUD-RotationHelper-Active", true )
-        b.HelperOn:SetPoint( "CENTER", b, "CENTER", 0, 0 )
-        b.HelperGlow = top:CreateTexture( nil, "ARTWORK", nil, 1 )
-        b.HelperGlow:SetAtlas( "UI-HUD-RotationHelper-Active-FX" )
-        b.HelperGlow:SetAlpha( 0.6 )
-        b.HelperGlow:SetBlendMode( "ADD" )
-        b.HelperGlow:SetPoint( "CENTER", b, "CENTER", 0, 0 )
-        b.HelperMask = top:CreateMaskTexture()
-        b.HelperMask:SetAtlas( "UI-HUD-RotationHelper-Active-FX-Mask", true, nil, nil, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE" )
-        b.HelperMask:SetPoint( "CENTER", b, "CENTER", 0, 0 ) -- on the cell, so it stays put while the glow turns
-        b.HelperGlow:AddMaskTexture( b.HelperMask )
-        b.HelperAnim = b.HelperGlow:CreateAnimationGroup()
-        b.HelperAnim:SetLooping( "REPEAT" )
-        local spin = b.HelperAnim:CreateAnimation( "Rotation" )
-        spin:SetDuration( 3 )
-        spin:SetDegrees( -360 )
-        spin:SetOrigin( "CENTER", 0, 0 )
-        b.HelperOff = top:CreateTexture( nil, "ARTWORK", nil, 1 )
-        b.HelperOff:SetAtlas( "UI-HUD-RotationHelper-Inactive", true )
-        b.HelperOff:SetPoint( "CENTER", b, "CENTER", 0, 0 )
-        b.helper = 0
+        -- focusReadyStyle "gold": fixed-colour ring art with a transparent centre, above the icon (sized in dress)
+        b.Gold = top:CreateTexture( nil, "OVERLAY", nil, -1 )
+        b.Gold:SetTexture( GOLD_RING )
+        b.Gold:SetPoint( "CENTER", b, "CENTER", 0, 0 )
+    end
+    if i == 2 then -- nextFrame "gold": decoration above the icon, in place of the colour border
+        b.Frame = top:CreateTexture( nil, "OVERLAY", nil, -1 )
+        b.Frame:SetTexture( GOLD_FRAME )
+        b.Frame:SetPoint( "CENTER", b, "CENTER", 0, 0 )
     end
     b.Marker = track( T, top:CreateTexture( nil, "OVERLAY" ), L .. ".Marker" )
     b.Marker:SetPoint( "BOTTOMLEFT", b, "BOTTOMLEFT", 1, 1 )
@@ -265,16 +253,6 @@ local function readyGlow( b, on, c )
     else Glower.AutoCastGlow_Stop( b, "focus" ) end
 end
 
--- The now circle's Blizzard look (focusReadyStyle "blizzard"): 0 none, 1 the active border and glow, 2 the inactive frame.
-local function helperLook( b, k )
-    if k == b.helper then return end
-    b.helper = k
-    b.HelperOn:SetShown( k == 1 )
-    b.HelperGlow:SetShown( k == 1 )
-    if k == 1 then b.HelperAnim:Play() else b.HelperAnim:Stop() end
-    b.HelperOff:SetShown( k == 2 )
-end
-
 local function setFont( fs, font, size, style, color )
     fs:SetFont( LSM:Fetch( "font", font ), size, style )
     if color then fs:SetTextColor( color[ 1 ], color[ 2 ], color[ 3 ], color[ 4 ] ) end
@@ -291,7 +269,7 @@ end
 local function reveal( T, tl )
     for i = 1, SLOTS do
         local b = T.cells[ i ]
-        b.Border:SetShown( tl.border.enabled )
+        b.Border:SetShown( tl.border.enabled and not ( b.Frame and tl.nextFrame == "gold" ) )
         b.Texture:Show()
         b.Top:Show()
         if b.Cooldown then b.Cooldown:Show() end
@@ -329,14 +307,12 @@ local function dress( T, b, i, size, tl )
         b.FocusMask:ClearAllPoints()
         b.FocusMask:SetPoint( "TOPLEFT", b, "TOPLEFT", -rt, rt )
         b.FocusMask:SetPoint( "BOTTOMRIGHT", b, "BOTTOMRIGHT", rt, -rt )
-        -- Blizzard's ratios on its 45 px button: border and mask 64, glow 100 at scale 0.8
-        local px = size * T.s / 45
-        b.HelperOn:SetSize( 64 * px, 64 * px )
-        b.HelperGlow:SetSize( 80 * px, 80 * px )
-        b.HelperMask:SetSize( 64 * px, 64 * px )
-        b.HelperOff:SetSize( 64 * px, 64 * px )
-        b.helper = -1
-        helperLook( b, 0 )
+        b.Gold:SetSize( size * T.s / GOLD_RING_IN, size * T.s / GOLD_RING_IN ) -- its opening fits the cell
+        b.Gold:Hide()
+    end
+    if b.Frame then
+        b.Frame:SetSize( size * T.s / GOLD_FRAME_IN, size * T.s / GOLD_FRAME_IN )
+        b.Frame:SetShown( tl.nextFrame == "gold" )
     end
     b.Border:SetTexture( WHITE )
     if tl.border.coloring == "custom" then
@@ -651,10 +627,14 @@ local function assign( d, T, tl, conf, out, now, combat )
     local blank = out.count == 0 or out.version == d.blankVersion
     local look = tl.focusReadyStyle
     local ring, glow = cells[ 1 ].Ring, T.focused and T.ready and look == "glow" and not blank
-    local bliz = T.focused and look == "blizzard" and not blank
-    ring:SetShown( T.focused and not glow and not bliz )
+    local gold, art = T.focused and look == "gold", cells[ 1 ].Gold
+    ring:SetShown( T.focused and not glow and not gold )
     readyGlow( cells[ 1 ], glow, tl.focusColor )
-    helperLook( cells[ 1 ], bliz and ( T.ready and 1 or 2 ) or 0 )
+    art:SetShown( gold )
+    if gold then
+        art:SetDesaturated( not T.ready )
+        art:SetAlpha( T.ready and 1 or 0.5 )
+    end
     if T.focused then
         local fc = T.ready and tl.focusColor or tl.focusPendingColor
         ring:SetVertexColor( fc[ 1 ], fc[ 2 ], fc[ 3 ], fc[ 4 ] )
@@ -950,7 +930,6 @@ function Timeline.Clear( d )
     for _, b in ipairs( T.cells ) do
         glowOff( b )
         readyGlow( b, false )
-        if b.HelperOn then helperLook( b, 0 ) end
         b.Action, b.Ability, b.ExactTime, b.Key, b.cdAction = nil, nil, nil, nil, nil
     end
     for i = 1, SLOTS do T.want[ i ], T.inLane[ i ] = false, false end
@@ -1030,8 +1009,8 @@ function Timeline.Options( id, conf )
         nowFallback = optSelect( "Without Focus", "Empty: the now circle holds only focus abilities (gold once ready to press) and the next box what to press. First Recommendation: the earlier layout, what to press in the now circle unless a focus ability is coming up.",
             { empty = "Empty", press = "First Recommendation" }, 4 ),
         focusPendingColor = { type = "color", name = "Pending Ring Color", desc = "The now circle's ring while a focus ability counts down (the Timeline tab's Ring Color once it is ready).", hasAlpha = true, order = 5, width = 1.49 },
-        focusReadyStyle = optSelect( "Ready Look", "How the now circle shows a focus ability that is ready to press: the ring in the Timeline tab's Ring Color, or a glow in it, or Blizzard's rotation helper frame (its active border and glow when ready, its inactive frame while pending).",
-            { ring = "Ring", glow = "Glow", blizzard = "Blizzard" }, 6 ),
+        focusReadyStyle = optSelect( "Ready Look", "How the now circle shows a focus ability that is ready to press: the ring in the Timeline tab's Ring Color, or a glow in it, or the Gold Ring art (full colour when ready, grey and half faded while pending; fixed-colour art, so the ring colours do not apply to it).",
+            { ring = "Ring", glow = "Glow", gold = "Gold Ring" }, 6 ),
         eta = section( "ETA", 2, etaFont ),
         sweep = section( "Sweep", 3, {
             mode = optSelect( "Cooldown Sweep", "Extend: the sweep runs until the pick should be used. Cooldown: the ability's own cooldown. Off: none.",
@@ -1041,6 +1020,8 @@ function Timeline.Options( id, conf )
 
     local nextBox = zoneGroups( {
         nextSize = optRange( "Size", "The size of the next box (what to press now).", 16, 200, 1, 1 ),
+        nextFrame = optSelect( "Frame", "None: the colour border (the Border options). Gold Frame: the gold frame art over the icon, in place of the border.",
+            { none = "None", gold = "Gold Frame" }, 2.5 ),
         gap = optRange( "Gap", "The space between the now circle and the next box, and between the next box and the lane.", 0, 100, 1, 2 ),
         alts = section( "Alternatives", 3, {
             enabled = optToggle( "Show Alternatives", "Show what the rotation would pick instead if the gating resource came in lower or higher than expected.", 1 ),

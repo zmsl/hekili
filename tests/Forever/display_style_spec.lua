@@ -1316,40 +1316,64 @@ describe("the timeline display style", function()
         assert.are.same({}, H.errors)
     end)
 
-    it("shows Blizzard's rotation helper art on the now circle when focusReadyStyle is blizzard", function()
+    it("draws the Gold Ring art on the now circle when focusReadyStyle is gold", function()
         local H, d, T = tlBoot(false, function(tl)
-            tl.nowFallback, tl.focusReadyStyle = "empty", "blizzard"
+            tl.nowFallback, tl.focusReadyStyle = "empty", "gold"
         end)
-        local tl = H.Hekili.DB.profile.displays.Primary.timeline
         local c1 = T.cells[1]
-        for _, k in ipairs({ "HelperOn", "HelperGlow", "HelperOff" }) do
-            for m, fn in pairs(tlrec) do
-                rawset(c1[k], m, fn)
-            end
+        local g = c1.Gold
+        for m, fn in pairs(tlrec) do
+            rawset(g, m, fn)
         end
-        local playing = false
-        rawset(c1.HelperAnim, "Play", function()
-            playing = true
-        end)
-        rawset(c1.HelperAnim, "Stop", function()
-            playing = false
+        local size
+        rawset(g, "SetSize", function(_, w, h)
+            size = { w, h }
         end)
         H.Hekili:BuildUI()
-        local function shown()
-            return { c1.HelperOn:IsShown(), c1.HelperGlow:IsShown(), c1.HelperOff:IsShown(), c1.Ring:IsShown() }
-        end
+        local w = 48 * H.Hekili:GetScale() / 0.737
+        assert.are.same({ w, w }, size)
+        assert.truthy(io.open("src/Hekili/Textures/GoldRing.tga")) -- the art the texture path names (set once, at creation)
         tlPublish(H, 1) -- ready
         tlFrame(H, d)
-        assert.are.same({ true, true, false, false }, shown())
-        assert.is_true(playing)
+        assert.is_true(g:IsShown())
+        assert.is_false(c1.Ring:IsShown())
+        assert.is_false(rawget(g, "__desat"))
+        assert.are.equal(1, rawget(g, "__alpha"))
         tlPublish(H, 3) -- pending
         tlFrame(H, d)
-        assert.are.same({ false, false, true, false }, shown())
-        assert.is_false(playing)
-        tl.focusReadyStyle = "ring"
-        tlPublish(H, 1)
+        assert.is_true(g:IsShown())
+        assert.is_true(rawget(g, "__desat"))
+        assert.are.equal(0.5, rawget(g, "__alpha"))
+        tlPublish(H) -- no focus record
         tlFrame(H, d)
-        assert.are.same({ false, false, false, true }, shown())
+        assert.is_false(g:IsShown())
+        assert.are.same({}, H.errors)
+    end)
+
+    it("draws the Gold Frame over the next box in place of its colour border when nextFrame is gold", function()
+        local H, _, T = tlBoot(false)
+        local tl = H.Hekili.DB.profile.displays.Primary.timeline
+        assert.are.equal("none", tl.nextFrame)
+        local c2 = T.cells[2]
+        local f = c2.Frame
+        for m, fn in pairs(tlrec) do
+            rawset(f, m, fn)
+        end
+        local size
+        rawset(f, "SetSize", function(_, w, h)
+            size = { w, h }
+        end)
+        H.Hekili:BuildUI()
+        assert.is_false(f:IsShown())
+        assert.is_true(c2.Border:IsShown())
+        tl.nextFrame = "gold"
+        H.Hekili:BuildUI()
+        assert.is_true(f:IsShown())
+        assert.is_false(c2.Border:IsShown())
+        assert.is_true(T.cells[1].Border:IsShown()) -- the other cells keep theirs
+        local w = 48 * H.Hekili:GetScale() / 0.691
+        assert.are.same({ w, w }, size)
+        assert.truthy(io.open("src/Hekili/Textures/GoldFrame.tga")) -- the art the texture path names (set once, at creation)
         assert.are.same({}, H.errors)
     end)
 
