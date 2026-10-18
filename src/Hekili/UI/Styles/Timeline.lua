@@ -371,12 +371,12 @@ function Timeline.Build( d, conf )
     local band = mmax( nowS, nextS, laneH )
     local extra = tl.alts.enabled and ( tl.alts.size + tl.alts.spacing ) or 0
     local nextX = nowS + tl.gap
-    T.laneX0 = nextX + nextS + tl.gap -- the lane's t = 0 (and the ruler's first mark)
+    T.laneX0 = nextX + nextS + tl.gap -- the lane's t = 0, the ruler's first mark and a lane icon's left edge
     T.laneLength = tl.horizon * tl.pxPerSec
     T.laneTop = ( band - laneH ) / 2
     T.rowTop1 = T.laneTop + laneH - ( tl.rows >= 2 and 2 or 1 ) * iconS
     T.rowTop2 = T.rowTop1 + iconS
-    d:SetSize( s * ( T.laneX0 + T.laneLength + iconS / 2 ), s * ( band + extra ) )
+    d:SetSize( s * ( T.laneX0 + T.laneLength + iconS ), s * ( band + extra ) )
 
     for i = 1, SLOTS do
         local b = T.cells[ i ]
@@ -457,7 +457,7 @@ local function moveLane( T, tl, now, elapsed )
             end
             if inLane and abs( x - T.x[ i ] ) >= MOVE_EPS then
                 T.x[ i ] = x
-                place( T, b, T.laneX0 + x - tl.laneIconSize / 2, T.row[ i ] == 2 and T.rowTop2 or T.rowTop1 )
+                place( T, b, T.laneX0 + x, T.row[ i ] == 2 and T.rowTop2 or T.rowTop1 )
             end
             if laneEta then showEta( b, target - now, int ) end
         end

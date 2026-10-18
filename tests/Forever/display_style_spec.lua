@@ -1510,8 +1510,8 @@ describe("the timeline's out-of-combat pinning", function()
         for n = 2, #seen do
             assert.are.same(seen[1], seen[n], "frame " .. n)
         end
-        -- pick 3 (slam) 3 s after the press: 120 + 3 * 24 - 10
-        near(T.laneX0 + 3 * 24 - 10, seen[1][3], "slam")
+        -- pick 3 (slam) 3 s after the press: its left edge at 120 + 3 * 24
+        near(T.laneX0 + 3 * 24, seen[1][3], "slam")
         assert.are.equal("", T.cells[1].Eta:GetText()) -- the press: 0 when pinned
         assert.are.equal("1.5", T.cells[2].Eta:GetText()) -- overpower 1.5 s after it
         assert.are.equal("3.0", T.cells[3].Eta:GetText())
@@ -1545,10 +1545,43 @@ describe("the timeline's out-of-combat pinning", function()
             end)
             H.ctl.now = H.ctl.now + 0.2
             d.__scripts.OnUpdate(d, 0.2)
-            near(T.laneX0 - 10, anchor(H, T.cells[3]), "past pick " .. tostring(combat))
+            near(T.laneX0, anchor(H, T.cells[3]), "past pick " .. tostring(combat))
             assert.is_true(T.cells[3]:IsShown())
             assert.is_false(T.cells[6]:IsShown()) -- 11 s after the press, 11.8 s on the clock: past the 10 s horizon
             status.combat = false
+            assert.are.same({}, H.errors)
+        end
+    end)
+
+    it("keeps one gap between the next box and every lane icon's left edge, on both rows", function()
+        for _, combat in ipairs({ false, true }) do
+            local H, d, T = tlBoot(false, function(tl)
+                tl.oocPinned, tl.glide, tl.rows = true, 0, 2
+            end)
+            local tl = H.Hekili.DB.profile.displays.Primary.timeline
+            H.Hekili.Engine.Output.status.combat = combat
+            local now = H.ctl.now
+            tlPublish(H, nil, function(s)
+                for i, rel in ipairs({ -1, 0, 0.1, 0.3 }) do -- before the press, at it, just after
+                    s[i + 2].time, s[i + 2].exact_time = s[1].time + rel, now + rel
+                end
+            end)
+            H.ctl.now = H.ctl.now + 0.2
+            d.__scripts.OnUpdate(d, 0.2)
+            local edge = anchor(H, T.cells[2]) + tl.nextSize + tl.gap
+            local rows = {}
+            for c = 3, 6 do
+                assert.is_true(T.cells[c]:IsShown(), "cell " .. c)
+                local left = anchor(H, T.cells[c]) -- TOPLEFT: the left edge
+                assert.is_true(
+                    left >= edge - 1e-6,
+                    ("cell %d left %s < %s (%s)"):format(c, left, edge, tostring(combat))
+                )
+                rows[T.row[c]] = true
+            end
+            assert.is_true(rows[1] and rows[2], "both rows used")
+            near(edge, anchor(H, T.ticks[1]), "the ruler's first mark at the icons' edge")
+            H.Hekili.Engine.Output.status.combat = false
             assert.are.same({}, H.errors)
         end
     end)
