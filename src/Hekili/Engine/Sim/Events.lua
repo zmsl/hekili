@@ -1011,9 +1011,8 @@ end
 
 local lowLevelWarned = false
 local noClassWarned = false
--- Change here every expansion to automatically warn low-level users.
-local minimumLevel = 71
-local expansionName = "The War Within"
+-- Forever: the packs are tuned for level 60 content; warn once below that.
+local minimumLevel = 60
 
 -- Need to make caching system.
 RegisterUnitEvent( "UNIT_SPELLCAST_SUCCEEDED", "player", "target", function( event, unit, _, spellID )
@@ -1021,7 +1020,7 @@ RegisterUnitEvent( "UNIT_SPELLCAST_SUCCEEDED", "player", "target", function( eve
         Hekili:Notify( UnitClass( "player" ) .. " does not have any Hekili modules loaded (yet).\nWatch for updates.", 10 )
         noClassWarned = true
     elseif not lowLevelWarned and UnitLevel( "player" ) < minimumLevel then
-        Hekili:Notify( "Hekili is designed for use in " .. expansionName .. " content.\nIt may not work as expected below level " .. minimumLevel .. ".", 10 )
+        Hekili:Notify( "Hekili Forever is designed for level " .. minimumLevel .. " content.\nIt may not work as expected below level " .. minimumLevel .. ".", 10 )
         lowLevelWarned = true
     end
 
