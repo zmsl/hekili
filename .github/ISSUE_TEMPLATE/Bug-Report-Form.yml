@@ -17,7 +17,7 @@ body:
           required: true
         - label: I am not playing on a private server.
           required: true
-        - label: I checked for an [existing, open ticket](https://github.com/Hekili/hekili/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) for this issue and was not able to find one.
+        - label: I checked for an [existing, open ticket](https://github.com/zmsl/hekili/issues) for this issue and was not able to find one.
           required: true
         - label: I edited the title of this bug report (above) so that it describes the issue I am reporting.
           required: true

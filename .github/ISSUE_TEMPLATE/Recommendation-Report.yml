@@ -17,7 +17,7 @@ body:
           required: true
         - label: I confirm I am playing on official Blizzard servers (not private servers).
           required: true
-        - label: I checked for an [existing, open ticket](https://github.com/Hekili/hekili/labels/recommendation) for this issue and was not able to find one.
+        - label: I checked for an [existing, open ticket](https://github.com/zmsl/hekili/issues) for this issue and was not able to find one.
           required: true
         - label: I have updated the issue title to clearly describe the problem.
           required: true

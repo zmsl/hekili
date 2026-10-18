@@ -55,6 +55,13 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
 `make bootstrap` once (Lua 5.1 + busted/luacheck/luacov into `.lua/`; StyLua and LuaLS from `mise.toml`), then
 `make check` before every commit. A new worktree has no `.lua/`: copy or symlink `.lua/` from another worktree, or
 run `make bootstrap`. One spec: `.lua/bin/busted tests/Game/State/resources_spec.lua`.
+StyLua formats only our files (`.styluaignore` lists upstream Hekili, which keeps
+its own style). If `fmt-check` still fails after `make fmt`, run `make fmt` again: StyLua 2.5.2 takes two passes on a
+call whose argument is a long single-line table.
+`tests/boundary_spec.lua` scans `Game/` and `Engine/Schema/` strictly, and holds each `Engine/Sim/` file to its
+per-token counts in `tests/boundary_baseline.lua` (a ceiling per file, not a line lock). Regenerate the baseline with
+`.lua/bin/lua tools/boundary_baseline.lua` only when removing an inherited leak, or when new content registers a key a
+Sim identifier already uses (`git blame` the Sim line and say so in the commit); never to admit a leak.
 `make check` also runs `packs-check` (`make packs`, then `git diff --exit-code src`: the RegisterPack blocks match
 `tools/packs/`). CI (`.github/workflows/check.yml`) runs the same checks except the type check.
 
@@ -76,13 +83,7 @@ Arms solo: fights=3 agreement 0.938 (2258 ticks); react median 0 p90 1 never 0.0
 ```
 git remote add upstream https://github.com/Hekili/hekili.git
 git remote set-url --push upstream no_push
-``` StyLua formats only our files (`.styluaignore` lists upstream Hekili, which keeps
-its own style). If `fmt-check` still fails after `make fmt`, run `make fmt` again: StyLua 2.5.2 takes two passes on a
-call whose argument is a long single-line table.
-`tests/boundary_spec.lua` scans `Game/` and `Engine/Schema/` strictly, and holds each `Engine/Sim/` file to its
-per-token counts in `tests/boundary_baseline.lua` (a ceiling per file, not a line lock). Regenerate the baseline with
-`.lua/bin/lua tools/boundary_baseline.lua` only when removing an inherited leak, or when new content registers a key a
-Sim identifier already uses (`git blame` the Sim line and say so in the commit); never to admit a leak.
+```
 
 ## In game
 
