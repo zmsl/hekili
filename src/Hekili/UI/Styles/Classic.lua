@@ -60,7 +60,166 @@ local LSR = LibStub("SpellRange-1.0")
 local lastGcdStart = 0
 local Glower = LibStub("LibCustomGlow-1.0")
 
-local Classic = { label = "Classic" } -- no defaults: its fields are the display table's legacy flat ones
+-- Classic's config is its own subtable, displays[ id ].classic (Task 2b; moved out of Options.lua's displayTemplate).
+local Classic = {
+    label = "Classic",
+    defaults = {
+        primaryWidth = 50,
+        primaryHeight = 50,
+
+        keepAspectRatio = true,
+        zoom = 30,
+
+        queue = {
+            anchor = 'RIGHT',
+            direction = 'RIGHT',
+            style = 'RIGHT',
+            alignment = 'CENTER',
+
+            width = 50,
+            height = 50,
+
+            -- offset = 5, -- deprecated.
+            offsetX = 5,
+            offsetY = 0,
+            spacing = 5,
+
+            elvuiCooldown = false,
+
+            --[[ font = ElvUI and 'PT Sans Narrow' or 'Arial Narrow',
+            fontSize = 12,
+            fontStyle = "OUTLINE" ]]
+        },
+
+        border = {
+            enabled = true,
+            thickness = 1,
+            fit = false,
+            coloring = 'custom',
+            color = { 0, 0, 0, 1 },
+        },
+
+        range = {
+            enabled = true,
+            type = 'ability',
+        },
+
+        glow = {
+            enabled = false,
+            queued = false,
+            mode = "autocast",
+            coloring = "default",
+            color = { 0.95, 0.95, 0.32, 1 },
+
+            highlight = true
+        },
+
+        flash = {
+            enabled = false,
+            color = { 255/255, 215/255, 0, 1 }, -- gold.
+            blink = false,
+            suppress = false,
+            combat = false,
+
+            size = 240,
+            brightness = 100,
+            speed = 0.4,
+
+            fixedSize = false,
+            fixedBrightness = false
+        },
+
+        captions = {
+            enabled = false,
+            queued = false,
+
+            align = "CENTER",
+            anchor = "BOTTOM",
+            x = 0,
+            y = 0,
+
+            font = ElvUI and 'PT Sans Narrow' or 'Arial Narrow',
+            fontSize = 12,
+            fontStyle = "OUTLINE",
+
+            color = { 1, 1, 1, 1 },
+        },
+
+        indicators = {
+            enabled = true,
+            queued = true,
+
+            anchor = "RIGHT",
+            x = 0,
+            y = 0,
+
+            width = 20,
+            height = 20,
+            zoom = 30,
+            keepAspectRatio = true,
+        },
+
+        targets = {
+            enabled = true,
+
+            font = ElvUI and 'PT Sans Narrow' or 'Arial Narrow',
+            fontSize = 12,
+            fontStyle = "OUTLINE",
+
+            anchor = "BOTTOMRIGHT",
+            x = 0,
+            y = 0,
+
+            color = { 1, 1, 1, 1 },
+        },
+
+        delays = {
+            type = "__NA",
+            fade = false,
+            extend = true,
+            elvuiCooldowns = false,
+
+            font = ElvUI and 'PT Sans Narrow' or 'Arial Narrow',
+            fontSize = 12,
+            fontStyle = "OUTLINE",
+
+            anchor = "TOPLEFT",
+            x = 0,
+            y = 0,
+
+            color = { 1, 1, 1, 1 },
+        },
+
+        keybindings = {
+            enabled = true,
+            queued = true,
+
+            font = ElvUI and "PT Sans Narrow" or "Arial Narrow",
+            fontSize = 12,
+            fontStyle = "OUTLINE",
+
+            lowercase = false,
+
+            separateQueueStyle = false,
+
+            queuedFont = ElvUI and "PT Sans Narrow" or "Arial Narrow",
+            queuedFontSize = 12,
+            queuedFontStyle = "OUTLINE",
+
+            queuedLowercase = false,
+
+            anchor = "TOPRIGHT",
+            x = 1,
+            y = -1,
+
+            cPortOverride = true,
+            cPortZoom = 0.6,
+
+            color = { 1, 1, 1, 1 },
+            queuedColor = { 1, 1, 1, 1 },
+        },
+    },
+}
 
 local LSM = LibStub("LibSharedMedia-3.0", true)
 
@@ -87,16 +246,16 @@ local function CreateButton( dispID, id )
 
     local borderOffset = 0
 
-    if conf.border.enabled and conf.border.fit then
+    if conf.classic.border.enabled and conf.classic.border.fit then
         borderOffset = 2
     end
 
     if id == 1 then
-        b:SetHeight( scale * ( ( conf.primaryHeight or 50 ) - borderOffset ) )
-        b:SetWidth( scale * ( ( conf.primaryWidth or 50 ) - borderOffset  ) )
+        b:SetHeight( scale * ( ( conf.classic.primaryHeight or 50 ) - borderOffset ) )
+        b:SetWidth( scale * ( ( conf.classic.primaryWidth or 50 ) - borderOffset  ) )
     else
-        b:SetHeight( scale * ( ( conf.queue.height or 30 ) - borderOffset  ) )
-        b:SetWidth( scale * ( ( conf.queue.width or 50 ) - borderOffset  ) )
+        b:SetHeight( scale * ( ( conf.classic.queue.height or 30 ) - borderOffset  ) )
+        b:SetWidth( scale * ( ( conf.classic.queue.width or 50 ) - borderOffset  ) )
     end
 
     -- Texture
@@ -107,12 +266,12 @@ local function CreateButton( dispID, id )
     end
 
     b.texCoords = b.texCoords or {}
-    local zoom = 1 - ( ( conf.zoom or 0) / 200 )
+    local zoom = 1 - ( ( conf.classic.zoom or 0) / 200 )
 
-    if conf.keepAspectRatio then
-        local biggest = id == 1 and max( conf.primaryHeight, conf.primaryWidth ) or max( conf.queue.height, conf.queue.width )
-        local height = 0.5 * zoom * ( id == 1 and conf.primaryHeight or conf.queue.height ) / biggest
-        local width = 0.5 * zoom * ( id == 1 and conf.primaryWidth or conf.queue.width ) / biggest
+    if conf.classic.keepAspectRatio then
+        local biggest = id == 1 and max( conf.classic.primaryHeight, conf.classic.primaryWidth ) or max( conf.classic.queue.height, conf.classic.queue.width )
+        local height = 0.5 * zoom * ( id == 1 and conf.classic.primaryHeight or conf.classic.queue.height ) / biggest
+        local width = 0.5 * zoom * ( id == 1 and conf.classic.primaryWidth or conf.classic.queue.width ) / biggest
 
         b.texCoords[1] = 0.5 - width
         b.texCoords[2] = 0.5 + width
@@ -139,40 +298,40 @@ local function CreateButton( dispID, id )
 
     -- Indicator Icons.
     b.Icon = b.Icon or b:CreateTexture( nil, "OVERLAY" )
-    b.Icon:SetSize( conf.indicators.width or 20, conf.indicators.height or 20 )
+    b.Icon:SetSize( conf.classic.indicators.width or 20, conf.classic.indicators.height or 20 )
 
-    local zoom = 1 - ( ( conf.indicators.zoom or 0) / 200 )
+    local zoom = 1 - ( ( conf.classic.indicators.zoom or 0) / 200 )
 
-    if conf.indicators.keepAspectRatio and conf.indicators.height ~= conf.indicators.width then
-        local biggest = max( conf.indicators.height or 20, conf.indicators.width or 20 )
-        local height = 0.5 * zoom * ( conf.indicators.height or 20 ) / biggest
-        local width = 0.5 * zoom * ( conf.indicators.width or 20 ) / biggest
+    if conf.classic.indicators.keepAspectRatio and conf.classic.indicators.height ~= conf.classic.indicators.width then
+        local biggest = max( conf.classic.indicators.height or 20, conf.classic.indicators.width or 20 )
+        local height = 0.5 * zoom * ( conf.classic.indicators.height or 20 ) / biggest
+        local width = 0.5 * zoom * ( conf.classic.indicators.width or 20 ) / biggest
 
         b.Icon:SetTexCoord( 0.5 - width, 0.5 + width, 0.5 - height, 0.5 + height )
     else
         b.Icon:SetTexCoord( 0, 1, 0, 1 )
     end
 
-    local iconAnchor = conf.indicators.anchor or "RIGHT"
+    local iconAnchor = conf.classic.indicators.anchor or "RIGHT"
 
     b.Icon:ClearAllPoints()
-    b.Icon:SetPoint( iconAnchor, b, iconAnchor, conf.indicators.x or 0, conf.indicators.y or 0 )
+    b.Icon:SetPoint( iconAnchor, b, iconAnchor, conf.classic.indicators.x or 0, conf.classic.indicators.y or 0 )
     b.Icon:Hide()
 
 
     -- Caption Text.
     b.Caption = b.Caption or b:CreateFontString( bName .. "_Caption", "OVERLAY" )
 
-    local captionFont = conf.captions.font or conf.font
-    b.Caption:SetFont( LSM:Fetch("font", captionFont), conf.captions.fontSize or 12, conf.captions.fontStyle or "OUTLINE" )
+    local captionFont = conf.classic.captions.font or conf.font
+    b.Caption:SetFont( LSM:Fetch("font", captionFont), conf.classic.captions.fontSize or 12, conf.classic.captions.fontStyle or "OUTLINE" )
 
-    local capAnchor = conf.captions.anchor or "BOTTOM"
+    local capAnchor = conf.classic.captions.anchor or "BOTTOM"
     b.Caption:ClearAllPoints()
-    b.Caption:SetPoint( capAnchor, b, capAnchor, conf.captions.x or 0, conf.captions.y or 0 )
+    b.Caption:SetPoint( capAnchor, b, capAnchor, conf.classic.captions.x or 0, conf.classic.captions.y or 0 )
     b.Caption:SetHeight( b:GetHeight() / 2 )
     b.Caption:SetJustifyV( capAnchor:match("RIGHT") and "RIGHT" or ( capAnchor:match( "LEFT" ) and "LEFT" or "MIDDLE" ) )
-    b.Caption:SetJustifyH( conf.captions.align or "CENTER" )
-    b.Caption:SetTextColor( unpack( conf.captions.color ) )
+    b.Caption:SetJustifyH( conf.classic.captions.align or "CENTER" )
+    b.Caption:SetTextColor( unpack( conf.classic.captions.color ) )
     b.Caption:SetWordWrap( false )
 
     local capText = b.Caption:GetText()
@@ -183,18 +342,18 @@ local function CreateButton( dispID, id )
     -- Keybinding Text
     b.Keybinding = b.Keybinding or b:CreateFontString(bName .. "_KB", "OVERLAY")
 
-    local queued = id > 1 and conf.keybindings.separateQueueStyle
-    local kbFont = queued and conf.keybindings.queuedFont or conf.keybindings.font or conf.font
+    local queued = id > 1 and conf.classic.keybindings.separateQueueStyle
+    local kbFont = queued and conf.classic.keybindings.queuedFont or conf.classic.keybindings.font or conf.font
 
-    b.Keybinding:SetFont( LSM:Fetch("font", kbFont), queued and conf.keybindings.queuedFontSize or conf.keybindings.fontSize or 12, queued and conf.keybindings.queuedFontStyle or conf.keybindings.fontStyle or "OUTLINE" )
+    b.Keybinding:SetFont( LSM:Fetch("font", kbFont), queued and conf.classic.keybindings.queuedFontSize or conf.classic.keybindings.fontSize or 12, queued and conf.classic.keybindings.queuedFontStyle or conf.classic.keybindings.fontStyle or "OUTLINE" )
 
-    local kbAnchor = conf.keybindings.anchor or "TOPRIGHT"
+    local kbAnchor = conf.classic.keybindings.anchor or "TOPRIGHT"
     b.Keybinding:ClearAllPoints()
-    b.Keybinding:SetPoint( kbAnchor, b, kbAnchor, conf.keybindings.x or 0, conf.keybindings.y or 0 )
+    b.Keybinding:SetPoint( kbAnchor, b, kbAnchor, conf.classic.keybindings.x or 0, conf.classic.keybindings.y or 0 )
     b.Keybinding:SetHeight( b:GetHeight() / 2 )
     b.Keybinding:SetJustifyH( kbAnchor:match("RIGHT") and "RIGHT" or ( kbAnchor:match( "LEFT" ) and "LEFT" or "CENTER" ) )
     b.Keybinding:SetJustifyV( kbAnchor:match("TOP") and "TOP" or ( kbAnchor:match( "BOTTOM" ) and "BOTTOM" or "MIDDLE" ) )
-    b.Keybinding:SetTextColor( unpack( queued and conf.keybindings.queuedColor or conf.keybindings.color ) )
+    b.Keybinding:SetTextColor( unpack( queued and conf.classic.keybindings.queuedColor or conf.classic.keybindings.color ) )
     b.Keybinding:SetWordWrap( false )
 
     local kbText = b.Keybinding:GetText()
@@ -214,7 +373,7 @@ local function CreateButton( dispID, id )
 
     b.Cooldown.noCooldownCount = conf.hideOmniCC
 
-    if _G["ElvUI"] and not b.isRegisteredCooldown and ( ( id == 1 and conf.elvuiCooldown ) or ( id > 1 and conf.queue.elvuiCooldown ) ) then
+    if _G["ElvUI"] and not b.isRegisteredCooldown and ( ( id == 1 and conf.elvuiCooldown ) or ( id > 1 and conf.classic.queue.elvuiCooldown ) ) then
         local E = unpack( ElvUI )
 
         local cd = b.Cooldown.CooldownSettings or {}
@@ -230,8 +389,8 @@ local function CreateButton( dispID, id )
     -- Backdrop (for borders)
     b.Backdrop = b.Backdrop or Mixin( CreateFrame("Frame", bName .. "_Backdrop", b ), BackdropTemplateMixin )
     b.Backdrop:ClearAllPoints()
-    b.Backdrop:SetWidth( b:GetWidth() + ( conf.border.thickness and ( 2 * conf.border.thickness ) or 2 ) )
-    b.Backdrop:SetHeight( b:GetHeight() + ( conf.border.thickness and ( 2 * conf.border.thickness ) or 2 ) )
+    b.Backdrop:SetWidth( b:GetWidth() + ( conf.classic.border.thickness and ( 2 * conf.classic.border.thickness ) or 2 ) )
+    b.Backdrop:SetHeight( b:GetHeight() + ( conf.classic.border.thickness and ( 2 * conf.classic.border.thickness ) or 2 ) )
 
     local framelevel = b:GetFrameLevel()
     if framelevel > 0 then
@@ -246,17 +405,17 @@ local function CreateButton( dispID, id )
     b.Backdrop:SetPoint( "CENTER", b, "CENTER" )
     b.Backdrop:Hide()
 
-    if conf.border.enabled then
+    if conf.classic.border.enabled then
         b.Backdrop:SetBackdrop( {
             bgFile = nil,
             edgeFile = "Interface\\Buttons\\WHITE8X8",
             tile = false,
             tileSize = 0,
-            edgeSize = conf.border.thickness or 1,
+            edgeSize = conf.classic.border.thickness or 1,
             insets = { left = -1, right = -1, top = -1, bottom = -1 }
         } )
-        if conf.border.coloring == 'custom' then
-            b.Backdrop:SetBackdropBorderColor( unpack( conf.border.color ) )
+        if conf.classic.border.coloring == 'custom' then
+            b.Backdrop:SetBackdropBorderColor( unpack( conf.classic.border.color ) )
         else
             b.Backdrop:SetBackdropBorderColor( RAID_CLASS_COLORS[ Registry.ClassFile() ]:GetRGBA() )
         end
@@ -286,16 +445,16 @@ local function CreateButton( dispID, id )
         -- Target Counter
         b.Targets = b.Targets or b:CreateFontString( bName .. "_Targets", "OVERLAY" )
 
-        local tarFont = conf.targets.font or conf.font
-        b.Targets:SetFont( LSM:Fetch( "font", tarFont ), conf.targets.fontSize or 12, conf.targets.fontStyle or "OUTLINE" )
+        local tarFont = conf.classic.targets.font or conf.font
+        b.Targets:SetFont( LSM:Fetch( "font", tarFont ), conf.classic.targets.fontSize or 12, conf.classic.targets.fontStyle or "OUTLINE" )
 
-        local tarAnchor = conf.targets.anchor or "BOTTOM"
+        local tarAnchor = conf.classic.targets.anchor or "BOTTOM"
         b.Targets:ClearAllPoints()
-        b.Targets:SetPoint( tarAnchor, b, tarAnchor, conf.targets.x or 0, conf.targets.y or 0 )
+        b.Targets:SetPoint( tarAnchor, b, tarAnchor, conf.classic.targets.x or 0, conf.classic.targets.y or 0 )
         b.Targets:SetHeight( b:GetHeight() / 2 )
         b.Targets:SetJustifyH( tarAnchor:match("RIGHT") and "RIGHT" or ( tarAnchor:match( "LEFT" ) and "LEFT" or "CENTER" ) )
         b.Targets:SetJustifyV( tarAnchor:match("TOP") and "TOP" or ( tarAnchor:match( "BOTTOM" ) and "BOTTOM" or "MIDDLE" ) )
-        b.Targets:SetTextColor( unpack( conf.targets.color ) )
+        b.Targets:SetTextColor( unpack( conf.classic.targets.color ) )
         b.Targets:SetWordWrap( false )
 
         local tText = b.Targets:GetText()
@@ -326,17 +485,17 @@ local function CreateButton( dispID, id )
         -- Delay Counter
         b.DelayText = b.DelayText or b:CreateFontString( bName .. "_DelayText", "OVERLAY" )
 
-        local delayFont = conf.delays.font or conf.font
-        b.DelayText:SetFont( LSM:Fetch("font", delayFont), conf.delays.fontSize or 12, conf.delays.fontStyle or "OUTLINE" )
+        local delayFont = conf.classic.delays.font or conf.font
+        b.DelayText:SetFont( LSM:Fetch("font", delayFont), conf.classic.delays.fontSize or 12, conf.classic.delays.fontStyle or "OUTLINE" )
 
-        local delayAnchor = conf.delays.anchor or "TOPLEFT"
+        local delayAnchor = conf.classic.delays.anchor or "TOPLEFT"
         b.DelayText:ClearAllPoints()
-        b.DelayText:SetPoint( delayAnchor, b, delayAnchor, conf.delays.x, conf.delays.y or 0 )
+        b.DelayText:SetPoint( delayAnchor, b, delayAnchor, conf.classic.delays.x, conf.classic.delays.y or 0 )
         b.DelayText:SetHeight( b:GetHeight() / 2 )
 
         b.DelayText:SetJustifyH( delayAnchor:match( "RIGHT" ) and "RIGHT" or ( delayAnchor:match( "LEFT" ) and "LEFT" or "CENTER") )
         b.DelayText:SetJustifyV( delayAnchor:match( "TOP" ) and "TOP" or ( delayAnchor:match( "BOTTOM" ) and "BOTTOM" or "MIDDLE") )
-        b.DelayText:SetTextColor( unpack( conf.delays.color ) )
+        b.DelayText:SetTextColor( unpack( conf.classic.delays.color ) )
 
         local dText = b.DelayText:GetText()
         b.DelayText:SetText( nil )
@@ -351,7 +510,7 @@ local function CreateButton( dispID, id )
         b.DelayIcon:SetVertexColor( 1, 0, 0, 1 )
 
         b.DelayIcon:ClearAllPoints()
-        b.DelayIcon:SetPoint( delayAnchor, b, delayAnchor, conf.delays.x or 0, conf.delays.y or 0 )
+        b.DelayIcon:SetPoint( delayAnchor, b, delayAnchor, conf.classic.delays.x or 0, conf.classic.delays.y or 0 )
         b.DelayIcon:Hide()
 
         -- Overlay (for Pause)
@@ -364,9 +523,9 @@ local function CreateButton( dispID, id )
 
     elseif id == 2 then
         -- Anchoring for the remainder.
-        local queueAnchor = conf.queue.anchor or "RIGHT"
-        local qOffsetX = ( conf.queue.offsetX or 5 )
-        local qOffsetY = ( conf.queue.offsetY or 0 )
+        local queueAnchor = conf.classic.queue.anchor or "RIGHT"
+        local qOffsetX = ( conf.classic.queue.offsetX or 5 )
+        local qOffsetY = ( conf.classic.queue.offsetY or 0 )
 
         b:ClearAllPoints()
 
@@ -384,8 +543,8 @@ local function CreateButton( dispID, id )
             b:SetPoint( getInverseDirection(dir) .. align, "Hekili_" .. dispID .. "_B1", dir .. align, 0, -1 * ( borderOffset + qOffsetY ) * scale )
         end
     else
-        local queueDirection = conf.queue.direction or "RIGHT"
-        local btnSpacing = borderOffset + ( conf.queue.spacing or 5 )
+        local queueDirection = conf.classic.queue.direction or "RIGHT"
+        local btnSpacing = borderOffset + ( conf.classic.queue.spacing or 5 )
 
         b:ClearAllPoints()
 
@@ -461,7 +620,7 @@ local function RefreshCooldowns( self, out )
                 start, duration, enabled, modRate = GetSpellCooldown( ability.actionID )
             end
 
-            if i == 1 and conf.delays.extend and rec.exact_time > max( now, start + duration ) then
+            if i == 1 and conf.classic.delays.extend and rec.exact_time > max( now, start + duration ) then
                 start = ( start > 0 and start ) or ( cStart > 0 and cStart ) or ( gStart > 0 and gStart ) or max( lastGcdStart, Status.combatStart )
                 duration = rec.exact_time - start
 
@@ -483,6 +642,8 @@ end
 --- Builds (or reuses) the ten buttons on `d` and returns them; core stores the list as ns.UI.Buttons[ d.id ].
 function Classic.Build( d, conf )
     local self, id, st = Hekili, d.id, d.styleState
+    local scale, border = self:GetScale(), 2
+    d:SetSize( scale * ( border + ( conf.classic.primaryWidth or 50 ) ), scale * ( border + ( conf.classic.primaryHeight or 50 ) ) )
     d.styleFrames.classic = d.styleFrames.classic or {}
     local buttons = d.styleFrames.classic
     st.delayTimer, st.flashTimer, st.rangeTimer = st.delayTimer or 0, st.flashTimer or 0, st.rangeTimer or 0
@@ -523,14 +684,14 @@ function Classic.UpdateKeybindings( d )
     local self = d
     local conf = Hekili.DB.profile.displays[ self.id ]
 
-    if conf.keybindings and conf.keybindings.enabled then
+    if conf.classic.keybindings and conf.classic.keybindings.enabled then
         for i, b in ipairs( self.Buttons ) do
             local a = b.Action
 
             if a then
                 b.Keybind, b.KeybindFrom = Hekili:GetBindingForAction( a, conf, i )
 
-                if i == 1 or conf.keybindings.queued then
+                if i == 1 or conf.classic.keybindings.queued then
                     b.Keybinding:SetText( b.Keybind )
                 else
                     b.Keybinding:SetText( nil )
@@ -606,7 +767,7 @@ function Classic.Draw( d, conf, out, status )
                 if ability and ability.actionID < 0 and ability.actionID > -100 and action ~= "cancel_buff" or exact_time == nil then ability = nil end
 
                 if ability then
-                    if ( conf.flash.enabled and conf.flash.suppress ) then b:Hide()
+                    if ( conf.classic.flash.enabled and conf.classic.flash.suppress ) then b:Hide()
                     else b:Show() end
 
                     --[[ if i == 1 then
@@ -626,7 +787,7 @@ function Classic.Draw( d, conf, out, status )
                     b.Texture:Show()
 
                     if i == 1 then
-                        if conf.glow.highlight then
+                        if conf.classic.glow.highlight then
                             local id = ability.item or ability.actionID
                             local isItem = ability.item ~= nil
 
@@ -642,7 +803,7 @@ function Classic.Draw( d, conf, out, status )
                     end
 
 
-                    if conf.indicators.enabled and indicator then
+                    if conf.classic.indicators.enabled and indicator then
                         if indicator == "cycle" then
                             b.Icon:SetTexture("Interface\\Addons\\Hekili\\Textures\\Cycle")
                         end
@@ -654,36 +815,36 @@ function Classic.Draw( d, conf, out, status )
                         b.Icon:Hide()
                     end
 
-                    if ( caption and conf.captions.enabled or Registry.Abilities()[ action ].caption ) and ( i == 1 or conf.captions.queued ) then
+                    if ( caption and conf.classic.captions.enabled or Registry.Abilities()[ action ].caption ) and ( i == 1 or conf.classic.captions.queued ) then
                         b.Caption:SetText( caption )
                     else
                         b.Caption:SetText(nil)
                     end
 
-                    if conf.keybindings.enabled and ( i == 1 or conf.keybindings.queued ) then
+                    if conf.classic.keybindings.enabled and ( i == 1 or conf.classic.keybindings.queued ) then
                         b.Keybinding:SetText( keybind )
                     else
                         b.Keybinding:SetText(nil)
                     end
 
-                    if conf.glow.enabled and ( i == 1 or conf.glow.queued ) and IsSpellOverlayed( ability.actionID ) then
+                    if conf.classic.glow.enabled and ( i == 1 or conf.classic.glow.queued ) and IsSpellOverlayed( ability.actionID ) then
                         b.glowColor = b.glowColor or {}
 
-                        if conf.glow.coloring == "class" then
+                        if conf.classic.glow.coloring == "class" then
                             b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = RAID_CLASS_COLORS[ Registry.ClassFile() ]:GetRGBA()
-                        elseif conf.glow.coloring == "custom" then
-                            b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = unpack(conf.glow.color)
+                        elseif conf.classic.glow.coloring == "custom" then
+                            b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = unpack(conf.classic.glow.color)
                         else
                             b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = 0.95, 0.95, 0.32, 1
                         end
 
-                        if conf.glow.mode == "default" then
+                        if conf.classic.glow.mode == "default" then
                             Glower.ButtonGlow_Start( b, b.glowColor )
                             b.glowStop = Glower.ButtonGlow_Stop
-                        elseif conf.glow.mode == "autocast" then
+                        elseif conf.classic.glow.mode == "autocast" then
                             Glower.AutoCastGlow_Start( b, b.glowColor )
                             b.glowStop = Glower.AutoCastGlow_Stop
-                        elseif conf.glow.mode == "pixel" then
+                        elseif conf.classic.glow.mode == "pixel" then
                             Glower.PixelGlow_Start( b, b.glowColor )
                             b.glowStop = Glower.PixelGlow_Stop
                         end
@@ -715,7 +876,7 @@ function Classic.Draw( d, conf, out, status )
     local postRecs = debugprofilestop()
 
     if st.HasRecommendations then
-        if fullUpdate and conf.glow.enabled then
+        if fullUpdate and conf.classic.glow.enabled then
             madeUpdate = true
 
             for i, b in ipairs( self.Buttons ) do
@@ -723,27 +884,27 @@ function Classic.Draw( d, conf, out, status )
 
                 local a = b.Ability
 
-                if i == 1 or conf.glow.queued then
+                if i == 1 or conf.classic.glow.queued then
                     local glowing = a.actionID > 0 and IsSpellOverlayed( a.actionID )
 
                     if glowing and not b.glowing then
                         b.glowColor = b.glowColor or {}
 
-                        if conf.glow.coloring == "class" then
+                        if conf.classic.glow.coloring == "class" then
                             b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = RAID_CLASS_COLORS[ Registry.ClassFile() ]:GetRGBA()
-                        elseif conf.glow.coloring == "custom" then
-                            b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = unpack(conf.glow.color)
+                        elseif conf.classic.glow.coloring == "custom" then
+                            b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = unpack(conf.classic.glow.color)
                         else
                             b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = 0.95, 0.95, 0.32, 1
                         end
 
-                        if conf.glow.mode == "default" then
+                        if conf.classic.glow.mode == "default" then
                             Glower.ButtonGlow_Start( b, b.glowColor )
                             b.glowStop = Glower.ButtonGlow_Stop
-                        elseif conf.glow.mode == "autocast" then
+                        elseif conf.classic.glow.mode == "autocast" then
                             Glower.AutoCastGlow_Start( b, b.glowColor )
                             b.glowStop = Glower.AutoCastGlow_Stop
-                        elseif conf.glow.mode == "pixel" then
+                        elseif conf.classic.glow.mode == "pixel" then
                             Glower.PixelGlow_Start( b, b.glowColor )
                             b.glowStop = Glower.PixelGlow_Stop
                         end
@@ -764,7 +925,7 @@ function Classic.Draw( d, conf, out, status )
 
         local postGlow = debugprofilestop()
 
-        if st.flashReady and conf.flash.enabled and LSF and ( InCombatLockdown() or not conf.flash.combat ) then
+        if st.flashReady and conf.classic.flash.enabled and LSF and ( InCombatLockdown() or not conf.classic.flash.combat ) then
             st.flashTimer = st.flashTimer - elapsed
             st.flashWarnings = st.flashWarnings or {}
             st.lastFlashFrames = st.lastFlashFrames or {}
@@ -783,12 +944,12 @@ function Classic.Draw( d, conf, out, status )
                     end
                 end
 
-                st.flashTimer = conf.flash.speed or 0.4
+                st.flashTimer = conf.classic.flash.speed or 0.4
 
                 local ability = Registry.Abilities()[ a ]
 
                 st.flashColor = st.flashColor or {}
-                st.flashColor.r, st.flashColor.g, st.flashColor.b = unpack( conf.flash.color )
+                st.flashColor.r, st.flashColor.g, st.flashColor.b = unpack( conf.classic.flash.color )
 
                 catchFlash = GetTime()
                 table.wipe( lastFramesFlashed )
@@ -796,8 +957,8 @@ function Classic.Draw( d, conf, out, status )
                 if ability.item then
                     local iname = LSF.ItemName( ability.item )
                     if LSF.Flashable( iname ) then
-                        LSF.FlashItem( iname, st.flashColor, conf.flash.size, conf.flash.brightness, conf.flash.blink, nil, profile.flashTexture, conf.flash.fixedSize, conf.flash.fixedBrightness )
-                    elseif conf.flash.suppress and not st.flashWarnings[ iname ] then
+                        LSF.FlashItem( iname, st.flashColor, conf.classic.flash.size, conf.classic.flash.brightness, conf.classic.flash.blink, nil, profile.flashTexture, conf.classic.flash.fixedSize, conf.classic.flash.fixedBrightness )
+                    elseif conf.classic.flash.suppress and not st.flashWarnings[ iname ] then
                         st.flashWarnings[ iname ] = true
                         -- Hekili:Error( "|cffff0000WARNING|r - Could not flash recommended item '" .. iname .. "' (" .. self.id .. ")." )
                     end
@@ -821,8 +982,8 @@ function Classic.Draw( d, conf, out, status )
                         end
 
                         if flashable then
-                            LSF.FlashAction( aFlash, st.flashColor, conf.flash.size, conf.flash.brightness, conf.flash.blink, nil, profile.flashTexture, conf.flash.fixedSize, conf.flash.fixedBrightness )
-                        elseif conf.flash.suppress and not st.flashWarnings[ aFlash ] then
+                            LSF.FlashAction( aFlash, st.flashColor, conf.classic.flash.size, conf.classic.flash.brightness, conf.classic.flash.blink, nil, profile.flashTexture, conf.classic.flash.fixedSize, conf.classic.flash.fixedBrightness )
+                        elseif conf.classic.flash.suppress and not st.flashWarnings[ aFlash ] then
                             st.flashWarnings[ aFlash ] = true
                             -- Hekili:Error( "|cffff0000WARNING|r - Could not flash recommended action '" .. aFlash .. "' (" .. self.id .. ")." )
                         end
@@ -837,7 +998,7 @@ function Classic.Draw( d, conf, out, status )
 
                         if sname then
                             if LSF.Flashable( sname ) then
-                                LSF.FlashAction( sname, st.flashColor, conf.flash.size, conf.flash.brightness, conf.flash.blink, nil, profile.flashTexture, conf.flash.fixedSize, conf.flash.fixedBrightness )
+                                LSF.FlashAction( sname, st.flashColor, conf.classic.flash.size, conf.classic.flash.brightness, conf.classic.flash.blink, nil, profile.flashTexture, conf.classic.flash.fixedSize, conf.classic.flash.fixedBrightness )
                             elseif not st.flashWarnings[ sname ] then
                                 st.flashWarnings[ sname ] = true
                                 -- Hekili:Error( "|cffff0000WARNING|r - Could not flash recommended ability '" .. sname .. "' (" .. self.id .. ")." )
@@ -865,7 +1026,7 @@ function Classic.Draw( d, conf, out, status )
         if fullUpdate then
             local b = self.Buttons[ 1 ]
 
-            if conf.targets.enabled then
+            if conf.classic.targets.enabled then
                 madeUpdate = true
 
                 local tMin, tMax = 0, 0
@@ -937,7 +1098,7 @@ function Classic.Draw( d, conf, out, status )
                 if rStart > 0 then earliest_time = max( earliest_time, rStart + rDuration - now ) end
             end
 
-            if conf.delays.type == "TEXT" then
+            if conf.classic.delays.type == "TEXT" then
                 if st.delayIconShown then
                     b.DelayIcon:Hide()
                     st.delayIconShown = false
@@ -951,7 +1112,7 @@ function Classic.Draw( d, conf, out, status )
                     st.delayTextShown = false
                 end
 
-            elseif conf.delays.type == "ICON" then
+            elseif conf.classic.delays.type == "ICON" then
                 if st.delayTextShown then
                     b.DelayText:SetText(nil)
                     st.delayTextShown = false
@@ -1001,10 +1162,10 @@ function Classic.Draw( d, conf, out, status )
                     local outOfRange = false
                     local desaturated = false
 
-                    if conf.range.enabled and UnitCanAttack( "player", "target" ) then
-                        if conf.range.type == "melee" then
+                    if conf.classic.range.enabled and UnitCanAttack( "player", "target" ) then
+                        if conf.classic.range.type == "melee" then
                             outOfRange = ( LRC:GetRange( "target" ) or 10 ) > 7
-                        elseif conf.range.type == "ability" then
+                        elseif conf.classic.range.type == "ability" then
                             local name = def.rangeSpell or def.itemSpellName or def.actualName or def.name
                             if name then outOfRange = LSR.IsSpellInRange( name, "target" ) == 0 end
                         end
@@ -1029,12 +1190,12 @@ function Classic.Draw( d, conf, out, status )
                             _, unusable = IsUsableSpell( def.actualName or def.name )
                         end
 
-                        if i == 1 and ( conf.delays.fade or conf.delays.desaturate ) then
+                        if i == 1 and ( conf.classic.delays.fade or conf.classic.delays.desaturate ) then
                             local delay = b.ExactTime and ( b.ExactTime - now ) or 0
                             local earliest_time = b.EarliestTime or delay
                             if delay > earliest_time + 0.05 then
-                                if conf.delays.fade then unusable = true end
-                                if conf.delays.desaturate then desaturated = true end
+                                if conf.classic.delays.fade then unusable = true end
+                                if conf.classic.delays.desaturate then desaturated = true end
                             end
                         end
 
@@ -1096,9 +1257,9 @@ function Classic.OnGameEvent( d, conf, event, ... )
     local self, st = d, d.styleState
 
     if event == "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW" then
-        if conf.glow.enabled then
+        if conf.classic.glow.enabled then
             for i, b in ipairs( self.Buttons ) do
-                if i > 1 and not conf.glow.queued then
+                if i > 1 and not conf.classic.glow.queued then
                     break
                 end
 
@@ -1111,21 +1272,21 @@ function Classic.OnGameEvent( d, conf, event, ... )
                 if not b.glowing and a and a.actionID == ... then
                     b.glowColor = b.glowColor or {}
 
-                    if conf.glow.coloring == "class" then
+                    if conf.classic.glow.coloring == "class" then
                         b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = RAID_CLASS_COLORS[ Registry.ClassFile() ]:GetRGBA()
-                    elseif conf.glow.coloring == "custom" then
-                        b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = unpack(conf.glow.color)
+                    elseif conf.classic.glow.coloring == "custom" then
+                        b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = unpack(conf.classic.glow.color)
                     else
                         b.glowColor[1], b.glowColor[2], b.glowColor[3], b.glowColor[4] = 0.95, 0.95, 0.32, 1
                     end
 
-                    if conf.glow.mode == "default" then
+                    if conf.classic.glow.mode == "default" then
                         Glower.ButtonGlow_Start( b, b.glowColor )
                         b.glowStop = Glower.ButtonGlow_Stop
-                    elseif conf.glow.mode == "autocast" then
+                    elseif conf.classic.glow.mode == "autocast" then
                         Glower.AutoCastGlow_Start( b, b.glowColor )
                         b.glowStop = Glower.AutoCastGlow_Stop
-                    elseif conf.glow.mode == "pixel" then
+                    elseif conf.classic.glow.mode == "pixel" then
                         Glower.PixelGlow_Start( b, b.glowColor )
                         b.glowStop = Glower.PixelGlow_Stop
                     end
@@ -1135,9 +1296,9 @@ function Classic.OnGameEvent( d, conf, event, ... )
             end
         end
     elseif event == "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE" then
-        if conf.glow.enabled then
+        if conf.classic.glow.enabled then
             for i, b in ipairs(self.Buttons) do
-                if i > 1 and not conf.glow.queued then
+                if i > 1 and not conf.classic.glow.queued then
                     break
                 end
 
@@ -1165,7 +1326,7 @@ function Classic.OnGameEvent( d, conf, event, ... )
     if event == "CURRENT_SPELL_CAST_CHANGED" then
         local b = self.Buttons[ 1 ]
 
-        if conf.glow.highlight then
+        if conf.classic.glow.highlight then
             local ability = b.Ability
             local isItem, id = false, ability and ability.actionID
 
@@ -1242,15 +1403,266 @@ end
 
 -- Classic's option tabs, moved verbatim out of Options/Options.lua's newDisplayOption (Task 2). `name` and `data` were
 -- its upvalues (the display id and its config); the rest of what they read comes from Options.lua through
--- ns.UI.DisplayOptionParts. Their profile paths are unchanged (display, tab key, option); core adds each tab's `hidden`.
+-- ns.UI.DisplayOptionParts. Core puts them in one group keyed `classic` (hidden unless the display is classic), so their
+-- profile path is display → classic → tab key → option (Task 2b); `layout` holds what was classic's part of `main`.
 function Classic.Options( id, conf )
     local name, data = id, conf
     local P = ns.UI.DisplayOptionParts
     local ClassColor, NewFeature, fontElements, fontStyles = P.ClassColor, P.NewFeature, P.fontElements, P.fontStyles
-    local realAnchorPositions, rangeIcon = P.realAnchorPositions, P.rangeIcon
+    local anchorPositions, realAnchorPositions, rangeIcon = P.anchorPositions, P.realAnchorPositions, P.rangeIcon
     local SF, tableCopy = SpellFlashCore, ns.tableCopy
 
     return {
+        layout = {
+            type = "group",
+            name = "Icons",
+            desc = "Icon size, shape and the queue's layout.",
+            order = 1,
+
+            args = {
+                primaryIcon = {
+                    type = "group",
+                    name = "Primary Icon",
+                    inline = true,
+                    order = 15,
+                    args = {
+                        primaryWidth = {
+                            type = "range",
+                            name = "Width",
+                            desc = "Specify the width of the primary icon for " .. ( name == "Multi" and "each display." or ( "your " .. name .. " Display." ) ),
+                            min = 10,
+                            max = 500,
+                            step = 1,
+
+                            width = 1.49,
+                            order = 1,
+                        },
+
+                        primaryHeight = {
+                            type = "range",
+                            name = "Height",
+                            desc = "Specify the height of the primary icon for " .. ( name == "Multi" and "each display." or ( "your " .. name .. " Display." ) ),
+                            min = 10,
+                            max = 500,
+                            step = 1,
+
+                            width = 1.49,
+                            order = 2,
+                        },
+
+                        spacer01 = {
+                            type = "description",
+                            name = " ",
+                            width = "full",
+                            order = 3
+                        },
+
+                        zoom = {
+                            type = "range",
+                            name = "Icon Zoom",
+                            desc = "Select the zoom percentage for the icon textures in this display. (Roughly 30% will trim off the default Blizzard borders.)",
+                            min = 0,
+                            softMax = 100,
+                            max = 200,
+                            step = 1,
+
+                            width = 1.49,
+                            order = 4,
+                        },
+
+                        keepAspectRatio = {
+                            type = "toggle",
+                            name = "Keep Aspect Ratio",
+                            desc = "If your primary or queued icons are not square, checking this option will prevent the icon textures from being " ..
+                                "stretched and distorted, trimming some of the texture instead.",
+                            disabled = function( info, val )
+                                return not ( data.classic.primaryHeight ~= data.classic.primaryWidth or ( data.numIcons > 1 and data.classic.queue.height ~= data.classic.queue.width ) )
+                            end,
+                            width = 1.49,
+                            order = 5,
+                        },
+                    },
+                },
+
+                queuedElvuiCooldown = {
+                    type = "toggle",
+                    name = "Apply ElvUI Cooldown Style to Queued Icons",
+                    desc = "If ElvUI is installed, you can apply the ElvUI cooldown style to your queued icons.\n\nDisabling this setting requires you to reload your UI (|cFFFFD100/reload|r).",
+                    width = "full",
+                    order = 23,
+                    get = function( info )
+                        return Hekili.DB.profile.displays[ name ].classic.queue.elvuiCooldown
+                    end,
+                    set = function( info, val )
+                        Hekili.DB.profile.displays[ name ].classic.queue.elvuiCooldown = val
+                    end,
+                    hidden = function () return _G["ElvUI"] == nil end,
+                },
+
+                iconSizeGroup = {
+                    type = "group",
+                    inline = true,
+                    name = "Queued Icon Size",
+                    order = 21,
+                    args = {
+                        width = {
+                            type = 'range',
+                            name = 'Width',
+                            desc = "Select the width of the queued icons.",
+                            min = 10,
+                            max = 500,
+                            step = 1,
+                            bigStep = 1,
+                            order = 10,
+                            width = 1.49,
+                            get = function( info )
+                                return Hekili.DB.profile.displays[ name ].classic.queue.width
+                            end,
+                            set = function( info, val )
+                                Hekili.DB.profile.displays[ name ].classic.queue.width = val
+                            end,
+                        },
+
+                        height = {
+                            type = 'range',
+                            name = 'Height',
+                            desc = "Select the height of the queued icons.",
+                            min = 10,
+                            max = 500,
+                            step = 1,
+                            bigStep = 1,
+                            order = 11,
+                            width = 1.49,
+                            get = function( info )
+                                return Hekili.DB.profile.displays[ name ].classic.queue.height
+                            end,
+                            set = function( info, val )
+                                Hekili.DB.profile.displays[ name ].classic.queue.height = val
+                            end,
+                        },
+                    }
+                },
+
+                anchorGroup = {
+                    type = "group",
+                    inline = true,
+                    name = "Queued Icon Positioning",
+                    order = 22,
+                    args = {
+                        anchor = {
+                            type = 'select',
+                            name = 'Anchor To',
+                            desc = "Select the point on the primary icon to which the queued icons will attach.",
+                            values = anchorPositions,
+                            width = 1.49,
+                            order = 1,
+                            get = function( info )
+                                return Hekili.DB.profile.displays[ name ].classic.queue.anchor
+                            end,
+                            set = function( info, val )
+                                Hekili.DB.profile.displays[ name ].classic.queue.anchor = val
+                                Hekili:BuildUI()
+                            end,
+                        },
+
+                        direction = {
+                            type = 'select',
+                            name = 'Grow Direction',
+                            desc = "Select the direction for the icon queue.\n\n"
+                                .. "This option generally matches Anchor To selection, but you can specify another direction to make a creative layout.",
+                            values = {
+                                TOP = 'Up',
+                                BOTTOM = 'Down',
+                                LEFT = 'Left',
+                                RIGHT = 'Right'
+                            },
+                            width = 1.49,
+                            order = 1.1,
+                            get = function( info )
+                                return Hekili.DB.profile.displays[ name ].classic.queue.direction
+                            end,
+                            set = function( info, val )
+                                Hekili.DB.profile.displays[ name ].classic.queue.direction = val
+                                Hekili:BuildUI()
+                            end,
+                        },
+
+                        spacer01 = {
+                            type = "description",
+                            name = " ",
+                            order = 1.2,
+                            width = "full",
+                        },
+
+                        offsetX = {
+                            type = 'range',
+                            name = 'X Offset',
+                            desc = "Specify the horizontal offset (in pixels) for the queue, in relation to the anchor point on the primary icon for this display.\n\n"
+                                .. "Positive numbers move the queue to the right, negative numbers move it to the left.",
+                            min = -100,
+                            max = 500,
+                            step = 1,
+                            width = 1.49,
+                            order = 2,
+                            get = function( info )
+                                return Hekili.DB.profile.displays[ name ].classic.queue.offsetX
+                            end,
+                            set = function( info, val )
+                                Hekili.DB.profile.displays[ name ].classic.queue.offsetX = val
+                                Hekili:BuildUI()
+                            end,
+                        },
+
+                        offsetY = {
+                            type = 'range',
+                            name = 'Y Offset',
+                            desc = "Specify the vertical offset (in pixels) for the queue, in relation to the anchor point on the primary icon for this display.\n\n"
+                                .. "Positive numbers move the queue up, negative numbers move it down.",
+                            min = -100,
+                            max = 500,
+                            step = 1,
+                            width = 1.49,
+                            order = 2.1,
+                            get = function( info )
+                                return Hekili.DB.profile.displays[ name ].classic.queue.offsetY
+                            end,
+                            set = function( info, val )
+                                Hekili.DB.profile.displays[ name ].classic.queue.offsetY = val
+                                Hekili:BuildUI()
+                            end,
+                        },
+
+                        spacer02 = {
+                            type = "description",
+                            name = " ",
+                            order = 2.2,
+                            width = "full",
+                        },
+
+                        spacing = {
+                            type = 'range',
+                            name = 'Icon Spacing',
+                            desc = "Select the number of pixels between icons in the queue.",
+                            softMin = ( data.classic.queue.direction == "LEFT" or data.classic.queue.direction == "RIGHT" ) and -data.classic.queue.width or -data.classic.queue.height,
+                            softMax = ( data.classic.queue.direction == "LEFT" or data.classic.queue.direction == "RIGHT" ) and data.classic.queue.width or data.classic.queue.height,
+                            min = -500,
+                            max = 500,
+                            step = 1,
+                            order = 3,
+                            width = 2.98,
+                            get = function( info )
+                                return Hekili.DB.profile.displays[ name ].classic.queue.spacing
+                            end,
+                            set = function( info, val )
+                                Hekili.DB.profile.displays[ name ].classic.queue.spacing = val
+                                Hekili:BuildUI()
+                            end,
+                        },
+                    }
+                },
+            },
+        },
+
         keybindings = {
             type = "group",
             name = "Keybinds",
@@ -1270,7 +1682,7 @@ function Classic.Options( id, conf )
                     name = "Enabled for Queued Icons",
                     order = 2,
                     width = 1.49,
-                    disabled = function () return data.keybindings.enabled == false end,
+                    disabled = function () return data.classic.keybindings.enabled == false end,
                 },
 
                 pos = {
@@ -1293,8 +1705,8 @@ return "Position" end,
                             name = "X Offset",
                             order = 3,
                             width = 0.99,
-                            min = -max( data.primaryWidth, data.queue.width ),
-                            max = max( data.primaryWidth, data.queue.width ),
+                            min = -max( data.classic.primaryWidth, data.classic.queue.width ),
+                            max = max( data.classic.primaryWidth, data.classic.queue.width ),
                             disabled = function( info )
                                 return false
                             end,
@@ -1306,8 +1718,8 @@ return "Position" end,
                             name = "Y Offset",
                             order = 4,
                             width = 0.99,
-                            min = -max( data.primaryHeight, data.queue.height ),
-                            max = max( data.primaryHeight, data.queue.height ),
+                            min = -max( data.classic.primaryHeight, data.classic.queue.height ),
+                            max = max( data.classic.primaryHeight, data.classic.queue.height ),
                             step = 1,
                         }
                     }
@@ -1340,7 +1752,7 @@ return "Position" end,
                     inline = true,
                     name = "Queued Font and Style",
                     order = 7,
-                    hidden = function () return not data.keybindings.separateQueueStyle end,
+                    hidden = function () return not data.classic.keybindings.separateQueueStyle end,
                     args = {
                         queuedFont = {
                             type = "select",
@@ -1390,7 +1802,7 @@ return "Position" end,
                     name = "Use Lowercase in Queue",
                     order = 7.1,
                     width = 1.49,
-                    hidden = function () return not data.keybindings.separateQueueStyle end,
+                    hidden = function () return not data.classic.keybindings.separateQueueStyle end,
                 },
 
                 cPort = {
@@ -1476,7 +1888,7 @@ return "Position" end,
                         class = format( "Class |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s", ClassColor.r * 255, ClassColor.g * 255, ClassColor.b * 255, ClassColor:GenerateHexColor():sub( 3, 8 ) ),
                         custom = "Specify a Custom Color"
                     },
-                    disabled = function() return data.border.enabled == false end,
+                    disabled = function() return data.classic.border.enabled == false end,
                 },
 
                 color = {
@@ -1485,7 +1897,7 @@ return "Position" end,
                     desc = "When borders are enabled and the Coloring Mode is set to |cFFFFD100Custom Color|r, the border will use this color.",
                     order = 4,
                     width = 1.49,
-                    disabled = function () return data.border.enabled == false or data.border.coloring ~= "custom" end,
+                    disabled = function () return data.classic.border.enabled == false or data.classic.border.coloring ~= "custom" end,
                 }
             }
         },
@@ -1518,7 +1930,7 @@ return "Position" end,
                     },
                     width = 1.49,
                     order = 2,
-                    disabled = function () return data.range.enabled == false end,
+                    disabled = function () return data.classic.range.enabled == false end,
                 }
             }
         },
@@ -1544,7 +1956,7 @@ return "Position" end,
                         "This may not be ideal, the glow may no longer be correct by that point in the future.",
                     width = 1.49,
                     order = 2,
-                    disabled = function() return data.glow.enabled == false end,
+                    disabled = function() return data.classic.glow.enabled == false end,
                 },
 
                 break01 = {
@@ -1565,7 +1977,7 @@ return "Position" end,
                         autocast = "AutoCast Shine",
                         pixel = "Pixel Glow",
                     },
-                    disabled = function() return data.glow.enabled == false end,
+                    disabled = function() return data.classic.glow.enabled == false end,
                 },
 
                 coloring = {
@@ -1579,7 +1991,7 @@ return "Position" end,
                         class = format( "Class |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s", ClassColor.r * 255, ClassColor.g * 255, ClassColor.b * 255, ClassColor:GenerateHexColor():sub( 3, 8 ) ),
                         custom = "Specify a Custom Color"
                     },
-                    disabled = function() return data.glow.enabled == false end,
+                    disabled = function() return data.classic.glow.enabled == false end,
                 },
 
                 color = {
@@ -1588,7 +2000,7 @@ return "Position" end,
                     desc = "Select the custom glow color for your display.",
                     width = 0.99,
                     order = 5,
-                    disabled = function() return data.glow.coloring ~= "custom" end,
+                    disabled = function() return data.classic.glow.coloring ~= "custom" end,
                 },
 
                 break02 = {
@@ -1667,7 +2079,7 @@ return "Position" end,
                 flashTexture = {
                     type = "select",
                     name = "Texture",
-                    icon =  function() return data.flash.texture or "Interface\\Cooldown\\star4" end,
+                    icon =  function() return data.classic.flash.texture or "Interface\\Cooldown\\star4" end,
                     desc = "Your selection will override the SpellFlash texture for all displays' flashes.",
                     order = 3.1,
                     width = 1.19,
@@ -1819,7 +2231,7 @@ return "Position" end,
                     desc = "If enabled, descriptive captions will be shown for queued abilities, if appropriate.",
                     order = 2,
                     width = 1.49,
-                    disabled = function () return data.captions.enabled == false end,
+                    disabled = function () return data.classic.captions.enabled == false end,
                 },
 
                 position = {
@@ -1918,8 +2330,8 @@ return "Position" end,
                         x = {
                             type = "range",
                             name = "X Offset",
-                            min = -max( data.primaryWidth, data.queue.width ),
-                            max = max( data.primaryWidth, data.queue.width ),
+                            min = -max( data.classic.primaryWidth, data.classic.queue.width ),
+                            max = max( data.classic.primaryWidth, data.classic.queue.width ),
                             step = 1,
                             order = 2,
                             width = 0.99,
@@ -1928,8 +2340,8 @@ return "Position" end,
                         y = {
                             type = "range",
                             name = "Y Offset",
-                            min = -max( data.primaryHeight, data.queue.height ),
-                            max = max( data.primaryHeight, data.queue.height ),
+                            min = -max( data.classic.primaryHeight, data.classic.queue.height ),
+                            max = max( data.classic.primaryHeight, data.classic.queue.height ),
                             step = 1,
                             order = 2,
                             width = 0.99,
@@ -2018,8 +2430,8 @@ return "Position" end,
                             name = "X Offset",
                             order = 3,
                             width = 0.99,
-                            min = -max( data.primaryWidth, data.queue.width ),
-                            max = max( data.primaryWidth, data.queue.width ),
+                            min = -max( data.classic.primaryWidth, data.classic.queue.width ),
+                            max = max( data.classic.primaryWidth, data.classic.queue.width ),
                             step = 1,
                         },
 
@@ -2028,12 +2440,12 @@ return "Position" end,
                             name = "Y Offset",
                             order = 4,
                             width = 0.99,
-                            min = -max( data.primaryHeight, data.queue.height ),
-                            max = max( data.primaryHeight, data.queue.height ),
+                            min = -max( data.classic.primaryHeight, data.classic.queue.height ),
+                            max = max( data.classic.primaryHeight, data.classic.queue.height ),
                             step = 1,
                         }
                     },
-                    disabled = function () return data.delays.type == "__NA" end,
+                    disabled = function () return data.classic.delays.type == "__NA" end,
                 },
 
                 textStyle = {
@@ -2042,7 +2454,7 @@ return "Position" end,
                     name = "Text",
                     order = 4,
                     args = tableCopy( fontElements ),
-                    disabled = function () return data.delays.type ~= "TEXT" end,
+                    disabled = function () return data.classic.delays.type ~= "TEXT" end,
                 },
             }
         },
@@ -2067,7 +2479,7 @@ return "Position" end,
                     desc = "If enabled, these indicators will appear on queued icons as well as the primary icon, when appropriate.",
                     order = 2,
                     width = 1.49,
-                    disabled = function () return data.indicators.enabled == false end,
+                    disabled = function () return data.classic.indicators.enabled == false end,
                 },
 
                 size = {
@@ -2145,8 +2557,8 @@ return "Position" end,
                         x = {
                             type = "range",
                             name = "X Offset",
-                            min = -max( data.primaryWidth, data.queue.width ),
-                            max = max( data.primaryWidth, data.queue.width ),
+                            min = -max( data.classic.primaryWidth, data.classic.queue.width ),
+                            max = max( data.classic.primaryWidth, data.classic.queue.width ),
                             step = 1,
                             order = 2,
                             width = 0.99,
@@ -2155,8 +2567,8 @@ return "Position" end,
                         y = {
                             type = "range",
                             name = "Y Offset",
-                            min = -max( data.primaryHeight, data.queue.height ),
-                            max = max( data.primaryHeight, data.queue.height ),
+                            min = -max( data.classic.primaryHeight, data.classic.queue.height ),
+                            max = max( data.classic.primaryHeight, data.classic.queue.height ),
                             step = 1,
                             order = 2,
                             width = 0.99,

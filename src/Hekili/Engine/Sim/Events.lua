@@ -2360,11 +2360,11 @@ if select( 2, UnitClass( "player" ) ) == "DRUID" then
 
         local caps, console = true, false
 
-        local queued = ( i or 1 ) > 1 and display.keybindings.separateQueueStyle
+        local queued = ( i or 1 ) > 1 and display.classic.keybindings.separateQueueStyle
 
         if display then
-            caps = not ( queued and display.keybindings.queuedLowercase or display.keybindings.lowercase )
-            console = ConsolePort ~= nil and display.keybindings.cPortOverride
+            caps = not ( queued and display.classic.keybindings.queuedLowercase or display.classic.keybindings.lowercase )
+            console = ConsolePort ~= nil and display.classic.keybindings.cPortOverride
         end
 
         local db = console and keys[ key ].console or ( caps and keys[ key ].upper or keys[ key ].lower )
@@ -2396,7 +2396,7 @@ if select( 2, UnitClass( "player" ) ) == "DRUID" then
             size = tonumber(size)
 
             if size then
-                local margin = floor( size * display.keybindings.cPortZoom * 0.5 )
+                local margin = floor( size * display.classic.keybindings.cPortZoom * 0.5 )
                 output = output:gsub( ":0|t", ":0:" .. size .. ":" .. size .. ":" .. margin .. ":" .. ( size - margin ) .. ":" .. margin .. ":" .. ( size - margin ) .. "|t" )
             end
         end
@@ -2429,12 +2429,12 @@ elseif select( 2, UnitClass( "player" ) ) == "ROGUE" then
             return ""
         end
 
-        local queued = ( i or 1 ) > 1 and display.keybindings.separateQueueStyle
+        local queued = ( i or 1 ) > 1 and display.classic.keybindings.separateQueueStyle
 
         local caps, console = true, false
         if display then
-            caps = not ( queued and display.keybindings.queuedLowercase or display.keybindings.lowercase )
-            console = ConsolePort ~= nil and display.keybindings.cPortOverride
+            caps = not ( queued and display.classic.keybindings.queuedLowercase or display.classic.keybindings.lowercase )
+            console = ConsolePort ~= nil and display.classic.keybindings.cPortOverride
         end
 
         local db = console and keys[ key ].console or ( caps and keys[ key ].upper or keys[ key ].lower )
@@ -2459,7 +2459,7 @@ elseif select( 2, UnitClass( "player" ) ) == "ROGUE" then
             size = tonumber(size)
 
             if size then
-                local margin = floor( size * display.keybindings.cPortZoom * 0.5 )
+                local margin = floor( size * display.classic.keybindings.cPortZoom * 0.5 )
                 output = output:gsub( ":0|t", ":0:" .. size .. ":" .. size .. ":" .. margin .. ":" .. ( size - margin ) .. ":" .. margin .. ":" .. ( size - margin ) .. "|t" )
             end
         end
@@ -2485,12 +2485,12 @@ else
 
         if not keys[ key ] then return "" end
 
-        local queued = ( i or 1 ) > 1 and display.keybindings.separateQueueStyle
+        local queued = ( i or 1 ) > 1 and display.classic.keybindings.separateQueueStyle
 
         local caps, console = true, false
         if display then
-            caps = not ( queued and display.keybindings.queuedLowercase or display.keybindings.lowercase )
-            console = ConsolePort ~= nil and display.keybindings.cPortOverride
+            caps = not ( queued and display.classic.keybindings.queuedLowercase or display.classic.keybindings.lowercase )
+            console = ConsolePort ~= nil and display.classic.keybindings.cPortOverride
         end
 
         local db = console and keys[ key ].console or ( caps and keys[ key ].upper or keys[ key ].lower )
@@ -2514,7 +2514,7 @@ else
             size = tonumber(size)
 
             if size then
-                local margin = floor( size * display.keybindings.cPortZoom * 0.5 )
+                local margin = floor( size * display.classic.keybindings.cPortZoom * 0.5 )
                 output = output:gsub( ":0:0:0:0|t", ":0:0:0:0:" .. size .. ":" .. size .. ":" .. margin .. ":" .. ( size - margin ) .. ":" .. margin .. ":" .. ( size - margin ) .. "|t" )
             end
         end

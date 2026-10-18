@@ -94,8 +94,8 @@ local function instrument(f)
     end
 end
 
-local function boot()
-    local H = headless.new({ character = ww.character(), pack = ww.PACK })
+local function boot(saved)
+    local H = headless.new({ character = ww.character(), pack = ww.PACK, saved = saved })
     assert.are.same({}, H.loadErrors)
     H.ctl.inRange.target, H.ctl.level.target = true, 60
     H.Fire("PLAYER_TARGET_CHANGED")
@@ -110,7 +110,7 @@ local function boot()
         end
     end
     -- past the defaults: captions on every button, the delay countdown, and the delay's desaturation
-    local conf = H.Hekili.DB.profile.displays.Primary
+    local conf = H.Hekili.DB.profile.displays.Primary.classic
     conf.captions.enabled, conf.captions.queued = true, true
     conf.delays.type, conf.delays.desaturate = "TEXT", true
     H.Hekili:BuildUI()
@@ -238,7 +238,7 @@ end
 describe("the classic display style", function()
     it("draws a fixed 4-record publish over 3 frames exactly as the base commit's fixture", function()
         local H, d = boot()
-        local conf = H.Hekili.DB.profile.displays.Primary
+        local conf = H.Hekili.DB.profile.displays.Primary.classic
         conf.glow.enabled, conf.glow.queued = true, true
         overlayed[H.Hekili.Engine.Registry.Abilities().mortal_strike.id] = true
         publish(H)
@@ -327,8 +327,15 @@ describe("a display's style", function()
         H.Hekili.DB:ResetProfile()
         assert.are.equal(1, H.Hekili.DB.profile.displays.Primary.stub.foo)
         assert.are.equal("classic", H.Hekili.DB.profile.displays.Primary.style)
-        -- an inline section inside the style's tab is presentational: display, tab key, option
-        assert.are.equal(1, H.Hekili:GetDisplayOption({ "displays", "Primary", "stub", "section", "foo" }))
+        -- a style group's path is walked through the keys its config has, so an inline section is presentational
+        assert.are.equal(1, H.Hekili:GetDisplayOption({ "displays", "Primary", "stub", "sec_now", "foo" }))
+        local classic = H.Hekili.DB.profile.displays.Primary.classic
+        local font = { "displays", "Primary", "classic", "keybindings", "font" }
+        assert.are.equal(classic.keybindings.font, H.Hekili:GetDisplayOption(font))
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "classic", "layout", "primaryIcon", "primaryWidth" }, 77)
+        assert.are.equal(77, classic.primaryWidth)
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "classic", "keybindings", "pos", "x" }, 9)
+        assert.are.equal(9, classic.keybindings.x)
     end)
 
     it(
@@ -394,10 +401,10 @@ describe("a display's style", function()
             local H = boot()
             stub(H, function()
                 return {
-                    stub = {
+                    lane = {
                         type = "group",
-                        name = "Stub",
-                        args = { section = { type = "group", inline = true, args = {} } },
+                        name = "Lane",
+                        args = { sec_now = { type = "group", inline = true, args = {} } },
                     },
                 }
             end)
@@ -409,11 +416,14 @@ describe("a display's style", function()
             assert.are.same({ "classic", "stub" }, style.sorting())
             local function shown(args)
                 return {
-                    classic = not args.glow.hidden() and not args.main.args.primaryIcon.hidden(),
+                    classic = not args.classic.hidden() and args.classic.args.glow ~= nil,
                     stub = not args.stub.hidden(),
                 }
             end
             assert.are.same({ classic = true, stub = false }, shown(primary))
+            assert.is_nil(primary.main.args.primaryIcon) -- classic's size fields left the core tab
+            assert.is_not_nil(primary.classic.args.layout.args.primaryIcon)
+            assert.is_not_nil(primary.stub.args.lane.args.sec_now)
             local displays = H.Hekili.DB.profile.displays
             displays.Primary.style = "stub"
             assert.are.same({ classic = false, stub = true }, shown(primary))
@@ -433,5 +443,89 @@ describe("a display's style", function()
         H.Hekili:CreateCustomDisplay("Custom1")
         assert.are.same({ "Custom1" }, log.builds)
         assert.are.equal(H.ns.UI.Styles.stub, H.ns.UI.Displays.Custom1.style)
+    end)
+end)
+
+-- Task 2b: every style under its own subtable. A profile saved before it has classic's fields flat on the display.
+local LEGACY = {
+    primaryWidth = 61,
+    primaryHeight = 62,
+    zoom = 11,
+    keepAspectRatio = false,
+    queue = { width = 33 },
+    border = { thickness = 3 },
+    range = { type = "melee" },
+    glow = { mode = "pixel" },
+    flash = { size = 111 },
+    captions = { x = 4 },
+    indicators = { x = 5 },
+    targets = { x = 6 },
+    delays = { x = 7 },
+    keybindings = { x = 8 },
+}
+
+local function legacyProfile()
+    local primary = { numIcons = 5, x = 12, style = "classic" }
+    for k, val in pairs(LEGACY) do -- a copy: AceDB keeps the saved tables
+        if type(val) == "table" then
+            local leaf, x = next(val)
+            val = { [leaf] = x }
+        end
+        primary[k] = val
+    end
+    return { profiles = { Default = { displays = { Primary = primary } } } }
+end
+
+describe("classic's settings", function()
+    it("move under `classic` on load when a saved profile has them flat; core fields stay", function()
+        local H = boot(legacyProfile())
+        local conf = H.Hekili.DB.profile.displays.Primary
+        for k, val in pairs(LEGACY) do
+            assert.is_nil(rawget(conf, k), k)
+            if type(val) == "table" then
+                local leaf, want = next(val)
+                assert.are.equal(want, conf.classic[k][leaf], k .. "." .. leaf)
+            else
+                assert.are.equal(val, conf.classic[k], k)
+            end
+        end
+        assert.are.equal(50, conf.classic.queue.height) -- the defaults a saved table omitted are kept
+        assert.is_true(conf.classic.glow.enabled) -- Primary's own default
+        assert.are.equal(5, conf.numIcons)
+        assert.are.equal(12, conf.x)
+        H.Hekili:RunOneTimeFixes() -- idempotent
+        assert.are.equal(61, conf.classic.primaryWidth)
+        assert.are.equal(33, conf.classic.queue.width)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("are left alone in a profile already migrated", function()
+        local H = boot({ profiles = { Default = { displays = { Primary = { classic = { primaryWidth = 70 } } } } } })
+        local conf = H.Hekili.DB.profile.displays.Primary
+        H.Hekili:RunOneTimeFixes()
+        assert.are.equal(70, conf.classic.primaryWidth)
+        assert.are.equal(50, conf.classic.primaryHeight)
+        assert.is_nil(rawget(conf, "primaryWidth"))
+    end)
+
+    it("come from the classic style's defaults in a fresh profile", function()
+        local H = boot()
+        local displays = H.Hekili.DB.profile.displays
+        assert.are.same(H.ns.UI.Styles.classic.defaults.keybindings, displays.Primary.classic.keybindings)
+        assert.are.equal(50, displays.Primary.classic.primaryWidth)
+        assert.are.same({ 0, 1, 0, 1 }, displays.AOE.classic.flash.color) -- a built-in display's own default
+        for k in pairs(LEGACY) do
+            assert.is_nil(rawget(displays.Primary, k), k)
+        end
+    end)
+
+    it("keep the rest of `classic` when the recover command restores a built-in display's defaults", function()
+        local H = boot()
+        local classic = H.Hekili.DB.profile.displays.Primary.classic
+        classic.primaryWidth, classic.glow.mode = 70, "pixel"
+        H.Hekili:HandleRecoverCommand()
+        assert.are.equal(70, classic.primaryWidth)
+        assert.are.equal("autocast", classic.glow.mode)
+        assert.are.same({}, H.errors)
     end)
 end)

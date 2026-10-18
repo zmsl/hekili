@@ -48,9 +48,38 @@ local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 
 -- One Time Fixes
 local oneTimeFixes = {}
+
+-- Classic's settings, flat on the display table before every style had its own subtable (display styles plan, Task 2b).
+local legacyClassic = { "primaryWidth", "primaryHeight", "zoom", "keepAspectRatio", "queue", "border", "range", "glow",
+    "flash", "captions", "indicators", "targets", "delays", "keybindings" }
+
+local function mergeKey( into, k, v )
+    if type( v ) == "table" and type( into[ k ] ) == "table" then
+        for k2, v2 in pairs( v ) do mergeKey( into[ k ], k2, v2 ) end
+    else into[ k ] = v end
+end
+
+-- Moves a display's flat classic fields under `classic`. AceDB has already filled `classic` from the defaults, so a
+-- flat field is the sign of an older profile; its values win over the defaults (a saved table holds only changes).
+local function migrateDisplay( conf )
+    for _, k in ipairs( legacyClassic ) do
+        local v = rawget( conf, k )
+        if v ~= nil then
+            conf.classic = conf.classic or {}
+            mergeKey( conf.classic, k, v )
+            conf[ k ] = nil
+        end
+    end
+end
+
 function Hekili:RunOneTimeFixes()
     local profile = Hekili.DB.profile
     if not profile then return end
+
+    -- not a runOnce fix: an imported or copied older display can bring flat fields back
+    for _, conf in pairs( profile.displays ) do
+        if type( conf ) == "table" then migrateDisplay( conf ) end
+    end
 
     profile.runOnce = profile.runOnce or {}
 
@@ -87,38 +116,11 @@ local displayTemplate = {
     numIcons = 4,
     forecastPeriod = 15,
 
-    primaryWidth = 50,
-    primaryHeight = 50,
-
-    keepAspectRatio = true,
-    zoom = 30,
-
     frameStrata = "LOW",
     frameLevel = 10,
 
     elvuiCooldown = false,
     hideOmniCC = false,
-
-    queue = {
-        anchor = 'RIGHT',
-        direction = 'RIGHT',
-        style = 'RIGHT',
-        alignment = 'CENTER',
-
-        width = 50,
-        height = 50,
-
-        -- offset = 5, -- deprecated.
-        offsetX = 5,
-        offsetY = 0,
-        spacing = 5,
-
-        elvuiCooldown = false,
-
-        --[[ font = ElvUI and 'PT Sans Narrow' or 'Arial Narrow',
-        fontSize = 12,
-        fontStyle = "OUTLINE" ]]
-    },
 
     visibility = {
         advanced = false,
@@ -149,135 +151,6 @@ local displayTemplate = {
             hideMounted = false,
         },
     },
-
-    border = {
-        enabled = true,
-        thickness = 1,
-        fit = false,
-        coloring = 'custom',
-        color = { 0, 0, 0, 1 },
-    },
-
-    range = {
-        enabled = true,
-        type = 'ability',
-    },
-
-    glow = {
-        enabled = false,
-        queued = false,
-        mode = "autocast",
-        coloring = "default",
-        color = { 0.95, 0.95, 0.32, 1 },
-
-        highlight = true
-    },
-
-    flash = {
-        enabled = false,
-        color = { 255/255, 215/255, 0, 1 }, -- gold.
-        blink = false,
-        suppress = false,
-        combat = false,
-
-        size = 240,
-        brightness = 100,
-        speed = 0.4,
-
-        fixedSize = false,
-        fixedBrightness = false
-    },
-
-    captions = {
-        enabled = false,
-        queued = false,
-
-        align = "CENTER",
-        anchor = "BOTTOM",
-        x = 0,
-        y = 0,
-
-        font = ElvUI and 'PT Sans Narrow' or 'Arial Narrow',
-        fontSize = 12,
-        fontStyle = "OUTLINE",
-
-        color = { 1, 1, 1, 1 },
-    },
-
-    indicators = {
-        enabled = true,
-        queued = true,
-
-        anchor = "RIGHT",
-        x = 0,
-        y = 0,
-
-        width = 20,
-        height = 20,
-        zoom = 30,
-        keepAspectRatio = true,
-    },
-
-    targets = {
-        enabled = true,
-
-        font = ElvUI and 'PT Sans Narrow' or 'Arial Narrow',
-        fontSize = 12,
-        fontStyle = "OUTLINE",
-
-        anchor = "BOTTOMRIGHT",
-        x = 0,
-        y = 0,
-
-        color = { 1, 1, 1, 1 },
-    },
-
-    delays = {
-        type = "__NA",
-        fade = false,
-        extend = true,
-        elvuiCooldowns = false,
-
-        font = ElvUI and 'PT Sans Narrow' or 'Arial Narrow',
-        fontSize = 12,
-        fontStyle = "OUTLINE",
-
-        anchor = "TOPLEFT",
-        x = 0,
-        y = 0,
-
-        color = { 1, 1, 1, 1 },
-    },
-
-    keybindings = {
-        enabled = true,
-        queued = true,
-
-        font = ElvUI and "PT Sans Narrow" or "Arial Narrow",
-        fontSize = 12,
-        fontStyle = "OUTLINE",
-
-        lowercase = false,
-
-        separateQueueStyle = false,
-
-        queuedFont = ElvUI and "PT Sans Narrow" or "Arial Narrow",
-        queuedFontSize = 12,
-        queuedFontStyle = "OUTLINE",
-
-        queuedLowercase = false,
-
-        anchor = "TOPRIGHT",
-        x = 1,
-        y = -1,
-
-        cPortOverride = true,
-        cPortZoom = 0.6,
-
-        color = { 1, 1, 1, 1 },
-        queuedColor = { 1, 1, 1, 1 },
-    },
-
 }
 
 local actionTemplate = {
@@ -493,13 +366,15 @@ do
                         numIcons = 3,
                         order = 1,
 
-                        flash = {
-                            color = { 1, 0, 0, 1 },
-                        },
+                        classic = {
+                            flash = {
+                                color = { 1, 0, 0, 1 },
+                            },
 
-                        glow = {
-                            enabled = true,
-                            mode = "autocast"
+                            glow = {
+                                enabled = true,
+                                mode = "autocast"
+                            },
                         },
                     },
 
@@ -515,13 +390,15 @@ do
                         numIcons = 3,
                         order = 2,
 
-                        flash = {
-                            color = { 0, 1, 0, 1 },
-                        },
+                        classic = {
+                            flash = {
+                                color = { 0, 1, 0, 1 },
+                            },
 
-                        glow = {
-                            enabled = true,
-                            mode = "autocast",
+                            glow = {
+                                enabled = true,
+                                mode = "autocast",
+                            },
                         },
                     },
 
@@ -538,13 +415,15 @@ do
                         numIcons = 1,
                         order = 3,
 
-                        flash = {
-                            color = { 1, 0.82, 0, 1 },
-                        },
+                        classic = {
+                            flash = {
+                                color = { 1, 0.82, 0, 1 },
+                            },
 
-                        glow = {
-                            enabled = true,
-                            mode = "autocast",
+                            glow = {
+                                enabled = true,
+                                mode = "autocast",
+                            },
                         },
                     },
 
@@ -561,13 +440,15 @@ do
                         numIcons = 1,
                         order = 4,
 
-                        flash = {
-                            color = { 0.522, 0.302, 1, 1 },
-                        },
+                        classic = {
+                            flash = {
+                                color = { 0.522, 0.302, 1, 1 },
+                            },
 
-                        glow = {
-                            enabled = true,
-                            mode = "autocast",
+                            glow = {
+                                enabled = true,
+                                mode = "autocast",
+                            },
                         },
                     },
 
@@ -584,13 +465,15 @@ do
                         numIcons = 1,
                         order = 5,
 
-                        flash = {
-                            color = { 1, 1, 1, 1 },
-                        },
+                        classic = {
+                            flash = {
+                                color = { 1, 1, 1, 1 },
+                            },
 
-                        glow = {
-                            enabled = true,
-                            mode = "autocast",
+                            glow = {
+                                enabled = true,
+                                mode = "autocast",
+                            },
                         },
                     },
 
@@ -691,6 +574,22 @@ return end
 
     local frameStratas = ns.FrameStratas
 
+    -- The table an option lives in. A core tab is display → tab key → option; a style's group walks the full path
+    -- (display → style → group → option), descending only into keys its config has, so inline sections are
+    -- presentational and must use keys the config does not (e.g. sec_now).
+    local function optionConf( conf, info )
+        local n, category = #info, info[ 3 ]
+        if ns.UI.Styles[ category ] then
+            for i = 3, n - 1 do
+                local sub = conf[ info[ i ] ]
+                if type( sub ) == "table" then conf = sub end
+            end
+        elseif category ~= info[ n ] and category ~= "main" then
+            conf = conf[ category ]
+        end
+        return conf
+    end
+
     -- Display Config.
     function Hekili:GetDisplayOption( info )
         local n = #info
@@ -700,11 +599,7 @@ return end
             return self:GetDisplayShareOption( info )
         end
 
-        local conf = self.DB.profile.displays[ display ]
-
-        if category ~= option and category ~= "main" then
-            conf = conf[ category ]
-        end
+        local conf = optionConf( self.DB.profile.displays[ display ], info )
 
         if option == "color" or option == "queuedColor" then return unpack( conf.color ) end
         if option == "frameStrata" then return frameStratas[ conf.frameStrata ] or 3 end
@@ -733,8 +628,7 @@ return end
             return
         end
 
-        local conf = self.DB.profile.displays[ display ]
-        if category ~= option and category ~= 'main' then conf = conf[ category ] end
+        local conf = optionConf( self.DB.profile.displays[ display ], info )
 
         if option == 'color' or option == 'queuedColor' then
             conf[ option ] = { val, v2, v3, v4 }
@@ -950,7 +844,7 @@ return end
         local display = info[2]
         display = display == "Multi" and "Primary" or display
 
-        local data = display and Hekili.DB.profile.displays[ display ]
+        local data = display and Hekili.DB.profile.displays[ display ].classic
 
         if data then
             tab.args.x.min = -1 * max( data.primaryWidth, data.queue.width )
@@ -1192,6 +1086,7 @@ return end
         NewFeature = NewFeature,
         fontElements = fontElements,
         fontStyles = fontStyles,
+        anchorPositions = anchorPositions,
         realAnchorPositions = realAnchorPositions,
         rangeIcon = rangeIcon,
     }
@@ -1497,71 +1392,6 @@ return "Position" end,
                                 },
                             },
 
-                            primaryIcon = {
-                                type = "group",
-                                name = "Primary Icon",
-                                inline = true,
-                                order = 15,
-                                hidden = notClassic,
-                                args = {
-                                    primaryWidth = {
-                                        type = "range",
-                                        name = "Width",
-                                        desc = "Specify the width of the primary icon for " .. ( name == "Multi" and "each display." or ( "your " .. name .. " Display." ) ),
-                                        min = 10,
-                                        max = 500,
-                                        step = 1,
-
-                                        width = 1.49,
-                                        order = 1,
-                                    },
-
-                                    primaryHeight = {
-                                        type = "range",
-                                        name = "Height",
-                                        desc = "Specify the height of the primary icon for " .. ( name == "Multi" and "each display." or ( "your " .. name .. " Display." ) ),
-                                        min = 10,
-                                        max = 500,
-                                        step = 1,
-
-                                        width = 1.49,
-                                        order = 2,
-                                    },
-
-                                    spacer01 = {
-                                        type = "description",
-                                        name = " ",
-                                        width = "full",
-                                        order = 3
-                                    },
-
-                                    zoom = {
-                                        type = "range",
-                                        name = "Icon Zoom",
-                                        desc = "Select the zoom percentage for the icon textures in this display. (Roughly 30% will trim off the default Blizzard borders.)",
-                                        min = 0,
-                                        softMax = 100,
-                                        max = 200,
-                                        step = 1,
-
-                                        width = 1.49,
-                                        order = 4,
-                                    },
-
-                                    keepAspectRatio = {
-                                        type = "toggle",
-                                        name = "Keep Aspect Ratio",
-                                        desc = "If your primary or queued icons are not square, checking this option will prevent the icon textures from being " ..
-                                            "stretched and distorted, trimming some of the texture instead.",
-                                        disabled = function( info, val )
-                                            return not ( data.primaryHeight ~= data.primaryWidth or ( data.numIcons > 1 and data.queue.height ~= data.queue.width ) )
-                                        end,
-                                        width = 1.49,
-                                        order = 5,
-                                    },
-                                },
-                            },
-
                             advancedFrame = {
                                 type = "group",
                                 name = "Display Frame Layer",
@@ -1587,185 +1417,6 @@ return "Position" end,
                                         order = 1,
                                     },
                                 },
-                            },
-
-                            queuedElvuiCooldown = {
-                                type = "toggle",
-                                name = "Apply ElvUI Cooldown Style to Queued Icons",
-                                desc = "If ElvUI is installed, you can apply the ElvUI cooldown style to your queued icons.\n\nDisabling this setting requires you to reload your UI (|cFFFFD100/reload|r).",
-                                width = "full",
-                                order = 23,
-                                get = function( info )
-                                    return Hekili.DB.profile.displays[ name ].queue.elvuiCooldown
-                                end,
-                                set = function( info, val )
-                                    Hekili.DB.profile.displays[ name ].queue.elvuiCooldown = val
-                                end,
-                                hidden = function () return _G["ElvUI"] == nil or notClassic() end,
-                            },
-
-                            iconSizeGroup = {
-                                type = "group",
-                                inline = true,
-                                name = "Queued Icon Size",
-                                order = 21,
-                                hidden = notClassic,
-                                args = {
-                                    width = {
-                                        type = 'range',
-                                        name = 'Width',
-                                        desc = "Select the width of the queued icons.",
-                                        min = 10,
-                                        max = 500,
-                                        step = 1,
-                                        bigStep = 1,
-                                        order = 10,
-                                        width = 1.49,
-                                        get = function( info )
-                                            return Hekili.DB.profile.displays[ name ].queue.width
-                                        end,
-                                        set = function( info, val )
-                                            Hekili.DB.profile.displays[ name ].queue.width = val
-                                        end,
-                                    },
-
-                                    height = {
-                                        type = 'range',
-                                        name = 'Height',
-                                        desc = "Select the height of the queued icons.",
-                                        min = 10,
-                                        max = 500,
-                                        step = 1,
-                                        bigStep = 1,
-                                        order = 11,
-                                        width = 1.49,
-                                        get = function( info )
-                                            return Hekili.DB.profile.displays[ name ].queue.height
-                                        end,
-                                        set = function( info, val )
-                                            Hekili.DB.profile.displays[ name ].queue.height = val
-                                        end,
-                                    },
-                                }
-                            },
-
-                            anchorGroup = {
-                                type = "group",
-                                inline = true,
-                                name = "Queued Icon Positioning",
-                                order = 22,
-                                hidden = notClassic,
-                                args = {
-                                    anchor = {
-                                        type = 'select',
-                                        name = 'Anchor To',
-                                        desc = "Select the point on the primary icon to which the queued icons will attach.",
-                                        values = anchorPositions,
-                                        width = 1.49,
-                                        order = 1,
-                                        get = function( info )
-                                            return Hekili.DB.profile.displays[ name ].queue.anchor
-                                        end,
-                                        set = function( info, val )
-                                            Hekili.DB.profile.displays[ name ].queue.anchor = val
-                                            Hekili:BuildUI()
-                                        end,
-                                    },
-
-                                    direction = {
-                                        type = 'select',
-                                        name = 'Grow Direction',
-                                        desc = "Select the direction for the icon queue.\n\n"
-                                            .. "This option generally matches Anchor To selection, but you can specify another direction to make a creative layout.",
-                                        values = {
-                                            TOP = 'Up',
-                                            BOTTOM = 'Down',
-                                            LEFT = 'Left',
-                                            RIGHT = 'Right'
-                                        },
-                                        width = 1.49,
-                                        order = 1.1,
-                                        get = function( info )
-                                            return Hekili.DB.profile.displays[ name ].queue.direction
-                                        end,
-                                        set = function( info, val )
-                                            Hekili.DB.profile.displays[ name ].queue.direction = val
-                                            Hekili:BuildUI()
-                                        end,
-                                    },
-
-                                    spacer01 = {
-                                        type = "description",
-                                        name = " ",
-                                        order = 1.2,
-                                        width = "full",
-                                    },
-
-                                    offsetX = {
-                                        type = 'range',
-                                        name = 'X Offset',
-                                        desc = "Specify the horizontal offset (in pixels) for the queue, in relation to the anchor point on the primary icon for this display.\n\n"
-                                            .. "Positive numbers move the queue to the right, negative numbers move it to the left.",
-                                        min = -100,
-                                        max = 500,
-                                        step = 1,
-                                        width = 1.49,
-                                        order = 2,
-                                        get = function( info )
-                                            return Hekili.DB.profile.displays[ name ].queue.offsetX
-                                        end,
-                                        set = function( info, val )
-                                            Hekili.DB.profile.displays[ name ].queue.offsetX = val
-                                            Hekili:BuildUI()
-                                        end,
-                                    },
-
-                                    offsetY = {
-                                        type = 'range',
-                                        name = 'Y Offset',
-                                        desc = "Specify the vertical offset (in pixels) for the queue, in relation to the anchor point on the primary icon for this display.\n\n"
-                                            .. "Positive numbers move the queue up, negative numbers move it down.",
-                                        min = -100,
-                                        max = 500,
-                                        step = 1,
-                                        width = 1.49,
-                                        order = 2.1,
-                                        get = function( info )
-                                            return Hekili.DB.profile.displays[ name ].queue.offsetY
-                                        end,
-                                        set = function( info, val )
-                                            Hekili.DB.profile.displays[ name ].queue.offsetY = val
-                                            Hekili:BuildUI()
-                                        end,
-                                    },
-
-                                    spacer02 = {
-                                        type = "description",
-                                        name = " ",
-                                        order = 2.2,
-                                        width = "full",
-                                    },
-
-                                    spacing = {
-                                        type = 'range',
-                                        name = 'Icon Spacing',
-                                        desc = "Select the number of pixels between icons in the queue.",
-                                        softMin = ( data.queue.direction == "LEFT" or data.queue.direction == "RIGHT" ) and -data.queue.width or -data.queue.height,
-                                        softMax = ( data.queue.direction == "LEFT" or data.queue.direction == "RIGHT" ) and data.queue.width or data.queue.height,
-                                        min = -500,
-                                        max = 500,
-                                        step = 1,
-                                        order = 3,
-                                        width = 2.98,
-                                        get = function( info )
-                                            return Hekili.DB.profile.displays[ name ].queue.spacing
-                                        end,
-                                        set = function( info, val )
-                                            Hekili.DB.profile.displays[ name ].queue.spacing = val
-                                            Hekili:BuildUI()
-                                        end,
-                                    },
-                                }
                             },
                         },
                     },
@@ -1994,16 +1645,20 @@ return "Position" end,
             },
         }
 
-        -- each style's tabs, shown only while the display uses that style
+        -- each style's tabs in one group keyed by the style's name (its config subtable), shown only while the display
+        -- uses that style
         local args = option[ name ].args
         for styleName, style in pairs( ns.UI.Styles ) do
             local tabs = style.Options( name, data )
             if tabs then
-                local hidden = notStyle( styleName )
-                for key, tab in pairs( tabs ) do
-                    tab.hidden = hidden
-                    args[ key ] = tab
-                end
+                args[ styleName ] = {
+                    type = "group",
+                    name = style.label,
+                    childGroups = "tab",
+                    order = 2,
+                    hidden = notStyle( styleName ),
+                    args = tabs,
+                }
             end
         end
 
@@ -2176,12 +1831,12 @@ return "Position" end,
                     values = LSM:HashTable("font"),
                     get = function( info )
                         -- Display the information from Primary, Keybinds.
-                        return Hekili.DB.profile.displays.Primary.keybindings.font
+                        return Hekili.DB.profile.displays.Primary.classic.keybindings.font
                     end,
                     set = function( info, val )
                         -- Set all fonts in all displays.
                         for _, display in pairs( Hekili.DB.profile.displays ) do
-                            for _, data in pairs( display ) do
+                            for _, data in pairs( display.classic ) do
                                 if type( data ) == "table" and data.font then data.font = val end
                             end
                         end
@@ -2198,12 +1853,12 @@ return "Position" end,
                     step = 1,
                     get = function( info )
                         -- Display the information from Primary, Keybinds.
-                        return Hekili.DB.profile.displays.Primary.keybindings.fontSize
+                        return Hekili.DB.profile.displays.Primary.classic.keybindings.fontSize
                     end,
                     set = function( info, val )
                         -- Set all fonts in all displays.
                         for _, display in pairs( Hekili.DB.profile.displays ) do
-                            for _, data in pairs( display ) do
+                            for _, data in pairs( display.classic ) do
                                 if type( data ) == "table" and data.fontSize then data.fontSize = val end
                             end
                         end
@@ -2226,12 +1881,12 @@ return "Position" end,
                     },
                     get = function( info )
                         -- Display the information from Primary, Keybinds.
-                        return Hekili.DB.profile.displays.Primary.keybindings.fontStyle
+                        return Hekili.DB.profile.displays.Primary.classic.keybindings.fontStyle
                     end,
                     set = function( info, val )
                         -- Set all fonts in all displays.
                         for _, display in pairs( Hekili.DB.profile.displays ) do
-                            for _, data in pairs( display ) do
+                            for _, data in pairs( display.classic ) do
                                 if type( data ) == "table" and data.fontStyle then data.fontStyle = val end
                             end
                         end
@@ -2245,11 +1900,11 @@ return "Position" end,
                     name = "Color",
                     order = 960.4,
                     get = function( info )
-                        return unpack( Hekili.DB.profile.displays.Primary.keybindings.color )
+                        return unpack( Hekili.DB.profile.displays.Primary.classic.keybindings.color )
                     end,
                     set = function( info, ... )
                         for name, display in pairs( Hekili.DB.profile.displays ) do
-                            for _, data in pairs( display ) do
+                            for _, data in pairs( display.classic ) do
                                 if type( data ) == "table" and data.color then data.color = { ... } end
                             end
                         end
@@ -2438,7 +2093,10 @@ return "Position" end,
                                             confirm = true,
                                             func = function ()
                                                 for k, v in pairs( shareDB.imported ) do
-                                                    if type( v ) == "table" then self.DB.profile.displays[ k ] = v end
+                                                    if type( v ) == "table" then
+                                                        migrateDisplay( v )
+                                                        self.DB.profile.displays[ k ] = v
+                                                    end
                                                 end
 
                                                 shareDB.import = ""

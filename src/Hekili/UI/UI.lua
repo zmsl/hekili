@@ -1101,10 +1101,7 @@ do
         d.numIcons = conf.numIcons
         d.firstForce = 0
 
-        local scale = self:GetScale()
-        local border = 2
-
-        d:SetSize( scale * ( border + ( conf.primaryWidth or 50 ) ), scale * ( border + ( conf.primaryHeight or 50 ) ) )
+        -- the style's Build sizes the frame
         --[[ d:SetIgnoreParentScale( true )
         d:SetScale( UIParent:GetScale() ) ]]
         d:ClearAllPoints()
@@ -1305,10 +1302,6 @@ do
 
         d.id = id
 
-        local scale = self:GetScale()
-        local border = 2
-
-        d:SetSize( scale * ( border + conf.primaryWidth ), scale * (border + conf.primaryHeight ) )
         d:SetPoint( "CENTER", nil, "CENTER", conf.x, conf.y )
         d:SetFrameStrata( "MEDIUM" )
         d:SetClampedToScreen( true )

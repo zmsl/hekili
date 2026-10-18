@@ -575,7 +575,13 @@ function Hekili:HandleRecoverCommand()
         local default = defaults.profile.displays[k]
         if default then
             for key, value in pairs( default ) do
-                v[ key ] = ( type( value) == "table" ) and tableCopy( value ) or value
+                if key == "classic" then -- a style subtable: restore its groups, keep the rest
+                    for group, gv in pairs( value ) do
+                        v.classic[ group ] = ( type( gv ) == "table" ) and tableCopy( gv ) or gv
+                    end
+                else
+                    v[ key ] = ( type( value) == "table" ) and tableCopy( value ) or value
+                end
             end
         end
     end
