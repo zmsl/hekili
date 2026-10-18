@@ -461,21 +461,12 @@ end
 
 
 do
-    local knownCache = {}
-    local reasonCache = {}
+    local caches = ns.SpellCaches -- State.lua's per-prediction memos of IsKnown and IsDisabled
 
     function Hekili:IsSpellKnown( spell )
         return state:IsKnown( spell )
-        --[[ local id = class.abilities[ spell ] and class.abilities[ spell ].id or spell
-
-        if knownCache[ id ] ~= nil then return knownCache[ id ], reasonCache[ id ] end
-        knownCache[ id ], reasonCache[ id ] = state:IsKnown( spell )
-        return knownCache[ id ], reasonCache[ id ] ]]
     end
 
-
-    local disabledCache = {}
-    local disabledReasonCache = {}
 
     function Hekili:IsSpellEnabled( spell )
         local ability = class.abilities[ spell ]
@@ -491,11 +482,12 @@ do
 
 
     function Hekili:ResetSpellCaches()
-        twipe( knownCache )
-        twipe( reasonCache )
-
-        twipe( disabledCache )
-        twipe( disabledReasonCache )
+        twipe( caches.known )
+        twipe( caches.knownReason )
+        twipe( caches.disabled )
+        twipe( caches.disabledReason )
+        twipe( caches.disabledStrict )
+        twipe( caches.disabledStrictReason )
     end
 end
 

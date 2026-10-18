@@ -33,6 +33,7 @@ end
 
 --- True (and a reason) when ability `key` is disabled by the profile (strict: by the user's own choice only).
 function Registry.IsDisabled(key, strict)
+    Hekili:ResetSpellCaches() -- the options panel reads between predictions: never a cached answer
     return state:IsDisabled(key, strict)
 end
 

@@ -113,6 +113,9 @@ Two environments have them:
 `RegisterAbility{ passive = true, id = <number> }` (`Engine/Schema/Spec.lua`) is a spell the spellbook knows and the
 player never casts. The belief tracks its known rank (`knownRank` reads it); the sim never sees it.
 
+An ability's `known` must depend only on the spellbook, talents and gear, never on buffs or time, because the engine
+caches it for one prediction (`state:IsKnown`, wiped by `Hekili:ResetSpellCaches`).
+
 **Addons and load order.** `Hekili` (core, the only addon the client loads by itself), `Hekili_Shared`
 (`## Dependencies: Hekili`, `## LoadOnDemand: 1`; Shared auras, consumables, items, and the race packs), then one pack
 per class: `Hekili_Warrior`, `Hekili_Druid` (`## Dependencies: Hekili, Hekili_Shared`,

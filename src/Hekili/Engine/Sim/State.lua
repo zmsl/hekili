@@ -1798,7 +1798,9 @@ do
             -- If the information will change and is time-sensitive, just return the calculated value.
             -- If something externally will set the value and it needs to persist, do not include in the reset table.
             -- If it's possible that something will set a value during recommendations generation, the key should also be in the reset table so it'll get wiped for each new set of recommendations.
-            if class.stateExprs[ k ] then return class.stateExprs[ k ]()
+            -- query_time first: the simulation's most frequent read (dispatch order only; no stateExpr names it).
+            if k == "query_time" then return t.now + t.offset + t.delay
+            elseif class.stateExprs[ k ] then return class.stateExprs[ k ]()
 
             -- Internal processing stuff.
             elseif k == "display" then t[k] = "Primary"
@@ -1822,7 +1824,6 @@ do
             elseif k == "longest_ttd" then t[k] = Hekili:GetGreatestTTD()
             elseif k == "now" then t[k] = GetTime()
             elseif k == "offset" then t[k] = 0
-            elseif k == "query_time" then  return t.now + t.offset + t.delay
             elseif k == "shortest_ttd" then t[k] = Hekili:GetLowestTTD()
             elseif k == "time" then
                 -- Calculate time in combat.
@@ -6193,6 +6194,7 @@ do
 
     function state.reset( dispName, full )
         dispName = dispName or "Primary"
+        Hekili:ResetSpellCaches() -- every reset path (the pack editor's Evaluate, the scripts' load) starts fresh
 
         full = dispName == "Primary" or state.offset > 0
 
@@ -6727,7 +6729,17 @@ do
 end
 
 
-function state:IsKnown( sID )
+-- Per-prediction memos of IsKnown and of IsDisabled's static prefix (wiped by Hekili:ResetSpellCaches at every
+-- GetNextPrediction and state.reset): an ability's `known` may depend only on the spellbook, talents and gear.
+local knownCache, knownReason = {}, {}
+local disabledCache, disabledReason, disabledStrict, disabledStrictReason = {}, {}, {}, {}
+ns.SpellCaches = {
+    known = knownCache, knownReason = knownReason,
+    disabled = disabledCache, disabledReason = disabledReason,
+    disabledStrict = disabledStrict, disabledStrictReason = disabledStrictReason,
+}
+
+local function computeKnown( sID )
     local original = sID
     if type(sID) ~= "number" then sID = class.abilities[ sID ] and class.abilities[ sID ].id or nil end
 
@@ -6814,6 +6826,25 @@ function state:IsKnown( sID )
 
 end
 
+-- Cached by the ability's numeric ID (nil: not computed; a nil answer is stored as false).
+function state:IsKnown( sID )
+    local id = sID
+    if type( id ) ~= "number" then
+        local a = class.abilities[ id ]
+        id = a and a.id
+        if not id then return false, "could not find valid ID" end
+    end
+
+    local known = knownCache[ id ]
+    if known ~= nil then return known, knownReason[ id ] end
+
+    local reason
+    known, reason = computeKnown( sID )
+    if known == nil then known = false end
+    knownCache[ id ], knownReason[ id ] = known, reason
+    return known, reason
+end
+
 
 
 do
@@ -6822,6 +6853,52 @@ do
         cancel_buff = true,
         phial_of_serenity = true,
     }
+
+    -- If an ability has been manually disabled, don't consider it.
+    -- IsDisabled's static prefix: the profile (spec, items, toggles, display filter, preferences, boss, target
+    -- counts), fixed within one prediction. DISABLED / ENABLED are final; LIVE leaves the answer to the live tail.
+    local DISABLED, ENABLED, LIVE = 1, 2, 3
+
+    local function disabledPrefix( self, ability, spell, strict )
+        local settings = Hekili.Engine.settings
+        local spec = rawget( settings.specs, state.spec.id )
+        if not spec then return DISABLED end
+
+        local option = ability.item and spec.items[ spell ] or spec.abilities[ spell ]
+
+        if ability.item and ability.toggle ~= "potions" then
+            local sp = rawget( settings.specs, state.spec.id )
+            if sp and sp.disable_items then
+                return DISABLED, "preference - spec disables gear/items"
+            end
+        end
+
+        local live -- a toggle with an override (Bloodlust, Power Infusion) is live: never cached (the third return)
+        if not strict then
+            local toggle = option.toggle
+            if not toggle or toggle == "default" then toggle = ability.toggle end
+
+            if ( toggle == "potion" or toggle == "essences" ) and settings.toggles[ toggle ].separate and not settings.toggles[ toggle ].value then toggle = "cooldowns" end
+
+            live = toggle and toggle ~= "none" and ( settings.toggles[ toggle ].override or settings.toggles[ toggle ].infusion )
+            if toggle and toggle ~= "none" and ( not self.toggle[ toggle ] or ( settings.toggles[ toggle ].separate and state.filter ~= toggle ) ) then return DISABLED, format( "toggle %s", toggle ), live end
+
+            if ability.id < -100 or ability.id > 0 or toggleSpells[ spell ] then
+                if state.filter ~= "none" and state.filter ~= toggle and not ability[ state.filter ] then return DISABLED, "display", live
+                elseif ability.item and not ability.bagItem and not state.equipped[ ability.item ] then return ENABLED, nil, live end
+            end
+        end
+
+        if option.disabled then return DISABLED, "preference" end
+        if option.boss and not state.boss then return DISABLED, "boss-only" end
+        if option.targetMin > 0 and self.active_enemies < option.targetMin then
+            return DISABLED, "active_enemies[" .. self.active_enemies .. "] is less than ability's minimum targets [" .. option.targetMin .. "]"
+        elseif option.targetMax > 0 and self.active_enemies > option.targetMax then
+            return DISABLED, "active_enemies[" .. self.active_enemies .. "] is more than ability's maximum targets [" .. option.targetMax .. "]"
+        end
+
+        return LIVE, nil, live
+    end
 
     -- If an ability has been manually disabled, don't consider it.
     function state:IsDisabled( spell, strict )
@@ -6836,44 +6913,24 @@ do
 
         spell = ability.key
 
-        local settings = Hekili.Engine.settings
-        local spec = rawget( settings.specs, state.spec.id )
-        if not spec then return true end
-
-        local option = ability.item and spec.items[ spell ] or spec.abilities[ spell ]
-
-        if ability.item and ability.toggle ~= "potions" then
-            local sp = rawget( settings.specs, state.spec.id )
-            if sp and sp.disable_items then
-                return true, "preference - spec disables gear/items"
-            end
+        local cache, reasons = disabledCache, disabledReason
+        if strict then cache, reasons = disabledStrict, disabledStrictReason end
+        local code, reason = cache[ spell ], reasons[ spell ]
+        if code == nil then
+            local live
+            code, reason, live = disabledPrefix( self, ability, spell, strict )
+            if not live then cache[ spell ], reasons[ spell ] = code, reason end
         end
+        if code == DISABLED then return true, reason end
+        if code == ENABLED then return false end
 
-        if not strict then
-            local toggle = option.toggle
-            if not toggle or toggle == "default" then toggle = ability.toggle end
-
-            if ( toggle == "potion" or toggle == "essences" ) and settings.toggles[ toggle ].separate and not settings.toggles[ toggle ].value then toggle = "cooldowns" end
-
-            if toggle and toggle ~= "none" and ( not self.toggle[ toggle ] or ( settings.toggles[ toggle ].separate and state.filter ~= toggle ) ) then return true, format( "toggle %s", toggle ) end
-
-            if ability.id < -100 or ability.id > 0 or toggleSpells[ spell ] then
-                if state.filter ~= "none" and state.filter ~= toggle and not ability[ state.filter ] then return true, "display"
-                elseif ability.item and not ability.bagItem and not state.equipped[ ability.item ] then return false end
-            end
-        end
-
+        -- The live tail: may change within a prediction as the simulation advances.
         if ability.disabled then return true, "disabled per ability function" end
         if self.holds[ spell ] then return true, "on hold" end
-        if option.disabled then return true, "preference" end
-        if option.boss and not state.boss then return true, "boss-only" end
-        if option.targetMin > 0 and self.active_enemies < option.targetMin then
-            return true, "active_enemies[" .. self.active_enemies .. "] is less than ability's minimum targets [" .. option.targetMin .. "]"
-        elseif option.targetMax > 0 and self.active_enemies > option.targetMax then
-            return true, "active_enemies[" .. self.active_enemies .. "] is more than ability's maximum targets [" .. option.targetMax .. "]"
-        end
 
         -- New: DoT Cap
+        local spec = rawget( Hekili.Engine.settings.specs, state.spec.id )
+        local option = ability.item and spec.items[ spell ] or spec.abilities[ spell ]
         local dotCap = option.dotCap
         if dotCap and dotCap > 0 and class.auras[ spell ] then
             local activeDot = state.active_dot[ spell ]
