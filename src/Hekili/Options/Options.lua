@@ -1680,7 +1680,7 @@ return "Position" end,
             if tabs then
                 args[ styleName ] = {
                     type = "group",
-                    name = style.label,
+                    name = "Style",
                     childGroups = "tab",
                     order = 2,
                     hidden = notStyle( styleName ),

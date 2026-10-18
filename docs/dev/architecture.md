@@ -198,7 +198,7 @@ display whose profile already names the style binds it.
 | Member | Called | Does |
 |---|---|---|
 | `api` | registration | the interface version it was written for |
-| `label` | dropdown | the name the style dropdown shows |
+| `label` | dropdown | the name the style dropdown shows; the options group itself is always titled Style |
 | `defaults` | registration | optional; the template of `displays[id].<name>` |
 | `needs` | subscribing | optional; `{ alts = true }` asks the engine for `recs[1..2].alts` (below), which costs extra simulation passes; read from the bound style table on every subscribe, which the display's alpha check repeats about every 0.5 s while it is shown, so a change applies within about 0.5 s |
 | `NeedsFor(id, conf)` | subscribing | optional; when present core asks it instead of reading `needs`, for that display's needs table (return preallocated tables: it runs on every alpha check); Timeline answers `needs` while `alts.enabled`, else no needs |
