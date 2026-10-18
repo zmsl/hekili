@@ -485,8 +485,8 @@ do
 
         {
             text = "Minor CDs",
-            func = function() Hekili:FireToggle( "essences" ); ns.UI.Minimap:RefreshDataText() end,
-            checked = function () return Hekili.DB.profile.toggles.essences.value end,
+            func = function() Hekili:FireToggle( "minor_cooldowns" ); ns.UI.Minimap:RefreshDataText() end,
+            checked = function () return Hekili.DB.profile.toggles.minor_cooldowns.value end,
         },
 
         {
@@ -829,8 +829,8 @@ function Hekili:CreateLaunchers()
         local m = p.toggles.mode.value
         local color = "FFFFD100"
 
-        if p.toggles.essences.override then
-            -- Don't show Minor CDs (the `essences` toggle) here if it's overridden by CDs anyway?
+        if p.toggles.minor_cooldowns.override then
+            -- Don't show Minor CDs here if it's overridden by CDs anyway?
             return format( "|c%s%s|r %sCD|r %sInt|r %sDef|r", color,
                 m == "single" and "ST" or ( m == "aoe" and "AOE" or ( m == "dual" and "Dual" or ( m == "reactive" and "React" or "Auto" ) ) ),
                 p.toggles.cooldowns.value and "|cFF00FF00" or "|cFFFF0000",
@@ -841,7 +841,7 @@ function Hekili:CreateLaunchers()
                 color,
                 m == "single" and "ST" or ( m == "aoe" and "AOE" or ( m == "dual" and "Dual" or ( m == "reactive" and "React" or "Auto" ) ) ),
                 p.toggles.cooldowns.value and "|cFF00FF00" or "|cFFFF0000",
-                p.toggles.essences.value and "|cFF00FF00" or "|cFFFF0000",
+                p.toggles.minor_cooldowns.value and "|cFF00FF00" or "|cFFFF0000",
                 p.toggles.interrupts.value and "|cFF00FF00" or "|cFFFF0000" )
         end
     end

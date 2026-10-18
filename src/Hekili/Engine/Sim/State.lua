@@ -2655,10 +2655,11 @@ local mt_toggle = {
         local toggles = Hekili.Engine.settings.toggles
         if not toggles then return end
 
+        if k == "essences" then k = "minor_cooldowns" end -- upstream's name for it, in pasted or saved priorities
         local toggle = toggles[ k ]
 
         if k == "cooldowns" and ( toggle.override and state.buff.bloodlust.up or toggle.infusion and state.buff.power_infusion.up ) then return true end
-        if k == "essences" and toggle.override and state.toggle.cooldowns then return true end
+        if k == "minor_cooldowns" and toggle.override and state.toggle.cooldowns then return true end
         if k == "potions" and toggle.override and state.toggle.cooldowns then return true end
 
         if toggle then return toggle.value end
@@ -6787,7 +6788,7 @@ do
             local toggle = option.toggle
             if not toggle or toggle == "default" then toggle = ability.toggle end
 
-            if ( toggle == "potion" or toggle == "essences" ) and settings.toggles[ toggle ].separate and not settings.toggles[ toggle ].value then toggle = "cooldowns" end
+            if ( toggle == "potion" or toggle == "minor_cooldowns" ) and settings.toggles[ toggle ].separate and not settings.toggles[ toggle ].value then toggle = "cooldowns" end
 
             local tt = toggle and toggle ~= "none" and settings.toggles[ toggle ] -- nil for an unknown key: disabled below, as before
             live = tt and ( tt.override or tt.infusion )
@@ -6886,7 +6887,7 @@ do
         local toggle = option.toggle
         if not toggle or toggle == "default" then toggle = ability.toggle end
 
-        if ( toggle == "potion" or toggle == "essences" ) and settings.toggles[ toggle ].separate and not settings.toggles[ toggle ].value then toggle = "cooldowns" end
+        if ( toggle == "potion" or toggle == "minor_cooldowns" ) and settings.toggles[ toggle ].separate and not settings.toggles[ toggle ].value then toggle = "cooldowns" end
 
         if state.filter ~= "none" and state.filter ~= toggle and not ability[ state.filter ] then return true, "display" end
         if ability.item and not ability.bagItem and not state.equipped[ ability.item ] then return false, "not equipped" end

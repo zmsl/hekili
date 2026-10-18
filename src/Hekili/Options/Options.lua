@@ -76,9 +76,33 @@ local function migrateDisplay( conf )
     end
 end
 
+-- The Minor Cooldowns toggle was saved as `essences` (upstream's name). Its presence marks an older profile, since the
+-- defaults no longer have it; its saved fields win over the defaults AceDB put in `minor_cooldowns`.
+local function migrateToggles( profile )
+    local toggles = profile.toggles
+    local old = rawget( toggles, "essences" )
+    if type( old ) == "table" then
+        local new = toggles.minor_cooldowns
+        for _, k in ipairs( { "key", "value", "separate", "override" } ) do
+            if old[ k ] ~= nil then new[ k ] = old[ k ] end
+        end
+        toggles.essences = nil
+    end
+    for _, spec in pairs( profile.specs ) do
+        for _, kind in ipairs( { "abilities", "items" } ) do
+            for _, option in pairs( type( spec ) == "table" and rawget( spec, kind ) or {} ) do
+                if type( option ) == "table" and option.toggle == "essences" then option.toggle = "minor_cooldowns" end
+            end
+        end
+    end
+end
+
 function Hekili:RunOneTimeFixes()
     local profile = Hekili.DB.profile
     if not profile then return end
+
+    -- not a runOnce fix either: an imported or copied older profile can bring `essences` back
+    migrateToggles( profile )
 
     -- not a runOnce fix: an imported or copied older display can bring flat fields back
     for _, conf in pairs( profile.displays ) do
@@ -322,7 +346,7 @@ do
                         castRemainingThreshold = 0.25,
                     },
 
-                    essences = {
+                    minor_cooldowns = {
                         key = "ALT-SHIFT-G",
                         value = true,
                         override = true,
@@ -2801,12 +2825,12 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
                     table.wipe( toggles )
 
                     local t = Registry.Abilities()[ v ].toggle or "none"
-                    if t == "essences" then t = "Minor CDs" end
+                    if t == "minor_cooldowns" then t = "Minor CDs" end
 
                     toggles.none = "None"
                     toggles.default = "Default |cffffd100(" .. t .. ")|r"
                     toggles.cooldowns = "Cooldowns"
-                    toggles.essences = "Minor CDs"
+                    toggles.minor_cooldowns = "Minor CDs"
                     toggles.defensives = "Defensives"
                     toggles.interrupts = "Interrupts"
                     toggles.potions = "Potions"
@@ -2936,12 +2960,12 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
                             table.wipe( toggles )
 
                             local t = Registry.Abilities()[ v ].toggle or "none"
-                            if t == "essences" then t = "Minor CDs" end
+                            if t == "minor_cooldowns" then t = "Minor CDs" end
 
                             toggles.none = "None"
                             toggles.default = "Default |cffffd100(" .. t .. ")|r"
                             toggles.cooldowns = "Cooldowns"
-                            toggles.essences = "Minor CDs"
+                            toggles.minor_cooldowns = "Minor CDs"
                             toggles.defensives = "Defensives"
                             toggles.interrupts = "Interrupts"
                             toggles.potions = "Potions"
@@ -3225,7 +3249,7 @@ found = true end
                     toggles.none = "None"
                     toggles.default = "Default" .. ( Registry.Abilities()[ v ].toggle and ( " |cffffd100(" .. Registry.Abilities()[ v ].toggle .. ")|r" ) or " |cffffd100(none)|r" )
                     toggles.cooldowns = "Cooldowns"
-                    toggles.essences = "Minor CDs"
+                    toggles.minor_cooldowns = "Minor CDs"
                     toggles.defensives = "Defensives"
                     toggles.interrupts = "Interrupts"
                     toggles.potions = "Potions"
@@ -3330,7 +3354,7 @@ found = true end
                             toggles.none = "None"
                             toggles.default = "Default" .. ( Registry.Abilities()[ v ].toggle and ( " |cffffd100(" .. Registry.Abilities()[ v ].toggle .. ")|r" ) or " |cffffd100(none)|r" )
                             toggles.cooldowns = "Cooldowns"
-                            toggles.essences = "Minor CDs"
+                            toggles.minor_cooldowns = "Minor CDs"
                             toggles.defensives = "Defensives"
                             toggles.interrupts = "Interrupts"
                             toggles.potions = "Potions"
@@ -6246,7 +6270,7 @@ do
                             order = 5
                         },
 
-                        essences = {
+                        minor_cooldowns = {
                             type = "group",
                             name = "",
                             inline = true,
@@ -7858,6 +7882,7 @@ do
         { "hyperthread_wristwraps%.([%w_]+)%.first_remains" , "hyperthread_wristwraps.first_remains.%1" },
         { "hyperthread_wristwraps%.([%w_]+)%.count"         , "hyperthread_wristwraps.%1"               },
         { "cooldown"                                        , "action_cooldown"                         },
+        { "toggle%.essences"                                , "toggle.minor_cooldowns"                  },
         { "talent%.([%w_]+)"                                , "talent.%1.enabled",                      true },
         { "rune_word%.([%w_]+)"                             , "buff.rune_word_%1.up"                    },
         { "rune_word%.([%w_]+)%.enabled"                    , "buff.rune_word_%1.up"                    },
@@ -8304,7 +8329,7 @@ do
             local toggle = Hekili.DB.profile.toggles[ k ]
             if k == "custom1" or k == "custom2" then
                 name = toggle and toggle.name or name
-            elseif k == "essences" then
+            elseif k == "minor_cooldowns" then
                 name = "Minor Cooldowns"
                 t[ k ] = name
             elseif k == "cooldowns" then
@@ -8334,6 +8359,7 @@ do
     end
 
     function Hekili:FireToggle( name, explicitState )
+        if name == "essences" then name = "minor_cooldowns" end -- the old key, for macros and WeakAuras
         local toggle = name and self.DB.profile.toggles[ name ]
         if not toggle then return end
 

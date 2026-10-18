@@ -110,6 +110,7 @@ end
 function Hekili:HandleSetCommand( args )
     local profile = self.DB.profile
     local mainToggle = args[2] and args[2]:lower()  -- Convert to lowercase
+    if mainToggle == "essences" then mainToggle = "minor_cooldowns" end -- the old key, for macros
     local subToggleOrState = args[3] and args[3]:lower()
     local explicitState = args[4]
 
