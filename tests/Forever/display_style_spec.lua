@@ -1638,7 +1638,7 @@ local RULERS = {
     ruler = { shown = 12, base = { 130, 9 }, tick1 = { 130, 3 }, tick2 = { 154, 6 } }, -- a major tick at 0 s
     dots = { shown = 11, tick1 = { 130, 7 }, tick2 = { 154, 7 } },
     lines = { shown = 11, tick1 = { 130, 5 }, tick2 = { 154, 5 } },
-    center = { shown = 1, base = { 130, 36 } }, -- through the middle of the two rows (16 .. 56)
+    center = { shown = 1, base = { 130, 25.5 } }, -- through the middle of row 1 (16 .. 36), not the two-row band
 }
 
 for _, style in ipairs({ "ruler", "dots", "lines", "center" }) do

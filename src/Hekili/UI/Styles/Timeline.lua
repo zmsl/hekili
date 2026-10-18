@@ -447,7 +447,8 @@ function Timeline.Build( d, conf )
     T.ticksOn = style ~= "center" and tl.ruler.ticks
     T.base:SetColorTexture( rc[ 1 ], rc[ 2 ], rc[ 3 ], 1 )
     T.base:SetSize( T.laneLength * s, s )
-    place( T, T.base, T.laneX0, style == "center" and T.rowTop1 + ( tl.rows >= 2 and 2 or 1 ) * iconS / 2 or baseY )
+    -- center: through the middle of row 1 (the lane proper; row 2 is the stacked alternatives), whatever the row count
+    place( T, T.base, T.laneX0, style == "center" and T.rowTop1 + ( iconS - 1 ) / 2 or baseY )
     for k = 1, MAX_TICKS do
         local t = T.ticks[ k ]
         local sec = k - 1
