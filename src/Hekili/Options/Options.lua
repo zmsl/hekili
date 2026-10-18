@@ -9590,6 +9590,7 @@ do
         if WeakAuras and WeakAuras.ScanEvents then WeakAuras.ScanEvents( "HEKILI_TOGGLE", name, toggle.value ) end
         if ns.UI.Minimap then ns.UI.Minimap:RefreshDataText() end
         self:UpdateDisplayVisibility()
+        self:ResetSpellCaches() -- the rest of a suspended prediction sees the new toggle too
         self:ForceUpdate( "HEKILI_TOGGLE", true )
     end
 

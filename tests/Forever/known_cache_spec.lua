@@ -177,10 +177,35 @@ describe("the per-prediction memos of IsKnown and IsDisabled", function()
             st.reset("Primary", true)
             assert.is_false((st:IsDisabled("recklessness")))
             assert.is_false((st:IsDisabled("recklessness"))) -- the cached answer
+            assert.is_not_nil(H.ns.SpellCaches.disabled.recklessness)
             toggles[key].value = false
             H.Hekili:ResetSpellCaches() -- the next prediction, as GetNextPrediction starts it
             assert.is_true((st:IsDisabled("recklessness")))
             toggles[key].value = was
+        end)
+
+        it("never caches the prefix of an ability whose toggle has an override (a buff can flip it)", function()
+            local toggles = H.Hekili.Engine.settings.toggles
+            local key = H.Hekili.Class.abilities.recklessness.toggle
+            local was = toggles[key].override
+            toggles[key].override = true
+            H.Hekili:ResetSpellCaches()
+            st.reset("Primary", true)
+            st:IsDisabled("recklessness")
+            assert.is_nil(H.ns.SpellCaches.disabled.recklessness)
+            toggles[key].override = was
+        end)
+
+        it("caches the target-count check for one prediction and re-reads it in the next", function()
+            local ms = H.Hekili.Engine.settings.specs[ww.SPEC].abilities.mortal_strike
+            st.reset("Primary", true)
+            assert.are.equal(1, st.active_enemies)
+            ms.targetMin = 2
+            H.Hekili:ResetSpellCaches()
+            assert.is_true((st:IsDisabled("mortal_strike")))
+            ms.targetMin = 0
+            H.Hekili:ResetSpellCaches()
+            assert.is_false((st:IsDisabled("mortal_strike")))
         end)
     end)
 end)

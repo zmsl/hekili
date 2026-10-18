@@ -6880,7 +6880,8 @@ do
 
             if ( toggle == "potion" or toggle == "essences" ) and settings.toggles[ toggle ].separate and not settings.toggles[ toggle ].value then toggle = "cooldowns" end
 
-            live = toggle and toggle ~= "none" and ( settings.toggles[ toggle ].override or settings.toggles[ toggle ].infusion )
+            local tt = toggle and toggle ~= "none" and settings.toggles[ toggle ] -- nil for an unknown key: disabled below, as before
+            live = tt and ( tt.override or tt.infusion )
             if toggle and toggle ~= "none" and ( not self.toggle[ toggle ] or ( settings.toggles[ toggle ].separate and state.filter ~= toggle ) ) then return DISABLED, format( "toggle %s", toggle ), live end
 
             if ability.id < -100 or ability.id > 0 or toggleSpells[ spell ] then
