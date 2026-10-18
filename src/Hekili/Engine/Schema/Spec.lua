@@ -1389,7 +1389,7 @@ function Hekili:NewSpecialization( specID, isRanged, icon )
     local forever = ns.Specializations[ specID ] and ns.Specializations[ specID ].forever
     -- Forever pseudo-spec: GetSpecializationInfoByID is unprobed there, so identity comes from the Constants row.
     if forever then id, name, texture, pClass = specID, forever, icon, ns.Specializations[ specID ].class
-    elseif Hekili.IsRetail() and specID > 0 then id, name, _, texture, role, pClass = GetSpecializationInfoByID( specID )
+    elseif Hekili.IsForever() and specID > 0 then id, name, _, texture, role, pClass = GetSpecializationInfoByID( specID )
     else
         id = specID
         texture = icon

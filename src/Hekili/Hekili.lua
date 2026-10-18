@@ -8,7 +8,7 @@ local AuraUtil, C_AddOns, C_UnitAuras = Facade.AuraUtil, Facade.C_AddOns, Facade
 local GetBuildInfo, GetFramerate, GetTime = Facade.GetBuildInfo, Facade.GetFramerate, Facade.GetTime
 Hekili = LibStub("AceAddon-3.0"):NewAddon( "Hekili", "AceConsole-3.0", "AceSerializer-3.0" )
 Hekili.Version = C_AddOns.GetAddOnMetadata( "Hekili", "Version" )
-Hekili.Flavor = C_AddOns.GetAddOnMetadata( "Hekili", "X-Flavor" ) or "Retail"
+Hekili.Flavor = C_AddOns.GetAddOnMetadata( "Hekili", "X-Flavor" ) or "Forever"
 
 local format = string.format
 local insert, concat = table.insert, table.concat
@@ -25,9 +25,10 @@ end
 
 Hekili.AllowSimCImports = true
 
-Hekili.IsRetail = function()
-    return Hekili.Flavor == "Retail"
+Hekili.IsForever = function()
+    return Hekili.Flavor == "Forever"
 end
+Hekili.IsRetail = Hekili.IsForever -- upstream's name, kept for WeakAuras and plug-ins that call it
 
 Hekili.BuiltFor = 16001
 Hekili.GameBuild = buildStr

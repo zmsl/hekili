@@ -360,7 +360,7 @@ describe("ns.Facade", function()
         end
     )
 
-    it("answers empty spec slots and talent ranks in retail's shape (decision 7)", function()
+    it("answers empty spec slots and talent ranks in the shape upstream Hekili's code expects (decision 7)", function()
         answers["C_SpecializationInfo.GetSpecializationInfo"] = function(i)
             if i == 1 then
                 return 1491, "Warrior", "", 1, "DAMAGER", 1

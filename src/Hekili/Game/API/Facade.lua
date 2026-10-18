@@ -665,9 +665,10 @@ end, "player plain [W PR9]; target secret [W PR8]; TargetCast()")
 -- Combat log, talents, spells and items: absent on Forever, or replaced
 
 kept("CombatLogGetCurrentEventInfo", "virtual", I.Log.Current, "absent; the row being delivered (event-facade §2.4)")
--- A talent in retail's GetTalentInfoByID shape from the C_Traits walk (event-facade decision 7): `talent` is a
--- RegisterTalents entry { node, spell, max rank } or a spell ID; always named (the caller's IsPlayerSpell fallback
--- would get a table), selected and known with any rank, the rank as a 12th return (Forever's; not in retail's shape).
+-- A talent in the GetTalentInfoByID shape upstream Hekili's code expects, from the C_Traits walk (event-facade
+-- decision 7): `talent` is a RegisterTalents entry { node, spell, max rank } or a spell ID; always named (the caller's
+-- IsPlayerSpell fallback would get a table), selected and known with any rank, the rank as a 12th return (Forever's;
+-- not in that shape).
 kept("GetTalentInfoByID", "virtual", function(talent)
     local spell = talent
     if type(talent) == "table" then
@@ -706,14 +707,14 @@ kept("GetTime", "hybrid", function()
 end, "plain [W]; a back-dated combat-log row's observed time while it is delivered")
 
 ----------------------------------------------------------------------------------------------------------------------
--- Forever's answers in retail's shape (event-facade decision 7): an empty specialization slot. Hekili asks the GCD as
+-- Forever's answers in the shape upstream Hekili's code expects (event-facade decision 7): an empty specialization slot. Hekili asks the GCD as
 -- Forever's own spell, I.GCD_SPELL (shared-content spec §5).
 
 local realGetSpecializationInfo = resolve("C_SpecializationInfo.GetSpecializationInfo")
 
 local function noEmptySlot(id, ...)
     if not issecretvalue(id) and id == 0 then
-        return nil -- Forever answers id 0 for an empty slot; retail answers nothing
+        return nil -- Forever answers id 0 for an empty slot; upstream's code expects nothing
     end
     return id, ...
 end

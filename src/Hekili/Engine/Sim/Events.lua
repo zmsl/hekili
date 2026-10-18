@@ -434,7 +434,7 @@ function ns.updateTalents()
 
         enabled = enabled or known
 
-        -- Forever: the facade answers a 12th return, the rank (event-facade decision 7); retail has none.
+        -- Forever: the facade answers a 12th return, the rank (event-facade decision 7); upstream's shape has none.
         rank = rank or 0
         if rawget( state.talent, k ) then
             state.talent[ k ].enabled = enabled

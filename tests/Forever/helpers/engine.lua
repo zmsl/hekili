@@ -171,7 +171,7 @@ function M.load(classToken, race)
     local client = { SECRET = {}, isUnit = {}, exists = {} }
     local env = { errors = {}, loadErrors = {}, class = class, state = state, client = client }
     local hekili = { Class = class, State = state }
-    function hekili.IsRetail()
+    function hekili.IsForever()
         return false
     end
     function hekili:Error(...)
