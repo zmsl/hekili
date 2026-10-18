@@ -18,7 +18,7 @@
 
 local Facade = Hekili.Client
 local C_Spell, UnitClassBase = Facade.C_Spell, Facade.UnitClassBase
-local CombatLogGetCurrentEventInfo, GetTime = Facade.CombatLogGetCurrentEventInfo, Facade.GetTime
+local GetTime = Facade.GetTime
 
 if UnitClassBase("player") ~= "DRUID" then
     return
@@ -571,34 +571,12 @@ spec:RegisterStateFunction("swap_form", function(form)
     applyBuff(form)
 end)
 
--- The bleeds' misses, as Classic's combat-log windows (event-facade spec §6): a dodged, parried or missed Rake, Rip or
--- Pounce still raised SPELL_CAST_SUCCESS, so its `now` applied the debuff; the miss row removes it at the next reset.
-local bleedOf = {} -- spell ID -> the debuff its miss leaves off the target
-for _, id in ipairs(RAKE) do
-    bleedOf[id] = "rake"
-end
-for _, id in ipairs(RIP) do
-    bleedOf[id] = "rip"
-end
-for _, id in ipairs(POUNCE) do
-    bleedOf[id] = "pounce_bleed"
-end
-local missedAt = { rake = 0, rip = 0, pounce_bleed = 0 }
-
 -- The UI_ERROR_MESSAGE types of "You must be behind your target" (checkpoint Q11 records it; until then none, and the
 -- window never opens). On the spec object so the headless specs can name one.
 local NOT_BEHIND_ERRORS = {}
 spec.notBehindErrors = NOT_BEHIND_ERRORS
 local NOT_BEHIND_WINDOW = 5
 local behindErrAt = 0
-
-spec:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function()
-    local _, subtype, _, sourceGUID, _, _, _, _, _, _, _, spellID = CombatLogGetCurrentEventInfo()
-
-    if sourceGUID == state.GUID and subtype == "SPELL_MISSED" and bleedOf[spellID] then
-        missedAt[bleedOf[spellID]] = GetTime()
-    end
-end)
 
 spec:RegisterEvent("UI_ERROR_MESSAGE", function(_, errorType)
     if NOT_BEHIND_ERRORS[errorType] then
@@ -613,15 +591,8 @@ spec:RegisterHook("reset_precast", function()
         applyBuff("maul")
     end
 
-    if now == query_time then
-        for key, t in pairs(missedAt) do
-            if t > 0 and debuff[key].up and t >= debuff[key].applied then
-                removeDebuff("target", key)
-            end
-        end
-        if behindErrAt > 0 and now - behindErrAt < NOT_BEHIND_WINDOW then
-            applyBuff("not_behind", behindErrAt + NOT_BEHIND_WINDOW - now)
-        end
+    if now == query_time and behindErrAt > 0 and now - behindErrAt < NOT_BEHIND_WINDOW then
+        applyBuff("not_behind", behindErrAt + NOT_BEHIND_WINDOW - now)
     end
 end)
 
@@ -1350,6 +1321,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(POUNCE),
+        missable = "pounce_bleed",
         buff = "prowl",
 
         now = function()
@@ -1421,6 +1393,8 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(RAKE),
+        -- a dodged, parried or missed cast leaves no debuff (core: Engine/Schema/Spec.lua trackMisses)
+        missable = true,
         buff = "cat_form",
 
         now = function()
@@ -1504,6 +1478,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(RIP),
+        missable = true,
         buff = "cat_form",
 
         usable = function()

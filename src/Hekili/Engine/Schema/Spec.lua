@@ -134,6 +134,41 @@ local protectedFunctions = {
 }
 
 
+-- A missable DoT (an ability's `missable`, C15): a dodged, parried or missed cast still raised SPELL_CAST_SUCCESS, so
+-- its `now` applied the debuff (`missable = true`: the ability's own key; a string: that debuff's key). Our
+-- SPELL_MISSED row of any of its IDs (Game/Events/Rows.lua synthesizes it) removes it at the next reset, unless it was
+-- applied again since. One combat-log hook and one reset hook per spec; neither allocates.
+local function trackMisses( spec, key, data )
+    local missedAt, auraOf = spec.missedAt, spec.missAura
+    if not missedAt then
+        missedAt, auraOf = {}, {}
+        spec.missedAt, spec.missAura = missedAt, auraOf
+        local function onRow( _, subtype, _, sourceGUID, _, _, _, _, _, _, _, spellID )
+            local aura = subtype == "SPELL_MISSED" and sourceGUID == state.GUID and auraOf[ spellID ]
+            if aura then missedAt[ aura ] = GetTime() end
+        end
+        spec:RegisterHook( "COMBAT_LOG_EVENT_UNFILTERED", onRow )
+        spec:RegisterHook( "reset_precast", function()
+            if now == query_time then
+                for aura, t in pairs( missedAt ) do
+                    if t > 0 and debuff[ aura ].up and t >= debuff[ aura ].applied then
+                        removeDebuff( "target", aura )
+                    end
+                end
+            end
+        end )
+    end
+    local aura = data.missable == true and key or data.missable
+    missedAt[ aura ] = 0
+    auraOf[ data.id ] = aura
+    local copy = data.copy
+    if type( copy ) == "number" then auraOf[ copy ] = aura end
+    if type( copy ) == "table" then
+        for _, id in ipairs( copy ) do auraOf[ id ] = aura end
+    end
+end
+
+
 local HekiliSpecMixin = {
     RegisterResource = function( self, resourceID, regen, model, meta )
         local resource = GetResourceKey( resourceID )
@@ -705,6 +740,10 @@ local HekiliSpecMixin = {
         insert( self.hooks[ hook ], func )
     end,
 
+    -- Two content fields beside Hekili's own. `ladder = false`: the ability's usability answers are no rungs of the
+    -- belief's cost ladder (Game/State/Families/Resources.lua); without it a short answer is a rung only while its
+    -- `usable` holds in the belief's `now` context (a finisher at 0 combo points pins no energy). `missable = true` or
+    -- an aura key: a miss leaves that debuff off the target (trackMisses, above).
     RegisterAbility = function( self, ability, data )
         -- A passive (a spell the spellbook knows, never cast): the belief tracks its known rank; the sim never sees it.
         if data.passive then
@@ -1039,6 +1078,8 @@ local HekiliSpecMixin = {
         if a.auras then
             self:RegisterAuras( a.auras )
         end
+
+        if data.missable then trackMisses( self, ability, data ) end
     end,
 
     RegisterAbilities = function( self, abilities )

@@ -1,7 +1,7 @@
 -- tests/Forever/helpers/load_druid.lua
 -- Loads Hekili_Druid/Druid.lua headless against a recording stand-in for Hekili (load_warrior.lua's shape): each
 -- spec:RegisterX call is kept by method name, and the plain game reads the file captures at load answer from `game`
--- (known spells, queued spells, the shapeshift form, the time, the combat-log row, the belief's per-hand base weapon
+-- (known spells, queued spells, the shapeshift form, the time, the belief's per-hand base weapon
 -- speeds). `env()` is a stand-in `state` for running the file's handlers, state functions, expressions and hooks
 -- (Hekili runs them with setfenv( f, state )).
 local M = {}
@@ -29,7 +29,6 @@ function M.load(vs)
         formSpell = {},
         base = { 0, 0 }, -- VS.SwingBase: each hand's unhasted speed (0: no plain read yet)
         now = 0, -- GetTime()
-        row = {}, -- the combat-log row CombatLogGetCurrentEventInfo answers
     }
     local w = { game = game, abilities = {}, auras = {}, resources = {}, hooks = {}, funcs = {}, exprs = {} }
     w.state = { buff = {}, swings = {} }
@@ -57,9 +56,6 @@ function M.load(vs)
         end,
         GetTime = function()
             return game.now
-        end,
-        CombatLogGetCurrentEventInfo = function()
-            return unpack(game.row, 1, 15)
         end,
         Enum = { PowerType = { Mana = 0, Rage = 1, Energy = 3, ComboPoints = 4 } },
     }

@@ -651,15 +651,7 @@ describe("Forever Druid", function()
         assert.is_nil(src:find("buff%.clearcasting")) -- the modifier, not each `spend`, prices it
     end)
 
-    describe("the combat log and the not-behind window", function()
-        local ME, MOB = "Player-1", "Creature-1"
-
-        local function row(t, sub, spellID)
-            w.game.now = t
-            w.game.row = { t, sub, false, ME, "", 0, 0, MOB, "", 0, 0, spellID, "", 1, "DODGE" }
-            w.events.COMBAT_LOG_EVENT_UNFILTERED("COMBAT_LOG_EVENT_UNFILTERED")
-        end
-
+    describe("the missable bleeds and the not-behind window", function()
         local function reset(t, debuffs)
             local e = ld.env(w)
             e.now, e.query_time = t, t
@@ -668,27 +660,13 @@ describe("Forever Druid", function()
             return e
         end
 
-        local function removed(e, key)
-            for _, k in ipairs(e.removed) do
-                if k == key then
-                    return true
-                end
-            end
-            return false
-        end
-
-        before_each(function()
-            w.state.GUID = ME
-        end)
-
-        it("removes a missed Rake or Rip at the next reset, not a hit or a newer application", function()
-            row(10, "SPELL_MISSED", 1823) -- Rake rank 2, dodged
-            assert.is_true(removed(reset(11, { rake = { up = true, applied = 9.9 } }), "rake"))
-            assert.is_false(removed(reset(13, { rake = { up = true, applied = 12 } }), "rake")) -- reapplied since
-            row(20, "SPELL_CAST_SUCCESS", 1079) -- a Rip that landed
-            assert.is_false(removed(reset(21, { rip = { up = true, applied = 20 } }), "rip"))
-            row(30, "SPELL_MISSED", 9827) -- Pounce: its bleed
-            assert.is_true(removed(reset(31, { pounce_bleed = { up = true, applied = 29.9 } }), "pounce_bleed"))
+        it("declares its bleeds missable, which core drops on a miss (Engine/Schema/Spec.lua)", function()
+            assert.are.same({ true, true, "pounce_bleed" }, {
+                w.abilities.rake.missable,
+                w.abilities.rip.missable,
+                w.abilities.pounce.missable,
+            })
+            assert.is_nil(w.events.COMBAT_LOG_EVENT_UNFILTERED) -- no copy of its own
         end)
 
         it("opens not_behind for the rest of 5 s after a listed error, never for another", function()
@@ -858,6 +836,67 @@ end)
 
 -- The priorities' wowsims-aligned lines (class-completion plan Task 2; research §1, the sim's default APLs as a
 -- reference, no code copied) and their D1 focus tiers: 1 a proc or reactive window, 2 predictable upkeep.
+describe("Forever Druid's bleeds through the real engine's missable handling", function()
+    local engine = require("Forever.helpers.engine")
+    local env, spec, ME
+
+    -- Each reset_precast hook of the Druid spec, run in a stand-in state at t with these debuffs; the keys removed.
+    local function reset(t, debuffs)
+        local removed = {}
+        local e = setmetatable({
+            now = t,
+            query_time = t,
+            debuff = setmetatable(debuffs, {
+                __index = function()
+                    return { up = false, applied = 0 }
+                end,
+            }),
+            removeDebuff = function(unit, key)
+                removed[#removed + 1] = unit .. ":" .. key
+            end,
+        }, { __index = env.state })
+        for _, hook in ipairs(spec.hooks.reset_precast) do
+            setfenv(hook, e)()
+        end
+        return table.concat(removed, ",")
+    end
+
+    local function row(t, sub, spellID)
+        env.client.now = t
+        for _, hook in ipairs(spec.hooks.COMBAT_LOG_EVENT_UNFILTERED) do
+            hook(t, sub, false, ME, "", 0, 0, "Creature-1", "", 0, 0, spellID, "", 1, "DODGE")
+        end
+    end
+
+    before_each(function()
+        env = engine.load("DRUID")
+        spec = env.class.specs[1499]
+        ME = "Player-1"
+        rawset(env.state, "GUID", ME)
+    end)
+
+    it("removes a missed Rake or Rip at the next reset, not a hit or a newer application", function()
+        assert.are.same({}, env.loadErrors)
+        row(10, "SPELL_MISSED", 1823) -- Rake rank 2, dodged
+        assert.are.equal("target:rake", reset(11, { rake = { up = true, applied = 9.9 } }))
+        assert.are.equal("", reset(13, { rake = { up = true, applied = 12 } })) -- reapplied since
+        row(20, "SPELL_CAST_SUCCESS", 1079) -- a Rip that landed
+        assert.are.equal("", reset(21, { rip = { up = true, applied = 20 } }))
+        row(30, "SPELL_MISSED", 9827) -- Pounce: its bleed, not the stun
+        assert.are.equal(
+            "target:pounce_bleed",
+            reset(31, { pounce_bleed = { up = true, applied = 29.9 }, pounce = { up = true, applied = 29.9 } })
+        )
+        row(40, "SPELL_MISSED", 1079)
+        rawset(env.state, "GUID", "Player-2") -- another player's miss
+        row(41, "SPELL_MISSED", 1822)
+        assert.are.equal(
+            "target:rip",
+            reset(42, { rip = { up = true, applied = 39 }, rake = { up = true, applied = 39 } })
+        )
+    end)
+end)
+
 describe("Forever Druid priorities against wowsims/forever", function()
     local packs = {}
     setup(function()
