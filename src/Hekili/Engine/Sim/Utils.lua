@@ -721,7 +721,7 @@ do
     local IsSpellDisabled = function( spellID )
         if DisabledSpells[ spellID ] ~= nil then return DisabledSpells[ spellID ] end
 
-        local isDisabled = FindStringInSpellTooltip( DisableText, spellID, true, true )
+        local isDisabled = FindStringInSpellTooltip( DisableText, spellID, true, true ) or false
         DisabledSpells[ spellID ] = isDisabled
 
         return isDisabled

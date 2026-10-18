@@ -611,7 +611,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
         local actID = 1
 
         while actID <= #list do
-            self:Yield( "GetPrediction... " .. dispName .. "-" .. packName .. ":" .. actID )
+            self:Yield( debug and ( "GetPrediction... " .. dispName .. "-" .. packName .. ":" .. actID ) or nil )
 
             if rWait < state.delayMax then state.delayMax = rWait end
 
@@ -1755,7 +1755,7 @@ function Hekili.Update()
                             break
                         end
 
-                        Hekili.ThreadStatus = "Processed event #" .. n .. " for " .. dispName .. "."
+                        if debug then Hekili.ThreadStatus = "Processed event #" .. n .. " for " .. dispName .. "." end
                     end
                 end
 
@@ -2021,7 +2021,7 @@ function Hekili.Update()
                 end
             end
 
-            if round < 5 then Hekili:Yield( "Recommendations finished for " .. dispName .. ".", nil, true ) end
+            if round < 5 then Hekili:Yield( debug and ( "Recommendations finished for " .. dispName .. "." ) or nil, nil, true ) end
 
             dispName = nextDisplay
             state.display = dispName
