@@ -1184,12 +1184,40 @@ describe("the timeline display style", function()
         local exact = c[1].ExactTime
         assert.are.equal(t0, rawget(cd, "__cdStart")) -- nothing running: the countdown starts at its first draw
         assert.are.equal(exact - t0, rawget(cd, "__cdDuration"))
-        for _ = 1, 5 do
+        local function again() -- the same wait re-published (the sweep is re-read on a publish)
+            tlPublish(H, 3, function(s)
+                s[3].exact_time = exact
+            end)
             tlFrame(H, d)
+        end
+        for _ = 1, 5 do
+            again()
         end
         assert.are.equal(t0, rawget(cd, "__cdStart")) -- held while the same ability waits
         local fraction = (exact - H.ctl.now) / rawget(cd, "__cdDuration")
         assert.is_true(fraction > 0.6 and fraction < 0.8, tostring(fraction)) -- 2.6 s of 3.8 s left, not a sliver
+        -- a GCD in the middle of the wait does not restart it: the held start wins (review S1)
+        local cs = H.ns.Facade.C_Spell
+        local getCd = cs.GetSpellCooldown
+        local gcd = H.Hekili.Engine.Registry.GCD_SPELL
+        local gStart = H.ctl.now
+        cs.GetSpellCooldown = function(id)
+            if id == gcd then
+                return { startTime = gStart, duration = 1.5, isEnabled = true, modRate = 1 }
+            end
+            return getCd(id)
+        end
+        again()
+        cs.GetSpellCooldown = getCd
+        assert.are.equal(t0, rawget(cd, "__cdStart"))
+        -- the ability leaves the circle and returns: its sweep starts fresh (review B1)
+        tlPublish(H)
+        tlFrame(H, d)
+        tlPublish(H, 3)
+        local t1 = H.ctl.now + 0.2
+        tlFrame(H, d)
+        assert.are.equal(t1, rawget(cd, "__cdStart"))
+        assert.are.equal(c[1].ExactTime - t1, rawget(cd, "__cdDuration"))
         assert.are.same({}, H.errors)
     end)
 

@@ -404,7 +404,7 @@ function Timeline.Build( d, conf )
         b.glowing = false
         readyGlow( b, false )
         b:Hide()
-        b.Action, b.Ability, b.ExactTime, b.Key, b.Recommendation = nil, nil, nil, nil, nil
+        b.Action, b.Ability, b.ExactTime, b.Key, b.Recommendation, b.cdAction = nil, nil, nil, nil, nil, nil
         T.inLane[ i ], T.want[ i ], T.x[ i ], T.row[ i ] = false, false, -1, 1
     end
     for i = 1, SLOTS do T.rec[ i ] = i end
@@ -597,19 +597,20 @@ local function assign( d, T, tl, conf, out, now, combat )
     if pinned then now = 0 end
     T.clock = now
     roles( T, tl, recs, out.count, now )
-    local ring, glow = cells[ 1 ].Ring, T.focused and T.ready and tl.focusReadyStyle == "glow"
+    local blank = out.count == 0 or out.version == d.blankVersion
+    local ring, glow = cells[ 1 ].Ring, T.focused and T.ready and tl.focusReadyStyle == "glow" and not blank
     ring:SetShown( T.focused and not glow )
     readyGlow( cells[ 1 ], glow, tl.focusColor )
     if T.focused then
         local fc = T.ready and tl.focusColor or tl.focusPendingColor
         ring:SetVertexColor( fc[ 1 ], fc[ 2 ], fc[ 3 ], fc[ 4 ] )
     end
-    if out.count == 0 or out.version == d.blankVersion then
+    if blank then
         for i = 1, SLOTS do
             local b = cells[ i ]
             b:Hide()
             glowOff( b )
-            b.Action, b.Ability, b.ExactTime, b.Key = nil, nil, nil, nil
+            b.Action, b.Ability, b.ExactTime, b.Key, b.cdAction = nil, nil, nil, nil, nil
             T.want[ i ], T.inLane[ i ] = false, false
         end
         T.has = false
@@ -710,6 +711,7 @@ local function assign( d, T, tl, conf, out, now, combat )
             T.row[ c ] = 0 -- no row: the next pick has nothing here to dodge
         end
 
+        if not ability then b.cdAction = nil end -- no wait here: the sweep's held start goes
         b.Action = action
         b.Text = r.caption
         b.Indicator = r.indicator
@@ -724,11 +726,12 @@ end
 -- Cell `b`'s sweep (now and next): the spell's cooldown, stretched to its time in mode extend when `extend` (the now
 -- circle, or the press in the next box beside an empty one), re-set only when its start changed or its end moved (TDF
 -- Render.SetSwipe). With nothing running the stretch starts when the ability's wait began (its first draw here), so
--- the swipe shows the remaining fraction of its countdown, not of the time since 0 or a stale GCD.
+-- the swipe shows the remaining fraction of its countdown, not of the time since 0 or a stale GCD; once held, that
+-- start wins over a cast's or a GCD's, so a long wait does not restart its swipe every GCD.
 local function sweep( b, extend, tl, now )
     local cd, ability, mode = b.Cooldown, b.Ability, tl.sweep.mode
-    local held = b.cdAbility == ability and b.cdStart > 0
-    b.cdAbility = ability
+    local held = b.cdAction == b.Action and b.cdStart > 0 and now < b.cdEnd -- records are pooled: key on the action
+    b.cdAction = b.Action
     local start, duration, enabled, modRate = 0, 0, 1, 1
     if mode ~= "off" then
         if ability.item then
@@ -739,7 +742,7 @@ local function sweep( b, extend, tl, now )
         if extend and mode == "extend" and b.ExactTime > mmax( now, start + duration ) then
             local gStart = GetSpellCooldown( Registry.GCD_SPELL )
             local cStart = ( select( 4, UnitCastingInfo( "player" ) ) or select( 4, UnitChannelInfo( "player" ) ) or 0 ) / 1000
-            start = ( start > 0 and start ) or ( cStart > 0 and cStart ) or ( gStart > 0 and gStart ) or ( held and b.cdStart or now )
+            start = ( start > 0 and start ) or ( held and b.cdStart ) or ( cStart > 0 and cStart ) or ( gStart > 0 and gStart ) or now
             duration = b.ExactTime - start
         elseif enabled == 0 or enabled == false then
             start, duration, modRate = 0, 0, 1
@@ -893,7 +896,7 @@ function Timeline.Clear( d )
     for _, b in ipairs( T.cells ) do
         glowOff( b )
         readyGlow( b, false )
-        b.Action, b.Ability, b.ExactTime, b.Key = nil, nil, nil, nil
+        b.Action, b.Ability, b.ExactTime, b.Key, b.cdAction = nil, nil, nil, nil, nil
     end
     for i = 1, SLOTS do T.want[ i ], T.inLane[ i ] = false, false end
     for _, w in ipairs( T.widgets ) do w:Hide() end
