@@ -285,3 +285,153 @@ describe("the classic display style", function()
         assert.are.equal(0, bytes)
     end)
 end)
+
+-- Task 2: per-display style selection. A stub style (no buttons, its own `defaults`) registered after boot.
+local function stub(H, options)
+    local log = { builds = {}, draws = {} }
+    H.ns.UI.RegisterStyle("stub", {
+        label = "Stub",
+        defaults = { foo = 1 },
+        Build = function(d)
+            log.builds[#log.builds + 1] = d.id
+            return {}
+        end,
+        Draw = function(_, _, out)
+            log.draws[#log.draws + 1] = out.count
+        end,
+        Tick = function() end,
+        OnGameEvent = function() end,
+        Clear = function() end,
+        Perimeter = function() end,
+        UpdateKeybindings = function() end,
+        Options = function() -- fresh tables per display: core sets each tab's `hidden`
+            return options and options()
+        end,
+    })
+    return log
+end
+
+local function notifications(H)
+    local said = {}
+    H.Hekili.Notify = function(_, msg)
+        said[#said + 1] = msg
+    end
+    return said
+end
+
+describe("a display's style", function()
+    it("takes a style's defaults into every display of a fresh profile", function()
+        local H = boot()
+        stub(H)
+        H.Hekili:GetDefaults()
+        H.Hekili.DB:ResetProfile()
+        assert.are.equal(1, H.Hekili.DB.profile.displays.Primary.stub.foo)
+        assert.are.equal("classic", H.Hekili.DB.profile.displays.Primary.style)
+        -- an inline section inside the style's tab is presentational: display, tab key, option
+        assert.are.equal(1, H.Hekili:GetDisplayOption({ "displays", "Primary", "stub", "section", "foo" }))
+    end)
+
+    it(
+        "binds classic silently when the profile names no style, and with one Notify when it names an unknown one",
+        function()
+            local H, d = boot()
+            local said = notifications(H)
+            local conf = H.Hekili.DB.profile.displays.Primary
+            conf.style = nil
+            H.Hekili:BuildUI()
+            assert.are.equal(H.ns.UI.Styles.classic, d.style)
+            assert.are.same({}, said)
+            conf.style = "nope"
+            H.Hekili:BuildUI()
+            assert.are.equal(H.ns.UI.Styles.classic, d.style)
+            assert.are.equal(1, #said)
+            assert.are.same({}, H.errors)
+        end
+    )
+
+    it("switching from classic hides every classic button and the new style draws the next publish", function()
+        local H, d = boot()
+        local log = stub(H)
+        publish(H)
+        local f = d.__scripts.OnUpdate
+        H.ctl.now = H.ctl.now + 0.2
+        f(d, 0.2)
+        local classic = d.styleFrames.classic
+        assert.is_true(classic[1]:IsShown())
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "main", "style" }, "stub")
+        H.Hekili:BuildUI()
+        assert.are.equal(H.ns.UI.Styles.stub, d.style)
+        for i, b in ipairs(classic) do
+            assert.is_false(b:IsShown(), "classic button " .. i)
+        end
+        assert.are.same({}, H.ns.UI.Buttons.Primary)
+        publish(H)
+        H.ctl.now = H.ctl.now + 0.2
+        f(d, 0.2)
+        assert.are.equal(H.Hekili.Engine.Output.Primary.count, log.draws[#log.draws])
+        assert.are.equal(4, log.draws[#log.draws])
+        assert.are.same({}, H.errors)
+    end)
+
+    it("rebuilds, enters and leaves config mode with a display that has no buttons", function()
+        local H, d = boot()
+        stub(H)
+        H.Hekili.DB.profile.displays.Primary.style = "stub"
+        H.Hekili:BuildUI()
+        assert.are.equal(0, #d.Buttons)
+        H.ns.StartConfiguration(true) -- the movers and backdrops; without `true` it also opens the AceConfig dialog,
+        -- which fails headless whatever the style (AceConfigDialog.lua:1610)
+        H.Hekili.Config = true
+        H.Hekili:BuildUI() -- rebuild in config mode: its removed-display pass, then StartConfiguration( true )
+        H.Hekili.Config = false
+        H.ns.StopConfiguration()
+        assert.are.same({}, H.errors)
+    end)
+
+    it(
+        "offers every style in the dropdown and shows a style's tabs only where it is bound (on Multi, everywhere)",
+        function()
+            local H = boot()
+            stub(H, function()
+                return {
+                    stub = {
+                        type = "group",
+                        name = "Stub",
+                        args = { section = { type = "group", inline = true, args = {} } },
+                    },
+                }
+            end)
+            H.Hekili:EmbedDisplayOptions()
+            local plugins = H.Hekili.Options.args.displays.plugins
+            local primary, multi = plugins.Primary.Primary.args, plugins.Multi.Multi.args
+            local style = primary.main.args.style
+            assert.are.same({ classic = "Classic", stub = "Stub" }, style.values())
+            assert.are.same({ "classic", "stub" }, style.sorting())
+            local function shown(args)
+                return {
+                    classic = not args.glow.hidden() and not args.main.args.primaryIcon.hidden(),
+                    stub = not args.stub.hidden(),
+                }
+            end
+            assert.are.same({ classic = true, stub = false }, shown(primary))
+            local displays = H.Hekili.DB.profile.displays
+            displays.Primary.style = "stub"
+            assert.are.same({ classic = false, stub = true }, shown(primary))
+            assert.are.same({ classic = false, stub = false }, shown(multi)) -- Multi edits Primary and AOE: they differ
+            H.Hekili:SetMultiDisplayOption({ "displays", "Multi", "main", "style" }, "stub")
+            assert.are.equal("stub", displays.AOE.style)
+            assert.are.same({ classic = false, stub = true }, shown(multi))
+            assert.are.same({}, H.errors)
+        end
+    )
+
+    it("binds a custom display's own style", function()
+        local H = boot()
+        local log = stub(H)
+        H.Hekili:GetDefaults()
+        H.Hekili.DB.profile.displays.Custom1.style = "stub"
+        H.Hekili:CreateCustomDisplay("Custom1")
+        assert.are.same({ "Custom1" }, log.builds)
+        assert.are.equal(H.ns.UI.Styles.stub, H.ns.UI.Displays.Custom1.style)
+    end)
+end)

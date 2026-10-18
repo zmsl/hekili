@@ -15,7 +15,7 @@ local MEMBERS = {
     Clear = "function", -- ( d ): hide everything it shows
     Perimeter = "function", -- ( d ): left, right, top, bottom frames for config mode's backdrop (or nil)
     UpdateKeybindings = "function", -- ( d )
-    Options = "function", -- ( id, conf ): the style's option tabs
+    Options = "function", -- ( id, conf ): the style's option tabs, new tables each call (core sets each tab's `hidden`)
 }
 
 --- Registers style `impl` as `name`, raising when a member is missing or of the wrong type.

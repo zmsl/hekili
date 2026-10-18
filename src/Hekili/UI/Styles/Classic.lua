@@ -3,7 +3,8 @@ local _, ns = ...
 -- texture, caption, keybind, indicator, glow, flash, target count, delay, range/usable/desaturate, cooldown spiral),
 -- moved verbatim out of UI/UI.lua's CreateDisplay and CreateButton behind the style interface (display styles plan,
 -- Task 1). Hekili code by Hekili's authors and maintainers. Its per-display scratch lives on d.styleState, its buttons
--- on d.styleFrames.classic (= d.Buttons = ns.UI.Buttons[ d.id ]).
+-- on d.styleFrames.classic (Build returns them; core stores them as d.Buttons = ns.UI.Buttons[ d.id ] while classic is
+-- bound). Its option tabs (Options) moved out of Options/Options.lua's newDisplayOption (Task 2).
 
 local Facade = ns.Facade
 local CreateFrame = Facade.CreateFrame
@@ -75,7 +76,7 @@ local function CreateButton( dispID, id )
     if not conf then return end
 
     local bName = "Hekili_" .. dispID .. "_B" .. id
-    local b = d.Buttons[ id ] or CreateFrame( "Button", bName, d )
+    local b = d.styleFrames.classic[ id ] or CreateFrame( "Button", bName, d )
 
     Hekili:ProfileFrame( bName, b )
 
@@ -483,23 +484,23 @@ end
 function Classic.Build( d, conf )
     local self, id, st = Hekili, d.id, d.styleState
     d.styleFrames.classic = d.styleFrames.classic or {}
-    d.Buttons = d.styleFrames.classic
+    local buttons = d.styleFrames.classic
     st.delayTimer, st.flashTimer, st.rangeTimer = st.delayTimer or 0, st.flashTimer or 0, st.rangeTimer or 0
 
     local out = Hekili.Engine.Output[ id ]
 
     for i = 1, 10 do
-        d.Buttons[ i ] = CreateButton( id, i )
-        d.Buttons[ i ]:Hide()
+        buttons[ i ] = CreateButton( id, i )
+        buttons[ i ]:Hide()
 
         if self:IsDisplayActive( id ) and i <= conf.numIcons then
             if out and i <= out.count then
-                d.Buttons[ i ]:Show()
+                buttons[ i ]:Show()
             end
         end
 
         if ns.UI.MasqueGroup then
-            ns.UI.MasqueGroup:AddButton( d.Buttons[i], { Icon = d.Buttons[ i ].Texture, Cooldown = d.Buttons[ i ].Cooldown } )
+            ns.UI.MasqueGroup:AddButton( buttons[i], { Icon = buttons[ i ].Texture, Cooldown = buttons[ i ].Cooldown } )
         end
     end
 
@@ -515,7 +516,7 @@ function Classic.Build( d, conf )
         end )
     end
 
-    return d.Buttons
+    return buttons
 end
 
 function Classic.UpdateKeybindings( d )
@@ -1184,9 +1185,10 @@ function Classic.OnGameEvent( d, conf, event, ... )
     end
 end
 
---- Hides every button and forgets what it showed (unsubscribe, Deactivate, a style switch).
+--- Hides every button and forgets what it showed (unsubscribe, Deactivate, a style switch). Its own frames, not
+--- d.Buttons, which a switch hands to the next style.
 function Classic.Clear( d )
-    for _, b in ipairs( d.Buttons ) do
+    for _, b in ipairs( d.styleFrames.classic ) do
         b:Hide()
         b.Action = nil
     end
@@ -1238,7 +1240,932 @@ function Classic.Perimeter( d )
     return left, right, top, bottom
 end
 
--- The classic tabs still live in Options.lua's newDisplayOption.
-function Classic.Options( id, conf ) end
+-- Classic's option tabs, moved verbatim out of Options/Options.lua's newDisplayOption (Task 2). `name` and `data` were
+-- its upvalues (the display id and its config); the rest of what they read comes from Options.lua through
+-- ns.UI.DisplayOptionParts. Their profile paths are unchanged (display, tab key, option); core adds each tab's `hidden`.
+function Classic.Options( id, conf )
+    local name, data = id, conf
+    local P = ns.UI.DisplayOptionParts
+    local ClassColor, NewFeature, fontElements, fontStyles = P.ClassColor, P.NewFeature, P.fontElements, P.fontStyles
+    local realAnchorPositions, rangeIcon = P.realAnchorPositions, P.rangeIcon
+    local SF, tableCopy = SpellFlashCore, ns.tableCopy
+
+    return {
+        keybindings = {
+            type = "group",
+            name = "Keybinds",
+            desc = "Options for keybinding text on displayed icons.",
+            order = 7,
+
+            args = {
+                enabled = {
+                    type = "toggle",
+                    name = "Enabled",
+                    order = 1,
+                    width = 1.49,
+                },
+
+                queued = {
+                    type = "toggle",
+                    name = "Enabled for Queued Icons",
+                    order = 2,
+                    width = 1.49,
+                    disabled = function () return data.keybindings.enabled == false end,
+                },
+
+                pos = {
+                    type = "group",
+                    inline = true,
+                    name = function( info ) rangeIcon( info )
+return "Position" end,
+                    order = 3,
+                    args = {
+                        anchor = {
+                            type = "select",
+                            name = 'Anchor Point',
+                            order = 2,
+                            width = 1,
+                            values = realAnchorPositions
+                        },
+
+                        x = {
+                            type = "range",
+                            name = "X Offset",
+                            order = 3,
+                            width = 0.99,
+                            min = -max( data.primaryWidth, data.queue.width ),
+                            max = max( data.primaryWidth, data.queue.width ),
+                            disabled = function( info )
+                                return false
+                            end,
+                            step = 1,
+                        },
+
+                        y = {
+                            type = "range",
+                            name = "Y Offset",
+                            order = 4,
+                            width = 0.99,
+                            min = -max( data.primaryHeight, data.queue.height ),
+                            max = max( data.primaryHeight, data.queue.height ),
+                            step = 1,
+                        }
+                    }
+                },
+
+                textStyle = {
+                    type = "group",
+                    inline = true,
+                    name = "Font and Style",
+                    order = 5,
+                    args = tableCopy( fontElements ),
+                },
+
+                lowercase = {
+                    type = "toggle",
+                    name = "Use Lowercase",
+                    order = 5.1,
+                    width = "full",
+                },
+
+                separateQueueStyle = {
+                    type = "toggle",
+                    name = "Use Different Settings for Queue",
+                    order = 6,
+                    width = "full",
+                },
+
+                queuedTextStyle = {
+                    type = "group",
+                    inline = true,
+                    name = "Queued Font and Style",
+                    order = 7,
+                    hidden = function () return not data.keybindings.separateQueueStyle end,
+                    args = {
+                        queuedFont = {
+                            type = "select",
+                            name = "Font",
+                            order = 1,
+                            width = 1.49,
+                            dialogControl = 'LSM30_Font',
+                            values = LSM:HashTable("font"),
+                        },
+
+                        queuedFontStyle = {
+                            type = "select",
+                            name = "Style",
+                            order = 2,
+                            values = fontStyles,
+                            width = 1.49
+                        },
+
+                        break01 = {
+                            type = "description",
+                            name = " ",
+                            width = "full",
+                            order = 2.1
+                        },
+
+                        queuedFontSize = {
+                            type = "range",
+                            name = "Size",
+                            order = 3,
+                            min = 8,
+                            max = 64,
+                            step = 1,
+                            width = 1.49
+                        },
+
+                        queuedColor = {
+                            type = "color",
+                            name = "Color",
+                            order = 4,
+                            width = 1.49
+                        }
+                    },
+                },
+
+                queuedLowercase = {
+                    type = "toggle",
+                    name = "Use Lowercase in Queue",
+                    order = 7.1,
+                    width = 1.49,
+                    hidden = function () return not data.keybindings.separateQueueStyle end,
+                },
+
+                cPort = {
+                    name = "ConsolePort",
+                    type = "group",
+                    inline = true,
+                    order = 4,
+                    args = {
+                        cPortOverride = {
+                            type = "toggle",
+                            name = "Use ConsolePort Buttons",
+                            order = 6,
+                            width = 1.49,
+                        },
+
+                        cPortZoom = {
+                            type = "range",
+                            name = "ConsolePort Button Zoom",
+                            desc = "The ConsolePort button textures generally have a significant amount of blank padding around them. " ..
+                                "Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.",
+                            order = 7,
+                            min = 0,
+                            max = 1,
+                            step = 0.01,
+                            width = 1.49,
+                        },
+                    },
+                    disabled = function() return ConsolePort == nil end,
+                },
+
+            }
+        },
+
+        border = {
+            type = "group",
+            name = "Border",
+            desc = "Enable/disable or set the color for icon borders.\n\n" ..
+                "You may want to disable this if you use Masque or other tools to skin your Hekili icons.",
+            order = 4,
+
+            args = {
+                enabled = {
+                    type = "toggle",
+                    name = "Enabled",
+                    desc = "If enabled, each icon in this display will have a thin border.",
+                    order = 1,
+                    width = "full",
+                },
+
+                thickness = {
+                    type = "range",
+                    name = "Border Thickness",
+                    desc = "Determines the thickness (width) of the border.  Default is 1.",
+                    softMin = 1,
+                    softMax = 20,
+                    step = 1,
+                    order = 2,
+                    width = 1.49,
+                },
+
+                fit = {
+                    type = "toggle",
+                    name = "Border Inside",
+                    desc = "If enabled, when borders are enabled, the button's border will fit inside the button (instead of around it).",
+                    order = 2.5,
+                    width = 1.49
+                },
+
+                break01 = {
+                    type = "description",
+                    name = " ",
+                    width = "full",
+                    order = 2.6
+                },
+
+                coloring = {
+                    type = "select",
+                    name = "Coloring Mode",
+                    desc = "Specify whether to use Class or Custom color borders.\n\nClass-colored borders will automatically change to match the class you are playing.",
+                    width = 1.49,
+                    order = 3,
+                    values = {
+                        class = format( "Class |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s", ClassColor.r * 255, ClassColor.g * 255, ClassColor.b * 255, ClassColor:GenerateHexColor():sub( 3, 8 ) ),
+                        custom = "Specify a Custom Color"
+                    },
+                    disabled = function() return data.border.enabled == false end,
+                },
+
+                color = {
+                    type = "color",
+                    name = "Custom Color",
+                    desc = "When borders are enabled and the Coloring Mode is set to |cFFFFD100Custom Color|r, the border will use this color.",
+                    order = 4,
+                    width = 1.49,
+                    disabled = function () return data.border.enabled == false or data.border.coloring ~= "custom" end,
+                }
+            }
+        },
+
+        range = {
+            type = "group",
+            name = "Range",
+            desc = "Preferences for range-check warnings, if desired.",
+            order = 5,
+            args = {
+                enabled = {
+                    type = "toggle",
+                    name = "Enabled",
+                    desc = "If enabled, the addon will provide a red warning highlight when you are not in range of your enemy.",
+                    width = 1.49,
+                    order = 1,
+                },
+
+                type = {
+                    type = "select",
+                    name = 'Range Checking',
+                    desc = "Select the kind of range checking and range coloring to be used by this display.\n\n" ..
+                        "|cFFFFD100Ability|r - Each ability is highlighted in red if that ability is out of range.\n\n" ..
+                        "|cFFFFD100Melee|r - All abilities are highlighted in red if you are out of melee range.\n\n" ..
+                        "|cFFFFD100Exclude|r - If an ability is not in-range, it will not be recommended.",
+                    values = {
+                        ability = "Per Ability",
+                        melee = "Melee Range",
+                        xclude = "Exclude Out-of-Range"
+                    },
+                    width = 1.49,
+                    order = 2,
+                    disabled = function () return data.range.enabled == false end,
+                }
+            }
+        },
+
+        glow = {
+            type = "group",
+            name = "Glows",
+            desc = "Preferences for Blizzard action button glows (not SpellFlash).",
+            order = 6,
+            args = {
+                enabled = {
+                    type = "toggle",
+                    name = "Enable Overlay Glow",
+                    desc = "If enabled, when the ability for the first icon has an active glow (or overlay), it will also glow in this display.",
+                    width = 1.49,
+                    order = 1,
+                },
+
+                queued = {
+                    type = "toggle",
+                    name = "Enabled for Queued Icons",
+                    desc = "If enabled, abilities that have active glows (or overlays) will also glow in your queue.\n\n" ..
+                        "This may not be ideal, the glow may no longer be correct by that point in the future.",
+                    width = 1.49,
+                    order = 2,
+                    disabled = function() return data.glow.enabled == false end,
+                },
+
+                break01 = {
+                    type = "description",
+                    name = " ",
+                    order = 2.1,
+                    width = "full"
+                },
+
+                mode = {
+                    type = "select",
+                    name = "Glow Style",
+                    desc = "Select the glow style for your display.",
+                    width = 1,
+                    order = 3,
+                    values = {
+                        default = "Default Button Glow",
+                        autocast = "AutoCast Shine",
+                        pixel = "Pixel Glow",
+                    },
+                    disabled = function() return data.glow.enabled == false end,
+                },
+
+                coloring = {
+                    type = "select",
+                    name = "Coloring Mode",
+                    desc = "Select the coloring mode for this glow effect.\n\nClass-colored borders will automatically change to match the class you are playing.",
+                    width = 0.99,
+                    order = 4,
+                    values = {
+                        default = "Use Default Color",
+                        class = format( "Class |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s", ClassColor.r * 255, ClassColor.g * 255, ClassColor.b * 255, ClassColor:GenerateHexColor():sub( 3, 8 ) ),
+                        custom = "Specify a Custom Color"
+                    },
+                    disabled = function() return data.glow.enabled == false end,
+                },
+
+                color = {
+                    type = "color",
+                    name = "Glow Color",
+                    desc = "Select the custom glow color for your display.",
+                    width = 0.99,
+                    order = 5,
+                    disabled = function() return data.glow.coloring ~= "custom" end,
+                },
+
+                break02 = {
+                    type = "description",
+                    name = " ",
+                    order = 10,
+                    width = "full",
+                },
+
+                highlight = {
+                    type = "toggle",
+                    name = "Enable Action Highlight",
+                    desc = "If enabled, the addon will apply the default highlight when the first recommended item/ability is currently queued.",
+                    width = "full",
+                    order = 11
+                },
+            },
+        },
+
+        flash = {
+            type = "group",
+            name = "SpellFlash",
+            desc = function ()
+                if SF then
+                    return "If enabled, the addon can highlight abilities on your action bars when they are recommended for use."
+                end
+                return "This feature requires the SpellFlashCore addon or library to function properly."
+            end,
+            order = 8,
+            args = {
+                warning = {
+                    type = "description",
+                    name = "These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.",
+                    order = 0,
+                    fontSize = "medium",
+                    width = "full",
+                    hidden = function () return SF ~= nil end,
+                },
+
+                enabled = {
+                    type = "toggle",
+                    name = "Enabled",
+                    desc = "If enabled, the addon will place a colorful glow on the first recommended ability for this display.",
+
+                    width = 1.49,
+                    order = 1,
+                    hidden = function () return SF == nil end,
+                },
+
+                color = {
+                    type = "color",
+                    name = "Color",
+                    desc = "Specify a glow color for the SpellFlash highlight.",
+                    order = 2,
+                    width = 1.49,
+                    hidden = function () return SF == nil end,
+                },
+
+                break00 = {
+                    type = "description",
+                    name = " ",
+                    order = 2.1,
+                    width = "full",
+                    hidden = function () return SF == nil end,
+                },
+
+                sample = {
+                    type = "description",
+                    name = "",
+                    image = function() return Hekili.DB.profile.flashTexture end,
+                    order = 3,
+                    width = 0.3,
+                    hidden = function () return SF == nil end,
+                },
+
+                flashTexture = {
+                    type = "select",
+                    name = "Texture",
+                    icon =  function() return data.flash.texture or "Interface\\Cooldown\\star4" end,
+                    desc = "Your selection will override the SpellFlash texture for all displays' flashes.",
+                    order = 3.1,
+                    width = 1.19,
+                    values = {
+                        ["Interface\\AddOns\\Hekili\\Textures\\MonoCircle2"] = "Monochrome Circle Thin",
+                        ["Interface\\AddOns\\Hekili\\Textures\\MonoCircle5"] = "Monochrome Circle Thick",
+                        ["Interface\\Cooldown\\ping4"] = "Circle",
+                        ["Interface\\Cooldown\\star4"] = "Star (Default)",
+                        ["Interface\\Cooldown\\starburst"] = "Starburst",
+                        ["Interface\\Masks\\CircleMaskScalable"] = "Filled Circle",
+                        ["Interface\\Masks\\SquareMask"] = "Filled Square",
+                        ["Interface\\Soulbinds\\SoulbindsConduitCollectionsIconMask"] = "Filled Octagon",
+                        ["Interface\\Soulbinds\\SoulbindsConduitPendingAnimationMask"] = "Octagon Outline",
+                        ["Interface\\Soulbinds\\SoulbindsEnhancedConduitMask"] = "Octagon Thick",
+                    },
+                    get = function()
+                        return Hekili.DB.profile.flashTexture
+                    end,
+                    set = function( _, val )
+                        Hekili.DB.profile.flashTexture = val
+                    end,
+                    hidden = function () return SF == nil end,
+                },
+
+                speed = {
+                    type = "range",
+                    name = "Speed",
+                    desc = "Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.",
+                    min = 0.1,
+                    max = 2,
+                    step = 0.1,
+                    order = 3.2,
+                    width = 1.49,
+                    hidden = function () return SF == nil end,
+                },
+
+                break01 = {
+                    type = "description",
+                    name = " ",
+                    order = 4,
+                    width = "full",
+                    hidden = function () return SF == nil end,
+                },
+
+                size = {
+                    type = "range",
+                    name = "Flash Size",
+                    desc = "Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.",
+                    order = 5,
+                    min = 0,
+                    max = 240 * 8,
+                    step = 1,
+                    width = 1.49,
+                    hidden = function () return SF == nil end,
+                },
+
+                fixedSize = {
+                    type = "toggle",
+                    name = "Fixed Size",
+                    desc = "If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.",
+                    order = 6,
+                    width = 1.49,
+                    hidden = function () return SF == nil end,
+                },
+
+                break02 = {
+                    type = "description",
+                    name = " ",
+                    order = 7,
+                    width = "full",
+                    hidden = function () return SF == nil end,
+                },
+
+                brightness = {
+                    type = "range",
+                    name = "Flash Brightness",
+                    desc = "Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.",
+                    order = 8,
+                    min = 0,
+                    max = 100,
+                    step = 1,
+                    width = 1.49,
+                    hidden = function () return SF == nil end,
+                },
+
+                fixedBrightness = {
+                    type = "toggle",
+                    name = "Fixed Brightness",
+                    desc = "If checked, the SpellFlash glow will not dim/brighten.",
+                    order = 9,
+                    width = 1.49,
+                    hidden = function () return SF == nil end,
+                },
+
+                break03 = {
+                    type = "description",
+                    name = " ",
+                    order = 10,
+                    width = "full",
+                    hidden = function () return SF == nil end,
+                },
+
+                combat = {
+                    type = "toggle",
+                    name = "Combat Only",
+                    desc = "If checked, the addon will only create flashes when you are in combat.",
+                    order = 11,
+                    width = "full",
+                    hidden = function () return SF == nil end,
+                },
+
+                suppress = {
+                    type = "toggle",
+                    name = "Hide Display",
+                    desc = "If checked, the addon will not show this display and will make recommendations via SpellFlash only.",
+                    order = 12,
+                    width = "full",
+                    hidden = function () return SF == nil end,
+                },
+
+                blink = {
+                    type = "toggle",
+                    name = "Button Blink",
+                    desc = "If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.",
+                    order = 13,
+                    width = "full",
+                    hidden = function () return SF == nil end,
+                },
+            },
+        },
+
+        captions = {
+            type = "group",
+            name = "Captions",
+            desc = "Captions are brief descriptions sometimes (rarely) used in action lists to describe why the action is shown.",
+            order = 9,
+            args = {
+                enabled = {
+                    type = "toggle",
+                    name = "Enabled",
+                    desc = "If enabled, when the first ability shown has a descriptive caption, the caption will be shown.",
+                    order = 1,
+                    width = 1.49,
+                },
+
+                queued = {
+                    type = "toggle",
+                    name = "Enabled for Queued Icons",
+                    desc = "If enabled, descriptive captions will be shown for queued abilities, if appropriate.",
+                    order = 2,
+                    width = 1.49,
+                    disabled = function () return data.captions.enabled == false end,
+                },
+
+                position = {
+                    type = "group",
+                    inline = true,
+                    name = function( info ) rangeIcon( info ); return "Position" end,
+                    order = 3,
+                    args = {
+                        anchor = {
+                            type = "select",
+                            name = 'Anchor Point',
+                            order = 1,
+                            width = 1,
+                            values = {
+                                TOP = 'Top',
+                                BOTTOM = 'Bottom',
+                            }
+                        },
+
+                        x = {
+                            type = "range",
+                            name = "X Offset",
+                            order = 2,
+                            width = 0.99,
+                            step = 1,
+                        },
+
+                        y = {
+                            type = "range",
+                            name = "Y Offset",
+                            order = 3,
+                            width = 0.99,
+                            step = 1,
+                        },
+
+                        break01 = {
+                            type = "description",
+                            name = " ",
+                            order = 3.1,
+                            width = "full",
+                        },
+
+                        align = {
+                            type = "select",
+                            name = "Alignment",
+                            order = 4,
+                            width = 1.49,
+                            values = {
+                                LEFT = "Left",
+                                RIGHT = "Right",
+                                CENTER = "Center"
+                            },
+                        },
+                    }
+                },
+
+                textStyle = {
+                    type = "group",
+                    inline = true,
+                    name = "Text",
+                    order = 4,
+                    args = tableCopy( fontElements ),
+                },
+            }
+        },
+
+        targets = {
+            type = "group",
+            name = "Targets",
+            desc = "A target count indicator can be shown on the display's first recommendation.",
+            order = 10,
+            args = {
+                enabled = {
+                    type = "toggle",
+                    name = "Enabled",
+                    desc = "If enabled, the addon will show the number of active (or virtual) targets for this display.",
+                    order = 1,
+                    width = "full",
+                },
+
+                pos = {
+                    type = "group",
+                    inline = true,
+                    name = function( info ) rangeIcon( info )
+return "Position" end,
+                    order = 2,
+                    args = {
+                        anchor = {
+                            type = "select",
+                            name = "Anchor To",
+                            values = realAnchorPositions,
+                            order = 1,
+                            width = 1,
+                        },
+
+                        x = {
+                            type = "range",
+                            name = "X Offset",
+                            min = -max( data.primaryWidth, data.queue.width ),
+                            max = max( data.primaryWidth, data.queue.width ),
+                            step = 1,
+                            order = 2,
+                            width = 0.99,
+                        },
+
+                        y = {
+                            type = "range",
+                            name = "Y Offset",
+                            min = -max( data.primaryHeight, data.queue.height ),
+                            max = max( data.primaryHeight, data.queue.height ),
+                            step = 1,
+                            order = 2,
+                            width = 0.99,
+                        }
+                    }
+                },
+
+                textStyle = {
+                    type = "group",
+                    inline = true,
+                    name = "Text",
+                    order = 3,
+                    args = tableCopy( fontElements ),
+                },
+            }
+        },
+
+        delays = {
+            type = "group",
+            name = "Delays",
+            desc = "When an ability is recommended some time in the future, a colored indicator or countdown timer can " ..
+                "communicate that there is a delay.",
+            order = 11,
+            args = {
+                extend = {
+                    type = "toggle",
+                    name = "Extend Spiral",
+                    desc = "If checked, the primary icon's cooldown spiral will continue until the ability should be used.",
+                    width = 1.49,
+                    order = 1,
+                },
+
+                fade = {
+                    type = "toggle",
+                    name = "Fade as Unusable",
+                    desc = "Fade the primary icon when you should wait before using the ability, similar to when an ability is lacking required resources.",
+                    width = 1.49,
+                    order = 1.1
+                },
+
+                desaturate = {
+                    type = "toggle",
+                    name = format( "%s Desaturate", NewFeature ),
+                    desc = "Desaturate the primary icon when you should wait before using the ability.",
+                    width = 1.49,
+                    order = 1.15
+                },
+
+                break01 = {
+                    type = "description",
+                    name = " ",
+                    order = 1.2,
+                    width = "full",
+                },
+
+                type = {
+                    type = "select",
+                    name = "Indicator",
+                    desc = "Specify the type of indicator to use when you should wait before casting the ability.",
+                    values = {
+                        __NA = "No Indicator",
+                        ICON = "Show Icon (Color)",
+                        TEXT = "Show Text (Countdown)",
+                    },
+                    width = 1.49,
+                    order = 2,
+                },
+
+                pos = {
+                    type = "group",
+                    inline = true,
+                    name = function( info ) rangeIcon( info )
+return "Position" end,
+                    order = 3,
+                    args = {
+                        anchor = {
+                            type = "select",
+                            name = 'Anchor Point',
+                            order = 2,
+                            width = 1,
+                            values = realAnchorPositions
+                        },
+
+                        x = {
+                            type = "range",
+                            name = "X Offset",
+                            order = 3,
+                            width = 0.99,
+                            min = -max( data.primaryWidth, data.queue.width ),
+                            max = max( data.primaryWidth, data.queue.width ),
+                            step = 1,
+                        },
+
+                        y = {
+                            type = "range",
+                            name = "Y Offset",
+                            order = 4,
+                            width = 0.99,
+                            min = -max( data.primaryHeight, data.queue.height ),
+                            max = max( data.primaryHeight, data.queue.height ),
+                            step = 1,
+                        }
+                    },
+                    disabled = function () return data.delays.type == "__NA" end,
+                },
+
+                textStyle = {
+                    type = "group",
+                    inline = true,
+                    name = "Text",
+                    order = 4,
+                    args = tableCopy( fontElements ),
+                    disabled = function () return data.delays.type ~= "TEXT" end,
+                },
+            }
+        },
+
+        indicators = {
+            type = "group",
+            name = "Indicators",
+            desc = "Indicators are small icons that can indicate target-swapping or (rarely) cancelling auras.",
+            order = 11,
+            args = {
+                enabled = {
+                    type = "toggle",
+                    name = "Enabled",
+                    desc = "If enabled, small indicators for target-swapping, aura-cancellation, etc. may appear on your primary icon.",
+                    order = 1,
+                    width = 1.49,
+                },
+
+                queued = {
+                    type = "toggle",
+                    name = "Enabled for Queued Icons",
+                    desc = "If enabled, these indicators will appear on queued icons as well as the primary icon, when appropriate.",
+                    order = 2,
+                    width = 1.49,
+                    disabled = function () return data.indicators.enabled == false end,
+                },
+
+                size = {
+                    type = "group",
+                    inline = true,
+                    name = "Appearance",
+                    order = 1.5,
+                    args = {
+                        width = {
+                            type = "range",
+                            name = "Width",
+                            desc = "Specify the width of indicator icons.",
+                            min = 8,
+                            max = 100,
+                            step = 1,
+                            width = 1.49,
+                            order = 1,
+                        },
+
+                        height = {
+                            type = "range",
+                            name = "Height",
+                            desc = "Specify the height of indicator icons.",
+                            min = 8,
+                            max = 100,
+                            step = 1,
+                            width = 1.49,
+                            order = 2,
+                        },
+
+                        spacer01 = {
+                            type = "description",
+                            name = " ",
+                            width = "full",
+                            order = 3
+                        },
+
+                        zoom = {
+                            type = "range",
+                            name = "Icon Zoom",
+                            desc = "Select the zoom percentage for indicator icon textures. (Roughly 30% will trim off the default Blizzard borders.)",
+                            min = 0,
+                            softMax = 100,
+                            max = 200,
+                            step = 1,
+                            width = 1.49,
+                            order = 4,
+                        },
+
+                        keepAspectRatio = {
+                            type = "toggle",
+                            name = "Keep Aspect Ratio",
+                            desc = "When enabled, indicator icons will maintain their original aspect ratio when resized.",
+                            width = 1.49,
+                            order = 5,
+                        },
+                    }
+                },
+
+                pos = {
+                    type = "group",
+                    inline = true,
+                    name = function( info ) rangeIcon( info )
+return "Position" end,
+                    order = 2,
+                    args = {
+                        anchor = {
+                            type = "select",
+                            name = "Anchor To",
+                            values = realAnchorPositions,
+                            order = 1,
+                            width = 1,
+                        },
+
+                        x = {
+                            type = "range",
+                            name = "X Offset",
+                            min = -max( data.primaryWidth, data.queue.width ),
+                            max = max( data.primaryWidth, data.queue.width ),
+                            step = 1,
+                            order = 2,
+                            width = 0.99,
+                        },
+
+                        y = {
+                            type = "range",
+                            name = "Y Offset",
+                            min = -max( data.primaryHeight, data.queue.height ),
+                            max = max( data.primaryHeight, data.queue.height ),
+                            step = 1,
+                            order = 2,
+                            width = 0.99,
+                        }
+                    }
+                },
+            }
+        },
+    }
+end
 
 ns.UI.RegisterStyle( "classic", Classic )

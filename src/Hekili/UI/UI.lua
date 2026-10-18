@@ -1065,8 +1065,18 @@ do
     end, true )
 
     -- Binds the display's style and builds it; the list it returns is the display's buttons (ns.UI.Buttons[ id ]).
+    -- No style named (a profile older than styles) draws classic; an unknown name draws classic and says so. A switch
+    -- clears the old style first, so nothing it drew stays on screen.
     local function bindStyle( d, conf )
-        d.style = ns.UI.Styles[ conf.style ] or ns.UI.Styles.classic
+        local style = ns.UI.Styles[ conf.style ]
+        if not style then
+            if conf.style ~= nil then
+                Hekili:Notify( "Display " .. d.id .. ": unknown style '" .. tostring( conf.style ) .. "', drawn as classic." )
+            end
+            style = ns.UI.Styles.classic
+        end
+        if d.style and d.style ~= style then d.style.Clear( d ) end
+        d.style = style
         d.styleState = d.styleState or {} -- per-display scratch, owned by the style
         d.styleFrames = d.styleFrames or {} -- per style name, the frames it built (WoW cannot free frames)
         ns.UI.Buttons[ d.id ] = d.style.Build( d, conf )
