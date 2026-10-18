@@ -264,6 +264,9 @@ local HekiliSpecMixin = {
         end
     end,
 
+    -- A content field beside Hekili's own: `overlay = spellID` on a player proc aura (C2). While the player aura walk is
+    -- secret or stopped, the belief reads the proc from that spell's overlay glow (Game/State/Sources/Auras.lua, poll
+    -- 11): up with no expiry while it glows, down once it stops. A plain walk wins.
     RegisterAura = function( self, aura, data )
         CommitKey( aura )
 

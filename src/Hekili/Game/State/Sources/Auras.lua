@@ -4,6 +4,8 @@
 -- filter). Entries whose spellId is tracked become `Read` observations straight to the log (remaining time, stacks).
 -- After a complete walk, a believed-up aura it did not find is logged down, but in combat only once that aura was
 -- seen readable in combat (before that, a miss may be the client hiding it). Combat's end queues one more walk (poll 10).
+-- A player aura with `overlay = spellID` (C2) is also read from C_SpellActivationOverlay.IsSpellOverlayed (poll 11)
+-- while the player walk is secret or stopped: on is a `Read` with no expiry, off a `Read` down.
 -- Credits: the pcall-then-issecretvalue handling and the "seen readable in combat" rule follow Catnip's (Durts)
 -- secret-value research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Auras.lua (:42, :58-61, :74, :148).
@@ -13,6 +15,7 @@ local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local S = I.Sources
 local Obs, ReadOf = VS.Obs, I.ReadOf
 local Plain, Direct, Note = S.Plain, S.Direct, S.Note
+local HUGE = math.huge
 
 -- A safety cap: the walk stops at the first empty slot, so the cap costs nothing; a unit with more auras than the cap
 -- in one filter would hide a tracked aura past it.
@@ -28,6 +31,10 @@ local serial = 0
 -- Set when combat ends: the belief's in-combat down-states stand until a plain walk, and no UNIT_AURA comes while the
 -- buffs stay unchanged.
 local pending = false
+-- Whether the last player walk completed (plain): then it wins over the overlay reads.
+local playerPlain = true
+-- The player auras with a numeric `overlay`: their aura indices and overlay spell IDs (built at OnBuild).
+local OVL_J, OVL_ID, OVL_N = {}, {}, 0
 
 I.OnBuild(function(def)
     local U = I.auras
@@ -39,6 +46,15 @@ I.OnBuild(function(def)
         end
         found[u], seen[u] = f, s
     end
+    OVL_N = 0
+    for j = 1, U.nAura do
+        local id = rawget(def.auras[j], "overlay")
+        if type(id) == "number" then
+            OVL_N = OVL_N + 1
+            OVL_J[OVL_N], OVL_ID[OVL_N] = j, id
+        end
+    end
+    playerPlain = true
 end)
 
 -- One unit's walk at t; returns whether it completed. Allocates nothing (the client allocates its aura tables).
@@ -109,6 +125,9 @@ local function walk(api, u, unit, t)
             end
         end
     end
+    if u == 1 then
+        playerPlain = complete
+    end
     return complete
 end
 I.WalkAuras = walk
@@ -147,5 +166,23 @@ S.Poll(10, function(api, t)
     end
     if I.auras.n >= 2 and Plain(api, api.UnitExists("target")) == true then
         walk(api, 2, "target", t)
+    end
+end)
+
+-- Poll 11: the overlay reads, while the player walk is secret or stopped. An overlay-read proc (no expiry) is still taken
+-- down by its overlay going off after the walk turns plain, since an in-combat walk miss is no down. Allocates nothing.
+S.Poll(11, function(api, t)
+    if OVL_N == 0 or not I.built then
+        return
+    end
+    local e = I.auras.exp0[1]
+    for k = 1, OVL_N do
+        local j = OVL_J[k]
+        local on = Plain(api, api.C_SpellActivationOverlay.IsSpellOverlayed(OVL_ID[k])) -- plain [W PR11]; tested anyway
+        if on == true and not playerPlain and e[j] <= t then
+            Direct(Obs.Read, t, j, -1, ReadOf.Aura)
+        elseif on == false and e[j] > t and (not playerPlain or e[j] == HUGE) then
+            Direct(Obs.Read, t, j, 0, ReadOf.Aura)
+        end
     end
 end)

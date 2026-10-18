@@ -250,6 +250,103 @@ describe("auras", function()
         assert.are.equal(30, VS.Aura("target", fs.SPENDER_C, 12).est)
     end)
 
+    describe("a proc seen through its spell's overlay (`overlay`, C2)", function()
+        local OVERLAY = 5001 -- a generic spell whose overlay the proc lights
+        local lit
+
+        before_each(function()
+            local def = fs.def(fs.new(9))
+            def.auras[SHOUT] = { key = "spender_a", id = fs.SPENDER_A, overlay = OVERLAY }
+            I.Build(def, 1)
+            I.ObsLog.Clear(I.log)
+            lit = {}
+            api.C_SpellActivationOverlay.IsSpellOverlayed = function(id)
+                return lit[id]
+            end
+        end)
+
+        local function poll(t)
+            ctl.Tick(t)
+            S.RunPolls(t)
+            I.Fold(t, false)
+            I.Settle(t)
+        end
+
+        local function secretWalk()
+            ctl.auras.player.HELPFUL[1] = fake.SECRET
+            ctl.Fire("UNIT_AURA", "player")
+        end
+
+        it("in combat with the walk secret, reads the proc up while its overlay is on, down once it is off", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            secretWalk()
+            lit[OVERLAY] = true
+            poll(10)
+            local rec = VS.Aura("player", fs.SPENDER_A, 10)
+            assert.are.same({ math.huge, "observed" }, { rec.est, rec.basis }) -- a Read with no expiry
+            poll(11)
+            assert.is_truthy(VS.Aura("player", fs.SPENDER_A, 11))
+            lit[OVERLAY] = false
+            poll(12)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 12))
+        end)
+
+        it("leaves the belief alone on a secret overlay answer", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            secretWalk()
+            I.AuraModel(1, SHOUT, 10, 20, 1, 10, Obs.CastSuccess, false)
+            lit[OVERLAY] = fake.SECRET
+            poll(11)
+            assert.are.equal(20, VS.Aura("player", fs.SPENDER_A, 11).est)
+        end)
+
+        it("lets a plain walk win: the overlay is not read while the player walk completes", function()
+            ctl.now = 10
+            ctl.auras.player.HELPFUL[1] = { spellId = fs.SPENDER_A, expirationTime = 30, applications = 0 }
+            ctl.Fire("UNIT_AURA", "player")
+            lit[OVERLAY] = false
+            poll(10)
+            assert.are.equal(30, VS.Aura("player", fs.SPENDER_A, 10).est)
+            ctl.auras.player.HELPFUL[1] = nil
+            ctl.Fire("UNIT_AURA", "player")
+            lit[OVERLAY] = true
+            poll(11)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11))
+        end)
+
+        it("takes an overlay-read proc down once its overlay is off, even after the walk turns plain", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            secretWalk()
+            lit[OVERLAY] = true
+            poll(10)
+            ctl.auras.player.HELPFUL[1] = nil
+            ctl.Fire("UNIT_AURA", "player") -- plain and complete, but in combat a miss is not a down
+            lit[OVERLAY] = false
+            poll(11)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11))
+        end)
+
+        it("allocates nothing over 1000 polls", function()
+            local alloc = require("Game.State.helpers.alloc")
+            ctl.now = 10
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            secretWalk()
+            local t = 10
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    t = t + 0.01
+                    lit[OVERLAY] = not lit[OVERLAY]
+                    S.RunPolls(t)
+                    I.Fold(t, false)
+                end, 1000)
+            )
+        end)
+    end)
+
     describe("an aura spent by hits on the player (`consumedBy`, tank design §3)", function()
         local BLOCKED, BLOCK, DODGE -- I.HitKind's, read once I is loaded (a tag-filtered run skips the earlier cases)
 
