@@ -1,8 +1,8 @@
-# Class Completion Implementation Plan (DRAFT)
+# Class Completion Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-> **DRAFT, 2026-10-18.** This plan is not approved. The decisions D1-D7 below need the user before Day 2 starts.
+> **Approved by the user 2026-10-18** with decisions D1-D7 taken (see "Decisions"). Execution: one opus controller per day or two from the SDD ledger; the merge into `forever` after each day's gates.
 
 **Goal:** Every Forever DPS and tank spec is at least modelled. That means a class pack with wowsims/forever's
 rotation as its APL basis, `focus=N` on its non-rotational timing-bound lines, and a headless `<Spec> solo:` gate. The
@@ -46,26 +46,25 @@ hold the DB2 tables and checkpoint questions.
 5. **Each pack's gate must exercise its focus lines.** Test: the gate's report counts records with `focus` set, and
    the count is above 0 for every spec with a flagged line.
 
-## Decisions needed from the user
+## Decisions (user, 2026-10-18; binding)
 
-- **D1 Focus tiers.** Proposed: `focus=1` for reactive or costly-to-miss lines (gold on arrival), `focus=2` for
-  predictable upkeep and timing windows. The Timeline must treat 2 like 1, or rank it below 1. Confirm the meaning and
-  what the Timeline does with 2 (the Fury run already emits it).
-- **D2 Fight length.** The sim gates Rip, Rupture, SnD, Doom and Agony on "fight left". The fork dropped time to die.
-  Proposed: `boss`, plus a per-pack setting ("short fights: skip DoTs under N s" stays off).
-- **D3 Hunter basis.** The sim's default is Melee Weave, which a display can't perform. Proposed: Turret (MM), Turret
-  Hawk (BM) and Melee (SV). The weave is out of scope.
-- **D4 Rune and Forever-only spells.** Wowsims uses Summon Hawk, Venom, Arcane Wrath, Frostfire Bolt, Wrack,
-  Incinerate, Lava Burst, Spearing Strike, Strider Kick and others. Register only what a Forever character can learn
-  (an in-game check per class), or register them all with `known` from the spellbook? Proposed: all, with `known`
-  from the spellbook.
-- **D5 Probe budget.** Each new class needs a character in game for its checkpoint questions. Which classes can the
-  user play this week, and at what level? Specs without a character ship marked "provisional" in the pack
-  description, as Balance does.
-- **D6 Out of scope.** Proposed out: pet-bar abilities (Spell Lock), the Paladin item swap, the Hamstring weave
-  (needs a party Windfury Totem), the Smite/Holy damage build, and multidot (Flame Shock ×3, Bane of Havoc) until C14.
-- **D7 Absolute mana thresholds.** Proposed: Arcane Blast at ≥ 5000 mana and Dark Sacrifice at ≤ 2000 become fractions
-  of the maximum (a setting), since mana is a belief estimate.
+- **D1 Focus tiers.** `focus=N` is a priority tier (merged d66f6dcc): lowest number first, soonest within a tier, a
+  ready flagged press always wins the Now circle. Use tier 1 for reactive or costly-to-miss lines, tier 2 for
+  predictable upkeep and timing windows.
+- **D2 Fight length.** DoT lines gate on `boss`, plus a per-pack setting "short fights: skip DoTs under N s",
+  default off. No time-to-die estimate.
+- **D3 Hunter basis.** Turret (MM), Turret Hawk (BM), Melee (SV). The melee weave is out of scope.
+- **D4 Rune and Forever-only spells.** Register all of them; `known` comes from the spellbook, so an unlearnable
+  spell's lines are inert. No per-class learnability check first.
+- **D5 Probe budget.** Druid only this week. Every other spec ships "provisional" in its pack description; its
+  checkpoint questions go into the T18 ledger. T11 therefore builds the modelled auto-shot clock (from Auto Shot
+  casts and the ranged speed) without the `PLAYER_SWING` measurement; Marksmanship ships as "shots without
+  weaving"; the measurement stays on the ledger.
+- **D6 Out of scope.** Out: pet-bar abilities (Spell Lock etc.) and the Paladin item swap. In: the Hamstring weave
+  (Arms gets the Windfury-gated Hamstring line in T5, as Fury has) and the Priest Smite/Holy damage build (T16 adds a
+  `Smite` APL beside `Shadow` in the same pack). Multidot (Flame Shock ×3, Bane of Havoc) stays deferred until C14.
+- **D7 Absolute mana thresholds.** Fractions of the maximum, one setting per line.
+- Also settled: combo points are plain in combat (research addendum), so no event-driven combo-point estimate.
 
 ## The per-pack gate (every class task uses this)
 
@@ -100,7 +99,7 @@ hold the DB2 tables and checkpoint questions.
 **Deps:** none.
 
 ### Task 2: Druid aligned with wowsims, plus three solo lines [M]
-**Files:** APLs: `src/Hekili_Druid/APLs/{Feral,Guardian,Balance}.simc` (`tools/packs/druid/` if the APL move has not merged); `src/Hekili_Druid/Druid.lua`; New: `tests/Forever/helpers/druid_loop_world.lua` (reuses `druid_world.lua`'s character and presses) and `tests/Forever/loop_druid_spec.lua`.
+**Files:** APLs: `src/Hekili_Druid/APLs/{Feral,Guardian,Balance}.simc` (the APL move is merged, d66f6dcc); `src/Hekili_Druid/Druid.lua`; New: `tests/Forever/helpers/druid_loop_world.lua` (reuses `druid_world.lua`'s character and presses) and `tests/Forever/loop_druid_spec.lua`.
 
 **Content** (research §1): Feral:.
   - `shred,focus=1,if=buff.clearcasting.up`;
@@ -153,7 +152,7 @@ missed bleed still drops), `tests/Forever/shared_spec.lua`.
 
 ### Task 5: Warrior gaps vs wowsims [S]
 **Files:** `src/Hekili_Warrior/APLs/{Arms,Protection}.simc` and `src/Hekili_Warrior/Warrior.lua` (settings).
-- Arms: Rend in Battle Stance at ≤ 1.5 s, outside execute, also with Mortal Strike (`focus=2`); Slam after the main-hand swing, gated on `mainhand_remains` (`focus=2`); Battle Shout at ≤ 10 s; Overpower `focus=1`.
+- Arms: Rend in Battle Stance at ≤ 1.5 s, outside execute, also with Mortal Strike (`focus=2`); Slam after the main-hand swing, gated on `mainhand_remains` (`focus=2`); Battle Shout at ≤ 10 s; Overpower `focus=1`; Hamstring with Windfury up, the Fury line's shape (D6: in scope).
 - Protection: Shield Block at rage ≥ 40, or when Revenge is near ready; Last Stand, Shield Wall, Stoneform and Healthstone on health in the Defensives display (`focus=1`); Rend when not up; Sunder at ≤ 10 s; Shield Bash, Taunt and Mocking Blow `focus=1`.
 
 **Gate:** Arms changes on purpose, so re-record `arms_recs` and record the new `Arms solo:` lines in `layout.md`.
@@ -217,8 +216,9 @@ and guardian counts (a cap, per-summon expiry).
 `UnitRangedDamage` row (T4), and the mapping of Hekili's auto-shot state names (find the names in
 `Engine/Sim/State.lua`).
 **Tests:** `tests/Game/State/swing_spec.lua` (ranged anchors). The harness world grows a ranged hand.
-**In game (user, blocking):** Hunter Q2, whether `PLAYER_SWING` fires with `swingType` 2. If it does not, the task
-stops at a modelled clock from Auto Shot casts and becomes a decision.
+**In game:** deferred (D5: no Hunter this week). Build the modelled clock from Auto Shot casts and the ranged speed
+now; the `PLAYER_SWING` `swingType` 2 measurement goes on the T18 ledger and, if it fires, a later task anchors the
+clock on it.
 **Deps:** T4.
 
 ### Task 12: Hunter pack (D3 builds) [L]
@@ -256,8 +256,8 @@ stops at a modelled clock from Auto Shot casts and becomes a decision.
 **Deps:** T1, T3, T6, T10, T13.
 
 ### Task 16: Priest Shadow pack [M]
-**Files:** new `src/Hekili_Priest/` (`APLs/Shadow.simc`).
-**Content:** Shadowform via Forms (verify); SW:P and Devouring Plague on drop `focus=2`; Mind Flay channel; Dark Sacrifice at a mana fraction.
+**Files:** new `src/Hekili_Priest/` (`APLs/{Shadow,Smite}.simc`).
+**Content:** Shadowform via Forms (verify); SW:P and Devouring Plague on drop `focus=2`; Mind Flay channel; Dark Sacrifice at a mana fraction. Smite (D6: in scope): the sim's Smite/Holy damage list as a second pack in the same addon, Holy Fire and SW:P upkeep `focus=2`, Inner Focus `focus=1`.
 
 **Gate:** `Shadow solo:`. **In game:** Priest brief Q2 and Q4.
 **Deps:** T1, T6, T13.
