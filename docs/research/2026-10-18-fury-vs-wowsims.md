@@ -233,7 +233,7 @@ FOCUS (predictable). 34 berserker_stance: EITHER.
 Keep each set small, so the Now circle means "look here" rather than "always occupied".
 
 - **Fury** (the user's list fixes it): victory_rush, overpower, revenge, heroic_strike, cleave. Advisory: drop
-  heroic_strike/cleave from focus (they'd occupy Now most of the fight). If Execute is added, give it focus. Rend and bloodrage score FOCUS on today's list but stay out: the user's list has no Bloodrage line and fixes its focus lines, and Rend is silent in Berserker Stance.
+  heroic_strike/cleave from focus (they'd occupy Now most of the fight). ~~If Execute is added, give it focus.~~ (Superseded: the user ruled that none of the added wowsims lines is focus; see "Added from wowsims".) Rend and bloodrage score FOCUS on today's list but stay out: the user's list has no Bloodrage line and fixes its focus lines, and Rend is silent in Berserker Stance.
 - **Arms**: overpower, victory_rush, execute, rend, battle_shout (the in-combat line 33, not precombat 8).
 - **Protection**: revenge (both lists), shield_block, shield_bash, taunt, mocking_blow, victory_rush, thunder_clap
   (both lists).
