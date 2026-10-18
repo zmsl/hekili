@@ -132,6 +132,9 @@ end
 -- By ability index a: the last usability answer and the last short report (cost, time, the slot's own gains so far
 -- and its estimate then).
 local usable, shortCost, shortT, shortGain, shortEst = {}, {}, {}, {}, {}
+-- By ability index: its ladder precondition (C9): false for `ladder = false` (its answers are no rungs), its `usable`
+-- function (a short answer while it fails names another requirement, such as a finisher's combo points), or true.
+local pre = {}
 
 -- The usability oracle (harness design §2): per credit record k (Events/Rows.lua's record id, a landed swing's `b`),
 -- the slot it paid (0: none), the hand, est, lo and hi before it and the deltas it added (its crit included), its
@@ -259,6 +262,10 @@ I.OnBuild(function(def, now)
     end
     for a = 1, #def.abilities do
         usable[a], shortCost[a], shortT[a], shortGain[a], shortEst[a] = UNKNOWN, 0, 0, 0, 0
+        local obj = def.abilities[a]
+        local funcs = rawget(obj, "funcs") -- Hekili keeps an ability's functions there
+        local f = type(funcs) == "table" and rawget(funcs, "usable") or rawget(obj, "usable")
+        pre[a] = rawget(obj, "ladder") ~= false and (type(f) ~= "function" or f)
     end
     for k = 1, RECORDS do
         recA[k], recR[k] = 0, 0
@@ -627,15 +634,38 @@ local function judge(a, now, t, r, c)
     return explained
 end
 
+-- Whether ability a's `usable` holds at t, read in the `now` context (the belief's names). Its function is Hekili's
+-- sim one, so it runs there for this call only; one that raises (a name the context lacks) holds from then on.
+-- Allocates nothing once it has raised.
+local function holds(a, t)
+    local f = pre[a]
+    if f == true then
+        return true
+    end
+    local env = getfenv(f)
+    setfenv(f, I.nowCtx)
+    I.NowAt(t)
+    local ok, v = pcall(f)
+    setfenv(f, env)
+    if not ok then
+        pre[a] = true
+        return true
+    end
+    return v ~= false and v ~= nil
+end
+
 I.On(Obs.Usable, function(o, t, lag)
     local a = o.a
     local now = o.b == 1 and YES or (o.c == 1 and SHORT or NOT)
+    local r = I.ab.slot[a]
+    if now == SHORT and r ~= 0 and not R.readable[r] and pre[a] and not holds(a, t) then
+        now = NOT -- short for another requirement: no rung, and no flip from it later
+    end
     local was = usable[a]
     usable[a] = now
-    local r = I.ab.slot[a]
     local c = r ~= 0 and I.CostOf(a) or 0
     local explained = I.CreditVerdict and judge(a, now, t, r, c)
-    if r == 0 or now == NOT or R.readable[r] or I.ab.multiCost[a] then
+    if r == 0 or now == NOT or R.readable[r] or I.ab.multiCost[a] or not pre[a] then
         return -- a second power cost (Overpower's combo points) makes a short answer ambiguous: no rung
     end
     if c <= 0 then

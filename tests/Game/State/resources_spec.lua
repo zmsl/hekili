@@ -85,6 +85,90 @@ describe("resources", function()
         end)
     end)
 
+    describe("a ladder precondition (C9: a spender that also needs points)", function()
+        local FINISHER, PLAIN, NOLADDER = 1, 2, 3
+
+        before_each(function()
+            boot({
+                abilities = {
+                    {
+                        key = "finisher",
+                        spend = 30,
+                        funcs = {
+                            usable = function()
+                                return points.current > 0, "requires points" -- luacheck: ignore 113
+                            end,
+                        },
+                    },
+                    {
+                        key = "reader",
+                        spend = 20,
+                        funcs = {
+                            usable = function()
+                                return target.missing.field -- luacheck: ignore 113 (a name the context lacks)
+                            end,
+                        },
+                    },
+                    { key = "noladder", spend = 50, ladder = false },
+                },
+                abilityIds = { { 1001 }, { 1002 }, { 1003 } },
+                abilitySlot = { 1, 1, 1 },
+                resources = {
+                    { key = "energy", type = ENERGY, token = "ENERGY", max = 100, rest = true, regen = 10 },
+                    { key = "points", type = 4, token = "COMBO_POINTS", max = 5 },
+                },
+                auras = {},
+                auraIds = {},
+                talents = {},
+                units = { "player", "target" },
+            })
+        end)
+
+        it("pins nothing from a finisher's short answer at 0 points, nor the flip once points come", function()
+            obs(Obs.Usable, 10, FINISHER, 0, 1)
+            I.Fold(10, false)
+            assert.are.same(
+                { 100, 0, 100 },
+                { VS.Power(ENERGY, 10).est, VS.Power(ENERGY, 10).lo, VS.Power(ENERGY, 10).hi }
+            )
+            I.ResourceShift(2, 1, 10.5, Obs.CastSuccess) -- a builder's point
+            obs(Obs.Usable, 11, FINISHER, 1, 0) -- usable now: the points crossed, not the energy
+            I.Fold(11, false)
+            local e = VS.Power(ENERGY, 11)
+            assert.are.same({ 100, 30 }, { e.est, e.lo }) -- a plain floor at the cost, no exact pin at 30
+        end)
+
+        it("pins the short answer once the precondition holds", function()
+            I.ResourceShift(2, 2, 9, Obs.CastSuccess)
+            obs(Obs.Usable, 10, FINISHER, 0, 1)
+            I.Fold(10, false)
+            within(30 - I.EPS, VS.Power(ENERGY, 10).est)
+        end)
+
+        it("keeps the ladder for a precondition that raises, and drops it for `ladder = false`", function()
+            obs(Obs.Usable, 10, NOLADDER, 1, 0)
+            obs(Obs.Usable, 10, NOLADDER, 0, 1)
+            I.Fold(10, false)
+            assert.are.same({ 100, 0 }, { VS.Power(ENERGY, 10).est, VS.Power(ENERGY, 10).lo })
+            obs(Obs.Usable, 11, PLAIN, 0, 1)
+            I.Fold(11, false)
+            within(20 - I.EPS, VS.Power(ENERGY, 11).est)
+        end)
+
+        it("allocates nothing evaluating the precondition", function()
+            local t = 10
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    t = t + 0.01
+                    obs(Obs.Usable, t, FINISHER, 0, 1)
+                    obs(Obs.Usable, t, PLAIN, 0, 1)
+                    I.Fold(t, false)
+                end, 1000)
+            )
+        end)
+    end)
+
     describe("the out-of-combat regen read", function()
         local RAGE = 1
         local api
