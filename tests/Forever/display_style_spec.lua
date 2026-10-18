@@ -434,8 +434,8 @@ describe("a display's style", function()
             local plugins = H.Hekili.Options.args.displays.plugins
             local primary, multi = plugins.Primary.Primary.args, plugins.Multi.Multi.args
             local style = primary.main.args.style
-            assert.are.same({ classic = "Classic", stub = "Stub" }, style.values())
-            assert.are.same({ "classic", "stub" }, style.sorting())
+            assert.are.same({ classic = "Classic", stub = "Stub", timeline = "Timeline" }, style.values())
+            assert.are.same({ "classic", "stub", "timeline" }, style.sorting())
             local function shown(args)
                 return {
                     classic = not args.classic.hidden() and args.classic.args.glow ~= nil,
@@ -642,6 +642,299 @@ describe("an external display style", function()
             assert.is_nil(H.ns.UI.Styles[taken], taken)
         end
         assert.are.equal("classic", H.Hekili.DB.profile.displays.Primary.style)
+        assert.are.same({}, H.errors)
+    end)
+end)
+
+-- Task 4: the timeline style. Its frames are on d.styleFrames.timeline: `widgets` (every frame and region it built)
+-- with `labels` naming each for the dump, and `cells` (record i's cell, the list Build returns). Record its fixture with
+-- TIMELINE_DRAW=record.
+local TL_PATH = "tests/Forever/fixtures/timeline_draw.lua"
+
+-- Recorders for what the timeline sets past classic's (alpha, SetShown), on its widgets only.
+local tlrec = {}
+for k, fn in pairs(rec) do
+    tlrec[k] = fn
+end
+function tlrec.SetShown(self, on)
+    rawset(self, "__shown", on and true or false)
+end
+function tlrec.SetAlpha(self, a)
+    rawset(self, "__alpha", a)
+end
+
+local function tlInstrument(T)
+    for _, w in ipairs(T.widgets) do
+        for k, fn in pairs(tlrec) do
+            rawset(w, k, fn)
+        end
+    end
+end
+
+-- Primary bound to the timeline with six icons, its widgets recording unless `plain` (the recorders build strings);
+-- the second build records Build's anchors.
+local function tlBoot(plain)
+    local H, d = boot()
+    local conf = H.Hekili.DB.profile.displays.Primary
+    conf.style, conf.numIcons = "timeline", 6
+    local tl = conf.timeline
+    tl.captions.enabled, tl.captions.queued = true, true
+    tl.glow.enabled, tl.delays.desaturate = true, true
+    tl.laneEta.enabled = true
+    H.Hekili:BuildUI()
+    local T = d.styleFrames.timeline
+    if not plain then
+        tlInstrument(T)
+    end
+    H.Hekili:BuildUI()
+    return H, d, T
+end
+
+-- Six picks: 1 delayed (now), 2 with two alternatives, 3 short of its resource (the gate), 4 after an idle gap past
+-- 3's busy time (a cooldown wait), 5 within rowGap of 4 (row 2), 6 past the horizon (clipped).
+local TL_SET = {
+    { "mortal_strike", 1.0, "cycle", 30, 40, 1.5 },
+    { "overpower", 2.5, nil, 5, 50, 1.5 },
+    { "slam", 4.0, "cancel", 15, 10, 1.5 },
+    { "rend", 8.0, nil, 10, 20, 1.5 },
+    { "whirlwind", 8.3, nil, 25, 30, 1.5 },
+    { "sunder_armor", 12.0, nil, 15, 40, 1.5 },
+}
+
+local function tlPublish(H)
+    local abilities = H.Hekili.Engine.Registry.Abilities()
+    local now = H.ctl.now
+    local s = H.ns.Output.Begin("Primary")
+    local prev = 0
+    for i, e in ipairs(TL_SET) do
+        local r = s[i]
+        r.actionName, r.actionID = e[1], abilities[e[1]].id
+        r.texture, r.caption, r.keybind, r.indicator = "tex" .. i, "cap" .. i, "K" .. i, e[3]
+        r.time, r.exact_time, r.since = e[2], now + e[2], e[2] - prev
+        r.resource_type, r.cost, r.resources.rage, r.busy = "rage", e[4], e[5], e[6]
+        prev = e[2]
+        r.alts.n = 0
+    end
+    local a = s[1].alts
+    a.n, a[1].actionName, a[1].texture = 1, "slam", "alt1a"
+    a = s[2].alts
+    a.n, a[1].actionName, a[1].texture, a[2].actionName, a[2].texture = 2, "rend", "alt2a", "whirlwind", "alt2b"
+    H.ns.Output.Publish("Primary", #TL_SET)
+end
+
+local function tlDump(T, lines)
+    lines = lines or {}
+    for n, w in ipairs(T.widgets) do
+        lines[#lines + 1] = ("%s shown=%s tex=%s text=%s point=%s cd=%s/%s desat=%s vc=%s,%s,%s,%s alpha=%s"):format(
+            T.labels[n],
+            v(rawget(w, "__shown")),
+            v(rawget(w, "__tex")),
+            v(rawget(w, "__text")),
+            v(rawget(w, "__point")),
+            v(rawget(w, "__cdStart")),
+            v(rawget(w, "__cdDuration")),
+            v(rawget(w, "__desat")),
+            v(rawget(w, "__r")),
+            v(rawget(w, "__g")),
+            v(rawget(w, "__b")),
+            v(rawget(w, "__a")),
+            v(rawget(w, "__alpha"))
+        )
+    end
+    for i, b in ipairs(T.cells) do
+        lines[#lines + 1] = ("cell%d action=%s exact=%s glowing=%s"):format(
+            i,
+            v(b.Action),
+            v(b.ExactTime),
+            v(b.glowing)
+        )
+    end
+    return lines
+end
+
+local function tlWrite(lines)
+    local f = assert(io.open(TL_PATH, "w"))
+    local git = assert(io.popen("git rev-parse --short HEAD"))
+    local head = git:read("*l")
+    git:close()
+    f:write(
+        ("-- Generated by tests/Forever/display_style_spec.lua (TIMELINE_DRAW=record) on %s: do not edit.\n"):format(
+            head
+        )
+    )
+    f:write("return {\n")
+    for _, l in ipairs(lines) do
+        f:write(("    %q,\n"):format(l))
+    end
+    f:write("}\n")
+    f:close()
+end
+
+describe("the timeline display style", function()
+    it("draws a fixed 6-record publish over 3 frames as its recorded fixture", function()
+        local H, d, T = tlBoot()
+        overlayed[H.Hekili.Engine.Registry.Abilities().mortal_strike.id] = true
+        tlPublish(H)
+        local f = d.__scripts.OnUpdate
+        for _ = 1, 3 do -- the publish's draw, a frame between pulses (lane glides), the 0.25 s pulse
+            H.ctl.now = H.ctl.now + 0.2
+            f(d, 0.2)
+        end
+        assert.are.same({}, H.errors)
+        local lines = tlDump(T)
+        H.Hekili.Pause = true
+        H.ctl.now = H.ctl.now + 0.2
+        f(d, 0.2)
+        lines[#lines + 1] = "-- paused"
+        tlDump(T, lines)
+        H.Hekili.Pause = false
+        local l, r, t, b = d.style.Perimeter(d)
+        lines[#lines + 1] = ("-- perimeter: %s %s %s %s"):format(v(l == d), v(r == d), v(t == d), v(b == d))
+        d:Deactivate()
+        lines[#lines + 1] = "-- deactivated"
+        tlDump(T, lines)
+        assert.are.same({}, H.errors)
+        for k in pairs(overlayed) do
+            overlayed[k] = nil
+        end
+        if os.getenv("TIMELINE_DRAW") == "record" then
+            tlWrite(lines)
+        end
+        local want = dofile(TL_PATH)
+        assert.are.equal(#want, #lines)
+        for i, l in ipairs(want) do
+            assert.are.equal(l, lines[i], "line " .. i)
+        end
+    end)
+
+    it(
+        "places the lane by time: row 2 within rowGap, clipped past the horizon, gate and cooldown-wait marks",
+        function()
+            local H, d, T = tlBoot()
+            tlPublish(H)
+            H.ctl.now = H.ctl.now + 0.2
+            d.__scripts.OnUpdate(d, 0.2)
+            local c = T.cells
+            assert.is_true(c[3]:IsShown() and c[4]:IsShown() and c[5]:IsShown())
+            assert.is_false(c[6]:IsShown()) -- 12 s: past the 10 s horizon
+            assert.are.equal(1, T.row[4])
+            assert.are.equal(2, T.row[5]) -- 0.3 s after 4: 7.2 px < rowGap 24
+            assert.is_true(c[3].Veil:IsShown()) -- 10 rage short of 15
+            assert.is_false(c[4].Veil:IsShown())
+            assert.is_true(c[4].Edges[1]:IsShown()) -- idle 8.0 - (4.0 + 1.5) with the rage there
+            assert.is_false(c[3].Edges[1]:IsShown())
+            assert.is_true(c[2].Alts[2]:IsShown())
+            assert.are.equal("alt2b", c[2].Alts[2]:GetTexture())
+            assert.is_false(c[1].Alts[2]:IsShown())
+            assert.are.same({}, H.errors)
+        end
+    )
+
+    it("allocates nothing over 1,000 display frames after the first publish, on a moving clock", function()
+        local H, d = tlBoot(true)
+        tlPublish(H)
+        local f = d.__scripts.OnUpdate
+        for _ = 1, 3 do
+            H.ctl.now = H.ctl.now + 0.2
+            f(d, 0.2)
+        end
+        collectgarbage("collect")
+        collectgarbage("stop")
+        local before = collectgarbage("count")
+        for _ = 1, 1000 do
+            H.ctl.now = H.ctl.now + 0.01
+            f(d, 0.01)
+        end
+        local bytes = (collectgarbage("count") - before) * 1024
+        collectgarbage("restart")
+        assert.are.same({}, H.errors)
+        assert.are.equal(0, bytes)
+    end)
+
+    it("switching classic -> timeline -> classic hides every widget of the style left", function()
+        local H, d = boot()
+        publish(H)
+        local f = d.__scripts.OnUpdate
+        H.ctl.now = H.ctl.now + 0.2
+        f(d, 0.2)
+        local classic = d.styleFrames.classic
+        assert.is_true(classic[1]:IsShown())
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "main", "style" }, "timeline")
+        H.Hekili:BuildUI()
+        assert.are.equal(H.ns.UI.Styles.timeline, d.style)
+        for i, b in ipairs(classic) do
+            assert.is_false(b:IsShown(), "classic button " .. i)
+        end
+        local T = d.styleFrames.timeline
+        assert.are.equal(T.cells, d.Buttons)
+        tlInstrument(T)
+        H.Hekili:BuildUI()
+        tlPublish(H)
+        H.ctl.now = H.ctl.now + 0.2
+        f(d, 0.2)
+        assert.is_true(T.cells[1]:IsShown())
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "main", "style" }, "classic")
+        H.Hekili:BuildUI()
+        assert.are.equal(H.ns.UI.Styles.classic, d.style)
+        for n, w in ipairs(T.widgets) do
+            assert.is_false(w:IsShown(), T.labels[n])
+        end
+        assert.are.same({}, H.errors)
+    end)
+
+    it("asks the engine for alternatives while it draws a display", function()
+        local H, d = boot()
+        local out = H.Hekili.Engine.Output.Primary
+        assert.are.equal(0, out.needAlts)
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "main", "style" }, "timeline")
+        H.Hekili:BuildUI()
+        d:UpdateAlpha()
+        assert.are.equal(1, out.needAlts)
+    end)
+
+    it("defaults every display's timeline subtable and serves its options from it", function()
+        local H = boot()
+        local tl = H.Hekili.DB.profile.displays.Primary.timeline
+        assert.are.equal(10, tl.horizon)
+        assert.are.equal(24, tl.pxPerSec)
+        assert.are.equal("RIGHT", tl.direction)
+        assert.are.equal(16, tl.eta.size)
+        assert.are.equal("extend", tl.sweep.mode)
+        assert.are.equal("veil", tl.gate.style)
+        assert.is_true(tl.alts.enabled)
+        assert.are.equal("both", tl.alts.zones)
+        assert.are.equal(12, tl.keybindings.laneFontSize) -- the shared groups' lane zone
+        local get = function(path)
+            return H.Hekili:GetDisplayOption(path)
+        end
+        assert.are.equal(false, get({ "displays", "Primary", "timeline", "glow", "enabled" }))
+        assert.are.equal(12, get({ "displays", "Primary", "timeline", "keybindings", "nextFontSize" }))
+        assert.are.equal(16, get({ "displays", "Primary", "timeline", "layout", "sec_now", "eta", "size" }))
+        assert.are.equal(2, get({ "displays", "Primary", "timeline", "layout", "sec_alts", "alts", "max" }))
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "timeline", "layout", "sec_lane", "horizon" }, 8)
+        assert.are.equal(8, tl.horizon)
+        H.Hekili:EmbedDisplayOptions()
+        local args = H.Hekili.Options.args.displays.plugins.Primary.Primary.args.timeline.args
+        local layout = args.layout.args
+        for _, k in ipairs({ "sec_now", "sec_next", "sec_lane", "sec_alts" }) do
+            assert.truthy(layout[k], k)
+            assert.is_true(layout[k].inline, k)
+            assert.is_nil(tl[k], k) -- presentational, not a config key
+        end
+        for _, k in ipairs({
+            "keybindings",
+            "border",
+            "range",
+            "glow",
+            "flash",
+            "captions",
+            "targets",
+            "delays",
+            "indicators",
+        }) do
+            assert.truthy(args[k], k)
+        end
+        assert.is_true(args.layout.order < args.border.order)
         assert.are.same({}, H.errors)
     end)
 end)

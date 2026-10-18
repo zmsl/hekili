@@ -540,6 +540,105 @@ local function RefreshCooldowns( self, out )
     end
 end
 
+--- Flashes the action bar buttons of record 1's action `a` through SpellFlash, from a display's Draw. `st` is the
+--- display's styleState (flashReady: SpellFlash may flash) and `flash` the bound style's flash group. Shared by every
+--- style that offers the flash group (UI/Styles/Timeline.lua); true when it flashed.
+function ns.UI.FlashRecommendation( st, flash, a, elapsed )
+    if not ( st.flashReady and flash.enabled and LSF and ( InCombatLockdown() or not flash.combat ) ) then return false end
+    local profile = Hekili.DB.profile
+    st.flashTimer = st.flashTimer - elapsed
+    st.flashWarnings = st.flashWarnings or {}
+    st.lastFlashFrames = st.lastFlashFrames or {}
+
+    local changed = st.lastFlash ~= a
+
+    if a then -- every Draw is a full update
+        if changed then
+            for frame in pairs( st.lastFlashFrames ) do
+                frame:Hide()
+                frame.flashDuration = 0
+                st.lastFlashFrames[ frame ] = nil
+            end
+        end
+
+        st.flashTimer = flash.speed or 0.4
+
+        local ability = Registry.Abilities()[ a ]
+
+        st.flashColor = st.flashColor or {}
+        st.flashColor.r, st.flashColor.g, st.flashColor.b = unpack( flash.color )
+
+        catchFlash = GetTime()
+        table.wipe( lastFramesFlashed )
+
+        if ability.item then
+            local iname = LSF.ItemName( ability.item )
+            if LSF.Flashable( iname ) then
+                LSF.FlashItem( iname, st.flashColor, flash.size, flash.brightness, flash.blink, nil, profile.flashTexture, flash.fixedSize, flash.fixedBrightness )
+            elseif flash.suppress and not st.flashWarnings[ iname ] then
+                st.flashWarnings[ iname ] = true
+                -- Hekili:Error( "|cffff0000WARNING|r - Could not flash recommended item '" .. iname .. "' (" .. self.id .. ")." )
+            end
+        else
+            local aFlash = ability.flash
+            if aFlash then
+                local flashable = false
+
+                if type( aFlash ) == "table" then
+                    local lastSpell
+                    for _, spell in ipairs( aFlash ) do
+                        lastSpell = spell
+                        if LSF.Flashable( spell ) then
+                            flashable = true
+                            break
+                        end
+                    end
+                    aFlash = lastSpell
+                else
+                    flashable = LSF.Flashable( aFlash )
+                end
+
+                if flashable then
+                    LSF.FlashAction( aFlash, st.flashColor, flash.size, flash.brightness, flash.blink, nil, profile.flashTexture, flash.fixedSize, flash.fixedBrightness )
+                elseif flash.suppress and not st.flashWarnings[ aFlash ] then
+                    st.flashWarnings[ aFlash ] = true
+                    -- Hekili:Error( "|cffff0000WARNING|r - Could not flash recommended action '" .. aFlash .. "' (" .. self.id .. ")." )
+                end
+            else
+                local id = ability.known
+
+                if id == nil or type( id ) ~= "number" then
+                    id = ability.id
+                end
+
+                local sname = LSF.SpellName( id )
+
+                if sname then
+                    if LSF.Flashable( sname ) then
+                        LSF.FlashAction( sname, st.flashColor, flash.size, flash.brightness, flash.blink, nil, profile.flashTexture, flash.fixedSize, flash.fixedBrightness )
+                    elseif not st.flashWarnings[ sname ] then
+                        st.flashWarnings[ sname ] = true
+                        -- Hekili:Error( "|cffff0000WARNING|r - Could not flash recommended ability '" .. sname .. "' (" .. self.id .. ")." )
+                    end
+                end
+            end
+        end
+
+        catchFlash = nil
+        for frame, status in pairs( lastFramesFlashed ) do
+            if status ~= 0 then
+                st.lastFlashFrames[ frame ] = 1
+                if frame.texture ~= profile.flashTexture then
+                    frame.FlashTexture:SetTexture( profile.flashTexture )
+                    frame.texture = profile.flashTexture
+                end
+            end
+        end
+        st.lastFlash = a
+    end
+    return a ~= nil
+end
+
 --- Builds (or reuses) the ten buttons on `d` and returns them; core stores the list as ns.UI.Buttons[ d.id ].
 function Classic.Build( d, conf )
     local self, id, st = Hekili, d.id, d.styleState
@@ -824,101 +923,7 @@ function Classic.Draw( d, conf, out, status )
 
         local postGlow = debugprofilestop()
 
-        if st.flashReady and conf.classic.flash.enabled and LSF and ( InCombatLockdown() or not conf.classic.flash.combat ) then
-            st.flashTimer = st.flashTimer - elapsed
-            st.flashWarnings = st.flashWarnings or {}
-            st.lastFlashFrames = st.lastFlashFrames or {}
-
-            local a = self.Buttons[ 1 ].Action
-            local changed = st.lastFlash ~= a
-
-            if a and ( fullUpdate or changed ) then
-                madeUpdate = true
-
-                if changed then
-                    for frame in pairs( st.lastFlashFrames ) do
-                        frame:Hide()
-                        frame.flashDuration = 0
-                        st.lastFlashFrames[ frame ] = nil
-                    end
-                end
-
-                st.flashTimer = conf.classic.flash.speed or 0.4
-
-                local ability = Registry.Abilities()[ a ]
-
-                st.flashColor = st.flashColor or {}
-                st.flashColor.r, st.flashColor.g, st.flashColor.b = unpack( conf.classic.flash.color )
-
-                catchFlash = GetTime()
-                table.wipe( lastFramesFlashed )
-
-                if ability.item then
-                    local iname = LSF.ItemName( ability.item )
-                    if LSF.Flashable( iname ) then
-                        LSF.FlashItem( iname, st.flashColor, conf.classic.flash.size, conf.classic.flash.brightness, conf.classic.flash.blink, nil, profile.flashTexture, conf.classic.flash.fixedSize, conf.classic.flash.fixedBrightness )
-                    elseif conf.classic.flash.suppress and not st.flashWarnings[ iname ] then
-                        st.flashWarnings[ iname ] = true
-                        -- Hekili:Error( "|cffff0000WARNING|r - Could not flash recommended item '" .. iname .. "' (" .. self.id .. ")." )
-                    end
-                else
-                    local aFlash = ability.flash
-                    if aFlash then
-                        local flashable = false
-
-                        if type( aFlash ) == "table" then
-                            local lastSpell
-                            for _, spell in ipairs( aFlash ) do
-                                lastSpell = spell
-                                if LSF.Flashable( spell ) then
-                                    flashable = true
-                                    break
-                                end
-                            end
-                            aFlash = lastSpell
-                        else
-                            flashable = LSF.Flashable( aFlash )
-                        end
-
-                        if flashable then
-                            LSF.FlashAction( aFlash, st.flashColor, conf.classic.flash.size, conf.classic.flash.brightness, conf.classic.flash.blink, nil, profile.flashTexture, conf.classic.flash.fixedSize, conf.classic.flash.fixedBrightness )
-                        elseif conf.classic.flash.suppress and not st.flashWarnings[ aFlash ] then
-                            st.flashWarnings[ aFlash ] = true
-                            -- Hekili:Error( "|cffff0000WARNING|r - Could not flash recommended action '" .. aFlash .. "' (" .. self.id .. ")." )
-                        end
-                    else
-                        local id = ability.known
-
-                        if id == nil or type( id ) ~= "number" then
-                            id = ability.id
-                        end
-
-                        local sname = LSF.SpellName( id )
-
-                        if sname then
-                            if LSF.Flashable( sname ) then
-                                LSF.FlashAction( sname, st.flashColor, conf.classic.flash.size, conf.classic.flash.brightness, conf.classic.flash.blink, nil, profile.flashTexture, conf.classic.flash.fixedSize, conf.classic.flash.fixedBrightness )
-                            elseif not st.flashWarnings[ sname ] then
-                                st.flashWarnings[ sname ] = true
-                                -- Hekili:Error( "|cffff0000WARNING|r - Could not flash recommended ability '" .. sname .. "' (" .. self.id .. ")." )
-                            end
-                        end
-                    end
-                end
-
-                catchFlash = nil
-                for frame, status in pairs( lastFramesFlashed ) do
-                    if status ~= 0 then
-                        st.lastFlashFrames[ frame ] = 1
-                        if frame.texture ~= profile.flashTexture then
-                            frame.FlashTexture:SetTexture( profile.flashTexture )
-                            frame.texture = profile.flashTexture
-                        end
-                    end
-                end
-                st.lastFlash = a
-            end
-        end
+        if ns.UI.FlashRecommendation( st, conf.classic.flash, self.Buttons[ 1 ].Action, elapsed ) then madeUpdate = true end
 
         local postFlash = debugprofilestop()
 
