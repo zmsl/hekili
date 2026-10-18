@@ -64,8 +64,9 @@ local lastGcdStart = 0
 local Glower = LibStub("LibCustomGlow-1.0")
 
 -- Classic's config is its own subtable, displays[ id ].classic (Task 2b; moved out of Options.lua's displayTemplate).
--- Its icon zones for the shared option builders (Options/StyleOptions.lua, Task 3d): the primary icon and the queue.
-local ZONES = { "primary", "queued" }
+-- Its icon zones for the shared option builders (Options/StyleOptions.lua, Task 3d): the primary icon and the queue,
+-- marked legacy so the queue keeps classic's shape (queued* keybinding fields behind separateQueueStyle).
+local ZONES = { "primary", "queued", legacy = true }
 local SHARED = { "border", "range", "glow", "flash", "captions", "indicators", "targets", "delays", "keybindings" }
 
 local Classic = {

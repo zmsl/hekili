@@ -211,7 +211,8 @@ display whose profile already names the style binds it.
 subtable: `keybindings`, `captions`, `border`, `range`, `glow`, `flash`, `delays`, `targets`, `indicators` as
 `(styleKey, zones, order, id, conf)`, `icon(zone, order, id)` and `defaults(groups, zones)` for the matching
 `defaults`; the engine's range, flash and keybinding reads take the bound style's group (`Hekili.Engine.StyleGroup`),
-classic's when the style has none.
+classic's when the style has none. Later zones get their own prefixed blocks (`nextFont`); only classic marks its
+zones `legacy = true`, which keeps its queue's `queued*` keybinding fields behind `separateQueueStyle`.
 
 **What a style may read.** `conf` is the whole display table: core fields (`numIcons`, `enabled`, ...) and its own
 subtable `conf[name]`, never another style's. `d.styleState` is its per-display scratch. `out` is

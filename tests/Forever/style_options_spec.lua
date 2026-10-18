@@ -221,7 +221,7 @@ describe("the shared style option builders", function()
         local kb = SO.keybindings("ext", ZONES, 7, "Primary", conf).args
         assert.truthy(kb.nextTextStyle.args.nextFont)
         assert.truthy(kb.nextTextStyle.args.nextColor)
-        assert.truthy(kb.nextLowercase)
+        assert.is_nil(kb.nextLowercase) -- case is shared: the engine honours a zone's only through classic's toggle
         assert.is_nil(kb.nextTextStyle.hidden) -- only classic's queue hides its block behind separateQueueStyle
         assert.is_nil(kb.separateQueueStyle)
         local cap = SO.captions("ext", ZONES, 9, "Primary", conf).args
@@ -234,18 +234,35 @@ describe("the shared style option builders", function()
         assert.is_nil(SO.border("ext", ZONES, 4, "Primary", conf).args.fit) -- classic's alone
     end)
 
+    it("give a zone named queued the normal per-zone shape unless the zones are marked legacy", function()
+        local H = boot()
+        local SO = H.Hekili.StyleOptions
+        local zones = { "now", "queued" }
+        local conf = { ext = SO.defaults(GROUPS, zones) }
+        local kb = SO.keybindings("ext", zones, 7, "Primary", conf).args
+        assert.is_nil(kb.separateQueueStyle)
+        assert.is_nil(kb.queuedTextStyle.hidden)
+        assert.is_nil(kb.queuedLowercase)
+        assert.truthy(SO.captions("ext", zones, 9, "Primary", conf).args.queuedPosition)
+        assert.truthy(SO.indicators("ext", zones, 11, "Primary", conf).args.queuedSize)
+        assert.is_nil(conf.ext.keybindings.separateQueueStyle)
+        assert.are.equal("BOTTOM", conf.ext.captions.queuedAnchor)
+        assert.are.equal(20, conf.ext.indicators.queuedWidth)
+    end)
+
     it("default every zone's fields; classic's queue keeps its legacy queued* fields only", function()
         local H = boot()
         local SO = H.Hekili.StyleOptions
         local d = SO.defaults({ "keybindings", "captions", "indicators" }, ZONES)
         assert.are.same(d.keybindings.color, d.keybindings.nextColor)
         assert.are_not.equal(d.keybindings.color, d.keybindings.nextColor) -- copied, not shared
-        assert.are.equal(d.keybindings.lowercase, d.keybindings.nextLowercase)
+        assert.is_nil(d.keybindings.nextLowercase)
         assert.are.equal("BOTTOM", d.captions.nextAnchor)
         assert.are.equal(20, d.indicators.nextWidth)
         assert.is_nil(d.keybindings.separateQueueStyle)
-        local c = SO.defaults({ "keybindings", "captions" }, { "primary", "queued" })
+        local c = SO.defaults({ "keybindings", "captions" }, { "primary", "queued", legacy = true })
         assert.is_false(c.keybindings.separateQueueStyle)
+        assert.is_false(c.keybindings.queuedLowercase)
         assert.are.equal(c.keybindings.font, c.keybindings.queuedFont)
         assert.is_nil(c.captions.queuedAnchor)
         assert.has_error(function()

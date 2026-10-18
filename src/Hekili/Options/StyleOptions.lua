@@ -4,8 +4,9 @@ local _, ns = ...
 -- UI/Styles/Classic.lua), turned into builders: `SO.<group>( styleKey, zones, order, id, conf )` returns the tab for
 -- displays[ id ][ styleKey ][ group ], where `zones` names the style's icon zones in order. The first zone uses the
 -- plain fields (`font`); every later zone gets its own copy of the per-zone blocks, its fields prefixed with the zone
--- name (`nextFont`). Classic's `queued` zone is the legacy exception: it has only the copies classic always had (the
--- keybinding font and case, behind `separateQueueStyle`) and shares every other block with the primary icon.
+-- name (`nextFont`). `zones.legacy = true` (classic's alone) marks the later zones as classic's queue: they get only
+-- the copies classic always had (the keybinding font and case, behind `separateQueueStyle`) and share every other
+-- block with the primary icon. Keybinding case is per zone only there (the engine honours it only through that toggle).
 -- `SO.defaults( groups, zones )` returns the matching config subtables. Public as Hekili.StyleOptions for external
 -- styles. Options a builder leaves out because only classic's layout gives them meaning (border.fit, the delay
 -- indicator, keepAspectRatio on the icon) stay in Classic.lua.
@@ -26,9 +27,9 @@ local function key( i, zone, field )
     return zone .. title( field )
 end
 
--- Classic's queued icons share every per-zone block classic never split.
-local function own( zone )
-    return zone ~= "queued"
+-- A style's later zones have their own blocks, unless the zones are classic's legacy queue (zones.legacy).
+local function own( zones )
+    return not zones.legacy
 end
 
 -- shortcut: offset bounds come from classic's icon sizes; a style without them gets +-100 until it says its own.
@@ -56,7 +57,7 @@ end
 
 -- Per-zone fields of each group, copied for a later zone in SO.defaults.
 local ZONED = {
-    keybindings = { "font", "fontSize", "fontStyle", "color", "lowercase" },
+    keybindings = { "font", "fontSize", "fontStyle", "color" },
     captions = { "anchor", "x", "y", "align" },
     indicators = { "width", "height", "zoom", "keepAspectRatio" },
 }
@@ -181,13 +182,15 @@ function SO.defaults( groups, zones )
         if fields then
             for i = 2, #zones do
                 local zone = zones[ i ]
-                if own( zone ) or g == "keybindings" then
+                if own( zones ) or g == "keybindings" then
                     for _, f in ipairs( fields ) do
                         local v = t[ f ]
                         t[ key( i, zone, f ) ] = type( v ) == "table" and { unpack( v ) } or v
                     end
                 end
-                if g == "keybindings" and not own( zone ) then t.separateQueueStyle = false end
+                if g == "keybindings" and not own( zones ) then
+                    t.separateQueueStyle, t[ key( i, zone, "lowercase" ) ] = false, t.lowercase
+                end
             end
         end
         out[ g ] = t
@@ -358,7 +361,7 @@ return "Position" end,
     for i = 2, #zones do
         local zone = zones[ i ]
         local hidden
-        if not own( zone ) then
+        if not own( zones ) then
             hidden = function () return not conf[ styleKey ].keybindings.separateQueueStyle end
             args.separateQueueStyle = {
                 type = "toggle",
@@ -377,13 +380,15 @@ return "Position" end,
             args = fontBlock( i, zone ),
         }
 
-        args[ key( i, zone, "lowercase" ) ] = {
-            type = "toggle",
-            name = own( zone ) and ( "Use Lowercase (" .. title( zone ) .. ")" ) or "Use Lowercase in Queue",
-            order = 5 + i + 0.1,
-            width = 1.49,
-            hidden = hidden,
-        }
+        if not own( zones ) then
+            args[ key( i, zone, "lowercase" ) ] = {
+                type = "toggle",
+                name = "Use Lowercase in Queue",
+                order = 5 + i + 0.1,
+                width = 1.49,
+                hidden = hidden,
+            }
+        end
     end
 
     return {
@@ -809,7 +814,7 @@ function SO.captions( styleKey, zones, order, id, conf )
 
     for i = 1, #zones do
         local zone = zones[ i ]
-        if i == 1 or own( zone ) then
+        if i == 1 or own( zones ) then
             local x = {
                 type = "range",
                 name = "X Offset",
@@ -1036,7 +1041,7 @@ return "Position" end,
 
     for i = 1, #zones do
         local zone = zones[ i ]
-        if i == 1 or own( zone ) then
+        if i == 1 or own( zones ) then
             args[ key( i, zone, "size" ) ] = {
                 type = "group",
                 inline = true,
