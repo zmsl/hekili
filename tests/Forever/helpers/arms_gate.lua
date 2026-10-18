@@ -7,8 +7,7 @@
 -- 20 fights (`make test-loop`): agreement 0.966, react median 0 / p90 0 / never 0.060, cost refusals 16.5 per 100
 -- attempts (the oracle's own 15.8), DPS A/B 0.993, GCD idle 0.742 / 0.739, Sunder Armor up 0.95 / 0.95, flicker
 -- 0.69/min, CPU mean 2.70 ms.
-local assert = require("luassert")
-local loop = require("Game.harness.loop")
+local pack_gate = require("Forever.helpers.pack_gate")
 local ww = require("Forever.helpers.warrior_world")
 
 local M = {}
@@ -17,26 +16,13 @@ local M = {}
 -- priority keeps it off by default).
 M.REPORTED = { demoralizing_shout = true }
 
--- The engine and the first icon, gated at any fight count.
-function M.gate(m, r, line)
-    assert.is_true(r.agreement >= 0.85, line)
-    assert.is_true(r.reactMedian <= 1 and r.reactP90 <= 3, line)
-    assert.is_true((r.per100.gcd or 0) == 0 and (r.per100.cooldown or 0) == 0, line)
-    assert.is_true((r.per100.cost or 0) <= (r.per100B.cost or 0) + 3, line)
-    assert.are.same({ 0, 0, 0 }, { m.errors, m.raises, m.selfCheck })
-    assert.are.same({}, m.misses)
-    assert.are.same({}, m.secrets) -- no facade passthrough answered a secret (the traced first fight)
-    assert.is_true(r.cpuMean <= 10, line) -- D5: about 4x the measured mean; p99 reported
-end
+-- The engine and the first icon, gated at any fight count (helpers/pack_gate.lua).
+M.gate = pack_gate.gate
 
 --- `n` fights on a fresh boot (seeds `seed0` + 1 ..), the `Arms solo:` line printed (`label` appended), gated.
 --- DPS A/B (per fight its sd is about 0.11) and never-reacts are reported under 20 fights, not gated.
 function M.solo(n, seed0, label)
-    local m = loop.tally(loop.new(ww), n, { seed0 = seed0 })
-    local r, line = loop.summary(m), loop.line(m)
-    print("\nArms solo: " .. line .. (label and " [" .. label .. "]" or ""))
-    M.gate(m, r, line)
-    return r, line
+    return pack_gate.solo("Arms", ww, n, seed0, label)
 end
 
 return M

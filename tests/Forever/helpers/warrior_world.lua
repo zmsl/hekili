@@ -102,8 +102,9 @@ M.WORLD = { level = 60, weapons = { { 150, 230, 3.6 } }, max = 100, mobHealth = 
 
 -- True rage per landed white wound: the class file's own model restated (Hekili_Warrior/Warrior.lua, "Rage per white
 -- swing": 4.5 x the unhasted speed with a two-hander; a crit one more base swing, 3.46 x speed). Circular on purpose:
--- the loop measures recommendations, not the rage model (its own specs measure that).
-function M.rage(hand, _, flag)
+-- the loop measures recommendations, not the rage model (its own specs measure that). The loop's gain hook: rage is
+-- the character's only power, so `pt` is always rage's.
+function M.gain(_, hand, _, flag)
     if hand ~= 1 then
         return 0
     end

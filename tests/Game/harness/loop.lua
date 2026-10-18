@@ -3,7 +3,8 @@
 -- encodes, and the oracle, reading a secret-free client (k.plain, design §4/D4) with the target's health rows raw.
 -- Run A: ours drives, the oracle shadows; run B: the same seed, a fresh world, the oracle drives (§2.3).
 -- Class-neutral (the boundary rule): the content passes the character, the pack, the press resolution, the usability
--- answers, the true rage per hit, the world's knobs and the debuff list.
+-- answers, the true power gain per hit (content.gain, for the content's power type), the world's knobs and the debuff
+-- list.
 local headless = require("Game.harness.headless")
 local observer = require("Game.harness.observer")
 local scenarios = require("Game.harness.scenarios")
@@ -22,11 +23,16 @@ M.GAP = 30 -- out of combat between two fights on one boot (consecutive pulls)
 M.RAW = { "UnitHealth", "UnitHealthMax", "C_UnitAuras.GetDebuffDataByIndex" }
 
 --- Boots the two instances for `content` (one boot per busted block, §1.3): { content, us, oracle }. `content`:
---- character(), PACK, resolve(key, H), usable(H), rage(hand, amount, flag), WORLD (scenario knobs), uptime(H).
+--- character(), PACK, resolve(key, H), usable(H), gain(pt, hand, amount, flag) (what a landed wound of ours pays in
+--- power type `pt`, the character's), WORLD (scenario knobs), uptime(H).
 function M.new(content)
     local L = { content = content }
     local character = content.character()
     L.form, L.power = character.form, character.power
+    local pt = L.power.type
+    L.gain = function(hand, amount, flag) -- the swing-paid power is the character's (scenarios.world's `pt`)
+        return content.gain(pt, hand, amount, flag)
+    end
     L.us = headless.new({ character = character, pack = content.PACK })
     L.oracle = headless.new({ character = character, pack = content.PACK, raw = M.RAW })
     for _, H in ipairs({ L.us, L.oracle }) do
@@ -79,7 +85,7 @@ end
 --- each tick), on(run, steps, t) (a per-tick hook). Returns the run { W, us, ticks, presses, refused (by reason),
 --- attempts, episodes, errors, raises, misses (unexpected run names), secrets (Facade.secrets), selfCheck (ticks where
 --- the oracle's belief missed the truth, by field), combat, full, idle, up (by debuff key: in-combat ticks), ours and
---- theirs (first icons by in-combat tick), gap (believed minus true power where they differ), cpu (ms per tick of
+--- theirs (first icons by in-combat tick), focus (in-combat ticks whose first record of ours has `focus` set), gap (believed minus true power where they differ), cpu (ms per tick of
 --- the first instance, timed around headless.cycle: VirtualState's flush and the timers as well as Update, so it errs
 --- high), damage, t }.
 function M.run(L, seed, o, drivers)
@@ -91,7 +97,8 @@ function M.run(L, seed, o, drivers)
         prepull = 0.1,
         duration = o.duration or 180,
         mobHealth = o.mobHealth or content.WORLD.mobHealth,
-        rage = content.rage,
+        pt = L.power.type,
+        rage = L.gain,
         form = L.form,
         tag = "-" .. seed .. "-" .. #drivers, -- a fresh mob per run
         others = o.others, -- other sources on our target (scenarios.ARCHETYPES: the party report)
@@ -101,7 +108,7 @@ function M.run(L, seed, o, drivers)
     local run = { W = W, us = us, ticks = 0, presses = 0, refused = {}, raises = 0, selfCheck = {} }
     -- the metrics' per-tick record (§5.1): in-combat ticks only, both queues' first icons, the truth
     run.combat, run.full, run.idle, run.attempts, run.episodes, run.up = 0, 0, 0, 0, 0, {}
-    run.ours, run.theirs, run.gap, run.cpu, run.secrets = {}, {}, {}, {}, {}
+    run.ours, run.theirs, run.gap, run.cpu, run.secrets, run.focus = {}, {}, {}, {}, {}, 0
     local sink = {}
     local steps = {}
     for i, d in ipairs(drivers) do
@@ -245,6 +252,10 @@ function M.run(L, seed, o, drivers)
                 run.up[u[1]] = (run.up[u[1]] or 0) + ((tgt and tgt.auras[u[2]]) and 1 or 0)
             end
             run.ours[n] = steps[1].q.name[1]
+            local out = steps[1].H.Hekili.Engine.Output.Primary
+            if out.count > 0 and out.recs[1].focus then
+                run.focus = run.focus + 1
+            end
             run.theirs[n] = steps[2] and steps[2].q.name[1] or false
             if steps[2] and run.ours[n] ~= run.theirs[n] then -- the belief's power error where they disagree
                 local VS = steps[1].H.ns.VirtualState
@@ -324,7 +335,8 @@ local function reactions(ours, theirs, n, out)
 end
 
 --- `n` fights (seeds 1..n, from `o.seed0` + 1) on `L`'s boot: run A and run B each, tallied (§5.1). The first fight
---- runs traced when `o.trace` is unset (one per scenario: the facade's secret passthroughs). Returns the tally.
+--- runs traced when `o.trace` is unset (one per scenario: the facade's secret passthroughs). Returns the tally; its
+--- `focus` (run A's in-combat ticks whose first record of ours has `focus` set) shows a pack's flagged lines ran.
 function M.tally(L, n, o)
     o = o or {}
     local m = { fights = 0, both = 0, agree = 0, conf = {}, react = {}, refused = {}, attempts = 0, episodes = 0 }
@@ -332,7 +344,7 @@ function M.tally(L, n, o)
     m.A = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0 }
     m.B = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0 }
     m.oracleFlicker, m.errors, m.raises, m.misses, m.secrets, m.selfCheck = 0, 0, 0, {}, {}, 0
-    m.cpu, m.gap = {}, {}
+    m.cpu, m.gap, m.focus = {}, {}, 0
     for f = 1, n do
         local seed = (o.seed0 or 0) + f
         local po = setmetatable({ trace = o.trace == nil and f == 1 or o.trace }, { __index = o })
@@ -355,6 +367,7 @@ function M.tally(L, n, o)
             m.refused[why] = (m.refused[why] or 0) + k
         end
         m.attempts, m.episodes = m.attempts + a.attempts, m.episodes + a.episodes
+        m.focus = m.focus + a.focus
         for why, k in pairs(b.refused) do
             m.refusedB[why] = (m.refusedB[why] or 0) + k
         end
@@ -399,9 +412,9 @@ end
 
 --- The tally's derived metrics: agreement, react (median, p90, share never; in ticks), refusals per 100 attempts by
 --- reason, episodes per minute, damage per second A / B, full-power and GCD-idle shares and debuff uptimes (A, B),
---- flicker per minute (ours, the oracle's), CPU per Update (mean, p99 ms).
+--- flicker per minute (ours, the oracle's), CPU per Update (mean, p99 ms), and the tally's focus count (not in M.line).
 function M.summary(m)
-    local r = {}
+    local r = { focus = m.focus }
     r.agreement = m.agree / math.max(1, m.both)
     local reacted, never = {}, 0
     for _, d in ipairs(m.react) do
