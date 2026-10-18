@@ -3984,7 +3984,6 @@ found = true end
 
     local toggleToNumber = {
         cycle_targets = true,
-        focus = true,
         for_next = true,
         max_energy = true,
         only_cwc = true,
@@ -4049,13 +4048,13 @@ found = true end
         end
 
         if toggleToNumber[ option ] then return data[ option ] == 1 end
+        if option == "focus" then return data.focus or 0 end
         return data[ option ]
     end
 
     -- Options to nil if val is false.
     local review_options = {
         enable_moving = 1,
-        focus = 1,
         line_cd = 1,
         only_cwc = 1,
         strict = 1,
@@ -4085,6 +4084,7 @@ found = true end
             if review_options[ option ] and not val then val = nil
             else val = val and 1 or 0 end
         end
+        if option == "focus" and val == 0 then val = nil end -- tier 0 is off
         if type( val ) == 'string' then
             val = val:trim()
             if val:len() == 0 then val = nil end
@@ -5761,11 +5761,15 @@ n = tonumber( n ) + 1
                                             width = 0.99
                                         },
                                         focus = {
-                                            type = "toggle",
-                                            name = "Focus candidate",
-                                            desc = "Timeline style: when this entry is predicted within the focus horizon it takes the Now circle.",
+                                            type = "range",
+                                            name = "Focus Tier",
+                                            desc = "Timeline style: 0 is off; a tier (1 highest) makes this entry a focus candidate. When it is predicted within the focus horizon it takes the Now circle; the lowest tier wins, then the soonest.",
                                             order = 4,
-                                            width = 0.99
+                                            width = 0.99,
+                                            min = 0,
+                                            softMax = 5,
+                                            max = 99,
+                                            step = 1
                                         }
                                     },
                                     hidden = function ()
@@ -8214,7 +8218,16 @@ do
             if result.max_energy then result.max_energy = tonumber( result.max_energy ) end
 
             if result.use_off_gcd then result.use_off_gcd = tonumber( result.use_off_gcd ) end
-            if result.focus then result.focus = tonumber( result.focus ) end
+            if result.focus then
+                local tier = tonumber( result.focus )
+                if not tier or tier < 0 or tier % 1 ~= 0 then
+                    insert( warnings, "Line " .. line .. ": focus=" .. result.focus .. " is not a tier (a whole number, 1 highest); ignored." )
+                    tier = nil
+                elseif tier == 0 then
+                    tier = nil -- focus=0 is off
+                end
+                result.focus = tier
+            end
             if result.use_while_casting then result.use_while_casting = tonumber( result.use_while_casting ) end
             if result.strict then result.strict = tonumber( result.strict ) end
             if result.moving then

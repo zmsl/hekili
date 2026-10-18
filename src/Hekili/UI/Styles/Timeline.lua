@@ -504,23 +504,31 @@ end
 -- The zone rule, on a publish: T.rec[ c ] is the record cell c draws (0: none), T.press the cell drawing record 1
 -- (every "key to press" affordance goes there), T.focused whether cell 1 draws a focus record, T.ready whether that is
 -- record 1 (the gold ring; else the pending one), T.extend2 whether cell 2's sweep is extended. With focusEnabled a
--- record is flagged when `focus == 1`; the focus record is record 1 if flagged, else the earliest flagged record 2.. due
--- within the focus horizon (never past the lane's). It takes the now circle (else empty); the next box takes the first
+-- record is flagged when `focus` is a tier (N >= 1, 1 highest); the focus record is record 1 if flagged (any tier), else
+-- among the flagged records 2.. due within the focus horizon (never past the lane's) the lowest tier, then the soonest.
+-- It takes the now circle (else empty); the next box takes the first
 -- unflagged record other than it; the lane every other record in order. nowFallback "press" keeps the earlier rule:
 -- record 1 never counts, a focus record takes the now circle and record 1 the next box, else cell c draws record c.
+local function flagged( r )
+    local n = r.focus
+    return n ~= nil and n >= 1
+end
+
 local function roles( T, tl, recs, count, now )
     local map, f, press = T.rec, 0, tl.nowFallback == "press"
     local on = tl.focusEnabled
-    if on and not press and count > 0 and recs[ 1 ].focus == 1 then f = 1 end
+    if on and not press and count > 0 and flagged( recs[ 1 ] ) then f = 1 end
     if on and f == 0 then
-        local h = mmin( tl.focusHorizon, tl.horizon )
+        local h, best = mmin( tl.focusHorizon, tl.horizon ), 0
         for i = 2, count do
             local r = recs[ i ]
-            local t = r.exact_time and r.exact_time - now
-            if T.pinned and t then t = r.time and r.time - T.pressTime end
-            if r.focus == 1 and t and t <= h then
-                f = i
-                break
+            if flagged( r ) and ( best == 0 or r.focus < best ) then -- strict: a tie keeps the sooner record
+                local t = r.exact_time and r.exact_time - now
+                if T.pinned and t then t = r.time and r.time - T.pressTime end
+                if t and t <= h then
+                    f, best = i, r.focus
+                    if best == 1 then break end
+                end
             end
         end
     end
@@ -544,7 +552,7 @@ local function roles( T, tl, recs, count, now )
     end
     local n = 0
     for i = 1, count do
-        if i ~= f and not ( on and recs[ i ].focus == 1 ) then
+        if i ~= f and not ( on and flagged( recs[ i ] ) ) then
             n = i
             break
         end
@@ -1003,7 +1011,7 @@ function Timeline.Options( id, conf )
             } ),
         } ),
         sec_focus = section( "Focus", 3, {
-            focusEnabled = optToggle( "Focus Abilities", "An ability marked focus=1 in the priority takes the now circle with a countdown when it comes up within the focus horizon.", 1 ),
+            focusEnabled = optToggle( "Focus Abilities", "An ability marked focus=N in the priority (a tier, 1 highest) takes the now circle with a countdown when it comes up within the focus horizon; the lowest tier wins, then the soonest.", 1 ),
             focusHorizon = optRange( "Focus Horizon", "Seconds ahead a focus ability takes the now circle (never past the lane's horizon).", 1, 30, 1, 2 ),
             focusColor = { type = "color", name = "Ring Color", desc = "The now circle's ring when the focus ability is ready to press.", hasAlpha = true, order = 3, width = 1.49 },
         } ),

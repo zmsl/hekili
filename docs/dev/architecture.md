@@ -43,7 +43,7 @@ through it.
 - `version` (bumps each publish), `count` (records in `recs`), `recs` (the last complete set, up to 10 records).
 - A record holds the recommendation (`Sim/Core.lua`'s `slot.*` writes are the list): `index`, `depth`, `display`,
   `pack`, `list`, `listName`, `action`, `actionName`, `actionID` (negative for an item), `name`, `texture`, `caption`,
-  `indicator`, `focus` (1 from a `focus=1` entry), `item` (the item id), `keybind`, `keybindFrom`, `time`, `exact_time`,
+  `indicator`, `focus` (the tier N from a `focus=N` entry), `item` (the item id), `keybind`, `keybindFrom`, `time`, `exact_time`,
   `delay`, `since`, `wait`, `waitSec`, `offGCD`, `interrupt`, `castStart`, `resource`, `resource_type`, `cost`, `busy`,
   `scriptType`, `script`, `hook`, plus the tables `resources`, `alts` (§7) and `belief` (empty until an annotator fills it).
 - `payload`: the WeakAuras copy, set by `Integrations/WeakAuras.lua` (a passive subscriber, outside `Engine/`) only
@@ -180,9 +180,12 @@ part of `make check`.
 
 **APL line options.** `make_pack.lua` and the in-game importer accept these on a line before `if=` (in the tool,
 an unknown option or a non-numeric value errors; `unparse` writes them in this order): `name=<list>` (for
-`call_action_list`/`run_action_list`), `use_off_gcd=1` (recommendable off the GCD) and `focus=1` (the record carries
-`focus = 1`; the timeline shows it in the now circle ahead of time, below; `focus=0` is off). The flag is per line,
-not per ability. The Druid pack flags Feral's `rip`.
+`call_action_list`/`run_action_list`), `use_off_gcd=1` (recommendable off the GCD) and `focus=N` (a priority tier, 1
+highest; the record carries `focus = N` and the timeline shows it in the now circle ahead of time, below). The tool
+refuses 0, negatives and non-integers; the in-game importer drops `focus=0` (off) and warns on and drops anything that
+is not a whole number; the priority editor's Focus Tier slider sets it (0 is off). The tier is per line, not per
+ability. The Druid pack flags Feral's `rip` (tier 1); the Warrior pack's Fury tiers Heroic Strike and Cleave 1 near the
+rage cap and 2 otherwise.
 
 ## 7. Display styles
 
@@ -219,12 +222,13 @@ display whose profile already names the style binds it.
 | `Options(id, conf)` | building the options | the style's tabs, new tables each call; they land in one group keyed by `name`, so their options resolve to `displays[id].<name>.<option>` (keys flat and unique within the style) |
 
 **Timeline zones.** On each publish the press record is record 1. With `focusEnabled` (default on), a record is
-flagged when `focus == 1`, and the focus record is record 1 if flagged, else the earliest flagged record 2.. due within
-`focusHorizon` seconds (default 10, never past `horizon`). It takes the now circle: record 1 with the gold
+flagged when `focus` is a tier (N >= 1), and the focus record is record 1 if flagged (any tier), else, among the
+flagged records 2.. due within `focusHorizon` seconds (default 10, never past `horizon`), the lowest tier number and,
+within a tier, the soonest. It takes the now circle: record 1 with the gold
 `focusColor` ring and the press look, or a later record with a countdown, no keybind and the `focusPendingColor` ring;
 with no focus record the now circle is empty. The next box draws the first record that is neither the focus record nor
 flagged (flagged records never sit there), and the lane every other record at its time, flagged ones included.
-`nowFallback = "press"` keeps the earlier rule: record 1 never counts as focus, a focus record takes the now circle and
+`nowFallback = "press"` keeps the earlier rule: record 1 never counts as focus, a focus record (by the same tier rule) takes the now circle and
 record 1 the next box, else now, next and lane draw records 1, 2 and 3... Every "key to press" affordance (keybind,
 glow, flash, range, cast highlight, targets, alternatives, pause overlay, extend sweep) sits on the cell drawing
 record 1. With `oocPinned`

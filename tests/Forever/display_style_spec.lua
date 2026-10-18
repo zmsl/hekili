@@ -1204,6 +1204,71 @@ describe("the timeline display style", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- Fury plan Task 3b: focus=N is a tier, 1 highest. Record 1 flagged (any tier) takes the now circle; else, among
+    -- flagged records 2.. within the focus horizon, the lowest tier wins and, within a tier, the soonest.
+    it("picks the focus record by tier: lowest tier, then soonest; a flagged record 1 first", function()
+        local function tiers(t)
+            return function(s)
+                for i, n in pairs(t) do
+                    s[i].focus = n
+                end
+            end
+        end
+        local H, d, T = tlBoot(false, function(tl)
+            tl.nowFallback = "empty"
+        end)
+        local tl = H.Hekili.DB.profile.displays.Primary.timeline
+        local c = T.cells
+        rawset(c[1].Ring, "SetColorTexture", function(self, r, g, b, a)
+            rawset(self, "__color", { r, g, b, a })
+        end)
+        -- a tier-1 record 5 beats a tier-2 record 3
+        tlPublish(H, nil, tiers({ [3] = 2, [5] = 1 }))
+        tlFrame(H, d)
+        assert.are.same({
+            "whirlwind",
+            "mortal_strike",
+            "overpower",
+            "slam",
+            "rend",
+            "sunder_armor",
+            false,
+            false,
+            false,
+            false,
+        }, actions(T))
+        assert.are.same(tl.focusPendingColor, rawget(c[1].Ring, "__color"))
+        -- two tier-2 records: the soonest
+        tlPublish(H, nil, tiers({ [3] = 2, [4] = 2 }))
+        tlFrame(H, d)
+        assert.are.same(FOCUS3, actions(T))
+        -- record 1 flagged tier 2 with a tier-1 record 3 ahead: record 1, gold
+        tlPublish(H, nil, tiers({ [1] = 2, [3] = 1 }))
+        tlFrame(H, d)
+        assert.are.same(TODAY, actions(T))
+        assert.are.same(tl.focusColor, rawget(c[1].Ring, "__color"))
+        assert.are.equal("K1", c[1].Keybinding:GetText())
+        -- a tier past the focus horizon does not count: the tier-2 record 3 wins over a tier-1 record 6
+        tlPublish(H, nil, tiers({ [3] = 2, [6] = 1 }))
+        tlFrame(H, d)
+        assert.are.same(FOCUS3, actions(T))
+
+        -- nowFallback "press" unchanged: record 1 never counts; the tier rule picks among records 2..
+        tl.nowFallback = "press"
+        tlPublish(H, nil, tiers({ [1] = 1, [3] = 2 }))
+        tlFrame(H, d)
+        assert.are.same(FOCUS3, actions(T))
+        tlPublish(H, nil, tiers({ [1] = 1 }))
+        tlFrame(H, d)
+        assert.are.same(TODAY, actions(T))
+        tlPublish(H, nil, tiers({ [3] = 2, [5] = 1 }))
+        tlFrame(H, d)
+        assert.are.equal("whirlwind", c[1].Action)
+        assert.are.equal("mortal_strike", c[2].Action)
+        assert.are.equal("K1", c[2].Keybinding:GetText())
+        assert.are.same({}, H.errors)
+    end)
+
     it("switching classic -> timeline -> classic hides every widget of the style left", function()
         local H, d = boot()
         publish(H)

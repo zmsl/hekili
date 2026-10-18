@@ -15,7 +15,7 @@ local function records()
     local t = {}
     for i = 1, SLOTS do
         t[i] = { resources = {}, belief = {}, cost = 0, busy = 0, alts = { n = 0 } } -- cost, busy: Core writes them on every published record
-        -- focus (nil or 1, the entry's `focus=1` flag) is a scalar Core also writes on every record, so Begin clears it
+        -- focus (nil or the entry's `focus=N` tier, 1 highest) is a scalar Core also writes on every record, so Begin clears it
         -- alts[1..n]: { actionName, actionID, texture, action, list, bound = "lo"|"hi" }, filled for a needs.alts subscriber
         for j = 1, ALTS do
             t[i].alts[j] = {}
