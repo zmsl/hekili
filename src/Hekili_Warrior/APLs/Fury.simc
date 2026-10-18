@@ -12,8 +12,8 @@ actions.precombat=charge,use_off_gcd=1
 actions=victory_rush,focus=1
 actions+=/overpower,focus=1,if=buff.battle_stance.up
 actions+=/revenge,focus=1,if=buff.defensive_stance.up
-actions+=/heroic_strike,use_off_gcd=1,focus=1,if=rage.current>=settings.hs_threshold&active_enemies=1&(!action.bloodthirst.known|cooldown.bloodthirst.remains>=mainhand_remains|rage.current-action.heroic_strike.cost>=action.bloodthirst.cost)&(!action.whirlwind.known|cooldown.whirlwind.remains>=mainhand_remains|rage.current-action.heroic_strike.cost>=action.whirlwind.cost)
-actions+=/cleave,use_off_gcd=1,focus=1,if=rage.current>=settings.cleave_threshold&active_enemies>1&(!action.bloodthirst.known|cooldown.bloodthirst.remains>=mainhand_remains|rage.current-action.cleave.cost>=action.bloodthirst.cost)&(!action.whirlwind.known|cooldown.whirlwind.remains>=mainhand_remains|rage.current-action.cleave.cost>=action.whirlwind.cost)
+actions+=/heroic_strike,use_off_gcd=1,focus=1,if=rage.current>=settings.hs_threshold&active_enemies=1&(!action.bloodthirst.known|cooldown.bloodthirst.remains>mainhand_remains|rage.current-action.heroic_strike.cost>=action.bloodthirst.cost)&(!action.whirlwind.known|cooldown.whirlwind.remains>mainhand_remains|rage.current-action.heroic_strike.cost>=action.whirlwind.cost)
+actions+=/cleave,use_off_gcd=1,focus=1,if=rage.current>=settings.cleave_threshold&active_enemies>1&(!action.bloodthirst.known|cooldown.bloodthirst.remains>mainhand_remains|rage.current-action.cleave.cost>=action.bloodthirst.cost)&(!action.whirlwind.known|cooldown.whirlwind.remains>mainhand_remains|rage.current-action.cleave.cost>=action.whirlwind.cost)
 actions+=/rend,if=!buff.berserker_stance.up&!debuff.rend.up
 actions+=/sunder_armor,if=settings.debuff_sunder_enabled&debuff.sunder_armor.stack<settings.debuff_sunder_max_stack&!debuff.expose_armor.up&target.level>=settings.debuff_sunder_min_level
 actions+=/thunder_clap,if=settings.maintain_thunder_clap&!buff.berserker_stance.up&!debuff.thunder_clap.up

@@ -112,6 +112,8 @@ describe("the Fury priority", function()
             assert.is_true(check("heroic_strike"))
             pin(hs + bt - 1, 1.5, 2, 9) -- Bloodthirst comes up after the swing
             assert.is_true(check("heroic_strike"))
+            pin(hs + bt - 1, 0, 0, 9) -- a swing due now (or no swing speed read): Bloodthirst ready still reserved
+            assert.is_false(check("heroic_strike"))
         end)
 
         it("refuses Cleave when Whirlwind comes up before the swing and the rest is short of it", function()
@@ -123,6 +125,8 @@ describe("the Fury priority", function()
             assert.is_true(check("cleave"))
             pin(cl + wwc - 1, 1.5, 9, 3, 2) -- Whirlwind comes up after the swing
             assert.is_true(check("cleave"))
+            pin(cl + wwc - 1, 0, 9, 0, 2) -- a swing due now: Whirlwind ready still reserved
+            assert.is_false(check("cleave"))
         end)
 
         it("needs the threshold's rage and the target count: Heroic Strike on one, Cleave on more", function()
