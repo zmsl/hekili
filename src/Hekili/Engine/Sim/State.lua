@@ -7,7 +7,7 @@ local C_Item, C_LossOfControl, C_Spell = Facade.C_Item, Facade.C_LossOfControl, 
 local C_SpellBook, C_UnitAuras = Facade.C_SpellBook, Facade.C_UnitAuras
 local GetCombatRating, GetCombatRatingBonus, GetManaRegen, GetNumGroupMembers = Facade.GetCombatRating, Facade.GetCombatRatingBonus, Facade.GetManaRegen, Facade.GetNumGroupMembers
 local GetPowerRegenForPowerType, GetShapeshiftForm, GetShapeshiftFormInfo, GetTime = Facade.GetPowerRegenForPowerType, Facade.GetShapeshiftForm, Facade.GetShapeshiftFormInfo, Facade.GetTime
-local GetTotemInfo, GetUnitSpeed, InCombatLockdown, IsInJailersTower = Facade.GetTotemInfo, Facade.GetUnitSpeed, Facade.InCombatLockdown, Facade.IsInJailersTower
+local GetTotemInfo, GetUnitSpeed, InCombatLockdown = Facade.GetTotemInfo, Facade.GetUnitSpeed, Facade.InCombatLockdown
 local IsInRaid, IsMounted, IsPlayerSpell, IsSpellKnown = Facade.IsInRaid, Facade.IsMounted, Facade.IsPlayerSpell, Facade.IsSpellKnown
 local IsSpellKnownOrOverridesKnown, IsUsableSpell, UnitAttackSpeed, UnitAuraBySlot = Facade.IsSpellKnownOrOverridesKnown, Facade.IsUsableSpell, Facade.UnitAttackSpeed, Facade.UnitAuraBySlot
 local UnitCanAttack, UnitClassification, UnitCreatureType, UnitExists = Facade.UnitCanAttack, Facade.UnitClassification, Facade.UnitCreatureType, Facade.UnitExists
@@ -4421,28 +4421,17 @@ do
     } )
 end
 
-local tierSetAliasMap = {
-    -- For specs with APLs that don't use the normal tier/season identifier that the majority uses
-    thewarwithin_season_2 = "tww2",
-    thewarwithin_season_3 = "tww3",
-}
-
 -- Table of set bonuses. Some string manipulation to honor the SimC syntax.
 local mt_set_bonuses = {
     __index = function( t, k )
         if type( k ) == "number" then return 0 end
 
-        -- Match specific set bonus effect checks, 2pc/4pc (tww2_2pc)
+        -- Match specific set bonus effect checks, 2pc/4pc (<set>_2pc)
         local prefix, pieces = k:match( "^(.+)_([24])pc$" )
         if prefix and pieces then
             pieces = tonumber( pieces )
-
-            local standardSet = tierSetAliasMap[ prefix ] or prefix
-            return ( rawget( t, standardSet ) or 0 ) >= pieces and 1 or 0
+            return ( rawget( t, prefix ) or 0 ) >= pieces and 1 or 0
         end
-
-        -- Check if this is a basic set name that should be aliased first
-        if tierSetAliasMap[ k ] then return rawget( t,  tierSetAliasMap[ k ] ) or 0 end
 
         -- t[ k ] is nil or this metafunction would not have fired.
         return 0
@@ -5496,91 +5485,6 @@ do
             end
 
             i = i + 1
-        end
-
-        if UnitIsUnit( unit, "player" ) and IsInJailersTower() then
-            i = 1
-            while ( true ) do
-                local name, _, count, _, duration, expires, caster, _, _, spellID, _, _, _, _, timeMod, v1, v2, v3 = UnitBuff( unit, i, "MAW" )
-                if not name then break end
-
-                local aura = class.auras[ spellID ]
-                local key = aura and aura.key
-
-                if not key then key = autoAuraKey[ spellID ] end
-
-                if key then
-                    db.buff[ key ] = db.buff[ key ] or {}
-                    local buff = db.buff[ key ]
-
-                    if expires == 0 then
-                        expires = GetTime() + 3600
-                        duration = 7200
-                    end
-
-                    buff.key = key
-                    buff.id = spellID
-                    buff.name = name
-                    buff.count = count > 0 and count or 1
-                    buff.expires = expires
-                    -- buff.duration = duration
-                    buff.applied = expires - duration
-                    buff.caster = caster
-                    buff.timeMod = timeMod
-                    buff.v1 = v1
-                    buff.v2 = v2
-                    buff.v3 = v3
-
-                    if aura and buff.count > aura.max_stack then aura.max_stack = buff.count end
-
-                    buff.last_application = buff.last_application or 0
-                    buff.last_expiry      = buff.last_expiry or 0
-
-                    buff.unit = unit
-                end
-
-                i = i + 1
-            end
-
-            i = 1
-            while ( true ) do
-                local name, _, count, _, duration, expires, caster, _, _, spellID, _, _, _, _, timeMod, v1, v2, v3 = UnitDebuff( unit, i, "MAW" )
-                if not name then break end
-
-                local aura = class.auras[ spellID ]
-                local key = aura and aura.key
-
-                if not key then key = autoAuraKey[ spellID ] end
-
-                if key then
-                    db.debuff[ key ] = db.debuff[ key ] or {}
-                    local debuff = db.debuff[ key ]
-
-                    if expires == 0 then
-                        expires = GetTime() + 3600
-                        duration = 7200
-                    end
-
-                    debuff.key = key
-                    debuff.id = spellID
-                    debuff.name = name
-                    debuff.count = count > 0 and count or 1
-                    debuff.expires = expires
-                    -- debuff.duration = duration
-                    debuff.applied = expires - duration
-                    debuff.caster = caster
-                    debuff.timeMod = timeMod
-                    debuff.v1 = v1
-                    debuff.v2 = v2
-                    debuff.v3 = v3
-
-                    if aura and debuff.count > aura.max_stack then aura.max_stack = debuff.count end
-
-                    debuff.unit = unit
-                end
-
-                i = i + 1
-            end
         end
     end
     Hekili.ScrapeUnitAuras = state.ScrapeUnitAuras

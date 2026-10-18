@@ -295,15 +295,13 @@ function Hekili:HandleFixCommand( args )
             if type( toggle ) == "table" and toggle.value ~= nil then
                 if name == "mode" then
                     -- Skip mode toggle.
-                elseif name == "funnel" then
-                    self:FireToggle( name, "off" )
                 else
                     self:FireToggle( name, "on" )
                 end
             end
         end
 
-        self:Print( "All standard toggles have been fixed (enabled), except 'funnel' (disabled) and 'mode' (unchanged)." )
+        self:Print( "All standard toggles have been fixed (enabled), except 'mode' (unchanged)." )
         return true
     end
 
@@ -316,7 +314,6 @@ function Hekili:HandleFixCommand( args )
         end
 
         interrupts.castRemainingThreshold = defaults.profile.castRemainingThreshold
-        interrupts.filterCasts = defaults.profile.filterCasts
 
         self:Print( "Interrupt display has been restored, set to separate mode, and interrupt tuning values reset." )
         self:BuildUI()

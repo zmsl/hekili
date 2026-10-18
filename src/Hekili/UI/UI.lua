@@ -796,11 +796,7 @@ do
         end
 
         local use = list or menuData
-        local classic = Hekili.IsClassic()
-
         for i, data in ipairs( use ) do
-            data.classicChecks = classic
-
             if not data.hidden or ( type( data.hidden ) == 'function' and not data.hidden() ) then
                 if data.isSeparator then
                     menu.AddSeparator( level )

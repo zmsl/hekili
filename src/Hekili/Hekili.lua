@@ -29,14 +29,6 @@ Hekili.IsRetail = function()
     return Hekili.Flavor == "Retail"
 end
 
-Hekili.IsWrath = function()
-    return Hekili.Flavor == "Wrath"
-end
-
-Hekili.IsClassic = function()
-    return Hekili.IsWrath()
-end
-
 Hekili.BuiltFor = 16001
 Hekili.GameBuild = buildStr
 

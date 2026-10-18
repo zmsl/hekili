@@ -1514,10 +1514,6 @@ all:RegisterAuras( {
                         -- Pretend that all casts by target dummies are interruptible.
                         if Hekili.ActiveDebug then Hekili:Debug( "Cast '%s' is fake-interruptible", spell ) end
                         t.v2 = 0
-
-                    elseif Hekili.Engine.settings.toggles.interrupts.filterCasts and class.spellFilters[ state.instance_id ] and class.interruptibleFilters and not class.interruptibleFilters[ spellID ] then
-                        if Hekili.ActiveDebug then Hekili:Debug( "Cast '%s' not interruptible per user preference.", spell ) end
-                        t.v2 = 1
                     end
 
                     return
@@ -1551,10 +1547,6 @@ all:RegisterAuras( {
                         -- Pretend that all casts by target dummies are interruptible.
                         if Hekili.ActiveDebug then Hekili:Debug( "Channel '%s' is fake-interruptible", spell ) end
                         t.v2 = 0
-
-                    elseif Hekili.Engine.settings.toggles.interrupts.filterCasts and class.spellFilters[ state.instance_id ] and class.interruptibleFilters and not class.interruptibleFilters[ spellID ] then
-                        if Hekili.ActiveDebug then Hekili:Debug( "Channel '%s' not interruptible per user preference.", spell ) end
-                        t.v2 = 1
                     end
 
                     return

@@ -39,8 +39,6 @@ local BlizzBlue = "|cFF00B4FF"
 local Bullet = AtlasToString( "characterupdate_arrow-bullet-point" )
 local ClassColor = C_ClassColor.GetClassColor( Registry.ClassFile() )
 
-local GetSpellInfo = ns.GetUnpackedSpellInfo
-
 local GetSpellDescription = C_Spell.GetSpellDescription
 
 local GetSpecialization = C_SpecializationInfo.GetSpecialization
@@ -321,7 +319,6 @@ do
                         key = "ALT-SHIFT-I",
                         value = true,
                         separate = false,
-                        filterCasts = false,
                         castRemainingThreshold = 0.25,
                     },
 
@@ -329,10 +326,6 @@ do
                         key = "ALT-SHIFT-G",
                         value = true,
                         override = true,
-                    },
-                    funnel = {
-                        key = "",
-                        value = false,
                     },
 
                     custom1 = {
@@ -524,7 +517,6 @@ do
                     encounters = {},
                 },
 
-                filterCasts = true,
                 castRemainingThreshold = 0.25,
 
                 iconStore = {
@@ -6347,38 +6339,6 @@ do
                                 },
                             }
                         },
-
-                        funnel = {
-                            type = "group",
-                            name = "",
-                            inline = true,
-                            order = 8,
-                            args = {
-                                key = {
-                                    type = "keybinding",
-                                    name = "Funnel Priority",
-                                    desc = "Set a key to toggle Funnel Priority on or off, for specializations which support it.",
-                                    width = 1,
-                                    order = 1,
-                                },
-
-                                value = {
-                                    type = "toggle",
-                                    name = "Enable Funnel Priority",
-                                    desc = "If checked, priorities for funnel specializations may change slightly to use single target spenders in AoE.\n\n",
-                                    width = 2,
-                                    order = 2,
-                                },
-
-                                supportedSpecs = {
-                                    type = "description",
-                                    name = "Supported Specializations: Subtlety, Assassination, Enhancement, Destruction",
-                                    desc = "",
-                                    width = "full",
-                                    order = 3,
-                                },
-                            },
-                        },
                     },
                 },
 
@@ -6440,28 +6400,6 @@ do
                             order = 3.2,
                         },
 
-                        filterCasts  ={
-                            type = "toggle",
-                            name = format( "%s Filter M+ Interrupts", NewFeature ),
-                            desc = format( "If checked, low-priority enemy casts will be ignored when your target may use an ability that should be interrupted.\n\n"
-                                .. "Example:  In Everbloom, Earthshaper Telu's |W%s|w will be ignored and |W%s|w will be interrupted.", ( GetSpellInfo( 168040 ) or "Nature's Wrath" ),
-                                ( GetSpellInfo( 427459 ) or "Toxic Bloom" ) ),
-                            width = 2,
-                            order = 4
-                        },
-                        lb3 = {
-                            type = "description",
-                            name = "",
-                            width = "full",
-                            order = 4.1
-                        },
-
-                        indent3 = {
-                            type = "description",
-                            name = "",
-                            width = 1,
-                            order = 4.2,
-                        },
                         castRemainingThreshold = {
                             type = "range",
                             name = "Interrupt Timing",

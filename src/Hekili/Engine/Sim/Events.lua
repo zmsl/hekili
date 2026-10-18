@@ -359,34 +359,28 @@ end )
 
 
 do
-    if Hekili.IsWrath() then
-        RegisterEvent( "ACTIVE_TALENT_GROUP_CHANGED", function()
-            Hekili:SpecializationChanged()
-        end )
-    else
-        local specializationEvents = {
-            ACTIVE_PLAYER_SPECIALIZATION_CHANGED = 1,
-            ACTIVE_TALENT_GROUP_CHANGED = 1,
-            CONFIRM_TALENT_WIPE = 1,
-            PLAYER_TALENT_UPDATE = 1,
-            SPEC_INVOLUNTARILY_CHANGED = 1,
-            TALENTS_INVOLUNTARILY_RESET = 1
-        }
+    local specializationEvents = {
+        ACTIVE_PLAYER_SPECIALIZATION_CHANGED = 1,
+        ACTIVE_TALENT_GROUP_CHANGED = 1,
+        CONFIRM_TALENT_WIPE = 1,
+        PLAYER_TALENT_UPDATE = 1,
+        SPEC_INVOLUNTARILY_CHANGED = 1,
+        TALENTS_INVOLUNTARILY_RESET = 1
+    }
 
-        local function CheckForTalentUpdate( event )
-            local specialization = GetSpecialization()
-            local specID = specialization and GetSpecializationInfo( specialization )
+    local function CheckForTalentUpdate( event )
+        local specialization = GetSpecialization()
+        local specID = specialization and GetSpecializationInfo( specialization )
 
-            if specID and specID ~= state.spec.id then
-                Hekili.PendingSpecializationChange = true
-            end
+        if specID and specID ~= state.spec.id then
+            Hekili.PendingSpecializationChange = true
         end
+    end
 
-        RegisterEvent( "ACTIVE_PLAYER_SPECIALIZATION_CHANGED", CheckForTalentUpdate )
+    RegisterEvent( "ACTIVE_PLAYER_SPECIALIZATION_CHANGED", CheckForTalentUpdate )
 
-        for event in pairs( specializationEvents ) do
-            RegisterEvent( event, CheckForTalentUpdate )
-        end
+    for event in pairs( specializationEvents ) do
+        RegisterEvent( event, CheckForTalentUpdate )
     end
 end
 
@@ -520,7 +514,7 @@ do
     end
 
     local wasWearing = {}
-    local maxItemSlot = Hekili.IsWrath() and INVSLOT_LAST_EQUIPPED or Enum.ItemSlotFilterTypeMeta.MaxValue
+    local maxItemSlot = Enum.ItemSlotFilterTypeMeta.MaxValue
 
     local timer
 
@@ -778,30 +772,6 @@ do
 
                 local usable = class.itemMap[ item ]
                 if usable then insert( state.items, usable ) end
-            end
-        end
-
-        -- Improve Pocket-Sized Computronic Device.
-        if state.equipped.pocketsized_computation_device then
-            local tName = CGetItemInfo( 167555 )
-            local redName, redLink = C_Item.GetItemGem( tName, 1 )
-
-            if redName and redLink then
-                local redID = tonumber( redLink:match("item:(%d+)") )
-                local action = class.itemMap[ redID ]
-
-                if action and class.abilities[ action ] and redID then
-                    state.set_bonus[ action ] = 1
-                    state.set_bonus[ redID ] = 1
-                    class.abilities.pocketsized_computation_device = class.abilities[ action ]
-                    class.abilities[ tName ] = class.abilities[ action ]
-                    insert( state.items, action )
-                end
-            else
-                if class.abilities.inactive_red_punchcard then
-                    class.abilities.pocketsized_computation_device = class.abilities.inactive_red_punchcard
-                    class.abilities[ tName ] = class.abilities.inactive_red_punchcard
-                end
             end
         end
 
@@ -2323,12 +2293,8 @@ RegisterEvent( "ACTIONBAR_HIDEGRID", DelayedUpdateKeybindings )
 -- RegisterEvent( "ACTIONBAR_PAGE_CHANGED", DelayedUpdateKeybindings )
 -- RegisterEvent( "UPDATE_SHAPESHIFT_FORM", DelayedUpdateKeybindings )
 
-if Hekili.IsWrath() then
-    RegisterEvent( "ACTIVE_TALENT_GROUP_CHANGED", DelayedUpdateKeybindings )
-else
-    RegisterEvent( "ACTIVE_PLAYER_SPECIALIZATION_CHANGED", DelayedUpdateKeybindings )
-    RegisterEvent( "TRAIT_CONFIG_UPDATED", DelayedUpdateKeybindings )
-end
+RegisterEvent( "ACTIVE_PLAYER_SPECIALIZATION_CHANGED", DelayedUpdateKeybindings )
+RegisterEvent( "TRAIT_CONFIG_UPDATED", DelayedUpdateKeybindings )
 
 
 
