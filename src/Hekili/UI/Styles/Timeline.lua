@@ -518,7 +518,7 @@ local function roles( T, tl, recs, count, now )
         end
     end
     if f == 0 then
-        local o = tl.nowFallback == "press" and 0 or 1
+        local o = tl.nowFallback == "press" and 0 or 1 -- "empty": record SLOTS is never drawn (the lane keeps 8 cells)
         for c = 1, SLOTS do map[ c ] = c - o end
         T.press, T.focused = 1 + o, false
     else
@@ -665,10 +665,11 @@ local function assign( d, T, tl, conf, out, now, combat )
     moveLane( T, tl, now, 0 )
 end
 
--- Cell `b`'s sweep (now and next): the spell's cooldown, record 1's stretched to its time in mode extend, re-set only
--- when its start changed or its end moved (TDF Render.SetSwipe).
+-- Cell `b`'s sweep (now and next): the spell's cooldown, stretched to its time in mode extend when `extend` (the now
+-- circle, or the press in the next box beside an empty one), re-set only when its start changed or its end moved (TDF
+-- Render.SetSwipe).
 local lastGcdStart = 0
-local function sweep( b, i, tl, now )
+local function sweep( b, extend, tl, now )
     local cd, ability, mode = b.Cooldown, b.Ability, tl.sweep.mode
     local start, duration, enabled, modRate = 0, 0, 1, 1
     if mode ~= "off" then
@@ -677,7 +678,7 @@ local function sweep( b, i, tl, now )
         else
             start, duration, enabled, modRate = GetSpellCooldown( ability.actionID )
         end
-        if i == 1 and mode == "extend" and b.ExactTime > mmax( now, start + duration ) then
+        if extend and mode == "extend" and b.ExactTime > mmax( now, start + duration ) then
             local gStart = GetSpellCooldown( Registry.GCD_SPELL )
             if gStart > lastGcdStart then lastGcdStart = gStart end
             local cStart = ( select( 4, UnitCastingInfo( "player" ) ) or select( 4, UnitChannelInfo( "player" ) ) or 0 ) / 1000
@@ -739,7 +740,7 @@ function Timeline.Draw( d, conf, out, status )
     if not T.has then return end
     if fresh then -- the sweeps, as classic's on a publish
         for i = 1, 2 do
-            if T.cells[ i ].Ability then sweep( T.cells[ i ], i, tl, now ) end
+            if T.cells[ i ].Ability then sweep( T.cells[ i ], i == 1 or i == T.press and not T.focused, tl, now ) end
         end
     end
 
@@ -924,7 +925,7 @@ function Timeline.Options( id, conf )
         gap = optRange( "Gap", "The space between the now circle and the next box, and between the next box and the lane.", 0, 100, 1, 2 ),
         alts = section( "Alternatives", 3, {
             enabled = optToggle( "Show Alternatives", "Show what the rotation would pick instead if the gating resource came in lower or higher than expected.", 1 ),
-            zones = optSelect( "Show On", "Which cells show their alternatives.", { now = "Now", next = "Next", both = "Both" }, 2 ),
+            zones = optSelect( "Show On", "Which cells show their alternatives: the now circle (a focus ability, or the first recommendation when Without Focus is that), the next box, or both.", { now = "Now", next = "Next", both = "Both" }, 2 ),
             max = optRange( "Count", "How many alternatives each cell shows.", 1, 2, 1, 3 ),
             size = optRange( "Size", "The alternatives' icon size.", 8, 48, 1, 4 ),
             spacing = optRange( "Spacing", "The gap between the cell and its alternatives, and between them.", 0, 20, 1, 5 ),

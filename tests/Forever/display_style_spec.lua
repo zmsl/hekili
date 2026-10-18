@@ -1003,6 +1003,10 @@ describe("the timeline display style", function()
         assert.is_true(c[2].Alts[1]:IsShown())
         assert.are.equal("alt1a", c[2].Alts[1]:GetTexture())
         assert.are.equal("0.6", c[2].Eta:GetText()) -- mortal_strike at 1 s, 0.4 s on
+        -- the extend sweep follows the press: cell 2's runs until record 1's time, cell 1 has none
+        local cd = c[2].Cooldown
+        assert.are.equal(c[2].ExactTime - rawget(cd, "__cdStart"), rawget(cd, "__cdDuration"))
+        assert.is_nil(rawget(c[1].Cooldown, "__cdDuration"))
         -- the lane: records 2..
         assert.are.equal("tex2", c[3].Texture:GetTexture())
         assert.are.equal("tex3", c[4].Texture:GetTexture())
@@ -1037,6 +1041,12 @@ describe("the timeline display style", function()
         assert.is_true(l == d and r == d)
         assert.are.equal(tl.nowSize + tl.gap + tl.nextSize + tl.gap, T.laneX0)
         H.ns.StopConfiguration()
+        -- "press" on the live display: the earlier layout
+        tl.nowFallback = "press"
+        tlPublish(H)
+        tlFrame(H, d)
+        assert.are.same(TODAY, actions(T))
+        assert.is_true(c[1]:IsShown())
         overlayed[ms.id] = nil
         assert.are.same({}, H.errors)
     end)
