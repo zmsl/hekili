@@ -157,12 +157,15 @@ local displayTemplate = {
 -- (displayTemplate's, or one the built-in displays set) or a core option tab.
 local coreDisplayKeys = {
     builtIn = true, name = true, desc = true, order = true, filter = true, relativeTo = true, displayPoint = true,
-    anchorPoint = true, x = true, y = true, queue = true, main = true, visibility = true, shareDisplays = true,
+    anchorPoint = true, x = true, y = true, main = true, visibility = true, shareDisplays = true,
 }
 
 function ns.UI.StyleNameTaken( name )
     if type( name ) ~= "string" then return true end
     if ns.UI.Styles[ name ] then return false end -- re-registration replaces the style
+    for _, k in ipairs( legacyClassic ) do -- RunOneTimeFixes would move a style's subtable of this name into classic
+        if k == name then return true end
+    end
     return coreDisplayKeys[ name ] or displayTemplate[ name ] ~= nil or name:match( "^MultiMod" ) ~= nil
 end
 

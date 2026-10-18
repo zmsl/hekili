@@ -609,7 +609,17 @@ describe("an external display style", function()
         for k, val in pairs(H.ns.UI.Styles.classic) do
             impl[k] = val
         end
-        for i, taken in ipairs({ "style", "enabled", "main", "queue", "visibility", "numIcons", "MultiModAOE" }) do
+        for i, taken in ipairs({
+            "style",
+            "enabled",
+            "main",
+            "queue",
+            "visibility",
+            "numIcons",
+            "MultiModAOE",
+            "glow",
+            "primaryWidth",
+        }) do
             assert.is_false(H.Hekili:RegisterDisplayStyle(taken, impl), taken)
             assert.are.equal(i, #said, taken)
             assert.is_nil(H.ns.UI.Styles[taken], taken)
