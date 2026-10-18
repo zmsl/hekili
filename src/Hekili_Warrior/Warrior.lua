@@ -578,6 +578,13 @@ spec:RegisterAuras({
         duration = 5,
         max_stack = 1,
     },
+    -- Victory Rush's window: 20 s from a kill that yields XP or honor (DB2 402974's PROC_FLAG_KILL triggers 402975).
+    -- Timed from the plain usability flip (reset_precast), as the aura walk is secret in combat.
+    victorious = {
+        id = 402975,
+        duration = 20,
+        max_stack = 1,
+    },
     shield_bash_silenced = {
         id = 18498,
         duration = 3,
@@ -681,6 +688,16 @@ spec:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function()
     end
 end)
 
+-- Victorious has no plain kill row: IsSpellUsable ignores the cooldown, so its false->true flip is the kill.
+local victorious_at, victory_usable = 0, false
+spec:RegisterEvent("SPELL_UPDATE_USABLE", function()
+    local u = reactive(VICTORY_RUSH)
+    if u ~= victory_usable then
+        victory_usable = u
+        victorious_at = u and GetTime() or 0
+    end
+end)
+
 spec:RegisterHook("reset_precast", function()
     -- The stance comes from the belief's Forms source (Game/State/Sources/Forms.lua) through the aura walk.
     local hs, cl = knownRank(HEROIC_STRIKE), knownRank(CLEAVE)
@@ -709,6 +726,14 @@ spec:RegisterHook("reset_precast", function()
                 applyBuff("revenge_usable", enemy_revenge_trigger + 5 - now)
             else
                 applyBuff("revenge_usable")
+            end
+        end
+        -- With an expiry the sim knows the window's end ahead: Victory Rush is refused past it.
+        if reactive(VICTORY_RUSH) then
+            if victorious_at > 0 and now - victorious_at < 20 then
+                applyBuff("victorious", victorious_at + 20 - now)
+            else
+                applyBuff("victorious")
             end
         end
     end
@@ -1675,7 +1700,7 @@ spec:RegisterAbilities({
         end,
     },
 
-    -- Forever: usable for a while after a kill that yields experience or honor; free, 30 s cooldown (DB2 402927).
+    -- Forever: usable within Victorious (20 s) after a kill that yields experience or honor; free, 30 s cooldown (DB2 402927).
     victory_rush = {
         id = 402927,
         cast = 0,
@@ -1686,7 +1711,16 @@ spec:RegisterAbilities({
         known = knows(VICTORY_RUSH),
 
         usable = function()
-            return reactive(VICTORY_RUSH), "only usable after a kill"
+            return buff.victorious.up, "only usable after a kill"
+        end,
+
+        -- what the cast did to the now-state, in the belief's context (spec §12a)
+        now = function()
+            removeBuff("victorious")
+        end,
+
+        handler = function()
+            removeBuff("victorious") -- confirmed in game (user, 2026-10-18)
         end,
     },
 

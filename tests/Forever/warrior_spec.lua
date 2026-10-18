@@ -337,6 +337,39 @@ describe("Forever Warrior", function()
                 assert.are_not.equal("revenge_usable", k)
             end
         end)
+
+        -- Victorious (DB2 402975): 20 s from a kill that yields XP or honor (402974's PROC_FLAG_KILL). The client's
+        -- usability flips at the kill, so the flip timestamps the window.
+        it("opens Victorious on the usability flip for the rest of its 20 s, and not without the flip", function()
+            w.game.known[402927] = true
+            assert.are.same({ 402975, 20 }, { w.auras.victorious.id, w.auras.victorious.duration })
+            w.game.now = 10
+            w.events.SPELL_UPDATE_USABLE() -- no kill (or no XP): the client says no
+            assert.is_nil(reset(11).durations.victorious)
+            for _, k in ipairs(reset(11).applied) do
+                assert.are_not.equal("victorious", k)
+            end
+            w.game.usable[402927] = true -- a kill with XP at t=12
+            w.game.now = 12
+            w.events.SPELL_UPDATE_USABLE()
+            assert.are.equal(16, reset(16).durations.victorious)
+            w.game.now = 32
+            w.game.usable[402927] = nil -- expired (or cast): the client says no
+            w.events.SPELL_UPDATE_USABLE()
+            for _, k in ipairs(reset(33).applied) do
+                assert.are_not.equal("victorious", k)
+            end
+        end)
+
+        it("gates Victory Rush on Victorious and removes it on the cast", function()
+            local e = lw.env(w)
+            w.game.known[402927], w.game.usable[402927] = true, true
+            assert.is_false(lw.run(w.abilities.victory_rush.usable, e)) -- window closed before the cooldown ends
+            e.buff = { victorious = { up = true } }
+            assert.is_true(lw.run(w.abilities.victory_rush.usable, e))
+            lw.run(w.abilities.victory_rush.handler, e)
+            assert.are.same({ "victorious" }, e.removed)
+        end)
     end)
 
     it("gates Thunder Clap, Execute and Spearing Strike on the stances Forever's tooltips name", function()
