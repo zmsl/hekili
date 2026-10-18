@@ -1,8 +1,9 @@
 -- Engine/Schema/Shared.lua
 -- Shared content (shared-content spec §3). `Hekili:NewShared()` returns a registration object the content files
 -- (Hekili_Shared/Shared/<File>.lua) use like a race pack's (Engine/Schema/Races.lua): RegisterAbility, RegisterAura,
--- RegisterResourceMod, RegisterCostMod. Always live, for every class and race, into the shared `all` spec, whose entries
--- the class's own win in the merge (Engine/Schema/Spec.lua) and a race pack's replace (ns.applyRace).
+-- RegisterResourceMod, RegisterCostMod, and RegisterStateExpr. Always live, for every class and race, into the shared
+-- `all` spec, whose entries the class's own win in the merge (Engine/Schema/Spec.lua) and a race pack's replace
+-- (ns.applyRace).
 
 local addon, ns = ...
 local Hekili = _G[addon]
@@ -20,6 +21,10 @@ end
 
 function Shared:RegisterAura(key, def)
     all():RegisterAura(key, def)
+end
+
+function Shared:RegisterStateExpr(key, func)
+    all():RegisterStateExpr(key, func)
 end
 
 --- { max = pct }: every resource the loaded class registered gets pct more maximum (the race object's signature).

@@ -1,9 +1,9 @@
 -- Hekili_Shared/Shared/Auras.lua
 -- The auras every class shares on Forever (shared-content spec §4.1), through Engine/Schema/Shared.lua into `all`: auras others
 -- put on the player, which the player's aura walk reads in combat (lust, Power Infusion, loss of control, dispellable
--- debuffs), and four id-less stubs for the keys core still reads by name. Retail's other lusts and lockouts, the
--- target-side reads (a target's auras are secret in combat) and the absorbs were dropped (spec §4.1); class buffs live in
--- their class files and racials in the race packs.
+-- debuffs), the per-school lockouts, and four id-less stubs for the keys core still reads by name. Retail's other lusts
+-- and lockouts, the target-side reads (a target's auras are secret in combat) and the absorbs were dropped (spec §4.1);
+-- class buffs live in their class files and racials in the race packs.
 
 local Client = Hekili.Client
 local C_LossOfControl = Client.C_LossOfControl
@@ -17,6 +17,24 @@ local function UnitDebuff(unit, index, filter)
 end
 
 local shared = Hekili:NewShared()
+
+-- Per school, whether an interrupt has it locked out at the query time (C10): `locked_out_fire` and so on, from
+-- C_LossOfControl (plain); a lockout's `lockoutSchool` is the mask of the schools it locks (0: no school).
+local SCHOOLS = { physical = 1, holy = 2, fire = 4, nature = 8, frost = 16, shadow = 32, arcane = 64 }
+local floor = math.floor
+for school, bit in pairs(SCHOOLS) do
+    shared:RegisterStateExpr("locked_out_" .. school, function()
+        for i = 1, GetActiveLossOfControlDataCount() do
+            local event = GetActiveLossOfControlData(i)
+            local mask, start, duration =
+                event and event.lockoutSchool, event and event.startTime, event and event.duration
+            if mask and start and duration and floor(mask / bit) % 2 == 1 and start + duration > query_time then
+                return true
+            end
+        end
+        return false
+    end)
+end
 
 local auras = {
     -- Core reads these by name (State.lua: the cooldown read, `prowling`, the GCD's length); none exists on Forever, so

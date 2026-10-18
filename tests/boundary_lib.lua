@@ -163,6 +163,9 @@ local function content()
             self.auras[k] = d
             def(k, d, path)
         end
+        function all:RegisterStateExpr(k)
+            def(k, nil, path)
+        end
         _G.Hekili = { State = { race_token = token }, Class = { specs = { [0] = all }, file = "WARRIOR" } }
         local any = setmetatable({}, {
             __index = function(t)

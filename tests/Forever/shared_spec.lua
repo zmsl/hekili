@@ -72,13 +72,13 @@ local function registers(src, key)
 end
 
 describe("shared content", function()
-    local all, ns, saved, debuffs, bags
+    local all, ns, saved, debuffs, bags, controls
 
     -- Runs Engine/Schema/Races.lua, Engine/Schema/Shared.lua and the named shared files (default: every one Hekili_Shared.toc lists) against
     -- a stand-in `all` that registers as Engine/Schema/Spec.lua's RegisterAbility/RegisterAura: under the key, its id and
     -- every `copy` alias.
     local function load(files)
-        all = { abilities = {}, auras = {}, keys = { abilities = {}, auras = {} } }
+        all = { abilities = {}, auras = {}, exprs = {}, keys = { abilities = {}, auras = {} } }
         local function register(t, key, def)
             table.insert(all.keys[t == all.abilities and "abilities" or "auras"], key)
             t[key] = def
@@ -95,8 +95,11 @@ describe("shared content", function()
         function all:RegisterAura(key, def)
             register(self.auras, key, def)
         end
+        function all:RegisterStateExpr(key, fn)
+            self.exprs[key] = fn
+        end
         _G.Hekili = { State = { race_token = "BloodElf" }, Class = { specs = { [0] = all }, file = "WARRIOR" } }
-        debuffs, bags = {}, {}
+        debuffs, bags, controls = {}, {}, {}
         ns = {
             Facade = {
                 C_Item = {
@@ -108,9 +111,11 @@ describe("shared content", function()
                     end,
                 },
                 C_LossOfControl = {
-                    GetActiveLossOfControlData = function() end,
+                    GetActiveLossOfControlData = function(i)
+                        return controls[i]
+                    end,
                     GetActiveLossOfControlDataCount = function()
-                        return 0
+                        return #controls
                     end,
                 },
                 -- the player's debuffs by index (name, count, dispel type, duration, expiration), unpacked in
@@ -197,6 +202,38 @@ describe("shared content", function()
         for _, k in ipairs(STUBS) do
             assert.are.same({}, all.auras[k], k) -- no id: never found on a unit, so never up
         end
+    end)
+
+    it("answers locked_out_<school> from the active lockouts' school masks, until each one ends", function()
+        load({ "Auras" })
+        local schools = {}
+        for k in pairs(all.exprs) do
+            schools[#schools + 1] = k
+        end
+        table.sort(schools)
+        assert.are.same({
+            "locked_out_arcane",
+            "locked_out_fire",
+            "locked_out_frost",
+            "locked_out_holy",
+            "locked_out_nature",
+            "locked_out_physical",
+            "locked_out_shadow",
+        }, schools)
+        local env = { query_time = 11 }
+        local function locked(school)
+            return setfenv(all.exprs["locked_out_" .. school], env)()
+        end
+        assert.is_false(locked("fire"))
+        controls[1] = { locType = "STUN", lockoutSchool = 0, startTime = 10, duration = 4, timeRemaining = 3 }
+        controls[2] =
+            { locType = "SCHOOL_INTERRUPT", lockoutSchool = 4 + 16, startTime = 10, duration = 4, timeRemaining = 3 }
+        assert.are.same(
+            { true, true, false, false },
+            { locked("fire"), locked("frost"), locked("shadow"), locked("arcane") }
+        )
+        env.query_time = 14
+        assert.is_false(locked("fire")) -- ended by the query time
     end)
 
     it("reads dispellable magic from the player's debuffs only, as a buff or a debuff", function()
