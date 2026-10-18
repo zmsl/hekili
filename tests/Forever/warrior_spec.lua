@@ -826,6 +826,16 @@ describe("Forever Warrior", function()
         e.mainhand_speed = 0
         assert.are.equal(0, lw.run(w.exprs.mainhand_remains, e))
     end)
+    it("anchors the next swing at the evaluation out of combat, so its phase does not run with the clock", function()
+        local e = lw.env(w)
+        e.combat, e.nextMH, e.mainhand_speed = 0, 0, 3
+        e.now, e.query_time = 100, 101.5
+        assert.are.equal(1.5, lw.run(w.exprs.mainhand_remains, e))
+        e.now, e.query_time = 200, 201.5 -- a later evaluation, the same offset: the same answer
+        assert.are.equal(1.5, lw.run(w.exprs.mainhand_remains, e))
+        e.query_time = 200
+        assert.are.equal(0, lw.run(w.exprs.mainhand_remains, e))
+    end)
     it(
         "state.reset clears the pseudo-swing anchors before it rebuilds the resource forecasts (core edit E3)",
         function()

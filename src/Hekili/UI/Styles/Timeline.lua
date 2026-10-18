@@ -24,7 +24,7 @@ local GetItemCooldown = C_Item.GetItemCooldown
 local GetSpellCooldown = function( spellID )
     local info = C_Spell.GetSpellCooldown( spellID )
     if info then return info.startTime, info.duration, info.isEnabled, info.modRate end
-    return 0, 0, false, 0
+    return 0, 0, false, 1
 end
 
 local Registry = Hekili.Engine.Registry
@@ -115,7 +115,7 @@ do
     d.focusHorizon = 10 -- clamped to the lane's horizon where it is used
     d.focusColor = { GOLD[ 1 ], GOLD[ 2 ], GOLD[ 3 ], 1 } -- the focus ability is the press (ready)
     d.focusPendingColor = { 1, 1, 1, 0.35 } -- the focus ability still counting down
-    d.focusReadyStyle = "ring" -- a ready focus ability: the ring in focusColor, or a glow in it ("glow")
+    d.focusReadyStyle = "ring" -- a ready focus ability: the ring in focusColor, a glow in it ("glow") or Blizzard's helper art ("blizzard")
 end
 
 local function track( T, region, label )
@@ -147,20 +147,19 @@ local function newCell( d, T, i )
         b.Texture:AddMaskTexture( b.Mask )
         b.RingMask = b:CreateMaskTexture()
         b.RingMask:SetTexture( CIRCLE, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE" )
-        b.RingMask:SetAllPoints( b.Border )
-        b.Border:AddMaskTexture( b.RingMask )
+        b.Border:AddMaskTexture( b.RingMask ) -- anchored to b in dress, with the Border's insets
         -- the focus ring: a disc over the border and under the round icon, so a ring of its thickness shows
         b.Ring = track( T, b:CreateTexture( nil, "BACKGROUND", nil, 1 ), L .. ".Ring" )
         b.FocusMask = b:CreateMaskTexture()
         b.FocusMask:SetTexture( CIRCLE, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE" )
-        b.FocusMask:SetAllPoints( b.Ring )
-        b.Ring:AddMaskTexture( b.FocusMask )
+        b.Ring:AddMaskTexture( b.FocusMask ) -- anchored to b in dress, with the Ring's insets
     end
     if i <= 2 then
         b.Cooldown = track( T, CreateFrame( "Cooldown", name .. "_Cooldown", b, "CooldownFrameTemplate" ), L .. ".Cooldown" )
         b.Cooldown:SetAllPoints( b )
         b.Cooldown:SetDrawBling( false )
         b.Cooldown:SetDrawEdge( false )
+        b.Cooldown:SetHideCountdownNumbers( true ) -- the ETA text is the countdown
         if i == 1 then
             b.Cooldown:SetSwipeTexture( CIRCLE )
             b.Cooldown:SetUseCircularEdge( true )
@@ -178,7 +177,33 @@ local function newCell( d, T, i )
     top:SetAllPoints( b )
     b.Veil = track( T, top:CreateTexture( nil, "ARTWORK" ), L .. ".Veil" )
     b.Veil:SetAllPoints( b.Texture )
-    if i == 1 then b.Veil:AddMaskTexture( b.Mask ) end
+    if i == 1 then
+        b.Veil:AddMaskTexture( b.Mask )
+        -- focusReadyStyle "blizzard": the rotation helper's button art (ActionBarButtonAssistedCombatRotationTemplate),
+        -- sized from the circle in dress; the active border and its rotating glow when ready, the inactive frame pending
+        b.HelperOn = top:CreateTexture( nil, "BORDER" )
+        b.HelperOn:SetAtlas( "UI-HUD-RotationHelper-Active", true )
+        b.HelperOn:SetPoint( "CENTER", b, "CENTER", 0, 0 )
+        b.HelperGlow = top:CreateTexture( nil, "ARTWORK", nil, 1 )
+        b.HelperGlow:SetAtlas( "UI-HUD-RotationHelper-Active-FX" )
+        b.HelperGlow:SetAlpha( 0.6 )
+        b.HelperGlow:SetBlendMode( "ADD" )
+        b.HelperGlow:SetPoint( "CENTER", b, "CENTER", 0, 0 )
+        b.HelperMask = top:CreateMaskTexture()
+        b.HelperMask:SetAtlas( "UI-HUD-RotationHelper-Active-FX-Mask", true, nil, nil, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE" )
+        b.HelperMask:SetPoint( "CENTER", b, "CENTER", 0, 0 ) -- on the cell, so it stays put while the glow turns
+        b.HelperGlow:AddMaskTexture( b.HelperMask )
+        b.HelperAnim = b.HelperGlow:CreateAnimationGroup()
+        b.HelperAnim:SetLooping( "REPEAT" )
+        local spin = b.HelperAnim:CreateAnimation( "Rotation" )
+        spin:SetDuration( 3 )
+        spin:SetDegrees( -360 )
+        spin:SetOrigin( "CENTER", 0, 0 )
+        b.HelperOff = top:CreateTexture( nil, "ARTWORK", nil, 1 )
+        b.HelperOff:SetAtlas( "UI-HUD-RotationHelper-Inactive", true )
+        b.HelperOff:SetPoint( "CENTER", b, "CENTER", 0, 0 )
+        b.helper = 0
+    end
     b.Marker = track( T, top:CreateTexture( nil, "OVERLAY" ), L .. ".Marker" )
     b.Marker:SetPoint( "BOTTOMLEFT", b, "BOTTOMLEFT", 1, 1 )
     b.Edges = {}
@@ -240,6 +265,16 @@ local function readyGlow( b, on, c )
     else Glower.AutoCastGlow_Stop( b, "focus" ) end
 end
 
+-- The now circle's Blizzard look (focusReadyStyle "blizzard"): 0 none, 1 the active border and glow, 2 the inactive frame.
+local function helperLook( b, k )
+    if k == b.helper then return end
+    b.helper = k
+    b.HelperOn:SetShown( k == 1 )
+    b.HelperGlow:SetShown( k == 1 )
+    if k == 1 then b.HelperAnim:Play() else b.HelperAnim:Stop() end
+    b.HelperOff:SetShown( k == 2 )
+end
+
 local function setFont( fs, font, size, style, color )
     fs:SetFont( LSM:Fetch( "font", font ), size, style )
     if color then fs:SetTextColor( color[ 1 ], color[ 2 ], color[ 3 ], color[ 4 ] ) end
@@ -287,6 +322,21 @@ local function dress( T, b, i, size, tl )
         b.Ring:SetTexture( WHITE )
         b.Ring:SetVertexColor( fc[ 1 ], fc[ 2 ], fc[ 3 ], fc[ 4 ] )
         b.Ring:Hide()
+        -- each mask on the cell frame with its texture's insets (a mask anchored to the texture it masks drew square)
+        b.RingMask:ClearAllPoints()
+        b.RingMask:SetPoint( "TOPLEFT", b, "TOPLEFT", -th, th )
+        b.RingMask:SetPoint( "BOTTOMRIGHT", b, "BOTTOMRIGHT", th, -th )
+        b.FocusMask:ClearAllPoints()
+        b.FocusMask:SetPoint( "TOPLEFT", b, "TOPLEFT", -rt, rt )
+        b.FocusMask:SetPoint( "BOTTOMRIGHT", b, "BOTTOMRIGHT", rt, -rt )
+        -- Blizzard's ratios on its 45 px button: border and mask 64, glow 100 at scale 0.8
+        local px = size * T.s / 45
+        b.HelperOn:SetSize( 64 * px, 64 * px )
+        b.HelperGlow:SetSize( 80 * px, 80 * px )
+        b.HelperMask:SetSize( 64 * px, 64 * px )
+        b.HelperOff:SetSize( 64 * px, 64 * px )
+        b.helper = -1
+        helperLook( b, 0 )
     end
     b.Border:SetTexture( WHITE )
     if tl.border.coloring == "custom" then
@@ -599,9 +649,12 @@ local function assign( d, T, tl, conf, out, now, combat )
     T.clock = now
     roles( T, tl, recs, out.count, now )
     local blank = out.count == 0 or out.version == d.blankVersion
-    local ring, glow = cells[ 1 ].Ring, T.focused and T.ready and tl.focusReadyStyle == "glow" and not blank
-    ring:SetShown( T.focused and not glow )
+    local look = tl.focusReadyStyle
+    local ring, glow = cells[ 1 ].Ring, T.focused and T.ready and look == "glow" and not blank
+    local bliz = T.focused and look == "blizzard" and not blank
+    ring:SetShown( T.focused and not glow and not bliz )
     readyGlow( cells[ 1 ], glow, tl.focusColor )
+    helperLook( cells[ 1 ], bliz and ( T.ready and 1 or 2 ) or 0 )
     if T.focused then
         local fc = T.ready and tl.focusColor or tl.focusPendingColor
         ring:SetVertexColor( fc[ 1 ], fc[ 2 ], fc[ 3 ], fc[ 4 ] )
@@ -667,7 +720,7 @@ local function assign( d, T, tl, conf, out, now, combat )
                 local p = recs[ i - 1 ]
                 wait = not gated and p.exact_time ~= nil and exact - ( p.exact_time + p.busy ) > 0.1
             end
-            for k = 1, 4 do b.Edges[ k ]:SetShown( wait ) end
+            for k = 1, 4 do b.Edges[ k ]:SetShown( wait and c ~= 1 ) end -- a square frame: never on the circle
             if gated and not ( gated1 and gated1 < i ) then gated1 = i end -- cells 1-2 may draw records out of order
 
             if b.Alts then
@@ -744,7 +797,7 @@ local function sweep( b, extend, tl, now )
             local gStart = GetSpellCooldown( Registry.GCD_SPELL )
             local cStart = ( select( 4, UnitCastingInfo( "player" ) ) or select( 4, UnitChannelInfo( "player" ) ) or 0 ) / 1000
             start = ( start > 0 and start ) or ( held and b.cdStart ) or ( cStart > 0 and cStart ) or ( gStart > 0 and gStart ) or now
-            duration = b.ExactTime - start
+            duration, modRate = b.ExactTime - start, 1 -- a wall-clock stretch: the spell's modRate would rescale it
         elseif enabled == 0 or enabled == false then
             start, duration, modRate = 0, 0, 1
         end
@@ -827,7 +880,7 @@ function Timeline.Draw( d, conf, out, status )
                 glowOff( b )
             end
             if i == 1 then
-                local wait = not b.gated and r.desaturate
+                local wait = not b.gated and r.desaturate and c ~= 1 -- a square frame: never on the circle
                 for k = 1, 4 do b.Edges[ k ]:SetShown( wait ) end
             end
         end
@@ -897,6 +950,7 @@ function Timeline.Clear( d )
     for _, b in ipairs( T.cells ) do
         glowOff( b )
         readyGlow( b, false )
+        if b.HelperOn then helperLook( b, 0 ) end
         b.Action, b.Ability, b.ExactTime, b.Key, b.cdAction = nil, nil, nil, nil, nil
     end
     for i = 1, SLOTS do T.want[ i ], T.inLane[ i ] = false, false end
@@ -976,8 +1030,8 @@ function Timeline.Options( id, conf )
         nowFallback = optSelect( "Without Focus", "Empty: the now circle holds only focus abilities (gold once ready to press) and the next box what to press. First Recommendation: the earlier layout, what to press in the now circle unless a focus ability is coming up.",
             { empty = "Empty", press = "First Recommendation" }, 4 ),
         focusPendingColor = { type = "color", name = "Pending Ring Color", desc = "The now circle's ring while a focus ability counts down (the Timeline tab's Ring Color once it is ready).", hasAlpha = true, order = 5, width = 1.49 },
-        focusReadyStyle = optSelect( "Ready Look", "How the now circle shows a focus ability that is ready to press: the ring in the Timeline tab's Ring Color, or a glow in it.",
-            { ring = "Ring", glow = "Glow" }, 6 ),
+        focusReadyStyle = optSelect( "Ready Look", "How the now circle shows a focus ability that is ready to press: the ring in the Timeline tab's Ring Color, or a glow in it, or Blizzard's rotation helper frame (its active border and glow when ready, its inactive frame while pending).",
+            { ring = "Ring", glow = "Glow", blizzard = "Blizzard" }, 6 ),
         eta = section( "ETA", 2, etaFont ),
         sweep = section( "Sweep", 3, {
             mode = optSelect( "Cooldown Sweep", "Extend: the sweep runs until the pick should be used. Cooldown: the ability's own cooldown. Off: none.",

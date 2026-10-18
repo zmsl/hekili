@@ -1750,17 +1750,19 @@ end)
 -- time to the next main-hand swing, and whether a strike queued now still leaves rage for the next Mortal Strike (or
 -- Bloodthirst) and Whirlwind as they come off cooldown.
 spec:RegisterStateExpr("mainhand_remains", function()
+    -- out of combat no swing runs (nextMH is 0): anchor it at this evaluation, or its phase free-runs with the clock
+    local mh = (nextMH == 0 and combat == 0) and now or nextMH
     if now == query_time then
-        local real = nextMH - now
+        local real = mh - now
         return real > 0 and real or 0
     end
-    if query_time <= nextMH then
-        return nextMH - query_time
+    if query_time <= mh then
+        return mh - query_time
     end
     if mainhand_speed <= 0 then
         return 0
     end -- no swing speed read yet
-    return mainhand_speed - (query_time - nextMH) % mainhand_speed
+    return mainhand_speed - (query_time - mh) % mainhand_speed
 end)
 
 local queueEvents = {

@@ -1247,6 +1247,112 @@ describe("the timeline display style", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- In game (2026-10-18, out of combat, pinned): a gold square around the pending circle and an "18" in it.
+    it(
+        "keeps the pending ring after a rebuild, masks on the cell frame, no square frame or countdown digits",
+        function()
+            local H, d, T = tlBoot(false, function(tl)
+                tl.nowFallback = "empty"
+            end)
+            local tl = H.Hekili.DB.profile.displays.Primary.timeline
+            local c = T.cells
+            local anchors = {}
+            for _, m in ipairs({ "RingMask", "FocusMask" }) do
+                rawset(c[1][m], "SetPoint", function(self, p, rel, rp, x, y)
+                    anchors[#anchors + 1] = { m, p, rel, x, y }
+                end)
+            end
+            rawset(c[1].Ring, "SetVertexColor", function(self, r, g, b, a)
+                rawset(self, "__color", { r, g, b, a })
+            end)
+            H.Hekili:BuildUI()
+            assert.are.same({
+                { "RingMask", "TOPLEFT", c[1], -1, 1 },
+                { "RingMask", "BOTTOMRIGHT", c[1], 1, -1 },
+                { "FocusMask", "TOPLEFT", c[1], -2, 2 },
+                { "FocusMask", "BOTTOMRIGHT", c[1], 2, -2 },
+            }, anchors)
+            tlPublish(H, 2, function(s) -- overpower pending in the circle, a wait past mortal strike's busy time
+                s[2].exact_time = s[2].exact_time + 1
+            end)
+            tlFrame(H, d)
+            H.Hekili:BuildUI() -- an option refresh: dress, then the publish redrawn
+            tlFrame(H, d)
+            assert.is_true(c[1].Ring:IsShown())
+            assert.are.same(tl.focusPendingColor, rawget(c[1].Ring, "__color"))
+            for k = 1, 4 do
+                assert.is_false(c[1].Edges[k]:IsShown(), "edge " .. k)
+            end
+            -- the Cooldown's own digits are off (the cells are built before any test can hook them)
+            local src = assert(io.open("src/Hekili/UI/Styles/Timeline.lua")):read("*a")
+            assert.is_truthy(src:find("SetHideCountdownNumbers( true )", 1, true))
+            assert.are.same({}, H.errors)
+        end
+    )
+
+    it("sweeps a pinned out-of-combat wait on GetTime(): from its entry to the record's exact time", function()
+        local H, d, T = tlBoot(false, function(tl)
+            tl.nowFallback, tl.oocPinned = "empty", true
+        end)
+        H.Hekili.Engine.Output.status.combat = false
+        local c = T.cells
+        local function pub() -- the in-game case: two presses at 0, the focus 6.25 s on
+            tlPublish(H, 3, function(s)
+                s[1].time, s[2].time, s[3].time = 0, 0, 6.25
+                s[1].exact_time, s[2].exact_time, s[3].exact_time = H.ctl.now, H.ctl.now, H.ctl.now + 6.25
+            end)
+        end
+        pub()
+        local t0 = H.ctl.now + 0.2
+        tlFrame(H, d)
+        assert.is_true(T.pinned)
+        local cd = c[1].Cooldown
+        assert.are.equal(t0, rawget(cd, "__cdStart"))
+        assert.are.equal(c[1].ExactTime, rawget(cd, "__cdStart") + rawget(cd, "__cdDuration"))
+        pub() -- re-evaluated a frame later: the end follows the record, the start holds
+        tlFrame(H, d)
+        assert.are.equal(t0, rawget(cd, "__cdStart"))
+        assert.is_true(math.abs(c[1].ExactTime - (rawget(cd, "__cdStart") + rawget(cd, "__cdDuration"))) < 1e-9)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("shows Blizzard's rotation helper art on the now circle when focusReadyStyle is blizzard", function()
+        local H, d, T = tlBoot(false, function(tl)
+            tl.nowFallback, tl.focusReadyStyle = "empty", "blizzard"
+        end)
+        local tl = H.Hekili.DB.profile.displays.Primary.timeline
+        local c1 = T.cells[1]
+        for _, k in ipairs({ "HelperOn", "HelperGlow", "HelperOff" }) do
+            for m, fn in pairs(tlrec) do
+                rawset(c1[k], m, fn)
+            end
+        end
+        local playing = false
+        rawset(c1.HelperAnim, "Play", function()
+            playing = true
+        end)
+        rawset(c1.HelperAnim, "Stop", function()
+            playing = false
+        end)
+        H.Hekili:BuildUI()
+        local function shown()
+            return { c1.HelperOn:IsShown(), c1.HelperGlow:IsShown(), c1.HelperOff:IsShown(), c1.Ring:IsShown() }
+        end
+        tlPublish(H, 1) -- ready
+        tlFrame(H, d)
+        assert.are.same({ true, true, false, false }, shown())
+        assert.is_true(playing)
+        tlPublish(H, 3) -- pending
+        tlFrame(H, d)
+        assert.are.same({ false, false, true, false }, shown())
+        assert.is_false(playing)
+        tl.focusReadyStyle = "ring"
+        tlPublish(H, 1)
+        tlFrame(H, d)
+        assert.are.same({ false, false, false, true }, shown())
+        assert.are.same({}, H.errors)
+    end)
+
     it("keeps today's layout with focus off, a flagged record 1, or a flag past the focus horizon", function()
         local H, d, T = tlBoot()
         local tl = H.Hekili.DB.profile.displays.Primary.timeline
