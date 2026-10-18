@@ -8,5 +8,7 @@ ignore:
     - tools
     - docs
     - .superpowers
+    - src/Hekili_Warrior/APLs
+    - src/Hekili_Druid/APLs
     - .luacheckrc
     - .luarc.json

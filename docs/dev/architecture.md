@@ -168,11 +168,12 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
 
 ## 6. The pack pipeline
 
-Default priorities are written as SimC text: `tools/packs/<class>/<Pack>.simc` (leading `#` lines are the description)
-and the manifest `tools/packs/<class>.lua` (`date`, `spec`, `packs` in block order). `make packs` runs
+Default priorities are written as SimC text: `src/Hekili_<Class>/APLs/<Pack>.simc` (leading `#` lines are the
+description) and the manifest `src/Hekili_<Class>/APLs/packs.lua` (`spec`, `packs` in block order). The TOC lists
+neither, so WoW never loads them, and `.pkgmeta` leaves them out of the zip. `make packs` runs
 `.lua/bin/lua tools/make_pack.lua write <class>` (`lua5.1` without `.lua/`) for each manifest. It parses the text, serializes and encodes it as the share
 string `RegisterPack` takes, and rewrites the generated `RegisterPack` blocks in `src/Hekili_<Class>/<Class>.lua`.
-`lua5.1 tools/make_pack.lua decode <string>` prints a share string back as SimC. The pack version is the manifest date
+`lua5.1 tools/make_pack.lua decode <string>` prints a share string back as SimC. The pack version is the class's date
 times 1000 plus a checksum of the text, so any text change reloads a saved profile. `make packs` on a clean tree is a
 no-op (`tests/Forever/make_pack_spec.lua`), and encode then decode returns the normalized text. `make packs` is not
 part of `make check`.

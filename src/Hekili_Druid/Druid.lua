@@ -1879,8 +1879,8 @@ spec:RegisterSetting("innervate", true, {
 
 spec:RegisterOptions({ package = "Feral" })
 
--- The three priorities, written by `make packs` (tools/make_pack.lua) from tools/packs/druid.lua and
--- tools/packs/druid/*.simc; edit those and run it, never these blocks (tests/Forever/druid_spec.lua checks they
+-- The three priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and
+-- APLs/*.simc; edit those and run it, never these blocks (tests/Forever/druid_spec.lua checks they
 -- match). Pick one with /hekili priority <name>. Guardian and Balance are provisional (their descriptions say why);
 -- Restoration is deferred.
 spec:RegisterPack(

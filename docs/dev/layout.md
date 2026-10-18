@@ -3,7 +3,8 @@
 How the layers and the engine port fit together: `docs/dev/architecture.md`.
 
 - `src/` holds the addons exactly as WoW loads them, each in its own folder with its TOC (paths inside a TOC are
-  relative to its folder); nothing else ships, and nothing dev-only goes in them. `tests/helpers/addons.lua` lists them
+  relative to its folder); nothing else ships, and nothing dev-only goes in them except each class pack's `APLs/` (below), which no TOC lists
+  and `.pkgmeta` ignores. `tests/helpers/addons.lua` lists them
   in dependency order, and every headless loader, spec and tool reads their files from it:
   - `src/Hekili/`: the core (the engine, the belief, the UI and options);
   - `src/Hekili_Shared/`: the content every class shares (`Shared/`: auras, consumables, items) and the race packs
@@ -12,6 +13,11 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `src/Hekili_Warrior/`, `src/Hekili_Druid/`: one class pack each (the class file, its RegisterPack
     blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's `Engine/Content.lua` for the
     player's class.
+    The default priorities' sources sit beside the class file in `APLs/`: one `<Pack>.simc` per priority and the
+    manifest `packs.lua` (`{ spec = ..., packs = { ... } }`, no date). Edit those, then `make packs`. The date is per
+    class and lives only in the class file's first RegisterPack block: `make packs` keeps it while the generated
+    blocks are unchanged and sets it to today (`PACK_DATE=YYYYMMDD`, else the system date) when any of that class's
+    packs changed, so a clean tree is a no-op and one class's edit re-dates only that class.
     `## Group: Hekili` nests each content addon under Hekili in the in-game addon list.
 
   Content reaches the engine only through the public `Hekili` object (the registration API, `State`, `Class`,
@@ -80,7 +86,7 @@ per-token counts in `tests/boundary_baseline.lua` (a ceiling per file, not a lin
 `.lua/bin/lua tools/boundary_baseline.lua` only when removing an inherited leak, or when new content registers a key a
 Sim identifier already uses (`git blame` the Sim line and say so in the commit); never to admit a leak.
 `make check` also runs `packs-check` (`make packs`, then `git diff --exit-code src`: the RegisterPack blocks match
-`tools/packs/`). CI (`.github/workflows/check.yml`) runs the same checks except the type check.
+`src/Hekili_<Class>/APLs/`). CI (`.github/workflows/check.yml`) runs the same checks except the type check.
 
 `make check`'s 6-fight Arms gate is two files of 3 fights (`tests/Forever/loop_warrior_spec.lua`, seeds 1-3, and
 `loop_warrior_late_spec.lua`, seeds 4-6), so it prints three `Arms solo:` lines (`tests/Forever/arms_recs_spec.lua`

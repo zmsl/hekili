@@ -1938,8 +1938,8 @@ spec:RegisterSetting("challenging_shout_loose", 3, {
 
 spec:RegisterOptions({ package = "Arms" })
 
--- The three priorities, written by `make packs` (tools/make_pack.lua) from tools/packs/warrior.lua and
--- tools/packs/warrior/*.simc; edit those and run it, never these blocks (tests/Forever/warrior_spec.lua checks they
+-- The three priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and
+-- APLs/*.simc; edit those and run it, never these blocks (tests/Forever/warrior_spec.lua checks they
 -- match). Pick one with /hekili priority <name>.
 spec:RegisterPack(
     "Arms",
