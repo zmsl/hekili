@@ -3,8 +3,23 @@
 -- renderer moved out of UI.lua (UI/Styles/Classic.lua). Record with CLASSIC_DRAW=record (rewrites the fixture). The
 -- headless stub widgets keep no state, so the spec gives every button region recording Show/Hide, texture, text,
 -- point, cooldown, desaturation and vertex colour methods, then rebuilds the UI so Build's anchors are recorded too.
+-- Past the draw (Task 2, review M1) the same case records glow state, the tooltip's fields, the overlay-glow and
+-- cast-highlight events, a flash pause, the keybinding refresh, the pause overlay, Perimeter and Deactivate's hide;
+-- the shims (`d.styleState or d`, `d.style or d`) read the same thing at the base commit and after the extraction.
 local headless = require("Game.harness.headless")
 local ww = require("Forever.helpers.warrior_world")
+local fake = require("Game.State.helpers.fake_api")
+
+-- IsSpellOverlayed answers from this table (fake_api answers false); the classic style reads it at file load.
+local overlayed = {}
+local fakeNew = fake.new
+fake.new = function(...)
+    local api, ctl = fakeNew(...)
+    api.C_SpellActivationOverlay.IsSpellOverlayed = function(id)
+        return overlayed[id] == true
+    end
+    return api, ctl
+end
 
 local PATH = "tests/Forever/fixtures/classic_draw.lua"
 local REGIONS = {
@@ -128,10 +143,23 @@ local function v(x)
 end
 
 -- One line per button (all ten), and one per region holding any recorded state.
-local function dump(d)
-    local lines = {}
+local function name(t)
+    return t and t.actionName
+end
+
+local function dump(d, lines)
+    lines = lines or {}
     for i, b in ipairs(d.Buttons) do
-        lines[#lines + 1] = ("B%d shown=%s point=%s"):format(i, v(rawget(b, "__shown")), v(rawget(b, "__point")))
+        lines[#lines + 1] = ("B%d shown=%s point=%s glowing=%s action=%s rec=%s ability=%s exact=%s"):format(
+            i,
+            v(rawget(b, "__shown")),
+            v(rawget(b, "__point")),
+            v(b.glowing),
+            v(b.Action),
+            v(name(b.Recommendation)),
+            v(name(b.Ability)),
+            v(b.ExactTime)
+        )
         for _, k in ipairs(REGIONS) do
             local r = rawget(b, k)
             if r then
@@ -175,9 +203,44 @@ local function write(lines)
     f:close()
 end
 
+-- After the draw: the events a display forwards to its style, the pause overlay, Perimeter, then Deactivate.
+local function events(H, d, lines)
+    local abilities = H.Hekili.Engine.Registry.Abilities()
+    local ms, op = abilities.mortal_strike.id, abilities.overpower.id
+    local st = d.styleState or d -- the style's scratch (on the display itself at base)
+    overlayed[op], overlayed[ms] = true, nil
+    d:OnEvent("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", op)
+    d:OnEvent("SPELL_ACTIVATION_OVERLAY_GLOW_HIDE", ms)
+    H.ctl.current[ms] = true
+    d:OnEvent("CURRENT_SPELL_CAST_CHANGED")
+    d:OnEvent("ACTIONBAR_SHOWGRID") -- a flash event: pauses SpellFlash
+    d:OnEvent("SPELLS_CHANGED") -- a keybinding event
+    lines[#lines + 1] = "-- events: flashReady=" .. v(st.flashReady)
+    dump(d, lines)
+    H.Hekili.Pause = true
+    H.ctl.now = H.ctl.now + 0.2
+    d.__scripts.OnUpdate(d, 0.2)
+    lines[#lines + 1] = "-- paused: paused=" .. v(st.paused)
+    dump(d, lines)
+    local l, r, t, b
+    if d.style then
+        l, r, t, b = d.style.Perimeter(d)
+    else
+        l, r, t, b = d:GetPerimeterButtons()
+    end
+    lines[#lines + 1] = ("-- perimeter: %s %s %s %s"):format(v(l.__name), v(r.__name), v(t.__name), v(b.__name))
+    d:Deactivate()
+    for i, btn in ipairs(d.Buttons) do
+        lines[#lines + 1] = ("-- deactivated: B%d shown=%s"):format(i, v(rawget(btn, "__shown")))
+    end
+end
+
 describe("the classic display style", function()
     it("draws a fixed 4-record publish over 3 frames exactly as the base commit's fixture", function()
         local H, d = boot()
+        local conf = H.Hekili.DB.profile.displays.Primary
+        conf.glow.enabled, conf.glow.queued = true, true
+        overlayed[H.Hekili.Engine.Registry.Abilities().mortal_strike.id] = true
         publish(H)
         assert.is_true(d.NewRecommendations)
         local f = d.__scripts.OnUpdate
@@ -187,6 +250,11 @@ describe("the classic display style", function()
         end
         assert.are.same({}, H.errors)
         local lines = dump(d)
+        events(H, d, lines)
+        assert.are.same({}, H.errors)
+        for k in pairs(overlayed) do
+            overlayed[k] = nil
+        end
         if os.getenv("CLASSIC_DRAW") == "record" then
             write(lines)
         end
