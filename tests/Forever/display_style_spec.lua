@@ -882,6 +882,33 @@ describe("the timeline display style", function()
         assert.are.same({}, H.errors)
     end)
 
+    it("shows its cells and ruler again on the first publish after its alpha went to 0 and back", function()
+        local H, d, T = tlBoot()
+        tlPublish(H)
+        local f = d.__scripts.OnUpdate
+        H.ctl.now = H.ctl.now + 0.2
+        f(d, 0.2)
+        local c1 = T.cells[1]
+        assert.is_true(c1.Texture:IsShown() and T.base:IsShown())
+        H.Hekili.Barber = true -- alpha 0: core unsubscribes and clears the style
+        d:UpdateAlpha()
+        assert.is_false(c1.Texture:IsShown())
+        assert.is_false(T.base:IsShown())
+        H.Hekili.Barber = nil
+        d:UpdateAlpha()
+        tlPublish(H)
+        H.ctl.now = H.ctl.now + 0.2
+        f(d, 0.2)
+        assert.is_true(c1:IsShown())
+        assert.is_true(c1.Texture:IsShown())
+        assert.is_true(c1.Top:IsShown())
+        assert.is_true(c1.Eta:IsShown())
+        assert.is_true(T.base:IsShown())
+        assert.is_true(T.ticks[1]:IsShown())
+        assert.is_false(T.ticks[12]:IsShown()) -- past the 10 s horizon
+        assert.are.same({}, H.errors)
+    end)
+
     it("asks the engine for alternatives while it draws a display", function()
         local H, d = boot()
         local out = H.Hekili.Engine.Output.Primary

@@ -217,6 +217,25 @@ local function justifyH( anchor )
 end
 
 -- A cell's texts, marks and border from the config (Build only).
+-- Shows what Clear hid and a drawn cell keeps up (its texture, texts, sweep and border) and the ruler: from Build, and
+-- from the first publish after a Clear (core clears on every unsubscribe, e.g. when the display's alpha drops to 0).
+local function reveal( T, tl )
+    for i = 1, SLOTS do
+        local b = T.cells[ i ]
+        b.Border:SetShown( tl.border.enabled )
+        b.Texture:Show()
+        b.Top:Show()
+        if b.Cooldown then b.Cooldown:Show() end
+        b.Eta:Show()
+        b.Keybinding:Show()
+        b.Caption:Show()
+        if b.Targets then b.Targets:Show() end
+    end
+    T.base:Show()
+    for k = 1, MAX_TICKS do T.ticks[ k ]:SetShown( tl.ruler.ticks and k - 1 <= tl.horizon ) end
+    T.cleared = false
+end
+
 local function dress( T, b, i, size, tl )
     local z = i < 3 and i or 3
     local kb, cap, ind, eta = tl.keybindings, tl.captions, tl.indicators, tl.eta
@@ -233,14 +252,6 @@ local function dress( T, b, i, size, tl )
         local r, g, bl = RAID_CLASS_COLORS[ Registry.ClassFile() ]:GetRGB()
         b.Border:SetColorTexture( r, g, bl, 1 )
     end
-    b.Border:SetShown( tl.border.enabled )
-    b.Texture:Show()
-    b.Top:Show()
-    if b.Cooldown then b.Cooldown:Show() end
-    b.Eta:Show()
-    b.Keybinding:Show()
-    b.Caption:Show()
-    if b.Targets then b.Targets:Show() end
 
     local gc = tl.gate.color
     b.Veil:SetColorTexture( gc[ 1 ], gc[ 2 ], gc[ 3 ], gc[ 4 ] )
@@ -355,7 +366,6 @@ function Timeline.Build( d, conf )
     T.base:SetColorTexture( 1, 1, 1, 0.5 )
     T.base:SetSize( T.laneLength * s, s )
     place( T, T.base, T.laneX0, baseY )
-    T.base:Show()
     for k = 1, MAX_TICKS do
         local t = T.ticks[ k ]
         local sec = k - 1
@@ -365,11 +375,9 @@ function Timeline.Build( d, conf )
             t:SetColorTexture( 1, 1, 1, major and 0.8 or 0.5 )
             t:SetSize( s, h * s )
             place( T, t, T.laneX0 + sec * tl.pxPerSec, baseY - h )
-            t:Show()
-        else
-            t:Hide()
         end
     end
+    reveal( T, tl )
 
     if st.flashReady == nil then C_Timer.After( 3, T.flashOn ) end
 
@@ -465,6 +473,7 @@ local function assign( d, T, tl, conf, out, now )
         return
     end
     T.has = true
+    if T.cleared then reveal( T, tl ) end
     local suppress = tl.flash.enabled and tl.flash.suppress
     local kb, cap, ind, a = tl.keybindings, tl.captions, tl.indicators, tl.alts
     local px, abilities = tl.pxPerSec, Registry.Abilities()
@@ -719,6 +728,7 @@ function Timeline.Clear( d )
     end
     for i = 1, SLOTS do T.want[ i ], T.inLane[ i ] = false, false end
     for _, w in ipairs( T.widgets ) do w:Hide() end
+    T.cleared = true
     T.has, T.paused = false, false
 end
 
