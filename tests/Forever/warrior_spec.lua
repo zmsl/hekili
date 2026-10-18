@@ -628,7 +628,7 @@ describe("Forever Warrior", function()
         assert.are.same({ package = "Arms" }, w.options)
     end)
 
-    it("opens with Charge before combat and closes the gap with Intercept in Arms and Fury", function()
+    it("opens with Charge before combat in Arms and Fury, and closes the gap with Intercept in Arms", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists", "warrior")
         local function actions(list, n)
             local out = {}
@@ -637,10 +637,9 @@ describe("Forever Warrior", function()
             end
             return out
         end
-        for i = 1, 2 do
-            assert.are.same({ "battle_shout", "charge" }, actions(packs[i].lists.precombat), packs[i].name)
-            assert.are.same({ "victory_rush", "intercept" }, actions(packs[i].lists.rotation, 2), packs[i].name)
-        end
+        assert.are.same({ "battle_shout", "charge" }, actions(packs[1].lists.precombat))
+        assert.are.same({ "victory_rush", "intercept" }, actions(packs[1].lists.rotation, 2))
+        assert.are.same({ "charge" }, actions(packs[2].lists.precombat)) -- Fury: no Intercept in the user's list
         -- Protection charges in Battle Stance, then swaps to Defensive Stance
         assert.are.same({ "battle_shout", "charge", "defensive_stance" }, actions(packs[3].lists.precombat))
     end)

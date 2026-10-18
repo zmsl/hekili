@@ -121,7 +121,8 @@ describe("tools/make_pack.lua", function()
 
         it("re-dates only the class whose text changed, by one character, and is then a no-op", function()
             local apls = "src/Hekili_Warrior/APLs/"
-            local fury = slurp(apls .. "Fury.simc"):gsub("(\nactions[^\n]*)(\n*)$", "%1 %2") -- one space on the last line
+            local fury, n = slurp(apls .. "Fury.simc"):gsub("if=rage.current>=", "if=rage.current>", 1) -- one character
+            assert.are.equal(1, n)
             local root = scratch(apls, { ["packs.lua"] = true, ["Arms.simc"] = true, ["Protection.simc"] = true })
             local f = assert(io.open(root .. "Fury.simc", "wb"))
             f:write(fury)
