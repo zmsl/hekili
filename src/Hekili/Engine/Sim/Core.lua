@@ -278,6 +278,7 @@ function Hekili:PopStack()
     end
 
     InUse[ x.list ] = nil
+    if not x.run then tinsert( StackPool, x ) end
 end
 
 
@@ -1315,8 +1316,8 @@ function Hekili:GetNextPrediction( dispName, packName, slot )
 
     -- This is the entry point for the prediction engine.
     -- Any cache-wiping should happen here.
-    twipe( Stack )
-    twipe( Block )
+    for i = #Stack, 1, -1 do tinsert( StackPool, tremove( Stack, i ) ) end
+    for i = #Block, 1, -1 do tinsert( StackPool, tremove( Block, i ) ) end
     twipe( InUse )
 
     twipe( listStack )

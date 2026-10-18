@@ -1,8 +1,8 @@
 -- tests/Forever/bench_spec.lua (`make bench`, #bench; not in `make check`; in tests/Forever as it names the class):
 -- per-Update cost of headless Arms, ours driving alone at 5 Hz, Primary only. Adapted from the codebase audit's scratch
 -- specs (perf, coup, alloc; docs/research/2026-10-17-codebase-audit.md Appendix A). Pass 1 times Hekili.Update; pass 2
--- counts bytes with the GC stopped: Update run directly and, on alternate Updates, in a fresh coroutine as
--- Engine/Driver.lua runs it, and each UNIT_COMBAT dispatch. Prints the table; asserts only that the fights ran.
+-- counts bytes with the GC stopped: Update run directly and, on alternate Updates, in one reused coroutine that yields
+-- a sentinel after each Update as Engine/Driver.lua runs it, and each UNIT_COMBAT dispatch. Prints the table; asserts only that the fights ran.
 local loop = require("Game.harness.loop")
 local ww = require("Forever.helpers.warrior_world")
 
@@ -50,13 +50,19 @@ describe("headless Arms per-Update cost #bench", function()
         fights(L)
 
         local direct, co, uc = {}, {}, {}
+        local DONE = {}
+        local thread = coroutine.create(function()
+            while true do
+                coroutine.yield(DONE, upd())
+            end
+        end)
         local function viaDriver()
             hk.maxFrameTime, hk.activeFrameStart = 1e9, 0 -- the Driver's frame budget, never reached here
-            local thread = coroutine.create(upd)
+            local ok, r
             repeat
-                local ok, err = coroutine.resume(thread)
-                assert(ok, err)
-            until coroutine.status(thread) == "dead"
+                ok, r = coroutine.resume(thread)
+                assert(ok, r)
+            until r == DONE
         end
         hk.Update = function()
             if (#direct + #co) % 2 == 0 then

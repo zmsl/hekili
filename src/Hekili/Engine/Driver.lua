@@ -75,7 +75,16 @@ end
 ns.EngineFrame = CreateFrame("Frame", "HekiliEngine")
 
 ns.EngineFrame.refreshTimer = 1
-ns.EngineFrame.eventsTriggered = {}
+
+-- One engine coroutine, reused: it yields DONE after each Update (a new coroutine per Update cost ~9 KB). `parked`:
+-- it waits at DONE; an error kills it and a drop mid-Update (Snapshot.lua, Spec.lua) abandons it, so either recreates.
+local DONE = {}
+local engineThread, parked
+local function engineLoop()
+    while true do
+        coroutine.yield(DONE, Hekili.Update())
+    end
+end
 
 local framesUsed = 0
 local framesTimes = 0
@@ -188,7 +197,11 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
             self.superUpdate = false
             self.refreshTimer = 0
 
-            self.activeThread = coroutine.create(Hekili.Update)
+            if not parked then
+                engineThread = coroutine.create(engineLoop)
+            end
+            parked = false
+            self.activeThread = engineThread
 
             self.activeThreadTime = 0
             self.activeThreadStart = debugprofilestop()
@@ -209,7 +222,7 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
             Hekili.activeFrameStart = debugprofilestop()
 
             -- if ns.EngineFrame.threadUpdates then print( 1000 * elapsed, Hekili.maxFrameTime, ns.EngineFrame.threadUpdates.meanWorkTime, ns.EngineFrame.threadUpdates.meanFrames ) end
-            local ok, err = coroutine.resume(thread)
+            local ok, err, ret = coroutine.resume(thread)
 
             if not ok then
                 err = err .. "\n\n" .. debugstack(thread)
@@ -231,8 +244,9 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
 
             self.activeThreadTime = self.activeThreadTime + debugprofilestop() - Hekili.activeFrameStart
 
-            if coroutine.status(thread) == "dead" or err then
+            if not ok or err == DONE then
                 self.activeThread = nil
+                parked = ok
 
                 self.refreshRate = 0.5
                 self.combatRate = 0.2
@@ -245,7 +259,7 @@ ns.EngineFrame:SetScript("OnUpdate", function(self, elapsed)
                 end
             end
 
-            if ok and err == "AutoSnapshot" then
+            if ok and err == DONE and ret == "AutoSnapshot" then
                 self.DontProfile = true
                 Hekili.Engine.Snapshot(true)
                 self.DontProfile = false
@@ -270,9 +284,5 @@ function Hekili:ForceUpdate(event, super)
 
     if engine.firstForce == 0 then
         engine.firstForce = GetTime()
-    end
-
-    if event then
-        engine.eventsTriggered[event] = true
     end
 end
