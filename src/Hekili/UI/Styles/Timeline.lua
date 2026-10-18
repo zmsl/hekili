@@ -74,9 +74,14 @@ end
 local Timeline = {
     label = "Timeline",
     defaults = SO.defaults( SHARED, ZONES ),
-    -- Static (core reads style.needs when it subscribes): alts.enabled = false hides them but Core still computes them.
     needs = { alts = true },
 }
+
+-- Per display (core asks on each alpha check): no alternative passes for a display that hides them.
+local NO_NEEDS = {}
+function Timeline.NeedsFor( _, conf )
+    return conf.timeline.alts.enabled and Timeline.needs or NO_NEEDS
+end
 
 do
     local d = Timeline.defaults
@@ -555,6 +560,7 @@ local function assign( d, T, tl, conf, out, now )
             b:Hide()
             glowOff( b )
             T.want[ i ], T.inLane[ i ] = false, false
+            T.row[ i ] = 0 -- no row: the next pick has nothing here to dodge
         end
 
         b.Action = action

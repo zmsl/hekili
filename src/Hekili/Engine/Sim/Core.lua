@@ -1455,6 +1455,7 @@ local function altPick( dispName, packName, rec, i, bound, value, maxTime, abili
 
     if not action or action == "wait" or action == rec.actionName then return end
     local alts = rec.alts
+    if alts.n > 0 and alts[ alts.n ].actionName == action then return end -- hi picked what lo did: one entry
     local n = alts.n + 1
     local e = alts[ n ]
     e.actionName, e.actionID, e.action, e.list, e.bound = action, altProbe.actionID, altProbe.action, altProbe.list, bound
@@ -1939,7 +1940,7 @@ function Hekili.Update()
                     local cost = ability.spend
                     if type( cost ) == "function" then cost = cost() end
                     if type( cost ) ~= "number" then cost = 0 end
-                    if cost > 0 and cost < 1 then cost = cost * state[ slot.resource_type ].modmax end
+                    if cost > 0 and cost < 1 and slot.resource_type then cost = cost * state[ slot.resource_type ].modmax end
                     slot.cost = cost
                     slot.busy = max( ability.gcd ~= "off" and gcdLength( action ) or 0, ability.cast or 0 )
 

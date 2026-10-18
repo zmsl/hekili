@@ -189,6 +189,22 @@ describe("alternatives (headless Arms, a scripted belief band)", function()
         end
     )
 
+    it("the same pick at both bounds is one alternative, not two", function()
+        -- the free filler only outside 10..30 rage: at 15 the pick is hamstring, at 5 and at 40 the filler
+        H.Hekili.DB.profile.packs[ww.PACK].lists.default = {
+            { enabled = true, action = "berserker_stance", criteria = "rage<10|rage>30" },
+            { enabled = true, action = "hamstring" },
+        }
+        H.Hekili:LoadScripts()
+        band = { est = 15, lo = 5, hi = 40 }
+        cycle()
+        local r = out.recs[1]
+        assert.are.equal("hamstring", r.actionName)
+        assert.are.equal(1, r.alts.n)
+        assert.are.same({ "berserker_stance", "lo" }, { r.alts[1].actionName, r.alts[1].bound })
+        assert.are.same({}, H.errors)
+    end)
+
     it("a band that does not straddle the pick's cost yields none", function()
         local st = H.Hekili.State
         band = { est = 15, lo = 5, hi = 40 }

@@ -1078,7 +1078,7 @@ do
         end
         if d.style and d.style ~= style then d.style.Clear( d ) end
         d.style = style
-        d.styleState = d.styleState or {} -- per-display scratch, owned by the style
+        d.styleState = d.styleState or {} -- per-display scratch, shared by every style the display has bound
         d.styleFrames = d.styleFrames or {} -- per style name, the frames it built (WoW cannot free frames)
         ns.UI.Buttons[ d.id ] = d.style.Build( d, conf )
         d.Buttons = ns.UI.Buttons[ d.id ]
@@ -1181,7 +1181,12 @@ do
 
             -- Subscribed (the engine computes this display) exactly while Active and visible.
             if newAlpha == 0 then unsubscribe( self )
-            elseif Published[ self.id ] then Hekili.Engine.Subscribe( self.id, self.OnPublish, nil, self.style and self.style.needs ) end
+            elseif Published[ self.id ] then
+                local style = self.style
+                local needs = style and style.needs
+                if style and style.NeedsFor then needs = style.NeedsFor( self.id, Hekili.DB.profile.displays[ self.id ] ) end
+                Hekili.Engine.Subscribe( self.id, self.OnPublish, nil, needs )
+            end
         end
 
         function d:OnEvent( event, ... )

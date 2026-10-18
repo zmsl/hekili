@@ -201,11 +201,12 @@ display whose profile already names the style binds it.
 | `label` | dropdown | the name the style dropdown shows |
 | `defaults` | registration | optional; the template of `displays[id].<name>` |
 | `needs` | subscribing | optional; `{ alts = true }` asks the engine for `recs[1..2].alts` (below), which costs extra simulation passes; read from the bound style table on every subscribe, which the display's alpha check repeats about every 0.5 s while it is shown, so a change applies within about 0.5 s |
+| `NeedsFor(id, conf)` | subscribing | optional; when present core asks it instead of reading `needs`, for that display's needs table (return preallocated tables: it runs on every alpha check); Timeline answers `needs` while `alts.enabled`, else no needs |
 | `Build(d, conf)` | every `BuildUI` | creates or reuses (`d.styleFrames[name]`) its frames on `d`; returns the button list (may be empty) |
 | `Draw(d, conf, out, status)` | on a drawing frame: a publish or the 0.25 s pulse | draws `out` |
 | `Tick(d, conf, out, now, elapsed)` | every frame, before `Draw` | timers, flashes, range |
 | `OnGameEvent(d, conf, event, ...)` | every display event, after core's alpha and keybinding handling | |
-| `Clear(d)` | style switch, deactivate | hides everything it shows |
+| `Clear(d)` | style switch, deactivate, and every unsubscribe (the display's alpha drops to 0: combat-only visibility, mounting, vehicles, barber shop, pet battles) | hides everything it shows; `Build` is not run again after an unsubscribe, so `Draw` must re-show what `Clear` hid on the next publish (as Timeline's `reveal()` does) |
 | `Perimeter(d)` | config mode | left, right, top, bottom frames for the mover backdrop, or nil |
 | `UpdateKeybindings(d)` | keybinding changes | |
 | `Options(id, conf)` | building the options | the style's tabs, new tables each call; they land in one group keyed by `name`, so their options resolve to `displays[id].<name>.<option>` (keys flat and unique within the style) |

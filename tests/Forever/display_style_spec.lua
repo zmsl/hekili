@@ -919,6 +919,20 @@ describe("the timeline display style", function()
         assert.are.equal(1, out.needAlts)
     end)
 
+    it("asks for alternatives only while the display shows them", function()
+        local H, d = boot()
+        local out = H.Hekili.Engine.Output.Primary
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "main", "style" }, "timeline")
+        H.Hekili:BuildUI()
+        H.Hekili.DB.profile.displays.Primary.timeline.alts.enabled = false
+        d:UpdateAlpha()
+        assert.are.equal(0, out.needAlts)
+        H.Hekili.DB.profile.displays.Primary.timeline.alts.enabled = true
+        d:UpdateAlpha()
+        assert.are.equal(1, out.needAlts)
+        assert.are.same({}, H.errors)
+    end)
+
     it("defaults every display's timeline subtable and serves its options from it", function()
         local H = boot()
         local tl = H.Hekili.DB.profile.displays.Primary.timeline
