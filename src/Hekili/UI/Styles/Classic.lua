@@ -5,12 +5,12 @@ local _, ns = ...
 -- Task 1). Hekili code by Hekili's authors and maintainers. Its per-display scratch lives on d.styleState, its buttons
 -- on d.styleFrames.classic (Build returns them; core stores them as d.Buttons = ns.UI.Buttons[ d.id ] while classic is
 -- bound). Its option tabs (Options) moved out of Options/Options.lua's newDisplayOption (Task 2).
+-- Range, usability, the delay, the target count and the glow it shows come from d.resolved (UI/Resolve.lua, Task 3).
 
 local Facade = ns.Facade
 local CreateFrame = Facade.CreateFrame
 local C_Item, C_Spell = Facade.C_Item, Facade.C_Spell
-local C_SpellActivationOverlay = Facade.C_SpellActivationOverlay
-local GetTime, InCombatLockdown, UnitCanAttack = Facade.GetTime, Facade.InCombatLockdown, Facade.UnitCanAttack
+local GetTime, InCombatLockdown = Facade.GetTime, Facade.InCombatLockdown
 local UnitCastingInfo, UnitChannelInfo = Facade.UnitCastingInfo, Facade.UnitChannelInfo
 
 local Registry = Hekili.Engine.Registry
@@ -20,11 +20,8 @@ local frameStratas = ns.FrameStratas
 local getInverseDirection = ns.getInverseDirection
 
 local IsCurrentItem = C_Item.IsCurrentItem
-local IsUsableItem = C_Item.IsUsableItem
 local IsCurrentSpell = C_Spell.IsCurrentSpell
 local GetItemCooldown = C_Item.GetItemCooldown
-local IsUsableSpell = C_Spell.IsSpellUsable
-local IsSpellOverlayed = C_SpellActivationOverlay.IsSpellOverlayed
 
 local GetSpellCooldown = function( spellID )
     local spellCooldownInfo = Facade.C_Spell.GetSpellCooldown( spellID )
@@ -35,13 +32,20 @@ local GetSpellCooldown = function( spellID )
 end
 
 local format = string.format
+local floor = math.floor
+
+-- The delay countdown's texts, built once: a fresh string per tenth of a second would allocate on every change.
+-- shortcut: a tie (x.x5 exactly) rounds up here where %.1f rounds to even, and 10 s or more still formats each change.
+local DELAY_TEXT = {}
+for t = 0, 99 do
+    DELAY_TEXT[ t ] = format( "%.1f", t / 10 )
+end
 
 local dPool = ns.UI.Displays
 local flashEvents = ns.UI.FlashEvents
 local Button_OnMouseDown, Button_OnMouseUp = ns.UI.Button_OnMouseDown, ns.UI.Button_OnMouseUp
 local pulseRange = TOOLTIP_UPDATE_TIME
 
-local LRC = LibStub( "LibRangeCheck-3.0" )
 local LSF = SpellFlashCore
 local catchFlash, lastFramesFlashed = nil, {}
 
@@ -56,7 +60,6 @@ if LSF then
     end )
 end
 
-local LSR = LibStub("SpellRange-1.0")
 local lastGcdStart = 0
 local Glower = LibStub("LibCustomGlow-1.0")
 
@@ -827,7 +830,7 @@ function Classic.Draw( d, conf, out, status )
                         b.Keybinding:SetText(nil)
                     end
 
-                    if conf.classic.glow.enabled and ( i == 1 or conf.classic.glow.queued ) and IsSpellOverlayed( ability.actionID ) then
+                    if conf.classic.glow.enabled and ( i == 1 or conf.classic.glow.queued ) and self.resolved[ i ].glow then
                         b.glowColor = b.glowColor or {}
 
                         if conf.classic.glow.coloring == "class" then
@@ -882,10 +885,8 @@ function Classic.Draw( d, conf, out, status )
             for i, b in ipairs( self.Buttons ) do
                 if not b.Action then break end
 
-                local a = b.Ability
-
                 if i == 1 or conf.classic.glow.queued then
-                    local glowing = a.actionID > 0 and IsSpellOverlayed( a.actionID )
+                    local glowing = self.resolved[ i ].glow
 
                     if glowing and not b.glowing then
                         b.glowColor = b.glowColor or {}
@@ -1029,26 +1030,10 @@ function Classic.Draw( d, conf, out, status )
             if conf.classic.targets.enabled then
                 madeUpdate = true
 
-                local tMin, tMax = 0, 0
-                local mode = profile.toggles.mode.value
-                local spec = Status.specID and profile.specs[ Status.specID ]
+                local r = self.resolved[ 1 ]
+                local detected, shown = r.detected, r.targets
 
-                if self.id == 'Primary' then
-                    if ( mode == 'dual' or mode == 'single' or mode == 'reactive' ) then tMax = 1
-                    elseif mode == 'aoe' then tMin = spec and spec.aoe or 3 end
-                elseif self.id == 'AOE' then tMin = spec and spec.aoe or 3 end
-
-                local detected = Status.numTargets
-                local shown = detected
-
-                if tMin > 0 then
-                    shown = max(tMin, shown)
-                end
-                if tMax > 0 then
-                    shown = min(tMax, shown)
-                end
-
-                if tMax == 1 or shown > 1 then
+                if r.single or shown > 1 then
                     local color = detected < shown and "|cFFFF0000" or ( shown < detected and "|cFF00C0FF" or "" )
                     b.Targets:SetText( color .. shown .. "|r")
                     b.targetShown = true
@@ -1070,33 +1055,7 @@ function Classic.Draw( d, conf, out, status )
             madeUpdate = true
 
             local b = self.Buttons[ 1 ]
-            local a = b.Ability
-
-            local delay = b.ExactTime - now
-            local earliest_time = 0
-
-            if delay > 0 then
-                local start, duration = 0, 0
-
-                if not a.offGCD then
-                    start, duration = GetSpellCooldown( Registry.GCD_SPELL )
-                    if start > 0 then earliest_time = start + duration - now end
-                end
-
-                start, duration = select( 4, UnitCastingInfo( "player" ) )
-                if start and start > 0 then earliest_time = max( ( start / 1000 ) + ( duration / 1000 ) - now, earliest_time ) end
-
-                local rStart, rDuration = 0, 0
-                if a.item then
-                    rStart, rDuration = C_Item.GetItemCooldown( a.item )
-                else
-                    local def = Registry.Abilities()[ b.Action ]
-                    if def.cooldown > 0 or def.spendType ~= "runes" then
-                        rStart, rDuration = GetSpellCooldown( a.actionID )
-                    end
-                end
-                if rStart > 0 then earliest_time = max( earliest_time, rStart + rDuration - now ) end
-            end
+            local delay, earliest_time = self.resolved[ 1 ].delay, self.resolved[ 1 ].earliest
 
             if conf.classic.delays.type == "TEXT" then
                 if st.delayIconShown then
@@ -1105,7 +1064,7 @@ function Classic.Draw( d, conf, out, status )
                 end
 
                 if delay > earliest_time + 0.05 then
-                    b.DelayText:SetText( format( "%.1f", delay ) )
+                    b.DelayText:SetText( DELAY_TEXT[ floor( delay * 10 + 0.5 ) ] or format( "%.1f", delay ) )
                     st.delayTextShown = true
                 else
                     b.DelayText:SetText( nil )
@@ -1158,16 +1117,15 @@ function Classic.Draw( d, conf, out, status )
                 local a = b.Ability
 
                 if a and a.actionID then
-                    local def = Registry.Abilities()[ b.Action ]
+                    local r = self.resolved[ i ]
                     local outOfRange = false
                     local desaturated = false
 
-                    if conf.classic.range.enabled and UnitCanAttack( "player", "target" ) then
+                    if conf.classic.range.enabled then
                         if conf.classic.range.type == "melee" then
-                            outOfRange = ( LRC:GetRange( "target" ) or 10 ) > 7
+                            outOfRange = not r.inMelee
                         elseif conf.classic.range.type == "ability" then
-                            local name = def.rangeSpell or def.itemSpellName or def.actualName or def.name
-                            if name then outOfRange = LSR.IsSpellInRange( name, "target" ) == 0 end
+                            outOfRange = not r.inRange
                         end
                     end
 
@@ -1182,18 +1140,10 @@ function Classic.Draw( d, conf, out, status )
                     end
 
                     if not b.outOfRange then
-                        local _, unusable
-
-                        if def.itemCd or a.item then
-                            unusable = not IsUsableItem( def.itemCd or a.item )
-                        else
-                            _, unusable = IsUsableSpell( def.actualName or def.name )
-                        end
+                        local unusable = not r.usable
 
                         if i == 1 and ( conf.classic.delays.fade or conf.classic.delays.desaturate ) then
-                            local delay = b.ExactTime and ( b.ExactTime - now ) or 0
-                            local earliest_time = b.EarliestTime or delay
-                            if delay > earliest_time + 0.05 then
+                            if r.desaturate then
                                 if conf.classic.delays.fade then unusable = true end
                                 if conf.classic.delays.desaturate then desaturated = true end
                             end

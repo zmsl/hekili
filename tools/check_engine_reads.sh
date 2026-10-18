@@ -21,7 +21,7 @@ hits=$(grep -rnE 'Hekili\.DB\b|self\.DB\.|\.profile\b' src/Hekili/Engine --inclu
 # so `self.state` and `classes` pass.
 # Exempt: Hekili.lua's definitions of Hekili.Class/Hekili.State, DevTools' generated-text line, and DisplayPool in
 # UI.lua (which owns it).
-ui=(src/Hekili/UI/UI.lua src/Hekili/UI/Styles.lua src/Hekili/UI/Styles/*.lua src/Hekili/Options/*.lua src/Hekili/Integrations/*.lua src/Hekili/Hekili.lua)
+ui=(src/Hekili/UI/UI.lua src/Hekili/UI/Resolve.lua src/Hekili/UI/Styles.lua src/Hekili/UI/Styles/*.lua src/Hekili/Options/*.lua src/Hekili/Integrations/*.lua src/Hekili/Hekili.lua)
 hits=$(grep -nE '(^|[^.[:alnum:]_])(state[.:]|class\.)|Hekili\.State\b|Hekili\.Class\b|\bns\.queue|ns\.getNumberTargets|VirtualStateInternal|DisplayPool|HekiliDisplay[A-Za-z]*\.(RecommendationsStr|NewRecommendations|activeThread)|HekiliEngine\b|ns\.EngineFrame' "${ui[@]}" |
     grep -vE '^src/Hekili/Hekili\.lua:[0-9]+:Hekili\.(Class|State) = |^src/Hekili/Options/DevTools\.lua:[0-9]+:    self:Append\( "local class, state = Hekili\.Class, Hekili\.State" \)$|^src/Hekili/UI/UI\.lua:[0-9]+:.*Hekili\.DisplayPool\b')
 [ -n "$hits" ] && { echo "$hits"; fail=1; }

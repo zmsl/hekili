@@ -102,6 +102,9 @@ function M.new()
     function api.UnitCanAttack(_, unit)
         return ctl.friendly[unit] ~= true
     end
+    function api.CheckInteractDistance(unit) -- LibRangeCheck's interact checkers: within reach when in range
+        return ctl.inRange[unit] == true
+    end
     function api.UnitPower(_, pt)
         local v = ctl.power[pt]
         if v == nil then

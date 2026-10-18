@@ -1139,10 +1139,13 @@ do
                 self:UpdateAlpha()
             end
 
-            local style = self.style
-            style.Tick( self, conf, out, GetTime(), elapsed )
+            local style, now = self.style, GetTime()
+            -- What to show (UI/Resolve.lua) is asked of the client only when the style is about to draw.
+            local draw = self.NewRecommendations or self.timer < 0
+            if draw then ns.UI.Resolve( self, conf, out, now ) end
+            style.Tick( self, conf, out, now, elapsed )
 
-            if self.NewRecommendations or self.timer < 0 then
+            if draw then
                 self.timer = pulseDisplay
                 style.Draw( self, conf, out, Status )
             end
