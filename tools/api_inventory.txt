@@ -113,7 +113,6 @@ IsHarmfulSpell	virtual
 IsHelpfulSpell	virtual
 IsInGroup	passthrough
 IsInInstance	passthrough
-IsInJailersTower	passthrough
 IsInRaid	passthrough
 IsMounted	passthrough
 IsPassiveSpell	virtual

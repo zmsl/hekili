@@ -811,7 +811,6 @@ local PASSTHROUGH = {
     { "IsActionInRange", "plain [W PR7]" },
     { "IsInGroup", "plain [W sweep 2026-10-16]" },
     { "IsInInstance", "plain [W sweep 2026-10-16]" },
-    { "IsInJailersTower", "plain [W sweep 2026-10-16]" },
     { "IsInRaid", "plain [W sweep 2026-10-16]" },
     { "IsMounted", "plain [W sweep 2026-10-16]" },
     { "IsPlayerSpell", "plain [W sweep 2026-10-16]" },

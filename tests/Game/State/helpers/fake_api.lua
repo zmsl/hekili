@@ -296,7 +296,7 @@ function M.new()
         return ctl.inventory[slot]
     end
     api.UnitPhaseReason, api.UnitThreatSituation, api.UnitTokenFromGUID, api.IsActionInRange = none, none, none, none
-    api.HasOverrideActionBar, api.HasVehicleActionBar, api.IsInJailersTower, api.SpellIsSelfBuff = no, no, no, no
+    api.HasOverrideActionBar, api.HasVehicleActionBar, api.SpellIsSelfBuff = no, no, no
     api.IsMounted, api.IsResting, api.IsInGroup, api.IsInRaid, api.UnitCanAssist = no, no, no, no, no
     api.UnitIsTrivial, api.UnitIsPVP, api.UnitInVehicle, api.UnitHasVehicleUI, api.UnitOnTaxi = no, no, no, no, no
     api.UnitInParty, api.UnitInRaid = no, none

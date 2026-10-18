@@ -8112,8 +8112,7 @@ do
                     local ability = str:trim()
 
                     if ability and ( ability == "use_item" or Registry.Abilities()[ ability ] ) then
-                        if ability == "pocketsized_computation_device" then ability = "cyclotronic_blast"
-                        else result.action = ability end
+                        result.action = ability
                     elseif not ignore_actions[ ability ] then
                         insert( warnings, "Line " .. line .. ": Unsupported action '" .. ability .. "'." )
                         result.action = ability

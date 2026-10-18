@@ -293,8 +293,8 @@ function Hekili:HandleFixCommand( args )
     if fixType == "toggles" then
         for name, toggle in pairs( profile.toggles ) do
             if type( toggle ) == "table" and toggle.value ~= nil then
-                if name == "mode" then
-                    -- Skip mode toggle.
+                if name == "mode" or not defaults.profile.toggles[ name ] then
+                    -- Skip mode toggle and keys a removed toggle left in an older profile.
                 else
                     self:FireToggle( name, "on" )
                 end
