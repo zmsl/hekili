@@ -358,3 +358,12 @@ Already modelled and only to reuse: combo points and energy (Druid), charges (`F
 `chargesPolicy`), forms and stances through `Sources/Forms.lua`, health gates (`healthGate`), on-next-swing
 (Raptor Strike), player health (Player poll), racials (`src/Hekili_Shared/Races/`; check Forever's Elune's Light
 1259799, Eureka! 1259812/1259821/1259823 and Skyborne 1259705 against wowdb), and the Healthstone and potion pattern.
+
+## Addendum 2026-10-18: combo points are plain in combat (measured)
+
+ForeverProbe `/cpsecret` on a Feral, 60 s, 139 combat samples and 77 out of combat: `UnitPower("player", 4)`
+and `UnitPower("player", 4, true)` plain in every sample (range 0..4 while building points);
+`C_Secrets.GetPowerTypeSecrecy(4)` = 0; `GetComboPoints("player", "target")` plain, range 0..3 (per-target;
+Forever keeps points on the player across a target change); `ShouldUnitPowerBeSecret` does not exist on
+this client. The belief's poll pins combo points exactly; no event-driven estimate is needed. Closes the
+Rogue research Q3 and the Druid research Q10. Probe source: `~/src/ForeverProbe/CPSecrecy.lua`.
