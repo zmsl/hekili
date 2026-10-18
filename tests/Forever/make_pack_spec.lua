@@ -82,21 +82,64 @@ describe("tools/make_pack.lua", function()
         end)
     end)
 
-    it("names the .simc file of a line it cannot parse", function()
+    -- A scratch APLs folder: `files` maps a name to its text, or true to copy it from `from` (an APLs folder).
+    local function scratch(from, files)
         local root = os.tmpname()
         os.remove(root)
-        assert(os.execute("mkdir -p " .. root .. "/zzz") == 0)
-        local function put(path, text)
-            local f = assert(io.open(root .. "/" .. path, "wb"))
-            f:write(text)
+        assert(os.execute("mkdir -p " .. root) == 0)
+        for name, text in pairs(files) do
+            local f = assert(io.open(root .. "/" .. name, "wb"))
+            f:write(text == true and slurp(from .. name) or text)
             f:close()
         end
-        put("zzz.lua", 'return { date = 20261017, spec = 1, packs = { "Bad" } }\n')
-        put("zzz/Bad.simc", "# A bad pack\nnot an action line\n")
-        local ok, err = pcall(mp.load, "zzz", root .. "/")
+        return root .. "/"
+    end
+
+    it("names the .simc file of a line it cannot parse", function()
+        local root = scratch(nil, {
+            ["packs.lua"] = 'return { spec = 1, packs = { "Bad" } }\n',
+            ["Bad.simc"] = "# A bad pack\nnot an action line\n",
+        })
+        local ok, err = pcall(mp.load, "zzz", root, 20261017)
         os.execute("rm -r " .. root)
         assert.is_false(ok)
-        assert.are.equal(root .. "/zzz/Bad.simc: bad line: not an action line", err)
+        assert.are.equal(root .. "Bad.simc: bad line: not an action line", err)
+    end)
+
+    describe("write (the date changes only with the text)", function()
+        local TODAY = 20991231
+        local function date(src, name)
+            return math.floor(tonumber(src:match('"' .. name .. '",\n    (%d+),')) / 1000)
+        end
+
+        for class, Class in pairs(CLASSES) do
+            it("leaves the checked-in " .. Class .. ".lua alone on any day", function()
+                local src = slurp("src/Hekili_" .. Class .. "/" .. Class .. ".lua")
+                assert.is_true(src == mp.write(src, class, TODAY), "the source changed")
+            end)
+        end
+
+        it("re-dates only the class whose text changed, by one character, and is then a no-op", function()
+            local apls = "src/Hekili_Warrior/APLs/"
+            local fury = slurp(apls .. "Fury.simc"):gsub("(\nactions[^\n]*)(\n*)$", "%1 %2") -- one space on the last line
+            local root = scratch(apls, { ["packs.lua"] = true, ["Arms.simc"] = true, ["Protection.simc"] = true })
+            local f = assert(io.open(root .. "Fury.simc", "wb"))
+            f:write(fury)
+            f:close()
+            local src = slurp("src/Hekili_Warrior/Warrior.lua")
+            local out, report = mp.write(src, "warrior", TODAY, root)
+            local again = mp.write(out, "warrior", TODAY + 1, root)
+            os.execute("rm -r " .. root)
+            assert.is_false(src == out, "the Fury change was not written")
+            assert.are.same({ "Fury", "updated" }, report[2])
+            for _, name in ipairs({ "Arms", "Fury", "Protection" }) do
+                assert.are.equal(TODAY, date(out, name), name)
+            end
+            assert.is_true(out == again, "a second write changed the file")
+            local druid = slurp("src/Hekili_Druid/Druid.lua")
+            assert.is_true(druid == mp.write(druid, "druid", TODAY), "the Druid file changed")
+            assert.are_not.equal(TODAY, date(druid, "Feral"))
+        end)
     end)
 
     it("refuses an unknown action option", function()

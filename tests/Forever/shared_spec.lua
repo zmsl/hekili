@@ -287,7 +287,7 @@ describe("shared content", function()
     it(
         "leaves no dropped key in a priority, a class, race, engine or shared file, and no stub outside its own",
         function()
-            local roots = { "src/Hekili/Engine/Schema", "tools/packs" }
+            local roots = { "src/Hekili/Engine/Schema" } -- the class pack roots below hold the APLs/packs.lua manifests
             for _, name in ipairs(addons.CONTENT) do
                 roots[#roots + 1] = addons.root(name)
             end

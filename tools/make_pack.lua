@@ -1,19 +1,32 @@
 -- tools/make_pack.lua: builds a Forever class's priorities in the share format RegisterPack takes ("Hekili:" +
 -- LibDeflate print encoding of the AceSerializer'd package) headless with the vendored libraries, and keeps the
--- class file's RegisterPack blocks in step with them. Each class has a manifest tools/packs/<class>.lua
--- ({ date, spec, packs = { "<Pack>", ... } } in block order) and one tools/packs/<class>/<Pack>.simc per pack: its
--- leading `#` lines are the description, other `#` lines and blank lines are dropped, the rest is SimC-style text.
+-- class file's RegisterPack blocks in step with them. Each class pack addon has a manifest
+-- src/Hekili_<Class>/APLs/packs.lua ({ spec, packs = { "<Pack>", ... } } in block order) and one <Pack>.simc per pack
+-- beside it (dev-only: no TOC lists them): its leading `#` lines are the description, other `#` lines and blank lines
+-- are dropped, the rest is SimC-style text. The class's pack date has one source, its class file's first block.
 -- Run from the repository root (the class defaults to warrior):
 --   lua5.1 tools/make_pack.lua [class]          prints "<version> <string>" per pack, in order
 --   lua5.1 tools/make_pack.lua write [class]    rewrites the class file's RegisterPack blocks (`make packs` runs it)
 --   lua5.1 tools/make_pack.lua decode <string>  prints a share string's description and lists as SimC
 -- Loaded with loadfile(...)("lists"[, class]) it returns the class's pack records ({ name, desc, simc, lists,
--- version, spec }); with ("lib") the functions { parse, unparse, encode, decode, sync, load }, for the specs.
+-- version, spec }); with ("lib") the functions { parse, unparse, encode, decode, sync, load, write }, for the specs.
 -- The version is date * 1000 + a checksum of the pack's SimC text % 1000, so any text change reloads a saved profile
 -- (Engine/Schema/Spec.lua RestoreDefaults reloads on `~=`; a lower number on a same-day edit still reloads but reports
--- the pack "reverted" rather than "updated": bump the manifest's date to avoid that).
+-- the pack "reverted" rather than "updated"). `write` keeps the class file's date while the generated blocks are
+-- unchanged and sets it to today (PACK_DATE, else os.date) when any of them changed, so an unchanged pack keeps its
+-- version and a rebuild is a no-op.
 
-local CLASS_FILES = "src/Hekili_" -- <Class>/<Class>.lua (the class pack addon) holds the RegisterPack blocks
+local function Class(class)
+    return class:sub(1, 1):upper() .. class:sub(2)
+end
+
+-- src/Hekili_<Class>/<Class>.lua (the class pack addon) holds the RegisterPack blocks; APLs/ beside it, the sources.
+local function classFile(class)
+    return "src/Hekili_" .. Class(class) .. "/" .. Class(class) .. ".lua"
+end
+local function aplRoot(class)
+    return "src/Hekili_" .. Class(class) .. "/APLs/"
+end
 
 local OPTIONS = { name = "list_name", use_off_gcd = "use_off_gcd", focus = "focus" } -- plus if=, which runs to the end of the line
 
@@ -94,26 +107,39 @@ local function slurp(path)
     return s
 end
 
--- The class's pack records, in the manifest's order; a listed pack without a file or a file not listed is refused, and
--- a line parse refuses is reported with its .simc file. `root` (default "tools/packs/") is for the specs.
-local function load(class, root)
-    root = root or "tools/packs/"
-    local def = dofile(root .. class .. ".lua")
+-- The pack date of a class file: its first RegisterPack block's version without the checksum.
+local function current(src)
+    local version = src:match('spec:RegisterPack%(\n    "[^"\n]+",\n    (%d+),')
+    if not version then
+        error("no RegisterPack block", 0)
+    end
+    return math.floor(tonumber(version) / 1000)
+end
+
+-- The class's pack records, in the manifest's order, versioned with `date` (default: the class file's); a listed pack
+-- without a file or a .simc file not listed is refused, and a line parse refuses is reported with its .simc file.
+-- `root` (default src/Hekili_<Class>/APLs/) is for the specs.
+local function load(class, root, date)
+    root = root or aplRoot(class)
+    date = date or current(slurp(classFile(class)))
+    local def = dofile(root .. "packs.lua")
     local files = {}
-    local pipe = assert(io.popen("ls " .. root .. class .. "/ 2>/dev/null"))
+    local pipe = assert(io.popen("ls " .. root .. " 2>/dev/null"))
     for file in pipe:lines() do
-        files[file] = true
+        if file:match("%.simc$") then
+            files[file] = true
+        end
     end
     pipe:close()
     local packs = {}
     for i, name in ipairs(def.packs) do
         local file = name .. ".simc"
         if not files[file] then
-            error("pack " .. name .. " has no " .. root .. class .. "/" .. file, 0)
+            error("pack " .. name .. " has no " .. root .. file, 0)
         end
         files[file] = nil
         local desc, simc, head = {}, {}, true
-        local path = root .. class .. "/" .. file
+        local path = root .. file
         for line in slurp(path):gmatch("([^\n]*)\n?") do
             head = head and line:sub(1, 1) == "#"
             if head then
@@ -128,13 +154,13 @@ local function load(class, root)
             error(path .. ": " .. lists, 0)
         end
         p.lists = lists
-        p.version = def.date * 1000 + checksum(p.simc)
+        p.version = date * 1000 + checksum(p.simc)
         p.spec = def.spec
         packs[i] = p
     end
     local stray = next(files)
     if stray then
-        error(root .. class .. "/" .. stray .. " is not in " .. root .. class .. ".lua", 0)
+        error(root .. stray .. " is not in " .. root .. "packs.lua", 0)
     end
     return packs
 end
@@ -238,7 +264,24 @@ local function sync(src, packs)
     return src:sub(1, first - 1) .. table.concat(new) .. src:sub(last + 1), report
 end
 
-local lib = { parse = parse, unparse = unparse, encode = encode, decode = decode, sync = sync, load = load }
+-- sync with the class file's own date; if that changes any block, again with `today` (YYYYMMDD) as the class's date.
+local function write(src, class, today, root)
+    local out, report = sync(src, load(class, root, current(src)))
+    if out ~= src then
+        out, report = sync(src, load(class, root, today))
+    end
+    return out, report
+end
+
+local lib = {
+    parse = parse,
+    unparse = unparse,
+    encode = encode,
+    decode = decode,
+    sync = sync,
+    load = load,
+    write = write,
+}
 
 local mode, arg2 = ...
 if mode == "lib" then
@@ -257,12 +300,9 @@ elseif mode == "decode" then
     end
 elseif mode == "write" then
     local class = arg2 or "warrior"
-    local Class = class:sub(1, 1):upper() .. class:sub(2)
-    local path = CLASS_FILES .. Class .. "/" .. Class .. ".lua"
+    local path = classFile(class)
     local src = slurp(path)
-    local ok, out, report = pcall(function()
-        return sync(src, load(class))
-    end)
+    local ok, out, report = pcall(write, src, class, tonumber(os.getenv("PACK_DATE") or os.date("%Y%m%d")))
     if not ok then
         io.stderr:write(path .. ": " .. out .. "\n")
         os.exit(1)

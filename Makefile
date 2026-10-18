@@ -60,12 +60,13 @@ api-check:
 	bash tools/check_engine_reads.sh
 	git diff --exit-code tools/api_inventory.txt
 
-# The generated RegisterPack blocks match tools/packs/ (make_pack writes only a changed file, so `make -j` is safe).
+# The generated RegisterPack blocks match src/Hekili_*/APLs/ (make_pack writes only a changed file, so `make -j` is safe).
 packs-check: packs
 	git diff --exit-code src
 
 check: lint fmt-check typecheck test syntax api-check packs-check
 
-# Rewrites each class file's RegisterPack blocks from tools/packs/ (tools/make_pack.lua write); not part of `check`.
+# Rewrites each class file's RegisterPack blocks from its APLs/ (tools/make_pack.lua write), re-dating a class (today,
+# or PACK_DATE=YYYYMMDD) only when its blocks change; not part of `check`.
 packs:
-	for f in tools/packs/*.lua; do $(LUA) tools/make_pack.lua write $$(basename $$f .lua) || exit 1; done
+	for d in src/Hekili_*/APLs; do c=$${d#src/Hekili_}; $(LUA) tools/make_pack.lua write $$(echo $${c%/APLs} | tr A-Z a-z) || exit 1; done

@@ -776,7 +776,7 @@ describe("Forever Druid", function()
         for i, name in ipairs({ "Feral", "Guardian", "Balance" }) do
             assert.are.same({ name, tonumber(printed[i][1]), printed[i][2] }, w.packs[i])
         end
-        assert.are.equal(w.specID, dofile("tools/packs/druid.lua").spec) -- the packs' spec is the file's
+        assert.are.equal(w.specID, dofile("src/Hekili_Druid/APLs/packs.lua").spec) -- the packs' spec is the file's
     end)
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()

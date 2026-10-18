@@ -1,4 +1,4 @@
--- tests/Forever/packs_spec.lua: every `if=` in tools/packs/*/*.simc names its auras in full. Hekili's state resolves `up`,
+-- tests/Forever/packs_spec.lua: every `if=` in src/Hekili_*/APLs/*.simc names its auras in full. Hekili's state resolves `up`,
 -- `remains` and the like only inside buff/debuff/cooldown/... tables; a bare `up` is an undefined key, so `!up` is
 -- always true. And every entry whose ability is registered `gcd = "off"` carries use_off_gcd=1 (Hekili holds an entry
 -- without it until the GCD ends), while no on-GCD ability does.
@@ -8,7 +8,7 @@ local BARE = { up = true, down = true, remains = true, ticking = true, refreshab
 describe("Forever priorities", function()
     it("use no bare aura alias (up, down, remains, ticking, refreshable, react, stack) in a condition", function()
         local hits = {}
-        local pipe = assert(io.popen("ls tools/packs/*/*.simc"))
+        local pipe = assert(io.popen("ls src/Hekili_*/APLs/*.simc"))
         for file in pipe:lines() do
             local n = 0
             for line in io.lines(file) do
