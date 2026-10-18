@@ -76,7 +76,7 @@ local stateEnv = {
     "talent", "spec", "overcap", "health", "haste", "gcd", "equipped", "action", "solo", "settings", "now",
     "moving", "assignAuraToLastCast", "actual_trinket1", "actual_trinket2", "actual_main_hand", "trackAuraRemoval",
     "trackAuraApplication", "toggleSpell", "target", "state", "squawk", "set_bonus", "setCooldown", "safeAbs",
-    "next_ation", "name", "listName", "id", "event", "boss", "alphaCheck", "abilitty", "display", "args", "v", "p",
+    "next_ation", "name", "listName", "id", "event", "boss", "abilitty", "display", "args", "v", "p",
     "val", "treeToString", "QueueRebuildUI",
     -- the belief's reads content uses (State.lua, restructure plan Task 8)
     "knownRank", "stat", "swingBase", "healthMax",
@@ -92,7 +92,7 @@ files["src/Hekili/Options/DevTools.lua"] = {
     globals = { "assignAuraToLastCast", "trackAuraApplication", "trackAuraRemoval" },
 }
 -- UI.lua reads no engine state (Engine.Registry, Engine.Output.status): not stateEnv, so a bare state/class fails.
-files["src/Hekili/UI/UI.lua"] = { globals = { "p", "alphaCheck" } } -- upstream's two stray global reads
+files["src/Hekili/UI/UI.lua"] = { globals = { "p" } } -- upstream's stray global read
 -- The names a class file's `now` function reads in VirtualState's context (src/Hekili/Game/State/Families/Now.lua).
 local nowEnv = {
     "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "setCooldown", "talent",

@@ -1180,7 +1180,8 @@ do
             self.timer = ( self.timer or 0 ) - elapsed
             self.alphaCheck = self.alphaCheck - elapsed
 
-            if alphaCheck then
+            if self.alphaCheck <= 0 then
+                self.alphaCheck = 0.5
                 self:UpdateAlpha()
             end
 

@@ -83,7 +83,6 @@ M.KNOWN_RUN_NILS = {
     overcap = "State.lua:1385",
     id = "State.lua:3765",
     listName = "Core.lua:1992",
-    alphaCheck = "UI.lua:1121",
     squawk = "Scripts.lua:1032",
 }
 
