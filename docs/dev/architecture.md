@@ -177,7 +177,46 @@ times 1000 plus a checksum of the text, so any text change reloads a saved profi
 no-op (`tests/Forever/make_pack_spec.lua`), and encode then decode returns the normalized text. `make packs` is not
 part of `make check`.
 
-## 7. Follow-ups
+## 7. Display styles
+
+A display style draws one display's recommendations. Each display names one in `displays[id].style` (nil or unknown:
+classic; unknown also gives one notice per display and name). Styles live in `ns.UI.Styles` (`UI/Styles.lua`);
+classic (`UI/Styles/Classic.lua`) is one of them.
+
+**The public door.** Another addon (a UI pack, `## Dependencies: Hekili`) registers a style with
+`Hekili:RegisterDisplayStyle(name, impl)`, the same call the built-in styles use. `impl.api` must equal
+`Hekili.DisplayStyleAPI` (now `1`); it is bumped only when the interface or the record fields below change, and a
+mismatch is refused with one notice. A name that is a core display field or option tab (`style`, `enabled`, `numIcons`,
+`main`, `queue`, `visibility`, ...) is refused the same way; the call returns `false` when refused, `true` otherwise. A
+dependent addon registers after Hekili's `OnInitialize`: its `defaults` are then registered with AceDB again so every
+display gets `displays[id].<name>`, the options tabs are rebuilt on the next open, and the displays are rebuilt, so a
+display whose profile already names the style binds it.
+
+| Member | Called | Does |
+|---|---|---|
+| `api` | registration | the interface version it was written for |
+| `label` | dropdown | the name the style dropdown shows |
+| `defaults` | registration | optional; the template of `displays[id].<name>` |
+| `Build(d, conf)` | every `BuildUI` | creates or reuses (`d.styleFrames[name]`) its frames on `d`; returns the button list (may be empty) |
+| `Draw(d, conf, out, status)` | on a publish or the 0.25 s pulse | draws `out` |
+| `Tick(d, conf, out, now, elapsed)` | every frame, before `Draw` | timers, flashes, range |
+| `OnGameEvent(d, conf, event, ...)` | every display event, after core's alpha and keybinding handling | |
+| `Clear(d)` | style switch, deactivate | hides everything it shows |
+| `Perimeter(d)` | config mode | left, right, top, bottom frames for the mover backdrop, or nil |
+| `UpdateKeybindings(d)` | keybinding changes | |
+| `Options(id, conf)` | building the options | the style's tabs, new tables each call; they land in one group keyed by `name`, so their options resolve to `displays[id].<name>.<option>` (keys flat and unique within the style) |
+
+**What a style may read.** `conf` is the whole display table: core fields (`numIcons`, `enabled`, ...) and its own
+subtable `conf[name]`, never another style's. `d.styleState` is its per-display scratch. `out` is
+`Hekili.Engine.Output[id]`: `out.count`, `out.version` and `out.recs[1..count]`, each record with `actionName`,
+`actionID`, `texture`, `caption`, `indicator`, `keybind`, `offGCD`, `time`, `exact_time`, `delay`, `since`, `wait`,
+`resource_type`, `resources`, `script`, `list`, `action`, `pack`; `status` is `Output.status`. `d.resolved[i]` (range,
+usable, desaturation, delay, targets, glow per record) comes with the shared resolve and is the place to read those
+instead of asking the game again. A style never reads `state.*`, `class.*`, `Hekili.State`, `Hekili.Class` or
+`HekiliEngine`: `tools/check_engine_reads.sh` enforces it inside Hekili, and an external style must keep it by
+convention. Draw and Tick allocate nothing after the first publish.
+
+## 8. Follow-ups
 
 - **Belief annotator** (needs its own short design): `Game/Annotate.lua`, registered with `ns.Output.Annotate`. Per
   record: the gating resource's est/lo/hi at the record's time, the basis of the usability read (observed, pinned or

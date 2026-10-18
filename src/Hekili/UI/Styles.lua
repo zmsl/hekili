@@ -18,6 +18,29 @@ local MEMBERS = {
     Options = "function", -- ( id, conf ): the style's option tabs, new tables each call (core sets each tab's `hidden`)
 }
 
+-- The version of the style interface below. A style declares the one it was written for as `api`.
+Hekili.DisplayStyleAPI = 1
+
+--- Public: registers display style `impl` as `name` for any addon (built-in styles use it too). Refused with one
+--- Notify (returns false) when `impl.api` is not Hekili.DisplayStyleAPI or `name` is a core display field or tab;
+--- raises when a member is missing. Registered after Hekili's DB exists, its defaults reach every display; after
+--- the displays exist, a rebuild binds it where the profile names it.
+function Hekili:RegisterDisplayStyle( name, impl )
+    local api = type( impl ) == "table" and impl.api or nil
+    if api ~= Hekili.DisplayStyleAPI then
+        self:Notify( ( "Display style '%s' targets style API %s, this Hekili has %d; not registered." ):format( tostring( name ), tostring( api ), Hekili.DisplayStyleAPI ) )
+        return false
+    end
+    if ns.UI.StyleNameTaken( name ) then
+        self:Notify( ( "Display style '%s' not registered: the name is a core display setting." ):format( tostring( name ) ) )
+        return false
+    end
+    ns.UI.RegisterStyle( name, impl )
+    if self.DB then ns.UI.LateStyleDefaults() end
+    if next( ns.UI.Displays ) then ns.UI.QueueRebuildUI() end
+    return true
+end
+
 --- Registers style `impl` as `name`, raising when a member is missing or of the wrong type.
 function ns.UI.RegisterStyle( name, impl )
     for k, kind in pairs( MEMBERS ) do

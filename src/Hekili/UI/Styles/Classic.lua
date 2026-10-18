@@ -2580,4 +2580,5 @@ return "Position" end,
     }
 end
 
-ns.UI.RegisterStyle( "classic", Classic )
+Classic.api = Hekili.DisplayStyleAPI
+Hekili:RegisterDisplayStyle( "classic", Classic )

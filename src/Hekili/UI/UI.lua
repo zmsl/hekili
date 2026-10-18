@@ -1070,7 +1070,8 @@ do
     local function bindStyle( d, conf )
         local style = ns.UI.Styles[ conf.style ]
         if not style then
-            if conf.style ~= nil then
+            if conf.style ~= nil and conf.style ~= d.styleWarned then -- once per unknown name, not on every rebuild
+                d.styleWarned = conf.style
                 Hekili:Notify( "Display " .. d.id .. ": unknown style '" .. tostring( conf.style ) .. "', drawn as classic." )
             end
             style = ns.UI.Styles.classic

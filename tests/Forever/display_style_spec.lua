@@ -352,6 +352,11 @@ describe("a display's style", function()
             H.Hekili:BuildUI()
             assert.are.equal(H.ns.UI.Styles.classic, d.style)
             assert.are.equal(1, #said)
+            H.Hekili:BuildUI() -- once per display per unknown name, not on every rebuild
+            assert.are.equal(1, #said)
+            conf.style = "nope2"
+            H.Hekili:BuildUI()
+            assert.are.equal(2, #said)
             assert.are.same({}, H.errors)
         end
     )
@@ -526,6 +531,90 @@ describe("classic's settings", function()
         H.Hekili:HandleRecoverCommand()
         assert.are.equal(70, classic.primaryWidth)
         assert.are.equal("autocast", classic.glow.mode)
+        assert.are.same({}, H.errors)
+    end)
+end)
+
+-- Task 2c: a style from another addon, through the public door. A dependent addon's files load after Hekili's
+-- OnInitialize, so the registration comes after the DB and the first BuildUI.
+local function external(H, api)
+    local log = { builds = {} }
+    local ok = H.Hekili:RegisterDisplayStyle("ext", {
+        api = api or H.Hekili.DisplayStyleAPI,
+        label = "External",
+        defaults = { foo = 1 },
+        Build = function(d)
+            log.builds[#log.builds + 1] = d.id
+            return {}
+        end,
+        Draw = function() end,
+        Tick = function() end,
+        OnGameEvent = function() end,
+        Clear = function() end,
+        Perimeter = function() end,
+        UpdateKeybindings = function() end,
+        Options = function() end,
+    })
+    return ok, log
+end
+
+local function namesExt()
+    return { profiles = { Default = { displays = { Primary = { style = "ext" } } } } }
+end
+
+describe("an external display style", function()
+    it(
+        "registered after boot takes the dropdown, every display's defaults and binds where the profile names it",
+        function()
+            local H, d = boot(namesExt())
+            assert.are.equal(H.ns.UI.Styles.classic, d.style) -- unknown at boot: drawn as classic
+            local said = notifications(H)
+            local ok, log = external(H)
+            assert.is_true(ok)
+            local displays = H.Hekili.DB.profile.displays
+            assert.are.equal(1, displays.Primary.ext.foo)
+            assert.are.equal(1, displays.AOE.ext.foo)
+            assert.are.equal("ext", displays.Primary.style)
+            H.Hekili:EmbedDisplayOptions()
+            local style = H.Hekili.Options.args.displays.plugins.Primary.Primary.args.main.args.style
+            assert.are.equal("External", style.values().ext)
+            H.RunTimers(H.ctl.now + 1) -- the queued rebuild
+            assert.are.equal(H.ns.UI.Styles.ext, d.style)
+            assert.are.same({ "Primary" }, log.builds)
+            H.Hekili:BuildUI()
+            assert.are.same({}, said)
+            assert.are.same({}, H.errors)
+        end
+    )
+
+    it("with another style API version is refused with one Notify and classic stays bound", function()
+        local H, d = boot(namesExt())
+        local said = notifications(H)
+        local ok = external(H, H.Hekili.DisplayStyleAPI + 1)
+        assert.is_false(ok)
+        assert.are.equal(1, #said)
+        assert.truthy(said[1]:find("'ext'", 1, true))
+        assert.truthy(said[1]:find(tostring(H.Hekili.DisplayStyleAPI + 1), 1, true))
+        assert.truthy(said[1]:find(tostring(H.Hekili.DisplayStyleAPI), 1, true))
+        assert.is_nil(H.ns.UI.Styles.ext)
+        H.RunTimers(H.ctl.now + 1)
+        assert.are.equal(H.ns.UI.Styles.classic, d.style)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("may not take the name of a core display field or option tab", function()
+        local H = boot()
+        local said = notifications(H)
+        local impl = {}
+        for k, val in pairs(H.ns.UI.Styles.classic) do
+            impl[k] = val
+        end
+        for i, taken in ipairs({ "style", "enabled", "main", "queue", "visibility", "numIcons", "MultiModAOE" }) do
+            assert.is_false(H.Hekili:RegisterDisplayStyle(taken, impl), taken)
+            assert.are.equal(i, #said, taken)
+            assert.is_nil(H.ns.UI.Styles[taken], taken)
+        end
+        assert.are.equal("classic", H.Hekili.DB.profile.displays.Primary.style)
         assert.are.same({}, H.errors)
     end)
 end)

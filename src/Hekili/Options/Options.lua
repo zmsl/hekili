@@ -153,6 +153,19 @@ local displayTemplate = {
     },
 }
 
+-- A style's defaults subtable and option tab are keyed by its name, so a style may not take a core display field
+-- (displayTemplate's, or one the built-in displays set) or a core option tab.
+local coreDisplayKeys = {
+    builtIn = true, name = true, desc = true, order = true, filter = true, relativeTo = true, displayPoint = true,
+    anchorPoint = true, x = true, y = true, queue = true, main = true, visibility = true, shareDisplays = true,
+}
+
+function ns.UI.StyleNameTaken( name )
+    if type( name ) ~= "string" then return true end
+    if ns.UI.Styles[ name ] then return false end -- re-registration replaces the style
+    return coreDisplayKeys[ name ] or displayTemplate[ name ] ~= nil or name:match( "^MultiMod" ) ~= nil
+end
+
 local actionTemplate = {
     enabled = true,
     criteria = "",
@@ -527,6 +540,15 @@ do
 
         return defaults
     end
+
+    -- A style registered once the DB exists (a dependent addon loads after OnInitialize) missed the defaults: register
+    -- them again with its subtable (AceDB strips and re-copies them, which may replace profile subtables, so the engine
+    -- is repointed) and rebuild the options tabs on the next open.
+    function ns.UI.LateStyleDefaults()
+        Hekili.DB:RegisterDefaults( Hekili:GetDefaults() )
+        Hekili.Engine.Configure( Hekili.DB.profile )
+        Hekili.OptionsReady = false
+    end
 end
 
 do
@@ -617,6 +639,7 @@ return end
             Hekili:BuildUI()
         end )
     end
+    ns.UI.QueueRebuildUI = QueueRebuildUI
 
     function Hekili:SetDisplayOption( info, val, v2, v3, v4 )
         local n = #info
