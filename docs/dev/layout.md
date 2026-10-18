@@ -97,12 +97,13 @@ Arms solo: fights=3 agreement 0.938 (2258 ticks); react median 0 p90 1 never 0.0
 A deliberate pack or APL change re-records the fixture in the same commit:
 `ARMS_RECS=record .lua/bin/busted tests/Forever/arms_recs_spec.lua`.
 
-The display style fixtures in `tests/Forever/fixtures/` re-record the same way:
+The display style fixtures in `tests/Forever/fixtures/` have their own record modes:
 `CLASSIC_DRAW=record .lua/bin/busted tests/Forever/display_style_spec.lua` (`classic_draw.lua`),
 `STYLE_OPTIONS=record .lua/bin/busted tests/Forever/style_options_spec.lua` (`classic_options.lua`) and
 `TIMELINE_DRAW=record .lua/bin/busted tests/Forever/display_style_spec.lua` (`timeline_draw.lua`). The classic ones
-prove a refactor left classic unchanged, so they are recorded at a base commit (the one before the change) in a
-temporary worktree with the spec copied in, then copied back; never re-record them in place to make a change pass. The
+prove a refactor left classic unchanged, so run their command at a base commit (the one before the change) in a
+temporary worktree with the spec copied in, then copy the fixture back; never run it on the changed tree to make a
+change pass. The
 timeline fixture is re-recorded in place, in the commit that deliberately changes the timeline's look.
 
 ## Remotes

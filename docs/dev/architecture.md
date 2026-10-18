@@ -200,7 +200,7 @@ display whose profile already names the style binds it.
 | `api` | registration | the interface version it was written for |
 | `label` | dropdown | the name the style dropdown shows |
 | `defaults` | registration | optional; the template of `displays[id].<name>` |
-| `needs` | subscribing | optional; `{ alts = true }` asks the engine for `recs[1..2].alts` (below), which costs extra simulation passes; read from the style table when the display subscribes, so a change takes effect at the next rebuild |
+| `needs` | subscribing | optional; `{ alts = true }` asks the engine for `recs[1..2].alts` (below), which costs extra simulation passes; read from the bound style table on every subscribe, which the display's alpha check repeats about every 0.5 s while it is shown, so a change applies within about 0.5 s |
 | `Build(d, conf)` | every `BuildUI` | creates or reuses (`d.styleFrames[name]`) its frames on `d`; returns the button list (may be empty) |
 | `Draw(d, conf, out, status)` | on a drawing frame: a publish or the 0.25 s pulse | draws `out` |
 | `Tick(d, conf, out, now, elapsed)` | every frame, before `Draw` | timers, flashes, range |
@@ -220,14 +220,16 @@ zones `legacy = true`, which keeps its queue's `queued*` keybinding fields behin
 **Config.** Every style owns one subtable, `displays[id].<name>`, filled from its `defaults`; classic's is
 `displays[id].classic` too (`Hekili:RunOneTimeFixes` moves an older profile's flat classic fields under it on every
 load). Core fields (`numIcons`, `enabled`, `style`, position, `visibility`) stay on the display table. No style reads
-another style's subtable, and core reads a style's only through `StyleGroup`.
+another style's subtable. The engine and the resolve read the shared groups (range, flash, keybindings) through
+`Hekili.Engine.StyleGroup`, the bound style's group or classic's; only the classic migration, a few classic options
+and the display reset in `ChatCommands.lua` name `classic` directly.
 
 **What a style may read.** `conf` is the whole display table: core fields and its own subtable `conf[name]`.
 `d.styleState` is per-display scratch shared by every style the display has bound; state of the style's own goes on
 `d.styleFrames[name]`. `out` is
 `Hekili.Engine.Output[id]`: `out.count`, `out.version` and `out.recs[1..count]`, each record with `actionName`,
 `actionID`, `texture`, `caption`, `indicator`, `keybind`, `offGCD`, `time`, `exact_time`, `delay`, `since`, `wait`,
-`resource_type`, `resources`, `cost` (the pick's spend of `resource_type`, a fraction already scaled by the maximum),
+`resource_type`, `resources`, `cost` (the amount of `resource_type` the pick spends; a fractional spend is multiplied by the resource's maximum),
 `busy` (seconds the pick keeps the player busy: its GCD, or its cast when longer), `script`, `list`, `action`, `pack`,
 and `alts` (`alts.n` entries of
 `actionName`, `actionID`, `texture`, `action`, `list`, `bound` = `"lo"` or `"hi"`: the pick with the gating resource
