@@ -1022,6 +1022,21 @@ describe("the timeline display style", function()
         assert.are.same(EMPTY, actions(T))
         assert.is_false(c[1]:IsShown() or c[1].Ring:IsShown())
         assert.is_true(c[2].glowing)
+        -- the pause overlay is a press affordance: on the next box here
+        H.Hekili.Pause = true
+        tlFrame(H, d)
+        assert.is_true(c[2].Overlay:IsShown())
+        assert.is_false(c[1].Overlay:IsShown())
+        H.Hekili.Pause = false
+        tlFrame(H, d)
+        assert.is_false(c[2].Overlay:IsShown())
+        -- config mode: the mover's backdrop spans the display frame, the empty circle included
+        H.ns.StartConfiguration(true)
+        local tl = H.Hekili.DB.profile.displays.Primary.timeline
+        local l, r = d.style.Perimeter(d)
+        assert.is_true(l == d and r == d)
+        assert.are.equal(tl.nowSize + tl.gap + tl.nextSize + tl.gap, T.laneX0)
+        H.ns.StopConfiguration()
         overlayed[ms.id] = nil
         assert.are.same({}, H.errors)
     end)

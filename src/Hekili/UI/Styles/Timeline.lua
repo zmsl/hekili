@@ -207,7 +207,7 @@ local function newCell( d, T, i )
         b.Highlight:SetAllPoints( b )
         b.Highlight:SetBlendMode( "ADD" )
     end
-    if i == 1 then
+    if i <= 2 then -- the pause overlay, on the press record's cell
         b.Overlay = track( T, top:CreateTexture( nil, "OVERLAY" ), L .. ".Overlay" )
         b.Overlay:SetAllPoints( b )
         b.Overlay:SetAtlas( "creditsscreen-assets-buttons-pause" )
@@ -392,7 +392,7 @@ function Timeline.Build( d, conf )
     end
     for i = 1, SLOTS do T.rec[ i ] = i end
     T.press, T.focused = 1, false
-    T.has, T.paused = false, false
+    T.has, T.paused = false, 0
 
     -- the ruler, from one pool (T.base, T.ticks): a baseline over the lane's rows and a tick a second (taller every
     -- majorEvery); dots or short lines a second and no baseline; or one line through the rows' middle and no ticks
@@ -699,10 +699,11 @@ end
 function Timeline.Tick( d, conf, out, now, elapsed )
     local T = d.styleFrames.timeline
     T.elapsed = elapsed
-    local paused = Hekili.Pause and true or false
+    local paused = Hekili.Pause and T.press or 0 -- the cell showing the pause overlay, or 0
     if paused ~= T.paused then
         T.paused = paused
-        T.cells[ 1 ].Overlay:SetShown( paused )
+        T.cells[ 1 ].Overlay:SetShown( paused == 1 )
+        T.cells[ 2 ].Overlay:SetShown( paused == 2 )
     end
     if not T.has then return end
     local tl = conf.timeline
@@ -838,7 +839,7 @@ function Timeline.Clear( d )
     for i = 1, SLOTS do T.want[ i ], T.inLane[ i ] = false, false end
     for _, w in ipairs( T.widgets ) do w:Hide() end
     T.cleared = true
-    T.has, T.paused = false, false
+    T.has, T.paused = false, 0
 end
 
 --- The display frame itself: Build sizes it to the timeline.
