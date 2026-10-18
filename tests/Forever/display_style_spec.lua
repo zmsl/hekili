@@ -1046,7 +1046,7 @@ describe("the timeline display style", function()
         local tl = H.Hekili.DB.profile.displays.Primary.timeline
         local l, r = d.style.Perimeter(d)
         assert.is_true(l == d and r == d)
-        assert.are.equal(tl.nowSize + tl.gap + tl.nextSize + tl.gap, T.laneX0)
+        assert.are.equal(tl.nowSize + tl.gap + tl.nextSize + tl.gap + tl.laneIconSize / 2, T.laneX0)
         H.ns.StopConfiguration()
         -- "press" on the live display: the earlier layout
         tl.nowFallback = "press"
@@ -1346,7 +1346,7 @@ local function near(want, got, what)
     assert.is_true(math.abs(want - got) < 1e-6, ("%s: want %s, got %s"):format(what, tostring(want), tostring(got)))
 end
 
--- The ruler's pool: base and ticks, shown count. The defaults put t = 0 at 48 + 12 + 48 + 12 = 120, the rows' top at
+-- The ruler's pool: base and ticks, shown count. The defaults put t = 0 at 48 + 12 + 48 + 12 + 20 / 2 = 130, the rows' top at
 -- 56 - 2 * 20 = 16 (the ruler's baseline 7 above it, at 9), 24 px a second, 11 ticks for the 10 s horizon.
 local function shownMarks(T)
     local n = T.base:IsShown() and 1 or 0
@@ -1357,10 +1357,10 @@ local function shownMarks(T)
 end
 
 local RULERS = {
-    ruler = { shown = 12, base = { 120, 9 }, tick1 = { 120, 3 }, tick2 = { 144, 6 } }, -- a major tick at 0 s
-    dots = { shown = 11, tick1 = { 120, 7 }, tick2 = { 144, 7 } },
-    lines = { shown = 11, tick1 = { 120, 5 }, tick2 = { 144, 5 } },
-    center = { shown = 1, base = { 120, 36 } }, -- through the middle of the two rows (16 .. 56)
+    ruler = { shown = 12, base = { 130, 9 }, tick1 = { 130, 3 }, tick2 = { 154, 6 } }, -- a major tick at 0 s
+    dots = { shown = 11, tick1 = { 130, 7 }, tick2 = { 154, 7 } },
+    lines = { shown = 11, tick1 = { 130, 5 }, tick2 = { 154, 5 } },
+    center = { shown = 1, base = { 130, 36 } }, -- through the middle of the two rows (16 .. 56)
 }
 
 for _, style in ipairs({ "ruler", "dots", "lines", "center" }) do
@@ -1390,7 +1390,7 @@ for _, style in ipairs({ "ruler", "dots", "lines", "center" }) do
 end
 
 describe("the timeline's gaps", function()
-    it("are one gap from the now circle to the next box and from the next box to the lane", function()
+    it("are one gap from the now circle to the next box and from the next box to the lane's first icon", function()
         for _, case in ipairs({ { 48, 48, 12 }, { 40, 56, 20 } }) do
             local H, _, T = tlBoot(false, function(tl)
                 tl.nowSize, tl.nextSize, tl.gap = case[1], case[2], case[3]
@@ -1399,7 +1399,7 @@ describe("the timeline's gaps", function()
             local x2 = anchor(H, T.cells[2])
             local x0 = anchor(H, T.ticks[1]) -- the ruler's first mark: the lane's t = 0
             near(case[3], x2 - (x1 + case[1]), "now -> next")
-            near(case[3], x0 - (x2 + case[2]), "next -> lane")
+            near(case[3] + 10, x0 - (x2 + case[2]), "next -> lane") -- t = 0 under the centre of a 20 px icon
             near(x0, T.laneX0, "laneX0")
             assert.are.same({}, H.errors)
         end
@@ -1467,7 +1467,7 @@ describe("the timeline's ruler alpha", function()
     end)
 end)
 
--- Timeline focus plan, Task 2c: the lane never left of laneX0; out of combat (oocPinned) the lane and the ETAs on the
+-- Timeline focus plan, Task 2c: the lane never left of laneX0 (an icon centred on it); out of combat (oocPinned) the lane and the ETAs on the
 -- press-relative times (rec.time - recs[ 1 ].time), still between publishes.
 describe("the timeline's out-of-combat pinning", function()
     local function laneXs(H, T)
@@ -1510,8 +1510,8 @@ describe("the timeline's out-of-combat pinning", function()
         for n = 2, #seen do
             assert.are.same(seen[1], seen[n], "frame " .. n)
         end
-        -- pick 3 (slam) 3 s after the press: its left edge at 120 + 3 * 24
-        near(T.laneX0 + 3 * 24, seen[1][3], "slam")
+        -- pick 3 (slam) 3 s after the press, centred: 130 + 3 * 24 - 10
+        near(T.laneX0 + 3 * 24 - 10, seen[1][3], "slam")
         assert.are.equal("", T.cells[1].Eta:GetText()) -- the press: 0 when pinned
         assert.are.equal("1.5", T.cells[2].Eta:GetText()) -- overpower 1.5 s after it
         assert.are.equal("3.0", T.cells[3].Eta:GetText())
@@ -1545,7 +1545,7 @@ describe("the timeline's out-of-combat pinning", function()
             end)
             H.ctl.now = H.ctl.now + 0.2
             d.__scripts.OnUpdate(d, 0.2)
-            near(T.laneX0, anchor(H, T.cells[3]), "past pick " .. tostring(combat))
+            near(T.laneX0 - 10, anchor(H, T.cells[3]), "past pick " .. tostring(combat))
             assert.is_true(T.cells[3]:IsShown())
             assert.is_false(T.cells[6]:IsShown()) -- 11 s after the press, 11.8 s on the clock: past the 10 s horizon
             status.combat = false
@@ -1580,7 +1580,11 @@ describe("the timeline's out-of-combat pinning", function()
                 rows[T.row[c]] = true
             end
             assert.is_true(rows[1] and rows[2], "both rows used")
-            near(edge, anchor(H, T.ticks[1]), "the ruler's first mark at the icons' edge")
+            near(
+                edge + tl.laneIconSize / 2,
+                anchor(H, T.ticks[1]),
+                "the ruler's first mark under the t = 0 icon's centre"
+            )
             H.Hekili.Engine.Output.status.combat = false
             assert.are.same({}, H.errors)
         end
