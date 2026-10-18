@@ -325,6 +325,16 @@ end
 
 local function return_false() return false end
 
+-- The GCD `action` triggers now (state.gcd's per-ability length reads this_action): a pick's busy time and the GCD the
+-- queue starts for it.
+local function gcdLength( action )
+    local prev = state.this_action
+    state.this_action = action
+    local length = state.gcd.execute
+    state.this_action = prev
+    return length
+end
+
 local default_modifiers = {
     early_chain_if = return_false,
     chain = return_false,
@@ -1856,6 +1866,15 @@ function Hekili.Update()
 
                     slot.resource_type = state.GetResourceType( action )
 
+                    -- For a timeline: the pick's spend of resource_type now (as ns.spendResources reads it) and how long
+                    -- it keeps the player busy (its GCD, or its cast or channel when longer).
+                    local cost = ability.spend
+                    if type( cost ) == "function" then cost = cost() end
+                    if type( cost ) ~= "number" then cost = 0 end
+                    if cost > 0 and cost < 1 then cost = cost * state[ slot.resource_type ].modmax end
+                    slot.cost = cost
+                    slot.busy = max( ability.gcd ~= "off" and gcdLength( action ) or 0, ability.cast or 0 )
+
                     for k,v in pairs( class.resources ) do
                         slot.resources[ k ] = state[ k ].current
                     end
@@ -1870,7 +1889,7 @@ function Hekili.Update()
                         local cast = ability.cast or 0
 
                         if ability.gcd ~= "off" and state.cooldown.global_cooldown.remains == 0 then
-                            state.setCooldown( "global_cooldown", state.gcd.execute )
+                            state.setCooldown( "global_cooldown", gcdLength( action ) )
                         end
 
                         if state.buff.casting.up and not ability.dual_cast then

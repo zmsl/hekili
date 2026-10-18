@@ -13,7 +13,7 @@ local SUBS = 4 -- subscriber slots per display, and annotator slots
 local function records()
     local t = {}
     for i = 1, SLOTS do
-        t[i] = { resources = {}, belief = {} }
+        t[i] = { resources = {}, belief = {}, cost = 0, busy = 0 } -- cost, busy: Core writes them on every published record
     end
     return t
 end

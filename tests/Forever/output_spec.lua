@@ -359,6 +359,29 @@ describe("Engine.Output (headless Arms)", function()
         assert.are.same({}, H.errors)
     end)
 
+    it("records carry cost (the spend of resource_type, 0 when none) and busy (GCD, or cast if longer)", function()
+        local abilities = H.Hekili.Class.abilities
+        local spent = 0
+        for i = 1, out.count do
+            local r = out.recs[i]
+            local a = abilities[r.actionName]
+            assert.is_number(r.cost, r.actionName)
+            assert.is_number(r.busy, r.actionName)
+            assert.is_true(r.busy >= 0, r.actionName)
+            assert.is_true(r.busy >= (a.cast or 0), r.actionName)
+            if a.gcd ~= "off" then
+                assert.is_true(r.busy > 0, r.actionName)
+            end
+            if r.resource_type == nil then
+                assert.are.equal(0, r.cost, r.actionName)
+            end
+            if r.cost > 0 then
+                spent = spent + 1
+            end
+        end
+        assert.is_true(spent > 0, "no published record costs anything")
+    end)
+
     it(
         "WeakAuras: a passive subscriber from PLAYER_ENTERING_WORLD fills payload and scans the six arguments",
         function()
