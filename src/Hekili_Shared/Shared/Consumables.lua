@@ -1,8 +1,9 @@
 -- Hekili_Shared/Shared/Consumables.lua
 -- The consumables every class shares on Forever (shared-content spec §4.3), through Engine/Schema/Shared.lua into `all`: the
--- `potion` action and auras core reads by name, and the Healthstone from Forever's items (DB2 1.60.1.70338: the five
--- ranks and their Improved Healthstone variants). No Forever potion, flask or food is registered: the default
--- priorities leave consumables out, and retail's (Tempered Potion, Pact of Gluttony's Healthstone) do not exist here.
+-- `potion` action and auras core reads by name, the Healthstone from Forever's items (DB2 1.60.1.70338: the five
+-- ranks and their Improved Healthstone variants), and the mana and energy consumables as their own actions. No potion
+-- is registered for the `potion` verb, nor flask or food: the default priorities leave them out, and retail's
+-- (Tempered Potion, Pact of Gluttony's Healthstone) do not exist here.
 -- Neither action has a `now`: the belief sees only spell casts (an item action has no spell ID), and a Healthstone's
 -- heal is health, which the belief does not track (spec §4.3).
 
@@ -73,15 +74,19 @@ shared:RegisterAbility("potion", {
 local HEALTHSTONES =
     { 19013, 19012, 9421, 19011, 19010, 5510, 19009, 19008, 5509, 19007, 19006, 5511, 19005, 19004, 5512 }
 
--- The best Healthstone in the bags and true (Minor and false when none: the keybind and icon lookups need an item). A
--- field read (`ability.item`) keeps only the first value.
-local function healthstone()
-    for i = 1, #HEALTHSTONES do
-        if GetItemCount(HEALTHSTONES[i]) > 0 then
-            return HEALTHSTONES[i], true
+-- The first of `items` in the bags and true (the last and false when none: the keybind and icon lookups need an item).
+-- A field read (`ability.item`) keeps only the first value.
+local function inBags(items)
+    for i = 1, #items do
+        if GetItemCount(items[i]) > 0 then
+            return items[i], true
         end
     end
-    return HEALTHSTONES[#HEALTHSTONES], false
+    return items[#items], false
+end
+
+local function healthstone()
+    return inBags(HEALTHSTONES)
 end
 
 shared:RegisterAbility("healthstone", {
@@ -113,3 +118,38 @@ shared:RegisterAbility("healthstone", {
         gain(0.25 * health.max, "health")
     end,
 })
+
+-- The mana and energy consumables (C12), best first: item IDs from ItemSparse (DB2 1.60.1.70338); each cooldown from
+-- wowsims/forever's db.json (MIT, a reference only): the potion's own 2 min category, and the 2 min category the rune,
+-- the tea and the gems share (Thistle Tea's own 5 min); Mana Agate's row is absent there and is taken as its ranks'.
+-- Read in game (checkpoint). Offered while one is in the bags and the client calls it usable; none has a `now`.
+local function consumable(key, items, cooldown, name)
+    local function best()
+        return inBags(items)
+    end
+    shared:RegisterAbility(key, {
+        name = name,
+        cast = 0,
+        cooldown = cooldown,
+        gcd = "off",
+
+        item = best,
+        items = items,
+        bagItem = true,
+
+        startsCombat = false,
+
+        usable = function()
+            local item, have = best()
+            if not have then
+                return false, "none in the bags"
+            end
+            return IsUsableItem(item) == true, "on cooldown"
+        end,
+    })
+end
+
+consumable("major_mana_potion", { 13444 }, 120)
+consumable("demonic_rune", { 12662 }, 120)
+consumable("thistle_tea", { 7676 }, 300)
+consumable("mana_gem", { 8008, 8007, 5513, 5514 }, 120, "Mana Gem") -- Ruby, Citrine, Jade, Agate

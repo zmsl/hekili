@@ -249,7 +249,10 @@ describe("shared content", function()
 
     it("registers the potion action and auras core reads, and the Healthstone from Forever's items only", function()
         load({ "Consumables" })
-        assert.are.same({ "healthstone", "potion" }, keys("abilities"))
+        assert.are.same(
+            { "demonic_rune", "healthstone", "major_mana_potion", "mana_gem", "potion", "thistle_tea" },
+            keys("abilities")
+        )
         assert.are.same({ "fake_potion", "potion" }, keys("auras"))
         assert.are.equal(all.abilities.potion, all.abilities.potion_default)
         assert.are.same({ "fake_potion" }, all.auras.potion.alias)
@@ -262,6 +265,27 @@ describe("shared content", function()
         for _, path in ipairs({ "src/Hekili/Engine/Sim/Core.lua", "src/Hekili/Options/DevTools.lua" }) do
             assert.is_false(names(read(path), "tempered_potion"), path) -- the `potion` verb's old fallback
         end
+    end)
+
+    it("registers Forever's mana and energy consumables (ItemSparse IDs), each offered only from the bags", function()
+        load({ "Consumables" })
+        local a = all.abilities
+        -- item IDs from wowdb's ItemSparse (build 1.60.1.70338); the cooldowns from wowsims/forever's db.json (MIT)
+        assert.are.same({ { 13444 }, 120 }, { a.major_mana_potion.items, a.major_mana_potion.cooldown })
+        assert.are.same({ { 12662 }, 120 }, { a.demonic_rune.items, a.demonic_rune.cooldown })
+        assert.are.same({ { 7676 }, 300 }, { a.thistle_tea.items, a.thistle_tea.cooldown })
+        assert.are.same({ { 8008, 8007, 5513, 5514 }, 120 }, { a.mana_gem.items, a.mana_gem.cooldown })
+        for _, key in ipairs({ "major_mana_potion", "demonic_rune", "thistle_tea", "mana_gem" }) do
+            assert.are.same({ "off", false, true }, { a[key].gcd, a[key].startsCombat, a[key].bagItem }, key)
+            assert.is_nil(a[key].now, key) -- an item action: no cast the belief sees
+            assert.is_false((a[key].usable()), key)
+        end
+        assert.are.equal(5514, a.mana_gem.item()) -- the lowest rank when none is in the bags
+        bags[5513], bags[8007] = 1, 1
+        assert.are.equal(8007, a.mana_gem.item()) -- the best one in the bags
+        assert.is_true(a.mana_gem.usable())
+        bags[7676] = 2
+        assert.is_true(a.thistle_tea.usable())
     end)
 
     it("uses the best Healthstone in the bags, and the Minor one when there is none", function()
