@@ -208,6 +208,7 @@ local function newCell( d, T, i )
         b.Highlight = track( T, top:CreateTexture( nil, "OVERLAY" ), L .. ".Highlight" )
         b.Highlight:SetTexture( "Interface\\Buttons\\ButtonHilight-Square" )
         b.Highlight:SetAllPoints( b )
+        if i == 1 then b.Highlight:AddMaskTexture( b.Mask ) end -- the cast highlight is square art; round it on the circle
         b.Highlight:SetBlendMode( "ADD" )
     end
     if i <= 2 then -- the pause overlay, on the press record's cell
