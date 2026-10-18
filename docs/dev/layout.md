@@ -43,15 +43,40 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   UnitDamage read, our strike's and DoT's spell IDs) plus a header comment; a fit outside tolerance is retuned in the
   same change. The Druid scenarios (`tests/Forever/helpers/druid_world.lua`, `druid_vs.lua`, `druid_harness_spec.lua`) run on the same
   harness, the class read from `Druid.lua`: a tenth of their fights is `#slow`, the design's counts are `#druid`, run
-  only by `make test-druid` (about 190 s). The gates make `busted` take about 160 s; `make test-fast` skips the
-  `#slow` gates.
+  only by `make test-druid` (about 190 s). `make test` runs one busted process per spec file in parallel
+  (`scripts/busted_parallel.sh`; `make test-serial` is the one-process run, about 160 s); `make test-fast` skips the
+  `#slow` gates. `make bench` (`tests/Forever/bench_spec.lua`, `#bench`, not in `make check`) prints ms per Update and bytes per
+  Update and per UNIT_COMBAT for headless Arms over 6 fights.
 - `tools/`, `docs/` and `archive/` stay at the repository root, with the lint, test and type-check configs
   (`.busted`, `.luacheckrc`, `.luarc.json`). Run every tool and `busted` from the root.
 
 ## Checks
 
 `make bootstrap` once (Lua 5.1 + busted/luacheck/luacov into `.lua/`; StyLua and LuaLS from `mise.toml`), then
-`make check` before every commit. StyLua formats only our files (`.styluaignore` lists upstream Hekili, which keeps
+`make check` before every commit. A new worktree has no `.lua/`: copy or symlink `.lua/` from another worktree, or
+run `make bootstrap`. One spec: `.lua/bin/busted tests/Game/State/resources_spec.lua`.
+`make check` also runs `packs-check` (`make packs`, then `git diff --exit-code src`: the RegisterPack blocks match
+`tools/packs/`). CI (`.github/workflows/check.yml`) runs the same checks except the type check.
+
+`make check`'s 6-fight Arms gate is two files of 3 fights (`tests/Forever/loop_warrior_spec.lua`, seeds 1-3, and
+`loop_warrior_late_spec.lua`, seeds 4-6), so it prints two `Arms solo:` lines. Each fight seeds its own world and the
+boot carries nothing between fights, so the halves play the same fights as the old single run (4524 ticks in all).
+At the split (forever 98e718bd; the single 6-fight line was agreement 0.953, never 0.073, cost 17.1 (oracle 16.4),
+dps A/B 0.999):
+
+```
+Arms solo: fights=3 agreement 0.968 (2266 ticks); react median 0 p90 1 never 0.053; refused per 100 [cost 17.4 (oracle 17.4)], episodes 2.65/min; dps A/B 0.954; ... [seeds 1-3]
+Arms solo: fights=3 agreement 0.938 (2258 ticks); react median 0 p90 1 never 0.095; refused per 100 [cost 16.8 (oracle 15.4)], episodes 2.52/min; dps A/B 1.044; ... [seeds 4-6]
+```
+
+## Remotes
+
+`origin` is the fork (github.com/zmsl/hekili). Upstream, fetch only:
+
+```
+git remote add upstream https://github.com/Hekili/hekili.git
+git remote set-url --push upstream no_push
+``` StyLua formats only our files (`.styluaignore` lists upstream Hekili, which keeps
 its own style). If `fmt-check` still fails after `make fmt`, run `make fmt` again: StyLua 2.5.2 takes two passes on a
 call whose argument is a long single-line table.
 `tests/boundary_spec.lua` scans `Game/` and `Engine/Schema/` strictly, and holds each `Engine/Sim/` file to its

@@ -3,6 +3,7 @@
 local headless = require("Game.harness.headless")
 local loop = require("Game.harness.loop")
 local ww = require("Forever.helpers.warrior_world")
+local gate = require("Forever.helpers.arms_gate")
 
 describe("headless Arms", function()
     it("boots the Arms character: three entries out of combat with a target, no error, no unlisted nil read", function()
@@ -200,53 +201,25 @@ describe("the headless Arms loop", function()
     end)
 end)
 
--- The gates (headless loop design §5.2; as built: the plan's Deviations 7-8, 14-15). Measured on the plan's replay:
--- 6 fights (in `make check`, about 150 s in all): agreement 0.953, react median 0 / p90 1 / never 0.073, cost refusals
--- 17.1 per 100 (the oracle's 16.4), DPS A/B 0.999 (reported), never-reacts 0.073 (reported), CPU mean 2.95 ms.
--- 20 fights (`make test-loop`): agreement 0.966, react median 0 / p90 0 / never 0.060, cost refusals 16.5 per 100
--- attempts (the oracle's own 15.8), DPS A/B 0.993, GCD idle 0.742 / 0.739, Sunder Armor up 0.95 / 0.95, flicker
--- 0.69/min, CPU mean 2.70 ms.
--- Report-only: full-rage time (rage never reaches full in these fights) and Demoralizing Shout uptime (the Arms
--- priority keeps it off by default).
-local REPORTED = { demoralizing_shout = true }
-
--- The engine and the first icon, gated at any fight count.
-local function gate(m, r, line)
-    assert.is_true(r.agreement >= 0.85, line)
-    assert.is_true(r.reactMedian <= 1 and r.reactP90 <= 3, line)
-    assert.is_true((r.per100.gcd or 0) == 0 and (r.per100.cooldown or 0) == 0, line)
-    assert.is_true((r.per100.cost or 0) <= (r.per100B.cost or 0) + 3, line)
-    assert.are.same({ 0, 0, 0 }, { m.errors, m.raises, m.selfCheck })
-    assert.are.same({}, m.misses)
-    assert.are.same({}, m.secrets) -- no facade passthrough answered a secret (the traced first fight)
-    assert.is_true(r.cpuMean <= 10, line) -- D5: about 4x the measured mean; p99 reported
-end
-
-local function solo(n)
-    local m = loop.tally(loop.new(ww), n)
-    local r, line = loop.summary(m), loop.line(m)
-    print("\nArms solo: " .. line)
-    gate(m, r, line)
-    return r, line
-end
-
--- `make check` runs 6 fights (#slow): DPS A/B (per fight its sd is about 0.11) and never-reacts (13 of 179 there against
--- an allowance of 14) are reported there, not gated.
-describe("the headless Arms gates #slow", function()
-    it("Arms solo, level 60, one mob, 6 fights of up to 3 minutes: the first icon against the oracle's", function()
-        solo(6)
+-- The gates (headless loop design §5.2; the thresholds and their measured values: helpers/arms_gate.lua). `make check`
+-- runs 6 fights (#slow) as two files of 3, run in parallel: seeds 1-3 here, 4-6 in loop_warrior_late_spec.lua. Each
+-- fight seeds its own world (scenarios.world(o, seed)) and the boot carries nothing between fights, so a half on a fresh
+-- boot plays the same fights as the old single 6-fight run.
+describe("the headless Arms gates, fights 1-3 #slow", function()
+    it("Arms solo, level 60, one mob, fights 1-3 of up to 3 minutes: the first icon against the oracle's", function()
+        gate.solo(3, nil, "seeds 1-3")
     end)
 end)
 
 -- `make test-loop` runs the full 20 (#loop), outside `make check` for its time: the outcome gates too.
 describe("the headless Arms gates, 20 fights #loop", function()
     it("Arms solo, level 60, one mob, 20 fights of up to 3 minutes: the first icon against the oracle's", function()
-        local r, line = solo(20)
+        local r, line = gate.solo(20)
         assert.is_true(r.never <= 0.08, line)
         assert.is_true(r.dps >= 0.97, line)
         assert.is_true(r.idleA <= r.idleB + 0.03, line)
         for key, up in pairs(r.upB) do
-            if not REPORTED[key] then
+            if not gate.REPORTED[key] then
                 assert.is_true((r.upA[key] or 0) >= up - 0.03, key .. ": " .. line)
             end
         end

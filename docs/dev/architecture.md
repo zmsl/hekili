@@ -156,7 +156,8 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
   `ns.Facade`. It uses luacheck for bare reads and grep for `_G.Name`; `git diff` guards `api_inventory.txt`.
 - Headless gates: `make test` (everything except the tagged gates), `make test-fast` (skips `#slow`), `make test-loop`
   (the 20-fight Arms loop and its `Arms solo:` line), `make test-party`, `make test-druid` (about 190 s). `make check`
-  runs lint, format, type check, `make test`, syntax and `api-check`.
+  runs lint, format, type check, `make test` (one process per spec file, in parallel), syntax, `api-check` and
+  `packs-check`.
 
 ## 6. The pack pipeline
 

@@ -1,0 +1,25 @@
+# `make check` on every push and pull request, minus the type check: LuaLS reads the WoW API annotations from a local
+# absolute path (.luarc.json) that the runner does not have, so `make typecheck` stays a local step.
+name: check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - uses: actions/cache@v4
+        with:
+          path: .lua
+          key: lua-${{ runner.os }}-${{ hashFiles('scripts/bootstrap.sh') }}
+      - run: make bootstrap
+      - run: make lint
+      - run: make fmt-check
+      - run: make test
+      - run: make syntax
+      - run: make api-check
+      - run: make packs-check
