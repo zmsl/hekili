@@ -43,6 +43,11 @@ local function parse(simc)
         local action, opts = body:match("^([%w_]+),?(.*)$")
         local e = { action = action, enabled = true }
         e.criteria = opts:match("if=(.*)$")
+        if e.criteria then
+            -- stored as the in-game importer stores it: a literal | is || (a lone | starts a WoW colour escape in the
+            -- editor); the engine reads either form (Scripts.lua)
+            e.criteria = e.criteria:gsub("(|)([^|])", "%1|%2"):gsub("|||", "||")
+        end
         opts = opts:gsub(",?if=.*$", "")
         for opt in opts:gmatch("[^,]+") do
             local k, v = opt:match("^([%w_]+)=(.+)$")
@@ -85,7 +90,7 @@ local function unparse(lists)
                 .. (e.list_name and ",name=" .. e.list_name or "")
                 .. (e.use_off_gcd and ",use_off_gcd=" .. e.use_off_gcd or "")
                 .. (e.focus and ",focus=" .. e.focus or "")
-                .. (e.criteria and ",if=" .. e.criteria or "")
+                .. (e.criteria and ",if=" .. e.criteria:gsub("||", "|") or "")
         end
     end
     return table.concat(out, "\n") .. "\n"

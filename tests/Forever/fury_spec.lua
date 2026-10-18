@@ -101,7 +101,7 @@ describe("the Fury priority", function()
         assert.are.same({ "cooldowns", "default", "precombat" }, names)
         local d = fury.lists.default
         assert.are.equal("cooldowns", d[10].list_name)
-        assert.are.equal(d[10].criteria, "boss|target.level>=level+3") -- Arms.simc's cooldowns gate
+        assert.are.equal("boss||target.level>=level+3", d[10].criteria) -- Arms.simc's cooldowns gate; a stored | is ||
         for i = 4, 7 do
             assert.are.equal(1, d[i].use_off_gcd)
         end
