@@ -939,126 +939,87 @@ end
 
 
 do
-    local damage = {
-        [1] = 0,
-        [5] = 0,
-        [10] = 0,
-    }
+    -- Incoming damage and healing as ring buffers of { time, amount } (two parallel arrays each), summed on read over the
+    -- entries newer than GetTime() - seconds: no table, closure or timer per hit. RING entries a kind: the newest RING
+    -- hits are kept, so past RING hits of one kind in 10 s the 10 s sums drop the oldest (undercount).
+    local RING = 128
+    local NEVER = -math.huge
 
-    local physical = {
-        [1] = 0,
-        [5] = 0,
-        [10] = 0
-    }
+    local function newRing()
+        local r = { time = {}, amount = {}, head = 0 }
+        for i = 1, RING do r.time[ i ], r.amount[ i ] = NEVER, 0 end
+        return r
+    end
 
-    local magical = {
-        [1] = 0,
-        [5] = 0,
-        [10] = 0
-    }
+    local physical, magical, healing = newRing(), newRing(), newRing()
 
-    local healing = {
-        [1] = 0,
-        [5] = 0,
-        [10] = 0
-    }
+    local function store( r, amount )
+        local h = r.head % RING + 1
+        r.head = h
+        r.time[ h ], r.amount[ h ] = GetTime(), amount
+    end
+
+    -- The sum of the entries newer than `seconds` ago, newest first (times only grow, so stop at the first older one).
+    local function sum( r, seconds )
+        local cutoff = GetTime() - seconds
+        local times, amounts, h = r.time, r.amount, r.head
+        local total = 0
+        for n = 0, RING - 1 do
+            local i = ( h - n - 1 ) % RING + 1
+            if times[ i ] <= cutoff then break end
+            total = total + amounts[ i ]
+        end
+        return total
+    end
+
+    local function window( seconds, isPhysical )
+        if isPhysical == nil then return sum( physical, seconds ) + sum( magical, seconds ) end
+        return sum( isPhysical and physical or magical, seconds )
+    end
+
+    -- Upstream's 1 s / 5 s / 10 s buckets and its interpolation between them for any other window.
+    local function interpolate( f, seconds, arg )
+        if seconds == 1 or seconds == 5 or seconds == 10 then return f( seconds, arg ) end
+
+        if seconds < 1 then
+            return f( 1, arg ) * ( seconds / 1 )
+        end
+
+        if seconds < 5 then
+            local d1 = f( 1, arg )
+            return d1 + ( f( 5, arg ) - d1 ) * ( seconds - 1 ) / 5
+        end
+
+        if seconds < 10 then
+            local d5 = f( 5, arg )
+            return d5 + ( f( 10, arg ) - d5 ) * ( seconds - 5 ) / 10
+        end
+
+        return f( 10, arg ) * seconds / 10
+    end
 
     ns.storeDamage = function( _, dam, isPhysical )
         if dam and dam > 0 then
-            local db = isPhysical and physical or magical
-
-            db[ 1 ] = db[ 1 ] + dam
-            damage[ 1 ] = damage[ 1 ] + dam
-
-            C_Timer.After( 1, function()
-                db[ 1 ] = db[ 1 ] - dam
-                damage[ 1 ] = damage[ 1 ] - dam
-            end )
-
-            db[ 5 ] = db[ 5 ] + dam
-            damage[ 5 ] = damage[ 5 ] + dam
-
-            C_Timer.After( 5, function()
-                db[ 5 ] = db[ 5 ] - dam
-                damage[ 5 ] = damage[ 5 ] - dam
-            end )
-
-            db[ 10 ] = db[ 10 ] + dam
-            damage[ 10 ] = damage[ 10 ] + dam
-
-            C_Timer.After( 10, function()
-                db[ 10 ] = db[ 10 ] - dam
-                damage[ 10 ] = damage[ 10 ] - dam
-            end )
+            store( isPhysical and physical or magical, dam )
         end
     end
 
     ns.damageInLast = function( seconds, isPhysical )
-        local db
-        if isPhysical == nil then db = damage
-        elseif isPhysical == true then db = physical
-        else db = magical end
-
-        if db[ seconds ] then return db[ seconds ] end
-
-        if seconds < 1 then
-            return db[ 1 ] * ( seconds / 1 )
-        end
-
-        if seconds < 5 then
-            return db[ 1 ] + ( db[ 5 ] - db[ 1 ] ) * ( seconds - 1 ) / 5
-        end
-
-        if seconds < 10 then
-            return db[ 5 ] + ( db[ 10 ] - db[ 5 ] ) * ( seconds - 5 ) / 10
-        end
-
-        return db[ 10 ] * seconds / 10
+        return interpolate( window, seconds, isPhysical )
     end
 
     ns.storeHealing = function( _, amount )
         if amount and amount > 0 then
-            healing[ 1 ] = healing[ 1 ] + amount
-            C_Timer.After( 1, function() healing[ 1 ] = healing[ 1 ] - amount end )
-
-            healing[ 5 ] = healing[ 5 ] + amount
-            C_Timer.After( 5, function() healing[ 5 ] = healing[ 5 ] - amount end )
-
-            healing[ 10 ] = healing[ 10 ] + amount
-            C_Timer.After( 10, function() healing[ 10 ] = healing[ 10 ] - amount end )
+            store( healing, amount )
         end
+    end
+
+    local function healed( seconds )
+        return sum( healing, seconds )
     end
 
     ns.healingInLast = function( seconds )
-        if healing[ seconds ] then return healing[ seconds ] end
-
-        if seconds < 1 then
-            return healing[ 1 ] * ( seconds / 1 )
-        end
-
-        if seconds < 5 then
-            return healing[ 1 ] + ( healing[ 5 ] - healing[ 1 ] ) * ( seconds - 1 ) / 5
-        end
-
-        if seconds < 10 then
-            return healing[ 5 ] + ( healing[ 10 ] - healing[ 5 ] ) * ( seconds - 5 ) / 10
-        end
-
-        return healing[ 10 ] * seconds / 10
-    end
-
-    ns.sanitizeDamageAndHealing = function()
-        physical[ 1 ] = max( 0, physical[ 1 ] )
-        physical[ 5 ] = max( 0, physical[ 5 ] )
-        physical[ 10 ] = max( 0, physical[ 10 ] )
-
-        magical[ 1 ] = max( 0, magical[ 1 ] )
-        magical[ 5 ] = max( 0, magical[ 5 ] )
-        magical[ 10 ] = max( 0, magical[ 10 ] )
-
-        healing[ 1 ] = max( 0, healing[ 1 ] )
-        healing[ 5 ] = max( 0, healing[ 5 ] )
-        healing[ 10 ] = max( 0, healing[ 10 ] )
+        return interpolate( healed, seconds )
     end
 end
 
@@ -1105,8 +1066,6 @@ do
                 end
             end
         end
-
-        ns.sanitizeDamageAndHealing()
     end
 
     Hekili.AuditTimer = C_Timer.NewTicker( 1, ns.Audit )
