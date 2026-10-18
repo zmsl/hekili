@@ -1,5 +1,7 @@
 # Codebase audit: performance, structure, repo health (2026-10-17)
 
+Status (2026-10-18): items 1-9, 11, 17, 18, 20 landed in the first wave (plan docs/superpowers/plans/2026-10-17-audit-first-wave.md); counts below are the pre-wave snapshot.
+
 Three read-only investigations on `forever` 0489efb7, the first commit after the restructure and the engine seams.
 Each item has the value it buys, what it costs, and a recommendation. The three source reports follow as appendices
 with their evidence and measurements; the scratch specs that produced the performance numbers are under
@@ -136,7 +138,8 @@ is never wiped (the wipe is in commented-out code at UI.lua 2046-2129).
 3. **Ring buffer for incoming damage and healing (do).** Targets.lua storeDamage (966) and storeHealing (1019): each
    hit creates 3 closures and 3 C_Timer.After timers, the whole of UNIT_COMBAT's 410.6 B. Fix: a fixed ring summed on
    read in damageInLast. 1-2 h plus a spec pinning the 1/5/10 s sums. Risk: Protection and defensive lists read the
-   sums. Medium friction.
+   sums. Medium friction. Follow-up: switch to fixed 100 ms time buckets when the first tank pack reads incoming_*; the
+   hit ring undercounts above 12.8 hits/s per kind.
 4. **Return popped stack entries to the pool (do).** Core.lua PopStack drops non-run entries so AddToStack's pool
    stays empty: 667 B per Update, 98% of direct allocation. One line (tinsert(StackPool, x) on the non-run branch).
 5. **Answer query_time first in mt_state (do, with 2).** State.lua mt_state.__index (1795): 1,362 misses per Update,

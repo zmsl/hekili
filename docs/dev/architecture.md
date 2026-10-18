@@ -114,7 +114,10 @@ Two environments have them:
 player never casts. The belief tracks its known rank (`knownRank` reads it); the sim never sees it.
 
 An ability's `known` must depend only on the spellbook, talents and gear, never on buffs or time, because the engine
-caches it for one prediction (`state:IsKnown`, wiped by `Hekili:ResetSpellCaches`).
+caches it for one prediction (`state:IsKnown`, wiped by `Hekili:ResetSpellCaches`). `state:IsDisabled` caches its
+prefix the same way: the ability and item options, the toggle assignment, `state.filter`, boss and the target counts
+are fixed within one prediction, wiped every slot and by every option setter; `ability.disabled`, holds and the DoT cap
+are read live.
 
 **Addons and load order.** `Hekili` (core, the only addon the client loads by itself), `Hekili_Shared`
 (`## Dependencies: Hekili`, `## LoadOnDemand: 1`; Shared auras, consumables, items, and the race packs), then one pack
@@ -158,7 +161,8 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
 - `tools/check_api_reads.sh`: no file of any addon TOC reads a game API from `tools/api_inventory.txt` except through
   `ns.Facade`. It uses luacheck for bare reads and grep for `_G.Name`; `git diff` guards `api_inventory.txt`.
 - Headless gates: `make test` (everything except the tagged gates), `make test-fast` (skips `#slow`), `make test-loop`
-  (the 20-fight Arms loop and its `Arms solo:` line), `make test-party`, `make test-druid` (about 190 s). `make check`
+  (the 20-fight Arms loop and its `Arms solo:` line), `make test-party`, `make test-druid` (about 190 s), `make bench`
+  (ms and bytes per Update and per UNIT_COMBAT; reported, not gated). `make check`
   runs lint, format, type check, `make test` (one process per spec file, in parallel), syntax, `api-check` and
   `packs-check`.
 

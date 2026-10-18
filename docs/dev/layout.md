@@ -20,7 +20,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   the Schema or the content surface changes. The core's modules:
   - root: `Hekili.toc`, `Hekili.lua` (the addon object), `Bindings.xml`, `embeds.xml`;
   - `Engine/Sim/`: upstream's simulation (`Core`, `State`, `Scripts`, `Events`, `Targets`, `Constants`, `Utils`);
-  - `Engine/Schema/`: the class/race/shared registration API (`Spec`, `Races`, `Shared`), the engine core the
+  - `Engine/Schema/`: the class/race/shared registration API (`Spec`, `Races`, `Shared`, `Threat`), the engine core the
     boundary spec scans;
   - `UI/`: the display and editor widgets (`UI`, `Formatting`, `MultilineEditor`, `PopupSlider`);
   - `Integrations/`: bridges to other addons that subscribe to the engine like the UI does (`WeakAuras`);
@@ -32,6 +32,21 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   `Hekili.Engine.settings`): merge-friction cost on every upstream merge. Contract: `Engine.Configure(profile)` (called by
   `Options/Profile.lua` at load and on each AceDB profile change) hands the engine the profile's subtables by reference
   and copies its scalars (`enabled`, `autoSnapshot`, `screenshot`), so a setter that writes one of those calls it again.
+  The audit's first wave (plan `docs/superpowers/plans/2026-10-17-audit-first-wave.md`) edited these upstream files,
+  each a merge-friction point:
+  - `Engine/Sim/Core.lua`: checkImports removed; PopStack and GetNextPrediction pool stack entries; the Yield and
+    ThreadStatus strings are built only under debug; ResetSpellCaches wipes `ns.SpellCaches`.
+  - `Engine/Sim/State.lua`: query_time first in mt_state; IsKnown split into computeKnown and a per-id memo (returns
+    false, not nil); IsDisabled split into a cached disabledPrefix and a live tail (the reason order changed);
+    state.reset wipes the spell caches.
+  - `Engine/Sim/Targets.lua`: storeDamage/storeHealing are 128-entry rings; sanitizeDamageAndHealing removed.
+  - `Engine/Sim/Utils.lua`: IsSpellDisabled caches a false answer.
+  - `Engine/Sim/Events.lua`: the checkImports call removed.
+  - `UI/UI.lua:1183`: the per-frame alphaCheck fixed (`self.alphaCheck <= 0`).
+  - `Options/Options.lua`: the checkImports call removed; FireToggle, SetAbilityOption, SetItemOption and SetToggle
+    wipe the spell caches.
+  - `Options/Profile.lua`: the checkImports call removed.
+  - `Engine/Schema/Spec.lua`: the threat block moved out to `Engine/Schema/Threat.lua`.
 - `tests/` holds the busted specs and their helpers, mirroring the source tree: the specs for
   `src/Hekili/Game/State/` are in `tests/Game/State/`, their helpers in `tests/Game/State/helpers/`, and so
   on. `tests/Game/State/helpers/load.lua` names the addon root once (`ROOT = "src/Hekili/"`).
@@ -66,7 +81,8 @@ Sim identifier already uses (`git blame` the Sim line and say so in the commit);
 `tools/packs/`). CI (`.github/workflows/check.yml`) runs the same checks except the type check.
 
 `make check`'s 6-fight Arms gate is two files of 3 fights (`tests/Forever/loop_warrior_spec.lua`, seeds 1-3, and
-`loop_warrior_late_spec.lua`, seeds 4-6), so it prints two `Arms solo:` lines. Each fight seeds its own world and the
+`loop_warrior_late_spec.lua`, seeds 4-6), so it prints three `Arms solo:` lines (`tests/Forever/arms_recs_spec.lua`
+repeats seeds 1-3 against its every-slot fixture). Each fight seeds its own world and the
 boot carries nothing between fights, so the halves play the same fights as the old single run (4524 ticks in all).
 At the split (forever 98e718bd; the single 6-fight line was agreement 0.953, never 0.073, cost 17.1 (oracle 16.4),
 dps A/B 0.999):
@@ -75,6 +91,9 @@ dps A/B 0.999):
 Arms solo: fights=3 agreement 0.968 (2266 ticks); react median 0 p90 1 never 0.053; refused per 100 [cost 17.4 (oracle 17.4)], episodes 2.65/min; dps A/B 0.954; ... [seeds 1-3]
 Arms solo: fights=3 agreement 0.938 (2258 ticks); react median 0 p90 1 never 0.095; refused per 100 [cost 16.8 (oracle 15.4)], episodes 2.52/min; dps A/B 1.044; ... [seeds 4-6]
 ```
+
+A deliberate pack or APL change re-records the fixture in the same commit:
+`ARMS_RECS=record .lua/bin/busted tests/Forever/arms_recs_spec.lua`.
 
 ## Remotes
 
