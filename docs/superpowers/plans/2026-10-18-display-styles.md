@@ -245,6 +245,39 @@ Each task is one reviewed commit set on `forever-styles`; `make check` green; `d
 - [ ] `output_spec`: both are numbers on every published record, `busy >= 0`; `make test-loop` `Arms solo:` line and `arms_recs_spec` fixture unchanged (additive fields only).
 - [ ] `make check`, commit.
 
+### Task 3c: alternatives under resource uncertainty, gated by subscriber needs (engine, additive)
+
+Why: the Timeline stacks several picks at one moment when the belief knows a resource is in a range but
+not its exact value, ordered by APL priority. Hekili runs one deterministic sim at the estimate, so the
+engine must evaluate the bounds too. Only displays whose bound style asked pay for it.
+
+**Files:**
+- Modify: `src/Hekili/Engine/Output.lua` (`Subscribe(name, fn, passive, needs)`; per-display
+  `needs.alts` count maintained like the non-passive count; record template gains `alts = {}` with
+  preallocated entries `{ actionName, actionID, texture, action, list, bound }`), `src/Hekili/UI/UI.lua`
+  (subscribe with `d.style.needs`), `src/Hekili/UI/Styles.lua` (`needs` optional member),
+  `src/Hekili/Engine/Sim/Core.lua` (the bounded passes), `src/Hekili/Engine/Sim/State.lua` only if a
+  resource pin needs a hook (prefer none: set `state[res].actual`/`current` through the existing reset path)
+- Test: `tests/Forever/output_spec.lua`, `tests/Forever/alts_spec.lua`
+
+- [ ] Invariant first, as a spec: with a second subscriber on Primary declaring `needs = { alts = true }`,
+  every field of `recs[1..count]` other than `alts` is identical to a run without that subscriber, over the
+  every-slot fixture (`tests/Forever/arms_recs_spec.lua` run twice in-process, needs off then on, deep
+  compare). The main records never depend on whether alternatives were computed.
+- [ ] Order inside `Update` for a display with `needs.alts > 0`: the normal slot loop finishes and the
+  records are final; THEN for slots 1 and 2 only: `state.reset`, pin the gating resource
+  (`recs[i].resource_type`) at the belief's low bound (`VS.Power(type).lo`), advance to `recs[i].time`,
+  evaluate one pick; same at the high bound; a pick that differs from `recs[i].actionName` goes into
+  `recs[i].alts` with `bound = "lo"|"hi"`; sorted by `action` (APL entry index). Skip both passes when the
+  band does not straddle any registered cost (`lo >= cost of the estimate pick`, or `hi < cost`). Then
+  publish. No pass when the count is 0.
+- [ ] `output_spec`: `alts` is empty on every record when no subscriber declares the need; the need count
+  rises and falls with Subscribe/Unsubscribe; `Wanted` unchanged by needs.
+- [ ] `alts_spec`: a scripted belief band straddling a spender's cost produces exactly the spender and the
+  filler on `recs[1].alts`, in APL order; a band that does not straddle produces none; `make bench`
+  reports the per-Update cost with the need on (expect under 0.5 ms extra), recorded in the report.
+- [ ] `make check`, gate lines unchanged, commit.
+
 ### Task 4: the Timeline style
 
 **Files:**
