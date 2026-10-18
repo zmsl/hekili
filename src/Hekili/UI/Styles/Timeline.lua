@@ -111,6 +111,7 @@ do
     d.oocPinned = true -- out of combat the lane and ETAs on press-relative times (rec.time - recs[ 1 ].time), Task 2c
     d.alts = { enabled = true, max = 2, size = 16, spacing = 2, zones = "both" }
     d.focusEnabled = true
+    d.nowFallback = "empty" -- no focus record: the now circle stays empty (or "press": record 1 there, record 2 next)
     d.focusHorizon = 10 -- clamped to the lane's horizon where it is used
     d.focusColor = { GOLD[ 1 ], GOLD[ 2 ], GOLD[ 3 ], 1 }
 end
@@ -500,7 +501,8 @@ end
 -- The zone rule, on a publish: T.rec[ c ] is the record cell c draws, T.press the cell drawing record 1 (every "key to
 -- press" affordance goes there), T.focused whether cell 1 draws a focus record. The focus record is the earliest record
 -- 2.. flagged `focus` due within the focus horizon (never past the lane's): it takes the now circle, record 1 the next
--- box and the lane the rest in order. Else cell c draws record c.
+-- box and the lane the rest in order. Else record 1 takes the next box and the lane 2.. with the now circle empty (record
+-- 0: none), or with nowFallback "press" cell c draws record c.
 local function roles( T, tl, recs, count, now )
     local map, f = T.rec, 0
     if tl.focusEnabled then
@@ -516,8 +518,9 @@ local function roles( T, tl, recs, count, now )
         end
     end
     if f == 0 then
-        for c = 1, SLOTS do map[ c ] = c end
-        T.press, T.focused = 1, false
+        local o = tl.nowFallback == "press" and 0 or 1
+        for c = 1, SLOTS do map[ c ] = c - o end
+        T.press, T.focused = 1 + o, false
     else
         map[ 1 ], map[ 2 ] = f, 1
         local c = 3
@@ -530,6 +533,8 @@ local function roles( T, tl, recs, count, now )
         T.press, T.focused = 2, true
     end
 end
+
+local NONE = {} -- the empty now circle's record 0
 
 -- A publish: what each cell shows until the next one.
 local function assign( d, T, tl, conf, out, now, combat )
@@ -563,8 +568,8 @@ local function assign( d, T, tl, conf, out, now, combat )
 
     for c = 1, SLOTS do
         local i = T.rec[ c ] -- record i, drawn by cell c
-        local b, r = cells[ c ], recs[ i ]
-        b.Recommendation = r
+        local b, r = cells[ c ], recs[ i ] or NONE
+        b.Recommendation = recs[ i ]
         local action, exact = r.actionName, r.exact_time
         local key = exact
         if pinned and exact then key = r.time - T.pressTime end
@@ -903,7 +908,9 @@ function Timeline.Options( id, conf )
     etaFont.font.order, etaFont.style.order, etaFont.size.order, etaFont.color.order = 3, 4, 5, 6
 
     local now = zoneGroups( {
-        nowSize = optRange( "Size", "The diameter of the now circle (the first recommendation).", 16, 200, 1, 1 ),
+        nowSize = optRange( "Size", "The diameter of the now circle (a focus ability coming up).", 16, 200, 1, 1 ),
+        nowFallback = optSelect( "Without Focus", "What the now circle shows when no focus ability is coming up: nothing (the next box shows what to press), or what to press.",
+            { empty = "Empty", press = "First Recommendation" }, 4 ),
         eta = section( "ETA", 2, etaFont ),
         sweep = section( "Sweep", 3, {
             mode = optSelect( "Cooldown Sweep", "Extend: the sweep runs until the pick should be used. Cooldown: the ability's own cooldown. Off: none.",
@@ -912,7 +919,7 @@ function Timeline.Options( id, conf )
     }, 1, id, conf )
 
     local nextBox = zoneGroups( {
-        nextSize = optRange( "Size", "The size of the next box (the second recommendation).", 16, 200, 1, 1 ),
+        nextSize = optRange( "Size", "The size of the next box (what to press now).", 16, 200, 1, 1 ),
         gap = optRange( "Gap", "The space between the now circle and the next box, and between the next box and the lane.", 0, 100, 1, 2 ),
         alts = section( "Alternatives", 3, {
             enabled = optToggle( "Show Alternatives", "Show what the rotation would pick instead if the gating resource came in lower or higher than expected.", 1 ),
@@ -960,14 +967,14 @@ function Timeline.Options( id, conf )
             } ),
         } ),
         sec_focus = section( "Focus", 3, {
-            focusEnabled = optToggle( "Focus Abilities", "An ability marked focus=1 in the priority takes the now circle with a countdown when it comes up within the focus horizon; what to press now moves to the next box.", 1 ),
+            focusEnabled = optToggle( "Focus Abilities", "An ability marked focus=1 in the priority takes the now circle with a countdown when it comes up within the focus horizon.", 1 ),
             focusHorizon = optRange( "Focus Horizon", "Seconds ahead a focus ability takes the now circle (never past the lane's horizon).", 1, 30, 1, 2 ),
             focusColor = { type = "color", name = "Ring Color", desc = "The now circle's ring while it shows a focus ability.", hasAlpha = true, order = 3, width = 1.49 },
         } ),
     }
 
     return {
-        tab_now = tab( "Now", "The now circle: the first recommendation, or a focus ability coming up.", 1, now ),
+        tab_now = tab( "Now", "The now circle: a focus ability coming up.", 1, now ),
         tab_next = tab( "Next", "The next box and the alternatives.", 2, nextBox ),
         tab_lane = tab( "Lane", "The picks on the lane.", 3, lane ),
         tab_timeline = tab( "Timeline", "The lane's time axis, the ruler and the focus zone.", 4, timeline ),

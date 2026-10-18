@@ -682,6 +682,7 @@ local function tlBoot(plain, setup, saved)
     tl.glow.enabled, tl.delays.desaturate = true, true
     tl.laneEta.enabled = true
     tl.oocPinned = false -- the wall clock the fixture and the tests before Task 2c expect (status.combat is false)
+    tl.nowFallback = "press" -- the layout before the empty now circle (the fixture's); its own tests set "empty"
     if setup then
         setup(tl)
     end
@@ -843,11 +844,12 @@ describe("the timeline display style", function()
     )
 
     it("allocates nothing over 1,000 display frames after the first publish, on a moving clock", function()
-        -- today's layout, a focus record in the now circle, then pinned out of combat (Task 2c)
-        for _, case in ipairs({ { false }, { 3 }, { false, true } }) do
+        -- today's layout, a focus record in the now circle, then pinned out of combat (Task 2c), the empty now circle
+        for _, case in ipairs({ { false }, { 3 }, { false, true }, { false, false, "empty" } }) do
             local focus = case[1]
             local H, d = tlBoot(true, function(tl)
                 tl.oocPinned = case[2] or false
+                tl.nowFallback = case[3] or "press"
             end)
             tlPublish(H, focus or nil)
             local f = d.__scripts.OnUpdate
@@ -855,7 +857,8 @@ describe("the timeline display style", function()
                 H.ctl.now = H.ctl.now + 0.2
                 f(d, 0.2)
             end
-            assert.are.equal(focus and "slam" or "mortal_strike", d.styleFrames.timeline.cells[1].Action)
+            local want = not case[3] and (focus and "slam" or "mortal_strike")
+            assert.are.equal(want, d.styleFrames.timeline.cells[1].Action or false)
             collectgarbage("collect")
             collectgarbage("stop")
             local status = H.Hekili.Engine.Output.status
@@ -969,6 +972,60 @@ describe("the timeline display style", function()
         assert.are.same({}, H.errors)
     end)
 
+    local EMPTY =
+        { false, "mortal_strike", "overpower", "slam", "rend", "whirlwind", "sunder_armor", false, false, false }
+
+    it("leaves the now circle empty without a focus record (nowFallback empty, the default)", function()
+        local H, d, T = tlBoot(false, function(tl)
+            tl.nowFallback = "empty"
+        end)
+        local ms = H.Hekili.Engine.Registry.Abilities().mortal_strike
+        overlayed[ms.id] = true
+        H.Hekili.Engine.Output.status.numTargets = 3
+        tlPublish(H)
+        tlFrame(H, d)
+        tlFrame(H, d)
+        local c = T.cells
+        assert.are.same(EMPTY, actions(T))
+        -- the now circle: nothing
+        assert.is_false(c[1]:IsShown())
+        assert.is_nil(c[1].Texture:GetTexture())
+        assert.is_nil(c[1].Keybinding:GetText())
+        assert.is_false(c[1].Ring:IsShown())
+        assert.is_false(c[1].glowing)
+        assert.is_nil(c[1].Recommendation)
+        -- the next box: the press with every press affordance
+        assert.is_true(c[2]:IsShown())
+        assert.are.equal("tex1", c[2].Texture:GetTexture())
+        assert.are.equal("K1", c[2].Keybinding:GetText())
+        assert.is_true(c[2].glowing)
+        assert.are.equal("3|r", c[2].Targets:GetText())
+        assert.is_true(c[2].Alts[1]:IsShown())
+        assert.are.equal("alt1a", c[2].Alts[1]:GetTexture())
+        assert.are.equal("0.6", c[2].Eta:GetText()) -- mortal_strike at 1 s, 0.4 s on
+        -- the lane: records 2..
+        assert.are.equal("tex2", c[3].Texture:GetTexture())
+        assert.are.equal("tex3", c[4].Texture:GetTexture())
+        d.style.UpdateKeybindings(d)
+        assert.is_nil(c[1].Keybinding:GetText())
+        assert.truthy(c[2].Keybinding:GetText())
+        -- a focus record: the now circle takes it as before
+        tlPublish(H, 3)
+        tlFrame(H, d)
+        assert.are.same(FOCUS3, actions(T))
+        assert.is_true(c[1]:IsShown() and c[1].Ring:IsShown())
+        assert.is_nil(c[1].Keybinding:GetText())
+        assert.are.equal("K1", c[2].Keybinding:GetText())
+        -- gone again: empty
+        tlPublish(H)
+        tlFrame(H, d)
+        assert.are.same(EMPTY, actions(T))
+        assert.is_false(c[1]:IsShown() or c[1].Ring:IsShown())
+        assert.is_true(c[2].glowing)
+        overlayed[ms.id] = nil
+        assert.are.same({}, H.errors)
+    end)
+
     it("keeps today's layout with focus off, a flagged record 1, or a flag past the focus horizon", function()
         local H, d, T = tlBoot()
         local tl = H.Hekili.DB.profile.displays.Primary.timeline
@@ -1026,7 +1083,7 @@ describe("the timeline display style", function()
         tlPublish(H)
         H.ctl.now = H.ctl.now + 0.2
         f(d, 0.2)
-        assert.is_true(T.cells[1]:IsShown())
+        assert.is_true(T.cells[2]:IsShown()) -- the press (the now circle is empty by default)
         H.Hekili:SetDisplayOption({ "displays", "Primary", "main", "style" }, "classic")
         H.Hekili:BuildUI()
         assert.are.equal(H.ns.UI.Styles.classic, d.style)
@@ -1110,6 +1167,9 @@ describe("the timeline display style", function()
         assert.are.equal(8, tl.horizon)
         H.Hekili:SetDisplayOption({ "displays", "Primary", "timeline", "tab_timeline", "sec_focus", "focusHorizon" }, 6)
         assert.are.equal(6, tl.focusHorizon)
+        assert.are.equal("empty", tl.nowFallback)
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "timeline", "tab_now", "nowFallback" }, "press")
+        assert.are.equal("press", tl.nowFallback)
         H.Hekili:EmbedDisplayOptions()
         local tabs = H.Hekili.Options.args.displays.plugins.Primary.Primary.args.timeline.args
         assert.is_true(tabs.tab_timeline.args.sec_focus.inline) -- Task 2's Focus section, in the Timeline tab

@@ -220,7 +220,8 @@ display whose profile already names the style binds it.
 **Timeline zones.** On each publish the press record is record 1. With `focusEnabled` (default on), the focus record
 is the earliest record 2.. with `focus` due within `focusHorizon` seconds (default 10, never past `horizon`): it takes
 the now circle with a countdown, no keybind and a `focusColor` ring, record 1 moves to the next box and the lane
-draws the rest. Otherwise now, next and lane draw records 1, 2 and 3... Every "key to press" affordance (keybind,
+draws the rest. Otherwise, with `nowFallback` `"empty"` (the default), the now circle is hidden and the next box
+draws record 1, the lane 2..; with `"press"` now, next and lane draw records 1, 2 and 3... (the earlier rule). Every "key to press" affordance (keybind,
 glow, flash, range, cast highlight, targets, alternatives) sits on the cell drawing record 1. With `oocPinned`
 (default on) and out of combat, lane positions, countdowns and the focus test use `rec.time - recs[1].time` instead
 of the clock, so the display holds still between updates; the lane never draws left of its first mark.

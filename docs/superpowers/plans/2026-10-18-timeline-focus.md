@@ -72,6 +72,9 @@ reused record is cleared. Additive. Classic ignores it.
 - Everything that means "the key to press" follows the press record's cell. Alternatives follow their
   record wherever it is drawn.
 - Options: `focusEnabled` true, `focusHorizon` 10, `focusColor` gold rgba.
+- *2026-10-18, user decision:* the "Else" fallback changed. Without a focus record the Now circle is empty
+  and the Next box always draws the press (record 1), the lane 2..; the layout above stays behind
+  `nowFallback = "press"` (default `"empty"`).
 
 **Ruler styles.** `rulerStyle` ∈ { `ruler` (today: baseline + a tick a second, taller every
 `majorEvery`), `dots` (one small square per second, no baseline), `lines` (short vertical per second, no
