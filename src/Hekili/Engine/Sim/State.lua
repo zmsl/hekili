@@ -75,6 +75,7 @@ state.now = 0
 state.offset = 0
 state.modified = false
 state.resetType = "heavy"
+state.fullNext = false -- Core's alternative passes ran: the next reset is full (Engine/Sim/Core.lua altPasses)
 
 state.encounterID = 0
 state.encounterName = "None"
@@ -6195,7 +6196,8 @@ do
     function state.reset( dispName, full )
         dispName = dispName or "Primary"
 
-        full = dispName == "Primary" or state.offset > 0
+        full = dispName == "Primary" or state.offset > 0 or state.fullNext
+        state.fullNext = false
 
         ClearMarks( firstTime )
         firstTime = nil

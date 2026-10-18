@@ -1422,6 +1422,16 @@ local displayRules = {
 -- APL entry. Skipped when the band does not straddle the record's cost. shortcut: record 2's pass does not replay
 -- record 1's cast first, so an alternative of record 2 can repeat record 1; replay it if the Timeline needs it.
 local altProbe = {} -- GetNextPrediction's slot for a bound pass: one table, its fields overwritten by every pick
+local altMax = { 0, 0 } -- the main loop's forecast window (defaultMax) at records 1 and 2
+
+-- A pick's icon: an item's, else the spec's per-ability override, else the APL's, the ability's or the spell's.
+local function pickTexture( action, ability, texture, abilityOpts )
+    if ability.item then
+        return texture or ability.texture or ( select( 5, GetItemInfoInstant( ability.item ) ) )
+    end
+    local override = abilityOpts and rawget( abilityOpts, action )
+    return override and override.icon or texture or ability.texture or GetSpellTexture( ability.id )
+end
 
 local function altPick( dispName, packName, rec, i, bound, value, maxTime, abilityOpts )
     state.reset( dispName )
@@ -1430,7 +1440,9 @@ local function altPick( dispName, packName, rec, i, bound, value, maxTime, abili
     local keep = res.actual
     res.actual = value
     state.forecastResources( rt )
-    if rec.time > 0 then state.advance( rec.time ) end
+    -- the reset may already have advanced (to the end of a cast in progress): only the rest of the way
+    local dt = rec.time - state.offset
+    if dt > 0 then state.advance( dt ) end
 
     altProbe.index, state.index = i, i
     state.delay = 0
@@ -1442,23 +1454,17 @@ local function altPick( dispName, packName, rec, i, bound, value, maxTime, abili
     state.forecastResources( rt )
 
     if not action or action == "wait" or action == rec.actionName then return end
-    local ability = class.abilities[ action ]
     local alts = rec.alts
     local n = alts.n + 1
     local e = alts[ n ]
     e.actionName, e.actionID, e.action, e.list, e.bound = action, altProbe.actionID, altProbe.action, altProbe.list, bound
-    if ability.item then
-        e.texture = altProbe.texture or ability.texture or select( 5, GetItemInfoInstant( ability.item ) )
-    else
-        local override = abilityOpts and rawget( abilityOpts, action )
-        e.texture = override and override.icon or altProbe.texture or ability.texture or GetSpellTexture( ability.id )
-    end
+    e.texture = pickTexture( action, class.abilities[ action ], altProbe.texture, abilityOpts )
     alts.n = n
 end
 
-local function altPasses( dispName, packName, display, Queue, numFilled, abilityOpts )
-    local isMain = dispName == "Primary" or dispName == "AOE"
-    local maxTime = isMain and ( Hekili.Engine.settings.performance.forecastWindow or 15 ) or ( display.forecastPeriod or 15 )
+-- Returns true when a pass ran (the sim state is then the last pass's, not the main loop's).
+local function altPasses( dispName, packName, Queue, numFilled, abilityOpts )
+    local ran = false
     for i = 1, numFilled < 2 and numFilled or 2 do
         local rec = Queue[ i ]
         local rt, cost = rec.resource_type, rec.cost
@@ -1467,8 +1473,9 @@ local function altPasses( dispName, packName, display, Queue, numFilled, ability
             local band = ns.VirtualState.Power( resource.type, state.now )
             local lo, hi = band.lo, band.hi
             if lo < cost and hi >= cost then
-                altPick( dispName, packName, rec, i, "lo", lo, maxTime, abilityOpts )
-                altPick( dispName, packName, rec, i, "hi", hi, maxTime, abilityOpts )
+                ran = true
+                altPick( dispName, packName, rec, i, "lo", lo, altMax[ i ], abilityOpts )
+                altPick( dispName, packName, rec, i, "hi", hi, altMax[ i ], abilityOpts )
                 local alts = rec.alts
                 if alts.n == 2 and alts[ 1 ].action > alts[ 2 ].action then
                     alts[ 1 ], alts[ 2 ] = alts[ 2 ], alts[ 1 ]
@@ -1476,6 +1483,7 @@ local function altPasses( dispName, packName, display, Queue, numFilled, ability
             end
         end
     end
+    return ran
 end
 
 local hasSnapped
@@ -1607,6 +1615,7 @@ function Hekili.Update()
                 elseif state.spec.assassination then
                     defaultMax = max( state.delayMax, 0.01 + state.energy.max / state.energy.regen_combined )
                 end
+                if i <= 2 then altMax[ i ] = defaultMax end
 
                 state.delay = 0
                 state:SetConstraint( 0, defaultMax )
@@ -1906,13 +1915,8 @@ function Hekili.Update()
 
                     -- What the UI shows, resolved once per record: the icon (the spec's per-ability override first),
                     -- the item id (truthy for items), off-GCD and the name.
-                    if ability.item then
-                        slot.item = ability.item
-                        slot.texture = slot.texture or ability.texture or select( 5, GetItemInfoInstant( ability.item ) )
-                    else
-                        local override = abilityOpts and rawget( abilityOpts, action )
-                        slot.texture = override and override.icon or slot.texture or ability.texture or GetSpellTexture( ability.id )
-                    end
+                    if ability.item then slot.item = ability.item end
+                    slot.texture = pickTexture( action, ability, slot.texture, abilityOpts )
                     slot.offGCD = ability.gcd == "off"
                     slot.name = ability.name
 
@@ -2070,8 +2074,11 @@ function Hekili.Update()
                 end
             end
 
-            if out.needAlts > 0 and numFilled > 0 then
-                altPasses( dispName, packName, display, Queue, numFilled, abilityOpts )
+            -- After passes, the next reset must be full: a full reset rebuilds the state whatever the passes left, as
+            -- it would from the main loop's end (offset > 0). shortcut: skipped when the main loop ends at offset 0 (the
+            -- next reset is partial and keeps that end state, which the passes would replace); no timeline queue does.
+            if out.needAlts > 0 and numFilled > 0 and state.offset > 0 then
+                if altPasses( dispName, packName, Queue, numFilled, abilityOpts ) then state.fullNext = true end
             end
 
             Output.Publish( dispName, numFilled )
