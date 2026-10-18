@@ -3772,8 +3772,8 @@ found = true end
                                     type = "toggle",
                                     name = "Allow Target Swaps |TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t",
                                     desc = "When target swapping is enabled, an icon (|TInterface\\Addons\\Hekili\\Textures\\Cycle:0|t) may be shown when you should use an ability on a different target.\n\n" ..
-                                        "This works well for some specs that simply want to apply a debuff to another target (like Windwalker), but can be less-effective for specializations that are concerned with " ..
-                                        "maintaining dots/debuffs based on their durations (like Affliction).\n\nThis feature is targeted for improvement in a future update.",
+                                        "This works well for some specs that simply want to apply a debuff to another target, but can be less-effective for specializations that are concerned with " ..
+                                        "maintaining dots/debuffs based on their durations.\n\nThis feature is targeted for improvement in a future update.",
                                     width = "full",
                                     order = 6
                                 },
@@ -7171,7 +7171,7 @@ do
                                 type = "description",
                                 name = "Top 3 questions/problems\n\n" ..
                                 "1. My keybinds aren't showing up right\n- |cFF00CCFFThis can happen with macros or stealth bars sometimes. You can manually tell the addon what keybind to use in the|r |cFFFFD100Abilities|r |cFF00CCFFsection. Find the spell from the dropdown and use the|r |cFFFFD100Override Keybind|r |cFF00CCFFbox. Same can be done with trinkets under|r |cFFFFD100Gear and Items|r.\n\n" ..
-                                "2. I don't recognize this spell! What is it?\n- |cFF00CCFFIf you're a Frost Mage it may be your Water Elemental pet spell, Freeze. Otherwise, it's probably a trinket. You can press |cFFFFD100alt-shift-p|r to pause the addon and hover over the icon to see what it is!|r\n\n" ..
+                                "2. I don't recognize this spell! What is it?\n- |cFF00CCFFIt's probably a trinket. You can press |cFFFFD100alt-shift-p|r to pause the addon and hover over the icon to see what it is!|r\n\n" ..
                                 "3. How do I disable a certain ability or trinket?\n- |cFF00CCFFHead over to |cFFFFD100Abilities|r or |cFFFFD100Gear and Items|r, find it in the dropdown list, and disable it.\n\n|r" ..
                                 "\nI made it to the bottom but I still have an issue!\n- |cFF00CCFFHead on over to|r |cFFFFD100Snapshots (Troubleshooting)|r |cFF00CCFFfor more detailed instructions.",
                                 order = 4.1,
