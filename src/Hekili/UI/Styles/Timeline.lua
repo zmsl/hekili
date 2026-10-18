@@ -113,7 +113,8 @@ do
     d.focusEnabled = true
     d.nowFallback = "empty" -- no focus record: the now circle stays empty (or "press": record 1 there, record 2 next)
     d.focusHorizon = 10 -- clamped to the lane's horizon where it is used
-    d.focusColor = { GOLD[ 1 ], GOLD[ 2 ], GOLD[ 3 ], 1 }
+    d.focusColor = { GOLD[ 1 ], GOLD[ 2 ], GOLD[ 3 ], 1 } -- the focus ability is the press (ready)
+    d.focusPendingColor = { 1, 1, 1, 0.35 } -- the focus ability still counting down
 end
 
 local function track( T, region, label )
@@ -391,7 +392,7 @@ function Timeline.Build( d, conf )
         T.inLane[ i ], T.want[ i ], T.x[ i ], T.row[ i ] = false, false, -1, 1
     end
     for i = 1, SLOTS do T.rec[ i ] = i end
-    T.press, T.focused = 1, false
+    T.press, T.focused, T.ready, T.extend2 = 1, false, true, false
     T.has, T.paused = false, 0
 
     -- the ruler, from one pool (T.base, T.ticks): a baseline over the lane's rows and a tick a second (taller every
@@ -498,14 +499,18 @@ local function highlight( b, tl, ability, exact )
     b.Highlight:SetShown( tl.glow.highlight and id ~= nil and ( isItem and IsCurrentItem( id ) or IsCurrentSpell( id ) ) and exact > GetTime() or false )
 end
 
--- The zone rule, on a publish: T.rec[ c ] is the record cell c draws, T.press the cell drawing record 1 (every "key to
--- press" affordance goes there), T.focused whether cell 1 draws a focus record. The focus record is the earliest record
--- 2.. flagged `focus` due within the focus horizon (never past the lane's): it takes the now circle, record 1 the next
--- box and the lane the rest in order. Else record 1 takes the next box and the lane 2.. with the now circle empty (record
--- 0: none), or with nowFallback "press" cell c draws record c.
+-- The zone rule, on a publish: T.rec[ c ] is the record cell c draws (0: none), T.press the cell drawing record 1
+-- (every "key to press" affordance goes there), T.focused whether cell 1 draws a focus record, T.ready whether that is
+-- record 1 (the gold ring; else the pending one), T.extend2 whether cell 2's sweep is extended. With focusEnabled a
+-- record is flagged when `focus == 1`; the focus record is record 1 if flagged, else the earliest flagged record 2.. due
+-- within the focus horizon (never past the lane's). It takes the now circle (else empty); the next box takes the first
+-- unflagged record other than it; the lane every other record in order. nowFallback "press" keeps the earlier rule:
+-- record 1 never counts, a focus record takes the now circle and record 1 the next box, else cell c draws record c.
 local function roles( T, tl, recs, count, now )
-    local map, f = T.rec, 0
-    if tl.focusEnabled then
+    local map, f, press = T.rec, 0, tl.nowFallback == "press"
+    local on = tl.focusEnabled
+    if on and not press and count > 0 and recs[ 1 ].focus == 1 then f = 1 end
+    if on and f == 0 then
         local h = mmin( tl.focusHorizon, tl.horizon )
         for i = 2, count do
             local r = recs[ i ]
@@ -517,24 +522,45 @@ local function roles( T, tl, recs, count, now )
             end
         end
     end
-    if f == 0 then
-        local o = tl.nowFallback == "press" and 0 or 1 -- "empty": record SLOTS is never drawn (the lane keeps 8 cells)
-        for c = 1, SLOTS do map[ c ] = c - o end
-        T.press, T.focused = 1 + o, false
-    else
-        map[ 1 ], map[ 2 ] = f, 1
-        local c = 3
-        for i = 2, SLOTS do
-            if i ~= f then
-                map[ c ] = i
-                c = c + 1
+    if press then
+        if f == 0 then
+            for c = 1, SLOTS do map[ c ] = c end
+            T.press, T.focused = 1, false
+        else
+            map[ 1 ], map[ 2 ] = f, 1
+            local c = 3
+            for i = 2, SLOTS do
+                if i ~= f then
+                    map[ c ] = i
+                    c = c + 1
+                end
             end
+            T.press, T.focused = 2, true
         end
-        T.press, T.focused = 2, true
+        T.ready, T.extend2 = true, false
+        return
     end
+    local n = 0
+    for i = 1, count do
+        if i ~= f and not ( on and recs[ i ].focus == 1 ) then
+            n = i
+            break
+        end
+    end
+    map[ 1 ], map[ 2 ] = f, n
+    local c = 3
+    for i = 1, SLOTS do
+        if i ~= f and i ~= n and c <= SLOTS then
+            map[ c ] = i
+            c = c + 1
+        end
+    end
+    for k = c, SLOTS do map[ k ] = 0 end
+    T.press = f == 1 and 1 or 2 -- record 1 is the focus record or, unflagged, the first one for the next box
+    T.focused, T.ready, T.extend2 = f ~= 0, f == 1, n == 1
 end
 
-local NONE = {} -- the empty now circle's record 0
+local NONE = {} -- record 0: an empty cell
 
 -- A publish: what each cell shows until the next one.
 local function assign( d, T, tl, conf, out, now, combat )
@@ -547,7 +573,12 @@ local function assign( d, T, tl, conf, out, now, combat )
     if pinned then now = 0 end
     T.clock = now
     roles( T, tl, recs, out.count, now )
-    cells[ 1 ].Ring:SetShown( T.focused )
+    local ring = cells[ 1 ].Ring
+    ring:SetShown( T.focused )
+    if T.focused then
+        local fc = T.ready and tl.focusColor or tl.focusPendingColor
+        ring:SetColorTexture( fc[ 1 ], fc[ 2 ], fc[ 3 ], fc[ 4 ] )
+    end
     if out.count == 0 or out.version == d.blankVersion then
         for i = 1, SLOTS do
             local b = cells[ i ]
@@ -740,7 +771,7 @@ function Timeline.Draw( d, conf, out, status )
     if not T.has then return end
     if fresh then -- the sweeps, as classic's on a publish
         for i = 1, 2 do
-            if T.cells[ i ].Ability then sweep( T.cells[ i ], i == 1 or i == T.press and not T.focused, tl, now ) end
+            if T.cells[ i ].Ability then sweep( T.cells[ i ], i == 1 or T.extend2, tl, now ) end
         end
     end
 
@@ -911,8 +942,9 @@ function Timeline.Options( id, conf )
 
     local now = zoneGroups( {
         nowSize = optRange( "Size", "The diameter of the now circle (a focus ability coming up).", 16, 200, 1, 1 ),
-        nowFallback = optSelect( "Without Focus", "What the now circle shows when no focus ability is coming up: nothing (the next box shows what to press), or what to press.",
+        nowFallback = optSelect( "Without Focus", "Empty: the now circle holds only focus abilities (gold once ready to press) and the next box what to press. First Recommendation: the earlier layout, what to press in the now circle unless a focus ability is coming up.",
             { empty = "Empty", press = "First Recommendation" }, 4 ),
+        focusPendingColor = { type = "color", name = "Pending Ring Color", desc = "The now circle's ring while a focus ability counts down (the Timeline tab's Ring Color once it is ready).", hasAlpha = true, order = 5, width = 1.49 },
         eta = section( "ETA", 2, etaFont ),
         sweep = section( "Sweep", 3, {
             mode = optSelect( "Cooldown Sweep", "Extend: the sweep runs until the pick should be used. Cooldown: the ability's own cooldown. Off: none.",
@@ -971,7 +1003,7 @@ function Timeline.Options( id, conf )
         sec_focus = section( "Focus", 3, {
             focusEnabled = optToggle( "Focus Abilities", "An ability marked focus=1 in the priority takes the now circle with a countdown when it comes up within the focus horizon.", 1 ),
             focusHorizon = optRange( "Focus Horizon", "Seconds ahead a focus ability takes the now circle (never past the lane's horizon).", 1, 30, 1, 2 ),
-            focusColor = { type = "color", name = "Ring Color", desc = "The now circle's ring while it shows a focus ability.", hasAlpha = true, order = 3, width = 1.49 },
+            focusColor = { type = "color", name = "Ring Color", desc = "The now circle's ring when the focus ability is ready to press.", hasAlpha = true, order = 3, width = 1.49 },
         } ),
     }
 

@@ -75,6 +75,12 @@ reused record is cleared. Additive. Classic ignores it.
 - *2026-10-18, user decision:* the "Else" fallback changed. Without a focus record the Now circle is empty
   and the Next box always draws the press (record 1), the lane 2..; the layout above stays behind
   `nowFallback = "press"` (default `"empty"`).
+- *2026-10-18, user rule (round 3):* flagged records never sit in the Next box. Record 1, when flagged, is
+  the focus record: it takes the Now circle with the gold ring and every press affordance. Otherwise the
+  earliest flagged record 2.. within the horizon takes the Now circle with a pending ring
+  (`focusPendingColor`, muted white), a countdown and no keybind. Next takes the first record that is
+  neither the focus record nor flagged. The lane takes the rest, other flagged records included.
+  `nowFallback = "press"` keeps the original rule.
 
 **Ruler styles.** `rulerStyle` ∈ { `ruler` (today: baseline + a tick a second, taller every
 `majorEvery`), `dots` (one small square per second, no baseline), `lines` (short vertical per second, no

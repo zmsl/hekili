@@ -217,12 +217,16 @@ display whose profile already names the style binds it.
 | `UpdateKeybindings(d)` | keybinding changes | |
 | `Options(id, conf)` | building the options | the style's tabs, new tables each call; they land in one group keyed by `name`, so their options resolve to `displays[id].<name>.<option>` (keys flat and unique within the style) |
 
-**Timeline zones.** On each publish the press record is record 1. With `focusEnabled` (default on), the focus record
-is the earliest record 2.. with `focus` due within `focusHorizon` seconds (default 10, never past `horizon`): it takes
-the now circle with a countdown, no keybind and a `focusColor` ring, record 1 moves to the next box and the lane
-draws the rest. Otherwise, with `nowFallback` `"empty"` (the default), the now circle is hidden and the next box
-draws record 1, the lane 2..; with `"press"` now, next and lane draw records 1, 2 and 3... (the earlier rule). Every "key to press" affordance (keybind,
-glow, flash, range, cast highlight, targets, alternatives) sits on the cell drawing record 1. With `oocPinned`
+**Timeline zones.** On each publish the press record is record 1. With `focusEnabled` (default on), a record is
+flagged when `focus == 1`, and the focus record is record 1 if flagged, else the earliest flagged record 2.. due within
+`focusHorizon` seconds (default 10, never past `horizon`). It takes the now circle: record 1 with the gold
+`focusColor` ring and the press look, or a later record with a countdown, no keybind and the `focusPendingColor` ring;
+with no focus record the now circle is empty. The next box draws the first record that is neither the focus record nor
+flagged (flagged records never sit there), and the lane every other record at its time, flagged ones included.
+`nowFallback = "press"` keeps the earlier rule: record 1 never counts as focus, a focus record takes the now circle and
+record 1 the next box, else now, next and lane draw records 1, 2 and 3... Every "key to press" affordance (keybind,
+glow, flash, range, cast highlight, targets, alternatives, pause overlay, extend sweep) sits on the cell drawing
+record 1. With `oocPinned`
 (default on) and out of combat, lane positions, countdowns and the focus test use `rec.time - recs[1].time` instead
 of the clock, so the display holds still between updates; the lane never draws left of its first mark.
 

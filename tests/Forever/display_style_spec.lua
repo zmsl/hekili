@@ -845,11 +845,19 @@ describe("the timeline display style", function()
 
     it("allocates nothing over 1,000 display frames after the first publish, on a moving clock", function()
         -- today's layout, a focus record in the now circle, then pinned out of combat (Task 2c), the empty now circle
-        for _, case in ipairs({ { false }, { 3 }, { false, true }, { false, false, "empty" } }) do
+        -- { focus, oocPinned, nowFallback, cell 1's action }
+        for _, case in ipairs({
+            { false, false, "press", "mortal_strike" },
+            { 3, false, "press", "slam" },
+            { false, true, "press", "mortal_strike" },
+            { false, false, "empty", false },
+            { 3, false, "empty", "slam" },
+            { 1, false, "empty", "mortal_strike" },
+        }) do
             local focus = case[1]
             local H, d = tlBoot(true, function(tl)
-                tl.oocPinned = case[2] or false
-                tl.nowFallback = case[3] or "press"
+                tl.oocPinned = case[2]
+                tl.nowFallback = case[3]
             end)
             tlPublish(H, focus or nil)
             local f = d.__scripts.OnUpdate
@@ -857,8 +865,7 @@ describe("the timeline display style", function()
                 H.ctl.now = H.ctl.now + 0.2
                 f(d, 0.2)
             end
-            local want = not case[3] and (focus and "slam" or "mortal_strike")
-            assert.are.equal(want, d.styleFrames.timeline.cells[1].Action or false)
+            assert.are.equal(case[4], d.styleFrames.timeline.cells[1].Action or false)
             collectgarbage("collect")
             collectgarbage("stop")
             local status = H.Hekili.Engine.Output.status
@@ -1050,6 +1057,116 @@ describe("the timeline display style", function()
         overlayed[ms.id] = nil
         assert.are.same({}, H.errors)
     end)
+
+    -- Round 3 (user rule, 2026-10-18), nowFallback "empty": a flagged record (focus == 1) never sits in the next box;
+    -- the now circle draws record 1 when it is flagged (gold, with the press look), else the earliest flagged record 2..
+    -- within the horizon (pending ring, countdown, no keybind); the next box the first other unflagged record.
+    it(
+        "draws the focus zones by the flag: pending and ready focus, flagged records kept out of the next box",
+        function()
+            local H, d, T = tlBoot(false, function(tl)
+                tl.nowFallback = "empty"
+            end)
+            local tl = H.Hekili.DB.profile.displays.Primary.timeline
+            assert.are.same({ 1, 1, 1, 0.35 }, tl.focusPendingColor)
+            local ms = H.Hekili.Engine.Registry.Abilities().mortal_strike
+            overlayed[ms.id] = true
+            H.Hekili.Engine.Output.status.numTargets = 3
+            local c = T.cells
+            rawset(c[1].Ring, "SetColorTexture", function(self, r, g, b, a)
+                rawset(self, "__color", { r, g, b, a })
+            end)
+            local function frames()
+                tlFrame(H, d)
+                tlFrame(H, d)
+            end
+
+            -- (1) record 3 flagged: pending ring and countdown in the now circle, the press in the next box
+            tlPublish(H, 3)
+            frames()
+            assert.are.same(FOCUS3, actions(T))
+            assert.is_true(c[1].Ring:IsShown())
+            assert.are.same(tl.focusPendingColor, rawget(c[1].Ring, "__color"))
+            assert.are.equal("3.6", c[1].Eta:GetText())
+            assert.is_nil(c[1].Keybinding:GetText())
+            assert.are.equal("K1", c[2].Keybinding:GetText())
+            assert.is_true(c[2].glowing)
+            assert.are.equal("3|r", c[2].Targets:GetText())
+
+            -- (2) records 3 and 5 flagged: 3 in the now circle, 5 on the lane at its time
+            tlPublish(H, 3, function(s)
+                s[5].focus = 1
+            end)
+            frames()
+            assert.are.same(FOCUS3, actions(T))
+            assert.is_true(T.inLane[5])
+
+            -- (3) record 1 flagged: gold and every press affordance on the now circle, record 2 plain in the next box
+            H.Hekili.Pause = true
+            tlPublish(H, 1)
+            frames()
+            assert.are.same({
+                "mortal_strike",
+                "overpower",
+                "slam",
+                "rend",
+                "whirlwind",
+                "sunder_armor",
+                false,
+                false,
+                false,
+                false,
+            }, actions(T))
+            assert.is_true(c[1]:IsShown() and c[1].Ring:IsShown())
+            assert.are.same(tl.focusColor, rawget(c[1].Ring, "__color"))
+            assert.are.equal("K1", c[1].Keybinding:GetText())
+            assert.is_true(c[1].glowing)
+            assert.are.equal("3|r", c[1].Targets:GetText())
+            assert.is_true(c[1].Overlay:IsShown())
+            assert.is_false(c[2].Overlay:IsShown())
+            local cd = c[1].Cooldown
+            assert.are.equal(c[1].ExactTime - rawget(cd, "__cdStart"), rawget(cd, "__cdDuration")) -- extended
+            assert.is_false(c[2].glowing)
+            assert.is_nil(c[2].Targets:GetText())
+            H.Hekili.Pause = false
+
+            -- (4) records 1 and 2 flagged: 1 in the now circle, 3 in the next box, 2 on the lane
+            tlPublish(H, 1, function(s)
+                s[2].focus = 1
+            end)
+            frames()
+            assert.are.same({
+                "mortal_strike",
+                "slam",
+                "overpower",
+                "rend",
+                "whirlwind",
+                "sunder_armor",
+                false,
+                false,
+                false,
+                false,
+            }, actions(T))
+            assert.are.same(tl.focusColor, rawget(c[1].Ring, "__color"))
+            assert.are.equal("K1", c[1].Keybinding:GetText())
+            assert.is_nil(c[2].Targets:GetText())
+
+            -- (5) nothing flagged: the now circle empty, the press in the next box
+            tlPublish(H)
+            frames()
+            assert.are.same(EMPTY, actions(T))
+            assert.is_false(c[1]:IsShown() or c[1].Ring:IsShown())
+            assert.are.equal("K1", c[2].Keybinding:GetText())
+
+            -- focus off: flags ignored
+            tl.focusEnabled = false
+            tlPublish(H, 1)
+            frames()
+            assert.are.same(EMPTY, actions(T))
+            overlayed[ms.id] = nil
+            assert.are.same({}, H.errors)
+        end
+    )
 
     it("keeps today's layout with focus off, a flagged record 1, or a flag past the focus horizon", function()
         local H, d, T = tlBoot()
