@@ -44,8 +44,8 @@ through it.
 - A record holds the recommendation (`Sim/Core.lua`'s `slot.*` writes are the list): `index`, `depth`, `display`,
   `pack`, `list`, `listName`, `action`, `actionName`, `actionID` (negative for an item), `name`, `texture`, `caption`,
   `indicator`, `item` (the item id), `keybind`, `keybindFrom`, `time`, `exact_time`, `delay`, `since`, `wait`,
-  `waitSec`, `offGCD`, `interrupt`, `castStart`, `resource`, `resource_type`, `scriptType`, `script`, `hook`, plus the
-  tables `resources` and `belief` (empty until an annotator fills it).
+  `waitSec`, `offGCD`, `interrupt`, `castStart`, `resource`, `resource_type`, `cost`, `busy`, `scriptType`, `script`,
+  `hook`, plus the tables `resources`, `alts` (§7) and `belief` (empty until an annotator fills it).
 - `payload`: the WeakAuras copy, set by `Integrations/WeakAuras.lua` (a passive subscriber, outside `Engine/`) only
   when WeakAuras is loaded.
 - Read it in a subscriber, or between publishes. Records are reused: copy a field you need to keep.
@@ -54,9 +54,9 @@ through it.
 `combat`, `combatStart` (0 out of combat), `numTargets`, `specID`, `specKey`, `specName`, `packName`. Combat, target
 count, spec and pack are read here and nowhere else.
 
-**`Engine.Subscribe(name, fn, passive)`** returns true, or false when the display's 4 slots are full. `fn(name, version,
+**`Engine.Subscribe(name, fn, passive, needs)`** returns true, or false when the display's 4 slots are full. `fn(name, version,
 output)` runs after each publish of `name` (`name` may be `"status"`). Subscribing the same `fn` again only updates its
-`passive` flag. A passive subscriber listens without asking for the display to be computed: the engine builds a display
+`passive` flag and `needs` (`needs.alts`: §7). A passive subscriber listens without asking for the display to be computed: the engine builds a display
 only when a non-passive subscriber exists. WeakAuras is passive, so it never makes the engine compute a hidden display.
 **`Engine.Unsubscribe(name, fn)`** is safe inside a subscriber; later subscribers are not skipped.
 
@@ -180,8 +180,11 @@ part of `make check`.
 ## 7. Display styles
 
 A display style draws one display's recommendations. Each display names one in `displays[id].style` (nil or unknown:
-classic; unknown also gives one notice per display and name). Styles live in `ns.UI.Styles` (`UI/Styles.lua`);
-classic (`UI/Styles/Classic.lua`) is one of them.
+classic; unknown also gives one notice per display and name). Styles live in `ns.UI.Styles` (`UI/Styles.lua`); the
+built-in ones are classic (`UI/Styles/Classic.lua`, Hekili's icon row) and timeline (`UI/Styles/Timeline.lua`: now and
+next cells and a time lane). Each display binds its own style, so Primary can be timeline while Cooldowns stays
+classic; choosing another in the options rebuilds the UI, which calls the old style's `Clear` before the new one's
+`Build`.
 
 **The public door.** Another addon (a UI pack, `## Dependencies: Hekili`) registers a style with
 `Hekili:RegisterDisplayStyle(name, impl)`, the same call the built-in styles use. `impl.api` must equal
@@ -197,9 +200,9 @@ display whose profile already names the style binds it.
 | `api` | registration | the interface version it was written for |
 | `label` | dropdown | the name the style dropdown shows |
 | `defaults` | registration | optional; the template of `displays[id].<name>` |
-| `needs` | subscribing | optional; `{ alts = true }` asks the engine for `recs[1..2].alts` (below), which costs extra simulation passes |
+| `needs` | subscribing | optional; `{ alts = true }` asks the engine for `recs[1..2].alts` (below), which costs extra simulation passes; read from the style table when the display subscribes, so a change takes effect at the next rebuild |
 | `Build(d, conf)` | every `BuildUI` | creates or reuses (`d.styleFrames[name]`) its frames on `d`; returns the button list (may be empty) |
-| `Draw(d, conf, out, status)` | on a publish or the 0.25 s pulse | draws `out` |
+| `Draw(d, conf, out, status)` | on a drawing frame: a publish or the 0.25 s pulse | draws `out` |
 | `Tick(d, conf, out, now, elapsed)` | every frame, before `Draw` | timers, flashes, range |
 | `OnGameEvent(d, conf, event, ...)` | every display event, after core's alpha and keybinding handling | |
 | `Clear(d)` | style switch, deactivate | hides everything it shows |
@@ -214,18 +217,28 @@ subtable: `keybindings`, `captions`, `border`, `range`, `glow`, `flash`, `delays
 classic's when the style has none. Later zones get their own prefixed blocks (`nextFont`); only classic marks its
 zones `legacy = true`, which keeps its queue's `queued*` keybinding fields behind `separateQueueStyle`.
 
-**What a style may read.** `conf` is the whole display table: core fields (`numIcons`, `enabled`, ...) and its own
-subtable `conf[name]`, never another style's. `d.styleState` is its per-display scratch. `out` is
+**Config.** Every style owns one subtable, `displays[id].<name>`, filled from its `defaults`; classic's is
+`displays[id].classic` too (`Hekili:RunOneTimeFixes` moves an older profile's flat classic fields under it on every
+load). Core fields (`numIcons`, `enabled`, `style`, position, `visibility`) stay on the display table. No style reads
+another style's subtable, and core reads a style's only through `StyleGroup`.
+
+**What a style may read.** `conf` is the whole display table: core fields and its own subtable `conf[name]`.
+`d.styleState` is per-display scratch shared by every style the display has bound; state of the style's own goes on
+`d.styleFrames[name]`. `out` is
 `Hekili.Engine.Output[id]`: `out.count`, `out.version` and `out.recs[1..count]`, each record with `actionName`,
 `actionID`, `texture`, `caption`, `indicator`, `keybind`, `offGCD`, `time`, `exact_time`, `delay`, `since`, `wait`,
-`resource_type`, `resources`, `cost`, `busy`, `script`, `list`, `action`, `pack`, and `alts` (`alts.n` entries of
+`resource_type`, `resources`, `cost` (the pick's spend of `resource_type`, a fraction already scaled by the maximum),
+`busy` (seconds the pick keeps the player busy: its GCD, or its cast when longer), `script`, `list`, `action`, `pack`,
+and `alts` (`alts.n` entries of
 `actionName`, `actionID`, `texture`, `action`, `list`, `bound` = `"lo"` or `"hi"`: the pick with the gating resource
 at the belief's low or high bound, when it differs from the record's own, sorted by APL entry; filled for records 1
-and 2 only while a subscriber's style declares `needs.alts`, otherwise `n = 0`); `status` is `Output.status`. `d.resolved[i]` (range,
-usable, desaturation, delay, targets, glow per record) comes with the shared resolve and is the place to read those
-instead of asking the game again. A style never reads `state.*`, `class.*`, `Hekili.State`, `Hekili.Class` or
+and 2 only while a subscriber's style declares `needs.alts`, otherwise `n = 0`); `status` is `Output.status`. `d.resolved[i]` (`UI/Resolve.lua`:
+range, usable, desaturation, delay, targets, glow per record) is the place to read those instead of asking the game
+again. `ns.UI.Resolve` runs only on drawing frames, before `Tick` and `Draw`, so a `Tick` that reads `d.resolved` sees
+values up to 0.25 s old. A style never reads `state.*`, `class.*`, `Hekili.State`, `Hekili.Class` or
 `HekiliEngine`: `tools/check_engine_reads.sh` enforces it inside Hekili, and an external style must keep it by
-convention. Draw and Tick allocate nothing after the first publish.
+convention. Draw and Tick allocate nothing after the first publish, and `Clear` must leave none of the style's
+frames shown.
 
 ## 8. Follow-ups
 

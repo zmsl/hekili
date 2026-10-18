@@ -22,9 +22,11 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `Engine/Sim/`: upstream's simulation (`Core`, `State`, `Scripts`, `Events`, `Targets`, `Constants`, `Utils`);
   - `Engine/Schema/`: the class/race/shared registration API (`Spec`, `Races`, `Shared`, `Threat`), the engine core the
     boundary spec scans;
-  - `UI/`: the display and editor widgets (`UI`, `Formatting`, `MultilineEditor`, `PopupSlider`);
+  - `UI/`: the display core and editor widgets (`UI`, `Formatting`, `MultilineEditor`, `PopupSlider`), the display
+    style registry (`Styles`), the shared "what to show" (`Resolve`) and the styles themselves (`Styles/Classic`,
+    `Styles/Timeline`); architecture §7;
   - `Integrations/`: bridges to other addons that subscribe to the engine like the UI does (`WeakAuras`);
-  - `Options/` (the options panel and chat commands), `Game/` (the game as the addon knows it: `API/` the facade,
+  - `Options/` (the options panel, chat commands and the styles' shared option builders, `StyleOptions`), `Game/` (the game as the addon knows it: `API/` the facade,
     `Events/`, `State/` the belief, VirtualState), `Libs/` (embedded, untouched) and `Textures/`.
 
   An upstream merge lands new root files at the root; re-home them by hand.
@@ -94,6 +96,14 @@ Arms solo: fights=3 agreement 0.938 (2258 ticks); react median 0 p90 1 never 0.0
 
 A deliberate pack or APL change re-records the fixture in the same commit:
 `ARMS_RECS=record .lua/bin/busted tests/Forever/arms_recs_spec.lua`.
+
+The display style fixtures in `tests/Forever/fixtures/` re-record the same way:
+`CLASSIC_DRAW=record .lua/bin/busted tests/Forever/display_style_spec.lua` (`classic_draw.lua`),
+`STYLE_OPTIONS=record .lua/bin/busted tests/Forever/style_options_spec.lua` (`classic_options.lua`) and
+`TIMELINE_DRAW=record .lua/bin/busted tests/Forever/display_style_spec.lua` (`timeline_draw.lua`). The classic ones
+prove a refactor left classic unchanged, so they are recorded at a base commit (the one before the change) in a
+temporary worktree with the spec copied in, then copied back; never re-record them in place to make a change pass. The
+timeline fixture is re-recorded in place, in the commit that deliberately changes the timeline's look.
 
 ## Remotes
 
