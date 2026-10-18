@@ -177,12 +177,17 @@ times 1000 plus a checksum of the text, so any text change reloads a saved profi
 no-op (`tests/Forever/make_pack_spec.lua`), and encode then decode returns the normalized text. `make packs` is not
 part of `make check`.
 
+**APL line options.** `make_pack.lua` accepts these on a line before `if=` (an unknown option errors; `unparse` writes them in this order):
+`name=<list>` (for `call_action_list`/`run_action_list`), `use_off_gcd=1` (recommendable off the GCD) and
+`focus=1` (the record carries `focus = 1`; the timeline shows it in the now circle ahead of time, below). The flag is
+per line, not per ability. The Druid pack flags Feral's `rip`.
+
 ## 7. Display styles
 
 A display style draws one display's recommendations. Each display names one in `displays[id].style` (nil or unknown:
 classic; unknown also gives one notice per display and name). Styles live in `ns.UI.Styles` (`UI/Styles.lua`); the
 built-in ones are classic (`UI/Styles/Classic.lua`, Hekili's icon row) and timeline (`UI/Styles/Timeline.lua`: now and
-next cells and a time lane). Each display binds its own style, so Primary can be timeline while Cooldowns stays
+next cells and a time lane; below). Each display binds its own style, so Primary can be timeline while Cooldowns stays
 classic; choosing another in the options rebuilds the UI, which calls the old style's `Clear` before the new one's
 `Build`.
 
@@ -210,6 +215,14 @@ display whose profile already names the style binds it.
 | `Perimeter(d)` | config mode | left, right, top, bottom frames for the mover backdrop, or nil |
 | `UpdateKeybindings(d)` | keybinding changes | |
 | `Options(id, conf)` | building the options | the style's tabs, new tables each call; they land in one group keyed by `name`, so their options resolve to `displays[id].<name>.<option>` (keys flat and unique within the style) |
+
+**Timeline zones.** On each publish the press record is record 1. With `focusEnabled` (default on), the focus record
+is the earliest record 2.. with `focus` due within `focusHorizon` seconds (default 10, never past `horizon`): it takes
+the now circle with a countdown, no keybind and a `focusColor` ring, record 1 moves to the next box and the lane
+draws the rest. Otherwise now, next and lane draw records 1, 2 and 3... Every "key to press" affordance (keybind,
+glow, flash, range, cast highlight, targets, alternatives) sits on the cell drawing record 1. With `oocPinned`
+(default on) and out of combat, lane positions, countdowns and the focus test use `rec.time - recs[1].time` instead
+of the clock, so the display holds still between updates; the lane never draws left of its first mark.
 
 **Shared option builders.** `Hekili.StyleOptions` (`Options/StyleOptions.lua`) builds classic's tabs for any style's
 subtable: `keybindings`, `captions`, `border`, `range`, `glow`, `flash`, `delays`, `targets`, `indicators` as

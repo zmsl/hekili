@@ -9,7 +9,7 @@ actions=cat_form,if=!buff.cat_form.up
 actions+=/shifting_power,if=energy.current<50
 actions+=/use_items
 actions+=/berserk,use_off_gcd=1
-actions+=/rip,if=combo_points.current>=settings.rip_cp&!debuff.rip.up
+actions+=/rip,focus=1,if=combo_points.current>=settings.rip_cp&!debuff.rip.up
 actions+=/rake,if=!debuff.rake.up
 actions+=/ferocious_bite,if=settings.bite_finisher&combo_points.current>=5&debuff.rip.up&excess_e>=energy.current
 actions+=/shred,if=shred_ok&excess_e>=action.shred.cost

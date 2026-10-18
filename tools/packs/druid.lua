@@ -7,4 +7,4 @@
 -- cat_ps/innervate_or_shift lists, Omen of Clarity's precombat line, `ttd` guards (target health is secret), Faerie
 -- Fire in cat, the ranged Moonfire opener, and the consumables.
 
-return { date = 20261017, spec = 1499, packs = { "Feral", "Guardian", "Balance" } }
+return { date = 20261018, spec = 1499, packs = { "Feral", "Guardian", "Balance" } }
