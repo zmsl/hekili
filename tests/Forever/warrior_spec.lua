@@ -338,6 +338,13 @@ describe("Forever Warrior", function()
             end
         end)
 
+        -- Windfury Totem's party aura on the warrior (DB2 8515/10609/10612, effect 35 area aura party), not the
+        -- Shaman's totem casts (8512/10613/10614).
+        it("tracks Windfury as the party aura the totem grants, every rank", function()
+            local a = w.auras.windfury
+            assert.are.same({ 8515, { 10609, 10612 } }, { a.id, a.copy })
+        end)
+
         -- Victorious (DB2 402975): 20 s from a kill that yields XP or honor (402974's PROC_FLAG_KILL). The client's
         -- usability flips at the kill, so the flip timestamps the window.
         it("opens Victorious on the usability flip for the rest of its 20 s, and not without the flip", function()

@@ -511,7 +511,7 @@ end
 -- record 1 never counts, a focus record takes the now circle and record 1 the next box, else cell c draws record c.
 local function flagged( r )
     local n = r.focus
-    return n ~= nil and n >= 1
+    return type( n ) == "number" and n >= 1
 end
 
 local function roles( T, tl, recs, count, now )

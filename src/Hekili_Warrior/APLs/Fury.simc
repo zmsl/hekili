@@ -4,7 +4,8 @@
 # Focus lines first, in tiers (1 highest). Overpower and Revenge only in the stance that allows them, never a swap for
 # them. Heroic Strike and Cleave (on the next swing) are the lowest tier: at the rage cap (tier 1) they dump whatever
 # comes next; below it (tier 2) they need their threshold and must leave the cost of Bloodthirst and Whirlwind when
-# either comes off cooldown before the next main-hand swing (the no-clip rule; an unknown one reserves nothing).
+# either comes off cooldown before the next main-hand swing (the no-clip rule; an unlearned Bloodthirst or Whirlwind
+# reserves nothing).
 # Rend and Thunder Clap are silent in Berserker Stance (their `nobuff`); Sunder Armor and Demoralizing Shout work in
 # every stance. From wowsims: the cooldowns (trinkets, Death Wish, Sweeping Strikes) under Arms's boss gate and the
 # cooldowns toggle; Execute after Bloodthirst and Whirlwind; then Hamstring under a Windfury Totem, the Berserker

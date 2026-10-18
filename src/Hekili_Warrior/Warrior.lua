@@ -629,8 +629,8 @@ spec:RegisterAuras({
         shared = "target",
     },
     windfury = {
-        id = 8512,
-        copy = { 10613, 10614 },
+        id = 8515,
+        copy = { 10609, 10612 },
         duration = 300,
         max_stack = 1,
     },
