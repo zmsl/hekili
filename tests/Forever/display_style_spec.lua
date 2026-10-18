@@ -1271,16 +1271,21 @@ describe("the timeline's out-of-combat pinning", function()
         return xs
     end
 
-    -- Four publishes 0.2 s apart (each set's exact_times 0.2 s later, its time offsets unchanged), three frames between.
-    local function run(combat)
+    -- Four publishes 0.2 s apart (each set's exact_times 0.2 s later, its time offsets unchanged), three frames between;
+    -- `shift`: every record's time also 0.2 s earlier per publish (the press-relative times unchanged).
+    local function run(combat, shift)
         local H, d, T = tlBoot(false, function(tl)
             tl.oocPinned = true
         end)
         local status = H.Hekili.Engine.Output.status
         status.combat = combat
         local seen = {}
-        for _ = 1, 4 do
-            tlPublish(H)
+        for n = 1, 4 do
+            tlPublish(H, nil, shift and function(s)
+                for i = 1, #TL_SET do
+                    s[i].time = s[i].time - 0.2 * n
+                end
+            end)
             for _ = 1, 3 do
                 H.ctl.now = H.ctl.now + 0.05
                 d.__scripts.OnUpdate(d, 0.05)
@@ -1304,6 +1309,16 @@ describe("the timeline's out-of-combat pinning", function()
         assert.are.equal("1.5", T.cells[2].Eta:GetText()) -- overpower 1.5 s after it
         assert.are.equal("3.0", T.cells[3].Eta:GetText())
     end)
+
+    it(
+        "holds the lane still when every time shifts by 0.2 s per publish, the offsets between them unchanged",
+        function()
+            local seen = run(false, true)
+            for n = 2, #seen do
+                assert.are.same(seen[1], seen[n], "frame " .. n)
+            end
+        end
+    )
 
     it("moves with the clock in combat", function()
         local seen = run(true)

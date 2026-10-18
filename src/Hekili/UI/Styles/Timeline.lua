@@ -385,7 +385,7 @@ function Timeline.Build( d, conf )
         if b.glowing then b:glowStop() end
         b.glowing = false
         b:Hide()
-        b.Action, b.Ability, b.ExactTime, b.Recommendation = nil, nil, nil, nil
+        b.Action, b.Ability, b.ExactTime, b.Key, b.Recommendation = nil, nil, nil, nil, nil
         T.inLane[ i ], T.want[ i ], T.x[ i ], T.row[ i ] = false, false, -1, 1
     end
     for i = 1, SLOTS do T.rec[ i ] = i end
@@ -434,7 +434,7 @@ local function showEta( b, t, int )
 end
 
 -- Moves the lane's cells toward their times (TDF's glide) and hides those past the horizon. `now` is the clock the
--- cells' Key is on: GetTime(), or record 1's time when pinned.
+-- cells' Key is on: GetTime(), or 0 when pinned (Keys press-relative).
 local function moveLane( T, tl, now, elapsed )
     local px, glide, cells = tl.pxPerSec, tl.glide, T.cells
     local keep = glide > 0 and exp( -elapsed / glide ) or 0
@@ -506,7 +506,9 @@ local function roles( T, tl, recs, count, now )
         local h = mmin( tl.focusHorizon, tl.horizon )
         for i = 2, count do
             local r = recs[ i ]
-            if r.focus and r.exact_time and ( T.pinned and r.time or r.exact_time ) - now <= h then
+            local t = r.exact_time and r.exact_time - now
+            if T.pinned and t then t = r.time and r.time - T.pressTime end
+            if r.focus and t and t <= h then
                 f = i
                 break
             end
@@ -531,11 +533,12 @@ end
 -- A publish: what each cell shows until the next one.
 local function assign( d, T, tl, conf, out, now, combat )
     local cells, recs = T.cells, out.recs
-    -- pinned: every time is press-relative (each cell's Key r.time on the clock recs[ 1 ].time), else exact_time on GetTime()
+    -- pinned: each cell's Key is press-relative (r.time - recs[ 1 ].time) on the clock 0, else exact_time on GetTime()
     local pinned = tl.oocPinned and not combat and out.count > 0 and recs[ 1 ].time ~= nil
     local reset = pinned ~= T.pinned -- the lane's glide positions are on the other clock
     T.pinned = pinned
-    if pinned then now = recs[ 1 ].time end
+    T.pressTime = pinned and recs[ 1 ].time or 0
+    if pinned then now = 0 end
     T.clock = now
     roles( T, tl, recs, out.count, now )
     cells[ 1 ].Ring:SetShown( T.focused )
@@ -544,7 +547,7 @@ local function assign( d, T, tl, conf, out, now, combat )
             local b = cells[ i ]
             b:Hide()
             glowOff( b )
-            b.Action, b.Ability, b.ExactTime = nil, nil, nil
+            b.Action, b.Ability, b.ExactTime, b.Key = nil, nil, nil, nil
             T.want[ i ], T.inLane[ i ] = false, false
         end
         T.has = false
@@ -562,7 +565,8 @@ local function assign( d, T, tl, conf, out, now, combat )
         local b, r = cells[ c ], recs[ i ]
         b.Recommendation = r
         local action, exact = r.actionName, r.exact_time
-        local key = pinned and r.time or exact
+        local key = exact
+        if pinned and exact then key = r.time - T.pressTime end
         local ability = action and r or nil
         if ability and ability.actionID < 0 and ability.actionID > -100 and action ~= "cancel_buff" or exact == nil then ability = nil end
 
@@ -823,7 +827,7 @@ function Timeline.Clear( d )
     if not T then return end
     for _, b in ipairs( T.cells ) do
         glowOff( b )
-        b.Action, b.Ability, b.ExactTime = nil, nil, nil
+        b.Action, b.Ability, b.ExactTime, b.Key = nil, nil, nil, nil
     end
     for i = 1, SLOTS do T.want[ i ], T.inLane[ i ] = false, false end
     for _, w in ipairs( T.widgets ) do w:Hide() end
