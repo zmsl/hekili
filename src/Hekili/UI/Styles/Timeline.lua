@@ -28,7 +28,6 @@ local GetSpellCooldown = function( spellID )
 end
 
 local Registry = Hekili.Engine.Registry
-local Status = Hekili.Engine.Output.status
 local SO = ns.StyleOptions
 local flashEvents = ns.UI.FlashEvents
 local Button_OnMouseDown, Button_OnMouseUp = ns.UI.Button_OnMouseDown, ns.UI.Button_OnMouseUp
@@ -45,6 +44,7 @@ local MOVE_EPS = 0.25 -- a lane icon is re-anchored when it moved this many pixe
 local CROP = 0.08 -- TDF Render.NewCell's texture crop
 local GOLD = { 1, 0.8, 0.1 } -- TDF Render.GOLD, the wait frame
 local CIRCLE = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
+local WHITE = "Interface\\Buttons\\WHITE8X8" -- tinted with SetVertexColor: a mask does not apply to a SetColorTexture fill
 local CYCLE, CANCEL = "Interface\\Addons\\Hekili\\Textures\\Cycle", "Interface\\Addons\\Hekili\\Textures\\Cancel"
 
 -- TDF Render.ETA: labels in 0.1 s steps up to 10 s, built once ("" for none, "10+" past); whole seconds for "int".
@@ -115,6 +115,7 @@ do
     d.focusHorizon = 10 -- clamped to the lane's horizon where it is used
     d.focusColor = { GOLD[ 1 ], GOLD[ 2 ], GOLD[ 3 ], 1 } -- the focus ability is the press (ready)
     d.focusPendingColor = { 1, 1, 1, 0.35 } -- the focus ability still counting down
+    d.focusReadyStyle = "ring" -- a ready focus ability: the ring in focusColor, or a glow in it ("glow")
 end
 
 local function track( T, region, label )
@@ -148,7 +149,8 @@ local function newCell( d, T, i )
         b.RingMask:SetTexture( CIRCLE, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE" )
         b.RingMask:SetAllPoints( b.Border )
         b.Border:AddMaskTexture( b.RingMask )
-        b.Ring = track( T, b:CreateTexture( nil, "BACKGROUND", nil, 1 ), L .. ".Ring" ) -- the focus ring, over the border
+        -- the focus ring: a disc over the border and under the round icon, so a ring of its thickness shows
+        b.Ring = track( T, b:CreateTexture( nil, "BACKGROUND", nil, 1 ), L .. ".Ring" )
         b.FocusMask = b:CreateMaskTexture()
         b.FocusMask:SetTexture( CIRCLE, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE" )
         b.FocusMask:SetAllPoints( b.Ring )
@@ -214,7 +216,7 @@ local function newCell( d, T, i )
         b.Overlay:SetAtlas( "creditsscreen-assets-buttons-pause" )
     end
     b.glowColor = { 0, 0, 0, 0 }
-    b.glowing = false
+    b.glowing, b.readyGlow = false, false
     b.etaK = -1
 
     b:SetScript( "OnMouseDown", Button_OnMouseDown )
@@ -227,6 +229,14 @@ local function newCell( d, T, i )
     b:EnableMouse( false )
     b:SetMovable( false )
     return b
+end
+
+-- The now circle's ready glow (focusReadyStyle "glow"), keyed apart from the press glow on the same cell.
+local function readyGlow( b, on, c )
+    if on == b.readyGlow then return end
+    b.readyGlow = on
+    if on then Glower.AutoCastGlow_Start( b, c, nil, nil, nil, nil, nil, "focus" )
+    else Glower.AutoCastGlow_Stop( b, "focus" ) end
 end
 
 local function setFont( fs, font, size, style, color )
@@ -273,19 +283,22 @@ local function dress( T, b, i, size, tl )
         b.Ring:ClearAllPoints()
         b.Ring:SetPoint( "TOPLEFT", b, "TOPLEFT", -rt, rt )
         b.Ring:SetPoint( "BOTTOMRIGHT", b, "BOTTOMRIGHT", rt, -rt )
-        b.Ring:SetColorTexture( fc[ 1 ], fc[ 2 ], fc[ 3 ], fc[ 4 ] )
+        b.Ring:SetTexture( WHITE )
+        b.Ring:SetVertexColor( fc[ 1 ], fc[ 2 ], fc[ 3 ], fc[ 4 ] )
         b.Ring:Hide()
     end
+    b.Border:SetTexture( WHITE )
     if tl.border.coloring == "custom" then
         local c = tl.border.color
-        b.Border:SetColorTexture( c[ 1 ], c[ 2 ], c[ 3 ], c[ 4 ] )
+        b.Border:SetVertexColor( c[ 1 ], c[ 2 ], c[ 3 ], c[ 4 ] )
     else
         local r, g, bl = RAID_CLASS_COLORS[ Registry.ClassFile() ]:GetRGB()
-        b.Border:SetColorTexture( r, g, bl, 1 )
+        b.Border:SetVertexColor( r, g, bl, 1 )
     end
 
     local gc = tl.gate.color
-    b.Veil:SetColorTexture( gc[ 1 ], gc[ 2 ], gc[ 3 ], gc[ 4 ] )
+    b.Veil:SetTexture( WHITE )
+    b.Veil:SetVertexColor( gc[ 1 ], gc[ 2 ], gc[ 3 ], gc[ 4 ] )
     b.Veil:Hide()
     b.Marker:SetColorTexture( gc[ 1 ], gc[ 2 ], gc[ 3 ], 1 )
     b.Marker:SetSize( mmax( 4, size / 5 ), mmax( 4, size / 5 ) )
@@ -389,6 +402,7 @@ function Timeline.Build( d, conf )
         b:SetAlpha( i < 3 and 1 or tl.laneAlpha )
         if b.glowing then b:glowStop() end
         b.glowing = false
+        readyGlow( b, false )
         b:Hide()
         b.Action, b.Ability, b.ExactTime, b.Key, b.Recommendation = nil, nil, nil, nil, nil
         T.inLane[ i ], T.want[ i ], T.x[ i ], T.row[ i ] = false, false, -1, 1
@@ -583,11 +597,12 @@ local function assign( d, T, tl, conf, out, now, combat )
     if pinned then now = 0 end
     T.clock = now
     roles( T, tl, recs, out.count, now )
-    local ring = cells[ 1 ].Ring
-    ring:SetShown( T.focused )
+    local ring, glow = cells[ 1 ].Ring, T.focused and T.ready and tl.focusReadyStyle == "glow"
+    ring:SetShown( T.focused and not glow )
+    readyGlow( cells[ 1 ], glow, tl.focusColor )
     if T.focused then
         local fc = T.ready and tl.focusColor or tl.focusPendingColor
-        ring:SetColorTexture( fc[ 1 ], fc[ 2 ], fc[ 3 ], fc[ 4 ] )
+        ring:SetVertexColor( fc[ 1 ], fc[ 2 ], fc[ 3 ], fc[ 4 ] )
     end
     if out.count == 0 or out.version == d.blankVersion then
         for i = 1, SLOTS do
@@ -708,10 +723,12 @@ end
 
 -- Cell `b`'s sweep (now and next): the spell's cooldown, stretched to its time in mode extend when `extend` (the now
 -- circle, or the press in the next box beside an empty one), re-set only when its start changed or its end moved (TDF
--- Render.SetSwipe).
-local lastGcdStart = 0
+-- Render.SetSwipe). With nothing running the stretch starts when the ability's wait began (its first draw here), so
+-- the swipe shows the remaining fraction of its countdown, not of the time since 0 or a stale GCD.
 local function sweep( b, extend, tl, now )
     local cd, ability, mode = b.Cooldown, b.Ability, tl.sweep.mode
+    local held = b.cdAbility == ability and b.cdStart > 0
+    b.cdAbility = ability
     local start, duration, enabled, modRate = 0, 0, 1, 1
     if mode ~= "off" then
         if ability.item then
@@ -721,9 +738,8 @@ local function sweep( b, extend, tl, now )
         end
         if extend and mode == "extend" and b.ExactTime > mmax( now, start + duration ) then
             local gStart = GetSpellCooldown( Registry.GCD_SPELL )
-            if gStart > lastGcdStart then lastGcdStart = gStart end
             local cStart = ( select( 4, UnitCastingInfo( "player" ) ) or select( 4, UnitChannelInfo( "player" ) ) or 0 ) / 1000
-            start = ( start > 0 and start ) or ( cStart > 0 and cStart ) or ( gStart > 0 and gStart ) or mmax( lastGcdStart, Status.combatStart )
+            start = ( start > 0 and start ) or ( cStart > 0 and cStart ) or ( gStart > 0 and gStart ) or ( held and b.cdStart or now )
             duration = b.ExactTime - start
         elseif enabled == 0 or enabled == false then
             start, duration, modRate = 0, 0, 1
@@ -876,6 +892,7 @@ function Timeline.Clear( d )
     if not T then return end
     for _, b in ipairs( T.cells ) do
         glowOff( b )
+        readyGlow( b, false )
         b.Action, b.Ability, b.ExactTime, b.Key = nil, nil, nil, nil
     end
     for i = 1, SLOTS do T.want[ i ], T.inLane[ i ] = false, false end
@@ -955,6 +972,8 @@ function Timeline.Options( id, conf )
         nowFallback = optSelect( "Without Focus", "Empty: the now circle holds only focus abilities (gold once ready to press) and the next box what to press. First Recommendation: the earlier layout, what to press in the now circle unless a focus ability is coming up.",
             { empty = "Empty", press = "First Recommendation" }, 4 ),
         focusPendingColor = { type = "color", name = "Pending Ring Color", desc = "The now circle's ring while a focus ability counts down (the Timeline tab's Ring Color once it is ready).", hasAlpha = true, order = 5, width = 1.49 },
+        focusReadyStyle = optSelect( "Ready Look", "How the now circle shows a focus ability that is ready to press: the ring in the Timeline tab's Ring Color, or a glow in it.",
+            { ring = "Ring", glow = "Glow" }, 6 ),
         eta = section( "ETA", 2, etaFont ),
         sweep = section( "Sweep", 3, {
             mode = optSelect( "Cooldown Sweep", "Extend: the sweep runs until the pick should be used. Cooldown: the ability's own cooldown. Off: none.",

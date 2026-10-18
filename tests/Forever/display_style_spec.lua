@@ -1073,7 +1073,7 @@ describe("the timeline display style", function()
             overlayed[ms.id] = true
             H.Hekili.Engine.Output.status.numTargets = 3
             local c = T.cells
-            rawset(c[1].Ring, "SetColorTexture", function(self, r, g, b, a)
+            rawset(c[1].Ring, "SetVertexColor", function(self, r, g, b, a)
                 rawset(self, "__color", { r, g, b, a })
             end)
             local function frames()
@@ -1168,6 +1168,57 @@ describe("the timeline display style", function()
         end
     )
 
+    -- The now circle's round ring and its sweep (user screenshots, 2026-10-18): the ring is a white disc tinted under
+    -- the round icon (a colour texture ignores masks and drew square); the extend sweep counts down from when the wait
+    -- began, not from 0 out of combat.
+    it("draws the ring as a tinted white disc and sweeps the remaining fraction of the countdown", function()
+        local H, d, T = tlBoot(false, function(tl)
+            tl.nowFallback = "empty"
+        end)
+        local c = T.cells
+        assert.are.equal("Interface\\Buttons\\WHITE8X8", c[1].Ring:GetTexture())
+        tlPublish(H, 3) -- slam at 4 s: pending
+        local t0 = H.ctl.now + 0.2 -- the first frame's clock
+        tlFrame(H, d)
+        local cd = c[1].Cooldown
+        local exact = c[1].ExactTime
+        assert.are.equal(t0, rawget(cd, "__cdStart")) -- nothing running: the countdown starts at its first draw
+        assert.are.equal(exact - t0, rawget(cd, "__cdDuration"))
+        for _ = 1, 5 do
+            tlFrame(H, d)
+        end
+        assert.are.equal(t0, rawget(cd, "__cdStart")) -- held while the same ability waits
+        local fraction = (exact - H.ctl.now) / rawget(cd, "__cdDuration")
+        assert.is_true(fraction > 0.6 and fraction < 0.8, tostring(fraction)) -- 2.6 s of 3.8 s left, not a sliver
+        assert.are.same({}, H.errors)
+    end)
+
+    it("shows a ready focus ability with a glow instead of the ring when focusReadyStyle is glow", function()
+        local H, d, T = tlBoot(false, function(tl)
+            tl.nowFallback = "empty"
+        end)
+        local tl = H.Hekili.DB.profile.displays.Primary.timeline
+        assert.are.equal("ring", tl.focusReadyStyle)
+        tl.focusReadyStyle = "glow"
+        local c = T.cells
+        tlPublish(H, 1) -- record 1 flagged: ready
+        tlFrame(H, d)
+        assert.is_false(c[1].Ring:IsShown())
+        assert.is_true(c[1].readyGlow)
+        assert.truthy(rawget(c[1], "_AutoCastGlowfocus"))
+        tlPublish(H, 3) -- pending: the pending ring, no glow
+        tlFrame(H, d)
+        assert.is_true(c[1].Ring:IsShown())
+        assert.is_false(c[1].readyGlow)
+        tlPublish(H, 1)
+        tlFrame(H, d)
+        assert.is_true(c[1].readyGlow)
+        tlPublish(H) -- no focus: the circle empties and the glow stops
+        tlFrame(H, d)
+        assert.is_false(c[1].readyGlow)
+        assert.are.same({}, H.errors)
+    end)
+
     it("keeps today's layout with focus off, a flagged record 1, or a flag past the focus horizon", function()
         local H, d, T = tlBoot()
         local tl = H.Hekili.DB.profile.displays.Primary.timeline
@@ -1219,7 +1270,7 @@ describe("the timeline display style", function()
         end)
         local tl = H.Hekili.DB.profile.displays.Primary.timeline
         local c = T.cells
-        rawset(c[1].Ring, "SetColorTexture", function(self, r, g, b, a)
+        rawset(c[1].Ring, "SetVertexColor", function(self, r, g, b, a)
             rawset(self, "__color", { r, g, b, a })
         end)
         -- a tier-1 record 5 beats a tier-2 record 3
