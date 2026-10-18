@@ -69,6 +69,8 @@ Options\Profile.lua
 Engine\Driver.lua
 Engine\Content.lua
 UI\UI.lua
+UI\Styles.lua
+UI\Styles\Classic.lua
 Integrations\WeakAuras.lua
 Engine\Sim\Scripts.lua
 Engine\Sim\Core.lua
