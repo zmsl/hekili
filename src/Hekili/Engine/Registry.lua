@@ -26,6 +26,11 @@ function Registry.ClassFile() return class.file end
 function Registry.Kit() return class.kit or nil end
 -- stylua: ignore end
 
+--- A pack payload's `spec` (a share key "WARRIOR:arms", a legacy pseudo-spec id or an id) as this session's spec id.
+function Registry.SpecFromShare(v)
+    return ns.SpecFromShare(v, class.specByShare, state.spec.clientID, state.spec.id)
+end
+
 --- The AceOption settings list `specID` registered with RegisterSetting ({ name, default, info } entries), or nil.
 function Registry.Settings(specID)
     local spec = class.specs[specID]

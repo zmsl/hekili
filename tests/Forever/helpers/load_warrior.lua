@@ -7,9 +7,9 @@ local M = {}
 
 --- Loads the class file. Returns `w`: `w.abilities`, `w.auras` (merged by key), `w.talents`, `w.resource`
 --- ({ powerType, models }), `w.hooks[name]`, `w.events[event]` (spec:RegisterEvent's handlers), `w.funcs[name]`,
---- `w.exprs[name]`, `w.settings[key]` ({ default, option }), `w.packs` (in order: { name, version, string }),
---- `w.options`, `w.specID`, `w.state` (Hekili.State's stand-in, its knownRank, swingBase, stat and healthMax answering
---- from `game`) and `w.game`. `w.passives`: spec:RegisterAbility's single registrations (the passives).
+--- `w.exprs[name]`, `w.settings[key]` ({ default, option, specs: nil for every spec }), `w.packs` (in order: { name,
+--- version, string }), `w.options`, `w.specID`, `w.class` and `w.def` (NewClass's token and definition), `w.state`
+--- (Hekili.State's stand-in, its knownRank, swingBase, stat and healthMax answering from `game`) and `w.game`. `w.passives`: spec:RegisterAbility's single registrations (the passives).
 function M.load()
     local reg = {}
     local spec = setmetatable({}, {
@@ -38,6 +38,10 @@ function M.load()
     local hekili = { State = w.state }
     function hekili:NewSpecialization(id)
         w.specID = id
+        return spec
+    end
+    function hekili:NewClass(token, def)
+        w.class, w.def = token, def
         return spec
     end
     local fakes = {
@@ -133,7 +137,7 @@ function M.load()
     end
     w.settings = {}
     for _, call in ipairs(reg.RegisterSetting or {}) do
-        w.settings[call[1]] = { default = call[2], option = call[3] }
+        w.settings[call[1]] = { default = call[2], option = call[3], specs = call[4] and { unpack(call, 4) } or nil }
     end
     w.packs = reg.RegisterPack or {}
     w.options = reg.RegisterOptions and reg.RegisterOptions[1][1]

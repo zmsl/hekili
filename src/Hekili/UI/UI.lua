@@ -1340,8 +1340,7 @@ do
             actsActive[ a ] = nil
         end
 
-        local specEnabled = GetSpecialization()
-        specEnabled = specEnabled and GetSpecializationInfo( specEnabled )
+        local specEnabled = Status.specID
 
         if Registry.Specs()[ specEnabled ] then
             specEnabled = specEnabled and rawget( profile.specs, specEnabled )

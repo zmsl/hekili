@@ -11,9 +11,9 @@ local M = {}
 --- `state.knownRank` (a real one, for the strict-context specs); by default a fake answering from `game.known`. Returns `w`: `w.abilities`,
 --- `w.auras` (merged by key), `w.talents`, `w.resources[powerType]` ({ models, meta }), `w.costMods` (the
 --- RegisterCostMod declarations), `w.hooks[name]`, `w.events[event]`, `w.funcs[name]`, `w.exprs[name]`,
---- `w.settings[key]` ({ default, option }), `w.totems` (the RegisterTotems table), `w.pets` (the RegisterPets
---- table), `w.packs` (in order: { name,
---- version, string }), `w.options`, `w.specID`,
+--- `w.settings[key]` ({ default, option, specs: nil for every spec }), `w.totems` (the RegisterTotems table), `w.pets`
+--- (the RegisterPets table), `w.packs` (in order: { name, version, string }), `w.options`, `w.specID`, `w.class` and
+--- `w.def` (NewClass's token and definition),
 --- `w.spec` (the recording spec object), `w.state` (Hekili.State's stand-in) and `w.game`.
 function M.load(vs, file, class)
     local reg = {}
@@ -41,6 +41,10 @@ function M.load(vs, file, class)
     w.spec = spec
     function hekili:NewSpecialization(id)
         w.specID = id
+        return spec
+    end
+    function hekili:NewClass(token, def)
+        w.class, w.def = token, def
         return spec
     end
     local fakes = {
@@ -129,7 +133,7 @@ function M.load(vs, file, class)
     end
     w.settings = {}
     for _, call in ipairs(reg.RegisterSetting or {}) do
-        w.settings[call[1]] = { default = call[2], option = call[3] }
+        w.settings[call[1]] = { default = call[2], option = call[3], specs = call[4] and { unpack(call, 4) } or nil }
     end
     w.totems = reg.RegisterTotems and reg.RegisterTotems[1][1]
     w.pets = reg.RegisterPets and reg.RegisterPets[1][1]

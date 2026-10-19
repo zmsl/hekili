@@ -445,13 +445,17 @@ function Hekili:GenerateProfile()
     local s = state
 
     local spec = s.spec.key
+    if spec and s.spec.source then spec = spec .. " (" .. s.spec.source .. ")" end
 
     local talents
 
     for k, v in orderedPairs( s.talent ) do
         if v.enabled then
-            if talents then talents = format( "%s\n    %s = %d/%d", talents, k, v.rank, v.max )
-            else talents = format( "%s = %d/%d", k, v.rank, v.max ) end
+            -- Forever: no `max` on state.talent (its metatable answers the key name); the entry's max rank instead.
+            local entry = class.talents[ k ]
+            local max = rawget( v, "max" ) or type( entry ) == "table" and entry[ 3 ] or 0
+            if talents then talents = format( "%s\n    %s = %d/%d", talents, k, v.rank, max )
+            else talents = format( "%s = %d/%d", k, v.rank, max ) end
         end
     end
 

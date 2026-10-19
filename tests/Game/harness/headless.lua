@@ -245,7 +245,7 @@ local function isVerb(k)
 end
 
 --- A new instance: Hekili loaded and logged in. `o.character` (the content's, set before login: §1.3) {
---- class, classID, specID, level, known = { spellID... }, talents = { [spellID] = rank }, power = { type, token, max,
+--- class, classID, specID (the client's pseudo-spec id; the spec comes from `o.pack`), level, known = { spellID... }, talents = { [spellID] = rank }, power = { type, token, max,
 --- value (nil: secret, as on Forever) }, speed = { main, off }, items = { [slot] = { itemID, name, equipLoc } },
 --- forms = { spellID... }, form }; `o.pack` the priority to select; `o.now` the clock [1000]; `o.raw` facade rows
 --- answered by the raw client (names: the oracle's secret-free client, §4), replaced as Facade.lua loads; `o.saved` the
@@ -976,7 +976,16 @@ function M.new(o)
     H.Hekili = rawget(env, "Hekili")
     local hk = H.Hekili
     if hk and o.pack and ctl.specID then
-        rawget(hk.DB.profile.specs, ctl.specID).package = o.pack
+        -- the priority's spec becomes the character's choice (a class on NewClass), then the priority its package
+        local pack = rawget(hk.DB.profile.packs, o.pack)
+        local s = pack and hk.Engine.Registry.Specs()[pack.spec]
+        if s and s.id ~= hk.State.spec.id and hk:SetSpecChoice(s.key) then
+            hk:SpecializationChanged()
+        end
+        local sp = rawget(hk.DB.profile.specs, hk.State.spec.id)
+        if sp then
+            sp.package = o.pack
+        end
     end
     H.phase = "run"
     return H

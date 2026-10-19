@@ -608,7 +608,7 @@ describe("Forever Warrior", function()
         local n, registered = 0, 0
         for key, t in pairs(TALENTS) do
             n = n + 1
-            assert.are.same({ 0, t[1], t[2] }, w.talents[key], key)
+            assert.are.same({ t[1], t[2] }, { w.talents[key][2], w.talents[key][3] }, key)
         end
         for _ in pairs(w.talents) do
             registered = registered + 1
@@ -616,6 +616,17 @@ describe("Forever Warrior", function()
         assert.are.same({ 52, 52 }, { n, registered })
         -- Tactical Mastery, a passive: declared, and the Schema tells the belief to watch it (Engine/Schema/Spec.lua)
         assert.are.same({ id = 1310185, passive = true }, w.passives.tactical_mastery)
+    end)
+
+    it("places every registered talent in a tree, 17 Arms, 18 Fury and 17 Protection", function()
+        -- the DB2's tabs (wowdb talents WARRIOR): Improved Slam is Fury's and Improved Thunder Clap Arms's, though the
+        -- pane groups them with the other tree; a Forever-only node is its section's
+        local n = { 0, 0, 0 }
+        for key, t in pairs(require("Forever.helpers.load_warrior").load().talents) do
+            assert.is_true(t[1] >= 1 and t[1] <= 3, key)
+            n[t[1]] = n[t[1]] + 1
+        end
+        assert.are.same({ 17, 18, 17 }, n)
     end)
 
     it("reads a queued strike and Revenge's window at reset, leaving the stance to the Forms source", function()
@@ -665,7 +676,13 @@ describe("Forever Warrior", function()
         for i, name in ipairs({ "Arms", "Fury", "Protection" }) do
             assert.are.same({ name, tonumber(printed[i][1]), printed[i][2] }, w.packs[i])
         end
-        assert.are.same({ package = "Arms" }, w.options)
+        assert.is_nil(w.options) -- each spec's package is NewClass's
+        assert.are.equal("WARRIOR", w.class)
+        local keys = {}
+        for i, s in ipairs(w.def.specs) do
+            keys[i] = s.key .. "=" .. tostring(s.package) .. "@" .. s.tree
+        end
+        assert.are.same({ "arms=Arms@1", "fury=Fury@2", "protection=Protection@3" }, keys)
     end)
 
     it(
@@ -690,7 +707,7 @@ describe("Forever Warrior", function()
 
     it("keeps its priorities in src/Hekili_Warrior/APLs/, tools/make_pack.lua's default class", function()
         local def = dofile("src/Hekili_Warrior/APLs/packs.lua")
-        assert.are.same({ 1491, { "Arms", "Fury", "Protection" } }, { def.spec, def.packs })
+        assert.are.same({ "WARRIOR", { "Arms", "Fury", "Protection" } }, { def.class, def.packs })
         local byName = assert(loadfile("tools/make_pack.lua"))("lists", "warrior")
         local byDefault = assert(loadfile("tools/make_pack.lua"))("lists")
         assert.are.same(byDefault, byName)

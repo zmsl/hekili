@@ -8,7 +8,8 @@ local loadWarrior = require("Forever.helpers.load_warrior")
 
 local M = {}
 
-M.SPEC, M.CLASS_ID, M.PACK = 1491, 1, "Arms"
+-- M.SPEC: the Arms spec's id (Hekili:NewClass); M.CLIENT_SPEC: the client's pseudo-spec the character reports.
+M.SPEC, M.CLIENT_SPEC, M.CLASS_ID, M.PACK = 100011, 1491, 1, "Arms"
 
 -- The Arms kit a level 60 Warrior has trained (every rank: Classic trains them all by 60) and the talent-granted
 -- Mortal Strike of the build below.
@@ -83,7 +84,7 @@ function M.character()
     return {
         class = "WARRIOR",
         classID = M.CLASS_ID,
-        specID = M.SPEC,
+        specID = M.CLIENT_SPEC,
         level = 60,
         known = known,
         talents = M.TALENTS,

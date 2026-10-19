@@ -15,6 +15,14 @@ local CLASSES =
     { warrior = "Warrior", druid = "Druid", rogue = "Rogue", paladin = "Paladin", shaman = "Shaman", hunter = "Hunter" }
 
 describe("tools/make_pack.lua", function()
+    it("binds each pack to its spec's share key from the manifest", function()
+        local by = {}
+        for _, p in ipairs(mp.load("warrior")) do
+            by[p.name] = mp.decode(mp.encode(p)).spec
+        end
+        assert.are.same({ Arms = "WARRIOR:arms", Fury = "WARRIOR:fury", Protection = "WARRIOR:protection" }, by)
+    end)
+
     for class in pairs(CLASSES) do
         it("round-trips every " .. class .. " pack through encode, decode, unparse and parse", function()
             for _, p in ipairs(mp.load(class)) do

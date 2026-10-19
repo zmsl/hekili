@@ -372,7 +372,10 @@ do
         local specialization = GetSpecialization()
         local specID = specialization and GetSpecializationInfo( specialization )
 
-        if specID and specID ~= state.spec.id then
+        if specID and specID ~= state.spec.clientID then
+            Hekili.PendingSpecializationChange = true
+        elseif class.kit and not Hekili.Engine.settings.specChoice[ ns.CharKey() ] then
+            -- no stored choice yet (no points, or a tie): the next pass picks the dominant tree and stores it
             Hekili.PendingSpecializationChange = true
         end
     end

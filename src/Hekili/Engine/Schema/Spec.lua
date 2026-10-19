@@ -32,6 +32,17 @@ local GetSpellDescription, GetSpellTexture = C_Spell.GetSpellDescription, C_Spel
 local GetSpecialization, GetSpecializationInfo = C_SpecializationInfo.GetSpecialization, C_SpecializationInfo.GetSpecializationInfo
 local GetItemSpell = C_Item.GetItemSpell
 local GetSpellInfo = C_Spell.GetSpellInfo
+local GetRealmName, GetTalentInfoByID, UnitName = Facade.GetRealmName, Facade.GetTalentInfoByID, Facade.UnitName
+
+-- A RegisterTalents entry's rank: the facade answers the C_Traits walk's rank as GetTalentInfoByID's 12th return.
+local function talentRank( t )
+    return ( select( 12, GetTalentInfoByID( t ) ) ) or 0
+end
+
+--- The key a character's spec choice is stored under: "Name-Realm".
+function ns.CharKey()
+    return ( UnitName( "player" ) or "?" ) .. "-" .. ( GetRealmName() or "?" )
+end
 
 local specTemplate = {
     enabled = true,
@@ -2024,12 +2035,22 @@ Hekili.SpecChangeHistory = {}
 
 function Hekili:SpecializationChanged()
     local currentSpec = GetSpecialization()
-    local currentID = GetSpecializationInfo( currentSpec )
+    if currentSpec == 5 then currentSpec = 1 end -- no specialization: the first
+    -- Forever's one pseudo-spec per class: its id keys the legacy profile; its role and primary stat stay the
+    -- simulation's (a spec's role is shown, not simulated: per-spec plan).
+    local clientID, clientName, _, _, clientRole, clientStat = GetSpecializationInfo( currentSpec )
 
-    if currentID == nil then
+    if clientID == nil then
         self.PendingSpecializationChange = true
         return
     end
+
+    -- The class pack's spec: the stored choice, else the dominant tree (Engine/Schema/Trees.lua). The ranks may be the
+    -- last walk's here; SettleSpecChoice re-picks after this pass's walk.
+    local kit = class.kit
+    local tree, source
+    if kit then tree, source = ns.PickSpec( kit, Hekili.Engine.settings.specChoice[ ns.CharKey() ], talentRank ) end
+    local currentID = tree and tree.id or clientID
 
     self.PendingSpecializationChange = false
     self:ForceUpdate( "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" )
@@ -2069,53 +2090,36 @@ function Hekili:SpecializationChanged()
 
     wipe( class.pets )
 
-    local specs = {}
+    local specs = { currentID, 0 }
 
-    -- If the player does not have a specialization, use their first spec instead.
-    if currentSpec == 5 then
-        currentSpec = 1
-        currentID = GetSpecializationInfo( 1 )
+    state.spec.id = currentID
+    state.spec.name = tree and tree.name or clientName
+    state.spec.key = tree and tree.key or getSpecializationKey( currentID )
+    state.spec.clientID = clientID
+    state.spec.kitID = kit and kit.id or currentID
+    state.spec.source = source or "client"
+
+    for k in pairs( state.role ) do
+        state.role[ k ] = false
     end
 
-    for i = 1, 4 do
-        local id, name, _, _, role, primaryStat = GetSpecializationInfo( i )
-
-        if not id then break end
-
-        if i == currentSpec then
-            insert( specs, 1, id )
-
-            state.spec.id = id
-            state.spec.name = name
-            state.spec.key = getSpecializationKey( id )
-
-            for k in pairs( state.role ) do
-                state.role[ k ] = false
-            end
-
-            if role == "DAMAGER" then
-                state.role.attack = true
-            elseif role == "TANK" then
-                state.role.tank = true
-            else
-                state.role.healer = true
-            end
-
-            if primaryStat == 1 then
-                state.spec.primaryStat = "strength"
-            elseif primaryStat == 2 then
-                state.spec.primaryStat = "agility"
-            else
-                state.spec.primaryStat = "intellect"
-            end
-
-            state.spec[ state.spec.key ] = true
-        else
-            insert( specs, id )
-        end
+    if clientRole == "DAMAGER" then
+        state.role.attack = true
+    elseif clientRole == "TANK" then
+        state.role.tank = true
+    else
+        state.role.healer = true
     end
 
-    insert( specs, 0 )
+    if clientStat == 1 then
+        state.spec.primaryStat = "strength"
+    elseif clientStat == 2 then
+        state.spec.primaryStat = "agility"
+    else
+        state.spec.primaryStat = "intellect"
+    end
+
+    state.spec[ state.spec.key ] = true
 
 
     for key in pairs( GetResourceInfo() ) do
@@ -2306,6 +2310,7 @@ function Hekili:SpecializationChanged()
     ns.VirtualState.SpecChanged()
 
     ns.updateTalents()
+    if kit then self:SettleSpecChoice( clientID ) end
     ResetDisabledGearAndSpells()
 
     state.swings.mh_speed, state.swings.oh_speed = UnitAttackSpeed( "player" )
@@ -2323,6 +2328,46 @@ function Hekili:SpecializationChanged()
     self:UpdateDamageDetectionForCLEU()
 end
 
+--- (per-spec plan) After a spec change's talent walk: share keys of imported packs resolved, the dominant tree stored on
+--- a character with no choice yet, and one more pass when this pass's pick (made on the last walk's ranks) was not it.
+--- A stored choice never moves here: a respec only shows the hint (GetSpecHint).
+function Hekili:SettleSpecChoice( clientID )
+    local kit, settings = class.kit, Hekili.Engine.settings
+    local key = ns.CharKey()
+    local pick, source = ns.PickSpec( kit, settings.specChoice[ key ], talentRank )
+    ns.ResolvePackSpecs( settings.packs, class.specByShare )
+    if source == "dominant" then settings.specChoice[ key ] = pick.key end
+    if pick.id ~= state.spec.id then self.PendingSpecializationChange = true end
+end
+
+--- Stores this character's spec choice and switches to it at the next frame: `key` is a spec key, or a prefix of one
+--- spec's key or name (case-insensitive). Returns the spec, or nil when no spec or more than one matches.
+function Hekili:SetSpecChoice( key )
+    local kit = class.kit
+    if not kit or type( key ) ~= "string" then return end
+    key = key:lower()
+    local s = kit.specs[ key ]
+    if not s then
+        for _, t in ipairs( kit.trees ) do
+            if t.key:sub( 1, #key ) == key or t.name:lower():sub( 1, #key ) == key then
+                if s then return end -- ambiguous
+                s = t
+            end
+        end
+    end
+    if not s then return end
+    Hekili.Engine.settings.specChoice[ ns.CharKey() ] = s.key
+    self.PendingSpecializationChange = true
+    return s
+end
+
+--- The spec the talents favor when it differs from this character's stored choice (the class page's hint), or nil.
+function Hekili:GetSpecHint()
+    local kit = class.kit
+    if not kit then return end
+    return ns.SpecHint( kit, Hekili.Engine.settings.specChoice[ ns.CharKey() ], talentRank )
+end
+
 
 do
     RegisterEvent( "PLAYER_ENTERING_WORLD", function( event, login, reload )
@@ -2330,7 +2375,7 @@ do
             local currentSpec = GetSpecialization()
             local currentID = GetSpecializationInfo( currentSpec )
 
-            if currentID ~= state.spec.id then
+            if currentID ~= state.spec.clientID then
                 Hekili:SpecializationChanged()
             end
         end

@@ -15,6 +15,8 @@ local settings = {
     displays = false,
     performance = false,
     notifications = false,
+    specChoice = false,
+    specMigrated = false,
     -- copied
     enabled = false,
     autoSnapshot = false,
@@ -30,6 +32,8 @@ function Engine.Configure(profile)
     settings.displays = profile.displays
     settings.performance = profile.performance
     settings.notifications = profile.notifications
+    settings.specChoice = profile.specChoice
+    settings.specMigrated = profile.specMigrated
     settings.enabled = profile.enabled
     settings.autoSnapshot = profile.autoSnapshot
     settings.screenshot = profile.screenshot

@@ -67,14 +67,18 @@ describe("Forever content through the real Engine/Schema/Spec.lua", function()
                     assert.are.same({}, env.errors)
                 end)
 
-                it("registers the class's specialization", function()
+                it("registers the class's specialization (on NewClass: its kit and a spec a talent tree)", function()
                     local n = 0
                     for id in pairs(env.class.specs) do
                         if id ~= 0 then
                             n = n + 1
                         end
                     end
-                    assert.are.equal(1, n)
+                    local kit = env.class.kit
+                    assert.are.equal(kit and 1 + #kit.trees or 1, n)
+                    if classToken == "WARRIOR" then
+                        assert.are.equal(3, #kit.trees)
+                    end
                 end)
 
                 it("resolves every ability's item at registration (the Healthstone: 5512, the bags empty)", function()

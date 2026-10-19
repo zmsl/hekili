@@ -29,7 +29,7 @@ local function boot(stance)
 end
 
 local function set(name, value)
-    H.Hekili.DB.profile.specs[ww.SPEC].settings[name] = value
+    H.Hekili.DB.profile.specs[H.Hekili.State.spec.id].settings[name] = value -- the Fury spec
 end
 
 -- The `n`th (default first) `action` line's condition in Fury's `list` (default list by default) as the engine

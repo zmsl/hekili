@@ -1,9 +1,9 @@
 -- Hekili_Warrior/Warrior.lua
--- The Forever Warrior (pseudo-spec 1491): the Classic Warrior kit with Forever's spell data (ranks, costs, cooldowns,
--- cast times and durations from the Forever DB2 at build 1.60.1.70338, wowdb, a cost of 100 there being 10 rage; the
--- client is 1.60.1.70374, and its export wins where they differ), Forever's Victory Rush and Spearing Strike, rage per
--- hit for both hands, Bloodrage's and Anger Management's rage over time, stances from the belief's Forms source, and
--- the default priorities.
+-- The Forever Warrior (Arms, Fury and Protection, one spec a talent tree: Hekili:NewClass): the Classic Warrior kit
+-- with Forever's spell data (ranks, costs, cooldowns, cast times and durations from the Forever DB2 at build
+-- 1.60.1.70338, wowdb, a cost of 100 there being 10 rage; the client is 1.60.1.70374, and its export wins where they
+-- differ), Forever's Victory Rush and Spearing Strike, rage per hit for both hands, Bloodrage's and Anger Management's
+-- rage over time, stances from the belief's Forms source, and the default priorities.
 -- Talents: the 52 live nodes (a ForeverProbe export of the client, 1.60.1.70374, 2026-10-15; confirmed by the trait
 -- walk of 2026-10-16, docs/research/2026-10-16-warrior-talent-dump.md: no Improved Shield Block, Improved Taunt or
 -- Toughness, Defiance max 3, so Shield Block stays 7 s and Taunt 8 s). Only rank 1 of each
@@ -30,7 +30,16 @@ local IsSpellKnown, IsCurrentSpell, IsSpellUsable =
     C_SpellBook.IsSpellKnown, C_Spell.IsCurrentSpell, C_Spell.IsSpellUsable
 local floor, max, min, sort = math.floor, math.max, math.min, table.sort
 
-local spec = Hekili:NewSpecialization(1491, false, 135328) -- inv_sword_27; numeric because Options formats it with %d
+-- The class kit and one spec a talent tree (ids the core's: Arms 100011, Fury 100012, Protection 100013; the client's
+-- one pseudo-spec, 1491, only keys the legacy profile the core migrates). Icons are the DB2 talent tabs' (wowdb
+-- TalentTab.SpellIconID), numeric: Options formats them with %d.
+local spec = Hekili:NewClass("WARRIOR", {
+    specs = {
+        { key = "arms", name = "Arms", tree = 1, icon = 132292, role = "attack", package = "Arms" },
+        { key = "fury", name = "Fury", tree = 2, icon = 132347, role = "attack", package = "Fury" },
+        { key = "protection", name = "Protection", tree = 3, icon = 134952, role = "tank", package = "Protection" },
+    },
+})
 if not spec then
     return
 end
@@ -319,72 +328,74 @@ spec:RegisterResource(
     }
 )
 
--- Talents: { node (unused on Forever), the definition spell, max rank }: the 52 nodes of Forever's one talent tree,
--- grouped by their columns as the pane shows them. Keys are Classic's where the talent exists (Bastion keeps Classic's
+-- Talents: { talent tree (1 Arms, 2 Fury, 3 Protection: the dominant tree picks the spec), the definition spell,
+-- max rank }: the 52 nodes of Forever's one talent tree, grouped by their columns as the pane shows them. The tree is
+-- the DB2's (Talent.TabID; Improved Slam and Improved Thunder Clap sit in another column than their tab), a
+-- Forever-only node its section's. Keys are Classic's where the talent exists (Bastion keeps Classic's
 -- one_handed_weapon_specialization), snake_case names for the Forever-only ones. Each node reported one definition
 -- spell at every rank the export saw (owned nodes at ranks 1-5 report their rank 1 spell; Iron Will and Defiance
 -- define themselves by a higher DB2 rank's ID), so there are no rank aliases. The belief maps the trait walk's
 -- spells to them.
 spec:RegisterTalents({
-    -- Arms (17)
-    improved_heroic_strike = { 0, 12282, 3 },
-    deflection = { 0, 16462, 5 },
-    improved_rend = { 0, 12286, 3 },
-    improved_charge = { 0, 12285, 2 },
-    improved_tactical_mastery = { 0, 12295, 5 },
-    improved_overpower = { 0, 12290, 2 },
-    anger_management = { 0, 12296, 1 },
-    deep_wounds = { 0, 12834, 3 },
-    two_handed_weapon_specialization = { 0, 12163, 3 },
-    impale = { 0, 16493, 2 },
-    sweeping_strikes = { 0, 12292, 1 },
-    improved_hamstring = { 0, 12289, 3 },
-    mortal_strike = { 0, 12294, 1 },
-    improved_slam = { 0, 12862, 2 }, -- effect unmodelled
+    -- Arms (16 here, 17 on the tree)
+    improved_heroic_strike = { 1, 12282, 3 },
+    deflection = { 1, 16462, 5 },
+    improved_rend = { 1, 12286, 3 },
+    improved_charge = { 1, 12285, 2 },
+    improved_tactical_mastery = { 1, 12295, 5 },
+    improved_overpower = { 1, 12290, 2 },
+    anger_management = { 1, 12296, 1 },
+    deep_wounds = { 1, 12834, 3 },
+    two_handed_weapon_specialization = { 1, 12163, 3 },
+    impale = { 1, 16493, 2 },
+    sweeping_strikes = { 1, 12292, 1 },
+    improved_hamstring = { 1, 12289, 3 },
+    mortal_strike = { 1, 12294, 1 },
+    improved_slam = { 2, 12862, 2 }, -- effect unmodelled; the DB2 tab is Fury
     -- Forever-only; Weaponmaster (in place of the four weapon specializations) and Bloodthrill unmodelled.
-    weaponmaster = { 0, 1290261, 5 },
-    spearing_strike = { 0, 1310222, 1 },
-    bloodthrill = { 0, 1289682, 5 },
-    -- Fury (17)
-    booming_voice = { 0, 12321, 5 },
-    cruelty = { 0, 12320, 5 },
-    unbridled_wrath = { 0, 12322, 5 },
-    piercing_howl = { 0, 12323, 1 },
-    blood_craze = { 0, 16487, 3 },
-    dual_wield_specialization = { 0, 23584, 5 },
-    improved_execute = { 0, 20502, 2 },
-    enrage = { 0, 12317, 5 },
-    death_wish = { 0, 12328, 1 },
-    improved_intercept = { 0, 20504, 2 },
-    improved_berserker_rage = { 0, 20500, 2 },
-    flurry = { 0, 12319, 5 },
-    bloodthirst = { 0, 23881, 1 },
+    weaponmaster = { 1, 1290261, 5 },
+    spearing_strike = { 1, 1310222, 1 },
+    bloodthrill = { 1, 1289682, 5 },
+    -- Fury (17 here, 18 on the tree)
+    booming_voice = { 2, 12321, 5 },
+    cruelty = { 2, 12320, 5 },
+    unbridled_wrath = { 2, 12322, 5 },
+    piercing_howl = { 2, 12323, 1 },
+    blood_craze = { 2, 16487, 3 },
+    dual_wield_specialization = { 2, 23584, 5 },
+    improved_execute = { 2, 20502, 2 },
+    enrage = { 2, 12317, 5 },
+    death_wish = { 2, 12328, 1 },
+    improved_intercept = { 2, 20504, 2 },
+    improved_berserker_rage = { 2, 20500, 2 },
+    flurry = { 2, 12319, 5 },
+    bloodthirst = { 2, 23881, 1 },
     -- Forever-only: Raging Blows (-3 rage on Cleave and Whirlwind); the others unmodelled.
-    furious_precision = { 0, 1323963, 3 },
-    raging_blows = { 0, 1310315, 1 },
-    lingering_rage = { 0, 1323964, 5 },
-    gore_drinker = { 0, 1323967, 2 },
-    -- Protection (18)
-    shield_specialization = { 0, 12298, 5 },
-    anticipation = { 0, 12297, 5 },
-    improved_bloodrage = { 0, 12301, 2 },
-    improved_thunder_clap = { 0, 12287, 3 },
-    iron_will = { 0, 12962, 5 },
-    last_stand = { 0, 12975, 1 },
-    improved_revenge = { 0, 12797, 3 },
-    defiance = { 0, 12792, 3 },
-    improved_sunder_armor = { 0, 12308, 3 },
-    improved_disarm = { 0, 12313, 3 },
-    improved_shield_wall = { 0, 12312, 2 },
-    concussion_blow = { 0, 12809, 1 },
-    improved_shield_bash = { 0, 12311, 2 },
-    one_handed_weapon_specialization = { 0, 16538, 5 }, -- "Bastion" on Forever
-    shield_slam = { 0, 23922, 1 },
+    furious_precision = { 2, 1323963, 3 },
+    raging_blows = { 2, 1310315, 1 },
+    lingering_rage = { 2, 1323964, 5 },
+    gore_drinker = { 2, 1323967, 2 },
+    -- Protection (18 here, 17 on the tree)
+    shield_specialization = { 3, 12298, 5 },
+    anticipation = { 3, 12297, 5 },
+    improved_bloodrage = { 3, 12301, 2 },
+    improved_thunder_clap = { 1, 12287, 3 }, -- the DB2 tab is Arms
+    iron_will = { 3, 12962, 5 },
+    last_stand = { 3, 12975, 1 },
+    improved_revenge = { 3, 12797, 3 },
+    defiance = { 3, 12792, 3 },
+    improved_sunder_armor = { 3, 12308, 3 },
+    improved_disarm = { 3, 12313, 3 },
+    improved_shield_wall = { 3, 12312, 2 },
+    concussion_blow = { 3, 12809, 1 },
+    improved_shield_bash = { 3, 12311, 2 },
+    one_handed_weapon_specialization = { 3, 16538, 5 }, -- "Bastion" on Forever
+    shield_slam = { 3, 23922, 1 },
     -- Forever-only: Focused Rage (-3 rage a rank on the offensive abilities), Vanguard (Charge in Defensive Stance),
     -- Master of Defense (rage on a dodge or parry: the rage resource's `taken`).
-    focused_rage = { 0, 29787, 3 },
-    vanguard = { 0, 1310317, 1 },
-    master_of_defense = { 0, 1310316, 2 },
+    focused_rage = { 3, 29787, 3 },
+    vanguard = { 3, 1310317, 1 },
+    master_of_defense = { 3, 1310316, 2 },
 })
 
 spec:RegisterAuras({
@@ -1983,23 +1994,21 @@ spec:RegisterSetting("challenging_shout_loose", 3, {
     step = 1,
 })
 
-spec:RegisterOptions({ package = "Arms" })
-
 -- The three priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and
 -- APLs/*.simc; edit those and run it, never these blocks (tests/Forever/warrior_spec.lua checks they
 -- match). Pick one with /hekili priority <name>.
 spec:RegisterPack(
     "Arms",
-    20261018413,
-    [[Hekili:LN1sVnUnq4Fl5IBcswvR8y7gGid0wGI29qU4c0BsMwAKfHPevjPIJlm8V9sQhuuVSuYM0w0Ci7Qiop(MHd58PjU2U)U7YaKaCF865x)z752F5w7BCxk2NcUltr(BrBKpKGIL)7pYI5QxUNqrbkfxNHjIFlXDDV2GNc(UpAF792UlJWbbqHGa33D5VqzWta74kLnpU6pqmgMYU64QuktabhxfYOXhx9RWwmb)Dsj(zcIZX(vkKQehl2BjXdJgIjs4H8fyAc3kLb(041iHJ8hbb84r0mXv4qN1zHHwMV0IbXiCc)bh75h)AhdCPZ37hHyBGRY4Ghnm0BJFGJTwshEwsaW8qSyj4LoGdcbozd3kau(YRCDibTMabZkERLPwwCHmj)WakgJE2lxGzNvQl8CkvILcDZsNjuWtyrKztYIH8FmoXlxcnYLrwainbIG)lPc1PO2wqjv(I6GOcjD1xIhth4JieVIF1JG5IRuvro(ukjGUlHNVHq58dndH8)7YBmnellPRDGNb)mbOSs5JEPriomQImQaPEv9(Tgso8DaKMhpcgElWBUVR8LsNNazYaIXaFHDpwjp3IerE7W8O(xxwGTLaCEI8NAjkJdNiGrX(Lyymi4yp78ZptVTHcqP5l)NzqgOcLQ9Tk)Bj32eisP5RobSWHjpPBjWXGNG6D71hMGjv76KaVi(fhoVXMWmTYvVUTUxCrN4wvYqa0tJgYlExc57M)cc5cG(wf2LpvVuvnQZtyFbLT3JLzwkvTSuvCIay(qQOBsR42oGXb2w5LaY7rs8b1DgfMXsRQ8jpgkzdm7SYLyqsG(T963pA1OgH(hQIuJ4wvuCvi1pJ7CDNUP6IRYUd5vq1DxTURxtsLCasP7awPDT7vQDrygzhw69Uz56gw72L3NRCHdVj5EtJ7h4fGddNs(V5w2DpCA3CzpEP)DGgQ3ResoxiwDdS(LHGIn3hvGicLe4jvgcwmFM(f68qtr(0CRBMDE1DfnJPTjY48Wi51snvaXYhXfhYty(zmzvJ4tnwLYflC61tQL6pnfHIvYKSrxLQkEcZy7vfOFlaxviFrTf0fMT1UEHgAooAhZ)6sfTwvvmZoLZpHAMP(f9iNiIbY7tib9c(1eknqzIUxhAA4hUFE)Q)6iOBAHw936IJZgQp4XV6UuE)dxAOwF5IISix9bovos(8J5FQu5jC3FQ6ZnKMWOfTRqAPwYzaiLr06PB)6U0x(PmadJuFr1BtpBfqUzIaPrRCtW8put8PCJQrx8xr7mv242jMnkAAoCA4DRV(linu1y)vMkURvQOD53uBPxN0ul5UmVNI6aG0hFEGtl6o(AXTvI)ddiU(UStSHmifG3poatzV6nGeGkZ8LbYmnSIsW7hqWwucuIApFWkG3bYaJ1uTdBGxpDaJOwkEZks7HUax3RRZjHjtBySqCeEdJsCih)TBSCs8pgG(xKirEWm1MtAcgMbxlQf5gS997AdyWMyWR6At1i3ITVMCqi2QDTPxgK8H0dc1WqdrzeXPOxyoSqtlRZW)hDuJ9rfQkM6o6WtfzVWrq2h1hJTD1eh7FKJgCaAn5YcgHEftbxphV(yvu7OgDMn6u2CKKnSCPk91IEkQRjRMxAPhI9PkUE1hoMkj3IXNxGOQWRh88XMA6KtM))NAA7dUvHE9rdH5jWxqPu7r7FQ04PV7QA0(NcVMd4ph0syJYerQ7Wl(JADC15L)rWUiFz3)(d]]
+    20261019413,
+    [[Hekili:LN1wVTTnu4Fl5fVeKunRCPBziYaDdyyTp0bepG(MKPLoYIWuIAKuXjdg(3(i1fkQBwkPjBdRpKwfXZLVZHhYZNoX129pCxgGeG7NVC(LV3EU9TxBFL7sXtPG7YuK)w0g5djOy5)(bwmx9YNiuuGsX1zyI4JjUR71g8uW3D5x(W93)XF)(FcLRCeoiakua4Yv)vkdEayhwPS9HvFbXyyk7IdRsPmbeCyviJgFy1VbBXe83jL4xiioh7xPqQsCS4jljUy0qmrctKVatt4wPmWNgVgjCK)iiGhpIMjUah6Solm0Y8LwmigHt435yp)WN6yGZD(E)ieBdCrgh8OHHEB8dCS1s6WZscaMNmgLGx6aoie4KnCRaq5lVY1He0AcemR4TwMAzXfYK9DdOym6rVCbMDsPUWJPujwk0nlDMqbpHfrMnjlgY)X4eVCj0ixgzbG0eic(VKkuNIABbLu5lQdIkK0vFjEmDGpIq8k(vpcMlUqvn54tPKa6UeE(gcLZ33meY)VZVY0qSSKU2bEe8ZeGYkLp6LgH4WOkYOcK6v173Ai5W3bqAE8iy4TaV5(UYxkDEaKjdigd8f29yL8Clse5TdZJ6FDzb2wcW5jYFQLOmoCIagf7xIHXGGJ9Stp9e92gkaLMV8FMbzGkuQ23Q8VLCBtGiLMV6eWchM8eVLahdEcQ31xUFcMuTRtc8I4NT)0gBcZ0kx9626E2zDIBvjdbqpmAiV4njKVz(ZiKla6Rvyx(u9sv1OopG9fu2tESmZsPQLLQIteaZhsfDtAf32bmoW2kVeqEpsIpOUZOWmwAvLp5XqjBGzNuUedsc0VTx)(TwnQrO)nvrQrCRkkUiK6NXDUSt3uDXvz3H8kO6URw30RjPsoaP0DaR0U29k1UimJSdl9E3SCDdRD7Y7ZvUW(xLCVPX9d8cWHHtj)3Cl7M7oUBoVhV0)oqd17vcj3leRUbw)YqqXM7JkqeHsc8KkdblMpt)cDEOPiVBU1vZoT6UIMX02ezCUFK8APMkGy5J4I95jm)mMSQr8UgRs5Ifo96j1s9NMIqXkzs2ORsvfpHzSNufOFnaxviFwTf0fMT1UEHgAooAhZ)6sfTwvvmZoMZpIAMP(f9iNiIbY7tib9c(1eknqzIUxhAA47UDE)Q)YiOBAHw936IJtgQp4Hp5UuE)dxAOwFbJISix9Hovos(8NZ)KPYt4U)C1NBinHrlAxH0sTKZaqkJO1t3(1DPV8tzaggP(YQxNE2kGC1ebsJw5MG5FOM4t5gvJU4VG2zQSX1tmBu00C40WBwF9NrAOQX(lmvCtRur7YVP2sVoPPwYDzEpf1baPpE)aNw0D81IBRe)hgqC9DzhzdzqkaVDCaMYE1RajavM5hhiZ0WkkbVDabBrjqjQ98bRaEdidmwt1oSbE50bmIAP4nRiTh6cCDVUoNeMmTHXcXr4nmkXHC83UXYrX)ya6FrIe5bZuBoPjyygCTOwKBW23VRnGbBIbVQRnvJCl2(AYbHyR21MEzqYhspiuddneLrehJEH5WcnTSod)F0rn2hvOQyQ7OdpwK9mhbzFuFm22vtCS)roAWbO1Kllye6vmnC9C86JvrTJA0z2OtzZrs2WYLQ0xl6POUMSAEPLEi2hR46fF4yQKClgFEbIQcVEWZ32utNCY8))utBFWTk0RpAimpb(mkLApA)JLgp(DxvJ2)y41Ca)5GwcBuMisDhEXFuRdRoT8pc2z5l7(3p]]
 )
 spec:RegisterPack(
     "Fury",
-    20261018900,
-    [[Hekili:nNvtZnkoq0FlZCWBsnXetMp2KTcPQDoS1UZHCXBv7nWYcHrLbeLKWozRu8BFBjWGaJIn2z2zo4m2sD)6N6w06jgFx))2FEiss8F8Mz38f3zU3E3Sz(ZLpNt8NNJWRrRGVKHsH)(hf8Nvd(CcdfQCCzbnr(xz(lhedrob7)O7NUZ1FEmnmKuzirGbOyCYgcVCHcZYf)dIZPm(VvUqgtkxuii8FruUixnivcgCHc5PUZM6E7LxvUiIZslx8vchmCTcM5sugMaZSLkJlxOWg8cTKMODFlBRGMkUoQkSkSRcmNjrsklRCbgjKWWxeYWIR5ebbXXXx3g2PrGdt3iMwJLtAieU3)7W6kChHQN69x6aPjolIMaznewfaHtoNGzPlrsp4JmHeiIzfYROrEllIICmh0Htsr0mX9EUZk)2Ea8bVRXXi(kYvqIkGfffSch65oSL0mjHJj5YUg3g3DjXaHoh6uKpPchNgxHVfWrzRitEx9uCswyZOnb2Bdflz8Nd4fI4RIy4cHbTaYWGKFoBlHVBY9w(74GPxQAgeM98jKerYe0nwClMWzummhNUU159YckhaiizKukbSych2Y)GNGiL0Svch1pdWO8azmSTiMLeEOGCZ4dsSOf(jxSllVmHXcLXuUq6SoJTn7fmdma(sNPQ3T8G6VXOSWG6bErfehCbhQwYP1y2HWoyMq(G3aHtnXLTmzlmAYwku07XJ2jERyrlIAoyMSXje0MJUu(WilLDq)G1W9rVY))VQJvr7hwbCOW)kvov)cvo8Dw758UqIEoDNLUpilkYcbBr8ugxbstgVYLG65jzOLjKWj1az6Ldeh867T4yk6PaTbnKG8uodk)v(cKtQ62kDsGgrjpyl(Pq)qTfD2uHsscQ(zqcviVsDuQ3USVq3lJjeV0nc6)5dF0eizCvuWjO8ojbvnscFcmTyYHt0MM3lHhsG1nkH(VqaApMQ)YwzLEYMm)oO33)EbWyJQ5WnBGmhK8ebxijkgu)1G8yKG0Plmkv1kjBvZzdkuuNyRxXD87KFS0Z15ZN2tuAp7S(7vxgUzZquCYRrX79M54(YW8BID(PDBVYJ6P(95LzVG7VB2WlkTRGXsucyMdnfedTHeg01cNDBB(zOGmgjz)WjStt)dpvbIkjPIbMu)KmsghSLkIhEEXwcjx)uQ(KyXHp1R8B(ZbvCcaQE69vT3eQRf0ea4hpQVHrDL2)R7Kd7pVH4(sahlg1sFLvFSNvgCvfNgV6VOagb3IGWPOkBmxoaUsvCIqfjYxJVMsB9NRfjOmEaY3gSbv22czJA4U41Fz2dVbu92czTu5Ua(jllPoIWmCzVeRT03XiwwrGppkcCZ5qGJvi9ivGnwrSJqj2OKInwE0tsMQy8flfJkfDNY2GJrOTkY)6Xf5ru)ppr4Vf7botz4NFX)ieIRY93Aj3RKBBMFpSUXAb6kqVZcOMsVnb)NDH7Q1K7m7TFvc1hwPUXM5Ec(RoxmO6nO1EYOks2oQXuz(GPV3ij)Asy)O3(A4FTk5iVlGoY9pNBxKnE8rBNTJVA2LRTY2zm1A)njFNRdOD2wpXM7vS3PWN29lol5HhuFOEP0VjRnrs93N0Vj7jE5Jt82hAQ3VhLvQV76jMCU3ft0aAR)u37HyIY5FJLV)L4B63HQzzzCFfRYqhZLz(UVwKQ3tE97Q(1eFFsRSH0MBBlv17tFmxYO5LJVpFo)3OUo1aiJkKXQJq)tYAAcTCXf1))MuL78)V]]
+    20261019900,
+    [[Hekili:nNvuZTjoq4FlPp4lzAmXo9AVMoHmt7dDU2h6nt8ntFdSmimAmGyKe2jDYWV9Bxbgeyi2yNETp4uBPD)2pTRy1NOotD(xNz(ef15Bxp563nDY0BUzYeNzQhtPoZsjERilHVKqIH)(5mXJ4GpgXj(OJlYyrQVK4SOtmKPupNzF)J3F)x(N7)qG25qMVpTWbQeM9ZCbDnvKphXoF(3jcbJl(q(CvinFEMKk(dz(8uCqMcm4CmcJNoz803FXL5Zde8485FIkadxHWmtrs8OWmByQW85i2GxKfSiT7B4BKSy5vbfHfXUiWcUIOy8K85EePcg(CFUN8kbvsjcVWRQd7yCHmETCCjwwX(q4E1hH1L)wcvo1RUWcsxcEalcYEepmasRub1JhVGOSHpQiQRmKNPUKfyViliWYCqlbnMWsK3ApDs(x3bGxBFLxirSKEjKOC5bbUl98TN2TLSefv4rtvnnUoUBtIUsDo0klDubowvUcFZvqswshDw5ucAIF1Ovb2EnZtXfp6kYKHxgW9YKg0cidhs(P8nuX2j3z5VLdMEH1mim74JpnGMizR7XTqQGZ8G5eSv1oVtwaDaGGMqJzuWIrcyR)D2sQsXswkTWF66rsDvHW2IqEK)(cY1dpiHYA4hD(2S8Iio3xfYesL1Qe(MKN84GbWxAmv5UL7W)gss8Dlh4jmiwEzcOAPgxIzdcB5XLQ7S7iC4exuZKnWOrByqrVfpQN4LIf1iQ5GzY2lIswFWLY7gyPSb67TgUl6f())vDSiA)YkGDf(NPYH9lWC4z92Z5mFQEoDNLMpilZs8bBjIyUabPkJx4IB580eYIiQ)OsGm9YcIJ3QB7XXyYdUAdQib9Huou(l8fiNc72QSIGgrr31x8JH(HAlASPIef5w8t3iMuDjEKQ92SVu3lJlLp1mc6)51VXeivyru8IiPnscynsbFCnTy0(t0MM3kH7tH1njI9dia1ht1EzJwPNSkZVf6D9Vvam2OAoC1giZbPpq9YuuKbLF1nnKiPn6ctIXwjjlRoBarbpXwVIB43r)yP9uR3ECprP9SX6VvDP7MnDrXrphfV1EI10N6MFJ6NFA32P8Gp1VlVm7fC7nt6ErPDfmwrIaZSyXGyO1uF3MwyTDBZVdfKHij7xoHTQ6FyJfiMIgl7ys9tYevO7gMmS75LBO0u9tP6tIL7)uV8V6mduXjbOAP7hBVjXRhufa4hFtFtJYkTZN2kh2zwfXDuao9yun9rREtlRm4kgNkVAVOagb3IGkyKcBmxoaUkmobKSi1ZXxtPToZ0IeqJ7G81bRtLT1qwPgUjETxMTWRdvV1qwkvUjG)zplPgIWmCzNeBFPVdrSmsG3oicC9PqGdvi9avGnurSdqj2GKInuE0ssgwmExpfJcfDhZ2GdrOng5)6WI8aQ)NMi8xI9aNOm8tV4FacXXC)77j3JYTnZV7x3yPaDe0B6butP3MG)7UWDCnnDs)TFrH6DRu3yZClb)fNl6w8M0QpzeJuFh1yQmVZ03lKKFnj6)O32A4FUk5aVlGoYTpNBBKnE8rBxFhFvTlxBvFNXuQ93K8nUoG25(6jwDVIDof(4UFXjjpCV6d1lL2nz7tKu79jTBYEKx(4iV9HM6T7r1l13E9eto36IjAa7R)uZ7HyIYPFJLF(L4RB3HQAzzCFLELHoKlZ8tFTOW3tE57Q(5eFFuRSU0M33wQI3N(qUKr1lhFx(C6VrDDQbqMKPcXJq)B6kwelF(5L))MuK7C(Vd]]
 )
 spec:RegisterPack(
     "Protection",
-    20261018023,
-    [[Hekili:9IvBVTTnq4Fl9lzjyzQ25LU2IOa0UHISHUGIPc0VjjAjAlIqtAqsvdpeOF77oszzQxJ92WqrBJ5D3ZD85EHNt884VghLtm04hVA2vVz(S5VD2vxhhz2THghTHK9ezf8dcYA4F)IsAOzgMuGI2XLKC08fLmU53eXlgej9gAw8JZV5DZJJky55uNIuDwC0NKk63PQQ0dixL(nIsXKQ3xL(R0LuHM9DAvAKHiYOxwL(vsPWuLUTGcQAkargIAffoYuQe6QuYwYoqpWxuEEv6h5YSNQsFIUbuPCdi5pbxkwbgse5h0lItwJMvkYXa6dQ1s4)0gGbOGyJSk9wq(duLKLHXJI9eGbQ0VWPemg3Ymf1XKIGoOGzGaAHIjwfuL(iar((BKgUEFMOnUBwUxa)ncNxhBpqjCtH2ifu8IPO1OVHt2rv)aCwMv5Z3k3QzRHpVc4FTvR1qSbmuHfcaEnntHSeEynTFbeuFsjbnRT)1lDcqK9ZiF4lFgCIcIDffYciiCKJZ4eT(NYKR3WPon)krdK9Tx8(Ejac47BMTNzqAZrxnzdbLahQOK8D1xFl7TLjYLBH4VO0ytEOex2xi3Ns3N1Gqur1fycd93CWFANZ4uT(YACDvnfGRaD4ml5EEt4s0iD9hqqdPnB4VDFz3foyxkZkbtMhaDbk5sghAniwQshSrrb(ybXec)1WPj6cje4SLHVAr5YLb(NguUP637z4pg(6ScSK(YsnnrUCzYQS8W5dRzt9uI21G0YMdUTRE(UouBV6jlWBU9U55nWhRDurYcKjQLJi7yWaUeQI9u))IqcGXGeEJ76HHNZp7v5ulI(bAh0agLZH6muCtgPbdPMEFOMAmGyDqpDtSA4d3EgdlT7hB2GXxLa7yK7U6SZXQ)GSsf0hzUp8Mzp74cLRjiPutwWrM4SmPKd19I9IG)FnHj03fop42l8JLVZYms1UevPUW)CWZYC0F9dq)O4URM1YQtQQfmqvksCFkHZ0MlXxkcjskAmEoKFPc6AgvFF41VOHAG05hO6a3NdRjHUNFitOHP3difUG52BrDfc(5wDDhWXobjHGJ9rlQnW)46S4TppKSdPNzdGUPWPlmWCJF84F(WXvofqNWz)vRk3MAvhojOwUsvQaRGYB6j6B)W(jtkGonnMnS95Jm7Pr)c77GqRl(m40vyETwW4stslttSVhmD(4GyOUk8i5YNRl(YLMwIURDrzlShLVps20brVIv3XdwP6eLzxG40yrNnDOVAp1I7IJGx0XeBN9YWMonU(MJZHF6r7YG1vqXFC)JAXr13OydaXiQ4D7q1UEuKe5XrzkMHQyK4OonMOP3mMh8Uv(qmvN6l1QI(72r8NFrZqHCN6neQ3mcu9lB8b8FzZm64FUJJ9QKWSAtG0Plhn9ThPPT6A9d)tRvhD57oMmSb(teuppvD5jMIE(iNjmvD(0PYxmrnEFrth2O1)T7W6w2oAk3oN4ytyEtvMQGUFMc2MJuYntLT8wZmoYUyhQ7aC9Hq1BlVd44VMxBG6YUJXjDx9SvkCSLtNk3yxw1lw655bVsJT46utL6TC6GyFul0oucEmgZFBwFpEkR6(pCx3HMVTpS8399ugM1SB8y9fWwXtnPYFF4(fpD2wgbcEQzSA82ZEGLK9Mk0Efz3B2jUFxm4Ore4rFZEcBRFX32428TjNQ19KVVDBPhD6K9B6()rVR79KstbU9Wd0NyCg8T(3)BcXko(V)]]
+    20261019023,
+    [[Hekili:9IvBVTTnq4Fl9lzjyzQ25LU1GOa0UHI0HUSIOaKVjjAjAlctlAqsfdpeOF77oszzQxJ92WqrBJjV75o(Cph55eon8PWGuIMg(WftU4dtNm9JtU4YWa9210WG1KKLKfWpKtwb)73LcnnrZe54wB5csk6(Scgx)18Wz9IKAnnjm45p94JF9pF8M1oqKXstPw3OkWMViK0xOYY49XPm(zIuYeYBkJ)n6CAUI9cTmoqtYtONxg)ePixxgVjJcMQZGT0e5ckSKUqMRkJjBiBb7Gyr5PLXFMlswwgVKUgmPynSZJqiZxaosYt3BxaNScDRipftOpjxjG)tPb(GcBRfLXxd7Fpvkyjy(izlbmqJ(voLG54gMoRkNKemazmnKqZKS8fELXpaqKU7ePGJ33ikT9KL6KWpt48QC7EkHRZuArofpysAf6R5KTu5paRLym(0nInk2k4ZlGQHYy1ki3agkZabaVIMirwcxSI2pdsQVifGLv()(52nqKDRiF67FdcIeYDjfQciiCKJt4eL6NseRwZPwlFIOaY(6ZUPtbGaX(Qj7ygK2S0vD1iNsGfLus62QJVH92WYtfBG8pRqBkE4o2QFUyxjDxvdsrjvLHfmmEtH4PSbJtvQZRW1QAYGqb2WzgY9060LOq66pGKgkBM0FZoz3zwyNlskaxM6b9esXCghAuigQs5Twsb(ygr7d)vZPrQmbK4S5(VBwX85EUR6vSU83744p6)(KmusFEHIgjMppArsQ)0(TSwpfPSnin8zFyBBNBO9vMJE0m8KBoBordIXklvendzIQ9rKTmOhxaQyhZ)ViLay0iHxhUoy4e8tExk1GOBI2cnGr5CqNHBxxrQXqOO35ROAnSTYRJTrglCHBhJHs7U5MjzCnXZCnYTxCYPO63lPqc9r678VAYRwUqABcIkuKzCKjojri4GUpF3wW)VIWYv36p176ZCZLxyjAHCBKSqL5UoezrkgVUjOBwC7ftA41rPAbhKf5r2pfXzk9547g(ebfDgxhQV0C6kgvDN)LVPJkG057PAp7N9RiH2RVVsOGBV7zx4aMAofvke8Zn662JJ5gKicETp6rLdUlxvfV(1(2BF5zspORZS2cxyU2nFCxV)8kLcOt4S)QHYTwRAXjcTYkvP5OckTUNOR)9hNero0PPWQHPpFG7EQTpZ8oi06IpdoUcZP1cNfiQHRrM3dgVESFBqx5FGC5RvIVuHUXw32uu2a7b57dKnTq0rSAxUxLQDReZaehhlA9Pf9vfPgCxya8IowyBnLg20PWH5SCo8tpygnSsbf(5DpQfguDIc1aedyIZPdn7YbrkpnmirY0ujJeg0QXeD9QHIGZPYfIX6uFRwvmExpq8Cfn9LYT0BiuFyaO6kBCb8FzZmg4FUvGDusyvTorA1LJU(lhORn6ADt)JRvhd5hpKkSg(taONhtxEKLOxpW7egtNpEP8nlud3xu3HnO(VzhwBz7GLCZ9ehAbZ5wLXe0DRuW0CKcUESQLZyMHbMb7qB7HR3NQot5Thh3X8AcuB2DioP9ONnkHdnC6y1gZWQo5sNi37rAObxh7wPodN2l2h0aT9vGhIXCNM1nIhZOU)dN1TV732LwUZ(EmxMvpB8q9fWuXJDtL78WDfpTMwgbcEQzinEZ7EGHKDUvO5iY23SJS)MzWRgrGh8n7r8T6fFtJB93MCSw3J(82ULEWBNmFt3)p6DTVNuOZWPhUNUKXzW36F3VjeZ2H)n]]
 )

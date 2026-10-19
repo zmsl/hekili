@@ -368,6 +368,8 @@ do
                 specs = {
                     -- ['**'] = specTemplate
                 },
+                specChoice = {}, -- [ "Name-Realm" ] = spec key: each character's active spec (per-spec plan)
+                specMigrated = {}, -- [ class token ] = true: the legacy pseudo-spec profile was copied to the specs
 
                 packs = {
                     ['**'] = packTemplate
@@ -2600,7 +2602,7 @@ local specs = {}
 local activeSpec
 
 local function GetCurrentSpec()
-    activeSpec = activeSpec or GetSpecializationInfo( GetSpecialization() )
+    activeSpec = activeSpec or Status.specID
     return activeSpec
 end
 
@@ -7775,6 +7777,7 @@ DeserializeActionPack = function( str )
     end
 
     serial.payload.builtIn = false
+    serial.payload.spec = Registry.SpecFromShare( serial.payload.spec )
 
     return serial
 end
