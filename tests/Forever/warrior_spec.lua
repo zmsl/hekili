@@ -908,9 +908,26 @@ describe("the Arms and Protection lines from wowsims/forever (class-completion T
     local H, st, pack
 
     -- Protection adds Revenge (every rank) to the Arms kit, so its cooldown is read.
-    local function boot(stance, name)
+    -- `noMortalStrike`: the Arms build without the talent (neither Mortal Strike known nor its talent taken).
+    local function boot(stance, name, noMortalStrike)
         local c = ww.character()
         c.form, pack = ww.FORM[stance], name
+        if noMortalStrike then
+            local ms, known, talents = {}, {}, {}
+            for _, id in ipairs(ww.IDS.mortal_strike) do
+                ms[id] = true
+            end
+            for _, id in ipairs(c.known) do
+                if not ms[id] then
+                    known[#known + 1] = id
+                end
+            end
+            for k, v in pairs(c.talents) do
+                talents[k] = v
+            end
+            talents[ww.IDS.mortal_strike[1]] = nil
+            c.known, c.talents = known, talents
+        end
         if name == "Protection" then
             local revenge = lw.load().abilities.revenge
             c.known[#c.known + 1] = revenge.id
@@ -998,6 +1015,13 @@ describe("the Arms and Protection lines from wowsims/forever (class-completion T
             assert.is_true((check("rotation", "slam")))
             cds(1.6, 9) -- Mortal Strike after the cast: nothing reserved
             rawset(st.rage, "current", slam)
+            assert.is_true((check("rotation", "slam")))
+            -- without Mortal Strike nothing is reserved (an unlearned spell's cooldown reads ready)
+            boot("battle_stance", "Arms", true)
+            assert.is_false(st.action.mortal_strike.known)
+            rawset(st.rage, "current", slam)
+            rawset(st, "mainhand_speed", 3.6)
+            rawset(st, "mainhand_remains", 3.4)
             assert.is_true((check("rotation", "slam")))
             rawset(st, "mainhand_speed", 0) -- no swing speed read: no window
             rawset(st, "mainhand_remains", 0)

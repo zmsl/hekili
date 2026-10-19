@@ -31,7 +31,7 @@ actions.rotation+=/overpower,focus=1
 actions.rotation+=/whirlwind,if=active_enemies>=settings.ww_min_enemies|(!settings.adaptive_queueing_enabled&cooldown.mortal_strike.remains>=settings.ww_cd_diff|settings.adaptive_queueing_enabled&rage.time_to_55<cooldown.mortal_strike.remains+settings.ww_cd_diff)
 actions.rotation+=/mortal_strike
 actions.rotation+=/spearing_strike
-actions.rotation+=/slam,focus=2,if=mainhand_speed>0&mainhand_remains>=mainhand_speed-0.3&(cooldown.mortal_strike.remains>action.slam.cast|rage.current-action.slam.cost>=action.mortal_strike.cost)
+actions.rotation+=/slam,focus=2,if=mainhand_speed>0&mainhand_remains>=mainhand_speed-0.3&(!action.mortal_strike.known|cooldown.mortal_strike.remains>action.slam.cast|rage.current-action.slam.cost>=action.mortal_strike.cost)
 actions.rotation+=/hamstring,if=buff.windfury.up&(!action.mortal_strike.known|cooldown.mortal_strike.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)
 actions.rotation+=/hamstring,if=cooldown.mortal_strike.remains>=settings.hamstring_cd_diff&cooldown.whirlwind.remains>=settings.hamstring_cd_diff&rage.current>settings.hamstring_threshold
 actions.rotation+=/bloodrage,use_off_gcd=1,if=rage.current<90
