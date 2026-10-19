@@ -98,7 +98,9 @@ unticked, it creates the draft (use this when a tag's run failed after the push,
   `dry_run` unticked. If a draft for the tag already exists, delete the draft first.
 - **Publish run fails:** the release is public on GitHub (and the Discord webhook has posted it) but not on
   CurseForge. `cf_upload:` lines name the cause. Re-run the failed job once the cause is fixed
-  (Actions > publish > Re-run).
+  (Actions > publish > Re-run). A re-run replays the original event, so it reuses the release body as it was when
+  published; when the cause is the body (for example `cf_upload: the release body is empty`), edit the release, set it
+  back to a draft and publish again, which makes the Discord webhook post again.
 - **CurseForge rejects a duplicate display name:** a tag can be uploaded once. To re-ship, cut a new tag (the next
   patch or `-rc.N`).
 - **CurseForge daily upload limit:** the upload fails with a limit error; re-run the publish job the next day.

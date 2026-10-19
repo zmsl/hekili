@@ -26,6 +26,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # every commit and tag: the packager versions from git describe, the notes span tags
+          persist-credentials: false # nothing in the job pushes, so the write-scoped token is not left in .git/config for the third-party packager
       - uses: BigWigsMods/packager@v2
         with:
           args: -d -l # -d: build only, never upload; -l: skip @localization@ (the SFX-Widgets Info-URL widget carries one)
