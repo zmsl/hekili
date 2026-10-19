@@ -22,7 +22,6 @@ for _, name in ipairs(require("helpers.addons").CONTENT) do
 end
 local PUBLIC = {
     NewClass = true,
-    NewSpecialization = true,
     NewShared = true,
     NewRace = true,
     State = true,

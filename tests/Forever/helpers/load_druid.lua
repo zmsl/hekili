@@ -12,7 +12,7 @@ local M = {}
 --- `w.auras` (merged by key), `w.talents`, `w.resources[powerType]` ({ models, meta }), `w.costMods` (the
 --- RegisterCostMod declarations), `w.hooks[name]`, `w.events[event]`, `w.funcs[name]`, `w.exprs[name]`,
 --- `w.settings[key]` ({ default, option, specs: nil for every spec }), `w.totems` (the RegisterTotems table), `w.pets`
---- (the RegisterPets table), `w.packs` (in order: { name, version, string }), `w.options`, `w.specID`, `w.class` and
+--- (the RegisterPets table), `w.packs` (in order: { name, version, string }), `w.options`, `w.class` and
 --- `w.def` (NewClass's token and definition),
 --- `w.spec` (the recording spec object), `w.state` (Hekili.State's stand-in) and `w.game`.
 function M.load(vs, file, class)
@@ -39,10 +39,6 @@ function M.load(vs, file, class)
     w.state = { buff = {}, swings = {} }
     local hekili = { State = w.state }
     w.spec = spec
-    function hekili:NewSpecialization(id)
-        w.specID = id
-        return spec
-    end
     function hekili:NewClass(token, def)
         w.class, w.def = token, def
         return spec

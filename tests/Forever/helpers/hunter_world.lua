@@ -17,7 +17,7 @@ local ld = require("Forever.helpers.load_druid")
 
 local M = {}
 
-M.SPEC, M.CLASS_ID = 1484, 3
+M.CLIENT_SPEC, M.CLASS_ID = 1484, 3 -- the client's Hunter pseudo-spec
 local MANA = 0 -- Enum.PowerType
 local MAX = 5000
 local GCD = { spell = 1.5, off = 0 }
@@ -245,6 +245,7 @@ end
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = name, IDS = {} }
+    C.SPEC = ({ BeastMastery = 100031, Marksmanship = 100032, Survival = 100033 })[name]
 
     function C.character()
         local w = class()
@@ -263,7 +264,7 @@ local function content(name)
         return {
             class = "HUNTER",
             classID = M.CLASS_ID,
-            specID = M.SPEC,
+            specID = M.CLIENT_SPEC,
             level = 60,
             known = known,
             talents = {},

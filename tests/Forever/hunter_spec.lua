@@ -70,9 +70,17 @@ describe("Forever Hunter", function()
             assert.are.equal("function", type(a.known), key)
         end
         assert.are.equal(15, n)
-        assert.are.equal(1484, w.specID) -- Forever's alphabetical pattern, confirmed at the checkpoint
-        assert.are.same({ package = "Marksmanship" }, w.options)
+        assert.are.equal("HUNTER", w.class)
+        assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.rapid_fire.toggle)
+    end)
+
+    it("places every DB2 talent in a tree and keeps the Forever-only ones at tree 0", function()
+        local n = { [0] = 0, 0, 0, 0 }
+        for _, t in pairs(w.talents) do
+            n[t[1]] = n[t[1]] + 1
+        end
+        assert.are.same({ [0] = 0, 16, 14, 16 }, n)
     end)
 
     it("declares mana under the five-second rule and both mana floors off", function()

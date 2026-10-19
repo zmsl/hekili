@@ -1,13 +1,13 @@
 -- Hekili_Rogue/Rogue.lua
--- The Forever Rogue (one pseudo-spec, ROGUE_SPEC below; Combat, Assassination and Subtlety are talent builds, one pack
--- each): the Rogue kit with Forever's spell data (ranks, costs, cooldowns and durations from the Forever DB2 at build
--- 1.60.1.70338, wowdb; energy costs are DB2 points), Forever's Venom, Mutilate and Cutthroat, energy and combo points
--- as the Druid's cat has them (combo points plain in combat, measured), Adrenaline Rush as a regen multiplier, Stealth
--- and Vanish from IsStealthed (unprobed, so the belief also models them from our casts), poisons as precombat
--- reminders read from the weapon enchants out of combat, and the default priorities (all provisional: no in-game
--- check yet, D5). Research: docs/research/2026-10-15-forever-rogue/research.md and the class-completion research §2.
--- Talents: only those this file reads; a modifier is rank 1's value x the rank (Classic's convention; only rank 1 of
--- each is in the Forever DB2), floored at 0.
+-- The Forever Rogue (Assassination, Combat and Subtlety, one spec a talent tree: Hekili:NewClass): the Rogue kit with
+-- Forever's spell data (ranks, costs, cooldowns and durations from the Forever DB2 at build 1.60.1.70338, wowdb; energy
+-- costs are DB2 points), Forever's Venom, Mutilate and Cutthroat, energy and combo points as the Druid's cat has them
+-- (combo points plain in combat, measured), Adrenaline Rush as a regen multiplier, Stealth and Vanish from IsStealthed
+-- (unprobed, so the belief also models them from our casts), poisons as precombat reminders read from the weapon
+-- enchants out of combat, and the default priorities (all provisional: no in-game check yet, D5). Research:
+-- docs/research/2026-10-15-forever-rogue/research.md and the class-completion research §2.
+-- Talents: the DB2's 51 Classic nodes and the Forever-only ones this file reads; a modifier is rank 1's value x the
+-- rank (Classic's convention; only rank 1 of each is in the Forever DB2), floored at 0.
 -- Credits: Hekili (registration API and pack format; the `stealthed` table and the stealth-breaking runHandler hook
 -- follow Hekili's Classic profile, origin/classic:Classic/Rogue.lua). wowsims/forever (MIT,
 -- ui/specs/rogue/dps/apls/default.apl.json and sim/rogue/) is the reference for the priorities and the Cutthroat and
@@ -24,11 +24,22 @@ end
 local state = Hekili.State
 local max = math.max
 
--- The pseudo-spec the client reports for a Rogue (Constants.lua's row): 1488, read in game 2026-10-19
--- (C_SpecializationInfo.GetSpecializationInfo(1)). The ids run alphabetically by class from Druid 1483 to Warrior 1491.
-local ROGUE_SPEC = 1488
-
-local spec = Hekili:NewSpecialization(ROGUE_SPEC, false, 132292) -- ability_rogue_eviscerate
+-- The class kit and one spec a talent tree (ids the core's: Assassination 100041, Combat 100042, Subtlety 100043; the
+-- client's one pseudo-spec, 1488, only keys the legacy profile the core migrates). Icons: the DB2 talent tabs'.
+local spec = Hekili:NewClass("ROGUE", {
+    specs = {
+        {
+            key = "assassination",
+            name = "Assassination",
+            tree = 1,
+            icon = 132292,
+            role = "attack",
+            package = "Assassination",
+        },
+        { key = "combat", name = "Combat", tree = 2, icon = 132090, role = "attack", package = "Combat" },
+        { key = "subtlety", name = "Subtlety", tree = 3, icon = 132320, role = "attack", package = "Subtlety" },
+    },
+})
 if not spec then
     return
 end
@@ -93,14 +104,66 @@ spec:RegisterResource(Enum.PowerType.Energy, {
     adrenaline_rush = { aura = "adrenaline_rush", mult = 2 },
 })
 
--- Talents: { node (unused on Forever), rank 1's spell, max rank } (`wowdb talents ROGUE`; Forever-only ones by spell),
--- only those this file reads, until the live export (checkpoint Q1) lists the tree.
+-- Talents: { talent tree (1 Assassination, 2 Combat, 3 Subtlety: the dominant tree picks the spec), rank 1's spell,
+-- max rank }: the DB2's 51 nodes (`wowdb talents ROGUE`; the tree is the DB2's Talent.TabID), keys the snake_case
+-- names (Setup is setup_talent; a nameless node talent_<spell>), and the Forever-only ones by spell at tree 0 until the
+-- live export (checkpoint Q1) places them.
 spec:RegisterTalents({
-    improved_sinister_strike = { 0, 13732, 2 },
-    improved_slice_and_dice = { 0, 14165, 3 },
-    relentless_strikes = { 0, 14179, 1 },
-    improved_expose_armor = { 0, 14168, 2 },
-    -- Forever-only
+    -- Assassination (tree 1)
+    improved_eviscerate = { 1, 14162, 3 },
+    remorseless_attacks = { 1, 14144, 2 },
+    malice = { 1, 14138, 5 },
+    ruthlessness = { 1, 14156, 3 },
+    murder = { 1, 14158, 2 },
+    improved_slice_and_dice = { 1, 14165, 3 },
+    relentless_strikes = { 1, 14179, 1 },
+    improved_expose_armor = { 1, 14168, 2 },
+    lethality = { 1, 14128, 5 },
+    vile_poisons = { 1, 16513, 5 },
+    improved_poisons = { 1, 14113, 5 },
+    cold_blood = { 1, 14177, 1 },
+    improved_kidney_shot = { 1, 14174, 3 },
+    seal_fate = { 1, 14186, 5 },
+    vigor = { 1, 14983, 1 },
+    -- Combat (tree 2)
+    improved_gouge = { 2, 13741, 3 },
+    improved_sinister_strike = { 2, 13732, 2 },
+    lightning_reflexes = { 2, 13712, 5 },
+    talent_13733 = { 2, 13733, 3 },
+    deflection = { 2, 13713, 5 },
+    precision = { 2, 13705, 5 },
+    endurance = { 2, 13742, 2 },
+    riposte = { 2, 14251, 1 },
+    improved_sprint = { 2, 13743, 2 },
+    improved_kick = { 2, 13754, 2 },
+    hack_and_slash = { 2, 13706, 5 },
+    dual_wield_specialization = { 2, 13715, 5 },
+    hack_and_slash_2 = { 2, 13709, 5 },
+    blade_flurry = { 2, 13877, 1 },
+    hack_and_slash_3 = { 2, 13960, 5 },
+    fist_weapon_specialization = { 2, 13707, 5 },
+    weapon_expertise = { 2, 30919, 2 },
+    aggression = { 2, 18427, 3 },
+    adrenaline_rush = { 2, 13750, 1 },
+    -- Subtlety (tree 3)
+    master_of_deception = { 3, 13958, 5 },
+    opportunity = { 3, 14057, 5 },
+    sleight_of_hand = { 3, 30892, 2 },
+    elusiveness = { 3, 13981, 2 },
+    camouflage = { 3, 13975, 5 },
+    initiative = { 3, 13976, 3 },
+    ghostly_strike = { 3, 14278, 1 },
+    improved_ambush = { 3, 14079, 3 },
+    setup_talent = { 3, 13983, 3 },
+    improved_sap = { 3, 14076, 3 },
+    serrated_blades = { 3, 14171, 3 },
+    heightened_senses = { 3, 30894, 2 },
+    preparation = { 3, 14185, 1 },
+    dirty_deeds = { 3, 14082, 2 },
+    hemorrhage = { 3, 16511, 1 },
+    deadliness = { 3, 30902, 5 },
+    premeditation = { 3, 14183, 1 },
+    -- Forever-only (tree unknown until the export)
     flawless_execution = { 0, 1310711, 1 },
     thousand_cuts = { 0, 1310721, 1 },
     cutthroat = { 0, 424980, 1 },
@@ -848,7 +911,7 @@ spec:RegisterSetting("backstab", false, {
     name = "Backstab Builder",
     desc = "When enabled, Backstab is the builder and Hemorrhage is kept up (needs a dagger and to stand behind).",
     width = "full",
-})
+}, "subtlety")
 
 spec:RegisterSetting("poisons", true, {
     type = "toggle",
@@ -858,23 +921,21 @@ spec:RegisterSetting("poisons", true, {
     width = "full",
 })
 
-spec:RegisterOptions({ package = "Combat" })
-
 -- The three priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those
 -- and run it, never these blocks (tests/Forever/rogue_spec.lua checks they match). Pick one with
 -- /hekili priority <name>. All three are provisional (their descriptions say why).
 spec:RegisterPack(
     "Combat",
     20261019514,
-    [[Hekili:nFvxVTTnu0Fl5fpBmp3ip700U4cKU1I9fcgQ2ZsIsIYMWYIcKuj1ag63(ouurwYH0nDzfyVylZpo3dV3Z9i6aVG)oWpLOOb3n)Y5x5DP3Bw6TiWxTVKg4xss2swJhki7WN)mFxmrPhEFoNKQ3ACflx9BfbXwrrwstcUZBX1xh4VHLMsnlKktc8)ixqVNkQJmOwh9j(6kAD04sb)EMKXli5VToQGxhXk(H1Ga1rjBOjBRJ2tv)uDKFolbJrksRJ(f8406OBtfuSnwbg)tvYnTZQ2GFZlPfuHedjWV2XtP55umzMGVdZwbMKqKk5K3(uORJ2slbfRkXG4BfttCp7reZNZFOoshU17Br595KuSKpMxjeyShyQn2ctvjW8d44NqfiDAqBjygYriruYzfkCegVaqSHwydcgMxY5yU0k6eaNpRGjvAc7ReSTyjkaLUWLovdjhSFnYdCHn4mHHPmatI5vkdazK8Cuf(dMUImmP8HpxYLyV3k2PbDmbmIQuimt6V056IOIsYvdku4qk5fiyXuWjQ5WR31yswZX4b(ds2o5RYmkOVt2PDU9V(teEbnJIQIM98I89tMbfRGNXYHeMKOGYsoRuqnWUIvivKcvOjStRK0qEww46K0vEtzzRAzo2IHxJUiUklB2ocRiCdyDiIe(wndIJF)jW)9REvkLKMV)RfF9AEwWlnzWNcSbN2P7V9vBrnBAgpPsUYRBuafTPUfs0LT25NRrQDCONg1iedn6WzjqmtluVB1Y(Oq2fJgHMJMj200zqRmQ7GAwqOPH0kI3maW1eHGROpfXl(QGC0fP0MuslEiLmACmxkp0bJsqakPC4c0Na3tqhKLmC3(mla8za9Cqdtzr3OfQRVP4HzcQwpjF38rJDCMmUjht5g21UOzjCP6GR0HLZTd0ECfA4otUzqYH05agkAR7dr)MvlV06HUNKe4O2axQCAisH2WWBGKiwBNgM14MQx9zZP934W18ytqV2LtPOdfV3Olo2vmOhQZ8wd6yh9lhSp(IZjoUz1vNx7mXfNKTVbiu28canXCOnhF2ayL134D4u10RxE4irGyjWh2063OFY1dYbRKnxaHMrQYv4X7AUqceuX4LZbV)rd7aFTNvGFt9sVifG6KvMiy4mYiyWVOF1rC7751H)Cn()OdMyAU6hVxGpNoqlCeO2Ur3r6)k)pRn5AMT8eM1Zbuxe6yQX)Bar))L143gVr7MJ6e3vU0odnlhiAFUMMA8FTd87zIEoS9A0Dx7aK(MR9r5SvhnGVXzh5lWC9iVgU9HMbEx64WC0pUpFC6l)T3yUHTUC5oXPUpL)35y7YY2MNDFtBWs9F07X7zAZz2LzWWluB1u4lFvABg8Uc4Gly)mINLRwBZV3v4ADYSiV7UQDt2d5psLAJ(1k)kDllNH)bt7F61KEd(Np]]
+    [[Hekili:nFvxVTTnu0Fl5fpBmp3iV401S4cKULUpr7q02RsIsIYMWYIcKujZag63(ouurwYH0jDDfyVylZpo3dV3Z9i6aVG)mWpLOObFy(5ZV07CV3SW7IaF1UsAGFjjzdzfEOGSfF(d8TXeLE4D5CsQERXvSC1VueeBffzjnjW)Up(t)1TxL0U51S0uQzdujM99Cb9EQOoYGED0D8vv06OXLc(9mjJxqYVQoQGxhXk(MvGi1rjRPjBQJ2rvFFDKFolbJrksRJ(r8406OBsfuSnwbg)Uk562zvRXV5L0cQqIHe4xB5P08CkMmtW3IzRatsisLCYvpf66On0sqXQsmi(wX0e3ZEeX858hQJ0HB1UwuExojfl595vcbg7bMATTWuvcmVfh)eQaPvdAlaZqocjIsoRqHJW4laeRPf2GGH5LCoMlTIobW5ZkysLMW(kbBdwIcqPlGPt1qYb7xH8axydotyykdWKyELYaqgjphvHFJPRidtk3(3LCj27nITAqhtaJOkfcZK(lDUUiQOKC1GcfoKsEbcwmfCIAo86DnMK1CmEG)GKTv(QmJc6RKDANB(JFhHxqZOOQOzpViF3Kzq5k4zSCiLjjkOSKZkfudSlzfsfPqfAc70kjnKNLfUkjDP3uw2YwMJTy41OZIRYYMTLWkcxdwhIiHVvZG44xFc8F9YxLsjP57(uXxVMxe8stg8PaBWPD6(BF5guZMMXtQKl96gfqrBQBHeDzRD(5AKAhh6PrncXqJoCwceZ0c1BxUOpkKTXOrO5OzInnDg0kJ6oOMfeAAiTI41daCfri4k6tr8SpjihDwkTjL0IhsjJghZLY9DWOeeGskhUa9jW9e0bzjd3TpZcaFgqph0Wuw0nAH66BkEyMGQ1tY3oF0yhNjJBYHuUHDTlAwcxQ27kDy5C7aThxHgUtKBgKCiDoGHI26(q0VE5IZTEO7jjboQ1WLkNgIuOnm8gijI12PHznUP6vFYCA)noCnp2e0RD5yk6qX7n6SdDfd6H6mV1Go2r)YE7JFXPehxV8YtRDM4ItY23aekBEbGMyo0MJpzaSY6R92FSA61l2FGiqSe4dBA9B0p6Ac5GvYMlIqZiv5k84hAUyceuX4LZbV7rd7aFTNvGFt9sVifG6OvMiy4mYiyWN1V6aU9986WFUg)V1btmnx9J3NHpNoqx4iqTDJUJ0)v(FwBY1mBXrmRNdOUi0XuJ)3aI()lRXVmEJ2nh1jUlDPDgAwoq0(snn14)Ah43Ze9uy71O7(ohG03CTpkNS6Ob8no7i)mmxpWRHBFOzG35oomh8J7ZhN(YF5nMByRlxUJCQ7t5)Do2USST5z330gSu)h(E8EM2CMDzgm8c1wnfE(RsBZG3vahCb7xq8SC1AB(9UcxRtMf5D3vTBYEi)rQuR1Vw5NPBy5m8pyA)tVM0BW)m]]
 )
 spec:RegisterPack(
     "Assassination",
     20261019736,
-    [[Hekili:nJ12UnUnq0VL8IRnQxVrox3TXlq22TOxdkQw0hLeLeLnHPjfiPIRbm03ENrsrsmwmobzdqFXwMxoZzUW5i6aVGVg4Nsm0G7MF68l9o17dxD2Lb(MD50a)CsYAYs4bbzd85TAnrRzcIHjf4S74sskIqCbJB(vrq8GGPZPjb35D(1xh4VILMsRxivNe4)Zsf9EQQmYc8YO)wUSGwgnoxjVNPHHi8pwgjKLrmX7wc0PmkzfnzDz0oQ5hkJ85SeymIiTm6NGhNwg9puHCtZqMvWKYCQGQ0Wqk4xBKPuoNctMPW1jlawKq0g9KpEiELrRP5MYOICyq4BddjTxpZadEgaGCtmqYCjty0WS)OKdi8zUuMIu3aZrkJU4DvlOm6lGZLqvqmd81ZlJ2YmRkJ(ZcdJdJnzA3ZGjH9IbAaOX(mbtBqk4BuS1WSX0mj6wmavg4JCkrjOPie5sjNjwcoQunKNTDfv0TrsSSWuBTmcNdX2FNHXzBV(l)BUud79w1ge0XGtPPgdyMj9x6Cm1yOeo6wDzcW71sHUJ1yyd31yswLxTvUvZ2OFFwD5X3PBRiU9V(dW8kAgvrfi7Lc(UjZGYrLmJXHYuscwcPNLRO1WUGj0gIWewB2PfAAOmllCzs6cVPSSfnmh2snVgDsCrw2SneMiCfW6qWsW3Mzq2)3oa(VFX7tPKu(Uxk(4AEwWRRJGhcCnont3F7lwd5SPzYKc9cV2rbOOv5TqcM2AMFoIuZ4Pf0rvLWH1vWZskuqC28Pfx0hfYM4c9QkxR2200zqTYOwhTEbH1N4geXBSaCjrPKg6HiEYlcYrNKsRcjn4bHKrJJLA9(wymkcGsQeoM3Na3tGdudeHB3x9ca(yrph0OoTGh0cX8Bk8WmffRN0FA(OXo8j8JL76c51SRzrZsKAZExHJb8BhO9Wkq4EIyJvWXScA2WPHGRxvRyH8nl8SsL2U9d1G9QwTdlathUGZB0jDfLwPkSHBhEv)0nmN5cMeOZCym2y(WSUJJahjV6iItB7Xxf0Ton2ofA1Xom7(Hh)8rngytJeXS1c5wHZv)eK)Mfx(0(2exrXhSTROgCyy8tI8G09gV9poyE1f77yGv1PUrlmuxjfwvzmyKX1P13gcg4dcx4BU8O3gIdKvx9Ax0msb3apEx1RHrfKy49rc(8dsyb(yx8a)QJq4ImaupALjkg46mcm4r7G3HBFvGw8NJ4FMdMu3UPV9EfD(rdDUdd10FYTL(wPimyBpKzx8iM1R7aMeAzATIGfr))LyXBJAXWYfyG7shP0EYhwfShiJGGCLZc8xH8rhxS3U9zRRDW)kfMdzYlr4bH)dpZ6QoHP(28TusczN3Po8(U12Noo1QEHIvV9QvvoNRgSpWMJfPpUkHlzIH0j6luurVh3vVTA1wAZQg8BPe3RG8g8MxnxvziPmxv523jBWUOh)2ydPi6YGw3r7zyVbUD2qcKUmxtR)bAG1EBTQOhe)ifMvOo8VqxZ4m4sWn)Pi1H3G)7d]]
+    [[Hekili:nJ12UnUnq0VL8IRdQxVXo36MgVazBtV3TfRB7JsIwAKnHPjfiPsQbc03ENrsrsmwmobjbOVylZlN5mx4CeDWKG)kyEcZcbFE6rtpBYrt(W5hFwWC72miyEglEnBj(GKTb)8kJHzmCjZYvsA2TcflHqyroxy)zzWIEbZKbXbZ)YF8J)91xWCXyfpjbQ2hyWf9dknCdOlICSvr0xulZHIOHzA1nCdoetCrrKuveXLVBjYUIO4vq86IOTG9BlIMl4X4ymzsr03JpoQi6FaPAt9q2v4KQmqcAdoKg)1gvcieaozQMwNkhzrmZynhEXU4veTgYSfr5z4G43wor6jDmdo4XiaQnlqsMP4sRbN97uceHpjuQeI6wCowr0PVRCbfrxJoxmOXqi6RNueDl3UQi63ZTCbo2HJAFgnjUxkUJanCoxYnwIcZTA(AC2fqQICloIkh9rbW0siHGitPeC5s0rv6(8SBxbY2nYwOYTvwlLjeyS9x5uC21RV(FZugCVxP3qGoeDkdyTOzoS7sNsPglWeKB1MjqV3OKMwwtHnAxdzPLE1TQBn8nM3NwvE8vMMkIR(ZFdnVgsbnij2RKIThogRo1QuUaRAzXujKzCMgQGDgxASmPnSYSJYnqOknnCzCYSjJ4PZQzoULkEn4Gf5PPJ3W4YWviRdrlHFBhJz)Fzh4)6zVpbyjITpx8P18KG3ufb3f4kCQNU72NTgZzJsvX5MztAgfHckZBHmkTvp)ucP6XtYHbLLWHvvWJJZ1yC2(XzN2ff2Mf5MvLUwLTHKXyTYGghTAbHvN46fXlDaCjtRvwyxep4zb5GdsGYqsnEyizWWfkJ5UgySAgIsIcpM3La3WWdu9eHB2x1cq(4qpp0OkTqh0cP8Bc(Wynq1tMpoDWqp(e9XYTTH8k2vVOXXkJ9oFHJE8BpOD)ki4EKyJtWXUcB2iGq01lRvCq(YztCsLUU991GDQwDdlit7VGBYGdAlkDsvud3w8k)PFyo2hmXyN5WfuJ5DZ6EocSN8QNio00JVmO7CASzkYQd9y276F8tguBGn1seJxlv3k9U6hH8xo7Sh33o0xu8EB7lQHhgg(Oi3lDVCYDpmyE(P31YaNQttTwyOPukSSYO3iJVtRVnemyokCrV5YdE5ibswt5BHbPSCHfF8ZLVvgizlW3hj4t3lHfmN6IhmV8ieTilc1dwzSMJUoNHdU3o4T42vfOb)Pe(h7HjvTB6AVxqNFYqN4Xq19N8BPxlfHEB7rm70hWSoDhOKqdtRueCi6)VelEBul6xUGcCN5jL2r(WPGDhzecKZ9wG)cKpA5I72DpB9nE4FPcZUm55i8qW)HNyDvRWuxB(wkjrSBYrE8(212LoE1QEMIvV9QvLoNVgS3ZM9fP3VkHpzI(0j6kuusVh2vVPA1vAZPg81uI7fqElDZR6RQ0NuMVQC37K1Bx09FBS(ue9zqN7O9eSxp3oRpbsFMRU1FpnWAUTwz0dJFSC7ksh(NG1CbhVeC9Fksv4n4)c]]
 )
 spec:RegisterPack(
     "Subtlety",
     20261019927,
-    [[Hekili:nJ1wVTTnu4Fl(fpBmp3iN7DrbiDRBDxqqrDFwsusuwewwuGKkzgWq)23HI6UjTDBAr6d11MI878DUWZ5lYXY5ZoldrcSZJloBXvwNzD7TlU2zPyBg2zzgkynAf8Lu0g4ZL5(IeSyR8bBtOOq5H9ZjjI)k1Xxlo8mCGZJwxCZnolJjHHy1gX8aNL)bLHFcZk8QXTW7t0v54cVjzm6teoHMIsEBHxkTWJK(lRasu4feJdwx4Tfl(v4KjKaynuAyH3VdFDwH3VLleXmksuTSig2GFcghYHvyWp2qdXjjy4zrm6McpAoWHaexWRoYdB8Z5X)e8ZCoYNKqeBN(26LH9N23kW)eePFynBFgv4TgNb7ipB4o)idVbhseib4NWV)uEMixYVNjcWkFoMcwxcdylGku4yFaVHYyXqkrXcFkNJHNnbv4XXcbjDvHhoHJFogZWt7AXfGfEpetdWmilPEYLGBt34dr3mkjvWHT8NXuUibYelfmY6AhPRDfW2L5Cy5jVdQp4cKFnNlJ1HOvRKwSIqtNjHNMuYTiPxSFicOl4neGsezoWNMlugkcLKaP5)Hit59dFV))YOC4SpW2ibTtiOVFlRseyuIKFTfeGdZPPGX8XaNWQaH8utqrc55EM(mNSH)MivrQSyOQ48Hp(VG5z4iieNguMjs2oDoCPGrJijW9euGmLYNNXWkyTjPqykv4Qm7SCo2Lgf5Uki02AgjYUI5Wru8A8i)8OO5BqKu3yG1UGLG)xmhkJ(79G)NTFtigfMS9lfF5Eoj45Qi4(aRWP6XDpU9AiNnlIgKZTTAwfGcxM3CrY0w1ZxirQA9WC84YIsxvn58GCgeNf3BFzxuqL3fRXxE(sIeuFTeOIwyUthkYaKYdWHZHkUXnHl1gCPz4um7eaCfIXOc8(io6lcYXJcXL(tfEsVzI8Y(UgyemeGsivWN2LapHsjCn5PMZP2aWNE0Zanujx51vxzvsi8L5qxlOQKF)IXtm4tYpwTTnXPyx1MMhany2zkCOXVnGw9oKWDGytVGdurNHyQ(Tqmja6kfsFoTkM04zN19mIyc0qe7cHRYQ0ES5oBRlhyGoT03ljOnkBFExe6hS7wFpsxYWqv(92wJh1EHQRbyQPmDV5PhHZBsgvhPSiuGsGNoxunCYfUWXNJtrWa2WDv7pUzAbCKPhi5yIJ4M5us6nXq7GD6x)Idv1EN9vhUOgO7OtXhRJj1h0(IDdluV(YDJoqHPjNFLAcSlVCaSXYME1DTr8E319Rgp3Kj7LzoH2z1aya1tTLlucCOyU2e5Dw6cOTHSPM9)r7t1xjEXjqJfqorNK5OQ(xDsfRtHMqJFTzTZsqMJuY9af8jGhWl)ReWrO8eb81hl)RgQUr48UAbpolLZ8Dww2ArUjba1GDgWiq8GGGfp68(wC7QzOb)fs8p3i(NAXzRvuJI6Z)lm4P17T1EVafesdDPbdvnNZSL(wPSqBxkjZUAaZ6mwtgKAyQAkApI(JLOJVpQo03Dxg4U2qkTJmKUrlJYrKyDJbS6ipP3LR9KPib52tmt2tgtFkQvaJeBRZmEt8fOCPLt9pE)lPwd7hDyg)vPT5GIBoQ6Mw)OYG97IznSnztJVgLqDDkJkIEDKeDanr6M6uRk64YIkdnd7W30ySNoPJLZvnzTm1oVnRQT)1xLqQsdAQTEnIhXCN6qSJPjWKOaT5NoYck9HHdaoCq7BMoMxeNn17DGISEe)7UYSxGhjk7klppsRcmtTY7)IN0wTLD0x5KoHCMmyVxe1jypnVckD66mzUkffAg308kPkJEq8dLdTVa5JFaVMKqk8Mu9(NvHxN)p]]
+    [[Hekili:nJ1wVTTnu4Fl(fpBSm3iNBlzrbiDlRDxqxrC3RsIsIYIW0IcKuj1ag63(ouuswYM02TPfzpuxBkE(oFNl8WViphVp5nlgjXEFy6PtV05uNRVE6vEZKRYXEZYrrlqZHVKHwcFoRiusXYvQhSIYqXkJdliu5FK5fAehrooYB2J)Z7(3hUr0AEkjogRnblGN)7mo(jmVmOXdLbpYMxGldgLZzpreewgIEtzqgRmGK9tZb6ugeLIJwugScl)fWskjcwdLfxg8BWxpPm4xlKYuodjRxwMcBiKIXXcyfo8JLSymLIHNLWzlldyfahIqcPO2K7xgwis)b4NfcuiHsKRgFtZYW(Z67f4FsIkoCozxgvgSaNd7OiF7D(roEjoMirsioHF)yrUSqXVNjsWlFkLbExbd4lGkmWS3JxY48uO4OzritiWWZgHkdeyPKKnVmatf4NtXC84UECk4HhGCAeMd1l9tUacB2Yqi7MZizsbSL3LYeskujMj5Kfnbsx)kHTRQ(WYJEl0PiKOWgoxLRJrZNR8ynHgFIcEgTIBjQOy3ueqxiAiaLiQAqiRqQDucIsHY8FruL8(PVh(Cota2EpFPc0oPG(XTQlrIruf)20qabSGLboledCcRtekRgHsKk7EM9SGSu8MeDtQQzOU58(p(3G754eifNfvvjORgpboEWzjekCIbfPkPIj5CSgwxsgKMYK(A3EsHa7Zss8Nhf76CcjXTM5GjAEnCqyrsYKLisMFkWAFWtW)lNaTr)5oW)JUVjgJIPR(sXxTNJcEHodUlWACQFCxZDxa1StsyrfcxN2vbOWv1nFKQSv)8PkKQxpUapSQP0x3tojQGd5z5DUx0ffu1zXg8v2xrKOMJLavmcZTMqrLG0raoEc0XnSnDP3GplhNH5hbGZrCotI3fXbFrqoCqmUkEQXtfnJuh2x3cJKJauIzsX4Ue4jugryOo1ANEdaF6rpl0qxCvhx9vDjXWxMatTGUsXDthoYsmP(y(Qnfon7Q30KiyaZABPddXTf0A2HcU9KB6LCGo6CexpVfYjrWuPy2Zz15K2i70U2itjWarSpKUQ6s7XMBDDUylh0zK(ofbJzz3Z6Iq)KD3(7bMkgw6YVZ1z4GnhO66aU(wMUN8mJWzTfJAtQAcLik80jY6lN8HdCIj4meCbB8669N2EBbyY49uCSXrC79uk6nYY4G1Mx)8911ER7L7VPgO7GJjgBYjng6E(6TBuV6I1d2tJPTGFU(gyFr1fWwBB613TjJ37SEy91ZTvYEvMJyCwdawq9yh5cTa7lNBSqERJPe6Mu2y7X)GDP6ReVeeyWciNOtXCq98RoLIfzWqOHV2S2BgiZrj5ElT8uicev)9c4eubvcF9dv)9d1Ni8EBJGhVzQ789MvnArTjja1w7mItG8bbblEW773GBxndT4pvH)zwX)yBo34f9vr95)5wI0M9UXFVafekhDHfhvFpNDp9TszHXPukMD5wmRZ1AQKult13I2JO))s0X3hvhMNURsCxzPK2rgs3SLv5ikS(zly1rEsVdx7itrbY1hzLSNmM(u0Oagf2oNA9K4lq5Ygo138(hsD2EE0(z8xL2M9kU5GQB2eh1oS)umNTht2o4Rvju3GYQIOxhjr7rtKPBDAufDyzrvPMTNW3oySNoPdvZ1dzDSnoFtv148RVkHuvo02y9gepG7o2lXoKMaBIcmwF6ilOkg2(cG9N0(MPJ5fXzBZE3srwpI)Dxz2liIKvtLv2JmQaZ2O8(V4jJDB5h8vozsiNnh27frDe(ZWRGYKUoBURwrHHRBAFLuvzpi)HkGXxG8X3JxqOKYGr1V)zD617)o]]
 )

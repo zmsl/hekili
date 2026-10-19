@@ -1,13 +1,14 @@
 -- Hekili_Paladin/Paladin.lua
--- The Forever Paladin (one pseudo-spec, PALADIN_SPEC below; Retribution and Protection are talent builds, one pack
--- each): the Paladin kit with Forever's spell data (ranks, costs, cooldowns, cast times and durations from the Forever
--- DB2 at build 1.60.1.70338, wowdb; a cost percentage there is a fraction of the believed maximum, as the Druid's),
--- the seals as player auras (one at a time: a seal's `now` takes the others down), Twist of Light's Echoes, Swift
+-- The Forever Paladin (Protection, Retribution and an idle Holy, one spec a talent tree: Hekili:NewClass): the Paladin
+-- kit with Forever's spell data (ranks, costs, cooldowns, cast times and durations from the Forever DB2 at build
+-- 1.60.1.70338, wowdb; a cost percentage there is a fraction of the believed maximum, as the Druid's), the seals as
+-- player auras (one at a time: a seal's `now` takes the others down), Twist of Light's Echoes, Swift
 -- Judgement, Holy Shield's charges spent by blocks on us (`consumedBy`), Hammer of Wrath through the target health
 -- gate, mana under the five-second rule (`fsr`), and the default priorities (all provisional: no in-game check yet,
 -- D5). Research: the class-completion research §3.
 -- Judgement does not consume the seal (wowsims/forever judgement.go and the DB2 tooltip); the in-game checkpoint asks.
--- Talents: only those this file reads; a modifier is rank 1's value x the rank, floored at 0.
+-- Talents: the DB2's 44 Classic nodes and the Forever-only ones this file reads; a modifier is rank 1's value x the
+-- rank, floored at 0.
 -- Unmodelled: the judgement debuffs on the target (no priority reads them), Seal of Fury's absorb, the seals' attack
 -- speed and per-hit effects, Exorcism's Undead/Demon restriction (the 879 ranks; the 415068 ranks hit any target).
 -- Credits: Hekili (registration API and pack format; `mainhand_remains` follows Hekili's Classic Warrior profile,
@@ -25,10 +26,22 @@ end
 local state = Hekili.State
 local max = math.max
 
--- The pseudo-spec the client reports for a Paladin (Constants.lua's row). A placeholder until the checkpoint reads it.
-local PALADIN_SPEC = 1486 -- alphabetical pseudo-spec ids (Rogue 1488, Warrior 1491 read in game); confirm at P1
-
-local spec = Hekili:NewSpecialization(PALADIN_SPEC, false, 135963) -- spell_holy_sealofmight
+-- The class kit and one spec a talent tree (ids the core's: Holy 100021, unsupported; Protection 100022, Retribution
+-- 100023; the client's one pseudo-spec, 1486, only keys the legacy profile the core migrates). Icons: the DB2 tabs'.
+local spec = Hekili:NewClass("PALADIN", {
+    specs = {
+        { key = "holy", name = "Holy", tree = 1, icon = 135920, role = "healer", unsupported = true },
+        { key = "protection", name = "Protection", tree = 2, icon = 135893, role = "tank", package = "Protection" },
+        {
+            key = "retribution",
+            name = "Retribution",
+            tree = 3,
+            icon = 135873,
+            role = "attack",
+            package = "Retribution",
+        },
+    },
+})
 if not spec then
     return
 end
@@ -184,13 +197,59 @@ spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
     fsr = { spirit = 17, mp5 = 2 },
 })
 
--- Talents: { node (unused on Forever), rank 1's spell, max rank } (`wowdb talents PALADIN`; Forever-only ones by
--- spell), only those this file reads, until the live export lists the tree.
+-- Talents: { talent tree (1 Holy, 2 Protection, 3 Retribution: the dominant tree picks the spec), rank 1's spell, max
+-- rank }: the DB2's 44 nodes (`wowdb talents PALADIN`; the tree is the DB2's Talent.TabID), keys the snake_case names
+-- (Holy Power is holy_power_talent; a nameless node talent_<spell>), and the Forever-only ones by spell at tree 0
+-- until the live export places them.
 spec:RegisterTalents({
-    holy_shock = { 0, 20473, 1 },
-    holy_shield = { 0, 20925, 1 },
-    seal_of_command = { 0, 20375, 1 },
-    -- Forever-only
+    -- Holy (tree 1)
+    divine_strength = { 1, 20262, 5 },
+    divine_intellect = { 1, 20257, 5 },
+    spiritual_focus = { 1, 20205, 5 },
+    improved_seals = { 1, 20224, 5 },
+    healing_light = { 1, 20237, 3 },
+    consecration = { 1, 26573, 1 },
+    talent_20234 = { 1, 20234, 2 },
+    unyielding_faith = { 1, 9453, 2 },
+    illumination = { 1, 20210, 5 },
+    improved_blessing_of_wisdom = { 1, 20244, 2 },
+    divine_favor = { 1, 20216, 1 },
+    lasting_judgement = { 1, 20359, 3 },
+    holy_power_talent = { 1, 5923, 5 },
+    holy_shock = { 1, 20473, 1 },
+    -- Protection (tree 2)
+    improved_devotion_aura = { 2, 20138, 5 },
+    redoubt = { 2, 20127, 5 },
+    precision = { 2, 20189, 3 },
+    guardians_favor = { 2, 20174, 2 },
+    toughness = { 2, 20143, 5 },
+    blessing_of_kings = { 2, 20217, 1 },
+    improved_righteous_fury = { 2, 20468, 3 },
+    shield_specialization = { 2, 20148, 3 },
+    anticipation = { 2, 20096, 5 },
+    improved_hammer_of_justice = { 2, 20487, 3 },
+    improved_concentration_aura = { 2, 20254, 3 },
+    talent_20911 = { 2, 20911, 1 },
+    reckoning = { 2, 20177, 5 },
+    one_handed_weapon_specialization = { 2, 20196, 5 },
+    holy_shield = { 2, 20925, 1 },
+    -- Retribution (tree 3)
+    improved_blessing_of_might = { 3, 20042, 5 },
+    benediction = { 3, 20101, 5 },
+    improved_judgement = { 3, 25956, 2 },
+    improved_seal_of_the_crusader = { 3, 20335, 3 },
+    deflection = { 3, 20060, 5 },
+    vindication = { 3, 9452, 3 },
+    conviction = { 3, 20117, 5 },
+    seal_of_command = { 3, 20375, 1 },
+    pursuit_of_justice = { 3, 26022, 2 },
+    eye_for_an_eye = { 3, 9799, 2 },
+    improved_retribution_aura = { 3, 20091, 2 },
+    two_handed_weapon_specialization = { 3, 20111, 3 },
+    sanctity_aura = { 3, 20218, 1 },
+    vengeance = { 3, 20049, 5 },
+    repentance = { 3, 20066, 1 },
+    -- Forever-only (tree unknown until the export)
     twist_of_light = { 0, 1310735, 1 },
     swift_judgement = { 0, 1310994, 1 },
     instrument_of_law = { 0, 1311085, 1 },
@@ -459,7 +518,7 @@ spec:RegisterSetting("consecration_mana", 0, {
     max = 100,
     step = 1,
     width = "full",
-})
+}, "retribution")
 
 spec:RegisterSetting("exorcism_mana", 0, {
     type = "range",
@@ -469,9 +528,7 @@ spec:RegisterSetting("exorcism_mana", 0, {
     max = 100,
     step = 1,
     width = "full",
-})
-
-spec:RegisterOptions({ package = "Retribution" })
+}, "retribution")
 
 -- The two priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those
 -- and run it, never these blocks (tests/Forever/paladin_spec.lua checks they match). Pick one with
@@ -479,10 +536,10 @@ spec:RegisterOptions({ package = "Retribution" })
 spec:RegisterPack(
     "Retribution",
     20261019682,
-    [[Hekili:TE1xVTTnq8pl7LSAmp3yV2S0w4cSv0HUGIGIQcS3Oen1jlUijAqsfh)I(SV7OKIPKLSD96lg0K3F(D3974rXMZ(gliMBb29lUEXnZVE(BU52fSa7Unalydx8aFnUOGNJ)(vWQLRkTsvbD2UmfpM0FvPmZ(3fSvdAkZgqWUF(RU9gwqQmogQfemcwWFP0WJGUkYZ0vrFHNXJL4IxSrREuAWn5zVTkQqvfjl(11iyQIePG4HQODG9Dvr2uChdWZmtRI(OivbMQiErCv0DLXRHCOW(Z4oqsciSvrKtEwfuqnUmxfdzzaQsIwLJYuIWsWnwZK36zMALfkvwSABb6TpXZZPiqLuf9pAUnLWyJ5HNarPfxSvwGIJEc13kjXNtQQY2vffGr(dW0gv(2wPXwBTplxNABXOTE)xe4(hD8hu55Uq09Z(9)kPgOknfGHshaxGyABkGOsABexAn1jQMONcMj9X3hufgqGXKRQ407JpP0cPj3linyWTUkAnFJV(lqSIhlXLik5ywntP0Mg3zaRf1IGNkbX8kmpedj8Ym7K3rPlkn6SEtokvrfBlpdlbtBGpc5QOS60cpXsEDRARrMBEzsnVIQ5Dyw)Xx(m5tnKaAOqau1mB3KziDwRsKzijNlirnZ2ObHkFf3UuV3cH8snFQmz5pTQmjzw)tMvUP6UdmWVS8LunmuLekQRzol427ukO7umhsTL6s05U1HuYyk1RUmftBHgkRrkvN3MTFZzqbFfr2BTc6Y)TLIpT0aOVtcxlIxo3xKuhxNW1wIPpnrjkn9eX5dhL2F7(jGgn9aNJGtIKrHClaVQordit1tDmp3Cqp76xagnlEH(UJroeb9p(yrpvhpHR7xMpkN473wcVw7MeYcYu5CzrkcXqnqlnVF(SxFf1apBJW((LT9TZ81p01G7zCO5sIlXWT621OEu3LNIN6jBVaDerofRUR0Jxfop6qpFpq7sxjILpklGWe(JkD3iMCA7Gi)E7Mm8YRVkgCy65CaehUwRk72NmeGAV44cmqBbS6owaEfmn8U3dcOBPm07g2Rh(V7DpfPHZY(twGxSsh2CXml456pZIgUNsTc5x2j5(TrKRxTNf4k(K)qLE1iknyng9PwIdHKCwWXPcKPF9y4zpFGe7MZmN4ts8bYLtpiV)7hfKU6MNVoL1UDeR1syyubnO5vadri27QrNNT3Q9MkwZ6cRFhRh(hGcDw8UFO8PEf9(CJdI7ZAC1zmQ8qgDZzDHDFs4LHNVZXNNSBZhHJrupiS8ArpVzMhJ4E6RboFF8MrZXN7GZdMipYLHTjUfKBNF9)B)2zG9aD1((ZsVZU5rUd1H)CZBV3vF4DRd8Y7Jno4yebVQWyD1NUsV3iUOKxAtPBI)e8GmtIFFsZh6oXDm7)(]]
+    [[Hekili:TE1xVTTnq8pl7LSAmp1yV1S2u4cK11H2GGGGQcS3Ken1jlUijAqsfx)I(SV7OKIPKLSD86lg0K3F(D3974rfml4Bb(XmdeC)8lNF1SlN9URE78aFZ21qG)Ag)r2kCrblh)9RGrjwwAeYc6STzswmP)YsrM5lfblh0u61apW)HBU7M)6l3FTY1gPI4yOwpqJc93sf8eOQIC8uv0dSmwSax8Q1k5tcnUjl76QOczvKO4xxHyRkINc8hRI2cM3xfzsXD0altpTk6t8ujORIyfXvr3wgVcYHcZpJ7ajja3ufro5zvqbv4YCzmKLbOkjkzoktjclotB0tU2Xm1kZLYSy5Mc0BFMLNtrGmPk6FumtkHXgZdFh4LgCXgrbko6juFJGeFgPQmBBvKpg5pctBu5BBeAtT1UtSk10Irt9(VY3(p64pkZZTHO9ND7)vsnqwQlanLoaghX0MuarLW0iUWORtunrpfmt6JVpkl0ahJjBvXQ3N(UuXf6CNGuJb3QQOvS1U6phXkESaxIOKHz1mPuPBCNgmgulcEYeeZlX8qmKWkZmtEpLUO0O16n5OujvSnSmSemTb(iKRIYQtlSed51nYnArU(1j18kQM3HzDZd3r(ubjGck4avnZ2oXdz3kzIid58mojQ2BTc4Y8LmZchgCiRuXMksw8tllts86FIx56QB3Za)YIxt1WqzsiVUMzTGDVJPGQtXCi1wOkrNBxhsjJPuR7IumTfQPSgPuDEZB3MEqbBjr2BTc6Y)TLIpTudOVtcxXJxmZvKulxNW1gIPpnrYl19eX6dlL2D7(jGgnDaNLGtIKrHClaVOordit1rDmp3Cqp76wagnlEM(UJr2hb9p(qrpvhpIR7xMpiN4LBlUtRDtczozQCMOifHyOcOL6pmZ7nxqnWER5MpSOTV1Zv)qBdUJXHMljohd3QBxJ6qDxCmEQJS9c0re5yS6UspEv40Od989aTlDLiw8KOactypjvDJyYPTdIC7TBYWlU8IyWIPNZbqC4kLSSBFYqaQ9IJZWaTfWQBd8XRGPH39EFaDlLMEgXo9W)DV9LjnC2G)mW3jwPdBUyoW)56FGbnCpLAfYTStY9BJixVAFGVT4t(dv63hrPbRXOpvcCiKGf4FyQaz63mgE2XhiXU6eZjUKexGC(0dY7)XbbPTU54RJzT3oI1Ajmbub1V5vadri25QrNNTZQ9MkwZ6cRFwRd(hGcDs8UFO8PEf9(CJ9I7tAC1jmQCFgDZzDHDFs45HNx44ZJ2T5IWXiQ7fwoTON2mZdrCp(1aNUpE3O54tDW5EtKh5YW2e3CYTZU8)TF7mWEGUAx)zO3z38i3H6WFU5T37Q3)U1bE59HghCiIGtvySU6JxP3zeBuYknP0nXFgEuKjWVpP5dDNypo4)c]]
 )
 spec:RegisterPack(
     "Protection",
     20261019065,
-    [[Hekili:nwv3YPnpq0NLEvtMMsc0eAA7WfTDAAAMVHjZN61cllVYOIWYJ(juUXp7DxdgumKFUjJYUN9OvNZUg(q(V5Scra4thDXOXdVy4NUy8vCwyDnWz1c5crjEOsSe)79oBaKbTTIsT2yffu55rTj8RkE(rzYxds(0HxE9yoBUUOa2ae8so7gRdEaCnz7zgplmIcnE4KAN9bThdkmFUjRY2KPREFj2knzY5GCrt2Ai8LMSWCmIheg)znz3AnRBYWRcmfV1tifUsapiQkAYUlwuclHQaLcuk8sBYOBDhhiqhECPTamgalr5SlrmrSnLcFOJP2cYnw5c)ggI(tXU8)1LZdGnIbVj6WojhuwIqPDzUiCwslSLi2kTkKegHWA7dRQJJfqnIiwVTI0N4M7wATMc7k8Kabg0KMocj672kpiDcszt0glPDuD7Ytp0F6SXQI9Wco9ca)3F8xRtQ9OiCIqfiQxzx51l9NR24FKwM6GF9()dlZbkWbvsGUkZ6thGdnoRsBWjjrls)GAhSrxM460Tzk8jFMwn5n5rLAWJJpa1G7oO43n5ChGDBEKsmteDIec6L5jPGm)zwvV7pnAAPt(Zo)k6beHAwPSyYWDaigjND2Rby6vRSYOFYOxUfWcLj(BA85OdoZt(mrtb0YJCVzpRS1R7X22QOXQUU4W0TtfPHHUXJ74mCyG2x79jaJgxBA)qdOertapoT9dpqLih3X4FJZs0gk52jeoBN6XdiRVYI6j8uPFOxPsNghL1co7OICcxjj4SwzHAeKYl7rzxfPMcH7QNa3EtkTDEoZIyB8ZZgzEpUn)4ZwqRDsWU(jG1zVCsgz7wyoMh2vYJ3zpuRpyN(yE7oY6T)Ee6oCd)yo(Xn0xAoiS5DlIH5whNDlSqB04xc3(txN2MM)V)]]
+    [[Hekili:nw12sTnmq0VL(uHP0ajTqBPtEGEHcmmmm19zzllVkrnkwE0fsZl(BV76e7iCmxEHrODpND15SRdBm7pSKcUhy3n5KjNn(KXF5KZoLL4xxbSKkUybFgEOKVe)79wJheELPKcTwB4fe88Gs7VUKLpitUkqGqV42l(X13DEvefZvffWgyGdZ5sJfEaS1z7QdEMR5fk8Wbi0huo8sU(86SstDMQ89ZWgRotmhelQZwd(VwN5NJ34aU2DuD2vg966mSuGU4ToktUDgGh4Lf1z3ekMblHspfcKsSO1zuv74at0IhxAkaTgqisRzjMtaBtb35BzQbqU2iw42WqWDi2L)wnBUhmb8YldwStYbPHiuywMZ9hf1cBjkzLs6JUgtjPPpmYwowavygHQTiIFIBQTWy0fMv4joMOxrA6eKOVBkDGWYjLnsBmK2r46Itp0FznHYIDP5TQfa(V)8FgRq5qr4aU0tuVYSYPw6owUX)iTm2bV4(BrywqcwOuauP0RpCeocznsLgNR4nz6gvzHn6YuBRULkXN8rk503KhKYrp((rOgCZEGF30JTa2T5bkqkpy5re0lYtsbz(PgzV6hFBm0P)TZVcoaZqMotumDCxceJKZM(AsmU0sJi4Mo5LBbeOiYFJVFo6GPoYNjAkGgEe7m70znEDp22IIgRA7I9d3mveFn0oECdlbhgO91EFqqRW1MMp7asEq7XJ318ziOKNJ7ySVXsI0gk42jewsN6X8iRVsq9eEc6h6bvyv4OSIZsguKJ4kkalPrwOgbP8J9OSfrSPq5D6tK3otkUDEoZIy7SNNnY8ECB(PNfqJDsP95NiTw7LrYys3cZqEylKhVZUVwV3o9qEBhz92FhGU93WhYXh2qFP5a)M3np4NBSSKRGfkTc)s42F66WMWS)d]]
 )

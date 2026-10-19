@@ -1560,6 +1560,7 @@ local function buildSpec( id, key, name, texture, role, pClass, melee )
     return spec
 end
 
+--- Spec 0 (`all`) only; class packs call Hekili:NewClass.
 function Hekili:NewSpecialization( specID, isRanged, icon )
 
     if not specID or specID < 0 then return end
@@ -1568,10 +1569,7 @@ function Hekili:NewSpecialization( specID, isRanged, icon )
 
     local id, name, _, texture, role, pClass
 
-    local forever = ns.Specializations[ specID ] and ns.Specializations[ specID ].forever
-    -- Forever pseudo-spec: GetSpecializationInfoByID is unprobed there, so identity comes from the Constants row.
-    if forever then id, name, texture, pClass = specID, forever, icon, ns.Specializations[ specID ].class
-    elseif Hekili.IsForever() and specID > 0 then id, name, _, texture, role, pClass = GetSpecializationInfoByID( specID )
+    if Hekili.IsForever() and specID > 0 then id, name, _, texture, role, pClass = GetSpecializationInfoByID( specID )
     else
         id = specID
         texture = icon

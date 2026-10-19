@@ -164,15 +164,15 @@ local function load(class, root, date)
         end
         p.lists = lists
         p.version = date * 1000 + checksum(p.simc)
-        if def.class then -- per-spec manifests: { class = "WARRIOR", packs = {...}, specs = { Arms = "arms", ... } }
-            local key = def.specs and def.specs[name]
-            if not key then
-                error(root .. "packs.lua: pack " .. name .. " has no spec key", 0)
-            end
-            p.spec = def.class .. ":" .. key
-        else
-            p.spec = def.spec -- the pseudo-spec manifests, until Task 6 converts the last of them
+        -- the manifest: { class = "WARRIOR", packs = {...}, specs = { Arms = "arms", ... } }
+        if not def.class then
+            error(root .. "packs.lua: no class", 0)
         end
+        local key = def.specs and def.specs[name]
+        if not key then
+            error(root .. "packs.lua: pack " .. name .. " has no spec key", 0)
+        end
+        p.spec = def.class .. ":" .. key
         packs[i] = p
     end
     local stray = next(files)

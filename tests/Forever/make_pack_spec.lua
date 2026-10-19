@@ -106,13 +106,24 @@ describe("tools/make_pack.lua", function()
 
     it("names the .simc file of a line it cannot parse", function()
         local root = scratch(nil, {
-            ["packs.lua"] = 'return { spec = 1, packs = { "Bad" } }\n',
+            ["packs.lua"] = 'return { class = "ZZZ", packs = { "Bad" }, specs = { Bad = "bad" } }\n',
             ["Bad.simc"] = "# A bad pack\nnot an action line\n",
         })
         local ok, err = pcall(mp.load, "zzz", root, 20261017)
         os.execute("rm -r " .. root)
         assert.is_false(ok)
         assert.are.equal(root .. "Bad.simc: bad line: not an action line", err)
+    end)
+
+    it("refuses a manifest with no class", function()
+        local root = scratch("src/Hekili_Warrior/APLs/", {
+            ["packs.lua"] = 'return { packs = { "Arms" } }\n',
+            ["Arms.simc"] = true,
+        })
+        local ok, err = pcall(mp.load, "zzz", root, 20261017)
+        os.execute("rm -r " .. root)
+        assert.is_false(ok)
+        assert.are.equal(root .. "packs.lua: no class", err)
     end)
 
     describe("write (the date changes only with the text)", function()

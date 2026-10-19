@@ -13,7 +13,7 @@ local ld = require("Forever.helpers.load_druid")
 
 local M = {}
 
-M.SPEC, M.CLASS_ID = 1488, 4
+M.CLIENT_SPEC, M.CLASS_ID = 1488, 4 -- the client's Rogue pseudo-spec
 local ENERGY, POINTS = 3, 4 -- Enum.PowerType
 local TOKENS = { [ENERGY] = "ENERGY", [POINTS] = "COMBO_POINTS" }
 local GCD = { totem = 1.0, spell = 1.5, off = 0 }
@@ -251,6 +251,7 @@ end
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = name, IDS = {} }
+    C.SPEC = ({ Assassination = 100041, Combat = 100042, Subtlety = 100043 })[name]
 
     function C.character()
         local w = class()
@@ -269,7 +270,7 @@ local function content(name)
         return {
             class = "ROGUE",
             classID = M.CLASS_ID,
-            specID = M.SPEC,
+            specID = M.CLIENT_SPEC,
             level = 60,
             known = known,
             talents = P.talents,

@@ -8,7 +8,7 @@ local M = {}
 --- Loads the class file. Returns `w`: `w.abilities`, `w.auras` (merged by key), `w.talents`, `w.resource`
 --- ({ powerType, models }), `w.hooks[name]`, `w.events[event]` (spec:RegisterEvent's handlers), `w.funcs[name]`,
 --- `w.exprs[name]`, `w.settings[key]` ({ default, option, specs: nil for every spec }), `w.packs` (in order: { name,
---- version, string }), `w.options`, `w.specID`, `w.class` and `w.def` (NewClass's token and definition), `w.state`
+--- version, string }), `w.options`, `w.class` and `w.def` (NewClass's token and definition), `w.state`
 --- (Hekili.State's stand-in, its knownRank, swingBase, stat and healthMax answering from `game`) and `w.game`.
 --- `w.passives`: spec:RegisterAbility's single registrations (the passives).
 function M.load()
@@ -37,10 +37,6 @@ function M.load()
     local w = { game = game, abilities = {}, auras = {}, hooks = {}, funcs = {}, exprs = {} }
     w.state = { main_hand = { size = 2 }, equipped = {}, timeToInterrupt = function() end }
     local hekili = { State = w.state }
-    function hekili:NewSpecialization(id)
-        w.specID = id
-        return spec
-    end
     function hekili:NewClass(token, def)
         w.class, w.def = token, def
         return spec

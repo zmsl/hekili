@@ -1,12 +1,12 @@
 -- Hekili_Shaman/Shaman.lua
--- The Forever Shaman (one pseudo-spec, SHAMAN_SPEC below; Enhancement is a talent build, one pack): the Shaman kit with
--- Forever's spell data (ranks, costs, cooldowns, cast times and durations from the Forever DB2 at build 1.60.1.70338,
--- wowdb), the totems on the sim side (C6: `RegisterTotems` with each one's element and duration; the summon's `now`
--- writes the slot's modelled expiry, which Families/Totems.lua answers in combat), Lightning Shield's charges spent by
--- hits on us (`consumedBy`), Maelstrom Weapon's stacks on Lightning Bolt, Clearcasting as a charged cost modifier, the
--- shocks' shared cooldown, the weapon imbue as a precombat reminder (C4's main_hand_enchant), mana under the
--- five-second rule (`fsr`), and the default priorities (all provisional: no in-game check yet, D5). Research: the
--- class-completion research §4.
+-- The Forever Shaman (Enhancement, and Elemental and Restoration idle, one spec a talent tree: Hekili:NewClass): the
+-- Shaman kit with Forever's spell data (ranks, costs, cooldowns, cast times and durations from the Forever DB2 at build
+-- 1.60.1.70338, wowdb), the totems on the sim side (C6: `RegisterTotems` with each one's element and duration; the
+-- summon's `now` writes the slot's modelled expiry, which Families/Totems.lua answers in combat), Lightning Shield's
+-- charges spent by hits on us (`consumedBy`), Maelstrom Weapon's stacks on Lightning Bolt, Clearcasting as a charged
+-- cost modifier, the shocks' shared cooldown, the weapon imbue as a precombat reminder (C4's main_hand_enchant), mana
+-- under the five-second rule (`fsr`), and the default priorities (all provisional: no in-game check yet, D5). Research:
+-- the class-completion research §4.
 -- Unmodelled: Stormstrike's debuff (no priority reads it), the totems' effects, Flametongue and Windfury Weapon's
 -- procs, Windfury Totem (the party's: never prompted), Improved Lightning Shield's extra charges.
 -- Credits: Hekili (registration API, pack format and `summonTotem`'s signature, State.lua). wowsims/forever (MIT,
@@ -23,10 +23,31 @@ end
 local state = Hekili.State
 local max = math.max
 
--- The pseudo-spec the client reports for a Shaman (Constants.lua's row). A placeholder until the checkpoint reads it.
-local SHAMAN_SPEC = 1489 -- alphabetical pseudo-spec ids (Rogue 1488, Warrior 1491 read in game); confirm at S1
-
-local spec = Hekili:NewSpecialization(SHAMAN_SPEC, false, 132314) -- ability_shaman_stormstrike
+-- The class kit and one spec a talent tree (ids the core's: Elemental 100071 and Restoration 100073, unsupported;
+-- Enhancement 100072; the client's one pseudo-spec, 1489, only keys the legacy profile the core migrates). Icons: the
+-- DB2 talent tabs'. Elemental gets its priority with the class-completion plan (it drops `unsupported`).
+local spec = Hekili:NewClass("SHAMAN", {
+    specs = {
+        {
+            key = "elemental",
+            name = "Elemental",
+            tree = 1,
+            icon = 136048,
+            role = "attack",
+            ranged = true,
+            unsupported = true,
+        },
+        {
+            key = "enhancement",
+            name = "Enhancement",
+            tree = 2,
+            icon = 136051,
+            role = "attack",
+            package = "Enhancement",
+        },
+        { key = "restoration", name = "Restoration", tree = 3, icon = 136052, role = "healer", unsupported = true },
+    },
+})
 if not spec then
     return
 end
@@ -343,13 +364,13 @@ spec:RegisterSetting("imbue", 1, {
     desc = "The weapon imbue recommended before combat while your main hand has none.",
     values = { "Rockbiter Weapon", "Flametongue Weapon", "Windfury Weapon", "Frostbrand Weapon" },
     width = "full",
-})
+}, "enhancement")
 
 -- The mana lines' floors (D7: a percent of the maximum, one setting a line; wowsims: Fire Nova above 10%, the mana
 -- potion below 80%, Demonic Rune below 70%). Off by default: mana is secret and `mana.pct` reads the belief's
 -- low-biased lower bound (0 on a fresh boot, climbing with regen), so a floor line becomes usable only after a warm-up
 -- and a "below" line errs early (Retribution's precedent); the usability answers still refuse at a real lack.
-local function manaSetting(key, name, desc)
+local function manaSetting(key, name, desc, ...)
     spec:RegisterSetting(key, 0, {
         type = "range",
         name = name,
@@ -358,30 +379,86 @@ local function manaSetting(key, name, desc)
         max = 100,
         step = 1,
         width = "full",
-    })
+    }, ...)
 end
 manaSetting(
     "fire_nova_mana",
     "Fire Nova Mana Floor",
-    "Fire Nova as a filler only while your mana is at least this percent of its maximum. 0 turns the floor off."
+    "Fire Nova as a filler only while your mana is at least this percent of its maximum. 0 turns the floor off.",
+    "enhancement"
 )
 manaSetting(
     "potion_mana",
     "Mana Potion Below",
-    "A Major Mana Potion while your mana is under this percent of its maximum. Mana is estimated low, so the line errs early (it can fire near full mana). 0 turns the line off."
+    "A Major Mana Potion while your mana is under this percent of its maximum. Mana is estimated low, so the line errs early (it can fire near full mana). 0 turns the line off.",
+    "enhancement"
 )
 manaSetting(
     "rune_mana",
     "Demonic Rune Below",
-    "A Demonic Rune while your mana is under this percent of its maximum. Mana is estimated low, so the line errs early (it can fire near full mana). 0 turns the line off."
+    "A Demonic Rune while your mana is under this percent of its maximum. Mana is estimated low, so the line errs early (it can fire near full mana). 0 turns the line off.",
+    "enhancement"
 )
 
-spec:RegisterOptions({ package = "Enhancement" })
+-- Talents: { talent tree (1 Elemental, 2 Enhancement, 3 Restoration: the dominant tree picks the spec), rank 1's spell,
+-- max rank }: the DB2's 46 nodes (`wowdb talents SHAMAN`; the tree is the DB2's Talent.TabID), keys the snake_case
+-- names (a nameless node talent_<spell>). No ability reads one yet.
+spec:RegisterTalents({
+    -- Elemental (tree 1)
+    convection = { 1, 16039, 5 },
+    concussion = { 1, 16035, 5 },
+    earths_grasp = { 1, 16043, 2 },
+    elemental_warding = { 1, 28996, 3 },
+    call_of_flame = { 1, 16038, 3 },
+    elemental_focus = { 1, 16164, 1 },
+    reverberation = { 1, 16040, 5 },
+    talent_16041 = { 1, 16041, 5 },
+    improved_fire_nova = { 1, 16086, 2 },
+    eye_of_the_storm = { 1, 29062, 3 },
+    elemental_devastation = { 1, 30160, 3 },
+    elemental_reach = { 1, 28999, 2 },
+    elemental_fury = { 1, 16089, 1 },
+    elemental_alacrity = { 1, 16578, 5 },
+    talent_16166 = { 1, 16166, 1 },
+    -- Enhancement (tree 2)
+    ancestral_knowledge = { 2, 17485, 5 },
+    shield_specialization = { 2, 16253, 5 },
+    guardian_totems = { 2, 16258, 2 },
+    thundering_strikes = { 2, 16255, 5 },
+    improved_ghost_wolf = { 2, 16262, 2 },
+    improved_lightning_shield = { 2, 16261, 3 },
+    enhancing_totems = { 2, 16259, 2 },
+    two_handed_axes_and_maces = { 2, 16269, 1 },
+    anticipation = { 2, 16254, 5 },
+    flurry = { 2, 16256, 5 },
+    toughness = { 2, 16252, 5 },
+    improved_weapon_totems = { 2, 29192, 2 },
+    elemental_weapons = { 2, 16266, 3 },
+    spirit_weapons = { 2, 16268, 1 },
+    weapon_mastery = { 2, 29082, 5 },
+    stormstrike = { 2, 17364, 1 },
+    -- Restoration (tree 3)
+    improved_healing_wave = { 3, 16182, 5 },
+    tidal_focus = { 3, 16179, 5 },
+    improved_reincarnation = { 3, 16184, 2 },
+    ancestral_healing = { 3, 16176, 3 },
+    totemic_focus = { 3, 16173, 5 },
+    natures_guidance = { 3, 16180, 3 },
+    healing_focus = { 3, 16181, 5 },
+    totemic_mastery = { 3, 16189, 1 },
+    natural_grace = { 3, 29187, 3 },
+    restorative_totems = { 3, 16187, 5 },
+    tidal_mastery = { 3, 16194, 5 },
+    healing_way = { 3, 29206, 3 },
+    natures_swiftness = { 3, 16188, 1 },
+    purification = { 3, 16178, 5 },
+    mana_tide_totem = { 3, 16190, 1 },
+})
 
 -- The priority, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and run
 -- it, never this block (tests/Forever/shaman_spec.lua checks it matches). Provisional (its description says why).
 spec:RegisterPack(
     "Enhancement",
     20261019322,
-    [[Hekili:vE12UXTnq0VL(stmQ7gVRTtJt6gGK24EbPgfvbOVrjkjQvSRePajLxSVOV9od19lu2(fBjsoNzMdNZOzjBjFJ4ftnmYd7UA3B3E127UE3oIN5CbJ4vqJospapiO5WF)IiLkIy5mHb37CMKgJ2hwYZm)HGeUiu6cwe5HT38U7iEP84yw9bz6iI39sf7rMQkya0vbEP0CQOk41fk5JCnxkOzVVkqiRc4IF8aelvbrPSOJvbNzMpufysHvmsdlVkqNjn6lRc(k)qQrWfhq84SS4xPrROQdm4bQiUXmDQm6O(v4dufdwnskZILNa)dVxfKlJzzz4gjkjGVSec3iQ2mcLuo(UemQuFX7Bw8eJwGlXZdlzdpTnuHZhYsKOpIK5Humr(nfncExMuf8jUQXepJIjoysRx)luf(4PuMWIgEmmNb3aiYYlmNBTJrv28)B1mtNjqQWr32A2sSv7XByceV7ZSmVhsyTBZbaIvYcKmGhnC8YChKj3B9WdYhP10YVKbrdsBwFyXBGp)SmZuJWTvb)fLLPnwY(FByWES3(bKqKQC4e8JSl7iKMWQosh48xttmOHNKN08C9BsQl5WQHrfDF6V)kaMILWa22EjiYoFXgG9qcdQhbSkKgOyeo2VYYLcEuvW)ukgDZo0ZjCOUX6OARtYKsvtvLMzqMaPEzcCRgcxAXSeAzMzdOTusWyqXrJqhQ3uOy11i7vqwgYHmYVU66sEY(wW2yl02V97)UWYKKn5uUWhYWyFiHG)B2uwu9NZG8h2)Me8M1ifhkzUHD3lg2tCrCsP6SBmV(fJjic1MqfEuNOEZlg1S2srFTT6hbTgJP74eIdO01xM4t5kFRa3cI9PnWAplYFQDOo1PH6M(cOtzOiyM52vDApwv6RlWEeZS8e0hFuiVpN(FsLV1MgzqPgZ3e)drX73I2IBUPiY8ZD3h1N0AvhsGNJRLp(kq98CGbp3mqwGWtKrL697Ct8RWAZTDg7HxwWfIVaK3nN3gW2cLObn4My0SQRH(6jRYWyUUtUZiDAzInn76rUCOecTCNLe5TTEBexB0gyeGpU)2rCawW6B)U5OyjMzXyW2tIPA62UZYC6Gl)p2lQ72VPeG4b9VXPcMmOrgh(OSDEM6gPWJpyNVHjOHWxWjFM4nOyd3SPblXBw1nXlsHTz5uCZvQRjgimEMEzyD)6oORIhH)6jW3B4OQ8E)mxAq8S3uyOcaEZtbyBPFpKoKnJX9wN4UKePh8UB4o42IW9w3HPlvtpMt3CCK(tpfd0iPgqad1GJb7DtaRNZ60G4XUBD2XP2BPCcvVJjRTx5oLwuzoG(7xFCITDQ8P1Ibkz75Mkaw4IDE1Utjoaj(dmA)u1s64whmDCOH(5fmw0sI4rSZOHJwXjRnK0ss5wNmzuPv8WAJmTK2UlnMo40k(yTbOwsN7wZ9CKSlO0xRrMRUFlOQx6k0fkTc(v1Zo6b6U)5cY((p5mz8RfWPDmmRIa0e0stQur8(D2rEgh(Xnn)a6lSBt()]]
+    [[Hekili:vE13ZXPnq4)w6lnjtDV47CCAJtVmJtBCt7K4PtjZK3aeG4q9ajgjHV5EH)27UIFdsy7xSbjTF7UFA)w2ZFR)389siAQ)97UC3B3E523D1UD(E6ZLuFVss8rYb4boPa(7N4zeEmTGY14ENZfKe0(OkwU(V4(rwHsvsJ998(8TF927VHogImwscTXmQcoZDcj9bQSoCKJQd9YifeED4llLIhykMGtYVPoKlQdz8F(aez1HXz04J1HNP63xhQZGv0cnTOouLl0QlQd)c7qMMZ4hq8y08KxOqRiYdu4bcpP1mvMi(O6f4dejfwnwiYteNa)dVxhwisO554gPsbGVOcc3yIspbLmg(UamQs9QBAx8eLuIlXkIQOJpTjuHZhrtfOpIffremr(tjjgExKwhElt2AINws5h0znR)jIeF8ugLBqdpgMZGBaePfL6ZD2rjst()TgMP3eivyOB7mZgB1D8wMaX7UCdZ7Hew32maGePOejd4rndVm3bzYDgpCV4bsdT875q0G0MXhg8g5ZpkY1niCDD4xj0CL2q2FVLbhWE77rcrilGtWosVONqAdRMiDKZFjjvJgEsCsXkuVoTPKdRgMu0D7)8famjnLcST5sGNF(vBa2djmOEeWQuOHIr4y)bTqWzX1H)BfFYn7ypNYG6gJJASonxiKTvvkQgzcK6fPWTAeCPLqtjv56nGstkaJb9hjgDOAtPK2uJSxczzedYOGMQRlyP77aBJPqB)2F8hIQst3uqy8aidtcGec(VEtvz9FVaYFA)RtXBwTGFOI6g2DpBypX4jPvYZUX8QNnMGiuPJK4rDI6BE2OM3vkgOmv)iOnymFhNqCaLUbI0actgye4gqmpTbw7jr(ZTd1Ponu12xaDkffblm3SQt7XQYavj2JyHLNGU6tc59fK)tidm20kdQuy(MgCioz)w0wCZnLX6FR)(O5KgR6rc8CsJ8jqcQNNcm45waIfcpvexP2VZnXVcRT02fShEzbxibCqE3EEtaBkuIh1GBMrlQUg7RhTkdJ5Mo5oJ05LjM0SVhP9qjcA5Uijk6A92kU2O0WabFy)1t4aSGnW8DZjXsc1GXOTNftn0Tzh7C6Ol)pmiQ73VTeW3d6FJtfmBSJCg8rzZ0nnnsHhV3mTdLtIGVG7)rFVrfB4MTny99wuD77flX2SmcU5k11(AimEIEzCD)6oOVIhH)QzWpy4KQ8b)SuA47zUPWqfa8npgGDL(dq6q2mf3RDIRnjYa493W9WTfH7TUdtxQMbmNV50i9xEmgOvsnIagRbNc2VodSboRxdIh7DRZoo1E2Yju9oLS2EP7uYQYCe9pS(0eB7C5tNfJuYMZnxay5IDz1Utjoaj(Zn6(uLnDCNdMpo0y)8mglYMiEc7mz4OvCYAdjztk35KzJkTIhwBKjBA7(0y(GtR4J1gGYMo3TM7PizTO0xRrMRUFwu12UcDHsNGFv9SJEGU7FAr2p8jNzJFzbNUXWmkcqtqQ0zcPV3NPhz5m4h30(dOFLzB)))d]]
 )

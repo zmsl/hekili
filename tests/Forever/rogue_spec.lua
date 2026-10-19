@@ -74,8 +74,16 @@ describe("Forever Rogue", function()
         assert.are.equal(20, n)
         assert.are.same({ 8928, 8927, 8926, 6950, 6949, 6947 }, w.abilities.instant_poison.items)
         assert.are.same({ 20844, 8985, 8984, 2893, 2892 }, w.abilities.deadly_poison.items)
-        assert.are.equal(1488, w.specID)
-        assert.are.same({ package = "Combat" }, w.options)
+        assert.are.equal("ROGUE", w.class)
+        assert.is_nil(w.options)
+    end)
+
+    it("places every DB2 talent in a tree and keeps the Forever-only ones at tree 0", function()
+        local n = { [0] = 0, 0, 0, 0 }
+        for _, t in pairs(w.talents) do
+            n[t[1]] = n[t[1]] + 1
+        end
+        assert.are.same({ [0] = 3, 15, 19, 17 }, n)
     end)
 
     it("models the talent-modified costs from rank 1's value x the rank, floored at 0", function()

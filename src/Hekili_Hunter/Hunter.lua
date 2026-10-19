@@ -1,11 +1,11 @@
 -- Hekili_Hunter/Hunter.lua
--- The Forever Hunter (one pseudo-spec, HUNTER_SPEC below; Beast Mastery, Marksmanship and Survival are talent builds,
--- one pack each, D3: Turret Hawk, Turret and Melee): the Hunter kit with Forever's spell data (ranks, costs, cooldowns,
--- cast times and durations from the Forever DB2 at build 1.60.1.70338, wowdb), mana under the five-second rule (the
--- Forever Hunter spends mana, never focus), Auto Shot as the ranged clock's anchor (`rangedSwing`, C7; no priority
--- reads it: shots without weaving, D5), Summon Hawk's guardians (two at most, 18 s each: RegisterPets `cap`, C1), the
--- shared cooldowns (Arcane Shot and Summon Hawk; Aimed Shot and Multi-Shot), Raptor Strike on the next swing, Mongoose
--- Bite's window from the plain usability read, and the default priorities (all provisional: no in-game check yet, D5).
+-- The Forever Hunter (Beast Mastery, Marksmanship and Survival, one spec a talent tree: Hekili:NewClass; D3's Turret
+-- Hawk, Turret and Melee): the Hunter kit with Forever's spell data (ranks, costs, cooldowns, cast times and durations
+-- from the Forever DB2 at build 1.60.1.70338, wowdb), mana under the five-second rule (the Forever Hunter spends mana,
+-- never focus), Auto Shot as the ranged clock's anchor (`rangedSwing`, C7; no priority reads it: shots without weaving,
+-- D5), Summon Hawk's guardians (two at most, 18 s each: RegisterPets `cap`, C1), the shared cooldowns (Arcane Shot and
+-- Summon Hawk; Aimed Shot and Multi-Shot), Raptor Strike on the next swing, Mongoose Bite's window from the plain
+-- usability read, and the default priorities (all provisional: no in-game check yet, D5).
 -- Research: docs/research/2026-10-15-forever-hunter/research.md and the class-completion research §5.
 -- Unmodelled: ranged haste on the auto-shot clock (Rapid Fire, Quick Shots; their haste on Aimed, Multi and Sniper
 -- Shot's casts is modelled), the pet and its abilities (D6), Aspect of the Viper and the other runes no priority names,
@@ -26,11 +26,39 @@ end
 
 local state = Hekili.State
 
--- The pseudo-spec the client reports for a Hunter (Constants.lua's row): Forever's ids run alphabetically by class
--- (Rogue 1488 and Warrior 1491 read in game), so 1484 follows the pattern; to be confirmed at the Hunter checkpoint.
-local HUNTER_SPEC = 1484
-
-local spec = Hekili:NewSpecialization(HUNTER_SPEC, true, 135130) -- Aimed Shot's icon (DB2 SpellMisc)
+-- The class kit and one spec a talent tree (ids the core's: Beast Mastery 100031, Marksmanship 100032, Survival
+-- 100033; the client's one pseudo-spec, 1484, only keys the legacy profile the core migrates). Icons: the DB2 tabs'.
+local spec = Hekili:NewClass("HUNTER", {
+    specs = {
+        {
+            key = "beast_mastery",
+            name = "Beast Mastery",
+            tree = 1,
+            icon = 132164,
+            role = "attack",
+            ranged = true,
+            package = "BeastMastery",
+        },
+        {
+            key = "marksmanship",
+            name = "Marksmanship",
+            tree = 2,
+            icon = 132222,
+            role = "attack",
+            ranged = true,
+            package = "Marksmanship",
+        },
+        {
+            key = "survival",
+            name = "Survival",
+            tree = 3,
+            icon = 132215,
+            role = "attack",
+            ranged = true,
+            package = "Survival",
+        },
+    },
+})
 if not spec then
     return
 end
@@ -450,7 +478,7 @@ spec:RegisterAbilities({
 -- The filler lines' mana floors (D7: a percent of the maximum, one setting a line). Off by default: mana is secret and
 -- `mana.pct` reads the belief's low-biased lower bound, which reaches the maximum only after an out-of-combat rest
 -- (about 5-6 minutes), so a floor is honest after that rest (Retribution's and Enhancement's precedent).
-local function manaSetting(key, name, desc)
+local function manaSetting(key, name, desc, ...)
     spec:RegisterSetting(key, 0, {
         type = "range",
         name = name,
@@ -459,35 +487,91 @@ local function manaSetting(key, name, desc)
         max = 100,
         step = 1,
         width = "full",
-    })
+    }, ...)
 end
 manaSetting(
     "arcane_shot_mana",
     "Arcane Shot Mana Floor",
-    "Arcane Shot only while your mana is at least this percent of its maximum. Mana is estimated low until you rest out of combat. 0 turns the floor off."
+    "Arcane Shot only while your mana is at least this percent of its maximum. Mana is estimated low until you rest out of combat. 0 turns the floor off.",
+    "beast_mastery",
+    "marksmanship"
 )
 manaSetting(
     "wing_clip_mana",
     "Wing Clip Mana Floor",
-    "Wing Clip as a filler only while your mana is at least this percent of its maximum. Mana is estimated low until you rest out of combat. 0 turns the floor off."
+    "Wing Clip as a filler only while your mana is at least this percent of its maximum. Mana is estimated low until you rest out of combat. 0 turns the floor off.",
+    "survival"
 )
 
-spec:RegisterOptions({ package = "Marksmanship" })
+-- Talents: { talent tree (1 Beast Mastery, 2 Marksmanship, 3 Survival: the dominant tree picks the spec), rank 1's
+-- spell, max rank }: the DB2's 46 nodes (`wowdb talents HUNTER`; the tree is the DB2's Talent.TabID), keys the
+-- snake_case names (a nameless node talent_<spell>). No ability reads one yet.
+spec:RegisterTalents({
+    -- Beast Mastery (tree 1)
+    deadly_aspects = { 1, 19552, 5 },
+    endurance_training = { 1, 19583, 5 },
+    improved_eyes_of_the_beast = { 1, 19557, 2 },
+    improved_aspect_of_the_monkey = { 1, 19549, 5 },
+    thick_hide = { 1, 19609, 3 },
+    improved_revive_pet = { 1, 24443, 2 },
+    pathfinding = { 1, 19559, 2 },
+    bestial_swiftness = { 1, 19596, 1 },
+    unleashed_fury = { 1, 19616, 5 },
+    improved_mend_pet = { 1, 19572, 2 },
+    ferocity = { 1, 19598, 5 },
+    spirit_bond = { 1, 19578, 2 },
+    intimidation = { 1, 19577, 1 },
+    bestial_discipline = { 1, 19590, 2 },
+    frenzy = { 1, 19621, 5 },
+    bestial_wrath = { 1, 19574, 1 },
+    -- Marksmanship (tree 2)
+    improved_concussive_shot = { 2, 19407, 5 },
+    efficiency = { 2, 19416, 5 },
+    improved_hunters_mark = { 2, 19421, 5 },
+    lethal_attacks = { 2, 19426, 5 },
+    aimed_shot = { 2, 19434, 1 },
+    improved_arcane_shot = { 2, 19454, 5 },
+    hawk_eye = { 2, 19498, 3 },
+    improved_serpent_sting = { 2, 19464, 5 },
+    mortal_shots = { 2, 19485, 5 },
+    scatter_shot = { 2, 19503, 1 },
+    barrage = { 2, 19461, 3 },
+    talent_19491 = { 2, 19491, 3 },
+    ranged_weapon_specialization = { 2, 19507, 5 },
+    trueshot_aura = { 2, 19506, 1 },
+    -- Survival (tree 3)
+    improved_tracking = { 3, 24293, 3 },
+    humanoid_slaying = { 3, 19151, 3 },
+    deflection = { 3, 19295, 5 },
+    entrapment = { 3, 19184, 5 },
+    savage_strikes = { 3, 19159, 2 },
+    improved_wing_clip = { 3, 19228, 5 },
+    clever_traps = { 3, 19239, 2 },
+    survivalist = { 3, 19255, 5 },
+    deterrence = { 3, 19263, 1 },
+    survival_tactics = { 3, 19376, 2 },
+    surefooted = { 3, 19290, 3 },
+    improved_feign_death = { 3, 19286, 2 },
+    killer_instinct = { 3, 19370, 3 },
+    counterattack = { 3, 19306, 1 },
+    lightning_reflexes = { 3, 19168, 5 },
+    talent_19386 = { 3, 19386, 1 },
+})
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
 -- run it, never this block (tests/Forever/hunter_spec.lua checks it matches). Provisional (each description says why).
 spec:RegisterPack(
     "BeastMastery",
     20261019217,
-    [[Hekili:9AvtVnUnq0Fl9utqZQDTB631lG3dlsl2euuTNPeT0qBIirkqsfd3d63EFdPJTSSD7cuGEib0CM5nV5nZqBXmXNf51YajEA(7M)9ZE3SFA(SFqKh21rI8oz1ZY14Gr2I))bs6dpI)i3o24UgRSMbyvVUj8BgXQlILVJQepn7(F8Er(gDDnLCK8vI8pAD0lKBOmI9q5E0hkFO3Gd3nu(5ENJGLhKBFEO8MoN9fTxBnYMFEO0yhk1M3Sg0BOSAdvbx2rHFzO0VXg8dLB1Hn2Ee(ws(I2Sgag2aF3a0GzPPE)fbPBnf(ACxnTQxPWHwBn10qWdLZ2ouA7bpRab93IuVKllaSvThHebJiMipd2JshUCfPqDIGTTRKm7M6G1Gir5qBFLj7rkNCDKbFkpa2JYydbx14IANTJRaCmOzfCoW9pLDAe1h1C2yqRS2MA7wdSf2cXkVVTLVpr219sxTwAao9DjPb2w6QKgeFoKWek4ETJ1uPJLJxbfrSu3Y3KCnY4h7Bc63Cm22yLNkkKNBKQaZ2T2TEDR)TQ0aalfN2Px(hFc47if5itvSCA2DBwkx(0h5EsWRRP9TGAsw)xwM73SSpyFLxAqdN0SM4WhxDCwBLgO8QgRfSs7J9bpfcPHfRcT3v7yOvsuzzyU3zv6gSoiRcyo0N15OuJDHmotuyvfGof8m2DA1IVINNYo3wwF3WVFgiFZI3UjoD4lAXSreG0iz247hh8)H8onBkBvVFX8VKSIqD84wHctB317jKdvX6Q6fZg7tLSPPi9XIgTpCh)wYI46jNLKLmjAxf8LzAtrSxDuAI(UWhNCpuCDuilwmvwWVFD(e3rILXgDeuoaUpN1vfE)I9DxF2ipkIJbNHHpT(v4JJdxqCoXHtAOhObVHeZX52A5DLdmKT(cvqgQvt(3dvuKJvd(XUjVOY6ONF4nceo8u8DCYixH3ReF41zt4WrvtKx50OtQLygEI6jcidxbIrQ0yi(c0tg1VDcQhb4As4iYp2Iipk)mpbS3FnYEqTzV(UR41rDFmHMQ)cgJ89l()tI85RyNuNxFn8sY(5c0KfWJ5DSHtLNPQ(OTtUmoGWXf4ljQNknxCl9iut3ZttPfPF5qAonQNhEO7)nf9YY1)Uohsegf9gRtK)a9SUrJVAz)Vz52OzXFp]]
+    [[Hekili:9AvxVnUnqWFl9PMGMt3z3VqVwFa(a6H0IlbfrPVkjAPLwerIuGKkgUpOF7Dws)HSSD7buG(qcK4U7SZo7U0kBw2ZzPvcpL9483n)hM9Uz)08z)ywQFBhLL2jkFrSgpOfT4)FKeo)d4pYULnUTXiQyaw1RA8)MoB1fXY1rLzP3)Np(8V(07xXyK3UhKAvvffdKCWRpzS0RKDOiKRHIDzBO4(EnE4UHIN7TwcwUxS5LHIB6SMxvoLrlAE)qH2muO0VznO7qrznvcx2s(FEOWvB8UHInkFTPhHVHeVQ0RbG(A4BnqdMf6QDh4f21K)RXzv0QEPep0AQOMgcEiTM2Hctp4zjiO7wK6LCzcGnYDiejyaXi5zWEqyXHRijQteSPDLGz3uhmAejkhAZEMSdPuY2rA8wQhShLrnbxv4GkRPJRa8OxXk4CG7tIofI6tkoBmOLgttLzJg28BGyL232YNhj76EHTsj0aN(UO0aBlTLcnIpfsyefCUYYAQWYYXEqrelvT8jrxdm(H(gV6nhJTnu5XIc55gH0ZSDJzJt16ERmoaWsXPD6L)XNb(wsswsxgkNMT3MeZLl(k3t8ovfTRfurIQ)YWC)ML9EZEEPanSc9AIdFC1XzTvOHYlBmgWkLl0hCK3hhwms0ExTLHwkqLLG9aRrQAW6HO0J5qxsNLIn2fIWmrUrMd6KZZy3PKl(kEEk5CBj9Dd)(zG8nlEBDy6WHTgBeG4izY4Zhh8)H8onBstzVBX8VKSIqT84wUetB317iKdz(6YQfZg7tPOPjp(AEJY5VJVBzry9KZs0sIaTRC(WeLop0RoknbFx4ctUhkUoYNekMsd43VmFI7iXIqJoakha3Nt6k9FyXUURlzKh5HXGZWWfx)YDHXHlioN4Wjn0d0G3qc54CBT8UYbgYwFLYjn1Qi3hGkMLIvd(YUj3WY6OJVioaeE4XW96KwSc3xL9X9ZMWHJQwwAPvHoPsGz4jQxMhz4kqmsLgdXxGEYO(Ttq9iaxtchr(XwYsdYpZta73DnYEqTzV((R41rDFmHMQ)zmgP7w8)Ne5ZxXoPoV(A4LK9ZfOjlGhZ7ydNkptv9rBNCzCaHJlWxsupvAU4w6rOMUNhNsZJFjrConONhUO7)nf9YY1)Uo7JegfDTXIpOHEr1OWpTS7BwUnyo7V)d]]
 )
 spec:RegisterPack(
     "Marksmanship",
     20261019551,
-    [[Hekili:9AvxVTTom0Fl3NUTyDEZDTxSpqgq2ddDdBfBx3NLTInvSqTL8vsobz4c)BFKsj2oUoDfya7Le9b5HKhEOsyXS7yjfChWU9YxE5)e)Y43C91XSe3UgGL0WZVNVgxO414NFLBU3wZv2szdD5UknVGayvRSY9jfB1SyzBGC2TXx96RyjLYIciyiyZzjFuBGnGPlBm2Dz30QCG5IUS7AngW1LDwJrVrALAfV6TDzkDxMu981yA1LLxc533LTdCVRlZwQD2USTsxPUfDClW3ivRrOCLOToUzn4(B0IcyvRqGlQ1fqvfu0Ljm66UmDlMo5CRZEogPLu2J4Of7r4g(wmyCvXHSKaJY(USvGalh0zD9koLmtnqRqpXSh2Eit2JucyAafUlXHjlM1LaAQepOWOBq)54sNKiQlrC)xEJe96JskAeO5ADvHERcVBPSMQLeKhWIorjBiVOTDzTQcAZXUJh89wjXGjbUBiwXicln5Cf0dOpD)ABLt(8aMu4R9LDOIqaoJlCK7B1BTYA7leHMmXdh6Nl)2xqWmGamGk3xfv7opQphOTuRWzLfWEMVa4f)qt5YzlBD6dfLetadxTgi3hNTu8qffs4IknvMsRN(TGZfKeAb2vxTJGwWXAkcv1gTqwHIDEUdvB2Ogde6Nl4EPqQwKIPtAjQdUqkw8xKmk6H3f12095haYZw8IsVOWMwJscpabLy04Zh78VrCNgnHoV1U4YNsurxnKmjvGQKlATagdr668IfXJTjNxvLg2MwjTUlOxkw4hcPOeUjIJTRu6WiPk13RgOgVTl4KQ1BYKBWyyddhPwFxBMA4idoI37HWpg4XFpaXeaEVhkt01)3F0)rZdERTZch3RYcWHWqISOMC37xSxAzJgzrQxd(amQPzOEiOB3aPGcQLG99ihZsWrg6bVjVMsSSLE01deU4w)B4GIVcFeJ9Hdkx87EoL5qqMyvUrInEjNLCkACaPJUHL4zqcre2xDsyNHCNJDhfLHMuFmIPyC1PkWbsECGFcTdc1RpbQdnMXGoTbXisnz)7gpAx4btOhX9NEk(P10Mm)oe3Xx84TSrd3uz0JWqVBUMWXuZSd5dqn9zIGmon83kcczpF2)o5FmgDE66xZZUqcJfDP2WsUbUxwjXFzA)FO5C)1SFc]]
+    [[Hekili:9AvxVTPsq0Fl9PMO6qcPnv6MkIKRuJsRAIUnK(kWAywZkd7s3DjwUQIF7DMfBaJXTr6kDFjz)yMZmZzoZAI8JEkkmJzHOhU8IlFV)f()Zvx5hfA3ubrHvS0vSL4cjRe)79m9ktjtAYfv0LBkuSmcGf1Ic7NLrlMeltfKgfE33F4Pp941L7HrUildA9dmOr3Q0WZGUjzyOAsURwAb9SMKNQ1AW2KCsLw9SWiuswX1njsvtIqE2smlBssZH0vnjBa7hAsm5kRPjzTWMRQrhxdSNfYLiu2C0wltVeSVgTidwuZ54IsvguuaznjCTQSjrvJPtkZynNIrAovmiok(weUJTgdgtMTlljWOSVjzbWXYbDwvUGrjZydus0tm7H17YKTifc6kqI7cTyYIzDoGMkWdY0Qk0FgU0kiI6se3hzvc0RBfu0iqtvQIm1AjE3CrjvlHipGfDOuurErBBsQLz0M9Dhp4B1cIbdB5U(y5JimxNYKqhGU09(6cR4SwmPWx6k72kcb4eg3sUVwT2iknNZBBYepSRFo)F)kcMg4GgKPUQOyZPED5aTLAfwJid2Y8zal7NkkxozETvTROeycOzYLa5(WSLIhQOqcNxOOYuyC0VbS2wjHIJD1fBiO5mSM8qrUwXffO2NLAr1MXRsdT9ZaMtkeR4Xy6eNJ6GzcEWRizK3H35vx18Lda5nbNN7efMyAWWbqRs0B45dD()qChhnUkT2eC5ljQORAsMeZrvYSAdGXGhVmnlWFOnPSII42TXfcJDg9WrGBiKIs7nEmSDfth6jKXUEvp14SnGrQwNjJUbJHPD4i246Atud7zWE8EheUXah(BbWNaW5DFzIU(l3r)GMhCwBMeoMtL1chcdjY8QsT3eSvAz8gyrStdEagL0muhe0TpdXGekfG5gKJJcXrg6bVrpUsSSHEd2beU4b3t6GKTaFel6J7uU4)740ilcYiRs1cSXlyrHhJg7rAVBIcDmiHic7BpkStqUtXUdIsFtQlg(umE3XkWEsEyGFbTdc1RocQ9nMHGoUbfrKA423n(JDHdMq3J7p(u8lRPnA(TpUdV4p3YgmCtLrhc99UPAc7tntoK3d14NjALXXTFLrRq2XNDVt()gJonD935zBBcJfDUsJFSdSsuiWFzA7h0CQ76OFp]]
 )
 spec:RegisterPack(
     "Survival",
     20261019438,
-    [[Hekili:LAvuVTTnq4Fl7PLG5Qg7em0TwnGKbmK0TgmuvG9MePKoktyksnsk75x4V9DhPITsItAb6djwM3DF399Xps5YLLFPSOL7HY7xDXQFE5fl)LRU8DLf(9dqzXaVzdVdFqZ7X)xmA3k3YvuG9kdVLkUEuQ83PlRpjoUbOP8(Lx9URklwlBBHuIGRPS4pmwylydShWnWUDu7b7Ia7tGcGa7SbRzR0jnAU6xdmTjWK630HttG1SgA2ey7b)7dSpZh8gckVvUbd(VJWi0gygDG5xJlOH)ZhyUDsDhbVr3zmoC9BKE4hDbggO1SlWewt)ujJoETuj97dmlWBxmT8A(UnybCD70cEUTd8ei9Clor9MwqPOUNaZmIdwd35DNJC4AssWrXiMk)gadnHxI)euFkcvniqrcR20xZFnEUBnOtIjnQ7NG7X0K0o8p)m2YXg7Luzlx88UtIhNKUDpqY5vS69rcOtdtlT0FkB2qY0odTP23taClkxbw3i32k56heU)b3hcSFxjhWfCtkHqIYgcZzCHN(CNzNt27ERizuIdwYxC9F)xliQkalOBaAuv7X55oSNkUxsn(lwocUceKyp6ppdxI6sFccxubDPstsZuelx3bzZNX0ERg1cHYqYV0fvgh49jdLrGBN1ioTGGpQ8z4zeRbjeESH3qdKlBWcP9XCE0duzeviVRQjdWcPi)hQhfIStemBCi8XNbZpL)21XDmxfz8Ii0crmMV(8IZTr)tvI8lgDa2hrvxtB(YfctZOlF5HKr8)Eg0NoEj4x9TmMyPnCLQk91kLeBlDfuEChIqifj7r0jtQRI7Dh1Qy(59thdQQXtbpJMPKWw6s24QnOl(erJ(5k60pnadGpJEoRXGK4dREEb0vnvnO7HsNCpzdn(FlFYZ4YoeVkAT(yzb6XPR6EYvOe7D0nTrGXhUpEPnO514LmL38GbdtyopllIeLY2Ji(cLmNZuEx(s5DK9LfnweFRKJE8NOceex9cqCGVZb4RQliIE6fgXtvNI8Z8WuWdT7rwJVnX4eg65Z6R56pL2nRYt73p255bomRNunpc6REe4i0p9GuYqvLEJEYsfL4dxR8AoSVtf6Le(ht)VUU5tJmF0V2yllUf2GVNgFVX0VO48y4Y)p]]
+    [[Hekili:LAvxVnUnqWFl9PEb1vxSZHI7JQcCPOhY9rcoCkf9njsjTuMWuKQKuX1VWF7DxsfBLeNChqEiXYC3D2DgoKYLllVUSOL7HYRwD6QFB5PlFZRo71Lf(DdqzXaVzdVdFqZ7X)xmAVrEdxrb2Pm8wQ46rPY)rDz9rXXnanLfx83xD9F9T362x)AzBlKQbCycFWyHBaBGDBlcSlg1EWUiWUeuaeyVyWAUr6Kgnx92atBcmP(x7WblWAwdnBcSDG)Db234dEdbL3k3Gb)3ryeAdmJoW8RXf0W)5dm3wPUJG3O7mghU(5sp8ZUadd0A2gycRPFQKrhVwQK(DbMf4TlMwEnF7gSaUUDAbp32bEcKEUfNOEtlOuu3tGzgXbRH78Utqo8EsDWrXiMk)CadnHxI)euxgHQgeOiHvB6R5pfp3Ug0jXKg1DtWDxAsAh(NFgB5yJ9sQSLlEy3jXJts32Bj58kw9Uib0PHPLw6ZYMnKmT1qBQ99eaxGYvG1nYTTsU(wH7FW9Ha7pvYbCb3KsiKOSHW8cUWtFU1S1j7DVuKmkXbl5lE)x)YcIQcWc6gGgv1oCE(i2tf3lPgFTLJGRabj2J(tYWLOU0NGWfvqxQ0K0mfXY1Dq28zmT3QrTqOmK8lDrLXbEFYqze42znItli4JkFgECXAqcHNG4n0a5YgSqAFmNh9avgrfY7QAYaSqkY)P6rHi7ibZghcF6bW8l5VCDChZvrgVicTqeJ5RpV4CB0)uLi)IrhG9ru110MVCHW0m6YxUpze)NZGE)Xlb)QFKXelTHRuvPVwPKyBPBJYJ7qecPiz3HozsDvCV7GwfZpVF6yqvnEk4b0mLe2sxYgxTbDXhjA0pxrN(Pbya8z0ZzngKe)(QhwaDvtvd6EO0j3t2qJ)pYN8mUS9XRIwRpvwGEC6QU7DBkXEhDPBey8HRI3FdAEnEjt553AWWeMZZYIirPS9iIpsjZ5mL3zpwEhyFzrJfX3k5Oh)EQabXREei2Z35a8D1ferp9cJ4PQJr(zEyk4(2DhRXpMyCed98z9PC9ht7Mv5X97h688a7N1JQMha9jpcCa67FqkzOQsVCpzPIs8(RvEkh2ZuHEmH)U0)7RB(0iZh9Rnw8xAaBW3tJV3y6xuCsmC5))d]]
 )

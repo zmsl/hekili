@@ -79,9 +79,17 @@ describe("Forever Shaman", function()
             assert.are.equal("function", type(a.known), key)
         end
         assert.are.equal(15, n)
-        assert.are.equal(1489, w.specID)
-        assert.are.same({ package = "Enhancement" }, w.options)
+        assert.are.equal("SHAMAN", w.class)
+        assert.is_nil(w.options)
         assert.is_nil(w.abilities.windfury_totem) -- the party's (research §4): never prompted
+    end)
+
+    it("places every DB2 talent in a tree and keeps the Forever-only ones at tree 0", function()
+        local n = { [0] = 0, 0, 0, 0 }
+        for _, t in pairs(w.talents) do
+            n[t[1]] = n[t[1]] + 1
+        end
+        assert.are.same({ [0] = 0, 15, 16, 15 }, n)
     end)
 
     it("declares mana under the five-second rule, Rockbiter as the default imbue, and the mana lines off", function()

@@ -15,7 +15,7 @@ local ld = require("Forever.helpers.load_druid")
 
 local M = {}
 
-M.SPEC, M.CLASS_ID = 1489, 7
+M.CLIENT_SPEC, M.CLASS_ID = 1489, 7 -- the client's Shaman pseudo-spec
 local MANA = 0 -- Enum.PowerType
 local GCD = { totem = 1.0, spell = 1.5, off = 0 }
 -- UNMEASURED: the true regen parts (the class file declares 17 and 2: the out-of-combat read corrects them).
@@ -204,6 +204,7 @@ end
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = name, IDS = {} }
+    C.SPEC = ({ Enhancement = 100072 })[name]
 
     function C.character()
         local w = class()
@@ -222,7 +223,7 @@ local function content(name)
         return {
             class = "SHAMAN",
             classID = M.CLASS_ID,
-            specID = M.SPEC,
+            specID = M.CLIENT_SPEC,
             level = 60,
             known = known,
             talents = {},
