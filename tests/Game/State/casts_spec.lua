@@ -290,16 +290,19 @@ describe("the GCD by kind", function()
         assert.are.equal(0, I.gcdOwner)
     end)
 
-    it("pins the GCD at an on-GCD success that no rising edge follows (in game: rend, then overpower; here a totem press)", function()
-        success(SPELL, 10) -- rend: its success and rising edge
-        edge(10, true)
-        assert.are.same({ 10, 1.5 }, info(10.1))
-        -- its GCD ends with no SPELL_UPDATE_COOLDOWN, so the flag stays up and the next press shows no edge
-        success(TOTEM, 12.1)
-        assert.are.same({ I.Quantise(12.1), 1 }, info(12.5))
-        assert.are.equal(TOTEM, I.gcdOwner)
-        assert.are.same({ 0, 0 }, info(13.2)) -- over at its own length
-    end)
+    it(
+        "pins the GCD at an on-GCD success that no rising edge follows (in game: rend, then overpower; here a totem press)",
+        function()
+            success(SPELL, 10) -- rend: its success and rising edge
+            edge(10, true)
+            assert.are.same({ 10, 1.5 }, info(10.1))
+            -- its GCD ends with no SPELL_UPDATE_COOLDOWN, so the flag stays up and the next press shows no edge
+            success(TOTEM, 12.1)
+            assert.are.same({ I.Quantise(12.1), 1 }, info(12.5))
+            assert.are.equal(TOTEM, I.gcdOwner)
+            assert.are.same({ 0, 0 }, info(13.2)) -- over at its own length
+        end
+    )
 
     it("re-fixes a success-pinned GCD at a rising edge within GCD_EDGE after it", function()
         success(TOTEM, 10)
