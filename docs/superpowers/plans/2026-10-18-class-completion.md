@@ -289,6 +289,33 @@ clock on it.
 - **Task 3b:** guard the overlay off-read with `I.SAME_FRAME` before the first pack declares `overlay` on a
   cast-modelled aura.
 
+## Open after Day 3 (2026-10-19)
+- **Rogue, in game:** Q1-Q13 of `docs/research/2026-10-15-forever-rogue/research.md` §7 (Q3 itself is closed: combo
+  points are plain), plus:
+  - Q3-new: on a finisher, does the combo-point drop (UNIT_POWER to 0) arrive before `UNIT_SPELLCAST_SUCCEEDED`? If
+    it does, the `now` handlers read 0 points and SnD, Rupture and Venom are modelled at their 0-point durations (SnD
+    believed down about 6 s after each cast). Fix generically: remember the last nonzero points in Families/Now.lua.
+  - Q14: does Premeditation need Stealth on Forever (registered without the requirement)?
+  - Q15: Cutthroat: does Ambush read usable out of stealth while 462707 is up, and is the castable Ambush 8676.. or
+    462718..462723 (also Backstab 462709.., Garrote 462724..)? Is the 15% chance from Backstab only?
+  - Q16 player auras secret in combat; Q17 any hasted GCD under Adrenaline Rush; Q18 poison item use from the
+    reminder.
+- **Rogue, headless coverage gaps:** Cutthroat Ambush (tier 1), Kick, Expose Armor, Rupture, Garrote and Vanish never
+  run in the Rogue solo worlds; every Rogue spec's focus count comes from the Slice and Dice line only.
+- **Rogue SnD focus=1** is "when down", not research's "refresh at <= 2 s": settle after Q8 (replace vs extend).
+- **Rogue Vanish re-open** has no focus=2 line (only research has it; off on trash by default).
+- **Rogue stealth drop:** only Ambush and Garrote's `now` drop Stealth/Vanish; a Sinister Strike, Backstab,
+  Hemorrhage or Mutilate opener leaves `buff.stealth` believed up until the IsStealthed read. If Q5 finds IsStealthed
+  secret in combat, drop it in every `startsCombat` ability's `now` (final review Minor 2).
+- **Task 6 residuals, for the first task that declares `fsr`** (Day 4 Paladin/Enhancement or a Balance adoption):
+  the OOC regen read is skipped for fsr slots (Power.lua): use its two returns (not casting / casting) for the
+  spirit+mp5 and mp5 parts; a declared mp5 of 0 never learns; add resources_spec cases for 0 < pinB < PIN_GAP and a
+  mult aura expiring between pins; note in Spec.lua that `mana.fsr` is not an APL field.
+- **Task 6 shortcuts:** the forecast takes VS.Regen at `now` as constant across a `mult` aura edge (Spec.lua
+  `shortcut:`); overlapping `mult` auras add rather than multiply (only one exists).
+- **Still open from Day 1-2:** the `locked_out_*` allocation (fix before a caster APL reads it in combat) and the
+  overlay `I.SAME_FRAME` guard (Task 3b).
+
 ## Verification
 - `make check` green with every `<Spec> solo:` line gated. `make test-<class>` runs 20 fights per class and is green.
   Arms stays as recorded (or re-recorded in T5).
