@@ -12,6 +12,7 @@ for bad in '^Hekili/src/' '/tests/' '/tools/' '^Hekili/docs/' '/APLs/' '\.simc$'
     if grep -qE "$bad" <<<"$list"; then echo "unexpected: $(grep -E "$bad" <<<"$list" | head -3)"; fail=1; fi
 done
 ver=$(basename "$zip" .zip); ver=${ver#Hekili-}
+ver=${ver%-forever}
 for a in Hekili Hekili_Shared Hekili_Druid Hekili_Warrior; do
     v=$(unzip -p "$zip" "$a/$a.toc" | tr -d '\r' | sed -n 's/^## Version: //p')
     [ "$v" = "$ver" ] || { echo "$a.toc Version '$v' != zip version '$ver'"; fail=1; }
