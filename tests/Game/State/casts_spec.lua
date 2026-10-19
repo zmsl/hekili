@@ -53,16 +53,16 @@ describe("casts and cooldowns", function()
         assert.are.equal(30, VS.CooldownLength(fs.SPENDER_C))
     end)
 
-    it("learns a GCD only from a falling edge within [1.0, 2.0) s", function()
+    it("learns a GCD only from a falling edge within [1.0, 1.51) s", function()
         -- a spell-kind cast opens each one (an ownerless GCD teaches nothing), so the window alone rejects
-        for _, e in ipairs({ { 100, 101.4 }, { 110, 114.38 }, { 120, 122 } }) do -- chained GCDs merge into one edge
+        for _, e in ipairs({ { 100, 101.4 }, { 110, 114.38 }, { 120, 122 }, { 130, 131.85 } }) do -- chained GCDs merge into one edge
             S.Direct(Obs.CastSuccess, e[1], REND)
             S.Direct(Obs.Cooldown, e[1], 0, 1, 1)
             I.Fold(e[1], false)
             assert.are.equal(REND, I.gcdOwner)
-            S.Direct(Obs.Cooldown, e[2], 0, 0, 1) -- 122: exactly 2.0 s, two chained 1.0 s GCDs, not one
+            S.Direct(Obs.Cooldown, e[2], 0, 0, 1) -- 122: two chained 1.0 s GCDs; 131.85: a fall seen late
         end
-        I.Fold(122.1, false)
+        I.Fold(132, false)
         assert.is_true(math.abs(I.gcdLearned[1] - 1.4) < 0.002) -- the earlier, plausible one stands
     end)
 
@@ -282,6 +282,28 @@ describe("the GCD by kind", function()
         edge(10, true)
         info(10.6)
         assert.are.equal(0, I.gcdOwner)
+    end)
+
+    it("pins the GCD at an on-GCD success that no rising edge follows (in game: rend, then overpower)", function()
+        success(SPELL, 10) -- rend: its success and rising edge
+        edge(10, true)
+        assert.are.same({ 10, 1.5 }, info(10.1))
+        -- its GCD ends with no SPELL_UPDATE_COOLDOWN, so the flag stays up and the next press shows no edge
+        success(TOTEM, 12.1)
+        assert.are.same({ I.Quantise(12.1), 1 }, info(12.5))
+        assert.are.equal(TOTEM, I.gcdOwner)
+        assert.are.same({ 0, 0 }, info(13.2)) -- over at its own length
+    end)
+
+    it("re-fixes a success-pinned GCD at a rising edge within GCD_EDGE after it", function()
+        success(TOTEM, 10)
+        assert.are.same({ 10, 1 }, info(10.01)) -- pinned at the success before the edge
+        edge(10.05, true)
+        assert.are.same({ I.Quantise(10.05), 1 }, info(10.1))
+        assert.are.equal(TOTEM, I.gcdOwner)
+        edge(11.05, false)
+        I.Fold(11.1, false)
+        near(1.0, I.gcdLearned[2])
     end)
 
     it("never lets an off-GCD success inside the window open the GCD", function()

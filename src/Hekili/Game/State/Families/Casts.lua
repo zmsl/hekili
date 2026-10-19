@@ -41,9 +41,9 @@ A.bySpell = {}
 
 -- Unknown, not ready, ready (the plain isActive flag as last reported).
 local UNKNOWN, NOT, YES = -1, 0, 1
--- The plausible lengths a falling edge may teach, by kind: spell [1.0, 2.0), totem [0.9, 1.2) (two chained GCDs merge
--- into one long edge: 2.0 and more is never one).
-local GCD_MIN, GCD_MAX = { 1.0, 0.9 }, { 2.0, 1.2 }
+-- The plausible lengths a falling edge may teach, by kind: spell [1.0, 1.51), totem [0.9, 1.2). Haste only shortens a
+-- GCD; a longer fall is one seen late (the flag is read only on the next SPELL_UPDATE_COOLDOWN; in game 1.85 was learned).
+local GCD_MIN, GCD_MAX = { 1.0, 0.9 }, { 1.51, 1.2 }
 -- An own cast within this of the GCD's rising edge, before or after it, opened it (UNMEASURED until checkpoint G3).
 local GCD_EDGE = 0.1
 
@@ -138,8 +138,9 @@ local function pinGcd(t)
 end
 
 -- An own cast of on-GCD ability a at time `at`: it claims an ownerless GCD that rose within GCD_EDGE before it (the
--- edge came first), re-fixing the duration only while GcdInfo has not answered this GCD (spec §7.5); else it is kept
--- for the next rising edge.
+-- edge came first), re-fixing the duration only while GcdInfo has not answered this GCD (spec §7.5); else it opens a
+-- GCD of its own length at `at`, and a rising edge within GCD_EDGE after it re-fixes it there. Forever fires no
+-- SPELL_UPDATE_COOLDOWN at a GCD's end, so the flag stays up between chained GCDs and their rising edges never come.
 local function opener(a, at, t)
     if A.gcdKind[a] == 0 then
         return -- off the GCD (an on-next-swing strike's success at its swing): never an opener
@@ -153,6 +154,9 @@ local function opener(a, at, t)
         lastGcdA = 0
     else
         lastGcdA, lastGcdT = a, at
+        I.gcdOwner, I.gcdKindLast, I.gcdRead = a, A.gcdKind[a], false
+        -- no pinned sample: the gcd belief's modelled one is Families/Now.lua's, and only an edge pins it
+        I.gcdStart, I.gcdDur, gcdEdge = quantise(at), quantise(I.GcdLen(a, t)), at
     end
 end
 
