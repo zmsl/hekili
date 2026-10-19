@@ -116,8 +116,6 @@ describe("upstream links", function()
 end)
 
 describe("readme", function()
-    pending("Task 2b turns this on")
-    --[[ TASK 2B BODY
     it("has no old-project link but the bare upstream repo", function()
         assert.are.same({}, scan({ "README.md" }, "github%.com/hekili/hekili/"))
         assert.falsy(read("README.md"):lower():find("wiki", 1, true))
@@ -139,7 +137,6 @@ describe("readme", function()
             assert.truthy(s:find(want, 1, true), want)
         end
     end)
-    --]]
 end)
 
 describe("tocs", function()

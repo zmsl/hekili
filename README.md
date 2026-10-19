@@ -1,108 +1,70 @@
-# Goodbye
+<p align="center"><img src="docs/publishing/icon-512.png" alt="Hekili Forever" width="160"></p>
 
-The Hekili Project on Retail WoW has ended with the launch of the Midnight prepatch, version 12.0, on January 20th 2026. The new direction with Blizzard's API makes it impossible to continue the addon in a way that would meet our design goals and quality standards.
+# Hekili Forever
 
-### From Syrif:
-Thank you for the last couple years, I've enjoyed the opportunity to learn from Hekili while helping out. I will remember the positive messages I've received from users over the years. I hope our users are able to continue to find ways to enjoy the game in Midnight and beyond.
+Hekili Forever is a fork of the Hekili priority helper, rebuilt for WoW Forever. It is based on the original work by Hekili and is published with the original author's explicit permission.
 
-# Old Readme below
+> **This addon is not maintained by the original Hekili project. Please do not report Hekili Forever issues to the original project. Bugs, questions and requests go to the GitHub issue tracker:** [https://github.com/zmsl/hekili/issues](https://github.com/zmsl/hekili/issues)
 
-# Hekili
+## What is Hekili Forever?
+Hekili Forever is a priority helper that can make recommendations several steps into the future. It collects information about the game's current state, uses a SimulationCraft-style action priority list to recommend the next ability, then advances the game state and makes the next prediction.
 
-**Hekili** is a powerful, highly configurable **priority helper** for **World of Warcraft**. It supports **all 🗡️DPS and 🛡️Tank specializations**. ➕Healer specializations are supported with a focus on **DPS abilities**, great for solo content or downtime during PvE.
+## Supported Classes
+Hekili Forever is currently in rapid development based on the level 30 beta. Druid (Feral, Guardian, Balance) and Warrior (Arms, Fury, Protection) are the current focus and are tuned for level 60 content, but are subject to rapid change after launch.
 
-[➡️ Latest Release](https://github.com/Hekili/hekili/releases/latest)
+## Action Packs
+Action Packs are shareable instructions that direct the addon how to make recommendations. They use action priority lists similar to SimulationCraft, with Forever-specific lines written for this ruleset. Action Packs only work for specializations the addon supports. View and edit them under /hekili > Action Packs.
 
-## ✨ What Does It Do?
+## Displays
+Each display can use the classic Hekili look, a row of icons for the next recommendations, or the new Timeline style:
 
-Hekili helps you play more effectively by recommending which abilities to use during combat. 
+- A round Focus circle for the ability that deserves your attention, with a countdown until it is ready and a gold ring when it is time to press it.
+- A Next box for the ability to press right now, with its keybind.
+- A lane where upcoming abilities sit by time, so you can see what is coming and when.
+- When the addon cannot be sure of your resource, the lane can show the alternative picks stacked together in priority order.
+- Ruler styles for the lane, a quiet mode out of combat so nothing bounces while you are not fighting, and optional gold ring and frame art.
 
-Its **key feature** is the display of multiple upcoming sequential actions, allowing you to plan ahead instead of reacting to a single, constantly changing icon. This approach reduces tunnel vision and helps you stay focused on the encounter itself.
+Pack authors can mark lines as "focus" abilities, such as a buff to refresh or a proc to use, so they appear in the Focus circle ahead of time rather than only when they reach the top of the list.
 
-These recommendations are provided using **Action Priority List (APL) logic** inherited from [**SimulationCraft**](https://www.simulationcraft.org) and [**RaidBots**](https://www.raidbots.com/simbot). This integration helps ensure consistency between your in-game decisions and the tools you already use to optimize talents, gear, and stats. APLs are **frequently updated** to reflect changes in class balance, mechanics, and theorycrafting.
+## Current Mode
+The Current Mode: Auto setting adjusts your display to the number of enemies the addon detects. For fights where you want to focus one enemy, switch to Single Target to force the primary display to assume one target; the AOE display then appears alongside with the multi-target recommendations. Bind a key for Mode Switch under /hekili > Toggles so you can flip it mid-fight.
 
-**Hekili** can help:
-- Increase your damage output
-- Learn and master new specializations
-- Improve consistency and compare your decisions against theorycrafted simulations
+## Other Customization
+You can change the direction of your recommendation queue, its alignment and spacing, the number of icons shown, the primary and queued icon sizes, fonts and font sizes, and Blizzard's overlay glow on the first recommendation. Visibility and transparency can be set separately for PvE and PvP, and displays can be given conditions in the same syntax the action lists use.
 
-## 🔧 How Does It Work?
+## Toggles
+Cooldowns, Minor Cooldowns, Defensives, Interrupts and Potions can each be switched on and off with a keybind, so the recommendations follow what you actually want to use right now.
 
-**Hekili** uses your current character state — including cooldowns, resources, buffs/debuffs, and enemies nearby — to **simulate several spells into the future** using your spec’s APL logic. It assumes you follow its recommendations in sequence.
+## Troubleshooting
+1. **Nothing is showing**: Go to /hekili > General and make sure Enabled is checked. If it has unchecked itself, the addon may have hit an error and shut itself off; collect the error with BugSack/BugGrabber and submit it on GitHub.
+2. **Still nothing**: Check /hekili > Displays > Primary and AOE, and the alpha settings on the Visibility tab. If a default display is the problem, try a new profile and see whether the displays appear.
+3. **Old data**: If you have used Hekili before, reset your profile under /hekili > Profiles and reload your UI.
 
-If you cast something else, the addon **immediately re-evaluates** your game state and updates its suggestions in real time.
+## Install
+- **CurseForge:** install **Hekili Forever** (https://www.curseforge.com/wow/addons/hekili-forever).
+- **GitHub:** download the zip from https://github.com/zmsl/hekili/releases and extract it into
+  `_classic_beta_\Interface\AddOns\`. It holds four folders: `Hekili`, `Hekili_Shared`, `Hekili_Druid`, `Hekili_Warrior`.
+- Remove any old `Hekili` folder first. Hekili Forever keeps the original's folder name and saved settings (`HekiliDB`),
+  so your settings carry over. `/hekili` opens the options.
 
-Other features include:
-- Optional Separate Displays for:
-  - AoE abilities
-  - Cooldowns
-  - Defensives
-  - Interrupts
-    - Guides you to interrupt late in the enemy cast
-    - Filter recommendations to Mythic+ priority spells
-- Toggle controls for cooldowns, defensives, interrupts, potions:
-  - You can manually control whether major abilities like 2-minute cooldowns are used by enabling or disabling toggle options.
-  - These toggles can be bound to hotkeys or macros, giving you flexible control on a fight-by-fight basis.
-  - Rather than using the toggles, you can display these abilities in a dedicated Cooldowns display, allowing you to cast them manually when timing is ideal.
-  - This system is especially powerful when paired with encounter knowledge — for example, holding cooldowns for a burn phase or add wave can result in substantial DPS gains.
-- Compatible with **ElvUI**, **Bartender**, and other UI mods
-- Customization
-  - Choose from several display styles to match your needs — from a single Automatic display to AoE-specific or dual-display setups
-  - Tailor the look and feel: adjust icon size, spacing, layout, fonts, and transparency
-  - Show spell keybindings on icons, or swap out the default icon for another spell or texture
-  - Disable individual abilities to fit your playstyle — for example, if you prefer to macro an on-use trinket into your cooldown, you can hide that trinket from the queue entirely
-  - Advanced users can edit or create their own action lists using familiar **SimulationCraft-style syntax**
+## Reporting a problem
+Open an issue at https://github.com/zmsl/hekili/issues.
+- **Lua errors:** install BugSack and BugGrabber, reproduce the error, and paste BugSack's text into the issue.
+- **A wrong recommendation:** take a snapshot while it is happening: type `/hek snap` (or press the snapshot keybind,
+  set under `/hekili` > Toggles; or the pause keybind; or tick **Auto Snapshot** to get one when the addon fails to
+  recommend anything). Then open `/hekili` > **Snapshots (Troubleshooting)**, pick the snapshot from the dropdown,
+  click the text box, press Ctrl+A and Ctrl+C, and paste it into the issue (or a paste site, with the link in the issue).
 
-## 🚀 Getting Started
+## Development
+Layout and conventions: `docs/dev/layout.md`. Run `make bootstrap` once, then `make check` before every commit.
+Packaging and releases: `docs/publishing/README.md`.
 
-### 1. **Install the Addon**
+## Credits
+Based on the original work by Hekili: https://github.com/Hekili/hekili (Hekili and its maintainers). Hekili Forever is
+published with the original author's explicit permission. Author: [defzach](https://github.com/zmsl).
+Bundled libraries (Ace3, LibStub, LibSharedMedia-3.0, LibDBIcon-1.0, LibDataBroker-1.1 and others) belong to their
+authors under their own licences; see `src/Hekili/Libs/CREDITS.md`.
 
-There are two main ways to install **Hekili**:
-
-- **Addon Managers** (recommended): Automatically install and keep the addon up to date
-- **Manual Download**: Install it yourself from [**GitHub Releases**](https://github.com/Hekili/hekili/releases/latest) by extracting the `.zip` to `Interface/AddOns`
-
-#### Recommended Addon Managers
-Because **Hekili** is frequently updated, we suggest using one of these trusted tools:
-- [**CurseForge**](https://www.curseforge.com/download) – A widely used manager for all types of addons. We recommend the standalone desktop version for Windows or macOS to avoid extra overlays.
-- [**Wago App**](https://addons.wago.io/download) – Ideal if you also use **WeakAuras**, **Plater scripts**, or other Wago-hosted content.
-- [**WowUp**](https://wowup.io/) – Supports both **CurseForge** and **Wago** backends, and includes its own addon library. We suggest using the **CurseForge** version unless you use another tool to manage your WeakAuras.
-- [**CurseBreaker**](https://github.com/AcidWeb/CurseBreaker) (for 💪 power users) – A lightweight command-line interface (CLI) tool that supports **Wago**, **WoWInterface**, **Tukui**, **ElvUI**, **GitHub**, and more. No extra setup is needed for **WoWInterface**-based updates.
-
-### 2. Configure In-Game
-
-Use the minimap icon or the command: `/hekili`
-
-## 🛠 Need Help?
-
-### 🐛 Bug Reports
-
-If something isn’t working:
-
-1. Install [**BugSack**](https://www.curseforge.com/wow/addons/bugsack) and [**BugGrabber**](https://www.curseforge.com/wow/addons/bug-grabber)
-2. Reproduce the issue, generate a [**snapshot**](https://github.com/Hekili/hekili/wiki/Report-An-Issue#how-do-i-get-a-snapshot), then open BugSack to check for LUA errors
-3. Submit a report on the [**Issues page**](https://github.com/Hekili/hekili/issues/new/choose), be sure to include your newly acquired snapshot and LUA errors (if applicable)
-
-### ❓ Other Support
-
-- Review the [**Wiki**](https://github.com/Hekili/hekili/wiki)
-
-
----
-
-## 🙏 Credits
-
-- Based on logic from [**SimulationCraft**](https://www.simulationcraft.org/), which is maintained by many wonderful developers and theorycrafters
-- Uses libraries like [**Ace3**](https://www.wowace.com/projects/ace3), [**LibRangeCheck**](https://www.wowace.com/projects/librangecheck-2-0), and others
-- Maintained by [**Hekili**](https://github.com/Hekili), [**Syrif**](https://github.com/syrifgit), [**Nerien**](https://github.com/johnnylam88) and lots of help from our community contributors
-
----
-
-## 🧪 Developer Notes
-
-If you're working on custom spec modules, improving existing logic, or contributing to the addon’s development:
-
-- See the [**Developer Stuff**](https://github.com/Hekili/hekili/wiki/Developer-Stuff) page
-- Use `/hekili` and the Snapshots tab to inspect live decision-making
-- Review existing and past [**Pull Requsts**](https://github.com/Hekili/hekili/pulls)
-- Review existing and past [**Issues**](https://github.com/Hekili/hekili/issues)
+## Licence
+GNU General Public License version 3 (`LICENSE`), as the original Hekili. Modified for WoW Forever by defzach from
+October 2026.
