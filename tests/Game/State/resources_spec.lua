@@ -915,6 +915,47 @@ describe("resources", function()
             assert.are.equal(14, VS.Regen(MANA, 110).est)
         end)
 
+        -- The lower bound mana floors (D7, `mana.pct>=N`) are judged on: 0 at a fresh boot (mana is secret even out of
+        -- combat), then the regen's low edge out of combat, so a long rest makes it the maximum.
+        it(
+            "lifts a fresh boot's lower bound to the maximum over a long rest, a secret read never in the maths",
+            function()
+                within(9 * 12 * 0.9, VS.Power(MANA, 10).lo) -- the declared rates' low edge since the build at 1
+                local api = fake.new() -- its clock at 100
+                I.api = api
+                VS.Start(api)
+                api.ctl.powerMax[MANA] = 1000
+                api.ctl.regen[MANA] = { 15, 3 } -- exact once read: spirit 12 + mp5 3
+                -- ctl.power[MANA] unset: every UnitPower answers the SECRET proxy, which raises on any compare or maths
+                local function poll(t)
+                    api.ctl.Tick(t)
+                    S.RunPolls(t)
+                    I.Fold(t, false)
+                end
+                poll(101)
+                local lo = VS.Power(MANA, 101).lo
+                assert.is_true(lo < 1000)
+                poll(140)
+                within(lo + 15 * 39, VS.Power(MANA, 140).lo) -- the read rate, exact
+                poll(200)
+                assert.are.same({ 1000, 1000, 1000 }, { VS.Power(MANA, 200).lo, VS.Power(MANA, 200).est, I.res.max[1] })
+            end
+        )
+
+        it(
+            "carries the rested bound through combat: lowered by our spend, the window at the mp5 part's low edge",
+            function()
+                I.Settle(120)
+                assert.are.equal(1000, VS.Power(MANA, 120).lo)
+                obs(Obs.CombatStart, 120, 0, 0, 0)
+                I.Fold(120, false)
+                I.ResourceShift(1, -300, 120, Obs.CastSuccess) -- the window to 125
+                assert.are.equal(700, VS.Power(MANA, 120).lo)
+                within(700 + 2 * 0.9 * 5, VS.Power(MANA, 125).lo)
+                within(700 + 2 * 0.9 * 5 + 12 * 0.9 * 2, VS.Power(MANA, 127).lo)
+            end
+        )
+
         it("learns an mp5 part declared 0 (or read 0) from a measurement inside the window", function()
             boot({
                 abilities = {},
