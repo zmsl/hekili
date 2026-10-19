@@ -69,7 +69,8 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   only by `make test-druid` (about 190 s). `make test` runs one busted process per spec file in parallel
   (`scripts/busted_parallel.sh`; `make test-serial` is the one-process run, about 160 s); `make test-fast` skips the
   `#slow` gates. `make bench` (`tests/Forever/bench_spec.lua`, `#bench`, not in `make check`) prints ms per Update and bytes per
-  Update and per UNIT_COMBAT for headless Arms over 6 fights.
+  Update and per UNIT_COMBAT for headless Arms over 6 fights. The Task 5 Arms lines cost the stock sim a little: "B per
+  Update, direct" went from mean -1, p95 160, max 640 (05f075dd) to 7 / 206 / 640 (238d2e6f), with no rise before Task 5.
 - `tools/`, `docs/` and `archive/` stay at the repository root, with the lint, test and type-check configs
   (`.busted`, `.luacheckrc`, `.luarc.json`). Run every tool and `busted` from the root.
 
@@ -101,6 +102,9 @@ Arms solo: fights=3 agreement 0.977 (2265 ticks); react median 0 p90 0 never 0.0
 Arms solo: fights=3 agreement 0.949 (2422 ticks); react median 0 p90 0 never 0.060; refused per 100 [casting 2.3 (oracle 2.2), cost 20.6 (oracle 22.6)], episodes 3.47/min; dps A/B 1.020; ... [seeds 4-6]
 ```
 
+Seeds 1-3 pass the cost gate by 0.1 (25.8 against a 25.9 limit). Fury's Battle Shout is still `!buff.battle_shout.up`
+while Arms refreshes it at 10 s, on purpose: aligning Fury is a later Fury change.
+
 `tests/Forever/loop_druid_spec.lua` runs 3 fights a Druid pack in `make check` (seeds 1-3, the `#slow` tag) and 20 in
 `make test-druid` (`#druid`), each asserting its flagged lines ran (`r.focus > 0`). Feral and Balance are gated by
 `pack_gate.gate`; Guardian is reported (engine health and focus asserted, not the agreement): its first icon waits on
@@ -111,6 +115,8 @@ Feral solo: fights=3 agreement 0.974 (2697 ticks); react median 0 p90 0 never 0.
 Guardian solo: fights=3 agreement 0.718 (2574 ticks); react median 0 p90 1 never 0.186; refused per 100 [cost 31.2 (oracle 19.3), gcd 3.8 (oracle 3.5)], episodes 2.68/min; dps A/B 0.955; ... [seeds 1-3] (reported)
 Balance solo: fights=3 agreement 0.985 (864 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 91.2 (oracle 91.4)], episodes 8.13/min; dps A/B 0.996; ... [seeds 1-3]
 ```
+
+Feral's Innervate line never fires in the loop: the feral worlds keep no mana.
 
 A deliberate pack or APL change re-records the fixture in the same commit:
 `ARMS_RECS=record .lua/bin/busted tests/Forever/arms_recs_spec.lua`.

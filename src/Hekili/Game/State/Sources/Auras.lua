@@ -31,7 +31,8 @@ local serial = 0
 -- Set when combat ends: the belief's in-combat down-states stand until a plain walk, and no UNIT_AURA comes while the
 -- buffs stay unchanged.
 local pending = false
--- Whether the last player walk completed (plain): then it wins over the overlay reads.
+-- Whether the last player walk completed (plain): then it wins over the overlay reads, except that a permanent aura with
+-- `overlay` still goes down while its glow is off.
 local playerPlain = true
 -- The player auras with a numeric `overlay`: their aura indices and overlay spell IDs (built at OnBuild).
 local OVL_J, OVL_ID, OVL_N = {}, {}, 0
@@ -178,10 +179,15 @@ S.Poll(11, function(api, t)
     local e = I.auras.exp0[1]
     for k = 1, OVL_N do
         local j = OVL_J[k]
-        local on = Plain(api, api.C_SpellActivationOverlay.IsSpellOverlayed(OVL_ID[k])) -- plain [W PR11]; tested anyway
+        local ok, raw = pcall(api.C_SpellActivationOverlay.IsSpellOverlayed, OVL_ID[k]) -- secret: Plain next (plain [W PR11])
+        local on = nil
+        if ok then
+            on = Plain(api, raw)
+        end
         if on == true and not playerPlain and e[j] <= t then
             Direct(Obs.Read, t, j, -1, ReadOf.Aura)
         elseif on == false and e[j] > t and (not playerPlain or e[j] == HUGE) then
+            -- shortcut: a glow not yet lit in the frame of the cast that procs it drops the proc; upgrade by skipping reads within I.SAME_FRAME of our cast
             Direct(Obs.Read, t, j, 0, ReadOf.Aura)
         end
     end

@@ -274,6 +274,21 @@ clock on it.
 
 **Deps:** all.
 
+## Open after Day 1-2 (2026-10-18)
+- **Druid, in game:** Innervate unshifts from Cat; Clearcasting arriving in the same frame as the cast that procs it
+  (the 0.25 s shortcut in `tests/Forever/helpers/druid_loop_world.lua`); Frenzied Regeneration shown ready during the
+  GCD (stock State.lua defensives toggle); a dodged Rake drops through the core SPELL_MISSED route; which Forever procs
+  light an overlay; whether UnitHealth("player") is plain in combat (it gates FR at low health and the Warrior
+  Protection defensives).
+- **Consumable item cooldowns:** taken from wowsims db.json; Mana Agate's 120 s is assumed; the shared potion/rune
+  category is unmodelled.
+- **Guardian:** reported, not gated (agreement 0.718); it needs core rage precision or rage from damage taken; the
+  `cooldown.primal_bite.remains` cause is unverified.
+- **Feral:** the D2 "short fights: skip DoTs under N s" guard is unscheduled (research C17 names Feral).
+- **Protection:** focus=1 lines but no loop gate; it needs a threat or second-mob scenario (Review Focus 5).
+- **Task 3b:** guard the overlay off-read with `I.SAME_FRAME` before the first pack declares `overlay` on a
+  cast-modelled aura.
+
 ## Verification
 - `make check` green with every `<Spec> solo:` line gated. `make test-<class>` runs 20 fights per class and is green.
   Arms stays as recorded (or re-recorded in T5).

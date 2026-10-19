@@ -266,7 +266,8 @@ local HekiliSpecMixin = {
 
     -- A content field beside Hekili's own: `overlay = spellID` on a player proc aura (C2). While the player aura walk is
     -- secret or stopped, the belief reads the proc from that spell's overlay glow (Game/State/Sources/Auras.lua, poll
-    -- 11): up with no expiry while it glows, down once it stops. A plain walk wins.
+    -- 11): up with no expiry while it glows, down once it stops. A plain walk wins, except that a permanent aura
+    -- with `overlay` still goes down while the glow is off.
     -- Also `isStealthed = true` (C5): the player aura follows IsStealthed (Sources/Forms.lua); and `weaponEnchant = slot`
     -- (C4, Enum.WeaponSlot: 0 main hand, 1 off hand) on an id-less pseudo-aura, read out of combat from
     -- C_Item.GetWeaponEnchantInfo (Sources/Enchants.lua) and modelled from our apply cast in combat.

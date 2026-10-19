@@ -580,6 +580,7 @@ kept("C_Item.GetWeaponEnchantInfo", realGetWeaponEnchantInfo and "hybrid" or "vi
     if not rec then
         return NO_ENCHANTS
     end
+    -- rec.lo, the conservative bound (as the aura facade's expirationTime): a pack reapplies early, never late.
     ENCHANT.timeLeft = rec.lo == HUGE and 0 or floor((rec.lo - t) * 1000)
     ENCHANT.charges = stacks
     return ENCHANTS

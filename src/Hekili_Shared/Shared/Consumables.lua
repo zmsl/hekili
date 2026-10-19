@@ -2,8 +2,7 @@
 -- The consumables every class shares on Forever (shared-content spec §4.3), through Engine/Schema/Shared.lua into `all`: the
 -- `potion` action and auras core reads by name, the Healthstone from Forever's items (DB2 1.60.1.70338: the five
 -- ranks and their Improved Healthstone variants), and the mana and energy consumables as their own actions. No potion
--- is registered for the `potion` verb, nor flask or food: the default priorities leave them out, and retail's
--- (Tempered Potion, Pact of Gluttony's Healthstone) do not exist here.
+-- is registered for the `potion` verb, nor flask or food: the default priorities leave them out.
 -- Neither action has a `now`: the belief sees only spell casts (an item action has no spell ID), and a Healthstone's
 -- heal is health, which the belief does not track (spec §4.3).
 
@@ -144,7 +143,7 @@ local function consumable(key, items, cooldown, name)
             if not have then
                 return false, "none in the bags"
             end
-            return IsUsableItem(item) == true, "on cooldown"
+            return IsUsableItem(item) == true, "not usable"
         end,
     })
 end

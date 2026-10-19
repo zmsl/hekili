@@ -834,8 +834,6 @@ describe("Forever Druid", function()
     )
 end)
 
--- The priorities' wowsims-aligned lines (class-completion plan Task 2; research §1, the sim's default APLs as a
--- reference, no code copied) and their D1 focus tiers: 1 a proc or reactive window, 2 predictable upkeep.
 describe("Forever Druid's bleeds through the real engine's missable handling", function()
     local engine = require("Forever.helpers.engine")
     local env, spec, ME
@@ -897,6 +895,8 @@ describe("Forever Druid's bleeds through the real engine's missable handling", f
     end)
 end)
 
+-- The priorities' wowsims-aligned lines (class-completion plan Task 2; research §1, the sim's default APLs as a
+-- reference, no code copied) and their D1 focus tiers: 1 a proc or reactive window, 2 predictable upkeep.
 describe("Forever Druid priorities against wowsims/forever", function()
     local packs = {}
     setup(function()
