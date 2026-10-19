@@ -18,6 +18,9 @@ manual-changelog:
     markup-type: markdown
 
 ignore:
+    - README.md
+    - CHANGELOG.md
+    - src/Hekili_Shared/README.md
     - tests
     - tools
     - docs

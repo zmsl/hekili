@@ -24,3 +24,5 @@ jobs:
       - name: CHANGELOG has this tag
         run: grep -qx "## ${GITHUB_REF_NAME}" CHANGELOG.md || { echo "CHANGELOG.md has no '## ${GITHUB_REF_NAME}' heading"; exit 1; }
       - uses: BigWigsMods/packager@v2
+        with:
+          args: -l # skip @localization@ substitution: the SFX-Widgets Info-URL widget carries one and the project has no CurseForge localization

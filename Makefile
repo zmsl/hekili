@@ -87,7 +87,7 @@ PACKAGER_REF ?= v2
 package:
 	@mkdir -p $(LUA_ENV)
 	@test -s $(LUA_ENV)/release.sh || curl -fsSL https://raw.githubusercontent.com/BigWigsMods/packager/$(PACKAGER_REF)/release.sh -o $(LUA_ENV)/release.sh
-	bash $(LUA_ENV)/release.sh -d -r $(CURDIR)/.release
+	bash $(LUA_ENV)/release.sh -d -l -r $(CURDIR)/.release
 
 package-check: package
 	bash tools/check_package.sh "$$(ls -t .release/Hekili-*.zip | head -1)"
