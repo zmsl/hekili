@@ -366,7 +366,8 @@ do
         CONFIRM_TALENT_WIPE = 1,
         PLAYER_TALENT_UPDATE = 1,
         SPEC_INVOLUNTARILY_CHANGED = 1,
-        TALENTS_INVOLUNTARILY_RESET = 1
+        TALENTS_INVOLUNTARILY_RESET = 1,
+        TRAIT_CONFIG_UPDATED = 1 -- Forever fires this one for spent points, not the two above (probe session W)
     }
 
     local function CheckForTalentUpdate( event )

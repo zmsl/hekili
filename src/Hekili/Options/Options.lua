@@ -4010,6 +4010,7 @@ found = true end
                     options.args.core.args.activeSpec = activeSpecOption
                     options.args.core.args.specHint = specHintOption
                     if tree.unsupported then -- no priorities on Forever: the page says why nothing shows
+                        specs[ id ] = nil -- and no priority can be made for it (the spec lists of the Priorities)
                         options.args = {
                             core = {
                                 type = "group",
@@ -4436,7 +4437,13 @@ found = true end
                                             type = "input",
                                             order = 3,
                                             name = "Pack Specialization",
-                                            get = function () local s = Registry.Specs()[ shareDB.imported.payload.spec or 0 ]; return s and s.name or "No Specialization Set" end,
+                                            get = function ()
+                                                local v = shareDB.imported.payload.spec
+                                                local s = Registry.Specs()[ v or 0 ]
+                                                if s then return s.name end
+                                                -- another class's share key ("PALADIN:retribution"): shown as is
+                                                return type( v ) == "string" and v or "No Specialization Set"
+                                            end,
                                             set = function () end,
                                             width = "full",
                                             disabled = true,

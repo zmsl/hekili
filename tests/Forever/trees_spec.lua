@@ -86,11 +86,13 @@ describe("Trees.lua", function()
         assert.is_nil(T.SpecShareKey(K))
         assert.is_nil(T.SpecShareKey(nil))
         local by = { ["TEST:two"] = 100052 }
-        assert.are.equal(100052, T.SpecFromShare("TEST:two", by, 1491, 100051))
-        assert.are.equal("OTHER:x", T.SpecFromShare("OTHER:x", by, 1491, 100051)) -- another class's: kept
-        assert.are.equal(100051, T.SpecFromShare(1491, by, 1491, 100051)) -- the legacy pseudo-spec: the active spec
-        assert.are.equal(100052, T.SpecFromShare(100052, by, 1491, 100051))
-        assert.is_nil(T.SpecFromShare(nil, by, 1491, 100051))
+        assert.are.equal(100052, T.SpecFromShare("TEST:two", by, 1491, K, two))
+        assert.are.equal("OTHER:x", T.SpecFromShare("OTHER:x", by, 1491, K, two)) -- another class's: kept
+        assert.are.equal(two.id, T.SpecFromShare(1491, by, 1491, K, two)) -- the legacy pseudo-spec: the active spec
+        -- the active spec unsupported (a healing tree): the first supported spec, as MigrateTrees
+        assert.are.equal(K.specs.one.id, T.SpecFromShare(1491, by, 1491, K, K.specs.heal))
+        assert.are.equal(100052, T.SpecFromShare(100052, by, 1491, K, two))
+        assert.is_nil(T.SpecFromShare(nil, by, 1491, K, two))
         local packs = { A = { spec = "TEST:two" }, B = { spec = "OTHER:x" }, C = { spec = 7 } }
         T.ResolvePackSpecs(packs, by)
         assert.are.same({ 100052, "OTHER:x", 7 }, { packs.A.spec, packs.B.spec, packs.C.spec })

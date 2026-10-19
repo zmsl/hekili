@@ -28,7 +28,8 @@ function Registry.Kit() return class.kit or nil end
 
 --- A pack payload's `spec` (a share key "WARRIOR:arms", a legacy pseudo-spec id or an id) as this session's spec id.
 function Registry.SpecFromShare(v)
-    return ns.SpecFromShare(v, class.specByShare, state.spec.clientID, state.spec.id)
+    local kit = class.kit or nil
+    return ns.SpecFromShare(v, class.specByShare, state.spec.clientID, kit, kit and kit.specs[state.spec.key])
 end
 
 --- The share key ("WARRIOR:arms") export strings carry for spec `id`, or nil (a spec outside a class kit).

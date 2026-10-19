@@ -9,6 +9,11 @@
   floors off by default.
 - Pets and guardians: the addon tracks your pet and your summoned guardians (Summon Hawk, up to two), so priorities can
   ask whether a pet is out and how many guardians are up.
+- Specializations: each supported class has one specialization page per talent tree, each with its own priorities
+  and settings (the Druid's Feral Combat tree has two: Feral and Guardian). The active specialization is the talent
+  tree with the most points; change it with the dropdown on any specialization page or with `/hekili spec <name>`
+  (`/hekili spec` lists them). Healing trees (Holy, Restoration) and Elemental show a "no priorities on Forever"
+  notice and the addon recommends nothing while one is active.
 
 ### Changed
 - The AddOns list shows Hekili Forever under the Combat category.
@@ -28,6 +33,9 @@
 - Rogue, Paladin and Shaman priorities are not yet checked in game.
 
 ### Upgrade notes
+- Your class's existing settings (thresholds, toggles, ability and item options) are copied once into each of its
+  specializations, and a custom priority you had chosen stays selected for your active specialization. Change them per
+  specialization afterwards; old priority exports still import.
 
 ## v0.1.0
 

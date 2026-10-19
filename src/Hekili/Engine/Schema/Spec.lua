@@ -1365,7 +1365,9 @@ function Hekili:RestoreDefaults()
     for k, v in pairs( class.packs ) do
         local existing = rawget( p.packs, k )
 
-        if not existing or not existing.version or existing.version ~= v.version then
+        -- A built-in bound to a spec this session lacks (a pseudo-spec id from before specs per tree) decodes again.
+        if not existing or not existing.version or existing.version ~= v.version
+            or ( existing.builtIn and not class.specs[ existing.spec ] ) then
             local data = self.DeserializeActionPack( v.import )
 
             if data and type( data ) == "table" then
@@ -1374,7 +1376,7 @@ function Hekili:RestoreDefaults()
                 data.payload.date = v.version
                 data.payload.builtIn = true
 
-                if not existing or not existing.version or existing.version < v.version then
+                if not existing or not existing.version or existing.version <= v.version then
                     insert( changed, k )
                 else
                     insert( reverted, k )

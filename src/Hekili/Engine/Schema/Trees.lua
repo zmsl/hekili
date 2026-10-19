@@ -103,13 +103,15 @@ end
 
 --- A pack payload's `spec` as this session's spec id: a share key through `byShare` (another class's: kept as the
 --- string, resolved when that class logs in); the class's legacy pseudo-spec id (`legacyID`) as the active spec
---- (`activeID`); anything else as is.
-function ns.SpecFromShare(v, byShare, legacyID, activeID)
+--- (`active`, a spec of `kit`), or the kit's first supported spec when the active one is unsupported (MigrateTrees's
+--- rule); anything else as is.
+function ns.SpecFromShare(v, byShare, legacyID, kit, active)
     if type(v) == "string" then
         return byShare[v] or v
     end
-    if v ~= nil and v == legacyID and activeID then
-        return activeID
+    if v ~= nil and v == legacyID and kit then
+        local s = active and not active.unsupported and active or firstSupported(kit)
+        return s.id
     end
     return v
 end
