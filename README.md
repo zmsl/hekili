@@ -67,5 +67,4 @@ authors under their own licences; see `src/Hekili/Libs/CREDITS.md`.
 
 ## Licence
 GNU General Public License version 3 or later (`LICENSE`): either version 3 of the License, or (at your option) any
-later version, as the original Hekili. Modified for WoW Forever by defzach from
-October 2026.
+later version. Modified for WoW Forever by defzach from October 2026.
