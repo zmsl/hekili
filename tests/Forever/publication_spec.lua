@@ -146,11 +146,11 @@ describe("tocs", function()
             assert.truthy(field(toc, "Title"):find("^Hekili Forever"), toc)
             assert.truthy(field(toc, "Notes"):lower():find("based on the original work by hekili", 1, true), toc)
             assert.are.equal("https://github.com/zmsl/hekili", field(toc, "X-Website"), toc)
+            assert.are.equal("Interface\\AddOns\\Hekili\\Textures\\HekiliForever", field(toc, "IconTexture"), toc)
         end
         assert.are.equal("Hekili Forever", field(TOCS[1], "Title"))
         assert.are.equal("Hekili Forever - Shared", field(TOCS[2], "Title"))
         assert.are.equal("1753387", field(TOCS[1], "X-Curse-Project-ID"))
-        assert.are.equal("Interface\\AddOns\\Hekili\\Textures\\HekiliForever", field(TOCS[1], "IconTexture"))
         assert.truthy(io.open("src/Hekili/Textures/HekiliForever.tga"))
     end)
 

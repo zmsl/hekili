@@ -2,6 +2,7 @@
 ## Version: forever-dev
 ## Title: Hekili Forever - Druid
 ## Author: defzach
+## IconTexture: Interface\AddOns\Hekili\Textures\HekiliForever
 ## Notes: Hekili Forever's Druid: the class kit and its default priorities, loaded by Hekili Forever for a Druid. Based on the original work by Hekili.
 ## X-Website: https://github.com/zmsl/hekili
 ## Dependencies: Hekili, Hekili_Shared
