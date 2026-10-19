@@ -9,7 +9,8 @@ local M = {}
 --- ({ powerType, models }), `w.hooks[name]`, `w.events[event]` (spec:RegisterEvent's handlers), `w.funcs[name]`,
 --- `w.exprs[name]`, `w.settings[key]` ({ default, option, specs: nil for every spec }), `w.packs` (in order: { name,
 --- version, string }), `w.options`, `w.specID`, `w.class` and `w.def` (NewClass's token and definition), `w.state`
---- (Hekili.State's stand-in, its knownRank, swingBase, stat and healthMax answering from `game`) and `w.game`. `w.passives`: spec:RegisterAbility's single registrations (the passives).
+--- (Hekili.State's stand-in, its knownRank, swingBase, stat and healthMax answering from `game`) and `w.game`.
+--- `w.passives`: spec:RegisterAbility's single registrations (the passives).
 function M.load()
     local reg = {}
     local spec = setmetatable({}, {

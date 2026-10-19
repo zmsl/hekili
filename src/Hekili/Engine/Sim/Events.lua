@@ -128,8 +128,9 @@ function ns.StartEventHandler()
 
     events:SetScript( "OnUpdate", function( self, elapsed )
         if Hekili.PendingSpecializationChange then
-            Hekili:SpecializationChanged()
+            -- Cleared first: a pass may ask for another (SettleSpecChoice) or retry next frame (no client spec yet).
             Hekili.PendingSpecializationChange = false
+            Hekili:SpecializationChanged()
             -- Spec updates are expensive; exit and do other work in the next frame.
             return
         end

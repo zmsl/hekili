@@ -29,13 +29,22 @@ local function boot(o)
     return H
 end
 
--- The event frame's OnUpdate (the harness does not run it): a pending spec change runs; at most 2 passes.
+-- The event frame's real OnUpdate (Engine/Sim/Events.lua; the harness's cycle does not run it), called while a spec
+-- change is pending: each call runs one pass; at most 2 passes.
 local function settle(H)
+    local frame
+    for _, f in ipairs(H.frames) do
+        local u = f.__scripts.OnUpdate
+        if u and debug.getinfo(u, "S").source:find("Engine/Sim/Events.lua", 1, true) then
+            frame = f
+        end
+    end
+    assert.is_truthy(frame, "no event frame with an OnUpdate")
     for _ = 1, 2 do
         if not H.Hekili.PendingSpecializationChange then
             return
         end
-        H.Hekili:SpecializationChanged()
+        frame.__scripts.OnUpdate(frame, 0.016)
     end
     assert.is_false(H.Hekili.PendingSpecializationChange, "the spec change did not settle")
 end
@@ -113,6 +122,19 @@ describe("the active spec (headless Warrior)", function()
             assert.is_nil(H.Hekili:SetSpecChoice("")) -- every key is a prefix of "": ambiguous
         end
     )
+
+    it("ends an OnUpdate pass whose early pick was on stale ranks on the settled spec (the extra pass runs)", function()
+        local H = boot({ talents = {}, level = 5 })
+        settle(H)
+        assert.are.equal(ARMS, H.Hekili.State.spec.id)
+        -- new points the talent walk has not seen yet: the pass picks on the old ranks (no points: Arms), its own walk
+        -- then sees Fury, and SettleSpecChoice asks for one more pass
+        H.ctl.traits = traits(FURY_TALENTS)
+        H.Hekili.PendingSpecializationChange = true
+        settle(H)
+        assert.are.equal("fury", H.Hekili.DB.profile.specChoice[CHAR])
+        assert.are.equal(FURY, H.Hekili.State.spec.id)
+    end)
 
     it("selects the spec of the priority a harness instance asks for", function()
         local H = boot({ pack = "Protection" })

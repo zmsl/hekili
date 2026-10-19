@@ -245,11 +245,12 @@ local function isVerb(k)
 end
 
 --- A new instance: Hekili loaded and logged in. `o.character` (the content's, set before login: §1.3) {
---- class, classID, specID (the client's pseudo-spec id; the spec comes from `o.pack`), level, known = { spellID... }, talents = { [spellID] = rank }, power = { type, token, max,
---- value (nil: secret, as on Forever) }, speed = { main, off }, items = { [slot] = { itemID, name, equipLoc } },
---- forms = { spellID... }, form }; `o.pack` the priority to select; `o.now` the clock [1000]; `o.raw` facade rows
---- answered by the raw client (names: the oracle's secret-free client, §4), replaced as Facade.lua loads; `o.saved` the
---- HekiliDB saved variables (default nil: a fresh profile).
+--- class, classID, specID (the client's pseudo-spec id; the spec comes from `o.pack`), level, known = { spellID... },
+--- talents = { [spellID] = rank }, power = { type, token, max, value (nil: secret, as on Forever) },
+--- speed = { main, off }, items = { [slot] = { itemID, name, equipLoc } }, forms = { spellID... }, form }; `o.pack` the
+--- priority to select; `o.now` the clock [1000]; `o.raw` facade rows answered by the raw client (names: the oracle's
+--- secret-free client, §4), replaced as Facade.lua loads; `o.saved` the HekiliDB saved variables (default nil: a fresh
+--- profile).
 --- Returns `H = { env, api, ctl, ns, Hekili, frames, timers, misses, errors, loadErrors, prints }`.
 function M.new(o)
     o = o or {}

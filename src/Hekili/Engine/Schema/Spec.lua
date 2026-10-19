@@ -2328,9 +2328,9 @@ function Hekili:SpecializationChanged()
     self:UpdateDamageDetectionForCLEU()
 end
 
---- (per-spec plan) After a spec change's talent walk: share keys of imported packs resolved, the dominant tree stored on
---- a character with no choice yet, and one more pass when this pass's pick (made on the last walk's ranks) was not it.
---- A stored choice never moves here: a respec only shows the hint (GetSpecHint).
+--- (per-spec plan) After a spec change's talent walk: share keys of imported packs resolved, the dominant tree stored
+--- on a character with no choice yet, and one more pass when this pass's pick (made on the last walk's ranks) was not
+--- it. A stored choice never moves here: a respec only shows the hint (GetSpecHint).
 function Hekili:SettleSpecChoice( clientID )
     local kit, settings = class.kit, Hekili.Engine.settings
     local key = ns.CharKey()

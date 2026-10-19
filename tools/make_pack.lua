@@ -1,9 +1,10 @@
 -- tools/make_pack.lua: builds a Forever class's priorities in the share format RegisterPack takes ("Hekili:" +
 -- LibDeflate print encoding of the AceSerializer'd package) headless with the vendored libraries, and keeps the
 -- class file's RegisterPack blocks in step with them. Each class pack addon has a manifest
--- src/Hekili_<Class>/APLs/packs.lua ({ class, packs = { "<Pack>", ... } in block order, specs = { [<Pack>] = <spec key> } })
--- and one <Pack>.simc per pack beside it (dev-only: no TOC lists them): its leading `#` lines are the description,
--- other `#` lines and blank lines are dropped, the rest is SimC-style text. The class's pack date has one source, its class file's first block.
+-- src/Hekili_<Class>/APLs/packs.lua ({ class, packs = { "<Pack>", ... } in block order,
+-- specs = { [<Pack>] = <spec key> } }) and one <Pack>.simc per pack beside it (dev-only: no TOC lists them): its
+-- leading `#` lines are the description, other `#` lines and blank lines are dropped, the rest is SimC-style text.
+-- The class's pack date has one source, its class file's first block.
 -- Run from the repository root (the class defaults to warrior):
 --   lua5.1 tools/make_pack.lua [class]          prints "<version> <string>" per pack, in order
 --   lua5.1 tools/make_pack.lua write [class]    rewrites the class file's RegisterPack blocks (`make packs` runs it)
