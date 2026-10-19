@@ -8,7 +8,7 @@ local Facade = ns.Facade
 local C_Item, C_SpecializationInfo, C_Spell = Facade.C_Item, Facade.C_SpecializationInfo, Facade.C_Spell
 local GetSpecializationInfoByID, GetTime, InCombatLockdown, UnitAttackSpeed = Facade.GetSpecializationInfoByID, Facade.GetTime, Facade.InCombatLockdown, Facade.UnitAttackSpeed
 local UnitCanAttack, UnitCastingInfo, UnitChannelInfo, UnitClassBase = Facade.UnitCanAttack, Facade.UnitCastingInfo, Facade.UnitChannelInfo, Facade.UnitClassBase
-local UnitGUID = Facade.UnitGUID
+local UnitClass, UnitGUID = Facade.UnitClass, Facade.UnitGUID
 local Hekili = _G[ addon ]
 
 local class = Hekili.Class
@@ -397,7 +397,7 @@ local HekiliSpecMixin = {
                     end
 
                     self.auras[ a.name ] = a
-                    if GetSpecializationInfo( GetSpecialization() or 0 ) == self.id then
+                    if state.spec.id == self.id or state.spec.kitID == self.id then
                         -- Copy to class table as well.
                         class.auras[ a.name ] = a
                     end
@@ -1151,6 +1151,15 @@ local HekiliSpecMixin = {
     end,
 
     RegisterOptions = function( self, options )
+        local trees = rawget( self, "trees" )
+        if trees then -- the kit: every spec's options, but each spec keeps its own package (NewClass)
+            for _, s in ipairs( trees ) do
+                for k, v in pairs( options ) do
+                    if k ~= "package" and s.options[ k ] == nil then s.options[ k ] = v end
+                end
+            end
+            return
+        end
         self.options = options
     end,
 
@@ -1162,13 +1171,13 @@ local HekiliSpecMixin = {
 
     RegisterEvent = function( self, event, func )
         RegisterEvent( event, function( ... )
-            if state.spec.id == self.id then func( ... ) end
+            if state.spec.id == self.id or state.spec.kitID == self.id then func( ... ) end
         end )
     end,
 
     RegisterUnitEvent = function( self, event, unit1, unit2, func )
         RegisterUnitEvent( event, unit1, unit2, function( ... )
-            if state.spec.id == self.id then func( ... ) end
+            if state.spec.id == self.id or state.spec.kitID == self.id then func( ... ) end
         end )
     end,
 
@@ -1286,7 +1295,25 @@ local HekiliSpecMixin = {
     end,
 
     -- option should be an AceOption table.
-    RegisterSetting = function( self, key, value, option )
+    RegisterSetting = function( self, key, value, option, ... )
+        local trees = rawget( self, "trees" )
+        if trees then -- the kit: every supported spec (or the specs named after `option`), each with its own option table
+            local only = select( "#", ... ) > 0 and { ... } or nil
+            for _, k in ipairs( only or {} ) do
+                if not self.specs[ k ] then error( "RegisterSetting " .. key .. ": no spec " .. tostring( k ), 2 ) end
+            end
+            for _, s in ipairs( trees ) do
+                local wanted = not only and not s.unsupported
+                for _, k in ipairs( only or {} ) do if k == s.key then wanted = true end end
+                if wanted then
+                    local o = {}
+                    for k, v in pairs( option ) do o[ k ] = v end
+                    s:RegisterSetting( key, value, o )
+                end
+            end
+            return
+        end
+
         CommitKey( key )
 
         table.insert( self.settings, {
@@ -1457,42 +1484,15 @@ ns.isDefault = function( name, category )
     return false
 end
 
-function Hekili:NewSpecialization( specID, isRanged, icon )
-
-    if not specID or specID < 0 then return end
-
-    isRanged = isRanged or ns.Specializations[ specID ].ranged
-
-    local id, name, _, texture, role, pClass
-
-    local forever = ns.Specializations[ specID ] and ns.Specializations[ specID ].forever
-    -- Forever pseudo-spec: GetSpecializationInfoByID is unprobed there, so identity comes from the Constants row.
-    if forever then id, name, texture, pClass = specID, forever, icon, ns.Specializations[ specID ].class
-    elseif Hekili.IsForever() and specID > 0 then id, name, _, texture, role, pClass = GetSpecializationInfoByID( specID )
-    else
-        id = specID
-        texture = icon
-    end
-
-    if not id then
-        Hekili:Error( "Unable to generate specialization DB for spec ID #" .. specID .. "." )
-        return nil
-    end
-
-    if specID ~= 0 then
-        class.initialized = true
-    end
-
-    local token = getSpecializationKey( id )
-
+local function buildSpec( id, key, name, texture, role, pClass, melee )
     local spec = class.specs[ id ] or {
         id = id,
-        key = token,
+        key = key,
         name = name,
         texture = texture,
         role = role,
         class = pClass,
-        melee = not isRanged,
+        melee = melee,
 
         resources = {},
         resourceAuras = {},
@@ -1541,12 +1541,84 @@ function Hekili:NewSpecialization( specID, isRanged, icon )
 
     class.num = class.num + 1
 
-    for key, func in pairs( HekiliSpecMixin ) do
-        spec[ key ] = func
+    for k, func in pairs( HekiliSpecMixin ) do
+        spec[ k ] = func
     end
 
     class.specs[ id ] = spec
     return spec
+end
+
+function Hekili:NewSpecialization( specID, isRanged, icon )
+
+    if not specID or specID < 0 then return end
+
+    isRanged = isRanged or ns.Specializations[ specID ].ranged
+
+    local id, name, _, texture, role, pClass
+
+    local forever = ns.Specializations[ specID ] and ns.Specializations[ specID ].forever
+    -- Forever pseudo-spec: GetSpecializationInfoByID is unprobed there, so identity comes from the Constants row.
+    if forever then id, name, texture, pClass = specID, forever, icon, ns.Specializations[ specID ].class
+    elseif Hekili.IsForever() and specID > 0 then id, name, _, texture, role, pClass = GetSpecializationInfoByID( specID )
+    else
+        id = specID
+        texture = icon
+    end
+
+    if not id then
+        Hekili:Error( "Unable to generate specialization DB for spec ID #" .. specID .. "." )
+        return nil
+    end
+
+    if specID ~= 0 then
+        class.initialized = true
+    end
+
+    local token = getSpecializationKey( id )
+    return buildSpec( id, token, name, texture, role, pClass, not isRanged )
+end
+
+--- (per-spec plan) A class pack's entry point. Returns the class kit: every Register* call on it (abilities, auras,
+--- talents as { tree (1-3, 0 unknown), spell, max rank }, resources, hooks, packs, settings) is the class's, read by
+--- each of its specs. `def.specs` lists the specs in order, each { key, name, tree (the talent tree it rides), icon,
+--- role ("attack"|"tank"|"healer": shown, not simulated), ranged, package (its default priority), unsupported (true: no
+--- priorities on Forever; the engine idles and the options page says so) }. Ids are ours: ns.TreeSpecID(client class
+--- id, slot), the kit at slot 0. Nil when `token` is not the player's class.
+function Hekili:NewClass( token, def )
+    local _, playerToken, classID = UnitClass( "player" )
+    if token ~= playerToken or type( classID ) ~= "number" or type( def ) ~= "table" or type( def.specs ) ~= "table" then return end
+
+    class.initialized = true
+    local kit = buildSpec( ns.TreeSpecID( classID, 0 ), "kit", token, nil, nil, token, true )
+    kit.token, kit.trees, kit.specs = token, {}, {}
+
+    for slot, d in ipairs( def.specs ) do
+        local id = ns.TreeSpecID( classID, slot )
+        local s = setmetatable( {
+            id = id,
+            key = d.key,
+            name = d.name,
+            texture = d.icon,
+            role = d.role,
+            tree = d.tree or 0,
+            slot = slot,
+            unsupported = d.unsupported or nil,
+            melee = not d.ranged,
+            kit = kit,
+            settings = {},
+            options = { package = d.package },
+        }, { __index = kit } )
+        if d.unsupported then s.options.enabled = false end -- no priorities: no displays
+
+        class.specs[ id ] = s
+        kit.trees[ slot ] = s
+        kit.specs[ d.key ] = s
+        class.specByShare[ token .. ":" .. d.key ] = id
+    end
+
+    class.kit = kit
+    return kit
 end
 
 function Hekili:GetSpecialization( specID )

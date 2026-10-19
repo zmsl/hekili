@@ -23,6 +23,7 @@ function Registry.PotionList() return class.potionList end
 function Registry.Gear() return class.gear end
 function Registry.Talents() return class.talents end
 function Registry.ClassFile() return class.file end
+function Registry.Kit() return class.kit or nil end
 -- stylua: ignore end
 
 --- The AceOption settings list `specID` registered with RegisterSetting ({ name, default, info } entries), or nil.

@@ -60,6 +60,7 @@ Engine\Sim\State.lua
 Engine\Schema\Races.lua
 Engine\Sim\Events.lua
 
+Engine\Schema\Trees.lua
 Engine\Schema\Spec.lua
 Engine\Schema\Shared.lua
 Engine\Schema\Threat.lua

@@ -20,7 +20,15 @@ local CONTENT = {}
 for _, name in ipairs(require("helpers.addons").CONTENT) do
     CONTENT[#CONTENT + 1] = require("helpers.addons").root(name)
 end
-local PUBLIC = { NewSpecialization = true, NewShared = true, NewRace = true, State = true, Class = true, Client = true }
+local PUBLIC = {
+    NewClass = true,
+    NewSpecialization = true,
+    NewShared = true,
+    NewRace = true,
+    State = true,
+    Class = true,
+    Client = true,
+}
 local PRIVATE = { "%f[%w_]ns%.", "ns%s*=%s*%.%.%.", "VirtualState", "Hekili%.Virtual", "Hekili%.Engine" }
 
 describe("core/content boundary", function()

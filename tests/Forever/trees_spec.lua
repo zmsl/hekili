@@ -1,0 +1,163 @@
+-- tests/Forever/trees_spec.lua (per-spec plan, docs/superpowers/plans/2026-10-19-forever-specs.md): the pure rules of
+-- src/Hekili/Engine/Schema/Trees.lua (ids, points per talent tree, the active-spec pick, the hint, share keys), and
+-- Hekili:NewClass on the engine headless (tests/Forever/helpers/engine.lua).
+
+local function trees()
+    local ns = {}
+    assert(loadfile("src/Hekili/Engine/Schema/Trees.lua"))("Hekili", ns)
+    return ns
+end
+
+-- A kit as NewClass builds it, without the engine: { key, tree, unsupported } per spec.
+local function kit(list, talents)
+    local k = { token = "TEST", trees = {}, specs = {}, talents = talents }
+    for i, d in ipairs(list) do
+        local s = { id = 100050 + i, key = d[1], name = d[1], tree = d[2], unsupported = d[3], options = {} }
+        k.trees[i], k.specs[d[1]] = s, s
+    end
+    return k
+end
+local TALENTS = { a = { 1, 101, 5 }, b = { 2, 201, 5 }, c = { 3, 301, 5 }, d = { 0, 401, 1 } }
+local K = kit({ { "one", 1 }, { "two", 2 }, { "two_b", 2 }, { "heal", 3, true } }, TALENTS)
+local function ranks(r)
+    return function(t)
+        return r[t[2]] or 0
+    end
+end
+
+describe("Trees.lua", function()
+    local T = trees()
+
+    it("numbers a class's kit and specs 100000 + class id x 10 + slot", function()
+        assert.are.equal(100010, T.TreeSpecID(1, 0))
+        assert.are.equal(100042, T.TreeSpecID(4, 2))
+        assert.are.equal(100114, T.TreeSpecID(11, 4))
+    end)
+
+    it("sums ranks per tree, tree 0 nowhere, into one reused table", function()
+        local p = T.TreePoints(TALENTS, ranks({ [101] = 3, [201] = 5, [401] = 1 }))
+        assert.are.same({ 3, 5, 0 }, p)
+        assert.are.equal(p, T.TreePoints(TALENTS, ranks({})))
+        assert.are.same({ 0, 0, 0 }, p)
+    end)
+
+    it("names a dominant tree only for a unique maximum above zero", function()
+        assert.is_nil(T.DominantTree({ 0, 0, 0 }))
+        assert.are.equal(2, T.DominantTree({ 3, 5, 0 }))
+        assert.is_nil(T.DominantTree({ 5, 5, 0 }))
+        assert.are.equal(3, T.DominantTree({ 0, 0, 1 }))
+    end)
+
+    describe("PickSpec", function()
+        it("takes a stored choice that names a spec, whatever the talents", function()
+            local s, source = T.PickSpec(K, "two_b", ranks({ [101] = 31 }))
+            assert.are.same({ "two_b", "stored" }, { s.key, source })
+        end)
+        it("ignores a stored key the kit does not have", function()
+            local s, source = T.PickSpec(K, "gone", ranks({ [201] = 5 }))
+            assert.are.same({ "two", "dominant" }, { s.key, source })
+        end)
+        it("picks the first spec on the dominant tree, a healing tree too", function()
+            assert.are.equal("two", (T.PickSpec(K, nil, ranks({ [201] = 5, [101] = 1 }))).key)
+            assert.are.equal("heal", (T.PickSpec(K, nil, ranks({ [301] = 5 }))).key)
+        end)
+        it("falls back to the first supported spec with no points (level < 10) or a tie, not to be stored", function()
+            local s, source = T.PickSpec(K, nil, ranks({}))
+            assert.are.same({ "one", "default" }, { s.key, source })
+            s, source = T.PickSpec(K, nil, ranks({ [101] = 2, [201] = 2 }))
+            assert.are.same({ "one", "default" }, { s.key, source })
+            local H = kit({ { "heal", 1, true }, { "dps", 2 } }, TALENTS)
+            assert.are.equal("dps", (T.PickSpec(H, nil, ranks({}))).key)
+        end)
+    end)
+
+    it("hints the dominant spec only when it is on another tree than the stored choice", function()
+        assert.are.equal("two", T.SpecHint(K, "one", ranks({ [201] = 5 })).key)
+        assert.is_nil(T.SpecHint(K, "two_b", ranks({ [201] = 5 }))) -- same tree
+        assert.is_nil(T.SpecHint(K, "one", ranks({ [101] = 5 })))
+        assert.is_nil(T.SpecHint(K, nil, ranks({ [201] = 5 })))
+        assert.is_nil(T.SpecHint(K, "one", ranks({ [101] = 2, [201] = 2 })))
+    end)
+
+    it("carries a spec as TOKEN:key in shares and reads it back", function()
+        local two = K.trees[2]
+        two.kit = K
+        assert.are.equal("TEST:two", T.SpecShareKey(two))
+        assert.is_nil(T.SpecShareKey(K))
+        assert.is_nil(T.SpecShareKey(nil))
+        local by = { ["TEST:two"] = 100052 }
+        assert.are.equal(100052, T.SpecFromShare("TEST:two", by, 1491, 100051))
+        assert.are.equal("OTHER:x", T.SpecFromShare("OTHER:x", by, 1491, 100051)) -- another class's: kept
+        assert.are.equal(100051, T.SpecFromShare(1491, by, 1491, 100051)) -- the legacy pseudo-spec: the active spec
+        assert.are.equal(100052, T.SpecFromShare(100052, by, 1491, 100051))
+        assert.is_nil(T.SpecFromShare(nil, by, 1491, 100051))
+        local packs = { A = { spec = "TEST:two" }, B = { spec = "OTHER:x" }, C = { spec = 7 } }
+        T.ResolvePackSpecs(packs, by)
+        assert.are.same({ 100052, "OTHER:x", 7 }, { packs.A.spec, packs.B.spec, packs.C.spec })
+    end)
+end)
+
+describe("Hekili:NewClass (the engine headless)", function()
+    local engine = require("Forever.helpers.engine")
+    local DEF = {
+        specs = {
+            { key = "one", name = "One", tree = 1, icon = 11, role = "attack", package = "One" },
+            { key = "two", name = "Two", tree = 2, icon = 12, role = "tank", package = "Two", ranged = true },
+            { key = "heal", name = "Heal", tree = 3, icon = 13, role = "healer", unsupported = true },
+        },
+    }
+    local function names(settings)
+        local out = {}
+        for i, s in ipairs(settings) do
+            out[i] = s.name
+        end
+        return out
+    end
+
+    it("registers the kit at slot 0 and a spec per entry, each spec reading the kit's registrations", function()
+        local env = engine.load("WARRIOR")
+        local kit = env.Hekili:NewClass("WARRIOR", DEF)
+        assert.are.equal(100010, kit.id)
+        assert.are.equal(kit, env.class.kit)
+        local one, two, heal = kit.specs.one, kit.specs.two, kit.specs.heal
+        assert.are.same({ 100011, 100012, 100013 }, { one.id, two.id, heal.id })
+        assert.are.same({ one, two, heal }, kit.trees)
+        assert.are.equal(two, env.class.specs[100012])
+        assert.are.equal(kit.abilities, two.abilities)
+        assert.are.equal(kit.talents, heal.talents)
+        assert.are_not.equal(kit.settings, two.settings)
+        assert.are.same(
+            { "Two", 12, "tank", 2, false },
+            { two.options.package, two.texture, two.role, two.tree, two.melee }
+        )
+        assert.is_false(heal.options.enabled)
+        assert.is_nil(one.options.enabled)
+        assert.are.equal(100012, env.class.specByShare["WARRIOR:two"])
+        assert.is_nil(env.Hekili:NewClass("DRUID", DEF)) -- not the player's class
+    end)
+
+    it("fans a kit setting out to the supported specs or the named ones, each with its own option table", function()
+        local env = engine.load("WARRIOR")
+        local kit = env.Hekili:NewClass("WARRIOR", DEF)
+        local opt = { type = "range", name = "N", min = 0, max = 9 }
+        kit:RegisterSetting("n_shared", 3, opt)
+        kit:RegisterSetting("n_two", 4, { type = "toggle", name = "T" }, "two")
+        local one, two, heal = kit.specs.one, kit.specs.two, kit.specs.heal
+        assert.are.same({ "n_shared" }, names(one.settings))
+        assert.are.same({ "n_shared", "n_two" }, names(two.settings))
+        assert.are.same({}, names(heal.settings))
+        assert.are_not.equal(one.settings[1].info, two.settings[1].info)
+        assert.is_nil(opt.get) -- the caller's table is copied, not filled
+        assert.has_error(function()
+            kit:RegisterSetting("x", 1, {}, "nope")
+        end)
+    end)
+
+    it("applies kit options to every spec but keeps each spec's package", function()
+        local env = engine.load("WARRIOR")
+        local kit = env.Hekili:NewClass("WARRIOR", DEF)
+        kit:RegisterOptions({ potion = "p", package = "Other" })
+        assert.are.same({ "p", "One" }, { kit.specs.one.options.potion, kit.specs.one.options.package })
+        assert.is_nil(kit.specs.heal.options.package)
+    end)
+end)

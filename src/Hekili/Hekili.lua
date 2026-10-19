@@ -80,6 +80,8 @@ ns.auras = {
 
 Hekili.Class = {
     specs = {},
+    kit = false, -- the class pack's kit (Hekili:NewClass; Engine/Schema/Trees.lua); false: no class pack
+    specByShare = {}, -- "<CLASS>:<spec key>" -> spec id, the share key export strings carry
     num = 0,
 
     file = "NONE",

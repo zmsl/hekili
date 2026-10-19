@@ -23,7 +23,9 @@ local Hekili = _G[addon]
 -- 5 (2026-10-19): the `now` verb `summonPet` (Families/Now.lua), RegisterPets' `cap` (a counted guardian), the
 -- simulation's `pet.<key>.count`, the ability field `rangedSwing` and the simulation's swings.ranged_actual,
 -- swings.ranged_speed, swings.ranged_projected and swing.ranged.
-local CONTENT_API = 5
+-- 6 (2026-10-2x): Hekili:NewClass (one kit, one spec per talent tree, ids of the core's), RegisterTalents' first field
+-- is the talent tree, kit:RegisterSetting's trailing spec keys (per-spec plan).
+local CONTENT_API = 6
 
 local done, notice = false, nil
 

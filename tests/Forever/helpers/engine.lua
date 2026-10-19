@@ -163,10 +163,12 @@ function M.load(classToken, race)
         "stances",
         "toggles",
         "variables",
+        "specByShare",
     }) do
         class[k] = {}
     end
     class.itemPack = { lists = { items = {} } }
+    class.kit = false
     strict(class, "class")
     local state = newState(class, race)
     local client = { SECRET = {}, isUnit = {}, exists = {} }
@@ -231,6 +233,20 @@ function M.load(classToken, race)
         end,
         UnitClassBase = function()
             return classToken
+        end,
+        UnitClass = function()
+            local ids = {
+                WARRIOR = 1,
+                PALADIN = 2,
+                HUNTER = 3,
+                ROGUE = 4,
+                PRIEST = 5,
+                SHAMAN = 7,
+                MAGE = 8,
+                WARLOCK = 9,
+                DRUID = 11,
+            }
+            return classToken, classToken, ids[classToken]
         end,
         UnitRace = function()
             return "Undead", race
