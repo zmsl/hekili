@@ -41,9 +41,12 @@ A.bySpell = {}
 
 -- Unknown, not ready, ready (the plain isActive flag as last reported).
 local UNKNOWN, NOT, YES = -1, 0, 1
--- The plausible lengths a falling edge may teach, by kind: spell [1.0, 1.51), totem [0.9, 1.2). Haste only shortens a
--- GCD; a longer fall is one seen late (the flag is read only on the next SPELL_UPDATE_COOLDOWN; in game 1.85 was learned).
-local GCD_MIN, GCD_MAX = { 1.0, 0.9 }, { 1.51, 1.2 }
+-- The plausible lengths a falling edge may teach, by kind: spell [1.0, 1.51), totem [0.9, 1.01). Haste only shortens a
+-- GCD and the totem kind's is 1.0; a longer fall is one seen late (the flag is read only on the next
+-- SPELL_UPDATE_COOLDOWN, any spell's: in game 1.85 was learned).
+-- shortcut: a fall seen late by under 0.01 s still teaches, and a hasted spell GCD can learn up to 1.5; upgrade by
+-- learning only below the haste default if a hasted class shows it.
+local GCD_MIN, GCD_MAX = { 1.0, 0.9 }, { 1.51, 1.01 }
 -- An own cast within this of the GCD's rising edge, before or after it, opened it (UNMEASURED until checkpoint G3).
 local GCD_EDGE = 0.1
 
@@ -240,6 +243,9 @@ I.On(Obs.Cooldown, function(o, t)
             end
             I.gcdStart, I.gcdDur, gcdEdge = quantise(o.t), quantise(I.GcdLen(owner, t)), o.t
             pinGcd(t)
+        elseif I.gcdStart > 0 and abs(o.t - gcdEdge) <= GCD_EDGE then
+            -- a fall at the current GCD's opening is the last one's, seen late (read only on the next press's
+            -- SPELL_UPDATE_COOLDOWN): it neither ends this one nor teaches a length
         else
             local len, owner = o.t - I.gcdStart, I.gcdOwner
             local kind = owner > 0 and A.gcdKind[owner] or 0

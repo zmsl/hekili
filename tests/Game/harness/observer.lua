@@ -369,9 +369,10 @@ function M.new(W, k)
                 end
                 local flag = list[#list]
                 push(t, "SPELL_UPDATE_COOLDOWN")
-                push(t + d, "SPELL_UPDATE_COOLDOWN")
                 if gcdFlag then
-                    gcdEnd = { flag, list[#list] }
+                    gcdEnd = { flag, flag } -- Forever sends no SPELL_UPDATE_COOLDOWN at a GCD's end
+                else
+                    push(t + d, "SPELL_UPDATE_COOLDOWN")
                 end
             end
             local gcdFirst = ev.gcd and k.gcdSpell and ev.order == 2
