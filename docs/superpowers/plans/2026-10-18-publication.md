@@ -15,7 +15,9 @@
 - `## Author: defzach` in every TOC and on the CurseForge project; Notes and the project description attribute the original as "based on the original work by Hekili".
 - Upstream Hekili is GPLv3 (its CurseForge page; no licence text in its repo). Obligations: LICENSE (full GPLv3) at the repo root and in `src/Hekili` (shipped); keep upstream copyright notices, add ours; a prominent "modified <date> for WoW Forever" notice (README and General page); CurseForge licence field GPLv3; the shipped Hekili logo is replaced by distinct art (user supplies it; placeholder first).
 - CurseForge rules: credit and link the original; describe what changed, do not copy the original description; distinct name, avatar (400x400, not copyrighted art), summary, description; no game name in the project name; a changelog per uploaded file; third-party distribution toggle ON. One project ships all four folders in one zip.
-- The CurseForge project exists; its id is supplied by the user (`## X-Curse-Project-ID`).
+- The CurseForge project exists: id `1753387`, URL https://www.curseforge.com/wow/addons/hekili-forever (user, 2026-10-18).
+- Licence: GPLv3 for the entire project, per the agreement with the original author; vendored libraries keep their own licences, listed in `src/Hekili/Libs/CREDITS.md`.
+- Versions: semver tags `v1.0.0`, `v1.0.1`, ...; one workflow run uploads to CurseForge and creates the GitHub release; CurseForge game version WoW Forever 1.60.1 (interface 16001).
 - Releases: BigWigs packager, `@project-version@`, GitHub Actions on tags; `make check` CI stays as is.
 
 ## Global Constraints
@@ -29,9 +31,9 @@
 ## Review Focus
 1. A stale upstream link or "Discord" survives in a string the scan does not read (a locale-like table, a `.xml`, an issue template, the CurseForge description). Expect zero hits across `src/**/*.{lua,toc,xml}` (minus `Libs/`), README.md, `.github/ISSUE_TEMPLATE/*`, `docs/publishing/README.md`. Pinned by the scan in Task 1 (`publication_spec.lua`, "no upstream contact links"), whose file list comes from `git ls-files`, not a hand list.
 2. The zip misses LICENSE or one of the four folders, or still holds `Hekili/src/`, `tests/`, `tools/`, `docs/`. Pinned by `tools/check_package.sh` in Task 3 (asserts each folder's TOC, `Hekili/LICENSE`, absence of dev paths) and by the `.pkgmeta` assertions in Task 1.
-3. The packager rewrites TOC tokens wrongly: `@project-version@` left raw, or `## Interface: 16001` mapped to a CurseForge game version that does not exist (packager reads 16001 as classic "1.60.1"). Pinned by `check_package.sh` (no raw `@project-version@` in any packed TOC; Version equals the zip's version) and by the dry-run step in Task 3 that records the game version the packager chose; the upload side is open question U5.
+3. The packager rewrites TOC tokens wrongly: `@project-version@` left raw, or `## Interface: 16001` mapped to a CurseForge game version that does not exist (packager reads 16001 as classic "1.60.1"). Pinned by `check_package.sh` (no raw `@project-version@` in any packed TOC; Version equals the zip's version), by the dry-run step in Task 3 that records the game version the packager chose, and by Task 4 Step 4, which checks CurseForge's version list for 1.60.1 and sets it explicitly when the automatic mapping does not match.
 4. Migration from the symlink install: extracting the zip into `AddOns\Hekili` while it is still a `mklink /D` writes through the link into the WSL working tree. Task 3's in-game check removes the four links first (exact commands); the README install section says to remove an old upstream Hekili folder too (same folder name, same `HekiliDB`, settings carry over).
-5. Version mismatch between tag, TOC and changelog: a tag pushed without a CHANGELOG entry, or a `v*` upstream tag (origin carries about 960 of them) firing a release. Pinned in Task 4: the workflow triggers only on `v*-forever` tags and fails before packaging unless CHANGELOG.md has a `## <tag>` heading; `publication_spec.lua` checks every TOC's Version is `@project-version@`.
+5. Version mismatch between tag, TOC and changelog, or a runaway changelog: origin carries about 960 historical upstream `v*` tags. They never fire the workflow (it runs on tag pushes only, and they are already pushed), but the packager's automatic changelog runs back to the previous tag, which for `v1.0.0` is an upstream one, so it would list the fork's whole history. Pinned in Task 4: `.pkgmeta` `manual-changelog` makes the tracked CHANGELOG.md the changelog (the first release's entry is written by hand), and the workflow fails before packaging unless CHANGELOG.md has a `## <tag>` heading; `publication_spec.lua` checks every TOC's Version is `@project-version@`.
 
 ---
 
@@ -223,7 +225,7 @@ describe("changelog", function()
     --[[ TASK 4 BODY
     it("is tracked and opens with a version heading", function()
         assert.are.same({ "CHANGELOG.md" }, tracked("CHANGELOG.md"))
-        assert.truthy(read("CHANGELOG.md"):find("^# Hekili Forever changelog\n\n## v%d+%.%d+%.%d+%-forever"))
+        assert.truthy(read("CHANGELOG.md"):find("^# Hekili Forever changelog\n\n## v%d+%.%d+%.%d+\n"))
     end)
     --]]
 end)
@@ -252,7 +254,7 @@ Do not edit the GPL text. Upstream shipped no copyright notice in its files (gre
 -- not the original project, made with the explicit permission of the original author.
 ```
 
-- [ ] **Step 5: Libs/CREDITS.md check.** Confirm every folder under `src/Hekili/Libs/` (except `CREDITS.md`) has a row: `for d in src/Hekili/Libs/*/; do n=$(basename "$d"); grep -q "^| $n" src/Hekili/Libs/CREDITS.md || echo "missing $n"; done`. Expected: no output; if a library is missing, add its row in the existing column format (upstream, pin, licence, author credit). GPLv3 compatibility note: LGPL-2.1 (LibSharedMedia), BSD-style (Ace3), MIT and public domain are all compatible; "None stated upstream" (AceGUI-3.0-SharedMediaWidgets, LibSpellRange-1.0) and SFX-Widgets' custom licence are listed in the report to the user (open question U6), not changed.
+- [ ] **Step 5: Libs/CREDITS.md check.** Confirm every folder under `src/Hekili/Libs/` (except `CREDITS.md`) has a row: `for d in src/Hekili/Libs/*/; do n=$(basename "$d"); grep -q "^| $n" src/Hekili/Libs/CREDITS.md || echo "missing $n"; done`. Expected: no output; if a library is missing, add its row in the existing column format (upstream, pin, licence, author credit). Then add a short section "Licence compatibility with GPLv3" under the table: the project as a whole is GPLv3 (agreement with the original author) and each library keeps its own licence; list only incompatibilities. Expected: none for the usual set (Ace3 BSD-style, LibStub public domain, LibSharedMedia LGPL-2.1, MIT libraries such as VirtualGameAPI-1.0). For each library whose row says no licence is stated (AceGUI-3.0-SharedMediaWidgets, LibSpellRange-1.0, and any other the column shows) write `licence unknown, ask or replace`, and for AceGUI-3.0_SFX-Widgets' custom licence `custom licence, check terms`. These are not release blockers.
 
 - [ ] **Step 6: Run, expect PASS** — `.lua/bin/busted tests/Forever/publication_spec.lua` (licence green, rest pending), then `make check`.
 
@@ -275,7 +277,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Test: `tests/Forever/publication_spec.lua` (enable "upstream links" and the Task 2 "tocs" body)
 
 **Interfaces:**
-- Consumes: Task 1's spec. Produces: TOC field values Task 3/4 rely on (`## X-Curse-Project-ID` placeholder line absent until U1 is answered; see Step 3).
+- Consumes: Task 1's spec. Produces: TOC field values Task 3/4 rely on, including `## X-Curse-Project-ID: 1753387` (Step 3).
 
 - [ ] **Step 1: Turn on the tests.** In `publication_spec.lua` delete the two `pending("Task 2 turns this on")` lines and the `--[[ TASK 2 BODY` / `--]]` markers around the Task 2 bodies. Run `.lua/bin/busted tests/Forever/publication_spec.lua`. Expected: FAIL, listing the Options.lua Discord/WoW Interface/upstream lines, the TOC fields, README, templates and the missing `docs/publishing/README.md`.
 
@@ -303,7 +305,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
 `src/Hekili_Warrior/Hekili_Warrior.toc`: as Druid with "Warrior". (The spec matches the credit phrase case-insensitively, so "Based ..." passes.)
 
-- [ ] **Step 3: CurseForge id.** Not known yet (U1). Do not add a placeholder value (a wrong id uploads to someone else's project or fails). Task 4 Step 1 adds `## X-Curse-Project-ID: <id>` to `src/Hekili/Hekili.toc` once the user supplies it.
+- [ ] **Step 3: CurseForge id.** Add to `src/Hekili/Hekili.toc` after `## X-Website`: `## X-Curse-Project-ID: 1753387` (the packager uploads to this project). Add to the spec's Task 2 `tocs` test: `assert.are.equal("1753387", field(TOCS[1], "X-Curse-Project-ID"))`.
 
 - [ ] **Step 4: General page** (`src/Hekili/Options/Options.lua`, the `general` group args). Replace the `supporters` entry (order 6) with:
 
@@ -323,7 +325,8 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
                         width = "full"
                     },
 ```
-Delete `discord`, `discordSpace`, `curse` (re-added in Task 5 Step 3 once the project URL is known), `wowi`, `faq`. Repoint:
+Delete `discord`, `discordSpace`, `wowi`, `faq`. Repoint:
+- `curse`: `desc = "Find Hekili Forever updates on CurseForge."`, `get = function () return "https://www.curseforge.com/wow/addons/hekili-forever" end` (the scan forbids only upstream's `.../addons/hekili` slug; `hekili-forever` passes)
 - `github`: `desc = "Find Hekili Forever updates on GitHub."`, `get = function () return "https://github.com/zmsl/hekili/releases" end`
 - `link` ("Report Issue"): `get = function() return "https://github.com/zmsl/hekili/issues" end`
 Keep `simulationcraft`. Root group: `name = "Hekili Forever " .. Hekili.Version`; general `desc = "Welcome to Hekili Forever; includes general information and essential links."`.
@@ -390,7 +393,7 @@ October 2026. Bundled libraries keep their own licences (`src/Hekili/Libs/CREDIT
 ```
 Before writing the "Reporting a problem" steps, confirm the snapshot command and binding names: `grep -n '"snap' src/Hekili/Engine/Sim/Core.lua src/Hekili/Options/*.lua | head` and `grep -n 'SNAPSHOT' src/Hekili/Bindings.xml`; use what exists (Bindings.xml is commented out, so drop "the Snapshot binding" if no binding is live).
 
-- [ ] **Step 9: Logo placeholder.** Upstream's art (`LOGO-ORANGE.blp`, `LOGO-WHITE.blp`, `Taco256.blp`, `TACODOG.blp`) must not ship as the fork's identity. Placeholder until the user supplies art (U2): point every reference at a stock client icon, then delete the four files.
+- [ ] **Step 9: Logo placeholder.** Upstream's art (`LOGO-ORANGE.blp`, `LOGO-WHITE.blp`, `Taco256.blp`, `TACODOG.blp`) must not ship as the fork's identity. Placeholder until the user supplies art (U1): point every reference at a stock client icon, then delete the four files.
 - `src/Hekili/Hekili.toc`: `## IconTexture: Interface\ICONS\spell_nature_bloodlust`
 - `src/Hekili/UI/UI.lua` compartment `icon = "Interface\\ICONS\\spell_nature_bloodlust"` (the LDB object already uses it)
 - `src/Hekili/Engine/Schema/Spec.lua` (`NewSpecialization( 0, "All", ...)`): `"Interface\\ICONS\\spell_nature_bloodlust"`
@@ -409,7 +412,7 @@ permission of the original author.
 
 - [ ] **Step 11: Keep-as-is reaffirmed.** `git diff --stat` must not touch `.pkgmeta`'s `package-as`, any `SavedVariables`, `/hekili`/`/hek` registration, `NewAddon( "Hekili"`, `NewDataObject( "Hekili"`, `LDBIcon:Register( "Hekili"`, `ACD:Open( "Hekili" )`. Check: `git diff -U0 | grep -E '^-.*(NewAddon|NewDataObject|LDBIcon:Register|RegisterChatCommand|SavedVariables)'` is empty.
 
-- [ ] **Step 12: Run** `.lua/bin/busted tests/Forever/publication_spec.lua` (PASS), `make check` (PASS). In game (user, `/reload` through the symlinks): the AddOns list shows "Hekili Forever"; `/hekili` window title "Hekili Forever <version>"; General page shows the notice and only GitHub, Report Issue, SimC Wiki rows; Snapshots page has no Discord row.
+- [ ] **Step 12: Run** `.lua/bin/busted tests/Forever/publication_spec.lua` (PASS), `make check` (PASS). In game (user, `/reload` through the symlinks): the AddOns list shows "Hekili Forever"; `/hekili` window title "Hekili Forever <version>"; General page shows the notice and only GitHub, CurseForge (hekili-forever), Report Issue, SimC Wiki rows; Snapshots page has no Discord row.
 
 - [ ] **Step 13: Commit**
 
@@ -514,7 +517,7 @@ package-check: package
 ```
 Not part of `check` (network, and the packager needs a clean commit to version from).
 
-- [ ] **Step 5: Dry run in WSL.** On a clean tree (`git status --short` empty): `make package-check`. Expected: `package ok: .release/Hekili-<describe>.zip`. Until Task 4 the TOC Version is still `forever-dev`, so the Version check fails with `Version 'forever-dev' != zip version ...`; that failure is expected here and goes away in Task 4. Record in the commit message: the zip name, and the packager's "Game version" line (`grep -i 'game version' ` in its output; expected classic `1.60.1`, see U5). If `move-folders` leaves `Hekili/src/` behind or drops a folder, stop and report (do not reshape the repo).
+- [ ] **Step 5: Dry run in WSL.** On a clean tree (`git status --short` empty): `make package-check`. Expected: `package ok: .release/Hekili-<describe>.zip`. Until Task 4 the TOC Version is still `forever-dev`, so the Version check fails with `Version 'forever-dev' != zip version ...`; that failure is expected here and goes away in Task 4. Record in the commit message: the zip name, and the packager's "Game version" line (`grep -i 'game version' ` in its output; expected classic `1.60.1`; Task 4 Step 4 confirms it against CurseForge). If `move-folders` leaves `Hekili/src/` behind or drops a folder, stop and report (do not reshape the repo).
 
 - [ ] **Step 6: In-game zip check (user).** Back up and remove the four `mklink /D` links first, or extraction writes into the WSL repo. In an elevated Windows `cmd` in `_classic_beta_\Interface\AddOns`: `rmdir Hekili Hekili_Shared Hekili_Druid Hekili_Warrior` (rmdir on a directory link removes only the link). Extract the zip there (from `\\wsl.localhost\personal\home\zack\src\hekili-wt-pubplan\.release\`), full client restart, log in a Druid or Warrior: displays show, `/hekili` opens, General page has the notice, no Lua errors. Then delete the four extracted folders and re-create the links (`mklink /D Hekili \\wsl.localhost\personal\home\zack\src\TacoDogForever\...` per the README of the dev repo; the user's existing commands).
 
@@ -537,23 +540,22 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 **Files:**
 - Create: `.github/workflows/release.yml`, `CHANGELOG.md`
-- Modify: four TOCs (`## Version`), `src/Hekili/Hekili.toc` (`## X-Curse-Project-ID`), `.gitignore`, `docs/dev/layout.md` (version rule), `docs/publishing/README.md` (release how-to), `tests/Forever/publication_spec.lua` (enable the Task 4 bodies)
+- Modify: four TOCs (`## Version`), `.gitignore`, `docs/dev/layout.md` (version rule), `docs/publishing/README.md` (release how-to), `tests/Forever/publication_spec.lua` (enable the Task 4 bodies)
 
 **Interfaces:**
-- Consumes: `.pkgmeta` (Task 3), the CurseForge project id (U1), repo secret `CF_API_KEY` (user).
-- Produces: tag scheme `vMAJOR.MINOR.PATCH-forever` (U3); CHANGELOG headings `## <tag>`.
+- Consumes: `.pkgmeta` (Task 3), `## X-Curse-Project-ID: 1753387` (Task 2), repo secret `CF_API_KEY` (user).
+- Produces: tag scheme `vMAJOR.MINOR.PATCH` (first `v1.0.0`); CHANGELOG headings `## <tag>`.
 
 - [ ] **Step 1: Enable the Task 4 spec bodies** (remove `pending("Task 4 turns this on")` and both `TASK 4 BODY` markers). Run: FAIL (Version `forever-dev`, no CHANGELOG.md).
 
 - [ ] **Step 2: Versions.** In all four TOCs: `## Version: @project-version@`. `Hekili.lua` already turns the raw token into `Dev-<build> (<date>)` for symlinked checkouts. The content TOCs show the raw token in the AddOns list when unpackaged; acceptable. In `docs/dev/layout.md` replace "A class release bumps the pack addon's `## Version`" with "Every TOC's `## Version` is `@project-version@`; the packager stamps the release tag into all four (one zip, one version)".
-Add to `src/Hekili/Hekili.toc` after `## X-Website`: `## X-Curse-Project-ID: <the id the user supplied>` — only once U1 is answered; if not answered when this task runs, skip this line and the workflow's CurseForge upload is skipped by the packager (it uploads only with an id and a key), leaving a GitHub release only.
 
-- [ ] **Step 3: CHANGELOG.md.** Remove the `CHANGELOG.md` line from `.gitignore`. Create:
+- [ ] **Step 3: CHANGELOG.md (mandatory).** Without it the packager writes its own changelog from `git log` since the previous tag, and for `v1.0.0` the previous reachable tag is an upstream one, so it would span the fork's whole history. The tracked file (`.pkgmeta` `manual-changelog`, Task 3) is the per-file changelog CurseForge requires; the first release's entry is written by hand, as below. Remove the `CHANGELOG.md` line from `.gitignore`. Create:
 
 ```markdown
 # Hekili Forever changelog
 
-## v1.0.0-forever
+## v1.0.0
 
 First release of Hekili Forever, based on the original work by Hekili, for the WoW Forever client.
 - Druid (Feral, Balance, Guardian) and Warrior (Arms, Fury, Protection) default priorities.
@@ -564,14 +566,15 @@ First release of Hekili Forever, based on the original work by Hekili, for the W
 - [ ] **Step 4: `.github/workflows/release.yml`**
 
 ```yaml
-# Packs and uploads a release when a vX.Y.Z-forever tag is pushed (docs/publishing/README.md). Only -forever tags:
-# origin also carries upstream's v* tags, which must never publish.
+# Packs a release when a vX.Y.Z tag is pushed (docs/publishing/README.md): BigWigsMods/packager uploads the zip to
+# CurseForge (project from ## X-Curse-Project-ID, key CF_API_KEY) and creates the GitHub release (GITHUB_TOKEN) in the
+# same run. Only tag pushes fire it: the historical upstream v* tags on origin were pushed long ago and never run it.
 name: release
 
 on:
   push:
     tags:
-      - "v*-forever"
+      - "v*"
 
 permissions:
   contents: write # GitHub release
@@ -590,21 +593,36 @@ jobs:
         run: grep -qx "## ${GITHUB_REF_NAME}" CHANGELOG.md || { echo "CHANGELOG.md has no '## ${GITHUB_REF_NAME}' heading"; exit 1; }
       - uses: BigWigsMods/packager@v2
 ```
-(`GITHUB_OAUTH` makes the packager also attach the zip to a GitHub release; drop that env line if U4 says no. No Wago/WoWI ids: not used. If U5 finds that CurseForge rejects the inferred game version, add `with: { args: -g <version> }` to the packager step with the value the user gives.)
+This is the "publish directly from GitHub to CurseForge" path: one run, two destinations. `CF_API_KEY` uploads to CurseForge; `GITHUB_OAUTH` (the built-in `GITHUB_TOKEN`, hence `contents: write`) creates the GitHub release for the tag with the same zip and changelog. No Wago/WoWI ids: not used.
+
+- [ ] **Step 4a: CurseForge game version.** The packager maps `## Interface: 16001` to the classic version name `1.60.1` and looks that name up in CurseForge's list. Confirm it exists (user, with the token from the one-time setup in Step 5):
+
+```bash
+curl -fsS -H "X-Api-Token: $CF_API_KEY" https://wow.curseforge.com/api/game/versions | jq '.[] | select(.name | test("^1\\.60")) | {id, name, gameVersionTypeID}'
+curl -fsS -H "X-Api-Token: $CF_API_KEY" https://wow.curseforge.com/api/game/version-types | jq '.[] | {id, name, slug}'
+```
+If an entry named `1.60.1` exists under the WoW Forever version type, nothing to set. If it is missing or listed under another name, pin it in the packager step (the packager takes version names with `-g` and resolves the id itself) and record the id beside it:
+
+```yaml
+      - uses: BigWigsMods/packager@v2
+        with:
+          args: -g 1.60.1 # CurseForge game version id from the query above (WoW Forever 1.60.1); use the listed name
+```
+and pass the same `-g` in the Makefile's local run (`bash $(LUA_ENV)/release.sh -d -g 1.60.1 -r .release`) so the dry run reports what the upload will use. Record the name and id in `docs/publishing/README.md` under "CurseForge page".
 
 - [ ] **Step 5: Release how-to** in `docs/publishing/README.md`, section "Cutting a release":
-1. `make check` green on `forever`; add `## vX.Y.Z-forever` with the changes at the top of CHANGELOG.md (under the title); commit.
-2. `git tag vX.Y.Z-forever && git push origin vX.Y.Z-forever` (push that one tag, never `--tags`).
-3. Watch Actions > release; the zip lands on CurseForge (id from `## X-Curse-Project-ID`) with CHANGELOG.md as its changelog, and on GitHub Releases.
+1. `make check` green on `forever`; write `## vX.Y.Z` with the changes by hand at the top of CHANGELOG.md (under the title); commit.
+2. `git tag vX.Y.Z && git push origin vX.Y.Z` (push that one tag, never `--tags`).
+3. Watch Actions > release: the one run uploads the zip to CurseForge project 1753387 with CHANGELOG.md as its changelog and creates the GitHub release for the tag.
 One-time setup: CurseForge > API tokens > create token; GitHub repo > Settings > Secrets > Actions > `CF_API_KEY`.
 
-- [ ] **Step 6: Run** `.lua/bin/busted tests/Forever/publication_spec.lua` (PASS), `make check` (PASS), then on a clean tree `git tag v0.0.0-forever-dry && make package-check && git tag -d v0.0.0-forever-dry`. Expected: `package ok: .release/Hekili-v0.0.0-forever-dry.zip` (all four TOC Versions stamped). Never push that tag.
+- [ ] **Step 6: Run** `.lua/bin/busted tests/Forever/publication_spec.lua` (PASS), `make check` (PASS), then on a clean tree `git tag v0.0.0 && make package-check && git tag -d v0.0.0`. Expected: `package ok: .release/Hekili-v0.0.0.zip` (all four TOC Versions stamped). Never push that tag.
 
 - [ ] **Step 7: Commit**
 
 ```bash
 git add .github/workflows/release.yml CHANGELOG.md .gitignore src/*/*.toc docs/dev/layout.md docs/publishing/README.md tests/Forever/publication_spec.lua
-git commit -m "build(release): packager workflow on -forever tags, @project-version@ in every TOC, CHANGELOG.md
+git commit -m "build(release): packager workflow on v* tag pushes (CurseForge + GitHub release), @project-version@ in every TOC, CHANGELOG.md
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -614,7 +632,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ### Task 5: CurseForge project page content (S)
 
 **Files:**
-- Modify: `docs/publishing/README.md` (section "CurseForge page"); `src/Hekili/Options/Options.lua` (re-add the `curse` row once the URL is known)
+- Modify: `docs/publishing/README.md` (section "CurseForge page")
 
 - [ ] **Step 1: Write the page text** into `docs/publishing/README.md` (the user pastes it into the CurseForge project settings; it stays scanned by `publication_spec.lua`):
 
@@ -625,7 +643,8 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - **Summary:** A priority helper that shows your next abilities on the WoW Forever client.
   (No game name in the project name; the summary may name the client.)
 - **Licence field:** GNU General Public License version 3 (GPLv3)
-- **Game version:** WoW Forever (whatever CurseForge lists for client 1.60.1; see U5)
+- **Project id / URL:** 1753387, https://www.curseforge.com/wow/addons/hekili-forever
+- **Game version:** WoW Forever 1.60.1 (interface 16001; Task 4 Step 4a)
 - **Third-party distribution:** ON (Allow)
 - **Avatar:** 400x400 PNG, the fork's own art (not Hekili's logo, not Blizzard or other copyrighted art)
 - **Source:** https://github.com/zmsl/hekili ; **Issues:** https://github.com/zmsl/hekili/issues
@@ -653,27 +672,11 @@ Write the description fresh: do not paste any paragraph of upstream's CurseForge
 
 - [ ] **Step 2: Run** the spec (PASS: the doc credits and links upstream, has "explicit permission", has no forbidden link).
 
-- [ ] **Step 3: CurseForge row in game** (only once the user gives the project URL, U1): in the General page add after `github`
-
-```lua
-                    curse = {
-                        type = "input",
-                        name = "CurseForge",
-                        desc = "Find Hekili Forever updates on CurseForge.",
-                        order = 11,
-                        get = function () return "<the URL the user supplied, https://www.curseforge.com/wow/addons/<slug>>" end,
-                        set = function () end,
-                        width = "full",
-                        dialogControl = "SFX-Info-URL",
-                    },
-```
-The scan forbids only `.../addons/hekili` exactly, so a slug such as `hekili-forever` passes; a slug of exactly `hekili` would be upstream's and fails, as it should.
-
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add docs/publishing/README.md src/Hekili/Options/Options.lua
-git commit -m "docs(publishing): CurseForge page text (fork credit, changes, licence) and the in-game CurseForge link
+git add docs/publishing/README.md
+git commit -m "docs(publishing): CurseForge page text (fork credit, changes, licence)
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -683,8 +686,8 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ### Task 6: Verification checklist and open questions (S, no code)
 
 - [ ] **Offline** (`make check` covers): publication spec green; `grep -rniE 'discord|wowinterface|patreon|github\.com/hekili' src --include=*.lua --include=*.toc --include=*.xml | grep -v /Libs/` shows only `Targets.lua` 4845.
-- [ ] **Package:** `make package-check` on a throwaway `-forever-dry` tag prints `package ok`; `unzip -l` shows four top-level folders and `Hekili/LICENSE`.
-- [ ] **In game from the zip** (links removed first, full restart): AddOns list titles "Hekili Forever", "Hekili Forever - Shared/Druid/Warrior", author defzach, the placeholder icon; `/hekili` title "Hekili Forever <tag>"; General page notice, GitHub/Report Issue/(CurseForge)/SimC rows only; Snapshots page without Discord; a snapshot starts "Hekili Forever build:"; Interface Options category "Hekili Forever"; compartment and minimap tooltips "Hekili Forever"; minimap button keeps its saved position (LDBIcon key unchanged).
+- [ ] **Package:** `make package-check` on a throwaway local `v0.0.0` tag (deleted after) prints `package ok`; `unzip -l` shows four top-level folders and `Hekili/LICENSE`.
+- [ ] **In game from the zip** (links removed first, full restart): AddOns list titles "Hekili Forever", "Hekili Forever - Shared/Druid/Warrior", author defzach, the placeholder icon; `/hekili` title "Hekili Forever <tag>"; General page notice, GitHub/CurseForge/Report Issue/SimC rows only; Snapshots page without Discord; a snapshot starts "Hekili Forever build:"; Interface Options category "Hekili Forever"; compartment and minimap tooltips "Hekili Forever"; minimap button keeps its saved position (LDBIcon key unchanged).
 - [ ] **CurseForge:** project fields as Task 5; first upload has the CHANGELOG entry as its changelog; distribution toggle ON; licence GPLv3; avatar is the fork's art.
 - [ ] **GitHub:** repo description/website point at the CurseForge page; issue templates assign `zmsl`.
 - [ ] **Merge** `forever-pubplan` work into `forever` after `/ponytail-review` (pre-approved once reviewed and checked); tag only after the merge.
@@ -693,10 +696,5 @@ Open questions for the original author:
 - **Q1:** GPL "version 3 only" or "version 3 or later"? (The plan writes v3 only, valid either way.)
 - **Q2:** May the README/CurseForge page quote the permission publicly (e.g. "with the permission of Hekili, <date>"), and in what words?
 
-Open questions for the user:
-- **U1:** the CurseForge project id and URL slug (`## X-Curse-Project-ID`, the in-game CurseForge row).
-- **U2:** the fork's art: a 400x400 PNG avatar and an in-game icon (`.blp`/`.tga`, 64x64 or 128x128).
-- **U3:** the release tag scheme (plan: `vX.Y.Z-forever`, first `v1.0.0-forever`).
-- **U4:** also publish GitHub Releases (plan: yes, via `GITHUB_OAUTH`)?
-- **U5:** the CurseForge game version for Forever: does CurseForge list "1.60.1" (what the packager infers from 16001), or must the workflow pass `-g`?
-- **U6:** three vendored libraries state no licence (AceGUI-3.0-SharedMediaWidgets, LibSpellRange-1.0) or a custom one (AceGUI-3.0_SFX-Widgets); ship as is (common practice) or ask their authors?
+Open question for the user:
+- **U1:** the fork's art: a 400x400 PNG avatar for CurseForge and an in-game icon (`.blp`/`.tga`, 64x64 or 128x128); the stock-icon placeholder from Task 2 Step 9 ships until then.
