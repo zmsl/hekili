@@ -1,0 +1,29 @@
+# Uploads a release to CurseForge when the user publishes its draft on GitHub (docs/publishing/README.md, "Cutting a
+# release"): the release's Hekili-*.zip asset, the release body as the markdown changelog, the tag as the display name,
+# and a pre-release as a beta file. Only `published` fires it: saving an edit, unpublishing or deleting does not.
+name: publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read # download the release asset
+
+jobs:
+  curseforge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4 # the tag's tools/cf_upload.py
+      - name: Download the zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          gh release download "$TAG" --pattern 'Hekili-*.zip' --dir dist
+          zips=(dist/Hekili-*.zip)
+          [ ${#zips[@]} -eq 1 ] && [ -s "${zips[0]}" ] || { echo "expected one Hekili-*.zip asset on $TAG: ${zips[*]}"; exit 1; }
+      - name: Upload to CurseForge
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+        run: python3 tools/cf_upload.py "$GITHUB_EVENT_PATH" dist/Hekili-*.zip

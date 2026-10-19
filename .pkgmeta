@@ -14,6 +14,8 @@ move-folders:
     Hekili/src/Hekili_Shaman: Hekili_Shaman
     Hekili/src/Hekili_Hunter: Hekili_Hunter
 
+# The packager uploads nothing (release.yml passes -d; publish.yml uploads with the release body as the changelog).
+# manual-changelog stays so the packager does not generate a CHANGELOG.md into the shipped Hekili/ folder.
 manual-changelog:
     filename: CHANGELOG.md
     markup-type: markdown

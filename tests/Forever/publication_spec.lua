@@ -197,6 +197,8 @@ describe("pkgmeta", function()
         end
         assert.falsy(s:find("LICENSE", 1, true)) -- never ignored
         assert.falsy(s:find("externals", 1, true)) -- libraries are vendored
+        -- a generated changelog would ship as Hekili/CHANGELOG.md; the tracked one is ignored for copying
+        assert.truthy(s:find("\nmanual-changelog:\n    filename: CHANGELOG.md\n", 1, true))
     end)
 end)
 
