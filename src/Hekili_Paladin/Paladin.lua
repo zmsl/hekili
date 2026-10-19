@@ -447,22 +447,23 @@ spec:RegisterAbilities({
     retribution_aura = selfBuff("retribution_aura", RETRIBUTION_AURA),
 })
 
--- The mana floors of Retribution's swing-gap fillers (D7: a fraction of the maximum, one setting a line; wowsims's 10%).
--- Mana is secret even out of combat, so Hekili reads the belief's lower bound against them (the in-game checkpoint).
-spec:RegisterSetting("consecration_mana", 10, {
+-- The mana floors of Retribution's swing-gap fillers (D7: a percent of the maximum, one setting a line; wowsims uses
+-- 10). Off by default: mana is secret, Hekili reads the belief's lower bound, which cannot reach a percent floor; the
+-- usability answers still refuse a filler at a real lack of mana.
+spec:RegisterSetting("consecration_mana", 0, {
     type = "range",
     name = "Consecration Mana Floor",
-    desc = "Consecration is used in the swing gap only while your mana is at least this percent of its maximum.",
+    desc = "Consecration is used in the swing gap only while your mana is at least this percent of its maximum. 0 turns the floor off.",
     min = 0,
     max = 100,
     step = 1,
     width = "full",
 })
 
-spec:RegisterSetting("exorcism_mana", 10, {
+spec:RegisterSetting("exorcism_mana", 0, {
     type = "range",
     name = "Exorcism Mana Floor",
-    desc = "Exorcism is used in the swing gap only while your mana is at least this percent of its maximum.",
+    desc = "Exorcism is used in the swing gap only while your mana is at least this percent of its maximum. 0 turns the floor off.",
     min = 0,
     max = 100,
     step = 1,
@@ -477,7 +478,7 @@ spec:RegisterOptions({ package = "Retribution" })
 spec:RegisterPack(
     "Retribution",
     20261019682,
-    [[Hekili:TEvBVTTnq4Fl7lznyEQ2Elz9f4cSv0HUGIGIQcSVrjAQtwCrs0GKkU5l63(UJskMswY21BFXGM8UN7TNJhfBb7RSWeUfy3VC(YBxmFXRV9vlzH2N2cSWTCXd8n4IsEb(7xaRwUUYkvL0zpLR4jK(RRK52)QKTEuOmBbb7(f3mFblmtMKanccgbl8pvA4rqxh7bDD8N558ejU4fB1QhLgCtE(BQJlv1XYYFEd6m1XImq8qD8tG9T1X2mChdWZnZQJ)GitbM6yEzsD8DvjBGcO0(J4oqAkiS1XKrEwfuqnUSqLa55aQsQwvGYuHULGBSMRFJhmnkluQ8e1Us0AFKxuqrGkTo(V1CBg5JTWdFdevwCXozjkoAjuFRKeFbPQk)P64qmYFaM1QYx3jn2g0(KCtMTZhTn7)Iq3)OJFVQOWfIUF2V)xi1avLPemu6a4c0N2LbOxjTTIlTMMevB0tbZ1d9V3RknGaJjxvXP3h(MslKMcVG0Gb3M64n8T(6VKmPmNsS8sEDCoLjFlLjOmKtX2Wptr1rlphZUZA9m0BqvAIyEQLaCNANrwyEzAdLHkN9in)(N)efTAif0qPaOcv(txhGmvTkf9ewixqIAc2QbHQyn3UsVhHiELMptMU6hwxLMgm8KGQT13Daa)0QxsLNivAKOPC4qWT3Puq3RonMAR0vOXDRJOKXmQnCvgM2ImuwJuQjVfSFZaOKVM4XDOGM8F6yVZQmaA70OnIKvl8fjZrJj)AhrINLQevMbI4SHJT6V9WeqRMEoNJ7sIKtHCNdEvtIgqsON6yEU9Gb46xaMmlEH2Uhih6bdp(yrpvhpHPhwMpkN47hlHxxBBczjbvbxwMHUyKgOLM3Ti4MROMZGTc77wzaRfBKnb(6h5AE9ahA7)VeG70TpOEu3vNIN6j7GaDcrofRUV0txfop6WaBps7sFjsKpklHOu(JkD)iMmA3mg)E72m8Q5xLaoF65CaKeTrRQ63NmMd1DXXfaqxbS(owiEfmnxEWSE6wkd9KG96H)7E3RmA5SS)Gf6fR0HTxmZcFU(ZSiWduQti)Yoj3VmHCdQ9SqxXNShQ0VoHsJwJrBQL4qijNfECQab9nt5p75dKy3EM5eFsIVJC50dY6)2rDsxDZZwNcTxnbADeggvqrus5v52Xie7n1KZZ2J6GPInSUOMNO65)JqHolE3)R8Pbf9HCJdI7ZAC1zmQ8qgD7z9D7HKWlZF(ohFEYUnFpCkI6bHLxl65nZ8ye3tFnW5BJxpzo(ChCEWe5jUmSlXTKm7I5)NTBVb2J0v7Bpl9o72h5owh(ZnVdEx9H3ToYlVp24GJre8Qct1vF6k9EqCrjVYMr3e)r4bzUe)(K2VH9A3XS)n]]
+    [[Hekili:TE12oUTnq0VL(Y2yuxhB3UBZf4a0gKI0fblcIcqFJs0uJSyxjrdsQ1XVOV9odL0AkzjBh3(Ibn5C5mZCgouSfSVYcI5wG9WY5lVBX8fV(UxTKfy3VfybB5Ih5BWff8C83VawTCDPvQkOZ2NP4XK(RlLz2)QGTEqtz2cc2dlUD(cwqQmogQfemcwWFQ0WtGUkYZ0vrFMNXJL4IxSvREsAWn5zVPkQqvfjl(5niyQIePG4XQO9G9Tvr2uChdWZmtRI(GivbMQiErCv09LXBGCOW(J4oqsciSvrKtEwfuqnUmxfdzzaQsIwLJYuIWsWnwZK34zMALfkvwSAxb6TpYZZPiqLuf93AUnLWyJ5HVbIslUyNSafh9eQVvsIVGuvLTVkkaJ8hHPnQ81DsJT2AFsUj12IrB9(ViW9p643RYZDHO7Nd7)fsnqvAkadLoaUaX0UuarL02iU0AQtunrpfmt6JV3RkmGaJjxvXP3h(MslKMCVG0Gb3MQOn8T(6VeXkESexIOKJz1mLsBACNbSwulcEQeeZRX8qmKWlZStElLUO0OZ6n5OufvST8mSemTb(iKRIYQtl8el51DQDgzU5Lj18kQM3Hz97F(tKp1qcOHcbqvZS9tMH0zTkrMHKCUGe1mBRgeQ81C7k9bleYl18PYKv)W6YKKz9pzw52Q7pYa)0Qxs1WqvsOOUM5SGBVZPGUtXCi1wPlrN7whsjJPuV6QumTfAOSgPuDEB2HnNbf81ezV1kOl)Nwk(0sdG(ojCJiE1cFrsDCDcx7iM(0eLO00teNpCuA)T7NaA00dCocojsgfYTa8M6enGmvp1X8CZb9SRFby0S4v67og5ye0)4tf9uD8mUUFz(KCIVFBj8ATBsiljtLZLfPied1aT08UfZU9gQbE2wH9DRA7BN5RFORb3Z4qZLexJHB1TRr9OURohp1t2Eb6iICowDxPhVkCz0HE(EG2LUselFswaHj8Nu6Urm502br(92nz4vZVjgCy65CaehUrRk72NmeGAV44kmqBbS6EwaEfmn8U3dcOBPm07goOh(VhCpfPHZY(dwGxSsh2CXml456pZIgUNsTc5x2j5(LrKRxTNf4k(K)qL(1ruAWAm6tTehcj5SGttfitF7y45aFGe7UlmN4ts8bY1tpiV)BNeKU6MNVoN1E1iwRLWWOcAqZRagIqCWvJop7Gv7nvSM1fw)owp8paf6I4D)VYN6v07ZnokUVOXvxWOYJz0nN1f29jHxhE(ohFE2UnFeogr9OWYRf9YMzEkI75Vg4Y9XRhnhFPdopAI8ixg2M4wsUDX8)Z(TZa7b6Q99NLENDZJChQd)5M3EVR(47wh4L3NACWPicEvHX6QpFL(GrCrjV0Ms3e)r4rzMe)(KMp0DI7y2)o]]
 )
 spec:RegisterPack(
     "Protection",

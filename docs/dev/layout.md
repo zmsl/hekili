@@ -134,14 +134,15 @@ Subtlety solo: fights=3 agreement 0.950 (2379 ticks); react median 0 p90 0 never
 `make test-paladin` (`#paladin`), asserting its flagged lines ran (Retribution: the seal twist at tier 1; Protection:
 Seal of Fury and Holy Shield at tier 2). The mob swings at us in both worlds: Holy Shield raises the block chance and
 each block spends a charge (the world's class-neutral `taking`/`took`); our landed swing spends an Echo (`landed`); mana
-runs under the five-second rule (`fsr`). Protection is gated by `pack_gate.gate`. Retribution is **reported**: its
-swing-gap fillers wait for `mana.pct>=settings.*_mana` (10%, wowsims), and Hekili reads mana as the belief's lower
-bound, which on a fresh boot only the usability ladder lifts, to at most Consecration's 565 of 6000 (mana is secret
-even out of combat); without the floor its agreement is 0.988. The holy_shock list (Holy Shock talent) and Hammer of
-Wrath's window are not exercised by the solo worlds. The first runs (class-completion Task 8):
+runs under the five-second rule (`fsr`). Both packs are gated by `pack_gate.gate`. Retribution's swing-gap fillers
+have per-line mana floors (`settings.consecration_mana`, `settings.exorcism_mana`, D7), off by default: mana is secret
+even out of combat and Hekili reads the belief's lower bound, which on a fresh boot only the usability ladder lifts, to
+at most Consecration's 565 of 6000, so a 10% floor (wowsims) never passes; the usability answers still refuse a filler
+at a real lack of mana. Residual: a core at-rest mana bound (out of combat) would let the floor return. The holy_shock
+list (Holy Shock talent) and Hammer of Wrath's window are not exercised by the solo worlds. The first runs (class-completion Task 8):
 
 ```
-Retribution solo: fights=3 agreement 0.846 (1923 ticks); react median 0 p90 1 never 0.275; refused per 100 [], episodes 0.00/min; dps A/B 1.017; ... [seeds 1-3] (reported)
+Retribution solo: fights=3 agreement 0.988 (1767 ticks); react median 0 p90 1 never 0.007; refused per 100 [], episodes 0.00/min; dps A/B 0.951; ... [seeds 1-3]
 Protection solo: fights=3 agreement 0.957 (2164 ticks); react median 0 p90 1 never 0.030; refused per 100 [], episodes 0.00/min; dps A/B 0.977; ... [seeds 1-3]
 ```
 

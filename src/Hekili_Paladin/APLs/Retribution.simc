@@ -1,8 +1,8 @@
 # Forever Retribution Paladin (provisional: no in-game check yet; the seals, Echoes and Judgement's effect on the seal
 # are modelled from our casts): Judgement on cooldown, Hammer of Wrath in the execute window at tier 1, Holy Strike,
 # the Twist of Light seal twist (Seal of Command and Seal of Righteousness, each when it and its Echo are down) at tier
-# 1, Consecration and Exorcism in the swing gap at tier 2 while mana lasts; with the Holy Shock talent, its own list
-# (after wowsims/forever's Retribution APLs, reference only).
+# 1, Consecration and Exorcism in the swing gap at tier 2 (their mana floors are settings, off by default); with the
+# Holy Shock talent, its own list (after wowsims/forever's Retribution APLs, reference only).
 
 actions.precombat=retribution_aura,if=!buff.retribution_aura.up
 actions.precombat+=/seal_of_command,if=!seal_up
