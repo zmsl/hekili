@@ -66,5 +66,6 @@ Bundled libraries (Ace3, LibStub, LibSharedMedia-3.0, LibDBIcon-1.0, LibDataBrok
 authors under their own licences; see `src/Hekili/Libs/CREDITS.md`.
 
 ## Licence
-GNU General Public License version 3 (`LICENSE`), as the original Hekili. Modified for WoW Forever by defzach from
+GNU General Public License version 3 or later (`LICENSE`): either version 3 of the License, or (at your option) any
+later version, as the original Hekili. Modified for WoW Forever by defzach from
 October 2026.

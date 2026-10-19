@@ -6971,8 +6971,8 @@ do
                             .. "maintainers, modified for WoW Forever by defzach from October 2026, and it is |cffff0000not|r "
                             .. "the original project: please report problems on the Hekili Forever GitHub page below, never "
                             .. "to the original Hekili authors.\n\n"
-                            .. "Hekili Forever is free software under the GNU General Public License version 3; the full text "
-                            .. "is in the LICENSE file in the addon folder.\n\n"
+                            .. "Hekili Forever is free software under the GNU General Public License version 3 or (at your "
+                            .. "option) any later version; the full text is in the LICENSE file in the addon folder.\n\n"
                             .. "See the |cFFFFD100Snapshots (Troubleshooting)|r section for how to report a bug.\n\n",
                         fontSize = "medium",
                         order = 6,

@@ -2,7 +2,8 @@
 -- July 2024
 --
 -- Hekili Forever, based on the original work by Hekili and its maintainers (the original Hekili project),
--- distributed under the GNU General Public License version 3 (see LICENSE).
+-- distributed under the GNU General Public License, either version 3 of the License, or (at your option) any later
+-- version (see LICENSE).
 -- Modified for WoW Forever by defzach, from October 2026 (https://github.com/zmsl/hekili); this is a fork,
 -- not the original project, made with the explicit permission of the original author.
 

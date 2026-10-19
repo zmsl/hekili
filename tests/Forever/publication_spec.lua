@@ -130,7 +130,7 @@ describe("readme", function()
             "https://github.com/Hekili/hekili",
             "https://github.com/zmsl/hekili/issues",
             "https://github.com/zmsl/hekili/releases",
-            "GNU General Public License version 3",
+            "GNU General Public License version 3 or later",
             "Modified for WoW Forever by defzach",
             "Libs/CREDITS.md",
         }) do
