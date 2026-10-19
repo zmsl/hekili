@@ -14,7 +14,7 @@ README.md derives its user-facing sections from the description below; change bo
   the option selected; the project text (LICENSE, file headers) is version 3 or later.
 - **Third-party distribution:** ON
 - **Avatar:** `docs/publishing/icon-512.png` (the fork's taco dog icon)
-- **Game version:** WoW Forever 1.60.1 (interface 16001; see "Cutting a release")
+- **Game version:** WoW Forever 1.60.1 (interface 16001; CurseForge type 88568; pinned in tools/cf_upload.py)
 - **Source / issues:** https://github.com/zmsl/hekili , https://github.com/zmsl/hekili/issues
 
 ### Description (verbatim HTML)
@@ -63,26 +63,81 @@ the links, one per addon: `mklink /D <Addon> \\wsl.localhost\personal\home\zack\
 **Standing rule for implementer briefs:** a commit that changes what a player sees adds its line under
 `## Unreleased` in CHANGELOG.md (New / Changed / Fixed / Known issues / Upgrade notes) in the same commit.
 
-Tags are `vMAJOR.MINOR.PATCH`; the first release is `v0.1.0`.
+A release is three steps: tag, read the draft, publish. Nothing reaches players before step 3. **A tag without a
+published release is not released**: it has a draft on GitHub and nothing on CurseForge.
 
-1. `make check` green on `forever`; write `## vX.Y.Z` with the changes by hand at the top of CHANGELOG.md (under the
-   title); commit.
-2. `git tag vX.Y.Z && git push origin vX.Y.Z` (push that one tag, never `--tags`), for example
-   `git tag v0.1.0 && git push origin v0.1.0`.
-3. Watch Actions > release: the one run (`.github/workflows/release.yml`) uploads the zip to CurseForge project 1753387
-   with CHANGELOG.md as its changelog and creates the GitHub release for the tag. It fails early if CHANGELOG.md has
-   no `## <tag>` heading.
+Tags are `vMAJOR.MINOR.PATCH`; a pre-release adds a suffix with a `-` (`v0.2.0-rc.1`, `v0.2.0-beta.1`) and goes to
+CurseForge as a beta file.
 
-One-time setup (already done for zmsl/hekili): CurseForge > API tokens > create token; GitHub repo > Settings >
-Secrets > Actions > `CF_API_KEY`.
+1. **Tag.** On `forever` with `make check` green. For a final release, first rename `## Unreleased` in CHANGELOG.md to
+   `## vX.Y.Z`, put a fresh `## Unreleased` with the five empty headings (`### New`, `### Changed`, `### Fixed`,
+   `### Known issues`, `### Upgrade notes`) above it, and commit (a pre-release skips this; its notes read
+   Unreleased). Then `git tag vX.Y.Z && git push origin vX.Y.Z` (that one tag, never `--tags`).
+2. **Read the draft.** Actions > release (`.github/workflows/release.yml`) builds the zip with the BigWigs packager
+   (no upload), writes the notes with `tools/release_notes.py` and creates a draft release with the zip attached
+   (`Hekili-<tag>-forever.zip`; a pre-release for a `-` tag). The notes come from the changelog section for the tag
+   (or Unreleased), the commits under `src/` since the previous release (pre-release tags are skipped, so a final
+   release covers its release candidates) and the "Open after" sections of plans changed since then. Open
+   Releases > the draft > Edit: fix anything that reads like a developer note, keep it player-facing, never leave the
+   body empty.
+3. **Publish.** Press Publish release (tick "Set as a pre-release" only if it already is one). Actions > publish
+   (`.github/workflows/publish.yml`) uploads the attached zip to CurseForge project 1753387 with the release body as
+   the markdown changelog, the tag as the file name and game version 1.60.1; the Discord webhook posts the release.
 
-The packager maps `## Interface: 16001` to the game version `1.60.1` (the dry run prints `Game version: 1.60.1`), so
-the workflow pins none. Optional check that CurseForge lists that version, with the same token:
+Edits after publishing reach GitHub only: fix the CurseForge changelog by hand on the file's page. Unpublishing or
+deleting a release does not remove the CurseForge file.
+
+To preview the notes without releasing: Actions > release > Run workflow, pick the branch or tag, keep `dry_run`
+ticked. It builds the zip and prints the notes in the log (one Anthropic API call). Run from a tag with `dry_run`
+unticked, it creates the draft (use this when a tag's run failed after the push, for example an API outage).
+
+### Failure modes
+
+- **Release run fails:** no draft exists. Read the log: `release_notes:` lines name the cause (missing key, API
+  error, refusal, no changes since the last release). Fix it and re-run the job, or run the workflow on the tag with
+  `dry_run` unticked. If a draft for the tag already exists, delete the draft first.
+- **Publish run fails:** the release is public on GitHub (and the Discord webhook has posted it) but not on
+  CurseForge. `cf_upload:` lines name the cause. Re-run the failed job once the cause is fixed
+  (Actions > publish > Re-run).
+- **CurseForge rejects a duplicate display name:** a tag can be uploaded once. To re-ship, cut a new tag (the next
+  patch or `-rc.N`).
+- **CurseForge daily upload limit:** the upload fails with a limit error; re-run the publish job the next day.
+- **Game version missing:** `cf_upload: 0 CurseForge game versions named 1.60.1` means CurseForge has no such
+  version under type 88568. When the client's `## Interface` changes, update `GAME_VERSION` in
+  `tools/cf_upload.py`; list the versions with the curl below.
+
+### One-time setup
+
+- **Secrets** (GitHub repo > Settings > Secrets and variables > Actions): `CF_API_KEY` (CurseForge > API tokens; used
+  only by publish.yml) and `ANTHROPIC_API_KEY` (console.anthropic.com > API keys; used only by release.yml). Actions
+  masks both in logs; the tools never print a request or a header.
+- **Discord webhook** (the user): in the channel's settings > Integrations, create a Discord webhook and copy its URL.
+  Then GitHub repo > Settings > Webhooks > Add webhook: Payload URL is that Discord webhook URL with `/github`
+  appended, content type `application/json`, "Let me select individual events", tick Releases only (untick Pushes).
+  The Discord webhook posts each published release; the rehearsal confirms it stays quiet for drafts.
+
+The CurseForge game version, with the same token:
 
 ```sh
 curl -fsS -H "X-Api-Token: $CF_API_KEY" https://wow.curseforge.com/api/game/versions | jq '.[] | select(.name | test("^1\\.60")) | {id, name, gameVersionTypeID}'
-curl -fsS -H "X-Api-Token: $CF_API_KEY" https://wow.curseforge.com/api/game/version-types | jq '.[] | {id, name, slug}'
 ```
 
-If `1.60.1` is missing or listed under another name, pin the listed name in the packager step (`with: args: -g <name>`)
-and pass the same `-g` in the Makefile's `package` target.
+### Rehearsal
+
+Run once by the session owner (Fable) after this pipeline merges, before the next real release; the SDD controller
+does not push tags. The controller decides, and tells the user, whether the rehearsal release stays as a public beta
+or is deleted (step 5).
+
+1. Secrets and the Discord webhook are set up (above). Optional: Actions > release > Run workflow on `forever` with
+   `dry_run` ticked; the log ends with the notes.
+2. `git tag v0.1.1-rc.1 && git push origin v0.1.1-rc.1`. Actions > release goes green. Releases shows a draft
+   pre-release `v0.1.1-rc.1` with `Hekili-v0.1.1-rc.1-forever.zip` attached. Read the notes: player language, one
+   section per class then core and display, a Known issues list, under 60 lines, no file or task names. Nothing on
+   CurseForge; no post from the Discord webhook.
+3. Edit the notes if needed and publish. Actions > publish goes green (log: `cf_upload: v0.1.1-rc.1 (beta) uploaded
+   as CurseForge file <id>`).
+4. CurseForge project > Files shows `v0.1.1-rc.1`, type Beta, game version 1.60.1, its changelog equal to the release
+   body. The Discord webhook has posted the release once.
+5. Then, per the controller's decision: keep it as the public beta, or delete it: the file on CurseForge
+   (Files > the file > Delete), then `gh release delete v0.1.1-rc.1 --cleanup-tag --yes` and
+   `git tag -d v0.1.1-rc.1`.

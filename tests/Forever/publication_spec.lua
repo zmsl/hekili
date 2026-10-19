@@ -66,6 +66,7 @@ local FORBIDDEN = {
 local ALLOW = {
     ["src/Hekili/Engine/Sim/Targets.lua"] = "github%.com/hekili/hekili/issues/4845",
     ["README.md"] = "discord%.gg/jac6w4pkur", -- the fork's own server, not the old project's
+    ["docs/publishing/README.md"] = "discord webhook", -- the fork's own release webhook (Cutting a release)
 }
 
 local function scan(files, upstream)
