@@ -66,4 +66,25 @@ describe("Forever priorities", function()
             assert.are.same({}, hits)
         end)
     end
+    for class, load in pairs(LOADS) do
+        it("registers every setting a priority reads on that priority's spec (" .. class .. ")", function()
+            local w = load()
+            local hits = {}
+            for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", class)) do
+                local key = type(p.spec) == "string" and p.spec:match(":(.+)$") -- nil: a pseudo-spec manifest
+                for name in p.simc:gmatch("settings%.([%w_]+)") do
+                    local s = w.settings[name]
+                    local on = s ~= nil and (not s.specs or not key)
+                    for _, k in ipairs(s and s.specs or {}) do
+                        on = on or k == key
+                    end
+                    if not on then
+                        hits[#hits + 1] = p.name .. ": settings." .. name
+                    end
+                end
+            end
+            table.sort(hits)
+            assert.are.same({}, hits)
+        end)
+    end
 end)

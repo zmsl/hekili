@@ -1828,7 +1828,8 @@ spec:RegisterStateExpr("should_cleave", function()
     return should_queue(action.cleave.cost)
 end)
 
--- The Classic settings the Arms and Fury priorities read (Classic/Warrior.lua:1574-1734, same defaults). Left out:
+-- The Classic settings the Arms and Fury priorities read (Classic/Warrior.lua:1574-1734, same defaults). Each
+-- preference shows on the specs whose priority reads it (the trailing spec keys; none: every spec). Left out:
 -- adaptive Whirlwind and Bloodthirst-in-execute (they need attack power and weapon damage, secret on Forever), the
 -- unused queueing threshold, and the Overpower stance-swap settings (the dodge is unseen from another stance).
 spec:RegisterSetting("adaptive_queueing_enabled", true, {
@@ -1836,14 +1837,14 @@ spec:RegisterSetting("adaptive_queueing_enabled", true, {
     name = "Use Queue Prediction",
     desc = "When enabled, recommendations will use swing timers and rage calculations to determine if Heroic Strike or Cleave should be queued.",
     width = "full",
-})
+}, "arms")
 
 spec:RegisterSetting("execute_queueing_enabled", true, {
     type = "toggle",
     name = "Queue During Execute",
     desc = "When enabled, recommendations will always queue Heroic Strike or Cleave during the execute phase.",
     width = "full",
-})
+}, "arms")
 
 spec:RegisterSetting("ww_min_enemies", 2, {
     type = "range",
@@ -1854,7 +1855,7 @@ spec:RegisterSetting("ww_min_enemies", 2, {
     softMax = 4,
     max = 10,
     step = 1,
-})
+}, "arms")
 
 spec:RegisterSetting("ww_cd_diff", 1.5, {
     type = "range",
@@ -1865,7 +1866,7 @@ spec:RegisterSetting("ww_cd_diff", 1.5, {
     softMax = 2,
     max = 5,
     step = 0.1,
-})
+}, "arms")
 
 spec:RegisterSetting("hamstring_threshold", 80, {
     type = "range",
@@ -1876,7 +1877,7 @@ spec:RegisterSetting("hamstring_threshold", 80, {
     softMax = 100,
     max = 100,
     step = 1,
-})
+}, "arms")
 
 spec:RegisterSetting("hamstring_cd_diff", 1.5, {
     type = "range",
@@ -1887,14 +1888,14 @@ spec:RegisterSetting("hamstring_cd_diff", 1.5, {
     softMax = 2,
     max = 5,
     step = 0.1,
-})
+}, "arms")
 
 spec:RegisterSetting("debuff_sunder_enabled", true, {
     type = "toggle",
     name = "Maintain Sunder Armor",
     desc = "When enabled, the Arms and Fury priorities will include Sunder Armor.",
     width = "full",
-})
+}, "arms", "fury")
 
 spec:RegisterSetting("debuff_sunder_max_stack", 1, {
     type = "range",
@@ -1904,7 +1905,7 @@ spec:RegisterSetting("debuff_sunder_max_stack", 1, {
     min = 1,
     max = 5,
     step = 1,
-})
+}, "arms", "fury")
 
 -- Forever default: Sunder Armor's own level in the DB2 (7386, level 10), so Sunder is on from the start; Classic's 61
 -- kept it to raid bosses at level 60.
@@ -1916,7 +1917,7 @@ spec:RegisterSetting("debuff_sunder_min_level", 10, {
     min = 0,
     max = 63,
     step = 1,
-})
+}, "arms", "fury")
 
 spec:RegisterSetting("debuff_demoshout_enabled", false, {
     type = "toggle",
@@ -1927,72 +1928,72 @@ spec:RegisterSetting("debuff_demoshout_enabled", false, {
 
 spec:RegisterSetting("maintain_thunder_clap", false, {
     type = "toggle",
-    name = "Fury: Maintain Thunder Clap",
+    name = "Maintain Thunder Clap",
     desc = "When enabled, the Fury priority keeps Thunder Clap on the target (Battle or Defensive Stance only).",
     width = "full",
-})
+}, "fury")
 
 -- Fury's rage floors for the on-next-swing strikes (wowsims/forever's Fury APL dumps at 40 rage for both).
 spec:RegisterSetting("rage_cap_threshold", 80, {
     type = "range",
-    name = "Fury: Rage Cap",
+    name = "Rage Cap",
     desc = "At or above this much rage the Fury priority dumps rage into Heroic Strike (one target) or Cleave (more), "
         .. "without holding rage for Bloodthirst or Whirlwind.",
     width = "full",
     min = 0,
     max = 100,
     step = 1,
-})
+}, "fury")
 
 spec:RegisterSetting("hs_threshold", 40, {
     type = "range",
-    name = "Fury: Heroic Strike Rage",
+    name = "Heroic Strike Rage",
     desc = "The Fury priority recommends Heroic Strike on one target at or above this much rage.",
     width = "full",
     min = 0,
     max = 100,
     step = 1,
-})
+}, "fury")
 
 spec:RegisterSetting("cleave_threshold", 40, {
     type = "range",
-    name = "Fury: Cleave Rage",
+    name = "Cleave Rage",
     desc = "The Fury priority recommends Cleave on two or more targets at or above this much rage.",
     width = "full",
     min = 0,
     max = 100,
     step = 1,
-})
+}, "fury")
 
 spec:RegisterSetting("prot_heroic_strike_rage", 50, {
     type = "range",
-    name = "Protection: Heroic Strike Rage",
+    name = "Heroic Strike Rage",
     desc = "The Protection priority recommends Heroic Strike in the single-target list at or above this much rage.",
     width = "full",
     min = 0,
     max = 100,
     step = 1,
-})
+}, "protection")
 
 spec:RegisterSetting("prot_cleave_rage", 40, {
     type = "range",
-    name = "Protection: Cleave Rage",
+    name = "Cleave Rage",
     desc = "The Protection priority recommends Cleave on three or more targets at or above this much rage.",
     width = "full",
     min = 0,
     max = 100,
     step = 1,
-})
+}, "protection")
 
 spec:RegisterSetting("challenging_shout_loose", 3, {
     type = "range",
-    name = "Protection: Challenging Shout Enemies",
+    name = "Challenging Shout Enemies",
     desc = "The Protection priority recommends Challenging Shout when at least this many enemies attack someone else.",
     width = "full",
     min = 1,
     max = 10,
     step = 1,
-})
+}, "protection")
 
 -- The three priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and
 -- APLs/*.simc; edit those and run it, never these blocks (tests/Forever/warrior_spec.lua checks they

@@ -142,3 +142,48 @@ describe("the active spec (headless Warrior)", function()
         assert.are.equal("Protection", H.Hekili.DB.profile.specs[PROT].package)
     end)
 end)
+
+describe("the spec options and /hekili spec (headless Warrior)", function()
+    it("shows one node per spec with its own preferences, and the dropdown and the command set the choice", function()
+        local H = boot()
+        settle(H)
+        H.Hekili:EmbedSpecOptions()
+        local nodes = H.Hekili.Options.plugins.specializations
+        assert.are.same({ 132292, 132347, 134952 }, { nodes.arms.icon, nodes.fury.icon, nodes.protection.icon })
+        local prefs = function(key)
+            return nodes[key].args.core.plugins.settings
+        end
+        assert.is_not_nil(prefs("arms").ww_min_enemies)
+        assert.is_nil(prefs("arms").hs_threshold)
+        assert.is_not_nil(prefs("fury").hs_threshold)
+        assert.is_nil(prefs("fury").prot_cleave_rage)
+        assert.is_not_nil(prefs("protection").prot_cleave_rage)
+        assert.is_not_nil(prefs("protection").debuff_demoshout_enabled) -- shared by all three
+        local pick = nodes.arms.args.core.args.activeSpec
+        assert.are.same({ arms = "Arms", fury = "Fury", protection = "Protection" }, pick.values())
+        assert.are.equal("arms", pick.get())
+        pick.set(nil, "fury")
+        settle(H)
+        assert.are.equal(FURY, H.Hekili.State.spec.id)
+        assert.are.equal("fury", H.Hekili.DB.profile.specChoice[CHAR])
+        assert.is_true(nodes.arms.args.core.args.specHint.hidden() == false) -- Arms talents, Fury chosen
+        H.Hekili:CmdLine("spec") -- the list, then an unmatched name (the list again): no error, no change
+        H.Hekili:CmdLine("spec zzz")
+        assert.are.equal("fury", H.Hekili.DB.profile.specChoice[CHAR])
+        H.Hekili:CmdLine("spec prot")
+        settle(H)
+        assert.are.equal(PROT, H.Hekili.State.spec.id)
+    end)
+
+    it("orders the Priorities list by spec", function()
+        local H = boot()
+        settle(H)
+        H.Hekili:EmbedPackOptions() -- builds the Priorities tree into Hekili.Options.args.packs
+        local packages = H.Hekili.Options.args.packs.plugins.packages
+        local order = {}
+        for _, name in ipairs({ "Arms", "Fury", "Protection" }) do
+            order[#order + 1] = packages[name].order
+        end
+        assert.is_true(order[1] < order[2] and order[2] < order[3])
+    end)
+end)

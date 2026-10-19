@@ -3402,23 +3402,62 @@ found = true end
     local tAbilities = {}
     local tItems = {}
 
+    -- (per-spec plan) On every spec's page: the active spec (stored per character; the dominant talent tree until one
+    -- is chosen) and the hint when the talents favor another.
+    local activeSpecOption = {
+        type = "select",
+        name = "Active Specialization",
+        desc = "The specialization Hekili Forever recommends for on this character. Your choice is kept until you "
+            .. "change it (also |cFFFFD100/hekili spec name|r); with no choice yet, the talent tree with the most "
+            .. "points is chosen once.",
+        order = -2,
+        width = 1.5,
+        values = function()
+            local v, kit = {}, Registry.Kit()
+            for _, s in ipairs( kit and kit.trees or {} ) do v[ s.key ] = s.name end
+            return v
+        end,
+        get = function() return Status.specKey end,
+        set = function( _, val ) Hekili:SetSpecChoice( val ) end,
+    }
+    local specHintOption = {
+        type = "description",
+        name = function()
+            local h = Hekili:GetSpecHint()
+            return h and ( "Your talents favor |cFFFFD100" .. h.name .. "|r; the active specialization stays "
+                .. "your choice until you pick another above." ) or ""
+        end,
+        fontSize = "medium",
+        order = -1,
+        width = "full",
+        hidden = function() return Hekili:GetSpecHint() == nil end,
+    }
+
     -- Options table constructors.
     function Hekili:EmbedSpecOptions( db )
         db = db or self.Options
         if not db then return end
 
+        local kit = Registry.Kit()
+        local trees = kit and kit.trees
         local i = 1
 
         while( true ) do
-            local id, name, description, texture, role = GetSpecializationInfo( i )
-
-            if not id or id == 0 then break end
+            local id, name, description, texture, role
+            local tree = trees and trees[ i ]
+            if trees then
+                if not tree then break end
+                id, name, texture, role = tree.id, tree.name, tree.texture, tree.role
+            else
+                id, name, description, texture, role = GetSpecializationInfo( i )
+                if not id or id == 0 then break end
+            end
             if description then description = description:match( "^(.-)\n" ) end
 
             local spec = Registry.Specs()[ id ]
 
             if spec then
-                local sName = lower( name )
+                local sName = tree and tree.key or lower( name )
                 specNameByID[ id ] = sName
                 specIDByName[ sName ] = id
 
@@ -3967,6 +4006,32 @@ found = true end
                     end
                 end
 
+                if tree then
+                    options.args.core.args.activeSpec = activeSpecOption
+                    options.args.core.args.specHint = specHintOption
+                    if tree.unsupported then -- no priorities on Forever: the page says why nothing shows
+                        options.args = {
+                            core = {
+                                type = "group",
+                                name = "Specialization Settings",
+                                order = 1,
+                                args = {
+                                    notice = {
+                                        type = "description",
+                                        name = "No priorities on Forever for " .. name .. ": Hekili Forever recommends "
+                                            .. "nothing while this specialization is active.",
+                                        fontSize = "medium",
+                                        order = 0,
+                                        width = "full",
+                                    },
+                                    activeSpec = activeSpecOption,
+                                    specHint = specHintOption,
+                                },
+                            },
+                        }
+                    end
+                end
+
                 db.plugins.specializations[ sName ] = options
             end
 
@@ -4371,7 +4436,7 @@ found = true end
                                             type = "input",
                                             order = 3,
                                             name = "Pack Specialization",
-                                            get = function () return select( 2, GetSpecializationInfoByID( shareDB.imported.payload.spec or 0 ) ) or "No Specialization Set" end,
+                                            get = function () local s = Registry.Specs()[ shareDB.imported.payload.spec or 0 ]; return s and s.name or "No Specialization Set" end,
                                             set = function () end,
                                             width = "full",
                                             disabled = true,
@@ -4552,7 +4617,20 @@ found = true end
 
         local count = 0
 
-        for pack, data in orderedPairs( self.DB.profile.packs ) do
+        -- by spec (its slot in the class), then by name (per-spec plan)
+        local ordered = {}
+        for pack, data in pairs( self.DB.profile.packs ) do
+            if data.spec and Registry.Specs()[ data.spec ] and not data.hidden then ordered[ #ordered + 1 ] = pack end
+        end
+        table.sort( ordered, function( a, b )
+            local sa = Registry.Specs()[ self.DB.profile.packs[ a ].spec ].slot or 0
+            local sb = Registry.Specs()[ self.DB.profile.packs[ b ].spec ].slot or 0
+            if sa ~= sb then return sa < sb end
+            return a < b
+        end )
+
+        for _, pack in ipairs( ordered ) do
+            local data = self.DB.profile.packs[ pack ]
             if data.spec and Registry.Specs()[ data.spec ] and not data.hidden then
                 packs.plugins.links.packButtons = packs.plugins.links.packButtons or {
                     type = "header",

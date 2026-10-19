@@ -81,6 +81,7 @@ function Hekili:CmdLine( input )
         set      = function () self:HandleSetCommand( args ) end,
         profile  = function () self:HandleProfileCommand( args ) end,
         priority = function () self:HandlePriorityCommand( args ) end,
+        spec     = function () self:HandleSpecCommand( args ) end,
         enable   = function () self:HandleEnableDisableCommand( args ) end,
         disable  = function () self:HandleEnableDisableCommand( args ) end,
         move     = function () self:HandleMoveCommand( args ) end,
@@ -658,5 +659,35 @@ function Hekili:HandlePriorityCommand( args )
         output = output .. format( " %s%s|r%s", Hekili.DB.profile.packs[ priority ].builtIn and BlizzBlue or "|cFFFFD100", priority, i == #priorities and "." or "," )
     end
     self:Print( output )
+    return true
+end
+
+-- (per-spec plan) `/hekili spec [name]`: chooses this character's specialization (a key or a prefix of a name), or
+-- lists them, the current one marked, with the talent hint.
+function Hekili:HandleSpecCommand( args )
+    local kit = Registry.Kit()
+    if not kit then
+        self:Print( "No specializations: your class has no Hekili Forever pack." )
+        return true
+    end
+
+    if args[2] then
+        local name = table.concat( args, " ", 2 )
+        local s = self:SetSpecChoice( name )
+        if s then
+            self:Print( format( "Specialization set to |cFFFFD100%s|r.", s.name ) )
+            return true
+        end
+        self:Print( format( "No single specialization matches '%s'.", name ) )
+    end
+
+    local out = "Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:"
+    for _, s in ipairs( kit.trees ) do
+        out = format( "%s\n - |cFFFFD100%s|r%s%s", out, s.key, s.id == Status.specID and " |cFF00FF00(current)|r" or "",
+            s.unsupported and " (no priorities on Forever)" or "" )
+    end
+    local hint = self:GetSpecHint()
+    if hint then out = format( "%s\nYour talents favor |cFFFFD100%s|r.", out, hint.name ) end
+    self:Print( out )
     return true
 end
