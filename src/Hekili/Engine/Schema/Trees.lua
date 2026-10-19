@@ -145,8 +145,8 @@ end
 --- release) is merged into every supported spec of `kit`: each field (settings, thresholds, toggles, ability and item
 --- options) but `package`, value by value over the spec's defaults; each spec's package becomes its default priority
 --- (`options.package`); the legacy choice, when it was a custom priority (not built in), stays the choice of `active`
---- (the spec this login picked), and every custom priority bound to the legacy id is rebound to `active`. Returns true
---- when it ran.
+--- (the spec this login picked; the first supported spec when that one is unsupported), and every custom priority
+--- bound to the legacy id is rebound to the same spec. Returns true when it ran.
 function ns.MigrateTrees(specs, packs, done, kit, legacyID, active)
     if done[kit.token] then
         return false
@@ -167,13 +167,15 @@ function ns.MigrateTrees(specs, packs, done, kit, legacyID, active)
             dst.package = s.options.package
         end
     end
+    -- An unsupported (healing) spec has no priorities: the custom choice goes to the first supported spec instead.
+    local target = active and not active.unsupported and active or firstSupported(kit)
     local chosen = old.package and rawget(packs, old.package)
-    if chosen and not chosen.builtIn and active then
-        specs[active.id].package = old.package
+    if chosen and not chosen.builtIn then
+        specs[target.id].package = old.package
     end
     for _, p in pairs(packs) do
-        if type(p) == "table" and p.spec == legacyID and not p.builtIn and active then
-            p.spec = active.id
+        if type(p) == "table" and p.spec == legacyID and not p.builtIn then
+            p.spec = target.id
         end
     end
     return true

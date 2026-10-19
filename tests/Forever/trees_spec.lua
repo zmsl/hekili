@@ -160,6 +160,14 @@ describe("Trees.lua", function()
             assert.is_true(none.TEST)
         end)
 
+        it("lands a custom choice on the first supported spec when the login picked an unsupported one", function()
+            local specs, packs, done = fresh()
+            T.MigrateTrees(specs, packs, done, K, 1491, K.specs.heal)
+            assert.are.equal("Mine", specs[K.specs.one.id].package)
+            assert.are.equal(K.specs.one.id, packs.Mine.spec)
+            assert.is_nil(specs[K.specs.heal.id].package)
+        end)
+
         it("merges value by value, so a spec's defaults the legacy table never saved stay", function()
             local specs, packs, done = fresh()
             local one = specs[K.specs.one.id]

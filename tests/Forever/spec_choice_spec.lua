@@ -237,6 +237,12 @@ describe("the legacy profile and shares (headless Warrior)", function()
         H.Hekili:SpecializationChanged()
         assert.are.equal(2, p.specs[ARMS].settings.ww_min_enemies)
         assert.are.equal(55, p.specs[1491].settings.hs_threshold)
+        local H2 = boot({ saved = H.env.HekiliDB }) -- a /reload: the migration does not run again
+        settle(H2)
+        local p2 = H2.Hekili.DB.profile
+        assert.are.equal(2, p2.specs[ARMS].settings.ww_min_enemies)
+        assert.are.equal("Mine", p2.specs[ARMS].package)
+        assert.is_true(p2.specMigrated.WARRIOR)
     end)
 
     it("exports the spec as its share key and imports keys and legacy ids as this session's spec", function()
