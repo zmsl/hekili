@@ -45,16 +45,16 @@ The twelve Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Development 
 The project as a whole is GPLv3 (agreement with the original author); each library keeps its own licence. The rest
 (Ace3 BSD-style, LibStub public domain, LibSharedMedia-3.0 LGPL v2.1, LibTranslit-1.0 LGPL v3, LibDeflate zlib, the
 MIT libraries LibRangeCheck-3.0, LibCustomGlow-1.0 and VirtualGameAPI-1.0) is compatible. Only the exceptions are
-listed; none is a release blocker.
+listed.
 
 | Library | Issue |
 |---|---|
-| LibCompress | GPL version 2 with no "or later" in its header: GPLv2-only does not combine with GPLv3, ask or replace |
-| LibDualSpec-1.0 | BSD-style plus a no-standalone-redistribution clause, an extra restriction GPLv3 does not allow: check terms |
+| LibCompress | GPL version 2 with no "or later" in its header: licence conflict, replace or remove before v0.1.0 if still bundled |
+| LibDualSpec-1.0 | BSD-style plus a no-standalone-redistribution clause: licence conflict, replace or remove before v0.1.0 if still bundled |
 | AceGUI-3.0_SFX-Widgets | custom licence, check terms |
-| AceGUI-3.0-SharedMediaWidgets | licence unknown, ask or replace |
-| LibSpellRange-1.0 | licence unknown, ask or replace |
-| LibDataBroker-1.1 | licence unknown, ask or replace |
-| LibDBIcon-1.0 | licence unknown, ask or replace |
-| LibChatAnims | licence unknown, ask or replace |
-| SpellFlashCore | licence unknown, ask or replace |
+| AceGUI-3.0-SharedMediaWidgets | licence unstated, ask or replace |
+| LibSpellRange-1.0 | licence unstated, ask or replace |
+| LibDataBroker-1.1 | licence unstated, ask or replace |
+| LibDBIcon-1.0 | licence unstated, ask or replace |
+| LibChatAnims | licence unstated, ask or replace |
+| SpellFlashCore | licence unstated, ask or replace |
