@@ -79,7 +79,9 @@ hold the DB2 tables and checkpoint questions.
   The first passing run's line goes into the commit message and into `docs/dev/layout.md` beside the Arms lines.
 - `tests/Forever/<class>_spec.lua` holds the unit specs for the class file: `now` handlers, auras, the focus lines'
   conditions.
-- **New addon checklist:** `src/Hekili_<Class>/Hekili_<Class>.toc`: `## Dependencies: Hekili, Hekili_Shared`, `## LoadOnDemand: 1`, `## X-Hekili-ContentAPI`, `## Group: Hekili`; The tools/packs manifest; `tests/helpers/addons.lua`; The `mklink` line in `docs/dev/layout.md`; A `docs/dev/architecture.md` §3 addon list entry; `Engine/Content.lua` finds the pack by class token, with no code change.
+- **New addon checklist:** the class file opens with `Hekili:NewClass("<TOKEN>", { specs = { ... } })` listing all
+  three talent trees in the DB2's tab order (healing trees `unsupported`) and a full `RegisterTalents` block
+  (`{ tree, spell, max rank }` for every talent of `wowdb talents <TOKEN>`); `src/Hekili_<Class>/Hekili_<Class>.toc`: `## Dependencies: Hekili, Hekili_Shared`, `## LoadOnDemand: 1`, `## X-Hekili-ContentAPI`, `## Group: Hekili`; The tools/packs manifest; `tests/helpers/addons.lua`; The `mklink` line in `docs/dev/layout.md`; A `docs/dev/architecture.md` §3 addon list entry; `Engine/Content.lua` finds the pack by class token, with no code change.
 
 ---
 
@@ -240,9 +242,15 @@ clock on it.
 
 ### Task 14: Mage pack [L]
 **Files:** new `src/Hekili_Mage/` (`APLs/{Arcane,Fire,Frost}.simc`).
+**Specs:** `Hekili:NewClass("MAGE", { specs = { arcane (tree 1, 100081, package "Arcane"), fire (2, 100082, "Fire"),
+frost (3, 100083, "Frost") } })`; every talent from `wowdb talents MAGE` with its tree (the per-spec plan's Task 6
+`talent_block.sh`, `docs/superpowers/plans/2026-10-19-forever-specs.md`); preferences with their spec keys
+(`kit:RegisterSetting(key, value, option, "fire", ...)`, none for every supported spec); manifest
+`{ class = "MAGE", packs = { "Arcane", "Fire", "Frost" }, specs = { Arcane = "arcane", Fire = "fire", Frost = "frost" } }`.
 **Content:** Missiles on Missile Barrage `focus=1`; Pyroblast at 3 Heating Up `focus=1`; Scorch for Fire Vulnerability `focus=2` (stacks by `addStack`); Evocation and gems at low `mana.pct` `focus=2`; Counterspell `focus=1`; Lockouts (T3); Arcane Blast's mana tests as fractions (D7).
 
-**Gate:** `Arcane solo:`, `Fire solo:` and `Frost solo:` (casts and channels in the world).
+**Gate:** `Arcane solo:`, `Fire solo:` and `Frost solo:` (casts and channels in the world), each world on its pack's
+spec (`H.Hekili.State.spec.id` 100081-100083).
 **In game (user):** a Mage. Mage brief §9.
 **Deps:** T1, T3, T3b, T6, T13.
 
@@ -250,23 +258,32 @@ clock on it.
 
 ### Task 15: Warlock pack [L]
 **Files:** new `src/Hekili_Warlock/` (`APLs/{Affliction,Demonology,Destruction}.simc`).
+**Specs:** as Task 14: `Hekili:NewClass("WARLOCK", ...)` with affliction (1, 100091), demonology (2, 100092) and
+destruction (3, 100093), each packaged with its pack; full talent block; preferences with spec keys; manifest
+`{ class = "WARLOCK", packs = { ... }, specs = { Affliction = "affliction", Demonology = "demonology", Destruction = "destruction" } }`.
 **Content:** Soul shards as an item-count StateExpr (T3); Pets via T10; One Bane and one Curse, each removing the others in `now`; Shadow Trance and Decimation `focus=1`. DoT refreshes `focus=2`; Wrack while the DoTs have ≥ 4 s left; Life Tap's mana gain in `now`; Pet mana as a setting.
 
-**Gate:** three solo lines. **In game:** a Warlock with a demon, Warlock brief §8.
+**Gate:** three solo lines, each on its pack's spec. **In game:** a Warlock with a demon, Warlock brief §8.
 **Deps:** T1, T3, T6, T10, T13.
 
 ### Task 16: Priest Shadow pack [M]
 **Files:** new `src/Hekili_Priest/` (`APLs/{Shadow,Smite}.simc`).
+**Specs:** `Hekili:NewClass("PRIEST", ...)` with discipline (1, 100051, `unsupported`), holy (2, 100052, package
+`Smite`: the Smite build rides the Holy tree) and shadow (3, 100053, package `Shadow`); full talent block; preferences
+with spec keys; manifest `{ class = "PRIEST", packs = { "Shadow", "Smite" }, specs = { Shadow = "shadow", Smite = "holy" } }`.
 **Content:** Shadowform via Forms (verify); SW:P and Devouring Plague on drop `focus=2`; Mind Flay channel; Dark Sacrifice at a mana fraction. Smite (D6: in scope): the sim's Smite/Holy damage list as a second pack in the same addon, Holy Fire and SW:P upkeep `focus=2`, Inner Focus `focus=1`.
 
-**Gate:** `Shadow solo:`. **In game:** Priest brief Q2 and Q4.
+**Gate:** `Shadow solo:` (on 100053). **In game:** Priest brief Q2 and Q4.
 **Deps:** T1, T6, T13.
 
 ### Task 17: Shaman Elemental [M]
-**Files:** `src/Hekili_Shaman/APLs/Elemental.simc`.
+**Files:** `src/Hekili_Shaman/APLs/Elemental.simc`, `Shaman.lua`, `APLs/packs.lua`.
+**Specs:** drop `unsupported` from the Shaman's elemental entry (100071) and add `package = "Elemental"`; the manifest
+gains `Elemental = "elemental"`; Elemental's preferences carry `"elemental"` (and `imbue` adds `"elemental"` to its
+spec keys if the Elemental pack reads it).
 **Content:** Single target first (D6); Searing or Magma by `active_enemies`; Lava Burst while Flame Shock is up; Earth Shock on Revelation `focus=1`; Mana Tide `focus=2`.
 
-**Gate:** `Elemental solo:`.
+**Gate:** `Elemental solo:` (on 100071).
 **Deps:** T9, T13.
 
 ### Task 18: docs and the checkpoint ledger [S]

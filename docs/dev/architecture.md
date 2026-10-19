@@ -24,7 +24,7 @@ are relative to `src/Hekili/` unless they start with another top-level folder.
  subscribers: UI/ (displays), Integrations/WeakAuras, Options/ (owns the AceDB profile, Options.lua, Profile.lua)
  the headless loop (tests)
 
- Content addons (Hekili_Shared, Hekili_<Class>) call the public Hekili object: Hekili:NewSpecialization,
+ Content addons (Hekili_Shared, Hekili_<Class>) call the public Hekili object: Hekili:NewClass,
  NewShared, NewRace, Hekili.State, Hekili.Class, Hekili.Client.
 ```
 
@@ -97,8 +97,17 @@ Output allocates nothing in `Begin`, `Publish`, `Subscribe` or `Unsubscribe` (`t
 ## 3. The content surface
 
 What a content addon may use, and nothing else (`tests/boundary_spec.lua` enforces it):
-- `Hekili:NewSpecialization(id, ...)`, `Hekili:NewShared(...)`, `Hekili:NewRace(...)` and the `Register*` calls on the
-  object they return (abilities, auras, hooks, settings, packs, ...).
+- `Hekili:NewClass(token, { specs = { ... } })`, `Hekili:NewShared(...)`, `Hekili:NewRace(...)` and the `Register*`
+  calls on the object they return (abilities, auras, hooks, settings, packs, ...). `NewClass` (`Engine/Schema/Spec.lua`)
+  returns the class's kit, or nil on another class (the pack then returns). The kit holds every ability, aura and talent;
+  each entry of `specs` is one talent tree's spec: `{ key, name, tree (1-3), icon, role, ranged, package, unsupported }`
+  (`package`: the default priority's name; `unsupported`: no priorities on Forever, its displays off and its page a
+  notice). A spec reads the kit through its metatable and keeps its own settings and options. Ids are the core's:
+  `100000 + client class id x 10 + slot` (`ns.TreeSpecID`, `Engine/Schema/Trees.lua`; slot 0 the kit, 1..n the specs
+  in `specs` order: Warrior Arms 100011). `RegisterTalents` entries are `{ tree, spell, max rank }`, the tree from the
+  DB2 (`Talent.TabID`, ordered by `TalentTab.OrderIndex`; 0 when unknown, counted nowhere). `kit:RegisterSetting(key,
+  value, option, ...)` registers the setting on every supported spec, or only on the specs whose keys follow `option`
+  (`"enhancement"`; an unknown key errors).
 - `Hekili.State` (the simulation's `state`) and `Hekili.Class` (the registry the class file fills).
 - `Hekili.Client`: the game client as an addon may read it, the same table as `ns.Facade`. Content never names a WoW
   global (`tools/check_api_reads.sh`).
@@ -135,6 +144,20 @@ class token, a missing pack, a mismatch or a failed pack load keeps one notice, 
 `## X-Hekili-ContentAPI` change together, only when the content surface changes: the Register* API, `Hekili.Client`,
 or the environment names above. `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
 
+**Active spec.** The client reports one pseudo-spec per class, so the core picks the spec (`ns.PickSpec`): the
+character's stored choice (`profile.specChoice["Name-Realm"]`), else the first spec on the talent tree with the most
+points (stored once, so later talent changes do not move it), else the first supported spec (no points yet or a tie;
+not stored). When the talents favor another tree than the stored choice, the class page and `/hekili spec` say so
+("Your talents favor X"); the choice changes only through the page's "Active Specialization" dropdown or
+`/hekili spec <name>`. On a class's first login after the update a one-time migration (`ns.MigrateTrees`, marked in
+`profile.specMigrated[<TOKEN>]`) merges the legacy pseudo-spec profile (the client's id, now read for nothing else:
+Rogue 1488 and Warrior 1491 read in game; Druid 1483, Hunter 1484, Paladin 1486, Shaman 1489 assumed) into every
+supported spec, value by
+value; a legacy custom priority stays the choice of the active spec, or of the first supported spec when the active one
+is unsupported, and custom priorities bound to the legacy id are rebound to it. Exports carry the spec as a share key
+`"<TOKEN>:<key>"` (`"WARRIOR:fury"`), which the importer resolves to this session's id (another class's key is kept
+as the string until that class logs in).
+
 ## 4. `Hekili.Virtual`
 
 `Hekili.Virtual = { State, Events }` (`Game/State/Adapter.lua`) is the probe and debug handle, for example
@@ -149,7 +172,7 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
     content at test time;
   - Sim baseline: each `Engine/Sim/` file may hold no more of each content name than `tests/boundary_baseline.lua`
     (a per-token ceiling; regenerate with `tools/boundary_baseline.lua` only to remove a leak);
-  - content allowlist: files of the three content addons may use only `Hekili:NewSpecialization/NewShared/NewRace` and
+  - content allowlist: files of the content addons may use only `Hekili:NewClass/NewShared/NewRace` and
     `Hekili.State/Class/Client`, and contain none of `ns.`, `ns = ...`, `VirtualState`, `Hekili.Virtual`,
     `Hekili.Engine`. Pack share strings are data and skipped.
 - `tools/check_engine_reads.sh` (in `make api-check`), both directions: the engine files (`Sim/{Core,State,Targets,
@@ -171,7 +194,9 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
 ## 6. The pack pipeline
 
 Default priorities are written as SimC text: `src/Hekili_<Class>/APLs/<Pack>.simc` (leading `#` lines are the
-description) and the manifest `src/Hekili_<Class>/APLs/packs.lua` (`spec`, `packs` in block order). The TOC lists
+description) and the manifest `src/Hekili_<Class>/APLs/packs.lua` (`{ class = "<TOKEN>", packs = { ... } in block
+order, specs = { [<Pack>] = <spec key> } }`; each pack's payload gets `spec = "<TOKEN>:<key>"`, a pack without a spec
+key errors). The TOC lists
 neither, so WoW never loads them, and `.pkgmeta` leaves them out of the zip. `make packs` runs
 `.lua/bin/lua tools/make_pack.lua write <class>` (`lua5.1` without `.lua/`) for each manifest. It parses the text, serializes and encodes it as the share
 string `RegisterPack` takes, and rewrites the generated `RegisterPack` blocks in `src/Hekili_<Class>/<Class>.lua`.

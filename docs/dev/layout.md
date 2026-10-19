@@ -15,7 +15,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
     blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's `Engine/Content.lua` for the
     player's class.
     The default priorities' sources sit beside the class file in `APLs/`: one `<Pack>.simc` per priority and the
-    manifest `packs.lua` (`{ spec = ..., packs = { ... } }`, no date). Edit those, then `make packs`. The date is per
+    manifest `packs.lua` (`{ class = "<TOKEN>", packs = { ... }, specs = { [<Pack>] = <spec key> } }`, no date). Edit those, then `make packs`. The date is per
     class and lives only in the class file's first RegisterPack block: `make packs` keeps it while the generated
     blocks are unchanged and sets it to today (`PACK_DATE=YYYYMMDD`, else the system date) when any of that class's
     packs changed, so a clean tree is a no-op and one class's edit re-dates only that class.
@@ -152,7 +152,8 @@ Protection solo: fights=20 agreement 0.959 (14343 ticks); react median 0 p90 1 n
 ```
 
 Paladin checkpoint (in game, a level 60 Paladin; provisional until answered):
-- P1: the pseudo-spec ID the client reports (Constants.lua's 1486 follows the alphabetical pattern, Rogue 1488 and Warrior 1491 read in game), and the talent IDs (Twist of Light
+- P1: the client's pseudo-spec id (assumed 1486; only the legacy profile migration reads it) and the talent tree the
+  dominant-tree pick chooses for your build (Snapshot `spec:` line), and the talent IDs (Twist of Light
   1310735, Swift Judgement 1310994, Instrument of Law 1311085, Holy Shock 20473, Holy Shield 20925).
 - P2: are the seal auras (20375.., 20154.., 21082.., 1311649..) and the Echoes (1311703, 1311704, 1311701) readable on
   the player in combat, or secret (then the belief holds an Echo until the next seal: check the twist still advances)?
@@ -191,7 +192,8 @@ Enhancement solo: fights=20 agreement 0.993 (4227 ticks); react median 0 p90 1 n
 ```
 
 Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
-- S1: the pseudo-spec ID the client reports (Constants.lua's 1489 follows the alphabetical pattern, Rogue 1488 and Warrior 1491 read in game).
+- S1: the client's pseudo-spec id (assumed 1489; only the legacy profile migration reads it) and the talent tree the
+  dominant-tree pick chooses for your build (Snapshot `spec:` line).
 - S2: totem slot order: GetTotemInfo(1..4) out of combat is fire, earth, water, air (as Hekili's `totem.<element>`
   and `summonTotem` assume)? Searing Totem's duration (55 s at rank 6) and the 300 s totems' read back as such?
 - S3: PLAYER_TOTEM_UPDATE in combat: does it fire for our own summon (and for the replaced totem), and does it arrive
@@ -240,8 +242,8 @@ Survival solo: fights=20 agreement 0.947 (5182 ticks); react median 0 p90 1 neve
 
 Hunter checkpoint (in game, a level 60 Hunter with a ranged weapon and a pet; provisional until answered): the Hunter
 research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`), plus:
-- H1: the pseudo-spec ID the client reports (Constants.lua's 1484 follows Forever's alphabetical pattern: Druid 1483 to
-  Warrior 1491, with Rogue 1488 and Warrior 1491 read in game).
+- H1: the client's pseudo-spec id (assumed 1484; only the legacy profile migration reads it) and the talent tree the
+  dominant-tree pick chooses for your build (Snapshot `spec:` line).
 - H2 (Q1, C7-3): UnitRangedDamage("player") plain out of combat, and secret in combat? Its first return feeds the
   ranged hand's speed.
 - H3 (Q2, C7-1): PLAYER_SWING with swingType 2 for each Auto Shot, and its duration the hasted ranged speed (the better
@@ -303,3 +305,28 @@ mklink /D Hekili_Hunter \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili
 ```
 
 Then restart the client fully (a moved addon is not picked up by `/reload`).
+
+### Specs (one spec per talent tree; `/reload` after the update, no client restart)
+
+The client reports one pseudo-spec per class, so each class pack registers a spec per talent tree and the active spec is
+the character's choice, else the tree with the most points (stored once), else the first supported spec.
+1. **Rogue:** `/hekili` shows Assassination, Combat and Subtlety nodes with their icons; Subtlety's page has "Backstab
+   Builder", Combat's does not; the shared preferences ("Bleeds on Trash", "Vanish to Re-open") are on all three.
+2. **First login after the update (any class):** the active spec is the tree with the most points (Snapshot:
+   `spec: <key> (dominant)` on the first pass, `(stored)` after a `/reload`); the old thresholds (e.g. "Bleeds on Trash"
+   if you changed it) appear in every supported spec of the class; your previous priority choice is kept.
+3. **Override:** pick another spec in "Active Specialization" (or `/hekili spec subtlety`); the displays switch to its
+   priority; `/reload` keeps it; `/hekili spec` lists the specs with "(current)" and, when your talents favor another
+   tree, "Your talents favor X"; the page shows the same hint. No repeated chat or lag on talent changes.
+4. **Priorities list:** grouped by spec (the Warrior's Arms, Fury, Protection in that order), each with its spec icon;
+   exporting Fury and importing it on the same character binds it to Fury.
+5. **Druid:** Feral is selected for a Feral build; `/hekili spec guardian` switches to the bear priority; choosing
+   Restoration hides the displays, its page says "No priorities on Forever for Restoration", and no "modules loaded"
+   warning appears when casting. Is the client's Druid pseudo-spec 1483 (assumed; it now only keys the legacy
+   migration, as Hunter 1484, Paladin 1486, Rogue 1488 and Shaman 1489 do)?
+6. **Warrior:** Arms/Fury/Protection recommendations as before; Fury's page carries the Fury thresholds only. The DB2
+   puts Improved Slam (12862) on Fury and Improved Thunder Clap (12287) on Arms: does the client's talent frame agree?
+   (They count toward those trees' points.)
+7. **Paladin and Shaman:** a Paladin with mostly Holy points, or a Shaman with mostly Elemental or Restoration points,
+   lands on an idle unsupported spec (no displays) until you pick another with `/hekili spec` or the dropdown.
+8. Report the Snapshot's first lines (`VSCopy`) for each character if anything differs.
