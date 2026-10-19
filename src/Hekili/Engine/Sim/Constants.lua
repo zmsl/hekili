@@ -272,6 +272,13 @@ ns.Specializations = {
         ranged = false,
         forever = "Druid"
     },
+    -- Forever Rogue pseudo-spec (Rogue.lua's ROGUE_SPEC): a placeholder until the client's ID is read (checkpoint Q1)
+    [1500] = {
+        key = "rogue",
+        class = "ROGUE",
+        ranged = false,
+        forever = "Rogue"
+    },
 }
 
 ns.getSpecializationKey = function ( id )

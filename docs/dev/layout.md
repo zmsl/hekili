@@ -10,7 +10,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `src/Hekili_Shared/`: the content every class shares (`Shared/`: auras, consumables, items) and the race packs
     (`Races/`); `## Dependencies: Hekili`, `## LoadOnDemand: 1`, loaded on demand by the core's `Engine/Content.lua`
     at login, first (before the class pack, and for a class with no pack too);
-  - `src/Hekili_Warrior/`, `src/Hekili_Druid/`: one class pack each (the class file, its RegisterPack
+  - `src/Hekili_Warrior/`, `src/Hekili_Druid/`, `src/Hekili_Rogue/`: one class pack each (the class file, its RegisterPack
     blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's `Engine/Content.lua` for the
     player's class.
     The default priorities' sources sit beside the class file in `APLs/`: one `<Pack>.simc` per priority and the
@@ -118,6 +118,18 @@ Balance solo: fights=3 agreement 0.985 (864 ticks); react median 0 p90 1 never 0
 
 Feral's Innervate line never fires in the loop: the feral worlds keep no mana.
 
+`tests/Forever/loop_rogue_spec.lua` runs 3 fights a Rogue pack in `make check` (seeds 1-3, `#slow`) and 20 in
+`make test-rogue` (`#rogue`), each gated by `pack_gate.gate` and asserting its flagged lines ran (`r.focus > 0`: Slice
+and Dice at tier 1 in every pack). Rupture, Garrote and Vanish's re-open are guarded by `boss|settings.trash_dots`
+(default off), so the solo world (no boss) never presses them; Kick has no caster to interrupt, Expose Armor is a
+setting (off) and Cutthroat needs Backstab, off by default. The first passing run (class-completion Task 7):
+
+```
+Combat solo: fights=3 agreement 0.978 (2322 ticks); react median 0 p90 0 never 0.012; refused per 100 [], episodes 0.00/min; dps A/B 1.003; ... [seeds 1-3]
+Assassination solo: fights=3 agreement 0.999 (2222 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.015; ... [seeds 1-3]
+Subtlety solo: fights=3 agreement 0.950 (2379 ticks); react median 0 p90 0 never 0.036; refused per 100 [], episodes 0.00/min; dps A/B 1.056; ... [seeds 1-3]
+```
+
 A deliberate pack or APL change re-records the fixture in the same commit:
 `ARMS_RECS=record .lua/bin/busted tests/Forever/arms_recs_spec.lua`.
 
@@ -142,7 +154,7 @@ git remote set-url --push upstream no_push
 ## In game
 
 Each addon gets its own AddOns link, at its folder in `src/`, not at the repository root. From an elevated Windows
-prompt, in the client's `Interface\AddOns` folder, remove the old link and create the four:
+prompt, in the client's `Interface\AddOns` folder, remove the old link and create the five:
 
 ```
 rmdir Hekili
@@ -150,6 +162,7 @@ mklink /D Hekili \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili
 mklink /D Hekili_Shared \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Shared
 mklink /D Hekili_Warrior \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Warrior
 mklink /D Hekili_Druid \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Druid
+mklink /D Hekili_Rogue \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Rogue
 ```
 
 Then restart the client fully (a moved addon is not picked up by `/reload`).

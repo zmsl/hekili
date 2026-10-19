@@ -2,13 +2,14 @@ package-as: Hekili
 
 enable-nolib-creation: no
 
-# The four addons live in src/; move them to the zip root (src/Hekili replaces the package folder itself, so
+# The five addons live in src/; move them to the zip root (src/Hekili replaces the package folder itself, so
 # root files such as the licence do not survive: the copy in src/Hekili/ is the shipped one).
 move-folders:
     Hekili/src/Hekili: Hekili
     Hekili/src/Hekili_Shared: Hekili_Shared
     Hekili/src/Hekili_Druid: Hekili_Druid
     Hekili/src/Hekili_Warrior: Hekili_Warrior
+    Hekili/src/Hekili_Rogue: Hekili_Rogue
 
 manual-changelog:
     filename: CHANGELOG.md
@@ -31,3 +32,4 @@ ignore:
     - mise.toml
     - src/Hekili_Warrior/APLs
     - src/Hekili_Druid/APLs
+    - src/Hekili_Rogue/APLs

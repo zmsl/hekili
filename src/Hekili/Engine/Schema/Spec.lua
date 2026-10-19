@@ -178,6 +178,9 @@ end
 -- A regen entry with `mult` (C3b), `{ aura = key, mult = n }`: the resource's calibrated continuous rate x n while the
 -- player's aura `key` is up (an energy or mana surge). It is a rate multiplier, not a forecast event: it moves out of
 -- the regen model into `state.regenMult` here (Hekili's forecast would call its missing `last`).
+-- shortcut: the sim's forecast takes the belief's regen rate at `now` as a constant (Game/API/Facade.lua's
+-- GetPowerRegenForPowerType), so it sees neither a `mult` aura expire mid-forecast nor a simulated cast apply one;
+-- upgrade with a per-forecast multiplier when a pack's pooling misjudges across a `mult` aura's edge.
 local HekiliSpecMixin = {
     RegisterResource = function( self, resourceID, regen, model, meta )
         local resource = GetResourceKey( resourceID )

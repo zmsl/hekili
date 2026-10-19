@@ -182,6 +182,7 @@ describe("now handlers", function()
         starfire = "removeStack is no `now` verb; the charges end with the 15 s aura",
         claw = "combo points are read plainly in combat (poll 1)",
         shred = "as claw",
+        premeditation = "as claw",
         healthstone = "health is no tracked resource",
     }
     it("declares a `now` beside every handler with an aura or resource effect", function()

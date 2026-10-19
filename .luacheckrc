@@ -122,5 +122,13 @@ for _, k in ipairs(stateEnv) do
     druidEnv[#druidEnv + 1] = k
 end
 files["src/Hekili_Druid/Druid.lua"] = { globals = druidEnv }
+-- The Rogue's further `state` names.
+local rogueEnv = {
+    "energy", "combo_points", "cooldown", "combat", "class", "interrupt", "stealthed", "expose_due",
+}
+for _, k in ipairs(stateEnv) do
+    rogueEnv[#rogueEnv + 1] = k
+end
+files["src/Hekili_Rogue/Rogue.lua"] = { globals = rogueEnv }
 files["src/Hekili_Shared/Races/"] = { globals = stateEnv }
 files["src/Hekili_Shared/Shared/"] = { globals = stateEnv }

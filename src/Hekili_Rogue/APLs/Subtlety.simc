@@ -1,0 +1,27 @@
+# Forever Subtlety Rogue (provisional: no in-game check yet; Slice and Dice, Cutthroat and the bleeds are modelled from
+# our casts and Ambush's usability): Ambush on Cutthroat at tier 1, Slice and Dice kept up at tier 1, Premeditation,
+# Rupture with Thousand Cuts or Hemorrhage on bosses (a setting elsewhere) at tier 2, Eviscerate at 5 combo points,
+# Ghostly Strike and Hemorrhage to build (Backstab with the dagger setting), pooling for Slice and Dice when it is about
+# to fall; Kick at tier 1, Expose Armor (a setting) at tier 2; Stealth and the poisons before combat (after
+# wowsims/forever's Rogue APL, reference only).
+
+actions.precombat=instant_poison,use_off_gcd=1,if=settings.poisons&!buff.main_hand_enchant.up
+actions.precombat+=/deadly_poison,use_off_gcd=1,if=settings.poisons&!buff.off_hand_enchant.up
+actions.precombat+=/stealth,use_off_gcd=1,if=!buff.stealth.up
+actions=kick,focus=1
+actions+=/expose_armor,focus=2,if=expose_due&combo_points.current>=5
+actions+=/ambush,focus=1,if=buff.cutthroat.up&combo_points.current<5
+actions+=/ambush,if=stealthed.all&settings.ambush_opener&combo_points.current<5
+actions+=/garrote,if=stealthed.all&!settings.ambush_opener&combo_points.current<5&!debuff.garrote.up&(boss|settings.trash_dots)
+actions+=/vanish,use_off_gcd=1,if=settings.vanish&!stealthed.all&combo_points.current<5&buff.slice_and_dice.remains>2&(settings.ambush_opener&energy.current>=action.ambush.cost|!settings.ambush_opener&!debuff.garrote.up&energy.current>=action.garrote.cost&(boss|settings.trash_dots))
+actions+=/preparation,if=cooldown.vanish.remains>0
+actions+=/thistle_tea,if=energy.current<=15
+actions+=/premeditation,use_off_gcd=1,if=combo_points.current<=3
+actions+=/slice_and_dice,focus=1,if=!buff.slice_and_dice.up&combo_points.current>=1&!expose_due
+actions+=/rupture,focus=2,if=combo_points.current>=3&!debuff.rupture.up&(talent.thousand_cuts.enabled|debuff.hemorrhage.up)&(boss|settings.trash_dots)&!expose_due
+actions+=/eviscerate,if=(combo_points.current>=5|combo_points.current>=4&buff.slice_and_dice.remains<=6&buff.slice_and_dice.remains>2)&(!talent.thousand_cuts.enabled|debuff.rupture.remains>=4|energy.current>=75|!(boss|settings.trash_dots))&!expose_due
+actions+=/ghostly_strike,if=combo_points.current<5
+actions+=/hemorrhage,if=settings.backstab&!debuff.hemorrhage.up&combo_points.current<5
+actions+=/backstab,if=settings.backstab&!buff.cutthroat.up&combo_points.current<5&(buff.slice_and_dice.remains>2|combo_points.current<1|energy.current>=75|expose_due)
+actions+=/hemorrhage,if=!settings.backstab&combo_points.current<5&(buff.slice_and_dice.remains>2|combo_points.current<1|energy.current>=75|expose_due)
+actions+=/sinister_strike,if=!action.hemorrhage.known&!settings.backstab&combo_points.current<5&(buff.slice_and_dice.remains>2|combo_points.current<1|energy.current>=75|expose_due)

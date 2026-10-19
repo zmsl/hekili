@@ -27,9 +27,21 @@ describe("Forever priorities", function()
         assert.are.same({}, hits)
     end)
 
-    for class, loader in pairs({ warrior = "load_warrior", druid = "load_druid" }) do
+    -- the class files' recording loads (the Rogue's through load_druid)
+    local LOADS = {
+        warrior = function()
+            return require("Forever.helpers.load_warrior").load()
+        end,
+        druid = function()
+            return require("Forever.helpers.load_druid").load()
+        end,
+        rogue = function()
+            return require("Forever.helpers.load_druid").load(nil, "src/Hekili_Rogue/Rogue.lua", "ROGUE")
+        end,
+    }
+    for class, load in pairs(LOADS) do
         it("flag use_off_gcd=1 on exactly the off-GCD abilities (" .. class .. ")", function()
-            local abilities = require("Forever.helpers." .. loader).load().abilities
+            local abilities = load().abilities
             local hits = {}
             for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", class)) do
                 for list, entries in pairs(p.lists) do

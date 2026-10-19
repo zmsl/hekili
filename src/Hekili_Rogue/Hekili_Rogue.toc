@@ -1,0 +1,13 @@
+## Interface: 16001
+## Version: @project-version@
+## Title: Hekili Forever - Rogue
+## Author: defzach
+## IconTexture: Interface\AddOns\Hekili\Textures\HekiliForever
+## Notes: Hekili Forever's Rogue: the class kit and its default priorities (provisional), loaded by Hekili Forever for a Rogue. Based on the original work by Hekili.
+## X-Website: https://github.com/zmsl/hekili
+## Dependencies: Hekili, Hekili_Shared
+## Group: Hekili
+## LoadOnDemand: 1
+## X-Hekili-ContentAPI: 3
+
+Rogue.lua

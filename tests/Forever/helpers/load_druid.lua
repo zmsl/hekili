@@ -1,18 +1,19 @@
 -- tests/Forever/helpers/load_druid.lua
 -- Loads Hekili_Druid/Druid.lua headless against a recording stand-in for Hekili (load_warrior.lua's shape): each
 -- spec:RegisterX call is kept by method name, and the plain game reads the file captures at load answer from `game`
--- (known spells, queued spells, the shapeshift form, the time, the belief's per-hand base weapon
+-- (known spells, queued spells, usability, bag counts, the shapeshift form, the time, the belief's per-hand base weapon
 -- speeds). `env()` is a stand-in `state` for running the file's handlers, state functions, expressions and hooks
 -- (Hekili runs them with setfenv( f, state )).
 local M = {}
 
---- Loads the class file. `vs` (optional) is the VirtualState whose KnownRank the file's knownRank reads through
+--- Loads the class file (`file`, default the Druid's, as class token `class`, default "DRUID": the Rogue's helpers
+--- load theirs through it). `vs` (optional) is the VirtualState whose KnownRank the file's knownRank reads through
 --- `state.knownRank` (a real one, for the strict-context specs); by default a fake answering from `game.known`. Returns `w`: `w.abilities`,
 --- `w.auras` (merged by key), `w.talents`, `w.resources[powerType]` ({ models, meta }), `w.costMods` (the
 --- RegisterCostMod declarations), `w.hooks[name]`, `w.events[event]`, `w.funcs[name]`, `w.exprs[name]`,
 --- `w.settings[key]` ({ default, option }), `w.packs` (in order: { name, version, string }), `w.options`, `w.specID`,
 --- `w.spec` (the recording spec object), `w.state` (Hekili.State's stand-in) and `w.game`.
-function M.load(vs)
+function M.load(vs, file, class)
     local reg = {}
     local spec = setmetatable({}, {
         __index = function(_, method)
@@ -25,6 +26,8 @@ function M.load(vs)
     local game = {
         known = {},
         current = {},
+        usable = {}, -- C_Spell.IsSpellUsable: [id] = { usable, noMana }
+        bags = {}, -- C_Item.GetItemCount: [itemID] = count
         form = 0,
         formSpell = {},
         base = { 0, 0 }, -- VS.SwingBase: each hand's unhasted speed (0: no plain read yet)
@@ -41,11 +44,20 @@ function M.load(vs)
     local fakes = {
         Hekili = hekili,
         UnitClassBase = function()
-            return "DRUID"
+            return class or "DRUID"
         end,
         C_Spell = {
             IsCurrentSpell = function(id)
                 return game.current[id] == true
+            end,
+            IsSpellUsable = function(id)
+                local u = game.usable[id] or {}
+                return u[1] == true, u[2] == true
+            end,
+        },
+        C_Item = {
+            GetItemCount = function(id)
+                return game.bags[id] or 0
             end,
         },
         GetShapeshiftForm = function()
@@ -75,7 +87,7 @@ function M.load(vs)
             end
             return 0
         end
-    local ok, err = pcall(assert(loadfile("src/Hekili_Druid/Druid.lua")))
+    local ok, err = pcall(assert(loadfile(file or "src/Hekili_Druid/Druid.lua")))
     for k, v in pairs(saved) do
         _G[k] = v or nil
     end
