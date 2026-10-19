@@ -2693,7 +2693,8 @@ end)
   replay knobs' `hidden` if the client cannot see it, else note it), or wowsims quirk (note it). Then set `<FLOOR>` to
   the measured value truncated to two decimals and re-run: PASS. `n` (decisions) above 40 for a three-minute fight;
   fewer means the key map misses casts (P4).
-- **P8 Leveling.** First run with `LIVE60 = 0` and read the 60 bracket's `worst idle X s`: that is wowsims's own
+- **P8 Leveling.** Ruling (user, 2026-10-19): wowsims is the oracle, so whatever idle the faithful pack shows at 60
+  is correct and is never "fixed"; only lower brackets get fillers, and only ones silent at 60. First run with `LIVE60 = 0` and read the 60 bracket's `worst idle X s`: that is wowsims's own
   pooling (Arms leaves Heroic Strike to 90 rage), so set `LIVE60` to X rounded up to 0.1 with that reason in a
   comment. The limit at every bracket is then `max(6 s = four GCDs, LIVE60)`: a lower level may not idle longer than
   the pack does at 60. A failing bracket prints its idle stretch: fix it with a recipe `leveling` line (a filler the
