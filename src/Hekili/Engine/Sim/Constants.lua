@@ -272,6 +272,14 @@ ns.Specializations = {
         ranged = false,
         forever = "Druid"
     },
+    -- Forever Hunter pseudo-spec (Hunter.lua's HUNTER_SPEC): Forever's alphabetical pattern (Rogue 1488, Warrior 1491
+    -- read in game); to be confirmed at the Hunter checkpoint
+    [1484] = {
+        key = "hunter",
+        class = "HUNTER",
+        ranged = true,
+        forever = "Hunter"
+    },
     -- Forever Rogue pseudo-spec (Rogue.lua's ROGUE_SPEC): a placeholder until the client's ID is read (checkpoint Q1)
     [1488] = {
         key = "rogue",

@@ -75,6 +75,9 @@ function M.melee(p)
                 if h == 1 and (e.queued or foreign) then
                     local q = e.queued or {}
                     e.queued = nil
+                    if (q.cd or 0) > 0 then -- a queued strike's cooldown starts at its swing
+                        e.cdUntil[q.key] = W.t + q.cd
+                    end
                     -- our strike frame's order (P log 1's, then the brief's): 1 the success first, 2 the swing first
                     local order = p.land and (W.crng.chance(0.5) and 1 or 2) or nil
                     W.emit({
@@ -89,6 +92,7 @@ function M.melee(p)
                         spell = q.spell,
                         ids = q.ids,
                         cost = q.cost,
+                        cd = q.cd,
                         speed = w[3],
                         order = order,
                     })

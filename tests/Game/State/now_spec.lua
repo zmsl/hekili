@@ -178,6 +178,7 @@ describe("now handlers", function()
         heroic_strike = "the queued-strike pseudo-aura has no spell id: untracked; poll 3 reads the queue",
         cleave = "as heroic_strike",
         maul = "as heroic_strike",
+        raptor_strike = "as heroic_strike",
         revenge = "revenge_usable has no spell id: untracked",
         starfire = "removeStack is no `now` verb; the charges end with the 15 s aura",
         claw = "combo points are read plainly in combat (poll 1)",

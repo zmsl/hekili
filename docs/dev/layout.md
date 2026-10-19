@@ -10,7 +10,8 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `src/Hekili_Shared/`: the content every class shares (`Shared/`: auras, consumables, items) and the race packs
     (`Races/`); `## Dependencies: Hekili`, `## LoadOnDemand: 1`, loaded on demand by the core's `Engine/Content.lua`
     at login, first (before the class pack, and for a class with no pack too);
-  - `src/Hekili_Warrior/`, `src/Hekili_Druid/`, `src/Hekili_Rogue/`, `src/Hekili_Paladin/`, `src/Hekili_Shaman/`: one class pack each (the class file, its RegisterPack
+  - `src/Hekili_Warrior/`, `src/Hekili_Druid/`, `src/Hekili_Rogue/`, `src/Hekili_Paladin/`, `src/Hekili_Shaman/`,
+    `src/Hekili_Hunter/`: one class pack each (the class file, its RegisterPack
     blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's `Engine/Content.lua` for the
     player's class.
     The default priorities' sources sit beside the class file in `APLs/`: one `<Pack>.simc` per priority and the
@@ -211,6 +212,54 @@ Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
 - S10: mana: UnitPower(mana) secret out of combat on a Shaman too; GetPowerRegenForPowerType(0)'s two returns; the
   Flame Shock DoT (12 s, 3 s ticks) on the target modelled from our cast.
 
+`tests/Forever/loop_hunter_spec.lua` runs 3 fights of each Hunter pack in `make check` (seeds 1-3, `#slow`) and 20 in
+`make test-hunter` (`#hunter`), gated by `pack_gate.gate` and asserting its flagged lines ran (Sniper Shot under Rapid
+Fire or Quick Shots, Mongoose Bite and Raptor Strike at tier 1; Serpent Sting and Hunter's Mark at tier 2). The turret
+worlds (Beast Mastery, Marksmanship) shoot Auto Shots on the harness's ranged hand (`W.startRanged`, the `ranged`
+scenario knob), and Quick Shots procs off them under Aspect of the Hawk (10%). The mob swings at us, and our dodge opens
+Mongoose Bite for 5 s. Raptor Strike's cooldown starts at its swing (class-neutral: a queued strike's cooldown). Each
+fight's fresh world gets the pack's aspect at the pull (the character keeps a permanent buff between fights). Neither side
+dies (shaman_world's workaround for the loop's missing kill). The turret worlds run out of mana within the first minute
+(idle about 0.74: UNMEASURED pool and regen, no Aspect of the Viper), and Hekili recommends a press during Aimed and
+Sniper Shot's casts on both sides (the world's client sees no cast start: the `casting` refusals). The filler mana
+floors (Arcane Shot, Wing Clip; D7) are settings, off by default; they work after an out-of-combat rest. The first runs
+(class-completion Task 12):
+
+```
+Beast Mastery solo: fights=3 agreement 0.983 (1036 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 65.3 (oracle 61.9)], episodes 3.55/min; dps A/B 0.978; ... [seeds 1-3]
+Marksmanship solo: fights=3 agreement 0.986 (928 ticks); react median 0 p90 1 never 0.013; refused per 100 [casting 76.0 (oracle 74.5)], episodes 3.55/min; dps A/B 1.039; ... [seeds 1-3]
+Survival solo: fights=3 agreement 0.945 (770 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.947; ... [seeds 1-3]
+Beast Mastery solo: fights=20 agreement 0.980 (6925 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 65.7 (oracle 61.7)], episodes 3.59/min; dps A/B 1.006; ...
+Marksmanship solo: fights=20 agreement 0.981 (6374 ticks); react median 0 p90 1 never 0.037; refused per 100 [casting 75.5 (oracle 73.4)], episodes 3.43/min; dps A/B 0.997; ...
+Survival solo: fights=20 agreement 0.947 (5182 ticks); react median 0 p90 1 never 0.009; refused per 100 [], episodes 0.00/min; dps A/B 0.982; ...
+```
+
+Hunter checkpoint (in game, a level 60 Hunter with a ranged weapon and a pet; provisional until answered): the Hunter
+research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`), plus:
+- H1: the pseudo-spec ID the client reports (Constants.lua's 1484 follows Forever's alphabetical pattern: Druid 1483 to
+  Warrior 1491, with Rogue 1488 and Warrior 1491 read in game).
+- H2 (Q1, C7-3): UnitRangedDamage("player") plain out of combat, and secret in combat? Its first return feeds the
+  ranged hand's speed.
+- H3 (Q2, C7-1): PLAYER_SWING with swingType 2 for each Auto Shot, and its duration the hasted ranged speed (the better
+  anchor, already wired)?
+- H4 (C7-2): UNIT_SPELLCAST_SUCCEEDED for Auto Shot (75) on every shot, at the release? The modelled clock assumes it.
+- H5 (C7-4): ranged haste (quiver, Rapid Fire, Quick Shots) in UnitRangedDamage's speed out of combat, and the clock's
+  drift in combat under Rapid Fire.
+- H6 (Q3, Q6): C_Spell.IsSpellInRange(75, "target") at 4, 10 and 40 yards, in and out of combat (the deadzone guard:
+  Hekili's `action.auto_shot.in_range` and `action.raptor_strike.in_range`); plain or secret in combat?
+- H7 (Q4): Multi-Shot's and Strider Kick's actual costs (DB2 13.9% and 5.81% of base mana, priced here as of the
+  maximum); UnitPower(mana) secret out of combat on a Hunter too; GetPowerRegenForPowerType(0)'s two returns.
+- H8 (Q5): Rapid Fire (3045) and Quick Shots (6150) readable on the player in combat (the Sniper Shot line)?
+- H9 (Q9): Sniper Shot (1310687..), Summon Hawk (1293241..), Strider Kick (1317257) and Aspect of the Beast's Forever
+  ranks (1299445..) learnable (else their lines stay inert)?
+- H10 (C1, CAST_GRACE): Summon Hawk: two hawks at most, 18 s each, the oldest replaced by a third; is a hawk a `pet`
+  unit (UNIT_PET) at all? If the Hunter's pet unit is summoned (Call Pet), does UNIT_PET arrive within 0.5 s of
+  UNIT_SPELLCAST_SUCCEEDED (I.CAST_GRACE)?
+- H11: Arcane Shot and Summon Hawk share a 6 s cooldown (category 1173), Aimed Shot and Multi-Shot another (category 2)?
+- H12 (Q14): Mongoose Bite usable only for 5 s after a dodge (Defensive State 5302), by IsSpellUsable; Raptor Strike
+  queued (IsCurrentSpell) and its 6 s cooldown from the swing that takes it?
+- H13 (Q8): Hunter's Mark and Serpent Sting on the target unreadable in combat (modelled from our casts)?
+
 A deliberate pack or APL change re-records the fixture in the same commit:
 `ARMS_RECS=record .lua/bin/busted tests/Forever/arms_recs_spec.lua`.
 
@@ -235,7 +284,7 @@ git remote set-url --push upstream no_push
 ## In game
 
 Each addon gets its own AddOns link, at its folder in `src/`, not at the repository root. From an elevated Windows
-prompt, in the client's `Interface\AddOns` folder, remove the old link and create the seven:
+prompt, in the client's `Interface\AddOns` folder, remove the old link and create the eight:
 
 ```
 rmdir Hekili
@@ -246,6 +295,7 @@ mklink /D Hekili_Druid \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_
 mklink /D Hekili_Rogue \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Rogue
 mklink /D Hekili_Paladin \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Paladin
 mklink /D Hekili_Shaman \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Shaman
+mklink /D Hekili_Hunter \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Hunter
 ```
 
 Then restart the client fully (a moved addon is not picked up by `/reload`).

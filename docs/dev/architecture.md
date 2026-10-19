@@ -121,7 +121,7 @@ are read live.
 
 **Addons and load order.** `Hekili` (core, the only addon the client loads by itself), `Hekili_Shared`
 (`## Dependencies: Hekili`, `## LoadOnDemand: 1`; Shared auras, consumables, items, and the race packs), then one pack
-per class: `Hekili_Warrior`, `Hekili_Druid`, `Hekili_Rogue`, `Hekili_Paladin`, `Hekili_Shaman` (`## Dependencies: Hekili, Hekili_Shared`,
+per class: `Hekili_Warrior`, `Hekili_Druid`, `Hekili_Rogue`, `Hekili_Paladin`, `Hekili_Shaman`, `Hekili_Hunter` (`## Dependencies: Hekili, Hekili_Shared`,
 `## LoadOnDemand: 1`). `tests/helpers/addons.lua` lists them in this order. `ns.LoadContent` runs once, in
 `OnInitialize`, before `InitializeProfile`, so the profile's defaults see the class's spec and packs. It loads
 `Hekili_Shared` explicitly first (every class, with or without a pack, gets the shared and race content), then reads
@@ -163,7 +163,7 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
 - Headless gates: `make test` (everything except the tagged gates), `make test-fast` (skips `#slow`), `make test-loop`
   (the 20-fight Arms loop and its `Arms solo:` line), `make test-party`, `make test-druid` (about 190 s), `make test-rogue` (the
   20-fight Rogue gates, about 320 s), `make test-paladin` (the 20-fight Paladin gates, about 150 s), `make test-shaman` (the 20-fight
-  Enhancement gate, about 60 s), `make bench`
+  Enhancement gate, about 60 s), `make test-hunter` (the 20-fight Hunter gates), `make bench`
   (ms and bytes per Update and per UNIT_COMBAT; reported, not gated). `make check`
   runs lint, format, type check, `make test` (one process per spec file, in parallel), syntax, `api-check` and
   `packs-check`.

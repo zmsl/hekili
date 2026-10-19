@@ -144,5 +144,11 @@ for _, k in ipairs(stateEnv) do
     shamanEnv[#shamanEnv + 1] = k
 end
 files["src/Hekili_Shaman/Shaman.lua"] = { globals = shamanEnv }
+-- The Hunter's further `state` names.
+local hunterEnv = { "summonPet" }
+for _, k in ipairs(stateEnv) do
+    hunterEnv[#hunterEnv + 1] = k
+end
+files["src/Hekili_Hunter/Hunter.lua"] = { globals = hunterEnv }
 files["src/Hekili_Shared/Races/"] = { globals = stateEnv }
 files["src/Hekili_Shared/Shared/"] = { globals = stateEnv }

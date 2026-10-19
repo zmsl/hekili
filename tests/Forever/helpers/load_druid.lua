@@ -11,7 +11,8 @@ local M = {}
 --- `state.knownRank` (a real one, for the strict-context specs); by default a fake answering from `game.known`. Returns `w`: `w.abilities`,
 --- `w.auras` (merged by key), `w.talents`, `w.resources[powerType]` ({ models, meta }), `w.costMods` (the
 --- RegisterCostMod declarations), `w.hooks[name]`, `w.events[event]`, `w.funcs[name]`, `w.exprs[name]`,
---- `w.settings[key]` ({ default, option }), `w.totems` (the RegisterTotems table), `w.packs` (in order: { name,
+--- `w.settings[key]` ({ default, option }), `w.totems` (the RegisterTotems table), `w.pets` (the RegisterPets
+--- table), `w.packs` (in order: { name,
 --- version, string }), `w.options`, `w.specID`,
 --- `w.spec` (the recording spec object), `w.state` (Hekili.State's stand-in) and `w.game`.
 function M.load(vs, file, class)
@@ -131,6 +132,7 @@ function M.load(vs, file, class)
         w.settings[call[1]] = { default = call[2], option = call[3] }
     end
     w.totems = reg.RegisterTotems and reg.RegisterTotems[1][1]
+    w.pets = reg.RegisterPets and reg.RegisterPets[1][1]
     w.packs = reg.RegisterPack or {}
     w.options = reg.RegisterOptions and reg.RegisterOptions[1][1]
     return w

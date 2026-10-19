@@ -44,6 +44,9 @@ describe("Forever priorities", function()
         shaman = function()
             return require("Forever.helpers.load_druid").load(nil, "src/Hekili_Shaman/Shaman.lua", "SHAMAN")
         end,
+        hunter = function()
+            return require("Forever.helpers.load_druid").load(nil, "src/Hekili_Hunter/Hunter.lua", "HUNTER")
+        end,
     }
     for class, load in pairs(LOADS) do
         it("flag use_off_gcd=1 on exactly the off-GCD abilities (" .. class .. ")", function()

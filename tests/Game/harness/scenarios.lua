@@ -44,7 +44,8 @@ M.ARCHETYPES = ARCHETYPES
 --- target), mobPeriod [2.0], mobDamage { lo, hi } [10-14], plainSpeed, damageBuff (t: +20% in combat), formAt (t),
 --- presses ({ t, spell, cost, kind }), rage ({ main, off } [9, 5]), max (our power cap [1e6]), proc, mobs (per
 --- attacker { damage = { lo, hi }, period }) and joinAt ({ [attacker] = t: on us from t }) for hits on us, switches.
---- The headless loop's knobs: weapons (ours [entities.weapons(level)]), mobHealth (our target's [1e9]: a kill ends
+--- The headless loop's knobs: weapons (ours [entities.weapons(level)]), ranged (our ranged hand { lo, hi, speed }, read
+--- out of combat from the prepull; W.startRanged shoots it [none]), mobHealth (our target's [1e9]: a kill ends
 --- the fight), pull (its time [1]), prepull (the cache and target reads [pull - 0.5]), form (ours at the start [0]),
 --- power (ours at the start [0]), tag (appended to the mobs' GUIDs: a fresh target per fight on one boot).
 --- Several resources (GCD kinds design §2): pt (the swing-paid power type [1]), res ({ [pt] = { cur, max } }: the
@@ -64,6 +65,7 @@ function M.world(o, seed)
         pt = o.pt,
         res = o.res,
         formSpeed = o.formSpeed,
+        ranged = o.ranged,
     }))
     us.form, us.power = o.form or 0, o.power or 0
     us.power0 = us.power -- the observer's first view (a batch stream reads the finished world)

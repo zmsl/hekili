@@ -342,6 +342,18 @@ function M.new(W, k)
             outcome(t + 0.001, ev, 1)
             for _, id in ipairs(ev.ids or { spellID(ev.spell) }) do
                 push(t, "@current", id, false) -- IsCurrentSpell: no longer queued
+                if (ev.cd or 0) > 0 then -- a queued strike's cooldown, from its swing (every rank)
+                    push(t, "@cooldown", id, k.plain and t or fake.SECRET, k.plain and ev.cd or fake.SECRET)
+                    if k.plain then
+                        push(t + ev.cd, "@cooldown", id, 0, 0)
+                    else
+                        push(t + ev.cd, "@cooldown", id)
+                    end
+                end
+            end
+            if (ev.cd or 0) > 0 then
+                push(t, "SPELL_UPDATE_COOLDOWN")
+                push(t + ev.cd, "SPELL_UPDATE_COOLDOWN")
             end
         elseif kind == "totem" and ev.src == us then -- our summon or its end: the slot's read, then its event
             totems[ev.slot], touched[ev.slot] = ev.start > 0 and ev or nil, true

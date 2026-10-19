@@ -10,7 +10,7 @@ Hekili Forever is a fork of the Hekili priority helper, rebuilt for WoW Forever.
 Hekili Forever is a priority helper that can make recommendations several steps into the future. It collects information about the game's current state, uses a SimulationCraft-style action priority list to recommend the next ability, then advances the game state and makes the next prediction.
 
 ## Supported Classes
-Hekili Forever is currently in rapid development based on the level 30 beta. Druid (Feral, Guardian, Balance), Warrior (Arms, Fury, Protection), Rogue (Combat, Assassination, Subtlety), Paladin (Retribution, Protection) and Shaman (Enhancement) are the current focus and are tuned for level 60 content, but are subject to rapid change after launch.
+Hekili Forever is currently in rapid development based on the level 30 beta. Druid (Feral, Guardian, Balance), Warrior (Arms, Fury, Protection), Rogue (Combat, Assassination, Subtlety), Paladin (Retribution, Protection), Shaman (Enhancement) and Hunter (Beast Mastery, Marksmanship, Survival) are the current focus and are tuned for level 60 content, but are subject to rapid change after launch.
 
 ## Action Packs
 Action Packs are shareable instructions that direct the addon how to make recommendations. They use action priority lists similar to SimulationCraft, with Forever-specific lines written for this ruleset. Action Packs only work for specializations the addon supports. View and edit them under /hekili > Priorities.
@@ -43,8 +43,8 @@ Cooldowns, Minor Cooldowns, Defensives, Interrupts and Potions can each be switc
 ## Install
 - **CurseForge:** install **Hekili Forever** (https://www.curseforge.com/wow/addons/hekili-forever).
 - **GitHub:** download the zip from https://github.com/zmsl/hekili/releases and extract it into
-  `_classic_beta_\Interface\AddOns\`. It holds seven folders: `Hekili`, `Hekili_Shared`, `Hekili_Druid`,
-  `Hekili_Warrior`, `Hekili_Rogue`, `Hekili_Paladin`, `Hekili_Shaman`.
+  `_classic_beta_\Interface\AddOns\`. It holds eight folders: `Hekili`, `Hekili_Shared`, `Hekili_Druid`,
+  `Hekili_Warrior`, `Hekili_Rogue`, `Hekili_Paladin`, `Hekili_Shaman`, `Hekili_Hunter`.
 - Remove any old `Hekili` folder first. Hekili Forever keeps the original's folder name and saved settings (`HekiliDB`),
   so your settings carry over. `/hekili` opens the options.
 

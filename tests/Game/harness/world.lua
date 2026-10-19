@@ -160,7 +160,7 @@ function M.new(seed)
         if gcdLen then
             e.gcdUntil = t + gcdLen
         end
-        if (p.cooldown or 0) > 0 then
+        if (p.cooldown or 0) > 0 and not p.onNextSwing then -- a queued strike's starts at its swing
             e.cdUntil[key] = t + p.cooldown
         end
         local function land()
@@ -190,7 +190,7 @@ function M.new(seed)
             W.effects(e, p)
         end
         if p.onNextSwing then
-            W.queueStrike(e, p)
+            W.queueStrike(e, p, key)
             if p.effect then
                 p.effect(W, e, p)
             end
@@ -343,9 +343,10 @@ function M.new(seed)
         beat()
     end
 
-    --- Queues `p` as `e`'s next main-hand swing (the melee behaviour turns it into a strike frame, paid then).
-    function W.queueStrike(e, p)
-        e.queued = { spell = p.spell, ids = p.ids, cost = p.cost, amount = p.amount }
+    --- Queues `p` (ability `key`) as `e`'s next main-hand swing (the melee behaviour turns it into a strike frame, paid
+    --- then; its cooldown `p.cooldown` starts then).
+    function W.queueStrike(e, p, key)
+        e.queued = { spell = p.spell, ids = p.ids, cost = p.cost, amount = p.amount, key = key, cd = p.cooldown }
         W.emit({ kind = "queue", src = e, spell = p.spell, ids = p.ids })
     end
 

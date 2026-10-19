@@ -109,7 +109,7 @@ local function newState(class, race)
     for _, verb in ipairs({ "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "removeStack", "addStack" }) do
         s[verb] = noop
     end
-    for _, verb in ipairs({ "spend", "gain", "setCooldown", "setDistance", "interrupt", "summonTotem" }) do
+    for _, verb in ipairs({ "spend", "gain", "setCooldown", "setDistance", "interrupt", "summonTotem", "summonPet" }) do
         s[verb] = noop
     end
     return setmetatable(s, {

@@ -44,6 +44,26 @@ describe("the world's resources", function()
         assert.are.same({ { 10, 1.05, 1 }, { 11.05, 1.05, 1 } }, casts)
     end)
 
+    it("starts a queued strike's cooldown at the swing that takes it, and the client answers it then", function()
+        setup()
+        W.emit({ kind = "pull" })
+        behaviours.melee({ rates = { miss = 0, dodge = 0, parry = 0, crit = 0 }, phase = { 1 } })(W, us)
+        W.t = 0.2
+        assert.is_true(W.press(us, "q", { spell = 7, cost = 0, offGcd = true, onNextSwing = true, cooldown = 6 }))
+        assert.is_nil(us.cdUntil.q) -- queued, not yet on cooldown
+        W.run(1.5) -- the swing at 1 takes it
+        assert.are.equal(7, us.cdUntil.q)
+        local observer = require("Game.harness.observer")
+        local s = observer.observe(W, setmetatable({ plain = true }, { __index = observer.DEFAULTS }))
+        local cds = {}
+        for i = 1, s.n do
+            if s.ev[i] == "@cooldown" and s.a1[i] == 7 then
+                cds[#cds + 1] = { s.t[i], s.a3[i] }
+            end
+        end
+        assert.are.same({ { 1, 6 }, { 7, 0 } }, cds)
+    end)
+
     it("rolls the GCD flag's order from its own generator when mixed, leaving the world's two alone", function()
         setup({ gcdOrder = "mixed" })
         local before = { W.rng.next(), W.crng.next() }
