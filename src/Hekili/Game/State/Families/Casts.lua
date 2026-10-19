@@ -67,7 +67,7 @@ end
 I.Quantise = quantise
 
 --- The length of a GCD that ability a (0: none known, the last opener's kind) opens at t: its declared `gcdTime`,
---- else its kind's learned length, else 1.0 for the totem kind and 1.5 / haste for the spell kind. Allocates nothing.
+--- else its kind's learned length, else 1.0 for the totem kind and max(1.0, 1.5 / spell haste) for the spell kind. Allocates nothing.
 function I.GcdLen(a, t)
     local kind = I.gcdKindLast
     if a > 0 then
@@ -84,8 +84,9 @@ function I.GcdLen(a, t)
     elseif kind == 2 then
         return 1.0
     end
-    local h = VS.Haste and VS.Haste(t).est or 1 -- Families/Swing.lua measures it
-    return 1.5 / (h > 0 and h or 1) -- nonzero: h > 0 checked
+    -- spell haste (UnitSpellHaste %, plain), never melee haste: attack speed does not shorten a GCD on Forever
+    local h = VS.SpellHaste and VS.SpellHaste(t).est or 0
+    return max(1.0, 1.5 / (1 + (h > 0 and h or 0) / 100)) -- 1 + h/100 >= 1: h > 0 checked
 end
 
 local function maxCharges(a)

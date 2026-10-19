@@ -207,12 +207,18 @@ describe("the GCD by kind", function()
         assert.are.equal(TOTEM, I.gcdOwner)
     end)
 
-    it("opens a spell-kind GCD of 1.5 / haste (haste 1.25: 1.2)", function()
-        S.Direct(Obs.Haste, 9, 0, 1.25, 1)
+    it("opens a spell-kind GCD of 1.5 / spell haste, never melee haste (melee 1.3: 1.5; spell 20%: 1.25)", function()
+        S.Direct(Obs.Haste, 9, 0, 1.3, 1) -- melee (Flurry): attack speed only
         success(SPELL, 10)
         edge(10.03, true)
-        near(1.2, info(10.1)[2])
+        near(1.5, info(10.1)[2])
         assert.are.equal(SPELL, I.gcdOwner)
+        S.Direct(Obs.Haste, 19, 0, 20, 2) -- UnitSpellHaste 20 %
+        success(SPELL, 20)
+        near(1.25, info(20.1)[2])
+        S.Direct(Obs.Haste, 29, 0, 100, 2) -- floored at 1.0
+        success(SPELL, 30)
+        near(1.0, info(30.1)[2])
     end)
 
     it("lets a hard cast in progress own the edge at its start, after a totem-kind GCD", function()
@@ -284,7 +290,7 @@ describe("the GCD by kind", function()
         assert.are.equal(0, I.gcdOwner)
     end)
 
-    it("pins the GCD at an on-GCD success that no rising edge follows (in game: rend, then overpower)", function()
+    it("pins the GCD at an on-GCD success that no rising edge follows (in game: rend, then overpower; here a totem press)", function()
         success(SPELL, 10) -- rend: its success and rising edge
         edge(10, true)
         assert.are.same({ 10, 1.5 }, info(10.1))
