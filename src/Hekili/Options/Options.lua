@@ -3407,7 +3407,7 @@ found = true end
     local activeSpecOption = {
         type = "select",
         name = "Active Specialization",
-        desc = "The specialization Hekili Forever recommends for on this character. Your choice is kept until you "
+        desc = "The specialization Hekili Forever recommends for this character. Your choice is kept until you "
             .. "change it (also |cFFFFD100/hekili spec name|r); with no choice yet, the talent tree with the most "
             .. "points is chosen once.",
         order = -2,

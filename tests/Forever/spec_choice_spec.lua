@@ -167,8 +167,17 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         assert.are.equal(FURY, H.Hekili.State.spec.id)
         assert.are.equal("fury", H.Hekili.DB.profile.specChoice[CHAR])
         assert.is_true(nodes.arms.args.core.args.specHint.hidden() == false) -- Arms talents, Fury chosen
-        H.Hekili:CmdLine("spec") -- the list, then an unmatched name (the list again): no error, no change
+        local printed, print0 = {}, H.Hekili.Print
+        H.Hekili.Print = function(_, text)
+            printed[#printed + 1] = text
+        end
+        H.Hekili:CmdLine("spec") -- the list, then an unmatched name (the list again): no change
         H.Hekili:CmdLine("spec zzz")
+        local out = table.concat(printed, "\n")
+        assert.is_truthy(out:find("|cFFFFD100fury|r |cFF00FF00(current)|r", 1, true))
+        assert.is_falsy(out:find("arms|r |cFF00FF00(current)", 1, true))
+        assert.is_truthy(out:find("No single specialization matches 'zzz'.", 1, true))
+        H.Hekili.Print = print0
         assert.are.equal("fury", H.Hekili.DB.profile.specChoice[CHAR])
         H.Hekili:CmdLine("spec prot")
         settle(H)
@@ -178,12 +187,19 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
     it("orders the Priorities list by spec", function()
         local H = boot()
         settle(H)
+        local packs = H.Hekili.DB.profile.packs
+        local aaa = {} -- a custom Fury pack whose name sorts before "Arms": spec order, not name order
+        for k, v in pairs(packs.Fury) do
+            aaa[k] = v
+        end
+        aaa.builtIn, aaa.spec = false, FURY
+        packs.Aaa = aaa
         H.Hekili:EmbedPackOptions() -- builds the Priorities tree into Hekili.Options.args.packs
         local packages = H.Hekili.Options.args.packs.plugins.packages
         local order = {}
-        for _, name in ipairs({ "Arms", "Fury", "Protection" }) do
+        for _, name in ipairs({ "Arms", "Aaa", "Fury", "Protection" }) do
             order[#order + 1] = packages[name].order
         end
-        assert.is_true(order[1] < order[2] and order[2] < order[3])
+        assert.is_true(order[1] < order[2] and order[2] < order[3] and order[3] < order[4])
     end)
 end)
