@@ -69,6 +69,7 @@ function M.new(seed)
             local o = w[2] or { 0, 0 }
             ev.damage = { w[1][1] * m, w[1][2] * m, o[1] * m, o[2] * m }
             ev.speed = { w[1][3], w[2] and w[2][3] or nil }
+            ev.ranged = me.ranged and me.ranged[3] or nil -- UnitRangedDamage's speed
             ev.regen, ev.regenCasting = {}, {}
             for pt in pairs(W.rates) do
                 ev.regen[pt], ev.regenCasting[pt] = W.regenRate(me, pt, "idle"), W.regenRate(me, pt, "casting")
@@ -408,6 +409,30 @@ function M.new(seed)
         e.lastHit =
             W.emit({ kind = "spell", src = e, dst = dst, act = act, flag = flag, amount = amt, school = school or 1 })
         return e.lastHit
+    end
+
+    --- Starts `e`'s ranged hand (`e.ranged`): a shot now plus `o.delay` and then every ranged speed, while
+    --- `e.rangedOn` and its target lives: the auto attack's cast success of `spell` (the content's ID; free, off the
+    --- GCD), with `o.swing` also a PLAYER_SWING of the ranged hand (swingType 2), and the shot's physical outcome (W.hit,
+    --- the range's middle).
+    function W.startRanged(e, spell, o)
+        o = o or {}
+        e.rangedOn = true
+        local function shot()
+            local v = e.target
+            if not e.rangedOn or not v or v.dead then
+                e.rangedOn = false
+                return
+            end
+            local w = e.ranged
+            W.emit({ kind = "cast", src = e, dst = v, spell = spell })
+            if o.swing then
+                W.emit({ kind = "swing", src = e, dst = v, hand = 3, speed = w[3], ours = true })
+            end
+            W.hit(e, v, (w[1] + w[2]) / 2)
+            W.at(W.t + w[3], shot)
+        end
+        W.at(W.t + (o.delay or 0), shot)
     end
 
     --- `e` gains `amount` power now (a negative amount spends it).

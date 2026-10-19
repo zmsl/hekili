@@ -262,6 +262,8 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         end
     elseif ev == "@attackSpeed" then -- the player's main and off hand
         ctl.speed[1], ctl.speed[2] = a1, a2
+    elseif ev == "@rangedSpeed" then -- the player's ranged hand (UnitRangedDamage's first return)
+        ctl.ranged[1] = a1
     end
 end
 

@@ -224,4 +224,57 @@ describe("the world's resources", function()
         W.run(3.5) -- the swing at 3: 5 and the crit's 3
         assert.are.equal(8, us.power)
     end)
+
+    for _, swing in ipairs({ false, true }) do
+        local how = swing and "with swingType 2" or "from its cast successes alone (the modelled clock)"
+        it("shoots a ranged hand every ranged speed, and the belief's ranged clock follows " .. how, function()
+            local observer, drive = require("Game.harness.observer"), require("Game.harness.drive")
+            local fs = require("Game.State.helpers.fake_spec")
+            setup({ ranged = { 20, 30, 2.8 } })
+            W.t = 0.5
+            W.emit({ kind = "prepull" })
+            W.t = 1
+            W.emit({ kind = "pull" })
+            W.startRanged(us, fs.SPENDER_R, { swing = swing, delay = 0.2 })
+            W.at(10, function()
+                us.rangedOn = false
+            end)
+            W.run(15)
+            local shots, swings = {}, 0
+            for _, ev in ipairs(W.truth) do
+                if ev.kind == "cast" then
+                    shots[#shots + 1] = ev.t
+                elseif ev.kind == "swing" and ev.hand == 3 then
+                    swings = swings + 1
+                end
+            end
+            assert.are.equal(4, #shots) -- 1.2, 4.0, 6.8, 9.6
+            assert.is_true(math.abs(shots[4] - 9.6) < 1e-9)
+            assert.are.equal(swing and 4 or 0, swings)
+            assert.is_true(mob.health < 1e6) -- the shots' outcomes
+            local s = observer.observe(W)
+            local seen = {}
+            for i = 1, s.n do
+                if s.ev[i] == "@rangedSpeed" or (s.ev[i] == "PLAYER_SWING" and s.a2[i] == 2) then
+                    seen[#seen + 1] = s.ev[i] .. " " .. s.a1[i]
+                end
+            end
+            local want = { "@rangedSpeed 2.8" }
+            for k = 1, swings do
+                want[k + 1] = "PLAYER_SWING 2.8"
+            end
+            assert.are.same(want, seen)
+            local c = drive.boot({
+                boot = function(c)
+                    c.I.Build(fs.def(fs.new(9, nil, true)), 0.1)
+                    c.VS.Start(c.api) -- fake_api's 3.1 until the cache read answers 2.8
+                end,
+            })
+            drive.run(c, s)
+            drive.restore(c)
+            assert.are.equal(2.8, c.VS.SwingSpeed(3, 12).est)
+            assert.is_true(math.abs(c.VS.LastSwing(3) - 9.6) < 1e-9)
+            assert.is_true(math.abs(c.VS.Swing(3, 12).est - 12.4) < 1e-9)
+        end)
+    end
 end)

@@ -194,7 +194,10 @@ state.swings = {
     mh_projected = 2.6,
     oh_actual = 0,
     oh_speed = select( 2, UnitAttackSpeed( "player" ) ) or 2.6,
-    oh_projected = 3.9
+    oh_projected = 3.9,
+    ranged_actual = 0,
+    ranged_speed = 0,
+    ranged_projected = 0
 }
 state.system = {}
 state.table = table
@@ -5138,6 +5141,9 @@ local mt_swings = {
         elseif k == "offhand_speed" then
             return t.oh_pseudo_speed or t.oh_speed or 0
 
+        elseif k == "ranged" then
+            return t.ranged_actual
+
         end
     end
 }
@@ -5150,7 +5156,7 @@ local mt_swing_timer = {
         local speed = state.swings[ t.type .. "_speed" ]
         if speed == 0 then return 999 end
 
-        local swing = state.time == 0 and state.now or state.swings.mainhand
+        local swing = state.time == 0 and state.now or state.swings[ t.type == "ranged" and "ranged" or "mainhand" ]
         if swing == 0 then return speed end
 
         -- Technically, we didn't even check if this were "remains" but there are no other symbols.
@@ -5166,6 +5172,8 @@ state.swing.main_hand = state.swing.mh
 state.swing.oh = setmetatable( { type = "offhand" }, mt_swing_timer )
 state.swing.offhand = state.swing.oh
 state.swing.off_hand = state.swing.oh
+
+state.swing.ranged = setmetatable( { type = "ranged" }, mt_swing_timer )
 
 
 local mt_weapon_type = {
@@ -6264,6 +6272,12 @@ do
 
         state.mainhand_speed = state.swings.mh_speed or 0
         state.offhand_speed = state.swings.oh_speed or 0
+
+        -- Forever C7: the ranged hand is the belief's (hand 3): the next shot, the one before it and the speed.
+        local ranged = VS.Swing( 3, state.now ).est
+        state.swings.ranged_speed = VS.SwingSpeed( 3, state.now ).est
+        state.swings.ranged_projected = ranged
+        state.swings.ranged_actual = ranged > 0 and ranged - state.swings.ranged_speed or 0
 
         state.nextMH = ( state.combat > 0 and state.swings.mh_actual > state.combat and state.swings.mh_actual + state.mainhand_speed ) or 0
         state.nextOH = ( state.combat > 0 and state.swings.oh_actual > state.combat and state.swings.oh_actual + state.offhand_speed ) or 0

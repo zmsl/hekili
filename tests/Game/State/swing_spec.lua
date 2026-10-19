@@ -1,6 +1,8 @@
 -- tests/Game/State/swing_spec.lua: swings and melee haste (spec §6.4, §6.5). Golden scenario 1 (TDF
 -- tests/model/swing_replay_spec.lua:96): swing anchors within tolerance from rage steps every 2.6 s with casts
--- interleaved, without a PLAYER_SWING after the pull.
+-- interleaved, without a PLAYER_SWING after the pull. The ranged hand (hand 3, class-completion C7): anchored on the
+-- ranged auto attack's own cast success (an ability declaring `rangedSwing`) at the out-of-combat UnitRangedDamage
+-- speed, or on a PLAYER_SWING of swingType 2 (unmeasured on Forever) at its duration.
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
@@ -88,5 +90,108 @@ describe("swings", function()
         I.Fold(101, false)
         assert.are.same({ 0, 0 }, { VS.Swing(1, 102).est, VS.Swing(1, 102).conf })
         assert.are.equal(2.6, VS.SwingSpeed(1, 102).est)
+    end)
+
+    describe("the ranged hand (C7)", function()
+        local api, ctl, ns, saved, rows
+        local R = fs.SPENDER_R
+
+        before_each(function()
+            api, ctl = fake.new()
+            saved = {}
+            for k, v in pairs({
+                CreateFrame = api.CreateFrame,
+                issecretvalue = api.issecretvalue,
+                GetTime = api.GetTime,
+            }) do
+                saved[k] = rawget(_G, k) or false
+                _G[k] = v
+            end
+            ns = load.module()
+            VS, I = ns.VirtualState, ns.VirtualStateInternal
+            S, Obs = I.Sources, VS.Obs
+            I.Build(fs.def(fs.new(9, nil, true)), 1)
+            ctl.now = 2
+            rows = {}
+            local GetInfo = ns.Facade.CombatLogGetCurrentEventInfo
+            local sink = I.Events.CreateFrame("Frame")
+            sink:SetScript("OnEvent", function()
+                local _, ev = GetInfo()
+                if ev:find("^SWING") then -- a melee swing's row
+                    rows[#rows + 1] = ev
+                end
+            end)
+            sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+        end)
+
+        after_each(function()
+            for k, v in pairs(saved) do
+                _G[k] = v or nil
+            end
+        end)
+
+        local function at(t, event, ...)
+            ctl.Tick(t)
+            ctl.Fire(event, ...)
+            ctl.Tick(t)
+            fs.fold(ns, t)
+            ctl.Tick(t)
+        end
+
+        it(
+            "anchors on the auto attack's cast success at the out-of-combat ranged speed; the melee hands stay",
+            function()
+                VS.Start(api) -- reads UnitRangedDamage's speed, 3.1 (fake_api)
+                ctl.Tick(2) -- the staged flush
+                fs.fold(ns, 2)
+                assert.are.equal(3.1, VS.SwingSpeed(3, 2).est)
+                assert.are.equal(0, VS.Swing(3, 2).est) -- no shot yet
+                at(9.9, "PLAYER_REGEN_DISABLED")
+                at(10, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", R)
+                local s = VS.Swing(3, 10)
+                assert.are.same({ 13.1, 1, "modelled" }, { s.est, s.conf, s.basis })
+                assert.is_true(math.abs(VS.Swing(3, 14).est - 16.2) < 1e-9) -- one period on, uncast
+                assert.are.equal(10, VS.LastSwing(3))
+                assert.are.equal(3.1, (ns.Facade.UnitRangedDamage("player")))
+                assert.are.equal(0, VS.LastSwing(1))
+                assert.are.equal(2.6, VS.SwingSpeed(1, 10.5).est)
+                assert.are.same({}, rows) -- a shot is no melee swing
+            end
+        )
+
+        it("anchors at a PLAYER_SWING of swingType 2 with weight 1 and takes its duration as the speed", function()
+            VS.Start(api)
+            at(9.9, "PLAYER_REGEN_DISABLED")
+            local haste = VS.Haste(10).est
+            at(10, "PLAYER_SWING", 2.8, 2)
+            local s = VS.Swing(3, 10)
+            assert.are.same({ 12.8, 1, "observed" }, { s.est, s.conf, s.basis })
+            assert.are.equal(2.8, VS.SwingSpeed(3, 10).est)
+            assert.are.equal(2.8, (ns.Facade.UnitRangedDamage("player")))
+            assert.are.equal(haste, VS.Haste(10).est) -- melee haste learns from the main hand only
+            assert.are.equal(0, VS.LastSwing(1))
+            assert.is_true(VS.Swing(1, 10).conf <= 0.3) -- the main hand keeps its combat-start guess
+            at(12, "UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+            assert.are.same({}, rows) -- not a melee swing: no SWING_DAMAGE
+            at(12.8, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", R) -- the same shot's success re-anchors
+            assert.is_true(math.abs(VS.Swing(3, 13).est - 15.6) < 1e-9)
+        end)
+
+        it("has no speed and no clock when UnitRangedDamage is secret, and gives content none of it", function()
+            ctl.ranged[1] = fake.SECRET
+            VS.Start(api)
+            at(10, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", R)
+            assert.are.same({ 0, 0, 0 }, { VS.SwingSpeed(3, 10).est, VS.Swing(3, 10.5).est, VS.Swing(3, 10.5).conf })
+            assert.is_false(api.issecretvalue((ns.Facade.UnitRangedDamage("player"))))
+        end)
+
+        it("clears the ranged anchor at combat end and keeps its speed", function()
+            VS.Start(api)
+            at(9.9, "PLAYER_REGEN_DISABLED")
+            at(10, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", R)
+            at(11, "PLAYER_REGEN_ENABLED")
+            assert.are.same({ 0, 0 }, { VS.Swing(3, 12).est, VS.Swing(3, 12).conf })
+            assert.are.equal(3.1, VS.SwingSpeed(3, 12).est)
+        end)
     end)
 end)

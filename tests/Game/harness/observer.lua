@@ -100,7 +100,7 @@ end
 --- swing's true time), actor[] (the entity index of a hit on us) }. An `ev` starting with "@" is a client-answer change
 --- for the drive (`@damage` UnitDamage, `@usable`, `@form`, `@guid`, `@unitIs`, `@speed`, `@combat`, `@auraError`,
 --- `@current` IsCurrentSpell, `@aura` an aura list entry, `@dead`, `@cooldown`, `@power`, `@regen`, `@attackSpeed`,
---- `@forms`), or `@truth` our true power after an event. It draws nothing from `W.rng` (the behaviours roll every
+--- `@rangedSpeed`, `@forms`), or `@truth` our true power after an event. It draws nothing from `W.rng` (the behaviours roll every
 --- random choice and record it on the truth event), so batch and incremental streams of one world are equal for
 --- power-only answers (in batch, a list answer that reads `W` sees the finished world at every time).
 --- `k.usable`: true (the fake spec's COSTS against our power) or a list { { spellID, fn(W, us, power, view) -> ok,
@@ -204,6 +204,9 @@ function M.new(W, k)
         push(t, "@damage", d[1], d[2], d[3], d[4])
         if k.playerSpeed and ev.speed then
             push(t, "@attackSpeed", ev.speed[1], ev.speed[2])
+        end
+        if ev.ranged then -- only a world with a ranged hand: the others' streams are unchanged
+            push(t, "@rangedSpeed", ev.ranged)
         end
         if k.regenRead and ev.regen then
             for pt, r in pairs(ev.regen) do

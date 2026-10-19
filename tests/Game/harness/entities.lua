@@ -18,13 +18,15 @@ end
 --- A new actor. `o`: guid, kind ("player", "mob", "pet"), level, weapons ({ { min, max, speed }, ... }), dr (the
 --- damage its armour takes away, 0-1), avoid ({ miss, dodge, parry, block } on swings at it), health, powerMax, pt (the
 --- power type of `power`, the swing-paid resource [1]), res ({ [powerType] = { cur, max } }: the other resources),
---- formSpeed ({ [form] = the main hand's period in that form }).
+--- formSpeed ({ [form] = the main hand's period in that form }), ranged ({ min, max, speed }: the ranged hand,
+--- W.startRanged).
 function M.new(o)
     local e = {
         guid = o.guid,
         kind = o.kind or "player",
         level = o.level or 22,
         weapons = o.weapons or {},
+        ranged = o.ranged,
         dr = o.dr or 0,
         avoid = o.avoid or { miss = 0.05, dodge = 0.05, parry = 0.05, block = 0 },
         health = o.health or 1000,

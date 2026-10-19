@@ -3,6 +3,9 @@
 -- anchorT + k x speed. Anchors carry weights: PLAYER_SWING 1.0, a paired rage step 0.5, combat start 0.3; conf is the
 -- anchor's weight falling linearly to 0 over SWING_DECAY. The observed swing duration is the hasted speed; melee
 -- haste is observed out of combat and modelled in combat as the base speed / the observed duration.
+-- Hand 3 is the ranged hand (class-completion C7): its speed is UnitRangedDamage's out of combat or a swingType 2
+-- duration; it anchors at a swingType 2 PLAYER_SWING or at the cast success of an ability declaring `rangedSwing` (the
+-- ranged auto attack, content's), both weight 1; no rage step pairs with it and combat start does not anchor it.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Model/Belief/Swing.lua (weights :54, confAt :181-188, after
 -- :196-205, Applier Swing :602, Listener PowerTick :656, CombatStart :710, CombatEnd :723) and Belief/Player.lua
 -- (Applier Haste :130).
@@ -14,16 +17,18 @@ local floor = math.floor
 
 local W_SWING, W_PAIR, W_COMBAT = 1, 0.5, 0.3
 
-local anchorT, speed, base, last, w0, confAt = { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }
-local prevTick = { 0, 0 }
+local anchorT, speed, base, last, w0, confAt =
+    { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }
+local prevTick = { 0, 0, 0 }
+local HAND = { "main", "off", "ranged" }
 local swingRec, speedRec, haste = {}, {}, nil
 I.haste0 = 1
 
 I.OnBuild(function(def, now)
-    for h = 1, 2 do
+    for h = 1, 3 do
         anchorT[h], w0[h], prevTick[h], last[h] = 0, 0, 0, 0 -- the old set's clock; Sources/Swing.lua re-reads speeds
-        swingRec[h] = I.NewBelief(h == 1 and "swing main" or "swing off")
-        speedRec[h] = I.NewBelief(h == 1 and "swing speed main" or "swing speed off")
+        swingRec[h] = I.NewBelief("swing " .. HAND[h])
+        speedRec[h] = I.NewBelief("swing speed " .. HAND[h])
         I.Sample(speedRec[h], "default", h == 1 and 2 or 0, now, 0)
         if speed[h] == 0 and h == 1 then
             speed[h] = 2
@@ -44,7 +49,7 @@ end
 
 I.On(Obs.Swing, function(o, t)
     local h, c = o.a, o.c
-    if h ~= 1 and h ~= 2 then
+    if h ~= 1 and h ~= 2 and h ~= 3 then
         return
     end
     if c == 4 then -- PLAYER_SWING, landed or not (c = 1, landed, is the resources family's)
@@ -65,6 +70,16 @@ I.On(Obs.Swing, function(o, t)
     elseif c == 2 then
         base[h] = o.b
     end
+end)
+
+-- The ranged auto attack's own success is its shot (UNMEASURED: whether Forever sends it per shot is a checkpoint).
+I.On(Obs.CastSuccess, function(o, t)
+    if not I.ab.obj[o.a].rangedSwing then
+        return
+    end
+    anchor(3, o.t, W_SWING)
+    last[3] = o.t
+    I.Sample(swingRec[3], "modelled", o.t + speed[3], t, Obs.CastSuccess)
 end)
 
 I.On(Obs.Haste, function(o, t)
@@ -135,12 +150,12 @@ I.On(Obs.CombatStart, function(o, t)
 end)
 
 I.On(Obs.CombatEnd, function()
-    for h = 1, 2 do
+    for h = 1, 3 do
         anchorT[h], w0[h], prevTick[h] = 0, 0, 0
     end
 end)
 
---- (spec §3.2) The next swing of hand 1 (main) or 2 (off) after now.
+--- (spec §3.2) The next swing of hand 1 (main), 2 (off) or 3 (ranged) after now.
 function VS.Swing(hand, now)
     local rec = swingRec[hand]
     if not rec then
@@ -192,7 +207,7 @@ function VS.Haste(now)
 end
 
 I.OnSnapshot(function(out, now)
-    for h = 1, 2 do
+    for h = 1, 3 do
         VS.Swing(h, now)
         VS.SwingSpeed(h, now)
         out[#out + 1] = string.format(

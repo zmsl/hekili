@@ -261,11 +261,16 @@ local function hold(kind, x, dst, w, t)
     return i
 end
 
+-- swingType 2, the ranged hand (C7), is no melee swing: its clock is Sources/Swing.lua's, and the shot's outcome pairs
+-- through its ability's cast success, if that starts combat (a SWING row would move Hekili's main-hand clock).
 S.On("PLAYER_SWING", nil, function(api, t, duration, swingType)
-    if type(swingType) ~= "number" or swingType > 1 then
+    if type(swingType) ~= "number" or swingType > 2 then
         return
     end
     advance(t)
+    if swingType == 2 then
+        return
+    end
     if swingType == 0 then
         lastMain = t
     end

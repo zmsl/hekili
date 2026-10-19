@@ -12,7 +12,8 @@ local Obs = VS.Obs
 local floor, abs, max = math.floor, math.abs, math.max
 
 -- By ability index a. `obj` is the spec's ability table (Hekili's `class.abilities[key]`): VirtualState reads its
--- `spend`, `spendType`, `cooldown`, `charges`, `recharge`, `gcd`, `gcdTime`, `cast` and `onNextSwing` fields.
+-- `spend`, `spendType`, `cooldown`, `charges`, `recharge`, `gcd`, `gcdTime`, `cast`, `onNextSwing` and `rangedSwing`
+-- (the ranged auto attack: its success is the ranged hand's shot, Families/Swing.lua) fields.
 local A = {
     n = 0,
     key = {},

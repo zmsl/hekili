@@ -30,7 +30,7 @@ VS.Obs = {
     TargetGone = 12,
     Known = 13, -- reserved
     Queued = 14, -- a: ability index; b: 1 queued for the next swing / 0 not
-    Swing = 15, -- a: hand (1 main, 2 off); b: swing duration or speed; c: 4 swung (PLAYER_SWING), 1 landed
+    Swing = 15, -- a: hand (1 main, 2 off, 3 ranged); b: duration or speed; c: 4 swung (PLAYER_SWING), 1 landed
     -- (Events/Rows.lua's pairing with the target's wound; b: 0), 0 a read, 2 base speed, 3 crit (the same pairing with a
     -- CRITICAL wound; b: 0)
     Haste = 16, -- b: melee multiplier (a plain read); c: 1 melee, 2 spell (b: spell haste percent)

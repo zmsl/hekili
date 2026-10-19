@@ -5,6 +5,8 @@
 -- lane (Hekili's `state.swings` come from the swing rows, Game/Events/Rows.lua). Out of combat,
 -- UNIT_ATTACK_SPEED and PLAYER_EQUIPMENT_CHANGED (and login, and combat end) read both hands' speeds (c = 0), the
 -- unhasted base speeds (c = 2, speed x (1 + melee haste / 100)) and the melee haste multiplier (`Haste`, c = 1).
+-- The ranged hand (a = 3, class-completion C7): swingType 2 (UNMEASURED: whether Forever fires it is a checkpoint) and
+-- UnitRangedDamage's speed (c = 0, the stat cache's) out of combat on the same events.
 -- Credits: secret-value handling after Catnip's (Durts) research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Swing.lua.
 
@@ -15,7 +17,7 @@ local Obs = VS.Obs
 local Plain, Stage, Note = S.Plain, S.Stage, S.Note
 
 S.On("PLAYER_SWING", nil, function(api, t, duration, swingType)
-    if type(duration) ~= "number" or type(swingType) ~= "number" or swingType > 1 then
+    if type(duration) ~= "number" or type(swingType) ~= "number" or swingType > 2 then
         return
     end
     local hand = swingType + 1
@@ -45,9 +47,19 @@ local function readSpeeds(api, t)
     end
 end
 
+-- The ranged hand's speed: UnitRangedDamage's first return from the stat cache (Sources/Player.lua reads it first on
+-- the same events, through issecretvalue and Plain; zeros before a plain read or on a client without it).
+-- shortcut: ranged haste in combat is unread (the speed stays the out-of-combat one until a swingType 2 duration);
+-- upgrade with a ranged-haste read when a pack gates on the ranged clock.
+local function readRanged(t)
+    local speed = VS.Stat("UnitRangedDamage")
+    Stage(Obs.Swing, t, 3, speed > 0 and speed or 0, 0)
+end
+
 local function outOfCombat(api, t)
     if not I.inCombat then
         readSpeeds(api, t)
+        readRanged(t)
     end
 end
 S.On("UNIT_ATTACK_SPEED", "player", outOfCombat)

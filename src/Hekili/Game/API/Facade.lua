@@ -364,10 +364,12 @@ hybrid("UnitAttackSpeed", function(unit)
     return main, nil
 end, "secret in combat [SU PR2]; SwingSpeed()")
 
--- The out-of-combat speed is C7's auto-shot clock input (Hunter Q2).
+-- The speed is the ranged hand's (C7: out of combat, or a swingType 2 duration); the rest the out-of-combat cache.
 hybrid("UnitRangedDamage", function()
-    return VS.Stat("UnitRangedDamage")
-end, "SecretWhenUnitStatsRestricted (API docs); unprobed (Hunter Q2); Stat()")
+    local speed, lo, hi, pos, neg, pct = VS.Stat("UnitRangedDamage")
+    local s = VS.SwingSpeed(3, now()).est
+    return s > 0 and s or speed, lo, hi, pos, neg, pct
+end, "SecretWhenUnitStatsRestricted (API docs); unprobed (Hunter Q1); SwingSpeed(3), Stat()")
 
 hybrid("GetUnitSpeed", function(unit)
     if unit == "player" and VS.Moving() then
