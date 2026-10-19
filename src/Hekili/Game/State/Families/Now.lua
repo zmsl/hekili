@@ -3,9 +3,9 @@
 -- On each own CastSuccess (a channel's included) the family writes the automatic effects from the ability's declared
 -- fields (its cost, its cooldown or charge, the GCD), then runs the ability's `now` function, if the class file
 -- declared one beside `handler`, in one shared context whose names are Hekili's verbs (`gain`, `spend`, `applyBuff`,
--- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `summonTotem`) and reads (`talent`, `buff`, `debuff`, the
--- resources by key, `knownRank`, `stat`, `swingBase`, `healthMax`, `now`, `combat`) with belief meanings. Every write is a `modelled` sample at the
--- cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
+-- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `summonTotem`) and reads (`talent`, `buff`,
+-- `debuff`, the resources by key, `knownRank`, `stat`, `swingBase`, `healthMax`, `now`, `combat`) with belief
+-- meanings. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
 
 local _, ns = ...

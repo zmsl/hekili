@@ -448,8 +448,9 @@ spec:RegisterAbilities({
 })
 
 -- The mana floors of Retribution's swing-gap fillers (D7: a percent of the maximum, one setting a line; wowsims uses
--- 10). Off by default: mana is secret, Hekili reads the belief's lower bound, which cannot reach a percent floor; the
--- usability answers still refuse a filler at a real lack of mana.
+-- 10). Off by default: mana is secret and the floor is judged on the belief's low-biased lower bound, which starts at 0
+-- on a fresh boot and climbs with regen, so a floor line becomes usable only after a warm-up (minutes out of combat);
+-- the usability answers still refuse a filler at a real lack of mana.
 spec:RegisterSetting("consecration_mana", 0, {
     type = "range",
     name = "Consecration Mana Floor",

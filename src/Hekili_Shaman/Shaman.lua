@@ -346,8 +346,9 @@ spec:RegisterSetting("imbue", 1, {
 })
 
 -- The mana lines' floors (D7: a percent of the maximum, one setting a line; wowsims: Fire Nova above 10%, the mana
--- potion below 80%, Demonic Rune below 70%). Off by default: mana is secret, Hekili reads the belief's lower bound,
--- which cannot reach a percent floor (Retribution's precedent); the usability answers still refuse at a real lack.
+-- potion below 80%, Demonic Rune below 70%). Off by default: mana is secret and `mana.pct` reads the belief's
+-- low-biased lower bound (0 on a fresh boot, climbing with regen), so a floor line becomes usable only after a warm-up
+-- and a "below" line errs early (Retribution's precedent); the usability answers still refuse at a real lack.
 local function manaSetting(key, name, desc)
     spec:RegisterSetting(key, 0, {
         type = "range",
@@ -367,12 +368,12 @@ manaSetting(
 manaSetting(
     "potion_mana",
     "Mana Potion Below",
-    "A Major Mana Potion while your mana is under this percent of its maximum. 0 turns the line off."
+    "A Major Mana Potion while your mana is under this percent of its maximum. Mana is estimated low, so the line errs early (it can fire near full mana). 0 turns the line off."
 )
 manaSetting(
     "rune_mana",
     "Demonic Rune Below",
-    "A Demonic Rune while your mana is under this percent of its maximum. 0 turns the line off."
+    "A Demonic Rune while your mana is under this percent of its maximum. Mana is estimated low, so the line errs early (it can fire near full mana). 0 turns the line off."
 )
 
 spec:RegisterOptions({ package = "Enhancement" })

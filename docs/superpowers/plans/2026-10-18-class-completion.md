@@ -307,7 +307,7 @@ clock on it.
 - **Rogue stealth drop:** only Ambush and Garrote's `now` drop Stealth/Vanish; a Sinister Strike, Backstab,
   Hemorrhage or Mutilate opener leaves `buff.stealth` believed up until the IsStealthed read. If Q5 finds IsStealthed
   secret in combat, drop it in every `startsCombat` ability's `now` (final review Minor 2).
-- **Task 6 residuals, for the first task that declares `fsr`** (Day 4 Paladin/Enhancement or a Balance adoption):
+- **Closed (8e9d3bf8):** ~~Task 6 residuals, for the first task that declares `fsr`~~ (Day 4 Paladin/Enhancement or a Balance adoption):
   the OOC regen read is skipped for fsr slots (Power.lua): use its two returns (not casting / casting) for the
   spirit+mp5 and mp5 parts; a declared mp5 of 0 never learns; add resources_spec cases for 0 < pinB < PIN_GAP and a
   mult aura expiring between pins; note in Spec.lua that `mana.fsr` is not an APL field.
@@ -315,6 +315,27 @@ clock on it.
   `shortcut:`); overlapping `mult` auras add rather than multiply (only one exists).
 - **Still open from Day 1-2:** the `locked_out_*` allocation (fix before a caster APL reads it in combat) and the
   overlay `I.SAME_FRAME` guard (Task 3b).
+
+## Open after Day 4 (2026-10-19)
+- **Core mana bound decision, before T10** (every mana pack hits it): D7 percent floors are judged on the belief's
+  lower bound `lo`, which starts at 0 on boot (lo0 = 0) and sits low after spending. Options: judge pct thresholds on
+  `est`, or seed lo0 from rest/max on boot when restMax; add a headless case with a long OOC rest. Until then the
+  Retribution (Consecration/Exorcism) and Enhancement (Fire Nova, potion/rune) mana floors default 0.
+- **Paladin, in game:** checkpoints P1-P9 in `docs/dev/layout.md`. **Shaman, in game:** S1-S10.
+- **Paladin, headless gaps:** the Holy Shock list and Hammer of Wrath's window never run; partial blocks (BLOCKED) are
+  never produced (P6).
+- **Paladin, belief:** the Echo 3600 s belief fallback could stall the twist if P2 finds player auras secret; the
+  Exorcism rank lists concatenate the 879 and 415068 families (P8).
+- **Enhancement gate is thin:** the world goes OOM in ~35 s (687 ticks / 3) with no Mana Spring or mp5 regen in the
+  world; the Searing and Grace of Air in-combat lines barely run. Revisit with T17.
+- **Harness:** loop.lua does not feed a kill, so the next fight's prepull is believed in combat; worked around in
+  shaman_world only, other worlds unchecked. Fixing it changes other packs' lines, so it is its own task.
+- **RegisterTotems** drops element/duration (Schema keeps only the id mapping); shaman_spec asserts the recording
+  stand-in.
+- **Sim summonTotem** raises on an unknown element (a content bug only).
+- **D4 runes unregistered:** Lava Lash 408507, Water Shield 408510, Shamanistic Rage 433255; for T17 (Water Shield
+  bears on the thin gate).
+- **shaman_world** prices presses from the oracle's belief while usable reads world truth (Paladin precedent).
 
 ## Verification
 - `make check` green with every `<Spec> solo:` line gated. `make test-<class>` runs 20 fights per class and is green.
