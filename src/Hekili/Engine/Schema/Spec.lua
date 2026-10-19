@@ -1525,7 +1525,7 @@ end
 
 
 class.file = UnitClassBase( "player" )
-local all = Hekili:NewSpecialization( 0, "All", "Interface\\Addons\\Hekili\\Textures\\LOGO-WHITE.blp" )
+local all = Hekili:NewSpecialization( 0, "All", "Interface\\AddOns\\Hekili\\Textures\\HekiliForever" )
 
 ------------------------------------------------------------------------------------------------------------------------
 -- The `all` spec's engine keys: what core reads by name (the cast and movement auras, the GCD, the APL verbs). Shared game

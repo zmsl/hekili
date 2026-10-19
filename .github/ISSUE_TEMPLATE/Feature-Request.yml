@@ -3,7 +3,7 @@ description: I would like the addon to have a new feature, and I'll explain why.
 title: "[FEATURE] REPLACE THIS TEXT WITH A BRIEF DESCRIPTION OF YOUR NEW FEATURE"
 labels: [enhancement, triage]
 assignees:
-  - Hekili
+  - zmsl
 body:
   - type: checkboxes
     id: precheck
@@ -41,5 +41,5 @@ body:
       label: Contact Information
       description: |
         I will contact you via this GitHub ticket with questions and updates.
-        If you do not regularly check your GitHub email, please provide an alternate contact method (i.e., Discord ID) so that I can reach you if needed.
-      placeholder: Hekili#0001
+        If you do not regularly check your GitHub email, please provide an alternate contact method so that I can reach you if needed.
+      placeholder: your-name

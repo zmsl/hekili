@@ -1,9 +1,11 @@
 ## Interface: 16001
 ## Version: forever-dev
-## Title: Hekili
-## Author: Hekili
-## IconTexture: Interface\AddOns\Hekili\Textures\LOGO-ORANGE.blp
-## Notes: Priority helper based on SimulationCraft action lists.
+## Title: Hekili Forever
+## Author: defzach
+## IconTexture: Interface\AddOns\Hekili\Textures\HekiliForever
+## Notes: Hekili Forever: a priority helper for WoW Forever, based on the original work by Hekili. A fork made with the original author's permission; not the original project.
+## X-Website: https://github.com/zmsl/hekili
+## X-Curse-Project-ID: 1753387
 ## SavedVariables: HekiliDB
 ## OptionalDeps: ConsolePort, ElvUI, LibDualSpec-1.0, Masque, WeakAuras
 

@@ -27,6 +27,7 @@ local TOCS = {
 }
 
 local function field(toc, key)
+    key = key:gsub("%-", "%%-") -- keys like X-Website are matched literally
     return read(toc):match("\n## " .. key .. ": ([^\r\n]*)") or read(toc):match("^## " .. key .. ": ([^\r\n]*)")
 end
 
@@ -86,8 +87,6 @@ local function scan(files, upstream)
 end
 
 describe("upstream links", function()
-    pending("Task 2 turns this on")
-    --[[ TASK 2 BODY
     it("has none in shipped files (src/: no github.com/Hekili at all)", function()
         local files = tracked("'src/*.lua'", "'src/*.toc'", "'src/*.xml'")
         assert.is_true(#files > 50)
@@ -114,7 +113,6 @@ describe("upstream links", function()
         assert.truthy(s:find('name = "Hekili Forever " .. Hekili.Version', 1, true))
         assert.falsy(s:find("ns.Patrons", 1, true))
     end)
-    --]]
 end)
 
 describe("readme", function()
@@ -145,8 +143,6 @@ describe("readme", function()
 end)
 
 describe("tocs", function()
-    pending("Task 2 turns this on")
-    --[[ TASK 2 BODY
     it("name the fork, its author and the original in every TOC", function()
         for _, toc in ipairs(TOCS) do
             assert.are.equal("defzach", field(toc, "Author"), toc)
@@ -156,6 +152,9 @@ describe("tocs", function()
         end
         assert.are.equal("Hekili Forever", field(TOCS[1], "Title"))
         assert.are.equal("Hekili Forever - Shared", field(TOCS[2], "Title"))
+        assert.are.equal("1753387", field(TOCS[1], "X-Curse-Project-ID"))
+        assert.are.equal("Interface\\AddOns\\Hekili\\Textures\\HekiliForever", field(TOCS[1], "IconTexture"))
+        assert.truthy(io.open("src/Hekili/Textures/HekiliForever.tga"))
     end)
 
     it("keep the Keep-as-is fields", function()
@@ -166,7 +165,6 @@ describe("tocs", function()
             assert.truthy(field(TOCS[i], "X-Hekili-ContentAPI"), TOCS[i])
         end
     end)
-    --]]
     --[[ TASK 4 BODY
     it("let the packager stamp the version in every TOC", function()
         for _, toc in ipairs(TOCS) do

@@ -30,7 +30,7 @@ Hekili.DisplayStyleAPI = 1
 function Hekili:RegisterDisplayStyle( name, impl )
     local api = type( impl ) == "table" and impl.api or nil
     if api ~= Hekili.DisplayStyleAPI then
-        self:Notify( ( "Display style '%s' targets style API %s, this Hekili has %d; not registered." ):format( tostring( name ), tostring( api ), Hekili.DisplayStyleAPI ) )
+        self:Notify( ( "Display style '%s' targets style API %s, this Hekili Forever has %d; not registered." ):format( tostring( name ), tostring( api ), Hekili.DisplayStyleAPI ) )
         return false
     end
     if ns.UI.StyleNameTaken( name ) then

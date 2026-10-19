@@ -1,8 +1,9 @@
 ## Interface: 16001
 ## Version: forever-dev
-## Title: Hekili Forever
-## Author: Hekili
-## Notes: Hekili's Forever content every class shares: the shared auras, consumables and items, and the race packs.
+## Title: Hekili Forever - Shared
+## Author: defzach
+## Notes: Hekili Forever's content every class shares: shared auras, consumables, items and the race packs. Based on the original work by Hekili.
+## X-Website: https://github.com/zmsl/hekili
 ## Dependencies: Hekili
 ## Group: Hekili
 ## LoadOnDemand: 1

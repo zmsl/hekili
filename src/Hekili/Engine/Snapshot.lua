@@ -533,7 +533,7 @@ function Hekili:GenerateProfile()
 
 
     return format(
-    "build: %s\n" ..
+    "Hekili Forever build: %s\n" ..
     "level: %d (%d)\n" ..
     "class: %s\n" ..
     "spec: %s\n\n" ..

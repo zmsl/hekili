@@ -253,7 +253,7 @@ local packTemplate = {
     builtIn = false,
 
     author = UnitName("player"),
-    desc = "This is a package of action lists for Hekili.",
+    desc = "This is a package of action lists for Hekili Forever.",
     source = "",
     date = tonumber( date("%Y%M%D.%H%M") ),
     warnings = "",
@@ -1731,7 +1731,7 @@ return "Position" end,
             args = {
                 header = {
                     type = "description",
-                    name = "Hekili has up to five built-in displays (identified in blue) that can display " ..
+                    name = "Hekili Forever has up to five built-in displays (identified in blue) that can display " ..
                         "different kinds of recommendations.  The addon's recommendations are based upon the " ..
                         "Priorities that are generally (but not exclusively) based on SimulationCraft profiles " ..
                         "so that you can compare your performance to the results of your simulations.",
@@ -6917,7 +6917,7 @@ end
 
 do
     local Options = {
-        name = "Hekili " .. Hekili.Version,
+        name = "Hekili Forever " .. Hekili.Version,
         type = "group",
         handler = Hekili,
         get = 'GetOption',
@@ -6927,7 +6927,7 @@ do
             general = {
                 type = "group",
                 name = "General",
-                desc = "Welcome to Hekili; includes general information and essential links.",
+                desc = "Welcome to Hekili Forever; includes general information and essential links.",
                 order = 10,
                 childGroups = "tab",
                 args = {
@@ -6957,48 +6957,34 @@ do
                         type = 'description',
                         name = "",
                         fontSize = "medium",
-                        image = "Interface\\Addons\\Hekili\\Textures\\Taco256",
+                        image = "Interface\\AddOns\\Hekili\\Textures\\HekiliForever",
                         imageWidth = 96,
                         imageHeight = 96,
                         order = 5,
                         width = "full"
                     },
 
-                    supporters = {
+                    forkNotice = {
                         type = "description",
-                        name = function ()
-                            return "|cFF00CCFFTHANK YOU TO OUR SUPPORTERS!|r\n\n" .. ns.Patrons .. "\n\n" ..
-                                "See the |cFFFFD100Snapshots (Troubleshooting)|r section for information about reporting bugs.\n\n"
-                        end,
+                        name = "|cFF00CCFFHekili Forever|r is a fork of the original |cFFFFD100Hekili|r project, made with the "
+                            .. "explicit permission of its original author. It is based on the original work by Hekili and its "
+                            .. "maintainers, modified for WoW Forever by defzach from October 2026, and it is |cffff0000not|r "
+                            .. "the original project: please report problems on the Hekili Forever GitHub page below, never "
+                            .. "to the original Hekili authors.\n\n"
+                            .. "Hekili Forever is free software under the GNU General Public License version 3; the full text "
+                            .. "is in the LICENSE file in the addon folder.\n\n"
+                            .. "See the |cFFFFD100Snapshots (Troubleshooting)|r section for how to report a bug.\n\n",
                         fontSize = "medium",
                         order = 6,
                         width = "full"
                     },
 
-                    discord = {
-                        type = "input",
-                        name = "Discord",
-                        desc = "Join the Hekili Discord server for support and discussion.",
-                        order = 7,
-                        get = function () return "https://discord.gg/3cCTFxM" end,
-                        set = function () end,
-                        width = "full",
-                        dialogControl = "SFX-Info-URL",
-                    },
-                    discordSpace = {
-                        type = "description",
-                        name = " ",
-                        order = 8,
-                        width = "full",
-                    },
-
-
                     github = {
                         type = "input",
                         name = "GitHub",
-                        desc = "Find updates on GitHub.",
+                        desc = "Find Hekili Forever updates on GitHub.",
                         order = 10,
-                        get = function () return "https://github.com/Hekili/hekili/releases" end,
+                        get = function () return "https://github.com/zmsl/hekili/releases" end,
                         set = function () end,
                         width = "full",
                         dialogControl = "SFX-Info-URL",
@@ -7006,19 +6992,9 @@ do
                     curse = {
                         type = "input",
                         name = "CurseForge",
-                        desc = "Find updates on Curseforge.",
+                        desc = "Find Hekili Forever updates on CurseForge.",
                         order = 11,
-                        get = function () return "https://www.curseforge.com/wow/addons/hekili" end,
-                        set = function () end,
-                        width = "full",
-                        dialogControl = "SFX-Info-URL",
-                    },
-                    wowi = {
-                        type = "input",
-                        name = "WoW Interface",
-                        desc = "Find updates on WoW Interface.",
-                        order = 13,
-                        get = function () return "https://www.wowinterface.com/downloads/info24608-HekiliPriorityHelper.html" end,
+                        get = function () return "https://www.curseforge.com/wow/addons/hekili-forever" end,
                         set = function () end,
                         width = "full",
                         dialogControl = "SFX-Info-URL",
@@ -7035,16 +7011,7 @@ do
                         name = "Report Issue",
                         order = 20,
                         width = "full",
-                        get = function() return "http://github.com/Hekili/hekili/issues" end,
-                        set = function() end,
-                        dialogControl = "SFX-Info-URL"
-                    },
-                    faq = {
-                        type = "input",
-                        name = "Help",
-                        order = 21,
-                        width = "full",
-                        get = function() return "https://github.com/Hekili/hekili/wiki/Frequently-Asked-Questions" end,
+                        get = function() return "https://github.com/zmsl/hekili/issues" end,
                         set = function() end,
                         dialogControl = "SFX-Info-URL"
                     },
@@ -7069,13 +7036,13 @@ do
                 args = {
                     gettingStarted_welcome_header = {
                         type = "header",
-                        name = "Welcome to Hekili\n",
+                        name = "Welcome to Hekili Forever\n",
                         order = 1,
                         width = "full"
                     },
                     gettingStarted_welcome_info = {
                         type = "description",
-                        name = "This section is a quick overview of the addon basics. At the end, you will also find answers to a few of the most common questions we get on Github or Discord. \n\n" ..
+                        name = "This section is a quick overview of the addon basics. At the end, you will also find answers to a few of the most common questions we get on GitHub. \n\n" ..
                         "|cFF00CCFFTaking a couple minutes to read it is highly encouraged to improve your experience!|r\n\n",
                         order = 1.1,
                         fontSize = "medium",
@@ -7108,10 +7075,10 @@ do
                         args = {
                             gettingStarted_displays_info = {
                             type = "description",
-                            name = "|cFFFFD100Displays|r are where Hekili shows you the recommended spells and items to cast, with the |cFF00CCFFPrimary|r display being your DPS priority. When this options window is open, all displays are visible.\n" ..
+                            name = "|cFFFFD100Displays|r are where Hekili Forever shows you the recommended spells and items to cast, with the |cFF00CCFFPrimary|r display being your DPS priority. When this options window is open, all displays are visible.\n" ..
                                 "\n|cFFFFD100Displays|r can be moved by:\n" ..
                                 "• Clicking and Dragging them\n" ..
-                                "  - You can move this window out of the way by clicking the |cFFFFD100Hekili " .. Hekili.Version .. " |rtitle at the very top and dragging it out of the way.\n" ..
+                                "  - You can move this window out of the way by clicking the |cFFFFD100Hekili Forever " .. Hekili.Version .. " |rtitle at the very top and dragging it out of the way.\n" ..
                                 "  - Or, you can type |cFFFFD100/hek move|r to allow displays to be moved, but without opening the options. Type it again to lock the displays.\n" ..
                                 "• Setting precise X/Y positioning in the |cFFFFD100Displays|r section, on each display's |cFFFFD100Icon|r tab.\n\n" ..
                                 "By default, the addon uses |cFFFFD100Automatic|r Mode, which decides whether to do a |cFF00CCFFSingle-Target|r or |cFF00CCFFAoE (Multi-Target)|r rotation based on the number of targets detected. You can enable other types of displays in the |cFFFFD100Toggles|r > |cFFFFD100Display Control|r section." ..
@@ -7335,25 +7302,16 @@ do
                             issueReporting_snapshot_next_info_3 = {
                                 type = "description",
                                 name = "Paste the Snapshot Data in the large textbox ( |cFFFFD100CTRL+V|r ), then click |cFFFFD100Create New Paste|r.\n\n"
-                                    .. "Copy the link address from your browser and provide it where appropriate, whether Discord or in a GitHub issue report.",
+                                    .. "Copy the link address from your browser and provide it in a GitHub issue report on the Hekili Forever page.",
                                 fontSize = "medium",
                                 order = 3,
                                 width = "full"
-                            },
-                            issueReporting_snapshot_next_info_4 = {
-                                type = "input",
-                                name = "Discord",
-                                dialogControl = "SFX-Info-URL",
-                                get = function() return "https://discord.gg/3cCTFxM" end,
-                                set = function() end,
-                                order = 2,
-                                width = "full",
                             },
                             issueReporting_snapshot_next_info_5 = {
                                 type = "input",
                                 name = "GitHub Issues",
                                 dialogControl = "SFX-Info-URL",
-                                get = function() return "http://github.com/Hekili/hekili/issues" end,
+                                get = function() return "https://github.com/zmsl/hekili/issues" end,
                                 set = function() end,
                                 order = 2,
                                 width = "full",

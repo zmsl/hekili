@@ -5,7 +5,7 @@ description: |
 title: "[BUG] Provide a short, clear title for your Bug Report"
 labels: [bug, triage]
 assignees:
-  - Hekili
+  - zmsl
 body:
   - type: checkboxes
     id: precheck
@@ -85,5 +85,5 @@ body:
     id: contact
     attributes:
       label: Contact Information
-      description: I will contact you via this GitHub ticket with questions and updates.  If you do not regularly check your GitHub email, please provide an alternate contact method (i.e., Discord ID) so that I can reach you if needed.
-      placeholder: Hekili#0001
+      description: I will contact you via this GitHub ticket with questions and updates.  If you do not regularly check your GitHub email, please provide an alternate contact method so that I can reach you if needed.
+      placeholder: your-name

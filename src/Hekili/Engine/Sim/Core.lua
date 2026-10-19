@@ -34,13 +34,13 @@ local tinsert, tremove, twipe = table.insert, table.remove, table.wipe
 
 local function EmbedBlizOptions()
     local panel = CreateFrame( "Frame", "HekiliDummyPanel", UIParent )
-    panel.name = "Hekili"
+    panel.name = "Hekili Forever"
 
     local open = CreateFrame( "Button", "HekiliOptionsButton", panel, "UIPanelButtonTemplate" )
     open:SetPoint( "CENTER", panel, "CENTER", 0, 0 )
     open:SetWidth( 250 )
     open:SetHeight( 25 )
-    open:SetText( "Open Hekili Options Panel" )
+    open:SetText( "Open Hekili Forever Options" )
 
     open:SetScript( "OnClick", function ()
         ns.StartConfiguration()

@@ -3,8 +3,7 @@ description: The addon is working, but the recommended abilities seem wrong, inc
 title: "[REC] ⚠️ Replace this text with a short, descriptive title of your Recommendation issue"
 labels: [recommendation, triage]
 assignees:
-  - Hekili
-  - syrifgit
+  - zmsl
 body:
 
   - type: checkboxes
@@ -116,7 +115,7 @@ body:
       label: Snapshot (Link)
       description: |
         Please provide a **Snapshot** from the addon, which is a **text** output created by a built-in command, **not** a screenshot.  
-        👉 [How to get a Snapshot (Click here)](https://github.com/Hekili/hekili/wiki/Report-An-Issue#how-do-i-get-a-snapshot)
+        👉 [How to get a Snapshot](https://github.com/zmsl/hekili#reporting-a-problem)
 
         ⚠️ **If you do not provide this information, your ticket may be declined.**
       placeholder: http://pastebin.com/AbCdEfGh
@@ -148,5 +147,5 @@ body:
       label: Contact Information
       description: |
         I will contact you via this GitHub ticket with questions and updates.
-        If you do not regularly check your GitHub email, please provide an alternate contact method (i.e., Discord ID) so that I can reach you if needed.
-      placeholder: Hekili#0001
+        If you do not regularly check your GitHub email, please provide an alternate contact method so that I can reach you if needed.
+      placeholder: your-name

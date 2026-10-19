@@ -64,7 +64,7 @@ function ns.LoadContent()
         notice = name
             .. " is for content API "
             .. tostring(api)
-            .. ", this Hekili for "
+            .. ", this Hekili Forever for "
             .. CONTENT_API
             .. "; update the older one"
         return

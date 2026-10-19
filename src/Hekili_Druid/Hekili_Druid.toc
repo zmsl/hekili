@@ -1,8 +1,9 @@
 ## Interface: 16001
 ## Version: forever-dev
 ## Title: Hekili Forever - Druid
-## Author: Hekili
-## Notes: Hekili's Forever Druid: the class kit and its default priorities. Loaded by Hekili for a Druid.
+## Author: defzach
+## Notes: Hekili Forever's Druid: the class kit and its default priorities, loaded by Hekili Forever for a Druid. Based on the original work by Hekili.
+## X-Website: https://github.com/zmsl/hekili
 ## Dependencies: Hekili, Hekili_Shared
 ## Group: Hekili
 ## LoadOnDemand: 1
