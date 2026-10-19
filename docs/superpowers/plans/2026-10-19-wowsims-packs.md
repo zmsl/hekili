@@ -2804,8 +2804,13 @@ return {
 - [ ] **Step 4: P6, the Arms kit gaps (the spike's).** Improved Slam (12862, 2 ranks): the Forever DB2 gives rank 1
   only (`wowdb effects 12862`: misc 10, the cast time, -500 ms; misc 11, the cooldown, -3000 ms; rank 2, 12330, has no
   effects), and the wowsims log of the 2/2 build shows `Casting {SpellID: 11605} (... Cast Time = 1s, GCD = 1s ...)`
-  with Slams 16.5 s or more apart. So any rank: cast 1.0 s, cooldown 15 s. In `tests/Forever/warrior_spec.lua`, in the
-  block that evaluates ability fields under a talent state, add:
+  with Slams 16.5 s or more apart. The in-game rank 2/2 tooltip (user, 2026-10-19): "Reduces the global cooldown and
+  cast time of your Slam ability by 0.50 sec. In addition, Slam no longer interrupts or delays your melee swing and
+  Slam's cooldown is reduced by 3.0 sec." So with the talent: cast 1.0 s, GCD 1.0 s, cooldown 15 s, and the Slam
+  handler must NOT reset the swing timer (today's Slam models the swing delay; keep that only when the talent is off).
+  Add `gcd = function() return talent.improved_slam.enabled and 1.0 or 1.5 end` beside `cast` below and gate the
+  handler's swing reset on `not talent.improved_slam.enabled`; the spec below gets one more `it` for each. In
+  `tests/Forever/warrior_spec.lua`, in the block that evaluates ability fields under a talent state, add:
 
 ```lua
     it("casts Slam in 1.0 s on a 15 s cooldown with Improved Slam (Forever DB2 12862)", function()
