@@ -24,6 +24,7 @@ Game\State\Families\TargetCast.lua
 Game\State\Families\TargetHealth.lua
 Game\State\Families\Talents.lua
 Game\State\Families\Totems.lua
+Game\State\Families\Pets.lua
 Game\State\Families\Enemies.lua
 Game\State\Families\Now.lua
 Game\State\Families\Modifiers.lua
@@ -39,6 +40,7 @@ Game\State\Sources\Target.lua
 Game\State\Sources\Talents.lua
 Game\State\Sources\Nameplates.lua
 Game\State\Sources\Totems.lua
+Game\State\Sources\Pets.lua
 Game\State\Sources\Enchants.lua
 Game\State\Snapshot.lua
 Game\State\AplWarnings.lua

@@ -67,9 +67,11 @@ local def = {
     auraIds = {},
     talents = {},
     units = {},
+    pets = {}, -- the guardians: { key, cap, duration } of each pet registered with a `cap` (Families/Pets.lua)
 }
 
 local HANDS = { mainhand = 1, offhand = 2 }
+local NO_PETS = {} -- a test's stand-in class may have no `pets`
 local DECAY = "__decay" -- the generated entry's reserved name in a regen model
 local TAKEN = "__taken" -- the generated incoming-rage entry's (tank design §1.2.5)
 
@@ -282,6 +284,12 @@ local function buildDef()
         if type(v) == "table" and type(v[2]) == "number" and not seen[v[2]] then
             seen[v[2]] = true
             insert(def.talents, { key = k, spell = v[2], max = v[3] or 1 })
+        end
+    end
+    for _, k in ipairs(sortedKeys(class.pets or NO_PETS)) do
+        local p = class.pets[k]
+        if p.token == k and type(p.cap) == "number" and p.cap >= 1 then -- its token's entry, not an alias's
+            insert(def.pets, { key = k, cap = floor(p.cap), duration = p.duration })
         end
     end
     def.units[1], def.units[2] = "player", "target"

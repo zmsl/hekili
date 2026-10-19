@@ -579,10 +579,13 @@ describe("now handlers", function()
                 gain(1, "rage")
                 applyDebuff("target", "spender_c", 15)
                 summonTotem("rage_test", "fire", 30)
+                summonPet("pet_a", 3600)
+                summonPet("guardian_a", 18)
                 local _ = talent.talent_a.rank + rage.current
             end,
         })
         register("charge_test", { id = 3131, charges = 2, recharge = 10 }) -- the charge step too
+        h.Class.pets.guardian_a = { token = "guardian_a", cap = 2, duration = 18 }
         start()
         function h:ForceUpdate() end -- the fake records each call; Hekili's own only sets fields
         cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- the capturing subscriber allocates by design

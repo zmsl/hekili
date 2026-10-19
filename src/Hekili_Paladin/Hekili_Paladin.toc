@@ -8,6 +8,6 @@
 ## Dependencies: Hekili, Hekili_Shared
 ## Group: Hekili
 ## LoadOnDemand: 1
-## X-Hekili-ContentAPI: 4
+## X-Hekili-ContentAPI: 5
 
 Paladin.lua

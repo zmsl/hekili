@@ -142,7 +142,7 @@ UnitCreatureFamily	hybrid
 UnitCreatureType	passthrough
 UnitDamage	hybrid
 UnitEffectiveLevel	passthrough
-UnitExists	passthrough
+UnitExists	hybrid
 UnitFactionGroup	passthrough
 UnitGUID	passthrough
 UnitGetTotalAbsorbs	virtual
@@ -154,7 +154,7 @@ UnitInRaid	passthrough
 UnitInRange	virtual
 UnitInVehicle	passthrough
 UnitIsConnected	passthrough
-UnitIsDead	passthrough
+UnitIsDead	hybrid
 UnitIsDeadOrGhost	passthrough
 UnitIsFriend	passthrough
 UnitIsPVP	passthrough

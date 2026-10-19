@@ -1226,6 +1226,8 @@ local HekiliSpecMixin = {
             else
                 self:RegisterPet( token, id, spell, duration )
             end
+            -- Forever (content API 5): `cap` makes it a guardian the belief counts per summon (Game/State/Families/Pets.lua)
+            self.pets[ token ].cap = data.cap
         end
     end,
 

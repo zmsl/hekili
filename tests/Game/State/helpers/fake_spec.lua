@@ -74,6 +74,7 @@ function M.new(swingValue, kinds)
         abilities = {},
         auras = {},
         talents = { talent_a = { 0, 1011, 3 } },
+        pets = {},
     }
     local function ability(key, t)
         t.key, t.funcs = key, { now = t.now } -- Hekili keeps an unknown function field in `funcs`

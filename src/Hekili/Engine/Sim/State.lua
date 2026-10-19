@@ -2454,6 +2454,14 @@ do
             elseif k == "down" then
                 return ( t.expires < ( state.query_time ) )
 
+            elseif k == "count" then
+                -- Forever: a capped guardian's count is the belief's (Game/State/Families/Pets.lua); another pet's 1 while up.
+                -- shortcut: the belief's at query_time, so a summon this simulation predicts adds none; count it in the
+                -- class's handler if an APL needs it.
+                local model = rawget( t, "model" )
+                if model and model.cap then return ( VS.PetCount( model.token, state.query_time ) ) end
+                return t.up and 1 or 0
+
             elseif k == "id" then
                 local id = t.model and t.model.id
                 if type( id ) == "function" then id = id() end

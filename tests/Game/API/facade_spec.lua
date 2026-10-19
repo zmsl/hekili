@@ -116,7 +116,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 122, hybrid = 31, virtual = 26 }, count)
+        assert.are.same({ passthrough = 120, hybrid = 33, virtual = 26 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -443,6 +443,18 @@ describe("ns.Facade", function()
         assert.are.same({ "Family", 1 }, { Facade.UnitCreatureFamily("pet") })
         answers.UnitCreatureFamily = nil
         assert.is_nil(Facade.UnitCreatureFamily("pet")) -- never the secret
+    end)
+
+    it("answers UnitExists raw for any unit but the pet, and the belief's for a secret pet read (C1)", function()
+        answers.UnitExists = function(unit)
+            return unit == "target"
+        end
+        assert.is_true(Facade.UnitExists("target"))
+        assert.is_false(Facade.UnitExists("focus"))
+        answers.UnitExists = nil -- secret
+        assert.is_true(api.issecretvalue(Facade.UnitExists("target"))) -- another unit: raw, as the passthrough was
+        assert.is_false(Facade.UnitExists("pet")) -- the belief's: no pet observed, never the secret
+        assert.is_false(api.issecretvalue(Facade.UnitExists("pet")))
     end)
 
     it("answers UnitRangedDamage raw while plain and the out-of-combat cache once secret (C7, probe only)", function()

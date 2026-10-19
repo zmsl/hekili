@@ -586,8 +586,41 @@ kept("C_Item.GetWeaponEnchantInfo", realGetWeaponEnchantInfo and "hybrid" or "vi
     return ENCHANTS
 end, "unprobed (Rogue Q9); the slot's `weaponEnchant` pseudo-aura when any field is secret")
 
--- Pets (C1): no belief until the Pets family (T10).
+-- Pets (C1): the pet unit's reads are plain [W PR14; gate spike]; for "pet", our summon's model answers them until the
+-- first observation (Families/Pets.lua, VS.Pet), and so does the belief's last observation when one is secret. Every
+-- other unit gets the raw answer, as the passthrough did.
 hybrid("UnitCreatureFamily", nothing, "SecretWhenUnitIdentityRestricted (API docs); unprobed (C1); nothing")
+
+local realUnitExists = resolve("UnitExists")
+kept("UnitExists", "hybrid", function(unit)
+    if unit == "pet" then
+        local exists, _, model = VS.Pet(now())
+        local raw = not model and realUnitExists and realUnitExists(unit) -- secret: tested next
+        if model or issecretvalue(raw) then
+            modelled = true
+            return exists
+        end
+        return raw
+    end
+    if realUnitExists then
+        return realUnitExists(unit)
+    end
+end, "plain in combat [W PR14; gate spike]; for the pet, Pet() while our summon is modelled or the read is secret")
+
+kept("UnitIsDead", "hybrid", function(unit)
+    if unit == "pet" then
+        local _, dead, model = VS.Pet(now())
+        local raw = not model and realUnitIsDead and realUnitIsDead(unit) -- secret: tested next
+        if model or issecretvalue(raw) then
+            modelled = true
+            return dead
+        end
+        return raw
+    end
+    if realUnitIsDead then
+        return realUnitIsDead(unit)
+    end
+end, "plain in combat [W PR14; gate spike]; for the pet, Pet() while our summon is modelled or the read is secret")
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Cooldowns [W PR4, PR11]: times secret in combat, flags plain
@@ -894,7 +927,6 @@ local PASSTHROUGH = {
     { "UnitClassification", "plain in combat [W PR14; gate spike]" },
     { "UnitCreatureType", "plain in combat [W PR14; gate spike]" },
     { "UnitEffectiveLevel", "plain [W sweep 2026-10-16]" },
-    { "UnitExists", "plain in combat [W PR14; gate spike]" },
     { "UnitFactionGroup", "plain [W sweep 2026-10-16]" },
     { "UnitGUID", "plain in combat [W PR14; gate spike]" },
     { "UnitHasVehicleUI", "plain [W sweep 2026-10-16]" },
@@ -902,7 +934,6 @@ local PASSTHROUGH = {
     { "UnitInRaid", "plain [W sweep 2026-10-16]" },
     { "UnitInVehicle", "plain [W sweep 2026-10-16]" },
     { "UnitIsConnected", "plain [W sweep 2026-10-16]" },
-    { "UnitIsDead", "plain in combat [W PR14; gate spike]" },
     { "UnitIsDeadOrGhost", "plain [W sweep 2026-10-16]" },
     { "UnitIsFriend", "plain in combat [W PR14; gate spike]" },
     { "UnitIsPVP", "plain [W sweep 2026-10-16]" },

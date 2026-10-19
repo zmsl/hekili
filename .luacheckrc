@@ -96,6 +96,7 @@ files["src/Hekili/UI/UI.lua"] = { globals = { "p" } } -- upstream's stray global
 -- The names a class file's `now` function reads in VirtualState's context (src/Hekili/Game/State/Families/Now.lua).
 local nowEnv = {
     "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "setCooldown", "summonTotem",
+    "summonPet",
     "talent",
     "buff", "debuff", "knownRank", "stat", "swingBase", "healthMax", "now", "combat", "rage", "energy", "mana", "focus",
     "runic_power",
