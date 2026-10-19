@@ -40,6 +40,7 @@ local mmax, mmin = math.max, math.min
 local SLOTS = 10 -- Output's records per display
 local MAX_TICKS = 31 -- the ruler's ticks for the horizon's maximum (30 s)
 local SWIPE_EPS = 0.1 -- TDF Render.SWIPE_EPS: the sweep is re-set when its end moves this much (seconds)
+local READY_EPS = 0.05 -- a wait this close to its time is due: its ETA hides and a flagged record 1 turns ready
 local MOVE_EPS = 0.25 -- a lane icon is re-anchored when it moved this many pixels
 local CROP = 0.08 -- TDF Render.NewCell's texture crop
 local GOLD = { 1, 0.8, 0.1 } -- TDF Render.GOLD
@@ -58,7 +59,7 @@ end
 ETA[ 101 ], ETA_INT[ 101 ] = "10+", "10+"
 
 local function etaStep( t )
-    if t <= 0.05 then return 0 end
+    if t <= READY_EPS then return 0 end
     local k = floor( t * 10 + 0.5 )
     if k > 100 then return 101 end
     return k
@@ -527,7 +528,7 @@ end
 
 -- The zone rule, on a publish: T.rec[ c ] is the record cell c draws (0: none), T.press the cell drawing record 1
 -- (every "key to press" affordance goes there), T.focused whether cell 1 draws a focus record, T.ready whether that is
--- record 1 (the gold ring; else the pending one), T.extend2 whether cell 2's sweep is extended (to its record's time whenever it holds one). With focusEnabled a
+-- record 1 and its time has come (the gold ring; else the pending one), T.extend2 whether cell 2's sweep is extended (to its record's time whenever it holds one). With focusEnabled a
 -- record is flagged when `focus` is a tier (N >= 1, 1 highest); the focus record is record 1 if flagged (any tier), else
 -- among the flagged records 2.. due within the focus horizon (never past the lane's) the lowest tier, then the soonest.
 -- It takes the now circle (else empty); the next box takes the first
@@ -571,7 +572,7 @@ local function roles( T, tl, recs, count, now )
             end
             T.press, T.focused = 2, true
         end
-        T.ready, T.extend2 = true, f ~= 0
+        T.ready, T.readyAt, T.extend2 = true, nil, f ~= 0
         return
     end
     local n = 0
@@ -591,7 +592,30 @@ local function roles( T, tl, recs, count, now )
     end
     for k = c, SLOTS do map[ k ] = 0 end
     T.press = f == 1 and 1 or 2 -- record 1 is the focus record or, unflagged, the first one for the next box
-    T.focused, T.ready, T.extend2 = f ~= 0, f == 1, n ~= 0
+    T.focused, T.extend2 = f ~= 0, n ~= 0
+    -- a flagged record 1 is ready once its time has come (Tick flips it then); until then the pending look
+    local r1 = recs[ 1 ]
+    T.readyAt = f == 1 and ( T.pinned and r1.time and r1.time - T.pressTime or r1.exact_time ) or nil
+    T.ready = f == 1 and now >= ( T.readyAt or now ) - READY_EPS
+end
+
+-- The now circle's focus look from T.ready: the ring's colour, the ready glow or the Gold Ring's colour and fade.
+local function focusLook( T, tl, blank )
+    local cells = T.cells
+    local look = tl.focusReadyStyle
+    local ring, glow = cells[ 1 ].Ring, T.focused and T.ready and look == "glow" and not blank
+    local gold, art = T.focused and look == "gold", cells[ 1 ].Gold
+    ring:SetShown( T.focused and not glow and not gold )
+    readyGlow( cells[ 1 ], glow, tl.focusColor )
+    art:SetShown( gold )
+    if gold then
+        art:SetDesaturated( not T.ready )
+        art:SetAlpha( T.ready and 1 or 0.5 )
+    end
+    if T.focused then
+        local fc = T.ready and tl.focusColor or tl.focusPendingColor
+        ring:SetVertexColor( fc[ 1 ], fc[ 2 ], fc[ 3 ], fc[ 4 ] )
+    end
 end
 
 local NONE = {} -- record 0: an empty cell
@@ -608,20 +632,7 @@ local function assign( d, T, tl, conf, out, now, combat )
     T.clock = now
     roles( T, tl, recs, out.count, now )
     local blank = out.count == 0 or out.version == d.blankVersion
-    local look = tl.focusReadyStyle
-    local ring, glow = cells[ 1 ].Ring, T.focused and T.ready and look == "glow" and not blank
-    local gold, art = T.focused and look == "gold", cells[ 1 ].Gold
-    ring:SetShown( T.focused and not glow and not gold )
-    readyGlow( cells[ 1 ], glow, tl.focusColor )
-    art:SetShown( gold )
-    if gold then
-        art:SetDesaturated( not T.ready )
-        art:SetAlpha( T.ready and 1 or 0.5 )
-    end
-    if T.focused then
-        local fc = T.ready and tl.focusColor or tl.focusPendingColor
-        ring:SetVertexColor( fc[ 1 ], fc[ 2 ], fc[ 3 ], fc[ 4 ] )
-    end
+    focusLook( T, tl, blank )
     if blank then
         for i = 1, SLOTS do
             local b = cells[ i ]
@@ -779,6 +790,10 @@ function Timeline.Tick( d, conf, out, now, elapsed )
     if not T.has then return end
     local tl = conf.timeline
     if T.pinned then now = T.clock end -- still between publishes
+    if not T.ready and T.readyAt and now >= T.readyAt - READY_EPS then -- a flagged record 1's time has come
+        T.ready = true
+        focusLook( T, tl, false )
+    end
     local int = tl.eta.format == "int"
     if tl.eta.enabled and not T.quiet then
         for i = 1, 2 do

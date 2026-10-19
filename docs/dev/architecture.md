@@ -224,8 +224,10 @@ display whose profile already names the style binds it.
 **Timeline zones.** On each publish the press record is record 1. With `focusEnabled` (default on), a record is
 flagged when `focus` is a tier (N >= 1), and the focus record is record 1 if flagged (any tier), else, among the
 flagged records 2.. due within `focusHorizon` seconds (default 10, never past `horizon`), the lowest tier number and,
-within a tier, the soonest. It takes the now circle: record 1 with the gold
-`focusColor` ring and the press look, or a later record with a countdown, no keybind and the `focusPendingColor` ring;
+within a tier, the soonest. It takes the now circle: record 1 with the press look, its countdown, extend sweep and
+the `focusPendingColor` ring while it still waits (the GCD, a cast, its cooldown) and the gold `focusColor` ring (or
+`focusReadyStyle`'s glow or full-colour Gold Ring) from the frame its `exact_time` arrives (within 0.05 s, with no
+publish needed), or a later record with a countdown, no keybind and the `focusPendingColor` ring;
 with no focus record the now circle is empty. The next box draws the first record that is neither the focus record nor
 flagged (flagged records never sit there), and the lane every other record at its time, flagged ones included.
 `nowFallback = "press"` keeps the earlier rule: record 1 never counts as focus, a focus record (by the same tier rule) takes the now circle and

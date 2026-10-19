@@ -707,6 +707,13 @@ local TL_SET = {
     { "sunder_armor", 12.0, nil, 15, 40, 1.5 },
 }
 
+-- An edit for tlPublish: record 1 due now (a flagged record 1 is ready only once its time has come).
+local function due(H)
+    return function(s)
+        s[1].exact_time = H.ctl.now
+    end
+end
+
 -- `focus`: the record flagged as a focus candidate (the APL entry's focus=1), if any.
 -- `edit( s )` changes the records before the publish.
 local function tlPublish(H, focus, edit)
@@ -1100,9 +1107,9 @@ describe("the timeline display style", function()
             assert.are.same(FOCUS3, actions(T))
             assert.is_true(T.inLane[5])
 
-            -- (3) record 1 flagged: gold and every press affordance on the now circle, record 2 plain in the next box
+            -- (3) record 1 flagged and due: gold and every press affordance on the now circle, record 2 plain in the next box
             H.Hekili.Pause = true
-            tlPublish(H, 1)
+            tlPublish(H, 1, due(H))
             frames()
             assert.are.same({
                 "mortal_strike",
@@ -1123,8 +1130,6 @@ describe("the timeline display style", function()
             assert.are.equal("3|r", c[1].Targets:GetText())
             assert.is_true(c[1].Overlay:IsShown())
             assert.is_false(c[2].Overlay:IsShown())
-            local cd = c[1].Cooldown
-            assert.are.equal(c[1].ExactTime - rawget(cd, "__cdStart"), rawget(cd, "__cdDuration")) -- extended
             assert.is_false(c[2].glowing)
             assert.is_nil(c[2].Targets:GetText())
             H.Hekili.Pause = false
@@ -1132,6 +1137,7 @@ describe("the timeline display style", function()
             -- (4) records 1 and 2 flagged: 1 in the now circle, 3 in the next box, 2 on the lane
             tlPublish(H, 1, function(s)
                 s[2].focus = 1
+                due(H)(s)
             end)
             frames()
             assert.are.same({
@@ -1228,7 +1234,7 @@ describe("the timeline display style", function()
         assert.are.equal("ring", tl.focusReadyStyle)
         tl.focusReadyStyle = "glow"
         local c = T.cells
-        tlPublish(H, 1) -- record 1 flagged: ready
+        tlPublish(H, 1, due(H)) -- record 1 flagged and due: ready
         tlFrame(H, d)
         assert.is_false(c[1].Ring:IsShown())
         assert.is_true(c[1].readyGlow)
@@ -1237,12 +1243,68 @@ describe("the timeline display style", function()
         tlFrame(H, d)
         assert.is_true(c[1].Ring:IsShown())
         assert.is_false(c[1].readyGlow)
-        tlPublish(H, 1)
+        tlPublish(H, 1, due(H))
         tlFrame(H, d)
         assert.is_true(c[1].readyGlow)
         tlPublish(H) -- no focus: the circle empties and the glow stops
         tlFrame(H, d)
         assert.is_false(c[1].readyGlow)
+        assert.are.same({}, H.errors)
+    end)
+
+    -- In game (Fury, 2026-10-18): Overpower (focus 1) procced during the GCD and was record 1 at the GCD's end, but the
+    -- circle drew it ready. A flagged record 1 still waiting is pending (ring, countdown, the extend sweep from the GCD's
+    -- start); it turns ready on the frame its time comes, with no publish, and a publish moving it out makes it pending.
+    it("draws a waiting flagged record 1 pending until its time comes, then ready without a publish", function()
+        local H, d, T = tlBoot(false, function(tl)
+            tl.nowFallback = "empty"
+        end)
+        local tl = H.Hekili.DB.profile.displays.Primary.timeline
+        local c = T.cells
+        rawset(c[1].Ring, "SetVertexColor", function(self, r, g, b, a)
+            rawset(self, "__color", { r, g, b, a })
+        end)
+        local cs = H.ns.Facade.C_Spell
+        local getCd = cs.GetSpellCooldown
+        local gcd = H.Hekili.Engine.Registry.GCD_SPELL
+        local op = H.Hekili.Engine.Registry.Abilities().overpower.id
+        local gStart = H.ctl.now - 0.3 -- a GCD running, 1.2 s left: the spell on it reads the GCD (Facade isOnGCD)
+        cs.GetSpellCooldown = function(id)
+            if id == gcd or id == op then
+                return { startTime = gStart, duration = 1.5, isEnabled = true, modRate = 1 }
+            end
+            return getCd(id)
+        end
+        local function pub(at)
+            tlPublish(H, 1, function(s)
+                s[1].actionName, s[1].actionID, s[2].actionName, s[2].actionID =
+                    "overpower", op, "mortal_strike", s[1].actionID
+                s[1].exact_time = at
+            end)
+        end
+        local exact = gStart + 1.5
+        pub(exact)
+        tlFrame(H, d)
+        tlFrame(H, d) -- the ETA is drawn by the frame after the publish
+        assert.are.equal("overpower", c[1].Action)
+        assert.are.same(tl.focusPendingColor, rawget(c[1].Ring, "__color"))
+        assert.are.equal("0.8", c[1].Eta:GetText())
+        assert.are.equal("K1", c[1].Keybinding:GetText()) -- the press stays on the circle
+        local cd = c[1].Cooldown
+        assert.are.equal(gStart, rawget(cd, "__cdStart"))
+        assert.is_true(math.abs(gStart + rawget(cd, "__cdDuration") - exact) < 1e-9)
+        assert.is_false(c[1].readyGlow)
+        for _ = 1, 4 do -- 0.8 s on, no publish: the GCD ends
+            tlFrame(H, d)
+        end
+        assert.are.same(tl.focusColor, rawget(c[1].Ring, "__color"))
+        assert.are.equal("", c[1].Eta:GetText())
+        pub(H.ctl.now + 2) -- a new publish moves it out again
+        tlFrame(H, d)
+        tlFrame(H, d)
+        assert.are.same(tl.focusPendingColor, rawget(c[1].Ring, "__color"))
+        assert.are.equal("1.6", c[1].Eta:GetText())
+        cs.GetSpellCooldown = getCd
         assert.are.same({}, H.errors)
     end)
 
@@ -1329,7 +1391,7 @@ describe("the timeline display style", function()
         local w = 48 * H.Hekili:GetScale() / 0.737
         assert.are.same({ w, w }, size)
         assert.truthy(io.open("src/Hekili/Textures/GoldRing.tga")) -- the art the texture path names (set once, at creation)
-        tlPublish(H, 1) -- ready
+        tlPublish(H, 1, due(H)) -- ready
         tlFrame(H, d)
         assert.is_true(g:IsShown())
         assert.is_false(c1.Ring:IsShown())
@@ -1448,7 +1510,10 @@ describe("the timeline display style", function()
         tlFrame(H, d)
         assert.are.same(FOCUS3, actions(T))
         -- record 1 flagged tier 2 with a tier-1 record 3 ahead: record 1, gold
-        tlPublish(H, nil, tiers({ [1] = 2, [3] = 1 }))
+        tlPublish(H, nil, function(s)
+            tiers({ [1] = 2, [3] = 1 })(s)
+            due(H)(s)
+        end)
         tlFrame(H, d)
         assert.are.same(TODAY, actions(T))
         assert.are.same(tl.focusColor, rawget(c[1].Ring, "__color"))
