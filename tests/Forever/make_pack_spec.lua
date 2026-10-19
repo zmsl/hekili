@@ -11,7 +11,7 @@ local function slurp(path)
     return s
 end
 
-local CLASSES = { warrior = "Warrior", druid = "Druid", rogue = "Rogue" }
+local CLASSES = { warrior = "Warrior", druid = "Druid", rogue = "Rogue", paladin = "Paladin" }
 
 describe("tools/make_pack.lua", function()
     for class in pairs(CLASSES) do
@@ -32,7 +32,7 @@ describe("tools/make_pack.lua", function()
             for _, r in ipairs(report) do
                 assert.are.equal("unchanged", r[2], r[1])
             end
-            assert.are.equal(3, #report)
+            assert.are.equal(#mp.load(class), #report)
         end)
     end
 

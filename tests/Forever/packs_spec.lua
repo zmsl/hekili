@@ -38,6 +38,9 @@ describe("Forever priorities", function()
         rogue = function()
             return require("Forever.helpers.load_druid").load(nil, "src/Hekili_Rogue/Rogue.lua", "ROGUE")
         end,
+        paladin = function()
+            return require("Forever.helpers.load_druid").load(nil, "src/Hekili_Paladin/Paladin.lua", "PALADIN")
+        end,
     }
     for class, load in pairs(LOADS) do
         it("flag use_off_gcd=1 on exactly the off-GCD abilities (" .. class .. ")", function()

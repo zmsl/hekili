@@ -279,6 +279,13 @@ ns.Specializations = {
         ranged = false,
         forever = "Rogue"
     },
+    -- Forever Paladin pseudo-spec (Paladin.lua's PALADIN_SPEC): a placeholder until the client's ID is read (checkpoint)
+    [1501] = {
+        key = "paladin",
+        class = "PALADIN",
+        ranged = false,
+        forever = "Paladin"
+    },
 }
 
 ns.getSpecializationKey = function ( id )

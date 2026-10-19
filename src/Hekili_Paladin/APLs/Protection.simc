@@ -1,0 +1,16 @@
+# Forever Protection Paladin (provisional: no in-game check yet; the seals, Holy Shield's charges and Judgement's
+# effect on the seal are modelled from our casts and the blocks on us): Righteous Fury before combat, Judgement and
+# Swift Judgement, Seal of Fury kept up and Holy Shield on cooldown at tier 2, Consecration, Holy Shock on Consecrated
+# Ground, Holy Strike, Exorcism (after wowsims/forever's Protection APL, reference only).
+
+actions.precombat=righteous_fury,if=!buff.righteous_fury.up
+actions.precombat+=/retribution_aura,if=!buff.retribution_aura.up
+actions.precombat+=/seal_of_fury,if=!buff.seal_of_fury.up
+actions=judgement,use_off_gcd=1
+actions+=/swift_judgement,use_off_gcd=1
+actions+=/seal_of_fury,focus=2,if=!buff.seal_of_fury.up
+actions+=/consecration
+actions+=/holy_shock,if=debuff.consecrated_ground.up
+actions+=/holy_shield,focus=2
+actions+=/holy_strike
+actions+=/exorcism

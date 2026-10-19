@@ -130,5 +130,11 @@ for _, k in ipairs(stateEnv) do
     rogueEnv[#rogueEnv + 1] = k
 end
 files["src/Hekili_Rogue/Rogue.lua"] = { globals = rogueEnv }
+-- The Paladin's further `state` names.
+local paladinEnv = { "combat", "seal_up", "nextMH", "mainhand_speed", "query_time" }
+for _, k in ipairs(stateEnv) do
+    paladinEnv[#paladinEnv + 1] = k
+end
+files["src/Hekili_Paladin/Paladin.lua"] = { globals = paladinEnv }
 files["src/Hekili_Shared/Races/"] = { globals = stateEnv }
 files["src/Hekili_Shared/Shared/"] = { globals = stateEnv }

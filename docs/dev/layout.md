@@ -10,7 +10,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `src/Hekili_Shared/`: the content every class shares (`Shared/`: auras, consumables, items) and the race packs
     (`Races/`); `## Dependencies: Hekili`, `## LoadOnDemand: 1`, loaded on demand by the core's `Engine/Content.lua`
     at login, first (before the class pack, and for a class with no pack too);
-  - `src/Hekili_Warrior/`, `src/Hekili_Druid/`, `src/Hekili_Rogue/`: one class pack each (the class file, its RegisterPack
+  - `src/Hekili_Warrior/`, `src/Hekili_Druid/`, `src/Hekili_Rogue/`, `src/Hekili_Paladin/`: one class pack each (the class file, its RegisterPack
     blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's `Engine/Content.lua` for the
     player's class.
     The default priorities' sources sit beside the class file in `APLs/`: one `<Pack>.simc` per priority and the
@@ -130,6 +130,41 @@ Assassination solo: fights=3 agreement 0.999 (2222 ticks); react median 0 p90 0 
 Subtlety solo: fights=3 agreement 0.950 (2379 ticks); react median 0 p90 0 never 0.036; refused per 100 [], episodes 0.00/min; dps A/B 1.056; ... [seeds 1-3]
 ```
 
+`tests/Forever/loop_paladin_spec.lua` runs 3 fights a Paladin pack in `make check` (seeds 1-3, `#slow`) and 20 in
+`make test-paladin` (`#paladin`), asserting its flagged lines ran (Retribution: the seal twist at tier 1; Protection:
+Seal of Fury and Holy Shield at tier 2). The mob swings at us in both worlds: Holy Shield raises the block chance and
+each block spends a charge (the world's class-neutral `taking`/`took`); our landed swing spends an Echo (`landed`); mana
+runs under the five-second rule (`fsr`). Protection is gated by `pack_gate.gate`. Retribution is **reported**: its
+swing-gap fillers wait for `mana.pct>=settings.*_mana` (10%, wowsims), and Hekili reads mana as the belief's lower
+bound, which on a fresh boot only the usability ladder lifts, to at most Consecration's 565 of 6000 (mana is secret
+even out of combat); without the floor its agreement is 0.988. The holy_shock list (Holy Shock talent) and Hammer of
+Wrath's window are not exercised by the solo worlds. The first runs (class-completion Task 8):
+
+```
+Retribution solo: fights=3 agreement 0.846 (1923 ticks); react median 0 p90 1 never 0.275; refused per 100 [], episodes 0.00/min; dps A/B 1.017; ... [seeds 1-3] (reported)
+Protection solo: fights=3 agreement 0.957 (2164 ticks); react median 0 p90 1 never 0.030; refused per 100 [], episodes 0.00/min; dps A/B 0.977; ... [seeds 1-3]
+```
+
+Paladin checkpoint (in game, a level 60 Paladin; provisional until answered):
+- P1: the pseudo-spec ID the client reports (Constants.lua's 1501 is a placeholder), and the talent IDs (Twist of Light
+  1310735, Swift Judgement 1310994, Instrument of Law 1311085, Holy Shock 20473, Holy Shield 20925).
+- P2: are the seal auras (20375.., 20154.., 21082.., 1311649..) and the Echoes (1311703, 1311704, 1311701) readable on
+  the player in combat, or secret (then the belief holds an Echo until the next seal: check the twist still advances)?
+- P3: does an Echo drop on our next landed white swing only, or on any melee hit (Holy Strike, a miss)?
+- P4: Judgement and the seal: does Judgement leave the seal up (modelled as wowsims judgement.go: not consumed)? Is
+  Judgement unusable (IsSpellUsable false, false) without a seal, and with Swift Judgement's charge is it free?
+- P5: Hammer of Wrath's usability edge: does IsSpellUsable flip at exactly 20% target health (the `healthGate`), and
+  is its cast 1 s (0 with Instrument of Law: DB2 rank 1 -1000 ms, wowsims says 0.5 s a rank)?
+- P6: Holy Shield's charges: 4 stacks on the player aura, one spent per BLOCK and per partial block (BLOCKED) in
+  UNIT_COMBAT, and the aura readable in combat?
+- P7: mana: UnitPower(mana) secret out of combat on a Paladin too; GetPowerRegenForPowerType(0)'s two returns out of
+  combat (not casting = spirit + mp5, casting = mp5, as the belief now reads them); a cost percentage (Judgement 6%,
+  Righteous Fury 30%) is of base mana in the DB2, priced here as of the maximum.
+- P8: Exorcism: which ranks a Paladin learns (879.. Undead/Demon only, or 415068.. any target), and whether
+  IsSpellUsable answers false on a beast for the 879 ranks.
+- P9: Consecrated Ground (1310905) on the target after Consecration, its 8.6 s; Seal of Fury's absorb and Improved
+  Seal of Fury's mana are unmodelled.
+
 A deliberate pack or APL change re-records the fixture in the same commit:
 `ARMS_RECS=record .lua/bin/busted tests/Forever/arms_recs_spec.lua`.
 
@@ -154,7 +189,7 @@ git remote set-url --push upstream no_push
 ## In game
 
 Each addon gets its own AddOns link, at its folder in `src/`, not at the repository root. From an elevated Windows
-prompt, in the client's `Interface\AddOns` folder, remove the old link and create the five:
+prompt, in the client's `Interface\AddOns` folder, remove the old link and create the six:
 
 ```
 rmdir Hekili
@@ -163,6 +198,7 @@ mklink /D Hekili_Shared \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili
 mklink /D Hekili_Warrior \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Warrior
 mklink /D Hekili_Druid \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Druid
 mklink /D Hekili_Rogue \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Rogue
+mklink /D Hekili_Paladin \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Paladin
 ```
 
 Then restart the client fully (a moved addon is not picked up by `/reload`).
