@@ -6,4 +6,4 @@
 -- build. Left out on purpose: the racials (Blood Fury), potions and trinkets, Kidney Shot, Cheap Shot, Riposte,
 -- the "fight about to end" lines (no time to die on Forever) and the Thousand Cuts cost discount.
 
-return { spec = 1500, packs = { "Combat", "Assassination", "Subtlety" } }
+return { spec = 1488, packs = { "Combat", "Assassination", "Subtlety" } }

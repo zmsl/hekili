@@ -74,7 +74,7 @@ describe("Forever Rogue", function()
         assert.are.equal(20, n)
         assert.are.same({ 8928, 8927, 8926, 6950, 6949, 6947 }, w.abilities.instant_poison.items)
         assert.are.same({ 20844, 8985, 8984, 2893, 2892 }, w.abilities.deadly_poison.items)
-        assert.are.equal(1500, w.specID)
+        assert.are.equal(1488, w.specID)
         assert.are.same({ package = "Combat" }, w.options)
     end)
 
@@ -308,7 +308,7 @@ describe("Forever Rogue through the engine", function()
         return {
             class = "ROGUE",
             classID = 4,
-            specID = 1500,
+            specID = 1488,
             level = 60,
             known = known,
             power = { type = 3, token = "ENERGY", max = 100 },

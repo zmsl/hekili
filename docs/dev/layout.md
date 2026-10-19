@@ -151,7 +151,7 @@ Protection solo: fights=20 agreement 0.959 (14343 ticks); react median 0 p90 1 n
 ```
 
 Paladin checkpoint (in game, a level 60 Paladin; provisional until answered):
-- P1: the pseudo-spec ID the client reports (Constants.lua's 1501 is a placeholder), and the talent IDs (Twist of Light
+- P1: the pseudo-spec ID the client reports (Constants.lua's 1486 follows the alphabetical pattern, Rogue 1488 and Warrior 1491 read in game), and the talent IDs (Twist of Light
   1310735, Swift Judgement 1310994, Instrument of Law 1311085, Holy Shock 20473, Holy Shield 20925).
 - P2: are the seal auras (20375.., 20154.., 21082.., 1311649..) and the Echoes (1311703, 1311704, 1311701) readable on
   the player in combat, or secret (then the belief holds an Echo until the next seal: check the twist still advances)?
@@ -190,7 +190,7 @@ Enhancement solo: fights=20 agreement 0.993 (4227 ticks); react median 0 p90 1 n
 ```
 
 Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
-- S1: the pseudo-spec ID the client reports (Constants.lua's 1502 is a placeholder).
+- S1: the pseudo-spec ID the client reports (Constants.lua's 1489 follows the alphabetical pattern, Rogue 1488 and Warrior 1491 read in game).
 - S2: totem slot order: GetTotemInfo(1..4) out of combat is fire, earth, water, air (as Hekili's `totem.<element>`
   and `summonTotem` assume)? Searing Totem's duration (55 s at rank 6) and the 300 s totems' read back as such?
 - S3: PLAYER_TOTEM_UPDATE in combat: does it fire for our own summon (and for the replaced totem), and does it arrive

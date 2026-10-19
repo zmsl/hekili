@@ -79,7 +79,7 @@ describe("Forever Shaman", function()
             assert.are.equal("function", type(a.known), key)
         end
         assert.are.equal(15, n)
-        assert.are.equal(1502, w.specID)
+        assert.are.equal(1489, w.specID)
         assert.are.same({ package = "Enhancement" }, w.options)
         assert.is_nil(w.abilities.windfury_totem) -- the party's (research §4): never prompted
     end)
@@ -289,7 +289,7 @@ describe("Forever Shaman through the engine", function()
         return {
             class = "SHAMAN",
             classID = 7,
-            specID = 1502,
+            specID = 1489,
             level = 60,
             known = known,
             talents = {},

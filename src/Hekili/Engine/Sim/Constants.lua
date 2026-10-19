@@ -273,21 +273,21 @@ ns.Specializations = {
         forever = "Druid"
     },
     -- Forever Rogue pseudo-spec (Rogue.lua's ROGUE_SPEC): a placeholder until the client's ID is read (checkpoint Q1)
-    [1500] = {
+    [1488] = {
         key = "rogue",
         class = "ROGUE",
         ranged = false,
         forever = "Rogue"
     },
     -- Forever Paladin pseudo-spec (Paladin.lua's PALADIN_SPEC): a placeholder until the client's ID is read (checkpoint)
-    [1501] = {
+    [1486] = {
         key = "paladin",
         class = "PALADIN",
         ranged = false,
         forever = "Paladin"
     },
     -- Forever Shaman pseudo-spec (Shaman.lua's SHAMAN_SPEC): a placeholder until the client's ID is read (checkpoint)
-    [1502] = {
+    [1489] = {
         key = "shaman",
         class = "SHAMAN",
         ranged = false,

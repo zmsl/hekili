@@ -15,7 +15,7 @@ local ld = require("Forever.helpers.load_druid")
 
 local M = {}
 
-M.SPEC, M.CLASS_ID = 1502, 7
+M.SPEC, M.CLASS_ID = 1489, 7
 local MANA = 0 -- Enum.PowerType
 local GCD = { totem = 1.0, spell = 1.5, off = 0 }
 -- UNMEASURED: the true regen parts (the class file declares 17 and 2: the out-of-combat read corrects them).

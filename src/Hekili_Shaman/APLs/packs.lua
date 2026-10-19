@@ -6,4 +6,4 @@
 -- Left out on purpose: Windfury Totem (the party's, research §4), racials and trinkets (autocastOtherCooldowns).
 -- Elemental joins in Task 17.
 
-return { spec = 1502, packs = { "Enhancement" } }
+return { spec = 1489, packs = { "Enhancement" } }

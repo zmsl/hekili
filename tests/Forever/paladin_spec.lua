@@ -87,7 +87,7 @@ describe("Forever Paladin", function()
             assert.are.equal("function", type(a.known), key)
         end
         assert.are.equal(15, n)
-        assert.are.equal(1501, w.specID)
+        assert.are.equal(1486, w.specID)
         assert.are.same({ package = "Retribution" }, w.options)
     end)
 
@@ -296,7 +296,7 @@ describe("Forever Paladin through the engine", function()
         return {
             class = "PALADIN",
             classID = 2,
-            specID = 1501,
+            specID = 1486,
             level = 60,
             known = known,
             talents = { [1310735] = 1 },

@@ -7,4 +7,4 @@
 -- the item swap (D6), racials, potions and trinkets, a taunt (Hand of Reckoning is no player spell on Forever) and
 -- Hammer of Wrath's swing sync (the 0.2 s after a main-hand swing).
 
-return { spec = 1501, packs = { "Retribution", "Protection" } }
+return { spec = 1486, packs = { "Retribution", "Protection" } }
