@@ -2,13 +2,32 @@ package-as: Hekili
 
 enable-nolib-creation: no
 
+# The four addons live in src/; move them to the zip root (src/Hekili replaces the package folder itself, so
+# root files such as the licence do not survive: the copy in src/Hekili/ is the shipped one).
+move-folders:
+    Hekili/src/Hekili: Hekili
+    Hekili/src/Hekili_Shared: Hekili_Shared
+    Hekili/src/Hekili_Druid: Hekili_Druid
+    Hekili/src/Hekili_Warrior: Hekili_Warrior
+
+manual-changelog:
+    filename: CHANGELOG.md
+    markup-type: markdown
+
 ignore:
-    - VirtualState/spec
-    - .busted
+    - tests
     - tools
     - docs
+    - scripts
+    - archive
     - .superpowers
-    - src/Hekili_Warrior/APLs
-    - src/Hekili_Druid/APLs
+    - .github
+    - .busted
     - .luacheckrc
     - .luarc.json
+    - .stylua.toml
+    - .styluaignore
+    - Makefile
+    - mise.toml
+    - src/Hekili_Warrior/APLs
+    - src/Hekili_Druid/APLs

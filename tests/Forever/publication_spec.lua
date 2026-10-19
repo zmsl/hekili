@@ -172,8 +172,6 @@ describe("tocs", function()
 end)
 
 describe("pkgmeta", function()
-    pending("Task 3 turns this on")
-    --[[ TASK 3 BODY
     it("moves the four src/ folders to the zip root and ignores the dev tree", function()
         local s = read(".pkgmeta")
         assert.truthy(s:find("\npackage%-as: Hekili\n") or s:find("^package%-as: Hekili\n"))
@@ -186,7 +184,6 @@ describe("pkgmeta", function()
         assert.falsy(s:find("LICENSE", 1, true)) -- never ignored
         assert.falsy(s:find("externals", 1, true)) -- libraries are vendored
     end)
-    --]]
 end)
 
 describe("changelog", function()
