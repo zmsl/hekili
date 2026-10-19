@@ -84,6 +84,10 @@ class Section(unittest.TestCase):
         self.assertIn("### Task 3: not open", got)  # an h3 does not end the section
         self.assertNotIn("Global Constraints", got)
 
+    def test_open_after_ignores_headings_inside_code_fences(self):
+        got = rn.open_after("```python\n## Open after Fixture\n- fake\n```\n## Open after Real\n- real\n")
+        self.assertEqual(got, "## Open after Real\n- real")
+
 
 class Gather(unittest.TestCase):
     def test_spans_previous_tag_to_ref_and_drops_trailers(self):

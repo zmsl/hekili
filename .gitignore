@@ -65,3 +65,4 @@ Specs.md
 luacov.stats.out
 luacov.report.out
 .superpowers/
+__pycache__/

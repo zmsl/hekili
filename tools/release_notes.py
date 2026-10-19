@@ -66,6 +66,7 @@ def section(text, heading):
 
 def open_after(text):
     """Every "## Open after ..." section of a plan, heading included, joined by blank lines."""
+    text = re.sub(r"^(`{3,}).*?^\1[^\n]*\n?", "", text, flags=re.M | re.S)  # headings inside code fences are not sections
     found = re.findall(r"^(## Open after[^\n]*\n.*?)(?=^## |\Z)", text, re.M | re.S)
     return "\n\n".join(s.strip() for s in found)
 
