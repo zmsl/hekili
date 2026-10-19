@@ -229,6 +229,8 @@ local function buildDef()
             auraRegen = auraRegen,
             decay = r.state and r.state.meta and r.state.meta.decay, -- out-of-combat loss per second (Resources.lua)
             decayInterval = r.state and r.state.meta and r.state.meta.decayInterval, -- seconds per quantum (stepped)
+            fsr = r.state and r.state.meta and r.state.meta.fsr, -- the five-second rule's parts (Resources.lua, C3)
+            mult = r.state and r.state.regenMult, -- the rate multipliers, out of the regen model (Spec.lua, C3b)
         }
         insert(def.resources, d)
         slotByKey[k] = #def.resources

@@ -26,6 +26,11 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- that hand adds (0: none). Continuous regen is per second (regE/regL/regH); a swing-paid
 -- resource's step is the spec's model value of that hand x scale (spread around it). `restMax[r]`: a regenerating
 -- resource rests at its maximum (energy, mana), the others at 0 (rage).
+-- The five-second rule (C3): a slot with an `fsr` meta splits its continuous regen in two parts, each with its own
+-- calibrated state: the `mp5` part (regE/regL/regH, decl, dev) always, the `spirit` part (spE/spL/spH, spDecl, spDev;
+-- 0 for every other slot) only outside the window our own spend opens (`fsrUntil[r]`: its end, I.FSR after the
+-- spend). `shaped[r]`: the slot has an `fsr` or a `mult` entry (else its regen is the plain rate x dt). `pinA[r]` /
+-- `pinB[r]`: the mult-weighted seconds since the last pin, in all and outside the window (the calibration's weights).
 local R = {
     n = 0,
     type = {},
@@ -47,6 +52,16 @@ local R = {
     regH = {},
     decl = {},
     dev = {},
+    fsr = {},
+    fsrUntil = {},
+    spE = {},
+    spL = {},
+    spH = {},
+    spDecl = {},
+    spDev = {},
+    shaped = {},
+    pinA = {},
+    pinB = {},
     scale = {},
     spread = {},
     pinT = {},
@@ -90,6 +105,12 @@ I.TAKEN_WINDOW = 10
 -- In combat (fold order, for the entries without an aura: aura index 0) and since when.
 local fighting, fightT = false, 0
 R.auraRegen = G
+-- Rate multipliers (C3b, built from each resource's `mult` entries): slot r's continuous regen x `mult` while the
+-- player's aura j is believed up.
+local M = { n = 0, slot = {}, aura = {}, mult = {} }
+R.regenMult = M
+--- The five-second rule's window after our own spend of an `fsr` slot, in seconds.
+I.FSR = 5
 
 -- Slot r's out-of-combat loss per second from its `decay` (a number or a state-bound function; absent: none),
 -- evaluated at the build and at each combat end (talent ranks change out of combat only). With a `decayInterval`
@@ -202,9 +223,17 @@ I.OnBuild(function(def, now)
         R.swingOff[r] = d.swingOff or 0
         R.swingCrit[r], R.swingOffCrit[r] = d.swingCrit or 0, d.swingOffCrit or 0
         R.est0[r], R.lo0[r], R.hi0[r] = R.rest[r], 0, R.max[r]
-        local rate = d.regen or 0
+        local fsr = type(d.fsr) == "table" and d.fsr or false
+        local rate, spirit = d.regen or 0, 0
+        if fsr then
+            rate, spirit = eval(fsr.mp5), eval(fsr.spirit)
+            rate, spirit = type(rate) == "number" and rate or 0, type(spirit) == "number" and spirit or 0
+        end
+        R.fsr[r], R.fsrUntil[r], R.shaped[r], R.pinA[r], R.pinB[r] = fsr ~= false, 0, fsr ~= false, 0, 0
         R.decl[r] = rate
         R.regE[r], R.regL[r], R.regH[r] = rate, rate * (1 - I.REGEN_SPREAD), rate * (1 + I.REGEN_SPREAD)
+        R.spDecl[r], R.spDev[r] = spirit, 0
+        R.spE[r], R.spL[r], R.spH[r] = spirit, spirit * (1 - I.REGEN_SPREAD), spirit * (1 + I.REGEN_SPREAD)
         R.dev[r], R.scale[r], R.spread[r] = 0, 1, I.REGEN_SPREAD
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
@@ -220,7 +249,7 @@ I.OnBuild(function(def, now)
         R.power[r] = I.NewBelief("power " .. tostring(d.key))
         R.regen[r] = I.NewBelief("regen " .. tostring(d.key))
         I.Sample(R.power[r], "default", R.rest[r], now, 0)
-        I.Sample(R.regen[r], "default", rate, now, 0)
+        I.Sample(R.regen[r], "default", rate + spirit, now, 0)
     end
     I.TRACKED.resource = R.type
     for r = 1, R.n do
@@ -233,7 +262,20 @@ I.OnBuild(function(def, now)
         end
         R.swingAura[r] = j
     end
-    G.n = 0
+    G.n, M.n = 0, 0
+    for r = 1, R.n do
+        local entries = list[r].mult
+        for k = 1, entries and #entries or 0 do
+            local e = entries[k]
+            for i = 1, #def.auras do
+                if def.auras[i].key == e.aura and type(e.mult) == "number" then
+                    M.n = M.n + 1
+                    M.slot[M.n], M.aura[M.n], M.mult[M.n] = r, i, e.mult
+                    R.shaped[r] = true
+                end
+            end
+        end
+    end
     -- shortcut: a build in combat (a /reload, a spec change) times the combat entries from the build, not the pull;
     -- the next pull's CombatStart sets the real start.
     fighting, fightT = I.inCombat == true, now
@@ -333,6 +375,54 @@ local function auraGain(g, from, to)
     return (floor((to - ap) / iv) - floor((from - ap) / iv)) * G.value[g] -- nonzero: interval > 0 (checked at build)
 end
 
+-- Slot r's regen seconds in (from, to], each weighted by its multiplier: a `mult` entry's believed-up aura adds
+-- (mult - 1) x its overlap. shortcut: two overlapping mult auras add, not multiply; exact for one at a time. Upgrade
+-- if a spec ever stacks two. Allocates nothing.
+local function scaled(r, from, to)
+    local s = to - from
+    for k = 1, M.n do
+        if M.slot[k] == r then
+            local j = M.aura[k]
+            local e, ap = I.auras.exp0[1][j], I.auras.applied[1][j] -- unit 1 is always "player"
+            local hi, lo = e < to and e or to, ap > from and ap or from
+            if hi > lo then
+                s = s + (M.mult[k] - 1) * (hi - lo)
+            end
+        end
+    end
+    return s
+end
+
+-- Slot r's regen weights over dt from `from`: the mult-weighted seconds in all (the mp5 part, or the whole rate) and
+-- outside the five-second window (the spirit part); dt and 0 for a plain slot. The window is the latest one: a
+-- bound over a past interval that held an earlier window is approximate. Allocates nothing.
+local function spans(r, from, dt)
+    if not R.shaped[r] then
+        return dt, 0
+    end
+    local to = from + dt
+    local b, s = 0, R.fsrUntil[r]
+    if R.fsr[r] then
+        s = s > from and s or from
+        b = to > s and scaled(r, s, to) or 0
+    end
+    return scaled(r, from, to), b
+end
+
+-- Slot r's regen multiplier at t: 1 plus each believed-up `mult` aura's (mult - 1). Allocates nothing.
+local function multAt(r, t)
+    local f = 1
+    for k = 1, M.n do
+        if M.slot[k] == r then
+            local j = M.aura[k]
+            if I.auras.applied[1][j] <= t and I.auras.exp0[1][j] > t then
+                f = f + M.mult[k] - 1
+            end
+        end
+    end
+    return f
+end
+
 -- No decay while a `pausesDecay` entry's player aura of slot r is up (Bloodrage: +1/s and no decay for 10 s, in game):
 -- false while one is up through `to`, else when in (from, to] the decay runs from (the latest expiry in it, or `from`).
 local function decayFrom(r, from, to)
@@ -377,11 +467,12 @@ end
 I.OnAdvance(function(from, to)
     local dt = to - from
     for r = 1, R.n do
-        if R.swing[r] == 0 and R.regH[r] ~= 0 then
-            local max = R.max[r]
-            R.est0[r] = clamp(R.est0[r] + R.regE[r] * dt, max)
-            R.lo0[r] = clamp(R.lo0[r] + R.regL[r] * dt, max)
-            R.hi0[r] = clamp(R.hi0[r] + R.regH[r] * dt, max)
+        if R.swing[r] == 0 and (R.regH[r] ~= 0 or R.spH[r] ~= 0) then
+            local max, a, b = R.max[r], spans(r, from, dt)
+            R.est0[r] = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b, max)
+            R.lo0[r] = clamp(R.lo0[r] + R.regL[r] * a + R.spL[r] * b, max)
+            R.hi0[r] = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b, max)
+            R.pinA[r], R.pinB[r] = R.pinA[r] + a, R.pinB[r] + b
         end
     end
     for g = 1, G.n do
@@ -446,15 +537,51 @@ function I.SwingPerSecond(r)
     return per
 end
 
--- One regen measurement m (per second, between two pins ending at t) into the slot's regen (the EMA, TDF
--- calibrate). A swing-paid slot calibrates its step scale against the spec's value per second of swinging.
-local function calibrate(r, m, t)
-    local ref
-    if R.swing[r] > 0 then
-        ref = I.SwingPerSecond(r)
-    else
-        ref = R.decl[r]
+-- One measurement m of a continuous part of slot r (its declared rate ref, its EMA E/L/H and deviation D) into that
+-- part's EMA (TDF calibrate). False when m is noise (a missed spend, a cap) or the part has no declared rate.
+local function ema(r, m, ref, E, L, H, D)
+    if ref == 0 then
+        return false
     end
+    local ratio = m / ref -- nonzero: ref ~= 0 checked
+    if ratio < 1 / I.REGEN_RATIO or ratio > I.REGEN_RATIO then
+        return false
+    end
+    local est = E[r] + I.ALPHA * (m - E[r])
+    local dev = D[r] + I.ALPHA * (abs(m - est) - D[r])
+    local floor = abs(ref) * I.REGEN_SPREAD_MIN
+    local spread = dev > floor and dev or floor
+    D[r] = dev
+    E[r], L[r], H[r] = est, est - spread, est + spread
+    return true
+end
+
+-- One regen measurement m (per second, between two pins ending at t) into the slot's regen (the EMA, TDF
+-- calibrate). A swing-paid slot calibrates its step scale against the spec's value per second of swinging. A shaped
+-- slot's m is the gain over the pins' interval, split by its weights (pinA, pinB; spans): with no time outside the
+-- window it measures the mp5 part (or the whole unscaled rate) as gain / pinA; with at least I.PIN_GAP outside, the
+-- spirit part as (gain - mp5 x pinA) / pinB; a shorter time outside is no measurement.
+local function calibrate(r, m, t)
+    if R.shaped[r] then
+        local a, b = R.pinA[r], R.pinB[r]
+        local ok
+        if b <= 0 and a > 0 then
+            ok = ema(r, m / a, R.decl[r], R.regE, R.regL, R.regH, R.dev) -- nonzero: a > 0 checked
+        elseif b >= I.PIN_GAP then
+            ok = ema(r, (m - R.regE[r] * a) / b, R.spDecl[r], R.spE, R.spL, R.spH, R.spDev) -- nonzero: b >= 1
+        end
+        if ok then
+            I.Sample(R.regen[r], "modelled", R.regE[r] + R.spE[r], t, Obs.Usable)
+        end
+        return
+    end
+    if R.swing[r] == 0 then
+        if ema(r, m, R.decl[r], R.regE, R.regL, R.regH, R.dev) then
+            I.Sample(R.regen[r], "modelled", R.regE[r], t, Obs.Usable)
+        end
+        return
+    end
+    local ref = I.SwingPerSecond(r)
     if ref == 0 then
         return
     end
@@ -462,21 +589,11 @@ local function calibrate(r, m, t)
     if ratio < 1 / I.REGEN_RATIO or ratio > I.REGEN_RATIO then
         return -- noise: a missed spend, a cap
     end
-    if R.swing[r] > 0 then
-        local scale = R.scale[r] + I.ALPHA * (ratio - R.scale[r])
-        local dev = R.dev[r] + I.ALPHA * (abs(ratio - scale) - R.dev[r])
-        R.scale[r], R.dev[r] = scale, dev
-        R.spread[r] = dev > I.REGEN_SPREAD_MIN and dev or I.REGEN_SPREAD_MIN
-        I.Sample(R.regen[r], "modelled", scale * ref, t, Obs.Usable)
-    else
-        local est = R.regE[r] + I.ALPHA * (m - R.regE[r])
-        local dev = R.dev[r] + I.ALPHA * (abs(m - est) - R.dev[r])
-        local floor = abs(ref) * I.REGEN_SPREAD_MIN
-        local spread = dev > floor and dev or floor
-        R.dev[r] = dev
-        R.regE[r], R.regL[r], R.regH[r] = est, est - spread, est + spread
-        I.Sample(R.regen[r], "modelled", est, t, Obs.Usable)
-    end
+    local scale = R.scale[r] + I.ALPHA * (ratio - R.scale[r])
+    local dev = R.dev[r] + I.ALPHA * (abs(ratio - scale) - R.dev[r])
+    R.scale[r], R.dev[r] = scale, dev
+    R.spread[r] = dev > I.REGEN_SPREAD_MIN and dev or I.REGEN_SPREAD_MIN
+    I.Sample(R.regen[r], "modelled", scale * ref, t, Obs.Usable)
 end
 
 -- Pins slot r at t to [v, v + width]; when this pin and the previous one both measure (exact, or `mid`), the regen
@@ -488,7 +605,8 @@ local function pin(r, v, width, t, origin, event, mid)
     local vm = mid and v + width / 2 or v
     local dt = t - R.pinT[r]
     if measures and R.pinValid[r] and dt >= I.PIN_GAP then
-        calibrate(r, (vm - R.pinV[r] - R.pinDelta[r]) / dt, t) -- nonzero: dt >= PIN_GAP (1 s)
+        local gain = vm - R.pinV[r] - R.pinDelta[r]
+        calibrate(r, R.shaped[r] and gain or gain / dt, t) -- nonzero: dt >= PIN_GAP (1 s)
     end
     local max = R.max[r]
     local est = v + width / 2
@@ -498,6 +616,7 @@ local function pin(r, v, width, t, origin, event, mid)
     R.est0[r], R.lo0[r], R.hi0[r] = clamp(est, max), clamp(v, max), clamp(v + width, max)
     R.snapT[r] = -1e9 -- an anchor, not a snap
     R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r] = t, vm, 0, measures
+    R.pinA[r], R.pinB[r] = 0, 0
     I.Sample(R.power[r], origin, R.est0[r], t, event)
 end
 
@@ -506,13 +625,14 @@ end
 -- (a snap: the estimate now stands on this rung, so the caller writes a `pinned` sample).
 local function ladder(r, c, affordable, t, lag)
     if lag > 0 and R.swing[r] == 0 then
+        local a, b = spans(r, t - lag, lag)
         if affordable then
-            c = c + R.regL[r] * lag
+            c = c + R.regL[r] * a + R.spL[r] * b
             if c > R.hi0[r] then
                 return false
             end
         else
-            c = c + R.regH[r] * lag
+            c = c + R.regH[r] * a + R.spH[r] * b
             if c - I.EPS < R.lo0[r] then
                 return false
             end
@@ -707,7 +827,8 @@ I.On(Obs.Usable, function(o, t, lag)
                 pin(r, c, step, t, "pinned", Obs.Usable, true)
             end
         else
-            local width = R.regH[r] * (t - shortT[a])
+            local wa, wb = spans(r, shortT[a], t - shortT[a])
+            local width = R.regH[r] * wa + R.spH[r] * wb
             pin(r, c, t - shortT[a] <= I.PIN_EXACT and 0 or width, t, "pinned", Obs.Usable)
         end
     elseif ladder(r, c, now == YES, t, lag) then
@@ -725,7 +846,9 @@ I.On(Obs.Read, function(o, t, lag)
             R.readable[r] = true -- plain in combat: its exact reads keep it, its spenders' answers are no rungs
         end
         if lag > 0 and R.swing[r] == 0 then
-            pin(r, o.b + R.regL[r] * lag, (R.regH[r] - R.regL[r]) * lag, t, "observed", Obs.Read)
+            local a, b = spans(r, t - lag, lag)
+            local width = (R.regH[r] - R.regL[r]) * a + (R.spH[r] - R.spL[r]) * b
+            pin(r, o.b + R.regL[r] * a + R.spL[r] * b, width, t, "observed", Obs.Read)
         else
             pin(r, o.b, 0, t, "observed", Obs.Read)
         end
@@ -893,6 +1016,9 @@ function I.ResourceShift(r, delta, t, event)
         R.gain[r] = R.gain[r] + delta -- explains a flip (the Usable apply)
     elseif delta < 0 then
         R.spends[r] = R.spends[r] + 1 -- a spend between a credit and its verdict voids the verdict (the oracle)
+        if R.fsr[r] then
+            R.fsrUntil[r] = t + I.FSR -- our own spend: the spirit part pauses (the five-second rule, C3)
+        end
     end
     I.Sample(R.power[r], "modelled", R.est0[r], t, event)
 end
@@ -917,9 +1043,10 @@ function VS.Power(powerType, now)
             end
         end
     end
-    local est = clamp(R.est0[r] + R.regE[r] * dt + gain, max)
-    local lo = clamp(R.lo0[r] + R.regL[r] * dt + gain, max)
-    local hi = clamp(R.hi0[r] + R.regH[r] * dt + gain, max)
+    local a, b = spans(r, I.clock, dt)
+    local est = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b + gain, max)
+    local lo = clamp(R.lo0[r] + R.regL[r] * a + R.spL[r] * b + gain, max)
+    local hi = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b + gain, max)
     if lo > est then
         lo = est
     end
@@ -944,7 +1071,8 @@ function VS.DecayAnchor(powerType)
 end
 
 --- (spec §3.2) The believed regen per second of a power type. A swing-paid resource's is its calibrated step per
---- second of swinging. `casting` selects the in-cast rate (Phase 1 has one rate). Allocates nothing.
+--- second of swinging. A continuous one's is x its `mult` auras up at `now`; with an `fsr`, the mp5 part alone while
+--- `casting` (the in-cast rate) or inside the five-second window, else both parts. Allocates nothing.
 function VS.Regen(powerType, now, casting)
     local r = R.slotOf[powerType]
     if not r then
@@ -957,9 +1085,11 @@ function VS.Regen(powerType, now, casting)
         rec.est, rec.lo, rec.hi = per * s, per * (s - sp), per * (s + sp)
         rec.conf = s > 0 and 1 - sp / s or 0 -- nonzero: s > 0 checked
     else
-        local est = R.regE[r]
-        rec.est, rec.lo, rec.hi = est, R.regL[r], R.regH[r]
-        local conf = est ~= 0 and 1 - (R.regH[r] - est) / abs(est) or 0 -- nonzero: est ~= 0 checked
+        local f, sp = multAt(r, now), R.fsr[r] and not casting and now >= R.fsrUntil[r]
+        local est = (R.regE[r] + (sp and R.spE[r] or 0)) * f
+        rec.est, rec.lo, rec.hi =
+            est, (R.regL[r] + (sp and R.spL[r] or 0)) * f, (R.regH[r] + (sp and R.spH[r] or 0)) * f
+        local conf = est ~= 0 and 1 - (rec.hi - est) / abs(est) or 0 -- nonzero: est ~= 0 checked
         rec.conf = conf < 0 and 0 or conf
     end
     return rec

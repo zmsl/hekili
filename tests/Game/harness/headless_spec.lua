@@ -178,6 +178,21 @@ describe("headless Hekili", function()
             assert.are.same({ VS.KnownRank, VS.SwingBase, VS.HealthMax }, { kr, sb, hm })
         end)
 
+        it(
+            "binds an `fsr` meta's parts to `state` and moves a `mult` regen entry out of the forecast's model",
+            function()
+                local spec, meta = H.Hekili.Class.specs[0], { fsr = { spirit = probe, mp5 = 2 } }
+                local entry = { aura = "rate_aura", mult = 2 }
+                spec:RegisterResource(H.env.Enum.PowerType.Focus, { surge = entry }, nil, meta)
+                assert.are.equal(VS.KnownRank, (meta.fsr.spirit()))
+                local st = spec.resources.focus.state
+                assert.are.same(
+                    { {}, { entry }, true },
+                    { st.regenModel, st.regenMult, spec.resourceAuras.focus.rate_aura }
+                )
+            end
+        )
+
         it("calls stat without allocating", function()
             local alloc = require("Game.State.helpers.alloc")
             assert.are.equal(

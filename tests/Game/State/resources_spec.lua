@@ -827,6 +827,129 @@ describe("resources", function()
         end)
     end)
 
+    describe("the five-second rule (C3: mana's `fsr`, spirit 10/s and mp5 2/s declared)", function()
+        local MANA = 0
+
+        before_each(function()
+            boot({
+                abilities = {},
+                abilityIds = {},
+                abilitySlot = {},
+                resources = {
+                    {
+                        key = "mana",
+                        type = MANA,
+                        token = "MANA",
+                        max = 1000,
+                        rest = true,
+                        fsr = { spirit = 10, mp5 = 2 },
+                    },
+                },
+                auras = {},
+                auraIds = {},
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.Settle(10)
+        end)
+
+        local function read(t, v)
+            obs(Obs.Read, t, 1, v, I.ReadOf.Resource)
+            I.Fold(t, false)
+        end
+
+        it("opens a 5 s window at our own spend: only the mp5 part regenerates in it", function()
+            I.ResourceShift(1, -500, 10, Obs.CastSuccess) -- 500 at 10, the window to 15
+            within(510, VS.Power(MANA, 15).est) -- 2/s for 5 s
+            within(534, VS.Power(MANA, 17).est) -- then 12/s
+            assert.are.same({ 2, 12, 2 }, {
+                VS.Regen(MANA, 12).est,
+                VS.Regen(MANA, 16).est,
+                VS.Regen(MANA, 16, true).est, -- casting: the mp5 part
+            })
+            I.Settle(13)
+            I.ResourceShift(1, -100, 13, Obs.CastSuccess) -- a second spend: the window to 18
+            I.Settle(20)
+            within(500 + 6 - 100 + 2 * 7 + 10 * 2, VS.Power(MANA, 20).est)
+        end)
+
+        it("calibrates each part in its own state, across windows", function()
+            read(10, 500)
+            read(12, 530) -- outside: 15/s, the spirit part (30 - 2 x 2) / 2 = 13
+            within(10 + I.ALPHA * 3, I.res.spE[1])
+            assert.are.equal(2, I.res.regE[1])
+            I.ResourceShift(1, -100, 12, Obs.CastSuccess) -- the window to 17
+            read(14, 436) -- inside: (436 - 530 + 100) / 2 = 3/s, the mp5 part
+            local mp5 = 2 + I.ALPHA * 1
+            within(mp5, I.res.regE[1])
+            within(10 + I.ALPHA * 3, I.res.spE[1])
+            local spirit = 10 + I.ALPHA * 3
+            read(20, 436 + mp5 * 6 + 12 * 3) -- 3 s outside: (gain - mp5 x 6) / 3 = 12
+            within(spirit + I.ALPHA * (12 - spirit), I.res.spE[1])
+            within(mp5, I.res.regE[1])
+            within(mp5 + spirit + I.ALPHA * (12 - spirit), VS.Regen(MANA, 20).est)
+        end)
+
+        it("allocates nothing over 1000 spends, advances and projections", function()
+            local t = 10
+            local bytes = alloc.bytes(function()
+                t = t + 1
+                I.ResourceShift(1, -1, t, Obs.CastSuccess)
+                I.Settle(t + 0.5)
+                VS.Power(MANA, t + 6)
+                VS.Regen(MANA, t + 6)
+            end, 1000)
+            assert.are.equal(0, bytes)
+        end)
+    end)
+
+    describe("a regen `mult` (C3b: energy 10/s, x2 while rate_aura is up)", function()
+        local RATE_AURA = 1
+
+        before_each(function()
+            boot({
+                abilities = {},
+                abilityIds = {},
+                abilitySlot = {},
+                resources = {
+                    {
+                        key = "energy",
+                        type = ENERGY,
+                        token = "ENERGY",
+                        max = 200,
+                        rest = true,
+                        regen = 10,
+                        mult = { { aura = "rate_aura", mult = 2 }, { aura = "not_tracked", mult = 5 } },
+                    },
+                },
+                auras = { { key = "rate_aura", id = 1021 } },
+                auraIds = { { 1021 } },
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.Settle(10)
+            I.ResourceShift(1, -200, 10, Obs.CastSuccess) -- 0 at 10
+            I.AuraModel(1, RATE_AURA, 10, 15, 1, 10, 0) -- applied at 10, expires at 15
+        end)
+
+        it("scales the rate while its aura is up", function()
+            within(40, VS.Power(ENERGY, 12).est)
+            within(100 + 30, VS.Power(ENERGY, 18).est) -- 20/s to 15, then 10/s
+            assert.are.same({ 20, 10 }, { VS.Regen(ENERGY, 12).est, VS.Regen(ENERGY, 16).est })
+            I.Settle(18)
+            within(130, I.res.est0[1])
+        end)
+
+        it("calibrates the unscaled rate: a measurement under the aura is divided by its mult", function()
+            obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+            I.Fold(10, false)
+            obs(Obs.Read, 12, 1, 48, I.ReadOf.Resource) -- 24/s under x2: 12/s unscaled
+            I.Fold(12, false)
+            within(10 + I.ALPHA * 2, I.res.regE[1])
+            within(2 * (10 + I.ALPHA * 2), VS.Regen(ENERGY, 12).est)
+        end)
+    end)
+
     describe("a swing entry gated on a player aura (swings pay only while form_a is up)", function()
         local GATE, SPENDER_C = 3, 3 -- the aura index; fs.def's ability index of spender_c (10 rage)
 

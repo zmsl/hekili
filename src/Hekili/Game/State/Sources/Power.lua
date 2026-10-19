@@ -108,7 +108,7 @@ S.Poll(1, function(api, t)
         if type(v) == "number" then
             Direct(Obs.Read, t, r, v, ReadOf.Resource)
         end
-        if not I.inCombat and R.swing[r] == 0 then
+        if not I.inCombat and R.swing[r] == 0 and not R.fsr[r] then -- an `fsr` slot's parts are declared, then calibrated
             local rawIn, rawAct = api.GetPowerRegenForPowerType(R.type[r]) -- secret: Plain next
             local act = Plain(api, rawAct)
             -- A 0 for a slot resting at its maximum is a form that does not regenerate it (a pull from Bear Form): skip.

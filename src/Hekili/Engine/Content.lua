@@ -18,7 +18,8 @@ local Hekili = _G[addon]
 
 -- 2 (2026-10-18): the ability fields `ladder` and `missable`, Shared:RegisterStateExpr, the aura fields `overlay`,
 -- `isStealthed` and `weaponEnchant`, and Hekili_Shared's main_hand_enchant and off_hand_enchant pseudo-auras.
-local CONTENT_API = 2
+-- 3 (2026-10-19): a resource meta's `fsr` (the five-second rule's parts) and a regen entry's `mult`.
+local CONTENT_API = 3
 
 local done, notice = false, nil
 

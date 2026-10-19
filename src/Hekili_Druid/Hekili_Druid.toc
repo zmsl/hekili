@@ -8,6 +8,6 @@
 ## Dependencies: Hekili, Hekili_Shared
 ## Group: Hekili
 ## LoadOnDemand: 1
-## X-Hekili-ContentAPI: 2
+## X-Hekili-ContentAPI: 3
 
 Druid.lua

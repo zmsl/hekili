@@ -125,6 +125,17 @@ describe("Adapter", function()
         assert.are.equal(1, I.res.swing[1]) -- the swing source is still found
     end)
 
+    it("forwards a resource's `fsr` meta and its `mult` entries (C3, C3b)", function()
+        local st = h.Class.resources.rage.state
+        st.meta = { fsr = { spirit = 3, mp5 = 1 } }
+        st.regenMult = { { aura = "regen_aura_a", mult = 2 } }
+        h.Class.auras.regen_aura_a = { key = "regen_aura_a", id = 1021, duration = 10 }
+        VS.SpecChanged()
+        local M = I.res.regenMult
+        assert.are.same({ true, 1, 3, 1, 2 }, { I.res.fsr[1], I.res.regE[1], I.res.spE[1], M.n, M.mult[1] })
+        assert.are.equal(1021, I.auras.id[M.aura[1]])
+    end)
+
     it("forwards the off hand's swing value and a plain periodic entry (combat-gated), with its talent", function()
         local model = h.Class.resources.rage.state.regenModel
         model.offhand = { swing = "offhand", value = 4 }

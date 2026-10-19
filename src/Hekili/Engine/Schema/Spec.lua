@@ -169,6 +169,15 @@ local function trackMisses( spec, key, data )
 end
 
 
+-- RegisterResource( resourceID, regen, model, meta ): `regen` is Hekili's regen model (named entries); `meta` holds
+-- state-bound functions (each setfenv'd to `state`): `max`, `decay`, `decayInterval`, and two fields the belief reads
+-- (Game/State/Families/Resources.lua):
+--   fsr = { spirit = fn, mp5 = fn }  The five-second rule (C3): continuous regen in two parts, each a rate per second
+--                                    (a number or a function, read at the build) and calibrated on its own; after our
+--                                    own spend of the resource the spirit part pauses for 5 s, the mp5 part never does.
+-- A regen entry with `mult` (C3b), `{ aura = key, mult = n }`: the resource's calibrated continuous rate x n while the
+-- player's aura `key` is up (an energy or mana surge). It is a rate multiplier, not a forecast event: it moves out of
+-- the regen model into `state.regenMult` here (Hekili's forecast would call its missing `last`).
 local HekiliSpecMixin = {
     RegisterResource = function( self, resourceID, regen, model, meta )
         local resource = GetResourceKey( resourceID )
@@ -213,12 +222,23 @@ local HekiliSpecMixin = {
         r.state.regenModel = regen
         r.state.meta = meta or {}
 
-        for _, func in pairs( r.state.meta ) do
-            setfenv( func, state )
+        for _, v in pairs( r.state.meta ) do
+            if type( v ) == "table" then -- `fsr`'s parts
+                for _, func in pairs( v ) do
+                    if type( func ) == "function" then setfenv( func, state ) end
+                end
+            else
+                setfenv( v, state )
+            end
         end
 
         if r.state.regenModel then
-            for _, v in pairs( r.state.regenModel ) do
+            for k, v in pairs( r.state.regenModel ) do
+                if v.mult then
+                    r.state.regenMult = r.state.regenMult or {}
+                    insert( r.state.regenMult, v )
+                    r.state.regenModel[ k ] = nil -- clearing a field mid-traversal is allowed
+                end
                 v.resource = v.resource or resource
                 self.resourceAuras[ v.resource ] = self.resourceAuras[ v.resource ] or {}
 
