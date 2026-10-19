@@ -13,7 +13,7 @@ Hekili Forever is a priority helper that can make recommendations several steps 
 Hekili Forever is currently in rapid development based on the level 30 beta. Druid (Feral, Guardian, Balance) and Warrior (Arms, Fury, Protection) are the current focus and are tuned for level 60 content, but are subject to rapid change after launch.
 
 ## Action Packs
-Action Packs are shareable instructions that direct the addon how to make recommendations. They use action priority lists similar to SimulationCraft, with Forever-specific lines written for this ruleset. Action Packs only work for specializations the addon supports. View and edit them under /hekili > Action Packs.
+Action Packs are shareable instructions that direct the addon how to make recommendations. They use action priority lists similar to SimulationCraft, with Forever-specific lines written for this ruleset. Action Packs only work for specializations the addon supports. View and edit them under /hekili > Priorities.
 
 ## Displays
 Each display can use the classic Hekili look, a row of icons for the next recommendations, or the new Timeline style:
@@ -27,7 +27,7 @@ Each display can use the classic Hekili look, a row of icons for the next recomm
 Pack authors can mark lines as "focus" abilities, such as a buff to refresh or a proc to use, so they appear in the Focus circle ahead of time rather than only when they reach the top of the list.
 
 ## Current Mode
-The Current Mode: Auto setting adjusts your display to the number of enemies the addon detects. For fights where you want to focus one enemy, switch to Single Target to force the primary display to assume one target; the AOE display then appears alongside with the multi-target recommendations. Bind a key for Mode Switch under /hekili > Toggles so you can flip it mid-fight.
+The Current Mode: Automatic setting adjusts your display to the number of enemies the addon detects. For fights where you want to focus one enemy, switch to Single-Target to force the primary display to assume one target; the AOE display then appears alongside with the multi-target recommendations. Bind a key for Display Mode under /hekili > Toggles > Display Control so you can flip it mid-fight.
 
 ## Other Customization
 You can change the direction of your recommendation queue, its alignment and spacing, the number of icons shown, the primary and queued icon sizes, fonts and font sizes, and Blizzard's overlay glow on the first recommendation. Visibility and transparency can be set separately for PvE and PvP, and displays can be given conditions in the same syntax the action lists use.
