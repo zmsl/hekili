@@ -3,6 +3,7 @@
 ## Title: Hekili Forever
 ## Author: defzach
 ## IconTexture: Interface\AddOns\Hekili\Textures\HekiliForever
+## Category: Combat
 ## Notes: Hekili Forever: a priority helper for WoW Forever, based on the original work by Hekili. A fork made with the original author's permission; not the original project.
 ## X-Website: https://github.com/zmsl/hekili
 ## X-Curse-Project-ID: 1753387
