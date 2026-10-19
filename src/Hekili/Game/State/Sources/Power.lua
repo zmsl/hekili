@@ -108,16 +108,23 @@ S.Poll(1, function(api, t)
         if type(v) == "number" then
             Direct(Obs.Read, t, r, v, ReadOf.Resource)
         end
-        if not I.inCombat and R.swing[r] == 0 and not R.fsr[r] then -- an `fsr` slot's parts are declared, then calibrated
+        if not I.inCombat and R.swing[r] == 0 then
             local rawIn, rawAct = api.GetPowerRegenForPowerType(R.type[r]) -- secret: Plain next
-            local act = Plain(api, rawAct)
+            local idle, act = Plain(api, rawIn), Plain(api, rawAct)
             -- A 0 for a slot resting at its maximum is a form that does not regenerate it (a pull from Bear Form): skip.
-            if
-                Plain(api, rawIn) ~= nil
-                and type(act) == "number"
-                and act ~= R.regE[r]
-                and (act ~= 0 or not R.restMax[r])
-            then
+            if R.fsr[r] then
+                -- an `fsr` slot (C3): not casting is both parts, casting the mp5 part alone
+                if
+                    type(idle) == "number"
+                    and type(act) == "number"
+                    and idle >= act
+                    and (idle ~= 0 or not R.restMax[r])
+                    and (act ~= R.regE[r] or idle - act ~= R.spE[r])
+                then
+                    Direct(Obs.Read, t, r, act, ReadOf.Regen)
+                    Direct(Obs.Read, t, r, idle - act, ReadOf.RegenSpirit)
+                end
+            elseif idle ~= nil and type(act) == "number" and act ~= R.regE[r] and (act ~= 0 or not R.restMax[r]) then
                 Direct(Obs.Read, t, r, act, ReadOf.Regen)
             end
         end

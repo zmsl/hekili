@@ -61,9 +61,10 @@ VS.Obs = {
 I.HitKind = { WOUND = 1, BLOCKED = 2, BLOCK = 3, DODGE = 4, PARRY = 5, MISS = 6, HEAL = 7 }
 I.HitName = { "WOUND", "BLOCKED", "BLOCK", "DODGE", "PARRY", "MISS", "HEAL" }
 
---- What a `Read` observation read (its `c`): TDF's Enum.ReadOf integers (5 and 7-9 reserved), plus Health = 10, a
---- VirtualState kind past TDF's range.
-I.ReadOf = { Resource = 1, Aura = 2, TargetAura = 3, Max = 4, Regen = 6, Health = 10 }
+--- What a `Read` observation read (its `c`): TDF's Enum.ReadOf integers (5 and 7-9 reserved), plus Health = 10 and
+--- RegenSpirit = 11 (an `fsr` slot's spirit part: the not-casting rate less the casting one), VirtualState kinds past
+--- TDF's range.
+I.ReadOf = { Resource = 1, Aura = 2, TargetAura = 3, Max = 4, Regen = 6, Health = 10, RegenSpirit = 11 }
 
 --- What a `TargetCast` observation reports (its `a`): TDF's Enum.TargetCastOf integers.
 I.TargetCastOf = { Start = 1, ChannelStart = 2, End = 3, Interrupted = 4, Kickable = 5 }

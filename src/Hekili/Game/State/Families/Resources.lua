@@ -268,7 +268,8 @@ I.OnBuild(function(def, now)
         for k = 1, entries and #entries or 0 do
             local e = entries[k]
             for i = 1, #def.auras do
-                if def.auras[i].key == e.aura and type(e.mult) == "number" then
+                -- a mult of 0 or less is no rate multiplier (the out-of-combat read divides by it)
+                if def.auras[i].key == e.aura and type(e.mult) == "number" and e.mult > 0 then
                     M.n = M.n + 1
                     M.slot[M.n], M.aura[M.n], M.mult[M.n] = r, i, e.mult
                     R.shaped[r] = true
@@ -538,18 +539,25 @@ function I.SwingPerSecond(r)
 end
 
 -- One measurement m of a continuous part of slot r (its declared rate ref, its EMA E/L/H and deviation D) into that
--- part's EMA (TDF calibrate). False when m is noise (a missed spend, a cap) or the part has no declared rate.
-local function ema(r, m, ref, E, L, H, D)
+-- part's EMA (TDF calibrate). False when m is noise (a missed spend, a cap) or the part has no declared rate. A part
+-- declared 0 with a `bound` (an `fsr` slot's mp5 part: the slot's declared total) learns any m in [0, bound x
+-- REGEN_RATIO] instead of the ratio test.
+local function ema(r, m, ref, E, L, H, D, bound)
+    local scale = ref
     if ref == 0 then
-        return false
-    end
-    local ratio = m / ref -- nonzero: ref ~= 0 checked
-    if ratio < 1 / I.REGEN_RATIO or ratio > I.REGEN_RATIO then
-        return false
+        scale = bound or 0
+        if scale <= 0 or m < 0 or m > scale * I.REGEN_RATIO then
+            return false
+        end
+    else
+        local ratio = m / ref -- nonzero: ref ~= 0 checked
+        if ratio < 1 / I.REGEN_RATIO or ratio > I.REGEN_RATIO then
+            return false
+        end
     end
     local est = E[r] + I.ALPHA * (m - E[r])
     local dev = D[r] + I.ALPHA * (abs(m - est) - D[r])
-    local floor = abs(ref) * I.REGEN_SPREAD_MIN
+    local floor = abs(scale) * I.REGEN_SPREAD_MIN
     local spread = dev > floor and dev or floor
     D[r] = dev
     E[r], L[r], H[r] = est, est - spread, est + spread
@@ -566,7 +574,8 @@ local function calibrate(r, m, t)
         local a, b = R.pinA[r], R.pinB[r]
         local ok
         if b <= 0 and a > 0 then
-            ok = ema(r, m / a, R.decl[r], R.regE, R.regL, R.regH, R.dev) -- nonzero: a > 0 checked
+            local bound = R.fsr[r] and R.decl[r] + R.spDecl[r] or nil
+            ok = ema(r, m / a, R.decl[r], R.regE, R.regL, R.regH, R.dev, bound) -- nonzero: a > 0 checked
         elseif b >= I.PIN_GAP then
             ok = ema(r, (m - R.regE[r] * a) / b, R.spDecl[r], R.spE, R.spL, R.spH, R.spDev) -- nonzero: b >= 1
         end
@@ -861,7 +870,12 @@ I.On(Obs.Read, function(o, t, lag)
         local v = o.b / multAt(r, t) -- the game's rate includes any `mult` aura up now: store it unscaled
         R.decl[r], R.readT[r] = v, t
         R.regE[r], R.regL[r], R.regH[r] = v, v, v
-        I.Sample(R.regen[r], "observed", v, t, Obs.Read)
+        I.Sample(R.regen[r], "observed", v + R.spE[r], t, Obs.Read)
+    elseif c == ReadOf.RegenSpirit and R.fsr[r] then -- after its slot's Regen read in the same poll (Power.lua)
+        local v = o.b / multAt(r, t)
+        R.spDecl[r], R.readT[r] = v, t
+        R.spE[r], R.spL[r], R.spH[r] = v, v, v
+        I.Sample(R.regen[r], "observed", R.regE[r] + v, t, Obs.Read)
     end
 end)
 

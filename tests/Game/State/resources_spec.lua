@@ -890,6 +890,58 @@ describe("resources", function()
             within(mp5 + spirit + I.ALPHA * (12 - spirit), VS.Regen(MANA, 20).est)
         end)
 
+        it("takes no measurement from less than PIN_GAP outside the window (0 < pinB < PIN_GAP)", function()
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            read(15.5, 400 + 2 * 5 + 30) -- 0.5 s outside: no part moves
+            assert.are.same({ 2, 10 }, { I.res.regE[1], I.res.spE[1] })
+        end)
+
+        it("reads both parts out of combat: not casting is spirit + mp5, casting the mp5 part", function()
+            local api = fake.new()
+            I.api = api
+            VS.Start(api)
+            local function poll(t)
+                api.ctl.Tick(t)
+                S.RunPolls(t)
+                I.Fold(t, false)
+            end
+            api.ctl.regen[MANA] = { 14, 3 }
+            poll(105)
+            assert.are.same({ 3, 11 }, { I.res.regE[1], I.res.spE[1] })
+            assert.are.same({ 14, 3 }, { VS.Regen(MANA, 105).est, VS.Regen(MANA, 105, true).est })
+            api.ctl.regen[MANA] = { 0, 0 } -- a total 0 for a slot at rest at its maximum: no news
+            poll(110)
+            assert.are.equal(14, VS.Regen(MANA, 110).est)
+        end)
+
+        it("learns an mp5 part declared 0 (or read 0) from a measurement inside the window", function()
+            boot({
+                abilities = {},
+                abilityIds = {},
+                abilitySlot = {},
+                resources = {
+                    {
+                        key = "mana",
+                        type = MANA,
+                        token = "MANA",
+                        max = 1000,
+                        rest = true,
+                        fsr = { spirit = 10, mp5 = 0 },
+                    },
+                },
+                auras = {},
+                auraIds = {},
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.Settle(10)
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            read(12, 400 + 4) -- 2/s inside: the mp5 part
+            within(I.ALPHA * 2, I.res.regE[1])
+        end)
+
         it("allocates nothing over 1000 spends, advances and projections", function()
             local t = 10
             local bytes = alloc.bytes(function()
@@ -949,12 +1001,50 @@ describe("resources", function()
             within(2 * (10 + I.ALPHA * 2), VS.Regen(ENERGY, 12).est)
         end)
 
+        it("calibrates across the aura's expiry between two pins (x2 to 15, then x1)", function()
+            obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+            I.Fold(10, false)
+            obs(Obs.Read, 18, 1, 12 * (2 * 5 + 3), I.ReadOf.Resource) -- 12/s unscaled over 13 weighted seconds
+            I.Fold(18, false)
+            within(10 + I.ALPHA * 2, I.res.regE[1])
+            within(10 + I.ALPHA * 2, VS.Regen(ENERGY, 18).est)
+        end)
+
         it("an out-of-combat regen read taken under the aura is stored unscaled", function()
             obs(Obs.Read, 12, 1, 24, I.ReadOf.Regen) -- the game's 24/s already includes the x2
             I.Fold(12, false)
             assert.are.same({ 12, 12 }, { I.res.decl[1], I.res.regE[1] })
             assert.are.same({ 24, 12 }, { VS.Regen(ENERGY, 12).est, VS.Regen(ENERGY, 16).est })
         end)
+    end)
+
+    it("ignores a regen `mult` of 0 or less (the out-of-combat read divides by it)", function()
+        boot({
+            abilities = {},
+            abilityIds = {},
+            abilitySlot = {},
+            resources = {
+                {
+                    key = "energy",
+                    type = ENERGY,
+                    token = "ENERGY",
+                    max = 200,
+                    rest = true,
+                    regen = 10,
+                    mult = { { aura = "rate_aura", mult = 0 }, { aura = "rate_aura", mult = -1 } },
+                },
+            },
+            auras = { { key = "rate_aura", id = 1021 } },
+            auraIds = { { 1021 } },
+            talents = {},
+            units = { "player", "target" },
+        })
+        I.Settle(10)
+        I.AuraModel(1, 1, 10, 15, 1, 10, 0)
+        assert.are.same({ 0, false }, { I.res.regenMult.n, I.res.shaped[1] })
+        obs(Obs.Read, 12, 1, 12, I.ReadOf.Regen)
+        I.Fold(12, false)
+        assert.are.same({ 12, 12 }, { I.res.decl[1], VS.Regen(ENERGY, 12).est })
     end)
 
     describe("a swing entry gated on a player aura (swings pay only while form_a is up)", function()
