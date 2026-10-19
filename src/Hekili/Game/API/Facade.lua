@@ -58,7 +58,7 @@ function Facade.Attach(hekili)
 end
 
 local busy, modelled = false, false
-Facade.secrets = {} -- by name: secret answers from a passthrough while tracing (a misfiled name, E11)
+Facade.secrets = {} -- by name: secret answers from a passthrough, or a hybrid's raw answer, while tracing (E11)
 Facade.QUIET = { GetTime = true } -- read so often it would bury the snapshot: counted, not written
 Facade.counts = {} -- by name: reads while tracing
 
@@ -89,11 +89,13 @@ end
 -- One trace line (run through pcall: a raising Debug or a strange value never reaches the read).
 local function write(name, kind, a1, a2, n, r1, r2, r3, r4)
     Facade.counts[name] = (Facade.counts[name] or 0) + 1
-    if kind == "passthrough" then
+    -- a hybrid's raw answer counts too: UnitExists and UnitIsDead pass every unit but the pet through raw
+    if kind == "passthrough" or (kind == "hybrid" and not modelled) then
         if issecretvalue(r1) or issecretvalue(r2) or issecretvalue(r3) or issecretvalue(r4) then
             Facade.secrets[name] = (Facade.secrets[name] or 0) + 1
         end
-    elseif kind == "hybrid" then
+    end
+    if kind == "hybrid" then
         kind = modelled and "hybrid:model" or "hybrid:raw"
     end
     if not Facade.QUIET[name] then

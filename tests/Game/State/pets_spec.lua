@@ -132,6 +132,11 @@ describe("the pets family", function()
         assert.are.same({ true, true, false }, pet(31.1)) -- unchanged
         assert.is_true(ns.Facade.UnitExists("pet")) -- the belief's, never the secret
         assert.is_false(api.issecretvalue(ns.Facade.UnitExists("pet")))
+        ctl.dead.pet = fake.SECRET
+        local dead = ns.Facade.UnitIsDead("pet")
+        assert.is_false(api.issecretvalue(dead))
+        assert.are.equal(select(2, VS.Pet(31.1)), dead) -- the belief's: dead
+        assert.is_true(dead)
     end)
 
     it("counts 3 guardians against a cap of 2, each with its own expiry", function()

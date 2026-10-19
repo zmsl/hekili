@@ -25,6 +25,12 @@ describe("the facade trace", function()
             GetHaste = function()
                 return fake.SECRET
             end,
+            UnitExists = function(unit)
+                if unit == "target" then
+                    return fake.SECRET
+                end
+                return false
+            end,
             GetInstanceInfo = function()
                 return { spellId = fake.SECRET, expirationTime = 5 }, { startTime = fake.SECRET, duration = 1 }
             end,
@@ -72,6 +78,17 @@ describe("the facade trace", function()
         }, lines) -- GetTime is quiet: counted, not written
         assert.are.equal(1, Facade.secrets.UnitName)
         assert.are.equal(1, Facade.counts.GetTime)
+    end)
+
+    it("counts a hybrid's secret raw answer (UnitExists of another unit), and not the pet's plain one", function()
+        hekili.ActiveDebug = true
+        Facade.UnitExists("target")
+        assert.is_false(Facade.UnitExists("pet"))
+        assert.are.same({
+            "[vs] hybrid:raw UnitExists(target, nil) -> S, nil, nil, nil #1",
+            "[vs] hybrid:raw UnitExists(pet, nil) -> false, nil, nil, nil #1",
+        }, lines)
+        assert.are.same({ UnitExists = 1 }, Facade.secrets)
     end)
 
     it("writes a table result's secret fields as S, and keeps tracing after a raising Debug", function()

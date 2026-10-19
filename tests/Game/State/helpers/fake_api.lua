@@ -102,6 +102,9 @@ function M.new()
         return ctl.exists[unit] == true
     end
     function api.UnitIsDead(unit)
+        if ctl.dead[unit] == SECRET then
+            return SECRET
+        end
         return ctl.dead[unit] == true
     end
     function api.UnitCanAttack(_, unit)
