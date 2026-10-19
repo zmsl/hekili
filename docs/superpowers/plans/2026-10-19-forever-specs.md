@@ -64,8 +64,8 @@ and the pack checklist of `docs/superpowers/plans/2026-10-18-class-completion.md
   (grouped by tree in comments); Rogue, Paladin, Shaman and Hunter get full blocks from `wowdb talents <CLASS>` in
   Task 6. Forever-only talents not in the DB2 stay tree 0 (counted nowhere). The Warrior export
   (`docs/research/2026-10-16-warrior-talent-dump.md`, and the trait walk's single tree 1117 with three posX column
-  bands) confirms one C_Traits tree per class, so the walk itself cannot give the tab; the column bands are unverified
-  for other classes and not used.
+  bands) confirms one C_Traits tree per class, so the walk itself cannot give the tab; the column bands are not used:
+  the DB2's `Talent.TabID` and `TalentTab.OrderIndex` give every class's tab membership and order (see Spec icons).
 
 ## Global Constraints
 - `make check` green before every commit. Commit trailer: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
@@ -133,15 +133,25 @@ and the pack checklist of `docs/superpowers/plans/2026-10-18-class-completion.md
 - Docs (Task 7): `docs/dev/layout.md`, `docs/dev/architecture.md` §3 and §6 (this repo's pack author guide; there is
   no `docs/class-packs/` in the Hekili fork), `docs/superpowers/plans/2026-10-18-class-completion.md` Days 6-7.
 
-## Spec icons (FileDataIDs, `wow_icon_search`)
-Warrior: Arms 132355 (ability_warrior_savageblow), Fury 132347 (ability_warrior_innerrage), Protection 132341
-(ability_warrior_defensivestance). Druid: Balance 136096 (spell_nature_starfall), Feral 132115 (ability_druid_catform),
-Guardian 132276 (ability_racial_bearform), Restoration 136041 (spell_nature_healingtouch). Rogue: Assassination 132292
-(ability_rogue_eviscerate), Combat 132090 (ability_backstab), Subtlety 132320 (ability_stealth). Paladin: Holy 135920
-(spell_holy_holybolt), Protection 135893 (spell_holy_devotionaura), Retribution 135873 (spell_holy_auraoflight).
-Shaman: Elemental 136048 (spell_nature_lightning), Enhancement 136051 (spell_nature_lightningshield), Restoration
-136052 (spell_nature_magicimmunity). Hunter: Beast Mastery 132164 (ability_hunter_beasttaming), Marksmanship 132222
-(ability_marksmanship), Survival 132215 (ability_hunter_swiftstrike).
+## Spec icons and tab order (the Forever DB2, authoritative)
+Every spec's icon is its talent tab's own icon, `TalentTab.SpellIconID` in the Forever DB2 (`wowdb "select Name_lang,
+OrderIndex, SpellIconID from TalentTab where ClassMask = <2^(classID-1)> order by OrderIndex"`), so the options tree
+shows what the client's talent frame shows. FileDataIDs (icon names from `wow_icon_search`), in the client's tab order
+(`OrderIndex` 0, 1, 2 = tree 1, 2, 3; `wowdb talents CLASS` lists tabs in that order):
+- Warrior: Arms 132292 (ability_rogue_eviscerate), Fury 132347 (ability_warrior_innerrage), Protection 134952 (inv_shield_06).
+- Paladin: Holy 135920 (spell_holy_holybolt), Protection 135893 (spell_holy_devotionaura), Retribution 135873 (spell_holy_auraoflight).
+- Hunter: Beast Mastery 132164 (ability_hunter_beasttaming), Marksmanship 132222 (ability_marksmanship), Survival 132215 (ability_hunter_swiftstrike).
+- Rogue: Assassination 132292 (ability_rogue_eviscerate), Combat 132090 (ability_backstab), Subtlety 132320 (ability_stealth).
+- Priest: Discipline 135987 (spell_holy_wordfortitude), Holy 237542 (spell_holy_guardianspirit), Shadow 136207 (spell_shadow_shadowwordpain).
+- Shaman: Elemental 136048 (spell_nature_lightning), Enhancement 136051 (spell_nature_lightningshield), Restoration 136052 (spell_nature_magicimmunity).
+- Mage: Arcane 135932 (spell_holy_magicalsentry), Fire 135810 (spell_fire_firebolt02), Frost 135846 (spell_frost_frostbolt02).
+- Warlock: Affliction 136145 (spell_shadow_deathcoil), Demonology 136172 (spell_shadow_metamorphosis), Destruction 136186 (spell_shadow_rainoffire).
+- Druid: Balance 136096 (spell_nature_starfall), Feral Combat 132276 (ability_racial_bearform), Restoration 136041
+  (spell_nature_healingtouch). The two specs on the Feral Combat tree split the art: Feral 132115 (ability_druid_catform),
+  Guardian 132276 (the tab's bear).
+
+The talent-to-tab link is `Talent.TabID` and the tab order `TalentTab.OrderIndex`, both in the DB2; no client read and
+no assumption about the C_Traits layout is needed for the dominant tree, for any class.
 
 ## The gate commands (every task that says "Gate")
 ```bash
