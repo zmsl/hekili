@@ -52,6 +52,7 @@ return {
         ["main_hand"] = 25,
         ["moonkin_form"] = 1,
         ["null_cooldown"] = 9,
+        ["stealth"] = 2,
         ["travel"] = 18,
         ["trinket1"] = 6,
         ["trinket2"] = 6,

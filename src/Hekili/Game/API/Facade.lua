@@ -701,12 +701,12 @@ kept("UnitCastingInfo", "hybrid", function(unit, ...)
         return nil
     end
     modelled = true
-    local channel, castBarID, start, kick = VS.TargetCastFacts()
+    local channel, castBarID, start, interruptible = VS.TargetCastFacts()
     local rec = channel == false and VS.TargetCast(now())
     if not rec then
         return nil
     end
-    return "Casting", "", CAST_ICON, start * 1000, rec.est * 1000, false, castBarID, kick == 0, 0
+    return "Casting", "", CAST_ICON, start * 1000, rec.est * 1000, false, castBarID, interruptible == 0, 0
 end, "player plain [W PR9]; target secret [W PR8]; TargetCast()")
 
 kept("UnitChannelInfo", "hybrid", function(unit, ...)
@@ -719,12 +719,12 @@ kept("UnitChannelInfo", "hybrid", function(unit, ...)
         return nil
     end
     modelled = true
-    local channel, _, start, kick = VS.TargetCastFacts()
+    local channel, _, start, interruptible = VS.TargetCastFacts()
     local rec = channel == true and VS.TargetCast(now())
     if not rec then
         return nil
     end
-    return "Channeling", "", CAST_ICON, start * 1000, rec.est * 1000, false, kick == 0, 0
+    return "Channeling", "", CAST_ICON, start * 1000, rec.est * 1000, false, interruptible == 0, 0
 end, "player plain [W PR9]; target secret [W PR8]; TargetCast()")
 
 ----------------------------------------------------------------------------------------------------------------------

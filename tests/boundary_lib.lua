@@ -26,8 +26,6 @@ local ALLOW_KEYS = {
     -- generic words a content file also uses as a key
     form = "the Druid's any-form aura; core reads the client's shapeshift form generically",
     potion = "the shared potion ability; stock Engine/Schema/Spec.lua's RegisterPotion names its argument so",
-    stealth = "the Rogue's Stealth; core's IsStealthed read and `isStealthed` aura field are generic (C5, Forms.lua)",
-    kick = "the Rogue's Kick; core's target-cast `kick` is the generic interruptible flag (TargetCast.lua, Facade.lua)",
 }
 -- Identifiers core may use whole although a part matches content, each with its reason.
 local ALLOW_NAMES = {

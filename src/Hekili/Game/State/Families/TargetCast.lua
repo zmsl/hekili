@@ -11,7 +11,7 @@ local Obs, Of = VS.Obs, I.TargetCastOf
 --- A target cast's believed length while its end is secret (G6).
 I.TARGET_CAST_DEFAULT = 2
 
-local active, channel, bar, start, kick = false, false, 0, 0, -1
+local active, channel, bar, start, interruptible = false, false, 0, 0, -1
 local rec
 
 I.OnBuild(function(def, now)
@@ -22,7 +22,7 @@ end)
 I.On(Obs.TargetCast, function(o, t)
     local of = o.a
     if of == Of.Start or of == Of.ChannelStart then
-        active, channel, bar, start, kick = true, of == Of.ChannelStart, o.b, o.t, o.c
+        active, channel, bar, start, interruptible = true, of == Of.ChannelStart, o.b, o.t, o.c
         local e = o.t + I.TARGET_CAST_DEFAULT
         rec.est, rec.lo, rec.hi = e, e, e
         I.Sample(rec, "default", e, t, Obs.TargetCast)
@@ -33,7 +33,7 @@ I.On(Obs.TargetCast, function(o, t)
             I.Sample(rec, "observed", o.t, t, Obs.TargetCast)
         end
     elseif of == Of.Kickable then
-        kick = o.c
+        interruptible = o.c
     end
 end)
 
@@ -50,7 +50,7 @@ function VS.TargetCastFacts()
     if not active then
         return nil
     end
-    return channel, bar, start, kick
+    return channel, bar, start, interruptible
 end
 
 --- (spec §3.2) Belief end of the target's cast; nil when it is not casting.

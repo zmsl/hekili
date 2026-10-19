@@ -24,18 +24,18 @@ local pending = false
 local warned = {}
 local UNTRACKED = "Forever: shapeshift form %d (spell %d) matches no registered aura; the belief cannot see this form"
 -- The player auras flagged `isStealthed`: their indices 1..n (the facade's IsStealthed policy reads them too).
-local stealth = { n = 0 }
-I.stealthAuras = stealth
+local stealthIdx = { n = 0 }
+I.stealthAuras = stealthIdx
 
 I.OnBuild(function(def)
     for j in pairs(isForm) do
         isForm[j] = nil
     end
-    stealth.n = 0
+    stealthIdx.n = 0
     for j = 1, #def.auras do
         if rawget(def.auras[j], "isStealthed") == true then
-            stealth.n = stealth.n + 1
-            stealth[stealth.n] = j
+            stealthIdx.n = stealthIdx.n + 1
+            stealthIdx[stealthIdx.n] = j
         end
     end
     for id in pairs(warned) do
@@ -86,13 +86,13 @@ end
 -- Logs every `isStealthed` aura up (no expiry) or down at t from one plain IsStealthed read; a secret or failed read
 -- logs nothing and hands those auras back to the walk. Allocates nothing.
 local function readStealth(api, t)
-    if stealth.n == 0 then
+    if stealthIdx.n == 0 then
         return
     end
     local ok, raw = pcall(stealthed, api)
     local on = ok and Plain(api, raw)
-    for k = 1, stealth.n do
-        local j = stealth[k]
+    for k = 1, stealthIdx.n do
+        local j = stealthIdx[k]
         if type(on) == "boolean" then
             isForm[j] = true
             Direct(Obs.Read, t, j, on and -1 or 0, ReadOf.Aura)
