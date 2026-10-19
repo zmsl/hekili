@@ -455,13 +455,11 @@ describe("the observer's resources, GCD and forms", function()
             "2 @cooldown 900 SECRET",
             "2 SPELL_UPDATE_COOLDOWN nil nil",
             "2 UNIT_SPELLCAST_SUCCEEDED player Cast-1",
-            "3 @cooldown 900 nil",
-            "3 SPELL_UPDATE_COOLDOWN nil nil",
+            "3 @cooldown 900 nil", -- the end: no SPELL_UPDATE_COOLDOWN (Forever sends none)
             "4 UNIT_SPELLCAST_SUCCEEDED player Cast-2",
             "4 @cooldown 900 SECRET",
             "4 SPELL_UPDATE_COOLDOWN nil nil",
             "5 @cooldown 900 nil",
-            "5 SPELL_UPDATE_COOLDOWN nil nil",
         }, lines(observer.observe(W, knobs({ gcdSpell = GCD })), keep))
     end)
 
