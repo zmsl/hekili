@@ -260,6 +260,33 @@ describe("now handlers", function()
         assert.are.equal("SPELL_AURA_REMOVED", rows[#rows - 1][1])
     end)
 
+    it("writes summonTotem's slot expiry and facts as modelled, kept through our summon's in-combat update", function()
+        register("totem_test", {
+            id = 6262,
+            now = function()
+                summonTotem("totem_test", "air", 120) -- Hekili's signature: name, element, duration
+                summonTotem("totem_test", "no_such_element", 5) -- an unknown element writes nothing
+            end,
+        })
+        start()
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        cast(6262, 20)
+        ctl.now = 20.1
+        ctl.Fire("PLAYER_TOTEM_UPDATE", 4) -- the summon's own update (no read in combat): not a destruction
+        VS.Drain(20.2)
+        local rec = VS.Totem(4, 21)
+        assert.are.same({ 140, "modelled" }, { rec.est, rec.basis })
+        assert.are.same({ 6262, "totem_test", 0, 20, 120 }, { VS.TotemFacts(4) })
+        assert.are.same({ true, "totem_test", 20, 120, 0, 1, 6262 }, { ns.Facade.GetTotemInfo(4) })
+        for slot = 1, 3 do
+            assert.is_nil(VS.Totem(slot, 21))
+        end
+        ctl.now = 30
+        ctl.Fire("PLAYER_TOTEM_UPDATE", 4) -- no cast of ours near it: destroyed
+        VS.Drain(30.1)
+        assert.is_nil(VS.Totem(4, 30.2))
+    end)
+
     it("counts a gain or spend naming no tracked resource as the `now`'s error, writing nothing", function()
         register("bad_test", {
             id = 6262,
@@ -551,6 +578,7 @@ describe("now handlers", function()
             now = function()
                 gain(1, "rage")
                 applyDebuff("target", "spender_c", 15)
+                summonTotem("rage_test", "fire", 30)
                 local _ = talent.talent_a.rank + rage.current
             end,
         })

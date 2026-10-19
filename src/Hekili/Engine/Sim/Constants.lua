@@ -286,6 +286,13 @@ ns.Specializations = {
         ranged = false,
         forever = "Paladin"
     },
+    -- Forever Shaman pseudo-spec (Shaman.lua's SHAMAN_SPEC): a placeholder until the client's ID is read (checkpoint)
+    [1502] = {
+        key = "shaman",
+        class = "SHAMAN",
+        ranged = false,
+        forever = "Shaman"
+    },
 }
 
 ns.getSpecializationKey = function ( id )

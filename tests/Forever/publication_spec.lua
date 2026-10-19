@@ -1,6 +1,6 @@
 -- tests/Forever/publication_spec.lua (publication plan, docs/superpowers/plans/2026-10-18-publication.md):
 -- the offline publication rules: the GPLv3 LICENSE ships, no user-facing link to the old project survives,
--- the TOCs carry the fork's name/author/credit, .pkgmeta packs the six src/ folders, and CHANGELOG.md exists.
+-- the TOCs carry the fork's name/author/credit, .pkgmeta packs the seven src/ folders, and CHANGELOG.md exists.
 
 local function read(path)
     local f = assert(io.open(path, "rb"), path)
@@ -26,6 +26,7 @@ local TOCS = {
     "src/Hekili_Warrior/Hekili_Warrior.toc",
     "src/Hekili_Rogue/Hekili_Rogue.toc",
     "src/Hekili_Paladin/Hekili_Paladin.toc",
+    "src/Hekili_Shaman/Hekili_Shaman.toc",
 }
 
 local function field(toc, key)
@@ -172,7 +173,7 @@ describe("tocs", function()
 end)
 
 describe("pkgmeta", function()
-    it("moves the six src/ folders to the zip root and ignores the dev tree", function()
+    it("moves the seven src/ folders to the zip root and ignores the dev tree", function()
         local s = read(".pkgmeta")
         assert.truthy(s:find("\npackage%-as: Hekili\n") or s:find("^package%-as: Hekili\n"))
         for _, a in ipairs({
@@ -182,6 +183,7 @@ describe("pkgmeta", function()
             "Hekili_Warrior",
             "Hekili_Rogue",
             "Hekili_Paladin",
+            "Hekili_Shaman",
         }) do
             assert.truthy(s:find("\n    Hekili/src/" .. a .. ": " .. a .. "\n", 1, true), a)
         end

@@ -1,6 +1,7 @@
 -- Game/State/Families/Totems.lua
 -- The totems family (spec §6.7): the four slots. An out-of-combat read is `observed` (with the slot's facts); a
--- PLAYER_TOTEM_UPDATE in combat with no own cast just before it is a `pinned` destruction. Conf as an aura.
+-- PLAYER_TOTEM_UPDATE in combat with no own cast just before it is a `pinned` destruction; our summon's `now`
+-- (`summonTotem`, Families/Now.lua) writes the slot's `modelled` expiry and facts (I.TotemModel). Conf as an aura.
 -- Ported from Taco Dog Forever, the totem half of src/TacoDogForever/Model/Belief/Pets.lua (Applier Totem :57).
 
 local _, ns = ...
@@ -33,6 +34,14 @@ I.On(Obs.Totem, function(o, t)
         I.Sample(rec[s], "pinned", 0, t, Obs.Totem)
     end
 end)
+
+--- Our summon into slot 1-4 at `t`: the slot's `modelled` expiry `expires` and its facts (spell, name, no icon, start
+--- `t`), so the in-combat GetTotemInfo answers it until an observation wins. Allocates nothing.
+function I.TotemModel(slot, expires, spell, name, t, event)
+    exp0[slot] = expires
+    I.totemSpell[slot], I.totemName[slot], I.totemIcon[slot], I.totemStart[slot] = spell, name, 0, t
+    I.Sample(rec[slot], "modelled", expires, t, event)
+end
 
 --- (spec §3.2) Belief expiry of totem slot 1-4; nil when empty.
 function VS.Totem(slot, now)

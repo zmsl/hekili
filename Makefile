@@ -6,7 +6,7 @@ LUACHECK := $(LUA_ENV)/bin/luacheck
 LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
-.PHONY: bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin bench syntax api-check \
+.PHONY: bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman bench syntax api-check \
 	packs-check check packs package package-check
 
 bootstrap:
@@ -25,9 +25,10 @@ typecheck:
 	lua-language-server --check . --checklevel=Error --logpath $(LUA_ENV)/lsp-log
 
 # The headless loop's 20-fight Arms gate (#loop) and party report (#party), the Druid harness gates at the GCD
-# kinds design's fight counts (#druid), the 20-fight Rogue (#rogue) and Paladin (#paladin) gates and the benchmark
+# kinds design's fight counts (#druid), the 20-fight Rogue (#rogue), Paladin (#paladin) and Shaman (#shaman) gates and
+# the benchmark
 # (#bench) run only behind their own targets.
-TEST_EXCLUDE := --exclude-tags=party,loop,druid,rogue,paladin,bench
+TEST_EXCLUDE := --exclude-tags=party,loop,druid,rogue,paladin,shaman,bench
 
 # One busted process per spec file, in parallel (scripts/busted_parallel.sh); `make test-serial` is the one-process run.
 test:
@@ -38,7 +39,7 @@ test-serial:
 
 # The edit loop: skips the harness gate specs tagged #slow (hundreds of simulated fights); `make check` runs them.
 test-fast:
-	$(BUSTED) --exclude-tags=slow,party,loop,druid,rogue,paladin,bench
+	$(BUSTED) --exclude-tags=slow,party,loop,druid,rogue,paladin,shaman,bench
 
 test-loop:
 	$(BUSTED) --tags=loop
@@ -54,6 +55,9 @@ test-rogue:
 
 test-paladin:
 	$(BUSTED) --tags=paladin
+
+test-shaman:
+	$(BUSTED) --tags=shaman
 
 # Per-Update time and allocation of headless Arms (tests/Forever/bench_spec.lua); not part of `check`.
 bench:

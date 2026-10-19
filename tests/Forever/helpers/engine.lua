@@ -82,6 +82,7 @@ local function newState(class, race)
         buff = every(leaf),
         debuff = every(leaf),
         talent = every(leaf),
+        totem = every(leaf),
         cooldown = every(leaf),
         action = every(leaf),
         active_dot = every(0),
@@ -108,7 +109,7 @@ local function newState(class, race)
     for _, verb in ipairs({ "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "removeStack", "addStack" }) do
         s[verb] = noop
     end
-    for _, verb in ipairs({ "spend", "gain", "setCooldown", "setDistance", "interrupt" }) do
+    for _, verb in ipairs({ "spend", "gain", "setCooldown", "setDistance", "interrupt", "summonTotem" }) do
         s[verb] = noop
     end
     return setmetatable(s, {

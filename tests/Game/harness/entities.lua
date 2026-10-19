@@ -43,6 +43,7 @@ function M.new(o)
         cdUntil = {}, -- [key] = the true cooldown's end
         avoidAt = {}, -- [act] = the last time an outcome of ours on a target was that avoid (MISS, DODGE, PARRY)
         spentAt = {}, -- [pt] = the last time a cast of ours spent that type (the world's five-second rule)
+        totems = {}, -- [slot] = { spell, start, expires }: the summons up (W.summonTotem)
     }
     e.res0 = {} -- each other resource's value at the start (the observer's first view; the world changes `res`)
     for pt, r in pairs(o.res or {}) do

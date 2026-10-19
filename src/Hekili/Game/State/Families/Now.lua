@@ -3,7 +3,7 @@
 -- On each own CastSuccess (a channel's included) the family writes the automatic effects from the ability's declared
 -- fields (its cost, its cooldown or charge, the GCD), then runs the ability's `now` function, if the class file
 -- declared one beside `handler`, in one shared context whose names are Hekili's verbs (`gain`, `spend`, `applyBuff`,
--- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`) and reads (`talent`, `buff`, `debuff`, the
+-- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `summonTotem`) and reads (`talent`, `buff`, `debuff`, the
 -- resources by key, `knownRank`, `stat`, `swingBase`, `healthMax`, `now`, `combat`) with belief meanings. Every write is a `modelled` sample at the
 -- cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
@@ -219,6 +219,17 @@ function NAMES.setCooldown(action, duration)
     local a = abByKey[action]
     if live and a and type(duration) == "number" then
         I.CooldownModel(a, T + duration, duration, T, CAST)
+    end
+end
+
+-- The totem slots by element, as Hekili's `state.totem` numbers them (State.lua's mt_totem; the client's slot order).
+local TOTEM_SLOT = { fire = 1, earth = 2, water = 3, air = 4 }
+--- summonTotem(name, element, duration): Hekili's signature (State.lua); the element's slot expires `duration` s after
+--- the cast (an unknown element or a non-number duration writes nothing).
+function NAMES.summonTotem(name, elem, duration)
+    local slot = TOTEM_SLOT[elem]
+    if live and slot and type(duration) == "number" then
+        I.TotemModel(slot, T + duration, A.qid[curA], type(name) == "string" and name or "", T, CAST)
     end
 end
 

@@ -534,6 +534,63 @@ describe("the observer's resources, GCD and forms", function()
         end
     end)
 
+    it("keeps our totem slots, one per slot, to their expiry; their reads plain out of combat, secret in it", function()
+        for _, plain in ipairs({ false, true }) do
+            setup()
+            W.t = 1
+            W.summonTotem(us, 2, 30, 9091)
+            W.at(2, function()
+                W.emit({ kind = "pull" })
+            end)
+            W.at(5, function()
+                W.summonTotem(us, 4, 10, 9093)
+                W.summonTotem(us, 2, 40, 9092) -- replaces slot 2's: the first one's expiry (31) is moot
+            end)
+            W.at(20, function()
+                W.emit({ kind = "stop" })
+            end)
+            W.run(30)
+            assert.is_nil(W.totem(us, 4))
+            assert.are.same({ 9092, 5, 45 }, { W.totem(us, 2).spell, W.totem(us, 2).start, W.totem(us, 2).expires })
+            W.run(50)
+            assert.is_nil(W.totem(us, 2))
+            local s = observer.observe(W, knobs({ plain = plain }))
+            local got = {}
+            for i = 1, s.n do
+                if s.ev[i] == "@totem" and (s.a1[i] == 2 or s.a1[i] == 4) then
+                    got[#got + 1] = { s.t[i], s.a1[i], s.a2[i], s.a3[i], s.a4[i] }
+                elseif s.ev[i] == "PLAYER_TOTEM_UPDATE" then
+                    got[#got + 1] = { s.t[i], "update", s.a1[i] }
+                end
+            end
+            local want = { { 1, 2, 9091, 1, 30 }, { 1, "update", 2 } }
+            local function add(row)
+                want[#want + 1] = row
+            end
+            if plain then
+                add({ 5, 4, 9093, 5, 10 })
+                add({ 5, "update", 4 })
+                add({ 5, 2, 9092, 5, 40 })
+                add({ 5, "update", 2 })
+                add({ 15, 4, 0, 0, 0 })
+                add({ 15, "update", 4 })
+            else -- secret from the pull (each slot summoned into), each update's read too; plain again at the stop
+                add({ 2, 2 })
+                add({ 5, 4 })
+                add({ 5, "update", 4 })
+                add({ 5, 2 })
+                add({ 5, "update", 2 })
+                add({ 15, 4 })
+                add({ 15, "update", 4 })
+                add({ 20, 2, 9092, 5, 40 })
+                add({ 20, 4, 0, 0, 0 })
+            end
+            add({ 45, 2, 0, 0, 0 })
+            add({ 45, "update", 2 })
+            assert.are.same(want, got)
+        end
+    end)
+
     it("reads an `fsr` pool's two rates out of combat: not casting, then casting", function()
         setup()
         W.startRegen(us, {}, 0.1, nil, { [POOL] = { 10, 2 } })

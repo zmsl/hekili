@@ -221,8 +221,28 @@ function M.new(W, k)
             push(t, "UNIT_POWER_FREQUENT", "player", tokens[pt] or k.powerToken)
         end
     end
+    -- our totem slots' truth: [slot] = the last "totem" event that filled it; `touched`: the slots ever summoned into,
+    -- whose reads turn secret in combat (a stream with no totem stays as it was)
+    local totems, touched = {}, {}
+    local function totemRead(t, slot) -- GetTotemInfo: secret in combat [W PR12] (no spell: a secret answer)
+        local tt = totems[slot]
+        if inCombat and not k.plain then
+            push(t, "@totem", slot)
+        elseif tt then
+            push(t, "@totem", slot, tt.spell, tt.start, tt.duration)
+        else
+            push(t, "@totem", slot, 0, 0, 0)
+        end
+    end
     local function combat(t, on) -- the plain-out-of-combat reads turn secret in combat and plain again after it
         inCombat = on
+        if not k.plain then
+            for slot = 1, 4 do
+                if touched[slot] then
+                    totemRead(t, slot)
+                end
+            end
+        end
         for pt, m in pairs(modes) do
             if m == "ooc" then
                 if on then
@@ -320,6 +340,10 @@ function M.new(W, k)
             for _, id in ipairs(ev.ids or { spellID(ev.spell) }) do
                 push(t, "@current", id, false) -- IsCurrentSpell: no longer queued
             end
+        elseif kind == "totem" and ev.src == us then -- our summon or its end: the slot's read, then its event
+            totems[ev.slot], touched[ev.slot] = ev.start > 0 and ev or nil, true
+            totemRead(t, ev.slot)
+            push(t, "PLAYER_TOTEM_UPDATE", ev.slot)
         elseif kind == "queue" or kind == "unqueue" then -- our on-next-swing press (IsCurrentSpell, plain)
             for _, id in ipairs(ev.ids or { spellID(ev.spell) }) do
                 push(t, "@current", id, kind == "queue")

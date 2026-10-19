@@ -10,7 +10,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `src/Hekili_Shared/`: the content every class shares (`Shared/`: auras, consumables, items) and the race packs
     (`Races/`); `## Dependencies: Hekili`, `## LoadOnDemand: 1`, loaded on demand by the core's `Engine/Content.lua`
     at login, first (before the class pack, and for a class with no pack too);
-  - `src/Hekili_Warrior/`, `src/Hekili_Druid/`, `src/Hekili_Rogue/`, `src/Hekili_Paladin/`: one class pack each (the class file, its RegisterPack
+  - `src/Hekili_Warrior/`, `src/Hekili_Druid/`, `src/Hekili_Rogue/`, `src/Hekili_Paladin/`, `src/Hekili_Shaman/`: one class pack each (the class file, its RegisterPack
     blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's `Engine/Content.lua` for the
     player's class.
     The default priorities' sources sit beside the class file in `APLs/`: one `<Pack>.simc` per priority and the
@@ -166,6 +166,47 @@ Paladin checkpoint (in game, a level 60 Paladin; provisional until answered):
 - P9: Consecrated Ground (1310905) on the target after Consecration, its 8.6 s; Seal of Fury's absorb and Improved
   Seal of Fury's mana are unmodelled.
 
+`tests/Forever/loop_shaman_spec.lua` runs 3 Enhancement fights in `make check` (seeds 1-3, `#slow`) and 20 in
+`make test-shaman` (`#shaman`), gated by `pack_gate.gate` and asserting its flagged lines ran (Lightning Bolt at 5
+Maelstrom Weapon and Fire Nova on Clearcasting at tier 1; Strength of Earth, Lightning Shield and Flame Shock at tier
+2). The world keeps the totem slots (`W.summonTotem`, class-neutral: a slot and an expiry), secret in combat; the summon's
+`now` (`summonTotem`, content API 4) writes the slot's modelled expiry, which the in-combat GetTotemInfo answers. The
+mob swings at us and each hit that lands spends a Lightning Shield charge; our landed melee stacks Maelstrom Weapon; an
+elemental spell rolls Clearcasting (10%); the shocks share a 6 s cooldown. Neither side dies: a kill by our last press
+ends the loop before the client sees it, so the next fight's prepull would be believed in combat and its totem slots
+never read (a harness quirk every pack shares). The world runs out of mana about 35 s in (idle about 0.68: UNMEASURED
+pool and regen, no Mana Spring regen, Water Shield or potions), so most in-combat ticks show no icon on either side.
+The imbues are not in the solo world's kit (it has no weapon enchant read); `shaman_spec` covers the reminder. The mana
+lines (Fire Nova filler floor, mana potion, Demonic Rune; D7) are settings, off by default (Retribution's reason). The
+first runs (class-completion Task 9):
+
+```
+Enhancement solo: fights=3 agreement 0.999 (687 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.014; ... [seeds 1-3]
+Enhancement solo: fights=20 agreement 0.993 (4227 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.006; ...
+```
+
+Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
+- S1: the pseudo-spec ID the client reports (Constants.lua's 1502 is a placeholder).
+- S2: totem slot order: GetTotemInfo(1..4) out of combat is fire, earth, water, air (as Hekili's `totem.<element>`
+  and `summonTotem` assume)? Searing Totem's duration (55 s at rank 6) and the 300 s totems' read back as such?
+- S3: PLAYER_TOTEM_UPDATE in combat: does it fire for our own summon (and for the replaced totem), and does it arrive
+  within 0.5 s of UNIT_SPELLCAST_SUCCEEDED (I.CAST_GRACE; later, the belief drops the summon as a destruction)? Does it
+  fire at a totem's natural expiry and when the totem is killed? Is GetTotemInfo secret in combat (all returns)?
+- S4: Maelstrom Weapon (408505) visibility: is the player aura and its stack count readable in combat? Is 408498 a
+  learnable rune on Forever (else its lines stay inert)? Five stacks: Lightning Bolt instant and free?
+- S5: Clearcasting (16246) after an elemental spell: readable in combat; one charge, spent by the next Lightning Bolt,
+  shock or Fire Nova (the cost modifier's list)?
+- S6: Fire Nova (408341..408345): IsSpellUsable without a fire totem answers (false, false), not short of mana (its
+  answers are a mana rung)? Its 10 s cooldown, and does it leave the totem up?
+- S7: Lightning Shield (324..10432): 3 charges on the player aura, one spent per hit that lands (WOUND and partial block
+  in UNIT_COMBAT), readable in combat?
+- S8: the shocks' shared cooldown: after Earth Shock, does Flame Shock read on cooldown for 6 s (category 19), and the
+  reverse?
+- S9: the imbues: C_Item.GetWeaponEnchantInfo out of combat after Rockbiter (60 minutes), so main_hand_enchant reads up;
+  the reminder's setting (Rockbiter by default) and the dual-wield off hand (not modelled).
+- S10: mana: UnitPower(mana) secret out of combat on a Shaman too; GetPowerRegenForPowerType(0)'s two returns; the
+  Flame Shock DoT (12 s, 3 s ticks) on the target modelled from our cast.
+
 A deliberate pack or APL change re-records the fixture in the same commit:
 `ARMS_RECS=record .lua/bin/busted tests/Forever/arms_recs_spec.lua`.
 
@@ -190,7 +231,7 @@ git remote set-url --push upstream no_push
 ## In game
 
 Each addon gets its own AddOns link, at its folder in `src/`, not at the repository root. From an elevated Windows
-prompt, in the client's `Interface\AddOns` folder, remove the old link and create the six:
+prompt, in the client's `Interface\AddOns` folder, remove the old link and create the seven:
 
 ```
 rmdir Hekili
@@ -200,6 +241,7 @@ mklink /D Hekili_Warrior \\wsl.localhost\personal\home\zack\src\hekili\src\Hekil
 mklink /D Hekili_Druid \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Druid
 mklink /D Hekili_Rogue \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Rogue
 mklink /D Hekili_Paladin \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Paladin
+mklink /D Hekili_Shaman \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Shaman
 ```
 
 Then restart the client fully (a moved addon is not picked up by `/reload`).

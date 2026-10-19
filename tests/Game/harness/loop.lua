@@ -44,7 +44,8 @@ function M.new(content)
     return L
 end
 
--- Fires the client events `obs` releases up to world time `t` into instance `H`, each at its own time (base + t).
+-- Fires the client events `obs` releases up to world time `t` into instance `H`, each at its own time (base + t);
+-- a cooldown's start, an aura's expiry and a totem's start move to the instance's clock.
 local function feed(H, obs, t, base, sink)
     local s = obs.s
     local first, last = obs.step(t)
@@ -52,14 +53,16 @@ local function feed(H, obs, t, base, sink)
     for i = first, last do
         ctl.now = base + s.t[i]
         local ev = s.ev[i]
-        if ev:byte(1) == 64 then -- "@"; a cooldown's start and an aura's expiry on the instance's clock
-            local a2, a4 = s.a2[i], s.a4[i]
+        if ev:byte(1) == 64 then -- "@"
+            local a2, a3, a4 = s.a2[i], s.a3[i], s.a4[i]
             if ev == "@cooldown" and type(a2) == "number" and a2 > 0 then
                 a2 = base + a2
             elseif ev == "@aura" and a4 > 0 then
                 a4 = base + a4
+            elseif ev == "@totem" and type(a3) == "number" and a3 > 0 then
+                a3 = base + a3
             end
-            drive.op(sink, ctl, ev, s.a1[i], a2, s.a3[i], a4, s.a5[i])
+            drive.op(sink, ctl, ev, s.a1[i], a2, a3, a4, s.a5[i])
         else
             H.Fire(ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
         end
@@ -115,7 +118,8 @@ function M.run(L, seed, o, drivers)
     for i, d in ipairs(drivers) do
         local ctl = d.H.ctl -- a fresh world: the client's answers about it start fresh too
         ctl.combat, ctl.form = false, L.form
-        for _, t in ipairs({ ctl.dead, ctl.current, ctl.cooldown, ctl.usable, ctl.unitHealth, ctl.unitHealthMax }) do
+        local fresh = { ctl.dead, ctl.current, ctl.cooldown, ctl.usable, ctl.unitHealth, ctl.unitHealthMax, ctl.totems }
+        for _, t in ipairs(fresh) do
             for key in pairs(t) do
                 t[key] = nil
             end

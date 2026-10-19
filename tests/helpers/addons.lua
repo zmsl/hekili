@@ -8,7 +8,7 @@ local M = {}
 M.CORE = "Hekili"
 -- the shared content (a dependency of every class pack), then the class packs; all load-on-demand, loaded by the
 -- core's Engine/Content.lua in this order
-M.CONTENT = { "Hekili_Shared", "Hekili_Warrior", "Hekili_Druid", "Hekili_Rogue", "Hekili_Paladin" }
+M.CONTENT = { "Hekili_Shared", "Hekili_Warrior", "Hekili_Druid", "Hekili_Rogue", "Hekili_Paladin", "Hekili_Shaman" }
 M.ADDONS = { M.CORE }
 for _, name in ipairs(M.CONTENT) do
     M.ADDONS[#M.ADDONS + 1] = name

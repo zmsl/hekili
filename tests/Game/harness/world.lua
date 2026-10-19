@@ -13,7 +13,7 @@ M.CRIT = behaviours.RATES.crit
 --- A new world. `seed` seeds its generator. Truth events: { t, kind, src, dst, hand, act, flag, amount, school, spell }
 --- with kind "swing" (a white swing, its outcome rolled; ours land later as "land"), "land", "strike" (an
 --- on-next-swing strike frame), "spell" (a spell's outcome), "tick", "proc", "cast", "prepull" (the cache and
---- target reads 0.5 s before the pull), "pull", "stop", "form", "buff", "target", "aura", "queue", "unqueue", "gain", "kill",
+--- target reads 0.5 s before the pull), "pull", "stop", "form", "buff", "target", "aura", "totem", "queue", "unqueue", "gain", "kill",
 --- "regen" and "decay" (a resource's continuous regen and out-of-combat decay, W.startRegen / W.startDecay). A gain
 --- (`rage`) or spend (`cost`) of ours is of power type `pt` (default our `pt`, the swing-paid `power`; another type's
 --- value after it: `ev.resCur`).
@@ -363,6 +363,26 @@ function M.new(seed)
                 W.emit({ kind = "aura", dst = dst, aura = id, stacks = 0, expires = 0, duration = 0 })
             end
         end)
+    end
+
+    --- `e` summons into totem slot `slot` (1-4, the client's order) for `duration` s; `spell` the summon's ID. One a
+    --- slot: a summon replaces the one there. It expires on the world clock. Truth events "totem" { src, slot, spell,
+    --- start (0: empty), duration }.
+    function W.summonTotem(e, slot, duration, spell)
+        local tt = { spell = spell, start = W.t, expires = W.t + duration }
+        e.totems[slot] = tt
+        W.emit({ kind = "totem", src = e, slot = slot, spell = spell, start = W.t, duration = duration })
+        W.at(tt.expires, function()
+            if e.totems[slot] == tt then
+                e.totems[slot] = nil
+                W.emit({ kind = "totem", src = e, slot = slot, spell = spell, start = 0, duration = 0 })
+            end
+        end)
+    end
+
+    --- `e`'s summon up in totem slot `slot` ({ spell, start, expires }), or nil.
+    function W.totem(e, slot)
+        return e.totems[slot]
     end
 
     --- `n` ticks of `amount` (school 1) from `e` on `dst`, every `every` s from now.

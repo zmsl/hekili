@@ -1049,9 +1049,10 @@ state.dismissPet = dismissPet
 
 local function summonTotem( name, elem, duration )
     if elem then
-        state.totem[ elem ] = rawget( state.totem, elem ) or {}
-        state.totem[ elem ].name = name
-        state.totem[ elem ].expires = state.query_time + duration
+        -- Forever: through mt_totem, so the element's table knows its slot (a bare {} would read slot nil after reset)
+        local t = state.totem[ elem ]
+        t.name = name
+        t.expires = state.query_time + duration
         summonPet( elem, duration )
     end
 
@@ -4140,34 +4141,24 @@ Hekili.mt_default_totem = mt_default_totem
 
 -- Table of totems. Currently Shaman-centric.
 -- Needs review.
+-- Forever: an element's table holds only its slot; mt_default_totem reads `expires` and `name` (marked, so re-read
+-- after each reset rather than kept from the first read).
 local mt_totem = {
     __index = function(t, k)
         if k == "fire" then
-            local _, name, start, duration = GetTotemInfo(1)
-
-            t[k] = {
-            key = k, totem = 1, name = name, expires = (start + duration) or 0, }
+            t[k] = { key = k, totem = 1 }
             return t[k]
 
         elseif k == "earth" then
-            local _, name, start, duration = GetTotemInfo(2)
-
-            t[k] = {
-            key = k, totem = 2, name = name, expires = (start + duration) or 0, }
+            t[k] = { key = k, totem = 2 }
             return t[k]
 
         elseif k == "water" then
-            local _, name, start, duration = GetTotemInfo(3)
-
-            t[k] = {
-            key = k, totem = 3, name = name, expires = (start + duration) or 0, }
+            t[k] = { key = k, totem = 3 }
             return t[k]
 
         elseif k == "air" then
-            local _, name, start, duration = GetTotemInfo(4)
-
-            t[k] = {
-            key = k, totem = 4, name = name, expires = (start + duration) or 0, }
+            t[k] = { key = k, totem = 4 }
             return t[k]
         end
 

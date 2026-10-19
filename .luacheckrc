@@ -95,7 +95,8 @@ files["src/Hekili/Options/DevTools.lua"] = {
 files["src/Hekili/UI/UI.lua"] = { globals = { "p" } } -- upstream's stray global read
 -- The names a class file's `now` function reads in VirtualState's context (src/Hekili/Game/State/Families/Now.lua).
 local nowEnv = {
-    "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "setCooldown", "talent",
+    "gain", "spend", "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "addStack", "setCooldown", "summonTotem",
+    "talent",
     "buff", "debuff", "knownRank", "stat", "swingBase", "healthMax", "now", "combat", "rage", "energy", "mana", "focus",
     "runic_power",
 }
@@ -136,5 +137,11 @@ for _, k in ipairs(stateEnv) do
     paladinEnv[#paladinEnv + 1] = k
 end
 files["src/Hekili_Paladin/Paladin.lua"] = { globals = paladinEnv }
+-- The Shaman's further `state` names.
+local shamanEnv = { "totem", "summonTotem" }
+for _, k in ipairs(stateEnv) do
+    shamanEnv[#shamanEnv + 1] = k
+end
+files["src/Hekili_Shaman/Shaman.lua"] = { globals = shamanEnv }
 files["src/Hekili_Shared/Races/"] = { globals = stateEnv }
 files["src/Hekili_Shared/Shared/"] = { globals = stateEnv }

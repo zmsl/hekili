@@ -20,6 +20,8 @@ local CAP = 4096
 
 local USABLE, SHORT, UNUSABLE = { true, false }, { false, true }, { false, false }
 local PLAIN_READY = { isActive = false, isOnGCD = false, startTime = 0, duration = 0 } -- a secret-free client's
+local SECRET = fake.SECRET
+local SECRET_TOTEM = { name = SECRET, start = SECRET, duration = SECRET, icon = SECRET, spell = SECRET } -- in combat
 
 --- A booted VirtualState: { api, ctl, ns, VS, I, L, captures }. `o.rage` { main, off } per landed swing [9, 5],
 --- `o.max` the rage cap [1e6]; `o.damage` the UnitDamage cache's first values (default zeros: read at the pull);
@@ -250,6 +252,14 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         ctl.forms = a1
     elseif ev == "@regen" then -- powerType, not casting (nil: secret), casting; allocates (no 0-byte drive fires one)
         ctl.regen[a1] = a2 and { a2, a3 or a2 } or nil
+    elseif ev == "@totem" then -- slot, spell, start (0: empty), duration; no spell: secret; allocates (as @regen)
+        if a2 == nil then
+            ctl.totems[a1] = SECRET_TOTEM
+        elseif a3 == 0 then
+            ctl.totems[a1] = nil
+        else
+            ctl.totems[a1] = { name = "", start = a3, duration = a4, icon = 0, spell = a2 }
+        end
     elseif ev == "@attackSpeed" then -- the player's main and off hand
         ctl.speed[1], ctl.speed[2] = a1, a2
     end
