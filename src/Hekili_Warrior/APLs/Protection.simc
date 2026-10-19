@@ -1,16 +1,19 @@
 # Forever Protection Warrior: Defensive Stance, Taunt when the target turns away, Shield Block kept up, Revenge and
 # Shield Slam, Sunder Armor stacked to 5, Heroic Strike or Cleave with the rage hits bring. No defensives: Last
-# Stand, Shield Wall and Healthstones are the player's call.
+# Stand, Shield Wall and Healthstones are the player's call (wowsims gates them on health, secret on Forever).
+# From wowsims/forever's Protection APL (reference only, class-completion Task 5): Shield Block at 40 rage or with
+# Revenge near ready and its window shut, Rend when not up, Sunder refreshed at 10 s or less, and the threat lines
+# (Shield Bash, Mocking Blow, Taunt) at focus 1.
 
 actions.precombat=battle_shout,if=!buff.battle_shout.up
 actions.precombat+=/charge,use_off_gcd=1
 actions.precombat+=/defensive_stance,use_off_gcd=1,if=!buff.defensive_stance.up
-actions=shield_bash
-actions+=/mocking_blow,if=threat.lost
+actions=shield_bash,focus=1
+actions+=/mocking_blow,focus=1,if=threat.lost
 actions+=/defensive_stance,use_off_gcd=1,if=!buff.defensive_stance.up
-actions+=/taunt,use_off_gcd=1,if=threat.lost&!debuff.mocking_blow.up
+actions+=/taunt,focus=1,use_off_gcd=1,if=threat.lost&!debuff.mocking_blow.up
 actions+=/challenging_shout,if=threat.loose>=settings.challenging_shout_loose
-actions+=/shield_block,use_off_gcd=1,if=buff.shield_block.stack<2
+actions+=/shield_block,use_off_gcd=1,if=buff.shield_block.stack<2&(rage.current>=40|!buff.revenge_usable.up&cooldown.revenge.remains<=1.5)
 actions+=/victory_rush
 actions+=/bloodrage,use_off_gcd=1,if=rage.current<20
 actions+=/battle_shout,if=!buff.battle_shout.up
@@ -18,7 +21,8 @@ actions+=/run_action_list,name=aoe,if=active_enemies>=3
 actions+=/run_action_list,name=single
 actions.single=revenge
 actions.single+=/shield_slam
-actions.single+=/sunder_armor,if=debuff.sunder_armor.stack<5|debuff.sunder_armor.remains<3
+actions.single+=/rend,if=!debuff.rend.up
+actions.single+=/sunder_armor,if=debuff.sunder_armor.stack<5|debuff.sunder_armor.remains<=10
 actions.single+=/thunder_clap,if=!debuff.thunder_clap.up
 actions.single+=/demoralizing_shout,if=settings.debuff_demoshout_enabled&!debuff.demoralizing_shout.up
 actions.single+=/concussion_blow,use_off_gcd=1

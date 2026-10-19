@@ -207,7 +207,8 @@ end)
 -- boot plays the same fights as the old single 6-fight run.
 describe("the headless Arms gates, fights 1-3 #slow", function()
     it("Arms solo, level 60, one mob, fights 1-3 of up to 3 minutes: the first icon against the oracle's", function()
-        gate.solo(3, nil, "seeds 1-3")
+        local r, line = gate.solo(3, nil, "seeds 1-3")
+        assert.is_true(r.focus > 0, "no flagged line ran: " .. line) -- review focus 5
     end)
 end)
 
@@ -224,6 +225,7 @@ describe("the headless Arms gates, 20 fights #loop", function()
             end
         end
         assert.is_true(r.flicker <= 2, line)
+        assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
     end)
 end)
 

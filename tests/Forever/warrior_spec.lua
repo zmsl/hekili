@@ -760,7 +760,10 @@ describe("Forever Warrior", function()
                 "run_action_list",
                 "run_action_list",
             }, order)
-            assert.are.equal("buff.shield_block.stack<2", prot.lists.default[6].criteria)
+            assert.are.equal(
+                "buff.shield_block.stack<2&(rage.current>=40||!buff.revenge_usable.up&cooldown.revenge.remains<=1.5)",
+                prot.lists.default[6].criteria
+            ) -- a stored | is ||
             for list, entries in pairs(prot.lists) do
                 for _, e in ipairs(entries) do
                     for _, never in ipairs({ "last_stand", "shield_wall", "healthstone" }) do
@@ -895,4 +898,174 @@ describe("Forever Warrior", function()
         assert.is_truthy(opts:find('forecastWindowInfo = {\n%s+type = "description",'))
         assert.is_nil(w.settings.forecast_window)
     end)
+end)
+
+-- The wowsims lines (class-completion Task 5) on the headless engine, as fury_spec checks Fury's: each line's `if=` runs
+-- through the real Scripts.lua against a booted Arms Warrior (helpers/warrior_world.lua) with the state pinned per case.
+describe("the Arms and Protection lines from wowsims/forever (class-completion Task 5)", function()
+    local headless = require("Game.harness.headless")
+    local ww = require("Forever.helpers.warrior_world")
+    local H, st, pack
+
+    -- Protection adds Revenge (every rank) to the Arms kit, so its cooldown is read.
+    local function boot(stance, name)
+        local c = ww.character()
+        c.form, pack = ww.FORM[stance], name
+        if name == "Protection" then
+            local revenge = lw.load().abilities.revenge
+            c.known[#c.known + 1] = revenge.id
+            for _, id in ipairs(revenge.copy) do
+                c.known[#c.known + 1] = id
+            end
+        end
+        H = headless.new({ character = c, pack = name })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert(headless.cycle(H, H.ctl.now + 0.2))
+        st = H.Hekili.State
+        st.reset("Primary", true)
+        assert.is_true(st.buff[stance].up, stance)
+    end
+
+    -- The `n`th `action` entry of `list` in the booted pack: its condition as the engine evaluates it now, and its focus.
+    local function check(list, action, n)
+        n = n or 1
+        for i, e in ipairs(H.Hekili.DB.profile.packs[pack].lists[list]) do
+            if e.action == action then
+                n = n - 1
+                if n == 0 then
+                    local ok, err = H.Hekili.Scripts:CheckScript(pack .. ":" .. list .. ":" .. i)
+                    assert.is_nil(err, action)
+                    return ok and true or false, e.focus
+                end
+            end
+        end
+        error("no " .. action .. " line")
+    end
+
+    local function cds(ms, wwcd, revenge)
+        st.cooldown.mortal_strike.expires = st.query_time + ms
+        st.cooldown.whirlwind.expires = st.query_time + wwcd
+        st.cooldown.revenge.expires = st.query_time + (revenge or 9)
+    end
+
+    it("Arms: Rend in Battle Stance at 1.5 s or less, with Mortal Strike, outside execute (focus 2)", function()
+        boot("battle_stance", "Arms")
+        rawset(st.rage, "current", 50)
+        assert.is_true(st.talent.mortal_strike.enabled)
+        local ok, focus = check("rotation", "rend")
+        assert.is_true(ok) -- not up
+        assert.are.equal(2, focus)
+        st.applyDebuff("target", "rend", 2)
+        assert.is_false((check("rotation", "rend")))
+        st.removeDebuff("target", "rend") -- a shorter application does not shorten the running one
+        st.applyDebuff("target", "rend", 1.4)
+        assert.is_true((check("rotation", "rend")))
+        boot("berserker_stance", "Arms")
+        assert.is_false((check("rotation", "rend")))
+        -- the rotation list runs only outside the execute phase
+        local d = H.Hekili.DB.profile.packs.Arms.lists.default
+        assert.are.same(
+            { "run_action_list", "execute", "execute_phase" },
+            { d[4].action, d[4].list_name, d[4].criteria }
+        )
+    end)
+
+    it(
+        "Arms: Overpower at focus 1, Slam within 0.3 s after the main-hand swing (focus 2), leaving Mortal Strike's rage",
+        function()
+            boot("battle_stance", "Arms")
+            assert.are.equal(1, select(2, check("rotation", "overpower")))
+            rawset(st.rage, "current", 100)
+            cds(9, 9)
+            rawset(st, "mainhand_speed", 3.6)
+            rawset(st, "mainhand_remains", 3.4) -- swung 0.2 s ago
+            local ok, focus = check("rotation", "slam")
+            assert.is_true(ok)
+            assert.are.equal(2, focus)
+            rawset(st, "mainhand_remains", 3.31)
+            assert.is_true((check("rotation", "slam")))
+            rawset(st, "mainhand_remains", 3.29) -- swung 0.31 s ago
+            assert.is_false((check("rotation", "slam")))
+            -- Mortal Strike ready within Slam's cast: Slam only with Mortal Strike's rage left over
+            rawset(st, "mainhand_remains", 3.4)
+            local slam, ms = st.action.slam.cost, st.action.mortal_strike.cost
+            cds(1.4, 9)
+            rawset(st.rage, "current", slam + ms - 1)
+            assert.is_false((check("rotation", "slam")))
+            rawset(st.rage, "current", slam + ms)
+            assert.is_true((check("rotation", "slam")))
+            cds(1.6, 9) -- Mortal Strike after the cast: nothing reserved
+            rawset(st.rage, "current", slam)
+            assert.is_true((check("rotation", "slam")))
+            rawset(st, "mainhand_speed", 0) -- no swing speed read: no window
+            rawset(st, "mainhand_remains", 0)
+            assert.is_false((check("rotation", "slam")))
+        end
+    )
+
+    it(
+        "Arms: Battle Shout at 10 s or less, Hamstring under Windfury with Mortal Strike and Whirlwind 1.5 s away",
+        function()
+            boot("battle_stance", "Arms")
+            rawset(st.rage, "current", 50)
+            st.applyBuff("battle_shout", 11)
+            assert.is_false((check("rotation", "battle_shout")))
+            assert.is_false((check("precombat", "battle_shout")))
+            st.applyBuff("battle_shout", 9.9)
+            assert.is_true((check("rotation", "battle_shout")))
+            assert.is_true((check("precombat", "battle_shout")))
+            cds(9, 9)
+            assert.is_false((check("rotation", "hamstring"))) -- no Windfury Totem
+            st.applyBuff("windfury", 10)
+            assert.is_true((check("rotation", "hamstring")))
+            cds(1, 9)
+            assert.is_false((check("rotation", "hamstring")))
+            cds(9, 1)
+            assert.is_false((check("rotation", "hamstring")))
+            cds(1.6, 1.6)
+            assert.is_true((check("rotation", "hamstring")))
+        end
+    )
+
+    it("Protection: Shield Block at 40 rage, or with Revenge near ready and its window shut", function()
+        boot("defensive_stance", "Protection")
+        cds(9, 9, 9)
+        rawset(st.rage, "current", 40)
+        assert.is_true((check("default", "shield_block")))
+        rawset(st.rage, "current", 39)
+        assert.is_false((check("default", "shield_block")))
+        cds(9, 9, 1.4)
+        assert.is_true((check("default", "shield_block")))
+        st.applyBuff("revenge_usable", 3) -- Revenge's window open: Revenge, not the block
+        assert.is_false((check("default", "shield_block")))
+        st.removeBuff("revenge_usable")
+        cds(9, 9, 1.6)
+        assert.is_false((check("default", "shield_block")))
+        rawset(st.rage, "current", 100)
+        st.applyBuff("shield_block", nil, 2) -- both blocks still up: no recast
+        assert.is_false((check("default", "shield_block")))
+    end)
+
+    it(
+        "Protection: Rend when not up, Sunder to 5 and at 10 s or less, Shield Bash, Taunt and Mocking Blow at focus 1",
+        function()
+            boot("defensive_stance", "Protection")
+            rawset(st.rage, "current", 50)
+            assert.is_true((check("single", "rend")))
+            st.applyDebuff("target", "rend", 5)
+            assert.is_false((check("single", "rend")))
+            st.applyDebuff("target", "sunder_armor", 11, 5)
+            assert.is_false((check("single", "sunder_armor")))
+            st.removeDebuff("target", "sunder_armor")
+            st.applyDebuff("target", "sunder_armor", 9.9, 5)
+            assert.is_true((check("single", "sunder_armor")))
+            st.applyDebuff("target", "sunder_armor", 30, 4)
+            assert.is_true((check("single", "sunder_armor")))
+            for _, key in ipairs({ "shield_bash", "taunt", "mocking_blow" }) do
+                assert.are.equal(1, select(2, check("default", key)), key)
+            end
+        end
+    )
 end)

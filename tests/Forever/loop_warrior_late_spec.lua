@@ -4,6 +4,7 @@ local gate = require("Forever.helpers.arms_gate")
 
 describe("the headless Arms gates, fights 4-6 #slow", function()
     it("Arms solo, level 60, one mob, fights 4-6 of up to 3 minutes: the first icon against the oracle's", function()
-        gate.solo(3, 3, "seeds 4-6")
+        local r, line = gate.solo(3, 3, "seeds 4-6")
+        assert.is_true(r.focus > 0, "no flagged line ran: " .. line) -- review focus 5
     end)
 end)

@@ -91,13 +91,14 @@ Sim identifier already uses (`git blame` the Sim line and say so in the commit);
 `make check`'s 6-fight Arms gate is two files of 3 fights (`tests/Forever/loop_warrior_spec.lua`, seeds 1-3, and
 `loop_warrior_late_spec.lua`, seeds 4-6), so it prints three `Arms solo:` lines (`tests/Forever/arms_recs_spec.lua`
 repeats seeds 1-3 against its every-slot fixture). Each fight seeds its own world and the
-boot carries nothing between fights, so the halves play the same fights as the old single run (4524 ticks in all).
-At the split (forever 98e718bd; the single 6-fight line was agreement 0.953, never 0.073, cost 17.1 (oracle 16.4),
-dps A/B 0.999):
+boot carries nothing between fights, so the halves play the same fights as the old single run.
+After the wowsims lines (class-completion Task 5: Rend, Overpower and Slam at focus, Hamstring under Windfury, Battle
+Shout at 10 s; the split's lines, forever 98e718bd, were agreement 0.968 / 0.938, cost 17.4 (oracle 17.4) / 16.8
+(oracle 15.4)):
 
 ```
-Arms solo: fights=3 agreement 0.968 (2266 ticks); react median 0 p90 1 never 0.053; refused per 100 [cost 17.4 (oracle 17.4)], episodes 2.65/min; dps A/B 0.954; ... [seeds 1-3]
-Arms solo: fights=3 agreement 0.938 (2258 ticks); react median 0 p90 1 never 0.095; refused per 100 [cost 16.8 (oracle 15.4)], episodes 2.52/min; dps A/B 1.044; ... [seeds 4-6]
+Arms solo: fights=3 agreement 0.977 (2265 ticks); react median 0 p90 0 never 0.030; refused per 100 [cost 25.8 (oracle 22.9)], episodes 4.37/min; dps A/B 0.918; ... [seeds 1-3]
+Arms solo: fights=3 agreement 0.949 (2422 ticks); react median 0 p90 0 never 0.060; refused per 100 [casting 2.3 (oracle 2.2), cost 20.6 (oracle 22.6)], episodes 3.47/min; dps A/B 1.020; ... [seeds 4-6]
 ```
 
 `tests/Forever/loop_druid_spec.lua` runs 3 fights a Druid pack in `make check` (seeds 1-3, the `#slow` tag) and 20 in
