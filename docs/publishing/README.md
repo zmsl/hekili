@@ -60,6 +60,9 @@ the links, one per addon: `mklink /D <Addon> \\wsl.localhost\personal\home\zack\
 
 ## Cutting a release
 
+**Standing rule for implementer briefs:** a commit that changes what a player sees adds its line under
+`## Unreleased` in CHANGELOG.md (New / Changed / Fixed / Known issues / Upgrade notes) in the same commit.
+
 Tags are `vMAJOR.MINOR.PATCH`; the first release is `v0.1.0`.
 
 1. `make check` green on `forever`; write `## vX.Y.Z` with the changes by hand at the top of CHANGELOG.md (under the
