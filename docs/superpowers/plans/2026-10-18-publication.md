@@ -13,7 +13,7 @@
 ## Binding facts (user, 2026-10-18)
 - The original author approved the fork as "Hekili Forever": user-facing name and CurseForge project "Hekili Forever"; code keeps plain "Hekili" identifiers, folders, saved variables and slash commands; the Options General page clearly says Hekili Forever is a fork of the original Hekili project made with the explicit permission of the original author; every contact/Discord/WoW Interface/donation/wiki link to the old project is removed; GitHub info is github.com/zmsl/hekili; elsewhere it is clear this is not the original project.
 - `## Author: defzach` in every TOC and on the CurseForge project; Notes and the project description attribute the original as "based on the original work by Hekili".
-- Upstream Hekili is GPLv3 (its CurseForge page; no licence text in its repo). Obligations: LICENSE (full GPLv3) at the repo root and in `src/Hekili` (shipped); keep upstream copyright notices, add ours; a prominent "modified <date> for WoW Forever" notice (README and General page); CurseForge licence field GPLv3; the shipped Hekili logo is replaced by distinct art (user supplies it; placeholder first).
+- Upstream Hekili is GPLv3 (its CurseForge page; no licence text in its repo). Obligations: LICENSE (full GPLv3) at the repo root and in `src/Hekili` (shipped); keep upstream copyright notices, add ours; a prominent "modified <date> for WoW Forever" notice (README and General page); CurseForge licence field GPLv3; the shipped Hekili logo is replaced by distinct art (the fork's taco dog icon, supplied 2026-10-18).
 - CurseForge rules: credit and link the original; describe what changed, do not copy the original description; distinct name, avatar (400x400, not copyrighted art), summary, description; no game name in the project name; a changelog per uploaded file; third-party distribution toggle ON. One project ships all four folders in one zip.
 - The CurseForge project exists: id `1753387`, URL https://www.curseforge.com/wow/addons/hekili-forever (user, 2026-10-18).
 - Licence: GPLv3 for the entire project, per the agreement with the original author; vendored libraries keep their own licences, listed in `src/Hekili/Libs/CREDITS.md`.
@@ -38,7 +38,7 @@
 ---
 
 ## File map
-- Create: `LICENSE`, `src/Hekili/LICENSE` (identical GPLv3 text), `CHANGELOG.md`, `tests/Forever/publication_spec.lua`, `tools/check_package.sh`, `.github/workflows/release.yml`, `docs/publishing/README.md` (CurseForge page text, release how-to, package dry run).
+- Create: `LICENSE`, `src/Hekili/LICENSE` (identical GPLv3 text), `CHANGELOG.md`, `src/Hekili/Textures/HekiliForever.tga`, `docs/publishing/icon-512.png`, `tests/Forever/publication_spec.lua`, `tools/check_package.sh`, `.github/workflows/release.yml`, `docs/publishing/README.md` (CurseForge page text, release how-to, package dry run).
 - Modify: the four TOCs; `src/Hekili/Hekili.lua` (header, `ns.Patrons` removed); `src/Hekili/Options/Options.lua` (General page, window title, Getting Started, Snapshot panel); `src/Hekili/Engine/Sim/Core.lua`, `src/Hekili/UI/UI.lua`, `src/Hekili/Engine/Snapshot.lua`, `src/Hekili/Engine/Sim/Events.lua`, `src/Hekili/Engine/Content.lua`, `src/Hekili/UI/Styles.lua` (strings); `README.md` (rewrite); `.github/ISSUE_TEMPLATE/*.yml`; `.pkgmeta`; `.gitignore` (stop ignoring CHANGELOG.md); `Makefile` (`package`, `package-check`); `docs/dev/layout.md` (version rule); `src/Hekili/Libs/CREDITS.md` only if Task 1's check finds a gap.
 
 ---
@@ -47,10 +47,10 @@
 
 **Files:**
 - Create: `LICENSE`, `src/Hekili/LICENSE`, `tests/Forever/publication_spec.lua`
-- Modify: `src/Hekili/Hekili.lua:1-2` (header), `README.md` (temporary licence line only; full rewrite in Task 2)
+- Modify: `src/Hekili/Hekili.lua:1-2` (header)
 
 **Interfaces:**
-- Produces: `tests/Forever/publication_spec.lua` with `describe` blocks "licence", "upstream links", "tocs", "pkgmeta", "changelog". Tasks 2-4 turn their `pending` blocks into real ones by deleting the `pending(...)` line and un-commenting the body (each block's body is written here in full).
+- Produces: `tests/Forever/publication_spec.lua` with `describe` blocks "licence", "upstream links", "readme", "tocs", "pkgmeta", "changelog", and the top-level `scan(files, upstream)` helper. Tasks 2, 2b, 3 and 4 turn their `pending` blocks into real ones by deleting the `pending(...)` line and un-commenting the body (each block's body is written here in full).
 
 - [ ] **Step 1: Write the spec** (`tests/Forever/publication_spec.lua`). All five blocks are written now; the ones owned by later tasks start as `pending` so this task stays green.
 
@@ -104,60 +104,58 @@ describe("licence", function()
     end)
 end)
 
+-- lowercase patterns; a hit is "path:line: text"
+local FORBIDDEN = {
+    "discord",
+    "wowinterface",
+    "patreon",
+    "paypal",
+    "ko%-fi",
+    "curseforge%.com/wow/addons/hekili$",
+    "curseforge%.com/wow/addons/hekili[^%-]",
+    "hekili#0001",
+}
+local ALLOW = { ["src/Hekili/Engine/Sim/Targets.lua"] = "github%.com/hekili/hekili/issues/4845" }
+
+local function scan(files, upstream)
+    local hits = {}
+    for _, path in ipairs(files) do
+        if not path:find("/Libs/", 1, true) then
+            local n = 0
+            for line in (read(path) .. "\n"):gmatch("([^\n]*)\n") do
+                n = n + 1
+                local l = line:lower()
+                if ALLOW[path] and l:find(ALLOW[path]) then l = "" end
+                for _, pat in ipairs(FORBIDDEN) do
+                    if l:find(pat) then hits[#hits + 1] = path .. ":" .. n .. ": " .. line end
+                end
+                if l:find(upstream) then hits[#hits + 1] = path .. ":" .. n .. ": " .. line end
+            end
+        end
+    end
+    return hits
+end
+
 describe("upstream links", function()
     pending("Task 2 turns this on")
     --[[ TASK 2 BODY
-    -- lowercase patterns; a hit is "path:line: text"
-    local FORBIDDEN = {
-        "discord",
-        "wowinterface",
-        "patreon",
-        "paypal",
-        "ko%-fi",
-        "curseforge%.com/wow/addons/hekili$",
-        "curseforge%.com/wow/addons/hekili[^%-]",
-        "hekili#0001",
-    }
-    local ALLOW = { ["src/Hekili/Engine/Sim/Targets.lua"] = "github%.com/hekili/hekili/issues/4845" }
-
-    local function scan(files, upstream)
-        local hits = {}
-        for _, path in ipairs(files) do
-            if not path:find("/Libs/", 1, true) then
-                local n = 0
-                for line in (read(path) .. "\n"):gmatch("([^\n]*)\n") do
-                    n = n + 1
-                    local l = line:lower()
-                    if ALLOW[path] and l:find(ALLOW[path]) then l = "" end
-                    for _, pat in ipairs(FORBIDDEN) do
-                        if l:find(pat) then hits[#hits + 1] = path .. ":" .. n .. ": " .. line end
-                    end
-                    if l:find(upstream) then hits[#hits + 1] = path .. ":" .. n .. ": " .. line end
-                end
-            end
-        end
-        return hits
-    end
-
     it("has none in shipped files (src/: no github.com/Hekili at all)", function()
         local files = tracked("'src/*.lua'", "'src/*.toc'", "'src/*.xml'")
         assert.is_true(#files > 50)
         assert.are.same({}, scan(files, "github%.com/hekili"))
     end)
 
-    it("has only the bare upstream repo link in README, issue templates and the CurseForge text", function()
-        local files = tracked("README.md", "'.github/ISSUE_TEMPLATE/*'", "docs/publishing/README.md")
-        assert.is_true(#files >= 5)
+    it("has only the bare upstream repo link in issue templates and the publishing record", function()
+        local files = tracked("'.github/ISSUE_TEMPLATE/*'", "docs/publishing/README.md")
+        assert.is_true(#files >= 4)
         assert.are.same({}, scan(files, "github%.com/hekili/hekili/"))
     end)
 
-    it("credits and links the original in README and the CurseForge text", function()
-        for _, path in ipairs({ "README.md", "docs/publishing/README.md" }) do
-            local s = read(path)
-            assert.truthy(s:find("based on the original work by Hekili", 1, true), path)
-            assert.truthy(s:find("https://github.com/Hekili/hekili", 1, true), path)
-            assert.truthy(s:find("explicit permission", 1, true), path)
-        end
+    it("credits and links the original in the publishing record", function()
+        local s = read("docs/publishing/README.md")
+        assert.truthy(s:lower():find("based on the original work by hekili", 1, true))
+        assert.truthy(s:find("https://github.com/Hekili/hekili", 1, true))
+        assert.truthy(s:find("explicit permission", 1, true))
     end)
 
     it("puts the fork notice on the General page", function()
@@ -166,6 +164,33 @@ describe("upstream links", function()
         assert.truthy(s:find("explicit permission of its original author", 1, true))
         assert.truthy(s:find('name = "Hekili Forever " .. Hekili.Version', 1, true))
         assert.falsy(s:find("ns.Patrons", 1, true))
+    end)
+    --]]
+end)
+
+describe("readme", function()
+    pending("Task 2b turns this on")
+    --[[ TASK 2B BODY
+    it("has no old-project link but the bare upstream repo", function()
+        assert.are.same({}, scan({ "README.md" }, "github%.com/hekili/hekili/"))
+        assert.falsy(read("README.md"):lower():find("wiki", 1, true))
+    end)
+
+    it("credits the original, states the permission, the fork's tracker and the licence", function()
+        local s = read("README.md")
+        for _, want in ipairs({
+            "docs/publishing/icon-512.png",
+            "based on the original work by Hekili",
+            "explicit permission",
+            "https://github.com/Hekili/hekili",
+            "https://github.com/zmsl/hekili/issues",
+            "https://github.com/zmsl/hekili/releases",
+            "GNU General Public License version 3",
+            "Modified for WoW Forever by defzach",
+            "Libs/CREDITS.md",
+        }) do
+            assert.truthy(s:find(want, 1, true), want)
+        end
     end)
     --]]
 end)
@@ -272,14 +297,15 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ### Task 2: Rename pass (M)
 
 **Files:**
-- Modify: the four TOCs; `src/Hekili/Hekili.lua` (`ns.Patrons`); `src/Hekili/Options/Options.lua`; `src/Hekili/Engine/Sim/Core.lua`; `src/Hekili/UI/UI.lua`; `src/Hekili/Engine/Snapshot.lua`; `src/Hekili/Engine/Sim/Events.lua`; `src/Hekili/Engine/Content.lua`; `src/Hekili/UI/Styles.lua`; `README.md`; `.github/ISSUE_TEMPLATE/{Bug-Report-Form,Feature-Request,Recommendation-Report}.yml`
-- Create: `docs/publishing/README.md` (stub here with the credit paragraph; Task 5 fills it)
+- Modify: the four TOCs; `src/Hekili/Hekili.lua` (`ns.Patrons`); `src/Hekili/Options/Options.lua`; `src/Hekili/Engine/Sim/Core.lua`; `src/Hekili/UI/UI.lua`; `src/Hekili/Engine/Snapshot.lua`; `src/Hekili/Engine/Sim/Events.lua`; `src/Hekili/Engine/Content.lua`; `src/Hekili/UI/Styles.lua`; `.github/ISSUE_TEMPLATE/{Bug-Report-Form,Feature-Request,Recommendation-Report}.yml`; `src/Hekili/Engine/Schema/Spec.lua` (icon)
+- Create: `docs/publishing/README.md` (stub with the credit paragraph; Task 5 records the page in it), `src/Hekili/Textures/HekiliForever.tga`, `docs/publishing/icon-512.png`
+- Delete: `src/Hekili/Textures/{LOGO-ORANGE,LOGO-WHITE,Taco256,TACODOG}.blp`
 - Test: `tests/Forever/publication_spec.lua` (enable "upstream links" and the Task 2 "tocs" body)
 
 **Interfaces:**
 - Consumes: Task 1's spec. Produces: TOC field values Task 3/4 rely on, including `## X-Curse-Project-ID: 1753387` (Step 3).
 
-- [ ] **Step 1: Turn on the tests.** In `publication_spec.lua` delete the two `pending("Task 2 turns this on")` lines and the `--[[ TASK 2 BODY` / `--]]` markers around the Task 2 bodies. Run `.lua/bin/busted tests/Forever/publication_spec.lua`. Expected: FAIL, listing the Options.lua Discord/WoW Interface/upstream lines, the TOC fields, README, templates and the missing `docs/publishing/README.md`.
+- [ ] **Step 1: Turn on the tests.** In `publication_spec.lua` delete the two `pending("Task 2 turns this on")` lines and the `--[[ TASK 2 BODY` / `--]]` markers around the Task 2 bodies. Run `.lua/bin/busted tests/Forever/publication_spec.lua`. Expected: FAIL, listing the Options.lua Discord/WoW Interface/upstream lines, the TOC fields, templates and the missing `docs/publishing/README.md`. (README.md is Task 2b's; its block stays pending here.)
 
 - [ ] **Step 2: TOCs.** Edit the `##` header of each file (other lines unchanged; Version stays `forever-dev` until Task 4; IconTexture changes in Step 9):
 
@@ -351,55 +377,20 @@ Then `make test-fast`; fix any spec that asserts the old string (grep the old te
 
 - [ ] **Step 7: Issue templates.** In all three: `assignees:` list becomes only `  - zmsl` (drop `Hekili`, `syrifgit`); `placeholder: Hekili#0001` -> `placeholder: your-name`; "alternate contact method (i.e., Discord ID)" -> "alternate contact method". `Recommendation-Report.yml:119` link -> `[How to get a Snapshot](https://github.com/zmsl/hekili#reporting-a-problem)` (the README section from Step 8). Retail wording in Recommendation-Report: replace "Retail" with "WoW Forever" where it names the game.
 
-- [ ] **Step 8: README rewrite** (replace the whole file):
+- [ ] **Step 8: README** moved to Task 2b (its own reviewable task).
 
-```markdown
-# Hekili Forever
+- [ ] **Step 9: The fork's icon.** Upstream's art (`LOGO-ORANGE.blp`, `LOGO-WHITE.blp`, `Taco256.blp`, `TACODOG.blp`) must not ship as the fork's identity. The art is ready (user, 2026-10-18; a taco dog with an infinity halo, already the CurseForge avatar): a 512x512 RGBA PNG and a 256x256 TGA made from it.
 
-Hekili Forever is a priority helper for the **WoW Forever** client (1.60.1, `## Interface: 16001`). It shows the next
-abilities to press for Druid (Feral, Balance, Guardian) and Warrior (Arms, Fury, Protection), with more classes to come.
-
-**This is a fork, not the original project.** Hekili Forever is based on the original work by Hekili
-(https://github.com/Hekili/hekili) and its maintainers (Hekili, Syrif, Nerien and contributors), and is published with
-the explicit permission of the original author. Please report problems here, never to the original Hekili authors.
-
-## Changes from the original
-- Runs on the WoW Forever client, whose API differs from Retail (secret values in combat, no assisted combat).
-- A game facade and a virtual game state replace upstream's direct API reads.
-- New Forever class content (Druid, Warrior) as load-on-demand addons, with default priorities written for Forever.
-- New display styles (Classic and Timeline), focus tiers, options reworked for these.
-- Upstream's Retail class modules, Discord/WoW Interface/Patreon links and SimC import cadence are gone.
-
-## Install
-- CurseForge: search for **Hekili Forever** (installs four folders: `Hekili`, `Hekili_Shared`, `Hekili_Druid`,
-  `Hekili_Warrior`).
-- GitHub: download the zip from https://github.com/zmsl/hekili/releases and extract the four folders into
-  `_classic_beta_\Interface\AddOns\`.
-- Remove any old upstream `Hekili` folder first: the folder name and saved variables (`HekiliDB`) are the same, so your
-  settings carry over. `/hekili` opens the options.
-
-## Reporting a problem
-Open an issue at https://github.com/zmsl/hekili/issues. For a wrong recommendation, attach a snapshot: press the
-Snapshot binding (or `/hek snap`) when it happens, open `/hekili` > Snapshots (Troubleshooting), select the snapshot,
-CTRL+A, CTRL+C, and paste it into the issue or a paste site.
-
-## Development
-See `docs/dev/layout.md` (layout, `make bootstrap`, `make check`) and `docs/publishing/README.md` (packaging and
-releases).
-
-## Licence
-GNU General Public License version 3 (`LICENSE`), as the original Hekili. Modified for WoW Forever by defzach from
-October 2026. Bundled libraries keep their own licences (`src/Hekili/Libs/CREDITS.md`).
+```bash
+cp /home/zack/.claude/jobs/080a308e/tmp/pubplan/HekiliForever.tga src/Hekili/Textures/HekiliForever.tga
+cp /home/zack/.claude/jobs/080a308e/tmp/pubplan/icon-512.png docs/publishing/icon-512.png   # README/CurseForge only, not shipped (docs/ is ignored by .pkgmeta)
 ```
-Before writing the "Reporting a problem" steps, confirm the snapshot command and binding names: `grep -n '"snap' src/Hekili/Engine/Sim/Core.lua src/Hekili/Options/*.lua | head` and `grep -n 'SNAPSHOT' src/Hekili/Bindings.xml`; use what exists (Bindings.xml is commented out, so drop "the Snapshot binding" if no binding is live).
-
-- [ ] **Step 9: Logo placeholder.** Upstream's art (`LOGO-ORANGE.blp`, `LOGO-WHITE.blp`, `Taco256.blp`, `TACODOG.blp`) must not ship as the fork's identity. Placeholder until the user supplies art (U1): point every reference at a stock client icon, then delete the four files.
-- `src/Hekili/Hekili.toc`: `## IconTexture: Interface\ICONS\spell_nature_bloodlust`
-- `src/Hekili/UI/UI.lua` compartment `icon = "Interface\\ICONS\\spell_nature_bloodlust"` (the LDB object already uses it)
-- `src/Hekili/Engine/Schema/Spec.lua` (`NewSpecialization( 0, "All", ...)`): `"Interface\\ICONS\\spell_nature_bloodlust"`
-- `src/Hekili/Options/Options.lua` `welcome.image = "Interface\\ICONS\\spell_nature_bloodlust"`
-- `grep -rn 'LOGO-\|Taco256\|TACODOG' src tests | grep -v /Libs/` empty, then `git rm src/Hekili/Textures/{LOGO-ORANGE,LOGO-WHITE,Taco256,TACODOG}.blp`.
-When the art arrives: add `src/Hekili/Textures/HekiliForever.blp` (and a 400x400 PNG for CurseForge, not shipped: keep it under `docs/publishing/`) and repoint the four references to `Interface\AddOns\Hekili\Textures\HekiliForever` in one commit.
+Point every reference at it (no extension, the client resolves `.tga`):
+- `src/Hekili/Hekili.toc`: `## IconTexture: Interface\AddOns\Hekili\Textures\HekiliForever`
+- `src/Hekili/UI/UI.lua` compartment: `icon = "Interface\\AddOns\\Hekili\\Textures\\HekiliForever",`
+- `src/Hekili/Engine/Schema/Spec.lua` (`NewSpecialization( 0, "All", ...)`, was LOGO-WHITE): `"Interface\\AddOns\\Hekili\\Textures\\HekiliForever"`
+- `src/Hekili/Options/Options.lua` `welcome.image` (was Taco256): `"Interface\\AddOns\\Hekili\\Textures\\HekiliForever"`
+Then `grep -rn 'LOGO-\|Taco256\|TACODOG' src tests | grep -v /Libs/` must be empty, and `git rm src/Hekili/Textures/{LOGO-ORANGE,LOGO-WHITE,Taco256,TACODOG}.blp`. Add to the spec's Task 2 `tocs` test: `assert.are.equal("Interface\\AddOns\\Hekili\\Textures\\HekiliForever", field(TOCS[1], "IconTexture"))` and `assert.truthy(io.open("src/Hekili/Textures/HekiliForever.tga"))`.
 
 - [ ] **Step 10: `docs/publishing/README.md` stub** (Task 5 fills the rest):
 
@@ -412,13 +403,78 @@ permission of the original author.
 
 - [ ] **Step 11: Keep-as-is reaffirmed.** `git diff --stat` must not touch `.pkgmeta`'s `package-as`, any `SavedVariables`, `/hekili`/`/hek` registration, `NewAddon( "Hekili"`, `NewDataObject( "Hekili"`, `LDBIcon:Register( "Hekili"`, `ACD:Open( "Hekili" )`. Check: `git diff -U0 | grep -E '^-.*(NewAddon|NewDataObject|LDBIcon:Register|RegisterChatCommand|SavedVariables)'` is empty.
 
-- [ ] **Step 12: Run** `.lua/bin/busted tests/Forever/publication_spec.lua` (PASS), `make check` (PASS). In game (user, `/reload` through the symlinks): the AddOns list shows "Hekili Forever"; `/hekili` window title "Hekili Forever <version>"; General page shows the notice and only GitHub, CurseForge (hekili-forever), Report Issue, SimC Wiki rows; Snapshots page has no Discord row.
+- [ ] **Step 12: Run** `.lua/bin/busted tests/Forever/publication_spec.lua` (PASS), `make check` (PASS). In game (user, `/reload` through the symlinks): the AddOns list shows "Hekili Forever" with the taco dog icon; `/hekili` window title "Hekili Forever <version>"; General page shows the taco dog image, the notice and only GitHub, CurseForge (hekili-forever), Report Issue, SimC Wiki rows; Snapshots page has no Discord row.
 
 - [ ] **Step 13: Commit**
 
 ```bash
-git add -A src README.md .github/ISSUE_TEMPLATE docs/publishing tests/Forever/publication_spec.lua
-git commit -m "feat(fork): Hekili Forever name, fork notice and fork links; upstream contact links and logo removed
+git add -A src .github/ISSUE_TEMPLATE docs/publishing tests/Forever/publication_spec.lua
+git commit -m "feat(fork): Hekili Forever name, icon, fork notice and fork links; upstream contact links and logos removed
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+```
+
+---
+
+### Task 2b: README (M)
+
+**Files:**
+- Modify: `README.md` (replace the whole file)
+- Test: `tests/Forever/publication_spec.lua` (enable "readme")
+
+**Interfaces:**
+- Consumes: `docs/publishing/icon-512.png` (Task 2 Step 9); the user's CurseForge description, verbatim HTML at `/home/zack/.claude/jobs/080a308e/tmp/pubplan/curseforge-description.html` (the controller passes this path; Task 5 stores the same text in the repo).
+
+- [ ] **Step 1: Enable the "readme" block** (remove `pending("Task 2b turns this on")` and the `TASK 2B BODY` markers). Run `.lua/bin/busted tests/Forever/publication_spec.lua`. Expected: FAIL (upstream's README: releases/wiki/issues links, no icon, no licence line).
+
+- [ ] **Step 2: Convert the description.** Read the HTML file whole. Convert it to Markdown keeping its sections, order and wording: `<h3>` -> `##`, the `- ...` display lines -> a Markdown list, the numbered troubleshooting items -> `1.`/`2.`/`3.` with the underlined lead-in as **bold**, `&gt;` -> `>`, `&nbsp;` dropped, links as Markdown links. The red callout (second, right after the fork paragraph) becomes a blockquote in bold: `> **This addon is not maintained by the original Hekili project. ...** [https://github.com/zmsl/hekili/issues](https://github.com/zmsl/hekili/issues)`. Do not reword it except the one typo fix "based the level 30 beta" -> "based on the level 30 beta" (tell the user).
+
+- [ ] **Step 3: Assemble README.md** in this order:
+1. `<p align="center"><img src="docs/publishing/icon-512.png" alt="Hekili Forever" width="160"></p>` then `# Hekili Forever`.
+2. From the description, in its order: the fork paragraph, the red callout, What is Hekili Forever?, Supported Classes, Action Packs, Displays, Current Mode, Other Customization, Toggles, Troubleshooting.
+3. GitHub-only sections:
+
+```markdown
+## Install
+- **CurseForge:** install **Hekili Forever** (https://www.curseforge.com/wow/addons/hekili-forever).
+- **GitHub:** download the zip from https://github.com/zmsl/hekili/releases and extract it into
+  `_classic_beta_\Interface\AddOns\`. It holds four folders: `Hekili`, `Hekili_Shared`, `Hekili_Druid`, `Hekili_Warrior`.
+- Remove any old `Hekili` folder first. Hekili Forever keeps the original's folder name and saved settings (`HekiliDB`),
+  so your settings carry over. `/hekili` opens the options.
+
+## Reporting a problem
+Open an issue at https://github.com/zmsl/hekili/issues.
+- **Lua errors:** install BugSack and BugGrabber, reproduce the error, and paste BugSack's text into the issue.
+- **A wrong recommendation:** take a snapshot while it is happening: type `/hek snap` (or press the snapshot keybind,
+  set under `/hekili` > Toggles; or the pause keybind; or tick **Auto Snapshot** to get one when the addon fails to
+  recommend anything). Then open `/hekili` > **Snapshots (Troubleshooting)**, pick the snapshot from the dropdown,
+  click the text box, press Ctrl+A and Ctrl+C, and paste it into the issue (or a paste site, with the link in the issue).
+
+## Development
+Layout and conventions: `docs/dev/layout.md`. Run `make bootstrap` once, then `make check` before every commit.
+Packaging and releases: `docs/publishing/README.md`.
+
+## Credits
+Based on the original work by Hekili: https://github.com/Hekili/hekili (Hekili and its maintainers). Hekili Forever is
+published with the original author's explicit permission. Author: [defzach](https://github.com/zmsl).
+Bundled libraries (Ace3, LibStub, LibSharedMedia-3.0, LibDBIcon-1.0, LibDataBroker-1.1 and others) belong to their
+authors under their own licences; see `src/Hekili/Libs/CREDITS.md`.
+
+## Licence
+GNU General Public License version 3 (`LICENSE`), as the original Hekili. Modified for WoW Forever by defzach from
+October 2026.
+```
+The description's own Credits line ("Based on the original work by Hekili. Author: defzach.") is replaced by the Credits section above, which keeps that wording and adds the upstream link and the libraries.
+
+- [ ] **Step 4: Check every path and command against the tree:** `ls docs/dev/layout.md docs/publishing/README.md docs/publishing/icon-512.png src/Hekili/Libs/CREDITS.md LICENSE`; `grep -n 'bootstrap:\|^check:' Makefile`; `grep -n 'snap  *= "snapshot"' src/Hekili/Options/ChatCommands.lua`; `grep -n 'Auto Snapshot\|Snapshots (Troubleshooting)' src/Hekili/Options/Options.lua`; `grep -n 'toggles.snapshot.key' src/Hekili/Options/Options.lua`; and for each library named in Credits `ls -d src/Hekili/Libs/<name>`. Every option path the description names (`/hekili > General > Enabled`, `Displays > Primary and AOE`, `Visibility` tab, `Profiles`, `Action Packs`, `Toggles` > Mode Switch) must exist: `grep -n 'name = "Enabled"\|name = "Visibility"\|name = "Profiles"\|name = "Action Packs"\|Mode Switch' src/Hekili/Options/*.lua | head`. Report any that does not match to the user instead of changing the description's wording.
+
+- [ ] **Step 5: Run** `.lua/bin/busted tests/Forever/publication_spec.lua` (PASS), `make check` (PASS). Preview the Markdown (GitHub renders the icon from the relative path).
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add README.md tests/Forever/publication_spec.lua
+git commit -m "docs(readme): Hekili Forever README from the CurseForge description, plus install, reporting, development, credits, licence
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -629,54 +685,44 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task 5: CurseForge project page content (S)
+### Task 5: CurseForge page record (S)
+
+The page is already set up by the user; this task records it in the repo, it writes nothing new.
 
 **Files:**
 - Modify: `docs/publishing/README.md` (section "CurseForge page")
 
-- [ ] **Step 1: Write the page text** into `docs/publishing/README.md` (the user pastes it into the CurseForge project settings; it stays scanned by `publication_spec.lua`):
+- [ ] **Step 1: Record the settings and the description** in `docs/publishing/README.md`, below the stub paragraph (which keeps the upstream credit link the spec checks):
 
-```markdown
+````markdown
 ## CurseForge page
 
+The user's settings on https://www.curseforge.com/wow/addons/hekili-forever (project 1753387), recorded 2026-10-18.
+README.md derives its user-facing sections from the description below; change both together.
+
 - **Name:** Hekili Forever
-- **Summary:** A priority helper that shows your next abilities on the WoW Forever client.
-  (No game name in the project name; the summary may name the client.)
+- **Summary:** <copy the summary exactly as set on the page; ask the user if it is not in the controller's brief>
 - **Licence field:** GNU General Public License version 3 (GPLv3)
-- **Project id / URL:** 1753387, https://www.curseforge.com/wow/addons/hekili-forever
-- **Game version:** WoW Forever 1.60.1 (interface 16001; Task 4 Step 4a)
-- **Third-party distribution:** ON (Allow)
-- **Avatar:** 400x400 PNG, the fork's own art (not Hekili's logo, not Blizzard or other copyrighted art)
-- **Source:** https://github.com/zmsl/hekili ; **Issues:** https://github.com/zmsl/hekili/issues
+- **Third-party distribution:** ON
+- **Avatar:** `docs/publishing/icon-512.png` (the fork's taco dog icon)
+- **Game version:** WoW Forever 1.60.1 (interface 16001; see "Cutting a release")
+- **Source / issues:** https://github.com/zmsl/hekili , https://github.com/zmsl/hekili/issues
 
-### Description
+### Description (verbatim HTML)
 
-Hekili Forever shows the next abilities to press, as a short queue of icons, for the WoW Forever client.
-
-**A fork, made with permission.** Hekili Forever is based on the original work by Hekili
-(https://github.com/Hekili/hekili) and its maintainers, and is published with the explicit permission of the original
-author. It is not the original project: please report problems on https://github.com/zmsl/hekili/issues.
-
-**What is different from the original Hekili**
-- Built for the WoW Forever client (1.60.1) and its in-combat API limits, not Retail.
-- Class content for Forever: Druid (Feral, Balance, Guardian) and Warrior (Arms, Fury, Protection), each with
-  priorities written for Forever's spells and talents.
-- New Classic and Timeline display styles and focus tiers.
-- Installs four folders (Hekili, Hekili_Shared, Hekili_Druid, Hekili_Warrior). It uses the same folder name and saved
-  settings as the original, so remove an old Hekili install first; your settings carry over.
-
-**Licence.** GNU GPL version 3, as the original. Modified for WoW Forever by defzach from October 2026. Source code:
-https://github.com/zmsl/hekili.
+```html
+<the full contents of /home/zack/.claude/jobs/080a308e/tmp/pubplan/curseforge-description.html, unchanged>
 ```
-Write the description fresh: do not paste any paragraph of upstream's CurseForge description.
+````
+The two angle-bracket lines are instructions to the implementer, not text to commit: paste the HTML file's contents unchanged (`cat` it into the fence), and ask the controller for the summary string if it was not passed.
 
-- [ ] **Step 2: Run** the spec (PASS: the doc credits and links upstream, has "explicit permission", has no forbidden link).
+- [ ] **Step 2: Run** the spec (PASS: the record credits and links upstream through the stub paragraph, says "explicit permission", and holds no forbidden link).
 
 - [ ] **Step 3: Commit**
 
 ```bash
 git add docs/publishing/README.md
-git commit -m "docs(publishing): CurseForge page text (fork credit, changes, licence)
+git commit -m "docs(publishing): record the CurseForge page settings and description
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 ```
@@ -687,8 +733,8 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 - [ ] **Offline** (`make check` covers): publication spec green; `grep -rniE 'discord|wowinterface|patreon|github\.com/hekili' src --include=*.lua --include=*.toc --include=*.xml | grep -v /Libs/` shows only `Targets.lua` 4845.
 - [ ] **Package:** `make package-check` on a throwaway local `v0.0.0` tag (deleted after) prints `package ok`; `unzip -l` shows four top-level folders and `Hekili/LICENSE`.
-- [ ] **In game from the zip** (links removed first, full restart): AddOns list titles "Hekili Forever", "Hekili Forever - Shared/Druid/Warrior", author defzach, the placeholder icon; `/hekili` title "Hekili Forever <tag>"; General page notice, GitHub/CurseForge/Report Issue/SimC rows only; Snapshots page without Discord; a snapshot starts "Hekili Forever build:"; Interface Options category "Hekili Forever"; compartment and minimap tooltips "Hekili Forever"; minimap button keeps its saved position (LDBIcon key unchanged).
-- [ ] **CurseForge:** project fields as Task 5; first upload has the CHANGELOG entry as its changelog; distribution toggle ON; licence GPLv3; avatar is the fork's art.
+- [ ] **In game from the zip** (links removed first, full restart): AddOns list titles "Hekili Forever", "Hekili Forever - Shared/Druid/Warrior", author defzach, the taco dog icon; `/hekili` title "Hekili Forever <tag>"; General page notice, GitHub/CurseForge/Report Issue/SimC rows only; Snapshots page without Discord; a snapshot starts "Hekili Forever build:"; Interface Options category "Hekili Forever"; compartment and minimap tooltips "Hekili Forever"; minimap button keeps its saved position (LDBIcon key unchanged).
+- [ ] **CurseForge:** project fields as Task 5; first upload has the CHANGELOG entry as its changelog; distribution toggle ON; licence GPLv3; avatar is `docs/publishing/icon-512.png`.
 - [ ] **GitHub:** repo description/website point at the CurseForge page; issue templates assign `zmsl`.
 - [ ] **Merge** `forever-pubplan` work into `forever` after `/ponytail-review` (pre-approved once reviewed and checked); tag only after the merge.
 
@@ -696,5 +742,3 @@ Open questions for the original author:
 - **Q1:** GPL "version 3 only" or "version 3 or later"? (The plan writes v3 only, valid either way.)
 - **Q2:** May the README/CurseForge page quote the permission publicly (e.g. "with the permission of Hekili, <date>"), and in what words?
 
-Open question for the user:
-- **U1:** the fork's art: a 400x400 PNG avatar for CurseForge and an in-game icon (`.blp`/`.tga`, 64x64 or 128x128); the stock-icon placeholder from Task 2 Step 9 ships until then.
