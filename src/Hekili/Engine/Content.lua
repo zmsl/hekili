@@ -20,8 +20,9 @@ local Hekili = _G[addon]
 -- `isStealthed` and `weaponEnchant`, and Hekili_Shared's main_hand_enchant and off_hand_enchant pseudo-auras.
 -- 3 (2026-10-19): a resource meta's `fsr` (the five-second rule's parts) and a regen entry's `mult`.
 -- 4 (2026-10-19): the `now` verb `summonTotem` (Families/Now.lua), Hekili's signature.
--- 5 (2026-10-19): the `now` verb `summonPet` (Families/Now.lua), RegisterPets' `cap` (a counted guardian) and the
--- simulation's `pet.<key>.count`.
+-- 5 (2026-10-19): the `now` verb `summonPet` (Families/Now.lua), RegisterPets' `cap` (a counted guardian), the
+-- simulation's `pet.<key>.count`, the ability field `rangedSwing` and the simulation's swings.ranged_actual,
+-- swings.ranged_speed, swings.ranged_projected and swing.ranged.
 local CONTENT_API = 5
 
 local done, notice = false, nil

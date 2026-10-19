@@ -317,7 +317,7 @@ clock on it.
   overlay `I.SAME_FRAME` guard (Task 3b).
 
 ## Open after Day 4 (2026-10-19)
-- **Core mana bound decision, before T10** (every mana pack hits it): D7 percent floors are judged on the belief's
+- **Closed (T9b):** ~~Core mana bound decision, before T10~~ (every mana pack hits it): D7 percent floors are judged on the belief's
   lower bound `lo`, which starts at 0 on boot (lo0 = 0) and sits low after spending. Options: judge pct thresholds on
   `est`, or seed lo0 from rest/max on boot when restMax; add a headless case with a long OOC rest. Until then the
   Retribution (Consecration/Exorcism) and Enhancement (Fire Nova, potion/rune) mana floors default 0.
@@ -336,6 +336,34 @@ clock on it.
 - **D4 runes unregistered:** Lava Lash 408507, Water Shield 408510, Shamanistic Rage 433255; for T17 (Water Shield
   bears on the thin gate).
 - **shaman_world** prices presses from the oracle's belief while usable reads world truth (Paladin precedent).
+
+## Open after Day 5 (2026-10-19)
+- **Hunter, in game:** checkpoints H1-H13 in `docs/dev/layout.md` plus the Hunter research's §7
+  (`docs/research/2026-10-15-forever-hunter/research.md`). Key: H1 the pseudo-spec 1484 (the alphabetical pattern;
+  reconcile with Druid's 1499 on forever); H3/H4 PLAYER_SWING swingType 2 and Auto Shot SUCCEEDED per shot; H6
+  IsSpellInRange(75) in the deadzone (the C11 guard rests on it); H7 the percent-of-base costs; H9 learnability,
+  including the rune Raptor Strike variants; H10 CAST_GRACE and whether a hawk is a pet unit.
+- **Hunter, headless gaps:** Mongoose Bite's window never opens in the Survival world (`dodged()` likely reads the
+  batch world's end); all three gates are thin (~28% of Survival ticks with icons; the turret worlds go OOM within a
+  minute); the deadzone is untested headless (in_range always true); hawks deal nothing; the Beast Mastery and
+  Marksmanship `casting` refusals (the world's client sees no cast start); the world mirrors the overstated percent
+  costs (Multi-Shot 0.139*MAX, Strider Kick 0.0581*MAX), so the gate cannot catch H7; `Specializations[1484].ranged =
+  true` gives Survival `spec.melee = false` (no Survival line reads active_enemies yet).
+- **Hunter, belief shortcuts:** the simulation's `pet.<key>.count` ignores predicted summons; ranged haste is unread in
+  combat; the modelled Auto Shot anchor counts at full weight; Rows.lua's advance(t) on swingType 2; an uncapped or
+  typo'd `summonPet` key models the pet unit; the sim tests take `model.cap` as truthy where the Adapter wants a
+  numeric cap >= 1; VS.Pet writes `est` in a getter; the UnitGUID("pet") and UnitCreatureFamily rows are not added
+  (research C1).
+- **Rune Raptor Strike** (415335-415343, on-GCD instants; 409691-409755): unregistered, a separate ability (D4 gap,
+  H9).
+- **D2:** confirm with the user that C17's scope (Feral, Rogue, Warlock) is the intended reading; it now covers Rend,
+  Flame Shock and Serpent Sting.
+- **Mana bound (T9b):** the at-rest bound exists (it reaches max after ~5-6 min out of combat), but Sources/Power.lua:122
+  skips an out-of-combat regen read equal to the estimate, so `lo` climbs at 0.9x (its own task; may move mana lines);
+  plus its three test minors (paladin_spec.lua:349's comment, resources_spec.lua:921 and :932). The Retribution,
+  Enhancement and Hunter mana floors default 0.
+- **Still open:** loop.lua feeds no kill (worked around in shaman_world and hunter_world); the `locked_out_*`
+  allocation; the overlay `I.SAME_FRAME` guard.
 
 ## Verification
 - `make check` green with every `<Spec> solo:` line gated. `make test-<class>` runs 20 fights per class and is green.

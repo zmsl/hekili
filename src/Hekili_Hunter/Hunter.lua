@@ -153,6 +153,8 @@ spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
 
 -- Summon Hawk's guardians (C1): 2 up at most (DB2 1293527 effect 3), 18 s each (1293248's duration); the oldest gives
 -- way to a third.
+-- shortcut: the APLs' pet.hawk.count is the belief's count at query_time; summons the simulation predicts are not
+-- counted (the shared 6 s cooldown blocks a second summon in the lookahead), count them if a pack needs it.
 spec:RegisterPets({
     hawk = { spell = "summon_hawk", duration = 18, cap = 2 },
 })

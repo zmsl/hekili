@@ -214,12 +214,16 @@ Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
 
 `tests/Forever/loop_hunter_spec.lua` runs 3 fights of each Hunter pack in `make check` (seeds 1-3, `#slow`) and 20 in
 `make test-hunter` (`#hunter`), gated by `pack_gate.gate` and asserting its flagged lines ran (Sniper Shot under Rapid
-Fire or Quick Shots, Mongoose Bite and Raptor Strike at tier 1; Serpent Sting and Hunter's Mark at tier 2). The turret
+Fire or Quick Shots and Raptor Strike at tier 1; Serpent Sting and Hunter's Mark at tier 2). Mongoose Bite is not
+exercised headless: in seeds 1-20 it is never the first icon, and in seeds 1-3 IsSpellUsable(14271) never answers true
+(Survival's focus ticks come only from Hunter's Mark and Raptor Strike). The turret
 worlds (Beast Mastery, Marksmanship) shoot Auto Shots on the harness's ranged hand (`W.startRanged`, the `ranged`
-scenario knob), and Quick Shots procs off them under Aspect of the Hawk (10%). The mob swings at us, and our dodge opens
-Mongoose Bite for 5 s. Raptor Strike's cooldown starts at its swing (class-neutral: a queued strike's cooldown). Each
+scenario knob), and Quick Shots procs off them under Aspect of the Hawk (10%). The mob swings at us, and our dodge is meant to open
+Mongoose Bite for 5 s, but the window never opens (likely `dodged()` in `tests/Forever/helpers/hunter_world.lua` reads
+`W.t`/`W.truth`, which a batched list answer sees at the finished world). Raptor Strike's cooldown starts at its swing (class-neutral: a queued strike's cooldown). Each
 fight's fresh world gets the pack's aspect at the pull (the character keeps a permanent buff between fights). Neither side
-dies (shaman_world's workaround for the loop's missing kill). The turret worlds run out of mana within the first minute
+dies (shaman_world's workaround for the loop's missing kill). All three gates are thin: Survival shows no first icon on 72% of its in-combat ticks (seeds 1-3), and
+the turret worlds run out of mana within the first minute
 (idle about 0.74: UNMEASURED pool and regen, no Aspect of the Viper), and Hekili recommends a press during Aimed and
 Sniper Shot's casts on both sides (the world's client sees no cast start: the `casting` refusals). The filler mana
 floors (Arcane Shot, Wing Clip; D7) are settings, off by default; they work after an out-of-combat rest. The first runs
