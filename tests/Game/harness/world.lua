@@ -23,6 +23,7 @@ function M.new(seed)
     W.grng = rng.new(seed + 15485863) -- the GCD flag's order against its cast (W.press), apart from both
     W.combat = false
     W.rates = {} -- [powerType] = regen per second (W.startRegen)
+    W.fsr = {} -- [powerType] = { spirit, mp5 } per second: the five-second rule's two parts (W.startRegen)
 
     --- Runs `fn(W)` at time `t` (after everything already queued for `t`).
     function W.at(t, fn)
@@ -68,9 +69,9 @@ function M.new(seed)
             local o = w[2] or { 0, 0 }
             ev.damage = { w[1][1] * m, w[1][2] * m, o[1] * m, o[2] * m }
             ev.speed = { w[1][3], w[2] and w[2][3] or nil }
-            ev.regen = {}
+            ev.regen, ev.regenCasting = {}, {}
             for pt in pairs(W.rates) do
-                ev.regen[pt] = W.regenRate(me, pt)
+                ev.regen[pt], ev.regenCasting[pt] = W.regenRate(me, pt, "idle"), W.regenRate(me, pt, "casting")
             end
         end
         if ev.act == "WOUND" and ev.dst and (ev.kind ~= "swing" or not ev.ours) then -- ours take it at `land`
@@ -85,6 +86,9 @@ function M.new(seed)
             ev.dst.health = math.min(ev.dst.healthMax, ev.dst.health + (ev.amount or 0))
         end
         local us = W.ents[1]
+        if ev.kind == "cast" and ev.src == us and (ev.cost or 0) > 0 then -- the five-second rule's window opens
+            us.spentAt[ev.pt or us.pt] = W.t
+        end
         if ev.src == us and (ev.rage or ev.cost) then
             local r = ev.pt and ev.pt ~= us.pt and us.res[ev.pt]
             if r then
@@ -200,6 +204,12 @@ function M.new(seed)
         return true
     end
 
+    --- `e`'s cooldown of `key` (its ranks' spell IDs `ids`) finishes now: the world's and the client's answers.
+    function W.resetCooldown(e, key, ids)
+        e.cdUntil[key] = nil
+        W.emit({ kind = "cdreset", src = e, ids = ids })
+    end
+
     --- The generic effects of press `p` by `e` (W.press's gain, points, drain, aura, shift), after its `effect`.
     function W.effects(e, p)
         if p.gain then
@@ -269,7 +279,14 @@ function M.new(seed)
     end
 
     --- `e`'s regen per second of `pt` now: the rate, times `W.regenAfter.k` after `W.regenAfter.s` seconds in one form.
-    function W.regenRate(e, pt)
+    --- An `fsr` type's is its mp5 part, plus its spirit part from 5 s after our last cast that spent it; `mode` "idle"
+    --- or "casting" (the out-of-combat read's two returns) asks for both parts or the mp5 part alone.
+    function W.regenRate(e, pt, mode)
+        local f = W.fsr[pt]
+        if f then
+            local open = mode == "idle" or (mode ~= "casting" and W.t - (e.spentAt[pt] or -1e9) >= 5)
+            return f[2] + (open and f[1] or 0)
+        end
         local r, ra = W.rates[pt] or 0, W.regenAfter
         if ra and W.t - e.formSince >= ra.s then
             r = r * ra.k
@@ -279,11 +296,15 @@ function M.new(seed)
 
     --- Continuous regen of `e`'s resources at `rates` ({ [pt] = per second }) from now, applied every `every` s (0.1)
     --- as a "regen" gain, capped at the maximum (no event at it); `after` { s, k }: the rate x k after s seconds in one
-    --- form (an unmeasured in-form ramp's knob).
-    function W.startRegen(e, rates, every, after)
+    --- form (an unmeasured in-form ramp's knob); `fsr` ({ [pt] = { spirit, mp5 } }): those types by W.regenRate's
+    --- five-second rule instead.
+    function W.startRegen(e, rates, every, after, fsr)
         every, W.regenAfter = every or 0.1, after
         for pt, r in pairs(rates) do
             W.rates[pt] = r
+        end
+        for pt, f in pairs(fsr or {}) do
+            W.fsr[pt], W.rates[pt] = f, 0
         end
         local function step()
             for pt in pairs(W.rates) do

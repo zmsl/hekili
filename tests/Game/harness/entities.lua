@@ -42,6 +42,7 @@ function M.new(o)
         gcdUntil = 0, -- the true GCD's end (W.press)
         cdUntil = {}, -- [key] = the true cooldown's end
         avoidAt = {}, -- [act] = the last time an outcome of ours on a target was that avoid (MISS, DODGE, PARRY)
+        spentAt = {}, -- [pt] = the last time a cast of ours spent that type (the world's five-second rule)
     }
     e.res0 = {} -- each other resource's value at the start (the observer's first view; the world changes `res`)
     for pt, r in pairs(o.res or {}) do

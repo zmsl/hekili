@@ -508,6 +508,49 @@ describe("the observer's resources, GCD and forms", function()
         assert.are.same({}, lines(observer.observe(W, knobs({ regenRead = false })), { ["@regen"] = true }))
     end)
 
+    it("answers a cooldown finished early ready, plain to a secret-free client", function()
+        for _, plain in ipairs({ false, true }) do
+            setup()
+            W.t = 2
+            W.press(us, "a", { spell = 11, ids = { 11, 12 }, gcd = 0, cooldown = 10 })
+            W.t = 3
+            W.resetCooldown(us, "a", { 11, 12 })
+            assert.is_nil(us.cdUntil.a)
+            local s = observer.observe(W, knobs({ plain = plain }))
+            local got = {}
+            for i = 1, s.n do
+                if s.ev[i] == "@cooldown" and s.t[i] == 3 then
+                    got[#got + 1] = { s.a1[i], s.a2[i] }
+                end
+            end
+            assert.are.same(plain and { { 11, 0 }, { 12, 0 } } or { { 11 }, { 12 } }, got)
+            local later = 0 -- the reset cooldown's old end (12) is gone: no answer after it
+            for i = 1, s.n do
+                if s.ev[i] == "@cooldown" and s.t[i] > 3 then
+                    later = later + 1
+                end
+            end
+            assert.are.equal(0, later)
+        end
+    end)
+
+    it("reads an `fsr` pool's two rates out of combat: not casting, then casting", function()
+        setup()
+        W.startRegen(us, {}, 0.1, nil, { [POOL] = { 10, 2 } })
+        W.at(1, function()
+            W.emit({ kind = "prepull" })
+        end)
+        W.run(1.5)
+        local s = observer.observe(W, knobs({}))
+        local got = {}
+        for i = 1, s.n do
+            if s.ev[i] == "@regen" then
+                got[#got + 1] = { s.a1[i], s.a2[i], s.a3[i] }
+            end
+        end
+        assert.are.same({ { POOL, 12, 2 } }, got)
+    end)
+
     it("fires a shift's success, then the form; the player's attack speed out of combat only", function()
         setup()
         W.t = 1

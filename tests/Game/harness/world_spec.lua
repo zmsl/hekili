@@ -103,6 +103,54 @@ describe("the world's resources", function()
         assert.are.same({ "regen", POOL }, { last.kind, last.pt })
     end)
 
+    it("regenerates an `fsr` pool's spirit part only 5 s after our last cast's spend, the read naming both", function()
+        setup()
+        W.startRegen(us, {}, 0.1, nil, { [POOL] = { 10, 2 } }) -- spirit 10/s, mp5 2/s
+        W.run(1.05)
+        assert.is_true(math.abs(W.res(us, POOL) - 62) < 1e-6, tostring(W.res(us, POOL)))
+        W.press(us, "spend", { spell = 1, gcd = 0, cost = 50, pt = POOL })
+        W.run(6.05) -- the window to 6.0: 2/s through it
+        assert.is_true(math.abs(W.res(us, POOL) - (12 + 2 * 5)) < 1e-6, tostring(W.res(us, POOL)))
+        W.run(7.05)
+        assert.is_true(math.abs(W.res(us, POOL) - (22 + 12)) < 1e-6, tostring(W.res(us, POOL)))
+        assert.are.same(
+            { 12, 2, 12 },
+            { W.regenRate(us, POOL, "idle"), W.regenRate(us, POOL, "casting"), W.regenRate(us, POOL) }
+        )
+        local ev = W.emit({ kind = "stop" })
+        assert.are.same({ 12, 2 }, { ev.regen[POOL], ev.regenCasting[POOL] })
+    end)
+
+    it("lets the victim's `taking` change a swing's rates and its `took` see the outcome", function()
+        setup()
+        local seen = {}
+        us.taking = function(_, _, rates)
+            rates.block = 1
+        end
+        us.took = function(_, attacker, act)
+            seen[#seen + 1] = { attacker == mob, act }
+        end
+        behaviours.mob({ phase = 0.5 })(W, mob)
+        W.run(3)
+        assert.are.same({ { true, "BLOCK" }, { true, "BLOCK" } }, seen)
+    end)
+
+    it("lets our `landed` see each of our swings land, after its land event", function()
+        setup()
+        local seen = {}
+        us.landed = function(w, act, hand)
+            seen[#seen + 1] = { w.truth[#w.truth].kind, act ~= nil, hand }
+        end
+        behaviours.melee({
+            land = function()
+                return 0.4
+            end,
+            phase = { 0.1 },
+        })(W, us)
+        W.run(2.6)
+        assert.are.same({ { "land", true, 1 }, { "land", true, 1 } }, seen)
+    end)
+
     it(
         "decays out of combat stepped and front-loaded; an aura that pauses it moves the next quantum to its expiry",
         function()

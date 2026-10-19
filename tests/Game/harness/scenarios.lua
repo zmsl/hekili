@@ -48,8 +48,8 @@ M.ARCHETYPES = ARCHETYPES
 --- the fight), pull (its time [1]), prepull (the cache and target reads [pull - 0.5]), form (ours at the start [0]),
 --- power (ours at the start [0]), tag (appended to the mobs' GUIDs: a fresh target per fight on one boot).
 --- Several resources (GCD kinds design §2): pt (the swing-paid power type [1]), res ({ [pt] = { cur, max } }: the
---- others), regen ({ [pt] = per second }, from the prepull), regenTick [0.1], regenAfter ({ s, k }), decay ({ pt, rate,
---- interval, pausedBy }: from the stop), formSpeed ({ [form] = period }), payIn (the form whose swings pay), critRage
+--- others), regen ({ [pt] = per second }, from the prepull), fsr ({ [pt] = { spirit, mp5 } }: W.startRegen's five-
+--- second rule), regenTick [0.1], regenAfter ({ s, k }), decay ({ pt, rate, interval, pausedBy }: from the stop), formSpeed ({ [form] = period }), payIn (the form whose swings pay), critRage
 --- ({ main, off }), gcdOrder (1, 2 or "mixed") and gcdLatency [0] (W.press), script (fn(W, us): our presses, started
 --- at the pull), after (seconds the world runs past the stop [3]).
 --- Returns the world with every behaviour scheduled, not run (`M.build` runs it).
@@ -93,9 +93,9 @@ function M.world(o, seed)
     end
     local pull = o.pull or 1
     local stop = (o.duration or 120) + pull
-    if o.regen then -- before the prepull: its reads answer the rates
+    if o.regen or o.fsr then -- before the prepull: its reads answer the rates
         W.at(0, function()
-            W.startRegen(us, o.regen, o.regenTick, o.regenAfter)
+            W.startRegen(us, o.regen or {}, o.regenTick, o.regenAfter, o.fsr)
         end)
     end
     W.at(o.prepull or pull - 0.5, function() -- out of combat: the weapon damage cache and the target (observer.lua)

@@ -207,7 +207,7 @@ function M.new(W, k)
         end
         if k.regenRead and ev.regen then
             for pt, r in pairs(ev.regen) do
-                push(t, "@regen", pt, r)
+                push(t, "@regen", pt, r, ev.regenCasting and ev.regenCasting[pt]) -- not casting, casting
             end
         end
         push(t, "PLAYER_EQUIPMENT_CHANGED")
@@ -391,6 +391,21 @@ function M.new(W, k)
             if ev.onUs then -- P log 1 1345, 4329-4330, 6532: also on targettarget while our target targets us
                 push(t, "UNIT_SPELLCAST_SUCCEEDED", "targettarget", "Cast-" .. castN, spellID(ev.spell))
             end
+        elseif kind == "cdreset" and ev.src == us then -- a cooldown finished early (W.resetCooldown): every rank ready
+            local reset = {}
+            for _, id in ipairs(ev.ids) do
+                reset[id] = true
+            end
+            for i = #list, 1, -1 do -- the old cooldown's end, still pending, would later end a new one early
+                local e = list[i]
+                if e[1] > t and e[3] == "@cooldown" and reset[e[4]] then
+                    table.remove(list, i)
+                end
+            end
+            for _, id in ipairs(ev.ids) do
+                push(t, "@cooldown", id, k.plain and 0 or nil)
+            end
+            push(t, "SPELL_UPDATE_COOLDOWN")
         elseif kind == "cast" and party[ev.src] then
             push(t, "UNIT_SPELLCAST_SUCCEEDED", party[ev.src], fake.SECRET, fake.SECRET)
         elseif kind == "proc" and ev.src == us then -- G5: the wound on the target, then a heal of the same amount on us, same ms

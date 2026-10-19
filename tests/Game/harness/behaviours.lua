@@ -143,6 +143,9 @@ function M.melee(p)
                                 swing = sw,
                                 rage = rage,
                             })
+                            if e.landed then -- our content sees the outcome land (an aura the next hit spends)
+                                e.landed(W, act, h)
+                            end
                         end)
                     end
                     if p.proc and W.rng.chance(p.proc[1]) then
@@ -228,9 +231,15 @@ function M.mob(p)
             end
             local rates = { miss = v.avoid.miss, dodge = v.avoid.dodge, parry = v.avoid.parry, block = v.avoid.block }
             rates.crit = p.crit or M.MOB_CRIT
+            if v.taking then -- the victim's content: its auras change this swing's rates (a block chance up)
+                v.taking(W, e, rates)
+            end
             local act, flag = roll(W.rng, rates)
             local amt = act == "WOUND" and amount(W.rng, e.weapons[1], e, v, flag) or 0
             W.emit({ kind = "swing", src = e, dst = v, hand = 1, act = act, flag = flag, amount = amt, school = 1 })
+            if v.took then -- the victim's content sees the outcome (a charge a block spends)
+                v.took(W, e, act, flag)
+            end
             W.at(W.t + e.weapons[1][3], swing)
         end
         W.at(W.t + (p.phase or W.rng.next() * e.weapons[1][3]), swing)

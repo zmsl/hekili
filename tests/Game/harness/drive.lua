@@ -248,8 +248,8 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         end
     elseif ev == "@forms" then -- the client's forms, index to spell ID (the content's list)
         ctl.forms = a1
-    elseif ev == "@regen" then -- powerType, the rate (nil: secret); allocates (no 0-byte drive fires one)
-        ctl.regen[a1] = a2 and { a2, a2 } or nil
+    elseif ev == "@regen" then -- powerType, not casting (nil: secret), casting; allocates (no 0-byte drive fires one)
+        ctl.regen[a1] = a2 and { a2, a3 or a2 } or nil
     elseif ev == "@attackSpeed" then -- the player's main and off hand
         ctl.speed[1], ctl.speed[2] = a1, a2
     end
