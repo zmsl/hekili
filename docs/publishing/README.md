@@ -29,3 +29,29 @@ Hekili_Warrior` (rmdir on a directory link removes only the link). Extract the z
 `\\wsl.localhost\personal\home\zack\src\hekili\.release\`), full client restart, log in a Druid or Warrior: displays
 show, `/hekili` opens, General page has the notice, no Lua errors. Then delete the four extracted folders and re-create
 the links, one per addon: `mklink /D <Addon> \\wsl.localhost\personal\home\zack\src\hekili\src\<Addon>`.
+
+## Cutting a release
+
+Tags are `vMAJOR.MINOR.PATCH`; the first release is `v0.1.0`.
+
+1. `make check` green on `forever`; write `## vX.Y.Z` with the changes by hand at the top of CHANGELOG.md (under the
+   title); commit.
+2. `git tag vX.Y.Z && git push origin vX.Y.Z` (push that one tag, never `--tags`), for example
+   `git tag v0.1.0 && git push origin v0.1.0`.
+3. Watch Actions > release: the one run (`.github/workflows/release.yml`) uploads the zip to CurseForge project 1753387
+   with CHANGELOG.md as its changelog and creates the GitHub release for the tag. It fails early if CHANGELOG.md has
+   no `## <tag>` heading.
+
+One-time setup (already done for zmsl/hekili): CurseForge > API tokens > create token; GitHub repo > Settings >
+Secrets > Actions > `CF_API_KEY`.
+
+The packager maps `## Interface: 16001` to the game version `1.60.1` (the dry run prints `Game version: 1.60.1`), so
+the workflow pins none. Optional check that CurseForge lists that version, with the same token:
+
+```sh
+curl -fsS -H "X-Api-Token: $CF_API_KEY" https://wow.curseforge.com/api/game/versions | jq '.[] | select(.name | test("^1\\.60")) | {id, name, gameVersionTypeID}'
+curl -fsS -H "X-Api-Token: $CF_API_KEY" https://wow.curseforge.com/api/game/version-types | jq '.[] | {id, name, slug}'
+```
+
+If `1.60.1` is missing or listed under another name, pin the listed name in the packager step (`with: args: -g <name>`)
+and pass the same `-g` in the Makefile's `package` target.

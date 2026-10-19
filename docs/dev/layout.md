@@ -21,7 +21,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
     `## Group: Hekili` nests each content addon under Hekili in the in-game addon list.
 
   Content reaches the engine only through the public `Hekili` object (the registration API, `State`, `Class`,
-  `Client`; `tests/boundary_spec.lua`). A class release bumps the pack addon's `## Version`; the core's ContentAPI
+  `Client`; `tests/boundary_spec.lua`). Every TOC's `## Version` is `@project-version@`; the packager stamps the release tag into all four (one zip, one version); the core's ContentAPI
   (`CONTENT_API` in `Engine/Content.lua`, matched against each content TOC's `## X-Hekili-ContentAPI`) bumps only when
   the Schema or the content surface changes. The core's modules:
   - root: `Hekili.toc`, `Hekili.lua` (the addon object), `Bindings.xml`, `embeds.xml`;

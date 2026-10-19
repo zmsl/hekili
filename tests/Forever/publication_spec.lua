@@ -162,13 +162,11 @@ describe("tocs", function()
             assert.truthy(field(TOCS[i], "X-Hekili-ContentAPI"), TOCS[i])
         end
     end)
-    --[[ TASK 4 BODY
     it("let the packager stamp the version in every TOC", function()
         for _, toc in ipairs(TOCS) do
             assert.are.equal("@project-version@", field(toc, "Version"), toc)
         end
     end)
-    --]]
 end)
 
 describe("pkgmeta", function()
@@ -187,11 +185,8 @@ describe("pkgmeta", function()
 end)
 
 describe("changelog", function()
-    pending("Task 4 turns this on")
-    --[[ TASK 4 BODY
     it("is tracked and opens with a version heading", function()
         assert.are.same({ "CHANGELOG.md" }, tracked("CHANGELOG.md"))
         assert.truthy(read("CHANGELOG.md"):find("^# Hekili Forever changelog\n\n## v%d+%.%d+%.%d+\n"))
     end)
-    --]]
 end)

@@ -1,0 +1,26 @@
+# Packs a release when a vX.Y.Z tag is pushed (docs/publishing/README.md): BigWigsMods/packager uploads the zip to
+# CurseForge (project from ## X-Curse-Project-ID, key CF_API_KEY) and creates the GitHub release (GITHUB_TOKEN) in the
+# same run. Only tag pushes fire it: the historical upstream v* tags on origin were pushed long ago and never run it.
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # GitHub release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: CHANGELOG has this tag
+        run: grep -qx "## ${GITHUB_REF_NAME}" CHANGELOG.md || { echo "CHANGELOG.md has no '## ${GITHUB_REF_NAME}' heading"; exit 1; }
+      - uses: BigWigsMods/packager@v2

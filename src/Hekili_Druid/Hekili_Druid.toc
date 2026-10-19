@@ -1,5 +1,5 @@
 ## Interface: 16001
-## Version: forever-dev
+## Version: @project-version@
 ## Title: Hekili Forever - Druid
 ## Author: defzach
 ## IconTexture: Interface\AddOns\Hekili\Textures\HekiliForever
