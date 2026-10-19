@@ -2,8 +2,9 @@
 """Drafts the player-facing release notes for a tag (docs/publishing/README.md, "Cutting a release").
 
 Gathers the change material between the previous release tag and <ref> (commits touching src/, the CHANGELOG.md
-section for the tag or "Unreleased", and the "Open after" sections of plans changed since the previous tag), asks the
-Anthropic Messages API to write the notes in the house style, and writes them to <out>.
+"Unreleased" section, or the tag's own section when Unreleased has no entries, and the "Open after" sections of plans
+changed since the previous tag), asks the Anthropic Messages API to write the notes in the house style, and writes them
+to <out>.
 
 usage: release_notes.py <ref> <out.md>       (ANTHROPIC_API_KEY in the environment)
        release_notes.py --material <ref>     (print the request's user message; no network)
@@ -77,7 +78,10 @@ def gather(ref, run=git):
     commits = run("log", "--no-merges", "--format=--- %s%n%b", span, "--", "src")
     commits = re.sub(r"^(Co-Authored-By|Claude-Session):.*\n?", "", commits, flags=re.M | re.I).strip()
     changelog = run("show", ref + ":CHANGELOG.md")
-    entry = section(changelog, ref) or section(changelog, "Unreleased")
+    # a final's "## <tag>" is written by publish.yml after the notes, so Unreleased leads; the tag's own section is the
+    # fallback once Unreleased holds only its empty headings (a manual re-run after publishing)
+    pending = section(changelog, "Unreleased")
+    entry = pending if re.search(r"^(?!###)\S", pending, re.M) else section(changelog, ref)
     known = []
     if prev:
         for path in run("diff", "--name-only", "--diff-filter=AM", prev, ref, "--", PLANS).split():

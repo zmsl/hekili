@@ -1,6 +1,7 @@
 # Uploads a release to CurseForge when the user publishes its draft on GitHub (docs/publishing/README.md, "Cutting a
 # release"): the release's Hekili-*.zip asset, the release body as the markdown changelog, the tag as the display name,
-# and a pre-release as a beta file. Only `published` fires it: saving an edit, unpublishing or deleting does not.
+# and a pre-release as a beta file; then, for a final release only, the changelog job writes the notes into CHANGELOG.md
+# on forever. Only `published` fires it: saving an edit, unpublishing or deleting does not.
 name: publish
 
 on:
@@ -8,7 +9,7 @@ on:
     types: [published]
 
 permissions:
-  contents: read # download the release asset
+  contents: read # download the release asset (the changelog job raises its own to write)
 
 jobs:
   curseforge:
@@ -27,3 +28,29 @@ jobs:
         env:
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
         run: python3 tools/cf_upload.py "$GITHUB_EVENT_PATH" dist/Hekili-*.zip
+
+  # A final release's notes become its CHANGELOG.md section on forever (tools/changelog_release.py), so the file is
+  # never edited by hand for a release. A workflow pushing to forever is the user's decision (2026-10-19).
+  changelog:
+    needs: curseforge
+    if: ${{ !github.event.release.prerelease && !contains(github.event.release.tag_name, '-') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # the push to forever
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: forever
+          persist-credentials: true # this job pushes; it runs no third-party code
+      - name: Write the release into CHANGELOG.md
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          git fetch --depth=1 origin "refs/tags/$TAG:refs/tags/$TAG"
+          jq -r '.release.body // ""' "$GITHUB_EVENT_PATH" > "$RUNNER_TEMP/body.md"
+          python3 tools/changelog_release.py "$TAG" "$RUNNER_TEMP/body.md" CHANGELOG.md
+          git diff --quiet -- CHANGELOG.md && { echo "CHANGELOG.md already has $TAG"; exit 0; }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "docs(changelog): $TAG released [skip ci]" -- CHANGELOG.md
+          git push origin HEAD:forever

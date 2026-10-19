@@ -77,7 +77,7 @@ api-check:
 packs-check: packs
 	git diff --exit-code src
 
-# Offline tests of the release tools (tools/release_notes.py, tools/cf_upload.py): no network, no keys.
+# Offline tests of the release tools (tools/release_notes.py, cf_upload.py, changelog_release.py): no network, no keys.
 tools-test:
 	python3 -m unittest discover -s tests/tools -t tests/tools
 

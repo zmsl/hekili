@@ -69,20 +69,24 @@ published release is not released**: it has a draft on GitHub and nothing on Cur
 Tags are `vMAJOR.MINOR.PATCH`; a pre-release adds a suffix with a `-` (`v0.2.0-rc.1`, `v0.2.0-beta.1`) and goes to
 CurseForge as a beta file.
 
-1. **Tag.** On `forever` with `make check` green. For a final release, first rename `## Unreleased` in CHANGELOG.md to
-   `## vX.Y.Z`, put a fresh `## Unreleased` with the five empty headings (`### New`, `### Changed`, `### Fixed`,
-   `### Known issues`, `### Upgrade notes`) above it, and commit (a pre-release skips this; its notes read
-   Unreleased). Then `git tag vX.Y.Z && git push origin vX.Y.Z` (that one tag, never `--tags`).
+1. **Tag.** On `forever` with `make check` green: `git tag vX.Y.Z && git push origin vX.Y.Z` (that one tag, never
+   `--tags`). CHANGELOG.md is not touched by hand.
 2. **Read the draft.** Actions > release (`.github/workflows/release.yml`) builds the zip with the BigWigs packager
    (no upload), writes the notes with `tools/release_notes.py` and creates a draft release with the zip attached
-   (`Hekili-<tag>-forever.zip`; a pre-release for a `-` tag). The notes come from the changelog section for the tag
-   (or Unreleased), the commits under `src/` since the previous release (pre-release tags are skipped, so a final
-   release covers its release candidates) and the "Open after" sections of plans changed since then. Open
+   (`Hekili-<tag>-forever.zip`; a pre-release for a `-` tag). The notes come from the changelog's Unreleased section
+   (or the tag's own section once publish has written it), the commits under `src/` since the previous release
+   (pre-release tags are skipped, so a final release covers its release candidates) and the "Open after" sections of
+   plans changed since then. Open
    Releases > the draft > Edit: fix anything that reads like a developer note, keep it player-facing, never leave the
    body empty.
 3. **Publish.** Press Publish release (tick "Set as a pre-release" only if it already is one). Actions > publish
    (`.github/workflows/publish.yml`) uploads the attached zip to CurseForge project 1753387 with the release body as
    the markdown changelog, the tag as the file name and game version 1.60.1; the Discord webhook posts the release.
+   For a final release its changelog job then writes `## vX.Y.Z` (the published notes, dated) into CHANGELOG.md on
+   `forever` with `tools/changelog_release.py` and resets Unreleased to the five empty headings, keeping lines merged
+   after the tag; it commits as github-actions[bot] (`docs(changelog): vX.Y.Z released [skip ci]`) and pushes. So the
+   file is never edited by hand for a release; a pre-release leaves it alone. The push to `forever` from a workflow is
+   the user's decision (2026-10-19), overriding the approved-release plan's "no pushes to forever from workflows".
 
 Edits after publishing reach GitHub only: fix the CurseForge changelog by hand on the file's page. Unpublishing or
 deleting a release does not remove the CurseForge file.
@@ -101,6 +105,10 @@ unticked, it creates the draft (use this when a tag's run failed after the push,
   (Actions > publish > Re-run). A re-run replays the original event, so it reuses the release body as it was when
   published; when the cause is the body (for example `cf_upload: the release body is empty`), edit the release, set it
   back to a draft and publish again, which makes the Discord webhook post again.
+- **The changelog commit fails** (a push race with another merge, or a `changelog_release:` refusal): CurseForge
+  already has the file. Re-run the publish job's changelog job (Actions > publish > Re-run failed jobs); it starts from
+  the current `forever` and does nothing if the section is already there. Or locally on an up-to-date `forever`: save
+  the release body to a file, `python3 tools/changelog_release.py vX.Y.Z body.md`, then commit and push.
 - **CurseForge rejects a duplicate display name:** a tag can be uploaded once. To re-ship, cut a new tag (the next
   patch or `-rc.N`).
 - **CurseForge daily upload limit:** the upload fails with a limit error; re-run the publish job the next day.

@@ -97,9 +97,18 @@ class Gather(unittest.TestCase):
         self.assertTrue(m["changelog"].startswith("### New"))  # no ## v0.3.0 yet: Unreleased
         self.assertIn("Auto Shot timing", m["known"])
 
-    def test_prefers_the_tags_own_section(self):
+    def test_prefers_unreleased_over_the_tags_own_section(self):
         m = rn.gather("v0.2.0", repo(ref="v0.2.0", prev="v0.1.0"))
-        self.assertEqual(m["changelog"], "### Fixed\n- Rogue loads.")
+        self.assertTrue(m["changelog"].startswith("### New\n- Hunter"))
+
+    def test_falls_back_to_the_tags_section_when_unreleased_has_only_headings(self):
+        git = repo(ref="v0.2.0", prev="v0.1.0")
+        empty = CHANGELOG.replace("- Hunter: Beast Mastery, Marksmanship, Survival.\n", "")
+
+        def run(*args):
+            return empty if args == ("show", "v0.2.0:CHANGELOG.md") else git(*args)
+
+        self.assertEqual(rn.gather("v0.2.0", run)["changelog"], "### Fixed\n- Rogue loads.")
 
     def test_no_previous_tag_takes_all_history_and_no_plans(self):
         m = rn.gather("v0.3.0", repo(prev=None))
