@@ -21,6 +21,8 @@ describe("zero allocation", function()
             UnitIsDead = api.UnitIsDead,
             UnitCastingInfo = api.UnitCastingInfo,
             UnitChannelInfo = api.UnitChannelInfo,
+            IsStealthed = api.IsStealthed,
+            UnitRangedDamage = api.UnitRangedDamage,
             UnitPowerType = function()
                 return fs.RAGE
             end,
@@ -34,6 +36,8 @@ describe("zero allocation", function()
         end
         saved.C_Spell = rawget(_G, "C_Spell") or false
         _G.C_Spell = api.C_Spell
+        saved.C_Item = rawget(_G, "C_Item") or false
+        _G.C_Item = api.C_Item
         local ns = load.module()
         local VS, I, Facade = ns.VirtualState, ns.VirtualStateInternal, ns.Facade
         local h = fs.new(9)
@@ -56,6 +60,11 @@ describe("zero allocation", function()
             GetInfo()
         end)
         sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+        -- a weapon-enchant pseudo-aura and a stealth aura (Sources/Enchants.lua, Sources/Forms.lua)
+        h.Class.auras.enchant_x = { key = "enchant_x", id = -7, weaponEnchant = 0 }
+        h.Class.auras.stealth_x = { key = "stealth_x", id = 1999, isStealthed = true }
+        local ENCHANTED = { { hasEnchant = true, enchantType = 0, timeLeft = 1800000, charges = 20, enchantID = 7 } }
+        local STEALTHS = { true, false, fake.SECRET }
         h.Class.abilities.spender_c.healthGate = 0.2 -- a health-gated spender (Families/TargetHealth.lua)
         ctl.known[fs.SPENDER_C] = true -- known: its NOT answers can bound the target's health
         h.Class.resources.rage.state.meta = { -- a stepped decay (Families/Resources.lua): 2 at each 1 s beat
@@ -99,6 +108,10 @@ describe("zero allocation", function()
                 ctl.form = i % 12 == 4 and 1 or 0 -- spender_a's aura as a form: every other walk follows a form swap
                 ctl.Fire("UPDATE_SHAPESHIFT_FORM")
                 ctl.Fire("UNIT_AURA", "player")
+                ctl.stealthed = STEALTHS[i % 3 + 1] -- plain both ways and secret
+                ctl.Fire("UPDATE_STEALTH")
+                ctl.enchants[0] = i % 8 == 4 and fake.SECRET or ENCHANTED
+                ctl.Fire("WEAPON_ENCHANT_CHANGED") -- read only out of combat
             else
                 local dodge = i % 12 == 5 -- an avoid at the swing's lag: provisional, SWING_MISSED at the window's close
                 ctl.Fire("UNIT_COMBAT", "target", dodge and "DODGE" or "WOUND", "", dodge and 0 or 10, 1)
@@ -178,6 +191,11 @@ describe("zero allocation", function()
             Facade.UnitCastingInfo("target")
             Facade.UnitChannelInfo("target")
             Facade.IsUsableSpell(fs.SPENDER_C)
+            Facade.IsStealthed()
+            Facade.C_Item.GetWeaponEnchantInfo(0)
+            Facade.C_Item.GetWeaponEnchantInfo(1)
+            Facade.UnitCreatureFamily("pet")
+            Facade.UnitRangedDamage("player")
             Facade.GetTime() -- passthroughs
             Facade.UnitGUID("target")
             Facade.GetInstanceInfo() -- absent here: virtual, answers nothing

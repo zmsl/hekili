@@ -186,6 +186,8 @@ describe("shared content", function()
             "feared",
             "incapacitated",
             "loss_of_control",
+            "main_hand_enchant",
+            "off_hand_enchant",
             "power_infusion",
             "reversible_magic",
             "rooted",
@@ -197,6 +199,10 @@ describe("shared content", function()
         }, keys("auras"))
         assert.are.same({ all.auras.incapacitated, all.auras.snared }, { all.auras.sapped, all.auras.slowed })
         assert.are.same({ 10060, 15 }, { all.auras.power_infusion.id, all.auras.power_infusion.duration })
+        assert.are.same(
+            { 0, 1 },
+            { all.auras.main_hand_enchant.weaponEnchant, all.auras.off_hand_enchant.weaponEnchant }
+        )
         assert.are.same({ "bloodlust_actual" }, all.auras.bloodlust.alias)
         assert.are.same({ 1245940, "player" }, { all.auras.bloodlust_actual.id, all.auras.bloodlust_actual.shared })
         for _, k in ipairs(STUBS) do

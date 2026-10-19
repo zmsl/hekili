@@ -25,6 +25,7 @@ do
     mt.__tostring = refuse("convert to a string")
 end
 local SECRET = M.SECRET
+local NO_ENCHANTS = {} -- an unenchanted weapon slot's list (shared: the fake allocates nothing per call)
 
 --- A new fake client and its control table.
 function M.new()
@@ -65,6 +66,10 @@ function M.new()
         unknownEvents = {}, -- [event] = true: RegisterEvent raises, as the client does for an event it does not know
         form = 0, -- GetShapeshiftForm (0: none)
         forms = {}, -- [form index] = its spell ID (GetShapeshiftFormInfo's 4th return)
+        stealthed = false, -- IsStealthed (SECRET: a secret answer)
+        enchants = {}, -- [weapon slot] = C_Item.GetWeaponEnchantInfo's list (SECRET: a secret answer; nil: none)
+        enchantCalls = 0, -- C_Item.GetWeaponEnchantInfo calls
+        ranged = { 3.1, 30, 40, 0, 0, 1 }, -- UnitRangedDamage("player")
         damage = { 0, 0, 0, 0 }, -- UnitDamage's min and max main, min and max off (the harness's out-of-combat cache)
         classID = 0, -- UnitClass's third return
         specID = nil, -- C_SpecializationInfo.GetSpecializationInfo(1)'s ID (nil: no specialization)
@@ -169,6 +174,14 @@ function M.new()
     end
     function api.GetShapeshiftFormInfo(i)
         return 0, i == ctl.form, true, ctl.forms[i]
+    end
+    function api.IsStealthed()
+        return ctl.stealthed
+    end
+    function api.UnitCreatureFamily() end -- no pet
+    function api.UnitRangedDamage()
+        local r = ctl.ranged
+        return r[1], r[2], r[3], r[4], r[5], r[6]
     end
     function api.GetTotemInfo(slot)
         local t = ctl.totems[slot]
@@ -448,6 +461,10 @@ function M.new()
         IsCurrentItem = no,
         GetDetailedItemLevelInfo = none,
         GetItemGem = none,
+        GetWeaponEnchantInfo = function(slot)
+            ctl.enchantCalls = ctl.enchantCalls + 1
+            return ctl.enchants[slot] or NO_ENCHANTS
+        end,
     }
     api.C_LossOfControl = { GetActiveLossOfControlData = none, GetActiveLossOfControlDataCount = zero }
     api.C_PetBattles = { IsInBattle = no }

@@ -199,4 +199,51 @@ describe("forms", function()
         poll(10)
         assert.are.same({}, warnings)
     end)
+
+    -- C5: a player aura flagged `isStealthed` follows IsStealthed, read at the first poll and after UPDATE_STEALTH.
+    local STEALTH = 1784 + 10000 -- any tracked player aura ID
+    local function startStealth()
+        local d = def({ OTHER, STEALTH })
+        d.auras[2].isStealthed = true
+        ctl.now = 1
+        I.Build(d, 1)
+        VS.Start(api)
+    end
+
+    it("puts the isStealthed aura up with no expiry while IsStealthed is true and down when it turns false", function()
+        startStealth()
+        poll(10)
+        assert.is_nil(VS.Aura("player", STEALTH, 10))
+        ctl.stealthed, ctl.now = true, 11
+        ctl.Fire("UPDATE_STEALTH")
+        poll(11)
+        local rec, stacks = VS.Aura("player", STEALTH, 11)
+        assert.are.same({ math.huge, 1, "observed" }, { rec.est, stacks, rec.basis })
+        assert.is_nil(VS.Aura("player", OTHER, 11)) -- only the flagged aura
+        ctl.Fire("UNIT_AURA", "player") -- a clean walk without it: the stealth read owns it, so it stays up
+        poll(12)
+        assert.is_not_nil(VS.Aura("player", STEALTH, 12))
+        ctl.stealthed, ctl.now = false, 13
+        ctl.Fire("UPDATE_STEALTH")
+        poll(13)
+        assert.is_nil(VS.Aura("player", STEALTH, 13))
+    end)
+
+    it(
+        "reads nothing from a secret IsStealthed: our cast's modelled state stands, and the walk owns the aura",
+        function()
+            startStealth()
+            ctl.stealthed = true
+            poll(10)
+            ctl.stealthed, ctl.now = fake.SECRET, 11
+            ctl.Fire("UPDATE_STEALTH")
+            local n = I.log.n
+            poll(11)
+            assert.are.equal(n, I.log.n) -- nothing logged from the secret answer
+            assert.is_not_nil(VS.Aura("player", STEALTH, 11))
+            ctl.Fire("UNIT_AURA", "player") -- the walk owns it again: a clean walk without it takes it down
+            poll(12)
+            assert.is_nil(VS.Aura("player", STEALTH, 12))
+        end
+    )
 end)

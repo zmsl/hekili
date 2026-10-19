@@ -14,6 +14,7 @@ C_Item.GetItemGem	passthrough
 C_Item.GetItemInfo	passthrough
 C_Item.GetItemInfoInstant	passthrough
 C_Item.GetItemSpell	passthrough
+C_Item.GetWeaponEnchantInfo	hybrid
 C_Item.IsCurrentItem	passthrough
 C_Item.IsEquippedItem	passthrough
 C_Item.IsUsableItem	passthrough
@@ -120,6 +121,7 @@ IsPlayerSpell	passthrough
 IsResting	passthrough
 IsSpellKnown	passthrough
 IsSpellKnownOrOverridesKnown	passthrough
+IsStealthed	hybrid
 IsUsableSpell	passthrough
 SecureCmdOptionParse	passthrough
 SpellIsSelfBuff	passthrough
@@ -136,6 +138,7 @@ UnitChannelInfo	hybrid
 UnitClass	passthrough
 UnitClassBase	passthrough
 UnitClassification	passthrough
+UnitCreatureFamily	hybrid
 UnitCreatureType	passthrough
 UnitDamage	hybrid
 UnitEffectiveLevel	passthrough
@@ -167,6 +170,7 @@ UnitPower	virtual
 UnitPowerMax	passthrough
 UnitPowerType	passthrough
 UnitRace	passthrough
+UnitRangedDamage	hybrid
 UnitSex	passthrough
 UnitSpellHaste	hybrid
 UnitStat	hybrid

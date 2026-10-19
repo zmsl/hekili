@@ -60,6 +60,19 @@ local auras = {
         max_stack = 1,
     },
 
+    -- Weapon enchants (C4): poisons, imbues, stones, oils. Id-less pseudo-auras read out of combat from
+    -- C_Item.GetWeaponEnchantInfo, the charges as stacks; a pack's apply ability `applyBuff`s one to model it in combat.
+    main_hand_enchant = {
+        weaponEnchant = 0,
+        duration = 3600,
+        max_stack = 1,
+    },
+    off_hand_enchant = {
+        weaponEnchant = 1,
+        duration = 3600,
+        max_stack = 1,
+    },
+
     -- Another Priest's on the player (State.lua's infusion toggle); 15 s on Forever (DB2).
     power_infusion = {
         id = 10060,

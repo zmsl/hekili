@@ -362,6 +362,11 @@ hybrid("UnitAttackSpeed", function(unit)
     return main, nil
 end, "secret in combat [SU PR2]; SwingSpeed()")
 
+-- The out-of-combat speed is C7's auto-shot clock input (Hunter Q2).
+hybrid("UnitRangedDamage", function()
+    return VS.Stat("UnitRangedDamage")
+end, "SecretWhenUnitStatsRestricted (API docs); unprobed (Hunter Q2); Stat()")
+
 hybrid("GetUnitSpeed", function(unit)
     if unit == "player" and VS.Moving() then
         return 7, 7, 7, 4.72
@@ -424,7 +429,7 @@ local names, icons = {}, {}
 local function spellName(id)
     local n = names[id]
     if n == nil then
-        local info = realGetSpellInfo and realGetSpellInfo(id)
+        local info = id > 0 and realGetSpellInfo and realGetSpellInfo(id) -- a pseudo-aura's negative ID asks nothing
         n = info and info.name or tostring(id)
         names[id], icons[id] = n, info and info.iconID or 0
     end
@@ -522,6 +527,66 @@ end, "wraps secret aura data [W §4]; AuraAt()")
 kept("C_UnitAuras.GetAuraSlots", "virtual", nothing, "secret in combat [W §4]; no retained consumer")
 kept("UnitAura", "virtual", nothing, "absent on Forever")
 kept("UnitAuraBySlot", "virtual", nothing, "absent on Forever")
+
+-- Stealth (C5): the believed state of the `isStealthed` auras (Sources/Forms.lua) when the answer is secret.
+hybrid("IsStealthed", function()
+    local list, t = I.stealthAuras, now()
+    for k = 1, list.n do
+        if VS.Aura("player", I.auras.id[list[k]], t) then
+            return true
+        end
+    end
+    return false
+end, "no SecretWhen* flag in the API docs, but unprobed in combat (Rogue Q5); a believed-up `isStealthed` aura")
+
+-- Weapon enchants (C4): the client's list of WeaponEnchantInfo while every field is plain, else the slot's
+-- `weaponEnchant` pseudo-aura (Sources/Enchants.lua) in that shape (timeLeft in ms), in shared tables.
+local realGetWeaponEnchantInfo = resolve("C_Item.GetWeaponEnchantInfo")
+local ENCHANT = { hasEnchant = true, enchantType = 0, timeLeft = 0, charges = 0, enchantID = 0, enchantIconID = 0 }
+local ENCHANTS, NO_ENCHANTS = { ENCHANT }, {}
+local function plainEnchants(list)
+    if issecretvalue(list) or type(list) ~= "table" then
+        return false
+    end
+    for i = 1, #list do
+        local e = list[i]
+        if issecretvalue(e) or type(e) ~= "table" then
+            return false
+        end
+        if
+            issecretvalue(e.hasEnchant)
+            or issecretvalue(e.enchantType)
+            or issecretvalue(e.timeLeft)
+            or issecretvalue(e.charges)
+            or issecretvalue(e.enchantID)
+            or issecretvalue(e.enchantIconID)
+        then
+            return false
+        end
+    end
+    return true
+end
+kept("C_Item.GetWeaponEnchantInfo", realGetWeaponEnchantInfo and "hybrid" or "virtual", function(slot)
+    local list = realGetWeaponEnchantInfo and realGetWeaponEnchantInfo(slot) -- secret: tested next
+    if plainEnchants(list) then
+        return list
+    end
+    modelled = true
+    local j, t = I.enchantSlot[slot], now()
+    local rec, stacks
+    if j then
+        rec, stacks = VS.Aura("player", I.auras.id[j], t)
+    end
+    if not rec then
+        return NO_ENCHANTS
+    end
+    ENCHANT.timeLeft = rec.lo == HUGE and 0 or floor((rec.lo - t) * 1000)
+    ENCHANT.charges = stacks
+    return ENCHANTS
+end, "unprobed (Rogue Q9); the slot's `weaponEnchant` pseudo-aura when any field is secret")
+
+-- Pets (C1): no belief until the Pets family (T10).
+hybrid("UnitCreatureFamily", nothing, "SecretWhenUnitIdentityRestricted (API docs); unprobed (C1); nothing")
 
 ----------------------------------------------------------------------------------------------------------------------
 -- Cooldowns [W PR4, PR11]: times secret in combat, flags plain

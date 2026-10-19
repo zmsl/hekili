@@ -111,6 +111,7 @@ I.STATS = {
     { "UnitAttackPower" },
     { "UnitWeaponAttackPower" },
     { "UnitDamage" },
+    { "UnitRangedDamage" },
     { "UnitArmor" },
     { "GetShieldBlock" },
     { "GetMasteryEffect" },

@@ -23,6 +23,8 @@ local function statCall(api, name, arg)
         return api.UnitWeaponAttackPower("player") -- secret: readStat tests every return
     elseif name == "UnitDamage" then
         return api.UnitDamage("player") -- secret: readStat tests every return
+    elseif name == "UnitRangedDamage" then
+        return api.UnitRangedDamage("player") -- secret: readStat tests every return
     elseif name == "UnitArmor" then
         return api.UnitArmor("player") -- secret: readStat tests every return
     elseif name == "GetShieldBlock" then

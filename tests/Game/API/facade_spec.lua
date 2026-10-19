@@ -116,7 +116,7 @@ describe("ns.Facade", function()
             assert.is_function(entry(n), n)
             assert.is_string(Facade.Why(n), n)
         end
-        assert.are.same({ passthrough = 122, hybrid = 27, virtual = 26 }, count)
+        assert.are.same({ passthrough = 122, hybrid = 31, virtual = 26 }, count)
         assert.is_nil(Facade.Status("NotAGameFunction"))
     end)
 
@@ -386,5 +386,72 @@ describe("ns.Facade", function()
     it("aliases IsUsableSpell to C_Spell.IsSpellUsable", function()
         ctl.usable[5] = { true, false }
         assert.is_true(Facade.IsUsableSpell(5))
+    end)
+    -- The fake spec plus two player auras: a weapon-enchant pseudo-aura (main hand, RegisterAura's negative pseudo-ID)
+    -- and a stealth aura (C4, C5); j 3 and 4.
+    local ENCHANT, STEALTH = -1001, 1999
+    local function buildWithEnchantAndStealth()
+        local d = fs.def(fs.new(9))
+        d.auras[3], d.auraIds[3] = { key = "enchant_x", id = ENCHANT, weaponEnchant = 0 }, { ENCHANT }
+        d.auras[4], d.auraIds[4] = { key = "stealth_x", id = STEALTH, isStealthed = true }, { STEALTH }
+        I.Build(d, 1)
+    end
+
+    it(
+        "answers weapon enchants raw while plain, and from the enchant pseudo-aura once any field is secret (C4)",
+        function()
+            buildWithEnchantAndStealth()
+            assert.are.same({}, Facade.C_Item.GetWeaponEnchantInfo(0)) -- secret, nothing believed: no enchant
+            local plain = {
+                { hasEnchant = true, enchantType = 0, timeLeft = 5000, charges = 0, enchantID = 7, enchantIconID = 1 },
+            }
+            answers["C_Item.GetWeaponEnchantInfo"] = function()
+                return plain
+            end
+            assert.are.equal(plain, Facade.C_Item.GetWeaponEnchantInfo(0)) -- plain: the client's own table
+            plain[1].timeLeft = fake.SECRET -- one secret field: the belief's answer, never the secret
+            I.AuraModel(1, 3, 1, 1801, 20, 1, VS.Obs.CastSuccess, false) -- our apply cast: 30 min, 20 charges
+            ctl.now = 101
+            local list = Facade.C_Item.GetWeaponEnchantInfo(0)
+            assert.are_not.equal(plain, list)
+            assert.are.same({ true, 1700000, 20 }, { list[1].hasEnchant, list[1].timeLeft, list[1].charges })
+            assert.are.equal(list, Facade.C_Item.GetWeaponEnchantInfo(0)) -- shared, not allocated per call
+            assert.are.same({}, Facade.C_Item.GetWeaponEnchantInfo(1)) -- no off-hand pseudo-aura registered
+            answers["C_Item.GetWeaponEnchantInfo"] = function()
+                return fake.SECRET -- the whole answer secret
+            end
+            assert.are.equal(list, Facade.C_Item.GetWeaponEnchantInfo(0))
+        end
+    )
+
+    it("answers IsStealthed raw while plain, and from the stealth aura's belief once secret (C5)", function()
+        buildWithEnchantAndStealth()
+        answers.IsStealthed = function()
+            return true
+        end
+        assert.is_true(Facade.IsStealthed())
+        answers.IsStealthed = nil -- secret
+        assert.is_false(Facade.IsStealthed())
+        I.AuraModel(1, 4, 1, math.huge, 1, 1, VS.Obs.CastSuccess, false)
+        assert.is_true(Facade.IsStealthed())
+    end)
+
+    it("answers UnitCreatureFamily raw while plain and nothing once secret (C1, probe only)", function()
+        answers.UnitCreatureFamily = function()
+            return "Family", 1
+        end
+        assert.are.same({ "Family", 1 }, { Facade.UnitCreatureFamily("pet") })
+        answers.UnitCreatureFamily = nil
+        assert.is_nil(Facade.UnitCreatureFamily("pet")) -- never the secret
+    end)
+
+    it("answers UnitRangedDamage raw while plain and the out-of-combat cache once secret (C7, probe only)", function()
+        answers.UnitRangedDamage = function()
+            return 2.9, 10, 20, 0, 0, 1
+        end
+        assert.are.same({ 2.9, 10, 20, 0, 0, 1 }, { Facade.UnitRangedDamage("player") })
+        answers.UnitRangedDamage = nil
+        local speed, lo, hi = Facade.UnitRangedDamage("player") -- secret: the fake's plain read at Start
+        assert.are.same({ ctl.ranged[1], ctl.ranged[2], ctl.ranged[3] }, { speed, lo, hi })
     end)
 end)

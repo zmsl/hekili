@@ -16,7 +16,9 @@ local Facade = ns.Facade
 local C_AddOns, UnitClass = Facade.C_AddOns, Facade.UnitClass
 local Hekili = _G[addon]
 
-local CONTENT_API = 1
+-- 2 (2026-10-18): the ability fields `ladder` and `missable`, Shared:RegisterStateExpr, the aura fields `overlay`,
+-- `isStealthed` and `weaponEnchant`, and Hekili_Shared's main_hand_enchant and off_hand_enchant pseudo-auras.
+local CONTENT_API = 2
 
 local done, notice = false, nil
 
