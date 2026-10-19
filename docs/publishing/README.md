@@ -100,15 +100,17 @@ unticked, it creates the draft (use this when a tag's run failed after the push,
 - **Release run fails:** no draft exists. Read the log: `release_notes:` lines name the cause (missing key, API
   error, refusal, no changes since the last release). Fix it and re-run the job, or run the workflow on the tag with
   `dry_run` unticked. If a draft for the tag already exists, delete the draft first.
-- **Publish run fails:** the release is public on GitHub (and the Discord webhook has posted it) but not on
+- **The curseforge job fails:** the release is public on GitHub (and the Discord webhook has posted it) but not on
   CurseForge. `cf_upload:` lines name the cause. Re-run the failed job once the cause is fixed
   (Actions > publish > Re-run). A re-run replays the original event, so it reuses the release body as it was when
   published; when the cause is the body (for example `cf_upload: the release body is empty`), edit the release, set it
   back to a draft and publish again, which makes the Discord webhook post again.
-- **The changelog commit fails** (a push race with another merge, or a `changelog_release:` refusal): CurseForge
-  already has the file. Re-run the publish job's changelog job (Actions > publish > Re-run failed jobs); it starts from
-  the current `forever` and does nothing if the section is already there. Or locally on an up-to-date `forever`: save
-  the release body to a file, `python3 tools/changelog_release.py vX.Y.Z body.md`, then commit and push.
+- **The changelog job fails** (a push race the job's one retry did not win, or a `changelog_release:` refusal):
+  CurseForge already has the file. For a push race, re-run it (Actions > publish > Re-run failed jobs); it starts from
+  the current `forever` and does nothing if the section is already there. A body refusal (for example a `##` heading
+  in the notes) repeats on every re-run, because a re-run replays the original body: use the local route with a
+  corrected body. Locally, on an up-to-date `forever` with the tag fetched: save the release body to a file,
+  `python3 tools/changelog_release.py vX.Y.Z body.md`, then commit and push.
 - **CurseForge rejects a duplicate display name:** a tag can be uploaded once. To re-ship, cut a new tag (the next
   patch or `-rc.N`).
 - **CurseForge daily upload limit:** the upload fails with a limit error; re-run the publish job the next day.
@@ -121,6 +123,9 @@ unticked, it creates the draft (use this when a tag's run failed after the push,
 - **Secrets** (GitHub repo > Settings > Secrets and variables > Actions): `CF_API_KEY` (CurseForge > API tokens; used
   only by publish.yml) and `ANTHROPIC_API_KEY` (console.anthropic.com > API keys; used only by release.yml). Actions
   masks both in logs; the tools never print a request or a header.
+- **Branch rules:** `forever` must accept pushes from the workflow's GITHUB_TOKEN (no ruleset or protection rule
+  requiring pull requests or status checks, or the Actions bot on its bypass list), or every final release's changelog
+  job fails after the upload. Checked 2026-10-19: no rule on `forever`.
 - **Discord webhook** (the user): in the channel's settings > Integrations, create a Discord webhook and copy its URL.
   Then GitHub repo > Settings > Webhooks > Add webhook: Payload URL is that Discord webhook URL with `/github`
   appended, content type `application/json`, "Let me select individual events", tick Releases only (untick Pushes).

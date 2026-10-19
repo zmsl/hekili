@@ -41,16 +41,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: forever
+          fetch-depth: 0 # the push retry rebases onto a newer forever
           persist-credentials: true # this job pushes; it runs no third-party code
       - name: Write the release into CHANGELOG.md
         env:
           TAG: ${{ github.event.release.tag_name }}
         run: |
-          git fetch --depth=1 origin "refs/tags/$TAG:refs/tags/$TAG"
+          git fetch origin "refs/tags/$TAG:refs/tags/$TAG" # the tool diffs against the tag's changelog
           jq -r '.release.body // ""' "$GITHUB_EVENT_PATH" > "$RUNNER_TEMP/body.md"
           python3 tools/changelog_release.py "$TAG" "$RUNNER_TEMP/body.md" CHANGELOG.md
           git diff --quiet -- CHANGELOG.md && { echo "CHANGELOG.md already has $TAG"; exit 0; }
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "docs(changelog): $TAG released [skip ci]" -- CHANGELOG.md
-          git push origin HEAD:forever
+          # one retry after a race with another merge
+          git push origin HEAD:forever || { git pull --rebase origin forever && git push origin HEAD:forever; }

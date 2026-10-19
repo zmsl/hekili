@@ -79,7 +79,7 @@ def gather(ref, run=git):
     commits = re.sub(r"^(Co-Authored-By|Claude-Session):.*\n?", "", commits, flags=re.M | re.I).strip()
     changelog = run("show", ref + ":CHANGELOG.md")
     # a final's "## <tag>" is written by publish.yml after the notes, so Unreleased leads; the tag's own section is the
-    # fallback once Unreleased holds only its empty headings (a manual re-run after publishing)
+    # fallback for tags cut before publish.yml wrote the changelog (v0.1.0, renamed by hand)
     pending = section(changelog, "Unreleased")
     entry = pending if re.search(r"^(?!###)\S", pending, re.M) else section(changelog, ref)
     known = []

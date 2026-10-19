@@ -62,14 +62,41 @@ Hunters arrive.
 """
 
 
-
-
 class Rewrite(unittest.TestCase):
     def test_inserts_the_release_and_resets_unreleased(self):
         got = cr.rewrite(NOW, "v0.2.0", BODY, cr.unreleased(AT_TAG)[2], "2026-10-19")
         self.assertTrue(got.startswith("# Hekili Forever changelog\n\n"))
         self.assertIn(FRESH, got)
         self.assertTrue(got.endswith("## v0.1.0\n\nFirst release.\n"))
+
+    def test_edited_wrapped_entry_stays_whole(self):
+        now = NOW.replace("  Shot first.", "  Shot first (configurable).")
+        got = cr.rewrite(now, "v0.2.0", BODY, cr.unreleased(AT_TAG)[2], "2026-10-19")
+        self.assertIn("### New\n- Hunter: Beast Mastery, Marksmanship and Survival default priorities. Sniper\n"
+                      "  Shot first (configurable).\n\n### Changed", got)
+
+    def test_unchanged_wrapped_entry_ships(self):
+        got = cr.rewrite(NOW, "v0.2.0", BODY, cr.unreleased(AT_TAG)[2], "2026-10-19")
+        self.assertNotIn("Shot first", got)
+
+    def test_new_entry_repeating_a_shipped_one_is_kept(self):
+        now = NOW.replace("- Rogue loads.\n", "- Rogue loads.\n- Rogue loads.\n")
+        got = cr.rewrite(now, "v0.2.0", BODY, cr.unreleased(AT_TAG)[2], "2026-10-19")
+        self.assertIn("### Fixed\n- Rogue loads.\n- Paladin loads.\n\n### Known issues", got)
+
+    def test_trailing_whitespace_body(self):
+        got = cr.rewrite(NOW, "v0.2.0", BODY + "  \n\n\t\n", cr.unreleased(AT_TAG)[2], "2026-10-19")
+        self.assertIn(FRESH, got)
+
+    def test_no_unreleased_is_refused(self):
+        with self.assertRaises(SystemExit) as cm:
+            cr.rewrite("# c\n\n## v0.1.0\n\nx\n", "v0.2.0", BODY, "", "2026-10-19")
+        self.assertEqual(cm.exception.code, 2)
+
+    def test_released_already_matches_a_dated_heading_only(self):
+        self.assertTrue(cr.released_already("## v0.2.0 (2026-10-19)\n", "v0.2.0"))
+        self.assertFalse(cr.released_already("## v0.2.0-rc.1\n", "v0.2.0"))
+        self.assertFalse(cr.released_already("## v0.2.0.1\n", "v0.2.0"))
 
     def test_crlf_body(self):
         got = cr.rewrite(NOW, "v0.2.0", BODY.replace("\n", "\r\n"), cr.unreleased(AT_TAG)[2], "2026-10-19")
@@ -118,6 +145,13 @@ class Main(unittest.TestCase):
         self.assertEqual(cr.main(["x", "v0.2.0", body, path], None), 0)  # second run: no git call, no change
         with open(path) as f:
             self.assertEqual(f.read(), got)
+
+    def test_crlf_changelog(self):
+        body, path = self.files(NOW.replace("\n", "\r\n"))
+        run = lambda a, **kw: subprocess.CompletedProcess(a, 0, AT_TAG.replace("\n", "\r\n"), "")  # noqa: E731
+        self.assertEqual(cr.main(["x", "v0.2.0", body, path], run), 0)
+        with open(path) as f:
+            self.assertIn(FRESH, f.read())
 
     def test_refuses_without_the_tag(self):
         body, path = self.files(NOW)
