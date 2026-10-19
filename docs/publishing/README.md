@@ -15,6 +15,8 @@ make package-check
 uploaded; the zip lands in `.release/`, which is gitignored. `make package-check` then runs `tools/check_package.sh` on
 the newest zip: the four addon folders at the zip root, `Hekili/LICENSE`, no dev paths, and every TOC `## Version`
 equal to the zip version. Neither target is part of `make check` (they need the network and a clean commit).
+Run them from a plain clone: in a git worktree (`.git` is a file) the packager stops with `No Git, SVN, or Hg
+checkout found`.
 
 The packager versions the zip from `git describe`. On a dirty tree, or with no release tag (the first one will be
 `v0.1.0`), that is a describe string; it may name an upstream tag such as `v2.5.5-...-g<hash>`, which is harmless for a
