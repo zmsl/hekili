@@ -7,7 +7,7 @@ LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
 .PHONY: bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter bench syntax api-check \
-	packs-check check packs package package-check
+	packs-check tools-test check packs package package-check
 
 bootstrap:
 	scripts/bootstrap.sh
@@ -77,7 +77,11 @@ api-check:
 packs-check: packs
 	git diff --exit-code src
 
-check: lint fmt-check typecheck test syntax api-check packs-check
+# Offline tests of the release tools (tools/release_notes.py, tools/cf_upload.py): no network, no keys.
+tools-test:
+	python3 -m unittest discover -s tests/tools -t tests/tools
+
+check: lint fmt-check typecheck test syntax api-check packs-check tools-test
 
 # Rewrites each class file's RegisterPack blocks from its APLs/ (tools/make_pack.lua write), re-dating a class (today,
 # or PACK_DATE=YYYYMMDD) only when its blocks change; not part of `check`.

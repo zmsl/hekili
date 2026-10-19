@@ -1,28 +1,47 @@
-# Packs a release when a vX.Y.Z tag is pushed (docs/publishing/README.md): BigWigsMods/packager uploads the zip to
-# CurseForge (project from ## X-Curse-Project-ID, key CF_API_KEY) and creates the GitHub release (GITHUB_TOKEN) in the
-# same run. Only tag pushes fire it: the historical upstream v* tags on origin were pushed long ago and never run it.
+# Builds a release when a v* tag is pushed (docs/publishing/README.md, "Cutting a release"): the BigWigs packager
+# builds the zip without uploading anything, tools/release_notes.py drafts the player-facing notes with the Anthropic
+# API, and a DRAFT GitHub release carries both. Nothing is public until the user publishes the draft; publishing fires
+# publish.yml (CurseForge) and the repo's Discord webhook. A tag with a "-" suffix (v0.2.0-rc.1) drafts a pre-release.
+# Run by hand (Actions > release > Run workflow, on a tag or branch) it builds and prints the notes only.
 name: release
 
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build the zip and print the notes; create no release"
+        type: boolean
+        default: true
 
 permissions:
-  contents: write # GitHub release
+  contents: write # the draft release
 
 jobs:
-  release:
+  draft:
     runs-on: ubuntu-latest
-    env:
-      CF_API_KEY: ${{ secrets.CF_API_KEY }}
-      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-      - name: CHANGELOG has this tag
-        run: grep -qx "## ${GITHUB_REF_NAME}" CHANGELOG.md || { echo "CHANGELOG.md has no '## ${GITHUB_REF_NAME}' heading"; exit 1; }
+          fetch-depth: 0 # every commit and tag: the packager versions from git describe, the notes span tags
       - uses: BigWigsMods/packager@v2
         with:
-          args: -l # skip @localization@ substitution: the SFX-Widgets Info-URL widget carries one and the project has no CurseForge localization
+          args: -d -l # -d: build only, never upload; -l: skip @localization@ (the SFX-Widgets Info-URL widget carries one)
+      - name: Release notes
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python3 tools/release_notes.py "$GITHUB_REF_NAME" notes.md
+          cat notes.md
+      - name: Draft release
+        if: github.ref_type == 'tag' && inputs.dry_run != true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          zips=(.release/Hekili-*.zip)
+          [ ${#zips[@]} -eq 1 ] && [ -s "${zips[0]}" ] || { echo "expected one .release/Hekili-*.zip: ${zips[*]}"; exit 1; }
+          pre=()
+          case "$GITHUB_REF_NAME" in *-*) pre=(--prerelease) ;; esac
+          gh release create "$GITHUB_REF_NAME" --draft "${pre[@]}" --title "$GITHUB_REF_NAME" --notes-file notes.md "${zips[0]}"
