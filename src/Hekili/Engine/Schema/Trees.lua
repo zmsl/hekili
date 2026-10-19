@@ -122,3 +122,59 @@ function ns.ResolvePackSpecs(packs, byShare)
         end
     end
 end
+
+-- Merges `src` into `dst` key by key (not table by table), so the profile's defaults in `dst` survive; skips `skip`.
+local function merge(dst, src, skip)
+    for k, v in pairs(src) do
+        if k ~= skip then
+            if type(v) == "table" then
+                local d = dst[k]
+                if type(d) ~= "table" then
+                    d = {}
+                    dst[k] = d
+                end
+                merge(d, v)
+            else
+                dst[k] = v
+            end
+        end
+    end
+end
+
+--- Once per class (`done[kit.token]`), the legacy pseudo-spec profile `specs[legacyID]` (the client's id; kept for one
+--- release) is merged into every supported spec of `kit`: each field (settings, thresholds, toggles, ability and item
+--- options) but `package`, value by value over the spec's defaults; each spec's package becomes its default priority
+--- (`options.package`); the legacy choice, when it was a custom priority (not built in), stays the choice of `active`
+--- (the spec this login picked), and every custom priority bound to the legacy id is rebound to `active`. Returns true
+--- when it ran.
+function ns.MigrateTrees(specs, packs, done, kit, legacyID, active)
+    if done[kit.token] then
+        return false
+    end
+    done[kit.token] = true
+    local old = legacyID and rawget(specs, legacyID)
+    if type(old) ~= "table" then
+        return true
+    end
+    for _, s in ipairs(kit.trees) do
+        if not s.unsupported then
+            local dst = specs[s.id]
+            if not dst then
+                dst = {}
+                specs[s.id] = dst
+            end
+            merge(dst, old, "package")
+            dst.package = s.options.package
+        end
+    end
+    local chosen = old.package and rawget(packs, old.package)
+    if chosen and not chosen.builtIn and active then
+        specs[active.id].package = old.package
+    end
+    for _, p in pairs(packs) do
+        if type(p) == "table" and p.spec == legacyID and not p.builtIn and active then
+            p.spec = active.id
+        end
+    end
+    return true
+end

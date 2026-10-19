@@ -31,6 +31,11 @@ function Registry.SpecFromShare(v)
     return ns.SpecFromShare(v, class.specByShare, state.spec.clientID, state.spec.id)
 end
 
+--- The share key ("WARRIOR:arms") export strings carry for spec `id`, or nil (a spec outside a class kit).
+function Registry.SpecShareKey(id)
+    return ns.SpecShareKey(class.specs[id])
+end
+
 --- The AceOption settings list `specID` registered with RegisterSetting ({ name, default, info } entries), or nil.
 function Registry.Settings(specID)
     local spec = class.specs[specID]

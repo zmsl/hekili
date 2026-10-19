@@ -203,3 +203,52 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         assert.is_true(order[1] < order[2] and order[2] < order[3] and order[3] < order[4])
     end)
 end)
+
+describe("the legacy profile and shares (headless Warrior)", function()
+    local mp = assert(loadfile("tools/make_pack.lua"))("lib")
+
+    it("migrates the pseudo-spec profile once, keeping thresholds and a custom priority", function()
+        local saved = {
+            profiles = {
+                Default = {
+                    specs = { [1491] = { package = "Mine", settings = { hs_threshold = 55, ww_min_enemies = 4 } } },
+                    packs = { Mine = { spec = 1491, builtIn = false, lists = { default = {} } } },
+                },
+            },
+        }
+        local H = boot({ saved = saved })
+        settle(H)
+        local p = H.Hekili.DB.profile
+        assert.are.same({ 55, 55, 55 }, {
+            p.specs[ARMS].settings.hs_threshold,
+            p.specs[FURY].settings.hs_threshold,
+            p.specs[PROT].settings.hs_threshold,
+        })
+        assert.are.equal(4, p.specs[ARMS].settings.ww_min_enemies)
+        assert.is_true(p.specs[ARMS].settings.debuff_sunder_enabled) -- a default the legacy table never saved
+        assert.are.equal(0, p.specs[ARMS].abilities.mortal_strike.clash)
+        assert.are.same(
+            { "Mine", "Fury", "Protection" },
+            { p.specs[ARMS].package, p.specs[FURY].package, p.specs[PROT].package }
+        )
+        assert.are.equal(ARMS, p.packs.Mine.spec)
+        assert.is_true(p.specMigrated.WARRIOR)
+        p.specs[ARMS].settings.ww_min_enemies = 2
+        H.Hekili:SpecializationChanged()
+        assert.are.equal(2, p.specs[ARMS].settings.ww_min_enemies)
+        assert.are.equal(55, p.specs[1491].settings.hs_threshold)
+    end)
+
+    it("exports the spec as its share key and imports keys and legacy ids as this session's spec", function()
+        local H = boot()
+        settle(H)
+        local str = H.Hekili.SerializeActionPack("Fury")
+        assert.are.equal("WARRIOR:fury", mp.decode(str).spec)
+        assert.are.equal(FURY, H.Hekili.DeserializeActionPack(str).payload.spec)
+        local legacy = mp.encode({ name = "Old", version = 1, spec = 1491, desc = "", simc = "", lists = {} })
+        assert.are.equal(ARMS, H.Hekili.DeserializeActionPack(legacy).payload.spec)
+        local other =
+            mp.encode({ name = "Ret", version = 1, spec = "PALADIN:retribution", desc = "", simc = "", lists = {} })
+        assert.are.equal("PALADIN:retribution", H.Hekili.DeserializeActionPack(other).payload.spec)
+    end)
+end)

@@ -7843,9 +7843,11 @@ SerializeActionPack = function( name )
     }
 
     serial.payload.builtIn = false
+    serial.payload.spec = Registry.SpecShareKey( pack.spec ) or pack.spec
 
     return TableToString( serial, true )
 end
+Hekili.SerializeActionPack = SerializeActionPack
 
 DeserializeActionPack = function( str )
     local serial = StringToTable( str, true )

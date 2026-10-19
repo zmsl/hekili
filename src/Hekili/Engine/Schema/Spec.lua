@@ -2335,6 +2335,7 @@ function Hekili:SettleSpecChoice( clientID )
     local kit, settings = class.kit, Hekili.Engine.settings
     local key = ns.CharKey()
     local pick, source = ns.PickSpec( kit, settings.specChoice[ key ], talentRank )
+    ns.MigrateTrees( settings.specs, settings.packs, settings.specMigrated, kit, clientID, pick )
     ns.ResolvePackSpecs( settings.packs, class.specByShare )
     if source == "dominant" then settings.specChoice[ key ] = pick.key end
     if pick.id ~= state.spec.id then self.PendingSpecializationChange = true end

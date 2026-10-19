@@ -95,6 +95,87 @@ describe("Trees.lua", function()
         T.ResolvePackSpecs(packs, by)
         assert.are.same({ 100052, "OTHER:x", 7 }, { packs.A.spec, packs.B.spec, packs.C.spec })
     end)
+
+    describe("MigrateTrees", function()
+        local function fresh()
+            local specs = {
+                [1491] = {
+                    enabled = true,
+                    aoe = 3,
+                    package = "Mine",
+                    settings = { hs_threshold = 55, ww_min_enemies = 4 },
+                    abilities = { rend = { disabled = true } },
+                },
+            }
+            for _, s in ipairs(K.trees) do
+                specs[s.id] = { settings = {} }
+                s.options.package = s.unsupported and nil or (s.key:gsub("^%l", string.upper))
+            end
+            local packs = { Mine = { spec = 1491, builtIn = false }, One = { spec = 100051, builtIn = true } }
+            return specs, packs, {}
+        end
+
+        it(
+            "copies every legacy field to each supported spec, keeps the legacy table, and keeps a custom choice",
+            function()
+                local specs, packs, done = fresh()
+                local active = K.specs.two
+                assert.is_true(T.MigrateTrees(specs, packs, done, K, 1491, active))
+                for _, key in ipairs({ "one", "two", "two_b" }) do
+                    local s = specs[K.specs[key].id]
+                    assert.are.same(
+                        { 3, 55, 4, true },
+                        { s.aoe, s.settings.hs_threshold, s.settings.ww_min_enemies, s.abilities.rend.disabled }
+                    )
+                end
+                assert.are_not.equal(specs[1491].settings, specs[K.specs.one.id].settings) -- deep copies
+                assert.is_nil(specs[K.specs.heal.id].aoe) -- a spec with no priorities keeps its defaults
+                assert.are.same({ "One", "Mine", "Two_b" }, {
+                    specs[K.specs.one.id].package,
+                    specs[active.id].package, -- the user's custom pick stays on the active spec
+                    specs[K.specs.two_b.id].package,
+                })
+                assert.are.equal(active.id, packs.Mine.spec)
+                assert.are.equal(100051, packs.One.spec)
+                assert.are.equal(55, specs[1491].settings.hs_threshold) -- kept for one release
+                assert.is_true(done.TEST)
+            end
+        )
+
+        it("runs once: a second pass changes nothing the user changed since", function()
+            local specs, packs, done = fresh()
+            T.MigrateTrees(specs, packs, done, K, 1491, K.specs.one)
+            specs[K.specs.one.id].settings.hs_threshold = 60
+            assert.is_false(T.MigrateTrees(specs, packs, done, K, 1491, K.specs.one))
+            assert.are.equal(60, specs[K.specs.one.id].settings.hs_threshold)
+        end)
+
+        it("maps a built-in legacy choice 1:1 by spec and marks a class with no legacy profile as done", function()
+            local specs, packs, done = fresh()
+            specs[1491].package = "One"
+            T.MigrateTrees(specs, packs, done, K, 1491, K.specs.two)
+            assert.are.same({ "One", "Two" }, { specs[K.specs.one.id].package, specs[K.specs.two.id].package })
+            local none = {}
+            assert.is_true(T.MigrateTrees({}, {}, none, K, 1483, K.specs.one))
+            assert.is_true(none.TEST)
+        end)
+
+        it("merges value by value, so a spec's defaults the legacy table never saved stay", function()
+            local specs, packs, done = fresh()
+            local one = specs[K.specs.one.id]
+            one.settings.sunder = true
+            one.abilities = { strike = { clash = 0 } }
+            local settings = one.settings
+            T.MigrateTrees(specs, packs, done, K, 1491, K.specs.one)
+            assert.are.equal(settings, one.settings)
+            assert.are.same({ true, 55, 0, true }, {
+                one.settings.sunder,
+                one.settings.hs_threshold,
+                one.abilities.strike.clash,
+                one.abilities.rend.disabled,
+            })
+        end)
+    end)
 end)
 
 describe("Hekili:NewClass (the engine headless)", function()
