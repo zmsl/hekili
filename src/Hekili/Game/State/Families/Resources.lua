@@ -858,9 +858,10 @@ I.On(Obs.Read, function(o, t, lag)
             R.maxRead[r] = true -- a plain read wins over the declared maximum from now on
         end
     elseif c == ReadOf.Regen and R.swing[r] == 0 then
-        R.decl[r], R.readT[r] = o.b, t
-        R.regE[r], R.regL[r], R.regH[r] = o.b, o.b, o.b
-        I.Sample(R.regen[r], "observed", o.b, t, Obs.Read)
+        local v = o.b / multAt(r, t) -- the game's rate includes any `mult` aura up now: store it unscaled
+        R.decl[r], R.readT[r] = v, t
+        R.regE[r], R.regL[r], R.regH[r] = v, v, v
+        I.Sample(R.regen[r], "observed", v, t, Obs.Read)
     end
 end)
 

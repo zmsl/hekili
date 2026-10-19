@@ -948,6 +948,13 @@ describe("resources", function()
             within(10 + I.ALPHA * 2, I.res.regE[1])
             within(2 * (10 + I.ALPHA * 2), VS.Regen(ENERGY, 12).est)
         end)
+
+        it("an out-of-combat regen read taken under the aura is stored unscaled", function()
+            obs(Obs.Read, 12, 1, 24, I.ReadOf.Regen) -- the game's 24/s already includes the x2
+            I.Fold(12, false)
+            assert.are.same({ 12, 12 }, { I.res.decl[1], I.res.regE[1] })
+            assert.are.same({ 24, 12 }, { VS.Regen(ENERGY, 12).est, VS.Regen(ENERGY, 16).est })
+        end)
     end)
 
     describe("a swing entry gated on a player aura (swings pay only while form_a is up)", function()
