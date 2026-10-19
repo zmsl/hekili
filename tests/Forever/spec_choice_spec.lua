@@ -352,5 +352,8 @@ describe("Rogue and Paladin specs (headless)", function()
         local values = H.Hekili.Options.args.packs.args.newPackSpec.values -- no priority for a healing spec
         assert.is_nil(values[100021])
         assert.is_not_nil(values[100023])
+        -- the new priority's spec defaults to a listed one, never the idle healing spec
+        local get = H.Hekili.GetPackOption
+        assert.are.equal(100022, get(H.Hekili, { "packs", "newPackSpec", "newPackSpec" }))
     end)
 end)

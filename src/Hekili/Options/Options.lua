@@ -4204,7 +4204,14 @@ found = true end
         end
 
         if option == "newPackSpec" and packControl[ option ] == "" then
-            packControl[ option ] = GetCurrentSpec()
+            local id = GetCurrentSpec()
+            if not specs[ id ] then -- not listed (an idle healing spec): the first listed spec, in tree order
+                id = nil
+                for k in pairs( specs ) do
+                    if not id or k < id then id = k end
+                end
+            end
+            packControl[ option ] = id or ""
         end
 
         if packControl[ option ] ~= nil then return packControl[ option ] end
