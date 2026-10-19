@@ -63,7 +63,10 @@ local FORBIDDEN = {
     "curseforge%.com/wow/addons/hekili[^%-]",
     "hekili#0001",
 }
-local ALLOW = { ["src/Hekili/Engine/Sim/Targets.lua"] = "github%.com/hekili/hekili/issues/4845" }
+local ALLOW = {
+    ["src/Hekili/Engine/Sim/Targets.lua"] = "github%.com/hekili/hekili/issues/4845",
+    ["README.md"] = "discord%.gg/jac6w4pkur", -- the fork's own server, not the old project's
+}
 
 local function scan(files, upstream)
     local hits = {}

@@ -2,9 +2,13 @@
 
 # Hekili Forever
 
+[![Discord](https://img.shields.io/discord/1561791635220725912?logo=discord&logoColor=white&label=Discord&color=5865F2)](https://discord.gg/JaC6W4Pkur)
+
 Hekili Forever is a fork of the Hekili priority helper, rebuilt for WoW Forever. It is based on the original work by Hekili and is published with the original author's explicit permission.
 
 > **This addon is not maintained by the original Hekili project. Please do not report Hekili Forever issues to the original project. Bugs, questions and requests go to the GitHub issue tracker:** [https://github.com/zmsl/hekili/issues](https://github.com/zmsl/hekili/issues)
+>
+> **Help and feedback: the Hekili Forever Discord:** [https://discord.gg/JaC6W4Pkur](https://discord.gg/JaC6W4Pkur)
 
 ## What is Hekili Forever?
 Hekili Forever is a priority helper that can make recommendations several steps into the future. It collects information about the game's current state, uses a SimulationCraft-style action priority list to recommend the next ability, then advances the game state and makes the next prediction.
