@@ -84,7 +84,7 @@ local function druid()
         character = {
             class = "DRUID",
             classID = 11,
-            specID = w.specID,
+            specID = 1483, -- the client's Druid pseudo-spec
             level = 60,
             known = known,
             power = { type = 3, token = "ENERGY", max = 100, value = 100 },

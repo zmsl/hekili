@@ -193,7 +193,7 @@ describe("the simulation's GCD by kind in energy (core edit E10)", function()
             character = {
                 class = "DRUID",
                 classID = 11,
-                specID = 1499,
+                specID = 1483,
                 level = 60,
                 known = { 768, 5487, 5221 },
                 power = { type = 3, token = "ENERGY", max = 100 },

@@ -12,7 +12,7 @@ local dw = require("Forever.helpers.druid_world")
 
 local M = {}
 
-M.SPEC, M.CLASS_ID = 1499, 11
+M.CLIENT_SPEC, M.CLASS_ID = 1483, 11 -- the client's Druid pseudo-spec
 local MANA, RAGE, ENERGY, POINTS = dw.MANA, dw.RAGE, dw.ENERGY, dw.POINTS
 local TOKENS = dw.TOKENS
 
@@ -324,6 +324,7 @@ end
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = name, IDS = {} }
+    C.SPEC = ({ Balance = 100111, Feral = 100112, Guardian = 100113 })[name]
     local pt = P.power.type
 
     function C.character()
@@ -351,7 +352,7 @@ local function content(name)
         return {
             class = "DRUID",
             classID = M.CLASS_ID,
-            specID = M.SPEC,
+            specID = M.CLIENT_SPEC,
             level = 60,
             known = known,
             talents = talents,

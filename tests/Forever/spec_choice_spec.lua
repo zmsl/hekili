@@ -258,3 +258,42 @@ describe("the legacy profile and shares (headless Warrior)", function()
         assert.are.equal("PALADIN:retribution", H.Hekili.DeserializeActionPack(other).payload.spec)
     end)
 end)
+
+describe("a Druid (headless)", function()
+    local dw = require("Forever.helpers.druid_loop_world")
+    local BALANCE, FERAL, GUARDIAN, RESTO = 100111, 100112, 100113, 100114
+
+    it("gives Feral and Guardian their own specs on one tree, Feral by the talents and Guardian by choice", function()
+        local H = headless.new({ character = dw.Feral.character(), pack = "Feral" })
+        assert.are.same({}, H.loadErrors)
+        settle(H)
+        assert.are.equal(FERAL, H.Hekili.State.spec.id)
+        local G = headless.new({ character = dw.Guardian.character(), pack = "Guardian" })
+        assert.are.equal(GUARDIAN, G.Hekili.State.spec.id)
+        assert.are.equal("guardian", G.Hekili.DB.profile.specChoice[CHAR])
+        local p = G.Hekili.DB.profile
+        assert.are.same(
+            { BALANCE, FERAL, GUARDIAN },
+            { p.packs.Balance.spec, p.packs.Feral.spec, p.packs.Guardian.spec }
+        )
+    end)
+
+    it("leaves Restoration idle: no priority, no displays, its page the notice, no warning", function()
+        local H = headless.new({ character = dw.Feral.character() })
+        assert.are.same({}, H.loadErrors)
+        settle(H)
+        assert.is_not_nil(H.Hekili:SetSpecChoice("resto"))
+        settle(H)
+        assert.are.equal(RESTO, H.Hekili.State.spec.id)
+        local p = H.Hekili.DB.profile
+        assert.is_nil(rawget(p.specs[RESTO], "package"))
+        assert.is_false(p.specs[RESTO].enabled)
+        assert.is_true(H.Hekili.Class.initialized) -- the "no modules loaded" notice's guard
+        assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
+        assert.are.same({}, H.errors)
+        H.Hekili:EmbedSpecOptions()
+        local node = H.Hekili.Options.plugins.specializations.restoration
+        assert.is_not_nil(node.args.core.args.notice)
+        assert.is_nil(node.args.core.args.enabled)
+    end)
+end)

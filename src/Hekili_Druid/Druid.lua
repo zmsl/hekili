@@ -1,10 +1,10 @@
 -- Hekili_Druid/Druid.lua
--- The Forever Druid (one pseudo-spec, DRUID_SPEC below): the Classic Druid kit with Forever's spell data (ranks,
--- costs, cooldowns, cast times and durations from the Forever DB2 at build 1.60.1.70338, wowdb; energy and mana costs
--- are DB2 points, rage the DB2 cost / 10), Forever's Shifting Power, Berserk, Primal Bite and Lacerate, bear rage per
--- white swing in Bear Form only, Enrage's rage over time, Clearcasting as a cost modifier, forms from the belief's
--- Forms source, the bleeds' misses from the combat log, and the default priorities (Feral; Guardian and Balance
--- provisional). Design: docs/superpowers/specs/2026-10-15-forever-druid-pack.md.
+-- The Forever Druid (Balance, Feral, Guardian and an idle Restoration: Hekili:NewClass): the Classic Druid kit with
+-- Forever's spell data (ranks, costs, cooldowns, cast times and durations from the Forever DB2 at build 1.60.1.70338,
+-- wowdb; energy and mana costs are DB2 points, rage the DB2 cost / 10), Forever's Shifting Power, Berserk, Primal Bite
+-- and Lacerate, bear rage per white swing in Bear Form only, Enrage's rage over time, Clearcasting as a cost modifier,
+-- forms from the belief's Forms source, the bleeds' misses from the combat log, and the default priorities (Feral;
+-- Guardian and Balance provisional). Design: docs/superpowers/specs/2026-10-15-forever-druid-pack.md.
 -- Talents: the DB2's 47 Classic nodes plus three placeholders the live export replaces (checkpoint Q1). Only rank 1 of
 -- each talent is in the Forever DB2, so a modifier is rank 1's value x the rank (Classic's convention), floored at 0;
 -- no cooldown or duration modifier is modelled but Improved Shifting Power's (spec D5).
@@ -28,10 +28,24 @@ local state = Hekili.State
 local IsCurrentSpell = C_Spell.IsCurrentSpell
 local floor, max, min, huge = math.floor, math.max, math.min, math.huge
 
--- The pseudo-spec the client reports for a Druid (Constants.lua's row). A placeholder until checkpoint Q1 reads it.
-local DRUID_SPEC = 1499
-
-local spec = Hekili:NewSpecialization(DRUID_SPEC, false, 132115) -- ability_druid_catform
+-- The class kit and its specs (ids the core's: Balance 100111, Feral 100112, Guardian 100113, Restoration 100114).
+-- Feral and Guardian ride the Feral Combat tree: its points pick Feral; Guardian is chosen (/hekili spec guardian).
+local spec = Hekili:NewClass("DRUID", {
+    specs = {
+        {
+            key = "balance",
+            name = "Balance",
+            tree = 1,
+            icon = 136096,
+            role = "attack",
+            ranged = true,
+            package = "Balance",
+        },
+        { key = "feral", name = "Feral", tree = 2, icon = 132115, role = "attack", package = "Feral" },
+        { key = "guardian", name = "Guardian", tree = 2, icon = 132276, role = "tank", package = "Guardian" },
+        { key = "restoration", name = "Restoration", tree = 3, icon = 136041, role = "healer", unsupported = true },
+    },
+})
 if not spec then
     return
 end
@@ -209,60 +223,61 @@ spec:RegisterResource(
 -- Mana: secret even out of combat; costs below 1 are fractions of the maximum in both layers (spec §0.1).
 spec:RegisterResource(Enum.PowerType.Mana)
 
--- Talents: { node (unused on Forever), rank 1's spell, max rank }: the DB2's 47 Classic nodes (16 Balance, 16 Feral
--- Combat, 15 Restoration), keys Classic's, until the live export (checkpoint Q1) replaces them. The last three are
--- placeholders the export replaces, so no reader names an unregistered key.
+-- Talents: { talent tree (1 Balance, 2 Feral Combat, 3 Restoration: the dominant tree picks the spec), rank 1's spell,
+-- max rank }: the DB2's 47 Classic nodes (16 Balance, 16 Feral Combat, 15 Restoration; the tree is the DB2's
+-- Talent.TabID), keys Classic's, until the live export (checkpoint Q1) replaces them. The last three are placeholders
+-- the export replaces, so no reader names an unregistered key; their tree is 0 until the export places them.
 spec:RegisterTalents({
     -- Balance (16)
-    improved_wrath = { 0, 16814, 5 },
-    natures_grasp = { 0, 16689, 1 },
-    improved_natures_grasp = { 0, 17245, 4 },
-    improved_entangling_roots = { 0, 16918, 3 },
-    improved_moonfire = { 0, 16821, 5 },
-    natural_weapons = { 0, 16902, 5 },
-    natural_shapeshifter = { 0, 16833, 3 },
-    improved_thorns = { 0, 16836, 3 },
-    omen_of_clarity = { 0, 16864, 1 },
-    natures_reach = { 0, 16819, 2 },
-    vengeance = { 0, 16909, 5 },
-    improved_starfire = { 0, 16850, 5 },
-    natures_grace = { 0, 16880, 1 },
-    moonglow = { 0, 16845, 3 },
-    moonfury = { 0, 16896, 5 },
-    moonkin_form = { 0, 24858, 1 },
+    improved_wrath = { 1, 16814, 5 },
+    natures_grasp = { 1, 16689, 1 },
+    improved_natures_grasp = { 1, 17245, 4 },
+    improved_entangling_roots = { 1, 16918, 3 },
+    improved_moonfire = { 1, 16821, 5 },
+    natural_weapons = { 1, 16902, 5 },
+    natural_shapeshifter = { 1, 16833, 3 },
+    improved_thorns = { 1, 16836, 3 },
+    omen_of_clarity = { 1, 16864, 1 },
+    natures_reach = { 1, 16819, 2 },
+    vengeance = { 1, 16909, 5 },
+    improved_starfire = { 1, 16850, 5 },
+    natures_grace = { 1, 16880, 1 },
+    moonglow = { 1, 16845, 3 },
+    moonfury = { 1, 16896, 5 },
+    moonkin_form = { 1, 24858, 1 },
     -- Feral Combat (16)
-    ferocity = { 0, 16934, 5 },
-    feral_aggression = { 0, 16858, 5 },
-    feral_instinct = { 0, 16947, 5 },
-    brutal_impact = { 0, 16940, 2 },
-    thick_hide = { 0, 16929, 5 },
-    feline_swiftness = { 0, 17002, 2 },
-    feral_charge = { 0, 16979, 1 },
-    sharpened_claws = { 0, 16942, 3 },
-    improved_shred = { 0, 16966, 2 }, -- Shredding Attacks
-    predatory_strikes = { 0, 16972, 3 },
-    blood_frenzy = { 0, 16952, 2 },
-    primal_fury = { 0, 16958, 2 }, -- "Blood Frenzy" on Forever
-    savage_fury = { 0, 16998, 2 },
-    faerie_fire_feral = { 0, 16857, 1 },
-    heart_of_the_wild = { 0, 17003, 5 },
-    leader_of_the_pack = { 0, 17007, 1 },
+    ferocity = { 2, 16934, 5 },
+    feral_aggression = { 2, 16858, 5 },
+    feral_instinct = { 2, 16947, 5 },
+    brutal_impact = { 2, 16940, 2 },
+    thick_hide = { 2, 16929, 5 },
+    feline_swiftness = { 2, 17002, 2 },
+    feral_charge = { 2, 16979, 1 },
+    sharpened_claws = { 2, 16942, 3 },
+    improved_shred = { 2, 16966, 2 }, -- Shredding Attacks
+    predatory_strikes = { 2, 16972, 3 },
+    blood_frenzy = { 2, 16952, 2 },
+    primal_fury = { 2, 16958, 2 }, -- "Blood Frenzy" on Forever
+    savage_fury = { 2, 16998, 2 },
+    faerie_fire_feral = { 2, 16857, 1 },
+    heart_of_the_wild = { 2, 17003, 5 },
+    leader_of_the_pack = { 2, 17007, 1 },
     -- Restoration (15)
-    improved_mark_of_the_wild = { 0, 17050, 5 },
-    furor = { 0, 17056, 5 },
-    improved_healing_touch = { 0, 17069, 5 },
-    natures_focus = { 0, 17063, 5 },
-    improved_enrage = { 0, 17079, 2 },
-    reflection = { 0, 17106, 3 },
-    insect_swarm = { 0, 5570, 1 },
-    subtlety = { 0, 17118, 5 },
-    tranquil_spirit = { 0, 24968, 5 },
-    improved_rejuvenation = { 0, 17111, 3 },
-    natures_swiftness = { 0, 17116, 1 },
-    gift_of_nature = { 0, 17104, 5 },
-    improved_tranquility = { 0, 17123, 2 },
-    improved_regrowth = { 0, 17074, 5 },
-    swiftmend = { 0, 18562, 1 },
+    improved_mark_of_the_wild = { 3, 17050, 5 },
+    furor = { 3, 17056, 5 },
+    improved_healing_touch = { 3, 17069, 5 },
+    natures_focus = { 3, 17063, 5 },
+    improved_enrage = { 3, 17079, 2 },
+    reflection = { 3, 17106, 3 },
+    insect_swarm = { 3, 5570, 1 },
+    subtlety = { 3, 17118, 5 },
+    tranquil_spirit = { 3, 24968, 5 },
+    improved_rejuvenation = { 3, 17111, 3 },
+    natures_swiftness = { 3, 17116, 1 },
+    gift_of_nature = { 3, 17104, 5 },
+    improved_tranquility = { 3, 17123, 2 },
+    improved_regrowth = { 3, 17074, 5 },
+    swiftmend = { 3, 18562, 1 },
     -- Forever-only placeholders, replaced by the export (checkpoint Q1).
     improved_shifting_power = { 0, 1322670, 2 },
     natures_splendor = { 0, 1223083, 1 },
@@ -1790,7 +1805,7 @@ spec:RegisterSetting("bite_finisher", false, {
     name = "Ferocious Bite Finisher",
     desc = "When enabled, Ferocious Bite spends 5 combo points while Rip is up and no energy is held back.",
     width = "full",
-})
+}, "feral")
 
 spec:RegisterSetting("behind", false, {
     type = "toggle",
@@ -1804,7 +1819,7 @@ spec:RegisterSetting("buffs", true, {
     name = "Out-of-Combat Buffs",
     desc = "When enabled, Mark of the Wild and Thorns are recommended before combat when missing.",
     width = "full",
-})
+}, "feral", "balance")
 
 spec:RegisterSetting("dump_rage", 60, {
     type = "range",
@@ -1814,35 +1829,35 @@ spec:RegisterSetting("dump_rage", 60, {
     min = 0,
     max = 100,
     step = 1,
-})
+}, "guardian")
 
 spec:RegisterSetting("use_enrage", false, {
     type = "toggle",
     name = "Use Enrage",
     desc = "When enabled, the Guardian priority uses Enrage when rage is short.",
     width = "full",
-})
+}, "guardian")
 
 spec:RegisterSetting("moonkin", true, {
     type = "toggle",
     name = "Moonkin Form",
     desc = "When enabled, the Balance priority recommends Moonkin Form before combat.",
     width = "full",
-})
+}, "balance")
 
 spec:RegisterSetting("trash_dots", true, {
     type = "toggle",
     name = "Moonfire on Trash",
     desc = "When enabled, the Balance priority keeps Moonfire on targets that are not bosses.",
     width = "full",
-})
+}, "balance")
 
 spec:RegisterSetting("starfire_filler", false, {
     type = "toggle",
     name = "Starfire Filler",
     desc = "When enabled, the Balance priority fills with Starfire instead of Wrath.",
     width = "full",
-})
+}, "balance")
 
 spec:RegisterSetting("hurricane_targets", 4, {
     type = "range",
@@ -1852,14 +1867,14 @@ spec:RegisterSetting("hurricane_targets", 4, {
     min = 0,
     max = 10,
     step = 1,
-})
+}, "balance")
 
 spec:RegisterSetting("innervate", true, {
     type = "toggle",
     name = "Innervate",
     desc = "When enabled, the Feral and Balance priorities use Innervate when mana runs low.",
     width = "full",
-})
+}, "feral", "balance")
 
 -- Lacerate's refresh window and the Innervate mana fractions (class-completion D7: a fraction of the maximum per line).
 spec:RegisterSetting("lacerate_refresh", 4.5, {
@@ -1871,7 +1886,7 @@ spec:RegisterSetting("lacerate_refresh", 4.5, {
     min = 0,
     max = 15,
     step = 0.5,
-})
+}, "guardian")
 
 spec:RegisterSetting("feral_innervate_mana", 40, {
     type = "range",
@@ -1881,7 +1896,7 @@ spec:RegisterSetting("feral_innervate_mana", 40, {
     min = 0,
     max = 100,
     step = 1,
-})
+}, "feral")
 
 spec:RegisterSetting("balance_innervate_mana", 10, {
     type = "range",
@@ -1891,9 +1906,7 @@ spec:RegisterSetting("balance_innervate_mana", 10, {
     min = 0,
     max = 100,
     step = 1,
-})
-
-spec:RegisterOptions({ package = "Feral" })
+}, "balance")
 
 -- The three priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and
 -- APLs/*.simc; edit those and run it, never these blocks (tests/Forever/druid_spec.lua checks they
@@ -1901,16 +1914,16 @@ spec:RegisterOptions({ package = "Feral" })
 -- Restoration is deferred.
 spec:RegisterPack(
     "Feral",
-    20261018313,
-    [[Hekili:fF17VTTnq0)wYx8AWmuTJt6AgQlWAhgwh2ckQ2NPen1jBcttkqsfpdmO)27DuYksYwPEbByFjHH8DV7h8DNyyZz)jloJ7b2d3m7M3mF283Uy(cwS)qbWIl4IT814cnFh(ZFbSCfT7bLHNrwUQuQ8FsZwDwsCfGG9W8BV)Ew8gzwgudeCcKlJfEeSvPbsRs)zBPmRk9vcU)6PvPCLCTgWn2l9BWFA27K7CVoV2QVZvL(hgTbbxL(tF(3r7SqoybTaQsnA1HR)XQ04nwIbJUk9JkGBfCNxQxJG)OIVhpOeT2KxLwyCsV0OjhJbAEnQpB2tX3kqzqW3oRkf0GD9HQ0sDgDsFs5A0x3nRoIrQrU(ayDGDlE2gGNv7lEvAwjgKFHVfqiFrwG7HXHFdUPdWvcZUvgkOKAVRHxcnU0fWHrqoxPi(Yrk011rHswuGrY0gUSGdjd5W0wjAY79BaDdip3UM8zoxai5hmLunyJrLfYPaMJzDdR5iXBiWAiWj8xOPUeiCRrX6N0ObpIQbY7yvIYUAxUJRX03wQrRDBmwFekMSMCPcfxCbDf4IkSavb4(L742TjM8e0Xj7LQSPY8LyfIk3UOvL55Ujxr)kAiWOYIMtwJxMdoP63oXtF)YxJxzwTBupuF8OwJ6WeuAUJSV2GJ701KLxgmKpxJimPG0Ge86lHirPff5(3D7S)UHGoAqkThGd1JDOT0bjspSZ1DZv1I0P0HOGkzTiB58qeMbbxyrTxOI(QGYmPwyE0fV)PcMvwKiqChTtwGMDD)8c1HtZnIsxTpoBoeqLy221sbQC)MgE15SedJUg(sYHE0r9T18DZzQsDHIdKmcPP0LScR691w4gj5sTeBLStoFmD3KEbXKJnAVFGy40cm5PMkrhRQrffojsyC(tQVu6mUHeKtStESzVBnPnnBpDYq1(eAwquHW)UwW50hcsAnjHqmupVCXSjNx4xVBJyoCrWIX5Iomoh8vjL05DHp7b58sLhx(q4ZGGMVsbzSpCCyel(yeJRS4vMvYzXN05Y8OhgHG(DYDP50o6lTLM83Ir8xBlob62bG60ItPCRrnvTEj5)on)uuC3GO4jN8SD)DRH4oS4GaJIBKZ38pJZRoLusn3NZFyuoFjP(tEc)7(o6TJ6Obv9oCGB0sYnej3pIaO)qNUK)FYWhkuMpBuXF4IRtiCbtLcmoA)y4wRtb7cgxfiCy)5zkl)poS6PeSLXE32E6Dsnp345gxn8HqN)6)L(YPNBox9dK(M(R9Dup3mSlDOBOUWljozX)kSvQK47rB(hlUoCm7R]]
+    20261019313,
+    [[Hekili:fFvBVTTnq4Fl5lEnygQ25LU1I6cS2GILHTIIOTVkjAQt2eMMuGKkEgyq)23DKYksYwPEbByFjHH85EUx4ZDIjzEYVNeNZCqYxUA2vVz(S5V965xNe72xcjXLm(g2kCHITf)5Nbdts7UxQz5KLlRes39QKLNKeBjWtIV7H)4(7ExrW21I8CiGhS4HFwBGhbtDMN76S7mvI86SxXzUlNwNXKIvka3yNWTg)PENvS1(6IGvFNTo730kncUo7N(6VI2za0rGId1zALC)LVRolETHyqRQZ(KeygoZ6eQvi4pjz7WdQqR1f1zLARWj0kYXyGweq9v9ok(wcsnc(Mz1zGcmR2xNvPYPt6tktH(62zHigPg56JGXcMn4zRbwEWxS6S8kmiFGTbqipikX9W4WTg30c4kUE7snfucLZ2WlHgxA94WiOGjLeFfifQqDKlfLLyKmTHldyrYqo0TvIM8E3Aq1aYXmRiFwW4as(EDfvdwRL5(CYJ5qw3WAbs8AcSc8Cc)jAQnf83AuSEVcn4ruuqEhRsu2fC5wMctFtLcT2UwBCrOMYOlesuJX40vGnQ0aufG5wSLz2KQlsrhNUtiZNkkwGviQCBJwwvuyNCb9ROHaJQkBozfEzo4K6F5ip99lEnELzu2r9q44rTg1HPO0ClzFWGd701KfNhmKpBJimTK0Ge8WLqeVYGIC37Vz2F1qqhniL2dWH6Xo0wzHuHd2A7U5YGiDkDikOsxXZxm3hH5G3fgu75ROVYRmtdcZdU4dpvWmIYuoI7GDIs0Sl7NxOoCAHMxzd(4K5GhvQEtxl5OY9BA4fNYsmm6A4ljh6rh13g47QtuL6cfhiP5cDLnDjw17RTWnslekb2kzMC6y62j9cIjhA0(WaXWXfyYtnvIowfqf5pjIRTUJQVu6mUHeKJStCOzVBnPnnBpDYq1(eAwquj39(wW(puK2AskHyOEEX1ZMCAHFy3gXS)IijgNlAX4CWhNKcRZ6)6huWQKoC5x8FneuSLsip5JhggLeFiIXvg8kZiyjXh15M4qpmcb97K7sZXD0NBln5VRhXFTT4eOBgaQtloLYTg1u16LK)708trXTdIINCYZ293TgI7Ke7fyuCJC(M)zCEXXKsQ5(C(dJY5lj1FYt4F33r)4OoAqvVdh4gTKCfrYBhra0FOtxY)pz4dfkZNnQ43FX1jeoJPsEghTF0FR1PGDgJR8eoS)8eLL)hhw9uc2YyVBBh9oPMNB8CJRg(qOtF9)sF50ZnNl8aPVP)AFh1Znd7Ch66RlSkIZK4Fg2iKc89On)Jfx6po5V)d]]
 )
 spec:RegisterPack(
     "Guardian",
-    20261018907,
-    [[Hekili:TE12UTnoq0VL(s2nOgQXUjTjlIcWweS3qAqr1(mLOKgftejsbsQy4If6BFNrswMwYYW1jVe7mxoZTZqsZMZ(xwqk3cShxCXIpn)I5xFZfFMfyxxcSGsEYZ8NWVi5f4F)ZkUovWLKI15kEk5CCLi3(3sw8EXXucjShNF5n3WcwkstHwdbtcl4puA4fqxhTb36O71vI06OFng46z1rLA1lcJqj55)wDejSosJjuDKqMOkWp5s08uiHVg)UgfujlaUPsdPNJaWZSuawPwzefMpK1gXFXSbSF)BpGrtdzGgKjO7kz(6ZXy9fqBa9Z9i8nTOGNJYfwaX9EOqP55IFiKpvh9Dvt2(apb0ylOoYQQJUQl5qW1GzjKsjnQAjQ3awmPeYu1Qz7InLb1rjkvoQtIk)kVkVdPGvIsG8ZUeHOSPCPUHhop0QmrooI4jwSDz8k1a2GI5wFQqdXcVyMiZ)DXvzzE9I8QkR)NoxoAdFV)h0vYW2)lmxySZi6HpxbKNK8xGqqcfcWCN)cxhJBBRZQmqOkll8PKu)5KxPqtatD6RHASTIb(SnDdSOOgvym2N80qbxir8V0fFcxuBHXv4iqBkWderxNZ7gQZYujvg)foj7gvEglUNCN)vNnurxsERpoWTyam9Qc7OfUHYP8CfNXbTacZeAWnXDepvkJwhRmMrPvt(E7vU(uG0SXtLg2vsLgxoS353AThzQxIYyFFNa3Xcj))E3Eu8SeNGUr0qS5WMf9rrQVDLwvug2SX74jijjJZ2EVinTgDMlU3or(UtZgn8hcifNppHuySDHk6nWd54(NoDIC)qlbdxD(4qphtV7uSpQtNQT95HAEnZ8TOEIuHZoP4mSeoYDdwaEQpDpYGBNOdVm0LyiA4hp2CBii5X5qk7lBonLUVAWuLfKOXsrl4SGdn6zwmIda1PJtrSpiD0cxOhrii8(4ejzp5Gm6YjmYzoqMD1eMTTTtw9PJScOPNB6FsJ4jPsV1CjQY(8e1VdbAFJ6D5xmckKJKHb0EiAu)1P7G5OBA3hPzAoXIT4p4A5w(Dy7B3ig(Eip)eKXxXv0hIrUdTDk(4RAbCi9Duj9wCr(2CDJgKfrpzGMLhGPnyH863ic5J3mbqBZUTOCOhjqyn)IJK1CAha8tSP3KntTE5CO1K5W4xw0a5XEgD7RkCH)uF0rtyN6O89(kK2Jz6Fy)BZbnnyYRSlvyt7VGNf5c8he19lZoVrn7)p]]
+    20261019907,
+    [[Hekili:TE1wVTjsu4Fl9LSBuSOXUnTnrHi1QOEtPrrLDFfyaoypkWmOzgsKRwXV99CamEmySCC8lXoNlFNBFNzg7p1)F89sygW)(zNp7dtpF6LxE(h99mllaFVcw8JS54xeSC8VFRKPs4mbPyzMKLqohvYZm)q4hTvC0fqSV3T)(F)XTxnVZ9f8KeOXfqJ6)QubpbQQWvrOk8wvjpPk8VJaMAsvyHs(exZLcw2vvHKWQqfMAvHCrSmh)KjqZtGy2s87kuqPihy6sfKCkcal1qb4z5ZAEU(TPnr8V0Ra7ZpChgnfKckqeJUlfzlpfJ1xaLgup2HWdkEoldLZnaI7TqUuXY4)HlMxf(BzD2EhlguyZOk0iRcVOn5qWvGEbKqjnQAbQxdgmP4Ie5Zt2eBkdQcJLYmuNav(lwzwlsEpZlaYpZceII6YL6go4Krjt5z4WIfBW2L2PqbydkIzCPcnal88j8u33evMM60jYPSO6NTUS3gEM7BvLIGM)liJRntiIIltcKNK8NGaqa5CqFJ7mBhJAARtk1qGmnnyECI7uYReOoGjw91af2wXaFYQUbwuuJkic7tokiNXfi(V3gFcxuBU2w4aqRlWDerBNZAhQtsLXLA3zwj7kvoAdUXCJ7fN0xrBsETloWnya0DQcAPf2HYQ8SfNYafhcs5kWoXTepwkJwhj16bPvD(E9f2(KJ0SHtLA2vCPcxom342yTdzQtSuBoRvG9yHK)FVzlkEuGtq7iQj2Cq9I(Gi11UskZlcQ34T8eeKKHzBNxKMgJoXg3RhjF3OzJg(hoKGZN5ifgBxOIodCqoU7HtNi331sq)vN313ZH07wfBJ60QADFUVMxZmFnQhiv4Kdko9lH9C3W3dp1NUhP39u0HxA66men8J7RVxeeSOmiX)lRonLUVQ3u13lwHLIIZ8921O33GrShOwDCkIDbPLwyd9acbH37gjj7ihKrVFeJSMdKzxmIzRB7KvFypRaA6zN(h0iEuQ0XMlrv2hhP(TiqBBuVj)YNGc5iPyan7Ig1DD6gyo4M2TrAgNtmBn(9UwUHFh08koIHVfYZlGm(kUIExmYnOTJXhFvlG9PVdkPJXf5RZ1vAqwe9KbAwUdMwVfYpDKiK3F5iaTo7wJYUEKaH10Z3twZHDaWlytVoBgB9Y6qRrZHHVSOgY99m6Mxvyd)H(OJ6Wo2r5B9vinhZ09W(JZbn1yYknlKyt77WJ8mo(dIA)LzNwR2))p]]
 )
 spec:RegisterPack(
     "Balance",
-    20261018598,
-    [[Hekili:LA1BRTTpq4pl9nznSqAtxB)1oMlSYVnAhBLbEWENSvKLterwYij3qGH)SV78FuStTtH13KyR7UNNt3DpsMSG8lsyc1XjpDX5xC9IZxCZv3Edj0TlNtcZPSn0vWdkAg879ujvXQwFNuttWyxwiKUhvKLdcJnNZipT4YBVLeUwKKWRDKBzKWVQn8N5MY4gylJ)FtHiPm(0CJ(zHvOvu5hlJZOkAzSWwgRQ93WPj0LsiaQcC)lmPi3YFh4aBn1Scw3uGwXqkumTkvyY4jtbS(HwR2iuLXa5zZQFhS2c1JklN5kJd3snzLXB45Wlf5GJHoQP2rTYtzlHwWHFBOU1LXoDzCQqkHvEOWyemQQjgyBSdSJ(7WaEuP4MNHsgWnWIBn8GL7A3VPgkZjWapLM6WT9w9wRiZEwADDd3V(k3N)53NHfMuUHxTGwj3nDo0PmAiDGwwnA255gotNTK6cYQRfrPyPqKgaK7eQv25ngMCYYI005DDBErE53EbsVp4SmQztKonc2frBfYKE4HWyBr7ahbeBSSsK6oWYWC5wRnk7OmuBUB0bI2sDVG8RobR4ZZzUpThW6cBK3NOQUslIqwuybRoEMT7ImQugv)AKuyDZqDtav3N41Tdgrntd3D(emON5rCfptWT3DeN7YxwZ47SunRWgCbsZjjCFFdTHv4txQT2)4X0zO21rjANDAx0evt)rwC4Fie7AhrfbTB82gnstSlQIndKYQvtQaGxlBMdoY2CxWIbdUtq(eU1yekTaTqN42I6UobTFMbk7b(c0WfMEodG5l29aKecYn84OdoCd7Ww8mqiy4VNQolLRWJMsi33k5iHTesczgyKXiOKWbsgIdWFei8jwpmQtqiohEMAkTq6owE4hM7cYBqoCSe2lpqN(Wbona7VnnXEEpubw3LIQV)c7tq6C5OPZ4ANbfpd1IRM9X6cq0vVkrdjP62W2BTpYxpoYhtWTh6wfLh2fiS)3iDZ9E)sIgtKI4DZi4vjAhDu2Fy)RjQAVwAWjQJEl2XgDp8kQbr)F(oTH0dTmxF11RYN)gUQYfuWOf4sKWh4Besb8fdnFA10kZK)c]]
+    20261019598,
+    [[Hekili:LA17pTnmq0)w4lDuTQcLnyaAbPHyt0Pn00YM23CIBItRvDSJSDAvLMYF77U8d3KssrA8fO139EVZNVNDjZi)I4htTmYtxC(fxn78z3C5nxt8T7Yye)mA0A6s4dsAk837PcQmQC9DcfngXUiNlSZLKf9sJjJfr8F4N)E(d3UOb9kECmRcbZaH)IsZ2W0fH18xe(GoNhxeEAMwTHB4kjvCBrykvslc5MIqzv(AgnMUqaaOsi9phj4zg2BGeIwr1lH115yuesUmsjt46uw8yGRVRuY1CzriiE6KQVdrBOAU0WISfH(BP60IW1Sm4l5zqI(wQUkrL0jzJGgiH)OP2vfHwvrycxiGvEmxR5ruzngyBSdIJ5BraZLsMEd07aTbvSRGpyy2M9BIMgz5iWtPjwCBVvT1WtnNLu13W9RRZ9PF8TjyJjHPzLlOKIDJNchzAfuoq3VInZ0mnlsLUGA9sR6fbjyRGN4bIB5YLMP1bgDYI8KKPTtBAEwXxFgtV17SuQEDGkja2fbB5I4o8H0yAy7GebgRJSKNypis)AzxP0sZGkufUnApEtRUdi3QJWo(0Si7h3tyvJnWLtq5PsdJqvKBGOwwQP9IruHiO6RbcUXobnqEuvxHx1myeupnC35JqqBybmjlLZm3DKKBRxA947KevuUX7cuMtIzUZnmg2HpDHYy(RJtRMAwfeRSMXTzJxo9hyWH)(ySDCKvK024n1EKASZkXMcwz5YrLeWQSntHeJwFN3SEb3cKRGBcgGwlWl0c3w031c0(zgOT75Aq93y6KmqMRz3HqIpy3WRJo4wo8e2GxgcGH)9u5LQmjE1um5(glhXVrqIFKggz0CkXVNIHyb(hGcxH1HJQceWzX7utO5c7XQd3WCBsEf2HJvWo7bM07oiPEu)15j2R7HoWQtPGQhYWZjOCE)GLZWENEnp9Dexo7J9fqOlFrH6Zs1(aBF0UmF1WmFmd3EQBCuoANH0(Hbon3N9ZfAitkY31dWxPPDWrz3L9VKPQ5zPENOo6RyhB09WNO6L9)7306Zp0OC1txVOEUx4kBxqdJMJlr8FKTMl4WVyO(NwnUmm5F]]
 )

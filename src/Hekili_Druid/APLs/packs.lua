@@ -1,6 +1,6 @@
 -- src/Hekili_Druid/APLs/packs.lua: the Forever Druid's pack manifest for tools/make_pack.lua (lua5.1
--- tools/make_pack.lua druid): the pseudo-spec (Hekili_Druid/Druid.lua's DRUID_SPEC; run `make packs` when it changes)
--- and the packs in RegisterPack order, each one's text in <Pack>.simc beside this file. Dev-only (no TOC lists it);
+-- tools/make_pack.lua druid): the class token, the packs in RegisterPack order (each one's text in <Pack>.simc beside
+-- this file) and each pack's spec key. Dev-only (no TOC lists it);
 -- the pack date lives in Druid.lua's generated blocks, and `make packs` sets it to today only when a pack changed.
 -- Ported from Taco Dog Forever's src/TacoDogForever_Druid/APLs/feral.simc (Nerdegghead's priority, via the user),
 -- bear.simc and balance.simc (after the guides they cite), with Classic's precombat buffs
@@ -8,4 +8,8 @@
 -- cat_ps/innervate_or_shift lists, Omen of Clarity's precombat line, `ttd` guards (target health is secret), Faerie
 -- Fire in cat, the ranged Moonfire opener, and the consumables.
 
-return { spec = 1499, packs = { "Feral", "Guardian", "Balance" } }
+return {
+    class = "DRUID",
+    packs = { "Feral", "Guardian", "Balance" },
+    specs = { Feral = "feral", Guardian = "guardian", Balance = "balance" },
+}

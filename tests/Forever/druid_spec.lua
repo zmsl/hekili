@@ -419,7 +419,7 @@ describe("Forever Druid", function()
         local n, registered = 0, 0
         for key, t in pairs(TALENTS) do
             n = n + 1
-            assert.are.same({ 0, t[1], t[2] }, w.talents[key], key)
+            assert.are.same({ t[1], t[2] }, { w.talents[key][2], w.talents[key][3] }, key) -- the tree: below
         end
         for _ in pairs(w.talents) do
             registered = registered + 1
@@ -765,7 +765,7 @@ describe("Forever Druid", function()
         for i, name in ipairs({ "Feral", "Guardian", "Balance" }) do
             assert.are.same({ name, tonumber(printed[i][1]), printed[i][2] }, w.packs[i])
         end
-        assert.are.equal(w.specID, dofile("src/Hekili_Druid/APLs/packs.lua").spec) -- the packs' spec is the file's
+        assert.are.equal(w.class, dofile("src/Hekili_Druid/APLs/packs.lua").class) -- the packs' class is the file's
     end)
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
@@ -807,31 +807,36 @@ describe("Forever Druid", function()
         end
     end)
 
-    it(
-        "declares its pseudo-spec once, as a placeholder until checkpoint Q1, and the settings the packs read",
-        function()
-            assert.are.equal(1499, w.specID)
-            for key, default in pairs({
-                rip_cp = 5,
-                bite_finisher = false,
-                behind = false,
-                buffs = true,
-                dump_rage = 60,
-                use_enrage = false,
-                moonkin = true,
-                trash_dots = true,
-                starfire_filler = false,
-                hurricane_targets = 4,
-                innervate = true,
-                lacerate_refresh = 4.5,
-                feral_innervate_mana = 40,
-                balance_innervate_mana = 10,
-            }) do
-                assert.are.equal(default, w.settings[key].default, key)
-            end
-            assert.are.same({ package = "Feral" }, w.options)
+    it("declares its class once (NewClass), no options, and the settings the packs read", function()
+        assert.are.equal("DRUID", w.class)
+        for key, default in pairs({
+            rip_cp = 5,
+            bite_finisher = false,
+            behind = false,
+            buffs = true,
+            dump_rage = 60,
+            use_enrage = false,
+            moonkin = true,
+            trash_dots = true,
+            starfire_filler = false,
+            hurricane_targets = 4,
+            innervate = true,
+            lacerate_refresh = 4.5,
+            feral_innervate_mana = 40,
+            balance_innervate_mana = 10,
+        }) do
+            assert.are.equal(default, w.settings[key].default, key)
         end
-    )
+        assert.is_nil(w.options)
+    end)
+
+    it("places each talent in its tree, the Forever-only placeholders at tree 0", function()
+        local n = { [0] = 0, 0, 0, 0 }
+        for _, t in pairs(w.talents) do
+            n[t[1]] = n[t[1]] + 1
+        end
+        assert.are.same({ [0] = 3, 16, 16, 15 }, n)
+    end)
 end)
 
 describe("Forever Druid's bleeds through the real engine's missable handling", function()
@@ -868,7 +873,7 @@ describe("Forever Druid's bleeds through the real engine's missable handling", f
 
     before_each(function()
         env = engine.load("DRUID")
-        spec = env.class.specs[1499]
+        spec = env.class.kit
         ME = "Player-1"
         rawset(env.state, "GUID", ME)
     end)
