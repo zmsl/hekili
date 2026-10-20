@@ -4751,7 +4751,7 @@ do
 
                 local real = auras.target.debuff[ t.key ] or auras.player.debuff[ t.key ]
                 if aura and aura.shared and auras[ aura.shared ] then
-                    real = auras.player.debuff[ t.key ]
+                    real = auras[ aura.shared ].debuff[ t.key ] -- the unit `shared` names (GAP AJ)
                 end
 
                 if real then
