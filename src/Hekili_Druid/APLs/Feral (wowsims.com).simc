@@ -7,7 +7,7 @@
 # Omitted: berserk #2: strictSequence
 # Omitted: cooldowns #2: selectedConjured
 # Omitted: cooldowns #3: other OtherActionResourcePotion
-# Omitted: cooldowns #4: autocastOtherCooldowns
+# Omitted: cooldowns #4: autocastOtherCooldowns: none in the log
 # Omitted: default: empty group berserk
 
 actions=cat_form,if=!buff.cat_form.up

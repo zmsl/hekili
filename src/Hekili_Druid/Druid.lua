@@ -125,6 +125,17 @@ local FORMS = { "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic
 local SHIFTING_POWER_ENERGY = 40
 local BEAR_RAGE_RATE = 3.46
 local BEAR_SWING = 2.5
+-- A cost in percent of base mana (DB2 PowerCostPct: the forms, Shifting Power, Innervate) as mana at 60: base mana
+-- 1244 (wowsims/forever's log: Shifting Power and Cat Form 684 = 55%, Innervate 62 = 5%). The engine prices a
+-- fraction as of the maximum (2674 in that log), which overstates it. Whole mana, rounded down (the log's 684 and 62).
+-- shortcut: below 60 still a fraction of the maximum (no per-level base mana source); upgrade with one.
+-- The belief prices a cast in a context without `level` (Families/Now.lua's names): it reads the simulation's last.
+local BASE_MANA = 1244
+local seenLevel = 60
+local function ofBaseMana(f, lvl)
+    seenLevel = lvl or seenLevel
+    return seenLevel >= 60 and floor(f * BASE_MANA) or f
+end
 -- Rip's and Rake's energy (Rake's before Ferocity's -1 a rank), shared by their `spend` and `excess_e`'s reservations.
 local RIP_COST = 30
 local RAKE_COST = 40
@@ -227,7 +238,8 @@ spec:RegisterResource(
     }
 )
 
--- Mana: secret even out of combat; costs below 1 are fractions of the maximum in both layers (spec §0.1).
+-- Mana: secret even out of combat; costs below 1 are fractions of the maximum in both layers (spec §0.1), the
+-- percent-of-base-mana costs whole mana at 60 (ofBaseMana).
 spec:RegisterResource(Enum.PowerType.Mana)
 
 -- Talents: { talent tree (1 Balance, 2 Feral Combat, 3 Restoration: the dominant tree picks the spec), rank 1's spell,
@@ -261,7 +273,8 @@ spec:RegisterTalents({
     feline_swiftness = { 2, 17002, 2 },
     feral_charge = { 2, 16979, 1 },
     sharpened_claws = { 2, 16942, 3 },
-    improved_shred = { 2, 16966, 2 }, -- Shredding Attacks
+    -- Shredding Attacks: wowsims/forever's 3 points (Shred 42 at 3/3, its log; the DB2 node lists 2 rank spells)
+    improved_shred = { 2, 16966, 3 },
     predatory_strikes = { 2, 16972, 3 },
     blood_frenzy = { 2, 16952, 2 },
     primal_fury = { 2, 16958, 2 }, -- "Blood Frenzy" on Forever
@@ -636,7 +649,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.20 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+            return ofBaseMana(0.20 * (1 - 0.1 * talent.natural_shapeshifter.rank), level)
         end,
         spendType = "mana",
 
@@ -708,7 +721,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.55 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+            return ofBaseMana(0.55 * (1 - 0.1 * talent.natural_shapeshifter.rank), level)
         end,
         spendType = "mana",
 
@@ -764,7 +777,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.55 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+            return ofBaseMana(0.55 * (1 - 0.1 * talent.natural_shapeshifter.rank), level)
         end,
         spendType = "mana",
 
@@ -1133,7 +1146,9 @@ spec:RegisterAbilities({
         cooldown = 360,
         gcd = "spell",
 
-        spend = 0.05,
+        spend = function()
+            return ofBaseMana(0.05, level)
+        end,
         spendType = "mana",
 
         startsCombat = false,
@@ -1297,7 +1312,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.35 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+            return ofBaseMana(0.35 * (1 - 0.1 * talent.natural_shapeshifter.rank), level)
         end,
         spendType = "mana",
 
@@ -1550,7 +1565,7 @@ spec:RegisterAbilities({
         gcd = "totem",
 
         spend = function()
-            return 0.55 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+            return ofBaseMana(0.55 * (1 - 0.1 * talent.natural_shapeshifter.rank), level)
         end,
         spendType = "mana",
 
@@ -1661,7 +1676,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return 0.20 * (1 - 0.1 * talent.natural_shapeshifter.rank)
+            return ofBaseMana(0.20 * (1 - 0.1 * talent.natural_shapeshifter.rank), level)
         end,
         spendType = "mana",
 

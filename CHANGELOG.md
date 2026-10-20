@@ -77,6 +77,8 @@
 - Druid: Primal Bite is ready again during Berserk; Lacerate's cost with Shredding Attacks and the Balance spells' mana
   costs with Moonglow and Improved Wrath now match the game's numbers as wowsims.com models them.
 - Druid: Shifting Power's cooldown is 0.5 s shorter with the Howling Idol equipped.
+- Druid: at level 60 the forms, Shifting Power and Innervate cost their percent of base mana (Shifting Power 684, not
+  over 1200), and Shredding Attacks counts all three points (Shred 42 energy at 3/3).
 - Rogue, Paladin and Shaman: the default priorities now load. They were registered under the wrong specialization ids
   for the WoW Forever client, so the addon showed nothing for these classes.
 - Developer: unreadable (secret) answers to "does this unit exist / is it dead" for target, party, boss and focus units

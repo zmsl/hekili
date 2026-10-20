@@ -27,9 +27,9 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     end)
 
     it("Feral (wowsims.com) follows wowsims's casts", function()
-        ws.gate("Feral (wowsims.com)", content("druid_feral", W.Feral, "Feral (wowsims.com)", 60), "druid_feral", 0.87)
+        ws.gate("Feral (wowsims.com)", content("druid_feral", W.Feral, "Feral (wowsims.com)", 60), "druid_feral", 0.92)
     end)
-    local FERAL60 = 4.0 -- the pack's own worst idle at 60 (wowsims's energy pooling), seconds
+    local FERAL60 = 3.2 -- the pack's own worst idle at 60 (wowsims's energy pooling), seconds
     for _, level in ipairs({ 20, 40, 60 }) do
         it("Feral (wowsims.com) stays live at level " .. level, function()
             ws.live(

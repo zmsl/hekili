@@ -7,10 +7,10 @@ local alloc = require("Game.State.helpers.alloc")
 -- the project interpreter when bootstrapped, else the system one (as tools/list_api_reads.sh picks it)
 local LUA = io.open(".lua/bin/lua") and ".lua/bin/lua" or "lua5.1"
 
--- key = { spell IDs in rank order, cost with every talent at rank 0 (a list: by rank; below 1: a fraction of maximum
--- mana), spendType, cooldown, gcd }, from the DB2: energy and mana costs as points, rage as the cost / 10; the
--- cooldown is the larger of RecoveryTime and CategoryRecoveryTime; gcd "totem" for the 1.0 s StartRecoveryTime, "off"
--- where it is 0 or has no row.
+-- key = { spell IDs in rank order, cost with every talent at rank 0 (a list: by rank; a percent of base mana as whole
+-- mana at 60: x 1244), spendType, cooldown, gcd }, from the DB2: energy and mana costs as points, rage as the cost /
+-- 10; the cooldown is the larger of RecoveryTime and CategoryRecoveryTime; gcd "totem" for the 1.0 s
+-- StartRecoveryTime, "off" where it is 0 or has no row.
 local KIT = {
     claw = { { 1082, 3029, 5201, 9849, 9850 }, 45, "energy", 0, "totem" },
     shred = { { 5221, 6800, 8992, 9829, 9830 }, 60, "energy", 0, "totem" },
@@ -22,13 +22,13 @@ local KIT = {
     cower = { { 8998, 9000, 9892 }, 20, "energy", 10, "totem" },
     prowl = { { 5215, 6783, 9913 }, 0, nil, 10, "off" },
     dash = { { 1850, 9821 }, 0, nil, 300, "off" },
-    shifting_power = { { 1322605 }, 0.55, "mana", 16, "totem" },
+    shifting_power = { { 1322605 }, 684, "mana", 16, "totem" },
     berserk = { { 417141 }, 0, nil, 180, "off" },
-    cat_form = { { 768 }, 0.55, "mana", 0, "spell" },
-    bear_form = { { 5487, 9634 }, 0.55, "mana", 0, "spell" },
-    moonkin_form = { { 24858 }, 0.35, "mana", 0, "spell" },
-    travel_form = { { 783 }, 0.20, "mana", 0, "spell" },
-    aquatic_form = { { 1066 }, 0.20, "mana", 0, "spell" },
+    cat_form = { { 768 }, 684, "mana", 0, "spell" },
+    bear_form = { { 5487, 9634 }, 684, "mana", 0, "spell" },
+    moonkin_form = { { 24858 }, 435, "mana", 0, "spell" },
+    travel_form = { { 783 }, 248, "mana", 0, "spell" },
+    aquatic_form = { { 1066 }, 248, "mana", 0, "spell" },
     maul = { { 6807, 6808, 6809, 8972, 9745, 9880, 9881 }, 15, "rage", 0, "off" },
     swipe_bear = { { 779, 780, 769, 9754, 9908 }, 20, "rage", 0, "spell" },
     primal_bite = { { 407995, 1238069, 1238070, 1238073 }, 20, "rage", 6, "spell" },
@@ -65,7 +65,7 @@ local KIT = {
     insect_swarm = { { 5570, 24974, 24975, 24976, 24977 }, { 45, 85, 100, 140, 160 }, "mana", 0, "spell" },
     hurricane = { { 16914, 17401, 17402 }, { 880, 1180, 1495 }, "mana", 0, "spell" },
     entangling_roots = { { 339, 1062, 5195, 5196, 9852, 9853 }, { 50, 65, 80, 95, 110, 125 }, "mana", 0, "spell" },
-    innervate = { { 29166 }, 0.05, "mana", 360, "spell" },
+    innervate = { { 29166 }, 62, "mana", 360, "spell" },
     barkskin = { { 22812 }, 0, nil, 60, "spell" },
     natures_grasp = { { 16689, 16810, 16811, 16812, 16813, 17329 }, { 50, 65, 80, 95, 110, 125 }, "mana", 60, "spell" },
     mark_of_the_wild = {
@@ -127,7 +127,7 @@ local TALENTS = {
     feline_swiftness = { 17002, 2 },
     feral_charge = { 16979, 1 },
     sharpened_claws = { 16942, 3 },
-    improved_shred = { 16966, 2 },
+    improved_shred = { 16966, 3 }, -- wowsims/forever's 3 points (Shred 42 at 3/3; the DB2 node lists 2 rank spells)
     predatory_strikes = { 16972, 3 },
     blood_frenzy = { 16952, 2 },
     primal_fury = { 16958, 2 },
@@ -324,7 +324,8 @@ describe("Forever Druid", function()
             { 43, 38, 13, 18, 18, 48, 13 },
             { at("claw"), at("rake"), at("maul"), at("swipe_bear"), at("primal_bite"), at("shred"), at("lacerate") }
         )
-        -- Natural Shapeshifter -10% a rank on the forms and Shifting Power
+        -- Natural Shapeshifter -10% a rank on the forms and Shifting Power: below 60 a fraction (of the maximum)
+        e.level = 59
         for key, cost in pairs({
             cat_form = 0.44,
             bear_form = 0.44,
@@ -335,6 +336,12 @@ describe("Forever Druid", function()
         }) do
             near(cost, at(key))
         end
+        -- at 60 of the base mana, 1244 (wowsims's log: Shifting Power and Cat Form 684 = 55%, Innervate 62 = 5%)
+        e.level = 60
+        assert.are.same({ 547, 348 }, { at("shifting_power"), at("moonkin_form") })
+        e.talent = rank(0)
+        assert.are.same({ 684, 684, 62 }, { at("shifting_power"), at("cat_form"), at("innervate") })
+        e.talent = rank(2)
         assert.are.same(
             { 8, 1.3 },
             { ld.run(w.abilities.shifting_power.cooldown, e), ld.run(w.abilities.wrath.cast, e) }
@@ -1075,9 +1082,9 @@ describe("Forever Druid in VirtualState's now context", function()
 
     it("runs a Feral and a bear sequence: costs, energy, forms, debuffs and bear rage, with no `now` error", function()
         I.Sources.Direct(VS.Obs.CombatStart, 1.5) -- in combat: no rage decay
-        cast(768, 2) -- Cat Form: 55 mana (0.55 of the declared 100)
+        cast(768, 2) -- Cat Form: 684 mana (55% of the base mana at 60) of the fake's 100: none left
         assert.is_not_nil(VS.Aura("player", 768, 2.1))
-        near(45, power(0, 2.1))
+        near(0, power(0, 2.1))
         cast(5221, 3) -- Shred: 60 of 100 energy
         cast(1322605, 4) -- Shifting Power: +40
         assert.are.equal(80, power(3, 4.1))

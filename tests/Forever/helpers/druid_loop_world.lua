@@ -26,7 +26,7 @@ end
 local GROUP = { feral_form = { [FORM.cat_form] = true, [FORM.bear_form] = true } }
 
 -- UNMEASURED: Omen of Clarity's chance per press of ours (about one Clearcasting every 10 presses), Innervate's mana a
--- second over its 20 s (Balance's world only; the feral worlds keep no mana), and the hits' amounts.
+-- second over its 20 s (the worlds that keep mana: Balance's and Feral's), and the hits' amounts.
 local OMEN = 0.1
 local INNERVATE_MANA = 100
 local AMOUNT = {
@@ -102,7 +102,8 @@ local function shift(key, mult)
 end
 
 -- Each recommendable ability: `effect(W, e, p, X)`, `requires(W, e)` (beyond the form fields), `points` (combo points:
--- 1 on a landed hit, "all" spent), `drain`, `extra(p)` (generic effects), `cooldown(H, cd)` (the true one). A key missing here fails the loop.
+-- 1 on a landed hit, "all" spent), `drain`, `extra(p, pt, res)` (generic effects; the world's main power and other
+-- pools), `cooldown(H, cd)` (the true one). A key missing here fails the loop.
 M.MAP = {
     cat_form = shift("cat_form", 1),
     bear_form = shift("bear_form", 1),
@@ -141,8 +142,8 @@ M.MAP = {
             end
             aura(W, X, e, "innervate")
         end,
-        extra = function(p, pt)
-            if pt == MANA then
+        extra = function(p, pt, res)
+            if pt == MANA or res[MANA] then
                 local a = class().auras.innervate
                 p.aura = { id = a.id, duration = a.duration, tick = { pt = MANA, every = 1, amount = INNERVATE_MANA } }
             end
@@ -232,10 +233,12 @@ local PACKS = {
             "thorns",
         },
         power = { type = ENERGY, token = TOKENS[ENERGY], max = 100 },
-        res = { [POINTS] = { cur = 0, max = 5 } },
+        -- mana: wowsims/forever's Feral log's pool (pre-raid gear) and regen (2.175 a 0.1 s tick outside the
+        -- five-second rule, none inside it: { spirit, mp5 } = { 22, 0 } a second)
+        res = { [POINTS] = { cur = 0, max = 5 }, [MANA] = { cur = 2674, max = 2674 } },
         form = "cat_form",
         weapon = { 55, 75, 1.0 },
-        world = { regen = { [ENERGY] = dw.ENERGY_REGEN }, power = 100 },
+        world = { regen = { [ENERGY] = dw.ENERGY_REGEN }, fsr = { [MANA] = { 22, 0 } }, power = 100 },
         uptime = { "rip", "rake" },
     },
     Guardian = {
@@ -385,8 +388,9 @@ local function content(name)
         mobHealth = 15000,
     }, { __index = P.world })
 
-    -- The client's other power reads: combo points plain (research addendum), the rest never.
-    C.OBSERVE = { plainPower = { [POINTS] = "always" }, powerTokens = TOKENS }
+    -- The client's other power reads: combo points plain (research addendum), the rest never. UnitPowerMax answers the
+    -- world's pools where it keeps mana beside the main power (Feral's 2674; else the fake's 100).
+    C.OBSERVE = { plainPower = { [POINTS] = "always" }, powerTokens = TOKENS, powerMax = P.res[MANA] ~= nil }
 
     -- True rage per landed white wound in Bear (the class file's model, druid_world's rules); no other power is
     -- swing-paid.
@@ -398,13 +402,17 @@ local function content(name)
         return R.swing + (flag == "CRITICAL" and R.crit or 0)
     end
 
-    -- The press's cost: the state's for the main power (Clearcasting's, from the oracle's true belief), none for mana
-    -- in the feral worlds (they keep none).
+    -- The press's cost: the state's for the main power and any other the world keeps (Clearcasting's, from the
+    -- oracle's true belief), none for one it does not (mana in the Guardian world).
     local function cost(key, a, H, X)
         local c = H.Hekili.State.action[key].cost or 0
         local spendPt = ({ mana = MANA, rage = RAGE, energy = ENERGY })[a.spendType]
-        if spendPt ~= pt then
+        if spendPt ~= pt and not P.res[spendPt] then
             return 0, nil
+        elseif spendPt ~= pt then -- a kept pool's: the declared cost, a fraction of the pool's maximum (as the belief)
+            local f = rawget(a, "declaredSpend") or a.spend
+            c = type(f) == "function" and f() or f or 0
+            return c < 1 and c * P.res[spendPt].max or c, spendPt
         end
         if X.covered[a.id] and H.ns.VirtualState.Aura("player", X.aura.clearcasting.id, H.ctl.now) then
             return 0, spendPt, true
@@ -441,7 +449,7 @@ local function content(name)
             p.points = { POINTS, m.points }
         end
         if m.extra then
-            m.extra(p, pt)
+            m.extra(p, pt, P.res)
         end
         if m.cooldown then -- a cooldown the true state changes (the oracle's)
             p.cooldown = m.cooldown(H, p.cooldown)
@@ -480,10 +488,8 @@ local function content(name)
         for key, m in pairs(M.MAP) do
             local a = H.Hekili.Class.abilities[key]
             if a and C.IDS[key] then
-                local c, cpt = H.Hekili.State.action[key].cost or 0, ({ rage = RAGE, energy = ENERGY })[a.spendType]
-                if a.spendType == "mana" then
-                    c, cpt = pt == MANA and c or 0, pt == MANA and MANA or nil
-                end
+                local c = H.Hekili.State.action[key].cost or 0
+                local cpt = ({ rage = RAGE, energy = ENERGY, mana = MANA })[a.spendType]
                 local covered = X.covered[a.id]
                 local function answer(W, e, power, view)
                     if not formOk(a, e) or (m.requires and not m.requires(W, e)) then
@@ -492,7 +498,12 @@ local function content(name)
                     if covered and e.auras[X.aura.clearcasting.id] then
                         return true, false
                     end
-                    local have = (cpt == nil and math.huge) or (cpt == e.pt and power) or view[cpt] or 0
+                    -- mana where the world keeps none (the feral loop worlds; ws.live passes no view): never short
+                    local have = (cpt == nil and math.huge)
+                        or (cpt == e.pt and power)
+                        or (view and view[cpt])
+                        or (cpt == MANA and math.huge)
+                        or 0
                     return have >= c, have < c
                 end
                 for _, id in ipairs(C.IDS[key]) do

@@ -119,6 +119,7 @@ files["src/Hekili_Warrior/Warrior.lua"] = { globals = warriorEnv }
 -- The Druid's further `state` names.
 local druidEnv = {
     "rage", "energy", "mana", "combo_points", "cooldown", "combat", "group", "swap_form", "addStack", "removeStack",
+    "level",
 }
 for _, k in ipairs(stateEnv) do
     druidEnv[#druidEnv + 1] = k

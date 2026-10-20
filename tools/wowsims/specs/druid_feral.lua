@@ -2,18 +2,22 @@
 -- and translation.
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/druid/feralcat/presets.ts:19
 -- (DefaultOptions), :31-37 (OtherDefaults), :109 (CatTalents, "Monocat") at the pin.
--- Replay (P7): decisions on-GCD 0.875 (n 88). Worked:
--- - Shifting Power's 7.5 s recasts are the pre-raid set's Howling Idol (272427): its equip aura 1291059 ("Reduces the
---   cooldown of your Shifting Power ability", in the log from 0.00) is now in the kit (-0.5 s, wowsims's; the DB2 effect
---   reads -1000 ms). Checked for other cooldown modifiers: the 16 pre-raid items (only the idol's aura appears in the
---   log), no set bonus aura, and the build's talents (Improved Shifting Power 2/2, -8 s).
--- 1. shifting_power -> rake 3, 2. shifting_power -> rip 2: still 0.5 s short at wowsims's recast. The aura is up in the
---    sim's state, but the belief's cooldown for Shifting Power (a function `cooldown`) answers 8 s from the cast
---    (C_Spell.GetSpellCooldown's model, start 27.74, duration 8.0 at 35.24), and the replay gives the client no
---    cooldown for a function `cooldown` (replay.lua `tonumber(a.cooldown)`): shared layers, recorded, not worked around.
--- 3. faerie_fire -> rake 1: the energy belief. Known deviations: wowsims refunds 80% of a dodged strike's energy
---    (OtherActionRefund, 8 in the log: no fork layer models a refund) and adds the Wolfshead Helm's 5 energy to
---    Shifting Power (45 in the log).
+-- Replay (P7): decisions on-GCD 0.920 (n 88), after central fix 6 gave the replay the log's mana pool and regen.
+-- Worked (Task 7b):
+-- - Content: the forms', Shifting Power's and Innervate's costs are percent of base mana, 1244 at 60 (the log's 684,
+--   684 and 62), not of the maximum (2674: 1203 believed); Shredding Attacks has 3 points (Shred 42 at 3/3, the
+--   log's; the DB2 node lists 2 rank spells). The world's usability now reads the kept mana pool (it said mana-free).
+-- - Shifting Power's 7.5 s recasts are the pre-raid set's Howling Idol (272427): its equip aura 1291059 is in the kit
+--   (-0.5 s, wowsims's; the DB2 effect reads -1000 ms). Other cooldown modifiers checked: none.
+-- 1. faerie_fire -> rake 1 (45.74), 2. faerie_fire -> shred 1 (38.74), and shred -> shifting_power 1 (41.24): the
+--    belief reads Shifting Power's function `cooldown` as 0 at the cast (shared gap, not worked around): it believes
+--    Shifting Power ready, so "Faerie Fire for Omen" (Shifting Power >= 1 s away) fails. A scalar 7.5 s cooldown
+--    (scratch) clears all three: 84/88.
+-- 3. ferocious_bite -> rake 1 (177.99): "Bite at the end" reads the fight's last 3 s; time to die is not modelled on
+--    Forever (API-forced, below). Also: shifting_power -> rake 1 (107.74): wowsims casts it at 684.9 mana for a cost of
+--    684 and our mana belief sits lower (the belief, shared); innervate -> cat_form 1; shred -> rake 1 (73.99).
+--    Known deviations: wowsims refunds 80% of a dodged strike's energy (OtherActionRefund, 8 in the log: central fix
+--    7's) and adds the Wolfshead Helm's 5 energy to Shifting Power (45 in the log).
 -- Translation gaps: the Berserk group's two strictSequence entries (Berserk then Rake or Shred; Berserk is cast once
 -- in 180 s), Thistle Tea (selectedConjured), the potion, sapper charges, autocastOtherCooldowns (GAP 14: this spec loses
 -- no class cooldown to it; wowsims casts no other cooldown in the log). Time to die is unknown on Forever (3600), so the
