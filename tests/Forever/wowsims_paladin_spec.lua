@@ -66,7 +66,11 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
 
     it("Retribution (wowsims.com) follows wowsims's casts", function()
         local C = content("paladin_retribution", RET, "Retribution (wowsims.com)", 60)
-        ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.57, REPLAY)
+        -- 0.56 (0.561), lowered from 0.57 (0.579) by central fix 12's mana tick padding: with the tick's phase unknown
+        -- (a secret pool) the icon for a mana-gated seal comes one tick late, so one decision of 57 (Seal of Command on
+        -- the tick that pays for it) shows Seal of Righteousness. Recover after the in-game UNIT_POWER_FREQUENT-for-mana
+        -- checkpoint by rounding up to the observed tick; the belief's precision at near-ties is GAP AB.
+        ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.56, REPLAY)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Retribution is out of mana from 60 s
     -- of its log), so its longest wait is for mana. 4.4 before central fix 8, while
@@ -86,7 +90,8 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
 
     it("Protection (wowsims.com) follows wowsims's casts", function()
         local C = content("paladin_protection", PROT, "Protection (wowsims.com)", 60)
-        ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.75, REPLAY)
+        -- 0.96: 0.964 on central fix 12 (GAP R, the five-second rule's mana forecast), from 0.75
+        ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.96, REPLAY)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Protection is out of mana from 24 s),
     -- so its longest wait is for mana
