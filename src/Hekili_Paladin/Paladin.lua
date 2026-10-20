@@ -221,6 +221,7 @@ end
 -- about 100 spirit) and a little mp5 from gear.
 spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
     fsr = { spirit = 17, mp5 = 2 },
+    base = 1512, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
 })
 
 -- Talents: { talent tree (1 Holy, 2 Protection, 3 Retribution: the dominant tree picks the spec), rank 1's spell, max

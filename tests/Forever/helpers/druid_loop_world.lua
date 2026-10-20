@@ -438,10 +438,11 @@ local function content(name)
         local spendPt = ({ mana = MANA, rage = RAGE, energy = ENERGY })[a.spendType]
         if spendPt ~= pt and not P.res[spendPt] then
             return 0, nil
-        elseif spendPt ~= pt then -- a kept pool's: the declared cost, a fraction of the pool's maximum (as the belief)
+        elseif spendPt ~= pt then -- a kept pool's: the declared cost; a fraction is of the base, else of the maximum
             local f = rawget(a, "declaredSpend") or a.spend
             c = type(f) == "function" and f() or f or 0
-            return c < 1 and c * P.res[spendPt].max or c, spendPt
+            local b = H.ns.VirtualState.BasePower(spendPt) -- the kit's `base` (headless: no cost read teaches another)
+            return c < 1 and (b and math.floor(c * b + 1e-6) or c * P.res[spendPt].max) or c, spendPt
         end
         if X.covered[a.id] and H.ns.VirtualState.Aura("player", X.aura.clearcasting.id, H.ctl.now) then
             return 0, spendPt, true

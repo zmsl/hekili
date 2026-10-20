@@ -496,6 +496,15 @@ state.select = select
 -- the sim's stat table, as upstream; calling it, stat(name, arg), is the belief's out-of-combat stat cache (mt_stat's
 -- __call below). In a `now` handler `stat` is only the plain function.
 local VS = ns.VirtualState
+
+--- A cost `c` between 0 and 1 of resource state `res`, as power: that fraction of the pool's base power, floored, when
+--- the pack declares one (the meta's `base`; VS.BasePower, learned from the client's cost read), else of its `modmax`
+--- (Hekili's). Allocates nothing.
+function ns.FractionCost( c, res )
+    local b = VS.BasePower( res.type )
+    if b then return math.floor( c * b + 1e-6 ) end
+    return c * res.modmax
+end
 state.knownRank, state.swingBase, state.healthMax = VS.KnownRank, VS.SwingBase, VS.HealthMax
 
 -- Forever (gap 13): an on-next-swing strike's own range check answers in range at any distance (probe W PR7), so its
@@ -2183,7 +2192,7 @@ do
 
                 c = ability.spend
                 if c and c > 0 and c < 1 then
-                    c = c * t[ ability.spendType or class.primaryResource ].modmax
+                    c = ns.FractionCost( c, t[ ability.spendType or class.primaryResource ] )
                 end
                 return c or 0
 
@@ -5098,7 +5107,7 @@ local mt_default_action = {
                 c = ability.spend
 
                 if c and c > 0 and c < 1 then
-                    c = c * state[ ability.spendType or class.primaryResource ].modmax
+                    c = ns.FractionCost( c, state[ ability.spendType or class.primaryResource ] )
                 end
 
                 return c or 0
@@ -6620,7 +6629,7 @@ ns.spendResources = function( ability )
         end
 
         if cost > 0 and cost < 1 then
-            cost = ( cost * state[ resource ].modmax )
+            cost = ns.FractionCost( cost, state[ resource ] )
         end
 
         -- a charged cost modifier's buff loses a stack when the declared cost is above 0, even at a discounted 0 (Engine/Schema/Races.lua)
@@ -7153,7 +7162,7 @@ ns.hasRequiredResources = function( ability )
         end
 
         if spend > 0 and spend < 1 then
-            spend = ( spend * state[ resource ].modmax )
+            spend = ns.FractionCost( spend, state[ resource ] )
         end
 
         if spend > 0 then
@@ -7219,7 +7228,7 @@ function state:TimeToReady( action, pool )
     end
 
     if spend and resource and spend > 0 and spend < 1 then
-        spend = spend * self[ resource ].modmax
+        spend = ns.FractionCost( spend, self[ resource ] )
     end
 
     if not pool then
@@ -7380,7 +7389,7 @@ function state:IsReadyNow( action )
         end
 
         if spend > 0 and spend < 1 then
-            spend = ( spend * state[ resource ].modmax )
+            spend = ns.FractionCost( spend, state[ resource ] )
         end
 
         if spend > 0 then

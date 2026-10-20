@@ -60,6 +60,31 @@ describe("facts and polls", function()
         assert.are.same({ true, 10 }, { I.ab.multiCost[3], I.ab.readCost[3] })
     end)
 
+    it("prices a fraction cost from its pool's base, which a plain cost read out of combat teaches", function()
+        local h = fs.new(9)
+        h.Class.abilities.spender_c.spend = 0.055 -- a percent-of-base cost
+        local def = fs.def(h)
+        def.resources[1].base = 200 -- the pack's fallback
+        I.Build(def, 1)
+        ctl.known[fs.SPENDER_C] = true
+        assert.are.same({ 11, 200 }, { I.CostOf(3), VS.BasePower(fs.RAGE) }) -- floor(0.055 x 200), before any read
+        ctl.costs[fs.SPENDER_C] = { { type = 1, cost = 12 } }
+        ctl.Fire("SPELLS_CHANGED")
+        assert.are.same({ 12, 219 }, { I.CostOf(3), VS.BasePower(fs.RAGE) }) -- the least whole base pricing it 12
+        ctl.Fire("SPELLS_CHANGED") -- a read the base prices keeps it
+        assert.are.equal(219, VS.BasePower(fs.RAGE))
+        ctl.costs[fs.SPENDER_C] = { { type = 1, cost = 14 } }
+        ctl.Fire("PLAYER_LEVEL_UP", 21) -- a new level's base
+        assert.are.same({ 14, 255 }, { I.CostOf(3), VS.BasePower(fs.RAGE) })
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.costs[fs.SPENDER_C] = { { type = 1, cost = 20 } }
+        ctl.Fire("SPELLS_CHANGED") -- no cost read in combat
+        assert.are.equal(255, VS.BasePower(fs.RAGE))
+        def.resources[1].base = nil -- no base: a fraction of the maximum, as Hekili prices it
+        I.Build(def, 1)
+        assert.are.same({ 5.5, nil }, { I.CostOf(3), VS.BasePower(fs.RAGE) })
+    end)
+
     it("walks the talent tree into ranks by registered spell ID, and defers a walk in combat", function()
         ctl.traits = { config = 1, trees = { 7 }, nodeIDs = { 70 }, nodes = {}, defs = { [700] = 1011 } }
         ctl.traits.nodes[70] = { entryIDs = { 700 }, activeRank = 2 }

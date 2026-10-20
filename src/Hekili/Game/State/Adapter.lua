@@ -235,6 +235,7 @@ local function buildDef()
             -- the class's default share of an avoided cast's cost given back, for an ability with `refundOnAvoid = true`
             -- (a number, 0-1; Families/Now.lua's Obs.Avoided); the sim never reads it: it does not roll avoidance
             refundOnAvoid = r.state and r.state.meta and r.state.meta.refundOnAvoid,
+            base = r.state and r.state.meta and r.state.meta.base, -- the pool's base power (Families/Casts.lua)
             mult = r.state and r.state.regenMult, -- the rate multipliers, out of the regen model (Spec.lua, C3b)
         }
         insert(def.resources, d)

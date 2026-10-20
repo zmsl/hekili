@@ -11,9 +11,8 @@
 -- Unmodelled: ranged haste on the auto-shot clock (Rapid Fire, Quick Shots; their haste on Aimed, Multi and Sniper
 -- Shot's casts is modelled), the pet and its abilities (D6), Aspect of the Viper and the other runes no priority names,
 -- Improved Aimed Shot's +2 s cast, Sniper Shot's range buff, Expose Prey's own Mongoose Bite window (the usability read
--- covers it), percent-of-base-mana costs (priced as a fraction of the maximum: overstated, research Q4),
--- Resourcefulness's second effect (1242688: 30 s of 50% mana regen while casting after a critical strike; the mana
--- belief's `mult` hook scales a whole rate, not the spirit part inside the five-second rule).
+-- covers it), Resourcefulness's second effect (1242688: 30 s of 50% mana regen while casting after a critical strike;
+-- the mana belief's `mult` hook scales a whole rate, not the spirit part inside the five-second rule).
 -- Credits: Hekili (registration API and pack format; the on-next-swing queue read follows the Warrior's Heroic Strike).
 -- wowsims/forever (MIT, ui/specs/hunter/dps/apls/default.apl.json, the Melee Weave, and sim/hunter/) is the source of
 -- the priorities (tools/wowsims/specs/hunter_*.lua) and the reference for the Summon Hawk, Sniper Shot, Raptor Strike
@@ -203,6 +202,7 @@ end
 -- the in-combat calibration replace. UNMEASURED: a level 60 Hunter's spirit regen and a little mp5 from gear.
 spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
     fsr = { spirit = 15, mp5 = 2 },
+    base = 1720, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
 })
 
 -- Summon Hawk's guardians (C1): 2 up at most (DB2 1293527 effect 3), 18 s each (1293248's duration); the oldest gives
@@ -421,7 +421,7 @@ spec:RegisterAbilities({
         handler = shares("multi_shot"),
     },
 
-    -- 13.9% of base mana (DB2 PowerCostPct), priced as a fraction of the maximum (overstated: research Q4).
+    -- 13.9% of base mana (DB2 PowerCostPct): a fraction of the mana meta's `base`.
     multi_shot = {
         id = 2643,
         cast = rangedCast(0.5),
@@ -497,7 +497,7 @@ spec:RegisterAbilities({
         handler = removes("defensive_state"),
     },
 
-    -- Forever-only (D4): 5.81% of base mana (DB2 PowerCostPct), priced as a fraction of the maximum (research Q4).
+    -- Forever-only (D4): 5.81% of base mana (DB2 PowerCostPct): a fraction of the mana meta's `base`.
     strider_kick = {
         id = 1317257,
         cast = 0,

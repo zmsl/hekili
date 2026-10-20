@@ -202,6 +202,11 @@ end
 --                                    the target dodges, parries or misses it, for an ability declaring
 --                                    `refundOnAvoid = true` (RegisterAbility below): the belief's only (Families/Now.lua,
 --                                    Obs.Avoided); the sim does not predict avoidance and never reads it.
+-- base = n (a number)               The pool's base power at the class's top level (wowsims's base stats): a cost
+--                                    between 0 and 1 is that fraction of it, floored, as the client prices a
+--                                    percent-of-base cost, in both layers (ns.FractionCost, Families/Casts.lua). The
+--                                    belief learns the player's own from a plain out-of-combat cost read (login,
+--                                    level-up, spell changes); without `base` a fraction is of the maximum (Hekili's).
 local HekiliSpecMixin = {
     RegisterResource = function( self, resourceID, regen, model, meta )
         local resource = GetResourceKey( resourceID )

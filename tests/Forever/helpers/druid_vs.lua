@@ -23,7 +23,7 @@ function M.boot(ns, api, edit)
         energy = { type = 3, state = { meta = w.resources[3].meta } },
         combo_points = { type = 4, state = {} },
         rage = { type = 1, state = { regenModel = w.resources[1].models, meta = w.resources[1].meta } },
-        mana = { type = 0, state = {} },
+        mana = { type = 0, state = { meta = w.resources[0].meta } }, -- its `base`: a fraction cost's base mana
     }
     for key, a in pairs(w.abilities) do
         class.abilities[key] = {

@@ -8,7 +8,7 @@ local alloc = require("Game.State.helpers.alloc")
 local LUA = io.open(".lua/bin/lua") and ".lua/bin/lua" or "lua5.1"
 
 -- key = { spell IDs in rank order, cost with every talent at rank 0 (a list: by rank; a percent of base mana as whole
--- mana at 60: x 1244), spendType, cooldown, gcd }, from the DB2: energy and mana costs as points, rage as the cost /
+-- mana at 60: the fraction x the mana meta's `base` 1244, floored), spendType, cooldown, gcd }, from the DB2: energy and mana costs as points, rage as the cost /
 -- 10; the cooldown is the larger of RecoveryTime and CategoryRecoveryTime; gcd "totem" for the 1.0 s
 -- StartRecoveryTime, "off" where it is 0 or has no row.
 local KIT = {
@@ -241,6 +241,14 @@ local function near(want, got)
     assert.is_true(math.abs(got - want) < 1e-9, ("want %.4f, got %.4f"):format(want, got))
 end
 
+-- A declared mana cost as the engine prices it: a fraction is of the mana meta's `base`, floored (Spec.lua).
+local function priced(w, c, spendType)
+    if spendType == "mana" and c and c > 0 and c < 1 then
+        return math.floor(c * w.resources[0].meta.base + 1e-6)
+    end
+    return c
+end
+
 -- A buff/debuff table whose named keys are up (with the given fields) and the rest down.
 local function auras(up)
     return setmetatable(up, {
@@ -272,10 +280,10 @@ describe("Forever Druid", function()
                 if type(want[2]) == "table" then
                     for r, cost in ipairs(want[2]) do -- the cost of each rank, as the spellbook learns it
                         w.game.known[want[1][r]] = true
-                        assert.are.equal(cost, ld.run(a.spend, e), key .. " rank " .. r)
+                        assert.are.equal(cost, priced(w, ld.run(a.spend, e), a.spendType), key .. " rank " .. r)
                     end
                 else
-                    assert.are.equal(want[2], ld.run(a.spend, e) or 0, key)
+                    assert.are.equal(want[2], priced(w, ld.run(a.spend, e), a.spendType) or 0, key)
                 end
             end
             assert.are.equal(44, n)
@@ -324,8 +332,7 @@ describe("Forever Druid", function()
             { 43, 38, 13, 18, 18, 48, 13 },
             { at("claw"), at("rake"), at("maul"), at("swipe_bear"), at("primal_bite"), at("shred"), at("lacerate") }
         )
-        -- Natural Shapeshifter -10% a rank on the forms and Shifting Power: below 60 a fraction (of the maximum)
-        e.level = 59
+        -- Natural Shapeshifter -10% a rank on the forms and Shifting Power: a fraction of the base mana
         for key, cost in pairs({
             cat_form = 0.44,
             bear_form = 0.44,
@@ -337,10 +344,13 @@ describe("Forever Druid", function()
             near(cost, at(key))
         end
         -- at 60 of the base mana, 1244 (wowsims's log: Shifting Power and Cat Form 684 = 55%, Innervate 62 = 5%)
-        e.level = 60
-        assert.are.same({ 547, 348 }, { at("shifting_power"), at("moonkin_form") })
+        assert.are.equal(1244, w.resources[0].meta.base)
+        local function mana(key)
+            return priced(w, at(key), "mana")
+        end
+        assert.are.same({ 547, 348 }, { mana("shifting_power"), mana("moonkin_form") })
         e.talent = rank(0)
-        assert.are.same({ 684, 684, 62 }, { at("shifting_power"), at("cat_form"), at("innervate") })
+        assert.are.same({ 684, 684, 62 }, { mana("shifting_power"), mana("cat_form"), mana("innervate") })
         e.talent = rank(2)
         assert.are.same(
             { 8, 1.3 },

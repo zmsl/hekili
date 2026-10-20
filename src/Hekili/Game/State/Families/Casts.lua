@@ -9,7 +9,7 @@
 local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local Obs = VS.Obs
-local floor, abs, max = math.floor, math.abs, math.max
+local floor, ceil, abs, max = math.floor, math.ceil, math.abs, math.max
 
 -- By ability index a. `obj` is the spec's ability table (Hekili's `class.abilities[key]`): VirtualState reads its
 -- `spend`, `spendType`, `cooldown`, `charges`, `recharge`, `gcd`, `gcdTime`, `cast`, `onNextSwing` and `rangedSwing`
@@ -100,9 +100,20 @@ local function maxCharges(a)
     return type(c) == "number" and c or 1
 end
 
+-- By resource slot: the base power a cost between 0 and 1 is a fraction of, as the client prices a percent-of-base cost
+-- (floored): the pack's `base` (its level's value; the meta field, Engine/Schema/Spec.lua) until a plain cost read
+-- teaches it (I.LearnBase); 0 for a pool without one, whose fractions are of its maximum (Hekili's pricing).
+I.basePow, I.baseDefault = {}, {}
+local EPS = 1e-6 -- a float product a hair under a whole cost (0.05 x 1240) floors to it, not below
+
 I.OnBuild(function(def, now)
     for k in pairs(A.bySpell) do
         A.bySpell[k] = nil
+    end
+    for r = 1, #def.resources do
+        local b = def.resources[r].base
+        I.baseDefault[r] = type(b) == "number" and b > 0 and b or 0
+        I.basePow[r] = I.baseDefault[r]
     end
     local list = def.abilities
     A.n = #list
@@ -380,9 +391,8 @@ local function beliefEval(f, t)
     return v
 end
 
---- Ability a's declared cost, before any cost modifier (0 when it has none); a cost between 0 and 1 is that fraction
---- of its resource's believed maximum, as Hekili's simulation prices it (State.lua's spend). Allocates nothing.
-function I.BaseCostOf(a)
+-- Ability a's declared cost as written (a fraction stays one), or nil. Allocates nothing.
+local function declaredCost(a)
     local obj = I.ab.obj[a]
     local f = rawget(obj, "declaredSpend")
     local c = f and I.nowCtx and beliefEval(f, I.clock)
@@ -395,13 +405,48 @@ function I.BaseCostOf(a)
     if type(c) == "function" then
         c = c()
     end
-    if type(c) ~= "number" then
+    return type(c) == "number" and c or nil
+end
+
+--- Ability a's declared cost, before any cost modifier (0 when it has none); a cost between 0 and 1 is that fraction
+--- of its pool's base power, floored (I.basePow), else of its believed maximum, as Hekili's simulation prices it
+--- (ns.FractionCost). Allocates nothing.
+function I.BaseCostOf(a)
+    local c, r = declaredCost(a), A.slot[a]
+    if not c then
         return 0
     end
-    if c > 0 and c < 1 and A.slot[a] > 0 then
-        c = c * I.res.max[A.slot[a]]
+    if c > 0 and c < 1 and r > 0 then
+        local b = I.basePow[r] or 0
+        c = b > 0 and floor(c * b + EPS) or c * I.res.max[r]
     end
     return c
+end
+
+--- (spec §3.1) The base power a fraction cost of power type `pt` is priced from, or nil when its pool has none (the
+--- simulation's ns.FractionCost then prices it from the maximum, as Hekili does). Allocates nothing.
+function VS.BasePower(pt)
+    local r = I.res.slotOf[pt]
+    local b = r and I.basePow[r]
+    return b and b > 0 and b or nil
+end
+
+--- A plain out-of-combat cost read `cost` of ability a (Sources/Spellbook.lua), whose declared cost is a fraction of
+--- a pool with a base: when the base misprices it, the read teaches the pool's base (the least whole base that
+--- floors to it). Skipped while a cost modifier in scope changes the price (the read then is not the base's).
+--- Allocates nothing.
+function I.LearnBase(a, cost)
+    local r = A.slot[a]
+    if r == 0 or (I.basePow[r] or 0) <= 0 or cost <= 0 then
+        return
+    end
+    local f = declaredCost(a)
+    if not f or f <= 0 or f >= 1 or I.CostOf(a) ~= I.BaseCostOf(a) then
+        return
+    end
+    if floor(f * I.basePow[r] + EPS) ~= cost then
+        I.basePow[r] = ceil(cost / f - EPS) -- f > 0 checked
+    end
 end
 
 --- Ability a's declared cooldown at `t` (0 when it has none): a function (Hekili keeps it in `funcs`) evaluated in the

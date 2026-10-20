@@ -245,6 +245,7 @@ end
 -- the in-combat calibration replace. UNMEASURED: a level 60 Shaman's spirit regen and a little mp5 from gear.
 spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
     fsr = { spirit = 17, mp5 = 2 },
+    base = 1520, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
 })
 
 -- The totems (C6): each one's element and duration with its ranks, for `totem.<key>`.

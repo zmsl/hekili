@@ -1,6 +1,7 @@
 -- Game/State/Sources/Spellbook.lua
 -- Spellbook sources (spec §4.2, §4.5): each tracked ability's query ID (its highest known rank), its range (the range
--- poll's bounds) and plain cost (out of combat, shown by Snapshot() to confirm the spec's), and the cooldown flag edges: SPELL_UPDATE_COOLDOWN/SPELL_UPDATE_CHARGES read C_Spell.GetSpellCooldown
+-- poll's bounds) and plain cost (out of combat: shown by Snapshot(), and a percent-of-base cost teaches its pool's base),
+-- and the cooldown flag edges: SPELL_UPDATE_COOLDOWN/SPELL_UPDATE_CHARGES read C_Spell.GetSpellCooldown
 -- per tracked spell and log a `Cooldown` per changed plain `isActive` flag (b: 1 ready / 0 not), and the GCD's edge
 -- from the GCD spell's flag (a = 0, c = 1). Only the plain flags are used; the times are secret in combat.
 -- Credits: the field-by-field secrecy test after Catnip's (Durts) research.
@@ -22,6 +23,11 @@ local last, gcdLast = {}, -1
 -- cost and whether it costs a second power type. Out of the hot path: build, SPELLS_CHANGED.
 local function resolve(api)
     local A = I.ab
+    if not I.inCombat then -- each pool's base is learned again from this pass's reads (I.LearnBase)
+        for r = 1, #I.baseDefault do
+            I.basePow[r] = I.baseDefault[r]
+        end
+    end
     for a = 1, A.n do
         local ids, q, known = A.ids[a], A.ids[a][1], false
         for k = 1, #ids do
@@ -46,6 +52,7 @@ local function resolve(api)
             local first = type(costs) == "table" and Plain(api, costs[1])
             local cost = type(first) == "table" and Plain(api, first.cost)
             A.readCost[a] = type(cost) == "number" and cost or 0
+            I.LearnBase(a, A.readCost[a]) -- a percent-of-base cost teaches its pool's base (Families/Casts.lua)
             A.multiCost[a] = type(costs) == "table" and Plain(api, costs[2]) ~= nil -- a second power type (A5)
         end
     end
@@ -68,6 +75,13 @@ S.OnStart(function(api)
 end)
 
 S.On("SPELLS_CHANGED", nil, function(api)
+    if I.built then
+        resolve(api)
+    end
+end)
+
+-- A level-up changes every percent-of-base cost (the pool's base power): read them again.
+S.On("PLAYER_LEVEL_UP", nil, function(api)
     if I.built then
         resolve(api)
     end
