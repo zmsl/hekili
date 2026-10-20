@@ -271,7 +271,7 @@ research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`)
 - H6 (Q3, Q6): C_Spell.IsSpellInRange(75, "target") at 4, 10 and 40 yards, in and out of combat (the deadzone guard:
   Hekili's `action.auto_shot.in_range` and `action.raptor_strike.in_range`); plain or secret in combat? Raptor Strike
   (on the next swing) in range at any distance, like Heroic Strike?
-- H12 (gap 13): `/run local r=Hekili.State.target VSCopy(r.distance,r.minR,r.maxR,r.within5,r.outside8)` at 3, 11 and
+- H14 (gap 13): `/run local r=Hekili.State.target VSCopy(r.distance,r.minR,r.maxR,r.within5,r.outside8)` at 3, 11 and
   30 yards: about 2.5 / 0 / 5 / true / false in melee, 21.5 / 8 / 35 / false / true at 11 yd; and
   `C_Spell.GetSpellInfo(14268).maxRange` (Wing Clip) reads 5, not 0.
 - H7 (Q4): Multi-Shot's and Strider Kick's actual costs (DB2 13.9% and 5.81% of base mana, priced here as of the
