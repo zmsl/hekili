@@ -184,10 +184,15 @@ describe("facts and polls", function()
         ctl.health, ctl.healthMax = 300, 1000
         drain(2)
         assert.are.equal(0.3, VS.Health("player", 2).est) -- out of combat, plain: honoured
-        ctl.Fire("PLAYER_REGEN_DISABLED")
-        ctl.unitHealth.player = fake.SECRET -- the pull: secret
+        ctl.Fire("PLAYER_REGEN_DISABLED") -- the pull: the plain read from before it is forgotten at once
+        ctl.Tick(2.5)
+        I.Fold(2.5, false) -- before the next poll
+        local h = VS.Health("player", 2.5)
+        assert.are.same({ 1, "default", 0 }, { h.est, h.basis, h.conf })
+        ctl.unitHealth.player = fake.SECRET -- secret in combat
         drain(3)
-        assert.are.same({ 1, "default" }, { VS.Health("player", 3).est, VS.Health("player", 3).basis })
+        h = VS.Health("player", 3)
+        assert.are.same({ 1, "default", 0 }, { h.est, h.basis, h.conf })
         drain(4)
         assert.are.equal(1, VS.Health("player", 4).est) -- every secret poll the same: no flicker
         ctl.unitHealth.player = 400

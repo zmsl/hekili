@@ -24,13 +24,23 @@ I.On(Obs.Moving, function(o)
     I.moving = o.b == 1
 end)
 
-I.On(Obs.CombatStart, function(o, t)
-    I.combatT = t
-end)
-
 -- Health (player: plain reads; target: Families/TargetHealth.lua; others: the default 1.0), spell haste, time to die.
 local health, otherHealth, spellHaste, ttd
 I.healthMax = 0
+
+-- The player's health unknown from t: full (a defensive "health.pct<50" never fires, a "health.pct>50" gate always
+-- passes), the last plain read forgotten so the basis is "default" and the confidence 0. A secret read and the pull
+-- (a read from before it may be stale until the next poll) both make it unknown.
+local function healthUnknown(t, event)
+    health.est, health.lo, health.hi = 1, 0, 1
+    health.last.observed.t = 0
+    I.Sample(health, "default", 1, t, event)
+end
+
+I.On(Obs.CombatStart, function(o, t)
+    I.combatT = t
+    healthUnknown(t, Obs.CombatStart)
+end)
 
 local function decay(rec, now)
     local age = now - rec.last.observed.t
@@ -56,11 +66,7 @@ end)
 
 I.On(Obs.Read, function(o, t)
     if o.c == ReadOf.Health and o.b < 0 then
-        -- a secret read: unknown reads as full (a defensive "health.pct<50" never fires, a "health.pct>50" gate
-        -- always passes), not the last plain read, which may be from before the pull
-        health.est, health.lo, health.hi = 1, 0, 1
-        I.Sample(health, "default", 1, t, Obs.Read)
-        health.basis = "default"
+        healthUnknown(t, Obs.Read)
     elseif o.c == ReadOf.Health then
         health.est, health.lo, health.hi = o.b, o.b, o.b
         I.Sample(health, "observed", o.b, t, Obs.Read)

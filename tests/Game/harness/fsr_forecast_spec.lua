@@ -58,6 +58,42 @@ describe("the sim's five-second-rule forecast", function()
         assert.is_true(math.abs(S:TimeToResource(r, 23) - 23 / 22) < 1e-9)
     end)
 
+    describe("advancing the clock", function()
+        local resources, handle
+        before_each(function()
+            local class = H.Hekili.Class
+            resources, handle = class.resources, rawget(S, "HandleEvent")
+            class.resources = { mana = H.Hekili.Class.specs[0].resources.mana }
+            r.actual, r.fsr_until, S.offset = 1000, 105, 3 -- t=3, the window ends at 5
+        end)
+        after_each(function()
+            H.Hekili.Class.resources = resources
+            rawset(S, "HandleEvent", handle)
+            local q = S:GetQueue()
+            for i = #q, 1, -1 do
+                q[i] = nil
+            end
+            S.offset = 0
+        end)
+
+        it("credits the casting rate inside the window and the not-casting rate after it", function()
+            S.advance(5) -- t=3 to t=8: [3,5] at 0, [5,8] at 22
+            assert.is_true(math.abs(r.actual - 1000 - 66) < 1e-9, r.actual)
+        end)
+
+        it("restarts the window at a spend queued inside the advance", function()
+            local q = S:GetQueue()
+            q[1] = { action = "probe", time = 104, type = "PROBE" } -- t=4
+            rawset(S, "HandleEvent", function(self, e)
+                table.remove(q, 1)
+                self.spend(100, "mana") -- the window now ends at 9
+            end)
+            S.advance(5)
+            assert.are.equal(109, r.fsr_until)
+            assert.is_true(math.abs(r.actual - 900) < 1e-9, r.actual) -- no regen rise: [3,4] and [4,8] cast-rate 0
+        end)
+    end)
+
     it("keeps the old single rate for a resource without a window", function()
         r.fsr_until = false
         r.active_regen, r.inactive_regen = 10, 10
