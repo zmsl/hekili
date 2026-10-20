@@ -476,6 +476,11 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     elseif p then
         if avoid then
             avoided(p, t, act)
+        elseif flag == "CRITICAL" and t - actT[p] <= actW[p] then
+            local a = I.ab.bySpell[actX[p]] -- our cast's own crit (the target's row carries the flag plain): GAP T
+            if a then
+                S.Stage(Obs.Crit, t, a, actT[p], 0)
+            end
         end
         local x, at = actX[p], actT[p]
         actT[p] = 0

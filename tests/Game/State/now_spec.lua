@@ -743,6 +743,26 @@ describe("now handlers", function()
             ctl.usable[fs.SPENDER_C] = nil
         end
 
+        it("a crit in the cast's frame runs the ability's onCrit: its gain at the crit (GAP T)", function()
+            h.Class.abilities.spender_c.funcs.onCrit = function()
+                gain(5, "rage") -- luacheck: ignore 113 (the `now` context's verb)
+            end
+            begin()
+            h.Class.abilities.spender_c.funcs.onCrit = nil
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- 10 paid: 0
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 100, 1)
+            ctl.Tick(5.01)
+            VS.Drain(5.02)
+            assert.are.equal(5, VS.Power(fs.RAGE, 5.1).est)
+            ctl.now = 6
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 100, 1) -- a plain hit: nothing
+            ctl.Tick(6.01)
+            VS.Drain(6.02)
+            assert.are.equal(0, VS.Power(fs.RAGE, 6.1).est)
+        end)
+
         it("a dodge in the cast's frame: no debuff, 80% of the cost back, a REMOVED row", function()
             begin()
             castOutcome(fs.SPENDER_C, 5, "DODGE")

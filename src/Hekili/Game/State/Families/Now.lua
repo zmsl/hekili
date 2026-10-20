@@ -16,6 +16,7 @@ local CAST = Obs.CastSuccess
 
 local A = I.ab
 A.now = {} -- by ability index: the `now` function, bound to the context, or false
+A.onCrit = {} -- by ability index: the `onCrit` function (run at the cast's own crit, Obs.Crit), bound, or false
 A.extra = {} -- by ability index: a `track_<id>` extra (VS.Track): no ability, no effects
 A.known = A.known or {} -- by ability index: any rank in the spellbook (Sources/Spellbook.lua)
 
@@ -318,6 +319,8 @@ I.OnBuild(function(def)
             f = false
         end
         A.now[a] = type(f) == "function" and setfenv(f, ctx) or false
+        local c = type(funcs) == "table" and rawget(funcs, "onCrit")
+        A.onCrit[a] = type(c) == "function" and setfenv(c, ctx) or false
     end
     for r = 1, #def.resources do
         local f = def.resources[r].refundOnAvoid
@@ -405,6 +408,21 @@ local function automatic(a, t, kind, o)
     end
 end
 
+-- Runs ability a's bound function f in the shared context at belief time t; an error is counted, never raised.
+local function call(f, a, t)
+    T, curA = t, a
+    rawset(NAMES, "now", t)
+    rawset(NAMES, "combat", I.combatT)
+    rawset(NAMES, "level", I.level or 0)
+    live = true
+    local ok, err = pcall(f)
+    live = false
+    I.nowRuns = I.nowRuns + 1
+    if not ok then
+        I.nowErrors, I.nowError = I.nowErrors + 1, err
+    end
+end
+
 local function run(o, t)
     local a = o.a
     if not A.obj[a] or not A.key[a] or A.extra[a] then
@@ -415,23 +433,21 @@ local function run(o, t)
     automatic(a, t, o.kind, o)
     A.castStartT[a] = 0 -- consumed: a later instant cast of the same ability starts its own GCD
     I.castsRun = I.castsRun + 1
-    local f = A.now[a]
-    if f then
-        T, curA = t, a
-        rawset(NAMES, "now", t)
-        rawset(NAMES, "combat", I.combatT)
-        rawset(NAMES, "level", I.level or 0)
-        live = true
-        local ok, err = pcall(f)
-        live = false
-        I.nowRuns = I.nowRuns + 1
-        if not ok then
-            I.nowErrors, I.nowError = I.nowErrors + 1, err
-        end
+    if A.now[a] then
+        call(A.now[a], a, t)
     end
 end
 -- CastSuccess only: a channel stages ChannelStart and CastSuccess both (Sources/Casts.lua), and must run once.
 I.On(Obs.CastSuccess, run)
+
+-- Our cast's own crit (Events/Rows.lua, GAP T): the ability's `onCrit` runs in the same context, its writes `modelled` at
+-- the crit's row (what a crit gives, as Primal Fury's rage, is the class file's to declare). Allocates nothing.
+I.On(Obs.Crit, function(o)
+    local a = o.a
+    if A.onCrit[a] and A.key[a] and not A.extra[a] then
+        call(A.onCrit[a], a, o.t)
+    end
+end)
 
 -- Our cast's own avoid (Events/Rows.lua): the latest cast, when it is the one avoided, loses the target auras its `now`
 -- wrote (each back as it was, when the target is still the cast's) and gets back the ability's `refundOnAvoid` share of

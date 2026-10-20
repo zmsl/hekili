@@ -801,7 +801,9 @@ local HekiliSpecMixin = {
     -- `usable` holds in the belief's `now` context (a finisher at 0 combo points pins no energy). `missable = true` or
     -- an aura key: a miss leaves that debuff off the target (trackMisses, above). `refundOnAvoid = true` (its resource
     -- meta's share) or a share 0-1: a dodged, parried or missed cast gives back that much of its cost (the belief's
-    -- only, Game/State/Families/Now.lua; the sim does not predict avoidance).
+    -- only, Game/State/Families/Now.lua; the sim does not predict avoidance). `onCrit = function() ... end`, beside
+    -- `now`: what a critical hit of the cast gives, written with the same verbs when the target's row shows our cast's
+    -- own crit (Primal Fury's `gain( 5, "rage" )`); the belief's only, the sim does not predict crits.
     RegisterAbility = function( self, ability, data )
         -- A passive (a spell the spellbook knows, never cast): the belief tracks its known rank; the sim never sees it.
         if data.passive then
