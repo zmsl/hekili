@@ -288,7 +288,17 @@ local function nilAnd(list)
             end
         end
     end
-    return #out == 0 or (#out == 1 and out[1]) or out
+    local kept = { op = "and" }
+    for _, x in ipairs(out) do -- absorption: `A` with `(A or B)` is nil exactly when A is
+        local absorbed = false
+        for _, y in ipairs(x.op == "or" and x or {}) do
+            absorbed = absorbed or (y.test ~= nil and seen[y.test] == true)
+        end
+        if not absorbed then
+            kept[#kept + 1] = x
+        end
+    end
+    return #kept == 0 or (#kept == 1 and kept[1]) or kept
 end
 
 -- Term `s` with nil condition `u` as wowsims evaluates it: a nil term is dropped, so it reads `want` (true in an

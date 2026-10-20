@@ -434,6 +434,9 @@ describe("the wowsims APL translator", function()
         local function calc(op, l, r)
             return { math = { op = op, lhs = l, rhs = r } }
         end
+        local function known(id)
+            return { auraIsKnown = { auraId = { spellId = id } } }
+        end
         local energy, cp = { currentEnergy = {} }, { currentComboPoints = {} }
         local remains = { dotRemainingTime = { spellId = { spellId = 400 } } }
         -- Feral's pooling test: energy after A's cost, against B's (two abilities' reads in one comparison)
@@ -463,6 +466,12 @@ describe("the wowsims APL translator", function()
             spend,
             NOT(spend),
             OR(AND(ready, OR(ready, AND(up, ready))), E),
+            -- known tests or-ed inside an and (auraIsKnown of two abilities, of two talents): a condition, not a guard
+            AND(OR(known(200), known(400)), E),
+            AND(OR(known(900), known(950)), E),
+            OR(AND(OR(known(200), known(400)), ready), E),
+            OR(AND(known(200), up), E),
+            AND(OR(known(400), known(400)), ready),
         }
         for _, t in ipairs(trees) do
             corpus[#corpus + 1] = t

@@ -3,6 +3,12 @@
 -- learned cannot block it; checked on every "(wowsims.com)" .simc in the repository.
 local levels = assert(loadfile("tools/check_pack_levels.lua"))()
 local engine = require("Forever.helpers.engine")
+local FERAL = {
+    "actions+=/shifting_power,if=((action.shifting_power.ready&((buff.clearcasting.up&energy.current<40)|(!buff.clearcasting.up&energy.current<50)))|(((combo_points.current>=5&(!action.rip.known|debuff.rip.up)&fight_remains>=10&(!action.rip.known|debuff.rip.remains>0)&(!action.rip.known|debuff.rip.remains<=2)&(!action.rip.known|(!action.shred.known|((energy.current-action.shred.cost)+10)<action.rip.cost)))|((!action.rake.known|debuff.rake.up)&fight_remains>=9&(!action.rake.known|debuff.rake.remains>0)&(!action.rake.known|debuff.rake.remains<=1)&(!action.rake.known|(!action.shred.known|((energy.current-action.shred.cost)+10)<action.rake.cost))))&action.shifting_power.ready))",
+    "actions+=/faerie_fire,if=(!buff.clearcasting.up&(!talent.omen_of_clarity.enabled|buff.clearcasting.icd_ready)&(!action.shifting_power.known|cooldown.shifting_power.remains>=1)&(!action.shred.known|(energy.current+10)<action.shred.cost)&(!((action.rake.known|action.rake.known)|action.rake.known)|(((action.rake.known|action.rake.known)&!((action.rake.known&!debuff.rake.up)|(action.rake.known&debuff.rake.remains<1)))|(action.rake.known&(energy.current+10)<action.rake.cost)))&(!(combo_points.current>=5&fight_remains>=10&(!(action.rip.known|action.rip.known)|((action.rip.known&!debuff.rip.up)|(action.rip.known&debuff.rip.remains<1))))|(action.rip.known&(energy.current+10)<action.rip.cost))&action.faerie_fire.ready)",
+    "actions.builders+=/claw,focus=1,if=(!((combo_points.current>=5&(!action.rip.known|debuff.rip.up)&fight_remains>=10&(!action.rip.known|debuff.rip.remains>0)&(!action.rip.known|debuff.rip.remains<=2)&(!action.rip.known|(!action.shred.known|((energy.current-action.shred.cost)+10)<action.rip.cost)))|((!action.rake.known|debuff.rake.up)&fight_remains>=9&(!action.rake.known|debuff.rake.remains>0)&(!action.rake.known|debuff.rake.remains<=1)&(!action.rake.known|(!action.shred.known|((energy.current-action.shred.cost)+10)<action.rake.cost))))&(!action.shred.known|energy.current>=action.shred.cost))",
+    "actions+=/faerie_fire,if=(!buff.clearcasting.up&(!talent.omen_of_clarity.enabled|buff.clearcasting.icd_ready)&(!action.shifting_power.known|cooldown.shifting_power.remains>=1)&(!action.shred.known|(energy.current+10)<action.shred.cost)&(!action.rake.known|((action.rake.known&!((action.rake.known&!debuff.rake.up)|(action.rake.known&debuff.rake.remains<1)))|(action.rake.known&(energy.current+10)<action.rake.cost)))&(!(combo_points.current>=5&fight_remains>=10&(!action.rip.known|((action.rip.known&!debuff.rip.up)|(action.rip.known&debuff.rip.remains<1))))|(action.rip.known&(energy.current+10)<action.rip.cost))&action.faerie_fire.ready)",
+}
 
 local ABIL = { strike = true, big_hit = true, stance = true }
 local function isAbility(k)
@@ -96,14 +102,19 @@ describe("tools/check_pack_levels.lua", function()
             {},
             levels.unguarded("((action.stance.known&(action.big_hit.known&!(" .. P .. ")))|y>1)", "s", isAbility)
         )
-        -- the inner guard has the `|`-form's polarity where its outer guard's term must read false
+        -- a guard's term may also read as a plain `&`/`|` term (`(K&t)` is a guard or the condition K and t), so
+        -- either reading passes; an inner guard misplaced under both is refused
         assert.are.same(
-            { "action.big_hit.cost" },
+            {},
             levels.unguarded("((action.stance.known&(!action.big_hit.known|" .. P .. "))|y>1)", "s", isAbility)
         )
         assert.are.same(
             { "action.big_hit.cost" },
-            levels.unguarded("(!action.stance.known|(action.big_hit.known&" .. P .. "))&x>1", "s", isAbility)
+            levels.unguarded("((action.stance.known&((!action.big_hit.known|" .. P .. ")|z>1))|y>1)", "s", isAbility)
+        )
+        assert.are.same(
+            { "action.big_hit.cost" },
+            levels.unguarded("(!action.stance.known|((action.big_hit.known&" .. P .. ")&z>1))&x>1", "s", isAbility)
         )
     end)
 
@@ -135,6 +146,47 @@ describe("tools/check_pack_levels.lua", function()
             { "cooldown.big_hit.ready" },
             levels.unguarded("talent.t.enabled&cooldown.big_hit.ready", "s", isAbility)
         )
+    end)
+
+    it("takes known tests or-ed inside an and as a condition when its terms read none of their keys", function()
+        assert.are.same({}, levels.unguarded("((action.big_hit.known|action.stance.known)&x>1)", "s", isAbility))
+        assert.are.same({}, levels.unguarded("((talent.a.enabled|talent.b.enabled)&x>1)", "s", isAbility))
+        assert.are.same(
+            { "guard action.big_hit.known|action.stance.known" },
+            levels.unguarded(
+                "((action.big_hit.known|action.stance.known)&(!action.big_hit.known|cooldown.big_hit.ready))",
+                "s",
+                isAbility
+            )
+        )
+    end)
+
+    it("reads a ! inside arithmetic as part of its operand, and reports what it cannot parse", function()
+        assert.are.same(
+            { "cooldown.big_hit.ready" },
+            levels.unguarded("x>(10*!y)&cooldown.big_hit.ready", "s", isAbility)
+        )
+        assert.are.same(
+            { "cooldown.big_hit.ready" },
+            levels.unguarded("(x*!y)>1|cooldown.big_hit.ready", "s", isAbility)
+        )
+        assert.are.same(
+            { "unparsed )|cooldown.big_hit.ready" },
+            levels.unguarded("x>1)|cooldown.big_hit.ready", "s", isAbility)
+        )
+        assert.are.same({}, levels.unguarded("x!=1&!y", "s", isAbility))
+    end)
+
+    -- The five Feral (wowsims.com) lines the old check refused (three distinct; shifting_power and builders claw
+    -- twice), as the translator wrote them before group guards named each key once, and faerie_fire as it writes it now.
+    it("accepts the Feral lines with nested guards and repeated group keys", function()
+        local function isDruid(k)
+            return k ~= "clearcasting" -- an aura, not an ability
+        end
+        for _, line in ipairs(FERAL) do
+            local action, criteria = line:match("^actions[%w_.]*%+?=/?([%w_]+).-,if=(.*)$")
+            assert.are.same({}, levels.unguarded(criteria, action, isDruid), line)
+        end
     end)
 
     it("checks a dot read of another ability", function()

@@ -6,9 +6,11 @@
 -- guard `(!K|t)` reads true while K is false, `(K&t)` false, and `t` holds the guard's own position, so a guard nested
 -- in another's term, or under a `!`, is checked where it sits. K is a known-test formula (`action.X.known`,
 -- `talent.T.enabled`, `|`/`&` of them) and covers the keys it is false for unlearned: one key however often it repeats,
--- none of `(action.A.known|action.B.known)`. A guard of the wrong polarity covers nothing, and a misplaced group guard
--- (`(kA|kB)` as its K) is an offence "guard <its tests>". A line's own action needs no guard (the engine skips an
--- unknown action). Loaded with loadfile(...)() it returns { unguarded, file }; run directly: lua
+-- none of `(action.A.known|action.B.known)`, whose terms are then plain terms. `(K&t)` may also be the condition K
+-- and a term t (an auraIsKnown read), so t passes read either way. A guard of the wrong polarity covers nothing; a
+-- misplaced group guard (`(kA|kB)` as its K) whose terms read one of its keys is an offence "guard <its tests>", and
+-- text left over after the parse "unparsed <it>". A line's own action needs no guard (the engine skips an unknown
+-- action). Loaded with loadfile(...)() it returns { unguarded, file }; run directly: lua
 -- tools/check_pack_levels.lua <file.simc>... lists offences against every key (no class data), for a quick look.
 local M = {}
 
@@ -27,7 +29,7 @@ local function parse(c)
             return { op = "not", unary() }
         end
         local s, items, last = pos, 0, nil
-        while pos <= #c and not (c:find("^[&|)]", pos) or bang()) do
+        while pos <= #c and not c:find("^[&|)]", pos) do -- a `!` here is the atom's (`x>(10*!y)`)
             if c:sub(pos, pos) == "(" then
                 pos = pos + 1
                 last = orx()
@@ -55,7 +57,7 @@ local function parse(c)
         end
     end
     orx = chain("or", "|", chain("and", "&", unary))
-    return orx()
+    return orx(), pos
 end
 
 -- The keys a known-test formula (`action.X.known`, `talent.T.enabled`, and `&`/`|` of them; a talent's key is
@@ -64,7 +66,8 @@ end
 local function knownKeys(c, n)
     if n.op == "atom" then
         local t = c:sub(n.s, n.e)
-        local x = t:match("^action%.([%w_]+)%.known$") or (t:match("^talent%.[%w_]+%.enabled$") and "talent " .. t)
+        local tk = t:match("^talent%.([%w_]+)%.enabled$")
+        local x = t:match("^action%.([%w_]+)%.known$") or (tk and "talent " .. tk)
         return x and { [x] = true }
     elseif n.op == "and" or n.op == "or" then
         local set
@@ -91,11 +94,10 @@ end
 --- The unguarded cross-ability reads of one line's criteria (`self` its action; `isAbility(key)`), and each group
 --- guard misplaced for its position, "guard <its tests>".
 function M.unguarded(criteria, self, isAbility)
-    local bad = {}
     -- `want`: what node `n` must read while an unlearned ability's reads in it are dropped (wowsims drops a nil term):
     -- true at the top and as a term of an `&`, false as a term of a `|`, flipped by a `!`; `covered`: the keys of the
     -- guards around `n`.
-    local function walk(n, want, covered)
+    local function walk(n, want, covered, bad)
         if n.op == "atom" then
             for kind, x, field in criteria:sub(n.s, n.e):gmatch("(%a+)%.([%w_]+)%.([%w_]+)") do
                 if KINDS[kind] and x ~= self and isAbility(x) and not (kind == "action" and field == "known") then
@@ -106,7 +108,7 @@ function M.unguarded(criteria, self, isAbility)
             end
             return
         elseif n.op == "not" then
-            return walk(n[1], not want, covered)
+            return walk(n[1], not want, covered, bad)
         end
         -- a guard `(!K|t)` reads true while K's keys are unlearned, `(K&t)` false; while they are learned it reads `t`
         local head, negated = n[1], false
@@ -114,23 +116,43 @@ function M.unguarded(criteria, self, isAbility)
             head, negated = head[1], true
         end
         local keys = #n > 1 and knownKeys(criteria, head)
-        if keys and negated == (n.op == "or") and negated == want then
+        local placed = keys and negated == (n.op == "or") and negated == want
+        if placed and next(keys) then -- a guard; a group of several keys covers none, so its terms are plain terms
             local inner = setmetatable(keys, { __index = covered })
-            if #n == 2 then
-                return walk(n[2], want, inner)
-            end
+            -- `(K&(!x|t))` is a guard nesting another (the term reads the guard's position) or the condition K and a
+            -- guarded term (an `&`'s term), which the text cannot tell apart: either reading passes
+            local nested, plain = {}, {}
             for i = 2, #n do
-                walk(n[i], n.op == "and", inner)
+                walk(n[i], n.op == "and", inner, plain)
+            end
+            if #n == 2 then
+                walk(n[2], want, inner, nested)
+            else
+                nested = plain
+            end
+            for _, o in ipairs(#nested <= #plain and nested or plain) do
+                bad[#bad + 1] = o
             end
             return
-        elseif keys and head.op == "or" then -- a group guard (the translator's `(kA|kB)`) misplaced
-            bad[#bad + 1] = "guard " .. criteria:sub(head.s, head.e)
+        elseif keys and not placed and head.op == "or" then -- a group guard (`(kA|kB)`) misplaced over reads of its keys
+            local tests = criteria:sub(head.s, head.e)
+            for kind, x, field in criteria:sub(head.e + 1, n.e):gmatch("(%a+)%.([%w_]+)%.([%w_]+)") do
+                local ofKey = tests:find("action." .. x .. ".known", 1, true)
+                if KINDS[kind] and ofKey and not (kind == "action" and field == "known") then
+                    bad[#bad + 1] = "guard " .. tests
+                    break
+                end
+            end
         end
         for i = keys and 2 or 1, #n do -- a known-test head reads nothing to check
-            walk(n[i], n.op == "and", covered)
+            walk(n[i], n.op == "and", covered, bad)
         end
     end
-    walk(parse(criteria), true, {})
+    local bad, tree, stop = {}, parse(criteria)
+    walk(tree, true, {}, bad)
+    if stop <= #criteria then
+        bad[#bad + 1] = "unparsed " .. criteria:sub(stop)
+    end
     return bad
 end
 
