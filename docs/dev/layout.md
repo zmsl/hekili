@@ -208,7 +208,7 @@ The imbues are not in the solo world's kit (it has no weapon enchant read). The 
 with Shamanistic Focus when the build has it, Stormstrike's 121 (wowsims/forever's), and the shocks' cooldown and Flame
 Shock's duration from the booted talents. The lines below run Enhancement (wowsims.com) (wowsims packs plan, Task 10,
 after its fix round 1: Stormstrike's cost moved them). `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's own fight
-(floor 0.75) and runs the levels 10, 40 and 60:
+(floor 0.78) and runs the levels 10, 40 and 60:
 
 ```
 Enhancement solo: fights=3 agreement 0.999 (706 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.011; ... [seeds 1-3]

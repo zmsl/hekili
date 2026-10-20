@@ -295,7 +295,7 @@ describe("Forever Shaman priorities", function()
 
     it("names only registered abilities, auras, settings and totem elements", function()
         local cls = ld.load(nil, FILE, "SHAMAN")
-        local shared = { major_mana_potion = true, demonic_rune = true } -- Hekili_Shared's consumables
+        local shared = { major_mana_potion = true, demonic_rune = true, blood_fury = true } -- Hekili_Shared's consumables, the Orc racial
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, settings = cls.settings }
         local elements = { fire = true, earth = true, water = true, air = true, main_hand_enchant = true }
         for list, entries in pairs(packs[PACK].lists) do

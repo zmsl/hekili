@@ -103,7 +103,11 @@ local function costOf(key, rank, cc, mw, sf)
     if ELEMENTAL[key] and cc then
         return 0
     end
-    local c = COST[key][rank] or COST[key][#COST[key]]
+    local list = COST[key]
+    if not list then
+        return 0 -- a racial (Blood Fury): no cost
+    end
+    local c = list[rank] or list[#list]
     if FOCUSED[key] and sf then
         c = c * 0.55
     elseif key == "lightning_bolt" then
@@ -170,6 +174,12 @@ M.MAP = {
     lightning_shield = {
         effect = function(W, e, _, X)
             aura(W, X, e, "lightning_shield", nil, 3)
+        end,
+    },
+    -- The Orc racial wowsims fires (its autocast cooldowns, rule 13): its buff on us, nothing else the world models.
+    blood_fury = {
+        effect = function(W, e, _, X)
+            aura(W, X, e, "blood_fury")
         end,
     },
     searing_totem = totem("searing_totem"),
@@ -327,7 +337,7 @@ local function content(name)
         local X = classData(H, C)
         local S = H.Hekili.State
         local VS, now = H.ns.VirtualState, H.ctl.now
-        local ids = C.IDS[key]
+        local ids = C.IDS[key] or { a.id } -- a racial (the content's race) is no kit key
         if C.SHARED[key] then
             ids = {}
             local members = { key, C.SHARED[key] }
@@ -342,7 +352,7 @@ local function content(name)
         local cc = VS.Aura("player", X.aura.clearcasting.id, now)
         local _, mw = VS.Aura("player", X.aura.maelstrom_weapon.id, now)
         local spellID = VS.KnownID(a.id)
-        local rank = rankOf(C.IDS[key], spellID)
+        local rank = rankOf(ids, spellID)
         local p = {
             spell = spellID,
             ids = ids,
