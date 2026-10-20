@@ -102,7 +102,9 @@
 local M = {}
 
 M.OPS = { OpEq = "=", OpNe = "!=", OpLt = "<", OpLe = "<=", OpGt = ">", OpGe = ">=" }
-M.MATH = { OpAdd = "+", OpSub = "-", OpMul = "*", OpDiv = "%" } -- SimC's division is %
+-- The engine's script language (Engine/Sim/Scripts.lua, as upstream) takes `/` for division and `%` for modulo;
+-- SimC's `%` (division) is rewritten to `/` where SimC text enters: here, and at in-game import (Options.lua).
+M.MATH = { OpAdd = "+", OpSub = "-", OpMul = "*", OpDiv = "/" }
 -- Values with one translation.
 M.VALUES = {
     numberTargets = "active_enemies",

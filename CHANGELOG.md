@@ -42,6 +42,8 @@
   target is beyond melee range (the game's own range check says "in range" for them at any distance).
 
 ### Fixed
+- Hunter: priority lines that divide (Multi-Shot's) now fire. Divisions in the priorities translated from
+  wowsims ran as a remainder, so those lines never recommended their ability.
 - Rogue, Paladin and Shaman: the default priorities now load. They were registered under the wrong specialization ids
   for the WoW Forever client, so the addon showed nothing for these classes.
 - Developer: unreadable (secret) answers to "does this unit exist / is it dead" for target, party, boss and focus units

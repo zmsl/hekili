@@ -726,3 +726,34 @@ describe("the wowsims APL translator", function()
         assert.are.same({ "default #1: autocastOtherCooldowns (no log)" }, none)
     end)
 end)
+
+-- Central fix 11: wowsims's OpDiv is division; the engine's script language takes `/` for division and `%` for modulo.
+describe("a wowsims division", function()
+    local div = cmp("OpGt", { math = { op = "OpDiv", lhs = const("7"), rhs = const("2") } }, const("3"))
+
+    it("is written as /", function()
+        local text = apl.translate({ priorityList = { cast(100, div) } }, ctx({}))
+        assert.are.equal("actions=strike,if=(7/2)>3", text)
+    end)
+
+    it("runs as division through the engine (7 / 2 > 3; modulo would be 1)", function()
+        local headless = require("Game.harness.headless")
+        local ww = require("Forever.helpers.warrior_world")
+        local H = headless.new({ character = ww.character(), pack = ww.PACK })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        local cond = apl.translate({ priorityList = { cast(100, div) } }, ctx({})):match(",if=(.*)$")
+        H.Hekili.DB.profile.packs[ww.PACK].lists = {
+            default = { { enabled = true, action = "berserker_stance", criteria = cond } },
+        }
+        H.Hekili:LoadScripts()
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        assert(headless.cycle(H, t + 0.2))
+        assert.are.same({}, H.errors)
+        assert.are.equal("berserker_stance", out.recs[1] and out.recs[1].actionName)
+    end)
+end)
