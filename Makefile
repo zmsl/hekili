@@ -7,7 +7,7 @@ LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
 .PHONY: gate bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter bench syntax api-check \
-	packs-check tools-test check packs package package-check
+	packs-check tools-test check packs package package-check wowsims-cli wowsims-export wowsims-learn wowsims-packs test-wowsims
 
 bootstrap:
 	scripts/bootstrap.sh
@@ -73,6 +73,27 @@ test-hunter:
 bench:
 	$(BUSTED) --tags=bench tests/Forever/bench_spec.lua
 
+# The wowsims/forever packs (docs/superpowers/plans/2026-10-19-wowsims-packs.md). Dev-only, outside `make check`:
+# wowsims-cli builds the CLI in the checkout (Go, protoc and protoc-gen-go on PATH), wowsims-export SPEC=<spec>
+# exports one recipe's request and log, wowsims-learn CLASS=<TOKEN> the class's learn levels. wowsims-packs (CI-safe)
+# rewrites every wowsims pack's .simc from the checked-in requests.
+WOWSIMS ?= $(HOME)/src/wowsims-forever
+wowsims-cli:
+	cd $(WOWSIMS) && make sim/core/proto/api.pb.go && go build --tags=with_db -o wowsimcli-amd64-linux ./cmd/wowsimcli/cli_main.go
+
+wowsims-export:
+	WOWSIMS=$(WOWSIMS) $(LUA) tools/wowsims/export.lua export $(SPEC)
+
+wowsims-learn:
+	$(LUA) tools/wowsims/export.lua learn $(CLASS)
+
+wowsims-packs:
+	for r in tools/wowsims/specs/*.lua; do [ -e "$$r" ] || continue; $(LUA) tools/wowsims/export.lua pack $$(basename $$r .lua) || exit 1; done
+
+# The wowsims replay and leveling gates (#wowsims; `make check` runs them too, in its #slow tier).
+test-wowsims:
+	$(BUSTED) --tags=wowsims
+
 syntax:
 	git ls-files -z '*.lua' | xargs -0 -n 200 $(LUAC) -p
 
@@ -82,7 +103,7 @@ api-check:
 	git diff --exit-code tools/api_inventory.txt
 
 # The generated RegisterPack blocks match src/Hekili_*/APLs/ (make_pack writes only a changed file, so `make -j` is safe).
-packs-check: packs
+packs-check: wowsims-packs packs
 	git diff --exit-code src
 
 # Offline tests of the release tools (tools/release_notes.py, cf_upload.py, changelog_release.py): no network, no keys.
