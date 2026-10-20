@@ -92,7 +92,8 @@
 
 ### Fixed
 - Warrior: Thunder Clap's debuff on the target was always read as down, so priorities that refresh it suggested
-  Thunder Clap again and again; it now counts from your own Thunder Clap.
+  Thunder Clap again and again; it now counts from any warrior's Thunder Clap on your target, as the game's slow
+  does (a group's second warrior no longer reapplies it).
 - Pre-pull actions no longer show in combat when the pre-pull list hands them to another list: Fury recommended
   Intercept all fight (and planned its rage around it), and Arms did the same with stance dancing on.
 - Mana (Paladin, Shaman, Hunter and other spirit regenerators): in combat the addon forecast mana with the

@@ -649,6 +649,7 @@ spec:RegisterAuras({
             return THUNDER_CLAP_DURATION[knownRank(THUNDER_CLAP)] or 10
         end,
         max_stack = 1,
+        shared = "target", -- any warrior's Thunder Clap slows the target (read from the target since GAP AJ)
     },
     windfury = {
         id = 8515,

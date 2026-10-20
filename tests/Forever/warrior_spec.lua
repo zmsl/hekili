@@ -463,9 +463,13 @@ describe("Forever Warrior", function()
 
     -- The state reads a `shared` aura from the player's debuffs (src/Hekili/Engine/Sim/State.lua's debuff lookup), so a
     -- target debuff marked shared (Classic's `shared = "target"`) reads down while the target has it.
-    it("marks no target debuff shared: Thunder Clap's reads the target's", function()
+    it("shares only Thunder Clap's debuff, read from the target (any warrior's slows it)", function()
         for key, a in pairs(w.auras) do
-            assert.is_true(a.shared == nil or a.shared == "player", key)
+            if key == "thunder_clap" then
+                assert.are.equal("target", a.shared)
+            else
+                assert.is_true(a.shared == nil or a.shared == "player", key)
+            end
         end
     end)
 
