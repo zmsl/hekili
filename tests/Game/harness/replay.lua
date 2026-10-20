@@ -212,6 +212,21 @@ function M.manaRegen(ev)
     return idle, casting <= idle and casting or 0
 end
 
+--- The log's pools (M.parse's `ev`): { [powerType] = its first line's before-value }, { [powerType] = its maximum
+--- ("of N total") }: the one source of every pool maximum in a replay (the world's, the client's UnitPowerMax and the
+--- character's: tests/Forever/helpers/wowsims.lua `logged`).
+--- shortcut: the first line's total; take each line's own if a log's maximum moves mid-fight
+function M.pools(ev)
+    local start0, maxOf = {}, {}
+    for _, e in ipairs(ev) do
+        local pt = e.kind == "power" and M.POWER[e.name]
+        if pt and start0[pt] == nil then
+            start0[pt], maxOf[pt] = e.from, e.total
+        end
+    end
+    return start0, maxOf
+end
+
 --- A replay of log `text` bound to booted instance `H`'s class data (abilities by `key`, `id`, `copy`, `cooldown`: a
 --- number, else the engine's answer `H.Hekili.State.action[key].cooldown` (talent-modified), else the log's least
 --- spacing between two of the key's casts; auras by `id`, `copy`, `duration`). `o.shared` ({ [key] = partner key or
@@ -396,16 +411,8 @@ function M.new(text, H, o)
         end
     end
     R.mobHealth = math.floor(before / (1 - M.TAIL)) + 1
-    -- the starting powers: each power's first line's before-value; each pool's maximum ("of N total")
-    -- shortcut: the first line's total; take each line's own if a log's maximum moves mid-fight
-    local start0 = {}
-    R.maxOf = {}
-    for _, e in ipairs(p.ev) do
-        local pt = e.kind == "power" and M.POWER[e.name]
-        if pt and start0[pt] == nil then
-            start0[pt], R.maxOf[pt] = e.from, e.total
-        end
-    end
+    local start0
+    start0, R.maxOf = M.pools(p.ev)
 
     R.manaIdle, R.manaCasting = M.manaRegen(p.ev)
 

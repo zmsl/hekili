@@ -29,11 +29,6 @@ local function wowsims(base, drop, world)
                 end
             end
             c.known = known
-            -- shortcut: the shared harness boots the character with the class world's max, not the log's (shared gap
-            -- "power pools in the replay"); delete this override when M.content starts it with R.maxOf[pt] (ruling P10).
-            if world.max then -- the log's pool: percent costs priced on it (the oracle's state and the answers)
-                c.power = { type = c.power.type, token = c.power.token, max = world.max }
-            end
             return c
         end,
     }, { __index = base })
@@ -59,9 +54,9 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     pw.Retribution.character() -- fills IDS
     pw.Protection.character()
 
-    -- Mana: the log's pool and its regen per second, { from 5 s after the last spend, inside the five-second rule }
+    -- Mana: its regen per second, { from 5 s after the last spend, inside the five-second rule }
     -- (Retribution: 2.19 and 0.825 each 0.1 s; Protection: 1.738 and none).
-    local RET = wowsims(pw.Retribution, set(EXORCISM_ANY), { max = 3737, fsr = { [0] = { 21.9, 8.25 } } })
+    local RET = wowsims(pw.Retribution, set(EXORCISM_ANY), { fsr = { [0] = { 21.9, 8.25 } } })
     local RET_LIVE = wowsims(pw.Retribution, set(EXORCISM_ANY), {})
 
     it("Retribution (wowsims.com) follows wowsims's casts", function()
@@ -85,7 +80,7 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
 
     -- The build takes no Holy Shock.
     local PROT_DROP = set(pw.Protection.IDS.holy_shock, EXORCISM_ANY)
-    local PROT = wowsims(pw.Protection, PROT_DROP, { max = 2597, fsr = { [0] = { 17.38, 0 } } })
+    local PROT = wowsims(pw.Protection, PROT_DROP, { fsr = { [0] = { 17.38, 0 } } })
     local PROT_LIVE = wowsims(pw.Protection, PROT_DROP, {})
 
     it("Protection (wowsims.com) follows wowsims's casts", function()

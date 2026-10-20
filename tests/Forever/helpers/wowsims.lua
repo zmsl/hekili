@@ -209,12 +209,29 @@ function M.content(base, o)
     return C
 end
 
+--- Content `C` as the replay character of spec `spec`'s log: its power's maximum the log's (replay.pools), the pool
+--- the world and the client's UnitPowerMax read too, so percent costs are priced on it at boot.
+function M.logged(C, spec)
+    local _, maxOf = replay.pools(replay.parse(M.log(spec)).ev)
+    return setmetatable({
+        character = function()
+            local c = C.character()
+            local p, m = c.power, maxOf[c.power and c.power.type]
+            if m then
+                c.power = { type = p.type, token = p.token, value = p.value, max = m }
+            end
+            return c
+        end,
+    }, { __index = C })
+end
+
 --- The replay gate of content `C` on spec `spec`'s log: prints "<label> wowsims: <line>", asserts the engine's health
 --- (pack_gate.health) and decisions on-GCD >= `floor`. `o`: replay.new's knobs over the character's forms, the
 --- request's target creature type, its distance (M.distance), the content's shared category cooldowns (C.SHARED) and
---- the content WORLD's regen and fsr. Returns the
+--- the content WORLD's regen and fsr; the character's pool the log's (M.logged). Returns the
 --- summary and the line.
 function M.gate(label, C, spec, floor, o)
+    C = M.logged(C, spec)
     local L = loop.new(C)
     local ro = setmetatable({
         forms = C.character().forms,
