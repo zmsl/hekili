@@ -41,6 +41,28 @@ describe("Engine/Driver.lua through the engine frame", function()
         until not f:IsThreadActive()
     end
 
+    -- Bytes per refresh over n refreshes after warm-up. The collector stays stopped across the window: a GC cycle
+    -- completing between two refreshes would free what the next one rebuilds once (the thread's stack, interned
+    -- strings, VM buffers: a cost per cycle, not per Update) and land it on one measured refresh. As in
+    -- tests/Game/State/helpers/alloc.lua: collect, absorb that rebuild through the measured path itself, then measure.
+    -- `during` runs between the absorbing refresh and the window (to install a measuring wrapper).
+    local function perUpdate(n, during)
+        collectgarbage("collect")
+        collectgarbage("collect")
+        collectgarbage("stop")
+        tick()
+        if during then
+            during()
+        end
+        local b = collectgarbage("count")
+        for _ = 1, n do
+            tick()
+        end
+        local d = (collectgarbage("count") - b) * 1024 / n
+        collectgarbage("restart")
+        return d
+    end
+
     it("allocates 0 B per Update after warm-up, AddToStack included, and runs one Update body per refresh", function()
         -- warm-up: 35 refreshes, past the Driver's 30-sample FPS window filling (its array grows to 32 slots)
         for _ = 1, 35 do
@@ -48,25 +70,32 @@ describe("Engine/Driver.lua through the engine frame", function()
         end
         assert.are.equal(35, runs)
         local add, stackBytes, stackCalls = H.Hekili.AddToStack, 0, 0
-        H.Hekili.AddToStack = function(...)
-            local b = collectgarbage("count")
-            add(...)
-            stackBytes, stackCalls = stackBytes + (collectgarbage("count") - b), stackCalls + 1
-        end
-        local total = 0
-        for _ = 1, 45 do
-            collectgarbage("stop")
-            local b = collectgarbage("count")
-            tick()
-            total = total + (collectgarbage("count") - b)
-            collectgarbage("restart")
-        end
+        local bytes = perUpdate(45, function()
+            H.Hekili.AddToStack = function(...)
+                local b = collectgarbage("count")
+                add(...)
+                stackBytes, stackCalls = stackBytes + (collectgarbage("count") - b), stackCalls + 1
+            end
+        end)
         H.Hekili.AddToStack = add
-        assert.are.equal(80, runs)
+        assert.are.equal(81, runs)
         assert.is_true(stackCalls > 0)
         assert.are.equal(0, stackBytes * 1024)
-        assert.are.equal(0, total * 1024 / 45)
+        assert.are.equal(0, bytes)
         assert.are.same({}, H.errors)
+    end)
+
+    it("still sees an allocation of about 100 B per Update", function()
+        for _ = 1, 35 do
+            tick()
+        end
+        local sink = {}
+        H.Hekili.Update = function(...)
+            sink[runs % 2 + 1] = { 1, 2, 3, 4 } -- a table and its 4-slot array: 128 B on 64-bit Lua 5.1
+            runs = runs + 1
+            return upd(...)
+        end
+        assert.is_true(perUpdate(45) >= 100)
     end)
 
     it("starts a fresh thread after a snapshot drops one mid-Update, and never resumes the dropped one", function()
