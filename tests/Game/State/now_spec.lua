@@ -278,6 +278,17 @@ describe("now handlers", function()
         assert.are.equal(0, I.nowErrors)
     end)
 
+    it("starts the cooldown at the cast's own time when its success folds late (GAP W)", function()
+        register("cd_late", { id = 6167, cooldown = 9 })
+        start()
+        ctl.now = 20
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 6167) -- staged at 20
+        I.Sources.Direct(VS.Obs.Haste, 20.3, 0, 0, 2) -- logged first: the fold's clock reaches 20.3 before the success
+        ctl.Tick(20.31)
+        VS.Drain(20.32)
+        assert.are.equal(29, VS.Cooldown(6167, 20.4).est)
+    end)
+
     it("brings a charged ability's next charge sooner with reduceCooldown", function()
         register("ch_test", { id = 6168, cooldown = 20, charges = 2, recharge = 20 })
         register("ch_cut", {
