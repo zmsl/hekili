@@ -1,16 +1,18 @@
 -- tools/wowsims/specs/hunter_survival.lua (wowsims packs plan, Task 11): Survival (wowsims.com)'s wowsims/forever request and translation.
 -- Values from wowsims/forever (MIT) ui/specs/hunter/dps/presets.ts:68-89,128-134 at the pin (the SV Weave talents,
 -- DefaultOptions = NoPetOptions, OtherDefaults; the default rotation Melee Weave, apls/default.apl.json; gear p1).
--- Disagreements worked (P7), decisions on-GCD 0.780 (41) top [multi_shot -> arcane_shot 3; strider_kick -> wing_clip 3;
--- hunters_mark -> false 1]:
---   multi_shot -> arcane_shot: replay limit (secret mana; see hunter_beast_mastery.lua).
---   strider_kick -> wing_clip: API-forced price (no base mana read): its percent-of-base cost priced on the maximum.
---   hunters_mark -> false: replay limit, the in-combat mana lower bound under the mark's 60.
+-- Disagreements worked (P7, after central fix 6: the log's pools, casts priced when heard), decisions on-GCD 0.805 (41)
+-- top [multi_shot -> arcane_shot 3; strider_kick -> wing_clip 3; immolation_trap -> wing_clip 1]:
+--   multi_shot -> arcane_shot: shared gap (`%` division read as Lua's modulo; see
+--   hunter_beast_mastery.lua).
+--   strider_kick -> wing_clip: shared gap (percent-of-base costs priced on the maximum; see hunter_marksmanship.lua).
+--   immolation_trap -> wing_clip (37.09 s): API-forced (mana secret in combat): the belief sits at its last usable
+--   rung, Strider Kick's price (64.8; 39.95 priced on base mana), while the truth is 112 and the trap costs 98.
 -- Content gaps fixed (P6): Resourcefulness (440529, 2/2) cuts Raptor Strike, Mongoose Bite, Wing Clip, Immolation Trap
 -- and Strider Kick 60% (wowsims's 40, 26, 32, 98 and 39.6; 30% at rank 1): before it the bite was believed short of
 -- mana at every window (0.415 -> 0.659), and with Raptor Strike priced too and the world's truth under the build's
 -- talents 0.659 -> 0.780. Strider Kick's DB2 mask is outside 440529's, but wowsims's log charges it 39.6: the kit
--- follows the log. The replay's pool is the world's 5000 until central fix 6.
+-- follows the log.
 -- Ranges: the weave's melee-range lines read `target.within5` (rule 11) and the shots the bracket from the kit's
 -- range checks; wowsims's Movement steps place us in the replay.
 -- autocastOtherCooldowns (rule 13, from the log's "Major cooldown used"): Blood Fury (20572, the Orc's) and Rapid Fire

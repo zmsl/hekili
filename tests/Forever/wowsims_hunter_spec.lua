@@ -49,9 +49,9 @@ local REPLAY = { hidden = { [1310726] = true } }
 -- (their worlds at 11 yd, the weave's range) believe Arcane Shot's mana short after Rapid Fire's 100 (BM less long: its
 -- Efficiency); SV, whose strikes Resourcefulness makes cheap, never idles at 60.
 local PACKS = {
-    { "hunter_beast_mastery", "BeastMastery", "Beast Mastery (wowsims.com)", 0.81, 5.4 },
-    { "hunter_marksmanship", "Marksmanship", "Marksmanship (wowsims.com)", 0.73, 9.2 },
-    { "hunter_survival", "Survival", "Survival (wowsims.com)", 0.78, 0 },
+    { "hunter_beast_mastery", "BeastMastery", "Beast Mastery (wowsims.com)", 0.88, 5.4 },
+    { "hunter_marksmanship", "Marksmanship", "Marksmanship (wowsims.com)", 0.83, 9.2 },
+    { "hunter_survival", "Survival", "Survival (wowsims.com)", 0.80, 0 },
 }
 
 describe("the Hunter wowsims.com packs #slow #wowsims", function()

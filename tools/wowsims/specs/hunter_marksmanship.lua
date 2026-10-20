@@ -1,14 +1,16 @@
 -- tools/wowsims/specs/hunter_marksmanship.lua (wowsims packs plan, Task 11): Marksmanship (wowsims.com)'s wowsims/forever request and translation.
 -- Values from wowsims/forever (MIT) ui/specs/hunter/dps/presets.ts:68-89,128-134 at the pin (the MM Weave talents,
 -- DefaultOptions = NoPetOptions, OtherDefaults; the default rotation Melee Weave, apls/default.apl.json; gear p1).
--- Disagreements worked (P7), decisions on-GCD 0.738 (42) top [strider_kick -> wing_clip 5; mongoose_bite -> false 2;
--- multi_shot -> arcane_shot 2]:
---   strider_kick -> wing_clip: API-forced price (no base mana read): Strider Kick costs 5.81% of base mana, priced as a
---   fraction of the maximum (overstated), so at low mana the belief takes it as short and shows Wing Clip.
---   mongoose_bite -> false: replay limit, the in-combat mana lower bound (secret mana) under the bite's price.
---   multi_shot -> arcane_shot: replay limit, the same bound (see hunter_beast_mastery.lua).
+-- Disagreements worked (P7, after central fix 6: the log's pools, casts priced when heard), decisions on-GCD 0.833 (42)
+-- top [strider_kick -> wing_clip 5; multi_shot -> arcane_shot 2]:
+--   strider_kick -> wing_clip: shared gap (percent-of-base costs priced on the maximum): Strider Kick's 5.81% of base
+--   mana is priced on the log's maximum 2790 (64.8 after Resourcefulness) vs wowsims's 39.6, with the true mana 40-52.
+--   Priced on base mana (a local run): 0.905, and the two left (149 s, 168 s) are API-forced: mana is secret in combat
+--   and the belief's bound [32, 37] sits under a 39.96 the truth (40.0, 40.4) clears by under 1.
+--   multi_shot -> arcane_shot: shared gap (`%` division read as Lua's modulo; see
+--   hunter_beast_mastery.lua).
 -- Prices (P6): Resourcefulness 2/2 (440529) cuts Raptor Strike, Mongoose Bite, Wing Clip, Immolation Trap and Strider
--- Kick 60% (wowsims's 40, 26, 32, 98, 39.6). The replay's pool is the world's 5000 until central fix 6.
+-- Kick 60% (wowsims's 40, 26, 32, 98, 39.6).
 -- Ranges: the weave's melee-range lines read `target.within5` (rule 11) and the shots the bracket from the kit's
 -- range checks; wowsims's Movement steps place us in the replay.
 -- autocastOtherCooldowns (rule 13, from the log's "Major cooldown used"): Blood Fury (20572, the Orc's) and Rapid Fire
