@@ -35,6 +35,10 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- answer, a flip's pin: the game held more than we believed) and the latest lifting rung's time; a landed swing at or
 -- before it pays that much less (owe, I.On(Obs.Swing)). `liftRec[r]`: the credit record that paid from it (its crit
 -- may pay the rest).
+-- `over[r]`: how far the modelled floor sits above the measured one (lo0): a regenerating slot that rests at its
+-- maximum is built at rest (est, and this floor: lo0 + over), and the floor then moves with everything that moves lo0;
+-- a measurement the floor contradicts (a short answer below it, a pin's top under it, an exact read) drops it to lo0.
+-- Without it a slot never read plainly (mana, secret even out of combat) holds the dearest usable cost as its floor.
 local R = {
     n = 0,
     type = {},
@@ -94,6 +98,7 @@ local R = {
     liftH = {},
     liftT = {},
     liftRec = {},
+    over = {},
 }
 I.res = R
 R.slotOf, R.slotOfToken = {}, {}
@@ -188,6 +193,25 @@ local function clamp(v, max)
     return v
 end
 
+-- Slot r's modelled floor (lo0 + over) kept at or under the maximum. Allocates nothing.
+local function norm(r)
+    local room = R.max[r] - R.lo0[r]
+    if R.over[r] > room then
+        R.over[r] = room > 0 and room or 0
+    end
+end
+
+-- After a measurement moved lo0, slot r's modelled floor (`was`, lo0 + over before it), if any, stays where it was
+-- unless the measurement's top `top` falls under it (then it is lo0). Allocates nothing.
+local function remeasure(r, was, top)
+    if R.over[r] <= 0 then
+        return -- no modelled floor above the measured one: a measurement moves lo0 alone, as before
+    end
+    local o = top < was - I.EPS and 0 or was - R.lo0[r]
+    R.over[r] = o > 0 and o or 0
+    norm(r)
+end
+
 -- Slot r's maximum becomes m. A slot resting at its maximum rests at the new one, and its estimate and upper bound rise
 -- by an increase (seeded at 100, a plain read of 1200 believes 1200), kept out of the regen measurement; a decrease
 -- caps every slot's interval at the new maximum. Allocates nothing.
@@ -198,10 +222,14 @@ local function setMax(r, m)
         local before = R.est0[r]
         R.est0[r], R.lo0[r], R.hi0[r] = clamp(before, m), clamp(R.lo0[r], m), clamp(R.hi0[r], m)
         R.pinDelta[r] = R.pinDelta[r] + R.est0[r] - before -- the capped-away amount stays out of the regen measurement
+        norm(r)
     end
     if R.restMax[r] then
         R.rest[r] = m
         if up > 0 then
+            if R.over[r] > 0 and R.lo0[r] + R.over[r] >= m - up - I.EPS then
+                R.over[r] = R.over[r] + up -- the modelled floor was at rest: it rests at the new maximum
+            end
             R.est0[r] = clamp(R.est0[r] + up, m)
             R.hi0[r] = clamp(R.hi0[r] + up, m)
             R.pinDelta[r] = R.pinDelta[r] + up
@@ -232,6 +260,7 @@ I.OnBuild(function(def, now)
         R.swingOff[r] = d.swingOff or 0
         R.swingCrit[r], R.swingOffCrit[r] = d.swingCrit or 0, d.swingOffCrit or 0
         R.est0[r], R.lo0[r], R.hi0[r] = R.rest[r], 0, R.max[r]
+        R.over[r] = R.restMax[r] and R.swing[r] == 0 and R.rest[r] or 0 -- the floor at rest too (over)
         local fsr = type(d.fsr) == "table" and d.fsr or false
         local rate, spirit = d.regen or 0, 0
         if fsr then
@@ -484,6 +513,7 @@ I.OnAdvance(function(from, to)
             R.lo0[r] = clamp(R.lo0[r] + R.regL[r] * a + R.spL[r] * b, max)
             R.hi0[r] = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b, max)
             R.pinA[r], R.pinB[r] = R.pinA[r] + a, R.pinB[r] + b
+            norm(r)
         end
     end
     for g = 1, G.n do
@@ -495,6 +525,7 @@ I.OnAdvance(function(from, to)
             R.lo0[r] = clamp(R.lo0[r] + v, max)
             R.hi0[r] = clamp(R.hi0[r] + v, max)
             R.pinDelta[r] = R.pinDelta[r] + v
+            norm(r)
         end
     end
     if fighting then
@@ -628,6 +659,7 @@ local function pin(r, v, width, t, origin, event, mid)
         calibrate(r, R.shaped[r] and gain or gain / dt, t) -- nonzero: dt >= PIN_GAP (1 s)
     end
     local max = R.max[r]
+    local was = R.lo0[r] + R.over[r]
     local est = v + width / 2
     if origin == "pinned" then
         est = R.est0[r] < v and v or (R.est0[r] > v + width and v + width or R.est0[r])
@@ -636,6 +668,7 @@ local function pin(r, v, width, t, origin, event, mid)
     R.snapT[r] = -1e9 -- an anchor, not a snap
     R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r] = t, vm, 0, measures
     R.pinA[r], R.pinB[r] = 0, 0
+    remeasure(r, was, origin == "pinned" and v + width or -1) -- an exact read leaves no model above it
     I.Sample(R.power[r], origin, R.est0[r], t, event)
 end
 
@@ -658,6 +691,7 @@ local function ladder(r, c, affordable, t, lag)
         end
     end
     local snapped = false
+    local was = R.lo0[r] + R.over[r]
     if affordable then
         if R.lo0[r] < c then
             R.lo0[r] = c
@@ -680,6 +714,7 @@ local function ladder(r, c, affordable, t, lag)
             R.lo0[r] = top < 0 and 0 or top -- the newest bound wins
         end
     end
+    remeasure(r, was, affordable and R.max[r] or c - I.EPS)
     return snapped
 end
 
@@ -999,7 +1034,7 @@ I.On(Obs.CastSuccess, function(o, t, lag)
     if r == 0 or I.ab.obj[a].onNextSwing then
         return
     end
-    local c = I.CostOf(a)
+    local c = I.CastCost(o, a)
     local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
     if c > 0 and ladder(r, c, true, t, lag) then
         I.Sample(R.power[r], "pinned", R.est0[r], t, Obs.CastSuccess)
@@ -1029,6 +1064,7 @@ I.On(Obs.PlayerHit, function(o, t)
                 R.est0[r] = clamp(R.est0[r] + gain, max)
                 R.lo0[r] = clamp(R.lo0[r] + (gain > width and gain - width or 0), max)
                 R.hi0[r] = clamp(R.hi0[r] + gain + width, max)
+                norm(r)
                 -- the full gain even when capped, as I.ResourceShift does (review minor 3: skipped for both)
                 R.pinDelta[r], R.gain[r] = R.pinDelta[r] + gain, R.gain[r] + gain
                 I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.PlayerHit)
@@ -1096,7 +1132,13 @@ end)
 function I.ResourceShift(r, delta, t, event)
     local max = R.max[r]
     R.est0[r] = clamp(R.est0[r] + delta, max)
-    R.lo0[r] = clamp(R.lo0[r] + delta, max)
+    local lo = R.lo0[r]
+    R.lo0[r] = clamp(lo + delta, max)
+    if delta < 0 and R.over[r] > 0 then -- the part the measured floor could not lose (at 0) comes off the model's
+        local o = R.over[r] + delta - (R.lo0[r] - lo)
+        R.over[r] = o > 0 and o or 0
+    end
+    norm(r)
     R.hi0[r] = clamp(R.hi0[r] + delta, max)
     R.pinDelta[r] = R.pinDelta[r] + delta
     if delta > 0 then
@@ -1132,7 +1174,7 @@ function VS.Power(powerType, now)
     end
     local a, b = spans(r, I.clock, dt)
     local est = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b + gain, max)
-    local lo = clamp(R.lo0[r] + R.regL[r] * a + R.spL[r] * b + gain, max)
+    local lo = clamp(R.lo0[r] + R.over[r] + R.regL[r] * a + R.spL[r] * b + gain, max)
     local hi = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b + gain, max)
     if lo > est then
         lo = est

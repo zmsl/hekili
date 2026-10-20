@@ -334,6 +334,15 @@ end
 --- The cost the ladder uses for ability a: the spec's `spend` (decision 2), a number or a function bound to `state`
 --- (Hekili's ability table already evaluates a function `spend` on access; a raw one is called here). The plain
 --- out-of-combat read (`readCost`, Sources/Spellbook.lua) only confirms it, in Snapshot(): its units are the client's.
+--- What our cast success `o` of ability a paid: the cost priced when it was heard (Sources/Casts.lua: `o.b`, with
+--- `o.c` 1), else I.CostOf(a) now. Allocates nothing.
+function I.CastCost(o, a)
+    if o.c == 1 then
+        return o.b
+    end
+    return I.CostOf(a)
+end
+
 function I.CostOf(a)
     local c = I.BaseCostOf(a)
     if I.CostMod then
@@ -344,9 +353,34 @@ end
 
 --- Ability a's declared cost, before any cost modifier (0 when it has none); a cost between 0 and 1 is that fraction
 --- of its resource's believed maximum, as Hekili's simulation prices it (State.lua's spend). Allocates nothing.
+local simOnly = {} -- by declared cost function: true once it raised in the belief's context (it then prices as before)
+
+-- A declared cost function evaluated in the belief's `now` context at the clock (its `buff`, `talent`, ... the
+-- belief's, as Resources.lua's `usable` check): a cost that reads an aura (Maelstrom Weapon's stacks) is the cast's
+-- own, not the simulation's last reset's. Nil when it raised there. Allocates nothing once it has raised.
+local function beliefCost(f)
+    if simOnly[f] then
+        return nil
+    end
+    local env = getfenv(f)
+    setfenv(f, I.nowCtx)
+    I.NowAt(I.clock)
+    local ok, v = pcall(f)
+    setfenv(f, env)
+    if not ok then
+        simOnly[f] = true
+        return nil
+    end
+    return v
+end
+
 function I.BaseCostOf(a)
     local obj = I.ab.obj[a]
-    local c = obj.baseSpend -- the declared cost before the simulation's modifiers (Engine/Schema/Races.lua)
+    local f = rawget(obj, "declaredSpend")
+    local c = f and I.nowCtx and beliefCost(f)
+    if c == nil then
+        c = obj.baseSpend -- the declared cost before the simulation's modifiers (Engine/Schema/Races.lua)
+    end
     if c == nil then
         c = obj.spend
     end

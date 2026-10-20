@@ -127,15 +127,16 @@ describe("resources", function()
         it("pins nothing from a finisher's short answer at 0 points, nor the flip once points come", function()
             obs(Obs.Usable, 10, FINISHER, 0, 1)
             I.Fold(10, false)
-            assert.are.same(
-                { 100, 0, 100 },
+            assert.are.same( -- untouched: at rest, the modelled floor too
+                { 100, 100, 100 },
                 { VS.Power(ENERGY, 10).est, VS.Power(ENERGY, 10).lo, VS.Power(ENERGY, 10).hi }
             )
             I.ResourceShift(2, 1, 10.5, Obs.CastSuccess) -- a builder's point
             obs(Obs.Usable, 11, FINISHER, 1, 0) -- usable now: the points crossed, not the energy
             I.Fold(11, false)
             local e = VS.Power(ENERGY, 11)
-            assert.are.same({ 100, 30 }, { e.est, e.lo }) -- a plain floor at the cost, no exact pin at 30
+            assert.are.same({ 100, 100 }, { e.est, e.lo }) -- a floor at the cost under the rest, no exact pin at 30
+            assert.are.equal(30, I.res.lo0[1]) -- the measured floor
         end)
 
         it("pins the short answer once the precondition holds", function()
@@ -149,7 +150,7 @@ describe("resources", function()
             obs(Obs.Usable, 10, NOLADDER, 1, 0)
             obs(Obs.Usable, 10, NOLADDER, 0, 1)
             I.Fold(10, false)
-            assert.are.same({ 100, 0 }, { VS.Power(ENERGY, 10).est, VS.Power(ENERGY, 10).lo })
+            assert.are.same({ 100, 100 }, { VS.Power(ENERGY, 10).est, VS.Power(ENERGY, 10).lo }) -- no rung: at rest
             obs(Obs.Usable, 11, PLAIN, 0, 1)
             I.Fold(11, false)
             within(20 - I.EPS, VS.Power(ENERGY, 11).est)
@@ -917,6 +918,83 @@ describe("resources", function()
         end)
     end)
 
+    describe("a never-plain regenerating slot (mana): the modelled floor", function()
+        local MANA, SEAL, BIG = 0, 1, 2
+        local function bootMana()
+            boot({
+                abilities = { { key = "seal", spend = 150 }, { key = "big", spend = 305 } },
+                abilityIds = { { 1001 }, { 1002 } },
+                abilitySlot = { 1, 1 },
+                resources = {
+                    {
+                        key = "mana",
+                        type = MANA,
+                        token = "MANA",
+                        max = 3737,
+                        rest = true,
+                        fsr = { spirit = 13.65, mp5 = 8.25 },
+                    },
+                },
+                auras = {},
+                auraIds = {},
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.res.regL[1], I.res.spL[1] = 8.25, 13.65 -- the out-of-combat read made both parts exact
+            I.res.regH[1], I.res.spH[1] = 8.25, 13.65
+            I.Settle(10)
+        end
+
+        it("drops the floor to the ladder's at a short answer below it", function()
+            bootMana()
+            obs(Obs.Usable, 10, BIG, 0, 1) -- short of 305: the rest was wrong
+            I.Fold(10, false)
+            local r = VS.Power(MANA, 10)
+            assert.is_true(r.lo < 305 and r.est < 305 and r.hi < 305)
+            assert.are.equal(0, I.res.over[1]) -- the measured floor alone: what regen gave since the build
+        end)
+
+        it(
+            "follows a 30 s fight's spends and regen, where the measured floor sat at the dearest usable cost",
+            function()
+                -- the Retribution collapse (Paladin lane, task 9): a seal (150) every 3 s, the dearest spell (305) usable
+                -- at each; the truth is the rest less the spends plus the window-aware regen (8.25 inside, 21.9 after)
+                bootMana()
+                obs(Obs.CombatStart, 10, 0, 0, 0)
+                I.Fold(10, false)
+                local truth, last = 3737, 10
+                for k = 0, 9 do
+                    local t = 10 + 3 * k
+                    truth = math.min(3737, truth + 8.25 * (t - last)) -- inside the window since the last spend (3 s < 5)
+                    last = t
+                    obs(Obs.Usable, t, BIG, 1, 0)
+                    obs(Obs.CastSuccess, t, SEAL)
+                    I.Fold(t, false)
+                    truth = truth - 150
+                    local r = VS.Power(MANA, t)
+                    assert.is_true(
+                        r.lo <= truth + 1e-6 and r.lo >= truth - 1e-6,
+                        ("lo %.1f truth %.1f"):format(r.lo, truth)
+                    )
+                end
+                assert.is_true(I.res.lo0[1] < 400) -- the measured floor alone: the dearest usable cost and what regen adds
+                within(truth + 8.25 * 5 + 21.9 * 5, VS.Power(MANA, last + 10).lo) -- then the window closes at last + 5
+            end
+        )
+
+        it("opens the five-second window at a paid cast only, not at a free one", function()
+            bootMana()
+            obs(Obs.CombatStart, 10, 0, 0, 0)
+            S.Direct(Obs.CastSuccess, 11, SEAL, 0, 1) -- priced 0 when heard (a free-cast aura): no spend, no window
+            I.Fold(11, false)
+            assert.are.equal(0, I.res.fsrUntil[1])
+            S.Direct(Obs.CastSuccess, 12, SEAL, 150, 1)
+            I.Fold(12, false)
+            assert.are.equal(17, I.res.fsrUntil[1])
+            within(3737 - 150, VS.Power(MANA, 12).est)
+        end)
+    end)
+
     describe("the five-second rule (C3: mana's `fsr`, spirit 10/s and mp5 2/s declared)", function()
         local MANA = 0
 
@@ -1005,32 +1083,21 @@ describe("resources", function()
             assert.are.equal(14, VS.Regen(MANA, 110).est)
         end)
 
-        -- The lower bound mana floors (D7, `mana.pct>=N`) are judged on: 0 at a fresh boot (mana is secret even out of
-        -- combat), then the regen's low edge out of combat, so a long rest makes it the maximum.
-        it(
-            "lifts a fresh boot's lower bound to the maximum over a long rest, a secret read never in the maths",
-            function()
-                within(9 * 12 * 0.9, VS.Power(MANA, 10).lo) -- the declared rates' low edge since the build at 1
-                local api = fake.new() -- its clock at 100
-                I.api = api
-                VS.Start(api)
-                api.ctl.powerMax[MANA] = 1000
-                api.ctl.regen[MANA] = { 15, 3 } -- exact once read: spirit 12 + mp5 3
-                -- ctl.power[MANA] unset: every UnitPower answers the SECRET proxy, which raises on any compare or maths
-                local function poll(t)
-                    api.ctl.Tick(t)
-                    S.RunPolls(t)
-                    I.Fold(t, false)
-                end
-                poll(101)
-                local lo = VS.Power(MANA, 101).lo
-                assert.is_true(lo < 1000)
-                poll(140)
-                within(lo + 15 * 39, VS.Power(MANA, 140).lo) -- the read rate, exact
-                poll(200)
-                assert.are.same({ 1000, 1000, 1000 }, { VS.Power(MANA, 200).lo, VS.Power(MANA, 200).est, I.res.max[1] })
-            end
-        )
+        -- The lower bound mana floors (D7, `mana.pct>=N`) are judged on: the build assumes rest, the floor too (mana is
+        -- secret even out of combat, so nothing measures it), and only a measurement below it drops it.
+        it("rests a fresh boot's floor at the maximum, a secret read never in the maths", function()
+            within(1000, VS.Power(MANA, 10).lo)
+            local api = fake.new() -- its clock at 100
+            I.api = api
+            VS.Start(api)
+            api.ctl.powerMax[MANA] = 1000
+            api.ctl.regen[MANA] = { 15, 3 } -- exact once read: spirit 12 + mp5 3
+            -- ctl.power[MANA] unset: every UnitPower answers the SECRET proxy, which raises on any compare or maths
+            api.ctl.Tick(101)
+            S.RunPolls(101)
+            I.Fold(101, false)
+            assert.are.same({ 1000, 1000, 1000 }, { VS.Power(MANA, 101).lo, VS.Power(MANA, 101).est, I.res.max[1] })
+        end)
 
         it(
             "carries the rested bound through combat: lowered by our spend, the window at the mp5 part's low edge",

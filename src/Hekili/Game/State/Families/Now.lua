@@ -305,11 +305,11 @@ end)
 ----------------------------------------------------------------------------------------------------------------------
 -- The trigger: our cast's automatic effects, then its `now`.
 
-local function automatic(a, t, kind)
+local function automatic(a, t, kind, o)
     local obj = A.obj[a]
     local r = A.slot[a]
     if r > 0 then -- an on-next-swing strike's success arrives with its swing, which is when it pays
-        local c = I.CostOf(a)
+        local c = I.CastCost(o, a)
         if c > 0 then
             I.ResourceShift(r, -c, t, kind)
         end
@@ -349,7 +349,7 @@ local function run(o, t)
     if not A.obj[a] or not A.key[a] or A.extra[a] then
         return
     end
-    automatic(a, t, o.kind)
+    automatic(a, t, o.kind, o)
     A.castStartT[a] = 0 -- consumed: a later instant cast of the same ability starts its own GCD
     I.castsRun = I.castsRun + 1
     local f = A.now[a]

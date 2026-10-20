@@ -191,6 +191,9 @@ function M.Wrap(a)
         return
     end
     rawset(a, "spend", nil)
+    if type(declared) == "function" then
+        rawset(a, "declaredSpend", declared) -- the raw function: the belief prices a cast in its own context (Casts.lua)
+    end
     local function base()
         if type(declared) == "function" then
             return declared()

@@ -54,7 +54,9 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     if not a then
         return
     end
-    Stage(Obs.CastSuccess, t, a)
+    -- priced now, on the last fold's belief: a cost-cutting aura the cast consumes (its UNIT_AURA read, Direct, can
+    -- reach the log before this staged success) still prices it (I.CastCost)
+    Stage(Obs.CastSuccess, t, a, I.CostOf(a), 1)
     I.Log.Cast("SPELL_CAST_SUCCESS", t, spellID, I.sentGUID or Plain(api, api.UnitGUID("target")))
     I.sentGUID = nil
     Urgent("UNIT_SPELLCAST_SUCCEEDED")

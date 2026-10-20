@@ -189,8 +189,8 @@ end
 --                                    The belief's only: no APL field (`mana.fsr` would call the table and raise). Out
 --                                    of combat GetPowerRegenForPowerType's two returns (not casting, casting) are read
 --                                    as spirit + mp5 and mp5 (Sources/Power.lua). Mana is secret even out of combat:
---                                    its lower bound (`mana.current`, `mana.pct`) is 0 on a fresh boot and climbs at
---                                    the regen's low edge, so a percent floor holds only after a rest (minutes).
+--                                    its lower bound (`mana.current`, `mana.pct`) is the build's rest (full), moved by
+--                                    our spends and the regen, until a short answer below it drops it to the ladder's.
 -- A regen entry with `mult` (C3b), `{ aura = key, mult = n }` (n > 0; the belief ignores any other): the resource's
 -- calibrated continuous rate x n while the player's aura `key` is up (an energy or mana surge). It is a rate
 -- multiplier, not a forecast event: it moves out of the regen model into `state.regenMult` here (Hekili's forecast

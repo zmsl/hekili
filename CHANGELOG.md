@@ -44,6 +44,10 @@
   for the WoW Forever client, so the addon showed nothing for these classes.
 - Developer: unreadable (secret) answers to "does this unit exist / is it dead" for target, party, boss and focus units
   are counted by the addon's diagnostics again; an unreadable "is my pet dead" falls back to the addon's own estimate.
+- Mana and energy: the addon no longer believes you nearly out of mana (or energy) after a reload. It assumes the
+  bar full until the game says otherwise, so a mana-rich fight no longer waits on spells it can afford.
+- Free casts: a spell made free by a buff it uses up (Clearcasting, five Maelstrom Weapon stacks) no longer counts as
+  spending mana or opening the five-second rule.
 - Rage: an ability used at the moment of a white swing no longer leaves the rage estimate too high once that swing's
   hit shows up (the swing's rage had already paid for the ability).
 

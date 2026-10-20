@@ -353,14 +353,14 @@ describe("Forever Paladin through the engine", function()
         assert.are.same({}, H.errors)
     end)
 
-    -- (plan "Open after Day 4", the mana bound) Mana is secret even out of combat, so `mana.pct` (the belief's lower
-    -- bound) starts near 0 on a fresh boot and climbs with the declared regen's low edge: the research floor of 10 %
-    -- holds after a long rest out of combat (5000 at the declared 19 a second x 0.9: about 5 minutes to full).
-    it("reads mana.pct near 0 on a fresh boot and the bound full after a long rest out of combat", function()
+    -- (plan "Open after Day 4", the mana bound; central fix 8) Mana is secret even out of combat, so nothing measures it:
+    -- the belief assumes a fresh boot at rest, the bound too (`mana.pct` full), until a measurement says less (a short
+    -- answer below it).
+    it("reads mana.pct full on a fresh boot and keeps the bound full over a rest out of combat", function()
         local t0 = H.ctl.now
         assert.is_true(headless.cycle(H, t0 + 1))
-        assert.is_true(H.Hekili.State.mana.pct < 10)
-        for t = t0 + 2, t0 + 360 do
+        assert.is_true(H.Hekili.State.mana.pct > 90)
+        for t = t0 + 2, t0 + 60 do
             assert.is_true(headless.cycle(H, t))
         end
         assert.are.equal(5000, H.Hekili.Client.UnitPower("player", 0)) -- the facade's answer: the bound, full

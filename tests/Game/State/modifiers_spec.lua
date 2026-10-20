@@ -141,6 +141,43 @@ describe("resource modifiers", function()
         assert.are.equal(15, I.CostOf(spender_b))
     end)
 
+    it(
+        "prices a cast when it is heard: the free-cast aura it consumed, read away first, still makes it free",
+        function()
+            local spender_c = I.ab.bySpell[fs.SPENDER_C]
+            ns.raceMods.costMods = { { aura = "mod_aura_a", pct = -1, charges = 1, spells = { fs.SPENDER_C } } }
+            VS.SpecChanged()
+            local j = I.auras.bySpell[MOD_AURA]
+            I.AuraModel(1, j, 5, 20, 1, 5, VS.Obs.CastSuccess, false)
+            I.clock = 5
+            assert.are.equal(0, I.CostOf(spender_c))
+            local spends = I.res.spends[1]
+            ctl.now = 6
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- staged, priced now: 0
+            I.Sources.Direct(VS.Obs.Read, 6, j, 0, I.ReadOf.Aura) -- the same frame's aura walk: gone, in the log first
+            ctl.Tick(6.01)
+            VS.Drain(6.02)
+            assert.are.equal(spends, I.res.spends[1]) -- no spend: nothing paid, no five-second window
+            assert.are.equal(10, I.CostOf(spender_c))
+        end
+    )
+
+    it("prices a declared cost function in the belief's context: its aura reads are the belief's", function()
+        local spender_c = I.ab.bySpell[fs.SPENDER_C]
+        -- Races.lua keeps the declared function; this one reads the aura's stacks (Maelstrom Weapon's shape)
+        rawset(I.ab.obj[spender_c], "declaredSpend", function()
+            return 20 * math.max(0, 1 - 0.2 * buff.mod_aura_a.stack) -- luacheck: ignore 113 (the context's)
+        end)
+        local j = I.auras.bySpell[MOD_AURA]
+        I.AuraModel(1, j, 5, 20, 3, 5, VS.Obs.CastSuccess, false)
+        I.clock = 5
+        assert.is_true(math.abs(I.CostOf(spender_c) - 8) < 1e-9) -- 20 x (1 - 0.6)
+        rawset(I.ab.obj[spender_c], "declaredSpend", function()
+            return no_such_name.field -- luacheck: ignore 113 (raises in the context: the simulation prices it)
+        end)
+        assert.are.equal(10, I.CostOf(spender_c))
+    end)
+
     it("allocates nothing over 1000 casts with both modifiers declared", function()
         local j = I.auras.bySpell[MOD_AURA]
         local t = 10
