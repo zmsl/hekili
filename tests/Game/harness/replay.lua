@@ -3,13 +3,14 @@
 -- `new` binds it to a booted instance's class data (spell ID -> ability key, aura durations) and gives loop.run its one
 -- injection (`o.replay`): the world factory, wowsims's decisions and its next cast after a tick. The truth is the
 -- log's: casts at their completion (no cast bars), powers as the logged after-values (no regen ticks; the client
--- still reads the content's rate), our auras and the target's with the log's real duration when they fade, the
--- content's hidden auras in the truth only, swings and spells landing at once, the mob's health at 20% from the
--- execute phase's start (wowsims's is the last 20% of the duration) and never dead, our distance to it (the request's,
--- then the log's Movement stacks). A white swing's outcome reaches the client one landing lag after its swing
--- (M.LAND), as in game: wowsims logs both at once, with the swing's rage. Not replayed: cast bars, the target's swings. Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map
--- through the booted instance's own ability set (Hekili.Class, booted as the log's race). Credit: the log
--- format is wowsims/forever's (MIT, https://github.com/wowsims/forever); no code copied.
+-- still reads the content's rate, mana's from the log's regen lines: M.manaRegen), our auras and the target's with
+-- the log's real duration when they fade, the content's hidden auras in the truth only, spells landing at once, a
+-- white swing's outcome one landing lag after its swing (M.LAND; wowsims logs both at once, with the swing's rage),
+-- the mob's health at 20% from the execute phase's start (wowsims's is the last 20% of the duration) and never dead,
+-- our distance to it (the request's, then the log's Movement stacks). Not replayed: cast bars, the target's swings.
+-- Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map through the booted
+-- instance's own ability set (Hekili.Class, booted as the log's race). Credit: the log format is wowsims/forever's
+-- (MIT, https://github.com/wowsims/forever); no code copied.
 local world = require("Game.harness.world")
 local entities = require("Game.harness.entities")
 local observer = require("Game.harness.observer")
@@ -26,6 +27,10 @@ M.TAIL = 0.2 -- the exporter's execute proportion: the last 20% of the duration
 -- the game credits it is UNMEASURED (Families/Resources.lua's owe, checkpoint R1).
 -- shortcut: fixed lags, deterministic; draw from observer.lag when a gate needs the tail.
 M.LAND = { observer.DEFAULTS.main.med, observer.DEFAULTS.off.own }
+
+-- wowsims's mana regen: its tick (manaTickDuration, sim/core/mana.go) and the regen lines' OtherID; Tag 1 the casting
+-- rate (inside the five-second rule), Tag 2 the not-casting rate.
+M.MANA_TICK, M.MANA_REGEN = 0.1, 2
 
 M.MOVE = 20 -- wowsims's OtherActionMove: the Movement aura (sim/core/movement.go), its stacks the distance in yards
 -- (max(int(d), 1): truncated, so the replay's position can be up to 1 yd short of wowsims's)
@@ -70,9 +75,19 @@ local function ours(rest)
         local id, other, tag, item = ids(b)
         return { kind = "completed", id = id, other = other, tag = tag, item = item }
     end
-    local name, from, to = rest:match("^%a+ [%d.]+ ([%a ]-) from {[^}]*} %(([%d.]+) %-%-> ([%d.]+)%)")
+    local amount, name, src, from, to = rest:match("^%a+ ([%d.]+) ([%a ]-) from {([^}]*)} %(([%d.]+) %-%-> ([%d.]+)%)")
     if name then
-        return { kind = "power", name = name, from = tonumber(from), to = tonumber(to) }
+        local id, other, tag = ids(src)
+        return {
+            kind = "power",
+            name = name,
+            from = tonumber(from),
+            to = tonumber(to),
+            amount = tonumber(amount),
+            id = id,
+            other = other,
+            tag = tag,
+        }
     end
     local verb
     verb, b = rest:match("^Aura (%a+): {([^}]*)}")
@@ -132,7 +147,7 @@ end
 --- The events of a log's text: { header = { pin, spec, seed, duration, targetLevel, talents = { { id, rank, tree } }
 --- }, ev = { { t, kind, ... } } } in line order. Kinds: casting { id | item, tag, cast, gcd }, completed { id, other,
 --- tag, item },
---- power { name, from, to }, aura { unit ("player" | "target"), verb ("gained" | "faded" | "refreshed"), id }, stacks
+--- power { name, from, to, amount, id, other, tag }, aura { unit ("player" | "target"), verb ("gained" | "faded" | "refreshed"), id }, stacks
 --- { unit, id, to }, hit { what ("swing" | "spell" | "tick"), hand, id, act, flag, amount }, move { distance } (our
 --- Movement aura's stacks: wowsims's yards to the target, truncated, at least 1, while we move). Other lines are
 --- skipped.
@@ -171,6 +186,31 @@ function M.parse(text)
     return { header = h, ev = ev }
 end
 
+--- The mana regen rates per second the log's regen lines show: not casting, casting; nil without any. Each is its
+--- tag's most frequent amount a tick (partial ticks at the five-second rule's edges are rarer). A casting rate above
+--- the not-casting one is a temporary boost (Innervate: wowsims's casting rate is the mp5 part plus at most all of the
+--- spirit part), so the casting rate is then 0; with no not-casting line the casting rate stands for both.
+function M.manaRegen(ev)
+    local count, best = { {}, {} }, { 0, 0 }
+    for _, e in ipairs(ev) do
+        local tag = e.kind == "power" and e.name == "mana" and e.other == M.MANA_REGEN and e.tag
+        if tag == 1 or tag == 2 then
+            local n = (count[tag][e.amount] or 0) + 1
+            count[tag][e.amount] = n
+            if n > (count[tag][best[tag]] or 0) then
+                best[tag] = e.amount
+            end
+        end
+    end
+    local casting, idle = best[1] / M.MANA_TICK, best[2] / M.MANA_TICK
+    if idle == 0 and casting == 0 then
+        return nil
+    elseif idle == 0 then
+        return casting, casting
+    end
+    return idle, casting <= idle and casting or 0
+end
+
 --- A replay of log `text` bound to booted instance `H`'s class data (abilities by `key`, `id`, `copy`, `cooldown`: a
 --- number, else the engine's answer `H.Hekili.State.action[key].cooldown` (talent-modified), else the log's least
 --- spacing between two of the key's casts; auras by `id`, `copy`, `duration`). `o.shared` ({ [key] = partner key or
@@ -179,7 +219,7 @@ end
 --- decision nor a cast; a key is a spell ID, every tag of it, or "<spellID>:<tag>", that tag only: a weapon proc logged
 --- under its totem's ID), totems ({ [key] = { slot, duration } }: a completed cast of the key summons into that slot,
 --- W.summonTotem), speed (the main hand's period; default the log's first two main-hand swings), regen and fsr (the
---- rates the client reads: W.rates, W.fsr; no regen ticks), pull (the world time of the log's 0; default the log's
+--- rates the client reads: W.rates, W.fsr; no regen ticks; the loop's world knobs, mana's replaced by the log's), pull (the world time of the log's 0; default the log's
 --- earliest line M.LEAD s into the world, at least M.PULL: a -10 s prepull pulls at 10.5). Prepull casts (before the
 --- log's 0) are decisions like any other: wowsims counts them as its casts and the engine recommends a pack's precombat
 --- list out of combat (once each with `prepull_at`), so an on-GCD one is scored. creatureType: the mob's
@@ -364,6 +404,8 @@ function M.new(text, H, o)
         end
     end
 
+    R.manaIdle, R.manaCasting = M.manaRegen(p.ev)
+
     local ci = 1
     --- wowsims's next cast strictly after world time `t` (its key), or false; `t` only grows within a world.
     function R.next(t)
@@ -408,6 +450,9 @@ function M.new(text, H, o)
         end
         for pt, f in pairs(wo.fsr or {}) do
             W.fsr[pt] = f
+        end
+        if R.manaIdle then -- the log's own mana regen wins over the content's: { spirit part, mp5 part } (W.fsr)
+            W.rates[0], W.fsr[0] = 0, { R.manaIdle - R.manaCasting, R.manaCasting }
         end
         local function show(dst, id, a) -- an aura change the client sees (not a hidden one)
             if not hidden[id] then

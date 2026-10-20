@@ -366,3 +366,58 @@ describe("the replay's position", function()
         assert.is_nil(replay.new(log, H).world(WO, 1).distance) -- no request distance: no positions until a move
     end)
 end)
+
+describe("the replay's mana regen (wowsims's regen lines)", function()
+    local observer = require("Game.harness.observer")
+    local fake = require("Game.State.helpers.fake_api")
+    local function line(t, amount, tag)
+        return ("[%.2f] [Tester (#1)] Gained %.3f mana from {OtherID: 2, Tag: %d} (100.000 --> 102.200) of 4000 total."):format(
+            t,
+            amount,
+            tag
+        )
+    end
+    local function log(rows)
+        local out = { "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63" }
+        for _, r in ipairs(rows) do
+            out[#out + 1] = line(r[1], r[2], r[3])
+        end
+        return table.concat(out, "\n")
+    end
+
+    it("reads each tag's usual tick a second; a casting rate above the idle one is a boost (casting 0)", function()
+        -- not casting 2.2 a tick (one partial 0.132, one boosted 3.1), casting only under a boost (11 a tick)
+        local p = replay.parse(
+            log({ { 1, 11, 1 }, { 1.1, 11, 1 }, { 3, 0.132, 2 }, { 3.1, 2.2, 2 }, { 3.2, 2.2, 2 }, { 3.3, 3.1, 2 } })
+        )
+        local idle, casting = replay.manaRegen(p.ev)
+        assert.is_true(math.abs(idle - 22) < 1e-9)
+        assert.are.equal(0, casting)
+        idle, casting = replay.manaRegen(replay.parse(log({ { 1, 0.3, 1 }, { 1.1, 0.3, 1 }, { 7, 2.5, 2 } })).ev)
+        assert.is_true(math.abs(idle - 25) < 1e-9 and math.abs(casting - 3) < 1e-9) -- mp5 while casting
+        assert.is_nil(replay.manaRegen(replay.parse(log({})).ev))
+    end)
+
+    it("answers them to the client out of combat (W.fsr, the fake's GetManaRegen), secret in combat", function()
+        local R = replay.new(log({ { 0.5, 2.2, 2 }, { 0.6, 2.2, 2 } }), H, {})
+        local W = R.world(setmetatable({ tag = "-m" }, { __index = WO }), 1)
+        local us = W.ents[1]
+        assert.are.same({ 22, 0 }, { W.regenRate(us, 0, "idle"), W.regenRate(us, 0, "casting") })
+        local obs = observer.new(W, setmetatable({}, { __index = observer.DEFAULTS }))
+        W.run(R.pull + 0.1)
+        obs.step(R.pull + 0.1)
+        local api = fake.new()
+        local s, seen = obs.s, 0
+        for i = 1, s.n do
+            if s.ev[i] == "@regen" and s.a1[i] == 0 then
+                api.ctl.regen[0] = s.a2[i] and { s.a2[i], s.a3[i] } or nil -- as drive.lua applies it
+                seen = seen + 1
+                if seen == 1 then
+                    assert.are.same({ 22, 0 }, { api.GetManaRegen() }) -- the prepull read: plain
+                end
+            end
+        end
+        assert.are.equal(2, seen)
+        assert.are.equal(fake.SECRET, (api.GetManaRegen())) -- the pull: secret, the facade's model answers
+    end)
+end)

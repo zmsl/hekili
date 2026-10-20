@@ -431,8 +431,8 @@ function M.new()
         return ctl.known[id] == true
     end
     api.IsSpellKnown, api.IsSpellKnownOrOverridesKnown = api.IsPlayerSpell, api.IsPlayerSpell
-    function api.GetManaRegen()
-        return 0, 0
+    function api.GetManaRegen() -- (not casting, casting): mana's GetPowerRegenForPowerType pair, secret in combat [W PR16]
+        return api.GetPowerRegenForPowerType(0)
     end
     function api.SecureCmdOptionParse(s)
         return s
