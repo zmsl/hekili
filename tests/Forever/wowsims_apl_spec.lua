@@ -686,7 +686,7 @@ describe("the wowsims APL translator", function()
         assert.are.equal(
             table.concat({
                 "actions=big_hit",
-                "actions+=/roar,if=time>=5",
+                "actions+=/roar,use_off_gcd=1,if=time>=5", -- off the GCD: flagged; dot (on it) is not
                 "actions+=/dot,if=time>=5",
                 "actions+=/trinket,use_off_gcd=1",
                 "actions+=/strike,focus=1",

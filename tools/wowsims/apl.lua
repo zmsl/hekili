@@ -77,7 +77,10 @@
 --    AddMajorCooldown in sim/core/major_cooldown.go and not cast by the APL itself, ready-at then priority first, cast
 --    once the GCD is ready) is one line per cooldown the log's "Major cooldown used" lines name, in first-use order
 --    (a proxy for wowsims's ready-then-priority; equal when they are first ready together), each key once and none
---    the APL casts itself under another ID (that key's own line stands; noted), without `use_off_gcd` (it waits for the GCD as wowsims's does), under the entry's condition and
+--    the APL casts itself under another ID (that key's own line stands; noted), with rule 7's `use_off_gcd` for an
+--    off-GCD ability (a documented deviation, packs_spec requiring the flag on every off-GCD line: wowsims waits for
+--    the GCD before an automatic cast, the fork shows an off-GCD cooldown as soon as it is ready; the replay scores
+--    on-GCD decisions only), under the entry's condition and
 --    the ability's own toggle (the engine gates `toggle = "cooldowns"`/`"defensives"` itself; a defensive one appears
 --    only when wowsims fired it: its default is a tank's). `castAllStatBuffCooldowns` (every instant major cooldown
 --    whose buff raises one of its stat types, out of the autocast list) is one line per instant cast (Effective Time 0s: off
@@ -825,8 +828,8 @@ local function entry(c, e)
     if auto then
         local out = {}
         for i, x in ipairs(auto) do
-            -- wowsims's autocast waits for the GCD (no use_off_gcd); its stat-buff cast is a castSpell (rule 7's)
-            local off = kind == "castAllStatBuffCooldowns" and c.offGcd[x]
+            -- rule 7's use_off_gcd for both (autocast: the documented deviation from wowsims's GCD wait)
+            local off = c.offGcd[x]
             local line = x
                 .. (off and ",use_off_gcd=1" or "")
                 .. (c.prepullAt and (",prepull_at=" .. c.prepullAt) or "")
