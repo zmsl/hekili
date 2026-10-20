@@ -304,6 +304,7 @@ function ns.StartConfiguration( external )
         if not Hekili.OptionsReady then Hekili:RefreshOptions() end
 
         local ACD = LibStub( "AceConfigDialog-3.0" )
+        Hekili:WrapOptionsDialog() -- the spec tree's view (Options.lua), on a newer AceConfigDialog too
         ACD:SetDefaultSize( "Hekili", 800, 608 )
         ACD:Open( "Hekili" )
 

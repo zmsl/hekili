@@ -2648,24 +2648,35 @@ local function MarkActiveSpec( tree )
     end
 end
 
-if ACD and ACD.FeedGroup then
-    local feed = ACD.FeedGroup
-    function ACD.FeedGroup( dialog, appName, options, container, rootframe, path, isRoot )
-        if appName ~= "Hekili" then return feed( dialog, appName, options, container, rootframe, path, isRoot ) end
-        local outer = feedDepth
-        feedDepth = #path
-        feed( dialog, appName, options, container, rootframe, path, isRoot )
-        feedDepth = outer
-        if #path > 0 then return end
-        for _, child in ipairs( container.children ) do -- the root's tree: hooked once (AceGUI reuses widgets)
-            if child.type == "TreeGroup" and not child.hekiliMarks then
-                child.hekiliMarks = true
-                hooksecurefunc( child, "RefreshTree", MarkActiveSpec )
-                MarkActiveSpec( child )
-            end
+local feed -- AceConfigDialog's own FeedGroup, under the wrapper
+local function FeedGroup( dialog, appName, options, container, rootframe, path, isRoot )
+    if appName ~= "Hekili" then return feed( dialog, appName, options, container, rootframe, path, isRoot ) end
+    local outer = feedDepth
+    feedDepth = #path
+    local ok, err = pcall( feed, dialog, appName, options, container, rootframe, path, isRoot )
+    feedDepth = outer -- also after an error (a priority's option function can throw)
+    if not ok then error( err, 0 ) end
+    if #path > 0 then return end
+    for _, child in ipairs( container.children ) do -- the root's tree, hooked once
+        -- AceGUI pools widgets: another addon may get this tree back, hook included; MarkActiveSpec then only hides
+        -- our marks (its appName is not Hekili)
+        if child.type == "TreeGroup" and not child.hekiliMarks then
+            child.hekiliMarks = true
+            hooksecurefunc( child, "RefreshTree", MarkActiveSpec )
+            MarkActiveSpec( child )
         end
     end
 end
+
+--- Wraps AceConfigDialog's FeedGroup (above); again on every open of the options, as an addon loaded later may bring
+--- a newer AceConfigDialog whose FeedGroup replaces the wrapper. A no-op without AceConfigDialog (headless loaders).
+function Hekili:WrapOptionsDialog()
+    if ACD and ACD.FeedGroup and ACD.FeedGroup ~= FeedGroup then
+        feed = ACD.FeedGroup
+        ACD.FeedGroup = FeedGroup
+    end
+end
+Hekili:WrapOptionsDialog()
 
 do
     local packs = {}
@@ -3530,7 +3541,10 @@ found = true end
                 local options = {
                     type = "group",
                     -- name = specs[ id ],
-                    name = name,
+                    -- the active spec in gold when the tree's mark cannot be placed (the FeedGroup wrapper not live)
+                    name = function()
+                        return feedDepth == nil and Status.specID == id and ( "|cFFFFD100" .. name .. "|r" ) or name
+                    end,
                     icon = texture,
                     iconCoords = { 0.15, 0.85, 0.15, 0.85 },
                     desc = description,
@@ -4332,6 +4346,11 @@ found = true end
         end
 
         data[ option ] = val
+
+        if option == "spec" then -- the priority's node moves under its new spec
+            self:EmbedPackOptions()
+            SelectPack( category )
+        end
     end
 
     function Hekili:EmbedPackOptions( db )

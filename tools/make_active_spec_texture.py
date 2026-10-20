@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Writes src/Hekili/Textures/ActiveSpec.tga: the options tree's active-spec marker, a 64x16 rounded rectangle with a
-vertical gradient in the Now ring's gold (GoldRing.tga's palette: light gold at the top, dark amber at the bottom),
-half transparent so the row's text stays readable. Stdlib only; run from the repository root."""
+"""Writes src/Hekili/Textures/ActiveSpec.tga: the options tree's active-spec marker, a 256x16 rounded rectangle (near
+the tree row's shape, so the corners stay round when stretched) with a vertical gradient in the Now ring's gold
+(GoldRing.tga's palette: light gold at the top, dark amber at the bottom), half transparent so the row's text stays
+readable. Stdlib only; run from the repository root."""
 
 import struct
 
-W, H, R = 64, 16, 6  # size and corner radius in pixels
+W, H, R = 256, 16, 6  # size and corner radius in pixels
 TOP, BOTTOM = (255, 224, 120), (160, 96, 16)  # GoldRing.tga's bright and mid golds
 ALPHA = 150  # the fill's opacity (0-255)
 SAMPLES = 4  # per axis: anti-aliased corners

@@ -282,6 +282,50 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         assert.are.equal(FURY, H.Hekili:GetPackOption({ "fury", "Aaa", "pack", "spec" }))
     end)
 
+    it("moves a priority's node to its new spec when its Specialization changes", function()
+        local H = boot()
+        settle(H)
+        local packs = H.Hekili.DB.profile.packs
+        local aaa = {}
+        for k, v in pairs(packs.Fury) do
+            aaa[k] = v
+        end
+        aaa.builtIn, aaa.spec = false, FURY
+        packs.Aaa = aaa
+        local nodes = embed(H)
+        assert.is_not_nil(nodes.fury.plugins.packs.Aaa)
+        H.Hekili:SetPackOption({ "fury", "Aaa", "pack", "spec" }, PROT)
+        assert.are.equal(PROT, packs.Aaa.spec)
+        assert.is_nil(nodes.fury.plugins.packs.Aaa)
+        assert.is_not_nil(nodes.protection.plugins.packs.Aaa)
+        local ACD = H.env.LibStub("AceConfigDialog-3.0")
+        assert.are.equal("protection\001Aaa", ACD:GetStatusTable("Hekili").groups.selected)
+    end)
+
+    it("re-wraps a replaced FeedGroup, resets its depth after an error, and golds the name unwrapped", function()
+        local H = boot()
+        settle(H)
+        local nodes = embed(H)
+        local ACD = H.env.LibStub("AceConfigDialog-3.0")
+        local depth -- a newer AceConfigDialog's FeedGroup: no wrapper; records the spec node's view, then throws
+        local function newer()
+            depth = nodes.arms.childGroups
+            error("boom")
+        end
+        ACD.FeedGroup = newer
+        -- unwrapped: the stock view, and the active spec's name in gold in place of the tree's mark
+        assert.are.equal("|cFFFFD100Arms|r", nodes.arms.name())
+        assert.are.equal("Fury", nodes.fury.name())
+        H.Hekili:WrapOptionsDialog() -- as the open path does
+        assert.are_not.equal(newer, ACD.FeedGroup)
+        local ok, err = pcall(ACD.FeedGroup, ACD, "Hekili", H.Hekili.Options, { children = {} }, nil, {})
+        assert.is_false(ok)
+        assert.is_truthy(tostring(err):find("boom", 1, true))
+        assert.are.equal("tree", depth) -- fed at the root: the tree's view
+        assert.are.equal("tab", nodes.arms.childGroups) -- the depth reset despite the error
+        assert.are.equal("|cFFFFD100Arms|r", nodes.arms.name()) -- outside a feed
+    end)
+
     it("shows Activate on the other specs and the Active marker on the active one, and lists it first", function()
         local H = boot()
         settle(H)
