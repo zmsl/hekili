@@ -91,6 +91,9 @@
   never recommend Aimed Shot, Sniper Shot or Summon Hawk (wowsims's switches for them are off).
 - Rogue, Paladin and Shaman priorities are not yet checked in game.
 - Shaman: the Enhancement priority no longer shows the weapon-imbue reminder (the wowsims.com list has none).
+- Shaman: the Enhancement priority's mana lines (mana potion, Demonic Rune, Fire Nova above 10%) are always on and read
+  an estimated mana.
+- Shaman: Fire Nova is believed to cost 520 mana where wowsims.com uses 375.
 
 ### Upgrade notes
 - Rogue: a saved choice of the Assassination, Combat or Subtlety priority falls back to that specialization's

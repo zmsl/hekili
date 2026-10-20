@@ -10,6 +10,17 @@ local sw = require("Forever.helpers.shaman_world")
 local PACKS = { "Enhancement" }
 
 describe("the Shaman loop worlds", function()
+    -- A shock's press sends both shocks' ranks (the shared category) but is priced by its own rank: at level 30 the
+    -- highest Flame Shock is rank 3 (8053, 160 mana in the DB2), not the top rank's 410.
+    it("prices a shock by its own known rank", function()
+        local ws = require("Forever.helpers.wowsims")
+        local C = ws.content(sw.Enhancement, { level = 30, learn = ws.learn("SHAMAN") })
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local p = C.resolve("flame_shock", H)
+        assert.are.same({ 8053, 160 }, { p.spell, p.cost })
+        assert.are.equal(13, #p.ids) -- Earth Shock's 7 ranks and Flame Shock's 6
+    end)
+
     for _, name in ipairs(PACKS) do
         it(name .. ": boots, and maps every ability the pack can recommend that the character knows", function()
             local C = sw[name]

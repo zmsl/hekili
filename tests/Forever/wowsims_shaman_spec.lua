@@ -20,7 +20,8 @@ end
 -- Flametongue Totem's weapon proc is logged under the totem's ID with Tag 1 (not a choice); every totem cast fills its
 -- slot (1 fire, 2 earth, 3 water, 4 air) for its top rank's DB2 duration.
 local ENH_REPLAY = {
-    procs = { ["16387:1"] = true },
+    -- Fire Nova's nova lines (Tag 1, GCD 0, cost 0) come at the instant of its real cast: the hit, not a choice.
+    procs = { ["16387:1"] = true, ["408345:1"] = true },
     totems = {
         searing_totem = { 1, 55 },
         flametongue_totem = { 1, 300 },

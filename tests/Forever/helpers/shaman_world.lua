@@ -107,7 +107,7 @@ local function costOf(key, rank, cc, mw, sf)
     if not list then
         return 0 -- a racial (Blood Fury): no cost
     end
-    local c = list[rank] or list[#list]
+    local c = #list == 1 and list[1] or assert(list[rank], key .. " has no rank " .. tostring(rank)) -- Stormstrike: one
     if FOCUSED[key] and sf then
         c = c * 0.55
     elseif key == "lightning_bolt" then
@@ -116,14 +116,14 @@ local function costOf(key, rank, cc, mw, sf)
     return c
 end
 
--- The rank (1-based) of spell `id` among `key`'s IDs `ids`.
+-- The rank (1-based) of spell `id` among one key's own IDs `ids` (never a shared category's).
 local function rankOf(ids, id)
     for i, x in ipairs(ids) do
         if x == id then
             return i
         end
     end
-    return #ids
+    error("spell " .. tostring(id) .. " is no rank of its key")
 end
 
 local function spell(key, extra)
@@ -337,7 +337,8 @@ local function content(name)
         local X = classData(H, C)
         local S = H.Hekili.State
         local VS, now = H.ns.VirtualState, H.ctl.now
-        local ids = C.IDS[key] or { a.id } -- a racial (the content's race) is no kit key
+        local own = C.IDS[key] or { a.id } -- a racial (the content's race) is no kit key
+        local ids = own
         if C.SHARED[key] then
             ids = {}
             local members = { key, C.SHARED[key] }
@@ -352,7 +353,7 @@ local function content(name)
         local cc = VS.Aura("player", X.aura.clearcasting.id, now)
         local _, mw = VS.Aura("player", X.aura.maelstrom_weapon.id, now)
         local spellID = VS.KnownID(a.id)
-        local rank = rankOf(ids, spellID)
+        local rank = rankOf(own, spellID)
         local p = {
             spell = spellID,
             ids = ids,

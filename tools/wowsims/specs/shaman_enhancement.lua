@@ -39,7 +39,7 @@ return {
         lightning_bolt = 1,
         flame_shock = 2,
     },
-    -- below 60 (Improved Fire Nova, the build's last talent, comes at 59-60): Lightning Bolt fills while the shocks and
-    -- Stormstrike wait; silent at 60, where wowsims casts it only at five Maelstrom Weapon stacks
+    -- before Stormstrike (learned at 40): Lightning Bolt fills while the shocks wait; silent from 40, and so at 60,
+    -- where wowsims casts it only at five Maelstrom Weapon stacks
     leveling = { "lightning_bolt,if=!action.stormstrike.known" },
 }
