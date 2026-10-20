@@ -200,7 +200,7 @@ Maelstrom Weapon and Fire Nova on Clearcasting at tier 1; Strength of Earth, Lig
 2). The world keeps the totem slots (`W.summonTotem`, class-neutral: a slot and an expiry), secret in combat; the summon's
 `now` (`summonTotem`, content API 4) writes the slot's modelled expiry, which the in-combat GetTotemInfo answers. The
 mob swings at us and each hit that lands spends a Lightning Shield charge; our landed melee stacks Maelstrom Weapon; an
-elemental spell rolls Clearcasting (10%); the shocks share a 6 s cooldown. Neither side dies: a kill by our last press
+elemental spell rolls Clearcasting (10%); the shocks share a cooldown (6 s, 0.2 s less a rank of Reverberation). Neither side dies: a kill by our last press
 ends the loop before the client sees it, so the next fight's prepull would be believed in combat and its totem slots
 never read (a harness quirk every pack shares). The world runs out of mana about 35 s in (idle about 0.68: UNMEASURED
 pool and regen, no Mana Spring regen, Water Shield or potions), so most in-combat ticks show no icon on either side.
