@@ -564,6 +564,13 @@ function I.CreditVerdict(id, ok, t, firm)
     return true
 end
 
+--- Whether credit record `id` is too young at t for a verdict (its outcome under ORACLE_MIN before t): a usability
+--- answer then is the client's from before the credit (Families/Resources.lua takes no short rung from it). Allocates
+--- nothing.
+function I.CreditYoung(id, t)
+    return recOpen[id] == true and t - recT[id] < L.ORACLE_MIN
+end
+
 --- (harness design §2.3) A flip of slot r to usable that leaves `need` unexplained (Families/Resources.lua): the dropped
 --- wound that arrived ORACLE_MIN to ORACLE_MAX before it (the flip trails the wound that caused it, as a verdict does;
 --- and not before `since`, the short report, less that window), whose swing nothing claimed and whose step covers

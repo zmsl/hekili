@@ -1802,16 +1802,68 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         assert.are.same({ 2, 2, 2 }, power(10.6))
     end)
 
-    it("rescues nothing for a flip our confirmed credit explains, after a stale short clamped it", function()
+    it("rescues nothing for a flip our confirmed credit explains, and gives back the stale short's cut", function()
         setup(5)
         answer(9.95, SPENDER_A, false)
         L.theta[2] = 8 -- main, exact, tail: the 45 at 1.3 s is dropped
         credit(10, 45, 1.3)
         credit(11, 45, 0.47) -- ours, credited: 5 + 9 crosses 10
-        answer(11.5, SPENDER_A, false) -- stale (0.03 s after the outcome): the ladder clamps under 10
-        answer(11.67, SPENDER_A, true)
+        answer(11.5, SPENDER_A, false) -- 0.03 s after the outcome: the ladder clamps under 10, the cut kept
+        assert.are.same({ 9.99, 9.99, 9.99 }, power(11.5))
+        answer(11.67, SPENDER_A, true) -- at least 10: the short was the client's from before the credit
         assert.are.same({ 1, 0 }, { L.oracle.confirmed, L.oracle.rescued })
-        assert.are.equal(10, power(11.67)[1]) -- the swing-paid pin [10, 10 + a step)
+        assert.are.same({ 5 + 9 * 0.9, 14, 5 + 9 * 1.1 }, power(11.67))
+    end)
+
+    it("gives a crit credit's cut back: its landing poll's short answer was the client's from before it", function()
+        setup(5)
+        R.swingCrit[1] = 20
+        answer(9.95, SPENDER_A, false)
+        at(10, "PLAYER_SWING", 2.2, 0)
+        at(10.47, "UNIT_COMBAT", "target", "WOUND", "CRITICAL", 90, 1) -- 5 + 9 + 20; Rows polls usability: short
+        assert.are.same({ 9.99, 9.99, 9.99 }, power(10.5))
+        answer(10.6, SPENDER_A, true)
+        assert.are.same({ 5 + 9 * 0.9 + 20, 34, 5 + 9 * 1.1 + 20 }, power(10.6))
+    end)
+
+    it("bounds a flip a credit explains as a rung, not the pin at the cost plus one white step", function()
+        setup(5)
+        R.swingCrit[1] = 20
+        answer(9.95, SPENDER_A, false)
+        at(10, "PLAYER_SWING", 2.2, 0)
+        ctl.usable[SPENDER_A] = USABLE -- the client already shows the swing's rage at its wound
+        at(10.47, "UNIT_COMBAT", "target", "WOUND", "CRITICAL", 90, 1) -- Rows' landing poll: the flip
+        assert.are.same({ 5 + 9 * 0.9 + 20, 34, 5 + 9 * 1.1 + 20 }, power(10.5)) -- not [10, 10 + 9.9]
+    end)
+
+    it(
+        "gives a young short's cut back only on a usable answer at its cost or dearer (Arms seed 6 at 81.4 s)",
+        function()
+            -- the loop: a white crit credited 21 -> 49.8 (truth 52.7), then Mortal Strike's short answer 0.04 s later (the
+            -- client still at 24) cut it to 29.99 for good; its usable answer 0.06 s later now gives the cut back
+            setup(8)
+            credit(10) -- 8 + 9 crosses spender_a (10) and spender_b (15)
+            answer(10.5, SPENDER_B, false) -- young: cut (the floor holds whether the credit is stale or false)
+            assert.are.same({ 14.99, 14.99, 14.99 }, power(10.5))
+            answer(10.6, SPENDER_A, true) -- at least 10 says nothing of 15: the cut stands
+            assert.are.same({ 14.99, 14.99, 14.99 }, power(10.6))
+            answer(10.65, SPENDER_B, true)
+            assert.are.same({ 8 + 9 * 0.9, 17, 8 + 9 * 1.1 }, power(10.65))
+        end
+    )
+
+    it("keeps a young short's cut after one of our spends, or past the verdict window", function()
+        setup(8)
+        credit(10)
+        answer(10.5, SPENDER_B, false)
+        at(10.55, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", SPENDER_A) -- 10 paid: 4.99
+        answer(10.6, SPENDER_B, true) -- not from the cut state: a plain rung
+        assert.are.equal(15, power(10.6)[1])
+        R.est0[1], R.lo0[1], R.hi0[1] = 8, 8, 8
+        credit(20)
+        answer(20.5, SPENDER_B, false)
+        answer(21.2, SPENDER_B, true) -- 0.73 s after the outcome: past ORACLE_MAX
+        assert.are.equal(15, power(21.2)[1])
     end)
 
     it("labels a soft credit (only its estimate crossed) at half weight and retracts nothing", function()

@@ -35,6 +35,10 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- answer, a flip's pin: the game held more than we believed) and the latest lifting rung's time; a landed swing at or
 -- before it pays that much less (owe, I.On(Obs.Swing)). `liftRec[r]`: the credit record that paid from it (its crit
 -- may pay the rest).
+-- `cutL/E/H[r]`: what short answers cut from a swing-paid slot's lo, est and hi while a swing credit of it was too
+-- young for its verdict (Rows.lua's I.CreditYoung: the client may still show the slot from before it), the dearest
+-- such cost `cutC[r]` (0: none kept), the first such answer's time `cutT[r]` and the slot's spend count then
+-- `cutSp[r]`; a usable answer at that cost or dearer gives the cut back (I.On(Obs.Usable)).
 -- `over[r]`: how far the modelled floor sits above the measured one (lo0): a regenerating slot that rests at its
 -- maximum is built at rest (est, and this floor: lo0 + over), and the floor then moves with everything that moves lo0;
 -- a measurement the floor contradicts (a short answer below it, a pin's top under it, an exact read) drops it to lo0
@@ -99,6 +103,12 @@ local R = {
     liftH = {},
     liftT = {},
     liftRec = {},
+    cutC = {},
+    cutT = {},
+    cutL = {},
+    cutE = {},
+    cutH = {},
+    cutSp = {},
     over = {},
     assume = {},
 }
@@ -283,6 +293,7 @@ I.OnBuild(function(def, now)
         R.dev[r], R.scale[r], R.spread[r] = 0, 1, I.REGEN_SPREAD
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
+        R.cutC[r], R.cutT[r], R.cutL[r], R.cutE[r], R.cutH[r], R.cutSp[r] = 0, 0, 0, 0, 0, 0
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
         R.decayDef[r] = d.decay
         R.decay[r] = decayOf(r)
@@ -861,6 +872,43 @@ local function judge(a, now, t, r, c)
     return explained
 end
 
+-- Whether a swing credit that paid slot r is too young at t for its verdict (Rows.lua's I.CreditYoung): a usability
+-- answer then may be the client's from before it. Allocates nothing.
+local function young(r, t)
+    if I.CreditYoung then
+        for k = 1, RECORDS do
+            if recR[k] == r and I.CreditYoung(k, t) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+-- A usable answer at cost c at t gives back what young short answers cut from slot r (R.cutC): the slot is at least c,
+-- so those answers, at c or cheaper, were the client's from before the credit. Only with no spend from the slot since
+-- the cut and within the verdict window (Rows.lua's ORACLE_MAX); else the cut stands. True when it gave it back.
+-- Allocates nothing.
+local function uncut(r, c, t)
+    local k = R.cutC[r]
+    if k <= 0 then
+        return false
+    end
+    if R.spends[r] ~= R.cutSp[r] or t - R.cutT[r] > I.Log.ORACLE_MAX then
+        R.cutC[r] = 0
+        return false
+    elseif c < k - I.EPS then
+        return false -- a cheaper usable answer says nothing of the dearer short one
+    end
+    R.cutC[r] = 0
+    local max = R.max[r]
+    R.lo0[r] = clamp(R.lo0[r] + R.cutL[r], max)
+    R.est0[r] = clamp(R.est0[r] + R.cutE[r], max)
+    R.hi0[r] = clamp(R.hi0[r] + R.cutH[r], max)
+    I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Usable)
+    return true
+end
+
 -- Whether ability a's `usable` holds at t, read in the `now` context (the belief's names). Its function is Hekili's
 -- sim one, so it runs there for this call only; one that raises (a name the context lacks) holds from then on.
 -- Allocates nothing once it has raised.
@@ -912,6 +960,9 @@ I.On(Obs.Usable, function(o, t, lag)
     if c <= 0 then
         return
     end
+    if now == YES and uncut(r, c, t) then
+        was = YES -- the short answers it gave back were the client's from before the credit: no crossing since them
+    end
     if was == SHORT and now == YES and lag <= 0 and abs(c - shortCost[a]) <= I.EPS then
         -- It just became affordable at an unchanged cost: it crossed the cost since the last short report.
         if R.gain[r] - shortGain[a] >= c - shortEst[a] then
@@ -934,6 +985,13 @@ I.On(Obs.Usable, function(o, t, lag)
                     swingStep(r, hand, 3, t)
                 end
                 crossed(r, c, t)
+            elseif explained then
+                -- a credited swing crossed it (its crit included): the flip proves only "at least c", a rung
+                local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
+                if ladder(r, c, true, t, lag) then
+                    I.Sample(R.power[r], "pinned", R.est0[r], t, Obs.Usable)
+                end
+                owe(r, e, lo, hi, o.t)
             else
                 -- a swing-paid resource crosses at a swing: [c, c + one step of the larger hand), measured at its
                 -- midpoint
@@ -954,6 +1012,14 @@ I.On(Obs.Usable, function(o, t, lag)
             I.Sample(R.power[r], "pinned", R.est0[r], t, Obs.Usable)
         end
         owe(r, e, lo, hi, o.t)
+        if now == SHORT and R.swing[r] > 0 and young(r, t) then
+            if R.cutC[r] <= 0 or R.spends[r] ~= R.cutSp[r] then
+                R.cutT[r], R.cutSp[r], R.cutL[r], R.cutE[r], R.cutH[r] = t, R.spends[r], 0, 0, 0
+            end
+            R.cutC[r] = c > R.cutC[r] and c or R.cutC[r]
+            R.cutL[r], R.cutE[r] = R.cutL[r] + lo - R.lo0[r], R.cutE[r] + e - R.est0[r]
+            R.cutH[r] = R.cutH[r] + hi - R.hi0[r]
+        end
     end
     if now == SHORT then
         shortCost[a], shortT[a], shortGain[a], shortEst[a] = c, t - lag, R.gain[r], R.est0[r]
