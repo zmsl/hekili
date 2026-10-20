@@ -107,7 +107,10 @@ function M.talents(str, trees)
     return out
 end
 
---- The RaidSimRequest of recipe `r`, its files read under the wowsims checkout `root` ("" : paths as given).
+--- The RaidSimRequest of recipe `r`, its files read under the wowsims checkout `root` ("" : paths as given). A tank
+--- recipe (`r.tank`) makes the player the raid's tank and `r.healingModel` its incoming healing, as wowsims's UI does
+--- for a tank spec (ui/features/settings/model/apply_defaults.ts:108-122: `setHealingModel` from the spec's
+--- OtherDefaults, `setTanks([player])`): without a tank the target swings at no one.
 function M.request(r, root)
     local p
     if r.build then
@@ -130,8 +133,9 @@ function M.request(r, root)
         p.rotation = decode(slurp(join(root, r.apl)), r.apl)
     end
     p.name = r.name
+    p.healingModel = r.healingModel
     return {
-        raid = { parties = { { players = { p } } } },
+        raid = { parties = { { players = { p } } }, tanks = r.tank and { { type = "Player", index = 0 } } or nil },
         encounter = M.ENCOUNTER,
         simOptions = { iterations = 1, randomSeed = tostring(M.SEED), debug = true },
         type = "SimTypeIndividual",

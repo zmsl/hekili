@@ -28,6 +28,14 @@
               }
             },
             "class":"ClassPaladin",
+            "healingModel":{
+              "inspirationUptime":0.25,
+              "hps":2200,
+              "cadenceVariation":1.2,
+              "cadenceSeconds":0.4,
+              "absorbFrac":0.02,
+              "burstWindow":6
+            },
             "equipment":{
               "items":[{
                   "id":250599
@@ -274,6 +282,10 @@
             },
             "distanceFromTarget":5
           }]
+      }],
+    "tanks":[{
+        "index":0,
+        "type":"Player"
       }]
   },
   "simOptions":{

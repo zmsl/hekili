@@ -84,5 +84,23 @@ describe("check_wowsims_pin", function()
             req.simOptions.debug,
         })
         assert.are.same({ 180, 63 }, { req.encounter.duration, req.encounter.targets[1].level })
+        assert.is_nil(req.raid.tanks) -- not a tank: no tank, no healing model
+        assert.is_nil(p.healingModel)
+    end)
+
+    it("makes a tank recipe's player the raid's tank, healed by its healing model (the UI's tank defaults)", function()
+        local gear = tmp('{"items":[]}')
+        local model = { hps = 2200, cadenceSeconds = 0.4 }
+        local req = ex.request({
+            name = "Tank",
+            tank = true,
+            healingModel = model,
+            player = { race = "RaceHuman", class = "ClassPaladin", gear = gear, specKey = "protectionPaladin" },
+        }, "")
+        os.remove(gear)
+        assert.are.same({ { type = "Player", index = 0 } }, req.raid.tanks)
+        assert.are.same(model, req.raid.parties[1].players[1].healingModel)
+        local tanks = ex.recipe("paladin_protection")
+        assert.are.same({ true, 2200 }, { tanks.tank, tanks.healingModel.hps })
     end)
 end)

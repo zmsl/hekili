@@ -3,7 +3,9 @@
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/paladin/protection/presets.ts:23
 -- (DefaultTalents), :25-27 (DefaultOptions), :86-98 (OtherDefaults) at the pin; the APL and gear spec.ts's default.
 -- Disagreements worked (P7, resume 3: after central fixes 6/8/C and 9/9b): replay 0.750 (28; wowsims's own Protection
--- is out of mana from 24 s, so few decisions). 0.679 on the rebase alone (fix 6/8/C report: the replay's client now
+-- is out of mana from 24 s, so few decisions) on an export with no tank, so the target never swung (GAP AE, central fix
+-- 13: re-exported as the tank, 0.583 (48), the hits' and blocks' mana returns unmodelled; the notes below are the
+-- untanked fight's). 0.679 on the rebase alone (fix 6/8/C report: the replay's client now
 -- reads the log's 2597 maximum); back to 0.750 once wowsims's character is booted with that maximum too, so the class
 -- file prices Righteous Fury's 30% on it (on 6000, its short answers capped the belief at 779 under a true 1568).
 -- holy_strike -> false 4 and seal_of_fury -> holy_strike 3: GAP R (central fix 12;
@@ -30,6 +32,16 @@ return {
         profession1 = "Engineering",
         profession2 = "Enchanting",
         distanceFromTarget = 5,
+    },
+    -- a tank: the raid's tank (the target swings at it) and presets.ts:92-99's healing model (apply_defaults.ts:108-122)
+    tank = true,
+    healingModel = {
+        hps = 2200,
+        cadenceSeconds = 0.4,
+        cadenceVariation = 1.2,
+        absorbFrac = 0.02,
+        burstWindow = 6,
+        inspirationUptime = 0.25,
     },
     map = { [25903] = "holy_shock" }, -- Holy Shock rank 4's hostile spell (wowdb: 25903, range 40); the kit's 20930
     focus = { seal_of_fury = 2, holy_shield = 2 },
