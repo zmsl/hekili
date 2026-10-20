@@ -20,7 +20,9 @@ function M.gate(m, r, line)
     assert.is_true(r.agreement >= 0.85, line)
     assert.is_true(r.reactMedian <= 1 and r.reactP90 <= 3, line)
     assert.is_true((r.per100.gcd or 0) == 0 and (r.per100.cooldown or 0) == 0, line)
-    assert.is_true((r.per100.cost or 0) <= (r.per100B.cost or 0) + 3, line)
+    -- our cost refusals the oracle shadow would not have made at that tick (loop.unmatched: the round-3 ruling); a
+    -- refusal both make is the press protocol meeting the world's rage timing, kept visible in the raw rate
+    assert.is_true((r.per100U.cost or 0) <= (r.per100B.cost or 0) + 3, line)
     M.health(m, r, line)
 end
 

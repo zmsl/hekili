@@ -83,6 +83,14 @@ local function queue(H, q, n)
     return k
 end
 
+--- Whether a refusal of `key` is the driver's own (§5.2 as built, the round-3 ruling): not when the shadow's queue `q`
+--- (the oracle's, the same tick) showed the same first icon ready (wait at most `react`), a press it would have made
+--- too: the harness's press protocol meeting the world's rage timing, not a belief error. No shadow (run B, a replay):
+--- every refusal is the driver's.
+function M.unmatched(key, q, react)
+    return not (q and q.name[1] == key and q.time[1] <= react)
+end
+
 -- The first on-GCD name of an instance's Primary queue (false: none): the replay's decision-point pick.
 local function firstGcd(H)
     local out, abilities = H.Hekili.Engine.Output.Primary, H.Hekili.Class.abilities
@@ -126,7 +134,7 @@ function M.run(L, seed, o, drivers)
     end
     local W = R and R.world(wo, seed) or scenarios.world(wo, seed)
     local us = W.ents[1]
-    local run = { W = W, us = us, ticks = 0, presses = 0, refused = {}, raises = 0, selfCheck = {} }
+    local run = { W = W, us = us, ticks = 0, presses = 0, refused = {}, unmatched = {}, raises = 0, selfCheck = {} }
     -- the metrics' per-tick record (§5.1): in-combat ticks only, both queues' first icons, the truth
     run.combat, run.full, run.idle, run.attempts, run.episodes, run.up = 0, 0, 0, 0, 0, {}
     run.ours, run.theirs, run.gap, run.cpu, run.secrets, run.focus = {}, {}, {}, {}, {}, 0
@@ -156,7 +164,7 @@ function M.run(L, seed, o, drivers)
         end
         ctl.auraError.target = nil
         -- the fresh world holds none of our buffs: the client says so (a plain walk out of combat), or the instance
-        -- keeps believing the last fight's (a Battle Shout of run A up into run B, a different world)
+        -- keeps believing the last fight's (a self-buff of run A up into run B, a different world)
         d.H.Fire("UNIT_AURA", "player")
         -- UnitLevel is plain in combat on Forever (the facade's passthrough row); fake_api answers an unset unit secret
         -- `targetLevel` the content's answer for the target (-1: a boss, as Hekili's `boss` reads it)
@@ -294,6 +302,9 @@ function M.run(L, seed, o, drivers)
             else
                 if inCombat then -- over the in-combat attempts (per100)
                     run.refused[why] = (run.refused[why] or 0) + 1
+                    if M.unmatched(key, steps[2] and steps[2].q, o.react or M.REACT) then
+                        run.unmatched[why] = (run.unmatched[why] or 0) + 1
+                    end
                 end
                 refusedKey = key
                 if inCombat and lastRefused ~= key then
@@ -400,9 +411,10 @@ local function reactions(ours, theirs, n, out)
     end
 end
 
--- An empty tally (M.tally's and M.replay's).
+--- An empty tally (M.tally's and M.replay's).
 local function blank()
     local m = { fights = 0, both = 0, agree = 0, conf = {}, react = {}, refused = {}, attempts = 0, episodes = 0 }
+    m.unmatched = {} -- run A's refusals the oracle shadow would not have made (M.unmatched)
     m.refusedB, m.attemptsB = {}, 0 -- the oracle's own, driving run B (the projection's share: §5.2 as built)
     m.A = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0 }
     m.B = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0 }
@@ -437,6 +449,9 @@ function M.tally(L, n, o)
         reactions(a.ours, a.theirs, a.combat, m.react)
         for why, k in pairs(a.refused) do
             m.refused[why] = (m.refused[why] or 0) + k
+        end
+        for why, k in pairs(a.unmatched) do
+            m.unmatched[why] = (m.unmatched[why] or 0) + k
         end
         m.attempts, m.episodes = m.attempts + a.attempts, m.episodes + a.episodes
         m.focus = m.focus + a.focus
@@ -475,6 +490,8 @@ function M.tally(L, n, o)
     end
     return m
 end
+
+M.blank = blank
 
 --- One replay of wowsims log `R` (replay.lua) on `L`'s boot: ours alone on the log's world, no presses, wowsims's
 --- next cast as `theirs` each tick. A tally for summary and line: the per-tick agreement with wowsims's next cast
@@ -525,7 +542,7 @@ local function quantile(list, p)
 end
 
 --- The tally's derived metrics: agreement, react (median, p90, share never; in ticks), refusals per 100 attempts by
---- reason, episodes per minute, damage per second A / B, full-power and GCD-idle shares and debuff uptimes (A, B),
+--- reason (per100; per100U the unmatched ones, M.unmatched; per100B the oracle's own in run B), episodes per minute, damage per second A / B, full-power and GCD-idle shares and debuff uptimes (A, B),
 --- flicker per minute (ours, the oracle's), CPU per Update (mean, p99 ms), and the tally's focus count (not in M.line).
 function M.summary(m)
     local r = { focus = m.focus }
@@ -540,9 +557,10 @@ function M.summary(m)
     end
     r.reactMedian, r.reactP90 = quantile(reacted, 0.5), quantile(reacted, 0.9)
     r.never = never / math.max(1, #m.react)
-    r.per100, r.per100B = {}, {}
+    r.per100, r.per100B, r.per100U = {}, {}, {}
     for why, k in pairs(m.refused) do
         r.per100[why] = 100 * k / math.max(1, m.attempts)
+        r.per100U[why] = 100 * (m.unmatched[why] or 0) / math.max(1, m.attempts)
     end
     for why, k in pairs(m.refusedB) do
         r.per100B[why] = 100 * k / math.max(1, m.attemptsB)
@@ -592,7 +610,12 @@ function M.line(m)
     local r = M.summary(m)
     local refused = {}
     for why, v in pairs(r.per100) do
-        refused[#refused + 1] = ("%s %.1f (oracle %.1f)"):format(why, v, r.per100B[why] or 0)
+        refused[#refused + 1] = ("%s %.1f (oracle %.1f, unmatched %.1f)"):format(
+            why,
+            v,
+            r.per100B[why] or 0,
+            r.per100U[why]
+        )
     end
     table.sort(refused)
     local up = {}

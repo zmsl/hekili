@@ -118,6 +118,8 @@
 - Developer: the headless loop ends a fight killed by its last press out of combat for both instances, and starts each
   fight with no buffs believed from the last one (the next fight used to start "in combat", skipping the precombat
   list, and the oracle's own run depended on the run before it).
+- Developer: the headless loop's cost-refusal gate counts a refusal against the addon only when the oracle would not
+  have pressed the same icon at that tick; the line keeps the raw rates and shows the paired one ("unmatched").
 
 ### Known issues
 - Hunter priorities are unchecked in game: Auto Shot timing, the percent-of-base mana costs and the rune Raptor

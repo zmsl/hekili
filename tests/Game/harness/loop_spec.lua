@@ -96,6 +96,26 @@ describe("the headless loop between two fights on one boot", function()
     end)
 end)
 
+describe("the headless loop's paired refusals (loop.unmatched)", function()
+    it("counts a refusal against us only when the oracle shadow did not show that icon ready at that tick", function()
+        local shown = { name = { "spender" }, time = { 0.02 } }
+        local other = { name = { "other" }, time = { 0 } }
+        local waiting = { name = { "spender" }, time = { 0.4 } }
+        assert.is_false(loop.unmatched("spender", shown, loop.REACT)) -- both would press: no belief error
+        assert.is_true(loop.unmatched("spender", other, loop.REACT))
+        assert.is_true(loop.unmatched("spender", waiting, loop.REACT))
+        assert.is_true(loop.unmatched("spender", nil, loop.REACT)) -- no shadow: ours
+        local m = loop.blank()
+        m.attempts, m.attemptsB = 10, 10
+        m.refused.cost, m.refusedB.cost = 2, 1 -- two refusals at a tick the shadow pressed too: unmatched 0
+        local r = loop.summary(m)
+        assert.are.same({ 20, 0, 10 }, { r.per100.cost, r.per100U.cost, r.per100B.cost })
+        m.unmatched.cost = 1 -- one where the shadow did not show the icon ready
+        assert.are.equal(10, loop.summary(m).per100U.cost)
+        assert.is_truthy(loop.line(m):find("cost 20.0 (oracle 10.0, unmatched 10.0)", 1, true))
+    end)
+end)
+
 describe("the headless loop's replay injection (o.replay)", function()
     local scenarios = require("Game.harness.scenarios")
     it("presses nothing, cycles at each decision and scores only the on-GCD ones", function()
