@@ -207,12 +207,12 @@ pool and regen, no Mana Spring regen, Water Shield or potions), so most in-comba
 The imbues are not in the solo world's kit (it has no weapon enchant read). The world's costs are each rank's (DB2),
 with Shamanistic Focus when the build has it, Stormstrike's 121 (wowsims/forever's), and the shocks' cooldown and Flame
 Shock's duration from the booted talents. The lines below run Enhancement (wowsims.com) (wowsims packs plan, Task 10,
-after its fix round 1: Stormstrike's cost moved them). `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's own fight
-(floor 0.80) and runs the levels 10, 40 and 60:
+state R2 on origin/forever 3aa63c96: Fire Nova at the DB2's 520). `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's own fight
+(floor 0.80) and runs the levels 10, 40 and 60 (40 pending: GAP W, the five-second window opened late):
 
 ```
-Enhancement solo: fights=3 agreement 0.999 (706 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.011; ... [seeds 1-3]
-Enhancement solo: fights=20 agreement 0.992 (4332 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.001; ...
+Enhancement solo: fights=3 agreement 0.999 (1151 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.011; ... [seeds 1-3]
+Enhancement solo: fights=20 agreement 0.996 (7350 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.001; ...
 ```
 
 Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
@@ -228,15 +228,18 @@ Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
 - S5: Clearcasting (16246) after an elemental spell: readable in combat; one charge, spent by the next Lightning Bolt,
   shock or Fire Nova (the cost modifier's list)?
 - S6: Fire Nova (408341..408345): IsSpellUsable without a fire totem answers (false, false), not short of mana (its
-  answers are a mana rung)? Its 10 s cooldown, and does it leave the totem up?
+  answers are a mana rung)? Its cooldown (10 s, 6 s with Improved Fire Nova 2/2), and does it leave the totem up?
 - S7: Lightning Shield (324..10432): 3 charges on the player aura, one spent per hit that lands (WOUND and partial block
   in UNIT_COMBAT), readable in combat?
-- S8: the shocks' shared cooldown: after Earth Shock, does Flame Shock read on cooldown for 6 s (category 19), and the
-  reverse?
-- S9: the imbues: C_Item.GetWeaponEnchantInfo out of combat after Rockbiter (60 minutes), so main_hand_enchant reads up;
-  the reminder's setting (Rockbiter by default) and the dual-wield off hand (not modelled).
+- S8: the shocks' shared cooldown: after Earth Shock, does Flame Shock read on cooldown (category 19: 6 s, 5 s with
+  Reverberation 5/5), and the reverse?
+- S9: the imbues: C_Item.GetWeaponEnchantInfo out of combat after Rockbiter (60 minutes), so main_hand_enchant reads up
+  (the imbue reminder setting is retired with the hand-built list); the dual-wield off hand (not modelled).
 - S10: mana: UnitPower(mana) secret out of combat on a Shaman too; GetPowerRegenForPowerType(0)'s two returns; the
-  Flame Shock DoT (12 s, 3 s ticks) on the target modelled from our cast.
+  Flame Shock DoT (12 s, 21 s with Call of Flame 3/3; 3 s ticks) on the target modelled from our cast.
+- S11: wowsims/forever's spell data against the client: Flame Shock lasts 21 s with Call of Flame 3/3? Stormstrike
+  costs 121 (8% of base mana) or the DB2's 125? Fire Nova costs 375 (wowsims) or the DB2's 520 (the kit's)?
+  Shamanistic Focus takes 45% off the shocks and Lightning Shield?
 
 `tests/Forever/loop_hunter_spec.lua` runs 3 fights of each Hunter pack in `make check` (seeds 1-3, `#slow`) and 20 in
 `make test-hunter` (`#hunter`), gated by `pack_gate.gate` and asserting that some focus line ran (`r.focus > 0`: Beast

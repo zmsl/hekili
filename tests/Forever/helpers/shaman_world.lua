@@ -328,8 +328,8 @@ local function content(name)
 
     --- The resolved press of `key` from instance `H` (the oracle's: its state is true): the highest known rank's ID
     --- and every known rank's (a shock's with the other shock's: the client answers the shared cooldown on both), the
-    --- cost (Clearcasting and Maelstrom Weapon on the current world's us), the cooldown, GCD and cast time, the mapping's
-    --- effects. Raises "unmapped key".
+    --- cost (Clearcasting and Maelstrom Weapon on the current world's us), the cooldown, GCD and cast time, the
+    --- mapping's effects. Raises "unmapped key".
     function C.resolve(key, H)
         local m = M.MAP[key]
         if not m then
@@ -352,6 +352,9 @@ local function content(name)
             end
         end
         -- Clearcasting and Maelstrom Weapon from the world, not the oracle: the leveling brackets never step the oracle
+        if truth and truth.stopped then
+            truth = nil -- the world ended (its stop): a later press has no world to read
+        end
         local auras = truth and truth.auras or {}
         local cc = auras[X.aura.clearcasting.id]
         local mw = auras[X.aura.maelstrom_weapon.id] and auras[X.aura.maelstrom_weapon.id].stacks

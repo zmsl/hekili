@@ -8,9 +8,9 @@
 --    DB2 (wowdb effects 16038 has none): +3 s a rank on Flame Shock (21 s at 3/3, the log's). IN-GAME CHECK: Flame
 --    Shock duration with Call of Flame: 21 s?
 -- 2. "fire_nova -> earth_shock" (4; was 13): replay limit, fixed centrally (fix 9: the replay sends the shocks' shared
---    category and the talent-modified cooldowns, C.SHARED); 4 left. Shared gap behind them too: the secret-mana belief
---    credits no restore from a heard Major Mana Potion (17531, DB2 1800) or Demonic Rune (16666, 1200), so from the
---    first potion it sits about 2000 under the truth, held up only by the dearest usable rung.
+--    category and the talent-modified cooldowns, C.SHARED); 4 left. Core gap behind them too (GAP V): after a refill
+--    it cannot see (here the potions and runes), the secret-mana belief pins at the dearest usable cost (lo = hi), so
+--    from the first potion it sits about 2000 under the truth.
 -- 3. "stormstrike -> earth_shock" (3) and "stormstrike -> lightning_bolt" (3): replay limit (wowsims casts on the
 --    instant a cooldown ends; the decision sits a hair before it, our cooldown not yet over; mana is no factor).
 -- Kit fixes (P6): Reverberation (shocks 5 s), Improved Fire Nova (6 s), Shamanistic Focus (-45% on the shocks and
@@ -18,7 +18,8 @@
 -- 121 at 60; the DB2's 125), wowsims spell data absent from DB2 (in-game checks). Each matches the log.
 -- Known deviations: Fire Nova costs the DB2's 520, not wowsims's 375 (its spell data; the log's 15 casts): after a
 -- refill it cannot see, the secret-mana belief pins at the dearest usable cost (lo = hi), and at 375 that pin (450)
--- sits under the Fire Nova filler's 10% (500), so the solo loop gate falls to 0.886 (a core gap, reported). Also: of
+-- sits under the Fire Nova filler's 10% (500 of the solo world's 5000 mana; 553 of the 5530 in wowsims's fight and
+-- the replay), so the solo loop gate falls to 0.886 (GAP V, reported). Also: of
 -- wowsims's autocast cooldowns (rule 13) only Blood Fury translates; the trinket
 -- 249469, Rage of the Farseer 425336 (not in the kit), the Goblin Sapper Charge 10646 and the EZ-Thro Dark Bomb 260817
 -- stay unmapped; mana is secret in combat, so the potion (mana.pct<80), Demonic Rune (<70) and the Fire Nova filler

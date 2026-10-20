@@ -68,7 +68,8 @@ local FLAME_SHOCK_COST = { 55, 95, 160, 250, 345, 410 }
 local FIRE_NOVA = { 408341, 408342, 408343, 408344, 408345 } -- Forever's spell (no totem): from the fire totem up
 -- The DB2's. wowsims/forever's spell data says 65, 120, 210, 290, 375 (its log: 375): not modelled, because the
 -- secret-mana belief pins itself at the dearest usable cost after an unseen refill, and at 375 that pin (Earth Shock's
--- 450) sits under the 10% Fire Nova filler (the solo gate falls to 0.89: a core gap). IN-GAME CHECK: Fire Nova's cost.
+-- 450) sits under the 10% Fire Nova filler (500 of the solo world's 5000 mana; 553 of 5530 in wowsims's fight), so the
+-- solo gate falls to 0.89 (GAP V). IN-GAME CHECK: Fire Nova's cost.
 local FIRE_NOVA_COST = { 95, 170, 280, 395, 520 }
 local ROCKBITER_WEAPON = { 8017, 8018, 8019, 10399, 16314, 16315, 16316 }
 local ROCKBITER_WEAPON_COST = { 15, 25, 50, 75, 100, 125, 150 }
@@ -204,9 +205,12 @@ end
 
 local function shockEffect(other, debuffKey)
     return function()
+        -- shockCooldown's formula, repeated: called from here it runs outside the handler's state environment (no
+        -- `talent`)
         setCooldown(other, 6 - 0.2 * talent.reverberation.rank)
         if debuffKey then
-            applyDebuff("target", debuffKey, 12 + 3 * talent.call_of_flame.rank) -- the aura's duration, explicit for `now`
+            -- the aura's duration, explicit for `now`
+            applyDebuff("target", debuffKey, 12 + 3 * talent.call_of_flame.rank)
         end
     end
 end
