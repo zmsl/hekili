@@ -56,8 +56,8 @@
   list and the Consecration and Exorcism Mana Floor settings (wowsims's 10% floor is in the new priority).
 - Shaman: the hand-built "Enhancement" priority is gone, and with it its imbue reminder and mana settings.
   Reverberation and Improved Fire Nova now shorten the shock and Fire Nova cooldowns, Shamanistic Focus lowers the
-  shocks' and Lightning Shield's cost, Call of Flame lengthens Flame Shock, and Stormstrike and Fire Nova cost what
-  wowsims.com charges.
+  shocks' and Lightning Shield's cost, Call of Flame lengthens Flame Shock, and Stormstrike costs what wowsims.com
+  charges.
 
 ### Fixed
 - Hunter: priority lines that divide (Multi-Shot's) now fire. Divisions in the priorities translated from
@@ -93,6 +93,7 @@
 - Shaman: the Enhancement priority no longer shows the weapon-imbue reminder (the wowsims.com list has none).
 - Shaman: the Enhancement priority's mana lines (mana potion, Demonic Rune, Fire Nova above 10%) are always on and read
   an estimated mana.
+- Shaman: Fire Nova is believed to cost 520 mana where wowsims.com uses 375.
 
 ### Upgrade notes
 - Rogue: a saved choice of the Assassination, Combat or Subtlety priority falls back to that specialization's

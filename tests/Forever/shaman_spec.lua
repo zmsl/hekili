@@ -10,14 +10,14 @@ local headless = require("Game.harness.headless")
 local FILE = "src/Hekili_Shaman/Shaman.lua"
 
 -- key = { spell IDs in rank order, the top rank's mana cost, cooldown, gcd }, from the DB2 (`wowdb spell <name>`;
--- Stormstrike's and Fire Nova's costs from wowsims/forever's spell data, absent from the DB2 at 70338): the
+-- Stormstrike's cost from wowsims/forever's spell data, absent from the DB2 at 70338): the
 -- cooldown is the larger of RecoveryTime and CategoryRecoveryTime; gcd "spell" for 1.5 s, "totem" for 1.0 s.
 local KIT = {
     lightning_bolt = { { 403, 529, 548, 915, 943, 6041, 10391, 10392, 15207, 15208 }, 220, 0, "spell" },
     lightning_shield = { { 324, 325, 905, 945, 8134, 10431, 10432 }, 370, 0, "spell" },
     earth_shock = { { 8042, 8044, 8045, 8046, 10412, 10413, 10414 }, 450, 6, "spell" },
     flame_shock = { { 8050, 8052, 8053, 10447, 10448, 29228 }, 410, 6, "spell" },
-    fire_nova = { { 408341, 408342, 408343, 408344, 408345 }, 375, 10, "spell" }, -- wowsims's data (DB2 520)
+    fire_nova = { { 408341, 408342, 408343, 408344, 408345 }, 520, 10, "spell" }, -- wowsims's 375 not modelled
     stormstrike = { { 17364 }, 121, 8, "spell" }, -- wowsims's data: 8% of base mana (DB2 125 flat)
     searing_totem = { { 3599, 6363, 6364, 6365, 10437, 10438 }, 170, 0, "totem" },
     flametongue_totem = { { 8227, 8249, 10526, 16387 }, 275, 0, "totem" },
