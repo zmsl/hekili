@@ -628,7 +628,8 @@ spec:RegisterStateFunction("swap_form", function(form)
 end)
 
 -- The UI_ERROR_MESSAGE types of "You must be behind your target" (checkpoint Q11 records it; until then none, and the
--- window never opens). On the spec object so the headless specs can name one.
+-- window never opens). On the spec object so the headless specs can name one. Shred's positional fallback (its
+-- `usable`, the packs' Claw) depends on it: until Q11 fills it, Shred is never refused.
 local NOT_BEHIND_ERRORS = {}
 spec.notBehindErrors = NOT_BEHIND_ERRORS
 local NOT_BEHIND_WINDOW = 5

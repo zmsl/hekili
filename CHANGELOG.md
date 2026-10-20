@@ -83,8 +83,6 @@
 - Druid: Shifting Power's cooldown is 1 s shorter with the Howling Idol equipped.
 - Druid: with the Wolfshead Helm equipped, Shifting Power gives 45 energy and Enrage 15 instant rage.
 - Druid: Moonglow's first two points cut the Balance spells' mana by 8% and 17%, as in the game.
-- Druid: the Feral priority recommends Claw instead of Shred for a few seconds after the game says you must be behind
-  the target (the "Always Behind" setting keeps Shred). Before, it recommended Shred from the front forever.
 - Druid: at level 60 the forms, Shifting Power and Innervate cost their percent of base mana (Shifting Power 684, not
   over 1200), and Shredding Attacks counts all three points (Shred 42 energy at 3/3).
 - Druid: the mana estimate regenerates in combat outside the five-second rule (about 22 a second with pre-raid gear)
