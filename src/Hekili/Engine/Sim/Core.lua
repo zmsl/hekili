@@ -569,6 +569,11 @@ end
 
 local invalidActionWarnings = {}
 
+-- Forever: "in precombat" is a property of the walk, not of a list's name: true while the precombat list and every
+-- list it calls (at any depth) is walked, so a called list ("Pre-pull: Move" as `pre_pull_move`) is filtered in combat
+-- and its prepull_at entries are scheduled like precombat's own. Saved and restored around each list's walk.
+local inPrecombat = false
+
 -- A precombat entry with `prepull_at=N` (a prepull schedule, N seconds before the pull: the wowsims packs' doAtValue)
 -- is recommended once an out-of-combat episode, the time since the last combat ended (`state.combat_ended`): it is
 -- done once its ability is cast in the episode (`lastCast`: our casts and the simulation's) or its aura of the same key
@@ -629,7 +634,9 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
     -- if debug then self:Debug( "ListCheck: Success(%s-%s)", packName, listName ) end
 
-    local precombatFilter = listName == "precombat" and state.time > 0
+    local wasPrecombat = inPrecombat
+    if listName == "precombat" then inPrecombat = true end
+    local precombatFilter = inPrecombat and state.time > 0
 
     local rAction = action
     local rWait = wait or state.delayMax
@@ -793,7 +800,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                     Timer:Track( "Ability Known, Enabled" )
 
-                    if ability and known and enabled and entry.prepull_at and listName == "precombat" and prepullDone( entry, action, ability ) then
+                    if ability and known and enabled and entry.prepull_at and inPrecombat and prepullDone( entry, action, ability ) then
                         if debug then self:Debug( "This prepull entry ( prepull_at=%s ) is done for this out-of-combat episode.  Skipping.", tostring( entry.prepull_at ) ) end
                     elseif ability and known and enabled then
                         local script = scripts:GetScript( scriptID )
@@ -1343,6 +1350,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
     if listCache[ scriptID ] then twipe( listCache[ scriptID ] ) end
     if listValue[ scriptID ] then twipe( listValue[ scriptID ] ) end
 
+    inPrecombat = wasPrecombat
     return rAction, rWait, rDepth
 end
 
@@ -1357,6 +1365,7 @@ function Hekili:GetNextPrediction( dispName, packName, slot )
     for i = #Stack, 1, -1 do tinsert( StackPool, tremove( Stack, i ) ) end
     for i = #Block, 1, -1 do tinsert( StackPool, tremove( Block, i ) ) end
     twipe( InUse )
+    inPrecombat = false -- in case a walk was interrupted
 
     twipe( listStack )
 

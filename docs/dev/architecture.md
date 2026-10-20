@@ -276,6 +276,13 @@ earliest first, and emits `prepull_at` from it (0 at the pull), adding no guard 
 seconds are the order's source and documentation, not a timer. Lines without it (every hand-written pack's precombat,
 Arms's `battle_shout` refresh among them) behave as before.
 
+**In precombat.** Being in precombat is a property of the walk, not of a list's name: `GetPredictionFromAPL` sets
+`inPrecombat` while it walks the precombat list and every list that list calls or runs (at any depth; saved and
+restored around each list, so the caller's value returns after), and both the in-combat filter and `prepull_at`
+read it. A list the precombat list calls (wowsims's "Pre-pull: Move" becomes `pre_pull_move`) is skipped in combat
+like precombat itself; the same list reached from `default` is not (`tests/Forever/precombat_calls_spec.lua`).
+Upstream Hekili checks the name alone, so a called list leaked into combat.
+
 ## 7. Display styles
 
 A display style draws one display's recommendations. Each display names one in `displays[id].style` (nil or unknown:

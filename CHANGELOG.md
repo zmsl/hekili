@@ -70,6 +70,8 @@
   charges.
 
 ### Fixed
+- Pre-pull actions no longer show in combat when the pre-pull list hands them to another list: Fury recommended
+  Intercept all fight (and planned its rage around it), and Arms did the same with stance dancing on.
 - Mana (Paladin, Shaman, Hunter and other spirit regenerators): in combat the addon forecast mana with the
   while-casting rate, as if the five-second rule never ended, so at low mana it waited for mana that never came and
   showed no icon. It now regenerates at the full rate from 5 seconds after your last mana spend, its own planned
