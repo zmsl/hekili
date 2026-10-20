@@ -5,7 +5,8 @@
 -- log's: casts at their completion (no cast bars), powers as the logged after-values (no regen ticks; the client
 -- still reads the content's rate), our auras and the target's with the log's real duration when they fade, the
 -- content's hidden auras in the truth only, swings and spells landing at once, the mob's health at 20% from the
--- execute phase's start (wowsims's is the last 20% of the duration) and never dead. Not replayed: cast bars, landing
+-- execute phase's start (wowsims's is the last 20% of the duration) and never dead, our distance to it (the request's,
+-- then the log's Movement stacks). Not replayed: cast bars, landing
 -- lag, the target's swings. Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map
 -- through the booted instance's own ability set (Hekili.Class, booted as the log's race). Credit: the log
 -- format is wowsims/forever's (MIT, https://github.com/wowsims/forever); no code copied.
@@ -18,6 +19,8 @@ M.PULL = 5 -- the least world time of the log's 0 (a log whose prepull starts af
 M.LEAD = 0.5 -- the world time of the log's first line at the latest: after the prepull read at 0.1
 M.EPS = 1e-6 -- a line's place within its timestamp, as time: a decision falls just before its Casting line
 M.TAIL = 0.2 -- the exporter's execute proportion: the last 20% of the duration
+
+M.MOVE = 20 -- wowsims's OtherActionMove: the Movement aura (sim/core/movement.go), its stacks the distance in yards
 
 -- wowsims's resource names and the client's power types (Enum.PowerType); other names (health) are not powers.
 M.POWER = { mana = 0, rage = 1, focus = 2, energy = 3, ["combo points"] = 4 }
@@ -72,7 +75,10 @@ local function ours(rest)
     local n
     b, n = rest:match("^{([^}]*)} stacks: %d+ %-%-> (%d+)")
     if b then
-        local id = ids(b)
+        local id, other = ids(b)
+        if other == M.MOVE then -- the Movement aura's stacks: the yards to the target, whole (0: the move's end)
+            return tonumber(n) > 0 and { kind = "move", distance = tonumber(n) } or nil
+        end
         return id and { kind = "stacks", unit = "player", id = id, to = tonumber(n) }
     end
     local word, tail
@@ -119,7 +125,9 @@ end
 --- }, ev = { { t, kind, ... } } } in line order. Kinds: casting { id | item, tag, cast, gcd }, completed { id, other,
 --- tag, item },
 --- power { name, from, to }, aura { unit ("player" | "target"), verb ("gained" | "faded" | "refreshed"), id }, stacks
---- { unit, id, to }, hit { what ("swing" | "spell" | "tick"), hand, id, act, flag, amount }. Other lines are skipped.
+--- { unit, id, to }, hit { what ("swing" | "spell" | "tick"), hand, id, act, flag, amount }, move { distance } (our
+--- Movement aura's stacks: wowsims's yards to the target, truncated, at least 1, while we move). Other lines are
+--- skipped.
 --- The leading aura and stack lines at 0 before any other event are the sim's opening state (`initial`).
 function M.parse(text)
     local h, ev = { talents = {} }, {}
@@ -165,7 +173,8 @@ end
 --- earliest line M.LEAD s into the world, at least M.PULL: a -10 s prepull pulls at 10.5). Prepull casts (before the
 --- log's 0) are decisions like any other: wowsims counts them as its casts and the engine recommends a pack's precombat
 --- list out of combat (once each with `prepull_at`), so an on-GCD one is scored. creatureType: the mob's
---- (`target.creature_type`'s key; the request's mobType: tests/Forever/helpers/wowsims.lua `creatureType`). An ItemID cast maps through the abilities' `item`/`items`:
+--- (`target.creature_type`'s key; the request's mobType: tests/Forever/helpers/wowsims.lua `creatureType`), distance (the request's distanceFromTarget: our yards from the target at the start,
+--- W.moveTo; the log's move lines step it; nil: no positions). An ItemID cast maps through the abilities' `item`/`items`:
 --- a decision and a cooldown, no cast event (shortcut: the client is not shown the item's spell; emit it when a gate
 --- reads an item's cast).
 function M.new(text, H, o)
@@ -380,6 +389,8 @@ function M.new(text, H, o)
                 if tt then
                     W.summonTotem(us, tt[1], tt[2], e.id)
                 end
+            elseif e.kind == "move" then
+                W.moveTo(us, e.distance)
             elseif e.kind == "power" then
                 local pt = M.POWER[e.name]
                 if pt and (pt == us.pt or us.res[pt]) then
@@ -473,6 +484,11 @@ function M.new(text, H, o)
             end
             W.at(e.wt, function()
                 apply(e)
+            end)
+        end
+        if o.distance then
+            W.at(0, function()
+                W.moveTo(us, o.distance)
             end)
         end
         W.at(0.1, function() -- out of combat: the caches and the target (after the opening state at 0)

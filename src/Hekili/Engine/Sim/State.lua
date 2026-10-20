@@ -2769,22 +2769,31 @@ do
 
     mt_target = {
         __index = function( t, k )
-            if k == "distance" then t[k] = UnitCanAttack( "player", "target" ) and ( ( t.minR + t.maxR ) / 2 ) or 7.5
+            -- Forever (gap 13): the range comes from VirtualState's bracket (Game/State/Families/Enemies.lua
+            -- VS.TargetRange: the tracked abilities' own ranges, plain C_Spell.IsSpellInRange), not LibRangeCheck,
+            -- which resolves nothing here. Unknown never blocks: within and outside are both true, distance and
+            -- minR/maxR keep upstream's defaults.
+            if k == "distance" then
+                local r = VS.TargetRange()
+                if r.basis ~= "unknown" then t[k] = r.est
+                else t[k] = UnitCanAttack( "player", "target" ) and ( ( t.minR + t.maxR ) / 2 ) or 7.5 end
             elseif k == "in_range" then return t.distance <= 8
             elseif k == "minR" or k == "maxR" then
-                local minR, maxR = RC:GetRange( "target" )
-                t.minR = minR or 5
-                t.maxR = maxR or 10
+                local r = VS.TargetRange()
+                local known = r.basis ~= "unknown"
+                t.minR = known and r.lo or 5
+                -- no upper bound: past every range answered, at least 40 yd (the farthest spell ranges)
+                t.maxR = not known and 10 or ( r.hi < math.huge and r.hi or max( r.lo, 40 ) )
 
             elseif k:sub(1, 7) == "outside" then
                 local minR = k:match( "^outside([0-9.]+)$" )
                 if not minR then return false end
-                return ( t.minR > tonumber( minR ) )
+                return VS.TargetRange().basis == "unknown" or ( t.minR > tonumber( minR ) )
 
             elseif k:sub(1, 6) == "within" then
                 local maxR = k:match( "^within([0-9.]+)$" )
                 if not maxR then return false end
-                return ( t.maxR <= tonumber( maxR ) )
+                return VS.TargetRange().basis == "unknown" or ( t.maxR <= tonumber( maxR ) )
 
             elseif k:sub(1, 5) == "range" then
                 local minR, maxR = k:match( "^range([0-9.]+)to([0-9.]+)$" )

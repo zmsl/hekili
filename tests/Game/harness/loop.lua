@@ -37,7 +37,7 @@ function M.new(content)
     L.us = headless.new({ character = character, pack = content.PACK })
     L.oracle = headless.new({ character = character, pack = content.PACK, raw = M.RAW })
     for _, H in ipairs({ L.us, L.oracle }) do
-        H.ctl.inRange.target = true -- shortcut: no positions, every target in melee range
+        H.ctl.inRange.target = true -- a world without positions (no W.distance): every target in range
     end
     L.answers = content.usable(L.oracle)
     L.uptime = content.uptime(L.oracle)
@@ -136,7 +136,16 @@ function M.run(L, seed, o, drivers)
     for i, d in ipairs(drivers) do
         local ctl = d.H.ctl -- a fresh world: the client's answers about it start fresh too
         ctl.combat, ctl.form = false, L.form
-        local fresh = { ctl.dead, ctl.current, ctl.cooldown, ctl.usable, ctl.unitHealth, ctl.unitHealthMax, ctl.totems }
+        local fresh = {
+            ctl.dead,
+            ctl.current,
+            ctl.cooldown,
+            ctl.usable,
+            ctl.unitHealth,
+            ctl.unitHealthMax,
+            ctl.totems,
+            ctl.distance,
+        }
         for _, t in ipairs(fresh) do
             for key in pairs(t) do
                 t[key] = nil

@@ -1,0 +1,15 @@
+# wowsims 0123456789abcdef0123456789abcdef01234567 test_move seed 7 4 s target 63
+[0.51] [Tester (#1)] Casting {OtherID: 20} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)
+[0.51] [Tester (#1)] Completed cast {OtherID: 20}
+[0.51] [Tester (#1)] Aura gained: {OtherID: 20}
+[0.51] [Tester (#1)] {OtherID: 20} stacks: 0 --> 11
+[0.52] [Tester (#1)] {OtherID: 20} stacks: 11 --> 10
+[0.66] [Tester (#1)] {OtherID: 20} stacks: 10 --> 9
+[0.80] [Tester (#1)] {OtherID: 20} stacks: 9 --> 8
+[0.94] [Tester (#1)] {OtherID: 20} stacks: 8 --> 7
+[1.09] [Tester (#1)] {OtherID: 20} stacks: 7 --> 6
+[1.23] [Tester (#1)] {OtherID: 20} stacks: 6 --> 5
+[1.37] [Tester (#1)] Aura faded: {OtherID: 20}
+[1.37] [Tester (#1)] {OtherID: 20} stacks: 5 --> 0
+[1.40] [Tester (#1)] Casting {SpellID: 900001} (Cost = 20.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)
+[1.40] [Tester (#1)] Completed cast {SpellID: 900001}

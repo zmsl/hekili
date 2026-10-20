@@ -243,3 +243,34 @@ describe("the replay's casts: tags, items, pets, totems", function()
         assert.are.equal(1, casts) -- the totem's; the proc, the item and the pet emit none
     end)
 end)
+
+describe("the replay's position", function()
+    local f = assert(io.open("tests/Game/harness/fixtures/wowsims_move.log", "rb"))
+    local log = f:read("*a")
+    f:close()
+
+    it("reads the Movement aura's stacks as our yards to the target, its fade as no news", function()
+        local moves = {}
+        for _, e in ipairs(replay.parse(log).ev) do
+            if e.kind == "move" then
+                moves[#moves + 1] = e.distance
+            end
+            assert.is_not_equal("stacks", e.kind) -- an OtherID aura's stacks are no spell's
+        end
+        assert.are.same({ 11, 10, 9, 8, 7, 6, 5 }, moves)
+    end)
+
+    it("starts at the request's distance and steps it on the log's moves", function()
+        local R = replay.new(log, H, { distance = 25 })
+        local W = R.world(WO, 1)
+        assert.are.equal(25, at(W, 0.05).distance)
+        assert.are.equal(11, at(W, replay.PULL + 0.515).distance)
+        assert.are.equal(5, at(W, replay.PULL + 2).distance)
+        local n = 0
+        for _, ev in ipairs(W.truth) do
+            n = n + (ev.kind == "move" and 1 or 0)
+        end
+        assert.are.equal(8, n)
+        assert.is_nil(replay.new(log, H).world(WO, 1).distance) -- no request distance: no positions until a move
+    end)
+end)

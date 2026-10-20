@@ -54,3 +54,67 @@ describe("the headless Hunter gates, 20 fights a pack #hunter", function()
         end)
     end
 end)
+
+-- Gap 13 (wowsims unitDistance): the world at 25 yd, then in melee. Survival's melee list gated on the translator's
+-- `target.within5` (its line's criteria swapped in place) against the engine's range bracket.
+describe("the Hunter at range, then in melee", function()
+    it("brackets the distance from the kit's ranges and opens the melee list only in reach", function()
+        local loop = require("Game.harness.loop")
+        local fake = require("Game.State.helpers.fake_api")
+        local base = hw.Survival
+        local MOVE, SECRET = loop.PULL + 12, loop.PULL + 20
+        local C = setmetatable({}, { __index = base })
+        C.WORLD = setmetatable({
+            distance = 25,
+            script = function(W, us)
+                base.WORLD.script(W, us)
+                W.at(MOVE, function()
+                    W.moveTo(us, 5)
+                end)
+            end,
+        }, { __index = base.WORLD })
+        local L = loop.new(C)
+        local H = L.us
+        local pack = H.Hekili.Engine.settings.packs[C.PACK]
+        local swapped
+        for i, e in ipairs(pack.lists.default) do
+            if e.action == "call_action_list" and e.list_name == "melee" then
+                e.criteria, swapped = "target.within5", i
+                H.Hekili:LoadScript(C.PACK, "default", i)
+            end
+        end
+        assert.is_number(swapped)
+        local MELEE = { mongoose_bite = true, strider_kick = true, summon_hawk = true, wing_clip = true }
+        local seen = { far = {}, near = {}, secret = {} }
+        local run = loop.run(L, 1, {
+            duration = 30,
+            on = function(r, steps, t)
+                if t < loop.PULL + 1 or (t >= MOVE and t < MOVE + 1) then -- the pull's and the move's first second
+                    return
+                end
+                local phase = t < MOVE and "far" or (t < SECRET and "near" or "secret")
+                if t >= SECRET then
+                    H.ctl.distance.target = fake.SECRET -- every range read secret from here
+                end
+                local tg = H.Hekili.State.target
+                local s = seen[phase]
+                if s.within == nil then
+                    s.within = tg.within5
+                elseif s.within ~= tg.within5 then
+                    s.within = "mixed"
+                end
+                s.distance = tg.distance
+                local first = steps[1].q.name[1]
+                s.melee = (s.melee or 0) + (MELEE[first] and 1 or 0)
+            end,
+        }, { { H = H } })
+        assert.are.same({ false, 20 }, { seen.far.within, seen.far.distance }) -- [5, 35]: past Wing Clip, in Summon Hawk
+        assert.are.same({ true, 2.5 }, { seen.near.within, seen.near.distance }) -- [0, 5]
+        assert.are.same({ true, 2.5 }, { seen.secret.within, seen.secret.distance }) -- the last plain bracket stays
+        assert.are.equal(0, seen.far.melee)
+        assert.is_true(seen.near.melee > 0)
+        -- the pack's unconditional Raptor Strike line still shows at range (the world refuses it: "range")
+        assert.is_true((run.refused.range or 0) > 0)
+        assert.are.same({}, H.errors)
+    end)
+end)

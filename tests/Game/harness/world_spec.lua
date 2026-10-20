@@ -298,3 +298,52 @@ describe("the world's resources", function()
         end)
     end
 end)
+
+describe("the world's position", function()
+    it(
+        "moves our character: no white swing out of reach, a press refused outside its range, the client told",
+        function()
+            local observer = require("Game.harness.observer")
+            local W = world.new(5)
+            local us = W.add(entities.new({ guid = "Player-1", weapons = { { 10, 10, 2.0 } } }))
+            local mob =
+                W.add(entities.new({ guid = "Creature-1", kind = "mob", weapons = { { 10, 14, 2 } }, health = 1e6 }))
+            us.target, mob.target = mob, us
+            assert.is_true(W.inMelee()) -- no positions: in reach
+            W.at(0.2, function()
+                W.moveTo(us, 25)
+            end)
+            W.at(0.5, function()
+                W.emit({ kind = "prepull" })
+            end)
+            W.at(1, function()
+                W.emit({ kind = "pull" })
+                behaviours.melee({ phase = { 0.5 } })(W, us)
+            end)
+            W.at(6, function()
+                W.moveTo(us, 5)
+            end)
+            local strike = { spell = 7, gcd = 1.5, range = { 0, 5 } }
+            W.run(3)
+            assert.are.same({ false, "range" }, { W.press(us, "s", strike) })
+            W.run(8)
+            assert.is_true(W.press(us, "s", strike))
+            W.run(12)
+            local swings = {}
+            for _, ev in ipairs(W.truth) do
+                if ev.kind == "swing" and ev.src == us then
+                    swings[#swings + 1] = ev.t
+                end
+            end
+            assert.are.same({ 7.5, 9.5, 11.5 }, swings) -- 1.5, 3.5 and 5.5 fell out of reach
+            local s = observer.observe(W)
+            local seen = {}
+            for i = 1, s.n do
+                if s.ev[i] == "@distance" then
+                    seen[#seen + 1] = { s.t[i], s.a1[i], s.a2[i] }
+                end
+            end
+            assert.are.same({ { 0.2, "target", 25 }, { 6, "target", 5 } }, seen)
+        end
+    )
+end)

@@ -61,7 +61,12 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   on. `tests/Game/State/helpers/load.lua` names the addon root once (`ROOT = "src/Hekili/"`).
 - `tests/Game/harness/` is the combat harness (combat harness design §3): a seeded model of the Forever client
   (entities, behaviours, the world, the observer, scenarios) that drives VirtualState through the fakes, with the
-  attribution gates (`solo_spec`, `group_spec`, `onus_spec`, `sweep_spec`). Its `fixtures/` are in-game /vslog dumps,
+  attribution gates (`solo_spec`, `group_spec`, `onus_spec`, `sweep_spec`). The world has one position, our yards to
+  our target (`W.distance`: the `distance` scenario knob, `W.moveTo`; none by default, every range check in range):
+  the observer's `@distance` makes the fake client's `C_Spell.IsSpellInRange` answer against each spell's range (a
+  content's `character.ranges`, else 0-5), our white swings stop out of reach (5 yd) and a press with a `range` is
+  refused outside it; the wowsims replay starts at the request's `distanceFromTarget` and steps on the log's Movement
+  aura stacks. Its `fixtures/` are in-game /vslog dumps,
   every token row kept; `fixtures_spec` replays them and fits the observer's defaults to them. A new capture becomes a
   fixture with `lua5.1 tools/vslog_fixture.lua dump.txt "min,max,min,max" STRIKE=<id> DOT=<id>` (the weapon damage
   UnitDamage read, our strike's and DoT's spell IDs) plus a header comment; a fit outside tolerance is retuned in the
@@ -231,7 +236,11 @@ scenario knob), and Quick Shots procs off them under Aspect of the Hawk (10%). T
 Mongoose Bite for 5 s, but the window never opens (likely `dodged()` in `tests/Forever/helpers/hunter_world.lua` reads
 `W.t`/`W.truth`, which a batched list answer sees at the finished world). Raptor Strike's cooldown starts at its swing (class-neutral: a queued strike's cooldown). Each
 fight's fresh world gets the pack's aspect at the pull (the character keeps a permanent buff between fights). Neither side
-dies (shaman_world's workaround for the loop's missing kill). All three gates are thin: Survival shows no first icon on 72% of its in-combat ticks (seeds 1-3), and
+dies (shaman_world's workaround for the loop's missing kill). The kit's ranges are DB2's (`RANGE`: Hunter Range 8-35,
+Combat Range 0-5); the default worlds set no distance, so they are unchanged. "The Hunter at range, then in melee"
+runs Survival at 25 yd, then 5 yd, its melee list gated on `target.within5`: the bracket reads [5, 35] (past Wing
+Clip, inside Summon Hawk) and the list stays shut, then [0, 5] and it opens, and the bracket holds when every read goes
+secret; the list's unconditional Raptor Strike still shows at range (the world refuses it). All three gates are thin: Survival shows no first icon on 72% of its in-combat ticks (seeds 1-3), and
 the turret worlds run out of mana within the first minute
 (idle about 0.74: UNMEASURED pool and regen, no Aspect of the Viper), and Hekili recommends a press during Aimed and
 Sniper Shot's casts on both sides (the world's client sees no cast start: the `casting` refusals). The filler mana
@@ -259,7 +268,11 @@ research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`)
 - H5 (C7-4): ranged haste (quiver, Rapid Fire, Quick Shots) in UnitRangedDamage's speed out of combat, and the clock's
   drift in combat under Rapid Fire.
 - H6 (Q3, Q6): C_Spell.IsSpellInRange(75, "target") at 4, 10 and 40 yards, in and out of combat (the deadzone guard:
-  Hekili's `action.auto_shot.in_range` and `action.raptor_strike.in_range`); plain or secret in combat?
+  Hekili's `action.auto_shot.in_range` and `action.raptor_strike.in_range`); plain or secret in combat? Raptor Strike
+  (on the next swing) in range at any distance, like Heroic Strike?
+- H11 (gap 13): `/run local r=Hekili.State.target VSCopy(r.distance,r.minR,r.maxR,r.within5,r.outside8)` at 3, 11 and
+  30 yards: about 2.5 / 0 / 5 / true / false in melee, 21.5 / 8 / 35 / false / true at 11 yd; and
+  `C_Spell.GetSpellInfo(14268).maxRange` (Wing Clip) reads 5, not 0.
 - H7 (Q4): Multi-Shot's and Strider Kick's actual costs (DB2 13.9% and 5.81% of base mana, priced here as of the
   maximum); UnitPower(mana) secret out of combat on a Hunter too; GetPowerRegenForPowerType(0)'s two returns.
 - H8 (Q5): Rapid Fire (3045) and Quick Shots (6150) readable on the player in combat (the Sniper Shot line)?

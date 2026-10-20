@@ -32,6 +32,10 @@
   order, so two seals no longer alternate before a pull.
 - Abilities can be limited to target creature types (for example undead and demons); the addon reads the target's
   type in any client language, and a type it cannot read never hides an ability.
+- Priorities can read the distance to your target (`target.distance`, `target.within5`, `target.outside8`): the addon
+  brackets it from your abilities' range checks (for example "past Wing Clip, inside Arcane Shot"), keeps the last
+  reading if the game hides it, and treats an unknown distance as in range. Before, these conditions never worked on
+  WoW Forever.
 
 ### Fixed
 - Rogue, Paladin and Shaman: the default priorities now load. They were registered under the wrong specialization ids

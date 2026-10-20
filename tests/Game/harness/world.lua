@@ -9,11 +9,12 @@ local M = {}
 
 -- Our crit rate on an instant hit (W.hit): the white swings' measured rate.
 M.CRIT = behaviours.RATES.crit
+M.MELEE = 5 -- yards: our white swings' reach (wowsims's MaxMeleeRange)
 
 --- A new world. `seed` seeds its generator. Truth events: { t, kind, src, dst, hand, act, flag, amount, school, spell }
 --- with kind "swing" (a white swing, its outcome rolled; ours land later as "land"), "land", "strike" (an
 --- on-next-swing strike frame), "spell" (a spell's outcome), "tick", "proc", "cast", "prepull" (the cache and
---- target reads 0.5 s before the pull), "pull", "stop", "form", "buff", "target", "aura", "totem", "queue", "unqueue", "gain", "kill",
+--- target reads 0.5 s before the pull), "pull", "stop", "form", "buff", "target", "aura", "totem", "queue", "unqueue", "gain", "kill", "move",
 --- "regen" and "decay" (a resource's continuous regen and out-of-combat decay, W.startRegen / W.startDecay). A gain
 --- (`rage`) or spend (`cost`) of ours is of power type `pt` (default our `pt`, the swing-paid `power`; another type's
 --- value after it: `ev.resCur`).
@@ -24,6 +25,7 @@ function M.new(seed)
     W.combat = false
     W.rates = {} -- [powerType] = regen per second (W.startRegen)
     W.fsr = {} -- [powerType] = { spirit, mp5 } per second: the five-second rule's two parts (W.startRegen)
+    W.distance = nil -- yards from our character to its target (W.moveTo; nil: no positions, every check in range)
 
     --- Runs `fn(W)` at time `t` (after everything already queued for `t`).
     function W.at(t, fn)
@@ -130,8 +132,9 @@ function M.new(seed)
     --- generic effects run after `effect`: gain { pt, amount }, points { pt, 1 | "all" } (1: one more on a landed hit
     --- of `effect`'s; "all": spend them all), drain (a power type: spend what is left of it), aura { id, duration,
     --- tick = { pt, every, amount } } (named fields; on us), shift (W.shift's `sh`) }. Checked against the true state in order: a
-    --- cast in progress, the GCD, the cooldown, the cost, a strike already queued, `requires`; a refusal returns false
-    --- and its reason ("casting", "gcd", "cooldown", "cost", "queued", "requires:<why>") and changes nothing. An accept
+    --- cast in progress, the GCD, the cooldown, the range, the cost, a strike already queued, `requires`; a refusal
+    --- returns false and its reason ("casting", "gcd", "cooldown", "range", "cost", "queued", "requires:<why>") and
+    --- changes nothing. An accept
     --- starts the GCD (its length plus `e.gcdLatency`, the client's flag) and the cooldown, then spends, emits the cast
     --- (with `order`, the GCD flag's: 1 after the success, 2 before; `e.gcdOrder` 1, 2 or "mixed", rolled from W.grng)
     --- and runs the effects (a cast time: all three when the cast completes; a queued strike: queues it, paid at its
@@ -145,6 +148,8 @@ function M.new(seed)
             return false, "gcd"
         elseif t < (e.cdUntil[key] or 0) then
             return false, "cooldown"
+        elseif p.range and W.distance and (W.distance < p.range[1] or W.distance > p.range[2]) then
+            return false, "range"
         elseif (p.cost or 0) > W.res(e, p.pt) then
             return false, "cost"
         elseif p.onNextSwing and e.queued then
@@ -434,6 +439,18 @@ function M.new(seed)
             W.at(W.t + w[3], shot)
         end
         W.at(W.t + (o.delay or 0), shot)
+    end
+
+    --- Our character `e` is `yards` from its target from now (the world's one position: shortcut, instant; a scenario
+    --- steps it for a walk): a "move" truth event { src, distance }, the client's range checks' answer.
+    function W.moveTo(e, yards)
+        W.distance = yards
+        W.emit({ kind = "move", src = e, distance = yards })
+    end
+
+    --- Whether our character reaches its target with a white swing (no positions: yes).
+    function W.inMelee()
+        return (W.distance or 0) <= M.MELEE
     end
 
     --- `e` gains `amount` power now (a negative amount spends it).

@@ -67,6 +67,10 @@ function M.melee(p)
                     return
                 end
                 local w = e.weapons[h]
+                if e == W.ents[1] and not W.inMelee() then -- out of reach: no swing, the timer runs on
+                    W.at(W.t + w[3] / (p.haste or 1), swing)
+                    return
+                end
                 local foreign = h == 1 and p.strikes and W.rng.chance(p.strikes)
                 if h == 1 and e.queued and e.power < (e.queued.cost or 0) then -- short at the swing: a white one
                     W.emit({ kind = "unqueue", src = e, spell = e.queued.spell, ids = e.queued.ids })

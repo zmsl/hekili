@@ -1,6 +1,6 @@
 -- Game/State/Sources/Spellbook.lua
--- Spellbook sources (spec §4.2, §4.5): each tracked ability's query ID (its highest known rank) and plain cost (out
--- of combat, shown by Snapshot() to confirm the spec's), and the cooldown flag edges: SPELL_UPDATE_COOLDOWN/SPELL_UPDATE_CHARGES read C_Spell.GetSpellCooldown
+-- Spellbook sources (spec §4.2, §4.5): each tracked ability's query ID (its highest known rank), its range (the range
+-- poll's bounds) and plain cost (out of combat, shown by Snapshot() to confirm the spec's), and the cooldown flag edges: SPELL_UPDATE_COOLDOWN/SPELL_UPDATE_CHARGES read C_Spell.GetSpellCooldown
 -- per tracked spell and log a `Cooldown` per changed plain `isActive` flag (b: 1 ready / 0 not), and the GCD's edge
 -- from the GCD spell's flag (a = 0, c = 1). Only the plain flags are used; the times are secret in combat.
 -- Credits: the field-by-field secrecy test after Catnip's (Durts) research.
@@ -33,6 +33,13 @@ local function resolve(api)
         if A.known then
             A.known[a] = known -- VS.KnownRank (Families/Now.lua)
         end
+        -- the range poll's bounds (Sources/Target.lua): static spell data, plain; an on-next-swing strike is never
+        -- asked (the client answers it in range at any distance, probe W PR7)
+        local info = Plain(api, api.C_Spell.GetSpellInfo(q)) -- secret: Plain next, then each field
+        local lo = type(info) == "table" and Plain(api, info.minRange)
+        local hi = type(info) == "table" and Plain(api, info.maxRange)
+        A.rMin[a] = type(lo) == "number" and lo or 0
+        A.rMax[a] = (type(hi) == "number" and not A.obj[a].onNextSwing) and hi or 0
         if not I.inCombat and A.slot[a] > 0 then
             local raw = api.C_Spell.GetSpellPowerCost(q) -- secret: Plain next, then each field
             local costs = Plain(api, raw)

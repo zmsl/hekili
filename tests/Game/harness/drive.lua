@@ -264,6 +264,8 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         ctl.speed[1], ctl.speed[2] = a1, a2
     elseif ev == "@rangedSpeed" then -- the player's ranged hand (UnitRangedDamage's first return)
         ctl.ranged[1] = a1
+    elseif ev == "@distance" then -- unit, yards: the range checks' answers (fake_api's `distance`)
+        ctl.distance[a1] = a2
     end
 end
 

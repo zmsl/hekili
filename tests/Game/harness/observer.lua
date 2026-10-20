@@ -100,7 +100,7 @@ end
 --- swing's true time), actor[] (the entity index of a hit on us) }. An `ev` starting with "@" is a client-answer change
 --- for the drive (`@damage` UnitDamage, `@usable`, `@form`, `@guid`, `@unitIs`, `@speed`, `@combat`, `@auraError`,
 --- `@current` IsCurrentSpell, `@aura` an aura list entry, `@dead`, `@cooldown`, `@power`, `@regen`, `@attackSpeed`,
---- `@rangedSpeed`, `@forms`), or `@truth` our true power after an event. It draws nothing from `W.rng` (the behaviours roll every
+--- `@rangedSpeed`, `@forms`, `@distance` the range checks' yards), or `@truth` our true power after an event. It draws nothing from `W.rng` (the behaviours roll every
 --- random choice and record it on the truth event), so batch and incremental streams of one world are equal for
 --- power-only answers (in batch, a list answer that reads `W` sees the finished world at every time).
 --- `k.usable`: true (the fake spec's COSTS against our power) or a list { { spellID, fn(W, us, power, view) -> ok,
@@ -317,6 +317,8 @@ function M.new(W, k)
             end
         elseif kind == "target" then
             targets(t, ev)
+        elseif kind == "move" and ev.src == us then
+            push(t, "@distance", "target", ev.distance)
         elseif kind == "swing" and ev.src == us then
             push(t, "PLAYER_SWING", ev.speed, ev.hand - 1)
             if ev.sameMs then -- the behaviour's roll (P log 2: 3 of 87)

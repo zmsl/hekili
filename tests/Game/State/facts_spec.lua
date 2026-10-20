@@ -136,6 +136,35 @@ describe("facts and polls", function()
         assert.are.equal(1, VS.Count.InRange(fs.SPENDER_C, 3))
     end)
 
+    it(
+        "brackets the target's distance from the abilities' own ranges, keeping the last through secret reads",
+        function()
+            ctl.known[fs.SPENDER_A], ctl.known[fs.SPENDER_C] = true, true
+            ctl.ranges[fs.SPENDER_A], ctl.ranges[fs.SPENDER_C] = { 0, 5 }, { 8, 35 } -- a melee strike, a band
+            ctl.Fire("SPELLS_CHANGED")
+            assert.are.same({ 0, 5, 8, 35 }, { I.ab.rMin[1], I.ab.rMax[1], I.ab.rMin[3], I.ab.rMax[3] })
+            assert.are.equal(0, I.ab.rMax[2]) -- on the next swing: never asked
+            ctl.distance.target = fake.SECRET
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            drain(2)
+            assert.are.equal("unknown", VS.TargetRange().basis) -- a target, no plain answer yet
+            local function bracket(d, t)
+                ctl.distance.target = d
+                drain(t)
+                local r = VS.TargetRange()
+                return { r.lo, r.hi, r.est, r.basis }
+            end
+            assert.are.same({ 0, 5, 2.5, "observed" }, bracket(2, 3)) -- in melee, so nearer than the band
+            assert.are.same({ 8, 35, 21.5, "observed" }, bracket(20, 4))
+            assert.are.same({ 5, math.huge, 5, "observed" }, bracket(40, 5)) -- past the strike, either side of the band
+            assert.are.same({ 5, math.huge, 5, "observed" }, bracket(fake.SECRET, 6)) -- secret: the last bracket stays
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            drain(7)
+            assert.are.equal("unknown", VS.TargetRange().basis) -- a swap forgets it until the next plain answer
+            assert.are.same({ 0, 5, 2.5, "observed" }, bracket(3, 8))
+        end
+    )
+
     it("reads the player's health when plain and caches the stats out of combat", function()
         ctl.health, ctl.healthMax = 500, 1000
         drain(2)

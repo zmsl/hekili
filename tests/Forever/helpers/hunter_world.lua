@@ -10,7 +10,8 @@
 -- mana under the five-second rule, our Auto Shots on the ranged hand (W.startRanged) in the turret worlds. Damage
 -- amounts, the weapons, the regen parts and the mana pool are UNMEASURED; the hawks deal nothing here (no read of them
 -- exists), ranged haste does not speed the Auto Shots (no priority reads the clock, D5), and our melee swings run in
--- every world (the harness has no positions: a turret Hunter is in melee too).
+-- every world unless the world sets a distance (WORLD.distance, W.moveTo: the default worlds set none, so a turret
+-- Hunter is in melee too). Each ability's range (DB2 SpellRange) is the client's spell data and the world's press check.
 -- Credit: wowsims/forever (MIT) as the reference for the priorities and the Summon Hawk, Sniper Shot, Raptor Strike,
 -- Mongoose Bite and Quick Shots rules; no code copied.
 local ld = require("Forever.helpers.load_druid")
@@ -55,6 +56,27 @@ local AMOUNT = {
     mongoose_bite = 250,
     strider_kick = 300,
     wing_clip = 50,
+}
+
+-- The ranges in yards (DB2 SpellMisc.RangeIndex -> SpellRange, every rank alike): Hunter Range 8-35, Combat Range 0-5,
+-- Vision Range 0-100; Self Only (0) is no range check.
+local RANGE = {
+    auto_shot = { 8, 35 },
+    hunters_mark = { 0, 100 },
+    serpent_sting = { 8, 35 },
+    arcane_shot = { 8, 35 },
+    aimed_shot = { 8, 35 },
+    multi_shot = { 8, 35 },
+    sniper_shot = { 0, 100 },
+    summon_hawk = { 0, 35 },
+    raptor_strike = { 0, 5 },
+    mongoose_bite = { 0, 5 },
+    strider_kick = { 0, 5 },
+    wing_clip = { 0, 5 },
+    aspect_of_the_hawk = { 0, 0 },
+    aspect_of_the_beast = { 0, 0 },
+    rapid_fire = { 0, 0 },
+    immolation_trap = { 0, 0 },
 }
 
 -- The cast times (DB2) the ranged haste shortens: Rapid Fire +40%, Quick Shots +30% (aura 140).
@@ -249,7 +271,7 @@ local function content(name)
 
     function C.character()
         local w = class()
-        local known = {}
+        local known, ranges = {}, {}
         for _, key in ipairs(P.kit) do
             local a = assert(w.abilities[key], key)
             local ids = { a.id }
@@ -261,6 +283,14 @@ local function content(name)
                 known[#known + 1] = id
             end
         end
+        for key, r in pairs(RANGE) do -- every kit ability's ranks, known or not (the client's spell data)
+            local a = w.abilities[key]
+            if a then
+                for _, id in ipairs({ a.id, unpack(type(a.copy) == "table" and a.copy or {}) }) do
+                    ranges[id] = r
+                end
+            end
+        end
         return {
             class = "HUNTER",
             classID = M.CLASS_ID,
@@ -270,6 +300,7 @@ local function content(name)
             talents = {},
             power = { type = MANA, token = "MANA", max = MAX },
             speed = { P.weapon[3] },
+            ranges = ranges,
         }
     end
 
@@ -354,6 +385,7 @@ local function content(name)
             gcd = GCD[a.gcd or "spell"],
             offGcd = a.gcd == "off",
             onNextSwing = a.onNextSwing,
+            range = RANGE[key] and RANGE[key][2] > 0 and RANGE[key] or nil,
             -- the ranged haste from the oracle's (true) belief, as shaman_world's Maelstrom Weapon
             cast = CAST[key] and CAST[key] / haste(VS, now, X) or 0,
         }

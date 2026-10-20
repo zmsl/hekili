@@ -5,6 +5,8 @@
 -- the target's UNIT_SPELLCAST_* events become `TargetCast` observations by castBarID (plain; the spellID and castGUID
 -- are secret on the target).
 -- The target's UNIT_COMBAT WOUND amounts become `TargetDamage` (b: the amount; target-health design §2.3c).
+-- Poll 14 brackets the target's distance from each tracked ability's range (Spellbook.lua's rMin/rMax) and its plain
+-- C_Spell.IsSpellInRange (plain in combat, probe W PR7; a secret or nil answer is skipped) into `TargetRange`.
 -- Credits: secret-value handling after Catnip's (Durts) research.
 -- Ported from Taco Dog Forever, src/TacoDogForever/Sources/Target.lua.
 
@@ -20,6 +22,9 @@ for s = 1, I.TARGET_CAP do
     guid[s], used[s] = "", 0
 end
 local dead = false
+local HUGE = math.huge
+local lastLo, lastHi = -1, -1 -- the bracket last logged (-1: none since the swap)
+local answer = {} -- by ability index: this poll's plain answer (true, false, or nil)
 
 local function slotFor(g, t)
     local free, oldest = 0, 1
@@ -53,7 +58,7 @@ local function swap(api, t)
         s, fresh = slotFor(g, t)
     end
     local attackable = s > 0 and Plain(api, api.UnitCanAttack("player", "target")) == true
-    dead = false
+    dead, lastLo, lastHi = false, -1, -1
     Direct(Obs.TargetSwap, t, s, fresh and 1 or 0, attackable and 1 or 0)
     if s > 0 and I.auras.n >= 2 then
         I.WalkAuras(api, 2, "target", t)
@@ -81,6 +86,50 @@ S.Poll(4, function(api, t)
         Direct(Obs.TargetGone, t, I.curSlot)
     end
     dead = d
+end)
+
+-- Poll 14: the target's distance bracket. An answer in range puts it within [min, max]; out of a range from 0 past
+-- max; out of a band (min > 0) on the side the others leave open (nearer than min when it is within max, else past
+-- max). Logged when it changes. Allocates nothing once `answer` has grown to the ability count.
+S.Poll(14, function(api, t)
+    if I.curSlot == 0 then
+        return
+    end
+    local A = I.ab
+    local lo, hi, seen, band = 0, HUGE, false, false
+    for a = 1, A.n do
+        local r
+        if A.rMax[a] > 0 and A.known[a] then
+            r = Plain(api, api.C_Spell.IsSpellInRange(A.qid[a], "target"))
+            if r == true then
+                lo, hi = math.max(lo, A.rMin[a]), math.min(hi, A.rMax[a])
+            elseif r == false and A.rMin[a] == 0 then
+                lo = math.max(lo, A.rMax[a])
+            elseif r == false then
+                band = true
+            end
+            seen = seen or r ~= nil
+        end
+        answer[a] = r
+    end
+    if band then
+        for a = 1, A.n do
+            if answer[a] == false and A.rMin[a] > 0 then
+                if hi <= A.rMax[a] then
+                    hi = math.min(hi, A.rMin[a])
+                elseif lo >= A.rMin[a] then
+                    lo = math.max(lo, A.rMax[a])
+                end
+            end
+        end
+    end
+    if lo > hi then -- the answers disagree (a melee reach beyond its 5 yd, say): the upper bound wins
+        lo = hi
+    end
+    if seen and (lo ~= lastLo or hi ~= lastHi) then
+        lastLo, lastHi = lo, hi
+        Direct(Obs.TargetRange, t, lo, hi)
+    end
 end)
 
 -- The target's damage taken (target-health design §2.3c): UNIT_COMBAT's WOUND amount, plain and victim-side (every

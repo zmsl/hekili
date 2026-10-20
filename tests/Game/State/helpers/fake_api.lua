@@ -78,7 +78,9 @@ function M.new()
         unitHealthMax = {}, -- [unit] = UnitHealthMax (default: healthMax)
         totems = {},
         traits = nil, -- { config = id, trees = { tree }, nodes = { [node] = info }, entries = {}, defs = {} }
-        inRange = {},
+        inRange = {}, -- [unit] = true: every range check in range (when `distance` has no entry for the unit)
+        distance = {}, -- [unit] = yards (SECRET: a secret answer): range checks against the spell's `ranges`
+        ranges = {}, -- [spellID] = { min, max } yards: GetSpellInfo's minRange/maxRange (default 0, 5: melee)
         handlers = {},
         unitSpeed = {}, -- [unit] = speed for UnitAttackSpeed of a unit other than the player (default: secret)
         unitIs = {}, -- [unit] = the token UnitIsUnit(unit, x) is true for (SECRET: a secret answer)
@@ -265,7 +267,18 @@ function M.new()
             return ctl.costs[id] or COSTS
         end,
         IsSpellInRange = function(id, unit)
-            return ctl.inRange[unit] == true
+            local d = ctl.distance[unit]
+            if d == SECRET then
+                return SECRET
+            elseif d == nil then
+                return ctl.inRange[unit] == true
+            end
+            local r = ctl.ranges[id]
+            local lo, hi = r and r[1] or 0, r and r[2] or 5
+            if hi == 0 then
+                return nil -- no range check (the client's nil)
+            end
+            return d >= lo and d <= hi
         end,
     }
     api.C_SpellBook = {
@@ -532,11 +545,11 @@ function M.new()
                 iconID = 136000,
                 spellID = id,
                 castTime = 0,
-                minRange = 0,
-                maxRange = 5,
             }
             info[id] = i
         end
+        local r = ctl.ranges[id] -- read at each call: a test may set the ranges after the first
+        i.minRange, i.maxRange = r and r[1] or 0, r and r[2] or 5
         return i
     end
     function C.GetSpellTexture()

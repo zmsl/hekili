@@ -52,7 +52,8 @@ M.ARCHETYPES = ARCHETYPES
 --- others), regen ({ [pt] = per second }, from the prepull), fsr ({ [pt] = { spirit, mp5 } }: W.startRegen's five-
 --- second rule), regenTick [0.1], regenAfter ({ s, k }), decay ({ pt, rate, interval, pausedBy }: from the stop), formSpeed ({ [form] = period }), payIn (the form whose swings pay), critRage
 --- ({ main, off }), gcdOrder (1, 2 or "mixed") and gcdLatency [0] (W.press), script (fn(W, us): our presses, started
---- at the pull), after (seconds the world runs past the stop [3]).
+--- at the pull), after (seconds the world runs past the stop [3]), distance (yards from our target from the start
+--- [none: no positions]; W.moveTo changes it).
 --- Returns the world with every behaviour scheduled, not run (`M.build` runs it).
 function M.world(o, seed)
     local W = world.new(seed)
@@ -96,6 +97,11 @@ function M.world(o, seed)
     end
     local pull = o.pull or 1
     local stop = (o.duration or 120) + pull
+    if o.distance then
+        W.at(0, function()
+            W.moveTo(us, o.distance)
+        end)
+    end
     if o.regen or o.fsr then -- before the prepull: its reads answer the rates
         W.at(0, function()
             W.startRegen(us, o.regen or {}, o.regenTick, o.regenAfter, o.fsr)

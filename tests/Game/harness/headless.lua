@@ -249,7 +249,8 @@ end
 --- class, classID, specID (the client's pseudo-spec id; the spec comes from `o.pack`), race (the race token, UnitRace's
 --- second return: its race pack goes live), level, known = { spellID... },
 --- talents = { [spellID] = rank }, power = { type, token, max, value (nil: secret, as on Forever) },
---- speed = { main, off }, items = { [slot] = { itemID, name, equipLoc } }, forms = { spellID... }, form }; `o.pack` the
+--- speed = { main, off }, ranges = { [spellID] = { min, max } yards }, items = { [slot] = { itemID, name, equipLoc } },
+--- forms = { spellID... }, form }; `o.pack` the
 --- priority to select; `o.now` the clock [1000]; `o.raw` facade rows answered by the raw client (names: the oracle's
 --- secret-free client, §4), replaced as Facade.lua loads; `o.saved` the HekiliDB saved variables (default nil: a fresh
 --- profile).
@@ -910,6 +911,9 @@ function M.new(o)
         end
         if c.speed then
             ctl.speed = c.speed
+        end
+        for id, r in pairs(c.ranges or {}) do -- { [spellID] = { min, max } yards }: GetSpellInfo's, the range checks'
+            ctl.ranges[id] = r
         end
         for slot, item in pairs(c.items or {}) do -- { [slot] = { itemID, name, equipLoc } }: the gear scan's reads
             ctl.inventory[slot], ctl.items[item[1]] = item[1], { item[2], item[3] }

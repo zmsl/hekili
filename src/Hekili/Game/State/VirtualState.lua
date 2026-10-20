@@ -54,6 +54,7 @@ VS.Obs = {
     TargetCast = 34, -- a: TargetCastOf; b: castBarID; c: interruptible 1 / 0 / -1 unknown
     TargetDamage = 35, -- b: a WOUND amount the target took (UNIT_COMBAT, plain); VirtualState's own, past TDF's range
     PlayerHit = 36, -- a: I.HitKind; b: the amount (0: none); c: the attacker's level (UNIT_COMBAT on the player, plain)
+    TargetRange = 37, -- a: the target's least distance in yards; b: its greatest (math.huge: no bound), the range poll's
 }
 
 --- What a `PlayerHit` observation reports (its `a`), and each kind's name (the `taken` and `consumedBy` keys): a WOUND
