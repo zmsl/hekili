@@ -70,9 +70,9 @@
 ### Known issues
 - Hunter priorities are unchecked in game: Auto Shot timing, the percent-of-base mana costs and the rune Raptor
   Strike variants.
-- Hunter: Multi-Shot waits on the melee swing timer even at range (wowsims's melee weave); Beast Mastery and
-  Marksmanship run the same list; the defaults never recommend Aimed Shot, Sniper Shot or Summon Hawk (wowsims's
-  switches for them are off).
+- Hunter: Multi-Shot is recommended only when it ends before your next melee swing (wowsims's melee weave), so a
+  Hunter who never walks into melee rarely sees it; Beast Mastery and Marksmanship run the same list; the defaults
+  never recommend Aimed Shot, Sniper Shot or Summon Hawk (wowsims's switches for them are off).
 - Rogue, Paladin and Shaman priorities are not yet checked in game.
 
 ### Upgrade notes

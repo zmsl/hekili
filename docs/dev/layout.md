@@ -246,7 +246,7 @@ missing kill). The kit's ranges are DB2's (`RANGE`: Hunter Range 8-35, Combat Ra
 in melee" runs Survival at 25 yd, then 5 yd: its four `target.within5` lines stay shut while the bracket reads [8, 35],
 open at [0, 5], and the bracket holds when every read goes secret. Mana is secret in combat, so the belief holds its
 lower bound and the worlds idle 0.730 (Beast Mastery, Marksmanship) and 0.562 (Survival) of the time. The lines
-(gate 11rebase6, after central fix 6) after the swap (wowsims packs plan, Task 11; the hand-built lists' were
+(gate 11fix11, after central fixes 6 and 11) after the swap (wowsims packs plan, Task 11; the hand-built lists' were
 0.983/0.986/0.945 at 3 fights):
 
 ```
