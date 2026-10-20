@@ -461,8 +461,8 @@ describe("Forever Warrior", function()
         assert.are.same({ 29131, 10 }, { w.auras.bloodrage.id, w.auras.bloodrage.duration })
     end)
 
-    -- The state reads a `shared` aura from the player's debuffs (src/Hekili/Engine/Sim/State.lua's debuff lookup), so a
-    -- target debuff marked shared (Classic's `shared = "target"`) reads down while the target has it.
+    -- A `shared = "target"` aura is read from the target's debuffs, anyone's (src/Hekili/Engine/Sim/State.lua's debuff
+    -- lookup since central GAP AJ): Thunder Clap's slow, whoever cast it.
     it("shares only Thunder Clap's debuff, read from the target (any warrior's slows it)", function()
         for key, a in pairs(w.auras) do
             if key == "thunder_clap" then

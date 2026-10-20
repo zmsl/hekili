@@ -29,8 +29,7 @@
 - Shaman: "Enhancement (wowsims.com)" is the Enhancement default priority, translated from wowsims.com's own.
 - Warrior: "Arms (wowsims.com)" is the Arms default priority, translated from wowsims/forever's own Arms rotation.
 - Warrior: "Fury (wowsims.com)" is the Fury default priority, translated from wowsims/forever's own Fury rotation.
-  Below the level of Bloodthirst it fills with Sunder Armor, and neither wowsims.com priority offers a Hamstring Weave
-  switch any more (no line of either read it).
+  Below the level of Bloodthirst it fills with Sunder Armor.
 - Warrior: "Protection (wowsims.com)" is the Protection default priority, translated from wowsims/forever's own
   Protection rotation.
 

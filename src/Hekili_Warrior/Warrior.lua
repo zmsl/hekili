@@ -694,7 +694,8 @@ local function shout_cost(talent, cost, focused)
     return cost * (1 - 0.05 * talent.booming_voice.rank)
 end
 
--- Improved Execute's -3 / -5 (DB2 20502: -50, rank 2's; rank 1's from wowsims/forever's rank curve).
+-- Improved Execute's -3 / -5 (DB2 20502: -50, rank 2's); rank 1's -3 is the rank curve wowsims/forever's spell data
+-- generates from the DB2 (its log charges it), not wowsims's own logic.
 local IMPROVED_EXECUTE = { [0] = 0, 3, 5 }
 
 -- The reactive windows from the combat log, as Classic models them (origin/classic:Classic/Warrior.lua:400-456): our
@@ -1820,9 +1821,8 @@ spec:RegisterStateExpr("execute_phase", function()
     return reactive(EXECUTE)
 end)
 
--- Queue prediction, ported from Hekili's Classic profile (Classic/Warrior.lua:462-575, without its debug lines): the
--- time to the next main-hand swing, and whether a strike queued now still leaves rage for the next Mortal Strike (or
--- Bloodthirst) and Whirlwind as they come off cooldown.
+-- The time to the next main-hand swing, ported from Hekili's Classic profile (Classic/Warrior.lua:462-575, without its
+-- debug lines); the Slam weave reads it.
 spec:RegisterStateExpr("mainhand_remains", function()
     -- out of combat no swing runs (nextMH is 0): anchor it at this evaluation, or its phase free-runs with the clock
     local mh = (nextMH == 0 and combat == 0) and now or nextMH
@@ -1869,7 +1869,8 @@ spec:RegisterSetting("wowsims_rend_weave", true, {
 }, "fury")
 
 -- The three priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit
--- those and run it, never these blocks (tests/Forever/warrior_spec.lua checks they match). Pick one with /hekili priority <name>.
+-- those and run it, never these blocks (tests/Forever/warrior_spec.lua checks they match). Pick one with
+-- /hekili priority <name>.
 spec:RegisterPack(
     "Protection (wowsims.com)",
     20261020996,

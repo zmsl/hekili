@@ -115,7 +115,9 @@ Arms solo: fights=3 agreement 0.973 (2660 ticks); react median 0 p90 0 never 0.0
 Arms solo: fights=3 agreement 0.985 (2501 ticks); react median 0 p90 0 never 0.049; refused per 100 [cost 16.1 (oracle 15.8, unmatched 0.0)], episodes 3.60/min; dps A/B 0.998; ... [seeds 4-6]
 ```
 
-Before the pull it shows Bloodrage and Battle Shout only (no positions headless, so no Charge).
+Before the pull it shows Bloodrage and Battle Shout only (no positions headless, so no Charge). Seeds 1-3's casting
+refusals (7.0 per 100, the oracle's 0.5) are presses during Slam's 1.5 s cast: the loop world's build has no Improved
+Slam, and the world's client sees only a cast's success (no cast start), so our first icon moves on mid-cast.
 
 `tests/Forever/loop_druid_spec.lua` runs 3 fights a Druid pack in `make check` (seeds 1-3, the `#slow` tag) and 20 in
 `make test-druid` (`#druid`), each asserting its flagged lines ran (`r.focus > 0`). Feral and Balance run their
