@@ -384,9 +384,11 @@ local function automatic(a, t, kind, o)
         end
         I.ChargesModel(a, charges > 0 and charges or 0, nextAt, t, kind)
     else
-        local cd = I.CooldownOf(a, t) -- a function cooldown in the belief's context (Families/Casts.lua)
+        -- from the cast's own time (o.t), not the fold's: a success folded late (lag) starts its cooldown no later
+        local at = o.t
+        local cd = I.CooldownOf(a, at) -- a function cooldown in the belief's context (Families/Casts.lua)
         if cd > 0 then
-            I.CooldownModel(a, t + cd, cd, t, kind)
+            I.CooldownModel(a, at + cd, cd, at, kind)
         end
     end
     if A.gcdKind[a] > 0 then

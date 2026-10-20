@@ -278,6 +278,41 @@ describe("now handlers", function()
         assert.are.equal(0, I.nowErrors)
     end)
 
+    it("starts the cooldown at the cast's own time when its success folds late", function()
+        register("cd_late", { id = 6167, cooldown = 9 })
+        start()
+        ctl.now = 20
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 6167) -- staged at 20
+        I.Sources.Direct(VS.Obs.Haste, 20.3, 0, 0, 2) -- logged first: the fold's clock reaches 20.3 before the success
+        ctl.Tick(20.31)
+        VS.Drain(20.32)
+        assert.are.equal(29, VS.Cooldown(6167, 20.4).est)
+    end)
+
+    it("brings a charged ability's next charge sooner with reduceCooldown", function()
+        register("ch_test", { id = 6168, cooldown = 20, charges = 2, recharge = 20 })
+        register("ch_cut", {
+            id = 6169,
+            now = function()
+                reduceCooldown("ch_test", 5)
+            end,
+        })
+        start()
+        cast(6168, 10) -- 2 -> 1 charge, the next at 30
+        local ch, nx = VS.Charges(6168, 10.1)
+        assert.are.same({ 1, 30 }, { ch.est, nx.est })
+        cast(6169, 12)
+        ch, nx = VS.Charges(6168, 12.1)
+        assert.are.same({ 1, 25, "modelled" }, { ch.est, nx.est, nx.basis })
+        cast(6169, 13)
+        cast(6169, 14)
+        cast(6169, 15)
+        cast(6169, 16) -- 20 s taken off: the charge came back at 10
+        ch = VS.Charges(6168, 16.1)
+        assert.are.equal(2, ch.est)
+        assert.are.equal(0, I.nowErrors)
+    end)
+
     it("lets a `now` end or shorten another ability's running cooldown (setCooldown, reduceCooldown)", function()
         register("cd_long", { id = 6163, cooldown = 60 })
         register("cd_reset", {
