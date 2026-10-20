@@ -193,32 +193,31 @@ describe("Forever Hunter", function()
         assert.are.same({ "raptor_strike" }, e.applied)
     end)
 
-    it(
-        "prices the melee strikes and the trap 60% lower with Resourcefulness (DB2 440529; wowsims's SV costs)",
-        function()
-            for _, key in ipairs({ "mongoose_bite", "wing_clip", "immolation_trap", "strider_kick", "raptor_strike" }) do
-                local ids = KIT[key][1]
-                w.game.known[ids[#ids]] = true
-            end
-            local e = ld.env(w)
-            local function costs()
-                local out = {}
-                for _, key in ipairs({
-                    "mongoose_bite",
-                    "wing_clip",
-                    "immolation_trap",
-                    "strider_kick",
-                    "raptor_strike",
-                }) do
-                    out[#out + 1] = math.floor(ld.run(w.abilities[key].spend, e) * 10000 + 0.5) / 10000
-                end
-                return out
-            end
-            assert.are.same({ 65, 80, 245, 0.0581, 100 }, costs())
-            e.talent.resourcefulness = { rank = 2, enabled = true }
-            assert.are.same({ 26, 32, 98, 0.0232, 100 }, costs())
+    it("prices the melee strikes and the trap 30% / 60% lower with Resourcefulness ranks 1 / 2 (440529)", function()
+        for _, key in ipairs({ "mongoose_bite", "wing_clip", "immolation_trap", "strider_kick", "raptor_strike" }) do
+            local ids = KIT[key][1]
+            w.game.known[ids[#ids]] = true
         end
-    )
+        local e = ld.env(w)
+        local function costs()
+            local out = {}
+            for _, key in ipairs({
+                "mongoose_bite",
+                "wing_clip",
+                "immolation_trap",
+                "strider_kick",
+                "raptor_strike",
+            }) do
+                out[#out + 1] = math.floor(ld.run(w.abilities[key].spend, e) * 10000 + 0.5) / 10000
+            end
+            return out
+        end
+        assert.are.same({ 65, 80, 245, 0.0581, 100 }, costs())
+        e.talent.resourcefulness = { rank = 1, enabled = true }
+        assert.are.same({ 45.5, 56, 171.5, 0.0407, 100 }, costs())
+        e.talent.resourcefulness = { rank = 2, enabled = true }
+        assert.are.same({ 26, 32, 98, 0.0232, 100 }, costs())
+    end)
 
     it("answers mainhand_remains, the time to the next main-hand swing (wowsims's Multi-Shot weave gap)", function()
         local f = assert(w.exprs.mainhand_remains, "no mainhand_remains")

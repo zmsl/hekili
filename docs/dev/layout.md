@@ -233,8 +233,8 @@ Marksmanship and Survival (wowsims.com), Task 11 of the wowsims packs plan: wows
 replay and leveling gates are `tests/Forever/wowsims_hunter_spec.lua`. The Beast Mastery and Marksmanship worlds stand
 at 11 yd (the weave's range: the shots in their band, Raptor Strike and the melee lines out of reach) and shoot Auto
 Shots on the harness's ranged hand (`W.startRanged`), Quick Shots procs off them under Aspect of the Hawk (10%); they
-run the same pack text and kit, so their lines match. The Survival world sets no distance (every check in range) and
-swings a two-hander. Each world's costs are the known rank's (the leveling brackets). Raptor Strike's cooldown starts
+run the same pack text and kit, so their lines match. The Survival world sets no distance (every check in range),
+swings a two-hander and keeps the pack's Aspect of the Hawk up. Each world's costs are the known rank's (the leveling brackets). Raptor Strike's cooldown starts
 at its swing (class-neutral: a queued strike's cooldown). Each fight's fresh world gets the pack's aspect at the pull
 (the character keeps a permanent buff between fights). Neither side dies (shaman_world's workaround for the loop's
 missing kill). The kit's ranges are DB2's (`RANGE`: Hunter Range 8-35, Combat Range 0-5). "The Hunter at range, then
@@ -246,10 +246,10 @@ after the swap (wowsims packs plan, Task 11; the hand-built lists' were 0.983/0.
 ```
 Beast Mastery solo: fights=3 agreement 0.999 (1715 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.008; ... [seeds 1-3]
 Marksmanship solo: fights=3 agreement 0.999 (1715 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.008; ... [seeds 1-3]
-Survival solo: fights=3 agreement 0.965 (882 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.979; ... [seeds 1-3]
+Survival solo: fights=3 agreement 0.963 (872 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.988; ... [seeds 1-3]
 Beast Mastery solo: fights=20 agreement 0.998 (11522 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.005; ...
 Marksmanship solo: fights=20 agreement 0.998 (11522 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.005; ...
-Survival solo: fights=20 agreement 0.966 (5903 ticks); react median 0 p90 1 never 0.010; refused per 100 [], episodes 0.00/min; dps A/B 1.004; ...
+Survival solo: fights=20 agreement 0.966 (5862 ticks); react median 0 p90 1 never 0.010; refused per 100 [], episodes 0.00/min; dps A/B 1.018; ...
 ```
 
 Hunter checkpoint (in game, a level 60 Hunter with a ranged weapon and a pet; provisional until answered): the Hunter

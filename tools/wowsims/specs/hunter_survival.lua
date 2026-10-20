@@ -6,13 +6,17 @@
 --   wing_clip -> false: replay limit, the in-combat mana lower bound (secret mana) under Wing Clip's price.
 --   multi_shot -> arcane_shot: replay limit, the same bound (see hunter_beast_mastery.lua).
 --   strider_kick -> false: API-forced price (no base mana read): its percent-of-base cost priced on the maximum.
--- Content gap fixed (P6): Resourcefulness (440529) cuts Mongoose Bite, Wing Clip, Immolation Trap and Strider Kick 60%
--- (wowsims's 26, 32, 98 and 39.6); before it, the bite was believed short of mana at every window (0.415 -> 0.659).
+-- Content gap fixed (P6): Resourcefulness (440529, 2/2) cuts Mongoose Bite, Wing Clip, Immolation Trap and Strider Kick
+-- 60% (wowsims's 26, 32, 98 and 39.6; 30% at rank 1); before it, the bite was believed short of mana at every window (0.415 -> 0.659).
 -- Ranges: the weave's melee-range lines read `target.within5` (rule 11) and the shots the bracket from the kit's
 -- range checks; wowsims's Movement steps place us in the replay.
 -- Lost to GAP 14 (autocastOtherCooldowns, not translated): Rapid Fire (3045) and the Orc's Blood Fury (20572), the
 -- cooldowns wowsims casts from 5 s on.
 -- Lacerating Strikes (1310536) and the trap's burn (14301) are procs no key maps.
+-- Multi-Shot (2643): its cast is the DB2's 500 ms; wowsims has no cast time for it (instant there). Kept: the client
+-- charges the DB2's, and the `action.multi_shot.cast+...<=mainhand_remains` line reads it (in-game checkpoint).
+-- Unmodelled: Resourcefulness's second effect (1242688, from 1.38 s in the log: 30 s of 50% mana regen while casting
+-- after a critical strike; the kit's mana belief has no hook for it).
 return {
     class = "HUNTER",
     pack = "Survival (wowsims.com)",

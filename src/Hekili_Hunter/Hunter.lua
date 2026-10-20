@@ -1,21 +1,23 @@
 -- Hekili_Hunter/Hunter.lua
--- The Forever Hunter (Beast Mastery, Marksmanship and Survival, one spec a talent tree: Hekili:NewClass; D3's Turret
--- Hawk, Turret and Melee): the Hunter kit with Forever's spell data (ranks, costs, cooldowns, cast times and durations
--- from the Forever DB2 at build 1.60.1.70338, wowdb), mana under the five-second rule (the Forever Hunter spends mana,
--- never focus), Auto Shot as the ranged clock's anchor (`rangedSwing`, C7; no priority reads it: shots without weaving,
--- D5), Summon Hawk's guardians (two at most, 18 s each: RegisterPets `cap`, C1), the shared cooldowns (Arcane Shot and
--- Summon Hawk; Aimed Shot and Multi-Shot), Raptor Strike on the next swing, Mongoose Bite's window from the plain
--- usability read, Immolation Trap, the time to the next main-hand swing (`mainhand_remains`), and the default
--- priorities (the wowsims.com packs, translated from wowsims/forever's Melee Weave; no in-game check yet).
+-- The Forever Hunter (Beast Mastery, Marksmanship and Survival, one spec a talent tree: Hekili:NewClass): the Hunter
+-- kit with Forever's spell data (ranks, costs, cooldowns, cast times and durations from the Forever DB2 at build
+-- 1.60.1.70338, wowdb), mana under the five-second rule (the Forever Hunter spends mana, never focus), Auto Shot as the
+-- ranged clock's anchor (`rangedSwing`, C7), Summon Hawk's guardians (two at most, 18 s each: RegisterPets `cap`, C1),
+-- the shared cooldowns (Arcane Shot and Summon Hawk; Aimed Shot and Multi-Shot), Raptor Strike on the next swing,
+-- Mongoose Bite's window from the plain usability read, Immolation Trap, Resourcefulness's cheaper strikes and traps,
+-- the time to the next main-hand swing (`mainhand_remains`, the weave's Multi-Shot gap), and the default priorities
+-- (the wowsims.com packs, translated from wowsims/forever's Melee Weave; no in-game check yet).
 -- Research: docs/research/2026-10-15-forever-hunter/research.md and the class-completion research §5.
 -- Unmodelled: ranged haste on the auto-shot clock (Rapid Fire, Quick Shots; their haste on Aimed, Multi and Sniper
 -- Shot's casts is modelled), the pet and its abilities (D6), Aspect of the Viper and the other runes no priority names,
 -- Improved Aimed Shot's +2 s cast, Sniper Shot's range buff, Expose Prey's own Mongoose Bite window (the usability read
--- covers it), percent-of-base-mana costs (priced as a fraction of the maximum: overstated, research Q4).
+-- covers it), percent-of-base-mana costs (priced as a fraction of the maximum: overstated, research Q4),
+-- Resourcefulness's second effect (1242688: 30 s of 50% mana regen while casting after a critical strike; the mana
+-- belief's `mult` hook scales a whole rate, not the spirit part inside the five-second rule).
 -- Credits: Hekili (registration API and pack format; the on-next-swing queue read follows the Warrior's Heroic Strike).
--- wowsims/forever (MIT, ui/specs/hunter/dps/apls/turret.apl.json, turret_hawk.apl.json, melee.apl.json and sim/hunter/)
--- is the reference for the priorities and the Summon Hawk, Sniper Shot, Raptor Strike and Mongoose Bite rules; no code
--- is copied.
+-- wowsims/forever (MIT, ui/specs/hunter/dps/apls/default.apl.json, the Melee Weave, and sim/hunter/) is the source of
+-- the priorities (tools/wowsims/specs/hunter_*.lua) and the reference for the Summon Hawk, Sniper Shot, Raptor Strike
+-- and Mongoose Bite rules; no code is copied.
 
 local Facade = Hekili.Client
 local UnitClassBase, GetTime = Facade.UnitClassBase, Facade.GetTime
@@ -113,14 +115,17 @@ local function cost(costs, ids)
     end
 end
 
--- Resourcefulness (440529, a Forever-only Survival talent): the melee strikes and the traps cost 60% less (DB2
--- 440529 effect 0, -60% mana cost; wowsims's 2/2 SV build pays 26 for Mongoose Bite, 32 for Wing Clip, 98 for
--- Immolation Trap). Raptor Strike keeps its price, as in wowsims's log, although the DB2 mask names it too.
+-- Resourcefulness (440529, a Forever-only Survival talent, 2 ranks): the melee strikes and the traps cost 30% less at
+-- rank 1 and 60% less at rank 2. The DB2 carries only the top rank's -60 (440529 effect 0); the rank-1 -30 is
+-- wowsims/forever's generated spell data (MIT, sim/core/spelldata/spells_auto_gen.go `440529: {{-30, -60}, ...}`).
+-- wowsims's 2/2 SV build pays 26 for Mongoose Bite, 32 for Wing Clip, 98 for Immolation Trap. Raptor Strike keeps its
+-- price, as in wowsims's log, although the DB2 mask names it too.
+local RESOURCEFUL = { 0.7, 0.4 }
 local function resourceful(price)
     local priced = type(price) == "function" -- decided here: the returned function runs in the state's environment
     return function()
         local c = priced and price() or price
-        return talent.resourcefulness.enabled and c * 0.4 or c
+        return c * (RESOURCEFUL[talent.resourcefulness.rank] or 1)
     end
 end
 

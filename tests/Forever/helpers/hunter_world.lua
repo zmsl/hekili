@@ -252,7 +252,7 @@ local PACKS = {
             "multi_shot",
         },
         weapon = { 180, 260, 3.6 },
-        aspect = "aspect_of_the_beast",
+        aspect = "aspect_of_the_hawk", -- the pack's (its precombat Aspect of the Hawk)
         uptime = { "hunters_mark" },
     },
 }
@@ -305,7 +305,7 @@ local function content(name)
         for _, key in ipairs(P.kit) do
             local a = assert(w.abilities[key], key)
             local ids = { a.id }
-            for _, id in ipairs(type(a.copy) == "table" and a.copy or {}) do
+            for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
                 ids[#ids + 1] = id
             end
             C.IDS[key] = ids
@@ -316,7 +316,7 @@ local function content(name)
         for key, r in pairs(RANGE) do -- every kit ability's ranks, known or not (the client's spell data)
             local a = w.abilities[key]
             if a then
-                for _, id in ipairs({ a.id, unpack(type(a.copy) == "table" and a.copy or {}) }) do
+                for _, id in ipairs({ a.id, unpack(type(a.copy) == "table" and a.copy or { a.copy }) }) do
                     ranges[id] = r
                 end
             end

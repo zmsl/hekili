@@ -15,6 +15,8 @@
 -- Lost to GAP 14 (autocastOtherCooldowns, not translated): Rapid Fire (3045) and the Orc's Blood Fury (20572), the
 -- cooldowns wowsims casts from 5 s on.
 -- Lacerating Strikes (1310536) and the trap's burn (14301) are procs no key maps.
+-- Multi-Shot (2643): its cast is the DB2's 500 ms; wowsims has no cast time for it (instant there). Kept: the client
+-- charges the DB2's, and the `action.multi_shot.cast+...<=mainhand_remains` line reads it (in-game checkpoint).
 return {
     class = "HUNTER",
     pack = "Beast Mastery (wowsims.com)",
