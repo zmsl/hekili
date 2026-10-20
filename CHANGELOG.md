@@ -10,8 +10,8 @@
   specialization's default priority, translated from wowsims/forever's Melee Weave: Wing Clip, Mongoose Bite, Strider
   Kick and Immolation Trap while you are in melee range, the shots between swings. Resourcefulness and Efficiency
   lower the mana costs the addon expects.
-- Druid: "Feral (wowsims.com)", the wowsims.com Feral priority translated for WoW Forever, can be picked under
-  Feral's priorities.
+- Druid: "Feral (wowsims.com)" and "Balance (wowsims.com)", the wowsims.com priorities translated for WoW Forever,
+  are the Feral and Balance defaults.
 - Hunter: Beast Mastery, Marksmanship and Survival default priorities (new addon folder Hekili_Hunter). Sniper Shot
   under Rapid Fire or Quick Shots, Mongoose Bite and Raptor Strike first; Serpent Sting and Hunter's Mark as focus
   abilities; shots only while in Auto Shot range and the melee list only in melee range; Arcane Shot and Wing Clip mana
@@ -33,6 +33,9 @@
   Trash, Maintain Expose Armor, Vanish to Re-open, Ambush Opener, Backstab Builder, Poison Reminders).
 - Hunter: the hand-built BeastMastery, Marksmanship and Survival priorities are gone, with their Arcane Shot and Wing
   Clip mana floor settings.
+- Druid: the hand-built Feral and Balance priorities are gone, with the settings only they read (Ferocious Bite
+  finisher, out-of-combat buffs, Moonkin Form, Moonfire on trash, Starfire filler, Hurricane targets, Innervate and its
+  mana thresholds). Guardian keeps its priority for now.
 - Specializations follow your talents: a respec or dual-spec swap that moves your most-spent talent tree activates
   that tree's specialization, the one you last activated for it (for example Guardian on the Feral Combat tree) or
   else its first. Swapping between two builds of the same tree keeps your choice. The "your talents favor" hint is gone.
@@ -113,6 +116,7 @@
   wowsims.com default.
 - Hunter: a saved choice of BeastMastery, Marksmanship or Survival falls back to that specialization's wowsims.com
   priority.
+- Druid: a saved choice of the old Feral or Balance priority falls back to its "(wowsims.com)" default.
 - Your class's existing settings (thresholds, toggles, ability and item options) are copied once into each of its
   specializations, and a custom priority you had chosen stays selected for your active specialization. Change them per
   specialization afterwards; old priority exports still import.

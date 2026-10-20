@@ -91,7 +91,7 @@ local function druid()
             forms = forms,
             form = 3,
         },
-        pack = "Feral",
+        pack = "Feral (wowsims.com)",
     })
 end
 

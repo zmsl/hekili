@@ -129,7 +129,7 @@ describe("tools/make_pack.lua", function()
     describe("write (the date changes only with the text)", function()
         local TODAY = 20991231
         local function date(src, name)
-            return math.floor(tonumber(src:match('"' .. name .. '",\n    (%d+),')) / 1000)
+            return math.floor(tonumber(src:match('"' .. name:gsub("%p", "%%%0") .. '",\n    (%d+),')) / 1000)
         end
 
         for class, Class in pairs(CLASSES) do
@@ -160,7 +160,7 @@ describe("tools/make_pack.lua", function()
             assert.is_true(out == again, "a second write changed the file")
             local druid = slurp("src/Hekili_Druid/Druid.lua")
             assert.is_true(druid == mp.write(druid, "druid", TODAY), "the Druid file changed")
-            assert.are_not.equal(TODAY, date(druid, "Feral"))
+            assert.are_not.equal(TODAY, date(druid, "Feral (wowsims.com)"))
         end)
     end)
 

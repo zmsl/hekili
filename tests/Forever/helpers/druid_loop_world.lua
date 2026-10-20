@@ -340,7 +340,8 @@ end
 
 local function content(name)
     local P = PACKS[name]
-    local C = { PACK = name, IDS = {} }
+    -- the spec's default: the wowsims.com pack (wowsims packs plan, P9), Guardian's hand-built list
+    local C = { PACK = name == "Guardian" and name or name .. " (wowsims.com)", IDS = {} }
     C.SPEC = ({ Balance = 100111, Feral = 100112, Guardian = 100113 })[name]
     local pt = P.power.type
 
@@ -502,8 +503,8 @@ local function content(name)
                     if not formOk(a, e) or (m.requires and not m.requires(W, e)) then
                         return false, false
                     end
-                    -- Clearcasting as the press's cost reads it (the oracle's: the truth in a stepped loop; ws.live steps
-                    -- none, so a free answer there would meet a full-cost press)
+                    -- Clearcasting as the press's cost reads it (the oracle's: the truth in a stepped loop; ws.live
+                    -- steps none, so a free answer there would meet a full-cost press)
                     if covered and H.ns.VirtualState.Aura("player", X.aura.clearcasting.id, H.ctl.now) then
                         return true, false
                     end

@@ -134,6 +134,7 @@ function M.load(vs, file, class)
     w.totems = reg.RegisterTotems and reg.RegisterTotems[1][1]
     w.pets = reg.RegisterPets and reg.RegisterPets[1][1]
     w.packs = reg.RegisterPack or {}
+    w.retired = reg.RetirePacks and reg.RetirePacks[1][1]
     w.options = reg.RegisterOptions and reg.RegisterOptions[1][1]
     return w
 end

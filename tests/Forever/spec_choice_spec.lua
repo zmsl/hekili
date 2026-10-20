@@ -542,7 +542,7 @@ describe("a Druid (headless)", function()
     local BALANCE, FERAL, GUARDIAN, RESTO = 100111, 100112, 100113, 100114
 
     it("gives Feral and Guardian their own specs on one tree, Feral by the talents and Guardian by choice", function()
-        local H = headless.new({ character = dw.Feral.character(), pack = "Feral" })
+        local H = headless.new({ character = dw.Feral.character(), pack = "Feral (wowsims.com)" })
         assert.are.same({}, H.loadErrors)
         settle(H)
         assert.are.equal(FERAL, H.Hekili.State.spec.id)
@@ -550,14 +550,15 @@ describe("a Druid (headless)", function()
         assert.are.equal(GUARDIAN, G.Hekili.State.spec.id)
         assert.are.equal("guardian", G.Hekili.Engine.Output.status.specKey)
         local p = G.Hekili.DB.profile
-        assert.are.same(
-            { BALANCE, FERAL, GUARDIAN },
-            { p.packs.Balance.spec, p.packs.Feral.spec, p.packs.Guardian.spec }
-        )
+        assert.are.same({ BALANCE, FERAL, GUARDIAN }, {
+            p.packs["Balance (wowsims.com)"].spec,
+            p.packs["Feral (wowsims.com)"].spec,
+            p.packs.Guardian.spec,
+        })
     end)
 
     it("keeps Guardian chosen on the Feral tree across a swap to Balance and back, and another Feral build", function()
-        local H = headless.new({ character = dw.Feral.character(), pack = "Feral" })
+        local H = headless.new({ character = dw.Feral.character(), pack = "Feral (wowsims.com)" })
         assert.are.same({}, H.loadErrors)
         local FERAL_BUILD = { [16942] = 3 } -- Sharpened Claws
         H.ctl.traits = traits(FERAL_BUILD)

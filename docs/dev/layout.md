@@ -119,17 +119,18 @@ Seeds 1-3 pass the cost gate by 0.1 (25.8 against a 25.9 limit). Fury's Battle S
 while Arms refreshes it at 10 s, on purpose: aligning Fury is a later Fury change.
 
 `tests/Forever/loop_druid_spec.lua` runs 3 fights a Druid pack in `make check` (seeds 1-3, the `#slow` tag) and 20 in
-`make test-druid` (`#druid`), each asserting its flagged lines ran (`r.focus > 0`). Feral and Balance are gated by
-`pack_gate.gate`; Guardian is reported (engine health and focus asserted, not the agreement): its first icon waits on
-rage the usability ladder cannot place. The first passing run (class-completion Task 2):
+`make test-druid` (`#druid`), each asserting its flagged lines ran (`r.focus > 0`). Feral and Balance run their
+wowsims.com defaults (wowsims packs plan, Task 7b; the hand-built lists retired) and are gated by `pack_gate.gate`;
+Guardian keeps its hand-built list and is reported (engine health and focus asserted, not the agreement): its first
+icon waits on rage the usability ladder cannot place. Current lines (Task 7b):
 
 ```
-Feral solo: fights=3 agreement 0.974 (2697 ticks); react median 0 p90 0 never 0.015; refused per 100 [], episodes 0.00/min; dps A/B 1.000; ... [seeds 1-3]
-Guardian solo: fights=3 agreement 0.718 (2574 ticks); react median 0 p90 1 never 0.186; refused per 100 [cost 31.2 (oracle 19.3), gcd 3.8 (oracle 3.5)], episodes 2.68/min; dps A/B 0.955; ... [seeds 1-3] (reported)
-Balance solo: fights=3 agreement 0.985 (864 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 91.2 (oracle 91.4)], episodes 8.13/min; dps A/B 0.996; ... [seeds 1-3]
+Feral solo: fights=3 agreement 0.911 (2541 ticks); react median 0 p90 0 never 0.030; refused per 100 [], episodes 0.00/min; dps A/B 1.055; ... [seeds 1-3]
+Guardian solo: fights=3 agreement 0.714 (2694 ticks); react median 0 p90 1 never 0.140; refused per 100 [cost 19.9 (oracle 22.6)], episodes 3.23/min; dps A/B 1.002; ... [seeds 1-3] (reported)
+Balance solo: fights=3 agreement 0.988 (1416 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 88.6 (oracle 89.4)], episodes 10.73/min; dps A/B 0.904; ... [seeds 1-3]
 ```
 
-Feral's Innervate line never fires in the loop: the feral worlds keep no mana.
+The Feral and Balance worlds keep the wowsims logs' mana pools and five-second rule (22 a second outside it).
 
 `tests/Forever/loop_rogue_spec.lua` runs 3 fights a Rogue spec in `make check` (seeds 1-3, `#slow`) and 20 in
 `make test-rogue` (`#rogue`), each on its "<Spec> (wowsims.com)" pack (wowsims packs plan, Task 8), gated by

@@ -5,8 +5,8 @@
 -- Replay (P7): decisions on-GCD 0.909 (n 88), after central fix 6 gave the replay the log's mana pool and regen.
 -- Worked (Task 7b):
 -- - Content: the forms', Shifting Power's and Innervate's costs are percent of base mana, 1244 at 60 (the log's 684,
---   684 and 62), not of the maximum (2674: 1203 believed); Shredding Attacks has 3 points (Shred 42 at 3/3, the
---   log's; the DB2 node lists 2 rank spells); mana declares the five-second rule (22 a second outside it, none inside:
+--   684 and 62), not of the maximum (2674: 1203 believed): right per the goal (wowsims prices them so); Shredding
+--   Attacks has 3 points (Shred 42 at 3/3, the log's; the DB2 node lists 2 rank spells); mana declares the five-second rule (22 a second outside it, none inside:
 --   the log's regen lines; 0.920 without it, one decision more, but the belief then regenerates nothing in combat).
 --   The world's usability now reads the kept mana pool (it said mana-free).
 -- - Shifting Power's 7.5 s recasts are the pre-raid set's Howling Idol (272427): its equip aura 1291059 is in the kit

@@ -43,4 +43,23 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             )
         end)
     end
+
+    it("Balance (wowsims.com) follows wowsims's casts", function()
+        ws.gate(
+            "Balance (wowsims.com)",
+            content("druid_balance", W.Balance, "Balance (wowsims.com)", 60),
+            "druid_balance",
+            0.56
+        )
+    end)
+    local BALANCE60 = 8.6 -- the pack's own worst idle at 60 (out of mana: see the recipe's header), seconds
+    for _, level in ipairs({ 10, 40, 60 }) do
+        it("Balance (wowsims.com) stays live at level " .. level, function()
+            ws.live(
+                "Balance (wowsims.com)",
+                content("druid_balance", W.Balance, "Balance (wowsims.com)", level),
+                math.max(6, BALANCE60)
+            )
+        end)
+    end
 end)

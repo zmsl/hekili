@@ -681,7 +681,7 @@ describe("Forever Druid", function()
     )
 
     it(
-        "declares energy with no regen model, combo points with no maximum, mana's five-second rule, in Classic's order",
+        "declares energy with no regen model, combo points with no maximum, mana's five-second rule, Classic's order",
         function()
             assert.are.same({ 3, 4, 1, 0 }, w.order)
             for _, pt in ipairs({ 3, 4 }) do
@@ -867,28 +867,22 @@ describe("Forever Druid", function()
         end
     end)
 
-    it("declares its class once (NewClass), no options, and the settings the packs read", function()
-        assert.are.equal("DRUID", w.class)
-        for key, default in pairs({
-            rip_cp = 5,
-            bite_finisher = false,
-            behind = false,
-            buffs = true,
-            dump_rage = 60,
-            use_enrage = false,
-            moonkin = true,
-            trash_dots = true,
-            starfire_filler = false,
-            hurricane_targets = 4,
-            innervate = true,
-            lacerate_refresh = 4.5,
-            feral_innervate_mana = 40,
-            balance_innervate_mana = 10,
-        }) do
-            assert.are.equal(default, w.settings[key].default, key)
+    it(
+        "declares its class once (NewClass), no options, and only the settings its expressions and Guardian read",
+        function()
+            assert.are.equal("DRUID", w.class)
+            local n = 0
+            for _ in pairs(w.settings) do
+                n = n + 1
+            end
+            assert.are.same({ 5, 5, false }, { n, w.settings.rip_cp.default, w.settings.behind.default })
+            assert.are.same(
+                { 60, false, 4.5 },
+                { w.settings.dump_rage.default, w.settings.use_enrage.default, w.settings.lacerate_refresh.default }
+            )
+            assert.is_nil(w.options)
         end
-        assert.is_nil(w.options)
-    end)
+    )
 
     it("places each talent in its tree, the Forever-only placeholders at tree 0", function()
         local n = { [0] = 0, 0, 0, 0 }
@@ -960,82 +954,70 @@ describe("Forever Druid's bleeds through the real engine's missable handling", f
     end)
 end)
 
--- The priorities' wowsims-aligned lines (class-completion plan Task 2; research §1, the sim's default APLs as a
--- reference, no code copied) and their D1 focus tiers: 1 a proc or reactive window, 2 predictable upkeep.
-describe("Forever Druid priorities against wowsims/forever", function()
-    local packs = {}
-    setup(function()
-        for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "druid")) do
-            packs[p.name] = p.lists.default
+-- The wowsims.com packs as the specs' defaults (wowsims packs plan, P9): the hand-built lists retired, their focus
+-- tiers carried by the recipes.
+describe("Forever Druid's wowsims.com defaults", function()
+    it("makes each spec's wowsims.com pack its default and retires the hand-built lists", function()
+        local w = ld.load()
+        local package = {}
+        for _, s in ipairs(w.def.specs) do
+            package[s.key] = s.package
         end
+        assert.are.same({
+            balance = "Balance (wowsims.com)",
+            feral = "Feral (wowsims.com)",
+            guardian = "Guardian", -- held: its wowsims.com pack waits on shared gaps (Task 7b report)
+        }, { balance = package.balance, feral = package.feral, guardian = package.guardian })
+        assert.are.same({ "Feral", "Balance" }, w.retired)
     end)
 
-    -- The first entry of `pack`'s default list pressing `action` whose criteria are `criteria`: its index and entry.
-    local function line(pack, action, criteria)
-        for i, e in ipairs(packs[pack]) do
-            if e.action == action and e.criteria == criteria then
-                return i, e
+    it("carries the retired lists' focus tiers on the wowsims.com packs' lines", function()
+        local focus = {}
+        for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "druid")) do
+            for _, list in pairs(p.lists) do
+                for _, e in ipairs(list) do
+                    if e.focus then
+                        focus[p.name .. " " .. e.action] = tonumber(e.focus)
+                    end
+                end
             end
         end
-        error(pack .. ": no " .. action .. " if " .. tostring(criteria))
-    end
-
-    it("Feral: Shred (Claw out of position) on Clearcasting at tier 1, before Rip (1) and Rake (2)", function()
-        local shred, s = line("Feral", "shred", "buff.clearcasting.up&shred_ok")
-        local claw, c = line("Feral", "claw", "buff.clearcasting.up&!shred_ok")
-        local rip, r = line("Feral", "rip", "combo_points.current>=settings.rip_cp&!debuff.rip.up")
-        local rake, k = line("Feral", "rake", "!debuff.rake.up")
-        assert.are.same({ 1, 1, 1, 2 }, { s.focus, c.focus, r.focus, k.focus })
-        assert.is_true(shred < claw and claw < rip and rip < rake)
-    end)
-
-    it("Feral: Shifting Power below 40 energy under Clearcasting, below 50 without", function()
-        line("Feral", "shifting_power", "energy.current<40||!buff.clearcasting.up&energy.current<50")
-    end)
-
-    it("Feral: Berserk ahead of a due Rake when Rip is not due, unflagged", function()
-        local i, b = line("Feral", "berserk", "!debuff.rake.up&!(combo_points.current>=settings.rip_cp&!debuff.rip.up)")
-        assert.are.same({ 1, nil }, { b.use_off_gcd, b.focus })
-        assert.is_true(i < line("Feral", "rake", "!debuff.rake.up"))
-    end)
-
-    it(
-        "Feral: Innervate in Cat at tier 2 when mana is short and energy low, outside Clearcasting and Berserk",
-        function()
-            local _, e = line(
-                "Feral",
-                "innervate",
-                "settings.innervate&buff.cat_form.up&mana.pct<settings.feral_innervate_mana&energy.current<=30"
-                    .. "&!buff.clearcasting.up&!buff.berserk.up"
-            )
-            assert.are.equal(2, e.focus)
+        for pack, tiers in pairs({
+            ["Feral (wowsims.com)"] = { shred = 1, claw = 1, rip = 1, rake = 2, innervate = 2 },
+            Guardian = { lacerate = 2 },
+            ["Balance (wowsims.com)"] = { moonfire = 2, insect_swarm = 2, starfire = 1 },
+        }) do
+            for action, tier in pairs(tiers) do
+                assert.are.equal(tier, focus[pack .. " " .. action], pack .. " " .. action)
+            end
         end
-    )
+    end)
+end)
 
-    it("Guardian: Berserk after Primal Bite, the Lacerate refresh window a setting at tier 2", function()
-        local _, b = line("Guardian", "berserk", "debuff.demoralizing_roar.up&cooldown.primal_bite.remains>=4")
-        local _, l =
-            line("Guardian", "lacerate", "debuff.lacerate.stack>=5&debuff.lacerate.remains<=settings.lacerate_refresh")
+-- The hand-built Guardian list (class-completion plan Task 2), the default until its wowsims.com pack's shared gaps
+-- close: wowsims-aligned lines (research §1, the sim's default APL as a reference, no code copied).
+describe("Forever Druid's Guardian list", function()
+    it("Berserk after Primal Bite, the Lacerate refresh window a setting at tier 2", function()
+        local list
+        for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "druid")) do
+            if p.name == "Guardian" then
+                list = p.lists.default
+            end
+        end
+        local function line(action, criteria)
+            for _, e in ipairs(list) do
+                if e.action == action and e.criteria == criteria then
+                    return e
+                end
+            end
+            error("Guardian: no " .. action .. " if " .. tostring(criteria))
+        end
+        local b = line("berserk", "debuff.demoralizing_roar.up&cooldown.primal_bite.remains>=4")
+        local l = line("lacerate", "debuff.lacerate.stack>=5&debuff.lacerate.remains<=settings.lacerate_refresh")
         assert.are.same({ 1, nil, 2 }, { b.use_off_gcd, b.focus, l.focus })
-    end)
-
-    it("Balance: Innervate at a mana fraction, Starfire on Eclipse at tier 1, the DoTs at tier 2", function()
-        local _, i = line("Balance", "innervate", "settings.innervate&mana.pct<settings.balance_innervate_mana")
-        local _, sf = line("Balance", "starfire", "!moving&buff.eclipse.stack>=1")
-        local _, mf = line("Balance", "moonfire", "!debuff.moonfire.up&(boss||settings.trash_dots)")
-        local _, is = line("Balance", "insect_swarm", "!debuff.insect_swarm.up&boss")
-        assert.are.same({ nil, 1, 2, 2 }, { i.focus, sf.focus, mf.focus, is.focus })
-    end)
-
-    it("describes the Lacerate window's default and the sim's 1.5 s, and the mana settings as fractions", function()
-        local w = ld.load()
-        local lr = w.settings.lacerate_refresh.option
+        local lr = ld.load().settings.lacerate_refresh.option
         assert.are.same({ "range", 0, 15 }, { lr.type, lr.min, lr.max })
         assert.is_truthy(lr.desc:find("1.5", 1, true))
-        for _, key in ipairs({ "feral_innervate_mana", "balance_innervate_mana" }) do
-            local o = w.settings[key].option
-            assert.are.same({ "range", 0, 100 }, { o.type, o.min, o.max }, key)
-        end
     end)
 end)
 

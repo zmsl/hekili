@@ -3,18 +3,19 @@
 -- Forever's spell data (ranks, costs, cooldowns, cast times and durations from the Forever DB2 at build 1.60.1.70338,
 -- wowdb; energy and mana costs are DB2 points, rage the DB2 cost / 10), Forever's Shifting Power, Berserk, Primal Bite
 -- and Lacerate, bear rage per white swing in Bear Form only, Enrage's rage over time, Clearcasting as a cost modifier,
--- forms from the belief's Forms source, the bleeds' misses from the combat log, and the default priorities (Feral;
--- Guardian and Balance provisional). Design: docs/superpowers/specs/2026-10-15-forever-druid-pack.md.
+-- forms from the belief's Forms source, the bleeds' misses from the combat log, and the default priorities (Feral and
+-- Balance the wowsims.com packs; Guardian's hand-built, provisional). Design:
+-- docs/superpowers/specs/2026-10-15-forever-druid-pack.md.
 -- Talents: the DB2's 47 Classic nodes plus three placeholders the live export replaces (checkpoint Q1). Only rank 1 of
 -- each talent is in the Forever DB2, so a modifier is rank 1's value x the rank (Classic's convention), floored at 0;
 -- no cooldown or duration modifier is modelled but Improved Shifting Power's (spec D5).
 -- Credits: Hekili (registration API and pack format); the abilities, auras, handlers and `swap_form` are ported from
 -- Hekili's Classic profile (origin/classic:Classic/Druid.lua). Ported from Taco Dog Forever
 -- (src/TacoDogForever_Druid/): the `excess_e` energy reservation (Expressions.lua, itself after Zachary Samsel's
--- `excess_e` in Hekili's Wrath Feral module, origin/wrath_release:Wrath/Druid.lua L413-566), the Feral, bear and
--- Balance priorities (APLs/feral.simc, bear.simc, balance.simc, after Nerdegghead and the guides they cite), the
--- not-behind window (Feral.lua), Enrage's 10 + 2/s and Faerie Fire free in form (Bear.lua), and the `form` alias over
--- the forms (Expressions.lua's RegisterForms).
+-- `excess_e` in Hekili's Wrath Feral module, origin/wrath_release:Wrath/Druid.lua L413-566), the bear priority
+-- (APLs/bear.simc, after the guides it cites), the not-behind window (Feral.lua), Enrage's 10 + 2/s and Faerie Fire
+-- free in form (Bear.lua), and the `form` alias over the forms (Expressions.lua's RegisterForms). The Feral and
+-- Balance (wowsims.com) priorities translate wowsims/forever's default APLs (MIT, https://github.com/wowsims/forever).
 
 local Facade = Hekili.Client
 local C_Spell, UnitClassBase = Facade.C_Spell, Facade.UnitClassBase
@@ -39,9 +40,9 @@ local spec = Hekili:NewClass("DRUID", {
             icon = 136096,
             role = "attack",
             ranged = true,
-            package = "Balance",
+            package = "Balance (wowsims.com)",
         },
-        { key = "feral", name = "Feral", tree = 2, icon = 132115, role = "attack", package = "Feral" },
+        { key = "feral", name = "Feral", tree = 2, icon = 132115, role = "attack", package = "Feral (wowsims.com)" },
         { key = "guardian", name = "Guardian", tree = 2, icon = 132276, role = "tank", package = "Guardian" },
         { key = "restoration", name = "Restoration", tree = 3, icon = 136041, role = "healer", unsupported = true },
     },
@@ -1840,7 +1841,8 @@ spec:RegisterStateExpr("excess_e", function()
     return cur - need
 end)
 
--- The settings the priorities read (TDF's names and defaults).
+-- The settings the class file's expressions (`excess_e`, `shred_ok`) and the Guardian list read (TDF's names and
+-- defaults); the wowsims.com packs read none.
 spec:RegisterSetting("rip_cp", 5, {
     type = "range",
     name = "Rip Combo Points",
@@ -1851,26 +1853,12 @@ spec:RegisterSetting("rip_cp", 5, {
     step = 1,
 })
 
-spec:RegisterSetting("bite_finisher", false, {
-    type = "toggle",
-    name = "Ferocious Bite Finisher",
-    desc = "When enabled, Ferocious Bite spends 5 combo points while Rip is up and no energy is held back.",
-    width = "full",
-}, "feral")
-
 spec:RegisterSetting("behind", false, {
     type = "toggle",
     name = "Always Behind",
     desc = "When enabled, Shred is recommended over Claw as if you always stand behind the target.",
     width = "full",
 })
-
-spec:RegisterSetting("buffs", true, {
-    type = "toggle",
-    name = "Out-of-Combat Buffs",
-    desc = "When enabled, Mark of the Wild and Thorns are recommended before combat when missing.",
-    width = "full",
-}, "feral", "balance")
 
 spec:RegisterSetting("dump_rage", 60, {
     type = "range",
@@ -1889,45 +1877,7 @@ spec:RegisterSetting("use_enrage", false, {
     width = "full",
 }, "guardian")
 
-spec:RegisterSetting("moonkin", true, {
-    type = "toggle",
-    name = "Moonkin Form",
-    desc = "When enabled, the Balance priority recommends Moonkin Form before combat.",
-    width = "full",
-}, "balance")
-
-spec:RegisterSetting("trash_dots", true, {
-    type = "toggle",
-    name = "Moonfire on Trash",
-    desc = "When enabled, the Balance priority keeps Moonfire on targets that are not bosses.",
-    width = "full",
-}, "balance")
-
-spec:RegisterSetting("starfire_filler", false, {
-    type = "toggle",
-    name = "Starfire Filler",
-    desc = "When enabled, the Balance priority fills with Starfire instead of Wrath.",
-    width = "full",
-}, "balance")
-
-spec:RegisterSetting("hurricane_targets", 4, {
-    type = "range",
-    name = "Hurricane Targets",
-    desc = "Select the number of enemies at which the Balance priority channels Hurricane (0: never).",
-    width = "full",
-    min = 0,
-    max = 10,
-    step = 1,
-}, "balance")
-
-spec:RegisterSetting("innervate", true, {
-    type = "toggle",
-    name = "Innervate",
-    desc = "When enabled, the Feral and Balance priorities use Innervate when mana runs low.",
-    width = "full",
-}, "feral", "balance")
-
--- Lacerate's refresh window and the Innervate mana fractions (class-completion D7: a fraction of the maximum per line).
+-- Lacerate's refresh window (class-completion D7).
 spec:RegisterSetting("lacerate_refresh", 4.5, {
     type = "range",
     name = "Lacerate Refresh Window",
@@ -1939,47 +1889,25 @@ spec:RegisterSetting("lacerate_refresh", 4.5, {
     step = 0.5,
 }, "guardian")
 
-spec:RegisterSetting("feral_innervate_mana", 40, {
-    type = "range",
-    name = "Feral Innervate Mana",
-    desc = "Select the mana percentage below which the Feral priority uses Innervate (wowsims: 1400 mana).",
-    width = "full",
-    min = 0,
-    max = 100,
-    step = 1,
-}, "feral")
-
-spec:RegisterSetting("balance_innervate_mana", 10, {
-    type = "range",
-    name = "Balance Innervate Mana",
-    desc = "Select the mana percentage below which the Balance priority uses Innervate.",
-    width = "full",
-    min = 0,
-    max = 100,
-    step = 1,
-}, "balance")
-
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc (a wowsims.com
 -- pack's from its recipe, `make wowsims-packs`); edit those and run it, never these blocks (tests/Forever/druid_spec.lua
--- checks they match). Pick one with /hekili priority <name>. Guardian and Balance are provisional (their descriptions
--- say why); Restoration is deferred.
+-- checks they match). Pick one with /hekili priority <name>. Restoration is deferred.
 spec:RegisterPack(
     "Feral (wowsims.com)",
     20261020114,
     [[Hekili:TNvBVnQrq4Fl5luOxom2ojTjkePRk6utvBuv91VcEnSyVNXGf7YfzPi(T3z5nVlEHa2w6AuRoPt2JNDEBN5zMDIZyNV4mZhXWoppXAYnJTMynE8voZy72IDMTf5TgTe(qeAd8)FgNGcZMR)s8luYgQPx8gdot7cJr(CbTiLeYEkYzHszs3I9CM94F93p94DbCr5mBfX3hxWpM6Pwd3LnNTcNnVK2OG4e83WjzZ9XbO0qw28p9N)E2CGC28QZNsgX1gDKFskXFuU28qSrOTHaTIZzcFX8R04iJlbnKGIOHGn7dFoMRrcnBoY3po6hGpSgVJAMn)redDNclr)pE6lGqwXyBP3nA0scBv6cUXpQbRgGmbd2F60BNA5BDL1ulticMehqcHamYJrIJO2GP6cNyZLKa7lwKgeywrXmDB2VvY2hSh5HcdDl(QBiHYUKFrz7fhh6h)sevKv6QeS)LbXEPu7XCbRRFrXVUx4RJGt9AtfAOvqjeJs8qugjAjNQKDeIErw2NOW1QpFUDxEyzAjyK)odJ3oESieJ9LcgqcrShjoL6UGWWfwmCDTi2DBmjIbjEPjj4i2d2xRDHEaz5kMBcEdIerFWESLHXRTW(unjMVFQS9rxrc4UiCUxWjf6T2Ne)PcNttxxv0rdhHtwURsR3FLfypx0hoVgmDG32D26WEczBzq3hNlzob(fZbbJ34mvCAz0pgV3EIsovMqORl7GFuIhVykZ4dW119cslNyEqOwhO14gMdNIcN9wT36qk92oz9E7XQ59S4WCXv6XgADKP1RYiaD3hNivirIaZ5BaUzz1)KbISOVbfHQtphFLLLMef5AVFKN)2mN2EQLM6K)AZyby14K1vOi5mxrtvo91srJaeoHGDdijfifTPmgkeShZ4n4i34axatmHW2zIJqaaK)RhEkINVBr0xeUt6YPWIRa0p8QRYIBbWSr2IyQHqgJ60p9dObqHQi2OO5vf8OkVFCEv4H82HnlModgDROy9cJAVVurAVRuG196HCOaVI7hQyTl)OghQQMuihRSGSod0SUDUnomnctHssW9UmLIH0Sa3LE(LnDvNUR37YGwySo7RICvGfQteWnmlAZAdoN0OaT2xvkyR4otiy1mKuOkO2KNr0a6roDutm1PSyRHQUruWLyC2hmU0fVlBAoW2f15LVdApoqxta64WRBvJW((8c)Cm0W)TNssPeLL3d2hkqiRYzg8epkqVXdF5Jqr5VpUgjh(YZ5p9UC4aNFXzMaEo)hlFmiWIaOpicyMcOvbYzwlO1TI33Fa)3aX3Hb)BwbeSkhrWepFy)7JhanNz5fQCvZGyD76)O6giOkGTADnPWVl3EGkhV6yvt4kAkh8mEvw(Ebip)DrkKBXwy2NebsyAx(EPZ2yi8((e89MtEwUCm)Qo07PQy1vGQF8VqmdWVLTXRpMOBzAnC8BA54Y7oq21h2oegWse4g0p1Ibj)OazdQoMDslxyqBxyGRx4O6C2)wNdO3P6EjdUzIq3t1TppU(NdPb6G6GEMCBPEODK2vKl)ZhvTz50ACbC7zb477X6h61(h2hrQ3WIuJONhB1g80(xskpTql24BS1ItzTfh)EloLfxCcBUyqRU475Ul6ZYlgY2lo)RVOCiXQk2ohtCyV06FtnmgigzDC79sNHb6FcP4Do9yhtS)(nx4S0f9)hEOToc94f4D8yGC0iukBvmmG8VIxtcjzZ1)C5Fv28F25F(d]]
 )
 spec:RegisterPack(
-    "Feral",
-    20261020313,
-    [[Hekili:fF17VTTnq0)wYx8AWmuTDs62kQlWsdkwgwlkI6(QKOLozryAsbsQ4zGb93EVJuwrs2k1lyd7ljmKV7D)GV7et08OVgfMXSq0NxmBXBMpBXSRMFvuODFjefwYs3WwJlKST4p)iOzcA39cflJSCvfxyVxgT6KKykH0OW7E4pV)U3M7TTGNLbE8Gbp8Jkn8iORtCCxNCNUINvN8QuM9YP1jmbFTeWn2XTf4pv7m8TMxN7T6hm1jFsjvi46KF9l)bANgqhbYuOorjf7V8T1jHfAIbLSo5dcGPtzglxUgb)bbBhEqfATkVoPuz4wUssogd0CpQVO2rX3kqOqWxpRobKGE9(6KkzgDsFszs0x3mZhXi1ix3cAdO3GNvaSmVVy1jzvyq(aBdGqEGxI7HXHTa30a4Qu12vkkO4sRPHxcnU04WHrqotii(YrkK(6yQGxwIrY0gU0Gbjd5q1wjAY7DfGSbKLPxt(mNLci57vvunOqjYC5KdZHSUH1CK4ccSeCCc)fAQjgC3AuSEVen4ruuqEhRsu25D5wMetFDLeT2uO02autPv5CbQXyP0vGjOudufGzxULP3eRYJrhhVJlYMYZxIviQCBcwvLNBMCb9RGHadQkBoznEzo4K6F)ip9JlFnELPLMr9G)4rTg1HXO0ClzV3Gd701KLNhmKptJimUK0GeC)LqqALgf523D9S)UHGoAqkThGd1JDOTYaXClS10DZvEr6u6quqfVonB5CxeMboxOrTNRI(kNYm2lmp4I3)ubtZlJtrChSJxIMDz)8c1HtZvPvgVpozo4qfR201Yuu5(Dn8ItzjggDn8LKd9OJ6B98T4evPUqXbsQuUQYeVcR691w4gX5CjhBL0toDmDZKEbXKdnAVFGy44cm5PMkrhR8OcCNeKQm2JQVu6mUHeKJSJFOzVBnPnnBpDYq1(eAwqqzQ9DTGDFOiU1KycXq98YRMn50cF)UnIz3fruiox0GX5Gpoj4gRX91piNvjS4Yp7(AiizReqw0ThggffEiIXvA8ktZzrHh15gzrpmcb97K7sZXD0NBln5VRgXFTT4eORhaQtloLYTg1u16LK)708trXndIINCYZ293TgI7ef6eyuCJC(M)zCEXXKsQ5(C(tJY5lj1FYt4F33r)8OoAqvVdh4gTKSGi5xgra0FOtxY)pz4dfkZNnQ43DX1jeoJPsoghTF0DR1PGDgJRCeoS)8eLL)hhw9uc2YyVBBl9oPMNB8CJRg(qOtF9)sF50ZnNZ)aPVR)AFh1Znd7Ch66QlSkIZOWFd2WfC89On)Jfx6oo6B]]
+    "Balance (wowsims.com)",
+    20261020564,
+    [[Hekili:fovxpQnmqWFl9PEOIYhahvf1uPEcvvo1EQQ(UxnXXEdXfh7i)bO7L8BV2HVYLcQcjKZUZm7KzDWP4NXigXc4NMKmzEAYKK7NpdJSV2ayudHULSXFqsQ9))arqKuOn)U9Q9gETjIQQhfG9QqrybPkCCHDLexCvvnnafJw(7xwTCrXbXWOkoJbhyag6TMYI2CBLV4XAXLknSd0T5mOK4e228V(RF0M7l3MFrbhpomttmt74S4JZmM0i8LoqmY)q0Fmk5OX(rOjsJWBCM)SkmsUPnNWyk579h2cVAIAZxsSKfxXk39Zvp7fPYABmlIJ3WTvUIG7JhaDKxtVJztN(PPjSKzjttI8XOwvYf(eHqTCL0KbcNemRf8nv2XodSwvwUEdLLL2(4rmFilMlLGEN3ZJ5Lz1ejjQHA)CAsFm1kLSKRHXLkQZKnja9DmOWvwgDQxKR5TYAaQDTzprxFnA97pGALtR5uISZrHY7G1GeQ5G5lzZ6J0yj6E(knqOtDGk4nMHEAVMyRAFeJ8zOXxBW1lb3ynDxOpSA9hFQ7coijfcGHFaJ6fJHMhZApKEzn26fEaVt4oN2yevZTGMtWOEPEG70bCVa8kz(fPpveJ6sJGh8In7)k2GnrFVEPXBf9(B82DEZ1Fo)ZgmOW8BARb7VlIFAzF2kPbH(4nSs3UgB7(HioBLsJrFh2YfC)xAF74hsDTX)9p]]
 )
 spec:RegisterPack(
     "Guardian",
     20261020907,
     [[Hekili:TEvBpTnsq4Fl8fAre5gslqPcJ0vHUwoXHQW39vBV2ECYkS31A31ervL)T3zSDC2yhhLg4lKW8YZ82ZS7g)Z8)pFVeMb8Fy20zxC20ztVA6L(EMxkaFVcw8tS54xeSC8VFRKPs4mbP4LmjlHCoQKNzUt4hTvC0fqSV3Tp()3D7xM35(cEsc04cOr9)TubpdQQWvrOk8wvjpPk89ratnPkSqjFMR5sbl7lvHKWQqfMAvHCrSmh)KjqZtGy2l43vOGsroW0Lki5eeawQHcWs5snpx)H0Mi(o9kW(RFCpgnfKckqeJUlfzVCcgRVcknOEQdHFO45Smuo3aiU3c5sflJ)tUyEv4JY6S9EwmOWMrvOrwfEEBYHGRa9ciHsAu1cuVgmysXfjYLt2eBkdQcJLYmuNav(VSYSwK8wYlaYpZceII6YL6go4Krjt5z4WIfBW2L2PqbydkIzCPcnal88j8u3JIkttD6e5uwu9pTUS3gEQ7huLIGM)liJRntiIIltcKNK8NHaqa5CqFJ7mBhJAARtk1qGmnnyECI7zKxjqDatS6RbkSTIb(4vDdSOOgvqe2NCuqoJlq8)Kn(eUO2CTTWbGwxG7iI2oN1ouNKkJl1UZSs2vQC0gCJ5g3ZpUVI2K8AxCGBWaO7uf0slSdLv5zloLbkoeKYvGDIBjESugTosQ1dsR6896ZT9jhPzdNk1SR4sfUCyUXTXAhYuNyP2CARa7Xcj)xhTffpjWjODe1eBoOErFqK6AxjL5fb1B8wEccsYWSTZlstJrhBJ71JKVB0Srd)jhsW5ZCKcJTlurNboih39WPtK77AjO)QZh775q6DRITrDAvTUp3xZRzMVg1dKkC8bfN(LWEUB47HN6t3J07Ek6WlnDDgIg(Xd13lccwugK4)1vNMs3x1BQ67fRWsrXz(E7A07BWi2duRoofXUG0slSHEaHGW7JJKKDKdYOpnIrwZbYSZhXS1TDYQl2ZkGME2P)bnIhLk9wZLOk7YrQFlc02g1BYV8jOqoskgqZUOrDxNUbMdUPDBKMX5eZwJFVRLB43bnVIJy4BH88hqgFfxrVlg5g02X4JVQfW(03bL0BXf5RZ1vAqwe9KbAwUdMwVfYp)griF4QraAD2TgLD9ibcRZMUNSMd7aG)Gn96SzS1lRdTgnhg(YIAi33ZOBEvHn8h6JoQd7yhLV1xH0Cmt3d7FBoOPgtwPzHeBAFhEINXXFqu7Vm7KA1()o]]
 )
-spec:RegisterPack(
-    "Balance",
-    20261020598,
-    [[Hekili:LAv0UTnoqWVL(IVyCgU2PnPPbNcqdspex0gCOQf9nkrlrztyksbskByGc9TF7kkrl7i5a08sIn3DMz5YDinzo5hKWuQLrE6YzxE98zxo7QpEdj0UVGrclOjBORGpiP5WFVNkOYK613lu0ue7YsUWUqsw2lnMcwcj8HV)ZfpC7Yw0R5PPmhcMbc)VknBltxf3WFv8d6sEAv8ffA1wUHRKuXTvX5ujTkMBQILU81mAkDPaaqLq6ForWlmS)csiznvVcwxxIrriLYeLmJRZzPJbU(Msj3WLvXG45tCFhI2s1cPHLyRId3r15vXByfWxklGedTuTlrL0lzRGgiHFPP21vXwvvCgxiGvESuR5juzdgyBShIJ5BralKsMEl07aTbvSRHpyy229BMMMy5iWlOzwCBVtTZWZnVnZ13W9RVZ9P)7RtWgtgtZQxqjf7hpfoY0kOCGUVJnZ0cnlrLVKAdYD9IOmSvWZcaXTC5kZ0MaJEZYYSSPDtBAzr1xEgt)DWBZP6nrQSiyxeTJlspIpKgtlBNKiWytKv8m7jr6xl7ALwAgubx4UOd4TT6Ja5xDe2XNwKy)Nde6ASr(CIQpvAzeQIsde1YYnDxmHkerUVgj4g7e0afqvhl862bJOMPH7MncbTLfXKSCoZC3zsURE5nJVtYujLMGlrzEtkZFUHXWo8flvgZV9CA1uZ6OuL1mUlB86P)ido83hJDJJSIK2fVPXJ0GDEn2CWklxnQMaMZ2mfsmzZDbZ7fChq(cUnyeATaVqhC7qFxhqhMzG2EGVb1FJ5OKbY8n7JiKec2n86OtULdpHn4LHay4FpvFPktIxnLsUV1YrcBfKeMOHrgnNsc7PyiwG)bOWxyhXHRabCw8o1mAPWEU6Wpm3LKxHD4CfS3EGj9UtsQh1FDEId6EQd0Dkf5EidpNGY59dwod7D61803rC9Sp2xaHU6ffQplv3dSdrpM5RhM5Zz4oqDRJYt7CK2pmWP5HSFUqdzsr(Uza(QnTdok7VS)LmvTpl17e1zFf7CJUN(evVS)h)MwF(HwLDpD9I65FHRUDbnmAjUej8r2gUGd)IHMFA146WK)p]]
-)
+
+-- The hand-built lists the wowsims.com packs replace (wowsims packs plan, P9): a saved choice of one falls back to the
+-- spec's default.
+spec:RetirePacks({ "Feral", "Balance" })
