@@ -72,6 +72,13 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   `#slow` gates. `make bench` (`tests/Forever/bench_spec.lua`, `#bench`, not in `make check`) prints ms per Update and bytes per
   Update and per UNIT_COMBAT for headless Arms over 6 fights. The Task 5 Arms lines cost the stock sim a little: "B per
   Update, direct" went from mean -1, p95 160, max 640 (05f075dd) to 7 / 206 / 640 (238d2e6f), with no rise before Task 5.
+- The wowsims tools (`tools/wowsims/apl.lua`, `export.lua`, `tools/check_pack_levels.lua`) and the wowsims gates
+  (`tests/Forever/helpers/wowsims.lua`) read one ability set: `tests/Forever/helpers/engine.lua`'s
+  `abilitySet(token, race)`, the abilities and auras the engine holds after SpecializationChanged (the class kit's,
+  then Hekili_Shared's and the engine's own for missing keys, a race pack's over both), every race's racials when
+  `race` is nil. So the translator's keys, off-GCD flags and talent links, the learn table, the leveling check's
+  ability keys and the gates' racials all agree with the engine. The replay (`tests/Game/harness/replay.lua`) maps
+  the log through the booted instance's own `Hekili.Class`, booted as the request's race (`wowsims.race(spec)`).
 - `tools/`, `docs/` and `archive/` stay at the repository root, with the lint, test and type-check configs
   (`.busted`, `.luacheckrc`, `.luarc.json`). Run every tool and `busted` from the root.
 

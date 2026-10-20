@@ -1,13 +1,37 @@
 -- tools/check_pack_levels.lua (wowsims packs plan, docs/superpowers/plans/2026-10-19-wowsims-packs.md, Task 4): the
 -- leveling rule's static check. A pack line may read another ability X's state (cooldown.X.*, action.X.* but known,
--- buff.X.*, debuff.X.*, dot.X.* with X an ability key) only inside a guard group for X: `(!action.X.known|...)` or
--- `(action.X.known&...)` (`(action.X.known|` and `(!action.X.known&` are false while X is unlearned, so they guard
+-- buff.X.*, debuff.X.*, dot.X.* with X an ability key) only inside a guard group for X that drops the read's term
+-- while X is unlearned (tools/wowsims/apl.lua rule 6): `(!action.X.known|...)`, true, where the group must come out
+-- true (the whole condition, a term of an `&`), `(action.X.known&...)`, false, where it must come out false (a term
+-- of a `|`), each `!` before it or an enclosing group flipping that (`(action.X.known|` and `(!action.X.known&` guard
 -- nothing); a line's own action needs none (the engine skips an unknown action). Loaded with
 -- loadfile(...)() it returns { unguarded, file }; run directly: lua tools/check_pack_levels.lua <file.simc>... lists
 -- offences against every key (no class data), for a quick look.
 local M = {}
 
 local KINDS = { cooldown = true, action = true, buff = true, debuff = true, dot = true }
+
+-- What the group at [s, e] of `criteria` must come out as for its line to hold: true at the top or as a term of an `&`,
+-- false as a term of a `|`, each `!` before it or before an enclosing group flipping it.
+local function wanted(criteria, s, e)
+    local flip = false
+    while true do
+        local i = s - 1
+        while criteria:sub(i, i) == "!" do
+            flip, i = not flip, i - 1
+        end
+        local before, after = criteria:sub(i, i), criteria:sub(e + 1, e + 1)
+        if before == "&" or after == "&" then
+            return not flip
+        elseif before == "|" or after == "|" then
+            return flip
+        elseif before == "(" and after == ")" then -- the group's only term: what its parent wants
+            s, e = i, e + 1
+        else
+            return not flip
+        end
+    end
+end
 
 --- The unguarded cross-ability reads of one line's criteria (`self` its action; `isAbility(key)`).
 function M.unguarded(criteria, self, isAbility)
@@ -19,7 +43,7 @@ function M.unguarded(criteria, self, isAbility)
             depth = depth + (ch == "(" and 1 or ch == ")" and -1 or 0)
             i = i + 1
         until depth == 0 or i > #criteria
-        if (bang == "!") == (op == "|") then
+        if (bang == "!") == (op == "|") and wanted(criteria, s, i - 1) == (bang == "!") then
             spans[#spans + 1] = { s, i - 1, x }
         end
     end

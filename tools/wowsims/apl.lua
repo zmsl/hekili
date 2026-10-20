@@ -14,15 +14,27 @@
 -- 3. Toggles: a group whose actions are all empty is a wowsims ON/OFF switch: `actionGroupUsed` of it reads
 --    `settings.wowsims_<snake of the name without " ON/OFF">`, its default on exactly when the APL's reference to it is
 --    not hidden; the class registers that setting for the spec (named "<Group> (wowsims.com)").
--- 4. Solo exports: `auraIsKnown` (another player's aura) is false.
--- 5. Keys: a spell ID maps through the recipe's `map`, else the class kit's abilities (`id` and `copy`), auras by the
---    kit's auras then abilities, items by an ability's `item`; `includeReactionTime`, `tag` and `rank` are ignored.
+-- 4. `auraIsKnown` (wowsims: the aura is registered on its source unit, Self by default): on Self, an ID that
+--    resolves (rule 5, or a kit talent's spell) to a talent's key or aura is `talent.<key>.enabled`, to an ability's
+--    key `action.<key>.known`, to any other aura `true`; an ID nothing resolves, or another unit, is false. Solo
+--    exports: another player's aura (wowsims's External, tag -1) is never known or active (`auraIsActive` false, its
+--    remaining time and stacks 0).
+-- 5. Keys, from the character's ability set (tests/Forever/helpers/engine.lua abilitySet: the class kit, the shared
+--    content and every race's racials, as the engine merges them): a spell ID maps through the recipe's `map`, else
+--    an ability's `id` and `copy`, auras by the set's auras then abilities, items by an ability's `item` or `items`;
+--    `includeReactionTime`, `rank` and a `tag` other than -1 (rule 4) are ignored. An aura's `sourceUnit` Self (or none) reads `buff.`,
+--    CurrentTarget or Target `debuff.`; a resource value with a source unit other than Self is unsupported.
 -- 6. Leveling guard: every value or test that reads another ability `X` (its cooldown, cast time, cost, readiness, or
---    an aura whose key is `X`) is wrapped `(!action.X.known|<test>)` where it must hold and `(action.X.known&<test>)`
---    under a `not`, so an unknown `X` never blocks the line; an aura whose ID is a talent's spell is guarded the same
---    way by `talent.<key>.enabled`. The line's own action is never guarded (the engine skips an unknown action).
+--    an aura whose key is `X`) is guarded so an unknown `X` drops the test the way wowsims drops an unresolved branch:
+--    `(!action.X.known|<test>)` where the test must come out true (the condition itself, a term of an `and`) and
+--    `(action.X.known&<test>)` where it must come out false (a term of an `or`), each `not` between the test and its
+--    `and`/`or` flipping it; an aura whose ID is a talent's spell is guarded the same way by `talent.<key>.enabled`.
+--    The line's own action is never guarded (the engine skips an unknown action). An empty value in an `and`/`or`
+--    is dropped, as wowsims drops it.
 -- 7. `focus` from the recipe (the tiers the retired list carried, by action), `use_off_gcd=1` on an ability whose
 --    `gcd` is `"off"`; the recipe's `leveling` lines are appended to `actions`, each silent at 60.
+-- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N
+--    (wowsims's N/100 against its 0-1 percents; ours, `mana.pct` and `health.pct`, run 0-100).
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
 -- The engine facts rule 6 rests on (tools/check_pack_levels.lua checks every pack for it):
@@ -63,8 +75,8 @@ function M.snake(s)
     return (s:lower():gsub("[^%w]+", "_"):gsub("^_+", ""):gsub("_+$", ""))
 end
 
---- The translation context of a class kit (`abilities`, `auras`, `talents` as the engine registers them) and recipe
---- `r` (map, focus, executePhase, leveling).
+--- The translation context of an ability set (`abilities`, `auras`, `talents` as the engine registers them:
+--- tests/Forever/helpers/engine.lua abilitySet) and recipe `r` (map, focus, executePhase, leveling).
 function M.context(kit, r)
     local c = {
         keyOf = {},
@@ -73,6 +85,8 @@ function M.context(kit, r)
         ability = {},
         offGcd = {},
         talent = {},
+        talentOf = {},
+        talentKey = {},
         map = r.map or {},
         focus = r.focus or {},
         executePhase = r.executePhase,
@@ -89,8 +103,10 @@ function M.context(kit, r)
         local a = kit.abilities[key]
         c.ability[key] = true
         c.offGcd[key] = a.gcd == "off" or nil
-        if type(a.item) == "number" then
-            c.itemKey[a.item] = key
+        for _, id in ipairs(type(a.items) == "table" and a.items or { a.item }) do
+            if type(id) == "number" then
+                c.itemKey[id] = c.itemKey[id] or key
+            end
         end
         local list = { a.id }
         for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
@@ -123,21 +139,36 @@ function M.context(kit, r)
         if aura and not c.ability[aura] then
             c.talent[aura] = key
         end
+        if type(t) == "table" and type(t[2]) == "number" then
+            c.talentOf[t[2]], c.talentKey[key] = key, true
+        end
     end
     return c
 end
 
+local SECONDS = { h = 3600, m = 60, s = 1, ms = 0.001, us = 1e-6, ns = 1e-9 } -- Go's time.ParseDuration units
+
 local function const(v)
-    if v == "true" then
+    v = tostring(v)
+    if v:lower() == "true" then
         return nil, true
-    elseif v == "false" then
+    elseif v:lower() == "false" then
         return nil, false
     end
-    local n, unit = tostring(v):match("^(%-?[%d.]+)(m?s?)$")
-    if not n then
-        unsupported("const " .. tostring(v))
+    local n = tonumber(v:match("^(%-?[%d.]+)%%$") or v:match("^%-?[%d.]+$"))
+    if not n and v:match("^%-?[%d.]+%a") then
+        local sign, rest, sum = v:match("^(%-?)(.*)$")
+        sum = 0
+        local used = rest:gsub("([%d.]+)(%a+)", function(x, u)
+            sum = sum + (tonumber(x) or 0 / 0) * (SECONDS[u] or 0 / 0)
+            return ""
+        end)
+        n = used == "" and sum == sum and (sign == "-" and -sum or sum) or nil
     end
-    return ("%g"):format(tonumber(n) / (unit == "ms" and 1000 or 1))
+    if not n then
+        unsupported("const " .. v)
+    end
+    return ("%g"):format(n)
 end
 
 local function spellKey(c, s)
@@ -153,21 +184,24 @@ local function auraKey(c, id)
     return c.map[id] or c.auraOf[id] or c.keyOf[id] or unsupported("aura " .. tostring(id))
 end
 
+local UNIT = { Self = "buff", CurrentTarget = "debuff", Target = "debuff" }
 local function unit(v)
-    return (v.sourceUnit and v.sourceUnit.type == "CurrentTarget") and "debuff" or "buff"
+    local u = v.sourceUnit and v.sourceUnit.type or "Self"
+    return UNIT[u] or unsupported("unit " .. tostring(u))
 end
 
--- `atom` reads `x`: guarded so an unknown `x` cannot block its entry (rule 6); `neg` under an odd number of nots.
-local function guard(c, x, atom, neg)
-    if x == c.self then
-        return atom
-    end
-    local test = c.ability[x] and ("action." .. x .. ".known")
-        or (c.talent[x] and ("talent." .. c.talent[x] .. ".enabled"))
+-- The known test of key `x` (an ability's or a talent's), or nil.
+local function knownTest(c, x)
+    return c.ability[x] and ("action." .. x .. ".known") or (c.talent[x] and ("talent." .. c.talent[x] .. ".enabled"))
+end
+
+-- `atom` reads `x`: guarded so an unknown `x` makes it `drop` (rule 6: true in an `and`, false in an `or`).
+local function guard(c, x, atom, drop)
+    local test = x ~= c.self and knownTest(c, x)
     if not test then
         return atom
     end
-    return neg and ("(" .. test .. "&" .. atom .. ")") or ("(!" .. test .. "|" .. atom .. ")")
+    return drop and ("(!" .. test .. "|" .. atom .. ")") or ("(" .. test .. "&" .. atom .. ")")
 end
 
 local function value(c, n)
@@ -179,6 +213,9 @@ local function value(c, n)
         end
         return s, {}
     elseif M.VALUES[k] then
+        if v.sourceUnit and v.sourceUnit.type ~= "Self" then
+            unsupported(k .. " of " .. tostring(v.sourceUnit.type))
+        end
         return M.VALUES[k], {}
     elseif k == "variableRef" then
         return value(c, c.vars[v.name] or unsupported("variable " .. v.name))
@@ -201,6 +238,9 @@ local function value(c, n)
         local a = auraKey(c, v.spellId.spellId)
         return "debuff." .. a .. ".remains", { a }
     elseif k == "auraRemainingTime" or k == "auraNumStacks" then
+        if v.auraId.tag == -1 then
+            return "0", {} -- rule 4: another player's aura
+        end
         local a = auraKey(c, v.auraId.spellId)
         return unit(v) .. "." .. a .. (k == "auraNumStacks" and ".stack" or ".remains"), { a }
     elseif k == "autoTimeToNext" and v.autoType == "MainHandAuto" then
@@ -230,24 +270,28 @@ local function grouped(s)
 end
 
 local bool
-local function negate(c, n, neg)
-    local s, b = bool(c, n, not neg)
+local function negate(c, n, drop)
+    local s, b = bool(c, n, not drop)
     if b ~= nil then
         return nil, not b
     end
     return (s:match("^[%w_.]+$") or grouped(s)) and ("!" .. s) or ("!(" .. s .. ")")
 end
 
--- A condition: its text, or nil and a constant when it folds.
-function bool(c, n, neg)
+-- A condition: its text, or nil and a constant when it folds. `drop`: what it must come out as when an ability it reads
+-- is unknown (rule 6).
+function bool(c, n, drop)
     local k, v = next(n)
     if k == "and" or k == "or" then
         local absorb, parts = k == "or", {}
         for _, x in ipairs(v.vals or {}) do
-            local s, b = bool(c, x, neg)
+            local s, b
+            if next(x) ~= nil then -- an empty value is dropped (rule 6)
+                s, b = bool(c, x, k == "and")
+            end
             if b == absorb then
                 return nil, absorb
-            elseif b == nil then
+            elseif s then
                 parts[#parts + 1] = s
             end
         end
@@ -258,7 +302,7 @@ function bool(c, n, neg)
         end
         return "(" .. table.concat(parts, k == "and" and "&" or "|") .. ")"
     elseif k == "not" then
-        return negate(c, v.val, neg)
+        return negate(c, v.val, drop)
     elseif k == "const" then
         local _, b = const(v.val)
         if b == nil then
@@ -274,27 +318,43 @@ function bool(c, n, neg)
             for _, x in ipairs(list) do
                 if not done[x] then
                     done[x] = true
-                    s = guard(c, x, s, neg)
+                    s = guard(c, x, s, drop)
                 end
             end
         end
         return s
     elseif k == "auraIsActive" then
+        if v.auraId.tag == -1 then
+            return nil, false -- rule 4: another player's aura
+        end
         local a = auraKey(c, v.auraId.spellId)
-        return guard(c, a, unit(v) .. "." .. a .. ".up", neg)
+        return guard(c, a, unit(v) .. "." .. a .. ".up", drop)
     elseif k == "auraIsInactive" then
-        return negate(c, { auraIsActive = v }, neg)
-    elseif k == "auraIsKnown" then
-        return nil, false -- rule 4: solo exports
+        return negate(c, { auraIsActive = v }, drop)
+    elseif k == "auraIsKnown" then -- rule 4
+        local id = v.auraId and v.auraId.spellId
+        if (v.sourceUnit and v.sourceUnit.type or "Self") ~= "Self" or not id or v.auraId.tag == -1 then
+            return nil, false
+        end
+        local x = c.map[id] or c.talentOf[id] or c.auraOf[id] or c.keyOf[id]
+        if not x then
+            return nil, false
+        end
+        local tk = c.talentOf[id] or (c.talentKey[x] and x) -- a talent's spell, or a recipe `map` to a talent's key
+        local test = tk and ("talent." .. tk .. ".enabled") or knownTest(c, x)
+        if not test then
+            return nil, true
+        end
+        return test
     elseif k == "dotIsActive" then
         local a = auraKey(c, v.spellId.spellId)
-        return guard(c, a, "debuff." .. a .. ".up", neg)
+        return guard(c, a, "debuff." .. a .. ".up", drop)
     elseif k == "spellIsReady" then
         local x = spellKey(c, v.spellId)
-        return guard(c, x, "cooldown." .. x .. ".ready", neg)
+        return guard(c, x, "cooldown." .. x .. ".ready", drop)
     elseif k == "spellCanCast" then
         local x = spellKey(c, v.spellId)
-        return guard(c, x, "action." .. x .. ".ready", neg)
+        return guard(c, x, "action." .. x .. ".ready", drop)
     elseif k == "spellIsKnown" then
         return "action." .. spellKey(c, v.spellId) .. ".known"
     elseif k == "isExecutePhase" then
@@ -305,7 +365,7 @@ function bool(c, n, neg)
     elseif k == "actionGroupUsed" then
         return "settings." .. (c.toggles[v.name] or unsupported("actionGroupUsed " .. tostring(v.name)))
     elseif k == "variableRef" then
-        return bool(c, c.vars[v.name] or unsupported("variable " .. v.name), neg)
+        return bool(c, c.vars[v.name] or unsupported("variable " .. v.name), drop)
     end
     unsupported(tostring(k))
 end
@@ -343,7 +403,7 @@ local function entry(c, e)
         unsupported(kind)
     end
     if a.condition then
-        local s, b = bool(c, a.condition, false)
+        local s, b = bool(c, a.condition, true)
         if b == false then
             return nil, "never"
         elseif s then
@@ -439,8 +499,8 @@ function M.write(spec, ex)
     local f = assert(io.open(ex.OUT .. spec .. ".json", "rb"))
     local req = json.decode(f:read("*a"))
     f:close()
-    local kit = require("Forever.helpers.engine").load(r.class).class.kit
-    local text, omitted, toggles = M.translate(req.raid.parties[1].players[1].rotation, M.context(kit, r))
+    local set = require("Forever.helpers.engine").abilitySet(r.class)
+    local text, omitted, toggles = M.translate(req.raid.parties[1].players[1].rotation, M.context(set, r))
     local Class = r.class:sub(1, 1) .. r.class:sub(2):lower()
     local out = {
         ("# %s: the wowsims/forever default APL for %s (%s), translated to this addon's keys."):format(

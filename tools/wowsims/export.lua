@@ -5,7 +5,7 @@
 --       tests/Forever/wowsims/<spec>.log: the debug log (noise lines dropped) under a header (the pin, the spec, the
 --       seed, the duration, the target level, the build's talents). Needs the checkout at M.PIN and its CLI.
 --   .lua/bin/lua tools/wowsims/export.lua learn <CLASS>  tests/Forever/wowsims/learn_<class>.lua: the DB2 learn level
---       of every rank of every ability the class kit registers (wowdb)
+--       of every rank of every ability in the class's ability set: kit, shared content, racials (wowdb)
 --   .lua/bin/lua tools/wowsims/export.lua pack <spec>    the spec's pack .simc from its checked-in request (Task 4;
 --       CI-safe: no checkout needed)
 -- Loaded with loadfile(...)() it returns M. Env: WOWSIMS (the checkout [~/src/wowsims-forever]), WOWSIMS_CLI
@@ -200,12 +200,13 @@ function M.ids(a)
     return out
 end
 
---- Writes learn_<class>.lua: the DB2 learn level (SpellLevels.BaseLevel) of every positive spell ID of every ability
---- class `token`'s kit registers. IDs the DB2 lacks are left out (the replay content treats them as level 1).
+--- Writes learn_<class>.lua: the DB2 learn level (SpellLevels.BaseLevel) of every positive spell ID of every ability in
+--- class `token`'s ability set (tests/Forever/helpers/engine.lua abilitySet: the kit's, the shared content's, every
+--- race's racials). IDs the DB2 lacks, or learns at 0, are left out (the replay content treats them as level 1).
 function M.learn(token)
-    local kit = assert(require("Forever.helpers.engine").load(token).class.kit, "no kit for " .. token)
+    local set = require("Forever.helpers.engine").abilitySet(token)
     local ids, seen = {}, {}
-    for key, a in pairs(kit.abilities) do
+    for key, a in pairs(set.abilities) do
         if type(key) == "string" and type(a) == "table" and a.key == key then
             for _, id in ipairs(M.ids(a)) do
                 if type(id) == "number" and id > 0 and not seen[id] then

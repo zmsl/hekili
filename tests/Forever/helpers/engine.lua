@@ -188,6 +188,32 @@ function M.load(classToken, race)
         fn(true)
     end
     env.Hekili = hekili
+    -- The race registry: every race file's token and the keys it registers (`races`, `raceKeys[token]` = { abilities,
+    -- auras }), recorded whether or not the race is live (Engine/Schema/Races.lua drops another race's registrations).
+    env.races, env.raceKeys = {}, {}
+    setmetatable(hekili, {
+        __newindex = function(t, k, v)
+            if k == "NewRace" then
+                local newRace = v
+                v = function(self, token)
+                    local keys = { abilities = {}, auras = {} }
+                    env.races[#env.races + 1], env.raceKeys[token] = token, keys
+                    local race = newRace(self, token)
+                    return setmetatable({
+                        RegisterAbility = function(_, key, def)
+                            table.insert(keys.abilities, key)
+                            return race:RegisterAbility(key, def)
+                        end,
+                        RegisterAura = function(_, key, def)
+                            table.insert(keys.auras, key)
+                            return race:RegisterAura(key, def)
+                        end,
+                    }, { __index = race })
+                end
+            end
+            rawset(t, k, v)
+        end,
+    })
 
     local ns = vload.module() -- the real VirtualState (KnownRank, I.GCD_SPELL); Facade replaced below
     env.ns = ns
@@ -358,6 +384,54 @@ function M.load(classToken, race)
         _G[k] = v or nil
     end
     return env
+end
+
+-- Hekili.Class's abilities and auras after Engine/Schema/Spec.lua's SpecializationChanged merge of loaded `env`: the
+-- kit's, then the shared `all` spec's for the keys the kit lacks, then the live race pack's over both (ns.applyRace).
+local function merged(env)
+    local class = env.class
+    local t = { abilities = {}, auras = {} }
+    for _, spec in ipairs({ assert(class.kit, "no class pack loaded"), class.specs[0] }) do
+        for kind, out in pairs(t) do
+            for k, v in pairs(spec[kind]) do
+                if out[k] == nil then
+                    out[k] = v
+                end
+            end
+        end
+    end
+    env.ns.applyRace(t)
+    return t
+end
+
+--- The character's ability set for class token `classToken`: the abilities and auras the engine itself holds for it
+--- (Hekili.Class after SpecializationChanged: the class kit's, the shared content's (Hekili_Shared: consumables,
+--- items, auras) and the engine's own, a race pack's over both), each its registered object (gcd, cooldown, cast,
+--- known and the rest as registered). `race`: one race token (UnitRace's second return), that race's racials; nil:
+--- every race the registry holds (a pack's priority serves every race). Returns { abilities, auras (keyed like
+--- Hekili.Class's: keys, names, IDs), talents (the kit's), racial = { [key] = race token } }.
+function M.abilitySet(classToken, race)
+    local base = M.load(classToken, race or "")
+    local set = merged(base)
+    set.talents, set.racial = base.class.kit.talents, {}
+    for _, r in ipairs(race and { race } or base.races) do
+        local env = race and base or M.load(classToken, r)
+        local t = merged(env)
+        for kind, keys in pairs(env.raceKeys[r] or {}) do
+            for _, key in ipairs(keys) do
+                local v = t[kind][key]
+                for k, w in pairs(t[kind]) do -- the key and its aliases (Races.lua's own())
+                    if w == v then
+                        set[kind][k] = w
+                    end
+                end
+                if kind == "abilities" then
+                    set.racial[key] = r
+                end
+            end
+        end
+    end
+    return set
 end
 
 return M

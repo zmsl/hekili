@@ -42,6 +42,30 @@ describe("tools/check_pack_levels.lua", function()
         )
     end)
 
+    it("wants the guard that drops the term: the & form in an or, the | form in an and, flipped by a not", function()
+        assert.are.same(
+            {},
+            levels.unguarded("((action.big_hit.known&cooldown.big_hit.ready)|rage.current>10)", "strike", isAbility)
+        )
+        assert.are.same(
+            { "cooldown.big_hit.ready" },
+            levels.unguarded("((!action.big_hit.known|cooldown.big_hit.ready)|rage.current>10)", "strike", isAbility)
+        )
+        assert.are.same(
+            { "cooldown.big_hit.ready" },
+            levels.unguarded("((action.big_hit.known&cooldown.big_hit.ready)&rage.current>10)", "strike", isAbility)
+        )
+        assert.are.same(
+            {},
+            levels.unguarded("(!(!action.big_hit.known|cooldown.big_hit.ready)|rage.current>10)", "strike", isAbility)
+        )
+        assert.are.same(
+            {},
+            levels.unguarded("!((action.big_hit.known&buff.big_hit.up)|rage.current>10)", "strike", isAbility)
+        )
+        assert.are.same({}, levels.unguarded("(action.big_hit.known&cooldown.big_hit.ready)|x>1", "strike", isAbility))
+    end)
+
     it("checks a dot read of another ability", function()
         assert.are.same({ "dot.big_hit.remains" }, levels.unguarded("dot.big_hit.remains<2", "strike", isAbility))
         assert.are.same({}, levels.unguarded("(!action.big_hit.known|dot.big_hit.remains<2)", "strike", isAbility))
@@ -53,7 +77,7 @@ describe("tools/check_pack_levels.lua", function()
             local root = "src/" .. addon .. "/APLs/"
             local ok, def = pcall(dofile, root .. "packs.lua")
             if ok and def.class then
-                local abilities = engine.load(def.class).class.kit.abilities
+                local abilities = engine.abilitySet(def.class).abilities
                 local function isAb(k)
                     local a = abilities[k]
                     return type(a) == "table" and a.key == k
