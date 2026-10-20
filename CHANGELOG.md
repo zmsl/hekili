@@ -68,6 +68,8 @@
   says it does.
 - Hunter: at range, Multi-Shot is no longer expected to fit before a melee swing that never comes; the weave line
   waits for the walk in, as wowsims's does.
+- Druid: Primal Bite is ready again during Berserk; Lacerate's cost with Shredding Attacks and the Balance spells' mana
+  costs with Moonglow and Improved Wrath now match the game's numbers as wowsims.com models them.
 - Rogue, Paladin and Shaman: the default priorities now load. They were registered under the wrong specialization ids
   for the WoW Forever client, so the addon showed nothing for these classes.
 - Developer: unreadable (secret) answers to "does this unit exist / is it dead" for target, party, boss and focus units

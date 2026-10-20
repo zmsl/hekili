@@ -152,6 +152,13 @@ local function byRank(values, ids)
     return values[knownRank(ids)] or values[1]
 end
 
+-- Moonglow (16845) on its class mask's spells (Wrath, Moonfire, Starfire, Insect Swarm, Hurricane, Entangling Roots,
+-- Thorns) and Improved Wrath (16814 effect 1) on Wrath: the DB2's -25% and -50% are the full ranks' (wowsims/forever's
+-- ladders and log: Wrath 45, Moonfire 281.25 at 3/3 and 5/5), pro rata below them.
+local function moonglow(rank)
+    return 1 - 0.25 * rank / 3
+end
+
 -- shortcut: after a /reload in combat energy's regen rate stays 0 for the rest of the fight (the belief's calibrate
 -- returns early at ref == 0); upgrade with a `regen` meta field forwarded by the adapter after checkpoint Q3.
 spec:RegisterResource(Enum.PowerType.Energy)
@@ -740,6 +747,7 @@ spec:RegisterAbilities({
 
         handler = function()
             applyBuff("berserk")
+            setCooldown("primal_bite", 0) -- Berserk removes Primal Bite's cooldown (DB2 text)
         end,
     },
 
@@ -902,7 +910,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return byRank(ROOTS_COST, ROOTS)
+            return byRank(ROOTS_COST, ROOTS) * moonglow(talent.moonglow.rank)
         end,
         spendType = "mana",
 
@@ -1095,7 +1103,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return byRank(HURRICANE_COST, HURRICANE)
+            return byRank(HURRICANE_COST, HURRICANE) * moonglow(talent.moonglow.rank)
         end,
         spendType = "mana",
 
@@ -1153,7 +1161,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return byRank(INSECT_SWARM_COST, INSECT_SWARM)
+            return byRank(INSECT_SWARM_COST, INSECT_SWARM) * moonglow(talent.moonglow.rank)
         end,
         spendType = "mana",
 
@@ -1177,9 +1185,10 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        -- Shredding Attacks: -6 rage a rank by its DB2 text (m2 = -60; checkpoint Q12)
+        -- Shredding Attacks: -1 rage a rank, wowsims's (its log: Cost = 13 at 2/3); the DB2 text's ${$m2/-10} reads 6
+        -- (m2 = -60; checkpoint Q12)
         spend = function()
-            return max(0, 15 - 6 * talent.improved_shred.rank)
+            return max(0, 15 - talent.improved_shred.rank)
         end,
         spendType = "rage",
 
@@ -1257,7 +1266,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return byRank(MOONFIRE_COST, MOONFIRE)
+            return byRank(MOONFIRE_COST, MOONFIRE) * moonglow(talent.moonglow.rank)
         end,
         spendType = "mana",
 
@@ -1361,7 +1370,10 @@ spec:RegisterAbilities({
         id = 407995,
         copy = rest(PRIMAL_BITE),
         cast = 0,
-        cooldown = 6, -- Berserk's no-cooldown rule unmodelled
+        -- Berserk (417141, DB2 text): "removes its cooldown" while it lasts (DB2 category cooldown 6 s otherwise)
+        cooldown = function()
+            return buff.berserk.up and 0 or 6
+        end,
         gcd = "spell",
 
         spend = function()
@@ -1570,7 +1582,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return byRank(STARFIRE_COST, STARFIRE)
+            return byRank(STARFIRE_COST, STARFIRE) * moonglow(talent.moonglow.rank)
         end,
         spendType = "mana",
 
@@ -1611,7 +1623,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return byRank(THORNS_COST, THORNS)
+            return byRank(THORNS_COST, THORNS) * moonglow(talent.moonglow.rank)
         end,
         spendType = "mana",
 
@@ -1667,6 +1679,8 @@ spec:RegisterAbilities({
 
         spend = function()
             return byRank(WRATH_COST, WRATH)
+                * moonglow(talent.moonglow.rank)
+                * (1 - 0.5 * talent.improved_wrath.rank / 5)
         end,
         spendType = "mana",
 
@@ -1918,16 +1932,16 @@ spec:RegisterSetting("balance_innervate_mana", 10, {
 -- Restoration is deferred.
 spec:RegisterPack(
     "Feral",
-    20261019313,
-    [[Hekili:fFvBVTTnq4Fl5lEnygQ25LU1I6cS2GILHTIIOTVkjAQt2eMMuGKkEgyq)23DKYksYwPEbByFjHH85EUx4ZDIjzEYVNeNZCqYxUA2vVz(S5V965xNe72xcjXLm(g2kCHITf)5Nbdts7UxQz5KLlRes39QKLNKeBjWtIV7H)4(7ExrW21I8CiGhS4HFwBGhbtDMN76S7mvI86SxXzUlNwNXKIvka3yNWTg)PENvS1(6IGvFNTo730kncUo7N(6VI2za0rGId1zALC)LVRolETHyqRQZ(KeygoZ6eQvi4pjz7WdQqR1f1zLARWj0kYXyGweq9v9ok(wcsnc(Mz1zGcmR2xNvPYPt6tktH(62zHigPg56JGXcMn4zRbwEWxS6S8kmiFGTbqipikX9W4WTg30c4kUE7snfucLZ2WlHgxA94WiOGjLeFfifQqDKlfLLyKmTHldyrYqo0TvIM8E3Aq1aYXmRiFwW4as(EDfvdwRL5(CYJ5qw3WAbs8AcSc8Cc)jAQnf83AuSEVcn4ruuqEhRsu2fC5wMctFtLcT2UwBCrOMYOlesuJX40vGnQ0aufG5wSLz2KQlsrhNUtiZNkkwGviQCBJwwvuyNCb9ROHaJQkBozfEzo4K6F5ip99lEnELzu2r9q44rTg1HPO0ClzFWGd701KfNhmKpBJimTK0Ge8WLqeVYGIC37Vz2F1qqhniL2dWH6Xo0wzHuHd2A7U5YGiDkDikOsxXZxm3hH5G3fgu75ROVYRmtdcZdU4dpvWmIYuoI7GDIs0Sl7NxOoCAHMxzd(4K5GhvQEtxl5OY9BA4fNYsmm6A4ljh6rh13g47QtuL6cfhiP5cDLnDjw17RTWnslekb2kzMC6y62j9cIjhA0(WaXWXfyYtnvIowfqf5pjIRTUJQVu6mUHeKJStCOzVBnPnnBpDYq1(eAwquj39(wW(puK2AskHyOEEX1ZMCAHFy3gXS)IijgNlAX4CWhNKcRZ6)6huWQKoC5x8FneuSLsip5JhggLeFiIXvg8kZiyjXh15M4qpmcb97K7sZXD0NBln5VRhXFTT4eOBgaQtloLYTg1u16LK)708trXTdIINCYZ293TgI7Ke7fyuCJC(M)zCEXXKsQ5(C(dJY5lj1FYt4F33r)4OoAqvVdh4gTKCfrYBhra0FOtxY)pz4dfkZNnQ43FX1jeoJPsEghTF0FR1PGDgJR8eoS)8eLL)hhw9uc2YyVBBh9oPMNB8CJRg(qOtF9)sF50ZnNl8aPVP)AFh1Znd7Ch66RlSkIZK4Fg2iKc89On)Jfx6po5V)d]]
+    20261020313,
+    [[Hekili:fF17VTTnq0)wYx8AWmuTDs62kQlWsdkwgwlkI6(QKOLozryAsbsQ4zGb93EVJuwrs2k1lyd7ljmKV7D)GV7et08OVgfMXSq0NxmBXBMpBXSRMFvuODFjefwYs3WwJlKST4p)iOzcA39cflJSCvfxyVxgT6KKykH0OW7E4pV)U3M7TTGNLbE8Gbp8Jkn8iORtCCxNCNUINvN8QuM9YP1jmbFTeWn2XTf4pv7m8TMxN7T6hm1jFsjvi46KF9l)bANgqhbYuOorjf7V8T1jHfAIbLSo5dcGPtzglxUgb)bbBhEqfATkVoPuz4wUssogd0CpQVO2rX3kqOqWxpRobKGE9(6KkzgDsFszs0x3mZhXi1ix3cAdO3GNvaSmVVy1jzvyq(aBdGqEGxI7HXHTa30a4Qu12vkkO4sRPHxcnU04WHrqotii(YrkK(6yQGxwIrY0gU0Gbjd5q1wjAY7DfGSbKLPxt(mNLci57vvunOqjYC5KdZHSUH1CK4ccSeCCc)fAQjgC3AuSEVen4ruuqEhRsu25D5wMetFDLeT2uO02autPv5CbQXyP0vGjOudufGzxULP3eRYJrhhVJlYMYZxIviQCBcwvLNBMCb9RGHadQkBoznEzo4K6F)ip9JlFnELPLMr9G)4rTg1HXO0ClzV3Gd701KLNhmKptJimUK0GeC)LqqALgf523D9S)UHGoAqkThGd1JDOTYaXClS10DZvEr6u6quqfVonB5CxeMboxOrTNRI(kNYm2lmp4I3)ubtZlJtrChSJxIMDz)8c1HtZvPvgVpozo4qfR201Yuu5(Dn8ItzjggDn8LKd9OJ6B98T4evPUqXbsQuUQYeVcR691w4gX5CjhBL0toDmDZKEbXKdnAVFGy44cm5PMkrhR8OcCNeKQm2JQVu6mUHeKJSJFOzVBnPnnBpDYq1(eAwqqzQ9DTGDFOiU1KycXq98YRMn50cF)UnIz3fruiox0GX5Gpoj4gRX91piNvjS4Yp7(AiizReqw0ThggffEiIXvA8ktZzrHh15gzrpmcb97K7sZXD0NBln5VRgXFTT4eORhaQtloLYTg1u16LK)708trXndIINCYZ293TgI7ef6eyuCJC(M)zCEXXKsQ5(C(tJY5lj1FYt4F33r)8OoAqvVdh4gTKSGi5xgra0FOtxY)pz4dfkZNnQ43DX1jeoJPsoghTF0DR1PGDgJRCeoS)8eLL)hhw9uc2YyVBBl9oPMNB8CJRg(qOtF9)sF50ZnNZ)aPVR)AFh1Znd7Ch66QlSkIZOWFd2WfC89On)Jfx6oo6B]]
 )
 spec:RegisterPack(
     "Guardian",
-    20261019907,
-    [[Hekili:TE1wVTjsu4Fl9LSBuSOXUnTnrHi1QOEtPrrLDFfyaoypkWmOzgsKRwXV99CamEmySCC8lXoNlFNBFNzg7p1)F89sygW)(zNp7dtpF6LxE(h99mllaFVcw8JS54xeSC8VFRKPs4mbPyzMKLqohvYZm)q4hTvC0fqSV3T)(F)XTxnVZ9f8KeOXfqJ6)QubpbQQWvrOk8wvjpPk8VJaMAsvyHs(exZLcw2vvHKWQqfMAvHCrSmh)KjqZtGy2s87kuqPihy6sfKCkcal1qb4z5ZAEU(TPnr8V0Ra7ZpChgnfKckqeJUlfzlpfJ1xaLgup2HWdkEoldLZnaI7TqUuXY4)HlMxf(BzD2EhlguyZOk0iRcVOn5qWvGEbKqjnQAbQxdgmP4Ie5Zt2eBkdQcJLYmuNav(lwzwlsEpZlaYpZceII6YL6go4Krjt5z4WIfBW2L2PqbydkIzCPcnal88j8u33evMM60jYPSO6NTUS3gEM7BvLIGM)liJRntiIIltcKNK8NGaqa5CqFJ7mBhJAARtk1qGmnnyECI7uYReOoGjw91af2wXaFYQUbwuuJkic7tokiNXfi(V3gFcxuBU2w4aqRlWDerBNZAhQtsLXLA3zwj7kvoAdUXCJ7fN0xrBsETloWnya0DQcAPf2HYQ8SfNYafhcs5kWoXTepwkJwhj16bPvD(E9f2(KJ0SHtLA2vCPcxom342yTdzQtSuBoRvG9yHK)FVzlkEuGtq7iQj2Cq9I(Gi11UskZlcQ34T8eeKKHzBNxKMgJoXg3RhjF3OzJg(hoKGZN5ifgBxOIodCqoU7HtNi331sq)vN313ZH07wfBJ60QADFUVMxZmFnQhiv4Kdko9lH9C3W3dp1NUhP39u0HxA66men8J7RVxeeSOmiX)lRonLUVQ3u13lwHLIIZ8921O33GrShOwDCkIDbPLwyd9acbH37gjj7ihKrVFeJSMdKzxmIzRB7KvFypRaA6zN(h0iEuQ0XMlrv2hhP(TiqBBuVj)YNGc5iPyan7Ig1DD6gyo4M2TrAgNtmBn(9UwUHFh08koIHVfYZlGm(kUIExmYnOTJXhFvlG9PVdkPJXf5RZ1vAqwe9KbAwUdMwVfYpDKiK3F5iaTo7wJYUEKaH10Z3twZHDaWlytVoBgB9Y6qRrZHHVSOgY99m6Mxvyd)H(OJ6Wo2r5B9vinhZ09W(JZbn1yYknlKyt77WJ8mo(dIA)LzNwR2))p]]
+    20261020907,
+    [[Hekili:TEvBpTnsq4Fl8fAre5gslqPcJ0vHUwoXHQW39vBV2ECYkS31A31ervL)T3zSDC2yhhLg4lKW8YZ82ZS7g)Z8)pFVeMb8Fy20zxC20ztVA6L(EMxkaFVcw8tS54xeSC8VFRKPs4mbP4LmjlHCoQKNzUt4hTvC0fqSV3Tp()3D7xM35(cEsc04cOr9)TubpdQQWvrOk8wvjpPk89ratnPkSqjFMR5sbl7lvHKWQqfMAvHCrSmh)KjqZtGy2l43vOGsroW0Lki5eeawQHcWs5snpx)H0Mi(o9kW(RFCpgnfKckqeJUlfzVCcgRVcknOEQdHFO45Smuo3aiU3c5sflJ)tUyEv4JY6S9EwmOWMrvOrwfEEBYHGRa9ciHsAu1cuVgmysXfjYLt2eBkdQcJLYmuNav(VSYSwK8wYlaYpZceII6YL6go4Krjt5z4WIfBW2L2PqbydkIzCPcnal88j8u3JIkttD6e5uwu9pTUS3gEQ7huLIGM)liJRntiIIltcKNK8NHaqa5CqFJ7mBhJAARtk1qGmnnyECI7zKxjqDatS6RbkSTIb(4vDdSOOgvqe2NCuqoJlq8)Kn(eUO2CTTWbGwxG7iI2oN1ouNKkJl1UZSs2vQC0gCJ5g3ZpUVI2K8AxCGBWaO7uf0slSdLv5zloLbkoeKYvGDIBjESugTosQ1dsR6896ZT9jhPzdNk1SR4sfUCyUXTXAhYuNyP2CARa7Xcj)xhTffpjWjODe1eBoOErFqK6AxjL5fb1B8wEccsYWSTZlstJrhBJ71JKVB0Srd)jhsW5ZCKcJTlurNboih39WPtK77AjO)QZh775q6DRITrDAvTUp3xZRzMVg1dKkC8bfN(LWEUB47HN6t3J07Ek6WlnDDgIg(Xd13lccwugK4)1vNMs3x1BQ67fRWsrXz(E7A07BWi2duRoofXUG0slSHEaHGW7JJKKDKdYOpnIrwZbYSZhXS1TDYQl2ZkGME2P)bnIhLk9wZLOk7YrQFlc02g1BYV8jOqoskgqZUOrDxNUbMdUPDBKMX5eZwJFVRLB43bnVIJy4BH88hqgFfxrVlg5g02X4JVQfW(03bL0BXf5RZ1vAqwe9KbAwUdMwVfYp)griF4QraAD2TgLD9ibcRZMUNSMd7aG)Gn96SzS1lRdTgnhg(YIAi33ZOBEvHn8h6JoQd7yhLV1xH0Cmt3d7FBoOPgtwPzHeBAFhEINXXFqu7Vm7KA1()o]]
 )
 spec:RegisterPack(
     "Balance",
-    20261019598,
-    [[Hekili:LA17pTnmq0)w4lDuTQcLnyaAbPHyt0Pn00YM23CIBItRvDSJSDAvLMYF77U8d3KssrA8fO139EVZNVNDjZi)I4htTmYtxC(fxn78z3C5nxt8T7Yye)mA0A6s4dsAk837PcQmQC9DcfngXUiNlSZLKf9sJjJfr8F4N)E(d3UOb9kECmRcbZaH)IsZ2W0fH18xe(GoNhxeEAMwTHB4kjvCBrykvslc5MIqzv(AgnMUqaaOsi9phj4zg2BGeIwr1lH115yuesUmsjt46uw8yGRVRuY1CzriiE6KQVdrBOAU0WISfH(BP60IW1Sm4l5zqI(wQUkrL0jzJGgiH)OP2vfHwvrycxiGvEmxR5ruzngyBSdIJ5BraZLsMEd07aTbvSRGpyy2M9BIMgz5iWtPjwCBVvT1WtnNLu13W9RRZ9PF8TjyJjHPzLlOKIDJNchzAfuoq3VInZ0mnlsLUGA9sR6fbjyRGN4bIB5YLMP1bgDYI8KKPTtBAEwXxFgtV17SuQEDGkja2fbB5I4o8H0yAy7GebgRJSKNypis)AzxP0sZGkufUnApEtRUdi3QJWo(0Si7h3tyvJnWLtq5PsdJqvKBGOwwQP9IruHiO6RbcUXobnqEuvxHx1myeupnC35JqqBybmjlLZm3DKKBRxA947KevuUX7cuMtIzUZnmg2HpDHYy(RJtRMAwfeRSMXTzJxo9hyWH)(ySDCKvK024n1EKASZkXMcwz5YrLeWQSntHeJwFN3SEb3cKRGBcgGwlWl0c3w031c0(zgOT75Aq93y6KmqMRz3HqIpy3WRJo4wo8e2GxgcGH)9u5LQmjE1um5(glhXVrqIFKggz0CkXVNIHyb(hGcxH1HJQceWzX7utO5c7XQd3WCBsEf2HJvWo7bM07oiPEu)15j2R7HoWQtPGQhYWZjOCE)GLZWENEnp9Dexo7J9fqOlFrH6Zs1(aBF0UmF1WmFmd3EQBCuoANH0(Hbon3N9ZfAitkY31dWxPPDWrz3L9VKPQ5zPENOo6RyhB09WNO6L9)7306Zp0OC1txVOEUx4kBxqdJMJlr8FKTMl4WVyO(NwnUmm5F]]
+    20261020598,
+    [[Hekili:LAv0UTnoqWVL(IVyCgU2PnPPbNcqdspex0gCOQf9nkrlrztyksbskByGc9TF7kkrl7i5a08sIn3DMz5YDinzo5hKWuQLrE6YzxE98zxo7QpEdj0UVGrclOjBORGpiP5WFVNkOYK613lu0ue7YsUWUqsw2lnMcwcj8HV)ZfpC7Yw0R5PPmhcMbc)VknBltxf3WFv8d6sEAv8ffA1wUHRKuXTvX5ujTkMBQILU81mAkDPaaqLq6ForWlmS)csiznvVcwxxIrriLYeLmJRZzPJbU(Msj3WLvXG45tCFhI2s1cPHLyRId3r15vXByfWxklGedTuTlrL0lzRGgiHFPP21vXwvvCgxiGvESuR5juzdgyBShIJ5BralKsMEl07aTbvSRHpyy229BMMMy5iWlOzwCBVtTZWZnVnZ13W9RVZ9P)7RtWgtgtZQxqjf7hpfoY0kOCGUVJnZ0cnlrLVKAdYD9IOmSvWZcaXTC5kZ0MaJEZYYSSPDtBAzr1xEgt)DWBZP6nrQSiyxeTJlspIpKgtlBNKiWytKv8m7jr6xl7ALwAgubx4UOd4TT6Ja5xDe2XNwKy)Nde6ASr(CIQpvAzeQIsde1YYnDxmHkerUVgj4g7e0afqvhl862bJOMPH7MncbTLfXKSCoZC3zsURE5nJVtYujLMGlrzEtkZFUHXWo8flvgZV9CA1uZ6OuL1mUlB86P)ido83hJDJJSIK2fVPXJ0GDEn2CWklxnQMaMZ2mfsmzZDbZ7fChq(cUnyeATaVqhC7qFxhqhMzG2EGVb1FJ5OKbY8n7JiKec2n86OtULdpHn4LHay4FpvFPktIxnLsUV1YrcBfKeMOHrgnNsc7PyiwG)bOWxyhXHRabCw8o1mAPWEU6Wpm3LKxHD4CfS3EGj9UtsQh1FDEId6EQd0Dkf5EidpNGY59dwod7D61803rC9Sp2xaHU6ffQplv3dSdrpM5RhM5Zz4oqDRJYt7CK2pmWP5HSFUqdzsr(Uza(QnTdok7VS)LmvTpl17e1zFf7CJUN(evVS)h)MwF(HwLDpD9I65FHRUDbnmAjUej8r2gUGd)IHMFA146WK)p]]
 )

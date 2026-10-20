@@ -318,9 +318,10 @@ describe("Forever Druid", function()
         local function at(key)
             return ld.run(w.abilities[key].spend, e)
         end
-        -- Ferocity -1 a rank; Shredding Attacks -6 a rank (Shred; Lacerate by its DB2 text, checkpoint Q12)
+        -- Ferocity -1 a rank; Shredding Attacks -6 a rank on Shred, -1 on Lacerate (wowsims's log: Cost = 13 at 2/3;
+        -- the DB2 text reads 6, checkpoint Q12)
         assert.are.same(
-            { 43, 38, 13, 18, 18, 48, 3 },
+            { 43, 38, 13, 18, 18, 48, 13 },
             { at("claw"), at("rake"), at("maul"), at("swipe_bear"), at("primal_bite"), at("shred"), at("lacerate") }
         )
         -- Natural Shapeshifter -10% a rank on the forms and Shifting Power
@@ -339,8 +340,42 @@ describe("Forever Druid", function()
             { ld.run(w.abilities.shifting_power.cooldown, e), ld.run(w.abilities.wrath.cast, e) }
         )
         e.talent = rank(5)
-        assert.are.same({ 40, 0, 30 }, { at("claw"), at("lacerate"), at("shred") })
+        assert.are.same({ 40, 10, 30 }, { at("claw"), at("lacerate"), at("shred") })
     end)
+
+    it(
+        "cuts the Balance spells' mana by Moonglow and Wrath's by Improved Wrath (wowsims's log at 3/3 and 5/5)",
+        function()
+            local e = ld.env(w)
+            e.talent = setmetatable({ moonglow = { rank = 3 }, improved_wrath = { rank = 5 } }, {
+                __index = function()
+                    return { rank = 0, enabled = false }
+                end,
+            })
+            for _, id in ipairs({ 9912, 9835, 25298, 24977 }) do
+                w.game.known[id] = true
+            end
+            -- DB2 16845 -25% and 16814 -50% at the full ranks; wowsims: Wrath 45, Moonfire 281.25, Starfire 255, IS 120
+            assert.are.same({ 45, 281.25, 255, 120 }, {
+                ld.run(w.abilities.wrath.spend, e),
+                ld.run(w.abilities.moonfire.spend, e),
+                ld.run(w.abilities.starfire.spend, e),
+                ld.run(w.abilities.insect_swarm.spend, e),
+            })
+        end
+    )
+
+    it(
+        "drops Primal Bite's cooldown under Berserk, and Berserk resets it (DB2 417141: removes its cooldown)",
+        function()
+            local e = ld.env(w)
+            assert.are.equal(6, ld.run(w.abilities.primal_bite.cooldown, e))
+            e.buff = auras({ berserk = { up = true } })
+            assert.are.equal(0, ld.run(w.abilities.primal_bite.cooldown, e))
+            ld.run(w.abilities.berserk.handler, e)
+            assert.are.same({ { "primal_bite", 0 } }, e.cooldowns)
+        end
+    )
 
     it(
         "gates every ability on the form it needs, Ravage and Pounce on Prowl, Faerie Fire free only in Cat or Bear",

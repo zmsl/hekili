@@ -147,7 +147,7 @@ local function default(value)
 end
 
 --- A stand-in `state` that records applyBuff/applyDebuff (into `applied`, durations and stacks by key), removeBuff,
---- removeDebuff, removeStack, addStack, spend and gain, with every talent at rank 0, every aura down and every cooldown
+--- removeDebuff, removeStack, addStack, setCooldown, spend and gain, with every talent at rank 0, every aura down and every cooldown
 --- ready, the settings at their defaults. The class file's state functions are bound to it.
 function M.env(w)
     local e = { applied = {}, durations = {}, stacks = {}, removed = {}, spent = {}, gained = {}, added = {} }
@@ -183,6 +183,10 @@ function M.env(w)
     end
     function e.addStack(key, _, n)
         table.insert(e.added, { key, n })
+    end
+    e.cooldowns = {}
+    function e.setCooldown(key, t)
+        table.insert(e.cooldowns, { key, t })
     end
     function e.spend(n, resource)
         table.insert(e.spent, { n, resource })
