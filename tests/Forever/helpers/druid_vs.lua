@@ -20,7 +20,7 @@ function M.boot(ns, api, edit)
     local e = ld.env(w)
     local class = { primaryResource = "energy", abilities = {}, auras = {}, talents = w.talents }
     class.resources = {
-        energy = { type = 3, state = {} },
+        energy = { type = 3, state = { meta = w.resources[3].meta } },
         combo_points = { type = 4, state = {} },
         rage = { type = 1, state = { regenModel = w.resources[1].models, meta = w.resources[1].meta } },
         mana = { type = 0, state = {} },
@@ -36,6 +36,7 @@ function M.boot(ns, api, edit)
             gcd = a.gcd,
             onNextSwing = a.onNextSwing,
             startsCombat = ld.run(a.startsCombat, e), -- Rows.lua credits a strike's hit to its cast
+            refundOnAvoid = a.refundOnAvoid, -- an avoid's refund (Families/Now.lua)
             cast = 0,
             charges = 1,
             recharge = 0,

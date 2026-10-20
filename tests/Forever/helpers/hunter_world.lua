@@ -15,6 +15,7 @@
 -- Credit: wowsims/forever (MIT) as the reference for the priorities and the Summon Hawk, Sniper Shot, Raptor Strike,
 -- Mongoose Bite and Quick Shots rules; no code copied.
 local ld = require("Forever.helpers.load_druid")
+local world = require("Game.harness.world")
 
 local M = {}
 
@@ -141,6 +142,18 @@ local function shot(key, extra)
     }
 end
 
+-- The avoids each press rolls when not the special melee tables' (world.OUTCOMES, from wowsims/forever's hunter/*.go):
+-- the shots and Serpent Sting can be missed only (OutcomeRangedHit*), Summon Hawk's hit only crits
+-- (OutcomeRangedCritOnly); Raptor Strike, Mongoose Bite, Wing Clip and Strider Kick are special melee hits.
+M.OUTCOMES = {
+    arcane_shot = "miss",
+    aimed_shot = "miss",
+    multi_shot = "miss",
+    sniper_shot = "miss",
+    serpent_sting = "miss",
+    summon_hawk = "none",
+}
+
 -- Each recommendable ability: `effect(W, e, p, X)`, `requires(W, e, X)`. A key missing here fails the loop.
 M.MAP = {
     aspect_of_the_hawk = {
@@ -167,8 +180,10 @@ M.MAP = {
     },
     serpent_sting = {
         effect = function(W, e, _, X)
-            aura(W, X, e.target, "serpent_sting")
-            W.dot(e, e.target, 3, 5, 60)
+            if W.hit(e, e.target, nil).act == "WOUND" then
+                aura(W, X, e.target, "serpent_sting")
+                W.dot(e, e.target, 3, 5, 60)
+            end
         end,
     },
     arcane_shot = shot("arcane_shot"),
@@ -473,6 +488,8 @@ local function content(name)
             range = RANGE[key] and RANGE[key][2] > 0 and RANGE[key] or nil,
             -- the ranged haste from the oracle's (true) belief, as shaman_world's Maelstrom Weapon
             cast = CAST[key] and CAST[key] / haste(VS, now, X) or 0,
+            refund = world.refundOf(H.Hekili.Class, key), -- an avoid gives back the kit's share (W.hit)
+            outcomes = M.OUTCOMES[key], -- nil: the special melee tables
         }
         if m.bonus then
             local w = P.weapon

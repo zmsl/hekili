@@ -9,6 +9,7 @@
 -- the packs follow; no code copied.
 local ld = require("Forever.helpers.load_druid")
 local dw = require("Forever.helpers.druid_world")
+local world = require("Game.harness.world")
 
 local M = {}
 
@@ -84,11 +85,10 @@ local function selfAura(key)
         aura(W, X, e, key)
     end
 end
-local function debuff(key, alsoHit) -- the debuff, and a hit for `key`'s amount
+local function debuff(key, alsoHit) -- the debuff when its hit (for `key`'s amount, or none) lands
     return function(W, e, _, X)
-        aura(W, X, e.target, key)
-        if alsoHit then
-            W.hit(e, e.target, AMOUNT[key])
+        if W.hit(e, e.target, alsoHit and AMOUNT[key] or nil).act == "WOUND" then
+            aura(W, X, e.target, key)
         end
     end
 end
@@ -101,6 +101,21 @@ local function shift(key, mult)
         end,
     }
 end
+
+-- The avoids each press rolls when not the special melee tables' (world.OUTCOMES, from wowsims/forever's druid/*.go):
+-- Pounce and Ravage can be missed only (OutcomeMeleeSpecialNoBlockDodgeParry*), the spells are magic hits
+-- (OutcomeMagicHit*).
+M.OUTCOMES = {
+    pounce = "miss",
+    ravage = "miss",
+    faerie_fire = "spell",
+    demoralizing_roar = "spell",
+    wrath = "spell",
+    starfire = "spell",
+    moonfire = "spell",
+    insect_swarm = "spell",
+    hurricane = "spell",
+}
 
 -- Each recommendable ability: `effect(W, e, p, X)`, `requires(W, e)` (beyond the form fields), `points` (combo points:
 -- 1 on a landed hit, "all" spent), `drain`, `extra(p, pt, res)` (generic effects; the world's main power and other
@@ -190,16 +205,19 @@ M.MAP = {
     moonfire = {
         effect = function(W, e, _, X)
             local d = X.aura.moonfire.duration
-            aura(W, X, e.target, "moonfire")
-            W.hit(e, e.target, AMOUNT.moonfire)
-            W.dot(e, e.target, 3, math.floor(d / 3), 40)
+            if W.hit(e, e.target, AMOUNT.moonfire).act == "WOUND" then
+                aura(W, X, e.target, "moonfire")
+                W.dot(e, e.target, 3, math.floor(d / 3), 40)
+            end
         end,
     },
     insect_swarm = {
         effect = function(W, e, _, X)
             local d = X.aura.insect_swarm.duration
-            aura(W, X, e.target, "insect_swarm")
-            W.dot(e, e.target, 2, math.floor(d / 2), 30)
+            if W.hit(e, e.target, nil).act == "WOUND" then
+                aura(W, X, e.target, "insect_swarm")
+                W.dot(e, e.target, 2, math.floor(d / 2), 30)
+            end
         end,
     },
     hurricane = { effect = hit("moonfire") }, -- the AoE list only (one mob: never)
@@ -453,6 +471,8 @@ local function content(name)
             onNextSwing = a.onNextSwing,
             amount = m.amount,
             drain = m.drain,
+            refund = world.refundOf(H.Hekili.Class, key), -- an avoid gives back the kit's share (W.hit)
+            outcomes = M.OUTCOMES[key], -- nil: the special melee tables
         }
         if m.points then
             p.points = { POINTS, m.points }

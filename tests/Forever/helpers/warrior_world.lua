@@ -5,6 +5,7 @@
 -- character; the booted instance's Hekili.Class and Hekili.State for the rest), never copied here. Damage amounts are
 -- Classic's rank-60 values: the loop compares two runs of one model (A/B), so they set only what a choice is worth.
 local loadWarrior = require("Forever.helpers.load_warrior")
+local world = require("Game.harness.world")
 
 local M = {}
 
@@ -112,6 +113,16 @@ function M.gain(_, hand, _, flag)
     return 4.5 * 3.6 + (flag == "CRITICAL" and 3.46 * 3.6 or 0)
 end
 
+-- The avoids each press rolls when not the special melee tables' (world.OUTCOMES, from wowsims/forever's warrior/*.go):
+-- Overpower can be missed only (OutcomeMeleeSpecialNoBlockDodgeParry), the shouts and Thunder Clap are magic hits
+-- (OutcomeMagicHit*), Intercept always hits.
+M.OUTCOMES = {
+    overpower = "miss",
+    demoralizing_shout = "spell",
+    thunder_clap = "spell",
+    intercept = "none",
+}
+
 -- A weapon hit's amount: the main hand's roll plus `bonus`.
 local function weapon(W, e, bonus)
     local w = e.weapons[1]
@@ -142,7 +153,7 @@ local function selfAura(key)
         end,
     }
 end
-local function strike(amount, key) -- a hit on the target for `amount`, and debuff `key` on it when it lands
+local function strike(amount, key) -- a hit on the target for `amount` (nil: none), and debuff `key` when it lands
     return {
         effect = function(W, e, _, X)
             if W.hit(e, e.target, amount).act == "WOUND" and key then
@@ -178,26 +189,19 @@ M.MAP = {
             W.gain(e, 15)
         end,
     },
-    -- shortcut: a queued strike always wounds (no avoid, crit or armour), so it never opens Overpower. Upgrade if the
-    -- loop's Overpower windows matter.
+    -- shortcut: a queued strike that lands has no crit or armour. It rolls its avoids (W.hit's sets, the swing's).
     cleave = { amount = 50 },
     heroic_strike = { amount = 157 },
-    demoralizing_shout = {
-        effect = function(W, e, _, X)
-            aura(W, X, e.target, "demoralizing_shout")
-        end,
-    },
-    sunder_armor = {
-        effect = function(W, e, _, X)
-            aura(W, X, e.target, "sunder_armor")
-        end,
-    },
+    demoralizing_shout = strike(nil, "demoralizing_shout"),
+    sunder_armor = strike(nil, "sunder_armor"),
     hamstring = strike(45, "hamstring"),
     rend = { -- rank 7: 147 over the aura's duration, a tick every 3 s
         effect = function(W, e, _, X)
-            local d = X.aura.rend.duration
-            aura(W, X, e.target, "rend")
-            W.dot(e, e.target, 3, math.floor(d / 3), math.floor(147 * 3 / d))
+            if W.hit(e, e.target, nil).act == "WOUND" then
+                local d = X.aura.rend.duration
+                aura(W, X, e.target, "rend")
+                W.dot(e, e.target, 3, math.floor(d / 3), math.floor(147 * 3 / d))
+            end
         end,
     },
     recklessness = selfAura("recklessness"),
@@ -214,11 +218,7 @@ M.MAP = {
     shield_slam = strike(342),
     thunder_clap = strike(103, "thunder_clap"),
     mocking_blow = strike(93, "mocking_blow"),
-    concussion_blow = {
-        effect = function(W, e, _, X)
-            aura(W, X, e.target, "concussion_blow")
-        end,
-    },
+    concussion_blow = strike(nil, "concussion_blow"),
     -- threat and interrupts are not modelled: these only press
     shield_bash = {},
     taunt = {},
@@ -349,8 +349,8 @@ function M.resolve(key, H)
         offGcd = a.gcd == "off",
         cast = tonumber(a.cast) or 0,
         onNextSwing = a.onNextSwing or a.nextSwing,
-        -- an avoid gives back the kit's share of the rage (W.hit), as the belief's rage resource declares it
-        refund = H.Hekili.Class.resources.rage.state.meta.refundOnAvoid,
+        refund = world.refundOf(H.Hekili.Class, key), -- an avoid gives back the kit's share (W.hit)
+        outcomes = M.OUTCOMES[key], -- nil: the special melee tables
     }
     if m.amount then
         local w = M.WORLD.weapons[1]

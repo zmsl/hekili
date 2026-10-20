@@ -12,6 +12,7 @@
 -- Credit: wowsims/forever (MIT) as the reference for the priorities and the totem, Fire Nova, Maelstrom Weapon and
 -- Clearcasting rules; no code copied.
 local ld = require("Forever.helpers.load_druid")
+local world = require("Game.harness.world")
 
 local M = {}
 
@@ -145,6 +146,10 @@ local function totem(key)
     }
 end
 
+-- The avoids each press rolls when not the special melee tables' (world.OUTCOMES, from wowsims/forever's shaman/*.go):
+-- the spells are magic hits (OutcomeMagicHitAndCrit); Stormstrike is a special melee hit.
+M.OUTCOMES = { lightning_bolt = "spell", earth_shock = "spell", flame_shock = "spell", fire_nova = "spell" }
+
 -- Each recommendable ability: `effect(W, e, p, X)`, `requires(W, e, X)`. A key missing here fails the loop.
 M.MAP = {
     lightning_bolt = spell("lightning_bolt", function(W, e, _, X)
@@ -155,8 +160,10 @@ M.MAP = {
     end),
     flame_shock = spell("flame_shock", function(W, e, _, X)
         e.cdUntil.earth_shock = W.t + X.shockCd
-        aura(W, X, e.target, "flame_shock", X.flameShock)
-        W.dot(e, e.target, 3, X.flameShock / 3, 80)
+        if e.lastHit.act == "WOUND" then -- the DoT only when the shock lands
+            aura(W, X, e.target, "flame_shock", X.flameShock)
+            W.dot(e, e.target, 3, X.flameShock / 3, 80)
+        end
     end),
     fire_nova = { -- around the fire totem up
         effect = spell("fire_nova").effect,
@@ -370,6 +377,8 @@ local function content(name)
             offGcd = a.gcd == "off",
             -- every press is instant but Lightning Bolt, 2.5 s less 20% a Maelstrom Weapon stack (DB2 15208)
             cast = key == "lightning_bolt" and LB_CAST[rank] * math.max(0, 1 - 0.2 * (mw or 0)) or 0,
+            refund = world.refundOf(H.Hekili.Class, key), -- an avoid gives back the kit's share (W.hit)
+            outcomes = M.OUTCOMES[key], -- nil: the special melee tables
         }
         p.requires = function(W, e)
             if m.requires then

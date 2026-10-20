@@ -85,14 +85,20 @@ function M.melee(p)
                     end
                     -- our strike frame's order (P log 1's, then the brief's): 1 the success first, 2 the swing first
                     local order = p.land and (W.crng.chance(0.5) and 1 or 2) or nil
+                    -- our strike rolls its press's avoids (W.hit's sets: "melee" by default); a foreign one lands
+                    local act = q.spell and W.rollOutcome(tgt, q.outcomes) or "WOUND"
+                    local hit = W.rng.int((q.amount or p.strike or w)[1], (q.amount or p.strike or w)[2])
+                    if act ~= "WOUND" then
+                        e.avoidAt[act] = W.t
+                    end
                     W.emit({
                         kind = "strike",
                         src = e,
                         dst = tgt,
                         hand = 1,
-                        act = "WOUND",
+                        act = act,
                         flag = "",
-                        amount = W.rng.int((q.amount or p.strike or w)[1], (q.amount or p.strike or w)[2]),
+                        amount = act == "WOUND" and hit or 0,
                         school = 1,
                         spell = q.spell,
                         ids = q.ids,
@@ -101,6 +107,9 @@ function M.melee(p)
                         speed = w[3],
                         order = order,
                     })
+                    if act ~= "WOUND" and (q.refund or 0) > 0 and (q.cost or 0) > 0 then -- its press's refund (W.hit)
+                        W.emit({ kind = "gain", src = e, pt = q.pt, rage = q.refund * q.cost })
+                    end
                 else
                     local act, flag = roll(W.rng, rates)
                     local amt = act == "WOUND" and amount(W.rng, w, e, tgt, flag, p.glance) or 0

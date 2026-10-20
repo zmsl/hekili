@@ -227,6 +227,82 @@ describe("the world's press", function()
         assert.are.equal(3, us.power)
     end)
 
+    it("rolls each press's own avoids (wowsims's tables): melee, a miss only, a spell's miss, none", function()
+        setup()
+        mob.avoid = { miss = 0.2, dodge = 0.2, parry = 0.2, spellMiss = 0.5 }
+        local function tally(set)
+            local n = {}
+            for _ = 1, 600 do
+                local act = W.rollOutcome(mob, set)
+                n[act] = (n[act] or 0) + 1
+            end
+            return n
+        end
+        local melee, miss, spell, none = tally(nil), tally("miss"), tally("spell"), tally("none")
+        assert.is_true(melee.DODGE > 60 and melee.PARRY > 60 and melee.MISS > 60)
+        assert.are.same({ nil, nil }, { miss.DODGE, miss.PARRY })
+        assert.is_true(miss.MISS > 60 and miss.MISS < 180)
+        assert.are.same({ nil, nil }, { spell.DODGE, spell.PARRY })
+        assert.is_true(spell.MISS > 240) -- the victim's spellMiss
+        assert.are.same({ 600 }, { none.WOUND })
+    end)
+
+    it("a hit with no amount shows no outcome when it lands, only its avoid", function()
+        setup()
+        mob.avoid = { miss = 0, dodge = 0, parry = 0 }
+        local n = #W.truth
+        assert.are.equal("WOUND", W.hit(us, mob, nil).act)
+        assert.are.equal(n, #W.truth)
+        mob.avoid = { miss = 1, dodge = 0, parry = 0 }
+        assert.are.equal("MISS", W.hit(us, mob, nil).act)
+        assert.are.equal("MISS", W.truth[#W.truth].act)
+    end)
+
+    it("an avoided finisher keeps its points (spends them all only when it lands)", function()
+        setup()
+        us.res[4] = { cur = 3, max = 5 }
+        mob.avoid = { miss = 1, dodge = 0, parry = 0 }
+        local p = {
+            spell = fs.SPENDER_C,
+            points = { 4, "all" },
+            effect = function(w, e)
+                w.hit(e, e.target, 40)
+            end,
+        }
+        W.t = 3
+        assert.is_true(W.press(us, "spender_c", p))
+        assert.are.equal(3, us.res[4].cur)
+        mob.avoid = { miss = 0, dodge = 0, parry = 0 }
+        W.t = 10
+        assert.is_true(W.press(us, "spender_c", p))
+        assert.are.equal(0, us.res[4].cur)
+    end)
+
+    it("a queued strike rolls its press's avoids at its swing and gives back its refund share", function()
+        setup()
+        mob.avoid = { miss = 0, dodge = 1, parry = 0 }
+        behaviours.melee({ land = observer.lag(), phase = { 2, 9 } })(W, us)
+        W.run(1)
+        local p = {
+            spell = fs.SPENDER_B,
+            cost = 15,
+            offGcd = true,
+            onNextSwing = true,
+            amount = { 70, 70 },
+            outcomes = "melee",
+            refund = 0.8,
+        }
+        assert.is_true(W.press(us, "spender_b", p))
+        W.run(2.5)
+        assert.are.equal(17, us.power) -- 20 - 15 + 12
+        local strike
+        for _, ev in ipairs(W.truth) do
+            strike = ev.kind == "strike" and ev or strike
+        end
+        assert.are.same({ "DODGE", 0 }, { strike.act, strike.amount })
+        assert.is_not_nil(us.avoidAt.DODGE)
+    end)
+
     it("crits an instant hit at world.CRIT, doubled", function()
         setup()
         mob.avoid = { miss = 0, dodge = 0, parry = 0 }

@@ -10,6 +10,7 @@
 -- Credit: wowsims/forever (MIT) as the reference for the priorities and the seal, Echo and Holy Shield rules; no code
 -- copied.
 local ld = require("Forever.helpers.load_druid")
+local world = require("Game.harness.world")
 
 local M = {}
 
@@ -93,6 +94,12 @@ local function selfAura(key)
         end,
     }
 end
+
+-- The avoids each press rolls when not the special melee tables' (world.OUTCOMES, from wowsims/forever's paladin/*.go):
+-- a judgement (the seal's, OutcomeMeleeSpecialNoBlockDodgeParry) and Hammer of Wrath (OutcomeRangedHitAndCrit) can be
+-- missed only, the holy spells are magic hits (OutcomeMagicHit*). Consecration's ground stays (its ticks roll).
+M.OUTCOMES =
+    { judgement = "miss", hammer_of_wrath = "miss", exorcism = "spell", holy_shock = "spell", holy_wrath = "spell" }
 
 -- Each recommendable ability: `effect(W, e, p, X)`, `requires(W, e, X)`. A key missing here fails the loop.
 M.MAP = {
@@ -349,6 +356,8 @@ local function content(name, pack)
             gcd = GCD[a.gcd or "spell"],
             offGcd = a.gcd == "off",
             cast = S.action[key].cast_time or tonumber(a.cast) or 0,
+            refund = world.refundOf(H.Hekili.Class, key), -- an avoid gives back the kit's share (W.hit)
+            outcomes = M.OUTCOMES[key], -- nil: the special melee tables
         }
         p.requires = function(W, e)
             if m.requires then

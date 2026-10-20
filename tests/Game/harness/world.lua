@@ -11,6 +11,30 @@ local M = {}
 M.CRIT = behaviours.RATES.crit
 M.MELEE = 5 -- yards: our white swings' reach (wowsims's MaxMeleeRange)
 
+-- The outcomes an ability of ours can roll on the target (a press's `outcomes`; wowsims/forever core/spell_outcome.go):
+-- "melee" the special melee tables (OutcomeMeleeSpecialHit*, OutcomeMeleeWeaponSpecial*: miss, dodge, parry), "miss"
+-- the ones with a miss roll only (OutcomeMeleeSpecialNoBlockDodgeParry*: from behind, Overpower; OutcomeRangedHit*),
+-- "spell" a magic hit check (OutcomeMagicHit*: a miss, at the victim's `spellMiss`, else its melee miss), "none" no
+-- roll (OutcomeAlwaysHit). The block a wowsims table can roll is a hit here (it lands).
+--- The share of its cost ability `key` of class data `class` (Hekili.Class) gives back when avoided, as the belief reads
+--- it: its `refundOnAvoid` (true: its resource meta's), or nil.
+function M.refundOf(class, key)
+    local a = class.abilities[key]
+    local f = a and rawget(a, "refundOnAvoid")
+    if f == true then
+        local r = class.resources[a.spendType]
+        f = r and r.state and r.state.meta and r.state.meta.refundOnAvoid
+    end
+    return type(f) == "number" and f or nil
+end
+
+M.OUTCOMES = {
+    melee = { "miss", "dodge", "parry" },
+    miss = { "miss" },
+    spell = { "spellMiss" },
+    none = {},
+}
+
 --- A new world. `seed` seeds its generator. Truth events: { t, kind, src, dst, hand, act, flag, amount, school, spell }
 --- with kind "swing" (a white swing, its outcome rolled; ours land later as "land"), "land", "strike" (an
 --- on-next-swing strike frame), "spell" (a spell's outcome), "tick", "proc", "cast", "prepull" (the cache and
@@ -130,9 +154,9 @@ function M.new(seed)
     --- the swing-paid one), cooldown, gcd (seconds; 0 or offGcd: off the GCD), offGcd, onNextSwing, amount ({ lo, hi } of
     --- a queued strike), cast (a cast time in seconds), requires = fn(W, e) -> ok, why, effect = fn(W, e, p), and the
     --- generic effects run after `effect`: gain { pt, amount }, points { pt, 1 | "all" } (1: one more on a landed hit
-    --- of `effect`'s; "all": spend them all), drain (a power type: spend what is left of it), aura { id, duration,
+    --- of `effect`'s; "all": spend them all, unless `effect`'s hit was avoided), drain (a power type: spend what is left of it), aura { id, duration,
     --- tick = { pt, every, amount } } (named fields; on us), shift (W.shift's `sh`) }, refund (W.hit's share of the cost
-    --- an avoid gives back). Checked against the true state in order: a
+    --- an avoid gives back), outcomes (W.hit's avoid set, a M.OUTCOMES key; a queued strike's too). Checked against the true state in order: a
     --- cast in progress, the GCD, the cooldown, the range, the cost, a strike already queued, `requires`; a refusal
     --- returns false and its reason ("casting", "gcd", "cooldown", "range", "cost", "queued", "requires:<why>") and
     --- changes nothing. An accept
@@ -226,7 +250,9 @@ function M.new(seed)
         if p.points then
             local pt, n = p.points[1], p.points[2]
             if n == "all" then
-                W.emit({ kind = "gain", src = e, pt = pt, cost = W.res(e, pt) })
+                if not (e.lastHit and e.lastHit.act ~= "WOUND") then -- an avoided finisher keeps them (wowsims)
+                    W.emit({ kind = "gain", src = e, pt = pt, cost = W.res(e, pt) })
+                end
             elseif e.lastHit and e.lastHit.act == "WOUND" then
                 W.emit({ kind = "gain", src = e, pt = pt, rage = n })
             end
@@ -353,7 +379,17 @@ function M.new(seed)
     --- Queues `p` (ability `key`) as `e`'s next main-hand swing (the melee behaviour turns it into a strike frame, paid
     --- then; its cooldown `p.cooldown` starts then).
     function W.queueStrike(e, p, key)
-        e.queued = { spell = p.spell, ids = p.ids, cost = p.cost, amount = p.amount, key = key, cd = p.cooldown }
+        e.queued = {
+            spell = p.spell,
+            ids = p.ids,
+            cost = p.cost,
+            amount = p.amount,
+            key = key,
+            cd = p.cooldown,
+            outcomes = p.outcomes,
+            refund = p.refund,
+            pt = p.pt,
+        }
         W.emit({ kind = "queue", src = e, spell = p.spell, ids = p.ids })
     end
 
@@ -405,15 +441,34 @@ function M.new(seed)
         end
     end
 
-    --- An instant outcome of `amount` (school [1]) from `e` on `dst`, rolled against the victim's avoid table and our
-    --- crit rate (a crit doubles it; an avoid is recorded in `e.avoidAt[act]`). An avoid of the press in progress gives
-    --- back its `refund` share (0-1; the kit's `refundOnAvoid`) of its cost, a gain after the outcome.
-    function W.hit(e, dst, amount, school)
-        local av = dst.avoid
-        local act, flag = roll(W.rng, { miss = av.miss, dodge = av.dodge, parry = av.parry, crit = M.CRIT })
+    --- The avoid `set` (a M.OUTCOMES key; default "melee") rolls for a hit of ours on `dst`, with our crit rate: the
+    --- act ("WOUND", "MISS", "DODGE", "PARRY") and flag.
+    function W.rollOutcome(dst, set)
+        local av, r = dst.avoid, { crit = M.CRIT }
+        for _, k in ipairs(M.OUTCOMES[set or "melee"]) do
+            if k == "spellMiss" then
+                r.miss = av.spellMiss or av.miss
+            else
+                r[k] = av[k]
+            end
+        end
+        return roll(W.rng, r)
+    end
+
+    --- An instant outcome of `amount` (school [1]) from `e` on `dst`, rolled on `set` or the press in progress's
+    --- `outcomes` (a M.OUTCOMES key; default "melee") against the victim's avoid table and our crit rate (a crit doubles it; an avoid
+    --- is recorded in `e.avoidAt[act]`). A nil `amount`: an ability with no damage, whose landed hit shows no outcome
+    --- (only its avoid does). An avoid of the press in progress gives back its `refund` share (0-1; the kit's
+    --- `refundOnAvoid`) of its cost, a gain after the outcome. Returns the truth event, or { act = "WOUND" } for a
+    --- silent landed hit.
+    function W.hit(e, dst, amount, school, set)
         local p = e.pressing
+        local act, flag = W.rollOutcome(dst, set or p and p.outcomes)
         if act ~= "WOUND" then
             e.avoidAt[act] = W.t
+        elseif amount == nil then
+            e.lastHit = { act = act }
+            return e.lastHit
         end
         local amt = act == "WOUND" and math.floor(amount * (flag == "CRITICAL" and 2 or 1) + 0.5) or 0
         e.lastHit =
@@ -428,7 +483,7 @@ function M.new(seed)
     --- Starts `e`'s ranged hand (`e.ranged`): a shot now plus `o.delay` and then every ranged speed, while
     --- `e.rangedOn` and its target lives: the auto attack's cast success of `spell` (the content's ID; free, off the
     --- GCD), with `o.swing` also a PLAYER_SWING of the ranged hand (swingType 2), and the shot's physical outcome (W.hit,
-    --- the range's middle).
+    --- the range's middle; a miss only, wowsims's ranged table).
     function W.startRanged(e, spell, o)
         o = o or {}
         e.rangedOn = true
@@ -443,7 +498,7 @@ function M.new(seed)
             if o.swing then
                 W.emit({ kind = "swing", src = e, dst = v, hand = 3, speed = w[3], ours = true })
             end
-            W.hit(e, v, (w[1] + w[2]) / 2)
+            W.hit(e, v, (w[1] + w[2]) / 2, 1, "miss") -- wowsims's auto shot: OutcomeRangedHitAndCrit
             W.at(W.t + w[3], shot)
         end
         W.at(W.t + (o.delay or 0), shot)

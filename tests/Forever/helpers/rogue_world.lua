@@ -16,6 +16,7 @@
 -- seeding the sim from the true energy (scratch counterfactual) leaves Subtlety 27 and 0. Credit:
 -- wowsims/forever (MIT) as the reference for the priorities the packs follow; no code copied.
 local ld = require("Forever.helpers.load_druid")
+local world = require("Game.harness.world")
 
 local M = {}
 
@@ -76,7 +77,8 @@ local function finisher(effect)
         effect = function(W, e, _, X)
             local cp = W.res(e, POINTS)
             effect(W, e, cp, X)
-            if X.relentless and cp >= 5 then
+            -- an avoided finisher keeps its points and procs nothing (wowsims ApplyFinisher runs on a landed one only)
+            if X.relentless and cp >= 5 and (not e.lastHit or e.lastHit.act == "WOUND") then
                 W.emit({ kind = "gain", src = e, pt = ENERGY, rage = RELENTLESS })
             end
         end,
@@ -93,6 +95,10 @@ local function selfAura(key)
         end,
     }
 end
+
+-- The avoids each press rolls when not the special melee tables' (world.OUTCOMES, from wowsims/forever's rogue/*.go):
+-- the from-behind strikes can be missed only (OutcomeMeleeSpecialNoBlockDodgeParry*).
+M.OUTCOMES = { backstab = "miss", ambush = "miss", garrote = "miss" }
 
 -- Each recommendable ability: `effect(W, e, p, X)`, `requires(W, e, X)`, `points`, `extra(p)`. A key missing here
 -- fails the loop.
@@ -121,7 +127,7 @@ M.MAP = {
     },
     garrote = {
         effect = function(W, e, _, X)
-            if W.hit(e, e.target, 0).act == "WOUND" then
+            if W.hit(e, e.target, nil).act == "WOUND" then
                 aura(W, X, e.target, "garrote")
                 W.dot(e, e.target, 3, 6, 50)
             end
@@ -142,13 +148,15 @@ M.MAP = {
         aura(W, X, e, "venom", 6 + 3 * cp)
     end),
     rupture = finisher(function(W, e, cp, X)
-        if W.hit(e, e.target, 0).act == "WOUND" then
+        if W.hit(e, e.target, nil).act == "WOUND" then
             aura(W, X, e.target, "rupture", 6 + 2 * cp)
             W.dot(e, e.target, 2, 3 + cp, 60)
         end
     end),
     expose_armor = finisher(function(W, e, _, X)
-        aura(W, X, e.target, "expose_armor")
+        if W.hit(e, e.target, nil).act == "WOUND" then
+            aura(W, X, e.target, "expose_armor")
+        end
     end),
     kick = {},
     adrenaline_rush = { -- +100% energy regen: the world's 10 a second again, while it lasts
@@ -344,6 +352,8 @@ local function content(name)
             gcd = GCD[a.gcd or "spell"],
             offGcd = a.gcd == "off",
             cast = 0,
+            refund = world.refundOf(H.Hekili.Class, key), -- an avoid gives back the kit's share (W.hit)
+            outcomes = M.OUTCOMES[key], -- nil: the special melee tables
         }
         if m.points then
             p.points = { POINTS, m.points }

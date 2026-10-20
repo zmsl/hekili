@@ -109,16 +109,18 @@ local function hit(key)
         W.hit(e, e.target, AMOUNT[key])
     end
 end
-local function debuff(key, alsoHit)
+local function debuff(key, alsoHit) -- the debuff when its hit (for `key`'s amount, or none) lands
     return function(W, e)
         local w = class()
         local a = w.auras[key]
-        W.applyAura(e.target, a.id, a.duration, 1, a.max_stack)
-        if alsoHit then
-            W.hit(e, e.target, AMOUNT[key])
+        if W.hit(e, e.target, alsoHit and AMOUNT[key] or nil).act == "WOUND" then
+            W.applyAura(e.target, a.id, a.duration, 1, a.max_stack)
         end
     end
 end
+-- The avoids each press rolls when not the special melee tables' (world.OUTCOMES; wowsims/forever's faerie_fire.go
+-- and demoralizing_roar.go: OutcomeMagicHit).
+M.OUTCOMES = { faerie_fire = "spell", demoralizing_roar = "spell" }
 local MAP = {
     claw = { effect = hit("claw"), points = 1 },
     shred = { effect = hit("shred"), points = 1 },
@@ -175,10 +177,16 @@ function M.press(key, R, o)
     if pt == M.MANA or cost < 1 then
         cost, pt = 0, nil
     end
+    local share = a.refundOnAvoid -- the belief's: true takes the resource meta's
+    if share == true then
+        share = pt and w.resources[pt] and w.resources[pt].meta and w.resources[pt].meta.refundOnAvoid
+    end
     local p = {
         spell = a.id,
         cost = cost,
         pt = pt,
+        refund = type(share) == "number" and share or nil, -- an avoid gives back the kit's share (W.hit)
+        outcomes = M.OUTCOMES[key], -- nil: the special melee tables
         cooldown = ld.run(a.cooldown, e) or 0,
         gcd = M.GCD[a.gcd or "spell"],
         onNextSwing = a.onNextSwing,
