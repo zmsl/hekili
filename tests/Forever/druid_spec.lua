@@ -699,14 +699,39 @@ describe("Forever Druid", function()
         "declares energy with no regen model, combo points with no maximum, mana's five-second rule, Classic's order",
         function()
             assert.are.same({ 3, 4, 1, 0 }, w.order)
-            for _, pt in ipairs({ 3, 4 }) do
+            for _, pt in ipairs({ 4 }) do
                 assert.are.same({ nil, nil }, { w.resources[pt].models, w.resources[pt].meta }, pt)
             end
+            assert.are.same({ nil, { refundOnAvoid = 0.8 } }, { w.resources[3].models, w.resources[3].meta })
             -- wowsims/forever's logs: 2.2 mana a 0.1 s tick outside the rule, none inside it (Feral, Balance)
             assert.are.same({ spirit = 22, mp5 = 0 }, w.resources[0].meta.fsr)
             assert.is_nil(w.resources[1].meta.max)
         end
     )
+
+    it("refunds 80% of an avoided ability's energy or rage where wowsims does, per ability", function()
+        assert.are.same({ 0.8, 0.8 }, { w.resources[3].meta.refundOnAvoid, w.resources[1].meta.refundOnAvoid })
+        local yes = {}
+        for key, a in pairs(w.abilities) do
+            if a.refundOnAvoid then
+                yes[#yes + 1] = key
+            end
+        end
+        table.sort(yes)
+        assert.are.same({
+            "bash",
+            "claw",
+            "cower",
+            "lacerate",
+            "maul",
+            "pounce",
+            "primal_bite",
+            "rake",
+            "ravage",
+            "rip",
+            "shred",
+        }, yes)
+    end)
 
     it("declares Clearcasting as one cost modifier over the covered rank-1 IDs, and no `spend` reads it", function()
         assert.are.equal(1, #w.costMods)

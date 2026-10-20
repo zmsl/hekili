@@ -58,6 +58,30 @@ describe("Forever Rogue", function()
         e = ld.env(w)
     end)
 
+    it("refunds 80% of an avoided ability's energy where wowsims does, per ability", function()
+        assert.are.equal(0.8, w.resources[3].meta.refundOnAvoid)
+        local yes = {}
+        for key, a in pairs(w.abilities) do
+            if a.refundOnAvoid then
+                yes[#yes + 1] = key
+            end
+        end
+        table.sort(yes)
+        assert.are.same({
+            "ambush",
+            "backstab",
+            "eviscerate",
+            "expose_armor",
+            "garrote",
+            "ghostly_strike",
+            "hemorrhage",
+            "kick",
+            "mutilate",
+            "rupture",
+            "sinister_strike",
+        }, yes)
+    end)
+
     it("registers the kit with the DB2's ranks, costs, cooldowns and GCDs, and the two poison reminders", function()
         local n = 0
         for key, a in pairs(w.abilities) do

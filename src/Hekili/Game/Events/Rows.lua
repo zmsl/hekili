@@ -34,6 +34,12 @@ local CAST_WINDOW, STRIKE_WINDOW = 0.2, 0.2
 -- cast this fresh takes a wound before any pending swing. Also the foreign strike frame: a wound this soon after a
 -- WOUND 0 that no cast of ours claimed is someone else's on-next-swing strike (G 177249/177250).
 local SAME_FRAME = 0.05
+-- Seconds within which our cast's own avoid follows its success (the belief's attribution and the swing rule below).
+-- shortcut: UNMEASURED for an instant ability's avoid: the only measured cast-and-outcome pair is the queued strike's
+-- frame (log 1: success 4330 ms, wound 4331 ms; 6531 / 6532), and swing-outcome-pairing.md measures white swings only.
+-- In-game checkpoint: Sunder Armor or Rend on an open-world mob with /vslog until one is dodged or parried, then read
+-- the ms from UNIT_SPELLCAST_SUCCEEDED to the target's DODGE / PARRY; set this from it.
+L.OWN_FRAME = SAME_FRAME
 
 -- The score (harness design §1.2-§1.4, decision D1; PROTOTYPE values, the harness's gates hold them): THETA the
 -- credit bar; q per amount class (exact, loose, above) and for an avoid; the lag density's tail weight per hand; the
@@ -142,11 +148,11 @@ end
 -- (no Forever ability declares a `velocity`), upgrade with a travel time when a kit declares one.
 local REFUSED = { DODGE = true, PARRY = true, MISS = true }
 local function avoided(p, t, act)
-    if not REFUSED[act] or t - actT[p] > SAME_FRAME then
+    if not REFUSED[act] or t - actT[p] > L.OWN_FRAME then
         return
     end
     for i = 1, N do
-        if i ~= p and actT[i] > 0 and actKind[i] == 2 and t - actT[i] <= SAME_FRAME then
+        if i ~= p and actT[i] > 0 and actKind[i] == 2 and t - actT[i] <= L.OWN_FRAME then
             return -- two casts in the frame: whose outcome is unknown
         end
     end
@@ -417,10 +423,12 @@ end
 -- A WOUND 0 is the white swing an on-next-swing strike replaced and pairs with nothing; a wound right after one that
 -- no cast of ours claimed is another player's strike frame (background). A white outcome (school 1) is then scored
 -- against our pending swings; a wound no swing takes goes to our pending cast, else to the background.
--- A white avoid that one of our pending swings explains (scoring at THETA, or any candidate past the cast's frame) is
--- not the cast's: before, our cast's 0.2 s claimed it as SPELL_MISSED, and an ability's `missable` dropped its debuff.
--- shortcut: a startsCombat cast with no outcome of its own (a DoT, a debuff) takes an avoid inside its 0.2 s as
--- SPELL_MISSED; rare, upgrade to the cast's frame if Phase D's compensating aura removal relies on it.
+-- A white avoid that one of our pending swings explains (any candidate past the cast's frame; inside it, a swing due
+-- in that frame) is not the cast's: before, our cast's 0.2 s claimed it as SPELL_MISSED, and an ability's `missable`
+-- dropped its debuff. An avoid takes the cast in its frame before an older one still in its window.
+-- shortcut: a startsCombat cast with no outcome of its own (a DoT, a debuff) takes an avoid inside its 0.2 s that no
+-- pending swing of ours explains as SPELL_MISSED; rare, upgrade to the cast's frame if Phase D's compensating aura
+-- removal relies on it.
 -- shortcut: in group play another attacker's white wound inside our pending cast's 0.2 s that no swing of ours takes
 -- is credited to that cast as SPELL_DAMAGE; upgrade when a per-attacker attribution exists.
 S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
@@ -438,12 +446,16 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         lastW0 = t
         return
     end
-    local p = cast(t, not avoid and SAME_FRAME or nil)
+    local p = cast(t, SAME_FRAME) -- an avoid's cast: the fresh one in its frame first, else the oldest in its window
+    if avoid and not p then
+        p = cast(t)
+    end
     if p and avoid and white then
-        -- a white avoid a pending swing of ours explains is the swing's: one scoring at THETA, or any candidate once the
-        -- cast's frame has passed (the cast keeps its effects: no SPELL_MISSED row, no Obs.Avoided)
-        local sw, swingLR = score(t, amount, flag, true, false)
-        if swingLR >= L.THETA or (sw and t - actT[p] > SAME_FRAME) then
+        -- a white avoid a pending swing of ours explains is the swing's (the cast keeps its effects: no SPELL_MISSED
+        -- row, no Obs.Avoided): any candidate once the cast's frame has passed; inside it, only a swing due in that frame
+        -- (its landing lag within OWN_FRAME of the learned median)
+        local sw, _, ref, lag = score(t, amount, flag, true, false)
+        if sw and (t - actT[p] > L.OWN_FRAME or math.abs(lag - L.med[ref == 3 and 2 or ref]) <= L.OWN_FRAME) then
             p = nil
         end
     end

@@ -587,9 +587,38 @@ describe("Forever Warrior", function()
         assert.are.equal(1, w.resource[4].decayInterval()) -- stepped: lost at the start of each 1 s window
     end)
 
-    it("gives back 80% of an avoided ability's rage (the belief's refundOnAvoid; wowsims's refund)", function()
-        assert.are.equal(0.8, w.resource[4].refundOnAvoid)
-    end)
+    it(
+        "gives back 80% of an avoided ability's rage where wowsims does, per ability (not Cleave or Whirlwind)",
+        function()
+            assert.are.equal(0.8, w.resource[4].refundOnAvoid)
+            local yes = {}
+            for key, a in pairs(w.abilities) do
+                if a.refundOnAvoid then
+                    yes[#yes + 1] = key
+                end
+            end
+            table.sort(yes)
+            assert.are.same({
+                "bloodthirst",
+                "concussion_blow",
+                "disarm",
+                "execute",
+                "hamstring",
+                "heroic_strike",
+                "mocking_blow",
+                "mortal_strike",
+                "overpower",
+                "pummel",
+                "rend",
+                "revenge",
+                "shield_bash",
+                "shield_slam",
+                "slam",
+                "spearing_strike",
+                "sunder_armor",
+            }, yes)
+        end
+    )
 
     it("declares no rage maximum of its own: a Gnome's 105 is the race pack's Expansive Mind", function()
         assert.is_nil(w.resource[4].max) -- 100 by default; the Gnome's race pack adds Expansive Mind

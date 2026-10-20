@@ -6,7 +6,7 @@
 -- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `summonTotem`, `summonPet`) and reads
 -- (`talent`, `buff`, `debuff`, the resources by key, `knownRank`, `stat`, `swingBase`, `healthMax`, `now`, `combat`)
 -- with belief meanings. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
--- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds its resource's `refundOnAvoid` share.
+-- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
 
 local _, ns = ...
@@ -50,15 +50,16 @@ I.nowErrors, I.nowError, I.nowRuns, I.castsRun = 0, nil, 0, 0
 -- keeps it in `ability.funcs`, where RunStressTest or an APL reading `action.x.now` can call it) writes nothing.
 local T, curA, live = 0, 0, false
 
--- The latest cast's undo (Obs.Avoided): its ability and time, the cost it paid, and the target auras its `now` wrote,
--- each as it was before (expiry 0: down), at most UNDO of them. Preallocated.
+-- The latest cast's undo (Obs.Avoided): its ability, time and target (memory slot), the cost it paid, and the target
+-- auras its `now` wrote, each as it was before (expiry 0: down), at most UNDO of them. Preallocated.
 local UNDO = 4
-local undoA, undoT, paid, undoN = 0, -1, 0, 0
+local undoA, undoT, undoSlot, paid, undoN = 0, -1, 0, 0, 0
 local undoJ, undoE, undoAp, undoSt = {}, {}, {}, {}
 for k = 1, UNDO do
     undoJ[k], undoE[k], undoAp[k], undoSt[k] = 0, 0, 0, 0
 end
-local refund = {} -- by resource slot: the fraction of an avoided cast's cost returned (its `refundOnAvoid`), 0 none
+local refund = {} -- by resource slot: the class's default share (the resource meta's `refundOnAvoid`), 0 none
+A.refund = {} -- by ability index: the share of its cost an avoid gives back (the ability's `refundOnAvoid`), 0 none
 I.avoidsRun = 0
 
 --- The context's reads answer at `t` from now on (a resource's `taken`, run at a hit: Families/Resources.lua); its
@@ -194,6 +195,14 @@ local function aura(u, key, duration, stacks)
     end
     local rec, have, applied = VS.Aura(u == 1 and "player" or "target", auraSpell[j], T)
     local before = rec and rec.est or 0
+    local after = 0
+    if duration ~= 0 then
+        local d = duration or auraDur[j]
+        if type(d) ~= "number" then
+            return -- the aura's registered duration is a function (Hekili's state): the `now` must pass one
+        end
+        after = T + d
+    end
     if u == 2 and undoN < UNDO then
         local first = true
         for k = 1, undoN do
@@ -203,14 +212,6 @@ local function aura(u, key, duration, stacks)
             undoN = undoN + 1
             undoJ[undoN], undoE[undoN], undoAp[undoN], undoSt[undoN] = j, before, applied or 0, have or 0
         end
-    end
-    local after = 0
-    if duration ~= 0 then
-        local d = duration or auraDur[j]
-        if type(d) ~= "number" then
-            return -- the aura's registered duration is a function (Hekili's state): the `now` must pass one
-        end
-        after = T + d
     end
     I.AuraModel(u, j, T, after, stacks or 1, T, CAST, u == 2)
     I.Log.Aura(u, j, auraSpell[j], before, after, T)
@@ -298,6 +299,19 @@ I.OnBuild(function(def)
         end
         A.now[a] = type(f) == "function" and setfenv(f, ctx) or false
     end
+    for r = 1, #def.resources do
+        local f = def.resources[r].refundOnAvoid
+        refund[r] = type(f) == "number" and f > 0 and f <= 1 and f or 0
+    end
+    for a = 1, A.n do -- true: the resource's default share; a number: its own
+        local obj = def.abilities[a]
+        local f = type(obj) == "table" and rawget(obj, "refundOnAvoid")
+        local r = def.abilitySlot[a] or 0
+        if f == true then
+            f = r > 0 and refund[r] or 0
+        end
+        A.refund[a] = type(f) == "number" and f > 0 and f <= 1 and f or 0
+    end
     for j = 1, #def.auras do
         local key = def.auras[j].key
         auraSpell[j] = def.auraIds[j][1]
@@ -313,8 +327,6 @@ I.OnBuild(function(def)
     end
     for r = 1, #def.resources do
         local d = def.resources[r]
-        local f = d.refundOnAvoid
-        refund[r] = type(f) == "number" and f > 0 and f <= 1 and f or 0
         if d.key then
             resByKey[d.key] = r
             rawset(NAMES, d.key, setmetatable({ type = d.type }, resourceMeta))
@@ -374,7 +386,7 @@ local function run(o, t)
     if not A.obj[a] or not A.key[a] or A.extra[a] then
         return
     end
-    undoA, undoT, paid, undoN = a, o.t, 0, 0
+    undoA, undoT, undoSlot, paid, undoN = a, o.t, I.curSlot, 0, 0
     automatic(a, t, o.kind, o)
     A.castStartT[a] = 0 -- consumed: a later instant cast of the same ability starts its own GCD
     I.castsRun = I.castsRun + 1
@@ -396,15 +408,16 @@ end
 I.On(Obs.CastSuccess, run)
 
 -- Our cast's own avoid (Events/Rows.lua): the latest cast, when it is the one avoided, loses the target auras its `now`
--- wrote (each back as it was) and gets back its resource's `refundOnAvoid` share of the cost it paid; both `modelled` at
--- the outcome. Any other cast's avoid changes nothing (its effects are no longer the latest's to undo). The cooldown,
+-- wrote (each back as it was, when the target is still the cast's) and gets back the ability's `refundOnAvoid` share of
+-- the cost it paid; both `modelled` at the outcome. Any other cast's avoid changes nothing (its effects are no longer
+-- the latest's to undo). The cooldown,
 -- the GCD and the player auras stay (an avoided ability still triggers them). Allocates nothing.
 I.On(Obs.Avoided, function(o, t)
     if o.a ~= undoA or o.b ~= undoT then
         return
     end
     undoA = 0
-    for k = 1, undoN do
+    for k = 1, I.curSlot == undoSlot and undoN or 0 do -- another target since the cast: its auras are not these
         local j = undoJ[k]
         local rec = VS.Aura("target", auraSpell[j], t)
         local was, back = rec and rec.est or 0, undoE[k] > t and undoE[k] or 0
@@ -412,8 +425,8 @@ I.On(Obs.Avoided, function(o, t)
         I.Log.Aura(2, j, auraSpell[j], was, back, t)
     end
     local r = A.slot[o.a]
-    if r > 0 and paid > 0 and refund[r] > 0 then
-        I.ResourceShift(r, paid * refund[r], t, Obs.Avoided)
+    if r > 0 and paid > 0 and A.refund[o.a] > 0 then
+        I.ResourceShift(r, paid * A.refund[o.a], t, Obs.Avoided)
     end
     I.avoidsRun = I.avoidsRun + 1
 end)

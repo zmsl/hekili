@@ -3510,7 +3510,7 @@ local mt_resource = {
     __index = function( t, k )
 
         local meta = t.meta[ k ]
-        if meta ~= nil then
+        if type( meta ) == "function" then -- a number (`refundOnAvoid`) is the belief's data, not a state field
             local result = meta( t )
 
             if result ~= nil then

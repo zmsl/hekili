@@ -637,7 +637,8 @@ describe("now handlers", function()
             ctl.Tick(t + 0.03)
         end
         local function begin()
-            h.Class.resources.rage.state.meta = { refundOnAvoid = 0.8 } -- the kit's declared share
+            h.Class.resources.rage.state.meta = { refundOnAvoid = 0.8 } -- the class's default share
+            h.Class.abilities.spender_c.refundOnAvoid = true -- the ability refunds: the default share
             start()
             ctl.Fire("PLAYER_TARGET_CHANGED")
             ctl.usable[fs.SPENDER_C] = { true, false } -- rage >= 10: pinned at 10 before the cast
@@ -714,6 +715,61 @@ describe("now handlers", function()
                 assert.is_false(r[1] == "SPELL_MISSED" and r[3] == fs.SPENDER_C, "the cast's miss row")
             end
             assert.are.equal(0, I.avoidsRun)
+        end)
+
+        it("an ability's own share overrides the class's; an ability without one refunds nothing", function()
+            begin()
+            h.Class.abilities.spender_c.refundOnAvoid = 0.5
+            VS.SpecChanged()
+            ctl.usable[fs.SPENDER_C] = { true, false }
+            ctl.now = 4
+            VS.Drain(4)
+            ctl.usable[fs.SPENDER_C] = nil
+            castOutcome(fs.SPENDER_C, 5, "DODGE")
+            assert.are.equal(5, VS.Power(fs.RAGE, 5.1).est)
+            h.Class.abilities.spender_c.refundOnAvoid = nil
+            VS.SpecChanged()
+            ctl.usable[fs.SPENDER_C] = { true, false }
+            ctl.now = 9
+            VS.Drain(9)
+            ctl.usable[fs.SPENDER_C] = nil
+            castOutcome(fs.SPENDER_C, 10, "DODGE")
+            assert.are.equal(0, VS.Power(fs.RAGE, 10.1).est)
+        end)
+
+        it(
+            "a target swap between the cast and its avoid: the new target's auras stay, the refund still comes",
+            function()
+                begin()
+                ctl.now = 5
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.Tick(5.01)
+                VS.Drain(5.01)
+                I.curSlot = I.curSlot + 1 -- as a swap's TargetSwap applier sets it (Families/Auras.lua)
+                ctl.now = 5.02
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                ctl.Tick(5.03)
+                VS.Drain(5.04)
+                assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.1).est)
+                assert.are.equal(8, VS.Power(fs.RAGE, 5.1).est)
+            end
+        )
+
+        it("in the cast's frame the cast wins over a pending swing not due then", function()
+            begin()
+            ctl.now = 4.8
+            ctl.Fire("PLAYER_SWING", 3.6, 0) -- due at about 5.27
+            castOutcome(fs.SPENDER_C, 5, "DODGE")
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.1))
+            assert.are.equal(1, I.avoidsRun)
+        end)
+
+        it("an avoid in a fresh cast's frame is that cast's, not an older one's still in its window", function()
+            begin()
+            castOutcome(fs.SPENDER_C, 4.9) -- no outcome of its own yet (a DoT's)
+            castOutcome(fs.SPENDER_C, 5, "DODGE")
+            assert.is_true(math.abs(VS.Aura("target", fs.SPENDER_C, 5.1).est - 19.9) < 1e-9) -- the 4.9 application
+            assert.are.equal(1, I.avoidsRun)
         end)
 
         it("no `refundOnAvoid`: the debuff is undone, the cost stays spent", function()

@@ -110,9 +110,13 @@ end
 spec:RegisterResource(Enum.PowerType.ComboPoints)
 -- Adrenaline Rush (13750 aura 110 misc 3 base 100): +100% energy regen while it is up, a rate multiplier (C3b).
 -- shortcut: after a /reload in combat energy's regen rate stays 0 for the rest of the fight (the Druid's Q3 note).
+-- refundOnAvoid: the share of the energy an ability flagged `refundOnAvoid = true` gives back when dodged, parried or
+-- missed (wowsims/forever's MissRefund, spelldata/attributes.go: 0.8 where the DB2 flags Discount Power On Miss and the
+-- spell issues the refund). Not Slice and Dice, Vanish or the poisons; Gouge is flagged in the DB2 but wowsims issues
+-- no refund for it (and the kit has no Gouge).
 spec:RegisterResource(Enum.PowerType.Energy, {
     adrenaline_rush = { aura = "adrenaline_rush", mult = 2 },
-})
+}, nil, { refundOnAvoid = 0.8 })
 
 -- Talents: { talent tree (1 Assassination, 2 Combat, 3 Subtlety: the dominant tree picks the spec), rank 1's spell,
 -- max rank }: the DB2's 51 nodes (`wowdb talents ROGUE`; the tree is the DB2's Talent.TabID), keys the snake_case
@@ -400,6 +404,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims ambush.go; DB2 Discount Power On Miss
         known = knows(AMBUSH),
 
         -- In Stealth or Vanish, or with Cutthroat's proc; a dagger and being behind are the player's (settings).
@@ -434,6 +439,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims backstab.go; DB2 Discount Power On Miss
         known = knows(BACKSTAB),
 
         now = function()
@@ -500,6 +506,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims eviscerate.go; DB2 Discount Power On Miss
         known = knows(EVISCERATE),
         ladder = false, -- a finisher: an answer short of energy may be short of combo points (C9)
         usable = finisherUsable,
@@ -533,6 +540,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims expose_armor.go; DB2 Discount Power On Miss
         known = knows(EXPOSE_ARMOR),
         ladder = false,
         usable = finisherUsable,
@@ -566,6 +574,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims garrote.go; DB2 Discount Power On Miss
         known = knows(GARROTE),
         missable = true,
 
@@ -595,6 +604,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims talents_subtlety.go; DB2 Discount Power On Miss
         known = knows(GHOSTLY_STRIKE),
 
         now = function()
@@ -619,6 +629,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims talents_subtlety.go; DB2 Discount Power On Miss
         known = knows(HEMORRHAGE),
         missable = true,
 
@@ -643,6 +654,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims kick.go; DB2 Discount Power On Miss
         known = knows(KICK),
         toggle = "interrupts",
         debuff = "casting",
@@ -665,6 +677,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims talents_assassination.go; DB2 Discount Power On Miss
         known = knows(MUTILATE),
 
         now = function()
@@ -736,6 +749,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims rupture.go; DB2 Discount Power On Miss
         known = knows(RUPTURE),
         missable = true,
         ladder = false,
@@ -770,6 +784,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims sinister_strike.go; DB2 Discount Power On Miss
         known = knows(SINISTER_STRIKE),
 
         now = function()

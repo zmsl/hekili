@@ -232,8 +232,8 @@ local function buildDef()
             decay = r.state and r.state.meta and r.state.meta.decay, -- out-of-combat loss per second (Resources.lua)
             decayInterval = r.state and r.state.meta and r.state.meta.decayInterval, -- seconds per quantum (stepped)
             fsr = r.state and r.state.meta and r.state.meta.fsr, -- the five-second rule's parts (Resources.lua, C3)
-            -- the share of an avoided cast's cost given back (a number, 0-1; Families/Now.lua's Obs.Avoided); the sim
-            -- never reads it: it does not roll avoidance
+            -- the class's default share of an avoided cast's cost given back, for an ability with `refundOnAvoid = true`
+            -- (a number, 0-1; Families/Now.lua's Obs.Avoided); the sim never reads it: it does not roll avoidance
             refundOnAvoid = r.state and r.state.meta and r.state.meta.refundOnAvoid,
             mult = r.state and r.state.regenMult, -- the rate multipliers, out of the regen model (Spec.lua, C3b)
         }

@@ -171,7 +171,11 @@ end
 
 -- shortcut: after a /reload in combat energy's regen rate stays 0 for the rest of the fight (the belief's calibrate
 -- returns early at ref == 0); upgrade with a `regen` meta field forwarded by the adapter after checkpoint Q3.
-spec:RegisterResource(Enum.PowerType.Energy)
+-- refundOnAvoid (energy here, rage below): the share an ability flagged `refundOnAvoid = true` gives back when dodged,
+-- parried or missed (wowsims/forever druid/feral.go refundOnMiss and MissRefund: 0.8 where the DB2 flags Discount
+-- Power On Miss). Not Ferocious Bite (flagged in the DB2, but wowsims issues no refund), Swipe, Faerie Fire (Feral) or
+-- Demoralizing Roar.
+spec:RegisterResource(Enum.PowerType.Energy, nil, nil, { refundOnAvoid = 0.8 })
 spec:RegisterResource(Enum.PowerType.ComboPoints)
 
 spec:RegisterResource(
@@ -231,10 +235,11 @@ spec:RegisterResource(
         decay = function()
             return 1.25
         end,
-        -- Stepped and front-loaded, as the Warrior's (a function: Engine/Schema/Spec.lua setfenv's every meta field).
+        -- Stepped and front-loaded, as the Warrior's.
         decayInterval = function()
             return 1
         end,
+        refundOnAvoid = 0.8, -- the Energy line's note above
     }
 )
 
@@ -713,6 +718,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims bash.go; DB2 Discount Power On Miss
         known = knows(BASH),
         buff = "bear_form",
 
@@ -845,6 +851,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims claw.go; DB2 Discount Power On Miss
         known = knows(CLAW),
         buff = "cat_form",
 
@@ -864,6 +871,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims cower.go; DB2 Discount Power On Miss
         known = knows(COWER),
         buff = "cat_form",
     },
@@ -1226,6 +1234,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims lacerate.go; DB2 Discount Power On Miss
         known = knows(LACERATE),
         buff = "bear_form",
 
@@ -1276,6 +1285,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims maul.go; DB2 Discount Power On Miss
         -- The belief: paid at the main hand's next swing, which then brings no rage. Hekili's own simulation pays
         -- at the press (the Warrior's Heroic Strike alike), so the two differ by up to one swing.
         onNextSwing = true,
@@ -1381,6 +1391,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims pounce.go; DB2 Discount Power On Miss
         known = knows(POUNCE),
         missable = "pounce_bleed",
         buff = "prowl",
@@ -1415,6 +1426,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims primal_bite.go; DB2 Discount Power On Miss
         known = knows(PRIMAL_BITE),
         buff = "bear_form",
 
@@ -1463,6 +1475,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims rake.go; DB2 Discount Power On Miss
         known = knows(RAKE),
         -- a dodged, parried or missed cast leaves no debuff (core: Engine/Schema/Spec.lua trackMisses)
         missable = true,
@@ -1489,6 +1502,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims ravage.go; DB2 Discount Power On Miss
         known = knows(RAVAGE),
         buff = "prowl",
 
@@ -1548,6 +1562,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims rip.go; DB2 Discount Power On Miss
         known = knows(RIP),
         missable = true,
         buff = "cat_form",
@@ -1609,6 +1624,7 @@ spec:RegisterAbilities({
         spendType = "energy",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims shred.go; DB2 Discount Power On Miss
         known = knows(SHRED),
         buff = "cat_form",
 

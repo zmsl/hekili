@@ -198,9 +198,10 @@ end
 -- shortcut: the sim's forecast takes the belief's regen rate at `now` as a constant (Game/API/Facade.lua's
 -- GetPowerRegenForPowerType), so it sees neither a `mult` aura expire mid-forecast nor a simulated cast apply one;
 -- upgrade with a per-forecast multiplier when a pack's pooling misjudges across a `mult` aura's edge.
--- refundOnAvoid = n (a number, 0-1)  The share of an ability's cost of this resource the game gives back when the target
---                                    dodges, parries or misses it: the belief's only (Families/Now.lua, Obs.Avoided);
---                                    the sim does not predict avoidance.
+-- refundOnAvoid = n (a number, 0-1)  The class's default share of an ability's cost of this resource given back when
+--                                    the target dodges, parries or misses it, for an ability declaring
+--                                    `refundOnAvoid = true` (RegisterAbility below): the belief's only (Families/Now.lua,
+--                                    Obs.Avoided); the sim does not predict avoidance and never reads it.
 local HekiliSpecMixin = {
     RegisterResource = function( self, resourceID, regen, model, meta )
         local resource = GetResourceKey( resourceID )
@@ -790,10 +791,12 @@ local HekiliSpecMixin = {
         insert( self.hooks[ hook ], func )
     end,
 
-    -- Two content fields beside Hekili's own. `ladder = false`: the ability's usability answers are no rungs of the
+    -- Three content fields beside Hekili's own. `ladder = false`: the ability's usability answers are no rungs of the
     -- belief's cost ladder (Game/State/Families/Resources.lua); without it a short answer is a rung only while its
     -- `usable` holds in the belief's `now` context (a finisher at 0 combo points pins no energy). `missable = true` or
-    -- an aura key: a miss leaves that debuff off the target (trackMisses, above).
+    -- an aura key: a miss leaves that debuff off the target (trackMisses, above). `refundOnAvoid = true` (its resource
+    -- meta's share) or a share 0-1: a dodged, parried or missed cast gives back that much of its cost (the belief's
+    -- only, Game/State/Families/Now.lua; the sim does not predict avoidance).
     RegisterAbility = function( self, ability, data )
         -- A passive (a spell the spellbook knows, never cast): the belief tracks its known rank; the sim never sees it.
         if data.passive then

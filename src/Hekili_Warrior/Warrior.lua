@@ -324,8 +324,10 @@ spec:RegisterResource(
         decayInterval = function()
             return 1
         end,
-        -- A dodged, parried or missed ability gives back 80% of its rage (wowsims/forever's RageCostOptions refund: the
-        -- log's "Gained 12.000 rage from {OtherID: 8}" after a dodged 15-rage Sunder Armor; unmeasured in game).
+        -- The share of the rage an ability flagged `refundOnAvoid = true` gives back when dodged, parried or missed:
+        -- wowsims/forever's MissRefund (spelldata/attributes.go), 0.8 where the DB2 flags Discount Power On Miss and
+        -- the spell issues the refund (the log's "Gained 12.000 rage from {OtherID: 8}" after a dodged 15-rage Sunder
+        -- Armor); unmeasured in game. Not Cleave, Whirlwind, Thunder Clap, Victory Rush, Intercept or Charge.
         refundOnAvoid = 0.8,
     }
 )
@@ -900,6 +902,7 @@ spec:RegisterAbilities({
 
         talent = "bloodthirst",
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims talents_fury.go; DB2 Discount Power On Miss
         known = knows(BLOODTHIRST),
     },
 
@@ -1000,6 +1003,7 @@ spec:RegisterAbilities({
 
         talent = "concussion_blow",
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims talents_protection.go; DB2 Discount Power On Miss
         known = knows({ 12809 }),
 
         now = function()
@@ -1097,6 +1101,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims disarm.go; DB2 Discount Power On Miss
         known = knows({ 676 }),
         toggle = "cooldowns",
         buff = "defensive_stance",
@@ -1124,6 +1129,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims execute.go; DB2 Discount Power On Miss
         known = knows(EXECUTE),
         nobuff = "defensive_stance",
         healthGate = 0.2, -- usable at or below 20% of the target's health: the belief's target health reads it
@@ -1150,6 +1156,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims hamstring.go; DB2 Discount Power On Miss
         known = knows(HAMSTRING),
         nobuff = "defensive_stance",
 
@@ -1177,6 +1184,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims heroic_strike_cleave.go; DB2 Discount Power On Miss
         -- The belief: paid at the main hand's next swing, which then brings no rage. Hekili's own simulation ignores
         -- onNextSwing: it spends the cost at the press and still adds the replaced swing's rage, so its forward
         -- projection is one swing of rage optimistic per queued strike until the belief's next drain corrects the
@@ -1281,6 +1289,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims mocking_blow.go; DB2 Discount Power On Miss
         known = knows(MOCKING_BLOW),
         toggle = "cooldowns",
         buff = "battle_stance",
@@ -1308,6 +1317,7 @@ spec:RegisterAbilities({
 
         talent = "mortal_strike",
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims talents_arms.go; DB2 Discount Power On Miss
         known = knows(MORTAL_STRIKE),
 
         now = function()
@@ -1332,6 +1342,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims overpower.go; DB2 Discount Power On Miss
         known = knows(OVERPOWER),
         buff = "battle_stance",
 
@@ -1384,6 +1395,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims pummel.go; DB2 Discount Power On Miss
         known = knows(PUMMEL),
         buff = "berserker_stance",
         debuff = "casting",
@@ -1427,6 +1439,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims rend.go; DB2 Discount Power On Miss
         known = knows(REND),
         nobuff = "berserker_stance",
 
@@ -1473,6 +1486,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims revenge.go; DB2 Discount Power On Miss
         known = knows(REVENGE),
 
         buff = function()
@@ -1500,6 +1514,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims shield_bash.go; DB2 Discount Power On Miss
         known = knows(SHIELD_BASH),
         toggle = "interrupts",
         buff = function()
@@ -1559,6 +1574,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims talents_protection.go; DB2 Discount Power On Miss
         known = knows(SHIELD_SLAM),
         equipped = "shield",
     },
@@ -1598,6 +1614,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims slam.go; DB2 Discount Power On Miss
         known = knows(SLAM),
     },
 
@@ -1614,6 +1631,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims talents_arms.go; DB2 Discount Power On Miss
         talent = "spearing_strike",
         known = knows({ 1310222 }),
         buff = "battle_stance",
@@ -1632,6 +1650,7 @@ spec:RegisterAbilities({
         spendType = "rage",
 
         startsCombat = true,
+        refundOnAvoid = true, -- wowsims sunder_armor.go; DB2 Discount Power On Miss
         known = knows(SUNDER_ARMOR),
 
         -- what the cast did to the now-state, in the belief's context (spec §12a)
