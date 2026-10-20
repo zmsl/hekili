@@ -12,7 +12,7 @@ end
 describe("solo attribution (harness gates) #slow", function()
     it(
         "credits >= 94% of each hand's hits to the right swing, <= 2% to the wrong one, no overshoot; the oracle retracts "
-            .. "<= 0.5% of our own credits, its rescues ours (>= 95%, or one miss) (200 fights)",
+            .. "<= 0.5% of our own credits (200 fights)",
         function()
             local m = metrics.fights(scenarios.oracle({}), 200)
             check(metrics.rate(m, 1) >= 0.94 and metrics.rate(m, 2) >= 0.94, m)
@@ -23,8 +23,6 @@ describe("solo attribution (harness gates) #slow", function()
             check(metrics.falsePer100(m, m.falseAvoids) <= 0.6, m) -- measured 0.08
             check(m.noDst == 0 and m.order == 0 and m.nonTarget == 0, m)
             assert.is_true(m.falseRetracted <= 0.005 * (m.right[1] + m.right[2]), metrics.oracleLine(m))
-            -- solo leaves the oracle little to rescue (2 in 200 fights): one wrong rescue is within the gate
-            assert.is_true(m.rescued - m.rescuedOurs <= math.max(1, 0.05 * m.rescued), metrics.oracleLine(m))
             assert.is_true(m.judged > 0 and m.danger == 0, metrics.oracleLine(m))
         end
     )

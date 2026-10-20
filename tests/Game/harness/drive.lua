@@ -57,12 +57,12 @@ function M.boot(o)
     end
     -- captures, by stream index: the hand credited and the swing time it was credited at (0: none)
     c.crHand, c.crAt, c.crTok, c.verdict, c.recIdx, c.onus = {}, {}, {}, {}, {}, {}
-    c.lateHand, c.lateAt = {}, {} -- credits staged outside an event (the oracle's rescue)
+    c.vetoHand, c.vetoAt = {}, {} -- by stream index: the swing a veto denied that wound (Rows' L.vetoX / vetoAt; 0 none)
     c.missHand, c.missAt = {}, {} -- the SWING_MISSED rows (hand, swing time): avoids credited to our swings
     c.avIdx, c.avHand, c.avAt = {}, {}, {} -- each provisional avoid taken: its stream index and the swing's hand, time
     c.win, c.winT, c.loOver, c.estOver, c.danger = {}, {}, {}, {}, {}
     for i = 1, CAP do
-        c.crHand[i], c.crAt[i], c.crTok[i], c.lateHand[i], c.lateAt[i], c.win[i], c.winT[i] = 0, 0, false, 0, 0, 0, 0
+        c.crHand[i], c.crAt[i], c.crTok[i], c.vetoHand[i], c.vetoAt[i], c.win[i], c.winT[i] = 0, 0, false, 0, 0, 0, 0
         c.missHand[i], c.missAt[i], c.avIdx[i], c.avHand[i], c.avAt[i] = 0, 0, 0, 0, 0
         c.loOver[i], c.estOver[i], c.danger[i] = 0, 0, 0
         c.verdict[i], c.onus[i] = 0, ""
@@ -70,6 +70,31 @@ function M.boot(o)
     for k = 1, 8 do
         c.recIdx[k] = 0
     end
+    -- the rage credits as the belief folded them: the swing's time, the fold's, the estimate they added (the windows
+    -- date them at the swing: rage is gained at the swing, checkpoint R1, so a gain and its credit share a window)
+    c.cdTs, c.cdTf, c.cdD, c.nCd = {}, {}, {}, 0
+    for i = 1, CAP do
+        c.cdTs[i], c.cdTf[i], c.cdD[i] = 0, 0, 0
+    end
+    local R, lastEst = c.I.res, 0
+    local function est()
+        local r = R.slotOf[fs.RAGE]
+        return r and R.est0[r] or 0
+    end
+    local SWING = c.VS.Obs.Swing
+    for kind = 1, 38 do
+        c.I.On(kind, function(o, t)
+            local e = est()
+            if kind == SWING and (o.c == 1 or o.c == 3) and c.nCd < CAP then
+                local n = c.nCd + 1
+                c.nCd, c.cdTs[n], c.cdTf[n], c.cdD[n] = n, o.t, t, e - lastEst
+            end
+            lastEst = e
+        end)
+    end
+    c.I.OnAdvance(function()
+        lastEst = est()
+    end)
     c.crit3, c.unk = {}, {} -- by stream index: a c = 3 staged at it; a white wound of ours scored on timing alone
     for i = 1, CAP do
         c.crit3[i], c.unk[i] = 0, 0
@@ -114,10 +139,10 @@ function M.boot(o)
         end
         return stage(kind, t, a, b, cc)
     end
-    -- the oracle's verdicts by stream index (1 confirmed, 2 retracted, 3 soft) and its rescues (hand, swing time)
-    local verdict, rescue = c.I.CreditVerdict, c.I.Rescue
+    -- the oracle's verdicts by stream index (1 confirmed, 2 retracted, 3 soft); without it no veto either (I.Missed)
+    local verdict = c.I.CreditVerdict
     if o.oracle == false then
-        c.I.CreditVerdict, c.I.Rescue = nil, nil
+        c.I.CreditVerdict, c.I.Missed = nil, nil
     elseif verdict then
         c.I.CreditVerdict = function(id, ok, t, firm)
             local v = verdict(id, ok, t, firm)
@@ -126,15 +151,6 @@ function M.boot(o)
                 c.verdict[i] = ok and 1 or (firm and 2 or 3)
             end
             return v
-        end
-        c.I.Rescue = function(r, need, since, t)
-            local h, crit, at = rescue(r, need, since, t)
-            if h then
-                c.landed[h] = c.landed[h] + 1
-                c.nLate = c.nLate + 1
-                c.lateHand[c.nLate], c.lateAt[c.nLate] = h, at
-            end
-            return h, crit, at
         end
     end
     local GetInfo = ns.Facade.CombatLogGetCurrentEventInfo
@@ -170,7 +186,7 @@ function M.boot(o)
         end
     end)
     sink:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-    c.nLate, c.nWin, c.truth, c.hits, c.nAv = 0, 0, 0, 0, 0
+    c.nWin, c.truth, c.hits, c.nAv = 0, 0, 0, 0
     return c
 end
 
@@ -320,13 +336,15 @@ function M.run(c, s, offset)
     c.stream = s
     for i = 1, s.n do
         c.crHand[i], c.crAt[i], c.verdict[i], c.onus[i], c.crit3[i], c.unk[i] = 0, 0, 0, "", 0, 0
+        c.vetoHand[i], c.vetoAt[i] = 0, 0
     end
     for _, r in pairs(c.trk) do
         r.n = 0
     end
     c.gcdN = 0
     c.hits = 0
-    c.crits[1], c.crits[2], c.landed[1], c.landed[2], c.nLate, c.nWin, c.truth, c.nAv = 0, 0, 0, 0, 0, 0, 0, 0
+    c.crits[1], c.crits[2], c.landed[1], c.landed[2], c.nWin, c.truth, c.nAv = 0, 0, 0, 0, 0, 0, 0
+    c.nCd = 0
     local rows = c.rows
     rows.swing, rows.missed, rows.spell, rows.noDst, rows.order = 0, 0, 0, 0, 0
     c.lastRow[1], c.lastRow[2] = 0, 0
@@ -349,7 +367,11 @@ function M.run(c, s, offset)
                 c.unk[i] = (maxMain <= 0 or ctl.form ~= c.I.damageForm) and 1 or 0
             end
             local avoids = c.L.avoids
+            local vetoed = c.L.oracle.vetoed
             ctl.Fire(ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
+            if c.L.oracle.vetoed > vetoed then
+                c.vetoHand[i], c.vetoAt[i] = c.L.vetoX, c.L.vetoAt
+            end
             if c.L.avoids > avoids and c.nAv < CAP then
                 c.nAv = c.nAv + 1
                 c.avIdx[c.nAv], c.avHand[c.nAv], c.avAt[c.nAv] = i, c.L.avoidX, c.L.avoidT
@@ -361,6 +383,13 @@ function M.run(c, s, offset)
     while nextTick <= stop do
         tick(c, nextTick)
         nextTick = nextTick + M.TICK
+    end
+    for j = 1, c.nCd do -- a window that ends between a swing and its credit's fold holds that credit
+        for w = 1, c.nWin do
+            if c.cdTs[j] <= c.winT[w] and c.winT[w] < c.cdTf[j] then
+                c.win[w] = c.win[w] + c.cdD[j]
+            end
+        end
     end
 end
 

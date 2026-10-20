@@ -18,7 +18,6 @@ function M.new()
         -- the same, less those the oracle retracted at their verdict: the rage they leave paid
         falseNet = { 0, 0 },
         falseAvoids = { 0, 0 }, -- another source's or an unexplained avoid credited: mislabels a row, pays nothing
-        late = 0,
         windows = 0,
         over = 0,
         loOver = 0,
@@ -33,8 +32,6 @@ function M.new()
         falseJudged = 0,
         caught = 0,
         falseRetracted = 0,
-        rescued = 0,
-        rescuedOurs = 0,
         onusAll = 0,
         onusCredited = 0,
         onusRight = 0,
@@ -43,6 +40,18 @@ function M.new()
         avoidRight = 0,
         avoidWrong = 0,
     }
+end
+
+-- Whether a credit of another source's outcome to our swing of hand `h` at `at` (its flag `flag`) puts false rage in
+-- the belief: rage is gained at the swing (checkpoint R1), so a wrong row whose swing did land with the same kind of
+-- hit pays the right rage. False: that swing was avoided, none of ours was due then, or its kind (crit or not) differs
+-- where a crit pays more rage in this world (`critPays[h]`).
+local function rageFalse(s, own, h, at, flag, critPays)
+    local i = own[h] and own[h][at]
+    if not i or s.a2[i] ~= "WOUND" then
+        return true
+    end
+    return critPays[h] and (s.a3[i] == "CRITICAL") ~= (flag == "CRITICAL")
 end
 
 -- Our true power at `t`: the last truth event with a power at or before it (0 before any).
@@ -65,6 +74,26 @@ M.truthAt = truthAt
 --- overshoot bar, default 9). Returns `m`.
 function M.score(m, c, s, W, step, after, keep)
     step, after = step or 9, after or 0
+    -- our swings' own outcomes by hand and swing time (the stream index of their target outcome), and whether a crit of
+    -- that hand pays more rage than a plain hit in this world (no world: assume it does)
+    local own, critPays = { {}, {} }, { not W, not W }
+    if W then
+        local plain, crit = {}, {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "swing" and ev.src == W.ents[1] and ev.rage and ev.hand then
+                local t = ev.flag == "CRITICAL" and crit or plain
+                t[ev.hand] = math.max(t[ev.hand] or 0, ev.rage)
+            end
+        end
+        for h = 1, 2 do
+            critPays[h] = (crit[h] or 0) > (plain[h] or 0)
+        end
+    end
+    for i = 1, s.n do
+        if s.ev[i] == "UNIT_COMBAT" and s.src[i] == 1 and s.hand[i] > 0 and s.a1[i] == "target" then
+            own[s.hand[i]][s.swingT[i]] = i
+        end
+    end
     local function inside(t)
         return t >= after and (keep == nil or keep(t))
     end
@@ -90,13 +119,22 @@ function M.score(m, c, s, W, step, after, keep)
                     m.falseNet[cr] = m.falseNet[cr] + 1
                 end
             end
+            local vh = c.vetoHand[i]
+            if vh > 0 then -- a veto: the usability check judged this wound's swing before it was credited
+                m.judged = m.judged + 1
+                if not (s.src[i] == 1 and h > 0) and rageFalse(s, own, vh, c.vetoAt[i], s.a3[i], critPays) then
+                    m.falseJudged, m.caught = m.falseJudged + 1, m.caught + 1
+                elseif s.src[i] == 1 and h == vh and s.swingT[i] == c.vetoAt[i] then
+                    m.falseRetracted = m.falseRetracted + 1 -- our own swing's wound, denied: an own retraction
+                end
+            end
             local v = c.verdict[i]
-            if v > 0 then -- judged: another source's outcome (a false credit) or our own swing's (credited right)
+            if v > 0 then -- judged: a rage-false credit, or our own swing's outcome credited right
                 local ours = s.src[i] == 1 and h > 0
                 m.judged = m.judged + 1
-                if not ours then
+                if not ours and rageFalse(s, own, cr, c.crAt[i], s.a3[i], critPays) then
                     m.falseJudged, m.caught = m.falseJudged + 1, m.caught + (v == 2 and 1 or 0)
-                elseif v == 2 and cr == h and c.crAt[i] == s.swingT[i] then
+                elseif ours and v == 2 and cr == h and c.crAt[i] == s.swingT[i] then
                     m.falseRetracted = m.falseRetracted + 1
                 end
             end
@@ -144,18 +182,6 @@ function M.score(m, c, s, W, step, after, keep)
         end
     end
     m.hitsStaged = m.hitsStaged + c.hits
-    m.late = m.late + c.nLate
-    for k = 1, c.nLate do -- a rescue was ours when it paid our swing whose wound landed and went uncredited
-        m.rescued = m.rescued + 1
-        for i = 1, s.n do
-            if s.src[i] == 1 and s.hand[i] == c.lateHand[k] and s.swingT[i] == c.lateAt[k] and s.a1[i] == "target" then
-                if s.a2[i] == "WOUND" and s.a4[i] > 0 and c.crHand[i] == 0 then
-                    m.rescuedOurs = m.rescuedOurs + 1
-                end
-                break
-            end
-        end
-    end
     if W then
         for w = 1, c.nWin - 1 do
             local a, b = c.winT[w], c.winT[w + 1]
@@ -340,18 +366,16 @@ function M.fights(o, n, after)
     return m
 end
 
---- The oracle's line: judged, false credits judged and caught, own credits retracted, rescues and how many were ours.
+--- The oracle's line: judged (vetoes included), rage-false credits judged and caught, own credits retracted.
 function M.oracleLine(m)
     return string.format(
-        "judged %d (%.1f a fight), false judged %d caught %d, own retracted %d of %d, rescued %d ours %d, lo over %d/%d",
+        "judged %d (%.1f a fight), false judged %d caught %d, own retracted %d of %d, lo over %d/%d",
         m.judged,
         m.judged / math.max(1, m.fights),
         m.falseJudged,
         m.caught,
         m.falseRetracted,
         m.right[1] + m.right[2],
-        m.rescued,
-        m.rescuedOurs,
         m.loOver,
         m.windows
     ) .. string.format(", est over %d, danger %d", m.estOver, m.danger)

@@ -459,7 +459,7 @@ function M.new(seed)
     --- `outcomes` (a M.OUTCOMES key; default "melee") against the victim's avoid table and our crit rate (a crit doubles it; an avoid
     --- is recorded in `e.avoidAt[act]`). A nil `amount`: an ability with no damage, whose landed hit shows no outcome
     --- (only its avoid does). An avoid of the press in progress gives back its `refund` share (0-1; the kit's
-    --- `refundOnAvoid`) of its cost, a gain after the outcome. Returns the truth event, or { act = "WOUND" } for a
+    --- `refundOnAvoid`) of its cost, a gain before the outcome (the server refunds at the cast's success). Returns the truth event, or { act = "WOUND" } for a
     --- silent landed hit.
     function W.hit(e, dst, amount, school, set)
         local p = e.pressing
@@ -471,12 +471,13 @@ function M.new(seed)
             return e.lastHit
         end
         local amt = act == "WOUND" and math.floor(amount * (flag == "CRITICAL" and 2 or 1) + 0.5) or 0
-        e.lastHit =
-            W.emit({ kind = "spell", src = e, dst = dst, act = act, flag = flag, amount = amt, school = school or 1 })
         if act ~= "WOUND" and p and (p.refund or 0) > 0 and (p.cost or 0) > 0 then
+            -- the server refunds at the cast's success (the user, 2026-10-20): before the outcome reports it
             e.pressing = nil -- once a press: a second hit of its effect is no second refund
             W.emit({ kind = "gain", src = e, pt = p.pt, rage = p.refund * p.cost })
         end
+        e.lastHit =
+            W.emit({ kind = "spell", src = e, dst = dst, act = act, flag = flag, amount = amt, school = school or 1 })
         return e.lastHit
     end
 

@@ -45,8 +45,8 @@ end
 
 --- A melee player: per weapon hand, a swing every speed / haste from a random phase, its outcome rolled from `p.rates`
 --- (default RATES). `p.land(W, e, hand, t)`: ours only, the lag before the outcome lands (observer.lua); without it the
---- outcome is at the swing (another player's). `p.rage` { main, off } or fn(hand, amount, flag): what a landed wound
---- of ours pays; `p.critRage` { main, off }: the extra a CRITICAL one pays; `p.payIn`: the form whose landed wounds pay
+--- outcome is at the swing (another player's). `p.rage` { main, off } or fn(hand, amount, flag): what a landed swing
+--- of ours pays, at the swing (R1); `p.critRage` { main, off }: the extra a CRITICAL one pays; `p.payIn`: the form whose landed swings pay
 --- (nil: every form). A queued strike (W.queueStrike) our power no longer covers at the swing is dropped (a white swing).
 --- `p.presses` { { t, spell, cost, kind } }: kind "queue" (the next main-hand swing is a strike of `p.strike`
 --- { lo, hi }), "dot" (`p.dot` { every, n, amount } ticks, school 1), "cast" (no outcome); each only if our power
@@ -107,7 +107,7 @@ function M.melee(p)
                         speed = w[3],
                         order = order,
                     })
-                    if act ~= "WOUND" and (q.refund or 0) > 0 and (q.cost or 0) > 0 then -- its press's refund (W.hit)
+                    if act ~= "WOUND" and (q.refund or 0) > 0 and (q.cost or 0) > 0 then -- its press's refund (W.hit), after the strike frame's spend
                         W.emit({ kind = "gain", src = e, pt = q.pt, rage = q.refund * q.cost })
                     end
                 else
@@ -117,6 +117,23 @@ function M.melee(p)
                     -- client-detail generator so the observer draws nothing (a press changes the fight's future,
                     -- never how its past is observed) and W.rng's draws per seed stay as they were
                     local same = p.sameMs and W.crng.chance(p.sameMs) and W.crng.pick(SAME_MS) or nil
+                    -- what a landed swing of ours pays, at the swing: rage is gained on the swing, not on its combat
+                    -- log entry (checkpoint R1, measured by the user 2026-10-20); its outcome lands a lag later
+                    local rage = nil
+                    if p.land and act == "WOUND" then
+                        rage = p.rage
+                        if type(rage) == "function" then
+                            rage = rage(h, amt, flag)
+                        else
+                            rage = rage and rage[h] or nil
+                        end
+                        if flag == "CRITICAL" and p.critRage then
+                            rage = (rage or 0) + (p.critRage[h] or 0)
+                        end
+                        if p.payIn and e.form ~= p.payIn then
+                            rage = nil
+                        end
+                    end
                     local sw = W.emit({
                         kind = "swing",
                         src = e,
@@ -129,6 +146,7 @@ function M.melee(p)
                         speed = w[3],
                         ours = p.land ~= nil,
                         sameMs = same,
+                        rage = rage,
                     })
                     if p.land then
                         local lag = p.land(W, e, h, W.t)
@@ -136,18 +154,6 @@ function M.melee(p)
                         W.at(W.t + lag, function()
                             if act ~= "WOUND" then
                                 e.avoidAt[act] = W.t -- the world's truth a content requirement reads (an opening)
-                            end
-                            local rage = p.rage
-                            if type(rage) == "function" then
-                                rage = act == "WOUND" and rage(h, amt, flag) or nil
-                            else
-                                rage = act == "WOUND" and rage and rage[h] or nil
-                            end
-                            if act == "WOUND" and flag == "CRITICAL" and p.critRage then
-                                rage = (rage or 0) + (p.critRage[h] or 0)
-                            end
-                            if p.payIn and e.form ~= p.payIn then
-                                rage = nil
                             end
                             W.emit({
                                 kind = "land",
@@ -159,7 +165,6 @@ function M.melee(p)
                                 amount = amt,
                                 school = 1,
                                 swing = sw,
-                                rage = rage,
                             })
                             if e.landed then -- our content sees the outcome land (an aura the next hit spends)
                                 e.landed(W, act, h)

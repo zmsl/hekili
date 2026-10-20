@@ -4,6 +4,10 @@
 -- (scenarios.oracle): the spec's rage bounds apply to the false wounds net of the oracle's retractions; the gross ones
 -- (as credited) are model-only error, bound at measured + 1. The overshoot gate is the model's drift alone (each window
 -- as if pinned at its start), so it reads a run without answers: the oracle's pins would count as error.
+-- Rows are not rescued (round 7 ruling): rage is gained at the swing (checkpoint R1), so a swing whose usability
+-- answers showed its rage is already right in the belief (owe's lift); if its own wound never pairs it loses only its
+-- SWING_DAMAGE row, and a wound taken for it after the fact was, in a group, mostly another source's (a wrong row is
+-- worse than a missing one).
 local metrics = require("Game.harness.metrics")
 local scenarios = require("Game.harness.scenarios")
 
@@ -48,16 +52,23 @@ describe("group attribution (harness gates) #slow", function()
         assert.is_true(m.fights == 30)
     end)
 
-    it("oracle, party of 5 (in-range melee): catches >= 60% of the false credits it judges (100 fights)", function()
-        local o = scenarios.oracle({ others = { "melee", "caster" } })
-        local m = metrics.fights(o, 100)
-        local off = metrics.fights(setmetatable({ oracle = false }, { __index = o }), 100)
-        print("\noracle: " .. metrics.oracleLine(m) .. "\nno oracle: " .. metrics.oracleLine(off))
-        assert.is_true(m.caught >= 0.60 * m.falseJudged, metrics.oracleLine(m))
-        assert.is_true(m.falseRetracted <= 0.01 * (m.right[1] + m.right[2]), metrics.oracleLine(m))
-        assert.is_true(m.rescuedOurs >= 0.90 * m.rescued, metrics.oracleLine(m))
-        -- the ladder clamps a false credit's floor at the same poll, with or without the oracle: no poll ever reads
-        -- a floor at a cost the true power is below
-        assert.is_true(m.danger == 0 and off.danger == 0, metrics.oracleLine(m))
-    end)
+    -- The population (round 7 ruling): rage-false credits only, a credit of another source's outcome whose rage differs
+    -- from the truth: our swing was avoided, none of ours was due, or the kinds differ (crit or not) where a crit pays
+    -- more. Rage is gained at the swing (checkpoint R1), so a wrong row on a swing that did land pays the right rage
+    -- and no usability answer can tell it; that is not this check's job. A veto (Rows: the swing's answers since it
+    -- showed say it gave no rage) is the check applied before the credit: judged and caught.
+    it(
+        "oracle, party of 5 (in-range melee): catches >= 60% of the rage-false credits it judges (100 fights)",
+        function()
+            local o = scenarios.oracle({ others = { "melee", "caster" } })
+            local m = metrics.fights(o, 100)
+            local off = metrics.fights(setmetatable({ oracle = false }, { __index = o }), 100)
+            print("\noracle: " .. metrics.oracleLine(m) .. "\nno oracle: " .. metrics.oracleLine(off))
+            assert.is_true(m.caught >= 0.60 * m.falseJudged, metrics.oracleLine(m))
+            assert.is_true(m.falseRetracted <= 0.01 * (m.right[1] + m.right[2]), metrics.oracleLine(m))
+            -- the ladder clamps a false credit's floor at the same poll, with or without the oracle: no poll ever reads
+            -- a floor at a cost the true power is below
+            assert.is_true(m.danger == 0 and off.danger == 0, metrics.oracleLine(m))
+        end
+    )
 end)

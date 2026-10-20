@@ -238,7 +238,7 @@ describe("the world's resources", function()
             critRage = { 3 },
             payIn = 1,
         })(W, us)
-        W.run(1.5) -- the swing at 1 lands at 1.1, in form 0: nothing
+        W.run(1.5) -- the swing at 1 (its rage at the swing), in form 0: nothing
         assert.are.equal(0, us.power)
         W.setForm(us, 1)
         W.run(3.5) -- the swing at 3: 5 and the crit's 3

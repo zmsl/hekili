@@ -460,8 +460,8 @@ function M.fight(o, seed)
         rage = I.res.type[r] == M.RAGE and r or rage
     end
     local values = { min = math.huge, max = -math.huge }
-    I.SwingValue = function(r, hand)
-        local v = sv(r, hand)
+    I.SwingValue = function(r, hand, at)
+        local v = sv(r, hand, at)
         if r == rage and hand ~= 2 and v > 0 then -- the main hand's while Bear's aura is believed up
             values.min, values.max = math.min(values.min, v), math.max(values.max, v)
         end
