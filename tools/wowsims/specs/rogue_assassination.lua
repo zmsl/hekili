@@ -8,7 +8,7 @@
 -- Translation: the APL's "Use X" variables are constants (inlined and folded, rule 1); omitted (rule 2): Maintain
 -- Expose (its call folds to never: "Use Expose Armor" false; its strictSequence, RL3, never reached), the Orc's Blood
 -- Fury -> Adrenaline Rush strictSequence (#10: a translation gap, the line stays omitted), autocastOtherCooldowns
--- (#7: GAP 14, pending centrally), the potion; Thousand Cuts's buff (1310723) resolves from the kit's aura, so
+-- (#7: rule 13, no "Major cooldown used" in the log), the potion; Thousand Cuts's buff (1310723) resolves from the kit's aura, so
 -- `auraIsKnown` of it is the talent. Known deviations (Forever API): remainingTime reads 3600 (time to die unknown),
 -- so the "Fight About to End" terms never fire; energy is secret in combat, so an unannounced energize (Rogue Armor
 -- Energize 27788, +20) is invisible to the belief until the next read.
