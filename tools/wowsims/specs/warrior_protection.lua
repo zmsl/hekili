@@ -62,7 +62,6 @@ return {
     auras = { [25288] = "revenge_usable" },
     exclusive = { [11556] = true }, -- Demoralizing Shout bids in wowsims's "Demoralizing" category (an exclusive effect)
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
-    -- the retired Protection list's tiers (P9.3)
-    focus = { shield_bash = 1, mocking_blow = 1, taunt = 1 },
+    -- no focus: the retired Protection list's tiers (Shield Bash, Mocking Blow, Taunt) are on none of wowsims's lines
     leveling = {},
 }

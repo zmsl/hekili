@@ -53,7 +53,7 @@ return {
     },
     executePhase = "execute_phase",
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
-    -- the retired Fury list's tiers in order (P9.3)
-    focus = { victory_rush = 1, overpower = 1, revenge = 1, heroic_strike = { 1, 2 }, cleave = { 1, 2 } },
+    -- the retired Fury list's tiers (P9.3) that a line carries: no line casts Victory Rush or Revenge, and one Cleave
+    focus = { overpower = 1, heroic_strike = { 1, 2 }, cleave = 1 },
     leveling = { "sunder_armor,if=!action.bloodthirst.known" },
 }

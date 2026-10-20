@@ -801,6 +801,42 @@ describe("Forever Warrior", function()
         }, keys)
     end)
 
+    it("makes each spec's wowsims.com pack its default and retires the hand-built lists", function()
+        local package = {}
+        for _, s in ipairs(w.def.specs) do
+            package[s.key] = s.package
+        end
+        assert.are.same({
+            arms = "Arms (wowsims.com)",
+            fury = "Fury (wowsims.com)",
+            protection = "Protection (wowsims.com)",
+        }, package)
+        assert.are.same({ "Arms", "Fury", "Protection" }, w.retired)
+    end)
+
+    it("carries the retired lists' focus tiers that a wowsims.com line casts", function()
+        local focus = {}
+        for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "warrior")) do
+            for _, list in pairs(p.lists) do
+                for _, e in ipairs(list) do
+                    if e.focus then
+                        local k = p.name .. " " .. e.action
+                        focus[k] = focus[k] or {}
+                        table.insert(focus[k], tonumber(e.focus))
+                    end
+                end
+            end
+        end
+        assert.are.same({
+            ["Arms (wowsims.com) rend"] = { 2 },
+            ["Arms (wowsims.com) overpower"] = { 1 },
+            ["Arms (wowsims.com) slam"] = { 2, 2 },
+            ["Fury (wowsims.com) overpower"] = { 1 },
+            ["Fury (wowsims.com) heroic_strike"] = { 1, 2 },
+            ["Fury (wowsims.com) cleave"] = { 1 },
+        }, focus) -- Protection (wowsims.com) casts none of the retired list's focus abilities
+    end)
+
     it("keeps its priorities in src/Hekili_Warrior/APLs/, tools/make_pack.lua's default class", function()
         local def = dofile("src/Hekili_Warrior/APLs/packs.lua")
         assert.are.same({

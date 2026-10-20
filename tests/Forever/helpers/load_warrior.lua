@@ -144,6 +144,7 @@ function M.load()
         end
     end
     w.packs = reg.RegisterPack or {}
+    w.retired = reg.RetirePacks and reg.RetirePacks[1][1]
     w.options = reg.RegisterOptions and reg.RegisterOptions[1][1]
     return w
 end
