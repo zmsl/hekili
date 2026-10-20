@@ -14,7 +14,7 @@ actions+=/seal_of_command,focus=1,if=talent.twist_of_light.enabled&(!buff.echo_o
 actions+=/seal_of_righteousness,focus=1,if=talent.twist_of_light.enabled&(!buff.echo_of_righteousness.up&!buff.seal_of_righteousness.up)
 actions+=/call_action_list,name=consecration
 actions+=/call_action_list,name=exorcism
-actions+=/seal_of_command,if=!talent.twist_of_light.enabled&!buff.seal_of_command.up
+actions+=/seal_of_command,focus=1,if=!talent.twist_of_light.enabled&!buff.seal_of_command.up
 actions+=/seal_of_righteousness,if=!action.seal_of_command.known&buff.seal_of_righteousness.remains<24
 actions.exorcism=exorcism,focus=2,if=(mainhand_remains>1.5&mana.pct>=10)
 actions.consecration=consecration,focus=2,if=(mainhand_remains>1.5&mana.pct>=10)
