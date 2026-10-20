@@ -205,14 +205,14 @@ ends the loop before the client sees it, so the next fight's prepull would be be
 never read (a harness quirk every pack shares). The world runs out of mana about 35 s in (idle about 0.68: UNMEASURED
 pool and regen, no Mana Spring regen, Water Shield or potions), so most in-combat ticks show no icon on either side.
 The imbues are not in the solo world's kit (it has no weapon enchant read). The world's costs are each rank's (DB2),
-with Shamanistic Focus when the build has it. The lines on Enhancement (wowsims.com) (wowsims packs plan, Task 10) are
-byte-identical to the retired hand-built list's (class-completion Task 9): the same order of the same abilities at 60
-and no mana potion or Demonic Rune in the character's bags. `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's own fight (floor
-0.60) and runs the levels 10, 40 and 60:
+with Shamanistic Focus when the build has it, Stormstrike's 121 (wowsims/forever's), and the shocks' cooldown and Flame
+Shock's duration from the booted talents. The lines below run Enhancement (wowsims.com) (wowsims packs plan, Task 10,
+after its fix round 1: Stormstrike's cost moved them). `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's own fight
+(floor 0.75) and runs the levels 10, 40 and 60:
 
 ```
-Enhancement solo: fights=3 agreement 0.999 (687 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.014; ... [seeds 1-3]
-Enhancement solo: fights=20 agreement 0.993 (4227 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.006; ...
+Enhancement solo: fights=3 agreement 0.999 (706 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.011; ... [seeds 1-3]
+Enhancement solo: fights=20 agreement 0.992 (4332 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.001; ...
 ```
 
 Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):

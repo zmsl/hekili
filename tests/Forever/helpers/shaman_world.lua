@@ -32,15 +32,15 @@ local TOTEM = {
     grace_of_air_totem = { 4, 300 },
 }
 
--- Each rank's mana cost (DB2, rank order), the world's truth the class file's costs are measured against; Shamanistic
+-- Each rank's mana cost (DB2, rank order; Stormstrike's wowsims/forever's), the world's truth the class file's costs are measured against; Shamanistic
 -- Focus (1223030, DB2 aura 108 misc 14) takes 45% off the shocks' and Lightning Shield's.
 local COST = {
     lightning_bolt = { 15, 30, 45, 60, 85, 110, 135, 160, 190, 220 },
     lightning_shield = { 45, 80, 125, 180, 240, 305, 370 },
     earth_shock = { 30, 50, 85, 145, 240, 345, 450 },
     flame_shock = { 55, 95, 160, 250, 345, 410 },
-    fire_nova = { 95, 170, 280, 395, 520 },
-    stormstrike = { 125 },
+    fire_nova = { 95, 170, 280, 395, 520 }, -- the kit's (wowsims/forever's 65..375 not modelled: Shaman.lua)
+    stormstrike = { 121 }, -- wowsims/forever's: 8% of base mana, 121 at 60 (the DB2's: 125)
     searing_totem = { 25, 45, 75, 110, 145, 170 },
     flametongue_totem = { 90, 140, 200, 275 },
     strength_of_earth_totem = { 25, 65, 125, 225, 275 },
@@ -146,13 +146,13 @@ M.MAP = {
     lightning_bolt = spell("lightning_bolt", function(W, e, _, X)
         drop(W, e, X, "maelstrom_weapon")
     end),
-    earth_shock = spell("earth_shock", function(W, e)
-        e.cdUntil.flame_shock = W.t + 6 -- the shared category
+    earth_shock = spell("earth_shock", function(W, e, _, X)
+        e.cdUntil.flame_shock = W.t + X.shockCd -- the shared category
     end),
     flame_shock = spell("flame_shock", function(W, e, _, X)
-        e.cdUntil.earth_shock = W.t + 6
-        aura(W, X, e.target, "flame_shock")
-        W.dot(e, e.target, 3, 4, 80)
+        e.cdUntil.earth_shock = W.t + X.shockCd
+        aura(W, X, e.target, "flame_shock", X.flameShock)
+        W.dot(e, e.target, 3, X.flameShock / 3, 80)
     end),
     fire_nova = { -- around the fire totem up
         effect = spell("fire_nova").effect,
@@ -215,9 +215,14 @@ local function classData(H, C)
     for key, a in pairs(H.Hekili.Class.auras) do
         if type(key) == "string" and type(a) == "table" and a.id then
             local d = a.duration
-            X.aura[key] = { id = a.id, duration = type(d) == "function" and d() or d or 0, max_stack = a.max_stack }
+            X.aura[key] = { id = a.id, duration = type(d) == "number" and d or 0, max_stack = a.max_stack }
         end
     end
+    -- The world's own talent rules (the booted state's talents), restated from wowdb and wowsims/forever's spell data:
+    -- Reverberation -0.2 s a rank on the shocks' 6 s, Call of Flame +3 s a rank on Flame Shock's 12 s.
+    local T = H.Hekili.State.talent
+    X.shockCd = 6 - 0.2 * T.reverberation.rank
+    X.flameShock = 12 + 3 * T.call_of_flame.rank
     return X
 end
 

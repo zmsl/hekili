@@ -32,13 +32,13 @@ local ENH_REPLAY = {
 
 describe("the Shaman wowsims.com packs #slow #wowsims", function()
     local PACK = "Enhancement (wowsims.com)"
-    -- the replay floor, measured on the first clean run (0.602), never lowered
+    -- the replay floor, measured (0.602 first; 0.750 with Call of Flame and Stormstrike's cost), never lowered
     it(PACK .. " follows wowsims's casts", function()
-        ws.gate(PACK, content("shaman_enhancement", sw.Enhancement, PACK, 60), "shaman_enhancement", 0.60, ENH_REPLAY)
+        ws.gate(PACK, content("shaman_enhancement", sw.Enhancement, PACK, 60), "shaman_enhancement", 0.75, ENH_REPLAY)
     end)
     -- the pack's own worst idle at 60, seconds rounded up to 0.1: wowsims's spending runs the mana out (its own log sits
     -- near 170 of 5530 mana from 90 s), so the priority waits for mana with only cheaper ranks usable
-    local LIVE60 = 8.2
+    local LIVE60 = 8.0
     for _, level in ipairs({ 10, 40, 60 }) do
         it(PACK .. " stays live at level " .. level, function()
             ws.live(PACK, content("shaman_enhancement", sw.Enhancement, PACK, level), math.max(6, LIVE60))

@@ -55,8 +55,9 @@
 - Paladin: the hand-built Retribution priority is gone (replaced by Retribution (wowsims.com)), with its Holy Shock
   list and the Consecration and Exorcism Mana Floor settings (wowsims's 10% floor is in the new priority).
 - Shaman: the hand-built "Enhancement" priority is gone, and with it its imbue reminder and mana settings.
-  Reverberation and Improved Fire Nova now shorten the shock and Fire Nova cooldowns, and Shamanistic Focus lowers
-  the shocks' and Lightning Shield's cost.
+  Reverberation and Improved Fire Nova now shorten the shock and Fire Nova cooldowns, Shamanistic Focus lowers the
+  shocks' and Lightning Shield's cost, Call of Flame lengthens Flame Shock, and Stormstrike costs what wowsims.com
+  charges.
 
 ### Fixed
 - Hunter: priority lines that divide (Multi-Shot's) now fire. Divisions in the priorities translated from
@@ -89,6 +90,7 @@
   Hunter who never walks into melee rarely sees it; Beast Mastery and Marksmanship run the same list; the defaults
   never recommend Aimed Shot, Sniper Shot or Summon Hawk (wowsims's switches for them are off).
 - Rogue, Paladin and Shaman priorities are not yet checked in game.
+- Shaman: the Enhancement priority no longer shows the weapon-imbue reminder (the wowsims.com list has none).
 
 ### Upgrade notes
 - Rogue: a saved choice of the Assassination, Combat or Subtlety priority falls back to that specialization's

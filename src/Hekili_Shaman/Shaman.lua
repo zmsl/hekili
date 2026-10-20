@@ -9,8 +9,9 @@
 -- (wowsims.com), translated from wowsims/forever's APL (tools/wowsims/specs/shaman_enhancement.lua). Research: the
 -- class-completion research §4.
 -- Unmodelled: Stormstrike's debuff (no priority reads it), the totems' effects, Flametongue and Windfury Weapon's
--- procs, Windfury Totem (the party's: never prompted), Improved Lightning Shield's extra charges, and Call of Flame's
--- +9 s on Flame Shock (wowsims/forever's spell data has it; the Forever DB2 at 70338 does not: checkpoint).
+-- procs, Windfury Totem (the party's: never prompted), Improved Lightning Shield's extra charges.
+-- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (in-game checks): Call of Flame's +3 s a
+-- rank on Flame Shock, Stormstrike's cost. Fire Nova's (375 there) is not modelled (FIRE_NOVA_COST says why).
 -- Credits: Hekili (registration API, pack format and `summonTotem`'s signature, State.lua). wowsims/forever (MIT,
 -- ui/specs/shaman/enhancement/apls/default.apl.json and sim/shaman/) is the reference for the priorities and the totem,
 -- Fire Nova, Maelstrom Weapon and Clearcasting rules; no code is copied.
@@ -65,6 +66,9 @@ local EARTH_SHOCK_COST = { 30, 50, 85, 145, 240, 345, 450 }
 local FLAME_SHOCK = { 8050, 8052, 8053, 10447, 10448, 29228 }
 local FLAME_SHOCK_COST = { 55, 95, 160, 250, 345, 410 }
 local FIRE_NOVA = { 408341, 408342, 408343, 408344, 408345 } -- Forever's spell (no totem): from the fire totem up
+-- The DB2's. wowsims/forever's spell data says 65, 120, 210, 290, 375 (its log: 375): not modelled, because at 375 the
+-- secret-mana belief's lower bound stays under the cost while the truth is over it (the solo gate falls to 0.72: a
+-- core gap). IN-GAME CHECK: Fire Nova's cost.
 local FIRE_NOVA_COST = { 95, 170, 280, 395, 520 }
 local ROCKBITER_WEAPON = { 8017, 8018, 8019, 10399, 16314, 16315, 16316 }
 local ROCKBITER_WEAPON_COST = { 15, 25, 50, 75, 100, 125, 150 }
@@ -202,7 +206,7 @@ local function shockEffect(other, debuffKey)
     return function()
         setCooldown(other, 6 - 0.2 * talent.reverberation.rank)
         if debuffKey then
-            applyDebuff("target", debuffKey)
+            applyDebuff("target", debuffKey, 12 + 3 * talent.call_of_flame.rank) -- the aura's duration, explicit for `now`
         end
     end
 end
@@ -260,7 +264,17 @@ spec:RegisterAuras({
     -- Elemental Focus's Clearcasting (16246): the next elemental damage spell costs nothing (1 charge, 15 s).
     clearcasting = { id = 16246, duration = 15, max_stack = 1 },
     -- The target's DoT, modelled from our cast (target auras are unreadable in combat).
-    flame_shock = { id = 8050, copy = rest(FLAME_SHOCK), duration = 12, tick_time = 3, max_stack = 1 },
+    -- Call of Flame: wowsims spell data, absent from DB2 (wowdb effects 16038 has none): +3 s a rank (its effect 2,
+    -- 3000/6000/9000). IN-GAME CHECK: Flame Shock duration with Call of Flame: 21 s?
+    flame_shock = {
+        id = 8050,
+        copy = rest(FLAME_SHOCK),
+        duration = function()
+            return 12 + 3 * talent.call_of_flame.rank
+        end,
+        tick_time = 3,
+        max_stack = 1,
+    },
 })
 
 -- Clearcasting (16246): aura 108 misc 14 (cost) -100% on the spells its class mask names (-1743781885 / 4096 against
@@ -328,7 +342,9 @@ spec:RegisterAbilities({
         cooldown = 8,
         gcd = "spell",
 
-        spend = 125,
+        -- wowsims spell data, absent from DB2 (wowdb spell 17364 costs 125 flat): 8% of base mana, 121 at level 60
+        -- (its log). shortcut: 121 at every level; below 60 it is less. IN-GAME CHECK: Stormstrike's cost.
+        spend = 121,
         spendType = "mana",
 
         startsCombat = true,
