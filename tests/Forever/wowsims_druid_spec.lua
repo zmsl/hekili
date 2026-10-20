@@ -50,7 +50,7 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             "Balance (wowsims.com)",
             content("druid_balance", W.Balance, "Balance (wowsims.com)", 60),
             "druid_balance",
-            0.81 -- 0.818 on central fix 12 (GAP R: the combat mana forecast's five-second rule), from 0.56
+            0.83 -- 0.836 (46/55) on central fix 13 over fix 12; 0.818 on central fix 12 (GAP R), from 0.56
         )
     end)
     -- The pack's own worst idle at 60, seconds: out of mana from shared gap R (the combat mana forecast reads the

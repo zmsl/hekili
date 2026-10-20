@@ -62,9 +62,10 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     -- the replay floor: 0.860 measured on central fix 13 (49/57: removals shown as removals, the cooldown restart)
     it("Retribution (wowsims.com) follows wowsims's casts", function()
         local C = content("paladin_retribution", RET, "Retribution (wowsims.com)", 60)
-        -- 0.56 (0.561), lowered from 0.57 (0.579) by central fix 12's mana tick padding: with the tick's phase unknown
-        -- (a secret pool) the icon for a mana-gated seal comes one tick late, so one decision of 57 (Seal of Command on
-        -- the tick that pays for it) shows Seal of Righteousness. Recover after the in-game UNIT_POWER_FREQUENT-for-mana
+        -- 0.860 over central fix 12 too (floor 0.85). Before central fix 13: 0.56 (0.561), lowered from 0.57 (0.579) by
+        -- central fix 12's mana tick padding: with the tick's phase unknown (a secret pool) the icon for a mana-gated
+        -- seal comes one tick late, so one decision of 57 (Seal of Command on the tick that pays for it) shows Seal of
+        -- Righteousness. Recover after the in-game UNIT_POWER_FREQUENT-for-mana
         -- checkpoint by rounding up to the observed tick; the belief's precision at near-ties is GAP AB.
         ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.85, REPLAY)
     end)
@@ -85,13 +86,13 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     local PROT_LIVE = wowsims(pw.Protection, PROT_DROP, {})
 
     -- the replay floor: 0.750 (28) was measured on a fight the target never swung in (the export set no tank, GAP AE);
-    -- as the tank, 0.583 (48): blocks and hits return mana (Improved Seal of Fury, 61 gains; Shield Specialization, 18)
+    -- as the tank, 0.583 (48), 0.625 over central fix 12: blocks and hits return mana (Improved Seal of Fury, 61 gains; Shield Specialization, 18)
     -- that the class file does not model and the replay cannot drive (it replays no target swings), so the belief
     -- waits for mana it has (holy_shield -> holy_strike 9, seal_of_fury -> holy_strike 4)
     it("Protection (wowsims.com) follows wowsims's casts", function()
         local C = content("paladin_protection", PROT, "Protection (wowsims.com)", 60)
-        -- 0.96: 0.964 on central fix 12 (GAP R, the five-second rule's mana forecast), from 0.75
-        ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.58, REPLAY)
+        -- 0.964 on central fix 12 (GAP R) was the untanked fight's; the tanked one's floor is 0.62 (30/48)
+        ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.62, REPLAY)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Protection is out of mana from 24 s),
     -- so its longest wait is for mana
