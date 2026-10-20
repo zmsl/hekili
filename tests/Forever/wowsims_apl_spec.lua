@@ -32,6 +32,39 @@ end
 local function const(v)
     return { const = { val = v } }
 end
+local function AND(...)
+    return { ["and"] = { vals = { ... } } }
+end
+local function OR(...)
+    return { ["or"] = { vals = { ... } } }
+end
+local function NOT(x)
+    return { ["not"] = { val = x } }
+end
+-- The truth table's reads: A (big_hit) ready, B (dot) up, the execute phase.
+local ready = { spellIsReady = { spellId = { spellId = 200 } } }
+local up = { auraIsActive = { auraId = { spellId = 400 } } }
+local E = { isExecutePhase = { threshold = "E20" } }
+-- The truth table's trees.
+local trees = {
+    ready,
+    NOT(ready),
+    AND(ready, E),
+    OR(ready, E),
+    AND(NOT(ready), E),
+    OR(NOT(ready), E),
+    NOT(AND(ready, E)),
+    NOT(OR(ready, up)),
+    AND(OR(ready, up), E),
+    OR(AND(ready, up), E),
+    AND(OR(ready, up), OR(ready, E)),
+    OR(NOT(AND(ready, E)), up),
+    NOT(AND(OR(ready, up), NOT(E))),
+    -- one key read by several terms of a group: its guard tests the key once
+    AND(OR(ready, ready), E),
+    OR(AND(OR(ready, ready), NOT(ready)), E),
+    NOT(AND(OR(ready, NOT(ready)), OR(up, up))),
+}
 
 describe("the wowsims APL translator", function()
     it("keeps the order, maps keys, flags off-GCD and focus, and guards another ability's reads", function()
@@ -282,8 +315,6 @@ describe("the wowsims APL translator", function()
     it(
         "guards a read so an unknown ability drops its term: true in an and, false in an or, flipped by a not",
         function()
-            local ready = { spellIsReady = { spellId = { spellId = 200 } } }
-            local up = { auraIsActive = { auraId = { spellId = 400 } } }
             local rage = cmp("OpGt", { currentRage = {} }, const("10"))
             local text = apl.translate({
                 priorityList = {
@@ -295,6 +326,8 @@ describe("the wowsims APL translator", function()
                     -- a group whose every term reads an unlearned ability is nil as a whole, and dropped
                     cast(100, { ["and"] = { vals = { { ["or"] = { vals = { ready, up } } }, rage } } }),
                     cast(100, { ["or"] = { vals = { { ["and"] = { vals = { ready, up } } }, rage } } }),
+                    -- a group whose terms all read one ability: that ability's guard, its test once
+                    cast(100, AND(OR(ready, ready), rage)),
                 },
             }, ctx({}))
             assert.are.equal(
@@ -306,6 +339,7 @@ describe("the wowsims APL translator", function()
                     "actions+=/strike,if=((!action.big_hit.known|!cooldown.big_hit.ready)&rage.current>10)",
                     "actions+=/strike,if=((!(action.big_hit.known|action.dot.known)|((action.big_hit.known&cooldown.big_hit.ready)|(action.dot.known&buff.dot.up)))&rage.current>10)",
                     "actions+=/strike,if=(((action.big_hit.known|action.dot.known)&((!action.big_hit.known|cooldown.big_hit.ready)&(!action.dot.known|buff.dot.up)))|rage.current>10)",
+                    "actions+=/strike,if=((!action.big_hit.known|((action.big_hit.known&cooldown.big_hit.ready)|(action.big_hit.known&cooldown.big_hit.ready)))&rage.current>10)",
                 }, "\n"),
                 text
             )
@@ -316,33 +350,6 @@ describe("the wowsims APL translator", function()
     -- evaluation (sim/core/apl_values_operators.go): a read of an unknown ability is nil; and/or drop nil children
     -- and are nil when all are; not of nil is nil; a nil condition is true (apl_action.go).
     it("evaluates as wowsims does for every learned/unlearned combination (the truth table)", function()
-        local ready = { spellIsReady = { spellId = { spellId = 200 } } } -- A: big_hit
-        local up = { auraIsActive = { auraId = { spellId = 400 } } } -- B: dot
-        local E = { isExecutePhase = { threshold = "E20" } }
-        local function AND(...)
-            return { ["and"] = { vals = { ... } } }
-        end
-        local function OR(...)
-            return { ["or"] = { vals = { ... } } }
-        end
-        local function NOT(x)
-            return { ["not"] = { val = x } }
-        end
-        local trees = {
-            ready,
-            NOT(ready),
-            AND(ready, E),
-            OR(ready, E),
-            AND(NOT(ready), E),
-            OR(NOT(ready), E),
-            NOT(AND(ready, E)),
-            NOT(OR(ready, up)),
-            AND(OR(ready, up), E),
-            OR(AND(ready, up), E),
-            AND(OR(ready, up), OR(ready, E)),
-            OR(NOT(AND(ready, E)), up),
-            NOT(AND(OR(ready, up), NOT(E))),
-        }
         local function wowsims(n, w)
             local k, v = next(n)
             if k == "spellIsReady" then
@@ -413,6 +420,64 @@ describe("the wowsims APL translator", function()
                 end
                 assert.are.equal(want, ours(text, w), ("tree %d, %s, row %d"):format(i, text, bits))
             end
+        end
+    end)
+
+    -- The invariant between rule 6 and tools/check_pack_levels.lua: every line the translator writes passes the
+    -- leveling check, over nested guards (a guarded term holding another ability's guard), guards under a not,
+    -- group guards and groups whose terms read one ability, and the Feral and Rogue shapes from the wowsims lanes.
+    it("writes only lines the leveling check accepts", function()
+        local levels = assert(loadfile("tools/check_pack_levels.lua"))()
+        local function cost(id)
+            return { spellCurrentCost = { spellId = { spellId = id } } }
+        end
+        local function calc(op, l, r)
+            return { math = { op = op, lhs = l, rhs = r } }
+        end
+        local energy, cp = { currentEnergy = {} }, { currentComboPoints = {} }
+        local remains = { dotRemainingTime = { spellId = { spellId = 400 } } }
+        -- Feral's pooling test: energy after A's cost, against B's (two abilities' reads in one comparison)
+        local pool = cmp("OpLt", calc("OpAdd", calc("OpSub", energy, cost(200)), const("10")), cost(400))
+        local refresh = AND(cmp("OpGe", cp, const("5")), up, cmp("OpLe", remains, const("2s")), pool)
+        local spend = OR(
+            AND(
+                cmp("OpLt", cp, const("5")),
+                OR(
+                    NOT(cmp("OpLe", remains, const("2s"))),
+                    AND(cmp("OpGt", energy, calc("OpAdd", cost(400), cost(100))), NOT(up))
+                )
+            ),
+            cmp("OpGe", energy, const("75"))
+        )
+        local corpus = {
+            pool,
+            NOT(pool),
+            refresh,
+            AND(NOT(OR(refresh, AND(ready, pool))), cmp("OpGe", energy, cost(200))),
+            AND(
+                OR(NOT(AND(NOT(up), ready)), cmp("OpLt", remains, const("1s"))),
+                OR(ready, up, ready),
+                NOT(OR(up, up, up))
+            ),
+            NOT(AND(OR(ready, up), OR(ready, pool), NOT(OR(up, NOT(pool))))),
+            spend,
+            NOT(spend),
+            OR(AND(ready, OR(ready, AND(up, ready))), E),
+        }
+        for _, t in ipairs(trees) do
+            corpus[#corpus + 1] = t
+        end
+        local function isAbility(k)
+            return k == "strike" or k == "big_hit" or k == "roar" or k == "dot"
+        end
+        for i, tree in ipairs(corpus) do
+            local text = apl.translate({ priorityList = { cast(300, tree) } }, ctx({ executePhase = "execute_phase" }))
+            local cond = text:match(",if=(.*)$")
+            assert.are.same(
+                {},
+                cond and levels.unguarded(cond, "roar", isAbility) or {},
+                ("tree %d: %s"):format(i, text)
+            )
         end
     end)
 

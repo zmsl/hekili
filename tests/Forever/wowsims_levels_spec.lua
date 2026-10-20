@@ -82,6 +82,46 @@ describe("tools/check_pack_levels.lua", function()
         )
     end)
 
+    it("reads a guard nested in another's guarded term, or under a not, at its own position", function()
+        local P = "((energy.current-action.big_hit.cost)+10)<action.stance.cost"
+        assert.are.same(
+            {},
+            levels.unguarded("(!action.stance.known|(!action.big_hit.known|" .. P .. "))&x>1", "s", isAbility)
+        )
+        assert.are.same(
+            {},
+            levels.unguarded("!((x>1&(!action.stance.known|(!action.big_hit.known|" .. P .. ")))|y>1)", "s", isAbility)
+        )
+        assert.are.same(
+            {},
+            levels.unguarded("((action.stance.known&(action.big_hit.known&!(" .. P .. ")))|y>1)", "s", isAbility)
+        )
+        -- the inner guard has the `|`-form's polarity where its outer guard's term must read false
+        assert.are.same(
+            { "action.big_hit.cost" },
+            levels.unguarded("((action.stance.known&(!action.big_hit.known|" .. P .. "))|y>1)", "s", isAbility)
+        )
+        assert.are.same(
+            { "action.big_hit.cost" },
+            levels.unguarded("(!action.stance.known|(action.big_hit.known&" .. P .. "))&x>1", "s", isAbility)
+        )
+    end)
+
+    it("takes a group guard of one repeated key as that key's guard", function()
+        local T = "((action.big_hit.known|action.big_hit.known)|action.big_hit.known)"
+        assert.are.same({}, levels.unguarded("(!" .. T .. "|cooldown.big_hit.ready)&x>1", "s", isAbility))
+        assert.are.same({}, levels.unguarded("(" .. T .. "&cooldown.big_hit.ready)|x>1", "s", isAbility))
+        assert.are.same(
+            { "guard " .. T:sub(2, -2), "cooldown.big_hit.ready" },
+            levels.unguarded("(" .. T .. "&cooldown.big_hit.ready)&x>1", "s", isAbility)
+        )
+        -- a group of two keys guards neither alone
+        assert.are.same(
+            { "cooldown.big_hit.ready" },
+            levels.unguarded("(!(action.big_hit.known|action.stance.known)|cooldown.big_hit.ready)", "s", isAbility)
+        )
+    end)
+
     it("checks a dot read of another ability", function()
         assert.are.same({ "dot.big_hit.remains" }, levels.unguarded("dot.big_hit.remains<2", "strike", isAbility))
         assert.are.same({}, levels.unguarded("(!action.big_hit.known|dot.big_hit.remains<2)", "strike", isAbility))

@@ -34,8 +34,8 @@
 --    and nil propagates as wowsims builds the APL (sim/core/apl_values_operators.go): `not`, `cmp` and `math` of a nil
 --    are nil; `and`/`or` drop a nil term and are nil when every term is; a nil condition is true (apl_action.go). So a
 --    term that may be nil is written `(!<known>|<term>)` in an `and` and as the condition, `(<known>&<term>)` in an
---    `or`, with `<known>` its known test, `(kA|kB)` for an `and`/`or` whose every term may be nil, and one guard a
---    test for a comparison of two reads. An empty value and another player's aura are nil always (dropped here). The
+--    `or`, with `<known>` its known test, `(kA|kB)` (each key once) for an `and`/`or` whose every term may be nil,
+--    and one guard a test for a comparison of two reads. An empty value and another player's aura are nil always (dropped here). The
 --    line's own action is never guarded (the engine skips an unknown action).
 -- 7. `focus` from the recipe (the tiers the retired list carried, by action), `use_off_gcd=1` on an ability whose
 --    `gcd` is `"off"`; the recipe's `leveling` lines are appended to `actions`, each silent at 60.
@@ -233,6 +233,18 @@ local function knownTest(c, x)
     return c.ability[x] and ("action." .. x .. ".known") or (c.talent[x] and ("talent." .. c.talent[x] .. ".enabled"))
 end
 
+-- The text of "`u` is not nil".
+local function present(u)
+    if u.test then
+        return u.test
+    end
+    local parts = {}
+    for i, x in ipairs(u) do
+        parts[i] = present(x)
+    end
+    return "(" .. table.concat(parts, u.op == "or" and "&" or "|") .. ")"
+end
+
 -- Rule 6's nil conditions: when a translated node is wowsims's unresolved (nil) node. `false`: never; `true`: always
 -- (dropped at translation); else a formula over known tests: { test = "action.X.known" } (nil while X is unknown),
 -- { op = "or", ... } (nil when any part is: a comparison, a sum), { op = "and", ... } (nil when every part is: an
@@ -248,9 +260,9 @@ local function nilOr(a, b)
     local out, seen = { op = "or" }, {}
     for _, u in ipairs({ a, b }) do
         for _, x in ipairs(u.op == "or" and u or { u }) do
-            if not (x.test and seen[x.test]) then
-                out[#out + 1] = x
-                seen[x.test or out] = true
+            local k = present(x)
+            if not seen[k] then
+                out[#out + 1], seen[k] = x, true
             end
         end
     end
@@ -258,27 +270,20 @@ local function nilOr(a, b)
 end
 
 local function nilAnd(list)
-    local out = { op = "and" }
+    local out, seen = { op = "and" }, {}
     for _, u in ipairs(list) do
         if u == false then
             return false
         elseif u ~= true then
-            out[#out + 1] = u
+            for _, x in ipairs(u.op == "and" and u or { u }) do -- one key once, however often the terms read it
+                local k = present(x)
+                if not seen[k] then
+                    out[#out + 1], seen[k] = x, true
+                end
+            end
         end
     end
     return #out == 0 or (#out == 1 and out[1]) or out
-end
-
--- The text of "`u` is not nil".
-local function present(u)
-    if u.test then
-        return u.test
-    end
-    local parts = {}
-    for i, x in ipairs(u) do
-        parts[i] = present(x)
-    end
-    return "(" .. table.concat(parts, u.op == "or" and "&" or "|") .. ")"
 end
 
 -- Term `s` with nil condition `u` as wowsims evaluates it: a nil term is dropped, so it reads `want` (true in an
