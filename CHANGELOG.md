@@ -79,8 +79,14 @@
   cooldown (1.5 s and 18 s without), so the Arms priorities place Slam on its real timing.
 - Warrior: Anger Management's rage is 1.5 every 5 seconds in combat (it was assumed 1 every 3 seconds), as the game data
   and wowsims/forever give it; rage forecasts with the talent are slightly lower.
+- Warrior: talent cost reductions are priced per rank as wowsims/forever charges them: Focused Rage takes 1 rage a rank
+  (it was 3) and now also covers Demoralizing, Challenging and Intimidating Shout and Death Wish; Improved Thunder
+  Clap 2 a rank (was 6), Improved Sunder Armor 1 a rank (was 3), Improved Execute 3 then 5 (was 5 then 10); Booming
+  Voice lowers the shouts' cost 5% a rank.
 
 ### Fixed
+- Warrior: Thunder Clap's debuff on the target was always read as down, so priorities that refresh it suggested
+  Thunder Clap again and again; it now counts from your own Thunder Clap.
 - Pre-pull actions no longer show in combat when the pre-pull list hands them to another list: Fury recommended
   Intercept all fight (and planned its rage around it), and Arms did the same with stance dancing on.
 - Mana (Paladin, Shaman, Hunter and other spirit regenerators): in combat the addon forecast mana with the

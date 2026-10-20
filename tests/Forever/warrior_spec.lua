@@ -162,15 +162,16 @@ describe("Forever Warrior", function()
         end
     )
 
-    it("models the talent-modified costs from rank 1's value x the rank, Focused Rage on the offensive ones", function()
+    it("models the talent-modified costs per rank, Focused Rage on the abilities its class mask names", function()
         local e = lw.env(w)
         e.talent = rank(2)
         local function at(key)
             return lw.run(w.abilities[key].spend, e)
         end
-        -- Focused Rage -3 a rank; Raging Blows -3 (Cleave, Whirlwind); Improved Heroic Strike -1, Improved Execute -5,
-        -- Improved Sunder Armor -3, Improved Thunder Clap -6 a rank; floored at 0
-        assert.are.same({ 7, 8, 0, 3, 2, 13, 0, 24, 10 }, {
+        -- Focused Rage -1 a rank; Raging Blows -3 (Cleave, Whirlwind); Improved Heroic Strike -1, Improved Execute -3/-5,
+        -- Improved Sunder Armor -1, Improved Thunder Clap -2 a rank; Booming Voice -5% a rank on the shouts (flat
+        -- first, then the percentage); floored at 0
+        assert.are.same({ 11, 12, 8, 11, 14, 17, 3, 28, 9, 7.2 }, {
             at("heroic_strike"),
             at("cleave"),
             at("execute"),
@@ -180,8 +181,44 @@ describe("Forever Warrior", function()
             at("overpower"),
             at("mortal_strike"),
             at("battle_shout"),
+            at("demoralizing_shout"),
         })
         assert.are.same({ 8, 7 }, { lw.run(w.abilities.taunt.cooldown, e), lw.run(w.auras.shield_block.duration, e) })
+    end)
+
+    -- wowsims/forever's (MIT, https://github.com/wowsims/forever) logged costs (tests/Forever/wowsims/warrior_*.log,
+    -- "Casting ... (Cost = N"): the DB2 holds one value per talent spell, so the per-rank steps are the logs'.
+    it("prices each wowsims build's casts as wowsims/forever's logs do", function()
+        local e = lw.env(w)
+        local function build(t)
+            return setmetatable({}, {
+                __index = function(_, k)
+                    return { rank = t[k] or 0, enabled = (t[k] or 0) > 0 }
+                end,
+            })
+        end
+        local function at(key)
+            return lw.run(w.abilities[key].spend, e)
+        end
+        -- Protection: Focused Rage 3, Improved Thunder Clap 1, Improved Heroic Strike 3
+        e.talent = build({ focused_rage = 3, improved_thunder_clap = 1, improved_heroic_strike = 3 })
+        assert.are.same({ 17, 2, 12, 7, 9, 15, 7, 10, 10 }, {
+            at("shield_slam"),
+            at("revenge"),
+            at("sunder_armor"),
+            at("rend"),
+            at("heroic_strike"),
+            at("thunder_clap"),
+            at("demoralizing_shout"),
+            at("shield_block"),
+            at("battle_shout"),
+        })
+        -- Fury: Improved Execute 2, Booming Voice 2, Improved Heroic Strike 3
+        e.talent = build({ improved_execute = 2, booming_voice = 2, improved_heroic_strike = 3 })
+        assert.are.same(
+            { 10, 9, 12, 30 },
+            { at("execute"), at("battle_shout"), at("heroic_strike"), at("bloodthirst") }
+        )
     end)
 
     -- The belief prices a cast in Families/Now.lua's context: its reads (talent, max, ...) and no state functions.
@@ -195,7 +232,7 @@ describe("Forever Warrior", function()
                 key
             )
         end
-        assert.are.equal(13, lw.run(w.abilities.whirlwind.spend, ctx))
+        assert.are.equal(17, lw.run(w.abilities.whirlwind.spend, ctx))
     end)
 
     it("casts Slam in 1.0 s with a 1.0 s GCD on a 15 s cooldown with Improved Slam (Forever DB2 12862)", function()
@@ -422,6 +459,14 @@ describe("Forever Warrior", function()
         assert.are.same({ 12328, 12292 }, { w.auras.death_wish.id, w.auras.sweeping_strikes.id })
         assert.are.same({ 1282733, 5 }, { w.auras.overpower_ready.id, w.auras.overpower_ready.duration })
         assert.are.same({ 29131, 10 }, { w.auras.bloodrage.id, w.auras.bloodrage.duration })
+    end)
+
+    -- The state reads a `shared` aura from the player's debuffs (src/Hekili/Engine/Sim/State.lua's debuff lookup), so a
+    -- target debuff marked shared (Classic's `shared = "target"`) reads down while the target has it.
+    it("marks no target debuff shared: Thunder Clap's reads the target's", function()
+        for key, a in pairs(w.auras) do
+            assert.is_true(a.shared == nil or a.shared == "player", key)
+        end
     end)
 
     it("registers every aura a handler, state function or stance gate names", function()

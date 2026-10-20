@@ -641,7 +641,6 @@ spec:RegisterAuras({
             return THUNDER_CLAP_DURATION[knownRank(THUNDER_CLAP)] or 10
         end,
         max_stack = 1,
-        shared = "target",
     },
     windfury = {
         id = 8515,
@@ -666,14 +665,28 @@ spec:RegisterStateFunction("swap_stance", function(stance)
     applyBuff(stance)
 end)
 
--- Focused Rage: -3 rage a rank on the offensive abilities (Forever's tooltip; DB2 29787 -30 at rank 1), floored at 0.
--- shortcut: which abilities count is a guess (every ability that strikes an enemy, and Disarm; not the shouts),
--- unseen until someone buys the talent; correct the offensive_cost calls from the client's costs (Snapshot cost= /
--- read=) then. A file-local reading the caller's `talent`: the belief prices a cast in Families/Now.lua's context,
--- which has `talent` but no state functions.
+-- Focused Rage: -1 rage a rank on the abilities its effect's class mask names (DB2 29787's SpellEffect
+-- EffectSpellClassMask against each ability's SpellClassOptions: every strike, Disarm, Death Wish and the shouts
+-- but Battle Shout), floored at 0. The DB2 holds one value (-30, rank 3's); the per-rank step is wowsims/forever's
+-- logged costs at rank 3 (Shield Slam 17, Revenge 2, Sunder Armor 12: tests/Forever/wowsims/warrior_protection.log).
+-- A file-local reading the caller's `talent`: the belief prices a cast in Families/Now.lua's context, which has
+-- `talent` but no state functions.
 local function offensive_cost(talent, cost)
-    return max(0, cost - 3 * talent.focused_rage.rank)
+    return max(0, cost - talent.focused_rage.rank)
 end
+
+-- Booming Voice: -5% a rank on the four shouts (DB2 12321 effect 1, -25% at rank 5, class mask 983040; Battle Shout
+-- 9 at rank 2 in wowsims/forever's Fury log), applied after the flat modifiers as the client's spell mods are;
+-- `focused`: the shout is in Focused Rage's mask too.
+local function shout_cost(talent, cost, focused)
+    if focused then
+        cost = offensive_cost(talent, cost)
+    end
+    return cost * (1 - 0.05 * talent.booming_voice.rank)
+end
+
+-- Improved Execute's -3 / -5 (DB2 20502: -50, rank 2's; rank 1's from wowsims/forever's rank curve).
+local IMPROVED_EXECUTE = { [0] = 0, 3, 5 }
 
 -- The reactive windows from the combat log, as Classic models them (origin/classic:Classic/Warrior.lua:400-456): our
 -- dodged swing or ability opens Overpower's, a dodge, parry or block on us opens Revenge's. On Forever the rows come
@@ -768,7 +781,9 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        spend = 10,
+        spend = function()
+            return shout_cost(talent, 10)
+        end,
         spendType = "rage",
 
         startsCombat = false,
@@ -913,7 +928,9 @@ spec:RegisterAbilities({
         cooldown = 600,
         gcd = "spell",
 
-        spend = 5,
+        spend = function()
+            return shout_cost(talent, 5, true)
+        end,
         spendType = "rage",
 
         startsCombat = true,
@@ -1022,7 +1039,9 @@ spec:RegisterAbilities({
         cooldown = 180,
         gcd = "spell",
 
-        spend = 10,
+        spend = function()
+            return offensive_cost(talent, 10)
+        end,
         spendType = "rage",
 
         talent = "death_wish",
@@ -1073,7 +1092,9 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        spend = 10,
+        spend = function()
+            return shout_cost(talent, 10, true)
+        end,
         spendType = "rage",
 
         startsCombat = true,
@@ -1125,7 +1146,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(talent, max(0, 15 - 5 * talent.improved_execute.rank))
+            return offensive_cost(talent, 15 - IMPROVED_EXECUTE[talent.improved_execute.rank])
         end,
         spendType = "rage",
 
@@ -1240,7 +1261,9 @@ spec:RegisterAbilities({
         cooldown = 180,
         gcd = "spell",
 
-        spend = 25,
+        spend = function()
+            return shout_cost(talent, 25, true)
+        end,
         spendType = "rage",
 
         startsCombat = true,
@@ -1655,7 +1678,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(talent, max(0, 15 - 3 * talent.improved_sunder_armor.rank))
+            return offensive_cost(talent, 15 - talent.improved_sunder_armor.rank)
         end,
         spendType = "rage",
 
@@ -1723,7 +1746,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(talent, max(0, 20 - 6 * talent.improved_thunder_clap.rank))
+            return offensive_cost(talent, 20 - 2 * talent.improved_thunder_clap.rank)
         end,
         spendType = "rage",
 
