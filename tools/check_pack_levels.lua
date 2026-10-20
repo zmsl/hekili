@@ -4,7 +4,9 @@
 -- while X is unlearned (tools/wowsims/apl.lua rule 6): `(!action.X.known|...)`, true, where the group must come out
 -- true (the whole condition, a term of an `&`), `(action.X.known&...)`, false, where it must come out false (a term
 -- of a `|`), each `!` before it or an enclosing group flipping that (`(action.X.known|` and `(!action.X.known&` guard
--- nothing); a line's own action needs none (the engine skips an unknown action). Loaded with
+-- nothing); a line's own action needs none (the engine skips an unknown action). A group guard (an `and`/`or` whose
+-- every term reads an unlearned ability: `(!(action.A.known|action.B.known)|...)`, `((action.A.known|...)&...)`) is held
+-- to the same position rule, an offence "guard <its tests>" when misplaced. Loaded with
 -- loadfile(...)() it returns { unguarded, file }; run directly: lua tools/check_pack_levels.lua <file.simc>... lists
 -- offences against every key (no class data), for a quick look.
 local M = {}
@@ -48,6 +50,19 @@ function M.unguarded(criteria, self, isAbility)
         end
     end
     local bad = {}
+    for s, bang, tests, op in criteria:gmatch("()%((!?)%(([%w_.|]+)%)([|&])") do
+        if tests:find("|", 1, true) and (tests:find(".known", 1, true) or tests:find(".enabled", 1, true)) then
+            local depth, i = 0, s
+            repeat
+                local ch = criteria:sub(i, i)
+                depth = depth + (ch == "(" and 1 or ch == ")" and -1 or 0)
+                i = i + 1
+            until depth == 0 or i > #criteria
+            if (bang == "!") ~= (op == "|") or wanted(criteria, s, i - 1) ~= (bang == "!") then
+                bad[#bad + 1] = "guard " .. tests
+            end
+        end
+    end
     for s, kind, x, field in criteria:gmatch("()(%a+)%.([%w_]+)%.([%w_]+)") do
         if KINDS[kind] and x ~= self and isAbility(x) and not (kind == "action" and field == "known") then
             local covered = false

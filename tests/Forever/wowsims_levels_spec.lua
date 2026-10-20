@@ -66,6 +66,22 @@ describe("tools/check_pack_levels.lua", function()
         assert.are.same({}, levels.unguarded("(action.big_hit.known&cooldown.big_hit.ready)|x>1", "strike", isAbility))
     end)
 
+    it("holds a group guard to the same position rule", function()
+        local G = "(action.big_hit.known&cooldown.big_hit.ready)|(action.stance.known&buff.stance.up)"
+        assert.are.same(
+            {},
+            levels.unguarded("(!(action.big_hit.known|action.stance.known)|(" .. G .. "))&x>1", "s", isAbility)
+        )
+        assert.are.same(
+            {},
+            levels.unguarded("((action.big_hit.known|action.stance.known)&(" .. G .. "))|x>1", "s", isAbility)
+        )
+        assert.are.same(
+            { "guard action.big_hit.known|action.stance.known" },
+            levels.unguarded("((action.big_hit.known|action.stance.known)&(" .. G .. "))&x>1", "s", isAbility)
+        )
+    end)
+
     it("checks a dot read of another ability", function()
         assert.are.same({ "dot.big_hit.remains" }, levels.unguarded("dot.big_hit.remains<2", "strike", isAbility))
         assert.are.same({}, levels.unguarded("(!action.big_hit.known|dot.big_hit.remains<2)", "strike", isAbility))
@@ -97,6 +113,23 @@ describe("the character's racials (engine.abilitySet)", function()
     local ws = require("Forever.helpers.wowsims")
     local ww = require("Forever.helpers.warrior_world")
     local RACIAL = { [20572] = "blood_fury", [20554] = "berserking", [1259813] = "eureka", [1259799] = "elunes_light" }
+
+    it("reads the request's race as the client's token", function()
+        local dir = os.tmpname()
+        os.remove(dir)
+        os.execute("mkdir -p '" .. dir .. "'")
+        for spec, race in pairs({ orc_test = "RaceOrc", undead_test = "RaceUndead", elf_test = "RaceNightElf" }) do
+            local f = assert(io.open(dir .. "/" .. spec .. ".json", "wb"))
+            f:write(('{"raid":{"parties":[{"players":[{"race":"%s"}]}]}}'):format(race))
+            f:close()
+        end
+        local saved = ws.DIR
+        ws.DIR = dir .. "/"
+        local got = { ws.race("orc_test"), ws.race("undead_test"), ws.race("elf_test") }
+        ws.DIR = saved
+        os.execute("rm -r '" .. dir .. "'")
+        assert.are.same({ "Orc", "Scourge", "NightElf" }, got)
+    end)
 
     it("holds every race's racials as registered, off the GCD", function()
         local set = engine.abilitySet("WARRIOR")

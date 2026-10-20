@@ -426,6 +426,10 @@ function M.abilitySet(classToken, race)
                     end
                 end
                 if kind == "abilities" then
+                    assert(
+                        not set.racial[key],
+                        ("races %s and %s both register %s"):format(tostring(set.racial[key]), r, key)
+                    )
                     set.racial[key] = r
                 end
             end
