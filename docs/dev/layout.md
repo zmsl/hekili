@@ -230,7 +230,8 @@ Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
 `make test-hunter` (`#hunter`), gated by `pack_gate.gate` and asserting its focus lines ran (Raptor Strike and Mongoose
 Bite at tier 1; Serpent Sting and Hunter's Mark at tier 2). The packs are the wowsims.com ones (Beast Mastery,
 Marksmanship and Survival (wowsims.com), Task 11 of the wowsims packs plan: wowsims/forever's Melee Weave), and their
-replay and leveling gates are `tests/Forever/wowsims_hunter_spec.lua`. The Beast Mastery and Marksmanship worlds stand
+replay and leveling gates are `tests/Forever/wowsims_hunter_spec.lua`. Each pack opens with wowsims's automatic Blood Fury and Rapid Fire
+(translator rule 13, from 5 s, off the GCD). The Beast Mastery and Marksmanship worlds stand
 at 11 yd (the weave's range: the shots in their band, Raptor Strike and the melee lines out of reach) and shoot Auto
 Shots on the harness's ranged hand (`W.startRanged`), Quick Shots procs off them under Aspect of the Hawk (10%); they
 run the same pack text and kit, so their lines match. The Survival world sets no distance (every check in range),
@@ -240,15 +241,15 @@ at its swing (class-neutral: a queued strike's cooldown). Each fight's fresh wor
 missing kill). The kit's ranges are DB2's (`RANGE`: Hunter Range 8-35, Combat Range 0-5). "The Hunter at range, then
 in melee" runs Survival at 25 yd, then 5 yd: its four `target.within5` lines stay shut while the bracket reads [8, 35],
 open at [0, 5], and the bracket holds when every read goes secret. Mana is secret in combat, so the belief holds its
-lower bound and the worlds idle about 0.72 (Beast Mastery, Marksmanship) and 0.56 (Survival) of the time. The lines
+lower bound and the worlds idle about 0.73 (Beast Mastery, Marksmanship) and 0.56 (Survival) of the time. The lines
 after the swap (wowsims packs plan, Task 11; the hand-built lists' were 0.983/0.986/0.945 at 3 fights):
 
 ```
-Beast Mastery solo: fights=3 agreement 0.999 (1715 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.008; ... [seeds 1-3]
-Marksmanship solo: fights=3 agreement 0.999 (1715 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.008; ... [seeds 1-3]
+Beast Mastery solo: fights=3 agreement 0.998 (1709 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.034; ... [seeds 1-3]
+Marksmanship solo: fights=3 agreement 0.998 (1709 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.034; ... [seeds 1-3]
 Survival solo: fights=3 agreement 0.963 (872 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.988; ... [seeds 1-3]
-Beast Mastery solo: fights=20 agreement 0.998 (11522 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.005; ...
-Marksmanship solo: fights=20 agreement 0.998 (11522 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.005; ...
+Beast Mastery solo: fights=20 agreement 0.998 (11263 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.007; ...
+Marksmanship solo: fights=20 agreement 0.998 (11263 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.007; ...
 Survival solo: fights=20 agreement 0.966 (5862 ticks); react median 0 p90 1 never 0.010; refused per 100 [], episodes 0.00/min; dps A/B 1.018; ...
 ```
 
