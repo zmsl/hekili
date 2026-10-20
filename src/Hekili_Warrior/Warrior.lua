@@ -2047,9 +2047,35 @@ spec:RegisterSetting("wowsims_hamstring_weave", true, {
     width = "full",
 }, "arms")
 
--- The four priorities (Arms has two, Arms (wowsims.com) and Arms, until the swap), written by `make packs`
--- (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and run it, never these blocks
--- (tests/Forever/warrior_spec.lua checks they match). Pick one with /hekili priority <name>.
+spec:RegisterSetting("wowsims_recklessness", false, {
+    type = "toggle",
+    name = "Recklessness (wowsims.com)",
+    desc = "The wowsims.com priority's Recklessness ON/OFF switch (its default in wowsims's own APL).",
+    width = "full",
+}, "fury")
+
+spec:RegisterSetting("wowsims_rend_weave", true, {
+    type = "toggle",
+    name = "Rend Weave (wowsims.com)",
+    desc = "The wowsims.com priority's Rend Weave ON/OFF switch (its default in wowsims's own APL).",
+    width = "full",
+}, "fury")
+
+spec:RegisterSetting("wowsims_hamstring_weave", true, {
+    type = "toggle",
+    name = "Hamstring Weave (wowsims.com)",
+    desc = "The wowsims.com priority's Hamstring Weave ON/OFF switch (its default in wowsims's own APL).",
+    width = "full",
+}, "fury")
+
+-- The five priorities (Arms and Fury have two each, the wowsims.com one and the hand-built one, until the swap),
+-- written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and run it, never
+-- these blocks (tests/Forever/warrior_spec.lua checks they match). Pick one with /hekili priority <name>.
+spec:RegisterPack(
+    "Fury (wowsims.com)",
+    20261020438,
+    [[Hekili:TNvBVTTTt8pl5nE2ybY2XjDTbvbO)XqX6W)1nexG9ojtlshXzzjbsQ4fGa)zFhPuKiPjDKDWaMXwbAaJ49aVF3X7bMOPrFlAogjirF9Qjx9UPtUAY1ZEF0CXtLKO5LOK1OhGf5OnWp)Cf7PDlgUTylNUHhKuSzKKMNYkqyPCwwrZeFjpAPtrYljjrZ)9pD)9F5xV)2vGSIMNsXysndeEItnC7UfIuYUfnFB8Qcg5rcB3cmzfQktSBXN(T))UfWN3TOH9k6yPY4J3IymAbBmUKpgvMbmdeeaRc(dEr(OlbrZq58m4WIH1fsvr57wGW4I8VdwSM8epy3IFejq364im8x(Y3aHKkeL8Bhp(bQiTAP8up2I0rGmHtkE2SpmBcEY1tMnjaGowXkAgaSOebTiNhuYiaZlrIWLegNWwtyXmWbCjSrzvwwmSZ1b3S7N3JHVpC8YSIcSI6kojUy1Q4hsWHt15DMhorcrgjMNwuj6b5ji52QnIZOCXLYOJqGIyfJBkEK0YyOBI5v5yW2qSnfSlPRcLe8ijMKt2qj8WPT87vDjyazsOOmUoTycsKgVLYt1)kC2xNr48C4)sTXjcbn)bEqJxkwNaDg5BjKsGYyUGrxt4wi7Eh87mo4BtPSST0C8RrOYZbrEmUWl)dVOEJanIdwNxSn)5KIImmSWylgzdIMZVlCAWnJ0Lk5pjjvcIuMnlJltrCIbKNrqpAhhTQiPIxB1dTTMbY4UGKkgJKlUl86jJEDpieMWkl2cHbBbTbOSbK0g)ZfO8e7ZIcqwwTAvGnHbvLdgEXqVGvZgTyB9Nh98qVSm4q47hdNa86wODm2THgBW)0T4ucRGM0eP1BOpC6GlmCJh2t86k5kLsone8TeIoOLBlb)SFuSMZrJmT53zAY(slcMPoBF8dtCh)Py9metgkqzGDfq3aLzEKGJnnPasoAzgb)C)iZmw1OGXzi2uN5qZi6Uxovl6jWOMwyskI5kmQZoAKyDIO6tJHQEjdLpvaqlnxqyjKsXH0JDopDvTF(qnT1v1muHSXYgIm1KlI7UqaPP7f5KkgznQFKMvb1DHcdpKk8XGE)c718aMOSC9phagFY6pQ1P0EvBcnCkoq7ZTGAR6advGsNzZii8tYQJMfiUX43LX)qLPbak8I8d1VqShkc(V2VPxMYJYpSKGtaUjDYrFJAWqhD1LJvsNCIDe8pfxztaU0E6sunZYrcjUEfh1BSNQgZPvYnMZfT2t3ok3nyg)NJ06o5lIs5kRLIBN7ihExW9gnhWyoibRzRLDvZvJYxpumS8RQr7BkFh9)IMNWOqPfkQECt9wiFzauGgRo1RLCC94)6jyJeWjWsb9siDP(LIyMhr0nhNKQR9qL(yB623bNVtkWBSeO2fbjU1Qa75)8dI3nvk3355G2gG8Ac4h8iaTOtjzV)y0ZbI(7r4VuDFWJ6AcU1vMr8UK3Pt8gg2JPiJMRQPOCk(Cs1dRQ0LDiFVIi3lvPsu2b3(0UDUstK)Kgr1BIS30qQN(uQk8W(MQx3ypMiTpEvJjvvNa7SaANGtfnFt3m8xyOpvgShzTftU6yWK(MiRDiyDyZA8xLa9LbZCQWZDWVVZg37HJvyN3K3AdAEUJChEY5iz1P5TVvSRUq6EEzOUEWnEJWEP)c7iAD(N5maVtzoAWWh76UOd0XXblKymkFnuy0YKd04f5AqNwiYbgTTfR10Pdn4TQP6XmC3NGJE190SUR2a9PX2x2WTsD)Mg(FuJA7xRDYJW47E7JJXa6Ecexrw(4Q(LqCfu5LdTheP2k3VfLJXy1DAM5Fodta933RC4kuOdS8ONoyUDpTUBoWeoY59SkgC8x)o9zLpp8U9(HpoMRxNCh7n2L9dG8gEbK)L6wD9mihZ7Ge1KwevjsL1l)jYAAgD3IHFU5V2UA7O)k]]
+)
 spec:RegisterPack(
     "Arms (wowsims.com)",
     20261020165,

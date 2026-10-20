@@ -21,6 +21,7 @@ describe("tools/make_pack.lua", function()
             by[p.name] = mp.decode(mp.encode(p)).spec
         end
         assert.are.same({
+            ["Fury (wowsims.com)"] = "WARRIOR:fury",
             ["Arms (wowsims.com)"] = "WARRIOR:arms",
             Arms = "WARRIOR:arms",
             Fury = "WARRIOR:fury",
@@ -63,6 +64,7 @@ describe("tools/make_pack.lua", function()
             local out, report = mp.sync((src:gsub(furyBlock:gsub("%p", "%%%0"), "")), packs)
             assert.is_true(src == out, "the source changed")
             assert.are.same({
+                { "Fury (wowsims.com)", "unchanged" },
                 { "Arms (wowsims.com)", "unchanged" },
                 { "Arms", "unchanged" },
                 { "Fury", "added" },
@@ -75,7 +77,7 @@ describe("tools/make_pack.lua", function()
             assert.are_not.equal(src, edited)
             local out, report = mp.sync(edited, packs)
             assert.is_true(src == out, "the source changed")
-            assert.are.same({ "Arms", "updated" }, report[2])
+            assert.are.same({ "Arms", "updated" }, report[3])
         end)
 
         it("removes a block the manifest does not list", function()
@@ -156,6 +158,7 @@ describe("tools/make_pack.lua", function()
             assert.are.equal(1, n)
             local root = scratch(apls, {
                 ["packs.lua"] = true,
+                ["Fury (wowsims.com).simc"] = true,
                 ["Arms (wowsims.com).simc"] = true,
                 ["Arms.simc"] = true,
                 ["Protection.simc"] = true,
@@ -168,8 +171,8 @@ describe("tools/make_pack.lua", function()
             local again = mp.write(out, "warrior", TODAY + 1, root)
             os.execute("rm -r " .. root)
             assert.is_false(src == out, "the Fury change was not written")
-            assert.are.same({ "Fury", "updated" }, report[3])
-            for _, name in ipairs({ "Arms (wowsims.com)", "Arms", "Fury", "Protection" }) do
+            assert.are.same({ "Fury", "updated" }, report[4])
+            for _, name in ipairs({ "Fury (wowsims.com)", "Arms (wowsims.com)", "Arms", "Fury", "Protection" }) do
                 assert.are.equal(TODAY, date(out, name), name)
             end
             assert.is_true(out == again, "a second write changed the file")

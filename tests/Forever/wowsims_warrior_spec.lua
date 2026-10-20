@@ -41,6 +41,14 @@ local ARMS_CHAR = setmetatable({
     end,
 }, { __index = ww })
 
+-- Fury: the same Overpower window (its Overpower Weaving group reads 1282733); Berserker Rage is a trained ability the
+-- loop kit lacks. The base is the dual-wield world (ww.Fury), the log's own weapon speeds.
+local FURY = { kit = { "berserker_rage" }, requires = ARMS.requires }
+-- Whirlwind's off-hand hit (1680 Tag 2) is logged as its own Casting line: a hit of the one cast, not a decision.
+-- wowsims logs the Heroic Strike queue (25286 Tag 1) as an aura the client never shows (the client sees
+-- IsCurrentSpell): hidden.
+local FURY_REPLAY = { hidden = { [1282733] = true, [25286] = true }, procs = { ["1680:2"] = true }, speed = 2.1 }
+
 describe("the Warrior wowsims.com packs #slow #wowsims", function()
     it("Arms (wowsims.com) follows wowsims's casts", function()
         ws.gate(
@@ -73,6 +81,26 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
                 "Arms (wowsims.com)",
                 content("warrior_arms", ww, "Arms (wowsims.com)", level, ARMS),
                 math.max(6, LIVE60)
+            )
+        end)
+    end
+    it("Fury (wowsims.com) follows wowsims's casts", function()
+        ws.gate(
+            "Fury (wowsims.com)",
+            content("warrior_fury", ww.Fury, "Fury (wowsims.com)", 60, FURY),
+            "warrior_fury",
+            0.81, -- measured 0.817 (0.883 without GAP AD); provisional until central fixes 16 and 7
+            FURY_REPLAY
+        )
+    end)
+    -- the pack's own worst idle at 60, measured with GAP AD (Intercept in combat): provisional until fix 16
+    local FURY_LIVE60 = 8.2
+    for _, level in ipairs({ 10, 40, 60 }) do
+        it("Fury (wowsims.com) stays live at level " .. level, function()
+            ws.live(
+                "Fury (wowsims.com)",
+                content("warrior_fury", ww.Fury, "Fury (wowsims.com)", level, FURY),
+                math.max(6, FURY_LIVE60)
             )
         end)
     end

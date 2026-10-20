@@ -134,7 +134,14 @@ function M.load()
     end
     w.settings = {}
     for _, call in ipairs(reg.RegisterSetting or {}) do
-        w.settings[call[1]] = { default = call[2], option = call[3], specs = call[4] and { unpack(call, 4) } or nil }
+        local prev, specs = w.settings[call[1]], call[4] and { unpack(call, 4) } or nil
+        if prev and prev.specs and specs then -- the same key registered per spec (wowsims_* toggles): one entry, every spec
+            for _, k in ipairs(specs) do
+                table.insert(prev.specs, k)
+            end
+        else
+            w.settings[call[1]] = { default = call[2], option = call[3], specs = specs }
+        end
     end
     w.packs = reg.RegisterPack or {}
     w.options = reg.RegisterOptions and reg.RegisterOptions[1][1]

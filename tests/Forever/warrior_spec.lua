@@ -728,15 +728,15 @@ describe("Forever Warrior", function()
         assert.is_true(lw.run(w.abilities.execute.usable, e))
     end)
 
-    it("registers the four priorities (Arms twice) exactly as tools/make_pack.lua prints them", function()
+    it("registers the five priorities (Arms and Fury twice) exactly as tools/make_pack.lua prints them", function()
         local printed = {}
         local pipe = assert(io.popen(LUA .. " tools/make_pack.lua"))
         for line in pipe:lines() do
             printed[#printed + 1] = { line:match("^(%d+) (.+)$") }
         end
         pipe:close()
-        assert.are.equal(4, #w.packs)
-        for i, name in ipairs({ "Arms (wowsims.com)", "Arms", "Fury", "Protection" }) do
+        assert.are.equal(5, #w.packs)
+        for i, name in ipairs({ "Fury (wowsims.com)", "Arms (wowsims.com)", "Arms", "Fury", "Protection" }) do
             assert.are.same({ name, tonumber(printed[i][1]), printed[i][2] }, w.packs[i])
         end
         assert.is_nil(w.options) -- each spec's package is NewClass's
@@ -773,11 +773,14 @@ describe("Forever Warrior", function()
 
     it("keeps its priorities in src/Hekili_Warrior/APLs/, tools/make_pack.lua's default class", function()
         local def = dofile("src/Hekili_Warrior/APLs/packs.lua")
-        assert.are.same({ "WARRIOR", { "Arms (wowsims.com)", "Arms", "Fury", "Protection" } }, { def.class, def.packs })
+        assert.are.same(
+            { "WARRIOR", { "Fury (wowsims.com)", "Arms (wowsims.com)", "Arms", "Fury", "Protection" } },
+            { def.class, def.packs }
+        )
         local byName = assert(loadfile("tools/make_pack.lua"))("lists", "warrior")
         local byDefault = assert(loadfile("tools/make_pack.lua"))("lists")
         assert.are.same(byDefault, byName)
-        assert.are.equal("Arms (wowsims.com)", byName[1].name)
+        assert.are.equal("Fury (wowsims.com)", byName[1].name)
     end)
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()

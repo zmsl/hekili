@@ -408,6 +408,40 @@ function M.usable(H)
     return out
 end
 
+-- The Fury base (wowsims packs plan, Task 6; ws.content's base for Fury (wowsims.com)): the world above dual wielding
+-- wowsims/forever's p1_fury weapons (MIT, https://github.com/wowsims/forever), Dawn's Edge and Serathil, at the periods
+-- of the first Tag 1 and Tag 2 swing pairs of tests/Forever/wowsims/warrior_fury.log (2.1 s, 1.9 s); damage UNMEASURED.
+-- Mortal Strike is an Arms talent, so the Fury character does not know it.
+local FURY_SPEED = { 2.1, 1.9 }
+M.Fury = setmetatable({
+    WORLD = setmetatable(
+        { weapons = { { 100, 180, FURY_SPEED[1] }, { 60, 110, FURY_SPEED[2] } } },
+        { __index = M.WORLD }
+    ),
+    character = function()
+        local c = M.character()
+        local ms, known = {}, {}
+        for _, id in ipairs(M.IDS.mortal_strike) do
+            ms[id] = true
+        end
+        for _, id in ipairs(c.known) do
+            if not ms[id] then
+                known[#known + 1] = id
+            end
+        end
+        c.known, c.speed = known, FURY_SPEED
+        c.items = { [16] = { 1, "One-Hander", "INVTYPE_WEAPON" }, [17] = { 2, "Off Hand", "INVTYPE_WEAPON" } }
+        return c
+    end,
+    -- The class file's rates restated (as M.gain): 3.46 x speed main hand with a one-hander, 1.73 x speed off hand at
+    -- Dual Wield Specialization 5/5 (+50%); a crit one more base swing. Unbridled Wrath's procs are not modelled.
+    gain = function(_, hand, _, flag)
+        local rate = hand == 1 and 3.46 or 1.73 * 1.5
+        local base = rate * FURY_SPEED[hand]
+        return base + (flag == "CRITICAL" and (hand == 1 and 3.46 or 1.73) * FURY_SPEED[hand] or 0)
+    end,
+}, { __index = M })
+
 --- The debuffs whose uptime the loop reports (§5.1): the Arms list keeps Sunder Armor and Demoralizing Shout up (Rend
 --- only without Mortal Strike). Returns { { key, auraID } } from instance `H`.
 function M.uptime(H)

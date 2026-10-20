@@ -29,6 +29,8 @@
 - Shaman: "Enhancement (wowsims.com)" is the Enhancement default priority, translated from wowsims.com's own.
 - Warrior: a second Arms priority, "Arms (wowsims.com)", translated from wowsims/forever's own Arms rotation (choose it
   under the Arms specialization's Priority; the hand-built Arms list stays the default for now).
+- Warrior: a second Fury priority, "Fury (wowsims.com)", translated from wowsims/forever's own Fury rotation (choose it
+  under the Fury specialization's Priority; the hand-built Fury list stays the default for now).
 
 ### Changed
 - Rogue: the hand-built Assassination, Combat and Subtlety priorities are gone, with their settings (Bleeds on
