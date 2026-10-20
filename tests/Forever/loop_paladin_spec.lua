@@ -29,6 +29,29 @@ describe("the Paladin loop worlds", function()
     end
 end)
 
+describe("the Paladin world's Judgement", function()
+    it("returns Sanctified Judgement's mana at 3/3, as the class file believes (wowsims's log: 161.28)", function()
+        local C = pw.Retribution
+        local c = C.character()
+        c.talents = { [1310735] = 1, [20101] = 5, [1311074] = 3 } -- Twist of Light, Benediction 5/5, Sanctified 3/3
+        local H = headless.new({ character = c, pack = C.PACK })
+        local seal = H.Hekili.Class.auras.seal_of_command.id
+        local e, gained = { auras = { [seal] = { stacks = 1 } } }, {}
+        local W = { t = 0, emit = function() end, hit = function() end }
+        function W.gain(_, n)
+            gained[#gained + 1] = n
+        end
+        C.resolve("judgement", H).effect(W, e)
+        assert.are.equal(1, #gained)
+        assert.is_true(math.abs(gained[1] - 161.28) < 1e-6, tostring(gained[1]))
+        c.talents[1311074] = 2 -- a chance below 3/3: the world, as the belief, returns nothing
+        H = headless.new({ character = c, pack = C.PACK })
+        gained = {}
+        C.resolve("judgement", H).effect(W, e)
+        assert.are.same({}, gained)
+    end)
+end)
+
 describe("the headless Paladin gates, 3 fights a pack #slow", function()
     for _, name in ipairs(PACKS) do
         it(

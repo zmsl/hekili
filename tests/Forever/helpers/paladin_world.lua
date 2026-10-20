@@ -104,6 +104,14 @@ M.MAP = {
         effect = function(W, e, _, X)
             drop(W, e, X, "swift_judgement")
             W.hit(e, e.target, AMOUNT.judgement)
+            if X.sanctified then -- Sanctified Judgement 3/3: 60% of the seal's base cost x (2 - its multiplier)
+                for _, key in ipairs(SEALS) do
+                    if up(e, X, key) then
+                        W.gain(e, X.S.action[key].cost / X.mult * (2 - X.mult) * 0.6)
+                        break
+                    end
+                end
+            end
         end,
         requires = function(_, e, X)
             for _, key in ipairs(SEALS) do
@@ -194,7 +202,7 @@ local PACKS = {
 }
 
 -- The class data a press reads from a booted instance `H` (once per instance): each aura's ID, duration and stacks,
--- Twist of Light, each ability's known rank IDs.
+-- Twist of Light, Sanctified Judgement, each ability's known rank IDs.
 local cache = setmetatable({}, { __mode = "k" })
 local function classData(H, C)
     if cache[H] then
@@ -208,7 +216,11 @@ local function classData(H, C)
             X.aura[key] = { id = a.id, duration = type(d) == "function" and d() or d or 0, max_stack = a.max_stack }
         end
     end
-    X.twist = (H.Hekili.State.talent.twist_of_light.rank or 0) > 0
+    local talent = H.Hekili.State.talent
+    X.twist = (talent.twist_of_light.rank or 0) > 0
+    -- Sanctified Judgement's refund, as the class file believes it (only at 3/3, a sure one): the seals' cost multiplier
+    X.S, X.sanctified = H.Hekili.State, (talent.sanctified_judgement.rank or 0) >= 3
+    X.mult = (1 - 0.2 * (talent.twist_of_light.rank or 0)) * (1 - 0.02 * (talent.benediction.rank or 0))
     return X
 end
 
