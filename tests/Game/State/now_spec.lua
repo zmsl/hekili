@@ -715,6 +715,18 @@ describe("now handlers", function()
             assert.are.equal(0, I.avoidsRun)
         end)
 
+        it("a white avoid in our swing's own frame 0.25 s after the cast is not the cast's (P log 2's)", function()
+            begin()
+            castOutcome(fs.SPENDER_C, 5) -- no outcome of its own yet
+            ctl.now = 5.25
+            ctl.Fire("PLAYER_SWING", 3.6, 0)
+            ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1) -- in the swing's ms: the unexplained avoid
+            ctl.Tick(5.3)
+            VS.Drain(5.3)
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.3).est)
+            assert.are.equal(0, I.avoidsRun)
+        end)
+
         it("an avoid 0.3 s after the cast is still the cast's: the hit and the refund come at the cast", function()
             begin()
             castOutcome(fs.SPENDER_C, 5, "DODGE", 0.3)

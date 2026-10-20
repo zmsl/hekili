@@ -440,10 +440,12 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     end
     if p and avoid and white then
         -- a white avoid a pending swing of ours explains is the swing's (the cast keeps its effects: no SPELL_MISSED
-        -- row, no Obs.Avoided): a swing due now, its landing lag within twice the hand's learned spread of the median
+        -- row, no Obs.Avoided): a swing due now, its landing lag within twice the hand's learned spread of the median,
+        -- or one in that swing's own event frame (P log 2: an unexplained avoid in our swing's ms, 3 of 87 swings;
+        -- never a cast's report)
         local sw, _, ref, lag = score(t, amount, flag, true, false)
         local h = ref == 3 and 2 or ref
-        if sw and math.abs(lag - L.med[h]) <= 2 * L.spr[h] then
+        if sw and (lag <= SAME_FRAME or math.abs(lag - L.med[h]) <= 2 * L.spr[h]) then
             p = nil
         end
     end
