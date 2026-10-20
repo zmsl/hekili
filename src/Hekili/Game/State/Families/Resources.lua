@@ -881,6 +881,20 @@ local function holds(a, t)
     return v ~= false and v ~= nil
 end
 
+-- A flip to usable that a gain we modelled explains (our own, or a rescued swing): it proves only "at least c" now,
+-- so slot r is bound to [c, the believed top] around the estimate, not pinned exactly at it (a mis-sized gain would
+-- put lo above the truth: rage the game lacks); no regen measurement. Allocates nothing.
+local function crossed(r, c, t)
+    local e, hi = R.est0[r], R.hi0[r]
+    local top = e > hi and e or hi
+    if top < c then
+        top = c
+    end
+    R.pinValid[r] = false
+    pin(r, c, top - c, t, "pinned", Obs.Usable)
+    R.pinValid[r] = false
+end
+
 I.On(Obs.Usable, function(o, t, lag)
     local a = o.a
     local now = o.b == 1 and YES or (o.c == 1 and SHORT or NOT)
@@ -901,11 +915,8 @@ I.On(Obs.Usable, function(o, t, lag)
     if was == SHORT and now == YES and lag <= 0 and abs(c - shortCost[a]) <= I.EPS then
         -- It just became affordable at an unchanged cost: it crossed the cost since the last short report.
         if R.gain[r] - shortGain[a] >= c - shortEst[a] then
-            -- our own gain since then explains the crossing: exact at the estimate (at least c), no regen measurement
-            local e = R.est0[r]
-            R.pinValid[r] = false
-            pin(r, e > c and e or c, 0, t, "pinned", Obs.Usable)
-            R.pinValid[r] = false
+            -- our own gain since then explains the crossing: a bound (crossed)
+            crossed(r, c, t)
         elseif R.swing[r] > 0 then
             -- below the cost by every gain we modelled: a wound Rows dropped just before this flip may be the swing
             -- that crossed it (the oracle's rescue): paid now, the crossing is explained and pins exactly; a credit of
@@ -922,10 +933,7 @@ I.On(Obs.Usable, function(o, t, lag)
                 if crit then
                     swingStep(r, hand, 3, t)
                 end
-                local e = R.est0[r]
-                R.pinValid[r] = false
-                pin(r, e > c and e or c, 0, t, "pinned", Obs.Usable)
-                R.pinValid[r] = false
+                crossed(r, c, t)
             else
                 -- a swing-paid resource crosses at a swing: [c, c + one step of the larger hand), measured at its
                 -- midpoint

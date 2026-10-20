@@ -1436,7 +1436,7 @@ describe("resources", function()
             end
 
             it(
-                "keeps est on the modelled chain (= lo); a gain-explained flip pins exactly and measures nothing",
+                "keeps est on the modelled chain (= lo); a gain-explained flip bounds it at the cost, measuring nothing",
                 function()
                     local t, raged, shouted = 50.1, false, false
                     while t < 59 do
@@ -1465,8 +1465,8 @@ describe("resources", function()
                         I.Fold(t, false)
                         I.Settle(t)
                         local r = VS.Power(fs.RAGE, t)
-                        -- from the regen_aura_a flip (exact at 10) hi is the chain itself, until the 5-cost's swing-width flip
-                        local hi = (t >= 50.3 and t < 55.3) and v or cap
+                        -- the regen_aura_a flip bounds [10, the believed top]: hi stays the short answers' cap
+                        local hi = cap
                         local got = ("%.2f est=%.2f lo=%.2f hi=%.2f"):format(t, r.est, r.lo, r.hi)
                         local want = ("%.2f est=%.2f lo=%.2f hi=%.2f"):format(t, v, v, hi)
                         assert.are.equal(want, got)
@@ -1607,20 +1607,24 @@ describe("resources", function()
             assert.are.same({ "0 0 11", "2 4 11" }, calls) -- the talent's rank, the rage before the hit, combat's start
         end)
 
-        it("explains a later flip by its gain: an exact pin, no swing calibration (the scale stays 1)", function()
-            taken(function()
-                return 8
-            end)
-            obs(Obs.Usable, 10, 2, 0, 1) -- spender_b (15) short at 0
-            I.Fold(10, false)
-            hit(11, WOUND, 40)
-            hit(12, WOUND, 40)
-            obs(Obs.Usable, 12.1, 2, 1, 0) -- usable: the hits crossed 15
-            I.Fold(12.1, false)
-            local r = VS.Power(fs.RAGE, 12.1)
-            assert.are.same({ 16, 16, 16, "pinned" }, { r.est, r.lo, r.hi, r.basis })
-            assert.are.same({ 1, false }, { I.res.scale[1], I.res.pinValid[1] })
-        end)
+        it(
+            "explains a later flip by its gain: a bound at the cost, no swing calibration (the scale stays 1)",
+            function()
+                taken(function()
+                    return 8
+                end)
+                obs(Obs.Usable, 10, 2, 0, 1) -- spender_b (15) short at 0
+                I.Fold(10, false)
+                hit(11, WOUND, 40)
+                hit(12, WOUND, 40)
+                obs(Obs.Usable, 12.1, 2, 1, 0) -- usable: the hits crossed 15
+                I.Fold(12.1, false)
+                local r = VS.Power(fs.RAGE, 12.1)
+                assert.are.same({ 16, 15, "pinned" }, { r.est, r.lo, r.basis }) -- the flip proves 15, not the modelled 16
+                assert.is_true(r.hi >= 16)
+                assert.are.same({ 1, false }, { I.res.scale[1], I.res.pinValid[1] })
+            end
+        )
 
         it("keeps a hit's gain out of the swing calibration between two measuring pins (pinDelta)", function()
             taken(function()
@@ -1835,13 +1839,29 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
             answer(11.45, SPENDER_A, true)
             assert.are.same({ 1, 0 }, { L.oracle.rescued, L.oracle.rescuedLate })
             assert.are.same({ { "SWING_DAMAGE", 45, 10 } }, rows)
-            assert.are.same({ 14, 14, 14 }, power(11.45)) -- 5 + 9, then the explained flip pins exactly
+            local p = power(11.45) -- 5 + 9, then the explained flip bounds it: at least the cost
+            assert.are.same({ 10, 14 }, { p[1], p[2] })
+            assert.is_true(p[3] >= 14)
             answer(12, SPENDER_A, false)
             R.est0[1], R.lo0[1], R.hi0[1] = 5, 5, 5
             answer(12.5, SPENDER_A, true) -- nothing dropped: the swing-paid pin [10, 10 + a step)
             assert.are.same({ 10, 10, 10 + 9 * 1.1 }, power(12.5))
         end
     )
+
+    it("keeps lo a floor when a rescued swing's step is too big (the Arms seed 4 trace at 49 s)", function()
+        -- believed 9.5 (truth 9.2, under spender_a's 10); the dropped wound's swing is modelled at 9, the game gave 8:
+        -- truth 17.2. The flip it explains proves only "at least 10" (in game: 30 + 17.7 believed, 28.8 + 16.2 true)
+        setup(9.5, 9, 9.99)
+        answer(9.95, SPENDER_A, false)
+        L.theta[2] = 8 -- main, exact, tail: the 45 at 1.3 s is dropped
+        credit(10, 45, 1.3)
+        answer(11.45, SPENDER_A, true)
+        assert.are.equal(1, L.oracle.rescued)
+        local p = power(11.45)
+        assert.is_true(p[1] <= 17.2 and p[1] >= 10, ("lo %.2f, truth 17.2"):format(p[1]))
+        assert.are.equal(18.5, p[2]) -- the estimate keeps the modelled step
+    end)
 
     it("allocates nothing over a retraction past its window, a soft verdict and a late rescue", function()
         setup(8)
