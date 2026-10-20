@@ -83,7 +83,11 @@ describe("Forever Paladin", function()
             w.game.known[ids[#ids]] = true
             local e = ld.env(w)
             assert.are.same(ids, idsOf(a), key)
-            assert.are.same({ want[2], want[3], want[4] }, { ld.run(a.spend, e) or 0, a.cooldown, a.gcd }, key)
+            assert.are.same(
+                { want[2], want[3], want[4] },
+                { ld.run(a.spend, e) or 0, ld.run(a.cooldown, e), a.gcd },
+                key
+            )
             assert.are.equal("function", type(a.known), key)
         end
         assert.are.equal(15, n)
@@ -96,7 +100,7 @@ describe("Forever Paladin", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 3, 14, 15, 15 }, n)
+        assert.are.same({ [0] = 4, 14, 15, 15 }, n)
     end)
 
     it("declares mana under the five-second rule, and the fillers' mana floors off by default", function()
@@ -158,6 +162,28 @@ describe("Forever Paladin", function()
         assert.is_false(ld.run(exp, e))
         e.buff = buffs({ seal_of_fury = true })
         assert.is_true(ld.run(exp, e))
+    end)
+
+    it(
+        "shortens Judgement's cooldown 1 s a rank of Improved Judgement (Forever DB2 25956: misc 11, -1000 ms)",
+        function()
+            local j = w.abilities.judgement
+            local e = ld.env(w)
+            assert.are.equal(10, ld.run(j.cooldown, e))
+            e.talent = rank(2)
+            assert.are.equal(8, ld.run(j.cooldown, e)) -- wowsims's log of the 2/2 build: Judgements 8 s apart
+        end
+    )
+
+    it("cuts Consecration's, Hammer of Wrath's and Exorcism's cost 20% a rank of Holy Conduit (DB2 1237268)", function()
+        for key, top in pairs({ consecration = 20924, hammer_of_wrath = 24239, exorcism = 10314 }) do
+            w.game.known[top] = true
+            local e = ld.env(w)
+            local base = ld.run(w.abilities[key].spend, e)
+            e.talent = rank(2)
+            -- wowsims's log of the 2/2 build: Consecration rank 5 costs 339 of 565
+            assert.are.equal(base * 0.6, ld.run(w.abilities[key].spend, e), key)
+        end
     end)
 
     it("gates Hammer of Wrath on the target's health, its cast shortened by Instrument of Law", function()

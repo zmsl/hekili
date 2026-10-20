@@ -139,6 +139,14 @@ local function sealCast(key)
     end
 end
 
+-- Holy Conduit (1237268 aura 108 misc 14, the cost, base -40 on Consecration's, Hammer of Wrath's and Exorcism's class
+-- mask bits; 2 ranks in wowsims's tree): 20% less a rank (wowsims's log of the 2/2 build: Consecration 339 of 565).
+local function conduitCost(costs, ids)
+    return function()
+        return byRank(costs, ids) * (1 - 0.2 * talent.holy_conduit.rank)
+    end
+end
+
 -- Twist of Light (1310735 aura 108 base -20): seals cost 20% less.
 local function sealCost(costs, ids)
     return function()
@@ -253,6 +261,7 @@ spec:RegisterTalents({
     twist_of_light = { 0, 1310735, 1 },
     swift_judgement = { 0, 1310994, 1 },
     instrument_of_law = { 0, 1311085, 1 },
+    holy_conduit = { 0, 1237268, 2 },
 })
 
 spec:RegisterAuras({
@@ -319,7 +328,10 @@ spec:RegisterAbilities({
     judgement = {
         id = 20271,
         cast = 0,
-        cooldown = 10,
+        -- Improved Judgement (25956, Forever DB2: aura 107 misc 11, -1000 ms a rank): 1 s shorter a rank
+        cooldown = function()
+            return 10 - talent.improved_judgement.rank
+        end,
         gcd = "off",
 
         spend = function()
@@ -376,9 +388,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "totem",
 
-        spend = function()
-            return byRank(HAMMER_OF_WRATH_COST, HAMMER_OF_WRATH)
-        end,
+        spend = conduitCost(HAMMER_OF_WRATH_COST, HAMMER_OF_WRATH),
         spendType = "mana",
 
         startsCombat = true,
@@ -413,9 +423,7 @@ spec:RegisterAbilities({
         cooldown = 8,
         gcd = "spell",
 
-        spend = function()
-            return byRank(CONSECRATION_COST, CONSECRATION)
-        end,
+        spend = conduitCost(CONSECRATION_COST, CONSECRATION),
         spendType = "mana",
 
         startsCombat = true,
@@ -437,9 +445,7 @@ spec:RegisterAbilities({
         cooldown = 15,
         gcd = "spell",
 
-        spend = function()
-            return byRank(EXORCISM_COST, EXORCISM)
-        end,
+        spend = conduitCost(EXORCISM_COST, EXORCISM),
         spendType = "mana",
 
         startsCombat = true,
@@ -533,6 +539,11 @@ spec:RegisterSetting("exorcism_mana", 0, {
 -- The two priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those
 -- and run it, never these blocks (tests/Forever/paladin_spec.lua checks they match). Pick one with
 -- /hekili priority <name>. Both are provisional (their descriptions say why).
+spec:RegisterPack(
+    "Protection (wowsims.com)",
+    20261019026,
+    [[Hekili:LsvtVTnmm0Fl7YwdwGDstx3AWYHoumSw0vua3ZYMwIownkwg6JLLl(3(OCDsDDtdkWUyjt947rZNOztzpWseGdz3D6KtpF6KPxqlSe32AKLud8vWsAtfSMEEVr7qUtQRAYozJEJvU2gX1RhfqUvPbrGTCVu5UUILFqIT1iNy6YBV8QRVBE9EgzjLsHaFkn0YpIAZBYCLytwxS4cTb)dAAYeyb4vUMSlV)2MmkCt2liXlJdYBJRbfiKvXplFmuRSXDeerVe9OvxnAmjLbQSk6drq71bPL2Mmqi0vFI2Sc3AJAYUcCW8dusN87RFGiP05QTZJJxkDL(8Wxr8aOJioPkxmB2fZMiMC2KztIO2QrxivuRhARsBuTbPKZb3cd6mYCFiCk4nqZnVcZNxeBrqLQlsPgwk34TGGQQDix8OxSexJvUXElsWksxYflMUhqGGnYcx67byNsfEZ2XfAU3U40XYIfNK7lkI6FAKbxdYk73dplHkrAxGp(HxJ1xpQVkCAb5gO1r7fVuR2MAl18vhiQevIDL0RpMAJRW(HX)QnCPDDZnSeYzSHBNV8sSsAD22jNNUWqBVRDscRGCfky)GL0RrfoSZbzj7BLmhX67mPbUqi1zdsLBKo0ibwY)FhVNW9oHL02ddvnP)zd0Fxg9DOaUV8g4E2XcOo)4Oco4lL)RhnHwpna7BVbSDEml0lt2pXCiJCxkdh4oK)nST1FSRvksmW7k1gwYVWvsLK(fXp7(dq7XS)9]]
+)
 spec:RegisterPack(
     "Retribution",
     20261019682,
