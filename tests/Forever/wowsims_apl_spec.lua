@@ -654,6 +654,79 @@ describe("the wowsims APL translator", function()
         "[9.00] [Tester (#1)] Major cooldown used: {SpellID: 101}",
     }, "\n")
 
+    it("writes a strictSequence as its members' lines, each after the one before it is cast (rule 14)", function()
+        local levels = assert(loadfile("tools/check_pack_levels.lua"))()
+        local function member(id, cond)
+            return { castSpell = { spellId = { spellId = id } }, condition = cond }
+        end
+        local text, omitted = apl.translate({
+            priorityList = {
+                {
+                    action = {
+                        condition = ready,
+                        strictSequence = { actions = { member(300), member(100, up), member(400) } },
+                    },
+                },
+                { action = { strictSequence = { actions = { member(300), { wait = {} } } } } },
+            },
+        }, ctx())
+        local GO = "(!action.big_hit.known|cooldown.big_hit.ready)" -- the sequence's condition: at its first member only
+        local AT_STRIKE = "((action.roar.known&prev.1.roar)|(!action.roar.known&" .. GO .. "))"
+        local lines = {
+            "actions=roar,use_off_gcd=1,if=" .. GO,
+            "actions+=/strike,focus=1,if=" .. AT_STRIKE .. "&(!action.dot.known|buff.dot.up)", -- and its own condition
+            "actions+=/dot,if=((action.strike.known&prev.1.strike)|(!action.strike.known&" .. AT_STRIKE .. "))",
+        }
+        assert.are.equal(table.concat(lines, "\n"), text)
+        assert.are.same({ "default #2: strictSequence of wait" }, omitted)
+        local function isAbility(k)
+            return k == "strike" or k == "big_hit" or k == "roar" or k == "dot"
+        end
+        for _, line in ipairs(lines) do
+            local key, cond = line:match("[=/]([%w_]+),.-if=(.*)$")
+            assert.are.same({}, levels.unguarded(cond, key, isAbility), line)
+        end
+    end)
+
+    it("opens the Rogue Combat recipe with Blood Fury, then Adrenaline Rush once it is cast (rule 14)", function()
+        local f = assert(io.open("src/Hekili_Rogue/APLs/Combat (wowsims.com).simc", "rb"))
+        local simc = f:read("*a")
+        f:close()
+        local bf, ar = simc:match( -- consecutive lines
+            "\nactions%+=/blood_fury,use_off_gcd=1,if=([^\n]*)\nactions%+=/adrenaline_rush,if=([^\n]*)\n"
+        )
+        assert.is_truthy(bf and bf:find("cooldown.adrenaline_rush.ready", 1, true)) -- the sequence's condition
+        assert.are.equal("((action.blood_fury.known&prev.1.blood_fury)|(!action.blood_fury.known&" .. bf .. "))", ar)
+        assert.is_falsy(simc:find("strictSequence", 1, true)) -- no longer omitted
+    end)
+
+    it("runs prev.1 through the engine: a member is recommended right after its predecessor's prediction", function()
+        local headless = require("Game.harness.headless")
+        local ww = require("Forever.helpers.warrior_world")
+        local H = headless.new({ character = ww.character(), pack = ww.PACK })
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        local out = H.Hekili.Engine.Output.Primary
+        local function recs(after) -- bloodrage, then battle_shout listed first behind `prev.1.<after>`
+            H.Hekili.DB.profile.packs[ww.PACK].lists = {
+                default = {
+                    { enabled = true, action = "battle_shout", criteria = "prev.1." .. after },
+                    { enabled = true, action = "bloodrage" },
+                },
+            }
+            H.Hekili:LoadScripts()
+            assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+            t = t + 0.2
+            assert(headless.cycle(H, t))
+            assert.are.same({}, H.errors)
+            return { out.recs[1] and out.recs[1].actionName, out.recs[2] and out.recs[2].actionName }
+        end
+        assert.are.same({ "bloodrage", "battle_shout" }, recs("bloodrage"))
+        assert.are.same({ "bloodrage" }, recs("berserker_stance"))
+    end)
+
     it("expands wowsims's automatic cooldowns from the log, in place, under the entry's condition", function()
         local levels = assert(loadfile("tools/check_pack_levels.lua"))()
         local r = { focus = { strike = 1 } }

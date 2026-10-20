@@ -11,7 +11,7 @@
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
 --    order as first called; `valueVariables` are inlined where referenced.
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
---    false; entries whose action or condition uses a node the fork lacks (`strictSequence`, `sequence`,
+--    false; entries whose action or condition uses a node the fork lacks (`sequence`,
 --    `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `unitDistance` outside rule 11, `sequenceIsComplete`,
 --    `activeItemSwapSet`, `selectedConjured`), or whose own action is an unmapped spell, item or other ID (an unmapped
 --    read drops only its branch: rule 12); a call of a group whose every entry was omitted. Also listed: rule 12's
@@ -89,6 +89,17 @@
 --    cast (castSpell, channelSpell, castFriendlySpell) names, as a castSpell (rule 7's `use_off_gcd`). An ID nothing maps is listed, not written; none at all omits
 --    the entry. Deterministic: the same log gives the same lines. Not modelled: wowsims's explosives, cast just after a
 --    GCD rather than before one (the log does not type a cooldown; they read as any other).
+-- 14. `strictSequence` (sim/core/apl_actions_sequences.go: ready when the GCD is within the queue window and its first
+--    member is ready, its condition read once there; it then takes the rotation, each member cast as soon as it can
+--    be, nothing else between, and gives it back after the last or when the GCD is ready and the next member is not)
+--    is one line per member, in order, each the member's own line (rules 5-7, its own condition) whose condition also
+--    says the sequence is at it: the first under the sequence's condition, each later one when the member before it
+--    is the last cast, `prev.1.<key>` (the engine's cast history, upstream Hekili's: casts heard and the queue's own
+--    predictions; Hekili has no sequence action), or, while that member is unlearned (wowsims drops it from the
+--    sequence: rule 6), under what put the sequence at it. The condition's reads are all guarded (rule 6), none being
+--    the line's own. Deviations: a member is shown only once the one before it is cast (wowsims holds the rotation
+--    for it, so nothing else is recommended between); a cast of a member outside the sequence also opens its next;
+--    the members must be casts (else rule 2).
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
 -- The engine facts rule 6 rests on (tools/check_pack_levels.lua checks every pack for it):
@@ -774,8 +785,47 @@ local function automatic(c, kind, v)
     return keys
 end
 
--- One entry as a line body (a list of them for rule 13's automatic actions), or nil and why it folds away.
-local function entry(c, e)
+local entry
+
+local function paren(s) -- `s` as one term of an `&`
+    return (grouped(s) or not s:find("|", 1, true)) and s or ("(" .. s .. ")")
+end
+
+-- Rule 14: a strictSequence's members (casts) as consecutive lines, each a member's own line (`entry`'s) whose
+-- condition also says the sequence is at it: the first under the sequence's condition `cond`; a later one when the
+-- member before it is the last cast (`prev.1.<key>`), or, while that member is unlearned (wowsims drops it from the
+-- sequence), under what put the sequence at that member.
+local function sequence(c, members, cond)
+    local out, at = {}, cond -- at: the condition that the sequence is at the next member (nil: always)
+    for i, m in ipairs(members) do
+        local mk
+        for k in pairs(m) do
+            if k ~= "condition" then
+                mk = k
+            end
+        end
+        if mk ~= "castSpell" and mk ~= "channelSpell" then
+            unsupported("strictSequence of " .. tostring(mk))
+        end
+        local body, why = entry(c, { action = m })
+        if not body then
+            unsupported(("strictSequence member %d: %s"):format(i, why))
+        end
+        local base, own = body:match("^(.-),if=(.*)$")
+        local parts = {}
+        parts[#parts + 1] = at and paren(at) or nil
+        parts[#parts + 1] = own and paren(own) or nil
+        out[i] = #parts > 0 and ((base or body) .. ",if=" .. table.concat(parts, "&")) or body
+        local x = c.self
+        local k = knownTest(c, x)
+        local last = "prev.1." .. x
+        at = k and ("(" .. k .. "&" .. last .. ")|(!" .. k .. (at and ("&" .. paren(at)) or "") .. ")") or last
+    end
+    return out
+end
+
+-- One entry as a line body (a list of them for rules 13 and 14), or nil and why it folds away.
+function entry(c, e)
     local a = e.action or {}
     local kind
     for k in pairs(a) do
@@ -786,7 +836,7 @@ local function entry(c, e)
     if not kind then
         return nil, "empty"
     end
-    local body, key, auto
+    local body, key, auto, seq
     if kind == "castSpell" or kind == "channelSpell" then
         local x = spellKey(c, a[kind].spellId)
         c.self, key = x, x
@@ -810,6 +860,8 @@ local function entry(c, e)
     elseif kind == "cancelAura" then -- rule 10
         c.self = nil
         body = "cancel_buff,buff_name=" .. auraKey(c, a.cancelAura.auraId.spellId)
+    elseif kind == "strictSequence" then -- rule 14: its condition's reads all guarded (no member is the line's own)
+        c.self, seq = nil, a.strictSequence.actions or {}
     elseif kind == "autocastOtherCooldowns" or kind == "castAllStatBuffCooldowns" then
         c.self, auto = nil, automatic(c, kind, a[kind])
         if #auto == 0 then
@@ -826,6 +878,9 @@ local function entry(c, e)
         elseif u ~= true and s then -- a nil condition is always true (wowsims's apl_action.go)
             cond = emit(u, s, true)
         end
+    end
+    if seq then
+        return sequence(c, seq, cond)
     end
     if auto then
         local out = {}

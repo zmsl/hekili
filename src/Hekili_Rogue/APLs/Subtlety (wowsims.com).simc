@@ -5,7 +5,6 @@
 # Omitted: default #1: never
 # Omitted: default #5: never
 # Omitted: default #7: autocastOtherCooldowns: none in the log
-# Omitted: default #10: strictSequence
 # Omitted: default #11: other OtherActionOffensivePotion
 # Omitted: default #22: never
 # Omitted: default #23: never
@@ -20,6 +19,8 @@ actions+=/vanish,use_off_gcd=1,if=((!action.garrote.known|!debuff.garrote.up)&(!
 actions+=/preparation,if=(!action.vanish.known|!cooldown.vanish.ready)
 actions+=/adrenaline_rush,if=(energy.current<=50&(!action.slice_and_dice.known|buff.slice_and_dice.up)&!action.blood_fury.known)
 actions+=/blood_fury,use_off_gcd=1,if=(!action.adrenaline_rush.known|cooldown.adrenaline_rush.remains>=120)
+actions+=/blood_fury,use_off_gcd=1,if=(!(action.adrenaline_rush.known|action.blood_fury.known|action.slice_and_dice.known)|((!action.adrenaline_rush.known|cooldown.adrenaline_rush.ready)&(!action.blood_fury.known|cooldown.blood_fury.ready)&(!action.slice_and_dice.known|buff.slice_and_dice.up)))
+actions+=/adrenaline_rush,if=((action.blood_fury.known&prev.1.blood_fury)|(!action.blood_fury.known&(!(action.adrenaline_rush.known|action.blood_fury.known|action.slice_and_dice.known)|((!action.adrenaline_rush.known|cooldown.adrenaline_rush.ready)&(!action.blood_fury.known|cooldown.blood_fury.ready)&(!action.slice_and_dice.known|buff.slice_and_dice.up)))))
 actions+=/eureka,use_off_gcd=1,if=(!action.blade_flurry.known|(action.blade_flurry.known&buff.blade_flurry.up))
 actions+=/thistle_tea,use_off_gcd=1,if=((energy.current<=15|(energy.current<=20&(!action.eureka.known|buff.eureka.up)))&action.thistle_tea.ready&(combo_points.current<3|(action.eureka.known&buff.eureka.up)))
 actions+=/blade_flurry,if=(!action.slice_and_dice.known|!(buff.slice_and_dice.remains<=2))
