@@ -24,7 +24,7 @@ local MUTILATE_HANDS = { procs = { ["1241584:1"] = true, ["1241584:2"] = true } 
 local PACKS = {
     { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.98, 5.0, MUTILATE_HANDS },
     { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.94, 4.8 },
-    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.87, 3.8 },
+    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.93, 3.8 },
 }
 
 describe("the Rogue wowsims.com packs #slow #wowsims", function()
