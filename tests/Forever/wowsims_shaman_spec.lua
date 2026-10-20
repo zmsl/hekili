@@ -44,12 +44,9 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
     -- sits near 170 of 5530 mana from 90 s), so the priority waits for mana with only cheaper ranks usable
     local LIVE60 = 8.0
     for _, level in ipairs({ 10, 40, 60 }) do
-        if level == 40 then -- 8.2 s, one tick over: the belief's late window trails the truth by 3-4 mana while starved
-            pending(
-                PACK
-                    .. " stays live at level 40: shared gap, secret-mana belief opens the five-second window late"
-                    .. " (GAP W)"
-            )
+        if level == 40 then -- 8.2 s, one tick over: Lightning Shield's 132 believed 0.4 mana short (lo 131.6, truth
+            -- 132.0 at 69.2 s) one tick before the truth, the window itself on time since GAP W (both at 74.4 s)
+            pending(PACK .. " stays live at level 40: shared gap, the secret-mana floor's last mana (GAP AB)")
         else
             it(PACK .. " stays live at level " .. level, function()
                 ws.live(PACK, content("shaman_enhancement", sw.Enhancement, PACK, level), math.max(6, LIVE60))

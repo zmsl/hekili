@@ -368,7 +368,9 @@ local function automatic(a, t, kind, o)
         local c = I.CastCost(o, a)
         paid = c
         if c > 0 then
-            I.ResourceShift(r, -c, t, kind)
+            -- at the cast's own time when its success folds late (staged, after a later direct observation): the
+            -- spend's five-second window opens at the cast, not at the fold (GAP W)
+            I.ResourceShift(r, -c, o.t < t and o.t or t, kind)
         end
         -- a charged cost modifier in scope loses a stack, even when its discount made the cast free (Modifiers.lua)
         if I.BaseCostOf(a) > 0 then
@@ -408,6 +410,7 @@ local function run(o, t)
     if not A.obj[a] or not A.key[a] or A.extra[a] then
         return
     end
+
     undoA, undoT, undoSlot, paid, undoN = a, o.t, I.curSlot, 0, 0
     automatic(a, t, o.kind, o)
     A.castStartT[a] = 0 -- consumed: a later instant cast of the same ability starts its own GCD

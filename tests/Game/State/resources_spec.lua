@@ -1123,6 +1123,19 @@ describe("resources", function()
             assert.are.equal(17, I.res.fsrUntil[1])
             within(3737 - 150, VS.Power(MANA, 12).est)
         end)
+
+        it(
+            "opens the window at the cast's own time when its success folds after a later observation (GAP W)",
+            function()
+                bootMana()
+                obs(Obs.CombatStart, 10, 0, 0, 0)
+                I.Fold(10, false)
+                S.Direct(Obs.Moving, 12.142, 0, 1, 0) -- a direct observation of the next frame, in the log first
+                S.Direct(Obs.CastSuccess, 12, SEAL, 150, 1) -- the staged success of 12, flushed after it
+                I.Fold(12.2, false)
+                assert.are.equal(17, I.res.fsrUntil[1]) -- not 17.142: the window opened at the cast
+            end
+        )
     end)
 
     describe("the five-second rule (C3: mana's `fsr`, spirit 10/s and mp5 2/s declared)", function()
