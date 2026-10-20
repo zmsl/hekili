@@ -1119,7 +1119,9 @@ do
     }
 
     local DEFAULT_TTD = 30
-    local FOREVER = 300
+    -- Forever: target health is secret (the facade answers the TargetHealth belief), so the tracker is not fed and every
+    -- time to die answers this "unknown", far beyond any fight (State.lua's time_to_die treats 3600 as unknown too).
+    local FOREVER = 3600
     local TRIVIAL = 5
 
     local function UpdateEnemy(guid, healthPct, unit, time)
@@ -1306,7 +1308,7 @@ do
             end
         end
 
-        if not validUnit then return state.boss and FOREVER or DEFAULT_TTD end
+        if not validUnit then return FOREVER end
 
         return time
     end
@@ -1497,8 +1499,12 @@ do
     local trackedUnits = { "target", "boss1", "boss2", "boss3", "boss4", "boss5", "focus", "arena1", "arena2", "arena3", "arena4", "arena5" }
     local seen = {}
 
+    -- Forever: off. Fed the belief's health, it learnt a 0 rate (DEFAULT_TTD) before a pin and junk from the jump at one.
+    -- shortcut: no time-to-die estimate; feed a belief-derived one here when a TargetHealth-based mechanism exists.
+    local FEED = false
+
     local UpdateTTDs = function()
-        if not InCombatLockdown() then return end
+        if not FEED or not InCombatLockdown() then return end
 
         wipe(seen)
 

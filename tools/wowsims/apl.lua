@@ -63,7 +63,7 @@ M.VALUES = {
     currentComboPoints = "combo_points.current",
     currentHealthPercent = "health.pct",
     currentTime = "time",
-    remainingTime = "fight_remains",
+    remainingTime = "fight_remains", -- API-forced: wowsims knows its fight length; ours answers "unknown" (3600 s)
     gcdTimeToReady = "gcd.remains",
     inputDelay = "0", -- wowsims's modelled reaction; the engine recommends without one
 }

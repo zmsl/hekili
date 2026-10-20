@@ -212,6 +212,11 @@ one (every wowsims list with no prepull actions, and make_pack writes none), `He
 default list from the forecast window `state.delayMax` as it would after an empty precombat pass
 (`tests/Forever/apl_entry_spec.lua`).
 
+**Time to die.** Target health is secret on Forever, so `Engine/Sim/Targets.lua`'s tracker is not fed and every time
+to die (`fight_remains`, `target.time_to_die`, `time_to_pct_N`, `longest_ttd`, ...) answers "unknown": `FOREVER`, 3600 s,
+a fight that never ends soon. A priority may read them without a load warning (`Game/State/AplWarnings.lua` warns only
+on health); wowsims's `remainingTime` maps to `fight_remains` with that deviation.
+
 **APL line options.** `make_pack.lua` and the in-game importer accept these on a line before `if=` (in the tool,
 an unknown option or a non-numeric value errors; `unparse` writes them in this order): `name=<list>` (for
 `call_action_list`/`run_action_list`), `use_off_gcd=1` (recommendable off the GCD) and `focus=N` (a priority tier, 1
@@ -315,4 +320,8 @@ frames shown.
   test this path; see `docs/research/2026-10-17-content-addon-spike.md`);
   icons, minimap and compartment entries, the pack editor, `/hekili snapshot`, combat alpha, a spec swap, the minimap
   position surviving `/reload`, and a third class (neither Warrior nor Druid) seeing the "no Forever pack" notice.
+- **Time to die from the TargetHealth belief** (a follow-up design): once the belief has M (the damage per full
+  health) and a modelled sample, the target's time to die is its health fraction x M / the recent WOUND damage rate
+  (a ring of the last ~10 s of our and the group's damage on it), "unknown" before that; Targets.lua's `FEED` would read
+  that belief instead of the facade's health, and `fight_remains` the longest over tracked enemies.
 - **ForeverProbe**: `Hekili.VirtualState` became `Hekili.Virtual.State`; update its calls.
