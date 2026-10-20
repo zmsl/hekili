@@ -16,7 +16,7 @@ describe("the sim's five-second-rule forecast", function()
         r = spec.resources.mana.state
         rawset(S, "mana", r)
         S.now, S.offset, S.delay = 100, 0, 0
-        r.actual, r.max, r.regen = 0, 10000, nil
+        r.actual, r.max, r.regen, r.tick_rate, r.last_tick = 0, 10000, nil, nil, nil
         r.active_regen, r.inactive_regen, r.fsr_until = 0, 22, 100 -- the last spend 5 s ago: the window ends now
     end)
 
@@ -46,6 +46,16 @@ describe("the sim's five-second-rule forecast", function()
         local base = r.current
         assert.are.equal(0, at(8) - base)
         assert.are.equal(110, at(13) - at(8))
+    end)
+
+    it("pads time_to_X by the tick a ticked pool waits for, as Hekili's energy (0.1 s by default)", function()
+        r.tick_rate, r.last_tick = 0.1, 100.05 -- a tick 0.05 s before the next: now is mid-tick
+        S.forecastResources("mana")
+        local t = S:TimeToResource(r, 23) -- 23 / 22 s of continuous regen, from the next tick (0.05 s on)
+        assert.is_true(math.abs(t - (0.05 + 23 / 22)) < 1e-9, t)
+        r.tick_rate = 0 -- continuous
+        S.forecastResources("mana")
+        assert.is_true(math.abs(S:TimeToResource(r, 23) - 23 / 22) < 1e-9)
     end)
 
     it("keeps the old single rate for a resource without a window", function()

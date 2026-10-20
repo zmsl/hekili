@@ -1120,7 +1120,7 @@ describe("resources", function()
                 VS.Regen(MANA, 16, true).est, -- casting: the mp5 part
             })
             -- the client's pair ignores the window (the sim applies it from FsrUntil): not casting, both parts
-            assert.are.same({ 12, 15 }, { VS.Regen(MANA, 12, false).est, VS.FsrUntil(MANA) })
+            assert.are.same({ 12, 15 }, { VS.Regen(MANA, 12, VS.NOT_CASTING).est, VS.FsrUntil(MANA) })
             assert.is_nil(VS.FsrUntil(99))
             I.Settle(13)
             I.ResourceShift(1, -100, 13, Obs.CastSuccess) -- a second spend: the window to 18

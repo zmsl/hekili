@@ -1216,11 +1216,15 @@ function VS.DecayAnchor(powerType)
     return n > 0 and n - R.decayIv[r] or 0
 end
 
+-- VS.Regen's modes: the client's pair, GetPowerRegenForPowerType's (not casting, casting), each without the window.
+VS.CASTING, VS.NOT_CASTING = true, "not casting"
+
 --- (spec §3.2) The believed regen per second of a power type. A swing-paid resource's is its calibrated step per
 --- second of swinging. A continuous one's is x its `mult` auras up at `now`; with an `fsr`, the mp5 part alone while
---- `casting` is true (the in-cast rate), both parts while it is false (the not-casting rate, the client's first
---- return), and with it nil the rate at `now`: the mp5 part alone inside the five-second window. Allocates nothing.
-function VS.Regen(powerType, now, casting)
+--- `mode` is VS.CASTING (the in-cast rate), both parts while it is VS.NOT_CASTING (the not-casting rate, the
+--- client's first return), and with it nil the rate at `now`: the mp5 part alone inside the five-second window.
+--- Allocates nothing.
+function VS.Regen(powerType, now, mode)
     local r = R.slotOf[powerType]
     if not r then
         return I.UNKNOWN
@@ -1232,7 +1236,8 @@ function VS.Regen(powerType, now, casting)
         rec.est, rec.lo, rec.hi = per * s, per * (s - sp), per * (s + sp)
         rec.conf = s > 0 and 1 - sp / s or 0 -- nonzero: s > 0 checked
     else
-        local f, sp = multAt(r, now), R.fsr[r] and not casting and (casting == false or now >= R.fsrUntil[r])
+        local f, sp =
+            multAt(r, now), R.fsr[r] and mode ~= VS.CASTING and (mode == VS.NOT_CASTING or now >= R.fsrUntil[r])
         local est = (R.regE[r] + (sp and R.spE[r] or 0)) * f
         rec.est, rec.lo, rec.hi =
             est, (R.regL[r] + (sp and R.spL[r] or 0)) * f, (R.regH[r] + (sp and R.spH[r] or 0)) * f

@@ -1209,6 +1209,17 @@ local function fsrTime( r, a, need )
     return w + ( need - act * w ) / idle
 end
 
+-- A pool's regen arrives in ticks (wowsims/forever, sim/core/mana.go and energy.go: every 0.1 s): its `tick_rate`
+-- (seconds; reset sets the default 0.1 unless the pack set its own on the resource's state; 0: continuous) and
+-- `last_tick` (an observed tick, else 0). Hekili's energy and focus padding, for every ticked pool: a pool whose
+-- continuous regen reaches an amount `dt` after the slice at `a` gets it the next tick after `a`, then `dt` on: late by
+-- at most one tick whatever the tick's phase (unknown for a secret pool: no tick seen). Allocates nothing.
+local function tickReach( t, a, dt )
+    local L = rawget( t, "tick_rate" )
+    if not L or L <= 0 then return a + dt end
+    return a + ( L - ( ( a - ( rawget( t, "last_tick" ) or 0 ) ) % L ) ) + dt
+end
+
 -- Resource Modeling!
 local forecastResources
 
@@ -3437,15 +3448,9 @@ function state:TimeToResource( t, amount )
     if not amount or amount > t.max then return 3600 end
     if t.current >= amount then return 0 end
 
-    local regen, lastTick, pad = t.regen, nil, 0
+    local regen = t.regen
     local queryTime = state.query_time
     local deficit = amount - t.current
-
-    -- Handle tick-based resources (e.g., energy, focus).
-    if t.resource == "energy" or t.resource == "focus" then
-        -- Round any result requiring ticks to the next tick.
-        lastTick = t.last_tick
-    end
 
     if regen == 0.001 then regen = 0 end
     local fsr = rawget( t, "fsr_until" )
@@ -3471,14 +3476,9 @@ function state:TimeToResource( t, amount )
             local after = t.forecast[ i + 1 ]
 
             if slice.v >= amount then
-                t.times[ amount ] = slice.t
-
-                if lastTick then
-                    pad = ( slice.t - lastTick ) % 0.1
-                    pad = 0.1 - pad
-                end
-
-                return max( 0, pad + t.times[ amount ] - queryTime )
+                -- a tick-paid pool reaches it at a tick (Forever: continuous regen arrives every tick_rate)
+                t.times[ amount ] = tickReach( t, slice.t, 0 )
+                return max( 0, t.times[ amount ] - queryTime )
 
             elseif after and after.v >= amount then
                 -- Check if regeneration fills the deficit before the next slice.
@@ -3486,13 +3486,8 @@ function state:TimeToResource( t, amount )
                 local deficit = amount - slice.v
                 local regen_time = fsr and fsrTime( t, slice.t, deficit ) or deficit / regen
 
-                if lastTick then
-                    pad = ( slice.t - lastTick ) % 0.1
-                    pad = 0.1 - pad
-                end
-
                 if regen_time < time_diff then
-                    t.times[ amount ] = ( pad + slice.t + regen_time )
+                    t.times[ amount ] = tickReach( t, slice.t, regen_time )
                 else
                     t.times[ amount ] = after.t
                 end
@@ -3505,14 +3500,9 @@ function state:TimeToResource( t, amount )
     end
 
     -- Fallback for non-modeled resources.
-    if lastTick and regen > 0 then
-        pad = ( queryTime - lastTick ) % 0.1
-        pad = 0.1 - pad
-    end
-
-    if fsr then return fsrTime( t, queryTime, amount - t.current ) end
+    if fsr then return tickReach( t, queryTime, fsrTime( t, queryTime, amount - t.current ) ) - queryTime end
     if regen <= 0 then return 3600 end
-    return max( 0, pad + ( ( amount - t.current ) / regen ) )
+    return max( 0, tickReach( t, queryTime, ( amount - t.current ) / regen ) - queryTime )
 end
 
 

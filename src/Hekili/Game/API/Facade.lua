@@ -253,14 +253,14 @@ hybrid("GetPowerRegenForPowerType", function(powerType)
         return 0, 0 -- Hekili's swing regen model adds that resource in combat; no swings out of combat (G3)
     end
     local t = now()
-    local inactive = VS.Regen(powerType, t, false).est -- the client's pair: not casting, casting (the window is the sim's)
-    return inactive, VS.Regen(powerType, t, true).est
+    local inactive = VS.Regen(powerType, t, VS.NOT_CASTING).est -- the client's pair; the window is the sim's
+    return inactive, VS.Regen(powerType, t, VS.CASTING).est
 end, "secret in combat [W PR16]; Regen() not casting and casting, 0 for a swing-paid resource (G3)")
 
 hybrid("GetManaRegen", function()
     local t = now()
-    local inactive = VS.Regen(0, t, false).est
-    return inactive, VS.Regen(0, t, true).est
+    local inactive = VS.Regen(0, t, VS.NOT_CASTING).est
+    return inactive, VS.Regen(0, t, VS.CASTING).est
 end, "secret in combat [W PR16]; Regen(0) not casting and casting")
 
 kept("UnitPartialPower", "virtual", zero, "secret always [W PR16]; no Forever user")
