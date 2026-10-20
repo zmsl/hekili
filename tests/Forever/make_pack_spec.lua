@@ -24,9 +24,6 @@ describe("tools/make_pack.lua", function()
             ["Protection (wowsims.com)"] = "WARRIOR:protection",
             ["Fury (wowsims.com)"] = "WARRIOR:fury",
             ["Arms (wowsims.com)"] = "WARRIOR:arms",
-            Arms = "WARRIOR:arms",
-            Fury = "WARRIOR:fury",
-            Protection = "WARRIOR:protection",
         }, by)
     end)
 
@@ -57,7 +54,7 @@ describe("tools/make_pack.lua", function()
         before_each(function()
             src = slurp("src/Hekili_Warrior/Warrior.lua")
             packs = mp.load("warrior")
-            furyBlock = src:match('spec:RegisterPack%(\n    "Fury",\n.-\n%)\n')
+            furyBlock = src:match('spec:RegisterPack%(\n    "Fury %(wowsims%.com%)",\n.-\n%)\n')
             assert.is_not_nil(furyBlock)
         end)
 
@@ -66,24 +63,24 @@ describe("tools/make_pack.lua", function()
             assert.is_true(src == out, "the source changed")
             assert.are.same({
                 { "Protection (wowsims.com)", "unchanged" },
-                { "Fury (wowsims.com)", "unchanged" },
+                { "Fury (wowsims.com)", "added" },
                 { "Arms (wowsims.com)", "unchanged" },
-                { "Arms", "unchanged" },
-                { "Fury", "added" },
-                { "Protection", "unchanged" },
             }, report)
         end)
 
         it("updates a block whose version differs", function()
-            local edited = src:gsub('("Arms",\n    )(%d+)', "%11")
+            local edited = src:gsub('("Arms %(wowsims%.com%)",\n    )(%d+)', "%11")
             assert.are_not.equal(src, edited)
             local out, report = mp.sync(edited, packs)
             assert.is_true(src == out, "the source changed")
-            assert.are.same({ "Arms", "updated" }, report[4])
+            assert.are.same({ "Arms (wowsims.com)", "updated" }, report[3])
         end)
 
         it("removes a block the manifest does not list", function()
-            local out, report = mp.sync(src .. 'spec:RegisterPack(\n    "Zzz",\n    1,\n    [[Hekili:x]]\n)\n', packs)
+            local zzz = 'spec:RegisterPack(\n    "Zzz",\n    1,\n    [[Hekili:x]]\n)\n'
+            local edited, n = src:gsub("%)\n\n%-%- The hand%-built lists", ")\n" .. zzz .. "\n-- The hand-built lists") -- after the last block
+            assert.are.equal(1, n)
+            local out, report = mp.sync(edited, packs)
             assert.is_true(src == out, "the source changed")
             assert.are.same({ "Zzz", "removed" }, report[#report])
         end)
@@ -95,10 +92,10 @@ describe("tools/make_pack.lua", function()
             end, "line " .. (n + 1) .. ": a RegisterPack( not in the generated block layout")
             assert.has_error(function()
                 mp.sync(src .. furyBlock, packs)
-            end, "duplicate RegisterPack Fury")
+            end, "duplicate RegisterPack Fury (wowsims.com)")
             assert.has_error(function()
                 mp.sync((src:gsub(furyBlock:gsub("%p", "%%%0"), furyBlock .. "-- stray\n")), packs)
-            end, "non-block content between RegisterPack blocks before Protection")
+            end, "non-block content between RegisterPack blocks before Arms (wowsims.com)")
             assert.has_error(function()
                 mp.sync("local x = 1\n", packs)
             end, "no RegisterPack block")
@@ -131,8 +128,8 @@ describe("tools/make_pack.lua", function()
 
     it("refuses a manifest with no class", function()
         local root = scratch("src/Hekili_Warrior/APLs/", {
-            ["packs.lua"] = 'return { packs = { "Arms" } }\n',
-            ["Arms.simc"] = true,
+            ["packs.lua"] = 'return { packs = { "Arms (wowsims.com)" } }\n',
+            ["Arms (wowsims.com).simc"] = true,
         })
         local ok, err = pcall(mp.load, "zzz", root, 20261017)
         os.execute("rm -r " .. root)
@@ -155,18 +152,14 @@ describe("tools/make_pack.lua", function()
 
         it("re-dates only the class whose text changed, by one character, and is then a no-op", function()
             local apls = "src/Hekili_Warrior/APLs/"
-            local fury, n =
-                slurp(apls .. "Fury.simc"):gsub("rage>=settings.hs_threshold", "rage>settings.hs_threshold", 1) -- one character
+            local fury, n = slurp(apls .. "Fury (wowsims.com).simc"):gsub("rage.current>=40", "rage.current>40", 1) -- one character
             assert.are.equal(1, n)
             local root = scratch(apls, {
                 ["packs.lua"] = true,
                 ["Protection (wowsims.com).simc"] = true,
-                ["Fury (wowsims.com).simc"] = true,
                 ["Arms (wowsims.com).simc"] = true,
-                ["Arms.simc"] = true,
-                ["Protection.simc"] = true,
             })
-            local f = assert(io.open(root .. "Fury.simc", "wb"))
+            local f = assert(io.open(root .. "Fury (wowsims.com).simc", "wb"))
             f:write(fury)
             f:close()
             local src = slurp("src/Hekili_Warrior/Warrior.lua")
@@ -174,15 +167,8 @@ describe("tools/make_pack.lua", function()
             local again = mp.write(out, "warrior", TODAY + 1, root)
             os.execute("rm -r " .. root)
             assert.is_false(src == out, "the Fury change was not written")
-            assert.are.same({ "Fury", "updated" }, report[5])
-            for _, name in ipairs({
-                "Protection (wowsims.com)",
-                "Fury (wowsims.com)",
-                "Arms (wowsims.com)",
-                "Arms",
-                "Fury",
-                "Protection",
-            }) do
+            assert.are.same({ "Fury (wowsims.com)", "updated" }, report[2])
+            for _, name in ipairs({ "Protection (wowsims.com)", "Fury (wowsims.com)", "Arms (wowsims.com)" }) do
                 assert.are.equal(TODAY, date(out, name), name)
             end
             assert.is_true(out == again, "a second write changed the file")

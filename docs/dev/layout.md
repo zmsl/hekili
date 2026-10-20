@@ -106,17 +106,16 @@ Sim identifier already uses (`git blame` the Sim line and say so in the commit);
 `loop_warrior_late_spec.lua`, seeds 4-6), so it prints three `Arms solo:` lines (`tests/Forever/arms_recs_spec.lua`
 repeats seeds 1-3 against its every-slot fixture). Each fight seeds its own world and the
 boot carries nothing between fights, so the halves play the same fights as the old single run.
-After the wowsims lines (class-completion Task 5: Rend, Overpower and Slam at focus, Hamstring under Windfury, Battle
-Shout at 10 s; the split's lines, forever 98e718bd, were agreement 0.968 / 0.938, cost 17.4 (oracle 17.4) / 16.8
-(oracle 15.4)):
+The gate runs Arms (wowsims.com), the Arms default since the wowsims packs plan's Warrior swap (the hand-built Arms,
+Fury and Protection lists retired), on the world's wowsims build (Spearing Strike and Berserker Rage in the kit). Its
+lines (the swap, on trunk 824901c4 plus the Warrior lane; 20 fights: agreement 0.964, flicker 1.38/min):
 
 ```
-Arms solo: fights=3 agreement 0.977 (2265 ticks); react median 0 p90 0 never 0.030; refused per 100 [cost 25.8 (oracle 22.9)], episodes 4.37/min; dps A/B 0.918; ... [seeds 1-3]
-Arms solo: fights=3 agreement 0.949 (2422 ticks); react median 0 p90 0 never 0.060; refused per 100 [casting 2.3 (oracle 2.2), cost 20.6 (oracle 22.6)], episodes 3.47/min; dps A/B 1.020; ... [seeds 4-6]
+Arms solo: fights=3 agreement 0.973 (2660 ticks); react median 0 p90 0 never 0.018; refused per 100 [casting 7.0 (oracle 0.5, unmatched 0.0), cost 17.0 (oracle 16.2, unmatched 0.0)], episodes 4.40/min; dps A/B 0.982; ... [seeds 1-3]
+Arms solo: fights=3 agreement 0.985 (2501 ticks); react median 0 p90 0 never 0.049; refused per 100 [cost 16.1 (oracle 15.8, unmatched 0.0)], episodes 3.60/min; dps A/B 0.998; ... [seeds 4-6]
 ```
 
-Seeds 1-3 pass the cost gate by 0.1 (25.8 against a 25.9 limit). Fury's Battle Shout is still `!buff.battle_shout.up`
-while Arms refreshes it at 10 s, on purpose: aligning Fury is a later Fury change.
+Before the pull it shows Bloodrage and Battle Shout only (no positions headless, so no Charge).
 
 `tests/Forever/loop_druid_spec.lua` runs 3 fights a Druid pack in `make check` (seeds 1-3, the `#slow` tag) and 20 in
 `make test-druid` (`#druid`), each asserting its flagged lines ran (`r.focus > 0`). Feral and Balance run their
@@ -381,7 +380,8 @@ follows the tree with the most points: the spec activated for that tree, else it
    Restoration hides the displays, its page says "No priorities on Forever for Restoration", and no "modules loaded"
    warning appears when casting. Is the client's Druid pseudo-spec 1483 (assumed; it now only keys the legacy
    migration, as Hunter 1484, Paladin 1486, Rogue 1488 and Shaman 1489 do)?
-6. **Warrior:** Arms/Fury/Protection recommendations as before; Fury's page carries the Fury thresholds only. The DB2
+6. **Warrior:** Arms, Fury and Protection run their "(wowsims.com)" defaults; Arms's page carries Stance Dance and
+   Recklessness, Fury's Rend Weave and Recklessness, Protection's none. The DB2
    puts Improved Slam (12862) on Fury and Improved Thunder Clap (12287) on Arms: does the client's talent frame agree?
    (They count toward those trees' points.)
 7. **Paladin and Shaman:** a Paladin with mostly Holy points, or a Shaman with mostly Elemental or Restoration points,

@@ -27,15 +27,12 @@
 - Paladin: "Retribution (wowsims.com)" is Retribution's default priority, translated from wowsims/forever's Twist of
   Light APL, your on-use trinkets included.
 - Shaman: "Enhancement (wowsims.com)" is the Enhancement default priority, translated from wowsims.com's own.
-- Warrior: a second Arms priority, "Arms (wowsims.com)", translated from wowsims/forever's own Arms rotation (choose it
-  under the Arms specialization's Priority; the hand-built Arms list stays the default for now).
-- Warrior: a second Fury priority, "Fury (wowsims.com)", translated from wowsims/forever's own Fury rotation (choose it
-  under the Fury specialization's Priority; the hand-built Fury list stays the default for now).
+- Warrior: "Arms (wowsims.com)" is the Arms default priority, translated from wowsims/forever's own Arms rotation.
+- Warrior: "Fury (wowsims.com)" is the Fury default priority, translated from wowsims/forever's own Fury rotation.
   Below the level of Bloodthirst it fills with Sunder Armor, and neither wowsims.com priority offers a Hamstring Weave
   switch any more (no line of either read it).
-- Warrior: a second Protection priority, "Protection (wowsims.com)", translated from wowsims/forever's own Protection
-  rotation (choose it under the Protection specialization's Priority; the hand-built Protection list stays the default
-  for now).
+- Warrior: "Protection (wowsims.com)" is the Protection default priority, translated from wowsims/forever's own
+  Protection rotation.
 
 ### Changed
 - Rogue: the hand-built Assassination, Combat and Subtlety priorities are gone, with their settings (Bleeds on
@@ -76,6 +73,10 @@
   longer suggested before combat (wowsims's Protection never casts it).
 - Paladin: the hand-built Retribution priority is gone (replaced by Retribution (wowsims.com)), with its Holy Shock
   list and the Consecration and Exorcism Mana Floor settings (wowsims's 10% floor is in the new priority).
+- Warrior: the hand-built Arms, Fury and Protection priorities are gone, with their settings: Use Queue Prediction,
+  Queue During Execute, Minimum Enemies For Whirlwind, Whirlwind Cooldown Differential, Hamstring Rage Threshold,
+  Hamstring Cooldown Differential, Maintain Sunder Armor, Max Sunders, Minimum Sunder Level, Maintain Demoralizing
+  Shout, Maintain Thunder Clap, Rage Cap, Heroic Strike Rage, Cleave Rage and Challenging Shout Enemies.
 - Shaman: the hand-built "Enhancement" priority is gone, and with it its imbue reminder and mana settings.
   Reverberation and Improved Fire Nova now shorten the shock and Fire Nova cooldowns, Shamanistic Focus lowers the
   shocks' and Lightning Shield's cost, Call of Flame lengthens Flame Shock, and Stormstrike costs what wowsims.com
@@ -170,6 +171,8 @@
 - Hunter: a saved choice of BeastMastery, Marksmanship or Survival falls back to that specialization's wowsims.com
   priority.
 - Druid: a saved choice of the old Feral or Balance priority falls back to its "(wowsims.com)" default.
+- Warrior: a saved choice of the old Arms, Fury or Protection priority falls back to that specialization's
+  "(wowsims.com)" default.
 - Update the core (Hekili) together with its class addons: the class addons now need content API 8 (an ability's
   avoid refund); a mismatched pair loads no priorities and says "update the older one".
 - Your class's existing settings (thresholds, toggles, ability and item options) are copied once into each of its

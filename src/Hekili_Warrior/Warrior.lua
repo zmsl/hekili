@@ -10,9 +10,10 @@
 -- talent is in the Forever DB2, so a cost modifier is rank 1's value x the rank (Classic's own convention), floored
 -- at 0; no cooldown or duration modifier is modelled but Improved Slam's (Slam). The in-game checkpoint compares the
 -- costs (Snapshot cost= / read=).
--- Credits: Hekili (registration API and pack format); the abilities, auras, stance swap, queue prediction and the Arms
--- and Fury priorities are ported from Hekili's Classic profile (origin/classic:Classic/Warrior.lua,
--- Classic/APLs/WarriorArms.simc, Classic/APLs/WarriorFury.simc); call shapes from archive/TheWarWithin/WarriorArms.lua.
+-- Credits: Hekili (registration API and pack format); the abilities, auras and stance swap are ported
+-- from Hekili's Classic profile (origin/classic:Classic/Warrior.lua); call shapes from
+-- archive/TheWarWithin/WarriorArms.lua; the priorities are translated from wowsims/forever's APLs (MIT,
+-- https://github.com/wowsims/forever; tools/wowsims/specs/warrior_*.lua).
 -- The one- and two-hander rage rates as in Taco Dog Forever's Warrior pack
 -- (src/TacoDogForever_Warrior/Warrior.lua:21-24).
 
@@ -27,16 +28,23 @@ end
 local state = Hekili.State
 local IsSpellKnown, IsCurrentSpell, IsSpellUsable =
     C_SpellBook.IsSpellKnown, C_Spell.IsCurrentSpell, C_Spell.IsSpellUsable
-local floor, max, min, sort = math.floor, math.max, math.min, table.sort
+local floor, max, min = math.floor, math.max, math.min
 
 -- The class kit and one spec a talent tree (ids the core's: Arms 100011, Fury 100012, Protection 100013; the client's
 -- one pseudo-spec, 1491, only keys the legacy profile the core migrates). Icons are the DB2 talent tabs' (wowdb
 -- TalentTab.SpellIconID), numeric: Options formats them with %d.
 local spec = Hekili:NewClass("WARRIOR", {
     specs = {
-        { key = "arms", name = "Arms", tree = 1, icon = 132292, role = "attack", package = "Arms" },
-        { key = "fury", name = "Fury", tree = 2, icon = 132347, role = "attack", package = "Fury" },
-        { key = "protection", name = "Protection", tree = 3, icon = 134952, role = "tank", package = "Protection" },
+        { key = "arms", name = "Arms", tree = 1, icon = 132292, role = "attack", package = "Arms (wowsims.com)" },
+        { key = "fury", name = "Fury", tree = 2, icon = 132347, role = "attack", package = "Fury (wowsims.com)" },
+        {
+            key = "protection",
+            name = "Protection",
+            tree = 3,
+            icon = 134952,
+            role = "tank",
+            package = "Protection (wowsims.com)",
+        },
     },
 })
 if not spec then
@@ -1830,225 +1838,7 @@ spec:RegisterStateExpr("mainhand_remains", function()
     return mainhand_speed - (query_time - mh) % mainhand_speed
 end)
 
-local queueEvents = {
-    { time = 0, spend = 0, priority = 1 },
-    { time = 0, spend = 0, priority = 2 },
-    { time = 0, spend = 0, priority = 3 },
-}
-
-local function byTime(a, b)
-    if a.time == b.time then
-        return a.priority < b.priority
-    end
-    return a.time < b.time
-end
-
-spec:RegisterStateFunction("should_queue", function(queue_cost)
-    -- An unlearned strike or Whirlwind reserves no rage (none is at the beta cap of 30).
-    local ms = knownRank(MORTAL_STRIKE) > 0
-    local bt = knownRank(BLOODTHIRST) > 0
-    local ww = knownRank(WHIRLWIND) > 0
-    for i = 1, #queueEvents do
-        local e = queueEvents[i]
-        if e.priority == 1 then
-            e.time = query_time + (ms and cooldown.mortal_strike.remains or cooldown.bloodthirst.remains)
-            e.spend = ms and action.mortal_strike.cost or bt and action.bloodthirst.cost or 0
-        elseif e.priority == 2 then
-            e.time = query_time + cooldown.whirlwind.remains
-            e.spend = ww and action.whirlwind.cost or 0
-        else
-            e.time = query_time + mainhand_remains
-            e.spend = queue_cost
-        end
-    end
-    sort(queueEvents, byTime)
-
-    local spent = 0
-    for i = 1, #queueEvents - 1 do
-        spent = spent + queueEvents[i].spend
-        local nextEvent = queueEvents[i + 1]
-        if query_time + state:TimeToResource(rage, nextEvent.spend + spent) > nextEvent.time then
-            return false
-        end
-    end
-    return true
-end)
-
-spec:RegisterStateExpr("should_hs", function()
-    return should_queue(action.heroic_strike.cost)
-end)
-
-spec:RegisterStateExpr("should_cleave", function()
-    return should_queue(action.cleave.cost)
-end)
-
--- The Classic settings the Arms and Fury priorities read (Classic/Warrior.lua:1574-1734, same defaults). Each
--- preference shows on the specs whose priority reads it (the trailing spec keys; none: every spec). Left out:
--- adaptive Whirlwind and Bloodthirst-in-execute (they need attack power and weapon damage, secret on Forever), the
--- unused queueing threshold, and the Overpower stance-swap settings (the dodge is unseen from another stance).
-spec:RegisterSetting("adaptive_queueing_enabled", true, {
-    type = "toggle",
-    name = "Use Queue Prediction",
-    desc = "When enabled, recommendations will use swing timers and rage calculations to determine if Heroic Strike or Cleave should be queued.",
-    width = "full",
-}, "arms")
-
-spec:RegisterSetting("execute_queueing_enabled", true, {
-    type = "toggle",
-    name = "Queue During Execute",
-    desc = "When enabled, recommendations will always queue Heroic Strike or Cleave during the execute phase.",
-    width = "full",
-}, "arms")
-
-spec:RegisterSetting("ww_min_enemies", 2, {
-    type = "range",
-    name = "Minimum Enemies For Whirlwind",
-    desc = "Select the minimum number of enemies before recommending Whirlwind over Bloodthirst or Mortal Strike.",
-    width = "full",
-    min = 0,
-    softMax = 4,
-    max = 10,
-    step = 1,
-}, "arms")
-
-spec:RegisterSetting("ww_cd_diff", 1.5, {
-    type = "range",
-    name = "Whirlwind Cooldown Differential",
-    desc = "Select the remaining time on Bloodthirst or Mortal Strike before Whirlwind can be recommended.",
-    width = "full",
-    min = 0,
-    softMax = 2,
-    max = 5,
-    step = 0.1,
-}, "arms")
-
-spec:RegisterSetting("hamstring_threshold", 80, {
-    type = "range",
-    name = "Hamstring Rage Threshold",
-    desc = "Select the rage threshold after which Hamstring will be recommended.",
-    width = "full",
-    min = 0,
-    softMax = 100,
-    max = 100,
-    step = 1,
-}, "arms")
-
-spec:RegisterSetting("hamstring_cd_diff", 1.5, {
-    type = "range",
-    name = "Hamstring Cooldown Differential",
-    desc = "Select the remaining time on Bloodthirst or Mortal Strike and Whirlwind before Hamstring can be recommended.",
-    width = "full",
-    min = 0,
-    softMax = 2,
-    max = 5,
-    step = 0.1,
-}, "arms")
-
-spec:RegisterSetting("debuff_sunder_enabled", true, {
-    type = "toggle",
-    name = "Maintain Sunder Armor",
-    desc = "When enabled, the Arms and Fury priorities will include Sunder Armor.",
-    width = "full",
-}, "arms", "fury")
-
-spec:RegisterSetting("debuff_sunder_max_stack", 1, {
-    type = "range",
-    name = "Max Sunders",
-    desc = "Select the maximum number of Sunder Armor stacks for Sunder Armor recommendations.",
-    width = "full",
-    min = 1,
-    max = 5,
-    step = 1,
-}, "arms", "fury")
-
--- Forever default: Sunder Armor's own level in the DB2 (7386, level 10), so Sunder is on from the start; Classic's 61
--- kept it to raid bosses at level 60.
-spec:RegisterSetting("debuff_sunder_min_level", 10, {
-    type = "range",
-    name = "Minimum Sunder Level",
-    desc = "Select the minimum target level before recommending Sunder Armor.",
-    width = "full",
-    min = 0,
-    max = 63,
-    step = 1,
-}, "arms", "fury")
-
-spec:RegisterSetting("debuff_demoshout_enabled", false, {
-    type = "toggle",
-    name = "Maintain Demoralizing Shout",
-    desc = "When enabled, the Arms and Fury priorities will include Demoralizing Shout.",
-    width = "full",
-})
-
-spec:RegisterSetting("maintain_thunder_clap", false, {
-    type = "toggle",
-    name = "Maintain Thunder Clap",
-    desc = "When enabled, the Fury priority keeps Thunder Clap on the target (Battle or Defensive Stance only).",
-    width = "full",
-}, "fury")
-
--- Fury's rage floors for the on-next-swing strikes (wowsims/forever's Fury APL dumps at 40 rage for both).
-spec:RegisterSetting("rage_cap_threshold", 80, {
-    type = "range",
-    name = "Rage Cap",
-    desc = "At or above this much rage the Fury priority dumps rage into Heroic Strike (one target) or Cleave (more), "
-        .. "without holding rage for Bloodthirst or Whirlwind.",
-    width = "full",
-    min = 0,
-    max = 100,
-    step = 1,
-}, "fury")
-
-spec:RegisterSetting("hs_threshold", 40, {
-    type = "range",
-    name = "Heroic Strike Rage",
-    desc = "The Fury priority recommends Heroic Strike on one target at or above this much rage.",
-    width = "full",
-    min = 0,
-    max = 100,
-    step = 1,
-}, "fury")
-
-spec:RegisterSetting("cleave_threshold", 40, {
-    type = "range",
-    name = "Cleave Rage",
-    desc = "The Fury priority recommends Cleave on two or more targets at or above this much rage.",
-    width = "full",
-    min = 0,
-    max = 100,
-    step = 1,
-}, "fury")
-
-spec:RegisterSetting("prot_heroic_strike_rage", 50, {
-    type = "range",
-    name = "Heroic Strike Rage",
-    desc = "The Protection priority recommends Heroic Strike in the single-target list at or above this much rage.",
-    width = "full",
-    min = 0,
-    max = 100,
-    step = 1,
-}, "protection")
-
-spec:RegisterSetting("prot_cleave_rage", 40, {
-    type = "range",
-    name = "Cleave Rage",
-    desc = "The Protection priority recommends Cleave on three or more targets at or above this much rage.",
-    width = "full",
-    min = 0,
-    max = 100,
-    step = 1,
-}, "protection")
-
-spec:RegisterSetting("challenging_shout_loose", 3, {
-    type = "range",
-    name = "Challenging Shout Enemies",
-    desc = "The Protection priority recommends Challenging Shout when at least this many enemies attack someone else.",
-    width = "full",
-    min = 1,
-    max = 10,
-    step = 1,
-}, "protection")
-
+-- The wowsims.com priorities' switches (each .simc header's Setting lines), on the specs whose priority reads them.
 spec:RegisterSetting("wowsims_recklessness", false, {
     type = "toggle",
     name = "Recklessness (wowsims.com)",
@@ -2077,9 +1867,8 @@ spec:RegisterSetting("wowsims_rend_weave", true, {
     width = "full",
 }, "fury")
 
--- The six priorities (each spec has two, the wowsims.com one and the hand-built one, until the swap),
--- written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and run it, never
--- these blocks (tests/Forever/warrior_spec.lua checks they match). Pick one with /hekili priority <name>.
+-- The three priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit
+-- those and run it, never these blocks (tests/Forever/warrior_spec.lua checks they match). Pick one with /hekili priority <name>.
 spec:RegisterPack(
     "Protection (wowsims.com)",
     20261020996,
@@ -2095,18 +1884,7 @@ spec:RegisterPack(
     20261020165,
     [[Hekili:1Mv3UTTnu4NLCJNnAMSDCs3squaYWWWYWw3qDb2DsMwKoIZYscKuXlaf(zFhsjlrslklLMDrnuTo878)HFhNG5bFjyjgjibF6Qzx9X5ZUA28pEtWsXR5KGL5OOTONHhsr7GpFKTJFy149z750DCVOSDtKY8AsgclXzDbnr8uAW6wHKNtIcw(3p(5p)0F(57qawblJPymP8aeEuRA4UdReXKdRQ(UPBYyKxiSdRWKnOIeXHvp(x)(HvWxdpvE8c6uPY4t3JymAgBkoNpfLNaFac4bp59p8S0jxcqZqP8eWyXWZzsvrbeqyCw63bpSL8k37WQFgjq31Ijm(pE6laiXcro)UPtFMkIlwlT6PwIobWeSu8If3UygE21ZwmZdcDSSn0eiWIIe0SuUxoJahEns4VMW4e2wclKbjGlHxKxKKecV5AVBo8BNCGp4pncjfq9IWekxCPmP5dseQokxGsJiTF01jzzyLIk4KWSnBcFoc7pxxTlCCsKqKqc5XzfIEi(zSXDzV0yH(TlmVifdHfitMXUKUXxkWlKqskzhLW9NxFENQlcdb1ikkHRllMGeXH7P8y9VfS9Tjeopf(NuBCIqqtFM7vLGd1fq)G89esoije3z0TeUvK9ed)bdd)yyvLZo9OJV4e7Ou0qS8ZrxSUyZgpdq8kYNORbi6jqjvwxREMoIMHKu8LBYIk4(xvAmK)LeviGCymItgn(IszT0)20S9PFTDdBeMOEHeA4JDiAk)E)5E3yyYqXblpBpHvP9QqXG1wNHHUJSgz4CcI1KHFNcfgwxZuaNvcDxi8gmGQIN6GnuHJWVcVz0ydN7RJRGwL0ui2wA8bzw00RG5T76QaQcxPyEriU4E7cHHcWdYsPrJL2tmkfhczoc(7R)Vvw6K79hp7dZ8wyAT7JPSK9uOMFinjvgK8mg22qAYptpURsnRAgJKT97K57XoY39mbx2NAgZIsiOxAZLSN5nsEPJxubdqestxpZaMyclJgDS)QLPGMHatSU1elxxXb4OFU7VDwBPi11BsvoUooBm5OkihLLLGHhSE5XwbvKA0zgExh2Rl8QI91G38cdGNmzKrhT0M1ssdk02HtAfMxyeVa(pQBNJsq5NdNlQkM0pJCmJDjHrNV1L)DGVbbeDkq(NPVRN3a4zWAXpkgXAR46nmb2Hka3NMkiSisUOl9mW()gT1WlYx1TeUPG9QPMAt4M7PGGwVeNuWiBr9t0KcGzfqE75yHRdOxuCc9WQIm9V2dC(OT3d0Odwct94aiwRQi5kYvBgvUJb84NuBkrsrRti4GFkyzeJcjdkQK9Uod0J85bzS4FwICy52u6MuGaSalf0lqAcwsiw4aIgUTsPU2Hu6uz19Vo58kb8gla1YtY4wTcS5e7oi(WCjUFSN4A0bPd6BKNSu3)GJGKXKMoJs6AsI4p6SaAq0ghmfA9eCkoyPI4KSCdSPB7WMgUn0OPA2e1QtLqNpBOr1UtGkmTBmRR2m5N)EhWvvjZTBADwIAn51WA(g4W)TsIVNK8QyXRCz7HmUdRvqBsKxlbbFVz54C7rt9h7bZXVt7WEI2rrRPEnOo)52dYocxLlPdMHxQoS9KOHpf8DDrI3YMe9Sk74Qek32ECPl3UCxdd)1(UKt3YqPb7HFU0Gbx5UQjpzbe1162Z8CM)oUHIUkS2nrbORbE6e)nmZUxA59zRL))wBr5Z9DoRZC1q2OrPrxCP0xxPVkOVR6OuSl6zg8f7NIb8eYFM5QFa22OX28B2ced9UPTBSu1KVvcQwlFvZs1obQBhlATPOrZTWH11X1BjAHP6WCb5wyLHuJCrlr1ZLZ6yRK6CMMoBrdohhQ2d9BMjxlPBxASEP02v6qVfP0)12RzaoFZARdXbA2EnOLDOCDQYLyBRw05j02L1klx1Cmex11T9NLXSsZOcrSSK8xjBPj0dRg)lv)HQuVo4)(d]]
 )
-spec:RegisterPack(
-    "Arms",
-    20261020413,
-    [[Hekili:LN1wVTTnu4Fl5fVeKunRCPBDiYaDdyyTp0bepG(MKPLoYIW0IAKuXjdg(3(i1fkQ7kPjBdlpKwfXZLVZHhYZNoX129pCxgGeG7xUC(LV3E(LZV2(k3LIhta3Lji)TOnYhIr7K)7hz74Qx(iHIcukUofteFk2DDN2GNa(Ul)6hV7Up9739tOmLJWbbqUcaxU6VszW9a74kLTpU6RigdtzxCCvcLjGGJRcz0Dhx9BWwmb)Dsj(fcIZX(LkKOehlE0sIlgnetKWe5lW0yUvcd8P7wJeoYFeeWJhrtfxGdDwNggAz(slgSdHJ536yp)4NBzGZD(E)ieBdCrkh8OHHEB8dCS1s6WtJdaMNmgLGx6aoie44nCRaq5lVI1Hy0Aceml)TwMAzXfYK9T9O4o0dEzcm7KcDHhsOsSKRBAYmHcEclImBsw0N)3HJ9YKqJCzKfastGi4)sQqvkQPfusLTOoikrsB9L4X0b(icXl)x9iyU4cv1KJpLscO7J5zBiuo)q9qi7)o)ktdXsJBBh4bWpvakRu8OxseIdJQiJkqQxvTFRHKdFpajzXJGH3c8677kFP05EqMmGDyGVWUdRKLBrIiV9yEu3RllW2saopw(tLefXHteWOy)cmmgeCSND6PNO32qbOKSL)ZuifuHs5(wP)TKBBcePW8LNaw4WKN4Te4DGNG6D9LhMGjv76KaVi(zhoT2MWmTYLVUPUNDwR4wvYqa09JgYlEvc5BM)ec5CG(sf2fpvTuznQZ9yFbL9Ohl1SuQCzPQ4ybW8Her7Kw(TDaJdSTYlbK3Je7dQ7mYnJLwv5tEmu8gy2jflXG4a9B70VV1Qrnc93ufPgXTQO4IqQFk35YwDt1fxfDhYQGQ6UADtNMKk5aKq3dSc7A3Pu7JWmYES07TZYvnS2VpRpxXchErY9Mg3pWlahgoL8F9TSBUDy3CEhEP7DGAQ3PesUxiwvdSULHG2zUpQarekoWtQmeSy(m9l05H6I8U5wxn70Y7kQhtBJLX5HrYRfAQaILpIloKLW8tzYQgX7QTkLlw40PNul1DAkcTtjt8gDvQQ4jmL9OQa9Bb4Qc5ZQSGUWSP2vlutZXr7y(xxQO1QSIz2qoFa1mt9l6qoredK3Nqc6e8RjuAGYeTVo00W3(H5DR(ZJGUPfA0FRnooPV(Gh)S7s59pCPHA8fmkYIC1h6u6i5ZFj7tMkoH7(ZLFUH0egTODfsl1qodaPmIwpD7x3L(YpLbyyK6lREz6zRaYvtei1ALBcM)HAIpLBun6I)mANPYgxpXSrEtZ(tdVA91FcPHYg7pZuXnnsfnl)MAl9QKMAj3Lz9uuhaK(499CAr3XxlUTs8FOhX13LnWgsVuaE94amL9QxasaQmZp2tMPMvuc(HEeSbLaLO2Z7Tc4vGmWynvBXg45thWiQLIxVI0UVlW196ADsyY0gglehH3WOehYWFZgldI)Xa0)IejYcMP2CstWWm4AqTiZGnVFxBad2e9EvxtQgzwS51K9cXgTRn9sVKpKEqOggAikLigIEH5WcnTSod)F0rn2fvOYyQ9OdhkYEIJGSlQpgB7Qjo29ihn4a0yYL5mc9YNgUEoEDXQOYr16mB0PS(ijRz5cv6Qf9uuxtwnR0spe7HkUE2hoMkj38XNNJOYWRd882MA6KtM))NAAZdULHE1rdH5jWNqPuZr7puAC47UkhT)q41Ca)zGwcBuQisDhE(FuRJRoT4pc2zzl7(3d]]
-)
-spec:RegisterPack(
-    "Fury",
-    20261020900,
-    [[Hekili:nNvuZTjoq4FlPp4lzAmX29AV2oHmt7dDU2h6nt9ntFdSmimAmGyKe2jDYWV9Bxbgeyi2yNETp4uBPD)2pTRy1NOotD(xN5(ef15RZMm7ntNmBY7MmXzU6HuQZ8uI3AYk4ljKy4VFkt8ao4drCIp64YmwK6Zjol7edzk1Zz(3)W3(2N)NV9(aTZHmFFAHdujm7N4c6gQiFbID(IVtecgx8(8fQqA(Imjv8hY8fP4GmfyWLyegpDY4PV9QRZxei4X5l(ivagUgHzUIK4rHz2YuH5lqSbVilzrA33Y3kzXYBckclIDrGfCfrX4j5l8isfm8L(Cp5ncQKseEH3uh2X4cz8g54sSSI9HW9IpaRl)DeQCQxCLfKUe8aweK9iEyaKwPcQhpEjrzdFuruxziptDnlWEzwqGL5GwcAmHLiV1E6K8VShaV0(gVqIyf9Air5YdcCx55BpTBlzjkQWJMQAACDC3LeDL6COvw6OcCSQCf(MRGKSIo6IYPe0e)QrRcS9gMNIlEWvKjdVoG7LjnOfqgoK8t5BPIDtU3YFhhm9cRzqy2ZhFAanrY20JBHubN5bZjyRRDEVSa6aabnHgZOGfJeWw)7SLuLILSsAH)01JK6QcHTfH8i)dfKzdpiHYA4hD5US8Yio3xfYesL16e(2Kh94GbWxAmv5UL7W)gss8Dlh4rmiwEzcOAPgxIzdcB5XLQ7S7iC4exvZKTWOrBzqrVfpQN45If1iQ5GzY2lIs2C0LY7gyPSb6hSgUp6f())vDSiA)YkGDf(NOYH9lWC4f92Z5cFQEoDNLMpilZs8bBjIyUabPkJx4IB580eYYiQ)OsGm9YcIJ36B7XXyY9UAdQib9(uou(l8fiNc72QSIGgrr31x8JH(HAlASPIef5w8t3iMuDnEKQ9USVu3lJlLp2mc6)5LVYeivyru8IiPnscynsbFCnTy0Ht0MM3kH7tH1njI9dia1ht1EzJwPNSkZVd699Vvam2OAoC1giZbP3t9YuuKbLF1nnKiPn6ctIXwjjRQoBarbpXwVIB43j)yP9uRxFAprP9SX6VvDP7MnDrXrpffV1EI10h7MFJ6NFA32R8Gp1VpVm7fC77M09Is7kySIebMzXIbXqBO(UnTWA32MFhkidrs2VCcBv1)Wglqmfnw2XK6NKjQq3Tmzy3Zl3sPP6Ns1Nelp8PE5FXzoOItcq1s3p2EtIxpOkaWp(Q(MgLvANpUtoSZ8kI7OaC6XOA6Jw9QwwzWvmovE1ErbmcUfbvWif2yUCaCvyCcizrQNIVMsBDMRfjGg3b5RdwNkBRHSsnCt8AVmBHxhQERHSuQCta)ZEwsneHz4YEj2(sFhJyzKaVEqey25qGJvi9avGnurSdqj2GKInuE0ssgwmEtpfJcfDNY2GJrOng5)64I8aQ)NNi8NJ9aNPm8ZV4FecXXC)B7j3JYTnZVhw3yPaDe031dOMsVnb)3DH74AA6K(B)Ic17wPUXM5wc(lox0T4nPvFYigP(oQXuzENPVNjj)As0)rVT1W)uvYbExaDKBFo3UiB84J2U(o(QAxU2Q(oJPu7Vj5BCDaTZ91tS6Ef7Dk8PD)IZsE4b1hQxkTBY2NiP27tA3K9eV8XjE7dn1B3JQxQV76jMCU1ft0a2x)PM3dXeLZ)gl)8lXZA3HQAzzCFLELHoKlZ8tFTOW3tE57Q(PeFFsRSU0M33wQI3N(qUKr1lhFF(C(VrDDQbqMKPcXJq)B6AwelFXLL))MuK7C(Vd]]
-)
-spec:RegisterPack(
-    "Protection",
-    20261020023,
-    [[Hekili:9IvBVTTnq4Fl9lzjyzQ2ojDBbrbODdfPdDzfrbiFts0s0weHw0GKkgEiq)23DKYYuVg71HHI2gtE3ZD85EoYZjCA4JHbPenn8(ztM9HPtMnzYSlcd0BxtddwtsEMSe(HCYk4F)MuOPjAMih3Alxqsr3NxW46VKhoVxKuRPjHbp9XhE4l)1dxV2bImwAk16gvb28zHK(cvwgVpoLXprKsMqEDz8VtxqZvSxOLXbAsEc98Y4hjf56Y4nzuWuDgSLMixsHL0fYCvzmzdzlyhelkpTm(tCrYZLXptxdMuSg25biK5lbhj5P7TlGtwHUvKNIj0hLReW)P0aFqHT1IY4RG9VJkfSemFKSNbmqJ(noLG54gMoRkNKemazmnKqZLS8LELX3dqKU7ePGJ3xjkT9KL6KWpr48QC7okHRZuArofpysAf6R5KTu5paRLym(0nInk2k4ZlHQHYy1ki3agkZabaVIMirwcxSI2pdsQplfGLv()(f2nqKDRiF8BFfcIeYDjfQciiCKJt4eL6NseRwZPwlFKOaY(QZUUtbGaX(Yj7ygK2S0vD1iNsGfLus62QJVH92WYtfBG8pRqBkE4o2QFUyxjDxvdsrjvLHfmmEtH4PSbJtvQZRW1QAYGqb2WzgY9060LOq66pHKgkBM0FZoz3zwyxiskaxM6b9esXcghAuigQs5Twsb(yor7d)vZPrQmbK4Sf(VBEXIfEUR6vSU8p644p6)(KmusFEHIgjwSiAzsQ)0(TSwpfPSnin8zFyBBNBO9vMJE0C8KBoBordIXklvenhzIQ9rKTmOhxaQyhZ)ViLay0iHxhUoy4e8tExk1GOBI2cnGr5CqNHBxxrQXqOO36ROAnSTYRJTrglCHBhJHs7U5MjzCnXZCnYnZo5uu97LuiH(i9T(xo5vlxiTnbrfkYCoYeNKieCq3NVBl4)xry5QB8N6D1zU5YlSeTqUnswOYCxhISifJx3e0nlUz2KgEDuQwWbzrEK9trCMsFo(UHprqrNX1H6lnNUIrv36FXB6OciD(EQ2Z(z)ksO967Rek427E2foGPMtrLcb)CJUU94yUbjIGx7JEu5G7YvvXRETV92xEM0d66mRTWfMRDZh317pVsPa6eo7VBOCR1QwCIqRSsvAoQGsR7j66F)XjrKdDAkSAy6Zh4UNA7ZmVdcTU4ZGJRWCATWzbIA4AK59GXRh73g0v(hix(AL4lvOBS1nnfLnWEq((aztleDeR2L7vPA3kXmaXXXIwFArFvrQb3fgaVOJf2wtPHnDkCyolNd)09MrdRuqHFA3JAHbvNOqnaXaM4C6qZUyqKYtddsKmnvYiHbTAmrxVCOi4CQCHySo13QvfJ3vdepxrtFPCl9gc1hgaQUYgxa)oBMXa)ZTcSJscRQ1jsRUC01F5aDTrxRB6FCT6yi)1dPcRH)ea65X0Lhzj61d8oHX05JxkFZc1W9f1DydQ)B2H1w2oyj3CpXHwWCUvzmbD3kfmnhPGRhRA5mMzyGzWo02E469PQZuE7XXDmVMa1MDhItAp6zJs4qdNowTXmSQtU0jY9EKgAW1XUvQZWP9I9bnqBFf4Hym3PzDJ4XmQ7)YzD77(TDPL7SVhZLz1ZgpuFbmv8y3u5opCxXtRPLrGGNAgsJ38UhyizNBfAoIS9n7i7Vzg8Qre4bFZEeFREX304w)TjhR19OpVTBPh82jZ309)JEx77jf6mC6H7OpZ4m4B9V73eIz7W)j]]
-)
+
+-- The hand-built lists the wowsims.com packs replace (wowsims packs plan, P9): a saved choice of one falls back to the
+-- spec's default.
+spec:RetirePacks({ "Arms", "Fury", "Protection" })

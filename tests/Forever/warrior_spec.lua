@@ -773,22 +773,15 @@ describe("Forever Warrior", function()
         assert.is_true(lw.run(w.abilities.execute.usable, e))
     end)
 
-    it("registers the six priorities (each spec twice) exactly as tools/make_pack.lua prints them", function()
+    it("registers the three priorities exactly as tools/make_pack.lua prints them", function()
         local printed = {}
         local pipe = assert(io.popen(LUA .. " tools/make_pack.lua"))
         for line in pipe:lines() do
             printed[#printed + 1] = { line:match("^(%d+) (.+)$") }
         end
         pipe:close()
-        assert.are.equal(6, #w.packs)
-        for i, name in ipairs({
-            "Protection (wowsims.com)",
-            "Fury (wowsims.com)",
-            "Arms (wowsims.com)",
-            "Arms",
-            "Fury",
-            "Protection",
-        }) do
+        assert.are.equal(3, #w.packs)
+        for i, name in ipairs({ "Protection (wowsims.com)", "Fury (wowsims.com)", "Arms (wowsims.com)" }) do
             assert.are.same({ name, tonumber(printed[i][1]), printed[i][2] }, w.packs[i])
         end
         assert.is_nil(w.options) -- each spec's package is NewClass's
@@ -797,44 +790,18 @@ describe("Forever Warrior", function()
         for i, s in ipairs(w.def.specs) do
             keys[i] = s.key .. "=" .. tostring(s.package) .. "@" .. s.tree
         end
-        assert.are.same({ "arms=Arms@1", "fury=Fury@2", "protection=Protection@3" }, keys)
+        assert.are.same({
+            "arms=Arms (wowsims.com)@1",
+            "fury=Fury (wowsims.com)@2",
+            "protection=Protection (wowsims.com)@3",
+        }, keys)
     end)
-
-    it(
-        "opens with Charge before combat in Arms and Fury (Fury with Intercept too), and closes the gap with Intercept in Arms",
-        function()
-            local packs = assert(loadfile("tools/make_pack.lua"))("lists", "warrior")
-            local function actions(list, n)
-                local out = {}
-                for j = 1, n or #list do
-                    out[j] = list[j].action
-                end
-                return out
-            end
-            for _, p in ipairs(packs) do
-                packs[p.name] = p
-            end
-            assert.are.same({ "battle_shout", "charge" }, actions(packs.Arms.lists.precombat))
-            assert.are.same({ "victory_rush", "intercept" }, actions(packs.Arms.lists.rotation, 2))
-            -- Fury: Battle Shout, then Charge in Battle Stance or Intercept in Berserker Stance (wowsims's pre-pull move)
-            assert.are.same({ "battle_shout", "charge", "intercept" }, actions(packs.Fury.lists.precombat))
-            -- Protection charges in Battle Stance, then swaps to Defensive Stance
-            assert.are.same({ "battle_shout", "charge", "defensive_stance" }, actions(packs.Protection.lists.precombat))
-        end
-    )
 
     it("keeps its priorities in src/Hekili_Warrior/APLs/, tools/make_pack.lua's default class", function()
         local def = dofile("src/Hekili_Warrior/APLs/packs.lua")
         assert.are.same({
             "WARRIOR",
-            {
-                "Protection (wowsims.com)",
-                "Fury (wowsims.com)",
-                "Arms (wowsims.com)",
-                "Arms",
-                "Fury",
-                "Protection",
-            },
+            { "Protection (wowsims.com)", "Fury (wowsims.com)", "Arms (wowsims.com)" },
         }, { def.class, def.packs })
         local byName = assert(loadfile("tools/make_pack.lua"))("lists", "warrior")
         local byDefault = assert(loadfile("tools/make_pack.lua"))("lists")
@@ -883,94 +850,9 @@ describe("Forever Warrior", function()
                 end
             end
         end
-        for _, name in ipairs({ "execute_phase", "should_hs", "should_cleave", "mainhand_remains" }) do
+        for _, name in ipairs({ "execute_phase", "mainhand_remains" }) do
             assert.are.equal("function", type(w.exprs[name]), name)
         end
-    end)
-
-    it(
-        "tanks in Protection: threat first, Shield Block kept up, no defensives, the rage thresholds as settings",
-        function()
-            local packs = assert(loadfile("tools/make_pack.lua"))("lists")
-            local prot = packs[#packs]
-            assert.are.equal("Protection", prot.name)
-            local order = {}
-            for i, e in ipairs(prot.lists.default) do
-                order[i] = e.action
-            end
-            assert.are.same({
-                "shield_bash",
-                "mocking_blow",
-                "defensive_stance",
-                "taunt",
-                "challenging_shout",
-                "shield_block",
-                "victory_rush",
-                "bloodrage",
-                "battle_shout",
-                "run_action_list",
-                "run_action_list",
-            }, order)
-            assert.are.equal(
-                "buff.shield_block.stack<2&(rage.current>=40||!buff.revenge_usable.up&cooldown.revenge.remains<=1.5)",
-                prot.lists.default[6].criteria
-            ) -- a stored | is ||
-            for list, entries in pairs(prot.lists) do
-                for _, e in ipairs(entries) do
-                    for _, never in ipairs({ "last_stand", "shield_wall", "healthstone" }) do
-                        assert.are_not.equal(never, e.action, list)
-                    end
-                end
-            end
-            local d = prot.desc
-            assert.is_nil(d:find("provisional"))
-            assert.are.same({ 50, 40, 3 }, {
-                w.settings.prot_heroic_strike_rage.default,
-                w.settings.prot_cleave_rage.default,
-                w.settings.challenging_shout_loose.default,
-            })
-        end
-    )
-
-    it("queues a strike only when the rage for the next strike and Whirlwind still arrives in time", function()
-        local e = lw.env(w)
-        e.query_time, e.mainhand_remains = 0, 2
-        e.action = setmetatable({}, {
-            __index = function()
-                return { cost = 30 }
-            end,
-        })
-        w.state.TimeToResource = function(_, _, amount)
-            return amount / 10 -- 10 rage a second
-        end
-        w.game.known[23881], w.game.known[1680] = true, true
-        assert.is_false(e.should_queue(15)) -- Bloodthirst and Whirlwind are both ready now: 60 rage needed at once
-        w.state.TimeToResource = function()
-            return 0
-        end
-        assert.is_true(e.should_queue(15))
-        -- 40 rage now, Whirlwind in 3 s, the swing in 2 s: Bloodthirst and Whirlwind fit, the queued strike does not
-        e.cooldown = setmetatable({ whirlwind = { remains = 3 } }, getmetatable(e.cooldown))
-        w.state.TimeToResource = function(_, _, amount)
-            return math.max(0, (amount - 40) / 10)
-        end
-        assert.is_true(e.should_queue(0))
-        assert.is_false(e.should_queue(15))
-    end)
-
-    it("reserves no rage for a main strike or Whirlwind the character does not know", function()
-        local e = lw.env(w)
-        e.query_time, e.mainhand_remains = 0, 2
-        e.action = setmetatable({}, {
-            __index = function()
-                return { cost = 30 }
-            end,
-        })
-        w.state.TimeToResource = function(_, _, amount)
-            return amount / 10 -- no rage now, 10 a second
-        end
-        assert.is_true(e.should_queue(15)) -- 15 rage by the swing in 2 s
-        assert.is_false(e.should_queue(30))
     end)
 
     it("times the next main-hand swing past the last known one, and 0 with no weapon speed", function()
@@ -1053,194 +935,3 @@ end)
 
 -- The wowsims lines (class-completion Task 5) on the headless engine, as fury_spec checks Fury's: each line's `if=` runs
 -- through the real Scripts.lua against a booted Arms Warrior (helpers/warrior_world.lua) with the state pinned per case.
-describe("the Arms and Protection lines from wowsims/forever (class-completion Task 5)", function()
-    local headless = require("Game.harness.headless")
-    local ww = require("Forever.helpers.warrior_world")
-    local H, st, pack
-
-    -- Protection adds Revenge (every rank) to the Arms kit, so its cooldown is read.
-    -- `noMortalStrike`: the Arms build without the talent (neither Mortal Strike known nor its talent taken).
-    local function boot(stance, name, noMortalStrike)
-        local c = ww.character()
-        c.form, pack = ww.FORM[stance], name
-        if noMortalStrike then
-            local ms, known, talents = {}, {}, {}
-            for _, id in ipairs(ww.IDS.mortal_strike) do
-                ms[id] = true
-            end
-            for _, id in ipairs(c.known) do
-                if not ms[id] then
-                    known[#known + 1] = id
-                end
-            end
-            for k, v in pairs(c.talents) do
-                talents[k] = v
-            end
-            talents[ww.IDS.mortal_strike[1]] = nil
-            c.known, c.talents = known, talents
-        end
-        if name == "Protection" then
-            local revenge = lw.load().abilities.revenge
-            c.known[#c.known + 1] = revenge.id
-            for _, id in ipairs(revenge.copy) do
-                c.known[#c.known + 1] = id
-            end
-        end
-        H = headless.new({ character = c, pack = name })
-        assert.are.same({}, H.loadErrors)
-        H.ctl.inRange.target, H.ctl.level.target = true, 60
-        H.Fire("PLAYER_TARGET_CHANGED")
-        assert(headless.cycle(H, H.ctl.now + 0.2))
-        st = H.Hekili.State
-        st.reset("Primary", true)
-        assert.is_true(st.buff[stance].up, stance)
-    end
-
-    -- The `n`th `action` entry of `list` in the booted pack: its condition as the engine evaluates it now, and its focus.
-    local function check(list, action, n)
-        n = n or 1
-        for i, e in ipairs(H.Hekili.DB.profile.packs[pack].lists[list]) do
-            if e.action == action then
-                n = n - 1
-                if n == 0 then
-                    local ok, err = H.Hekili.Scripts:CheckScript(pack .. ":" .. list .. ":" .. i)
-                    assert.is_nil(err, action)
-                    return ok and true or false, e.focus
-                end
-            end
-        end
-        error("no " .. action .. " line")
-    end
-
-    local function cds(ms, wwcd, revenge)
-        st.cooldown.mortal_strike.expires = st.query_time + ms
-        st.cooldown.whirlwind.expires = st.query_time + wwcd
-        st.cooldown.revenge.expires = st.query_time + (revenge or 9)
-    end
-
-    it("Arms: Rend in Battle Stance at 1.5 s or less, with Mortal Strike, outside execute (focus 2)", function()
-        boot("battle_stance", "Arms")
-        rawset(st.rage, "current", 50)
-        assert.is_true(st.talent.mortal_strike.enabled)
-        local ok, focus = check("rotation", "rend")
-        assert.is_true(ok) -- not up
-        assert.are.equal(2, focus)
-        st.applyDebuff("target", "rend", 2)
-        assert.is_false((check("rotation", "rend")))
-        st.removeDebuff("target", "rend") -- a shorter application does not shorten the running one
-        st.applyDebuff("target", "rend", 1.4)
-        assert.is_true((check("rotation", "rend")))
-        boot("berserker_stance", "Arms")
-        assert.is_false((check("rotation", "rend")))
-        -- the rotation list runs only outside the execute phase
-        local d = H.Hekili.DB.profile.packs.Arms.lists.default
-        assert.are.same(
-            { "run_action_list", "execute", "execute_phase" },
-            { d[4].action, d[4].list_name, d[4].criteria }
-        )
-    end)
-
-    it(
-        "Arms: Overpower at focus 1, Slam within 0.3 s after the main-hand swing (focus 2), leaving Mortal Strike's rage",
-        function()
-            boot("battle_stance", "Arms")
-            assert.are.equal(1, select(2, check("rotation", "overpower")))
-            rawset(st.rage, "current", 100)
-            cds(9, 9)
-            rawset(st, "mainhand_speed", 3.6)
-            rawset(st, "mainhand_remains", 3.4) -- swung 0.2 s ago
-            local ok, focus = check("rotation", "slam")
-            assert.is_true(ok)
-            assert.are.equal(2, focus)
-            rawset(st, "mainhand_remains", 3.31)
-            assert.is_true((check("rotation", "slam")))
-            rawset(st, "mainhand_remains", 3.29) -- swung 0.31 s ago
-            assert.is_false((check("rotation", "slam")))
-            -- Mortal Strike ready within Slam's cast: Slam only with Mortal Strike's rage left over
-            rawset(st, "mainhand_remains", 3.4)
-            local slam, ms = st.action.slam.cost, st.action.mortal_strike.cost
-            cds(1.4, 9)
-            rawset(st.rage, "current", slam + ms - 1)
-            assert.is_false((check("rotation", "slam")))
-            rawset(st.rage, "current", slam + ms)
-            assert.is_true((check("rotation", "slam")))
-            cds(1.6, 9) -- Mortal Strike after the cast: nothing reserved
-            rawset(st.rage, "current", slam)
-            assert.is_true((check("rotation", "slam")))
-            -- without Mortal Strike nothing is reserved (an unlearned spell's cooldown reads ready)
-            boot("battle_stance", "Arms", true)
-            assert.is_false(st.action.mortal_strike.known)
-            rawset(st.rage, "current", slam)
-            rawset(st, "mainhand_speed", 3.6)
-            rawset(st, "mainhand_remains", 3.4)
-            assert.is_true((check("rotation", "slam")))
-            rawset(st, "mainhand_speed", 0) -- no swing speed read: no window
-            rawset(st, "mainhand_remains", 0)
-            assert.is_false((check("rotation", "slam")))
-        end
-    )
-
-    it(
-        "Arms: Battle Shout at 10 s or less, Hamstring under Windfury with Mortal Strike and Whirlwind 1.5 s away",
-        function()
-            boot("battle_stance", "Arms")
-            rawset(st.rage, "current", 50)
-            st.applyBuff("battle_shout", 11)
-            assert.is_false((check("rotation", "battle_shout")))
-            assert.is_false((check("precombat", "battle_shout")))
-            st.applyBuff("battle_shout", 9.9)
-            assert.is_true((check("rotation", "battle_shout")))
-            assert.is_true((check("precombat", "battle_shout")))
-            cds(9, 9)
-            assert.is_false((check("rotation", "hamstring"))) -- no Windfury Totem
-            st.applyBuff("windfury", 10)
-            assert.is_true((check("rotation", "hamstring")))
-            cds(1, 9)
-            assert.is_false((check("rotation", "hamstring")))
-            cds(9, 1)
-            assert.is_false((check("rotation", "hamstring")))
-            cds(1.6, 1.6)
-            assert.is_true((check("rotation", "hamstring")))
-        end
-    )
-
-    it("Protection: Shield Block at 40 rage, or with Revenge near ready and its window shut", function()
-        boot("defensive_stance", "Protection")
-        cds(9, 9, 9)
-        rawset(st.rage, "current", 40)
-        assert.is_true((check("default", "shield_block")))
-        rawset(st.rage, "current", 39)
-        assert.is_false((check("default", "shield_block")))
-        cds(9, 9, 1.4)
-        assert.is_true((check("default", "shield_block")))
-        st.applyBuff("revenge_usable", 3) -- Revenge's window open: Revenge, not the block
-        assert.is_false((check("default", "shield_block")))
-        st.removeBuff("revenge_usable")
-        cds(9, 9, 1.6)
-        assert.is_false((check("default", "shield_block")))
-        rawset(st.rage, "current", 100)
-        st.applyBuff("shield_block", nil, 2) -- both blocks still up: no recast
-        assert.is_false((check("default", "shield_block")))
-    end)
-
-    it(
-        "Protection: Rend when not up, Sunder to 5 and at 10 s or less, Shield Bash, Taunt and Mocking Blow at focus 1",
-        function()
-            boot("defensive_stance", "Protection")
-            rawset(st.rage, "current", 50)
-            assert.is_true((check("single", "rend")))
-            st.applyDebuff("target", "rend", 5)
-            assert.is_false((check("single", "rend")))
-            st.applyDebuff("target", "sunder_armor", 11, 5)
-            assert.is_false((check("single", "sunder_armor")))
-            st.removeDebuff("target", "sunder_armor")
-            st.applyDebuff("target", "sunder_armor", 9.9, 5)
-            assert.is_true((check("single", "sunder_armor")))
-            st.applyDebuff("target", "sunder_armor", 30, 4)
-            assert.is_true((check("single", "sunder_armor")))
-            for _, key in ipairs({ "shield_bash", "taunt", "mocking_blow" }) do
-                assert.are.equal(1, select(2, check("default", key)), key)
-            end
-        end
-    )
-end)

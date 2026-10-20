@@ -10,13 +10,14 @@ local world = require("Game.harness.world")
 local M = {}
 
 -- M.SPEC: the Arms spec's id (Hekili:NewClass); M.CLIENT_SPEC: the client's pseudo-spec the character reports.
-M.SPEC, M.CLIENT_SPEC, M.CLASS_ID, M.PACK = 100011, 1491, 1, "Arms"
+M.SPEC, M.CLIENT_SPEC, M.CLASS_ID, M.PACK = 100011, 1491, 1, "Arms (wowsims.com)"
 
 -- The Arms kit a level 60 Warrior has trained (every rank: Classic trains them all by 60) and the talent-granted
--- Mortal Strike of the build below.
+-- Mortal Strike and Spearing Strike of the build below.
 M.KIT = {
     "battle_shout",
     "battle_stance",
+    "berserker_rage",
     "berserker_stance",
     "bloodrage",
     "charge",
@@ -33,14 +34,15 @@ M.KIT = {
     "recklessness",
     "rend",
     "slam",
+    "spearing_strike",
     "sunder_armor",
     "thunder_clap",
     "victory_rush",
     "whirlwind",
 }
 -- An Arms build by definition spell (the SPIKE's): Mortal Strike, Anger Management, Deep Wounds 3, Tactical Mastery 5,
--- Impale 2, Improved Rend 3.
-M.TALENTS = { [12294] = 1, [12296] = 1, [12834] = 3, [12295] = 5, [16493] = 2, [12163] = 3 }
+-- Impale 2, Improved Rend 3, and Spearing Strike (the Arms talent the wowsims.com build takes).
+M.TALENTS = { [12294] = 1, [12296] = 1, [12834] = 3, [12295] = 5, [16493] = 2, [12163] = 3, [1310222] = 1 }
 -- How many of an ability's rank list (`id`, then `copy`) the character knows when the list runs past its trained ranks:
 -- Slam's list ends in Improved Slam's override IDs, which this build (no Improved Slam) does not know.
 M.RANKS = { slam = 5 }
@@ -218,6 +220,8 @@ M.MAP = {
     berserker_rage = selfAura("berserker_rage"), -- Improved Berserker Rage's rage not modelled (not this build)
     blood_fury = selfAura("blood_fury"), -- the Orc racial (Hekili_Shared/Races/Orc.lua; the wowsims Arms build's race)
     shield_block = selfAura("shield_block"),
+    last_stand = selfAura("last_stand"), -- its health gain not modelled
+    shield_wall = selfAura("shield_wall"),
     spearing_strike = { -- UNMEASURED amount: a plain weapon hit
         effect = function(W, e)
             W.hit(e, e.target, weapon(W, e, 0))
@@ -465,8 +469,8 @@ M.Protection = setmetatable({
     end,
 }, { __index = M })
 
---- The debuffs whose uptime the loop reports (§5.1): the Arms list keeps Sunder Armor and Demoralizing Shout up (Rend
---- only without Mortal Strike). Returns { { key, auraID } } from instance `H`.
+--- The debuffs whose uptime the loop reports (§5.1): Sunder Armor (Arms (wowsims.com) stacks it to 5) and Demoralizing
+--- Shout (never cast). Returns { { key, auraID } } from instance `H`.
 function M.uptime(H)
     local out = {}
     for _, key in ipairs({ "sunder_armor", "demoralizing_shout" }) do

@@ -273,7 +273,7 @@ describe("Engine.Output (headless Arms)", function()
         t = H.ctl.now + 0.2
         assert(headless.cycle(H, t))
         out = H.Hekili.Engine.Output.Primary
-        assert.is_true(out.count >= 3)
+        assert.is_true(out.count >= 2) -- Arms (wowsims.com) before the pull: Bloodrage, Battle Shout
     end
 
     -- The first `n` published names and times, copied.
@@ -307,7 +307,7 @@ describe("Engine.Output (headless Arms)", function()
 
     it("never shows a half-built set: recs and version hold until the swap, then every record is complete", function()
         assert.are.same({}, H.errors)
-        local v0, recs0, before = out.version, out.recs, names(3)
+        local v0, recs0, before = out.version, out.recs, names(2)
         local co = suspendable()
         local yields, published = 0, false
         while true do
@@ -319,7 +319,7 @@ describe("Engine.Output (headless Arms)", function()
             if out.version == v0 then
                 assert.is_false(published)
                 assert.are.equal(recs0, out.recs)
-                assert.are.same(before, names(3))
+                assert.are.same(before, names(2))
             else
                 published = true
                 assert.are.equal(v0 + 1, out.version)

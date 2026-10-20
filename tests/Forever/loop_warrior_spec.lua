@@ -6,7 +6,7 @@ local ww = require("Forever.helpers.warrior_world")
 local gate = require("Forever.helpers.arms_gate")
 
 describe("headless Arms", function()
-    it("boots the Arms character: three entries out of combat with a target, no error, no unlisted nil read", function()
+    it("boots the Arms character: two entries out of combat with a target, no error, no unlisted nil read", function()
         local H = headless.new({ character = ww.character(), pack = ww.PACK })
         assert.are.same({}, H.loadErrors)
         assert.are.equal(ww.SPEC, H.Hekili.State.spec.id)
@@ -14,9 +14,9 @@ describe("headless Arms", function()
         H.Fire("PLAYER_TARGET_CHANGED")
         assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
         local out = H.Hekili.Engine.Output.Primary
-        assert.is_true(out.count >= 3)
+        assert.is_true(out.count >= 2) -- Bloodrage and Battle Shout: no positions, so no Charge (pre_pull_move)
         local q = out.recs
-        for i = 1, 3 do
+        for i = 1, 2 do
             assert.is_table(H.Hekili.Class.abilities[q[i].actionName], tostring(q[i].actionName))
         end
         assert.are.same({}, H.errors)
@@ -46,15 +46,16 @@ describe("the Warrior world mapping", function()
         assert.is_truthy(tostring(err):find("unmapped key not_an_ability", 1, true))
     end)
 
-    it("maps every ability of the Arms, Fury and Protection packs, known or not", function()
+    it("maps every ability of the three Warrior packs, known or not (but other races' racials)", function()
         local unmapped, packs = {}, {}
-        for _, name in ipairs({ "Arms", "Fury", "Protection" }) do
+        for _, name in ipairs({ "Arms (wowsims.com)", "Fury (wowsims.com)", "Protection (wowsims.com)" }) do
             local pack = H.Hekili.DB.profile.packs[name]
             packs[#packs + 1] = pack ~= nil
             for _, list in pairs(pack and pack.lists or {}) do
                 for _, entry in ipairs(list) do
                     local a = entry.action and H.Hekili.Class.abilities[entry.action]
-                    if a and (a.id or 0) > 0 and not ww.MAP[entry.action] then -- a spell (internal handlers: id <= 0)
+                    -- a spell (internal handlers: id <= 0) the character's race allows (another race's: known = false)
+                    if a and (a.id or 0) > 0 and a.known ~= false and not ww.MAP[entry.action] then
                         unmapped[#unmapped + 1] = name .. ":" .. entry.action
                     end
                 end
@@ -151,12 +152,12 @@ describe("the headless Arms loop", function()
             on = function(_, steps, t)
                 if not first and steps[1].q.name[1] then
                     local q = steps[1].q
-                    first = { t, q.name[1], q.name[2], q.name[3] }
+                    first = { t, q.name[1], q.name[2], q.name[3] or "none" }
                 end
             end,
         }, { { H = L.us } })
         print(("\nC1 headless precombat queue at %.1f s: %s %s %s"):format(unpack(first)))
-        assert.are.same({ "bloodrage", "battle_shout", "berserker_stance" }, { first[2], first[3], first[4] })
+        assert.are.same({ "bloodrage", "battle_shout", "none" }, { first[2], first[3], first[4] })
     end)
 
     it(

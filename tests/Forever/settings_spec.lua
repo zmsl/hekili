@@ -92,13 +92,15 @@ describe("Engine.Configure (headless Arms boot)", function()
     -- the live one (LibDBIcon's iconStore: the minimap button's position and lock).
     it("keeps a saved spec setting and the minimap button's db (an all-default iconStore) across the boot", function()
         local saved = {
-            profiles = { Default = { specs = { [100011] = { settings = { ww_min_enemies = 4 } } }, iconStore = {} } },
+            profiles = {
+                Default = { specs = { [100011] = { settings = { wowsims_recklessness = true } } }, iconStore = {} },
+            },
         }
         local H = headless.new({ character = ww.character(), pack = ww.PACK, saved = saved })
         assert.are.same({}, H.loadErrors)
         local p = H.Hekili.DB.profile
-        assert.are.equal(4, p.specs[100011].settings.ww_min_enemies)
-        assert.is_true(p.specs[100011].settings.adaptive_queueing_enabled) -- a default the spec registered
+        assert.is_true(p.specs[100011].settings.wowsims_recklessness)
+        assert.is_false(p.specs[100011].settings.wowsims_stance_dance) -- a default the spec registered
         assert.are.equal(p.iconStore, saved.profiles.Default.iconStore)
         local icon = H.env.LibStub("LibDBIcon-1.0", true)
         local button = icon and icon:GetMinimapButton("Hekili")

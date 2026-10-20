@@ -67,9 +67,13 @@ describe("the active spec (headless Warrior)", function()
     it("binds each built-in priority to its spec and makes it that spec's package", function()
         local H = boot()
         local p = H.Hekili.DB.profile
-        assert.are.same({ ARMS, FURY, PROT }, { p.packs.Arms.spec, p.packs.Fury.spec, p.packs.Protection.spec })
+        assert.are.same({ ARMS, FURY, PROT }, {
+            p.packs["Arms (wowsims.com)"].spec,
+            p.packs["Fury (wowsims.com)"].spec,
+            p.packs["Protection (wowsims.com)"].spec,
+        })
         assert.are.same(
-            { "Arms", "Fury", "Protection" },
+            { "Arms (wowsims.com)", "Fury (wowsims.com)", "Protection (wowsims.com)" },
             { p.specs[ARMS].package, p.specs[FURY].package, p.specs[PROT].package }
         )
     end)
@@ -157,9 +161,9 @@ describe("the active spec (headless Warrior)", function()
     end)
 
     it("selects the spec of the priority a harness instance asks for", function()
-        local H = boot({ pack = "Protection" })
+        local H = boot({ pack = "Protection (wowsims.com)" })
         assert.are.equal(PROT, H.Hekili.State.spec.id)
-        assert.are.equal("Protection", H.Hekili.DB.profile.specs[PROT].package)
+        assert.are.equal("Protection (wowsims.com)", H.Hekili.DB.profile.specs[PROT].package)
     end)
 end)
 
@@ -179,12 +183,13 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         local prefs = function(key)
             return nodes[key].args.core.plugins.settings
         end
-        assert.is_not_nil(prefs("arms").ww_min_enemies)
-        assert.is_nil(prefs("arms").hs_threshold)
-        assert.is_not_nil(prefs("fury").hs_threshold)
-        assert.is_nil(prefs("fury").prot_cleave_rage)
-        assert.is_not_nil(prefs("protection").prot_cleave_rage)
-        assert.is_not_nil(prefs("protection").debuff_demoshout_enabled) -- shared by all three
+        assert.is_not_nil(prefs("arms").wowsims_stance_dance)
+        assert.is_nil(prefs("arms").wowsims_rend_weave)
+        assert.is_not_nil(prefs("fury").wowsims_rend_weave)
+        assert.is_nil(prefs("fury").wowsims_stance_dance)
+        assert.is_not_nil(prefs("fury").wowsims_recklessness) -- shared by Arms and Fury
+        assert.is_not_nil(prefs("arms").wowsims_recklessness)
+        assert.is_nil(prefs("protection").wowsims_recklessness) -- Protection's priority reads no setting
         nodes.fury.args.core.args.activate.func()
         settle(H)
         assert.are.equal(FURY, H.Hekili.State.spec.id)
@@ -238,7 +243,7 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         settle(H)
         local packs = H.Hekili.DB.profile.packs
         local aaa = {} -- a custom Fury pack whose name sorts before "Arms": spec order, not name order
-        for k, v in pairs(packs.Fury) do
+        for k, v in pairs(packs["Fury (wowsims.com)"]) do
             aaa[k] = v
         end
         aaa.builtIn, aaa.spec = false, FURY
@@ -253,13 +258,16 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
             table.sort(names)
             return names
         end
-        assert.are.same({ "Arms", "Arms (wowsims.com)" }, under("arms"))
-        assert.are.same({ "Aaa", "Fury", "Fury (wowsims.com)" }, under("fury"))
-        assert.are.same({ "Protection", "Protection (wowsims.com)" }, under("protection"))
+        assert.are.same({ "Arms (wowsims.com)" }, under("arms"))
+        assert.are.same({ "Aaa", "Fury (wowsims.com)" }, under("fury"))
+        assert.are.same({ "Protection (wowsims.com)" }, under("protection"))
         local order = function(key, name)
             return nodes[key].plugins.packs[name].order
         end
-        assert.is_true(order("arms", "Arms") < order("fury", "Aaa") and order("fury", "Aaa") < order("fury", "Fury"))
+        assert.is_true(
+            order("arms", "Arms (wowsims.com)") < order("fury", "Aaa")
+                and order("fury", "Aaa") < order("fury", "Fury (wowsims.com)")
+        )
         local root = H.Hekili.Options.args.packs
         assert.are.same({}, root.plugins.packages)
         assert.is_nil(root.plugins.links)
@@ -287,7 +295,7 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         settle(H)
         local packs = H.Hekili.DB.profile.packs
         local aaa = {}
-        for k, v in pairs(packs.Fury) do
+        for k, v in pairs(packs["Fury (wowsims.com)"]) do
             aaa[k] = v
         end
         aaa.builtIn, aaa.spec = false, FURY
@@ -378,7 +386,7 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         -- outside a dialog feed: the stock view
         assert.are.equal("tab", nodes.arms.childGroups)
         assert.is_false(nodes.arms.args.core.hidden())
-        assert.is_false(nodes.arms.plugins.packs.Arms.hidden())
+        assert.is_false(nodes.arms.plugins.packs["Arms (wowsims.com)"].hidden())
         -- the real AceConfigDialog, headless (its widgets on the harness's frames)
         local ACD = H.env.LibStub("AceConfigDialog-3.0")
         ACD:Open("Hekili")
@@ -394,9 +402,9 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
             end
         end
         assert.are.same({
-            arms = { "Arms", "Arms (wowsims.com)" },
-            fury = { "Fury", "Fury (wowsims.com)" },
-            protection = { "Protection", "Protection (wowsims.com)" },
+            arms = { "Arms (wowsims.com)" },
+            fury = { "Fury (wowsims.com)" },
+            protection = { "Protection (wowsims.com)" },
         }, kids)
         local at = {}
         for i, v in ipairs(entries) do
@@ -409,8 +417,8 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
             tabs[#tabs + 1] = e.value
         end
         assert.are.same({ "core", "targets", "performance" }, tabs)
-        H.Hekili:SelectPack("Fury") -- under its spec in the tree
-        assert.are.equal("fury\001Fury", ACD:GetStatusTable("Hekili").groups.selected)
+        H.Hekili:SelectPack("Fury (wowsims.com)") -- under its spec in the tree
+        assert.are.equal("fury\001Fury (wowsims.com)", ACD:GetStatusTable("Hekili").groups.selected)
         tree = ACD.OpenFrames.Hekili.children[1] -- the dialog redrew on the selection
         -- the rows: plain buttons (the harness has no OptionsListButtonTemplate), drawn by a refresh that stops
         -- before laying out (no height), so only the hook places the mark
@@ -464,11 +472,16 @@ end)
 describe("the legacy profile and shares (headless Warrior)", function()
     local mp = assert(loadfile("tools/make_pack.lua"))("lib")
 
-    it("migrates the pseudo-spec profile once, keeping thresholds and a custom priority", function()
+    it("migrates the pseudo-spec profile once, keeping settings and a custom priority", function()
         local saved = {
             profiles = {
                 Default = {
-                    specs = { [1491] = { package = "Mine", settings = { hs_threshold = 55, ww_min_enemies = 4 } } },
+                    specs = {
+                        [1491] = {
+                            package = "Mine",
+                            settings = { wowsims_recklessness = true },
+                        },
+                    },
                     packs = { Mine = { spec = 1491, builtIn = false, lists = { default = {} } } },
                 },
             },
@@ -476,28 +489,27 @@ describe("the legacy profile and shares (headless Warrior)", function()
         local H = boot({ saved = saved })
         settle(H)
         local p = H.Hekili.DB.profile
-        assert.are.same({ 55, 55, 55 }, {
-            p.specs[ARMS].settings.hs_threshold,
-            p.specs[FURY].settings.hs_threshold,
-            p.specs[PROT].settings.hs_threshold,
+        assert.are.same({ true, true, true }, {
+            p.specs[ARMS].settings.wowsims_recklessness,
+            p.specs[FURY].settings.wowsims_recklessness,
+            p.specs[PROT].settings.wowsims_recklessness,
         })
-        assert.are.equal(4, p.specs[ARMS].settings.ww_min_enemies)
-        assert.is_true(p.specs[ARMS].settings.debuff_sunder_enabled) -- a default the legacy table never saved
+        assert.is_false(p.specs[ARMS].settings.wowsims_stance_dance) -- a default the legacy table never saved
         assert.are.equal(0, p.specs[ARMS].abilities.mortal_strike.clash)
         assert.are.same(
-            { "Mine", "Fury", "Protection" },
+            { "Mine", "Fury (wowsims.com)", "Protection (wowsims.com)" },
             { p.specs[ARMS].package, p.specs[FURY].package, p.specs[PROT].package }
         )
         assert.are.equal(ARMS, p.packs.Mine.spec)
         assert.is_true(p.specMigrated.WARRIOR)
-        p.specs[ARMS].settings.ww_min_enemies = 2
+        p.specs[ARMS].settings.wowsims_stance_dance = true
         H.Hekili:SpecializationChanged()
-        assert.are.equal(2, p.specs[ARMS].settings.ww_min_enemies)
-        assert.are.equal(55, p.specs[1491].settings.hs_threshold)
+        assert.is_true(p.specs[ARMS].settings.wowsims_stance_dance)
+        assert.is_true(p.specs[1491].settings.wowsims_recklessness)
         local H2 = boot({ saved = H.env.HekiliDB }) -- a /reload: the migration does not run again
         settle(H2)
         local p2 = H2.Hekili.DB.profile
-        assert.are.equal(2, p2.specs[ARMS].settings.ww_min_enemies)
+        assert.is_true(p2.specs[ARMS].settings.wowsims_stance_dance)
         assert.are.equal("Mine", p2.specs[ARMS].package)
         assert.is_true(p2.specMigrated.WARRIOR)
     end)
@@ -505,7 +517,7 @@ describe("the legacy profile and shares (headless Warrior)", function()
     it("exports the spec as its share key and imports keys and legacy ids as this session's spec", function()
         local H = boot()
         settle(H)
-        local str = H.Hekili.SerializeActionPack("Fury")
+        local str = H.Hekili.SerializeActionPack("Fury (wowsims.com)")
         assert.are.equal("WARRIOR:fury", mp.decode(str).spec)
         assert.are.equal(FURY, H.Hekili.DeserializeActionPack(str).payload.spec)
         local legacy = mp.encode({ name = "Old", version = 1, spec = 1491, desc = "", simc = "", lists = {} })

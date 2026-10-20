@@ -4,8 +4,7 @@
 -- to today only when a pack changed.
 -- Arms, Fury and Protection (wowsims.com) are generated (`make wowsims-packs`) from tools/wowsims/specs/warrior_arms.lua,
 -- warrior_fury.lua and warrior_protection.lua.
--- The Arms and Fury lists are ported from Hekili's Classic profile (origin/classic:Classic/APLs/WarriorArms.simc,
--- WarriorFury.simc); the Protection list's shape is archive/TheWarWithin/Priorities/WarriorProtection.simc's.
+-- The hand-built Arms, Fury and Protection lists are retired (Warrior.lua's spec:RetirePacks).
 
 return {
     class = "WARRIOR",
@@ -13,16 +12,10 @@ return {
         "Protection (wowsims.com)",
         "Fury (wowsims.com)",
         "Arms (wowsims.com)",
-        "Arms",
-        "Fury",
-        "Protection",
     },
     specs = {
         ["Protection (wowsims.com)"] = "protection",
         ["Fury (wowsims.com)"] = "fury",
         ["Arms (wowsims.com)"] = "arms",
-        Arms = "arms",
-        Fury = "fury",
-        Protection = "protection",
     },
 }
