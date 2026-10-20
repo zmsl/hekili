@@ -93,6 +93,22 @@ describe("the headless loop between two fights on one boot", function()
         for _, H in ipairs({ L.us, L.oracle }) do
             assert.is_false(H.ns.VirtualStateInternal.inCombat) -- the kill's PLAYER_REGEN_ENABLED arrived
         end
+        -- the next fight's fresh world: each instance hears the client's plain reads of it before anything happens
+        -- (no buff, cooldown, form or totem of the last fight carried over)
+        local heard = {}
+        local fire = L.us.Fire
+        L.us.Fire = function(ev, ...)
+            heard[ev] = (heard[ev] or 0) + 1
+            return fire(ev, ...)
+        end
+        loop.run(L, 2, { duration = 1 }, { { H = L.us } })
+        L.us.Fire = fire
+        assert.are.same({ 1, 1, 1, 4 }, {
+            heard.UNIT_AURA and 1,
+            heard.SPELL_UPDATE_COOLDOWN and 1,
+            heard.UPDATE_SHAPESHIFT_FORM and 1,
+            heard.PLAYER_TOTEM_UPDATE,
+        })
     end)
 end)
 

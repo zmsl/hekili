@@ -163,9 +163,6 @@ function M.run(L, seed, o, drivers)
             list.HELPFUL, list.HARMFUL = {}, {}
         end
         ctl.auraError.target = nil
-        -- the fresh world holds none of our buffs: the client says so (a plain walk out of combat), or the instance
-        -- keeps believing the last fight's (a self-buff of run A up into run B, a different world)
-        d.H.Fire("UNIT_AURA", "player")
         -- UnitLevel is plain in combat on Forever (the facade's passthrough row); fake_api answers an unset unit secret
         -- `targetLevel` the content's answer for the target (-1: a boss, as Hekili's `boss` reads it)
         ctl.level.target, ctl.level.nameplate1 = wo.targetLevel or wo.level, wo.targetLevel or wo.level
@@ -188,6 +185,17 @@ function M.run(L, seed, o, drivers)
             k.plain, k.usableDelay = true, 0
         end
         local base = d.H.ctl.now + M.GAP -- this instance's clock continues from its last fight
+        -- the fresh world holds none of our buffs, cooldowns or totems and starts in the content's form: the client says
+        -- so (plain reads out of combat, at the new fight's clock: a GCD flag's fall read at the old one would teach
+        -- its length), or the instance keeps believing the last fight's (a self-buff or a long cooldown of run A
+        -- carried into run B, a different world)
+        ctl.now = base
+        d.H.Fire("UNIT_AURA", "player")
+        d.H.Fire("SPELL_UPDATE_COOLDOWN")
+        d.H.Fire("UPDATE_SHAPESHIFT_FORM")
+        for slot = 1, 4 do
+            d.H.Fire("PLAYER_TOTEM_UPDATE", slot)
+        end
         steps[i] = { H = d.H, obs = observer.new(W, k), base = base, q = { name = {}, time = {} }, plain = d.plain }
     end
     local errors0 = {}
