@@ -780,11 +780,12 @@ spec:RegisterAbilities({
 
         now = function()
             applyBuff("berserk")
+            setCooldown("primal_bite", 0) -- Berserk removes Primal Bite's cooldown (DB2 text)
         end,
 
         handler = function()
             applyBuff("berserk")
-            setCooldown("primal_bite", 0) -- Berserk removes Primal Bite's cooldown (DB2 text)
+            setCooldown("primal_bite", 0)
         end,
     },
 
@@ -972,12 +973,12 @@ spec:RegisterAbilities({
         cast = 0,
         -- Free with a 6 s cooldown in Cat or Bear Form (TDF Bear.lua; checkpoint Q7 confirms).
         cooldown = function()
-            return buff.feral_form.up and 6 or 0
+            return (buff.cat_form.up or buff.bear_form.up) and 6 or 0 -- not the `feral_form` alias: no belief read
         end,
         gcd = "spell",
 
         spend = function()
-            if buff.feral_form.up then
+            if buff.cat_form.up or buff.bear_form.up then
                 return 0
             end
             return byRank(FAERIE_FIRE_COST, FAERIE_FIRE)
@@ -1414,10 +1415,11 @@ spec:RegisterAbilities({
         id = 407995,
         copy = rest(PRIMAL_BITE),
         cast = 0,
-        -- Berserk (417141, DB2 text) "removes its cooldown": its handler ends the running one, and the client's ready
-        -- flag shows each later one gone; the number stays the DB2's 6 s (category), which the belief needs as a
-        -- number.
-        cooldown = 6,
+        -- 6 s (DB2 category); Berserk (417141, DB2 text) "removes its cooldown": its `now` and handler end the running
+        -- one and none starts while it is up (the belief evaluates this in its own context, Families/Casts.lua).
+        cooldown = function()
+            return buff.berserk.up and 0 or 6
+        end,
         gcd = "spell",
 
         spend = function()
@@ -1429,13 +1431,6 @@ spec:RegisterAbilities({
         refundOnAvoid = true, -- wowsims primal_bite.go; DB2 Discount Power On Miss
         known = knows(PRIMAL_BITE),
         buff = "bear_form",
-
-        -- the forecast's: no cooldown under Berserk (the now-state's comes from the client's ready flag)
-        handler = function()
-            if buff.berserk.up then
-                setCooldown("primal_bite", 0)
-            end
-        end,
     },
 
     prowl = {

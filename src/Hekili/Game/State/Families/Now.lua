@@ -3,7 +3,7 @@
 -- On each own CastSuccess (a channel's included) the family writes the automatic effects from the ability's declared
 -- fields (its cost, its cooldown or charge, the GCD), then runs the ability's `now` function, if the class file
 -- declared one beside `handler`, in one shared context whose names are Hekili's verbs (`gain`, `spend`, `applyBuff`,
--- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `summonTotem`, `summonPet`) and reads
+-- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `reduceCooldown`, `summonTotem`, `summonPet`) and reads
 -- (`talent`, `buff`, `debuff`, the resources by key, `knownRank`, `stat`, `swingBase`, `healthMax`, `now`, `combat`)
 -- with belief meanings. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share.
@@ -244,6 +244,24 @@ function NAMES.setCooldown(action, duration)
         I.CooldownModel(a, T + duration, duration, T, CAST)
     end
 end
+--- reduceCooldown(action, time): Hekili's verb (State.lua): a running cooldown `time` s shorter (ready at the cast at
+--- the earliest); a charged ability's next charge `time` s sooner (VS.Charges counts the recharges it then passes).
+function NAMES.reduceCooldown(action, time)
+    local a = abByKey[action]
+    if not live or not a or type(time) ~= "number" then
+        return
+    end
+    if A.ch[a] then
+        if A.next0[a] > 0 then
+            A.next0[a] = A.next0[a] - time
+            I.Sample(A.chNext[a], "modelled", A.next0[a], T, CAST)
+        end
+    elseif A.ready0[a] > T then
+        local e = A.ready0[a] - time
+        A.ready0[a] = e > T and e or T
+        I.Sample(A.cd[a], "modelled", A.ready0[a], T, CAST)
+    end
+end
 
 -- The totem slots by element, as Hekili's `state.totem` numbers them (State.lua's mt_totem; the client's slot order).
 local TOTEM_SLOT = { fire = 1, earth = 2, water = 3, air = 4 }
@@ -364,8 +382,8 @@ local function automatic(a, t, kind, o)
         end
         I.ChargesModel(a, charges > 0 and charges or 0, nextAt, t, kind)
     else
-        local cd = obj.cooldown
-        if type(cd) == "number" and cd > 0 then
+        local cd = I.CooldownOf(a, t) -- a function cooldown in the belief's context (Families/Casts.lua)
+        if cd > 0 then
             I.CooldownModel(a, t + cd, cd, t, kind)
         end
     end

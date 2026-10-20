@@ -261,6 +261,49 @@ describe("now handlers", function()
         assert.are.equal("SPELL_AURA_REMOVED", rows[#rows - 1][1])
     end)
 
+    it("evaluates a function `cooldown` in the belief's context at the cast (an aura shortens it)", function()
+        register("cd_func", {
+            id = 6162,
+            cooldown = function()
+                return buff.spender_a.up and 4 or 9 -- `buff` is the belief's: this file's _G has none
+            end,
+        })
+        start()
+        cast(6162, 20)
+        assert.are.same({ 29, "modelled" }, { VS.Cooldown(6162, 20.1).est, VS.Cooldown(6162, 20.1).basis })
+        assert.are.equal(9, VS.CooldownLength(6162))
+        cast(fs.SPENDER_A, 30) -- spender_a up (its `now`)
+        cast(6162, 31)
+        assert.are.equal(35, VS.Cooldown(6162, 31.1).est)
+        assert.are.equal(0, I.nowErrors)
+    end)
+
+    it("lets a `now` end or shorten another ability's running cooldown (setCooldown, reduceCooldown)", function()
+        register("cd_long", { id = 6163, cooldown = 60 })
+        register("cd_reset", {
+            id = 6164,
+            now = function()
+                setCooldown("cd_long", 0)
+            end,
+        })
+        register("cd_cut", {
+            id = 6165,
+            now = function()
+                reduceCooldown("cd_long", 20)
+            end,
+        })
+        start()
+        cast(6163, 10)
+        assert.are.equal(70, VS.Cooldown(6163, 10.1).est)
+        cast(6165, 12)
+        assert.are.same({ 50, "modelled" }, { VS.Cooldown(6163, 12.1).est, VS.Cooldown(6163, 12.1).basis })
+        cast(6164, 14)
+        assert.are.equal(14, VS.Cooldown(6163, 14.1).est) -- ready at the reset
+        cast(6165, 16)
+        assert.are.equal(14, VS.Cooldown(6163, 16.1).est) -- a ready cooldown stays ready
+        assert.are.equal(0, I.nowErrors)
+    end)
+
     it("writes summonTotem's slot expiry and facts as modelled, kept through our summon's in-combat update", function()
         register("totem_test", {
             id = 6262,

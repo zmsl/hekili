@@ -272,8 +272,8 @@ I.On(Obs.Cooldown, function(o, t)
     if o.b == 1 and was == NOT and A.castT[a] > 0 and o.t > A.castT[a] then
         -- a ready edge after our cast teaches the real length (talents included), but only near the registered one:
         -- a flag that also tracks something else (a kill window's usability) would teach minutes
-        local len, reg = o.t - A.castT[a], A.obj[a].cooldown
-        if type(reg) ~= "number" or reg <= 0 or abs(len - reg) <= max(1, reg * 0.1) then
+        local len, reg = o.t - A.castT[a], I.CooldownOf(a, o.t)
+        if reg <= 0 or abs(len - reg) <= max(1, reg * 0.1) then
             A.cdLen[a] = len
         end
     end
@@ -360,16 +360,16 @@ I.OnBuild(function()
     end
 end)
 
--- A declared cost function evaluated in the belief's `now` context at the clock (its `buff`, `talent`, ... the
+-- A declared cost or cooldown function evaluated in the belief's `now` context at `t` (its `buff`, `talent`, ... the
 -- belief's, as Resources.lua's `usable` check): a cost that reads an aura's stacks (a stacking free-cast proc) is the
 -- cast's own, not the simulation's last reset's. Nil when it raised there. Allocates nothing once it has raised.
-local function beliefCost(f)
+local function beliefEval(f, t)
     if simOnly[f] then
         return nil
     end
     local env = getfenv(f)
     setfenv(f, I.nowCtx)
-    I.NowAt(I.clock)
+    I.NowAt(t)
     local ok, v = pcall(f)
     setfenv(f, env)
     if not ok then
@@ -385,7 +385,7 @@ end
 function I.BaseCostOf(a)
     local obj = I.ab.obj[a]
     local f = rawget(obj, "declaredSpend")
-    local c = f and I.nowCtx and beliefCost(f)
+    local c = f and I.nowCtx and beliefEval(f, I.clock)
     if c == nil then
         c = obj.baseSpend -- the declared cost before the simulation's modifiers (Engine/Schema/Races.lua)
     end
@@ -402,6 +402,29 @@ function I.BaseCostOf(a)
         c = c * I.res.max[A.slot[a]]
     end
     return c
+end
+
+--- Ability a's declared cooldown at `t` (0 when it has none): a function (Hekili keeps it in `funcs`) evaluated in the
+--- belief's context, as BaseCostOf prices a cost (the simulation's answer when it raised there), so a talent or an
+--- aura that changes it is the belief's own. Allocates nothing.
+function I.CooldownOf(a, t)
+    local obj = A.obj[a]
+    local f = rawget(obj, "cooldown")
+    if f == nil then
+        local funcs = rawget(obj, "funcs")
+        f = type(funcs) == "table" and rawget(funcs, "cooldown") or nil
+    end
+    local c = f
+    if type(f) == "function" then
+        c = I.nowCtx and beliefEval(f, t)
+        if c == nil then
+            c = obj.cooldown -- the simulation's (Spec.lua's __index runs it under `state`)
+            if type(c) == "function" then
+                c = c()
+            end
+        end
+    end
+    return type(c) == "number" and c or 0
 end
 
 local function ageConf(rec, now)
@@ -442,8 +465,7 @@ function VS.CooldownLength(spellID)
     if A.cdLen[a] > 0 then
         return A.cdLen[a]
     end
-    local c = A.obj[a].cooldown
-    return type(c) == "number" and c or 0
+    return I.CooldownOf(a, I.clock)
 end
 
 --- (spec §3.2) Two Beliefs, current charges and the next charge's time; nil for a spell without charges.

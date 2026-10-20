@@ -390,13 +390,12 @@ describe("Forever Druid", function()
 
     it("ends Primal Bite's cooldown on Berserk and gives it none under Berserk (DB2 417141)", function()
         local e = ld.env(w)
-        assert.are.equal(6, w.abilities.primal_bite.cooldown) -- a number: the belief's cooldown length
-        ld.run(w.abilities.primal_bite.handler, e)
-        assert.are.same({}, e.cooldowns) -- no Berserk: the 6 s stands
+        assert.are.equal(6, ld.run(w.abilities.primal_bite.cooldown, e)) -- no Berserk: the 6 s stands
         ld.run(w.abilities.berserk.handler, e)
+        ld.run(w.abilities.berserk.now, e)
+        assert.are.same({ { "primal_bite", 0 }, { "primal_bite", 0 } }, e.cooldowns) -- the sim's and the belief's
         e.buff = auras({ berserk = { up = true } })
-        ld.run(w.abilities.primal_bite.handler, e)
-        assert.are.same({ { "primal_bite", 0 }, { "primal_bite", 0 } }, e.cooldowns)
+        assert.are.equal(0, ld.run(w.abilities.primal_bite.cooldown, e))
     end)
 
     it(
