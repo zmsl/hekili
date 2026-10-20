@@ -102,7 +102,7 @@ end
 
 -- By resource slot: the base power a cost between 0 and 1 is a fraction of, as the client prices a percent-of-base cost
 -- (floored): the pack's `base` (its level's value; the meta field, Engine/Schema/Spec.lua) until a plain cost read
--- teaches it (I.LearnBase); 0 for a pool without one, whose fractions are of its maximum (Hekili's pricing).
+-- teaches it (I.LearnBases); 0 for a pool without one, whose fractions are of its maximum (Hekili's pricing).
 I.basePow, I.baseDefault = {}, {}
 local EPS = 1e-6 -- a float product a hair under a whole cost (0.05 x 1240) floors to it, not below
 
@@ -431,21 +431,33 @@ function VS.BasePower(pt)
     return b and b > 0 and b or nil
 end
 
---- A plain out-of-combat cost read `cost` of ability a (Sources/Spellbook.lua), whose declared cost is a fraction of
---- a pool with a base: when the base misprices it, the read teaches the pool's base (the least whole base that
---- floors to it). Skipped while a cost modifier in scope changes the price (the read then is not the base's).
---- Allocates nothing.
-function I.LearnBase(a, cost)
-    local r = A.slot[a]
-    if r == 0 or (I.basePow[r] or 0) <= 0 or cost <= 0 then
-        return
+--- Each pool's base from the plain out-of-combat cost reads (A.readCost, Sources/Spellbook.lua) of its fraction-priced
+--- abilities: the pack's value unless the read with the largest fraction (the finest: a read pins the base to within
+--- 1 / f) misprices it, then the least whole base that floors to that read. A read is skipped while a cost modifier in
+--- scope changes its price (it is then not the base's). Runs after the reads and again after a talent walk that changed
+--- a rank (Sources/Talents.lua), so a talent-scaled fraction is the walked rank's. Allocates nothing.
+-- shortcut: the base is exact only to 1 / f of the chosen read (a 55% read: within 2 mana); a smaller fraction's read
+-- the result misprices by one is not reconciled; upgrade by intersecting every read's [cost / f, (cost + 1) / f).
+function I.LearnBases()
+    for r = 1, #I.baseDefault do
+        I.basePow[r] = I.baseDefault[r]
     end
-    local f = declaredCost(a)
-    if not f or f <= 0 or f >= 1 or I.CostOf(a) ~= I.BaseCostOf(a) then
-        return
-    end
-    if floor(f * I.basePow[r] + EPS) ~= cost then
-        I.basePow[r] = ceil(cost / f - EPS) -- f > 0 checked
+    for r = 1, #I.baseDefault do
+        if I.basePow[r] > 0 then
+            local bestF, bestCost = 0, 0
+            for a = 1, A.n do
+                local cost = A.readCost[a]
+                if A.slot[a] == r and cost > 0 then
+                    local f = declaredCost(a)
+                    if f and f > bestF and f < 1 and I.CostOf(a) == I.BaseCostOf(a) then
+                        bestF, bestCost = f, cost
+                    end
+                end
+            end
+            if bestF > 0 and floor(bestF * I.basePow[r] + EPS) ~= bestCost then
+                I.basePow[r] = ceil(bestCost / bestF - EPS) -- bestF > 0 checked
+            end
+        end
     end
 end
 

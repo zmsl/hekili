@@ -85,6 +85,28 @@ describe("facts and polls", function()
         assert.are.same({ 5.5, nil }, { I.CostOf(3), VS.BasePower(fs.RAGE) })
     end)
 
+    it("learns the base after the talent walk, from the read with the largest fraction", function()
+        local h = fs.new(9)
+        local function scaled() -- a talent-scaled percent-of-base cost, read in the belief's context
+            return 0.5 * (1 - 0.1 * talent.talent_a.rank)
+        end
+        local a, c = h.Class.abilities.spender_a, h.Class.abilities.spender_c
+        a.spend, a.declaredSpend = scaled, scaled
+        c.spend = 0.03
+        local def = fs.def(h)
+        def.resources[1].base = 200
+        I.Build(def, 1)
+        -- the true base 310: at rank 2 spender_a costs floor(0.4 x 310) = 124, spender_c floor(0.03 x 310) = 9
+        ctl.known[fs.SPENDER_A], ctl.known[fs.SPENDER_C] = true, true
+        ctl.costs[fs.SPENDER_A] = { { type = 1, cost = 124 } }
+        ctl.costs[fs.SPENDER_C] = { { type = 1, cost = 9 } }
+        ctl.traits = { config = 1, trees = { 7 }, nodeIDs = { 70 }, nodes = {}, defs = { [700] = 1011 } }
+        ctl.traits.nodes[70] = { entryIDs = { 700 }, activeRank = 2 } -- first known in the same SPELLS_CHANGED
+        ctl.Fire("SPELLS_CHANGED")
+        assert.are.same({ 2, 310 }, { VS.Talent(1011), VS.BasePower(fs.RAGE) })
+        assert.are.same({ 124, 9 }, { I.CostOf(1), I.CostOf(3) })
+    end)
+
     it("walks the talent tree into ranks by registered spell ID, and defers a walk in combat", function()
         ctl.traits = { config = 1, trees = { 7 }, nodeIDs = { 70 }, nodes = {}, defs = { [700] = 1011 } }
         ctl.traits.nodes[70] = { entryIDs = { 700 }, activeRank = 2 }

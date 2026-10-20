@@ -131,10 +131,15 @@ local function walk(api, t)
     end
     -- whether the pack's aliases (VirtualState.Track{ talents }) were needed: "used" or "unused" (CHECKPOINT 2)
     Note("talent walk aliases", aliasHits > 0 and "used" or "unused")
+    local changed = false
     for k = 1, T.n do
         if I.SetTalentRank(k, walkRank[k]) then
             Direct(Obs.Talent, t, k, walkRank[k])
+            changed = true
         end
+    end
+    if changed then
+        I.LearnBases() -- the cost reads (Sources/Spellbook.lua, earlier) priced a talent-scaled fraction at the old rank
     end
 end
 
