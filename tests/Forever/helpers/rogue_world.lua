@@ -6,13 +6,14 @@
 -- for the rest); the finishers' per-point durations and Relentless Strikes's refund restate the class file's rules
 -- (circular on purpose, as warrior_world's rage: the loop measures the picks, not the rules). Damage amounts and the
 -- weapons are UNMEASURED. Shortcuts: the client's IsStealthed answers false throughout (fake_api; UPDATE_STEALTH never
--- fires), so the belief holds Stealth and Vanish from our casts only, the in-combat secret case. API deviation (energy
--- secret in combat; Task 8c): the belief's Slice and Dice, Rupture and combo points equal the oracle's at every
--- `-> slice_and_dice` split (Subtlety rupture 284, hemorrhage 67; Combat sinister_strike 20, eviscerate 17 over seeds
--- 1-20); the split is pooled energy's ready time landing 0.1-0.2 s later than the oracle's, past Slice and Dice's expiry
--- or its 2 s line: the sim seeds energy from floor(Power().lo) (Facade UnitPower), not knowing the regen tick phase pads
--- TimeToResource up to 0.1 s, and the belief's continuous regen sits up to 1 energy under this world's 0.1 s ticks.
--- Seeding the sim from the true energy (scratch counterfactual) leaves Subtlety 27 and 0. Credit:
+-- fires), so the belief holds Stealth and Vanish from our casts only, the in-combat secret case. Slice and Dice splits
+-- (Task 8c): the belief's Slice and Dice, Rupture and combo points equal the oracle's at every `-> slice_and_dice`
+-- split (Subtlety rupture 284, hemorrhage 67; Combat sinister_strike 20, eviscerate 17 over seeds 1-20); the split is
+-- pooled energy's ready time landing 0.1-0.2 s later than the oracle's, past Slice and Dice's expiry or its 2 s line.
+-- API deviation (energy secret in combat): the sim seeds energy from floor(Power().lo) (Facade UnitPower), and not
+-- knowing the regen tick phase pads TimeToResource up to 0.1 s. Shared replay/harness limit (reported centrally, RL10):
+-- this world's 0.1 s regen tick orders after a same-instant press, keeping the belief up to 1 energy under truth;
+-- seeding the sim from the true energy (scratch counterfactual) leaves Subtlety 27 and 0. Credit:
 -- wowsims/forever (MIT) as the reference for the priorities the packs follow; no code copied.
 local ld = require("Forever.helpers.load_druid")
 

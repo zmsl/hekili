@@ -12,11 +12,10 @@
 -- `auraIsKnown` of it is the talent. Known deviations (Forever API): remainingTime reads 3600 (time to die unknown),
 -- so the "Fight About to End" terms never fire; energy is secret in combat, so an unannounced energize (Rogue Armor
 -- Energize 27788, +20) is invisible to the belief until the next read.
--- Disagreements worked (P7; decisions on-GCD 0.878, n 82): hemorrhage -> garrote 7 (core belief, reported: a white
--- swing's miss at 0.06 s is inferred as the opening Garrote's SPELL_MISSED (Game/Events/Rows.lua), so the missable
--- Garrote debuff is removed and Vanish -> Garrote shows until it would have expired; with that one swing a glance the
--- opener agrees); hemorrhage -> rupture 2 (Thousand Cuts's stacks and Hemorrhage's cost: the belief's energy without
--- the unannounced energize above); eviscerate -> rupture 1 (the same energize: wowsims at 75.6 energy, our belief 60).
+-- Disagreements worked (P7; decisions on-GCD 0.939, n 82): hemorrhage -> rupture 4 (Thousand Cuts's stacks and
+-- Hemorrhage's cost: the belief's energy without the unannounced energize above); eviscerate -> rupture 1 (the same
+-- energize: wowsims at 75.6 energy, our belief 60). The pre-rebase hemorrhage -> garrote 7 (the opener's Garrote) went
+-- away with the central fixes (fix 6's energy belief).
 -- Kit fixes from this replay (P6): Dirty Deeds (Garrote 30 at 2/2), Thousand Cuts's -3 a stack on Hemorrhage and
 -- Backstab, Improved Sinister Strike's -5 as the whole talent's (Combat's Sinister Strike 40).
 return {
