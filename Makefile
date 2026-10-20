@@ -43,8 +43,10 @@ test-fast:
 LOOPS = test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter
 
 # The merge gate: check, then every 20-fight loop target at once (one busted process each; 16 cores here).
+GATE_LOCK ?= /tmp/hekili-gate.lock
+# One gate at a time per machine (flock): the loops assert a CPU budget per update that parallel lanes would trip.
 gate: check
-	$(MAKE) -j$(words $(LOOPS)) -Otarget $(LOOPS)
+	flock $(GATE_LOCK) $(MAKE) -j$(words $(LOOPS)) -Otarget $(LOOPS)
 
 test-loop:
 	$(BUSTED) --tags=loop
