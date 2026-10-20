@@ -31,6 +31,9 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- 0 for every other slot) only outside the window our own spend opens (`fsrUntil[r]`: its end, I.FSR after the
 -- spend). `shaped[r]`: the slot has an `fsr` or a `mult` entry (else its regen is the plain rate x dt). `pinA[r]` /
 -- `pinB[r]`: the mult-weighted seconds since the last pin, in all and outside the window (the calibration's weights).
+-- `liftE/L/H[r]` and `liftT[r]`: how far our own cast's success rung lifted a swing-paid slot's est, lo and hi (the
+-- game paid that cost from more than we believed), and the rung's time; a landed swing at or before it pays that much
+-- less (I.On(Obs.Swing)).
 local R = {
     n = 0,
     type = {},
@@ -85,6 +88,10 @@ local R = {
     takenBin = {},
     takenSec = {},
     spends = {},
+    liftE = {},
+    liftL = {},
+    liftH = {},
+    liftT = {},
 }
 I.res = R
 R.slotOf, R.slotOfToken = {}, {}
@@ -236,6 +243,7 @@ I.OnBuild(function(def, now)
         R.spE[r], R.spL[r], R.spH[r] = spirit, spirit * (1 - I.REGEN_SPREAD), spirit * (1 + I.REGEN_SPREAD)
         R.dev[r], R.scale[r], R.spread[r] = 0, 1, I.REGEN_SPREAD
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
+        R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r] = 0, 0, 0, -1e9
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
         R.decayDef[r] = d.decay
         R.decay[r] = decayOf(r)
@@ -626,6 +634,7 @@ local function pin(r, v, width, t, origin, event, mid)
     R.snapT[r] = -1e9 -- an anchor, not a snap
     R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r] = t, vm, 0, measures
     R.pinA[r], R.pinB[r] = 0, 0
+    R.liftE[r], R.liftL[r], R.liftH[r] = 0, 0, 0 -- an anchor: a later credit no longer owes a rung's lift
     I.Sample(R.power[r], origin, R.est0[r], t, event)
 end
 
@@ -673,9 +682,16 @@ local function ladder(r, c, affordable, t, lag)
     return snapped
 end
 
+-- Step d less what of `lift` it covers, and the lift left.
+local function net(d, lift)
+    local u = lift < d and lift or d
+    return d - u, lift - u
+end
+
 -- One swing step of slot r for `hand` at t: c = 1 a landed swing (the hand's value x scale, spread around it), c = 3
--- its crit (the hand's `crit`, unscaled); none for a crit of a slot without one. Allocates nothing.
-local function swingStep(r, hand, c, t)
+-- its crit (the hand's `crit`, unscaled); none for a crit of a slot without one. `owed`: the step first covers the
+-- slot's rung lift (R.liftE/L/H). Allocates nothing.
+local function swingStep(r, hand, c, t, owed)
     local max, v, s, sp = R.max[r], 0, 1, 0
     if c == 1 then
         v, s, sp = I.SwingValue(r, hand), R.scale[r], R.spread[r]
@@ -683,9 +699,15 @@ local function swingStep(r, hand, c, t)
         v = I.SwingCrit(r, hand)
     end
     if c == 1 or v ~= 0 then -- a slot with no `crit` takes no sample for a crit
-        R.est0[r] = clamp(R.est0[r] + v * s, max)
-        R.lo0[r] = clamp(R.lo0[r] + v * (s - sp), max)
-        R.hi0[r] = clamp(R.hi0[r] + v * (s + sp), max)
+        local de, dl, dh = v * s, v * (s - sp), v * (s + sp)
+        if owed then
+            de, R.liftE[r] = net(de, R.liftE[r])
+            dl, R.liftL[r] = net(dl, R.liftL[r])
+            dh, R.liftH[r] = net(dh, R.liftH[r])
+        end
+        R.est0[r] = clamp(R.est0[r] + de, max)
+        R.lo0[r] = clamp(R.lo0[r] + dl, max)
+        R.hi0[r] = clamp(R.hi0[r] + dh, max)
         I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Swing)
     end
 end
@@ -886,8 +908,11 @@ end)
 -- (c = 3, the same credit with a CRITICAL wound, right after its c = 1) adds the hand's `crit` once more, unscaled (an
 -- exact, documented amount; the scale absorbs the model's error). A swing (c = 4) pays nothing; it and c = 1
 -- keep the hand's hit rate. A credit's `b` names its record (the oracle): the first slot it pays keeps its deltas, and
--- its crit (the same `b`) adds to them.
-I.On(Obs.Swing, function(o, t)
+-- its crit (the same `b`) adds to them. A landed swing at or before our cast's success (the same frame, or its wound
+-- still in flight) was in the game's pool when the cast paid: the success rung's lift (I.On(Obs.CastSuccess)) was this
+-- swing's, so its step covers that lift first (as if credited before the spend: lo stays a floor); a swing after the
+-- rung clears the lift.
+I.On(Obs.Swing, function(o, t, lag)
     local hand, c = o.a, o.c
     local hit = 0
     if hand ~= 1 and hand ~= 2 then
@@ -909,7 +934,10 @@ I.On(Obs.Swing, function(o, t)
     for r = 1, R.n do
         if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
             local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
-            swingStep(r, hand, c, t)
+            if c == 1 and t - lag > R.liftT[r] then -- the swing's own time, not the fold's
+                R.liftE[r], R.liftL[r], R.liftH[r] = 0, 0, 0
+            end
+            swingStep(r, hand, c, t, true)
             if k > 0 and c == 1 then
                 predict(k, r, hand, e, lo, hi, hit)
                 k = 0
@@ -930,8 +958,13 @@ I.On(Obs.CastSuccess, function(o, t, lag)
         return
     end
     local c = I.CostOf(a)
+    local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
     if c > 0 and ladder(r, c, true, t, lag) then
         I.Sample(R.power[r], "pinned", R.est0[r], t, Obs.CastSuccess)
+    end
+    if R.swing[r] > 0 then -- what the rung lifted, owed by a swing that landed before it (I.On(Obs.Swing))
+        R.liftE[r], R.liftL[r] = R.liftE[r] + R.est0[r] - e, R.liftL[r] + R.lo0[r] - lo
+        R.liftH[r], R.liftT[r] = R.liftH[r] + R.hi0[r] - hi, t - lag
     end
 end)
 

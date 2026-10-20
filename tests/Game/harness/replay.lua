@@ -6,12 +6,13 @@
 -- still reads the content's rate), our auras and the target's with the log's real duration when they fade, the
 -- content's hidden auras in the truth only, swings and spells landing at once, the mob's health at 20% from the
 -- execute phase's start (wowsims's is the last 20% of the duration) and never dead, our distance to it (the request's,
--- then the log's Movement stacks). Not replayed: cast bars, landing
--- lag, the target's swings. Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map
+-- then the log's Movement stacks). A white swing's outcome reaches the client one landing lag after its swing
+-- (M.LAND), as in game: wowsims logs both at once, with the swing's rage. Not replayed: cast bars, the target's swings. Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map
 -- through the booted instance's own ability set (Hekili.Class, booted as the log's race). Credit: the log
 -- format is wowsims/forever's (MIT, https://github.com/wowsims/forever); no code copied.
 local world = require("Game.harness.world")
 local entities = require("Game.harness.entities")
+local observer = require("Game.harness.observer")
 
 local M = {}
 
@@ -19,6 +20,10 @@ M.PULL = 5 -- the least world time of the log's 0 (a log whose prepull starts af
 M.LEAD = 0.5 -- the world time of the log's first line at the latest: after the prepull read at 0.1
 M.EPS = 1e-6 -- a line's place within its timestamp, as time: a decision falls just before its Casting line
 M.TAIL = 0.2 -- the exporter's execute proportion: the last 20% of the duration
+
+-- Our white swing's landing lag per hand (main, off): the observer's measured medians (P log 2, G5), no spread.
+-- shortcut: fixed medians, deterministic; draw from observer.lag when a gate needs the tail.
+M.LAND = { observer.DEFAULTS.main.med, observer.DEFAULTS.off.own }
 
 M.MOVE = 20 -- wowsims's OtherActionMove: the Movement aura (sim/core/movement.go), its stacks the distance in yards
 -- (max(int(d), 1): truncated, so the replay's position can be up to 1 yd short of wowsims's)
@@ -503,17 +508,19 @@ function M.new(text, H, o)
                         speed = R.speed,
                         ours = true,
                     })
-                    W.emit({
-                        kind = "land",
-                        src = us,
-                        dst = mob,
-                        hand = e.hand,
-                        act = e.act,
-                        flag = e.flag,
-                        amount = amount,
-                        school = 1,
-                        swing = sw,
-                    })
+                    W.at(T + M.LAND[e.hand], function() -- its outcome, one landing lag later (the rage is already in)
+                        W.emit({
+                            kind = "land",
+                            src = us,
+                            dst = mob,
+                            hand = e.hand,
+                            act = e.act,
+                            flag = e.flag,
+                            amount = amount,
+                            school = 1,
+                            swing = sw,
+                        })
+                    end)
                 else
                     W.emit({
                         kind = e.what,

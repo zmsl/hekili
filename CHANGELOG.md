@@ -44,6 +44,8 @@
   for the WoW Forever client, so the addon showed nothing for these classes.
 - Developer: unreadable (secret) answers to "does this unit exist / is it dead" for target, party, boss and focus units
   are counted by the addon's diagnostics again; an unreadable "is my pet dead" falls back to the addon's own estimate.
+- Rage: an ability used at the moment of a white swing no longer leaves the rage estimate too high once that swing's
+  hit shows up (the swing's rage had already paid for the ability).
 
 ### Known issues
 - Hunter priorities are provisional and unchecked in game: Auto Shot timing, the melee/ranged deadzone, the

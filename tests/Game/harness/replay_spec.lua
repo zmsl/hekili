@@ -145,6 +145,28 @@ describe("the replay world", function()
         end
     )
 
+    it(
+        "a swing and a cast at one instant: the swing and the cast at once, the swing's outcome one landing lag later",
+        function()
+            local R = replay.new(text(), H, O)
+            local W = at(R.world(setmetatable({ tag = "-l" }, { __index = WO }), 1), R.pull + 1)
+            local swing, cast, land
+            for _, ev in ipairs(W.truth) do
+                if ev.kind == "swing" and not swing then
+                    swing = ev
+                elseif ev.kind == "cast" and ev.spell == 900001 then
+                    cast = ev
+                elseif ev.kind == "land" then
+                    land = ev
+                end
+            end
+            assert.is_true(math.abs(swing.t - (R.pull + 0.1)) < 1e-4 and math.abs(cast.t - swing.t) < 1e-4)
+            assert.are.equal(swing, land.swing)
+            assert.is_true(math.abs(land.t - swing.t - replay.LAND[1]) < 1e-9) -- after the cast, as the client sees it
+            assert.are.equal(42 - 20, W.ents[1].power) -- the truth: the swing's rage paid the strike at 0.10
+        end
+    )
+
     it("auras: forms from the stance auras; a hidden aura in the truth only; a fade's real duration", function()
         local R = replay.new(text(), H, O)
         local W = R.world(setmetatable({ tag = "-a" }, { __index = WO }), 1)

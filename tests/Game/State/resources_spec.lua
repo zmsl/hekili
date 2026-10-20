@@ -310,6 +310,58 @@ describe("resources", function()
             end
         )
 
+        describe("a swing and our cast at the same instant (spender_a, 10)", function()
+            -- 9 before (one swing at 2.4), a swing at 5 and spender_a's success at 5: 9 + 9 - 10 = 8 either way round
+            local function scenario(swingFirst)
+                obs(Obs.Swing, 2.4, 1, 0, 1)
+                I.Fold(2.4, false)
+                if swingFirst then
+                    obs(Obs.Swing, 5, 1, 0, 1)
+                end
+                obs(Obs.CastSuccess, 5, 1) -- the rung (at least 10 at 5), then Families/Now.lua's pay
+                I.Fold(5, false)
+                if not swingFirst then
+                    I.Settle(5.47) -- the clock moves on: the credit below folds late (lag 0.47)
+                    obs(Obs.Swing, 5, 1, 0, 1) -- its wound came 0.47 s after the success: back-dated to the swing
+                    I.Fold(5.47, false)
+                end
+                return VS.Power(fs.RAGE, 6)
+            end
+
+            it("ends at the rage of the swing credited before the spend, in both delivery orders", function()
+                local a = scenario(true)
+                boot(fs.def(fs.new(9)))
+                local b = scenario(false)
+                within(8, a.est)
+                within(a.est, b.est)
+                within(a.lo, b.lo) -- (hi differs only by the cap: 100 + 9.9 clamps in the first order)
+                assert.is_true(b.lo <= 8) -- lo stays a floor
+            end)
+
+            it("adds a swing whose wound lands after a short answer at its instant to the bounded value", function()
+                -- the client's order (P log 2): the swing at 5, a short answer sampled then (spender_a, 10), the
+                -- wound 0.47 s later: the answer bounds the pre-swing rage, the credit adds to it
+                obs(Obs.Swing, 2.4, 1, 0, 1)
+                obs(Obs.Swing, 5, 1, 2.6, 4)
+                obs(Obs.Usable, 5, 1, 0, 1)
+                I.Fold(5, false)
+                I.Settle(5.47)
+                obs(Obs.Swing, 5, 1, 0, 1)
+                I.Fold(5.47, false)
+                local r = VS.Power(fs.RAGE, 6)
+                within(9 + 9, r.est)
+                assert.is_true(r.hi < 10 + 9 * (1 + I.REGEN_SPREAD))
+            end)
+
+            it("owes nothing to a swing after the rung", function()
+                obs(Obs.CastSuccess, 5, 1) -- 0 believed: the rung lifts 10, the pay takes it
+                I.Fold(5, false)
+                obs(Obs.Swing, 6, 1, 0, 1)
+                I.Fold(6, false)
+                within(9, VS.Power(fs.RAGE, 6).est)
+            end)
+        end)
+
         it("keeps basis default at rest when a rung bounds the interval without moving the estimate", function()
             obs(Obs.Usable, 5, 1, 0, 1) -- spender_a (10) short at 0 rage, out of combat
             I.Fold(5, false)
