@@ -12,7 +12,13 @@ local function ctx(r)
             trinket = { key = "trinket", id = -1, item = 555, gcd = "off" },
             stone = { key = "stone", id = -2, items = { 556, 557 }, gcd = "off" },
         },
-        auras = { dot = { id = 400 }, fury = { id = 900 }, stance = { id = 910 } },
+        auras = {
+            dot = { id = 400 },
+            fury = { id = 900 },
+            stance = { id = 910 },
+            proc = { id = 960, icd = 10, icdSpell = 950 },
+            sunder = { id = 970, max_stack = 5 },
+        },
         talents = { furious = { 2, 900, 1 }, cuts = { 1, 950, 1 } },
     }
     return apl.context(kit, r or { executePhase = "execute_phase", focus = { strike = 1 } })
@@ -139,6 +145,68 @@ describe("the wowsims APL translator", function()
         )
         assert.are.same({ "default #6: never", "default #8: never", "default #9: never" }, omitted)
     end)
+
+    it(
+        "reads auraIcdIsReady as the declaring aura's icd_ready, by its ID or its proc trigger's (a talent's: guarded)",
+        function()
+            local function icd(id)
+                return { auraIcdIsReady = { auraId = { spellId = id }, includeReactionTime = true } }
+            end
+            local text, omitted = apl.translate({
+                priorityList = {
+                    cast(100, icd(960)), -- the proc aura's own ID
+                    cast(100, { ["and"] = { vals = { icd(950), const("true") } } }), -- its trigger, a talent's spell
+                    cast(100, { ["or"] = { vals = { icd(950), { auraIsActive = { auraId = { spellId = 910 } } } } } }),
+                    cast(100, icd(910)), -- an aura declaring no icd
+                },
+            }, ctx())
+            assert.are.equal(
+                table.concat({
+                    "actions=strike,focus=1,if=buff.proc.icd_ready",
+                    "actions+=/strike,focus=1,if=(!talent.cuts.enabled|buff.proc.icd_ready)",
+                    "actions+=/strike,focus=1,if=((talent.cuts.enabled&buff.proc.icd_ready)|buff.stance.up)",
+                }, "\n"),
+                text
+            )
+            assert.are.same({ "default #4: auraIcdIsReady 910" }, omitted)
+        end
+    )
+
+    it(
+        "reads auraShouldRefresh as remains within the overlap (or short of max stacks), cancelAura, autoSwingTime",
+        function()
+            local function refresh(id, unit, overlap)
+                return {
+                    auraShouldRefresh = {
+                        sourceUnit = unit and { type = unit } or nil,
+                        auraId = { spellId = id },
+                        maxOverlap = overlap and const(overlap) or nil,
+                    },
+                }
+            end
+            local text, omitted = apl.translate({
+                priorityList = {
+                    cast(400, refresh(400, "CurrentTarget", "6s")), -- its own aura: unguarded
+                    cast(100, refresh(970)), -- the target's by default; a stacking aura
+                    cast(100, refresh(400, "Self")), -- another ability's aura: guarded
+                    { action = { cancelAura = { auraId = { spellId = 910 } } } },
+                    cast(100, cmp("OpGt", { autoSwingTime = { autoType = "OffHand" } }, const("0s"))),
+                    cast(100, cmp("OpGt", { autoSwingTime = { autoType = "Ranged" } }, const("0s"))),
+                },
+            }, ctx())
+            assert.are.equal(
+                table.concat({
+                    "actions=dot,if=debuff.dot.remains<=6",
+                    "actions+=/strike,focus=1,if=(debuff.sunder.remains<=0|debuff.sunder.stack<5)",
+                    "actions+=/strike,focus=1,if=(!action.dot.known|buff.dot.remains<=0)",
+                    "actions+=/cancel_buff,buff_name=stance",
+                    "actions+=/strike,focus=1,if=offhand_speed>0",
+                }, "\n"),
+                text
+            )
+            assert.are.same({ "default #6: autoSwingTime" }, omitted)
+        end
+    )
 
     it("reads percents 0-100, Go durations in seconds, a Target's aura as a debuff, an item list", function()
         local text = apl.translate({

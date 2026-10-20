@@ -37,6 +37,15 @@
 --    `gcd` is `"off"`; the recipe's `leveling` lines are appended to `actions`, each silent at 60.
 -- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N
 --    (wowsims's N/100 against its 0-1 percents; ours, `mana.pct` and `health.pct`, run 0-100).
+-- 9. `auraIcdIsReady` (wowsims: the proc aura's internal cooldown is ready): the aura declaring `icd` (RegisterAura,
+--    seconds from its last application) by its ID or its `icdSpell` (the proc trigger wowsims names the ICD by) is
+--    `buff.<key>.icd_ready`, guarded by the talent when that ID is a talent's spell (rule 6); an aura declaring none is
+--    unsupported (rule 2). `includeReactionTime` is ignored (rule 5).
+-- 10. `auraShouldRefresh` (wowsims: no stronger exclusive effect is up and none of ours outlasts the overlap; solo, ours
+--    is the only one): `<unit>.<key>.remains<=<maxOverlap>` (0 by default; the target's by default, as wowsims's
+--    GetTargetUnit), `|...stack<max_stack` for a stacking aura, guarded (rule 6); `cancelAura` is the action
+--    `cancel_buff,buff_name=<key>`; `autoSwingTime` MainHand / OffHand is `mainhand_speed` / `offhand_speed`.
+--    `remainingTime` is `fight_remains`, which answers "unknown" (3600 s) on Forever: an API-forced deviation.
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
 -- The engine facts rule 6 rests on (tools/check_pack_levels.lua checks every pack for it):
@@ -83,6 +92,8 @@ function M.context(set, r)
     local c = {
         keyOf = {},
         auraOf = {},
+        icdOf = {},
+        stackOf = {},
         itemKey = {},
         ability = {},
         offGcd = {},
@@ -130,6 +141,13 @@ function M.context(set, r)
     for _, key in ipairs(akeys) do
         local a = set.auras[key]
         c.auraOf[a.id] = c.auraOf[a.id] or key
+        c.stackOf[key] = a.max_stack
+        if a.icd then -- rule 9: by its own ID and by the spell wowsims names the ICD by (its proc trigger)
+            c.icdOf[a.id] = key
+            if a.icdSpell then
+                c.icdOf[a.icdSpell] = key
+            end
+        end
         for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
             if type(id) == "number" then
                 c.auraOf[id] = c.auraOf[id] or key
@@ -310,6 +328,8 @@ local function value(c, n)
         end
         local a = auraKey(c, v.auraId.spellId)
         return unit(v) .. "." .. a .. (k == "auraNumStacks" and ".stack" or ".remains"), reads(c, a)
+    elseif k == "autoSwingTime" and (v.autoType == "MainHand" or v.autoType == "OffHand") then -- rule 10
+        return v.autoType == "MainHand" and "mainhand_speed" or "offhand_speed", false
     elseif k == "autoTimeToNext" and v.autoType == "MainHandAuto" then
         return "mainhand_remains", false
     elseif k == "autoTimeSinceLast" and v.autoType == "MainHandAuto" then
@@ -417,6 +437,27 @@ local function bool(c, n)
             return nil, true, false
         end
         return test, nil, false
+    elseif k == "auraShouldRefresh" then -- rule 10
+        local a = auraKey(c, v.auraId.spellId)
+        local un = v.sourceUnit and unit(v) or "debuff" -- wowsims reads it on the target by default
+        local overlap, ou = "0", false
+        if v.maxOverlap then
+            overlap, ou = value(c, v.maxOverlap)
+        end
+        local u = nilOr(reads(c, a), ou)
+        if u == true then
+            return nil, nil, true
+        end
+        local atom = un .. "." .. a .. ".remains<=" .. overlap
+        if (c.stackOf[a] or 1) > 1 then
+            atom = "(" .. atom .. "|" .. un .. "." .. a .. ".stack<" .. c.stackOf[a] .. ")"
+        end
+        return atom, nil, u
+    elseif k == "auraIcdIsReady" then -- rule 9
+        local id = v.auraId and v.auraId.spellId
+        local a = c.icdOf[id] or unsupported("auraIcdIsReady " .. tostring(id))
+        local tk = c.talentOf[id] -- nil (dropped) while the proc's talent is untaken, as wowsims's unregistered aura
+        return "buff." .. a .. ".icd_ready", nil, tk and { test = "talent." .. tk .. ".enabled" } or false
     elseif k == "dotIsActive" then
         local a = auraKey(c, v.spellId.spellId)
         return "debuff." .. a .. ".up", nil, reads(c, a)
@@ -470,6 +511,9 @@ local function entry(c, e)
         end
         c.used[g], c.self = true, nil
         body = "call_action_list,name=" .. M.snake(g)
+    elseif kind == "cancelAura" then -- rule 10
+        c.self = nil
+        body = "cancel_buff,buff_name=" .. auraKey(c, a.cancelAura.auraId.spellId)
     else
         unsupported(kind)
     end

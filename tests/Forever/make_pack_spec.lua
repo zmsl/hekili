@@ -189,6 +189,16 @@ describe("tools/make_pack.lua", function()
         assert.are.same(lists, mp.parse(mp.unparse(lists)))
     end)
 
+    it("round-trips cancel_buff's buff_name as a string, written after name=", function()
+        local simc = "actions=cancel_buff,buff_name=cat_form,if=a\n"
+        local lists = mp.parse(simc)
+        assert.are.same(
+            { action = "cancel_buff", enabled = true, buff_name = "cat_form", criteria = "a" },
+            lists.default[1]
+        )
+        assert.are.equal(simc, mp.unparse(lists))
+    end)
+
     it("round-trips focus=N for any positive integer tier and refuses 0, negatives and non-integers", function()
         local simc = "actions=heroic_strike,use_off_gcd=1,focus=2,if=a\nactions+=/cleave,focus=12\n"
         local lists = mp.parse(simc)

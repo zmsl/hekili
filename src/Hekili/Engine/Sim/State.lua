@@ -785,7 +785,7 @@ local function applyBuff( aura, duration, stacks, value, v2, v3, applied )
         b.count = 0
 
         b.lastApplied = b.applied
-        b.last_application = b.applied or 0
+        b.last_application = max( b.last_application or 0, b.applied or 0 ) -- Forever: removing a down buff keeps it (icd_remains)
 
         b.v1 = value or 0
         b.v2 = 0
@@ -3816,6 +3816,18 @@ do
 
             elseif k == "cooldown_remains" then
                 return state.cooldown[ t.key ] and state.cooldown[ t.key ].remains or 0
+
+            elseif k == "icd_remains" then
+                -- Forever: a proc aura's internal cooldown (RegisterAura `icd`, seconds), from its last application; an
+                -- aura without one, or never applied, is ready (an unknown ICD never blocks).
+                local icd = aura and aura.icd
+                if not icd then return 0 end
+                local last = max( t.applied, t.last_application )
+                if last <= 0 then return 0 end
+                return max( 0, last + icd - state.query_time )
+
+            elseif k == "icd_ready" then
+                return t.icd_remains == 0
 
             elseif k == "react" or k == "stack" or k == "stacks" then
                 if t.remains == 0 then return 0 end

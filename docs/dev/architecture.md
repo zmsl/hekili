@@ -128,6 +128,16 @@ prefix the same way: the ability and item options, the toggle assignment, `state
 are fixed within one prediction, wiped every slot and by every option setter; `ability.disabled`, holds and the DoT cap
 are read live.
 
+**A proc aura's internal cooldown.** `RegisterAura{ icd = <seconds> }` declares that the aura can be applied at most
+once per `icd` seconds (its proc's ICD), measured from its last application; `icdSpell = <id>` names the spell an
+outside source names the ICD by (the proc trigger passive, as wowsims does; `tools/wowsims/apl.lua` rule 9). The sim
+answers `buff.<key>.icd_remains` (`max(applied, last_application) + icd - query_time`, never below 0) and
+`buff.<key>.icd_ready` (`icd_remains == 0`) from the aura's existing state entry, so it advances with the sim's clock
+and allocates nothing; an aura without `icd`, or never applied, reads ready (an unknown ICD never blocks). The
+application comes from the aura belief (`Game/State/Families/Auras.lua`): a plain read starts it, and a read of a player aura whose
+expiry moved past the believed one by more than `I.AURA_REFRESH` (0.5 s) is a re-application, so a re-proc restarts
+it; the sim's `applyBuff` starts it too, and removing a down aura keeps it (`tests/Forever/aura_icd_spec.lua`).
+
 **Addons and load order.** `Hekili` (core, the only addon the client loads by itself), `Hekili_Shared`
 (`## Dependencies: Hekili`, `## LoadOnDemand: 1`; Shared auras, consumables, items, and the race packs), then one pack
 per class: `Hekili_Warrior`, `Hekili_Druid`, `Hekili_Rogue`, `Hekili_Paladin`, `Hekili_Shaman`, `Hekili_Hunter` (`## Dependencies: Hekili, Hekili_Shared`,

@@ -330,11 +330,15 @@ spec:RegisterAuras({
         duration = 6,
         max_stack = 1,
     },
-    -- Omen of Clarity's proc (a passive on Forever): the next covered ability is free (the cost modifier below).
+    -- Omen of Clarity's proc (a passive on Forever): the next covered ability is free (the cost modifier below). It
+    -- procs at most once per 10 s (16864's SpellAuraOptions.ProcCategoryRecovery 10000; wowsims ICDMs 10000), the ICD
+    -- wowsims names by 16864.
     clearcasting = {
         id = 16870,
         duration = 15,
         max_stack = 1,
+        icd = 10,
+        icdSpell = 16864,
     },
     dash = {
         id = 1850,

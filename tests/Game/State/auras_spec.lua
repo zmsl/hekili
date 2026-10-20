@@ -41,6 +41,24 @@ describe("auras", function()
         assert.are.same({ fs.SPENDER_A, 130 }, { id, r2.est })
     end)
 
+    it("a later expiry is a re-application: applied moves to the read; a jitter keeps it", function()
+        ctl.now = 10
+        ctl.auras.player.HELPFUL[1] = { spellId = fs.SPENDER_A, expirationTime = 25, applications = 0 }
+        ctl.Fire("UNIT_AURA", "player")
+        fold(10)
+        assert.are.equal(10, select(3, VS.Aura("player", fs.SPENDER_A, 10)))
+        ctl.now = 20
+        ctl.auras.player.HELPFUL[1].expirationTime = 35 -- refreshed (a re-proc): a fresh 15 s
+        ctl.Fire("UNIT_AURA", "player")
+        fold(20)
+        assert.are.equal(20, select(3, VS.Aura("player", fs.SPENDER_A, 20)))
+        ctl.now = 21
+        ctl.auras.player.HELPFUL[1].expirationTime = 35.2 -- within I.AURA_REFRESH: the same application
+        ctl.Fire("UNIT_AURA", "player")
+        fold(21)
+        assert.are.equal(20, select(3, VS.Aura("player", fs.SPENDER_A, 21)))
+    end)
+
     it("finds a tracked aura past the 40th slot of one filter", function()
         ctl.now = 10
         for i = 1, 40 do

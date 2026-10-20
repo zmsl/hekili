@@ -14,6 +14,7 @@ local HUGE = math.huge
 --- An aura Read's `a` packs the unit index and the aura index; its `c` packs ReadOf.Aura and the stacks.
 I.AURA_UNIT = 4096 -- a = (unit - 1) * AURA_UNIT + aura (Hekili registers hundreds of auras)
 I.AURA_STACK = 16 -- c = ReadOf.Aura + stacks * AURA_STACK
+I.AURA_REFRESH = 0.5 -- a plain read of a player aura expiring this much past the believed one is a re-application
 
 local U = {
     n = 0,
@@ -161,7 +162,10 @@ I.On(Obs.Read, function(o, t)
         set(u, j, 0, 0, 0, t, "observed", Obs.Read)
     else
         local expires = o.b < 0 and HUGE or o.t + o.b
-        local applied = U.exp0[u][j] > 0 and U.applied[u][j] or o.t
+        local was = U.exp0[u][j]
+        -- up: the same application, except a player aura's later expiry, a refresh (a re-proc: its ICD restarts)
+        local refresh = u == 1 and expires > was + I.AURA_REFRESH -- unit 1 is always "player"
+        local applied = was > 0 and not refresh and U.applied[u][j] or o.t
         set(u, j, expires, applied, stacks > 0 and stacks or 1, t, "observed", Obs.Read)
     end
 end)

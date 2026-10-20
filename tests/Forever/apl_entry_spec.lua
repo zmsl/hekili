@@ -88,3 +88,34 @@ describe("a priority reading time to die", function()
         assert.are.equal("berserker_stance", out.recs[1] and out.recs[1].actionName)
     end)
 end)
+
+describe("a priority cancelling an aura", function()
+    it("recommends cancel_buff,buff_name=<aura> while the aura is up", function()
+        local H = boot()
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        local shout = H.Hekili.Class.auras.battle_shout
+        H.ctl.auras.player.HELPFUL[1] = { spellId = shout.id, expirationTime = t + 100, applications = 0 }
+        H.Fire("UNIT_AURA", "player")
+        H.Hekili.DB.profile.packs[ww.PACK].lists = {
+            default = {
+                {
+                    enabled = true,
+                    action = "cancel_buff",
+                    buff_name = "battle_shout",
+                    criteria = "buff.battle_shout.up",
+                },
+                { enabled = true, action = "berserker_stance" },
+            },
+        }
+        H.Hekili:LoadScripts()
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        t = t + 0.2
+        assert(headless.cycle(H, t))
+        assert.are.same({}, H.errors)
+        assert.are.equal("cancel_buff", out.recs[1] and out.recs[1].actionName)
+    end)
+end)

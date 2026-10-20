@@ -1,5 +1,5 @@
 -- tests/Game/harness/replay_spec.lua (wowsims packs plan, Task 3): the wowsims log parser and the log-driven world on
--- the 30-line fixture (fixtures/wowsims_test.log, invented IDs), each of the plan's Review Focus lies pinned. The class
+-- the fixture (fixtures/wowsims_test.log, invented IDs), each of the plan's Review Focus lies pinned. The class
 -- data is a stand-in H (replay.new reads only H.Hekili.Class).
 local replay = require("Game.harness.replay")
 
@@ -26,6 +26,7 @@ local H = {
                 shout = { id = 900002, duration = 120 },
                 mark = { id = 900030, duration = 12, max_stack = 5 },
                 window = { id = 900020, duration = 5 },
+                proc = { id = 900040, duration = 15, icd = 10 }, -- a proc aura: gained, then refreshed by a re-proc
             },
         },
     },
@@ -55,7 +56,7 @@ describe("the wowsims log parser", function()
         for _, e in ipairs(p.ev) do
             kinds[e.kind] = (kinds[e.kind] or 0) + 1
         end
-        assert.are.same({ casting = 6, completed = 8, power = 5, aura = 8, stacks = 2, hit = 4 }, kinds)
+        assert.are.same({ casting = 6, completed = 8, power = 5, aura = 10, stacks = 2, hit = 4 }, kinds)
         local c = p.ev[2]
         assert.are.same({ "casting", -2, 900010, 0, 0 }, { c.kind, c.t, c.id, c.cast, c.gcd })
         local hit = p.ev[12]
@@ -141,6 +142,20 @@ describe("the replay world", function()
         assert.is_true(near(R.pull + 10.1, mark.expires)) -- faded at 10.10: 10 s, not the class's 12
         assert.is_true(near(R.pull - 1 + 120, us.auras[900002].expires)) -- never faded: the class's duration
         assert.is_not_nil(us.avoidAt.DODGE)
+    end)
+
+    it("a proc aura's gain and refresh both reach the client: each re-application restarts its expiry", function()
+        local R = replay.new(text(), H, O)
+        local W = R.world(setmetatable({ tag = "-r" }, { __index = WO }), 1)
+        at(W, R.pull + 6)
+        local seen = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "aura" and ev.aura == 900040 then
+                seen[#seen + 1] = ev.expires - R.pull
+            end
+        end
+        assert.are.equal(2, #seen)
+        assert.is_true(math.abs(seen[1] - 17) < 1e-3 and math.abs(seen[2] - 20) < 1e-3)
     end)
 
     it("execute: the mob is above 20% before pull + 0.8 x duration and at or under it from then, never dead", function()

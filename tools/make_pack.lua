@@ -29,10 +29,11 @@ local function aplRoot(class)
     return "src/Hekili_" .. Class(class) .. "/APLs/"
 end
 
-local OPTIONS = { name = "list_name", use_off_gcd = "use_off_gcd", focus = "focus" } -- plus if=, which runs to the end of the line
+local OPTIONS = { name = "list_name", buff_name = "buff_name", use_off_gcd = "use_off_gcd", focus = "focus" } -- plus if=, which runs to the end of the line
 
 -- SimC-style lines into their lists and entries:
--- actions[.list](=|+=/)action[,name=list][,use_off_gcd=N][,focus=N][,if=criteria]; focus is a tier, 1 highest.
+-- actions[.list](=|+=/)action[,name=list][,buff_name=aura][,use_off_gcd=N][,focus=N][,if=criteria]; focus is a tier,
+-- 1 highest; buff_name is cancel_buff's aura.
 local function parse(simc)
     local lists = {}
     for line in simc:gmatch("[^\n]+") do
@@ -55,7 +56,7 @@ local function parse(simc)
             if not OPTIONS[k] then
                 error("unknown option " .. (k or opt) .. " in: " .. line, 0)
             end
-            local value = k == "name" and v or tonumber(v)
+            local value = (k == "name" or k == "buff_name") and v or tonumber(v)
             if k == "focus" and not v:match("^[1-9]%d*$") then
                 value = nil -- a focus tier is a positive integer, 1 highest
             end
@@ -89,6 +90,7 @@ local function unparse(lists)
                 .. (i == 1 and "=" or "+=/")
                 .. e.action
                 .. (e.list_name and ",name=" .. e.list_name or "")
+                .. (e.buff_name and ",buff_name=" .. e.buff_name or "")
                 .. (e.use_off_gcd and ",use_off_gcd=" .. e.use_off_gcd or "")
                 .. (e.focus and ",focus=" .. e.focus or "")
                 .. (e.criteria and ",if=" .. e.criteria:gsub("||", "|") or "")
