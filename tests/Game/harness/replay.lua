@@ -369,9 +369,11 @@ function M.new(text, H, o)
         return e.id and keyOf[e.id] or (e.item and itemOf[e.item])
     end
     -- world times: log time + pull, each line after the earlier ones of its timestamp; the opening state at 0
-    -- a tagged aura whose spell ID also logs untagged on that unit is another wowsims aura sharing the ID (Seal of
-    -- Fury's {20423, Tag: 1} stacks beside the seal 20423): not the client's aura of that ID, so its lines are dropped
-    -- (a tag alone, an External's -1 or a weapon's 1, stays the aura)
+    -- a tagged aura whose spell ID also logs untagged on that unit is another wowsims aura sharing the ID (a stacking
+    -- counter beside a buff; the example in tools/wowsims/specs/paladin_protection.lua): not the client's aura of that
+    -- ID, so its lines are dropped; a tag alone (an External's -1, a weapon's 1) stays the aura. Limit: any tag is
+    -- dropped once an untagged line exists, -1 and 1 included (the example's is 1, so no tag can be spared); an External's
+    -- copy of an aura we also carry would be lost (none in the checked-in logs)
     local plain = {}
     for _, e in ipairs(p.ev) do
         if e.kind == "aura" and not e.tag then

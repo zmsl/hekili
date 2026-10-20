@@ -5,7 +5,8 @@
 -- Disagreements worked (P7, resume 3: after central fixes 6/8/C and 9/9b): replay 0.750 (28; wowsims's own Protection
 -- is out of mana from 24 s, so few decisions) on an export with no tank, so the target never swung (GAP AE, central fix
 -- 13: re-exported as the tank, 0.583 (48), the hits' and blocks' mana returns unmodelled; the notes below are the
--- untanked fight's). 0.679 on the rebase alone (fix 6/8/C report: the replay's client now
+-- untanked fight's). The tanked log carries {SpellID: 20423, Tag: 1}, a stacking counter wowsims logs beside the seal
+-- 20423 and fades each few seconds; the replay drops such tagged lines (replay.lua), or the seal would vanish with it. 0.679 on the rebase alone (fix 6/8/C report: the replay's client now
 -- reads the log's 2597 maximum); back to 0.750 once wowsims's character is booted with that maximum too, so the class
 -- file prices Righteous Fury's 30% on it (on 6000, its short answers capped the belief at 779 under a true 1568).
 -- holy_strike -> false 4 and seal_of_fury -> holy_strike 3: GAP R (central fix 12;

@@ -49,6 +49,9 @@
 - Developer: the mana estimate's at-rest lower bound is pinned by tests (no behaviour change).
 - Developer: the test harness answers the mana regen pair (`GetManaRegen`) as the client does, plain out of combat
   and secret in combat, and its wowsims replays read the mana regen rates from the log.
+- Developer: a wowsims recipe may map aura IDs alone (`auras = { [id] = key }`) for an aura wowsims keys by an
+  ability's own spell ID. At the pinned wowsims, Protection Warrior's APL reads two: 25288 (Revenge rank 6, its
+  Revenge window: map it to `revenge_usable`) and 12975 (Last Stand, read as `buff.last_stand` as wanted).
 - Priorities: a precombat line may carry `prepull_at=<seconds before the pull>`; such a line is recommended once
   between fights (after its spell is cast or its buff is seen up, and again once that buff runs out), in the list's
   order, so two seals no longer alternate before a pull.

@@ -31,8 +31,9 @@
 --    on Forever (API-forced, below); innervate -> cat_form 1; shred -> rake 1 (73.99).
 --    Known deviation: wowsims refunds 80% of a dodged strike's energy (OtherActionRefund, 8 in the log: central fix
 --    7's).
--- Translation gaps: the Berserk group's two strictSequence entries (Berserk then Rake or Shred; Berserk is cast once
--- in 180 s), Thistle Tea (selectedConjured), the potion, sapper charges, autocastOtherCooldowns (GAP 14: this spec
+-- The Berserk group's two strictSequence entries (Berserk then Rake or Shred; Berserk is cast once in 180 s) are rule
+-- 14's lines since central fix 13: both open on `prev.1.berserk`, so each later member keeps its own sequence's terms
+-- (Rake now, or not) to stay apart. Translation gaps: Thistle Tea (selectedConjured), the potion, sapper charges, autocastOtherCooldowns (GAP 14: this spec
 -- loses no class cooldown to it; wowsims casts no other cooldown in the log). Time to die is unknown on Forever (3600),
 -- so the `fight_remains` lines read a long fight (API-forced).
 return {

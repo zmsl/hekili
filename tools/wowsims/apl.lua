@@ -29,10 +29,8 @@
 --    content and every race's racials, as the engine merges them): a spell ID maps through the recipe's `map`, else
 --    an ability's `id` and `copy`, auras by the recipe's aura-only `auras` map ({ [aura ID] = key }: an aura wowsims
 --    keys by an ability's own spell ID, where `map` would also turn that ability's casts) then `map` then the set's
---    auras then abilities, items by an ability's `item` or `items`. Such aura reads in every wowsims APL of a fork
---    class at the pin (ui/specs/*/*/apls, central fix 13): warrior/protection's auraIsInactive 25288 (Revenge rank 6,
---    wowsims's Revenge-window aura: `auras = { [25288] = "revenge_usable" }`) and auraIsActive 12975 (Last Stand's
---    cast ID; it reads `buff.last_stand`, the kit's aura key, as wanted);
+--    auras then abilities, items by an ability's `item` or `items` (the APLs at the pin that read such an aura: the
+--    CHANGELOG's central fix 13 developer note);
 --    `includeReactionTime`, `rank` and a `tag` other than -1 (rule 4) are ignored. An aura's `sourceUnit` Self (or none) reads `buff.`,
 --    CurrentTarget or Target `debuff.`; a resource value with a source unit other than Self is unsupported.
 -- 6. Leveling guard: a read of another ability `X` (its cooldown, cast time, cost, readiness, or an aura whose key is
@@ -102,9 +100,11 @@
 --    is the last cast, `prev.1.<key>` (the engine's cast history, upstream Hekili's: casts heard and the queue's own
 --    predictions; Hekili has no sequence action), or, while that member is unlearned (wowsims drops it from the
 --    sequence: rule 6), under what put the sequence at it. A later member also carries the sequence's condition
---    without the terms (of a top-level `and`, variables followed) that read a member already cast (Blood Fury's own
---    readiness is false once it is cast): two sequences sharing a first member (Feral's Berserk -> Rake and Berserk ->
---    Shred) would otherwise both open on the one `prev.1`, the higher one's next member firing for the other. The
+--    without the terms (of a top-level `and`, variables followed) that read a member already cast (a member's own
+--    readiness is false once it is cast): two sequences sharing a first member would otherwise both open on the one
+--    `prev.1`, the higher one's next member firing for the other (examples: the recipes' headers). Limit: when the
+--    condition is not a top-level `and` and reads a cast member, or every term reads one, nothing is kept and two
+--    such sequences sharing a first member are not told apart (none at the pin). The
 --    condition's reads are all guarded (rule 6), none being the line's own. Deviations: a member is shown only once the
 --    one before it is cast (wowsims holds the rotation for it, so nothing else is recommended between); a later member
 --    re-reads its sequence's remaining terms, which wowsims reads once at the start, so a change between the casts can

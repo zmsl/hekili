@@ -6,10 +6,10 @@
 -- defaults to: the class's first race, Engineering, 100 ms) at the pin. One APL for the three builds
 -- (ui/specs/rogue/dps/apls/default.apl.json, "Direct APL"); the talents pick the lines.
 -- Translation: the APL's "Use X" variables are constants (inlined and folded, rule 1); omitted (rule 2): Maintain
--- Expose (its call folds to never: "Use Expose Armor" false; its strictSequence, RL3, never reached), the Orc's Blood
--- Fury -> Adrenaline Rush strictSequence (#10: a translation gap, the line stays omitted), autocastOtherCooldowns
+-- Expose (its call folds to never: "Use Expose Armor" false; its strictSequence, RL3, never reached), autocastOtherCooldowns
 -- (#7: rule 13, no "Major cooldown used" in the log), the potion; Thousand Cuts's buff (1310723) resolves from the kit's aura, so
--- `auraIsKnown` of it is the talent. Known deviations (Forever API): remainingTime reads 3600 (time to die unknown),
+-- `auraIsKnown` of it is the talent. The Orc's Blood Fury -> Adrenaline Rush strictSequence (#10) is rule 14's
+-- two lines since central fix 13 (Adrenaline Rush unlearned here: the Blood Fury line alone). Known deviations (Forever API): remainingTime reads 3600 (time to die unknown),
 -- so the "Fight About to End" terms never fire; energy is secret in combat, so an unannounced energize (Rogue Armor
 -- Energize 27788, +20) is invisible to the belief until the next read.
 -- Disagreements worked (P7; decisions on-GCD 0.939, n 82): hemorrhage -> rupture 4 (Thousand Cuts's stacks and
