@@ -7,6 +7,9 @@ local loop = require("Game.harness.loop")
 
 local M = {}
 
+-- The most cost refusals per 100 attempts the oracle shadow would not have made (loop.unmatched), a plain bar.
+M.UNMATCHED = 3
+
 --- The engine's health, gated at any fight count: no error, raise, self-check miss, unlisted read or secret, CPU.
 function M.health(m, r, line)
     assert.are.same({ 0, 0, 0 }, { m.errors, m.raises, m.selfCheck })
@@ -22,7 +25,7 @@ function M.gate(m, r, line)
     assert.is_true((r.per100.gcd or 0) == 0 and (r.per100.cooldown or 0) == 0, line)
     -- our cost refusals the oracle shadow would not have made at that tick (loop.unmatched: the round-3 ruling); a
     -- refusal both make is the press protocol meeting the world's rage timing, kept visible in the raw rate
-    assert.is_true((r.per100U.cost or 0) <= (r.per100B.cost or 0) + 3, line)
+    assert.is_true((r.per100U.cost or 0) <= M.UNMATCHED, line)
     M.health(m, r, line)
 end
 

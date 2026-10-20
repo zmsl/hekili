@@ -114,6 +114,28 @@ describe("the headless loop's paired refusals (loop.unmatched)", function()
         assert.are.equal(10, loop.summary(m).per100U.cost)
         assert.is_truthy(loop.line(m):find("cost 20.0 (oracle 10.0, unmatched 10.0)", 1, true))
     end)
+
+    it("bars the unmatched cost refusals at a plain 3 per 100 (pack_gate), whatever the oracle's own rate", function()
+        local gate = require("Forever.helpers.pack_gate")
+        local h = { errors = 0, raises = 0, selfCheck = 0, misses = {}, secrets = {} }
+        local function r(u, b)
+            return {
+                agreement = 1,
+                reactMedian = 0,
+                reactP90 = 0,
+                cpuMean = 0,
+                per100 = { cost = 40 },
+                per100U = { cost = u },
+                per100B = { cost = b },
+            }
+        end
+        assert.has_no.errors(function()
+            gate.gate(h, r(3, 0), "line")
+        end)
+        assert.has.errors(function()
+            gate.gate(h, r(3.1, 30), "line") -- the oracle refusing more does not widen it
+        end)
+    end)
 end)
 
 describe("the headless loop's replay injection (o.replay)", function()
