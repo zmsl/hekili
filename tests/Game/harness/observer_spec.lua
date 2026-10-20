@@ -463,6 +463,23 @@ describe("the observer's resources, GCD and forms", function()
         }, lines(observer.observe(W, knobs({ gcdSpell = GCD })), keep))
     end)
 
+    it("drops a cooldown's end that a restart on its instant supersedes (the end's float sum a ulp later)", function()
+        setup()
+        W.emit({ t = 0.1, kind = "cast", src = us, dst = mob, spell = 77, cd = 0.2 })
+        W.emit({ t = 0.3, kind = "cast", src = us, dst = mob, spell = 77, cd = 0.2 }) -- 0.1 + 0.2 > 0.3
+        local got = {}
+        for _, l in ipairs(lines(observer.observe(W, knobs({ plain = true })), { ["@cooldown"] = true })) do
+            got[#got + 1] = l:gsub("^(%S+)", function(x)
+                return ("%.2f"):format(tonumber(x))
+            end)
+        end
+        assert.are.same({
+            "0.10 @cooldown 77 0.1",
+            "0.30 @cooldown 77 0.3", -- the restart; the first end (0.30000000000000004) is gone
+            "0.50 @cooldown 77 0",
+        }, got)
+    end)
+
     it("answers each power type by its mode: always, out of combat only, never", function()
         setup()
         local modes = { [POOL] = "ooc", [POINTS] = "always", [1] = "never" }

@@ -275,6 +275,16 @@ function M.new(W, k)
         return M.SPELLS[name] or name -- a real ID (the content's) passes as is
     end
     local castN = 0
+    -- a cooldown's pending end (at or after `t`) whose start a restart or a reset supersedes: dropped, or it would end the
+    -- new one (a restart on the old end's instant: that end's float sum lands a ulp after the new start)
+    local function dropEnds(t, id)
+        for i = #list, 1, -1 do
+            local e = list[i]
+            if e[1] >= t and e[3] == "@cooldown" and e[4] == id then
+                table.remove(list, i)
+            end
+        end
+    end
     local gcdEnd -- the latest GCD's falling edge: its flag and its event (the list entries)
     local deltas, dseq = {}, 0 -- our power's changes as the client's usability sees them: { answer time, delta, power type, true time, seq } (a
     -- form change: { t, form, "form", seq }; byTime orders by the last field)
@@ -356,6 +366,7 @@ function M.new(W, k)
             for _, id in ipairs(ev.ids or { spellID(ev.spell) }) do
                 push(t, "@current", id, false) -- IsCurrentSpell: no longer queued
                 if (ev.cd or 0) > 0 then -- a queued strike's cooldown, from its swing (every rank)
+                    dropEnds(t, id)
                     push(t, "@cooldown", id, k.plain and t or fake.SECRET, k.plain and ev.cd or fake.SECRET)
                     if k.plain then
                         push(t + ev.cd, "@cooldown", id, 0, 0)
@@ -415,6 +426,9 @@ function M.new(W, k)
                 if gcdFlag and gcdEnd and gcdEnd[1][1] > t and gcdEnd[1][1] - t < 1e-6 then
                     gcdEnd[1][1], gcdEnd[2][1] = t, t
                 end
+                if not gcdFlag then
+                    dropEnds(t, id)
+                end
                 if k.plain then
                     push(t, "@cooldown", id, t, d)
                     push(t + d, "@cooldown", id, 0, 0)
@@ -447,17 +461,8 @@ function M.new(W, k)
                 push(t, "UNIT_SPELLCAST_SUCCEEDED", "targettarget", "Cast-" .. castN, spellID(ev.spell))
             end
         elseif kind == "cdreset" and ev.src == us then -- a cooldown finished early (W.resetCooldown): every rank ready
-            local reset = {}
             for _, id in ipairs(ev.ids) do
-                reset[id] = true
-            end
-            for i = #list, 1, -1 do -- the old cooldown's end, still pending, would later end a new one early
-                local e = list[i]
-                if e[1] > t and e[3] == "@cooldown" and reset[e[4]] then
-                    table.remove(list, i)
-                end
-            end
-            for _, id in ipairs(ev.ids) do
+                dropEnds(t, id)
                 push(t, "@cooldown", id, k.plain and 0 or nil)
             end
             push(t, "SPELL_UPDATE_COOLDOWN")
