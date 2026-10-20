@@ -31,7 +31,14 @@ local max = math.max
 local spec = Hekili:NewClass("PALADIN", {
     specs = {
         { key = "holy", name = "Holy", tree = 1, icon = 135920, role = "healer", unsupported = true },
-        { key = "protection", name = "Protection", tree = 2, icon = 135893, role = "tank", package = "Protection" },
+        {
+            key = "protection",
+            name = "Protection",
+            tree = 2,
+            icon = 135893,
+            role = "tank",
+            package = "Protection (wowsims.com)",
+        },
         {
             key = "retribution",
             name = "Retribution",
@@ -599,8 +606,6 @@ spec:RegisterPack(
     20261020682,
     [[Hekili:TE1xVTTnq8pl7LSAmpvBV1SUu4cK11H2GGGGQcS3Ken1jlUijAqsfx)I(SV7OKIPKLSD92lg0K3F(D3974rfmp4Rb(Xmde8WIzlUE(SfZU(Tlc8n72ab(By8NyRXffSC83VagLyvPrilOZ2LjzXK(RkfzMpxeSAqtP3a8a)hV9(B)Zp)WnkxBKkIJHA9ank0FjvWZGQkYXtvrpYYyXcCXR2OKpl04MSSBQIkKvrIIFEnITQiEkWFQkAhyExvKjf3rdSm90QOpYtLGUkIvexfDxz8Aihkm)iUdKKaCtve5KxubfuHlZLXqwgGQKOK5OmLiS4mTrp5ghZuRmxkZILBlqV9jwEofbYKQO)wXmPegBmp8nGxAWfBffO4ONq9ncs85KQYSDvr(yK)emTrLVUvOn1w7EX6utlgn17)kF7)OJ)Gmp3gI2F2V)xi1azPUa0u6ayCetBtbevctJ4cJUor1e9uWmPp((GSqdCmMSvfREF8BsfxOZDcsngCRRIwZ24Q)ceR4XcCjIsgMvZKsLUXDAWyqTi4jtqmVcZdXqcRmZm5Du6IsJwR3KJsLuX2WYWsW0g4JqUkkRoTWsmKx3k3Qf56xNuZROAEhM1TpEp5tfKakOGdu1mB3epKDRKjImKZZ4KOAVnkGlZxXmlDyWHSsfBQiz5pSQmjXR)jELBQU7ad8tlFnvddLjH86AM1c29oLcQofZHuBPQeDUDDiLmMsTUltX0wOMYAKs15nV9B6bfSvezV1kOl)Nwk(0snG(ojCnpE5CxrsTCDcxBjM(0ejVu3teRpSuA3T7NaA00bCwcojsgfYTa8Q6enGmvh1X8CZb9SRBby0S4f67og5qe0)4Jf9uD8eUUFz(OCIVFBXDATBsilitLZefPiedvaTu)(5EV5kQb2Bd38(LT9TEU6hABWDmo0CjXLy4wD7AuhQ7YtXtDKTxGoIiNIv3v6XRcNhDONVhODPReXINffqyc7zPQBetoTDqKBVDtgE5SRIblMEjhaXHRvYYU9jdbO2loUad0waRUlWhVcMgE379b0TuA6ze71d)3d2xM0Wzd(JaFNyLoS5I5a)xQ)bg0W9uQvi3Yoj3VmIC9Q9b(2Ip5puPFDeLgSgJ(ujWHqcwG)XPcKPFZy4zpFGe76ZmN4ssCbYLtpiV)BhfK26MJVoL1E7iwRLWeqfu)MxbmeHyVRgDE2ER2BQynRlS(zTo4Fak0zX7(FLp1RO3NBCqCFwJRoJrLhYOBoRlS7tcVm88Do(8KDBUiCmI6bHLtl65nZ8ye3tFnW57JFF0C85o48GjYJCzyBIBb525Z(p73odShOR21Fg6D2npYDOo8xAE79U6dVBDGxEFSXbhJi4ufgRR(0v69gXgLSstkDt8NGNezc87tA(q3j2Jd(3d]]
 )
-spec:RegisterPack(
-    "Protection",
-    20261020065,
-    [[Hekili:nwv3sTnpq0NLEvHP0qiTq7qNCb9hkWWWWu)DTSLLx5OVOyLr)qAUXp7DxNyhHJdWnmcT75SRoNDDyNX(pwsb3dShMmEYfNnEY4XxColXVEjWswYfZ5L4Hk(c8VpAnEq4vMkk0ATHxqWZdkT)2kw(Gm5wcce6v3F1pV9HlxgrXmvrbSbg4WCU2yHNaBD2U6GN5AEHcpCec9jLdVKRVSoRYuNPQ(yj2y1zIzGyED2AW)T6m)m8ghW1UtQZUXOxxNHLc0fV3rzYTLaEGxvuNDxOOewavEkeiLyrRZOQ2XbMOfpUWuaAnGqKwZcmNa2McUZ3YudGCTrm3THHG7ySl)JQCMhmb8YRdwStYbPHiuywKZ9Ne1cBjkzLs6JUgtjPPpmYwoMdlXmcl3Ii(jUP2cJrxywHN4yIEfPPtqI(HPYbclNu2iTXqAhHRlo9q)T1eQk2LM3QMd4)(R)AScLdfHJ4spr9kZkNAH7u5g)J0Yyh8QhVhHzbjyHkbqLsV(4r4iK1ivACUI3KPB0slSrxMAB1Tuj(KprjN(U8Guo653pc1G72d8hMEQfWUnpqbs5blpIGEroifK5NAK9QF8TXqN()D(vWbygY0srX0Z6sGyKC203sIXLwAeb30jVElGafr(B89Zqhm1r(mrtb0WJyNzNw2419yBlkASQTl2pCZur81q74XDSeCyG2x79bbTcxBA(Sdi5bThp(qZNHGkEoUJX(oljsBOGBNqyjDQhZJS(gb1t4jOFQhuHvHJYkolzqroIROaSKgzHAeKYp3JYweXMcL35hiVDMuC78sMfX2fVmBK59828lViGg7Ks7RhiTw7LrYys3cZqEylKNVZUVwV3o9qEBhz92FhGU93WhYXh2qFT5a)M3np4NzSSKBG5kTc)s42F664MWS)n]]
-)
+
+-- The hand-built lists the wowsims.com priorities replaced: a saved choice of one falls back to its spec's default.
+spec:RetirePacks({ "Protection" })

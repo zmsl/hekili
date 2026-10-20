@@ -212,9 +212,9 @@ local function classData(H, C)
     return X
 end
 
-local function content(name)
+local function content(name, pack)
     local P = PACKS[name]
-    local C = { PACK = name, IDS = {} }
+    local C = { PACK = pack or name, IDS = {} }
     C.SPEC = ({ Retribution = 100023, Protection = 100022 })[name]
 
     function C.character()
@@ -387,6 +387,6 @@ local function content(name)
     return C
 end
 
-M.Retribution, M.Protection = content("Retribution"), content("Protection")
+M.Retribution, M.Protection = content("Retribution"), content("Protection", "Protection (wowsims.com)")
 
 return M

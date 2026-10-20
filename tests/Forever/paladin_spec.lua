@@ -301,7 +301,7 @@ describe("Forever Paladin priorities", function()
         local src = f:read("*a")
         f:close()
         assert.are.equal(src, (mp.sync(src, mp.load("paladin"))))
-        for _, name in ipairs({ "Retribution", "Protection" }) do
+        for _, name in ipairs({ "Retribution" }) do
             assert.is_truthy(packs[name].desc:find("provisional", 1, true), name)
         end
     end)
@@ -362,11 +362,10 @@ describe("Forever Paladin priorities", function()
         line("Retribution", "holy_shock", "holy_shock", "debuff.consecrated_ground.up")
     end)
 
-    it("Protection: Seal of Fury and Holy Shield at tier 2, Righteous Fury before combat", function()
-        local _, sof = line("Protection", "default", "seal_of_fury", "!buff.seal_of_fury.up")
-        local _, hs = line("Protection", "default", "holy_shield")
+    it("Protection (wowsims.com): Seal of Fury and Holy Shield at tier 2 (the retired list's tiers)", function()
+        local _, sof = line("Protection (wowsims.com)", "default", "seal_of_fury")
+        local _, hs = line("Protection (wowsims.com)", "default", "holy_shield")
         assert.are.same({ 2, 2 }, { sof.focus, hs.focus })
-        assert.are.equal("righteous_fury", packs.Protection.lists.precombat[1].action)
     end)
 end)
 

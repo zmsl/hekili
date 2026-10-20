@@ -154,13 +154,14 @@ bound, so it climbs toward the maximum at rest, but on a fresh boot it starts at
 prepull and continuous spending, so a 10% floor (wowsims) never passes there; in game the floor lines become usable
 only after a warm-up (minutes out of combat). The usability answers still refuse a filler at a real lack of mana.
 Residual: the core mana bound decision (plan, Open after Day 4) would let the floor default return. The holy_shock
-list (Holy Shock talent) and Hammer of Wrath's window are not exercised by the solo worlds. The first runs (class-completion Task 8):
+list (Holy Shock talent) and Hammer of Wrath's window are not exercised by the solo worlds. The runs (class-completion
+Task 8; the Protection lines are Protection (wowsims.com)'s since the wowsims packs plan, Task 9):
 
 ```
 Retribution solo: fights=3 agreement 0.988 (1767 ticks); react median 0 p90 1 never 0.007; refused per 100 [], episodes 0.00/min; dps A/B 0.951; ... [seeds 1-3]
-Protection solo: fights=3 agreement 0.957 (2164 ticks); react median 0 p90 1 never 0.030; refused per 100 [], episodes 0.00/min; dps A/B 0.977; ... [seeds 1-3]
+Protection solo: fights=3 agreement 0.986 (1925 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.011; ... [seeds 1-3]
 Retribution solo: fights=20 agreement 0.989 (11761 ticks); react median 0 p90 1 never 0.003; refused per 100 [], episodes 0.00/min; dps A/B 0.970; ...
-Protection solo: fights=20 agreement 0.959 (14343 ticks); react median 0 p90 1 never 0.026; refused per 100 [], episodes 0.00/min; dps A/B 0.998; ...
+Protection solo: fights=20 agreement 0.988 (13869 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.985; ...
 ```
 
 Paladin checkpoint (in game, a level 60 Paladin; provisional until answered):

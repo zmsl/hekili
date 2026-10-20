@@ -9,11 +9,10 @@
 
 return {
     class = "PALADIN",
-    packs = { "Retribution (wowsims.com)", "Protection (wowsims.com)", "Retribution", "Protection" },
+    packs = { "Retribution (wowsims.com)", "Protection (wowsims.com)", "Retribution" },
     specs = {
         ["Retribution (wowsims.com)"] = "retribution",
         ["Protection (wowsims.com)"] = "protection",
         Retribution = "retribution",
-        Protection = "protection",
     },
 }
