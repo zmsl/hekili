@@ -26,6 +26,7 @@ describe("the target's creature type", function()
 
     after_each(function()
         H.Hekili.Class.abilities.hamstring.usable_on = nil
+        H.Hekili.Class.abilities.hamstring.funcs.usable_on = nil
     end)
 
     it("reads the client's type ID as a key: undead, demon, unknown when secret or unlisted", function()
@@ -48,6 +49,19 @@ describe("the target's creature type", function()
         local ok, why = cycle("beast"):IsUsable("hamstring")
         assert.are.same({ false, "target's creature type not in usable_on" }, { ok, why })
         assert.is_true(cycle("unknown"):IsUsable("hamstring")) -- never blocked on the unknown
+        assert.are.same({}, H.errors)
+    end)
+
+    it("usable_on as a function: its list applies, its nil means any target", function()
+        local list
+        H.Hekili.Class.abilities.hamstring.funcs.usable_on = function()
+            return list
+        end
+        list = { "undead" }
+        assert.is_false((cycle("beast"):IsUsable("hamstring")))
+        assert.is_true(cycle("undead"):IsUsable("hamstring"))
+        list = nil
+        assert.is_true(cycle("beast"):IsUsable("hamstring"))
         assert.are.same({}, H.errors)
     end)
 end)

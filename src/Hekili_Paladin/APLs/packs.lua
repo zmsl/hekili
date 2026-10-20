@@ -2,10 +2,9 @@
 -- tools/make_pack.lua paladin): the class token, the packs in RegisterPack order (each one's text in <Pack>.simc beside
 -- this file) and each pack's spec key. Dev-only (no TOC lists it); the pack date lives in Paladin.lua's generated
 -- blocks, and `make packs` sets it to today only when a pack changed.
--- After wowsims/forever's Paladin APLs (ui/specs/paladin/retribution/apls/twist_of_light.apl.json and
--- holy_shock.apl.json, ui/specs/paladin/protection/apls/default.apl.json; MIT, reference only). Left out on purpose:
--- the item swap (D6), racials, potions and trinkets, a taunt (Hand of Reckoning is no player spell on Forever) and
--- Hammer of Wrath's swing sync (the 0.2 s after a main-hand swing).
+-- Both packs are translated from wowsims/forever (MIT, https://github.com/wowsims/forever) by tools/wowsims (recipes in
+-- tools/wowsims/specs/paladin_*.lua): ui/specs/paladin/retribution/apls/twist_of_light.apl.json and
+-- ui/specs/paladin/protection/apls/default.apl.json.
 
 return {
     class = "PALADIN",

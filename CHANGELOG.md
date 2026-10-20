@@ -49,7 +49,8 @@
   WoW Forever.
 - Strikes on your next swing (Raptor Strike, Heroic Strike, Maul) are no longer recommended while the addon knows your
   target is beyond melee range (the game's own range check says "in range" for them at any distance).
-- Paladin: the hand-built Protection priority is gone (replaced by Protection (wowsims.com)).
+- Paladin: the hand-built Protection priority is gone (replaced by Protection (wowsims.com)); Righteous Fury is no
+  longer suggested before combat (wowsims's Protection never casts it).
 - Paladin: the hand-built Retribution priority is gone (replaced by Retribution (wowsims.com)), with its Holy Shock
   list and the Consecration and Exorcism Mana Floor settings (wowsims's 10% floor is in the new priority).
 

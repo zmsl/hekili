@@ -151,7 +151,9 @@ runs under the five-second rule (`fsr`). Both packs are gated by `pack_gate.gate
 wowsims packs plan, Task 9 (the hand-built lists retired). Retribution (wowsims.com)'s swing-gap fillers carry
 wowsims's own `mana.pct>=10`, judged on the secret-mana belief: in the solo worlds' later fights (each starts at full
 mana 30 s after the last, which no regen fills) the belief rightly carries the drained pool, so the fillers wait where
-the oracle, reading the truth, casts them (the Retribution lines' consecration disagreements; reported centrally). The
+the oracle, reading the truth, casts them (the Retribution lines' consecration disagreements; GAP X: loop fights
+restart at full mana after a dry fight, so the Retribution 20-fight line's 0.911, never 0.226 is harness-caused and
+recovers after GAP X). The
 holy_shock list is gone with the hand-built Retribution list; Hammer of Wrath's window is not exercised by the solo
 worlds. The runs (the rebased base of the wowsims packs plan, Task 9 resume 3):
 
@@ -180,8 +182,16 @@ Paladin checkpoint (in game, a level 60 Paladin; provisional until answered):
   Righteous Fury 30%) is of base mana in the DB2, priced here as of the maximum.
 - P8: Exorcism: which ranks a Paladin learns (879.. Undead/Demon only, or 415068.. any target), and whether
   IsSpellUsable answers false on a beast for the 879 ranks.
-- P9: Consecrated Ground (1310905) on the target after Consecration, its 8.6 s; Seal of Fury's absorb and Improved
-  Seal of Fury's mana are unmodelled.
+- P9: Consecrated Ground (1280353, the aura the class file reads; wowsims logs it, not the APL's 1310905) on the
+  target after Consecration, its 8.6 s; Seal of Fury's absorb and Improved Seal of Fury's mana are unmodelled.
+- P10: Judgement's cooldown with Improved Judgement (modelled 10 s less 1 s a rank: 8 s at 2/2), and the costs at
+  partial ranks of Benediction (2% less a rank) and Holy Conduit (20% less a rank; Consecration, Exorcism, Hammer of
+  Wrath): the DB2 holds the full-rank value on rank 1 (ruling P5), so check a 1-rank cost in the spellbook tooltip.
+- P11: Sanctified Judgement at 3/3: does every Judgement return 60% of the seal's base cost (the belief gains it, e.g.
+  161 mana for Seal of Command at 0.72), or is the refund chance-based or another amount (then the bound over-reads)?
+- P12: Retribution (wowsims.com)'s `use_items` line: is the equipped on-use trinket suggested, off the GCD, when ready?
+- P13: Protection (wowsims.com)'s precombat order: Retribution Aura (10 s before the pull), then Seal of the Crusader
+  at 1.5 s, then Seal of Fury in combat; and no Righteous Fury suggestion (ruling P11).
 
 `tests/Forever/loop_shaman_spec.lua` runs 3 Enhancement fights in `make check` (seeds 1-3, `#slow`) and 20 in
 `make test-shaman` (`#shaman`), gated by `pack_gate.gate` and asserting its flagged lines ran (Lightning Bolt at 5

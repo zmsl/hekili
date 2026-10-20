@@ -29,6 +29,8 @@ local function wowsims(base, drop, world)
                 end
             end
             c.known = known
+            -- shortcut: the shared harness boots the character with the class world's max, not the log's (shared gap
+            -- "power pools in the replay"); delete this override when M.content starts it with R.maxOf[pt] (ruling P10).
             if world.max then -- the log's pool: percent costs priced on it (the oracle's state and the answers)
                 c.power = { type = c.power.type, token = c.power.token, max = world.max }
             end
@@ -67,7 +69,7 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.57, REPLAY)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Retribution is out of mana from 60 s
-    -- of its log), and the gate counts Retribution Aura (up, free) as usable meanwhile. 4.4 before central fix 8, while
+    -- of its log), so its longest wait is for mana. 4.4 before central fix 8, while
     -- the collapsed mana lower bound kept Consecration's and Exorcism's `mana.pct>=10` from passing.
     local RET_LIVE60 = 8.4
     for _, level in ipairs({ 10, 40, 60 }) do
@@ -87,7 +89,7 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.75, REPLAY)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Protection is out of mana from 24 s),
-    -- and the gate counts Retribution Aura (up, free) as usable meanwhile
+    -- so its longest wait is for mana
     local PROT_LIVE60 = 17.8
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()

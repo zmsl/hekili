@@ -104,6 +104,8 @@ M.MAP = {
         effect = function(W, e, _, X)
             drop(W, e, X, "swift_judgement")
             W.hit(e, e.target, AMOUNT.judgement)
+            -- shortcut: the world refunds only at 3/3 (the belief's rule) and has no proc chance below it; model the
+            -- 33/66% chance if a world build takes 1-2 ranks.
             if X.sanctified then -- Sanctified Judgement 3/3: 60% of the seal's base cost x (2 - its multiplier)
                 for _, key in ipairs(SEALS) do
                     if up(e, X, key) then
