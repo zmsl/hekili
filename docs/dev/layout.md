@@ -308,17 +308,17 @@ Then restart the client fully (a moved addon is not picked up by `/reload`).
 
 ### Specs (one spec per talent tree; `/reload` after the update, no client restart)
 
-The client reports one pseudo-spec per class, so each class pack registers a spec per talent tree and the active spec is
-the character's choice, else the tree with the most points (stored once), else the first supported spec.
+The client reports one pseudo-spec per class, so each class pack registers a spec per talent tree and the active spec
+follows the tree with the most points: the spec activated for that tree, else its first spec.
 1. **Rogue:** `/hekili` shows Assassination, Combat and Subtlety nodes with their icons; Subtlety's page has "Backstab
    Builder", Combat's does not; the shared preferences ("Bleeds on Trash", "Vanish to Re-open") are on all three.
 2. **First login after the update (any class):** the active spec is the tree with the most points (Snapshot:
    `spec: <key> (dominant)` on the first pass, `(stored)` after a `/reload`); the old thresholds (e.g. "Bleeds on Trash"
    if you changed it) appear in every supported spec of the class; your previous priority choice is kept.
-3. **Override:** pick another spec in "Active Specialization" (or `/hekili spec subtlety`); the displays switch to its
-   priority; `/reload` keeps it; `/hekili spec` lists the specs with "(current)" and, when your talents favor another
-   tree, "Your talents favor X"; the page shows the same hint. No repeated chat or lag on talent changes.
-4. **Priorities list:** grouped by spec (the Warrior's Arms, Fury, Protection in that order), each with its spec icon;
+3. **Override:** press "Activate Subtlety" on Subtlety's page (or `/hekili spec subtlety`); the displays switch to its
+   priority, the page shows the gold "Active" marker, the tree lists Subtlety first with a gold highlight; `/reload`
+   keeps it; a respec into another tree switches to that tree's spec, and back restores Subtlety.
+4. **Priorities:** each priority sits under its spec's node in the tree (the Warrior's Arms, Fury, Protection);
    exporting Fury and importing it on the same character binds it to Fury.
 5. **Druid:** Feral is selected for a Feral build; `/hekili spec guardian` switches to the bear priority; choosing
    Restoration hides the displays, its page says "No priorities on Forever for Restoration", and no "modules loaded"

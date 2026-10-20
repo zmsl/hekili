@@ -2614,11 +2614,77 @@ local function GetCurrentSpecList()
     return specs
 end
 
+-- (spec tree) A spec's node has tabs (Specialization Settings, Targeting, Performance) and, in the options tree, its
+-- priorities as children. AceConfigDialog builds the tree from groups whose childGroups is "tree" and a page's tabs
+-- from all of its child groups, so a spec node answers by what the dialog is feeding (FeedGroup's path length): the
+-- tree (0) sees "tree" and only the priorities; the spec's page (1) sees "tab" and only the tabs. If another
+-- AceConfigDialog replaces FeedGroup, feedDepth stays nil and the priorities show as further tabs of their spec.
+local feedDepth
+local specNodeMeta = {
+    __index = function( _, k )
+        if k == "childGroups" then return feedDepth == 0 and "tree" or "tab" end
+    end,
+}
+local function SpecTabHidden() return feedDepth == 0 end
+local function SpecPackHidden() return feedDepth == 1 end
+
+-- The active spec's row in the options tree: a gold rounded rectangle behind it (Textures/ActiveSpec.tga, made by
+-- tools/make_active_spec_texture.py), one texture per tree button made on first use, re-placed after every refresh.
+local function MarkActiveSpec( tree )
+    local key = tree:GetUserData( "appName" ) == "Hekili" and Status.specKey
+    for _, button in ipairs( tree.buttons ) do
+        local mark = button.hekiliActive
+        if key and button:IsShown() and button.uniquevalue == key then
+            if not mark then
+                mark = button:CreateTexture( nil, "BACKGROUND" )
+                mark:SetTexture( "Interface\\AddOns\\Hekili\\Textures\\ActiveSpec" )
+                mark:SetAllPoints()
+                button.hekiliActive = mark
+            end
+            mark:Show()
+        elseif mark then
+            mark:Hide()
+        end
+    end
+end
+
+if ACD and ACD.FeedGroup then
+    local feed = ACD.FeedGroup
+    function ACD.FeedGroup( dialog, appName, options, container, rootframe, path, isRoot )
+        if appName ~= "Hekili" then return feed( dialog, appName, options, container, rootframe, path, isRoot ) end
+        local outer = feedDepth
+        feedDepth = #path
+        feed( dialog, appName, options, container, rootframe, path, isRoot )
+        feedDepth = outer
+        if #path > 0 then return end
+        for _, child in ipairs( container.children ) do -- the root's tree: hooked once (AceGUI reuses widgets)
+            if child.type == "TreeGroup" and not child.hekiliMarks then
+                child.hekiliMarks = true
+                hooksecurefunc( child, "RefreshTree", MarkActiveSpec )
+                MarkActiveSpec( child )
+            end
+        end
+    end
+end
+
 do
     local packs = {}
 
     local specNameByID = {}
     local specIDByName = {}
+    local packNodes = {} -- [ spec id ] = its priorities' nodes, the spec node's `plugins.packs` (spec tree)
+
+    -- Selects a priority's node: under its spec's node, or under Priorities when its spec has none.
+    local function SelectPack( pack )
+        local data = rawget( Hekili.DB.profile.packs, pack )
+        local owner = data and packNodes[ data.spec ] and packNodes[ data.spec ][ pack ] and specNameByID[ data.spec ]
+        if not owner then return ACD:SelectGroup( "Hekili", "packs", pack ) end
+        local outer = feedDepth
+        feedDepth = 0 -- SelectGroup reads the spec node's childGroups: the tree's view
+        ACD:SelectGroup( "Hekili", owner, pack )
+        feedDepth = outer
+    end
+    function Hekili:SelectPack( pack ) return SelectPack( pack ) end
 
     local shareDB = {
         actionPack = "",
@@ -3402,36 +3468,33 @@ found = true end
     local tAbilities = {}
     local tItems = {}
 
-    -- (per-spec plan) On every spec's page: the active spec (stored per character; the dominant talent tree until one
-    -- is chosen) and the hint when the talents favor another.
-    local activeSpecOption = {
-        type = "select",
-        name = "Active Specialization",
-        desc = "The specialization Hekili Forever recommends for this character. Your choice is kept until you "
-            .. "change it (also |cFFFFD100/hekili spec name|r); with no choice yet, the talent tree with the most "
-            .. "points is chosen once.",
-        order = -2,
-        width = 1.5,
-        values = function()
-            local v, kit = {}, Registry.Kit()
-            for _, s in ipairs( kit and kit.trees or {} ) do v[ s.key ] = s.name end
-            return v
-        end,
-        get = function() return Status.specKey end,
-        set = function( _, val ) Hekili:SetSpecChoice( val ) end,
-    }
-    local specHintOption = {
-        type = "description",
-        name = function()
-            local h = Hekili:GetSpecHint()
-            return h and ( "Your talents favor |cFFFFD100" .. h.name .. "|r; the active specialization stays "
-                .. "your choice until you pick another above." ) or ""
-        end,
-        fontSize = "medium",
-        order = -1,
-        width = "full",
-        hidden = function() return Hekili:GetSpecHint() == nil end,
-    }
+    -- (spec tree) The right half of a spec page's top row: "Activate <Spec>" while another spec is active (as
+    -- /hekili spec: kept for the current talent tree), else the gold "Active" marker.
+    local function AddActivateOptions( args, key, name, texture )
+        args.activate = {
+            type = "execute",
+            name = "Activate " .. name,
+            desc = "Recommend for " .. name .. " from now on. The choice is kept for your current talent tree: "
+                .. "a talent swap to another tree activates the specialization chosen for that one (also "
+                .. "|cFFFFD100/hekili spec name|r).",
+            order = 1.2,
+            width = 1.5,
+            func = function() Hekili:SetSpecChoice( key ) end,
+            hidden = function() return Status.specKey == key end,
+        }
+        args.activeMarker = {
+            type = "description",
+            name = "|cFFFFD100Active|r",
+            image = texture,
+            imageCoords = { 0.15, 0.85, 0.15, 0.85 },
+            imageWidth = 20,
+            imageHeight = 20,
+            fontSize = "medium",
+            order = 1.3,
+            width = 1.5,
+            hidden = function() return Status.specKey ~= key end,
+        }
+    end
 
     -- Options table constructors.
     function Hekili:EmbedSpecOptions( db )
@@ -3463,6 +3526,7 @@ found = true end
 
                 specs[ id ] = Hekili:ZoomedTextureWithText( texture or ( Registry.Specs()[ id ] and Registry.Specs()[ id ].texture ), name )
 
+                local slot = i -- this spec's slot for the order function (`i` moves on)
                 local options = {
                     type = "group",
                     -- name = specs[ id ],
@@ -3470,8 +3534,8 @@ found = true end
                     icon = texture,
                     iconCoords = { 0.15, 0.85, 0.15, 0.85 },
                     desc = description,
-                    order = 50 + i,
-                    childGroups = "tab",
+                    -- the active spec first, then the others in talent-tab order
+                    order = function() return Status.specID == id and 50 or 50 + slot end,
                     get = "GetSpecOption",
                     set = "SetSpecOption",
 
@@ -3481,13 +3545,25 @@ found = true end
                             name = "Specialization Settings",
                             desc = "Core features and specialization options for " .. specs[ id ] .. ".",
                             order = 1,
+                            hidden = SpecTabHidden,
                             args = {
+                                disableSpacer = {
+                                    type = "description",
+                                    name = " ",
+                                    order = 9999,
+                                    width = "full",
+                                },
+
+                                -- the stored flag is `enabled`; the toggle shows its inverse
                                 enabled = {
                                     type = "toggle",
-                                    name = specs[ id ] .. " Enabled",
-                                    desc = "If checked, the addon will provide priority recommendations for " .. name .. " based on the selected priority list.",
-                                    order = 0,
+                                    name = "Disable " .. name,
+                                    desc = "No recommendations while this specialization is active.",
+                                    descStyle = "inline",
+                                    order = 10000,
                                     width = "full",
+                                    get = function( info ) return Hekili:GetSpecOption( info ) == false end,
+                                    set = function( info, val ) Hekili:SetSpecOption( info, not val ) end,
                                 },
 
                                 package = {
@@ -3495,7 +3571,7 @@ found = true end
                                     name = "Priority",
                                     desc = "The addon will use the selected package when making its priority recommendations.",
                                     order = 1,
-                                    width = 1.5,
+                                    width = 1.35,
                                     values = function( info, val )
                                         wipe( packs )
 
@@ -3525,7 +3601,7 @@ found = true end
                                         return rawget( self.DB.profile.packs, pack ) == nil
                                     end,
                                     func = function ()
-                                        ACD:SelectGroup( "Hekili", "packs", self.DB.profile.specs[ id ].package )
+                                        SelectPack( self.DB.profile.specs[ id ].package )
                                     end,
                                     order = 1.1,
                                     width = 0.15,
@@ -3562,6 +3638,7 @@ found = true end
                             name = "Targeting",
                             desc = "Settings related to how enemies are identified and counted.",
                             order = 3,
+                            hidden = SpecTabHidden,
                             args = {
                                 targetsHeader = {
                                     type = "description",
@@ -3874,6 +3951,7 @@ found = true end
                             type = "group",
                             name = "Performance",
                             order = 10,
+                            hidden = SpecTabHidden,
                             args = {
                                 frameBudget = {
                                     type = "range",
@@ -4006,9 +4084,12 @@ found = true end
                     end
                 end
 
+                setmetatable( options, specNodeMeta ) -- childGroups: the tree's view or the page's (above)
+                packNodes[ id ] = packNodes[ id ] or {}
+                options.plugins = { packs = packNodes[ id ] } -- its priorities (EmbedPackOptions)
+
                 if tree then
-                    options.args.core.args.activeSpec = activeSpecOption
-                    options.args.core.args.specHint = specHintOption
+                    AddActivateOptions( options.args.core.args, sName, name, texture )
                     if tree.unsupported then -- no priorities on Forever: the page says why nothing shows
                         specs[ id ] = nil -- and no priority can be made for it (the spec lists of the Priorities)
                         options.args = {
@@ -4016,6 +4097,7 @@ found = true end
                                 type = "group",
                                 name = "Specialization Settings",
                                 order = 1,
+                                hidden = SpecTabHidden,
                                 args = {
                                     notice = {
                                         type = "description",
@@ -4025,11 +4107,10 @@ found = true end
                                         order = 0,
                                         width = "full",
                                     },
-                                    activeSpec = activeSpecOption,
-                                    specHint = specHintOption,
                                 },
                             },
                         }
+                        AddActivateOptions( options.args.core.args, sName, name, texture )
                     end
                 end
 
@@ -4315,7 +4396,7 @@ found = true end
                     func = function ()
                         Hekili.DB.profile.packs[ packControl.newPackName ].spec = packControl.newPackSpec
                         Hekili:EmbedPackOptions()
-                        ACD:SelectGroup( "Hekili", "packs", packControl.newPackName )
+                        SelectPack( packControl.newPackName )
                         packControl.newPackName = ""
                         packControl.newPackSpec = ""
                     end,
@@ -4622,12 +4703,11 @@ found = true end
             },
             plugins = {
                 packages = {},
-                links = {},
             }
         }
 
         wipe( packs.plugins.packages )
-        wipe( packs.plugins.links )
+        for _, nodes in pairs( packNodes ) do wipe( nodes ) end
 
         local count = 0
 
@@ -4646,23 +4726,14 @@ found = true end
         for _, pack in ipairs( ordered ) do
             local data = self.DB.profile.packs[ pack ]
             if data.spec and Registry.Specs()[ data.spec ] and not data.hidden then
-                packs.plugins.links.packButtons = packs.plugins.links.packButtons or {
-                    type = "header",
-                    name = "Installed Packs",
-                    order = 10,
-                }
+                -- under its spec's node (EmbedSpecOptions runs first), else under Priorities
+                local under = specNameByID[ data.spec ] and packNodes[ data.spec ]
 
-                packs.plugins.links[ "btn" .. pack ] = {
-                    type = "execute",
-                    name = pack,
-                    order = 11 + count,
-                    func = function ()
-                        ACD:SelectGroup( "Hekili", "packs", pack )
-                    end,
-                }
-
-                local opts = packs.plugins.packages[ pack ] or {
+                local opts = {
                     type = "group",
+                    get = "GetPackOption", -- not the spec node's handlers
+                    set = "SetPackOption",
+                    hidden = under and SpecPackHidden or nil,
                     name = function ()
                         local p = rawget( Hekili.DB.profile.packs, pack )
                         if p.builtIn then return '|cFF00B4FF' .. pack .. '|r' end
@@ -4768,7 +4839,7 @@ found = true end
 
                                         Hekili:EmbedPackOptions()
                                         Hekili:LoadScripts()
-                                        ACD:SelectGroup( "Hekili", "packs", val )
+                                        SelectPack( val )
                                     end,
                                     disabled = data.builtIn
                                 },
@@ -4807,7 +4878,7 @@ found = true end
                                         Hekili.DB.profile.packs[ newPackName ] = newPack
                                         Hekili:EmbedPackOptions()
                                         Hekili:LoadScripts()
-                                        ACD:SelectGroup( "Hekili", "packs", newPackName )
+                                        SelectPack( newPackName )
                                     end
                                 },
 
@@ -4830,7 +4901,7 @@ found = true end
                                         Hekili:RestoreDefault( pack )
                                         Hekili:EmbedPackOptions()
                                         Hekili:LoadScripts()
-                                        ACD:SelectGroup( "Hekili", "packs", pack )
+                                        SelectPack( pack )
                                     end
                                 },
 
@@ -4865,6 +4936,7 @@ found = true end
 
                                         Hekili.DB.profile.packs[ pack ] = nil
                                         Hekili.Options.args.packs.plugins.packages[ pack ] = nil
+                                        for _, nodes in pairs( packNodes ) do nodes[ pack ] = nil end
 
                                         -- Hekili:EmbedPackOptions()
                                         ACD:SelectGroup( "Hekili", "packs" )
@@ -6165,7 +6237,7 @@ n = tonumber( n ) + 1
                     n = n + 1
                 end ]]
 
-                packs.plugins.packages[ pack ] = opts
+                ( under or packs.plugins.packages )[ pack ] = opts
                 count = count + 1
             end
         end
@@ -7511,8 +7583,8 @@ function Hekili:RefreshOptions()
     if not self.Options then return end
 
     self:EmbedDisplayOptions()
+    self:EmbedSpecOptions() -- first: the priorities' nodes go under the spec nodes
     self:EmbedPackOptions()
-    self:EmbedSpecOptions()
     self:EmbedAbilityOptions()
     self:EmbedItemOptions()
 

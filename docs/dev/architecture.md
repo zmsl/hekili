@@ -144,12 +144,13 @@ class token, a missing pack, a mismatch or a failed pack load keeps one notice, 
 `## X-Hekili-ContentAPI` change together, only when the content surface changes: the Register* API, `Hekili.Client`,
 or the environment names above. `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
 
-**Active spec.** The client reports one pseudo-spec per class, so the core picks the spec (`ns.PickSpec`): the
-character's stored choice (`profile.specChoice["Name-Realm"]`), else the first spec on the talent tree with the most
-points (stored once, so later talent changes do not move it), else the first supported spec (no points yet or a tie;
-not stored). When the talents favor another tree than the stored choice, the class page and `/hekili spec` say so
-("Your talents favor X"); the choice changes only through the page's "Active Specialization" dropdown or
-`/hekili spec <name>`. On a class's first login after the update a one-time migration (`ns.MigrateTrees`, marked in
+**Active spec.** The client reports one pseudo-spec per class, so the core picks the spec (`ns.PickSpec`) from the
+talent tree with the most points: the spec the character activated for that tree
+(`profile.specChoice["Name-Realm"] = { [tree] = key, last = tree }`), else the tree's first spec; on no points or a
+tie, the last dominant tree seen; with none seen, the first supported spec. A respec or dual-spec swap that moves the
+dominant tree therefore switches the spec, and two builds of one tree share its choice. The choice is written only by a
+spec page's "Activate <Spec>" button or `/hekili spec <name>`, for the current dominant tree (a pre-table scalar
+choice moves onto it once). On a class's first login after the update a one-time migration (`ns.MigrateTrees`, marked in
 `profile.specMigrated[<TOKEN>]`) merges the legacy pseudo-spec profile (the client's id, now read for nothing else:
 Rogue 1488 and Warrior 1491 read in game; Druid 1483, Hunter 1484, Paladin 1486, Shaman 1489 assumed) into every
 supported spec, value by

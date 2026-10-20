@@ -1054,6 +1054,10 @@ do
         if st.specID ~= seenSpec then
             seenSpec, seenCombat = st.specID, st.combat
             Hekili:UpdateDisplayVisibility()
+            -- the open options mark the active spec (its Activate button, its row in the tree): redraw them
+            if LibStub( "AceConfigDialog-3.0" ).OpenFrames[ "Hekili" ] then
+                LibStub( "AceConfigRegistry-3.0" ):NotifyChange( "Hekili" )
+            end
         elseif st.combat ~= seenCombat then
             seenCombat = st.combat
             for _, d in pairs( dPool ) do d:UpdateAlpha() end

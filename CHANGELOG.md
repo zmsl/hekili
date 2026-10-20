@@ -10,12 +10,19 @@
 - Pets and guardians: the addon tracks your pet and your summoned guardians (Summon Hawk, up to two), so priorities can
   ask whether a pet is out and how many guardians are up.
 - Specializations: each supported class has one specialization page per talent tree, each with its own priorities
-  and settings (the Druid's Feral Combat tree has two: Feral and Guardian). The active specialization is the talent
-  tree with the most points; change it with the dropdown on any specialization page or with `/hekili spec <name>`
-  (`/hekili spec` lists them). Healing trees (Holy, Restoration) and Elemental show a "no priorities on Forever"
-  notice and the addon recommends nothing while one is active.
+  and settings (the Druid's Feral Combat tree has two: Feral and Guardian). The active specialization follows the
+  talent tree with the most points; change it with the "Activate <Spec>" button on a specialization page or with
+  `/hekili spec <name>` (`/hekili spec` lists them). Healing trees (Holy, Restoration) and Elemental show a "no
+  priorities on Forever" notice and the addon recommends nothing while one is active.
 
 ### Changed
+- Specializations follow your talents: a respec or dual-spec swap that moves your most-spent talent tree activates
+  that tree's specialization, the one you last activated for it (for example Guardian on the Feral Combat tree) or
+  else its first. Swapping between two builds of the same tree keeps your choice. The "your talents favor" hint is gone.
+- Options: each specialization page starts with its Priority and an "Activate <Spec>" button (a gold "Active" marker
+  on the active one; the Active Specialization dropdown is gone) and ends with a "Disable <Spec>" checkbox in place of
+  "<Spec> Enabled". Each priority now sits under its specialization in the options tree (Priorities keeps Import /
+  Export and Create a New Priority), and the active specialization is listed first with a gold highlight.
 - The AddOns list shows Hekili Forever under the Combat category.
 - The addon keeps a ranged Auto Shot timer next to the melee swing timers (used by the Hunter priorities' range and
   swing checks; no other class reads it).

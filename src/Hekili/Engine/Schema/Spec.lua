@@ -2045,8 +2045,8 @@ function Hekili:SpecializationChanged()
         return
     end
 
-    -- The class pack's spec: the stored choice, else the dominant tree (Engine/Schema/Trees.lua). The ranks may be the
-    -- last walk's here; SettleSpecChoice re-picks after this pass's walk.
+    -- The class pack's spec: the one chosen for the dominant tree, else its first (Engine/Schema/Trees.lua). The ranks
+    -- may be the last walk's here; SettleSpecChoice re-picks after this pass's walk.
     local kit = class.kit
     local tree, source
     if kit then tree, source = ns.PickSpec( kit, Hekili.Engine.settings.specChoice[ ns.CharKey() ], talentRank ) end
@@ -2328,21 +2328,35 @@ function Hekili:SpecializationChanged()
     self:UpdateDamageDetectionForCLEU()
 end
 
---- (per-spec plan) After a spec change's talent walk: share keys of imported packs resolved, the dominant tree stored
---- on a character with no choice yet, and one more pass when this pass's pick (made on the last walk's ranks) was not
---- it. A stored choice never moves here: a respec only shows the hint (GetSpecHint).
+-- This character's spec choice table ({ [tree] = spec key, last = tree }; Trees.lua's PickSpec), made on first use;
+-- a legacy scalar choice moves onto `tree` (the dominant tree now, else 0) once.
+local function charChoice( tree )
+    local all, key = Hekili.Engine.settings.specChoice, ns.CharKey()
+    local choice = all[ key ]
+    if type( choice ) ~= "table" then
+        all[ key ] = { [ tree or 0 ] = type( choice ) == "string" and choice or nil }
+        choice = all[ key ]
+    end
+    return choice
+end
+
+--- (per-spec plan) After a spec change's talent walk: share keys of imported packs resolved, the dominant tree
+--- remembered (a talent swap to another tree activates that tree's spec), and one more pass when this pass's pick
+--- (made on the last walk's ranks) was not the settled one.
 function Hekili:SettleSpecChoice( clientID )
     local kit, settings = class.kit, Hekili.Engine.settings
-    local key = ns.CharKey()
-    local pick, source = ns.PickSpec( kit, settings.specChoice[ key ], talentRank )
+    local tree = ns.DominantTree( ns.TreePoints( kit.talents, talentRank ) )
+    local choice = charChoice( tree )
+    if tree then choice.last = tree end
+    local pick = ns.PickSpec( kit, choice, talentRank )
     ns.MigrateTrees( settings.specs, settings.packs, settings.specMigrated, kit, clientID, pick )
     ns.ResolvePackSpecs( settings.packs, class.specByShare )
-    if source == "dominant" then settings.specChoice[ key ] = pick.key end
     if pick.id ~= state.spec.id then self.PendingSpecializationChange = true end
 end
 
---- Stores this character's spec choice and switches to it at the next frame: `key` is a spec key, or a prefix of one
---- spec's key or name (case-insensitive). Returns the spec, or nil when no spec or more than one matches.
+--- Activates a spec for this character's current dominant talent tree (kept until another is activated on that
+--- tree) and switches to it at the next frame: `key` is a spec key, or a prefix of one spec's key or name
+--- (case-insensitive). Returns the spec, or nil when no spec or more than one matches.
 function Hekili:SetSpecChoice( key )
     local kit = class.kit
     if not kit or type( key ) ~= "string" then return end
@@ -2357,16 +2371,11 @@ function Hekili:SetSpecChoice( key )
         end
     end
     if not s then return end
-    Hekili.Engine.settings.specChoice[ ns.CharKey() ] = s.key
+    local tree = ns.DominantTree( ns.TreePoints( kit.talents, talentRank ) )
+    local choice = charChoice( tree )
+    choice[ tree or choice.last or 0 ] = s.key
     self.PendingSpecializationChange = true
     return s
-end
-
---- The spec the talents favor when it differs from this character's stored choice (the class page's hint), or nil.
-function Hekili:GetSpecHint()
-    local kit = class.kit
-    if not kit then return end
-    return ns.SpecHint( kit, Hekili.Engine.settings.specChoice[ ns.CharKey() ], talentRank )
 end
 
 

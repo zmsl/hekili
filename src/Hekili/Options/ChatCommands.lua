@@ -246,7 +246,7 @@ function Hekili:HandleFixCommand( args )
         Hekili:RestoreDefault( packName )
         Hekili:EmbedPackOptions()
         Hekili:LoadScripts()
-        ACD:SelectGroup( "Hekili", "packs", packName )
+        Hekili:SelectPack( packName )
         if profile.notifications.enabled then
             Hekili:Notify( "Your pack has been reset to default", 6 )
         end
@@ -662,8 +662,8 @@ function Hekili:HandlePriorityCommand( args )
     return true
 end
 
--- (per-spec plan) `/hekili spec [name]`: chooses this character's specialization (a key or a prefix of a name), or
--- lists them, the current one marked, with the talent hint.
+-- (per-spec plan) `/hekili spec [name]`: activates a specialization for the current talent tree (a key or a prefix of
+-- a name), or lists them, the current one marked.
 function Hekili:HandleSpecCommand( args )
     local kit = Registry.Kit()
     if not kit then
@@ -686,8 +686,6 @@ function Hekili:HandleSpecCommand( args )
         out = format( "%s\n - |cFFFFD100%s|r%s%s", out, s.key, s.id == Status.specID and " |cFF00FF00(current)|r" or "",
             s.unsupported and " (no priorities on Forever)" or "" )
     end
-    local hint = self:GetSpecHint()
-    if hint then out = format( "%s\nYour talents favor |cFFFFD100%s|r.", out, hint.name ) end
     self:Print( out )
     return true
 end

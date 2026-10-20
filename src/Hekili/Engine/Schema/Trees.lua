@@ -1,9 +1,9 @@
 -- Engine/Schema/Trees.lua
 -- Specs per talent tree on Forever (per-spec plan, docs/superpowers/plans/2026-10-19-forever-specs.md). The client
 -- reports one pseudo-spec per class, so a class pack registers one kit and a spec per tree (Hekili:NewClass,
--- Spec.lua) with ids of our own, and the active spec is the character's stored choice, else the dominant talent tree
--- (stored once), else the first supported spec. Pure functions over a kit and the settings tables; Spec.lua, Registry
--- and Options call them.
+-- Spec.lua) with ids of our own, and the active spec follows the dominant talent tree: the spec the character chose
+-- for that tree, else its first spec; with no points, the first supported spec. Pure functions over a kit and the
+-- settings tables; Spec.lua, Registry and Options call them.
 
 local _, ns = ...
 
@@ -63,33 +63,27 @@ local function firstSupported(kit)
     return kit.trees[1]
 end
 
---- The active spec of `kit`: the stored choice (`stored`, a spec key) when the kit has it ("stored"); else the first
---- spec on the dominant tree ("dominant": the caller stores it); else the first supported spec ("default": no points
---- yet or a tie; not stored, so the first points spent decide). Returns the spec and the source.
-function ns.PickSpec(kit, stored, rankOf)
-    local s = stored and kit.specs[stored]
-    if s then
-        return s, "stored"
+--- The active spec of `kit` for a character's `choice`: { [tree] = spec key, last = tree } (a spec activated while
+--- that tree was dominant, and the last dominant tree seen), or a legacy scalar spec key (before its migration). On the
+--- dominant tree (else the last one seen: no points or a tie): the spec chosen for it ("stored"), else its first spec
+--- ("dominant"); else the first supported spec ("default": no points yet). Returns the spec, the source and the
+--- dominant tree (nil on no points or a tie).
+function ns.PickSpec(kit, choice, rankOf)
+    local dominant = ns.DominantTree(ns.TreePoints(kit.talents, rankOf))
+    local tree, key = dominant, choice
+    if type(choice) == "table" then
+        tree = dominant or choice.last
+        key = choice[tree or 0]
     end
-    local tree = ns.DominantTree(ns.TreePoints(kit.talents, rankOf))
+    local s = type(key) == "string" and kit.specs[key]
+    if s then
+        return s, "stored", dominant
+    end
     s = tree and firstOn(kit, tree)
     if s then
-        return s, "dominant"
+        return s, "dominant", dominant
     end
-    return firstSupported(kit), "default"
-end
-
---- The spec the talents favor when it is on another tree than the stored choice (the class page's hint), else nil.
-function ns.SpecHint(kit, stored, rankOf)
-    local s = stored and kit.specs[stored]
-    if not s then
-        return nil
-    end
-    local tree = ns.DominantTree(ns.TreePoints(kit.talents, rankOf))
-    if tree and tree ~= s.tree then
-        return firstOn(kit, tree)
-    end
-    return nil
+    return firstSupported(kit), "default", dominant
 end
 
 --- A spec's key in export strings, "<CLASS TOKEN>:<spec key>" ("WARRIOR:arms"); nil for a kit or a spec outside one.

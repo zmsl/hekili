@@ -376,8 +376,9 @@ do
 
         if specID and specID ~= state.spec.clientID then
             Hekili.PendingSpecializationChange = true
-        elseif class.kit and not Hekili.Engine.settings.specChoice[ ns.CharKey() ] then
-            -- no stored choice yet (no points, or a tie): the next pass picks the dominant tree and stores it
+        elseif class.kit then
+            -- the dominant tree may have moved (a respec or a dual-spec swap); the walk may not have run yet, so a pass
+            -- re-walks and SettleSpecChoice re-picks (talent events are rare: no pass per frame)
             Hekili.PendingSpecializationChange = true
         end
     end

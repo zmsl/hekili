@@ -97,7 +97,8 @@ local function strsplit(sep, s)
     end
     return unpack(out)
 end
-function string.split(s, sep) -- luacheck: ignore 122 142
+-- WoW's order: string.split is strsplit, ("\001"):split(value) splits value (AceGUI and AceConfigDialog do this).
+function string.split(sep, s) -- luacheck: ignore 122 142
     return strsplit(sep, s)
 end
 
