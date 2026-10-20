@@ -2631,8 +2631,15 @@ local function SpecPackHidden() return feedDepth == 1 end
 -- The active spec's row in the options tree: a gold rounded rectangle behind it (Textures/ActiveSpec.tga, made by
 -- tools/make_active_spec_texture.py), one texture per tree button made on first use, re-placed after every refresh.
 local function MarkActiveSpec( tree )
-    local key = tree:GetUserData( "appName" ) == "Hekili" and Status.specKey
+    local ours = tree:GetUserData( "appName" ) == "Hekili"
+    local key = ours and Status.specKey
     for _, button in ipairs( tree.buttons ) do
+        -- AceGUI anchors every row's label 2 px above centre; keep ours level with the icon (re-set each refresh)
+        local text = ours and button:IsShown() and button.text
+        if text and text.GetPoint then
+            local point, rel, relPoint, x = text:GetPoint( 1 )
+            if point then text:SetPoint( point, rel, relPoint, x, 0 ) end
+        end
         local mark = button.hekiliActive
         if key and button:IsShown() and button.uniquevalue == key then
             if not mark then
