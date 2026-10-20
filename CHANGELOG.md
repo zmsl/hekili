@@ -17,8 +17,8 @@
   talent tree with the most points; change it with the "Activate <Spec>" button on a specialization page or with
   `/hekili spec <name>` (`/hekili spec` lists them). Healing trees (Holy, Restoration) and Elemental show a "no
   priorities on Forever" notice and the addon recommends nothing while one is active.
-- Paladin: a "Protection (wowsims.com)" priority, translated from wowsims/forever's Protection APL (selectable; not
-  yet the default).
+- Paladin: a "Retribution (wowsims.com)" priority, translated from wowsims/forever's Twist of Light APL (selectable;
+  not yet the default).
 
 ### Changed
 - Rogue: the hand-built Assassination, Combat and Subtlety priorities are gone, with their settings (Bleeds on
@@ -69,7 +69,9 @@
 - Rage: an ability used at the moment of a white swing no longer leaves the rage estimate too high once that swing's
   hit shows up (the swing's rage had already paid for the ability).
 - Paladin: Judgement's cooldown is 1 s shorter a rank of Improved Judgement; Holy Conduit lowers the mana cost of
-  Consecration, Hammer of Wrath and Exorcism.
+  Consecration, Hammer of Wrath and Exorcism; Benediction lowers every other cost; Sanctified Judgement's mana refund
+  is counted; the Undead/Demon ranks of Exorcism are recommended only against an Undead or Demon target; Consecration's
+  mark on the target is the aura the game shows (1280353).
 
 ### Known issues
 - Hunter priorities are unchecked in game: Auto Shot timing, the percent-of-base mana costs and the rune Raptor

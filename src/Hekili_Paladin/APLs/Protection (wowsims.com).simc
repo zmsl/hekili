@@ -5,8 +5,8 @@
 # Omitted: default #1: autocastOtherCooldowns
 # Omitted: default #5: hidden
 
-actions.precombat=retribution_aura
-actions.precombat+=/seal_of_the_crusader
+actions.precombat=retribution_aura,prepull_at=10
+actions.precombat+=/seal_of_the_crusader,prepull_at=1.5
 actions=judgement,use_off_gcd=1
 actions+=/swift_judgement,use_off_gcd=1
 actions+=/seal_of_fury,focus=2,if=(buff.seal_of_fury.remains<mainhand_remains&!buff.seal_of_fury.up)

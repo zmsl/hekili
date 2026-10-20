@@ -2,8 +2,12 @@
 -- request and translation.
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/paladin/protection/presets.ts:23
 -- (DefaultTalents), :25-27 (DefaultOptions), :86-98 (OtherDefaults) at the pin; the APL and gear spec.ts's default.
--- Disagreements worked (P7): pending (the replay gate waits on a shared change: the APL casts Retribution Aura at
--- -10 s, before tests/Game/harness/replay.lua's 5 s prepull).
+-- Disagreements worked (P7): replay 0.750 (28; wowsims's own Protection is out of mana from 24 s, so few decisions);
+-- top two, the known deviation the Forever API forces (mana is secret in combat; the belief is the cost ladder's lower
+-- bound): holy_strike -> false 4 (the bound 2-15 under Holy Strike's 20 when wowsims casts at exactly its cost),
+-- seal_of_fury -> holy_strike 3 (the bound 150-180 against Seal of Fury's 200). Holy Shock is unconditional: the APL's
+-- Consecrated Ground (1310905) is never on the target (wowsims logs Consecration's 1280353), as in wowsims; the build
+-- takes no Holy Shock. Lost to autocastOtherCooldowns (not translated): nothing cast.
 return {
     class = "PALADIN",
     pack = "Protection (wowsims.com)",

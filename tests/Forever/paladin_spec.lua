@@ -55,6 +55,16 @@ local function rank(n)
     })
 end
 
+-- `talent` with the ranks in `ranks` ({ key = rank }), every other talent at 0.
+local function talents(ranks)
+    return setmetatable({}, {
+        __index = function(_, k)
+            local n = ranks[k] or 0
+            return { rank = n, enabled = n > 0 }
+        end,
+    })
+end
+
 -- `buff` with the keys in `up` up.
 local function buffs(up)
     return setmetatable({}, {
@@ -100,7 +110,7 @@ describe("Forever Paladin", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 4, 14, 15, 15 }, n)
+        assert.are.same({ [0] = 5, 14, 15, 15 }, n)
     end)
 
     it("declares mana under the five-second rule, and the fillers' mana floors off by default", function()
@@ -130,7 +140,7 @@ describe("Forever Paladin", function()
         end
         assert.is_nil(w.abilities.seal_of_command.ladder) -- mana is a seal's only requirement: its answers are rungs
         local e = ld.env(w)
-        e.talent = rank(1)
+        e.talent = talents({ twist_of_light = 1 })
         w.game.known[20920] = true
         assert.are.equal(210 * 0.8, ld.run(w.abilities.seal_of_command.spend, e)) -- Twist of Light: -20%
     end)
@@ -180,10 +190,54 @@ describe("Forever Paladin", function()
             w.game.known[top] = true
             local e = ld.env(w)
             local base = ld.run(w.abilities[key].spend, e)
-            e.talent = rank(2)
+            e.talent = talents({ holy_conduit = 2 })
             -- wowsims's log of the 2/2 build: Consecration rank 5 costs 339 of 565
             assert.are.equal(base * 0.6, ld.run(w.abilities[key].spend, e), key)
         end
+    end)
+
+    it("cuts every cost but Hammer of Wrath's 2% a rank of Benediction (DB2 20101: -10 at 5/5)", function()
+        for _, id in ipairs({ 20920, 10333, 20924, 24239 }) do
+            w.game.known[id] = true
+        end
+        local e = ld.env(w)
+        e.talent = talents({ benediction = 5, twist_of_light = 1, holy_conduit = 2 })
+        -- wowsims's log of the Twist of Light build: Seal of Command 151.2, Holy Strike 18, Consecration 305.1
+        assert.is_true(math.abs(ld.run(w.abilities.seal_of_command.spend, e) - 151.2) < 1e-9)
+        assert.is_true(math.abs(ld.run(w.abilities.holy_strike.spend, e) - 18) < 1e-9)
+        assert.is_true(math.abs(ld.run(w.abilities.consecration.spend, e) - 305.1) < 1e-9)
+        assert.is_true(math.abs(ld.run(w.abilities.hammer_of_wrath.spend, e) - 425 * 0.6) < 1e-9)
+        assert.is_true(math.abs(ld.run(w.abilities.judgement.spend, e) - 0.06 * 0.9) < 1e-9)
+    end)
+
+    it(
+        "refunds 60% of the seal's base cost x (2 - its cost multiplier) at Judgement with Sanctified Judgement 3/3",
+        function()
+            w.game.known[20920] = true
+            for _, field in ipairs({ "now", "handler" }) do
+                local e = ld.env(w)
+                e.talent = talents({ benediction = 5, twist_of_light = 1, sanctified_judgement = 3 })
+                e.buff = buffs({ seal_of_command = true })
+                ld.run(w.abilities.judgement[field], e)
+                -- wowsims's log: "Gained 161.280 mana from {SpellID: 1311074}" = 210 x (2 - 0.72) x 0.6
+                assert.are.equal(1, #e.gained, field)
+                assert.is_true(math.abs(e.gained[1][1] - 161.28) < 1e-9, field)
+                assert.are.equal("mana", e.gained[1][2], field)
+                e = ld.env(w)
+                e.talent = talents({ sanctified_judgement = 2 }) -- a chance under 100%: no refund believed
+                e.buff = buffs({ seal_of_command = true })
+                ld.run(w.abilities.judgement[field], e)
+                assert.are.same({}, e.gained, field)
+            end
+        end
+    )
+
+    it("casts the 879 ranks of Exorcism only at an Undead or Demon target; the 415068 ranks at any", function()
+        local x = w.abilities.exorcism
+        w.game.known[10314] = true
+        assert.are.same({ "undead", "demon" }, ld.run(x.usable_on, ld.env(w)))
+        w.game.known[415073] = true
+        assert.is_nil(ld.run(x.usable_on, ld.env(w)))
     end)
 
     it("gates Hammer of Wrath on the target's health, its cast shortened by Instrument of Law", function()
@@ -219,7 +273,7 @@ describe("Forever Paladin", function()
         ld.run(w.abilities.consecration.now, e)
         ld.run(w.abilities.holy_shock.now, e)
         assert.are.same({ { "consecrated_ground" }, { "divine_favor" } }, { e.applied, e.removed })
-        assert.are.equal(1310905, w.auras.consecrated_ground.id)
+        assert.are.equal(1280353, w.auras.consecrated_ground.id) -- the area aura the client shows, not 1310905
     end)
 end)
 
@@ -265,7 +319,8 @@ describe("Forever Paladin priorities", function()
             for list, entries in pairs(p.lists) do
                 for i, e in ipairs(entries) do
                     local where = name .. " " .. list .. " " .. i
-                    assert.is_true(cls.abilities[e.action] ~= nil or e.action == "run_action_list", where)
+                    local isList = e.action == "run_action_list" or e.action == "call_action_list"
+                    assert.is_true(cls.abilities[e.action] ~= nil or isList, where)
                     for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
                             assert.is_not_nil(kinds[kind][key], where .. ": no " .. kind .. " " .. key)

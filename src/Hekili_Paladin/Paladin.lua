@@ -10,7 +10,7 @@
 -- Talents: the DB2's 44 Classic nodes and the Forever-only ones this file reads; a modifier is rank 1's value x the
 -- rank, floored at 0.
 -- Unmodelled: the judgement debuffs on the target (no priority reads them), Seal of Fury's absorb, the seals' attack
--- speed and per-hit effects, Exorcism's Undead/Demon restriction (the 879 ranks; the 415068 ranks hit any target).
+-- speed and per-hit effects.
 -- Credits: Hekili (registration API and pack format; `mainhand_remains` follows Hekili's Classic Warrior profile,
 -- origin/classic:Classic/Warrior.lua, as Hekili_Warrior/Warrior.lua has it). wowsims/forever (MIT,
 -- ui/specs/paladin/*/apls/*.apl.json and sim/paladin/) is the reference for the priorities and the seal, Echo,
@@ -63,6 +63,8 @@ local CONSECRATION = { 26573, 20116, 20922, 20923, 20924 }
 local CONSECRATION_COST = { 135, 235, 320, 435, 565 }
 -- The Undead/Demon ranks, then the ranks that hit any target (Retribution skill line); the highest known is cast.
 local EXORCISM = { 879, 5614, 5615, 10312, 10313, 10314, 415068, 415069, 415070, 415071, 415072, 415073 }
+local EXORCISM_ANY = 7 -- 415068's place in EXORCISM: the first rank that hits any target
+local UNDEAD_DEMON = { "undead", "demon" }
 local EXORCISM_COST = { 85, 135, 180, 235, 285, 345, 85, 135, 180, 235, 285, 345 }
 local HOLY_SHOCK = { 1311606, 20473, 20929, 20930 } -- rank 1 Forever-only
 local HOLY_SHOCK_COST = { 160, 225, 275, 325 }
@@ -139,18 +141,21 @@ local function sealCast(key)
     end
 end
 
--- Holy Conduit (1237268 aura 108 misc 14, the cost, base -40 on Consecration's, Hammer of Wrath's and Exorcism's class
--- mask bits; 2 ranks in wowsims's tree): 20% less a rank (wowsims's log of the 2/2 build: Consecration 339 of 565).
+-- Benediction (20101 aura 108 misc 14, the cost, base -10 on the rank-1 spell only; its class mask covers every cost
+-- here but Hammer of Wrath's): 2% less a rank (wowsims's log of the 5/5 build: Seal of Command 151.2 = 210 x 0.8 x 0.9,
+-- Holy Strike 18). Written out in each cost: a cost function runs in the state's environment, a helper would not.
+-- Holy Conduit (1237268 aura 108 misc 14, base -40 on Consecration's, Hammer of Wrath's and Exorcism's class mask
+-- bits; 2 ranks in wowsims's tree): 20% less a rank (wowsims's log of the 2/2 build: Consecration 339 of 565).
 local function conduitCost(costs, ids)
     return function()
-        return byRank(costs, ids) * (1 - 0.2 * talent.holy_conduit.rank)
+        return byRank(costs, ids) * (1 - 0.2 * talent.holy_conduit.rank) * (1 - 0.02 * talent.benediction.rank)
     end
 end
 
 -- Twist of Light (1310735 aura 108 base -20): seals cost 20% less.
 local function sealCost(costs, ids)
     return function()
-        return byRank(costs, ids) * (1 - 0.2 * talent.twist_of_light.rank)
+        return byRank(costs, ids) * (1 - 0.2 * talent.twist_of_light.rank) * (1 - 0.02 * talent.benediction.rank)
     end
 end
 
@@ -262,6 +267,7 @@ spec:RegisterTalents({
     swift_judgement = { 0, 1310994, 1 },
     instrument_of_law = { 0, 1311085, 1 },
     holy_conduit = { 0, 1237268, 2 },
+    sanctified_judgement = { 0, 1311074, 3 },
 })
 
 spec:RegisterAuras({
@@ -287,12 +293,41 @@ spec:RegisterAuras({
     righteous_fury = { id = 25780, copy = { 407627 }, duration = 1800, max_stack = 1 },
     retribution_aura = { id = 7294, copy = rest(RETRIBUTION_AURA), duration = 3600, max_stack = 1 },
     divine_favor = { id = 20216, duration = 3600, max_stack = 1 },
-    -- Consecration's mark on the target (1310905): its 8 s and the area's 0.6 s tail (wowsims consecration.go),
-    -- modelled from our cast (target auras are unreadable in combat).
-    consecrated_ground = { id = 1310905, duration = 8.6, max_stack = 1 },
+    -- Consecration's area aura on the target (1280353, DB2: 0.6 s on area enemies, refreshed by each 1 s tick; the one
+    -- the client and wowsims's log show; 1310905 "Consecrated Ground" targets the caster): its 8 s and the 0.6 s tail
+    -- (wowsims consecration.go), modelled from our cast (target auras are unreadable in combat).
+    consecrated_ground = { id = 1280353, duration = 8.6, max_stack = 1 },
 })
 
 -- Any seal up: Judgement's requirement.
+-- Sanctified Judgement (1311074, Forever-only, 3 ranks: a 33/66/100% chance to return 20/40/60%; wowsims
+-- talents_retribution.go measured it in game as 60% of the seal's base cost x (2 - its cost multiplier) at 3/3, its
+-- log "Gained 161.280 mana" = 210 x 1.28 x 0.6): the belief counts the refund only at 3/3, a sure one.
+local SEAL_BASE = {
+    { "seal_of_command", SEAL_OF_COMMAND_COST, SEAL_OF_COMMAND },
+    { "seal_of_righteousness", SEAL_OF_RIGHTEOUSNESS_COST, SEAL_OF_RIGHTEOUSNESS },
+    { "seal_of_the_crusader", SEAL_OF_THE_CRUSADER_COST, SEAL_OF_THE_CRUSADER },
+    { "seal_of_fury", SEAL_OF_FURY_COST, SEAL_OF_FURY },
+}
+-- Judgement's cast effect (the `now` and the `handler`, two closures so each gets its own environment): Swift
+-- Judgement's charge goes; the refund.
+local function judgementCast()
+    return function()
+        removeBuff("swift_judgement")
+        if talent.sanctified_judgement.rank < 3 then
+            return
+        end
+        for i = 1, #SEAL_BASE do
+            local s = SEAL_BASE[i]
+            if buff[s[1]].up then
+                local mult = (1 - 0.2 * talent.twist_of_light.rank) * (1 - 0.02 * talent.benediction.rank)
+                gain(byRank(s[2], s[3]) * (2 - mult) * 0.6, "mana")
+                return
+            end
+        end
+    end
+end
+
 spec:RegisterStateExpr("seal_up", function()
     return buff.seal_of_command.up
         or buff.seal_of_righteousness.up
@@ -335,7 +370,7 @@ spec:RegisterAbilities({
         gcd = "off",
 
         spend = function()
-            return buff.swift_judgement.up and 0 or 0.06
+            return buff.swift_judgement.up and 0 or 0.06 * (1 - 0.02 * talent.benediction.rank)
         end,
         spendType = "mana",
 
@@ -347,13 +382,8 @@ spec:RegisterAbilities({
             return seal_up, "requires a seal"
         end,
 
-        now = function()
-            removeBuff("swift_judgement")
-        end,
-
-        handler = function()
-            removeBuff("swift_judgement")
-        end,
+        now = judgementCast(),
+        handler = judgementCast(),
     },
 
     -- Forever-only (talent): finishes Judgement's cooldown, the next Judgement free.
@@ -388,7 +418,9 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "totem",
 
-        spend = conduitCost(HAMMER_OF_WRATH_COST, HAMMER_OF_WRATH),
+        spend = function() -- Holy Conduit only (Benediction's mask leaves it out)
+            return byRank(HAMMER_OF_WRATH_COST, HAMMER_OF_WRATH) * (1 - 0.2 * talent.holy_conduit.rank)
+        end,
         spendType = "mana",
 
         startsCombat = true,
@@ -408,7 +440,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return byRank(HOLY_STRIKE_COST, HOLY_STRIKE)
+            return byRank(HOLY_STRIKE_COST, HOLY_STRIKE) * (1 - 0.02 * talent.benediction.rank)
         end,
         spendType = "mana",
 
@@ -450,6 +482,14 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(EXORCISM),
+
+        -- The 879 ranks (Holy) hit only an Undead or Demon target (the DB2 tooltip; wowsims casts none at its
+        -- Mechanical target); the 415068 ranks any target.
+        usable_on = function()
+            if knownRank(EXORCISM) < EXORCISM_ANY then
+                return UNDEAD_DEMON
+            end
+        end,
     },
 
     holy_shock = {
@@ -460,7 +500,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return byRank(HOLY_SHOCK_COST, HOLY_SHOCK)
+            return byRank(HOLY_SHOCK_COST, HOLY_SHOCK) * (1 - 0.02 * talent.benediction.rank)
         end,
         spendType = "mana",
 
@@ -492,7 +532,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return byRank(HOLY_SHIELD_COST, HOLY_SHIELD)
+            return byRank(HOLY_SHIELD_COST, HOLY_SHIELD) * (1 - 0.02 * talent.benediction.rank)
         end,
         spendType = "mana",
 
@@ -508,7 +548,12 @@ spec:RegisterAbilities({
         end,
     },
 
-    righteous_fury = selfBuff("righteous_fury", RIGHTEOUS_FURY, { spend = 0.3, spendType = "mana" }),
+    righteous_fury = selfBuff("righteous_fury", RIGHTEOUS_FURY, {
+        spend = function()
+            return 0.3 * (1 - 0.02 * talent.benediction.rank)
+        end,
+        spendType = "mana",
+    }),
     retribution_aura = selfBuff("retribution_aura", RETRIBUTION_AURA),
 })
 
@@ -540,17 +585,22 @@ spec:RegisterSetting("exorcism_mana", 0, {
 -- and run it, never these blocks (tests/Forever/paladin_spec.lua checks they match). Pick one with
 -- /hekili priority <name>. Both are provisional (their descriptions say why).
 spec:RegisterPack(
+    "Retribution (wowsims.com)",
+    20261020849,
+    [[Hekili:TA12UTjqq0VL(sQTQlGVK0eRqKsvuvtvAuujpdSWoy2yGfT7sDTufF7DwFHB(sCQISKfWmZ5CMzNza3HUp76qjkW9XrwJUyO1iRlNCLRJAzo46KtcNtMHxKrsX))fOeSGcfJNv63BbFHKLknc5P91UUmHtOA4ckyjQ7ZCd2lYYCi015PBF427U)XPIAiDDIzukSooqgEm(Mw6RIHs)npZmIlGFdIsFkerksuL(3(0dL(4Jl9BJsbZuRaPzojHqzzMnuGjjprAQwWKkpEKxcBwSYaFMXlsEw)biNcsMmbZjkEnxRbMS0NqP8SpIxmhwknk9VJOit3J269Z7FgbjwPYLtnnNXuXfb60XSJR9rmXuGoE8vJTOwtSgBzGvybpILGhdKqTyLg5cadoGOSBKdEKcbzaAkVijXdTn0Q8h7eXNSnLajrNL4dsjz0br8WcP9WMHo(4rINaEHIcjHcIwmACEvG2VuqNbPqMAqHeWOI8MfsThw5aIxmjnfeAexiiQ4kLWIS7T2lJoUyesKkBR)2lLWYIr17HNPa9Zv3ka9LY(xBzmQFlU4jl9Ky1AoOXxXsHBSAO3Juy0Y5dbfrrgqymVHhgf5NT2qNqrd93hYcDJfWlKzGuEe8B53US01ClUcj6dJv3InYs1a9iSDiAecXsOEy4v9g(dxeYKPVEoGA)dBoQ6wdMNXxKD2re(MZQRhnPUDBlZvsytvA0QQu3J5BWoUZqYig5HQBWo(6kHrZmUv6)Mr01bhnL6fvTxOPRxs9EVMOJ3)4QDRqgjibOUFfTlykqWiUoNaFBhZ7aRZkvJkWvH)C2wEEhPRcYouTzZ6(yQXKT2yfuvZ(y8imhuEhFi)eNYRPTdovjYqTmg3rgvbvVyOP22UGqh6KdNbV99c1m3XyB5E(PY5BDxXU83YL2Q4Idu06U2y9WG36VwOvFlcYx(FaPQBeb4YdaWbsG6s17WQP1ZavVfCFtb1VbeTzvlVUVCEFddnJD8j2A0TtUf)yh7oO0891RYhmJifQyUW157WCwcd)gLVT5tqwz29F]]
+)
+spec:RegisterPack(
     "Protection (wowsims.com)",
-    20261019026,
-    [[Hekili:LsvtVTnmm0Fl7YwdwGDstx3AWYHoumSw0vua3ZYMwIownkwg6JLLl(3(OCDsDDtdkWUyjt947rZNOztzpWseGdz3D6KtpF6KPxqlSe32AKLud8vWsAtfSMEEVr7qUtQRAYozJEJvU2gX1RhfqUvPbrGTCVu5UUILFqIT1iNy6YBV8QRVBE9EgzjLsHaFkn0YpIAZBYCLytwxS4cTb)dAAYeyb4vUMSlV)2MmkCt2liXlJdYBJRbfiKvXplFmuRSXDeerVe9OvxnAmjLbQSk6drq71bPL2Mmqi0vFI2Sc3AJAYUcCW8dusN87RFGiP05QTZJJxkDL(8Wxr8aOJioPkxmB2fZMiMC2KztIO2QrxivuRhARsBuTbPKZb3cd6mYCFiCk4nqZnVcZNxeBrqLQlsPgwk34TGGQQDix8OxSexJvUXElsWksxYflMUhqGGnYcx67byNsfEZ2XfAU3U40XYIfNK7lkI6FAKbxdYk73dplHkrAxGp(HxJ1xpQVkCAb5gO1r7fVuR2MAl18vhiQevIDL0RpMAJRW(HX)QnCPDDZnSeYzSHBNV8sSsAD22jNNUWqBVRDscRGCfky)GL0RrfoSZbzj7BLmhX67mPbUqi1zdsLBKo0ibwY)FhVNW9oHL02ddvnP)zd0Fxg9DOaUV8g4E2XcOo)4Oco4lL)RhnHwpna7BVbSDEml0lt2pXCiJCxkdh4oK)nST1FSRvksmW7k1gwYVWvsLK(fXp7(dq7XS)9]]
+    20261020180,
+    [[Hekili:Lsv3UTnpm0NLDZwdwGTtsB)6cwUOdfFyPOROaUxlBAj6y1OyzOFwxUXp7JYnnX5NwuGDJJc55CinpIMnI9ilvaoKD)4KXxokzCYORsyPU1nilTb4lHf0HAyf98bJ2HCNux3MF2Z6NTYv2iUE1GaY1knicQv4Lk38AwXjf22GCsPRV76BMF)0MTkYsRKcb(cn0YFNQnTn3vHT5BIfxQn4VrtBUalbVY1MF9d31MtHBZ3teVmouEBCdOaHSoEx5JHgLnEJar0FIEYQRhmKkLbQTk6frqN1HslTT5GqOR)cDyjU2g1MFd4GPNOLo7xZFKePY5AStJJxiDv(IWBr8bqhqAsDUyYKVnjrKCEYKKiASA0Lsfn6HUU0g1yqICb4MzqNrw4dHZaVbgsPA8kvgLBus7ThX4RZITiOY0Lz04lJB8wqGM94fDXwIZEYlwGRWA3qVfjwLzl4IzJ2ciO3ZYsx2hb4Mcx6nRhwQ5E7SXdLLZoRWxwg1pBKbxbYA73dpRGAr2MaF(thJ13mOFv40pi3aD2DV4vA16mBLMV8erLOs8AlDCAAgVe7hg)J2WL2vT3YsjBZgU6U)nCL06SDRvVCBIoEF3AgwdfkuW(blT3GkKCJ9Ys3okzos1piPdCHa1jhqLBKo0ibw6)(eVxH7LHL2nddDnv)ZpO(VYOVdfWDXBGBNJfqD57Jk4G7x()7Dj05Pbyx9gWE1JzHzz62fOtzK7wEOCj7K4WTZt5N7Xn6IJNR9xt76fQBaVRsByP)exkvs6dm))MVF0LM93p]]
 )
 spec:RegisterPack(
     "Retribution",
-    20261019682,
-    [[Hekili:TE1xVTTnq8pl7LSAmp1yV1S2u4cK11H2GGGGQcS3Ken1jlUijAqsfx)I(SV7OKIPKLSD86lg0K3F(D3974rfml4Bb(XmdeC)8lNF1SlN9URE78aFZ21qG)Ag)r2kCrblh)9RGrjwwAeYc6STzswmP)YsrM5lfblh0u61apW)HBU7M)6l3FTY1gPI4yOwpqJc93sf8eOQIC8uv0dSmwSax8Q1k5tcnUjl76QOczvKO4xxHyRkINc8hRI2cM3xfzsXD0altpTk6t8ujORIyfXvr3wgVcYHcZpJ7ajja3ufro5zvqbv4YCzmKLbOkjkzoktjclotB0tU2Xm1kZLYSy5Mc0BFMLNtrGmPk6FumtkHXgZdFh4LgCXgrbko6juFJGeFgPQmBBvKpg5pctBu5BBeAtT1UtSk10Irt9(VY3(p64pkZZTHO9ND7)vsnqwQlanLoaghX0MuarLW0iUWORtunrpfmt6JVpkl0ahJjBvXQ3N(UuXf6CNGuJb3QQOvS1U6phXkESaxIOKHz1mPuPBCNgmgulcEYeeZlX8qmKWkZmtEpLUO0O16n5OujvSnSmSemTb(iKRIYQtlSed51nYnArU(1j18kQM3HzDZd3r(ubjGck4avnZ2oXdz3kzIid58mojQ2BTc4Y8LmZchgCiRuXMksw8tllts86FIx56QB3Za)YIxt1WqzsiVUMzTGDVJPGQtXCi1wOkrNBxhsjJPuR7IumTfQPSgPuDEZB3MEqbBjr2BTc6Y)TLIpTudOVtcxXJxmZvKulxNW1gIPpnrYl19eX6dlL2D7(jGgnDaNLGtIKrHClaVOordit1rDmp3Cqp76wagnlEM(UJr2hb9p(qrpvhpIR7xMpiN4LBlUtRDtczozQCMOifHyOcOL6pmZ7nxqnWER5MpSOTV1Zv)qBdUJXHMljohd3QBxJ6qDxCmEQJS9c0re5yS6UspEv40Od989aTlDLiw8KOactypjvDJyYPTdIC7TBYWlU8IyWIPNZbqC4kLSSBFYqaQ9IJZWaTfWQBd8XRGPH39EFaDlLMEgXo9W)DV9LjnC2G)mW3jwPdBUyoW)56FGbnCpLAfYTStY9BJixVAFGVT4t(dv63hrPbRXOpvcCiKGf4FyQaz63mgE2XhiXU6eZjUKexGC(0dY7)XbbPTU54RJzT3oI1Ajmbub1V5vadri25QrNNTZQ9MkwZ6cRFwRd(hGcDs8UFO8PEf9(CJ9I7tAC1jmQCFgDZzDHDFs45HNx44ZJ2T5IWXiQ7fwoTON2mZdrCp(1aNUpE3O54tDW5EtKh5YW2e3CYTZU8)TF7mWEGUAx)zO3z38i3H6WFU5T37Q3)U1bE59HghCiIGtvySU6JxP3zeBuYknP0nXFgEuKjWVpP5dDNypo4)c]]
+    20261020682,
+    [[Hekili:TE1xVTTnq8pl7LSAmpvBV1SUu4cK11H2GGGGQcS3Ken1jlUijAqsfx)I(SV7OKIPKLSD92lg0K3F(D3974rfmp4Rb(Xmde8WIzlUE(SfZU(Tlc8n72ab(By8NyRXffSC83VagLyvPrilOZ2LjzXK(RkfzMpxeSAqtP3a8a)hV9(B)Zp)WnkxBKkIJHA9ank0FjvWZGQkYXtvrpYYyXcCXR2OKpl04MSSBQIkKvrIIFEnITQiEkWFQkAhyExvKjf3rdSm90QOpYtLGUkIvexfDxz8Aihkm)iUdKKaCtve5KxubfuHlZLXqwgGQKOK5OmLiS4mTrp5ghZuRmxkZILBlqV9jwEofbYKQO)wXmPegBmp8nGxAWfBffO4ONq9ncs85KQYSDvr(yK)emTrLVUvOn1w7EX6utlgn17)kF7)OJ)Gmp3gI2F2V)xi1azPUa0u6ayCetBtbevctJ4cJUor1e9uWmPp((GSqdCmMSvfREF8BsfxOZDcsngCRRIwZ24Q)ceR4XcCjIsgMvZKsLUXDAWyqTi4jtqmVcZdXqcRmZm5Du6IsJwR3KJsLuX2WYWsW0g4JqUkkRoTWsmKx3k3Qf56xNuZROAEhM1TpEp5tfKakOGdu1mB3epKDRKjImKZZ4KOAVnkGlZxXmlDyWHSsfBQiz5pSQmjXR)jELBQU7ad8tlFnvddLjH86AM1c29oLcQofZHuBPQeDUDDiLmMsTUltX0wOMYAKs15nV9B6bfSvezV1kOl)Nwk(0snG(ojCnpE5CxrsTCDcxBjM(0ejVu3teRpSuA3T7NaA00bCwcojsgfYTa8Q6enGmvh1X8CZb9SRBby0S4f67og5qe0)4Jf9uD8eUUFz(OCIVFBXDATBsilitLZefPiedvaTu)(5EV5kQb2Bd38(LT9TEU6hABWDmo0CjXLy4wD7AuhQ7YtXtDKTxGoIiNIv3v6XRcNhDONVhODPReXINffqyc7zPQBetoTDqKBVDtgE5SRIblMEjhaXHRvYYU9jdbO2loUad0waRUlWhVcMgE379b0TuA6ze71d)3d2xM0Wzd(JaFNyLoS5I5a)xQ)bg0W9uQvi3Yoj3VmIC9Q9b(2Ip5puPFDeLgSgJ(ujWHqcwG)XPcKPFZy4zpFGe76ZmN4ssCbYLtpiV)BhfK26MJVoL1E7iwRLWeqfu)MxbmeHyVRgDE2ER2BQynRlS(zTo4Fak0zX7(FLp1RO3NBCqCFwJRoJrLhYOBoRlS7tcVm88Do(8KDBUiCmI6bHLtl65nZ8ye3tFnW57JFF0C85o48GjYJCzyBIBb525Z(p73odShOR21Fg6D2npYDOo8xAE79U6dVBDGxEFSXbhJi4ufgRR(0v69gXgLSstkDt8NGNezc87tA(q3j2Jd(3d]]
 )
 spec:RegisterPack(
     "Protection",
-    20261019065,
-    [[Hekili:nw12sTnmq0VL(uHP0ajTqBPtEGEHcmmmm19zzllVkrnkwE0fsZl(BV76e7iCmxEHrODpND15SRdBm7pSKcUhy3n5KjNn(KXF5KZoLL4xxbSKkUybFgEOKVe)79wJheELPKcTwB4fe88Gs7VUKLpitUkqGqV42l(X13DEvefZvffWgyGdZ5sJfEaS1z7QdEMR5fk8Wbi0huo8sU(86SstDMQ89ZWgRotmhelQZwd(VwN5NJ34aU2DuD2vg966mSuGU4ToktUDgGh4Lf1z3ekMblHspfcKsSO1zuv74at0IhxAkaTgqisRzjMtaBtb35BzQbqU2iw42WqWDi2L)wnBUhmb8YldwStYbPHiuywMZ9hf1cBjkzLs6JUgtjPPpmYwowavygHQTiIFIBQTWy0fMv4joMOxrA6eKOVBkDGWYjLnsBmK2r46Itp0FznHYIDP5TQfa(V)8FgRq5qr4aU0tuVYSYPw6owUX)iTm2bV4(BrywqcwOuauP0RpCeocznsLgNR4nz6gvzHn6YuBRULkXN8rk503KhKYrp((rOgCZEGF30JTa2T5bkqkpy5re0lYtsbz(PgzV6hFBm0P)TZVcoaZqMotumDCxceJKZM(AsmU0sJi4Mo5LBbeOiYFJVFo6GPoYNjAkGgEe7m70znEDp22IIgRA7I9d3mveFn0oECdlbhgO91EFqqRW1MMp7asEq7XJ318ziOKNJ7ySVXsI0gk42jewsN6X8iRVsq9eEc6h6bvyv4OSIZsguKJ4kkalPrwOgbP8J9OSfrSPq5D6tK3otkUDEoZIy7SNNnY8ECB(PNfqJDsP95NiTw7LrYys3cZqEylKhVZUVwV3o9qEBhz92FhGU93WhYXh2qFP5a)M3np4NBSSKRGfkTc)s42F66WMWS)d]]
+    20261020065,
+    [[Hekili:nwv3sTnpq0NLEvHP0qiTq7qNCb9hkWWWWu)DTSLLx5OVOyLr)qAUXp7DxNyhHJdWnmcT75SRoNDDyNX(pwsb3dShMmEYfNnEY4XxColXVEjWswYfZ5L4Hk(c8VpAnEq4vMkk0ATHxqWZdkT)2kw(Gm5wcce6v3F1pV9HlxgrXmvrbSbg4WCU2yHNaBD2U6GN5AEHcpCec9jLdVKRVSoRYuNPQ(yj2y1zIzGyED2AW)T6m)m8ghW1UtQZUXOxxNHLc0fV3rzYTLaEGxvuNDxOOewavEkeiLyrRZOQ2XbMOfpUWuaAnGqKwZcmNa2McUZ3YudGCTrm3THHG7ySl)JQCMhmb8YRdwStYbPHiuywKZ9Ne1cBjkzLs6JUgtjPPpmYwoMdlXmcl3Ii(jUP2cJrxywHN4yIEfPPtqI(HPYbclNu2iTXqAhHRlo9q)T1eQk2LM3QMd4)(R)AScLdfHJ4spr9kZkNAH7u5g)J0Yyh8QhVhHzbjyHkbqLsV(4r4iK1ivACUI3KPB0slSrxMAB1Tuj(KprjN(U8Guo653pc1G72d8hMEQfWUnpqbs5blpIGEroifK5NAK9QF8TXqN()D(vWbygY0srX0Z6sGyKC203sIXLwAeb30jVElGafr(B89Zqhm1r(mrtb0WJyNzNw2419yBlkASQTl2pCZur81q74XDSeCyG2x79bbTcxBA(Sdi5bThp(qZNHGkEoUJX(oljsBOGBNqyjDQhZJS(gb1t4jOFQhuHvHJYkolzqroIROaSKgzHAeKYp3JYweXMcL35hiVDMuC78sMfX2fVmBK59828lViGg7Ks7RhiTw7LrYys3cZqEylKNVZUVwV3o9qEBhz92FhGU93WhYXh2qFT5a)M3np4NzSSKBG5kTc)s42F664MWS)n]]
 )
