@@ -241,6 +241,29 @@ describe("resources", function()
             assert.are.same({ 8, 9.99, 9.99 }, { r.lo, r.est, r.hi }) -- not hi 10 + 8: the answer already saw it
         end)
 
+        it("moves a short answer's cap on a refund by what the slot gained since that answer", function()
+            local R = I.res
+            R.est0[1], R.lo0[1], R.hi0[1] = 12, 10, 20
+            I.ResourceShift(1, -10, 5, Obs.CastSuccess) -- 2 [0, 10]
+            obs(Obs.Usable, 5.1, I.ab.bySpell[fs.SPENDER_A], 0, 1) -- short of 10, at 2
+            I.Fold(5.1, false)
+            I.ResourceShift(1, 3, 5.2, Obs.PlayerHit) -- 3 gained since (a hit taken): 5 [3, 13]
+            I.Refund(1, 8, 5.3)
+            local r = VS.Power(fs.RAGE, 5.3)
+            assert.are.same({ 11, 12.99, 12.99 }, { r.lo, r.est, r.hi }) -- capped at 9.99 + 3, not 9.99
+        end)
+
+        it("keeps a refund out of an estimate a usable answer since the cast already raised", function()
+            local R = I.res
+            R.est0[1], R.lo0[1], R.hi0[1] = 12, 10, 20
+            I.ResourceShift(1, -10, 5, Obs.CastSuccess) -- 2 [0, 10]
+            obs(Obs.Usable, 5.1, I.ab.bySpell[fs.SPENDER_A], 1, 0) -- usable at 10: the refund already in it
+            I.Fold(5.1, false)
+            I.Refund(1, 8, 5.3)
+            local r = VS.Power(fs.RAGE, 5.3)
+            assert.are.same({ 10, 10 }, { r.lo, r.est }) -- not 18: the answer's bound already holds the refund
+        end)
+
         it("never believes more than the maximum, however many swings land", function()
             for k = 1, 20 do
                 obs(Obs.Swing, 5 + 2.6 * k, 1, 2.6, 1)
@@ -1371,6 +1394,21 @@ describe("resources", function()
             assert.are.equal(18, swing(31)) -- past the believed expiry
         end)
 
+        it("pays by the aura at the swing, not at its wound's fold (rage is gained at the swing)", function()
+            -- the druid shift fight: a Cat swing whose wound pairs after the shift into Bear paid nothing in game
+            gated("form_a")
+            I.AuraModel(1, GATE, 16, 30, 1, 16, Obs.CastSuccess, false) -- up from 16
+            I.Settle(16.2) -- the belief's clock past the shift when the swing's wound pairs
+            obs(Obs.Swing, 15.5, 1, 2.5, 4)
+            obs(Obs.Swing, 15.5, 1, 0, 1) -- swung at 15.5, before it
+            I.Fold(16.2, false)
+            assert.are.equal(0, VS.Power(fs.RAGE, 16.2).est)
+            obs(Obs.Swing, 17, 1, 2.5, 4)
+            obs(Obs.Swing, 17, 1, 0, 1) -- swung at 17, in it
+            I.Fold(17, false)
+            assert.are.equal(9, VS.Power(fs.RAGE, 17).est)
+        end)
+
         it("pays nothing when the gate names an untracked aura, and as before without a gate", function()
             gated("form_b_test")
             I.AuraModel(1, GATE, 12, 30, 1, 12, Obs.CastSuccess, false)
@@ -1781,15 +1819,37 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         assert.are.same({ { "SWING_DAMAGE", 45, 10 } }, rows)
     end)
 
-    it("judges no answer heard under ORACLE_MIN after the swing (the client does not show its rage yet)", function()
+    it(
+        "judges a credit by its spender's answer since the swing when the landing poll has none (the look-back)",
+        function()
+            setup(8)
+            answer(9.95, SPENDER_A, false)
+            at(10, "PLAYER_SWING", 2.2, 0)
+            answer(10.05, SPENDER_A, true) -- under ORACLE_MIN after the swing: not yet the swing's rage
+            ctl.usable[SPENDER_A] = NOT_KNOWN -- the landing poll: not usable for another reason, no rung
+            at(10.47, "UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+            assert.are.equal(0, L.oracle.judged)
+            R.est0[1], R.lo0[1], R.hi0[1] = 8, 8, 8
+            answer(19.95, SPENDER_A, false)
+            at(20, "PLAYER_SWING", 2.2, 0)
+            answer(20.2, SPENDER_A, true) -- the swing's rage shows
+            ctl.usable[SPENDER_A] = NOT_KNOWN
+            at(20.47, "UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+            assert.are.same({ 1, 1 }, { L.oracle.judged, L.oracle.confirmed })
+        end
+    )
+
+    it("judges nothing when one of our casts spent from the slot between the credit and its answer", function()
         setup(8)
         answer(9.95, SPENDER_A, false)
         at(10, "PLAYER_SWING", 2.2, 0)
-        ctl.usable[SPENDER_A] = NOT_KNOWN -- the landing poll: not usable for another reason (no rung, no verdict)
-        answer(10.05, SPENDER_A, true)
-        ctl.usable[SPENDER_A] = NOT_KNOWN
-        at(10.47, "UNIT_COMBAT", "target", "WOUND", "", 45, 1)
-        assert.are.equal(0, L.oracle.confirmed)
+        ctl.Tick(10.47)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 45, 1) -- credited: 8 + 9
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", SPENDER_B) -- 15 paid in the same frame
+        ctl.Tick(10.47) -- the landing poll: short of 10 (after the spend: not the credit's evidence)
+        fs.fold(ns, 10.47)
+        ctl.Tick(10.47)
+        assert.are.same({ 0, 0 }, { L.oracle.judged, L.oracle.retracted })
     end)
 
     it("vetoes a wound for a swing whose answer since it showed says it gave no rage (another source's)", function()
@@ -1800,6 +1860,18 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         assert.are.same({ 1, 0 }, { L.oracle.vetoed, L.credited[1] })
         assert.are.same({}, rows)
         assert.is_true(power(10.5)[1] < 10)
+    end)
+
+    it("vetoes nothing when one of our casts spent from the slot since the swing (the short is the spend's)", function()
+        setup(8)
+        answer(9.95, SPENDER_A, true)
+        at(10, "PLAYER_SWING", 2.2, 0)
+        at(10.05, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", SPENDER_A) -- 10 paid
+        ctl.usable[SPENDER_A] = NOT_KNOWN
+        answer(10.1, SPENDER_A, false) -- short of 10 after the spend
+        ctl.usable[SPENDER_A] = NOT_KNOWN
+        at(10.47, "UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+        assert.are.same({ 0, 1 }, { L.oracle.vetoed, L.credited[1] })
     end)
 
     it("credits a swing whose answer since it shows only a short above its landed floor (no veto)", function()
@@ -1818,7 +1890,20 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         assert.are.same({ 1, 1 }, { L.oracle.judged, L.oracle.retracted })
         assert.are.same({ 8, 8, 8 }, power(10.5)) -- lo never above its pre-credit value
         assert.are.equal(L.THETA * 1.5, L.theta[1])
+        -- the swing is pending again: a wound in its tail is scored to it, and its answers since it showed (short)
+        -- say it gave no rage, so the veto denies it
+        at(10.9, "UNIT_COMBAT", "target", "WOUND", "", 44, 1)
+        assert.are.equal(1, L.oracle.vetoed)
         assert.are.same({ { "SWING_DAMAGE", 45, 10 } }, rows)
+    end)
+
+    it("closes a retracted swing past its window as SWING_MISSED (two rows for that swing, decision D9)", function()
+        setup(8)
+        answer(9.95, SPENDER_A, false)
+        ctl.usable[SPENDER_A] = NOT_KNOWN -- the landing poll: no rung, the record stays open
+        credit(10, 45, 1.2)
+        answer(11.6, SPENDER_A, false) -- 0.4 s after the wound, 1.6 s after the swing: past its 1.5 s window
+        assert.are.same({ { "SWING_DAMAGE", 45, 10 }, { "SWING_MISSED", "MISS", 10 } }, rows)
     end)
 
     it("retracts a credited crit with its swing: lo back at its pre-credit value", function()

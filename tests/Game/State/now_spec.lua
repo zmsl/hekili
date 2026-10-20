@@ -803,6 +803,9 @@ describe("now handlers", function()
             VS.Drain(5.2)
             assert.is_true(math.abs(VS.Aura("target", fs.SPENDER_C, 5.2).est - 20) < 1e-9) -- the 5 application
             assert.are.equal(0, I.avoidsRun)
+            for _, r in ipairs(rows) do -- nor a row: `missable` would drop the older cast's debuff on it
+                assert.is_false(r[1] == "SPELL_MISSED", "a miss row for one of two pending casts")
+            end
         end)
 
         it("no `refundOnAvoid`: the debuff is undone, the cost stays spent", function()

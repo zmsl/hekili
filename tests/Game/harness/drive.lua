@@ -76,6 +76,7 @@ function M.boot(o)
     for i = 1, CAP do
         c.cdTs[i], c.cdTf[i], c.cdD[i] = 0, 0, 0
     end
+    local recSw = { 0, 0, 0, 0, 0, 0, 0, 0 } -- by credit record: its swing's time (a crit is stamped at its wound)
     local R, lastEst = c.I.res, 0
     local function est()
         local r = R.slotOf[fs.RAGE]
@@ -86,8 +87,12 @@ function M.boot(o)
         c.I.On(kind, function(o, t)
             local e = est()
             if kind == SWING and (o.c == 1 or o.c == 3) and c.nCd < CAP then
+                local id = o.b >= 1 and o.b <= 8 and o.b or 0
+                if o.c == 1 and id > 0 then
+                    recSw[id] = o.t
+                end
                 local n = c.nCd + 1
-                c.nCd, c.cdTs[n], c.cdTf[n], c.cdD[n] = n, o.t, t, e - lastEst
+                c.nCd, c.cdTs[n], c.cdTf[n], c.cdD[n] = n, o.c == 3 and id > 0 and recSw[id] or o.t, t, e - lastEst
             end
             lastEst = e
         end)

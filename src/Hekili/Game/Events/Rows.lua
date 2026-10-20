@@ -69,7 +69,7 @@ L.avoids, L.avoidX, L.avoidT = 0, 0, 0
 -- move the credit bar of the record's class,
 -- theta[k] for k = hand x amount class (exact, loose, above, unknown) x lag band (core: within 2 spr; tail), between
 -- THETA_MIN and THETA_MAX (start THETA; kept across pulls, reset at load).
-L.ORACLE_MIN, L.ORACLE_MAX = 0.1, 0.6
+L.ORACLE_MIN = 0.1
 L.THETA_MIN, L.THETA_MAX = 2, 16
 L.theta = {}
 for k = 1, 16 do
@@ -144,14 +144,19 @@ end
 -- shortcut: a projectile's later outcome is not attributed (no Forever ability declares a `velocity`), upgrade with a
 -- travel time when a kit declares one.
 local REFUSED = { DODGE = true, PARRY = true, MISS = true }
+-- Whether a cast of ours other than p is pending at t: an avoid then is nobody's (no row, no Obs.Avoided).
+local function another(p, t)
+    for i = 1, N do
+        if i ~= p and actT[i] > 0 and actKind[i] == 2 and t - actT[i] <= actW[i] then
+            return true
+        end
+    end
+    return false
+end
+
 local function avoided(p, t, act)
     if not REFUSED[act] or t - actT[p] > actW[p] then
         return
-    end
-    for i = 1, N do
-        if i ~= p and actT[i] > 0 and actKind[i] == 2 and t - actT[i] <= actW[i] then
-            return -- two casts pending: whose outcome is unknown
-        end
     end
     local a = I.ab.bySpell[actX[p]]
     if a then
@@ -451,19 +456,22 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
             unknown = maxMain <= 0 or form ~= I.damageForm
         end
         credited, lr, ref, lag, second, k = score(t, amount, flag, avoid, unknown)
-        if credited and not avoid and I.Missed and I.Missed(actX[credited], actT[credited]) then
-            -- the veto: that swing gave no rage (its usability answers since it showed), so this wound is another
-            -- source's; a wound row that swing cannot have (rage is gained at the swing, checkpoint R1)
-            L.oracle.vetoed, L.vetoX, L.vetoAt = L.oracle.vetoed + 1, actX[credited], actT[credited]
+        if credited and lr < (avoid and L.THETA or L.theta[k]) then
             credited = nil
-        elseif credited and lr < (avoid and L.THETA or L.theta[k]) then
+        elseif credited and not avoid and I.Missed and I.Missed(actX[credited], actT[credited]) then
+            -- the veto, on a credit the bar passed: that swing gave no rage (its usability answers since it showed),
+            -- so this wound is another source's; a wound row that swing cannot have (rage is gained at the swing, R1)
+            L.oracle.vetoed, L.vetoX, L.vetoAt = L.oracle.vetoed + 1, actX[credited], actT[credited]
             credited = nil
         end
     end
     if not p and not credited and not avoid and white then
         p = cast(t, CAST_WINDOW)
     end
-    if p then
+    if p and avoid and another(p, t) then
+        background(act, amount, flag, white, avoid, unknown) -- two casts pending: whose avoid is unknown
+        return
+    elseif p then
         if avoid then
             avoided(p, t, act)
         end
@@ -508,8 +516,8 @@ end)
 
 --- (harness design §2.2) The verdict on credit record `id` from a usability answer at t (`ok`: usable, false: short,
 --- nil: not usable for another reason; `firm`: the credit's floor reached the cost), asked by Families/Resources.lua:
---- nil before ORACLE_MIN after the swing (no verdict yet), false once one landing lag (the hand's learned median) has
---- passed since the wound, on a nil `ok` or when the record is closed, true when judged. Usable confirms it (theta of its class / 1.1). Short and firm retracts it
+--- nil before ORACLE_MIN after the swing or on a nil `ok` (no verdict yet), false once one landing lag (the hand's
+--- learned median) has passed since the wound or when the record is closed, true when judged. Usable confirms it (theta of its class / 1.1). Short and firm retracts it
 --- (theta x 1.5): its swing is pending again inside its window, else closed as SWING_MISSED (the SWING_DAMAGE row
 --- already went out: two rows for that swing, decision D9), and its wound counts as background. Short
 --- and soft labels it at half weight (x 1.22). Allocates nothing.
@@ -520,10 +528,13 @@ function I.CreditVerdict(id, ok, t, firm)
     if t - recAt[id] < L.ORACLE_MIN - 1e-6 then -- (a float sum of the two may fall a ulp short)
         return nil
     end
-    recOpen[id] = false
-    if t - recT[id] > L.med[recHand[id] == 2 and 2 or 1] or ok == nil then
-        return false -- past its window, or a NOT answer (no rung): no verdict
+    if t - recT[id] > L.med[recHand[id] == 2 and 2 or 1] then
+        recOpen[id] = false
+        return false -- past its window: no verdict
+    elseif ok == nil then
+        return nil -- a NOT answer (no rung): no verdict yet, the record stays open
     end
+    recOpen[id] = false
     local o, th, k = L.oracle, L.theta, recK[id]
     o.judged = o.judged + 1
     if ok then

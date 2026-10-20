@@ -35,9 +35,10 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- answer, a flip's pin: the game held more than we believed) and the latest lifting rung's time; a landed swing at or
 -- before it pays that much less (owe, I.On(Obs.Swing)). `liftRec[r]`: the credit record that paid from it (its crit
 -- may pay the rest).
--- `sinceShort[r]`: the lowest top a short answer set since our last spend from slot r (math.huge: none); `sinceYes[r]`:
--- whether a usable answer raised its floor since then. An avoided cast's refund (I.Refund) is dated at that cast: the
--- answers heard since already saw it.
+-- `sinceShort[r]`: the lowest top a short answer set since our last spend from slot r (math.huge: none), and the
+-- estimate just after it (`sinceShortEst[r]`: what the slot gained since moves that top with it); `sinceYes[r]` /
+-- `sinceSnap[r]`: whether a usable answer raised its floor / its estimate since then. An avoided cast's refund
+-- (I.Refund) is dated at that cast: the answers heard since already saw it.
 -- `over[r]`: how far the modelled floor sits above the measured one (lo0): a regenerating slot that rests at its
 -- maximum is built at rest (est, and this floor: lo0 + over), and the floor then moves with everything that moves lo0;
 -- a measurement the floor contradicts (a short answer below it, a pin's top under it, an exact read) drops it to lo0
@@ -103,7 +104,9 @@ local R = {
     liftT = {},
     liftRec = {},
     sinceShort = {},
+    sinceShortEst = {},
     sinceYes = {},
+    sinceSnap = {},
     over = {},
     assume = {},
 }
@@ -296,7 +299,7 @@ I.OnBuild(function(def, now)
         R.dev[r], R.scale[r], R.spread[r] = 0, 1, I.REGEN_SPREAD
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
-        R.sinceShort[r], R.sinceYes[r] = math.huge, false
+        R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
         R.decayDef[r] = d.decay
         R.decay[r] = decayOf(r)
@@ -783,7 +786,7 @@ function I.Missed(hand, at)
             (R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0))
             and R.spends[r] == swSp[hand]
         then
-            local step = I.SwingValue(r, hand) * (R.scale[r] - R.spread[r])
+            local step = I.SwingValue(r, hand, at) * (R.scale[r] - R.spread[r]) -- its form or aura at the swing
             return swTop[hand] < swL[hand] + step
         end
     end
@@ -873,7 +876,7 @@ local function verdict(k, now, t)
         recA[k], recR[k] = 0, 0
         return false
     end
-    local ok = nil -- a NOT answer is no rung: in the window it closes the record unjudged
+    local ok = nil -- a NOT answer is no rung: it leaves the record open (CreditVerdict)
     if now == YES or now == SHORT then
         ok = now == YES
     end
@@ -895,12 +898,23 @@ local function verdict(k, now, t)
     return v
 end
 
-local function judge(a, now, t, r, c)
+-- `was` / `wasT`: a's answer before this one and its time: a new credit is judged by it first when it was heard since
+-- the credit's swing (the look-back), then by this answer if that left it open.
+local function judge(a, now, t, r, c, was, wasT)
     local explained = false
     for k = 1, RECORDS do
         if recA[k] == a then
             local s, x, d = recR[k], recX0[k], recEst[k] + recE0[k] - recX0[k]
-            local v = verdict(k, now, t)
+            local v = nil
+            if recLook[k] then
+                recLook[k] = false
+                if wasT >= recSw[k] then
+                    v = verdict(k, was, wasT)
+                end
+            end
+            if v == nil and recA[k] == a then
+                v = verdict(k, now, t)
+            end
             if s == r and (v and now == YES or v == nil) then
                 explained = explained or (x < c and c <= x + d)
             end
@@ -968,17 +982,17 @@ I.On(Obs.Usable, function(o, t, lag)
     if now == SHORT and r ~= 0 and not R.readable[r] and pre[a] and not holds(a, t) then
         now = NOT -- short for another requirement: no rung, and no flip from it later
     end
-    local was = usable[a]
+    local was, wasT = usable[a], ansT[a]
     usable[a], ansT[a] = now, o.t
     local c = r ~= 0 and I.CostOf(a) or 0
-    local explained = I.CreditVerdict and judge(a, now, t, r, c)
+    local explained = I.CreditVerdict and judge(a, now, t, r, c, was, wasT)
     if r == 0 or now == NOT or R.readable[r] or I.ab.multiCost[a] or not pre[a] then
         return -- a second power cost (Overpower's combo points) makes a short answer ambiguous: no rung
     end
     if c <= 0 then
         return
     end
-    local lo1 = R.lo0[r]
+    local lo1, e1 = R.lo0[r], R.est0[r]
     if was == SHORT and now == YES and lag <= 0 and abs(c - shortCost[a]) <= I.EPS then
         -- It just became affordable at an unchanged cost: it crossed the cost since the last short report.
         if R.gain[r] - shortGain[a] >= c - shortEst[a] then
@@ -1021,15 +1035,16 @@ I.On(Obs.Usable, function(o, t, lag)
         shortCost[a], shortT[a], shortGain[a], shortEst[a] = c, t - lag, R.gain[r], R.est0[r]
         local top = c - I.EPS
         if top < R.sinceShort[r] then
-            R.sinceShort[r] = top
+            R.sinceShort[r], R.sinceShortEst[r] = top, R.est0[r]
         end
         for h = 1, 2 do -- heard once a swing's rage shows: evidence on that swing (I.Missed)
             if R.swing[r] > 0 and o.t - swT[h] > I.Log.ORACLE_MIN - 1e-6 and top < swTop[h] then
                 swTop[h] = top
             end
         end
-    elseif R.lo0[r] > lo1 then
-        R.sinceYes[r] = true
+    else
+        R.sinceYes[r] = R.sinceYes[r] or R.lo0[r] > lo1
+        R.sinceSnap[r] = R.sinceSnap[r] or R.est0[r] > e1
     end
 end)
 
@@ -1248,7 +1263,7 @@ function I.ResourceShift(r, delta, t, event)
         R.gain[r] = R.gain[r] + delta -- explains a flip (the Usable apply)
     elseif delta < 0 then
         R.spends[r] = R.spends[r] + 1 -- a spend between a credit and its verdict voids the verdict (the oracle)
-        R.sinceShort[r], R.sinceYes[r] = math.huge, false
+        R.sinceShort[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, false, false
         if R.fsr[r] then
             R.fsrUntil[r] = t + I.FSR -- our own spend: the spirit part pauses (the five-second rule, C3)
         end
@@ -1258,13 +1273,21 @@ end
 
 --- An avoided cast's refund `d` (> 0) to slot r, dated at that cast's success (the server refunds there, the user
 --- 2026-10-20; the target's avoid only reports it later): est and hi take it, clamped by the lowest top a short answer
---- set since the cast (that answer already saw the refunded pool); lo takes it only when no usable answer raised lo
---- since the cast (else that answer's bound already holds the refund: lo stays a floor). Allocates nothing.
+--- set since the cast plus what the slot gained since that answer (the answer already saw the refunded pool; regen or
+--- a credit after it adds to the truth); lo takes it only when no usable answer raised lo since the cast, est only
+--- when none raised est (else that answer's bound already holds the refund). Allocates nothing.
 function I.Refund(r, d, t)
-    local lo, top, yes = R.lo0[r], R.sinceShort[r], R.sinceYes[r]
+    local lo, e, top = R.lo0[r], R.est0[r], R.sinceShort[r]
+    if top < math.huge then
+        local moved = e - R.sinceShortEst[r]
+        top = top + (moved > 0 and moved or 0)
+    end
     I.ResourceShift(r, d, t, Obs.Avoided)
-    if yes then
+    if R.sinceYes[r] then
         R.lo0[r] = lo
+    end
+    if R.sinceSnap[r] then
+        R.est0[r] = e
     end
     if R.hi0[r] > top then
         R.hi0[r] = top
