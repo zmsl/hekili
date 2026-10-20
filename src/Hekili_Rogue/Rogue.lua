@@ -3,9 +3,10 @@
 -- Forever's spell data (ranks, costs, cooldowns and durations from the Forever DB2 at build 1.60.1.70338, wowdb; energy
 -- costs are DB2 points), Forever's Venom, Mutilate and Cutthroat, energy and combo points as the Druid's cat has them
 -- (combo points plain in combat, measured), Adrenaline Rush as a regen multiplier, Stealth and Vanish from IsStealthed
--- (unprobed, so the belief also models them from our casts), poisons as precombat reminders read from the weapon
--- enchants out of combat, and the default priorities (all provisional: no in-game check yet, D5). Research:
--- docs/research/2026-10-15-forever-rogue/research.md and the class-completion research §2.
+-- (unprobed, so the belief also models them from our casts) and the poisons as abilities (no list recommends them
+-- now). The defaults are the "<Spec> (wowsims.com)" packs, generated from wowsims/forever's Rogue APL
+-- (tools/wowsims/specs/rogue_*.lua; no in-game check yet). Research: docs/research/2026-10-15-forever-rogue/research.md
+-- and the class-completion research §2.
 -- Talents: the DB2's 51 Classic nodes and the Forever-only ones this file reads; a modifier is rank 1's value x the
 -- rank (Classic's convention; only rank 1 of each is in the Forever DB2), floored at 0, except where wowsims/forever's
 -- casts at the talent's last rank show the DB2 value is the whole talent's (Improved Sinister Strike, Dirty Deeds:

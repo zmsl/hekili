@@ -19,17 +19,19 @@ end
 
 -- { pack, recipe, world content, replay floor (decisions on-GCD, measured 2026-10-20, never lowered), LIVE60 (the
 -- pack's own worst idle at 60: wowsims's energy pooling, seconds rounded up to 0.1) }
+-- Mutilate's per-hand hits are GCD-0 Casting lines {SpellID: 1241584, Tag: 1/2}: procs, neither decisions nor casts.
+local MUTILATE_HANDS = { procs = { ["1241584:1"] = true, ["1241584:2"] = true } }
 local PACKS = {
-    { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.98, 5.0 },
+    { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.98, 5.0, MUTILATE_HANDS },
     { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.94, 4.8 },
     { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.87, 3.8 },
 }
 
 describe("the Rogue wowsims.com packs #slow #wowsims", function()
     for _, p in ipairs(PACKS) do
-        local pack, spec, base, FLOOR, LIVE60 = p[1], p[2], p[3], p[4], p[5]
+        local pack, spec, base, FLOOR, LIVE60, knobs = p[1], p[2], p[3], p[4], p[5], p[6]
         it(pack .. " follows wowsims's casts", function()
-            ws.gate(pack, content(spec, base, pack, 60), spec, FLOOR)
+            ws.gate(pack, content(spec, base, pack, 60), spec, FLOOR, knobs)
         end)
         for _, level in ipairs({ 10, 40, 60 }) do
             it(pack .. " stays live at level " .. level, function()

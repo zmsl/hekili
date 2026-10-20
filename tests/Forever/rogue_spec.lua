@@ -103,8 +103,8 @@ describe("Forever Rogue", function()
             return out
         end
         assert.are.same({ 40, 15, 5, 30 }, all())
-        e.talent = rank(3)
-        assert.are.same({ 37.5, 5, 0, 20 }, all())
+        e.talent = rank(1) -- RL5: no rank past a talent's max
+        assert.are.same({ 42.5, 25, 15, 40 }, all())
     end)
 
     it("takes 3 energy a Thousand Cuts stack off Backstab and Hemorrhage (1310723: misc 14 -3)", function()
