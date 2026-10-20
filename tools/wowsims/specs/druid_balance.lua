@@ -13,7 +13,9 @@
 -- 2. wrath -> insect_swarm 4, 3. starfire -> moonfire 2: a DoT refresh decided a fraction of a second before the debuff
 --    ends (Insect Swarm's 16 s, Moonfire's 15 s, the log's): wowsims casts the filler and refreshes after, our first
 --    icon is the refresh (the replay's casts land at their completion: no cast bars; replay limit).
--- LIVE60 8.6 s: the level 60 loop runs out of mana (the forecast gap above); 10 and 40 do not.
+-- Since central fixes 12-15 (gap R closed): 0.855 (n 55), top [wrath -> insect_swarm 4; starfire -> moonfire 2;
+-- starfire -> insect_swarm 1], all the DoT-refresh replay limit (2. above); LIVE L10 1.6, L40 1.4, L60 1.4 s (8.6 at
+-- 60 before gap R's fix).
 local object = { __jsontype = "object" } -- dkjson: an empty table as {} (UnitReference.create(), the default unit)
 return {
     class = "DRUID",

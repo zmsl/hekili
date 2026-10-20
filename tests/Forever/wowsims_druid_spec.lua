@@ -75,13 +75,13 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             "Balance (wowsims.com)",
             content("druid_balance", W.Balance, "Balance (wowsims.com)", 60),
             "druid_balance",
-            0.83 -- 0.836 (46/55) on central fix 13 over fix 12; 0.818 on central fix 12 (GAP R), from 0.56
+            -- 0.855 (47/55) on central fixes 14-15 (Task 7g); 0.836 on central fix 13 over fix 12; 0.818 on central
+            -- fix 12 (GAP R), from 0.56
+            0.85
         )
     end)
-    -- The pack's own worst idle at 60, seconds: out of mana from shared gap R (the combat mana forecast reads the
-    -- casting rate; the recipe's header), not wowsims's pooling. Re-measure and re-tighten it (and the L10/L40 limit)
-    -- when R lands.
-    local BALANCE60 = 8.6
+    -- The pack's own worst idle at 60, seconds (L10 1.6, L40 1.4: Task 7g, after shared gap R's fix; 8.6 before it)
+    local BALANCE60 = 1.4
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Balance (wowsims.com) stays live at level " .. level, function()
             ws.live(
