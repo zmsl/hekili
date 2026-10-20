@@ -149,6 +149,7 @@ function M.run(L, seed, o, drivers)
         -- UnitLevel is plain in combat on Forever (the facade's passthrough row); fake_api answers an unset unit secret
         -- `targetLevel` the content's answer for the target (-1: a boss, as Hekili's `boss` reads it)
         ctl.level.target, ctl.level.nameplate1 = wo.targetLevel or wo.level, wo.targetLevel or wo.level
+        ctl.creature.target = us.target and us.target.creatureType -- the world's mob (nil: the fake's default)
         local k = setmetatable({
             usable = L.answers,
             gcdSpell = d.H.ns.VirtualStateInternal.GCD_SPELL,

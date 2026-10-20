@@ -2717,6 +2717,7 @@ do
         adds = 1,
         casting = 1,
         class = 1,
+        creature_type = 1,
         exists = 1,
         health_current = 1,
         health_max = 1,
@@ -2757,6 +2758,15 @@ do
     local PvpDummies = ns.PvpDummies
     local TargetDummies = ns.TargetDummies
 
+    -- The target's creature type by UnitCreatureType's second return (CreatureType.db2's ID, the same on every client
+    -- language): `target.creature_type`, the type's English name in snake case; "unknown" when there is no target, the
+    -- answer is secret or the ID is not listed.
+    local CREATURE_TYPES = {
+        "beast", "dragonkin", "demon", "elemental", "giant", "undead", "humanoid", "critter", "mechanical",
+        "not_specified", "totem", "non_combat_pet", "gas_cloud", "wild_pet", "aberration",
+    }
+    local issecretvalue = Facade.issecretvalue
+
     mt_target = {
         __index = function( t, k )
             if k == "distance" then t[k] = UnitCanAttack( "player", "target" ) and ( ( t.minR + t.maxR ) / 2 ) or 7.5
@@ -2791,6 +2801,10 @@ do
                     if c then t[k] = strlower( c )
                     else t[k] = "unknown" end
                 end
+            elseif k == "creature_type" then
+                local _, id = UnitCreatureType( "target" )
+                if issecretvalue( id ) or not CREATURE_TYPES[ id ] then t[k] = "unknown"
+                else t[k] = CREATURE_TYPES[ id ] end
             elseif k == "exists" then t[k] = UnitExists( "target" )
             elseif k == "health_current" then return t.health.current
             elseif k == "health_max" then return t.health.max
@@ -2807,7 +2821,7 @@ do
                     t[k] = ( UnitCanAttack( "player", "target" ) and ( UnitClassification( "target" ) == "worldboss" or UnitLevel( "target" ) == -1 ) )
                 end
             elseif k == "is_dead" then t[k] = UnitIsDeadOrGhost("target")
-            elseif k == "is_demon" then t[k] = UnitCreatureType( "target" ) == PET_TYPE_DEMON
+            elseif k == "is_demon" then t[k] = t.creature_type == "demon"
             elseif k == "is_friendly" then t[k] = Facade.UnitCanAssist( "player", "target" )
             elseif k == "is_in_party" then t[k] = Facade.UnitInParty( "target" )
             elseif k == "is_in_raid" then t[k] = Facade.UnitInRaid( "target" ) ~= nil
@@ -2817,7 +2831,7 @@ do
                 t[k] = isPlayer or false -- Enables proper treatment of Absolute Corruption and similar modified-in-PvP effects.
 
             elseif k == "is_dummy" then t[k] = ( TargetDummies[ t.npcid ] ~= nil )
-            elseif k == "is_undead" then t[k] = UnitCreatureType( "target" ) == BATTLE_PET_NAME_4
+            elseif k == "is_undead" then t[k] = t.creature_type == "undead"
 
             elseif k == "level" then t[k] = UnitLevel( "target" ) or UnitLevel( "player" ) or MAX_PLAYER_LEVEL
             elseif k == "moving" then t[k] = GetUnitSpeed( "target" ) > 0
@@ -6989,6 +7003,20 @@ do
 
         if ability.nocombat and self.time > 0 then
             return false, "not usable in combat"
+        end
+
+        -- `usable_on`: the target creature types the ability works on (`target.creature_type`'s keys); an unknown type
+        -- never blocks it
+        z = ability.usable_on
+        if z then
+            local ct = self.target.creature_type
+            if ct ~= "unknown" then
+                local ok = false
+                for i = 1, #z do
+                    if z[ i ] == ct then ok = true; break end
+                end
+                if not ok then return false, "target's creature type not in usable_on" end
+            end
         end
 
         if ability.form and not state.buff[ ability.form ].up then

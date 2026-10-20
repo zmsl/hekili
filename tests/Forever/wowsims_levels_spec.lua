@@ -131,6 +131,27 @@ describe("the character's racials (engine.abilitySet)", function()
         assert.are.same({ "Orc", "Scourge", "NightElf" }, got)
     end)
 
+    it("reads the request's target creature type as target.creature_type's key", function()
+        local dir = os.tmpname()
+        os.remove(dir)
+        os.execute("mkdir -p '" .. dir .. "'")
+        for spec, mob in pairs({ undead_test = "MobTypeUndead", mech_test = "MobTypeMechanical" }) do
+            local f = assert(io.open(dir .. "/" .. spec .. ".json", "wb"))
+            f:write(('{"encounter":{"targets":[{"level":63,"mobType":"%s"}]}}'):format(mob))
+            f:close()
+        end
+        local f = assert(io.open(dir .. "/none_test.json", "wb"))
+        f:write('{"encounter":{"targets":[{"level":63}]}}')
+        f:close()
+        local saved = ws.DIR
+        ws.DIR = dir .. "/"
+        local got = { ws.creatureType("undead_test"), ws.creatureType("mech_test"), ws.creatureType("none_test") }
+        ws.DIR = saved
+        os.execute("rm -r '" .. dir .. "'")
+        assert.are.same({ "undead", "mechanical" }, got)
+        assert.is_nil(got[3])
+    end)
+
     it("holds every race's racials as registered, off the GCD", function()
         local set = engine.abilitySet("WARRIOR")
         for id, key in pairs(RACIAL) do

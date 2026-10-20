@@ -30,6 +30,8 @@
 - Priorities: a precombat line may carry `prepull_at=<seconds before the pull>`; such a line is recommended once
   between fights (after its spell is cast or its buff is seen up), in the list's order, so two seals no longer
   alternate before a pull.
+- Abilities can be limited to target creature types (for example undead and demons); the addon reads the target's
+  type in any client language, and a type it cannot read never hides an ability.
 
 ### Fixed
 - Rogue, Paladin and Shaman: the default priorities now load. They were registered under the wrong specialization ids

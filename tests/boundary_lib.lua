@@ -55,7 +55,6 @@ local ALLOW_NAMES = {
     C_BattleNet = "a WoW API name",
     SPELL_FAILED_NOT_IN_MAGE_TOWER = "a WoW GlobalStrings name",
     TOOLTIP_NOT_IN_MAGE_TOWER = "a WoW GlobalStrings name",
-    BATTLE_PET_NAME_4 = "a WoW GlobalStrings name",
 }
 local ALLOW_IDS = {
     [29515] = "the client's GCD spell (Constants), not content",

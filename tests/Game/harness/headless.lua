@@ -655,8 +655,6 @@ function M.new(o)
         "CLOSE",
         "DEFAULT",
         "INVTYPE_WEAPONMAINHAND",
-        "BATTLE_PET_NAME_4",
-        "PET_TYPE_DEMON",
         "ITEM_SPELL_TRIGGER_ONEQUIP",
         "KEY_BUTTON1",
         "KEY_BUTTON2",

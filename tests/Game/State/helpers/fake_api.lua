@@ -25,6 +25,27 @@ do
     mt.__tostring = refuse("convert to a string")
 end
 local SECRET = M.SECRET
+-- UnitCreatureType's IDs (CreatureType.db2) by State.lua's `target.creature_type` key.
+local CREATURE_IDS = {}
+for id, key in ipairs({
+    "beast",
+    "dragonkin",
+    "demon",
+    "elemental",
+    "giant",
+    "undead",
+    "humanoid",
+    "critter",
+    "mechanical",
+    "not_specified",
+    "totem",
+    "non_combat_pet",
+    "gas_cloud",
+    "wild_pet",
+    "aberration",
+}) do
+    CREATURE_IDS[key] = id
+end
 local NO_ENCHANTS = {} -- an unenchanted weapon slot's list (shared: the fake allocates nothing per call)
 
 --- A new fake client and its control table.
@@ -63,6 +84,7 @@ function M.new()
         unitIs = {}, -- [unit] = the token UnitIsUnit(unit, x) is true for (SECRET: a secret answer)
         friendly = {}, -- [unit] = true: UnitCanAttack("player", unit) answers false (default: hostile)
         level = { player = 20 }, -- [unit] = UnitLevel (nil: a secret answer)
+        creature = {}, -- [unit] = UnitCreatureType's type as State.lua's key ("undead"; default "beast"; SECRET: secret)
         unknownEvents = {}, -- [event] = true: RegisterEvent raises, as the client does for an event it does not know
         form = 0, -- GetShapeshiftForm (0: none)
         forms = {}, -- [form index] = its spell ID (GetShapeshiftFormInfo's 4th return)
@@ -370,8 +392,15 @@ function M.new()
     function api.UnitClassification()
         return "normal"
     end
-    function api.UnitCreatureType()
-        return "Beast"
+    function api.UnitCreatureType(unit)
+        local key = ctl.creature[unit] or "beast"
+        if key == SECRET then
+            return SECRET, SECRET
+        end
+        local id = CREATURE_IDS[key]
+        if id then -- the client's English name and its CreatureType ID
+            return (key:gsub("_", " "):gsub("^%l", string.upper)), id
+        end
     end
     function api.UnitIsConnected()
         return true

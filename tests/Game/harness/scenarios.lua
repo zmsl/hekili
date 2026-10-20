@@ -81,6 +81,7 @@ function M.world(o, seed)
             dr = i == 1 and (o.dr or 0) or 0,
             weapons = { { dmg[1], dmg[2], m.period or o.mobPeriod or 2.0 } },
             health = i == 1 and o.mobHealth or 1e9,
+            creatureType = m.creatureType or o.creatureType,
         }))
         mob.target = (i <= (o.attackers or 1) and not (o.joinAt and o.joinAt[i])) and us or nil
         mobs[i] = mob

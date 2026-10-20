@@ -164,7 +164,8 @@ end
 --- rates the client reads: W.rates, W.fsr; no regen ticks), pull (the world time of the log's 0; default the log's
 --- earliest line M.LEAD s into the world, at least M.PULL: a -10 s prepull pulls at 10.5). Prepull casts (before the
 --- log's 0) are decisions like any other: wowsims counts them as its casts and the engine recommends a pack's precombat
---- list out of combat (once each with `prepull_at`), so an on-GCD one is scored. An ItemID cast maps through the abilities' `item`/`items`:
+--- list out of combat (once each with `prepull_at`), so an on-GCD one is scored. creatureType: the mob's
+--- (`target.creature_type`'s key; the request's mobType: tests/Forever/helpers/wowsims.lua `creatureType`). An ItemID cast maps through the abilities' `item`/`items`:
 --- a decision and a cooldown, no cast event (shortcut: the client is not shown the item's spell; emit it when a gate
 --- reads an item's cast).
 function M.new(text, H, o)
@@ -184,6 +185,7 @@ function M.new(text, H, o)
         pull = o.pull or math.max(M.PULL, M.LEAD - first),
         duration = h.duration or 180,
         targetLevel = h.targetLevel,
+        creatureType = o.creatureType,
     }
     local class = H.Hekili.Class
     -- spell ID -> ability key (every rank), the key's IDs and cooldown; aura ID -> duration
@@ -331,6 +333,7 @@ function M.new(text, H, o)
             kind = "mob",
             level = R.targetLevel or wo.level,
             health = R.mobHealth,
+            creatureType = R.creatureType or wo.creatureType,
         }))
         mob.target, us.target = us, mob
         local env = W.add(entities.new({ guid = "Other-replay", level = wo.level })) -- the execute phase's source

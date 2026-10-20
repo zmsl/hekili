@@ -19,7 +19,8 @@ end
 --- damage its armour takes away, 0-1), avoid ({ miss, dodge, parry, block } on swings at it), health, powerMax, pt (the
 --- power type of `power`, the swing-paid resource [1]), res ({ [powerType] = { cur, max } }: the other resources),
 --- formSpeed ({ [form] = the main hand's period in that form }), ranged ({ min, max, speed }: the ranged hand,
---- W.startRanged).
+--- W.startRanged), creatureType (UnitCreatureType's answer as `target.creature_type`'s key: "undead"; nil: the client
+--- fake's default).
 function M.new(o)
     local e = {
         guid = o.guid,
@@ -27,6 +28,7 @@ function M.new(o)
         level = o.level or 22,
         weapons = o.weapons or {},
         ranged = o.ranged,
+        creatureType = o.creatureType,
         dr = o.dr or 0,
         avoid = o.avoid or { miss = 0.05, dodge = 0.05, parry = 0.05, block = 0 },
         health = o.health or 1000,

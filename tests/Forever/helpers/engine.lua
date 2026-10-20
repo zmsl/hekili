@@ -88,7 +88,7 @@ local function newState(class, race)
         active_dot = every(0),
         boss = false,
         history = { casts = {}, units = {} },
-        target = strict({ is_boss = false }, "target"),
+        target = strict({ is_boss = false, creature_type = "unknown" }, "target"),
         health = resource,
         mana = resource,
         rage = resource,

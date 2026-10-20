@@ -122,6 +122,17 @@ Two environments have them:
 `RegisterAbility{ passive = true, id = <number> }` (`Engine/Schema/Spec.lua`) is a spell the spellbook knows and the
 player never casts. The belief tracks its known rank (`knownRank` reads it); the sim never sees it.
 
+**Target creature type.** `target.creature_type` (`Engine/Sim/State.lua`'s target table, cached per reset) is the
+target's creature type as a key: UnitCreatureType's second return, CreatureType.db2's ID (the same on every client
+language), as its English name in snake case (`"undead"`, `"demon"`, `"beast"`, `"not_specified"`, ...), and
+`"unknown"` with no target, a secret answer (the raw docs flag it `SecretWhenUnitIdentityRestricted`; the facade's
+passthrough row is probed plain in combat) or an unlisted ID. `target.is_undead` and `target.is_demon` read it.
+An ability may declare `usable_on = { "undead", "demon" }`: `state:IsUsable` refuses it on a target of another known
+type ("target's creature type not in usable_on") and never on `"unknown"`, so a hidden type never blocks a line. The
+harness sets the type on a world's mob (`entities.new{ creatureType }`, a content `WORLD.creatureType`, a replay's
+request `mobType` through `tests/Forever/helpers/wowsims.lua` `creatureType`), and the client fake answers it
+(`ctl.creature[unit]`, default `"beast"`).
+
 An ability's `known` must depend only on the spellbook, talents and gear, never on buffs or time, because the engine
 caches it for one prediction (`state:IsKnown`, wiped by `Hekili:ResetSpellCaches`). `state:IsDisabled` caches its
 prefix the same way: the ability and item options, the toggle assignment, `state.filter`, boss and the target counts
