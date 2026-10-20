@@ -669,10 +669,11 @@ end)
 -- Focused Rage: -3 rage a rank on the offensive abilities (Forever's tooltip; DB2 29787 -30 at rank 1), floored at 0.
 -- shortcut: which abilities count is a guess (every ability that strikes an enemy, and Disarm; not the shouts),
 -- unseen until someone buys the talent; correct the offensive_cost calls from the client's costs (Snapshot cost= /
--- read=) then.
-spec:RegisterStateFunction("offensive_cost", function(cost)
+-- read=) then. A file-local reading the caller's `talent`: the belief prices a cast in Families/Now.lua's context,
+-- which has `talent` but no state functions.
+local function offensive_cost(talent, cost)
     return max(0, cost - 3 * talent.focused_rage.rank)
-end)
+end
 
 -- The reactive windows from the combat log, as Classic models them (origin/classic:Classic/Warrior.lua:400-456): our
 -- dodged swing or ability opens Overpower's, a dodge, parry or block on us opens Revenge's. On Forever the rows come
@@ -896,7 +897,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(30)
+            return offensive_cost(talent, 30)
         end,
         spendType = "rage",
 
@@ -973,7 +974,7 @@ spec:RegisterAbilities({
         gcd = "off",
 
         spend = function()
-            return offensive_cost(20 - 3 * talent.raging_blows.rank)
+            return offensive_cost(talent, 20 - 3 * talent.raging_blows.rank)
         end, -- Raging Blows: -3
         spendType = "rage",
 
@@ -997,7 +998,7 @@ spec:RegisterAbilities({
         gcd = "off",
 
         spend = function()
-            return offensive_cost(10)
+            return offensive_cost(talent, 10)
         end,
         spendType = "rage",
 
@@ -1096,7 +1097,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(20)
+            return offensive_cost(talent, 20)
         end,
         spendType = "rage",
 
@@ -1124,7 +1125,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(max(0, 15 - 5 * talent.improved_execute.rank))
+            return offensive_cost(talent, max(0, 15 - 5 * talent.improved_execute.rank))
         end,
         spendType = "rage",
 
@@ -1151,7 +1152,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(10)
+            return offensive_cost(talent, 10)
         end,
         spendType = "rage",
 
@@ -1179,7 +1180,7 @@ spec:RegisterAbilities({
 
         -- Improved Heroic Strike: -1 a rank
         spend = function()
-            return offensive_cost(15 - talent.improved_heroic_strike.rank)
+            return offensive_cost(talent, 15 - talent.improved_heroic_strike.rank)
         end,
         spendType = "rage",
 
@@ -1209,7 +1210,7 @@ spec:RegisterAbilities({
         gcd = "off",
 
         spend = function()
-            return offensive_cost(10)
+            return offensive_cost(talent, 10)
         end,
         spendType = "rage",
 
@@ -1284,7 +1285,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(10)
+            return offensive_cost(talent, 10)
         end,
         spendType = "rage",
 
@@ -1311,7 +1312,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(30)
+            return offensive_cost(talent, 30)
         end,
         spendType = "rage",
 
@@ -1337,7 +1338,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(5)
+            return offensive_cost(talent, 5)
         end,
         spendType = "rage",
 
@@ -1390,7 +1391,7 @@ spec:RegisterAbilities({
         gcd = "spell", -- the DB2's (start recovery 1500 ms); Classic had it off the GCD (checkpoint question)
 
         spend = function()
-            return offensive_cost(10)
+            return offensive_cost(talent, 10)
         end,
         spendType = "rage",
 
@@ -1434,7 +1435,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(10)
+            return offensive_cost(talent, 10)
         end,
         spendType = "rage",
 
@@ -1481,7 +1482,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(5)
+            return offensive_cost(talent, 5)
         end,
         spendType = "rage",
 
@@ -1509,7 +1510,7 @@ spec:RegisterAbilities({
         gcd = "spell", -- the DB2's (start recovery 1500 ms); Classic had it off the GCD (checkpoint question)
 
         spend = function()
-            return offensive_cost(10)
+            return offensive_cost(talent, 10)
         end,
         spendType = "rage",
 
@@ -1569,7 +1570,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(20)
+            return offensive_cost(talent, 20)
         end,
         spendType = "rage",
 
@@ -1618,7 +1619,7 @@ spec:RegisterAbilities({
         end,
 
         spend = function()
-            return offensive_cost(15)
+            return offensive_cost(talent, 15)
         end,
         spendType = "rage",
 
@@ -1635,7 +1636,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(15)
+            return offensive_cost(talent, 15)
         end,
         spendType = "rage",
 
@@ -1654,7 +1655,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(max(0, 15 - 3 * talent.improved_sunder_armor.rank))
+            return offensive_cost(talent, max(0, 15 - 3 * talent.improved_sunder_armor.rank))
         end,
         spendType = "rage",
 
@@ -1722,7 +1723,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(max(0, 20 - 6 * talent.improved_thunder_clap.rank))
+            return offensive_cost(talent, max(0, 20 - 6 * talent.improved_thunder_clap.rank))
         end,
         spendType = "rage",
 
@@ -1772,7 +1773,7 @@ spec:RegisterAbilities({
         gcd = "spell",
 
         spend = function()
-            return offensive_cost(25 - 3 * talent.raging_blows.rank)
+            return offensive_cost(talent, 25 - 3 * talent.raging_blows.rank)
         end, -- Raging Blows: -3
         spendType = "rage",
 

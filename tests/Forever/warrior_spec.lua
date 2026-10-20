@@ -184,6 +184,20 @@ describe("Forever Warrior", function()
         assert.are.same({ 8, 7 }, { lw.run(w.abilities.taunt.cooldown, e), lw.run(w.auras.shield_block.duration, e) })
     end)
 
+    -- The belief prices a cast in Families/Now.lua's context: its reads (talent, max, ...) and no state functions.
+    it("prices the offensive costs in the belief's now context, which has no state functions", function()
+        local e = lw.env(w)
+        local ctx = { talent = rank(2), max = math.max, min = math.min, floor = math.floor }
+        for _, key in ipairs({ "whirlwind", "mortal_strike", "sunder_armor", "execute" }) do
+            assert.are.equal(
+                lw.run(w.abilities[key].spend, setmetatable({ talent = ctx.talent }, { __index = e })),
+                lw.run(w.abilities[key].spend, ctx),
+                key
+            )
+        end
+        assert.are.equal(13, lw.run(w.abilities.whirlwind.spend, ctx))
+    end)
+
     it("casts Slam in 1.0 s with a 1.0 s GCD on a 15 s cooldown with Improved Slam (Forever DB2 12862)", function()
         local e = lw.env(w)
         local slam = w.abilities.slam
