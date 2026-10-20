@@ -52,6 +52,13 @@ describe("Forever content through the real Engine/Schema/Spec.lua", function()
         end
     end)
 
+    it("answers a gear-gated function field's equipped[itemID] as not equipped under the stub state", function()
+        local state = engine.load(CLASSES[1]).state
+        -- an item ID and a slot name, as State.lua's `equipped` answers both
+        local f = setfenv(assert(loadstring("return equipped[19340] and 1 or (equipped.shield and 2 or 3)")), state)
+        assert.are.equal(3, f())
+    end)
+
     it("lists the class packs and race files the content addons load", function()
         assert.is_true(#CLASSES >= 2)
         assert.are.equal(RACE_LINES, #RACES) -- every race line parsed, its NewRace token found

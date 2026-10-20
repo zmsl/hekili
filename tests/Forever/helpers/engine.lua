@@ -86,6 +86,7 @@ local function newState(class, race)
         cooldown = every(leaf),
         action = every(leaf),
         active_dot = every(0),
+        equipped = every(false), -- State.lua's equipped[itemID] / equipped.shield: no gear headless
         boss = false,
         history = { casts = {}, units = {} },
         target = strict({ is_boss = false, creature_type = "unknown" }, "target"),
