@@ -289,6 +289,18 @@ describe("now handlers", function()
         assert.are.equal(29, VS.Cooldown(6167, 20.4).est)
     end)
 
+    it("starts a charged ability's recharge at the cast's own time when its success folds late (GAP W)", function()
+        register("ch_late", { id = 6170, cooldown = 20, charges = 2, recharge = 20 })
+        start()
+        ctl.now = 20
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 6170) -- staged at 20
+        I.Sources.Direct(VS.Obs.Haste, 20.3, 0, 0, 2) -- logged first: the fold's clock reaches 20.3 before the success
+        ctl.Tick(20.31)
+        VS.Drain(20.32)
+        local ch, nx = VS.Charges(6170, 20.4)
+        assert.are.same({ 1, 40 }, { ch.est, nx.est })
+    end)
+
     it("brings a charged ability's next charge sooner with reduceCooldown", function()
         register("ch_test", { id = 6168, cooldown = 20, charges = 2, recharge = 20 })
         register("ch_cut", {
@@ -761,6 +773,54 @@ describe("now handlers", function()
             ctl.Tick(6.01)
             VS.Drain(6.02)
             assert.are.equal(0, VS.Power(fs.RAGE, 6.1).est)
+        end)
+
+        it("a crit two pending casts could own, or a pending swing explains, runs no onCrit (GAP T)", function()
+            local crits = 0
+            h.Class.abilities.spender_c.funcs.onCrit = function()
+                crits = crits + 1
+            end
+            begin()
+            h.Class.abilities.spender_c.funcs.onCrit = nil
+            ctl.now = 4.526
+            ctl.Fire("PLAYER_SWING", 3.6, 0) -- due to land about 5.0 (the main hand's 0.474 s)
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 100, 1) -- the swing's crit, not the cast's
+            ctl.Tick(5.01)
+            VS.Drain(5.02)
+            assert.are.equal(0, crits)
+            ctl.now = 20
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_C)
+            ctl.now = 20.2
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-3", fs.SPENDER_C) -- two of ours pending
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 100, 1)
+            ctl.Tick(20.21)
+            VS.Drain(20.22)
+            assert.are.equal(0, crits) -- the crit is nobody's to say
+            ctl.now = 30
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-4", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 100, 1) -- alone: the cast's
+            ctl.Tick(30.01)
+            VS.Drain(30.02)
+            assert.are.equal(1, crits)
+        end)
+
+        it("keeps an onCrit's target writes out of the cast's undo: an avoid after it leaves them (GAP T)", function()
+            h.Class.abilities.spender_c.funcs.onCrit = function()
+                applyDebuff("target", "spender_a", 120) -- luacheck: ignore 113 (the `now` context's verb)
+            end
+            begin()
+            h.Class.abilities.spender_c.funcs.onCrit = nil
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 100, 1)
+            ctl.Tick(5.01)
+            VS.Drain(5.02)
+            I.Sources.Direct(VS.Obs.Avoided, 5.1, I.ab.bySpell[fs.SPENDER_C], 5, I.HitKind.DODGE) -- the latest cast's
+            VS.Drain(5.12)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.2)) -- the cast's own write, undone
+            assert.are.equal(125, VS.Aura("target", fs.SPENDER_A, 5.2).est) -- the crit's write stays
         end)
 
         it("a dodge in the cast's frame: no debuff, 80% of the cost back, a REMOVED row", function()

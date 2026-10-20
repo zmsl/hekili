@@ -85,6 +85,15 @@ describe("resources", function()
             assert.are.equal("modelled", rr.basis)
         end)
 
+        it("caps a late usable rung's regen at the pool's maximum", function()
+            obs(Obs.Read, 9, 1, 40.5, I.ReadOf.Max)
+            I.Fold(9, false)
+            I.Settle(10.5)
+            obs(Obs.Usable, 10, BUILDER, 1, 0) -- heard 0.5 s late: 40 + 4.5 of regen, but the pool holds 40.5
+            I.Fold(10.5, false)
+            assert.is_true(I.res.lo0[1] <= 40.5, tostring(I.res.lo0[1]))
+        end)
+
         it("rests at its maximum of 100, as before rest became a flag", function()
             assert.are.same({ 100, 100 }, { VS.Power(ENERGY, 1).est, I.res.rest[1] })
         end)
@@ -310,15 +319,33 @@ describe("resources", function()
 
         it("measures the swing scale only over enough steps to drown one step's lumpiness (GAP AC)", function()
             obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource) -- a measuring pin
-            obs(Obs.Swing, 10.5, 1, 2.6, 1) -- a landed swing: 9, and a speed to calibrate against (9 / 2.6 a second)
+            obs(Obs.Swing, 10.5, 1, 2.6, 4) -- a swing, and a speed to calibrate against (9 / 2.6 a second)
+            obs(Obs.Swing, 10.5, 1, 0, 1) -- landed: 9
             obs(Obs.Read, 11.5, 1, 9, I.ReadOf.Resource) -- one step in 1.5 s: 6/s, 1.73x the model, by its lumps alone
             I.Fold(11.5, false)
             assert.are.equal(1, I.res.scale[1]) -- not 1.22 from one interval
+            for k = 1, 4 do -- the hand keeps swinging (an idle hand starts the window over)
+                obs(Obs.Swing, 10.5 + 2.6 * k, 1, 2.6, 4)
+                obs(Obs.Swing, 10.5 + 2.6 * k, 1, 0, 1)
+            end
+            I.Fold(21, false)
             local per = I.SwingPerSecond(1)
             local v = 9 + 1.2 * per * 12 -- 20% above the model for 12 s more: 13.5 s since the first pin, five steps
             obs(Obs.Read, 23.5, 1, v, I.ReadOf.Resource)
             I.Fold(23.5, false)
             within(1 + I.ALPHA * (v / 13.5 / per - 1), I.res.scale[1])
+        end)
+
+        it("starts the swing-scale window over after the hand was idle past LIFT_WINDOW (GAP AC)", function()
+            obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+            obs(Obs.Swing, 10.5, 1, 2.6, 4)
+            obs(Obs.Swing, 10.5, 1, 0, 1)
+            obs(Obs.Read, 11.5, 1, 30, I.ReadOf.Resource) -- 30 in 1.5 s: lumpy, below the window
+            I.Fold(11.5, false)
+            -- 28.5 s with no swing seen: the window does not reach across (with it, 1.25x the model: scale 1.07)
+            obs(Obs.Read, 40, 1, 30 + I.SwingPerSecond(1) * 28.5, I.ReadOf.Resource)
+            I.Fold(40, false)
+            assert.are.same({ 1, 0, 0 }, { I.res.scale[1], I.res.swAccT[1], I.res.swAccG[1] })
         end)
 
         describe("a white crit (Swing c = 3 after the landed swing)", function()
@@ -1171,6 +1198,22 @@ describe("resources", function()
                 assert.are.equal(17, I.res.fsrUntil[1]) -- not 17.142: the window opened at the cast
             end
         )
+
+        it("takes back the spirit regen credited since a late-folded spend: lo as the timely fold's (GAP W)", function()
+            local function lo(late)
+                bootMana()
+                obs(Obs.Read, 10, 1, 1000, I.ReadOf.Resource) -- a plain pre-combat read: far from the cap
+                obs(Obs.CombatStart, 10, 0, 0, 0)
+                I.Fold(10, false)
+                if late then
+                    S.Direct(Obs.Moving, 16.142, 0, 1, 0) -- the next frame's observation, in the log first
+                end
+                S.Direct(Obs.CastSuccess, 16, SEAL, 150, 1)
+                I.Fold(16.2, false)
+                return VS.Power(MANA, 30).lo -- after the window's end at 21
+            end
+            within(lo(false), lo(true))
+        end)
     end)
 
     describe("the five-second rule (C3: mana's `fsr`, spirit 10/s and mp5 2/s declared)", function()

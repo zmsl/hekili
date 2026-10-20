@@ -691,10 +691,12 @@ local function pin(r, v, width, t, origin, event, mid)
         -- a swing-paid slot's gain comes in steps: between two pins a second or two apart it is 0, 1 or 2 of them, and
         -- that lumpiness alone (the low ratios refused as noise, the high ones kept) pulled the scale to 1.3 within 15 s,
         -- its floor step above the true one (GAP AC); chained measuring pins add up until SWING_STEPS steps are due
-        if measures and R.pinValid[r] then
+        -- (bounded in time too: a hand idle past its swing plus I.LIFT_WINDOW, or with no step, starts it over)
+        local h, step = R.swing[r], I.SwingValue(r, R.swing[r])
+        if measures and R.pinValid[r] and step > 0 and t - swT[h] <= I.SwingSpeedEst(h) + I.LIFT_WINDOW then
             R.swAccG[r], R.swAccT[r] = R.swAccG[r] + vm - R.pinV[r] - R.pinDelta[r], R.swAccT[r] + dt
-            if R.swAccT[r] * I.SwingPerSecond(r) >= I.SWING_STEPS * I.SwingValue(r, R.swing[r]) then
-                calibrate(r, R.swAccG[r] / R.swAccT[r], t) -- nonzero: the window holds steps, so swAccT > 0
+            if R.swAccT[r] * I.SwingPerSecond(r) >= I.SWING_STEPS * step then
+                calibrate(r, R.swAccG[r] / R.swAccT[r], t) -- nonzero: step > 0, so the window's time is too
                 R.swAccG[r], R.swAccT[r] = 0, 0
             end
         else
@@ -727,6 +729,7 @@ local function ladder(r, c, affordable, t, lag)
         local a, b = spans(r, t - lag, lag)
         if affordable then
             c = c + R.regL[r] * a + R.spL[r] * b
+            c = c < R.max[r] and c or R.max[r] -- the pool caps the regen since the answer
         else
             c = c + R.regH[r] * a + R.spH[r] * b
             if c - I.EPS < R.lo0[r] then
@@ -1315,7 +1318,18 @@ function I.ResourceShift(r, delta, t, event)
         R.spends[r] = R.spends[r] + 1 -- a spend between a credit and its verdict voids the verdict (the oracle)
         R.sinceShort[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, false, false
         if R.fsr[r] then
+            local late = I.clock - t -- a success folded late (GAP W): the spirit part was credited since t
+            local _, b0 = spans(r, t, late > 0 and late or 0)
             R.fsrUntil[r] = t + I.FSR -- our own spend: the spirit part pauses (the five-second rule, C3)
+            local _, b1 = spans(r, t, late > 0 and late or 0)
+            local d = b0 - b1 -- what the window opened at t takes back of it
+            if d > 0 then
+                R.est0[r] = clamp(R.est0[r] - R.spE[r] * d, max)
+                R.lo0[r] = clamp(R.lo0[r] - R.spL[r] * d, max)
+                R.hi0[r] = clamp(R.hi0[r] - R.spH[r] * d, max)
+                R.pinB[r] = R.pinB[r] - d
+                norm(r)
+            end
         end
     end
     I.Sample(R.power[r], "modelled", R.est0[r], t, event)

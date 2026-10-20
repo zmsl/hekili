@@ -438,15 +438,21 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     if avoid and not p then
         p = cast(t)
     end
-    if p and avoid and white then
+    -- a crit is the cast's only by the avoid's rules (GAP T); a wound row keeps its pairing either way
+    local crit = not avoid and flag == "CRITICAL"
+    if p and white and (avoid or crit) then
         -- a white avoid a pending swing of ours explains is the swing's (the cast keeps its effects: no SPELL_MISSED
-        -- row, no Obs.Avoided): a swing due now, its landing lag within twice the hand's learned spread of the median,
-        -- or one in that swing's own event frame (P log 2: an unexplained avoid in our swing's ms, 3 of 87 swings;
-        -- never a cast's report)
-        local sw, _, ref, lag = score(t, amount, flag, true, false)
+        -- row, no Obs.Avoided), and so is a white crit's Obs.Crit: a swing due now, its landing lag within twice the
+        -- hand's learned spread of the median, or one in that swing's own event frame (P log 2: an unexplained avoid
+        -- in our swing's ms, 3 of 87 swings; never a cast's report)
+        local sw, _, ref, lag = score(t, amount, flag, avoid, crit) -- a crit by its timing alone, as an avoid
         local h = ref == 3 and 2 or ref
         if sw and (lag <= SAME_FRAME or math.abs(lag - L.med[h]) <= 2 * L.spr[h]) then
-            p = nil
+            if avoid then
+                p = nil
+            else
+                crit = false
+            end
         end
     end
     local credited, lr, ref, lag, second, k = nil, 0, 0, 0, 0, 1
@@ -476,7 +482,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     elseif p then
         if avoid then
             avoided(p, t, act)
-        elseif flag == "CRITICAL" and t - actT[p] <= actW[p] then
+        elseif crit and t - actT[p] <= actW[p] and not another(p, t) then
             local a = I.ab.bySpell[actX[p]] -- our cast's own crit (the target's row carries the flag plain): GAP T
             if a then
                 S.Stage(Obs.Crit, t, a, actT[p], 0)

@@ -56,6 +56,7 @@ local T, curA, live = 0, 0, false
 -- auras its `now` wrote, each as it was before (expiry 0: down), at most UNDO of them. Preallocated.
 local UNDO = 4
 local undoA, undoT, undoSlot, paid, undoN = 0, -1, 0, 0, 0
+local journal = true -- false while an `onCrit` runs: a landed crit's writes are no avoid's to undo
 local undoJ, undoE, undoAp, undoSt = {}, {}, {}, {}
 for k = 1, UNDO do
     undoJ[k], undoE[k], undoAp[k], undoSt[k] = 0, 0, 0, 0
@@ -206,7 +207,7 @@ local function aura(u, key, duration, stacks)
         end
         after = T + d
     end
-    if u == 2 and undoN < UNDO then
+    if u == 2 and journal and undoN < UNDO then
         local first = true
         for k = 1, undoN do
             first = first and undoJ[k] ~= j
@@ -380,17 +381,18 @@ local function automatic(a, t, kind, o)
             I.SpendCostCharges(a, r, t, kind)
         end
     end
+    -- from the cast's own time, as its spend: a success folded late starts its cooldown or recharge no later (GAP W);
+    -- the GCD below stays at the fold's time (the safe side: never believed ready early)
+    local at = o.t < t and o.t or t
     if A.ch[a] then
         local recharge = type(obj.recharge) == "number" and obj.recharge or 0
-        local ch, nx = VS.Charges(A.id[a], t) -- the recharges finished since the last sample, caught up to t
+        local ch, nx = VS.Charges(A.id[a], at) -- the recharges finished since the last sample, caught up to the cast
         local charges, nextAt = ch.est - 1, nx.est
-        if nextAt <= t then
-            nextAt = t + recharge -- it was at max: the recharge starts now
+        if nextAt <= at then
+            nextAt = at + recharge -- it was at max: the recharge starts at the cast
         end
         I.ChargesModel(a, charges > 0 and charges or 0, nextAt, t, kind)
     else
-        -- from the cast's own time, as its spend: a success folded late starts its cooldown no later (GAP W)
-        local at = o.t < t and o.t or t
         local cd = I.CooldownOf(a, at) -- a function cooldown in the belief's context (Families/Casts.lua)
         if cd > 0 then
             I.CooldownModel(a, at + cd, cd, at, kind)
@@ -445,7 +447,9 @@ I.On(Obs.CastSuccess, run)
 I.On(Obs.Crit, function(o)
     local a = o.a
     if A.onCrit[a] and A.key[a] and not A.extra[a] then
+        journal = false
         call(A.onCrit[a], a, o.t)
+        journal = true
     end
 end)
 

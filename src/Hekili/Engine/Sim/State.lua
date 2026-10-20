@@ -1299,9 +1299,13 @@ do
                     -- Forever GAP AK: the game paid the latest swing already, the believed floor not yet (VS.SwingPending):
                     -- its gain is forecast one poll after the usability answers can show it (ORACLE_MIN), not lost as past;
                     -- the icon keeps its line, and nothing is pressable on it before an answer confirms it
+                    -- (the swings after it keep their own times: `resume`)
+                    v.resume = nil
                     if v.swing and i > 0 then
                         local p = VS.SwingPending( v.swing == "offhand" and 2 or 1 )
-                        if p > 0 and l > p - i / 2 then v.next = max( now, p + 2 * ns.VirtualStateInternal.Log.ORACLE_MIN ) end
+                        if p > 0 and l > p - i / 2 then
+                            v.next, v.resume = max( now, p + 2 * ns.VirtualStateInternal.Log.ORACLE_MIN ), l + i
+                        end
                     end
 
                     if i > 0 and v.next >= 0 then
@@ -1379,7 +1383,11 @@ do
                                            ( type( e.interval ) == "string" and state[ e.interval ] or 0 ) ), 3 )
 
                     remains[ e.resource ] = finish - e.next
-                    e.next = e.next + step
+                    if e.resume then
+                        e.next, e.resume = e.resume, nil -- after the pending swing (GAP AK): the next one on its own time
+                    else
+                        e.next = e.next + step
+                    end
 
                     if e.next > finish or step < 0 or
                        ( e.aura and state[ e.debuff and "debuff" or "buff" ][ e.aura ].expires < e.next ) or
