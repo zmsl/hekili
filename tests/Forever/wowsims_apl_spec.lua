@@ -481,6 +481,49 @@ describe("the wowsims APL translator", function()
         end
     end)
 
+    it(
+        "puts a recipe's required talent before each entry it names, in every list, and refuses an unknown one",
+        function()
+            local levels = assert(loadfile("tools/check_pack_levels.lua"))()
+            local rage = cmp("OpGt", { currentRage = {} }, const("10"))
+            local rotation = {
+                prepullActions = { { action = cast(200).action, doAtValue = const("-1s") } },
+                priorityList = {
+                    cast(100, OR(ready, rage)),
+                    cast(200),
+                    cast(100, AND(ready, rage)),
+                    cast(300, rage),
+                    { action = { groupReference = { groupName = "Big" } } },
+                },
+                groups = { { name = "Big", actions = { cast(200, NOT(up)) } } },
+            }
+            local text =
+                apl.translate(rotation, ctx({ requires = { strike = "furious", big_hit = "cuts", big = "cuts" } }))
+            assert.are.equal(
+                table.concat({
+                    "actions.precombat=big_hit,prepull_at=1,if=talent.cuts.enabled",
+                    "actions=strike,if=talent.furious.enabled&((action.big_hit.known&cooldown.big_hit.ready)|rage.current>10)",
+                    "actions+=/big_hit,if=talent.cuts.enabled",
+                    "actions+=/strike,if=talent.furious.enabled&((!action.big_hit.known|cooldown.big_hit.ready)&rage.current>10)",
+                    "actions+=/roar,use_off_gcd=1,if=rage.current>10",
+                    "actions+=/call_action_list,name=big,if=talent.cuts.enabled",
+                    "actions.big=big_hit,if=talent.cuts.enabled&(!action.dot.known|!buff.dot.up)",
+                }, "\n"),
+                text
+            )
+            local function isAbility(k)
+                return k == "strike" or k == "big_hit" or k == "roar" or k == "dot"
+            end
+            for line in text:gmatch("[^\n]+") do
+                local self, cond = line:match("=/?([%w_]+).-,if=(.*)$")
+                assert.are.same({}, levels.unguarded(cond, self, isAbility), line)
+            end
+            assert.has_error(function()
+                apl.translate({ priorityList = { cast(100) } }, ctx({ requires = { strike = "nope" } }))
+            end, "requires: nope is not a talent key")
+        end
+    )
+
     it("takes the character's ability set: a shared racial is mapped and off the GCD", function()
         local set = require("Forever.helpers.engine").abilitySet("WARRIOR")
         local c = apl.context(set, {})

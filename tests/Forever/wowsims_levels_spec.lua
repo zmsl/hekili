@@ -122,6 +122,21 @@ describe("tools/check_pack_levels.lua", function()
         )
     end)
 
+    it("accepts a recipe's required talent before a line's guards (wowsims apl.lua rule 7)", function()
+        assert.are.same(
+            {},
+            levels.unguarded("talent.t.enabled&((action.big_hit.known&cooldown.big_hit.ready)|x>1)", "s", isAbility)
+        )
+        assert.are.same(
+            {},
+            levels.unguarded("talent.t.enabled&(!action.big_hit.known|cooldown.big_hit.ready)", "s", isAbility)
+        )
+        assert.are.same(
+            { "cooldown.big_hit.ready" },
+            levels.unguarded("talent.t.enabled&cooldown.big_hit.ready", "s", isAbility)
+        )
+    end)
+
     it("checks a dot read of another ability", function()
         assert.are.same({ "dot.big_hit.remains" }, levels.unguarded("dot.big_hit.remains<2", "strike", isAbility))
         assert.are.same({}, levels.unguarded("(!action.big_hit.known|dot.big_hit.remains<2)", "strike", isAbility))

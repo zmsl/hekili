@@ -38,7 +38,10 @@
 --    and one guard a test for a comparison of two reads. An empty value and another player's aura are nil always (dropped here). The
 --    line's own action is never guarded (the engine skips an unknown action).
 -- 7. `focus` from the recipe (the tiers the retired list carried, by action), `use_off_gcd=1` on an ability whose
---    `gcd` is `"off"`; the recipe's `leveling` lines are appended to `actions`, each silent at 60.
+--    `gcd` is `"off"`; the recipe's `leveling` lines are appended to `actions`, each silent at 60. The recipe's
+--    `requires` ({ [action key or group's snake name] = talent key }) puts `talent.<key>.enabled&` before the
+--    condition of each such entry, in every list: an APL written for a talent build (wowsims picks it by that talent,
+--    e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
 -- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N
 --    (wowsims's N/100 against its 0-1 percents; ours, `mana.pct` and `health.pct`, run 0-100).
 -- 9. `auraIcdIsReady` (wowsims: the proc aura's internal cooldown is ready): the aura declaring `icd` (RegisterAura,
@@ -103,7 +106,8 @@ function M.snake(s)
 end
 
 --- The translation context of an ability set (`abilities`, `auras`, `talents` as the engine registers them:
---- tests/Forever/helpers/engine.lua abilitySet) and recipe `r` (map, focus, executePhase, leveling).
+--- tests/Forever/helpers/engine.lua abilitySet) and recipe `r` (map, focus, executePhase, leveling, exclusive,
+--- requires).
 function M.context(set, r)
     local c = {
         keyOf = {},
@@ -121,6 +125,7 @@ function M.context(set, r)
         executePhase = r.executePhase,
         leveling = r.leveling or {},
         exclusive = r.exclusive or {},
+        requires = r.requires or {},
     }
     local keys = {}
     for key, a in pairs(set.abilities) do
@@ -533,10 +538,10 @@ local function entry(c, e)
     if not kind then
         return nil, "empty"
     end
-    local body
+    local body, key
     if kind == "castSpell" or kind == "channelSpell" then
         local x = spellKey(c, a[kind].spellId)
-        c.self = x
+        c.self, key = x, x
         local tier = c.focus[x]
         if type(tier) == "table" then
             c.seen[x] = (c.seen[x] or 0) + 1
@@ -553,21 +558,32 @@ local function entry(c, e)
         end
         c.used[g], c.self = true, nil
         body = "call_action_list,name=" .. M.snake(g)
+        key = M.snake(g)
     elseif kind == "cancelAura" then -- rule 10
         c.self = nil
         body = "cancel_buff,buff_name=" .. auraKey(c, a.cancelAura.auraId.spellId)
     else
         unsupported(kind)
     end
+    local cond
     if a.condition then
         local s, b, u = bool(c, a.condition)
         if u ~= true and b == false then
             return nil, "never"
         elseif u ~= true and s then -- a nil condition is always true (wowsims's apl_action.go)
-            body = body .. ",if=" .. emit(u, s, true)
+            cond = emit(u, s, true)
         end
     end
-    return body
+    local talent = c.requires[key]
+    if talent then -- rule 7: the talent the APL's build assumes
+        if not c.talentKey[talent] then
+            error(("requires: %s is not a talent key"):format(tostring(talent)), 0)
+        end
+        local t = "talent." .. talent .. ".enabled"
+        cond = cond and (t .. "&" .. ((grouped(cond) or not cond:find("|", 1, true)) and cond or "(" .. cond .. ")"))
+            or t
+    end
+    return cond and (body .. ",if=" .. cond) or body
 end
 
 --- The SimC text of `rotation` (a wowsims APL table) under context `c`, the omitted entries
