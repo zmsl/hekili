@@ -85,12 +85,9 @@ describe("Forever Hunter", function()
         assert.are.same({ [0] = 1, 16, 14, 16 }, n)
     end)
 
-    it("declares mana under the five-second rule and both mana floors off", function()
+    it("declares mana under the five-second rule", function()
         assert.are.same({ 0 }, w.order)
         assert.are.same({ spirit = 15, mp5 = 2 }, w.resources[0].meta.fsr)
-        for _, key in ipairs({ "arcane_shot_mana", "wing_clip_mana" }) do
-            assert.are.equal(0, w.settings[key].default, key)
-        end
     end)
 
     it("anchors the ranged clock on Auto Shot, off the GCD", function()
@@ -259,7 +256,7 @@ describe("Forever Hunter", function()
     end)
 end)
 
--- The priorities after wowsims/forever's Hunter APLs (reference only), D3 builds and the D1 focus tiers.
+-- The priorities: the wowsims.com packs (generated from wowsims/forever's Melee Weave by `make wowsims-packs`).
 describe("Forever Hunter priorities", function()
     local packs = {}
     setup(function()
@@ -277,15 +274,21 @@ describe("Forever Hunter priorities", function()
         error(pack .. ": no " .. action .. " if " .. tostring(criteria))
     end
 
-    it("keeps the class file's generated blocks in step with APLs/ and marks every pack provisional", function()
+    it("keeps the class file's generated blocks in step with APLs/ and retires the hand-built lists", function()
         local mp = assert(loadfile("tools/make_pack.lua"))("lib")
         local f = assert(io.open(FILE))
         local src = f:read("*a")
         f:close()
         assert.are.equal(src, (mp.sync(src, mp.load("hunter"))))
-        for _, name in ipairs({ "BeastMastery", "Marksmanship", "Survival" }) do
-            assert.is_truthy(packs[name].desc:find("provisional", 1, true), name)
+        local cls, names = ld.load(nil, FILE, "HUNTER"), {}
+        for _, sp in ipairs(cls.def.specs) do
+            names[#names + 1] = sp.package
         end
+        assert.are.same(
+            { "Beast Mastery (wowsims.com)", "Marksmanship (wowsims.com)", "Survival (wowsims.com)" },
+            names
+        )
+        assert.is_truthy(src:find('spec:RetirePacks({ "BeastMastery", "Marksmanship", "Survival" })', 1, true))
     end)
 
     it("names only registered abilities, auras, settings and the hawk", function()
@@ -308,38 +311,6 @@ describe("Forever Hunter priorities", function()
                 end
             end
         end
-    end)
-
-    it("flags Sniper Shot, Mongoose Bite and Raptor Strike at tier 1, the sting and mark at tier 2", function()
-        local _, sniper = line("Marksmanship", "shots", "sniper_shot", "buff.rapid_fire.up||buff.quick_shots.up")
-        local _, bite = line("Survival", "melee", "mongoose_bite")
-        local _, raptor = line("Survival", "default", "raptor_strike")
-        assert.are.same({ 1, 1, 1 }, { sniper.focus, bite.focus, raptor.focus })
-        for _, pack in ipairs({ "BeastMastery", "Marksmanship" }) do
-            local _, sting = line(pack, "shots", "serpent_sting", "!debuff.serpent_sting.up")
-            assert.are.equal(2, sting.focus, pack)
-            -- D5: no Aimed or Multi line gates on the auto-shot gap or carries a focus
-            for _, key in ipairs({ "aimed_shot", "multi_shot" }) do
-                local _, e = line(pack, "shots", key)
-                assert.is_nil(e.focus, pack .. " " .. key)
-                assert.is_falsy((e.criteria or ""):find("swing", 1, true), pack .. " " .. key)
-            end
-        end
-        for _, pack in ipairs({ "BeastMastery", "Marksmanship", "Survival" }) do
-            local _, mark = line(pack, "default", "hunters_mark", "!debuff.hunters_mark.up")
-            assert.are.equal(2, mark.focus, pack)
-        end
-    end)
-
-    it("keeps the shots out of the deadzone and the strikes in melee range (C11, Hekili's in_range)", function()
-        for _, pack in ipairs({ "BeastMastery", "Marksmanship" }) do
-            line(pack, "default", "call_action_list", "action.auto_shot.in_range")
-        end
-        line("Survival", "default", "call_action_list", "action.raptor_strike.in_range")
-        line("BeastMastery", "shots", "summon_hawk", "pet.hawk.count<2")
-        line("Survival", "melee", "summon_hawk", "pet.hawk.count<2")
-        line("BeastMastery", "shots", "arcane_shot", "mana.pct>=settings.arcane_shot_mana")
-        line("Survival", "melee", "wing_clip", "mana.pct>=settings.wing_clip_mana")
     end)
 end)
 
@@ -369,7 +340,7 @@ describe("Forever Hunter through the engine", function()
     end
 
     before_each(function()
-        H = headless.new({ character = character(), pack = "BeastMastery" })
+        H = headless.new({ character = character(), pack = "Beast Mastery (wowsims.com)" })
     end)
 
     it("runs every declared `now` in VirtualState's context without an error", function()

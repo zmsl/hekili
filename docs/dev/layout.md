@@ -227,34 +227,29 @@ Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
   Flame Shock DoT (12 s, 3 s ticks) on the target modelled from our cast.
 
 `tests/Forever/loop_hunter_spec.lua` runs 3 fights of each Hunter pack in `make check` (seeds 1-3, `#slow`) and 20 in
-`make test-hunter` (`#hunter`), gated by `pack_gate.gate` and asserting its flagged lines ran (Sniper Shot under Rapid
-Fire or Quick Shots and Raptor Strike at tier 1; Serpent Sting and Hunter's Mark at tier 2). Mongoose Bite is not
-exercised headless: in seeds 1-20 it is never the first icon, and in seeds 1-3 IsSpellUsable(14271) never answers true
-(Survival's focus ticks come only from Hunter's Mark and Raptor Strike). The turret
-worlds (Beast Mastery, Marksmanship) shoot Auto Shots on the harness's ranged hand (`W.startRanged`, the `ranged`
-scenario knob), and Quick Shots procs off them under Aspect of the Hawk (10%). The mob swings at us, and our dodge is meant to open
-Mongoose Bite for 5 s, but the window never opens (likely `dodged()` in `tests/Forever/helpers/hunter_world.lua` reads
-`W.t`/`W.truth`, which a batched list answer sees at the finished world). Raptor Strike's cooldown starts at its swing (class-neutral: a queued strike's cooldown). Each
-fight's fresh world gets the pack's aspect at the pull (the character keeps a permanent buff between fights). Neither side
-dies (shaman_world's workaround for the loop's missing kill). The kit's ranges are DB2's (`RANGE`: Hunter Range 8-35,
-Combat Range 0-5); the default worlds set no distance, so they are unchanged. "The Hunter at range, then in melee"
-runs Survival at 25 yd, then 5 yd, its melee list gated on `target.within5`: the bracket reads [5, 35] (past Wing
-Clip, inside Summon Hawk) and the list stays shut, then [0, 5] and it opens, and the bracket holds when every read goes
-secret. Raptor Strike (on the next swing) is unusable and out of range while the bracket says beyond 5 yd, so the
-list's unconditional line no longer shows at range. All three gates are thin: Survival shows no first icon on 72% of its in-combat ticks (seeds 1-3), and
-the turret worlds run out of mana within the first minute
-(idle about 0.74: UNMEASURED pool and regen, no Aspect of the Viper), and Hekili recommends a press during Aimed and
-Sniper Shot's casts on both sides (the world's client sees no cast start: the `casting` refusals). The filler mana
-floors (Arcane Shot, Wing Clip; D7) are settings, off by default; they work after an out-of-combat rest. The first runs
-(class-completion Task 12):
+`make test-hunter` (`#hunter`), gated by `pack_gate.gate` and asserting its focus lines ran (Raptor Strike and Mongoose
+Bite at tier 1; Serpent Sting and Hunter's Mark at tier 2). The packs are the wowsims.com ones (Beast Mastery,
+Marksmanship and Survival (wowsims.com), Task 11 of the wowsims packs plan: wowsims/forever's Melee Weave), and their
+replay and leveling gates are `tests/Forever/wowsims_hunter_spec.lua`. The Beast Mastery and Marksmanship worlds stand
+at 11 yd (the weave's range: the shots in their band, Raptor Strike and the melee lines out of reach) and shoot Auto
+Shots on the harness's ranged hand (`W.startRanged`), Quick Shots procs off them under Aspect of the Hawk (10%); they
+run the same pack text and kit, so their lines match. The Survival world sets no distance (every check in range) and
+swings a two-hander. Each world's costs are the known rank's (the leveling brackets). Raptor Strike's cooldown starts
+at its swing (class-neutral: a queued strike's cooldown). Each fight's fresh world gets the pack's aspect at the pull
+(the character keeps a permanent buff between fights). Neither side dies (shaman_world's workaround for the loop's
+missing kill). The kit's ranges are DB2's (`RANGE`: Hunter Range 8-35, Combat Range 0-5). "The Hunter at range, then
+in melee" runs Survival at 25 yd, then 5 yd: its four `target.within5` lines stay shut while the bracket reads [8, 35],
+open at [0, 5], and the bracket holds when every read goes secret. Mana is secret in combat, so the belief holds its
+lower bound and the worlds idle about 0.72 (Beast Mastery, Marksmanship) and 0.56 (Survival) of the time. The lines
+after the swap (wowsims packs plan, Task 11; the hand-built lists' were 0.983/0.986/0.945 at 3 fights):
 
 ```
-Beast Mastery solo: fights=3 agreement 0.983 (1036 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 65.3 (oracle 61.9)], episodes 3.55/min; dps A/B 0.978; ... [seeds 1-3]
-Marksmanship solo: fights=3 agreement 0.986 (928 ticks); react median 0 p90 1 never 0.013; refused per 100 [casting 76.0 (oracle 74.5)], episodes 3.55/min; dps A/B 1.039; ... [seeds 1-3]
-Survival solo: fights=3 agreement 0.945 (770 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.947; ... [seeds 1-3]
-Beast Mastery solo: fights=20 agreement 0.980 (6925 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 65.7 (oracle 61.7)], episodes 3.59/min; dps A/B 1.006; ...
-Marksmanship solo: fights=20 agreement 0.981 (6374 ticks); react median 0 p90 1 never 0.037; refused per 100 [casting 75.5 (oracle 73.4)], episodes 3.43/min; dps A/B 0.997; ...
-Survival solo: fights=20 agreement 0.947 (5182 ticks); react median 0 p90 1 never 0.009; refused per 100 [], episodes 0.00/min; dps A/B 0.982; ...
+Beast Mastery solo: fights=3 agreement 0.999 (1715 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.008; ... [seeds 1-3]
+Marksmanship solo: fights=3 agreement 0.999 (1715 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.008; ... [seeds 1-3]
+Survival solo: fights=3 agreement 0.965 (882 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.979; ... [seeds 1-3]
+Beast Mastery solo: fights=20 agreement 0.998 (11522 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.005; ...
+Marksmanship solo: fights=20 agreement 0.998 (11522 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.005; ...
+Survival solo: fights=20 agreement 0.966 (5903 ticks); react median 0 p90 1 never 0.010; refused per 100 [], episodes 0.00/min; dps A/B 1.004; ...
 ```
 
 Hunter checkpoint (in game, a level 60 Hunter with a ranged weapon and a pet; provisional until answered): the Hunter

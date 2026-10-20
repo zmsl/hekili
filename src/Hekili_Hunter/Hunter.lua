@@ -5,7 +5,8 @@
 -- never focus), Auto Shot as the ranged clock's anchor (`rangedSwing`, C7; no priority reads it: shots without weaving,
 -- D5), Summon Hawk's guardians (two at most, 18 s each: RegisterPets `cap`, C1), the shared cooldowns (Arcane Shot and
 -- Summon Hawk; Aimed Shot and Multi-Shot), Raptor Strike on the next swing, Mongoose Bite's window from the plain
--- usability read, and the default priorities (all provisional: no in-game check yet, D5).
+-- usability read, Immolation Trap, the time to the next main-hand swing (`mainhand_remains`), and the default
+-- priorities (the wowsims.com packs, translated from wowsims/forever's Melee Weave; no in-game check yet).
 -- Research: docs/research/2026-10-15-forever-hunter/research.md and the class-completion research §5.
 -- Unmodelled: ranged haste on the auto-shot clock (Rapid Fire, Quick Shots; their haste on Aimed, Multi and Sniper
 -- Shot's casts is modelled), the pet and its abilities (D6), Aspect of the Viper and the other runes no priority names,
@@ -37,7 +38,7 @@ local spec = Hekili:NewClass("HUNTER", {
             icon = 132164,
             role = "attack",
             ranged = true,
-            package = "BeastMastery",
+            package = "Beast Mastery (wowsims.com)",
         },
         {
             key = "marksmanship",
@@ -46,7 +47,7 @@ local spec = Hekili:NewClass("HUNTER", {
             icon = 132222,
             role = "attack",
             ranged = true,
-            package = "Marksmanship",
+            package = "Marksmanship (wowsims.com)",
         },
         {
             key = "survival",
@@ -55,7 +56,7 @@ local spec = Hekili:NewClass("HUNTER", {
             icon = 132215,
             role = "attack",
             ranged = true,
-            package = "Survival",
+            package = "Survival (wowsims.com)",
         },
     },
 })
@@ -522,34 +523,6 @@ spec:RegisterAbilities({
     },
 })
 
--- The filler lines' mana floors (D7: a percent of the maximum, one setting a line). Off by default: mana is secret and
--- `mana.pct` reads the belief's low-biased lower bound, which reaches the maximum only after an out-of-combat rest
--- (about 5-6 minutes), so a floor is honest after that rest (Retribution's and Enhancement's precedent).
-local function manaSetting(key, name, desc, ...)
-    spec:RegisterSetting(key, 0, {
-        type = "range",
-        name = name,
-        desc = desc,
-        min = 0,
-        max = 100,
-        step = 1,
-        width = "full",
-    }, ...)
-end
-manaSetting(
-    "arcane_shot_mana",
-    "Arcane Shot Mana Floor",
-    "Arcane Shot only while your mana is at least this percent of its maximum. Mana is estimated low until you rest out of combat. 0 turns the floor off.",
-    "beast_mastery",
-    "marksmanship"
-)
-manaSetting(
-    "wing_clip_mana",
-    "Wing Clip Mana Floor",
-    "Wing Clip as a filler only while your mana is at least this percent of its maximum. Mana is estimated low until you rest out of combat. 0 turns the floor off.",
-    "survival"
-)
-
 -- Talents: { talent tree (1 Beast Mastery, 2 Marksmanship, 3 Survival: the dominant tree picks the spec), rank 1's
 -- spell, max rank }: the DB2's 46 nodes (`wowdb talents HUNTER`; the tree is the DB2's Talent.TabID), keys the
 -- snake_case names (a nameless node talent_<spell>). No ability reads one yet.
@@ -608,7 +581,8 @@ spec:RegisterTalents({
 })
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
--- run it, never this block (tests/Forever/hunter_spec.lua checks it matches). Provisional (each description says why).
+-- run it, never this block (tests/Forever/hunter_spec.lua checks it matches). Each pack's .simc is generated from its
+-- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/hunter_*.lua).
 spec:RegisterPack(
     "Beast Mastery (wowsims.com)",
     20261020913,
@@ -624,18 +598,6 @@ spec:RegisterPack(
     20261020957,
     [[Hekili:DwvxVnnpu4FlCbIM3vYxDDJvrU4fbi2emHiJBDItStJjo2r2oRA3KF7CCBxBswtbXnvN4Z55581JDrbOhqXeSHIUp0p8Qa)q)BwEnk28udff3GZRWRbdbUg(nUv9i7rmVlD2g5gnRw7MlRDSX9exIjwUYAzCZTcu2jPv3qZrXF5N3)WN(Xk9E6qXLmcHUddvNpzIw1LAkPDP7pZRqQOpsvDPeAbULB6s))V)1Uu44U0Eu0Y8S5v7v2kmuLhPr7HB4AV9WCHpC)LwkCMdjqHfAou5eWwAtit3LIjeP4nGrf9jTBx6hXg8QtuiZ(2TpaKuAmn6vEERzMY2mBT7nkuhGtOEjlwCZcFI)L(l8DH5OswW4WKgNBysH2TrrbWzyt0UAxNuJvvZlK5T6OW5G7Mwopb8hg2D3lqDrKh226Mezrcm6skXBQgGY)aQifUXivjAJIvrN3QPaOIK15KOG9jm4qWaXNSGyfrVIqZAlkC773TTPp0APyTucjiJzOpZTfRbRwtnUBGXgtSSpeBvrOQKkwE15JKvxlH9h8vcSlBoFWByI1j5C2Fimnv1qfgy2aX3Vjh4yuxIv5ybnrxkndAEqXX2EQLOz7C4E8u3CS2CXSG)B2SGG3U051x7448(OAmtuIfKef1AQ7Udfd6inaE0DmotB0BVwVtEdM3V9AovGZ4uc6dO4EBxRZ96nu8anakE7QXgGbYXikYvWYtXWO4j24hzTVJdKgAjDXKKoCzCKRbANHv4LJi7zi91oNjfadlNGHrAQZtYvtqYbT25HF9uDrFP2Pg)J1IwYE3eK1tBAd7Mjc7OQSFc)N1SiBYIp860PeMhFBcuiH)nsOX6Ybm43RLFXdHBlhOGWTMsPc(BjAfJZGhX)8(3O36g97p]]
 )
-spec:RegisterPack(
-    "BeastMastery",
-    20261020217,
-    [[Hekili:9AvxVnUnqWFl9PMGMt3f3VaUwFa(a6H0IMGItPVkjAPLwerIuGKkgUpOF7DwszBzz72dOa9HyiXD3zND2Dzu29zpNLwj8u2tlE3IF4(3HFV)hZs976OS0or5lIn4bTOf)(rs48pI)i7o24UgJOIbyDVQX)R6S1xelxhvML(WF(0Z)YNF)AgJ829GuRQQOyGKdE9jJLELSdfHCnumMTHIh614H7gkEU3Ajy5bX2xgkUPZAEv5ugTO59dfAZqHs)MnGUdfL1ujCzh5)PHcxTX7gk2Q81MEe(ws8QsVba6RHV1anywORgpWlSBi)xJZQO19sjEO1urnne8qAnTdfMEWZsqq3Ti1R4YeaBKJiejyaXi5zWEuyXHRjjQteSPDTGz3ChmAejkhA7EMmIukz7inEl1d2JYOMGRkCqL10XvaE0RyfCbW9ZIofI6tkoBmOLgttLzRg28BHyL232YNhj7MEHTsj0aN(UO0aBRSLcnIpfsyefCUYYAQWYYXEqreRuT8jrxdm(X(gV6nhJTnu5XIc55gH0ZSDRzRt16ERmoaWsXPD6v)XVd8TKKSKUmuon7UnjMlx8vUN4DQkASfurIQ)YWC)Mv9EZEEPanSc9gIdFA1XzTvOHYlBmgWkLl0hCK3hhwms0ExVJHwkqLLG9aRrQAW6HO0J5qxsNLIn2LIWmrUrMd6KZZy3PKl)kEEk5CBj9Dd)2zG8nlFBDy6WHTgBeG4izY0ZNg8)H8opBstzVB5IVKSIqT84wUetB317iKdz(MYQL3p1NsrttE818gLZFhF3YYW6jNLOLebAx58HjkDEOxDuAc(U0fMCpuCDKpjumLgWVFEXm3rIfHgDauoaUpN0v6)WYXURlzIh5HXGZWWfx)YDHXHlioN4Wjn0d0G3qc54CBT8UYbgYwFLYjn1Qi3hGkMLIvd(YUz3WY6OJVioaeE4PW96KwSg3xL9X9ZMWHJQwwAPvHoPsGz4zQxMhz4kqmrLMcXxGEYO(TZq9iaxtcNq(PwYsdYpZta73DnYEqTzV((R41rDFkHMR)zmgPJl()tI85RyNuNxFn8sY(5c0SfWJ5DQHtLN5Q(KTtUmoGWXf4ljQNknxCl9iuZ3ZJtP5XVKioNg0Zdx09)MIEz56FxN9rcJIU2yXh0qVOAu4FTm(nl3gmN93p]]
-)
-spec:RegisterPack(
-    "Marksmanship",
-    20261020551,
-    [[Hekili:9A13Vnnmq4)w4j2eDH1cJhaLjvKyAGGjGmEnjUjNBSAIDW2PvfHYF7CNDBtAw6ysiXlB(h39D39DFNBINgFFCuoZcX3n7YzVz6LZU8QRMghz3wdXr1SSvSL4cjRc)7xy6vMkM0uiQPl3wQy5ealAeL2pkJxmkwMAilo62FC39F47VT6imke55G3pWGgDJsdRbDBA)q1MEBJ0c6jTP33O1GTn9SATATWiusw5BBtLQ2uH8ILyw2MMvazRAt3c231MAkuwtB6gHTq1GoUbyRfYLiu2c0wltVeSphTihw0W54Ikvouwc5TPCTQQnv1GPtgZynNJrAovmiok(oeULTbdgtMVpljWOSVnDbWXYbDwvTGrjZqdus0tm7Hn7ZKDifb6AqI7ISyYIzDbGMkWdY1QA0FgU0kiIAgI73z1c0RBeu0iqZuQYC1gjE3CrfvlripGfDKuutErBBtBK50MJDhp4BncIbJ8CxxSMIimxNXKWbaDP7xAkTIl8ysHVYv2(kcb4mg3sUVrTXiQmVK7BYepSVFo)RFgbtdCqdYmxvuU98Gd5aTLAfwJih2X85al)xkkxoBEJvTVOeycOzYLa5E)SLIhQOqcNxQOYuyC0VbSwVKqXXU6ITe0CgwtbOixR4Isu7ZYSOAZeuRbF)mK5KcjkEcMojfOoyIGh(msgf8W7cAQB)0da5fHVSWjkmj0GHdaVsmO)59D(FiUdJgxL1ycN9uIk6QMKjjCuLmPXaym4jlZYdN23MmwzzIFBsPWyNqpCe6gcPO4VjGHTRe6WaHmX1R6OgNTHms16mzWnymm(HJeJRRnsnCKbhX7hGWng4WFhatjaCE3vMOR)2D0pP5bN1MrHJ5uzE4qyirwqDM96WDsltqplsCAWhGrfndDac621qciHkbyUg544iCKHEWBWJRelBO3GDaHlUZ9KoizlWhXIF)ELl()dCASfbzGvzAb24fS4OtrJDiD0nXrogKqeH9vNe2ri3Xy3ErPRjDigtPy86tvGDKC)a)eAheQxDcu7Am9bDydkMi1ODVB8ODHhmHEe3F6P4NwtBW8BxC7FXJ3Y6nCtLXbe66DJ1eoMAgDiVdQHpt4LXj(VYWlKD85H3j)VXOJtx)DE26tySOluA8JDGvIsb(lt7(GMZDxh)N)]]
-)
-spec:RegisterPack(
-    "Survival",
-    20261020438,
-    [[Hekili:LAvxVTnoqWFl3txcox1y3IdhAovGMIwK(vWH4u03KiL0sBctrQssfx)c)TF7sQylN44uG8qIL5U7S7mCiLlMwCtX8gUhkUA2zZ(7PNn7Sx)Q)PyUFthumVJxVIVaFqZBX)pV3ER8wUIcSrz4nuXv9sL)t6IQdIJRdQlMF53V6MpC9BCBRFPSPbs1aomHpASWTGnWURfb2L9ApyNeyFduaeyN0zn3kDsJMREtGPnbMu)If4Gfy1lH6vb2gWFEGDnVZBiO8w5km4p7HEOjWm6aZVexqd)YhyU1s9ccEJEHX4W1Vq6H)0fyyGgZ6atynTdL074vsL0VjWSaVzYWYl5RxHfW1ndl452fGNaPLBXjQ10akf19eyMECWQ5oV7uKdVJuhCumIHYVaWqd4L4pb13IqvbcuKWQnTv8JXZ1lbDsmPrDZaC7tts7W)8JylhBSxsLnDYd7ojECs6wFhjhxXSZJeqNgMgAPViRxrY0AdTP22saCjkxb2IEUTrY13jC)a3hcS3RKD4cUbLqirzdH5eUWtFU2S2jBDVuKmkXbl5lE3)91jevfGf01anQQn488jSNkUxsn(glhbxbcsS79NMHlrDPnbHlQGUuPjPziILRxazJNX0ERg1cHYqYV0fvgh49jdLrGBNvionGG3R8z4XfRbjeEcIxtdKlRZcP9XCE0duAeLiVlRidWePi)pQ6fISdemRVl85haZFL)YLXDmxjz8Ii0armgV(4IZTr)tzI8t6Da2hr5I6M8PteM6Ex(0TjJ4)Cg07pEj4N97mMyP1CLQm91sLeBlDBuEChIqifjBp6Kj1LX9UDAvm)82HJbLv4PGhqZusylDjBC5k0fFGOr)CjD6NgGoWNrpNvBqs8VZEyb0vnL1O7HsNCpzD1(3Mp4zCzBJxgTwFUyo6XPR6U3TPe7D0LUrGXhUkE)nO5v4LmfxCNbdtymplMhjkLThr8rkzmNP8E1JL3o2xmV2I4BLC0JFpvGG41pceB57yaEsDbr0tVWiEQ6qKFKhMcUTD7zn(9eJdyOhpRhZ1FiTBuLh2VVRZJdSDwpOAUd0JEeyh03)GuYqvME5EYsfL4TxRCmh2ZuHEmHFF6)06MpnY8E)sJf)LgWk89047ng(ffNgdx8))]]
-)
+
+-- The hand-built lists the wowsims.com packs replaced: a saved choice of one falls back to the spec's default.
+spec:RetirePacks({ "BeastMastery", "Marksmanship", "Survival" })

@@ -5,10 +5,11 @@
 ### New
 - Rogue: "Assassination (wowsims.com)", "Combat (wowsims.com)" and "Subtlety (wowsims.com)", translated from
   wowsims.com's Rogue priority, are each specialization's default.
-- Hunter: Beast Mastery, Marksmanship and Survival default priorities (new addon folder Hekili_Hunter). Sniper Shot
-  under Rapid Fire or Quick Shots, Mongoose Bite and Raptor Strike first; Serpent Sting and Hunter's Mark as focus
-  abilities; shots only while in Auto Shot range and the melee list only in melee range; Arcane Shot and Wing Clip mana
-  floors off by default.
+- Hunter: Beast Mastery, Marksmanship and Survival (new addon folder Hekili_Hunter).
+- Hunter: "Beast Mastery (wowsims.com)", "Marksmanship (wowsims.com)" and "Survival (wowsims.com)" are each
+  specialization's default priority, translated from wowsims/forever's Melee Weave: Wing Clip, Mongoose Bite, Strider
+  Kick and Immolation Trap while you are in melee range, the shots between swings. Resourcefulness lowers the melee
+  strikes' and traps' mana cost.
 - Pets and guardians: the addon tracks your pet and your summoned guardians (Summon Hawk, up to two), so priorities can
   ask whether a pet is out and how many guardians are up.
 - Specializations: each supported class has one specialization page per talent tree, each with its own priorities
@@ -20,6 +21,8 @@
 ### Changed
 - Rogue: the hand-built Assassination, Combat and Subtlety priorities are gone, with their settings (Bleeds on
   Trash, Maintain Expose Armor, Vanish to Re-open, Ambush Opener, Backstab Builder, Poison Reminders).
+- Hunter: the hand-built BeastMastery, Marksmanship and Survival priorities are gone, with their Arcane Shot and Wing
+  Clip mana floor settings.
 - Specializations follow your talents: a respec or dual-spec swap that moves your most-spent talent tree activates
   that tree's specialization, the one you last activated for it (for example Guardian on the Feral Combat tree) or
   else its first. Swapping between two builds of the same tree keeps your choice. The "your talents favor" hint is gone.
@@ -62,13 +65,15 @@
   hit shows up (the swing's rage had already paid for the ability).
 
 ### Known issues
-- Hunter priorities are provisional and unchecked in game: Auto Shot timing, the melee/ranged deadzone, the
-  percent-of-base mana costs and the rune Raptor Strike variants. Survival's Mongoose Bite window is untested.
+- Hunter priorities are unchecked in game: Auto Shot timing, the percent-of-base mana costs and the rune Raptor
+  Strike variants. Rapid Fire and racial cooldowns are not part of the wowsims.com priorities yet.
 - Rogue, Paladin and Shaman priorities are not yet checked in game.
 
 ### Upgrade notes
 - Rogue: a saved choice of the Assassination, Combat or Subtlety priority falls back to that specialization's
   wowsims.com default.
+- Hunter: a saved choice of BeastMastery, Marksmanship or Survival falls back to that specialization's wowsims.com
+  priority.
 - Your class's existing settings (thresholds, toggles, ability and item options) are copied once into each of its
   specializations, and a custom priority you had chosen stays selected for your active specialization. Change them per
   specialization afterwards; old priority exports still import.

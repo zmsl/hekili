@@ -55,8 +55,8 @@ describe("the headless Hunter gates, 20 fights a pack #hunter", function()
     end
 end)
 
--- Gap 13 (wowsims unitDistance): the world at 25 yd, then in melee. Survival's melee list gated on the translator's
--- `target.within5` (its line's criteria swapped in place) against the engine's range bracket.
+-- Gap 13 (wowsims unitDistance): the world at 25 yd, then in melee. Survival (wowsims.com)'s melee lines carry the
+-- translator's `target.within5`, read against the engine's range bracket.
 describe("the Hunter at range, then in melee", function()
     it("brackets the distance from the kit's ranges and opens the melee list only in reach", function()
         local loop = require("Game.harness.loop")
@@ -76,15 +76,12 @@ describe("the Hunter at range, then in melee", function()
         local L = loop.new(C)
         local H = L.us
         local pack = H.Hekili.Engine.settings.packs[C.PACK]
-        local swapped
-        for i, e in ipairs(pack.lists.default) do
-            if e.action == "call_action_list" and e.list_name == "melee" then
-                e.criteria, swapped = "target.within5", i
-                H.Hekili:LoadScript(C.PACK, "default", i)
-            end
+        local gated = 0
+        for _, e in ipairs(pack.lists.default) do
+            gated = gated + (e.criteria == "target.within5" and 1 or 0)
         end
-        assert.is_number(swapped)
-        local MELEE = { mongoose_bite = true, strider_kick = true, summon_hawk = true, wing_clip = true }
+        assert.are.equal(4, gated) -- Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip
+        local MELEE = { mongoose_bite = true, strider_kick = true, immolation_trap = true, wing_clip = true }
         local seen = { far = {}, near = {}, secret = {} }
         local run = loop.run(L, 1, {
             duration = 30,
@@ -122,8 +119,8 @@ describe("the Hunter at range, then in melee", function()
         local function view(x)
             return { x.within, x.outside, x.usable, x.inRange, x.distance }
         end
-        -- [5, 35]: past Wing Clip, in Summon Hawk; Raptor Strike out of reach
-        assert.are.same({ false, true, false, false, 20 }, view(seen.far))
+        -- [8, 35]: in the shots' band; Raptor Strike out of reach
+        assert.are.same({ false, true, false, false, 21.5 }, view(seen.far))
         assert.are.same({ true, false, true, true, 2.5 }, view(seen.near)) -- [0, 5]
         assert.are.same({ true, false, true, true, 2.5 }, view(seen.secret)) -- the last plain bracket stays
         assert.are.equal(0, seen.far.melee)

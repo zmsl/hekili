@@ -190,10 +190,14 @@ M.MAP = {
     },
 }
 
--- The packs' worlds: `kit` the abilities the character knows (every rank), `weapon` the main hand, `ranged` the ranged
--- hand (shooting from the pull), `aspect` the one the character keeps up, `uptime` the debuffs reported.
+-- The packs' worlds: `pack` the wowsims.com pack it runs, `kit` the abilities the character knows (every rank; with
+-- what the pack recommends), `weapon` the main hand, `ranged` the ranged hand (shooting from the pull), `aspect` the
+-- one the character keeps up, `uptime` the debuffs reported, `distance` our yards from the mob (none: every check in
+-- range).
 local PACKS = {
     BeastMastery = {
+        pack = "Beast Mastery (wowsims.com)",
+        distance = 11, -- wowsims's range between weaves (the request's distanceFromTarget): Raptor Strike out of reach
         kit = {
             "auto_shot",
             "aspect_of_the_hawk",
@@ -204,6 +208,7 @@ local PACKS = {
             "serpent_sting",
             "aimed_shot",
             "multi_shot",
+            "raptor_strike",
         },
         weapon = { 150, 220, 3.5 },
         ranged = { 140, 200, 3.0 },
@@ -211,6 +216,8 @@ local PACKS = {
         uptime = { "serpent_sting", "hunters_mark" },
     },
     Marksmanship = {
+        pack = "Marksmanship (wowsims.com)",
+        distance = 11, -- wowsims's range between weaves (the request's distanceFromTarget): Raptor Strike out of reach
         kit = {
             "auto_shot",
             "aspect_of_the_hawk",
@@ -221,6 +228,7 @@ local PACKS = {
             "sniper_shot",
             "arcane_shot",
             "multi_shot",
+            "raptor_strike",
         },
         weapon = { 150, 220, 3.5 },
         ranged = { 140, 200, 3.0 },
@@ -229,6 +237,7 @@ local PACKS = {
     },
     -- Melee: a two-hander, no Auto Shots.
     Survival = {
+        pack = "Survival (wowsims.com)",
         kit = {
             "aspect_of_the_beast",
             "hunters_mark",
@@ -237,6 +246,10 @@ local PACKS = {
             "strider_kick",
             "summon_hawk",
             "wing_clip",
+            "aspect_of_the_hawk",
+            "serpent_sting",
+            "arcane_shot",
+            "multi_shot",
         },
         weapon = { 180, 260, 3.6 },
         aspect = "aspect_of_the_beast",
@@ -283,7 +296,7 @@ end
 
 local function content(name)
     local P = PACKS[name]
-    local C = { PACK = name, IDS = {} }
+    local C = { PACK = P.pack, IDS = {} }
     C.SPEC = ({ BeastMastery = 100031, Marksmanship = 100032, Survival = 100033 })[name]
 
     function C.character()
@@ -360,6 +373,7 @@ local function content(name)
         fsr = { [MANA] = FSR },
         power = MAX,
         mobHealth = 1e9,
+        distance = P.distance,
         script = hooks,
     }
 
@@ -392,7 +406,7 @@ local function content(name)
             end
             local b = H.Hekili.Class.abilities[k]
             local out = { b.id }
-            for _, id in ipairs(type(b.copy) == "table" and b.copy or {}) do
+            for _, id in ipairs(type(b.copy) == "table" and b.copy or { b.copy }) do
                 out[#out + 1] = id
             end
             return out

@@ -41,6 +41,7 @@ return {
         distanceFromTarget = 11,
     },
     map = {},
-    focus = { hunters_mark = 2, serpent_sting = 2, sniper_shot = 1 }, -- the retired Marksmanship list's tiers (P9.3)
+    -- the retired Marksmanship list's tiers (P9.3); its Sniper Shot tier 1 is dropped: the Melee Weave never casts it
+    focus = { hunters_mark = 2, serpent_sting = 2 },
     leveling = {},
 }
