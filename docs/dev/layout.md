@@ -287,6 +287,12 @@ research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`)
   queued (IsCurrentSpell) and its 6 s cooldown from the swing that takes it?
 - H13 (Q8): Hunter's Mark and Serpent Sting on the target unreadable in combat (modelled from our casts)?
 
+Core checkpoint (in game, any rage user; provisional until answered):
+- R1 (the swing rung lift, `Families/Resources.lua` `owe`): when does a white swing's rage arrive, at PLAYER_SWING or with
+  its wound on the target about 0.47 s later? Log `UNIT_POWER_FREQUENT` "RAGE" (and `UnitPower("player", 1)` out of
+  combat) with PLAYER_SWING and the target's UNIT_COMBAT in one capture. The belief and the wowsims replay take it as in
+  at the swing; if it comes with the wound, the lift goes and the replay's rage lands with its wound.
+
 A deliberate pack or APL change re-records the fixture in the same commit:
 `ARMS_RECS=record .lua/bin/busted tests/Forever/arms_recs_spec.lua`.
 

@@ -21,8 +21,10 @@ M.LEAD = 0.5 -- the world time of the log's first line at the latest: after the 
 M.EPS = 1e-6 -- a line's place within its timestamp, as time: a decision falls just before its Casting line
 M.TAIL = 0.2 -- the exporter's execute proportion: the last 20% of the duration
 
--- Our white swing's landing lag per hand (main, off): the observer's measured medians (P log 2, G5), no spread.
--- shortcut: fixed medians, deterministic; draw from observer.lag when a gate needs the tail.
+-- Our white swing's landing lag per hand: the main hand's median (P log 2, 474 ms) and the off hand's own-swing mode
+-- (G5, 703 ms; log 2's off-hand median is 953 ms), no spread. The swing's rage stays at the swing, the log's line: when
+-- the game credits it is UNMEASURED (Families/Resources.lua's owe, checkpoint R1).
+-- shortcut: fixed lags, deterministic; draw from observer.lag when a gate needs the tail.
 M.LAND = { observer.DEFAULTS.main.med, observer.DEFAULTS.off.own }
 
 M.MOVE = 20 -- wowsims's OtherActionMove: the Movement aura (sim/core/movement.go), its stacks the distance in yards
@@ -508,7 +510,7 @@ function M.new(text, H, o)
                         speed = R.speed,
                         ours = true,
                     })
-                    W.at(T + M.LAND[e.hand], function() -- its outcome, one landing lag later (the rage is already in)
+                    W.at(T + M.LAND[e.hand], function() -- its outcome a landing lag later; rage at the swing
                         W.emit({
                             kind = "land",
                             src = us,

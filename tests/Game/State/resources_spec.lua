@@ -338,12 +338,12 @@ describe("resources", function()
                 assert.is_true(b.lo <= 8) -- lo stays a floor
             end)
 
-            it("adds a swing whose wound lands after a short answer at its instant to the bounded value", function()
-                -- the client's order (P log 2): the swing at 5, a short answer sampled then (spender_a, 10), the
-                -- wound 0.47 s later: the answer bounds the pre-swing rage, the credit adds to it
+            it("adds a swing whose wound lands late to a short answer sampled before it", function()
+                -- a short answer (spender_a, 10) at 4.9 bounds the rage before the swing at 5 (the rage taken as in at
+                -- the swing: Resources.lua's owe); the wound 0.47 s later adds the swing to it
                 obs(Obs.Swing, 2.4, 1, 0, 1)
+                obs(Obs.Usable, 4.9, 1, 0, 1)
                 obs(Obs.Swing, 5, 1, 2.6, 4)
-                obs(Obs.Usable, 5, 1, 0, 1)
                 I.Fold(5, false)
                 I.Settle(5.47)
                 obs(Obs.Swing, 5, 1, 0, 1)
@@ -351,6 +351,44 @@ describe("resources", function()
                 local r = VS.Power(fs.RAGE, 6)
                 within(9 + 9, r.est)
                 assert.is_true(r.hi < 10 + 9 * (1 + I.REGEN_SPREAD))
+            end)
+
+            it("nets a usable answer's lift in the swing's window against its late wound", function()
+                -- 9 believed; the swing at 5 makes 18; spender_a (10) answers usable at 5.1, before the wound: the
+                -- rung lifts 9 to 10 on the swing's rage, so the wound at 5.47 adds 9 - 1: 18, not 19
+                obs(Obs.Swing, 2.4, 1, 0, 1)
+                obs(Obs.Swing, 5, 1, 2.6, 4)
+                obs(Obs.Usable, 5.1, 1, 1, 0)
+                I.Fold(5.1, false)
+                within(10, VS.Power(fs.RAGE, 5.1).est)
+                I.Settle(5.47)
+                obs(Obs.Swing, 5, 1, 0, 1)
+                I.Fold(5.47, false)
+                local r = VS.Power(fs.RAGE, 6)
+                within(18, r.est)
+                assert.is_true(r.lo <= 18)
+            end)
+
+            it("keeps an off-hand swing's lift past a later main-hand wound (dual wield)", function()
+                -- truth: 5, the off hand's swing at 4.8 makes 10, spender_a pays it at 5 (0), the main hand's at 5.1
+                -- makes 9. Believed 0: the rung lifts 10; the main wound (5.57) owes nothing (after the rung), the
+                -- off-hand wound (6.0) pays its 4.5 from the lift: 9, lo below it
+                local def = fs.def(fs.new(9))
+                def.resources[1].swingOff = 4.5
+                boot(def)
+                obs(Obs.Swing, 4.8, 2, 1.8, 4)
+                obs(Obs.CastSuccess, 5, 1)
+                obs(Obs.Swing, 5.1, 1, 2.6, 4)
+                I.Fold(5.1, false)
+                I.Settle(5.57)
+                obs(Obs.Swing, 5.1, 1, 0, 1)
+                I.Fold(5.57, false)
+                I.Settle(6)
+                obs(Obs.Swing, 4.8, 2, 0, 1)
+                I.Fold(6, false)
+                local r = VS.Power(fs.RAGE, 6)
+                within(9, r.est)
+                assert.is_true(r.lo <= 9)
             end)
 
             it("owes nothing to a swing after the rung", function()
