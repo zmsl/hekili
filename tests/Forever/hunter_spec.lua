@@ -8,6 +8,7 @@ local ld = require("Forever.helpers.load_druid")
 local headless = require("Game.harness.headless")
 
 local FILE = "src/Hekili_Hunter/Hunter.lua"
+local TOC_SHARED = "src/Hekili_Shared/Hekili_Shared.toc"
 
 -- key = { spell IDs in rank order, the top rank's mana cost, cooldown, gcd }, from the DB2 (`wowdb spell <name>`): the
 -- cooldown is the larger of RecoveryTime and CategoryRecoveryTime; a percent-of-base-mana cost (PowerCostPct) as the
@@ -193,30 +194,45 @@ describe("Forever Hunter", function()
         assert.are.same({ "raptor_strike" }, e.applied)
     end)
 
-    it("prices the melee strikes and the trap 30% / 60% lower with Resourcefulness ranks 1 / 2 (440529)", function()
-        for _, key in ipairs({ "mongoose_bite", "wing_clip", "immolation_trap", "strider_kick", "raptor_strike" }) do
+    -- Resourcefulness (440529: 30% / 60% at ranks 1 / 2) and Efficiency (19416: 3% a rank) on each ability's top-rank
+    -- price, their percents added (one SPELLMOD_COST percent each). wowsims's logs: the 2/2 Resourcefulness builds pay
+    -- 40 Raptor Strike, 26 Mongoose Bite, 32 Wing Clip, 98 Immolation Trap, 39.6 Strider Kick; the 2/5 Efficiency BM
+    -- build 94 Raptor Strike, 75.2 Wing Clip, 178.6 Arcane Shot, 235 Serpent Sting, 224.66 Multi-Shot (of 239).
+    it("prices the abilities under Resourcefulness and Efficiency by rank", function()
+        local KEYS = {
+            "raptor_strike",
+            "mongoose_bite",
+            "wing_clip",
+            "immolation_trap",
+            "strider_kick",
+            "arcane_shot",
+            "serpent_sting",
+            "multi_shot",
+            "aimed_shot",
+            "summon_hawk",
+            "hunters_mark",
+            "rapid_fire",
+        }
+        for _, key in ipairs(KEYS) do
             local ids = KIT[key][1]
             w.game.known[ids[#ids]] = true
         end
         local e = ld.env(w)
-        local function costs()
+        local function costs(res, eff)
+            e.talent.resourcefulness = { rank = res, enabled = res > 0 }
+            e.talent.efficiency = { rank = eff, enabled = eff > 0 }
             local out = {}
-            for _, key in ipairs({
-                "mongoose_bite",
-                "wing_clip",
-                "immolation_trap",
-                "strider_kick",
-                "raptor_strike",
-            }) do
-                out[#out + 1] = math.floor(ld.run(w.abilities[key].spend, e) * 10000 + 0.5) / 10000
+            for _, key in ipairs(KEYS) do
+                out[#out + 1] = math.floor(ld.run(w.abilities[key].spend, e) * 100000 + 0.5) / 100000
             end
             return out
         end
-        assert.are.same({ 65, 80, 245, 0.0581, 100 }, costs())
-        e.talent.resourcefulness = { rank = 1, enabled = true }
-        assert.are.same({ 45.5, 56, 171.5, 0.0407, 100 }, costs())
-        e.talent.resourcefulness = { rank = 2, enabled = true }
-        assert.are.same({ 26, 32, 98, 0.0232, 100 }, costs())
+        -- raptor, bite, clip, trap, kick, arcane, sting, multi, aimed, hawk, mark, rapid fire
+        assert.are.same({ 100, 65, 80, 245, 0.0581, 190, 250, 0.139, 310, 190, 60, 100 }, costs(0, 0))
+        assert.are.same({ 70, 45.5, 56, 171.5, 0.04067, 190, 250, 0.139, 310, 190, 60, 100 }, costs(1, 0))
+        assert.are.same({ 40, 26, 32, 98, 0.02324, 190, 250, 0.139, 310, 190, 60, 100 }, costs(2, 0))
+        assert.are.same({ 94, 61.1, 75.2, 245, 0.0581, 178.6, 235, 0.13066, 291.4, 178.6, 60, 100 }, costs(0, 2))
+        assert.are.same({ 34, 22.1, 27.2, 98, 0.02324, 178.6, 235, 0.13066, 291.4, 178.6, 60, 100 }, costs(2, 2))
     end)
 
     it("answers mainhand_remains, the time to the next main-hand swing (wowsims's Multi-Shot weave gap)", function()
@@ -293,13 +309,18 @@ describe("Forever Hunter priorities", function()
     it("names only registered abilities, auras, settings and the hawk", function()
         local cls = ld.load(nil, FILE, "HUNTER")
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, settings = cls.settings }
-        -- every race's racials (src/Hekili_Shared/Races: rule 13's Blood Fury) are registered abilities too
+        -- every race's racials (the Races files Hekili_Shared's TOC lists: rule 13's Blood Fury) are registered too
         local racials = {}
-        local pipe = assert(io.popen("cat src/Hekili_Shared/Races/*.lua"))
-        for key in pipe:read("*a"):gmatch('RegisterAbility%("([%w_]+)"') do
-            racials[key] = true
+        local toc = assert(io.open(TOC_SHARED))
+        for path in toc:read("*a"):gmatch("(Races\\[%w_]+%.lua)") do
+            local f = assert(io.open("src/Hekili_Shared/" .. path:gsub("\\", "/")))
+            for key in f:read("*a"):gmatch('RegisterAbility%("([%w_]+)"') do
+                racials[key] = true
+            end
+            f:close()
         end
-        pipe:close()
+        toc:close()
+        assert.is_true(racials.blood_fury)
         for name, p in pairs(packs) do
             for list, entries in pairs(p.lists) do
                 for i, e in ipairs(entries) do

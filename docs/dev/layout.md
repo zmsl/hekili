@@ -227,17 +227,20 @@ Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
   Flame Shock DoT (12 s, 3 s ticks) on the target modelled from our cast.
 
 `tests/Forever/loop_hunter_spec.lua` runs 3 fights of each Hunter pack in `make check` (seeds 1-3, `#slow`) and 20 in
-`make test-hunter` (`#hunter`), gated by `pack_gate.gate` and asserting its focus lines ran (Raptor Strike and Mongoose
-Bite at tier 1; Serpent Sting and Hunter's Mark at tier 2). The packs are the wowsims.com ones (Beast Mastery,
-Marksmanship and Survival (wowsims.com), Task 11 of the wowsims packs plan: wowsims/forever's Melee Weave), and their
-replay and leveling gates are `tests/Forever/wowsims_hunter_spec.lua`. Each pack opens with wowsims's automatic Blood Fury and Rapid Fire
-(translator rule 13, from 5 s, off the GCD). The Beast Mastery and Marksmanship worlds stand
-at 11 yd (the weave's range: the shots in their band, Raptor Strike and the melee lines out of reach) and shoot Auto
-Shots on the harness's ranged hand (`W.startRanged`), Quick Shots procs off them under Aspect of the Hawk (10%); they
-run the same pack text and kit, so their lines match. The Survival world sets no distance (every check in range),
-swings a two-hander and keeps the pack's Aspect of the Hawk up. Each world's costs are the known rank's (the leveling brackets). Raptor Strike's cooldown starts
-at its swing (class-neutral: a queued strike's cooldown). Each fight's fresh world gets the pack's aspect at the pull
-(the character keeps a permanent buff between fights). Neither side dies (shaman_world's workaround for the loop's
+`make test-hunter` (`#hunter`), gated by `pack_gate.gate` and asserting that some focus line ran (`r.focus > 0`: the
+packs flag Raptor Strike and Mongoose Bite at tier 1, Serpent Sting and Hunter's Mark at tier 2). The packs are the
+wowsims.com ones (Beast Mastery, Marksmanship and Survival (wowsims.com), Task 11 of the wowsims packs plan:
+wowsims/forever's Melee Weave), and their replay and leveling gates are `tests/Forever/wowsims_hunter_spec.lua`. Each
+pack opens with wowsims's automatic Blood Fury and Rapid Fire (translator rule 13, from 5 s, off the GCD). The Beast
+Mastery and Marksmanship worlds stand at 11 yd (the weave's range: the shots in their band, Raptor Strike and the melee
+lines out of reach) and shoot Auto Shots on the harness's ranged hand (`W.startRanged`), Quick Shots procs off them
+under Aspect of the Hawk (10%); they run the same pack text and kit, so their lines match. The Survival world sets no
+distance (every check in range), swings a two-hander and keeps the pack's Aspect of the Hawk up. Its Mongoose Bite
+window never opens: our dodge is meant to open it for 5 s, but `dodged()` in `tests/Forever/helpers/hunter_world.lua`
+reads `W.t`/`W.truth`, which a batched list answer sees at the finished world. Each world prices the known rank under
+the character's Resourcefulness and Efficiency (the leveling brackets; the replay's builds). Raptor Strike's cooldown
+starts at its swing (class-neutral: a queued strike's cooldown). Each fight's fresh world gets the pack's aspect at the
+pull (the character keeps a permanent buff between fights). Neither side dies (shaman_world's workaround for the loop's
 missing kill). The kit's ranges are DB2's (`RANGE`: Hunter Range 8-35, Combat Range 0-5). "The Hunter at range, then
 in melee" runs Survival at 25 yd, then 5 yd: its four `target.within5` lines stay shut while the bracket reads [8, 35],
 open at [0, 5], and the bracket holds when every read goes secret. Mana is secret in combat, so the belief holds its
@@ -264,24 +267,35 @@ research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`)
 - H4 (C7-2): UNIT_SPELLCAST_SUCCEEDED for Auto Shot (75) on every shot, at the release? The modelled clock assumes it.
 - H5 (C7-4): ranged haste (quiver, Rapid Fire, Quick Shots) in UnitRangedDamage's speed out of combat, and the clock's
   drift in combat under Rapid Fire.
-- H6 (Q3, Q6): C_Spell.IsSpellInRange(75, "target") at 4, 10 and 40 yards, in and out of combat (the deadzone guard:
-  Hekili's `action.auto_shot.in_range` and `action.raptor_strike.in_range`); plain or secret in combat? Raptor Strike
-  (on the next swing) in range at any distance, like Heroic Strike?
+- H6 (Q3, Q6): C_Spell.IsSpellInRange(75, "target") at 4, 10 and 40 yards, in and out of combat (the target's range
+  bracket reads it; the packs have no deadzone guard of their own); plain or secret in combat? Raptor Strike (on the
+  next swing) in range at any distance, like Heroic Strike?
 - H14 (gap 13): `/run local r=Hekili.State.target VSCopy(r.distance,r.minR,r.maxR,r.within5,r.outside8)` at 3, 11 and
   30 yards: about 2.5 / 0 / 5 / true / false in melee, 21.5 / 8 / 35 / false / true at 11 yd; and
   `C_Spell.GetSpellInfo(14268).maxRange` (Wing Clip) reads 5, not 0.
 - H7 (Q4): Multi-Shot's and Strider Kick's actual costs (DB2 13.9% and 5.81% of base mana, priced here as of the
   maximum); UnitPower(mana) secret out of combat on a Hunter too; GetPowerRegenForPowerType(0)'s two returns.
-- H8 (Q5): Rapid Fire (3045) and Quick Shots (6150) readable on the player in combat (the Sniper Shot line)?
+- H8 (Q5): Rapid Fire (3045) and Quick Shots (6150) readable on the player in combat (Aimed, Multi and Sniper Shot's
+  hasted casts)?
 - H9 (Q9): Sniper Shot (1310687..), Summon Hawk (1293241..), Strider Kick (1317257) and Aspect of the Beast's Forever
   ranks (1299445..) learnable (else their lines stay inert)?
 - H10 (C1, CAST_GRACE): Summon Hawk: two hawks at most, 18 s each, the oldest replaced by a third; is a hawk a `pet`
   unit (UNIT_PET) at all? If the Hunter's pet unit is summoned (Call Pet), does UNIT_PET arrive within 0.5 s of
   UNIT_SPELLCAST_SUCCEEDED (I.CAST_GRACE)?
 - H11: Arcane Shot and Summon Hawk share a 6 s cooldown (category 1173), Aimed Shot and Multi-Shot another (category 2)?
-- H12 (Q14): Mongoose Bite usable only for 5 s after a dodge (Defensive State 5302), by IsSpellUsable; Raptor Strike
-  queued (IsCurrentSpell) and its 6 s cooldown from the swing that takes it?
+- H12 (Q14): Mongoose Bite usable only for 5 s after a dodge (Defensive State 5302) and for 10 s of Expose Prey
+  (1310726, the talent's proc), by IsSpellUsable; Raptor Strike queued (IsCurrentSpell) and its 6 s cooldown from the
+  swing that takes it?
 - H13 (Q8): Hunter's Mark and Serpent Sting on the target unreadable in combat (modelled from our casts)?
+- H15: Multi-Shot's cast: 0.5 s (DB2 2643, kept) or instant (wowsims)? The weave line reads it against the swing.
+- H16: Immolation Trap's 30 s category cooldown (DB2 SpellCooldowns).
+- H17: `mainhand_remains` against the real main-hand swing (the weave's Multi-Shot gap).
+- H18: Resourcefulness (440529) and Efficiency (19416) reported as talents at their ranks, and the prices they give:
+  Mongoose Bite, Wing Clip, Immolation Trap and Strider Kick 30% / 60% off; Raptor Strike under both (wowsims's log 40
+  at 2/2 Resourcefulness, 94 at 2/5 Efficiency).
+- H19: `target.within5` through the weave (in and out of melee each swing): the melee lines open and shut in time?
+- H20: a saved BeastMastery, Marksmanship or Survival choice falls back to the spec's wowsims.com pack.
+- H21: Rapid Fire and Blood Fury recommended from 5 s into a fight, off the GCD (rule 13's automatic cooldowns).
 
 Core checkpoint (in game, any rage user; provisional until answered):
 - R1 (the swing rung lift, `Families/Resources.lua` `owe`): when does a white swing's rage arrive, at PLAYER_SWING or with

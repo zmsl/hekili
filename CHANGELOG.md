@@ -8,8 +8,8 @@
 - Hunter: Beast Mastery, Marksmanship and Survival (new addon folder Hekili_Hunter).
 - Hunter: "Beast Mastery (wowsims.com)", "Marksmanship (wowsims.com)" and "Survival (wowsims.com)" are each
   specialization's default priority, translated from wowsims/forever's Melee Weave: Wing Clip, Mongoose Bite, Strider
-  Kick and Immolation Trap while you are in melee range, the shots between swings. Resourcefulness lowers the melee
-  strikes' and traps' mana cost.
+  Kick and Immolation Trap while you are in melee range, the shots between swings. Resourcefulness and Efficiency
+  lower the mana costs the addon expects.
 - Pets and guardians: the addon tracks your pet and your summoned guardians (Summon Hawk, up to two), so priorities can
   ask whether a pet is out and how many guardians are up.
 - Specializations: each supported class has one specialization page per talent tree, each with its own priorities
@@ -31,8 +31,7 @@
   "<Spec> Enabled". Each priority now sits under its specialization in the options tree (Priorities keeps Import /
   Export and Create a New Priority), and the active specialization is listed first with a gold highlight.
 - The AddOns list shows Hekili Forever under the Combat category.
-- The addon keeps a ranged Auto Shot timer next to the melee swing timers (used by the Hunter priorities' range and
-  swing checks; no other class reads it).
+- The addon keeps a ranged Auto Shot timer next to the melee swing timers.
 - Developer: the mana estimate's at-rest lower bound is pinned by tests (no behaviour change).
 - Developer: the test harness answers the mana regen pair (`GetManaRegen`) as the client does, plain out of combat
   and secret in combat, and its wowsims replays read the mana regen rates from the log.
@@ -67,6 +66,9 @@
 ### Known issues
 - Hunter priorities are unchecked in game: Auto Shot timing, the percent-of-base mana costs and the rune Raptor
   Strike variants.
+- Hunter: Multi-Shot waits on the melee swing timer even at range (wowsims's melee weave); Beast Mastery and
+  Marksmanship run the same list; the defaults never recommend Aimed Shot, Sniper Shot or Summon Hawk (wowsims's
+  switches for them are off).
 - Rogue, Paladin and Shaman priorities are not yet checked in game.
 
 ### Upgrade notes

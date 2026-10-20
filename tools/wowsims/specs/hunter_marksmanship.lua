@@ -7,6 +7,8 @@
 --   fraction of the maximum (overstated), so at low mana the belief takes it as short and shows Wing Clip.
 --   mongoose_bite -> false: replay limit, the in-combat mana lower bound (secret mana) under the bite's price.
 --   multi_shot -> arcane_shot: replay limit, the same bound (see hunter_beast_mastery.lua).
+-- Prices (P6): Resourcefulness 2/2 (440529) cuts Raptor Strike, Mongoose Bite, Wing Clip, Immolation Trap and Strider
+-- Kick 60% (wowsims's 40, 26, 32, 98, 39.6). The replay's pool is the world's 5000 until central fix 6.
 -- Ranges: the weave's melee-range lines read `target.within5` (rule 11) and the shots the bracket from the kit's
 -- range checks; wowsims's Movement steps place us in the replay.
 -- autocastOtherCooldowns (rule 13, from the log's "Major cooldown used"): Blood Fury (20572, the Orc's) and Rapid Fire

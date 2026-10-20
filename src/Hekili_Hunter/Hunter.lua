@@ -115,17 +115,24 @@ local function cost(costs, ids)
     end
 end
 
--- Resourcefulness (440529, a Forever-only Survival talent, 2 ranks): the melee strikes and the traps cost 30% less at
--- rank 1 and 60% less at rank 2. The DB2 carries only the top rank's -60 (440529 effect 0); the rank-1 -30 is
--- wowsims/forever's generated spell data (MIT, sim/core/spelldata/spells_auto_gen.go `440529: {{-30, -60}, ...}`).
--- wowsims's 2/2 SV build pays 26 for Mongoose Bite, 32 for Wing Clip, 98 for Immolation Trap. Raptor Strike keeps its
--- price, as in wowsims's log, although the DB2 mask names it too.
-local RESOURCEFUL = { 0.7, 0.4 }
-local function resourceful(price)
+-- The talents' cost cuts, their percents added (each a SPELLMOD_COST percent: DB2 aura 108, misc 14):
+-- - Resourcefulness (440529, a Forever-only Survival talent, 2 ranks): 30% / 60% off the strikes and traps (DB2 mask
+--   194: Raptor Strike and Mongoose Bite, Wing Clip, the traps). The DB2 carries only the top rank's -60; the rank-1
+--   -30 is wowsims/forever's generated spell data (MIT, sim/core/spelldata/spells_auto_gen.go `440529: {{-30, -60}`).
+--   Strider Kick takes it too, as wowsims's log shows (39.6), though its DB2 mask is outside 440529's.
+-- - Efficiency (19416, 5 ranks): 3% a rank off the shots, stings and strikes (DB2 mask: Raptor Strike, Mongoose Bite,
+--   Wing Clip, Arcane Shot, Multi-Shot, Serpent Sting, Aimed Shot, Summon Hawk; not the traps, Hunter's Mark, Rapid
+--   Fire, the aspects or Strider Kick). The DB2 carries the 5/5 -15; wowsims's data `19416: {{-3, -6, -9, -12, -15}}`.
+-- wowsims's logs: 2/2 Resourcefulness pays 40 Raptor Strike, 26 Mongoose Bite, 32 Wing Clip, 98 Immolation Trap; 2/5
+-- Efficiency 94 Raptor Strike, 75.2 Wing Clip, 178.6 Arcane Shot, 235 Serpent Sting.
+local RESOURCEFUL = { 0.3, 0.6 }
+local function discounted(price, resourceful, efficient)
     local priced = type(price) == "function" -- decided here: the returned function runs in the state's environment
     return function()
         local c = priced and price() or price
-        return c * (RESOURCEFUL[talent.resourcefulness.rank] or 1)
+        local off = (resourceful and RESOURCEFUL[talent.resourcefulness.rank] or 0)
+            + (efficient and 0.03 * talent.efficiency.rank or 0)
+        return c * (1 - off)
     end
 end
 
@@ -345,7 +352,7 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        spend = cost(SERPENT_STING_COST, SERPENT_STING),
+        spend = discounted(cost(SERPENT_STING_COST, SERPENT_STING), false, true),
         spendType = "mana",
 
         startsCombat = true,
@@ -362,7 +369,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "spell",
 
-        spend = cost(ARCANE_SHOT_COST, ARCANE_SHOT),
+        spend = discounted(cost(ARCANE_SHOT_COST, ARCANE_SHOT), false, true),
         spendType = "mana",
 
         startsCombat = true,
@@ -380,7 +387,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "spell",
 
-        spend = cost(SUMMON_HAWK_COST, SUMMON_HAWK),
+        spend = discounted(cost(SUMMON_HAWK_COST, SUMMON_HAWK), false, true),
         spendType = "mana",
 
         startsCombat = true,
@@ -397,7 +404,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "spell",
 
-        spend = cost(AIMED_SHOT_COST, AIMED_SHOT),
+        spend = discounted(cost(AIMED_SHOT_COST, AIMED_SHOT), false, true),
         spendType = "mana",
 
         startsCombat = true,
@@ -414,7 +421,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "spell",
 
-        spend = 0.139,
+        spend = discounted(0.139, false, true),
         spendType = "mana",
 
         startsCombat = true,
@@ -446,7 +453,7 @@ spec:RegisterAbilities({
         cooldown = 6,
         gcd = "off",
 
-        spend = cost(RAPTOR_STRIKE_COST, RAPTOR_STRIKE),
+        spend = discounted(cost(RAPTOR_STRIKE_COST, RAPTOR_STRIKE), true, true),
         spendType = "mana",
 
         startsCombat = true,
@@ -469,7 +476,7 @@ spec:RegisterAbilities({
         cooldown = 5,
         gcd = "spell",
 
-        spend = resourceful(cost(MONGOOSE_BITE_COST, MONGOOSE_BITE)),
+        spend = discounted(cost(MONGOOSE_BITE_COST, MONGOOSE_BITE), true, true),
         spendType = "mana",
 
         startsCombat = true,
@@ -490,7 +497,7 @@ spec:RegisterAbilities({
         cooldown = 8,
         gcd = "spell",
 
-        spend = resourceful(0.0581),
+        spend = discounted(0.0581, true, false),
         spendType = "mana",
 
         startsCombat = true,
@@ -504,7 +511,7 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        spend = resourceful(cost(WING_CLIP_COST, WING_CLIP)),
+        spend = discounted(cost(WING_CLIP_COST, WING_CLIP), true, true),
         spendType = "mana",
 
         startsCombat = true,
@@ -520,7 +527,7 @@ spec:RegisterAbilities({
         cooldown = 30,
         gcd = "spell",
 
-        spend = resourceful(cost(IMMOLATION_TRAP_COST, IMMOLATION_TRAP)),
+        spend = discounted(cost(IMMOLATION_TRAP_COST, IMMOLATION_TRAP), true, false),
         spendType = "mana",
 
         startsCombat = false,
@@ -530,7 +537,7 @@ spec:RegisterAbilities({
 
 -- Talents: { talent tree (1 Beast Mastery, 2 Marksmanship, 3 Survival: the dominant tree picks the spec), rank 1's
 -- spell, max rank }: the DB2's 46 nodes (`wowdb talents HUNTER`; the tree is the DB2's Talent.TabID), keys the
--- snake_case names (a nameless node talent_<spell>). No ability reads one yet.
+-- snake_case names (a nameless node talent_<spell>). The costs read Efficiency and Resourcefulness.
 spec:RegisterTalents({
     -- Beast Mastery (tree 1)
     deadly_aspects = { 1, 19552, 5 },

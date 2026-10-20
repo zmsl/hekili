@@ -1,13 +1,16 @@
 -- tools/wowsims/specs/hunter_beast_mastery.lua (wowsims packs plan, Task 11): Beast Mastery (wowsims.com)'s wowsims/forever request and translation.
 -- Values from wowsims/forever (MIT) ui/specs/hunter/dps/presets.ts:68-89,128-134 at the pin (the BM Weave talents,
 -- DefaultOptions = NoPetOptions, OtherDefaults; the default rotation Melee Weave, apls/default.apl.json; gear p1).
--- Disagreements worked (P7), decisions on-GCD 0.741 (27) top [wing_clip -> false 3; multi_shot -> arcane_shot 2;
--- multi_shot -> serpent_sting 1]:
---   wing_clip -> false: replay limit (mana is secret in combat): the belief's mana is its lower bound, a few points under
---   Wing Clip's price while wowsims, at its true mana, pays it.
---   multi_shot -> arcane_shot, multi_shot -> serpent_sting: replay limit, the same bound. The belief knows only that the
---   dearest spell the client answers usable is affordable (Multi-Shot's price); the queued Raptor Strike ahead of it is
---   paid in the simulation, so Multi-Shot is then believed short and Hekili waits on the next shot.
+-- Disagreements worked (P7), decisions on-GCD 0.815 (27) top [multi_shot -> arcane_shot 2; multi_shot -> serpent_sting
+-- 1; wing_clip -> false 1]:
+--   multi_shot -> arcane_shot, multi_shot -> serpent_sting: replay limit (mana is secret in combat): the belief knows
+--   only that the dearest spell the client answers usable is affordable (Multi-Shot's price); the queued Raptor Strike
+--   ahead of it is paid in the simulation, so Multi-Shot is then believed short and Hekili waits on the next shot.
+--   wing_clip -> false: replay limit, the same bound under Wing Clip's price.
+-- Content gap fixed (P6): Efficiency (19416, 2/5 here) cuts the shots', stings' and strikes' prices 3% a rank (wowsims's
+-- 94 Raptor Strike, 75.2 Wing Clip, 178.6 Arcane Shot, 235 Serpent Sting, 224.66 Multi-Shot); before it the client
+-- (the world's truth) and the belief priced them at full cost (0.741 -> 0.815). The replay's mana pool is still the
+-- world's 5000, not the log's 2790 (central fix 6 brings the log's pools; these classifications are redone after it).
 -- n is 27 (under 40) because wowsims spends its 2790 mana by 25 s (no pet, no Aspect of the Viper) and then casts
 -- little but Wing Clip; every on-GCD cast ID of the log maps to a key.
 -- Ranges: the weave's melee-range lines read `target.within5` (rule 11) and the shots the bracket from the kit's

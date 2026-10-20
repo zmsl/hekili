@@ -281,18 +281,48 @@ local function classData(H)
     return X
 end
 
--- The cost of `key`'s highest rank instance `H`'s character knows (`ids`: its ranks, lowest first).
-local function costOf(key, ids, H)
-    local c = COST[key]
-    if type(c) ~= "table" then
-        return c
-    end
-    for i = #ids, 1, -1 do
-        if H.ctl.known[ids[i]] then
-            return c[i]
+-- The talents' cost cuts, restated from the DB2 masks and wowsims's data (the world's truth the class file's are
+-- measured against), their percents added: Resourcefulness (440529) 30% / 60% a rank, Efficiency (19416) 3% a rank.
+local RESOURCEFUL = { raptor_strike = true, mongoose_bite = true, wing_clip = true, immolation_trap = true }
+RESOURCEFUL.strider_kick = true -- wowsims's log (39.6), outside 440529's DB2 mask
+local EFFICIENT = {
+    raptor_strike = true,
+    mongoose_bite = true,
+    wing_clip = true,
+    arcane_shot = true,
+    multi_shot = true,
+    serpent_sting = true,
+    aimed_shot = true,
+    summon_hawk = true,
+}
+
+-- The rank instance `H`'s character has in the talent whose spell is `spell` (0: untaken), from its traits.
+local function talentRank(H, spell)
+    local tr = H.ctl.traits
+    for i, d in ipairs(tr and tr.defs or {}) do
+        if d == spell then
+            return tr.nodes[i].activeRank
         end
     end
-    return c[#c]
+    return 0
+end
+
+-- The cost of `key`'s highest rank instance `H`'s character knows (`ids`: its ranks, lowest first), under its talents.
+local function costOf(key, ids, H)
+    local c = COST[key]
+    if type(c) == "table" then
+        local rank = #c
+        for i = #ids, 1, -1 do
+            if H.ctl.known[ids[i]] then
+                rank = i
+                break
+            end
+        end
+        c = c[rank]
+    end
+    local off = (RESOURCEFUL[key] and ({ 0.3, 0.6 })[talentRank(H, 440529)] or 0)
+        + (EFFICIENT[key] and 0.03 * talentRank(H, 19416) or 0)
+    return c * (1 - off)
 end
 
 -- The ranged haste on us at `now` in belief `VS`: Rapid Fire's 1.4 times Quick Shots' 1.3.
