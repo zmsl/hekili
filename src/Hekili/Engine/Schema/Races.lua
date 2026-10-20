@@ -3,7 +3,9 @@
 -- (Hekili_Shared/Races/<Race>.lua) uses like a spec: RegisterAbility, RegisterAura, RegisterResourceMod, RegisterCostMod
 -- (a class file declares its own cost modifiers with spec:RegisterCostMod, into the same list).
 -- Registrations count only when the token is the player's race (`state.race_token`, UnitRace's locale-free second
--- return); otherwise they are accepted and inert, so every race file runs unconditionally and loads headless.
+-- return), so every race file runs unconditionally and loads headless. Another race's abilities and auras still go to
+-- `all` (under a key `all` lacks), the abilities `known = false` and unlisted: a priority naming any race's racial
+-- reads `action.<racial>.known` false instead of indexing nothing; its modifiers stay inert.
 -- Abilities and auras go to the shared `all` spec (over `all`'s own entry for the same key), and ns.applyRace writes
 -- them over the class's after Engine/Schema/Spec.lua's merge (which takes the class first and only adds missing keys), so a race
 -- registration wins a key clash with the class and with `all`. Resource and cost modifiers go to `ns.raceMods`, one
@@ -52,6 +54,9 @@ function Race:RegisterAbility(key, def)
     if self.live then
         all():RegisterAbility(key, def)
         own("abilities", key)
+    elseif not all().abilities[key] then
+        def.known, def.unlisted = false, true
+        all():RegisterAbility(key, def)
     end
 end
 
@@ -59,6 +64,8 @@ function Race:RegisterAura(key, def)
     if self.live then
         all():RegisterAura(key, def)
         own("auras", key)
+    elseif not all().auras[key] then
+        all():RegisterAura(key, def)
     end
 end
 

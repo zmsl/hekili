@@ -189,7 +189,7 @@ function M.load(classToken, race)
     end
     env.Hekili = hekili
     -- The race registry: every race file's token and the keys it registers (`races`, `raceKeys[token]` = { abilities,
-    -- auras }), recorded whether or not the race is live (Engine/Schema/Races.lua drops another race's registrations).
+    -- auras }), recorded whether or not the race is live (Engine/Schema/Races.lua registers another race's unknown).
     env.races, env.raceKeys = {}, {}
     setmetatable(hekili, {
         __newindex = function(t, k, v)

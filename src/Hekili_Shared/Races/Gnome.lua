@@ -3,7 +3,7 @@
 -- +10% damage not modelled; 120 s, off the GCD; one ID per class: 1259813 Warrior, 1259812 Rogue, 1259817 Mage,
 -- 1259821 Warlock, 1259823 Priest), Expansive Mind (+5% maximum resources: 20591 Priest/Mage/Warlock, 1259802
 -- Warrior, 1259803 Rogue) and Escape Artist (20589: roots and snares removed, immune for 3 s; 120 s, on the GCD).
--- Engineering Specialization is a profession passive. Inert for any other race (Engine/Schema/Races.lua).
+-- Engineering Specialization is a profession passive. Unknown for any other race (Engine/Schema/Races.lua).
 
 local race = Hekili:NewRace("Gnome")
 

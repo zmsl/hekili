@@ -1,5 +1,5 @@
 -- tests/Game/State/races_spec.lua (event-facade spec §12b): Engine/Schema/Races.lua's rules with a fake race defined here,
--- headless against a stand-in for Hekili: `Hekili:NewRace` is inert for another race and registers into the shared
+-- headless against a stand-in for Hekili: `Hekili:NewRace` registers another race's abilities unknown and registers into the shared
 -- `all` for its own (over `all`'s entry), ns.applyRace writes the race's keys over the class's, and the simulation's half
 -- of a cost modifier on abilities built as RegisterAbility builds them. The real race files: tests/Forever/races_spec.lua.
 
@@ -88,10 +88,14 @@ describe("Engine/Schema/Races.lua", function()
         _G.Hekili = saved or nil
     end)
 
-    it("is inert for another race: nothing registered, no modifier", function()
+    it("registers another race's ability unknown and unlisted, its aura, no modifier", function()
         load("Other")
-        assert.are.same({}, all.abilities)
-        assert.are.same({}, all.auras)
+        local a = all.abilities.racial_a
+        assert.are.same({ false, true, a, a }, { a.known, a.unlisted, all.abilities[1001], all.abilities[1002] })
+        assert.are.equal(15, all.auras.racial_a.duration)
+        local class = { abilities = {}, auras = {} }
+        ns.applyRace(class) -- nothing owned: the class keeps its own
+        assert.are.same({ abilities = {}, auras = {} }, class)
         assert.are.same({ maxMods = {}, costMods = {} }, ns.raceMods)
         assert.are.equal(ns.raceMods, hekili.RaceMods) -- the table read in game
     end)

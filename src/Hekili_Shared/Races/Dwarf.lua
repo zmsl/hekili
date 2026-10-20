@@ -5,7 +5,7 @@
 -- `all`'s stock entry (120 s, off the GCD, its buff 65116 absent on Forever: the buff is 20594 itself). Kept from
 -- `all`: usable only while a dispellable effect it removes is up. No `dispellable_bleed` aura exists in `all`: the gate
 -- covers poison and disease until one does (the bleed lines stay, as Forever's real dispel). Find Treasure, Mace
--- Specialization and Big Game Hunter have no rotation effect. No resource or cost modifier. No pack names it. Inert for
+-- Specialization and Big Game Hunter have no rotation effect. No resource or cost modifier. No pack names it. Unknown for
 -- any other race (Engine/Schema/Races.lua).
 
 local race = Hekili:NewRace("Dwarf")

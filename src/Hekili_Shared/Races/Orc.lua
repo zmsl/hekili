@@ -5,7 +5,7 @@
 -- and 33697 are absent on Forever; its aura, 20572 for 15 s, is right but registered here too, so the race owns it),
 -- and Shatter Curse (1299026: removes curses, -15% magic damage taken and immunity to curses for 8 s; 180 s, on the
 -- GCD). Hardiness (-20% stun duration) and Axe Specialization (+1% crit with an axe) are passives. No resource or cost
--- modifier. No pack names either. Inert for any other race (Engine/Schema/Races.lua).
+-- modifier. No pack names either. Unknown for any other race (Engine/Schema/Races.lua).
 
 local race = Hekili:NewRace("Orc")
 

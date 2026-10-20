@@ -1,6 +1,6 @@
 -- tests/Forever/races_spec.lua (event-facade spec §12b): the race packs. Every race file Hekili_Shared.toc lists
--- (Races/*.lua), loaded through Engine/Schema/Races.lua headless against a stand-in for Hekili: inert for another race,
--- registered for its own, over `all`'s stale entries, and its cost modifier's numbers in the simulation. Engine/Schema/Races.lua's
+-- (Races/*.lua), loaded through Engine/Schema/Races.lua headless against a stand-in for Hekili: registered unknown for
+-- another race, registered for its own, over `all`'s stale entries, and its cost modifier's numbers in the simulation. Engine/Schema/Races.lua's
 -- own rules, with a fake race, are tests/Game/State/races_spec.lua.
 
 local addons = require("helpers.addons")
@@ -114,12 +114,23 @@ describe("race packs", function()
         _G.Hekili = saved or nil
     end)
 
-    it("is inert for another race: nothing registered, no modifier", function()
-        load("BloodElf")
-        assert.are.same({}, all.abilities)
-        assert.are.same({}, all.auras)
-        assert.are.same({ maxMods = {}, costMods = {} }, ns.raceMods)
-    end)
+    it(
+        "registers another race's racials unknown and unlisted, its auras, no modifier, nothing over the class",
+        function()
+            load("BloodElf")
+            for _, own in pairs(OWN) do
+                for _, key in ipairs(own[1]) do
+                    local a = all.abilities[key]
+                    assert.are.same({ false, true }, { a.known, a.unlisted }, key)
+                end
+            end
+            assert.is_not_nil(all.auras.blood_fury)
+            assert.are.same({ maxMods = {}, costMods = {} }, ns.raceMods)
+            local class = { abilities = {}, auras = {} }
+            ns.applyRace(class)
+            assert.are.same({ abilities = {}, auras = {} }, class)
+        end
+    )
 
     it(
         "registers Eureka!, its aura and both modifiers for a Gnome, into the shared spec (the race wins a clash)",
@@ -179,20 +190,20 @@ describe("race packs", function()
             { light.id, light.cast, light.cooldown, light.gcd, light.toggle }
         )
         assert.are.same({ 1259799, 15 }, { all.auras.elunes_light.id, all.auras.elunes_light.duration })
-        assert.is_nil(all.abilities.war_stomp)
+        assert.is_false(all.abilities.war_stomp.known)
         assert.are.same({ maxMods = {}, costMods = {} }, ns.raceMods) -- no resource or cost modifier
         load("Tauren")
         local stomp = all.abilities.war_stomp
         assert.are.same({ 20549, 0.5, 120, "off" }, { stomp.id, stomp.cast, stomp.cooldown, stomp.gcd })
         assert.are.same({ 20549, 2 }, { all.auras.war_stomp.id, all.auras.war_stomp.duration })
-        assert.is_nil(all.abilities.elunes_light)
+        assert.is_false(all.abilities.elunes_light.known)
         for _, a in ipairs({ light, stomp }) do
             assert.is_function(a.now)
             assert.are_not.equal(a.handler, a.now) -- two closures: one shared would be refused
         end
         load("Gnome")
         assert.is_not_nil(all.abilities.eureka)
-        assert.is_nil(all.abilities.elunes_light or all.abilities.war_stomp)
+        assert.are.same({ false, false }, { all.abilities.elunes_light.known, all.abilities.war_stomp.known })
     end)
 
     it(
@@ -207,7 +218,7 @@ describe("race packs", function()
                 load(r.token)
                 local keys = {}
                 for k in pairs(all.abilities) do
-                    if type(k) == "string" then
+                    if type(k) == "string" and all.abilities[k].known ~= false then
                         keys[#keys + 1] = k
                     end
                 end
@@ -308,7 +319,7 @@ describe("race packs", function()
 
     it("registers Will of the Forsaken and Cannibalize for the Scourge token, not for `Undead`", function()
         load("Undead")
-        assert.is_nil(all.abilities.cannibalize)
+        assert.is_false(all.abilities.cannibalize.known)
         load("Scourge")
         local w, c = all.abilities.will_of_the_forsaken, all.abilities.cannibalize
         assert.are.same({ 7744, 120, "spell", "defensives" }, { w.id, w.cooldown, w.gcd, w.toggle })

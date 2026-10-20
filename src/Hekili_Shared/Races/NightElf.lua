@@ -4,8 +4,8 @@
 -- chance with spells and attacks, aura 290 base 10, for 15 s; 180 s, off the GCD) and Shadowmeld, which replaces
 -- `all`'s stock entry (58984, absent on Forever): 20580, no cooldown of its own but a 10 s category recovery (871),
 -- off the GCD, the stealth aura 20580 until cancelled. Quickness and Wisp Spirit are passives. No resource or cost
--- modifier. No pack names either: a race ability is absent for other races; a player adds it to a priority if wanted.
--- Inert for any other race (Engine/Schema/Races.lua).
+-- modifier. No pack names either: a race ability is unknown for other races; a player adds it to a priority if wanted.
+-- Unknown for any other race (Engine/Schema/Races.lua).
 
 local race = Hekili:NewRace("NightElf")
 
