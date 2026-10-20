@@ -1,5 +1,5 @@
 -- Game/State/Sources/Player.lua
--- Player sources (spec §4.2): combat start and end, movement, spell haste, the player's health (poll 1.5), the
+-- Player sources (spec §4.2): combat start and end, movement, spell haste, the player's level, health (poll 1.5), the
 -- out-of-combat stat cache (login, PLAYER_REGEN_ENABLED, PLAYER_EQUIPMENT_CHANGED, UNIT_DAMAGE, UNIT_ATTACK_POWER,
 -- PLAYER_LEVEL_UP) and every hit on the player (UNIT_COMBAT, plain) as a `PlayerHit`.
 -- Credits: secret-value handling after Catnip's (Durts) research.
@@ -115,6 +115,7 @@ S.OnStart(function(api, t)
     end
     I.inCombat = Plain(api, api.InCombatLockdown()) == true
     I.class = Plain(api, api.UnitClassBase("player"))
+    I.level = Plain(api, api.UnitLevel("player")) or I.level -- plain [W PR14]; a `now`'s `level` (Families/Now.lua)
     readStats(api, t)
     readSpellHaste(api, t, true)
 end)
@@ -152,7 +153,8 @@ end
 S.On("UNIT_DAMAGE", "player", onPlayerStats)
 S.On("UNIT_ATTACK_POWER", "player", onPlayerStats)
 
-S.On("PLAYER_LEVEL_UP", nil, function(api, t)
+S.On("PLAYER_LEVEL_UP", nil, function(api, t, level)
+    I.level = Plain(api, level) or I.level -- the new level (UnitLevel may still answer the old one)
     readStats(api, t)
 end)
 

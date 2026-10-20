@@ -304,6 +304,24 @@ describe("now handlers", function()
         assert.are.equal(0, I.nowErrors)
     end)
 
+    it("reads the player's level: UnitLevel at the start, then PLAYER_LEVEL_UP's new one", function()
+        register("level_test", {
+            id = 6166,
+            now = function()
+                gain(level / 10, "rage")
+            end,
+        })
+        start()
+        local est = VS.Power(fs.RAGE, 9).est
+        cast(6166, 9)
+        assert.are.equal(est + 2, VS.Power(fs.RAGE, 9.1).est) -- the fake client's level 20
+        ctl.now = 10
+        ctl.Fire("PLAYER_LEVEL_UP", 21)
+        cast(6166, 11)
+        assert.are.equal(est + 4.1, VS.Power(fs.RAGE, 11.1).est)
+        assert.are.equal(0, I.nowErrors)
+    end)
+
     it("writes summonTotem's slot expiry and facts as modelled, kept through our summon's in-combat update", function()
         register("totem_test", {
             id = 6262,

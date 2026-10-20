@@ -129,13 +129,9 @@ local BEAR_SWING = 2.5
 -- 1244 (wowsims/forever's log: Shifting Power and Cat Form 684 = 55%, Innervate 62 = 5%). The engine prices a
 -- fraction as of the maximum (2674 in that log), which overstates it. Whole mana, rounded down (the log's 684 and 62).
 -- shortcut: below 60 still a fraction of the maximum (no per-level base mana source); upgrade with one.
--- The belief prices a cast in a context without `level` (Families/Now.lua's names): it reads the simulation's last.
--- Temporary workaround for shared GAP U (Now.lua's context has no `level`); remove the cache when it lands.
 local BASE_MANA = 1244
-local seenLevel = 60
 local function ofBaseMana(f, lvl)
-    seenLevel = lvl or seenLevel
-    return seenLevel >= 60 and floor(f * BASE_MANA) or f
+    return lvl >= 60 and floor(f * BASE_MANA) or f
 end
 
 local function rest(ids)

@@ -167,6 +167,7 @@ function M.env(w)
     e.mana = { current = 1000 }
     e.combo_points = { current = 0 }
     e.combat, e.active_enemies, e.group = 0, 1, false
+    e.level = 60 -- Hekili's state.level (UnitLevel), the belief's `level` (Families/Now.lua)
     e.pairs, e.ipairs = pairs, ipairs -- Hekili's state has them (State.lua)
     function e.applyBuff(key, duration)
         table.insert(e.applied, key)

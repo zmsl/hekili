@@ -3,9 +3,9 @@
 -- On each own CastSuccess (a channel's included) the family writes the automatic effects from the ability's declared
 -- fields (its cost, its cooldown or charge, the GCD), then runs the ability's `now` function, if the class file
 -- declared one beside `handler`, in one shared context whose names are Hekili's verbs (`gain`, `spend`, `applyBuff`,
--- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `reduceCooldown`, `summonTotem`, `summonPet`) and reads
--- (`talent`, `buff`, `debuff`, the resources by key, `knownRank`, `stat`, `swingBase`, `healthMax`, `now`, `combat`)
--- with belief meanings. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
+-- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `reduceCooldown`, `summonTotem`,
+-- `summonPet`) and reads (`talent`, `buff`, `debuff`, the resources by key, `knownRank`, `stat`, `swingBase`,
+-- `healthMax`, `now`, `combat`, `level`) with belief meanings. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
 
@@ -34,6 +34,7 @@ local NAMES = {
     error = error,
     now = 0, -- set per cast and per I.NowAt; seeded so the first set adds no key on a per-event path
     combat = 0,
+    level = 0, -- the player's (Sources/Player.lua; 0 before the first read), set with `now`
 }
 -- The environment itself stays empty, so every assignment from a `now` raises (a counted error) instead of
 -- shadowing a verb for every later cast.
@@ -68,6 +69,7 @@ function I.NowAt(t)
     T = t
     rawset(NAMES, "now", t)
     rawset(NAMES, "combat", I.combatT) -- as `run` does
+    rawset(NAMES, "level", I.level or 0)
 end
 local abByKey, auraByKey, auraSpell, auraDur, auraMax, resByKey = {}, {}, {}, {}, {}, {}
 
@@ -413,6 +415,7 @@ local function run(o, t)
         T, curA = t, a
         rawset(NAMES, "now", t)
         rawset(NAMES, "combat", I.combatT)
+        rawset(NAMES, "level", I.level or 0)
         live = true
         local ok, err = pcall(f)
         live = false
