@@ -698,16 +698,14 @@ local function pin(r, v, width, t, origin, event, mid)
 end
 
 -- One rung of the cost ladder: the resource was at least `c` (affordable) or below it, `lag` before t. A late bound
--- is moved by the most regen could have changed it and dropped if it then conflicts. True when it moved the estimate
+-- is moved by the most regen could have changed it; a late short one is dropped if it then conflicts with the floor,
+-- and an affordable one above the believed top opens the top to the maximum, as a timely one does. True when it moved the estimate
 -- (a snap: the estimate now stands on this rung, so the caller writes a `pinned` sample).
 local function ladder(r, c, affordable, t, lag)
     if lag > 0 and R.swing[r] == 0 then
         local a, b = spans(r, t - lag, lag)
         if affordable then
             c = c + R.regL[r] * a + R.spL[r] * b
-            if c > R.hi0[r] then
-                return false
-            end
         else
             c = c + R.regH[r] * a + R.spH[r] * b
             if c - I.EPS < R.lo0[r] then
@@ -725,7 +723,9 @@ local function ladder(r, c, affordable, t, lag)
             R.est0[r], R.snapT[r], snapped = c, t, true
         end
         if R.hi0[r] < c then
-            R.hi0[r] = c -- the newest bound wins
+            -- above the believed top: a gain the belief did not see (a refill: a potion, a pause, a mana return) put
+            -- the slot anywhere from c to its maximum; a bound, never the pin [c, c] (GAP V)
+            R.hi0[r] = R.max[r]
         end
     else
         local top = c - I.EPS

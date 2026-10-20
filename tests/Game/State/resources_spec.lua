@@ -57,6 +57,18 @@ describe("resources", function()
             within(25 + 10 * 0.9 * 2, VS.Power(ENERGY, 12).lo, 1e-6) -- then it moves with regen
         end)
 
+        it(
+            "bounds a usable answer above the believed top (a refill it did not see): lo the cost, hi the pool",
+            function()
+                obs(Obs.Usable, 10, FINISHER, 0, 1) -- short of 25: [0, 25)
+                I.Fold(10, false)
+                obs(Obs.Usable, 10.5, BUILDER, 1, 0) -- usable at 40 half a second later: well above the believed top
+                I.Fold(10.5, false)
+                local e = VS.Power(ENERGY, 10.5)
+                assert.are.same({ 40, 40, 100 }, { e.lo, e.est, e.hi }) -- a bound, not the pin [40, 40]
+            end
+        )
+
         it("measures regen between two pins, net of our own spends", function()
             local function pinAt(t)
                 obs(Obs.Usable, t, BUILDER, 0, 1)
