@@ -241,6 +241,8 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         ctl.usable[a1] = a2 == 1 and USABLE or (a2 == 2 and SHORT or UNUSABLE)
     elseif ev == "@form" then
         ctl.form = a1
+    elseif ev == "@stealthed" then
+        ctl.stealthed = a1
     elseif ev == "@guid" then
         ctl.guid[a1] = a2
     elseif ev == "@unitIs" then

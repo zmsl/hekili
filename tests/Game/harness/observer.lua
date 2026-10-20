@@ -102,7 +102,7 @@ end
 --- (1 ours, 2 another source, 3 unexplained, 0 not an outcome), hand[] (our swing's hand; 0 a cast's), swingT[] (our
 --- swing's true time), actor[] (the entity index of a hit on us) }. An `ev` starting with "@" is a client-answer change
 --- for the drive (`@damage` UnitDamage, `@usable`, `@form`, `@guid`, `@unitIs`, `@speed`, `@combat`, `@auraError`,
---- `@current` IsCurrentSpell, `@aura` an aura list entry, `@dead`, `@cooldown`, `@power`, `@regen`, `@attackSpeed`,
+--- `@current` IsCurrentSpell, `@aura` an aura list entry, `@stealthed` IsStealthed, `@dead`, `@cooldown`, `@power`, `@regen`, `@attackSpeed`,
 --- `@rangedSpeed`, `@forms`, `@distance` the range checks' yards), or `@truth` our true power after an event. It draws nothing from `W.rng` (the behaviours roll every
 --- random choice and record it on the truth event), so batch and incremental streams of one world are equal for
 --- power-only answers (in batch, a list answer that reads `W` sees the finished world at every time).
@@ -382,6 +382,9 @@ function M.new(W, k)
                 push(t, "@aura", unit, ev.aura, ev.stacks, ev.expires, ev.duration)
                 push(t, "UNIT_AURA", unit)
             end
+        elseif kind == "stealthed" then -- IsStealthed (plain: no SecretWhen* flag) and its event
+            push(t, "@stealthed", ev.on)
+            push(t, "UPDATE_STEALTH")
         elseif kind == "kill" then -- our target gone; out of combat when no living attacker is left
             if ev.dst == ev.ourTarget then
                 push(t, "@dead", "target", true)

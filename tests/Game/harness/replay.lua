@@ -4,10 +4,11 @@
 -- injection (`o.replay`): the world factory, wowsims's decisions and its next cast after a tick. The truth is the
 -- log's: casts at their completion (no cast bars), powers as the logged after-values (no regen ticks; the client
 -- still reads the content's rate, mana's from the log's regen lines: M.manaRegen), our auras and the target's with
--- the log's real duration when they fade, the content's hidden auras in the truth only, spells landing at once, a
--- white swing's outcome one landing lag after its swing (M.LAND; wowsims logs both at once, with the swing's rage),
--- the mob's health at 20% from the execute phase's start (wowsims's is the last 20% of the duration) and never dead,
--- our distance to it (the request's, then the log's Movement stacks). Not replayed: cast bars, the target's swings.
+-- the duration the client shows (the log's run to a natural fade, the declared one to a removal by a cast of ours),
+-- each fade a removal at its time, the content's hidden auras in the truth only, spells landing at once, a white
+-- swing's outcome one landing lag after its swing (M.LAND; wowsims logs both at once, with the swing's rage), the mob's
+-- health at 20% from the execute phase's start (wowsims's is the last 20% of the duration) and never dead, our distance
+-- to it (the request's, then the log's Movement stacks). Not replayed: cast bars, the target's swings.
 -- Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map through the booted
 -- instance's own ability set (Hekili.Class, booted as the log's race). Credit: the log format is wowsims/forever's
 -- (MIT, https://github.com/wowsims/forever); no code copied.
@@ -338,7 +339,14 @@ function M.new(text, H, o)
             shared[key] = { keys = list, ids = ids }
         end
     end
+    local stealthy = {} -- the auras IsStealthed answers for (`isStealthed`), every rank
     for _, a in pairs(class.auras) do
+        if type(a) == "table" and type(a.id) == "number" and a.isStealthed == true then
+            stealthy[a.id] = true
+            for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
+                stealthy[id] = true
+            end
+        end
         if type(a) == "table" and type(a.id) == "number" and type(a.duration) == "number" then
             dur[a.id] = dur[a.id] or a.duration
             for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
@@ -367,7 +375,17 @@ function M.new(text, H, o)
         e.wt = e.initial and 0 or R.pull + e.t + n * M.EPS
         assert(e.initial or e.t > 0.1 - R.pull, "the log starts before the replay's prepull read: raise o.pull")
     end
-    -- each aura application's real duration when its next line is its fade
+    -- the duration the client is shown at each application (UNIT_AURA's): its run when its next line is a natural
+    -- fade (the real duration: combo-point or talent scaled), the declared duration when a fade is a removal (a cast
+    -- or swing of ours earlier in the fade's timestamp: a recast, consume or cancel), else the declared (apply)
+    local castAt
+    for _, e in ipairs(p.ev) do
+        if e.kind == "casting" or e.kind == "completed" then
+            castAt = e.t
+        elseif e.kind == "aura" and e.verb == "faded" then
+            e.removed = castAt == e.t
+        end
+    end
     local nextOf = {}
     for i = #p.ev, 1, -1 do
         local e = p.ev[i]
@@ -375,7 +393,8 @@ function M.new(text, H, o)
             local k = e.unit .. ":" .. e.id
             local nx = nextOf[k]
             if e.verb ~= "faded" and nx and nx.verb == "faded" then
-                e.d = nx.wt - e.wt
+                local run = nx.wt - e.wt
+                e.d = nx.removed and dur[e.id] and math.max(dur[e.id], run) or run
             end
             nextOf[k] = e
         end
@@ -486,6 +505,14 @@ function M.new(text, H, o)
                 })
             end
         end
+        local function stealthed() -- IsStealthed: any stealth aura of ours up
+            for id in pairs(us.auras) do
+                if stealthy[id] then
+                    return true
+                end
+            end
+            return false
+        end
         local function apply(e)
             local T = W.t
             local key = e.kind == "completed" and keyFor(e)
@@ -539,15 +566,19 @@ function M.new(text, H, o)
                 end
             elseif e.kind == "aura" and (dur[e.id] or hidden[e.id]) then
                 local dst = e.unit == "target" and mob or us
+                local was = stealthy[e.id] and dst == us and stealthed()
                 if e.verb == "faded" then
                     dst.auras[e.id] = nil
                     show(dst, e.id, nil)
                 else
-                    local d = e.d or dur[e.id] or 3600
+                    local d = e.d or dur[e.id] or 3600 -- a refresh re-reports its new expiry; a fade is a removal
                     local cur = dst.auras[e.id]
                     local a = { stacks = cur and cur.stacks or 1, expires = T + d, duration = d }
                     dst.auras[e.id] = a
                     show(dst, e.id, a)
+                end
+                if stealthy[e.id] and dst == us and stealthed() ~= was then -- IsStealthed flips: UPDATE_STEALTH
+                    W.emit({ kind = "stealthed", on = not was })
                 end
             elseif e.kind == "stacks" and e.to > 0 then
                 local dst = e.unit == "target" and mob or us

@@ -27,6 +27,7 @@ local H = {
                 mark = { id = 900030, duration = 12, max_stack = 5 },
                 window = { id = 900020, duration = 5 },
                 proc = { id = 900040, duration = 15, icd = 10 }, -- a proc aura: gained, then refreshed by a re-proc
+                veil = { id = 900050, duration = 3600, isStealthed = true }, -- a stealth aura: IsStealthed's
             },
         },
     },
@@ -167,7 +168,7 @@ describe("the replay world", function()
         end
     )
 
-    it("auras: forms from the stance auras; a hidden aura in the truth only; a fade's real duration", function()
+    it("auras: forms from the stance auras; a hidden aura in the truth only; a natural fade's real duration", function()
         local R = replay.new(text(), H, O)
         local W = R.world(setmetatable({ tag = "-a" }, { __index = WO }), 1)
         local us, mob = W.ents[1], W.ents[2]
@@ -187,9 +188,11 @@ describe("the replay world", function()
         local function near(x, y)
             return math.abs(x - y) < 1e-4
         end
-        assert.is_true(near(R.pull + 10.1, mark.expires)) -- faded at 10.10: 10 s, not the class's 12
+        assert.is_true(near(R.pull + 10.1, mark.expires)) -- faded at 10.10 with no cast of ours: 10 s, not the class's 12
         assert.is_true(near(R.pull - 1 + 120, us.auras[900002].expires)) -- never faded: the class's duration
         assert.is_not_nil(us.avoidAt.DODGE)
+        at(W, R.pull + 10.2)
+        assert.is_nil(mob.auras[900030]) -- faded at 10.10: removed then
     end)
 
     it("a proc aura's gain and refresh both reach the client: each re-application restarts its expiry", function()
@@ -204,6 +207,80 @@ describe("the replay world", function()
         end
         assert.are.equal(2, #seen)
         assert.is_true(math.abs(seen[1] - 17) < 1e-3 and math.abs(seen[2] - 20) < 1e-3)
+    end)
+
+    it(
+        "an aura a cast removes shows its declared duration, then the removal; a refresh re-reports its expiry",
+        function()
+            -- the prepull shout (120 s) recast 1.5 s later (wowsims: the cast, faded, gained), refreshed at 2, removed by
+            -- a strike at 3; the mark (12 s) fades on its own at 14 (the log's run)
+            local R = replay.new(
+                table.concat({
+                    "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+                    "[-3.00] [Tester (#1)] Aura gained: {SpellID: 900002}",
+                    "[-1.50] [Tester (#1)] Casting {SpellID: 900002} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+                    "[-1.50] [Tester (#1)] Completed cast {SpellID: 900002}",
+                    "[-1.50] [Tester (#1)] Aura faded: {SpellID: 900002}",
+                    "[-1.50] [Tester (#1)] Aura gained: {SpellID: 900002}",
+                    "[0.00] [Target 1] Aura gained: {SpellID: 900030}",
+                    "[2.00] [Tester (#1)] Aura refreshed: {SpellID: 900002}",
+                    "[3.00] [Tester (#1)] Completed cast {SpellID: 900001}",
+                    "[3.00] [Tester (#1)] Aura faded: {SpellID: 900002}",
+                    "[14.00] [Target 1] Aura faded: {SpellID: 900030}",
+                }, "\n"),
+                H,
+                O
+            )
+            local W = R.world(setmetatable({ tag = "-e" }, { __index = WO }), 1)
+            at(W, R.pull + 15)
+            local seen = {}
+            for _, ev in ipairs(W.truth) do
+                if ev.kind == "aura" then
+                    local x = ev.expires > 0 and ev.expires - R.pull or 0
+                    seen[#seen + 1] = ("%d %.2f %g"):format(ev.aura, x, ev.duration)
+                end
+            end
+            assert.are.same({
+                "900002 117.00 120", -- the prepull application: the declared 120 s, not the 1.5 s it ran
+                "900002 0.00 0", -- the recast's removal
+                "900002 118.50 120",
+                "900030 14.00 14", -- a natural fade: the log's run, not the declared 12 s
+                "900002 122.00 120", -- the refresh: its new expiry
+                "900002 0.00 0", -- removed at 3
+                "900030 0.00 0",
+            }, seen)
+        end
+    )
+
+    it("a stealth aura flips IsStealthed with UPDATE_STEALTH at its gain and at its removal", function()
+        local observer = require("Game.harness.observer")
+        local R = replay.new(
+            table.concat({
+                "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+                "[-1.00] [Tester (#1)] Aura gained: {SpellID: 900050}",
+                "[0.00] [Tester (#1)] Completed cast {SpellID: 900001}",
+                "[0.00] [Tester (#1)] Aura faded: {SpellID: 900050}",
+            }, "\n"),
+            H,
+            O
+        )
+        local W = R.world(setmetatable({ tag = "-s" }, { __index = WO }), 1)
+        local obs = observer.new(W, observer.DEFAULTS)
+        at(W, R.pull + 1)
+        obs.step(R.pull + 1)
+        local got = {}
+        for i = 1, obs.s.n do
+            local ev = obs.s.ev[i]
+            if ev == "@stealthed" or ev == "UPDATE_STEALTH" then
+                got[#got + 1] = ("%s %s %.1f"):format(ev, tostring(obs.s.a1[i]), obs.s.t[i] - R.pull)
+            end
+        end
+        assert.are.same({
+            "@stealthed true -1.0",
+            "UPDATE_STEALTH nil -1.0",
+            "@stealthed false 0.0",
+            "UPDATE_STEALTH nil 0.0",
+        }, got)
     end)
 
     it("execute: the mob is above 20% before pull + 0.8 x duration and at or under it from then, never dead", function()

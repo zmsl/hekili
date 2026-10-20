@@ -169,7 +169,7 @@ function M.run(L, seed, o, drivers)
     local steps = {}
     for i, d in ipairs(drivers) do
         local ctl = d.H.ctl -- a fresh world: the client's answers about it start fresh too
-        ctl.combat, ctl.form = false, L.form
+        ctl.combat, ctl.form, ctl.stealthed = false, L.form, false
         local fresh = {
             ctl.dead,
             ctl.current,
