@@ -339,10 +339,12 @@ describe("resources", function()
         end)
 
         it(
-            "learns the swing scale alike with an own gain inside one step, or several pins at one instant (GAP AC)",
+            "learns the swing scale alike with an own gain inside one step, several pins at one instant or a crit (GAP AC)",
             function()
-                local function scale(own, stack)
-                    boot(fs.def(fs.new(9)))
+                local function scale(own, stack, crit)
+                    local def = fs.def(fs.new(9))
+                    def.resources[1].swingCrit = 7
+                    boot(def)
                     obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
                     I.Fold(10, false)
                     local truth = 0
@@ -352,6 +354,9 @@ describe("resources", function()
                         obs(Obs.Swing, t - 1.3, 1, 0, 1)
                         I.Fold(t - 1.3, false)
                         truth = truth + 9 * 1.2 -- 20% above the model
+                        if crit and k == 4 then -- a crit's exact extra, its wound row heard only after the next pin
+                            truth = truth + 7
+                        end
                         if own and k == 3 then
                             -- a gain the belief knows besides the swings (a hit taken, a Bloodrage-like own gain), its
                             -- amount the model's 10 where the game gave 14: no part of it is the swings'
@@ -360,6 +365,10 @@ describe("resources", function()
                         end
                         obs(Obs.Read, t, 1, stack and truth - 3 or truth, I.ReadOf.Resource)
                         I.Fold(t, false)
+                        if crit and k == 4 then
+                            obs(Obs.Swing, t - 1.3, 1, 0, 3) -- the same swing's crit, folded late
+                            I.Fold(t + 0.01, false)
+                        end
                         if stack then -- re-estimates at the same instant, the first 3 low: the instant counts once
                             obs(Obs.Read, t, 1, truth, I.ReadOf.Resource)
                             I.Fold(t, false)
@@ -374,6 +383,8 @@ describe("resources", function()
                 assert.is_true(plain > 1)
                 within(plain, scale(true, false))
                 within(plain, scale(false, true))
+                within(plain, scale(true, true)) -- an excluded interval's instant: its re-estimate adds nothing
+                within(plain, scale(false, false, true)) -- a crit's extra comes back out of the window
             end
         )
 

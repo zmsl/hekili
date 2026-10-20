@@ -84,6 +84,10 @@ local R = {
     pinDelta = {},
     pinValid = {},
     pinOwn = {},
+    swFrom = {},
+    skipFrom = {},
+    skipTo = {},
+    pinSkip = {},
     swAccG = {},
     swAccT = {},
     snapT = {},
@@ -251,7 +255,8 @@ local function setMax(r, m)
     if up < 0 then
         local before = R.est0[r]
         R.est0[r], R.lo0[r], R.hi0[r] = clamp(before, m), clamp(R.lo0[r], m), clamp(R.hi0[r], m)
-        R.pinDelta[r] = R.pinDelta[r] + R.est0[r] - before -- the capped-away amount stays out of the regen measurement
+        -- the capped-away amount stays out of the regen measurement
+        R.pinDelta[r], R.pinOwn[r] = R.pinDelta[r] + R.est0[r] - before, true
         norm(r)
     end
     if R.restMax[r] then
@@ -306,7 +311,7 @@ I.OnBuild(function(def, now)
         R.spE[r], R.spL[r], R.spH[r] = spirit, spirit * (1 - I.REGEN_SPREAD), spirit * (1 + I.REGEN_SPREAD)
         R.dev[r], R.scale[r], R.spread[r] = 0, 1, I.REGEN_SPREAD
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
-        R.pinOwn[r] = false
+        R.pinOwn[r], R.pinSkip[r], R.swFrom[r], R.skipFrom[r], R.skipTo[r] = false, false, 0, 0, 0
         R.swAccG[r], R.swAccT[r] = 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
         R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
@@ -705,15 +710,23 @@ local function pin(r, v, width, t, origin, event, mid)
                 end
                 -- an interval holding a gain the belief knows besides the swings (our cast's, a refund, a periodic or
                 -- decay step, a hit taken, a crit's extra) adds nothing: the scale measures swings only (the old
-                -- per-interval filter refused such intervals)
-                if not R.pinOwn[r] then
+                -- per-interval filter refused such intervals); the instant keeps that verdict for its re-estimates
+                R.pinSkip[r] = R.pinOwn[r]
+                if R.pinOwn[r] then
+                    R.skipFrom[r], R.skipTo[r] = R.pinT[r], t
+                else
+                    if R.swAccT[r] == 0 then
+                        R.swFrom[r] = R.pinT[r]
+                    end
                     R.swAccG[r], R.swAccT[r] = R.swAccG[r] + vm - R.pinV[r] - R.pinDelta[r], R.swAccT[r] + dt
                 end
-            elseif R.swAccT[r] > 0 then
+            elseif R.pinOwn[r] then
+                R.pinSkip[r] = true -- a known gain between pins of one instant: its re-estimate is none of the window's
+            elseif R.swAccT[r] > 0 and not R.pinSkip[r] then
                 R.swAccG[r] = R.swAccG[r] + vm - R.pinV[r] - R.pinDelta[r]
             end
         else
-            R.swAccG[r], R.swAccT[r] = 0, 0
+            R.swAccG[r], R.swAccT[r], R.pinSkip[r] = 0, 0, false
         end
     elseif measures and R.pinValid[r] and dt >= I.PIN_GAP then
         local gain = vm - R.pinV[r] - R.pinDelta[r]
@@ -854,11 +867,12 @@ local function swingStep(r, hand, c, t, owed, at)
             dh, R.liftH[r] = net(dh, R.liftH[r])
         end
         if c ~= 1 then
-            -- a crit's extra (exact, unscaled, Primal Fury's with it) is no step the scale measures: its interval adds
-            -- nothing to the window, or, already in it, comes back out
+            -- a crit's extra (exact and unscaled, a talent's rage with it) is no step the scale measures: its interval
+            -- adds nothing to the window, or, already in it (after the window's start, outside an excluded interval),
+            -- comes back out
             if at > R.pinT[r] then
                 R.pinOwn[r] = true
-            elseif R.swAccT[r] > 0 then
+            elseif R.swAccT[r] > 0 and at > R.swFrom[r] and not (at > R.skipFrom[r] and at <= R.skipTo[r]) then
                 R.swAccG[r] = R.swAccG[r] - v
             end
         end
