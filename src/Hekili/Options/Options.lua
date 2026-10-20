@@ -2638,7 +2638,11 @@ local function MarkActiveSpec( tree )
             if not mark then
                 mark = button:CreateTexture( nil, "BACKGROUND" )
                 mark:SetTexture( "Interface\\AddOns\\Hekili\\Textures\\ActiveSpec" )
-                mark:SetAllPoints()
+                -- the row's height, but the tree panel's full width (the row itself stops short of the expand toggle)
+                mark:SetPoint( "TOP", button, "TOP", 0, 0 )
+                mark:SetPoint( "BOTTOM", button, "BOTTOM", 0, 0 )
+                mark:SetPoint( "LEFT", tree.treeframe, "LEFT", 1, 0 )
+                mark:SetPoint( "RIGHT", tree.treeframe, "RIGHT", -1, 0 )
                 button.hekiliActive = mark
             end
             mark:Show()

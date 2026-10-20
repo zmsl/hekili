@@ -423,6 +423,7 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
             end
             r.SetTexture = function() end
             r.SetAllPoints = r.SetTexture
+            r.SetPoint = r.SetTexture
             function r.CreateTexture()
                 local t = region()
                 t.shown = false
