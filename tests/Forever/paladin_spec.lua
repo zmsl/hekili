@@ -320,7 +320,8 @@ describe("Forever Paladin priorities", function()
                 for i, e in ipairs(entries) do
                     local where = name .. " " .. list .. " " .. i
                     local isList = e.action == "run_action_list" or e.action == "call_action_list"
-                    assert.is_true(cls.abilities[e.action] ~= nil or isList, where)
+                    -- use_items is Hekili's `all` (Hekili_Shared/Shared/Items.lua), as in druid_spec
+                    assert.is_true(cls.abilities[e.action] ~= nil or isList or e.action == "use_items", where)
                     for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
                             assert.is_not_nil(kinds[kind][key], where .. ": no " .. kind .. " " .. key)

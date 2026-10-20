@@ -9,7 +9,7 @@
 -- is secret in combat). seal_of_righteousness -> seal_of_command 8 (Seal of Righteousness's 144 above the bound, so the
 -- twist's other seal shows first), seal_of_command -> false 6 and seal_of_righteousness -> false 6 (each seal at its
 -- cost). The floor is re-measured, and only ever raised, once the central fix lands.
--- Lost to wowsims's autocastOtherCooldowns (not translated): the Everlook Pathcarver (item 274759) at the pull.
+-- The Everlook Pathcarver (item 274759, a trinket wowsims's autocastOtherCooldowns uses at the pull) is `use_items`.
 -- Leveling: the Seal of Righteousness refresh fills Holy Strike's cooldown before Seal of Command (L10 8.6 -> 4.4 s).
 return {
     class = "PALADIN",
@@ -31,7 +31,7 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 5,
     },
-    map = {},
+    map = { ["item:274759"] = "use_items" }, -- the Everlook Pathcarver (ItemSparse 274759: a trinket, InventoryType 12)
     focus = { hammer_of_wrath = 1, seal_of_command = 1, seal_of_righteousness = 1, consecration = 2, exorcism = 2 },
     -- The Twist of Light lines need the talent (wowsims's Auto rotation picks this APL by it): without it they swap the
     -- seals every GCD.

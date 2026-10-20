@@ -18,8 +18,8 @@
   `/hekili spec <name>` (`/hekili spec` lists them). Healing trees (Holy, Restoration) and Elemental show a "no
   priorities on Forever" notice and the addon recommends nothing while one is active.
 - Paladin: "Protection (wowsims.com)" is Protection's default priority, translated from wowsims/forever's Protection APL.
-- Paladin: a "Retribution (wowsims.com)" priority, translated from wowsims/forever's Twist of Light APL (selectable;
-  not yet the default).
+- Paladin: a "Retribution (wowsims.com)" priority, translated from wowsims/forever's Twist of Light APL, your on-use
+  trinkets included (selectable; not yet the default).
 
 ### Changed
 - Rogue: the hand-built Assassination, Combat and Subtlety priorities are gone, with their settings (Bleeds on
