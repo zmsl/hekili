@@ -572,17 +572,41 @@ local invalidActionWarnings = {}
 -- A precombat entry with `prepull_at=N` (a prepull schedule, N seconds before the pull: the wowsims packs' doAtValue)
 -- is recommended once an out-of-combat episode, the time since the last combat ended (`state.combat_ended`): it is
 -- done once its ability is cast in the episode (`lastCast`: our casts and the simulation's) or its aura of the same key
--- is seen up, and stays done until the next episode. The list's order is the schedule's.
-local prepullSeen = setmetatable( {}, { __mode = "k" } ) -- [entry] = the episode its aura was seen up in
+-- is seen up. With that aura down again it stays done for the episode when the aura was replaced (it went before the
+-- expiry last seen, or before the aura's full duration from the cast: two seals), and is offered again once that
+-- expiry has passed (it ran out, as between open-world fights). An entry with no aura of its key is done by its cast
+-- alone. The list's order is the schedule's. Only the live state (the first record, no offset) is remembered.
+local prepullSeen = setmetatable( {}, { __mode = "k" } )    -- [entry] = when its aura was last seen up (live)
+local prepullExpires = setmetatable( {}, { __mode = "k" } ) -- [entry] = that aura's expiry then
+local prepullKept = setmetatable( {}, { __mode = "k" } )    -- [entry] = the episode it was replaced in
 
 local function prepullDone( entry, action, ability )
     local episode = state.combat_ended
-    if prepullSeen[ entry ] == episode or ability.lastCast > episode then return true end
-    if class.auras[ action ] and state.buff[ action ].up then
-        prepullSeen[ entry ] = episode
-        return true
+    if prepullKept[ entry ] == episode then return true end
+    local live = state.index == 1 and state.offset == 0
+    local aura = class.auras[ action ]
+    local now = state.query_time
+    if aura then
+        local buff = state.buff[ action ]
+        if buff.up then
+            if live then prepullSeen[ entry ], prepullExpires[ entry ] = now, buff.expires end
+            return true
+        end
     end
-    return false
+    local cast, seen = ability.lastCast, prepullSeen[ entry ] or 0
+    if cast <= episode and seen <= episode then return false end -- neither cast nor seen up this episode
+    if not aura then return true end
+    local expires
+    if seen >= cast then
+        expires = prepullExpires[ entry ] -- the application seen up last
+    else
+        local d = aura.duration -- cast, not seen up since (the aura not observed yet): its full duration
+        if type( d ) ~= "number" or d <= 0 then return true end
+        expires = cast + d
+    end
+    if now >= expires then return false end -- ran out: offered again
+    if live and seen >= cast then prepullKept[ entry ] = episode end -- replaced: done for the episode
+    return true
 end
 
 function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth, caller )

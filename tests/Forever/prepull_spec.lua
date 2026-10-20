@@ -78,6 +78,50 @@ describe("a prepull schedule (prepull_at)", function()
         assert.are.same({}, H.errors)
     end)
 
+    -- Bloodrage stands in for any timed buff (10 s); the client's plain ready flag keeps its cooldown out of the way.
+    local function buff(on) -- Bloodrage's aura on the player from now (its 10 s from the cast), or gone
+        local id = H.Hekili.Class.auras.bloodrage.id
+        H.ctl.auras.player.HELPFUL[1] = on and { spellId = id, expirationTime = on + 10, applications = 1 } or nil
+        H.Fire("UNIT_AURA", "player")
+    end
+    local function to(at) -- the clock to `at`, then one refresh
+        t = at - 0.2
+        H.ctl.cooldown[H.Hekili.Class.abilities.bloodrage.id] = nil -- ready: the client's flag
+        return cycle()
+    end
+
+    it("an aura that ran out is offered again: a 10 s buff not at 5 s, again at 11 s", function()
+        lists({ { enabled = true, action = "bloodrage", use_off_gcd = 1, prepull_at = 10 } })
+        assert.are.equal("bloodrage", cycle())
+        cast("bloodrage")
+        local t0 = t
+        buff(t0)
+        assert.are_not.equal("bloodrage", to(t0 + 5))
+        to(t0 + 10)
+        buff(false)
+        assert.are.equal("bloodrage", to(t0 + 11))
+        assert.are.same({}, H.errors)
+    end)
+
+    it("an aura replaced before it ran out stays done for the episode: replaced at 2 s, done through 60 s", function()
+        lists({
+            { enabled = true, action = "bloodrage", use_off_gcd = 1, prepull_at = 10 },
+            { enabled = true, action = "defensive_stance", use_off_gcd = 1, prepull_at = 1.5 },
+        })
+        assert.are.equal("bloodrage", cycle())
+        cast("bloodrage")
+        local t0 = t
+        buff(t0)
+        assert.are.equal("defensive_stance", to(t0 + 1))
+        t = t0 + 2 - 1.6
+        cast("defensive_stance") -- at t0 + 2, and the stand-in's aura goes with it, as a seal replaces a seal
+        buff(false)
+        for at = t0 + 3, t0 + 60, 3 do
+            assert.is_false(to(at), at - t0)
+        end
+        assert.are.same({}, H.errors)
+    end)
+
     it("an entry without prepull_at keeps the plain list's behaviour: recommended while its condition holds", function()
         lists({
             { enabled = true, action = "defensive_stance", use_off_gcd = 1 },

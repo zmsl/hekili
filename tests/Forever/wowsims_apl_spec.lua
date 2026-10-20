@@ -36,7 +36,7 @@ end
 describe("the wowsims APL translator", function()
     it("keeps the order, maps keys, flags off-GCD and focus, and guards another ability's reads", function()
         local text, omitted = apl.translate({
-            prepullActions = { cast(300) },
+            prepullActions = { { action = cast(300).action, doAtValue = const("-1s") } },
             priorityList = {
                 cast(100, cmp("OpGe", { spellTimeToReady = { spellId = { spellId = 200 } } }, const("1.5s"))),
                 cast(200, { ["not"] = { val = { auraIsActive = { auraId = { spellId = 900 } } } } }),
@@ -47,7 +47,7 @@ describe("the wowsims APL translator", function()
         }, ctx())
         assert.are.equal(
             table.concat({
-                "actions.precombat=roar,use_off_gcd=1",
+                "actions.precombat=roar,use_off_gcd=1,prepull_at=1",
                 "actions=strike,focus=1,if=(!action.big_hit.known|cooldown.big_hit.remains>=1.5)",
                 "actions+=/big_hit,if=(!talent.furious.enabled|!buff.fury.up)",
                 "actions+=/dot,if=debuff.dot.remains<=0.3",
@@ -59,31 +59,41 @@ describe("the wowsims APL translator", function()
         assert.are.same({}, omitted)
     end)
 
-    it("schedules the prepull: prepull_at from doAtValue, earliest first, no guard of its own", function()
-        local function at(id, v, cond)
-            local e = cast(id, cond)
-            e.doAtValue = v and const(v)
-            return e
+    it(
+        "schedules the prepull: prepull_at from doAtValue, earliest first, 0 at the pull, no guard of its own",
+        function()
+            local function at(id, v, cond)
+                local e = cast(id, cond)
+                e.doAtValue = type(v) == "table" and v or (v and const(v))
+                return e
+            end
+            local text, omitted = apl.translate({
+                prepullActions = {
+                    at(100, "-1.5s"),
+                    at(300, "-10s"),
+                    at(200, "-1.5s", { ["not"] = { val = { auraIsActive = { auraId = { spellId = 900 } } } } }),
+                    at(400, "0s"),
+                    at(400),
+                    at(100, "2s"),
+                    at(200, { variableRef = { name = "x" } }),
+                },
+            }, ctx())
+            assert.are.equal(
+                table.concat({
+                    "actions.precombat=roar,use_off_gcd=1,prepull_at=10",
+                    "actions.precombat+=/strike,focus=1,prepull_at=1.5",
+                    "actions.precombat+=/big_hit,prepull_at=1.5,if=(!talent.furious.enabled|!buff.fury.up)",
+                    "actions.precombat+=/dot,prepull_at=0",
+                }, "\n"),
+                text
+            )
+            assert.are.same({
+                "precombat #5: no doAtValue",
+                "precombat #6: doAtValue after the pull",
+                "precombat #7: doAtValue not a constant",
+            }, omitted)
         end
-        local text, omitted = apl.translate({
-            prepullActions = {
-                at(100, "-1.5s"),
-                at(300, "-10s"),
-                at(200, "-1.5s", { ["not"] = { val = { auraIsActive = { auraId = { spellId = 900 } } } } }),
-                at(400),
-            },
-        }, ctx())
-        assert.are.equal(
-            table.concat({
-                "actions.precombat=roar,use_off_gcd=1,prepull_at=10",
-                "actions.precombat+=/strike,focus=1,prepull_at=1.5",
-                "actions.precombat+=/big_hit,prepull_at=1.5,if=(!talent.furious.enabled|!buff.fury.up)",
-                "actions.precombat+=/dot",
-            }, "\n"),
-            text
-        )
-        assert.are.same({}, omitted)
-    end)
+    )
 
     it("folds constants, omits hidden and unsupported entries, inlines variables, makes toggles settings", function()
         local text, omitted, toggles = apl.translate({

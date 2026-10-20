@@ -5,7 +5,9 @@
 -- The translation rules (the plan's Task 4):
 -- 1. One `.simc` line per APL entry, in order: `prepullActions` -> `actions.precombat` (wowsims's schedule: by a
 --    constant `doAtValue`, earliest first, ties in the APL's order, each cast `prepull_at=<seconds before the pull>`,
---    which the engine recommends once an out-of-combat episode; no guard is added), `priorityList` -> `actions`,
+--    0 at the pull, which the engine recommends once an out-of-combat episode; no guard is added; an entry with no
+--    `doAtValue` or one after the pull is omitted, as wowsims ignores it, and one with a non-constant `doAtValue`
+--    too), `priorityList` -> `actions`,
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
 --    order as first called; `valueVariables` are inlined where referenced.
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
@@ -577,15 +579,19 @@ function M.translate(rotation, c)
         end
         if at then -- the prepull schedule: by doAtValue, earliest first (wowsims's order), ties in the APL's
             table.sort(order, function(x, y)
-                local ax, ay = at[x] or 0, at[y] or 0
+                local ax, ay = tonumber(at[x]) or 0, tonumber(at[y]) or 0
+                ax, ay = -ax, -ay -- seconds before the pull: the earliest is the largest
                 return ax < ay or (ax == ay and x < y)
             end)
         end
         for _, i in ipairs(order) do
             local e = entries[i]
-            c.prepullAt = at and at[i] and ("%g"):format(-at[i]) or nil
+            local when = at and at[i] -- seconds before the pull (0: at it), or why wowsims ignores the entry
+            c.prepullAt = type(when) == "number" and ("%g"):format(when) or nil
             if e.hide then
                 omitted[#omitted + 1] = ("%s #%d: hidden"):format(name, i)
+            elseif type(when) == "string" then
+                omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, when)
             else
                 local ok, body, why = pcall(entry, c, e)
                 if not ok then
@@ -602,10 +608,21 @@ function M.translate(rotation, c)
         end
         lists[#lists + 1], byName[name] = { name, out }, out
     end
+    -- wowsims (sim/core/apl.go, the prepull parse) skips an entry with no doAtValue or one after the pull (> 0); 0 runs
+    -- at the pull itself
     local prepull, at = rotation.prepullActions or {}, {}
     for i, e in ipairs(prepull) do
-        local ok, n = pcall(value, c, e.doAtValue or {}) -- a constant duration; anything else keeps no schedule
-        at[i] = ok and tonumber(n) or nil
+        local ok, n = pcall(value, c, e.doAtValue or {})
+        n = ok and tonumber(n)
+        if not e.doAtValue or next(e.doAtValue) == nil then
+            at[i] = "no doAtValue"
+        elseif not n then
+            at[i] = "doAtValue not a constant"
+        elseif n > 0 then
+            at[i] = "doAtValue after the pull"
+        else
+            at[i] = n == 0 and 0 or -n
+        end
     end
     run("precombat", prepull, at)
     c.prepullAt = nil

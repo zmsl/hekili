@@ -260,9 +260,13 @@ drops it): `GetPredictionFromAPL` (`Engine/Sim/Core.lua`, `prepullDone`) recomme
 out-of-combat episode, the time since the last combat ended (`state.combat_ended`, set at `PLAYER_REGEN_ENABLED`; 0
 before the first fight). The entry is done once its ability's `lastCast` is in the episode (our casts and the
 simulation's, so the next slot shows the next entry) or the aura of the same key is seen up (auras are plain out of
-combat on Forever), and stays done until the next episode, even after that aura falls off. The list's order is the
-schedule's: the wowsims translator (`tools/wowsims/apl.lua` rule 1) orders `prepullActions` by `doAtValue`, earliest
-first, and emits `prepull_at` from it, adding no guard of its own. The engine does not know when the pull comes, so the
+combat on Forever). With that aura down again, it stays done for the episode when the aura was replaced (gone before
+the expiry last seen up, or before its full duration from the cast: two seals), and is offered again once that expiry
+has passed (a buff that ran out between open-world fights). An entry with no aura of its key is done by its cast
+alone. Only the live state (the first record, no offset) is remembered, never a predicted slot's. The list's order is
+the schedule's: the wowsims translator (`tools/wowsims/apl.lua` rule 1) orders `prepullActions` by `doAtValue`,
+earliest first, and emits `prepull_at` from it (0 at the pull), adding no guard of its own; it omits, as wowsims does
+(`sim/core/apl.go`), an entry with no `doAtValue` or one after the pull. The engine does not know when the pull comes, so the
 seconds are the order's source and documentation, not a timer. Lines without it (every hand-written pack's precombat,
 Arms's `battle_shout` refresh among them) behave as before.
 
