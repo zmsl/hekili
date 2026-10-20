@@ -321,10 +321,12 @@ spec:RegisterResource(
         end,
         -- Stepped and front-loaded (stepped-decay design): 1.25 lost at once at the start of each 1 s window, the first
         -- when the decay starts (combat end, a tick aura's expiry), so Bloodrage's last tick ends at 10 - 1.25.
-        -- A function, not a number: Engine/Schema/Spec.lua setfenv's every meta field, and setfenv(1) re-envs its caller.
         decayInterval = function()
             return 1
         end,
+        -- A dodged, parried or missed ability gives back 80% of its rage (wowsims/forever's RageCostOptions refund: the
+        -- log's "Gained 12.000 rage from {OtherID: 8}" after a dodged 15-rage Sunder Armor; unmeasured in game).
+        refundOnAvoid = 0.8,
     }
 )
 

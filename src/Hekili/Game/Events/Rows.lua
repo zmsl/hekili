@@ -9,7 +9,8 @@
 -- (back-dated). A credited wound stages `Swing` c = 1 (landed, at the swing's time) and, when CRITICAL, c = 3 (that
 -- hand's crit) for VirtualState's resources (Families/Resources.lua). An avoid credited to a swing is provisional: a
 -- later wound that scores that swing higher takes it; otherwise the swing's window closes as SWING_MISSED. A swing
--- still unpaired when its window closes is emitted as SWING_DAMAGE with amount 0 at its own time.
+-- still unpaired when its window closes is emitted as SWING_DAMAGE with amount 0 at its own time. A DODGE / PARRY / MISS
+-- in the frame of exactly one cast of ours also stages `Avoided` for the belief (Families/Now.lua).
 -- Measured: docs/research/2026-10-16-swing-outcome-pairing.md (P), docs/research/2026-10-16-group-pairing-captures.md
 -- (G, G5).
 -- Credits: secret-value handling after Catnip's (Durts) research; the signals are Taco Dog Forever's research
@@ -131,6 +132,29 @@ local function cast(t, age)
         end
     end
     return best
+end
+
+-- Our cast's own avoid for the belief (Obs.Avoided, Families/Now.lua): an action that refuses the whole ability, in the
+-- frame of exactly one pending cast of ours (the caller has already given a swing of ours what one explains).
+-- Anything else is not attributable and stages nothing (the belief keeps the cast's optimistic effects). Allocates
+-- nothing.
+-- shortcut: the frame only (melee: the outcome comes with the cast); a projectile's later outcome is not attributed
+-- (no Forever ability declares a `velocity`), upgrade with a travel time when a kit declares one.
+local REFUSED = { DODGE = true, PARRY = true, MISS = true }
+local function avoided(p, t, act)
+    if not REFUSED[act] or t - actT[p] > SAME_FRAME then
+        return
+    end
+    for i = 1, N do
+        if i ~= p and actT[i] > 0 and actKind[i] == 2 and t - actT[i] <= SAME_FRAME then
+            return -- two casts in the frame: whose outcome is unknown
+        end
+    end
+    local a = I.ab.bySpell[actX[p]]
+    if a then
+        S.Stage(Obs.Avoided, t, a, actT[p], I.HitKind[act])
+        S.Urgent("VS_CAST_AVOIDED")
+    end
 end
 
 local function pending()
@@ -393,6 +417,8 @@ end
 -- A WOUND 0 is the white swing an on-next-swing strike replaced and pairs with nothing; a wound right after one that
 -- no cast of ours claimed is another player's strike frame (background). A white outcome (school 1) is then scored
 -- against our pending swings; a wound no swing takes goes to our pending cast, else to the background.
+-- A white avoid that one of our pending swings explains (scoring at THETA, or any candidate past the cast's frame) is
+-- not the cast's: before, our cast's 0.2 s claimed it as SPELL_MISSED, and an ability's `missable` dropped its debuff.
 -- shortcut: a startsCombat cast with no outcome of its own (a DoT, a debuff) takes an avoid inside its 0.2 s as
 -- SPELL_MISSED; rare, upgrade to the cast's frame if Phase D's compensating aura removal relies on it.
 -- shortcut: in group play another attacker's white wound inside our pending cast's 0.2 s that no swing of ours takes
@@ -413,6 +439,14 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         return
     end
     local p = cast(t, not avoid and SAME_FRAME or nil)
+    if p and avoid and white then
+        -- a white avoid a pending swing of ours explains is the swing's: one scoring at THETA, or any candidate once the
+        -- cast's frame has passed (the cast keeps its effects: no SPELL_MISSED row, no Obs.Avoided)
+        local sw, swingLR = score(t, amount, flag, true, false)
+        if swingLR >= L.THETA or (sw and t - actT[p] > SAME_FRAME) then
+            p = nil
+        end
+    end
     local credited, lr, ref, lag, second, k, short = nil, 0, 0, 0, 0, 1, nil
     local unknown = false
     if not p and white and (AVOIDS[act] or not avoid) and not (not avoid and t - lastW0 <= SAME_FRAME) then
@@ -430,6 +464,9 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         p = cast(t)
     end
     if p then
+        if avoid then
+            avoided(p, t, act)
+        end
         local x, at = actX[p], actT[p]
         actT[p] = 0
         L.credited[3] = L.credited[3] + 1

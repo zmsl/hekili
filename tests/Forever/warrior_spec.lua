@@ -587,6 +587,10 @@ describe("Forever Warrior", function()
         assert.are.equal(1, w.resource[4].decayInterval()) -- stepped: lost at the start of each 1 s window
     end)
 
+    it("gives back 80% of an avoided ability's rage (the belief's refundOnAvoid; wowsims's refund)", function()
+        assert.are.equal(0.8, w.resource[4].refundOnAvoid)
+    end)
+
     it("declares no rage maximum of its own: a Gnome's 105 is the race pack's Expansive Mind", function()
         assert.is_nil(w.resource[4].max) -- 100 by default; the Gnome's race pack adds Expansive Mind
     end)

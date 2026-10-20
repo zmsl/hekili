@@ -198,6 +198,9 @@ end
 -- shortcut: the sim's forecast takes the belief's regen rate at `now` as a constant (Game/API/Facade.lua's
 -- GetPowerRegenForPowerType), so it sees neither a `mult` aura expire mid-forecast nor a simulated cast apply one;
 -- upgrade with a per-forecast multiplier when a pack's pooling misjudges across a `mult` aura's edge.
+-- refundOnAvoid = n (a number, 0-1)  The share of an ability's cost of this resource the game gives back when the target
+--                                    dodges, parries or misses it: the belief's only (Families/Now.lua, Obs.Avoided);
+--                                    the sim does not predict avoidance.
 local HekiliSpecMixin = {
     RegisterResource = function( self, resourceID, regen, model, meta )
         local resource = GetResourceKey( resourceID )
@@ -247,7 +250,7 @@ local HekiliSpecMixin = {
                 for _, func in pairs( v ) do
                     if type( func ) == "function" then setfenv( func, state ) end
                 end
-            else
+            elseif type( v ) == "function" then -- a number (`refundOnAvoid`) is data
                 setfenv( v, state )
             end
         end

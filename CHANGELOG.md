@@ -94,6 +94,8 @@
   over 1200), and Shredding Attacks counts all three points (Shred 42 energy at 3/3).
 - Druid: the mana estimate regenerates in combat outside the five-second rule (about 22 a second with pre-raid gear)
   instead of not at all.
+- Dodged, parried and missed abilities: the addon no longer counts their debuff as applied (a dodged Sunder Armor is no
+  stack, a missed Rend is not up), and a Warrior's estimate gets the 80% of the rage an avoided ability gives back.
 - Rogue, Paladin and Shaman: the default priorities now load. They were registered under the wrong specialization ids
   for the WoW Forever client, so the addon showed nothing for these classes.
 - Developer: unreadable (secret) answers to "does this unit exist / is it dead" for target, party, boss and focus units

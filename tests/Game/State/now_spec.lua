@@ -622,4 +622,122 @@ describe("now handlers", function()
         assert.are.equal(0, bytes)
         assert.is_true(I.Log.emitted - emitted >= 1200 * 5) -- two casts, an aura, an energize and a removal each
     end)
+
+    describe("our cast's own outcome (Obs.Avoided)", function()
+        -- the cast, then the target's outcome `act` (nil: none) `dt` s later, then the drain
+        local function castOutcome(id, t, act, dt, amount)
+            ctl.now = t
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", id)
+            if act then
+                ctl.now = t + (dt or 0)
+                ctl.Fire("UNIT_COMBAT", "target", act, "", amount or 0, 1)
+            end
+            ctl.Tick(t + 0.01)
+            VS.Drain(t + 0.02)
+            ctl.Tick(t + 0.03)
+        end
+        local function begin()
+            h.Class.resources.rage.state.meta = { refundOnAvoid = 0.8 } -- the kit's declared share
+            start()
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.usable[fs.SPENDER_C] = { true, false } -- rage >= 10: pinned at 10 before the cast
+            ctl.now = 4
+            VS.Drain(4)
+            ctl.usable[fs.SPENDER_C] = nil
+        end
+
+        it("a dodge in the cast's frame: no debuff, 80% of the cost back, a REMOVED row", function()
+            begin()
+            castOutcome(fs.SPENDER_C, 5, "DODGE")
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.1))
+            local rage = VS.Power(fs.RAGE, 5.1)
+            assert.are.same({ 8, "modelled", VS.Obs.Avoided }, { rage.est, rage.basis, rage.last.modelled.event })
+            assert.are.same({ "SPELL_AURA_REMOVED", fs.SPENDER_C }, { rows[#rows][1], rows[#rows][3] })
+            assert.are.equal(1, I.avoidsRun)
+        end)
+
+        it("a wound: the debuff stays and nothing comes back", function()
+            begin()
+            castOutcome(fs.SPENDER_C, 5, "WOUND", 0, 40)
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.1).est)
+            assert.are.equal(0, VS.Power(fs.RAGE, 5.1).est)
+            assert.are.equal(0, I.avoidsRun)
+        end)
+
+        it("a parry of a refresh puts the earlier application back, its expiry and stacks", function()
+            begin()
+            castOutcome(fs.SPENDER_C, 5, "WOUND", 0, 40)
+            castOutcome(fs.SPENDER_C, 8, "PARRY")
+            local rec, stacks = VS.Aura("target", fs.SPENDER_C, 8.1)
+            assert.are.same({ 20, 1 }, { rec.est, stacks })
+        end)
+
+        it("unattributed: two casts in the frame, an outcome past the frame, a secret action; none changes", function()
+            begin()
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.now = 5.01
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_B)
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            ctl.Tick(5.02)
+            VS.Drain(5.03)
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.1).est)
+            castOutcome(fs.SPENDER_C, 30, "MISS", 0.1) -- 0.1 s on: a pending swing's as much as the cast's
+            assert.are.equal(45, VS.Aura("target", fs.SPENDER_C, 30.2).est)
+            castOutcome(fs.SPENDER_C, 50, fake.SECRET)
+            assert.are.equal(65, VS.Aura("target", fs.SPENDER_C, 50.1).est)
+            assert.are.equal(0, I.avoidsRun)
+        end)
+
+        it("unattributed: a white swing of ours due to land then could own the avoid as well", function()
+            begin()
+            ctl.now = 4.526
+            ctl.Fire("PLAYER_SWING", 3.6, 0) -- the main hand's landing lag is about 0.474 s
+            castOutcome(fs.SPENDER_C, 5, "DODGE")
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.1).est)
+            assert.are.equal(0, I.avoidsRun)
+        end)
+
+        it("a white swing's miss 0.06 s after the cast is the swing's: the debuff stays, no SPELL_MISSED", function()
+            begin() -- the opening Garrote, then the main hand's swing and its miss together (the Rogue replay's)
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.now = 5.06
+            ctl.Fire("PLAYER_SWING", 3.6, 0)
+            ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+            ctl.Tick(5.07)
+            VS.Drain(5.08)
+            ctl.Tick(7.5) -- past every window
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 7.5).est)
+            assert.are.equal(0, VS.Power(fs.RAGE, 7.5).est)
+            for _, r in ipairs(rows) do
+                assert.is_false(r[1] == "SPELL_MISSED" and r[3] == fs.SPENDER_C, "the cast's miss row")
+            end
+            assert.are.equal(0, I.avoidsRun)
+        end)
+
+        it("no `refundOnAvoid`: the debuff is undone, the cost stays spent", function()
+            start()
+            ctl.usable[fs.SPENDER_C] = { true, false }
+            ctl.now = 4
+            VS.Drain(4)
+            ctl.usable[fs.SPENDER_C] = nil
+            castOutcome(fs.SPENDER_C, 5, "MISS")
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.1))
+            assert.are.equal(0, VS.Power(fs.RAGE, 5.1).est)
+        end)
+
+        it("allocates nothing across 1000 avoided casts", function()
+            begin()
+            function h:ForceUpdate() end
+            cleu:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+            local t = 50
+            local bytes = alloc.bytes(function()
+                t = t + 1
+                castOutcome(fs.SPENDER_C, t, "DODGE")
+            end, 1000)
+            assert.are.equal(0, bytes)
+            assert.is_true(I.avoidsRun >= 1000)
+        end)
+    end)
 end)
