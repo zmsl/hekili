@@ -83,6 +83,18 @@ local function queue(H, q, n)
     return k
 end
 
+-- The first on-GCD name of an instance's Primary queue (false: none): the replay's decision-point pick.
+local function firstGcd(H)
+    local out, abilities = H.Hekili.Engine.Output.Primary, H.Hekili.Class.abilities
+    for i = 1, out.count do
+        local a = abilities[out.recs[i].actionName]
+        if a and a.gcd ~= "off" then
+            return out.recs[i].actionName
+        end
+    end
+    return false
+end
+
 --- One run of fight `seed`: the instances in `drivers` (each { H, plain }) stepped on one world in lockstep, the
 --- first one's first icon pressed. `o`: duration (combat seconds [180]), mobHealth, hz [5], react [REACT], reaction
 --- (seconds an icon shows ready before the press [0]), others (archetypes on our target), trace (the facade's trace
@@ -91,7 +103,8 @@ end
 --- the oracle's belief missed the truth, by field), combat, full, idle, up (by debuff key: in-combat ticks), ours and
 --- theirs (first icons by in-combat tick), focus (in-combat ticks whose first record of ours has `focus` set), gap (believed minus true power where they differ), cpu (ms per tick of
 --- the first instance, timed around headless.cycle: VirtualState's flush and the timers as well as Update, so it errs
---- high), damage, t }.
+--- high), damage, t }. `o.replay` (replay.lua's R: its world, no presses, wowsims's next cast as `theirs`, a cycle
+--- just before each decision; `run.dec` { ours, theirs }: our first on-GCD icon and wowsims's on-GCD cast).
 function M.run(L, seed, o, drivers)
     o = o or {}
     local content = L.content
@@ -107,12 +120,17 @@ function M.run(L, seed, o, drivers)
         tag = "-" .. seed .. "-" .. #drivers, -- a fresh mob per run
         others = o.others, -- other sources on our target (scenarios.ARCHETYPES: the party report)
     }, { __index = content.WORLD })
-    local W = scenarios.world(wo, seed)
+    local R = o.replay -- a wowsims log's world (replay.lua): no presses, its casts as `theirs`
+    if R then
+        wo.pull, wo.duration, wo.targetLevel = R.pull, R.duration, R.targetLevel or wo.targetLevel
+    end
+    local W = R and R.world(wo, seed) or scenarios.world(wo, seed)
     local us = W.ents[1]
     local run = { W = W, us = us, ticks = 0, presses = 0, refused = {}, raises = 0, selfCheck = {} }
     -- the metrics' per-tick record (§5.1): in-combat ticks only, both queues' first icons, the truth
     run.combat, run.full, run.idle, run.attempts, run.episodes, run.up = 0, 0, 0, 0, 0, {}
     run.ours, run.theirs, run.gap, run.cpu, run.secrets, run.focus = {}, {}, {}, {}, {}, 0
+    run.dec = R and { ours = {}, theirs = {} } or nil
     local sink = {}
     local steps = {}
     for i, d in ipairs(drivers) do
@@ -166,14 +184,13 @@ function M.run(L, seed, o, drivers)
             end
         end
     end
-    while t < stopAt and not W.killAt do
-        t = t + tick
-        W.run(t)
+    local function step(tc) -- the world to `tc`, every instance fed and cycled
+        W.run(tc)
         for i, st in ipairs(steps) do
-            feed(st.H, st.obs, t, st.base, sink)
+            feed(st.H, st.obs, tc, st.base, sink)
             st.H.Hekili.ActiveDebug = o.trace or false
             local c0 = os.clock()
-            local ok = headless.cycle(st.H, st.base + t)
+            local ok = headless.cycle(st.H, st.base + tc)
             if i == 1 then
                 run.cpu[#run.cpu + 1] = (os.clock() - c0) * 1000
             end
@@ -183,6 +200,24 @@ function M.run(L, seed, o, drivers)
             end
             queue(st.H, st.q, 3)
         end
+    end
+    local di = 1
+    while t < stopAt and not W.killAt do
+        -- wowsims's decisions before this tick (replay): a cycle just before each cast; the on-GCD ones scored
+        -- against our first on-GCD icon (an off-GCD cast would agree with whatever shows during a GCD)
+        while R and R.decisions[di] and R.decisions[di].t < t + tick do
+            local d = R.decisions[di]
+            di = di + 1
+            if d.t > t then
+                step(d.t)
+                if d.gcd then
+                    local n = #run.dec.ours + 1
+                    run.dec.ours[n], run.dec.theirs[n] = firstGcd(steps[1].H), d.key
+                end
+            end
+        end
+        t = t + tick
+        step(t)
         run.ticks = run.ticks + 1
         local inCombat = t >= wo.pull
         local gcdFree = us.gcdUntil <= t
@@ -222,7 +257,7 @@ function M.run(L, seed, o, drivers)
         local q = steps[1].q
         local key = q.name[1]
         local gcdPress, refusedKey = false, false
-        local shown = key and q.time[1] <= (o.react or M.REACT)
+        local shown = not R and key and q.time[1] <= (o.react or M.REACT)
         if shown then
             readySince[key] = readySince[key] or t
         end
@@ -265,7 +300,11 @@ function M.run(L, seed, o, drivers)
             if out.count > 0 and out.recs[1].focus then
                 run.focus = run.focus + 1
             end
-            run.theirs[n] = steps[2] and steps[2].q.name[1] or false
+            if R then
+                run.theirs[n] = R.next(t)
+            else
+                run.theirs[n] = steps[2] and steps[2].q.name[1] or false
+            end
             if steps[2] and run.ours[n] ~= run.theirs[n] then -- the belief's power error where they disagree
                 local VS = steps[1].H.ns.VirtualState
                 run.gap[#run.gap + 1] = VS.Power(L.power.type, steps[1].base + t).est - us.power
@@ -343,17 +382,23 @@ local function reactions(ours, theirs, n, out)
     end
 end
 
---- `n` fights (seeds 1..n, from `o.seed0` + 1) on `L`'s boot: run A and run B each, tallied (§5.1). The first fight
---- runs traced when `o.trace` is unset (one per scenario: the facade's secret passthroughs). Returns the tally; its
---- `focus` (run A's in-combat ticks whose first record of ours has `focus` set) shows a pack's flagged lines ran.
-function M.tally(L, n, o)
-    o = o or {}
+-- An empty tally (M.tally's and M.replay's).
+local function blank()
     local m = { fights = 0, both = 0, agree = 0, conf = {}, react = {}, refused = {}, attempts = 0, episodes = 0 }
     m.refusedB, m.attemptsB = {}, 0 -- the oracle's own, driving run B (the projection's share: §5.2 as built)
     m.A = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0 }
     m.B = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0 }
     m.oracleFlicker, m.errors, m.raises, m.misses, m.secrets, m.selfCheck = 0, 0, 0, {}, {}, 0
     m.cpu, m.gap, m.focus = {}, {}, 0
+    return m
+end
+
+--- `n` fights (seeds 1..n, from `o.seed0` + 1) on `L`'s boot: run A and run B each, tallied (§5.1). The first fight
+--- runs traced when `o.trace` is unset (one per scenario: the facade's secret passthroughs). Returns the tally; its
+--- `focus` (run A's in-combat ticks whose first record of ours has `focus` set) shows a pack's flagged lines ran.
+function M.tally(L, n, o)
+    o = o or {}
+    local m = blank()
     for f = 1, n do
         local seed = (o.seed0 or 0) + f
         local po = setmetatable({ trace = o.trace == nil and f == 1 or o.trace }, { __index = o })
@@ -413,6 +458,48 @@ function M.tally(L, n, o)
     return m
 end
 
+--- One replay of wowsims log `R` (replay.lua) on `L`'s boot: ours alone on the log's world, no presses, wowsims's
+--- next cast as `theirs` each tick. A tally for summary and line: the per-tick agreement with wowsims's next cast
+--- (reported) and `dec` { both, agree, conf } (our first on-GCD icon just before each on-GCD cast of wowsims's).
+function M.replay(L, R, o)
+    local a = M.run(L, 1, setmetatable({ replay = R, trace = false }, { __index = o or {} }), { { H = L.us } })
+    local m = blank()
+    m.fights = 1
+    for i = 1, a.combat do
+        local x, y = a.ours[i], a.theirs[i]
+        if x and y then
+            m.both = m.both + 1
+            if x == y then
+                m.agree = m.agree + 1
+            else
+                local key = y .. " -> " .. x
+                m.conf[key] = (m.conf[key] or 0) + 1
+            end
+        end
+    end
+    reactions(a.ours, a.theirs, a.combat, m.react)
+    local s = m.A
+    s.combat, s.full, s.idle, s.damage, s.time = a.combat, a.full, a.idle, a.damage, a.combat / (o and o.hz or 5)
+    s.flicker = flicker(a.ours, a.combat)
+    m.B = s -- one side: a replay has no oracle run (the line's A/B fields read 1)
+    m.errors, m.raises, m.cpu = a.errors, a.raises, a.cpu
+    for _, name in ipairs(a.misses) do
+        m.misses[name] = true
+    end
+    m.dec = { both = 0, agree = 0, conf = {} }
+    for i, y in ipairs(a.dec.theirs) do
+        local x = a.dec.ours[i]
+        m.dec.both = m.dec.both + 1
+        if x == y then
+            m.dec.agree = m.dec.agree + 1
+        else
+            local key = y .. " -> " .. tostring(x)
+            m.dec.conf[key] = (m.dec.conf[key] or 0) + 1
+        end
+    end
+    return m
+end
+
 -- The `p` quantile of a list (sorted in place).
 local function quantile(list, p)
     table.sort(list)
@@ -459,24 +546,32 @@ function M.summary(m)
         sum = sum + ms
     end
     r.cpuMean, r.cpuP99 = sum / math.max(1, #m.cpu), quantile(m.cpu, 0.99)
+    if m.dec then
+        r.decisions = m.dec.agree / math.max(1, m.dec.both)
+    end
     return r
+end
+
+-- A confusion table's top three disagreements, "key count" joined by "; ".
+local function top3(conf)
+    local list = {}
+    for key, k in pairs(conf) do
+        list[#list + 1] = { key, k }
+    end
+    table.sort(list, function(x, y)
+        return x[2] > y[2] or (x[2] == y[2] and x[1] < y[1])
+    end)
+    local top = {}
+    for i = 1, math.min(3, #list) do
+        top[i] = list[i][1] .. " " .. list[i][2]
+    end
+    return table.concat(top, "; ")
 end
 
 --- One line for a failure message: the summary, the confusion table's top three disagreements (oracle -> ours) and
 --- the believed power minus the truth where they disagree (mean), reported, never gated.
 function M.line(m)
     local r = M.summary(m)
-    local conf = {}
-    for key, k in pairs(m.conf) do
-        conf[#conf + 1] = { key, k }
-    end
-    table.sort(conf, function(x, y)
-        return x[2] > y[2] or (x[2] == y[2] and x[1] < y[1])
-    end)
-    local top = {}
-    for i = 1, math.min(3, #conf) do
-        top[i] = conf[i][1] .. " " .. conf[i][2]
-    end
     local refused = {}
     for why, v in pairs(r.per100) do
         refused[#refused + 1] = ("%s %.1f (oracle %.1f)"):format(why, v, r.per100B[why] or 0)
@@ -491,7 +586,7 @@ function M.line(m)
     for _, g in ipairs(m.gap) do
         gap = gap + g
     end
-    return (
+    local line = (
         "fights=%d agreement %.3f (%d ticks); react median %d p90 %d never %.3f; refused per 100 [%s], episodes %.2f/min; "
         .. "dps A/B %.3f; full %.3f/%.3f idle %.3f/%.3f; uptime [%s]; flicker %.2f/min (oracle %.2f); "
         .. "errors %d raises %d self-check %d; cpu mean %.2f p99 %.2f ms; top [%s]; power est-truth at disagreements %.1f"
@@ -517,9 +612,13 @@ function M.line(m)
         m.selfCheck,
         r.cpuMean,
         r.cpuP99,
-        table.concat(top, "; "),
+        top3(m.conf),
         gap / math.max(1, #m.gap)
     )
+    if m.dec then -- a replay's headline (loop.replay): every other line is unchanged
+        line = line .. ("; decisions on-GCD %.3f (%d) top [%s]"):format(r.decisions, m.dec.both, top3(m.dec.conf))
+    end
+    return line
 end
 
 return M

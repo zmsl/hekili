@@ -58,3 +58,55 @@ describe("the headless loop, class-neutral", function()
         end
     )
 end)
+
+describe("the headless loop's replay injection (o.replay)", function()
+    local scenarios = require("Game.harness.scenarios")
+    it("presses nothing, cycles at each decision and scores only the on-GCD ones", function()
+        local stub = {
+            character = function()
+                return { level = 60, power = { type = 1, token = "RAGE", max = 100 } }
+            end,
+            resolve = function()
+                error("no press in a replay")
+            end,
+            usable = function()
+                return {}
+            end,
+            uptime = function()
+                return {}
+            end,
+            gain = function()
+                return 0
+            end,
+            WORLD = { level = 60, max = 100, mobHealth = 1e9 },
+        }
+        local L = loop.new(stub)
+        local R = {
+            pull = 3,
+            duration = 6,
+            decisions = {
+                { t = 3.3, key = "a", gcd = true },
+                { t = 3.5, key = "b", gcd = false },
+                { t = 4.1, key = "c", gcd = true },
+            },
+        }
+        function R.world(wo, seed)
+            return scenarios.world(wo, seed)
+        end
+        function R.next(t)
+            for _, d in ipairs(R.decisions) do
+                if d.t > t then
+                    return d.key
+                end
+            end
+            return false
+        end
+        local m = loop.replay(L, R)
+        assert.are.same({ 2, 0 }, { m.dec.both, m.dec.agree }) -- no pack: our on-GCD icon is false at both
+        assert.are.equal(0, m.attempts)
+        local r = loop.summary(m)
+        assert.are.equal(0, r.decisions)
+        assert.is_truthy(loop.line(m):find("; decisions on-GCD 0.000 (2)", 1, true))
+        assert.is_nil(loop.summary(loop.tally(L, 1, { duration = 6 })).decisions) -- the normal tally: unchanged
+    end)
+end)
