@@ -4,11 +4,12 @@
 -- 1.60.1.70338, wowdb; a cost percentage there is a fraction of the believed maximum, as the Druid's), the seals as
 -- player auras (one at a time: a seal's `now` takes the others down), Twist of Light's Echoes, Swift
 -- Judgement, Holy Shield's charges spent by blocks on us (`consumedBy`), Hammer of Wrath through the target health
--- gate, mana under the five-second rule (`fsr`), and the default priorities (all provisional: no in-game check yet,
--- D5). Research: the class-completion research §3.
+-- gate, mana under the five-second rule (`fsr`), and the default priorities (the wowsims.com packs, translated from
+-- wowsims/forever's APLs by tools/wowsims/; no in-game check yet). Research: the class-completion research §3.
 -- Judgement does not consume the seal (wowsims/forever judgement.go and the DB2 tooltip); the in-game checkpoint asks.
 -- Talents: the DB2's 44 Classic nodes and the Forever-only ones this file reads; a modifier is rank 1's value x the
--- rank, floored at 0.
+-- rank, floored at 0, except where the DB2 holds the full-rank value on rank 1 (Benediction, Holy Conduit: each one's
+-- comment).
 -- Unmodelled: the judgement debuffs on the target (no priority reads them), Seal of Fury's absorb, the seals' attack
 -- speed and per-hit effects.
 -- Credits: Hekili (registration API and pack format; `mainhand_remains` follows Hekili's Classic Warrior profile,
@@ -159,10 +160,15 @@ local function conduitCost(costs, ids)
     end
 end
 
--- Twist of Light (1310735 aura 108 base -20): seals cost 20% less.
+-- Twist of Light (1310735 aura 108 base -20): seals cost 20% less. The seals' multiplier, given the caller's `talent`
+-- (the state's: a cost function runs in the state's environment, this helper in the file's).
+local function sealMult(t)
+    return (1 - 0.2 * t.twist_of_light.rank) * (1 - 0.02 * t.benediction.rank)
+end
+
 local function sealCost(costs, ids)
     return function()
-        return byRank(costs, ids) * (1 - 0.2 * talent.twist_of_light.rank) * (1 - 0.02 * talent.benediction.rank)
+        return byRank(costs, ids) * sealMult(talent)
     end
 end
 
@@ -307,9 +313,10 @@ spec:RegisterAuras({
 })
 
 -- Any seal up: Judgement's requirement.
--- Sanctified Judgement (1311074, Forever-only, 3 ranks: a 33/66/100% chance to return 20/40/60%; wowsims
--- talents_retribution.go measured it in game as 60% of the seal's base cost x (2 - its cost multiplier) at 3/3, its
--- log "Gained 161.280 mana" = 210 x 1.28 x 0.6): the belief counts the refund only at 3/3, a sure one.
+-- Sanctified Judgement (1311074, Forever-only, 3 ranks: a 33/66/100% chance to return 20/40/60%): 60% of the seal's
+-- base cost x (2 - its cost multiplier) at 3/3 (tests/Forever/wowsims/paladin_retribution.log:439, Seal of Command
+-- up: "Gained 161.280 mana from {SpellID: 1311074}" = 210 x 1.28 x 0.6): the belief counts the refund only at 3/3,
+-- a sure one.
 local SEAL_BASE = {
     { "seal_of_command", SEAL_OF_COMMAND_COST, SEAL_OF_COMMAND },
     { "seal_of_righteousness", SEAL_OF_RIGHTEOUSNESS_COST, SEAL_OF_RIGHTEOUSNESS },
@@ -327,7 +334,7 @@ local function judgementCast()
         for i = 1, #SEAL_BASE do
             local s = SEAL_BASE[i]
             if buff[s[1]].up then
-                local mult = (1 - 0.2 * talent.twist_of_light.rank) * (1 - 0.02 * talent.benediction.rank)
+                local mult = sealMult(talent)
                 gain(byRank(s[2], s[3]) * (2 - mult) * 0.6, "mana")
                 return
             end
