@@ -9,6 +9,20 @@
 
 return {
     class = "HUNTER",
-    packs = { "BeastMastery", "Marksmanship", "Survival" },
-    specs = { BeastMastery = "beast_mastery", Marksmanship = "marksmanship", Survival = "survival" },
+    packs = {
+        "Beast Mastery (wowsims.com)",
+        "Marksmanship (wowsims.com)",
+        "Survival (wowsims.com)",
+        "BeastMastery",
+        "Marksmanship",
+        "Survival",
+    },
+    specs = {
+        ["Beast Mastery (wowsims.com)"] = "beast_mastery",
+        ["Marksmanship (wowsims.com)"] = "marksmanship",
+        ["Survival (wowsims.com)"] = "survival",
+        BeastMastery = "beast_mastery",
+        Marksmanship = "marksmanship",
+        Survival = "survival",
+    },
 }

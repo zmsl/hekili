@@ -28,6 +28,8 @@ local KIT = {
     mongoose_bite = { { 1495, 14269, 14270, 14271 }, 65, 5, "spell" },
     strider_kick = { { 1317257 }, 0.0581, 8, "spell" },
     wing_clip = { { 2974, 1310180, 14267, 14268 }, 80, 0, "spell" },
+    -- wowsims's Melee Weave casts it in melee range (category cooldown 30 s, SpellCooldowns)
+    immolation_trap = { { 13795, 14302, 14303, 14304, 14305 }, 245, 30, "spell" },
 }
 
 local function idsOf(a)
@@ -69,7 +71,7 @@ describe("Forever Hunter", function()
             assert.are.same({ want[2], want[3], want[4] }, { ld.run(a.spend, e) or 0, a.cooldown, a.gcd }, key)
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(15, n)
+        assert.are.equal(16, n)
         assert.are.equal("HUNTER", w.class)
         assert.is_nil(w.options)
         assert.are.equal("cooldowns", w.abilities.rapid_fire.toggle)
@@ -192,6 +194,20 @@ describe("Forever Hunter", function()
         e.now, e.query_time = 0, 1 -- not the present: no usability read
         ld.run(w.hooks.reset_precast, e)
         assert.are.same({ "raptor_strike" }, e.applied)
+    end)
+
+    it("answers mainhand_remains, the time to the next main-hand swing (wowsims's Multi-Shot weave gap)", function()
+        local f = assert(w.exprs.mainhand_remains, "no mainhand_remains")
+        local e = ld.env(w)
+        e.combat, e.mainhand_speed = 1, 3
+        e.nextMH, e.now, e.query_time = 12, 10, 10
+        assert.are.equal(2, ld.run(f, e))
+        e.query_time = 11
+        assert.are.equal(1, ld.run(f, e))
+        e.query_time = 13 -- past the swing: the next one, a period later
+        assert.are.equal(2, ld.run(f, e))
+        e.nextMH, e.combat, e.query_time = 0, 0, 10 -- out of combat: anchored at this evaluation
+        assert.are.equal(0, ld.run(f, e))
     end)
 
     it("opens Mongoose Bite's window from the usability flip, 5 s from the flip, and the bite spends it", function()

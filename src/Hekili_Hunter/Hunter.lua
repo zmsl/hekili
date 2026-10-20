@@ -85,6 +85,8 @@ local ASPECT_OF_THE_HAWK = { 13165, 14318, 14319, 14320, 14321, 14322, 25296 }
 local ASPECT_OF_THE_HAWK_COST = { 20, 35, 50, 70, 90, 110, 120 }
 local ASPECT_OF_THE_BEAST = { 13161, 1299445, 1299446, 1299447 } -- ranks 2-4 Forever-only (D4)
 local ASPECT_OF_THE_BEAST_COST = { 50, 70, 90, 110 }
+local IMMOLATION_TRAP = { 13795, 14302, 14303, 14304, 14305 }
+local IMMOLATION_TRAP_COST = { 50, 90, 135, 190, 245 }
 
 local function rest(ids)
     local out = {}
@@ -238,6 +240,24 @@ spec:RegisterHook("reset_precast", function()
             applyBuff("defensive_state")
         end
     end
+end)
+
+-- The time to the next main-hand swing (Hekili_Warrior/Warrior.lua's, after Hekili's Classic profile): wowsims's Melee
+-- Weave casts Multi-Shot only when it ends before the walk in to that swing.
+spec:RegisterStateExpr("mainhand_remains", function()
+    -- out of combat no swing runs (nextMH is 0): anchor it at this evaluation, or its phase free-runs with the clock
+    local mh = (nextMH == 0 and combat == 0) and now or nextMH
+    if now == query_time then
+        local real = mh - now
+        return real > 0 and real or 0
+    end
+    if query_time <= mh then
+        return mh - query_time
+    end
+    if mainhand_speed <= 0 then
+        return 0
+    end -- no swing speed read yet
+    return mainhand_speed - (query_time - mh) % mainhand_speed
 end)
 
 spec:RegisterAbilities({
@@ -473,6 +493,22 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(WING_CLIP),
     },
+
+    -- wowsims's Melee Weave lays it in melee range (its burn on the target is the trap's triggered spell, unmodelled);
+    -- the 30 s is its category cooldown (DB2 SpellCooldowns).
+    immolation_trap = {
+        id = 13795,
+        copy = rest(IMMOLATION_TRAP),
+        cast = 0,
+        cooldown = 30,
+        gcd = "spell",
+
+        spend = cost(IMMOLATION_TRAP_COST, IMMOLATION_TRAP),
+        spendType = "mana",
+
+        startsCombat = false,
+        known = knows(IMMOLATION_TRAP),
+    },
 })
 
 -- The filler lines' mana floors (D7: a percent of the maximum, one setting a line). Off by default: mana is secret and
@@ -560,6 +596,21 @@ spec:RegisterTalents({
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
 -- run it, never this block (tests/Forever/hunter_spec.lua checks it matches). Provisional (each description says why).
+spec:RegisterPack(
+    "Beast Mastery (wowsims.com)",
+    20261019102,
+    [[Hekili:Dsvtponmq0FlCarcBjF0UlOTICGvaIDfBfIuU6eNyNgtsSJ84WQEj)2zCAPnnBxvjUe5oZ79MXVXtjHK1Kyg1WjRMhm)9HbH3ggmNeB22YjXT08k6g8GK2GFVJtbtF6J4xUEBFQZtQNard4LRACTO3wROmRIzDIAZ9ss2zfhA55K4V9RvR)YpxMzfnPzNMK4sbJX3rKd5xOMl7tnL8(09X8luA(F46(ugVG2vJ8(0p(EFkgUp9zc1j8Tnc4x2jXq(SwWN2wd(7j7H)W73Gs6odlJMkHA8QWWZkBzfqFkLXuY3GhQ4BbV(0ptn0LNPDCE8(1OiLgtlS03FJWu2LzVb(tG6IAInjBXIBxeWcUoyrGhASAvHOgha0CJqjbVwnhjNrnr76Da9pD1ScvEhenV)HNH7QiFQ9YAsufjOLLusFQ6aUinT1O0jGrlQ4Z6aocRiztolk8aiuIZvSzIIOxX4zDffEJZ711oMkW1TCPblHqU5CCpbWeYuDovYtGsLzC4gCijgIAfYzxcVJr9YXz9voHV1Xjm8D34(6p466(XOgQqwsLSen3Ee6FGeJwpGKN8oTwagyybz3lc84QHfgUKMvZzK7iXJmlBY9Jis8jwkXGkpHyUwGMLGsIFb77OwJtqIhmpREOOlUOOt91JQEsMtL96jY(pkJgewy38cWoocg3r)3diITyXhElFUPWLDQP2)HR0ZwlgkhwqANPuPX)NIxjQf4s8x3VJoKM83d]]
+)
+spec:RegisterPack(
+    "Marksmanship (wowsims.com)",
+    20261019102,
+    [[Hekili:Ds13Vnnmq4)w4bejSs(r7gOvrEaeGytSjez8QtUg70ysIDKphM2l5VDo3wAtZ6ys8sL7DFFF35VZxyXS7yPCWky3opA(BJJIVmoAol1(qNGL2bf1WA6GcAPFVbm1ylOWkz3qU3967rzlguOB9DyFOrdCNER6Ln2RuSvNuAStuWs)6pV9Up)JLTJKKLwj5CXwEcS4FwWLd52kXq(UyHLAJ43cZqoxuc9n2H8p89VnKtHhYNitVm01dyyvVYkmH8ome6AWWDudO)e8luR8NrfXq8AOBbNoRDfvId5aNRvVIoulEadgY)eyHLNOz8U5Q7irQS2oCzy4APTQFLR)dNa1N0K6z(IfxUiIhDE0IOaYtn6szd58qHvQvyqNrqKxb2KT9oM5mWzL6IEmz(W1pc3zjHG7YAZ0LzKHLvb3xVhxIb6SAtgAnYAXSEuqWkZwxWtI3dIK4ufBMSm5fCXQ(YYGX5d67gtffMoHYsLqQwFkUhbyczWuakrgwPTJd3sdj5MOoH82Mi4q0GcaTN5f)ApV443CH)lFNVV)7tAbPQcu8mJWDehUMLswpsKN8eTrIwCZMX2xe0XB3SPiuWQgbN9rw6iZYLC3iILEKLYSKYtiwyKKzjbw6tyFh0ACcw6gZZPhj6INv0P(6bvpkZXYE(ez)lLrdchSlEcyhgbJ7O)7beZvS09VLp1u45DQP2)(R0Jwl2uoQGqVTsBOprjQLnsAj(l72r3KM9N)]]
+)
+spec:RegisterPack(
+    "Survival (wowsims.com)",
+    20261019174,
+    [[Hekili:DsvqpQnpq0Fl9qvjDPjeGTRw0xo0Q2QUR(6QQA6vNme7qCjyh5XHvCj)27yGcHSGQuVenzM38EoVXt4X85CMaCs(tJhn(9XJIVp(UPCMBBTKZQH8vWskqdRPNSg7g1gOQnBWZMNr1Amm3SoWJBBLbeEUw0OQCpO5lUiTyTmNZ(6pFA(N)Xm8aDCwPsiK77rI5xvOzTzUszB2HCrfgRCJ02MjKfqtLRn7dF))BZO0TzDOOrf51fJkB0oPnsuJrqDfgDOTq6LWFHgDWqsalOXk6KlOyJxqf2MbcHr)gkyLClg2M9jWbZUWbzW3EyorsPZvJZIIwQCLnl8N9OEqdioPZRyYK7NmsmA6OjJcjF0AkuvKtd5oLrJH1wj18cWLS)SJPRb7QHfM8gmzC7JVa3njrG)J1LAksjZkTeEE1rCjwO2zSPOZQwjh2Gscwr6YCrs8bsJpcMO6sIouvK8kHCrtrry36Hn1DBfL2AP2rsP0l72Zzf61eyZbTmflnUUPxtdj1USEIgSVq4PSH5a6Uzq8Bhmio(D3g867ccc(VK1GsxcArQv6dX2h5mY6rQ5ExlRuOd3TjS)gbf(0UndPgwujf8pYzDmlFXdJio7mlLZ25sEaosJEuKBvKDPao7kg4jw7w4iPJ9KoPhP)PJZ81lPvFJ3t20RqwNbHh2Txb2Prqxb)NhqCVySJ3LV0u4V7p9n9JFsVyTyNCKGqJR0yPFljxPQu0s8xoSJURm)3]]
+)
 spec:RegisterPack(
     "BeastMastery",
     20261019217,

@@ -27,23 +27,25 @@ local FSR = { 18, 3 }
 local QUICK_SHOTS = 0.1 -- wowsims aspects.go: Deadly Aspects' 2% a rank, 5 ranks
 local AUTO_SHOT = 75
 
--- The top rank's mana cost (DB2), the world's truth the class file's costs are measured against; a percent-of-base
--- cost (PowerCostPct) as the class file prices it, a fraction of the maximum.
+-- Each rank's mana cost (DB2), lowest rank first, the world's truth the class file's costs are measured against (a
+-- level's highest known rank pays its own: the leveling brackets); a percent-of-base cost (PowerCostPct) as the class
+-- file prices it, a fraction of the maximum.
 local COST = {
-    hunters_mark = 60,
-    aspect_of_the_hawk = 120,
-    aspect_of_the_beast = 110,
+    hunters_mark = { 15, 30, 45, 60, 60 },
+    aspect_of_the_hawk = { 20, 35, 50, 70, 90, 110, 120 },
+    aspect_of_the_beast = { 50, 70, 90, 110 },
     rapid_fire = 100,
-    serpent_sting = 250,
-    arcane_shot = 190,
-    summon_hawk = 190,
-    aimed_shot = 310,
+    serpent_sting = { 15, 30, 50, 80, 115, 150, 190, 230, 250 },
+    arcane_shot = { 25, 35, 50, 80, 105, 135, 160, 190 },
+    summon_hawk = { 80, 105, 135, 190 },
+    aimed_shot = { 75, 115, 160, 210, 260, 310 },
     multi_shot = 0.139 * MAX,
     sniper_shot = 365,
-    raptor_strike = 100,
-    mongoose_bite = 65,
+    raptor_strike = { 10, 25, 35, 45, 55, 70, 85, 100 },
+    mongoose_bite = { 30, 40, 50, 65 },
     strider_kick = 0.0581 * MAX,
-    wing_clip = 80,
+    wing_clip = { 40, 40, 60, 80 },
+    immolation_trap = { 50, 90, 135, 190, 245 },
 }
 
 -- UNMEASURED: the hits' amounts.
@@ -175,6 +177,7 @@ M.MAP = {
     sniper_shot = shot("sniper_shot"),
     strider_kick = shot("strider_kick"),
     wing_clip = shot("wing_clip"),
+    immolation_trap = {}, -- the trap's burn is unmodelled (no read of it)
     raptor_strike = { bonus = 100 }, -- the queued swing's damage over the weapon's
     mongoose_bite = {
         requires = function(W, e)
@@ -256,6 +259,20 @@ local function classData(H)
         end
     end
     return X
+end
+
+-- The cost of `key`'s highest rank instance `H`'s character knows (`ids`: its ranks, lowest first).
+local function costOf(key, ids, H)
+    local c = COST[key]
+    if type(c) ~= "table" then
+        return c
+    end
+    for i = #ids, 1, -1 do
+        if H.ctl.known[ids[i]] then
+            return c[i]
+        end
+    end
+    return c[#c]
 end
 
 -- The ranged haste on us at `now` in belief `VS`: Rapid Fire's 1.4 times Quick Shots' 1.3.
@@ -368,11 +385,23 @@ local function content(name)
         local X = classData(H)
         local S = H.Hekili.State
         local VS, now = H.ns.VirtualState, H.ctl.now
-        local ids = C.IDS[key]
+        -- a key the world's kit lacks (a replay's or a bracket's added ability): every rank the class registers
+        local function idsOf(k)
+            if C.IDS[k] then
+                return C.IDS[k]
+            end
+            local b = H.Hekili.Class.abilities[k]
+            local out = { b.id }
+            for _, id in ipairs(type(b.copy) == "table" and b.copy or {}) do
+                out[#out + 1] = id
+            end
+            return out
+        end
+        local ids = idsOf(key)
         if SHARED[key] and C.IDS[SHARED[key]] then
             ids = {}
             for _, k in ipairs({ key, SHARED[key] }) do
-                for _, id in ipairs(C.IDS[k]) do
+                for _, id in ipairs(idsOf(k)) do
                     ids[#ids + 1] = id
                 end
             end
@@ -380,7 +409,7 @@ local function content(name)
         local p = {
             spell = VS.KnownID(a.id),
             ids = ids,
-            cost = COST[key],
+            cost = costOf(key, idsOf(key), H),
             pt = MANA,
             cooldown = tonumber(a.cooldown) or S.action[key].cooldown or 0,
             gcd = GCD[a.gcd or "spell"],
@@ -415,11 +444,12 @@ local function content(name)
         local X = classData(H)
         for key, m in pairs(M.MAP) do
             if H.Hekili.Class.abilities[key] and C.IDS[key] then
+                local cost = costOf(key, C.IDS[key], H)
                 local function answer(W, e, power)
                     if m.requires and not m.requires(W, e, X) then
                         return false, false
                     end
-                    return power >= COST[key], power < COST[key]
+                    return power >= cost, power < cost
                 end
                 for _, id in ipairs(C.IDS[key]) do
                     out[#out + 1] = { id, answer }
