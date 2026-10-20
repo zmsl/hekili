@@ -4,14 +4,17 @@
 -- (DefaultOptions), :37 (TwistOfLightTalents), :144-151 (OtherDefaults) at the pin; the APL and gear spec.ts's default
 -- (Twist of Light).
 -- Disagreements worked (P7, resume 3: after central fixes 6/8/C and 9/9b): replay 0.579 (57; 0.456 before them).
--- seal_of_righteousness -> seal_of_command 13 and consecration -> seal_of_command 3: replay limit (shared gap,
+-- seal_of_righteousness -> seal_of_command 13 and consecration -> seal_of_command 3: replay limit (central GAP N,
 -- tests/Game/harness/replay.lua): an aura the log removes early (a seal replaced, an Echo spent) is shown expiring at
 -- its removal, so the client sees the prepull Seal of Command run out 1.5 s after its cast, Core's prepull_at rule
 -- offers it again and the twist runs a seal behind (measured with the class duration shown instead: 0.772, both gone).
--- seal_of_command -> holy_strike 2: replay limit (shared gap, tests/Game/harness/observer.lua): wowsims casts Holy
--- Strike the instant its cooldown ends; the old cooldown's end lands a microsecond after the new start and clears it.
--- Under-belief of about 120 mana a Judgement: the class model prices its 6% on the maximum (3737), wowsims on base
--- mana (81 = 6% of 1500 x 0.9); base mana is not readable (known deviation).
+-- seal_of_command -> holy_strike 2: replay limit (central GAP O, tests/Game/harness/observer.lua): wowsims casts Holy
+-- Strike the instant its cooldown ends; the old cooldown's end lands a microsecond after the new start and clears it
+-- (with GAP N's experiment too: 0.789). The floor 0.57 is the one reachable without them.
+-- Under-belief of about 120 mana a Judgement: GAP H, an API-forced deviation: the class model prices its 6% on the
+-- maximum (3737), wowsims on base mana (81 = 6% of 1500 x 0.9), which the client does not expose.
+-- Idle at 60 (LIVE60 8.4 s, owner ruling): wowsims is the oracle; its own Retribution is out of mana from 60 s, and the
+-- pack, run faithfully, spends itself dry the same way (4.4 s before central fix 8 kept the 10% lines from passing).
 -- The Everlook Pathcarver (item 274759, a trinket wowsims's autocastOtherCooldowns uses at the pull) is `use_items`.
 -- Leveling: the Seal of Righteousness refresh fills Holy Strike's cooldown before Seal of Command (L10 8.6 -> 4.4 s);
 -- Seal of Command is kept up below Twist of Light (L40 6.4 s, under LIVE60's 8.4).

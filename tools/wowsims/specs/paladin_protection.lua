@@ -6,12 +6,12 @@
 -- is out of mana from 24 s, so few decisions). 0.679 on the rebase alone (fix 6/8/C report: the replay's client now
 -- reads the log's 2597 maximum); back to 0.750 once wowsims's character is booted with that maximum too, so the class
 -- file prices Righteous Fury's 30% on it (on 6000, its short answers capped the belief at 779 under a true 1568).
--- holy_strike -> false 4 and seal_of_fury -> holy_strike 3: core gap (shared, src/Hekili/Engine/Sim/State.lua): in
--- combat the engine forecasts mana at GetManaRegen's in-five-second-rule rate (this build's mp5 is 0) and never the
--- spirit part after the window, so a spell short by a few mana is never shown with a wait (measured with the
--- window-aware rate: 0.964). The floor stays 0.75. Holy Shock is unconditional: the APL's
--- Consecrated Ground (1310905) is never on the target (wowsims logs Consecration's 1280353), as in wowsims; the build
--- takes no Holy Shock. Lost to autocastOtherCooldowns (not translated): nothing cast.
+-- holy_strike -> false 4 and seal_of_fury -> holy_strike 3: core gap (shared, reported to the controller;
+-- src/Hekili/Engine/Sim/State.lua): in combat the engine forecasts mana at GetManaRegen's in-five-second-rule rate
+-- (this build's mp5 is 0) and never the spirit part after the window, so a spell short by a few mana is never shown
+-- with a wait (measured with the window-aware rate: 0.964). The floor stays 0.75. Holy Shock is unconditional: the
+-- APL's Consecrated Ground (1310905) is never on the target (wowsims logs Consecration's 1280353), as in wowsims; the
+-- build takes no Holy Shock. Lost to autocastOtherCooldowns (not translated): nothing cast.
 return {
     class = "PALADIN",
     pack = "Protection (wowsims.com)",
