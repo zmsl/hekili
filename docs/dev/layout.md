@@ -227,8 +227,9 @@ Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
   Flame Shock DoT (12 s, 3 s ticks) on the target modelled from our cast.
 
 `tests/Forever/loop_hunter_spec.lua` runs 3 fights of each Hunter pack in `make check` (seeds 1-3, `#slow`) and 20 in
-`make test-hunter` (`#hunter`), gated by `pack_gate.gate` and asserting that some focus line ran (`r.focus > 0`: the
-packs flag Raptor Strike and Mongoose Bite at tier 1, Serpent Sting and Hunter's Mark at tier 2). The packs are the
+`make test-hunter` (`#hunter`), gated by `pack_gate.gate` and asserting that some focus line ran (`r.focus > 0`: Beast
+Mastery and Marksmanship flag Hunter's Mark and Serpent Sting at tier 2; Survival flags Raptor Strike and Mongoose Bite
+at tier 1 and Hunter's Mark at tier 2). The packs are the
 wowsims.com ones (Beast Mastery, Marksmanship and Survival (wowsims.com), Task 11 of the wowsims packs plan:
 wowsims/forever's Melee Weave), and their replay and leveling gates are `tests/Forever/wowsims_hunter_spec.lua`. Each
 pack opens with wowsims's automatic Blood Fury and Rapid Fire (translator rule 13, from 5 s, off the GCD). The Beast
@@ -244,16 +245,17 @@ pull (the character keeps a permanent buff between fights). Neither side dies (s
 missing kill). The kit's ranges are DB2's (`RANGE`: Hunter Range 8-35, Combat Range 0-5). "The Hunter at range, then
 in melee" runs Survival at 25 yd, then 5 yd: its four `target.within5` lines stay shut while the bracket reads [8, 35],
 open at [0, 5], and the bracket holds when every read goes secret. Mana is secret in combat, so the belief holds its
-lower bound and the worlds idle about 0.73 (Beast Mastery, Marksmanship) and 0.56 (Survival) of the time. The lines
-after the swap (wowsims packs plan, Task 11; the hand-built lists' were 0.983/0.986/0.945 at 3 fights):
+lower bound and the worlds idle 0.730 (Beast Mastery, Marksmanship) and 0.562 (Survival) of the time. The lines
+(gate 11rebase6, after central fix 6) after the swap (wowsims packs plan, Task 11; the hand-built lists' were
+0.983/0.986/0.945 at 3 fights):
 
 ```
-Beast Mastery solo: fights=3 agreement 0.998 (1709 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.034; ... [seeds 1-3]
-Marksmanship solo: fights=3 agreement 0.998 (1709 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.034; ... [seeds 1-3]
-Survival solo: fights=3 agreement 0.963 (872 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.988; ... [seeds 1-3]
-Beast Mastery solo: fights=20 agreement 0.998 (11263 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.007; ...
-Marksmanship solo: fights=20 agreement 0.998 (11263 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.007; ...
-Survival solo: fights=20 agreement 0.966 (5862 ticks); react median 0 p90 1 never 0.010; refused per 100 [], episodes 0.00/min; dps A/B 1.018; ...
+Beast Mastery solo: fights=3 agreement 0.999 (1905 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.034; ... [seeds 1-3]
+Marksmanship solo: fights=3 agreement 0.999 (1905 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.034; ... [seeds 1-3]
+Survival solo: fights=3 agreement 0.976 (1393 ticks); react median 1 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.988; ... [seeds 1-3]
+Beast Mastery solo: fights=20 agreement 1.000 (12675 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.007; ...
+Marksmanship solo: fights=20 agreement 1.000 (12675 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.007; ...
+Survival solo: fights=20 agreement 0.976 (9328 ticks); react median 1 p90 2 never 0.008; refused per 100 [], episodes 0.00/min; dps A/B 1.018; ...
 ```
 
 Hunter checkpoint (in game, a level 60 Hunter with a ranged weapon and a pet; provisional until answered): the Hunter
@@ -288,8 +290,10 @@ research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`)
   swing that takes it?
 - H13 (Q8): Hunter's Mark and Serpent Sting on the target unreadable in combat (modelled from our casts)?
 - H15: Multi-Shot's cast: 0.5 s (DB2 2643, kept) or instant (wowsims)? The weave line reads it against the swing.
+  Blocked on the shared `%` division fix (the Multi-Shot weave line never passes until then).
 - H16: Immolation Trap's 30 s category cooldown (DB2 SpellCooldowns).
-- H17: `mainhand_remains` against the real main-hand swing (the weave's Multi-Shot gap).
+- H17: `mainhand_remains` against the real main-hand swing (the weave's Multi-Shot gap). Blocked on the shared `%`
+  division fix (the Multi-Shot weave line never passes until then).
 - H18: Resourcefulness (440529) and Efficiency (19416) reported as talents at their ranks, and the prices they give:
   Mongoose Bite, Wing Clip, Immolation Trap and Strider Kick 30% / 60% off; Raptor Strike under both (wowsims's log 40
   at 2/2 Resourcefulness, 94 at 2/5 Efficiency).
