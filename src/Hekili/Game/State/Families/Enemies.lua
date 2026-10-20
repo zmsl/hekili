@@ -39,10 +39,11 @@ I.On(Obs.Range, function(o)
     I.inRange[o.a] = o.b
 end)
 
--- TargetRange (a: lo, b: hi yards) at t: est the bracket's middle, or lo when it has no upper bound.
+-- TargetRange (a: lo, b: hi yards) at t: est the bracket's middle; with no upper bound, up to FAR yards (or lo).
+local FAR = 40 -- yards: past every range answered, the farthest spell ranges (the engine's maxR then)
 I.On(Obs.TargetRange, function(o, t)
     range.lo, range.hi = o.a, o.b
-    range.est, range.conf = o.b < HUGE and (o.a + o.b) / 2 or o.a, 1
+    range.est, range.conf = (o.a + (o.b < HUGE and o.b or math.max(o.a, FAR))) / 2, 1
     I.Sample(range, "observed", range.est, t, Obs.TargetRange)
 end)
 

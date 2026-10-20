@@ -36,6 +36,8 @@
   brackets it from your abilities' range checks (for example "past Wing Clip, inside Arcane Shot"), keeps the last
   reading if the game hides it, and treats an unknown distance as in range. Before, these conditions never worked on
   WoW Forever.
+- Strikes on your next swing (Raptor Strike, Heroic Strike, Maul) are no longer recommended while the addon knows your
+  target is beyond melee range (the game's own range check says "in range" for them at any distance).
 
 ### Fixed
 - Rogue, Paladin and Shaman: the default priorities now load. They were registered under the wrong specialization ids

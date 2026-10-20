@@ -98,23 +98,47 @@ describe("the Hunter at range, then in melee", function()
                 end
                 local tg = H.Hekili.State.target
                 local s = seen[phase]
-                if s.within == nil then
-                    s.within = tg.within5
-                elseif s.within ~= tg.within5 then
-                    s.within = "mixed"
+                -- each read's one value over the phase ("mixed" when it changed)
+                local S = H.Hekili.State
+                local ok, why = S:IsUsable("raptor_strike") -- on the next swing: the bracket's reach
+                local reads = {
+                    within = tg.within5,
+                    outside = tg.outside5,
+                    usable = ok or why ~= "target beyond melee range", -- (a queued strike refuses too)
+                    inRange = S.action.raptor_strike.in_range,
+                }
+                for key, v in pairs(reads) do
+                    if s[key] == nil then
+                        s[key] = v
+                    elseif s[key] ~= v then
+                        s[key] = "mixed"
+                    end
                 end
                 s.distance = tg.distance
                 local first = steps[1].q.name[1]
                 s.melee = (s.melee or 0) + (MELEE[first] and 1 or 0)
             end,
         }, { { H = H } })
-        assert.are.same({ false, 20 }, { seen.far.within, seen.far.distance }) -- [5, 35]: past Wing Clip, in Summon Hawk
-        assert.are.same({ true, 2.5 }, { seen.near.within, seen.near.distance }) -- [0, 5]
-        assert.are.same({ true, 2.5 }, { seen.secret.within, seen.secret.distance }) -- the last plain bracket stays
+        local function view(x)
+            return { x.within, x.outside, x.usable, x.inRange, x.distance }
+        end
+        -- [5, 35]: past Wing Clip, in Summon Hawk; Raptor Strike out of reach
+        assert.are.same({ false, true, false, false, 20 }, view(seen.far))
+        assert.are.same({ true, false, true, true, 2.5 }, view(seen.near)) -- [0, 5]
+        assert.are.same({ true, false, true, true, 2.5 }, view(seen.secret)) -- the last plain bracket stays
         assert.are.equal(0, seen.far.melee)
         assert.is_true(seen.near.melee > 0)
-        -- the pack's unconditional Raptor Strike line still shows at range (the world refuses it: "range")
-        assert.is_true((run.refused.range or 0) > 0)
+        assert.is_nil(run.refused.range) -- nothing recommended out of its range, Raptor Strike included
         assert.are.same({}, H.errors)
+        -- a new target with every range read secret: unknown, and unknown never blocks
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert(headless.cycle(H, H.ctl.now + 0.2))
+        assert.are.equal("unknown", H.ns.VirtualState.TargetRange().basis)
+        local S = H.Hekili.State
+        local _, why = S:IsUsable("raptor_strike")
+        assert.are.same(
+            { true, true, true },
+            { why ~= "target beyond melee range", S.target.within5, S.target.outside5 }
+        )
     end)
 end)

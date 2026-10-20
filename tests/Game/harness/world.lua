@@ -441,8 +441,10 @@ function M.new(seed)
         W.at(W.t + (o.delay or 0), shot)
     end
 
-    --- Our character `e` is `yards` from its target from now (the world's one position: shortcut, instant; a scenario
-    --- steps it for a walk): a "move" truth event { src, distance }, the client's range checks' answer.
+    --- Our character `e` is `yards` from its target from now (instant; a scenario steps it for a walk): a "move" truth
+    --- event { src, distance }, the client's range checks' answer.
+    -- shortcut: one position (ours to our target); the mob still swings at us and our ranged hand still shoots at any
+    -- distance (no deadzone); upgrade with per-entity positions when a scenario needs either.
     function W.moveTo(e, yards)
         W.distance = yards
         W.emit({ kind = "move", src = e, distance = yards })

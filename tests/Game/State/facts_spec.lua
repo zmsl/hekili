@@ -156,12 +156,16 @@ describe("facts and polls", function()
             end
             assert.are.same({ 0, 5, 2.5, "observed" }, bracket(2, 3)) -- in melee, so nearer than the band
             assert.are.same({ 8, 35, 21.5, "observed" }, bracket(20, 4))
-            assert.are.same({ 5, math.huge, 5, "observed" }, bracket(40, 5)) -- past the strike, either side of the band
-            assert.are.same({ 5, math.huge, 5, "observed" }, bracket(fake.SECRET, 6)) -- secret: the last bracket stays
+            -- past the strike (strictly: lo 5 is beyond 5 yd), either side of the band: no upper bound, est up to 40
+            assert.are.same({ 5, math.huge, 22.5, "observed" }, bracket(6, 5))
+            assert.are.same({ 5, math.huge, 22.5, "observed" }, bracket(40, 6))
+            assert.are.same({ 5, math.huge, 22.5, "observed" }, bracket(fake.SECRET, 7)) -- secret: the last bracket stays
             ctl.Fire("PLAYER_TARGET_CHANGED")
-            drain(7)
+            drain(8)
             assert.are.equal("unknown", VS.TargetRange().basis) -- a swap forgets it until the next plain answer
-            assert.are.same({ 0, 5, 2.5, "observed" }, bracket(3, 8))
+            assert.are.same({ 0, 5, 2.5, "observed" }, bracket(3, 9))
+            ctl.ranges[fs.SPENDER_C] = { 0, 35 } -- the client now answers the band in melee too (the resolved 8 stays)
+            assert.are.same({ 5, 5, 5, "observed" }, bracket(3, 10)) -- lo 8 over hi 5: the upper bound wins
         end
     )
 

@@ -497,6 +497,15 @@ state.select = select
 -- __call below). In a `now` handler `stat` is only the plain function.
 local VS = ns.VirtualState
 state.knownRank, state.swingBase, state.healthMax = VS.KnownRank, VS.SwingBase, VS.HealthMax
+
+-- Forever (gap 13): an on-next-swing strike's own range check answers in range at any distance (probe W PR7), so its
+-- reach is the target's range bracket (VS.TargetRange): beyond melee once the bracket's lower bound is at or past
+-- melee range and its upper bound past it; an unknown bracket never blocks.
+local MELEE_RANGE = 5
+local function beyondMelee()
+    local r = VS.TargetRange()
+    return r.basis ~= "unknown" and r.lo >= MELEE_RANGE and r.hi > MELEE_RANGE
+end
 state.tinsert = table.insert
 state.insert = table.insert
 state.remove = table.remove
@@ -2776,7 +2785,7 @@ do
             if k == "distance" then
                 local r = VS.TargetRange()
                 if r.basis ~= "unknown" then t[k] = r.est
-                else t[k] = UnitCanAttack( "player", "target" ) and ( ( t.minR + t.maxR ) / 2 ) or 7.5 end
+                else t[k] = ( t.minR + t.maxR ) / 2 end
             elseif k == "in_range" then return t.distance <= 8
             elseif k == "minR" or k == "maxR" then
                 local r = VS.TargetRange()
@@ -2788,17 +2797,22 @@ do
             elseif k:sub(1, 7) == "outside" then
                 local minR = k:match( "^outside([0-9.]+)$" )
                 if not minR then return false end
-                return VS.TargetRange().basis == "unknown" or ( t.minR > tonumber( minR ) )
+                -- >=: a lower bound from an out-of-range answer is strict (past a 0-5 check means beyond 5 yd)
+                return VS.TargetRange().basis == "unknown" or ( t.minR >= tonumber( minR ) )
 
             elseif k:sub(1, 6) == "within" then
                 local maxR = k:match( "^within([0-9.]+)$" )
                 if not maxR then return false end
-                return VS.TargetRange().basis == "unknown" or ( t.maxR <= tonumber( maxR ) )
+                local r = VS.TargetRange()
+                if r.basis == "unknown" then return true end
+                return r.hi < math.huge and t.maxR <= tonumber( maxR ) -- no upper bound: within nothing
 
             elseif k:sub(1, 5) == "range" then
                 local minR, maxR = k:match( "^range([0-9.]+)to([0-9.]+)$" )
                 if not minR or not maxR then return false end
-                return ( t.minR >= tonumber( minR ) and t.maxR <= tonumber( maxR ) )
+                local r = VS.TargetRange()
+                if r.basis == "unknown" then return true end
+                return ( t.minR >= tonumber( minR ) and r.hi < math.huge and t.maxR <= tonumber( maxR ) )
 
             elseif k == "adds" then t[k] = state.active_enemies - 1
             elseif k == "casting" then return state.debuff.casting.up and not state.debuff.casting.v2
@@ -5108,6 +5122,7 @@ local mt_default_action = {
             return min( 3600, max( 0, state.query_time - ability.lastCast ) )
 
         elseif k == "in_range" then
+            if ability.onNextSwing then return not beyondMelee() end -- gap 13: the client's answer is always yes
             -- Forever E5: ask the known rank's ID; the client answers nil (read as in range) for an unknown rank.
             if UnitExists( "target" ) and UnitCanAttack( "player", "target" ) and LSR.IsSpellInRange( ability.rangeSpell or ns.KnownSpellID( ability.id ), "target" ) == 0 then
                 return false
@@ -6973,6 +6988,10 @@ do
             elseif type( usable ) == "boolean" and not usable then
                 return false, "ability.usable was false"
             end
+        end
+
+        if ability.onNextSwing and beyondMelee() then
+            return false, "target beyond melee range"
         end
 
         local z -- scratch variable

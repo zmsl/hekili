@@ -67,7 +67,8 @@ function M.melee(p)
                     return
                 end
                 local w = e.weapons[h]
-                if e == W.ents[1] and not W.inMelee() then -- out of reach: no swing, the timer runs on
+                -- shortcut: out of reach only for us (the world's one position); the timer runs on, not reset at reach
+                if e == W.ents[1] and not W.inMelee() then
                     W.at(W.t + w[3] / (p.haste or 1), swing)
                     return
                 end

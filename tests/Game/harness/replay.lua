@@ -21,6 +21,7 @@ M.EPS = 1e-6 -- a line's place within its timestamp, as time: a decision falls j
 M.TAIL = 0.2 -- the exporter's execute proportion: the last 20% of the duration
 
 M.MOVE = 20 -- wowsims's OtherActionMove: the Movement aura (sim/core/movement.go), its stacks the distance in yards
+-- (max(int(d), 1): truncated, so the replay's position can be up to 1 yd short of wowsims's)
 
 -- wowsims's resource names and the client's power types (Enum.PowerType); other names (health) are not powers.
 M.POWER = { mana = 0, rage = 1, focus = 2, energy = 3, ["combo points"] = 4 }

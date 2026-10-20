@@ -940,7 +940,7 @@ spec:RegisterAbilities({
             return "battle_stance"
         end,
 
-        -- LibRangeCheck resolves nothing on Forever (target.minR/maxR stay at their defaults), so no gate may read them.
+        -- The spell's own range check: exact, where target.minR/maxR are only the coarse bracket (VS.TargetRange).
         usable = function()
             return combat == 0 and not action.rend.in_range, "cannot be in combat; target must be outside melee range"
         end,
@@ -1207,7 +1207,7 @@ spec:RegisterAbilities({
         known = knows(INTERCEPT),
         buff = "berserker_stance",
 
-        -- LibRangeCheck resolves nothing on Forever (target.minR/maxR stay at their defaults), so no gate may read them.
+        -- The spell's own range check: exact, where target.minR/maxR are only the coarse bracket (VS.TargetRange).
         usable = function()
             return action.intercept.in_range, "target must be within Intercept's range"
         end,

@@ -240,7 +240,8 @@ dies (shaman_world's workaround for the loop's missing kill). The kit's ranges a
 Combat Range 0-5); the default worlds set no distance, so they are unchanged. "The Hunter at range, then in melee"
 runs Survival at 25 yd, then 5 yd, its melee list gated on `target.within5`: the bracket reads [5, 35] (past Wing
 Clip, inside Summon Hawk) and the list stays shut, then [0, 5] and it opens, and the bracket holds when every read goes
-secret; the list's unconditional Raptor Strike still shows at range (the world refuses it). All three gates are thin: Survival shows no first icon on 72% of its in-combat ticks (seeds 1-3), and
+secret. Raptor Strike (on the next swing) is unusable and out of range while the bracket says beyond 5 yd, so the
+list's unconditional line no longer shows at range. All three gates are thin: Survival shows no first icon on 72% of its in-combat ticks (seeds 1-3), and
 the turret worlds run out of mana within the first minute
 (idle about 0.74: UNMEASURED pool and regen, no Aspect of the Viper), and Hekili recommends a press during Aimed and
 Sniper Shot's casts on both sides (the world's client sees no cast start: the `casting` refusals). The filler mana
@@ -270,7 +271,7 @@ research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`)
 - H6 (Q3, Q6): C_Spell.IsSpellInRange(75, "target") at 4, 10 and 40 yards, in and out of combat (the deadzone guard:
   Hekili's `action.auto_shot.in_range` and `action.raptor_strike.in_range`); plain or secret in combat? Raptor Strike
   (on the next swing) in range at any distance, like Heroic Strike?
-- H11 (gap 13): `/run local r=Hekili.State.target VSCopy(r.distance,r.minR,r.maxR,r.within5,r.outside8)` at 3, 11 and
+- H12 (gap 13): `/run local r=Hekili.State.target VSCopy(r.distance,r.minR,r.maxR,r.within5,r.outside8)` at 3, 11 and
   30 yards: about 2.5 / 0 / 5 / true / false in melee, 21.5 / 8 / 35 / false / true at 11 yd; and
   `C_Spell.GetSpellInfo(14268).maxRange` (Wing Clip) reads 5, not 0.
 - H7 (Q4): Multi-Shot's and Strider Kick's actual costs (DB2 13.9% and 5.81% of base mana, priced here as of the
