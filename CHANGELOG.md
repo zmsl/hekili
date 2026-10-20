@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### New
+- Rogue: "Assassination (wowsims.com)", "Combat (wowsims.com)" and "Subtlety (wowsims.com)", translated from
+  wowsims.com's Rogue priority, are each specialization's default.
 - Hunter: Beast Mastery, Marksmanship and Survival default priorities (new addon folder Hekili_Hunter). Sniper Shot
   under Rapid Fire or Quick Shots, Mongoose Bite and Raptor Strike first; Serpent Sting and Hunter's Mark as focus
   abilities; shots only while in Auto Shot range and the melee list only in melee range; Arcane Shot and Wing Clip mana
@@ -16,6 +18,8 @@
   priorities on Forever" notice and the addon recommends nothing while one is active.
 
 ### Changed
+- Rogue: the hand-built Assassination, Combat and Subtlety priorities are gone, with their settings (Bleeds on
+  Trash, Maintain Expose Armor, Vanish to Re-open, Ambush Opener, Backstab Builder, Poison Reminders).
 - Specializations follow your talents: a respec or dual-spec swap that moves your most-spent talent tree activates
   that tree's specialization, the one you last activated for it (for example Guardian on the Feral Combat tree) or
   else its first. Swapping between two builds of the same tree keeps your choice. The "your talents favor" hint is gone.
@@ -44,6 +48,8 @@
 ### Fixed
 - Hunter: priority lines that divide (Multi-Shot's) now fire. Divisions in the priorities translated from
   wowsims ran as a remainder, so those lines never recommended their ability.
+- Rogue: Garrote costs 10 less a Dirty Deeds rank, Backstab and Hemorrhage 3 less a Thousand Cuts stack, and
+  Improved Sinister Strike takes 5 off at 2/2 (it took 10), as in wowsims.com.
 - Rogue, Paladin and Shaman: the default priorities now load. They were registered under the wrong specialization ids
   for the WoW Forever client, so the addon showed nothing for these classes.
 - Developer: unreadable (secret) answers to "does this unit exist / is it dead" for target, party, boss and focus units
@@ -61,6 +67,8 @@
 - Rogue, Paladin and Shaman priorities are not yet checked in game.
 
 ### Upgrade notes
+- Rogue: a saved choice of the Assassination, Combat or Subtlety priority falls back to that specialization's
+  wowsims.com default.
 - Your class's existing settings (thresholds, toggles, ability and item options) are copied once into each of its
   specializations, and a custom priority you had chosen stays selected for your active specialization. Change them per
   specialization afterwards; old priority exports still import.

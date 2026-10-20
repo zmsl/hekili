@@ -6,7 +6,7 @@ local headless = require("Game.harness.headless")
 local pack_gate = require("Forever.helpers.pack_gate")
 local rw = require("Forever.helpers.rogue_world")
 
-local PACKS = { "Combat", "Assassination", "Subtlety" }
+local PACKS = { "Combat", "Assassination", "Subtlety" } -- rogue_world contents, each on its "<Spec> (wowsims.com)" pack
 
 describe("the Rogue loop worlds", function()
     for _, name in ipairs(PACKS) do

@@ -524,14 +524,14 @@ describe("the legacy profile and shares (headless Warrior)", function()
 
     it("rebinds a built-in priority stored on the legacy pseudo-spec at the current version (an upgrade)", function()
         local rw = require("Forever.helpers.rogue_world")
-        local H1 = headless.new({ character = rw.Combat.character(), pack = "Combat" })
+        local H1 = headless.new({ character = rw.Combat.character(), pack = rw.Combat.PACK })
         local saved = H1.env.HekiliDB
-        saved.profiles.Default.packs.Combat.spec = rw.CLIENT_SPEC -- the pack as the pseudo-spec release stored it
-        local H = headless.new({ character = rw.Combat.character(), saved = saved, pack = "Combat" })
+        saved.profiles.Default.packs[rw.Combat.PACK].spec = rw.CLIENT_SPEC -- the pack as the pseudo-spec release stored it
+        local H = headless.new({ character = rw.Combat.character(), saved = saved, pack = rw.Combat.PACK })
         assert.are.same({}, H.loadErrors)
         settle(H)
         assert.are.equal(100042, H.Hekili.State.spec.id)
-        assert.are.equal(100042, H.Hekili.DB.profile.packs.Combat.spec)
+        assert.are.equal(100042, H.Hekili.DB.profile.packs[rw.Combat.PACK].spec)
         assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
         assert.is_true(H.Hekili.Engine.Output.Primary.count > 0)
     end)
@@ -600,7 +600,7 @@ describe("Rogue and Paladin specs (headless)", function()
     it("selects each Rogue pack's spec", function()
         local rw = require("Forever.helpers.rogue_world")
         for name, id in pairs({ Assassination = 100041, Combat = 100042, Subtlety = 100043 }) do
-            local H = headless.new({ character = rw[name].character(), pack = name })
+            local H = headless.new({ character = rw[name].character(), pack = rw[name].PACK })
             assert.are.same({}, H.loadErrors)
             assert.are.equal(id, H.Hekili.State.spec.id, name)
         end

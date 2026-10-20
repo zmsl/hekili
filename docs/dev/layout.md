@@ -131,16 +131,16 @@ Balance solo: fights=3 agreement 0.985 (864 ticks); react median 0 p90 1 never 0
 
 Feral's Innervate line never fires in the loop: the feral worlds keep no mana.
 
-`tests/Forever/loop_rogue_spec.lua` runs 3 fights a Rogue pack in `make check` (seeds 1-3, `#slow`) and 20 in
-`make test-rogue` (`#rogue`), each gated by `pack_gate.gate` and asserting its flagged lines ran (`r.focus > 0`: Slice
-and Dice at tier 1 in every pack). Rupture, Garrote and Vanish's re-open are guarded by `boss|settings.trash_dots`
-(default off), so the solo world (no boss) never presses them; Kick has no caster to interrupt, Expose Armor is a
-setting (off) and Cutthroat needs Backstab, off by default. The first passing run (class-completion Task 7):
+`tests/Forever/loop_rogue_spec.lua` runs 3 fights a Rogue spec in `make check` (seeds 1-3, `#slow`) and 20 in
+`make test-rogue` (`#rogue`), each on its "<Spec> (wowsims.com)" pack (wowsims packs plan, Task 8), gated by
+`pack_gate.gate` and asserting its flagged lines ran (`r.focus > 0`: Slice and Dice at tier 1 in every pack). The
+worlds carry the wowsims.com builds' abilities and talents (Subtlety Hemo has no Ghostly Strike); the replay and
+leveling gates are `tests/Forever/wowsims_rogue_spec.lua`. The lines since the swap:
 
 ```
-Combat solo: fights=3 agreement 0.978 (2322 ticks); react median 0 p90 0 never 0.012; refused per 100 [], episodes 0.00/min; dps A/B 1.003; ... [seeds 1-3]
-Assassination solo: fights=3 agreement 0.999 (2222 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.015; ... [seeds 1-3]
-Subtlety solo: fights=3 agreement 0.950 (2379 ticks); react median 0 p90 0 never 0.036; refused per 100 [], episodes 0.00/min; dps A/B 1.056; ... [seeds 1-3]
+Combat solo: fights=3 agreement 0.999 (2226 ticks); react median 0 p90 0 never 0.000; refused per 100 [requires:in combat 0.7 (oracle 2.0)], episodes 0.13/min; dps A/B 1.037; ... [seeds 1-3]
+Assassination solo: fights=3 agreement 0.993 (2437 ticks); react median 0 p90 0 never 0.022; refused per 100 [requires:in combat 1.8 (oracle 1.8)], episodes 0.25/min; dps A/B 0.990; ... [seeds 1-3]
+Subtlety solo: fights=3 agreement 0.967 (2192 ticks); react median 0 p90 0 never 0.073; refused per 100 [requires:in combat 1.3 (oracle 0.6)], episodes 0.27/min; dps A/B 0.999; ... [seeds 1-3]
 ```
 
 `tests/Forever/loop_paladin_spec.lua` runs 3 fights a Paladin pack in `make check` (seeds 1-3, `#slow`) and 20 in

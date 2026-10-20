@@ -86,16 +86,35 @@ describe("Forever Rogue", function()
         assert.are.same({ [0] = 3, 15, 19, 17 }, n)
     end)
 
-    it("models the talent-modified costs from rank 1's value x the rank, floored at 0", function()
+    it("models the talent-modified costs, floored at 0", function()
         e.talent = rank(2)
         local function at(key)
             return ld.run(w.abilities[key].spend, e)
         end
-        -- Improved Sinister Strike -5 a rank, Flawless Execution -10 (one rank: 2 floors nothing below 0 here),
-        -- Improved Expose Armor -10 a rank
-        assert.are.same({ 35, 15, 5 }, { at("sinister_strike"), at("eviscerate"), at("expose_armor") })
+        -- rank 1's value x the rank: Flawless Execution -10, Improved Expose Armor -10; the DB2 value as the whole
+        -- talent's (wowsims/forever's casts at 2/2: Sinister Strike 40, Garrote 30): Improved Sinister Strike -5,
+        -- Dirty Deeds -20
+        local keys = { "sinister_strike", "eviscerate", "expose_armor", "garrote" }
+        local function all()
+            local out = {}
+            for i, k in ipairs(keys) do
+                out[i] = at(k)
+            end
+            return out
+        end
+        assert.are.same({ 40, 15, 5, 30 }, all())
         e.talent = rank(3)
-        assert.are.same({ 30, 5, 0 }, { at("sinister_strike"), at("eviscerate"), at("expose_armor") })
+        assert.are.same({ 37.5, 5, 0, 20 }, all())
+    end)
+
+    it("takes 3 energy a Thousand Cuts stack off Backstab and Hemorrhage (1310723: misc 14 -3)", function()
+        assert.are.same({ 10, 5 }, { w.auras.thousand_cuts.duration, w.auras.thousand_cuts.max_stack })
+        e.buff.thousand_cuts.stack = 2
+        assert.are.same({ 54, 29, 60 }, {
+            ld.run(w.abilities.backstab.spend, e),
+            ld.run(w.abilities.hemorrhage.spend, e),
+            ld.run(w.abilities.mutilate.spend, e),
+        })
     end)
 
     it("makes the finishers no ladder rungs, unusable without a combo point", function()
@@ -196,29 +215,11 @@ describe("Forever Rogue", function()
         ld.run(w.abilities.deadly_poison.handler, e)
         assert.are.same({ "main_hand_enchant", "off_hand_enchant" }, e.applied)
     end)
-
-    it("declares the settings the packs read, the DoT and Expose Armor guards off by default", function()
-        for key, default in pairs({
-            trash_dots = false,
-            expose_armor = false,
-            vanish = true,
-            ambush_opener = false,
-            backstab = false,
-            poisons = true,
-        }) do
-            assert.are.equal(default, w.settings[key].default, key)
-        end
-        local exp = w.exprs.expose_due
-        e.settings.expose_armor = false
-        assert.is_false(ld.run(exp, e))
-        e.settings.expose_armor = true
-        w.game.known[8647] = true
-        assert.is_true(ld.run(exp, e))
-    end)
 end)
 
--- The priorities after wowsims/forever's Rogue APL (reference only) and their D1 focus tiers.
+-- The wowsims.com packs (generated from wowsims/forever's Rogue APL: tools/wowsims/specs/rogue_*.lua).
 describe("Forever Rogue priorities", function()
+    local PACKS = { "Combat (wowsims.com)", "Assassination (wowsims.com)", "Subtlety (wowsims.com)" }
     local packs = {}
     setup(function()
         for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "rogue")) do
@@ -226,38 +227,42 @@ describe("Forever Rogue priorities", function()
         end
     end)
 
-    local function line(pack, action, criteria)
+    local function line(pack, action)
         for i, e in ipairs(packs[pack].lists.default) do
-            if e.action == action and (criteria == nil or e.criteria == criteria) then
+            if e.action == action then
                 return i, e
             end
         end
-        error(pack .. ": no " .. action .. " if " .. tostring(criteria))
+        error(pack .. ": no " .. action)
     end
 
-    it("keeps the class file's generated blocks in step with APLs/ and marks every pack provisional", function()
+    it("keeps the class file's generated blocks in step with APLs/, one wowsims.com pack a spec", function()
         local mp = assert(loadfile("tools/make_pack.lua"))("lib")
         local f = assert(io.open(FILE))
         local src = f:read("*a")
         f:close()
         assert.are.equal(src, (mp.sync(src, mp.load("rogue"))))
-        for _, name in ipairs({ "Combat", "Assassination", "Subtlety" }) do
-            assert.is_truthy(packs[name].desc:find("provisional", 1, true), name)
+        local names = {}
+        for name in pairs(packs) do
+            names[#names + 1] = name
         end
+        table.sort(names)
+        assert.are.same({ "Assassination (wowsims.com)", "Combat (wowsims.com)", "Subtlety (wowsims.com)" }, names)
     end)
 
     it("names only registered abilities, auras, talents and settings", function()
         local w = ld.load(nil, FILE, "ROGUE")
-        local shared = { thistle_tea = true }
-        local kinds = { buff = w.auras, debuff = w.auras, talent = w.talents, settings = w.settings }
-        local pseudo = { main_hand_enchant = true, off_hand_enchant = true }
+        -- the shared kit's (Hekili_Shared: an item and the races' racials), not the class file's
+        local shared = { thistle_tea = true, blood_fury = true, eureka = true }
+        local kinds =
+            { buff = w.auras, debuff = w.auras, talent = w.talents, settings = w.settings, action = w.abilities }
         for name, p in pairs(packs) do
             for list, entries in pairs(p.lists) do
                 for i, e in ipairs(entries) do
                     local where = name .. " " .. list .. " " .. i
                     assert.is_true(w.abilities[e.action] ~= nil or shared[e.action], where .. ": " .. e.action)
                     for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
-                        if kinds[kind] and not pseudo[key] then
+                        if kinds[kind] and not shared[key] then
                             assert.is_not_nil(kinds[kind][key], where .. ": no " .. kind .. " " .. key)
                         end
                     end
@@ -266,36 +271,14 @@ describe("Forever Rogue priorities", function()
         end
     end)
 
-    it("flags Kick and Slice and Dice at tier 1 in every pack, Expose Armor at tier 2", function()
-        for name in pairs(packs) do
-            local _, kick = line(name, "kick")
-            local _, snd = line(name, "slice_and_dice", "!buff.slice_and_dice.up&combo_points.current>=1&!expose_due")
-            local _, ea = line(name, "expose_armor", "expose_due&combo_points.current>=5")
-            assert.are.same({ 1, 1, 2 }, { kick.focus, snd.focus, ea.focus }, name)
+    it("flags Slice and Dice at tier 1 in every pack; Subtlety's Ambush at 1 and Rupture at 2", function()
+        for _, name in ipairs(PACKS) do
+            local _, snd = line(name, "slice_and_dice")
+            assert.are.equal(1, snd.focus, name)
         end
-    end)
-
-    it("Subtlety: Ambush on Cutthroat at tier 1; Rupture at tier 2, guarded as the bleeds are", function()
-        local _, a = line("Subtlety", "ambush", "buff.cutthroat.up&combo_points.current<5")
-        local _, r = line("Subtlety", "rupture")
+        local _, a = line("Subtlety (wowsims.com)", "ambush")
+        local _, r = line("Subtlety (wowsims.com)", "rupture")
         assert.are.same({ 1, 2 }, { a.focus, r.focus })
-        assert.is_truthy(r.criteria:find("(boss||settings.trash_dots)", 1, true))
-        for name in pairs(packs) do
-            local _, g = line(name, "garrote")
-            assert.is_truthy(g.criteria:find("(boss||settings.trash_dots)", 1, true), name)
-        end
-    end)
-
-    it("reminds of the poisons and stealths before combat", function()
-        for name, p in pairs(packs) do
-            local pre = p.lists.precombat
-            assert.are.same(
-                { "instant_poison", "deadly_poison", "stealth" },
-                { pre[1].action, pre[2].action, pre[3].action },
-                name
-            )
-            assert.are.equal("settings.poisons&!buff.main_hand_enchant.up", pre[1].criteria)
-        end
     end)
 end)
 
@@ -326,7 +309,7 @@ describe("Forever Rogue through the engine", function()
     end
 
     before_each(function()
-        H = headless.new({ character = character(), pack = "Combat" })
+        H = headless.new({ character = character(), pack = "Combat (wowsims.com)" })
     end)
 
     it("runs every declared `now` in VirtualState's context without an error", function()

@@ -7,7 +7,9 @@
 -- enchants out of combat, and the default priorities (all provisional: no in-game check yet, D5). Research:
 -- docs/research/2026-10-15-forever-rogue/research.md and the class-completion research §2.
 -- Talents: the DB2's 51 Classic nodes and the Forever-only ones this file reads; a modifier is rank 1's value x the
--- rank (Classic's convention; only rank 1 of each is in the Forever DB2), floored at 0.
+-- rank (Classic's convention; only rank 1 of each is in the Forever DB2), floored at 0, except where wowsims/forever's
+-- casts at the talent's last rank show the DB2 value is the whole talent's (Improved Sinister Strike, Dirty Deeds:
+-- that value x rank / max rank).
 -- Credits: Hekili (registration API and pack format; the `stealthed` table and the stealth-breaking runHandler hook
 -- follow Hekili's Classic profile, origin/classic:Classic/Rogue.lua). wowsims/forever (MIT,
 -- ui/specs/rogue/dps/apls/default.apl.json and sim/rogue/) is the reference for the priorities and the Cutthroat and
@@ -34,10 +36,17 @@ local spec = Hekili:NewClass("ROGUE", {
             tree = 1,
             icon = 132292,
             role = "attack",
-            package = "Assassination",
+            package = "Assassination (wowsims.com)",
         },
-        { key = "combat", name = "Combat", tree = 2, icon = 132090, role = "attack", package = "Combat" },
-        { key = "subtlety", name = "Subtlety", tree = 3, icon = 132320, role = "attack", package = "Subtlety" },
+        { key = "combat", name = "Combat", tree = 2, icon = 132090, role = "attack", package = "Combat (wowsims.com)" },
+        {
+            key = "subtlety",
+            name = "Subtlety",
+            tree = 3,
+            icon = 132320,
+            role = "attack",
+            package = "Subtlety (wowsims.com)",
+        },
     },
 })
 if not spec then
@@ -248,6 +257,13 @@ spec:RegisterAuras({
         duration = 21,
         max_stack = 1,
     },
+    -- Thousand Cuts's stacks (1310723, 10 s, 5: from Rupture's ticks): Backstab and Hemorrhage cost 3 less a stack
+    -- (effect 0: aura 107 misc 14 -3, class mask 0x2000004).
+    thousand_cuts = {
+        id = 1310723,
+        duration = 10,
+        max_stack = 5,
+    },
 })
 
 -- Stealth by kind (Hekili's Classic table, Forever's two auras): the APLs and Hekili's keybinding order read `.all`.
@@ -264,11 +280,6 @@ spec:RegisterStateTable(
         end,
     })
 )
-
--- Expose Armor holds the other finishers while it is due (wowsims's "Expose - Prevent Other Finishers").
-spec:RegisterStateExpr("expose_due", function()
-    return settings.expose_armor and knownRank(EXPOSE_ARMOR) > 0 and debuff.expose_armor.remains <= 16
-end)
 
 -- An ability that starts combat breaks Stealth and Vanish in the sim (Hekili's Classic hook); Stealth's 10 s cooldown
 -- starts then. Our casts' `now` write the same in the belief.
@@ -416,7 +427,9 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "totem",
 
-        spend = 60, -- Thousand Cuts's -3 a stack unmodelled (its stacks come from Rupture's ticks)
+        spend = function()
+            return max(0, 60 - 3 * buff.thousand_cuts.stack)
+        end,
         spendType = "energy",
 
         startsCombat = true,
@@ -546,7 +559,9 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "totem",
 
-        spend = 50,
+        spend = function() -- Dirty Deeds (14082: aura 107 misc 14 -20, the talent's whole)
+            return max(0, 50 - 10 * talent.dirty_deeds.rank)
+        end,
         spendType = "energy",
 
         startsCombat = true,
@@ -597,7 +612,9 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "totem",
 
-        spend = 35,
+        spend = function()
+            return max(0, 35 - 3 * buff.thousand_cuts.stack)
+        end,
         spendType = "energy",
 
         startsCombat = true,
@@ -747,7 +764,7 @@ spec:RegisterAbilities({
         gcd = "totem",
 
         spend = function()
-            return max(0, 45 - 5 * talent.improved_sinister_strike.rank)
+            return max(0, 45 - 2.5 * talent.improved_sinister_strike.rank) -- 13732's -5 is the talent's whole
         end,
         spendType = "energy",
 
@@ -871,71 +888,31 @@ spec:RegisterAbilities({
     },
 })
 
--- The settings the priorities read (wowsims's variables and defaults where it has them).
+-- The poison reminders (no wowsims.com list recommends them yet).
 spec:RegisterAbilities({
     instant_poison = poison("Instant Poison", INSTANT_POISON, "main_hand_enchant"),
     deadly_poison = poison("Deadly Poison", DEADLY_POISON, "off_hand_enchant"),
 })
 
-spec:RegisterSetting("trash_dots", false, {
-    type = "toggle",
-    name = "Bleeds on Trash",
-    desc = "When enabled, Rupture and Garrote (and Vanish to re-open with Garrote) are used on targets that are not "
-        .. "bosses. Off by default: short fights end before a bleed pays for itself.",
-    width = "full",
-})
-
-spec:RegisterSetting("expose_armor", false, {
-    type = "toggle",
-    name = "Maintain Expose Armor",
-    desc = "When enabled, Expose Armor is kept on the target at 5 combo points, ahead of the other finishers.",
-    width = "full",
-})
-
-spec:RegisterSetting("vanish", true, {
-    type = "toggle",
-    name = "Vanish to Re-open",
-    desc = "When enabled, Vanish is used in combat to open again with Garrote or Ambush.",
-    width = "full",
-})
-
-spec:RegisterSetting("ambush_opener", false, {
-    type = "toggle",
-    name = "Ambush Opener",
-    desc = "When enabled, Ambush opens from Stealth and Vanish instead of Garrote (needs a dagger and to stand behind).",
-    width = "full",
-})
-
-spec:RegisterSetting("backstab", false, {
-    type = "toggle",
-    name = "Backstab Builder",
-    desc = "When enabled, Backstab is the builder and Hemorrhage is kept up (needs a dagger and to stand behind).",
-    width = "full",
-}, "subtlety")
-
-spec:RegisterSetting("poisons", true, {
-    type = "toggle",
-    name = "Poison Reminders",
-    desc = "When enabled, Instant Poison (main hand) and Deadly Poison (off hand) are shown before combat when a "
-        .. "weapon has no enchant.",
-    width = "full",
-})
+-- The hand-built lists this file shipped before the wowsims.com packs: a saved choice of one falls back to the spec's
+-- default.
+spec:RetirePacks({ "Combat", "Assassination", "Subtlety" })
 
 -- The three priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those
 -- and run it, never these blocks (tests/Forever/rogue_spec.lua checks they match). Pick one with
--- /hekili priority <name>. All three are provisional (their descriptions say why).
+-- /hekili priority <name>.
 spec:RegisterPack(
-    "Combat",
-    20261019514,
-    [[Hekili:nFvxVTTnu0Fl5fpBmp3iV401S4cKULUpr7q02RsIsIYMWYIcKujZag63(ouurwYH0jDDfyVylZpo3dV3Z9i6aVG)mWpLOObFy(5ZV07CV3SW7IaF1UsAGFjjzdzfEOGSfF(d8TXeLE4D5CsQERXvSC1VueeBffzjnjW)Up(t)1TxL0U51S0uQzdujM99Cb9EQOoYGED0D8vv06OXLc(9mjJxqYVQoQGxhXk(MvGi1rjRPjBQJ2rvFFDKFolbJrksRJ(r8406OBsfuSnwbg)Uk562zvRXV5L0cQqIHe4xB5P08CkMmtW3IzRatsisLCYvpf66On0sqXQsmi(wX0e3ZEeX858hQJ0HB1UwuExojfl595vcbg7bMATTWuvcmVfh)eQaPvdAlaZqocjIsoRqHJW4laeRPf2GGH5LCoMlTIobW5ZkysLMW(kbBdwIcqPlGPt1qYb7xH8axydotyykdWKyELYaqgjphvHFJPRidtk3(3LCj27nITAqhtaJOkfcZK(lDUUiQOKC1GcfoKsEbcwmfCIAo86DnMK1CmEG)GKTv(QmJc6RKDANB(JFhHxqZOOQOzpViF3Kzq5k4zSCiLjjkOSKZkfudSlzfsfPqfAc70kjnKNLfUkjDP3uw2YwMJTy41OZIRYYMTLWkcxdwhIiHVvZG44xFc8F9YxLsjP57(uXxVMxe8stg8PaBWPD6(BF5guZMMXtQKl96gfqrBQBHeDzRD(5AKAhh6PrncXqJoCwceZ0c1BxUOpkKTXOrO5OzInnDg0kJ6oOMfeAAiTI41daCfri4k6tr8SpjihDwkTjL0IhsjJghZLY9DWOeeGskhUa9jW9e0bzjd3TpZcaFgqph0Wuw0nAH66BkEyMGQ1tY3oF0yhNjJBYHuUHDTlAwcxQ27kDy5C7aThxHgUtKBgKCiDoGHI26(q0VE5IZTEO7jjboQ1WLkNgIuOnm8gijI12PHznUP6vFYCA)noCnp2e0RD5yk6qX7n6SdDfd6H6mV1Go2r)YE7JFXPehxV8YtRDM4ItY23aekBEbGMyo0MJpzaSY6R92FSA61l2FGiqSe4dBA9B0p6Ac5GvYMlIqZiv5k84hAUyceuX4LZbV7rd7aFTNvGFt9sVifG6OvMiy4mYiyWN1V6aU9986WFUg)V1btmnx9J3NHpNoqx4iqTDJUJ0)v(FwBY1mBXrmRNdOUi0XuJ)3aI()lRXVmEJ2nh1jUlDPDgAwoq0(snn14)Ah43Ze9uy71O7(ohG03CTpkNS6Ob8no7i)mmxpWRHBFOzG35oomh8J7ZhN(YF5nMByRlxUJCQ7t5)Do2USST5z330gSu)h(E8EM2CMDzgm8c1wnfE(RsBZG3vahCb7xq8SC1AB(9UcxRtMf5D3vTBYEi)rQuR1Vw5NPBy5m8pyA)tVM0BW)m]]
+    "Combat (wowsims.com)",
+    20261020843,
+    [[Hekili:LN1wVTTnu4Fl9fpl0aFnoTnika7(6Ww3WC3RsMwIYMZYIgKujWag(3(oK6IfziTLDsqlqFPvH8WVZvE45doyyWNdMgJe4GpnAWOBgoy0G3F94GPITBWbt3GIwHwaFKHwd)7psxphj2pR7J0h5K18Er01EsP2MsrXsKMNtsfFmlyUvq5BWrbt)N)6x)3F(2ifwbtxsIJXfhaZJCOJB3ptSeVFw5A9tOm8dy2(zX4euEki(3)3)X(zWY7NvdqoPVuH8(m6ICC)4n8(OnP8(LNPh8h9(ponZ7kaDgkJNcwCm8nvQncF)muCmn77GpwH3Y7TF2pHeOBTyfD)Zp(zaKLcXg(T97VGiwMpxA49ne1dWemT4XJ)W4bXdUEW4b9G4hJMqsH4lksqOz8EBy4IWJ)8uumomjnNX2EfS8M800qy9r7)9Ni8B97dFVghtei5wxLZXH0KKWfrX(dBXP5cmkvS095gwFoF06558Lxrs87oppjPxuUqSKrrIE5B6irKgUHsYeq(dSDCM4UjE1Ng01ceJrfyfa2fVZBIXkOlffawdHhqzeUPXkHR7BkeQ(GRYOpMTZcCDCikodZwSTYuU33qOikx45WjpajpLeHdrzXHXWhvgrr0YypiRHiz878h55P5JYypIvKnLUwf2f(EfMruAAm8v1YmmkERgoOyW6qPKmCiRkTP7K35pzWjSDBwUmiwDO5PuACysoBBXb0SGdBAjJvHGHzwQ3A3ZC7YW29(dhnqtz4CgEf6ikQ51QsT015wDuoU26GBRPqz7crkoeUazRG0mupCYUNS2OgH)c7VzyVCfPE96ukvdLwKY7y)M04AFRjUDEcU6PRg9DAg5UWQAJIANnPavz1h8h3ebDfDvcnkNxgRpQHmW6LwO(PZB6MqwSuewl6n628d4m66IaHsdQ)2vRU79hRDyw(gbeND2RdKVUzxPSsO7kqPWUqEMMZLod0JL3dUbmpfhxNtxIxtzSLWR0L51sGASUm7EspmcUKfQULAPc2Mv7)8711OI)bcpcdD6orl4gYP6cRFTVEZIRD2J1WDpRUZ1v3RwNliP1wINDXVhK)8Bx2i4)SdEonSXDEAMg0wRQMQk)0kLQwSUF71Epj)8Uj7oE91ILq(kDBixWiRWoVOpP5zQYehBkHUDpsySZPdJ7oka7oYEqq945qJyKd9iRJFRzPxrX9ZVgXdeYrppB5q9u2HwiFZKaA018RIuaNat0jWSgxBQni9(u1JH9Khe(wiVzeN(sM8cMce94Gsni)McgixX2UG)j85NuSVl7bh8dveaH)xXUkyAeJaofbfmT9SSceGIDGBjdgnGBp7ljYJnqUXScs3Pwtfur0uKdYwNdXSxrMzTPAqgaU2rOTbvnnV2kLnxC2KkyIRAcD2pAk5S5YD(K5KM2nTm5F4Wwdf2P51sEEs74DT0oky3y1gSWa88PakTL33sBPbBn9BfwihEgSdFjOh2s(HsV9dokoBgASgVV07CsLoCqlJXAmlBAgo4uQa3ShSzpxxg35rM8GrQJxWuf7vPBingxnUv8n1dSTJhQcvZM2vOwoy)jFo4IiO(IWqvz(MTCDL(pqH9KE0jjV2IsZJWET10xv(NRo(hKwVJHlETNlX2lLz7ZKABlcTUTTlHC75ZU1g9wl8BvzpZhfRYE6eEpz3OjkWmFzRcSQu3jlSFjgS)et2)SgT)cMT)8if3MQlVDhBSERZ1RYoMV1xLDo0j7BX8Z5Yz(1md5A(ed(Hwhr5lnF6VYsRxeL6xVCRqnEN8yiRuNp8ZukP)AFW0kMXMdq44SgJtEqzv8GpgonMlP83vvhbLhHYHxSybt)n8kskz)SU)s5VtSA7G)p]]
 )
 spec:RegisterPack(
-    "Assassination",
-    20261019736,
-    [[Hekili:nJ12UnUnq0VL8IRdQxVXo36MgVazBtV3TfRB7JsIwAKnHPjfiPsQbc03ENrsrsmwmobjbOVylZlN5mx4CeDWKG)kyEcZcbFE6rtpBYrt(W5hFwWC72miyEglEnBj(GKTb)8kJHzmCjZYvsA2TcflHqyroxy)zzWIEbZKbXbZ)YF8J)91xWCXyfpjbQ2hyWf9dknCdOlICSvr0xulZHIOHzA1nCdoetCrrKuveXLVBjYUIO4vq86IOTG9BlIMl4X4ymzsr03JpoQi6FaPAt9q2v4KQmqcAdoKg)1gvcieaozQMwNkhzrmZynhEXU4veTgYSfr5z4G43wor6jDmdo4XiaQnlqsMP4sRbN97uceHpjuQeI6wCowr0PVRCbfrxJoxmOXqi6RNueDl3UQi63ZTCbo2HJAFgnjUxkUJanCoxYnwIcZTA(AC2fqQICloIkh9rbW0siHGitPeC5s0rv6(8SBxbY2nYwOYTvwlLjeyS9x5uC21RV(FZugCVxP3qGoeDkdyTOzoS7sNsPglWeKB1MjqV3OKMwwtHnAxdzPLE1TQBn8nM3NwvE8vMMkIR(ZFdnVgsbnij2RKIThogRo1QuUaRAzXujKzCMgQGDgxASmPnSYSJYnqOknnCzCYSjJ4PZQzoULkEn4Gf5PPJ3W4YWviRdrlHFBhJz)Fzh4)6zVpbyjITpx8P18KG3ufb3f4kCQNU72NTgZzJsvX5MztAgfHckZBHmkTvp)ucP6XtYHbLLWHvvWJJZ1yC2(XzN2ff2Mf5MvLUwLTHKXyTYGghTAbHvN46fXlDaCjtRvwyxep4zb5GdsGYqsnEyizWWfkJ5UgySAgIsIcpM3La3WWdu9eHB2x1cq(4qpp0OkTqh0cP8Bc(Wynq1tMpoDWqp(e9XYTTH8k2vVOXXkJ9oFHJE8BpOD)ki4EKyJtWXUcB2iGq01lRvCq(YztCsLUU991GDQwDdlit7VGBYGdAlkDsvud3w8k)PFyo2hmXyN5WfuJ5DZ6EocSN8QNio00JVmO7CASzkYQd9y276F8tguBGn1seJxlv3k9U6hH8xo7Sh33o0xu8EB7lQHhgg(Oi3lDVCYDpmyE(P31YaNQttTwyOPukSSYO3iJVtRVnemyokCrV5YdE5ibswt5BHbPSCHfF8ZLVvgizlW3hj4t3lHfmN6IhmV8ieTilc1dwzSMJUoNHdU3o4T42vfOb)Pe(h7HjvTB6AVxqNFYqN4Xq19N8BPxlfHEB7rm70hWSoDhOKqdtRueCi6)VelEBul6xUGcCN5jL2r(WPGDhzecKZ9wG)cKpA5I72DpB9nE4FPcZUm55i8qW)HNyDvRWuxB(wkjrSBYrE8(212LoE1QEMIvV9QvLoNVgS3ZM9fP3VkHpzI(0j6kuusVh2vVPA1vAZPg81uI7fqElDZR6RQ0NuMVQC37K1Bx09FBS(ue9zqN7O9eSxp3oRpbsFMRU1FpnWAUTwz0dJFSC7ksh(NG1CbhVeC9Fksv4n4)c]]
+    "Assassination (wowsims.com)",
+    20261020843,
+    [[Hekili:LN1wVTTnu4Fl5fpl0aFnoTnikaDy36Ww3WC3RsMwIYMZYIgKujWag(3(ou3SinPSStcAbYlTkuKFNVZfE05d2BO3x9MgIeyVVmAWOBhoy0GpCZyVPITBWEt3GcwHwapKGwd)7N4CeNtsqccnz)SUprFItwZ7fqx7i382ykkuc48usS4ZjEZnInFdoWB6)8x)6)(Z3HQdP30LKWqC(5W8GMT4D7NjwI3pRyT(rug(rmB)SqCeknwSF2N(7)y)myz4jnCsj9LSG3NrxKI7hUH3hTjM3V4O9G)O3)XPjoxdgHHs4XGBecptLgLW3pdfgst(b4Hv4T8E7N9tib6odKP7F(5VcGSui2WVRF)feXY05s(3xBRoaMaNdhp(JJheo4MbJh0dcQmAejgI9Oaj1592WWWHNJeUZJrHy)O4ugB71WYBsJJ9H1hT)3pAZVZTp88ACirKfcUoLJ9Prr(lccDh2ItZfyuSyP9ZnS6CUO1Zt5lVMe52DEAuuVGuHyjJIe9s30rIi1FdLKiG0iWDCI4(jovNgS1ceJrf4mamV9oxfIZGUyRaWki8ikHW1jReUUxLVPQdUkH(uYodW1XYwXjy2ITLu5bxTnfq5chlo5bi5XKaSpkj0peEOKe5rlT3bznejHFV7ihhfFug7rS8SP01kXo33lXmGsJdHNkxMHrHBvWbfcSdftsW(SY0MQtEV7KbNG7MyUmiwEO5XuAOFukBB(buyWHxAiJvIGgnlSBL7P)6IW2dUdhnqXy4ugEfQbdv)AvHv6A9vDYCCL1b3wXGY2fIySpCbYubPEOE4KDhT2OAH)C(xpSxSI0UoDk2vnJMNY7y(M04kFRoUDocx10vT(o1JCxyvTwrT1MuGPm6dUJRJGQHUoIgKYlI1nsKbgV0c1pDUQBezXsHF1wVvLZpItORZdezwi7VT1Q7b3XkhMLUraXzR96G9x1SRyVsO7kqXWBH8mnLlDgOhlVhCdyEmoSkNUeVMYylHVGxKxlaQ26YS7j9Wa4sMF2TudvWMyT7ZVxxTk(hj8am0P7eTGRTVSUWQx7REz(1oZXA4UNr35MY7vRtfK4kM4yE7pa7)8Bxwl4)SdEwj24ohNPbR1QQPYYpLsPYfR63EJZr5N3pzxZ1xlwc5R4T(CbJScB9I(K6NPmt00ucD72qySZPdJ7AeGDn8oiO2CoulgzXoY643Px6LxC)8RrCGnzPNNPCOAk7qlK3mjGADn)UifaYzGpYJz1U2uri1(uvJHD0heElK30ItFltEEtbHECWOAkIJbcYZuINR)eE8lzkZl6b79JLcaH)ptDL30agbCkcYBA7vz5jadBb3cfmka3E1xsKhRHCTzfKUtLLYLIOyilITohHzVIkZAt1GmaCJLqBnPAkETrjB20SjnWeB1eQQFumYzRL78fZjP2TTm5F4WgdfML51sDEsE8(wYJC1ng5GbfGNVeqjx(ql5sn1AQ3kmio8muh(sipSL6dLE7hTuCwp0ymEFP35KgD4GwgJvuwwNgw0uMbUEpy9EU2i35jM8ajvXZBAM6vPBijJTg3z6nvdSTthAgQ6nTlrTyW(t(5GlsG6lIc1m6R3Y1w6)Ge2t6rNu8AlknBq9ARLVM5F264Fy3QDmSPR9Cf2EPkBFMsBBrO1o3UeXTNV6wtYBnOVnl7P)rXYSNQG3t2nAsgy6FzReSYu3jlSFjgS)et2)SgT)cMT)8ef3MQlNDnnwVX56ZYo6FRVm7COt2BX8Z5Qz(1mdzB(en9Hghr5BTE6VZsRxKK6xVCRiB8o5XqgLoF4NPuk)18GPLkJ1hGWYz1gN8GXk1b3eo1MlP43vvfHmpcLcFXI5n93WRiXK9Z6(lf)oXzV27))d]]
 )
 spec:RegisterPack(
-    "Subtlety",
-    20261019927,
-    [[Hekili:nJ1wVTTnu4Fl(fpBSm3iNBlzrbiDlRDxqxrC3RsIsIYIW0IcKuj1ag63(ouuswYM02TPfzpuxBkE(oFNl8WViphVp5nlgjXEFy6PtV05uNRVE6vEZKRYXEZYrrlqZHVKHwcFoRiusXYvQhSIYqXkJdliu5FK5fAehrooYB2J)Z7(3hUr0AEkjogRnblGN)7mo(jmVmOXdLbpYMxGldgLZzpreewgIEtzqgRmGK9tZb6ugeLIJwugScl)fWskjcwdLfxg8BWxpPm4xlKYuodjRxwMcBiKIXXcyfo8JLSymLIHNLWzlldyfahIqcPO2K7xgwis)b4NfcuiHsKRgFtZYW(Z67f4FsIkoCozxgvgSaNd7OiF7D(roEjoMirsioHF)yrUSqXVNjsWlFkLbExbd4lGkmWS3JxY48uO4OzritiWWZgHkdeyPKKnVmatf4NtXC84UECk4HhGCAeMd1l9tUacB2Yqi7MZizsbSL3LYeskujMj5Kfnbsx)kHTRQ(WYJEl0PiKOWgoxLRJrZNR8ynHgFIcEgTIBjQOy3ueqxiAiaLiQAqiRqQDucIsHY8FruL8(PVh(Cota2EpFPc0oPG(XTQlrIruf)20qabSGLboledCcRtekRgHsKk7EM9SGSu8MeDtQQzOU58(p(3G754eifNfvvjORgpboEWzjekCIbfPkPIj5CSgwxsgKMYK(A3EsHa7Zss8Nhf76CcjXTM5GjAEnCqyrsYKLisMFkWAFWtW)lNaTr)5oW)JUVjgJIPR(sXxTNJcEHodUlWACQFCxZDxa1StsyrfcxN2vbOWv1nFKQSv)8PkKQxpUapSQP0x3tojQGd5z5DUx0ffu1zXg8v2xrKOMJLavmcZTMqrLG0raoEc0XnSnDP3GplhNH5hbGZrCotI3fXbFrqoCqmUkEQXtfnJuh2x3cJKJauIzsX4Ue4jugryOo1ANEdaF6rpl0qxCvhx9vDjXWxMatTGUsXDthoYsmP(y(Qnfon7Q30KiyaZABPddXTf0A2HcU9KB6LCGo6CexpVfYjrWuPy2Zz15K2i70U2itjWarSpKUQ6s7XMBDDUylh0zK(ofbJzz3Z6Iq)KD3(7bMkgw6YVZ1z4GnhO66aU(wMUN8mJWzTfJAtQAcLik80jY6lN8HdCIj4meCbB8669N2EBbyY49uCSXrC79uk6nYY4G1Mx)8911ER7L7VPgO7GJjgBYjng6E(6TBuV6I1d2tJPTGFU(gyFr1fWwBB613TjJ37SEy91ZTvYEvMJyCwdawq9yh5cTa7lNBSqERJPe6Mu2y7X)GDP6ReVeeyWciNOtXCq98RoLIfzWqOHV2S2BgiZrj5ElT8uicev)9c4eubvcF9dv)9d1Ni8EBJGhVzQ789MvnArTjja1w7mItG8bbblEW773GBxndT4pvH)zwX)yBo34f9vr95)5wI0M9UXFVafekhDHfhvFpNDp9TszHXPukMD5wmRZ1AQKult13I2JO))s0X3hvhMNURsCxzPK2rgs3SLv5ikS(zly1rEsVdx7itrbY1hzLSNmM(u0Oagf2oNA9K4lq5Ygo138(hsD2EE0(z8xL2M9kU5GQB2eh1oS)umNTht2o4Rvju3GYQIOxhjr7rtKPBDAufDyzrvPMTNW3oySNoPdvZ1dzDSnoFtv148RVkHuvo02y9gepG7o2lXoKMaBIcmwF6ilOkg2(cG9N0(MPJ5fXzBZE3srwpI)Dxz2liIKvtLv2JmQaZ2O8(V4jJDB5h8vozsiNnh27frDe(ZWRGYKUoBURwrHHRBAFLuvzpi)HkGXxG8X3JxqOKYGr1V)zD617)o]]
+    "Subtlety (wowsims.com)",
+    20261020732,
+    [[Hekili:LN12UnUnq0VL8IRf2aFnoPBquaArVTfTBlQ3(QKPLOSzTSObjvcmGH(27qDZI0K2YojyxG8YUkuZCMRC0CG9g69fVPHib27ZJgm62Hdgn4UXJ8Mk2Ub7nDdkyfAb8qcAn8VttNlIXITzZ6(m9zoznVxaDTJuUTXuuOeR5PKyXNs8MBew(gCG30)5V(1)9NVNxIM30LKWqCHkyEGv7CF2mXsC2SYZ6hrz4NWSSzH4iuASiB2p83)r2m44SznGiL0xAwEFgDrkUF4gEF0MyE)sT6b)rV)JttCUgWNHs4XGFhcptL2JWZMHcdPjFh8Wk8wEVSz)esGU3GF09p)0xaqwkeB433V)cIyz6CPR3xtuhatWDdhp(JJheo4MbJh0dYImAejgYZOabHMW7THHbLNJeUZJrHy)O4ugB71WXBsJJ9HZhL97hi8hC7dpVghsei5RUoLJ9Prr(lccDh2cT5cmkwS0UEdR1ZfTEEkF51r0GuoiejYT780OOEbPcXsgfj6LUPJezQ)gkjravsigWjIhM4uJcyZfigJkW5ayw8oxfIZHUuuayfeEcLq46oTeUUxviuTIRsOpNSZaCDSikobZwSTYvE0vtOakx4yji3djpMeG9rjH(HWdvorr2s7Dq1drs4p4oYXrjgL1aeROQkdTkSlI9kmdO04q4PQJzyu4wfCqHG3HIjjyFMS8jXsniFWDYGt47M8CzsSsP5XuAOFukBBHckEW(xAOIvHGMBwA36Wt)1LPThDhoAGIXWPm8k0rmuZRxLwPR1x1jpWvohcBfdkhBaJF8HlsMAi1t1dNS7GZg1i9x4)nt7LNiTRtNsPAy0IsEhZ3KgxhBnXTZb4QwUAm)PzM7c7Q1AQToScmLXyWDCteun0HdJS5idmEPf6F6Cv3iYILc)ArVv1NFcNqxxKiYTq(FBBu3JUJvuMLUra55s)CK1zEGE1d9k1rAIUcum8wOEtt5YGcM1Y7b3eMhJdRRTlXRPm2s4R3L13sGACUSkFYinaUS5NFB1qNSjV29LpZRrN)teEagM4DIrXnKlFAS61)6xwC9ZCUgUdAmCUP6(16ubjU2tCml(JG8N)yZgj)xCYZQJnUZHvAWATQBQQ9tPvQ6W65U34Cq95Uj7oE)1ILq9kERpxWiRWwVWpPPovvIJTTq3Uhjn250PXDhfGDh5Dqs941qTCKf7i7J)GERxrZ9lVhXbeYYSpt1q1s2(riVBkanMA(nrjGtGn7eywJRn1oK6CQ61Xo4dcVhQBA5PVMfpVPaXpoyunkXXGdYZzHxWhfE8Z5SYlNb79JEtdyeiiiiVPTNDvfns4)Z5O5nnFFdj4cWf0SqLSLCAumz75JjrESgYn2AqA7AlvqorXqwOFDou1Ed5Q1M(czc4glP2gK3uIAJK4SXItAGjwmGgFifJC2S7oF6Dsx72ww83RSXuHzIFTK5N0pURL(rbFhJ(GboHNpPqPV89T0xAWFt9wHb6INbFXxdcJTKXOmA)OLMZMPgJ57l9oN0Odh0YCScxZMUHfwM5GFQPX2CUZJE5ENufp152dTn4oNbQAITDmtZrvFO9jM(FrmtFvOMUpGlTBD6zuEGOp81wJWEATNmypjH2w0KEegTTMsBE8zB2)EPvNDyJR75s29sz7(cP72IuRDF7si8E(mEnr51aN38QN(NhRQEQKGp5CPj5GP)nUkWQkDNSX(1yz)tST)lAD)lyF)ZJOCB6UC2DSv9nURFE1r)R(vvN9d5EpwFoxE0VLviBBQOXz04YkFT5y)nwz9IOz)2vBf5l6jvdzKo9(Fkt5AdMxrTIJS(cew0vBXY9gRIr8XWPXEjL)2RQiKhrOu4lwmVP)gEfjMKnR7Vu(BjN)AV)p]]
 )

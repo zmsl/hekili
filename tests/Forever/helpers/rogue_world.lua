@@ -1,14 +1,13 @@
 -- tests/Forever/helpers/rogue_world.lua (class-completion plan, "The per-pack gate"): the Rogue content of the
--- class-neutral headless loop, in warrior_world.lua's shape, one content per pack (M.Combat, M.Assassination,
--- M.Subtlety): the character the instance logs in as, each ability's press in the world's generic verbs, the client's
--- usability answers. IDs, costs, cooldowns and durations come from the class file (load_druid's recording load of
--- Rogue.lua for the character, the booted oracle's Hekili.Class and Hekili.State for the rest); the finishers'
--- per-point durations and Relentless Strikes's refund restate the class file's rules (circular on purpose, as
--- warrior_world's rage: the loop measures the picks, not the rules). Damage amounts and the weapons are UNMEASURED.
--- Shortcuts: the client's IsStealthed answers false throughout (fake_api; UPDATE_STEALTH never fires), so the belief
--- holds Stealth and Vanish from our casts only, the in-combat secret case; Preparation finishes the world's
--- cooldowns but not the client's answers. Credit: wowsims/forever (MIT) as the reference for the priorities the packs
--- follow; no code copied.
+-- class-neutral headless loop, in warrior_world.lua's shape, one content per spec (M.Combat, M.Assassination,
+-- M.Subtlety, each on its "<Spec> (wowsims.com)" pack): the character the instance logs in as, each ability's press in
+-- the world's generic verbs, the client's usability answers. IDs, costs, cooldowns and durations come from the class
+-- file (load_druid's recording load of Rogue.lua for the character, the booted oracle's Hekili.Class and Hekili.State
+-- for the rest); the finishers' per-point durations and Relentless Strikes's refund restate the class file's rules
+-- (circular on purpose, as warrior_world's rage: the loop measures the picks, not the rules). Damage amounts and the
+-- weapons are UNMEASURED. Shortcuts: the client's IsStealthed answers false throughout (fake_api; UPDATE_STEALTH never
+-- fires), so the belief holds Stealth and Vanish from our casts only, the in-combat secret case. Credit:
+-- wowsims/forever (MIT) as the reference for the priorities the packs follow; no code copied.
 local ld = require("Forever.helpers.load_druid")
 
 local M = {}
@@ -162,12 +161,18 @@ M.MAP = {
             p.gain = { POINTS, 2 }
         end,
     },
-    preparation = {
-        effect = function(_, e)
-            for _, key in ipairs({ "cold_blood", "premeditation", "vanish", "ghostly_strike", "blade_flurry" }) do
-                e.cdUntil[key] = nil
+    preparation = { -- the world's cooldowns and the client's answers (every rank)
+        effect = function(W, e)
+            local list =
+                { "cold_blood", "premeditation", "vanish", "ghostly_strike", "blade_flurry", "adrenaline_rush" }
+            for _, key in ipairs(list) do
+                local a = class().abilities[key]
+                local ids = { a.id }
+                for _, id in ipairs(type(a.copy) == "table" and a.copy or {}) do
+                    ids[#ids + 1] = id
+                end
+                W.resetCooldown(e, key, ids)
             end
-            e.cdUntil.adrenaline_rush = nil
         end,
     },
     stealth = {
@@ -206,23 +211,36 @@ local function kit(extra)
     end
     return out
 end
+-- The wowsims.com builds (tools/wowsims/specs/rogue_<spec>.lua's talent strings): the abilities and the talents the
+-- packs and the kit read.
 local PACKS = {
-    -- Combat Swords: Improved Sinister Strike 2, Adrenaline Rush, Blade Flurry.
+    -- Combat SS: Improved Sinister Strike 2, Improved Slice and Dice 3, Relentless Strikes, Flawless Execution,
+    -- Adrenaline Rush, Blade Flurry, Cold Blood.
     Combat = {
-        kit = kit({ "adrenaline_rush", "blade_flurry" }),
-        talents = { [13732] = 2 },
+        kit = kit({ "adrenaline_rush", "blade_flurry", "cold_blood" }),
+        talents = { [13732] = 2, [14165] = 3, [14179] = 1, [1310711] = 1 },
         uptime = { "rupture", "garrote" },
     },
-    -- Mutilate: Improved Slice and Dice 3, Relentless Strikes, Cold Blood, Venom.
+    -- Asn Muti: Improved Slice and Dice 3, Relentless Strikes, Flawless Execution, Cold Blood, Mutilate, Venom.
     Assassination = {
         kit = kit({ "mutilate", "cold_blood", "venom" }),
-        talents = { [14165] = 3, [14179] = 1 },
+        talents = { [14165] = 3, [14179] = 1, [1310711] = 1 },
         uptime = { "rupture", "garrote" },
     },
-    -- Hemorrhage: Ghostly Strike, Premeditation, Preparation, Thousand Cuts.
+    -- Subtlety Hemo: Improved Slice and Dice 3, Relentless Strikes, Setup 3, Dirty Deeds 2, Hemorrhage,
+    -- Premeditation, Preparation, Thousand Cuts, Cold Blood (no Ghostly Strike).
     Subtlety = {
-        kit = kit({ "hemorrhage", "ghostly_strike", "premeditation", "preparation" }),
-        talents = { [1310721] = 1 },
+        kit = kit({ "hemorrhage", "cold_blood", "premeditation", "preparation" }),
+        talents = {
+            [14165] = 3,
+            [14179] = 1,
+            [13983] = 3,
+            [14082] = 2,
+            [16511] = 1,
+            [14183] = 1,
+            [14185] = 1,
+            [1310721] = 1,
+        },
         uptime = { "rupture", "hemorrhage" },
     },
 }
@@ -250,7 +268,7 @@ end
 
 local function content(name)
     local P = PACKS[name]
-    local C = { PACK = name, IDS = {} }
+    local C = { PACK = name .. " (wowsims.com)", IDS = {} }
     C.SPEC = ({ Assassination = 100041, Combat = 100042, Subtlety = 100043 })[name]
 
     function C.character()
