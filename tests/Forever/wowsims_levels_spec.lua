@@ -195,7 +195,7 @@ describe("tools/check_pack_levels.lua", function()
     end)
 
     it("finds every wowsims pack line guarded", function()
-        local pipe = assert(io.popen("ls src"))
+        local pipe, checked = assert(io.popen("ls src")), 0
         for addon in pipe:lines() do
             local root = "src/" .. addon .. "/APLs/"
             local ok, def = pcall(dofile, root .. "packs.lua")
@@ -208,11 +208,13 @@ describe("tools/check_pack_levels.lua", function()
                 for _, name in ipairs(def.packs) do
                     if name:find("(wowsims.com)", 1, true) then
                         assert.are.same({}, levels.file(root .. name .. ".simc", isAb), name)
+                        checked = checked + 1
                     end
                 end
             end
         end
         pipe:close()
+        assert.is_true(checked > 0, "no (wowsims.com) pack checked")
     end)
 end)
 

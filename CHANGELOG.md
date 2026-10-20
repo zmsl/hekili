@@ -27,6 +27,8 @@
 - Paladin: "Retribution (wowsims.com)" is Retribution's default priority, translated from wowsims/forever's Twist of
   Light APL, your on-use trinkets included.
 - Shaman: "Enhancement (wowsims.com)" is the Enhancement default priority, translated from wowsims.com's own.
+- Warrior: a second Arms priority, "Arms (wowsims.com)", translated from wowsims/forever's own Arms rotation (choose it
+  under the Arms specialization's Priority; the hand-built Arms list stays the default for now).
 
 ### Changed
 - Rogue: the hand-built Assassination, Combat and Subtlety priorities are gone, with their settings (Bleeds on
@@ -71,6 +73,10 @@
   Reverberation and Improved Fire Nova now shorten the shock and Fire Nova cooldowns, Shamanistic Focus lowers the
   shocks' and Lightning Shield's cost, Call of Flame lengthens Flame Shock, and Stormstrike costs what wowsims.com
   charges.
+- Warrior: Improved Slam is modelled: with the talent Slam is a 1.0 s cast with a 1.0 s global cooldown on a 15 s
+  cooldown (1.5 s and 18 s without), so the Arms priorities place Slam on its real timing.
+- Warrior: Anger Management's rage is 1.5 every 5 seconds in combat (it was assumed 1 every 3 seconds), as the game data
+  and wowsims/forever give it; rage forecasts with the talent are slightly lower.
 
 ### Fixed
 - Pre-pull actions no longer show in combat when the pre-pull list hands them to another list: Fury recommended

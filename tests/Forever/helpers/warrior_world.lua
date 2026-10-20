@@ -216,6 +216,7 @@ M.MAP = {
     sweeping_strikes = selfAura("sweeping_strikes"),
     death_wish = selfAura("death_wish"),
     berserker_rage = selfAura("berserker_rage"), -- Improved Berserker Rage's rage not modelled (not this build)
+    blood_fury = selfAura("blood_fury"), -- the Orc racial (Hekili_Shared/Races/Orc.lua; the wowsims Arms build's race)
     shield_block = selfAura("shield_block"),
     spearing_strike = { -- UNMEASURED amount: a plain weapon hit
         effect = function(W, e)

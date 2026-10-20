@@ -20,7 +20,12 @@ describe("tools/make_pack.lua", function()
         for _, p in ipairs(mp.load("warrior")) do
             by[p.name] = mp.decode(mp.encode(p)).spec
         end
-        assert.are.same({ Arms = "WARRIOR:arms", Fury = "WARRIOR:fury", Protection = "WARRIOR:protection" }, by)
+        assert.are.same({
+            ["Arms (wowsims.com)"] = "WARRIOR:arms",
+            Arms = "WARRIOR:arms",
+            Fury = "WARRIOR:fury",
+            Protection = "WARRIOR:protection",
+        }, by)
     end)
 
     for class in pairs(CLASSES) do
@@ -57,7 +62,12 @@ describe("tools/make_pack.lua", function()
         it("restores a deleted block byte for byte", function()
             local out, report = mp.sync((src:gsub(furyBlock:gsub("%p", "%%%0"), "")), packs)
             assert.is_true(src == out, "the source changed")
-            assert.are.same({ { "Arms", "unchanged" }, { "Fury", "added" }, { "Protection", "unchanged" } }, report)
+            assert.are.same({
+                { "Arms (wowsims.com)", "unchanged" },
+                { "Arms", "unchanged" },
+                { "Fury", "added" },
+                { "Protection", "unchanged" },
+            }, report)
         end)
 
         it("updates a block whose version differs", function()
@@ -65,13 +75,13 @@ describe("tools/make_pack.lua", function()
             assert.are_not.equal(src, edited)
             local out, report = mp.sync(edited, packs)
             assert.is_true(src == out, "the source changed")
-            assert.are.same({ "Arms", "updated" }, report[1])
+            assert.are.same({ "Arms", "updated" }, report[2])
         end)
 
         it("removes a block the manifest does not list", function()
             local out, report = mp.sync(src .. 'spec:RegisterPack(\n    "Zzz",\n    1,\n    [[Hekili:x]]\n)\n', packs)
             assert.is_true(src == out, "the source changed")
-            assert.are.same({ "Zzz", "removed" }, report[4])
+            assert.are.same({ "Zzz", "removed" }, report[#report])
         end)
 
         it("refuses a RegisterPack it cannot parse, a duplicate, stray content or no block", function()
@@ -144,7 +154,12 @@ describe("tools/make_pack.lua", function()
             local fury, n =
                 slurp(apls .. "Fury.simc"):gsub("rage>=settings.hs_threshold", "rage>settings.hs_threshold", 1) -- one character
             assert.are.equal(1, n)
-            local root = scratch(apls, { ["packs.lua"] = true, ["Arms.simc"] = true, ["Protection.simc"] = true })
+            local root = scratch(apls, {
+                ["packs.lua"] = true,
+                ["Arms (wowsims.com).simc"] = true,
+                ["Arms.simc"] = true,
+                ["Protection.simc"] = true,
+            })
             local f = assert(io.open(root .. "Fury.simc", "wb"))
             f:write(fury)
             f:close()
@@ -153,8 +168,8 @@ describe("tools/make_pack.lua", function()
             local again = mp.write(out, "warrior", TODAY + 1, root)
             os.execute("rm -r " .. root)
             assert.is_false(src == out, "the Fury change was not written")
-            assert.are.same({ "Fury", "updated" }, report[2])
-            for _, name in ipairs({ "Arms", "Fury", "Protection" }) do
+            assert.are.same({ "Fury", "updated" }, report[3])
+            for _, name in ipairs({ "Arms (wowsims.com)", "Arms", "Fury", "Protection" }) do
                 assert.are.equal(TODAY, date(out, name), name)
             end
             assert.is_true(out == again, "a second write changed the file")

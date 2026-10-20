@@ -253,7 +253,7 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
             table.sort(names)
             return names
         end
-        assert.are.same({ "Arms" }, under("arms"))
+        assert.are.same({ "Arms", "Arms (wowsims.com)" }, under("arms"))
         assert.are.same({ "Aaa", "Fury" }, under("fury"))
         assert.are.same({ "Protection" }, under("protection"))
         local order = function(key, name)
@@ -393,7 +393,10 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
                 end
             end
         end
-        assert.are.same({ arms = { "Arms" }, fury = { "Fury" }, protection = { "Protection" } }, kids)
+        assert.are.same(
+            { arms = { "Arms", "Arms (wowsims.com)" }, fury = { "Fury" }, protection = { "Protection" } },
+            kids
+        )
         local at = {}
         for i, v in ipairs(entries) do
             at[v] = i

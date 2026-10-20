@@ -60,8 +60,11 @@ end
 
 describe("the Fury priority", function()
     it("is the user's list with every wowsims Fury cast, Heroic Strike and Cleave in two focus tiers", function()
-        local fury = assert(loadfile("tools/make_pack.lua"))("lists")[2]
-        assert.are.equal("Fury", fury.name)
+        local fury
+        for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists")) do
+            fury = p.name == "Fury" and p or fury
+        end
+        assert.are.equal("Fury", fury and fury.name)
         local function lines(list)
             local out = {}
             for i, e in ipairs(fury.lists[list]) do

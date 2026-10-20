@@ -157,7 +157,7 @@ describe("Forever Warrior", function()
                 assert.are.equal("function", type(a.known), key)
             end
             assert.are.equal(41, n)
-            assert.are.equal(1.5, w.abilities.slam.cast)
+            assert.are.equal(1.5, lw.run(w.abilities.slam.cast, e))
             assert.is_true(w.abilities.heroic_strike.onNextSwing and w.abilities.cleave.onNextSwing)
         end
     )
@@ -182,6 +182,22 @@ describe("Forever Warrior", function()
             at("battle_shout"),
         })
         assert.are.same({ 8, 7 }, { lw.run(w.abilities.taunt.cooldown, e), lw.run(w.auras.shield_block.duration, e) })
+    end)
+
+    it("casts Slam in 1.0 s with a 1.0 s GCD on a 15 s cooldown with Improved Slam (Forever DB2 12862)", function()
+        local e = lw.env(w)
+        local slam = w.abilities.slam
+        local function fields()
+            return { lw.run(slam.cast, e), lw.run(slam.gcdTime, e) or 1.5, lw.run(slam.cooldown, e) }
+        end
+        e.talent = rank(0)
+        assert.are.same({ 1.5, 1.5, 18 }, fields())
+        e.talent = rank(2)
+        assert.are.same({ 1.0, 1.0, 15 }, fields())
+    end)
+
+    it("leaves the swing timer alone on a Slam (no handler: Improved Slam's 2/2 tooltip, the wowsims build)", function()
+        assert.is_nil(w.abilities.slam.handler)
     end)
 
     it("gates Spearing Strike on its talent, and Charge on Defensive Stance with Vanguard", function()
@@ -568,12 +584,12 @@ describe("Forever Warrior", function()
         assert.are.same({ 3.46 * 2.6, 0 }, { models.mainhand.value(), models.offhand.value() })
     end)
 
-    it("gains Anger Management's rage every 3 s in combat through a combat-gated periodic entry", function()
+    it("gains Anger Management's 1.5 rage every 5 s in combat through a combat-gated periodic entry", function()
         local am = w.resource[2].anger_management
-        assert.are.same({ "anger_management", 3, 1 }, { am.talent, am.interval, am.value })
+        assert.are.same({ "anger_management", 5, 1.5 }, { am.talent, am.interval, am.value })
         assert.is_nil(am.aura)
         w.state.combat, w.state.query_time = 100, 107.5
-        assert.are.same({ 106, false }, { am.last(), am.stop() })
+        assert.are.same({ 105, false }, { am.last(), am.stop() })
         w.state.combat = 0
         assert.is_true(am.stop())
     end)
@@ -705,8 +721,8 @@ describe("Forever Warrior", function()
             printed[#printed + 1] = { line:match("^(%d+) (.+)$") }
         end
         pipe:close()
-        assert.are.equal(3, #w.packs)
-        for i, name in ipairs({ "Arms", "Fury", "Protection" }) do
+        assert.are.equal(4, #w.packs)
+        for i, name in ipairs({ "Arms (wowsims.com)", "Arms", "Fury", "Protection" }) do
             assert.are.same({ name, tonumber(printed[i][1]), printed[i][2] }, w.packs[i])
         end
         assert.is_nil(w.options) -- each spec's package is NewClass's
@@ -729,27 +745,31 @@ describe("Forever Warrior", function()
                 end
                 return out
             end
-            assert.are.same({ "battle_shout", "charge" }, actions(packs[1].lists.precombat))
-            assert.are.same({ "victory_rush", "intercept" }, actions(packs[1].lists.rotation, 2))
+            for _, p in ipairs(packs) do
+                packs[p.name] = p
+            end
+            assert.are.same({ "battle_shout", "charge" }, actions(packs.Arms.lists.precombat))
+            assert.are.same({ "victory_rush", "intercept" }, actions(packs.Arms.lists.rotation, 2))
             -- Fury: Battle Shout, then Charge in Battle Stance or Intercept in Berserker Stance (wowsims's pre-pull move)
-            assert.are.same({ "battle_shout", "charge", "intercept" }, actions(packs[2].lists.precombat))
+            assert.are.same({ "battle_shout", "charge", "intercept" }, actions(packs.Fury.lists.precombat))
             -- Protection charges in Battle Stance, then swaps to Defensive Stance
-            assert.are.same({ "battle_shout", "charge", "defensive_stance" }, actions(packs[3].lists.precombat))
+            assert.are.same({ "battle_shout", "charge", "defensive_stance" }, actions(packs.Protection.lists.precombat))
         end
     )
 
     it("keeps its priorities in src/Hekili_Warrior/APLs/, tools/make_pack.lua's default class", function()
         local def = dofile("src/Hekili_Warrior/APLs/packs.lua")
-        assert.are.same({ "WARRIOR", { "Arms", "Fury", "Protection" } }, { def.class, def.packs })
+        assert.are.same({ "WARRIOR", { "Arms (wowsims.com)", "Arms", "Fury", "Protection" } }, { def.class, def.packs })
         local byName = assert(loadfile("tools/make_pack.lua"))("lists", "warrior")
         local byDefault = assert(loadfile("tools/make_pack.lua"))("lists")
         assert.are.same(byDefault, byName)
-        assert.are.equal("Arms", byName[1].name)
+        assert.are.equal("Arms (wowsims.com)", byName[1].name)
     end)
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists")
         local secretToken = require("Game.State.helpers.load").module().VirtualState.AplSecretToken
+        local racial = require("Forever.helpers.engine").abilitySet("WARRIOR").racial -- every race's (the registry)
         local kinds = {
             buff = w.auras,
             debuff = w.auras,
@@ -768,7 +788,7 @@ describe("Forever Warrior", function()
                     else
                         -- use_items is Hekili's `all` (Hekili_Shared/Shared/Items.lua), as in druid_spec
                         assert.is_true(
-                            w.abilities[e.action] ~= nil or e.action == "use_items",
+                            w.abilities[e.action] ~= nil or e.action == "use_items" or racial[e.action] ~= nil,
                             where .. ": no ability " .. e.action
                         )
                     end
@@ -791,7 +811,7 @@ describe("Forever Warrior", function()
         "tanks in Protection: threat first, Shield Block kept up, no defensives, the rage thresholds as settings",
         function()
             local packs = assert(loadfile("tools/make_pack.lua"))("lists")
-            local prot = packs[3]
+            local prot = packs[#packs]
             assert.are.equal("Protection", prot.name)
             local order = {}
             for i, e in ipairs(prot.lists.default) do
