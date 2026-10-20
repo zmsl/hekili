@@ -156,3 +156,49 @@ describe("the replay world", function()
         assert.are.equal(R.pull + R.duration, W.stopAt)
     end)
 end)
+
+describe("the replay's casts: tags, items, pets, totems", function()
+    local LOG = table.concat({
+        "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+        "[-1.00] [Tester (#1)] Casting {SpellID: 900005} (Cost = 0.000, Cast Time = 0s, GCD = 1s, Effective Time = 1s)",
+        "[-1.00] [Tester (#1)] Completed cast {SpellID: 900005}",
+        "[0.50] [Tester (#1)] Casting {SpellID: 900005, Tag: 1} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)",
+        "[0.50] [Tester (#1)] Completed cast {SpellID: 900005, Tag: 1}",
+        "[1.00] [Tester (#1)] Casting {ItemID: 800001} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)",
+        "[1.00] [Tester (#1)] Completed cast {ItemID: 800001}",
+        "[2.00] [Tester (#1) - Wolf] Casting {SpellID: 900001} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[2.00] [Tester (#1) - Wolf] Completed cast {SpellID: 900001}",
+    }, "\n")
+    local HT = {
+        Hekili = {
+            Class = {
+                abilities = {
+                    strike = { key = "strike", id = 900001, gcd = "spell" },
+                    fire_post = { key = "fire_post", id = 900005, gcd = "totem" },
+                    rune = { key = "rune", id = -101, items = { 800002, 800001 }, cooldown = 120, gcd = "off" },
+                },
+                auras = {},
+            },
+        },
+    }
+    local OT = { procs = { ["900005:1"] = true }, totems = { fire_post = { 1, 300 } } }
+
+    it("drops only the proc's tag, maps an item cast, skips a pet's, summons a totem", function()
+        local R = replay.new(LOG, HT, OT)
+        local keys = {}
+        for i, d in ipairs(R.decisions) do
+            keys[i] = d.key
+        end
+        assert.are.same({ "fire_post", "rune" }, keys)
+        local W = at(R.world(setmetatable({ tag = "-t" }, { __index = WO }), 1), R.pull + 1.5)
+        local us = W.ents[1]
+        local tt = W.totem(us, 1)
+        assert.are.equal(900005, tt and tt.spell)
+        assert.is_true(math.abs(us.cdUntil.rune - (R.pull + 1 + 120)) < 1e-3)
+        local casts = 0
+        for _, ev in ipairs(W.truth) do
+            casts = casts + (ev.kind == "cast" and 1 or 0)
+        end
+        assert.are.equal(1, casts) -- the totem's; the proc, the item and the pet emit none
+    end)
+end)

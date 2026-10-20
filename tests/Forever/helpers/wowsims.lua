@@ -31,17 +31,37 @@ function M.header(spec)
     return replay.parse(M.log(spec)).header
 end
 
+-- wowsims's Race enum names whose client token (UnitRace's second return) is not the name without "Race".
+M.RACE = { RaceUndead = "Scourge" }
+
+--- The client race token of spec `spec`'s character (its checked-in request's `race`, e.g. "RaceOrc" -> "Orc").
+function M.race(spec)
+    local req = require("dkjson").decode(slurp(M.DIR .. spec .. ".json"))
+    local race = req.raid.parties[1].players[1].race
+    return M.RACE[race] or (race:gsub("^Race", ""))
+end
+
 --- The learn levels of class `token` ({ [spellID] = level }).
 function M.learn(token)
     return dofile(M.DIR .. "learn_" .. token:lower() .. ".lua")
 end
 
-local kits = {}
-local function abilities(token) -- the class kit's abilities (the engine's headless load), once a class
-    if not kits[token] then
-        kits[token] = require("Forever.helpers.engine").load(token).class.kit.abilities
+local sets = {}
+local function abilities(token) -- the class's ability set (every race's racials: engine.abilitySet), once a class
+    if not sets[token] then
+        sets[token] = require("Forever.helpers.engine").abilitySet(token).abilities
     end
-    return kits[token]
+    return sets[token]
+end
+local function racials(token, race) -- the keys of race `race`'s abilities for class `token`, sorted
+    local out = {}
+    for key, r in pairs(require("Forever.helpers.engine").abilitySet(token, race).racial) do
+        if r == race then
+            out[#out + 1] = key
+        end
+    end
+    table.sort(out)
+    return out
 end
 local function rankIDs(token, key)
     local a = assert(abilities(token)[key], "no ability " .. key)
@@ -57,9 +77,20 @@ end
 --- (one a level from 10), the dominant tree first, each talent's spell known; `o.learn` ({ [spellID] = level }) drops
 --- ranks above the level (an ID it lacks counts as level 1); `o.kit` adds abilities the world's kit lacks (usable on
 --- cost); `o.requires` ({ [key] = fn(W, e) -> ok, why }) replaces an ability's requirement in the usability answers
---- (it then owns the stance check too). The world's mob is the character's level.
+--- (it then owns the stance check too); `o.race` (a race token: `M.race(spec)`) boots the character as that race, its
+--- racials known from their learn level (like `o.kit`'s). The world's mob is the character's level.
 function M.content(base, o)
     local level = o.level or 60
+    if o.race then
+        local kit = {}
+        for _, key in ipairs(o.kit or {}) do
+            kit[#kit + 1] = key
+        end
+        for _, key in ipairs(racials(base.character().class, o.race)) do
+            kit[#kit + 1] = key
+        end
+        o = setmetatable({ kit = kit }, { __index = o })
+    end
     local C = setmetatable({ PACK = o.pack or base.PACK }, { __index = base })
     C.WORLD = setmetatable({ level = level }, { __index = base.WORLD })
     local learn = o.learn or {}
@@ -71,7 +102,7 @@ function M.content(base, o)
         for k, v in pairs(base.character()) do
             c[k] = v
         end
-        c.level = level
+        c.level, c.race = level, o.race or c.race
         local known = {}
         for _, id in ipairs(c.known) do
             if learned(id) then

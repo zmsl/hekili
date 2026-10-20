@@ -92,3 +92,43 @@ describe("tools/check_pack_levels.lua", function()
         pipe:close()
     end)
 end)
+
+describe("the character's racials (engine.abilitySet)", function()
+    local ws = require("Forever.helpers.wowsims")
+    local ww = require("Forever.helpers.warrior_world")
+    local RACIAL = { [20572] = "blood_fury", [20554] = "berserking", [1259813] = "eureka", [1259799] = "elunes_light" }
+
+    it("holds every race's racials as registered, off the GCD", function()
+        local set = engine.abilitySet("WARRIOR")
+        for id, key in pairs(RACIAL) do
+            assert.are.same({ id, "off" }, { set.abilities[key].id, set.abilities[key].gcd })
+        end
+        assert.are.equal("Orc", set.racial.blood_fury)
+        assert.are.same({ blood_fury = "Orc", shatter_curse = "Orc" }, engine.abilitySet("WARRIOR", "Orc").racial)
+    end)
+
+    it("knows the content race's racials from level 1, usable, and the replay maps their casts", function()
+        local C = ws.content(ww, { level = 10, race = "Orc", learn = {} })
+        local c = C.character()
+        local known = {}
+        for _, id in ipairs(c.known) do
+            known[id] = true
+        end
+        assert.are.same({ "Orc", true, nil }, { c.race, known[20572], known[20554] })
+        local H = require("Game.harness.headless").new({ character = c })
+        local rows = {}
+        for _, row in ipairs(C.usable(H)) do
+            rows[row[1]] = true
+        end
+        assert.is_true(rows[20572])
+        local R = require("Game.harness.replay").new(
+            table.concat({
+                "# wowsims 0123456789abcdef0123456789abcdef01234567 warrior_test seed 101 10 s target 63",
+                "[0.00] [Arms (#1)] Casting {SpellID: 20572} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)",
+                "[0.00] [Arms (#1)] Completed cast {SpellID: 20572}",
+            }, "\n"),
+            H
+        )
+        assert.are.same({ "blood_fury", false }, { R.decisions[1].key, R.decisions[1].gcd })
+    end)
+end)

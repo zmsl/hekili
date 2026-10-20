@@ -246,7 +246,8 @@ local function isVerb(k)
 end
 
 --- A new instance: Hekili loaded and logged in. `o.character` (the content's, set before login: §1.3) {
---- class, classID, specID (the client's pseudo-spec id; the spec comes from `o.pack`), level, known = { spellID... },
+--- class, classID, specID (the client's pseudo-spec id; the spec comes from `o.pack`), race (the race token, UnitRace's
+--- second return: its race pack goes live), level, known = { spellID... },
 --- talents = { [spellID] = rank }, power = { type, token, max, value (nil: secret, as on Forever) },
 --- speed = { main, off }, items = { [slot] = { itemID, name, equipLoc } }, forms = { spellID... }, form }; `o.pack` the
 --- priority to select; `o.now` the clock [1000]; `o.raw` facade rows answered by the raw client (names: the oracle's
@@ -891,7 +892,7 @@ function M.new(o)
 
     local c = o.character
     if c then -- the character, before login: VirtualState builds its spellbook at SpecializationChanged
-        ctl.class, ctl.classID, ctl.specID = c.class, c.classID or 0, c.specID
+        ctl.class, ctl.classID, ctl.specID, ctl.race = c.class, c.classID or 0, c.specID, c.race
         ctl.level.player = c.level
         for _, id in ipairs(c.known or {}) do
             ctl.known[id] = true

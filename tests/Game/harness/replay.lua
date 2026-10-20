@@ -6,7 +6,8 @@
 -- still reads the content's rate), our auras and the target's with the log's real duration when they fade, the
 -- content's hidden auras in the truth only, swings and spells landing at once, the mob's health at 20% from the
 -- execute phase's start (wowsims's is the last 20% of the duration) and never dead. Not replayed: cast bars, landing
--- lag, the target's swings. Class-neutral: the content passes its forms, hidden auras and procs. Credit: the log
+-- lag, the target's swings. Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map
+-- through the booted instance's own ability set (Hekili.Class, booted as the log's race). Credit: the log
 -- format is wowsims/forever's (MIT, https://github.com/wowsims/forever); no code copied.
 local world = require("Game.harness.world")
 local entities = require("Game.harness.entities")
@@ -36,21 +37,26 @@ local function secs(s) -- "1.5s", "250ms", "0s" -> seconds
     local v, m = s:match("^([%d.]+)(m?)s$")
     return v and tonumber(v) / (m == "m" and 1000 or 1) or 0
 end
-local function ids(s) -- "SpellID: 1, Tag: 2" -> 1, nil, 2; "OtherID: 3, Tag: 1" -> nil, 3, 1
-    return tonumber(s:match("SpellID: (%d+)")), tonumber(s:match("OtherID: (%d+)")), tonumber(s:match("Tag: (%-?%d+)"))
+-- "SpellID: 1, Tag: 2" -> 1, nil, 2; "OtherID: 3, Tag: 1" -> nil, 3, 1; "ItemID: 4" -> nil, nil, nil, 4
+local function ids(s)
+    return tonumber(s:match("SpellID: (%d+)")),
+        tonumber(s:match("OtherID: (%d+)")),
+        tonumber(s:match("Tag: (%-?%d+)")),
+        tonumber(s:match("ItemID: (%d+)"))
 end
 
 -- One line of our character's (`rest`, after its "[Name (#1)] ") as an event, or nil.
 local function ours(rest)
     local b, cast, gcd = rest:match("^Casting {([^}]*)} %(.-Cast Time = (%S+), GCD = (%S+),")
     if b then
-        local id = ids(b)
-        return id and { kind = "casting", id = id, cast = secs(cast), gcd = secs(gcd) }
+        local id, _, tag, item = ids(b)
+        return (id or item)
+            and { kind = "casting", id = id, item = item, tag = tag, cast = secs(cast), gcd = secs(gcd) }
     end
     b = rest:match("^Completed cast {([^}]*)}")
     if b then
-        local id, other, tag = ids(b)
-        return { kind = "completed", id = id, other = other, tag = tag }
+        local id, other, tag, item = ids(b)
+        return { kind = "completed", id = id, other = other, tag = tag, item = item }
     end
     local name, from, to = rest:match("^%a+ [%d.]+ ([%a ]-) from {[^}]*} %(([%d.]+) %-%-> ([%d.]+)%)")
     if name then
@@ -109,7 +115,8 @@ local function theirs(rest)
 end
 
 --- The events of a log's text: { header = { pin, spec, seed, duration, targetLevel, talents = { { id, rank, tree } }
---- }, ev = { { t, kind, ... } } } in line order. Kinds: casting { id, cast, gcd }, completed { id, other, tag },
+--- }, ev = { { t, kind, ... } } } in line order. Kinds: casting { id | item, tag, cast, gcd }, completed { id, other,
+--- tag, item },
 --- power { name, from, to }, aura { unit ("player" | "target"), verb ("gained" | "faded" | "refreshed"), id }, stacks
 --- { unit, id, to }, hit { what ("swing" | "spell" | "tick"), hand, id, act, flag, amount }. Other lines are skipped.
 --- The leading aura and stack lines at 0 before any other event are the sim's opening state (`initial`).
@@ -131,7 +138,7 @@ function M.parse(text)
             local t, who, rest = line:match("^%[(%-?[%d.]+)%] %[([^%]]+)%] (.*)$")
             t = tonumber(t)
             local e
-            if t and who:find(" (#1)", 1, true) then
+            if t and who:match(" %(#1%)$") then -- ours, not our pets' ("<Name> (#1) - <Pet>")
                 e = ours(rest)
             elseif t and who == "Target 1" then
                 e = theirs(rest)
@@ -150,8 +157,12 @@ end
 --- A replay of log `text` bound to booted instance `H`'s class data (abilities by `key`, `id`, `copy`, `cooldown`;
 --- auras by `id`, `copy`, `duration`). `o`: forms ({ spellID, ... }: the client's form index of each form's spell and
 --- aura), hidden ({ [auraID] = true }: in the truth, never shown to the client), procs ({ [spellID] = true }: neither a
---- decision nor a cast), speed (the main hand's period; default the log's first two main-hand swings), regen and fsr
---- (the rates the client reads: W.rates, W.fsr; no regen ticks).
+--- decision nor a cast; a key is a spell ID, every tag of it, or "<spellID>:<tag>", that tag only: a weapon proc logged
+--- under its totem's ID), totems ({ [key] = { slot, duration } }: a completed cast of the key summons into that slot,
+--- W.summonTotem), speed (the main hand's period; default the log's first two main-hand swings), regen and fsr (the
+--- rates the client reads: W.rates, W.fsr; no regen ticks). An ItemID cast maps through the abilities' `item`/`items`:
+--- a decision and a cooldown, no cast event (shortcut: the client is not shown the item's spell; emit it when a gate
+--- reads an item's cast).
 function M.new(text, H, o)
     o = o or {}
     local p = M.parse(text)
@@ -159,7 +170,7 @@ function M.new(text, H, o)
     local R = { header = h, pull = M.PULL, duration = h.duration or 180, targetLevel = h.targetLevel }
     local class = H.Hekili.Class
     -- spell ID -> ability key (every rank), the key's IDs and cooldown; aura ID -> duration
-    local keyOf, rankIDs, cd, dur, form = {}, {}, {}, {}, {}
+    local keyOf, itemOf, rankIDs, cd, dur, form = {}, {}, {}, {}, {}, {}
     local keys = {}
     for key, a in pairs(class.abilities) do
         if type(key) == "string" and type(a) == "table" and a.key == key then
@@ -180,6 +191,11 @@ function M.new(text, H, o)
                 table.insert(rankIDs[key], id)
             end
         end
+        for _, id in ipairs(type(a.items) == "table" and a.items or { rawget(a, "item") }) do
+            if type(id) == "number" then
+                itemOf[id] = itemOf[id] or key
+            end
+        end
     end
     for _, a in pairs(class.auras) do
         if type(a) == "table" and type(a.id) == "number" and type(a.duration) == "number" then
@@ -194,7 +210,14 @@ function M.new(text, H, o)
     for i, id in ipairs(o.forms or {}) do
         form[id] = i
     end
-    local hidden, procs = o.hidden or {}, o.procs or {}
+    local hidden, procs, totems = o.hidden or {}, o.procs or {}, o.totems or {}
+    -- the event's ability key, or nil (unmapped, or a proc)
+    local function keyFor(e)
+        if e.id and (procs[e.id] or procs[e.id .. ":" .. (e.tag or 0)]) then
+            return nil
+        end
+        return e.id and keyOf[e.id] or (e.item and itemOf[e.item])
+    end
     -- world times: log time + pull, each line after the earlier ones of its timestamp; the opening state at 0
     local seq = {}
     for _, e in ipairs(p.ev) do
@@ -219,8 +242,8 @@ function M.new(text, H, o)
     -- wowsims's casts (procs out): the decisions just before their Casting lines, sorted
     R.decisions, R.casts = {}, {}
     for _, e in ipairs(p.ev) do
-        if e.kind == "casting" and keyOf[e.id] and not procs[e.id] then
-            local d = { t = e.wt - M.EPS / 2, key = keyOf[e.id], gcd = e.cast > 0 or e.gcd > 0 }
+        if e.kind == "casting" and keyFor(e) then
+            local d = { t = e.wt - M.EPS / 2, key = keyFor(e), gcd = e.cast > 0 or e.gcd > 0 }
             R.decisions[#R.decisions + 1], R.casts[#R.casts + 1] = d, d
         end
     end
@@ -314,8 +337,12 @@ function M.new(text, H, o)
         end
         local function apply(e)
             local T = W.t
-            if e.kind == "completed" and e.id and keyOf[e.id] and not procs[e.id] then
-                local key = keyOf[e.id]
+            local key = e.kind == "completed" and keyFor(e)
+            if key and not e.id then -- an item: its cooldown only
+                if cd[key] > 0 then
+                    us.cdUntil[key] = T + cd[key]
+                end
+            elseif key then
                 W.emit({
                     kind = "cast",
                     src = us,
@@ -328,6 +355,10 @@ function M.new(text, H, o)
                 })
                 if cd[key] > 0 then
                     us.cdUntil[key] = T + cd[key]
+                end
+                local tt = totems[key]
+                if tt then
+                    W.summonTotem(us, tt[1], tt[2], e.id)
                 end
             elseif e.kind == "power" then
                 local pt = M.POWER[e.name]
@@ -414,10 +445,11 @@ function M.new(text, H, o)
         -- a Completed line carries its Casting line's cast time and GCD
         local lastCast = {}
         for _, e in ipairs(p.ev) do
+            local id = tostring(e.id or ("item" .. tostring(e.item))) .. ":" .. (e.tag or 0)
             if e.kind == "casting" then
-                lastCast[e.id] = e
-            elseif e.kind == "completed" and e.id and lastCast[e.id] then
-                e.cast, e.gcd = lastCast[e.id].cast, lastCast[e.id].gcd
+                lastCast[id] = e
+            elseif e.kind == "completed" and lastCast[id] then
+                e.cast, e.gcd = lastCast[id].cast, lastCast[id].gcd
             end
             W.at(e.wt, function()
                 apply(e)

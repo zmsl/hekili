@@ -337,8 +337,8 @@ function M.new()
     function api.UnitClass()
         return ctl.class, ctl.class, ctl.classID
     end
-    function api.UnitRace()
-        return "Race", "Race", 1
+    function api.UnitRace() -- ctl.race: the race token (the second return), e.g. the harness character's
+        return ctl.race or "Race", ctl.race or "Race", 1
     end
     function api.UnitName(u)
         return u == "player" and "Player" or "Unit"
