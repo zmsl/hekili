@@ -2,20 +2,23 @@
 -- and translation.
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/druid/feralcat/presets.ts:19
 -- (DefaultOptions), :31-37 (OtherDefaults), :109 (CatTalents, "Monocat") at the pin.
--- Replay (P7): decisions on-GCD 0.920 (n 88), after central fix 6 gave the replay the log's mana pool and regen.
+-- Replay (P7): decisions on-GCD 0.909 (n 88), after central fix 6 gave the replay the log's mana pool and regen.
 -- Worked (Task 7b):
 -- - Content: the forms', Shifting Power's and Innervate's costs are percent of base mana, 1244 at 60 (the log's 684,
 --   684 and 62), not of the maximum (2674: 1203 believed); Shredding Attacks has 3 points (Shred 42 at 3/3, the
---   log's; the DB2 node lists 2 rank spells). The world's usability now reads the kept mana pool (it said mana-free).
+--   log's; the DB2 node lists 2 rank spells); mana declares the five-second rule (22 a second outside it, none inside:
+--   the log's regen lines; 0.920 without it, one decision more, but the belief then regenerates nothing in combat).
+--   The world's usability now reads the kept mana pool (it said mana-free).
 -- - Shifting Power's 7.5 s recasts are the pre-raid set's Howling Idol (272427): its equip aura 1291059 is in the kit
 --   (-0.5 s, wowsims's; the DB2 effect reads -1000 ms). Other cooldown modifiers checked: none.
--- 1. faerie_fire -> rake 1 (45.74), 2. faerie_fire -> shred 1 (38.74), and shred -> shifting_power 1 (41.24): the
---    belief reads Shifting Power's function `cooldown` as 0 at the cast (shared gap, not worked around): it believes
---    Shifting Power ready, so "Faerie Fire for Omen" (Shifting Power >= 1 s away) fails. A scalar 7.5 s cooldown
---    (scratch) clears all three: 84/88.
--- 3. ferocious_bite -> rake 1 (177.99): "Bite at the end" reads the fight's last 3 s; time to die is not modelled on
---    Forever (API-forced, below). Also: shifting_power -> rake 1 (107.74): wowsims casts it at 684.9 mana for a cost of
---    684 and our mana belief sits lower (the belief, shared); innervate -> cat_form 1; shred -> rake 1 (73.99).
+-- 1. shred -> shifting_power 2: at 41.24 the belief reads Shifting Power's function `cooldown` as 0 at the cast
+--    (shared gap, not worked around); at 143.74 the mana belief sits a mana over the truth at the 684 cost (the
+--    belief, shared; at 107.74 the opposite: shifting_power -> rake 1).
+-- 2. faerie_fire -> rake 1 (45.74), 3. faerie_fire -> shred 1 (38.74): the same function-`cooldown` gap: the belief
+--    believes Shifting Power ready, so "Faerie Fire for Omen" (Shifting Power >= 1 s away) fails. A scalar 7.5 s
+--    cooldown (scratch) clears all three cooldown cases.
+-- Also: ferocious_bite -> rake 1 (177.99): "Bite at the end" reads the fight's last 3 s; time to die is not modelled
+--    on Forever (API-forced, below); innervate -> cat_form 1; shred -> rake 1 (73.99).
 --    Known deviations: wowsims refunds 80% of a dodged strike's energy (OtherActionRefund, 8 in the log: central fix
 --    7's) and adds the Wolfshead Helm's 5 energy to Shifting Power (45 in the log).
 -- Translation gaps: the Berserk group's two strictSequence entries (Berserk then Rake or Shred; Berserk is cast once

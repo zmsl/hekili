@@ -680,13 +680,18 @@ describe("Forever Druid", function()
         end
     )
 
-    it("declares energy with no regen model, combo points and mana with no maximum, in Classic's order", function()
-        assert.are.same({ 3, 4, 1, 0 }, w.order)
-        for _, pt in ipairs({ 3, 4, 0 }) do
-            assert.are.same({ nil, nil }, { w.resources[pt].models, w.resources[pt].meta }, pt)
+    it(
+        "declares energy with no regen model, combo points with no maximum, mana's five-second rule, in Classic's order",
+        function()
+            assert.are.same({ 3, 4, 1, 0 }, w.order)
+            for _, pt in ipairs({ 3, 4 }) do
+                assert.are.same({ nil, nil }, { w.resources[pt].models, w.resources[pt].meta }, pt)
+            end
+            -- wowsims/forever's logs: 2.2 mana a 0.1 s tick outside the rule, none inside it (Feral, Balance)
+            assert.are.same({ spirit = 22, mp5 = 0 }, w.resources[0].meta.fsr)
+            assert.is_nil(w.resources[1].meta.max)
         end
-        assert.is_nil(w.resources[1].meta.max)
-    end)
+    )
 
     it("declares Clearcasting as one cost modifier over the covered rank-1 IDs, and no `spend` reads it", function()
         assert.are.equal(1, #w.costMods)

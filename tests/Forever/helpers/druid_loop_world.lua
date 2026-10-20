@@ -134,6 +134,7 @@ M.MAP = {
     },
     faerie_fire = { effect = debuff("faerie_fire") },
     mark_of_the_wild = { effect = selfAura("mark_of_the_wild") },
+    elunes_light = { effect = selfAura("elunes_light") }, -- the Night Elf racial (Hekili_Shared): its buff only
     thorns = { effect = selfAura("thorns") },
     innervate = { -- leaves the form (the client unshifts to cast it); mana only where the world keeps it
         effect = function(W, e, p, X)
@@ -289,7 +290,9 @@ local PACKS = {
         res = {},
         form = "moonkin_form",
         weapon = { 40, 60, 2.0 },
-        world = { power = 4000 },
+        -- the five-second rule's { spirit, mp5 } parts a second: wowsims/forever's Balance log (2.2 mana a 0.1 s tick
+        -- outside the rule, none inside it but Innervate's; prebis gear)
+        world = { power = 4000, fsr = { [MANA] = { 22, 0 } } },
         uptime = { "moonfire", "insect_swarm" },
     },
 }
@@ -318,9 +321,9 @@ local function classData(H)
 end
 
 -- Whether `e`'s true form meets ability `a`'s buff / nobuff form fields (a function field: the class file's choice,
--- Berserk's "Cat or Bear").
+-- Berserk's "Cat or Bear"; read from `funcs`, as Hekili's ability table answers it evaluated in its own state).
 local function formOk(a, e)
-    local need, avoid = a.buff, a.nobuff
+    local need, avoid = a.funcs and a.funcs.buff or a.buff, a.nobuff
     if type(need) == "function" then
         need = nil
         if e.form ~= FORM.cat_form and e.form ~= FORM.bear_form then
@@ -389,8 +392,12 @@ local function content(name)
     }, { __index = P.world })
 
     -- The client's other power reads: combo points plain (research addendum), the rest never. UnitPowerMax answers the
-    -- world's pools where it keeps mana beside the main power (Feral's 2674; else the fake's 100).
-    C.OBSERVE = { plainPower = { [POINTS] = "always" }, powerTokens = TOKENS, powerMax = P.res[MANA] ~= nil }
+    -- world's pools where it keeps mana (Feral's 2674, Balance's 4000; else the fake's 100).
+    C.OBSERVE = {
+        plainPower = { [POINTS] = "always" },
+        powerTokens = TOKENS,
+        powerMax = pt == MANA or P.res[MANA] ~= nil,
+    }
 
     -- True rage per landed white wound in Bear (the class file's model, druid_world's rules); no other power is
     -- swing-paid.
@@ -495,7 +502,9 @@ local function content(name)
                     if not formOk(a, e) or (m.requires and not m.requires(W, e)) then
                         return false, false
                     end
-                    if covered and e.auras[X.aura.clearcasting.id] then
+                    -- Clearcasting as the press's cost reads it (the oracle's: the truth in a stepped loop; ws.live steps
+                    -- none, so a free answer there would meet a full-cost press)
+                    if covered and H.ns.VirtualState.Aura("player", X.aura.clearcasting.id, H.ctl.now) then
                         return true, false
                     end
                     -- mana where the world keeps none (the feral loop worlds; ws.live passes no view): never short

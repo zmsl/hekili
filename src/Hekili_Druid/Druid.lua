@@ -239,8 +239,12 @@ spec:RegisterResource(
 )
 
 -- Mana: secret even out of combat; costs below 1 are fractions of the maximum in both layers (spec §0.1), the
--- percent-of-base-mana costs whole mana at 60 (ofBaseMana).
-spec:RegisterResource(Enum.PowerType.Mana)
+-- percent-of-base-mana costs whole mana at 60 (ofBaseMana). The five-second rule (C3): spirit regen a second outside
+-- it, none inside it, the declared start the out-of-combat read replaces (wowsims/forever's Feral and Balance logs:
+-- 2.175 and 2.2 mana a 0.1 s tick outside it, pre-raid gear).
+spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
+    fsr = { spirit = 22, mp5 = 0 },
+})
 
 -- Talents: { talent tree (1 Balance, 2 Feral Combat, 3 Restoration: the dominant tree picks the spec), rank 1's spell,
 -- max rank }: the DB2's 47 Classic nodes (16 Balance, 16 Feral Combat, 15 Restoration; the tree is the DB2's
