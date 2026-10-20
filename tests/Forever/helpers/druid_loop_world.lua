@@ -383,8 +383,7 @@ end
 
 local function content(name)
     local P = PACKS[name]
-    -- the spec's default: the wowsims.com pack (wowsims packs plan, P9), Guardian's hand-built list
-    local C = { PACK = name == "Guardian" and name or name .. " (wowsims.com)", IDS = {} }
+    local C = { PACK = name .. " (wowsims.com)", IDS = {} } -- the spec's default (wowsims packs plan, P9)
     C.SPEC = ({ Balance = 100111, Feral = 100112, Guardian = 100113 })[name]
     local pt = P.power.type
 

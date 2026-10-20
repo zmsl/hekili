@@ -12,6 +12,9 @@
   lower the mana costs the addon expects.
 - Druid: "Feral (wowsims.com)" and "Balance (wowsims.com)", the wowsims.com priorities translated for WoW Forever,
   are the Feral and Balance defaults.
+- Druid: "Guardian (wowsims.com)", the wowsims.com bear priority translated for WoW Forever, is the Guardian default:
+  Berserk once Demoralizing Roar is up and Primal Bite is on cooldown, Lacerate kept at five stacks, Primal Bite, then
+  Lacerate, and Maul at 20 rage.
 - Hunter: Beast Mastery, Marksmanship and Survival default priorities (new addon folder Hekili_Hunter). Sniper Shot
   under Rapid Fire or Quick Shots, Mongoose Bite and Raptor Strike first; Serpent Sting and Hunter's Mark as focus
   abilities; shots only while in Auto Shot range and the melee list only in melee range; Arcane Shot and Wing Clip mana
@@ -40,7 +43,9 @@
   Clip mana floor settings.
 - Druid: the hand-built Feral and Balance priorities are gone, with the settings only they read (Ferocious Bite
   finisher, out-of-combat buffs, Moonkin Form, Moonfire on trash, Starfire filler, Hurricane targets, Innervate and its
-  mana thresholds). Guardian keeps its priority for now.
+  mana thresholds).
+- Druid: the hand-built Guardian priority is gone, with its Swipe Rage Threshold, Use Enrage and Lacerate Refresh
+  Window settings.
 - Druid: the "Rip Combo Points" setting is gone; no priority read it.
 - Specializations follow your talents: a respec or dual-spec swap that moves your most-spent talent tree activates
   that tree's specialization, the one you last activated for it (for example Guardian on the Feral Combat tree) or
@@ -175,6 +180,7 @@
 - Druid: a saved choice of the old Feral or Balance priority falls back to its "(wowsims.com)" default.
 - Warrior: a saved choice of the old Arms, Fury or Protection priority falls back to that specialization's
   "(wowsims.com)" default.
+- Druid: a saved choice of the old "Guardian" priority falls back to "Guardian (wowsims.com)".
 - Update the core (Hekili) together with its class addons: the class addons now need content API 8 (an ability's
   avoid refund); a mismatched pair loads no priorities and says "update the older one".
 - Your class's existing settings (thresholds, toggles, ability and item options) are copied once into each of its

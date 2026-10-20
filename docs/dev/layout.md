@@ -120,15 +120,15 @@ refusals (7.0 per 100, the oracle's 0.5) are presses during Slam's 1.5 s cast: t
 Slam, and the world's client sees only a cast's success (no cast start), so our first icon moves on mid-cast.
 
 `tests/Forever/loop_druid_spec.lua` runs 3 fights a Druid pack in `make check` (seeds 1-3, the `#slow` tag) and 20 in
-`make test-druid` (`#druid`), each asserting its flagged lines ran (`r.focus > 0`). Feral and Balance run their
-wowsims.com defaults (wowsims packs plan, Task 7b; the hand-built lists retired) and are gated by `pack_gate.gate`;
-Guardian keeps its hand-built list and is reported (engine health and focus asserted, not the agreement): its first
-icon waits on rage the usability ladder cannot place. Current lines (Task 7b):
+`make test-druid` (`#druid`), each asserting its flagged lines ran (`r.focus > 0`). Every Druid spec runs its
+wowsims.com default (wowsims packs plan, Tasks 7b and 7g; the hand-built lists retired); Feral and Balance are gated by
+`pack_gate.gate`, Guardian is reported (engine health and focus asserted, not the agreement): its first icon waits on
+rage the usability ladder cannot place. Current lines (Task 7g):
 
 ```
-Feral solo: fights=3 agreement 0.911 (2541 ticks); react median 0 p90 0 never 0.030; refused per 100 [], episodes 0.00/min; dps A/B 1.055; ... [seeds 1-3]
-Guardian solo: fights=3 agreement 0.714 (2694 ticks); react median 0 p90 1 never 0.140; refused per 100 [cost 19.9 (oracle 22.6)], episodes 3.23/min; dps A/B 1.002; ... [seeds 1-3] (reported)
-Balance solo: fights=3 agreement 0.988 (1416 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 88.6 (oracle 89.4)], episodes 10.73/min; dps A/B 0.904; ... [seeds 1-3]
+Feral solo: fights=3 agreement 0.932 (2367 ticks); react median 0 p90 0 never 0.018; refused per 100 [], episodes 0.00/min; dps A/B 1.037; ... [seeds 1-3]
+Guardian solo: fights=3 agreement 0.805 (2570 ticks); react median 0 p90 1 never 0.051; refused per 100 [cost 10.5 (oracle 6.3, unmatched 4.7)], episodes 2.33/min; dps A/B 1.010; ... [seeds 1-3] (reported)
+Balance solo: fights=3 agreement 0.968 (2647 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 88.7 (oracle 87.8, unmatched 7.2), cost 0.3 (oracle 1.1, unmatched 0.1)], episodes 10.54/min; dps A/B 1.010; ... [seeds 1-3]
 ```
 
 The Feral and Balance worlds keep the wowsims logs' mana pools and five-second rule (22 a second outside it).

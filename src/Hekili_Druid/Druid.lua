@@ -3,18 +3,17 @@
 -- Forever's spell data (ranks, costs, cooldowns, cast times and durations from the Forever DB2 at build 1.60.1.70338,
 -- wowdb; energy and mana costs are DB2 points, rage the DB2 cost / 10), Forever's Shifting Power, Berserk, Primal Bite
 -- and Lacerate, bear rage per white swing in Bear Form only, Enrage's rage over time, Clearcasting as a cost modifier,
--- forms from the belief's Forms source, the bleeds' misses from the combat log, and the default priorities (Feral and
--- Balance the wowsims.com packs; Guardian's hand-built, provisional). Design:
+-- forms from the belief's Forms source, the bleeds' misses from the combat log, and the default priorities (the
+-- wowsims.com packs). Design:
 -- docs/superpowers/specs/2026-10-15-forever-druid-pack.md.
 -- Talents: the DB2's 47 Classic nodes plus three placeholders the live export replaces (checkpoint Q1). Only rank 1 of
 -- each talent is in the Forever DB2, so a modifier is rank 1's value x the rank (Classic's convention), floored at 0;
 -- no cooldown or duration modifier is modelled but Improved Shifting Power's (spec D5).
 -- Credits: Hekili (registration API and pack format); the abilities, auras, handlers and `swap_form` are ported from
 -- Hekili's Classic profile (origin/classic:Classic/Druid.lua). Ported from Taco Dog Forever
--- (src/TacoDogForever_Druid/): the bear priority (APLs/bear.simc, after the guides it cites), the not-behind window
--- (Feral.lua), Enrage's 10 + 2/s and Faerie Fire free in form (Bear.lua), and the `form` alias over the forms
--- (Expressions.lua's RegisterForms). The Feral and Balance (wowsims.com) priorities translate wowsims/forever's
--- default APLs (MIT, https://github.com/wowsims/forever).
+-- (src/TacoDogForever_Druid/): the not-behind window (Feral.lua), Enrage's 10 + 2/s and Faerie Fire free in form
+-- (Bear.lua), and the `form` alias over the forms (Expressions.lua's RegisterForms). The Feral, Guardian and Balance
+-- (wowsims.com) priorities translate wowsims/forever's default APLs (MIT, https://github.com/wowsims/forever).
 
 local Facade = Hekili.Client
 local C_Spell, UnitClassBase = Facade.C_Spell, Facade.UnitClassBase
@@ -42,7 +41,14 @@ local spec = Hekili:NewClass("DRUID", {
             package = "Balance (wowsims.com)",
         },
         { key = "feral", name = "Feral", tree = 2, icon = 132115, role = "attack", package = "Feral (wowsims.com)" },
-        { key = "guardian", name = "Guardian", tree = 2, icon = 132276, role = "tank", package = "Guardian" },
+        {
+            key = "guardian",
+            name = "Guardian",
+            tree = 2,
+            icon = 132276,
+            role = "tank",
+            package = "Guardian (wowsims.com)",
+        },
         { key = "restoration", name = "Restoration", tree = 3, icon = 136041, role = "healer", unsupported = true },
     },
 })
@@ -1774,42 +1780,13 @@ spec:RegisterAbilities({
     },
 })
 
--- The settings Shred's `usable` and the Guardian list read (TDF's names and defaults); the wowsims.com packs read none.
+-- The setting Shred's `usable` reads (TDF's name and default); the wowsims.com packs read none.
 spec:RegisterSetting("behind", false, {
     type = "toggle",
     name = "Always Behind",
     desc = "When enabled, Shred is recommended over Claw as if you always stand behind the target.",
     width = "full",
 })
-
-spec:RegisterSetting("dump_rage", 60, {
-    type = "range",
-    name = "Swipe Rage Threshold",
-    desc = "Select the rage at or above which the Guardian priority spends rage on Swipe.",
-    width = "full",
-    min = 0,
-    max = 100,
-    step = 1,
-}, "guardian")
-
-spec:RegisterSetting("use_enrage", false, {
-    type = "toggle",
-    name = "Use Enrage",
-    desc = "When enabled, the Guardian priority uses Enrage when rage is short.",
-    width = "full",
-}, "guardian")
-
--- Lacerate's refresh window (class-completion D7).
-spec:RegisterSetting("lacerate_refresh", 4.5, {
-    type = "range",
-    name = "Lacerate Refresh Window",
-    desc = "Select the seconds left on a 5-stack Lacerate at which the Guardian priority refreshes it "
-        .. "(wowsims uses 1.5; the default 4.5 allows for the debuff being modelled, not read).",
-    width = "full",
-    min = 0,
-    max = 15,
-    step = 0.5,
-}, "guardian")
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc (a wowsims.com
 -- pack's from its recipe, `make wowsims-packs`); edit those and run it, never these blocks
@@ -1825,11 +1802,11 @@ spec:RegisterPack(
     [[Hekili:fovxpQnmqWFl9PEOIYhahvf1uPEcvvo1EQQ(UxnXXEdXfh7i)bO7L8BV2HVYLcQcjKZUZm7KzDWP4NXigXc4NMKmzEAYKK7NpdJSV2ayudHULSXFqsQ9))arqKuOn)U9Q9gETjIQQhfG9QqrybPkCCHDLexCvvnnafJw(7xwTCrXbXWOkoJbhyag6TMYI2CBLV4XAXLknSd0T5mOK4e228V(RF0M7l3MFrbhpomttmt74S4JZmM0i8LoqmY)q0Fmk5OX(rOjsJWBCM)SkmsUPnNWyk579h2cVAIAZxsSKfxXk39Zvp7fPYABmlIJ3WTvUIG7JhaDKxtVJztN(PPjSKzjttI8XOwvYf(eHqTCL0KbcNemRf8nv2XodSwvwUEdLLL2(4rmFilMlLGEN3ZJ5Lz1ejjQHA)CAsFm1kLSKRHXLkQZKnja9DmOWvwgDQxKR5TYAaQDTzprxFnA97pGALtR5uISZrHY7G1GeQ5G5lzZ6J0yj6E(knqOtDGk4nMHEAVMyRAFeJ8zOXxBW1lb3ynDxOpSA9hFQ7coijfcGHFaJ6fJHMhZApKEzn26fEaVt4oN2yevZTGMtWOEPEG70bCVa8kz(fPpveJ6sJGh8In7)k2GnrFVEPXBf9(B82DEZ1Fo)ZgmOW8BARb7VlIFAzF2kPbH(4nSs3UgB7(HioBLsJrFh2YfC)xAF74hsDTX)9p]]
 )
 spec:RegisterPack(
-    "Guardian",
-    20261020907,
-    [[Hekili:TEvBpTnsq4Fl8fAre5gslqPcJ0vHUwoXHQW39vBV2ECYkS31A31ervL)T3zSDC2yhhLg4lKW8YZ82ZS7g)Z8)pFVeMb8Fy20zxC20ztVA6L(EMxkaFVcw8tS54xeSC8VFRKPs4mbP4LmjlHCoQKNzUt4hTvC0fqSV3Tp()3D7xM35(cEsc04cOr9)TubpdQQWvrOk8wvjpPk89ratnPkSqjFMR5sbl7lvHKWQqfMAvHCrSmh)KjqZtGy2l43vOGsroW0Lki5eeawQHcWs5snpx)H0Mi(o9kW(RFCpgnfKckqeJUlfzVCcgRVcknOEQdHFO45Smuo3aiU3c5sflJ)tUyEv4JY6S9EwmOWMrvOrwfEEBYHGRa9ciHsAu1cuVgmysXfjYLt2eBkdQcJLYmuNav(VSYSwK8wYlaYpZceII6YL6go4Krjt5z4WIfBW2L2PqbydkIzCPcnal88j8u3JIkttD6e5uwu9pTUS3gEQ7huLIGM)liJRntiIIltcKNK8NHaqa5CqFJ7mBhJAARtk1qGmnnyECI7zKxjqDatS6RbkSTIb(4vDdSOOgvqe2NCuqoJlq8)Kn(eUO2CTTWbGwxG7iI2oN1ouNKkJl1UZSs2vQC0gCJ5g3ZpUVI2K8AxCGBWaO7uf0slSdLv5zloLbkoeKYvGDIBjESugTosQ1dsR6896ZT9jhPzdNk1SR4sfUCyUXTXAhYuNyP2CARa7Xcj)xhTffpjWjODe1eBoOErFqK6AxjL5fb1B8wEccsYWSTZlstJrhBJ71JKVB0Srd)jhsW5ZCKcJTlurNboih39WPtK77AjO)QZh775q6DRITrDAvTUp3xZRzMVg1dKkC8bfN(LWEUB47HN6t3J07Ek6WlnDDgIg(Xd13lccwugK4)1vNMs3x1BQ67fRWsrXz(E7A07BWi2duRoofXUG0slSHEaHGW7JJKKDKdYOpnIrwZbYSZhXS1TDYQl2ZkGME2P)bnIhLk9wZLOk7YrQFlc02g1BYV8jOqoskgqZUOrDxNUbMdUPDBKMX5eZwJFVRLB43bnVIJy4BH88hqgFfxrVlg5g02X4JVQfW(03bL0BXf5RZ1vAqwe9KbAwUdMwVfYp)griF4QraAD2TgLD9ibcRZMUNSMd7aG)Gn96SzS1lRdTgnhg(YIAi33ZOBEvHn8h6JoQd7yhLV1xH0Cmt3d7FBoOPgtwPzHeBAFhEINXXFqu7Vm7KA1()o]]
+    "Guardian (wowsims.com)",
+    20261020280,
+    [[Hekili:vBvBVTjsq4Fl(l5S1zb440QRwHi1QORnrxJQkTFDHf2bZEEHfT7Yf5Qi(T3znyhI9MxAupL2VGGDE7zEMzNbYmYxirmQbixDCWXVEwa(8VcirM11ajQMMTIUeFPIwIpFFdvX40Q2KXxlVwZl1EzYYjw9wlKuM1xPnCH5IksQt3QRHms05F(RxC(IL9EJevWzmOZeqNDVXzrBIPaAt6pZpxQG)duTjmiN2imTjV9t)tBcECBYax0W9THv7ZunCMFoOOIuGQ8P1c8WoB9Wp8(xTSAYumkkALwGONHVlTrLRBtOmMS6pWxwbR1ETjNtn0foqZ4pEXxqNuym16f((l5MIMuBc4VNQtqFIGMnF(BMhWcojyEGhYLkzoxGSnnZWLv6WmQqe39rSGRntTfJWmPuWKxxPBVSxX)m0pxbvFJdSyfSeQWe1kykppSaOctHxDM50JdgAHBNVcG64M6hxrgTe7pgQxjYMtB0qSmppEzglCMn(kulVSgfIpZzHdGG3U8imfuAqT6qJh3PRxVcERQq9pARH7owbu26JgpQxBgukXkn)B8QLXkjv1z3nmiTjp3H4M6j3ADTIxsfXPCd0B3U4nuKckP8k9zHNmzIJCc5dq0ubAKYwwyCKAUZTniC7riUUzKl1geX(cwOGMzR6W0CzwJo84UymUpN3kfD5r7FK2G31pl8vtoqsFoEA4mpu6i3iESteEJ7I0KxWQ0HKgwKoimwEB0dGHBDs3nGWbHBFzO)Dvw(DNiBVKeHdX0O57nK3oEqB3fS7Ea(XvB20av0ubWiVJen4UGvy)4oCbsxcIwRWqQ4us0p3bapBk5X5eIbPINyEoCWWDs2N4iH7zMacbJD1RTZZfTVn8dsbxO(w88J1N(8Bu))SSSlR3ErKeT5MOnV74RU)c4HiS9xa21Nh39Nr32P7Gl36bNBNhs13zlT1tZFoyPFSM1(tEo2337GM)QNyRSDN)W8y)T9DC8wC5GJh29)YTS6xYE3hR59E72oal35s9da4nvlSErBmfs0QpaR4co(FT)D)VTUrm57]]
 )
 
 -- The hand-built lists the wowsims.com packs replace (wowsims packs plan, P9): a saved choice of one falls back to the
 -- spec's default.
-spec:RetirePacks({ "Feral", "Balance" })
+spec:RetirePacks({ "Feral", "Guardian", "Balance" })

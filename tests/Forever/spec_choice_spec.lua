@@ -562,14 +562,14 @@ describe("a Druid (headless)", function()
         assert.are.same({}, H.loadErrors)
         settle(H)
         assert.are.equal(FERAL, H.Hekili.State.spec.id)
-        local G = headless.new({ character = dw.Guardian.character(), pack = "Guardian" })
+        local G = headless.new({ character = dw.Guardian.character(), pack = "Guardian (wowsims.com)" })
         assert.are.equal(GUARDIAN, G.Hekili.State.spec.id)
         assert.are.equal("guardian", G.Hekili.Engine.Output.status.specKey)
         local p = G.Hekili.DB.profile
         assert.are.same({ BALANCE, FERAL, GUARDIAN }, {
             p.packs["Balance (wowsims.com)"].spec,
             p.packs["Feral (wowsims.com)"].spec,
-            p.packs.Guardian.spec,
+            p.packs["Guardian (wowsims.com)"].spec,
         })
     end)
 

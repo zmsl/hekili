@@ -887,17 +887,13 @@ describe("Forever Druid", function()
         end
     end)
 
-    it("declares its class once (NewClass), no options, and only the settings Shred and Guardian read", function()
+    it("declares its class once (NewClass), no options, and only the setting Shred reads", function()
         assert.are.equal("DRUID", w.class)
         local n = 0
         for _ in pairs(w.settings) do
             n = n + 1
         end
-        assert.are.same({ 4, false }, { n, w.settings.behind.default })
-        assert.are.same(
-            { 60, false, 4.5 },
-            { w.settings.dump_rage.default, w.settings.use_enrage.default, w.settings.lacerate_refresh.default }
-        )
+        assert.are.same({ 1, false }, { n, w.settings.behind.default })
         assert.is_nil(w.options)
     end)
 
@@ -983,9 +979,9 @@ describe("Forever Druid's wowsims.com defaults", function()
         assert.are.same({
             balance = "Balance (wowsims.com)",
             feral = "Feral (wowsims.com)",
-            guardian = "Guardian", -- held: its wowsims.com pack waits on shared gaps (Task 7b report)
+            guardian = "Guardian (wowsims.com)",
         }, { balance = package.balance, feral = package.feral, guardian = package.guardian })
-        assert.are.same({ "Feral", "Balance" }, w.retired)
+        assert.are.same({ "Feral", "Guardian", "Balance" }, w.retired)
     end)
 
     it("carries the retired lists' focus tiers on the wowsims.com packs' lines", function()
@@ -1001,40 +997,13 @@ describe("Forever Druid's wowsims.com defaults", function()
         end
         for pack, tiers in pairs({
             ["Feral (wowsims.com)"] = { shred = 1, claw = 1, rip = 1, rake = 2, innervate = 2 },
-            Guardian = { lacerate = 2 },
+            ["Guardian (wowsims.com)"] = { lacerate = 2 },
             ["Balance (wowsims.com)"] = { moonfire = 2, insect_swarm = 2, starfire = 1 },
         }) do
             for action, tier in pairs(tiers) do
                 assert.are.equal(tier, focus[pack .. " " .. action], pack .. " " .. action)
             end
         end
-    end)
-end)
-
--- The hand-built Guardian list (class-completion plan Task 2), the default until its wowsims.com pack's shared gaps
--- close: wowsims-aligned lines (research §1, the sim's default APL as a reference, no code copied).
-describe("Forever Druid's Guardian list", function()
-    it("Berserk after Primal Bite, the Lacerate refresh window a setting at tier 2", function()
-        local list
-        for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "druid")) do
-            if p.name == "Guardian" then
-                list = p.lists.default
-            end
-        end
-        local function line(action, criteria)
-            for _, e in ipairs(list) do
-                if e.action == action and e.criteria == criteria then
-                    return e
-                end
-            end
-            error("Guardian: no " .. action .. " if " .. tostring(criteria))
-        end
-        local b = line("berserk", "debuff.demoralizing_roar.up&cooldown.primal_bite.remains>=4")
-        local l = line("lacerate", "debuff.lacerate.stack>=5&debuff.lacerate.remains<=settings.lacerate_refresh")
-        assert.are.same({ 1, nil, 2 }, { b.use_off_gcd, b.focus, l.focus })
-        local lr = ld.load().settings.lacerate_refresh.option
-        assert.are.same({ "range", 0, 15 }, { lr.type, lr.min, lr.max })
-        assert.is_truthy(lr.desc:find("1.5", 1, true))
     end)
 end)
 

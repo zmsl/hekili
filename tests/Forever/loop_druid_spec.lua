@@ -7,11 +7,10 @@ local pack_gate = require("Forever.helpers.pack_gate")
 local dlw = require("Forever.helpers.druid_loop_world")
 
 local PACKS = { "Feral", "Guardian", "Balance" }
--- Guardian is reported, not gated (DONE_WITH_CONCERNS, class-completion Task 2): starved of rage (8.65 a 2.5 s swing,
--- no rage from damage taken in the class file), its first icon is a wait for rage between Primal Bite and Lacerate,
--- which the usability ladder's rage rungs (10, 15, 20) cannot split: agreement 0.718 and cost refusals 31.2 (the
--- oracle's 19.3) at seeds 1-3. The sim's Berserk gate (Primal Bite >= 4 s away) costs 0.762 -> 0.718 here and 0.765 ->
--- 0.750 over 20 fights; the old priority fails the gate too. Its engine health and focus are still asserted.
+-- Guardian (wowsims.com) is reported, not gated (Task 7g): rage-starved (11.25 a 2.5 s swing, no rage from damage
+-- taken in the class file), its first icon waits for rage between Primal Bite and Lacerate, which the usability
+-- ladder's rage rungs cannot split: agreement 0.805 and cost refusals 10.5 (the oracle's 6.3) at seeds 1-3, under
+-- the gate's 0.85. Its engine health and focus are still asserted.
 local REPORTED = { Guardian = true }
 local function solo(name, n, seed0, tag)
     return pack_gate.solo(name, dlw[name], n, seed0, tag, REPORTED[name])
