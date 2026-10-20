@@ -99,8 +99,16 @@ end
 
 -- The world the loop fights in (scenarios.world's knobs): level 60 against a level 60 mob in melee range, the
 -- two-hander's damage (Arcanite Reaper's range, rounded), rage capped at 100, a mob of 15000 health (killed in about
--- 3 minutes by this build: measured 13700-17700 damage in 3 minutes over seeds 1-3).
-M.WORLD = { level = 60, weapons = { { 150, 230, 3.6 } }, max = 100, mobHealth = 15000 }
+-- 3 minutes by this build: measured 13700-17700 damage in 3 minutes over seeds 1-3). Out of combat rage decays as the
+-- class file's meta says: 1.25 a second, 30% less with this build's Anger Management, stepped each second and
+-- front-loaded (between fights too: loop.rest).
+M.WORLD = {
+    level = 60,
+    weapons = { { 150, 230, 3.6 } },
+    max = 100,
+    mobHealth = 15000,
+    decay = { pt = 1, rate = 1.25 * (1 - 0.3), interval = 1 },
+}
 
 -- True rage per landed white wound: the class file's own model restated (Hekili_Warrior/Warrior.lua, "Rage per white
 -- swing": 4.5 x the unhasted speed with a two-hander; a crit one more base swing, 3.46 x speed). Circular on purpose:

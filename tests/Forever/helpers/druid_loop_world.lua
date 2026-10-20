@@ -284,7 +284,9 @@ local PACKS = {
         res = {},
         form = "bear_form",
         weapon = { 88, 120, 2.5 },
-        world = { targetLevel = -1, payIn = FORM.bear_form }, -- a boss: the pack stacks Lacerate on one
+        -- a boss: the pack stacks Lacerate on one; out of combat rage decays as the class file's meta says (1.25 a
+        -- second, stepped and front-loaded)
+        world = { targetLevel = -1, payIn = FORM.bear_form, decay = { pt = RAGE, rate = 1.25, interval = 1 } },
         uptime = { "lacerate", "demoralizing_roar" },
     },
     Balance = {

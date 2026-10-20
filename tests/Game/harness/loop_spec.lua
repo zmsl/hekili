@@ -112,6 +112,59 @@ describe("the headless loop between two fights on one boot", function()
     end)
 end)
 
+describe("the headless loop's pools between two fights (loop.rest)", function()
+    local function stub(pt, world)
+        return {
+            character = function()
+                return { level = 60, power = { type = pt, token = "POOL", max = 100 } }
+            end,
+            resolve = function()
+                return {}
+            end,
+            usable = function()
+                return {}
+            end,
+            uptime = function()
+                return {}
+            end,
+            gain = function()
+                return 0
+            end,
+            WORLD = world,
+        }
+    end
+    -- at the pull our pool is drained (or filled) to `v`; the next fight on the boot starts from it through the gap
+    local function twoFights(L, v)
+        local o = {
+            duration = 4,
+            on = function(run, _, t)
+                if t >= 3.5 and t < 3.7 then
+                    local us = run.us
+                    run.W.emit({ kind = "gain", src = us, rage = v - us.power })
+                end
+            end,
+        }
+        local a = loop.run(L, 1, o, { { H = L.us } })
+        local b = loop.run(L, 2, { duration = 1 }, { { H = L.us } })
+        return a, b
+    end
+
+    it("regenerates a pool at its idle rate through the gap: a fight that ended dry does not start full", function()
+        local L = loop.new(stub(3, { level = 60, max = 100, mobHealth = 1e9, power = 100, regen = { [3] = 1 } }))
+        local a, b = twoFights(L, 0)
+        assert.is_true(a.us.power < 5) -- dry at the end (a few seconds' regen)
+        assert.are.equal(math.min(100, a.us.power + loop.GAP), b.us.power0)
+    end)
+
+    it("decays a pool by the world's stepped out-of-combat decay through the gap", function()
+        local decay = { pt = 1, rate = 1, interval = 1 }
+        local L = loop.new(stub(1, { level = 60, max = 100, mobHealth = 1e9, decay = decay }))
+        local a, b = twoFights(L, 50)
+        assert.are.equal(49, a.us.power) -- the world's stop came: its first quantum taken
+        assert.are.equal(49 - loop.GAP, b.us.power0)
+    end)
+end)
+
 describe("the headless loop's paired refusals (loop.unmatched)", function()
     it("counts a refusal against us only when the oracle shadow did not show that icon ready at that tick", function()
         local shown = { name = { "spender" }, time = { 0.02 } }

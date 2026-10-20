@@ -91,6 +91,21 @@ function M.unmatched(key, q, react)
     return not (q and q.name[1] == key and q.time[1] <= react)
 end
 
+--- What pool `pt` of `e` at `v` (cap `max`) reaches over the out-of-combat gap between two fights (M.GAP): its idle
+--- regen (the world's rate, the five-second rule open), else the world's out-of-combat `decay` ({ pt, rate, interval }:
+--- stepped, the first quantum at combat's end: already taken when the world's own stop came, else now), else nil (the
+--- content's start: combo points go with their target).
+function M.rest(W, e, pt, v, decay, max)
+    local rate = W.regenRate(e, pt, "idle")
+    if rate > 0 then
+        return math.min(max, v + rate * M.GAP)
+    elseif decay and decay.pt == pt then
+        local q = math.floor(M.GAP / decay.interval) + (W.combat and 1 or 0)
+        return math.max(0, v - q * decay.rate * decay.interval)
+    end
+    return nil
+end
+
 -- The first on-GCD name of an instance's Primary queue (false: none): the replay's decision-point pick.
 local function firstGcd(H)
     local out, abilities = H.Hekili.Engine.Output.Primary, H.Hekili.Class.abilities
@@ -131,6 +146,17 @@ function M.run(L, seed, o, drivers)
     local R = o.replay -- a wowsims log's world (replay.lua): no presses, its casts as `theirs`
     if R then
         wo.pull, wo.duration, wo.targetLevel = R.pull, R.duration, R.targetLevel or wo.targetLevel
+    end
+    -- the pools the driver's last fight left, through the gap (M.rest): a fresh world of one boot starts there, as the
+    -- belief does (a fight that ended dry starts dry, not full)
+    local carry = not R and L.carry and L.carry[drivers[1].H]
+    if carry then
+        wo.power = carry.power or wo.power
+        local res = {}
+        for pt, r in pairs(content.WORLD.res or {}) do
+            res[pt] = { cur = carry.res[pt] or r.cur, max = r.max }
+        end
+        wo.res = res
     end
     local W = R and R.world(wo, seed) or scenarios.world(wo, seed)
     local us = W.ents[1]
@@ -378,6 +404,14 @@ function M.run(L, seed, o, drivers)
         end
     end
     run.t = t
+    if not R then
+        local c = { power = M.rest(W, us, us.pt, us.power, wo.decay, us.powerMax), res = {} }
+        for pt, r in pairs(us.res) do
+            c.res[pt] = M.rest(W, us, pt, r.cur, wo.decay, r.max)
+        end
+        L.carry = L.carry or {}
+        L.carry[drivers[1].H] = c
+    end
     return run
 end
 

@@ -120,6 +120,8 @@
   list, and the oracle's own run depended on the run before it).
 - Developer: the headless loop's cost-refusal gate counts a refusal against the addon only when the oracle would not
   have pressed the same icon at that tick; the line keeps the raw rates and shows the paired one ("unmatched").
+- Developer: each fight of a multi-fight headless loop starts with the pools the last one left, regenerated (mana,
+  energy) or decayed (rage) through the 30 s gap, instead of full, as the addon's estimate already carries them.
 
 ### Known issues
 - Hunter priorities are unchecked in game: Auto Shot timing, the percent-of-base mana costs and the rune Raptor
