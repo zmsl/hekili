@@ -211,14 +211,17 @@ end
 
 --- The replay gate of content `C` on spec `spec`'s log: prints "<label> wowsims: <line>", asserts the engine's health
 --- (pack_gate.health) and decisions on-GCD >= `floor`. `o`: replay.new's knobs over the character's forms, the
---- request's target creature type, its distance (M.distance) and the content WORLD's regen and fsr. Returns the
+--- request's target creature type, its distance (M.distance), the content's shared category cooldowns (C.SHARED) and
+--- the content WORLD's regen and fsr. Returns the
 --- summary and the line.
 function M.gate(label, C, spec, floor, o)
     local L = loop.new(C)
-    local ro = setmetatable(
-        { forms = C.character().forms, creatureType = M.creatureType(spec), distance = M.distance(spec) },
-        { __index = o or {} }
-    )
+    local ro = setmetatable({
+        forms = C.character().forms,
+        creatureType = M.creatureType(spec),
+        distance = M.distance(spec),
+        shared = C.SHARED,
+    }, { __index = o or {} })
     local R = replay.new(M.log(spec), L.oracle, ro)
     local m = loop.replay(L, R)
     local r, line = loop.summary(m), loop.line(m)

@@ -348,6 +348,7 @@ local function content(name)
 
     -- No other power read (mana is secret in combat); our attack speed read out of combat (probe W PR2).
     C.OBSERVE = { powerTokens = { [MANA] = "MANA" }, playerSpeed = true }
+    C.SHARED = SHARED -- the category cooldowns, for the wowsims replay (replay.new's o.shared)
 
     -- No power is swing-paid.
     function C.gain()

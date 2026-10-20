@@ -164,8 +164,10 @@ function M.parse(text)
     return { header = h, ev = ev }
 end
 
---- A replay of log `text` bound to booted instance `H`'s class data (abilities by `key`, `id`, `copy`, `cooldown`;
---- auras by `id`, `copy`, `duration`). `o`: forms ({ spellID, ... }: the client's form index of each form's spell and
+--- A replay of log `text` bound to booted instance `H`'s class data (abilities by `key`, `id`, `copy`, `cooldown`: a
+--- number, else the engine's answer `H.Hekili.State.action[key].cooldown` (talent-modified), else the log's least
+--- spacing between two of the key's casts; auras by `id`, `copy`, `duration`). `o.shared` ({ [key] = partner key or
+--- keys }: a category cooldown, the content's) puts the partners on the cast's cooldown too, on every member's ranks. `o`: forms ({ spellID, ... }: the client's form index of each form's spell and
 --- aura), hidden ({ [auraID] = true }: in the truth, never shown to the client), procs ({ [spellID] = true }: neither a
 --- decision nor a cast; a key is a spell ID, every tag of it, or "<spellID>:<tag>", that tag only: a weapon proc logged
 --- under its totem's ID), totems ({ [key] = { slot, duration } }: a completed cast of the key summons into that slot,
@@ -198,8 +200,16 @@ function M.new(text, H, o)
         creatureType = o.creatureType,
     }
     local class = H.Hekili.Class
+    -- a cooldown the kit computes (a function: talent-modified) as the booted engine answers it, or nil
+    local function engineCooldown(key)
+        local S = H.Hekili.State
+        local ok, v = pcall(function()
+            return S.action[key].cooldown
+        end)
+        return ok and tonumber(v) or nil
+    end
     -- spell ID -> ability key (every rank), the key's IDs and cooldown; aura ID -> duration
-    local keyOf, itemOf, rankIDs, cd, dur, form = {}, {}, {}, {}, {}, {}
+    local keyOf, itemOf, rankIDs, cd, dur, form, spacing = {}, {}, {}, {}, {}, {}, {}
     local keys = {}
     for key, a in pairs(class.abilities) do
         if type(key) == "string" and type(a) == "table" and a.key == key then
@@ -213,7 +223,7 @@ function M.new(text, H, o)
         for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
             list[#list + 1] = id
         end
-        rankIDs[key], cd[key] = {}, tonumber(a.cooldown) or 0
+        rankIDs[key], cd[key] = {}, tonumber(a.cooldown) or (a.cooldown == nil and 0) or engineCooldown(key)
         for _, id in ipairs(list) do
             if type(id) == "number" then
                 keyOf[id] = keyOf[id] or key
@@ -224,6 +234,38 @@ function M.new(text, H, o)
             if type(id) == "number" then
                 itemOf[id] = itemOf[id] or key
             end
+        end
+    end
+    -- the kit cannot say: the log's least spacing between two of the key's casts (none: no cooldown)
+    local lastAt = {}
+    for _, e in ipairs(p.ev) do
+        local key = e.kind == "casting" and (e.id and keyOf[e.id] or (e.item and itemOf[e.item]))
+        if key and cd[key] == nil then
+            if lastAt[key] then
+                spacing[key] = math.min(spacing[key] or math.huge, e.t - lastAt[key])
+            end
+            lastAt[key] = e.t
+        end
+    end
+    for _, key in ipairs(keys) do
+        cd[key] = cd[key] or spacing[key] or 0
+    end
+    -- a shared category (o.shared: { [key] = partner key or keys }): a cast puts every member on its cooldown, the
+    -- client answering it on every member's ranks (as the worlds' resolve does)
+    local shared = {}
+    for _, key in ipairs(keys) do
+        local partners = o.shared and o.shared[key]
+        if partners then
+            local ids, list = {}, type(partners) == "table" and partners or { partners }
+            for _, id in ipairs(rankIDs[key]) do
+                ids[#ids + 1] = id
+            end
+            for _, k in ipairs(list) do
+                for _, id in ipairs(rankIDs[k] or {}) do
+                    ids[#ids + 1] = id
+                end
+            end
+            shared[key] = { keys = list, ids = ids }
         end
     end
     for _, a in pairs(class.auras) do
@@ -373,18 +415,22 @@ function M.new(text, H, o)
                     us.cdUntil[key] = T + cd[key]
                 end
             elseif key then
+                local sh = shared[key]
                 W.emit({
                     kind = "cast",
                     src = us,
                     dst = mob,
                     spell = e.id,
-                    ids = rankIDs[key],
+                    ids = sh and sh.ids or rankIDs[key],
                     cd = cd[key],
                     gcd = (e.cast or 0) == 0 and (e.gcd or 0) > 0 and e.gcd or nil,
                     order = 1,
                 })
                 if cd[key] > 0 then
                     us.cdUntil[key] = T + cd[key]
+                    for _, k in ipairs(sh and sh.keys or {}) do
+                        us.cdUntil[k] = T + cd[key]
+                    end
                 end
                 local tt = totems[key]
                 if tt then

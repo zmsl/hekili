@@ -244,6 +244,65 @@ describe("the replay's casts: tags, items, pets, totems", function()
     end)
 end)
 
+describe("the replay's cooldowns: the engine's, a shared category's, the log's", function()
+    local LOG = table.concat({
+        "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 20 s target 63",
+        "[0.00] [Tester (#1)] Casting {SpellID: 900051} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[0.00] [Tester (#1)] Completed cast {SpellID: 900051}",
+        "[1.50] [Tester (#1)] Casting {SpellID: 900060} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[1.50] [Tester (#1)] Completed cast {SpellID: 900060}",
+        "[9.50] [Tester (#1)] Casting {SpellID: 900060} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[9.50] [Tester (#1)] Completed cast {SpellID: 900060}",
+    }, "\n")
+    local function talented() -- a talent-shortened cooldown: the kit's function, the engine's answer
+        return 6
+    end
+    local HC = {
+        Hekili = {
+            Class = {
+                abilities = {
+                    shock_a = { key = "shock_a", id = 900050, copy = { 900051 }, cooldown = talented, gcd = "spell" },
+                    shock_b = { key = "shock_b", id = 900052, cooldown = talented, gcd = "spell" },
+                    quake = { key = "quake", id = 900060, cooldown = talented, gcd = "spell" },
+                },
+                auras = {},
+            },
+            State = {
+                action = setmetatable({}, {
+                    __index = function(_, k)
+                        assert(k ~= "quake", "the engine cannot say") -- quake falls back to the log's spacing
+                        return { cooldown = 5 } -- Reverberation-like: 6 s less a talent's 1 s
+                    end,
+                }),
+            },
+        },
+    }
+
+    it("passes the engine's talent-modified cooldown, a category's on every member, the log's spacing else", function()
+        local R = replay.new(LOG, HC, { shared = { shock_a = "shock_b", shock_b = { "shock_a" } } })
+        local W = at(R.world(setmetatable({ tag = "-cd" }, { __index = WO }), 1), R.pull + 10)
+        local us, casts = W.ents[1], {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "cast" then
+                casts[#casts + 1] = ev
+            end
+        end
+        assert.are.equal(3, #casts)
+        assert.are.same({ 900051, 5, { 900050, 900051, 900052 } }, { casts[1].spell, casts[1].cd, casts[1].ids })
+        assert.is_true(math.abs(us.cdUntil.shock_a - (R.pull + 5)) < 1e-3)
+        assert.is_true(math.abs(us.cdUntil.shock_b - (R.pull + 5)) < 1e-3) -- the category: both together
+        assert.are.same({ 8, { 900060 } }, { casts[2].cd, casts[2].ids })
+        local plain = replay.new(LOG, HC) -- no category: only the cast's own ranks
+        W = at(plain.world(setmetatable({ tag = "-cd2" }, { __index = WO }), 1), plain.pull + 1)
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "cast" then
+                assert.are.same({ 900050, 900051 }, ev.ids)
+            end
+        end
+        assert.is_nil(W.ents[1].cdUntil.shock_b)
+    end)
+end)
+
 describe("the replay's position", function()
     local f = assert(io.open("tests/Game/harness/fixtures/wowsims_move.log", "rb"))
     local log = f:read("*a")
