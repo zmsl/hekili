@@ -82,7 +82,7 @@ describe("Forever Hunter", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 0, 16, 14, 16 }, n)
+        assert.are.same({ [0] = 1, 16, 14, 16 }, n)
     end)
 
     it("declares mana under the five-second rule and both mana floors off", function()
@@ -195,6 +195,33 @@ describe("Forever Hunter", function()
         ld.run(w.hooks.reset_precast, e)
         assert.are.same({ "raptor_strike" }, e.applied)
     end)
+
+    it(
+        "prices the melee strikes and the trap 60% lower with Resourcefulness (DB2 440529; wowsims's SV costs)",
+        function()
+            for _, key in ipairs({ "mongoose_bite", "wing_clip", "immolation_trap", "strider_kick", "raptor_strike" }) do
+                local ids = KIT[key][1]
+                w.game.known[ids[#ids]] = true
+            end
+            local e = ld.env(w)
+            local function costs()
+                local out = {}
+                for _, key in ipairs({
+                    "mongoose_bite",
+                    "wing_clip",
+                    "immolation_trap",
+                    "strider_kick",
+                    "raptor_strike",
+                }) do
+                    out[#out + 1] = math.floor(ld.run(w.abilities[key].spend, e) * 10000 + 0.5) / 10000
+                end
+                return out
+            end
+            assert.are.same({ 65, 80, 245, 0.0581, 100 }, costs())
+            e.talent.resourcefulness = { rank = 2, enabled = true }
+            assert.are.same({ 26, 32, 98, 0.0232, 100 }, costs())
+        end
+    )
 
     it("answers mainhand_remains, the time to the next main-hand swing (wowsims's Multi-Shot weave gap)", function()
         local f = assert(w.exprs.mainhand_remains, "no mainhand_remains")

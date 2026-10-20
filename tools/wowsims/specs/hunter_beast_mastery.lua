@@ -1,20 +1,20 @@
 -- tools/wowsims/specs/hunter_beast_mastery.lua (wowsims packs plan, Task 11): Beast Mastery (wowsims.com)'s wowsims/forever request and translation.
 -- Values from wowsims/forever (MIT) ui/specs/hunter/dps/presets.ts:68-89,128-134 at the pin (the BM Weave talents,
 -- DefaultOptions = NoPetOptions, OtherDefaults; the default rotation Melee Weave, apls/default.apl.json; gear p1).
--- Disagreements worked (P7), decisions on-GCD
--- 0.259 (27) top [wing_clip -> false 8; wing_clip -> arcane_shot 3; multi_shot -> arcane_shot 2]:
--- No positions (translation gap, rule 2): the Melee Weave walks in for each main-hand swing and out for the shots;
--- its four melee-range lines (Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip) read `unitDistance` and its
--- Weave group is `move`/`wait`, so all are omitted and Raptor Strike (no range test) leads the list.
---   wing_clip -> false, wing_clip -> arcane_shot: translation gap, no positions (above).
---   multi_shot -> arcane_shot: replay limit (mana is secret in combat): the belief holds mana at its in-combat lower
---   bound (a third of the log's at 6 s) and prices Multi-Shot's percent-of-base cost as a fraction of the maximum
---   (the API gives no base mana), so after Raptor Strike's swing spend Multi-Shot is believed unaffordable.
+-- Disagreements worked (P7), decisions on-GCD 0.741 (27) top [wing_clip -> false 3; multi_shot -> arcane_shot 2;
+-- multi_shot -> serpent_sting 1]:
+--   wing_clip -> false: replay limit (mana is secret in combat): the belief's mana is its lower bound, a few points under
+--   Wing Clip's price while wowsims, at its true mana, pays it.
+--   multi_shot -> arcane_shot, multi_shot -> serpent_sting: replay limit, the same bound. The belief knows only that the
+--   dearest spell the client answers usable is affordable (Multi-Shot's price); the queued Raptor Strike ahead of it is
+--   paid in the simulation, so Multi-Shot is then believed short and Hekili waits on the next shot.
 -- n is 27 (under 40) because wowsims spends its 2790 mana by 25 s (no pet, no Aspect of the Viper) and then casts
 -- little but Wing Clip; every on-GCD cast ID of the log maps to a key.
--- Also: the prepull is scheduled (doAtValue -22 s, -20 s), and the precombat list carries no conditions, so Hunter's
--- Mark leads it until the pull (translation gap, rule 1). Lacerating Strikes (1310536) and the trap's burn (14301)
--- are procs no key maps.
+-- Ranges: the weave's melee-range lines read `target.within5` (rule 11) and the shots the bracket from the kit's
+-- range checks; wowsims's Movement steps place us in the replay.
+-- Lost to GAP 14 (autocastOtherCooldowns, not translated): Rapid Fire (3045) and the Orc's Blood Fury (20572), the
+-- cooldowns wowsims casts from 5 s on.
+-- Lacerating Strikes (1310536) and the trap's burn (14301) are procs no key maps.
 return {
     class = "HUNTER",
     pack = "Beast Mastery (wowsims.com)",

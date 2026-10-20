@@ -1,16 +1,17 @@
 -- tools/wowsims/specs/hunter_marksmanship.lua (wowsims packs plan, Task 11): Marksmanship (wowsims.com)'s wowsims/forever request and translation.
 -- Values from wowsims/forever (MIT) ui/specs/hunter/dps/presets.ts:68-89,128-134 at the pin (the MM Weave talents,
 -- DefaultOptions = NoPetOptions, OtherDefaults; the default rotation Melee Weave, apls/default.apl.json; gear p1).
--- Disagreements worked (P7), decisions on-GCD
--- 0.238 (42) top [mongoose_bite -> false 10; strider_kick -> false 5; wing_clip -> arcane_shot 4]:
--- No positions (translation gap, rule 2): the Melee Weave walks in for each main-hand swing and out for the shots;
--- its four melee-range lines (Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip) read `unitDistance` and its
--- Weave group is `move`/`wait`, so all are omitted and Raptor Strike (no range test) leads the list.
---   all three: translation gap, no positions (above). Next: multi_shot -> arcane_shot, the secret-mana replay limit
---   (see hunter_beast_mastery.lua).
--- Also: the prepull is scheduled (doAtValue -22 s, -20 s), and the precombat list carries no conditions, so Hunter's
--- Mark leads it until the pull (translation gap, rule 1). Lacerating Strikes (1310536) and the trap's burn (14301)
--- are procs no key maps.
+-- Disagreements worked (P7), decisions on-GCD 0.738 (42) top [strider_kick -> wing_clip 5; mongoose_bite -> false 2;
+-- multi_shot -> arcane_shot 2]:
+--   strider_kick -> wing_clip: API-forced price (no base mana read): Strider Kick costs 5.81% of base mana, priced as a
+--   fraction of the maximum (overstated), so at low mana the belief takes it as short and shows Wing Clip.
+--   mongoose_bite -> false: replay limit, the in-combat mana lower bound (secret mana) under the bite's price.
+--   multi_shot -> arcane_shot: replay limit, the same bound (see hunter_beast_mastery.lua).
+-- Ranges: the weave's melee-range lines read `target.within5` (rule 11) and the shots the bracket from the kit's
+-- range checks; wowsims's Movement steps place us in the replay.
+-- Lost to GAP 14 (autocastOtherCooldowns, not translated): Rapid Fire (3045) and the Orc's Blood Fury (20572), the
+-- cooldowns wowsims casts from 5 s on.
+-- Lacerating Strikes (1310536) and the trap's burn (14301) are procs no key maps.
 return {
     class = "HUNTER",
     pack = "Marksmanship (wowsims.com)",
