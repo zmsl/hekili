@@ -621,4 +621,86 @@ describe("the wowsims APL translator", function()
             "default #9: spell 999",
         }, omitted)
     end)
+
+    -- A log in the exporter's shape: two autocast cooldowns (one twice), an unmapped one, a pet's, and instant and cast
+    -- stat-buff casts.
+    local LOG = table.concat({
+        "# wowsims 0123 test seed 1 10 s target 63",
+        "[-1.00] [Tester (#1)] Casting {ItemID: 555} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)",
+        "[-1.00] [Tester (#1)] Completed cast {ItemID: 555}",
+        '[-1.00] [Tester (#1)] Gained {"Strength": 50.000,} from {ItemID: 555}.',
+        "[0.00] [Tester (#1)] Casting {SpellID: 300} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)",
+        "[0.00] [Tester (#1)] Completed cast {SpellID: 300}",
+        '[0.00] [Tester (#1)] Gained {"AttackPower": 100.000,} from {SpellID: 300}.',
+        "[0.00] [Tester (#1)] Major cooldown used: {SpellID: 300}",
+        "[0.00] [Tester (#1)] Major cooldown used: {ItemID: 777}",
+        "[1.00] [Tester (#1) - Wolf] Major cooldown used: {SpellID: 200}",
+        "[2.00] [Tester (#1)] Major cooldown used: {SpellID: 400}",
+        "[3.00] [Tester (#1)] Major cooldown used: {SpellID: 300}",
+        "[4.00] [Tester (#1)] Casting {ItemID: 556} (Cost = 0.000, Cast Time = 1.5s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[5.50] [Tester (#1)] Completed cast {ItemID: 556}",
+        '[5.50] [Tester (#1)] Gained {"AttackPower": 80.000,} from {ItemID: 556}.',
+        "[6.00] [Tester (#1)] Casting {SpellID: 100} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[6.00] [Tester (#1)] Completed cast {SpellID: 100}",
+        '[6.00] [Tester (#1)] Gained {"AttackPower": 80.000,} from {SpellID: 100}.',
+    }, "\n")
+
+    it("expands wowsims's automatic cooldowns from the log, in place, under the entry's condition", function()
+        local levels = assert(loadfile("tools/check_pack_levels.lua"))()
+        local r = { focus = { strike = 1 } }
+        local rotation = {
+            priorityList = {
+                cast(200),
+                {
+                    action = { autocastOtherCooldowns = {}, condition = cmp("OpGe", { currentTime = {} }, const("5s")) },
+                },
+                { action = { castAllStatBuffCooldowns = { statType1 = 0, statType2 = 14, statType3 = -1 } } },
+                { action = { castAllStatBuffCooldowns = { statType1 = 13, statType2 = -1, statType3 = -1 } } },
+                cast(100),
+            },
+        }
+        local kit = {
+            abilities = {
+                strike = { key = "strike", id = 100, gcd = "spell" },
+                big_hit = { key = "big_hit", id = 200, gcd = "spell" },
+                roar = { key = "roar", id = 300, gcd = "off" },
+                dot = { key = "dot", id = 400, gcd = "spell" },
+                trinket = { key = "trinket", id = -1, item = 555, gcd = "off" },
+                stone = { key = "stone", id = -2, items = { 556, 557 }, gcd = "off" },
+            },
+            auras = {},
+        }
+        local text, omitted = apl.translate(rotation, apl.context(kit, r, LOG))
+        assert.are.equal(
+            table.concat({
+                "actions=big_hit",
+                "actions+=/roar,if=time>=5",
+                "actions+=/dot,if=time>=5",
+                "actions+=/trinket,use_off_gcd=1",
+                "actions+=/strike,focus=1",
+            }, "\n"),
+            text
+        )
+        assert.are.same({
+            "default #2: autocastOtherCooldowns: unmapped item 777",
+            "default #4: castAllStatBuffCooldowns: none in the log",
+        }, omitted)
+        -- deterministic, and every line passes the leveling check
+        assert.are.equal(text, (apl.translate(rotation, apl.context(kit, r, LOG))))
+        for line in text:gmatch("[^\n]+") do
+            local self, cond = line:match("=/?([%w_]+).-,if=(.*)$")
+            if cond then
+                assert.are.same(
+                    {},
+                    levels.unguarded(cond, self, function()
+                        return true
+                    end),
+                    line
+                )
+            end
+        end
+        -- without a log the automatic actions are unsupported, as before
+        local _, none = apl.translate({ priorityList = { { action = { autocastOtherCooldowns = {} } } } }, ctx())
+        assert.are.same({ "default #1: autocastOtherCooldowns (no log)" }, none)
+    end)
 end)
