@@ -115,6 +115,8 @@
   waits for the walk in, as wowsims's does.
 - Druid: Primal Bite is ready again during Berserk; Lacerate's cost with Shredding Attacks and the Balance spells' mana
   costs with Moonglow and Improved Wrath now match the game's numbers as wowsims.com models them.
+- Druid: in Bear Form the rage estimate counts 11.25 rage a white swing (it counted 8.65) and Primal Fury's 5 rage on
+  each of your critical hits, white or Maul, Swipe, Lacerate and Primal Bite, as wowsims.com models them.
 - Druid: Shifting Power's cooldown is 1 s shorter with the Howling Idol equipped.
 - Druid: with the Wolfshead Helm equipped, Shifting Power gives 45 energy and Enrage 15 instant rage.
 - Druid: Moonglow's first two points cut the Balance spells' mana by 8% and 17%, as in the game.

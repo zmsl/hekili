@@ -80,6 +80,20 @@ local function hit(key)
         W.hit(e, e.target, AMOUNT[key])
     end
 end
+-- A bear strike's hit (`key`'s amount; with `debuffKey`, the debuff when it lands): Primal Fury's rage on its crit in
+-- Bear Form (X.primalFury, the class file's rule at the character's rank). Maul's queued strike never crits in the
+-- world (behaviours.lua's strike frame), so it pays none.
+local function bearHit(key, debuffKey)
+    return function(W, e, _, X)
+        local r = W.hit(e, e.target, AMOUNT[key])
+        if r.act == "WOUND" and debuffKey then
+            aura(W, X, e.target, debuffKey)
+        end
+        if r.flag == "CRITICAL" and e.form == FORM.bear_form and X.primalFury > 0 then
+            W.gain(e, X.primalFury)
+        end
+    end
+end
 local function selfAura(key)
     return function(W, e, _, X)
         aura(W, X, e, key)
@@ -119,7 +133,7 @@ M.OUTCOMES = {
 
 -- Each recommendable ability: `effect(W, e, p, X)`, `requires(W, e)` (beyond the form fields), `points` (combo points:
 -- 1 on a landed hit, "all" spent), `drain`, `extra(p, pt, res)` (generic effects; the world's main power and other
--- pools), `cooldown(H, cd)` (the true one). A key missing here fails the loop.
+-- pools). A key missing here fails the loop.
 M.MAP = {
     cat_form = shift("cat_form", 1),
     bear_form = shift("bear_form", 1),
@@ -166,14 +180,9 @@ M.MAP = {
             end
         end,
     },
-    primal_bite = { -- no cooldown while Berserk is up (DB2 417141): the client never starts one
-        effect = hit("primal_bite"),
-        cooldown = function(H, cd)
-            return H.Hekili.State.buff.berserk.up and 0 or cd
-        end,
-    },
-    lacerate = { effect = debuff("lacerate", true) },
-    swipe_bear = { effect = hit("swipe_bear") },
+    primal_bite = { effect = bearHit("primal_bite") }, -- its cooldown the state's (none while Berserk is up)
+    lacerate = { effect = bearHit("lacerate", "lacerate") },
+    swipe_bear = { effect = bearHit("swipe_bear") },
     demoralizing_roar = { effect = debuff("demoralizing_roar") },
     maul = { amount = { 110, 140 } },
     enrage = {
@@ -280,6 +289,7 @@ local PACKS = {
             "mark_of_the_wild",
             "thorns",
         },
+        talents = { [16958] = 2 }, -- Primal Fury (wowsims's bear build's 2/2): its rage on our crits
         power = { type = RAGE, token = TOKENS[RAGE], max = 100 },
         res = {},
         form = "bear_form",
@@ -306,7 +316,7 @@ local PACKS = {
             "mark_of_the_wild",
             "thorns",
         },
-        talents = { 408248 }, -- Eclipse (the placeholder node): Wrath's charges
+        talents = { [408248] = 1 }, -- Eclipse (the placeholder node): Wrath's charges
         power = { type = MANA, token = TOKENS[MANA], max = 4000 },
         res = {},
         form = "moonkin_form",
@@ -321,8 +331,12 @@ local PACKS = {
 -- The class data a press reads from a booted instance `H` (once per instance): each aura's ID, duration and stacks,
 -- whether the Eclipse talent is known, the Clearcasting cost modifier's covered spell IDs.
 local cache = setmetatable({}, { __mode = "k" })
+-- shortcut: the latest booted oracle's Primal Fury rage (classData), for C.gain's white crits, which get no instance;
+-- right while one loop runs at a time (the loop boots its oracle, then reads usable(H)); upgrade if loops interleave.
+local pfRage = 0
 local function classData(H)
     if cache[H] then
+        pfRage = cache[H].primalFury
         return cache[H]
     end
     local X = { aura = {}, covered = {} }
@@ -334,6 +348,14 @@ local function classData(H)
         end
     end
     X.eclipse = (H.Hekili.State.talent.eclipse.rank or 0) > 0
+    -- Primal Fury's rage on a crit of ours in Bear Form at the character's rank: the class file's white-crit rule read
+    -- under the booted state's talents, less its rank-0 crit (the recording load's)
+    local w, base = class(), rules().crit
+    local talent = w.state.talent
+    w.state.talent = H.Hekili.State.talent
+    X.primalFury = w.resources[RAGE].models.mainhand.crit() - base
+    w.state.talent = talent
+    pfRage = X.primalFury
     X.cc = class().costMods[1]
     for _, id in ipairs(X.cc.spells) do
         X.covered[id] = true
@@ -381,8 +403,8 @@ local function content(name)
             end
         end
         local talents = {}
-        for _, id in ipairs(P.talents or {}) do
-            talents[id] = 1
+        for id, r in pairs(P.talents or {}) do
+            talents[id] = r
         end
         local forms = {}
         for i, key in ipairs(FORMS) do
@@ -428,7 +450,7 @@ local function content(name)
             return 0
         end
         local R = rules()
-        return R.swing + (flag == "CRITICAL" and R.crit or 0)
+        return R.swing + (flag == "CRITICAL" and R.crit + pfRage or 0)
     end
 
     -- The press's cost: the state's for the main power and any other the world keeps (Clearcasting's, from the
@@ -482,9 +504,6 @@ local function content(name)
         end
         if m.extra then
             m.extra(p, pt, P.res)
-        end
-        if m.cooldown then -- a cooldown the true state changes (the oracle's)
-            p.cooldown = m.cooldown(H, p.cooldown)
         end
         p.requires = function(W, e)
             local ok, why = formOk(a, e)

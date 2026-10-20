@@ -637,6 +637,35 @@ describe("Forever Druid", function()
             end
         end)
 
+        it(
+            "declares Primal Fury's rage as `onCrit` on the bear's strikes: 5 at 2/2, 2.5 at 1/2, in Bear Form",
+            function()
+                local bear = { maul = true, swipe_bear = true, lacerate = true, primal_bite = true }
+                for key, a in pairs(w.abilities) do
+                    assert.are.equal(bear[key] == true, type(a.onCrit) == "function", key)
+                end
+                for key in pairs(bear) do
+                    local e = ld.env(w)
+                    ld.run(w.abilities[key].onCrit, e) -- rank 0, no form
+                    e.talent = rank(2)
+                    ld.run(w.abilities[key].onCrit, e) -- no form
+                    e.buff = auras({ bear_form = { up = true } })
+                    ld.run(w.abilities[key].onCrit, e)
+                    e.talent = rank(1)
+                    ld.run(w.abilities[key].onCrit, e)
+                    e.talent = rank(0)
+                    ld.run(w.abilities[key].onCrit, e)
+                    local got = {}
+                    for _, g in ipairs(e.gained) do
+                        if g[1] ~= 0 then
+                            got[#got + 1] = g
+                        end
+                    end
+                    assert.are.same({ { 5, "rage" }, { 2.5, "rage" } }, got, key)
+                end
+            end
+        )
+
         it("writes no combo points from any `now`", function()
             local e = ld.env(w)
             e.talent = rank(1)
@@ -679,7 +708,8 @@ describe("Forever Druid", function()
     end)
 
     it(
-        "gains rage per white swing in Bear Form only, at the form's fixed 2.5 s x 3.46; Enrage 2/s; decay 1.25",
+        "gains rage per white swing in Bear Form only, at the form's fixed 2.5 s x 4.5 (wowsims's two-hand factor), a crit "
+            .. "2.5 s x 3.46 more and Primal Fury's 5; Enrage 2/s; decay 1.25",
         function()
             local models = w.resources[1].models
             w.state.buff.bear_form = { up = false }
@@ -691,10 +721,16 @@ describe("Forever Druid", function()
             assert.is_true(models.mainhand.stop()) -- out of Bear Form
             w.state.buff.bear_form.up = true
             assert.is_false(models.mainhand.stop())
-            near(2.5 * 3.46, models.mainhand.value()) -- before a plain base read
+            near(2.5 * 4.5, models.mainhand.value()) -- before a plain base read
             w.game.base = { 1.0, 0 } -- a Cat pull's base, stale after the shift (D4: the form's period, not the read)
-            near(8.65, models.mainhand.value())
-            near(8.65, models.mainhand.crit()) -- a white crit: one more base swing
+            near(11.25, models.mainhand.value())
+            near(8.65, models.mainhand.crit()) -- a white crit: one more base swing, without the two-hand factor
+            local talent = w.state.talent
+            w.state.talent = rank(2) -- Primal Fury ("Blood Frenzy", DB2 16958): 16959's 5 rage at 2/2
+            near(13.65, models.mainhand.crit())
+            w.state.talent = rank(1) -- 50% at 1/2 (wowsims's ladder): its expected 2.5
+            near(11.15, models.mainhand.crit())
+            w.state.talent = talent
             assert.are.same({ "enrage", 1, 2 }, { models.enrage.aura, models.enrage.interval, models.enrage.value })
             assert.is_nil(models.enrage.pausesDecay) -- unverified (checkpoint Q9)
             w.state.buff.enrage, w.state.query_time = { applied = 10 }, 13.4
@@ -1065,10 +1101,10 @@ describe("Forever Druid in VirtualState's now context", function()
         I.Sources.Direct(VS.Obs.Swing, 8, 1, 2.5, 4) -- PLAYER_SWING, then Rows.lua's landed wound
         I.Sources.Direct(VS.Obs.Swing, 8, 1, 0, 1)
         VS.Drain(8)
-        near(8.65, power(1, 8))
+        near(11.25, power(1, 8))
         cast(5229, 9) -- Enrage: 10 now, 2 a second
         I.Settle(12)
-        near(8.65 + 10 + 6, power(1, 12))
+        near(11.25 + 10 + 6, power(1, 12))
         cast(414644, 13) -- Lacerate twice: 2 stacks
         cast(414644, 14)
         assert.are.equal(2, select(2, VS.Aura("target", 414644, 14.1)))
@@ -1078,6 +1114,23 @@ describe("Forever Druid in VirtualState's now context", function()
         VS.Drain(16)
         assert.are.equal(power(1, 15.1), power(1, 16))
         assert.are.same({ 0, 9 }, { I.nowErrors, I.nowRuns })
+    end)
+
+    it("gives Primal Fury's 5 rage at a bear strike's own crit with the talent at 2/2, none at 0/2 (GAP T)", function()
+        I.Sources.Direct(VS.Obs.CombatStart, 1.5) -- in combat: no rage decay
+        cast(5487, 2) -- Bear Form
+        local function crit(t)
+            cast(407995, t) -- Primal Bite
+            local before = power(1, t + 0.05)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 100, 1)
+            ctl.Tick(t + 0.06)
+            VS.Drain(t + 0.07)
+            return power(1, t + 0.1) - before
+        end
+        assert.are.equal(0, crit(4))
+        I.SetTalentRank(I.talents.bySpell[16958], 2)
+        assert.are.equal(5, crit(6))
+        assert.are.equal(0, I.nowErrors, tostring(I.nowError))
     end)
 
     it("opens each GCD at its kind's length across shifts, a hard cast's included (GCD kinds §1.6)", function()

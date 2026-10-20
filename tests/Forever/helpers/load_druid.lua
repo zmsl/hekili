@@ -37,6 +37,11 @@ function M.load(vs, file, class)
     }
     local w = { game = game, abilities = {}, auras = {}, resources = {}, hooks = {}, funcs = {}, exprs = {} }
     w.state = { buff = {}, swings = {} }
+    w.state.talent = setmetatable({}, { -- every talent at rank 0 (the resource models' reads)
+        __index = function()
+            return { rank = 0, enabled = false }
+        end,
+    })
     local hekili = { State = w.state }
     w.spec = spec
     function hekili:NewClass(token, def)

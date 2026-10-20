@@ -40,7 +40,7 @@ function M.boot(ns, api, edit)
             cast = 0,
             charges = 1,
             recharge = 0,
-            funcs = { now = a.now, handler = a.handler },
+            funcs = { now = a.now, handler = a.handler, onCrit = a.onCrit },
         }
     end
     for key, a in pairs(w.auras) do

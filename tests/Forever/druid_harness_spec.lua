@@ -72,6 +72,14 @@ local function bear(n)
         for _, ev in ipairs(W.truth) do
             if ev.kind == "strike" and ev.src == W.ents[1] then
                 count(t, "strikes")
+                -- an avoided strike in the frame of another cast of ours can be nobody's (Rows.lua: an avoid with
+                -- another cast of ours pending pairs with neither), so it may have no row
+                for _, o in ipairs(W.truth) do
+                    if ev.act ~= "WOUND" and o.kind == "cast" and o.src == ev.src and math.abs(o.t - ev.t) < 0.01 then
+                        count(t, "strikesShared")
+                        break
+                    end
+                end
             end
         end
         count(t, "maulRows", ((f.rows.SPELL_DAMAGE or {})[maul] or 0) + ((f.rows.SPELL_MISSED or {})[maul] or 0))
@@ -211,7 +219,9 @@ local GATES = {
         print(msg)
         assert.is_true(metrics.rate(m, 1) >= 0.94 and m.wrong[1] == 0 and metrics.falsePer100(m) == 0, msg)
         assert.is_true(t.driftOver == 0 and t.danger == 0, msg)
-        assert.is_true(t.strikes > 0 and t.maulRows == t.strikes and t.maulPaid == t.strikes, msg)
+        local shared = t.strikesShared or 0
+        assert.is_true(t.strikes > 0 and t.maulRows <= t.strikes and t.maulRows >= t.strikes - shared, msg)
+        assert.is_true(t.maulPaid == t.strikes, msg)
         assert.is_true(t.staged >= 0.94 * t.crits and t.false3 == 0, msg)
         gcdGate(t, msg)
     end,
@@ -242,7 +252,7 @@ local GATES = {
         assert.is_true(metrics.falsePer100(mBear) == 0 and metrics.falsePer100(mCat) == 0, msg)
         assert.is_true(t.catUnknown == 0 and t.bearUnknown == t.bearWounds and t.bearWounds > 0, msg)
         assert.is_true(
-            t.rageOver == 0 and math.abs(t.swingMin - 8.65) < 1e-9 and math.abs(t.swingMax - 8.65) < 1e-9,
+            t.rageOver == 0 and math.abs(t.swingMin - 11.25) < 1e-9 and math.abs(t.swingMax - 11.25) < 1e-9,
             msg
         )
         assert.is_true(t.bearEntryOver <= 1.3, msg) -- no rage carried into Bear: a swing at the calibrated scale at most

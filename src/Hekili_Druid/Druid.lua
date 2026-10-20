@@ -119,12 +119,28 @@ local REJUVENATION_COST = { 25, 40, 75, 105, 135, 160, 195, 235, 280, 335, 360 }
 local FORMS = { "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form" }
 
 -- Shifting Power's energy (DB2 1322605 effect 30, base 40) and bear rage per white swing (spec §2.3, D4): the
--- Warrior's measured one-hand main-hand rate x the form's unhasted 2.5 s swing, 8.65 a swing, until checkpoint Q8.
+-- two-hand rate (4.5 a second) x the form's unhasted 2.5 s swing, 11.25 a swing, and a crit one more swing at the base
+-- rate (3.46 x 2.5 = 8.65), as wowsims/forever's bear (its combat log's 11.25 and 19.9), until checkpoint Q8.
 -- The swing is the form's fixed period, not the belief's out-of-combat base read, which holds the pull's form (1.0 s
 -- after a Cat pull) through an in-combat shift (GCD kinds design D4; checkpoint G6 reads both forms' speeds).
 local SHIFTING_POWER_ENERGY = 40
-local BEAR_RAGE_RATE = 3.46
+local BEAR_RAGE_RATE, BEAR_CRIT_RATE = 4.5, 3.46
 local BEAR_SWING = 2.5
+-- Primal Fury ("Blood Frenzy" on Forever, DB2 16958; wowsims/forever talents_feral_combat.go): a melee crit of ours in
+-- Bear Form gives 16959's 5 rage, always at 2/2 and half the time at 1/2 (wowsims's ladder): its expected rage. The
+-- Cat's combo point on a builder's crit is not declared: combo points are a plain read on Forever.
+local PRIMAL_FURY = 5
+local function primalFury(rank)
+    return PRIMAL_FURY * rank / 2
+end
+-- A bear strike's `onCrit` (the belief's own crit, Families/Now.lua): a closure per ability.
+local function primalFuryOnCrit()
+    return function()
+        if buff.bear_form.up then
+            gain(primalFury(talent.primal_fury.rank), "rage")
+        end
+    end
+end
 
 local function rest(ids)
     local out = {}
@@ -172,10 +188,10 @@ spec:RegisterResource(
         -- Rage per white swing in Bear or Dire Bear Form only (the Warrior's speed rule; Cat and caster swings add
         -- none).
         -- `aura` gates it in both layers (the belief's swing entry, spec §0.3; Hekili's forecast); `stop` too.
-        -- A white crit adds one more base swing, as the Warrior's (magey/forever-warrior issue 3 names the Bear and
-        -- Dire Bear match; unmeasured here): `crit`.
-        -- shortcut: misses, Blood Frenzy, Natural Reaction and rage from damage taken are unmodelled; the belief's
-        -- swing-scale calibration absorbs a steady bias. Upgrade from the combat-log rows once a non-cast `now` exists.
+        -- A white crit adds one more base swing (without the two-hand factor), as wowsims's, and Primal Fury's rage:
+        -- `crit`. A yellow crit's Primal Fury is the strikes' `onCrit`.
+        -- shortcut: misses, Natural Reaction and rage from damage taken are unmodelled; the belief's swing-scale
+        -- calibration absorbs a steady bias. Upgrade from the combat-log rows once a non-cast `now` exists.
         mainhand = {
             swing = "mainhand",
             aura = "bear_form",
@@ -198,7 +214,7 @@ spec:RegisterResource(
                 return BEAR_RAGE_RATE * BEAR_SWING
             end,
             crit = function()
-                return BEAR_RAGE_RATE * BEAR_SWING
+                return BEAR_CRIT_RATE * BEAR_SWING + primalFury(state.talent.primal_fury.rank)
             end,
         },
 
@@ -1226,6 +1242,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         refundOnAvoid = true, -- wowsims lacerate.go; DB2 Discount Power On Miss
+        onCrit = primalFuryOnCrit(),
         known = knows(LACERATE),
         buff = "bear_form",
 
@@ -1277,6 +1294,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         refundOnAvoid = true, -- wowsims maul.go; DB2 Discount Power On Miss
+        onCrit = primalFuryOnCrit(),
         -- The belief: paid at the main hand's next swing, which then brings no rage. Hekili's own simulation pays
         -- at the press (the Warrior's Heroic Strike alike), so the two differ by up to one swing.
         onNextSwing = true,
@@ -1419,6 +1437,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         refundOnAvoid = true, -- wowsims primal_bite.go; DB2 Discount Power On Miss
+        onCrit = primalFuryOnCrit(),
         known = knows(PRIMAL_BITE),
         buff = "bear_form",
     },
@@ -1664,6 +1683,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(SWIPE),
         buff = "bear_form",
+        onCrit = primalFuryOnCrit(),
     },
 
     thorns = {
