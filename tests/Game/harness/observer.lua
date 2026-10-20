@@ -41,6 +41,8 @@ M.DEFAULTS = {
     forms = false, -- the client's forms (index to spell ID: the content's), answered once
 }
 
+M.FRAME = 0.001 -- seconds: one client frame's events (a replay's lines of one timestamp sit 1e-6 apart)
+
 -- Our spells as the fake spec's (its costs: the usability answers).
 M.SPELLS = { STRIKE = fs.SPENDER_B, DOT = fs.SPENDER_C, CAST = fs.SPENDER_A, OTHER = 1 }
 M.COSTS = { { fs.SPENDER_A, 10 }, { fs.SPENDER_B, 15 }, { fs.SPENDER_C, 10 } }
@@ -223,7 +225,8 @@ function M.new(W, k)
         push(t, "PLAYER_EQUIPMENT_CHANGED")
     end
     local modes, tokens = k.plainPower or {}, k.powerTokens or {}
-    local cur, inCombat = {}, false -- our true power by type as the stream has told it; the client's combat flag
+    local cur, inCombat = {}, false
+    local spentT = -math.huge -- our latest spend's time (a gain in its frame is answered with it) -- our true power by type as the stream has told it; the client's combat flag
     local function plainPower(t, pt) -- a plain read of `pt` now, if its mode answers it
         local m = modes[pt]
         if m == "always" or (m == "ooc" and not inCombat) then
@@ -475,7 +478,20 @@ function M.new(W, k)
             plainPower(t, pt)
             dseq = dseq + 1
             local d = (ev.rage or 0) - (ev.cost or 0)
-            deltas[#deltas + 1] = { t + (ev.cost and 0 or k.usableDelay), d, pt, dseq }
+            -- a gain in the frame of a spend reaches the answers with it, either order (UNMEASURED: one server update
+            -- carries both, as an avoid's refund with its cost or a swing's rage with a press at its instant)
+            local when = t + k.usableDelay
+            if ev.cost then
+                when, spentT = t, t
+                for _, x in ipairs(deltas) do
+                    if x[3] ~= "form" and x[1] > t and t - x[4] < M.FRAME then
+                        x[1] = t
+                    end
+                end
+            elseif t - spentT < M.FRAME then
+                when = t
+            end
+            deltas[#deltas + 1] = { when, d, pt, t, dseq }
             if ev.power then
                 push(t, "@truth", ev.power) -- the metrics' truth (harness design §3.3), no client answer
             end

@@ -392,6 +392,21 @@ describe("resources", function()
                 assert.is_true(r.lo <= 9)
             end)
 
+            it("takes a short answer in the frame of a modelled gain (an avoid's refund) as after the gain", function()
+                -- 9 believed; spender_a (10) at 5 pays from a rung-lifted 10, then its avoid refunds 8 (the outcome's
+                -- modelled gain) and the client answers short in that frame: the answer bounds 8, not the 0 before
+                -- the refund (the client answers the frame's net: harness observer.lua M.FRAME)
+                obs(Obs.Swing, 2.4, 1, 0, 1)
+                obs(Obs.CastSuccess, 5, 1)
+                I.Fold(5, false)
+                I.ResourceShift(1, 8, 5, Obs.CastSuccess)
+                obs(Obs.Usable, 5, 1, 0, 1)
+                I.Fold(5, false)
+                local r = VS.Power(fs.RAGE, 5)
+                within(8, r.est)
+                assert.is_true(r.hi < 10 and r.lo <= 8)
+            end)
+
             it("owes nothing to a swing after the rung", function()
                 obs(Obs.CastSuccess, 5, 1) -- 0 believed: the rung lifts 10, the pay takes it
                 I.Fold(5, false)

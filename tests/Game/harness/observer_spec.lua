@@ -641,6 +641,24 @@ describe("the observer's resources, GCD and forms", function()
         assert.are.same({ "1 @usable 21 2", "2.1 @usable 21 1" }, lines(s, { ["@usable"] = true }))
     end)
 
+    it(
+        "answers a gain in the frame of a spend with the spend, either order (an avoid's refund, a swing's rage)",
+        function()
+            setup()
+            local function pool(_, _, _, view)
+                return view[POOL] >= 60, view[POOL] < 60
+            end
+            W.t = 1
+            W.emit({ kind = "gain", src = us, pt = POOL, cost = 50 }) -- 100 - 50: short alone
+            W.emit({ kind = "gain", src = us, pt = POOL, rage = 20 }) -- its refund in the same frame: 70, never short
+            W.t = 3
+            W.emit({ kind = "gain", src = us, pt = POOL, rage = 20 }) -- 90, then the spend in the same frame: 40, short
+            W.emit({ kind = "gain", src = us, pt = POOL, cost = 50 })
+            local s = observer.observe(W, knobs({ usable = { { 21, pool } }, usableDelay = 0.1 }))
+            assert.are.same({ "3 @usable 21 2" }, lines(s, { ["@usable"] = true })) -- no stale short at 1, none late at 3
+        end
+    )
+
     it("answers usability with our form as of the answer's time, a shift's form and resource change as one", function()
         setup()
         local function pool(_, now, _, view) -- needs form 1: short below 60 there, not usable elsewhere
