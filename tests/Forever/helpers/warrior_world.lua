@@ -142,13 +142,12 @@ local function selfAura(key)
         end,
     }
 end
-local function strike(amount, key) -- a hit on the target for `amount`, and debuff `key` on it
+local function strike(amount, key) -- a hit on the target for `amount`, and debuff `key` on it when it lands
     return {
         effect = function(W, e, _, X)
-            if key then
+            if W.hit(e, e.target, amount).act == "WOUND" and key then
                 aura(W, X, e.target, key)
             end
-            W.hit(e, e.target, amount)
         end,
     }
 end
@@ -193,12 +192,7 @@ M.MAP = {
             aura(W, X, e.target, "sunder_armor")
         end,
     },
-    hamstring = {
-        effect = function(W, e, _, X)
-            aura(W, X, e.target, "hamstring")
-            W.hit(e, e.target, 45)
-        end,
-    },
+    hamstring = strike(45, "hamstring"),
     rend = { -- rank 7: 147 over the aura's duration, a tick every 3 s
         effect = function(W, e, _, X)
             local d = X.aura.rend.duration
@@ -355,6 +349,8 @@ function M.resolve(key, H)
         offGcd = a.gcd == "off",
         cast = tonumber(a.cast) or 0,
         onNextSwing = a.onNextSwing or a.nextSwing,
+        -- an avoid gives back the kit's share of the rage (W.hit), as the belief's rage resource declares it
+        refund = H.Hekili.Class.resources.rage.state.meta.refundOnAvoid,
     }
     if m.amount then
         local w = M.WORLD.weapons[1]

@@ -438,3 +438,47 @@ describe("the replay's mana regen (wowsims's regen lines)", function()
         assert.are.same({ [1] = 100, [0] = 4000 }, got)
     end)
 end)
+
+describe("the replay's avoided casts", function()
+    -- wowsims's order for an avoided ability: the cast, its spend, the 80% refund (OtherID 8), then the outcome
+    local LOG = table.concat({
+        "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+        "[1.00] [Tester (#1)] Casting {SpellID: 900001} (Cost = 15.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[1.00] [Tester (#1)] Completed cast {SpellID: 900001}",
+        "[1.00] [Tester (#1)] Spent 15.000 rage from {SpellID: 900001} (50.000 --> 35.000) of 100 total.",
+        "[1.00] [Tester (#1)] Gained 12.000 rage from {OtherID: 8} (35.000 --> 47.000) of 100 total.",
+        "[1.00] [Tester (#1)] [Target 1] {SpellID: 900001} Dodge (SpellSchool: 1). (Threat: 0.000)",
+    }, "\n")
+
+    it("emits the cast, its powers, then the target's DODGE of it (no wound), in the log's order", function()
+        local R = replay.new(LOG, H, O)
+        local W = at(R.world(WO, 1), R.pull + 2)
+        local kinds = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "cast" or ev.kind == "gain" or ev.kind == "spell" then
+                kinds[#kinds + 1] = ev.kind .. ":" .. tostring(ev.act or ev.rage or ev.cost)
+            end
+        end
+        assert.are.same({ "cast:nil", "gain:15", "gain:12", "spell:DODGE" }, kinds)
+        assert.are.equal(47, W.ents[1].power)
+    end)
+
+    it("a white swing's Miss 0.06 s after a cast stays the swing's (the Rogue log's opening Garrote)", function()
+        local log = table.concat({
+            "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+            "[1.00] [Tester (#1)] Casting {SpellID: 900001} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+            "[1.00] [Tester (#1)] Completed cast {SpellID: 900001}",
+            "[1.06] [Tester (#1)] Completed cast {OtherID: 3, Tag: 1}",
+            "[1.06] [Tester (#1)] [Target 1] {OtherID: 3, Tag: 1} Miss (SpellSchool: 1). (Threat: 0.000)",
+        }, "\n")
+        local R = replay.new(log, H, O)
+        local W = at(R.world(WO, 1), R.pull + 2)
+        local kinds = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "cast" or ev.kind == "swing" or ev.kind == "land" or ev.kind == "spell" then
+                kinds[#kinds + 1] = ev.kind .. ":" .. tostring(ev.act)
+            end
+        end
+        assert.are.same({ "cast:nil", "swing:MISS", "land:MISS" }, kinds)
+    end)
+end)

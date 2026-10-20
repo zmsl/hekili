@@ -194,6 +194,39 @@ describe("the world's press", function()
         }, { got[at + 1], got[at + 2], got[at + 3], got[at + 4] })
     end)
 
+    it("an avoided press: the target's avoid, then its `refund` share of the cost back (a wound gives none)", function()
+        setup()
+        W.t = 3
+        mob.avoid = { miss = 0, dodge = 1, parry = 0 }
+        local p = {
+            spell = fs.SPENDER_C,
+            cost = 10,
+            refund = 0.8,
+            effect = function(w, e)
+                w.hit(e, e.target, 40)
+                w.hit(e, e.target, 40) -- a second outcome of one press: one refund
+            end,
+        }
+        assert.is_true(W.press(us, "spender_c", p))
+        assert.are.equal(18, us.power) -- 20 - 10 + 8
+        local n, success, first = 0, nil, nil
+        for i, line in ipairs(seen()) do
+            success = success or (line == "UNIT_SPELLCAST_SUCCEEDED player Cast-1" and i or nil)
+            if line == "UNIT_COMBAT target DODGE" then
+                n, first = n + 1, first or i
+            end
+        end
+        assert.are.equal(2, n)
+        assert.is_true(success < first) -- the cast's success, then its outcome
+        mob.avoid = { miss = 0, dodge = 0, parry = 0 }
+        W.t = 10
+        assert.is_true(W.press(us, "spender_c", p))
+        assert.are.equal(8, us.power)
+        W.t = 20
+        assert.is_true(W.press(us, "spender_c", { spell = fs.SPENDER_C, cost = 5, effect = p.effect })) -- no refund
+        assert.are.equal(3, us.power)
+    end)
+
     it("crits an instant hit at world.CRIT, doubled", function()
         setup()
         mob.avoid = { miss = 0, dodge = 0, parry = 0 }

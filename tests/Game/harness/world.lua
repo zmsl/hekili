@@ -131,7 +131,8 @@ function M.new(seed)
     --- a queued strike), cast (a cast time in seconds), requires = fn(W, e) -> ok, why, effect = fn(W, e, p), and the
     --- generic effects run after `effect`: gain { pt, amount }, points { pt, 1 | "all" } (1: one more on a landed hit
     --- of `effect`'s; "all": spend them all), drain (a power type: spend what is left of it), aura { id, duration,
-    --- tick = { pt, every, amount } } (named fields; on us), shift (W.shift's `sh`) }. Checked against the true state in order: a
+    --- tick = { pt, every, amount } } (named fields; on us), shift (W.shift's `sh`) }, refund (W.hit's share of the cost
+    --- an avoid gives back). Checked against the true state in order: a
     --- cast in progress, the GCD, the cooldown, the range, the cost, a strike already queued, `requires`; a refusal
     --- returns false and its reason ("casting", "gcd", "cooldown", "range", "cost", "queued", "requires:<why>") and
     --- changes nothing. An accept
@@ -188,11 +189,12 @@ function M.new(seed)
                 gcd = gcd,
                 order = gcd and order or nil,
             })
-            e.lastHit = nil
+            e.lastHit, e.pressing = nil, p
             if p.effect then
                 p.effect(W, e, p)
             end
             W.effects(e, p)
+            e.pressing = nil
         end
         if p.onNextSwing then
             W.queueStrike(e, p, key)
@@ -404,16 +406,22 @@ function M.new(seed)
     end
 
     --- An instant outcome of `amount` (school [1]) from `e` on `dst`, rolled against the victim's avoid table and our
-    --- crit rate (a crit doubles it; an avoid is recorded in `e.avoidAt[act]`).
+    --- crit rate (a crit doubles it; an avoid is recorded in `e.avoidAt[act]`). An avoid of the press in progress gives
+    --- back its `refund` share (0-1; the kit's `refundOnAvoid`) of its cost, a gain after the outcome.
     function W.hit(e, dst, amount, school)
         local av = dst.avoid
         local act, flag = roll(W.rng, { miss = av.miss, dodge = av.dodge, parry = av.parry, crit = M.CRIT })
+        local p = e.pressing
         if act ~= "WOUND" then
             e.avoidAt[act] = W.t
         end
         local amt = act == "WOUND" and math.floor(amount * (flag == "CRITICAL" and 2 or 1) + 0.5) or 0
         e.lastHit =
             W.emit({ kind = "spell", src = e, dst = dst, act = act, flag = flag, amount = amt, school = school or 1 })
+        if act ~= "WOUND" and p and (p.refund or 0) > 0 and (p.cost or 0) > 0 then
+            e.pressing = nil -- once a press: a second hit of its effect is no second refund
+            W.emit({ kind = "gain", src = e, pt = p.pt, rage = p.refund * p.cost })
+        end
         return e.lastHit
     end
 
