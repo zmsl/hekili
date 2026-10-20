@@ -59,7 +59,8 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     local RET = wowsims(pw.Retribution, set(EXORCISM_ANY), { fsr = { [0] = { 21.9, 8.25 } } })
     local RET_LIVE = wowsims(pw.Retribution, set(EXORCISM_ANY), {})
 
-    -- the replay floor: 0.860 measured on central fix 13 (49/57: removals shown as removals, the cooldown restart)
+    -- the replay floor: 0.860 measured on central fix 13 (49/57: removals shown as removals, the cooldown restart); 0.877
+    -- (50/57) on central fix 14 (Judgement's percent-of-base cost from base mana)
     it("Retribution (wowsims.com) follows wowsims's casts", function()
         local C = content("paladin_retribution", RET, "Retribution (wowsims.com)", 60)
         -- 0.860 over central fix 12 too (floor 0.85). Before central fix 13: 0.56 (0.561), lowered from 0.57 (0.579) by
@@ -67,7 +68,7 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         -- seal comes one tick late, so one decision of 57 (Seal of Command on the tick that pays for it) shows Seal of
         -- Righteousness. Recover after the in-game UNIT_POWER_FREQUENT-for-mana
         -- checkpoint by rounding up to the observed tick; the belief's precision at near-ties is GAP AB.
-        ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.85, REPLAY)
+        ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.87, REPLAY)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Retribution is out of mana from 60 s
     -- of its log), so its longest wait is for mana. 4.4 before central fix 8, while

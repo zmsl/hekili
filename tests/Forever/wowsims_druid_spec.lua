@@ -30,9 +30,10 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         assert.is_true(R.world(setmetatable({ pt = 3 }, { __index = C.WORLD }), 1).rates[3] > 0)
     end)
 
-    -- the replay floor: 0.932 measured on central fix 13 (82/88: the observer's cooldown restart), never lowered
+    -- the replay floor: 0.932 measured on central fix 13 (82/88: the observer's cooldown restart); 0.955 (84/88) on
+    -- central fix 14 (Shifting Power's function cooldown in the belief), never lowered
     it("Feral (wowsims.com) follows wowsims's casts", function()
-        ws.gate("Feral (wowsims.com)", content("druid_feral", W.Feral, "Feral (wowsims.com)", 60), "druid_feral", 0.93)
+        ws.gate("Feral (wowsims.com)", content("druid_feral", W.Feral, "Feral (wowsims.com)", 60), "druid_feral", 0.95)
     end)
     local FERAL60 = 4.2 -- the pack's own worst idle at 60 (wowsims's energy pooling), seconds
     for _, level in ipairs({ 20, 40, 60 }) do
