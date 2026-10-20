@@ -20,6 +20,7 @@
 - Paladin: "Protection (wowsims.com)" is Protection's default priority, translated from wowsims/forever's Protection APL.
 - Paladin: "Retribution (wowsims.com)" is Retribution's default priority, translated from wowsims/forever's Twist of
   Light APL, your on-use trinkets included.
+- Shaman: "Enhancement (wowsims.com)" is the Enhancement default priority, translated from wowsims.com's own.
 
 ### Changed
 - Rogue: the hand-built Assassination, Combat and Subtlety priorities are gone, with their settings (Bleeds on
@@ -53,6 +54,9 @@
   longer suggested before combat (wowsims's Protection never casts it).
 - Paladin: the hand-built Retribution priority is gone (replaced by Retribution (wowsims.com)), with its Holy Shock
   list and the Consecration and Exorcism Mana Floor settings (wowsims's 10% floor is in the new priority).
+- Shaman: the hand-built "Enhancement" priority is gone, and with it its imbue reminder and mana settings.
+  Reverberation and Improved Fire Nova now shorten the shock and Fire Nova cooldowns, and Shamanistic Focus lowers
+  the shocks' and Lightning Shield's cost.
 
 ### Fixed
 - Hunter: priority lines that divide (Multi-Shot's) now fire. Divisions in the priorities translated from
@@ -96,6 +100,7 @@
   specialization afterwards; old priority exports still import.
 - Paladin: a saved choice of the old "Protection" priority falls back to Protection (wowsims.com) at the next login.
 - Paladin: a saved choice of the old "Retribution" priority falls back to Retribution (wowsims.com) at the next login.
+- Shaman: a saved choice of the "Enhancement" priority falls back to "Enhancement (wowsims.com)".
 
 ## v0.1.0
 

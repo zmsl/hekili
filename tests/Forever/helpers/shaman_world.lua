@@ -32,20 +32,25 @@ local TOTEM = {
     grace_of_air_totem = { 4, 300 },
 }
 
--- The top rank's mana cost (DB2), the world's truth the class file's costs are measured against.
+-- Each rank's mana cost (DB2, rank order), the world's truth the class file's costs are measured against; Shamanistic
+-- Focus (1223030, DB2 aura 108 misc 14) takes 45% off the shocks' and Lightning Shield's.
 local COST = {
-    lightning_bolt = 220,
-    lightning_shield = 370,
-    earth_shock = 450,
-    flame_shock = 410,
-    fire_nova = 520,
-    stormstrike = 125,
-    searing_totem = 170,
-    flametongue_totem = 275,
-    strength_of_earth_totem = 275,
-    mana_spring_totem = 100,
-    grace_of_air_totem = 310,
+    lightning_bolt = { 15, 30, 45, 60, 85, 110, 135, 160, 190, 220 },
+    lightning_shield = { 45, 80, 125, 180, 240, 305, 370 },
+    earth_shock = { 30, 50, 85, 145, 240, 345, 450 },
+    flame_shock = { 55, 95, 160, 250, 345, 410 },
+    fire_nova = { 95, 170, 280, 395, 520 },
+    stormstrike = { 125 },
+    searing_totem = { 25, 45, 75, 110, 145, 170 },
+    flametongue_totem = { 90, 140, 200, 275 },
+    strength_of_earth_totem = { 25, 65, 125, 225, 275 },
+    mana_spring_totem = { 40, 60, 80, 100 },
+    grace_of_air_totem = { 155, 250, 310 },
 }
+local FOCUSED = { earth_shock = true, flame_shock = true, lightning_shield = true }
+local SHAMANISTIC_FOCUS = 1223030
+-- Lightning Bolt's cast time by rank (DB2).
+local LB_CAST = { 1.5, 2, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5 }
 
 -- UNMEASURED: the hits' amounts.
 local AMOUNT = {
@@ -92,15 +97,29 @@ local function elemental(W, e, X)
     end
 end
 
--- The cost of `key` with Clearcasting (`cc`: up) making an elemental spell free and each of `mw` Maelstrom Weapon
--- stacks taking 20% off Lightning Bolt's.
-local function costOf(key, cc, mw)
+-- The cost of `key`'s rank `rank` with Clearcasting (`cc`: up) making an elemental spell free, Shamanistic Focus
+-- (`sf`: taken) and each of `mw` Maelstrom Weapon stacks taking 20% off Lightning Bolt's.
+local function costOf(key, rank, cc, mw, sf)
     if ELEMENTAL[key] and cc then
         return 0
-    elseif key == "lightning_bolt" then
-        return COST[key] * math.max(0, 1 - 0.2 * mw)
     end
-    return COST[key]
+    local c = COST[key][rank] or COST[key][#COST[key]]
+    if FOCUSED[key] and sf then
+        c = c * 0.55
+    elseif key == "lightning_bolt" then
+        c = c * math.max(0, 1 - 0.2 * mw)
+    end
+    return c
+end
+
+-- The rank (1-based) of spell `id` among `key`'s IDs `ids`.
+local function rankOf(ids, id)
+    for i, x in ipairs(ids) do
+        if x == id then
+            return i
+        end
+    end
+    return #ids
 end
 
 local function spell(key, extra)
@@ -160,11 +179,12 @@ M.MAP = {
     grace_of_air_totem = totem("grace_of_air_totem"),
 }
 
--- The packs' worlds: `kit` the abilities the character knows (every rank), `weapon` the main hand, `uptime` the debuffs
+-- The packs' worlds: `pack` the priority, `kit` the abilities the character knows (every rank), `weapon` the main hand, `uptime` the debuffs
 -- reported. The imbues are left out of the kit: the world has no weapon enchant read (shaman_spec covers the reminder).
 local PACKS = {
     -- Stormstrike, Maelstrom Weapon and Elemental Focus, a two-hander.
     Enhancement = {
+        pack = "Enhancement (wowsims.com)",
         kit = {
             "lightning_bolt",
             "lightning_shield",
@@ -203,7 +223,7 @@ end
 
 local function content(name)
     local P = PACKS[name]
-    local C = { PACK = name, IDS = {} }
+    local C = { PACK = P.pack, IDS = {} }
     C.SPEC = ({ Enhancement = 100072 })[name]
 
     function C.character()
@@ -316,16 +336,18 @@ local function content(name)
         -- Clearcasting and Maelstrom Weapon from the oracle's (true) belief, as paladin_world's Swift Judgement
         local cc = VS.Aura("player", X.aura.clearcasting.id, now)
         local _, mw = VS.Aura("player", X.aura.maelstrom_weapon.id, now)
+        local spellID = VS.KnownID(a.id)
+        local rank = rankOf(C.IDS[key], spellID)
         local p = {
-            spell = VS.KnownID(a.id),
+            spell = spellID,
             ids = ids,
-            cost = costOf(key, cc ~= nil, mw or 0),
+            cost = costOf(key, rank, cc ~= nil, mw or 0, S.talent.shamanistic_focus.rank > 0),
             pt = MANA,
             cooldown = tonumber(a.cooldown) or S.action[key].cooldown or 0,
             gcd = GCD[a.gcd or "spell"],
             offGcd = a.gcd == "off",
             -- every press is instant but Lightning Bolt, 2.5 s less 20% a Maelstrom Weapon stack (DB2 15208)
-            cast = key == "lightning_bolt" and 2.5 * math.max(0, 1 - 0.2 * (mw or 0)) or 0,
+            cast = key == "lightning_bolt" and LB_CAST[rank] * math.max(0, 1 - 0.2 * (mw or 0)) or 0,
         }
         p.requires = function(W, e)
             if m.requires then
@@ -346,18 +368,22 @@ local function content(name)
     function C.usable(H)
         local out = {}
         local X = classData(H, C)
+        local sf = H.Hekili.State.talent.shamanistic_focus.rank > 0 -- the build's (the booted oracle's talents)
         for key, m in pairs(M.MAP) do
             if H.Hekili.Class.abilities[key] and C.IDS[key] then
-                local function answer(W, e, power)
-                    if m.requires and not m.requires(W, e, X) then
-                        return false, false
-                    end
-                    local mw = e.auras[X.aura.maelstrom_weapon.id]
-                    local c = costOf(key, e.auras[X.aura.clearcasting.id] ~= nil, mw and mw.stacks or 0)
-                    return power >= c, power < c
-                end
-                for _, id in ipairs(C.IDS[key]) do
-                    out[#out + 1] = { id, answer }
+                for rank, id in ipairs(C.IDS[key]) do
+                    out[#out + 1] = {
+                        id,
+                        function(W, e, power)
+                            if m.requires and not m.requires(W, e, X) then
+                                return false, false
+                            end
+                            local mw = e.auras[X.aura.maelstrom_weapon.id]
+                            local cc = e.auras[X.aura.clearcasting.id] ~= nil
+                            local c = costOf(key, rank, cc, mw and mw.stacks or 0, sf)
+                            return power >= c, power < c
+                        end,
+                    }
                 end
             end
         end

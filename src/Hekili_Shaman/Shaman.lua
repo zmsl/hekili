@@ -4,11 +4,13 @@
 -- 1.60.1.70338, wowdb), the totems on the sim side (C6: `RegisterTotems` with each one's element and duration; the
 -- summon's `now` writes the slot's modelled expiry, which Families/Totems.lua answers in combat), Lightning Shield's
 -- charges spent by hits on us (`consumedBy`), Maelstrom Weapon's stacks on Lightning Bolt, Clearcasting as a charged
--- cost modifier, the shocks' shared cooldown, the weapon imbue as a precombat reminder (C4's main_hand_enchant), mana
--- under the five-second rule (`fsr`), and the default priorities (all provisional: no in-game check yet, D5). Research:
--- the class-completion research §4.
+-- cost modifier, the shocks' shared cooldown, Reverberation, Improved Fire Nova and Shamanistic Focus, the weapon
+-- imbues (C4's main_hand_enchant), mana under the five-second rule (`fsr`), and the default priority, Enhancement
+-- (wowsims.com), translated from wowsims/forever's APL (tools/wowsims/specs/shaman_enhancement.lua). Research: the
+-- class-completion research §4.
 -- Unmodelled: Stormstrike's debuff (no priority reads it), the totems' effects, Flametongue and Windfury Weapon's
--- procs, Windfury Totem (the party's: never prompted), Improved Lightning Shield's extra charges.
+-- procs, Windfury Totem (the party's: never prompted), Improved Lightning Shield's extra charges, and Call of Flame's
+-- +9 s on Flame Shock (wowsims/forever's spell data has it; the Forever DB2 at 70338 does not: checkpoint).
 -- Credits: Hekili (registration API, pack format and `summonTotem`'s signature, State.lua). wowsims/forever (MIT,
 -- ui/specs/shaman/enhancement/apls/default.apl.json and sim/shaman/) is the reference for the priorities and the totem,
 -- Fire Nova, Maelstrom Weapon and Clearcasting rules; no code is copied.
@@ -43,7 +45,7 @@ local spec = Hekili:NewClass("SHAMAN", {
             tree = 2,
             icon = 136051,
             role = "attack",
-            package = "Enhancement",
+            package = "Enhancement (wowsims.com)",
         },
         { key = "restoration", name = "Restoration", tree = 3, icon = 136052, role = "healer", unsupported = true },
     },
@@ -166,7 +168,7 @@ local function totemAbility(key)
 end
 
 -- A weapon imbue on the main hand: 60 minutes (DB2 tooltip), the shared main_hand_enchant pseudo-aura (C4), read out of
--- combat; the precombat reminder casts the one the `imbue` setting names.
+-- combat.
 local function imbue(ids, costs)
     return {
         id = ids[1],
@@ -190,13 +192,25 @@ local function imbue(ids, costs)
     }
 end
 
--- The shocks' shared 6 s cooldown (DB2 category 19): each sets the other's; Flame Shock leaves its DoT.
+-- The shocks' shared 6 s cooldown (DB2 category 19), Reverberation (16040, aura 107 misc 11: rank 1's -200 ms x the
+-- rank) taking 1 s off at 5/5: each sets the other's; Flame Shock leaves its DoT.
+local function shockCooldown()
+    return 6 - 0.2 * talent.reverberation.rank
+end
+
 local function shockEffect(other, debuffKey)
     return function()
-        setCooldown(other, 6)
+        setCooldown(other, 6 - 0.2 * talent.reverberation.rank)
         if debuffKey then
             applyDebuff("target", debuffKey)
         end
+    end
+end
+
+-- Shamanistic Focus (1223030, aura 108 misc 14: -45% on the shocks and Lightning Shield, mask 0x90100400).
+local function focused(costs, ids)
+    return function()
+        return byRank(costs, ids) * (1 - 0.45 * talent.shamanistic_focus.rank)
     end
 end
 
@@ -205,10 +219,10 @@ local function shock(other, ids, costs, debuffKey)
         id = ids[1],
         copy = rest(ids),
         cast = 0,
-        cooldown = 6,
+        cooldown = shockCooldown,
         gcd = "spell",
 
-        spend = cost(costs, ids),
+        spend = focused(costs, ids),
         spendType = "mana",
 
         startsCombat = true,
@@ -294,7 +308,7 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        spend = cost(LIGHTNING_SHIELD_COST, LIGHTNING_SHIELD),
+        spend = focused(LIGHTNING_SHIELD_COST, LIGHTNING_SHIELD),
         spendType = "mana",
 
         startsCombat = false,
@@ -324,12 +338,15 @@ spec:RegisterAbilities({
     earth_shock = shock("flame_shock", EARTH_SHOCK, EARTH_SHOCK_COST),
     flame_shock = shock("earth_shock", FLAME_SHOCK, FLAME_SHOCK_COST, "flame_shock"),
 
-    -- Hits around the fire totem up (wowsims fire_totems.go): unusable without one; its 10 s cooldown is DB2 category 35.
+    -- Hits around the fire totem up (wowsims fire_totems.go): unusable without one; its 10 s cooldown is DB2 category 35,
+    -- Improved Fire Nova (16086, aura 107 misc 11: rank 1's -2000 ms x the rank) taking 4 s off at 2/2.
     fire_nova = {
         id = 408341,
         copy = rest(FIRE_NOVA),
         cast = 0,
-        cooldown = 10,
+        cooldown = function()
+            return 10 - 2 * talent.improved_fire_nova.rank
+        end,
         gcd = "spell",
 
         spend = cost(FIRE_NOVA_COST, FIRE_NOVA),
@@ -357,52 +374,10 @@ spec:RegisterAbilities({
     frostbrand_weapon = imbue(FROSTBRAND_WEAPON, FROSTBRAND_WEAPON_COST),
 })
 
--- The imbue the precombat reminder casts while the main hand has none (research §4: Rockbiter by default).
-spec:RegisterSetting("imbue", 1, {
-    type = "select",
-    name = "Weapon Imbue",
-    desc = "The weapon imbue recommended before combat while your main hand has none.",
-    values = { "Rockbiter Weapon", "Flametongue Weapon", "Windfury Weapon", "Frostbrand Weapon" },
-    width = "full",
-}, "enhancement")
-
--- The mana lines' floors (D7: a percent of the maximum, one setting a line; wowsims: Fire Nova above 10%, the mana
--- potion below 80%, Demonic Rune below 70%). Off by default: mana is secret and `mana.pct` reads the belief's
--- low-biased lower bound (0 on a fresh boot, climbing with regen), so a floor line becomes usable only after a warm-up
--- and a "below" line errs early (Retribution's precedent); the usability answers still refuse at a real lack.
-local function manaSetting(key, name, desc, ...)
-    spec:RegisterSetting(key, 0, {
-        type = "range",
-        name = name,
-        desc = desc,
-        min = 0,
-        max = 100,
-        step = 1,
-        width = "full",
-    }, ...)
-end
-manaSetting(
-    "fire_nova_mana",
-    "Fire Nova Mana Floor",
-    "Fire Nova as a filler only while your mana is at least this percent of its maximum. 0 turns the floor off.",
-    "enhancement"
-)
-manaSetting(
-    "potion_mana",
-    "Mana Potion Below",
-    "A Major Mana Potion while your mana is under this percent of its maximum. Mana is estimated low, so the line errs early (it can fire near full mana). 0 turns the line off.",
-    "enhancement"
-)
-manaSetting(
-    "rune_mana",
-    "Demonic Rune Below",
-    "A Demonic Rune while your mana is under this percent of its maximum. Mana is estimated low, so the line errs early (it can fire near full mana). 0 turns the line off.",
-    "enhancement"
-)
-
 -- Talents: { talent tree (1 Elemental, 2 Enhancement, 3 Restoration: the dominant tree picks the spec), rank 1's spell,
 -- max rank }: the DB2's 46 nodes (`wowdb talents SHAMAN`; the tree is the DB2's Talent.TabID), keys the snake_case
--- names (a nameless node talent_<spell>). No ability reads one yet.
+-- names (a nameless node talent_<spell>), then Shamanistic Focus at tree 0. Reverberation and Improved Fire Nova
+-- shorten cooldowns; Shamanistic Focus cuts the shocks' and Lightning Shield's cost.
 spec:RegisterTalents({
     -- Elemental (tree 1)
     convection = { 1, 16039, 5 },
@@ -437,6 +412,8 @@ spec:RegisterTalents({
     spirit_weapons = { 2, 16268, 1 },
     weapon_mastery = { 2, 29082, 5 },
     stormstrike = { 2, 17364, 1 },
+    -- Forever-only (wowsims/forever's tree; not in the DB2's Talent table at 70338: checkpoint)
+    shamanistic_focus = { 0, 1223030, 1 },
     -- Restoration (tree 3)
     improved_healing_wave = { 3, 16182, 5 },
     tidal_focus = { 3, 16179, 5 },
@@ -456,9 +433,12 @@ spec:RegisterTalents({
 })
 
 -- The priority, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and run
--- it, never this block (tests/Forever/shaman_spec.lua checks it matches). Provisional (its description says why).
+-- it, never this block (tests/Forever/shaman_spec.lua checks it matches).
 spec:RegisterPack(
-    "Enhancement",
-    20261019322,
-    [[Hekili:vE13ZXPnq4)w6lnjtDV47CCAJtVmJtBCt7K4PtjZK3aeG4q9ajgjHV5EH)27UIFdsy7xSbjTF7UFA)w2ZFR)389siAQ)97UC3B3E523D1UD(E6ZLuFVss8rYb4boPa(7N4zeEmTGY14ENZfKe0(OkwU(V4(rwHsvsJ998(8TF927VHogImwscTXmQcoZDcj9bQSoCKJQd9YifeED4llLIhykMGtYVPoKlQdz8F(aez1HXz04J1HNP63xhQZGv0cnTOouLl0QlQd)c7qMMZ4hq8y08KxOqRiYdu4bcpP1mvMi(O6f4dejfwnwiYteNa)dVxhwisO554gPsbGVOcc3yIspbLmg(UamQs9QBAx8eLuIlXkIQOJpTjuHZhrtfOpIffremr(tjjgExKwhElt2AINws5h0znR)jIeF8ugLBqdpgMZGBaePfL6ZD2rjst()TgMP3eivyOB7mZgB1D8wMaX7UCdZ7Hew32maGePOejd4rndVm3bzYDgpCV4bsdT875q0G0MXhg8g5ZpkY1niCDD4xj0CL2q2FVLbhWE77rcrilGtWosVONqAdRMiDKZFjjvJgEsCsXkuVoTPKdRgMu0D7)8famjnLcST5sGNF(vBa2djmOEeWQuOHIr4y)bTqWzX1H)BfFYn7ypNYG6gJJASonxiKTvvkQgzcK6fPWTAeCPLqtjv56nGstkaJb9hjgDOAtPK2uJSxczzedYOGMQRlyP77aBJPqB)2F8hIQst3uqy8aidtcGec(VEtvz9FVaYFA)RtXBwTGFOI6g2DpBypX4jPvYZUX8QNnMGiuPJK4rDI6BE2OM3vkgOmv)iOnymFhNqCaLUbI0actgye4gqmpTbw7jr(ZTd1Ponu12xaDkffblm3SQt7XQYavj2JyHLNGU6tc59fK)tidm20kdQuy(MgCioz)w0wCZnLX6FR)(O5KgR6rc8CsJ8jqcQNNcm45waIfcpvexP2VZnXVcRT02fShEzbxibCqE3EEtaBkuIh1GBMrlQUg7RhTkdJ5Mo5oJ05LjM0SVhP9qjcA5Uijk6A92kU2O0WabFy)1t4aSGnW8DZjXsc1GXOTNftn0Tzh7C6Ol)pmiQ73VTeW3d6FJtfmBSJCg8rzZ0nnnsHhV3mTdLtIGVG7)rFVrfB4MTny99wuD77flX2SmcU5k11(AimEIEzCD)6oOVIhH)QzWpy4KQ8b)SuA47zUPWqfa8npgGDL(dq6q2mf3RDIRnjYa493W9WTfH7TUdtxQMbmNV50i9xEmgOvsnIagRbNc2VodSboRxdIh7DRZoo1E2Yju9oLS2EP7uYQYCe9pS(0eB7C5tNfJuYMZnxay5IDz1Utjoaj(Zn6(uLnDCNdMpo0y)8mglYMiEc7mz4OvCYAdjztk35KzJkTIhwBKjBA7(0y(GtR4J1gGYMo3TM7PizTO0xRrMRUFwu12UcDHsNGFv9SJEGU7FAr2p8jNzJFzbNUXWmkcqtqQ0zcPV3NPhz5m4h30(dOFLzB)))d]]
+    "Enhancement (wowsims.com)",
+    20261020281,
+    [[Hekili:vAv3onopq0NL9Qf0wLFOaLTIUsSA3vaAbTsHRDIBItIPo2r2oG4M8S)nouACCtA57MkxpZCMzoEo2bfIEcfLH1e0JNfC2LHbWVxfII0Vvtqr140n4cybhxb)(BEjMNsQiCDBYjVkEvrRuEPIQtnU(gtGZmWTUHY03XrRhfzvnjfffD7npCZJlj9iIIkPzzK3dJOspu6w2MOljTjB3ZpxijVqKTjzKCCddC)M)932ey72KHO0q9nfGYxvIRWCFRcWhxZu(BrWd(J3Zkb)0zqUKyUIbTsgSwyYnv1MGZYe8Vcl2qEt51M8lSgVCKA6KhU7jaKsTUwT03VGQlBwBAdFhxpfWeQXS5Z)(8GSGZdMh4beRuKtza7Jt1ubx5vljqWRX6vfsCkjwKhJPYyTqtQMLlsBuRoBg4uDdJfdEDv797f63w5NZGZuTGx0q2gRvmlgpgLws4f6stojyjSyYSE54iaCoowvlP8I9Z6f7Izvf(zHmUZ7AHzRznktRMhxKMTkCgnFLXOxDQ(6Rc2fhKHmsLGttJLnCYbcAXGGoatcb1THhyYtsQWuU66vdI(y0Yoi6mobi5ujjMlEbVnSUYDDtEUxkdIlfR0aP51uBheJwuQ5gYuvsjSm7u(LUGD9WbafaD)zXEfSPOMSPfYkOZPBiJxrRfm9E9sfMWGGevXVsW1cUNsd3X8dRJ(pgnH6vKUzqdLr6WWYSt38o53z5Ou7htc)im4a1VjTVB0ZQH92WfVYBVhfbYwfy05oogvPvD3S((TjWYh7UPLWXRzKm0prrwJMgJBL3OO9M8rrPsQMiPyJXDZ8inK0pjM2AIrHBrhCZDGR3XXua9WVV6bf1X0MkeW98JGRRSOh5juwdH)IjHFm5tp47gl2bxObUlNeUjvu9y6ACyLU4ieHJCZIhSLPdX8khm7PUDJRg3((HjPj1LJ1AgLXqolmyAsBuvR1Pq)(dBSqxfZhryPY78ZvfS)8nOXp6XEO70)u9TvRn1ndaEAZl3BF3Bm5F)ZEMJWpTuYTxTHzHdPA)4(yYB7yV8)PMZvsBJ1f2xM58CFhZaCdUrxkKOOBjBOmk8rs)z73a1zg9Fp]]
 )
+
+-- The hand-built Enhancement list, replaced by Enhancement (wowsims.com): a saved choice of it falls back to the default.
+spec:RetirePacks({ "Enhancement" })

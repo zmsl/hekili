@@ -193,7 +193,8 @@ Paladin checkpoint (in game, a level 60 Paladin; provisional until answered):
 - P13: Protection (wowsims.com)'s precombat order: Retribution Aura (10 s before the pull), then Seal of the Crusader
   at 1.5 s, then Seal of Fury in combat; and no Righteous Fury suggestion (ruling P11).
 
-`tests/Forever/loop_shaman_spec.lua` runs 3 Enhancement fights in `make check` (seeds 1-3, `#slow`) and 20 in
+`tests/Forever/loop_shaman_spec.lua` runs 3 Enhancement fights on Enhancement (wowsims.com), the default priority, in
+`make check` (seeds 1-3, `#slow`) and 20 in
 `make test-shaman` (`#shaman`), gated by `pack_gate.gate` and asserting its flagged lines ran (Lightning Bolt at 5
 Maelstrom Weapon and Fire Nova on Clearcasting at tier 1; Strength of Earth, Lightning Shield and Flame Shock at tier
 2). The world keeps the totem slots (`W.summonTotem`, class-neutral: a slot and an expiry), secret in combat; the summon's
@@ -203,9 +204,11 @@ elemental spell rolls Clearcasting (10%); the shocks share a 6 s cooldown. Neith
 ends the loop before the client sees it, so the next fight's prepull would be believed in combat and its totem slots
 never read (a harness quirk every pack shares). The world runs out of mana about 35 s in (idle about 0.68: UNMEASURED
 pool and regen, no Mana Spring regen, Water Shield or potions), so most in-combat ticks show no icon on either side.
-The imbues are not in the solo world's kit (it has no weapon enchant read); `shaman_spec` covers the reminder. The mana
-lines (Fire Nova filler floor, mana potion, Demonic Rune; D7) are settings, off by default (Retribution's reason). The
-first runs (class-completion Task 9):
+The imbues are not in the solo world's kit (it has no weapon enchant read). The world's costs are each rank's (DB2),
+with Shamanistic Focus when the build has it. The lines on Enhancement (wowsims.com) (wowsims packs plan, Task 10) are
+byte-identical to the retired hand-built list's (class-completion Task 9): the same order of the same abilities at 60
+and no mana potion or Demonic Rune in the character's bags. `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's own fight (floor
+0.60) and runs the levels 10, 40 and 60:
 
 ```
 Enhancement solo: fights=3 agreement 0.999 (687 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.014; ... [seeds 1-3]

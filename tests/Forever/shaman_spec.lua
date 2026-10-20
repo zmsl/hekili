@@ -75,7 +75,11 @@ describe("Forever Shaman", function()
             w.game.known[ids[#ids]] = true
             local e = ld.env(w)
             assert.are.same(ids, idsOf(a), key)
-            assert.are.same({ want[2], want[3], want[4] }, { ld.run(a.spend, e) or 0, a.cooldown, a.gcd }, key)
+            assert.are.same(
+                { want[2], want[3], want[4] },
+                { ld.run(a.spend, e) or 0, ld.run(a.cooldown, e), a.gcd },
+                key
+            )
             assert.are.equal("function", type(a.known), key)
         end
         assert.are.equal(15, n)
@@ -89,18 +93,18 @@ describe("Forever Shaman", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 0, 15, 16, 15 }, n)
+        assert.are.same({ [0] = 1, 15, 16, 15 }, n)
+        assert.are.same({ 0, 1223030, 1 }, w.talents.shamanistic_focus) -- wowsims's tree; not in the DB2's Talent table
     end)
 
-    it("declares mana under the five-second rule, Rockbiter as the default imbue, and the mana lines off", function()
-        assert.are.same({ 0 }, w.order)
-        assert.are.same({ spirit = 17, mp5 = 2 }, w.resources[0].meta.fsr)
-        assert.are.equal(1, w.settings.imbue.default)
-        assert.are.equal("Rockbiter Weapon", w.settings.imbue.option.values[1])
-        for _, key in ipairs({ "fire_nova_mana", "potion_mana", "rune_mana" }) do
-            assert.are.equal(0, w.settings[key].default, key)
+    it(
+        "declares mana under the five-second rule and no settings (the hand-built list's are retired with it)",
+        function()
+            assert.are.same({ 0 }, w.order)
+            assert.are.same({ spirit = 17, mp5 = 2 }, w.resources[0].meta.fsr)
+            assert.is_nil(next(w.settings or {}))
         end
-    end)
+    )
 
     it("registers each totem with its element and durations, and its summon fills that slot for its rank's", function()
         for key, want in pairs(TOTEMS) do
@@ -198,6 +202,41 @@ describe("Forever Shaman", function()
         assert.are.same({ 8050, 12 }, { w.auras.flame_shock.id, w.auras.flame_shock.duration })
     end)
 
+    -- Rank 1's value x the rank (Druid's precedent; the DB2's higher ranks carry no effects): Reverberation (16040,
+    -- aura 107 misc 11, -200 ms) on the shocks, Improved Fire Nova (16086, aura 107 misc 11, -2000 ms) on Fire Nova.
+    -- wowsims's log of the 5/5 and 2/2 build: shocks 5 s apart, Fire Novas 6 s apart.
+    it("shortens the shocks' cooldown with Reverberation and Fire Nova's with Improved Fire Nova", function()
+        local e = ld.env(w)
+        e.talent.reverberation = { rank = 5, enabled = true }
+        e.talent.improved_fire_nova = { rank = 2, enabled = true }
+        assert.are.same({ 5, 5, 6 }, {
+            ld.run(w.abilities.earth_shock.cooldown, e),
+            ld.run(w.abilities.flame_shock.cooldown, e),
+            ld.run(w.abilities.fire_nova.cooldown, e),
+        })
+        local cds = {}
+        e.setCooldown = function(k, v)
+            cds[#cds + 1] = { k, v }
+        end
+        ld.run(w.abilities.earth_shock.handler, e)
+        assert.are.same({ { "flame_shock", 5 } }, cds)
+    end)
+
+    -- Shamanistic Focus (1223030, aura 108 misc 14, -45% on mask 0x90100400: the shocks and Lightning Shield); wowsims's
+    -- log: Flame Shock 225.5, Lightning Shield 203.5.
+    it("takes 45% off the shocks' and Lightning Shield's cost with Shamanistic Focus", function()
+        for _, ids in ipairs({ KIT.flame_shock[1], KIT.earth_shock[1], KIT.lightning_shield[1] }) do
+            w.game.known[ids[#ids]] = true
+        end
+        local e = ld.env(w)
+        e.talent.shamanistic_focus = { rank = 1, enabled = true }
+        assert.are.same({ 410 * 0.55, 450 * 0.55, 370 * 0.55 }, {
+            ld.run(w.abilities.flame_shock.spend, e),
+            ld.run(w.abilities.earth_shock.spend, e),
+            ld.run(w.abilities.lightning_shield.spend, e),
+        })
+    end)
+
     it("models each imbue on the main hand for its 60 minutes", function()
         for _, key in ipairs({ "rockbiter_weapon", "flametongue_weapon", "windfury_weapon", "frostbrand_weapon" }) do
             for _, field in ipairs({ "now", "handler" }) do
@@ -209,7 +248,7 @@ describe("Forever Shaman", function()
     end)
 end)
 
--- The priority after wowsims/forever's Enhancement APL (reference only) and its D1 focus tiers.
+-- The default priority, Enhancement (wowsims.com) (generated from wowsims/forever's APL), and its D1 focus tiers.
 describe("Forever Shaman priorities", function()
     local packs = {}
     setup(function()
@@ -218,8 +257,10 @@ describe("Forever Shaman priorities", function()
         end
     end)
 
+    local PACK = "Enhancement (wowsims.com)"
+
     local function line(list, action, criteria)
-        for i, e in ipairs(packs.Enhancement.lists[list]) do
+        for i, e in ipairs(packs[PACK].lists[list]) do
             if e.action == action and (criteria == nil or e.criteria == criteria) then
                 return i, e
             end
@@ -227,13 +268,12 @@ describe("Forever Shaman priorities", function()
         error("no " .. action .. " if " .. tostring(criteria))
     end
 
-    it("keeps the class file's generated block in step with APLs/ and marks the pack provisional", function()
+    it("keeps the class file's generated block in step with APLs/", function()
         local mp = assert(loadfile("tools/make_pack.lua"))("lib")
         local f = assert(io.open(FILE))
         local src = f:read("*a")
         f:close()
         assert.are.equal(src, (mp.sync(src, mp.load("shaman"))))
-        assert.is_truthy(packs.Enhancement.desc:find("provisional", 1, true))
     end)
 
     it("names only registered abilities, auras, settings and totem elements", function()
@@ -241,7 +281,7 @@ describe("Forever Shaman priorities", function()
         local shared = { major_mana_potion = true, demonic_rune = true } -- Hekili_Shared's consumables
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, settings = cls.settings }
         local elements = { fire = true, earth = true, water = true, air = true, main_hand_enchant = true }
-        for list, entries in pairs(packs.Enhancement.lists) do
+        for list, entries in pairs(packs[PACK].lists) do
             for i, e in ipairs(entries) do
                 local where = list .. " " .. i
                 assert.is_true(cls.abilities[e.action] ~= nil or shared[e.action] == true, where)
@@ -257,25 +297,20 @@ describe("Forever Shaman priorities", function()
     end)
 
     it(
-        "puts Fire Nova on Clearcasting and Lightning Bolt at 5 Maelstrom Weapon at tier 1, the upkeep at tier 2",
+        "carries the retired list's tiers: Fire Nova on Clearcasting and the Maelstrom Lightning Bolt at 1, upkeep at 2",
         function()
             local _, fn = line("default", "fire_nova", "buff.clearcasting.up")
             local _, lb = line("default", "lightning_bolt", "buff.maelstrom_weapon.stack>=5")
-            local _, goa = line("default", "grace_of_air_totem", "!totem.air.up")
-            local _, soe = line("default", "strength_of_earth_totem", "!totem.earth.up")
-            local _, st = line("default", "searing_totem", "!totem.fire.up")
+            local _, goa = line("default", "grace_of_air_totem", "totem.air.remains<=0")
+            local _, soe = line("default", "strength_of_earth_totem", "totem.earth.remains<=0")
+            local _, st = line("default", "searing_totem", "totem.fire.remains<=0")
             local _, ls = line("default", "lightning_shield", "!buff.lightning_shield.up")
             local _, fs = line("default", "flame_shock", "!debuff.flame_shock.up")
             assert.are.same(
                 { 1, 1, 2, 2, 2, 2, 2 },
                 { fn.focus, lb.focus, goa.focus, soe.focus, st.focus, ls.focus, fs.focus }
             )
-            local _, filler = line("default", "fire_nova", "mana.pct>=settings.fire_nova_mana")
-            assert.is_nil(filler.focus)
-            line("default", "major_mana_potion", "mana.pct<settings.potion_mana")
-            line("default", "demonic_rune", "mana.pct<settings.rune_mana")
-            line("precombat", "rockbiter_weapon", "settings.imbue=1&!buff.main_hand_enchant.up")
-            for _, e in ipairs(packs.Enhancement.lists.default) do
+            for _, e in ipairs(packs[PACK].lists.default) do
                 assert.are_not.equal("windfury_totem", e.action)
             end
         end
@@ -308,7 +343,7 @@ describe("Forever Shaman through the engine", function()
     end
 
     before_each(function()
-        H = headless.new({ character = character(), pack = "Enhancement" })
+        H = headless.new({ character = character(), pack = "Enhancement (wowsims.com)" })
     end)
 
     it("runs every declared `now` in VirtualState's context without an error", function()
@@ -332,6 +367,7 @@ describe("Forever Shaman through the engine", function()
         local VS, S = H.ns.VirtualState, H.Hekili.State
         local t = H.ctl.now + 1
         assert.is_true(headless.cycle(H, t))
+        S.reset("Primary", true) -- at now: the cycle leaves the state after its simulated precombat totems
         assert.is_false(S.totem.fire.up) -- read out of combat: empty
         H.ctl.combat = true
         H.Fire("PLAYER_REGEN_DISABLED")
@@ -350,12 +386,5 @@ describe("Forever Shaman through the engine", function()
         assert.are.equal(t + 55, S.totem.fire.expires)
         assert.is_false(S.totem.air.up)
         assert.are.same({}, H.errors)
-    end)
-
-    it("reminds of the imbue the setting names before combat while the main hand has none", function()
-        assert.is_true(headless.cycle(H, H.ctl.now + 1))
-        local out = H.Hekili.Engine.Output.Primary
-        assert.is_true(out.count > 0)
-        assert.are.equal("rockbiter_weapon", out.recs[1].actionName)
     end)
 end)
