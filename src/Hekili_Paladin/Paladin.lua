@@ -45,7 +45,7 @@ local spec = Hekili:NewClass("PALADIN", {
             tree = 3,
             icon = 135873,
             role = "attack",
-            package = "Retribution",
+            package = "Retribution (wowsims.com)",
         },
     },
 })
@@ -564,33 +564,9 @@ spec:RegisterAbilities({
     retribution_aura = selfBuff("retribution_aura", RETRIBUTION_AURA),
 })
 
--- The mana floors of Retribution's swing-gap fillers (D7: a percent of the maximum, one setting a line; wowsims uses
--- 10). Off by default: mana is secret and the floor is judged on the belief's low-biased lower bound, which starts at 0
--- on a fresh boot and climbs with regen, so a floor line becomes usable only after a warm-up (minutes out of combat);
--- the usability answers still refuse a filler at a real lack of mana.
-spec:RegisterSetting("consecration_mana", 0, {
-    type = "range",
-    name = "Consecration Mana Floor",
-    desc = "Consecration is used in the swing gap only while your mana is at least this percent of its maximum. 0 turns the floor off.",
-    min = 0,
-    max = 100,
-    step = 1,
-    width = "full",
-}, "retribution")
-
-spec:RegisterSetting("exorcism_mana", 0, {
-    type = "range",
-    name = "Exorcism Mana Floor",
-    desc = "Exorcism is used in the swing gap only while your mana is at least this percent of its maximum. 0 turns the floor off.",
-    min = 0,
-    max = 100,
-    step = 1,
-    width = "full",
-}, "retribution")
-
--- The two priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those
--- and run it, never these blocks (tests/Forever/paladin_spec.lua checks they match). Pick one with
--- /hekili priority <name>. Both are provisional (their descriptions say why).
+-- The priorities, one a spec, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit
+-- those (a wowsims.com pack: its recipe, tools/wowsims/specs/) and run it, never these blocks
+-- (tests/Forever/paladin_spec.lua checks they match).
 spec:RegisterPack(
     "Retribution (wowsims.com)",
     20261020890,
@@ -601,11 +577,6 @@ spec:RegisterPack(
     20261020180,
     [[Hekili:Lsv3UTnpm0NLDZwdwGTtsB)6cwUOdfFyPOROaUxlBAj6y1OyzOFwxUXp7JYnnX5NwuGDJJc55CinpIMnI9ilvaoKD)4KXxokzCYORsyPU1nilTb4lHf0HAyf98bJ2HCNux3MF2Z6NTYv2iUE1GaY1knicQv4Lk38AwXjf22GCsPRV76BMF)0MTkYsRKcb(cn0YFNQnTn3vHT5BIfxQn4VrtBUalbVY1MF9d31MtHBZ3teVmouEBCdOaHSoEx5JHgLnEJar0FIEYQRhmKkLbQTk6frqN1HslTT5GqOR)cDyjU2g1MFd4GPNOLo7xZFKePY5AStJJxiDv(IWBr8bqhqAsDUyYKVnjrKCEYKKiASA0Lsfn6HUU0g1yqICb4MzqNrw4dHZaVbgsPA8kvgLBus7ThX4RZITiOY0Lz04lJB8wqGM94fDXwIZEYlwGRWA3qVfjwLzl4IzJ2ciO3ZYsx2hb4Mcx6nRhwQ5E7SXdLLZoRWxwg1pBKbxbYA73dpRGAr2MaF(thJ13mOFv40pi3aD2DV4vA16mBLMV8erLOs8AlDCAAgVe7hg)J2WL2vT3YsjBZgU6U)nCL06SDRvVCBIoEF3AgwdfkuW(blT3GkKCJ9Ys3okzos1piPdCHa1jhqLBKo0ibw6)(eVxH7LHL2nddDnv)ZpO(VYOVdfWDXBGBNJfqD57Jk4G7x()7Dj05Pbyx9gWE1JzHzz62fOtzK7wEOCj7K4WTZt5N7Xn6IJNR9xt76fQBaVRsByP)exkvs6dm))MVF0LM93p]]
 )
-spec:RegisterPack(
-    "Retribution",
-    20261020682,
-    [[Hekili:TE1xVTTnq8pl7LSAmpvBV1SUu4cK11H2GGGGQcS3Ken1jlUijAqsfx)I(SV7OKIPKLSD92lg0K3F(D3974rfmp4Rb(Xmde8WIzlUE(SfZU(Tlc8n72ab(By8NyRXffSC83VagLyvPrilOZ2LjzXK(RkfzMpxeSAqtP3a8a)hV9(B)Zp)WnkxBKkIJHA9ank0FjvWZGQkYXtvrpYYyXcCXR2OKpl04MSSBQIkKvrIIFEnITQiEkWFQkAhyExvKjf3rdSm90QOpYtLGUkIvexfDxz8Aihkm)iUdKKaCtve5KxubfuHlZLXqwgGQKOK5OmLiS4mTrp5ghZuRmxkZILBlqV9jwEofbYKQO)wXmPegBmp8nGxAWfBffO4ONq9ncs85KQYSDvr(yK)emTrLVUvOn1w7EX6utlgn17)kF7)OJ)Gmp3gI2F2V)xi1azPUa0u6ayCetBtbevctJ4cJUor1e9uWmPp((GSqdCmMSvfREF8BsfxOZDcsngCRRIwZ24Q)ceR4XcCjIsgMvZKsLUXDAWyqTi4jtqmVcZdXqcRmZm5Du6IsJwR3KJsLuX2WYWsW0g4JqUkkRoTWsmKx3k3Qf56xNuZROAEhM1TpEp5tfKakOGdu1mB3epKDRKjImKZZ4KOAVnkGlZxXmlDyWHSsfBQiz5pSQmjXR)jELBQU7ad8tlFnvddLjH86AM1c29oLcQofZHuBPQeDUDDiLmMsTUltX0wOMYAKs15nV9B6bfSvezV1kOl)Nwk(0snG(ojCnpE5CxrsTCDcxBjM(0ejVu3teRpSuA3T7NaA00bCwcojsgfYTa8Q6enGmvh1X8CZb9SRBby0S4f67og5qe0)4Jf9uD8eUUFz(OCIVFBXDATBsilitLZefPiedvaTu)(5EV5kQb2Bd38(LT9TEU6hABWDmo0CjXLy4wD7AuhQ7YtXtDKTxGoIiNIv3v6XRcNhDONVhODPReXINffqyc7zPQBetoTDqKBVDtgE5SRIblMEjhaXHRvYYU9jdbO2loUad0waRUlWhVcMgE379b0TuA6ze71d)3d2xM0Wzd(JaFNyLoS5I5a)xQ)bg0W9uQvi3Yoj3VmIC9Q9b(2Ip5puPFDeLgSgJ(ujWHqcwG)XPcKPFZy4zpFGe76ZmN4ssCbYLtpiV)BhfK26MJVoL1E7iwRLWeqfu)MxbmeHyVRgDE2ER2BQynRlS(zTo4Fak0zX7(FLp1RO3NBCqCFwJRoJrLhYOBoRlS7tcVm88Do(8KDBUiCmI6bHLtl65nZ8ye3tFnW57JFF0C85o48GjYJCzyBIBb525Z(p73odShOR21Fg6D2npYDOo8xAE79U6dVBDGxEFSXbhJi4ufgRR(0v69gXgLSstkDt8NGNezc87tA(q3j2Jd(3d]]
-)
 
 -- The hand-built lists the wowsims.com priorities replaced: a saved choice of one falls back to its spec's default.
-spec:RetirePacks({ "Protection" })
+spec:RetirePacks({ "Protection", "Retribution" })

@@ -18,8 +18,8 @@
   `/hekili spec <name>` (`/hekili spec` lists them). Healing trees (Holy, Restoration) and Elemental show a "no
   priorities on Forever" notice and the addon recommends nothing while one is active.
 - Paladin: "Protection (wowsims.com)" is Protection's default priority, translated from wowsims/forever's Protection APL.
-- Paladin: a "Retribution (wowsims.com)" priority, translated from wowsims/forever's Twist of Light APL, your on-use
-  trinkets included (selectable; not yet the default).
+- Paladin: "Retribution (wowsims.com)" is Retribution's default priority, translated from wowsims/forever's Twist of
+  Light APL, your on-use trinkets included.
 
 ### Changed
 - Rogue: the hand-built Assassination, Combat and Subtlety priorities are gone, with their settings (Bleeds on
@@ -50,6 +50,8 @@
 - Strikes on your next swing (Raptor Strike, Heroic Strike, Maul) are no longer recommended while the addon knows your
   target is beyond melee range (the game's own range check says "in range" for them at any distance).
 - Paladin: the hand-built Protection priority is gone (replaced by Protection (wowsims.com)).
+- Paladin: the hand-built Retribution priority is gone (replaced by Retribution (wowsims.com)), with its Holy Shock
+  list and the Consecration and Exorcism Mana Floor settings (wowsims's 10% floor is in the new priority).
 
 ### Fixed
 - Hunter: priority lines that divide (Multi-Shot's) now fire. Divisions in the priorities translated from
@@ -92,6 +94,7 @@
   specializations, and a custom priority you had chosen stays selected for your active specialization. Change them per
   specialization afterwards; old priority exports still import.
 - Paladin: a saved choice of the old "Protection" priority falls back to Protection (wowsims.com) at the next login.
+- Paladin: a saved choice of the old "Retribution" priority falls back to Retribution (wowsims.com) at the next login.
 
 ## v0.1.0
 

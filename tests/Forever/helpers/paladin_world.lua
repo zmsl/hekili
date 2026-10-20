@@ -399,6 +399,7 @@ local function content(name, pack)
     return C
 end
 
-M.Retribution, M.Protection = content("Retribution"), content("Protection", "Protection (wowsims.com)")
+M.Retribution, M.Protection =
+    content("Retribution", "Retribution (wowsims.com)"), content("Protection", "Protection (wowsims.com)")
 
 return M

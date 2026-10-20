@@ -147,21 +147,19 @@ Subtlety solo: fights=3 agreement 0.967 (2192 ticks); react median 0 p90 0 never
 `make test-paladin` (`#paladin`), asserting its flagged lines ran (Retribution: the seal twist at tier 1; Protection:
 Seal of Fury and Holy Shield at tier 2). The mob swings at us in both worlds: Holy Shield raises the block chance and
 each block spends a charge (the world's class-neutral `taking`/`took`); our landed swing spends an Echo (`landed`); mana
-runs under the five-second rule (`fsr`). Both packs are gated by `pack_gate.gate`. Retribution's swing-gap fillers
-have per-line mana floors (`settings.consecration_mana`, `settings.exorcism_mana`, D7), off by default: mana is secret
-even out of combat and the floor is judged on the belief's low-biased lower bound. VS.Power integrates regen into that
-bound, so it climbs toward the maximum at rest, but on a fresh boot it starts at 0 and the solo worlds give it a 0.5 s
-prepull and continuous spending, so a 10% floor (wowsims) never passes there; in game the floor lines become usable
-only after a warm-up (minutes out of combat). The usability answers still refuse a filler at a real lack of mana.
-Residual: the core mana bound decision (plan, Open after Day 4) would let the floor default return. The holy_shock
-list (Holy Shock talent) and Hammer of Wrath's window are not exercised by the solo worlds. The runs (class-completion
-Task 8; the Protection lines are Protection (wowsims.com)'s since the wowsims packs plan, Task 9):
+runs under the five-second rule (`fsr`). Both packs are gated by `pack_gate.gate`; both are wowsims.com packs since the
+wowsims packs plan, Task 9 (the hand-built lists retired). Retribution (wowsims.com)'s swing-gap fillers carry
+wowsims's own `mana.pct>=10`, judged on the secret-mana belief: in the solo worlds' later fights (each starts at full
+mana 30 s after the last, which no regen fills) the belief rightly carries the drained pool, so the fillers wait where
+the oracle, reading the truth, casts them (the Retribution lines' consecration disagreements; reported centrally). The
+holy_shock list is gone with the hand-built Retribution list; Hammer of Wrath's window is not exercised by the solo
+worlds. The runs (the rebased base of the wowsims packs plan, Task 9 resume 3):
 
 ```
-Retribution solo: fights=3 agreement 0.988 (1767 ticks); react median 0 p90 1 never 0.007; refused per 100 [], episodes 0.00/min; dps A/B 0.951; ... [seeds 1-3]
-Protection solo: fights=3 agreement 0.986 (1925 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.011; ... [seeds 1-3]
-Retribution solo: fights=20 agreement 0.989 (11761 ticks); react median 0 p90 1 never 0.003; refused per 100 [], episodes 0.00/min; dps A/B 0.970; ...
-Protection solo: fights=20 agreement 0.988 (13869 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.985; ...
+Retribution solo: fights=3 agreement 0.924 (2572 ticks); react median 0 p90 0 never 0.188; refused per 100 [], episodes 0.00/min; dps A/B 0.865; ... [seeds 1-3]
+Protection solo: fights=3 agreement 0.988 (2431 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.011; ... [seeds 1-3]
+Retribution solo: fights=20 agreement 0.911 (17477 ticks); react median 0 p90 0 never 0.226; refused per 100 [], episodes 0.00/min; dps A/B 0.883; ...
+Protection solo: fights=20 agreement 0.989 (17185 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.985; ...
 ```
 
 Paladin checkpoint (in game, a level 60 Paladin; provisional until answered):

@@ -113,8 +113,7 @@ describe("Forever Paladin", function()
         assert.are.same({ [0] = 5, 14, 15, 15 }, n)
     end)
 
-    it("declares mana under the five-second rule, and the fillers' mana floors off by default", function()
-        assert.are.same({ 0, 0 }, { w.settings.consecration_mana.default, w.settings.exorcism_mana.default })
+    it("declares mana under the five-second rule", function()
         assert.are.same({ 0 }, w.order)
         assert.are.same({ spirit = 17, mp5 = 2 }, w.resources[0].meta.fsr)
     end)
@@ -295,15 +294,12 @@ describe("Forever Paladin priorities", function()
         error(pack .. ": no " .. action .. " if " .. tostring(criteria))
     end
 
-    it("keeps the class file's generated blocks in step with APLs/ and marks every pack provisional", function()
+    it("keeps the class file's generated blocks in step with APLs/", function()
         local mp = assert(loadfile("tools/make_pack.lua"))("lib")
         local f = assert(io.open(FILE))
         local src = f:read("*a")
         f:close()
         assert.are.equal(src, (mp.sync(src, mp.load("paladin"))))
-        for _, name in ipairs({ "Retribution" }) do
-            assert.is_truthy(packs[name].desc:find("provisional", 1, true), name)
-        end
     end)
 
     it("names only registered abilities, auras, talents and state expressions", function()
@@ -337,31 +333,25 @@ describe("Forever Paladin priorities", function()
         end
     end)
 
-    it("Retribution: Hammer of Wrath and the twist seals at tier 1, the swing-gap fillers at tier 2", function()
-        local _, how = line("Retribution", "default", "hammer_of_wrath")
-        local _, soc = line(
-            "Retribution",
-            "default",
-            "seal_of_command",
-            "talent.twist_of_light.enabled&!buff.echo_of_command.up&!buff.seal_of_command.up"
-        )
-        local _, sor = line(
-            "Retribution",
-            "default",
-            "seal_of_righteousness",
-            "talent.twist_of_light.enabled&!buff.echo_of_righteousness.up&!buff.seal_of_righteousness.up"
-        )
-        local _, con =
-            line("Retribution", "default", "consecration", "mainhand_remains>1.5&mana.pct>=settings.consecration_mana")
-        local _, exo =
-            line("Retribution", "default", "exorcism", "mainhand_remains>1.5&mana.pct>=settings.exorcism_mana")
-        local _, j = line("Retribution", "default", "judgement")
-        assert.are.same({ 1, 1, 1, 2, 2 }, { how.focus, soc.focus, sor.focus, con.focus, exo.focus })
-        assert.is_nil(j.focus)
-        local i = line("Retribution", "default", "run_action_list")
-        assert.are.equal(1, i)
-        line("Retribution", "holy_shock", "holy_shock", "debuff.consecrated_ground.up")
-    end)
+    it(
+        "Retribution (wowsims.com): Hammer of Wrath and the twist seals at tier 1, the swing-gap fillers at tier 2 (the retired list's tiers)",
+        function()
+            local R = "Retribution (wowsims.com)"
+            local _, how = line(R, "default", "hammer_of_wrath")
+            local twist = "talent.twist_of_light.enabled&(!buff.echo_of_command.up&!buff.seal_of_command.up)"
+            local _, soc = line(R, "default", "seal_of_command", twist)
+            local _, sor = line(
+                R,
+                "default",
+                "seal_of_righteousness",
+                "talent.twist_of_light.enabled&(!buff.echo_of_righteousness.up&!buff.seal_of_righteousness.up)"
+            )
+            local _, con = line(R, "consecration", "consecration")
+            local _, exo = line(R, "exorcism", "exorcism")
+            assert.are.same({ 1, 1, 1, 2, 2 }, { how.focus, soc.focus, sor.focus, con.focus, exo.focus })
+            assert.is_nil(select(2, line(R, "default", "judgement")).focus)
+        end
+    )
 
     it("Protection (wowsims.com): Seal of Fury and Holy Shield at tier 2 (the retired list's tiers)", function()
         local _, sof = line("Protection (wowsims.com)", "default", "seal_of_fury")
@@ -396,7 +386,7 @@ describe("Forever Paladin through the engine", function()
     end
 
     before_each(function()
-        H = headless.new({ character = character(), pack = "Retribution" })
+        H = headless.new({ character = character(), pack = "Retribution (wowsims.com)" })
     end)
 
     it("runs every declared `now` in VirtualState's context without an error", function()

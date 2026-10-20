@@ -6,7 +6,7 @@ local headless = require("Game.harness.headless")
 local pack_gate = require("Forever.helpers.pack_gate")
 local pw = require("Forever.helpers.paladin_world")
 
-local PACKS = { "Retribution", "Protection" }
+local PACKS = { "Retribution", "Protection" } -- the contents (paladin_world.lua): each on its wowsims.com pack
 
 describe("the Paladin loop worlds", function()
     for _, name in ipairs(PACKS) do
