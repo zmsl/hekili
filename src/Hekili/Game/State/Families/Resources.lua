@@ -37,8 +37,10 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- may pay the rest).
 -- `cutL/E/H[r]`: what short answers cut from a swing-paid slot's lo, est and hi while a swing credit of it was too
 -- young for its verdict (Rows.lua's I.CreditYoung: the client may still show the slot from before it), the dearest
--- such cost `cutC[r]` (0: none kept), the first such answer's time `cutT[r]` and the slot's spend count then
--- `cutSp[r]`; a usable answer at that cost or dearer gives the cut back (I.On(Obs.Usable)).
+-- such cost `cutC[r]` (0: none kept), the first such answer's time `cutT[r]`, the slot's spend count then `cutSp[r]`
+-- and its gains then (`cutGain[r]`: R.gain, our own and hits taken; `cutRaised[r]`: R.raised, every swing step and
+-- periodic tick paid so far); a usable answer at that cost or dearer gives the cut back (I.On(Obs.Usable)) only while
+-- none of them has moved since.
 -- `over[r]`: how far the modelled floor sits above the measured one (lo0): a regenerating slot that rests at its
 -- maximum is built at rest (est, and this floor: lo0 + over), and the floor then moves with everything that moves lo0;
 -- a measurement the floor contradicts (a short answer below it, a pin's top under it, an exact read) drops it to lo0
@@ -109,6 +111,9 @@ local R = {
     cutE = {},
     cutH = {},
     cutSp = {},
+    cutGain = {},
+    cutRaised = {},
+    raised = {},
     over = {},
     assume = {},
 }
@@ -191,7 +196,9 @@ local pre = {}
 local RECORDS = 8
 local recR, recHand, recEst, recLo, recHi, recHit, recA, recFirm, recSpends = {}, {}, {}, {}, {}, {}, {}, {}, {}
 local recE0, recLo0, recHi0 = {}, {}, {}
+local recTime = {} -- when this slot was paid from record k (its landed swing's fold): a stale id is never young
 for k = 1, RECORDS do
+    recTime[k] = -1e9
     recR[k], recHand[k], recEst[k], recLo[k], recHi[k], recHit[k], recA[k] = 0, 0, 0, 0, 0, 0, 0
     recFirm[k], recSpends[k], recE0[k], recLo0[k], recHi0[k] = false, 0, 0, 0, 0
 end
@@ -294,6 +301,7 @@ I.OnBuild(function(def, now)
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
         R.cutC[r], R.cutT[r], R.cutL[r], R.cutE[r], R.cutH[r], R.cutSp[r] = 0, 0, 0, 0, 0, 0
+        R.cutGain[r], R.cutRaised[r], R.raised[r] = 0, 0, 0
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
         R.decayDef[r] = d.decay
         R.decay[r] = decayOf(r)
@@ -544,6 +552,7 @@ I.OnAdvance(function(from, to)
             R.lo0[r] = clamp(R.lo0[r] + v, max)
             R.hi0[r] = clamp(R.hi0[r] + v, max)
             R.pinDelta[r] = R.pinDelta[r] + v
+            R.raised[r] = R.raised[r] + v
             norm(r)
         end
     end
@@ -795,6 +804,7 @@ local function swingStep(r, hand, c, t, owed)
         R.est0[r] = clamp(R.est0[r] + de, max)
         R.lo0[r] = clamp(R.lo0[r] + dl, max)
         R.hi0[r] = clamp(R.hi0[r] + dh, max)
+        R.raised[r] = R.raised[r] + v
         I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Swing)
     end
 end
@@ -841,7 +851,7 @@ local function judge(a, now, t, r, c)
     for k = 1, RECORDS do
         if recA[k] == a then
             if R.spends[recR[k]] ~= recSpends[k] then
-                recA[k] = 0
+                recA[k], recR[k] = 0, 0
             else
                 local ok = nil -- a NOT answer is no rung: in the window it closes the record unjudged
                 if now == YES or now == SHORT then
@@ -859,9 +869,13 @@ local function judge(a, now, t, r, c)
                     R.hi0[s] = back(R.hi0[s], recHi[k], recHi0[k], max)
                     local h = hitRate[recHand[k]] - recHit[k]
                     hitRate[recHand[k]] = h > 0 and h or 0
+                    R.cutC[s] = 0 -- a short answer the retraction proved right is no stale one to give back
                     I.Sample(R.power[s], "modelled", R.est0[s], t, Obs.Usable)
                 elseif s == r and (v and now == YES or v == nil) then
                     explained = explained or (recE0[k] < c and c <= recE0[k] + recEst[k])
+                end
+                if v ~= nil then
+                    recR[k] = 0 -- consumed: a reused id is not this slot's credit
                 end
             end
         elseif recA[k] > 0 and recR[k] == r and R.spends[r] == recSpends[k] then
@@ -877,7 +891,7 @@ end
 local function young(r, t)
     if I.CreditYoung then
         for k = 1, RECORDS do
-            if recR[k] == r and I.CreditYoung(k, t) then
+            if recR[k] == r and t - recTime[k] <= I.Log.ORACLE_MAX and I.CreditYoung(k, t) then
                 return true
             end
         end
@@ -886,15 +900,18 @@ local function young(r, t)
 end
 
 -- A usable answer at cost c at t gives back what young short answers cut from slot r (R.cutC): the slot is at least c,
--- so those answers, at c or cheaper, were the client's from before the credit. Only with no spend from the slot since
--- the cut and within the verdict window (Rows.lua's ORACLE_MAX); else the cut stands. True when it gave it back.
+-- so those answers, at c or cheaper, were the client's from before the credit, unless something else lifted it across
+-- c since. Only within the verdict window (Rows.lua's ORACLE_MAX), with no spend from the slot and no modelled gain
+-- since the cut (a refund, a hit taken, another swing or a periodic tick could have crossed c, and the cut credit may
+-- be false; the same poll's cheaper usable rungs are no gain); else the cut stands for good. True when it gave it back.
 -- Allocates nothing.
 local function uncut(r, c, t)
     local k = R.cutC[r]
     if k <= 0 then
         return false
     end
-    if R.spends[r] ~= R.cutSp[r] or t - R.cutT[r] > I.Log.ORACLE_MAX then
+    local gained = R.gain[r] ~= R.cutGain[r] or R.raised[r] ~= R.cutRaised[r]
+    if R.spends[r] ~= R.cutSp[r] or t - R.cutT[r] > I.Log.ORACLE_MAX or gained then
         R.cutC[r] = 0
         return false
     elseif c < k - I.EPS then
@@ -1019,6 +1036,9 @@ I.On(Obs.Usable, function(o, t, lag)
             R.cutC[r] = c > R.cutC[r] and c or R.cutC[r]
             R.cutL[r], R.cutE[r] = R.cutL[r] + lo - R.lo0[r], R.cutE[r] + e - R.est0[r]
             R.cutH[r] = R.cutH[r] + hi - R.hi0[r]
+            R.cutGain[r], R.cutRaised[r] = R.gain[r], R.raised[r]
+        elseif now == SHORT and R.cutC[r] > 0 and c >= R.cutC[r] - I.EPS then
+            R.cutC[r] = 0 -- a current short answer at the cut's cost: the cut was right
         end
     end
     if now == SHORT then
@@ -1100,6 +1120,7 @@ I.On(Obs.Swing, function(o, t)
             swingStep(r, hand, c, t, owes)
             if k > 0 and c == 1 then
                 predict(k, r, hand, e, lo, hi, hit)
+                recTime[k] = t
                 k = 0
             elseif k > 0 and recR[k] == r and recHand[k] == hand then
                 predict(k, r, hand, recE0[k], recLo0[k], recHi0[k], recHit[k]) -- its crit: both steps

@@ -1836,21 +1836,39 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         assert.are.same({ 5 + 9 * 0.9 + 20, 34, 5 + 9 * 1.1 + 20 }, power(10.5)) -- not [10, 10 + 9.9]
     end)
 
-    it(
-        "gives a young short's cut back only on a usable answer at its cost or dearer (Arms seed 6 at 81.4 s)",
-        function()
-            -- the loop: a white crit credited 21 -> 49.8 (truth 52.7), then Mortal Strike's short answer 0.04 s later (the
-            -- client still at 24) cut it to 29.99 for good; its usable answer 0.06 s later now gives the cut back
-            setup(8)
-            credit(10) -- 8 + 9 crosses spender_a (10) and spender_b (15)
-            answer(10.5, SPENDER_B, false) -- young: cut (the floor holds whether the credit is stale or false)
-            assert.are.same({ 14.99, 14.99, 14.99 }, power(10.5))
-            answer(10.6, SPENDER_A, true) -- at least 10 says nothing of 15: the cut stands
-            assert.are.same({ 14.99, 14.99, 14.99 }, power(10.6))
-            answer(10.65, SPENDER_B, true)
-            assert.are.same({ 8 + 9 * 0.9, 17, 8 + 9 * 1.1 }, power(10.65))
-        end
-    )
+    it("gives a young short's cut back only on a usable answer at its cost or dearer", function()
+        -- the loop's seed 6: a white crit credited 21 -> 49.8 (truth 52.7), then a dearer spender's short answer 0.04 s
+        -- later (the client still before the hit) cut it to 29.99 for good; its usable answer 0.06 s later gives it back
+        setup(8)
+        credit(10) -- 8 + 9 crosses spender_a (10) and spender_b (15)
+        answer(10.5, SPENDER_B, false) -- young: cut (the floor holds whether the credit is stale or false)
+        assert.are.same({ 14.99, 14.99, 14.99 }, power(10.5))
+        answer(10.52, SPENDER_A, true) -- at least 10 says nothing of 15: the cut stands
+        assert.are.same({ 14.99, 14.99, 14.99 }, power(10.52))
+        answer(10.65, SPENDER_B, true)
+        assert.are.same({ 8 + 9 * 0.9, 17, 8 + 9 * 1.1 }, power(10.65))
+    end)
+
+    it("keeps a young short's cut when a gain since could have crossed the cost (a false credit's floor)", function()
+        -- truth 9.99 and no swing of ours landed: the credit is false. The young short answer is the truth; a refund of
+        -- 1 then takes the truth to 10.99 and the usable answer at 10 follows from it, not from the credit
+        setup(9.99, 5, 9.99)
+        credit(10) -- false: believed 9.99 + 9, floor 5 + 8.1
+        answer(10.5, SPENDER_A, false)
+        assert.are.equal(9.99, power(10.5)[1])
+        I.ResourceShift(1, 1, 10.55, VS.Obs.Avoided) -- an avoided cast's refund, exact
+        answer(10.6, SPENDER_A, true)
+        assert.is_true(power(10.6)[1] <= 10.99 + 1e-9, ("lo %.2f, truth 10.99"):format(power(10.6)[1]))
+    end)
+
+    it("keeps a young short's cut once a current short answer at its cost shows it right", function()
+        setup(8)
+        credit(10)
+        answer(10.5, SPENDER_B, false) -- young: cut
+        answer(10.6, SPENDER_B, false) -- current: the cut was right
+        answer(10.65, SPENDER_B, true) -- a later crossing, not the credit's
+        assert.are.equal(15, power(10.65)[1])
+    end)
 
     it("keeps a young short's cut after one of our spends, or past the verdict window", function()
         setup(8)
@@ -1904,7 +1922,7 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         end
     )
 
-    it("keeps lo a floor when a rescued swing's step is too big (the Arms seed 4 trace at 49 s)", function()
+    it("keeps lo a floor when a rescued swing's step is too big (the loop's seed 4 trace at 49 s)", function()
         -- believed 9.5 (truth 9.2, under spender_a's 10); the dropped wound's swing is modelled at 9, the game gave 8:
         -- truth 17.2. The flip it explains proves only "at least 10" (in game: 30 + 17.7 believed, 28.8 + 16.2 true)
         setup(9.5, 9, 9.99)
