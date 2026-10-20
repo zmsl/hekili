@@ -5,15 +5,16 @@
 # Omitted: default #1: autocastOtherCooldowns
 
 actions.precombat=retribution_aura,prepull_at=10
-actions.precombat+=/seal_of_command,focus=1,prepull_at=3
+actions.precombat+=/seal_of_command,focus=1,prepull_at=3,if=talent.twist_of_light.enabled
 actions.precombat+=/seal_of_the_crusader,prepull_at=1.5
 actions=judgement,use_off_gcd=1
 actions+=/hammer_of_wrath,focus=1,if=(action.hammer_of_wrath.cast=0|(mainhand_speed-mainhand_remains)<0.2)
 actions+=/holy_strike,if=time>0.5
-actions+=/seal_of_command,focus=1,if=(!buff.echo_of_command.up&!buff.seal_of_command.up)
-actions+=/seal_of_righteousness,focus=1,if=(!buff.echo_of_righteousness.up&!buff.seal_of_righteousness.up)
+actions+=/seal_of_command,focus=1,if=talent.twist_of_light.enabled&(!buff.echo_of_command.up&!buff.seal_of_command.up)
+actions+=/seal_of_righteousness,focus=1,if=talent.twist_of_light.enabled&(!buff.echo_of_righteousness.up&!buff.seal_of_righteousness.up)
 actions+=/call_action_list,name=consecration
 actions+=/call_action_list,name=exorcism
+actions+=/seal_of_command,if=!talent.twist_of_light.enabled&!buff.seal_of_command.up
 actions+=/seal_of_righteousness,if=!action.seal_of_command.known&buff.seal_of_righteousness.remains<24
 actions.exorcism=exorcism,focus=2,if=(mainhand_remains>1.5&mana.pct>=10)
 actions.consecration=consecration,focus=2,if=(mainhand_remains>1.5&mana.pct>=10)

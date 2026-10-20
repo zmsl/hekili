@@ -67,10 +67,10 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Retribution (wowsims.com) stays live at level " .. level, function()
             if level == 40 then
-                -- Without Twist of Light (taken at 50 in the build's order) the twist lines swap the seals every GCD
-                -- and run the world dry (7.6 s idle): the translator has no talent precondition for the APL's lines
-                -- (shared gap, Task 9 report)
-                pending("blocked: the Twist of Light lines need a talent precondition")
+                -- Holy Strike's cooldown is the only gap filler below Twist of Light once Consecration's and
+                -- Exorcism's `mana.pct>=10` reads the collapsed mana lower bound (35-290 of a true 5000+): 8.4 s
+                -- idle. Central gap "power belief: secret mana lower bound does not climb with regen" (fix 8).
+                pending("blocked: the mana lower bound (central fix 8)")
                 return
             end
             local C = content("paladin_retribution", RET_LIVE, "Retribution (wowsims.com)", level)
