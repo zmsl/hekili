@@ -47,7 +47,7 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             "Arms (wowsims.com)",
             content("warrior_arms", ARMS_CHAR, "Arms (wowsims.com)", 60, ARMS),
             "warrior_arms",
-            0.83, -- measured 0.836; the open disagreements wait on shared fixes 6/7 (the recipe's header)
+            0.86, -- measured 0.866; provisional until central fix 7 (ruling L10; was 0.83 before fix 6)
             ARMS_REPLAY
         )
     end)
@@ -61,7 +61,7 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
         assert.are.equal(0, run.presses)
         assert.is_true(#run.dec.ours > 40, "decisions scored")
     end)
-    local LIVE60 = 9.2
+    local LIVE60 = 9.2 -- the pack's own worst idle at 60 (wowsims's pooling), measured on the rebased tree
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Arms (wowsims.com) stays live at level " .. level, function()
             ws.live(
