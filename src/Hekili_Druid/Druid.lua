@@ -11,11 +11,10 @@
 -- no cooldown or duration modifier is modelled but Improved Shifting Power's (spec D5).
 -- Credits: Hekili (registration API and pack format); the abilities, auras, handlers and `swap_form` are ported from
 -- Hekili's Classic profile (origin/classic:Classic/Druid.lua). Ported from Taco Dog Forever
--- (src/TacoDogForever_Druid/): the `excess_e` energy reservation (Expressions.lua, itself after Zachary Samsel's
--- `excess_e` in Hekili's Wrath Feral module, origin/wrath_release:Wrath/Druid.lua L413-566), the bear priority
--- (APLs/bear.simc, after the guides it cites), the not-behind window (Feral.lua), Enrage's 10 + 2/s and Faerie Fire
--- free in form (Bear.lua), and the `form` alias over the forms (Expressions.lua's RegisterForms). The Feral and
--- Balance (wowsims.com) priorities translate wowsims/forever's default APLs (MIT, https://github.com/wowsims/forever).
+-- (src/TacoDogForever_Druid/): the bear priority (APLs/bear.simc, after the guides it cites), the not-behind window
+-- (Feral.lua), Enrage's 10 + 2/s and Faerie Fire free in form (Bear.lua), and the `form` alias over the forms
+-- (Expressions.lua's RegisterForms). The Feral and Balance (wowsims.com) priorities translate wowsims/forever's
+-- default APLs (MIT, https://github.com/wowsims/forever).
 
 local Facade = Hekili.Client
 local C_Spell, UnitClassBase = Facade.C_Spell, Facade.UnitClassBase
@@ -27,7 +26,7 @@ end
 
 local state = Hekili.State
 local IsCurrentSpell = C_Spell.IsCurrentSpell
-local floor, max, min, huge = math.floor, math.max, math.min, math.huge
+local floor, max, min = math.floor, math.max, math.min
 
 -- The class kit and its specs (ids the core's: Balance 100111, Feral 100112, Guardian 100113, Restoration 100114).
 -- Feral and Guardian ride the Feral Combat tree: its points pick Feral; Guardian is chosen (/hekili spec guardian).
@@ -131,15 +130,13 @@ local BEAR_SWING = 2.5
 -- fraction as of the maximum (2674 in that log), which overstates it. Whole mana, rounded down (the log's 684 and 62).
 -- shortcut: below 60 still a fraction of the maximum (no per-level base mana source); upgrade with one.
 -- The belief prices a cast in a context without `level` (Families/Now.lua's names): it reads the simulation's last.
+-- Temporary workaround for shared GAP U (Now.lua's context has no `level`); remove the cache when it lands.
 local BASE_MANA = 1244
 local seenLevel = 60
 local function ofBaseMana(f, lvl)
     seenLevel = lvl or seenLevel
     return seenLevel >= 60 and floor(f * BASE_MANA) or f
 end
--- Rip's and Rake's energy (Rake's before Ferocity's -1 a rank), shared by their `spend` and `excess_e`'s reservations.
-local RIP_COST = 30
-local RAKE_COST = 40
 
 local function rest(ids)
     local out = {}
@@ -165,10 +162,11 @@ local function byRank(values, ids)
 end
 
 -- Moonglow (16845) on its class mask's spells (Wrath, Moonfire, Starfire, Insect Swarm, Hurricane, Entangling Roots,
--- Thorns) and Improved Wrath (16814 effect 1) on Wrath: the DB2's -25% and -50% are the full ranks' (wowsims/forever's
--- ladders and log: Wrath 45, Moonfire 281.25 at 3/3 and 5/5), pro rata below them.
+-- Thorns) and Improved Wrath (16814 effect 1) on Wrath: the DB2's -25% and -50% are the full ranks'. Moonglow's ranks
+-- follow wowsims/forever's ladder (spells_auto_gen.go 16845: -8, -17, -25 %; its log: Moonfire 281.25 at 3/3).
+local MOONGLOW = { 0.92, 0.83, 0.75 }
 local function moonglow(rank)
-    return 1 - 0.25 * rank / 3
+    return MOONGLOW[rank] or 1
 end
 
 -- shortcut: after a /reload in combat energy's regen rate stays 0 for the rest of the fight (the belief's calibrate
@@ -179,10 +177,11 @@ spec:RegisterResource(Enum.PowerType.ComboPoints)
 spec:RegisterResource(
     Enum.PowerType.Rage,
     {
-        -- Rage per white swing in Bear or Dire Bear Form only (the Warrior's speed rule; Cat and caster swings add none).
+        -- Rage per white swing in Bear or Dire Bear Form only (the Warrior's speed rule; Cat and caster swings add
+        -- none).
         -- `aura` gates it in both layers (the belief's swing entry, spec §0.3; Hekili's forecast); `stop` too.
-        -- A white crit adds one more base swing, as the Warrior's (magey/forever-warrior issue 3 names the Bear and Dire Bear
-        -- match; unmeasured here): `crit`.
+        -- A white crit adds one more base swing, as the Warrior's (magey/forever-warrior issue 3 names the Bear and
+        -- Dire Bear match; unmeasured here): `crit`.
         -- shortcut: misses, Blood Frenzy, Natural Reaction and rage from damage taken are unmodelled; the belief's
         -- swing-scale calibration absorbs a steady bias. Upgrade from the combat-log rows once a non-cast `now` exists.
         mainhand = {
@@ -342,6 +341,13 @@ spec:RegisterAuras({
     -- The Howling Idol's equip aura (272427): "Reduces the cooldown of your Shifting Power ability" (DB2 1291059).
     howling_idol = {
         id = 1291059,
+        duration = 3600,
+        max_stack = 1,
+    },
+    -- The Wolfshead Helm's equip aura (8345, DB2 17768): Shifting Power +5 energy, Enrage's instant rage +50%
+    -- (wowsims/forever sim/druid/items.go; its log gains the aura at 0 s and 45 energy a Shifting Power).
+    wolfshead_helm = {
+        id = 17768,
         duration = 3600,
         max_stack = 1,
     },
@@ -916,12 +922,12 @@ spec:RegisterAbilities({
         buff = "bear_form",
 
         now = function()
-            gain(10, "rage")
+            gain(buff.wolfshead_helm.up and 15 or 10, "rage")
             applyBuff("enrage")
         end,
 
         handler = function()
-            gain(10, "rage")
+            gain(buff.wolfshead_helm.up and 15 or 10, "rage")
             applyBuff("enrage")
         end,
     },
@@ -1397,7 +1403,8 @@ spec:RegisterAbilities({
         copy = rest(PRIMAL_BITE),
         cast = 0,
         -- Berserk (417141, DB2 text) "removes its cooldown": its handler ends the running one, and the client's ready
-        -- flag shows each later one gone; the number stays the DB2's 6 s (category), which the belief needs as a number.
+        -- flag shows each later one gone; the number stays the DB2's 6 s (category), which the belief needs as a
+        -- number.
         cooldown = 6,
         gcd = "spell",
 
@@ -1450,7 +1457,7 @@ spec:RegisterAbilities({
         gcd = "totem",
 
         spend = function()
-            return max(0, RAKE_COST - talent.ferocity.rank)
+            return max(0, 40 - talent.ferocity.rank)
         end,
         spendType = "energy",
 
@@ -1536,7 +1543,7 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "totem",
 
-        spend = RIP_COST,
+        spend = 30,
         spendType = "energy",
 
         startsCombat = true,
@@ -1562,10 +1569,11 @@ spec:RegisterAbilities({
     shifting_power = {
         id = 1322605,
         cast = 0,
-        -- spec D5; checkpoint Q4. The Howling Idol's equip aura (1291059) takes 0.5 s off: wowsims/forever's (its log
-        -- recasts every 7.5 s at Improved Shifting Power 2/2); the DB2 effect reads -1000 ms (checkpoint).
+        -- spec D5; checkpoint Q4. The Howling Idol's equip aura (1291059) takes 1 s off (DB2 -1000 ms;
+        -- wowsims/forever's TestHowlingIdolShortensShiftingPower). Its log's 7.5 s recasts are 7 s plus the
+        -- recipe's 250 ms reaction twice.
         cooldown = function()
-            return 16 - 4 * talent.improved_shifting_power.rank - (buff.howling_idol.up and 0.5 or 0)
+            return 16 - 4 * talent.improved_shifting_power.rank - (buff.howling_idol.up and 1 or 0)
         end,
         gcd = "totem",
 
@@ -1579,11 +1587,11 @@ spec:RegisterAbilities({
         buff = "cat_form",
 
         now = function()
-            gain(SHIFTING_POWER_ENERGY, "energy")
+            gain(SHIFTING_POWER_ENERGY + (buff.wolfshead_helm.up and 5 or 0), "energy")
         end,
 
         handler = function()
-            gain(SHIFTING_POWER_ENERGY, "energy")
+            gain(SHIFTING_POWER_ENERGY + (buff.wolfshead_helm.up and 5 or 0), "energy")
         end,
     },
 
@@ -1602,6 +1610,13 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(SHRED),
         buff = "cat_form",
+
+        -- Shred needs us behind the target, which the game tells only by refusing: a "must be behind" error opens the
+        -- not-behind window (TDF Feral.lua), where Shred is refused and the packs' Claw fallbacks
+        -- (`!action.shred.ready`) fire; settings.behind says the player always stands behind.
+        usable = function()
+            return settings.behind or not buff.not_behind.up, "not behind the target"
+        end,
 
         handler = function()
             gain(1, "combo_points")
@@ -1737,122 +1752,7 @@ spec:RegisterAbilities({
     },
 })
 
--- Shred needs us behind the target, which the game tells only by refusing: in a group the tank holds it, so Shred;
--- otherwise Claw. settings.behind says the player stands behind; a "must be behind" error says the target faces us
--- for 5 s (TDF Feral.lua; Classic's combat_mode setting replaced by Hekili's `group`).
-spec:RegisterStateExpr("shred_ok", function()
-    return settings.behind or (group and not buff.not_behind.up)
-end)
-
--- excess_e (ported from Taco Dog Forever's Expressions.excess_e, credited above): the energy a GCD-triggering spender
--- (Shred, Claw) may use now and still pay the coming Rip (at settings.rip_cp combo points) and Rake refreshes, with
--- Shifting Power's energy counted once it is off cooldown, unless its GCD would start a refresh later than without it.
--- Up to three events sorted by due time in preallocated arrays (no table per call); solved backwards: the energy
--- needed before each event is its cost plus whatever regen cannot cover of the events after it, which honours the
--- energy cap. -math.huge when the spender's GCD would delay a refresh that could otherwise start on time. A refresh the
--- druid does not know reserves nothing. Refreshes are reserved at full price (the spender uses up Clearcasting); no
--- time to die (Forever hides target health). Times are relative to query_time.
-local TOLERANCE = 0.1 -- within this much of its due time a refresh counts as on time
-local CAT_GCD = 1 -- gcd = "totem"
-local evT, evC, evK = { 0, 0, 0 }, { 0, 0, 0 }, { false, false, false } -- due, energy (negative: the credit), credit
-local evS, evS0 = { 0, 0, 0 }, { 0, 0, 0 } -- start times with and without the credit
-
-local function insertEvent(n, at, c, k)
-    local j = n
-    while j >= 1 and evT[j] > at do
-        evT[j + 1], evC[j + 1], evK[j + 1] = evT[j], evC[j], evK[j]
-        j = j - 1
-    end
-    evT[j + 1], evC[j + 1], evK[j + 1] = at, c, k
-    return n + 1
-end
-
--- Forward pass into `out`: nothing starts before the GCD before it ends (every event is on the GCD).
-local function starts(n, gcdFree, useCredit, out)
-    for k = 1, n do
-        if useCredit or not evK[k] then
-            local st = evT[k]
-            if st < gcdFree then
-                st = gcdFree
-            end
-            out[k] = st
-            gcdFree = st + CAT_GCD
-        end
-    end
-end
-
-spec:RegisterStateExpr("excess_e", function()
-    local cur, cap, regen = energy.current, energy.max, energy.regen
-    local gcdFree = CAT_GCD
-    local n = 0
-    -- Rip, then Rake: due when the debuff falls off; -math.huge when it could start on time but for the spender's GCD
-    -- (Clearcasting may make it free then: action.x.cost); reserved at the full price.
-    if knownRank(RIP) > 0 and combo_points.current >= settings.rip_cp then
-        local due = debuff.rip.remains
-        if due < gcdFree - TOLERANCE and min(cap, cur + regen * due) >= action.rip.cost then
-            return -huge
-        end
-        n = insertEvent(n, due, RIP_COST, false)
-    end
-    if knownRank(RAKE) > 0 then
-        local due = debuff.rake.remains
-        if due < gcdFree - TOLERANCE and min(cap, cur + regen * due) >= action.rake.cost then
-            return -huge
-        end
-        n = insertEvent(n, due, max(0, RAKE_COST - talent.ferocity.rank), false)
-    end
-    if knownRank(SHIFTING_POWER) > 0 then
-        n = insertEvent(n, cooldown.shifting_power.remains, -SHIFTING_POWER_ENERGY, true)
-    end
-    -- Use the credit only if its GCD starts no refresh later than without it.
-    starts(n, gcdFree, false, evS0)
-    starts(n, gcdFree, true, evS)
-    local useCredit = true
-    for k = 1, n do
-        if not evK[k] and evS[k] > evS0[k] + TOLERANCE then
-            useCredit = false
-        end
-    end
-    local st = useCredit and evS or evS0
-    -- Backward: the energy needed just before each event so it and everything after it are paid for.
-    local need, nextStart = 0, nil
-    for k = n, 1, -1 do
-        if useCredit or not evK[k] then
-            local carry = need
-            if nextStart then
-                carry = need - regen * (nextStart - st[k])
-                if carry < 0 then
-                    carry = 0
-                end
-            end
-            need = evC[k] + carry
-            if need < 0 then
-                need = 0
-            end
-            nextStart = st[k]
-        end
-    end
-    if nextStart then
-        need = need - regen * nextStart
-        if need < 0 then
-            need = 0
-        end
-    end
-    return cur - need
-end)
-
--- The settings the class file's expressions (`excess_e`, `shred_ok`) and the Guardian list read (TDF's names and
--- defaults); the wowsims.com packs read none.
-spec:RegisterSetting("rip_cp", 5, {
-    type = "range",
-    name = "Rip Combo Points",
-    desc = "Select the combo points at which Rip is applied and its energy reserved.",
-    width = "full",
-    min = 1,
-    max = 5,
-    step = 1,
-})
-
+-- The settings Shred's `usable` and the Guardian list read (TDF's names and defaults); the wowsims.com packs read none.
 spec:RegisterSetting("behind", false, {
     type = "toggle",
     name = "Always Behind",
@@ -1881,8 +1781,8 @@ spec:RegisterSetting("use_enrage", false, {
 spec:RegisterSetting("lacerate_refresh", 4.5, {
     type = "range",
     name = "Lacerate Refresh Window",
-    desc = "Select the seconds left on a 5-stack Lacerate at which the Guardian priority refreshes it (wowsims uses 1.5; "
-        .. "the default 4.5 allows for the debuff being modelled, not read).",
+    desc = "Select the seconds left on a 5-stack Lacerate at which the Guardian priority refreshes it "
+        .. "(wowsims uses 1.5; the default 4.5 allows for the debuff being modelled, not read).",
     width = "full",
     min = 0,
     max = 15,
@@ -1890,8 +1790,8 @@ spec:RegisterSetting("lacerate_refresh", 4.5, {
 }, "guardian")
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc (a wowsims.com
--- pack's from its recipe, `make wowsims-packs`); edit those and run it, never these blocks (tests/Forever/druid_spec.lua
--- checks they match). Pick one with /hekili priority <name>. Restoration is deferred.
+-- pack's from its recipe, `make wowsims-packs`); edit those and run it, never these blocks
+-- (tests/Forever/druid_spec.lua checks they match). Pick one with /hekili priority <name>. Restoration is deferred.
 spec:RegisterPack(
     "Feral (wowsims.com)",
     20261020114,

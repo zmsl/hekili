@@ -16,7 +16,8 @@ M.CLIENT_SPEC, M.CLASS_ID = 1483, 11 -- the client's Druid pseudo-spec
 local MANA, RAGE, ENERGY, POINTS = dw.MANA, dw.RAGE, dw.ENERGY, dw.POINTS
 local TOKENS = dw.TOKENS
 
--- The client's forms: druid_world's order, then Moonkin (Forms.lua maps them by spell ID, so the order changes nothing).
+-- The client's forms: druid_world's order, then Moonkin (Forms.lua maps them by spell ID, so the order changes
+-- nothing).
 local FORMS = { "bear_form", "aquatic_form", "cat_form", "travel_form", "moonkin_form" }
 local FORM = {}
 for i, key in ipairs(FORMS) do
@@ -477,7 +478,8 @@ local function content(name)
                 m.effect(W, e, p, X)
             end
             -- shortcut: the proc lands a tick after the cast it rolled on, so the belief prices that cast before it
-            -- sees Clearcasting (in game both can arrive in one frame: the in-game check); upgrade with a measured order.
+            -- sees Clearcasting (in game both can arrive in one frame: the in-game check); upgrade with a measured
+            -- order.
             if W.rng.chance(OMEN) then
                 W.at(W.t + 0.25, function()
                     aura(W, X, e, "clearcasting")

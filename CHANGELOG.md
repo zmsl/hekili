@@ -36,6 +36,7 @@
 - Druid: the hand-built Feral and Balance priorities are gone, with the settings only they read (Ferocious Bite
   finisher, out-of-combat buffs, Moonkin Form, Moonfire on trash, Starfire filler, Hurricane targets, Innervate and its
   mana thresholds). Guardian keeps its priority for now.
+- Druid: the "Rip Combo Points" setting is gone; no priority read it.
 - Specializations follow your talents: a respec or dual-spec swap that moves your most-spent talent tree activates
   that tree's specialization, the one you last activated for it (for example Guardian on the Feral Combat tree) or
   else its first. Swapping between two builds of the same tree keeps your choice. The "your talents favor" hint is gone.
@@ -79,7 +80,11 @@
   waits for the walk in, as wowsims's does.
 - Druid: Primal Bite is ready again during Berserk; Lacerate's cost with Shredding Attacks and the Balance spells' mana
   costs with Moonglow and Improved Wrath now match the game's numbers as wowsims.com models them.
-- Druid: Shifting Power's cooldown is 0.5 s shorter with the Howling Idol equipped.
+- Druid: Shifting Power's cooldown is 1 s shorter with the Howling Idol equipped.
+- Druid: with the Wolfshead Helm equipped, Shifting Power gives 45 energy and Enrage 15 instant rage.
+- Druid: Moonglow's first two points cut the Balance spells' mana by 8% and 17%, as in the game.
+- Druid: the Feral priority recommends Claw instead of Shred for a few seconds after the game says you must be behind
+  the target (the "Always Behind" setting keeps Shred). Before, it recommended Shred from the front forever.
 - Druid: at level 60 the forms, Shifting Power and Innervate cost their percent of base mana (Shifting Power 684, not
   over 1200), and Shredding Attacks counts all three points (Shred 42 energy at 3/3).
 - Druid: the mana estimate regenerates in combat outside the five-second rule (about 22 a second with pre-raid gear)

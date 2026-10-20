@@ -8,8 +8,8 @@
 -- 1. wrath -> false 14 (80-177 s, the mana floor): wowsims casts Wrath once regen reaches its 45; our belief
 --    regenerates (22 a second outside the rule), but the simulation's forecast reads GetManaRegen's casting rate (the
 --    mp5 part, 0) for every in-combat moment (Engine/Sim/State.lua `regen`: active_regen in combat), so no Wrath is
---    ever affordable and no icon shows. Shared gap (not worked around): with the forecast reading the not-casting rate outside the rule
---    (a scratch edit), 0.818.
+--    ever affordable and no icon shows. Shared gap R (not worked around): with the forecast reading the not-casting
+--    rate outside the rule (a scratch edit), 0.818.
 -- 2. wrath -> insect_swarm 4, 3. starfire -> moonfire 2: a DoT refresh decided a fraction of a second before the debuff
 --    ends (Insect Swarm's 16 s, Moonfire's 15 s, the log's): wowsims casts the filler and refreshes after, our first
 --    icon is the refresh (the replay's casts land at their completion: no cast bars; replay limit).

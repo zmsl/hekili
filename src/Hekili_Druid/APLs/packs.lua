@@ -4,8 +4,8 @@
 -- the pack date lives in Druid.lua's generated blocks, and `make packs` sets it to today only when a pack changed.
 -- Each pack is generated from its recipe (tools/wowsims/specs/druid_*.lua, `make wowsims-packs`): wowsims/forever's
 -- default APLs (MIT, https://github.com/wowsims/forever). The hand-built Feral and Balance lists are retired
--- (Druid.lua's spec:RetirePacks). Guardian keeps its hand-built list (Guardian.simc, ported from Taco Dog Forever's bear.simc after
--- the guides it cites) until its wowsims.com pack's shared gaps close.
+-- (Druid.lua's spec:RetirePacks). Guardian keeps its hand-built list (Guardian.simc, ported from Taco Dog Forever's
+-- bear.simc after the guides it cites) until its wowsims.com pack's shared gaps close.
 
 return {
     class = "DRUID",

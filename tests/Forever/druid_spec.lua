@@ -369,17 +369,22 @@ describe("Forever Druid", function()
                 ld.run(w.abilities.starfire.spend, e),
                 ld.run(w.abilities.insect_swarm.spend, e),
             })
+            -- below 3/3 wowsims's ladder (spells_auto_gen.go 16845: -8, -17, -25), not pro rata: Moonfire's 375
+            for r, want in ipairs({ 345, 311.25 }) do
+                e.talent.moonglow.rank = r
+                assert.is_near(want, ld.run(w.abilities.moonfire.spend, e), 1e-9)
+            end
         end
     )
 
     it(
-        "takes 0.5 s off Shifting Power's cooldown with the Howling Idol's aura (1291059; wowsims's 7.5 s recasts)",
+        "takes 1 s off Shifting Power's cooldown with the Howling Idol's aura (DB2 1291059 -1000 ms, wowsims's test)",
         function()
             local e = ld.env(w)
             e.talent = rank(2)
             assert.are.equal(8, ld.run(w.abilities.shifting_power.cooldown, e))
             e.buff = auras({ howling_idol = { up = true } })
-            assert.are.equal(7.5, ld.run(w.abilities.shifting_power.cooldown, e))
+            assert.are.equal(7, ld.run(w.abilities.shifting_power.cooldown, e))
         end
     )
 
@@ -587,6 +592,16 @@ describe("Forever Druid", function()
             assert.are.same({ "enrage" }, e.applied)
         end)
 
+        it("adds the Wolfshead Helm's 5 energy and half Enrage's 10 rage under its aura (DB2 17768)", function()
+            local e = ld.env(w)
+            e.buff = auras({ wolfshead_helm = { up = true } })
+            ld.run(w.abilities.shifting_power.now, e)
+            ld.run(w.abilities.shifting_power.handler, e)
+            ld.run(w.abilities.enrage.handler, e)
+            assert.are.same({ { 45, "energy" }, { 45, "energy" }, { 15, "rage" } }, e.gained)
+            assert.are.equal(17768, w.auras.wolfshead_helm.id)
+        end)
+
         it("adds Wrath's Eclipse charges only with the talent, and Starfire's handler spends one", function()
             local e = ld.env(w)
             ld.run(w.abilities.wrath.now, e)
@@ -737,73 +752,11 @@ describe("Forever Druid", function()
         end)
     end)
 
-    describe("excess_e (ported from Taco Dog Forever)", function()
-        local e, excess
-
-        before_each(function()
-            e = ld.env(w)
-            e.energy = { current = 100, max = 100, regen = 10 }
-            e.combo_points.current = 5
-            e.debuff = auras({ rip = { remains = 5 }, rake = { remains = 6 } })
-            e.cooldown = setmetatable({ shifting_power = { remains = 30 } }, getmetatable(e.cooldown))
-            e.action = setmetatable({ rip = { cost = 30 }, rake = { cost = 40 } }, getmetatable(e.action))
-            for _, id in ipairs({ 1079, 1822, 1322605 }) do
-                w.game.known[id] = true
-            end
-            excess = setfenv(w.exprs.excess_e, e)
-        end)
-
-        it("allows Shred when the energy covers it, Rip and Rake in time", function()
-            -- Rake's 40 at 6 s, Rip's 30 at 5 s less 10 s of regen: 10 held back
-            assert.are.equal(90, excess())
-        end)
-
-        it("holds Shred when Rip at 5 combo points is due within the regen", function()
-            e.energy.current = 40
-            e.debuff = auras({ rip = { remains = 2 }, rake = { remains = 9 } })
-            assert.are.equal(30, excess()) -- below Shred's 60
-            e.combo_points.current = 4 -- Rip not due at settings.rip_cp: nothing for it
-            assert.are.equal(40, excess())
-        end)
-
-        it("credits Shifting Power's 40 once it is off cooldown", function()
-            e.energy.current = 40
-            e.debuff = auras({ rip = { remains = 2 }, rake = { remains = 9 } })
-            e.cooldown.shifting_power.remains = 0
-            assert.are.equal(40, excess())
-        end)
-
-        it("is -math.huge when the spender's GCD would delay a refresh that could start on time", function()
-            e.debuff = auras({ rip = { remains = 0.5 }, rake = { remains = 6 } })
-            assert.are.equal(-math.huge, excess())
-            e.energy.current = 20 -- Rip could not start on time anyway
-            assert.is_true(excess() > -math.huge)
-        end)
-
-        it("reserves nothing for a Rip the druid does not know", function()
-            w.game.known[1079] = nil
-            e.energy.current = 40
-            e.debuff = auras({ rip = { remains = 2 }, rake = { remains = 9 } })
-            assert.are.equal(40, excess())
-        end)
-
-        it("allocates nothing over 1000 calls", function()
-            assert.are.equal(
-                0,
-                alloc.bytes(function()
-                    excess()
-                end, 1000)
-            )
-        end)
-    end)
-
-    it("reads shred_ok from the behind setting, the group and the not-behind window", function()
+    it("refuses Shred in the not-behind window unless the behind setting says otherwise (Claw then)", function()
         local e = ld.env(w)
         local ok = function()
-            return ld.run(w.exprs.shred_ok, e)
+            return ld.run(w.abilities.shred.usable, e)
         end
-        assert.is_false(ok())
-        e.group = true
         assert.is_true(ok())
         e.buff = auras({ not_behind = { up = true } })
         assert.is_false(ok())
@@ -862,27 +815,21 @@ describe("Forever Druid", function()
                 end
             end
         end
-        for _, name in ipairs({ "excess_e", "shred_ok" }) do
-            assert.are.equal("function", type(w.exprs[name]), name)
-        end
     end)
 
-    it(
-        "declares its class once (NewClass), no options, and only the settings its expressions and Guardian read",
-        function()
-            assert.are.equal("DRUID", w.class)
-            local n = 0
-            for _ in pairs(w.settings) do
-                n = n + 1
-            end
-            assert.are.same({ 5, 5, false }, { n, w.settings.rip_cp.default, w.settings.behind.default })
-            assert.are.same(
-                { 60, false, 4.5 },
-                { w.settings.dump_rage.default, w.settings.use_enrage.default, w.settings.lacerate_refresh.default }
-            )
-            assert.is_nil(w.options)
+    it("declares its class once (NewClass), no options, and only the settings Shred and Guardian read", function()
+        assert.are.equal("DRUID", w.class)
+        local n = 0
+        for _ in pairs(w.settings) do
+            n = n + 1
         end
-    )
+        assert.are.same({ 4, false }, { n, w.settings.behind.default })
+        assert.are.same(
+            { 60, false, 4.5 },
+            { w.settings.dump_rage.default, w.settings.use_enrage.default, w.settings.lacerate_refresh.default }
+        )
+        assert.is_nil(w.options)
+    end)
 
     it("places each talent in its tree, the Forever-only placeholders at tree 0", function()
         local n = { [0] = 0, 0, 0, 0 }
