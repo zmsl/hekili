@@ -11,7 +11,7 @@
 -- Unmodelled: Stormstrike's debuff (no priority reads it), the totems' effects, Flametongue and Windfury Weapon's
 -- procs, Windfury Totem (the party's: never prompted), Improved Lightning Shield's extra charges.
 -- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (in-game checks): Call of Flame's +3 s a
--- rank on Flame Shock, Stormstrike's cost. Fire Nova's (375 there) is not modelled (FIRE_NOVA_COST says why).
+-- rank on Flame Shock, Stormstrike's cost, Fire Nova's cost.
 -- Credits: Hekili (registration API, pack format and `summonTotem`'s signature, State.lua). wowsims/forever (MIT,
 -- ui/specs/shaman/enhancement/apls/default.apl.json and sim/shaman/) is the reference for the priorities and the totem,
 -- Fire Nova, Maelstrom Weapon and Clearcasting rules; no code is copied.
@@ -66,10 +66,8 @@ local EARTH_SHOCK_COST = { 30, 50, 85, 145, 240, 345, 450 }
 local FLAME_SHOCK = { 8050, 8052, 8053, 10447, 10448, 29228 }
 local FLAME_SHOCK_COST = { 55, 95, 160, 250, 345, 410 }
 local FIRE_NOVA = { 408341, 408342, 408343, 408344, 408345 } -- Forever's spell (no totem): from the fire totem up
--- The DB2's. wowsims/forever's spell data says 65, 120, 210, 290, 375 (its log: 375): not modelled, because at 375 the
--- secret-mana belief's lower bound stays under the cost while the truth is over it (the solo gate falls to 0.72: a
--- core gap). IN-GAME CHECK: Fire Nova's cost.
-local FIRE_NOVA_COST = { 95, 170, 280, 395, 520 }
+-- wowsims/forever's spell data (its log: 375); the DB2 says 95, 170, 280, 395, 520. IN-GAME CHECK: Fire Nova's cost.
+local FIRE_NOVA_COST = { 65, 120, 210, 290, 375 }
 local ROCKBITER_WEAPON = { 8017, 8018, 8019, 10399, 16314, 16315, 16316 }
 local ROCKBITER_WEAPON_COST = { 15, 25, 50, 75, 100, 125, 150 }
 local FLAMETONGUE_WEAPON = { 8024, 8027, 8030, 16339, 16341, 16342 }
@@ -370,8 +368,8 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(FIRE_NOVA),
-        -- its usability answer is a mana rung (the ladder) although it also needs a fire totem: the costliest spell, so
-        -- without it the believed lower bound never reaches 520 (checkpoint: no totem answers not usable, not short)
+        -- its usability answer is a mana rung (the ladder) although it also needs a fire totem (checkpoint: no totem
+        -- answers not usable, not short)
 
         usable = function()
             return totem.fire.up, "requires a fire totem"

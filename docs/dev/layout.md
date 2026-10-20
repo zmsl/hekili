@@ -205,10 +205,10 @@ ends the loop before the client sees it, so the next fight's prepull would be be
 never read (a harness quirk every pack shares). The world runs out of mana about 35 s in (idle about 0.68: UNMEASURED
 pool and regen, no Mana Spring regen, Water Shield or potions), so most in-combat ticks show no icon on either side.
 The imbues are not in the solo world's kit (it has no weapon enchant read). The world's costs are each rank's (DB2),
-with Shamanistic Focus when the build has it, Stormstrike's 121 (wowsims/forever's), and the shocks' cooldown and Flame
+with Shamanistic Focus when the build has it, Stormstrike's 121 and Fire Nova's 65..375 (wowsims/forever's), and the shocks' cooldown and Flame
 Shock's duration from the booted talents. The lines below run Enhancement (wowsims.com) (wowsims packs plan, Task 10,
 after its fix round 1: Stormstrike's cost moved them). `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's own fight
-(floor 0.78) and runs the levels 10, 40 and 60:
+(floor 0.76) and runs the levels 10, 40 and 60:
 
 ```
 Enhancement solo: fights=3 agreement 0.999 (706 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.011; ... [seeds 1-3]

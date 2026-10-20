@@ -39,7 +39,7 @@ local COST = {
     lightning_shield = { 45, 80, 125, 180, 240, 305, 370 },
     earth_shock = { 30, 50, 85, 145, 240, 345, 450 },
     flame_shock = { 55, 95, 160, 250, 345, 410 },
-    fire_nova = { 95, 170, 280, 395, 520 }, -- the kit's (wowsims/forever's 65..375 not modelled: Shaman.lua)
+    fire_nova = { 65, 120, 210, 290, 375 }, -- wowsims/forever's (the DB2's 95..520)
     stormstrike = { 121 }, -- wowsims/forever's: 8% of base mana, 121 at 60 (the DB2's: 125)
     searing_totem = { 25, 45, 75, 110, 145, 170 },
     flametongue_totem = { 90, 140, 200, 275 },
@@ -239,6 +239,7 @@ end
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = P.pack, IDS = {} }
+    local truth -- the current world's us (hooks): a press is priced by its true auras
     C.SPEC = ({ Enhancement = 100072 })[name]
 
     function C.character()
@@ -270,6 +271,7 @@ local function content(name)
     -- The class's world hooks on us, from the class file's aura IDs: our landed swing stacks Maelstrom Weapon; a hit
     -- that lands on us spends a Lightning Shield charge.
     local function hooks(_, us)
+        truth = us
         us.health, us.healthMax = 1e9, 1e9 -- never killed: see C.WORLD
         local A = class().auras
         local X = { aura = {} }
@@ -326,7 +328,7 @@ local function content(name)
 
     --- The resolved press of `key` from instance `H` (the oracle's: its state is true): the highest known rank's ID
     --- and every known rank's (a shock's with the other shock's: the client answers the shared cooldown on both), the
-    --- cost (Clearcasting and Maelstrom Weapon in the oracle's state), the cooldown, GCD and cast time, the mapping's
+    --- cost (Clearcasting and Maelstrom Weapon on the current world's us), the cooldown, GCD and cast time, the mapping's
     --- effects. Raises "unmapped key".
     function C.resolve(key, H)
         local m = M.MAP[key]
@@ -336,7 +338,7 @@ local function content(name)
         local a = H.Hekili.Class.abilities[key]
         local X = classData(H, C)
         local S = H.Hekili.State
-        local VS, now = H.ns.VirtualState, H.ctl.now
+        local VS = H.ns.VirtualState
         local own = C.IDS[key] or { a.id } -- a racial (the content's race) is no kit key
         local ids = own
         if C.SHARED[key] then
@@ -349,9 +351,10 @@ local function content(name)
                 end
             end
         end
-        -- Clearcasting and Maelstrom Weapon from the oracle's (true) belief, as paladin_world's Swift Judgement
-        local cc = VS.Aura("player", X.aura.clearcasting.id, now)
-        local _, mw = VS.Aura("player", X.aura.maelstrom_weapon.id, now)
+        -- Clearcasting and Maelstrom Weapon from the world, not the oracle: the leveling brackets never step the oracle
+        local auras = truth and truth.auras or {}
+        local cc = auras[X.aura.clearcasting.id]
+        local mw = auras[X.aura.maelstrom_weapon.id] and auras[X.aura.maelstrom_weapon.id].stacks
         local spellID = VS.KnownID(a.id)
         local rank = rankOf(own, spellID)
         local p = {
