@@ -384,11 +384,11 @@ local function automatic(a, t, kind, o)
         end
         I.ChargesModel(a, charges > 0 and charges or 0, nextAt, t, kind)
     else
-        -- from the cast's own time (o.t), not the fold's: a success folded late (lag) starts its cooldown no later
-        local at = o.t
-        local cd = I.CooldownOf(a, at) -- a function cooldown in the belief's context (Families/Casts.lua)
+        -- shortcut: started at the fold's time t, a lag after the cast's o.t; starting it at o.t costs Enhancement's
+        -- replay a decision (0.920 -> 0.909, a floor never lowered): move with fix 15's spend at o.t, re-floored then
+        local cd = I.CooldownOf(a, t) -- a function cooldown in the belief's context (Families/Casts.lua)
         if cd > 0 then
-            I.CooldownModel(a, at + cd, cd, at, kind)
+            I.CooldownModel(a, t + cd, cd, t, kind)
         end
     end
     if A.gcdKind[a] > 0 then
