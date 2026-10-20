@@ -102,7 +102,7 @@ local function shift(key, mult)
 end
 
 -- Each recommendable ability: `effect(W, e, p, X)`, `requires(W, e)` (beyond the form fields), `points` (combo points:
--- 1 on a landed hit, "all" spent), `drain`, `extra(p)` (generic effects). A key missing here fails the loop.
+-- 1 on a landed hit, "all" spent), `drain`, `extra(p)` (generic effects), `cooldown(H, cd)` (the true one). A key missing here fails the loop.
 M.MAP = {
     cat_form = shift("cat_form", 1),
     bear_form = shift("bear_form", 1),
@@ -124,7 +124,13 @@ M.MAP = {
             p.gain = { ENERGY, rules().shiftingPower }
         end,
     },
-    berserk = { effect = selfAura("berserk") },
+    berserk = { -- Berserk also ends Primal Bite's running cooldown (the class file's handler; wowsims's log)
+        effect = function(W, e, _, X)
+            aura(W, X, e, "berserk")
+            local a = class().abilities.primal_bite
+            W.resetCooldown(e, "primal_bite", { a.id, unpack(a.copy or {}) })
+        end,
+    },
     faerie_fire = { effect = debuff("faerie_fire") },
     mark_of_the_wild = { effect = selfAura("mark_of_the_wild") },
     thorns = { effect = selfAura("thorns") },
@@ -142,7 +148,12 @@ M.MAP = {
             end
         end,
     },
-    primal_bite = { effect = hit("primal_bite") },
+    primal_bite = { -- no cooldown while Berserk is up (DB2 417141): the client never starts one
+        effect = hit("primal_bite"),
+        cooldown = function(H, cd)
+            return H.Hekili.State.buff.berserk.up and 0 or cd
+        end,
+    },
     lacerate = { effect = debuff("lacerate", true) },
     swipe_bear = { effect = hit("swipe_bear") },
     demoralizing_roar = { effect = debuff("demoralizing_roar") },
@@ -431,6 +442,9 @@ local function content(name)
         end
         if m.extra then
             m.extra(p, pt)
+        end
+        if m.cooldown then -- a cooldown the true state changes (the oracle's)
+            p.cooldown = m.cooldown(H, p.cooldown)
         end
         p.requires = function(W, e)
             local ok, why = formOk(a, e)

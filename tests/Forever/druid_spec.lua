@@ -366,16 +366,26 @@ describe("Forever Druid", function()
     )
 
     it(
-        "drops Primal Bite's cooldown under Berserk, and Berserk resets it (DB2 417141: removes its cooldown)",
+        "takes 0.5 s off Shifting Power's cooldown with the Howling Idol's aura (1291059; wowsims's 7.5 s recasts)",
         function()
             local e = ld.env(w)
-            assert.are.equal(6, ld.run(w.abilities.primal_bite.cooldown, e))
-            e.buff = auras({ berserk = { up = true } })
-            assert.are.equal(0, ld.run(w.abilities.primal_bite.cooldown, e))
-            ld.run(w.abilities.berserk.handler, e)
-            assert.are.same({ { "primal_bite", 0 } }, e.cooldowns)
+            e.talent = rank(2)
+            assert.are.equal(8, ld.run(w.abilities.shifting_power.cooldown, e))
+            e.buff = auras({ howling_idol = { up = true } })
+            assert.are.equal(7.5, ld.run(w.abilities.shifting_power.cooldown, e))
         end
     )
+
+    it("ends Primal Bite's cooldown on Berserk and gives it none under Berserk (DB2 417141)", function()
+        local e = ld.env(w)
+        assert.are.equal(6, w.abilities.primal_bite.cooldown) -- a number: the belief's cooldown length
+        ld.run(w.abilities.primal_bite.handler, e)
+        assert.are.same({}, e.cooldowns) -- no Berserk: the 6 s stands
+        ld.run(w.abilities.berserk.handler, e)
+        e.buff = auras({ berserk = { up = true } })
+        ld.run(w.abilities.primal_bite.handler, e)
+        assert.are.same({ { "primal_bite", 0 }, { "primal_bite", 0 } }, e.cooldowns)
+    end)
 
     it(
         "gates every ability on the form it needs, Ravage and Pounce on Prowl, Faerie Fire free only in Cat or Bear",
@@ -796,12 +806,13 @@ describe("Forever Druid", function()
             printed[#printed + 1] = { line:match("^(%d+) (.+)$") }
         end
         pipe:close()
-        local names = dofile("src/Hekili_Druid/APLs/packs.lua").packs
+        local manifest = dofile("src/Hekili_Druid/APLs/packs.lua")
+        local names = manifest.packs
         assert.are.equal(#names, #w.packs)
         for i, name in ipairs(names) do
             assert.are.same({ name, tonumber(printed[i][1]), printed[i][2] }, w.packs[i])
         end
-        assert.are.equal(w.class, dofile("src/Hekili_Druid/APLs/packs.lua").class) -- the packs' class is the file's
+        assert.are.equal(w.class, manifest.class) -- the packs' class is the file's
     end)
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()

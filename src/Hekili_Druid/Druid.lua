@@ -321,6 +321,12 @@ spec:RegisterAuras({
         duration = 15,
         max_stack = 1,
     },
+    -- The Howling Idol's equip aura (272427): "Reduces the cooldown of your Shifting Power ability" (DB2 1291059).
+    howling_idol = {
+        id = 1291059,
+        duration = 3600,
+        max_stack = 1,
+    },
     -- Classic's alias without the other classes' bleeds.
     bleed = {
         alias = { "rake", "rip", "pounce_bleed", "lacerate" },
@@ -1370,10 +1376,9 @@ spec:RegisterAbilities({
         id = 407995,
         copy = rest(PRIMAL_BITE),
         cast = 0,
-        -- Berserk (417141, DB2 text): "removes its cooldown" while it lasts (DB2 category cooldown 6 s otherwise)
-        cooldown = function()
-            return buff.berserk.up and 0 or 6
-        end,
+        -- Berserk (417141, DB2 text) "removes its cooldown": its handler ends the running one, and the client's ready
+        -- flag shows each later one gone; the number stays the DB2's 6 s (category), which the belief needs as a number.
+        cooldown = 6,
         gcd = "spell",
 
         spend = function()
@@ -1384,6 +1389,13 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(PRIMAL_BITE),
         buff = "bear_form",
+
+        -- the forecast's: no cooldown under Berserk (the now-state's comes from the client's ready flag)
+        handler = function()
+            if buff.berserk.up then
+                setCooldown("primal_bite", 0)
+            end
+        end,
     },
 
     prowl = {
@@ -1530,9 +1542,11 @@ spec:RegisterAbilities({
     shifting_power = {
         id = 1322605,
         cast = 0,
+        -- spec D5; checkpoint Q4. The Howling Idol's equip aura (1291059) takes 0.5 s off: wowsims/forever's (its log
+        -- recasts every 7.5 s at Improved Shifting Power 2/2); the DB2 effect reads -1000 ms (checkpoint).
         cooldown = function()
-            return 16 - 4 * talent.improved_shifting_power.rank
-        end, -- spec D5; checkpoint Q4
+            return 16 - 4 * talent.improved_shifting_power.rank - (buff.howling_idol.up and 0.5 or 0)
+        end,
         gcd = "totem",
 
         spend = function()
@@ -1926,10 +1940,10 @@ spec:RegisterSetting("balance_innervate_mana", 10, {
     step = 1,
 }, "balance")
 
--- The three priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and
--- APLs/*.simc; edit those and run it, never these blocks (tests/Forever/druid_spec.lua checks they
--- match). Pick one with /hekili priority <name>. Guardian and Balance are provisional (their descriptions say why);
--- Restoration is deferred.
+-- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc (a wowsims.com
+-- pack's from its recipe, `make wowsims-packs`); edit those and run it, never these blocks (tests/Forever/druid_spec.lua
+-- checks they match). Pick one with /hekili priority <name>. Guardian and Balance are provisional (their descriptions
+-- say why); Restoration is deferred.
 spec:RegisterPack(
     "Feral (wowsims.com)",
     20261020114,

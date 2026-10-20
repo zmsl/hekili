@@ -10,6 +10,12 @@
   specialization's default priority, translated from wowsims/forever's Melee Weave: Wing Clip, Mongoose Bite, Strider
   Kick and Immolation Trap while you are in melee range, the shots between swings. Resourcefulness and Efficiency
   lower the mana costs the addon expects.
+- Druid: "Feral (wowsims.com)", the wowsims.com Feral priority translated for WoW Forever, can be picked under
+  Feral's priorities.
+- Hunter: Beast Mastery, Marksmanship and Survival default priorities (new addon folder Hekili_Hunter). Sniper Shot
+  under Rapid Fire or Quick Shots, Mongoose Bite and Raptor Strike first; Serpent Sting and Hunter's Mark as focus
+  abilities; shots only while in Auto Shot range and the melee list only in melee range; Arcane Shot and Wing Clip mana
+  floors off by default.
 - Pets and guardians: the addon tracks your pet and your summoned guardians (Summon Hawk, up to two), so priorities can
   ask whether a pet is out and how many guardians are up.
 - Specializations: each supported class has one specialization page per talent tree, each with its own priorities
@@ -70,6 +76,7 @@
   waits for the walk in, as wowsims's does.
 - Druid: Primal Bite is ready again during Berserk; Lacerate's cost with Shredding Attacks and the Balance spells' mana
   costs with Moonglow and Improved Wrath now match the game's numbers as wowsims.com models them.
+- Druid: Shifting Power's cooldown is 0.5 s shorter with the Howling Idol equipped.
 - Rogue, Paladin and Shaman: the default priorities now load. They were registered under the wrong specialization ids
   for the WoW Forever client, so the addon showed nothing for these classes.
 - Developer: unreadable (secret) answers to "does this unit exist / is it dead" for target, party, boss and focus units
