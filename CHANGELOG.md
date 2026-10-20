@@ -66,7 +66,7 @@
 
 ### Known issues
 - Hunter priorities are unchecked in game: Auto Shot timing, the percent-of-base mana costs and the rune Raptor
-  Strike variants. Rapid Fire and racial cooldowns are not part of the wowsims.com priorities yet.
+  Strike variants.
 - Rogue, Paladin and Shaman priorities are not yet checked in game.
 
 ### Upgrade notes

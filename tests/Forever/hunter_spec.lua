@@ -293,11 +293,21 @@ describe("Forever Hunter priorities", function()
     it("names only registered abilities, auras, settings and the hawk", function()
         local cls = ld.load(nil, FILE, "HUNTER")
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, settings = cls.settings }
+        -- every race's racials (src/Hekili_Shared/Races: rule 13's Blood Fury) are registered abilities too
+        local racials = {}
+        local pipe = assert(io.popen("cat src/Hekili_Shared/Races/*.lua"))
+        for key in pipe:read("*a"):gmatch('RegisterAbility%("([%w_]+)"') do
+            racials[key] = true
+        end
+        pipe:close()
         for name, p in pairs(packs) do
             for list, entries in pairs(p.lists) do
                 for i, e in ipairs(entries) do
                     local where = name .. " " .. list .. " " .. i
-                    assert.is_true(e.action == "call_action_list" or cls.abilities[e.action] ~= nil, where)
+                    assert.is_true(
+                        e.action == "call_action_list" or cls.abilities[e.action] ~= nil or racials[e.action],
+                        where
+                    )
                     for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
                         if kinds[kind] then
                             assert.is_true(kinds[kind][key] ~= nil, where .. ": " .. key)

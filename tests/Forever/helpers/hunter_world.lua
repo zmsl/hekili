@@ -46,6 +46,7 @@ local COST = {
     strider_kick = 0.0581 * MAX,
     wing_clip = { 40, 40, 60, 80 },
     immolation_trap = { 50, 90, 135, 190, 245 },
+    blood_fury = 0,
 }
 
 -- UNMEASURED: the hits' amounts.
@@ -178,6 +179,12 @@ M.MAP = {
     strider_kick = shot("strider_kick"),
     wing_clip = shot("wing_clip"),
     immolation_trap = {}, -- the trap's burn is unmodelled (no read of it)
+    -- the Orc racial (Hekili_Shared, the wowsims build's race): its buff on us; the attack power it adds is unmodelled
+    blood_fury = {
+        effect = function(W, e, _, X)
+            aura(W, X, e, "blood_fury")
+        end,
+    },
     raptor_strike = { bonus = 100 }, -- the queued swing's damage over the weapon's
     mongoose_bite = {
         requires = function(W, e)

@@ -12,8 +12,8 @@
 -- little but Wing Clip; every on-GCD cast ID of the log maps to a key.
 -- Ranges: the weave's melee-range lines read `target.within5` (rule 11) and the shots the bracket from the kit's
 -- range checks; wowsims's Movement steps place us in the replay.
--- Lost to GAP 14 (autocastOtherCooldowns, not translated): Rapid Fire (3045) and the Orc's Blood Fury (20572), the
--- cooldowns wowsims casts from 5 s on.
+-- autocastOtherCooldowns (rule 13, from the log's "Major cooldown used"): Blood Fury (20572, the Orc's) and Rapid Fire
+-- (3045), each `if=time>=5`, at the top of the list.
 -- Lacerating Strikes (1310536) and the trap's burn (14301) are procs no key maps.
 -- Multi-Shot (2643): its cast is the DB2's 500 ms; wowsims has no cast time for it (instant there). Kept: the client
 -- charges the DB2's, and the `action.multi_shot.cast+...<=mainhand_remains` line reads it (in-game checkpoint).
