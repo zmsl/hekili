@@ -3,14 +3,18 @@
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/paladin/retribution/presets.ts:32-34
 -- (DefaultOptions), :37 (TwistOfLightTalents), :144-151 (OtherDefaults) at the pin; the APL and gear spec.ts's default
 -- (Twist of Light).
--- Disagreements worked (P7): replay 0.456 (57); top three, all one tracked central core gap (domain "power belief:
--- secret mana lower bound does not climb with regen"): the bound sits near 140 against wowsims's 3000+ and never climbs,
--- though VS.Power should integrate regen into it (docs/dev/layout.md). Only its being a lower bound is API-forced (mana
--- is secret in combat). seal_of_righteousness -> seal_of_command 8 (Seal of Righteousness's 144 above the bound, so the
--- twist's other seal shows first), seal_of_command -> false 6 and seal_of_righteousness -> false 6 (each seal at its
--- cost). The floor is re-measured, and only ever raised, once the central fix lands.
+-- Disagreements worked (P7, resume 3: after central fixes 6/8/C and 9/9b): replay 0.579 (57; 0.456 before them).
+-- seal_of_righteousness -> seal_of_command 13 and consecration -> seal_of_command 3: replay limit (shared gap,
+-- tests/Game/harness/replay.lua): an aura the log removes early (a seal replaced, an Echo spent) is shown expiring at
+-- its removal, so the client sees the prepull Seal of Command run out 1.5 s after its cast, Core's prepull_at rule
+-- offers it again and the twist runs a seal behind (measured with the class duration shown instead: 0.772, both gone).
+-- seal_of_command -> holy_strike 2: replay limit (shared gap, tests/Game/harness/observer.lua): wowsims casts Holy
+-- Strike the instant its cooldown ends; the old cooldown's end lands a microsecond after the new start and clears it.
+-- Under-belief of about 120 mana a Judgement: the class model prices its 6% on the maximum (3737), wowsims on base
+-- mana (81 = 6% of 1500 x 0.9); base mana is not readable (known deviation).
 -- The Everlook Pathcarver (item 274759, a trinket wowsims's autocastOtherCooldowns uses at the pull) is `use_items`.
--- Leveling: the Seal of Righteousness refresh fills Holy Strike's cooldown before Seal of Command (L10 8.6 -> 4.4 s).
+-- Leveling: the Seal of Righteousness refresh fills Holy Strike's cooldown before Seal of Command (L10 8.6 -> 4.4 s);
+-- Seal of Command is kept up below Twist of Light (L40 6.4 s, under LIVE60's 8.4).
 return {
     class = "PALADIN",
     pack = "Retribution (wowsims.com)",

@@ -29,6 +29,9 @@ local function wowsims(base, drop, world)
                 end
             end
             c.known = known
+            if world.max then -- the log's pool: percent costs priced on it (the oracle's state and the answers)
+                c.power = { type = c.power.type, token = c.power.token, max = world.max }
+            end
             return c
         end,
     }, { __index = base })
@@ -61,18 +64,14 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
 
     it("Retribution (wowsims.com) follows wowsims's casts", function()
         local C = content("paladin_retribution", RET, "Retribution (wowsims.com)", 60)
-        ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.45, REPLAY)
+        ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.57, REPLAY)
     end)
-    local RET_LIVE60 = 4.4 -- the pack's own worst idle at 60 (between the twist's seals and Holy Strike), rounded up
+    -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Retribution is out of mana from 60 s
+    -- of its log), and the gate counts Retribution Aura (up, free) as usable meanwhile. 4.4 before central fix 8, while
+    -- the collapsed mana lower bound kept Consecration's and Exorcism's `mana.pct>=10` from passing.
+    local RET_LIVE60 = 8.4
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Retribution (wowsims.com) stays live at level " .. level, function()
-            if level == 40 then
-                -- Holy Strike's cooldown is the only gap filler below Twist of Light once Consecration's and
-                -- Exorcism's `mana.pct>=10` reads the collapsed mana lower bound (35-290 of a true 5000+): 8.4 s
-                -- idle. Central gap "power belief: secret mana lower bound does not climb with regen" (fix 8).
-                pending("blocked: the mana lower bound (central fix 8)")
-                return
-            end
             local C = content("paladin_retribution", RET_LIVE, "Retribution (wowsims.com)", level)
             ws.live("Retribution (wowsims.com)", C, math.max(6, RET_LIVE60))
         end)
