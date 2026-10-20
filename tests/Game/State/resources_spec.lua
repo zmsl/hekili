@@ -945,6 +945,26 @@ describe("resources", function()
             I.Settle(10)
         end
 
+        it("keeps the rest assumption through a usable answer heard before the plain maximum", function()
+            boot({ -- the declared maximum is the default 100 until the read: a usable 450 lifts lo0 past it first
+                abilities = { { key = "big", spend = 450 } },
+                abilityIds = { { 1001 } },
+                abilitySlot = { 1 },
+                resources = {
+                    { key = "mana", type = MANA, token = "MANA", rest = true, fsr = { spirit = 13, mp5 = 2 } },
+                },
+                auras = {},
+                auraIds = {},
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.Settle(10)
+            obs(Obs.Usable, 10, 1, 1, 0)
+            obs(Obs.Read, 10, 1, 5000, I.ReadOf.Max)
+            I.Fold(10, false)
+            assert.are.same({ 5000, 5000 }, { VS.Power(MANA, 10).lo, VS.Power(MANA, 10).est })
+        end)
+
         it("drops the floor to the ladder's at a short answer below it", function()
             bootMana()
             obs(Obs.Usable, 10, BIG, 0, 1) -- short of 305: the rest was wrong
@@ -981,6 +1001,34 @@ describe("resources", function()
                 within(truth + 8.25 * 5 + 21.9 * 5, VS.Power(MANA, last + 10).lo) -- then the window closes at last + 5
             end
         )
+
+        for _, plain in ipairs({ false, true }) do
+            it(
+                "keeps a 375 spender affordable against a 2000+ pool (the Enhancement Fire Nova case"
+                    .. (plain and ", after a plain read)" or ", never read)"),
+                function()
+                    bootMana()
+                    if plain then
+                        obs(Obs.Read, 10, 1, 2600, I.ReadOf.Resource) -- a plain pre-combat read: exact
+                    end
+                    obs(Obs.CombatStart, 10, 0, 0, 0)
+                    I.Fold(10, false)
+                    local truth, last = plain and 2600 or 3737, 10
+                    for k = 1, 6 do -- 375 every 4 s, usable at each: the floor stays above the cost
+                        local t = 10 + 4 * k
+                        -- no spend before the first cast: the full rate, then the window's mp5 part (4 s < 5)
+                        truth = math.min(3737, truth + (k == 1 and 21.9 or 8.25) * (t - last))
+                        last = t
+                        obs(Obs.Usable, t, BIG, 1, 0)
+                        S.Direct(Obs.CastSuccess, t, BIG, 375, 1)
+                        I.Fold(t, false)
+                        truth = truth - 375
+                        local r = VS.Power(MANA, t)
+                        assert.is_true(r.lo > 375 and r.lo <= truth + 1e-6, ("lo %.1f truth %.1f"):format(r.lo, truth))
+                    end
+                end
+            )
+        end
 
         it("opens the five-second window at a paid cast only, not at a free one", function()
             bootMana()

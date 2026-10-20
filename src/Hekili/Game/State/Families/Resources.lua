@@ -37,7 +37,8 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- may pay the rest).
 -- `over[r]`: how far the modelled floor sits above the measured one (lo0): a regenerating slot that rests at its
 -- maximum is built at rest (est, and this floor: lo0 + over), and the floor then moves with everything that moves lo0;
--- a measurement the floor contradicts (a short answer below it, a pin's top under it, an exact read) drops it to lo0.
+-- a measurement the floor contradicts (a short answer below it, a pin's top under it, an exact read) drops it to lo0
+-- for good (`assume[r]` false: the rest assumption is over; a usable answer above it only raises lo0).
 -- Without it a slot never read plainly (mana, secret even out of combat) holds the dearest usable cost as its floor.
 local R = {
     n = 0,
@@ -99,6 +100,7 @@ local R = {
     liftT = {},
     liftRec = {},
     over = {},
+    assume = {},
 }
 I.res = R
 R.slotOf, R.slotOfToken = {}, {}
@@ -204,10 +206,14 @@ end
 -- After a measurement moved lo0, slot r's modelled floor (`was`, lo0 + over before it), if any, stays where it was
 -- unless the measurement's top `top` falls under it (then it is lo0). Allocates nothing.
 local function remeasure(r, was, top)
-    if R.over[r] <= 0 then
-        return -- no modelled floor above the measured one: a measurement moves lo0 alone, as before
+    if not R.assume[r] then
+        return -- no modelled floor: a measurement moves lo0 alone, as before
     end
-    local o = top < was - I.EPS and 0 or was - R.lo0[r]
+    if top < was - I.EPS then
+        R.assume[r], R.over[r] = false, 0
+        return
+    end
+    local o = was - R.lo0[r]
     R.over[r] = o > 0 and o or 0
     norm(r)
 end
@@ -227,8 +233,9 @@ local function setMax(r, m)
     if R.restMax[r] then
         R.rest[r] = m
         if up > 0 then
-            if R.over[r] > 0 and R.lo0[r] + R.over[r] >= m - up - I.EPS then
-                R.over[r] = R.over[r] + up -- the modelled floor was at rest: it rests at the new maximum
+            if R.assume[r] and R.lo0[r] + R.over[r] >= m - up - I.EPS then
+                R.over[r] = m - R.lo0[r] -- the modelled floor was at rest: it rests at the new maximum
+                norm(r)
             end
             R.est0[r] = clamp(R.est0[r] + up, m)
             R.hi0[r] = clamp(R.hi0[r] + up, m)
@@ -260,7 +267,8 @@ I.OnBuild(function(def, now)
         R.swingOff[r] = d.swingOff or 0
         R.swingCrit[r], R.swingOffCrit[r] = d.swingCrit or 0, d.swingOffCrit or 0
         R.est0[r], R.lo0[r], R.hi0[r] = R.rest[r], 0, R.max[r]
-        R.over[r] = R.restMax[r] and R.swing[r] == 0 and R.rest[r] or 0 -- the floor at rest too (over)
+        R.assume[r] = R.restMax[r] and R.swing[r] == 0
+        R.over[r] = R.assume[r] and R.rest[r] or 0 -- the floor at rest too (over)
         local fsr = type(d.fsr) == "table" and d.fsr or false
         local rate, spirit = d.regen or 0, 0
         if fsr then
