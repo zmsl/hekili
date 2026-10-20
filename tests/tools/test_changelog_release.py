@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "tools"))
 import changelog_release as cr  # noqa: E402
@@ -119,6 +120,11 @@ class Rewrite(unittest.TestCase):
 
 
 class Main(unittest.TestCase):
+    def setUp(self):
+        self._today = mock.patch.object(cr, "today", return_value="2026-10-19")
+        self._today.start()
+        self.addCleanup(self._today.stop)
+
     def files(self, changelog):
         d = tempfile.mkdtemp()
         body, path = os.path.join(d, "body.md"), os.path.join(d, "CHANGELOG.md")

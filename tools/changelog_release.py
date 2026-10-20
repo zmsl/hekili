@@ -53,6 +53,11 @@ def released_already(text, tag):
     return re.search(r"^## " + re.escape(tag) + r"(?![\w.-])", text, re.M) is not None
 
 
+def today():
+    """The release date for the heading; tests pin it."""
+    return datetime.date.today().isoformat()
+
+
 def rewrite(text, tag, body, released_unreleased, date):
     if "-" in tag:
         fail("%s is a pre-release; its notes stay in Unreleased" % tag)
@@ -99,7 +104,7 @@ def main(argv, run=subprocess.run):
         released = unreleased(got.stdout.replace("\r\n", "\n"))[2]
     else:
         released = ""  # rewrite() refuses these
-    new = rewrite(text, tag, body, released, datetime.date.today().isoformat())
+    new = rewrite(text, tag, body, released, today())
     with open(path, "w") as f:
         f.write(new)
     return 0
