@@ -84,6 +84,7 @@ local function ours(rest)
             from = tonumber(from),
             to = tonumber(to),
             amount = tonumber(amount),
+            total = tonumber(rest:match("of ([%d.]+) total")), -- the pool's maximum
             id = id,
             other = other,
             tag = tag,
@@ -147,7 +148,7 @@ end
 --- The events of a log's text: { header = { pin, spec, seed, duration, targetLevel, talents = { { id, rank, tree } }
 --- }, ev = { { t, kind, ... } } } in line order. Kinds: casting { id | item, tag, cast, gcd }, completed { id, other,
 --- tag, item },
---- power { name, from, to, amount, id, other, tag }, aura { unit ("player" | "target"), verb ("gained" | "faded" | "refreshed"), id }, stacks
+--- power { name, from, to, amount, total, id, other, tag }, aura { unit ("player" | "target"), verb ("gained" | "faded" | "refreshed"), id }, stacks
 --- { unit, id, to }, hit { what ("swing" | "spell" | "tick"), hand, id, act, flag, amount }, move { distance } (our
 --- Movement aura's stacks: wowsims's yards to the target, truncated, at least 1, while we move). Other lines are
 --- skipped.
@@ -395,12 +396,13 @@ function M.new(text, H, o)
         end
     end
     R.mobHealth = math.floor(before / (1 - M.TAIL)) + 1
-    -- the starting powers: each power's first line's before-value
+    -- the starting powers: each power's first line's before-value; each pool's maximum ("of N total")
     local start0 = {}
+    R.maxOf = {}
     for _, e in ipairs(p.ev) do
         local pt = e.kind == "power" and M.POWER[e.name]
         if pt and start0[pt] == nil then
-            start0[pt] = e.from
+            start0[pt], R.maxOf[pt] = e.from, e.total
         end
     end
 
@@ -433,6 +435,16 @@ function M.new(text, H, o)
         for pt, r in pairs(us.res) do
             if start0[pt] then
                 r.cur, us.res0[pt] = start0[pt], start0[pt]
+            end
+        end
+        for pt, m in pairs(R.maxOf) do -- the log's pools: the client's UnitPowerMax (the loop's powerMax knob)
+            if pt == us.pt then
+                us.powerMax = m
+            elseif us.res[pt] then
+                us.res[pt].max = m
+            else
+                us.res[pt] = { cur = start0[pt] or m, max = m }
+                us.res0[pt] = us.res[pt].cur
             end
         end
         us.lastSwing, us.landAt = { 0, 0 }, { 0, 0 }

@@ -420,4 +420,21 @@ describe("the replay's mana regen (wowsims's regen lines)", function()
         assert.are.equal(2, seen)
         assert.are.equal(fake.SECRET, (api.GetManaRegen())) -- the pull: secret, the facade's model answers
     end)
+
+    it("gives the world each logged pool at the log's maximum, and the client its UnitPowerMax", function()
+        local R = replay.new(log({ { 0.5, 2.2, 2 } }), H, {}) -- a mana line "of 4000 total"; the world's power: rage
+        local W = R.world(setmetatable({ tag = "-x" }, { __index = WO }), 1)
+        local us = W.ents[1]
+        assert.are.same({ 100, 4000 }, { us.res[0].cur, us.res[0].max }) -- its first line's before-value, its pool
+        local obs = observer.new(W, setmetatable({ powerMax = true }, { __index = observer.DEFAULTS }))
+        W.run(R.pull - 0.2)
+        obs.step(R.pull - 0.2)
+        local got = {}
+        for i = 1, obs.s.n do
+            if obs.s.ev[i] == "@powerMax" then
+                got[obs.s.a1[i]] = obs.s.a2[i]
+            end
+        end
+        assert.are.same({ [1] = 100, [0] = 4000 }, got)
+    end)
 end)

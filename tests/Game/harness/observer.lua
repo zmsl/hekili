@@ -35,6 +35,7 @@ M.DEFAULTS = {
     -- UNIT_POWER_FREQUENT and the type's token in `powerTokens` ({ [powerType] = token }; default `powerToken`).
     plainPower = false,
     powerTokens = false,
+    powerMax = false, -- UnitPowerMax answers the world's pools at the out-of-combat reads (the replay's: the log's)
     regenRead = true, -- GetPowerRegenForPowerType answers the true rate out of combat (probe W), secret in combat
     playerSpeed = false, -- UnitAttackSpeed("player") answers our weapons' periods with the damage cache (out of combat)
     forms = false, -- the client's forms (index to spell ID: the content's), answered once
@@ -202,6 +203,12 @@ function M.new(W, k)
     local function cache(t, ev)
         local d = ev.damage
         push(t, "@damage", d[1], d[2], d[3], d[4])
+        if k.powerMax then -- UnitPowerMax, plain [W PR16]: the world's pools, not the character sheet's
+            push(t, "@powerMax", us.pt, us.powerMax)
+            for pt, r in pairs(us.res) do
+                push(t, "@powerMax", pt, r.max)
+            end
+        end
         if k.playerSpeed and ev.speed then
             push(t, "@attackSpeed", ev.speed[1], ev.speed[2])
         end

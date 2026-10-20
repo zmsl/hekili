@@ -236,6 +236,8 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         ctl.dead[a1] = a2 or nil
     elseif ev == "@aura" then -- unit, spellID, stacks (0: gone), expires, duration: ours, from the player
         aura(ctl, a1, a2, a3, a4, a5)
+    elseif ev == "@powerMax" then -- powerType, its maximum (plain)
+        ctl.powerMax[a1] = a2
     elseif ev == "@power" then
         ctl.power[a1] = a2
     elseif ev == "@health" then

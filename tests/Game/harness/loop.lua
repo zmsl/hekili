@@ -170,6 +170,9 @@ function M.run(L, seed, o, drivers)
         for key, v in pairs(content.OBSERVE or {}) do -- the content's client knobs (other powers' reads, forms)
             k[key] = v
         end
+        if o.replay then
+            k.powerMax = true -- the log's pools (replay.lua's maxOf), not the character sheet's
+        end
         if d.plain then
             k.plain, k.usableDelay = true, 0
         end
