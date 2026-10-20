@@ -79,12 +79,12 @@ describe("Engine/Content.lua", function()
     end)
 
     it("Notifies a content API mismatch and does not load the pack", function()
-        meta.Hekili_Warrior["X-Hekili-ContentAPI"] = "5"
+        meta.Hekili_Warrior["X-Hekili-ContentAPI"] = "6"
         run()
         assert.are.same({ "load Hekili_Shared", "meta Hekili_Warrior X-Hekili-ContentAPI" }, calls)
         assert.are.same(1, #notes)
         assert.is_truthy(notes[1]:find("Hekili_Warrior", 1, true))
-        assert.is_truthy(notes[1]:find("content API 5", 1, true))
+        assert.is_truthy(notes[1]:find("content API 6", 1, true))
     end)
 
     it("Notifies a failed pack load, whether LoadAddOn refuses or raises", function()
@@ -129,10 +129,10 @@ describe("Engine/Content.lua", function()
 
     it("declares one content API in every content TOC", function()
         for _, name in ipairs(addons.CONTENT) do
-            assert.are.equal("6", addons.meta(name)["X-Hekili-ContentAPI"], name)
+            assert.are.equal("7", addons.meta(name)["X-Hekili-ContentAPI"], name)
         end
         local src = assert(io.open("src/Hekili/Engine/Content.lua")):read("*a")
-        assert.is_truthy(src:find("\nlocal CONTENT_API = 6\n", 1, true))
+        assert.is_truthy(src:find("\nlocal CONTENT_API = 7\n", 1, true))
     end)
 
     it("without a class token, loads the shared content only and Notifies once to /reload (nothing retries)", function()

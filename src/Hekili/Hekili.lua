@@ -115,6 +115,7 @@ Hekili.Class = {
     },
 
     packs = {},
+    retiredPacks = {}, -- kit:RetirePacks
 
     pets = {},
     totems = {},

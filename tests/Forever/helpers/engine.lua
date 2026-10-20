@@ -154,6 +154,7 @@ function M.load(classToken, race)
         "itemList",
         "itemMap",
         "packs",
+        "retiredPacks",
         "pets",
         "totems",
         "potions",

@@ -25,7 +25,8 @@ local Hekili = _G[addon]
 -- swings.ranged_speed, swings.ranged_projected and swing.ranged.
 -- 6 (2026-10-2x): Hekili:NewClass (one kit, one spec per talent tree, ids of the core's), RegisterTalents' first field
 -- is the talent tree, kit:RegisterSetting's trailing spec keys (per-spec plan).
-local CONTENT_API = 6
+-- 7 (2026-10-2x): kit:RetirePacks (wowsims packs plan, Task 1).
+local CONTENT_API = 7
 
 local done, notice = false, nil
 

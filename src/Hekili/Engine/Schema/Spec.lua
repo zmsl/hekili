@@ -1142,6 +1142,14 @@ local HekiliSpecMixin = {
         }
     end,
 
+    -- Built-in packs the class no longer ships (wowsims packs plan, Task 1): RestoreDefaults drops their saved copies
+    -- and points a spec that chose one back at its default.
+    RetirePacks = function( self, names )
+        for _, name in ipairs( names ) do
+            class.retiredPacks[ name ] = true
+        end
+    end,
+
     RegisterPriority = function( self, name, version, notes, priority )
     end,
 
@@ -1361,6 +1369,21 @@ function Hekili:RestoreDefaults()
     local p = Hekili.Engine.settings
     local reverted = {}
     local changed = {}
+
+    -- A retired built-in pack (kit:RetirePacks) leaves the profile; a spec that chose it falls back to its default.
+    for k, v in pairs( p.packs ) do
+        if class.retiredPacks[ k ] and v.builtIn then
+            p.packs[ k ] = nil
+            for id, sp in pairs( p.specs ) do
+                -- AceDB copies a scalar default in (no __index), so nil would stay nil until the next login.
+                if type( sp ) == "table" and rawget( sp, "package" ) == k then
+                    local s = class.specs[ id ]
+                    sp.package = s and s.options.package or nil
+                end
+            end
+            insert( changed, k )
+        end
+    end
 
     for k, v in pairs( class.packs ) do
         local existing = rawget( p.packs, k )

@@ -8,6 +8,6 @@
 ## Dependencies: Hekili, Hekili_Shared
 ## Group: Hekili
 ## LoadOnDemand: 1
-## X-Hekili-ContentAPI: 6
+## X-Hekili-ContentAPI: 7
 
 Shaman.lua
