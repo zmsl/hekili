@@ -33,6 +33,9 @@
   under the Fury specialization's Priority; the hand-built Fury list stays the default for now).
   Below the level of Bloodthirst it fills with Sunder Armor, and neither wowsims.com priority offers a Hamstring Weave
   switch any more (no line of either read it).
+- Warrior: a second Protection priority, "Protection (wowsims.com)", translated from wowsims/forever's own Protection
+  rotation (choose it under the Protection specialization's Priority; the hand-built Protection list stays the default
+  for now).
 
 ### Changed
 - Rogue: the hand-built Assassination, Combat and Subtlety priorities are gone, with their settings (Bleeds on

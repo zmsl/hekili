@@ -773,15 +773,22 @@ describe("Forever Warrior", function()
         assert.is_true(lw.run(w.abilities.execute.usable, e))
     end)
 
-    it("registers the five priorities (Arms and Fury twice) exactly as tools/make_pack.lua prints them", function()
+    it("registers the six priorities (each spec twice) exactly as tools/make_pack.lua prints them", function()
         local printed = {}
         local pipe = assert(io.popen(LUA .. " tools/make_pack.lua"))
         for line in pipe:lines() do
             printed[#printed + 1] = { line:match("^(%d+) (.+)$") }
         end
         pipe:close()
-        assert.are.equal(5, #w.packs)
-        for i, name in ipairs({ "Fury (wowsims.com)", "Arms (wowsims.com)", "Arms", "Fury", "Protection" }) do
+        assert.are.equal(6, #w.packs)
+        for i, name in ipairs({
+            "Protection (wowsims.com)",
+            "Fury (wowsims.com)",
+            "Arms (wowsims.com)",
+            "Arms",
+            "Fury",
+            "Protection",
+        }) do
             assert.are.same({ name, tonumber(printed[i][1]), printed[i][2] }, w.packs[i])
         end
         assert.is_nil(w.options) -- each spec's package is NewClass's
@@ -818,20 +825,28 @@ describe("Forever Warrior", function()
 
     it("keeps its priorities in src/Hekili_Warrior/APLs/, tools/make_pack.lua's default class", function()
         local def = dofile("src/Hekili_Warrior/APLs/packs.lua")
-        assert.are.same(
-            { "WARRIOR", { "Fury (wowsims.com)", "Arms (wowsims.com)", "Arms", "Fury", "Protection" } },
-            { def.class, def.packs }
-        )
+        assert.are.same({
+            "WARRIOR",
+            {
+                "Protection (wowsims.com)",
+                "Fury (wowsims.com)",
+                "Arms (wowsims.com)",
+                "Arms",
+                "Fury",
+                "Protection",
+            },
+        }, { def.class, def.packs })
         local byName = assert(loadfile("tools/make_pack.lua"))("lists", "warrior")
         local byDefault = assert(loadfile("tools/make_pack.lua"))("lists")
         assert.are.same(byDefault, byName)
-        assert.are.equal("Fury (wowsims.com)", byName[1].name)
+        assert.are.equal("Protection (wowsims.com)", byName[1].name)
     end)
 
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists")
         local secretToken = require("Game.State.helpers.load").module().VirtualState.AplSecretToken
-        local racial = require("Forever.helpers.engine").abilitySet("WARRIOR").racial -- every race's (the registry)
+        local set = require("Forever.helpers.engine").abilitySet("WARRIOR") -- the class's, the shared kit's, every race's
+        local racial = set.racial
         local kinds = {
             buff = w.auras,
             debuff = w.auras,
@@ -848,9 +863,13 @@ describe("Forever Warrior", function()
                     if e.list_name then
                         assert.is_not_nil(p.lists[e.list_name], where .. ": no list " .. e.list_name)
                     else
-                        -- use_items is Hekili's `all` (Hekili_Shared/Shared/Items.lua), as in druid_spec
+                        -- use_items is Hekili's `all` (Hekili_Shared/Shared/Items.lua), as in druid_spec; healthstone
+                        -- the shared kit's (Hekili_Shared/Shared/Consumables.lua)
                         assert.is_true(
-                            w.abilities[e.action] ~= nil or e.action == "use_items" or racial[e.action] ~= nil,
+                            w.abilities[e.action] ~= nil
+                                or e.action == "use_items"
+                                or racial[e.action] ~= nil
+                                or set.abilities[e.action] ~= nil,
                             where .. ": no ability " .. e.action
                         )
                     end

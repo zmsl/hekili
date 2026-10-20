@@ -255,7 +255,7 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         end
         assert.are.same({ "Arms", "Arms (wowsims.com)" }, under("arms"))
         assert.are.same({ "Aaa", "Fury", "Fury (wowsims.com)" }, under("fury"))
-        assert.are.same({ "Protection" }, under("protection"))
+        assert.are.same({ "Protection", "Protection (wowsims.com)" }, under("protection"))
         local order = function(key, name)
             return nodes[key].plugins.packs[name].order
         end
@@ -396,7 +396,7 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         assert.are.same({
             arms = { "Arms", "Arms (wowsims.com)" },
             fury = { "Fury", "Fury (wowsims.com)" },
-            protection = { "Protection" },
+            protection = { "Protection", "Protection (wowsims.com)" },
         }, kids)
         local at = {}
         for i, v in ipairs(entries) do

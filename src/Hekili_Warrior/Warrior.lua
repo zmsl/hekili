@@ -2077,9 +2077,14 @@ spec:RegisterSetting("wowsims_rend_weave", true, {
     width = "full",
 }, "fury")
 
--- The five priorities (Arms and Fury have two each, the wowsims.com one and the hand-built one, until the swap),
+-- The six priorities (each spec has two, the wowsims.com one and the hand-built one, until the swap),
 -- written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and run it, never
 -- these blocks (tests/Forever/warrior_spec.lua checks they match). Pick one with /hekili priority <name>.
+spec:RegisterPack(
+    "Protection (wowsims.com)",
+    20261020996,
+    [[Hekili:vJvBVPUnu4Fl9lSGwviaLUrvPs3PPP1PT7UQCL23sWeBiEyIJSDkQtO8BFh7KsCmj0GUF6QQwLC85LNZXhF8tt44WVgUeJuKWppjyY9JdMemF(9HlvVLrcxMHI3H2cpKI2d)9lcUIeRO80IvEh4hK09s)y((HAnFJXryT3wNtzQNtdx3QJLzK4WL)ZNE5LN)7xEi7KhdxMqXysPzez8fI2dfRujKIvvYgTHliVsefRWKnOCMQy1N(YFwScexSQHtYPJ0Hxo6asiOCXO6WpcLXKJQCGp8I))k5PdVfcLaLkzqIGHN56qtLfRqymp9hGh2rEt6xS6xrk0dTajV)65VcojrPYKpmA0wQkjFTolg5O6qWNaYXtNoFAao4UGPb(qzvW3qzqPhzqP0ptqaJxJulGFvmsKmHNRUfeNLZyrG8X(Zk(JZu)hxmAnJZXcy782CjjIVzt02y8IXDz7cgsQIKkuk2Xa6MfE34ToFZg)AD8ZZo6vAQVmHsy4OdigZFxk)q6aJY2IZZgoCqcbXuj(zXQhxCxWWtHgaRLUM4zR60zdUX79yzHaRq1axdp2A4BeofpLa7e7nbdYUo8(XUYWHhVsiDL1QMfRzUflOxGiIIZfsY3Lzq5sMDHZB2AS3hyBgMGujrhOYeBPXiD3S51igvQUvp9ArmosGIPiMSL(m4Sr8UwAZ1hx8HYQGKQEc6rp6DJj50hzt3sIYLO1mcKFd8UPQCuTuv1oMZzy4HtIfK9iAQ8r9zTHonHhiKmA6wOglO7iYZXJw3xjrKuYEkr(0yBRHblPyDtadL1IUtAjRHXA7TfBMqaZ3esLT49CHcXQqL9cv50vGIXn39apJy0)ZKZM5yGfyIPcF(I1LU7VueRS3wChw2yckyPXoBHwBwbnZByMOzkyvW0ckBc8G9Re4eseCrdbViaoM4iPUtXAxWTBXEPkq8uvhtZwMYKejGILbrvaYwUpCKnE3JZo69nf5bT5ARcutGfZiOxB5SSNBdXa3JyoZfeCACvR3h6TfFG366gqWt229486DB)6XglmMhTjx8wt7BtzD0iW0yXoO)TxQtYfKDO(PklpLiHzBBtuUgeUeitibBC4DPhek10ZQ9e82Nn8)iP6Py4WFjCPL30lwX7ai1Dk3dvGN7RvNkbARM2tRkReAlURVwyvqc1)SSIj31KI1xVbfjbfUqLIcx2otNR9YpxQoTveFhhw22aiFBuGANduBBlNWX7CIAGIlWS4culUwUfxB99mYfT19uxGTOl99AYnRND1wmRSt1MCQ0o8(oQw1CS0A9tDOLlNRYborL)FJwJCax8Z9e52uZASlDgPSRMv2hsltJZ59fNo02SXAZ7NEAS2VJd6OgAtz5cozIXjUt1CQA67Vn611uglUEg96AkqdYFgn76yvvP0OJB35vMIL1PU7iDPgA7Q(WF04(UAL7cJxMyPXLUT2Nk2wKkTD5fzCA8OBtyDX29AQEqf9Q4I2dkHvhuM0vdTnvXgG9sSuVin1EaQpMNQbZ9Lvqjr2gO3Tz9CsNMi0xssn44EHa1g7wtG6lVQt0FTdIdX3s2tN(SrTXFQ(7fbR5pRJU83j44cMUTUgD1bRInhkxLOBH(DYokJwSY73Q(OzMLd))d]]
+)
 spec:RegisterPack(
     "Fury (wowsims.com)",
     20261020298,

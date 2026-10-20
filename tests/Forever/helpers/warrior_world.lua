@@ -442,6 +442,29 @@ M.Fury = setmetatable({
     end,
 }, { __index = M })
 
+-- The Protection base (wowsims packs plan, Task 6; ws.content's base for Protection (wowsims.com)): the world above with
+-- wowsims/forever's prebis Protection gear (MIT, https://github.com/wowsims/forever): a one-hander (10271) at the 2.35 s
+-- period of the first Tag 1 swing pairs of tests/Forever/wowsims/warrior_protection.log and a shield (15289); damage
+-- UNMEASURED. Defensive Stance up (wowsims's defaultStance); Mortal Strike is an Arms talent, so the character does
+-- not know it.
+local PROT_SPEED = 2.35
+M.Protection = setmetatable({
+    WORLD = setmetatable({ weapons = { { 60, 120, PROT_SPEED } } }, { __index = M.WORLD }),
+    character = function()
+        local c = M.Fury.character()
+        c.speed, c.form = { PROT_SPEED }, M.FORM.defensive_stance
+        c.items = { [16] = { 1, "One-Hander", "INVTYPE_WEAPON" }, [17] = { 2, "Shield", "INVTYPE_SHIELD" } }
+        return c
+    end,
+    -- The class file's rate restated (as M.gain): 3.46 x speed with a one-hander; a crit one more base swing.
+    gain = function(_, hand, _, flag)
+        if hand ~= 1 then
+            return 0
+        end
+        return 3.46 * PROT_SPEED * (flag == "CRITICAL" and 2 or 1)
+    end,
+}, { __index = M })
+
 --- The debuffs whose uptime the loop reports (§5.1): the Arms list keeps Sunder Armor and Demoralizing Shout up (Rend
 --- only without Mortal Strike). Returns { { key, auraID } } from instance `H`.
 function M.uptime(H)
