@@ -579,4 +579,46 @@ describe("the wowsims APL translator", function()
         assert.are.equal("actions=strike,focus=1", text)
         assert.are.same({ "gone #1: spell 999", "default: empty group gone" }, omitted)
     end)
+
+    it("drops only the branch of a read nothing resolves, as wowsims's nil node, and lists its ID", function()
+        local lost = { auraIsActive = { auraId = { spellId = 12345 } } } -- no aura, ability or map owns it
+        local rage = cmp("OpGt", { currentRage = {} }, const("10"))
+        local text, omitted = apl.translate({
+            priorityList = {
+                cast(100, AND(lost, rage)),
+                cast(100, OR(lost, rage)),
+                cast(100, NOT(lost)),
+                cast(100, AND(NOT(lost), OR(rage, lost), E)),
+                cast(100, cmp("OpLt", { spellTimeToReady = { spellId = { spellId = 999 } } }, const("1s"))),
+                cast(100, AND({ spellIsReady = { spellId = { itemId = 777 } } }, rage)),
+                cast(100, AND({ spellIsKnown = { spellId = { spellId = 999 } } }, rage)), -- wowsims's constant false
+                cast(100, { dotIsActive = { spellId = { spellId = 12346 } } }),
+                cast(999, rage), -- the action itself: the whole entry
+            },
+        }, ctx({ executePhase = "execute_phase" }))
+        assert.are.equal(
+            table.concat({
+                "actions=strike,if=rage.current>10",
+                "actions+=/strike,if=rage.current>10",
+                "actions+=/strike",
+                "actions+=/strike,if=(rage.current>10&execute_phase)",
+                "actions+=/strike",
+                "actions+=/strike,if=rage.current>10",
+                "actions+=/strike",
+            }, "\n"),
+            text
+        )
+        assert.are.same({
+            "default #1: dropped the unresolved aura 12345 (its branch only)",
+            "default #2: dropped the unresolved aura 12345 (its branch only)",
+            "default #3: dropped the unresolved aura 12345 (its branch only)",
+            "default #4: dropped the unresolved aura 12345 (its branch only)",
+            "default #4: dropped the unresolved aura 12345 (its branch only)",
+            "default #5: dropped the unresolved spell 999 (its branch only)",
+            "default #6: dropped the unresolved item 777 (its branch only)",
+            "default #7: never",
+            "default #8: dropped the unresolved aura 12346 (its branch only)",
+            "default #9: spell 999",
+        }, omitted)
+    end)
 end)

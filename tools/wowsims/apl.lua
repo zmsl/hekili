@@ -11,10 +11,11 @@
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
 --    order as first called; `valueVariables` are inlined where referenced.
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
---    false; entries whose action or condition uses a node the fork lacks (`autocastOtherCooldowns`,
---    `castAllStatBuffCooldowns`, `strictSequence`, `sequence`, `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`,
---    `unitDistance` outside rule 11, `sequenceIsComplete`, `activeItemSwapSet`, `selectedConjured`, an unmapped spell, item or other
---    ID); a call of a group whose every entry was omitted.
+--    false; entries whose action or condition uses a node the fork lacks (`strictSequence`, `sequence`,
+--    `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `unitDistance` outside rule 11, `sequenceIsComplete`,
+--    `activeItemSwapSet`, `selectedConjured`, `autocastOtherCooldowns`, `castAllStatBuffCooldowns`), or whose own action
+--    is an unmapped spell, item or other ID (an unmapped read drops only its branch: rule 12); a call of a group whose
+--    every entry was omitted. Also listed: rule 12's dropped reads, by entry.
 -- 3. Toggles: a group whose actions are all empty is a wowsims ON/OFF switch: `actionGroupUsed` of it reads
 --    `settings.wowsims_<snake of the name without " ON/OFF">`, its default on exactly when the APL's reference to it is
 --    not hidden; the class registers that setting for the spec (named "<Group> (wowsims.com)").
@@ -65,6 +66,11 @@
 --    and `within`/`outside` test the bracket's bounds (`maxR <= N`, `minR >= N`; `<` reads as `<=` and `>` as `>=`): a
 --    distance between two abilities' ranges answers neither side, and an unknown one (no plain answer yet for the
 --    target) answers both, never blocking a line. The last plain bracket stays believed if the reads go secret.
+-- 12. An unresolvable read (wowsims's nil node: sim/core apl_values_aura.go and apl_values_spell.go return nil for an
+--    aura or spell the unit lacks): an aura, spell, item or other ID nothing maps (rule 5) in a value or condition is
+--    nil, so rule 6 drops that branch (a nil condition is true) and the entry stays; `spellIsKnown` of one is false
+--    (wowsims's constant). The header lists each dropped ID by entry. Only an entry whose own action is unmapped is
+--    omitted whole (rule 2).
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
 -- The engine facts rule 6 rests on (tools/check_pack_levels.lua checks every pack for it):
@@ -213,17 +219,40 @@ local function const(v)
     return ("%g"):format(n)
 end
 
-local function spellKey(c, s)
+-- A spell, item or other ID's key, or nil and what it is ("spell 123").
+local function spellLookup(c, s)
     if s.spellId then
-        return c.map[s.spellId] or c.keyOf[s.spellId] or unsupported("spell " .. s.spellId)
+        return c.map[s.spellId] or c.keyOf[s.spellId], "spell " .. s.spellId
     elseif s.itemId then
-        return c.map["item:" .. s.itemId] or c.itemKey[s.itemId] or unsupported("item " .. s.itemId)
+        return c.map["item:" .. s.itemId] or c.itemKey[s.itemId], "item " .. s.itemId
     end
-    return c.map[s.otherId] or unsupported("other " .. tostring(s.otherId))
+    return c.map[s.otherId], "other " .. tostring(s.otherId)
+end
+
+local function spellKey(c, s)
+    local x, what = spellLookup(c, s)
+    return x or unsupported(what)
 end
 
 local function auraKey(c, id)
     return c.map[id] or c.auraOf[id] or c.keyOf[id] or unsupported("aura " .. tostring(id))
+end
+
+-- Rule 12: a read of an ID nothing resolves is wowsims's nil node (its branch dropped, not the entry); the ID is noted.
+local function readSpell(c, s)
+    local x, what = spellLookup(c, s)
+    if not x then
+        c.dropped[#c.dropped + 1] = what
+    end
+    return x
+end
+
+local function readAura(c, id)
+    local x = c.map[id] or c.auraOf[id] or c.keyOf[id]
+    if not x then
+        c.dropped[#c.dropped + 1] = "aura " .. tostring(id)
+    end
+    return x
 end
 
 local UNIT = { Self = "buff", CurrentTarget = "debuff", Target = "debuff" }
@@ -350,7 +379,10 @@ local function value(c, n)
         end
         return "(" .. l .. op .. r .. ")", u
     elseif k == "spellTimeToReady" or k == "spellCastTime" or k == "spellCurrentCost" then
-        local x = spellKey(c, v.spellId)
+        local x = readSpell(c, v.spellId)
+        if not x then
+            return nil, true
+        end
         local field = ({
             spellTimeToReady = "cooldown." .. x .. ".remains",
             spellCastTime = "action." .. x .. ".cast",
@@ -358,13 +390,19 @@ local function value(c, n)
         })[k]
         return field, reads(c, x)
     elseif k == "dotRemainingTime" then
-        local a = auraKey(c, v.spellId.spellId)
+        local a = readAura(c, v.spellId.spellId)
+        if not a then
+            return nil, true
+        end
         return "debuff." .. a .. ".remains", reads(c, a)
     elseif k == "auraRemainingTime" or k == "auraNumStacks" then
         if v.auraId.tag == -1 then
             return nil, true -- rule 4: another player's aura, never registered
         end
-        local a = auraKey(c, v.auraId.spellId)
+        local a = readAura(c, v.auraId.spellId)
+        if not a then
+            return nil, true
+        end
         return unit(v) .. "." .. a .. (k == "auraNumStacks" and ".stack" or ".remains"), reads(c, a)
     elseif k == "autoSwingTime" and (v.autoType == "MainHand" or v.autoType == "OffHand") then -- rule 10
         return v.autoType == "MainHand" and "mainhand_speed" or "offhand_speed", false
@@ -465,7 +503,10 @@ local function bool(c, n)
         if v.auraId.tag == -1 then
             return nil, nil, true -- rule 4: another player's aura, never registered
         end
-        local a = auraKey(c, v.auraId.spellId)
+        local a = readAura(c, v.auraId.spellId)
+        if not a then
+            return nil, nil, true
+        end
         return unit(v) .. "." .. a .. ".up", nil, reads(c, a)
     elseif k == "auraIsInactive" then
         return bool(c, { ["not"] = { val = { auraIsActive = v } } })
@@ -489,7 +530,10 @@ local function bool(c, n)
         if not c.exclusive[id] then
             unsupported("auraShouldRefresh " .. tostring(id) .. " (no exclusive effect declared)")
         end
-        local a = auraKey(c, id)
+        local a = readAura(c, id)
+        if not a then
+            return nil, nil, true
+        end
         local un = v.sourceUnit and unit(v) or "debuff" -- wowsims reads it on the target by default
         local overlap, ou = "0", false
         if v.maxOverlap then
@@ -509,20 +553,38 @@ local function bool(c, n)
             unsupported("auraIcdIsReady of " .. tostring(v.sourceUnit.type))
         end
         local id = v.auraId and v.auraId.spellId
-        local a = c.icdOf[id] or unsupported("auraIcdIsReady " .. tostring(id))
+        local a = c.icdOf[id]
+        if not a and not (c.map[id] or c.auraOf[id] or c.keyOf[id]) then
+            readAura(c, id)
+            return nil, nil, true
+        end
+        a = a or unsupported("auraIcdIsReady " .. tostring(id))
         local tk = c.talentOf[id] -- nil (dropped) while the proc's talent is untaken, as wowsims's unregistered aura
         return "buff." .. a .. ".icd_ready", nil, tk and { test = "talent." .. tk .. ".enabled" } or false
     elseif k == "dotIsActive" then
-        local a = auraKey(c, v.spellId.spellId)
+        local a = readAura(c, v.spellId.spellId)
+        if not a then
+            return nil, nil, true
+        end
         return "debuff." .. a .. ".up", nil, reads(c, a)
     elseif k == "spellIsReady" then
-        local x = spellKey(c, v.spellId)
+        local x = readSpell(c, v.spellId)
+        if not x then
+            return nil, nil, true
+        end
         return "cooldown." .. x .. ".ready", nil, reads(c, x)
     elseif k == "spellCanCast" then
-        local x = spellKey(c, v.spellId)
+        local x = readSpell(c, v.spellId)
+        if not x then
+            return nil, nil, true
+        end
         return "action." .. x .. ".ready", nil, reads(c, x)
-    elseif k == "spellIsKnown" then
-        return "action." .. spellKey(c, v.spellId) .. ".known", nil, false
+    elseif k == "spellIsKnown" then -- wowsims: a constant, false for a spell it lacks; ours for an ID nothing resolves
+        local x = spellLookup(c, v.spellId)
+        if not x then
+            return nil, false, false
+        end
+        return "action." .. x .. ".known", nil, false
     elseif k == "isExecutePhase" then
         if v.threshold == "E20" and c.executePhase then
             return c.executePhase, nil, false
@@ -534,6 +596,19 @@ local function bool(c, n)
         return bool(c, c.vars[v.name] or unsupported("variable " .. v.name))
     end
     unsupported(tostring(k))
+end
+
+-- Rule 7's required talent of `key` before condition `cond` (either may be nil).
+local function required(c, key, cond)
+    local talent = c.requires[key]
+    if not talent then
+        return cond
+    end
+    if not c.talentKey[talent] then
+        error(("requires: %s is not a talent key"):format(tostring(talent)), 0)
+    end
+    local t = "talent." .. talent .. ".enabled"
+    return cond and (t .. "&" .. ((grouped(cond) or not cond:find("|", 1, true)) and cond or "(" .. cond .. ")")) or t
 end
 
 -- One entry as a line body, or nil and why it folds away.
@@ -584,22 +659,14 @@ local function entry(c, e)
             cond = emit(u, s, true)
         end
     end
-    local talent = c.requires[key]
-    if talent then -- rule 7: the talent the APL's build assumes
-        if not c.talentKey[talent] then
-            error(("requires: %s is not a talent key"):format(tostring(talent)), 0)
-        end
-        local t = "talent." .. talent .. ".enabled"
-        cond = cond and (t .. "&" .. ((grouped(cond) or not cond:find("|", 1, true)) and cond or "(" .. cond .. ")"))
-            or t
-    end
+    cond = required(c, key, cond)
     return cond and (body .. ",if=" .. cond) or body
 end
 
 --- The SimC text of `rotation` (a wowsims APL table) under context `c`, the omitted entries
 --- ({ "<list> #<n>: <why>" }) and the toggles ({ { setting key, default } } in the APL's group order).
 function M.translate(rotation, c)
-    c.vars, c.toggles, c.used, c.seen = {}, {}, {}, {}
+    c.vars, c.toggles, c.used, c.seen, c.notes, c.dropped = {}, {}, {}, {}, {}, {}
     for _, v in ipairs(rotation.valueVariables or {}) do
         c.vars[v.name] = v.value
     end
@@ -642,6 +709,7 @@ function M.translate(rotation, c)
             elseif type(when) == "string" then
                 omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, when)
             else
+                c.notes, c.dropped = {}, {}
                 local ok, body, why = pcall(entry, c, e)
                 if not ok then
                     if type(body) ~= "table" then
@@ -650,6 +718,12 @@ function M.translate(rotation, c)
                     omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, body.unsupported)
                 elseif body then
                     out[#out + 1] = body
+                    for _, what in ipairs(c.dropped) do
+                        c.notes[#c.notes + 1] = "dropped the unresolved " .. what .. " (its branch only)"
+                    end
+                    for _, n in ipairs(c.notes) do
+                        omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, n)
+                    end
                 elseif why ~= "toggle" then
                     omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, why)
                 end
