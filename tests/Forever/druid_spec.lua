@@ -789,15 +789,16 @@ describe("Forever Druid", function()
         assert.is_true(ok())
     end)
 
-    it("registers the Feral, Guardian and Balance packs exactly as tools/make_pack.lua druid prints them", function()
+    it("registers the packs of APLs/packs.lua exactly as tools/make_pack.lua druid prints them", function()
         local printed = {}
         local pipe = assert(io.popen(LUA .. " tools/make_pack.lua druid"))
         for line in pipe:lines() do
             printed[#printed + 1] = { line:match("^(%d+) (.+)$") }
         end
         pipe:close()
-        assert.are.equal(3, #w.packs)
-        for i, name in ipairs({ "Feral", "Guardian", "Balance" }) do
+        local names = dofile("src/Hekili_Druid/APLs/packs.lua").packs
+        assert.are.equal(#names, #w.packs)
+        for i, name in ipairs(names) do
             assert.are.same({ name, tonumber(printed[i][1]), printed[i][2] }, w.packs[i])
         end
         assert.are.equal(w.class, dofile("src/Hekili_Druid/APLs/packs.lua").class) -- the packs' class is the file's
@@ -806,7 +807,8 @@ describe("Forever Druid", function()
     it("writes priorities that name only registered abilities, auras, talents, settings and lists", function()
         local packs = assert(loadfile("tools/make_pack.lua"))("lists", "druid")
         local secretToken = require("Game.State.helpers.load").module().VirtualState.AplSecretToken
-        local shared = { use_items = true } -- Hekili's `all` (Hekili_Shared/Shared/Items.lua's use_items)
+        -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items; Hekili_Shared/Races' Night Elf racial
+        local shared = { use_items = true, elunes_light = true }
         local kinds = {
             buff = w.auras,
             debuff = w.auras,

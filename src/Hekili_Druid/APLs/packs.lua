@@ -10,6 +10,11 @@
 
 return {
     class = "DRUID",
-    packs = { "Feral", "Guardian", "Balance" },
-    specs = { Feral = "feral", Guardian = "guardian", Balance = "balance" },
+    packs = { "Feral (wowsims.com)", "Feral", "Guardian", "Balance" },
+    specs = {
+        ["Feral (wowsims.com)"] = "feral",
+        Feral = "feral",
+        Guardian = "guardian",
+        Balance = "balance",
+    },
 }
