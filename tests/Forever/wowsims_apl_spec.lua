@@ -431,6 +431,29 @@ describe("the wowsims APL translator", function()
         assert.are.equal("demonic_rune", c.itemKey[12662])
     end)
 
+    it("reads unitDistance against a whole number as the target's within/outside, else omits the line", function()
+        local d = { unitDistance = { sourceUnit = { type = "Self" } } }
+        local text, omitted = apl.translate({
+            priorityList = {
+                cast(100, cmp("OpLe", d, { variableRef = { name = "Melee range" } })),
+                cast(200, cmp("OpGt", d, const("8"))),
+                cast(300, cmp("OpGe", const("11.00"), d)), -- N >= d: within
+                cast(400, cmp("OpEq", d, const("5"))),
+                cast(400, cmp("OpLe", d, const("5.5"))),
+            },
+            valueVariables = { { name = "Melee range", value = const("5.00") } },
+        }, ctx())
+        assert.are.equal(
+            table.concat({
+                "actions=strike,focus=1,if=target.within5",
+                "actions+=/big_hit,if=target.outside8",
+                "actions+=/roar,use_off_gcd=1,if=target.within11",
+            }, "\n"),
+            text
+        )
+        assert.are.same({ "default #4: unitDistance OpEq 5", "default #5: unitDistance OpLe 5.5" }, omitted)
+    end)
+
     it("drops a call to a group whose entries were all omitted", function()
         local text, omitted = apl.translate({
             priorityList = { { action = { groupReference = { groupName = "Gone" } } }, cast(100) },

@@ -13,7 +13,7 @@
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
 --    false; entries whose action or condition uses a node the fork lacks (`autocastOtherCooldowns`,
 --    `castAllStatBuffCooldowns`, `strictSequence`, `sequence`, `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`,
---    `unitDistance`, `sequenceIsComplete`, `activeItemSwapSet`, `selectedConjured`, an unmapped spell, item or other
+--    `unitDistance` outside rule 11, `sequenceIsComplete`, `activeItemSwapSet`, `selectedConjured`, an unmapped spell, item or other
 --    ID); a call of a group whose every entry was omitted.
 -- 3. Toggles: a group whose actions are all empty is a wowsims ON/OFF switch: `actionGroupUsed` of it reads
 --    `settings.wowsims_<snake of the name without " ON/OFF">`, its default on exactly when the APL's reference to it is
@@ -54,6 +54,14 @@
 --    `|...stack<max_stack` for a stacking aura, guarded (rule 6); `cancelAura` is the action
 --    `cancel_buff,buff_name=<key>`; `autoSwingTime` MainHand / OffHand is `mainhand_speed` / `offhand_speed`.
 --    `remainingTime` is `fight_remains`, which answers "unknown" (3600 s) on Forever: an API-forced deviation.
+-- 11. `unitDistance` (wowsims's yards from the APL's unit to its target; the source unit is ignored, as wowsims does)
+--    compared with a whole number N: `<=`/`<` N as `target.within<N>`, `>=`/`>` N as `target.outside<N>` (either
+--    side; any other comparison or a non-integer N is unsupported). API-forced deviation: the client gives no yards,
+--    only per-spell range checks (C_Spell.IsSpellInRange, plain in combat: probe W PR7), so the engine brackets the
+--    distance between the tracked abilities' own ranges (src/Hekili/Game/State/Families/Enemies.lua VS.TargetRange)
+--    and `within`/`outside` test the bracket's bounds (`maxR <= N`, `minR >= N`; `<` reads as `<=` and `>` as `>=`): a
+--    distance between two abilities' ranges answers neither side, and an unknown one (no plain answer yet for the
+--    target) answers both, never blocking a line. The last plain bracket stays believed if the reads go secret.
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
 -- The engine facts rule 6 rests on (tools/check_pack_levels.lua checks every pack for it):
@@ -214,6 +222,7 @@ local function auraKey(c, id)
 end
 
 local UNIT = { Self = "buff", CurrentTarget = "debuff", Target = "debuff" }
+local FLIP = { OpLe = "OpGe", OpLt = "OpGt", OpGe = "OpLe", OpGt = "OpLt", OpEq = "OpEq", OpNe = "OpNe" } -- N op d
 local function unit(v)
     local u = v.sourceUnit and v.sourceUnit.type or "Self"
     return UNIT[u] or unsupported("unit " .. tostring(u))
@@ -414,6 +423,15 @@ local function bool(c, n)
             unsupported("number as a condition")
         end
         return nil, b, false
+    elseif k == "cmp" and (v.lhs and v.lhs.unitDistance or v.rhs and v.rhs.unitDistance) then -- rule 11
+        local flip = not (v.lhs and v.lhs.unitDistance)
+        local n = value(c, flip and v.lhs or v.rhs)
+        local op = flip and FLIP[v.op] or v.op
+        local side = (op == "OpLe" or op == "OpLt") and "within" or ((op == "OpGe" or op == "OpGt") and "outside")
+        if not side or not (n and n:match("^%d+$")) then
+            unsupported("unitDistance " .. tostring(v.op) .. " " .. tostring(n))
+        end
+        return "target." .. side .. n, nil, false
     elseif k == "cmp" then
         local l, lu = value(c, v.lhs)
         local r, ru = value(c, v.rhs)
