@@ -184,6 +184,9 @@ local usable, ansT, shortCost, shortT, shortGain, shortEst = {}, {}, {}, {}, {},
 -- Per hand (1 main, 2 off): the swing-paid slot's estimate and floor at its latest PLAYER_SWING, that swing's time,
 -- the lowest top a short answer set from ORACLE_MIN after it (math.huge: none) and the slot's spend count then (I.Missed).
 local swE, swL, swT, swTop, swSp = { 0, 0 }, { 0, 0 }, { -1, -1 }, { math.huge, math.huge }, { 0, 0 }
+-- Per hand: the latest PLAYER_SWING whose rage the floor does not hold yet (0: none; VS.SwingPending).
+local pendT = { 0, 0 }
+local heardT = 0 -- the latest usability answer's time
 -- By ability index: its ladder precondition (C9): false for `ladder = false` (its answers are no rungs), its `usable`
 -- function (a short answer while it fails names another requirement, such as a finisher's combo points), or true.
 local pre = {}
@@ -1002,6 +1005,7 @@ I.On(Obs.Usable, function(o, t, lag)
     end
     local was, wasT = usable[a], ansT[a]
     usable[a], ansT[a] = now, o.t
+    heardT = o.t
     local c = r ~= 0 and I.CostOf(a) or 0
     local explained = I.CreditVerdict and judge(a, now, t, r, c, was, wasT)
     if r == 0 or now == NOT or R.readable[r] or I.ab.multiCost[a] or not pre[a] then
@@ -1119,11 +1123,15 @@ I.On(Obs.Swing, function(o, t)
             if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
                 swE[hand], swL[hand], swT[hand], swTop[hand], swSp[hand] =
                     R.est0[r], R.lo0[r], o.t, math.huge, R.spends[r]
+                pendT[hand] = o.t
                 break
             end
         end
         return
     elseif c == 1 then
+        if abs(o.t - pendT[hand]) < 1e-6 then
+            pendT[hand] = 0 -- credited: the floor holds it
+        end
         local h = hitRate[hand] + HIT_ALPHA
         h = h < 1 and h or 1
         hit, hitRate[hand] = h - hitRate[hand], h
@@ -1216,6 +1224,29 @@ I.On(Obs.PlayerHit, function(o, t)
     end
 end)
 
+--- The time of `hand`'s latest swing (1 main, 2 off) whose gain the believed floor does not hold yet, else 0 (GAP AK).
+--- The game pays it at the swing (checkpoint R1); the floor takes it at the first usability answer that can show it
+--- (about ORACLE_MIN later: a rung) or at its wound row's credit (a landing lag later). Hekili's swing forecast counts
+--- that swing as past meanwhile, so for a poll every rage-gated line ranked as unaffordable (Arms flicker 4.1/min);
+--- Engine/Sim/State.lua forecasts its gain instead, one poll after the answers can show it (no press before). Not pending
+--- once an answer since that point was heard (it showed the gain, or the swing gave none), once credited, after a spend
+--- from the slot (its cast's rung holds what the game had), or for a slot read plain. Allocates nothing.
+function VS.SwingPending(hand)
+    local p = pendT[hand]
+    if p == 0 or heardT > p + I.Log.ORACLE_MIN - 1e-6 then
+        return 0
+    end
+    for r = 1, R.n do
+        if
+            (R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0))
+            and (R.readable[r] or R.spends[r] ~= swSp[hand])
+        then
+            return 0
+        end
+    end
+    return p
+end
+
 --- (tank design §1.2.4) A power type's learned gain per second from hits on the player: its `taken` gains of
 --- the last TAKEN_WINDOW whole seconds to `now` / TAKEN_WINDOW, in combat only (0 out of combat, or with no `taken`).
 --- Allocates nothing.
@@ -1244,6 +1275,7 @@ end)
 -- a decaying slot's rate is re-read; a stepped one loses its first quantum at once (front-loaded).
 I.On(Obs.CombatEnd, function(o, t)
     fighting = false
+    pendT[1], pendT[2] = 0, 0
     for r = 1, R.n do
         for i = 1, I.TAKEN_WINDOW do
             R.takenSec[r][i] = -1

@@ -1296,6 +1296,14 @@ do
                     v.next = l + i
                     v.name = k
 
+                    -- Forever GAP AK: the game paid the latest swing already, the believed floor not yet (VS.SwingPending):
+                    -- its gain is forecast one poll after the usability answers can show it (ORACLE_MIN), not lost as past;
+                    -- the icon keeps its line, and nothing is pressable on it before an answer confirms it
+                    if v.swing and i > 0 then
+                        local p = VS.SwingPending( v.swing == "offhand" and 2 or 1 )
+                        if p > 0 and l > p - i / 2 then v.next = max( now, p + 2 * ns.VirtualStateInternal.Log.ORACLE_MIN ) end
+                    end
+
                     if i > 0 and v.next >= 0 then
                         table.insert( events, v )
                     end

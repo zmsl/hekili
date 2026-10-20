@@ -276,6 +276,28 @@ describe("resources", function()
             assert.are.same({ 10, 10 }, { r.lo, r.est }) -- not 18: the answer's bound already holds the refund
         end)
 
+        it("names a swing pending until an answer that can show its rage, its credit or a spend (GAP AK)", function()
+            local A = I.ab.bySpell[fs.SPENDER_A]
+            obs(Obs.Swing, 10, 1, 2.6, 4) -- PLAYER_SWING: the game paid it, the floor does not hold it yet
+            I.Fold(10, false)
+            assert.are.equal(10, VS.SwingPending(1))
+            assert.are.equal(0, VS.Power(fs.RAGE, 10).lo)
+            obs(Obs.Usable, 10.05, A, 0, 1) -- too soon to show it: still pending
+            I.Fold(10.05, false)
+            assert.are.equal(10, VS.SwingPending(1))
+            obs(Obs.Usable, 10.1, A, 0, 1) -- an answer that could show it, short: the swing gave none here
+            I.Fold(10.1, false)
+            assert.are.equal(0, VS.SwingPending(1))
+            obs(Obs.Swing, 12.6, 1, 2.6, 4)
+            obs(Obs.Swing, 12.6, 1, 0, 1) -- its credit (the wound row at the swing's time)
+            I.Fold(12.6, false)
+            assert.are.equal(0, VS.SwingPending(1))
+            obs(Obs.Swing, 15.2, 1, 2.6, 4)
+            I.Fold(15.2, false)
+            I.ResourceShift(1, -5, 15.25, Obs.CastSuccess) -- a spend: its cast's rung holds what the game had
+            assert.are.equal(0, VS.SwingPending(1))
+        end)
+
         it("never believes more than the maximum, however many swings land", function()
             for k = 1, 20 do
                 obs(Obs.Swing, 5 + 2.6 * k, 1, 2.6, 1)
