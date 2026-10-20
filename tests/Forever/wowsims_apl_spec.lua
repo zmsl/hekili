@@ -59,6 +59,32 @@ describe("the wowsims APL translator", function()
         assert.are.same({}, omitted)
     end)
 
+    it("schedules the prepull: prepull_at from doAtValue, earliest first, no guard of its own", function()
+        local function at(id, v, cond)
+            local e = cast(id, cond)
+            e.doAtValue = v and const(v)
+            return e
+        end
+        local text, omitted = apl.translate({
+            prepullActions = {
+                at(100, "-1.5s"),
+                at(300, "-10s"),
+                at(200, "-1.5s", { ["not"] = { val = { auraIsActive = { auraId = { spellId = 900 } } } } }),
+                at(400),
+            },
+        }, ctx())
+        assert.are.equal(
+            table.concat({
+                "actions.precombat=roar,use_off_gcd=1,prepull_at=10",
+                "actions.precombat+=/strike,focus=1,prepull_at=1.5",
+                "actions.precombat+=/big_hit,prepull_at=1.5,if=(!talent.furious.enabled|!buff.fury.up)",
+                "actions.precombat+=/dot",
+            }, "\n"),
+            text
+        )
+        assert.are.same({}, omitted)
+    end)
+
     it("folds constants, omits hidden and unsupported entries, inlines variables, makes toggles settings", function()
         local text, omitted, toggles = apl.translate({
             priorityList = {

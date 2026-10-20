@@ -29,11 +29,18 @@ local function aplRoot(class)
     return "src/Hekili_" .. Class(class) .. "/APLs/"
 end
 
-local OPTIONS = { name = "list_name", buff_name = "buff_name", use_off_gcd = "use_off_gcd", focus = "focus" } -- plus if=, which runs to the end of the line
+local OPTIONS = {
+    name = "list_name",
+    buff_name = "buff_name",
+    use_off_gcd = "use_off_gcd",
+    focus = "focus",
+    prepull_at = "prepull_at",
+} -- plus if=, which runs to the end of the line
 
 -- SimC-style lines into their lists and entries:
--- actions[.list](=|+=/)action[,name=list][,buff_name=aura][,use_off_gcd=N][,focus=N][,if=criteria]; focus is a tier,
--- 1 highest; buff_name is cancel_buff's aura.
+-- actions[.list](=|+=/)action[,name=list][,buff_name=aura][,use_off_gcd=N][,focus=N][,prepull_at=S][,if=criteria];
+-- focus is a tier, 1 highest; buff_name is cancel_buff's aura; prepull_at the seconds before the pull of a
+-- once-an-episode precombat entry (Engine/Sim/Core.lua).
 local function parse(simc)
     local lists = {}
     for line in simc:gmatch("[^\n]+") do
@@ -59,6 +66,9 @@ local function parse(simc)
             local value = (k == "name" or k == "buff_name") and v or tonumber(v)
             if k == "focus" and not v:match("^[1-9]%d*$") then
                 value = nil -- a focus tier is a positive integer, 1 highest
+            end
+            if k == "prepull_at" and (value or -1) < 0 then
+                value = nil -- seconds before the pull, never negative
             end
             if value == nil then
                 error("bad value " .. opt .. " in: " .. line, 0)
@@ -93,6 +103,7 @@ local function unparse(lists)
                 .. (e.buff_name and ",buff_name=" .. e.buff_name or "")
                 .. (e.use_off_gcd and ",use_off_gcd=" .. e.use_off_gcd or "")
                 .. (e.focus and ",focus=" .. e.focus or "")
+                .. (e.prepull_at and ",prepull_at=" .. e.prepull_at or "")
                 .. (e.criteria and ",if=" .. e.criteria:gsub("||", "|") or "")
         end
     end

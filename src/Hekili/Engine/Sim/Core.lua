@@ -569,6 +569,22 @@ end
 
 local invalidActionWarnings = {}
 
+-- A precombat entry with `prepull_at=N` (a prepull schedule, N seconds before the pull: the wowsims packs' doAtValue)
+-- is recommended once an out-of-combat episode, the time since the last combat ended (`state.combat_ended`): it is
+-- done once its ability is cast in the episode (`lastCast`: our casts and the simulation's) or its aura of the same key
+-- is seen up, and stays done until the next episode. The list's order is the schedule's.
+local prepullSeen = setmetatable( {}, { __mode = "k" } ) -- [entry] = the episode its aura was seen up in
+
+local function prepullDone( entry, action, ability )
+    local episode = state.combat_ended
+    if prepullSeen[ entry ] == episode or ability.lastCast > episode then return true end
+    if class.auras[ action ] and state.buff[ action ].up then
+        prepullSeen[ entry ] = episode
+        return true
+    end
+    return false
+end
+
 function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth, caller )
     local specID = state.spec.id
     local spec = rawget( Hekili.Engine.settings.specs, specID )
@@ -753,7 +769,9 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                     Timer:Track( "Ability Known, Enabled" )
 
-                    if ability and known and enabled then
+                    if ability and known and enabled and entry.prepull_at and listName == "precombat" and prepullDone( entry, action, ability ) then
+                        if debug then self:Debug( "This prepull entry ( prepull_at=%s ) is done for this out-of-combat episode.  Skipping.", tostring( entry.prepull_at ) ) end
+                    elseif ability and known and enabled then
                         local script = scripts:GetScript( scriptID )
 
                         wait_time = state:TimeToReady()

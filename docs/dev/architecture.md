@@ -234,11 +234,26 @@ on health); wowsims's `remainingTime` maps to `fight_remains` with that deviatio
 **APL line options.** `make_pack.lua` and the in-game importer accept these on a line before `if=` (in the tool,
 an unknown option or a non-numeric value errors; `unparse` writes them in this order): `name=<list>` (for
 `call_action_list`/`run_action_list`), `use_off_gcd=1` (recommendable off the GCD) and `focus=N` (a priority tier, 1
-highest; the record carries `focus = N` and the timeline shows it in the now circle ahead of time, below). The tool
+highest; the record carries `focus = N` and the timeline shows it in the now circle ahead of time, below) and
+`prepull_at=S` (a precombat line recommended once an out-of-combat episode, below). The tool
 refuses 0, negatives and non-integers; the in-game importer drops `focus=0` (off) and warns on and drops anything that
 is not a whole number; the priority editor's Focus Tier slider sets it (0 is off). The tier is per line, not per
 ability. The Druid pack flags Feral's `rip` (tier 1); the Warrior pack's Fury tiers Heroic Strike and Cleave 1 near the
 rage cap and 2 otherwise.
+
+**Prepull schedule.** Upstream Hekili walks `precombat` before `default` on every refresh and skips its non-essential
+entries once `time > 0`; out of combat it is a plain priority, so an unguarded buff, or two exclusive ones (two seals:
+each guard `!buff.X.up` holds again once the other replaces it), is recommended over and over. A precombat line may
+carry `prepull_at=S` (seconds before the pull, never negative; the tool refuses a negative, the importer warns and
+drops it): `GetPredictionFromAPL` (`Engine/Sim/Core.lua`, `prepullDone`) recommends such an entry once per
+out-of-combat episode, the time since the last combat ended (`state.combat_ended`, set at `PLAYER_REGEN_ENABLED`; 0
+before the first fight). The entry is done once its ability's `lastCast` is in the episode (our casts and the
+simulation's, so the next slot shows the next entry) or the aura of the same key is seen up (auras are plain out of
+combat on Forever), and stays done until the next episode, even after that aura falls off. The list's order is the
+schedule's: the wowsims translator (`tools/wowsims/apl.lua` rule 1) orders `prepullActions` by `doAtValue`, earliest
+first, and emits `prepull_at` from it, adding no guard of its own. The engine does not know when the pull comes, so the
+seconds are the order's source and documentation, not a timer. Lines without it (every hand-written pack's precombat,
+Arms's `battle_shout` refresh among them) behave as before.
 
 ## 7. Display styles
 

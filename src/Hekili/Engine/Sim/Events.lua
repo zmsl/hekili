@@ -858,6 +858,7 @@ RegisterEvent( "PLAYER_REGEN_ENABLED", function ()
     combat_ended = GetTime()
 
     state.combat = 0
+    state.combat_ended = combat_ended
 
     state.swings.mh_actual = 0
     state.swings.oh_actual = 0

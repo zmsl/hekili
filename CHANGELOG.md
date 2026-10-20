@@ -27,6 +27,9 @@
 - The addon keeps a ranged Auto Shot timer next to the melee swing timers (used by the Hunter priorities' range and
   swing checks; no other class reads it).
 - Developer: the mana estimate's at-rest lower bound is pinned by tests (no behaviour change).
+- Priorities: a precombat line may carry `prepull_at=<seconds before the pull>`; such a line is recommended once
+  between fights (after its spell is cast or its buff is seen up), in the list's order, so two seals no longer
+  alternate before a pull.
 
 ### Fixed
 - Rogue, Paladin and Shaman: the default priorities now load. They were registered under the wrong specialization ids

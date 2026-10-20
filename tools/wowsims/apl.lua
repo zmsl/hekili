@@ -3,7 +3,9 @@
 -- Data: wowsims/forever (MIT, https://github.com/wowsims/forever); the APL JSON is translated as data, no code copied.
 --
 -- The translation rules (the plan's Task 4):
--- 1. One `.simc` line per APL entry, in order: `prepullActions` -> `actions.precombat`, `priorityList` -> `actions`,
+-- 1. One `.simc` line per APL entry, in order: `prepullActions` -> `actions.precombat` (wowsims's schedule: by a
+--    constant `doAtValue`, earliest first, ties in the APL's order, each cast `prepull_at=<seconds before the pull>`,
+--    which the engine recommends once an out-of-combat episode; no guard is added), `priorityList` -> `actions`,
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
 --    order as first called; `valueVariables` are inlined where referenced.
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
@@ -515,7 +517,10 @@ local function entry(c, e)
             c.seen[x] = (c.seen[x] or 0) + 1
             tier = tier[c.seen[x]] or tier[#tier]
         end
-        body = x .. (c.offGcd[x] and ",use_off_gcd=1" or "") .. (tier and (",focus=" .. tier) or "")
+        body = x
+            .. (c.offGcd[x] and ",use_off_gcd=1" or "")
+            .. (tier and (",focus=" .. tier) or "")
+            .. (c.prepullAt and (",prepull_at=" .. c.prepullAt) or "")
     elseif kind == "groupReference" then
         local g = a.groupReference.groupName
         if c.toggles[g] then
@@ -565,9 +570,20 @@ function M.translate(rotation, c)
         end
     end
     local omitted, lists, byName = {}, {}, {}
-    local function run(name, entries)
-        local out = {}
-        for i, e in ipairs(entries) do
+    local function run(name, entries, at)
+        local out, order = {}, {}
+        for i in ipairs(entries) do
+            order[i] = i
+        end
+        if at then -- the prepull schedule: by doAtValue, earliest first (wowsims's order), ties in the APL's
+            table.sort(order, function(x, y)
+                local ax, ay = at[x] or 0, at[y] or 0
+                return ax < ay or (ax == ay and x < y)
+            end)
+        end
+        for _, i in ipairs(order) do
+            local e = entries[i]
+            c.prepullAt = at and at[i] and ("%g"):format(-at[i]) or nil
             if e.hide then
                 omitted[#omitted + 1] = ("%s #%d: hidden"):format(name, i)
             else
@@ -586,7 +602,13 @@ function M.translate(rotation, c)
         end
         lists[#lists + 1], byName[name] = { name, out }, out
     end
-    run("precombat", rotation.prepullActions or {})
+    local prepull, at = rotation.prepullActions or {}, {}
+    for i, e in ipairs(prepull) do
+        local ok, n = pcall(value, c, e.doAtValue or {}) -- a constant duration; anything else keeps no schedule
+        at[i] = ok and tonumber(n) or nil
+    end
+    run("precombat", prepull, at)
+    c.prepullAt = nil
     run("default", rotation.priorityList or {})
     for _, line in ipairs(c.leveling) do
         table.insert(byName.default, line)
