@@ -113,6 +113,9 @@ local function walk(api, u, unit, t)
     end
     if complete then
         Note(WALK[u], "readable") -- a clean walk, even with no tracked aura up
+        if U.firstWalk[u] == 0 then
+            U.firstWalk[u] = t -- an aura up in this walk was gained before it (Families/Auras.lua's ICD)
+        end
         local e = U.exp0[u]
         for j = 1, U.nAura do
             -- a form or stealth aura is left to its reads (Sources/Forms.lua), a weapon enchant to Sources/Enchants.lua

@@ -1123,6 +1123,9 @@ do
     -- time to die answers this "unknown", far beyond any fight (State.lua's time_to_die treats 3600 as unknown too).
     local FOREVER = 3600
     local TRIVIAL = 5
+    -- Forever: off. Fed the belief's health, it learnt a 0 rate (DEFAULT_TTD) before a pin and junk from the jump at one.
+    -- shortcut: no time-to-die estimate; feed a belief-derived one here when a TargetHealth-based mechanism exists.
+    local FEED = false
 
     local function UpdateEnemy(guid, healthPct, unit, time)
         local enemy = db[ guid ]
@@ -1218,7 +1221,8 @@ do
     function Hekili:GetTTD( unit, isGUID )
         if state.target.is_dummy then return 180 end
 
-        local default = ( isGUID or UnitIsTrivial(unit) and UnitLevel(unit) > -1 ) and TRIVIAL or FOREVER
+        -- Forever: unknown for every target, a grey one too, as fight_remains (wowsims's remainingTime has no trivial case)
+        local default = FEED and ( isGUID or UnitIsTrivial(unit) and UnitLevel(unit) > -1 ) and TRIVIAL or FOREVER
         local guid = isGUID and unit or UnitExists(unit) and UnitCanAttack("player", unit) and UnitGUID(unit)
 
         if not guid then
@@ -1247,7 +1251,7 @@ do
     end
 
     function Hekili:GetTimeToPct( unit, percent )
-        local default = 0.7 * ( UnitIsTrivial( unit ) and TRIVIAL or FOREVER )
+        local default = 0.7 * ( FEED and UnitIsTrivial( unit ) and TRIVIAL or FOREVER )
         local guid = UnitExists( unit ) and UnitCanAttack( "player", unit ) and UnitGUID( unit )
 
         if percent >= 1 then
@@ -1367,6 +1371,8 @@ do
     Hekili.GetNumTTDsBefore = Hekili.GetNumTTDsWithin
 
     function Hekili:GetNumTTDsAfter( x )
+        if not FEED then return state.active_enemies end -- Forever: every enemy's time to die is unknown, so after x
+
         local count = 0
         local dummy_override = state.target.is_dummy
 
@@ -1499,12 +1505,8 @@ do
     local trackedUnits = { "target", "boss1", "boss2", "boss3", "boss4", "boss5", "focus", "arena1", "arena2", "arena3", "arena4", "arena5" }
     local seen = {}
 
-    -- Forever: off. Fed the belief's health, it learnt a 0 rate (DEFAULT_TTD) before a pin and junk from the jump at one.
-    -- shortcut: no time-to-die estimate; feed a belief-derived one here when a TargetHealth-based mechanism exists.
-    local FEED = false
-
     local UpdateTTDs = function()
-        if not FEED or not InCombatLockdown() then return end
+        if not InCombatLockdown() then return end
 
         wipe(seen)
 
@@ -1543,5 +1545,5 @@ do
     end
     Hekili:ProfileCPU( "UpdateTTDs", UpdateTTDs )
 
-    C_Timer.NewTicker( 0.5, UpdateTTDs )
+    if FEED then C_Timer.NewTicker( 0.5, UpdateTTDs ) end
 end

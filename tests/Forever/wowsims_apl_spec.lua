@@ -158,6 +158,10 @@ describe("the wowsims APL translator", function()
                     cast(100, { ["and"] = { vals = { icd(950), const("true") } } }), -- its trigger, a talent's spell
                     cast(100, { ["or"] = { vals = { icd(950), { auraIsActive = { auraId = { spellId = 910 } } } } } }),
                     cast(100, icd(910)), -- an aura declaring no icd
+                    cast(
+                        100,
+                        { auraIcdIsReady = { sourceUnit = { type = "CurrentTarget" }, auraId = { spellId = 960 } } }
+                    ),
                 },
             }, ctx())
             assert.are.equal(
@@ -168,7 +172,10 @@ describe("the wowsims APL translator", function()
                 }, "\n"),
                 text
             )
-            assert.are.same({ "default #4: auraIcdIsReady 910" }, omitted)
+            assert.are.same(
+                { "default #4: auraIcdIsReady 910", "default #5: auraIcdIsReady of CurrentTarget" },
+                omitted
+            )
         end
     )
 
@@ -192,8 +199,9 @@ describe("the wowsims APL translator", function()
                     { action = { cancelAura = { auraId = { spellId = 910 } } } },
                     cast(100, cmp("OpGt", { autoSwingTime = { autoType = "OffHand" } }, const("0s"))),
                     cast(100, cmp("OpGt", { autoSwingTime = { autoType = "Ranged" } }, const("0s"))),
+                    cast(100, refresh(910)), -- no exclusive effect declared
                 },
-            }, ctx())
+            }, ctx({ focus = { strike = 1 }, exclusive = { [400] = true, [970] = true } }))
             assert.are.equal(
                 table.concat({
                     "actions=dot,if=debuff.dot.remains<=6",
@@ -204,7 +212,10 @@ describe("the wowsims APL translator", function()
                 }, "\n"),
                 text
             )
-            assert.are.same({ "default #6: autoSwingTime" }, omitted)
+            assert.are.same(
+                { "default #6: autoSwingTime", "default #7: auraShouldRefresh 910 (no exclusive effect declared)" },
+                omitted
+            )
         end
     )
 

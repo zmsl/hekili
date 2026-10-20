@@ -46,17 +46,34 @@ describe("a proc aura's internal cooldown", function()
         end
     )
 
-    it("from the client: a plain read's application starts it, a refresh (a re-proc) restarts it", function()
+    -- The client shows the aura expiring at `expires` (nil: gone) at t; the state is reset at t + 0.1.
+    local function at(t, expires)
+        H.ctl.now = t
+        H.ctl.auras.player.HELPFUL[1] = expires and { spellId = aura.id, expirationTime = expires, applications = 0 }
+            or nil
+        H.Fire("UNIT_AURA", "player")
+        assert(headless.cycle(H, t + 0.1))
+        st.reset("Primary", true)
+        return st.buff.battle_shout.icd_remains
+    end
+
+    -- `icd` declared, then the belief rebuilt from the spec (Adapter's VS.SpecChanged reads it at build).
+    local function declare()
         aura.icd = 10
-        local function at(t, expires) -- the client shows the aura expiring at `expires`; the state reset at t + 0.1
-            H.ctl.now = t
-            H.ctl.auras.player.HELPFUL[1] = { spellId = aura.id, expirationTime = expires, applications = 0 }
-            H.Fire("UNIT_AURA", "player")
-            assert(headless.cycle(H, t + 0.1))
-            st.reset("Primary", true)
-            return st.buff.battle_shout.icd_remains
-        end
+        H.ns.VirtualState.SpecChanged()
+    end
+
+    it("from the client: an aura already up at the first clean walk (a reload) has an unknown gain: ready", function()
+        declare()
         local t = H.ctl.now + 1
+        assert.are.equal(0, at(t, t + 12))
+        assert.are.same({}, H.errors)
+    end)
+
+    it("from the client: a plain read's application starts it, a refresh (a re-proc) restarts it", function()
+        declare()
+        local t = H.ctl.now + 1
+        assert.are.equal(0, at(t - 0.5, nil)) -- the first clean walk: nothing up
         assert.is_true(math.abs(at(t, t + 120) - 9.9) < 0.05)
         assert.is_true(math.abs(at(t + 5, t + 125) - 9.9) < 0.05) -- refreshed at t + 5: 10 s from then
         assert.is_true(math.abs(at(t + 6, t + 125) - 8.9) < 0.05)

@@ -134,9 +134,12 @@ outside source names the ICD by (the proc trigger passive, as wowsims does; `too
 answers `buff.<key>.icd_remains` (`max(applied, last_application) + icd - query_time`, never below 0) and
 `buff.<key>.icd_ready` (`icd_remains == 0`) from the aura's existing state entry, so it advances with the sim's clock
 and allocates nothing; an aura without `icd`, or never applied, reads ready (an unknown ICD never blocks). The
-application comes from the aura belief (`Game/State/Families/Auras.lua`): a plain read starts it, and a read of a player aura whose
-expiry moved past the believed one by more than `I.AURA_REFRESH` (0.5 s) is a re-application, so a re-proc restarts
-it; the sim's `applyBuff` starts it too, and removing a down aura keeps it (`tests/Forever/aura_icd_spec.lua`).
+application comes from the aura belief (`Game/State/Families/Auras.lua`), which reads `icd` at build: a plain read
+of the gain starts it, and for an `icd` aura only, a read whose expiry moved past the believed one by more than
+`I.AURA_REFRESH` (0.5 s) is a re-application, so a re-proc restarts it (any other aura keeps its applied time, which
+times its tick phase). An `icd` aura already up in the unit's first clean walk (a reload, a login) has an unknown gain,
+so its ICD reads ready (its applied time is put one ICD back, a sentinel) until a gain is seen. The sim's `applyBuff`
+starts it too, and removing a down aura keeps it (`tests/Forever/aura_icd_spec.lua`, `tests/Game/State/auras_spec.lua`).
 
 **Addons and load order.** `Hekili` (core, the only addon the client loads by itself), `Hekili_Shared`
 (`## Dependencies: Hekili`, `## LoadOnDemand: 1`; Shared auras, consumables, items, and the race packs), then one pack
@@ -224,7 +227,8 @@ default list from the forecast window `state.delayMax` as it would after an empt
 
 **Time to die.** Target health is secret on Forever, so `Engine/Sim/Targets.lua`'s tracker is not fed and every time
 to die (`fight_remains`, `target.time_to_die`, `time_to_pct_N`, `longest_ttd`, ...) answers "unknown": `FOREVER`, 3600 s,
-a fight that never ends soon. A priority may read them without a load warning (`Game/State/AplWarnings.lua` warns only
+a fight that never ends soon, a grey (trivial) target's too (wowsims's `remainingTime` has no trivial case), and
+`GetNumTTDsAfter` counts every enemy as after any time. The tracker's 0.5 s ticker is not started. A priority may read them without a load warning (`Game/State/AplWarnings.lua` warns only
 on health); wowsims's `remainingTime` maps to `fight_remains` with that deviation.
 
 **APL line options.** `make_pack.lua` and the in-game importer accept these on a line before `if=` (in the tool,

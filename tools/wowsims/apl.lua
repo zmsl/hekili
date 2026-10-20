@@ -40,10 +40,14 @@
 -- 9. `auraIcdIsReady` (wowsims: the proc aura's internal cooldown is ready): the aura declaring `icd` (RegisterAura,
 --    seconds from its last application) by its ID or its `icdSpell` (the proc trigger wowsims names the ICD by) is
 --    `buff.<key>.icd_ready`, guarded by the talent when that ID is a talent's spell (rule 6); an aura declaring none is
---    unsupported (rule 2). `includeReactionTime` is ignored (rule 5).
--- 10. `auraShouldRefresh` (wowsims: no stronger exclusive effect is up and none of ours outlasts the overlap; solo, ours
---    is the only one): `<unit>.<key>.remains<=<maxOverlap>` (0 by default; the target's by default, as wowsims's
---    GetTargetUnit), `|...stack<max_stack` for a stacking aura, guarded (rule 6); `cancelAura` is the action
+--    unsupported (rule 2), as is a source unit other than Self. `includeReactionTime` is ignored (rule 5).
+-- 10. `auraShouldRefresh` (wowsims sim/core/exclusive_effect.go ShouldRefreshExclusiveEffects: false for an aura with
+--    no exclusive effect; else true when no stronger effect of its category is up and none of ours outlasts the
+--    overlap; solo, ours is the only one): only for an aura the recipe's `exclusive` set ({ [spell ID] = true }) lists,
+--    since neither the DB2 nor the APL tells which wowsims auras carry exclusive effects (NewExclusiveEffect, in class
+--    code and spelldata/parse_effects_exclusive.go); any other is unsupported (rule 2). Then
+--    `<unit>.<key>.remains<=<maxOverlap>` (0 by default; the target's by default, as wowsims's GetTargetUnit),
+--    `|...stack<max_stack` for a stacking aura, guarded (rule 6); `cancelAura` is the action
 --    `cancel_buff,buff_name=<key>`; `autoSwingTime` MainHand / OffHand is `mainhand_speed` / `offhand_speed`.
 --    `remainingTime` is `fight_remains`, which answers "unknown" (3600 s) on Forever: an API-forced deviation.
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
@@ -104,6 +108,7 @@ function M.context(set, r)
         focus = r.focus or {},
         executePhase = r.executePhase,
         leveling = r.leveling or {},
+        exclusive = r.exclusive or {},
     }
     local keys = {}
     for key, a in pairs(set.abilities) do
@@ -141,7 +146,7 @@ function M.context(set, r)
     for _, key in ipairs(akeys) do
         local a = set.auras[key]
         c.auraOf[a.id] = c.auraOf[a.id] or key
-        c.stackOf[key] = a.max_stack
+        c.stackOf[key] = type(a.max_stack) == "number" and a.max_stack or 1
         if a.icd then -- rule 9: by its own ID and by the spell wowsims names the ICD by (its proc trigger)
             c.icdOf[a.id] = key
             if a.icdSpell then
@@ -438,7 +443,11 @@ local function bool(c, n)
         end
         return test, nil, false
     elseif k == "auraShouldRefresh" then -- rule 10
-        local a = auraKey(c, v.auraId.spellId)
+        local id = v.auraId.spellId
+        if not c.exclusive[id] then
+            unsupported("auraShouldRefresh " .. tostring(id) .. " (no exclusive effect declared)")
+        end
+        local a = auraKey(c, id)
         local un = v.sourceUnit and unit(v) or "debuff" -- wowsims reads it on the target by default
         local overlap, ou = "0", false
         if v.maxOverlap then
@@ -449,11 +458,14 @@ local function bool(c, n)
             return nil, nil, true
         end
         local atom = un .. "." .. a .. ".remains<=" .. overlap
-        if (c.stackOf[a] or 1) > 1 then
+        if c.stackOf[a] and c.stackOf[a] > 1 then
             atom = "(" .. atom .. "|" .. un .. "." .. a .. ".stack<" .. c.stackOf[a] .. ")"
         end
         return atom, nil, u
     elseif k == "auraIcdIsReady" then -- rule 9
+        if unit(v) ~= "buff" then
+            unsupported("auraIcdIsReady of " .. tostring(v.sourceUnit.type))
+        end
         local id = v.auraId and v.auraId.spellId
         local a = c.icdOf[id] or unsupported("auraIcdIsReady " .. tostring(id))
         local tk = c.talentOf[id] -- nil (dropped) while the proc's talent is untaken, as wowsims's unregistered aura

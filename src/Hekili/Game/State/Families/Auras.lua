@@ -14,7 +14,7 @@ local HUGE = math.huge
 --- An aura Read's `a` packs the unit index and the aura index; its `c` packs ReadOf.Aura and the stacks.
 I.AURA_UNIT = 4096 -- a = (unit - 1) * AURA_UNIT + aura (Hekili registers hundreds of auras)
 I.AURA_STACK = 16 -- c = ReadOf.Aura + stacks * AURA_STACK
-I.AURA_REFRESH = 0.5 -- a plain read of a player aura expiring this much past the believed one is a re-application
+I.AURA_REFRESH = 0.5 -- a plain read of an `icd` aura expiring this much past the believed one is a re-application
 
 local U = {
     n = 0,
@@ -35,6 +35,8 @@ local U = {
     ordN = {},
     gen = {},
     mem = {},
+    icd = {}, -- by aura: its RegisterAura `icd` (seconds), 0 none
+    firstWalk = {}, -- by unit: the time of its first clean walk (Sources/Auras.lua), 0 none yet
 }
 I.auras = U
 I.nextInst = 0
@@ -58,6 +60,8 @@ I.OnBuild(function(def, now)
     for j = 1, U.nAura do
         local ids = def.auraIds[j]
         U.id[j], U.obj[j] = ids[1], auras[j]
+        local icd = rawget(auras[j], "icd")
+        U.icd[j] = type(icd) == "number" and icd > 0 and icd or 0
         for k = 1, #ids do
             U.bySpell[ids[k]] = j
         end
@@ -73,6 +77,7 @@ I.OnBuild(function(def, now)
         end
         U.exp0[u], U.applied[u], U.stacks[u], U.inst[u], U.harm[u], U.seq[u], U.rec[u] = e, ap, st, ins, hm, sq, rc
         U.ord[u], U.ordN[u], U.gen[u] = ord, 0, 0
+        U.firstWalk[u] = 0
     end
     for s = 1, I.TARGET_CAP do
         local e, ap, st, ins = {}, {}, {}, {}
@@ -162,10 +167,20 @@ I.On(Obs.Read, function(o, t)
         set(u, j, 0, 0, 0, t, "observed", Obs.Read)
     else
         local expires = o.b < 0 and HUGE or o.t + o.b
-        local was = U.exp0[u][j]
-        -- up: the same application, except a player aura's later expiry, a refresh (a re-proc: its ICD restarts)
-        local refresh = u == 1 and expires > was + I.AURA_REFRESH -- unit 1 is always "player"
-        local applied = was > 0 and not refresh and U.applied[u][j] or o.t
+        local was, icd = U.exp0[u][j], U.icd[j]
+        local applied
+        if was > 0 and not (icd > 0 and expires > was + I.AURA_REFRESH) then
+            -- up: the same application. Only a proc aura with an ICD takes a later expiry as a re-application (its ICD
+            -- restarts, State.lua icd_remains); any other keeps its applied time, which times its tick phase (Resources.lua's
+            -- periodic gains and mult overlap, State.lua's ticks), and a refresh keeps the phase.
+            applied = U.applied[u][j]
+        elseif was == 0 and icd > 0 and not (U.firstWalk[u] > 0 and U.firstWalk[u] < o.t) then
+            -- first seen up in the unit's first clean walk (a reload, a login): the gain is unknown, so its ICD reads
+            -- ready (an unknown ICD never blocks): applied is put one ICD back, a sentinel only `icd` auras get
+            applied = o.t - icd
+        else
+            applied = o.t
+        end
         set(u, j, expires, applied, stacks > 0 and stacks or 1, t, "observed", Obs.Read)
     end
 end)

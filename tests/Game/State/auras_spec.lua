@@ -41,22 +41,32 @@ describe("auras", function()
         assert.are.same({ fs.SPENDER_A, 130 }, { id, r2.est })
     end)
 
-    it("a later expiry is a re-application: applied moves to the read; a jitter keeps it", function()
-        ctl.now = 10
-        ctl.auras.player.HELPFUL[1] = { spellId = fs.SPENDER_A, expirationTime = 25, applications = 0 }
+    -- Reads of SPENDER_A at t expiring at `expires`, folded; its believed applied time.
+    local function readA(t, expires)
+        ctl.now = t
+        ctl.auras.player.HELPFUL[1] = { spellId = fs.SPENDER_A, expirationTime = expires, applications = 0 }
         ctl.Fire("UNIT_AURA", "player")
-        fold(10)
-        assert.are.equal(10, select(3, VS.Aura("player", fs.SPENDER_A, 10)))
-        ctl.now = 20
-        ctl.auras.player.HELPFUL[1].expirationTime = 35 -- refreshed (a re-proc): a fresh 15 s
+        fold(t)
+        return select(3, VS.Aura("player", fs.SPENDER_A, t))
+    end
+
+    it("a refreshed aura without an icd keeps its applied time (its tick phase)", function()
+        assert.are.equal(10, readA(10, 25))
+        assert.are.equal(10, readA(20, 35)) -- refreshed: a later expiry, the same phase
+    end)
+
+    it("an icd aura: a later expiry is a re-application, a jitter is not, a first-walk sighting is unknown", function()
+        local def = fs.def(fs.new(9))
+        def.auras[SHOUT].icd = 10
+        I.Build(def, 1) -- the first clean walk is still to come
+        assert.are.equal(0, readA(10, 25)) -- up at the first clean walk: gain unknown, applied one ICD back
+        ctl.auras.player.HELPFUL[1] = nil
         ctl.Fire("UNIT_AURA", "player")
-        fold(20)
-        assert.are.equal(20, select(3, VS.Aura("player", fs.SPENDER_A, 20)))
-        ctl.now = 21
-        ctl.auras.player.HELPFUL[1].expirationTime = 35.2 -- within I.AURA_REFRESH: the same application
-        ctl.Fire("UNIT_AURA", "player")
-        fold(21)
-        assert.are.equal(20, select(3, VS.Aura("player", fs.SPENDER_A, 21)))
+        fold(11) -- seen down
+        assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11))
+        assert.are.equal(12, readA(12, 27)) -- a gain the walks saw
+        assert.are.equal(20, readA(20, 35)) -- refreshed (a re-proc)
+        assert.are.equal(20, readA(21, 35.2)) -- within I.AURA_REFRESH: the same application
     end)
 
     it("finds a tracked aura past the 40th slot of one filter", function()
