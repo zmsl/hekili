@@ -1874,6 +1874,22 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         assert.are.same({ 0, 1 }, { L.oracle.vetoed, L.credited[1] })
     end)
 
+    it("reads the swing's form for the veto: a swing out of the paying form gave no rage to rule out", function()
+        -- the druid shift: swung in Cat (its rage 0), the shift into Bear, then a short answer: no evidence against it
+        local def = fs.def(fs.new(9))
+        def.auras[3] = { key = "form_a", id = 1041 }
+        def.auraIds[3] = { 1041 }
+        def.resources[1].swingAura = "form_a"
+        I.Build(def, 9.8)
+        setup(8)
+        answer(9.95, SPENDER_A, false)
+        at(10, "PLAYER_SWING", 2.2, 0)
+        I.AuraModel(1, 3, 10.05, 60, 1, 10.05, VS.Obs.CastSuccess, false) -- the shift's applyBuff, after the swing
+        answer(10.1, SPENDER_A, false) -- under 10: against 8 + a Bear swing's 8.1, not against 8 + a Cat swing's 0
+        at(10.47, "UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+        assert.are.same({ 0, 1 }, { L.oracle.vetoed, L.credited[1] })
+    end)
+
     it("credits a swing whose answer since it shows only a short above its landed floor (no veto)", function()
         setup(4)
         answer(11.95, SPENDER_B, false)
