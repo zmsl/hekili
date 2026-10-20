@@ -31,50 +31,72 @@ describe("retired built-in packs", function()
 end)
 
 -- A spec's default is the package its NewClass entry names; a valid saved choice wins; the order the built-ins decode
--- in (pairs over class.packs) never matters.
+-- in (pairs over class.packs) never matters. The test drives that order itself: RestoreDefaults' pairs() is the
+-- harness env's, so over class.packs it walks the given names first, then the rest.
 describe("a spec's default priority with two built-in packs", function()
-    local EXTRA = { "Z Second", "A Second", "M Second", "Arms Second", "B", "Y", "Q Second", "C Second" }
+    local SECOND = "Second (test)"
 
     -- A fresh profile: every built-in decodes in one RestoreDefaults, the spec holding its AceDB default.
-    local function fresh(saved)
+    local function fresh(order, saved)
         local H = headless.new({ character = ww.character(), pack = ww.PACK })
         assert.are.same({}, H.loadErrors)
         local hk, p = H.Hekili, H.Hekili.DB.profile
         local id = hk.State.spec.id
         local def = hk.Class.specs[id].options.package
-        for _, name in ipairs(EXTRA) do
-            hk.Class.packs[name] = hk.Class.packs[def]
-        end
-        for name in pairs(hk.Class.packs) do
+        local packs = hk.Class.packs
+        packs[SECOND] = packs[def]
+        for name in pairs(packs) do
             p.packs[name] = nil
         end
         p.specs[id].package = saved or def
-        -- RestoreDefaults walks class.packs in this same pairs() order: some copies must decode before the default.
-        local passed, before, after = false, false, false
-        for name, v in pairs(hk.Class.packs) do
-            if name == def then
-                passed = true
-            elseif v == hk.Class.packs[def] then
-                before, after = before or not passed, after or passed
+        local names = {}
+        for _, n in ipairs(order) do
+            names[#names + 1] = n == "default" and def or SECOND
+        end
+        for name in pairs(packs) do
+            if name ~= def and name ~= SECOND then
+                names[#names + 1] = name
             end
         end
+        local walked = {}
+        local envPairs = rawget(H.env, "pairs")
+        rawset(H.env, "pairs", function(t)
+            if t ~= packs then
+                return pairs(t)
+            end
+            local i = 0
+            return function()
+                i = i + 1
+                local n = names[i]
+                if n then
+                    walked[#walked + 1] = n
+                    return n, packs[n]
+                end
+            end
+        end)
         hk:RestoreDefaults()
-        return p.specs[id].package, def, before and after
+        rawset(H.env, "pairs", envPairs)
+        assert.are.same(names, walked) -- the decode really followed the given order
+        return p.specs[id].package, def
     end
 
-    it("is the NewClass package whichever built-in decodes first", function()
-        local got, def, bothOrders = fresh()
-        assert.is_true(bothOrders, "the extra packs did not decode on both sides of the default")
+    it("is the NewClass package when the second built-in decodes first", function()
+        local got, def = fresh({ "second", "default" })
         assert.are.equal(def, got)
     end)
 
-    it("keeps a saved choice of another built-in for the spec", function()
-        local got = fresh("M Second")
-        assert.are.equal("M Second", got)
+    it("is the NewClass package when the default decodes first", function()
+        local got, def = fresh({ "default", "second" })
+        assert.are.equal(def, got)
+    end)
+
+    it("keeps a saved choice of another built-in for the spec, in either order", function()
+        assert.are.equal(SECOND, (fresh({ "second", "default" }, SECOND)))
+        assert.are.equal(SECOND, (fresh({ "default", "second" }, SECOND)))
     end)
 
     it("repairs a saved choice that names no pack", function()
-        local got, def = fresh("Gone")
+        local got, def = fresh({ "second", "default" }, "Gone")
         assert.are.equal(def, got)
     end)
 end)
