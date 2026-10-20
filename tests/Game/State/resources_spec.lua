@@ -230,6 +230,17 @@ describe("resources", function()
             assert.are.equal(100, r.hi) -- nothing bounded it from above yet
         end)
 
+        it("dates an avoided cast's refund at the cast: a short answer since bounds it (I.Refund)", function()
+            local R = I.res
+            R.est0[1], R.lo0[1], R.hi0[1] = 12, 10, 20
+            I.ResourceShift(1, -10, 5, Obs.CastSuccess) -- the cast's spend: 2 [0, 10]
+            obs(Obs.Usable, 5.1, I.ab.bySpell[fs.SPENDER_A], 0, 1) -- short of 10: the refunded pool is under 10
+            I.Fold(5.1, false)
+            I.Refund(1, 8, 5.3) -- the avoid's report: 8 back, dated at the cast
+            local r = VS.Power(fs.RAGE, 5.3)
+            assert.are.same({ 8, 9.99, 9.99 }, { r.lo, r.est, r.hi }) -- not hi 10 + 8: the answer already saw it
+        end)
+
         it("never believes more than the maximum, however many swings land", function()
             for k = 1, 20 do
                 obs(Obs.Swing, 5 + 2.6 * k, 1, 2.6, 1)
@@ -1690,7 +1701,7 @@ end)
 describe("the usability oracle (harness design §2: Rows' credits judged by the next usability answer)", function()
     local api, ctl, ns, VS, I, L, R, saved, rows
     local SPENDER_A, SPENDER_B = fs.SPENDER_A, fs.SPENDER_B -- the fake spec's spenders at 10 and 15
-    local USABLE, SHORT = { true, false }, { false, true }
+    local USABLE, SHORT, NOT_KNOWN = { true, false }, { false, true }, { false, false }
 
     before_each(function()
         api, ctl = fake.new()
@@ -1750,80 +1761,75 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         return { p.lo, p.est, p.hi }
     end
 
-    it("confirms a firm credit across a cost when the answer flips usable, and lowers its class's bar", function()
+    -- Rage is gained at the swing (checkpoint R1): the client's answers show it from about ORACLE_MIN after the swing,
+    -- before its wound. `shown`: the client's answer of spender_a heard 0.1 s after the swing (nil: none heard); Rows
+    -- polls usability when the wound pairs (its landing poll) and the client answers as ctl.usable stands.
+    local function swing(t, shown)
+        at(t, "PLAYER_SWING", 2.2, 0)
+        if shown ~= nil then
+            answer(t + 0.1, SPENDER_A, shown)
+        end
+    end
+
+    it("confirms a credit by the usable answer heard between its swing and its wound, and lowers its bar", function()
         setup(8)
-        credit(10)
-        assert.are.same({ 8 + 9 * 0.9, 17, 8 + 9 * 1.1 }, power(10.5))
-        answer(10.52, SPENDER_A, true) -- before ORACLE_MIN after the outcome: no verdict yet
-        assert.are.equal(0, L.oracle.judged)
-        answer(10.6, SPENDER_A, true)
+        answer(9.95, SPENDER_A, false)
+        swing(10, true) -- the client shows the swing's rage: 8 + 9 crosses 10
+        at(10.47, "UNIT_COMBAT", "target", "WOUND", "", 45, 1)
         assert.are.same({ 1, 1 }, { L.oracle.judged, L.oracle.confirmed })
         assert.are.equal(L.THETA / 1.1, L.theta[1]) -- main, exact, core band
+        assert.are.same({ { "SWING_DAMAGE", 45, 10 } }, rows)
     end)
 
-    it("retracts a firm credit answered short: est, lo and hi back, the swing pending again", function()
+    it("judges no answer heard under ORACLE_MIN after the swing (the client does not show its rage yet)", function()
         setup(8)
+        answer(9.95, SPENDER_A, false)
+        at(10, "PLAYER_SWING", 2.2, 0)
+        ctl.usable[SPENDER_A] = NOT_KNOWN -- the landing poll: not usable for another reason (no rung, no verdict)
+        answer(10.05, SPENDER_A, true)
+        ctl.usable[SPENDER_A] = NOT_KNOWN
+        at(10.47, "UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+        assert.are.equal(0, L.oracle.confirmed)
+    end)
+
+    it("vetoes a wound for a swing whose answer since it showed says it gave no rage (another source's)", function()
+        setup(8)
+        answer(9.95, SPENDER_A, false)
+        swing(10, false) -- still short a tenth after the swing: below 8 + its low step (16.1), it gave no rage
+        at(10.47, "UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+        assert.are.same({ 1, 0 }, { L.oracle.vetoed, L.credited[1] })
+        assert.are.same({}, rows)
+        assert.is_true(power(10.5)[1] < 10)
+    end)
+
+    it("credits a swing whose answer since it shows only a short above its landed floor (no veto)", function()
+        setup(4)
+        answer(11.95, SPENDER_B, false)
+        at(12, "PLAYER_SWING", 2.2, 0)
+        answer(12.1, SPENDER_B, false) -- under 15: no evidence against 4 + its low step (12.1)
+        at(12.47, "UNIT_COMBAT", "target", "WOUND", "", 45, 1)
+        assert.are.same({ 0, 1 }, { L.oracle.vetoed, L.credited[1] })
+    end)
+
+    it("retracts a firm credit its landing poll answers short: est, lo and hi back, the swing pending again", function()
+        setup(8)
+        answer(9.95, SPENDER_A, false) -- no answer between swing and wound: the landing poll answers short
         credit(10)
-        answer(10.6, SPENDER_A, false)
         assert.are.same({ 1, 1 }, { L.oracle.judged, L.oracle.retracted })
-        assert.are.same({ 8, 8, 8 }, power(10.6)) -- lo never above its pre-credit value
+        assert.are.same({ 8, 8, 8 }, power(10.5)) -- lo never above its pre-credit value
         assert.are.equal(L.THETA * 1.5, L.theta[1])
-        at(10.9, "UNIT_COMBAT", "target", "WOUND", "", 44, 1) -- in the tail: the re-held swing takes it
-        assert.are.same({ { "SWING_DAMAGE", 45, 10 }, { "SWING_DAMAGE", 44, 10 } }, rows)
+        assert.are.same({ { "SWING_DAMAGE", 45, 10 } }, rows)
     end)
-
-    it("closes a retracted swing past its window as SWING_MISSED (two rows for that swing, decision D9)", function()
-        setup(8)
-        credit(10, 45, 1.2)
-        answer(11.6, SPENDER_A, false) -- 0.4 s after the outcome, 1.6 s after the swing
-        assert.are.same({ { "SWING_DAMAGE", 45, 10 }, { "SWING_MISSED", "MISS", 10 } }, rows)
-    end)
-
-    it(
-        "retracts after a short answer before ORACLE_MIN clamped the step: est, lo and hi back to 8, not below",
-        function()
-            setup(8)
-            credit(10)
-            answer(10.5, SPENDER_A, false) -- 0.03 s after the outcome: no verdict yet; the ladder clamps under 10
-            answer(10.6, SPENDER_A, false)
-            assert.are.equal(1, L.oracle.retracted)
-            assert.are.same({ 8, 8, 8 }, power(10.6))
-        end
-    )
 
     it("retracts a credited crit with its swing: lo back at its pre-credit value", function()
-        setup(2)
+        setup(3)
         R.swingCrit[1] = 4
+        answer(9.94, SPENDER_A, false)
+        answer(9.95, SPENDER_B, false) -- 3 + 9 + 4 crosses 15 by the crit alone (its floor 15.1): spender_b judges it
         at(10, "PLAYER_SWING", 2.2, 0)
         at(10.47, "UNIT_COMBAT", "target", "WOUND", "CRITICAL", 90, 1)
-        assert.are.same({ 2 + 9 * 0.9 + 4, 15, 2 + 9 * 1.1 + 4 }, power(10.5))
-        answer(10.6, SPENDER_A, false)
         assert.are.equal(1, L.oracle.retracted)
-        assert.are.same({ 2, 2, 2 }, power(10.6))
-    end)
-
-    it("rescues nothing for a flip our confirmed credit explains, and gives back the stale short's cut", function()
-        setup(5)
-        answer(9.95, SPENDER_A, false)
-        L.theta[2] = 8 -- main, exact, tail: the 45 at 1.3 s is dropped
-        credit(10, 45, 1.3)
-        credit(11, 45, 0.47) -- ours, credited: 5 + 9 crosses 10
-        answer(11.5, SPENDER_A, false) -- 0.03 s after the outcome: the ladder clamps under 10, the cut kept
-        assert.are.same({ 9.99, 9.99, 9.99 }, power(11.5))
-        answer(11.67, SPENDER_A, true) -- at least 10: the short was the client's from before the credit
-        assert.are.same({ 1, 0 }, { L.oracle.confirmed, L.oracle.rescued })
-        assert.are.same({ 5 + 9 * 0.9, 14, 5 + 9 * 1.1 }, power(11.67))
-    end)
-
-    it("gives a crit credit's cut back: its landing poll's short answer was the client's from before it", function()
-        setup(5)
-        R.swingCrit[1] = 20
-        answer(9.95, SPENDER_A, false)
-        at(10, "PLAYER_SWING", 2.2, 0)
-        at(10.47, "UNIT_COMBAT", "target", "WOUND", "CRITICAL", 90, 1) -- 5 + 9 + 20; Rows polls usability: short
-        assert.are.same({ 9.99, 9.99, 9.99 }, power(10.5))
-        answer(10.6, SPENDER_A, true)
-        assert.are.same({ 5 + 9 * 0.9 + 20, 34, 5 + 9 * 1.1 + 20 }, power(10.6))
+        assert.are.same({ 3, 3, 3 }, power(10.5))
     end)
 
     it("bounds a flip a credit explains as a rung, not the pin at the cost plus one white step", function()
@@ -1831,152 +1837,70 @@ describe("the usability oracle (harness design §2: Rows' credits judged by the 
         R.swingCrit[1] = 20
         answer(9.95, SPENDER_A, false)
         at(10, "PLAYER_SWING", 2.2, 0)
-        ctl.usable[SPENDER_A] = USABLE -- the client already shows the swing's rage at its wound
+        ctl.usable[SPENDER_A] = USABLE -- the client shows the swing's rage at its wound's landing poll
         at(10.47, "UNIT_COMBAT", "target", "WOUND", "CRITICAL", 90, 1) -- Rows' landing poll: the flip
         assert.are.same({ 5 + 9 * 0.9 + 20, 34, 5 + 9 * 1.1 + 20 }, power(10.5)) -- not [10, 10 + 9.9]
     end)
 
-    it("gives a young short's cut back only on a usable answer at its cost or dearer", function()
-        -- the loop's seed 6: a white crit credited 21 -> 49.8 (truth 52.7), then a dearer spender's short answer 0.04 s
-        -- later (the client still before the hit) cut it to 29.99 for good; its usable answer 0.06 s later gives it back
-        setup(8)
-        credit(10) -- 8 + 9 crosses spender_a (10) and spender_b (15)
-        answer(10.5, SPENDER_B, false) -- young: cut (the floor holds whether the credit is stale or false)
-        assert.are.same({ 14.99, 14.99, 14.99 }, power(10.5))
-        answer(10.52, SPENDER_A, true) -- at least 10 says nothing of 15: the cut stands
-        assert.are.same({ 14.99, 14.99, 14.99 }, power(10.52))
-        answer(10.65, SPENDER_B, true)
-        assert.are.same({ 8 + 9 * 0.9, 17, 8 + 9 * 1.1 }, power(10.65))
-    end)
-
-    it("keeps a young short's cut when a gain since could have crossed the cost (a false credit's floor)", function()
-        -- truth 9.99 and no swing of ours landed: the credit is false. The young short answer is the truth; a refund of
-        -- 1 then takes the truth to 10.99 and the usable answer at 10 follows from it, not from the credit
-        setup(9.99, 5, 9.99)
-        credit(10) -- false: believed 9.99 + 9, floor 5 + 8.1
-        answer(10.5, SPENDER_A, false)
-        assert.are.equal(9.99, power(10.5)[1])
-        I.ResourceShift(1, 1, 10.55, VS.Obs.Avoided) -- an avoided cast's refund, exact
-        answer(10.6, SPENDER_A, true)
-        assert.is_true(power(10.6)[1] <= 10.99 + 1e-9, ("lo %.2f, truth 10.99"):format(power(10.6)[1]))
-    end)
-
-    it("keeps a young short's cut once a current short answer at its cost shows it right", function()
-        setup(8)
-        credit(10)
-        answer(10.5, SPENDER_B, false) -- young: cut
-        answer(10.6, SPENDER_B, false) -- current: the cut was right
-        answer(10.65, SPENDER_B, true) -- a later crossing, not the credit's
-        assert.are.equal(15, power(10.65)[1])
-    end)
-
-    it("keeps a young short's cut after one of our spends, or past the verdict window", function()
-        setup(8)
-        credit(10)
-        answer(10.5, SPENDER_B, false)
-        at(10.55, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", SPENDER_A) -- 10 paid: 4.99
-        answer(10.6, SPENDER_B, true) -- not from the cut state: a plain rung
-        assert.are.equal(15, power(10.6)[1])
-        R.est0[1], R.lo0[1], R.hi0[1] = 8, 8, 8
-        credit(20)
-        answer(20.5, SPENDER_B, false)
-        answer(21.2, SPENDER_B, true) -- 0.73 s after the outcome: past ORACLE_MAX
-        assert.are.equal(15, power(21.2)[1])
-    end)
-
     it("labels a soft credit (only its estimate crossed) at half weight and retracts nothing", function()
         setup(8, 0, 8)
+        answer(9.95, SPENDER_A, false)
         credit(10)
-        answer(10.6, SPENDER_A, false)
         assert.are.same({ 1, 0 }, { L.oracle.soft, L.oracle.retracted })
         assert.are.equal(L.THETA * 1.22, L.theta[1])
-        assert.are.equal(8.1, power(10.6)[1]) -- the credit's floor stays; the ladder clamped est and hi under 10
+        assert.are.equal(8.1, power(10.5)[1]) -- the credit's floor stays; the ladder clamped est and hi under 10
     end)
 
-    it("gives no verdict when one of our casts spent from the slot between the outcome and the answer", function()
-        setup(8)
-        credit(10)
-        at(10.55, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", SPENDER_A)
-        answer(10.6, SPENDER_A, false)
-        assert.are.equal(0, L.oracle.judged)
-    end)
-
-    it(
-        "rescues a dropped wound for a flip nothing explains: its swing paid, its row out; without one, today's pin",
-        function()
-            setup(5)
-            answer(9.95, SPENDER_A, false)
-            L.theta[2] = 8 -- main, exact, tail: the 45 at 1.3 s (LR 7.2) is dropped
-            credit(10, 45, 1.3)
-            assert.are.same({ 0, 0 }, { #rows, L.oracle.rescued })
-            answer(11.45, SPENDER_A, true)
-            assert.are.same({ 1, 0 }, { L.oracle.rescued, L.oracle.rescuedLate })
-            assert.are.same({ { "SWING_DAMAGE", 45, 10 } }, rows)
-            local p = power(11.45) -- 5 + 9, then the explained flip bounds it: at least the cost
-            assert.are.same({ 10, 14 }, { p[1], p[2] })
-            assert.is_true(p[3] >= 14)
-            answer(12, SPENDER_A, false)
-            R.est0[1], R.lo0[1], R.hi0[1] = 5, 5, 5
-            answer(12.5, SPENDER_A, true) -- nothing dropped: the swing-paid pin [10, 10 + a step)
-            assert.are.same({ 10, 10, 10 + 9 * 1.1 }, power(12.5))
-        end
-    )
-
-    it("keeps lo a floor when a rescued swing's step is too big (the loop's seed 4 trace at 49 s)", function()
-        -- believed 9.5 (truth 9.2, under spender_a's 10); the dropped wound's swing is modelled at 9, the game gave 8:
-        -- truth 17.2. The flip it explains proves only "at least 10" (in game: 30 + 17.7 believed, 28.8 + 16.2 true)
-        setup(9.5, 9, 9.99)
-        answer(9.95, SPENDER_A, false)
-        L.theta[2] = 8 -- main, exact, tail: the 45 at 1.3 s is dropped
-        credit(10, 45, 1.3)
-        answer(11.45, SPENDER_A, true)
-        assert.are.equal(1, L.oracle.rescued)
-        local p = power(11.45)
-        assert.is_true(p[1] <= 17.2 and p[1] >= 10, ("lo %.2f, truth 17.2"):format(p[1]))
-        assert.are.equal(18.5, p[2]) -- the estimate keeps the modelled step
-    end)
-
-    it("allocates nothing over a retraction past its window, a soft verdict and a late rescue", function()
+    it("allocates nothing over a retraction, a soft verdict, a confirmation and a veto", function()
         setup(8)
         rows = nil
         local o, b = L.oracle, 0
         local function cycle()
             b = b + 20
-            answer(b - 1, SPENDER_A, false) -- the last cycle's usable rung forgotten
             R.est0[1], R.lo0[1], R.hi0[1] = 8, 8, 8
             for k = 1, #L.theta do -- every class's bar back at THETA: each cycle credits as the first
                 L.theta[k] = L.THETA
             end
-            credit(b, 45, 1.2)
-            answer(b + 1.6, SPENDER_A, false) -- retracted 0.4 s after the outcome, past the swing's window: MISS
+            answer(b - 1, SPENDER_A, false)
+            credit(b) -- retracted by its landing poll
             R.est0[1], R.lo0[1], R.hi0[1] = 8, 0, 8
-            credit(b + 4)
-            answer(b + 4.6, SPENDER_A, false) -- soft: only the estimate crossed
-            R.est0[1], R.lo0[1], R.hi0[1] = 5, 5, 5
-            answer(b + 7.95, SPENDER_A, false)
-            L.theta[2] = math.huge -- main, exact, tail: the 45 at 1.3 s is dropped
-            credit(b + 8, 45, 1.3)
-            answer(b + 9.6, SPENDER_A, true) -- after the swing's window closed: rescued late (rage only)
+            credit(b + 4) -- soft: only the estimate crossed
+            R.est0[1], R.lo0[1], R.hi0[1] = 8, 8, 8
+            swing(b + 8, true)
+            at(b + 8.47, "UNIT_COMBAT", "target", "WOUND", "", 45, 1) -- confirmed
+            R.est0[1], R.lo0[1], R.hi0[1] = 8, 8, 8
+            answer(b + 11.9, SPENDER_A, false)
+            swing(b + 12, false)
+            at(b + 12.47, "UNIT_COMBAT", "target", "WOUND", "", 45, 1) -- vetoed
         end
-        local before = { o.retracted, o.soft, o.rescuedLate }
+        local function counts()
+            return { o.retracted, o.soft, o.confirmed, o.vetoed }
+        end
+        local before = counts()
         cycle()
-        assert.are.same({ before[1] + 1, before[2] + 1, before[3] + 1 }, { o.retracted, o.soft, o.rescuedLate })
+        local one = counts()
+        for i = 1, 4 do
+            assert.are.equal(before[i] + 1, one[i], "path " .. i)
+        end
         assert.are.equal(0, alloc.bytes(cycle, 100))
-        assert.are.same({ before[1] + 302, before[2] + 302, before[3] + 302 }, { o.retracted, o.soft, o.rescuedLate })
+        local after = counts()
+        for i = 1, 4 do -- each path at least once a cycle (the learned scale moves the soft one to firm at times)
+            assert.is_true(after[i] >= one[i] + 101, "path " .. i)
+        end
     end)
 
     it("caps a class's bar at THETA_MAX after ten negatives and floors it at THETA_MIN after positives", function()
         setup(8)
         for k = 0, 9 do
+            answer(9.95 + 3 * k, SPENDER_A, false)
             credit(10 + 3 * k)
-            answer(10.6 + 3 * k, SPENDER_A, false)
         end
         assert.are.equal(L.THETA_MAX, L.theta[1])
         for k = 10, 39 do
             R.est0[1], R.lo0[1], R.hi0[1] = 8, 8, 8
-            credit(10 + 3 * k)
-            answer(10.6 + 3 * k, SPENDER_A, true)
-            answer(11 + 3 * k, SPENDER_A, false)
+            answer(9.95 + 3 * k, SPENDER_A, false)
+            swing(10 + 3 * k, true)
+            at(10.47 + 3 * k, "UNIT_COMBAT", "target", "WOUND", "", 45, 1)
         end
         assert.are.equal(L.THETA_MIN, L.theta[1])
     end)

@@ -35,12 +35,9 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- answer, a flip's pin: the game held more than we believed) and the latest lifting rung's time; a landed swing at or
 -- before it pays that much less (owe, I.On(Obs.Swing)). `liftRec[r]`: the credit record that paid from it (its crit
 -- may pay the rest).
--- `cutL/E/H[r]`: what short answers cut from a swing-paid slot's lo, est and hi while a swing credit of it was too
--- young for its verdict (Rows.lua's I.CreditYoung: the client may still show the slot from before it), the dearest
--- such cost `cutC[r]` (0: none kept), the first such answer's time `cutT[r]`, the slot's spend count then `cutSp[r]`
--- and its gains then (`cutGain[r]`: R.gain, our own and hits taken; `cutRaised[r]`: R.raised, every swing step and
--- periodic tick paid so far); a usable answer at that cost or dearer gives the cut back (I.On(Obs.Usable)) only while
--- none of them has moved since.
+-- `sinceShort[r]`: the lowest top a short answer set since our last spend from slot r (math.huge: none); `sinceYes[r]`:
+-- whether a usable answer raised its floor since then. An avoided cast's refund (I.Refund) is dated at that cast: the
+-- answers heard since already saw it.
 -- `over[r]`: how far the modelled floor sits above the measured one (lo0): a regenerating slot that rests at its
 -- maximum is built at rest (est, and this floor: lo0 + over), and the floor then moves with everything that moves lo0;
 -- a measurement the floor contradicts (a short answer below it, a pin's top under it, an exact read) drops it to lo0
@@ -105,15 +102,8 @@ local R = {
     liftH = {},
     liftT = {},
     liftRec = {},
-    cutC = {},
-    cutT = {},
-    cutL = {},
-    cutE = {},
-    cutH = {},
-    cutSp = {},
-    cutGain = {},
-    cutRaised = {},
-    raised = {},
+    sinceShort = {},
+    sinceYes = {},
     over = {},
     assume = {},
 }
@@ -181,9 +171,12 @@ local function maxOf(r)
     return m
 end
 
--- By ability index a: the last usability answer and the last short report (cost, time, the slot's own gains so far
--- and its estimate then).
-local usable, shortCost, shortT, shortGain, shortEst = {}, {}, {}, {}, {}
+-- By ability index a: the last usability answer and its time (`ansT`), and the last short report (cost, time, the slot's
+-- own gains so far and its estimate then).
+local usable, ansT, shortCost, shortT, shortGain, shortEst = {}, {}, {}, {}, {}, {}
+-- Per hand (1 main, 2 off): the swing-paid slot's estimate and floor at its latest PLAYER_SWING, that swing's time,
+-- the lowest top a short answer set from ORACLE_MIN after it (math.huge: none) and the slot's spend count then (I.Missed).
+local swE, swL, swT, swTop, swSp = { 0, 0 }, { 0, 0 }, { -1, -1 }, { math.huge, math.huge }, { 0, 0 }
 -- By ability index: its ladder precondition (C9): false for `ladder = false` (its answers are no rungs), its `usable`
 -- function (a short answer while it fails names another requirement, such as a finisher's combo points), or true.
 local pre = {}
@@ -192,13 +185,16 @@ local pre = {}
 -- the slot it paid (0: none), the hand, est, lo and hi before it and the deltas it added (its crit included), its
 -- hit-rate step, the ability whose next answer judges it (0: not judged: it crossed no rung), whether the prediction
 -- is firm (the post-credit floor reaches the cost) and the slot's spend count at the credit. Rows registers
--- I.CreditVerdict and I.Rescue.
+-- I.CreditVerdict.
 local RECORDS = 8
 local recR, recHand, recEst, recLo, recHi, recHit, recA, recFirm, recSpends = {}, {}, {}, {}, {}, {}, {}, {}, {}
 local recE0, recLo0, recHi0 = {}, {}, {}
-local recTime = {} -- when this slot was paid from record k (its landed swing's fold): a stale id is never young
+-- Per record also: the estimate its crossing is judged from (`recX0`: the slot's at the swing, before any rung lifted it
+-- for that swing's rage; else recE0), the swing's time (`recSw`) and whether it still awaits the look-back at the
+-- answers heard since its swing (`recLook`, done at the fold's end, after its crit).
+local recX0, recSw, recLook = {}, {}, {}
 for k = 1, RECORDS do
-    recTime[k] = -1e9
+    recX0[k], recSw[k], recLook[k] = 0, 0, false
     recR[k], recHand[k], recEst[k], recLo[k], recHi[k], recHit[k], recA[k] = 0, 0, 0, 0, 0, 0, 0
     recFirm[k], recSpends[k], recE0[k], recLo0[k], recHi0[k] = false, 0, 0, 0, 0
 end
@@ -300,8 +296,7 @@ I.OnBuild(function(def, now)
         R.dev[r], R.scale[r], R.spread[r] = 0, 1, I.REGEN_SPREAD
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
-        R.cutC[r], R.cutT[r], R.cutL[r], R.cutE[r], R.cutH[r], R.cutSp[r] = 0, 0, 0, 0, 0, 0
-        R.cutGain[r], R.cutRaised[r], R.raised[r] = 0, 0, 0
+        R.sinceShort[r], R.sinceYes[r] = math.huge, false
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
         R.decayDef[r] = d.decay
         R.decay[r] = decayOf(r)
@@ -370,7 +365,7 @@ I.OnBuild(function(def, now)
         end
     end
     for a = 1, #def.abilities do
-        usable[a], shortCost[a], shortT[a], shortGain[a], shortEst[a] = UNKNOWN, 0, 0, 0, 0
+        usable[a], ansT[a], shortCost[a], shortT[a], shortGain[a], shortEst[a] = UNKNOWN, -1, 0, 0, 0, 0
         local obj = def.abilities[a]
         local funcs = rawget(obj, "funcs") -- Hekili keeps an ability's functions there
         local f = type(funcs) == "table" and rawget(funcs, "usable") or rawget(obj, "usable")
@@ -382,11 +377,11 @@ I.OnBuild(function(def, now)
 end)
 
 -- Slot r's `main` or (the off hand of a main-hand slot) `off` field for `hand`: a number, or the model's state-bound
--- function; 0 while the slot's swing aura is not believed up at the clock (its application after it, or its expiry at
--- or before it). Allocates nothing.
-local function perSwing(r, hand, main, off)
-    local j = R.swingAura[r]
-    if j < 0 or j > 0 and (I.auras.exp0[1][j] <= I.clock or I.auras.applied[1][j] > I.clock) then
+-- function; 0 while the slot's swing aura is not believed up at `at` (default the clock; a swing's own time: rage is
+-- gained at the swing) (its application after it, or its expiry at or before it). Allocates nothing.
+local function perSwing(r, hand, main, off, at)
+    local j, t = R.swingAura[r], at or I.clock
+    if j < 0 or j > 0 and (I.auras.exp0[1][j] <= t or I.auras.applied[1][j] > t) then
         return 0 -- unit 1 is always "player" (Adapter.lua's def.units)
     end
     local v = main[r]
@@ -401,13 +396,13 @@ end
 
 --- The spec's per-swing value of a swing-paid slot for `hand` (2: the off hand's `swingOff`; else the paying hand's),
 --- 0 while its swing aura is down. Allocates nothing.
-function I.SwingValue(r, hand)
-    return perSwing(r, hand, R.swingValue, R.swingOff)
+function I.SwingValue(r, hand, at)
+    return perSwing(r, hand, R.swingValue, R.swingOff, at)
 end
 
 --- The spec's white-crit extra of a swing-paid slot for `hand` (its swing entry's `crit`), as I.SwingValue.
-function I.SwingCrit(r, hand)
-    return perSwing(r, hand, R.swingCrit, R.swingOffCrit)
+function I.SwingCrit(r, hand, at)
+    return perSwing(r, hand, R.swingCrit, R.swingOffCrit, at)
 end
 
 -- What entry g brings in (from, to]: `value` at each `interval` after the player's aura was applied, up to its
@@ -552,7 +547,6 @@ I.OnAdvance(function(from, to)
             R.lo0[r] = clamp(R.lo0[r] + v, max)
             R.hi0[r] = clamp(R.hi0[r] + v, max)
             R.pinDelta[r] = R.pinDelta[r] + v
-            R.raised[r] = R.raised[r] + v
             norm(r)
         end
     end
@@ -757,10 +751,8 @@ I.LIFT_WINDOW = 2
 -- the first lift twice). A short answer in the window (a cut) is not netted: the wound's step lands on the clamped
 -- est and hi, which overshoot until the next answer, while lo (the simulation's reading) only takes its low edge.
 -- Allocates nothing.
--- shortcut: the rage is taken as in at PLAYER_SWING, its wound about 0.47 s later (the replay's model). P log 2
--- (research 2026-10-16-swing-outcome-pairing) logs PLAYER_SWING and UNIT_COMBAT only, so when the rage arrives is
--- UNMEASURED: log UNIT_POWER_FREQUENT "RAGE" with PLAYER_SWING and the target's UNIT_COMBAT in one capture (checkpoint
--- R1); if it arrives with the wound, drop the lift and land the replay's rage with its wound.
+-- The rage is in at PLAYER_SWING, its wound about 0.47 s later: checkpoint R1, measured by the user 2026-10-20 ("Rage is
+-- gained on swing, not on combat log entry").
 local function owe(r, e, lo, hi, t)
     if R.swing[r] == 0 then
         return
@@ -778,6 +770,26 @@ local function owe(r, e, lo, hi, t)
     R.liftT[r] = t
 end
 
+--- Whether the swing of `hand` at `at` gave no rage, by the usability answers heard once it showed: a short answer
+--- below the floor its landed step would have set (the floor at the swing plus the hand's low step), with no spend of
+--- ours from the slot since the swing. Events/Rows.lua then credits no wound to it (it was avoided: a wound now is
+--- another source's). Allocates nothing.
+function I.Missed(hand, at)
+    if swT[hand] ~= at or swTop[hand] == math.huge then
+        return false
+    end
+    for r = 1, R.n do
+        if
+            (R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0))
+            and R.spends[r] == swSp[hand]
+        then
+            local step = I.SwingValue(r, hand) * (R.scale[r] - R.spread[r])
+            return swTop[hand] < swL[hand] + step
+        end
+    end
+    return false
+end
+
 -- Step d less what of `lift` it covers, and the lift left.
 local function net(d, lift)
     local u = lift < d and lift or d
@@ -787,12 +799,12 @@ end
 -- One swing step of slot r for `hand` at t: c = 1 a landed swing (the hand's value x scale, spread around it), c = 3
 -- its crit (the hand's `crit`, unscaled); none for a crit of a slot without one. `owed`: the step first covers the
 -- slot's rung lift (R.liftE/L/H). Allocates nothing.
-local function swingStep(r, hand, c, t, owed)
+local function swingStep(r, hand, c, t, owed, at)
     local max, v, s, sp = R.max[r], 0, 1, 0
     if c == 1 then
-        v, s, sp = I.SwingValue(r, hand), R.scale[r], R.spread[r]
+        v, s, sp = I.SwingValue(r, hand, at), R.scale[r], R.spread[r]
     else
-        v = I.SwingCrit(r, hand)
+        v = I.SwingCrit(r, hand, at)
     end
     if c == 1 or v ~= 0 then -- a slot with no `crit` takes no sample for a crit
         local de, dl, dh = v * s, v * (s - sp), v * (s + sp)
@@ -804,29 +816,37 @@ local function swingStep(r, hand, c, t, owed)
         R.est0[r] = clamp(R.est0[r] + de, max)
         R.lo0[r] = clamp(R.lo0[r] + dl, max)
         R.hi0[r] = clamp(R.hi0[r] + dh, max)
-        R.raised[r] = R.raised[r] + v
         I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Swing)
     end
 end
 
 -- Credit record k paid slot r for `hand` (from e, lo and hi before it): its deltas, and which answer will judge it.
--- The cheapest tracked spender of the slot whose cost the credit's estimate step crosses (e < c <= e + step), firm
--- when the new floor reaches it; a credit crossing no rung is not judged. Its crit calls it again with the same
--- pre-credit values: the deltas and the crossing then cover both steps. Allocates nothing.
-local function predict(k, r, hand, e, lo, hi, hit)
+-- The cheapest tracked spender of the slot whose cost the swing's rage crosses (x < c <= the estimate now, x the
+-- estimate at the swing: a usable answer between the swing and its wound may already have lifted e), firm when the
+-- new floor reaches it; a credit crossing no rung is not judged. Its crit calls it again with the same pre-credit
+-- values: the deltas and the crossing then cover both steps. Allocates nothing.
+local function predict(k, r, hand, e, lo, hi, hit, x, above)
     recR[k], recHand[k], recHit[k], recSpends[k] = r, hand, hit, R.spends[r]
-    recE0[k], recLo0[k], recHi0[k] = e, lo, hi
+    recE0[k], recLo0[k], recHi0[k], recX0[k] = e, lo, hi, x
     recEst[k], recLo[k], recHi[k] = R.est0[r] - e, R.lo0[r] - lo, R.hi0[r] - hi
-    local best, cost = 0, 0
+    local best, cost, low, lowCost = 0, 0, 0, 0
     if not R.readable[r] then
         for a = 1, I.ab.n do
             if I.ab.slot[a] == r and not I.ab.multiCost[a] then
                 local c = I.CostOf(a)
-                if c > e and c <= R.est0[r] and (best == 0 or c < cost) then
-                    best, cost = a, c
+                if c > x and c <= R.est0[r] then
+                    if best == 0 or c < cost then
+                        best, cost = a, c
+                    end
+                    if c > above and (low == 0 or c < lowCost) then
+                        low, lowCost = a, c
+                    end
                 end
             end
         end
+    end
+    if low > 0 then -- a crit: the cheapest cost its extra alone crosses judges the crit as well as the hit
+        best, cost = low, lowCost
     end
     recA[k], recFirm[k] = best, best > 0 and R.lo0[r] >= cost
 end
@@ -836,7 +856,7 @@ end
 -- answered short is retracted here (est, lo, hi and the hit rate lose what it added, but never below their pre-credit
 -- values: a short answer before the verdict may already have clamped the step away). One of our spends from the slot
 -- since the credit voids it, and so does a NOT answer in its window. Returns whether a credit of slot r explains a
--- crossing of cost c: confirmed by this answer, or still awaiting its verdict with its step across c (no rescue then).
+-- crossing of cost c: confirmed by this answer, or still awaiting its verdict with its step across c.
 -- Allocates nothing.
 local function back(cur, d, pre, max)
     local v = cur - d
@@ -846,85 +866,66 @@ local function back(cur, d, pre, max)
     return clamp(v, max)
 end
 
+-- Record k's verdict from answer `now` (YES, SHORT, NOT) at t: nil before its window opens (it stays open), else
+-- true or false; a firm credit answered short is retracted here.
+local function verdict(k, now, t)
+    if R.spends[recR[k]] ~= recSpends[k] then
+        recA[k], recR[k] = 0, 0
+        return false
+    end
+    local ok = nil -- a NOT answer is no rung: in the window it closes the record unjudged
+    if now == YES or now == SHORT then
+        ok = now == YES
+    end
+    local v = I.CreditVerdict(k, ok, t, recFirm[k])
+    if v == nil then
+        return nil
+    end
+    local s = recR[k]
+    if v and now ~= YES and recFirm[k] then
+        local max = R.max[s]
+        R.est0[s] = back(R.est0[s], recEst[k], recE0[k], max)
+        R.lo0[s] = back(R.lo0[s], recLo[k], recLo0[k], max)
+        R.hi0[s] = back(R.hi0[s], recHi[k], recHi0[k], max)
+        local h = hitRate[recHand[k]] - recHit[k]
+        hitRate[recHand[k]] = h > 0 and h or 0
+        I.Sample(R.power[s], "modelled", R.est0[s], t, Obs.Usable)
+    end
+    recA[k], recR[k] = 0, 0 -- consumed: a reused id is not this slot's credit
+    return v
+end
+
 local function judge(a, now, t, r, c)
     local explained = false
     for k = 1, RECORDS do
         if recA[k] == a then
-            if R.spends[recR[k]] ~= recSpends[k] then
-                recA[k], recR[k] = 0, 0
-            else
-                local ok = nil -- a NOT answer is no rung: in the window it closes the record unjudged
-                if now == YES or now == SHORT then
-                    ok = now == YES
-                end
-                local v = I.CreditVerdict(k, ok, t, recFirm[k])
-                if v ~= nil then
-                    recA[k] = 0
-                end
-                local s = recR[k]
-                if v and now ~= YES and recFirm[k] then
-                    local max = R.max[s]
-                    R.est0[s] = back(R.est0[s], recEst[k], recE0[k], max)
-                    R.lo0[s] = back(R.lo0[s], recLo[k], recLo0[k], max)
-                    R.hi0[s] = back(R.hi0[s], recHi[k], recHi0[k], max)
-                    local h = hitRate[recHand[k]] - recHit[k]
-                    hitRate[recHand[k]] = h > 0 and h or 0
-                    R.cutC[s] = 0 -- a short answer the retraction proved right is no stale one to give back
-                    I.Sample(R.power[s], "modelled", R.est0[s], t, Obs.Usable)
-                elseif s == r and (v and now == YES or v == nil) then
-                    explained = explained or (recE0[k] < c and c <= recE0[k] + recEst[k])
-                end
-                if v ~= nil then
-                    recR[k] = 0 -- consumed: a reused id is not this slot's credit
-                end
+            local s, x, d = recR[k], recX0[k], recEst[k] + recE0[k] - recX0[k]
+            local v = verdict(k, now, t)
+            if s == r and (v and now == YES or v == nil) then
+                explained = explained or (x < c and c <= x + d)
             end
         elseif recA[k] > 0 and recR[k] == r and R.spends[r] == recSpends[k] then
             -- awaiting another spender's verdict: its step across c explains this one's flip as well
-            explained = explained or (recE0[k] < c and c <= recE0[k] + recEst[k])
+            local x = recX0[k]
+            explained = explained or (x < c and c <= recE0[k] + recEst[k])
         end
     end
     return explained
 end
 
--- Whether a swing credit that paid slot r is too young at t for its verdict (Rows.lua's I.CreditYoung): a usability
--- answer then may be the client's from before it. Allocates nothing.
-local function young(r, t)
-    if I.CreditYoung then
-        for k = 1, RECORDS do
-            if recR[k] == r and t - recTime[k] <= I.Log.ORACLE_MAX and I.CreditYoung(k, t) then
-                return true
+-- At the fold's end, each new credit is judged by its spender's latest answer heard since its swing, if any (rage is
+-- gained at the swing: an answer between the swing and its wound already shows it). Allocates nothing.
+I.OnSettle(function()
+    for k = 1, RECORDS do
+        if recLook[k] then
+            recLook[k] = false
+            local a = recA[k]
+            if a > 0 and ansT[a] >= recSw[k] and I.CreditVerdict then
+                verdict(k, usable[a], ansT[a])
             end
         end
     end
-    return false
-end
-
--- A usable answer at cost c at t gives back what young short answers cut from slot r (R.cutC): the slot is at least c,
--- so those answers, at c or cheaper, were the client's from before the credit, unless something else lifted it across
--- c since. Only within the verdict window (Rows.lua's ORACLE_MAX), with no spend from the slot and no modelled gain
--- since the cut (a refund, a hit taken, another swing or a periodic tick could have crossed c, and the cut credit may
--- be false; the same poll's cheaper usable rungs are no gain); else the cut stands for good. True when it gave it back.
--- Allocates nothing.
-local function uncut(r, c, t)
-    local k = R.cutC[r]
-    if k <= 0 then
-        return false
-    end
-    local gained = R.gain[r] ~= R.cutGain[r] or R.raised[r] ~= R.cutRaised[r]
-    if R.spends[r] ~= R.cutSp[r] or t - R.cutT[r] > I.Log.ORACLE_MAX or gained then
-        R.cutC[r] = 0
-        return false
-    elseif c < k - I.EPS then
-        return false -- a cheaper usable answer says nothing of the dearer short one
-    end
-    R.cutC[r] = 0
-    local max = R.max[r]
-    R.lo0[r] = clamp(R.lo0[r] + R.cutL[r], max)
-    R.est0[r] = clamp(R.est0[r] + R.cutE[r], max)
-    R.hi0[r] = clamp(R.hi0[r] + R.cutH[r], max)
-    I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Usable)
-    return true
-end
+end)
 
 -- Whether ability a's `usable` holds at t, read in the `now` context (the belief's names). Its function is Hekili's
 -- sim one, so it runs there for this call only; one that raises (a name the context lacks) holds from then on.
@@ -946,7 +947,7 @@ local function holds(a, t)
     return v ~= false and v ~= nil
 end
 
--- A flip to usable that a gain we modelled explains (our own, or a rescued swing): it proves only "at least c" now,
+-- A flip to usable that a gain we modelled explains (our own): it proves only "at least c" now,
 -- so slot r is bound to [c, the believed top] around the estimate, not pinned exactly at it (a mis-sized gain would
 -- put lo above the truth: rage the game lacks); no regen measurement. Allocates nothing.
 local function crossed(r, c, t)
@@ -968,7 +969,7 @@ I.On(Obs.Usable, function(o, t, lag)
         now = NOT -- short for another requirement: no rung, and no flip from it later
     end
     local was = usable[a]
-    usable[a] = now
+    usable[a], ansT[a] = now, o.t
     local c = r ~= 0 and I.CostOf(a) or 0
     local explained = I.CreditVerdict and judge(a, now, t, r, c)
     if r == 0 or now == NOT or R.readable[r] or I.ab.multiCost[a] or not pre[a] then
@@ -977,32 +978,18 @@ I.On(Obs.Usable, function(o, t, lag)
     if c <= 0 then
         return
     end
-    if now == YES and uncut(r, c, t) then
-        was = YES -- the short answers it gave back were the client's from before the credit: no crossing since them
-    end
+    local lo1 = R.lo0[r]
     if was == SHORT and now == YES and lag <= 0 and abs(c - shortCost[a]) <= I.EPS then
         -- It just became affordable at an unchanged cost: it crossed the cost since the last short report.
         if R.gain[r] - shortGain[a] >= c - shortEst[a] then
             -- our own gain since then explains the crossing: a bound (crossed)
             crossed(r, c, t)
         elseif R.swing[r] > 0 then
-            -- below the cost by every gain we modelled: a wound Rows dropped just before this flip may be the swing
-            -- that crossed it (the oracle's rescue): paid now, the crossing is explained and pins exactly; a credit of
-            -- ours across c (confirmed now, or awaiting its verdict) already explains it. Pays slot r only (one
-            -- swing-paid slot per spec today).
-            local hand, crit = nil, false
-            if I.Rescue and not explained and R.est0[r] < c then
-                hand, crit = I.Rescue(r, c - R.est0[r], shortT[a], t)
-            end
-            if hand then
-                local h = hitRate[hand] + HIT_ALPHA
-                hitRate[hand] = h < 1 and h or 1
-                swingStep(r, hand, 1, t)
-                if crit then
-                    swingStep(r, hand, 3, t)
-                end
-                crossed(r, c, t)
-            elseif explained then
+            -- below the cost by every gain we modelled: a swing crossed it (rage is gained at the swing, so its wound,
+            -- if ours, is still to come: the lift owe() records is its, netted when that wound is credited; a wound
+            -- that never comes loses only its row, the rage stays right); a credit of ours across c (confirmed now, or
+            -- awaiting its verdict) already explains it.
+            if explained then
                 -- a credited swing crossed it (its crit included): the flip proves only "at least c", a rung
                 local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
                 if ladder(r, c, true, t, lag) then
@@ -1029,20 +1016,20 @@ I.On(Obs.Usable, function(o, t, lag)
             I.Sample(R.power[r], "pinned", R.est0[r], t, Obs.Usable)
         end
         owe(r, e, lo, hi, o.t)
-        if now == SHORT and R.swing[r] > 0 and young(r, t) then
-            if R.cutC[r] <= 0 or R.spends[r] ~= R.cutSp[r] then
-                R.cutT[r], R.cutSp[r], R.cutL[r], R.cutE[r], R.cutH[r] = t, R.spends[r], 0, 0, 0
-            end
-            R.cutC[r] = c > R.cutC[r] and c or R.cutC[r]
-            R.cutL[r], R.cutE[r] = R.cutL[r] + lo - R.lo0[r], R.cutE[r] + e - R.est0[r]
-            R.cutH[r] = R.cutH[r] + hi - R.hi0[r]
-            R.cutGain[r], R.cutRaised[r] = R.gain[r], R.raised[r]
-        elseif now == SHORT and R.cutC[r] > 0 and c >= R.cutC[r] - I.EPS then
-            R.cutC[r] = 0 -- a current short answer at the cut's cost: the cut was right
-        end
     end
     if now == SHORT then
         shortCost[a], shortT[a], shortGain[a], shortEst[a] = c, t - lag, R.gain[r], R.est0[r]
+        local top = c - I.EPS
+        if top < R.sinceShort[r] then
+            R.sinceShort[r] = top
+        end
+        for h = 1, 2 do -- heard once a swing's rage shows: evidence on that swing (I.Missed)
+            if R.swing[r] > 0 and o.t - swT[h] > I.Log.ORACLE_MIN - 1e-6 and top < swTop[h] then
+                swTop[h] = top
+            end
+        end
+    elseif R.lo0[r] > lo1 then
+        R.sinceYes[r] = true
     end
 end)
 
@@ -1095,6 +1082,13 @@ I.On(Obs.Swing, function(o, t)
         return
     elseif c == 4 then
         hitRate[hand] = hitRate[hand] * (1 - HIT_ALPHA)
+        for r = 1, R.n do -- the estimate a credit of this swing is judged from (predict)
+            if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
+                swE[hand], swL[hand], swT[hand], swTop[hand], swSp[hand] =
+                    R.est0[r], R.lo0[r], o.t, math.huge, R.spends[r]
+                break
+            end
+        end
         return
     elseif c == 1 then
         local h = hitRate[hand] + HIT_ALPHA
@@ -1107,6 +1101,9 @@ I.On(Obs.Swing, function(o, t)
     if k > 0 and c == 1 then
         recA[k], recR[k] = 0, 0 -- a fresh record: no stale prediction when its hand pays no slot
     end
+    -- the swing's own time (rage is gained at the swing: its form or aura then decides): c = 1 is stamped at it, its
+    -- crit (stamped at the wound) takes its record's
+    local at = c == 3 and k > 0 and recSw[k] > 0 and recSw[k] or o.t
     for r = 1, R.n do
         if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
             local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
@@ -1117,13 +1114,15 @@ I.On(Obs.Swing, function(o, t)
             else
                 owes = R.liftRec[r] == o.b -- its crit pays the rest of what its landed step owed
             end
-            swingStep(r, hand, c, t, owes)
+            swingStep(r, hand, c, t, owes, at)
             if k > 0 and c == 1 then
-                predict(k, r, hand, e, lo, hi, hit)
-                recTime[k] = t
+                local x = abs(o.t - swT[hand]) < 1e-6 and swE[hand] < e and swE[hand] or e
+                predict(k, r, hand, e, lo, hi, hit, x, math.huge)
+                recSw[k], recLook[k] = o.t, true
                 k = 0
             elseif k > 0 and recR[k] == r and recHand[k] == hand then
-                predict(k, r, hand, recE0[k], recLo0[k], recHi0[k], recHit[k]) -- its crit: both steps
+                local white = recE0[k] + recEst[k] -- the estimate after the hit's own step
+                predict(k, r, hand, recE0[k], recLo0[k], recHi0[k], recHit[k], recX0[k], white) -- its crit: both steps
                 k = 0
             end
         end
@@ -1249,11 +1248,39 @@ function I.ResourceShift(r, delta, t, event)
         R.gain[r] = R.gain[r] + delta -- explains a flip (the Usable apply)
     elseif delta < 0 then
         R.spends[r] = R.spends[r] + 1 -- a spend between a credit and its verdict voids the verdict (the oracle)
+        R.sinceShort[r], R.sinceYes[r] = math.huge, false
         if R.fsr[r] then
             R.fsrUntil[r] = t + I.FSR -- our own spend: the spirit part pauses (the five-second rule, C3)
         end
     end
     I.Sample(R.power[r], "modelled", R.est0[r], t, event)
+end
+
+--- An avoided cast's refund `d` (> 0) to slot r, dated at that cast's success (the server refunds there, the user
+--- 2026-10-20; the target's avoid only reports it later): est and hi take it, clamped by the lowest top a short answer
+--- set since the cast (that answer already saw the refunded pool); lo takes it only when no usable answer raised lo
+--- since the cast (else that answer's bound already holds the refund: lo stays a floor). Allocates nothing.
+function I.Refund(r, d, t)
+    local lo, top, yes = R.lo0[r], R.sinceShort[r], R.sinceYes[r]
+    I.ResourceShift(r, d, t, Obs.Avoided)
+    if yes then
+        R.lo0[r] = lo
+    end
+    if R.hi0[r] > top then
+        R.hi0[r] = top
+    end
+    if R.est0[r] > top then
+        R.est0[r] = top
+    end
+    if R.lo0[r] > top then
+        R.lo0[r] = top
+    end
+    if R.est0[r] < R.lo0[r] then
+        R.est0[r] = R.lo0[r]
+    end
+    if R.hi0[r] < R.est0[r] then
+        R.hi0[r] = R.est0[r]
+    end
 end
 
 --- (spec §3.2) The believed amount of a power type at `now`: the clock values plus continuous regen x dt and the

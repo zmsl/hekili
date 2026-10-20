@@ -111,10 +111,12 @@
   Consecration, Hammer of Wrath and Exorcism; Benediction lowers every other cost; Sanctified Judgement's mana refund
   is counted; the Undead/Demon ranks of Exorcism are recommended only against an Undead or Demon target; Consecration's
   mark on the target is the aura the game shows (1280353).
-- Rage: a white swing's rage, a critical one's especially, is no longer lost to the game's "not enough rage" answer
-  that arrives just after the hit but still shows the bar from before it: the next answer that shows enough rage gives
-  it back. The estimate stayed over 20 rage low until the next swing, so the addon showed Mortal Strike to wait for
-  where a Whirlwind or Heroic Strike was affordable.
+- Rage: a white swing's rage is counted from the swing itself, as the game gives it (measured in game), not from the
+  hit's combat report half a second later. The addon now reads the "not enough rage" answers it hears after a swing
+  as news about that swing, keeps a critical hit's extra rage when the game confirms it, and no longer credits a swing
+  that gave no rage with another player's hit.
+- Dodged, parried and missed abilities: the refund now counts from the moment the ability was used, where the game
+  gives it, and an avoid reported up to about half a second later still finds its ability.
 - Developer: the headless loop ends a fight killed by its last press out of combat for both instances, and starts each
   fight with no buffs believed from the last one (the next fight used to start "in combat", skipping the precombat
   list, and the oracle's own run depended on the run before it).

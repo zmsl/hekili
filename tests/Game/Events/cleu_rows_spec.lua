@@ -240,7 +240,7 @@ describe("the synthesized combat log", function()
             for _, line in ipairs({
                 "rows credited main=1 off=0 cast=0 background=0 avoidsBack=0 lag main=474/60 off=703/20 ref=1686/20 "
                     .. "lambda exact=0.01/0.01 avoid=0.01\n",
-                "rows oracle judged=0 confirmed=0 retracted=0 soft=0 rescued=0 rescuedLate=0\n",
+                "rows oracle judged=0 confirmed=0 retracted=0 soft=0 vetoed=0\n",
                 "rows onus credited=1 unattributed=0 byBand=0\n",
             }) do
                 assert.is_truthy(snap:find(line, 1, true), line)

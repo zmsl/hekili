@@ -673,22 +673,25 @@ describe("now handlers", function()
             assert.are.same({ 20, 1 }, { rec.est, stacks })
         end)
 
-        it("unattributed: two casts in the frame, an outcome past the frame, a secret action; none changes", function()
-            begin()
-            ctl.now = 5
-            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
-            ctl.now = 5.01
-            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_B)
-            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
-            ctl.Tick(5.02)
-            VS.Drain(5.03)
-            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.1).est)
-            castOutcome(fs.SPENDER_C, 30, "MISS", 0.1) -- 0.1 s on: a pending swing's as much as the cast's
-            assert.are.equal(45, VS.Aura("target", fs.SPENDER_C, 30.2).est)
-            castOutcome(fs.SPENDER_C, 50, fake.SECRET)
-            assert.are.equal(65, VS.Aura("target", fs.SPENDER_C, 50.1).est)
-            assert.are.equal(0, I.avoidsRun)
-        end)
+        it(
+            "unattributed: two casts pending, an outcome past the landing window, a secret action; none changes",
+            function()
+                begin()
+                ctl.now = 5
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+                ctl.now = 5.01
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_B)
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+                ctl.Tick(5.02)
+                VS.Drain(5.03)
+                assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.1).est)
+                castOutcome(fs.SPENDER_C, 30, "MISS", 0.7) -- past the landing window (0.474 + 3 x 0.06)
+                assert.are.equal(45, VS.Aura("target", fs.SPENDER_C, 30.8).est)
+                castOutcome(fs.SPENDER_C, 50, fake.SECRET)
+                assert.are.equal(65, VS.Aura("target", fs.SPENDER_C, 50.1).est)
+                assert.are.equal(0, I.avoidsRun)
+            end
+        )
 
         it("unattributed: a white swing of ours due to land then could own the avoid as well", function()
             begin()
@@ -699,22 +702,50 @@ describe("now handlers", function()
             assert.are.equal(0, I.avoidsRun)
         end)
 
-        it("a white swing's miss 0.06 s after the cast is the swing's: the debuff stays, no SPELL_MISSED", function()
-            begin() -- the opening Garrote, then the main hand's swing and its miss together (the Rogue replay's)
-            ctl.now = 5
-            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
-            ctl.now = 5.06
-            ctl.Fire("PLAYER_SWING", 3.6, 0)
-            ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
-            ctl.Tick(5.07)
-            VS.Drain(5.08)
+        it("a white swing's miss due 0.3 s after the cast is the swing's: the debuff stays, no SPELL_MISSED", function()
+            begin()
+            ctl.now = 4.83
+            ctl.Fire("PLAYER_SWING", 3.6, 0) -- its outcome due about 5.30 (the main hand's 0.474 s)
+            castOutcome(fs.SPENDER_C, 5, "MISS", 0.3)
             ctl.Tick(7.5) -- past every window
             assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 7.5).est)
-            assert.are.equal(0, VS.Power(fs.RAGE, 7.5).est)
             for _, r in ipairs(rows) do
                 assert.is_false(r[1] == "SPELL_MISSED" and r[3] == fs.SPENDER_C, "the cast's miss row")
             end
             assert.are.equal(0, I.avoidsRun)
+        end)
+
+        it("an avoid 0.3 s after the cast is still the cast's: the hit and the refund come at the cast", function()
+            begin()
+            castOutcome(fs.SPENDER_C, 5, "DODGE", 0.3)
+            ctl.Tick(5.4)
+            VS.Drain(5.4)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.4))
+            assert.are.equal(8, VS.Power(fs.RAGE, 5.4).est)
+            assert.are.equal(1, I.avoidsRun)
+        end)
+
+        it("dates the refund at the cast: a usable answer between the cast and the avoid already held it", function()
+            begin() -- pinned at 10; the truth is 20 here (spender_b usable)
+            ctl.usable[fs.SPENDER_B] = { true, false }
+            ctl.now = 4.5
+            ctl.Fire("SPELL_UPDATE_USABLE")
+            VS.Drain(4.5) -- at least 15
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- 10 paid, 8 back at once: truth 18
+            ctl.Tick(5.01)
+            VS.Drain(5.01)
+            ctl.now = 5.1 -- the client already shows 18: spender_b usable (at least 15)
+            ctl.Fire("SPELL_UPDATE_USABLE")
+            VS.Drain(5.1)
+            ctl.usable[fs.SPENDER_B] = nil
+            ctl.now = 5.3
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            ctl.Tick(5.31)
+            VS.Drain(5.32)
+            local rage = VS.Power(fs.RAGE, 5.4)
+            assert.are.equal(1, I.avoidsRun)
+            assert.is_true(rage.lo <= 18 and rage.lo >= 15, ("lo %.2f, truth 18"):format(rage.lo)) -- not 15 + 8
         end)
 
         it("an ability's own share overrides the class's; an ability without one refunds nothing", function()
@@ -764,12 +795,14 @@ describe("now handlers", function()
             assert.are.equal(1, I.avoidsRun)
         end)
 
-        it("an avoid in a fresh cast's frame is that cast's, not an older one's still in its window", function()
+        it("two casts pending: an avoid is attributed to neither", function()
             begin()
             castOutcome(fs.SPENDER_C, 4.9) -- no outcome of its own yet (a DoT's)
-            castOutcome(fs.SPENDER_C, 5, "DODGE")
-            assert.is_true(math.abs(VS.Aura("target", fs.SPENDER_C, 5.1).est - 19.9) < 1e-9) -- the 4.9 application
-            assert.are.equal(1, I.avoidsRun)
+            castOutcome(fs.SPENDER_C, 5, "DODGE", 0.1)
+            ctl.Tick(5.2)
+            VS.Drain(5.2)
+            assert.is_true(math.abs(VS.Aura("target", fs.SPENDER_C, 5.2).est - 20) < 1e-9) -- the 5 application
+            assert.are.equal(0, I.avoidsRun)
         end)
 
         it("no `refundOnAvoid`: the debuff is undone, the cost stays spent", function()
