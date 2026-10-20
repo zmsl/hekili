@@ -83,6 +83,7 @@ local R = {
     pinV = {},
     pinDelta = {},
     pinValid = {},
+    pinOwn = {},
     swAccG = {},
     swAccT = {},
     snapT = {},
@@ -262,7 +263,7 @@ local function setMax(r, m)
             end
             R.est0[r] = clamp(R.est0[r] + up, m)
             R.hi0[r] = clamp(R.hi0[r] + up, m)
-            R.pinDelta[r] = R.pinDelta[r] + up
+            R.pinDelta[r], R.pinOwn[r] = R.pinDelta[r] + up, true
         end
     end
 end
@@ -305,6 +306,7 @@ I.OnBuild(function(def, now)
         R.spE[r], R.spL[r], R.spH[r] = spirit, spirit * (1 - I.REGEN_SPREAD), spirit * (1 + I.REGEN_SPREAD)
         R.dev[r], R.scale[r], R.spread[r] = 0, 1, I.REGEN_SPREAD
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
+        R.pinOwn[r] = false
         R.swAccG[r], R.swAccT[r] = 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
         R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
@@ -529,7 +531,7 @@ local function beat(r, t)
         R.hi0[r] = R.hi0[r] - step > rest and R.hi0[r] - step or rest
     end
     if R.est0[r] ~= before then
-        R.pinDelta[r] = R.pinDelta[r] + R.est0[r] - before
+        R.pinDelta[r], R.pinOwn[r] = R.pinDelta[r] + R.est0[r] - before, true
         I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.CombatEnd)
     end
     R.decayNext[r] = R.est0[r] > rest and t + R.decayIv[r] or 0
@@ -557,7 +559,7 @@ I.OnAdvance(function(from, to)
             R.est0[r] = clamp(R.est0[r] + v, max)
             R.lo0[r] = clamp(R.lo0[r] + v, max)
             R.hi0[r] = clamp(R.hi0[r] + v, max)
-            R.pinDelta[r] = R.pinDelta[r] + v
+            R.pinDelta[r], R.pinOwn[r] = R.pinDelta[r] + v, true
             norm(r)
         end
     end
@@ -590,7 +592,7 @@ I.OnAdvance(function(from, to)
                 R.hi0[r] = R.hi0[r] - drop > rest and R.hi0[r] - drop or rest
             end
             if R.est0[r] ~= before then
-                R.pinDelta[r] = R.pinDelta[r] + R.est0[r] - before
+                R.pinDelta[r], R.pinOwn[r] = R.pinDelta[r] + R.est0[r] - before, true
                 I.Sample(R.power[r], "modelled", R.est0[r], to, Obs.CombatEnd)
             end
         end
@@ -694,10 +696,21 @@ local function pin(r, v, width, t, origin, event, mid)
         -- (bounded in time too: a hand idle past its swing plus I.LIFT_WINDOW, or with no step, starts it over)
         local h, step = R.swing[r], I.SwingValue(r, R.swing[r])
         if measures and R.pinValid[r] and step > 0 and t - swT[h] <= I.SwingSpeedEst(h) + I.LIFT_WINDOW then
-            R.swAccG[r], R.swAccT[r] = R.swAccG[r] + vm - R.pinV[r] - R.pinDelta[r], R.swAccT[r] + dt
-            if R.swAccT[r] * I.SwingPerSecond(r) >= I.SWING_STEPS * step then
-                calibrate(r, R.swAccG[r] / R.swAccT[r], t) -- nonzero: step > 0, so the window's time is too
-                R.swAccG[r], R.swAccT[r] = 0, 0
+            -- pins at one instant (several cost thresholds flipping at once) re-estimate one value: the window's ends
+            -- are each instant's latest (it closes at the next instant's first pin, before that pin adds its interval)
+            if dt > 1e-6 then
+                if R.swAccT[r] * I.SwingPerSecond(r) >= I.SWING_STEPS * step then
+                    calibrate(r, R.swAccG[r] / R.swAccT[r], t) -- nonzero: step > 0, so the window's time is too
+                    R.swAccG[r], R.swAccT[r] = 0, 0
+                end
+                -- an interval holding a gain the belief knows besides the swings (our cast's, a refund, a periodic or
+                -- decay step, a hit taken, a crit's extra) adds nothing: the scale measures swings only (the old
+                -- per-interval filter refused such intervals)
+                if not R.pinOwn[r] then
+                    R.swAccG[r], R.swAccT[r] = R.swAccG[r] + vm - R.pinV[r] - R.pinDelta[r], R.swAccT[r] + dt
+                end
+            elseif R.swAccT[r] > 0 then
+                R.swAccG[r] = R.swAccG[r] + vm - R.pinV[r] - R.pinDelta[r]
             end
         else
             R.swAccG[r], R.swAccT[r] = 0, 0
@@ -714,7 +727,7 @@ local function pin(r, v, width, t, origin, event, mid)
     end
     R.est0[r], R.lo0[r], R.hi0[r] = clamp(est, max), clamp(v, max), clamp(v + width, max)
     R.snapT[r] = -1e9 -- an anchor, not a snap
-    R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r] = t, vm, 0, measures
+    R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.pinOwn[r] = t, vm, 0, measures, false
     R.pinA[r], R.pinB[r] = 0, 0
     remeasure(r, was, origin == "pinned" and v + width or -1) -- an exact read leaves no model above it
     I.Sample(R.power[r], origin, R.est0[r], t, event)
@@ -839,6 +852,15 @@ local function swingStep(r, hand, c, t, owed, at)
             de, R.liftE[r] = net(de, R.liftE[r])
             dl, R.liftL[r] = net(dl, R.liftL[r])
             dh, R.liftH[r] = net(dh, R.liftH[r])
+        end
+        if c ~= 1 then
+            -- a crit's extra (exact, unscaled, Primal Fury's with it) is no step the scale measures: its interval adds
+            -- nothing to the window, or, already in it, comes back out
+            if at > R.pinT[r] then
+                R.pinOwn[r] = true
+            elseif R.swAccT[r] > 0 then
+                R.swAccG[r] = R.swAccG[r] - v
+            end
         end
         R.est0[r] = clamp(R.est0[r] + de, max)
         R.lo0[r] = clamp(R.lo0[r] + dl, max)
@@ -1213,7 +1235,7 @@ I.On(Obs.PlayerHit, function(o, t)
                 R.hi0[r] = clamp(R.hi0[r] + gain + width, max)
                 norm(r)
                 -- the full gain even when capped, as I.ResourceShift does (review minor 3: skipped for both)
-                R.pinDelta[r], R.gain[r] = R.pinDelta[r] + gain, R.gain[r] + gain
+                R.pinDelta[r], R.gain[r], R.pinOwn[r] = R.pinDelta[r] + gain, R.gain[r] + gain, true
                 I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.PlayerHit)
                 local sec = floor(t) -- out of combat too: the pull's own hits count once combat starts
                 local i = sec % I.TAKEN_WINDOW + 1
@@ -1314,6 +1336,7 @@ function I.ResourceShift(r, delta, t, event)
     R.pinDelta[r] = R.pinDelta[r] + delta
     if delta > 0 then
         R.gain[r] = R.gain[r] + delta -- explains a flip (the Usable apply)
+        R.pinOwn[r] = true
     elseif delta < 0 then
         R.spends[r] = R.spends[r] + 1 -- a spend between a credit and its verdict voids the verdict (the oracle)
         R.sinceShort[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, false, false

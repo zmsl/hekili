@@ -333,8 +333,49 @@ describe("resources", function()
             local v = 9 + 1.2 * per * 12 -- 20% above the model for 12 s more: 13.5 s since the first pin, five steps
             obs(Obs.Read, 23.5, 1, v, I.ReadOf.Resource)
             I.Fold(23.5, false)
+            obs(Obs.Read, 24, 1, v, I.ReadOf.Resource) -- the next instant's first pin closes the window at 23.5
+            I.Fold(24, false)
             within(1 + I.ALPHA * (v / 13.5 / per - 1), I.res.scale[1])
         end)
+
+        it(
+            "learns the swing scale alike with an own gain inside one step, or several pins at one instant (GAP AC)",
+            function()
+                local function scale(own, stack)
+                    boot(fs.def(fs.new(9)))
+                    obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
+                    I.Fold(10, false)
+                    local truth = 0
+                    for k = 1, 12 do
+                        local t = 10 + 2.6 * k
+                        obs(Obs.Swing, t - 1.3, 1, 2.6, 4)
+                        obs(Obs.Swing, t - 1.3, 1, 0, 1)
+                        I.Fold(t - 1.3, false)
+                        truth = truth + 9 * 1.2 -- 20% above the model
+                        if own and k == 3 then
+                            -- a gain the belief knows besides the swings (a hit taken, a Bloodrage-like own gain), its
+                            -- amount the model's 10 where the game gave 14: no part of it is the swings'
+                            I.ResourceShift(1, 10, t - 0.5, Obs.CastSuccess)
+                            truth = truth + 14
+                        end
+                        obs(Obs.Read, t, 1, stack and truth - 3 or truth, I.ReadOf.Resource)
+                        I.Fold(t, false)
+                        if stack then -- re-estimates at the same instant, the first 3 low: the instant counts once
+                            obs(Obs.Read, t, 1, truth, I.ReadOf.Resource)
+                            I.Fold(t, false)
+                        end
+                        if I.res.scale[1] ~= 1 then
+                            return I.res.scale[1] -- its first measurement
+                        end
+                    end
+                    return I.res.scale[1]
+                end
+                local plain = scale(false, false)
+                assert.is_true(plain > 1)
+                within(plain, scale(true, false))
+                within(plain, scale(false, true))
+            end
+        )
 
         it("starts the swing-scale window over after the hand was idle past LIFT_WINDOW (GAP AC)", function()
             obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource)
