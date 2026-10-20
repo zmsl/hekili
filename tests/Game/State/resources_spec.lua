@@ -392,6 +392,27 @@ describe("resources", function()
                 assert.is_true(r.lo <= 9)
             end)
 
+            it("keeps lo a floor with two lifting rungs and a PLAYER_SWING between them (dual wield)", function()
+                -- truth 5; the off hand's swing at 4.8 makes 14; spender_a (10) pays at 5 (4); the main hand's swing
+                -- at 5.1 makes 13; spender_c (10) answers usable at 5.2; the main wound at 5.57, the off one at 6.0
+                local def = fs.def(fs.new(9))
+                def.resources[1].swingOff = 9
+                boot(def)
+                obs(Obs.Swing, 4.8, 2, 1.8, 4)
+                obs(Obs.CastSuccess, 5, 1)
+                obs(Obs.Swing, 5.1, 1, 2.6, 4)
+                obs(Obs.Usable, 5.2, 3, 1, 0)
+                I.Fold(5.2, false)
+                I.Settle(5.57)
+                obs(Obs.Swing, 5.1, 1, 0, 1)
+                I.Fold(5.57, false)
+                I.Settle(6)
+                obs(Obs.Swing, 4.8, 2, 0, 1)
+                I.Fold(6, false)
+                local r = VS.Power(fs.RAGE, 6)
+                assert.is_true(r.lo <= 13, ("lo %.2f, truth 13"):format(r.lo))
+            end)
+
             it("takes a short answer in the frame of a modelled gain (an avoid's refund) as after the gain", function()
                 -- 9 believed; spender_a (10) at 5 pays from a rung-lifted 10, then its avoid refunds 8 (the outcome's
                 -- modelled gain) and the client answers short in that frame: the answer bounds 8, not the 0 before

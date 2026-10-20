@@ -331,9 +331,6 @@ function I.GcdModel(expires, t, event)
     I.Sample(gcd, "modelled", expires, t, event)
 end
 
---- The cost the ladder uses for ability a: the spec's `spend` (decision 2), a number or a function bound to `state`
---- (Hekili's ability table already evaluates a function `spend` on access; a raw one is called here). The plain
---- out-of-combat read (`readCost`, Sources/Spellbook.lua) only confirms it, in Snapshot(): its units are the client's.
 --- What our cast success `o` of ability a paid: the cost priced when it was heard (Sources/Casts.lua: `o.b`, with
 --- `o.c` 1), else I.CostOf(a) now. Allocates nothing.
 function I.CastCost(o, a)
@@ -343,6 +340,9 @@ function I.CastCost(o, a)
     return I.CostOf(a)
 end
 
+--- The cost the ladder uses for ability a: the spec's `spend` (decision 2), a number or a function bound to `state`
+--- (Hekili's ability table already evaluates a function `spend` on access; a raw one is called here). The plain
+--- out-of-combat read (`readCost`, Sources/Spellbook.lua) only confirms it, in Snapshot(): its units are the client's.
 function I.CostOf(a)
     local c = I.BaseCostOf(a)
     if I.CostMod then
@@ -351,13 +351,18 @@ function I.CostOf(a)
     return c
 end
 
---- Ability a's declared cost, before any cost modifier (0 when it has none); a cost between 0 and 1 is that fraction
---- of its resource's believed maximum, as Hekili's simulation prices it (State.lua's spend). Allocates nothing.
-local simOnly = {} -- by declared cost function: true once it raised in the belief's context (it then prices as before)
+-- By declared cost function: true once it raised in the belief's context (it then prices as the simulation does,
+-- the error counted once in I.nowErrors); weak keys, cleared at each build (a rebuilt spec's functions are new).
+local simOnly = setmetatable({}, { __mode = "k" })
+I.OnBuild(function()
+    for f in pairs(simOnly) do
+        simOnly[f] = nil
+    end
+end)
 
 -- A declared cost function evaluated in the belief's `now` context at the clock (its `buff`, `talent`, ... the
--- belief's, as Resources.lua's `usable` check): a cost that reads an aura (Maelstrom Weapon's stacks) is the cast's
--- own, not the simulation's last reset's. Nil when it raised there. Allocates nothing once it has raised.
+-- belief's, as Resources.lua's `usable` check): a cost that reads an aura's stacks (a stacking free-cast proc) is the
+-- cast's own, not the simulation's last reset's. Nil when it raised there. Allocates nothing once it has raised.
 local function beliefCost(f)
     if simOnly[f] then
         return nil
@@ -369,11 +374,14 @@ local function beliefCost(f)
     setfenv(f, env)
     if not ok then
         simOnly[f] = true
+        I.nowErrors, I.nowError = (I.nowErrors or 0) + 1, v
         return nil
     end
     return v
 end
 
+--- Ability a's declared cost, before any cost modifier (0 when it has none); a cost between 0 and 1 is that fraction
+--- of its resource's believed maximum, as Hekili's simulation prices it (State.lua's spend). Allocates nothing.
 function I.BaseCostOf(a)
     local obj = I.ab.obj[a]
     local f = rawget(obj, "declaredSpend")

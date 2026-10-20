@@ -164,7 +164,7 @@ describe("resource modifiers", function()
 
     it("prices a declared cost function in the belief's context: its aura reads are the belief's", function()
         local spender_c = I.ab.bySpell[fs.SPENDER_C]
-        -- Races.lua keeps the declared function; this one reads the aura's stacks (Maelstrom Weapon's shape)
+        -- Races.lua keeps the declared function; this one reads the aura's stacks (a stacking free-cast proc's shape)
         rawset(I.ab.obj[spender_c], "declaredSpend", function()
             return 20 * math.max(0, 1 - 0.2 * buff.mod_aura_a.stack) -- luacheck: ignore 113 (the context's)
         end)
@@ -185,6 +185,21 @@ describe("resource modifiers", function()
             t = t + 1
             I.AuraModel(1, j, t, t + 15, 3, t, VS.Obs.CastSuccess, false)
             cast(fs.SPENDER_B, t + 0.5)
+            cast(fs.SPENDER_C, t + 0.7)
+        end, 1000)
+        assert.are.equal(0, bytes)
+    end)
+
+    it("allocates nothing over 1000 casts priced by a declared cost function in the belief's context", function()
+        local spender_c = I.ab.bySpell[fs.SPENDER_C]
+        rawset(I.ab.obj[spender_c], "declaredSpend", function()
+            return 20 * math.max(0, 1 - 0.2 * buff.mod_aura_a.stack) -- luacheck: ignore 113 (the context's)
+        end)
+        local j = I.auras.bySpell[MOD_AURA]
+        local t = 10
+        local bytes = alloc.bytes(function()
+            t = t + 1
+            I.AuraModel(1, j, t, t + 15, 3, t, VS.Obs.CastSuccess, false)
             cast(fs.SPENDER_C, t + 0.7)
         end, 1000)
         assert.are.equal(0, bytes)

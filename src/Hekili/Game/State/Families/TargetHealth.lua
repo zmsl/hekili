@@ -106,7 +106,7 @@ local function guarded(k, a, t)
         return false
     end
     local r = I.ab.slot[a]
-    if r > 0 and I.res.lo0[r] < I.CostOf(a) then
+    if r > 0 and I.res.lo0[r] < I.CostOf(a) then -- the measured floor, deliberately not VS.Power().lo (no rest assumption)
         return false
     end
     local j = H.aura[k]

@@ -241,7 +241,9 @@ kept("UnitPower", "virtual", function(unit, powerType)
         end
     end
     local b = VS.Power(powerType, now())
-    -- lo for every resource: rage's speed-based model has a zero band and errs upward only, so lo is a true floor (G4)
+    -- lo for every resource: rage's speed-based model has a zero band and errs upward only, so lo is a true floor (G4);
+    -- for a slot resting at its maximum (mana, energy) lo is the build's rest assumption until a short answer, an exact
+    -- read or a pin's top below it ends it (Families/Resources.lua `over`): it can say affordable when it is not
     return floor(b.lo)
 end, "secret always [W PR16]; Power().lo for every resource (G4's rage exception dropped 2026-10-16)")
 

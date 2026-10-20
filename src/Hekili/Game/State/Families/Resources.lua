@@ -729,12 +729,14 @@ end
 -- The lift a swing whose wound is still in flight can owe: its wound comes within the longest landing lag (Rows.lua's
 -- pair window, 2 s off hand), so an older lift is nobody's.
 I.LIFT_WINDOW = 2
--- The latest PLAYER_SWING's time (Swing c = 4, either hand): a lift from before it is not that swing's to owe.
-local swungT = -1e9
 
 -- Swing-paid slot r was at e, lo, hi before a rung at t moved it: what it lifted is owed by a swing at or before t
--- whose wound has not landed yet (I.On(Obs.Swing)). A lift older than the window, or one a later PLAYER_SWING
--- followed, is dropped first; a rung that lifts nothing leaves liftT. Allocates nothing.
+-- whose wound has not landed yet (I.On(Obs.Swing)). A lift older than the window is dropped first; a rung that lifts
+-- nothing leaves liftT. Two lifts in one window pool, so a swing between them may pay the first's share too: est then
+-- runs low and lo stays a floor (the safe side; keeping them apart per swing would let an off hand's late wound pay
+-- the first lift twice). A short answer in the window (a cut) is not netted: the wound's step lands on the clamped
+-- est and hi, which overshoot until the next answer, while lo (the simulation's reading) only takes its low edge.
+-- Allocates nothing.
 -- shortcut: the rage is taken as in at PLAYER_SWING, its wound about 0.47 s later (the replay's model). P log 2
 -- (research 2026-10-16-swing-outcome-pairing) logs PLAYER_SWING and UNIT_COMBAT only, so when the rage arrives is
 -- UNMEASURED: log UNIT_POWER_FREQUENT "RAGE" with PLAYER_SWING and the target's UNIT_COMBAT in one capture (checkpoint
@@ -747,7 +749,7 @@ local function owe(r, e, lo, hi, t)
     if de <= 0 and dl <= 0 and dh <= 0 then
         return
     end
-    if t - R.liftT[r] > I.LIFT_WINDOW or swungT > R.liftT[r] then
+    if t - R.liftT[r] > I.LIFT_WINDOW then
         R.liftE[r], R.liftL[r], R.liftH[r] = 0, 0, 0
     end
     R.liftE[r] = R.liftE[r] + (de > 0 and de or 0)
@@ -999,7 +1001,6 @@ I.On(Obs.Swing, function(o, t)
         return
     elseif c == 4 then
         hitRate[hand] = hitRate[hand] * (1 - HIT_ALPHA)
-        swungT = o.t > swungT and o.t or swungT
         return
     elseif c == 1 then
         local h = hitRate[hand] + HIT_ALPHA

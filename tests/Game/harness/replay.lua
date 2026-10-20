@@ -397,6 +397,7 @@ function M.new(text, H, o)
     end
     R.mobHealth = math.floor(before / (1 - M.TAIL)) + 1
     -- the starting powers: each power's first line's before-value; each pool's maximum ("of N total")
+    -- shortcut: the first line's total; take each line's own if a log's maximum moves mid-fight
     local start0 = {}
     R.maxOf = {}
     for _, e in ipairs(p.ev) do
