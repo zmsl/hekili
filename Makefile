@@ -6,7 +6,7 @@ LUACHECK := $(LUA_ENV)/bin/luacheck
 LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
-.PHONY: bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter bench syntax api-check \
+.PHONY: gate bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter bench syntax api-check \
 	packs-check tools-test check packs package package-check
 
 bootstrap:
@@ -39,6 +39,12 @@ test-serial:
 # The edit loop: skips the harness gate specs tagged #slow (hundreds of simulated fights); `make check` runs them.
 test-fast:
 	$(BUSTED) --exclude-tags=slow,party,loop,druid,rogue,paladin,shaman,hunter,bench
+
+LOOPS = test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter
+
+# The merge gate: check, then every 20-fight loop target at once (one busted process each; 16 cores here).
+gate: check
+	$(MAKE) -j$(words $(LOOPS)) -Otarget $(LOOPS)
 
 test-loop:
 	$(BUSTED) --tags=loop

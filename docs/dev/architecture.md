@@ -186,7 +186,8 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
 - Headless gates: `make test` (everything except the tagged gates), `make test-fast` (skips `#slow`), `make test-loop`
   (the 20-fight Arms loop and its `Arms solo:` line), `make test-party`, `make test-druid` (about 190 s), `make test-rogue` (the
   20-fight Rogue gates, about 320 s), `make test-paladin` (the 20-fight Paladin gates, about 150 s), `make test-shaman` (the 20-fight
-  Enhancement gate, about 60 s), `make test-hunter` (the 20-fight Hunter gates), `make bench`
+  Enhancement gate, about 60 s), `make test-hunter` (the 20-fight Hunter gates), `make gate` (`make check` then all seven
+  loop targets in parallel, one process each: the merge gate in about a third of the serial time), `make bench`
   (ms and bytes per Update and per UNIT_COMBAT; reported, not gated). `make check`
   runs lint, format, type check, `make test` (one process per spec file, in parallel), syntax, `api-check` and
   `packs-check`.
