@@ -1,8 +1,10 @@
 -- Game/State/AplWarnings.lua
--- Target and player health are secret on Forever (spec §6.5, §7.4): the player's reads a constant; the target's reads
--- 100 until a health-gated ability pins it (Families/TargetHealth.lua), always on a spec without one. An action-list
--- condition that reads them is dead or misled. Time to die is not warned: it answers "unknown" (Targets.lua's FOREVER,
--- 3600 s: the fight never ends soon), as a priority written for a long fight expects. VS.AplSecretToken finds
+-- Target health is secret on Forever (spec §6.5, §7.4): it reads 100 until a health-gated ability pins it
+-- (Families/TargetHealth.lua), always on a spec without one. An action-list condition that reads it is dead or
+-- misled. Not warned: time to die, which answers "unknown" (Targets.lua's FOREVER, 3600 s: the fight never ends soon),
+-- as a priority written for a long fight expects; and the player's health (`health.pct`, ...), which reads the plain
+-- value when the client gives one and full while it is secret (Families/Player.lua), so a defensive line never fires
+-- on an unknown and a gate on high health passes. VS.AplSecretToken finds
 -- such a token in a condition string; Hekili:LoadScript (Scripts.lua) writes one warning per entry from it. Pure Lua:
 -- no client read, no allocation.
 
@@ -11,14 +13,10 @@ local VS = ns.VirtualState
 local find, byte = string.find, string.byte
 
 local TARGET_HP = "target health is secret"
-local PLAYER_HP = "player health is secret"
 local ALWAYS_100 = "reads 100 until a health-gated ability pins it, always on a spec without one"
-local MAX_WHILE = "reads the health maximum while player health is unreadable"
-local PCT_WHILE = "reads 100 while player health is unreadable"
-local ZERO_WHILE = "reads 0 while player health is unreadable"
 
--- { token, subject, what it reads }: the names Hekili's state resolves through health (State.lua: mt_target's
--- health_*; mt_target_health; state.health). Qualified
+-- { token, subject, what it reads }: the names Hekili's state resolves through target health (State.lua: mt_target's
+-- health_*; mt_target_health). Qualified
 -- tokens come first; a token ending in "_" is a prefix (a number follows).
 local ROWS = {
     { "target.health.pct", TARGET_HP, ALWAYS_100 },
@@ -28,13 +26,6 @@ local ROWS = {
     { "target.health_pct", TARGET_HP, ALWAYS_100 },
     { "target.health_percent", TARGET_HP, ALWAYS_100 },
     { "target.health_current", TARGET_HP, ALWAYS_100 },
-    { "health.pct", PLAYER_HP, PCT_WHILE },
-    { "health.percent", PLAYER_HP, PCT_WHILE },
-    { "health.current", PLAYER_HP, MAX_WHILE },
-    { "health.actual", PLAYER_HP, MAX_WHILE },
-    { "health.deficit", PLAYER_HP, ZERO_WHILE },
-    { "health.deficit_pct", PLAYER_HP, ZERO_WHILE },
-    { "health.deficit_percent", PLAYER_HP, ZERO_WHILE },
 }
 
 local DOT, UNDERSCORE = 46, 95

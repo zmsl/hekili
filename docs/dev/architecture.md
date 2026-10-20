@@ -240,7 +240,13 @@ default list from the forecast window `state.delayMax` as it would after an empt
 to die (`fight_remains`, `target.time_to_die`, `time_to_pct_N`, `longest_ttd`, ...) answers "unknown": `FOREVER`, 3600 s,
 a fight that never ends soon, a grey (trivial) target's too (wowsims's `remainingTime` has no trivial case), and
 `GetNumTTDsAfter` counts every enemy as after any time. The tracker's 0.5 s ticker is not started. A priority may read them without a load warning (`Game/State/AplWarnings.lua` warns only
-on health); wowsims's `remainingTime` maps to `fight_remains` with that deviation.
+on target health); wowsims's `remainingTime` maps to `fight_remains` with that deviation.
+
+**Player health.** The same rule for the player's own health (`health.pct`, `health.current`, `health.deficit`): the
+plain value whenever the client answers one (out of combat), full while it keeps the answer secret
+(`Game/State/Families/Player.lua`), never a stale read from before the pull. A defensive line (`health.pct<50`) never
+fires on an unknown and a `health.pct>50` gate always passes; no load warning. wowsims's `currentHealthPercent` maps to
+`health.pct` with that deviation.
 
 **APL line options.** `make_pack.lua` and the in-game importer accept these on a line before `if=` (in the tool,
 an unknown option or a non-numeric value errors; `unparse` writes them in this order): `name=<list>` (for

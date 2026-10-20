@@ -55,7 +55,13 @@ I.OnBuild(function(def, now)
 end)
 
 I.On(Obs.Read, function(o, t)
-    if o.c == ReadOf.Health then
+    if o.c == ReadOf.Health and o.b < 0 then
+        -- a secret read: unknown reads as full (a defensive "health.pct<50" never fires, a "health.pct>50" gate
+        -- always passes), not the last plain read, which may be from before the pull
+        health.est, health.lo, health.hi = 1, 0, 1
+        I.Sample(health, "default", 1, t, Obs.Read)
+        health.basis = "default"
+    elseif o.c == ReadOf.Health then
         health.est, health.lo, health.hi = o.b, o.b, o.b
         I.Sample(health, "observed", o.b, t, Obs.Read)
     end
@@ -68,7 +74,8 @@ I.On(Obs.Haste, function(o, t)
     end
 end)
 
---- (spec §3.2) Health fraction 0..1: the player's last plain read (conf decaying as an aura); the target's belief
+--- (spec §3.2) Health fraction 0..1: the player's last plain read (conf decaying as an aura), 1 (full) before one and
+--- after a secret read; the target's belief
 --- (Families/TargetHealth.lua); every other unit the default 1.0.
 function VS.Health(unit, now)
     if unit == "player" then

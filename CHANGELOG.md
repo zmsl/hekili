@@ -74,6 +74,9 @@
   while-casting rate, as if the five-second rule never ended, so at low mana it waited for mana that never came and
   showed no icon. It now regenerates at the full rate from 5 seconds after your last mana spend, its own planned
   casts included.
+- Priorities that check your own health (such as "below 50% health") no longer raise an error when they load. While
+  the game hides your health the addon treats it as full, so a defensive line waits rather than firing on a guess;
+  out of combat it reads your real health.
 - Hunter: priority lines that divide (Multi-Shot's) now fire. Divisions in the priorities translated from
   wowsims ran as a remainder, so those lines never recommended their ability.
 - Rogue: Garrote costs 10 less a Dirty Deeds rank, Backstab and Hemorrhage 3 less a Thousand Cuts stack, and

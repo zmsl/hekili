@@ -179,4 +179,19 @@ describe("facts and polls", function()
         assert.are.same({ 0, 0, 0, 0, 0, 0, 0 }, { VS.Stat("UnitStat", 1) })
         assert.are.same({ 0, 0, 0, 0, 0, 0, 0 }, { VS.Stat("NoSuchStat") })
     end)
+
+    it("reads the player's health as full while the client keeps it secret, the plain value again after", function()
+        ctl.health, ctl.healthMax = 300, 1000
+        drain(2)
+        assert.are.equal(0.3, VS.Health("player", 2).est) -- out of combat, plain: honoured
+        ctl.Fire("PLAYER_REGEN_DISABLED")
+        ctl.unitHealth.player = fake.SECRET -- the pull: secret
+        drain(3)
+        assert.are.same({ 1, "default" }, { VS.Health("player", 3).est, VS.Health("player", 3).basis })
+        drain(4)
+        assert.are.equal(1, VS.Health("player", 4).est) -- every secret poll the same: no flicker
+        ctl.unitHealth.player = 400
+        drain(5)
+        assert.are.equal(0.4, VS.Health("player", 5).est)
+    end)
 end)
