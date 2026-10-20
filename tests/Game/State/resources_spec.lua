@@ -286,6 +286,19 @@ describe("resources", function()
             assert.is_true(r.lo <= 100)
         end)
 
+        it("measures the swing scale only over enough steps to drown one step's lumpiness (GAP AC)", function()
+            obs(Obs.Read, 10, 1, 0, I.ReadOf.Resource) -- a measuring pin
+            obs(Obs.Swing, 10.5, 1, 2.6, 1) -- a landed swing: 9, and a speed to calibrate against (9 / 2.6 a second)
+            obs(Obs.Read, 11.5, 1, 9, I.ReadOf.Resource) -- one step in 1.5 s: 6/s, 1.73x the model, by its lumps alone
+            I.Fold(11.5, false)
+            assert.are.equal(1, I.res.scale[1]) -- not 1.22 from one interval
+            local per = I.SwingPerSecond(1)
+            local v = 9 + 1.2 * per * 12 -- 20% above the model for 12 s more: 13.5 s since the first pin, five steps
+            obs(Obs.Read, 23.5, 1, v, I.ReadOf.Resource)
+            I.Fold(23.5, false)
+            within(1 + I.ALPHA * (v / 13.5 / per - 1), I.res.scale[1])
+        end)
+
         describe("a white crit (Swing c = 3 after the landed swing)", function()
             local function crits(crit)
                 local def = fs.def(fs.new(9))

@@ -16,6 +16,8 @@ local abs, floor = math.abs, math.floor
 
 --- A flip pin measures regen only when the last short report was at most this long before it (TDF Belief.PIN_EXACT).
 I.PIN_EXACT = 0.15
+--- A swing-paid slot's scale is measured over at least this many model steps of its paying hand (GAP AC).
+I.SWING_STEPS = 5
 
 -- Usability as observed: unknown, not usable, usable, not usable for lack of its resource.
 local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
@@ -81,6 +83,8 @@ local R = {
     pinV = {},
     pinDelta = {},
     pinValid = {},
+    swAccG = {},
+    swAccT = {},
     snapT = {},
     readT = {},
     readable = {},
@@ -298,6 +302,7 @@ I.OnBuild(function(def, now)
         R.spE[r], R.spL[r], R.spH[r] = spirit, spirit * (1 - I.REGEN_SPREAD), spirit * (1 + I.REGEN_SPREAD)
         R.dev[r], R.scale[r], R.spread[r] = 0, 1, I.REGEN_SPREAD
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
+        R.swAccG[r], R.swAccT[r] = 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
         R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
@@ -679,7 +684,20 @@ local function pin(r, v, width, t, origin, event, mid)
     local measures = exact or mid == true
     local vm = mid and v + width / 2 or v
     local dt = t - R.pinT[r]
-    if measures and R.pinValid[r] and dt >= I.PIN_GAP then
+    if R.swing[r] > 0 then
+        -- a swing-paid slot's gain comes in steps: between two pins a second or two apart it is 0, 1 or 2 of them, and
+        -- that lumpiness alone (the low ratios refused as noise, the high ones kept) pulled the scale to 1.3 within 15 s,
+        -- its floor step above the true one (GAP AC); chained measuring pins add up until SWING_STEPS steps are due
+        if measures and R.pinValid[r] then
+            R.swAccG[r], R.swAccT[r] = R.swAccG[r] + vm - R.pinV[r] - R.pinDelta[r], R.swAccT[r] + dt
+            if R.swAccT[r] * I.SwingPerSecond(r) >= I.SWING_STEPS * I.SwingValue(r, R.swing[r]) then
+                calibrate(r, R.swAccG[r] / R.swAccT[r], t) -- nonzero: the window holds steps, so swAccT > 0
+                R.swAccG[r], R.swAccT[r] = 0, 0
+            end
+        else
+            R.swAccG[r], R.swAccT[r] = 0, 0
+        end
+    elseif measures and R.pinValid[r] and dt >= I.PIN_GAP then
         local gain = vm - R.pinV[r] - R.pinDelta[r]
         calibrate(r, R.shaped[r] and gain or gain / dt, t) -- nonzero: dt >= PIN_GAP (1 s)
     end
