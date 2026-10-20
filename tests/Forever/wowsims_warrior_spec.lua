@@ -74,7 +74,7 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
         assert.are.equal(0, run.presses)
         assert.is_true(#run.dec.ours > 40, "decisions scored")
     end)
-    local LIVE60 = 9.2 -- the pack's own worst idle at 60 (wowsims's pooling), measured on the rebased tree
+    local LIVE60 = 9.2 -- the pack's own worst idle at 60 (wowsims's pooling), re-measured after fixes 7, 13 and 16
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Arms (wowsims.com) stays live at level " .. level, function()
             ws.live(
@@ -89,12 +89,12 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             "Fury (wowsims.com)",
             content("warrior_fury", ww.Fury, "Fury (wowsims.com)", 60, FURY),
             "warrior_fury",
-            0.81, -- measured 0.817 (0.883 without GAP AD); provisional until central fixes 16 and 7
+            0.93, -- measured 0.933 after central fixes 7, 13 and 16 (was 0.81 with GAP AD)
             FURY_REPLAY
         )
     end)
-    -- the pack's own worst idle at 60, measured with GAP AD (Intercept in combat): provisional until fix 16
-    local FURY_LIVE60 = 8.2
+    -- the pack's own worst idle at 60 (wowsims's pooling), after fix 16 (8.2 with GAP AD's Intercept)
+    local FURY_LIVE60 = 6.8
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Fury (wowsims.com) stays live at level " .. level, function()
             ws.live(

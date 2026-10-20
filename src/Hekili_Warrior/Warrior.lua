@@ -2063,13 +2063,6 @@ spec:RegisterSetting("wowsims_stance_dance", false, {
     width = "full",
 }, "arms")
 
-spec:RegisterSetting("wowsims_hamstring_weave", true, {
-    type = "toggle",
-    name = "Hamstring Weave (wowsims.com)",
-    desc = "The wowsims.com priority's Hamstring Weave ON/OFF switch (its default in wowsims's own APL).",
-    width = "full",
-}, "arms")
-
 spec:RegisterSetting("wowsims_recklessness", false, {
     type = "toggle",
     name = "Recklessness (wowsims.com)",
@@ -2084,20 +2077,13 @@ spec:RegisterSetting("wowsims_rend_weave", true, {
     width = "full",
 }, "fury")
 
-spec:RegisterSetting("wowsims_hamstring_weave", true, {
-    type = "toggle",
-    name = "Hamstring Weave (wowsims.com)",
-    desc = "The wowsims.com priority's Hamstring Weave ON/OFF switch (its default in wowsims's own APL).",
-    width = "full",
-}, "fury")
-
 -- The five priorities (Arms and Fury have two each, the wowsims.com one and the hand-built one, until the swap),
 -- written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and run it, never
 -- these blocks (tests/Forever/warrior_spec.lua checks they match). Pick one with /hekili priority <name>.
 spec:RegisterPack(
     "Fury (wowsims.com)",
-    20261020438,
-    [[Hekili:TNvBVTTTt8pl5nE2ybY2XjDTbvbO)XqX6W)1nexG9ojtlshXzzjbsQ4fGa)zFhPuKiPjDKDWaMXwbAaJ49aVF3X7bMOPrFlAogjirF9Qjx9UPtUAY1ZEF0CXtLKO5LOK1OhGf5OnWp)Cf7PDlgUTylNUHhKuSzKKMNYkqyPCwwrZeFjpAPtrYljjrZ)9pD)9F5xV)2vGSIMNsXysndeEItnC7UfIuYUfnFB8Qcg5rcB3cmzfQktSBXN(T))UfWN3TOH9k6yPY4J3IymAbBmUKpgvMbmdeeaRc(dEr(OlbrZq58m4WIH1fsvr57wGW4I8VdwSM8epy3IFejq364im8x(Y3aHKkeL8Bhp(bQiTAP8up2I0rGmHtkE2SpmBcEY1tMnjaGowXkAgaSOebTiNhuYiaZlrIWLegNWwtyXmWbCjSrzvwwmSZ1b3S7N3JHVpC8YSIcSI6kojUy1Q4hsWHt15DMhorcrgjMNwuj6b5ji52QnIZOCXLYOJqGIyfJBkEK0YyOBI5v5yW2qSnfSlPRcLe8ijMKt2qj8WPT87vDjyazsOOmUoTycsKgVLYt1)kC2xNr48C4)sTXjcbn)bEqJxkwNaDg5BjKsGYyUGrxt4wi7Eh87mo4BtPSST0C8RrOYZbrEmUWl)dVOEJanIdwNxSn)5KIImmSWylgzdIMZVlCAWnJ0Lk5pjjvcIuMnlJltrCIbKNrqpAhhTQiPIxB1dTTMbY4UGKkgJKlUl86jJEDpieMWkl2cHbBbTbOSbK0g)ZfO8e7ZIcqwwTAvGnHbvLdgEXqVGvZgTyB9Nh98qVSm4q47hdNa86wODm2THgBW)0T4ucRGM0eP1BOpC6GlmCJh2t86k5kLsone8TeIoOLBlb)SFuSMZrJmT53zAY(slcMPoBF8dtCh)Py9metgkqzGDfq3aLzEKGJnnPasoAzgb)C)iZmw1OGXzi2uN5qZi6Uxovl6jWOMwyskI5kmQZoAKyDIO6tJHQEjdLpvaqlnxqyjKsXH0JDopDvTF(qnT1v1muHSXYgIm1KlI7UqaPP7f5KkgznQFKMvb1DHcdpKk8XGE)c718aMOSC9phagFY6pQ1P0EvBcnCkoq7ZTGAR6advGsNzZii8tYQJMfiUX43LX)qLPbak8I8d1VqShkc(V2VPxMYJYpSKGtaUjDYrFJAWqhD1LJvsNCIDe8pfxztaU0E6sunZYrcjUEfh1BSNQgZPvYnMZfT2t3ok3nyg)NJ06o5lIs5kRLIBN7ihExW9gnhWyoibRzRLDvZvJYxpumS8RQr7BkFh9)IMNWOqPfkQECt9wiFzauGgRo1RLCC94)6jyJeWjWsb9siDP(LIyMhr0nhNKQR9qL(yB623bNVtkWBSeO2fbjU1Qa75)8dI3nvk3355G2gG8Ac4h8iaTOtjzV)y0ZbI(7r4VuDFWJ6AcU1vMr8UK3Pt8gg2JPiJMRQPOCk(Cs1dRQ0LDiFVIi3lvPsu2b3(0UDUstK)Kgr1BIS30qQN(uQk8W(MQx3ypMiTpEvJjvvNa7SaANGtfnFt3m8xyOpvgShzTftU6yWK(MiRDiyDyZA8xLa9LbZCQWZDWVVZg37HJvyN3K3AdAEUJChEY5iz1P5TVvSRUq6EEzOUEWnEJWEP)c7iAD(N5maVtzoAWWh76UOd0XXblKymkFnuy0YKd04f5AqNwiYbgTTfR10Pdn4TQP6XmC3NGJE190SUR2a9PX2x2WTsD)Mg(FuJA7xRDYJW47E7JJXa6Ecexrw(4Q(LqCfu5LdTheP2k3VfLJXy1DAM5Fodta933RC4kuOdS8ONoyUDpTUBoWeoY59SkgC8x)o9zLpp8U9(HpoMRxNCh7n2L9dG8gEbK)L6wD9mihZ7Ge1KwevjsL1l)jYAAgD3IHFU5V2UA7O)k]]
+    20261020298,
+    [[Hekili:TNvBVTTTt8pl5nE2ybY2XjDnbvbO)XqX6W)1nuxG9ojtlshXzzjbsQ4fGa)zFhPuKiPjDKDWaMXwbAGI09aVF3X7Penn6BrZXibj6lxn5Q3nDc8ZBFF0CXtLKO5LOK1OhGhYrBGF(Pk2t7wmCBXwoDdpiPyZijnpLvGWs5SSIMj(CE0sNIKxssIM)7F8RF9Z)6xVBfiRO5PumMuZaHN4ud3TBHiLSBrZ7gVQGrEKW2TatwHQYe7w8XF7)VBb86DlAyVIowQm(4TigJwWgJl5JrLzaZabbWtb)bViF0LGOzOCEgCyXWZfsvr57wGW4I8VdEyn5jEWUf)isGUZXry4V85Vbcjvik53nE8durA1s5PESfPJazcNu8Sz3oBcEY1tMnjaGowXkAgaSOebTiNhuYiaZlrIWLegNWwtyXmWbCj8HYQSSy4lxhCZUFEpg((WXlZkkWkQR4K4IvRIFibhovN3zE4ejezKyEArLOhKNGKFw9H4mkxCPm6ieOiwX4MIhjTmg6MyEvogSneBtb7s6QqjbpsIj5KnucpCAl)EvxcgqMekkJRtlMGePXBP8u93cN91zeoph(VuBCIqqZFGh04LI1jqNr(wcPeOmMly01eUfYU3b)EJd(2uklBlnh)AeQ8CqKhJl8Y)WlQ)qGgXbRZl2M)CsrrggEW4tmYgenNFF40GBgPlvYFssQeePmBEmUmfXjgqEgb9ODC0QIKkETvp02AgiJ7csQymsU4(WRNm619GqycRSylegSf0gGYgqsB8pxGYtSplkazz1Qvb2eguvoy4fd9cwnFOfBRF9ONh6LLbhcF)q4eGx3cTJXUpOXg8pDloLWkOjnrA9g6dNo4cd34H9eVUsUsPKtdbFlHOdA52sWp7hfR5C0itB(DMMSV0IGzQZ2hUDI74pfRNHyYqbkdSRa6gOmZJeCSPjfqYrlZi4N7hzMXQgfmodXM6mhAgr39YPMrp2fQ8EKnkv2vimmjfXCf71z8nhJ6Sx1MGX57L0AJ8Oc4usZfewcPuCi9yNOuxv7NevtBDLAdvMDSSlktn5I4UBrqU9EroPIrwJ6hPzvqXAOAYdPcFmO772RJdmrz56Voam(K1FqR9Q9krfA4uCG2NB3eSkEmubkDMnJGWpjlPAwv5gJFxEPbkNnaqHxKFO2TO9rrW)1(o9ABEu(HLeCcWn5Go6Budg6OvWCSs6KtSnI)P4kBcWL2tx2TzwosiB3R4OEJnI1yoTsUXCUO1E6(IYDdMX)5iTUt(IOuUYAP425oYH3fCVrZbmMdsWAGCzR4C18)1tsdp(f1(aAQ5h9)IMNWOqPfkQEgv9(oFzQvGgR27RLCC9od0tWgjGtGLc6Lq6s9lfXmpIOB4pjvx7Hk9z90TVdouOuG3yjqTlcsCRvb2dn6heVFQuUVZZbTna51eWp4raArNsYE)XONde93JWFP6U1J6AcU1vMr8UK3Pt8gg2JrpJMRQPOCk(Cs1t4Q0LDiFVIi3lvPsu2b3(0UDUstK)KMR1BIS30KTN(OTk8W(MQx3ypgJTpEvJXBvNa7SaANGtfnFt3m8xyOpvgSNZTftU6yWK(MiRDYzDyZAMzLa9LbZCuYZDWVVdu37jQvyN3K3AtNEUJChECBfm4R4Kr7dAWGxRjswRBE76QD1tt3gUHUecUXB86lDRyF)qN)zoVU0PmhTR4JDDh(b6F5GLLmwmqnuyGGoqJxdPpWGYTyTMoDObV1GvRgXDxho683tR)UAQ0NgB3tIBL6Edj(xrsT9R1C6ry8DBs5ymGUfQ4kYYhx17vXvqLxo0wVsTvUFdphJXQ70mZMDgMo7VVDM4kuOdS8ONoyU9BA9kDG5LKtpAvA54V(D6tEFE4D79AuoMRxNC))n2L96uEd7t5FPUvxlv5y2QsutAruLivwV8NiRPz0Dlg(PM)G)Qph9xd]]
 )
 spec:RegisterPack(
     "Arms (wowsims.com)",

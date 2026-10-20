@@ -51,6 +51,7 @@ actions+=/heroic_strike,use_off_gcd=1,focus=2,if=((!(action.bloodthirst.known|ac
 actions+=/bloodrage,use_off_gcd=1,if=rage.current<90
 actions+=/berserker_rage,if=((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&(talent.improved_berserker_rage.enabled|talent.improved_berserker_rage.enabled))
 actions+=/battle_shout,if=((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&buff.battle_shout.remains<=10)
+actions+=/sunder_armor,if=!action.bloodthirst.known
 actions.pre_pull_move=charge,use_off_gcd=1,if=(!action.battle_stance.known|buff.battle_stance.up)
 actions.pre_pull_move+=/intercept,use_off_gcd=1,if=(!action.berserker_stance.known|buff.berserker_stance.up)
 actions.cd_racials=blood_fury,use_off_gcd=1

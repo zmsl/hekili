@@ -1,18 +1,18 @@
 -- tools/wowsims/specs/warrior_fury.lua (wowsims packs plan, Task 6): Fury (wowsims.com)'s wowsims/forever request and
 -- translation. Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/warrior/dps/presets.ts
 -- (FuryTalents :73, DefaultOptions :143-152, OtherDefaults :169-175) at the pin; gear p1_fury (a level 60 dual-wield set).
--- Disagreements (P7; floor 0.81, provisional until central fixes 16 and 7): decisions on-GCD 0.817 (60) top
--- [sunder_armor -> bloodthirst 3; whirlwind -> bloodthirst 3; bloodthirst -> sunder_armor 1]. GAP AD (central fix 16):
--- precombat's in-combat filter does not reach pre_pull_move, so Intercept (off-GCD, usable in combat in Berserker
--- Stance) shows all fight and the forecast pays its 10 rage first; 0.883 (60) measured without it. Each disagreement
--- once, wowsims -> ours, at the log's time: whirlwind -> bloodthirst (57.09, 67.91, 138.30), bloodthirst ->
--- sunder_armor (76.16), whirlwind -> sunder_armor (117.06): GAP AD, on top of a gain just before the cast (Bloodrage's
--- +10, a same-instant or 0.02 s earlier swing) that reaches the client one usability delay or landing lag later
--- (replay limit); sunder_armor -> bloodthirst (88.32, 89.82): Sunders missed at 81.32 and 86.82 counted as stacks
--- (shared gap A; provisional: fix 7); sunder_armor -> bloodthirst (133.04): a same-instant crit swing's rage (replay
--- limit, landing lag); overpower -> bloodthirst (69.51): the believed rage still under 67.91's misread (provisional:
--- fix 7); rend -> bloodthirst (62.81): not worked; death_wish -> sunder_armor (0.00): wowsims is 6 yd away after
--- Intercept's travel and cannot Sunder yet; the engine does not gate Sunder on melee range (replay limit).
+-- Disagreements (P7; floor 0.93, final): decisions on-GCD 0.933 (60) top [sunder_armor -> bloodthirst 2; death_wish ->
+-- sunder_armor 1; overpower -> bloodthirst 1] after central fixes 7, 13 and 16 (0.817 before, with GAP AD: precombat's
+-- in-combat filter did not reach pre_pull_move, so Intercept showed all fight; fix 16 closed it). Each disagreement
+-- once, wowsims -> ours, at the log's time: sunder_armor -> bloodthirst (89.82): our Sunder stacks read 5 where
+-- wowsims's are 4 after its Sunders missed at 81.32 and 86.82 (fix 7 undoes an avoided cast's target auras; this one
+-- still counts: open, not worked); sunder_armor -> bloodthirst (133.04): a same-instant crit swing's rage (replay
+-- limit, landing lag); overpower -> bloodthirst (69.51): believed rage 0 under the truth's 10.8 (open, not worked);
+-- death_wish -> sunder_armor (0.00): wowsims is 6 yd away after Intercept's travel and cannot Sunder yet; the engine
+-- does not gate Sunder on melee range (replay limit). Fix 16 cleared 57.09, 67.91, 76.16, 117.06 and 138.30; 62.81
+-- and 88.32 no longer disagree.
+-- Leveling: Sunder Armor while Bloodthirst is unlearned (levels 10-40 idled 7.4 s and 8.2 s over the 60 bracket's 6.8 s
+-- with only Rend's or Whirlwind's wait left); silent at 60.
 -- Replay knobs (tests/Forever/wowsims_warrior_spec.lua): Whirlwind's off-hand hit (1680 Tag 2) is a hit, not a cast;
 -- the Heroic Strike queue (25286 Tag 1) is an aura the client never shows; the main hand's 2.1 s period (the log's
 -- first two main-hand swings are 4.2 s apart: Heroic Strike replaced one).
@@ -49,5 +49,5 @@ return {
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
     -- the retired Fury list's tiers in order (P9.3)
     focus = { victory_rush = 1, overpower = 1, revenge = 1, heroic_strike = { 1, 2 }, cleave = { 1, 2 } },
-    leveling = {},
+    leveling = { "sunder_armor,if=!action.bloodthirst.known" },
 }
