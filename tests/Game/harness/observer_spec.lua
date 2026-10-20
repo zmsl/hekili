@@ -650,9 +650,11 @@ describe("the observer's resources, GCD and forms", function()
             end
             W.t = 1
             W.emit({ kind = "gain", src = us, pt = POOL, cost = 50 }) -- 100 - 50: short alone
+            W.t = 1 + 1e-6 -- the replay's next line of one timestamp
             W.emit({ kind = "gain", src = us, pt = POOL, rage = 20 }) -- its refund in the same frame: 70, never short
-            W.t = 3
+            W.t = 3 - 1e-6
             W.emit({ kind = "gain", src = us, pt = POOL, rage = 20 }) -- 90, then the spend in the same frame: 40, short
+            W.t = 3
             W.emit({ kind = "gain", src = us, pt = POOL, cost = 50 })
             local s = observer.observe(W, knobs({ usable = { { 21, pool } }, usableDelay = 0.1 }))
             assert.are.same({ "3 @usable 21 2" }, lines(s, { ["@usable"] = true })) -- no stale short at 1, none late at 3

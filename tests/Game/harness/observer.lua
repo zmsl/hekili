@@ -41,7 +41,7 @@ M.DEFAULTS = {
     forms = false, -- the client's forms (index to spell ID: the content's), answered once
 }
 
-M.FRAME = 0.001 -- seconds: one client frame's events (a replay's lines of one timestamp sit 1e-6 apart)
+M.FRAME = 1e-4 -- seconds: one update's events (a replay's lines of one timestamp sit 1e-6 apart; a strike's 1 ms is the next)
 
 -- Our spells as the fake spec's (its costs: the usability answers).
 M.SPELLS = { STRIKE = fs.SPENDER_B, DOT = fs.SPENDER_C, CAST = fs.SPENDER_A, OTHER = 1 }
@@ -225,8 +225,8 @@ function M.new(W, k)
         push(t, "PLAYER_EQUIPMENT_CHANGED")
     end
     local modes, tokens = k.plainPower or {}, k.powerTokens or {}
-    local cur, inCombat = {}, false
-    local spentT = -math.huge -- our latest spend's time (a gain in its frame is answered with it) -- our true power by type as the stream has told it; the client's combat flag
+    local cur, inCombat = {}, false -- our true power by type as the stream has told it; the client's combat flag
+    local spentT = -math.huge -- our latest spend's time (a gain in its frame is answered with it)
     local function plainPower(t, pt) -- a plain read of `pt` now, if its mode answers it
         local m = modes[pt]
         if m == "always" or (m == "ooc" and not inCombat) then
@@ -276,7 +276,8 @@ function M.new(W, k)
     end
     local castN = 0
     local gcdEnd -- the latest GCD's falling edge: its flag and its event (the list entries)
-    local deltas, dseq = {}, 0 -- our power's changes as the client's usability sees them: { t, delta, seq }
+    local deltas, dseq = {}, 0 -- our power's changes as the client's usability sees them: { answer time, delta, power type, true time, seq } (a
+    -- form change: { t, form, "form", seq }; byTime orders by the last field)
     -- the answers' view of us: our form as of the answer's time (a form change is a delta), the rest live
     local now = setmetatable({}, { __index = us })
     for _, ev in ipairs(W.truth) do
@@ -489,7 +490,14 @@ function M.new(W, k)
                     end
                 end
             elseif t - spentT < M.FRAME then
+                -- the frame's answers wait for this gain: the spend's (and what moved to it) at this gain's time, so
+                -- no answer shows a gain before it happened
                 when = t
+                for _, x in ipairs(deltas) do
+                    if x[3] ~= "form" and x[1] >= spentT and x[1] < t and t - x[4] < M.FRAME then
+                        x[1] = t
+                    end
+                end
             end
             deltas[#deltas + 1] = { when, d, pt, t, dseq }
             if ev.power then
