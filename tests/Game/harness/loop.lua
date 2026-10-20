@@ -155,6 +155,9 @@ function M.run(L, seed, o, drivers)
             list.HELPFUL, list.HARMFUL = {}, {}
         end
         ctl.auraError.target = nil
+        -- the fresh world holds none of our buffs: the client says so (a plain walk out of combat), or the instance
+        -- keeps believing the last fight's (a Battle Shout of run A up into run B, a different world)
+        d.H.Fire("UNIT_AURA", "player")
         -- UnitLevel is plain in combat on Forever (the facade's passthrough row); fake_api answers an unset unit secret
         -- `targetLevel` the content's answer for the target (-1: a boss, as Hekili's `boss` reads it)
         ctl.level.target, ctl.level.nameplate1 = wo.targetLevel or wo.level, wo.targetLevel or wo.level
@@ -327,8 +330,10 @@ function M.run(L, seed, o, drivers)
             o.on(run, steps, t)
         end
     end
-    -- the out-of-combat gap: each instance's clock moves past the fight
+    -- the out-of-combat gap: each instance's clock moves past the fight, after the last tick's own events (a kill by
+    -- this tick's press, and the combat end it brings: else the next fight starts in combat for the instance)
     for i, st in ipairs(steps) do
+        feed(st.H, st.obs, t, st.base, sink)
         st.H.ctl.now = st.base + t
         if not headless.cycle(st.H, st.H.ctl.now) then
             run.raises = run.raises + 1

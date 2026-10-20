@@ -111,6 +111,13 @@
   Consecration, Hammer of Wrath and Exorcism; Benediction lowers every other cost; Sanctified Judgement's mana refund
   is counted; the Undead/Demon ranks of Exorcism are recommended only against an Undead or Demon target; Consecration's
   mark on the target is the aura the game shows (1280353).
+- Rage: a white swing's rage, a critical one's especially, is no longer lost to the game's "not enough rage" answer
+  that arrives just after the hit but still shows the bar from before it: the next answer that shows enough rage gives
+  it back. The estimate stayed over 20 rage low until the next swing, so the addon showed Mortal Strike to wait for
+  where a Whirlwind or Heroic Strike was affordable.
+- Developer: the headless loop ends a fight killed by its last press out of combat for both instances, and starts each
+  fight with no buffs believed from the last one (the next fight used to start "in combat", skipping the precombat
+  list, and the oracle's own run depended on the run before it).
 
 ### Known issues
 - Hunter priorities are unchecked in game: Auto Shot timing, the percent-of-base mana costs and the rune Raptor

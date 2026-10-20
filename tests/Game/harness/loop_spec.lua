@@ -59,6 +59,43 @@ describe("the headless loop, class-neutral", function()
     )
 end)
 
+describe("the headless loop between two fights on one boot", function()
+    it("ends a fight killed by the last tick's press out of combat for every instance", function()
+        local stub = {
+            character = function()
+                return { level = 60, power = { type = 1, token = "RAGE", max = 100 } }
+            end,
+            resolve = function()
+                return {}
+            end,
+            usable = function()
+                return {}
+            end,
+            uptime = function()
+                return {}
+            end,
+            gain = function()
+                return 0
+            end,
+            WORLD = { level = 60, max = 100, mobHealth = 1e9 },
+        }
+        local L = loop.new(stub)
+        local o = {
+            duration = 12,
+            on = function(run, _, t) -- a kill after this tick's feed, as a press's would be
+                if t >= 5 and not run.W.killAt then
+                    run.W.emit({ kind = "spell", src = run.us, dst = run.us.target, act = "WOUND", amount = 1e12 })
+                end
+            end,
+        }
+        local a = loop.run(L, 1, o, { { H = L.us }, { H = L.oracle, plain = true } })
+        assert.is_truthy(a.W.killAt)
+        for _, H in ipairs({ L.us, L.oracle }) do
+            assert.is_false(H.ns.VirtualStateInternal.inCombat) -- the kill's PLAYER_REGEN_ENABLED arrived
+        end
+    end)
+end)
+
 describe("the headless loop's replay injection (o.replay)", function()
     local scenarios = require("Game.harness.scenarios")
     it("presses nothing, cycles at each decision and scores only the on-GCD ones", function()
