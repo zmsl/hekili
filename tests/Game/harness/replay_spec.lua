@@ -91,6 +91,24 @@ describe("the replay world", function()
         assert.are.equal(3.8, R.speed) -- the first two main-hand swings
     end)
 
+    it("the pull: the log's earliest line 0.5 s in (at least 5 s), or o.pull; the world runs from it", function()
+        assert.are.equal(5, replay.new(text(), H, O).pull) -- its prepull starts at -2
+        local early = text():gsub(
+            "(\n%[%-2%.00%])",
+            "\n[-10.00] [Tester (#1)] Casting {SpellID: 900002} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)\n[-10.00] [Tester (#1)] Completed cast {SpellID: 900002}%1",
+            1
+        )
+        local R = replay.new(early, H, O)
+        assert.are.equal(10.5, R.pull)
+        assert.are.equal("shout", R.decisions[1].key)
+        assert.is_true(math.abs(R.decisions[1].t - 0.5) < 1e-4) -- the prepull cast, a scored decision
+        assert.is_true(R.decisions[1].gcd)
+        assert.are.equal(12, replay.new(early, H, setmetatable({ pull = 12 }, { __index = O })).pull)
+        assert.has_error(function()
+            replay.new(early, H, setmetatable({ pull = 5 }, { __index = O }))
+        end)
+    end)
+
     it("procs: a mapped proc emits no cast", function()
         local R = replay.new(text(), H, O)
         local W = at(R.world(setmetatable({ tag = "-p" }, { __index = WO }), 1), R.pull + 0.2)

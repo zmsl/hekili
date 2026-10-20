@@ -14,7 +14,8 @@ local entities = require("Game.harness.entities")
 
 local M = {}
 
-M.PULL = 5 -- world time of the log's 0 (its prepull starts at -4.5)
+M.PULL = 5 -- the least world time of the log's 0 (a log whose prepull starts after -4.5)
+M.LEAD = 0.5 -- the world time of the log's first line at the latest: after the prepull read at 0.1
 M.EPS = 1e-6 -- a line's place within its timestamp, as time: a decision falls just before its Casting line
 M.TAIL = 0.2 -- the exporter's execute proportion: the last 20% of the duration
 
@@ -160,14 +161,30 @@ end
 --- decision nor a cast; a key is a spell ID, every tag of it, or "<spellID>:<tag>", that tag only: a weapon proc logged
 --- under its totem's ID), totems ({ [key] = { slot, duration } }: a completed cast of the key summons into that slot,
 --- W.summonTotem), speed (the main hand's period; default the log's first two main-hand swings), regen and fsr (the
---- rates the client reads: W.rates, W.fsr; no regen ticks). An ItemID cast maps through the abilities' `item`/`items`:
+--- rates the client reads: W.rates, W.fsr; no regen ticks), pull (the world time of the log's 0; default the log's
+--- earliest line M.LEAD s into the world, at least M.PULL: a -10 s prepull pulls at 10.5). Prepull casts (before the
+--- log's 0) are decisions like any other: wowsims counts them as its casts and the engine recommends a pack's precombat
+--- list out of combat (once each with `prepull_at`), so an on-GCD one is scored. An ItemID cast maps through the abilities' `item`/`items`:
 --- a decision and a cooldown, no cast event (shortcut: the client is not shown the item's spell; emit it when a gate
 --- reads an item's cast).
 function M.new(text, H, o)
     o = o or {}
     local p = M.parse(text)
     local h = p.header
-    local R = { header = h, pull = M.PULL, duration = h.duration or 180, targetLevel = h.targetLevel }
+    -- the pull: the log's earliest line (its prepull, wowsims's doAtValue) M.LEAD into the world, at least M.PULL;
+    -- `o.pull` overrides it
+    local first = 0
+    for _, e in ipairs(p.ev) do
+        if not e.initial and e.t < first then
+            first = e.t
+        end
+    end
+    local R = {
+        header = h,
+        pull = o.pull or math.max(M.PULL, M.LEAD - first),
+        duration = h.duration or 180,
+        targetLevel = h.targetLevel,
+    }
     local class = H.Hekili.Class
     -- spell ID -> ability key (every rank), the key's IDs and cooldown; aura ID -> duration
     local keyOf, itemOf, rankIDs, cd, dur, form = {}, {}, {}, {}, {}, {}
@@ -224,7 +241,7 @@ function M.new(text, H, o)
         local n = (seq[e.t] or 0) + 1
         seq[e.t] = n
         e.wt = e.initial and 0 or R.pull + e.t + n * M.EPS
-        assert(e.initial or e.t > 0.1 - M.PULL, "the log starts before the replay's prepull: raise replay.PULL")
+        assert(e.initial or e.t > 0.1 - R.pull, "the log starts before the replay's prepull read: raise o.pull")
     end
     -- each aura application's real duration when its next line is its fade
     local nextOf = {}
