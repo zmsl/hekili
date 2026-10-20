@@ -35,10 +35,10 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
     local PACK = "Enhancement (wowsims.com)"
     -- the replay floor, measured (0.602 first; 0.750 with Call of Flame and Stormstrike's cost; 0.784 once the replay
     -- sends shared and talent cooldowns; 0.807 on central fix 6; Fire Nova at 375 was reverted, R2; 0.818 on central
-    -- fix 12's five-second-rule mana forecast), never lowered
+    -- fix 12's five-second-rule mana forecast; 0.909 on central fix 13's cooldown restart), never lowered
     it(PACK .. " follows wowsims's casts", function()
         local C = content("shaman_enhancement", sw.Enhancement, PACK, 60)
-        ws.gate(PACK, C, "shaman_enhancement", 0.81, ENH_REPLAY)
+        ws.gate(PACK, C, "shaman_enhancement", 0.90, ENH_REPLAY)
     end)
     -- the pack's own worst idle at 60, seconds rounded up to 0.1: wowsims's spending runs the mana out (its own log
     -- sits near 170 of 5530 mana from 90 s), so the priority waits for mana with only cheaper ranks usable

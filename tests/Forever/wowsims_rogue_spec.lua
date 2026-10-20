@@ -17,14 +17,15 @@ local function content(spec, base, pack, level, extra)
     return ws.content(base, o)
 end
 
--- { pack, recipe, world content, replay floor (decisions on-GCD, measured 2026-10-20, never lowered), LIVE60 (the
+-- { pack, recipe, world content, replay floor (decisions on-GCD, measured 2026-10-20, never lowered; Combat 0.958 and
+-- Subtlety 0.963 on central fix 13: the strictSequence opener, the cooldown restart), LIVE60 (the
 -- pack's own worst idle at 60: wowsims's energy pooling, seconds rounded up to 0.1) }
 -- Mutilate's per-hand hits are GCD-0 Casting lines {SpellID: 1241584, Tag: 1/2}: procs, neither decisions nor casts.
 local MUTILATE_HANDS = { procs = { ["1241584:1"] = true, ["1241584:2"] = true } }
 local PACKS = {
     { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.98, 5.0, MUTILATE_HANDS },
-    { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.94, 4.8 },
-    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.93, 3.8 },
+    { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.95, 4.8 },
+    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.96, 3.8 },
 }
 
 describe("the Rogue wowsims.com packs #slow #wowsims", function()
