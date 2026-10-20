@@ -12,10 +12,11 @@
 --    ready now wins: replay limit (the decision instant at a cooldown's end).
 -- 2. shatter_curse -> shield_slam (30.38): the Orc racial at 50% health; the replay does not replay our health, so
 --    health.pct reads full: replay limit.
--- 3. rend -> shield_slam (85.65): not worked.
--- Worked: shield_slam -> thunder_clap (18 at 0.585): the kit's Thunder Clap aura carried Classic's `shared = "target"`,
--- which the state reads from the player's debuffs, so Thunder Clap's debuff always read down (content gap, fixed in
--- Warrior.lua); the kit's talent costs (Focused Rage 1 a rank, on the shouts too) priced as wowsims logs them.
+-- 3. rend -> shield_slam (85.65): Rend's condition needs cooldown.shield_slam.remains>=1.5; Shield Slam was cast at
+--    81.15 on a 6 s cooldown, so wowsims reads exactly 1.5 and ours reads an ulp under it (the engine's clock sums):
+--    replay limit (an exact tie at the GCD's length).
+-- Worked: shield_slam -> thunder_clap (18 at 0.585): the state read a `shared = "target"` aura from the player's
+-- debuffs, so Thunder Clap's debuff always read down (central GAP AJ fixed the read; the kit shares it on the target); the kit's talent costs (Focused Rage 1 a rank, on the shouts too) priced as wowsims logs them.
 -- The replay does not replay the target's swings (replay limit: rage from damage taken reaches the belief only
 -- through the truth's after-values); Revenge's window (25288) is a hidden aura in the replay knobs.
 -- Precombat calls no list (fix 16 does not reach this pack). Automatic cooldowns (rule 13): none in the log.

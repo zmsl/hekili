@@ -7,9 +7,13 @@
 -- 0.836 before fix 6), with Improved Slam (12862) and Anger Management's 1.5 rage per 5 s (12296, DB2 aura 85)
 -- modelled in the kit and the replay character at the build's 3.8 s Arcanite Reaper. Each disagreement once, wowsims
 -- -> ours, at the log's time:
--- 1. execute -> overpower (165.08) and slam -> mortal_strike (64.08): the believed rage 14.0 under the 15 the cast
---    costs (truth 15.0 and 15.3); fix 7 now refunds Overpower's avoided rage (161.18), and the belief is still about one
---    rage short at both: open, not worked further (no kit term found).
+-- 1. execute -> overpower (165.08) and slam -> mortal_strike (64.08): wowsims casts 0.08 s after a tick crosses the
+--    15 the cast costs (Anger Management 13.5 -> 15.0 at 165.00; Bloodrage 13.8 -> 15.3 at 64.00); the client answers
+--    usability 0.1 s after a gain, so at the cast its last answer is still "short" (believed hi 14.99, the sim's
+--    floor(lo) 14): replay limit (the usability answer's delay). At 64.08 the belief is also 1.3 short because
+--    Improved Bloodrage 2/2's +50% on the periodic ticks (wowsims logs 1.5 a second) cannot be modelled: the belief's
+--    aura regen entries take a fixed number, not a talent-rank-scaled one (shared gap, lane report); with 1.5 forced in
+--    a scratch run the belief reads 14.99 there and agreement stays 0.910.
 -- 2. execute -> sunder_armor (171.08), mortal_strike -> slam (110.28), spearing_strike -> sunder_armor (34.28): wowsims
 --    casts on a white swing's rage logged at the same instant; the replay lands the swing one landing lag later (fix
 --    6's M.LAND, as the client hears it): replay limit (landing lag).

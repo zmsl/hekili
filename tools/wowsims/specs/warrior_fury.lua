@@ -5,9 +5,15 @@
 -- sunder_armor 1; overpower -> bloodthirst 1] after central fixes 7, 13 and 16 (0.817 before, with GAP AD: precombat's
 -- in-combat filter did not reach pre_pull_move, so Intercept showed all fight; fix 16 closed it). Each disagreement
 -- once, wowsims -> ours, at the log's time: sunder_armor -> bloodthirst (89.82): our Sunder stacks read 5 where
--- wowsims's are 4 after its Sunders missed at 81.32 and 86.82 (fix 7 undoes an avoided cast's target auras; this one
--- still counts: open, not worked); sunder_armor -> bloodthirst (133.04): a same-instant crit swing's rage (replay
--- limit, landing lag); overpower -> bloodthirst (69.51): believed rage 0 under the truth's 10.8 (open, not worked);
+-- wowsims's are 4: fix 7 undoes the Sunder missed at 81.32, but the one missed at 86.82, 0.04 s after our off-hand
+-- swing, is never attributed to our cast, so its stack stays (believed 4 while the client lists 3 from 86.82; the
+-- belief re-reads stacks only on an aura change): shared gap (the avoid's attribution, lane report); sunder_armor -> bloodthirst (133.04): a same-instant crit swing's rage (replay
+-- limit, landing lag); overpower -> bloodthirst (69.51): believed rage 0.0 under the truth's 10.8: an
+-- off-hand crit (67.90, +9.86) and our Whirlwind (67.91, 25) in one frame leave the belief at 0.0 against the truth's
+-- 4.88 for 1.6 s (the crit's extra step is not credited after the cast's success lift: shared gap, lane report), then
+-- the off-hand swing at 69.42 lands 0.09 s before the cast (replay limit, landing lag). Unbridled Wrath's procs (1 rage
+-- a proc) are the kit's measured ~7.5% a rank (Warrior.lua rageOf); wowsims procs 85 of 140 landed white hits (60%,
+-- the tooltip): wowsims quirk, kept (Forever measured);
 -- death_wish -> sunder_armor (0.00): wowsims is 6 yd away after Intercept's travel and cannot Sunder yet; the engine
 -- does not gate Sunder on melee range (replay limit). Fix 16 cleared 57.09, 67.91, 76.16, 117.06 and 138.30; 62.81
 -- and 88.32 no longer disagree.
