@@ -663,19 +663,24 @@ describe("the wowsims APL translator", function()
             priorityList = {
                 {
                     action = {
-                        condition = ready,
+                        condition = AND({ spellIsReady = { spellId = { spellId = 300 } } }, ready),
                         strictSequence = { actions = { member(300), member(100, up), member(400) } },
                     },
                 },
                 { action = { strictSequence = { actions = { member(300), { wait = {} } } } } },
             },
         }, ctx())
-        local GO = "(!action.big_hit.known|cooldown.big_hit.ready)" -- the sequence's condition: at its first member only
+        local BIG = "(!action.big_hit.known|cooldown.big_hit.ready)"
+        -- the sequence's condition, all reads guarded
+        local GO = "(!(action.roar.known|action.big_hit.known)|((!action.roar.known|cooldown.roar.ready)&"
+            .. BIG
+            .. "))"
         local AT_STRIKE = "((action.roar.known&prev.1.roar)|(!action.roar.known&" .. GO .. "))"
         local lines = {
             "actions=roar,use_off_gcd=1,if=" .. GO,
-            "actions+=/strike,focus=1,if=" .. AT_STRIKE .. "&(!action.dot.known|buff.dot.up)", -- and its own condition
-            "actions+=/dot,if=((action.strike.known&prev.1.strike)|(!action.strike.known&" .. AT_STRIKE .. "))",
+            -- a later member: the condition without roar's readiness (false once roar is cast), then its own
+            "actions+=/strike,focus=1,if=" .. AT_STRIKE .. "&" .. BIG .. "&(!action.dot.known|buff.dot.up)",
+            "actions+=/dot,if=((action.strike.known&prev.1.strike)|(!action.strike.known&" .. AT_STRIKE .. "))&" .. BIG,
         }
         assert.are.equal(table.concat(lines, "\n"), text)
         assert.are.same({ "default #2: strictSequence of wait" }, omitted)
@@ -688,6 +693,25 @@ describe("the wowsims APL translator", function()
         end
     end)
 
+    it("keeps two strictSequences sharing a first member apart: neither's later member opens on the other's", function()
+        local function member(id)
+            return { castSpell = { spellId = { spellId = id } } }
+        end
+        local text = apl.translate({
+            priorityList = {
+                { action = { condition = up, strictSequence = { actions = { member(300), member(100) } } } },
+                { action = { condition = NOT(up), strictSequence = { actions = { member(300), member(400) } } } },
+            },
+        }, ctx())
+        local strike = text:match("strike,focus=1,if=([^\n]*)")
+        local dot = text:match("/dot,if=([^\n]*)")
+        -- after the second sequence's roar (dot not up), the first's strike stays shut: it needs dot up too
+        local UP = "(!action.dot.known|buff.dot.up)"
+        assert.are.equal("((action.roar.known&prev.1.roar)|(!action.roar.known&" .. UP .. "))&" .. UP, strike)
+        local DOWN = dot:match("^%(%(action%.roar%.known&prev%.1%.roar%)|%(!action%.roar%.known&(.*)%)%)&(.*)$")
+        assert.is_truthy(DOWN and DOWN:find("!buff.dot.up", 1, true), dot) -- its own sequence's: dot down
+    end)
+
     it("opens the Rogue Combat recipe with Blood Fury, then Adrenaline Rush once it is cast (rule 14)", function()
         local f = assert(io.open("src/Hekili_Rogue/APLs/Combat (wowsims.com).simc", "rb"))
         local simc = f:read("*a")
@@ -696,7 +720,13 @@ describe("the wowsims APL translator", function()
             "\nactions%+=/blood_fury,use_off_gcd=1,if=([^\n]*)\nactions%+=/adrenaline_rush,if=([^\n]*)\n"
         )
         assert.is_truthy(bf and bf:find("cooldown.adrenaline_rush.ready", 1, true)) -- the sequence's condition
-        assert.are.equal("((action.blood_fury.known&prev.1.blood_fury)|(!action.blood_fury.known&" .. bf .. "))", ar)
+        local at, rest = ar:match("^(.-%)%))&(.*)$")
+        assert.are.equal("((action.blood_fury.known&prev.1.blood_fury)|(!action.blood_fury.known&" .. bf .. "))", at)
+        -- the rest of its sequence's condition: Slice and Dice up and Adrenaline Rush ready, not Blood Fury's readiness
+        assert.is_truthy(
+            rest:find("buff.slice_and_dice.up", 1, true) and rest:find("cooldown.adrenaline_rush.ready", 1, true)
+        )
+        assert.is_falsy(rest:find("blood_fury", 1, true))
         assert.is_falsy(simc:find("strictSequence", 1, true)) -- no longer omitted
     end)
 

@@ -96,10 +96,14 @@
 --    says the sequence is at it: the first under the sequence's condition, each later one when the member before it
 --    is the last cast, `prev.1.<key>` (the engine's cast history, upstream Hekili's: casts heard and the queue's own
 --    predictions; Hekili has no sequence action), or, while that member is unlearned (wowsims drops it from the
---    sequence: rule 6), under what put the sequence at it. The condition's reads are all guarded (rule 6), none being
---    the line's own. Deviations: a member is shown only once the one before it is cast (wowsims holds the rotation
---    for it, so nothing else is recommended between); a cast of a member outside the sequence also opens its next;
---    the members must be casts (else rule 2).
+--    sequence: rule 6), under what put the sequence at it. A later member also carries the sequence's condition
+--    without the terms (of a top-level `and`, variables followed) that read a member already cast (Blood Fury's own
+--    readiness is false once it is cast): two sequences sharing a first member (Feral's Berserk -> Rake and Berserk ->
+--    Shred) would otherwise both open on the one `prev.1`, the higher one's next member firing for the other. The
+--    condition's reads are all guarded (rule 6), none being the line's own. Deviations: a member is shown only once the
+--    one before it is cast (wowsims holds the rotation for it, so nothing else is recommended between); a later member
+--    re-reads its sequence's remaining terms, which wowsims reads once at the start, so a change between the casts can
+--    stop it; a cast of a member outside the sequence also opens its next; the members must be casts (else rule 2).
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
 -- The engine facts rule 6 rests on (tools/check_pack_levels.lua checks every pack for it):
@@ -787,6 +791,16 @@ end
 
 local entry
 
+-- Condition node `n` as text: nil when always true (a nil condition is true: wowsims's apl_action.go), false never.
+local function condition(c, n)
+    local s, b, u = bool(c, n)
+    if u ~= true and b == false then
+        return false
+    elseif u ~= true and s then
+        return emit(u, s, true)
+    end
+end
+
 local function paren(s) -- `s` as one term of an `&`
     return (grouped(s) or not s:find("|", 1, true)) and s or ("(" .. s .. ")")
 end
@@ -795,8 +809,31 @@ end
 -- condition also says the sequence is at it: the first under the sequence's condition `cond`; a later one when the
 -- member before it is the last cast (`prev.1.<key>`), or, while that member is unlearned (wowsims drops it from the
 -- sequence), under what put the sequence at that member.
-local function sequence(c, members, cond)
+-- Whether condition node `n` reads one of `keys` (a spell, aura or item ID that maps to one; variables followed).
+local function readsAny(c, n, keys)
+    if type(n) ~= "table" then
+        return false
+    end
+    if n.variableRef and c.vars[n.variableRef.name] then
+        return readsAny(c, c.vars[n.variableRef.name], keys)
+    end
+    if type(n.spellId) == "number" and keys[c.map[n.spellId] or c.keyOf[n.spellId] or c.auraOf[n.spellId] or ""] then
+        return true
+    end
+    if type(n.itemId) == "number" and keys[c.map["item:" .. n.itemId] or c.itemKey[n.itemId] or ""] then
+        return true
+    end
+    for _, v in pairs(n) do
+        if readsAny(c, v, keys) then
+            return true
+        end
+    end
+    return false
+end
+
+local function sequence(c, members, cond, node)
     local out, at = {}, cond -- at: the condition that the sequence is at the next member (nil: always)
+    local before = {} -- the keys of the members already cast
     for i, m in ipairs(members) do
         local mk
         for k in pairs(m) do
@@ -812,11 +849,31 @@ local function sequence(c, members, cond)
             unsupported(("strictSequence member %d: %s"):format(i, why))
         end
         local base, own = body:match("^(.-),if=(.*)$")
+        local x = c.self
+        local rest -- a later member: the sequence's condition without the terms reading a member already cast
+        if i > 1 and node then
+            local terms = node["and"] and node["and"].vals or { node }
+            local kept = {}
+            for _, t in ipairs(terms) do
+                if not readsAny(c, t, before) then
+                    kept[#kept + 1] = t
+                end
+            end
+            if #kept > 0 then
+                c.self = nil
+                local r = condition(c, { ["and"] = { vals = kept } })
+                if r == false then
+                    unsupported(("strictSequence member %d: its sequence's condition never holds"):format(i))
+                end
+                rest = r
+            end
+        end
         local parts = {}
         parts[#parts + 1] = at and paren(at) or nil
+        parts[#parts + 1] = rest and paren(rest) or nil
         parts[#parts + 1] = own and paren(own) or nil
         out[i] = #parts > 0 and ((base or body) .. ",if=" .. table.concat(parts, "&")) or body
-        local x = c.self
+        before[x] = true
         local k = knownTest(c, x)
         local last = "prev.1." .. x
         at = k and ("(" .. k .. "&" .. last .. ")|(!" .. k .. (at and ("&" .. paren(at)) or "") .. ")") or last
@@ -870,17 +927,12 @@ function entry(c, e)
     else
         unsupported(kind)
     end
-    local cond
-    if a.condition then
-        local s, b, u = bool(c, a.condition)
-        if u ~= true and b == false then
-            return nil, "never"
-        elseif u ~= true and s then -- a nil condition is always true (wowsims's apl_action.go)
-            cond = emit(u, s, true)
-        end
+    local cond = a.condition and condition(c, a.condition)
+    if cond == false then
+        return nil, "never"
     end
     if seq then
-        return sequence(c, seq, cond)
+        return sequence(c, seq, cond, a.condition)
     end
     if auto then
         local out = {}

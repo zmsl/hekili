@@ -81,6 +81,9 @@
   out of combat it reads your real health.
 - Hunter: priority lines that divide (Multi-Shot's) now fire. Divisions in the priorities translated from
   wowsims ran as a remainder, so those lines never recommended their ability.
+- Rogue: "Assassination (wowsims.com)", "Combat (wowsims.com)" and "Subtlety (wowsims.com)" now open with Blood Fury
+  then Adrenaline Rush, as wowsims does; the translation had left out wowsims's fixed-order pairs.
+- Druid: "Feral (wowsims.com)" now pairs Berserk with the Rake or Shred that follows it, as wowsims does.
 - Rogue: Garrote costs 10 less a Dirty Deeds rank, Backstab and Hemorrhage 3 less a Thousand Cuts stack, and
   Improved Sinister Strike takes 5 off at 2/2 (it took 10), as in wowsims.com.
 - Hunter: Arcane Shot's cooldown is 0.3 s shorter per rank of Improved Arcane Shot, so it comes back when the game

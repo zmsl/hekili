@@ -4,11 +4,12 @@
 -- injection (`o.replay`): the world factory, wowsims's decisions and its next cast after a tick. The truth is the
 -- log's: casts at their completion (no cast bars), powers as the logged after-values (no regen ticks; the client
 -- still reads the content's rate, mana's from the log's regen lines: M.manaRegen), our auras and the target's with
--- the duration the client shows (the log's run to a natural fade, the declared one to a removal by a cast of ours),
--- each fade a removal at its time, the content's hidden auras in the truth only, spells landing at once, a white
--- swing's outcome one landing lag after its swing (M.LAND; wowsims logs both at once, with the swing's rage), the mob's
--- health at 20% from the execute phase's start (wowsims's is the last 20% of the duration) and never dead, our distance
--- to it (the request's, then the log's Movement stacks). Not replayed: cast bars, the target's swings.
+-- the duration the client shows (the log's run to a natural fade, the declared one to a removal: a fade after one of
+-- our Casting or Completed cast lines in its timestamp), each fade a removal at its time, the content's hidden auras
+-- in the truth only, spells landing at once, a white swing's outcome one landing lag after its swing (M.LAND; wowsims
+-- logs both at once, with the swing's rage), the mob's health at 20% from the execute phase's start (wowsims's is the
+-- last 20% of the duration) and never dead, our distance to it (the request's, then the log's Movement stacks). Not
+-- replayed: cast bars, the target's swings.
 -- Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map through the booted
 -- instance's own ability set (Hekili.Class, booted as the log's race). Credit: the log format is wowsims/forever's
 -- (MIT, https://github.com/wowsims/forever); no code copied.
@@ -376,8 +377,9 @@ function M.new(text, H, o)
         assert(e.initial or e.t > 0.1 - R.pull, "the log starts before the replay's prepull read: raise o.pull")
     end
     -- the duration the client is shown at each application (UNIT_AURA's): its run when its next line is a natural
-    -- fade (the real duration: combo-point or talent scaled), the declared duration when a fade is a removal (a cast
-    -- or swing of ours earlier in the fade's timestamp: a recast, consume or cancel), else the declared (apply)
+    -- fade (the real duration: combo-point or talent scaled), the declared duration when a fade is a removal (one of
+    -- our Casting or Completed cast lines earlier in the fade's timestamp, a white swing's "Completed cast {OtherID: 3}"
+    -- included: a recast, consume or cancel), else the declared (apply)
     local castAt
     for _, e in ipairs(p.ev) do
         if e.kind == "casting" or e.kind == "completed" then
