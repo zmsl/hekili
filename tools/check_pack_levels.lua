@@ -1,24 +1,27 @@
 -- tools/check_pack_levels.lua (wowsims packs plan, docs/superpowers/plans/2026-10-19-wowsims-packs.md, Task 4): the
 -- leveling rule's static check. A pack line may read another ability X's state (cooldown.X.*, action.X.* but known,
--- buff.X.*, debuff.X.* with X an ability key) only inside a guard group for X: `(!action.X.known|...)` or
--- `(action.X.known&...)`; a line's own action needs none (the engine skips an unknown action). Loaded with
+-- buff.X.*, debuff.X.*, dot.X.* with X an ability key) only inside a guard group for X: `(!action.X.known|...)` or
+-- `(action.X.known&...)` (`(action.X.known|` and `(!action.X.known&` are false while X is unlearned, so they guard
+-- nothing); a line's own action needs none (the engine skips an unknown action). Loaded with
 -- loadfile(...)() it returns { unguarded, file }; run directly: lua tools/check_pack_levels.lua <file.simc>... lists
 -- offences against every key (no class data), for a quick look.
 local M = {}
 
-local KINDS = { cooldown = true, action = true, buff = true, debuff = true }
+local KINDS = { cooldown = true, action = true, buff = true, debuff = true, dot = true }
 
 --- The unguarded cross-ability reads of one line's criteria (`self` its action; `isAbility(key)`).
 function M.unguarded(criteria, self, isAbility)
     local spans = {}
-    for s, x in criteria:gmatch("()%(!?action%.([%w_]+)%.known[|&]") do
+    for s, bang, x, op in criteria:gmatch("()%((!?)action%.([%w_]+)%.known([|&])") do
         local depth, i = 0, s
         repeat
             local ch = criteria:sub(i, i)
             depth = depth + (ch == "(" and 1 or ch == ")" and -1 or 0)
             i = i + 1
         until depth == 0 or i > #criteria
-        spans[#spans + 1] = { s, i - 1, x }
+        if (bang == "!") == (op == "|") then
+            spans[#spans + 1] = { s, i - 1, x }
+        end
     end
     local bad = {}
     for s, kind, x, field in criteria:gmatch("()(%a+)%.([%w_]+)%.([%w_]+)") do

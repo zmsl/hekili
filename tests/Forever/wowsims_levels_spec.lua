@@ -31,6 +31,22 @@ describe("tools/check_pack_levels.lua", function()
         assert.are.same({}, levels.unguarded("!action.big_hit.known&rage.current>=45", "strike", isAbility))
     end)
 
+    it("refuses a guard of the wrong polarity, which blocks an unlearned ability like no guard", function()
+        assert.are.same(
+            { "cooldown.big_hit.remains" },
+            levels.unguarded("(action.big_hit.known|cooldown.big_hit.remains>1.5)", "strike", isAbility)
+        )
+        assert.are.same(
+            { "cooldown.big_hit.remains" },
+            levels.unguarded("(!action.big_hit.known&cooldown.big_hit.remains>1.5)", "strike", isAbility)
+        )
+    end)
+
+    it("checks a dot read of another ability", function()
+        assert.are.same({ "dot.big_hit.remains" }, levels.unguarded("dot.big_hit.remains<2", "strike", isAbility))
+        assert.are.same({}, levels.unguarded("(!action.big_hit.known|dot.big_hit.remains<2)", "strike", isAbility))
+    end)
+
     it("finds every wowsims pack line guarded", function()
         local pipe = assert(io.popen("ls src"))
         for addon in pipe:lines() do
