@@ -27,7 +27,12 @@
 --    registered, so it is not known (false) and every other read of it is nil (rule 6: dropped).
 -- 5. Keys, from the character's ability set (tests/Forever/helpers/engine.lua abilitySet: the class kit, the shared
 --    content and every race's racials, as the engine merges them): a spell ID maps through the recipe's `map`, else
---    an ability's `id` and `copy`, auras by the set's auras then abilities, items by an ability's `item` or `items`;
+--    an ability's `id` and `copy`, auras by the recipe's aura-only `auras` map ({ [aura ID] = key }: an aura wowsims
+--    keys by an ability's own spell ID, where `map` would also turn that ability's casts) then `map` then the set's
+--    auras then abilities, items by an ability's `item` or `items`. Such aura reads in every wowsims APL of a fork
+--    class at the pin (ui/specs/*/*/apls, central fix 13): warrior/protection's auraIsInactive 25288 (Revenge rank 6,
+--    wowsims's Revenge-window aura: `auras = { [25288] = "revenge_usable" }`) and auraIsActive 12975 (Last Stand's
+--    cast ID; it reads `buff.last_stand`, the kit's aura key, as wanted);
 --    `includeReactionTime`, `rank` and a `tag` other than -1 (rule 4) are ignored. An aura's `sourceUnit` Self (or none) reads `buff.`,
 --    CurrentTarget or Target `debuff.`; a resource value with a source unit other than Self is unsupported.
 -- 6. Leveling guard: a read of another ability `X` (its cooldown, cast time, cost, readiness, or an aura whose key is
@@ -244,7 +249,7 @@ end
 
 --- The translation context of an ability set (`abilities`, `auras`, `talents` as the engine registers them:
 --- tests/Forever/helpers/engine.lua abilitySet), recipe `r` (map, focus, executePhase, leveling, exclusive,
---- requires) and the spec's exported log text `log` (rule 13; nil: the automatic actions are unsupported).
+--- requires, auras) and the spec's exported log text `log` (rule 13; nil: the automatic actions are unsupported).
 function M.context(set, r, log)
     local c = {
         autocast = log and M.autocasts(log),
@@ -259,6 +264,7 @@ function M.context(set, r, log)
         talentOf = {},
         talentKey = {},
         map = r.map or {},
+        auraMap = r.auras or {},
         focus = r.focus or {},
         executePhase = r.executePhase,
         leveling = r.leveling or {},
@@ -367,7 +373,7 @@ local function spellKey(c, s)
 end
 
 local function auraKey(c, id)
-    return c.map[id] or c.auraOf[id] or c.keyOf[id] or unsupported("aura " .. tostring(id))
+    return c.auraMap[id] or c.map[id] or c.auraOf[id] or c.keyOf[id] or unsupported("aura " .. tostring(id))
 end
 
 local function drop(c, what) -- each ID once an entry
@@ -389,7 +395,7 @@ local function readSpell(c, s)
 end
 
 local function readAura(c, id)
-    local x = c.map[id] or c.auraOf[id] or c.keyOf[id]
+    local x = c.auraMap[id] or c.map[id] or c.auraOf[id] or c.keyOf[id]
     if not x then
         drop(c, "aura " .. tostring(id))
     end
@@ -656,7 +662,7 @@ local function bool(c, n)
         if not UNIT[v.sourceUnit and v.sourceUnit.type or "Self"] or not id or v.auraId.tag == -1 then
             return nil, false, false
         end
-        local x = c.map[id] or c.talentOf[id] or c.auraOf[id] or c.keyOf[id]
+        local x = c.auraMap[id] or c.map[id] or c.talentOf[id] or c.auraOf[id] or c.keyOf[id]
         if not x then
             return nil, false, false
         end
@@ -695,7 +701,7 @@ local function bool(c, n)
         end
         local id = v.auraId and v.auraId.spellId
         local a = c.icdOf[id]
-        if not a and not (c.map[id] or c.auraOf[id] or c.keyOf[id]) then
+        if not a and not (c.auraMap[id] or c.map[id] or c.auraOf[id] or c.keyOf[id]) then
             readAura(c, id)
             return nil, nil, true
         end
@@ -817,7 +823,8 @@ local function readsAny(c, n, keys)
     if n.variableRef and c.vars[n.variableRef.name] then
         return readsAny(c, c.vars[n.variableRef.name], keys)
     end
-    if type(n.spellId) == "number" and keys[c.map[n.spellId] or c.keyOf[n.spellId] or c.auraOf[n.spellId] or ""] then
+    local id = n.spellId
+    if type(id) == "number" and (keys[c.map[id] or c.keyOf[id] or c.auraOf[id] or ""] or keys[c.auraMap[id] or ""]) then
         return true
     end
     if type(n.itemId) == "number" and keys[c.map["item:" .. n.itemId] or c.itemKey[n.itemId] or ""] then

@@ -712,6 +712,23 @@ describe("the wowsims APL translator", function()
         assert.is_truthy(DOWN and DOWN:find("!buff.dot.up", 1, true), dot) -- its own sequence's: dot down
     end)
 
+    it(
+        "reads an aura keyed by an ability's spell ID through the recipe's aura-only map, casts through `map`",
+        function()
+            local hit = { auraIsActive = { auraId = { spellId = 200 } } } -- wowsims's window aura under big_hit's own ID
+            local rot =
+                { priorityList = { cast(200, hit), cast(100, { auraIsKnown = { auraId = { spellId = 200 } } }) } }
+            assert.are.equal(
+                "actions=big_hit,if=buff.big_hit.up\nactions+=/strike,focus=1,if=action.big_hit.known",
+                (apl.translate(rot, ctx({ focus = { strike = 1 } })))
+            )
+            assert.are.equal( -- the cast is still big_hit; the aura reads stance (registered: known, true)
+                "actions=big_hit,if=buff.stance.up\nactions+=/strike,focus=1",
+                (apl.translate(rot, ctx({ focus = { strike = 1 }, auras = { [200] = "stance" } })))
+            )
+        end
+    )
+
     it("opens the Rogue Combat recipe with Blood Fury, then Adrenaline Rush once it is cast (rule 14)", function()
         local f = assert(io.open("src/Hekili_Rogue/APLs/Combat (wowsims.com).simc", "rb"))
         local simc = f:read("*a")
