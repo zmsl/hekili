@@ -1329,7 +1329,9 @@ function Hekili:GetNextPrediction( dispName, packName, slot )
 
     if not pack then return end
 
-    local action, wait, depth = nil, nil, 0
+    -- Forever: the forecast window, as GetPredictionFromAPL starts, so a pack with no (or an inactive) precombat list
+    -- still runs its default list.
+    local action, wait, depth = nil, state.delayMax, 0
 
     state.this_action = nil
     state.this_list = nil

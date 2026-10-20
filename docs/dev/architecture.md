@@ -207,6 +207,11 @@ times 1000 plus a checksum of the text, so any text change reloads a saved profi
 no-op (`tests/Forever/make_pack_spec.lua`), and encode then decode returns the normalized text. `make packs` is not
 part of `make check`.
 
+**Lists.** A pack's lists are `default` (the `actions=` lines) and any named list; `precombat` is optional. Without
+one (every wowsims list with no prepull actions, and make_pack writes none), `Hekili:GetNextPrediction` starts the
+default list from the forecast window `state.delayMax` as it would after an empty precombat pass
+(`tests/Forever/apl_entry_spec.lua`).
+
 **APL line options.** `make_pack.lua` and the in-game importer accept these on a line before `if=` (in the tool,
 an unknown option or a non-numeric value errors; `unparse` writes them in this order): `name=<list>` (for
 `call_action_list`/`run_action_list`), `use_off_gcd=1` (recommendable off the GCD) and `focus=N` (a priority tier, 1
