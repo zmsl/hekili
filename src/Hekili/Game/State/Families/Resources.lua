@@ -1218,7 +1218,8 @@ end
 
 --- (spec §3.2) The believed regen per second of a power type. A swing-paid resource's is its calibrated step per
 --- second of swinging. A continuous one's is x its `mult` auras up at `now`; with an `fsr`, the mp5 part alone while
---- `casting` (the in-cast rate) or inside the five-second window, else both parts. Allocates nothing.
+--- `casting` is true (the in-cast rate), both parts while it is false (the not-casting rate, the client's first
+--- return), and with it nil the rate at `now`: the mp5 part alone inside the five-second window. Allocates nothing.
 function VS.Regen(powerType, now, casting)
     local r = R.slotOf[powerType]
     if not r then
@@ -1231,7 +1232,7 @@ function VS.Regen(powerType, now, casting)
         rec.est, rec.lo, rec.hi = per * s, per * (s - sp), per * (s + sp)
         rec.conf = s > 0 and 1 - sp / s or 0 -- nonzero: s > 0 checked
     else
-        local f, sp = multAt(r, now), R.fsr[r] and not casting and now >= R.fsrUntil[r]
+        local f, sp = multAt(r, now), R.fsr[r] and not casting and (casting == false or now >= R.fsrUntil[r])
         local est = (R.regE[r] + (sp and R.spE[r] or 0)) * f
         rec.est, rec.lo, rec.hi =
             est, (R.regL[r] + (sp and R.spL[r] or 0)) * f, (R.regH[r] + (sp and R.spH[r] or 0)) * f
@@ -1240,6 +1241,17 @@ function VS.Regen(powerType, now, casting)
     end
     return rec
 end
+
+--- The end of the five-second window our own last spend of a power type opened (its spirit part pauses until then;
+--- 0 before any spend), or nil for a type without an `fsr`. The sim's forecast applies the window itself (Engine/Sim
+--- State.lua): the casting rate before this, the not-casting rate after. Allocates nothing.
+function VS.FsrUntil(powerType)
+    local r = R.slotOf[powerType]
+    if r and R.fsr[r] then
+        return R.fsrUntil[r]
+    end
+end
+VS.FSR = I.FSR -- the window's length, for the sim's own queued spends
 
 I.OnSnapshot(function(out, now)
     for r = 1, R.n do

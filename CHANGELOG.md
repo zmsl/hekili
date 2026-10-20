@@ -70,6 +70,10 @@
   charges.
 
 ### Fixed
+- Mana (Paladin, Shaman, Hunter and other spirit regenerators): in combat the addon forecast mana with the
+  while-casting rate, as if the five-second rule never ended, so at low mana it waited for mana that never came and
+  showed no icon. It now regenerates at the full rate from 5 seconds after your last mana spend, its own planned
+  casts included.
 - Hunter: priority lines that divide (Multi-Shot's) now fire. Divisions in the priorities translated from
   wowsims ran as a remainder, so those lines never recommended their ability.
 - Rogue: Garrote costs 10 less a Dirty Deeds rank, Backstab and Hemorrhage 3 less a Thousand Cuts stack, and

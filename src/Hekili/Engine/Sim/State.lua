@@ -1186,6 +1186,29 @@ state.raid_event.adds = setmetatable( {
     end
 } )
 
+-- The five-second rule (Forever: wowsims' spirit regen pauses for 5 s after a spend, mp5 never does). A resource
+-- whose belief tracks the window has `fsr_until` (its end, GetTime's clock; false for none), read from the belief at
+-- reset and moved by the sim's own spends (resourceChange): its continuous regen is the casting rate (`active_regen`)
+-- before it and the not-casting rate (`inactive_regen`) after it.
+
+-- The continuous regen of `r` over [a, b] across the window's end. Allocates nothing.
+local function fsrGain( r, a, b )
+    if b <= a then return 0 end
+    local u, act, idle = r.fsr_until, r.active_regen or 0, r.inactive_regen or 0
+    if b <= u then return act * ( b - a ) end
+    if a >= u then return idle * ( b - a ) end
+    return act * ( u - a ) + idle * ( b - u )
+end
+
+-- Seconds from `a` until the continuous regen of `r` has added `need` (> 0); 3600 when it never does.
+local function fsrTime( r, a, need )
+    local u, act, idle = r.fsr_until, r.active_regen or 0, r.inactive_regen or 0
+    local w = u > a and u - a or 0
+    if act > 0 and act * w >= need then return need / act end
+    if idle <= 0 then return 3600 end
+    return w + ( need - act * w ) / idle
+end
+
 -- Resource Modeling!
 local forecastResources
 
@@ -1270,6 +1293,8 @@ do
         -- Forever E7: aura-gated regen entries are already forecast events; regen_combined would count them twice.
         local regen = r.regen or 0
         regen = regen > 0.001 and regen or 0
+        local fsr = rawget( r, "fsr_until" )
+        if fsr then regen = max( r.active_regen or 0, r.inactive_regen or 0 ) end
 
         while ( #events > 0 and now <= finish and iter < maxIter ) do
             local e = events[ 1 ]
@@ -1280,7 +1305,7 @@ do
             else
                 now = e.next
 
-                local bonus = regen * ( now - prev )
+                local bonus = fsr and fsrGain( r, prev, now ) or regen * ( now - prev )
                 local stop = e.stop and e.stop( r.forecast[ r.fcount ].v )
                 local aura = e.aura and state[ e.debuff and "debuff" or "buff" ][ e.aura ].expires < now
                 local channel = ( e.channel and state.buff.casting.expires < now )
@@ -1346,7 +1371,7 @@ do
 
                 r.forecast[ idx ] = r.forecast[ idx ] or {}
                 r.forecast[ idx ].t = finish
-                r.forecast[ idx ].v = min( r.max, val + ( v * regen ) )
+                r.forecast[ idx ].v = min( r.max, val + ( fsr and fsrGain( r, finish - v, finish ) or v * regen ) )
                 r.forecast[ idx ].e = "to_max"
                 r.fcount = idx
             end
@@ -1372,6 +1397,8 @@ local resourceChange = function( amount, resource, overcap )
 
     local r = state[ resource ]
     local pre = r.current
+
+    if amount < 0 and rawget( r, "fsr_until" ) then r.fsr_until = state.query_time + VS.FSR end -- opens the window
 
     if amount < 0 and r.spend then r.spend( -amount, resource, overcap )
     elseif amount > 0 and r.gain then r.gain( amount, resource, overcap )
@@ -3421,12 +3448,13 @@ function state:TimeToResource( t, amount )
     end
 
     if regen == 0.001 then regen = 0 end
+    local fsr = rawget( t, "fsr_until" )
 
     -- Handle forecasted resources with slices (e.g., energy/focus models).
     if t.forecast and t.fcount > 0 then
         if t.times[ amount ] then return t.times[ amount ] - queryTime end
 
-        if regen == 0 then
+        if regen == 0 and not fsr then
             for i = 1, t.fcount do
                 local v = t.forecast[ i ]
                 if v.v >= amount then
@@ -3456,7 +3484,7 @@ function state:TimeToResource( t, amount )
                 -- Check if regeneration fills the deficit before the next slice.
                 local time_diff = after.t - slice.t
                 local deficit = amount - slice.v
-                local regen_time = deficit / regen
+                local regen_time = fsr and fsrTime( t, slice.t, deficit ) or deficit / regen
 
                 if lastTick then
                     pad = ( slice.t - lastTick ) % 0.1
@@ -3482,6 +3510,7 @@ function state:TimeToResource( t, amount )
         pad = 0.1 - pad
     end
 
+    if fsr then return fsrTime( t, queryTime, amount - t.current ) end
     if regen <= 0 then return 3600 end
     return max( 0, pad + ( ( amount - t.current ) / regen ) )
 end
@@ -3528,12 +3557,17 @@ local mt_resource = {
 
                 -- We have a slice.
                 if index and slice and slice.v then
-                    t.values[ q ] = max( 0, min( t.max, slice.v + ( ( state.query_time - slice.t ) * regen ) ) )
+                    local fsr = rawget( t, "fsr_until" )
+                    t.values[ q ] = max( 0, min( t.max, slice.v + ( fsr and fsrGain( t, slice.t, q ) or ( q - slice.t ) * regen ) ) )
                     return t.values[ q ]
                 end
             end
 
             -- No forecast.
+            if rawget( t, "fsr_until" ) then
+                local q = state.query_time
+                return max( 0, min( t.max, t.actual + fsrGain( t, q - state.delay, q ) ) )
+            end
             if regen ~= 0 then
                 return max( 0, min( t.max, t.actual + ( regen * state.delay ) ) )
             end
@@ -3573,6 +3607,8 @@ local mt_resource = {
             return state:TimeToResource( t, amount )
 
         elseif k == "regen" then
+            local u = rawget( t, "fsr_until" )
+            if u then return ( state.query_time < u and t.active_regen or t.inactive_regen ) or 0 end -- the window's rate
             return ( state.time > 0 and t.active_regen or t.inactive_regen ) or 0
 
         elseif k == "regen_combined" then
@@ -6280,12 +6316,14 @@ do
                     res.active_regen = active or 0
                     res.inactive_regen = inactive or 0
                     res.regen = nil
+                    res.fsr_until = VS.FsrUntil( power.type ) or false
                 else
                     if ResourceRegenerates( k ) then
                         local inactive, active = GetPowerRegenForPowerType( power.type )
                         res.active_regen = active or 0.001
                         res.inactive_regen = inactive or 0.001
                         res.regen = nil
+                        res.fsr_until = VS.FsrUntil( power.type ) or false
                     else
                         res.regen = 0.001
                     end
@@ -6531,7 +6569,11 @@ function state.advance( time )
             local regen = resource.regen
             if regen == 0.001 then regen = 0 end
 
-            if not override and resource.regen and regen ~= 0 then
+            local fsr = rawget( resource, "fsr_until" )
+            if not override and fsr then
+                local q = state.query_time
+                resource.actual = min( resource.max, max( 0, resource.actual + fsrGain( resource, q, q + time ) ) )
+            elseif not override and resource.regen and regen ~= 0 then
                 resource.actual = min( resource.max, max( 0, resource.actual + ( regen * time ) ) )
             end
         else
