@@ -130,6 +130,8 @@
 - Hunter: a saved choice of BeastMastery, Marksmanship or Survival falls back to that specialization's wowsims.com
   priority.
 - Druid: a saved choice of the old Feral or Balance priority falls back to its "(wowsims.com)" default.
+- Update the core (Hekili) together with its class addons: the class addons now need content API 8 (an ability's
+  avoid refund); a mismatched pair loads no priorities and says "update the older one".
 - Your class's existing settings (thresholds, toggles, ability and item options) are copied once into each of its
   specializations, and a custom priority you had chosen stays selected for your active specialization. Change them per
   specialization afterwards; old priority exports still import.

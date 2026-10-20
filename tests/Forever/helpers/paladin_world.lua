@@ -97,7 +97,9 @@ end
 
 -- The avoids each press rolls when not the special melee tables' (world.OUTCOMES, from wowsims/forever's paladin/*.go):
 -- a judgement (the seal's, OutcomeMeleeSpecialNoBlockDodgeParry) and Hammer of Wrath (OutcomeRangedHitAndCrit) can be
--- missed only, the holy spells are magic hits (OutcomeMagicHit*). Consecration's ground stays (its ticks roll).
+-- missed only, except Seal of the Crusader's judgement, which always hits (seal_of_the_crusader.go, OutcomeAlwaysHit:
+-- the judgement's effect picks it); the holy spells are magic hits (OutcomeMagicHit*). Consecration's ground stays
+-- (its ticks roll).
 M.OUTCOMES =
     { judgement = "miss", hammer_of_wrath = "miss", exorcism = "spell", holy_shock = "spell", holy_wrath = "spell" }
 
@@ -110,7 +112,7 @@ M.MAP = {
     judgement = {
         effect = function(W, e, _, X)
             drop(W, e, X, "swift_judgement")
-            W.hit(e, e.target, AMOUNT.judgement)
+            W.hit(e, e.target, AMOUNT.judgement, 1, up(e, X, "seal_of_the_crusader") and "none" or nil)
             -- shortcut: the world refunds only at 3/3 (the belief's rule) and has no proc chance below it; model the
             -- 33/66% chance if a world build takes 1-2 ranks.
             if X.sanctified then -- Sanctified Judgement 3/3: 60% of the seal's base cost x (2 - its multiplier)

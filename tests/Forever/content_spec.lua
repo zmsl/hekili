@@ -129,10 +129,10 @@ describe("Engine/Content.lua", function()
 
     it("declares one content API in every content TOC", function()
         for _, name in ipairs(addons.CONTENT) do
-            assert.are.equal("7", addons.meta(name)["X-Hekili-ContentAPI"], name)
+            assert.are.equal("8", addons.meta(name)["X-Hekili-ContentAPI"], name)
         end
         local src = assert(io.open("src/Hekili/Engine/Content.lua")):read("*a")
-        assert.is_truthy(src:find("\nlocal CONTENT_API = 7\n", 1, true))
+        assert.is_truthy(src:find("\nlocal CONTENT_API = 8\n", 1, true))
     end)
 
     it("without a class token, loads the shared content only and Notifies once to /reload (nothing retries)", function()

@@ -446,7 +446,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         lastW0 = t
         return
     end
-    local p = cast(t, SAME_FRAME) -- an avoid's cast: the fresh one in its frame first, else the oldest in its window
+    local p = cast(t, avoid and L.OWN_FRAME or SAME_FRAME) -- an avoid's cast: the fresh one in its frame first, else the oldest in its window
     if avoid and not p then
         p = cast(t)
     end

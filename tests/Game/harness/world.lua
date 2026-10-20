@@ -11,11 +11,6 @@ local M = {}
 M.CRIT = behaviours.RATES.crit
 M.MELEE = 5 -- yards: our white swings' reach (wowsims's MaxMeleeRange)
 
--- The outcomes an ability of ours can roll on the target (a press's `outcomes`; wowsims/forever core/spell_outcome.go):
--- "melee" the special melee tables (OutcomeMeleeSpecialHit*, OutcomeMeleeWeaponSpecial*: miss, dodge, parry), "miss"
--- the ones with a miss roll only (OutcomeMeleeSpecialNoBlockDodgeParry*: from behind, Overpower; OutcomeRangedHit*),
--- "spell" a magic hit check (OutcomeMagicHit*: a miss, at the victim's `spellMiss`, else its melee miss), "none" no
--- roll (OutcomeAlwaysHit). The block a wowsims table can roll is a hit here (it lands).
 --- The share of its cost ability `key` of class data `class` (Hekili.Class) gives back when avoided, as the belief reads
 --- it: its `refundOnAvoid` (true: its resource meta's), or nil.
 function M.refundOf(class, key)
@@ -28,6 +23,11 @@ function M.refundOf(class, key)
     return type(f) == "number" and f or nil
 end
 
+-- The outcomes an ability of ours can roll on the target (a press's `outcomes`; wowsims/forever core/spell_outcome.go):
+-- "melee" the special melee tables (OutcomeMeleeSpecialHit*, OutcomeMeleeWeaponSpecial*: miss, dodge, parry), "miss"
+-- the ones with a miss roll only (OutcomeMeleeSpecialNoBlockDodgeParry*: from behind, Overpower; OutcomeRangedHit*),
+-- "spell" a magic hit check (OutcomeMagicHit*: a miss, at the victim's `spellMiss`, else its melee miss), "none" no
+-- roll (OutcomeAlwaysHit). The block a wowsims table can roll is a hit here (it lands).
 M.OUTCOMES = {
     melee = { "miss", "dodge", "parry" },
     miss = { "miss" },
