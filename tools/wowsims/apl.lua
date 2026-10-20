@@ -69,18 +69,21 @@
 -- 12. An unresolvable read (wowsims's nil node: sim/core apl_values_aura.go and apl_values_spell.go return nil for an
 --    aura or spell the unit lacks): an aura, spell, item or other ID nothing maps (rule 5) in a value or condition is
 --    nil, so rule 6 drops that branch (a nil condition is true) and the entry stays; `spellIsKnown` of one is false
---    (wowsims's constant). The header lists each dropped ID by entry. Only an entry whose own action is unmapped is
+--    (wowsims's constant). A deviation when wowsims has the aura or spell and the fork does not (a branch wowsims
+--    keeps is dropped); the header lists every such ID, once an entry. Only an entry whose own action is unmapped is
 --    omitted whole (rule 2).
 -- 13. wowsims's automatic cooldowns, read from the spec's exported log (the context's `log`; M.autocasts): the action
 --    `autocastOtherCooldowns` (sim/core/apl_actions_casting.go: the first ready major cooldown, registered with
 --    AddMajorCooldown in sim/core/major_cooldown.go and not cast by the APL itself, ready-at then priority first, cast
---    once the GCD is ready) is one line per cooldown the log's "Major cooldown used" lines name, in first-use order,
---    each key once, without `use_off_gcd` (it waits for the GCD as wowsims's does), under the entry's condition and
+--    once the GCD is ready) is one line per cooldown the log's "Major cooldown used" lines name, in first-use order
+--    (a proxy for wowsims's ready-then-priority; equal when they are first ready together), each key once and none
+--    the APL casts itself under another ID (that key's own line stands; noted), without `use_off_gcd` (it waits for the GCD as wowsims's does), under the entry's condition and
 --    the ability's own toggle (the engine gates `toggle = "cooldowns"`/`"defensives"` itself; a defensive one appears
 --    only when wowsims fired it: its default is a tank's). `castAllStatBuffCooldowns` (every instant major cooldown
---    whose buff raises one of its stat types, out of the autocast list) is one line per instant cast in the log whose
+--    whose buff raises one of its stat types, out of the autocast list) is one line per instant cast (Effective Time 0s: off
+--    the GCD, as wowsims's EffectiveTime() == 0) in the log whose
 --    aura logged a "Gained {stats}" with one of those stats at the cast and that no "Major cooldown used" line or APL
---    cast names, as a castSpell (rule 7's `use_off_gcd`). An ID nothing maps is listed, not written; none at all omits
+--    cast (castSpell, channelSpell, castFriendlySpell) names, as a castSpell (rule 7's `use_off_gcd`). An ID nothing maps is listed, not written; none at all omits
 --    the entry. Deterministic: the same log gives the same lines. Not modelled: wowsims's explosives, cast just after a
 --    GCD rather than before one (the log does not type a cooldown; they read as any other).
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
@@ -172,7 +175,8 @@ end
 
 --- Rule 13's facts from an exported log (tools/wowsims/export.lua), our character's lines only: `mcd`, the major
 --- cooldowns wowsims's autocast used ("Major cooldown used: {...}"), and `buffs`, the instant casts whose own aura
---- logged its stats ("Gained {...} from {...}." at the cast's time) and that are no major cooldown's, each
+--- logged its stats ("Gained {...} from {...}." at the cast's time; instant: Effective Time 0s, off the GCD too) and that
+--- are no major cooldown's, each
 --- { spellId | itemId, stats = { [stat name] = true } } once, in first-use order.
 function M.autocasts(text)
     local mcd, buffs, seen, instant, done, at = {}, {}, {}, {}, {}, {}
@@ -184,7 +188,8 @@ function M.autocasts(text)
         local t, rest = line:match("^%[(%-?[%d.]+)%] %[[^%]]- %(#1%)%] (.*)$")
         if rest then
             local b = rest:match("^Major cooldown used: {([^}]*)}")
-            local cast, ct = rest:match("^Casting {([^}]*)} %(.-Cast Time = (%S+),")
+            -- wowsims's instant: DefaultCast.EffectiveTime() == 0, max(GCD, cast time) (sim/core/cast.go)
+            local cast, et = rest:match("^Casting {([^}]*)} %(.-Effective Time = ([^%)]+)%)")
             local completed = rest:match("^Completed cast {([^}]*)}")
             local stats, from = rest:match("^Gained {(.-)} from {([^}]*)}%.$")
             if b then
@@ -193,7 +198,7 @@ function M.autocasts(text)
                     mcd[#mcd + 1], seen[k] = s, true
                 end
             elseif cast then
-                instant[id(cast) or ""] = ct == "0s"
+                instant[id(cast) or ""] = et == "0s"
             elseif completed then
                 at[id(completed) or ""] = t
             elseif stats then
@@ -345,11 +350,20 @@ local function auraKey(c, id)
     return c.map[id] or c.auraOf[id] or c.keyOf[id] or unsupported("aura " .. tostring(id))
 end
 
+local function drop(c, what) -- each ID once an entry
+    for _, d in ipairs(c.dropped) do
+        if d == what then
+            return
+        end
+    end
+    c.dropped[#c.dropped + 1] = what
+end
+
 -- Rule 12: a read of an ID nothing resolves is wowsims's nil node (its branch dropped, not the entry); the ID is noted.
 local function readSpell(c, s)
     local x, what = spellLookup(c, s)
     if not x then
-        c.dropped[#c.dropped + 1] = what
+        drop(c, what)
     end
     return x
 end
@@ -357,7 +371,7 @@ end
 local function readAura(c, id)
     local x = c.map[id] or c.auraOf[id] or c.keyOf[id]
     if not x then
-        c.dropped[#c.dropped + 1] = "aura " .. tostring(id)
+        drop(c, "aura " .. tostring(id))
     end
     return x
 end
@@ -746,6 +760,8 @@ local function automatic(c, kind, v)
         local x, what = spellLookup(c, s)
         if not x then
             c.notes[#c.notes + 1] = kind .. ": unmapped " .. what
+        elseif c.namedKeys[x] then -- another ID of a key the APL casts itself: its own line stands
+            c.notes[#c.notes + 1] = kind .. ": " .. what .. " is " .. x .. ", which the APL casts itself"
         elseif not seen[x] then
             keys[#keys + 1], seen[x] = x, true
         end
@@ -826,7 +842,7 @@ end
 --- The SimC text of `rotation` (a wowsims APL table) under context `c`, the omitted entries
 --- ({ "<list> #<n>: <why>" }) and the toggles ({ { setting key, default } } in the APL's group order).
 function M.translate(rotation, c)
-    c.vars, c.toggles, c.used, c.seen, c.named, c.notes, c.dropped = {}, {}, {}, {}, {}, {}, {}
+    c.vars, c.toggles, c.used, c.seen, c.named, c.namedKeys, c.notes, c.dropped = {}, {}, {}, {}, {}, {}, {}, {}
     -- the IDs the APL casts itself (wowsims takes them out of its automatic cooldowns: rule 13)
     local lists = { rotation.prepullActions or {}, rotation.priorityList or {} }
     for _, g in ipairs(rotation.groups or {}) do
@@ -835,9 +851,13 @@ function M.translate(rotation, c)
     for _, l in ipairs(lists) do
         for _, e in ipairs(l) do
             local a = e.action or {}
-            local s = (a.castSpell or a.channelSpell or {}).spellId or {}
+            local s = (a.castSpell or a.channelSpell or a.castFriendlySpell or {}).spellId or {}
             if s.spellId or s.itemId then
                 c.named[(s.spellId and "spell:" or "item:") .. (s.spellId or s.itemId)] = true
+            end
+            local x = (s.spellId or s.itemId or s.otherId) and spellLookup(c, s)
+            if x then
+                c.namedKeys[x] = true
             end
         end
     end

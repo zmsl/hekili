@@ -253,6 +253,10 @@ describe("the replay's cooldowns: the engine's, a shared category's, the log's",
         "[1.50] [Tester (#1)] Completed cast {SpellID: 900060}",
         "[9.50] [Tester (#1)] Casting {SpellID: 900060} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
         "[9.50] [Tester (#1)] Completed cast {SpellID: 900060}",
+        "[12.00] [Tester (#1)] Casting {SpellID: 900052} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[12.00] [Tester (#1)] Completed cast {SpellID: 900052}",
+        "[15.00] [Tester (#1)] Casting {SpellID: 900052} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[15.00] [Tester (#1)] Completed cast {SpellID: 900052}",
     }, "\n")
     local function talented() -- a talent-shortened cooldown: the kit's function, the engine's answer
         return 6
@@ -292,6 +296,13 @@ describe("the replay's cooldowns: the engine's, a shared category's, the log's",
         assert.is_true(math.abs(us.cdUntil.shock_a - (R.pull + 5)) < 1e-3)
         assert.is_true(math.abs(us.cdUntil.shock_b - (R.pull + 5)) < 1e-3) -- the category: both together
         assert.are.same({ 8, { 900060 } }, { casts[2].cd, casts[2].ids })
+        -- the engine's 5 s capped at the log's 3 s spacing: wowsims did cast it that soon
+        at(W, R.pull + 13)
+        local last
+        for _, ev in ipairs(W.truth) do
+            last = ev.kind == "cast" and ev or last
+        end
+        assert.are.same({ 900052, 3 }, { last.spell, last.cd })
         local plain = replay.new(LOG, HC) -- no category: only the cast's own ranks
         W = at(plain.world(setmetatable({ tag = "-cd2" }, { __index = WO }), 1), plain.pull + 1)
         for _, ev in ipairs(W.truth) do

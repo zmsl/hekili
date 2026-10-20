@@ -282,7 +282,7 @@ local function content(name)
 
     -- No other power read (mana is secret in combat); our attack speed read out of combat (probe W PR2).
     C.OBSERVE = { powerTokens = { [MANA] = "MANA" }, playerSpeed = true }
-    C.SHARED = { earth_shock = "flame_shock", flame_shock = "earth_shock" } -- the shocks' category, for the replay
+    C.SHARED = { earth_shock = "flame_shock", flame_shock = "earth_shock" } -- the shocks' category (resolve's and the replay's)
 
     -- No power is swing-paid.
     function C.gain()
@@ -303,9 +303,11 @@ local function content(name)
         local S = H.Hekili.State
         local VS, now = H.ns.VirtualState, H.ctl.now
         local ids = C.IDS[key]
-        if key == "earth_shock" or key == "flame_shock" then
+        if C.SHARED[key] then
             ids = {}
-            for _, k in ipairs({ "earth_shock", "flame_shock" }) do
+            local members = { key, C.SHARED[key] }
+            table.sort(members) -- the category's ranks in one order whichever member is cast
+            for _, k in ipairs(members) do
                 for _, id in ipairs(C.IDS[k]) do
                     ids[#ids + 1] = id
                 end

@@ -200,7 +200,9 @@ function M.new(text, H, o)
         creatureType = o.creatureType,
     }
     local class = H.Hekili.Class
-    -- a cooldown the kit computes (a function: talent-modified) as the booted engine answers it, or nil
+    -- a cooldown the kit computes (a function: talent-modified) as the booted engine answers it, or nil (an error
+    -- too: the log's spacing stands in). shortcut: read once at boot, so a state-dependent cooldown (a buff, haste)
+    -- keeps its boot value; read it at each cast when a kit's cooldown moves in a fight.
     local function engineCooldown(key)
         local S = H.Hekili.State
         local ok, v = pcall(function()
@@ -209,7 +211,7 @@ function M.new(text, H, o)
         return ok and tonumber(v) or nil
     end
     -- spell ID -> ability key (every rank), the key's IDs and cooldown; aura ID -> duration
-    local keyOf, itemOf, rankIDs, cd, dur, form, spacing = {}, {}, {}, {}, {}, {}, {}
+    local keyOf, itemOf, rankIDs, cd, dur, form, spacing, engine = {}, {}, {}, {}, {}, {}, {}, {}
     local keys = {}
     for key, a in pairs(class.abilities) do
         if type(key) == "string" and type(a) == "table" and a.key == key then
@@ -223,7 +225,10 @@ function M.new(text, H, o)
         for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
             list[#list + 1] = id
         end
-        rankIDs[key], cd[key] = {}, tonumber(a.cooldown) or (a.cooldown == nil and 0) or engineCooldown(key)
+        rankIDs[key], cd[key] = {}, tonumber(a.cooldown) or (a.cooldown == nil and 0) or nil
+        if cd[key] == nil then
+            engine[key] = engineCooldown(key)
+        end
         for _, id in ipairs(list) do
             if type(id) == "number" then
                 keyOf[id] = keyOf[id] or key
@@ -236,7 +241,8 @@ function M.new(text, H, o)
             end
         end
     end
-    -- the kit cannot say: the log's least spacing between two of the key's casts (none: no cooldown)
+    -- a computed cooldown: the engine's, capped at the log's least spacing between two of the key's casts (wowsims
+    -- did cast it that soon); the spacing alone when the engine cannot say; none of either: no cooldown
     local lastAt = {}
     for _, e in ipairs(p.ev) do
         local key = e.kind == "casting" and (e.id and keyOf[e.id] or (e.item and itemOf[e.item]))
@@ -248,7 +254,8 @@ function M.new(text, H, o)
         end
     end
     for _, key in ipairs(keys) do
-        cd[key] = cd[key] or spacing[key] or 0
+        local e, sp = engine[key], spacing[key]
+        cd[key] = cd[key] or (e and sp and math.min(e, sp)) or e or sp or 0
     end
     -- a shared category (o.shared: { [key] = partner key or keys }): a cast puts every member on its cooldown, the
     -- client answering it on every member's ranks (as the worlds' resolve does)

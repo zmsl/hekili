@@ -613,7 +613,6 @@ describe("the wowsims APL translator", function()
             "default #2: dropped the unresolved aura 12345 (its branch only)",
             "default #3: dropped the unresolved aura 12345 (its branch only)",
             "default #4: dropped the unresolved aura 12345 (its branch only)",
-            "default #4: dropped the unresolved aura 12345 (its branch only)",
             "default #5: dropped the unresolved spell 999 (its branch only)",
             "default #6: dropped the unresolved item 777 (its branch only)",
             "default #7: never",
@@ -643,6 +642,16 @@ describe("the wowsims APL translator", function()
         "[6.00] [Tester (#1)] Casting {SpellID: 100} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
         "[6.00] [Tester (#1)] Completed cast {SpellID: 100}",
         '[6.00] [Tester (#1)] Gained {"AttackPower": 80.000,} from {SpellID: 100}.',
+        -- instant but on the GCD (Effective Time 1.5s): wowsims's EffectiveTime() is not 0, no stat-buff cooldown
+        "[7.00] [Tester (#1)] Casting {SpellID: 500} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[7.00] [Tester (#1)] Completed cast {SpellID: 500}",
+        '[7.00] [Tester (#1)] Gained {"Strength": 80.000,} from {SpellID: 500}.',
+        -- off the GCD, but the APL casts it (castFriendlySpell): out of wowsims's automatic set
+        "[8.00] [Tester (#1)] Casting {SpellID: 600} (Cost = 0.000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)",
+        "[8.00] [Tester (#1)] Completed cast {SpellID: 600}",
+        '[8.00] [Tester (#1)] Gained {"Strength": 80.000,} from {SpellID: 600}.',
+        -- another ID of strike, which the APL casts itself under 100
+        "[9.00] [Tester (#1)] Major cooldown used: {SpellID: 101}",
     }, "\n")
 
     it("expands wowsims's automatic cooldowns from the log, in place, under the entry's condition", function()
@@ -657,13 +666,16 @@ describe("the wowsims APL translator", function()
                 { action = { castAllStatBuffCooldowns = { statType1 = 0, statType2 = 14, statType3 = -1 } } },
                 { action = { castAllStatBuffCooldowns = { statType1 = 13, statType2 = -1, statType3 = -1 } } },
                 cast(100),
+                { action = { castFriendlySpell = { spellId = { spellId = 600 } } } },
             },
         }
         local kit = {
             abilities = {
-                strike = { key = "strike", id = 100, gcd = "spell" },
+                strike = { key = "strike", id = 100, copy = { 101 }, gcd = "spell" },
                 big_hit = { key = "big_hit", id = 200, gcd = "spell" },
                 roar = { key = "roar", id = 300, gcd = "off" },
+                shout = { key = "shout", id = 500, gcd = "spell" },
+                bless = { key = "bless", id = 600, gcd = "off" },
                 dot = { key = "dot", id = 400, gcd = "spell" },
                 trinket = { key = "trinket", id = -1, item = 555, gcd = "off" },
                 stone = { key = "stone", id = -2, items = { 556, 557 }, gcd = "off" },
@@ -683,8 +695,18 @@ describe("the wowsims APL translator", function()
         )
         assert.are.same({
             "default #2: autocastOtherCooldowns: unmapped item 777",
+            "default #2: autocastOtherCooldowns: spell 101 is strike, which the APL casts itself",
             "default #4: castAllStatBuffCooldowns: none in the log",
+            "default #6: castFriendlySpell",
         }, omitted)
+        -- the friendly cast is what keeps bless out: without it, the off-GCD instant buff is wowsims's to cast
+        table.remove(rotation.priorityList)
+        local without = apl.translate(rotation, apl.context(kit, r, LOG))
+        assert.are.equal(
+            "actions+=/trinket,use_off_gcd=1\nactions+=/bless,use_off_gcd=1",
+            without:match("actions%+=/trinket.-use_off_gcd=1\n[^\n]+")
+        )
+        table.insert(rotation.priorityList, { action = { castFriendlySpell = { spellId = { spellId = 600 } } } })
         -- deterministic, and every line passes the leveling check
         assert.are.equal(text, (apl.translate(rotation, apl.context(kit, r, LOG))))
         for line in text:gmatch("[^\n]+") do
