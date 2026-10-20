@@ -69,7 +69,11 @@ describe("Forever Hunter", function()
             w.game.known[ids[#ids]] = true
             local e = ld.env(w)
             assert.are.same(ids, idsOf(a), key)
-            assert.are.same({ want[2], want[3], want[4] }, { ld.run(a.spend, e) or 0, a.cooldown, a.gcd }, key)
+            assert.are.same(
+                { want[2], want[3], want[4] },
+                { ld.run(a.spend, e) or 0, ld.run(a.cooldown, e), a.gcd },
+                key
+            )
             assert.are.equal("function", type(a.known), key)
         end
         assert.are.equal(16, n)
@@ -235,6 +239,19 @@ describe("Forever Hunter", function()
         assert.are.same({ 34, 22.1, 27.2, 98, 0.02324, 178.6, 235, 0.13066, 291.4, 178.6, 60, 100 }, costs(2, 2))
     end)
 
+    -- Improved Arcane Shot (19454, 5 ranks): Arcane Shot's cooldown -0.3 s a rank (wowsims's 19454 curve
+    -- {-300 .. -1500}; DB2 carries only rank 1's row): the MM build's 3/5 casts it 5.1 s apart in wowsims's log.
+    it("shortens Arcane Shot's cooldown 0.3 s a rank of Improved Arcane Shot", function()
+        local cd = w.abilities.arcane_shot.cooldown
+        local e = ld.env(w)
+        local out = {}
+        for rank = 0, 5 do
+            e.talent.improved_arcane_shot = { rank = rank, enabled = rank > 0 }
+            out[#out + 1] = math.floor(ld.run(cd, e) * 1000 + 0.5) / 1000
+        end
+        assert.are.same({ 6, 5.7, 5.4, 5.1, 4.8, 4.5 }, out)
+    end)
+
     it("answers mainhand_remains, the time to the next main-hand swing (wowsims's Multi-Shot weave gap)", function()
         local f = assert(w.exprs.mainhand_remains, "no mainhand_remains")
         local e = ld.env(w)
@@ -243,8 +260,12 @@ describe("Forever Hunter", function()
         assert.are.equal(2, ld.run(f, e))
         e.query_time = 11
         assert.are.equal(1, ld.run(f, e))
-        e.query_time = 13 -- past the swing: the next one, a period later
+        e.target = { within5 = true }
+        e.query_time = 13 -- past the swing in melee: the next one, a period later
         assert.are.equal(2, ld.run(f, e))
+        e.target = { within5 = false } -- out of melee no swing comes: wowsims's due timer reads 0 until one lands
+        assert.are.equal(0, ld.run(f, e))
+        e.target = { within5 = true }
         e.nextMH, e.combat, e.query_time = 0, 0, 10 -- out of combat: anchored at this evaluation
         assert.are.equal(0, ld.run(f, e))
     end)

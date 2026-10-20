@@ -462,7 +462,11 @@ local function content(name)
             ids = ids,
             cost = costOf(key, idsOf(key), H),
             pt = MANA,
-            cooldown = tonumber(a.cooldown) or S.action[key].cooldown or 0,
+            -- Improved Arcane Shot (19454): -0.3 s a rank, as the kit
+            cooldown = key == "arcane_shot" and 6 - 0.3 * talentRank(H, 19454)
+                or tonumber(a.cooldown)
+                or S.action[key].cooldown
+                or 0,
             gcd = GCD[a.gcd or "spell"],
             offGcd = a.gcd == "off",
             onNextSwing = a.onNextSwing,

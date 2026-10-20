@@ -1,11 +1,10 @@
 -- tools/wowsims/specs/hunter_survival.lua (wowsims packs plan, Task 11): Survival (wowsims.com)'s wowsims/forever request and translation.
 -- Values from wowsims/forever (MIT) ui/specs/hunter/dps/presets.ts:68-89,128-134 at the pin (the SV Weave talents,
 -- DefaultOptions = NoPetOptions, OtherDefaults; the default rotation Melee Weave, apls/default.apl.json; gear p1).
--- Disagreements worked (P7, after central fix 6: the log's pools, casts priced when heard), decisions on-GCD 0.805 (41)
--- top [multi_shot -> arcane_shot 3; strider_kick -> wing_clip 3; immolation_trap -> wing_clip 1]:
---   multi_shot -> arcane_shot: shared gap (`%` division read as Lua's modulo; see
---   hunter_beast_mastery.lua).
+-- Disagreements worked (P7, after central fixes 6 and 11), decisions on-GCD 0.878 (41) top [strider_kick -> wing_clip
+-- 3; immolation_trap -> wing_clip 1; multi_shot -> arcane_shot 1]:
 --   strider_kick -> wing_clip: shared gap (percent-of-base costs priced on the maximum; see hunter_marksmanship.lua).
+--   multi_shot -> arcane_shot (22.73 s): the same shared gap under Multi-Shot's 13.9% (387.8 vs wowsims's 239).
 --   immolation_trap -> wing_clip (37.09 s): API-forced (mana secret in combat): the belief sits at its last usable
 --   rung, Strider Kick's price (64.8; 39.95 priced on base mana), while the truth is 112 and the trap costs 98.
 -- Content gaps fixed (P6): Resourcefulness (440529, 2/2) cuts Raptor Strike, Mongoose Bite, Wing Clip, Immolation Trap

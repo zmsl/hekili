@@ -47,11 +47,12 @@ local REPLAY = { hidden = { [1310726] = true } }
 -- recipe, world content, pack, the replay floor (the first clean run's, never lowered), LIVE60: the pack's own worst
 -- idle at 60, rounded up to 0.1 s (P8). It is our secret-mana lower bound, not a wowsims pooling condition: BM and MM
 -- (their worlds at 11 yd, the weave's range) believe Arcane Shot's mana short after Rapid Fire's 100 (BM less long: its
--- Efficiency); SV, whose strikes Resourcefulness makes cheap, never idles at 60.
+-- Efficiency; MM longer since Improved Arcane Shot 3/5 casts it every 5.1 s); SV, whose strikes Resourcefulness makes
+-- cheap, never idles at 60.
 local PACKS = {
-    { "hunter_beast_mastery", "BeastMastery", "Beast Mastery (wowsims.com)", 0.88, 5.4 },
-    { "hunter_marksmanship", "Marksmanship", "Marksmanship (wowsims.com)", 0.83, 9.2 },
-    { "hunter_survival", "Survival", "Survival (wowsims.com)", 0.80, 0 },
+    { "hunter_beast_mastery", "BeastMastery", "Beast Mastery (wowsims.com)", 0.96, 5.4 },
+    { "hunter_marksmanship", "Marksmanship", "Marksmanship (wowsims.com)", 0.88, 11.8 },
+    { "hunter_survival", "Survival", "Survival (wowsims.com)", 0.87, 0 },
 }
 
 describe("the Hunter wowsims.com packs #slow #wowsims", function()

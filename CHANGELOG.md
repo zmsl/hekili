@@ -52,6 +52,10 @@
   wowsims ran as a remainder, so those lines never recommended their ability.
 - Rogue: Garrote costs 10 less a Dirty Deeds rank, Backstab and Hemorrhage 3 less a Thousand Cuts stack, and
   Improved Sinister Strike takes 5 off at 2/2 (it took 10), as in wowsims.com.
+- Hunter: Arcane Shot's cooldown is 0.3 s shorter per rank of Improved Arcane Shot, so it comes back when the game
+  says it does.
+- Hunter: at range, Multi-Shot is no longer expected to fit before a melee swing that never comes; the weave line
+  waits for the walk in, as wowsims's does.
 - Rogue, Paladin and Shaman: the default priorities now load. They were registered under the wrong specialization ids
   for the WoW Forever client, so the addon showed nothing for these classes.
 - Developer: unreadable (secret) answers to "does this unit exist / is it dead" for target, party, boss and focus units

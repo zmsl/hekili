@@ -289,11 +289,11 @@ research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`)
   (1310726, the talent's proc), by IsSpellUsable; Raptor Strike queued (IsCurrentSpell) and its 6 s cooldown from the
   swing that takes it?
 - H13 (Q8): Hunter's Mark and Serpent Sting on the target unreadable in combat (modelled from our casts)?
-- H15: Multi-Shot's cast: 0.5 s (DB2 2643, kept) or instant (wowsims)? The weave line reads it against the swing.
-  Blocked on the shared `%` division fix (the Multi-Shot weave line never passes until then).
+- H15: Multi-Shot's cast: 0.5 s (DB2 2643, kept) or instant (wowsims)? The weave line reads it against the swing
+  (live since central fix 11's division).
 - H16: Immolation Trap's 30 s category cooldown (DB2 SpellCooldowns).
-- H17: `mainhand_remains` against the real main-hand swing (the weave's Multi-Shot gap). Blocked on the shared `%`
-  division fix (the Multi-Shot weave line never passes until then).
+- H17: `mainhand_remains` against the real main-hand swing (the weave's Multi-Shot gap); past a due swing out
+  of melee it reads 0 (wowsims's due timer), not a swing a period later.
 - H18: Resourcefulness (440529) and Efficiency (19416) reported as talents at their ranks, and the prices they give:
   Mongoose Bite, Wing Clip, Immolation Trap and Strider Kick 30% / 60% off; Raptor Strike under both (wowsims's log 40
   at 2/2 Resourcefulness, 94 at 2/5 Efficiency).

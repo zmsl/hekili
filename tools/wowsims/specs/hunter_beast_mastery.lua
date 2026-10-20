@@ -1,13 +1,12 @@
 -- tools/wowsims/specs/hunter_beast_mastery.lua (wowsims packs plan, Task 11): Beast Mastery (wowsims.com)'s wowsims/forever request and translation.
 -- Values from wowsims/forever (MIT) ui/specs/hunter/dps/presets.ts:68-89,128-134 at the pin (the BM Weave talents,
 -- DefaultOptions = NoPetOptions, OtherDefaults; the default rotation Melee Weave, apls/default.apl.json; gear p1).
--- Disagreements worked (P7, after central fix 6: the replay reads the log's pools, 2790 mana, and prices casts when
--- heard), decisions on-GCD 0.889 (27) top [multi_shot -> arcane_shot 2; multi_shot -> serpent_sting 1]:
---   both: shared gap (`%` division): the translator writes SimC's `%` (tools/wowsims/apl.lua M.MATH OpDiv) and
---   Hekili's script compiler keeps it as Lua's modulo, so `(action.multi_shot.cast+(1*((11-5)%7)))<=mainhand_remains`
---   reads cast + 6 and Multi-Shot is never recommended (a local `/` run: BM 0.963, SV 0.878). The belief
---   (1816, 1060, 291) is not the cause: the condition fails first. Multi-Shot's price is a second shared gap: 13.9% of
---   base mana priced on the maximum (364.5 here vs wowsims's 224.66).
+-- Disagreements worked (P7, after central fixes 6 and 11: the log's pools, casts priced when heard, division as `/`),
+-- decisions on-GCD 0.963 (27) top [multi_shot -> arcane_shot 1]:
+--   multi_shot -> arcane_shot (22.73 s): shared gap (percent-of-base costs priced on the maximum): Multi-Shot's 13.9%
+--   of base mana is priced 364.5 on the maximum vs wowsims's 224.66, and the belief (291.6, true 512) sits between.
+-- Kit fix (P6): past a due swing out of melee, `mainhand_remains` reads 0 (wowsims's timer stays due until the walk
+-- in lands one), not a swing a period later; the phantom swing let Multi-Shot win projected ties at 11 yd (loop gate).
 -- Content gap fixed (P6): Efficiency (19416, 2/5 here) cuts the shots', stings' and strikes' prices 3% a rank (wowsims's
 -- 94 Raptor Strike, 75.2 Wing Clip, 178.6 Arcane Shot, 235 Serpent Sting, 224.66 Multi-Shot); before it the client
 -- (the world's truth) and the belief priced them at full cost (0.741 -> 0.815).

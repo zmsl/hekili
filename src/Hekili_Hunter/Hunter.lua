@@ -278,6 +278,10 @@ spec:RegisterStateExpr("mainhand_remains", function()
     if query_time <= mh then
         return mh - query_time
     end
+    -- past a due swing out of melee none comes: wowsims's timer stays due (0) until the walk in lands one
+    if not target.within5 then
+        return 0
+    end
     if mainhand_speed <= 0 then
         return 0
     end -- no swing speed read yet
@@ -366,7 +370,10 @@ spec:RegisterAbilities({
         id = 3044,
         copy = rest(ARCANE_SHOT),
         cast = 0,
-        cooldown = 6,
+        -- Improved Arcane Shot (19454): -0.3 s a rank (wowsims's curve; DB2 has only rank 1's row)
+        cooldown = function()
+            return 6 - 0.3 * talent.improved_arcane_shot.rank
+        end,
         gcd = "spell",
 
         spend = discounted(cost(ARCANE_SHOT_COST, ARCANE_SHOT), false, true),
