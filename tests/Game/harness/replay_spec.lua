@@ -252,6 +252,25 @@ describe("the replay world", function()
         end
     )
 
+    it("keeps an aura when another wowsims aura sharing its ID (a tagged one) comes and goes", function()
+        local R = replay.new(
+            table.concat({
+                "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+                "[-1.00] [Tester (#1)] Aura gained: {SpellID: 900002}",
+                "[0.50] [Tester (#1)] Aura gained: {SpellID: 900002, Tag: 1}",
+                "[0.50] [Tester (#1)] {SpellID: 900002, Tag: 1} stacks: 0 --> 35",
+                "[1.00] [Tester (#1)] Aura faded: {SpellID: 900002, Tag: 1}",
+                "[1.00] [Target 1] Aura gained: {SpellID: 900030, Tag: -1}", -- a tag alone: still the aura
+            }, "\n"),
+            H,
+            O
+        )
+        local W = R.world(setmetatable({ tag = "-g" }, { __index = WO }), 1)
+        local us, mob = W.ents[1], W.ents[2]
+        at(W, R.pull + 2)
+        assert.are.same({ 1, true }, { us.auras[900002] and us.auras[900002].stacks, mob.auras[900030] ~= nil })
+    end)
+
     it("a stealth aura flips IsStealthed with UPDATE_STEALTH at its gain and at its removal", function()
         local observer = require("Game.harness.observer")
         local R = replay.new(

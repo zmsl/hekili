@@ -95,17 +95,17 @@ local function ours(rest)
     local verb
     verb, b = rest:match("^Aura (%a+): {([^}]*)}")
     if verb then
-        local id = ids(b) -- an OtherID aura (a pre-pull move) is not a spell's
-        return id and { kind = "aura", unit = "player", verb = verb, id = id }
+        local id, _, tag = ids(b) -- an OtherID aura (a pre-pull move) is not a spell's
+        return id and { kind = "aura", unit = "player", verb = verb, id = id, tag = tag }
     end
     local n
     b, n = rest:match("^{([^}]*)} stacks: %d+ %-%-> (%d+)")
     if b then
-        local id, other = ids(b)
+        local id, other, tag = ids(b)
         if other == M.MOVE then -- the Movement aura's stacks: the yards to the target, whole (0: the move's end)
             return tonumber(n) > 0 and { kind = "move", distance = tonumber(n) } or nil
         end
-        return id and { kind = "stacks", unit = "player", id = id, to = tonumber(n) }
+        return id and { kind = "stacks", unit = "player", id = id, to = tonumber(n), tag = tag }
     end
     local word, tail
     b, word, tail = rest:match("^%[Target 1%] {([^}]*)} tick (%a+)(.*)$")
@@ -136,14 +136,14 @@ end
 local function theirs(rest)
     local verb, b = rest:match("^Aura (%a+): {([^}]*)}")
     if verb then
-        local id = ids(b) -- an OtherID aura (a pre-pull move) is not a spell's
-        return id and { kind = "aura", unit = "target", verb = verb, id = id }
+        local id, _, tag = ids(b) -- an OtherID aura (a pre-pull move) is not a spell's
+        return id and { kind = "aura", unit = "target", verb = verb, id = id, tag = tag }
     end
     local n
     b, n = rest:match("^{([^}]*)} stacks: %d+ %-%-> (%d+)")
     if b then
-        local id = ids(b)
-        return id and { kind = "stacks", unit = "target", id = id, to = tonumber(n) }
+        local id, _, tag = ids(b)
+        return id and { kind = "stacks", unit = "target", id = id, to = tonumber(n), tag = tag }
     end
 end
 
@@ -369,6 +369,22 @@ function M.new(text, H, o)
         return e.id and keyOf[e.id] or (e.item and itemOf[e.item])
     end
     -- world times: log time + pull, each line after the earlier ones of its timestamp; the opening state at 0
+    -- a tagged aura whose spell ID also logs untagged on that unit is another wowsims aura sharing the ID (Seal of
+    -- Fury's {20423, Tag: 1} stacks beside the seal 20423): not the client's aura of that ID, so its lines are dropped
+    -- (a tag alone, an External's -1 or a weapon's 1, stays the aura)
+    local plain = {}
+    for _, e in ipairs(p.ev) do
+        if e.kind == "aura" and not e.tag then
+            plain[e.unit .. ":" .. e.id] = true
+        end
+    end
+    local kept = {}
+    for _, e in ipairs(p.ev) do
+        if not ((e.kind == "aura" or e.kind == "stacks") and e.tag and plain[e.unit .. ":" .. e.id]) then
+            kept[#kept + 1] = e
+        end
+    end
+    p.ev = kept
     local seq = {}
     for _, e in ipairs(p.ev) do
         local n = (seq[e.t] or 0) + 1
