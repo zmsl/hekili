@@ -188,10 +188,10 @@ describe("Forever Warrior", function()
         local e = lw.env(w)
         local slam = w.abilities.slam
         local function fields()
-            return { lw.run(slam.cast, e), lw.run(slam.gcdTime, e) or 1.5, lw.run(slam.cooldown, e) }
+            return { lw.run(slam.cast, e), lw.run(slam.gcdTime, e), lw.run(slam.cooldown, e) }
         end
         e.talent = rank(0)
-        assert.are.same({ 1.5, 1.5, 18 }, fields())
+        assert.are.same({ 1.5, nil, 18 }, fields()) -- no gcdTime: the "spell" GCD kind's 1.5 s
         e.talent = rank(2)
         assert.are.same({ 1.0, 1.0, 15 }, fields())
     end)
@@ -714,7 +714,7 @@ describe("Forever Warrior", function()
         assert.is_true(lw.run(w.abilities.execute.usable, e))
     end)
 
-    it("registers the Arms, Fury and Protection priorities exactly as tools/make_pack.lua prints them", function()
+    it("registers the four priorities (Arms twice) exactly as tools/make_pack.lua prints them", function()
         local printed = {}
         local pipe = assert(io.popen(LUA .. " tools/make_pack.lua"))
         for line in pipe:lines() do

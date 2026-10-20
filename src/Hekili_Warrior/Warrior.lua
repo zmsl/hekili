@@ -2046,9 +2046,9 @@ spec:RegisterSetting("wowsims_hamstring_weave", true, {
     width = "full",
 }, "arms")
 
--- The three priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and
--- APLs/*.simc; edit those and run it, never these blocks (tests/Forever/warrior_spec.lua checks they
--- match). Pick one with /hekili priority <name>.
+-- The four priorities (Arms has two, Arms (wowsims.com) and Arms, until the swap), written by `make packs`
+-- (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and run it, never these blocks
+-- (tests/Forever/warrior_spec.lua checks they match). Pick one with /hekili priority <name>.
 spec:RegisterPack(
     "Arms (wowsims.com)",
     20261020165,
