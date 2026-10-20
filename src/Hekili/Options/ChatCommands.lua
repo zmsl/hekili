@@ -597,15 +597,8 @@ function Hekili:HandlePriorityCommand( args )
 
     -- Check for "default" keyword as the second argument
     if args[2] == "default" then
-        local defaultPriority = nil
-
-        -- Search for the built-in default priority in the current spec
-        for _, priority in ipairs( priorities ) do
-            if Hekili.DB.profile.packs[ priority ].builtIn then
-                defaultPriority = priority
-                break
-            end
-        end
+        local defaultPriority = ns.DefaultPackage( spec )
+        if defaultPriority and not rawget( Hekili.DB.profile.packs, defaultPriority ) then defaultPriority = nil end
 
         -- Set the default priority if found
         if defaultPriority then

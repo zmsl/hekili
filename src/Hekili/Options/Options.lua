@@ -4820,11 +4820,9 @@ found = true end
                                             if p.builtIn then
                                                 Hekili.DB.profile.specs[ p.spec ].package = "(none)"
                                             else
-                                                for def, data in pairs( Hekili.DB.profile.packs ) do
-                                                    if data.spec == p.spec and data.builtIn then
-                                                        Hekili.DB.profile.specs[ p.spec ].package = def
-                                                        return
-                                                    end
+                                                local def = ns.DefaultPackage( p.spec )
+                                                if def and rawget( Hekili.DB.profile.packs, def ) then
+                                                    Hekili.DB.profile.specs[ p.spec ].package = def
                                                 end
                                             end
                                         else
@@ -4947,21 +4945,11 @@ found = true end
                                     imageWidth = 24,
                                     confirm = function () return "Delete this priority package?" end,
                                     func = function ()
-                                        local defPack
-
                                         local specId = data.spec
                                         local spec = specId and Hekili.DB.profile.specs[ specId ]
 
-                                        if specId then
-                                            for pId, pData in pairs( Hekili.DB.profile.packs ) do
-                                                if pData.builtIn and pData.spec == specId then
-                                                    defPack = pId
-                                                    if spec.package == pack then
-                                                        spec.package = pId
-                                                        break
-                                                    end
-                                                end
-                                            end
+                                        if spec and spec.package == pack then
+                                            spec.package = ns.DefaultPackage( specId )
                                         end
 
                                         Hekili.DB.profile.packs[ pack ] = nil

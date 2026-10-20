@@ -29,3 +29,52 @@ describe("retired built-in packs", function()
         assert.is_true(env.class.retiredPacks["Old A"] and env.class.retiredPacks["Old B"])
     end)
 end)
+
+-- A spec's default is the package its NewClass entry names; a valid saved choice wins; the order the built-ins decode
+-- in (pairs over class.packs) never matters.
+describe("a spec's default priority with two built-in packs", function()
+    local EXTRA = { "Z Second", "A Second", "M Second", "Arms Second", "B", "Y", "Q Second", "C Second" }
+
+    -- A fresh profile: every built-in decodes in one RestoreDefaults, the spec holding its AceDB default.
+    local function fresh(saved)
+        local H = headless.new({ character = ww.character(), pack = ww.PACK })
+        assert.are.same({}, H.loadErrors)
+        local hk, p = H.Hekili, H.Hekili.DB.profile
+        local id = hk.State.spec.id
+        local def = hk.Class.specs[id].options.package
+        for _, name in ipairs(EXTRA) do
+            hk.Class.packs[name] = hk.Class.packs[def]
+        end
+        for name in pairs(hk.Class.packs) do
+            p.packs[name] = nil
+        end
+        p.specs[id].package = saved or def
+        -- RestoreDefaults walks class.packs in this same pairs() order: some copies must decode before the default.
+        local passed, before, after = false, false, false
+        for name, v in pairs(hk.Class.packs) do
+            if name == def then
+                passed = true
+            elseif v == hk.Class.packs[def] then
+                before, after = before or not passed, after or passed
+            end
+        end
+        hk:RestoreDefaults()
+        return p.specs[id].package, def, before and after
+    end
+
+    it("is the NewClass package whichever built-in decodes first", function()
+        local got, def, bothOrders = fresh()
+        assert.is_true(bothOrders, "the extra packs did not decode on both sides of the default")
+        assert.are.equal(def, got)
+    end)
+
+    it("keeps a saved choice of another built-in for the spec", function()
+        local got = fresh("M Second")
+        assert.are.equal("M Second", got)
+    end)
+
+    it("repairs a saved choice that names no pack", function()
+        local got, def = fresh("Gone")
+        assert.are.equal(def, got)
+    end)
+end)

@@ -1365,10 +1365,18 @@ local HekiliSpecMixin = {
 }
 
 
+--- A spec's default priority: the package its NewClass entry names (nil for none); load order never changes it.
+function ns.DefaultPackage( specID )
+    local s = class.specs[ specID ]
+    return s and s.options.package
+end
+
+
 function Hekili:RestoreDefaults()
     local p = Hekili.Engine.settings
     local reverted = {}
     local changed = {}
+    local decoded = {} -- specID -> a built-in decoded for it this call
 
     -- A retired built-in pack (kit:RetirePacks) leaves the profile; a spec that chose it falls back to its default.
     for k, v in pairs( p.packs ) do
@@ -1377,8 +1385,7 @@ function Hekili:RestoreDefaults()
             for id, sp in pairs( p.specs ) do
                 -- AceDB copies a scalar default in (no __index), so nil would stay nil until the next login.
                 if type( sp ) == "table" and rawget( sp, "package" ) == k then
-                    local s = class.specs[ id ]
-                    sp.package = s and s.options.package or nil
+                    sp.package = ns.DefaultPackage( id )
                 end
             end
             insert( changed, k )
@@ -1405,21 +1412,23 @@ function Hekili:RestoreDefaults()
                     insert( reverted, k )
                 end
 
+                -- The least name, so a spec whose NewClass names no package gets the same one in any load order.
                 local specID = data.payload.spec
+                if specID and ( not decoded[ specID ] or k < decoded[ specID ] ) then decoded[ specID ] = k end
+            end
+        end
+    end
 
-                if specID then
-                    local spec = rawget( p.specs, specID )
-                    if spec then
-                        if spec.package then
-                            local currPack = p.packs[ spec.package ]
-                            if not currPack or currPack.spec ~= specID then
-                                spec.package = k
-                            end
-                        else
-                            spec.package = k
-                        end
-                    end
-                end
+    -- After every built-in has decoded (packs decode in pairs() order): a spec whose choice is missing or bound to
+    -- another spec gets its default, the package its NewClass entry names; a valid saved choice wins.
+    for specID, k in pairs( decoded ) do
+        local spec = rawget( p.specs, specID )
+        if spec then
+            local currPack = spec.package and p.packs[ spec.package ]
+            if not currPack or currPack.spec ~= specID then
+                local def = ns.DefaultPackage( specID )
+                local defPack = def and rawget( p.packs, def )
+                spec.package = defPack and defPack.spec == specID and def or k
             end
         end
     end
