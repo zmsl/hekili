@@ -57,7 +57,7 @@ Translation:
 - `executePhase` (the key the kit's execute read answers, `"execute_phase"`): wowsims's `isExecutePhase` E20.
 - `leveling` (lines appended to `actions`): the fillers a lower level needs, each silent at 60 (below).
 - `levelingFirst` (lines put first in `actions`): a form the sim starts in and the APL never casts (Balance's Moonkin
-  Form), which a trailing line would never reach; silent once the form is up, and at 60 (`level<60`).
+  Form), which a trailing line would never reach; silent while the form is up.
 
 The autocast context: rule 13 reads the spec's exported log (`tests/Forever/wowsims/<spec>.log`, its "Major cooldown
 used" lines), so `make wowsims-packs` needs the checked-in log; a re-export can move those lines.

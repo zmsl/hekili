@@ -5,7 +5,7 @@
 # Omitted: default #1: autocastOtherCooldowns: unmapped item 272438
 # Omitted: default #1: autocastOtherCooldowns: unmapped item 272439
 
-actions=moonkin_form,if=level<60&!buff.moonkin_form.up
+actions=moonkin_form,if=!buff.moonkin_form.up
 actions+=/elunes_light,use_off_gcd=1
 actions+=/innervate,if=mana.pct<10
 actions+=/moonfire,focus=2,if=!debuff.moonfire.up

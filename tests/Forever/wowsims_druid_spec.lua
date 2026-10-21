@@ -99,8 +99,8 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         )
     end)
     -- wowsims's sim starts in Moonkin Form (its list never casts it); the recipe's `moonkin_form` line does, once
-    -- the form is known and below 60 (a sim-setup difference: never fires in the replay)
-    it("Balance (wowsims.com) recommends Moonkin Form out of it below 60", function()
+    -- the form is known (a sim-setup difference: never fires in the replay)
+    it("Balance (wowsims.com) recommends Moonkin Form out of it", function()
         local function first(level)
             local c = W.Balance.character()
             c.form, c.level = 0, level -- caster form
@@ -115,7 +115,7 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             return out.recs[1] and out.recs[1].actionName
         end
         assert.are.equal("moonkin_form", first(40))
-        assert.are_not.equal("moonkin_form", first(60))
+        assert.are.equal("moonkin_form", first(60))
     end)
     -- The pack's own worst idle at 60, seconds (L10 1.6, L40 1.4: Task 7g, after shared gap R's fix; 8.6 before it)
     local BALANCE60 = 1.4

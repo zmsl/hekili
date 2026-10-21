@@ -626,14 +626,16 @@ describe("Forever Druid", function()
             assert.are.same({ "eclipse" }, e.removed)
         end)
 
-        it('leaves any form on Innervate, as Classic\'s swap_form("") (the client unshifts to cast it)', function()
+        it('leaves any form but Moonkin on Innervate, as Classic\'s swap_form("") and wowsims/forever', function()
             for _, f in ipairs({ "now", "handler" }) do
                 local e = ld.env(w)
                 ld.run(w.abilities.innervate[f], e)
                 assert.are.same({ "innervate" }, e.applied, f)
-                for _, form in ipairs({ "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form" }) do
-                    assert.is_truthy(table.concat(e.removed, " "):find(form, 1, true), f .. " " .. form)
+                local removed = table.concat(e.removed, " ")
+                for _, form in ipairs({ "cat_form", "bear_form", "travel_form", "aquatic_form" }) do
+                    assert.is_truthy(removed:find(form, 1, true), f .. " " .. form)
                 end
+                assert.is_falsy(removed:find("moonkin_form", 1, true), f) -- Moonkin Form stays up
             end
         end)
 

@@ -1188,11 +1188,14 @@ spec:RegisterAbilities({
         known = knows(INNERVATE),
         toggle = "cooldowns",
 
-        -- From any form: the client leaves it to cast (Classic's handler, swap_form( "" )); the Feral priority shifts
-        -- back after it.
+        -- From any other form: the client leaves it to cast (Classic's handler, swap_form( "" )); the Feral priority
+        -- shifts back after it.
+        -- wowsims/forever: castable in Moonkin Form; UNMEASURED on Forever (checkpoint in layout.md)
         now = function()
             for i = 1, #FORMS do
-                removeBuff(FORMS[i])
+                if FORMS[i] ~= "moonkin_form" then
+                    removeBuff(FORMS[i])
+                end
             end
             removeBuff("maul")
             applyBuff("innervate")
@@ -1200,7 +1203,9 @@ spec:RegisterAbilities({
 
         handler = function()
             for i = 1, #FORMS do
-                removeBuff(FORMS[i])
+                if FORMS[i] ~= "moonkin_form" then
+                    removeBuff(FORMS[i])
+                end
             end
             removeBuff("maul")
             applyBuff("innervate")
@@ -1798,8 +1803,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Balance (wowsims.com)",
-    20261021532,
-    [[Hekili:fovBVnnmq4Fl7lWQOkV0SnGQfKyAcXMGjez8v34AFPXuh7iBNvTVKF7CoTR1l0cQsvo3DpV47otsjpsk4uhqEywYSRstMLEz2msH75wGu0szRPRWdkAd()nujvXG(YZ3O3yfn2iMUzIVSNLAk3t1YoH0DNIS8OSABbgP42F(R7UD(YTKrkQfCoSfbyzNsL59LUAm4UyXvAd8ey6l5qfTt66l)8p(wFjgUV8adDIyVM2yUPtWJ3PzmTvIH2cmc)i63wTAYuucdvzLOX54zTxsHTVKY5A1BXdRHNTr9L3sD05hXkN)97EejP25ATZJJxjC1Dl9UpEuPtqorhZZY(ywcp5IKSKiSnA0vcj2rOmNqRS5nATATqTar1mvuLlrSYRVk5nNTSRQkkmDuxB)97W9U8yq2Pa7cPyvTBANfwORQwSIXZtdRsOuG5j826jVHQOrTm31PjH14fPsyGPvAwNnFMV0Z4WEd4ZnsCHYcm3c7gkA7Jalm)iO1DgJGrvdoYh(jybOGgby)u(fHvADutGVs9agyhysrRDSN2yOU6(7jfy33IXgTykfwND4PW2Lc84ddpnafDPe4KBEzQqkcB7KcMr4aJGIC8pNoehk5igdgmE52Rq40ZJl7eoz)8l0gbZrp2lgH9qHhzk(6lPpiPyO)69os2L)xYgnBd96HeVM0RoXTB)UqOo)1oHNH3FsBnAJ4a5VS(S3kPEI(WjSYW2dXn8RG25Q1gsXxH1cPaF1)LDpQhst(Zp]]
+    20261021995,
+    [[Hekili:fo1wVPnmu4Fl7Pv0q5cq7gOXKwfAAuTvnT09Qjg7tiE4yhz7aQVKF774afCtbnHeY54Z3fFUqsjprY4uhqECuYO7stgLoD6TKm3Z1ajRMY2s3Ghu0k8)7PsQIbT53SxV3kQSrmD1aFApl1uUNQ1ncPBPIS(ISARbgjBXV)ZYfZwFGmswPGZHdial7AQmRn3vIbpglUqBGDGPnNdf0gPRn)R)6hT5y428Zm0iI9AAJ5Mgbp(OMX0Ajg6aWi8JO)A1QbdrjmuLvIgNJN1Ejf22CkNRvVhpSfE2g1MVG6OZUGvU5NlFcjP05QTZIJ3iCLnR9UpUxQdqorhZhpE64eEYKKXjryz0OlesSIqzoHwzNxP1QTc1kev1qrX83TUPOikmAutD7dht)dZJbzJcSRKInLUHnwyLUOy1ggFEAywcLcm7WhPNZkQIgvZCFonjmhVifcdmSqZASZh1jphoza)D9exOSaZTYUNIU9cWcVVh0YgJrWOQoh5dVdwbkOsa2VmFsyMwh1e4RupGo2bMuuB77P9gQRS9bsgw0TySEZJsH1z72aomlGhFSBJau01sGtU)LMbjlSStYygHdmckj7InfIdvQhrb9dVkNioSP5Xn(kg4uBlu9G2Nh7KEydS5BBEV(T5dsY6kREVJKD7)LSET0qVE(Ixt6Dx51DAeiuN3mk4z4Jx1w9geot(ltnNSsQNOpDfR0n0qCD)YOnUsTHK9DyRqkWD8VDCfU7AY)c]]
 )
 spec:RegisterPack(
     "Guardian (wowsims.com)",

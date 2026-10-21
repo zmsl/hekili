@@ -38,8 +38,6 @@ return {
     executePhase = "execute_phase",
     map = {},
     focus = { moonfire = 2, insect_swarm = 2, starfire = 1 }, -- the retired Balance list's tiers (P9.3)
-    -- wowsims's sim starts in Moonkin Form (its list never casts it): the form first, once known (a talent, 40), below
-    -- 60 only: at 60 the line would fire after Innervate (the client unshifts to cast it; wowsims's sim stays in the
-    -- form) and move the replay (0.855 to 0.782) and the L60 idle (1.4 to 8.4 s)
-    levelingFirst = { "moonkin_form,if=level<60&!buff.moonkin_form.up" },
+    -- wowsims's sim starts in Moonkin Form (its list never casts it): the form first, once known (a talent, 40)
+    levelingFirst = { "moonkin_form,if=!buff.moonkin_form.up" },
 }

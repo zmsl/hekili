@@ -166,9 +166,11 @@ M.MAP = {
     mark_of_the_wild = { effect = selfAura("mark_of_the_wild") },
     elunes_light = { effect = selfAura("elunes_light") }, -- the Night Elf racial (Hekili_Shared): its buff only
     thorns = { effect = selfAura("thorns") },
-    innervate = { -- leaves the form (the client unshifts to cast it); mana only where the world keeps it
+    -- leaves the form (the client unshifts to cast it) but Moonkin (wowsims/forever: castable in Moonkin Form; UNMEASURED
+    -- on Forever, the class file's rule); mana only where the world keeps it
+    innervate = {
         effect = function(W, e, p, X)
-            if e.form ~= 0 then
+            if e.form ~= 0 and e.form ~= FORM.moonkin_form then
                 W.setForm(e, 0)
             end
             aura(W, X, e, "innervate")

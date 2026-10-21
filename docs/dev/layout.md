@@ -594,6 +594,8 @@ Druid (a level 60 Druid):
 - D5: the Howling Idol (1291059) and the Wolfshead Helm (17768) as player auras.
 - D6: combat mana regen outside the five-second rule (about 22 a second with pre-raid gear); the Feral and Balance
   defaults load.
+- D7: Balance: does Innervate drop Moonkin Form on Forever? (cast it in form; watch the form aura). The kit and the
+  loop world keep the form, as wowsims/forever does.
 
 Rogue (a level 60 Rogue):
 - Rg1: each spec defaults to its "(wowsims.com)" pack; a saved old choice falls back after `/reload`.
