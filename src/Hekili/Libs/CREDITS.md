@@ -40,12 +40,19 @@ The twelve Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Development 
 | SpellFlashCore | Contributed copy kept in this repo (the 2024-09-15 copy; git history: added 617e3e6a 2023-11-29, last changed 1bd9f1c2 2024-07-08) | in-repo, TOC version 2.4.1 | No licence file in its folder | BigRedBrent, LightSpell | No | **Returns for builds below 110000** (`SpellFlashCore.lua` lines 1-4; 30400 for 3.4.x). Forever (16001) therefore does not load it: expected, not a Hekili failure |
 | VirtualGameAPI-1.0 | This repository | folded into `VirtualState/Facade.lua` (VirtualState Phase 1); the folder keeps only its `LICENSE` and `README.md` and is not loaded | MIT, `LICENSE` | Hekili Forever port | Yes (written for Forever) | None |
 
+## Translated content
+
+The class packs' "(wowsims.com)" priorities (the generated blocks in each `Hekili_<Class>/<Class>.lua`) are translated
+from the APLs and presets of wowsims/forever (https://github.com/wowsims/forever, commit d33930d040, 2026-10-18), MIT,
+Copyright (c) 2022 wowsims team. Its copyright and permission notice ships as `Hekili/LICENSE-wowsims.txt` (the
+copy in `src/Hekili/`; every class pack ships in the same zip).
+
 ## Licence compatibility with GPLv3 or later
 
 The project as a whole is GPLv3 or later (GNU General Public License, either version 3 of the License, or at your
 option any later version; agreement with the original author); each library keeps its own licence. The rest
 (Ace3 BSD-style, LibStub public domain, LibSharedMedia-3.0 LGPL v2.1, LibTranslit-1.0 LGPL v3, LibDeflate zlib, the
-MIT libraries LibRangeCheck-3.0, LibCustomGlow-1.0 and VirtualGameAPI-1.0) is compatible. Only the exceptions are
+MIT libraries LibRangeCheck-3.0, LibCustomGlow-1.0 and VirtualGameAPI-1.0, and the MIT wowsims/forever translations) is compatible. Only the exceptions are
 listed.
 
 | Library | Issue |

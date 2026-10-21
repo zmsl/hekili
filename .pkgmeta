@@ -3,7 +3,8 @@ package-as: Hekili
 enable-nolib-creation: no
 
 # The eight addons live in src/; move them to the zip root (src/Hekili replaces the package folder itself, so
-# root files such as the licence do not survive: the copy in src/Hekili/ is the shipped one).
+# root files such as the licence do not survive: the copy in src/Hekili/ is the shipped one, beside the wowsims/forever
+# MIT notice that covers the class packs' translated (wowsims.com) priorities).
 move-folders:
     Hekili/src/Hekili: Hekili
     Hekili/src/Hekili_Shared: Hekili_Shared
