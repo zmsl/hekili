@@ -195,6 +195,13 @@ describe("the replay world", function()
         assert.is_nil(mob.auras[900030]) -- faded at 10.10: removed then
     end)
 
+    it("ends a cooldown at its cast's log timestamp, not its line's place within it (ready-time ruling)", function()
+        local R = replay.new(text(), H, O)
+        local W = at(R.world(setmetatable({ tag = "-c" }, { __index = WO }), 1), R.pull + 0.2)
+        -- strike's Completed line is the fifth of 0.10: its cooldown still ends at 0.10 + 6, as wowsims's does
+        assert.is_true(math.abs(W.ents[1].cdUntil.strike - (R.pull + 0.1 + 6)) < 1e-9)
+    end)
+
     it("a proc aura's gain and refresh both reach the client: each re-application restarts its expiry", function()
         local R = replay.new(text(), H, O)
         local W = R.world(setmetatable({ tag = "-r" }, { __index = WO }), 1)
@@ -474,17 +481,18 @@ describe("the replay's cooldowns: the engine's, a shared category's, the log's",
             end
         end
         assert.are.equal(3, #casts)
-        assert.are.same({ 900051, 5, { 900050, 900051, 900052 } }, { casts[1].spell, casts[1].cd, casts[1].ids })
+        assert.are.same({ 900051, { 900050, 900051, 900052 } }, { casts[1].spell, casts[1].ids })
+        assert.is_true(math.abs(casts[1].cd - 5) < 1e-5) -- less its line's place in its timestamp (the ready-time ruling)
         assert.is_true(math.abs(us.cdUntil.shock_a - (R.pull + 5)) < 1e-3)
         assert.is_true(math.abs(us.cdUntil.shock_b - (R.pull + 5)) < 1e-3) -- the category: both together
-        assert.are.same({ 8, { 900060 } }, { casts[2].cd, casts[2].ids })
+        assert.are.same({ 8, { 900060 } }, { tonumber(("%.4f"):format(casts[2].cd)), casts[2].ids })
         -- the engine's 5 s capped at the log's 3 s spacing: wowsims did cast it that soon
         at(W, R.pull + 13)
         local last
         for _, ev in ipairs(W.truth) do
             last = ev.kind == "cast" and ev or last
         end
-        assert.are.same({ 900052, 3 }, { last.spell, last.cd })
+        assert.are.same({ 900052, 3 }, { last.spell, tonumber(("%.4f"):format(last.cd)) })
         local plain = replay.new(LOG, HC) -- no category: only the cast's own ranks
         W = at(plain.world(setmetatable({ tag = "-cd2" }, { __index = WO }), 1), plain.pull + 1)
         for _, ev in ipairs(W.truth) do

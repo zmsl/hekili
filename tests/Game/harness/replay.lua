@@ -557,9 +557,13 @@ function M.new(text, H, o)
         local function apply(e)
             local T = W.t
             local key = (e.kind == "completed" or (e.kind == "casting" and e.id and e.cast > 0)) and keyFor(e)
+            -- a cooldown ends at its cast's log timestamp plus the cooldown, as wowsims's does, not at the line's place
+            -- within the timestamp (M.EPS each): else the next cast's decision, line 1 of its timestamp, still reads it
+            -- running (the ready-time ruling, timing.lua)
+            local cdk = key and cd[key] > 0 and cd[key] - (T - (R.pull + e.t)) or 0
             if key and not e.id then -- an item: its cooldown only
                 if cd[key] > 0 then
-                    us.cdUntil[key] = T + cd[key]
+                    us.cdUntil[key] = T + cdk
                 end
             elseif key and e.kind == "casting" then -- a hard cast's start: its cast bar, the GCD from now
                 W.emit({
@@ -577,7 +581,7 @@ function M.new(text, H, o)
                     dst = mob,
                     spell = e.id,
                     ids = sh and sh.ids or rankIDs[key],
-                    cd = cd[key],
+                    cd = cdk,
                     gcd = (e.cast or 0) == 0 and (e.gcd or 0) > 0 and e.gcd or nil,
                     order = 1,
                     hard = (e.cast or 0) > 0 or nil,
@@ -589,9 +593,9 @@ function M.new(text, H, o)
                     end)
                 end
                 if cd[key] > 0 then
-                    us.cdUntil[key] = T + cd[key]
+                    us.cdUntil[key] = T + cdk
                     for _, k in ipairs(sh and sh.keys or {}) do
-                        us.cdUntil[k] = T + cd[key]
+                        us.cdUntil[k] = T + cdk
                     end
                 end
                 local tt = totems[key]
