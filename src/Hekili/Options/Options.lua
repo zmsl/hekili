@@ -2614,11 +2614,12 @@ local function GetCurrentSpecList()
     return specs
 end
 
--- (spec tree) A spec's node has tabs (Specialization Settings, Targeting, Performance) and, in the options tree, its
--- priorities as children. AceConfigDialog builds the tree from groups whose childGroups is "tree" and a page's tabs
--- from all of its child groups, so a spec node answers by what the dialog is feeding (FeedGroup's path length): the
--- tree (0) sees "tree" and only the priorities; the spec's page (1) sees "tab" and only the tabs. If another
--- AceConfigDialog replaces FeedGroup, feedDepth stays nil and the priorities show as further tabs of their spec.
+-- (spec tree) A spec's node (a child of Priorities) has tabs (Specialization Settings, Targeting, Performance) and, in
+-- the options tree, its priorities as children. AceConfigDialog builds the tree from groups whose childGroups is "tree"
+-- and a page's tabs from all of its child groups, so a spec node answers by what the dialog is feeding (FeedGroup's
+-- path length): the tree (0) sees "tree" and only the priorities; the spec's page (2: packs, spec) sees "tab" and only
+-- the tabs. If another AceConfigDialog replaces FeedGroup, feedDepth stays nil and the priorities show as further tabs
+-- of their spec.
 local feedDepth
 local specNodeMeta = {
     __index = function( _, k )
@@ -2626,13 +2627,13 @@ local specNodeMeta = {
     end,
 }
 local function SpecTabHidden() return feedDepth == 0 end
-local function SpecPackHidden() return feedDepth == 1 end
+local function SpecPackHidden() return feedDepth == 2 end
 
 -- The active spec's row in the options tree: a gold rounded rectangle behind it (Textures/ActiveSpec.tga, made by
 -- tools/make_active_spec_texture.py), one texture per tree button made on first use, re-placed after every refresh.
 local function MarkActiveSpec( tree )
     local ours = tree:GetUserData( "appName" ) == "Hekili"
-    local key = ours and Status.specKey
+    local key = ours and Status.specKey and ( "packs\001" .. Status.specKey ) -- the spec's row under Priorities
     for _, button in ipairs( tree.buttons ) do
         -- AceGUI anchors every row's label 2 px above centre; keep ours level with the icon (re-set each refresh)
         local text = ours and button:IsShown() and button.text
@@ -2662,6 +2663,12 @@ end
 local feed -- AceConfigDialog's own FeedGroup, under the wrapper
 local function FeedGroup( dialog, appName, options, container, rootframe, path, isRoot )
     if appName ~= "Hekili" then return feed( dialog, appName, options, container, rootframe, path, isRoot ) end
+    if #path == 0 then -- Priorities starts expanded: the specs show under it (the dialog keeps the state per session)
+        local status = dialog:GetStatusTable( appName )
+        status.groups = status.groups or {}
+        status.groups.groups = status.groups.groups or {}
+        if status.groups.groups.packs == nil then status.groups.groups.packs = true end
+    end
     local outer = feedDepth
     feedDepth = #path
     local ok, err = pcall( feed, dialog, appName, options, container, rootframe, path, isRoot )
@@ -2695,6 +2702,11 @@ do
     local specNameByID = {}
     local specIDByName = {}
     local packNodes = {} -- [ spec id ] = its priorities' nodes, the spec node's `plugins.packs` (spec tree)
+    local specNodes = {} -- [ spec key ] = its node, Priorities' `plugins.specializations` (spec tree)
+
+    -- Where a priority's key sits in an option's path: { "packs", spec, pack, ... } under its spec's node, else
+    -- { "packs", pack, ... }.
+    local function PackAt( info ) return specIDByName[ info[ 2 ] ] and 3 or 2 end
 
     -- Selects a priority's node: under its spec's node, or under Priorities when its spec has none.
     local function SelectPack( pack )
@@ -2703,7 +2715,7 @@ do
         if not owner then return ACD:SelectGroup( "Hekili", "packs", pack ) end
         local outer = feedDepth
         feedDepth = 0 -- SelectGroup reads the spec node's childGroups: the tree's view
-        ACD:SelectGroup( "Hekili", owner, pack )
+        ACD:SelectGroup( "Hekili", "packs", owner, pack )
         feedDepth = outer
     end
     function Hekili:SelectPack( pack ) return SelectPack( pack ) end
@@ -2742,7 +2754,7 @@ do
 
     function Hekili:SetSpecOption( info, val )
         local n = #info
-        local spec, option = info[1], info[n]
+        local spec, option = info[2], info[n] -- { "packs", spec, ... }
 
         spec = specIDByName[ spec ]
         if not spec then return end
@@ -2765,7 +2777,7 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
 
     function Hekili:GetSpecOption( info )
         local n = #info
-        local spec, option = info[1], info[n]
+        local spec, option = info[2], info[n] -- { "packs", spec, ... }
 
         if type( spec ) == 'string' then spec = specIDByName[ spec ] end
         if not spec then return end
@@ -4139,7 +4151,7 @@ found = true end
                     end
                 end
 
-                db.plugins.specializations[ sName ] = options
+                specNodes[ sName ] = options
             end
 
             i = i + 1
@@ -4203,7 +4215,7 @@ found = true end
 
     function Hekili:GetActionOption( info )
         local n = #info
-        local pack, option = info[ 2 ], info[ n ]
+        local pack, option = info[ PackAt( info ) ], info[ n ]
 
         if rawget( self.DB.profile.packs[ pack ].lists, packControl.listName ) == nil then
             packControl.listName = "default"
@@ -4255,7 +4267,7 @@ found = true end
 
     function Hekili:SetActionOption( info, val )
         local n = #info
-        local pack, option = info[ 2 ], info[ n ]
+        local pack, option = info[ PackAt( info ) ], info[ n ]
 
         local actionID = tonumber( packControl.actionID )
         local data = self.DB.profile.packs[ pack ].lists[ packControl.listName ]
@@ -4303,7 +4315,8 @@ found = true end
 
     function Hekili:GetPackOption( info )
         local n = #info
-        local category, subcat, option = info[ 2 ], info[ 3 ], info[ n ]
+        local at = PackAt( info )
+        local category, subcat, option = info[ at ], info[ at + 1 ], info[ n ]
 
         if rawget( self.DB.profile.packs, category ) and rawget( self.DB.profile.packs[ category ].lists, packControl.listName ) == nil then
             packControl.listName = "default"
@@ -4334,7 +4347,8 @@ found = true end
 
     function Hekili:SetPackOption( info, val )
         local n = #info
-        local category, subcat, option = info[ 2 ], info[ 3 ], info[ n ]
+        local at = PackAt( info )
+        local category, subcat, option = info[ at ], info[ at + 1 ], info[ n ]
 
         if packControl[ option ] ~= nil then
             packControl[ option ] = val
@@ -4733,6 +4747,7 @@ found = true end
             },
             plugins = {
                 packages = {},
+                specializations = specNodes, -- before the priorities without a spec node (order) and Import / Export
             }
         }
 
@@ -5807,7 +5822,7 @@ n = tonumber( n ) + 1
                                     multiline = 6,
                                     dialogControl = "HekiliCustomEditor",
                                     arg = function( info )
-                                        return Hekili.Engine.Evaluate( info[ 2 ], packControl.listName, tonumber( packControl.actionID ), nil, {} )
+                                        return Hekili.Engine.Evaluate( pack, packControl.listName, tonumber( packControl.actionID ), nil, {} )
                                     end,
                                 },
 
@@ -5821,7 +5836,7 @@ n = tonumber( n ) + 1
                                     multiline = 3,
                                     dialogControl = "HekiliCustomEditor",
                                     arg = function( info )
-                                        return Hekili.Engine.Evaluate( info[ 2 ], packControl.listName, tonumber( packControl.actionID ), "value", {} )
+                                        return Hekili.Engine.Evaluate( pack, packControl.listName, tonumber( packControl.actionID ), "value", {} )
                                     end,
                                     hidden = function ()
                                         local e = GetListEntry( pack )
@@ -5838,7 +5853,7 @@ n = tonumber( n ) + 1
                                     multiline = 3,
                                     dialogControl = "HekiliCustomEditor",
                                     arg = function( info )
-                                        return Hekili.Engine.Evaluate( info[ 2 ], packControl.listName, tonumber( packControl.actionID ), "value_else", {} )
+                                        return Hekili.Engine.Evaluate( pack, packControl.listName, tonumber( packControl.actionID ), "value_else", {} )
                                     end,
                                     hidden = function ()
                                         local e = GetListEntry( pack )
@@ -6030,7 +6045,7 @@ n = tonumber( n ) + 1
                                             multiline = 3,
                                             dialogControl = "HekiliCustomEditor",
                                             arg = function( info )
-                                                return Hekili.Engine.Evaluate( info[ 2 ], packControl.listName, tonumber( packControl.actionID ), "strict_if", {} )
+                                                return Hekili.Engine.Evaluate( pack, packControl.listName, tonumber( packControl.actionID ), "strict_if", {} )
                                             end,
                                             order = 2,
                                             width = "full",
@@ -7531,9 +7546,6 @@ do
                 },
             },
         },
-        plugins = {
-            specializations = {},
-        }
     }
 
     function Hekili:GetOptions()

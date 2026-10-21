@@ -172,7 +172,7 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
     local function embed(H)
         H.Hekili:EmbedSpecOptions()
         H.Hekili:EmbedPackOptions()
-        return H.Hekili.Options.plugins.specializations
+        return H.Hekili.Options.args.packs.plugins.specializations
     end
 
     it("shows one node per spec with its own preferences, and the Activate button and the command set it", function()
@@ -286,8 +286,9 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
             "shareHeader",
             "sharePacks",
         }, keys)
-        -- a pack's own options still read its name at info[2], under the spec as under Priorities
-        assert.are.equal(FURY, H.Hekili:GetPackOption({ "fury", "Aaa", "pack", "spec" }))
+        -- a pack's own options read its name after its spec's key, or at info[2] directly under Priorities
+        assert.are.equal(FURY, H.Hekili:GetPackOption({ "packs", "fury", "Aaa", "pack", "spec" }))
+        assert.are.equal(FURY, H.Hekili:GetPackOption({ "packs", "Aaa", "pack", "spec" }))
     end)
 
     it("moves a priority's node to its new spec when its Specialization changes", function()
@@ -302,12 +303,12 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         packs.Aaa = aaa
         local nodes = embed(H)
         assert.is_not_nil(nodes.fury.plugins.packs.Aaa)
-        H.Hekili:SetPackOption({ "fury", "Aaa", "pack", "spec" }, PROT)
+        H.Hekili:SetPackOption({ "packs", "fury", "Aaa", "pack", "spec" }, PROT)
         assert.are.equal(PROT, packs.Aaa.spec)
         assert.is_nil(nodes.fury.plugins.packs.Aaa)
         assert.is_not_nil(nodes.protection.plugins.packs.Aaa)
         local ACD = H.env.LibStub("AceConfigDialog-3.0")
-        assert.are.equal("protection\001Aaa", ACD:GetStatusTable("Hekili").groups.selected)
+        assert.are.equal("packs\001protection\001Aaa", ACD:GetStatusTable("Hekili").groups.selected)
     end)
 
     it("deleting the active priority falls back to a default that still exists, else (none)", function()
@@ -392,7 +393,7 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         for _, o in pairs(nodes.fury.args.core.plugins.settings) do
             assert.is_true(o.order < toggle.order)
         end
-        local info = { "fury", "core", "enabled" }
+        local info = { "packs", "fury", "core", "enabled" }
         assert.is_false(toggle.get(info))
         toggle.set(info, true)
         assert.is_false(H.Hekili.DB.profile.specs[FURY].enabled)
@@ -413,34 +414,39 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         local ACD = H.env.LibStub("AceConfigDialog-3.0")
         ACD:Open("Hekili")
         local tree = ACD.OpenFrames.Hekili.children[1]
-        local entries, kids = {}, {}
+        local top, entries, kids = {}, {}, {}
         for _, e in ipairs(tree.tree) do
-            entries[#entries + 1] = e.value
-            if nodes[e.value] then
-                kids[e.value] = {}
-                for _, c in ipairs(e.children or {}) do
-                    kids[e.value][#kids[e.value] + 1] = c.value
+            top[#top + 1] = e.value
+            if e.value == "packs" then -- Priorities: the specs, then Import / Export last
+                for _, s in ipairs(e.children) do
+                    entries[#entries + 1] = s.value
+                    if nodes[s.value] then
+                        kids[s.value] = {}
+                        for _, c in ipairs(s.children or {}) do
+                            kids[s.value][#kids[s.value] + 1] = c.value
+                        end
+                    end
                 end
             end
         end
+        for _, v in ipairs(top) do
+            assert.is_nil(nodes[v]) -- no spec at the top level
+        end
+        assert.are.same({ "arms", "fury", "protection", "sharePacks" }, entries)
         assert.are.same({
             arms = { "Arms (wowsims.com)" },
             fury = { "Fury (wowsims.com)" },
             protection = { "Protection (wowsims.com)" },
         }, kids)
-        local at = {}
-        for i, v in ipairs(entries) do
-            at[v] = i
-        end
-        assert.is_true(at.arms < at.fury and at.fury < at.protection and at.protection < at.packs)
-        tree:SelectByValue("fury") -- the spec's page: its three tabs, no priority among them
+        assert.is_true(ACD:GetStatusTable("Hekili").groups.groups.packs) -- Priorities starts expanded
+        tree:SelectByValue("packs\001fury") -- the spec's page: its three tabs, no priority among them
         local tabs = {}
         for _, e in ipairs(tree.children[1]:GetUserData("tablist")) do
             tabs[#tabs + 1] = e.value
         end
         assert.are.same({ "core", "targets", "performance" }, tabs)
         H.Hekili:SelectPack("Fury (wowsims.com)") -- under its spec in the tree
-        assert.are.equal("fury\001Fury (wowsims.com)", ACD:GetStatusTable("Hekili").groups.selected)
+        assert.are.equal("packs\001fury\001Fury (wowsims.com)", ACD:GetStatusTable("Hekili").groups.selected)
         tree = ACD.OpenFrames.Hekili.children[1] -- the dialog redrew on the selection
         -- the rows: plain buttons (the harness has no OptionsListButtonTemplate), drawn by a refresh that stops
         -- before laying out (no height), so only the hook places the mark
@@ -465,7 +471,7 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
             end
             return r
         end
-        for i, v in ipairs({ "general", "arms", "fury" }) do
+        for i, v in ipairs({ "general", "packs\001arms", "packs\001fury" }) do
             tree.buttons[i] = region()
             tree.buttons[i].uniquevalue = v
         end
@@ -481,13 +487,13 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
             return out, made
         end
         tree:RefreshTree()
-        assert.are.same({ { "arms" }, 1 }, { marked() })
+        assert.are.same({ { "packs\001arms" }, 1 }, { marked() })
         nodes.fury.args.core.args.activate.func()
         settle(H)
         tree:RefreshTree()
-        assert.are.same({ { "fury" }, 2 }, { marked() }) -- one texture per button, made once
+        assert.are.same({ { "packs\001fury" }, 2 }, { marked() }) -- one texture per button, made once
         tree:RefreshTree()
-        assert.are.same({ { "fury" }, 2 }, { marked() })
+        assert.are.same({ { "packs\001fury" }, 2 }, { marked() })
     end)
 end)
 
@@ -629,7 +635,8 @@ describe("a Druid (headless)", function()
         assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
         assert.are.same({}, H.errors)
         H.Hekili:EmbedSpecOptions()
-        local node = H.Hekili.Options.plugins.specializations.restoration
+        H.Hekili:EmbedPackOptions()
+        local node = H.Hekili.Options.args.packs.plugins.specializations.restoration
         assert.is_not_nil(node.args.core.args.notice)
         assert.is_nil(node.args.core.args.enabled)
     end)
@@ -659,8 +666,8 @@ describe("Rogue and Paladin specs (headless)", function()
         assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
         assert.are.same({}, H.errors)
         H.Hekili:EmbedSpecOptions()
-        assert.is_not_nil(H.Hekili.Options.plugins.specializations.holy.args.core.args.notice)
         H.Hekili:EmbedPackOptions()
+        assert.is_not_nil(H.Hekili.Options.args.packs.plugins.specializations.holy.args.core.args.notice)
         local values = H.Hekili.Options.args.packs.args.newPackSpec.values -- no priority for a healing spec
         assert.is_nil(values[100021])
         assert.is_not_nil(values[100023])
