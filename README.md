@@ -6,7 +6,6 @@
 
 Hekili Forever is a fork of the Hekili priority helper, rebuilt for WoW Forever. It is based on the original work by Hekili and is published with the original author's explicit permission.
 
-> [!CAUTION]
 > <span style="color:#e03e2d">**This addon is not maintained by the original Hekili project. Please do not report Hekili Forever issues to the original project. Bugs, questions and requests go to the GitHub issue tracker:**</span> [https://github.com/zmsl/hekili/issues](https://github.com/zmsl/hekili/issues)
 >
 > **Help and feedback: the Hekili Forever Discord:** [https://discord.gg/JaC6W4Pkur](https://discord.gg/JaC6W4Pkur)
