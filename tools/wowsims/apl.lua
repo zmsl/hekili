@@ -1010,9 +1010,7 @@ local function castBody(c, x)
         c.seen[x] = (c.seen[x] or 0) + 1
         tier = tier[c.seen[x]] or tier[#tier]
     end
-    return x
-        .. (c.offGcd[x] and ",use_off_gcd=1" or "")
-        .. (tier and (",focus=" .. tier) or "") -- none on a pre-pull line: stripped with rule 1's guard pass
+    return x .. (c.offGcd[x] and ",use_off_gcd=1" or "") .. (tier and (",focus=" .. tier) or "") -- none on a pre-pull line: stripped with rule 1's guard pass
 end
 
 -- Condition node `n` as text: nil when always true (a nil condition is true: wowsims's apl_action.go), false never.
