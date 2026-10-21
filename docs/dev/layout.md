@@ -352,6 +352,125 @@ temporary worktree with the spec copied in, then copy the fixture back; never ru
 change pass. The
 timeline fixture is re-recorded in place, in the commit that deliberately changes the timeline's look.
 
+### wowsims packs
+
+Every default priority is a wowsims.com pack (`"<Spec> (wowsims.com)"`): wowsims/forever's own APL translated to the
+fork's keys and gated against wowsims's own fight (the plan: `docs/superpowers/plans/2026-10-19-wowsims-packs.md`;
+the author's guide, the user's binding rules and the translator's rules: `docs/dev/wowsims-packs.md`; the open gaps:
+`docs/dev/gaps.md`).
+
+- **Pipeline.** A recipe `tools/wowsims/specs/<class>_<spec>.lua` -> `make wowsims-export SPEC=<class>_<spec>` (the
+  request `tests/Forever/wowsims/<spec>.json` and wowsims's debug log `<spec>.log`, both checked in) ->
+  `make wowsims-packs` (every recipe's `src/Hekili_<Class>/APLs/<Pack>.simc` from its checked-in request and log; no
+  checkout needed, so `packs-check` runs it) -> `make packs` (the RegisterPack blocks). `make wowsims-learn
+  CLASS=<TOKEN>` writes the class's learn levels (`tests/Forever/wowsims/learn_<class>.lua`, from wowdb).
+- **The pin.** `M.PIN` in `tools/wowsims/export.lua` (d33930d04030c3f556582f31949f1f22c17da0e4) is the wowsims/forever
+  commit every request and log comes from (`tests/Forever/wowsims_pin_spec.lua`); the export refuses a checkout at
+  another commit. To move it: check the checkout out at the new commit, bump `M.PIN`, `make wowsims-cli`, re-export
+  every recipe, `make wowsims-packs && make packs`, and re-measure every floor and LIVE60 (each move named in the
+  floor's comment).
+- **`make wowsims-cli`** builds wowsimcli in the checkout (`WOWSIMS`, default `~/src/wowsims-forever`): Go, `protoc`
+  and `protoc-gen-go` on PATH.
+- **The gates** (`tests/Forever/wowsims_<class>_spec.lua`, tagged `#slow #wowsims`): `make check` runs them in its
+  `#slow` tier, `make test-wowsims` alone. Per pack: the replay gate (`ws.gate`: the pack against wowsims's own fight,
+  `decisions on-GCD` at least the floor, the engine's health) and the leveling gate (`ws.live` at three levels: no
+  error, raise or unlisted read, at least one press, never idle longer than the limit with a usable on-GCD ability).
+  `tests/Forever/wowsims_levels_spec.lua` runs `tools/check_pack_levels.lua` over every pack (the leveling rule's
+  static check: every read of another ability sits inside a guard that drops it while that ability is unlearned).
+- **Floors** are the measured `decisions on-GCD`, truncated to two decimals, from the first clean run; raised when
+  content improves, never lowered except with a named cause recorded beside the number.
+- **The leveling rule** (user, 2026-10-19): wowsims is the oracle, so the pack's own idle at 60 (LIVE60) is correct;
+  every bracket's limit is `max(6 s, LIVE60)`, and a lower bracket over it gets a recipe `leveling` filler that is
+  silent at 60, never a higher limit.
+- **The replay's limits** (`tests/Game/harness/replay.lua`): no cast bars (casts at their completion, zero lag), no
+  regen ticks (powers are the log's after-values), the target's swings not replayed (the tank exports log them since
+  central fix 13; GAP AH), a white swing's outcome one landing lag after its swing (its rage at the swing), the execute
+  phase by time (the last 20% of the fight), our own health not replayed (reads full), one weapon. Auras show their
+  real durations (the log's to a natural fade, the declared one to an early removal).
+- **CI.** `.github/workflows/check.yml` runs `make check`'s checks (not the type check), so the replay and leveling
+  gates and the 3-fight loop lines run in CI; the 20-fight gates (`#loop`, `#party` and the class tags) do not.
+  `make gate` (local only, under a machine-wide lock) is the merge gate: `make check` then every 20-fight loop; a change
+  touching no `src/` file merges on `make check` alone (loop lines cannot move).
+
+Every pack's current lines (the forever gate on 51a0b1ac; the replay's `agreement` counts ticks, the gate reads
+`decisions on-GCD`; brackets are the worst idle in seconds at each level, the limit `max(6, LIVE60)`):
+
+| Pack | Replay floor | Measured (decisions) | LIVE60 limit | Brackets (worst idle) |
+| --- | --- | --- | --- | --- |
+| Arms (wowsims.com) | 0.91 | 0.910 (67) | 9.2 | L10 5.8, L40 7.2, L60 9.2 |
+| Fury (wowsims.com) | 0.93 | 0.933 (60) | 6.8 | L10 2.6, L40 2.6, L60 6.8 |
+| Protection (wowsims.com), Warrior | 0.90 | 0.904 (94) | 6 (5.4) | L10 5.6, L40 5.4, L60 5.4 |
+| Feral (wowsims.com) | 0.95 | 0.955 (88) | 6 (4.2) | L20 4.0, L40 3.8, L60 3.8 |
+| Guardian (wowsims.com) | 0.78 | 0.782 (78) | 8.4 | L10 4.8, L40 7.4, L60 8.4 |
+| Balance (wowsims.com) | 0.85 | 0.855 (55) | 6 (1.4) | L10 1.6, L40 1.4, L60 1.4 |
+| Assassination (wowsims.com) | 0.98 | 0.982 (57) | 6 (5.0) | L10 5.2, L40 5.0, L60 5.0 |
+| Combat (wowsims.com) | 0.95 | 0.972 (71) | 6 (4.8) | L10 5.6, L40 4.8, L60 4.0 |
+| Subtlety (wowsims.com) | 0.98 | 0.988 (82) | 6 (3.8) | L10 5.6, L40 4.6, L60 4.2 |
+| Retribution (wowsims.com) | 0.87 | 0.877 (57) | 8.4 | L10 4.4, L40 6.4, L60 2.2 |
+| Protection (wowsims.com), Paladin | 0.62 | 0.625 (48) | 17.8 | L10 6.0, L40 6.8, L60 8.4 |
+| Enhancement (wowsims.com) | 0.90 | 0.909 (88) | 8.0 | L10 1.6, L40 pending (GAP AB), L60 8.0 |
+| Beast Mastery (wowsims.com) | 1.00 | 1.000 (27) | 6 (5.4) | L10 4.6, L40 4.6, L60 5.4 |
+| Marksmanship (wowsims.com) | 0.92 | 0.929 (42) | 11.8 | L10 4.6, L40 3.6, L60 11.8 |
+| Survival (wowsims.com) | 0.97 | 0.976 (41) | 6 (0) | L10 4.6, L40 0.0, L60 0.0 |
+
+LIVE60s above 6 s are wowsims's own play: Arms pools rage for Heroic Strike, Guardian waits on rage, Retribution and
+Marksmanship spend themselves out of mana as wowsims's own fights do (ruling P6), Paladin Protection waits on mana
+(the old untanked fight's 17.8 s), Enhancement's spending runs the mana out from 90 s.
+
+Recorded deviations (each one's reason in the named file):
+- Every pack (API-forced, `tools/wowsims/apl.lua` rules 10, 11, 13): `fight_remains` answers unknown (target health
+  is secret), distance is a bracket from range checks, an off-GCD automatic cooldown shows as soon as it is ready; the
+  sim does not predict avoidance (wowsims rolls it); our own health reads full while secret; mana is a bounded belief
+  where the client keeps it secret.
+- Warrior (`tools/wowsims/specs/warrior_*.lua`): Stance Dance and Recklessness keep wowsims's defaults (off); the
+  Protection replay's top disagreements are replay limits (the decision instant at a cooldown's end, an exact tie at
+  the GCD's length, Shatter Curse at 50% health).
+- Druid (`druid_*.lua`, `Druid.lua`): Lacerate's cost per Shredding Attacks rank from the wowsims log (13), not the
+  DB2's 6 a rank (ruling: wowsims is the oracle); Primal Fury at 1/2 an average, not wowsims's 50% roll.
+- Rogue (`rogue_*.lua`, `rogue_world.lua`): the energy floor seeded from `floor(lo)` and an unknown regen tick phase
+  (GAP Y); Improved Sinister Strike at 1/2 scaled from the whole talent's DB2 value.
+- Paladin (`paladin_*.lua`): Benediction and Holy Conduit partial ranks from wowsims's per-rank curves (the DB2 holds
+  rank 1 only); mana from blocks and hits not modelled (GAP AG).
+- Shaman (`shaman_enhancement.lua`, `Shaman.lua`): Fire Nova at the DB2's 520 where wowsims has 375 (retry now that GAP V
+  is fixed); Flame Shock 21 s with Call of Flame from wowsims's spell data (the DB2 shows no such effect).
+- Hunter (`hunter_*.lua`, `Hunter.lua`): Multi-Shot keeps the DB2's 0.5 s cast (wowsims: instant); Resourcefulness rank
+  1 from wowsims's data (30%); percent-of-base costs on each class's level-60 base mana; Beast Mastery and Marksmanship
+  run one wowsims APL, so their lines match.
+
+CPU and memory, release to release (`r.cpuMean`/p99 of the 3- and 20-fight lines, process CPU ms per Update; `make
+bench`'s bytes per Update; both measured on this machine one run after the other, so compare the columns, not the
+absolute numbers with other tables):
+
+| 3-fight line (seeds 1-3 unless named) | v0.1.1-rc.1 (hand-built lists) cpu mean / p99 ms | now (wowsims.com packs) cpu mean / p99 ms |
+| --- | --- | --- |
+| Arms seeds 1-3 | 3.68 / 13.38 | 4.04 / 13.69 |
+| Arms seeds 4-6 | 3.33 / 10.81 | 3.66 / 11.87 |
+| Feral | 2.76 / 10.55 | 4.99 / 19.20 |
+| Guardian | 2.49 / 8.92 | 2.22 / 9.11 |
+| Balance | 1.61 / 7.26 | 2.05 / 8.45 |
+| Assassination | 2.64 / 9.39 | 2.46 / 7.74 |
+| Combat | 2.51 / 8.96 | 2.64 / 8.62 |
+| Subtlety | 3.14 / 11.66 | 2.61 / 9.03 |
+| Retribution | 1.33 / 4.41 | 1.86 / 6.55 |
+| Protection (Paladin) | 1.28 / 4.05 | 1.54 / 5.76 |
+| Enhancement | 1.16 / 4.29 | 2.11 / 6.77 |
+| Beast Mastery | 1.06 / 3.95 | 1.63 / 5.66 |
+| Marksmanship | 1.00 / 3.91 | 1.65 / 6.22 |
+| Survival | 0.94 / 3.92 | 1.80 / 6.52 |
+
+| `make bench` (headless Arms, 6 fights, need off) | v0.1.1-rc.1 | now |
+| --- | --- | --- |
+| ms per Update, mean / p95 / max | 2.595 / 3.520 / 10.925 (n 4631) | 2.812 / 3.886 / 12.670 (n 5285) |
+| B per Update, direct, mean / p95 / max | 6 / 206 / 640 | 2 / 80 / 240 |
+| B per Update, Driver coroutine, mean / p95 / max | 20 / 206 / 7424 | 19 / 80 / 7674 |
+| B per UNIT_COMBAT, mean / p95 / max | 28.7 / 80.0 / 504.0 | 29.5 / 80.0 / 504.0 |
+
+Every line stays under the 10 ms mean bar. Between the two the packs changed (hand-built -> translated) and the
+belief gained work (outcomes, swing credits, the range bracket, mana bounds); the runs do not separate the two. Feral
+rises most (2.76 -> 4.99 ms), the mana specs about half again, Assassination and Subtlety fall. The bench's bytes per
+Update fell (direct p95 206 -> 80), its time per Update rose 8% over more Updates (n 4631 -> 5285). The 20-fight lines
+were not re-run at v0.1.1-rc.1 (the 3-fight lines are the like-for-like set `make check` runs).
+
 ## Remotes
 
 `origin` is the fork (github.com/zmsl/hekili). Upstream, fetch only:
