@@ -689,8 +689,8 @@ describe("the wowsims APL translator", function()
                 { action = { castAssigned = {} } },
             },
         }, ctx(r, player))
-        local active =
-            "(settings.pick='off'|(settings.pick='one'&debuff.dot.up)|(settings.pick='two'&debuff.big_hit.up))"
+        -- wowsims's IsActive with no spell (the none candidate) is false: no term for it
+        local active = "((settings.pick='one'&debuff.dot.up)|(settings.pick='two'&debuff.big_hit.up))"
         assert.are.equal(
             table.concat({
                 "actions=dot,if=settings.pick='one'&(!" .. active .. ")",

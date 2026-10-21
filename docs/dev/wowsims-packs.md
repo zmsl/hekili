@@ -81,8 +81,8 @@ Translation:
   "<action key>" | false }, active = "<value name>", is = "<value name>" } }`, rule 16): a cast whose spell a class
   option picks (wowsims/forever d33930d040's `castWarlockAssignedCurse`, its option `curseOptions`). The option becomes
   a choice setting read as `settings.<key>='<snake of the option value>'`; the action is one line a candidate (none
-  for a `false` one, e.g. NoCurse); `active` names the value "the selected spell's debuff is up" (a `false`
-  candidate reads up, by ruling, so no line waits on a debuff that never comes; wowsims reads false), `is` the value
+  for a `false` one, e.g. NoCurse); `active` names the value "the selected spell's debuff is up" (false while a
+  `false` candidate is selected, as wowsims's IsActive with no spell), `is` the value
   "the option is X". The build's option value (the request's `<spec>.options.classOptions`) is the default in game and
   in the harness; the header lists it (`# Setting <key> (choice of <option>: ...), default <value> ...`) and the class
   registers the key as an AceConfig `select` with those candidate keys, `default` and `sim` both the build's. A
@@ -147,7 +147,7 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 15. `maintenance`: the action's lines behind its setting; other lines' reads of its aura as "up or disabled"; an
     absence read stays. Not a wowsims rule: the in-game default (off) is ours, the harness runs wowsims's (on).
 16. `select`: an option-selected cast as one line a candidate under its choice setting's term; its "active" value as
-    the selected candidate's debuff (a none candidate reads up: a ruling, wowsims reads false); its "is" value as the
+    the selected candidate's debuff (false with none selected, as wowsims); its "is" value as the
     setting term. Unsupported: an "is" with no field (protojson's zero value) or an unknown option value.
 
 Any node the translator does not handle is unsupported (rule 2): a new wowsims node omits its entry rather than

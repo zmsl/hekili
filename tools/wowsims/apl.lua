@@ -135,8 +135,8 @@
 --    passes a quoted string through: Engine/Sim/Scripts.lua). The action is one line a candidate with a key, in the
 --    option values' sorted order, each the candidate's cast line (rule 7) under the setting term and the entry's
 --    condition; a `false` candidate (none) has no line. The value `active` (the selected spell's aura is up on the
---    target) is the OR over candidates of (setting term & `debuff.<key>.up`), a `false` candidate's term alone (by
---    ruling: the lines guarded by it do not wait on a debuff that never comes; wowsims reads false there); an
+--    target) is the OR over candidates with a key of (setting term & `debuff.<key>.up`), so it is false while a
+--    `false` candidate is selected (wowsims's IsActive with no spell, sim/warlock/apl_values.go); an
 --    unlearned candidate's debuff reads down, as wowsims's missing spell does (no rule 6 guard). The value `is`
 --    (its one field names an option value) is that value's setting term; with no field (protojson's zero value) or an
 --    unknown value it is unsupported. The build's value (the request's `<spec>.options.classOptions.<option>` or
@@ -826,8 +826,13 @@ local function bool(c, n)
         end
         local parts = {}
         for _, val in ipairs(sel.values) do
-            local key = sel.x.candidates[val]
-            parts[#parts + 1] = key and ("(" .. sel.term[val] .. "&debuff." .. key .. ".up)") or sel.term[val]
+            local key = sel.x.candidates[val] -- none (false): wowsims's IsActive with no spell is false, no term
+            if key then
+                parts[#parts + 1] = "(" .. sel.term[val] .. "&debuff." .. key .. ".up)"
+            end
+        end
+        if #parts == 0 then
+            return nil, false, false
         end
         return "(" .. table.concat(parts, "|") .. ")", nil, false
     end
