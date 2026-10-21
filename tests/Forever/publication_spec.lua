@@ -30,6 +30,7 @@ local TOCS = {
     "src/Hekili_Hunter/Hekili_Hunter.toc",
     "src/Hekili_Mage/Hekili_Mage.toc",
     "src/Hekili_Priest/Hekili_Priest.toc",
+    "src/Hekili_Warlock/Hekili_Warlock.toc",
 }
 
 local function field(toc, key)
@@ -203,6 +204,7 @@ describe("pkgmeta", function()
             "Hekili_Hunter",
             "Hekili_Mage",
             "Hekili_Priest",
+            "Hekili_Warlock",
         }) do
             assert.truthy(s:find("\n    Hekili/src/" .. a .. ": " .. a .. "\n", 1, true), a)
         end

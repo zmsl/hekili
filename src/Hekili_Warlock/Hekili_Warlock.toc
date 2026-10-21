@@ -1,0 +1,14 @@
+## Interface: 16001
+## Version: @project-version@
+## Title: Hekili Forever - Warlock
+## Author: defzach
+## IconTexture: Interface\AddOns\Hekili\Textures\HekiliForever
+## Notes: Hekili Forever's Warlock: the class kit (no default priority yet), loaded by Hekili Forever for a Warlock. Based on the original work by Hekili.
+## X-Website: https://github.com/zmsl/hekili
+## X-Curse-Project-ID: 1753387
+## Dependencies: Hekili, Hekili_Shared
+## Group: Hekili
+## LoadOnDemand: 1
+## X-Hekili-ContentAPI: 8
+
+Warlock.lua

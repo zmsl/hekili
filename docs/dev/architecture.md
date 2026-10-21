@@ -199,7 +199,7 @@ starts it too, and removing a down aura keeps it (`tests/Forever/aura_icd_spec.l
 
 **Addons and load order.** `Hekili` (core, the only addon the client loads by itself), `Hekili_Shared`
 (`## Dependencies: Hekili`, `## LoadOnDemand: 1`; Shared auras, consumables, items, and the race packs), then one pack
-per class: `Hekili_Warrior`, `Hekili_Druid`, `Hekili_Rogue`, `Hekili_Paladin`, `Hekili_Shaman`, `Hekili_Hunter`, `Hekili_Mage`, `Hekili_Priest` (`## Dependencies: Hekili, Hekili_Shared`,
+per class: `Hekili_Warrior`, `Hekili_Druid`, `Hekili_Rogue`, `Hekili_Paladin`, `Hekili_Shaman`, `Hekili_Hunter`, `Hekili_Mage`, `Hekili_Priest`, `Hekili_Warlock` (`## Dependencies: Hekili, Hekili_Shared`,
 `## LoadOnDemand: 1`). `tests/helpers/addons.lua` lists them in this order. `ns.LoadContent` runs once, in
 `OnInitialize`, before `InitializeProfile`, so the profile's defaults see the class's spec and packs. It loads
 `Hekili_Shared` explicitly first (every class, with or without a pack, gets the shared and race content), then reads

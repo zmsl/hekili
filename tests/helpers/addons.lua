@@ -18,6 +18,7 @@ M.CONTENT = {
     "Hekili_Hunter",
     "Hekili_Mage",
     "Hekili_Priest",
+    "Hekili_Warlock",
 }
 M.ADDONS = { M.CORE }
 for _, name in ipairs(M.CONTENT) do

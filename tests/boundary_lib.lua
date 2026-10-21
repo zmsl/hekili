@@ -36,6 +36,11 @@ local loaders = {
             return require("Forever.helpers.load_druid").load(nil, "src/Hekili_Priest/Priest.lua", "PRIEST")
         end,
     },
+    Warlock = { -- the Warlock's, likewise
+        load = function()
+            return require("Forever.helpers.load_druid").load(nil, "src/Hekili_Warlock/Warlock.lua", "WARLOCK")
+        end,
+    },
 }
 
 -- Content names core may use, each with its reason.

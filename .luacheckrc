@@ -164,5 +164,13 @@ for _, k in ipairs(stateEnv) do
     priestEnv[#priestEnv + 1] = k
 end
 files["src/Hekili_Priest/Priest.lua"] = { globals = priestEnv }
+-- The Warlock's further `state` names.
+local warlockEnv = {
+    "min", "max", "level", "summonPet", "soul_shards", "locked_out_shadow", "locked_out_fire",
+}
+for _, k in ipairs(stateEnv) do
+    warlockEnv[#warlockEnv + 1] = k
+end
+files["src/Hekili_Warlock/Warlock.lua"] = { globals = warlockEnv }
 files["src/Hekili_Shared/Races/"] = { globals = stateEnv }
 files["src/Hekili_Shared/Shared/"] = { globals = stateEnv }

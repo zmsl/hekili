@@ -4,6 +4,7 @@
 return {
     ["src/Hekili/Engine/Sim/Constants.lua"] = {
         ["25297"] = 1,
+        ["5740"] = 1,
         ["71"] = 1,
         ["72"] = 1,
         ["DRUID"] = 5,
@@ -25,6 +26,7 @@ return {
         ["feral"] = 1,
         ["hunter"] = 1,
         ["paladin"] = 1,
+        ["rain_of_fire"] = 1,
         ["rogue"] = 1,
         ["shaman"] = 1,
         ["subtlety"] = 1,

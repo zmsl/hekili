@@ -21,6 +21,8 @@
   Word: Pain kept up, Penance, Smite; the wand at 10% mana).
 - Shaman: Elemental has a priority, "Elemental (wowsims.com)", wowsims/forever's Elemental list (Flame Shock, Lava Burst
   while it is up, Earth Shock on Revelation, Elemental Mastery, Lightning Bolt, the fire totem). It is Elemental's default.
+- Warlock (new addon folder Hekili_Warlock): the Warlock's abilities and talents, with no default priority yet
+  (Affliction, Demonology and Destruction come next).
 
 ### Changed
 - Mana and energy consumables (Major Mana Potion, Demonic Rune, Thistle Tea, Mana Gem) and the Rogue's poison reminders (Instant and Deadly Poison) are now under the Potions toggle, which is off by default: turn Potions on to see them. The Healthstone stays under Defensives.
