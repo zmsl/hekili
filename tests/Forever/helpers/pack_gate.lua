@@ -20,6 +20,7 @@ M.FLICKER = {
     ["Arms"] = { flicker = 1.6, retracted = 0.1 }, -- 1.57, 0.02 (re-measured on fix 22's truth resolve)
     -- 1.44, 0.13: 1.71, 0.09 before the user's Berserker Rage ruling (2026-10-21: no pre-pull Berserker Rage without
     -- Improved Berserker Rage, which the build lacks): the fight opens a GCD earlier, one more Execute retracted at a swing
+    -- (a phase shift from the ruled pre-pull removal, not a new retraction source)
     ["Fury L60"] = { flicker = 1.5, retracted = 0.2 },
     ["Fury L24"] = { flicker = 3.4, retracted = 0.2 }, -- 3.31, 0.12
     ["Feral"] = { flicker = 2.2, retracted = 0 }, -- 2.12, 0 (re-measured on fix 22's truth resolve)

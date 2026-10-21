@@ -1101,7 +1101,7 @@ describe("the wowsims APL translator", function()
         assert.are.equal(
             table.concat({
                 "actions.precombat=big_hit,if=talent.cuts.enabled&(buff.fury.remains>1|rage.current>50)",
-                "actions=big_hit,if=talent.cuts.enabled&(rage.current>10|cooldown.big_hit.ready)&(buff.fury.remains>1|rage.current>50)",
+                "actions=big_hit,if=(talent.cuts.enabled&(rage.current>10|cooldown.big_hit.ready))&(buff.fury.remains>1|rage.current>50)",
                 "actions+=/strike",
                 "actions+=/big_hit,if=talent.cuts.enabled&rage.current>10&(buff.fury.remains>1|rage.current>50)",
             }, "\n"),
@@ -1348,6 +1348,28 @@ describe("the wowsims APL translator", function()
         end
         assert.are.same({ "bloodrage", "battle_shout" }, recs("bloodrage"))
         assert.are.same({ "bloodrage" }, recs("berserker_stance"))
+    end)
+
+    it("groups an | condition before a guard's & term, on cast and automatic lines alike", function()
+        local early = OR(cmp("OpGe", { currentTime = {} }, const("5s")), cmp("OpGt", { currentRage = {} }, const("10")))
+        local kit = {
+            abilities = {
+                big_hit = { key = "big_hit", id = 200, gcd = "spell" },
+                roar = { key = "roar", id = 300, gcd = "off" },
+            },
+            auras = {},
+        }
+        local guard = { big_hit = "rage.current>50", roar = "rage.current>50|time>9" }
+        local text = apl.translate({
+            priorityList = { cast(200, early), { action = { autocastOtherCooldowns = {}, condition = early } } },
+        }, apl.context(kit, { guard = guard }, LOG))
+        assert.are.equal(
+            table.concat({
+                "actions=big_hit,if=(time>=5|rage.current>10)&rage.current>50",
+                "actions+=/roar,use_off_gcd=1,if=(time>=5|rage.current>10)&(rage.current>50|time>9)",
+            }, "\n"),
+            text
+        )
     end)
 
     it("expands wowsims's automatic cooldowns from the log, in place, under the entry's condition", function()

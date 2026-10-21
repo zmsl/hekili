@@ -1814,10 +1814,15 @@ spec:RegisterAbilities({
     },
 })
 
--- The rage a stance swap keeps (swap_stance's rule), for a priority's guard: Tactical Mastery is a passive, which no
--- priority can read (Fury's overpower_weaving guard, the user's ruling 2026-10-21).
+-- The rage a stance swap would leave (swap_stance's rule: the rage now, up to what is kept), for a priority's guard:
+-- Tactical Mastery is a passive, which no priority can read (Fury's overpower_weaving guard, the user's ruling
+-- 2026-10-21).
 spec:RegisterStateExpr("stance_rage_kept", function()
-    return stanceKeep(talent.improved_tactical_mastery.rank)
+    local keep = stanceKeep(talent.improved_tactical_mastery.rank)
+    if rage.current < keep then
+        return rage.current
+    end
+    return keep
 end)
 
 -- The execute phase: Execute's plain usability window (the target's health is secret on Forever).

@@ -71,7 +71,8 @@
 --    an `and`/`or` writes a repeated term once): an APL written for a talent build (wowsims picks it by that
 --    talent, e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
 --    The recipe's `guard` ({ [action key or group's snake name] = SimC expression }) appends `&(<expression>)` to the
---    condition of each such entry, in every list (after a required talent): a documented deviation from wowsims, each
+--    condition of each such entry (rule 13's automatic lines too), in every list (after a required talent): a
+--    documented deviation from wowsims, each
 --    with its reason in the recipe and docs/dev/wowsims-packs.md.
 -- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N when
 --    it is a direct operand (a variable followed) of a comparison with a percent read (M.PERCENT: `mana.pct`,
@@ -1055,6 +1056,15 @@ local function paren(s) -- `s` as one term of an `&`
     return (grouped(s) or not s:find("|", 1, true)) and s or ("(" .. s .. ")")
 end
 
+-- Rule 7's guard of `key` after condition `cond` (either may be nil): one more `&` term.
+local function guarded(c, key, cond)
+    local g = c.guard[key]
+    if not g then
+        return cond
+    end
+    return cond and (paren(cond) .. "&" .. paren(g)) or g
+end
+
 -- Rule 14: a strictSequence's members (casts) as consecutive lines, each a member's own line (`entry`'s) whose
 -- condition also says the sequence is at it: the first under the sequence's condition `cond`; a later one when the
 -- member before it is the last cast (`prev.1.<key>`), or, while that member is unlearned (wowsims drops it from the
@@ -1218,16 +1228,12 @@ function entry(c, e)
             -- rule 7's use_off_gcd for both (autocast: the documented deviation from wowsims's GCD wait)
             local off = c.offGcd[x]
             local line = x .. (off and ",use_off_gcd=1" or "")
-            local cx = required(c, x, cond)
+            local cx = guarded(c, x, required(c, x, cond))
             out[i] = cx and (line .. ",if=" .. cx) or line
         end
         return out
     end
-    cond = required(c, key, cond)
-    local g = c.guard[key] -- rule 7's guard: one more `&` term
-    if g then
-        cond = cond and (cond .. "&" .. paren(g)) or g
-    end
+    cond = guarded(c, key, required(c, key, cond))
     return cond and (body .. ",if=" .. cond) or body
 end
 

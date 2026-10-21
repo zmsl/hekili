@@ -768,7 +768,11 @@ describe("Forever Warrior", function()
         e.swap_stance("berserker_stance")
         assert.are.same({ 25 }, e.spent) -- 50 rage, 10 + 1 x 15 kept (DB2 12295: 15 a rank)
         assert.are.same({ "berserker_stance" }, e.applied)
-        assert.are.equal(25, lw.run(w.exprs.stance_rage_kept, e)) -- the same rule, for a priority to read
+        e.rage.current = 50
+        assert.are.equal(25, lw.run(w.exprs.stance_rage_kept, e)) -- the same rule, for a priority to read: 25 of 50
+        e.rage.current = 8
+        assert.are.equal(8, lw.run(w.exprs.stance_rage_kept, e)) -- under the cap, all of it
+        e.rage.current = 50
         w.game.known[1310185] = nil
         e.talent = rank(0)
         assert.are.equal(0, lw.run(w.exprs.stance_rage_kept, e)) -- below level 14: a swap keeps nothing
