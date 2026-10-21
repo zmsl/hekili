@@ -167,7 +167,7 @@ M.MAP = MAP
 
 --- The resolved press of `key` from the class file: its rank 1 ID, its cost (rank 0 talents) and power type (a mana
 --- cost is not modelled: mana is never read), its cooldown, its GCD by kind, on-next-swing, its form requirement (the
---- ability's `buff` / `nobuff` form fields) and the mapping's effects. `o.onEnter` { bear, cat }: a variant's entry
+--- ability's `form` / `nobuff` fields) and the mapping's effects. `o.onEnter` { bear, cat }: a variant's entry
 --- rules over the class file's.
 function M.press(key, R, o)
     local m = assert(MAP[key], "unmapped key " .. tostring(key))
@@ -200,11 +200,11 @@ function M.press(key, R, o)
     if m.extra then
         m.extra(p, R, o or {})
     end
-    local need, avoid = M.FORM[a.buff], M.FORM[a.nobuff]
-    assert((a.buff == nil or need) and (a.nobuff == nil or avoid), "an unmapped form requirement: " .. key)
+    local need, avoid = M.FORM[a.form], M.FORM[a.nobuff]
+    assert((a.form == nil or need) and (a.nobuff == nil or avoid), "an unmapped form requirement: " .. key)
     p.requires = function(_, us)
         if need and us.form ~= need then
-            return false, a.buff
+            return false, a.form
         elseif avoid and us.form == avoid then
             return false, "not " .. a.nobuff
         end

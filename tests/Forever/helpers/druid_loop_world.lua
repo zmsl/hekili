@@ -365,10 +365,10 @@ local function classData(H)
     return X
 end
 
--- Whether `e`'s true form meets ability `a`'s buff / nobuff form fields (a function field: the class file's choice,
+-- Whether `e`'s true form meets ability `a`'s form / nobuff fields (a function field: the class file's choice,
 -- Berserk's "Cat or Bear"; read from `funcs`, as Hekili's ability table answers it evaluated in its own state).
 local function formOk(a, e)
-    local need, avoid = a.funcs and a.funcs.buff or a.buff, a.nobuff
+    local need, avoid = a.funcs and a.funcs.form or a.form, a.nobuff
     if type(need) == "function" then
         need = nil
         if e.form ~= FORM.cat_form and e.form ~= FORM.bear_form then

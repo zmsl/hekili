@@ -808,6 +808,9 @@ local HekiliSpecMixin = {
     -- own crit (Primal Fury's `gain( 5, "rage" )`); the belief's only, the sim does not predict crits. `spendBase = true`:
     -- its `spend` (scalar or function) is a fraction of its pool's base power at any magnitude, floored, in both layers
     -- (a percent-of-base cost a stacking aura raises past 100%); without it only a cost between 0 and 1 is a fraction.
+    -- Hekili's `form = key` (or a function returning one): the form or stance aura the ability needs (state:IsUsable);
+    -- a kit declares that here, never through `buff` or a `usable` body (tests/Forever/forms_spec.lua); `nobuff` stays
+    -- upstream's "not while this is up".
     RegisterAbility = function( self, ability, data )
         -- A passive (a spell the spellbook knows, never cast): the belief tracks its known rank; the sim never sees it.
         if data.passive then

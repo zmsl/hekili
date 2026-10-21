@@ -448,7 +448,7 @@ describe("Forever Druid", function()
             }
             for gate, keys in pairs(gates) do
                 for _, k in ipairs(keys) do
-                    assert.are.same({ gate, nil }, { a[k].buff, a[k].nobuff }, k)
+                    assert.are.same({ gate, nil }, { gate:match("_form$") and a[k].form or a[k].buff, a[k].nobuff }, k)
                 end
             end
             for _, k in ipairs({
@@ -466,24 +466,24 @@ describe("Forever Druid", function()
                 "thorns",
                 "natures_grasp",
             }) do
-                assert.are.same({ nil, "feral_form" }, { a[k].buff, a[k].nobuff }, k)
+                assert.are.same({ nil, "feral_form" }, { a[k].form, a[k].nobuff }, k)
             end
-            assert.are.same({ nil, nil }, { a.innervate.buff, a.innervate.nobuff }) -- leaves the form (below)
+            assert.are.same({ nil, nil }, { a.innervate.form, a.innervate.nobuff }) -- leaves the form (below)
             for _, k in ipairs({ "cat_form", "bear_form", "moonkin_form", "travel_form", "aquatic_form" }) do
-                assert.are.same({ nil, k }, { a[k].buff, a[k].nobuff }, k)
+                assert.are.same({ nil, k }, { a[k].form, a[k].nobuff }, k)
             end
             for _, k in ipairs({ "faerie_fire", "barkskin" }) do
-                assert.are.same({ nil, nil }, { a[k].buff, a[k].nobuff }, k)
+                assert.are.same({ nil, nil }, { a[k].form, a[k].nobuff }, k)
             end
             local e = ld.env(w)
             assert.are.same(
                 { "cat_form", 55, 0 },
-                { ld.run(a.berserk.buff, e), ld.run(a.faerie_fire.spend, e), ld.run(a.faerie_fire.cooldown, e) }
+                { ld.run(a.berserk.form, e), ld.run(a.faerie_fire.spend, e), ld.run(a.faerie_fire.cooldown, e) }
             )
             e.buff = auras({ bear_form = { up = true }, feral_form = { up = true } })
             assert.are.same(
                 { "bear_form", 0, 6 },
-                { ld.run(a.berserk.buff, e), ld.run(a.faerie_fire.spend, e), ld.run(a.faerie_fire.cooldown, e) }
+                { ld.run(a.berserk.form, e), ld.run(a.faerie_fire.spend, e), ld.run(a.faerie_fire.cooldown, e) }
             )
         end
     )
@@ -525,7 +525,7 @@ describe("Forever Druid", function()
             ld.run(a.handler, e)
             ld.run(a.now, e)
             ld.run(a.start, e)
-            for _, gate in ipairs({ ld.run(a.buff, e), a.nobuff, a.aura }) do
+            for _, gate in pairs({ ld.run(a.form, e), ld.run(a.buff, e), a.nobuff, a.aura }) do
                 table.insert(e.applied, gate)
             end
         end

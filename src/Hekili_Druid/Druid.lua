@@ -732,7 +732,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         refundOnAvoid = true, -- wowsims bash.go; DB2 Discount Power On Miss
         known = knows(BASH),
-        buff = "bear_form",
+        form = "bear_form",
 
         now = function()
             applyDebuff("target", "bash", (BASH_STUN[knownRank(BASH)] or 2) + 0.5 * talent.brutal_impact.rank)
@@ -783,7 +783,7 @@ spec:RegisterAbilities({
         known = knows(BERSERK),
         toggle = "cooldowns",
         -- "Requires Cat Form, Bear Form, Dire Bear Form" (DB2 text): whichever is up.
-        buff = function()
+        form = function()
             if buff.bear_form.up then
                 return "bear_form"
             end
@@ -840,7 +840,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(CHALLENGING_ROAR),
-        buff = "bear_form",
+        form = "bear_form",
 
         now = function()
             applyDebuff("target", "challenging_roar")
@@ -866,7 +866,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         refundOnAvoid = true, -- wowsims claw.go; DB2 Discount Power On Miss
         known = knows(CLAW),
-        buff = "cat_form",
+        form = "cat_form",
 
         handler = function()
             gain(1, "combo_points")
@@ -886,7 +886,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         refundOnAvoid = true, -- wowsims cower.go; DB2 Discount Power On Miss
         known = knows(COWER),
-        buff = "cat_form",
+        form = "cat_form",
     },
 
     dash = {
@@ -898,7 +898,7 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows(DASH),
-        buff = "cat_form",
+        form = "cat_form",
 
         now = function()
             applyBuff("dash")
@@ -921,7 +921,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(DEMORALIZING_ROAR),
-        buff = "bear_form",
+        form = "bear_form",
 
         now = function()
             applyDebuff("target", "demoralizing_roar")
@@ -941,7 +941,7 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows(ENRAGE),
-        buff = "bear_form",
+        form = "bear_form",
 
         now = function()
             gain(buff.wolfshead_helm.up and 15 or 10, "rage")
@@ -1021,7 +1021,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(FERAL_CHARGE),
-        buff = "bear_form",
+        form = "bear_form",
 
         now = function()
             applyDebuff("target", "feral_charge_effect")
@@ -1045,7 +1045,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(FEROCIOUS_BITE),
-        buff = "cat_form",
+        form = "cat_form",
 
         usable = function()
             return combo_points.current > 0, "requires combo points"
@@ -1071,7 +1071,7 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows(FRENZIED_REGENERATION),
         toggle = "defensives",
-        buff = "bear_form",
+        form = "bear_form",
 
         now = function()
             applyBuff("frenzied_regeneration")
@@ -1115,7 +1115,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(GROWL),
-        buff = "bear_form",
+        form = "bear_form",
 
         now = function()
             applyDebuff("target", "growl")
@@ -1255,7 +1255,7 @@ spec:RegisterAbilities({
         refundOnAvoid = true, -- wowsims lacerate.go; DB2 Discount Power On Miss
         onCrit = primalFuryOnCrit(),
         known = knows(LACERATE),
-        buff = "bear_form",
+        form = "bear_form",
 
         now = function()
             applyDebuff("target", "lacerate", 15, min(5, debuff.lacerate.stack + 1))
@@ -1310,7 +1310,7 @@ spec:RegisterAbilities({
         -- at the press (the Warrior's Heroic Strike alike), so the two differ by up to one swing.
         onNextSwing = true,
         known = knows(MAUL),
-        buff = "bear_form",
+        form = "bear_form",
 
         usable = function()
             return not buff.maul.up, "Maul is already queued"
@@ -1450,7 +1450,7 @@ spec:RegisterAbilities({
         refundOnAvoid = true, -- wowsims primal_bite.go; DB2 Discount Power On Miss
         onCrit = primalFuryOnCrit(),
         known = knows(PRIMAL_BITE),
-        buff = "bear_form",
+        form = "bear_form",
     },
 
     prowl = {
@@ -1462,7 +1462,7 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows(PROWL),
-        buff = "cat_form",
+        form = "cat_form",
 
         usable = function()
             return combat == 0, "cannot be in combat"
@@ -1494,7 +1494,7 @@ spec:RegisterAbilities({
         known = knows(RAKE),
         -- a dodged, parried or missed cast leaves no debuff (core: Engine/Schema/Spec.lua trackMisses)
         missable = true,
-        buff = "cat_form",
+        form = "cat_form",
 
         now = function()
             applyDebuff("target", "rake")
@@ -1580,7 +1580,7 @@ spec:RegisterAbilities({
         refundOnAvoid = true, -- wowsims rip.go; DB2 Discount Power On Miss
         known = knows(RIP),
         missable = true,
-        buff = "cat_form",
+        form = "cat_form",
 
         usable = function()
             return combo_points.current > 0, "requires combo points"
@@ -1615,7 +1615,7 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows(SHIFTING_POWER),
-        buff = "cat_form",
+        form = "cat_form",
 
         now = function()
             gain(SHIFTING_POWER_ENERGY + (buff.wolfshead_helm.up and 5 or 0), "energy")
@@ -1641,7 +1641,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         refundOnAvoid = true, -- wowsims shred.go; DB2 Discount Power On Miss
         known = knows(SHRED),
-        buff = "cat_form",
+        form = "cat_form",
 
         -- Shred needs us behind the target, which the game tells only by refusing: a "must be behind" error opens the
         -- not-behind window (TDF Feral.lua), where Shred is refused and the packs' Claw fallbacks
@@ -1693,7 +1693,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(SWIPE),
-        buff = "bear_form",
+        form = "bear_form",
         onCrit = primalFuryOnCrit(),
     },
 
