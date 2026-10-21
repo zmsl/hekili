@@ -13,14 +13,13 @@ local function flagged(path)
     return out
 end
 
--- Rupture in Assassination and Combat: open (a spender, none, or upkeep, 2)
-local ROGUE = { "slice_and_dice=1", "rupture=2" }
+local ROGUE = { "garrote=1", "slice_and_dice=1", "rupture=1" } -- Slice and Dice and Rupture sort by soonest
 local HUNTER = { "raptor_strike=1", "hunters_mark=2", "mongoose_bite=1" }
 
 local PACKS = {
     ["Rogue/APLs/Assassination"] = ROGUE,
     ["Rogue/APLs/Combat"] = ROGUE,
-    ["Rogue/APLs/Subtlety"] = { "slice_and_dice=1", "rupture=1" }, -- both 1: they sort by soonest
+    ["Rogue/APLs/Subtlety"] = ROGUE,
     -- Serpent Sting: arguable (a shot that is a DoT), BM and MM keep 2, Survival none
     ["Hunter/APLs/Beast Mastery"] = { HUNTER[1], HUNTER[2], HUNTER[3], "serpent_sting=2" },
     ["Hunter/APLs/Marksmanship"] = { HUNTER[1], HUNTER[2], HUNTER[3], "serpent_sting=2" },

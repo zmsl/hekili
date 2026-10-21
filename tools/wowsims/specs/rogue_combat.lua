@@ -37,7 +37,8 @@ return {
         distanceFromTarget = 5,
     },
     map = {},
-    -- by role (docs/dev/wowsims-packs.md); Rupture open (a spender, none, or upkeep, 2)
-    focus = { slice_and_dice = 1, rupture = 2 },
+    -- by role (docs/dev/wowsims-packs.md): Garrote a stealth-window cast; Slice and Dice and Rupture both at 1, so they
+    -- sort by soonest; Venom none (the user, 2026-10-21)
+    focus = { garrote = 1, slice_and_dice = 1, rupture = 1 },
     leveling = {},
 }

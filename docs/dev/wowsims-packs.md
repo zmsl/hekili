@@ -65,7 +65,7 @@ Translation:
   Tier 2 is upkeep: DoTs, debuffs, buffs, seals, totems and shields kept up (Rend, Rake, Rip, Moonfire,
   Scorch for Fire Vulnerability, Hunter's Mark, Demoralizing Roar, Flame Shock). Cooldowns, consumables, defensives,
   movement and pre-pull lines carry none (the translator drops a tier on a `prepull_at` line). A line whose role is
-  arguable (Venom, Serpent Sting, Starfire on Eclipse) keeps its tier until the user rules; the recipe says
+  arguable (Serpent Sting, Consecration, Starfire on Eclipse) keeps its tier until the user rules; the recipe says
   so. `tests/Forever/focus_roles_spec.lua` holds every pack's tiers.
 - `requires` (`{ [action or group snake name] = talent key }`): entries written for a talent build run only once the
   talent is taken (Retribution's Twist of Light lines).

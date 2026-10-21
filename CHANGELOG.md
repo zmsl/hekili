@@ -17,7 +17,7 @@
 - Hunter: Raptor Strike and Mongoose Bite are highlighted in every specialization, Hunter's Mark no longer before the pull.
 - Mage: Evocation is no longer highlighted.
 - Paladin: Retribution no longer highlights Exorcism or the seal before the pull; the seal you keep up while leveling is highlighted as upkeep.
-- Rogue: Rupture is highlighted in every specialization (in Subtlety alongside Slice and Dice, whichever is due first).
+- Rogue: Garrote, Slice and Dice and Rupture share the first highlight (whichever is due first) in every specialization; Ambush is no longer highlighted.
 - Shaman: Fire Nova is highlighted only on Clearcasting, the totems no longer before the pull.
 
 ### Fixed

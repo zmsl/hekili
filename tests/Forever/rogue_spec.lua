@@ -305,7 +305,7 @@ describe("Forever Rogue priorities", function()
         end
         local _, a = line("Subtlety (wowsims.com)", "ambush")
         local _, r = line("Subtlety (wowsims.com)", "rupture")
-        assert.are.same({ nil, 1 }, { a.focus, r.focus })
+        assert.are.same({ nil, 1 }, { a.focus, r.focus }) -- Rupture 1 in every pack (focus_roles_spec.lua)
     end)
 end)
 

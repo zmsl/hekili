@@ -14,7 +14,7 @@ actions.precombat=blade_flurry,prepull_at=2
 actions.precombat+=/premeditation,use_off_gcd=1,prepull_at=2
 actions.precombat+=/stealth,use_off_gcd=1,prepull_at=1
 actions=ambush,if=(buff.cutthroat.up&combo_points.current<5)
-actions+=/garrote,if=(combo_points.current<5&!debuff.garrote.up)
+actions+=/garrote,focus=1,if=(combo_points.current<5&!debuff.garrote.up)
 actions+=/vanish,use_off_gcd=1,if=((!action.garrote.known|!debuff.garrote.up)&(!action.garrote.known|energy.current>=action.garrote.cost)&combo_points.current<5&(!action.slice_and_dice.known|!(buff.slice_and_dice.remains<=2)))
 actions+=/preparation,if=(!action.vanish.known|!cooldown.vanish.ready)
 actions+=/adrenaline_rush,if=(energy.current<=50&(!action.slice_and_dice.known|buff.slice_and_dice.up)&!action.blood_fury.known)
