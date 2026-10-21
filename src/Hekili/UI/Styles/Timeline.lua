@@ -529,10 +529,10 @@ end
 -- The zone rule, on a publish: T.rec[ c ] is the record cell c draws (0: none), T.press the cell drawing record 1
 -- (every "key to press" affordance goes there), T.focused whether cell 1 draws a focus record, T.ready whether that is
 -- record 1 and its time has come (the gold ring; else the pending one), T.extend2 whether cell 2's sweep is extended (to its record's time whenever it holds one). With focusEnabled a
--- record is flagged when `focus` is a tier (N >= 1, 1 highest); the focus record is record 1 if flagged (any tier), else
--- among the flagged records 2.. due within the focus horizon (never past the lane's) the lowest tier, then the soonest.
--- It takes the now circle (else empty); the next box takes the first
--- unflagged record other than it; the lane every other record in order. nowFallback "press" keeps the earlier rule:
+-- record is flagged when `focus` is a tier (N >= 1, 1 highest); the focus record is, among the flagged records due
+-- within the focus horizon (never past the lane's; record 1 always), the lowest tier, then the soonest. It alone takes
+-- the now circle (else empty); one focus per display (user rule 2026-10-21): the next box takes the first record other
+-- than it, flagged or not, and the lane every other record in order. nowFallback "press" keeps the earlier rule:
 -- record 1 never counts, a focus record takes the now circle and record 1 the next box, else cell c draws record c.
 local function flagged( r )
     local n = r.focus
@@ -541,16 +541,14 @@ end
 
 local function roles( T, tl, recs, count, now )
     local map, f, press = T.rec, 0, tl.nowFallback == "press"
-    local on = tl.focusEnabled
-    if on and not press and count > 0 and flagged( recs[ 1 ] ) then f = 1 end
-    if on and f == 0 then
+    if tl.focusEnabled then
         local h, best = mmin( tl.focusHorizon, tl.horizon ), 0
-        for i = 2, count do
+        for i = press and 2 or 1, count do
             local r = recs[ i ]
             if flagged( r ) and ( best == 0 or r.focus < best ) then -- strict: a tie keeps the sooner record
                 local t = r.exact_time and r.exact_time - now
                 if T.pinned and t then t = r.time and r.time - T.pressTime end
-                if t and t <= h then
+                if i == 1 or t and t <= h then -- record 1 is the press: always within the horizon
                     f, best = i, r.focus
                     if best == 1 then break end
                 end
@@ -576,12 +574,7 @@ local function roles( T, tl, recs, count, now )
         return
     end
     local n = 0
-    for i = 1, count do
-        if i ~= f and not ( on and flagged( recs[ i ] ) ) then
-            n = i
-            break
-        end
-    end
+    if count > 0 then n = f == 1 and ( count > 1 and 2 or 0 ) or 1 end -- one focus: other flagged records keep their place
     map[ 1 ], map[ 2 ] = f, n
     local c = 3
     for i = 1, SLOTS do
@@ -591,7 +584,7 @@ local function roles( T, tl, recs, count, now )
         end
     end
     for k = c, SLOTS do map[ k ] = 0 end
-    T.press = f == 1 and 1 or 2 -- record 1 is the focus record or, unflagged, the first one for the next box
+    T.press = f == 1 and 1 or 2 -- record 1 is the focus record or else the next box's
     T.focused, T.extend2 = f ~= 0, n ~= 0
     -- a flagged record 1 is ready once its time has come (Tick flips it then); until then the pending look
     local r1 = recs[ 1 ]

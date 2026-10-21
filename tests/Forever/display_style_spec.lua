@@ -1064,11 +1064,11 @@ describe("the timeline display style", function()
         assert.are.same({}, H.errors)
     end)
 
-    -- Round 3 (user rule, 2026-10-18), nowFallback "empty": a flagged record (focus == 1) never sits in the next box;
-    -- the now circle draws record 1 when it is flagged (gold, with the press look), else the earliest flagged record 2..
-    -- within the horizon (pending ring, countdown, no keybind); the next box the first other unflagged record.
+    -- Round 3 (user rule, 2026-10-18), nowFallback "empty": the now circle draws the focus record: record 1 (gold, with
+    -- the press look) or a later one within the horizon (pending ring, countdown, no keybind); the next box the first
+    -- other record. One focus per display (user rule, 2026-10-21): every other flagged record keeps its lane place.
     it(
-        "draws the focus zones by the flag: pending and ready focus, flagged records kept out of the next box",
+        "draws the focus zones by the flag: pending and ready focus, one focus, the other flagged records in place",
         function()
             local H, d, T = tlBoot(false, function(tl)
                 tl.nowFallback = "empty"
@@ -1134,7 +1134,7 @@ describe("the timeline display style", function()
             assert.is_nil(c[2].Targets:GetText())
             H.Hekili.Pause = false
 
-            -- (4) records 1 and 2 flagged: 1 in the now circle, 3 in the next box, 2 on the lane
+            -- (4) records 1 and 2 flagged: 1 in the now circle, 2 (no longer the focus) in the next box, 3 on the lane
             tlPublish(H, 1, function(s)
                 s[2].focus = 1
                 due(H)(s)
@@ -1142,8 +1142,8 @@ describe("the timeline display style", function()
             frames()
             assert.are.same({
                 "mortal_strike",
-                "slam",
                 "overpower",
+                "slam",
                 "rend",
                 "whirlwind",
                 "sunder_armor",
@@ -1471,9 +1471,9 @@ describe("the timeline display style", function()
         assert.are.same({}, H.errors)
     end)
 
-    -- Fury plan Task 3b: focus=N is a tier, 1 highest. Record 1 flagged (any tier) takes the now circle; else, among
-    -- flagged records 2.. within the focus horizon, the lowest tier wins and, within a tier, the soonest.
-    it("picks the focus record by tier: lowest tier, then soonest; a flagged record 1 first", function()
+    -- Fury plan Task 3b: focus=N is a tier, 1 highest. Among the flagged records within the focus horizon (record 1
+    -- always within it) the lowest tier wins and, within a tier, the soonest (user rule 2026-10-21).
+    it("picks the focus record by tier: lowest tier, then soonest, record 1 included", function()
         local function tiers(t)
             return function(s)
                 for i, n in pairs(t) do
@@ -1509,9 +1509,18 @@ describe("the timeline display style", function()
         tlPublish(H, nil, tiers({ [3] = 2, [4] = 2 }))
         tlFrame(H, d)
         assert.are.same(FOCUS3, actions(T))
-        -- record 1 flagged tier 2 with a tier-1 record 3 ahead: record 1, gold
+        -- record 1 flagged tier 2 and due beside a tier-1 record 3: record 3 (the better tier), record 1 the press
         tlPublish(H, nil, function(s)
             tiers({ [1] = 2, [3] = 1 })(s)
+            due(H)(s)
+        end)
+        tlFrame(H, d)
+        assert.are.same(FOCUS3, actions(T))
+        assert.are.same(tl.focusPendingColor, rawget(c[1].Ring, "__color"))
+        assert.are.equal("K1", c[2].Keybinding:GetText())
+        -- record 1 flagged tier 1 and due beside a tier-2 record 3: record 1, gold
+        tlPublish(H, nil, function(s)
+            tiers({ [1] = 1, [3] = 2 })(s)
             due(H)(s)
         end)
         tlFrame(H, d)
@@ -1539,6 +1548,54 @@ describe("the timeline display style", function()
         assert.are.equal("whirlwind", c[1].Action)
         assert.are.equal("mortal_strike", c[2].Action)
         assert.are.equal("K1", c[2].Keybinding:GetText())
+        assert.are.same({}, H.errors)
+    end)
+
+    -- One focus per display (user rule, 2026-10-21): of the flagged records only the best tier, soonest within it,
+    -- takes the now circle; every other record, flagged or not, keeps its place in the next box and on the lane.
+    it("shows one focus per display; a flagged record that loses it keeps its place", function()
+        local H, d, T = tlBoot(false, function(tl)
+            tl.nowFallback = "empty"
+        end)
+        local function tiers(t)
+            return function(s)
+                for i, n in pairs(t) do
+                    s[i].focus = n
+                end
+                due(H)(s)
+            end
+        end
+        local c = T.cells
+        local function now(e)
+            tlPublish(H, nil, e)
+            tlFrame(H, d)
+            return actions(T)
+        end
+        -- two tier-1 records (1 and 2): only record 1; record 2 keeps the next box, the lane its order
+        assert.are.same(TODAY, now(tiers({ [1] = 1, [2] = 1 })))
+        assert.is_true(T.focused)
+        assert.are.equal("K1", c[1].Keybinding:GetText())
+        -- two tier-1 records later on (2 and 3): only record 2; record 3 on the lane after it
+        assert.are.same(
+            { "overpower", "mortal_strike", "slam", "rend", "whirlwind", "sunder_armor", false, false, false, false },
+            now(tiers({ [2] = 1, [3] = 1 }))
+        )
+        -- a tier-2 record before a tier-1 one: the tier-1 record; the tier-2 record 2 keeps the next box after record 1
+        assert.are.same(
+            { "slam", "mortal_strike", "overpower", "rend", "whirlwind", "sunder_armor", false, false, false, false },
+            now(tiers({ [2] = 2, [3] = 1 }))
+        )
+        -- a tier-2 record 1 before a tier-1 record 4: record 4 in the circle, record 1 the press in the next box
+        assert.are.same(
+            { "rend", "mortal_strike", "overpower", "slam", "whirlwind", "sunder_armor", false, false, false, false },
+            now(tiers({ [1] = 2, [4] = 1 }))
+        )
+        assert.are.equal("K1", c[2].Keybinding:GetText())
+        -- a single tiered record: it
+        assert.are.same(FOCUS3, now(tiers({ [3] = 3 })))
+        -- none: the circle empty, everything in order
+        assert.are.same(EMPTY, now(tiers({})))
+        assert.is_false(T.focused)
         assert.are.same({}, H.errors)
     end)
 
