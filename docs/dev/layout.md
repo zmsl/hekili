@@ -270,7 +270,6 @@ own fight (floor 0.98; 0.989 of 88 with Rage of the Farseer, held) and runs the 
 ```
 Enhancement solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.1 (oracle 11.4, unmatched 0.0)], episodes 0.11/min; dps A/B 0.991; ... [seeds 1-3]
 Enhancement solo: fights=20 agreement 0.998 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.3 (oracle 14.6, unmatched 0.0)], episodes 0.12/min; dps A/B 1.014; ... flicker 1.13/min (oracle 1.10); ... top [stormstrike -> rage_of_the_farseer 44; rage_of_the_farseer -> stormstrike 1]; ...
-Enhancement solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.2 (oracle 12.6, unmatched 0.0)], episodes 0.11/min; dps A/B 0.964; ... [seeds 1-3]
 ```
 
 Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
