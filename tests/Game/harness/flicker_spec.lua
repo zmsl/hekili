@@ -94,10 +94,56 @@ describe("the flicker ledger", function()
             { e.kind, e.from, e.ready, e.tick, e.len, e.cause, e.reason, e.justified, e.floor }
         )
         assert.are.same({ -2, -2 }, { e.lo - e.truth, led.gapLo[#led.gapLo] }) -- lo-truth at the flip
+        -- the belief's delta between the two polls
+        assert.are.same(
+            { 40, 39, 41, 41, false, false, false, false },
+            { e.loP, e.loC, e.estP, e.estC, e.pendP, e.pendC, e.cdP, e.cdC }
+        )
         -- the same flip with our cast between the polls: justified (not the floor's count)
         f.ev.cast[3] = true
         e = flicker.ledger(f, O).entries[1]
         assert.are.same({ "retracted", "press", true }, { e.kind, e.cause, e.justified })
+    end)
+
+    it("gives a retraction's engine reason: a cooldown learned longer, the GCD; and a near-tie re-ranked", function()
+        local function one(rows)
+            local e = flicker.ledger(build(rows), O).entries[1]
+            return { e.kind, e.cause, e.reason, e.cdP, e.cdC }
+        end
+        assert.are.same(
+            { "retracted", "cooldown", "cooldown", 0, 5 },
+            one({
+                { s = { { "x", 0.4 } }, cd = { x = 0.4 } },
+                { s = { { "x", 0 } }, cd = { x = 0 } },
+                { s = { { "x", 5 } }, cd = { x = 5 } }, -- a restart the belief learned: no cast of ours
+            })
+        )
+        assert.are.same(
+            { "retracted", "unknown", "gcd", false, false },
+            one({
+                { s = { { "x", 0.4 } } },
+                { s = { { "x", 0 } } },
+                { s = { { "x", 1.2 } }, gcd = 1.2 },
+            })
+        )
+        assert.are.same(
+            { "retracted", "near-tie", "condition", false, false },
+            one({
+                { s = { { "x", 0.4 }, { "y", 0.5 } } },
+                { s = { { "x", 0 }, { "y", 0.1 } } }, -- y within a poll of x's ready
+                { s = { { "x", 0.3 }, { "y", 0 } } },
+            })
+        )
+    end)
+
+    it("records an icon appearing in an empty slot and leaving as a flash, not a dip of the empty slot", function()
+        local f = build({
+            { s = { { "a", 0 } } },
+            { s = { { "a", 0 }, { "b", 0.4 } } },
+            { s = { { "a", 0 } } },
+            { s = { { "a", 0 } } },
+        })
+        assert.are.same({ "flash false>b unknown 1" }, kinds(flicker.ledger(f, O)))
     end)
 
     it("records a wait oscillation: the same icon's wait jumping more than one poll, with no event", function()

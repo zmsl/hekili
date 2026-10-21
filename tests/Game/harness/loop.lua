@@ -213,9 +213,11 @@ function M.run(L, seed, o, drivers)
     run.combat, run.full, run.idle, run.attempts, run.episodes, run.up = 0, 0, 0, 0, 0, {}
     run.ours, run.theirs, run.gap, run.cpu, run.secrets, run.focus = {}, {}, {}, {}, {}, 0
     run.dec = R and { ours = {}, theirs = {}, flips = 0 } or nil
-    -- the flicker ledger's frames (flicker.frame), one an instance, over the run's events between two polls
+    -- the flicker ledger's frames (flicker.frame), one an instance, over the run's events between two polls: run A
+    -- and a replay only (run B, the oracle driving alone, is never read)
+    local ledger = R ~= nil or #drivers > 1
     run.ev, run.frames = flicker.events(), {}
-    for i = 1, #drivers do
+    for i = 1, ledger and #drivers or 0 do
         run.frames[i] = flicker.frame(run.ev)
     end
     local hold = o.hold
@@ -310,12 +312,14 @@ function M.run(L, seed, o, drivers)
     end
     local function step(tc) -- the world to `tc`, every instance fed and cycled
         W.run(tc)
-        for _, key in ipairs(flicker.EVENTS) do
-            pollEv[key] = false
-        end
-        nextEv = events(W, us, nextEv, pollEv)
-        for _, key in ipairs(flicker.EVENTS) do
-            tickEv[key] = tickEv[key] or pollEv[key]
+        if ledger or hold then -- the events the ledger and the hold read
+            for _, key in ipairs(flicker.EVENTS) do
+                pollEv[key] = false
+            end
+            nextEv = events(W, us, nextEv, pollEv)
+            for _, key in ipairs(flicker.EVENTS) do
+                tickEv[key] = tickEv[key] or pollEv[key]
+            end
         end
         for i, st in ipairs(steps) do
             feed(st.H, st.obs, tc, st.base, sink)
@@ -348,8 +352,10 @@ function M.run(L, seed, o, drivers)
                 if d.gcd then
                     local n = #run.dec.ours + 1
                     run.dec.ours[n], run.dec.theirs[n] = firstGcd(steps[1].H), d.key
-                    -- a flip at a decision point: the icon changed since the tick's poll, no cast between
-                    if tickPolled and lastGcd ~= nil and run.dec.ours[n] ~= lastGcd then
+                    -- a flip at a decision point: the icon changed since the tick's poll, no cast, spend, avoid or
+                    -- aura change between
+                    local moved = pollEv.cast or pollEv.spend or pollEv.avoid or pollEv.aura
+                    if tickPolled and not moved and lastGcd ~= nil and run.dec.ours[n] ~= lastGcd then
                         run.dec.flips = run.dec.flips + 1
                     end
                 end
@@ -452,7 +458,8 @@ function M.run(L, seed, o, drivers)
             else
                 run.theirs[n] = steps[2] and steps[2].q.name[1] or false
             end
-            for k, st in ipairs(steps) do -- the ledger's frame (flicker.frame)
+            for k = 1, #run.frames do -- the ledger's frame (flicker.frame)
+                local st = steps[k]
                 local f, sq = run.frames[k], st.q
                 local VS = st.H.ns.VirtualState
                 local now = st.base + t
@@ -467,7 +474,7 @@ function M.run(L, seed, o, drivers)
                 f.pend[n] = VS.SwingPending(1) > 0 or VS.SwingPending(2) > 0
                 f.cd[n], f.gcd[n], f.t[n], f.n = cd, math.max(0, us.gcdUntil - t), t, n
             end
-            for _, key in ipairs(flicker.EVENTS) do
+            for _, key in ipairs(ledger and flicker.EVENTS or {}) do
                 run.ev[key][n], tickEv[key] = tickEv[key], false
             end
             if steps[2] and run.ours[n] ~= run.theirs[n] then -- the belief's power error where they disagree
@@ -805,7 +812,7 @@ function M.line(m)
     end
     local line = (
         "fights=%d agreement %.3f (%d ticks); react median %d p90 %d never %.3f; refused per 100 [%s], episodes %.2f/min; "
-        .. "dps A/B %.3f; full %.3f/%.3f idle %.3f/%.3f; uptime [%s]; flicker %.2f/min (oracle %.2f) %s; "
+        .. "dps A/B %.3f; full %.3f/%.3f idle %.3f/%.3f; uptime [%s]; flicker %.2f/min (oracle %.2f); "
         .. "errors %d raises %d self-check %d; cpu mean %.2f p99 %.2f ms; top [%s]; power est-truth at disagreements %.1f"
     ):format(
         m.fights,
@@ -824,7 +831,6 @@ function M.line(m)
         table.concat(up, ", "),
         r.flicker,
         r.oracleFlicker,
-        flicker.line(r.led, r.ledO),
         m.errors,
         m.raises,
         m.selfCheck,
@@ -842,6 +848,7 @@ function M.line(m)
                 m.dec.confirmed
             )
     end
+    line = line .. "; " .. flicker.line(r.led, r.ledO) -- the flicker ledger's fields, last (layout.md's columns)
     if m.hold then
         line = line .. "; hold on"
     end

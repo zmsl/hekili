@@ -57,7 +57,8 @@ local function event(f, c)
     return ev.cast[c] or ev.spend[c] or ev.avoid[c] or ev.aura[c]
 end
 
--- The cause class of a change between polls p and c (= p + 1) involving icons a (before) and b (after).
+-- The cause class of a change between polls p and c (= p + 1) involving icons a (before) and b (after); a == b (a
+-- retracted ready): a near-tie when another shown icon's wait was within one poll of it at p (re-ranked).
 local function cause(f, p, c, a, b, tick)
     local ev = f.ev
     if ev.cast[c] or ev.spend[c] then
@@ -83,6 +84,13 @@ local function cause(f, p, c, a, b, tick)
     local wa, wb = a and waitOf(f, p, a), b and waitOf(f, p, b)
     if a ~= b and wa and wb and math.abs(wa - wb) <= tick + EPS then
         return "near-tie"
+    elseif a == b and wa then
+        for s = 1, M.SLOTS do
+            local x = f.name[s][p]
+            if x and x ~= a and math.abs(f.wait[s][p] - wa) <= tick + EPS then
+                return "near-tie"
+            end
+        end
     end
     return "unknown"
 end
@@ -104,7 +112,8 @@ end
 --- The ledger of frame `f` (o: tick, react, window): { entries, gapLo, gapEst }. Each entry { kind, slot, tick (the
 --- change's poll), from, to, len (ticks), cause, justified, lo, est, truth (at the change), cost (the slot's, 0:
 --- not cost-gated), floor (the floor crossed the cost while the estimate stayed above it: floor jitter); a retracted
---- one adds ready (its first ready tick), wait and reason }. gapLo/gapEst: lo - truth and est - truth at every
+--- one adds ready (its first ready tick), wait, reason and the belief's delta between the two polls: loP/loC, estP/estC,
+--- pendP/pendC, cdP/cdC (the icon's believed cooldown remaining, false: untracked) }. gapLo/gapEst: lo - truth and est - truth at every
 --- cost-gated decision (the first icon's cost inside the belief's band, lo < cost <= hi) and every change of a
 --- cost-gated slot.
 function M.ledger(f, o)
@@ -138,7 +147,8 @@ function M.ledger(f, o)
             local a, b = name[i - 1], name[i]
             if a ~= b then
                 local j = nil
-                for k = i + 1, math.min(n, i + W) do
+                -- an empty slot never dips: an icon appearing in it and leaving is a flash
+                for k = i + 1, a and math.min(n, i + W) or 0 do
                     if name[k] == a then
                         j = k
                         break
@@ -189,6 +199,14 @@ function M.ledger(f, o)
                         wait = wait[c],
                         reason = reason(f, s, c, x, react, tick),
                         justified = just,
+                        loP = f.lo[p],
+                        loC = f.lo[c],
+                        estP = f.est[p],
+                        estC = f.est[c],
+                        pendP = f.pend[p],
+                        pendC = f.pend[c],
+                        cdP = f.cd[p][x] or false,
+                        cdC = f.cd[c][x] or false,
                     }, s, p, c)
                 end
             elseif same and wait[c] > math.max(0, wait[p] - tick) + tick + EPS and not event(f, c) then
