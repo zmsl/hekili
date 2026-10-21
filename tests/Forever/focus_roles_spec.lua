@@ -17,6 +17,18 @@ local ROGUE = { "garrote=1", "slice_and_dice=1", "rupture=1" } -- Slice and Dice
 -- the melee-weave strikes (Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip) rotational (the user)
 local HUNTER = { "raptor_strike=1", "hunters_mark=2", "serpent_sting=1" }
 
+local WARLOCK_DEMO = {
+    "bane_of_doom=2",
+    "searing_pain=2",
+    "bane_of_agony=2",
+    "immolate=2",
+    "curse_of_the_elements=2",
+    "curse_of_recklessness=2",
+    "curse_of_weakness=2",
+    "soul_fire=1",
+    "corruption=2",
+}
+
 local PACKS = {
     ["Rogue/APLs/Assassination"] = ROGUE,
     ["Rogue/APLs/Combat"] = ROGUE,
@@ -41,6 +53,41 @@ local PACKS = {
     ["Druid/APLs/Guardian"] = { "maul=1", "maul=2", "lacerate=2", "demoralizing_roar=2", "lacerate=2" },
     ["Mage/APLs/Arcane"] = { "arcane_missiles=1" },
     ["Mage/APLs/Fire"] = { "scorch=2", "pyroblast=1", "arcane_missiles=1" },
+    -- the DoTs, Banes, curses and Searing Pain's Demonic Brand upkeep at 2; Shadow Bolt on Shadow Trance and Soul Fire on
+    -- Decimation at 1; Affliction's first Shadow Bolt keeps Shadow Vulnerability up (2); Amplify Curse a cooldown (none)
+    ["Warlock/APLs/Affliction"] = {
+        "bane_of_agony=2",
+        "corruption=2",
+        "siphon_life=2",
+        "curse_of_the_elements=2",
+        "curse_of_recklessness=2",
+        "curse_of_weakness=2",
+        "immolate=2",
+        "shadow_bolt=2",
+        "shadow_bolt=1",
+    },
+    ["Warlock/APLs/SM Ruin"] = {
+        "bane_of_doom=2",
+        "bane_of_agony=2",
+        "corruption=2",
+        "shadow_bolt=1",
+        "siphon_life=2",
+        "curse_of_the_elements=2",
+        "curse_of_recklessness=2",
+        "curse_of_weakness=2",
+        "immolate=2",
+    },
+    ["Warlock/APLs/Demonology"] = WARLOCK_DEMO,
+    ["Warlock/APLs/Shadow Brand"] = WARLOCK_DEMO,
+    ["Warlock/APLs/Destruction"] = {
+        "bane_of_doom=2",
+        "bane_of_agony=2",
+        "curse_of_the_elements=2",
+        "curse_of_recklessness=2",
+        "curse_of_weakness=2",
+        "immolate=2",
+        "corruption=2",
+    },
 }
 
 describe("the wowsims.com packs' focus tiers by role", function()

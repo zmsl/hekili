@@ -13,8 +13,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `src/Hekili_Warrior/`, `src/Hekili_Druid/`, `src/Hekili_Rogue/`, `src/Hekili_Paladin/`, `src/Hekili_Shaman/`,
     `src/Hekili_Hunter/`, `src/Hekili_Mage/`, `src/Hekili_Priest/`, `src/Hekili_Warlock/`: one class pack each (the
     class file, its RegisterPack blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's
-    `Engine/Content.lua` for the player's class. The Warlock has no priority yet, so no `APLs/` (`make packs` refuses a
-    manifest with no pack); its loop worlds are `tests/Forever/helpers/warlock_world.lua`.
+    `Engine/Content.lua` for the player's class.
     The default priorities' sources sit beside the class file in `APLs/`: one `<Pack>.simc` per priority and the
     manifest `packs.lua` (`{ class = "<TOKEN>", packs = { ... }, specs = { [<Pack>] = <spec key> } }`, no date). Edit those, then `make packs`. The date is per
     class and lives only in the class file's first RegisterPack block: `make packs` keeps it while the generated
@@ -544,6 +543,11 @@ Retribution, Paladin Protection and Survival idles re-measured in the final revi
 | Shadow (wowsims.com) | 1.00 | 1.000 (85) | 6 (1.8) | L10 0.0, L40 0.0, L60 1.8 | 0.000 / 1.600 | 1.500, 36 | 0 | 1.50, 36 |
 | Smite (wowsims.com) | 0.93 | 0.932 (44) | 6 (0.2) | L10 0.0, L40 0.2, L60 0.2 | 0.400 / 3.100 | 0.500, 27 | 3 | 0.50, 27 |
 | Elemental (wowsims.com) | 0.93 | 0.937 (95) | 6 (5.0) | L10 0.0, L40 0.0, L60 5.0 (Lava Burst r4 and Elemental Mastery learned at 1: not in the DB2) | 0.380 / 0.980 | 0.480, 54 | 6 | 0.48, 54 |
+| Affliction (wowsims.com) | 0.72 | 0.728 (81) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 2.800 | 1.000, 18 | 22 | 1.00, 18 |
+| SM Ruin (wowsims.com) | 0.60 | 0.606 (94) | 6 (0.2) | L10 0.0, L40 0.0, L60 0.2 | 0.000 / 0.900 | 0.900, 14 | 37 | 0.90, 14 |
+| Demonology (wowsims.com) | 0.76 | 0.767 (116) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 0.000 | 0.100, 3 | 27 | 0.10, 3 |
+| Shadow Brand (wowsims.com) | 0.73 | 0.735 (98) | 6 (0.2) | L10 0.0, L40 0.0, L60 0.2 | 0.000 / 1.000 | 0.900, 16 | 26 | 0.90, 16 |
+| Destruction (wowsims.com) | 0.74 | 0.743 (109) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 0.400 | 0.400, 17 | 28 | 0.40, 17 |
 
 A LIVE60 constant above today's L60 measurement is an earlier measurement the spec keeps (Combat 4.8 vs 4.0,
 Retribution 8.4 vs 2.8 by ruling P6, Paladin Protection 17.8 vs 11.8 from the untanked fight); limits are not lowered
@@ -584,6 +588,14 @@ Recorded deviations (each one's reason in the named file):
   harness's one crit rate); the world grants Fingers of Frost at Frostfire Bolt's cast end, wowsims at its hit about
   0.8 s later (the harness has no travel time: a shared limit); `includeReactionTime` on the Fingers of Frost read
   ignored (rule 5).
+- Warlock (`warlock_*.lua`, `Warlock.lua`, `warlock_world.lua`): `fight_remains` reads 3600 s, so the end-of-fight
+  Bane of Agony and Amplify Curse lines never fire and Bane of Doom goes up whenever it is down (API-forced, rule 10;
+  wowsims switches in a fight's last minute: most of SM Ruin's, Demonology's, Shadow Brand's and Destruction's replay
+  disagreements); the target's Shadow Vulnerability and Demonic Brand charges are unreadable (the brand kept its full
+  10 s; Shadow Bolt's `onCrit` models Shadow Vulnerability, but the bolt's crit lands about 1 s after its success, past
+  Events/Rows.lua's cast window: shared gap); wowsims's pet-spell costs (115, 160) kept verbatim (ruling W7); before
+  Incinerate (40) Destruction, and below Searing Pain (18) Demonology, fall through to Life Tap; before the Demonic
+  Brand talent both Demonology packs lead with Searing Pain.
 - Priest (`priest_*.lua`, `Priest.lua`, `priest_world.lua`): Devouring Plague 24 s and Shadow Word: Death 18 s from
   wowsims's data and log over the DB2's 60 s and 15 s (ruling M9's precedent); Smite's down-ranked Holy Fire and Smite
   (rank 5 below 20% mana) at the top rank (rule 5 ignores `rank`: shared gap, owner ruling); Mind Flay's interruptIf

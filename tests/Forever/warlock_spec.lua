@@ -88,18 +88,17 @@ describe("Forever Warlock", function()
         return e
     end
 
-    it("declares Affliction, Demonology and Destruction on trees 1-3, no priority yet", function()
+    it("declares Affliction, Demonology and Destruction on trees 1-3 with their wowsims.com packs", function()
         assert.are.equal("WARLOCK", w.class)
         local out = {}
         for _, s in ipairs(w.def.specs) do
             out[#out + 1] = { s.key, s.tree, s.role, s.ranged, s.unsupported or false, s.package or false }
         end
         assert.are.same({
-            { "affliction", 1, "attack", true, false, false },
-            { "demonology", 2, "attack", true, false, false },
-            { "destruction", 3, "attack", true, false, false },
+            { "affliction", 1, "attack", true, false, "Affliction (wowsims.com)" },
+            { "demonology", 2, "attack", true, false, "Demonology (wowsims.com)" },
+            { "destruction", 3, "attack", true, false, "Destruction (wowsims.com)" },
         }, out)
-        assert.are.same({}, w.packs)
     end)
 
     it("registers the kit with the DB2's ranks, top-rank costs, cooldowns and GCDs", function()
@@ -327,6 +326,23 @@ describe("Forever Warlock", function()
         assert.are.same({ 1293696, 10, 6 }, { a.id, a.duration, a.max_stack })
     end)
 
+    -- Improved Shadow Bolt (DB2 17793): a Shadow Bolt crit puts Shadow Vulnerability (17794, 12 s) on the target, as
+    -- wowsims's logs show; the belief's own crit (Families/Now.lua `onCrit`) is the only way to see it.
+    it("marks the target with Shadow Vulnerability on a Shadow Bolt crit, with Improved Shadow Bolt", function()
+        local crit = w.abilities.shadow_bolt.onCrit
+        for key, a in pairs(w.abilities) do
+            assert.are.equal(key == "shadow_bolt", type(a.onCrit) == "function", key)
+        end
+        local e = env()
+        ld.run(crit, e)
+        assert.are.same({}, e.applied)
+        e = env({ improved_shadow_bolt = 5 })
+        ld.run(crit, e)
+        assert.are.same({ "shadow_vulnerability" }, e.applied)
+        local a = w.auras.shadow_vulnerability
+        assert.are.same({ 17794, 12, 1 }, { a.id, a.duration, a.max_stack })
+    end)
+
     it("taps its rank's points, the level gain and Spirit into mana, x Improved Life Tap", function()
         local lt = w.abilities.life_tap
         w.game.known[11689] = true
@@ -552,6 +568,33 @@ describe("Forever Warlock through the engine", function()
         end
     )
 
+    -- A `now` must pass a function-duration aura's duration (Families/Now.lua writes nothing without one): Corruption's
+    -- rank-dependent 18 s lands in the belief at the cast, as the instant DoTs' do.
+    it("lands each DoT, Bane and Curse cast's debuff in the belief, Corruption's at its rank's duration", function()
+        local H = headless.new({ character = character() })
+        local VS = H.ns.VirtualState
+        local t = H.ctl.now + 1
+        assert.is_true(headless.cycle(H, t))
+        VS.Drain(t)
+        local cases = {
+            { "corruption", 25311, 172, 18 },
+            { "immolate", 25309, 348, 15 },
+            { "bane_of_agony", 11713, 980, 24 },
+            { "siphon_life", 18881, 18265, 30 },
+        }
+        for i, c in ipairs(cases) do
+            t = t + 1
+            H.ctl.now = t
+            H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. i, c[2])
+            assert.is_true(headless.cycle(H, t + 0.1))
+            VS.Drain(t + 0.1)
+            local a = VS.Aura("target", c[3], t + 0.1)
+            assert.is_truthy(a, c[1])
+            assert.are.equal(t + c[4], a.est, c[1])
+        end
+        assert.are.same({}, H.errors)
+    end)
+
     -- C1: a summon models the demon up until the pet unit's first observation (UNIT_PET), which overrides it.
     it("models the summoned demon up in the belief until the pet unit is observed", function()
         local H = headless.new({ character = character() })
@@ -575,5 +618,69 @@ describe("Forever Warlock through the engine", function()
         up, _, model = VS.Pet(t + 0.6)
         assert.are.same({ true, false }, { up, model })
         assert.are.same({}, H.errors)
+    end)
+end)
+
+-- The priorities: the wowsims.com packs (generated from wowsims/forever's builds by `make wowsims-packs`).
+describe("Forever Warlock priorities", function()
+    it("keeps the class file's generated blocks in step with APLs/, each spec's package its pack", function()
+        local mp = assert(loadfile("tools/make_pack.lua"))("lib")
+        local f = assert(io.open(FILE))
+        local src = f:read("*a")
+        f:close()
+        assert.are.equal(src, (mp.sync(src, mp.load("warlock"))))
+        local names = {}
+        for _, p in ipairs(ld.load(nil, FILE, "WARLOCK").packs) do
+            names[#names + 1] = p[1]
+        end
+        assert.are.same({
+            "Affliction (wowsims.com)",
+            "Demonology (wowsims.com)",
+            "Destruction (wowsims.com)",
+            "SM Ruin (wowsims.com)",
+            "Shadow Brand (wowsims.com)",
+        }, names)
+    end)
+
+    -- rule 16: wowsims's Curses option as a choice, every build's (and the harness's) Elements
+    it("registers the assigned curse as a choice for every spec, Elements in game and in the harness", function()
+        local s = ld.load(nil, FILE, "WARLOCK").settings.assigned_curse
+        local keys = {}
+        for k in pairs(s.option.values) do
+            keys[#keys + 1] = k
+        end
+        table.sort(keys)
+        assert.are.same(
+            { "elements", "select", "elements", { "elements", "nocurse", "recklessness", "weakness" } },
+            { s.default, s.option.type, s.option.sim, keys }
+        )
+        assert.is_nil(s.specs)
+    end)
+
+    it("names only registered abilities and auras", function()
+        local cls = ld.load(nil, FILE, "WARLOCK")
+        local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, action = cls.abilities }
+        -- Hekili's `all`: Hekili_Shared's use_items, the racials and Demonic Rune
+        local shared = {
+            use_items = true,
+            call_action_list = true,
+            blood_fury = true,
+            berserking = true,
+            eureka = true,
+            demonic_rune = true,
+        }
+        for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "warlock")) do
+            for list, entries in pairs(p.lists) do
+                for i, e in ipairs(entries) do
+                    local where = p.name .. " " .. list .. " " .. i
+                    assert.is_true(cls.abilities[e.action] ~= nil or shared[e.action], where)
+                    for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
+                        if kinds[kind] then
+                            assert.is_true(kinds[kind][key] ~= nil or shared[key], where .. ": " .. key)
+                        end
+                    end
+                end
+            end
+        end
     end)
 end)

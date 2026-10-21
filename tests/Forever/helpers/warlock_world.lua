@@ -1,25 +1,26 @@
 -- tests/Forever/helpers/warlock_world.lua (class-completion plan, "The per-pack gate"): the Warlock content of the
--- class-neutral headless loop, in mage_world.lua's shape, one content per talent tree (M.Affliction, M.Demonology,
--- M.Destruction) on wowsims/forever's builds (aff_wrack, demo_fire_brand, destro): the character the instance logs in as
--- (the build's talents), each ability's press in the world's generic verbs, the client's usability answers. IDs,
--- costs, cooldowns and aura durations come from the class file (load_druid's recording load of Warlock.lua for the
--- character, the booted oracle's Hekili.Class for the rest). The world's own, restated from the DB2 and wowsims/forever
--- (so the class file's belief is measured against them): the casts (Bane's -0.1 s a rank on Shadow Bolt, Immolate and
--- Incinerate, -0.4 s on Soul Fire; Improved Corruption's -0.4 s; Decimation's faster Soul Fire; Master Summoner's
--- summons; Shadow Trance's instant Shadow Bolt), Cataclysm's and Master Summoner's costs, the DoTs, Banes and Curses on
--- the target (each on a landed hit; one Bane and one Curse: each removes the others; their ticks), Amplify Curse spent
--- by Bane of Agony and Curse of Weakness, Nightfall's Shadow Trance (2% a rank on a Corruption tick and a Drain Life,
--- Drain Soul or Wrack tick), Conflagrate on our Immolate (consumed unless Shadow and Flame keeps it, 20% a rank),
--- Demonic Brand's charges from Searing Pain, Life Tap's mana (its rank's points, the level gain and the build's Spirit,
--- x Improved Life Tap; Demonic Energies' share to the demon), mana under the five-second rule (the pools and the regen
--- the five builds' logs show), and the channels (Drain Life 5 s a tick a second, Drain Soul 15 s every 3 s, Wrack 6 s a
--- tick a second with its debuff, Rain of Fire 8 s every 2 s, Hellfire 15 s a tick a second). Central fix 27's harness:
--- the Soul Shards in the bags (`WORLD.bags`, wowsims's 32; the shard spells' `reagent`, Shadow and Flame's refund), the
--- demon (`WORLD.pet`: the build's demon out from the start, as wowsims; its mana and regen from wowsims's logs; the
--- summons and Demonic Sacrifice's `pet`, the demon's own Firebolt or Lash of Pain spending its mana; Demonic
--- Sacrifice's effects, the build's sacrificed demon's from the pull) and the Spirit Life Tap reads (`WORLD.stats`). The
--- harness has one pet of any kind: summoning a different demon refills it to the build demon's pool. Damage amounts are
--- UNMEASURED.
+-- class-neutral headless loop, in mage_world.lua's shape, one content per wowsims.com pack (M.Affliction, M.Demonology,
+-- M.Destruction, M.SMRuin, M.ShadowBrand) on wowsims/forever's builds (aff_wrack, demo_fire_brand, destro, sm_ruin,
+-- demo_shadow_brand): the character the instance logs in as (the build's talents), each ability's press in the world's
+-- generic verbs, the client's usability answers. IDs, costs, cooldowns and aura durations come from the class file
+-- (load_druid's recording load of Warlock.lua for the character, the booted oracle's Hekili.Class for the rest). The
+-- world's own, restated from the DB2 and wowsims/forever (so the class file's belief is measured against them): the
+-- casts (Bane's -0.1 s a rank on Shadow Bolt, Immolate and Incinerate, -0.4 s on Soul Fire; Improved Corruption's -0.4
+-- s; Decimation's faster Soul Fire; Master Summoner's summons; Shadow Trance's instant Shadow Bolt), Cataclysm's and
+-- Master Summoner's costs, the DoTs, Banes and Curses on the target (each on a landed hit; one Bane and one Curse: each
+-- removes the others; their ticks), Amplify Curse spent by Bane of Agony and Curse of Weakness, Nightfall's Shadow
+-- Trance (2% a rank on a Corruption tick and a Drain Life, Drain Soul or Wrack tick), Conflagrate on our Immolate
+-- (consumed unless Shadow and Flame keeps it, 20% a rank), Demonic Brand's charges from Searing Pain, Improved Shadow
+-- Bolt's Shadow Vulnerability on a Shadow Bolt crit, Life Tap's mana (its rank's points, the level gain and the build's
+-- Spirit, x Improved Life Tap; Demonic Energies' share to the demon), mana under the five-second rule (the pools and
+-- the regen the five builds' logs show), and the channels (Drain Life 5 s a tick a second, Drain Soul 15 s every 3 s,
+-- Wrack 6 s a tick a second with its debuff, Rain of Fire 8 s every 2 s, Hellfire 15 s a tick a second). Central fix
+-- 27's harness: the Soul Shards in the bags (`WORLD.bags`, wowsims's 32; the shard spells' `reagent`, Shadow and
+-- Flame's refund), the demon (`WORLD.pet`: the build's demon out from the start, as wowsims; its mana and regen from
+-- wowsims's logs; the summons and Demonic Sacrifice's `pet`, the demon's own Firebolt or Lash of Pain spending its
+-- mana; Demonic Sacrifice's effects, the build's sacrificed demon's from the pull) and the Spirit Life Tap reads
+-- (`WORLD.stats`). The harness has one pet of any kind: summoning a different demon refills it to the build demon's
+-- pool. Damage amounts are UNMEASURED.
 -- Not in the world: the demon's swings and the brand charges they spend, and Decimation (below 35% target health; the
 -- mob never gets there).
 -- Credit: wowsims/forever (MIT, https://github.com/wowsims/forever) as the reference for the mechanics; no code copied.
@@ -147,6 +148,7 @@ local T = {
     demonic_brand = 1293695,
     demonic_energies = 1225214,
     demonic_pact = 425464,
+    improved_shadow_bolt = 17793,
 }
 
 local W0
@@ -191,10 +193,11 @@ local BASELINE = {
     "summon_felhunter",
 }
 
--- The packs' worlds: `pack` the wowsims.com pack it will run (the next task's), `spec` its spec id, `kit` the talent
+-- The packs' worlds: `pack` the wowsims.com pack it runs, `spec` its spec id, `kit` the talent
 -- abilities the build adds to BASELINE, `talents` the build's ({ [rank-1 spell] = rank }, its talentsString through
 -- wowsims's tree), `max` the pool (the build's log), `demon` the build's summon (classOptions.summon: the pet's mana),
--- `sacrificed` its sacrificed demon (classOptions.sacrificedDemon), `uptime` the debuffs reported.
+-- `petMax` the demon's pool where the build's talents raise it (the log's "Pet stats"), `sacrificed` its sacrificed
+-- demon (classOptions.sacrificedDemon), `uptime` the debuffs reported.
 local PACKS = {
     -- aff_wrack.build.json 25300020135201351--0550005003 (33/0/18)
     Affliction = {
@@ -280,6 +283,64 @@ local PACKS = {
             [412758] = 1, -- Incinerate
         },
         uptime = { "immolate", "corruption" },
+    },
+    -- sm_ruin.build.json 2540002013520105--0550305003 (30/0/21): Affliction's second pack
+    SMRuin = {
+        pack = "SM Ruin (wowsims.com)",
+        spec = 100091,
+        max = 5353,
+        demon = "succubus",
+        kit = { "siphon_life", "amplify_curse" },
+        talents = {
+            [18182] = 2, -- Improved Life Tap
+            [18174] = 5, -- Suppression
+            [17810] = 4, -- Improved Corruption
+            [18827] = 2, -- Improved Bane of Agony
+            [18288] = 1, -- Amplify Curse
+            [427712] = 3, -- Pandemic
+            [1310949] = 5, -- Malevolence
+            [18094] = 2, -- Nightfall
+            [18265] = 1, -- Siphon Life
+            [18271] = 5, -- Shadow Mastery
+            [17793] = 5, -- Improved Shadow Bolt
+            [17788] = 5, -- Bane
+            [17778] = 3, -- Cataclysm
+            [17959] = 5, -- Ruin
+            [17927] = 3, -- Agonizing Flames
+        },
+        uptime = { "corruption", "bane_of_doom" },
+    },
+    -- demo_shadow_brand.build.json 011-0005003231220301351-0550005003 (2/31/18): Demonology's second pack; the
+    -- Succubus out with Fel Vitality's pool (wowsims's log: 2151.65 mana), the Imp sacrificed (Burning Shadow)
+    ShadowBrand = {
+        pack = "Shadow Brand (wowsims.com)",
+        spec = 100092,
+        max = 6156,
+        demon = "succubus",
+        petMax = 2151.65,
+        sacrificed = "imp",
+        kit = { "demonic_sacrifice" },
+        talents = {
+            [18174] = 1, -- Suppression
+            [17810] = 1, -- Improved Corruption
+            [18769] = 5, -- Unholy Power
+            [18731] = 3, -- Fel Vitality
+            [1225214] = 2, -- Demonic Energies
+            [18754] = 3, -- Improved Sayaad
+            [18788] = 1, -- Demonic Sacrifice
+            [18709] = 2, -- Master Summoner
+            [440870] = 2, -- Decimation
+            [1293695] = 3, -- Demonic Brand
+            [19028] = 1, -- Soul Link
+            [412732] = 3, -- Demonic Knowledge
+            [23785] = 5, -- Master Demonologist
+            [425464] = 1, -- Demonic Pact
+            [17793] = 5, -- Improved Shadow Bolt
+            [17788] = 5, -- Bane
+            [17959] = 5, -- Ruin
+            [17927] = 3, -- Agonizing Flames
+        },
+        uptime = { "corruption", "immolate" },
     },
 }
 
@@ -503,7 +564,12 @@ end
 -- Each recommendable ability: `effect(W, e, p, X, H)` (a channel's at its start), `requires(W, e, X, H)`,
 -- `channel(H)` (a channel's { length, tick, effect }). A key missing here fails the loop.
 M.MAP = {
-    shadow_bolt = spell("shadow_bolt", 32),
+    -- Improved Shadow Bolt: a crit's Shadow Vulnerability on the target (DB2 17793 / 17794, 12 s)
+    shadow_bolt = spell("shadow_bolt", 32, function(W, e, X, H)
+        if e.lastHit.flag == "CRITICAL" and talentRank(H, T.improved_shadow_bolt) > 0 then
+            aura(W, X, e.target, "shadow_vulnerability")
+        end
+    end),
     immolate = spell("immolate", 4, function(W, e, X, H)
         dot(W, e, X, H, "immolate")
     end),
@@ -570,6 +636,12 @@ M.MAP = {
     amplify_curse = {
         effect = function(W, e, _, X)
             aura(W, X, e, "amplify_curse")
+        end,
+    },
+    -- the Orc racial the builds' Boosts group casts (Hekili_Shared/Races/Orc.lua): its buff on us
+    blood_fury = {
+        effect = function(W, e, _, X)
+            aura(W, X, e, "blood_fury")
         end,
     },
     summon_imp = summon("imp"),
@@ -655,7 +727,7 @@ local function content(name)
         script = hooks,
         bags = { [SOUL_SHARD] = 32 },
         -- the build's demon, out from the start with its mana full (wowsims)
-        pet = { pt = MANA, max = D.max, power = D.max, regen = D.regen, tick = 2, up = true },
+        pet = { pt = MANA, max = P.petMax or D.max, power = P.petMax or D.max, regen = D.regen, tick = 2, up = true },
         stats = { [5] = SPIRIT }, -- UnitStat(5)'s Spirit, Life Tap's
     }
 
@@ -769,5 +841,7 @@ end
 M.Affliction = content("Affliction")
 M.Demonology = content("Demonology")
 M.Destruction = content("Destruction")
+M.SMRuin = content("SMRuin")
+M.ShadowBrand = content("ShadowBrand")
 
 return M

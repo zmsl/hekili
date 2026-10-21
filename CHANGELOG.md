@@ -21,8 +21,22 @@
   Word: Pain kept up, Penance, Smite; the wand at 10% mana).
 - Shaman: Elemental has a priority, "Elemental (wowsims.com)", wowsims/forever's Elemental list (Flame Shock, Lava Burst
   while it is up, Earth Shock on Revelation, Elemental Mastery, Lightning Bolt, the fire totem). It is Elemental's default.
-- Warlock (new addon folder Hekili_Warlock): the Warlock's abilities and talents, with no default priority yet
-  (Affliction, Demonology and Destruction come next).
+- Warlock (new addon folder Hekili_Warlock): the Warlock's abilities and talents.
+- Warlock: "Affliction (wowsims.com)" is Affliction's default priority, wowsims/forever's Affliction list (Bane of
+  Agony, Corruption, Siphon Life, your curse and Immolate kept up, Shadow Bolt on Shadow Trance, Wrack while the DoTs
+  last, Shadow Bolt, Life Tap).
+- Warlock: "SM Ruin (wowsims.com)", wowsims/forever's SM/Ruin list (Bane of Doom, Corruption, Siphon Life, your curse
+  and Immolate kept up, Shadow Bolt), a second Affliction priority; Affliction's default stays "Affliction
+  (wowsims.com)".
+- Warlock: "Demonology (wowsims.com)" is Demonology's default priority, wowsims/forever's Fire Brand list (Bane of Doom,
+  Searing Pain for Demonic Brand, Immolate, your curse and Corruption kept up, Life Tap when the Imp runs low, Soul Fire
+  on Decimation, Searing Pain).
+- Warlock: "Shadow Brand (wowsims.com)", wowsims/forever's Shadow Brand list (the Fire Brand list with Shadow Bolt as
+  the filler and the Succubus), a second Demonology priority; Demonology's default stays "Demonology (wowsims.com)".
+- Warlock: "Destruction (wowsims.com)" is Destruction's default priority, wowsims/forever's Destruction list (Bane of
+  Doom, your curse, Immolate and Corruption kept up, Conflagrate, Shadowburn, Incinerate, Life Tap).
+- Warlock: an "Assigned Curse" setting (Curse of the Elements by default; Recklessness, Weakness or none) picks the
+  curse every Warlock priority keeps on the target.
 
 ### Changed
 - Mana and energy consumables (Major Mana Potion, Demonic Rune, Thistle Tea, Mana Gem) and the Rogue's poison reminders (Instant and Deadly Poison) are now under the Potions toggle, which is off by default: turn Potions on to see them. The Healthstone stays under Defensives.

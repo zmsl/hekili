@@ -46,12 +46,36 @@ local state = Hekili.State
 
 -- The class kit and one spec a talent tree (ids the core's: Affliction 100091, Demonology 100092, Destruction 100093;
 -- the client's one pseudo-spec, assumed 1490, only keys the legacy profile the core migrates). Icons: the DB2 talent
--- tabs'. The packages come with the wowsims.com packs.
+-- tabs'. Each spec's package is its wowsims.com pack (APLs/packs.lua).
 local spec = Hekili:NewClass("WARLOCK", {
     specs = {
-        { key = "affliction", name = "Affliction", tree = 1, icon = 136145, role = "attack", ranged = true },
-        { key = "demonology", name = "Demonology", tree = 2, icon = 136172, role = "attack", ranged = true },
-        { key = "destruction", name = "Destruction", tree = 3, icon = 136186, role = "attack", ranged = true },
+        {
+            key = "affliction",
+            name = "Affliction",
+            tree = 1,
+            icon = 136145,
+            role = "attack",
+            ranged = true,
+            package = "Affliction (wowsims.com)",
+        },
+        {
+            key = "demonology",
+            name = "Demonology",
+            tree = 2,
+            icon = 136172,
+            role = "attack",
+            ranged = true,
+            package = "Demonology (wowsims.com)",
+        },
+        {
+            key = "destruction",
+            name = "Destruction",
+            tree = 3,
+            icon = 136186,
+            role = "attack",
+            ranged = true,
+            package = "Destruction (wowsims.com)",
+        },
     },
 })
 if not spec then
@@ -231,14 +255,16 @@ spec:RegisterPets({
     felhunter = { id = 417, spell = "summon_felhunter", duration = 3600 },
 })
 
+local function corruptionDuration()
+    return CORRUPTION_DURATION[knownRank(CORRUPTION)] or 18
+end
+
 spec:RegisterAuras({
     -- The target's (unreadable in combat), modelled from our casts.
     corruption = {
         id = 172,
         copy = rest(CORRUPTION),
-        duration = function()
-            return CORRUPTION_DURATION[knownRank(CORRUPTION)] or 18
-        end,
+        duration = corruptionDuration,
         max_stack = 1,
     },
     immolate = { id = 348, copy = rest(IMMOLATE), duration = 15, max_stack = 1 },
@@ -252,7 +278,7 @@ spec:RegisterAuras({
     -- Searing Pain's brand (Demonic Brand 1293695): 10 s, 2 charges a rank (wowsims's curve; its logs land 6 at 3/3).
     -- shortcut: the demon's attacks spend the charges (unseen); the model keeps them all for the 10 s.
     demonic_brand = { id = 1293696, duration = 10, max_stack = 6 },
-    -- Improved Shadow Bolt's (a crit's: unseen), for the replay's reads.
+    -- Improved Shadow Bolt's (a Shadow Bolt crit's: the belief's own crit, Shadow Bolt's `onCrit`).
     shadow_vulnerability = { id = 17794, duration = 12, max_stack = 1 },
 
     -- The player's. The procs (unseen; the player aura walk reads them where plain): Nightfall's next Shadow Bolt
@@ -275,15 +301,16 @@ spec:RegisterAuras({
 
 -- A DoT's or Curse's `now` and `handler`: its debuff on the target, the others of its group (`group`: a Curse's or a
 -- Bane's) removed, Amplify Curse spent (`amplified`: Bane of Agony and Curse of Weakness, DB2 18288 effect 0's mask;
--- wowsims: spent at the cast).
-local function lands(key, group, amplified)
+-- wowsims: spent at the cast). `duration`: the debuff's when its aura's is a function (a `now` must pass it: the belief
+-- writes nothing for a function duration, Families/Now.lua).
+local function lands(key, group, amplified, duration)
     return function()
         for i = 1, group and #group or 0 do
             if group[i] ~= key then
                 removeDebuff("target", group[i])
             end
         end
-        applyDebuff("target", key)
+        applyDebuff("target", key, duration and duration())
         if amplified then
             removeBuff("amplify_curse")
         end
@@ -297,6 +324,16 @@ local function bolted()
     return function()
         if buff.shadow_trance.up then
             removeBuff("shadow_trance")
+        end
+    end
+end
+
+-- Shadow Bolt's `onCrit` (the belief's own crit, Families/Now.lua): Improved Shadow Bolt's Shadow Vulnerability on the
+-- target (DB2 17793; wowsims's logs: 17794 for 12 s after a crit), the only way the belief sees it.
+local function vulnerable()
+    return function()
+        if talent.improved_shadow_bolt.rank > 0 then
+            applyDebuff("target", "shadow_vulnerability")
         end
     end
 end
@@ -419,6 +456,7 @@ spec:RegisterAbilities({
 
         now = bolted(),
         handler = bolted(),
+        onCrit = vulnerable(),
     },
 
     immolate = {
@@ -459,8 +497,8 @@ spec:RegisterAbilities({
         usable = unlocked("shadow"),
         missable = true,
 
-        now = lands("corruption"),
-        handler = lands("corruption"),
+        now = lands("corruption", nil, nil, corruptionDuration),
+        handler = lands("corruption", nil, nil, corruptionDuration),
     },
 
     bane_of_agony = {
@@ -906,3 +944,48 @@ spec:RegisterTalents({
     shadow_and_flame = { 3, 426316, 5 },
     incinerate = { 3, 412758, 1 },
 })
+
+-- The assigned curse (tools/wowsims/apl.lua rule 16; the recipes' `select`): wowsims's Curses class option, a choice
+-- the packs' curse lines read as `settings.assigned_curse='<key>'`; every build's (and so the harness's) is Elements.
+spec:RegisterSetting("assigned_curse", "elements", {
+    type = "select",
+    name = "Assigned Curse",
+    desc = "The curse the wowsims.com priority keeps on the target (wowsims's Curses option). No Curse: none.",
+    values = {
+        elements = "Curse of the Elements",
+        recklessness = "Curse of Recklessness",
+        weakness = "Curse of Weakness",
+        nocurse = "No Curse",
+    },
+    width = "full",
+    sim = "elements",
+})
+
+-- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
+-- run it, never this block (tests/Forever/warlock_spec.lua checks it matches). Each pack's .simc is generated from its
+-- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/warlock_*.lua).
+spec:RegisterPack(
+    "Affliction (wowsims.com)",
+    20261021000,
+    [[Hekili:DJv3ooQnu4NLCtgqnkqMmDB3rkvAARQ62UDBvzL6DagSjXnGncB2OinIN9AdHGTdmduTBsvVyg5C858D(nh)P4VY)J(Eqah5)H7DV)nRCVFLRRRVh)yoY3lheVhSvCGaYe))PKKuCmhtjvHwhOhy4m2YyAMTuZJPuauIwujoL)oIFuVaZYrX(E)1t)57)9F4xFeCgrFVDyie1ygIf)cE7XQq(ouv4jzoj0c0NqfvHqucOmLxf(0F8(QqHyXjvqkXos3ZCoaksPX7DG5mhz4czoIij4qHiFxwly5FZOe7fcpvaiSurEafNPspJzvHaiKsUtCyp6iBzv4pc4Gh7jIS(T39rbi748C2JooBX8DLrYKWXqvBbMIahUE9Bx7cDFWDT7srvTGMGtfvEqDkW2uYqbyokJTqEIkI5TXWnRQ(Ltk8vBCGOmkbhhuusqdRvminnO5JbPygFHSdVjIszCMQEGS8uCYXG4YcMbClWjBSSM1O7YiarExaylLCC5Ec9a55zquuzsIXDL52ZNvlxdCPCvpRz0IeACjBZ9sFoeQAPhTOOmx(P(SS7wdZy48D1fKeuF2PCTP)KzGmyedMbOuugIWzQqWqCoMSLTeWy4TeeSjP3CxRY3n3AML1iuRnh6ZJYA4ZwN6iN1OafVpfXyeXFnDM5d6hvDV0xAi1RVoGa7hJFA17sFCgbb(229wKvdJrvK1ZkzH2mU1QIVsSpLEXidP)JwOBvzuf5opDnlWxZH9rK6JViJZYOY3v6Brt7DgBzIqcul2lcHPUjEWfXNTszNOMjA7kv0xDxOMb6ljvS4CsPPUsQk09)LJnxZV6Y2bG0dbr0uEVVG1C9NktjOcqeofZnF68seQNVunxYjk2C4SM8u9K4mRHMPgEc1(5mmXAidNF5WybkdGjm7fwdd68Eh7BT0(728Wq1ovXYj5aoOlzx2qtAtukLcdskloAYZY3tqPJj01G8RKPfRMXDdtvXXpuZahrarPiO)377PaL8Ytu)AKxt9ZNlqDKgPsguA3Ad7A1ZKoytOg0q7VjDLM)WiDRgXob6fIaVad89E5TutNWOmO(AJGQZBdbxxGQDJVx98US6kG9nVkSARgvQLNfRd438QaQV6Sdrf56q(Tdc5iws(5IV5vDz6x(TPknY(sz9gWBNEd4MXf9Zhz0Bstqnk0BcRCNEx4Mqw9k)nLrK8tUl0QGrhW8rSl3TPWZRd2wHgOn2x364dpH3y(xqfE6CHNkz4BlB4R8C5x8LhYzitMo98AB)CHvE2TJpOXaQjpOoW7LM8ld5QAinzX0ArnTATX7HPx)I8RVreSRtotUu9voK6zsrQvVwk4(s1A5JobUZDm1RrqGbOKVJw479ZO9IgFvO1pD63HT(A))5d]]
+)
+spec:RegisterPack(
+    "Demonology (wowsims.com)",
+    20261021000,
+    [[Hekili:nJv8VnQnu4)w6VCf2LrGKRD3vvoPBBAA32TUPXjTFdIbBs8cyJWMffPi(BF2oqIHaPqux6uvJi2V33779E28(A9D8)QVheWr(pnZE29o2ZCSTT994BZq(EzGO1GLIhiGuXN)ikLsOj0LBlxySHUHHtzwr0utPLBtOaOeTWcCc)Ze)WobMLHI89(Rp9NF53)HF9b4be99wHHq0E3qSOZeThkxWxHkxuT20yAo6Fq5LlGOyqrcVCXN(JVuUqSC5IgGuGNkdpB6gqEcnA9uygBQKUq2ujtcIX5OGWCabAPw26VzuI5er8eRXsezdu8mvgFmRCbacPKBfpSgTLzjcgGdEOdEz8BF(RcqwX5zShMoDjMVQiuMktBzQPatb9HZN)H52q73zp32suBZPX4er9heXXucZTGHcWCukBI8jACCWYiORt5VuzWBDvPdbhfKxqq9Bveijjy)xdsWm(ezF2nKszC2eCSRHX(nTcbejebqkn1AnHUH8gdJB6DZDquyrCCZDkYmFZy9jhLcWe2JUoVZ00C3zJ5n9f0y8Yv8GAOU32085RbSSempqVsmsMld8nggnI93AyWXPO32yrZVX2A(DMMp62Iy6WnjMgvWCNPOspjAZ88JUIevhogcKJjldYe7QdxnA1Ny2F8ViRlQawsjBBWLlQH0EdfSNKbp2kbWPPu5vWUiF9ET4DurU6OFG49fbOeukIiANA(ZqCUOOWSamgEjbbduU4EBTX3koYAymaZQisNruM07QVkDWICu06eeJre)wDNQ34OB7PXQbsDgRniW6HeNA7onghqqGFRlqDrJbvKBMvYcDBE3Ok(mCFm9IbsP)NwORnzqf5Jr6AwGVMh2hqQp8ICcogfWbzYAAgIBLciGhDCUB8JmQERAeofOQfnF1eJwKO0Bu1eDEExIO55fzYV11RapUB7iP9I)UY0dRzTN7UHjukmiUiFBpkhS0tv3qKOOMVweIMMVF(WOgaUBeM)rxN3RnGObNezhQihTgCTz0mjJ89es5ycs1s6R8OctPqwrsXtpPKFJiGWee0)7990ORCZkfFcpo0s85IF8Qu6ogioiAu4)tZgOt6YiL(nVLFr5ciZXaFVlwQ4fPvCiIfpVAXXix8y9O9n)9n1G9)5rvTvrz6DNPmn2S6YesoqkRFPrs876N4dx1P2XwnB99uV0sE2teO77nq9Ph9iQ6VqRjQF3fw3FbuQEAsRSTj)E)ZM1AczpIy9Inb7d9c2aMG)sPQ9QoP))E5wAxB6kLB2aCShFh4vtY7lNM3xLUGolA1fApaCaDHxfnXx5Rkdi5hDxO2GwDG2QjQ9RwHPEprxtTY5(LuCQA4lCQMt)ZJpxmoir)q66OqR)HKDQfxJ0hwUvbS90WoN0jnS9aUtQ0k1HnY)rir8Os(MJohL2JDJuYSqe)yuKUxx)vKFZu8tvxbf8v0CFVFgTgNGlxy8tv)BBvB7)Vd]]
+)
+spec:RegisterPack(
+    "Destruction (wowsims.com)",
+    20261021000,
+    [[Hekili:nJvupoQnq4Fl3l3c6IaYM922B1sL2Evv9AV7Av5K6BgmytIBa7iBtJI0k(TxBtiGjK9irx3TpKiJ9mFZ3mJdFJcyo4lGieuIbF(6GRVDEW1ZdccarYDBWGOnWS1WLQfuyP67FclK8QmjHrRtC2Y2kiLcVmwPR20DfmisdxAfPq(bkiDuKfBWzGO)6H)8J)(7)T7qDqcIwrqiCJFyr2tfV7QtKRW1j73ZpNXX)dMxNGW5WQczDYd)XhRtuBxNyJsfXxZaH)wiVGLT2hTr4Rzms4BidZZ8K3Flyu3zQ4WHurHkpqQ1mDCjI6eicXOxPwSgVt4PccucVBe(48Pp8ffiRKYnI789xsKRQs1PG)atDvyQOnAXI3TiafCtWIapvvLZYjfQsp0WFryLahtK4sXm9kwEE8Ymu486FDVbVjuLfLmkjlMxrXN2QmyrrCZJXfeHCMUfhMYycPygjp0XP5qVuivdrmIXk9wtzBPV2X5vN8Whr40Q8C7tQ24(6Z1hoUesOI7dNFJRR7JpzmF1PcAoz5kzClu3g462Vg038z5SSkr41MC)e4zd3peQWBm4Glz0Dw4DrCF4bgypIf3pGezvCtlpw97JyCbUetvn0EKrGLscDPWdkeKLumk24s4vTgFLQv54mbZ2ZVrJOodES9k0bl44S1fyHGQ(S)U0jJtFBpowwinAS2IHRNsCAT74yCabf(UJxK7tJjvKTZkDHEiVTQIFfUFo9IjsP)NwOBnzsf5Ui9CwGFoVSpHuF6fzszjtlW1V22(YN2ZuEz1xyCE1g9tJ5u3Ph5gnVaUKRdM59S7RzhIILCqVyBXxXkiITnTItTYcAgHI1q3F3csoowc7yHxJexyAbJHIZR47gQrcIuYXcLTdgCrRskmJl1mJHA5NnJpHPW0cmc8JGOEqPpCVSDZ(gzBGuH6eDQVqU2Vfd8lJRGKtGGOlwS(IuRNIC9tRxFoc2D1JHJS00sIBMnTPTQlt3C6Y00117IAFBbrMB76wOkqV9j6hxuYpDf)JPNXwB(D7j53eEF33QzaEwFV4)9It9UnowkB3a(UZVb8InFW3UbeErAc9zHDt47p)MWlY8dpZ)qzcj)z3eAnWUb8Ut2agziJouB30gS5bFv0SM(OhlpS9aehQH35WHHvSfrgFOLXMAXG)q5(w87gJXy2q19d1HdZ1ymBO6wRzTd6OmsEqn8mMqPBEidckmGvYvmoi6xWRjfK6eNFE))uH5yW)(d]]
+)
+spec:RegisterPack(
+    "SM Ruin (wowsims.com)",
+    20261021000,
+    [[Hekili:nJvxVrQnu0Fl5LeqDeWKjnTBuPsBBvv32KTRwwP(Mbd2mJ7ySrythnsr8BV2WqWWazzgLM0hsKX(Ep379C9hhnGLGVacqqjg8XR9U(2LExV0ZZdei3NJbb5WKTW1QbmyM6)bpuf95scRkYAhFNGKjCs4z2A72t5qKgR4scv(bgiEuyf54eqWF9(pF)F(Z)XDW0ukjrs4mqWgccHBCdlsMmw3vfj3GRIomNBkVa)p4IQieofwsLvrV)t3xfPMUkYaIsIRo0c3DWckpzRlkx4QtvKWvKfwOSYP(tN)wWz2lurPaYeuvfGuJ56OsevrqeIZUsnylEVWPk6xGs4DJKnwp8HVOazJuMlUZ1DnrUPmwxaUdm1wHPkPrRw9UvEiVB8w55O4ZcEkHQyCyn7i8lf4qIeNjwOhXttdxNG8xw97hm4B8Dr4moJKOQfgEARsGuAyZNHuIqUq3z9J5CHuSGK6Bz1SOtmKPHieX5zoBz8DSlTSUyYfFeHJltt7VszU9LNQpf4miHj(b)L3yBB)4ZgZlMkOPK1BKHTqDRNTTjhaZYPK09HjLfIbuvdfCwX8iNGR5S9t4vZAJMQxErTL9ssTLMvGzWxKYtkf(xxN6tKD9JYp6RcZyWvNv9W7SyIPk2JR1E7m5ffL56VmZGwS6wvbKPBInqeFxymNkp4xDtS2PdRPpkNGh6hjFt9zGu8yXZy5bow3q0LL6EOqmfNHzQJogqiWsjHTw4afcYAgg10d9VQ14Ru7vSSMHzT1(yruZ0p2Ey9jlkWjBPyHGP(7WP2jJJPThhREinAS2HHBNtCAT74y8eck87FeD00ywKC)Qst0dZ7ES4xj3pLEXmtP)Ns0TMmlsUlsVMe8R5M9zu6ZNKjzzCTuIXUOPDTPVwZCA99rHsyNPonpD7ht5CuyAzX(HV9dcuYmekBhift)6VOw9xJYj1WpwRgeZGXumc8tGadO0lEqosZ81YrasfQZ0jtbkA)wnWVKcfKfeii4SfHCwQqMJmKNxhYPiePJpgkfRPLe2i1UPTQPPBMj92tWqF288Y9NvqZlHIgD19TtVjy(Az6ibtBbb1h30Bqvb62Nz32zrpZxLZXPxTT9ZVVBY8BujqgBJEA6(a(9tc4OAJ6a04QNNqCPgX39vtX(QMmGSB((j5sVjXCgpz8sjJ6v9PL)7FF3yVXyL8GoWW78Nrh4ntJ1lNiR3KUGzwmOlm8r0z0fEteH9kFuzgf)j3fAnyqhyA5iJivRd22jhG2WxTh7YvTDdF)R1UwHEaTzTQbobfAD6bRrqHbSuUHxac(n8wcLufz9Rh(fOQxg8Vp]]
+)
+spec:RegisterPack(
+    "Shadow Brand (wowsims.com)",
+    20261021000,
+    [[Hekili:nJv8VnQnu4)w6VChSRJaj96URQCs3TPPDB36MgN0(nad2K4lGncBwuKI4V9z7ajgc0crDPtvnIy)EFVV37zZ7R13X)R(Eqah5)WC7536yp3X2223JVnh57LdIxdwkEGaYeF6TcaPBQc)ubGaRcn2q3WWzmRyAMP04TPuaucyujoL)zIFuVyZYrX(E)9h)RV8h)4VDheLrj0u6YT(ERWqiAVBiw8JhW7Qc5RqvH1RnlHwG(hurvieLakt5vHF8p)svOy5QWU4uINjjbB2gqrknE9myoBMK0q2mjFcykhcIK2BP2W6BmkX8ArqfRXsfzLaiovscmRkeaHuYRfpSgTLzvf(tao4UEiNXV)5VkazfNNZUB2SLy(QYiz(mRJPMcmf5aCXI3VWgAFJ9cBlrnUGMGtfTcqmhtjm3sgkaZrzSRLprtscwgdDDQ(1AdEJRkHi44GIscAyRIbPPb7)AqkMXVw2YDJOugNDnoX1Wy)MwraIeIaiLMzTMq3qELHXvdU5oikQmjP9oL5MVAQ(uGYayc7ExNBmnn39OX8QHcAcE5kEqdu3ABA(01awEkMhOxjMiZLb(kdJwX(7nm44m0BATO53zBT4TMM372Hy6WDDcnUK5oxrLbs0255hCfjQoCmeOatwgKl2vhUg0AoXS)4FzEFubSKs22IlNvdP7gkypjdUVtcGZYOYRG9r(M96W74Yc1r)aXlncqPOmer0o18NH4CrrHzbym8sccgOCX91ng)AXrwdJrywnr6nIYKExZvPdwuGIxNIymI4367udghDBpnwTqQ3yTbbwpM40y3PX4acc87CbQpAmQIC7SswO7Y7wvXNG7tPxmsk9)0cDJjJQiFmsxYc8L8W(is9XxKtXjOaoixwtZrCRmabCVZT2tFKr9BvJXzavTO9RMy0Y0GeCrZRZCEAxIPffL5YV13RapUB3ivlRHkKh1tIEynR9u3nkLsHbjLfBhq4GLEM6gHe10I1IgqBZ3pEysZ)2nbZ)GRZ70Mp0ItISdvwGwdU0mAUKr(EcLCmbP6OawEsHPekRiP4PhucXrequkc6)jFpn6k3SwWNWJdTeFU4hVA1UtbIdAgf()W8r6KUksPFl64xCHaYcmW37SvkEwsfhJwXhxS4uulESE09I)(MAW()qP62QOmDZJuMMAwDE6ihjL1V0ij(BhM4Jx0P2XwnB99uVZsE2teOBhmqdjh9iQ6czBJ6pCM19NbHQNM0kBBZV39KzTMo2Ji2SyBWE)GGnIb4pxIAVOd6)VxTL21M(s52nah7P3bEXu8(8j59fPlOZIoDHUdahrx4frs8f(QYis(j3fAmOthORAIg)AuyQ3t0LuRCEyjfNkg(mNQ5m884hlghuOFiDDuOn8qYELIRr6dl3Pa2DA4bgCu5UYUUZ3oPqReh2k9NGcXJc5Bp5Cssp2nrfZcn8trq6Ez9xq(nxXpvDfuYxrl89(f0ACkUk04NR)N2Q22)Fd]]
+)
