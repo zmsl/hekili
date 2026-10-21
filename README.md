@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/publishing/icon-512.png" alt="Hekili Forever" width="160"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/zmsl/hekili/forever/docs/publishing/icon-512.png" alt="Hekili Forever" width="160"></p>
 
 # Hekili Forever
 
