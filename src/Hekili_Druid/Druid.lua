@@ -1793,13 +1793,15 @@ spec:RegisterSetting("behind", false, {
     width = "full",
 })
 
--- The Guardian (wowsims.com) recipe's own setting (its .simc header's Setting line): the leveling Demoralizing Roar.
-spec:RegisterSetting("demoralizing_roar_filler", true, {
+-- The maintenance debuff (tools/wowsims/apl.lua rule 15; the recipe's `maintenance`): a raid's debuff, off in game
+-- (open-world mobs die before it pays off), on under the harness (`sim`: wowsims's raid boss).
+spec:RegisterSetting("maintain_demoralizing_roar", false, {
     type = "toggle",
-    name = "Demoralizing Roar Filler (wowsims.com)",
-    desc = "Below level 42 (no Lacerate), Demoralizing Roar fills the GCD while Primal Bite is not ready. Not in "
-        .. "wowsims's own APL: an addition for leveling.",
+    name = "Maintain Demoralizing Roar",
+    desc = "Keep Demoralizing Roar on the target, as a raid tank does (and use it as the leveling filler before "
+        .. "Lacerate). Off: the priority never shows it, and Berserk no longer waits for it.",
     width = "full",
+    sim = true,
 }, "guardian")
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc (a wowsims.com
@@ -1818,7 +1820,7 @@ spec:RegisterPack(
 spec:RegisterPack(
     "Guardian (wowsims.com)",
     20261021315,
-    [[Hekili:vF17VnQrq0)wYxsnQwG)rsAVOqKAvuBZPRNQkx)kWA2bZwVWI2DPP5ue)T3znGn2EXX16oL2Vyb7UZmV3BMDyC40WpfgqjAi8JZMm7MPtMnD(0Rdd0pxcHbLKKvKL4dfKC83FUIiPmsrD8ONepPy5k3erUJ5CpZfeQXxlQyC9JfHlS6wvjKeg8WV)hp(WTlB9wyqgJsHgtavYGX526yDguh3UMxQqc)fiRJPqkPIRRJ)HF7d1X4Y1X9CrfZZewLhvwXOEPGKWxaePhPKJl2yRl(I7FQefoJXOijfkoIEk(SWevMQoMqPIIVbFyf8SYTo(bIMCRf0m6xF8tOtY06s1TEElz6SQfgc4T3rDqFIGMoF(7MpHo5QjZN4IAPuKY4OAts0mrHYpHW5rnVeXzk9ytYWpri4uXtfQ633EWV13lvcfFMb0ijSekqIA2yml1pdiCDMBzI(Uzt6BHDNVcGYOQYx)GusowF0)C5OAoUsbrI00OLju)PM4lXt5Mujr8PV3Fxiy3IlAoGBPKLt4rlyAWDvbs4(MsHCbMnzFMvSmskisJLkqRX3vUhSBekSCqEzNV5KeJg164lhnymFPtT3zljKtyfQ7rm7Mt(7x6tY7S4QeHs7St6IasgGOsc9P8BnSmxoIWA081GArvAQ7MLC7vv4UPg0FbivGC1HPXrTbS9aTuAdU7wwce6ZBz6bzUw(sH1O5WTRkDoBDY)khhlCcfcGxvakSCFzM2c1SZTw9QzjexVCHTJ1lITx287s7Jtfjvk)znXyulN3uuuvE5(lP0yF679V25GDA54D(tDXDVWoIhzfHVypj58gMLou0gQhWfhbdBDst3l)EHB)9q)BlT8)DHS(9Hb4hGuO579bAtRDL574BUhGV8X1tjafKfCGg(JHb9Uly2S9tv4h)BiiATedPKrcd(Y2a4SLKxxtc1OuCI8SFJHDi7j2syGEcie0MXMmvE2K9UW3Jc2q9w88VRo98lu)AMw2W6UlIHbRVjA4DJE1mb3XeS9hEPPopQzQ2Tv6w0YopyDYQ(s9otyz808ZblTT1m2F15yFBTdA(1NyPSz6R(8y)j1m(6MZ0xdM3no97gGFhud13JFnMT70MI60gJYqSVFOsOTt7ztKE7a87gaWBg6Bh4EW8Gn3c7QCTClSF)X3UXz(pz3TxR92G9Jo6TKJn9Z6SfMViv6mbA1VaRyCg(Vw)P2)u66Td)N)]]
+    [[Hekili:LFvBVTQnu4Fl5l3f0IG8s7DRvLkTPQT1QTRMg39vad(qIVbWiBZ6Ave)23XbsItWPnlDsDt7dTcSpV8CEoVWjHtc)CyaLOGWpnD80poz80jZMCzyG6PkimOIKUKmhFOKuG))hRjckJu2ep8r(JswH0nLx4OL7PCoHQTvsnlxDFzyIvZkRG0WG7(TF)(7UEEN1cdwWOuOvfqMEu)CDtSAb0e3DMxgxa)biAIPqgPox1e)D)6p3eJh3eByIAMN2TspQOMr9YabjpbicpsvoEyRUU4lUFrYlDgHErqkL5i6P4ZCTxzYMycLYl)k8HLWts3M47ikY1wqZWF5(pJgzHsvjV2ZBotTOorhaEhiQdAte00zZUA2y64lgpBSlYLcEglhzBsQIXlL(PK88O2xIYzs1iDYWpLZZP8hlLnp0j4x77LjGYNzansaZHsmq1xmIL5Vai5QfUvPQBMo2ud7gFjavr1vVUGusbwFykxbYMJQLqepllAEk1FI2)cuk30AbIp1T(7db7AmOva3kbRGKhLWuG7YsmGnvLcfCmBYEMvopsWjcTMsqPW3LUfewPc)lQNyFy4gZNts10uNT3DEp3UAdHV3vcq7e5TiSr39NRmJZBSyQuUu54SxkJacgeLXeGzy)EGltyPBqIW60I1GkPolZD7rUgvgUBRd9taHeel7Nkh25Wob6cPT4EZXcGqFAxK2lP1fVuynA6FDD1QbNqU35Sjt)lmsD7cCKTG86sqI9fZxOSe)2jGosT9O6kNvdSjMHh76k93uBmkJNwl9N26JHDeZ2kN6QpC4rsfoq)w)lD6DtxmEJ)ex82b2r8qRiCL9mPZ)2tL9z23YeLbVqWSZrTZl9nG0H3HyWw(9)fzKMhcdWVlkr1pyVb9xCK61l221HV8P1lVaLKKCGg(9HbgDE6l7(ckUtsllGAlqxkyKWG)zNj9I82BN4EDMluHe2jYgMdR2JsoXXuhzofcbLENpDrSTKZg3Bec2q9o883RK)8R5F)tEB5MnD(HbRB91StlR2UK6lrRhUFwBptu7I776ASW4BSG1Lhnti7TeP2sZohS0nRvR)fNJ(DvyO6xEIf86fmnJJdxgvBRpEM26O5DTr)MJeF9kGmT4juVDoRVEA7jEAlkUECZ3ESYODl0AJOEFqSgWxDeaVDV29GBVvEB7e3u9APt0Cs673Yy)hEo4Rni8OtUEZ9tV0YBRZ7yMNuRwWrl)tWswod)z()q3VIF91H)1]]
 )
 
 -- The hand-built lists the wowsims.com packs replace (wowsims packs plan, P9): a saved choice of one falls back to the

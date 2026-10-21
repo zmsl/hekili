@@ -77,8 +77,8 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         local out = H.Hekili.Engine.Output.Primary
         assert.are.equal("bear_form", out.recs[1] and out.recs[1].actionName)
     end)
-    -- The recipe's leveling Demoralizing Roar filler is behind the pack setting `demoralizing_roar_filler` (user,
-    -- 2026-10-21; default on): off, a level 10 bear in Bear Form with the rage for it and the Roar already on the
+    -- The recipe's leveling Demoralizing Roar filler is behind the maintenance setting `maintain_demoralizing_roar`
+    -- (rule 15; user, 2026-10-21; off in game, on in the harness): off, a level 10 bear in Bear Form with the rage for it and the Roar already on the
     -- target is shown something else
     it("Guardian (wowsims.com)'s Demoralizing Roar filler is skipped with its setting off", function()
         local function first(on)
@@ -89,8 +89,8 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             assert.are.same({}, H.loadErrors)
             local hk = H.Hekili
             local settings = hk.DB.profile.specs[hk.State.spec.id].settings
-            assert.is_true(settings.demoralizing_roar_filler) -- the registered default
-            settings.demoralizing_roar_filler = on
+            assert.is_false(settings.maintain_demoralizing_roar) -- the in-game default (a direct boot is in game)
+            settings.maintain_demoralizing_roar = on
             H.ctl.inRange.target, H.ctl.level.target = true, 10
             H.Fire("PLAYER_TARGET_CHANGED")
             H.ctl.auras.target.HARMFUL[1] = { -- the Roar up: keep_up's own Roar line stands aside
@@ -114,9 +114,9 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         local f = assert(io.open("src/Hekili_Druid/APLs/Guardian (wowsims.com).simc", "rb"))
         local simc = f:read("*a")
         f:close()
-        assert.matches("\n# Setting demoralizing_roar_filler %(", simc)
+        assert.matches("\n# Setting maintain_demoralizing_roar %(", simc)
         assert.matches(
-            "\nactions%+=/demoralizing_roar,if=settings%.demoralizing_roar_filler&!action%.lacerate%.known",
+            "\nactions%+=/demoralizing_roar,if=settings%.maintain_demoralizing_roar&%(!action%.lacerate%.known",
             simc
         )
         assert.matches("demoralizing_roar", first(true))

@@ -687,8 +687,8 @@ Druid (a level 60 Druid):
   defaults load.
 - D7: Balance: does Innervate drop Moonkin Form on Forever? (cast it in form; watch the form aura). The kit and the
   loop world keep the form, as wowsims/forever does.
-- D8: the Guardian page shows a "Demoralizing Roar Filler (wowsims.com)" row, on by default; turned off, a bear below
-  42 (no Lacerate) no longer gets Demoralizing Roar as the filler while the debuff is up (the keep-up Roar stays).
+- D8: the Guardian page shows a "Maintain Demoralizing Roar" row, off by default: no Demoralizing Roar (the keep-up
+  line and the leveling filler below 42) and Berserk does not wait for it; turned on, the Roar is kept up as wowsims.
 
 Rogue (a level 60 Rogue):
 - Rg1: each spec defaults to its "(wowsims.com)" pack; a saved old choice falls back after `/reload`.

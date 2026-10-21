@@ -1869,13 +1869,31 @@ spec:RegisterSetting("wowsims_rend_weave", true, {
     width = "full",
 }, "fury")
 
+-- The maintenance debuffs (tools/wowsims/apl.lua rule 15; the recipes' `maintenance`): a raid's debuffs, off in game
+-- (open-world mobs die before they pay off), on under the harness (`sim`: wowsims's raid boss).
+spec:RegisterSetting("maintain_demoralizing_shout", false, {
+    type = "toggle",
+    name = "Maintain Demoralizing Shout",
+    desc = "Keep Demoralizing Shout on the target, as a raid tank does. Off: the priority never shows it.",
+    width = "full",
+    sim = true,
+}, "protection")
+
+spec:RegisterSetting("maintain_thunder_clap", false, {
+    type = "toggle",
+    name = "Maintain Thunder Clap",
+    desc = "Keep Thunder Clap's slow on the target, as a raid tank does. Off: the priority never shows Thunder Clap.",
+    width = "full",
+    sim = true,
+}, "protection")
+
 -- The three priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit
 -- those and run it, never these blocks (tests/Forever/warrior_spec.lua checks they match). Pick one with
 -- /hekili priority <name>.
 spec:RegisterPack(
     "Protection (wowsims.com)",
-    20261021006,
-    [[Hekili:vJ17VPUnu0)w6xybTQqakDRvLk9MMMwN2E7PYtAFlbtIH4HjoY2POoHYF77ANuITjbc69PNQAvW5(JZ94RV(uchh(1Wfjijo8ZtcMC)4GjJdcUpCH89CC4ICu8w0g4Hm0o4VFHZK4yjHLvU0BpBVGSt4hZ2nuz57ugkrfTvfeQ8LSWvTgyroooCX)8PxF9L)(1hZpgXWfPKKeCLByr8zY2JLlLP4YL1RnAnJJFdZlxMGxJkOYYLF6l)z5sy5YLwbPGmsLEXO9ioNW4JAs)iuovmQoa(Wh8)xblB4TqQ4OmbfkKe4zMk1er5suscl7hGh2IFx4xU8xrs0JTajV)6LVcbjvkZfpoA0gImTyLQkg5y6qiMaYtMo9HPbjb3fmnWhOvoBnHcupsJsHFohdoVcjNd)kP4irkRqElSCEbLgbRp2Fw5FCI5)48rROmwch2oVTqGJyRxhTjoz(4U8DofjKrcjklXXbY65E34TQy9A)gB8lYp4v5QViLGPjr7ruQ)2m2(SbAJnxUiF4WbPyevM6NhlFA(DbdpMAaSg2QZNPPtNn4gVpYLbcmsLfUgEO10BLojldd7e70jdQUoI(HUQWHhUsiDLCLnznZLSGEbmpkUGlWFxwbvVsVlCAZM1EFGPBjyKmnAprKAUAms1nR)yeLiK3QMEnpojIJIjiQOL(m4Sr82wAZvhx8bALJZKpd9Oh8UrxCQJSzBWrfc0kkgQVbE3uth1VQMTJzmAc8WXL54DisM4j1zTHonH7X4Cs2gGJ5KTyXP4rz7B4iCgEhblEESP3WGLSevtafL3ITtAPQHXA7mx(nsSKXFpIxytO6jhWCpUqAU8ogxIO1O18f116vGUX27QqKruY)P5c98nWJeSM5p9Lnu69NlJ1(BUChEAnzf8u7N5IgBIb21nmRupDSozQfQAo8G9Xu4KteCbeozEaC8XzLMoiJDh3UiZxvdINR7KSBLQksehilnIQbK56(Wr54Tpn7G33uMh0wOniiBGftXO3A5mUNBdXa3JEoZl4msCDR3fJ28leTUUzeIKPFp9qZUTFZ4K5A3JwxWF32)2mwLnmmLMVf6F7L54coElQFMslYWcyM3MuPRdHlargcWhh9yQbKcLSTMibF6ZADH4m10TKWFjCHr0uVSwpci27yThkHi3xVosbkVM2tVQycLh31xpmiKq1plQv4DnLyZ1EajXjWfTeu4I2vaDTxk6kbQns8dCy4Rfq(2Kg1U2O22woIJp0kzHIZO44msoUwnhxl)EIOJ26EAiydzuFVwCZ6zxTHIlZs1wRLkG33bB1O9sz1p1HvUAXQg4ev9)tAmYbcXp3tKBkzZAx6eXAxTATlkxtHZh6loDKZzIv77NEESkUJd6GdnLSCMGmrhe3PAoSM6(BTDDnLXudO2WUgdyikuBxxNQSujQT0Tf9dlR5CTnD111tUOIq7QP8unKMHQpcn1H3TH9sy88kq1H0T36izBO(0mKNvAQ(YKUAQustTVpRhAwVkrR9q7y9jQjD20AOP0cSNto7z1Z2dqDzbTAm3xTovkETqVBZ6PQt1zOV6ISedFMe1MmyDI6RCQJ6KntIJc5kzwh)ENAtOvZx4e8o)zD0L)HsixW0T3nORjz1Y(qfYuvl0VJ3sOKYLE)w936M(1H))p]]
+    20261021007,
+    [[Hekili:vJ17VjUny4)w6xybTQqao6TwvQ0nnnToTD7u5K23sWKyiEyIJSDkQtO83(ETtkX2KqdR3xov1QGZ7pEEF9JF9tjCC4xdxKGK4WppjyYnJdMmoi4JHlKVKJdxKJI3I2apKH2b)9lCMehljSSYLE7z7fKDc)y2UHklFHYqjQOTQGqLpMfUQ1alYXXHl(7p90tp(xpDx(XigUiLKKGRCdlIpt2URCPmfxUSETrRzC8ZyE5Ye8AubvwU8tF5pkxclxU0kifKrQ0lgThX5egFut6hHYPIr1bWh(G))iyzdVgsfhLjOqHKapZuPMikxIssyz)a8Ww8lc)YL)csIURfi59Np(viiPszU4UrJ2qKPfRuvXihthcXeqEY0P3onij4dbtd8H2kNTMqHwpsJsHFohdoVcjNd)kP4irkRqEnSCEbLgbRp2Fw5VFI5)48rROmwch2oVUqGJyRxhTjoz(4U8DofjKrcjklXXbY65Ex5TQy9A)gB8lYp4v5QViLGPjr7ruQ)2m2(SbAJnxUiF4WbPyevM6NhlVF(hcgEm1aynSvNpttNoBWvEVMldeyKklCn8qRP3kDswgg2j2PtguDDe9dDvHdpCHq6c7v2nRzUnlGlG5rXfCb(7YkO6v6DHtjBw79bMULGrY0O9erQ5QXifBw)XikriVwn9AECsehftqurl8m4Sr82wO5QJl(qBLJZKpaC0dExPlo1r2Sn4OcbAffd13aVRQBh1VQUBhZy0e4HJlZX7qKmX9QZAdDiH7X4Cs2gOhZjBXItXJY2NXr4m8ocw8WytVHblzjksafLRSvGLsiycFv(KWVrMwmWjutAPPat92zU8ZKyjJ)seVWUFRhSaJf5cP5Y7yCjIwxmMVOUv8Td8JT5eqIruY)Q7K6PJTgWtTBqcwV5E6BA21U5DG66WBUwhb2A2oeyTFMlAqJcSBTW0A9856KPwOIE6bmPu4SBeCfiozEaCa2zLgoSbbWLhB(QAq8qnx2MmxvKio0l1iQgqMR7ddtI3E)SdEVRmpOTqB0GSbwmfJEULPmEUKQbUh(DMyXzK4A29BgT5Vr066UzisM(D)Tn72(nd0MRDpADb)fB)BZyv2WW9e8TavTxMJl44TO(zkTidlGPUBsLUoeUaK5iaFCueQgrluchBIe8PpRvMIZuZxtc)5Wfgrt9YAfrGCZJ1EOeICF96ylq510E6vvNq5Xh6RhgnKq1plQ1yEjLyZfVqtItGR6jOWfTRb7sVw2vewBnXxXHHVwa59joRD1zTTTCehVQwZcfNrZZze9CPQEU0(7jYEAJ900GneY99AXnRNSAdnFMLQTApvaVPJUvJ6pLvFSdRCvdwnWjQ6)O1yKdeIFQNi3u0O1U0jYfVy9IVPGrfoVTV40rqPjwTVF6HXQ4ooOJEOPKfZGCzY0MOZH7qpNMQ66DTDDneYufQ2WUMsyilvBxxh6S0PQT0Lb)QL1BjAB6Iu(TPvvTD0fL(ubQNpt)pL6QXG7zI3zDEEnW6m6YUpUFAO)1mJNvCS(6SUO1kXX23O2dvZxKS5EOET(m9KopxyOQ1cSNtq9zvu3dq92sQ1yUVQTQ0CBHExc)P6J1zOVkZSKJFMe1MqCDI6RGUJk1ntIJg9kHEh)U3AtQxZx6g8o)zDWYFvlMly627g01KSAHNOczQIc9B4TekPCP3Vw)npQFD4)9d]]
 )
 spec:RegisterPack(
     "Fury (wowsims.com)",

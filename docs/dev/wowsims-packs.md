@@ -69,8 +69,8 @@ Translation:
 - `settings` (`{ <key> = { default = <bool>, desc = "<text>" } }`): a pack setting a recipe line reads as
   `settings.<key>`, listed in the header (`# Setting <key> (<desc>), default <bool>.`) after the ON/OFF groups when a
   line reads it; the class registers it beside the `wowsims_*` ones. For a recipe line a player may want to turn
-  off: Guardian's leveling Demoralizing Roar, `demoralizing_roar_filler` (user, 2026-10-21; Faerie Fire, free, has
-  none).
+  off. (Guardian's leveling Demoralizing Roar had `demoralizing_roar_filler`; it is now governed by rule 15's
+  `maintain_demoralizing_roar`, below. Faerie Fire, free, has none.)
 
 The autocast context: rule 13 reads the spec's exported log (`tests/Forever/wowsims/<spec>.log`, its "Major cooldown
 used" lines), so `make wowsims-packs` needs the checked-in log; a re-export can move those lines.
