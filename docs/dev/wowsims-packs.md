@@ -133,7 +133,8 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
    `min(...)` / `max(...)` with each term that may be nil as `(<known>&<term>)` (false, which they skip).
 7. `focus`, `use_off_gcd=1` for an off-GCD ability, `leveling` and `extra` lines, `requires`.
 8. Constants: Go durations in seconds; `"N%"` as N against a percent read (`mana.pct`, `health.pct` run 0-100), N/100
-   anywhere else (in `math`, against any other read), as wowsims reads it.
+   anywhere else (in `math`, against any other read), as wowsims reads it; a percent read inside `math`, `min` or
+   `max` is unsupported (its 0-100 scale would leak).
 9. `auraIcdIsReady`: `buff.<key>.icd_ready` for an aura declaring `icd`; else unsupported.
 10. `auraShouldRefresh` only for `exclusive` auras; `cancelAura`; `autoSwingTime`; `remainingTime` as
     `fight_remains` (API-forced: unknown, 3600 s, on Forever).
@@ -153,7 +154,7 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
     test, so an unlearned one reads down and the level checker sees its guard); its "is" value as the
     setting term. Unsupported: an "is" with no field (protojson's zero value) or an unknown option value.
 17. `multidot`: the DoT's cast while its DoT has at most `maxOverlap` left, on the current target only (`maxDots` is
-    noted per entry in the header as a deviation; no `cycle_targets`: other targets' DoTs are not readable on Forever).
+    a `# Deviation:` header line per entry; no `cycle_targets`: other targets' DoTs are not readable on Forever).
 
 Any node the translator does not handle is unsupported (rule 2): a new wowsims node omits its entry rather than
 mistranslating it.

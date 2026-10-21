@@ -60,7 +60,8 @@
 -- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N when
 --    it is a direct operand (a variable followed) of a comparison with a percent read (M.PERCENT: `mana.pct`,
 --    `health.pct`, which run 0-100 where wowsims's run 0-1), else N/100 as wowsims reads it (inside `math`, or
---    compared with anything else: Demonology's "Execute at" 35% scales a time).
+--    compared with anything else: Demonology's "Execute at" 35% scales a time). A percent read inside `math`, `min`
+--    or `max` is unsupported (rule 2): its scale would leak into the result.
 -- 9. `auraIcdIsReady` (wowsims: the proc aura's internal cooldown is ready): the aura declaring `icd` (RegisterAura,
 --    seconds from its last application) by its ID or its `icdSpell` (the proc trigger wowsims names the ICD by) is
 --    `buff.<key>.icd_ready`, guarded by the talent when that ID is a talent's spell (rule 6); an aura declaring none is
@@ -151,8 +152,8 @@
 --    AceConfig `select`; the header lists it. An entry the APL never uses, or a build without the option, is an error.
 -- 17. `multidot` (wowsims: the DoT cast on up to `maxDots` targets whose DoT has at most `maxOverlap` left) is the
 --    cast's line under the entry's condition and `debuff.<key>.remains<=<maxOverlap>` (0 when absent), its aura read as
---    `dotRemainingTime` (rules 5, 6, 12; `rank` ignored, rule 5). Deviation, noted in the header by entry: the current
---    target only (`maxDots` unused). No `cycle_targets=1`: the engine's target cycling (State.lua SetupCycle) needs
+--    `dotRemainingTime` (rules 5, 6, 12; `rank` ignored, rule 5). Deviation, a `# Deviation:` header line by entry:
+--    the current target only (`maxDots` unused). No `cycle_targets=1`: the engine's target cycling (State.lua SetupCycle) needs
 --    other targets' DoTs (`active_dot`), which Forever does not give plainly (gap AO / AP), and the replay is one target.
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
@@ -616,6 +617,9 @@ local function value(c, n, pct)
     elseif k == "variableRef" then
         return value(c, c.vars[v.name] or unsupported("variable " .. v.name), pct)
     elseif k == "math" then
+        if percentRead(c, v.lhs) or percentRead(c, v.rhs) then -- its 0-100 against wowsims's 0-1 leaks (rule 8)
+            unsupported("a percent read in math")
+        end
         local l, lu = value(c, v.lhs)
         local r, ru = value(c, v.rhs)
         local op = M.MATH[v.op] or unsupported("math " .. tostring(v.op))
@@ -627,6 +631,9 @@ local function value(c, n, pct)
     elseif k == "min" or k == "max" then -- wowsims's newValueMin/Max: a nil term dropped, nil when every term is
         local parts, us = {}, {}
         for _, x in ipairs(v.vals or {}) do
+            if percentRead(c, x) then
+                unsupported("a percent read in " .. k)
+            end
             local s, u = value(c, x, pct)
             if u ~= true then
                 parts[#parts + 1], us[#us + 1] = s, u
@@ -1100,7 +1107,7 @@ function entry(c, e)
         body = castBody(c, x)
     elseif kind == "multidot" then -- rule 17: the cast under "its DoT has at most maxOverlap left", this target only
         local m = a.multidot
-        c.notes[#c.notes + 1] = ("multidot: up to %d targets in wowsims, the current target only here"):format(
+        c.deviations[#c.deviations + 1] = ("multidot keeps the DoT on up to %d targets in wowsims; this line is for the current target only."):format(
             m.maxDots or 0
         )
         local due = {
@@ -1181,7 +1188,7 @@ end
 --- ON/OFF groups in its order, then the recipe's `settings` by key).
 function M.translate(rotation, c)
     c.vars, c.toggles, c.used, c.seen, c.named, c.namedKeys, c.notes, c.dropped = {}, {}, {}, {}, {}, {}, {}, {}
-    c.calledAt = {}
+    c.calledAt, c.deviated, c.deviations = {}, {}, {}
     -- the IDs the APL casts itself (wowsims takes them out of its automatic cooldowns: rule 13)
     local lists = { rotation.prepullActions or {}, rotation.priorityList or {} }
     for _, g in ipairs(rotation.groups or {}) do
@@ -1250,7 +1257,7 @@ function M.translate(rotation, c)
             elseif type(when) == "string" then
                 omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, when)
             else
-                c.notes, c.dropped = {}, {}
+                c.notes, c.dropped, c.deviations = {}, {}, {}
                 local ok, body, why = pcall(entry, c, e)
                 if not ok then
                     if type(body) ~= "table" then
@@ -1266,6 +1273,9 @@ function M.translate(rotation, c)
                     end
                     for _, n in ipairs(c.notes) do
                         omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, n)
+                    end
+                    for _, d in ipairs(c.deviations) do -- an emitted line that differs from wowsims (rule 17)
+                        c.deviated[#c.deviated + 1] = ("# Deviation: %s #%d: %s"):format(name, i, d)
                     end
                 elseif why ~= "toggle" then
                     omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, why)
@@ -1381,6 +1391,9 @@ function M.translate(rotation, c)
             table.concat(names, ", "),
             M.snake(sel.choice)
         )
+    end
+    for _, d in ipairs(c.deviated) do
+        header[#header + 1] = d
     end
     return text, omitted, read, header
 end

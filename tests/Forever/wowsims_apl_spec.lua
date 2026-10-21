@@ -394,8 +394,11 @@ describe("the wowsims APL translator", function()
         local function math(op, lhs, rhs)
             return { math = { op = op, lhs = lhs, rhs = rhs } }
         end
-        local text = apl.translate({
-            valueVariables = { { name = "Execute at", value = const("35%") } },
+        local text, omitted = apl.translate({
+            valueVariables = {
+                { name = "Execute at", value = const("35%") },
+                { name = "Mana", value = math("OpAdd", { currentManaPercent = {} }, const("1")) },
+            },
             priorityList = {
                 cast(100, cmp("OpLe", const("20%"), { currentHealthPercent = {} })), -- either side
                 cast(100, cmp("OpLt", { currentHealthPercent = {} }, at)), -- a variable, still the direct operand
@@ -414,6 +417,10 @@ describe("the wowsims APL translator", function()
                 ),
                 cast(100, cmp("OpGt", { currentManaPercent = {} }, math("OpAdd", const("10%"), const("5")))),
                 cast(100, cmp("OpLt", { currentRage = {} }, const("50%"))), -- not a percent read
+                -- a percent read inside math or min / max: its scale (0-100 here, 0-1 in wowsims) leaks, unsupported
+                cast(100, cmp("OpLt", math("OpSub", { currentHealthPercent = {} }, const("10%")), const("20%"))),
+                cast(100, cmp("OpLt", math("OpMul", const("2"), at), { variableRef = { name = "Mana" } })),
+                cast(100, cmp("OpLt", { min = { vals = { { currentManaPercent = {} }, const("5") } } }, const("20%"))),
             },
         }, ctx({}))
         assert.are.equal(
@@ -426,6 +433,11 @@ describe("the wowsims APL translator", function()
             }, "\n"),
             text
         )
+        assert.are.same({
+            "default #6: a percent read in math",
+            "default #7: a percent read in math",
+            "default #8: a percent read in min",
+        }, omitted)
     end)
 
     it(
@@ -818,7 +830,7 @@ describe("the wowsims APL translator", function()
             local m = { spellId = { spellId = id, rank = 5 }, maxDots = 3, maxOverlap = overlap and const(overlap) }
             return { action = { multidot = m, condition = cond } }
         end
-        local text, omitted = apl.translate({
+        local text, omitted, _, header = apl.translate({
             priorityList = {
                 multidot(400, "0ms"),
                 multidot(400, "2s", cmp("OpGt", { currentRage = {} }, const("10"))),
@@ -834,12 +846,13 @@ describe("the wowsims APL translator", function()
             }, "\n"),
             text
         )
+        assert.are.same({ "default #4: spell 999" }, omitted)
+        local dev = "multidot keeps the DoT on up to 3 targets in wowsims; this line is for the current target only."
         assert.are.same({
-            "default #1: multidot: up to 3 targets in wowsims, the current target only here",
-            "default #2: multidot: up to 3 targets in wowsims, the current target only here",
-            "default #3: multidot: up to 3 targets in wowsims, the current target only here",
-            "default #4: spell 999",
-        }, omitted)
+            "# Deviation: default #1: " .. dev,
+            "# Deviation: default #2: " .. dev,
+            "# Deviation: default #3: " .. dev,
+        }, header)
     end)
 
     it("takes the character's ability set: a shared racial is mapped and off the GCD", function()
