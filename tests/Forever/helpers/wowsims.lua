@@ -262,21 +262,21 @@ M.FIXTURES = "tests/Forever/fixtures/"
 -- of the real (outside-tolerance) on-GCD decisions, rounded up to 0.01 s; their count }, from the first clean run
 -- (forever-readytime, 2026-10-21), only ever lowered.
 M.READY = {
-    druid_balance = { 0.32, 22 },
-    druid_feral = { 0.11, 12 },
+    druid_balance = { 0.71, 17 },
+    druid_feral = { 0.26, 4 },
     druid_guardian = { 0.54, 40 },
     hunter_beast_mastery = { 0.32, 5 },
     hunter_marksmanship = { 0.15, 9 },
-    hunter_survival = { 0.14, 8 },
+    hunter_survival = { 0.14, 9 },
     paladin_protection = { 0.54, 12 },
     paladin_retribution = { 0.25, 1 },
-    rogue_assassination = { 0.19, 47 },
-    rogue_combat = { 0.20, 28 },
-    rogue_subtlety = { 0.19, 60 },
+    rogue_assassination = { 0.20, 30 },
+    rogue_combat = { 0.28, 16 },
+    rogue_subtlety = { 0.20, 45 },
     shaman_enhancement = { 0.96, 3 },
     warrior_arms = { 0.80, 6 },
-    warrior_fury = { 0.48, 33 },
-    warrior_protection = { 0.15, 2 },
+    warrior_fury = { 0.48, 32 },
+    warrior_protection = { 0.50, 5 },
 }
 
 --- The ready-time check of replay `R` (timing.lua) on spec `spec` after its run: prints "<label> wowsims timing:

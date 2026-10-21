@@ -55,7 +55,8 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             "Guardian (wowsims.com)",
             content("druid_guardian", W.Guardian, "Guardian (wowsims.com)", 60),
             "druid_guardian",
-            0.78, -- 0.782 (61/78) with Primal Fury's onCrit (central fix 15) and the bear's 11.25 a swing
+            0.80, -- 0.782 (61/78) with Primal Fury's onCrit (central fix 15) and the bear's 11.25 a swing; 0.808 (63/78)
+            -- once the replay ends a cooldown at its log timestamp (the ready-time ruling)
             -- Maul's untagged Casting lines are wowsims's queue at each swing (Cost = 0); its Tag 1 line is the hit,
             -- when the game's cast succeeds
             { procs = { ["9881:0"] = true } }
