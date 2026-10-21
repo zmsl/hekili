@@ -41,7 +41,8 @@ test-fast:
 	$(BUSTED) --exclude-tags=slow,party,loop,druid,rogue,paladin,shaman,hunter,bench
 
 # The merge gate: check, then every 20-fight loop tag in one scripts/busted_parallel.sh run (one busted process per
-# spec file, nproc - 2 at a time for the whole gate). `make test-<tag>` runs one tag the same way, nproc at a time.
+# spec file, nproc - 2 at a time for the whole gate, at least 1). `make test-<tag>` runs one tag the same way, nproc
+# at a time.
 comma := ,
 GATE_TAGS := loop,party,druid,rogue,paladin,shaman,hunter
 LOOPS = $(addprefix test-,$(subst $(comma), ,$(GATE_TAGS)))
@@ -49,7 +50,7 @@ GATE_LOCK ?= /tmp/hekili-gate.lock
 # One gate at a time per machine (flock): the loops assert a CPU budget per update (process CPU time, os.clock) that
 # another gate's load would still inflate through shared cores.
 gate: check
-	flock $(GATE_LOCK) env BUSTED=$(BUSTED) BUSTED_JOBS=$$(($$(nproc) - 2)) scripts/busted_parallel.sh --tags=$(GATE_TAGS)
+	flock $(GATE_LOCK) env BUSTED=$(BUSTED) BUSTED_JOBS=$$(($$(nproc) > 3 ? $$(nproc) - 2 : 1)) scripts/busted_parallel.sh --tags=$(GATE_TAGS)
 
 $(LOOPS): test-%:
 	BUSTED=$(BUSTED) scripts/busted_parallel.sh --tags=$*
