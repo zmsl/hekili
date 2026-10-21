@@ -9,7 +9,8 @@
 --    `doAtValue` or one after the pull is omitted, as wowsims ignores it, and one with a non-constant `doAtValue`
 --    too), `priorityList` -> `actions`,
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
---    order as first called; `valueVariables` are inlined where referenced.
+--    order as first called (a group the prepull calls gives every cast its caller's `prepull_at`, the earliest
+--    caller's when several); `valueVariables` are inlined where referenced.
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
 --    false; entries whose action or condition uses a node the fork lacks (`sequence`,
 --    `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `unitDistance` outside rule 11, `sequenceIsComplete`,
@@ -920,6 +921,7 @@ function entry(c, e)
             return nil, "toggle"
         end
         c.used[g], c.self = true, nil
+        c.calledAt[g] = c.calledAt[g] or tonumber(c.prepullAt) -- from the prepull: its casts take the caller's time
         body = "call_action_list,name=" .. M.snake(g)
         key = M.snake(g)
     elseif kind == "cancelAura" then -- rule 10
@@ -964,6 +966,7 @@ end
 --- order).
 function M.translate(rotation, c)
     c.vars, c.toggles, c.used, c.seen, c.named, c.namedKeys, c.notes, c.dropped = {}, {}, {}, {}, {}, {}, {}, {}
+    c.calledAt = {}
     -- the IDs the APL casts itself (wowsims takes them out of its automatic cooldowns: rule 13)
     local lists = { rotation.prepullActions or {}, rotation.priorityList or {} }
     for _, g in ipairs(rotation.groups or {}) do
@@ -1076,7 +1079,14 @@ function M.translate(rotation, c)
         for _, g in ipairs(rotation.groups or {}) do
             if c.used[g.name] and not done[g.name] then
                 done[g.name], more = true, true
-                run(M.snake(g.name), g.actions or {})
+                local at, when = nil, c.calledAt[g.name] -- the earliest caller's (the prepull runs earliest first)
+                if when then
+                    at = {}
+                    for i in ipairs(g.actions or {}) do
+                        at[i] = when
+                    end
+                end
+                run(M.snake(g.name), g.actions or {}, at)
             end
         end
     until not more

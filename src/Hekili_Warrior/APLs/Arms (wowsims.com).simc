@@ -56,9 +56,9 @@ actions+=/battle_shout,if=(((!action.mortal_strike.known|cooldown.mortal_strike.
 actions+=/heroic_strike,use_off_gcd=1,if=!action.mortal_strike.known&rage.current>=30
 actions+=/thunder_clap,if=!action.mortal_strike.known&!debuff.thunder_clap.up&rage.current>=40
 actions+=/sunder_armor,if=!action.mortal_strike.known&debuff.sunder_armor.stack<5
-actions.pre_pull_stance=battle_stance,use_off_gcd=1,if=!settings.wowsims_stance_dance
-actions.pre_pull_move=charge,use_off_gcd=1,if=(!action.battle_stance.known|buff.battle_stance.up)
-actions.pre_pull_move+=/intercept,use_off_gcd=1,if=(!action.berserker_stance.known|buff.berserker_stance.up)
+actions.pre_pull_stance=battle_stance,use_off_gcd=1,prepull_at=4,if=!settings.wowsims_stance_dance
+actions.pre_pull_move=charge,use_off_gcd=1,prepull_at=0.9,if=(!action.battle_stance.known|buff.battle_stance.up)
+actions.pre_pull_move+=/intercept,use_off_gcd=1,prepull_at=0.9,if=(!action.berserker_stance.known|buff.berserker_stance.up)
 actions.cd_racials=blood_fury,use_off_gcd=1
 actions.cd_racials+=/berserking,use_off_gcd=1
 actions.cd_racials+=/eureka,use_off_gcd=1

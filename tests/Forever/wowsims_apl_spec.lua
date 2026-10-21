@@ -128,6 +128,26 @@ describe("the wowsims APL translator", function()
         end
     )
 
+    it("gives a group called from the prepull its caller's prepull_at (its own entries' order kept)", function()
+        local call = { action = { groupReference = { groupName = "Move" } }, doAtValue = const("-0.9s") }
+        local text, omitted = apl.translate({
+            prepullActions = { call, { action = cast(300).action, doAtValue = const("-2s") } },
+            priorityList = { cast(400) },
+            groups = { { name = "Move", actions = { cast(200), cast(100) } } },
+        }, ctx())
+        assert.are.equal(
+            table.concat({
+                "actions.precombat=roar,use_off_gcd=1,prepull_at=2",
+                "actions.precombat+=/call_action_list,name=move",
+                "actions=dot",
+                "actions.move=big_hit,prepull_at=0.9",
+                "actions.move+=/strike,focus=1,prepull_at=0.9",
+            }, "\n"),
+            text
+        )
+        assert.are.same({}, omitted)
+    end)
+
     it("folds constants, omits hidden and unsupported entries, inlines variables, makes toggles settings", function()
         local text, omitted, toggles = apl.translate({
             priorityList = {
