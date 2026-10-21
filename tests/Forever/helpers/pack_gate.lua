@@ -28,8 +28,12 @@ M.FLICKER = {
     ["Survival"] = { flicker = 0.2, retracted = 0 }, -- 0.15, 0
     ["Marksmanship"] = { flicker = 0, retracted = 0 }, -- 0, 0
     ["Beast Mastery"] = { flicker = 0, retracted = 0 }, -- 0, 0
-    ["Retribution"] = { flicker = 0.3, retracted = 0 }, -- 0.28, 0
-    ["Protection"] = { flicker = 0.4, retracted = 0 }, -- 0.31, 0 (re-measured on fix 22's truth resolve)
+    -- fix 23's pre-pull guards re-seal before every pull, so the combat twist spends more mana and near an empty pool
+    -- our rounded waits trade places with Holy Strike (near-tie wobble of the mana belief, gap AB); steady icons
+    -- (experimental) is the player's remedy; the oracle reads 0.03 and 0.12
+    -- (Protection; Retribution measured 0.57 with its pre-pull Seal of Command, 0.19 since prepullSkip drops it)
+    ["Retribution"] = { flicker = 0.2, retracted = 0 }, -- 0.19, 0 (fix 23 with prepullSkip; was 0.28)
+    ["Protection"] = { flicker = 0.6, retracted = 0 }, -- 0.58, 0 (was 0.31: fix 23, above)
     ["Enhancement"] = { flicker = 1.2, retracted = 0 }, -- 1.11, 0
     ["Arcane"] = { flicker = 1.5, retracted = 0 }, -- 1.43, 0 (Mage lane, M13; 1.66 -> 1.43: Arcane Power on Wrath)
     ["Fire"] = { flicker = 1.3, retracted = 0 }, -- 1.21, 0

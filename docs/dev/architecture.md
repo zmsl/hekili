@@ -334,16 +334,6 @@ its first line waits for no member to be up
 own, so the first is cast only when neither is up and the later one replaces it. `prepull_at` (the retired
 once-per-episode schedule) is gone: `make_pack` refuses it and the in-game importer stores it inert.
 
-**First-icon hold.** Upstream's walk lets a lower-priority entry take a slot from the action already chosen when
-it is ready 0.05 s sooner. On a near tie between two waiting icons (a seal waiting on mana, a strike on its cooldown,
-at the end of a mana pool) the estimate's rounding crosses the two every refresh and the first icon trades places
-(the Paladin 20-fight loops: 34 and 33 flips, mostly Seal of Fury / Holy Strike and Seal of Righteousness / Holy
-Strike). `GetPredictionFromAPL` (`Engine/Sim/Core.lua`, `heldFirst`) remembers the first icon the display showed
-last refresh; while it is the chosen action of the first recommendation, a challenger still waiting more than 0.1 s
-needs a 0.1 s lead instead (`tests/Forever/first_icon_hold_spec.lua`); one ready within 0.1 s keeps the 0.05 s pad,
-the decision at hand (a 0.2 s hold cost Protection's replay a decision). Owner rule: hold an icon rather than flash
-it.
-
 **In precombat.** Being in precombat is a property of the walk, not of a list's name: `GetPredictionFromAPL` sets
 `inPrecombat` while it walks the precombat list and every list that list calls or runs (at any depth; saved and
 restored around each list, so the caller's value returns after), and the in-combat filter reads it. A list the precombat list calls (wowsims's "Pre-pull: Move" becomes `pre_pull_move`) is skipped in combat

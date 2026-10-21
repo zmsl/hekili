@@ -575,16 +575,6 @@ local invalidActionWarnings = {}
 -- line out of combat, its guard against recasting written into the line (tools/wowsims/apl.lua rule 1).
 local inPrecombat = false
 
--- Forever (the owner's no-jitter rule: hold an icon rather than flash it): the first icon the display showed last
--- refresh. While it is the chosen action of the first recommendation, a lower-priority entry still waiting more than
--- HOLD_PAD takes the slot only when ready HOLD_PAD sooner, not the upstream 0.05 s: two icons both waiting on a near tie
--- (one on mana, one on a cooldown) otherwise trade the slot every refresh as the estimate's rounding crosses them (the
--- Paladin loops: waits 0.02-0.08 s apart). A challenger ready within HOLD_PAD keeps upstream's pad (the decision at
--- hand). 0.1 s, not a 0.2 s poll: at 0.2 an off-GCD Judgement held over a Holy Shield 0.15 s sooner cost Protection's
--- replay a decision (tests/Forever/wowsims_paladin_spec.lua).
-local heldFirst
-local HOLD_PAD = 0.1
-
 function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth, caller )
     local specID = state.spec.id
     local spec = rawget( Hekili.Engine.settings.specs, specID )
@@ -785,7 +775,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                             if debug then self:Debug( "The conditions for this entry contain an error.  Skipping." ) end
                         elseif wait_time > state.delayMax then
                             if debug then self:Debug( "The action is not ready ( %.2f ) before our maximum delay window ( %.2f ) for this query.", wait_time, state.delayMax ) end
-                        elseif rAction and ( rWait - state.ClashOffset( rAction ) ) - ( wait_time - clash ) <= ( ( state.index == 1 and rAction == heldFirst and wait_time > HOLD_PAD ) and HOLD_PAD or 0.05 ) then
+                        elseif rAction and ( rWait - state.ClashOffset( rAction ) ) - ( wait_time - clash ) <= 0.05 then
                             if debug then self:Debug( "The action is not ready in time ( %.2f vs. %.2f [%s] ) [ Clash: %.2f vs. %.2f ] - padded by 0.05s.", wait_time, rWait, rAction or "NONE", clash, state.ClashOffset( rAction ) ) end
                         else
                             -- APL checks.
@@ -1585,7 +1575,6 @@ function Hekili.Update()
 
         if wanted and rule( settings ) then
             -- Only the scratch set is written until Publish: every yield below leaves out.recs the last complete set.
-            heldFirst = out.count and out.count > 0 and out.recs[ 1 ] and out.recs[ 1 ].actionName or nil
             local Queue = Output.Begin( dispName )
             local numFilled = 0
 
