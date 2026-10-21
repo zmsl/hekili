@@ -126,9 +126,9 @@ Fury and Protection lists retired), on the world's wowsims build (Spearing Strik
 lines (forever b0a5f8ee, central fix 22; 20 fights: agreement 0.966, flicker 1.57/min, oracle 1.10):
 
 ```
-Arms solo: fights=3 agreement 0.966 (2466 ticks); react median 0 p90 0 never 0.019; refused per 100 [cost 16.0 (oracle 21.9, unmatched 0.5)], episodes 3.65/min; dps A/B 1.013; ... [seeds 1-3]
+Arms solo: fights=3 agreement 0.966 (2466 ticks); react median 0 p90 0 never 0.019; refused per 100 [cost 16.0 (oracle 21.9, unmatched 0.5)], episodes 3.65/min; dps A/B 1.022; ... [seeds 1-3]
 Arms solo: fights=3 agreement 0.985 (2487 ticks); react median 0 p90 0 never 0.050; refused per 100 [cost 16.3 (oracle 16.0, unmatched 0.0)], episodes 3.62/min; dps A/B 1.000; ... [seeds 4-6]
-Arms solo: fights=20 agreement 0.966 (16585 ticks); react median 0 p90 0 never 0.038; refused per 100 [cost 18.4 (oracle 18.7, unmatched 1.7)], episodes 3.98/min; dps A/B 1.008; ...
+Arms solo: fights=20 agreement 0.966 (16858 ticks); react median 0 p90 0 never 0.038; refused per 100 [cost 13.3 (oracle 18.2, unmatched 1.0)], episodes 2.78/min; dps A/B 0.975; ...
 Arms party: fights=10 agreement 0.975 (4432 ticks); react median 0 p90 0 never 0.005; refused per 100 [cost 4.6 (oracle 12.5, unmatched 0.0)], episodes 0.88/min; dps A/B 1.008; ...
 ```
 
@@ -214,8 +214,8 @@ full mana). The holy_shock list is gone with the hand-built Retribution list; Ha
 exercised by the solo worlds. The runs (forever b0a5f8ee, central fixes 1-22):
 
 ```
-Retribution solo: fights=3 agreement 0.998 (2387 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.976; ... [seeds 1-3]
-Protection solo: fights=3 agreement 0.997 (2387 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.0 (oracle 2.6, unmatched 0.0)], episodes 0.13/min; dps A/B 1.018; ... [seeds 1-3]
+Retribution solo: fights=3 agreement 0.993 (2322 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.084; ... [seeds 1-3]
+Protection solo: fights=3 agreement 0.998 (2418 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.993; ... [seeds 1-3]
 Retribution solo: fights=20 agreement 0.995 (17219 ticks); react median 0 p90 0 never 0.010; refused per 100 [cost 0.2 (oracle 9.2, unmatched 0.0)], episodes 0.02/min; dps A/B 0.974; ...
 Protection solo: fights=20 agreement 0.994 (17526 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.4 (oracle 9.1, unmatched 0.3)], episodes 0.15/min; dps A/B 0.989; ...
 ```
@@ -270,6 +270,7 @@ own fight (floor 0.98; 0.989 of 88 with Rage of the Farseer, held) and runs the 
 ```
 Enhancement solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.1 (oracle 11.4, unmatched 0.0)], episodes 0.11/min; dps A/B 0.991; ... [seeds 1-3]
 Enhancement solo: fights=20 agreement 0.998 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.3 (oracle 14.6, unmatched 0.0)], episodes 0.12/min; dps A/B 1.014; ... flicker 1.13/min (oracle 1.10); ... top [stormstrike -> rage_of_the_farseer 44; rage_of_the_farseer -> stormstrike 1]; ...
+Enhancement solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.2 (oracle 12.6, unmatched 0.0)], episodes 0.11/min; dps A/B 0.964; ... [seeds 1-3]
 ```
 
 Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
@@ -323,9 +324,9 @@ lower bound and the worlds idle 0.820 (Beast Mastery, Marksmanship) and 0.711 (S
 lines (the forever gate on 51a0b1ac, central fixes 1-17; the hand-built lists' were 0.983/0.986/0.945 at 3 fights):
 
 ```
-Beast Mastery solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.991; ... [seeds 1-3]
-Marksmanship solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.991; ... [seeds 1-3]
-Survival solo: fights=3 agreement 0.996 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.009; ... [seeds 1-3]
+Beast Mastery solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.997; ... [seeds 1-3]
+Marksmanship solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.997; ... [seeds 1-3]
+Survival solo: fights=3 agreement 0.996 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.991; ... [seeds 1-3]
 Beast Mastery solo: fights=20 agreement 1.000 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.012; ...
 Marksmanship solo: fights=20 agreement 1.000 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.012; ...
 Survival solo: fights=20 agreement 0.999 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.003; ...
