@@ -20,8 +20,9 @@ end
 -- { pack, recipe, world content, replay floor (decisions on-GCD, measured 2026-10-20, never lowered; Combat 0.958 and
 -- Subtlety 0.963 (0.988 over central fix 12) on central fix 13: the strictSequence opener, the cooldown restart), LIVE60 (the
 -- pack's own worst idle at 60: wowsims's energy pooling, seconds rounded up to 0.1; Combat 4.8 -> 4.0 and Subtlety
--- 3.8 -> 4.2 re-set on central fix 22 round 2 from their measurement on this branch, both under the 6 s floor: stale
--- values, not a regression; neither moved in the fix) }
+-- 3.8 -> 4.2 re-set on central fix 22 round 2 from their measurement, both under the 6 s floor and unmoved by fix 22:
+-- Combat's L60 fell to 4.0 earlier; Subtlety's rose to 4.2 at 5a9b9987 (each world rolls wowsims's avoids per press:
+-- the live world's draws moved, git bisect on the L60 line) }
 -- Mutilate's per-hand hits are GCD-0 Casting lines {SpellID: 1241584, Tag: 1/2}: procs, neither decisions nor casts.
 local MUTILATE_HANDS = { procs = { ["1241584:1"] = true, ["1241584:2"] = true } }
 local PACKS = {

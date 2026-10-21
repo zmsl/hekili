@@ -78,8 +78,11 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     end)
     -- The pack's own worst idle at 60, seconds: 5.8 on central fix 22 round 2 (presses resolve from the current state,
     -- not Update's leftover prediction: a predicted Berserk had dropped Primal Bite's cooldown in the world, 9.2);
-    -- 8.4 before. L10 presses the recipe's leveling Maul (wowsims's list has nothing else before Primal Bite at 25:
-    -- 11.8 s idle without it); L10 and L40 its leveling Demoralizing Roar before Lacerate (42) (7.2 and 9.6 s without)
+    -- 10.0 before (L10 10.0, L40 9.6, L60 8.4 with the gate counting only on-GCD presses, final review fix 3: Maul, off
+    -- the GCD, no longer resets the idle streak). L10 presses the recipe's leveling Maul (wowsims's list has nothing
+    -- else before Primal Bite at 25: 11.8 s idle without it); before Lacerate (42) its leveling Demoralizing Roar fills
+    -- a GCD at 10 rage and Faerie Fire (Feral) below it, at most every 6 s (the kit's cooldown in a form): Demoralizing
+    -- Roar took L10 to 0.2 s and L40 to 8.4 s, Faerie Fire L40 from 8.4 to 2.6 s (0.4 and 2.8 rebased)
     local GUARDIAN60 = 5.8
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Guardian (wowsims.com) stays live at level " .. level, function()
