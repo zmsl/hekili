@@ -10,6 +10,8 @@
 - Experimental, off by default: "steady icons" on each specialization's Performance tab keeps a countdown icon for one
   more update instead of swapping it for another countdown icon, so the icons flicker less; ready icons still show at once.
 - Shaman: Enhancement suggests Rage of the Farseer when it is ready, right after Blood Fury, if you have the talent. It is under the Cooldowns toggle.
+- Priest (new addon folder Hekili_Priest): the Priest's abilities and talents, with no default priority yet (Shadow and
+  Discipline's Smite come next); Holy shows the "no priorities on Forever" notice.
 
 ### Changed
 - Mana and energy consumables (Major Mana Potion, Demonic Rune, Thistle Tea, Mana Gem) and the Rogue's poison reminders (Instant and Deadly Poison) are now under the Potions toggle, which is off by default: turn Potions on to see them. The Healthstone stays under Defensives.

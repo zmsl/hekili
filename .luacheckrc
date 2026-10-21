@@ -158,5 +158,11 @@ for _, k in ipairs(stateEnv) do
     mageEnv[#mageEnv + 1] = k
 end
 files["src/Hekili_Mage/Mage.lua"] = { globals = mageEnv }
+-- The Priest's further `state` names.
+local priestEnv = { "locked_out_arcane", "locked_out_holy", "locked_out_shadow" }
+for _, k in ipairs(stateEnv) do
+    priestEnv[#priestEnv + 1] = k
+end
+files["src/Hekili_Priest/Priest.lua"] = { globals = priestEnv }
 files["src/Hekili_Shared/Races/"] = { globals = stateEnv }
 files["src/Hekili_Shared/Shared/"] = { globals = stateEnv }

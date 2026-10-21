@@ -11,9 +11,9 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
     (`Races/`); `## Dependencies: Hekili`, `## LoadOnDemand: 1`, loaded on demand by the core's `Engine/Content.lua`
     at login, first (before the class pack, and for a class with no pack too);
   - `src/Hekili_Warrior/`, `src/Hekili_Druid/`, `src/Hekili_Rogue/`, `src/Hekili_Paladin/`, `src/Hekili_Shaman/`,
-    `src/Hekili_Hunter/`, `src/Hekili_Mage/`: one class pack each (the class file, its RegisterPack
+    `src/Hekili_Hunter/`, `src/Hekili_Mage/`, `src/Hekili_Priest/`: one class pack each (the class file, its RegisterPack
     blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's `Engine/Content.lua` for the
-    player's class.
+    player's class. The Priest has no priority yet, so no `APLs/` (`make packs` refuses a manifest with no pack).
     The default priorities' sources sit beside the class file in `APLs/`: one `<Pack>.simc` per priority and the
     manifest `packs.lua` (`{ class = "<TOKEN>", packs = { ... }, specs = { [<Pack>] = <spec key> } }`, no date). Edit those, then `make packs`. The date is per
     class and lives only in the class file's first RegisterPack block: `make packs` keeps it while the generated
@@ -583,7 +583,7 @@ git remote set-url --push upstream no_push
 ## In game
 
 Each addon gets its own AddOns link, at its folder in `src/`, not at the repository root. From an elevated Windows
-prompt, in the client's `Interface\AddOns` folder, remove the old link and create the nine:
+prompt, in the client's `Interface\AddOns` folder, remove the old link and create the ten:
 
 ```
 rmdir Hekili
@@ -596,6 +596,7 @@ mklink /D Hekili_Paladin \\wsl.localhost\personal\home\zack\src\hekili\src\Hekil
 mklink /D Hekili_Shaman \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Shaman
 mklink /D Hekili_Hunter \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Hunter
 mklink /D Hekili_Mage \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Mage
+mklink /D Hekili_Priest \\wsl.localhost\personal\home\zack\src\hekili\src\Hekili_Priest
 ```
 
 Then restart the client fully (a moved addon is not picked up by `/reload`).

@@ -29,6 +29,7 @@ local TOCS = {
     "src/Hekili_Shaman/Hekili_Shaman.toc",
     "src/Hekili_Hunter/Hekili_Hunter.toc",
     "src/Hekili_Mage/Hekili_Mage.toc",
+    "src/Hekili_Priest/Hekili_Priest.toc",
 }
 
 local function field(toc, key)
@@ -188,7 +189,7 @@ describe("tocs", function()
 end)
 
 describe("pkgmeta", function()
-    it("moves the nine src/ folders to the zip root and ignores the dev tree", function()
+    it("moves the ten src/ folders to the zip root and ignores the dev tree", function()
         local s = read(".pkgmeta")
         assert.truthy(s:find("\npackage%-as: Hekili\n") or s:find("^package%-as: Hekili\n"))
         for _, a in ipairs({
@@ -201,6 +202,7 @@ describe("pkgmeta", function()
             "Hekili_Shaman",
             "Hekili_Hunter",
             "Hekili_Mage",
+            "Hekili_Priest",
         }) do
             assert.truthy(s:find("\n    Hekili/src/" .. a .. ": " .. a .. "\n", 1, true), a)
         end

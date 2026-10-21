@@ -31,6 +31,11 @@ local loaders = {
             return require("Forever.helpers.load_druid").load(nil, "src/Hekili_Mage/Mage.lua", "MAGE")
         end,
     },
+    Priest = { -- the Priest's, likewise
+        load = function()
+            return require("Forever.helpers.load_druid").load(nil, "src/Hekili_Priest/Priest.lua", "PRIEST")
+        end,
+    },
 }
 
 -- Content names core may use, each with its reason.
@@ -66,6 +71,8 @@ local ALLOW_IDS = {
     [100] = "the percent scale and default maximum core uses; it collides with Charge rank 1's ID",
     [143] = "an action slot bound in upstream's keybind scan (Engine/Sim/Events.lua); it collides with Fireball rank 2's ID",
     [145] = "an action slot bound in upstream's keybind scan (Engine/Sim/Events.lua); it collides with Fireball rank 3's ID",
+    [17] = "a field index and string offset core uses (a log row's slot, VirtualState's Moving); it collides with Power Word: Shield rank 1's ID",
+    [600] = "a time and value in the harness's specs; it collides with Power Word: Shield rank 3's ID",
 }
 
 local CLASS_WORDS =
