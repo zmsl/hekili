@@ -2,7 +2,8 @@
 
 This guide takes you from a fresh clone to a merged change. It is written for two readers: a developer who has never
 seen Hekili's implementation, and a priority author who wants to add or change a priority pack. It is the front door.
-The detailed references stay where they are, and this guide links to them:
+The detailed references stay where they are, and this guide links to them. Terms such as belief, replay, loop and
+gate are defined in the [glossary](#8-glossary) at the end.
 
 | Reference | What it holds |
 | --- | --- |
@@ -19,9 +20,10 @@ it. It never presses anything for you: it is a display, with no automation.
 
 ### Why the addon cannot simply read the game
 
-WoW Forever runs on a modern client that hides many values from addons during combat. Resources, cooldown times, aura
-durations, target health and combat statistics become "secret": an addon can hand them to the game's own frames, but
-it cannot read, compare or calculate with them. The combat log is not available at all.
+WoW Forever runs on a modern client that hides many values from addons during combat. These include resources,
+cooldown times, aura durations, target health and combat statistics. Such a value is "secret": an addon can pass it
+to the game's own frames, but it cannot read it, compare it or calculate with it. The combat log is not available at
+all.
 
 Upstream Hekili read all of those values on every update, so it cannot work as written. Hekili Forever keeps
 Hekili's simulation and class model, and replaces the hidden reads with a **belief**: a running estimate of the game
@@ -30,8 +32,7 @@ state.
 - The belief starts from values the client still answers plainly, such as out-of-combat reads, your own casts,
   "is this spell usable" answers and cooldown flags.
 - It carries those values forward with the same models the class pack registers: costs, regeneration, durations.
-- Each estimate is a band with a low, a best guess and a high, plus how it was learned: observed, pinned by an event,
-  or modelled.
+- Each estimate is a band (low, best guess, high) plus how it was learned: observed, pinned by an event, or modelled.
 - When the client reveals something new, the belief corrects itself.
 
 ### The simulation and the display
@@ -58,9 +59,9 @@ flowchart TD
 
     client --> facade
     facade -- "plain reads and events" --> belief
-    belief -- "answers for secret reads" --> facade
+    belief -- "secret reads are answered from the belief" --> facade
     belief --> sim
-    content -- "abilities, auras, priorities<br/>through the public Hekili object" --> sim
+    content -- "abilities, auras, priorities<br/>through the registration API" --> sim
     options -- "settings" --> sim
     sim --> output --> subs
 ```
@@ -74,7 +75,8 @@ interface. The architecture reference has the full picture: [docs/dev/architectu
 
 The checks run in a Linux shell. On Windows, use WSL.
 
-1. Install [mise](https://mise.jdx.dev/), Python 3, Git, `make` and a C compiler.
+1. Install [mise](https://mise.jdx.dev/), Python 3, Git, `make` and a C compiler (the bootstrap builds Lua from
+   source).
 2. Clone the repository on the `forever` branch, install the tools mise manages, install the Lua toolchain into the
    repository, and run the full check once to confirm the tree is green:
 
@@ -86,29 +88,19 @@ The checks run in a Linux shell. On Windows, use WSL.
    make check
    ```
 
-The setup installs the following, none of it system-wide.
-
-| Tool | Version | Installed by |
-| --- | --- | --- |
-| Lua (the game's Lua) and LuaRocks | 5.1.5 and 3.8.0 | the bootstrap, into `.lua/` |
-| busted (tests), luacheck (lint), luacov (coverage) | 2.3.0, 1.2.0, 0.17.0 | the bootstrap, into `.lua/` |
-| StyLua (formatter) | 2.5.2 | mise |
-| lua-language-server (type check) | 3.19.1 | mise |
-| Python | 3.13 | mise |
-
-A new git worktree has no toolchain of its own. Run the bootstrap in it, or link its `.lua` folder to an existing one.
+The bootstrap installs the Lua toolchain (Lua 5.1, the game's version, with busted, luacheck and luacov) into
+`.lua/` inside the repository. mise installs the rest: StyLua, lua-language-server and Python. Their versions are
+pinned in `mise.toml`. Nothing is installed system-wide. A new git worktree has no `.lua/` of its own: run
+`make bootstrap` in it.
 
 ### What the full check covers
 
 Run `make check` before every commit. CI runs the same steps on every push, except the type check.
 
-- Lint, with luacheck.
-- Formatting, with StyLua. Upstream Hekili files keep their own style and are skipped.
-- The type check, with lua-language-server.
-- The headless test suite, one process per spec file, in parallel. It includes the short replay and loop gates.
-- A syntax check of every Lua file.
-- The API checks: no file reads a game API except through the facade, and the engine and the displays stay on their
-  own sides of the engine's interface.
+- Lint (luacheck), formatting (StyLua; upstream Hekili files keep their own style), the type check
+  (lua-language-server) and a syntax check of every Lua file.
+- The headless test suite, one process per spec file, in parallel, including the short replay and loop gates.
+- The API checks: only the facade reads the game, and the engine and the displays stay on their own sides.
 - The packs check: regenerating every priority pack leaves the source tree unchanged.
 - The offline tests of the release tools.
 
@@ -120,12 +112,12 @@ For a fast edit loop, `make test-fast` skips the long harness gates. To run one 
 
 ### Link the addons into the game client
 
-Each addon in `src/` gets its own directory link in the client's `_classic_beta_\Interface\AddOns` folder: the core,
-the shared content and every class pack. The full list is in [docs/dev/layout.md](docs/dev/layout.md), under
-"In game".
+Each addon in `src/` gets its own directory link in the client's `_classic_beta_\Interface\AddOns` folder. There are
+nine: `Hekili` (the core), `Hekili_Shared`, and one per class: `Hekili_Druid`, `Hekili_Hunter`, `Hekili_Mage`,
+`Hekili_Paladin`, `Hekili_Rogue`, `Hekili_Shaman` and `Hekili_Warrior`.
 
 With the clone in WSL, open an elevated Windows command prompt in the AddOns folder and link each addon to its folder
-in the clone, one line per addon:
+in the clone. Write one line per addon; the first two:
 
 ```bat
 mklink /D Hekili \\wsl.localhost\<distro>\home\<user>\src\hekili\src\Hekili
@@ -136,8 +128,6 @@ With the clone on Windows, link to its `src` folders instead: `mklink /D Hekili 
 
 Remove any installed copy of Hekili or Hekili Forever first, as the [README's Install section](README.md#install)
 says. Hekili Forever keeps the original folder name and saved settings.
-
-### Reload in the game
 
 After adding or moving an addon folder, restart the client fully: a reload does not pick up a new folder. After
 editing files, type `/reload`. `/hekili` opens the options.
@@ -169,7 +159,7 @@ shared addon holds the content every class uses. Nothing dev-only ships. Details
 These rules hold for every change to the core. The checks enforce most of them.
 
 - **The core/pack boundary.** The core names no class, spell, aura, talent, form or rotation. It works only with
-  what packs declare through the registration interface. Content addons, in turn, use only the public Hekili object,
+  what packs declare through the registration interface. Content addons, in turn, use only the registration API,
   never the core's internals. The boundary test scans both sides. A few inherited simulation files still carry
   upstream names; each is held to a ceiling that may only fall.
 - **Secret safety.** Only the facade reads the game client. Never compare a value, or calculate with it, unless it is
@@ -199,7 +189,9 @@ Work happens on a branch from `forever`.
 3. Have the change reviewed against the rules above and the gate's output.
 4. Merge into `forever`. Never force-push it.
 
-A change that moves a gate line says why in its commit. A floor that drops is a failure, not a re-measurement.
+A change that moves a gate line says why in its commit.
+
+A floor that drops is a failure. It is not a re-measurement.
 
 ## 5. How priority packs are developed
 
@@ -213,27 +205,22 @@ A pack follows wowsims as closely as the Forever client allows. A difference the
 keeps secret, is recorded with its reason. A difference with any other cause is a gap. It is fixed in the layer that
 is wrong: the class kit, the translator, the harness or the core.
 
-Each spec has a **recipe**: the wowsims build to export (race, gear, talents, options) and the translation data. Most
-translation data maps wowsims's spell IDs to this addon's keys. A few recipe keys add something wowsims does not
-carry, and they are the only additions a pack may make:
+Each pack starts from a **recipe**: one Lua file per pack in `tools/wowsims/specs/`. The file name is the spec name
+the tools take (for example `warrior_arms`), so listing that folder lists every spec. A recipe holds the wowsims build
+to export (race, gear, talents, options) and the translation data, which mostly maps wowsims's spell IDs to this
+addon's keys.
 
-| Key | Meaning |
-| --- | --- |
-| `leveling` | Filler lines for lower levels, appended to the list and silent at level 60 |
-| `levelingFirst` | Lines put first, for a form the sim starts in and its list never casts |
-| `extra` | A line inserted before a named action, for content wowsims cannot model; each use states its reason |
-| `requires` | Runs an entry only once a named talent is taken |
-| `settings` | A pack setting that a recipe line reads, so players can switch that line off |
-| `focus` | An action's priority tier, so the timeline display shows it ahead of time |
-
-[docs/dev/wowsims-packs.md](docs/dev/wowsims-packs.md) has the full recipe, the rules and the translator's behaviour.
+Only six recipe keys may add something wowsims does not carry: `leveling`, `levelingFirst`, `extra`, `requires`,
+`settings` and `focus`. [docs/dev/wowsims-packs.md](docs/dev/wowsims-packs.md) gives each one's meaning, the full
+recipe, the rules and the translator's behaviour.
 
 ### Regenerate
 
 The pipeline runs from the recipe to the packs that ship. Run each step from the repository root.
 
 1. Export the wowsims request and fight log for a spec. This needs a wowsims/forever checkout at the pinned commit and
-   its command-line simulator. Most changes skip this step and use the checked-in log.
+   its command-line simulator. The pin is recorded in the exporter, and moving it is described under "wowsims packs"
+   in [docs/dev/layout.md](docs/dev/layout.md). Most changes skip this step and use the checked-in log.
 2. Translate every recipe into its priority source.
 3. Write the generated priorities into the class files.
 
@@ -257,23 +244,12 @@ Two kinds of gate measure a pack.
   oracle shadows it. The oracle is the same engine reading a client with no secrets, so it shows what perfect
   knowledge would pick. In the second run, on the same seeds, the oracle drives.
 
-A loop's summary line starts like this:
+Each gate prints a summary line. It reports how often we agreed with the reference, how many presses the simulated
+client refused, and our flicker beside the oracle's own. [docs/dev/layout.md](docs/dev/layout.md) explains the
+fields and holds every pack's current lines.
 
-```
-Arms solo: fights=20 agreement 0.966 (16585 ticks); react median 0 p90 0 never 0.038; refused per 100 [...]; ...
-```
-
-| Field | Meaning |
-| --- | --- |
-| `agreement` | The share of ticks where our first recommendation matched the oracle's |
-| `react` | Ticks until we show a new pick of the oracle's; `never` is the share we never showed |
-| `refused per 100` | Presses the simulated client refused, by reason, ours beside the oracle's |
-| `dps A/B` | Damage with our addon driving, over damage with the oracle driving |
-| `flicker X/min (oracle Y)` | How often the first icon changes and changes back, ours beside the oracle's |
-
-`make check` runs short 3-fight versions. `make test-<tag>` runs one class's 20-fight loops (for example
-`make test-druid`), and `make gate` runs all of them. The current lines for every pack are in
-[docs/dev/layout.md](docs/dev/layout.md).
+`make check` runs short 3-fight versions. Each class's 20-fight loops have their own target, such as
+`make test-druid`; the Makefile's gate tag list names them all. `make gate` runs every one.
 
 ### Floors only rise
 
@@ -292,26 +268,15 @@ that every addition uses one of the recipe keys above, and that no floor fell.
 
 ### Adding a class
 
-A new class pack touches these places. The per-spec procedure is in
-[docs/dev/wowsims-packs.md](docs/dev/wowsims-packs.md) and the plan it links.
-
-1. The addon folder, with its TOC and class file, added to the list of addons the tests load.
-2. The kit: the class's abilities, auras and talents, with values from the game's DB2 data.
-3. The class world: the harness's model of the class for the loops.
-4. The learn table: the level at which each ability is learned (`make wowsims-learn CLASS=<TOKEN>`).
-5. The recipe and the export for each spec.
-6. The replay and loop floors, measured on the first clean run.
-7. The rows in the docs: the gate lines in the layout reference, and the class in the README.
-8. The packager's folder and ignore lists, the package check and the in-game link list.
+A new class needs its own addon folder, kit, harness world, learn table, recipes, floors and docs rows, and a place
+in the packager's lists. [docs/dev/wowsims-packs.md](docs/dev/wowsims-packs.md) links the per-spec procedure that
+walks through each step.
 
 ## 6. Checking in the game client
 
-The headless harness models the client, but it cannot see everything:
-
-- which values the real client keeps secret in each situation;
-- the exact order and timing of real events;
-- how the displays look and feel in play;
-- anything the harness models from an assumption rather than a measurement.
+The headless harness models the client, but it cannot see everything. It does not know which values the real client
+keeps secret in each situation, or the exact order and timing of real events. It cannot judge how the displays look
+and feel in play, and it cannot confirm anything it models from an assumption rather than a measurement.
 
 Changes in those areas need an in-game check. Forever has no target dummies, so checks happen on open-world mobs.
 
@@ -329,13 +294,12 @@ An in-game answer that differs from the model is a gap. Record it in [docs/dev/g
 
 - **Changelog.** Every change a player can see adds a line under "Unreleased" in [CHANGELOG.md](CHANGELOG.md), in the
   same commit. Write it for players, not developers.
-- **Floors.** Floors only move up. A floor goes down only with a named cause recorded beside it.
-- **Flicker.** A change that raises flicker says why. A quieter mechanism beats a jumpier one.
+- **Floors and flicker.** Floors only move up, unless a named cause is recorded beside the change. A change that
+  raises flicker says why.
 - **Versioning.** Releases are tagged `vMAJOR.MINOR.PATCH`. A pre-release adds a suffix such as `-rc.1` and ships as
   a beta. Every addon in the zip carries the same version.
-- **Releasing.** A release is three steps: push the tag, read the draft release the workflow builds, then publish it.
-  Publishing uploads to CurseForge and writes the release into the changelog. The procedure and its failure modes are
-  in [docs/publishing/README.md](docs/publishing/README.md).
+- **Releasing.** Push the tag, read the draft release the workflow builds, then publish it to upload it to
+  CurseForge. The procedure is in [docs/publishing/README.md](docs/publishing/README.md).
 
 ## 8. Glossary
 
