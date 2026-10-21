@@ -56,6 +56,11 @@ return {
         reactionTimeMs = 100,
         distanceFromTarget = 25,
     },
+    -- player-facing lines of the in-game description (the user's audit rulings, 2026-10-21)
+    notes = {
+        "Cooldowns toggle hides: Death Wish, Recklessness (also behind its pack setting, off by default), Sweeping Strikes and the racials (Blood Fury, Berserking, Eureka, Elune's Light).",
+        "No line here sits under the Potions or Defensives toggles.",
+    },
     executePhase = "execute_phase",
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
     focus = { overpower = 1, rend = 2, slam = 2 }, -- the retired Arms list's tiers (P9.3)

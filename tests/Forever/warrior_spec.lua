@@ -161,6 +161,14 @@ describe("Forever Warrior", function()
             assert.is_true(w.abilities.heroic_strike.onNextSwing and w.abilities.cleave.onNextSwing)
             -- Sweeping Strikes under the native Cooldowns toggle (APL usability audit A): off, the engine skips its line
             assert.are.equal("cooldowns", w.abilities.sweeping_strikes.toggle)
+            -- the user's audit rulings (2026-10-21): Death Wish under Cooldowns; Bloodrage, Intimidating Shout and Mocking
+            -- Blow under none; Disarm under Defensives
+            assert.are.equal("cooldowns", w.abilities.death_wish.toggle)
+            assert.are.equal("cooldowns", w.abilities.recklessness.toggle)
+            assert.is_nil(w.abilities.bloodrage.toggle)
+            assert.is_nil(w.abilities.intimidating_shout.toggle)
+            assert.is_nil(w.abilities.mocking_blow.toggle)
+            assert.are.equal("defensives", w.abilities.disarm.toggle)
         end
     )
 

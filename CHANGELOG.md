@@ -36,6 +36,8 @@
 - Pre-pull suggestions now guard against recasting: each shows whenever its purpose is unmet (its buff or debuff down, its totem down, its cooldown ready) and hides while it is met. The once-per-episode schedule and `prepull_at` are gone. Arms's Pre-pull: Stance and both Arms's and Fury's Pre-pull: Move no longer repeat between pulls; Charge still shows whenever it is usable, by design.
 - Paladin: Retribution's pre-pull suggests one starter seal, Seal of the Crusader, and no longer Seal of Command before it.
 - Warrior: Arms and Fury fill the rotation with Hamstring while leveling (at level 40, before Mortal Strike or Bloodthirst) instead of standing idle for up to 11 seconds.
+- Warrior: Bloodrage, Intimidating Shout and Mocking Blow are no longer under the Cooldowns toggle; Disarm is under Defensives.
+- Warrior: each priority's description lists the lines the Cooldowns and Defensives toggles hide.
 
 ### Fixed
 - A priority regenerated on the same day no longer shows as reverted on login.

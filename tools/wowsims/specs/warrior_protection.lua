@@ -48,6 +48,11 @@ return {
         reactionTimeMs = 100, -- apply_defaults.ts: `other.reactionTime || 100` (OtherDefaults sets none)
         distanceFromTarget = 0,
     },
+    -- player-facing lines of the in-game description (the user's audit rulings, 2026-10-21)
+    notes = {
+        "Cooldowns toggle hides: Death Wish, Sweeping Strikes and the racials (Blood Fury, Berserking, Eureka, Elune's Light).",
+        "Defensives toggle hides: Shield Wall, Last Stand, Healthstone and the racials Stoneform and Shatter Curse. No line here sits under the Potions toggle.",
+    },
     -- a tank: the raid's tank (the target swings at it) and presets.ts:127-142's healing model (apply_defaults.ts:108-122)
     tank = true,
     healingModel = {
