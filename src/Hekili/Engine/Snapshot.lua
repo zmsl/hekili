@@ -22,11 +22,13 @@ function Hekili.Engine.Snapshot( isAuto )
         return
     end
 
+    local first = #ns.snapshots + 1
     Hekili.ManualSnapshot = not isAuto
     Hekili.ActiveDebug = true
     Hekili.Update()
     Hekili.ActiveDebug = false
     Hekili.ManualSnapshot = nil
+    ns.NotifySnapshotListeners( first, not not isAuto )
 
     -- The suspended build's thread would write into the set this snapshot just published; drop it (R1).
     ns.EngineFrame.activeThread = nil
@@ -35,14 +37,16 @@ end
 local snapshots = ns.snapshots
 local hasScreenshotted = false
 
--- Snapshot listeners: other addons' fn(index, record, isAuto), called after each record is stored. A listener may
--- return a string, appended to the record's text under "## External" (each capped at EXTERNAL_MAX characters).
+-- Snapshot listeners: other addons' fn(index, record, isAuto), called once per snapshot after all its records (one per
+-- display) are stored. A returned string is appended to each of those records under "## External" (each listener's
+-- text capped at EXTERNAL_MAX characters).
 local listeners = {}
 local EXTERNAL_MAX = 4000
 
---- Registers `fn(index, record, isAuto)`, called inside pcall after each snapshot record is stored in
---- `Hekili.Snapshots[index]` (`record.header`, `record.log`). A returned string is appended to `record.log` under
---- "## External", truncated at 4000 characters. Registering the same `fn` twice is a no-op.
+--- Registers `fn(index, record, isAuto)`, called inside pcall once per snapshot, after all its records (one per
+--- display) are stored: `index` is the first one's in `Hekili.Snapshots`, `record` that first record (the rest follow
+--- it, up to `#Hekili.Snapshots`). A returned string is appended to each of those records' `log` under "## External",
+--- truncated at 4000 characters. Registering the same `fn` twice is a no-op.
 ---@param fn fun(index: integer, record: table, isAuto: boolean): string?
 function Hekili:RegisterSnapshotListener( fn )
     assert( type( fn ) == "function", "RegisterSnapshotListener: fn must be a function" )
@@ -59,17 +63,24 @@ function Hekili:UnregisterSnapshotListener( fn )
     end
 end
 
-local function notifyListeners( index, snap, isAuto )
+-- Engine.Snapshot's call: the records from `first` on are this snapshot's; none stored, no call.
+function ns.NotifySnapshotListeners( first, isAuto )
+    local snap = snapshots[ first ]
+    if not snap then return end
     local parts
     for i = 1, #listeners do
-        local ok, text = pcall( listeners[ i ], index, snap, isAuto )
+        local ok, text = pcall( listeners[ i ], first, snap, isAuto )
         if not ok then text = "snapshot listener " .. i .. " failed: " .. tostring( text ) end
         if type( text ) == "string" and text ~= "" then
             parts = parts or {}
             parts[ #parts + 1 ] = text:sub( 1, EXTERNAL_MAX )
         end
     end
-    if parts then snap.log = snap.log .. "\n\n## External\n" .. concat( parts, "\n" ) end
+    if not parts then return end
+    local ext = "\n\n## External\n" .. concat( parts, "\n" )
+    for i = first, #snapshots do
+        snapshots[ i ].log = snapshots[ i ].log .. ext
+    end
 end
 
 function Hekili:SaveDebugSnapshot( dispName )
@@ -459,7 +470,6 @@ function Hekili:SaveDebugSnapshot( dispName )
             }
 
             insert( snapshots, snap )
-            notifyListeners( #snapshots, snap, not Hekili.ManualSnapshot )
             snapped = true
 		end
     end

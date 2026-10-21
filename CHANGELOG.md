@@ -76,7 +76,7 @@
 - The addon keeps a ranged Auto Shot timer next to the melee swing timers.
 - Developer: the mana estimate's at-rest lower bound is pinned by tests (no behaviour change).
 - Developer: other addons can listen to snapshots with `Hekili:RegisterSnapshotListener(fn)` (and
-  `UnregisterSnapshotListener`): `fn(index, record, isAuto)` runs after each snapshot is saved, and text it returns
+  `UnregisterSnapshotListener`): `fn(index, record, isAuto)` runs once after each snapshot is saved, and text it returns
   shows in the snapshot under "## External".
 - Developer: the test harness answers the mana regen pair (`GetManaRegen`) as the client does, plain out of combat
   and secret in combat, and its wowsims replays read the mana regen rates from the log.
