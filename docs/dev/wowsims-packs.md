@@ -149,7 +149,8 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 15. `maintenance`: the action's lines behind its setting; other lines' reads of its aura as "up or disabled"; an
     absence read stays. Not a wowsims rule: the in-game default (off) is ours, the harness runs wowsims's (on).
 16. `select`: an option-selected cast as one line a candidate under its choice setting's term; its "active" value as
-    the selected candidate's debuff (false with none selected, as wowsims); its "is" value as the
+    the selected candidate's debuff (false with none selected, as wowsims; another candidate's term behind its known
+    test, so an unlearned one reads down and the level checker sees its guard); its "is" value as the
     setting term. Unsupported: an "is" with no field (protojson's zero value) or an unknown option value.
 
 Any node the translator does not handle is unsupported (rule 2): a new wowsims node omits its entry rather than

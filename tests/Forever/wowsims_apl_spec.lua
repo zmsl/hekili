@@ -764,13 +764,29 @@ describe("the wowsims APL translator", function()
                 { action = { castAssigned = {} } },
             },
         }, ctx(r, player))
-        -- wowsims's IsActive with no spell (the none candidate) is false: no term for it
-        local active = "((settings.pick='one'&debuff.dot.up)|(settings.pick='two'&debuff.big_hit.up))"
+        -- wowsims's IsActive with no spell (the none candidate) is false: no term for it; an unlearned candidate's term
+        -- reads false behind its known test (the line's own candidate needs none), which tools/check_pack_levels.lua takes
+        local one, two = "(settings.pick='one'&debuff.dot.up)", "(settings.pick='two'&debuff.big_hit.up)"
+        local gOne = "(action.dot.known&settings.pick='one'&debuff.dot.up)"
+        local gTwo = "(action.big_hit.known&settings.pick='two'&debuff.big_hit.up)"
+        local lines = {
+            "actions=dot,if=settings.pick='one'&(!(" .. one .. "|" .. gTwo .. "))",
+            "actions+=/big_hit,if=settings.pick='two'&(!(" .. gOne .. "|" .. two .. "))",
+            "actions+=/strike,if=((" .. gOne .. "|" .. gTwo .. ")&rage.current>10)",
+        }
+        local isAbility = function(k)
+            return k == "dot" or k == "big_hit" or k == "strike"
+        end
+        local levels = assert(loadfile("tools/check_pack_levels.lua"))()
+        for _, line in ipairs(lines) do
+            local self, cond = line:match("^actions[^=]*=/?([%w_]+),if=(.*)$")
+            assert.are.same({}, levels.unguarded(cond, self, isAbility), line)
+        end
         assert.are.equal(
             table.concat({
-                "actions=dot,if=settings.pick='one'&(!" .. active .. ")",
-                "actions+=/big_hit,if=settings.pick='two'&(!" .. active .. ")",
-                "actions+=/strike,if=(" .. active .. "&rage.current>10)",
+                lines[1],
+                lines[2],
+                lines[3],
                 "actions+=/strike,if=settings.pick='off'",
                 "actions+=/dot,if=settings.pick='one'",
                 "actions+=/big_hit,if=settings.pick='two'",

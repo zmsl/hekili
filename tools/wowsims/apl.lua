@@ -34,7 +34,8 @@
 --    auras then abilities, items by an ability's `item` or `items` (the APLs at the pin that read such an aura: the
 --    CHANGELOG's central fix 13 developer note);
 --    `includeReactionTime`, `rank` and a `tag` other than -1 (rule 4) are ignored. An aura's `sourceUnit` Self (or none) reads `buff.`,
---    CurrentTarget or Target `debuff.`; a resource value with a source unit other than Self is unsupported.
+--    CurrentTarget or Target `debuff.`; a resource value with a source unit other than Self is unsupported (the
+--    pet's `currentMana`: pending fix 27's pet-power key).
 -- 6. Leveling guard: a read of another ability `X` (its cooldown, cast time, cost, readiness, or an aura whose key is
 --    `X`; an aura whose ID is a talent's spell: the talent) is wowsims's unresolved (nil) node while `X` is unknown,
 --    and nil propagates as wowsims builds the APL (sim/core/apl_values_operators.go): `not`, `cmp` and `math` of a nil
@@ -141,8 +142,9 @@
 --    option values' sorted order, each the candidate's cast line (rule 7) under the setting term and the entry's
 --    condition; a `false` candidate (none) has no line. The value `active` (the selected spell's aura is up on the
 --    target) is the OR over candidates with a key of (setting term & `debuff.<key>.up`), so it is false while a
---    `false` candidate is selected (wowsims's IsActive with no spell, sim/warlock/apl_values.go); an
---    unlearned candidate's debuff reads down, as wowsims's missing spell does (no rule 6 guard). The value `is`
+--    `false` candidate is selected (wowsims's IsActive with no spell, sim/warlock/apl_values.go); each
+--    candidate's term but the line's own carries its known test first, `(action.<key>.known&<term>)`, so an unlearned
+--    candidate reads down, as wowsims's missing spell does, in the guard form tools/check_pack_levels.lua checks. The value `is`
 --    (its one field names an option value) is that value's setting term; with no field (protojson's zero value) or an
 --    unknown value it is unsupported. The build's value (the request's `<spec>.options.classOptions.<option>` or
 --    `.options.<option>`) is the setting's default in game and in the harness (`sim`), which the class registers as an
@@ -864,7 +866,8 @@ local function bool(c, n)
         for _, val in ipairs(sel.values) do
             local key = sel.x.candidates[val] -- none (false): wowsims's IsActive with no spell is false, no term
             if key then
-                parts[#parts + 1] = "(" .. sel.term[val] .. "&debuff." .. key .. ".up)"
+                local test = key ~= c.self and knownTest(c, key) -- an unlearned candidate's term reads false
+                parts[#parts + 1] = "(" .. (test and test .. "&" or "") .. sel.term[val] .. "&debuff." .. key .. ".up)"
             end
         end
         if #parts == 0 then

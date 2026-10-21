@@ -101,4 +101,10 @@ BA (the Delete Priority and Specialization guards read `Hekili.Version:sub(1, 3)
 no Delete button outside a Dev build).
 Fix 25 (the Warlock lane's option-selected cast, `castWarlockAssignedCurse`: choice settings in the core, rule 16's
 `select`; the Warlock recipe entry and class setting are the lane's).
+Fix 28 (the Warlock lane's translator gaps): T2, rule 8's "N%" is N/100 except as a direct operand of a comparison
+with a percent read (Demonology's "Execute at" in `math`; no shipped line moved, every "%" in the 18 requests is such
+an operand); T1, `min` / `max` values (rule 6: a term that may be nil as `(<known>&<term>)`, which the engine's
+min/max skip; the level checker takes it); T4, rule 16's candidate terms carry their known test, so the Warlock packs
+pass `tools/check_pack_levels.lua` without an exception. Open: T3, `currentMana` of the pet (rule 5's other source
+unit), pending fix 27's pet-power key.
 Cancelled: fix 19 (a harness-vs-in-game default for Sunder; players use Hekili's own per-ability toggles).
