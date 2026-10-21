@@ -77,6 +77,48 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         local out = H.Hekili.Engine.Output.Primary
         assert.are.equal("bear_form", out.recs[1] and out.recs[1].actionName)
     end)
+    -- The recipe's leveling Demoralizing Roar filler is behind the pack setting `demoralizing_roar_filler` (user,
+    -- 2026-10-21; default on): off, a level 10 bear in Bear Form with the rage for it and the Roar already on the
+    -- target is shown something else
+    it("Guardian (wowsims.com)'s Demoralizing Roar filler is skipped with its setting off", function()
+        local function first(on)
+            local c = content("druid_guardian", W.Guardian, "Guardian (wowsims.com)", 10).character()
+            local p = c.power
+            c.power = { type = p.type, token = p.token, max = p.max, value = 30 } -- Roar's 10 (a copy: the world's own is shared)
+            local H = headless.new({ character = c, pack = "Guardian (wowsims.com)" })
+            assert.are.same({}, H.loadErrors)
+            local hk = H.Hekili
+            local settings = hk.DB.profile.specs[hk.State.spec.id].settings
+            assert.is_true(settings.demoralizing_roar_filler) -- the registered default
+            settings.demoralizing_roar_filler = on
+            H.ctl.inRange.target, H.ctl.level.target = true, 10
+            H.Fire("PLAYER_TARGET_CHANGED")
+            H.ctl.auras.target.HARMFUL[1] = { -- the Roar up: keep_up's own Roar line stands aside
+                name = "Demoralizing Roar",
+                spellId = hk.Class.auras.demoralizing_roar.id,
+                expirationTime = H.ctl.now + 30,
+                duration = 30,
+                applications = 1,
+                sourceUnit = "player",
+            }
+            H.Fire("UNIT_AURA", "target")
+            assert.is_true(hk.Engine.Subscribe("Primary", function() end))
+            assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
+            assert.are.same({}, H.errors)
+            local names = {}
+            for i, r in ipairs(hk.Engine.Output.Primary.recs) do
+                names[i] = r.actionName
+            end
+            return table.concat(names, " ")
+        end
+        local f = assert(io.open("src/Hekili_Druid/APLs/Guardian (wowsims.com).simc", "rb"))
+        local simc = f:read("*a")
+        f:close()
+        assert.matches("\n# Setting demoralizing_roar_filler %(", simc)
+        assert.matches("\nactions%+=/demoralizing_roar,if=settings%.demoralizing_roar_filler&!action%.lacerate%.known", simc)
+        assert.matches("demoralizing_roar", first(true))
+        assert.not_matches("demoralizing_roar", first(false))
+    end)
     -- The pack's own worst idle at 60, seconds: 5.8 on central fix 22 round 2 (presses resolve from the current state,
     -- not Update's leftover prediction: a predicted Berserk had dropped Primal Bite's cooldown in the world, 9.2);
     -- 10.0 before (L10 10.0, L40 9.6, L60 8.4 with the gate counting only on-GCD presses, final review fix 3: Maul, off

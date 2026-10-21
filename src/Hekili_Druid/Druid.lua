@@ -1785,13 +1785,22 @@ spec:RegisterAbilities({
     },
 })
 
--- The setting Shred's `usable` reads (TDF's name and default); the wowsims.com packs read none.
+-- The setting Shred's `usable` reads (TDF's name and default).
 spec:RegisterSetting("behind", false, {
     type = "toggle",
     name = "Always Behind",
     desc = "When enabled, Shred is recommended over Claw as if you always stand behind the target.",
     width = "full",
 })
+
+-- The Guardian (wowsims.com) recipe's own setting (its .simc header's Setting line): the leveling Demoralizing Roar.
+spec:RegisterSetting("demoralizing_roar_filler", true, {
+    type = "toggle",
+    name = "Demoralizing Roar Filler (wowsims.com)",
+    desc = "Below level 42 (no Lacerate), Demoralizing Roar fills the GCD while Primal Bite is not ready. Not in "
+        .. "wowsims's own APL: an addition for leveling.",
+    width = "full",
+}, "guardian")
 
 -- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc (a wowsims.com
 -- pack's from its recipe, `make wowsims-packs`); edit those and run it, never these blocks
@@ -1808,8 +1817,8 @@ spec:RegisterPack(
 )
 spec:RegisterPack(
     "Guardian (wowsims.com)",
-    20261021314,
-    [[Hekili:vF17VnUnm0)w6xUfJfyNF02TROUaBOyB9W2HH5BFv2Yw0jAr2YqsED9qH)BFuXojojYTzbB46(sGTKi579ifndzk5tKig1aKpoBYSRNoz205tVKezEQcirv0Sv0f4dL0c83FSMQyCAztYOhLpQ5fA)mzHN9CpjKuM1xP1CH5HssQt3QRGms09)2V)W93SOZBKOLCgdAnb0zdgNBAsmlHMKU1cYLk4pbvtcdYP1cttY39R)CtcUCtspxuZdSHvhWu1CwqoOOIuGQcOvcCXwB9Xx8)dTS0BmgffTulq0ZWNL2OY1njugtw(v4dRGN0(nj3tn0BCGMr)YdFcDYsJPsFtqWcUzzDQLabhCup0NiOzZN)(5tytUCY8j(OwQK5CbQ20mdxwQdZOcrC7lXcU2m2MmcZKsbt(yPU5dDh8RddYvq5N5alwblGsKO2ngZZdxcuHzPFvM52zt6BHBNVcGQ46Qx)GmAbwF0)CfOAoUwdXY884fzSWP24RWt5NvRq8zUlCFi42IlApGFLIxqfXPCd4VQejCFtzqHeZM8pZlxeRKuvFlf0mRc0z27gnOhFEJwU3wkOGYl13HiYVG(xp3Nc36WvzsTXBVKbfuCioNRG3sWYw6hJvGfRbvADEU)2L87LZ93wHfMcknOwDCsAuxa7oqhL2I7nlRak7PDm9OSwhFzWA0C821vENTofEPNNdoHcbiQlbnwmVyPXb1CZTo9QDjexpFHRJ1lIDxLc3K2hNlZQ1HZAJXOooVTOOU6DhUK2GDHVl8kVJ2PJJ3go1h39c3iEKte(S7KK3xWS0XI2G3WFbmSZjT9Mc7fUd3d9VR0Y)3fYMpqIWpVOrZp4ZV2g3A7xP3EpaF5JRNbakPPcGr(EsuV7c2n7(qe(P9wcIwRWqQ4us0)UnaoBj511eIbLItKN9BmShzpXwcd0taHGXouKTYZLSVj89OGluVdp)ZQtp)c1)ltlBz9MlIKO13eT8UvVANp7LeSdhnPTopUDM1Dv6o0YnEW5Ct9L69MFY6P5Ndw6ARzT)YZX(UAh08RoXsz7Sv95XHZHz911NPVgmVBD63ma)oQgYLhp9rKoTzKoTHKSW(BhQaz3SCVTa87haWBhPBp4E00ET3X2ux64ow)UFF5gw5nzVRxR51GDBE57aVaGxNTW8fT2SuIw9tWkUGJ)JZFO7puUEBYF)d]]
+    20261021315,
+    [[Hekili:vF17VnQrq0)wYxsnQwG)rsAVOqKAvuBZPRNQkx)kWA2bZwVWI2DPP5ue)T3znGn2EXX16oL2Vyb7UZmV3BMDyC40WpfgqjAi8JZMm7MPtMnD(0Rdd0pxcHbLKKvKL4dfKC83FUIiPmsrD8ONepPy5k3erUJ5CpZfeQXxlQyC9JfHlS6wvjKeg8WV)hp(WTlB9wyqgJsHgtavYGX526yDguh3UMxQqc)fiRJPqkPIRRJ)HF7d1X4Y1X9CrfZZewLhvwXOEPGKWxaePhPKJl2yRl(I7FQefoJXOijfkoIEk(SWevMQoMqPIIVbFyf8SYTo(bIMCRf0m6xF8tOtY06s1TEElz6SQfgc4T3rDqFIGMoF(7MpHo5QjZN4IAPuKY4OAts0mrHYpHW5rnVeXzk9ytYWpri4uXtfQ633EWV13lvcfFMb0ijSekqIA2yml1pdiCDMBzI(Uzt6BHDNVcGYOQYx)GusowF0)C5OAoUsbrI00OLju)PM4lXt5Mujr8PV3Fxiy3IlAoGBPKLt4rlyAWDvbs4(MsHCbMnzFMvSmskisJLkqRX3vUhSBekSCqEzNV5KeJg164lhnymFPtT3zljKtyfQ7rm7Mt(7x6tY7S4QeHs7St6IasgGOsc9P8BnSmxoIWA081GArvAQ7MLC7vv4UPg0FbivGC1HPXrTbS9aTuAdU7wwce6ZBz6bzUw(sH1O5WTRkDoBDY)khhlCcfcGxvakSCFzM2c1SZTw9QzjexVCHTJ1lITx287s7Jtfjvk)znXyulN3uuuvE5(lP0yF679V25GDA54D(tDXDVWoIhzfHVypj58gMLou0gQhWfhbdBDst3l)EHB)9q)BlT8)DHS(9Hb4hGuO579bAtRDL574BUhGV8X1tjafKfCGg(JHb9Uly2S9tv4h)BiiATedPKrcd(Y2a4SLKxxtc1OuCI8SFJHDi7j2syGEcie0MXMmvE2K9UW3Jc2q9w88VRo98lu)AMw2W6UlIHbRVjA4DJE1mb3XeS9hEPPopQzQ2Tv6w0YopyDYQ(s9otyz808ZblTT1m2F15yFBTdA(1NyPSz6R(8y)j1m(6MZ0xdM3no97gGFhud13JFnMT70MI60gJYqSVFOsOTt7ztKE7a87gaWBg6Bh4EW8Gn3c7QCTClSF)X3UXz(pz3TxR92G9Jo6TKJn9Z6SfMViv6mbA1VaRyCg(Vw)P2)u66Td)N)]]
 )
 
 -- The hand-built lists the wowsims.com packs replace (wowsims packs plan, P9): a saved choice of one falls back to the
