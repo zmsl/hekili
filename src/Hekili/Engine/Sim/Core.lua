@@ -571,48 +571,9 @@ local invalidActionWarnings = {}
 
 -- Forever: "in precombat" is a property of the walk, not of a list's name: true while the precombat list and every
 -- list it calls (at any depth) is walked, so a called list ("Pre-pull: Move" as `pre_pull_move`) is filtered in combat
--- and its prepull_at entries are scheduled like precombat's own. Saved and restored around each list's walk.
+-- like precombat itself. Saved and restored around each list's walk. Pre-pull lines keep no schedule: each is a plain
+-- line out of combat, its guard against recasting written into the line (tools/wowsims/apl.lua rule 1).
 local inPrecombat = false
-
--- A precombat entry with `prepull_at=N` (a prepull schedule, N seconds before the pull: the wowsims packs' doAtValue)
--- is recommended once an out-of-combat episode, the time since the last combat ended (`state.combat_ended`): it is
--- done once its ability is cast in the episode (`lastCast`: our casts and the simulation's) or its aura of the same key
--- is seen up. With that aura down again it stays done for the episode when the aura was replaced (it went before the
--- expiry last seen, or before the aura's full duration from the cast: two seals), and is offered again once that
--- expiry has passed (it ran out, as between open-world fights). An entry with no aura of its key is done by its cast
--- alone. The list's order is the schedule's. Only the live state (the first record, no offset) is remembered.
-local prepullSeen = setmetatable( {}, { __mode = "k" } )    -- [entry] = when its aura was last seen up (live)
-local prepullExpires = setmetatable( {}, { __mode = "k" } ) -- [entry] = that aura's expiry then
-local prepullKept = setmetatable( {}, { __mode = "k" } )    -- [entry] = the episode it was replaced in
-
-local function prepullDone( entry, action, ability )
-    local episode = state.combat_ended
-    if prepullKept[ entry ] == episode then return true end
-    local live = state.index == 1 and state.offset == 0
-    local aura = class.auras[ action ]
-    local now = state.query_time
-    if aura then
-        local buff = state.buff[ action ]
-        if buff.up then
-            if live then prepullSeen[ entry ], prepullExpires[ entry ] = now, buff.expires end
-            return true
-        end
-    end
-    local cast, seen = ability.lastCast, prepullSeen[ entry ] or 0
-    if cast <= episode and seen <= episode then return false end -- neither cast nor seen up this episode
-    if not aura then return true end
-    local expires
-    if seen >= cast then
-        expires = prepullExpires[ entry ] -- the application seen up last
-    else
-        local d = aura.duration -- cast, not seen up since (the aura not observed yet): its full duration
-        if type( d ) ~= "number" or d <= 0 then return true end
-        expires = cast + d
-    end
-    if now >= expires then return false end -- ran out: offered again
-    if live and seen >= cast then prepullKept[ entry ] = episode end -- replaced: done for the episode
-    return true
-end
 
 function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth, caller )
     local specID = state.spec.id
@@ -800,9 +761,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                     Timer:Track( "Ability Known, Enabled" )
 
-                    if ability and known and enabled and entry.prepull_at and inPrecombat and prepullDone( entry, action, ability ) then
-                        if debug then self:Debug( "This prepull entry ( prepull_at=%s ) is done for this out-of-combat episode.  Skipping.", tostring( entry.prepull_at ) ) end
-                    elseif ability and known and enabled then
+                    if ability and known and enabled then
                         local script = scripts:GetScript( scriptID )
 
                         wait_time = state:TimeToReady()

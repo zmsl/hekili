@@ -8357,14 +8357,6 @@ do
             if result.max_energy then result.max_energy = tonumber( result.max_energy ) end
 
             if result.use_off_gcd then result.use_off_gcd = tonumber( result.use_off_gcd ) end
-            if result.prepull_at then
-                local at = tonumber( result.prepull_at ) -- seconds before the pull (Engine/Sim/Core.lua's prepull entries)
-                if not at or at < 0 then
-                    insert( warnings, "Line " .. line .. ": prepull_at=" .. result.prepull_at .. " is not a number of seconds; ignored." )
-                    at = nil
-                end
-                result.prepull_at = at
-            end
             if result.focus then
                 local tier = tonumber( result.focus )
                 if not tier or tier < 0 or tier % 1 ~= 0 then

@@ -54,18 +54,25 @@ describe("a list called from precombat", function()
         assert.are.same({}, H.errors)
     end)
 
-    it("schedules its prepull_at entries as precombat's own: once an episode", function()
-        local once = { enabled = true, action = "defensive_stance", use_off_gcd = 1, prepull_at = 1 }
-        lists({ precombat = { call("pre_pull") }, pre_pull = { once }, default = {} })
+    it("hides a guarded line while its stance is up and offers it again once the stance is gone", function()
+        local guarded = {
+            enabled = true,
+            action = "defensive_stance",
+            use_off_gcd = 1,
+            criteria = "!buff.defensive_stance.up",
+        }
+        lists({ precombat = { call("pre_pull") }, pre_pull = { guarded }, default = {} })
         assert.are.equal("defensive_stance", cycle())
         t = t + 1.6
         H.ctl.now = t
         H.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-ds", H.Hekili.Class.abilities.defensive_stance.id)
         H.ctl.form = ww.FORM.defensive_stance
         H.Fire("UPDATE_SHAPESHIFT_FORM")
-        H.ctl.form = ww.FORM.battle_stance -- back in Battle Stance: a plain entry would be offered again
-        H.Fire("UPDATE_SHAPESHIFT_FORM")
         assert.is_false(cycle())
+        H.ctl.form = ww.FORM.battle_stance -- back in Battle Stance: the guard's purpose is unmet again
+        H.Fire("UPDATE_SHAPESHIFT_FORM")
+        t = t + 1.6
+        assert.are.equal("defensive_stance", cycle())
         assert.are.same({}, H.errors)
     end)
 

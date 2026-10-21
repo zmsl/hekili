@@ -243,7 +243,7 @@ end
 --- rates the client reads: W.rates, W.fsr; no regen ticks; the loop's world knobs, mana's replaced by the log's), pull (the world time of the log's 0; default the log's
 --- earliest line M.LEAD s into the world, at least M.PULL: a -10 s prepull pulls at 10.5). Prepull casts (before the
 --- log's 0) are decisions like any other: wowsims counts them as its casts and the engine recommends a pack's precombat
---- list out of combat (once each with `prepull_at`), so an on-GCD one is scored. creatureType: the mob's
+--- list out of combat (each line under its guard against recasting), so an on-GCD one is scored. creatureType: the mob's
 --- (`target.creature_type`'s key; the request's mobType: tests/Forever/helpers/wowsims.lua `creatureType`), distance (the request's distanceFromTarget: our yards from the target at the start,
 --- W.moveTo; the log's move lines step it; nil: no positions). An ItemID cast maps through the abilities' `item`/`items`:
 --- a decision and a cooldown, no cast event (shortcut: the client is not shown the item's spell; emit it when a gate

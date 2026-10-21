@@ -22,7 +22,7 @@
 -- Fixed since the provisional floor: sunder_armor -> rend (7.58, a dodged Sunder counted as a stack) and rend -> slam
 -- (78.08, a missed Rend kept up) by fix 7's undo of an avoided cast's target auras; sunder_armor -> overpower (177.88)
 -- no longer disagrees. Fix 6 cleared 45.68, 60.88 and 102.68 (the belief's rage at a same-instant swing, gap B).
--- Pre-pull (prepull_at): Berserker Rage at -4.5 and Battle Shout at -3 are on-GCD decisions and agree; Battle Stance,
+-- Pre-pull: Berserker Rage at -4.5 and Battle Shout at -3 are on-GCD decisions and agree; Battle Stance,
 -- Bloodrage, Charge and Blood Fury are off the GCD (not scored).
 -- Automatic cooldowns (rule 13): cd_trinkets's two castAllStatBuffCooldowns entries cast nothing in the log (no
 -- stat-buff cooldown in this gear): no lines; GAP 14 (autocastOtherCooldowns) costs Arms nothing (none in its APL).

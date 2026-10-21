@@ -252,13 +252,9 @@ describe("tools/make_pack.lua", function()
         end
     end)
 
-    it("round-trips prepull_at=S (seconds before the pull) after focus and refuses a negative", function()
-        local simc = "actions.precombat=aura,prepull_at=10\nactions.precombat+=/seal,focus=1,prepull_at=1.5,if=a\n"
-        local lists = mp.parse(simc)
-        assert.are.same({ 10, 1.5 }, { lists.precombat[1].prepull_at, lists.precombat[2].prepull_at })
-        assert.are.equal(simc, mp.unparse(lists))
+    it("refuses prepull_at: pre-pull lines carry their guard in the condition (wowsims rule 1)", function()
         assert.has_error(function()
-            mp.parse("actions=rip,prepull_at=-1\n")
-        end, "bad value prepull_at=-1 in: actions=rip,prepull_at=-1")
+            mp.parse("actions.precombat=aura,prepull_at=10\n")
+        end, "unknown option prepull_at in: actions.precombat=aura,prepull_at=10")
     end)
 end)

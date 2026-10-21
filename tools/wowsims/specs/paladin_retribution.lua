@@ -6,8 +6,9 @@
 -- Disagreements worked (P7, resume 3: after central fixes 6/8/C and 9/9b): replay 0.579 (57; 0.456 before them).
 -- seal_of_righteousness -> seal_of_command 13 and consecration -> seal_of_command 3: replay limit (central GAP N,
 -- tests/Game/harness/replay.lua): an aura the log removes early (a seal replaced, an Echo spent) is shown expiring at
--- its removal, so the client sees the prepull Seal of Command run out 1.5 s after its cast, Core's prepull_at rule
--- offers it again and the twist runs a seal behind (measured with the class duration shown instead: 0.772, both gone).
+-- its removal, so the client sees the prepull Seal of Command run out 1.5 s after its cast, Core's prepull_at
+-- rule (gone since central fix 23) offers it again and the twist runs a seal behind (measured with the class
+-- duration shown instead: 0.772, both gone).
 -- seal_of_command -> holy_strike 2: replay limit (central GAP O, tests/Game/harness/observer.lua): wowsims casts Holy
 -- Strike the instant its cooldown ends; the old cooldown's end lands a microsecond after the new start and clears it
 -- (with GAP N's experiment too: 0.789). The floor was 0.57 then; central fix 13 (removals shown as removals, the

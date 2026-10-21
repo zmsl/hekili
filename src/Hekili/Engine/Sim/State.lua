@@ -544,7 +544,6 @@ state.safebool = function( val )
 end
 
 state.combat = 0
-state.combat_ended = 0 -- when the last combat ended (0: none yet): the out-of-combat episode's start
 state.faction = Facade.UnitFactionGroup( "player" )
 -- The race token (UnitRace's second return), the same on every client language: race packs match it (Engine/Schema/Races.lua), and
 -- race.gnome, race.troll ... hold beside the localized key.
