@@ -48,6 +48,8 @@ Unnumbered, from the lane reports (give one an id when it is dispatched):
 | Pet power model | `VS.PetPower` is the last plain `UnitPower("pet")`; no regen or spend model. UnitPower is `SecretWhenUnitPowerRestricted` and unprobed with a pet out (plain 0 with none, W PR12); if the Warlock checkpoint finds it secret, the pet's mana freezes at its last out-of-combat read | core belief (pets) | Warlock in-game Q3 |
 | Reagent prediction | A reagent count (Soul Shards) is read live through `C_Item.GetItemCount`; the sim does not predict a shard spend within one recommendation pass, so a second shard spender in the queue reads the count before the first | core sim | Warlock (pack) |
 | Replay pet and bags | The replay world starts from the content's bags and pet (`WORLD.bags`, `WORLD.pet`) and reads neither from the log (the pet's mana, wowsims's 32 shards) | harness replay | Warlock replay gate |
+| Travel time | An aura consumed when the hit lands, not at the end of the cast (Elemental's Revelation is spent on landing), so the belief spends it a travel time early; 2 Elemental replay decisions, and Mage has the same issue | core belief + harness replay | Elemental, Mage |
+| Potion mana refill | The mana belief does not believe a mana potion's or Demonic Rune's refill (lo up to 2286 under the truth in Elemental's replay); GAP AB/V family, 1 Elemental decision | core belief (mana) | Elemental, other mana users |
 
 ## In game (on the in-game ledger, not a register item)
 
