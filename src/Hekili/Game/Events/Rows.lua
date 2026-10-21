@@ -38,8 +38,9 @@ local SAME_FRAME = 0.05
 -- The window our cast's own avoid may follow its success in: the server resolves the hit and refunds at the cast's
 -- success (the user, 2026-10-20), and the target's DODGE / PARRY / MISS only reports it afterwards, as a white swing's
 -- outcome follows its swing; so a main-hand landing lag's window (the learned median plus three spreads), not a frame.
-local function landWindow()
-    return L.med[1] + 3 * L.spr[1]
+-- Hand h's (1 main, 2 off from its own swing); also how long a swing's rage stays pending (VS.SwingPending).
+function L.LandWindow(h)
+    return L.med[h] + 3 * L.spr[h]
 end
 -- GAP AX (docs/dev/gaps.md): the landing window holds for a refused avoid (DODGE / PARRY / MISS) only while the
 -- background avoid count (L.bg[7], decayed) stays below this; past it others avoid on the target too, so our cast
@@ -344,7 +345,7 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
             strikeWait = t
         end
     end
-    hold(2, spellID, Plain(api, api.UnitGUID("target")) or "", landWindow(), t)
+    hold(2, spellID, Plain(api, api.UnitGUID("target")) or "", L.LandWindow(1), t)
 end)
 
 -- The theta index of hand h's amount class `cls` (1-3, 4 unknown) at lag d from reference `ref`: core band (within 2

@@ -307,6 +307,43 @@ describe("resources", function()
             assert.are.equal(0, VS.SwingPending(1))
         end)
 
+        it("keeps a swing pending past answers that cannot show it (every cost under the floor) to its credit", function()
+            local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
+            R.est0[1], R.lo0[1], R.hi0[1] = 22, 20, 30 -- spender_a's 10 is under the floor: its answer proves nothing
+            obs(Obs.Swing, 10, 1, 2.6, 4)
+            obs(Obs.Usable, 10.1, A, 1, 0)
+            obs(Obs.Usable, 10.3, A, 1, 0)
+            I.Fold(10.3, false)
+            I.Settle(10.3)
+            assert.are.equal(10, VS.SwingPending(1)) -- the forecast keeps its gain
+            obs(Obs.Swing, 10, 1, 0, 1) -- its credit, folded late (the wound row at the swing's time)
+            I.Fold(10.47, false)
+            I.Settle(10.47)
+            assert.are.equal(0, VS.SwingPending(1))
+        end)
+
+        it("ends a swing pending at an answer whose cost is above the floor", function()
+            local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
+            R.est0[1], R.lo0[1], R.hi0[1] = 6, 5, 30 -- spender_a's 10 is above the floor: its answer shows the swing
+            obs(Obs.Swing, 10, 1, 2.6, 4)
+            obs(Obs.Usable, 10.1, A, 1, 0)
+            I.Fold(10.1, false)
+            assert.are.equal(0, VS.SwingPending(1))
+        end)
+
+        it("ends a swing pending one landing lag after it with no credit (an avoided swing)", function()
+            local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
+            R.est0[1], R.lo0[1], R.hi0[1] = 22, 20, 30
+            obs(Obs.Swing, 10, 1, 2.6, 4)
+            obs(Obs.Usable, 10.1, A, 1, 0)
+            I.Fold(10.1, false)
+            local lag = I.Log.LandWindow(1) -- the learned main-hand landing lag window (Rows.lua)
+            I.Settle(10 + lag - 0.01)
+            assert.are.equal(10, VS.SwingPending(1))
+            I.Settle(10 + lag + 0.01)
+            assert.are.equal(0, VS.SwingPending(1))
+        end)
+
         it("never believes more than the maximum, however many swings land", function()
             for k = 1, 20 do
                 obs(Obs.Swing, 5 + 2.6 * k, 1, 2.6, 1)

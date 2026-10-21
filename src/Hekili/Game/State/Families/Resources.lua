@@ -191,7 +191,7 @@ local usable, ansT, shortCost, shortT, shortGain, shortEst = {}, {}, {}, {}, {},
 local swE, swL, swT, swTop, swSp = { 0, 0 }, { 0, 0 }, { -1, -1 }, { math.huge, math.huge }, { 0, 0 }
 -- Per hand: the latest PLAYER_SWING whose rage the floor does not hold yet (0: none; VS.SwingPending).
 local pendT = { 0, 0 }
-local heardT = 0 -- the latest usability answer's time
+local heardT = 0 -- the latest usability answer's time whose cost was above its slot's floor
 -- By ability index: its ladder precondition (C9): false for `ladder = false` (its answers are no rungs), its `usable`
 -- function (a short answer while it fails names another requirement, such as a finisher's combo points), or true.
 local pre = {}
@@ -1044,8 +1044,10 @@ I.On(Obs.Usable, function(o, t, lag)
     end
     local was, wasT = usable[a], ansT[a]
     usable[a], ansT[a] = now, o.t
-    heardT = o.t
     local c = r ~= 0 and I.CostOf(a) or 0
+    if r ~= 0 and c > 0 and c > R.lo0[r] then
+        heardT = o.t -- only a cost above the floor can show a pending swing's gain (an answer below it proves nothing)
+    end
     local explained = I.CreditVerdict and judge(a, now, t, r, c, was, wasT)
     if r == 0 or now == NOT or R.readable[r] or I.ab.multiCost[a] or not pre[a] then
         return -- a second power cost (Overpower's combo points) makes a short answer ambiguous: no rung
@@ -1265,15 +1267,17 @@ end)
 
 --- The time of `hand`'s latest swing (1 main, 2 off) whose gain the believed floor does not hold yet, else 0 (GAP AK).
 --- The game pays it at the swing (checkpoint R1); the floor takes it at the first usability answer that can show it
---- (about ORACLE_MIN later: a rung) or at its wound row's credit (a landing lag later). Hekili's swing forecast counts
---- that swing as past meanwhile, so for a poll every rage-gated line ranked as unaffordable (Arms flicker 4.1/min);
---- Engine/Sim/State.lua forecasts its gain instead, one poll after the answers can show it (no press before). Not pending
---- once an answer since that point was heard (it showed the gain, or the swing gave none), once credited, after a spend
---- from the slot (its cast's rung holds what the game had), or for a slot read plain. Allocates nothing.
+--- (about ORACLE_MIN later: a rung, so a cost above the floor) or at its wound row's credit (a landing lag later).
+--- Hekili's swing forecast counts that swing as past meanwhile, so for a poll every rage-gated line ranked as
+--- unaffordable (Arms flicker 4.1/min); Engine/Sim/State.lua forecasts its gain instead, one poll after the answers can
+--- show it (no press before). Not pending once an answer above the floor since that point was heard (it showed the
+--- gain, or the swing gave none; one under it proves nothing), one landing lag after it with no credit (Rows'
+--- L.LandWindow: avoided), once credited, after a spend from the slot (its cast's rung holds what the game had), or for
+--- a slot read plain. Allocates nothing.
 function VS.SwingPending(hand)
     local p = pendT[hand]
-    if p == 0 or heardT > p + I.Log.ORACLE_MIN - 1e-6 then
-        return 0
+    if p == 0 or heardT > p + I.Log.ORACLE_MIN - 1e-6 or I.clock > p + I.Log.LandWindow(hand) then
+        return 0 -- shown, or no credit one landing lag on: avoided
     end
     for r = 1, R.n do
         if
