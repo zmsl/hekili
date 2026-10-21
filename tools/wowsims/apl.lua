@@ -123,7 +123,12 @@
 --    `buff.`/`debuff.<key>.up`, `.remains>`/`>=`) reads "up or disabled", `(<term>|!settings.<key>)` (inside an `or`,
 --    `|!settings.<key>` joins it); an absence read (`!...up`, `.remains<`) is left as is. The class registers the
 --    setting with `default = false` (in game) and `sim = true` (the harness: wowsims's raid boss); the header lists it.
---    A key no line casts is an error.
+--    A key no line casts is an error. The rewrite is textual and reads the debuff as up while the setting is off, under
+--    a negation too: right for a negated copy of another line's condition (Guardian's Lacerate lines carry
+--    `!(<Berserk's condition>)`, so they still yield to a Berserk that no longer waits for the Roar); a negated group
+--    of its own, `!(debuff.X.up&rage.current>10)`, also reads as if X were up (`!(rage.current>10)` with it off). No
+--    pack at the pin has such a group. Not built: `.stack` reads are not rewritten, and the aura key is always the
+--    action key (a debuff under another key, Fire's Scorch and `fire_vulnerability` stacks, needs both).
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
 -- The engine facts rule 6 rests on (tools/check_pack_levels.lua checks every pack for it):
@@ -796,9 +801,9 @@ local function maintained(c, body, cast)
                     and (s .. "&" .. ((grouped(cond) or not cond:find("|", 1, true)) and cond or "(" .. cond .. ")"))
                 or s
         elseif cond then
-            local pat = "()(!?)%f[%w_](d?e?buff%." .. key .. "%.([%w_]+)([<>=]*)([%w_.]*))()"
-            cond = cond:gsub(pat, function(i, neg, term, field, op, rhs, j)
-                local kind = term:match("^%a+")
+            -- (kind).<key>.(field)(op)(rhs), with what precedes it (`!` or not) and its bounds
+            local pat = "()(!?)%f[%w_]((%a+)%." .. key .. "%.([%w_]+)([<>=]*)([%w_.]*))()"
+            cond = cond:gsub(pat, function(i, neg, term, kind, field, op, rhs, j)
                 local wanted = neg == ""
                     and (kind == "buff" or kind == "debuff")
                     and (

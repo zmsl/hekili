@@ -620,7 +620,14 @@ describe("the wowsims APL translator", function()
             local rage = cmp("OpGt", { currentRage = {} }, const("10"))
             local r = {
                 maintenance = { dot = "keep_dot" },
-                leveling = { "dot,if=!action.big_hit.known", "strike,if=rage.current>10&debuff.dot.up" },
+                leveling = {
+                    "dot,if=!action.big_hit.known",
+                    "strike,if=rage.current>10&debuff.dot.up",
+                    -- under a negation: another line's copied condition (Guardian's Lacerate lines repeat Berserk's)
+                    "strike,if=!(cooldown.big_hit.ready&debuff.dot.up)",
+                    -- the documented limit: any negated group reads as if the debuff were up (setting off: !(rage>10))
+                    "big_hit,if=!(debuff.dot.up&rage.current>10)",
+                },
             }
             local text, _, _, header = apl.translate({
                 priorityList = {
@@ -644,6 +651,8 @@ describe("the wowsims APL translator", function()
                     "actions+=/dot,if=settings.keep_dot",
                     "actions+=/dot,if=settings.keep_dot&!action.big_hit.known",
                     "actions+=/strike,if=rage.current>10&(debuff.dot.up|!settings.keep_dot)",
+                    "actions+=/strike,if=!(cooldown.big_hit.ready&(debuff.dot.up|!settings.keep_dot))",
+                    "actions+=/big_hit,if=!((debuff.dot.up|!settings.keep_dot)&rage.current>10)",
                 }, "\n"),
                 text
             )

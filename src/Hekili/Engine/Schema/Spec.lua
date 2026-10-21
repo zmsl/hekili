@@ -1353,7 +1353,8 @@ local HekiliSpecMixin = {
 
         -- `option.sim`: the harness's default (Engine.SettingDefault); taken out, AceConfig rejects unknown keys
         local sim = option.sim
-        option.sim = nil
+        option.sim = nil -- the caller's own table on a direct spec call (the kit path passes each spec a copy)
+        -- the gate's note only on a string `desc`; a function `desc` is the caller's to word
         if sim ~= nil and type( option.desc ) == "string" then
             option.desc = option.desc .. "\n\nThe wowsims gate runs this as " .. ( sim and "on" or "off" ) .. "."
         end

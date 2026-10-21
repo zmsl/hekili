@@ -964,7 +964,11 @@ function M.new(o)
     loadAddon(addons.CORE)
     -- the scenario the settings' defaults are for (Engine.SettingDefault: "sim" for the harness's own, nil in game),
     -- set before ADDON_LOADED fills the profile
-    rawget(env, "Hekili").Engine.scenario = o.scenario
+    local core = rawget(env, "Hekili")
+    if not (core and core.Engine) then
+        error("headless.new: the core did not load: " .. table.concat(H.loadErrors, "; "), 2)
+    end
+    core.Engine.scenario = o.scenario
 
     -- login: ADDON_LOADED (OnInitialize: Hekili_Shared, the class pack, then the AceDB profile), PLAYER_LOGIN
     -- (OnEnable, VS.Start, the content notice) and PLAYER_ENTERING_WORLD
