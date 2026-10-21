@@ -2,6 +2,7 @@
 -- Paladin in each pack (tests/Forever/helpers/paladin_world.lua) against the harness's world; the mob swings at us
 -- (Protection's Holy Shield charges spent by its blocks). `make check` runs 3 fights a pack (#slow); `make test-paladin`
 -- the 20 (#paladin). Each gate also asserts its flagged lines ran (review focus 5).
+-- The 20-fight gates live one pack a file (loop_paladin_<pack>_spec.lua), so `make test-paladin` runs them in parallel.
 local headless = require("Game.harness.headless")
 local pack_gate = require("Forever.helpers.pack_gate")
 local pw = require("Forever.helpers.paladin_world")
@@ -61,14 +62,5 @@ describe("the headless Paladin gates, 3 fights a pack #slow", function()
                 assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
             end
         )
-    end
-end)
-
-describe("the headless Paladin gates, 20 fights a pack #paladin", function()
-    for _, name in ipairs(PACKS) do
-        it(name .. " solo, level 60, one mob, 20 fights of up to 3 minutes", function()
-            local r, line = pack_gate.solo(name, pw[name], 20)
-            assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
-        end)
     end
 end)

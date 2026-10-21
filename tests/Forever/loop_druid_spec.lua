@@ -2,6 +2,7 @@
 -- Druid in each pack (tests/Forever/helpers/druid_loop_world.lua) against the harness's world. `make check` runs 3
 -- fights a pack (#slow); `make test-druid` the 20 (#druid). Each gate also asserts its flagged lines ran (review focus
 -- 5: run A's in-combat ticks whose first record has `focus` set).
+-- The 20-fight gates live one pack a file (loop_druid_<pack>_spec.lua), so `make test-druid` runs them in parallel.
 local headless = require("Game.harness.headless")
 local pack_gate = require("Forever.helpers.pack_gate")
 local dlw = require("Forever.helpers.druid_loop_world")
@@ -46,14 +47,5 @@ describe("the headless Druid gates, 3 fights a pack #slow", function()
                 assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
             end
         )
-    end
-end)
-
-describe("the headless Druid gates, 20 fights a pack #druid", function()
-    for _, name in ipairs(PACKS) do
-        it(name .. " solo, level 60, one mob, 20 fights of up to 3 minutes", function()
-            local r, line = solo(name, 20)
-            assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
-        end)
     end
 end)

@@ -2,6 +2,7 @@
 -- Rogue in each pack (tests/Forever/helpers/rogue_world.lua) against the harness's world. `make check` runs 3 fights a
 -- pack (#slow); `make test-rogue` the 20 (#rogue). Each gate also asserts its flagged lines ran (review focus 5: run
 -- A's in-combat ticks whose first record has `focus` set).
+-- The 20-fight gates live one pack a file (loop_rogue_<pack>_spec.lua), so `make test-rogue` runs them in parallel.
 local headless = require("Game.harness.headless")
 local pack_gate = require("Forever.helpers.pack_gate")
 local rw = require("Forever.helpers.rogue_world")
@@ -38,14 +39,5 @@ describe("the headless Rogue gates, 3 fights a pack #slow", function()
                 assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
             end
         )
-    end
-end)
-
-describe("the headless Rogue gates, 20 fights a pack #rogue", function()
-    for _, name in ipairs(PACKS) do
-        it(name .. " solo, level 60, one mob, 20 fights of up to 3 minutes", function()
-            local r, line = pack_gate.solo(name, rw[name], 20)
-            assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
-        end)
     end
 end)

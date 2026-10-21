@@ -3,6 +3,7 @@
 -- Auto Shots on the ranged hand (W.startRanged), the mob swings at us (our dodges open Mongoose Bite). `make check`
 -- runs 3 fights a pack (#slow); `make test-hunter` the 20 (#hunter). Each gate also asserts its flagged lines ran
 -- (review focus 5).
+-- The 20-fight gates live one pack a file (loop_hunter_<pack>_spec.lua), so `make test-hunter` runs them in parallel.
 local headless = require("Game.harness.headless")
 local pack_gate = require("Forever.helpers.pack_gate")
 local hw = require("Forever.helpers.hunter_world")
@@ -42,16 +43,6 @@ describe("the headless Hunter gates, 3 fights a pack #slow", function()
                 assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
             end
         )
-    end
-end)
-
-describe("the headless Hunter gates, 20 fights a pack #hunter", function()
-    for _, pk in ipairs(PACKS) do
-        it(pk[2] .. " solo, level 60, one mob, 20 fights of up to 3 minutes", function()
-            local r, line = pack_gate.solo(pk[2], hw[pk[1]], 20)
-            print(pk[2] .. " focus ticks: " .. r.focus)
-            assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
-        end)
     end
 end)
 
