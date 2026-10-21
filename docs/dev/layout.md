@@ -72,7 +72,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   UnitDamage read, our strike's and DoT's spell IDs) plus a header comment; a fit outside tolerance is retuned in the
   same change. The Druid scenarios (`tests/Forever/helpers/druid_world.lua`, `druid_vs.lua`, `druid_harness_spec.lua`) run on the same
   harness, the class read from `Druid.lua`: a tenth of their fights is `#slow`, the design's counts are `#druid`, run
-  only by `make test-druid` (about 190 s). `make test` runs one busted process per spec file in parallel
+  only by `make test-druid` and `make gate` (about 190 s). `make test` runs one busted process per spec file in parallel
   (`scripts/busted_parallel.sh`; `make test-serial` is the one-process run, about 160 s); `make test-fast` skips the
   `#slow` gates. `make bench` (`tests/Forever/bench_spec.lua`, `#bench`, not in `make check`) prints ms per Update and bytes per
   Update and per UNIT_COMBAT for headless Arms over 6 fights. The Task 5 Arms lines cost the stock sim a little: "B per
@@ -101,6 +101,21 @@ per-token counts in `tests/boundary_baseline.lua` (a ceiling per file, not a lin
 Sim identifier already uses (`git blame` the Sim line and say so in the commit); never to admit a leak.
 `make check` also runs `packs-check` (`make packs`, then `git diff --exit-code src`: the RegisterPack blocks match
 `src/Hekili_<Class>/APLs/`). CI (`.github/workflows/check.yml`) runs the same checks except the type check.
+
+The shape (central fix 17): `make check` runs lint, fmt-check, typecheck and test at once (`make -j4 -Otarget`, each
+check's output kept whole), then syntax, api-check, packs-check and tools-test in order; one exit code. `make test`,
+`make test-<tag>` (loop, party, druid, rogue, paladin, shaman, hunter) and `make gate` all go through
+`scripts/busted_parallel.sh`: one busted process per spec file, each file's output in path order (files that ran no
+test skipped), then the summed counts. `make test` and `make test-<tag>` run `$(nproc)` files at a time; `make gate`
+runs all seven tags in one call capped at `nproc - 2` for the whole gate (`BUSTED_JOBS`), under the machine-wide
+`flock /tmp/hekili-gate.lock`. So each 20-fight pack is its own file (`tests/Forever/loop_<class>_<pack>_spec.lua`;
+the class's `loop_<class>_spec.lua` keeps the boot checks and the 3-fight `#slow` gates), and the gate is bounded by
+its slowest file: `druid_harness_spec.lua`'s seven `#druid` scenarios (345 s under the gate's load), then
+`loop_warrior_spec.lua` (#loop and #party, 292 s) and Feral (303 s); `make gate` 694 s, `make check` 263 s here. One
+spec file at one tag: `.lua/bin/busted --tags=druid tests/Forever/loop_druid_feral_spec.lua`.
+The CPU budget (`pack_gate.health`, `r.cpuMean <= 10` ms, p99 reported) is process CPU time (`os.clock` around each
+Update in `tests/Game/harness/loop.lua`), so other processes waiting for a core do not count; shared cores (SMT,
+cache) still raise it: Arms reads 4.1 ms alone, wall clock the same, and 6.1-6.7 ms in `make check`'s 16-wide run.
 
 `make check`'s 6-fight Arms gate is two files of 3 fights (`tests/Forever/loop_warrior_spec.lua`, seeds 1-3, and
 `loop_warrior_late_spec.lua`, seeds 4-6), so it prints three `Arms solo:` lines (`tests/Forever/arms_recs_spec.lua`
