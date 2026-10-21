@@ -132,6 +132,11 @@ Arms solo: fights=20 agreement 0.964 (16910 ticks); react median 0 p90 0 never 0
 Arms party: fights=10 agreement 0.970 (4371 ticks); react median 0 p90 1 never 0.010; refused per 100 [casting 5.9 (oracle 4.8, unmatched 0.0), cost 4.7 (oracle 10.3, unmatched 0.0), requires:no dodge 4.3 (oracle 0.0, unmatched 0.0)], episodes 1.51/min; dps A/B 1.027; ...
 ```
 
+`make test-loop` also runs Fury (wowsims.com) 20 fights at level 60 and 24 (`loop_warrior_fury_spec.lua`,
+`loop_warrior_fury24_spec.lua`, `helpers/fury_gate.lua`): Arms never waits on Heroic Strike (`rage>=90`), Fury does
+(`rage.current>=40`), so its flicker/min is the on-next-swing strike's jitter gate (central fix 21: L60 agreement 0.934,
+flicker 1.71/min, oracle 0.56; L24 0.908, 3.31/min, oracle 2.16).
+
 Before the pull it shows Bloodrage and Battle Shout only (no positions headless, so no Charge). Seeds 1-3's casting
 refusals (7.0 per 100, the oracle's 0.5) are presses during Slam's 1.5 s cast: the loop world's build has no Improved
 Slam, and the world's client sees only a cast's success (no cast start), so our first icon moves on mid-cast.

@@ -102,6 +102,8 @@
   that gave no rage with another player's hit.
 - Rage: an ability used at the moment of a white swing no longer leaves the rage estimate too high once that swing's
   hit shows up (the swing's rage had already paid for the ability).
+- Rage: Heroic Strike no longer counts down to a swing, jumps to the next one and turns ready a moment later: a swing's
+  rage stays expected until an answer that could show it, its hit, or the time its hit is due.
 - Dodged, parried and missed abilities: the addon no longer counts their debuff as applied (a dodged Sunder Armor is no
   stack, a missed Rend is not up), and the rage or energy estimate gets back the 80% that the game returns for the
   abilities that refund it (Warrior, Rogue and Feral Druid strikes; not Whirlwind, Cleave or Thunder Clap), counted
