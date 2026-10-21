@@ -55,7 +55,18 @@ Translation:
   kit does not list, a trinket as `use_items`). It maps casts and aura reads alike.
 - `auras` (`{ [aura ID] = key }`): an aura wowsims keys by an ability's own spell ID, where `map` would also turn that
   ability's casts (Revenge rank 6, 25288, read as the window aura `revenge_usable`).
-- `focus` (`{ [action] = tier or { tiers in order } }`): the priority tiers the retired list carried (P9.3).
+- `focus` (`{ [action] = tier or { tiers in order } }`, `false` for an untiered occurrence): the display's now-circle
+  tier, by the line's role (the user's rule, 2026-10-21; it replaces the retired lists' tiers of P9.3). Rotational
+  lines, the spec's core strikes, builders, fillers and finishers (Mortal Strike, Slam, Execute, Bloodthirst,
+  Whirlwind, Sinister Strike, Mutilate, Eviscerate, Primal Bite, Wrath, Fireball, Arcane Blast, the Hunter shots),
+  carry none. Tier 1 is a reactive or windowed line the player must catch: proc-, position- or stance-gated
+  (Overpower, Revenge, Mongoose Bite, Pyroblast on Heating Up, Arcane Missiles on Missile Barrage, Shred on
+  Clearcasting), and an off-GCD queued strike, with a second line of a rage dump at 2 (`heroic_strike = { 1, 2 }`).
+  Tier 2 is upkeep: DoTs, debuffs, buffs, seals, totems and shields kept up (Rend, Rake, Rip, Rupture, Moonfire,
+  Scorch for Fire Vulnerability, Hunter's Mark, Demoralizing Roar, Flame Shock). Cooldowns, consumables, defensives,
+  movement and pre-pull lines carry none (the translator drops a tier on a `prepull_at` line). A line whose role is
+  arguable (Slice and Dice, Serpent Sting, the filler Lacerate) keeps its tier until the user rules; the recipe says
+  so. `tests/Forever/focus_roles_spec.lua` holds every pack's tiers.
 - `requires` (`{ [action or group snake name] = talent key }`): entries written for a talent build run only once the
   talent is taken (Retribution's Twist of Light lines).
 - `maintenance` (`{ [action] = setting key }`, rule 15): a raid debuff kept up (Protection's Demoralizing Shout, Arms's

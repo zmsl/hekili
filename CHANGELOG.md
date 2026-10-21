@@ -12,6 +12,13 @@
 - Mana and energy consumables (Major Mana Potion, Demonic Rune, Thistle Tea, Mana Gem) and the Rogue's poison reminders (Instant and Deadly Poison) are now under the Potions toggle, which is off by default: turn Potions on to see them. The Healthstone stays under Defensives.
 - Warrior Protection's Demoralizing Shout, Arms's leveling Thunder Clap (before Mortal Strike) and Druid Guardian's Demoralizing Roar are off by default (open-world mobs die before they pay off). Turn them on in the specialization's settings for raids ("Maintain Demoralizing Shout", "Maintain Thunder Clap", "Maintain Demoralizing Roar"). Protection's Thunder Clap is unchanged.
 - Guardian: with Demoralizing Roar off, Berserk no longer waits for it, and the leveling Roar filler is off too.
+- The now circle's highlights follow a line's role: procs and windows the player must catch, then upkeep; core strikes, cooldowns and pre-pull steps are no longer highlighted.
+- Druid: Rip is highlighted as upkeep like Rake; Shred and Claw only on Clearcasting; Innervate no longer. Guardian highlights Maul and Demoralizing Roar.
+- Hunter: Raptor Strike and Mongoose Bite are highlighted in every specialization, Hunter's Mark no longer before the pull.
+- Mage: Evocation is no longer highlighted.
+- Paladin: Retribution no longer highlights Exorcism or the seal before the pull; the seal you keep up while leveling is highlighted as upkeep.
+- Rogue: Ambush (on Cutthroat) and Rupture are highlighted in every specialization.
+- Shaman: Fire Nova is highlighted only on Clearcasting, the totems no longer before the pull.
 
 ### Fixed
 - A priority regenerated on the same day no longer shows as reverted on login.
