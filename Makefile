@@ -95,7 +95,10 @@ packs-check: wowsims-packs packs
 tools-test:
 	python3 -m unittest discover -s tests/tools -t tests/tools
 
-check: lint fmt-check typecheck test syntax api-check packs-check tools-test
+# The four long checks at once (-Otarget keeps each one's output whole), then the short serial tail; one exit code.
+check:
+	$(MAKE) -j4 -Otarget lint fmt-check typecheck test
+	$(MAKE) syntax api-check packs-check tools-test
 
 # Rewrites each class file's RegisterPack blocks from its APLs/ (tools/make_pack.lua write), re-dating a class (today,
 # or PACK_DATE=YYYYMMDD) only when its blocks change; not part of `check`.
