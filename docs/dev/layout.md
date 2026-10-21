@@ -268,7 +268,7 @@ the forever gate on 51a0b1ac: Fire Nova at the DB2's 520). `tests/Forever/wowsim
 own fight (floor 0.98; 0.989 of 88 with Rage of the Farseer, held) and runs the levels 10, 40 and 60 (40 pending: GAP AB, the secret-mana floor's last mana):
 
 ```
-Enhancement solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.1 (oracle 11.4, unmatched 0.0)], episodes 0.11/min; dps A/B 0.991; ... [seeds 1-3]
+Enhancement solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.1 (oracle 11.9, unmatched 0.0)], episodes 0.11/min; dps A/B 0.964; ... [seeds 1-3]
 Enhancement solo: fights=20 agreement 0.998 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.3 (oracle 14.6, unmatched 0.0)], episodes 0.12/min; dps A/B 1.014; ... flicker 1.13/min (oracle 1.10); ... top [stormstrike -> rage_of_the_farseer 44; rage_of_the_farseer -> stormstrike 1]; ...
 ```
 
