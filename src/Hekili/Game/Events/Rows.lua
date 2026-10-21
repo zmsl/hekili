@@ -40,6 +40,10 @@ local SAME_FRAME = 0.05
 local function landWindow()
     return L.med[1] + 3 * L.spr[1]
 end
+-- GAP AX (docs/dev/gaps.md): the landing window holds for a refused avoid (DODGE / PARRY / MISS) only while the
+-- background avoid count (L.bg[7], decayed) stays below this; past it others avoid on the target too, so our cast
+-- claims an avoid only inside CAST_WINDOW (a late foreign dodge would refund into the floor, above the truth).
+L.FOREIGN_AVOIDS = 0.05
 
 -- The score (harness design §1.2-§1.4, decision D1; PROTOTYPE values, the harness's gates hold them): THETA the
 -- credit bar; q per amount class (exact, loose, above) and for an avoid; the lag density's tail weight per hand; the
@@ -436,7 +440,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     end
     local p = cast(t, SAME_FRAME) -- the fresh one in its frame first, else (an avoid) the oldest still pending
     if avoid and not p then
-        p = cast(t)
+        p = cast(t, not (REFUSED[act] and L.bg[7] < L.FOREIGN_AVOIDS) and CAST_WINDOW or nil) -- GAP AX
     end
     -- a crit is the cast's only by the avoid's rules (GAP T); a wound row keeps its pairing either way
     local crit = not avoid and flag == "CRITICAL"

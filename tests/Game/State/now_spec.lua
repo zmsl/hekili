@@ -913,6 +913,29 @@ describe("now handlers", function()
             assert.are.equal(1, I.avoidsRun)
         end)
 
+        it("GAP AX: past the cast's 0.2 s, once others avoid on the target, a late dodge is not ours", function()
+            begin() -- pinned at 10
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.now = 4.5
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- nothing of ours pending: a group member's
+            ctl.Tick(4.51)
+            assert.is_true(I.Log.bg[7] > 0, "the background avoid rate")
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C) -- 10 paid: the truth 0
+            ctl.Tick(5.01)
+            VS.Drain(5.01)
+            ctl.now = 5.4 -- no swing of ours pending, no usable answer between
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            ctl.Tick(5.41)
+            VS.Drain(5.42)
+            assert.are.equal(0, I.avoidsRun)
+            assert.are.equal(20, VS.Aura("target", fs.SPENDER_C, 5.5).est) -- the cast keeps its debuff
+            for _, t in ipairs({ 5.42, 5.5, 6, 7 }) do
+                local lo = VS.Power(fs.RAGE, t).lo
+                assert.is_true(lo <= 1e-9, ("lo %.2f at %.2f, truth 0"):format(lo, t))
+            end
+        end)
+
         it("dates the refund at the cast: a usable answer between the cast and the avoid already held it", function()
             begin() -- pinned at 10; the truth is 20 here (spender_b usable)
             ctl.usable[fs.SPENDER_B] = { true, false }
