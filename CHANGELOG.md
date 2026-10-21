@@ -26,6 +26,7 @@
 ### Fixed
 - A priority regenerated on the same day no longer shows as reverted on login.
 - Built-in priorities no longer show a Delete button.
+- A spell you cannot afford no longer flashes ready for a moment while you are low on mana (a Fire mage's Pyroblast, an Arcane mage's Arcane Blast).
 
 ### Known issues
 

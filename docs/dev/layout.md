@@ -493,8 +493,8 @@ Retribution, Paladin Protection and Survival idles re-measured in the final revi
 | Beast Mastery (wowsims.com) | 1.00 | 1.000 (27) | 6 (5.4) | L10 4.6, L40 4.6, L60 5.4 | 0.000 / 0.320 | 0.320, 5 | 0 | 0.32, 5 |
 | Marksmanship (wowsims.com) | 0.92 | 0.929 (42) | 11.8 (11.8) | L10 4.6, L40 3.6, L60 11.8 | 0.000 / 0.180 | 0.150, 9 | 3 | 0.15, 9 |
 | Survival (wowsims.com) | 0.97 | 0.976 (41) | 6 (0) | L10 4.6, L40 0.2, L60 0.2 | 0.000 / 0.360 | 0.140, 9 | 1 | 0.14, 9 |
-| Arcane (wowsims.com) | 0.77 | 0.780 (59) | 6 (0) | L10 0.0, L40 0.0, L60 0.0 | 0.100 / 0.970 | 0.470, 21 | 13 | 0.47, 21 |
-| Fire (wowsims.com) | 0.84 | 0.841 (63) | 12.6 (12.6) | L10 0.0, L40 0.2, L60 12.6 | 0.130 / 1.610 | 0.370, 31 | 10 | 0.37, 31 |
+| Arcane (wowsims.com) | 0.81 | 0.814 (59) | 6 (0) | L10 0.0, L40 0.0, L60 0.0 | 0.100 / 0.970 | 0.450, 21 | 11 | 0.47, 21 |
+| Fire (wowsims.com) | 0.82 | 0.825 (63) | 12.6 (12.6) | L10 0.0, L40 0.2, L60 12.6 | 0.130 / 1.610 | 0.370, 30 | 11 | 0.37, 31 |
 | Frostfire (wowsims.com) | 0.89 | 0.891 (55) | 10.8 (10.8) | L10 5.6, L40 0.2, L60 10.8 | 0.300 / 1.010 | 0.380, 31 | 6 | 0.38, 31 |
 
 A LIVE60 constant above today's L60 measurement is an earlier measurement the spec keeps (Combat 4.8 vs 4.0,

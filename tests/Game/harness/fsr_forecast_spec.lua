@@ -58,6 +58,18 @@ describe("the sim's five-second-rule forecast", function()
         assert.is_true(math.abs(S:TimeToResource(r, 23) - 23 / 22) < 1e-9)
     end)
 
+    -- Central fix 26: the forecast's slices are reused between passes, so one past `fcount` is an older, longer pass's;
+    -- reading it as the next slice answered an amount out of the horizon with that pass's time (in the past: ready).
+    it("never reads a slice past the forecast's end as the next one", function()
+        S.forecastResources("mana")
+        local n = r.fcount
+        r.forecast[n + 1] = { t = 50, v = 8000, e = "stale" } -- an earlier pass's slice, left in the reused table
+        finally(function()
+            r.forecast[n + 1] = nil -- leave the shared forecast clean
+        end)
+        assert.are.equal(3600, S:TimeToResource(r, 5000)) -- 15 s of 22/s from 0 never reaches it
+    end)
+
     describe("advancing the clock", function()
         local resources, handle
         before_each(function()

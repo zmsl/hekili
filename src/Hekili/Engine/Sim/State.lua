@@ -3504,7 +3504,8 @@ function state:TimeToResource( t, amount )
 
         for i = 1, t.fcount do
             local slice = t.forecast[ i ]
-            local after = t.forecast[ i + 1 ]
+            -- the slices are reused between passes: one past fcount is a stale pass's (central fix 26)
+            local after = i < t.fcount and t.forecast[ i + 1 ]
 
             if slice.v >= amount then
                 -- a tick-paid pool reaches it at a tick (Forever: continuous regen arrives every tick_rate)
