@@ -1,0 +1,131 @@
+# Writing a wowsims.com pack
+
+How a class's default priorities are made: each spec's priority is wowsims/forever's own APL (MIT,
+https://github.com/wowsims/forever), translated to this addon's keys and gated against wowsims's own fight. The
+pipeline, the pin, the gates and every pack's current numbers are in `docs/dev/layout.md` ("wowsims packs"); the
+step-by-step procedure the lanes ran is the plan's "per-spec procedure" (P1-P10,
+`docs/superpowers/plans/2026-10-19-wowsims-packs.md`). This page is what a pack author needs to know beside them.
+
+## The rules (the user's; binding)
+
+- Every priority is wowsims-built: `"<Spec> (wowsims.com)"`, generated from a recipe. The hand-built lists are gone
+  (each class file's `spec:RetirePacks({ ... })`); no work goes into hand-built rotations. A spec with no wowsims APL
+  at the pin has no priority until the user decides otherwise.
+- Match wowsims as closely as the Forever API allows. A difference the API forces (a secret value, a read the client
+  does not give) is an API-forced deviation, recorded with its reason where it lives (the translator rule, the kit
+  line, the recipe header); a difference with any other cause is a gap and is fixed in the layer that is wrong.
+- Replay floors only move up. A floor goes down only with a named cause recorded in the spec file beside it (a
+  measured, accepted change in the world or the export, e.g. Paladin Protection's tanked re-export, central fix 13).
+- "We don't want jittery recommendations where we can help it": flicker (the first icon changing and changing back)
+  is an acceptance metric beside agreement. Every gate line prints `flicker X/min (oracle Y)`; a change that raises a
+  pack's flicker needs a reason, and a display-side hold beats a belief that flashes. Anti-flicker mechanisms (a
+  display hold, an addon reaction time) are experimental and off until play-tested.
+- Players gate optional lines (Sunder Armor, Demoralizing Shout, Thunder Clap, ...) with Hekili's own per-ability
+  toggles (Custom 1/2, Boss Encounter Only, Disable). A pack carries wowsims's defaults, not a second in-game default:
+  the harness-vs-in-game settings mechanism was designed and cancelled ("stick with wowsims").
+
+## The recipe
+
+`tools/wowsims/specs/<class>_<spec>.lua` returns one table. Its header comment names the wowsims files and lines the
+values come from and holds the P7 classification (below). `tools/wowsims/export.lua` reads the request fields;
+`tools/wowsims/apl.lua` (`M.context`) the translation fields.
+
+Request (export):
+- `class` (`"WARRIOR"`), `pack` (`"Arms (wowsims.com)"`), `spec` (the spec key, `"arms"`), `name` (the wowsims spec
+  name in the header), `talentTree` (the wowsims tree file), `apl` (the APL JSON path in the checkout).
+- `player`: `race`, `class`, `gear` (a gear-set JSON path), `talentsString`, `specKey`, `options` (the spec's
+  `DefaultOptions` in protojson: enum values by name), `profession1`/`profession2`, `reactionTimeMs`,
+  `distanceFromTarget`. Or `build`: a preset build file whose `player` is taken whole (Feral).
+- `tank = true` and `healingModel = { hps, cadenceSeconds, ... }` for a tank spec: the player becomes the raid's tank
+  and gets the preset's incoming healing, as wowsims's UI does (apply_defaults.ts). Without them the target swings at
+  no one (GAP AE: the first Protection and Guardian floors were set on fights with no incoming melee).
+
+Translation:
+- `map` (`{ [spell ID or "item:<id>"] = key }`): a wowsims ID the kit holds under another ID (an effect ID, a rank the
+  kit does not list, a trinket as `use_items`). It maps casts and aura reads alike.
+- `auras` (`{ [aura ID] = key }`): an aura wowsims keys by an ability's own spell ID, where `map` would also turn that
+  ability's casts (Revenge rank 6, 25288, read as the window aura `revenge_usable`).
+- `focus` (`{ [action] = tier or { tiers in order } }`): the priority tiers the retired list carried (P9.3).
+- `requires` (`{ [action or group snake name] = talent key }`): entries written for a talent build run only once the
+  talent is taken (Retribution's Twist of Light lines).
+- `exclusive` (`{ [spell ID] = true }`): the auras wowsims gives an exclusive effect (rule 10's
+  `auraShouldRefresh`); neither the DB2 nor the APL says which, so the recipe lists them from wowsims's class code.
+- `executePhase` (the key the kit's execute read answers, `"execute_phase"`): wowsims's `isExecutePhase` E20.
+- `leveling` (lines appended to `actions`): the fillers a lower level needs, each silent at 60 (below).
+
+The autocast context: rule 13 reads the spec's exported log (`tests/Forever/wowsims/<spec>.log`, its "Major cooldown
+used" lines), so `make wowsims-packs` needs the checked-in log; a re-export can move those lines.
+
+Replay knobs are not recipe fields: the spec file passes them to `ws.gate` (`tests/Forever/helpers/wowsims.lua`;
+`ws.replayOptions(C, spec, o)` builds the gate's set): `forms`, `hidden` (auras the client cannot see, in the truth
+only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `totems` (`{ [key] = { slot, duration
+} }`), `speed`, `regen`, `fsr`, `pull`, and from the request `creatureType` and `distance`
+(`tests/Game/harness/replay.lua` `M.new`).
+
+## The translator's rules
+
+`tools/wowsims/apl.lua`'s header is the authority; one line each here, with what each leaves out:
+
+1. One line per entry; `prepullActions` -> `actions.precombat`, ordered by `doAtValue` with `prepull_at`; groups ->
+   called lists; variables inlined. Omits a prepull entry with no constant `doAtValue` or one after the pull.
+2. Omitted (and listed in the `# Omitted:` header): hidden entries, conditions folding to false, nodes the fork
+   lacks (`sequence`, `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `sequenceIsComplete`, ...), an entry
+   whose own action is unmapped, a call of an empty group.
+3. An all-empty group is an ON/OFF switch: `settings.wowsims_<name>`, its wowsims default; the header lists it only
+   when an emitted line reads it (ruling L14), and the class registers exactly those.
+4. `auraIsKnown`: a talent's `enabled`, an ability's `known`, else `true`; another unit's or player's aura is false.
+5. Keys from the character's ability set (kit, shared, every race): `map`, `auras`, then the set. Ignores
+   `includeReactionTime`, `rank` and tags.
+6. The leveling guard: a read of an unlearned ability is wowsims's nil and drops its term, as wowsims's nil
+   propagation does; `tools/check_pack_levels.lua` checks every pack for it.
+7. `focus`, `use_off_gcd=1` for an off-GCD ability, `leveling` lines, `requires`.
+8. Constants: Go durations in seconds, `"N%"` as N (our percents run 0-100).
+9. `auraIcdIsReady`: `buff.<key>.icd_ready` for an aura declaring `icd`; else unsupported.
+10. `auraShouldRefresh` only for `exclusive` auras; `cancelAura`; `autoSwingTime`; `remainingTime` as
+    `fight_remains` (API-forced: unknown, 3600 s, on Forever).
+11. `unitDistance` against a whole number as `target.within<N>`/`outside<N>` (API-forced: a bracket from range
+    checks, never yards; unknown never blocks).
+12. An unresolvable read drops only its branch (a deviation when wowsims has the aura or spell and the fork does not;
+    each such ID is listed).
+13. `autocastOtherCooldowns` / `castAllStatBuffCooldowns`: one line per cooldown the log shows wowsims using (an
+    off-GCD one shown as soon as ready: a documented deviation). Not modelled: explosives' after-GCD timing; an
+    unmapped item is listed, not written.
+14. `strictSequence`: consecutive lines behind `prev.1`. Deviations: nothing else is held off between members, a later
+    member re-reads the sequence's condition, an outside cast of a member opens the next.
+
+Any node the translator does not handle is unsupported (rule 2): a new wowsims node omits its entry rather than
+mistranslating it.
+
+## Classifying a disagreement (P7)
+
+Run the replay gate with the floor at 0 and read the `wowsims:` line's `decisions on-GCD X (n) top [...]`. Work the top
+three once each and record each in the recipe header under "Disagreements (P7; floor F)": the pair wowsims -> ours,
+its time in the log, and one class:
+- **kit**: the class file models the ability differently (a cost, a cooldown, a talent, a proc window): fix the kit
+  with a test, values from `wowdb` (wowsims's spell data where the DB2 lacks a rank, by ruling).
+- **world**: the replay or loop world is not the client (`tests/Game/harness/`): a replay limit (below) is named as
+  one; anything else is a harness fix.
+- **central**: the translator, the engine or the belief is wrong: a GAP in `docs/dev/gaps.md`, fixed centrally,
+  never worked around in a lane.
+- **API-forced deviation**: the client cannot tell us what wowsims knows; say which read and why.
+
+Also list what was worked and fixed ("Worked: ...") so the next author does not redo it.
+
+## Re-flooring
+
+The floor is the measured `decisions on-GCD` truncated to two decimals, on the first clean run. Raise it when a change
+lifts it (each central fix re-floors every pack it lifted: `test(wowsims): re-floor ...` commits). Lower it only with
+the cause in a comment beside the number. Each spec file keeps the measured value and its history in that comment.
+
+## Level brackets and liveness
+
+`ws.live` runs the pack on the loop's own world at a level (the class's learn table from DB2, the build's talents
+taken in dominant-tree order) and fails on an error, a raise, an unlisted read, no press, or an idle stretch (in
+combat, the GCD free, a known on-GCD ability the world would accept, nothing pressed) longer than the limit.
+- Brackets: 10, 40 and 60 (Feral 20, 40, 60: Cat Form at 20).
+- The limit is `max(6 s, LIVE60)`, LIVE60 the pack's own worst idle at 60 rounded up to 0.1 s. wowsims is the oracle:
+  its idle at 60 (pooling, running out of mana) is correct and never "fixed".
+- A lower bracket over the limit gets a recipe `leveling` filler, silent at 60 (`!action.<a level-60 ability>.known`),
+  never a higher limit; the 60 line and the floor must not move.
+- Limits of the check: one seed, no buffs; the talent order approximates how a player levels; an ID the DB2 lacks
+  counts as learned at 1; levels between the brackets are not sampled (Guardian 25-41).
