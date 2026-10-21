@@ -20,9 +20,13 @@ step-by-step procedure the lanes ran is the plan's "per-spec procedure" (P1-P10,
   is an acceptance metric beside agreement. Every gate line prints `flicker X/min (oracle Y)`; a change that raises a
   pack's flicker needs a reason, and a display-side hold beats a belief that flashes. Anti-flicker mechanisms (a
   display hold, an addon reaction time) are experimental and off until play-tested.
-- Players gate optional lines (Sunder Armor, Demoralizing Shout, Thunder Clap, ...) with Hekili's own per-ability
-  toggles (Custom 1/2, Boss Encounter Only, Disable). A pack carries wowsims's defaults, not a second in-game default:
-  the harness-vs-in-game settings mechanism was designed and cancelled ("stick with wowsims").
+- Players gate optional lines (Sunder Armor, ...) with Hekili's own per-ability toggles (Custom 1/2, Boss Encounter
+  Only, Disable). A pack carries wowsims's defaults, with one exception: the maintenance debuffs. The user's ruling
+  (2026-10-21): "We should have maintenance debuffs as toggles on the pack for warrior and druid. That way we can
+  default them to false in game, but override to true in the harness for accuracy measurements. That way Berserk can
+  say 'if up or disabled'." Open-world mobs die before a raid debuff pays off, so in game it is off; the harness runs
+  wowsims's raid boss, so there it is on and the gates still measure wowsims's own list. The recipe's `maintenance`
+  (rule 15) names them; each is a setting with two defaults (`default` in game, `sim` under the harness: below).
   The kits put the abilities a player may not want under Hekili's native Cooldowns or Defensives toggle
   (`toggle = ...` on the ability: Sweeping Strikes and Vanish under Cooldowns, Healthstone under Defensives); a
   toggle off skips the line and the list falls through. Buff and resource consumables (Major Mana Potion, Demonic
@@ -54,6 +58,12 @@ Translation:
 - `focus` (`{ [action] = tier or { tiers in order } }`): the priority tiers the retired list carried (P9.3).
 - `requires` (`{ [action or group snake name] = talent key }`): entries written for a talent build run only once the
   talent is taken (Retribution's Twist of Light lines).
+- `maintenance` (`{ [action] = setting key }`, rule 15): a raid debuff kept up (Protection's Demoralizing Shout and
+  Thunder Clap, Guardian's Demoralizing Roar). The action's lines (its leveling lines too) take `settings.<key>&`;
+  every other line that waits on its aura (`debuff.<action>.up`, `.remains>`) reads it as "up or disabled"
+  (`|!settings.<key>`). The class registers the key with `default = false` and `sim = true` (the option field
+  `sim`: the harness's default, `Engine.SettingDefault`; loop.new boots in the "sim" scenario, a direct
+  `headless.new` in game), one key per debuff, on the specs that cast it.
 - `exclusive` (`{ [spell ID] = true }`): the auras wowsims gives an exclusive effect (rule 10's
   `auraShouldRefresh`); neither the DB2 nor the APL says which, so the recipe lists them from wowsims's class code.
 - `executePhase` (the key the kit's execute read answers, `"execute_phase"`): wowsims's `isExecutePhase` E20.
@@ -111,6 +121,8 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
     unmapped item is listed, not written.
 14. `strictSequence`: consecutive lines behind `prev.1`. Deviations: nothing else is held off between members, a later
     member re-reads the sequence's condition, an outside cast of a member opens the next.
+15. `maintenance`: the action's lines behind its setting; other lines' reads of its aura as "up or disabled"; an
+    absence read stays. Not a wowsims rule: the in-game default (off) is ours, the harness runs wowsims's (on).
 
 Any node the translator does not handle is unsupported (rule 2): a new wowsims node omits its entry rather than
 mistranslating it.
