@@ -6,6 +6,8 @@
 - Warrior: Arms, Fury and Protection suggest Victory Rush after a kill, just above Bloodthirst (Mortal Strike for Arms).
 
 ### Changed
+- Mana and energy consumables (Major Mana Potion, Demonic Rune, Thistle Tea, Mana Gem) are now under the Potions toggle, which is off by default: turn Potions on to see them. The Healthstone stays under Defensives.
+- Druid: Guardian's Demoralizing Roar filler below level 42 has its own setting, "Demoralizing Roar Filler (wowsims.com)", on by default.
 
 ### Fixed
 - A priority regenerated on the same day no longer shows as reverted on login.

@@ -25,8 +25,10 @@ step-by-step procedure the lanes ran is the plan's "per-spec procedure" (P1-P10,
   the harness-vs-in-game settings mechanism was designed and cancelled ("stick with wowsims").
   The kits put the abilities a player may not want under Hekili's native Cooldowns or Defensives toggle
   (`toggle = ...` on the ability: Sweeping Strikes and Vanish under Cooldowns, Healthstone under Defensives); a
-  toggle off skips the line and the list falls through. The mana and energy consumables carry none: the priorities
-  use them as resources, not burst. The harness runs a fresh profile, every such toggle on.
+  toggle off skips the line and the list falls through. Buff and resource consumables (Major Mana Potion, Demonic
+  Rune, Thistle Tea, Mana Gem) go under the Potions toggle, health ones under Defensives (user, 2026-10-21). The
+  harness runs a fresh profile: Cooldowns and Defensives on, Potions off (Hekili's default); no harness world puts a
+  consumable in the bags, so no gated line moves.
 
 ## The recipe
 
@@ -64,6 +66,11 @@ Translation:
   Victory Rush: "This isn't something from wowsims, but needs to be added since it won't affect wowsims accuracy
   (wowsims never goes mob to mob so VR isn't ever a thing). Should be used just above bloodthirst (since it's a mini
   bloodthirst)."
+- `settings` (`{ <key> = { default = <bool>, desc = "<text>" } }`): a pack setting a recipe line reads as
+  `settings.<key>`, listed in the header (`# Setting <key> (<desc>), default <bool>.`) after the ON/OFF groups when a
+  line reads it; the class registers it beside the `wowsims_*` ones. For a recipe line a player may want to turn
+  off: Guardian's leveling Demoralizing Roar, `demoralizing_roar_filler` (user, 2026-10-21; Faerie Fire, free, has
+  none).
 
 The autocast context: rule 13 reads the spec's exported log (`tests/Forever/wowsims/<spec>.log`, its "Major cooldown
 used" lines), so `make wowsims-packs` needs the checked-in log; a re-export can move those lines.
@@ -84,7 +91,7 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
    lacks (`sequence`, `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `sequenceIsComplete`, ...), an entry
    whose own action is unmapped, a call of an empty group.
 3. An all-empty group is an ON/OFF switch: `settings.wowsims_<name>`, its wowsims default; the header lists it only
-   when an emitted line reads it (ruling L14), and the class registers exactly those.
+   when an emitted line reads it (ruling L14), and the class registers exactly those (with the recipe's `settings`).
 4. `auraIsKnown`: a talent's `enabled`, an ability's `known`, else `true`; another unit's or player's aura is false.
 5. Keys from the character's ability set (kit, shared, every race): `map`, `auras`, then the set. Ignores
    `includeReactionTime`, `rank` and tags.

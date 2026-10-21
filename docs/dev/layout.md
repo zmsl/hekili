@@ -619,6 +619,9 @@ Every class (the plan's own):
 - A3: a low-level alt (any class, level 10-20): something is recommended every few seconds in combat with resources
   up; no Lua errors.
 - A4: a spec that shows no priority: report the Snapshot's first lines.
+- A5: the Potions toggle (user 2026-10-21; off in a fresh profile): with a Major Mana Potion, Demonic Rune, Thistle
+  Tea or Mana Gem in the bags, their lines show only with Potions on (Enhancement, Fire, Arcane, the Rogue specs);
+  the Healthstone stays under Defensives.
 
 Core (the premises in `docs/forever-facade-notes.md`, "Premises"):
 - R1: rage at the swing. MEASURED (user, 2026-10-20); the refund at the cast's finish too.
@@ -668,6 +671,8 @@ Druid (a level 60 Druid):
   defaults load.
 - D7: Balance: does Innervate drop Moonkin Form on Forever? (cast it in form; watch the form aura). The kit and the
   loop world keep the form, as wowsims/forever does.
+- D8: the Guardian page shows a "Demoralizing Roar Filler (wowsims.com)" row, on by default; turned off, a bear below
+  42 (no Lacerate) no longer gets Demoralizing Roar as the filler while the debuff is up (the keep-up Roar stays).
 
 Rogue (a level 60 Rogue):
 - Rg1: each spec defaults to its "(wowsims.com)" pack; a saved old choice falls back after `/reload`.
