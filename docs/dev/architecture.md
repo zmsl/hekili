@@ -211,11 +211,12 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
 - Headless gates: `make test` (everything except the tagged gates), `make test-fast` (skips `#slow`), `make test-loop`
   (the 20-fight Arms loop and its `Arms solo:` line), `make test-party`, `make test-druid` (about 190 s), `make test-rogue` (the
   20-fight Rogue gates, about 320 s), `make test-paladin` (the 20-fight Paladin gates, about 150 s), `make test-shaman` (the 20-fight
-  Enhancement gate, about 60 s), `make test-hunter` (the 20-fight Hunter gates), `make gate` (`make check` then all seven
-  loop targets in parallel, one process each: the merge gate in about a third of the serial time), `make bench`
+  Enhancement gate, about 60 s), `make test-hunter` (the 20-fight Hunter gates), `make test-wowsims` (the `#wowsims`
+  replay and leveling gates alone; `make check` runs them in its `#slow` tier), `make gate` (`make check` then all
+  seven loop targets in parallel, one process each: the merge gate in about a third of the serial time), `make bench`
   (ms and bytes per Update and per UNIT_COMBAT; reported, not gated). `make check`
-  runs lint, format, type check, `make test` (one process per spec file, in parallel), syntax, `api-check` and
-  `packs-check`.
+  runs lint, format, type check, `make test` (one process per spec file, in parallel), syntax, `api-check`,
+  `packs-check` (`make wowsims-packs` and `make packs` leave `src/` unchanged) and `tools-test`.
 
 ## 6. The pack pipeline
 
@@ -230,6 +231,24 @@ string `RegisterPack` takes, and rewrites the generated `RegisterPack` blocks in
 times 1000 plus a checksum of the text, so any text change reloads a saved profile. `make packs` on a clean tree is a
 no-op (`tests/Forever/make_pack_spec.lua`), and encode then decode returns the normalized text. `make packs` is not
 part of `make check`.
+
+**The wowsims.com packs.** Every default priority is generated (the user's rule: no hand-built lists): one
+`<Spec> (wowsims.com)` pack per supported spec, wowsims/forever's own APL translated to the fork's keys. A recipe
+`tools/wowsims/specs/<class>_<spec>.lua` names the wowsims build (race, gear, talents, options; `tank` and
+`healingModel` for a tank) and the translation data (`map`, `auras`, `focus`, `requires`, `exclusive`,
+`executePhase`, `leveling`); `make wowsims-export SPEC=<spec>` writes its request and wowsims's debug log under
+`tests/Forever/wowsims/`, both checked in; `make wowsims-packs` translates the request's APL
+(`tools/wowsims/apl.lua`, `M.translate`, 14 rules in its header: entries, omissions, ON/OFF switches as settings,
+keys, the leveling guard, constants, ICDs, exclusive refreshes, distance, unresolved reads, automatic cooldowns from
+the log, `strictSequence`) into `src/Hekili_<Class>/APLs/<Pack>.simc`, its header listing the switches its lines read
+and every omitted entry; `make packs` then writes the RegisterPack blocks as for any pack. Each class file registers
+its switches (`spec:RegisterSetting("wowsims_<name>", ...)`, per spec) and names the pack as its spec's `package`.
+The author's guide is `docs/dev/wowsims-packs.md`; the gates and numbers are in `docs/dev/layout.md`.
+
+**Retired packs.** `kit:RetirePacks({ "<Old>", ... })` (`Engine/Schema/Spec.lua`, into `class.retiredPacks`) names
+built-in packs a class no longer ships. At `Hekili:RestoreDefaults` a saved built-in of that name leaves the profile
+(a user's own pack of the name stays), every spec that chose it falls back to its `NewClass` default
+(`ns.DefaultPackage`), and the login notice says it was retired (`tests/Forever/retired_packs_spec.lua`).
 
 **Lists.** A pack's lists are `default` (the `actions=` lines) and any named list; `precombat` is optional. Without
 one (every wowsims list with no prepull actions, and make_pack writes none), `Hekili:GetNextPrediction` starts the
