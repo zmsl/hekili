@@ -43,9 +43,9 @@
 --    `or`, with `<known>` its known test, `(kA|kB)` (each key once) for an `and`/`or` whose every term may be nil,
 --    and one guard a test for a comparison of two reads. An empty value and another player's aura are nil always (dropped here). The
 --    line's own action is never guarded (the engine skips an unknown action).
--- 7. `focus` from the recipe (the tiers the retired list carried, by action), `use_off_gcd=1` on an ability whose
---    `gcd` is `"off"`; the recipe's `leveling` lines are appended to `actions` and its `levelingFirst` lines put
---    before them (a form the sim starts in, which the APL's own lines would never let a trailing line reach):
+-- 7. `focus` from the recipe (the tier by the line's role, docs/dev/wowsims-packs.md; none on a pre-pull line),
+--    `use_off_gcd=1` on an ability whose `gcd` is `"off"`; the recipe's `leveling` lines are appended to `actions`
+--    and its `levelingFirst` lines put before them (a form the sim starts in, which the APL's own lines would never let a trailing line reach):
 --    `leveling` lines are silent at 60, `levelingFirst` lines whenever their form is up. Each recipe `extra`
 --    ({ before = action, line = text }, content outside wowsims's model) goes just before the first `actions` line of
 --    `before` (an error when there is none). The recipe's `settings` ({ [key] = { default = bool, desc = text } }) are
@@ -983,7 +983,7 @@ function entry(c, e)
         end
         body = x
             .. (c.offGcd[x] and ",use_off_gcd=1" or "")
-            .. (tier and (",focus=" .. tier) or "")
+            .. (tier and not c.prepullAt and (",focus=" .. tier) or "")
             .. (c.prepullAt and (",prepull_at=" .. c.prepullAt) or "")
     elseif kind == "groupReference" then
         local g = a.groupReference.groupName

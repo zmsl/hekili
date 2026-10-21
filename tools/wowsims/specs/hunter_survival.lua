@@ -50,6 +50,7 @@ return {
         distanceFromTarget = 11,
     },
     map = {},
-    focus = { raptor_strike = 1, hunters_mark = 2, mongoose_bite = 1 }, -- the retired Survival list's tiers (P9.3)
+    -- by role (docs/dev/wowsims-packs.md)
+    focus = { raptor_strike = 1, hunters_mark = 2, mongoose_bite = 1 },
     leveling = {},
 }

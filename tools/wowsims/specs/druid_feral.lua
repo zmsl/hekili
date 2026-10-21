@@ -57,6 +57,7 @@ return {
     },
     executePhase = "execute_phase",
     map = {},
-    focus = { shred = 1, claw = 1, rip = 1, rake = 2, innervate = 2 }, -- the retired Feral list's tiers (P9.3)
+    -- by role (docs/dev/wowsims-packs.md): Shred and Claw on Clearcasting (the first of each), not as builders
+    focus = { shred = { 1, false }, claw = { 1, false }, rip = 2, rake = 2 },
     leveling = {},
 }

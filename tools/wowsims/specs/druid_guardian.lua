@@ -41,7 +41,9 @@ return {
     },
     executePhase = "execute_phase",
     map = {},
-    focus = { lacerate = 2 }, -- the retired Guardian list's tier (P9.3)
+    -- by role (docs/dev/wowsims-packs.md): Maul a rage dump (its leveling line at 2), upkeep at 2; the filler
+    -- Lacerate arguable
+    focus = { maul = 1, lacerate = 2, demoralizing_roar = 2 },
     -- Before Primal Bite (25) Maul is the only rage sink: queued whenever affordable instead of at wowsims's 20, which
     -- pools for the on-GCD strikes a level 10 bear lacks (ruling L18; silent at 60). Before Lacerate (42), wowsims's
     -- 13-rage filler between Primal Bites, the bear waits for Primal Bite (L40 9.6 s, L10 7.2 s on central fix 22):
@@ -51,7 +53,7 @@ return {
     -- the leveling Roar filler below too, and Berserk's wait for the Roar reads "up or disabled"
     maintenance = { demoralizing_roar = "maintain_demoralizing_roar" },
     leveling = {
-        "maul,use_off_gcd=1,if=!action.primal_bite.known",
+        "maul,use_off_gcd=1,focus=2,if=!action.primal_bite.known",
         "demoralizing_roar,if=!action.lacerate.known&(!action.primal_bite.known|cooldown.primal_bite.remains>gcd.max|rage.current<action.primal_bite.cost)",
         "faerie_fire,if=!action.lacerate.known&(!action.primal_bite.known|cooldown.primal_bite.remains>gcd.max|rage.current<action.primal_bite.cost)",
         "bear_form,if=!buff.bear_form.up",

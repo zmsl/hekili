@@ -34,6 +34,7 @@ return {
         distanceFromTarget = 5,
     },
     map = {},
-    focus = { kick = 1, expose_armor = 2, slice_and_dice = 1 }, -- the retired list's tiers (P9.3)
+    -- by role (docs/dev/wowsims-packs.md); Slice and Dice arguable
+    focus = { ambush = 1, slice_and_dice = 1, rupture = 2 },
     leveling = {},
 }

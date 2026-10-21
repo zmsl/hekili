@@ -334,7 +334,7 @@ describe("Forever Paladin priorities", function()
     end)
 
     it(
-        "Retribution (wowsims.com): Hammer of Wrath and the twist seals at tier 1, the swing-gap fillers at tier 2 (the retired list's tiers)",
+        "Retribution (wowsims.com): Hammer of Wrath and the twist seals at tier 1, Consecration at 2, Exorcism (a filler) none",
         function()
             local R = "Retribution (wowsims.com)"
             local _, how = line(R, "default", "hammer_of_wrath")
@@ -348,7 +348,8 @@ describe("Forever Paladin priorities", function()
             )
             local _, con = line(R, "consecration", "consecration")
             local _, exo = line(R, "exorcism", "exorcism")
-            assert.are.same({ 1, 1, 1, 2, 2 }, { how.focus, soc.focus, sor.focus, con.focus, exo.focus })
+            assert.are.same({ 1, 1, 1, 2 }, { how.focus, soc.focus, sor.focus, con.focus })
+            assert.is_nil(exo.focus)
             assert.is_nil(select(2, line(R, "default", "judgement")).focus)
         end
     )

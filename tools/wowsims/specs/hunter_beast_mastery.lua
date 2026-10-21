@@ -48,6 +48,7 @@ return {
         distanceFromTarget = 11,
     },
     map = {},
-    focus = { hunters_mark = 2, serpent_sting = 2 }, -- the retired BeastMastery list's tiers (P9.3)
+    -- by role; Serpent Sting arguable
+    focus = { raptor_strike = 1, mongoose_bite = 1, hunters_mark = 2, serpent_sting = 2 },
     leveling = {},
 }

@@ -14,7 +14,7 @@
 # Omitted: precombat: empty group move_to_starting_range
 # Omitted: default: empty group weave
 
-actions.precombat=hunters_mark,focus=2,prepull_at=22
+actions.precombat=hunters_mark,prepull_at=22
 actions.precombat+=/aspect_of_the_hawk,prepull_at=20
 actions=blood_fury,use_off_gcd=1,if=time>=5
 actions+=/rapid_fire,use_off_gcd=1,if=time>=5

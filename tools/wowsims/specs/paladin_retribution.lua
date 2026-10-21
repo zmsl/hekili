@@ -40,12 +40,13 @@ return {
         distanceFromTarget = 5,
     },
     map = { ["item:274759"] = "use_items" }, -- the Everlook Pathcarver (ItemSparse 274759: a trinket, InventoryType 12)
-    focus = { hammer_of_wrath = 1, seal_of_command = 1, seal_of_righteousness = 1, consecration = 2, exorcism = 2 },
+    -- by role (docs/dev/wowsims-packs.md); the Twist of Light seals (1) and Consecration (2) arguable
+    focus = { hammer_of_wrath = 1, seal_of_command = 1, seal_of_righteousness = 1, consecration = 2 },
     -- The Twist of Light lines need the talent (wowsims's Auto rotation picks this APL by it): without it they swap the
     -- seals every GCD.
     requires = { seal_of_command = "twist_of_light", seal_of_righteousness = "twist_of_light" },
     leveling = {
-        "seal_of_command,focus=1,if=!talent.twist_of_light.enabled&!buff.seal_of_command.up",
-        "seal_of_righteousness,if=!action.seal_of_command.known&buff.seal_of_righteousness.remains<24",
+        "seal_of_command,focus=2,if=!talent.twist_of_light.enabled&!buff.seal_of_command.up",
+        "seal_of_righteousness,focus=2,if=!action.seal_of_command.known&buff.seal_of_righteousness.remains<24",
     },
 }

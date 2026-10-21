@@ -50,8 +50,6 @@ return {
         distanceFromTarget = 20,
     },
     map = { ["item:19339"] = "use_items" }, -- the Mind Quickening Gem (ItemSparse 19339: a trinket, InventoryType 12)
-    -- Ruling M5: the kit's content picks (no retired list): Pyroblast on Hot Streak, Scorch for Fire Vulnerability,
-    -- Missiles on Missile Barrage, Evocation, Counterspell
-    focus = { pyroblast = 1, scorch = 2, arcane_missiles = 1, evocation = 2, counterspell = 1 },
+    focus = { pyroblast = 1, scorch = 2, arcane_missiles = 1 }, -- by role (docs/dev/wowsims-packs.md)
     leveling = {},
 }

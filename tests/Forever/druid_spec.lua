@@ -970,8 +970,8 @@ describe("Forever Druid's bleeds through the real engine's missable handling", f
     end)
 end)
 
--- The wowsims.com packs as the specs' defaults (wowsims packs plan, P9): the hand-built lists retired, their focus
--- tiers carried by the recipes.
+-- The wowsims.com packs as the specs' defaults (wowsims packs plan, P9): the hand-built lists retired (the focus tiers:
+-- focus_roles_spec.lua).
 describe("Forever Druid's wowsims.com defaults", function()
     it("makes each spec's wowsims.com pack its default and retires the hand-built lists", function()
         local w = ld.load()
@@ -985,28 +985,6 @@ describe("Forever Druid's wowsims.com defaults", function()
             guardian = "Guardian (wowsims.com)",
         }, { balance = package.balance, feral = package.feral, guardian = package.guardian })
         assert.are.same({ "Feral", "Guardian", "Balance" }, w.retired)
-    end)
-
-    it("carries the retired lists' focus tiers on the wowsims.com packs' lines", function()
-        local focus = {}
-        for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "druid")) do
-            for _, list in pairs(p.lists) do
-                for _, e in ipairs(list) do
-                    if e.focus then
-                        focus[p.name .. " " .. e.action] = tonumber(e.focus)
-                    end
-                end
-            end
-        end
-        for pack, tiers in pairs({
-            ["Feral (wowsims.com)"] = { shred = 1, claw = 1, rip = 1, rake = 2, innervate = 2 },
-            ["Guardian (wowsims.com)"] = { lacerate = 2 },
-            ["Balance (wowsims.com)"] = { moonfire = 2, insect_swarm = 2, starfire = 1 },
-        }) do
-            for action, tier in pairs(tiers) do
-                assert.are.equal(tier, focus[pack .. " " .. action], pack .. " " .. action)
-            end
-        end
     end)
 end)
 

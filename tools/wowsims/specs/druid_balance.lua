@@ -41,7 +41,7 @@ return {
     },
     executePhase = "execute_phase",
     map = {},
-    focus = { moonfire = 2, insect_swarm = 2, starfire = 1 }, -- the retired Balance list's tiers (P9.3)
+    focus = { moonfire = 2, insect_swarm = 2, starfire = 1 }, -- by role (docs/dev/wowsims-packs.md); Starfire arguable
     -- wowsims's sim starts in Moonkin Form (its list never casts it): the form first, once known (a talent, 40)
     levelingFirst = { "moonkin_form,if=!buff.moonkin_form.up" },
 }

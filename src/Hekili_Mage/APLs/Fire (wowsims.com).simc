@@ -14,4 +14,4 @@ actions+=/pyroblast,focus=1,if=buff.heating_up.stack=3
 actions+=/fire_blast
 actions+=/arcane_missiles,focus=1,if=buff.missile_barrage.up
 actions+=/fireball
-actions.evocation=evocation,focus=2
+actions.evocation=evocation

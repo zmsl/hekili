@@ -9,14 +9,14 @@ actions=call_action_list,name=cooldowns
 actions+=/frenzied_regeneration,if=health.pct<20
 actions+=/call_action_list,name=keep_up
 actions+=/call_action_list,name=damage
-actions+=/maul,use_off_gcd=1,if=rage.current>=20
-actions+=/maul,use_off_gcd=1,if=!action.primal_bite.known
+actions+=/maul,use_off_gcd=1,focus=1,if=rage.current>=20
+actions+=/maul,use_off_gcd=1,focus=2,if=!action.primal_bite.known
 actions+=/demoralizing_roar,if=settings.maintain_demoralizing_roar&(!action.lacerate.known&(!action.primal_bite.known|cooldown.primal_bite.remains>gcd.max|rage.current<action.primal_bite.cost))
 actions+=/faerie_fire,if=!action.lacerate.known&(!action.primal_bite.known|cooldown.primal_bite.remains>gcd.max|rage.current<action.primal_bite.cost)
 actions+=/bear_form,if=!buff.bear_form.up
 actions.cooldowns=berserk,use_off_gcd=1,if=(action.berserk.known&cooldown.berserk.ready&(!action.demoralizing_roar.known|debuff.demoralizing_roar.up|!settings.maintain_demoralizing_roar)&(!action.primal_bite.known|cooldown.primal_bite.remains>=4))
 actions.cooldowns+=/elunes_light,use_off_gcd=1,if=((action.berserk.known&buff.berserk.up)|!action.berserk.known)
 actions.keep_up=lacerate,focus=2,if=(((debuff.lacerate.up&debuff.lacerate.stack>=5)&debuff.lacerate.remains<=1.5)&!(action.berserk.known&(!action.berserk.known|cooldown.berserk.ready)&(!action.demoralizing_roar.known|debuff.demoralizing_roar.up|!settings.maintain_demoralizing_roar)&(!action.primal_bite.known|cooldown.primal_bite.remains>=4)))
-actions.keep_up+=/demoralizing_roar,if=settings.maintain_demoralizing_roar&!debuff.demoralizing_roar.up
+actions.keep_up+=/demoralizing_roar,focus=2,if=settings.maintain_demoralizing_roar&!debuff.demoralizing_roar.up
 actions.damage=primal_bite
 actions.damage+=/lacerate,focus=2,if=!(action.berserk.known&(!action.berserk.known|cooldown.berserk.ready)&(!action.demoralizing_roar.known|debuff.demoralizing_roar.up|!settings.maintain_demoralizing_roar)&(!action.primal_bite.known|cooldown.primal_bite.remains>=4))

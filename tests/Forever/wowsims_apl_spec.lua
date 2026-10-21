@@ -170,7 +170,7 @@ describe("the wowsims APL translator", function()
             assert.are.equal(
                 table.concat({
                     "actions.precombat=roar,use_off_gcd=1,prepull_at=10",
-                    "actions.precombat+=/strike,focus=1,prepull_at=1.5",
+                    "actions.precombat+=/strike,prepull_at=1.5", -- pre-pull lines carry no tier
                     "actions.precombat+=/big_hit,prepull_at=1.5,if=(!talent.furious.enabled|!buff.fury.up)",
                     "actions.precombat+=/dot,prepull_at=0",
                 }, "\n"),
@@ -197,7 +197,7 @@ describe("the wowsims APL translator", function()
                 "actions.precombat+=/call_action_list,name=move",
                 "actions=dot",
                 "actions.move=big_hit,prepull_at=0.9",
-                "actions.move+=/strike,focus=1,prepull_at=0.9",
+                "actions.move+=/strike,prepull_at=0.9",
             }, "\n"),
             text
         )

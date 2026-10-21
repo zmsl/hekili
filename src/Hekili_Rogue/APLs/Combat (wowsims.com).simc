@@ -13,7 +13,7 @@
 actions.precombat=blade_flurry,prepull_at=2
 actions.precombat+=/premeditation,use_off_gcd=1,prepull_at=2
 actions.precombat+=/stealth,use_off_gcd=1,prepull_at=1
-actions=ambush,if=(buff.cutthroat.up&combo_points.current<5)
+actions=ambush,focus=1,if=(buff.cutthroat.up&combo_points.current<5)
 actions+=/garrote,if=(combo_points.current<5&!debuff.garrote.up)
 actions+=/vanish,use_off_gcd=1,if=((!action.garrote.known|!debuff.garrote.up)&(!action.garrote.known|energy.current>=action.garrote.cost)&combo_points.current<5&(!action.slice_and_dice.known|!(buff.slice_and_dice.remains<=2)))
 actions+=/preparation,if=(!action.vanish.known|!cooldown.vanish.ready)
@@ -27,7 +27,7 @@ actions+=/blade_flurry,if=(!action.slice_and_dice.known|!(buff.slice_and_dice.re
 actions+=/premeditation,use_off_gcd=1,if=combo_points.current<=3
 actions+=/slice_and_dice,focus=1,if=(buff.slice_and_dice.remains<=0&combo_points.current>=1&!(fight_remains<=6))
 actions+=/venom,if=(!buff.venom.up&combo_points.current>=3)
-actions+=/rupture,if=(combo_points.current>=3&!debuff.rupture.up&(talent.thousand_cuts.enabled|(action.hemorrhage.known&debuff.hemorrhage.up))&!(fight_remains<=6))
+actions+=/rupture,focus=2,if=(combo_points.current>=3&!debuff.rupture.up&(talent.thousand_cuts.enabled|(action.hemorrhage.known&debuff.hemorrhage.up))&!(fight_remains<=6))
 actions+=/cold_blood,use_off_gcd=1,if=(combo_points.current=5&(!action.slice_and_dice.known|!(buff.slice_and_dice.remains<=2))&(!action.eviscerate.known|energy.current>=action.eviscerate.cost))
 actions+=/eviscerate,if=((combo_points.current>=5|(combo_points.current=4&action.mutilate.known)|(combo_points.current>=4&(!action.slice_and_dice.known|buff.slice_and_dice.remains<=6)&(!action.slice_and_dice.known|!(buff.slice_and_dice.remains<=2)))|(combo_points.current>=3&fight_remains<=6))&(!talent.thousand_cuts.enabled|(action.rupture.known&debuff.rupture.remains>=4)|energy.current>=75|fight_remains<=6))
 actions+=/ghostly_strike,if=combo_points.current<5
