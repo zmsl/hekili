@@ -307,9 +307,9 @@ describe("resources", function()
             assert.are.equal(0, VS.SwingPending(1))
         end)
 
-        it("keeps a swing pending past answers that cannot show it (every cost under the floor) to its credit", function()
+        it("keeps a swing pending past answers under the floor (they cannot show it) to its credit", function()
             local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
-            R.est0[1], R.lo0[1], R.hi0[1] = 22, 20, 30 -- spender_a's 10 is under the floor: its answer proves nothing
+            R.est0[1], R.lo0[1], R.hi0[1] = 22, 20, 30 -- spender_a's 10 is under the floor: proves nothing
             obs(Obs.Swing, 10, 1, 2.6, 4)
             obs(Obs.Usable, 10.1, A, 1, 0)
             obs(Obs.Usable, 10.3, A, 1, 0)
