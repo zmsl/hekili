@@ -266,7 +266,10 @@ describe("shared content", function()
             { 19013, 19012, 9421, 19011, 19010, 5510, 19009, 19008, 5509, 19007, 19006, 5511, 19005, 19004, 5512 },
             all.abilities.healthstone.items
         )
-        assert.are.same({ 120, "off" }, { all.abilities.healthstone.cooldown, all.abilities.healthstone.gcd })
+        assert.are.same(
+            { 120, "off", "defensives" },
+            { all.abilities.healthstone.cooldown, all.abilities.healthstone.gcd, all.abilities.healthstone.toggle }
+        )
         assert.is_nil(all.abilities.healthstone.now or all.abilities.potion.now) -- item actions: no cast the belief sees
         for _, path in ipairs({ "src/Hekili/Engine/Sim/Core.lua", "src/Hekili/Options/DevTools.lua" }) do
             assert.is_false(names(read(path), "tempered_potion"), path) -- the `potion` verb's old fallback
@@ -282,7 +285,11 @@ describe("shared content", function()
         assert.are.same({ { 7676 }, 300 }, { a.thistle_tea.items, a.thistle_tea.cooldown })
         assert.are.same({ { 8008, 8007, 5513, 5514 }, 120 }, { a.mana_gem.items, a.mana_gem.cooldown })
         for _, key in ipairs({ "major_mana_potion", "demonic_rune", "thistle_tea", "mana_gem" }) do
-            assert.are.same({ "off", false, true }, { a[key].gcd, a[key].startsCombat, a[key].bagItem }, key)
+            assert.are.same(
+                { "off", false, true, "cooldowns" },
+                { a[key].gcd, a[key].startsCombat, a[key].bagItem, a[key].toggle },
+                key
+            )
             assert.is_nil(a[key].now, key) -- an item action: no cast the belief sees
             assert.is_false((a[key].usable()), key)
         end
