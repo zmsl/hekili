@@ -575,6 +575,13 @@ local invalidActionWarnings = {}
 -- line out of combat, its guard against recasting written into the line (tools/wowsims/apl.lua rule 1).
 local inPrecombat = false
 
+-- Forever (the owner's no-jitter rule: hold an icon a poll rather than flash it): the first icon the display showed
+-- last refresh. While it is the chosen action of the first recommendation, a lower-priority entry takes the slot only
+-- when ready a full poll (HOLD_PAD) sooner, not the upstream 0.05 s: two icons both waiting on a near tie (one on mana,
+-- one on a cooldown) otherwise trade the slot every refresh as the estimate's rounding crosses them.
+local heldFirst
+local HOLD_PAD = 0.2
+
 function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action, wait, depth, caller )
     local specID = state.spec.id
     local spec = rawget( Hekili.Engine.settings.specs, specID )
@@ -775,7 +782,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                             if debug then self:Debug( "The conditions for this entry contain an error.  Skipping." ) end
                         elseif wait_time > state.delayMax then
                             if debug then self:Debug( "The action is not ready ( %.2f ) before our maximum delay window ( %.2f ) for this query.", wait_time, state.delayMax ) end
-                        elseif rAction and ( rWait - state.ClashOffset( rAction ) ) - ( wait_time - clash ) <= 0.05 then
+                        elseif rAction and ( rWait - state.ClashOffset( rAction ) ) - ( wait_time - clash ) <= ( ( state.index == 1 and rAction == heldFirst ) and HOLD_PAD or 0.05 ) then
                             if debug then self:Debug( "The action is not ready in time ( %.2f vs. %.2f [%s] ) [ Clash: %.2f vs. %.2f ] - padded by 0.05s.", wait_time, rWait, rAction or "NONE", clash, state.ClashOffset( rAction ) ) end
                         else
                             -- APL checks.
@@ -1575,6 +1582,7 @@ function Hekili.Update()
 
         if wanted and rule( settings ) then
             -- Only the scratch set is written until Publish: every yield below leaves out.recs the last complete set.
+            heldFirst = out.count and out.count > 0 and out.recs[ 1 ] and out.recs[ 1 ].actionName or nil
             local Queue = Output.Begin( dispName )
             local numFilled = 0
 
