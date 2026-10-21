@@ -37,7 +37,8 @@ M.OUTCOMES = {
 
 --- A new world. `seed` seeds its generator. Truth events: { t, kind, src, dst, hand, act, flag, amount, school, spell }
 --- with kind "swing" (a white swing, its outcome rolled; ours land later as "land"), "land", "strike" (an
---- on-next-swing strike frame), "spell" (a spell's outcome), "tick", "proc", "cast", "prepull" (the cache and
+--- on-next-swing strike frame), "spell" (a spell's outcome), "tick", "proc", "cast", "castStart" and "channelStop" (our hard cast's
+--- start, our channel's end: W.press), "prepull" (the cache and
 --- target reads 0.5 s before the pull), "pull", "stop", "form", "buff", "target", "aura", "totem", "queue", "unqueue", "gain", "kill", "move",
 --- "regen" and "decay" (a resource's continuous regen and out-of-combat decay, W.startRegen / W.startDecay). A gain
 --- (`rage`) or spend (`cost`) of ours is of power type `pt` (default our `pt`, the swing-paid `power`; another type's
@@ -152,7 +153,10 @@ function M.new(seed)
     --- The player `e` pressed `key` now. `p` is the content's resolved press { spell, ids (every rank's: the client
     --- answers their cooldown and IsCurrentSpell together; default { spell }), cost, pt (the cost's power type; default
     --- the swing-paid one), cooldown, gcd (seconds; 0 or offGcd: off the GCD), offGcd, onNextSwing, amount ({ lo, hi } of
-    --- a queued strike), cast (a cast time in seconds), requires = fn(W, e) -> ok, why, effect = fn(W, e, p), and the
+    --- a queued strike), cast (a cast time in seconds), channel ({ length, tick, gain = { pt, amount }, effect = fn(W, e,
+    --- p, n) }: a channel of `length` s ticking every `tick` s, each tick's gain and effect; the cast, its cost and its
+    --- effects at the start), clip (a press during our channel stops it first, the client's cancel; else refused
+    --- "casting"), requires = fn(W, e) -> ok, why, effect = fn(W, e, p), and the
     --- generic effects run after `effect`: gain { pt, amount }, points { pt, 1 | "all" } (1: one more on a landed hit
     --- of `effect`'s; "all": spend them all, unless `effect`'s hit was avoided), drain (a power type: spend what is left of it), aura { id, duration,
     --- tick = { pt, every, amount } } (named fields; on us), shift (W.shift's `sh`) }, refund (W.hit's share of the cost
@@ -162,12 +166,14 @@ function M.new(seed)
     --- changes nothing. An accept
     --- starts the GCD (its length plus `e.gcdLatency`, the client's flag) and the cooldown, then spends, emits the cast
     --- (with `order`, the GCD flag's: 1 after the success, 2 before; `e.gcdOrder` 1, 2 or "mixed", rolled from W.grng)
-    --- and runs the effects (a cast time: all three when the cast completes; a queued strike: queues it, paid at its
-    --- swing); it returns true.
+    --- and runs the effects (a cast time: a "castStart" event with the GCD at the press, all three when the cast
+    --- completes; a channel: the cast with its end `chanEnds`, the ticks, a "channelStop" at its end or clip; a queued
+    --- strike: queues it, paid at its swing); it returns true.
     function W.press(e, key, p)
         local t = W.t
         local offGcd = p.offGcd or p.gcd == 0
-        if not p.onNextSwing and t < (e.castUntil or 0) then
+        local clip = p.clip and e.channel ~= nil -- our channel, cut once the press is accepted
+        if not p.onNextSwing and not clip and t < (e.castUntil or 0) then
             return false, "casting"
         elseif not offGcd and t < e.gcdUntil - 1e-9 then -- the loop's ticks are a float sum: a 1.0 s GCD ends on one
             return false, "gcd"
@@ -186,6 +192,9 @@ function M.new(seed)
                 return false, "requires:" .. tostring(why)
             end
         end
+        if clip then
+            W.stopChannel(e)
+        end
         local gcdLen = not offGcd and (p.gcd or 1.5) + (e.gcdLatency or 0) or nil
         if gcdLen then
             e.gcdUntil = t + gcdLen
@@ -193,10 +202,9 @@ function M.new(seed)
         if (p.cooldown or 0) > 0 and not p.onNextSwing then -- a queued strike's starts at its swing
             e.cdUntil[key] = t + p.cooldown
         end
-        local function land()
-            -- shortcut: a cast time's GCD is over at its success, so the client sees no GCD flag for it; upgrade
-            -- with UNIT_SPELLCAST_START.
-            local gcd = (p.cast or 0) == 0 and gcdLen or nil
+        local hard = (p.cast or 0) > 0 and not p.onNextSwing
+        local function land(chanEnds)
+            local gcd = not hard and gcdLen or nil -- a hard cast's GCD rose at its start
             local order = e.gcdOrder or 1
             if gcd and order == "mixed" then
                 order = W.grng.chance(0.5) and 2 or 1
@@ -212,6 +220,8 @@ function M.new(seed)
                 cd = p.cooldown,
                 gcd = gcd,
                 order = gcd and order or nil,
+                hard = hard or nil, -- its UNIT_SPELLCAST_START came at the press
+                chanEnds = chanEnds,
             })
             e.lastHit, e.pressing = nil, p
             if p.effect then
@@ -225,15 +235,48 @@ function M.new(seed)
             if p.effect then
                 p.effect(W, e, p)
             end
-        elseif (p.cast or 0) > 0 then
-            -- shortcut: the client sees only the success at the cast's end (no UNIT_SPELLCAST_START or
-            -- UnitCastingInfo, no swing-timer pause); upgrade when a cast-time ability's recommendations need them.
+        elseif hard then
+            -- shortcut: no swing-timer pause while casting; upgrade when a melee caster's swings need it.
             e.castUntil = t + p.cast
-            W.at(e.castUntil, land)
+            W.emit({ kind = "castStart", src = e, spell = p.spell, ends = e.castUntil, gcd = gcdLen })
+            W.at(e.castUntil, function()
+                land()
+            end)
+        elseif p.channel then
+            local c = p.channel
+            local ch = { spell = p.spell }
+            e.channel, e.castUntil = ch, t + c.length
+            land(e.castUntil)
+            for n = 1, math.floor(c.length / c.tick + 1e-9) do -- every tick lands, the one at the end too
+                W.at(t + n * c.tick, function()
+                    if e.channel == ch then
+                        if c.gain then
+                            W.emit({ kind = "gain", src = e, pt = c.gain[1], rage = c.gain[2] })
+                        end
+                        if c.effect then
+                            c.effect(W, e, p, n)
+                        end
+                    end
+                end)
+            end
+            W.at(e.castUntil, function()
+                if e.channel == ch then
+                    W.stopChannel(e)
+                end
+            end)
         else
             land()
         end
         return true
+    end
+
+    --- `e`'s channel ends now (its end, or a clip): no tick after it, other presses free.
+    function W.stopChannel(e)
+        local ch = e.channel
+        if ch then
+            e.channel, e.castUntil = nil, W.t
+            W.emit({ kind = "channelStop", src = e, spell = ch.spell })
+        end
     end
 
     --- `e`'s cooldown of `key` (its ranks' spell IDs `ids`) finishes now: the world's and the client's answers.

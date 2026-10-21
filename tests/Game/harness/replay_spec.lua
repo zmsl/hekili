@@ -362,6 +362,70 @@ describe("the replay's casts: tags, items, pets, totems", function()
     end)
 end)
 
+describe("the replay's channels and hard casts (central fix 22, gap BC)", function()
+    local LOG = table.concat({
+        "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+        "[0.00] [Tester (#1)] Casting {SpellID: 900060} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[0.00] [Tester (#1)] Completed cast {SpellID: 900060}",
+        "[0.00] [Target 1] Aura gained: {SpellID: 900060}",
+        "[1.00] [Tester (#1)] [Target 1] {SpellID: 900060} tick Hit for 50.000 damage (SpellSchool: 64). (Threat: 50.000)",
+        "[2.00] [Tester (#1)] [Target 1] {SpellID: 900060} tick Hit for 50.000 damage (SpellSchool: 64). (Threat: 50.000)",
+        "[2.50] [Target 1] Aura faded: {SpellID: 900060}",
+        "[2.50] [Tester (#1)] Casting {SpellID: 900061} (Cost = 0.000, Cast Time = 2s, GCD = 1.5s, Effective Time = 2s)",
+        "[4.50] [Tester (#1)] Completed cast {SpellID: 900061}",
+        "[5.00] [Tester (#1)] Casting {SpellID: 900062} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[5.00] [Tester (#1)] Completed cast {SpellID: 900062}",
+    }, "\n")
+    local HC = {
+        Hekili = {
+            Class = {
+                abilities = {
+                    beam = { key = "beam", id = 900060, cast = 5, channeled = true, gcd = "spell" },
+                    bolt = { key = "bolt", id = 900061, cast = 2, gcd = "spell" },
+                    drain = { key = "drain", id = 900062, cast = 3, channeled = true, gcd = "spell" },
+                },
+                auras = {},
+            },
+        },
+    }
+
+    it("feeds a channel's start and its stop at the aura's fade (else its declared length), a cast's START", function()
+        local R = replay.new(LOG, HC)
+        local W = at(R.world(WO, 1), R.pull + 10)
+        local s = require("Game.harness.observer").observe(W, require("Game.harness.observer").DEFAULTS)
+        local function rel(ms)
+            return ms and ("%.2f"):format(ms / 1000 - R.pull) or "nil"
+        end
+        local out = {}
+        for i = 1, s.n do
+            local ev = s.ev[i]
+            local head = ("%.2f %s"):format(s.t[i] - R.pull, ev)
+            if ev == "@casting" or ev == "@channel" then
+                out[#out + 1] = head .. " " .. rel(s.a1[i]) .. " " .. rel(s.a2[i])
+            elseif ev:match("^UNIT_SPELLCAST") and s.a1[i] == "player" then
+                out[#out + 1] = head .. " " .. tostring(s.a3[i])
+            end
+        end
+        assert.are.same({
+            "0.00 @channel 0.00 2.50",
+            "0.00 UNIT_SPELLCAST_CHANNEL_START 900060",
+            "0.00 UNIT_SPELLCAST_SUCCEEDED 900060",
+            "2.50 @channel nil nil",
+            "2.50 UNIT_SPELLCAST_CHANNEL_STOP 900060",
+            "2.50 @casting 2.50 4.50",
+            "2.50 UNIT_SPELLCAST_START 900061",
+            "4.50 @casting nil nil",
+            "4.50 UNIT_SPELLCAST_SUCCEEDED 900061",
+            "4.50 UNIT_SPELLCAST_STOP 900061",
+            "5.00 @channel 5.00 8.00",
+            "5.00 UNIT_SPELLCAST_CHANNEL_START 900062",
+            "5.00 UNIT_SPELLCAST_SUCCEEDED 900062",
+            "8.00 @channel nil nil",
+            "8.00 UNIT_SPELLCAST_CHANNEL_STOP 900062",
+        }, out)
+    end)
+end)
+
 describe("the replay's cooldowns: the engine's, a shared category's, the log's", function()
     local LOG = table.concat({
         "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 20 s target 63",

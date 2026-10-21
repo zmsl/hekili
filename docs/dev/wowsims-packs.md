@@ -143,3 +143,16 @@ Strike or Maul does not end it) longer than the limit.
   10.0 (its L10), each a lower bracket's measurement above the pack's own L60.
 - Limits of the check: one seed, no buffs; the talent order approximates how a player levels; an ID the DB2 lacks
   counts as learned at 1; levels between the brackets are not sampled (Guardian 25-41).
+
+## Casts and channels in the worlds
+
+A content's resolved press (`W.press`, `tests/Game/harness/world.lua`) may carry `cast` (a hard cast: the client sees
+UnitCastingInfo and UNIT_SPELLCAST_START at the press with the GCD's flag, then the success and UNIT_SPELLCAST_STOP at
+its end) or `channel = { length, tick, gain = { pt, amount }, effect = fn(W, e, p, n) }` (UnitChannelInfo, then
+UNIT_SPELLCAST_CHANNEL_START, then the success at the start, with the cost; a tick every `tick` s, its gain and effect;
+UNIT_SPELLCAST_CHANNEL_STOP at the end). Other presses are refused "casting" while either runs; a press with `clip = true`
+stops a running channel first (wowsims's `interruptIf`: the content sets it when its translation would break the
+channel). The replay feeds the same events from the log: a Casting line with a cast time opens the bar, and a completed
+cast of an ability the kit declares `channeled` runs until its aura's next fade (a clip, on either unit), else for the
+kit's `cast`. The client's order at a channel's start (UnitChannelInfo before the success, which the engine's queue
+reads) is UNMEASURED: in-game checkpoint on a class with a channel.

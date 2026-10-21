@@ -93,9 +93,9 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             "Balance (wowsims.com)",
             content("druid_balance", W.Balance, "Balance (wowsims.com)", 60),
             "druid_balance",
-            -- 0.855 (47/55) on central fixes 14-15 (Task 7g); 0.836 on central fix 13 over fix 12; 0.818 on central
-            -- fix 12 (GAP R), from 0.56
-            0.85
+            -- 0.909 (50/55) on central fix 22 (cast bars: the DoT-refresh replay limit gone); 0.855 (47/55) on central
+            -- fixes 14-15 (Task 7g); 0.836 on central fix 13 over fix 12; 0.818 on central fix 12 (GAP R), from 0.56
+            0.90
         )
     end)
     -- wowsims's sim starts in Moonkin Form (its list never casts it); the recipe's `moonkin_form` line does, once
@@ -117,8 +117,10 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         assert.are.equal("moonkin_form", first(40))
         assert.are.equal("moonkin_form", first(60))
     end)
-    -- The pack's own worst idle at 60, seconds (L10 1.6, L40 1.4: Task 7g, after shared gap R's fix; 8.6 before it)
-    local BALANCE60 = 1.4
+    -- The pack's own worst idle at 60, seconds: 10.8 on central fix 22 (cast bars: the engine chains its casts, so the
+    -- pack runs out of mana at about 50 s, as wowsims's log does from 80 s, and waits on regen; L10 0.0, L40 0.0); 1.4
+    -- (L10 1.6, L40 1.4: Task 7g, after shared gap R's fix; 8.6 before it)
+    local BALANCE60 = 10.8
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Balance (wowsims.com) stays live at level " .. level, function()
             ws.live(

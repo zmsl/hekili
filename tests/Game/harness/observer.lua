@@ -286,6 +286,35 @@ function M.new(W, k)
         end
     end
     local gcdEnd -- the latest GCD's falling edge: its flag and its event (the list entries)
+    -- on cooldown and the GCD (the client's GCD spell, `k.gcdSpell`) from `t`: the flags plain (probe W PR4), the times
+    -- secret but to a secret-free client
+    local function cooldown(t, id, d)
+        local gcdFlag = id == k.gcdSpell
+        -- a GCD pressed on the last one's end: that end's float sum can land a ulp after this rise, so it moves
+        -- back to it (its lower seq keeps it first)
+        if gcdFlag and gcdEnd and gcdEnd[1][1] > t and gcdEnd[1][1] - t < 1e-6 then
+            gcdEnd[1][1], gcdEnd[2][1] = t, t
+        end
+        if not gcdFlag then
+            dropEnds(t, id)
+        end
+        if k.plain then
+            push(t, "@cooldown", id, t, d)
+            push(t + d, "@cooldown", id, 0, 0)
+        else
+            push(t, "@cooldown", id, fake.SECRET, fake.SECRET)
+            push(t + d, "@cooldown", id)
+        end
+        local flag = list[#list]
+        push(t, "SPELL_UPDATE_COOLDOWN")
+        if gcdFlag then
+            gcdEnd = { flag, flag } -- Forever sends no SPELL_UPDATE_COOLDOWN at a GCD's end
+        else
+            push(t + d, "SPELL_UPDATE_COOLDOWN")
+        end
+    end
+    -- our hard cast's and channel's castGUID numbers (their start's, carried to the success and the stop)
+    local hardN, chanN = 0, 0
     local deltas, dseq = {}, 0 -- our power's changes as the client's usability sees them: { answer time, delta, power type, true time, seq } (a
     -- form change: { t, form, "form", seq }; byTime orders by the last field)
     -- the answers' view of us: our form as of the answer's time (a form change is a delta), the rest live
@@ -416,50 +445,48 @@ function M.new(W, k)
         -- our cast IDs plain (docs/superpowers/specs/2026-10-16-forever-protection-design.md §1.1)
         elseif kind == "cast" and ev.src == us then -- others' secret (G 49873)
             castN = castN + 1
-            -- on cooldown and the GCD (the client's GCD spell, `k.gcdSpell`): the flags plain (probe W PR4), the times
-            -- secret but to a secret-free client; the GCD's rising edge after the success or before it (`ev.order`,
-            -- the world's roll: UNMEASURED until checkpoint G3)
-            local function cooldown(id, d)
-                local gcdFlag = id == k.gcdSpell
-                -- a GCD pressed on the last one's end: that end's float sum can land a ulp after this rise, so it moves
-                -- back to it (its lower seq keeps it first)
-                if gcdFlag and gcdEnd and gcdEnd[1][1] > t and gcdEnd[1][1] - t < 1e-6 then
-                    gcdEnd[1][1], gcdEnd[2][1] = t, t
-                end
-                if not gcdFlag then
-                    dropEnds(t, id)
-                end
-                if k.plain then
-                    push(t, "@cooldown", id, t, d)
-                    push(t + d, "@cooldown", id, 0, 0)
-                else
-                    push(t, "@cooldown", id, fake.SECRET, fake.SECRET)
-                    push(t + d, "@cooldown", id)
-                end
-                local flag = list[#list]
-                push(t, "SPELL_UPDATE_COOLDOWN")
-                if gcdFlag then
-                    gcdEnd = { flag, flag } -- Forever sends no SPELL_UPDATE_COOLDOWN at a GCD's end
-                else
-                    push(t + d, "SPELL_UPDATE_COOLDOWN")
-                end
-            end
+            -- on cooldown and the GCD (cooldown, above); the GCD's rising edge after the success or before it
+            -- (`ev.order`, the world's roll: UNMEASURED until checkpoint G3)
             local gcdFirst = ev.gcd and k.gcdSpell and ev.order == 2
             if gcdFirst then
-                cooldown(k.gcdSpell, ev.gcd)
+                cooldown(t, k.gcdSpell, ev.gcd)
             end
-            push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. castN, spellID(ev.spell))
+            local guid = "Cast-" .. castN
+            if ev.hard then -- the start's castGUID; UnitCastingInfo answers nothing from the success on
+                castN, guid = castN - 1, "Cast-" .. hardN
+                push(t, "@casting", nil)
+            elseif ev.chanEnds then -- UnitChannelInfo answers first, then CHANNEL_START, then the success (UNMEASURED:
+                -- the order the engine's SPELL_CAST_SUCCESS needs, Events.lua reading UnitChannelInfo; Mage checkpoint M4)
+                chanN = castN
+                push(t, "@channel", t * 1000, ev.chanEnds * 1000)
+                push(t, "UNIT_SPELLCAST_CHANNEL_START", "player", guid, spellID(ev.spell))
+            end
+            push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", guid, spellID(ev.spell))
             if (ev.cd or 0) > 0 then -- every rank answers the spell's cooldown (`ev.ids`, the content's)
                 for _, id in ipairs(ev.ids or { spellID(ev.spell) }) do
-                    cooldown(id, ev.cd)
+                    cooldown(t, id, ev.cd)
                 end
             end
             if ev.gcd and k.gcdSpell and not gcdFirst then
-                cooldown(k.gcdSpell, ev.gcd)
+                cooldown(t, k.gcdSpell, ev.gcd)
             end
             if ev.onUs then -- P log 1 1345, 4329-4330, 6532: also on targettarget while our target targets us
-                push(t, "UNIT_SPELLCAST_SUCCEEDED", "targettarget", "Cast-" .. castN, spellID(ev.spell))
+                push(t, "UNIT_SPELLCAST_SUCCEEDED", "targettarget", guid, spellID(ev.spell))
             end
+            if ev.hard then -- after the success, as the client ends a completed cast bar (UNMEASURED)
+                push(t, "UNIT_SPELLCAST_STOP", "player", guid, spellID(ev.spell))
+            end
+        elseif kind == "castStart" and ev.src == us then -- our hard cast: UnitCastingInfo (plain [W PR9]), START, the GCD
+            castN = castN + 1
+            hardN = castN
+            push(t, "@casting", t * 1000, ev.ends * 1000)
+            push(t, "UNIT_SPELLCAST_START", "player", "Cast-" .. castN, spellID(ev.spell))
+            if ev.gcd and k.gcdSpell then
+                cooldown(t, k.gcdSpell, ev.gcd)
+            end
+        elseif kind == "channelStop" and ev.src == us then -- its end or a clip: UnitChannelInfo empty, then the stop
+            push(t, "@channel", nil)
+            push(t, "UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-" .. chanN, spellID(ev.spell))
         elseif kind == "cdreset" and ev.src == us then -- a cooldown finished early (W.resetCooldown): every rank ready
             for _, id in ipairs(ev.ids) do
                 dropEnds(t, id)

@@ -2,14 +2,15 @@
 -- wowsims/forever debug log (tools/wowsims/export.lua) as the headless loop's world. `parse` reads the log;
 -- `new` binds it to a booted instance's class data (spell ID -> ability key, aura durations) and gives loop.run its one
 -- injection (`o.replay`): the world factory, wowsims's decisions and its next cast after a tick. The truth is the
--- log's: casts at their completion (no cast bars), powers as the logged after-values (no regen ticks; the client
+-- log's: casts at their completion, a hard cast's bar from its Casting line (UNIT_SPELLCAST_START), a `channeled`
+-- ability's channel from its cast to its aura's fade (else its declared `cast`), powers as the logged after-values (no regen ticks; the client
 -- still reads the content's rate, mana's from the log's regen lines: M.manaRegen), our auras and the target's with
 -- the duration the client shows (the log's run to a natural fade, the declared one to a removal: a fade after one of
 -- our Casting or Completed cast lines in its timestamp), each fade a removal at its time, the content's hidden auras
 -- in the truth only, spells landing at once, a white swing's outcome one landing lag after its swing (M.LAND; wowsims
 -- logs both at once, with the swing's rage), the mob's health at 20% from the execute phase's start (wowsims's is the
 -- last 20% of the duration) and never dead, our distance to it (the request's, then the log's Movement stacks). Not
--- replayed: cast bars, the target's swings.
+-- replayed: the target's swings.
 -- Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map through the booted
 -- instance's own ability set (Hekili.Class, booted as the log's race). Credit: the log format is wowsims/forever's
 -- (MIT, https://github.com/wowsims/forever); no code copied.
@@ -419,6 +420,23 @@ function M.new(text, H, o)
             nextOf[k] = e
         end
     end
+    -- a channel's end (an ability the kit declares `channeled`): its aura's next fade on either unit before its next
+    -- cast (wowsims's channel is a dot whose aura fades at the end or at a clip), else its declared length (`cast`)
+    -- shortcut: a function `channeled` or `cast` reads as none; read the engine's answer if a kit declares one
+    for i, e in ipairs(p.ev) do
+        local key = e.kind == "completed" and e.id and keyFor(e)
+        local a = key and class.abilities[key]
+        if a and rawget(a, "channeled") == true then
+            for j = i + 1, #p.ev do
+                local f = p.ev[j]
+                if f.id == e.id and (f.kind == "completed" or (f.kind == "aura" and f.verb == "faded")) then
+                    e.chanEnd = f.kind == "aura" and f.wt or nil
+                    break
+                end
+            end
+            e.chanEnd = e.chanEnd or e.wt + (tonumber(rawget(a, "cast")) or 0)
+        end
+    end
     -- wowsims's casts (procs out): the decisions just before their Casting lines, sorted
     R.decisions, R.casts = {}, {}
     for _, e in ipairs(p.ev) do
@@ -535,11 +553,19 @@ function M.new(text, H, o)
         end
         local function apply(e)
             local T = W.t
-            local key = e.kind == "completed" and keyFor(e)
+            local key = (e.kind == "completed" or (e.kind == "casting" and e.id and e.cast > 0)) and keyFor(e)
             if key and not e.id then -- an item: its cooldown only
                 if cd[key] > 0 then
                     us.cdUntil[key] = T + cd[key]
                 end
+            elseif key and e.kind == "casting" then -- a hard cast's start: its cast bar, the GCD from now
+                W.emit({
+                    kind = "castStart",
+                    src = us,
+                    spell = e.id,
+                    ends = T + e.cast,
+                    gcd = e.gcd > 0 and e.gcd or nil,
+                })
             elseif key then
                 local sh = shared[key]
                 W.emit({
@@ -551,7 +577,14 @@ function M.new(text, H, o)
                     cd = cd[key],
                     gcd = (e.cast or 0) == 0 and (e.gcd or 0) > 0 and e.gcd or nil,
                     order = 1,
+                    hard = (e.cast or 0) > 0 or nil,
+                    chanEnds = e.chanEnd,
                 })
+                if e.chanEnd then
+                    W.at(e.chanEnd, function()
+                        W.emit({ kind = "channelStop", src = us, spell = e.id })
+                    end)
+                end
                 if cd[key] > 0 then
                     us.cdUntil[key] = T + cd[key]
                     for _, k in ipairs(sh and sh.keys or {}) do

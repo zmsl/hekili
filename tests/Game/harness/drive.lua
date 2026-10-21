@@ -291,6 +291,12 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         ctl.ranged[1] = a1
     elseif ev == "@distance" then -- unit, yards: the range checks' answers (fake_api's `distance`)
         ctl.distance[a1] = a2
+    elseif ev == "@casting" or ev == "@channel" then -- our cast bar's start and end in ms (nil: none), plain [W PR9]
+        local key = ev == "@casting" and "casting" or "channel"
+        local bar = c[key] or {} -- one per drive and kind, reused: fake_api answers its two fields
+        c[key] = bar
+        bar[1], bar[2] = a1, a2
+        ctl[key] = a1 and bar or nil
     end
 end
 

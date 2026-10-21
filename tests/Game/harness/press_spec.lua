@@ -337,4 +337,104 @@ describe("the world's press", function()
         local cast = W.truth[#W.truth]
         assert.are.same({ "cast", 2.5 }, { cast.kind, cast.t })
     end)
+
+    -- Our cast and channel events and their answers, as "t ev a1 a2 a3" strings (central fix 22, gap BC).
+    local function casts()
+        local s, out = observer.observe(W, setmetatable({ gcdSpell = 61304 }, { __index = observer.DEFAULTS })), {}
+        for i = 1, s.n do
+            local ev = s.ev[i]
+            if (ev:match("^UNIT_SPELLCAST") and s.a1[i] == "player") or ev == "@casting" or ev == "@channel" then
+                out[#out + 1] = table.concat(
+                    { ("%.2f"):format(s.t[i]), ev, tostring(s.a1[i]), tostring(s.a2[i]), tostring(s.a3[i]) },
+                    " "
+                )
+            end
+        end
+        return out
+    end
+
+    describe("a channel (channel = { length, tick })", function()
+        local ticks
+        local function channel()
+            ticks = {}
+            return {
+                spell = fs.SPENDER_C,
+                cost = 10,
+                gcd = 1.5,
+                channel = {
+                    length = 3,
+                    tick = 1,
+                    gain = { 3, 5 }, -- each tick's resource gain (a pool of type 3)
+                    effect = function(W2, _, _, n)
+                        ticks[#ticks + 1] = { n, W2.t }
+                    end,
+                },
+            }
+        end
+
+        it("opens with its answer, CHANNEL_START then SUCCEEDED, ticks every second and stops at its end", function()
+            setup()
+            us.res[3] = { cur = 0, max = 100 }
+            W.t = 1
+            assert.is_true(W.press(us, "spender_c", channel()))
+            assert.are.equal(10, us.power) -- paid at the start
+            W.t = 2.6
+            assert.are.same({ false, "casting" }, { W.press(us, "spender_b", { spell = fs.SPENDER_B, offGcd = true }) })
+            W.run(10)
+            assert.are.same({ { 1, 2 }, { 2, 3 }, { 3, 4 } }, ticks)
+            assert.are.equal(15, us.res[3].cur)
+            local id = tostring(fs.SPENDER_C)
+            assert.are.same({
+                "1.00 @channel 1000 4000 nil",
+                "1.00 UNIT_SPELLCAST_CHANNEL_START player Cast-1 " .. id,
+                "1.00 UNIT_SPELLCAST_SUCCEEDED player Cast-1 " .. id,
+                "4.00 @channel nil nil nil",
+                "4.00 UNIT_SPELLCAST_CHANNEL_STOP player Cast-1 " .. id,
+            }, casts())
+            assert.is_true(W.press(us, "spender_b", { spell = fs.SPENDER_B, offGcd = true }))
+        end)
+
+        it("is clipped by a press declaring `clip`: stopped then, no later tick, the new press cast", function()
+            setup()
+            us.res[3] = { cur = 0, max = 100 }
+            W.t = 1
+            assert.is_true(W.press(us, "spender_c", channel()))
+            W.run(2.5)
+            assert.is_true(W.press(us, "spender_b", { spell = fs.SPENDER_B, gcd = 1.5, clip = true }))
+            W.run(10)
+            assert.are.same({ { 1, 2 } }, ticks)
+            local id, b = tostring(fs.SPENDER_C), tostring(fs.SPENDER_B)
+            assert.are.same({
+                "1.00 @channel 1000 4000 nil",
+                "1.00 UNIT_SPELLCAST_CHANNEL_START player Cast-1 " .. id,
+                "1.00 UNIT_SPELLCAST_SUCCEEDED player Cast-1 " .. id,
+                "2.50 @channel nil nil nil",
+                "2.50 UNIT_SPELLCAST_CHANNEL_STOP player Cast-1 " .. id,
+                "2.50 UNIT_SPELLCAST_SUCCEEDED player Cast-2 " .. b,
+            }, casts())
+        end)
+    end)
+
+    it("starts a hard cast with UNIT_SPELLCAST_START and its UnitCastingInfo, the GCD from the start", function()
+        setup()
+        W.t = 1
+        assert.is_true(W.press(us, "spender_a", { spell = fs.SPENDER_A, cost = 10, cast = 1.5, gcd = 1.5 }))
+        W.run(5)
+        local a = tostring(fs.SPENDER_A)
+        assert.are.same({
+            "1.00 @casting 1000 2500 nil",
+            "1.00 UNIT_SPELLCAST_START player Cast-1 " .. a,
+            "2.50 @casting nil nil nil",
+            "2.50 UNIT_SPELLCAST_SUCCEEDED player Cast-1 " .. a,
+            "2.50 UNIT_SPELLCAST_STOP player Cast-1 " .. a,
+        }, casts())
+        local gcd = {}
+        local s = observer.observe(W, setmetatable({ gcdSpell = 61304 }, { __index = observer.DEFAULTS }))
+        for i = 1, s.n do
+            if s.ev[i] == "@cooldown" and s.a1[i] == 61304 and s.a2[i] ~= nil then
+                gcd[#gcd + 1] = s.t[i]
+            end
+        end
+        assert.are.same({ 1 }, gcd) -- the GCD's flag rises at the cast's start
+    end)
 end)

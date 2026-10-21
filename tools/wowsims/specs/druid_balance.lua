@@ -16,6 +16,8 @@
 -- Since central fixes 12-15 (gap R closed): 0.855 (n 55), top [wrath -> insect_swarm 4; starfire -> moonfire 2;
 -- starfire -> insect_swarm 1], all the DoT-refresh replay limit (2. above); LIVE L10 1.6, L40 1.4, L60 1.4 s (8.6 at
 -- 60 before gap R's fix).
+-- Since central fix 22 (the replay's cast bars: limit 2. gone): 0.909 (n 55), top [wrath -> insect_swarm 3;
+-- starfire -> insect_swarm 1; wrath -> starfire 1]; LIVE L10 0.0, L40 0.0, L60 10.8 s (out of mana from about 50 s).
 local object = { __jsontype = "object" } -- dkjson: an empty table as {} (UnitReference.create(), the default unit)
 return {
     class = "DRUID",
