@@ -58,9 +58,10 @@ Translation:
 - `focus` (`{ [action] = tier or { tiers in order } }`, `false` for an untiered occurrence): the display's now-circle
   tier, by the line's role (the user's rule, 2026-10-21; it replaces the retired lists' tiers of P9.3). Rotational
   lines, the spec's core strikes, builders, fillers and finishers (Mortal Strike, Slam, Execute, Bloodthirst,
-  Whirlwind, Sinister Strike, Mutilate, Eviscerate, Primal Bite, Wrath, Fireball, Arcane Blast, the Hunter shots),
+  Whirlwind, Sinister Strike, Mutilate, Eviscerate, Primal Bite, Wrath, Fireball, Arcane Blast, the Hunter shots and
+  melee-weave strikes),
   carry none. Tier 1 is a reactive or windowed line the player must catch: proc-, position- or stance-gated
-  (Overpower, Revenge, Mongoose Bite, Pyroblast on Heating Up, Arcane Missiles on Missile Barrage, Shred on
+  (Overpower, Revenge, Pyroblast on Heating Up, Arcane Missiles on Missile Barrage, Shred on
   Clearcasting), and an off-GCD queued strike, with a second line of a rage dump at 2 (`heroic_strike = { 1, 2 }`).
   Tier 2 is upkeep: DoTs, debuffs, buffs, seals and shields kept up (not totems) (Rend, Rake, Rip, Moonfire,
   Scorch for Fire Vulnerability, Hunter's Mark, Demoralizing Roar, Flame Shock). Cooldowns, consumables, defensives,

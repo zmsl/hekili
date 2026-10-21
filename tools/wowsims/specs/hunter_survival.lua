@@ -50,15 +50,7 @@ return {
         distanceFromTarget = 11,
     },
     map = {},
-    -- by role (docs/dev/wowsims-packs.md); the melee-weave strikes at 1, Serpent Sting at 1 (the user, 2026-10-21)
-    focus = {
-        raptor_strike = 1,
-        hunters_mark = 2,
-        mongoose_bite = 1,
-        strider_kick = 1,
-        immolation_trap = 1,
-        wing_clip = 1,
-        serpent_sting = 1,
-    },
+    -- by role (docs/dev/wowsims-packs.md); the melee-weave strikes rotational, Serpent Sting 1 (the user, 2026-10-21)
+    focus = { raptor_strike = 1, hunters_mark = 2, serpent_sting = 1 },
     leveling = {},
 }

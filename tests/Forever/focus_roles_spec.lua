@@ -14,27 +14,16 @@ local function flagged(path)
 end
 
 local ROGUE = { "garrote=1", "slice_and_dice=1", "rupture=1" } -- Slice and Dice and Rupture sort by soonest
--- the melee-weave strikes (Strider Kick, Immolation Trap, Wing Clip): 1 in Survival, 2 in BM and MM (the user)
-local function hunter(weave)
-    local w = "=" .. weave
-    return {
-        "raptor_strike=1",
-        "hunters_mark=2",
-        "mongoose_bite=1",
-        "strider_kick" .. w,
-        "immolation_trap" .. w,
-        "wing_clip" .. w,
-        "serpent_sting=1",
-    }
-end
+-- the melee-weave strikes (Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip) rotational (the user)
+local HUNTER = { "raptor_strike=1", "hunters_mark=2", "serpent_sting=1" }
 
 local PACKS = {
     ["Rogue/APLs/Assassination"] = ROGUE,
     ["Rogue/APLs/Combat"] = ROGUE,
     ["Rogue/APLs/Subtlety"] = ROGUE,
-    ["Hunter/APLs/Beast Mastery"] = hunter(2),
-    ["Hunter/APLs/Marksmanship"] = hunter(2),
-    ["Hunter/APLs/Survival"] = hunter(1),
+    ["Hunter/APLs/Beast Mastery"] = HUNTER,
+    ["Hunter/APLs/Marksmanship"] = HUNTER,
+    ["Hunter/APLs/Survival"] = HUNTER,
     ["Paladin/APLs/Protection"] = { "seal_of_fury=2", "holy_shield=2" },
     -- the Twist of Light seals (1): open
     ["Paladin/APLs/Retribution"] = {
