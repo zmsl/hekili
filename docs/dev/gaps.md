@@ -2,39 +2,30 @@
 
 The open gaps the wowsims packs plan's lanes and central fixes found (the overnight run of 2026-10-19/20), so the next
 session composes fixes from one list. A gap is fixed in the layer that is wrong, cohesively across that domain
-(belief, sim, facade, harness, tests, docs), never worked around in a lane. Status is as of forever 932479ce (central
-fixes 1-18 merged), from the morning notes, the six lane reports and the tree's own `GAP` references; "not re-checked"
-means the tree says nothing either way. Layers: **core** (`src/Hekili/`: belief = `Game/State/`, sim =
-`Engine/Sim/`), **kit** (a class file), **translator** (`tools/wowsims/apl.lua`), **harness** (`tests/Game/harness/`:
-replay and loop world), **tools**.
+(belief, sim, facade, harness, tests, docs), never worked around in a lane. Status is as of forever afc84eb2
+(2026-10-21), from the morning notes, the six lane reports and the tree's own `GAP` references; "not re-checked" means
+the tree says nothing either way. Layers: **core** (`src/Hekili/`: belief = `Game/State/`, sim = `Engine/Sim/`), **kit**
+(a class file), **translator** (`tools/wowsims/apl.lua`), **harness** (`tests/Game/harness/`: replay and loop world),
+**tools**.
 
 ## Open
 
 | Id | Mechanism | Layer | Status | Waiting |
 | --- | --- | --- | --- | --- |
-| L | A one-frame staging lag: the truth has paid a cast whose success folds a frame later, after a usable rung raised the floor (lo 20 vs truth 6.2 at 5.2 s); inflates lo-over-truth wherever a usable rung lands in a cast's frame | core belief (event staging order) | open, not dispatched | none named |
-| Q | The 200-fight bear gate (`make gate` only) reads danger=2: float ties at exactly 15 rage (Maul's cost) count as "floor above truth"; compare with an epsilon at the cost boundary | harness metric (`tests/Forever/druid_harness_spec.lua`) | open, not re-checked | the bear gate |
-| K | After each GC cycle an Update rebuilds 3-7 KB (coroutine stack, collected interned strings), which suggests string building in the refresh path; the allocation test cannot see interned strings | core (refresh path) | open: hunt the source | none |
 | Y | Energy: the loop world's 0.1 s regen tick at a press's instant orders after the press, and `TimeToResource` pads a full tick while the phase is unknown; about 170 of Subtlety's 284 Slice and Dice splits (counterfactual lo = truth: 284 -> 27) | harness world + core sim | open. Ready time (forever-readytime review): the replays' steady +0.19-0.20 s on Combat and Assassination is G7 (the observer's unmeasured `usableDelay`: the usable answer is still "no" at the cast's tick, the belief clamps to cost - 0.01, the engine forecasts the next tick), not Y; with G7 = 0 their real decisions go 28 -> 0 and 47 -> 0, Subtlety's 60 -> 35 at 0.12-0.15 s, "slack": those 35 are Y's tick-phase pad | Rogue Subtlety (raise its loop floor after) |
-| AB | Secret-mana belief precision: within 1-3 mana at near-ties (Holy Shield ready 0.13 s apart), and sub-1-mana cost refusals (ours 0.9 vs oracle 4.2 per 100); mana's one-tick padding (`tick_rate` 0.1) with an unknown phase | core belief (mana) | open; needs the in-game UNIT_POWER_FREQUENT-for-mana capture (checkpoint M1, layout.md) | Shaman L40 bracket (pending), Enhancement replay 0.909 -> recover, Retribution |
 | AG | Mana returned by blocks and hits (Improved Seal of Fury, Shield Specialization) is not modelled | kit (Paladin) | open | Paladin Protection replay (floor 0.62) |
 | AH | The replay does not replay the target's swings (the tank exports log them since central fix 13): nothing hit-driven (Revenge's window, blocks, rage from damage taken) is checked against wowsims | harness replay | open | Warrior and Paladin Protection, Guardian |
 | AM | Target-health brackets from an Execute-style `IsSpellUsable` (<20/25/35%), borrowed from NAG | core belief (target health) | open, design | execute phases, Guardian |
 | AN | A learned time to die from observed target health drops where plain, shared across the group; until then `fight_remains` answers unknown (API-forced, `docs/dev/architecture.md` §6, §8) | core belief + sim | open, design | every `remainingTime` line |
-| AO / AP | Our own DoTs checked against the target's nameplate aura frames. PROBE FIRST (ForeverProbe, ~1 h): are the nameplate aura frames' shown state and textures plain in combat? | core source | open; probe | caster lanes (Warlock, Shadow Priest) |
 | AQ | Aura regen is a fixed number (`Families/Resources.lua` :377-381, :429), so Improved Bloodrage's 1.5 rage/s at 2/2 cannot be modelled (forcing it left Arms agreement unchanged) | core belief | open | Warrior |
 | AR | A white crit and one of our casts in the same frame lose the crit's extra rage (Resources.lua ~:759, :1093-1146; belief 0.00 vs truth 4.88 for 1.6 s, Fury 69.51 s); suspected, not proven at line level | core belief | open | Warrior Fury |
 | AS | A missed Sunder Armor just after our own swing is not attributed to the cast (`Events/Rows.lua` :157, :478; stacks re-read only on an aura change): the belief counts 4 stacks, the client 3 (Fury 89.82 s) | core belief (outcomes) | open | Warrior |
-| AX | Our cast is held for the landing window (`Events/Rows.lua` `landWindow()`, 0.65-2.7 s) and claims an avoid no pending swing explains, so another attacker's dodge became our `Obs.Avoided` and `Families/Now.lua` refunded `refundOnAvoid` of the cost into lo (lo 8 over a truth of 0 in the test). Fixed for group play (final review fix 4): past CAST_WINDOW only a DODGE / PARRY / MISS, and only while the learned background avoid count `L.bg[7]` is below `L.FOREIGN_AVOIDS`. Residue: the first foreign avoid of a session (or after about 30 s of combat with none: `L.TAU` 10 s) still lands in that window as ours; solo, a white avoid of ours outside its swing's two spreads (the stacks-fix report's parry 0.65 s after a forced Sunder, one extra Sunder at a true 5 stacks); the 80% share is unmeasured (O2) | core belief (outcomes) | partly fixed; severity minor (one refund or stack, once) | in game: a group fight with `/vslog` (O1, O2) |
 | AY | The rest assumption: a slot that rests at its maximum (mana, energy) is believed full at a build (`Families/Resources.lua` :298-299 `assume`/`over`, :1432 lo = lo0 + over), and the facade's `UnitPower` returns that lo (`API/Facade.lua` :244-247). A build mid-combat or after a fight (`/reload`, a spec or talent swap, a login with partial mana) puts the floor at max until a short answer, an exact read or a pin's top below it ends it, so `mana.pct`, `energy.deficit`, time-to-X and "can I afford B after A" read full meanwhile. Deliberate (fix 6), unmeasured, and the one place lo may sit above the truth by design. Fix: assume only for an out-of-combat build whose PLAYER_REGEN_ENABLED is older than the pool's time to fill, else `assume = false` | core belief (resources) | open; severity medium (seconds of wrong recommendations after a mid-combat `/reload`; the floor rule broken) | none |
-| AZ | est for the on-next-swing pooling threshold only (second specimen, 19% of HS waits): Fury's `rage.current>=40` reads the floor, and where est >= 40 > lo the truth is >= 40 89% of the time; a core expression (the resource's estimate) the pack's line reads instead, never a cost check (whole-engine est fails the refusal bar: Arms 8.1 per 100) | core sim + kit (Warrior) | open, not built (heroic-strike research) | Fury L24 loop |
+| AZ | est for the on-next-swing pooling threshold only (second specimen, 19% of HS waits): Fury's `rage.current>=40` reads the floor, and where est >= 40 > lo the truth is >= 40 89% of the time; a core expression (the resource's estimate) the pack's line reads instead, never a cost check (whole-engine est fails the refusal bar: Arms 8.1 per 100) | core sim + kit (Warrior) | built on forever-gap-az with the held-pool guard; PARKED 2026-10-21: Fury L60 flicker 1.71 -> 2.44 and 1.90 -> 2.42/min over the 2.0 bar, the extra flicker is mostly not near-ties; input to the flicker design study after v0.3.0 | Fury L24 loop |
 | BA | Delete Priority stays visible and enabled for built-in packs: the upstream `Options.lua` :4964/:4980 guards read `not Hekili.Version:sub(1, 3) == "Dev"` (precedence: `(not string) == "Dev"` is always false). Harmless since the delete falls back to a default that still exists (final review item 2). Fix: `Hekili.Version:sub(1, 3) ~= "Dev"` | options | open; severity minor (cosmetic, upstream) | none |
-| BB | A percent-of-base cost at or above 100% of base (Arcane Blast at four charges, about 1.2-1.4 of base) was priced as 1.2 points: the unit was guessed from the magnitude (0 < c < 1) | core sim + belief (ability cost) | closed by central fix 22: an ability declares `spendBase = true` and its `spend` is a fraction at any magnitude, floor(c x base), in ns.SpendPoints (every sim site) and I.BaseCostOf / LearnBases; without the flag unchanged | Mage kit: declare `spendBase = true` on arcane_blast |
-| BC | The harness had no channel or cast bar: the observer fired only the success (a cast-time press only at its end), no UnitCastingInfo / UnitChannelInfo, no UNIT_SPELLCAST_START or CHANNEL_START/STOP, nothing ticked, no clip; the replay read no channel | harness world, observer, drive, replay | closed by central fix 22: W.press `channel = { length, tick, gain, effect }` and `clip`, a hard cast's START and GCD at the press, @casting / @channel answers (plain, as the facade), the replay's Casting bars and `channeled` casts to their aura's fade; the engine reads `buff.casting` / `channel_remains` from them (tests/Forever/channel_engine_spec.lua) | the start order (UnitChannelInfo, CHANNEL_START, SUCCEEDED) and STOP after a cast's success are UNMEASURED: Mage checkpoint M4 |
 | BD | Cast-boundary flicker, two mechanisms: (1) mid-cast the next cast is priced affordable at the cast's end, and after the success its wait jumps 0 -> 2-8 s (the forecast does not see the in-progress cast's cost, nor the five-second rule starting at its success); (2) a DoT-refresh pick computed from the cast's end flips at the end tick (wrath -> insect_swarm -> wrath 0.2 s before Wrath completes, both instances). Balance 20-fight 1.63 -> 2.51/min (oracle 0.27 -> 0.99), Arms 1.38 -> 1.57 (oracle 0.94 -> 1.10) on central fix 22; the old harness hid it (no UNIT_SPELLCAST_START) | core sim (forecast across a cast in progress) | open, priority under the no-jitter rule | none named |
 | BE | Balance's Starfire is 3.5 s in the kit against wowsims's 2.5 s (the kit's Eclipse charge, unmodelled), so our world casts slower: wowsims dips to 133 mana at 41 s (Innervate at 41.18 s) and sits at the floor from ~73 s; ours dips to 57 at 48.4 s and from ~83 s | kit (Druid) | open | Balance |
 | BF | Belief gaps the truthful harness shows once a press resolves from the current state (central fix 22 round 2): Feral's 20-fight line moves the wrong way (agreement 0.942 -> 0.941, flicker 1.70 -> 2.12/min, oracle 1.52 -> 1.72) and Guardian's cost refusals rise 19.8 -> 25.1 per 100 (unmatched 9.9 -> 15.2): our belief, not the world, now explains them | core belief (energy, rage) | open, priority under the no-jitter rule | Feral, Guardian (AQ-AS, AV, AW) |
-| BG | Hunter loops identical: The Marksmanship and Beast Mastery 20-fight loops print byte-identical lines: the same wowsims APL, and `tests/Forever/helpers/hunter_world.lua` gives both the same weapons, aspect, distance, `talents = {}` and client spec 1484; the kits' `summon_hawk` / `sniper_shot` are never recommended, and `C.SPEC` is set but never read, so the loops cannot tell the specs apart. Fix: model the talents in the world, or merge the two loops. The replays differ (0.929 / 1.000) because they use different logs | harness (hunter world) | open | none |
 | BH | Arms's first Slam is shown ready 0.88 s early: `{ 15.080, "slam", "gcd", "on", -0.880, -0.080, "early" }` (tests/Forever/fixtures/timing_warrior_arms.lua): the icon reads ready during Spearing Strike's GCD on Slam's first cast; suspected Slam's `cast` / `gcdTime` functions (Improved Slam's 1.0 s) in the engine's GCD forecast | core sim (kit functions) | open, not dispatched | none |
 
 Unnumbered, from the lane reports (give one an id when it is dispatched):
@@ -45,23 +36,44 @@ Unnumbered, from the lane reports (give one an id when it is dispatched):
 | Replay swing outcome | The replay delivers a white swing's outcome one landing lag (`M.LAND`) after the log's timestamp, rage at the swing; ruling (user + owner): deliver it at the log's own time if every replay line holds or rises. Guardian's top two disagreement classes | harness replay | Guardian |
 | `equipped` in the belief | The belief's cost context has no `equipped`, so the Howling Idol and Wolfshead Helm stay aura reads | core belief (`Families/Now.lua`) | Druid |
 | One-weapon replay | The replay world has one weapon, so the belief reads the off-hand period as 2.1 s (truth 1.9 s) | harness replay | Fury |
-| Unmapped autocasts | Four automatic cooldowns wowsims uses stay unmapped in Enhancement: trinket 249469, Rage of the Farseer 425336, explosives 10646 and 260817 (GAP 14's residue) | recipe map / kit | Shaman |
+| Unmapped autocasts | Automatic cooldowns wowsims uses stay unmapped in Enhancement (GAP 14's residue): Rage of the Farseer 425336 is on branch forever-farseer (merging), leaving the trinket 249469 and the explosives 10646 / 260817 | recipe map / kit | Shaman |
 | Fire Nova 375 | GAP V is fixed (central fix 13: a usable answer above the believed top is a bound, never a pin); retry Fire Nova at wowsims's 375, re-floor, then un-pend L40 | kit (Shaman) | Shaman |
 | `shockCooldown()` | `Shaman.lua` shockEffect repeats the Reverberation formula: `shockCooldown()` raises outside the handler's state environment; a setfenv-aware helper | kit / core helper | Shaman |
 | Mongoose window | `tests/Forever/helpers/hunter_world.lua` `dodged()` reads `W.t`/`W.truth`, which a batched answer sees at the finished world, so the loop's Mongoose Bite window never opens | harness world | Hunter Survival |
 | Base mana below 60 | Percent-of-base costs (GAP H, closed by central fix 14) use each class's level-60 base mana (`base` in the mana meta) at every level | kit | lower-level Paladin, Shaman, Hunter, Druid prices |
-| Levels CLI | `tools/check_pack_levels.lua` run directly exits 1 on two negated aura reads in the Paladin packs; the spec path is class-aware, the CLI is not | tools | none |
-| Pack version | `make_pack`'s version can go down within a day (regenerating twice), so Spec.lua prints "reverted" at login; make it monotonic | tools | none |
 | `mainhand_remains` | Copied into the Warrior, Hunter and Paladin kits; one generic core swing field | core | none |
-| ICD sentinel | An `icd` aura first seen already up gets `applied = now - icd`; one with no duration or tick_time would see the sentinel in State.lua's fallback: wants a `shortcut:` note | core sim | none |
-| Range filter default | wowsims never casts an out-of-range spell; the fork shows such lines unless the player enables the range filter. Default it on? | UX (user decision) | the user |
-| Explosives timing | Rule 13 does not model wowsims casting explosives just after a GCD | translator | none |
-| Items by list name | `Engine/Sim/Scripts.lua` :2020 registers a pack's items (`PackInfo.items`) by list name (`list ~= "precombat"`), so a use-item line in a list the precombat list calls counts as in-combat; display-harmless today | core sim | none |
-| `prev.1` from real casts | Rule 14's later sequence members and the recipes' cast-order lines (Rogue's Blood Fury -> Adrenaline Rush, Feral's Berserk -> Rake / Shred) read `prev.1.<key>`, which the replay and loop fill from the harness's casts; that the client's real casts fill it the same way is unverified (in-game checkpoint PV1, `docs/dev/layout.md`) | core sim / in game | the next in-game session |
-| Rule 14 deviation | A cast of ours between two members of a `strictSequence` replaces `prev.1`, so the next member never shows (safe: the sequence lapses, as wowsims's does when the GCD is ready and the member is not); not yet in rule 14's deviations (`tools/wowsims/apl.lua`) | translator | none |
-| Same-timestamp expiry | The replay judges a fade a removal when one of our Casting or Completed lines shares its 0.01 s timestamp (`tests/Game/harness/replay.lua` :397-407), so a natural expiry that coincides with a cast is shown with the declared duration, not its run | harness replay | none |
-| Stale recipe headers | The recipes' header numbers (`tools/wowsims/specs/*.lua`: replay agreements, floors, idle seconds) record the lane run that wrote them; the spec files hold the gates and moved since (Retribution's 0.57 corrected to the spec's 0.87 in the final fixes). Read a header's number as history, the spec's as the bar | tools (recipes) | none |
-| `use_items` toggle | `use_items` is an internal action (id -8: `IsSpellEnabled` and `IsDisabled` skip ids -1..-99), so a `toggle` on it is inert; as upstream, each equipped item's own ability carries the toggle, and Forever registers no trinket, so the line (Retribution's Everlook Pathcarver) expands to nothing in game. When trinkets are registered, their own abilities carry the toggle (`toggle = "cooldowns"`, upstream's way) | core sim / content | none |
+
+## In game (on the in-game ledger, not a register item)
+
+- AB: secret-mana belief precision at near-ties; needs the UNIT_POWER_FREQUENT-for-mana capture (checkpoint M1,
+  `docs/dev/layout.md`).
+- AO / AP: our own DoTs from the target's nameplate aura frames; the nameplate aura probe (ForeverProbe) first.
+- AX's residue: a foreign avoid landing in our cast's landing window (partly fixed by final review fix 4); a group
+  fight with `/vslog` (O1, O2).
+- `prev.1` from real casts: that the client's real casts fill `prev.1` as the harness does (PV1).
+
+## Decided (user, 2026-10-21)
+
+- Range filter: stays in the tint mode by default (out-of-range abilities shown in red); the exclude mode is each
+  display's own Range setting (user ruling 2026-10-21).
+- AY: to be built as a carry-over belief snapshot in saved variables (central fix, after v0.3.0).
+- BD and BF: explained to the user, priority pending.
+- AM / AN: a predictive time-to-die design is being drafted (design agent); AM and AN stay open pending it.
+
+## Ignored (user ruling 2026-10-21: will not fix unless a gate moves)
+
+- Q: the bear gate's float ties at exactly Maul's 15 rage count as "floor above truth".
+- K: an Update after each GC cycle rebuilds 3-7 KB (suspected string building in the refresh path).
+- L: a one-frame staging lag between a paid cast and its success's fold.
+- BG: the Marksmanship and Beast Mastery loops are byte-identical (or merge the two Hunter loops to save gate time).
+- ICD sentinel: an `icd` aura first seen up gets `applied = now - icd`; wants a `shortcut:` note.
+- Items by list name: a pack's items register by list name, so a precombat-called list's use-item counts as in-combat.
+- Stale recipe headers: the recipes' header numbers are history; the spec files hold the gates.
+- Explosives timing: rule 13 does not model explosives cast just after a GCD.
+- `use_items` toggle: a toggle on the internal `use_items` action is inert; each item's own ability carries it.
+- Same-timestamp expiry: the replay judges a fade sharing a cast's timestamp a removal.
+- Levels CLI: `tools/check_pack_levels.lua` run directly is not class-aware (exits 1 on the Paladin packs).
+- Rule 14 deviation: a cast between two `strictSequence` members replaces `prev.1`; not listed in rule 14's deviations.
 
 ## Closed (for reference)
 
@@ -82,4 +94,7 @@ AT (forever-readytime: the replay read the class's auras with `pairs` while a co
 Arms's Rend never reached the replay's target; a snapshot now, no line moved). AK revisited (fix 21: a pending swing ends only on a rung above the floor, its credit or one landing lag, at most 1 s;
 Fury L24 agreement 0.893 -> 0.908, unmatched cost 1.8 -> 1.2 per 100, flicker 4.35 -> 3.31/min, Heroic Strike
 snap-backs 4.77 -> 0.84/min (oracle 1.44), lateness median 3 / p90 9 polls; Arms unchanged).
+BB (central fix 22: `spendBase = true` prices a percent-of-base cost at any magnitude; the Mage kit declares it on
+arcane_blast). BC (central fix 22: the harness's channel and cast bars; the start order is Mage checkpoint M4).
+Pack version (central fix 24, f0ce3610: `make_pack`'s version is monotonic).
 Cancelled: fix 19 (a harness-vs-in-game default for Sunder; players use Hekili's own per-ability toggles).
