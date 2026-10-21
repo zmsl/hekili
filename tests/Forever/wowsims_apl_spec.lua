@@ -389,6 +389,45 @@ describe("the wowsims APL translator", function()
         )
     end)
 
+    it("reads a percent constant as N only against a percent read, N/100 in math or against anything else", function()
+        local at = { variableRef = { name = "Execute at" } }
+        local function math(op, lhs, rhs)
+            return { math = { op = op, lhs = lhs, rhs = rhs } }
+        end
+        local text = apl.translate({
+            valueVariables = { { name = "Execute at", value = const("35%") } },
+            priorityList = {
+                cast(100, cmp("OpLe", const("20%"), { currentHealthPercent = {} })), -- either side
+                cast(100, cmp("OpLt", { currentHealthPercent = {} }, at)), -- a variable, still the direct operand
+                -- wowsims's Demonology "In execute": the fight's elapsed plus remaining time scaled by the fraction
+                cast(
+                    100,
+                    cmp(
+                        "OpLe",
+                        math(
+                            "OpSub",
+                            { remainingTime = {} },
+                            math("OpMul", math("OpAdd", { currentTime = {} }, { remainingTime = {} }), at)
+                        ),
+                        const("0")
+                    )
+                ),
+                cast(100, cmp("OpGt", { currentManaPercent = {} }, math("OpAdd", const("10%"), const("5")))),
+                cast(100, cmp("OpLt", { currentRage = {} }, const("50%"))), -- not a percent read
+            },
+        }, ctx({}))
+        assert.are.equal(
+            table.concat({
+                "actions=strike,if=20<=health.pct",
+                "actions+=/strike,if=health.pct<35",
+                "actions+=/strike,if=(fight_remains-((time+fight_remains)*0.35))<=0",
+                "actions+=/strike,if=mana.pct>(0.1+5)",
+                "actions+=/strike,if=rage.current<0.5",
+            }, "\n"),
+            text
+        )
+    end)
+
     it(
         "guards a read so an unknown ability drops its term: true in an and, false in an or, flipped by a not",
         function()

@@ -131,7 +131,8 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 6. The leveling guard: a read of an unlearned ability is wowsims's nil and drops its term, as wowsims's nil
    propagation does; `tools/check_pack_levels.lua` checks every pack for it.
 7. `focus`, `use_off_gcd=1` for an off-GCD ability, `leveling` and `extra` lines, `requires`.
-8. Constants: Go durations in seconds, `"N%"` as N (our percents run 0-100).
+8. Constants: Go durations in seconds; `"N%"` as N against a percent read (`mana.pct`, `health.pct` run 0-100), N/100
+   anywhere else (in `math`, against any other read), as wowsims reads it.
 9. `auraIcdIsReady`: `buff.<key>.icd_ready` for an aura declaring `icd`; else unsupported.
 10. `auraShouldRefresh` only for `exclusive` auras; `cancelAura`; `autoSwingTime`; `remainingTime` as
     `fight_remains` (API-forced: unknown, 3600 s, on Forever).

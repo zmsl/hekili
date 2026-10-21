@@ -53,8 +53,10 @@
 --    The recipe's `requires` ({ [action key or group's snake name] = talent key }) puts `talent.<key>.enabled&` before
 --    the condition of each such entry, in every list: an APL written for a talent build (wowsims picks it by that
 --    talent, e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
--- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N
---    (wowsims's N/100 against its 0-1 percents; ours, `mana.pct` and `health.pct`, run 0-100).
+-- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N when
+--    it is a direct operand (a variable followed) of a comparison with a percent read (M.PERCENT: `mana.pct`,
+--    `health.pct`, which run 0-100 where wowsims's run 0-1), else N/100 as wowsims reads it (inside `math`, or
+--    compared with anything else: Demonology's "Execute at" 35% scales a time).
 -- 9. `auraIcdIsReady` (wowsims: the proc aura's internal cooldown is ready): the aura declaring `icd` (RegisterAura,
 --    seconds from its last application) by its ID or its `icdSpell` (the proc trigger wowsims names the ICD by) is
 --    `buff.<key>.icd_ready`, guarded by the talent when that ID is a talent's spell (rule 6); an aura declaring none is
@@ -407,14 +409,16 @@ end
 
 local SECONDS = { h = 3600, m = 60, s = 1, ms = 0.001, us = 1e-6, ns = 1e-9 } -- Go's time.ParseDuration units
 
-local function const(v)
+-- `pct`: the constant is a direct operand of a comparison with a percent read (rule 8), so "N%" reads N, else N/100.
+local function const(v, pct)
     v = tostring(v)
     if v:lower() == "true" then
         return nil, true
     elseif v:lower() == "false" then
         return nil, false
     end
-    local n = tonumber(v:match("^(%-?[%d.]+)%%$") or v:match("^%-?[%d.]+$"))
+    local pn = tonumber(v:match("^(%-?[%d.]+)%%$"))
+    local n = pn and (pct and pn or pn / 100) or tonumber(v:match("^%-?[%d.]+$"))
     if not n and v:match("^%-?[%d.]+%a") then
         local sign, rest, sum = v:match("^(%-?)(.*)$")
         sum = 0
@@ -571,13 +575,25 @@ local function reads(c, x)
     return test and { test = test } or false
 end
 
--- A value: its text and nil condition (`true`: nil, no text).
-local function value(c, n)
+-- Rule 8's percent reads (0-100 in the engine, 0-1 in wowsims).
+M.PERCENT = { currentManaPercent = true, currentHealthPercent = true }
+
+-- Whether value node `n` is a percent read (variables followed).
+local function percentRead(c, n)
+    local k, v = next(n or {})
+    if k == "variableRef" then
+        return c.vars[v.name] ~= nil and percentRead(c, c.vars[v.name])
+    end
+    return M.PERCENT[k] == true
+end
+
+-- A value: its text and nil condition (`true`: nil, no text). `pct`: compared directly with a percent read (rule 8).
+local function value(c, n, pct)
     local k, v = next(n)
     if k == nil then
         return nil, true -- an empty value
     elseif k == "const" then
-        local s = const(v.val)
+        local s = const(v.val, pct)
         if s == nil then
             unsupported("boolean as a value")
         end
@@ -588,7 +604,7 @@ local function value(c, n)
         end
         return M.VALUES[k], false
     elseif k == "variableRef" then
-        return value(c, c.vars[v.name] or unsupported("variable " .. v.name))
+        return value(c, c.vars[v.name] or unsupported("variable " .. v.name), pct)
     elseif k == "math" then
         local l, lu = value(c, v.lhs)
         local r, ru = value(c, v.rhs)
@@ -711,8 +727,8 @@ local function bool(c, n)
         end
         return "target." .. side .. n, nil, false
     elseif k == "cmp" then
-        local l, lu = value(c, v.lhs)
-        local r, ru = value(c, v.rhs)
+        local l, lu = value(c, v.lhs, percentRead(c, v.rhs))
+        local r, ru = value(c, v.rhs, percentRead(c, v.lhs))
         local op = M.OPS[v.op] or unsupported("op " .. tostring(v.op))
         local u = nilOr(lu, ru)
         if u == true then
