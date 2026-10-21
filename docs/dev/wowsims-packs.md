@@ -58,6 +58,12 @@ Translation:
 - `leveling` (lines appended to `actions`): the fillers a lower level needs, each silent at 60 (below).
 - `levelingFirst` (lines put first in `actions`): a form the sim starts in and the APL never casts (Balance's Moonkin
   Form), which a trailing line would never reach; silent while the form is up.
+- `extra` (`{ { before = "<action>", line = "<simc line>" } }`): a line put just before the first `actions` line of
+  `before` (the translator errors when there is none). Only for content wowsims cannot model, never to tune a
+  wowsims line, and each use names its reason in the recipe comment. The user's ruling (2026-10-21), for Warrior's
+  Victory Rush: "This isn't something from wowsims, but needs to be added since it won't affect wowsims accuracy
+  (wowsims never goes mob to mob so VR isn't ever a thing). Should be used just above bloodthirst (since it's a mini
+  bloodthirst)."
 
 The autocast context: rule 13 reads the spec's exported log (`tests/Forever/wowsims/<spec>.log`, its "Major cooldown
 used" lines), so `make wowsims-packs` needs the checked-in log; a re-export can move those lines.
@@ -84,7 +90,7 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
    `includeReactionTime`, `rank` and tags.
 6. The leveling guard: a read of an unlearned ability is wowsims's nil and drops its term, as wowsims's nil
    propagation does; `tools/check_pack_levels.lua` checks every pack for it.
-7. `focus`, `use_off_gcd=1` for an off-GCD ability, `leveling` lines, `requires`.
+7. `focus`, `use_off_gcd=1` for an off-GCD ability, `leveling` and `extra` lines, `requires`.
 8. Constants: Go durations in seconds, `"N%"` as N (our percents run 0-100).
 9. `auraIcdIsReady`: `buff.<key>.icd_ready` for an aura declaring `icd`; else unsupported.
 10. `auraShouldRefresh` only for `exclusive` auras; `cancelAura`; `autoSwingTime`; `remainingTime` as

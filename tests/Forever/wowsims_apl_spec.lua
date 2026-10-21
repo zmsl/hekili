@@ -106,6 +106,26 @@ describe("the wowsims APL translator", function()
         )
     end)
 
+    it("puts each recipe extra line before the first line of its anchor action, the rest in order", function()
+        local text = apl.translate(
+            { priorityList = { cast(300), cast(100), cast(200), cast(100) } },
+            ctx({ extra = { { before = "strike", line = "dot,if=buff.fury.up" } } })
+        )
+        assert.are.equal(
+            table.concat({
+                "actions=roar,use_off_gcd=1",
+                "actions+=/dot,if=buff.fury.up",
+                "actions+=/strike",
+                "actions+=/big_hit",
+                "actions+=/strike",
+            }, "\n"),
+            text
+        )
+        assert.has_error(function()
+            apl.translate({ priorityList = { cast(100) } }, ctx({ extra = { { before = "big_hit", line = "dot" } } }))
+        end, "extra: no big_hit line in actions")
+    end)
+
     it(
         "schedules the prepull: prepull_at from doAtValue, earliest first, 0 at the pull, no guard of its own",
         function()
