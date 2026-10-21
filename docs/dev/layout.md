@@ -394,29 +394,31 @@ the author's guide, the user's binding rules and the translator's rules: `docs/d
 
 Every pack's current lines (the forever gate on 51a0b1ac; the replay's `agreement` counts ticks, the gate reads
 `decisions on-GCD`). "Limit" is what the spec file gates every bracket at, `max(6, LIVE60)` with the spec's LIVE60
-constant in brackets; "Worst idle" is the measurement at each level, in seconds:
+constant in brackets; "Worst idle" is the measurement at each level, in seconds (the Arms, Fury, Guardian,
+Retribution, Paladin Protection and Survival idles re-measured in the final review fixes, on-GCD presses only):
 
 | Pack | Replay floor | Measured (decisions) | Limit (LIVE60 constant) | Worst idle (measured) |
 | --- | --- | --- | --- | --- |
-| Arms (wowsims.com) | 0.91 | 0.910 (67) | 9.2 (9.2) | L10 5.8, L40 7.2, L60 9.2 |
-| Fury (wowsims.com) | 0.93 | 0.933 (60) | 6.8 (6.8); 7.4 below 60 (FURY_LIVE_LEVELING) | L10 7.4, L40 7.4, L60 6.8 |
+| Arms (wowsims.com) | 0.91 | 0.910 (67) | 11.2 (11.2) | L10 9.0, L40 11.2, L60 9.2 |
+| Fury (wowsims.com) | 0.93 | 0.933 (60) | 6.8 (6.8); 8.6 below 60 (FURY_LIVE_LEVELING) | L10 7.4, L40 8.6, L60 6.8 |
 | Protection (wowsims.com), Warrior | 0.90 | 0.904 (94) | 6 (5.4) | L10 5.6, L40 5.4, L60 5.4 |
 | Feral (wowsims.com) | 0.95 | 0.955 (88) | 6 (4.2) | L20 4.0, L40 3.8, L60 3.8 |
-| Guardian (wowsims.com) | 0.78 | 0.782 (78) | 8.4 (8.4) | L10 4.8, L40 7.4, L60 8.4 |
+| Guardian (wowsims.com) | 0.78 | 0.782 (78) | 10.0 (10.0) | L10 10.0, L40 9.6, L60 8.4 |
 | Balance (wowsims.com) | 0.85 | 0.855 (55) | 6 (1.4) | L10 1.6, L40 1.4, L60 1.4 |
 | Assassination (wowsims.com) | 0.98 | 0.982 (57) | 6 (5.0) | L10 5.2, L40 5.0, L60 5.0 |
 | Combat (wowsims.com) | 0.95 | 0.972 (71) | 6 (4.8) | L10 5.6, L40 4.8, L60 4.0 |
 | Subtlety (wowsims.com) | 0.98 | 0.988 (82) | 6 (3.8) | L10 5.6, L40 4.6, L60 4.2 |
-| Retribution (wowsims.com) | 0.87 | 0.877 (57) | 8.4 (8.4) | L10 4.4, L40 6.4, L60 2.2 |
-| Protection (wowsims.com), Paladin | 0.62 | 0.625 (48) | 17.8 (17.8) | L10 6.0, L40 6.8, L60 8.4 |
+| Retribution (wowsims.com) | 0.87 | 0.877 (57) | 8.4 (8.4) | L10 4.4, L40 7.0, L60 2.8 |
+| Protection (wowsims.com), Paladin | 0.62 | 0.625 (48) | 17.8 (17.8) | L10 8.6, L40 11.0, L60 11.8 |
 | Enhancement (wowsims.com) | 0.90 | 0.909 (88) | 8.0 (8.0) | L10 1.6, L40 pending (GAP AB), L60 8.0 |
 | Beast Mastery (wowsims.com) | 1.00 | 1.000 (27) | 6 (5.4) | L10 4.6, L40 4.6, L60 5.4 |
 | Marksmanship (wowsims.com) | 0.92 | 0.929 (42) | 11.8 (11.8) | L10 4.6, L40 3.6, L60 11.8 |
-| Survival (wowsims.com) | 0.97 | 0.976 (41) | 6 (0) | L10 4.6, L40 0.0, L60 0.0 |
+| Survival (wowsims.com) | 0.97 | 0.976 (41) | 6 (0) | L10 4.6, L40 0.2, L60 0.2 |
 
 A LIVE60 constant above today's L60 measurement is an earlier measurement the spec keeps (Combat 4.8 vs 4.0,
-Retribution 8.4 vs 2.2 by ruling P6, Paladin Protection 17.8 vs 8.4 from the untanked fight); limits are not lowered
-in this task. Fury's 7.4 s below 60 is the one leveling limit above LIVE60 (docs/dev/wowsims-packs.md). LIVE60s above
+Retribution 8.4 vs 2.8 by ruling P6, Paladin Protection 17.8 vs 11.8 from the untanked fight); limits are not lowered
+in this task. Fury's 8.6 s below 60, Arms's 11.2 and Guardian's 10.0 are leveling measurements above the L60 one
+(docs/dev/wowsims-packs.md's recorded exceptions). LIVE60s above
 6 s are wowsims's own play: Arms pools rage for Heroic Strike, Guardian waits on rage, Retribution and
 Marksmanship spend themselves out of mana as wowsims's own fights do (ruling P6), Paladin Protection waits on mana
 (the old untanked fight's 17.8 s), Enhancement's spending runs the mana out from 90 s.

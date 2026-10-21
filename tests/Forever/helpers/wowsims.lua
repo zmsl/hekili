@@ -256,7 +256,7 @@ end
 --- The leveling gate of content `C` (its pack drives the loop's own world at C's level, `fights` [1] fights of 120 s,
 --- one instance): prints "<label> live L<level>: ..." and asserts no error, raise or unlisted read, at least one press,
 --- and never idle longer than `limit` seconds [6: four GCDs] in a row with a known on-GCD ability the world would
---- accept. Idle: in combat, our GCD free, no cast in progress, no press this tick. Returns the worst idle and the line.
+--- accept. Idle: in combat, our GCD free, no cast in progress, no on-GCD press this tick (an off-GCD press is idle). Returns the worst idle and the line.
 function M.live(label, C, limit, fights)
     limit = limit or 6
     local L = loop.new(C)
@@ -273,9 +273,10 @@ function M.live(label, C, limit, fights)
             duration = 120,
             on = function(run, _, t)
                 local us = run.us
-                local pressed = run.presses > last
-                last = run.presses
-                local idle = t >= loop.PULL and not pressed and us.gcdUntil <= t and t >= (us.castUntil or 0)
+                -- the run's own GCD-idle tick (in combat, GCD free, no on-GCD press): an off-GCD press is still idle
+                local gcdIdle = run.idle > last
+                last = run.idle
+                local idle = t >= loop.PULL and gcdIdle and t >= (us.castUntil or 0)
                 local usable = false
                 if idle then
                     for _, row in ipairs(L.answers) do

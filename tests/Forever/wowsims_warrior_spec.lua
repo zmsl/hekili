@@ -84,7 +84,10 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
         assert.are.equal(0, run.presses)
         assert.is_true(#run.dec.ours > 40, "decisions scored")
     end)
-    local LIVE60 = 9.2 -- the pack's own worst idle at 60 (wowsims's pooling), re-measured after fixes 7, 13 and 16
+    -- the pack's own worst idle (wowsims's pooling): 9.2 at 60 after fixes 7, 13 and 16; 11.2 (L40) since the leveling
+    -- gate counts only on-GCD presses (final review fix 3: a Heroic Strike or Bloodrage no longer resets the idle
+    -- streak; L10 9.0, L60 9.2 unchanged); the owner's call
+    local LIVE60 = 11.2
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Arms (wowsims.com) stays live at level " .. level, function()
             ws.live(
@@ -106,8 +109,9 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     -- the pack's own worst idle at 60 (wowsims's pooling), after fix 16 (8.2 with GAP AD's Intercept)
     local FURY_LIVE60 = 6.8
     -- below Bloodthirst: 7.4 s, the recipe's idle before its leveling Sunder, again since that Sunder stops at 5 stacks
-    -- (fix 18: it was 2.6 s, filled by Sunders at 5 stacks); the owner's call
-    local FURY_LIVE_LEVELING = 7.4
+    -- (fix 18: it was 2.6 s, filled by Sunders at 5 stacks); 8.6 (L40) since the gate counts only on-GCD presses (final
+    -- review fix 3: off-GCD presses no longer reset the streak; L10 7.4 unchanged); the owner's call
+    local FURY_LIVE_LEVELING = 8.6
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Fury (wowsims.com) stays live at level " .. level, function()
             ws.live(

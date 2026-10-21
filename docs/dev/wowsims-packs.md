@@ -121,7 +121,8 @@ the cause in a comment beside the number. Each spec file keeps the measured valu
 
 `ws.live` runs the pack on the loop's own world at a level (the class's learn table from DB2, the build's talents
 taken in dominant-tree order) and fails on an error, a raise, an unlisted read, no press, or an idle stretch (in
-combat, the GCD free, a known on-GCD ability the world would accept, nothing pressed) longer than the limit.
+combat, the GCD free, a known on-GCD ability the world would accept, no on-GCD press: an off-GCD press such as Heroic
+Strike or Maul does not end it) longer than the limit.
 - Brackets: 10, 40 and 60 (Feral 20, 40, 60: Cat Form at 20).
 - The limit is `max(6 s, LIVE60)`, LIVE60 the pack's own worst idle at 60 rounded up to 0.1 s. wowsims is the oracle:
   its idle at 60 (pooling, running out of mana) is correct and never "fixed".
@@ -130,5 +131,9 @@ combat, the GCD free, a known on-GCD ability the world would accept, nothing pre
   (`FURY_LIVE_LEVELING = 7.4` in `tests/Forever/wowsims_warrior_spec.lua`, the owner's call): its leveling Sunder
   Armor filler stops at five stacks since central fix 18, so the recipe's own idle before that filler (7.4 s)
   returns; it was 2.6 s while Sunder at five stacks filled the gaps.
+- The second recorded exception (final review fix 3, the owner's call): the gate counted every press as ending an idle
+  stretch until then, so an off-GCD press (Heroic Strike, Bloodrage, Maul) hid the on-GCD idle around it. Counting
+  on-GCD presses only, Arms's LIVE60 became 11.2 (its L40), Fury's FURY_LIVE_LEVELING 8.6 (its L40) and Guardian's
+  10.0 (its L10), each a lower bracket's measurement above the pack's own L60.
 - Limits of the check: one seed, no buffs; the talent order approximates how a player levels; an ID the DB2 lacks
   counts as learned at 1; levels between the brackets are not sampled (Guardian 25-41).

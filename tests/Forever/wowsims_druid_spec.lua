@@ -74,8 +74,10 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         assert.are.equal("bear_form", out.recs[1] and out.recs[1].actionName)
     end)
     -- The pack's own worst idle at 60 (L40 7.4: waits on rage for Primal Bite and Lacerate), seconds; L10 presses
-    -- the recipe's leveling Maul (wowsims's list has nothing else before Primal Bite at 25: 11.8 s idle without it)
-    local GUARDIAN60 = 8.4
+    -- the recipe's leveling Maul (wowsims's list has nothing else before Primal Bite at 25: 11.8 s idle without it).
+    -- 10.0 (L10; L40 9.6, L60 8.4 unchanged) since the gate counts only on-GCD presses (final review fix 3: Maul, off
+    -- the GCD, no longer resets the idle streak); the owner's call
+    local GUARDIAN60 = 10.0
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Guardian (wowsims.com) stays live at level " .. level, function()
             ws.live(
