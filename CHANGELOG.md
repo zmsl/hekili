@@ -31,7 +31,7 @@
 - Paladin: Retribution no longer highlights Exorcism or the seal before the pull; the seal you keep up while leveling is highlighted as upkeep.
 - Rogue: Garrote, Slice and Dice and Rupture share the first highlight (whichever is due first) in every specialization; Ambush is no longer highlighted.
 - Shaman: Fire Nova is highlighted only on Clearcasting, and the totems are no longer highlighted.
-- Pre-pull suggestions now guard against recasting: each shows whenever its purpose is unmet (its buff or debuff down, its totem down, its cooldown ready) and hides while it is met. The pull-timer schedule and `prepull_at` are gone. Arms and Fury's Pre-pull: Move and Stance no longer repeat.
+- Pre-pull suggestions now guard against recasting: each shows whenever its purpose is unmet (its buff or debuff down, its totem down, its cooldown ready) and hides while it is met. The once-per-episode schedule and `prepull_at` are gone. Arms's Pre-pull: Stance and both Arms's and Fury's Pre-pull: Move no longer repeat between pulls; Charge still shows whenever it is usable, by design.
 
 ### Fixed
 - A priority regenerated on the same day no longer shows as reverted on login.
@@ -41,6 +41,7 @@
 ### Known issues
 
 ### Upgrade notes
+- `prepull_at` in an imported or saved priority is now ignored, without a warning.
 
 ## v0.2.0
 

@@ -15,10 +15,11 @@
 --    - it applies an aura of the ability's own key: `!buff.<key>.up` (applyBuff) or `!debuff.<key>.up` (applyDebuff),
 --      unless the aura's duration is at most the ability's cooldown (moot: the cooldown already hides it);
 --    - it summons a totem of its own key: `!totem.<element>.up` (the element's slot);
---    - otherwise no guard (Charge: its own usability and cooldown).
---    A mutually exclusive group (lines of one list whose handlers remove each other's aura: seals) guards its first
---    line by every member's aura (`!buff.a.up&(!action.b.known|!buff.b.up)`: rule 6's guard on another ability's
---    read), later lines by their own: the first is cast only when none is up, the later replaces it. A handler that raises gives no guard and a header note.
+--    - otherwise no guard (the ability's own usability and cooldown decide).
+--    A mutually exclusive group (lines of one list whose handlers remove each other's aura) guards its first line by
+--    every member's aura (`!buff.a.up&(!action.b.known|!buff.b.up)`: rule 6's guard on another ability's read),
+--    later lines by their own: the first is cast only when none is up, the later replaces it. A handler that raises
+--    gives no guard and a header note.
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
 --    false; entries whose action or condition uses a node the fork lacks (`sequence`,
 --    `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `unitDistance` outside rule 11, `sequenceIsComplete`,
@@ -1158,7 +1159,8 @@ function entry(c, e)
         end
         c.used[g], c.self = true, nil
         local by = c.callers[M.snake(g)] or {}
-        c.callers[M.snake(g)], by[c.listName] = by, true -- rule 1: a list only pre-pull lists call is pre-pull
+        -- rule 1: a list only pre-pull lists call is pre-pull; an omitted call line still counts (it can only drop guards)
+        c.callers[M.snake(g)], by[c.listName] = by, true
         body = "call_action_list,name=" .. M.snake(g)
         key = M.snake(g)
     elseif kind == "cancelAura" then -- rule 10
@@ -1199,7 +1201,7 @@ end
 -- Rule 1: what ability `key`'s handler does, recorded: { unit = "buff"|"debuff" (it applies an aura of its own key),
 -- element (it summons a totem of its own key), removes = { [aura key] = true } }, or nil and the handler's error.
 -- Run in the handler's own environment (the kit's stub state: Register* setfenv( f, state )) with the verbs rebound,
--- once as the stub stands and once with every buff up (a removal conditional on the other aura being up: two seals).
+-- once as the stub stands and once with every buff up (a removal conditional on another aura being up).
 local VERBS = { "applyBuff", "applyDebuff", "summonTotem", "removeBuff" }
 local function effect(c, key)
     local done = c.effects[key]
@@ -1238,6 +1240,7 @@ local function effect(c, key)
                 return up
             end,
         })
+        -- every verb is recorded on this pass too: a handler applying its own aura only under another buff is guarded
         ok, err = pcall(h)
         env.buff = buff
     end
