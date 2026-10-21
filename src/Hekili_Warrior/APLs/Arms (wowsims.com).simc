@@ -48,8 +48,8 @@ actions+=/overpower,focus=1,if=(!action.battle_stance.known|buff.battle_stance.u
 actions+=/mortal_strike,if=!settings.wowsims_stance_dance
 actions+=/spearing_strike,if=(!execute_phase&(!action.battle_stance.known|buff.battle_stance.up))
 actions+=/berserker_stance,use_off_gcd=1,if=(settings.wowsims_stance_dance&(!action.battle_stance.known|buff.battle_stance.up)&!buff.overpower_ready.up&(execute_phase|(action.rend.known&debuff.rend.remains>1.5)))
-actions+=/slam,focus=2,if=(!execute_phase&action.slam.cast<1.5)
-actions+=/slam,focus=2,if=(!execute_phase&action.slam.cast>=1.5&(mainhand_speed-mainhand_remains)<=(0+0.3))
+actions+=/slam,if=(!execute_phase&action.slam.cast<1.5)
+actions+=/slam,if=(!execute_phase&action.slam.cast>=1.5&(mainhand_speed-mainhand_remains)<=(0+0.3))
 actions+=/whirlwind,if=settings.wowsims_stance_dance
 actions+=/execute,if=execute_phase
 actions+=/battle_stance,use_off_gcd=1,if=(settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known|buff.berserker_stance.up)&(buff.overpower_ready.up|(action.rend.known&debuff.rend.remains<=1.5)))

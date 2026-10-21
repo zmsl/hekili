@@ -67,9 +67,11 @@ return {
     -- the user's ruling (2026-10-21): Berserker Rage only "if talented for the rage gain", precombat and in combat
     requires = { berserker_rage = "improved_berserker_rage" },
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
-    -- the retired Fury list's tiers (P9.3) that a line carries: no wowsims line casts Victory Rush (the extra below
-    -- does, untiered) or Revenge, and one Cleave
-    focus = { overpower = 1, heroic_strike = { 1, 2 }, cleave = 1 },
+    -- the user's tiers (2026-10-21): Bloodthirst and Whirlwind rotational (untiered); Overpower 1; Heroic Strike and
+    -- Cleave alike, { 1, 2 } ("those abilities are kind of the same"; Fury has one Cleave line, so it takes 1); Rend 2
+    -- (the rend weave); Battle Stance 1 (overpower_weaving's swap, Fury's only Battle Stance line). A tier is static:
+    -- the weave's lines carry theirs whether Rend Weave is on or off.
+    focus = { overpower = 1, heroic_strike = { 1, 2 }, cleave = { 1, 2 }, rend = 2, battle_stance = 1 },
     leveling = {
         "sunder_armor,if=!action.bloodthirst.known&debuff.sunder_armor.stack<5",
         "hamstring,if=!action.bloodthirst.known&(!action.battle_stance.known|!buff.battle_stance.up)",

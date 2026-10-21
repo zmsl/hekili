@@ -68,7 +68,9 @@ return {
     -- the user's ruling (2026-10-21): Berserker Rage only "if talented for the rage gain", precombat and in combat
     requires = { berserker_rage = "improved_berserker_rage" },
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
-    focus = { overpower = 1, rend = 2, slam = 2 }, -- the retired Arms list's tiers (P9.3)
+    -- the user's tiers (2026-10-21): Rend's uptime and Overpower are focus; Mortal Strike, Slam and Execute rotational
+    -- (untiered); Arms casts no Revenge
+    focus = { overpower = 1, rend = 2 },
     -- Rule 15: Thunder Clap, a setting off in game and on in the harness (the user's ruling, 2026-10-21); its only
     -- line is the leveling filler below. Fury casts no Thunder Clap, so its recipe names none (rule 15 errors on a key
     -- with no cast line) and the setting is registered for Arms only.

@@ -824,7 +824,7 @@ describe("Forever Warrior", function()
         assert.are.same({ "Arms", "Fury", "Protection" }, w.retired)
     end)
 
-    it("carries the retired lists' focus tiers that a wowsims.com line casts", function()
+    it("carries the focus tiers the user ruled on (2026-10-21) on the lines that cast them", function()
         local focus = {}
         for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "warrior")) do
             for _, list in pairs(p.lists) do
@@ -840,11 +840,13 @@ describe("Forever Warrior", function()
         assert.are.same({
             ["Arms (wowsims.com) rend"] = { 2 },
             ["Arms (wowsims.com) overpower"] = { 1 },
-            ["Arms (wowsims.com) slam"] = { 2, 2 },
             ["Fury (wowsims.com) overpower"] = { 1 },
             ["Fury (wowsims.com) heroic_strike"] = { 1, 2 },
             ["Fury (wowsims.com) cleave"] = { 1 },
-        }, focus) -- Protection (wowsims.com) casts none of the retired list's focus abilities
+            ["Fury (wowsims.com) rend"] = { 2 },
+            ["Fury (wowsims.com) battle_stance"] = { 1 },
+        }, focus) -- Protection (wowsims.com) casts none of the retired list's focus abilities; the user's tiers (2026-10-21):
+        -- the main strikes (Mortal Strike, Slam, Execute, Bloodthirst, Whirlwind) are rotational, untiered
     end)
 
     -- the user's ruling (2026-10-21): Berserker Rage only for Improved Berserker Rage's rage, precombat and in combat

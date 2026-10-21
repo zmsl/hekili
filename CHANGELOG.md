@@ -38,6 +38,7 @@
 - Warrior: Arms and Fury fill the rotation with Hamstring while leveling (at level 40, before Mortal Strike or Bloodthirst) instead of standing idle for up to 11 seconds.
 - Warrior: Bloodrage, Intimidating Shout and Mocking Blow are no longer under the Cooldowns toggle; Disarm is under Defensives.
 - Warrior: Arms and Fury suggest Berserker Rage only once you have Improved Berserker Rage (for its rage), before the pull and in combat.
+- Warrior focus tiers: Arms's Slam is no longer a focus line (Mortal Strike, Slam and Execute are rotational); Fury marks Rend (2) and the Battle Stance swap for Overpower (1) as focus, and Cleave takes Heroic Strike's tiers.
 - Warrior: each priority's description lists the lines the Cooldowns and Defensives toggles hide.
 
 ### Fixed
