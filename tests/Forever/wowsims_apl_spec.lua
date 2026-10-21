@@ -813,6 +813,35 @@ describe("the wowsims APL translator", function()
         end, "select: the build sets no pickOption")
     end)
 
+    it("rule 17's multidot: the DoT's cast on the current target while its DoT has at most maxOverlap left", function()
+        local function multidot(id, overlap, cond)
+            local m = { spellId = { spellId = id, rank = 5 }, maxDots = 3, maxOverlap = overlap and const(overlap) }
+            return { action = { multidot = m, condition = cond } }
+        end
+        local text, omitted = apl.translate({
+            priorityList = {
+                multidot(400, "0ms"),
+                multidot(400, "2s", cmp("OpGt", { currentRage = {} }, const("10"))),
+                multidot(400), -- no maxOverlap (protojson's zero value): 0
+                multidot(999, "0ms"), -- an unmapped DoT: the whole entry (rule 2)
+            },
+        }, ctx({}))
+        assert.are.equal(
+            table.concat({
+                "actions=dot,if=debuff.dot.remains<=0",
+                "actions+=/dot,if=(rage.current>10&debuff.dot.remains<=2)",
+                "actions+=/dot,if=debuff.dot.remains<=0",
+            }, "\n"),
+            text
+        )
+        assert.are.same({
+            "default #1: multidot: up to 3 targets in wowsims, the current target only here",
+            "default #2: multidot: up to 3 targets in wowsims, the current target only here",
+            "default #3: multidot: up to 3 targets in wowsims, the current target only here",
+            "default #4: spell 999",
+        }, omitted)
+    end)
+
     it("takes the character's ability set: a shared racial is mapped and off the GCD", function()
         local set = require("Forever.helpers.engine").abilitySet("WARRIOR")
         local c = apl.context(set, {})

@@ -149,6 +149,11 @@
 --    unknown value it is unsupported. The build's value (the request's `<spec>.options.classOptions.<option>` or
 --    `.options.<option>`) is the setting's default in game and in the harness (`sim`), which the class registers as an
 --    AceConfig `select`; the header lists it. An entry the APL never uses, or a build without the option, is an error.
+-- 17. `multidot` (wowsims: the DoT cast on up to `maxDots` targets whose DoT has at most `maxOverlap` left) is the
+--    cast's line under the entry's condition and `debuff.<key>.remains<=<maxOverlap>` (0 when absent), its aura read as
+--    `dotRemainingTime` (rules 5, 6, 12; `rank` ignored, rule 5). Deviation, noted in the header by entry: the current
+--    target only (`maxDots` unused). No `cycle_targets=1`: the engine's target cycling (State.lua SetupCycle) needs
+--    other targets' DoTs (`active_dot`), which Forever does not give plainly (gap AO / AP), and the replay is one target.
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
 -- The engine facts rule 6 rests on (tools/check_pack_levels.lua checks every pack for it):
@@ -1093,6 +1098,20 @@ function entry(c, e)
         local x = spellKey(c, a[kind].spellId)
         c.self, key = x, x
         body = castBody(c, x)
+    elseif kind == "multidot" then -- rule 17: the cast under "its DoT has at most maxOverlap left", this target only
+        local m = a.multidot
+        c.notes[#c.notes + 1] = ("multidot: up to %d targets in wowsims, the current target only here"):format(
+            m.maxDots or 0
+        )
+        local due = {
+            cmp = {
+                op = "OpLe",
+                lhs = { dotRemainingTime = { spellId = m.spellId } },
+                rhs = m.maxOverlap or { const = { val = "0s" } },
+            },
+        }
+        local cond = a.condition and { ["and"] = { vals = { a.condition, due } } } or due
+        return entry(c, { action = { castSpell = { spellId = m.spellId }, condition = cond } })
     elseif c.select[kind] then -- rule 16: one line a candidate, each under its setting term
         local sel, out = c.select[kind], {}
         sel.used = true
@@ -1171,7 +1190,7 @@ function M.translate(rotation, c)
     for _, l in ipairs(lists) do
         for _, e in ipairs(l) do
             local a = e.action or {}
-            local s = (a.castSpell or a.channelSpell or a.castFriendlySpell or {}).spellId or {}
+            local s = (a.castSpell or a.channelSpell or a.castFriendlySpell or a.multidot or {}).spellId or {}
             if s.spellId or s.itemId then
                 c.named[(s.spellId and "spell:" or "item:") .. (s.spellId or s.itemId)] = true
             end

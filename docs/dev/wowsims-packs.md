@@ -152,6 +152,8 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
     the selected candidate's debuff (false with none selected, as wowsims; another candidate's term behind its known
     test, so an unlearned one reads down and the level checker sees its guard); its "is" value as the
     setting term. Unsupported: an "is" with no field (protojson's zero value) or an unknown option value.
+17. `multidot`: the DoT's cast while its DoT has at most `maxOverlap` left, on the current target only (`maxDots` is
+    noted per entry in the header as a deviation; no `cycle_targets`: other targets' DoTs are not readable on Forever).
 
 Any node the translator does not handle is unsupported (rule 2): a new wowsims node omits its entry rather than
 mistranslating it.
