@@ -4,6 +4,7 @@ local ws = require("Forever.helpers.wowsims")
 local W = require("Forever.helpers.druid_loop_world")
 local loop = require("Game.harness.loop")
 local replay = require("Game.harness.replay")
+local headless = require("Game.harness.headless")
 
 -- Berserk (417141) is a talent's spell with no trainer level: known through its talent's points only, not the
 -- worlds' kit list (which a missing level would teach at 1).
@@ -56,6 +57,21 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             -- when the game's cast succeeds
             { procs = { ["9881:0"] = true } }
         )
+    end)
+    -- wowsims's sim starts in Dire Bear Form, so its list never shifts; the recipe's `bear_form` line does (a
+    -- sim-setup difference: never fires in the replay)
+    it("Guardian (wowsims.com) recommends Bear Form out of it", function()
+        local c = W.Guardian.character()
+        c.form, c.power = 0, { type = 0, token = "MANA", max = 4000, value = 4000 } -- caster form: mana
+        local H = headless.new({ character = c, pack = "Guardian (wowsims.com)" })
+        assert.are.same({}, H.loadErrors)
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
+        assert.are.same({}, H.errors)
+        local out = H.Hekili.Engine.Output.Primary
+        assert.are.equal("bear_form", out.recs[1] and out.recs[1].actionName)
     end)
     -- The pack's own worst idle per bracket, seconds: wowsims's list presses only Demoralizing Roar and Maul before
     -- Primal Bite (25) and Lacerate (42) are learnt (L10), and waits on rage for them after (L40, L60).

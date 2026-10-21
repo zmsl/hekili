@@ -18,6 +18,8 @@
 --    (casts land at completion: replay limit).
 -- Translation: `health.pct<20` (Frenzied Regeneration) reads the player's health, full while the game keeps it
 -- secret (central fix 12: API-forced, never fires in combat); autocastOtherCooldowns (GAP 14: no class cooldown lost).
+-- Sim-setup difference (ruling L16): wowsims's sim starts in Dire Bear Form and its list never shifts, so out of form
+-- the list showed nothing; the `bear_form` line (the Feral APL's own cat_form pattern) never fires in the replay.
 return {
     class = "DRUID",
     pack = "Guardian (wowsims.com)",
@@ -40,5 +42,5 @@ return {
     executePhase = "execute_phase",
     map = {},
     focus = { lacerate = 2 }, -- the retired Guardian list's tier (P9.3)
-    leveling = {},
+    leveling = { "bear_form,if=!buff.bear_form.up" },
 }
