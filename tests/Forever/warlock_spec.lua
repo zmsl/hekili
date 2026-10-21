@@ -382,8 +382,15 @@ describe("Forever Warlock", function()
             for key in pairs(w.pets) do
                 assert.are.same({ "summon_" .. key, 3600 }, { w.pets[key].spell, w.pets[key].duration }, key)
             end
-            local function run(field, ranks)
+            local function run(field, ranks, out)
                 local e = env(ranks)
+                if out then -- the simulation's `pet`: demon `out` up
+                    e.pet = setmetatable({}, {
+                        __index = function(_, k)
+                            return { up = k == out }
+                        end,
+                    })
+                end
                 e.summoned = {}
                 function e.summonPet(key)
                     table.insert(e.summoned, key)
@@ -394,21 +401,18 @@ describe("Forever Warlock", function()
                 ld.run(w.abilities.summon_imp[field], e)
                 return e
             end
-            -- the simulation's handler dismisses the demon out first (wowsims summon.go: the same demon included);
-            -- the belief's `now` models the pet unit, which stays up
-            local SUMMONED = {
-                now = { "imp" },
-                handler = { "-imp", "-voidwalker", "-succubus", "-incubus", "-felhunter", "imp" },
-            }
             for _, field in ipairs({ "now", "handler" }) do
                 local e = run(field)
                 assert.are.same(
-                    { SUMMONED[field], { "burning_shadow", "fel_stamina", "touch_of_fire", "fel_energy" } },
+                    { { "imp" }, { "burning_shadow", "fel_stamina", "touch_of_fire", "fel_energy" } },
                     { e.summoned, e.removed },
                     field
                 )
                 e = run(field, { demonic_pact = 1 })
-                assert.are.same({ SUMMONED[field], { "burning_shadow" } }, { e.summoned, e.removed }, field)
+                assert.are.same({ { "imp" }, { "burning_shadow" } }, { e.summoned, e.removed }, field)
+                -- the simulation dismisses only the demon out first (wowsims summon.go: the same demon included)
+                assert.are.same({ "-succubus", "imp" }, run(field, nil, "succubus").summoned, field)
+                assert.are.same({ "-imp", "imp" }, run(field, nil, "imp").summoned, field)
             end
             assert.are.same({ 18789, 18790, 18791, 18792 }, {
                 w.auras.burning_shadow.id,

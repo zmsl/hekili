@@ -6,9 +6,10 @@ local headless = require("Game.harness.headless")
 local scenarios = require("Game.harness.scenarios")
 local ww = require("Forever.helpers.warlock_world")
 
--- The pet's spends in the truth after event `n0`: each fall of its power between two pet events.
-local function petSpends(W, n0)
-    local out, last = {}, nil
+-- The pet's spends in the truth after event `n0`: each fall of its power between two pet events (from `start`, its
+-- power at `n0`).
+local function petSpends(W, n0, start)
+    local out, last = {}, start
     for i = n0 + 1, #W.truth do
         local ev = W.truth[i]
         if ev.kind == "pet" or ev.kind == "petPower" then
@@ -108,8 +109,8 @@ describe("the Warlock loop worlds", function()
                 assert.are.same({ [5] = 221 }, C.WORLD.stats, name)
                 local pet = C.WORLD.pet
                 -- wowsims's logs at 60: the Imp 2180 mana, 85.2 mp5; the Succubus 1871, 28.4 mp5
-                local want = name == "Demonology" and { 0, 2180, 2180, 17.04, 2, false }
-                    or { 0, 1871, 1871, 5.68, 2, false }
+                local want = name == "Demonology" and { 0, 2180, 2180, 17.04, 2, true }
+                    or { 0, 1871, 1871, 5.68, 2, true }
                 assert.are.same(want, { pet.pt, pet.max, pet.power, pet.regen, pet.tick, pet.up }, name)
             end
             local C = ww.Destruction
@@ -123,41 +124,52 @@ describe("the Warlock loop worlds", function()
         end
     )
 
-    it("Destruction: summons the Succubus for a shard; its Lash of Pain spends its mana", function()
-        local C = ww.Destruction
-        local H = headless.new({ character = C.character() })
-        local W = scenarios.world(setmetatable({ power = 5000 }, { __index = C.WORLD }), 1)
-        local us = W.ents[1]
-        W.run(1) -- the pull
-        local su = C.resolve("summon_succubus", H)
-        assert.is_true(W.press(us, "summon_succubus", su))
-        W.run(1 + su.cast + 0.05)
-        assert.are.same({ 31, true }, { us.bags[6265], us.pet.up })
-        local n0 = #W.truth
-        W.run(W.t + 25)
-        assert.are.same({ 160, 160 }, petSpends(W, n0)) -- Lash of Pain's 160, 12 s apart
-        assert.are.same({}, H.errors)
-    end)
+    it(
+        "Destruction: the Succubus out from the pull spends Lash of Pain; a Felhunter replaces it for a shard",
+        function()
+            local C = ww.Destruction
+            local H = headless.new({ character = C.character() })
+            local W = scenarios.world(setmetatable({ power = 5000 }, { __index = C.WORLD }), 1)
+            local us = W.ents[1]
+            local n0 = #W.truth
+            W.run(1 + 13) -- the pull, then 13 s
+            assert.are.same({ 160, 160 }, petSpends(W, n0, 1871)) -- Lash of Pain's 160 at the pull and 12 s later
+            local fh = C.resolve("summon_felhunter", H)
+            W.t = W.t + 1
+            assert.is_true(W.press(us, "summon_felhunter", fh))
+            W.run(W.t + fh.cast + 0.05)
+            assert.are.same({ 31, true, "felhunter" }, { us.bags[6265], us.pet.up, us.demon })
+            n0 = #W.truth
+            W.run(W.t + 25)
+            assert.are.same({}, petSpends(W, n0)) -- the Felhunter casts nothing of its own here
+            assert.are.same({}, H.errors)
+        end
+    )
 
-    it("Demonology: the Imp keeps the sacrificed Succubus's effect (Demonic Pact); Sacrifice takes the Imp", function()
-        local C = ww.Demonology
-        local H = headless.new({ character = C.character() })
-        local W = scenarios.world(setmetatable({ power = 5000 }, { __index = C.WORLD }), 1)
-        local us = W.ents[1]
-        W.run(1) -- the pull
-        assert.is_truthy(us.auras[18791]) -- the build's sacrificed Succubus: Touch of Fire from the pull
-        assert.is_false(W.press(us, "demonic_sacrifice", C.resolve("demonic_sacrifice", H))) -- no demon out
-        local imp = C.resolve("summon_imp", H)
-        assert.is_true(W.press(us, "summon_imp", imp))
-        W.run(1 + imp.cast + 0.05)
-        assert.are.same({ 32, true, true }, { us.bags[6265], us.pet.up, us.auras[18791] ~= nil })
-        local n0 = #W.truth
-        W.run(W.t + 5)
-        assert.are.same({ 115, 115 }, petSpends(W, n0)) -- Firebolt's 115 a 2 s cast
-        W.t = W.t + 1.5
-        assert.is_true(W.press(us, "demonic_sacrifice", C.resolve("demonic_sacrifice", H)))
-        W.run(W.t + 0.1)
-        assert.are.same({ false, true, false }, { us.pet.up, us.auras[18789] ~= nil, us.auras[18791] ~= nil })
-        assert.are.same({}, H.errors)
-    end)
+    it(
+        "Demonology: Sacrifice takes the Imp out from the pull; a new Imp ends only its own effect (Demonic Pact)",
+        function()
+            local C = ww.Demonology
+            local H = headless.new({ character = C.character() })
+            local W = scenarios.world(setmetatable({ power = 5000 }, { __index = C.WORLD }), 1)
+            local us = W.ents[1]
+            local n0 = #W.truth
+            W.run(1 + 3) -- the pull, then 3 s
+            assert.are.same({ 115, 115 }, petSpends(W, n0, 2180)) -- the Imp's Firebolt, 115 a 2 s cast
+            assert.are.same({ true, "imp", true }, { us.pet.up, us.demon, us.auras[18791] ~= nil }) -- Touch of Fire
+            W.t = W.t + 1.5
+            assert.is_true(W.press(us, "demonic_sacrifice", C.resolve("demonic_sacrifice", H)))
+            W.run(W.t + 0.1)
+            assert.are.same({ false, true, false }, { us.pet.up, us.auras[18789] ~= nil, us.auras[18791] ~= nil })
+            W.t = W.t + 0.1
+            assert.is_false(W.press(us, "demonic_sacrifice", C.resolve("demonic_sacrifice", H))) -- no demon out now
+            local imp = C.resolve("summon_imp", H)
+            W.t = W.t + 1.5
+            assert.is_true(W.press(us, "summon_imp", imp))
+            W.run(W.t + imp.cast + 0.05)
+            -- no shard for the Imp; with Demonic Pact the Imp's summon ends Burning Shadow, its own demon's effect
+            assert.are.same({ 32, true, false }, { us.bags[6265], us.pet.up, us.auras[18789] ~= nil })
+            assert.are.same({}, H.errors)
+        end
+    )
 end)

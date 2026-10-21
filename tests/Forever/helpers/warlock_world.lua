@@ -15,10 +15,11 @@
 -- the five builds' logs show), and the channels (Drain Life 5 s a tick a second, Drain Soul 15 s every 3 s, Wrack 6 s a
 -- tick a second with its debuff, Rain of Fire 8 s every 2 s, Hellfire 15 s a tick a second). Central fix 27's harness:
 -- the Soul Shards in the bags (`WORLD.bags`, wowsims's 32; the shard spells' `reagent`, Shadow and Flame's refund), the
--- demon (`WORLD.pet`: its mana and regen from wowsims's logs; the summons and Demonic Sacrifice's `pet`, the demon's
--- own Firebolt or Lash of Pain spending its mana; Demonic Sacrifice's effects, the build's sacrificed demon's from the
--- pull)
--- and the Spirit Life Tap reads (`WORLD.stats`). Damage amounts are UNMEASURED.
+-- demon (`WORLD.pet`: the build's demon out from the start, as wowsims; its mana and regen from wowsims's logs; the
+-- summons and Demonic Sacrifice's `pet`, the demon's own Firebolt or Lash of Pain spending its mana; Demonic
+-- Sacrifice's effects, the build's sacrificed demon's from the pull) and the Spirit Life Tap reads (`WORLD.stats`). The
+-- harness has one pet of any kind: summoning a different demon refills it to the build demon's pool. Damage amounts are
+-- UNMEASURED.
 -- Not in the world: the demon's swings and the brand charges they spend, and Decimation (below 35% target health; the
 -- mob never gets there).
 -- Credit: wowsims/forever (MIT, https://github.com/wowsims/forever) as the reference for the mechanics; no code copied.
@@ -636,6 +637,7 @@ local function content(name)
     -- The build's sacrificed demon's effect from the pull (wowsims sacrifices it before the fight).
     local function hooks(W, us)
         us.health, us.healthMax = 1e9, 1e9
+        us.demon = P.demon -- out from the start (wowsims: the summon option's demon, EnabledOnStart)
         if P.sacrificed then
             sacrificeOn(W, us, DEMON[P.sacrificed].sacrifice)
         end
@@ -652,8 +654,8 @@ local function content(name)
         distance = 25, -- a caster's range: no melee swings of ours
         script = hooks,
         bags = { [SOUL_SHARD] = 32 },
-        -- the build's demon's mana; not out at the start: a summon brings it
-        pet = { pt = MANA, max = D.max, power = D.max, regen = D.regen, tick = 2, up = false },
+        -- the build's demon, out from the start with its mana full (wowsims)
+        pet = { pt = MANA, max = D.max, power = D.max, regen = D.regen, tick = 2, up = true },
         stats = { [5] = SPIRIT }, -- UnitStat(5)'s Spirit, Life Tap's
     }
 

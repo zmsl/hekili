@@ -11,9 +11,9 @@
 -- Demonic Sacrifice (the demon out for its effect), Amplify Curse (spent by Bane of Agony and Curse of Weakness),
 -- Conflagrate on our Immolate (consumed unless Shadow and Flame keeps it), Demonic Brand from Searing Pain, Wrack's
 -- debuff, the talents' cast and cost cuts (Bane, Improved Corruption, Cataclysm, Master Summoner), and the school
--- lockouts (Hekili_Shared's locked_out_<school>). No priority
--- yet: the wowsims.com packs (Affliction, Demonology, Destruction) come next; the abilities and auras below are what
--- wowsims/forever's five Warlock builds (ui/specs/warlock/dps/builds/*.build.json) cast or read.
+-- lockouts (Hekili_Shared's locked_out_<school>). No priority yet: the wowsims.com packs (Affliction, Demonology,
+-- Destruction) come next; the abilities and auras below are what wowsims/forever's five Warlock builds
+-- (ui/specs/warlock/dps/builds/*.build.json) cast or read.
 -- Research: docs/research/2026-10-15-forever-warlock/research.md.
 -- From wowsims/forever's data (MIT, https://github.com/wowsims/forever; sim/warlock/ and sim/core/spelldata), where the
 -- Forever DB2 at 70338 lacks it: the live talent tree (ui/sim/talents/trees/warlock.json: its 52 nodes, their trees and
@@ -336,13 +336,14 @@ local function tapped()
     end
 end
 
--- A summon's: the demon (the belief models the pet unit up until its first observation; the simulation's `handler`,
--- `replaces`, dismisses the demon out first, the same demon included: wowsims summon.go), and Demonic Sacrifice's
--- effect cancelled (any demon's without Demonic Pact, the sacrificed demon's own with it).
-local function summons(key, replaces)
+-- A summon's: the demon (the belief models the pet unit up until its first observation; in the simulation the demon
+-- out is dismissed first, the same demon included: wowsims summon.go), and Demonic Sacrifice's effect cancelled (any
+-- demon's without Demonic Pact, the sacrificed demon's own with it).
+local function summons(key)
     return function()
-        for i = 1, replaces and #DEMONS or 0 do
-            dismissPet(DEMONS[i])
+        local out = demonOut(pet) -- nil in the belief's `now` context (no `pet`)
+        if out then
+            dismissPet(out)
         end
         summonPet(key)
         local pact = talent.demonic_pact.enabled
@@ -376,7 +377,7 @@ local function summon(key, id, cost, shard)
         usable = shard and sharded() or unlocked("shadow"),
 
         now = summons(key),
-        handler = summons(key, true),
+        handler = summons(key),
     }
 end
 
