@@ -61,14 +61,14 @@ Open an issue at https://github.com/zmsl/hekili/issues.
   click the text box, press Ctrl+A and Ctrl+C, and paste it into the issue (or a paste site, with the link in the issue).
 
 ## Development
-See https://github.com/zmsl/hekili/blob/forever/DEVELOPMENT.md.
+See [DEVELOPMENT.md](https://github.com/zmsl/hekili/blob/forever/DEVELOPMENT.md).
 
 ## Credits
 Based on the original work by Hekili: https://github.com/Hekili/hekili (Hekili and its maintainers). Hekili Forever is
 published with the original author's explicit permission. Author: [defzach](https://github.com/zmsl).
 Bundled libraries (Ace3, LibStub, LibSharedMedia-3.0, LibDBIcon-1.0, LibDataBroker-1.1 and others) belong to their
-authors under their own licences: https://github.com/zmsl/hekili/blob/forever/src/Hekili/Libs/CREDITS.md.
+authors under [their own licences](https://github.com/zmsl/hekili/blob/forever/src/Hekili/Libs/CREDITS.md).
 
 ## Licence
-GNU General Public License version 3 or later (https://github.com/zmsl/hekili/blob/forever/LICENSE): either version 3 of the License, or (at your option) any
+[GNU General Public License version 3 or later](https://github.com/zmsl/hekili/blob/forever/LICENSE): either version 3 of the License, or (at your option) any
 later version. Modified for WoW Forever by defzach from October 2026.
