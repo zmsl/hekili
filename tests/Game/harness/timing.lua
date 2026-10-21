@@ -1,8 +1,9 @@
 -- tests/Game/harness/timing.lua (docs/superpowers/specs/2026-10-16-headless-recommendation-loop.md §12): how close a
 -- replay's recommendation shows an ability ready to when wowsims casts it. Fed by two hooks: replay.lua's `new` (each
 -- decision's ready class from the log: what wowsims waited for) and loop.lua's per-poll step (our queue and the power
--- band against the truth). `rows` gives one row per decision: the shown offset b (gated), the predicted offset a, the
--- class, the tolerance verdict and, at cost-gated decisions, lo - truth and est - truth. Class-neutral: keys, pools and
+-- band against the truth). `rows` gives one row per decision: the shown offset b (gated; on its late side the engine's
+-- forecast at the decision poll, which overshoots where the client's usable answer clamps the belief), the predicted
+-- offset a, the class, the tolerance verdict and, at cost-gated decisions, lo - truth and est - truth. Class-neutral: keys, pools and
 -- costs come from the log and the instance.
 local M = {}
 
@@ -17,7 +18,8 @@ local GCD_TOL, CD_TOL = 1.5e-3, 0.02 -- a cast "at" a GCD end or crossing; at a 
 
 --- Classifies each decision of replay `R` from the log's events `ev` (replay.parse's, with `wt`), in place: d.lt (log
 --- time), d.cls ("prepull" | "first" | "gcd" | "cost" | "cooldown" | "aura" | "slack" | "queue" | "landing"),
---- d.cost, d.pt (the pool's power type, `POWER` by name) and d.swing (the crossing came from a white swing). `keyFor`
+--- d.cost, d.pt (the pool's power type, `POWER` by name), d.swing (the crossing came from a white swing) and d.lag
+--- (a cost decision's cast minus its crossing: up to one TICK when wowsims cast after the tick that paid it). `keyFor`
 --- and `cd` are the replay's. Returns the recorder T { decisions, polls, costed = { [key] = pt }, pools, pull }.
 function M.new(R, ev, keyFor, cd, POWER)
     local T = { decisions = R.decisions, polls = {}, costed = {}, pools = {}, pull = R.pull }
@@ -74,8 +76,9 @@ function M.new(R, ev, keyFor, cd, POWER)
                 d.cls, first = "first", true
             end
             if not d.cls then
-                if math.abs(cross - e.t) < GCD_TOL and cross >= ready - GCD_TOL then
-                    d.cls = "cost"
+                -- the crossing, at the cast or within one tick before it, is the last constraint to clear
+                if cross <= e.t + GCD_TOL and e.t - cross <= M.P.TICK + GCD_TOL and cross >= ready - GCD_TOL then
+                    d.cls, d.lag = "cost", math.max(0, e.t - cross)
                 elseif math.abs(cdEnd - e.t) < CD_TOL then
                     d.cls = "cooldown"
                 elseif math.abs(prevEnd - e.t) < GCD_TOL then
@@ -138,8 +141,9 @@ local function r3(x) -- rounded to 0.001 (the fixture's grain)
 end
 
 --- The verdict of a row's class `cls` and shown offset `b` under tolerances `P` ("scope" | "never" | "in:<window>" |
---- "early" | "late"); `tie`: a not-shown decision that swaps with its neighbour.
-function M.verdict(cls, b, swing, tie, P)
+--- "early" | "late"); `tie`: a not-shown decision that swaps with its neighbour; `lag`: a cost decision's cast minus its
+--- crossing (the cost window runs from the crossing: b + lag).
+function M.verdict(cls, b, swing, tie, P, lag)
     local e = P.EDGE
     if cls == "prepull" or cls == "first" or cls == "landing" then
         return "scope"
@@ -147,7 +151,7 @@ function M.verdict(cls, b, swing, tie, P)
         return tie and "in:tie" or "never"
     elseif math.abs(b) <= P.REACT + e then
         return "in:grain"
-    elseif cls == "cost" and b > 0 and b <= P.G7 + (swing and P.HOLD or P.TICK) + e then
+    elseif cls == "cost" and b > 0 and b + (lag or 0) <= P.G7 + (swing and P.HOLD or P.TICK) + e then
         return "in:cost"
     elseif (cls == "aura" or cls == "slack") and b < 0 and b >= -(P.reaction + P.REACT) - e then
         return "in:reaction"
@@ -159,8 +163,9 @@ end
 
 --- One row per decision (R.decisions' order): { t (log s), key, class, "on" | "off", b, a, verdict, lo - truth,
 --- est - truth } rounded to 0.001. b: an icon shown ready at the decision poll, the first poll since the previous
---- decision's that showed it so, minus the cast (<= 0); shown waiting, its wait (exact: the poll is at the cast);
---- otherwise nil (not shown). a: the last poll before the decision's, its wait for the key plus its time minus the cast.
+--- on-GCD decision's that showed it so, minus the cast (<= 0); shown waiting, the engine's wait at the decision poll
+--- (its forecast, not the instant the icon first shows: it overshoots where the client's usable answer clamps the
+--- belief below the cost and the engine forecasts the next tick); otherwise nil (not shown). a: the last poll before the decision's, its wait for the key plus its time minus the cast.
 --- lo and est: cost-gated rows only, at the decision poll. Also sets T.flips: { lo, est } at each in-combat poll whose
 --- first on-GCD icon changed to or from a costed key.
 function M.rows(T, P)
@@ -205,8 +210,10 @@ function M.rows(T, P)
             band and r3(band[1]) or nil,
             band and r3(band[2]) or nil,
         }
-        rows[i].swing = d.swing
-        prevDec = j
+        rows[i].swing, rows[i].lag = d.swing, d.lag
+        if d.gcd then -- an off-GCD decision's poll never cuts an on-GCD decision's walk back
+            prevDec = j
+        end
     end
     -- the near-tie: a not-shown on-GCD decision whose neighbour on-GCD decision swaps keys with it
     local on = {}
@@ -217,14 +224,15 @@ function M.rows(T, P)
     end
     for n, i in ipairs(on) do
         local tie = false
-        for _, m in ipairs({ on[n - 1], on[n + 1] }) do
-            local x = T.decisions[m]
-            tie = tie or (fg[i] == x.key and fg[m] == T.decisions[i].key)
+        for _, m in pairs({ on[n - 1] or false, on[n + 1] or false }) do
+            if m then
+                tie = tie or (fg[i] == T.decisions[m].key and fg[m] == T.decisions[i].key)
+            end
         end
         rows[i].tie = tie
     end
     for _, r in ipairs(rows) do
-        r[7] = M.verdict(r[3], r[5], r.swing, r.tie, P)
+        r[7] = M.verdict(r[3], r[5], r.swing, r.tie, P, r.lag)
     end
     T.flips = {}
     local prev

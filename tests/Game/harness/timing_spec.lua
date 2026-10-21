@@ -69,6 +69,24 @@ describe("timing.new: each decision's ready class from the log", function()
         assert.are.equal(9, R.decisions[6].lt)
     end)
 
+    it("names cost a cast whose pool crossed its cost within one tick before it, with that lag", function()
+        local ev = events({
+            cast(0.1, 2, { gcd = 1 }),
+            power(1.53, "energy", 34, 35, { other = 5 }), -- the tick crosses 35 0.07 s before the cast
+            cast(1.6, 3, { cost = 35 }),
+            power(1.6, "energy", 35, 0, { id = 3 }),
+            power(3.0, "energy", 34, 35, { other = 5 }), -- 0.2 s before: wowsims waited past a tick (slack)
+            cast(3.2, 3, { cost = 35 }),
+            power(3.2, "energy", 35, 0, { id = 3 }),
+        }, 5)
+        POWER.energy = 3
+        local R = bind(ev, { b = 0, c = 0 }, 5)
+        POWER.energy = nil
+        assert.are.same({ "cost", false }, { R.decisions[2].cls, R.decisions[2].swing })
+        assert.is_true(math.abs(R.decisions[2].lag - 0.07) < 1e-9)
+        assert.are.equal("slack", R.decisions[3].cls)
+    end)
+
     it("finds a hard cast's pool from its spend at the cast's end", function()
         local ev = events({
             cast(0.1, 2),
@@ -138,6 +156,21 @@ describe("timing.rows: the shown and predicted offsets at each decision", functi
     end)
 end)
 
+describe("timing.rows: an off-GCD decision between two on-GCD ones", function()
+    it("does not cut the next on-GCD decision's walk back to its first ready poll", function()
+        local ev = events({ cast(0.1, 2), cast(1.0, 4, { gcd = 0 }), cast(1.6, 1) }, 5)
+        local R, T = bind(ev, { a = 0, b = 0, d = 0 }, 5)
+        local d = R.decisions
+        poll(T, d[1].t, { { "b", 0 } })
+        poll(T, 5.8, { { "a", 0 } }) -- a ready from 5.8, before d's poll
+        poll(T, d[2].t, { { "d", 0, true }, { "a", 0 } })
+        poll(T, 6.2, { { "a", 0 } })
+        poll(T, d[3].t, { { "a", 0 } })
+        local rows = timing.rows(T, timing.P)
+        assert.are.equal(-0.8, rows[3][5])
+    end)
+end)
+
 describe("timing.verdict: the tolerance windows (design §3)", function()
     local P = { REACT = 0.05, EDGE = 1e-3, G7 = 0.1, HOLD = 0.1, TICK = 0.1, reaction = 0.1, queue = 0.25 }
     it("absorbs grain, the cost lag, wowsims's reaction and the queue; the rest is real", function()
@@ -154,9 +187,11 @@ describe("timing.verdict: the tolerance windows (design §3)", function()
             { "slack", -0.15, false, false, "in:reaction" },
             { "aura", -0.2, false, false, "early" },
             { "queue", 0.25, false, false, "in:queue" },
+            { "cost", 0.12, false, false, "in:cost", 0.07 }, -- measured from the crossing: 0.19
+            { "cost", 0.19, false, false, "late", 0.07 }, -- 0.26 after the crossing: past G7 + TICK
         }
         for _, c in ipairs(cases) do
-            assert.are.equal(c[5], timing.verdict(c[1], c[2], c[3], c[4], P), c[1] .. " " .. tostring(c[2]))
+            assert.are.equal(c[5], timing.verdict(c[1], c[2], c[3], c[4], P, c[6]), c[1] .. " " .. tostring(c[2]))
         end
     end)
 end)

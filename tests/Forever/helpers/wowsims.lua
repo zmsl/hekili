@@ -313,6 +313,7 @@ function M.ready(label, spec, R)
     for i, r in ipairs(rows) do
         assert.are.same(want[i], { r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9] }, path .. " decision " .. i)
     end
+    -- the fixture comparison is the gate (any decision's change fails it); the count floor documents the real set
     local floor = assert(M.READY[spec], "no ready-time floor for " .. spec)
     assert.is_true(s.realMedian <= floor[1] + 1e-9 and s.real <= floor[2], line)
     return s, line

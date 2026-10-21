@@ -509,7 +509,9 @@ describe("the replay's cooldowns: the engine's, a shared category's, the log's",
         end
         assert.are.equal(3, #casts)
         assert.are.same({ 900051, { 900050, 900051, 900052 } }, { casts[1].spell, casts[1].ids })
-        assert.is_true(math.abs(casts[1].cd - 5) < 1e-5) -- less its line's place in its timestamp (the ready-time ruling)
+        -- less its line's place in its timestamp, n x replay.EPS by construction (the ready-time ruling), not float order:
+        -- the cast's cooldown runs from the timestamp's start, so do not "fix" the subtraction
+        assert.is_true(math.abs(casts[1].cd - 5) < 1e-5)
         assert.is_true(math.abs(us.cdUntil.shock_a - (R.pull + 5)) < 1e-3)
         assert.is_true(math.abs(us.cdUntil.shock_b - (R.pull + 5)) < 1e-3) -- the category: both together
         assert.are.same({ 8, { 900060 } }, { tonumber(("%.4f"):format(casts[2].cd)), casts[2].ids })
