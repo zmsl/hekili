@@ -30,7 +30,8 @@ local Hekili = _G[addon]
 -- older core's RegisterResource setfenv's every meta value, and a number raises there.
 --   Since then, without a bump: the ability field `spendBase` (central fix 22); an older core ignores the key and
 --   prices such a cost at or above 1 as points, silently.
-local CONTENT_API = 8
+-- 9 (2026-10-21): the `now` verb `dismissPet` (central fix 27) and the simulation's `pet.<resource>` (the pet's power).
+local CONTENT_API = 9
 
 local done, notice = false, nil
 

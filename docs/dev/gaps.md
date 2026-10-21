@@ -109,6 +109,6 @@ with a percent read (Demonology's "Execute at" in `math`; no shipped line moved,
 an operand); T1, `min` / `max` values (rule 6: a term that may be nil as `(<known>&<term>)`, which the engine's
 min/max skip; the level checker takes it); T4, rule 16's candidate terms carry their known test, so the Warlock packs
 pass `tools/check_pack_levels.lua` without an exception; T5, `multidot` as the single-target cast (rule 17; only the
-Elemental testing build uses it at the pin). Open: T3, `currentMana` of the pet (rule 5's other source
-unit), pending fix 27's pet-power key.
+Elemental testing build uses it at the pin). T3, `currentMana` of the pet (rule 5's other source unit), closed by
+fix 27 (`pet.mana`).
 Cancelled: fix 19 (a harness-vs-in-game default for Sunder; players use Hekili's own per-ability toggles).

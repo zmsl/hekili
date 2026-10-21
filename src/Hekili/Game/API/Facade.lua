@@ -230,22 +230,38 @@ end
 ----------------------------------------------------------------------------------------------------------------------
 -- Resources [W PR16]
 
-kept("UnitPower", "virtual", function(unit, powerType)
-    if unit ~= "player" then
-        return 0
-    end
-    if powerType == nil then
-        powerType = realUnitPowerType and realUnitPowerType("player")
-        if issecretvalue(powerType) or type(powerType) ~= "number" then
-            powerType = 0
+local realUnitPower = resolve("UnitPower")
+kept(
+    "UnitPower",
+    "hybrid",
+    function(unit, powerType)
+        if unit == "pet" then
+            local raw = realUnitPower and realUnitPower(unit, powerType) -- secret: tested next
+            if issecretvalue(raw) or type(raw) ~= "number" then
+                modelled = true
+                return VS.PetPower()
+            end
+            return raw
         end
-    end
-    local b = VS.Power(powerType, now())
-    -- lo for every resource: rage's speed-based model has a zero band and errs upward only, so lo is a true floor (G4);
-    -- for a slot resting at its maximum (mana, energy) lo is the build's rest assumption until a short answer, an exact
-    -- read or a pin's top below it ends it (Families/Resources.lua `over`): it can say affordable when it is not
-    return floor(b.lo)
-end, "secret always [W PR16]; Power().lo for every resource (G4's rage exception dropped 2026-10-16)")
+        modelled = true -- the player's: the belief's always; another unit's: 0
+        if unit ~= "player" then
+            return 0
+        end
+        if powerType == nil then
+            powerType = realUnitPowerType and realUnitPowerType("player")
+            if issecretvalue(powerType) or type(powerType) ~= "number" then
+                powerType = 0
+            end
+        end
+        local b = VS.Power(powerType, now())
+        -- lo for every resource: rage's speed-based model has a zero band and errs upward only, so lo is a true floor (G4);
+        -- for a slot resting at its maximum (mana, energy) lo is the build's rest assumption until a short answer, an exact
+        -- read or a pin's top below it ends it (Families/Resources.lua `over`): it can say affordable when it is not
+        return floor(b.lo)
+    end,
+    "secret always [W PR16]; Power().lo for every resource (G4's rage exception dropped 2026-10-16); the pet's raw "
+        .. "while plain (plain 0 with no pet [W PR12]), PetPower() when secret"
+)
 
 hybrid("GetPowerRegenForPowerType", function(powerType)
     local r = I.res.slotOf[powerType]

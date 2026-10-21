@@ -8,6 +8,6 @@
 ## Dependencies: Hekili, Hekili_Shared
 ## Group: Hekili
 ## LoadOnDemand: 1
-## X-Hekili-ContentAPI: 8
+## X-Hekili-ContentAPI: 9
 
 Warrior.lua

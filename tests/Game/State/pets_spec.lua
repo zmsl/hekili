@@ -8,7 +8,7 @@ local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
 local headless = require("Game.harness.headless")
 
-local SUMMON, GUARD = 6301, 6302
+local SUMMON, GUARD, DISMISS, DISMISS_G = 6301, 6302, 6303, 6304
 
 describe("the pets family", function()
     local ns, VS, I, api, ctl, h, saved
@@ -43,12 +43,20 @@ describe("the pets family", function()
         api, ctl = fake.new()
         ctl.now = 1
         saved = {}
-        for _, k in ipairs({ "GetTime", "UnitGUID", "UnitExists", "UnitIsDead", "CreateFrame", "issecretvalue" }) do
+        for _, k in ipairs({
+            "GetTime",
+            "UnitGUID",
+            "UnitExists",
+            "UnitIsDead",
+            "UnitPower",
+            "CreateFrame",
+            "issecretvalue",
+        }) do
             saved[k] = rawget(_G, k) or false
         end
         _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue =
             api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
-        _G.UnitExists, _G.UnitIsDead = api.UnitExists, api.UnitIsDead
+        _G.UnitExists, _G.UnitIsDead, _G.UnitPower = api.UnitExists, api.UnitIsDead, api.UnitPower
         saved.debugprofilestop = rawget(_G, "debugprofilestop") or false
         _G.debugprofilestop = function()
             return 0
@@ -69,6 +77,12 @@ describe("the pets family", function()
         end)
         register("summon_b", GUARD, function()
             summonPet("guardian_a", 18)
+        end)
+        register("dismiss_a", DISMISS, function()
+            dismissPet("pet_a")
+        end)
+        register("dismiss_b", DISMISS_G, function()
+            dismissPet("guardian_a")
         end)
     end)
 
@@ -139,6 +153,50 @@ describe("the pets family", function()
         assert.is_true(dead)
     end)
 
+    it("models our dismissal down until the first observation after it, which then answers", function()
+        ctl.exists.pet = true
+        start()
+        assert.are.same({ true, false, false }, pet(2))
+        cast(DISMISS, 20)
+        assert.are.same({ false, false, true }, pet(20.1)) -- the client still lists the pet; the dismissal answers
+        assert.is_false(ns.Facade.UnitExists("pet"))
+        ctl.exists.pet = false
+        unitPet(20.2)
+        assert.are.same({ false, false, false }, pet(20.3))
+        assert.are.equal("observed", select(4, VS.Pet(20.3)).basis)
+    end)
+
+    it("frees a dismissed guardian's slots; the pet unit is untouched", function()
+        start()
+        cast(GUARD, 10)
+        cast(GUARD, 12)
+        cast(DISMISS_G, 13)
+        assert.are.same({ 0, 0 }, { VS.PetCount("guardian_a", 13.1) })
+        assert.are.same({ false, false, false }, pet(13.1))
+    end)
+
+    it("reads the pet's power: the client's plain answer, the belief's last plain read when secret", function()
+        start()
+        assert.are.equal(0, VS.PetPower()) -- no pet
+        assert.are.equal(0, ns.Facade.UnitPower("pet", 0))
+        ctl.exists.pet, ctl.petPower = true, 380
+        unitPet(10)
+        assert.are.equal(380, VS.PetPower())
+        assert.are.equal(380, ns.Facade.UnitPower("pet", 0)) -- the raw plain answer
+        ctl.petPower = 300
+        ctl.now = 12
+        VS.Drain(12) -- the poll logs the change
+        assert.are.equal(300, VS.PetPower())
+        ctl.petPower = fake.SECRET
+        ctl.now = 14
+        VS.Drain(14) -- a secret read is no news
+        assert.are.equal(300, VS.PetPower())
+        local v = ns.Facade.UnitPower("pet", 0)
+        assert.is_false(api.issecretvalue(v))
+        assert.are.equal(300, v) -- the belief's, never the secret
+        assert.are.equal(0, ns.Facade.UnitPower("target", 0)) -- any other unit but the player: 0, as before
+    end)
+
     it("counts 3 guardians against a cap of 2, each with its own expiry", function()
         start()
         cast(GUARD, 10)
@@ -164,7 +222,10 @@ describe("the pets family", function()
             unitPet(t)
             cast(GUARD, t + 0.3)
             cast(SUMMON, t + 0.5)
+            ctl.petPower = t % 7
+            cast(DISMISS, t + 0.7)
             local _ = ns.Facade.UnitExists("pet"), ns.Facade.UnitIsDead("pet"), VS.PetCount("guardian_a", t)
+            _ = ns.Facade.UnitPower("pet", 0), VS.PetPower()
         end, 1000)
         assert.are.equal(0, bytes)
     end)
@@ -187,6 +248,17 @@ describe("the simulation's pet reads", function()
         S.reset("AOE") -- partial: a class-neutral boot has no spec, whose state tables a full reset walks
         assert.is_true(S.pet.up)
         assert.are.equal(2, S.pet.guardian_a.count)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("answers pet.<resource> with the pet's power through the facade (a wowsims Pet resource read)", function()
+        local H = headless.new()
+        local S = H.Hekili.State
+        H.ctl.exists.pet, H.ctl.petPower = true, 420
+        H.ns.VirtualState.SpecChanged()
+        S.reset("AOE") -- partial: a class-neutral boot has no spec, whose state tables a full reset walks
+        assert.are.equal(420, S.pet.mana)
+        assert.are.equal(0, S.pet.energy) -- not the pet's power type
         assert.are.same({}, H.errors)
     end)
 end)

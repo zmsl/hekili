@@ -146,6 +146,20 @@ harness sets the type on a world's mob (`entities.new{ creatureType }`, a conten
 request `mobType` through `tests/Forever/helpers/wowsims.lua` `creatureType`), and the client fake answers it
 (`ctl.creature[unit]`, default `"beast"`).
 
+**Pets.** `RegisterPets` names the pets (`{ id, spell, duration, cap }`; a `cap` makes a counted guardian). Both
+layers have the verbs `summonPet(key, duration)` and `dismissPet(key)`: the sim's (`Engine/Sim/State.lua`, Hekili's)
+in `handler`, the belief's (`Game/State/Families/Now.lua`) in `now`, where a guardian's summon adds an expiring slot
+and its dismissal frees them, and any other key models the pet unit up or down until the first observation
+(`Families/Pets.lua`; UNIT_PET and poll 13 read `UnitExists`, `UnitIsDead` and `UnitPower` of `"pet"`, plain). The sim
+answers `pet.up`/`pet.alive` through the facade's `UnitExists`/`UnitIsDead("pet")`, `pet.<key>.count` from the
+belief's guardians, and `pet.mana` (`rage`, `focus`, `energy`) as `UnitPower("pet", type)`: the client's plain answer,
+or the belief's last plain read (`VS.PetPower`) when secret (unprobed with a pet out; plain 0 with none, probe W PR12).
+The translator reads a wowsims resource value on the Pet (`currentMana`) as `pet.mana`.
+
+**Bag counts and stats.** `C_Item.GetItemCount` is a plain passthrough (W PR13): a reagent a kit counts (a
+`RegisterStateExpr` over `Hekili.Client.C_Item.GetItemCount(id)`) is read live, and the sim does not predict its
+spends. `UnitStat` and the other stat reads are the belief's out-of-combat cache (`stat(name, arg)`, `VS.Stat`).
+
 **Percent-of-base costs.** A `spend` between 0 and 1 is a fraction of its pool's base power (the resource meta's
 `base`, or the belief's learned one; without either, of the maximum, as Hekili), floored, in both layers: the sim's
 `ns.SpendPoints` (`Engine/Sim/State.lua`, every site that prices a spend) and the belief's `I.BaseCostOf`

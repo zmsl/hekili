@@ -247,6 +247,25 @@ describe("the wowsims APL translator", function()
         assert.are.same({ { "wowsims_big", false, "wowsims ON/OFF group" } }, toggles)
     end)
 
+    it("reads a resource's current value on the Pet as pet.<resource>; any other Pet value is unsupported", function()
+        local pet = { sourceUnit = { type = "Pet", index = 0, owner = { type = "Self" } } }
+        local text, omitted = apl.translate({
+            priorityList = {
+                cast(100, cmp("OpLt", { currentMana = pet }, const("115"))),
+                cast(200, cmp("OpGt", { currentManaPercent = pet }, const("10%"))),
+                cast(300, cmp("OpGt", { currentEnergy = pet }, const("40"))),
+            },
+        }, ctx())
+        assert.are.equal(
+            table.concat(
+                { "actions=strike,focus=1,if=pet.mana<115", "actions+=/roar,use_off_gcd=1,if=pet.energy>40" },
+                "\n"
+            ),
+            text
+        )
+        assert.are.same({ "default #2: currentManaPercent of Pet" }, omitted)
+    end)
+
     it("reads auraIsKnown as registered on Self or the target; another unit's or player's is false", function()
         local function known(id, unit)
             return { auraIsKnown = { sourceUnit = unit and { type = unit } or nil, auraId = { spellId = id } } }

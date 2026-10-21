@@ -59,6 +59,15 @@ describe("Forever content through the real Engine/Schema/Spec.lua", function()
         assert.are.equal(3, f())
     end)
 
+    it("answers the pet reads a summon or dismiss function field makes under the stub state: no pet", function()
+        local state = engine.load(CLASSES[1]).state
+        local f = setfenv(
+            assert(loadstring("dismissPet('a') summonPet('a') return pet.up, pet.alive, pet.a.up, pet.mana")),
+            state
+        )
+        assert.are.same({ false, false, false, 0 }, { f() })
+    end)
+
     it("lists the class packs and race files the content addons load", function()
         assert.is_true(#CLASSES >= 2)
         assert.are.equal(RACE_LINES, #RACES) -- every race line parsed, its NewRace token found

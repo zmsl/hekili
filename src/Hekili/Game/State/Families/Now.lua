@@ -4,7 +4,7 @@
 -- fields (its cost, its cooldown or charge, the GCD), then runs the ability's `now` function, if the class file
 -- declared one beside `handler`, in one shared context whose names are Hekili's verbs (`gain`, `spend`, `applyBuff`,
 -- `applyDebuff`, `removeBuff`, `removeDebuff`, `addStack`, `setCooldown`, `reduceCooldown`, `summonTotem`,
--- `summonPet`) and reads (`talent`, `buff`, `debuff`, the resources by key, `knownRank`, `stat`, `swingBase`,
+-- `summonPet`, `dismissPet`) and reads (`talent`, `buff`, `debuff`, the resources by key, `knownRank`, `stat`, `swingBase`,
 -- `healthMax`, `now`, `combat`, `level`) with belief meanings. Every write is a `modelled` sample at the cast's time, so any later observation overrides it (I.Basis). Hekili's sim `handler` is never read for truth.
 -- An avoid of the latest cast (Obs.Avoided) undoes its target debuffs and refunds the ability's `refundOnAvoid` share.
 -- Allocates nothing per cast: the context, its proxies and every per-ability array are built at SpecChanged.
@@ -284,6 +284,14 @@ end
 function NAMES.summonPet(key, duration)
     if live and type(key) == "string" then
         I.PetModel(key, duration, T, CAST)
+    end
+end
+
+--- dismissPet(key): Hekili's name. A guardian's summons end; any other key models the pet unit down until the first
+--- observation (Families/Pets.lua).
+function NAMES.dismissPet(key)
+    if live and type(key) == "string" then
+        I.PetDismiss(key, T, CAST)
     end
 end
 

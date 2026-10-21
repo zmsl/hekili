@@ -166,7 +166,7 @@ UnitName	passthrough
 UnitOnTaxi	passthrough
 UnitPartialPower	virtual
 UnitPhaseReason	passthrough
-UnitPower	virtual
+UnitPower	hybrid
 UnitPowerMax	passthrough
 UnitPowerType	passthrough
 UnitRace	passthrough

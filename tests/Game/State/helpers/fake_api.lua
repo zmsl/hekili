@@ -55,6 +55,8 @@ function M.new()
         combat = false,
         class = "CLASS_A",
         power = {}, -- [powerType] = value (SECRET for a secret read)
+        petPower = 0, -- UnitPower("pet") of the pet's power type `petPowerType` while exists.pet (SECRET: a secret read)
+        petPowerType = 0,
         powerMax = {}, -- [powerType] = max
         regen = {}, -- [powerType] = { inactive, active }
         usable = {}, -- [spellID] = { ok, short }
@@ -137,7 +139,13 @@ function M.new()
     function api.CheckInteractDistance(unit) -- LibRangeCheck's interact checkers: within reach when in range
         return ctl.inRange[unit] == true
     end
-    function api.UnitPower(_, pt)
+    function api.UnitPower(unit, pt)
+        if unit == "pet" then -- no pet, or another type than the pet's: plain 0 (probe W PR12, a Warrior with no pet)
+            if ctl.exists.pet ~= true or (pt ~= nil and pt ~= ctl.petPowerType) then
+                return 0
+            end
+            return ctl.petPower
+        end
         local v = ctl.power[pt]
         if v == nil then
             return SECRET

@@ -86,6 +86,15 @@ local function newState(class, race)
         cooldown = every(leaf),
         action = every(leaf),
         active_dot = every(0),
+        -- no pet: State.lua's mt_pets facts down, a pet's key a leaf, its power 0 (pet.mana)
+        pet = setmetatable({ up = false, exists = false, active = false, alive = false, dead = false }, {
+            __index = function(_, k)
+                if k == "mana" or k == "rage" or k == "focus" or k == "energy" then
+                    return 0
+                end
+                return leaf
+            end,
+        }),
         equipped = every(false), -- State.lua's equipped[itemID] / equipped.shield: no gear headless
         boss = false,
         history = { casts = {}, units = {} },
@@ -110,7 +119,16 @@ local function newState(class, race)
     for _, verb in ipairs({ "applyBuff", "applyDebuff", "removeBuff", "removeDebuff", "removeStack", "addStack" }) do
         s[verb] = noop
     end
-    for _, verb in ipairs({ "spend", "gain", "setCooldown", "setDistance", "interrupt", "summonTotem", "summonPet" }) do
+    for _, verb in ipairs({
+        "spend",
+        "gain",
+        "setCooldown",
+        "setDistance",
+        "interrupt",
+        "summonTotem",
+        "summonPet",
+        "dismissPet",
+    }) do
         s[verb] = noop
     end
     return setmetatable(s, {

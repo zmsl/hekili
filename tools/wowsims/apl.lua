@@ -34,8 +34,9 @@
 --    auras then abilities, items by an ability's `item` or `items` (the APLs at the pin that read such an aura: the
 --    CHANGELOG's central fix 13 developer note);
 --    `includeReactionTime`, `rank` and a `tag` other than -1 (rule 4) are ignored. An aura's `sourceUnit` Self (or none) reads `buff.`,
---    CurrentTarget or Target `debuff.`; a resource value with a source unit other than Self is unsupported (the
---    pet's `currentMana`: pending fix 27's pet-power key).
+--    CurrentTarget or Target `debuff.`; a resource's current value on the Pet (`currentMana`) reads `pet.<resource>`
+--    (`pet.mana`: Engine/Sim/State.lua's mt_pets, the pet unit's UnitPower); any other resource value with a source unit
+--    other than Self is unsupported.
 -- 6. Leveling guard: a read of another ability `X` (its cooldown, cast time, cost, readiness, or an aura whose key is
 --    `X`; an aura whose ID is a talent's spell: the talent) is wowsims's unresolved (nil) node while `X` is unknown,
 --    and nil propagates as wowsims builds the APL (sim/core/apl_values_operators.go): `not`, `cmp` and `math` of a nil
@@ -610,8 +611,12 @@ local function value(c, n, pct)
         end
         return s, false
     elseif M.VALUES[k] then
-        if v.sourceUnit and v.sourceUnit.type ~= "Self" then
-            unsupported(k .. " of " .. tostring(v.sourceUnit.type))
+        local u = v.sourceUnit and v.sourceUnit.type or "Self"
+        local res = u == "Pet" and M.VALUES[k]:match("^(%a+)%.current$") -- the pet's power: the sim's pet.<resource>
+        if res then
+            return "pet." .. res, false
+        elseif u ~= "Self" then
+            unsupported(k .. " of " .. tostring(u))
         end
         return M.VALUES[k], false
     elseif k == "variableRef" then

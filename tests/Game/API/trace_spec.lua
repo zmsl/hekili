@@ -74,7 +74,7 @@ describe("the facade trace", function()
             "[vs] passthrough UnitName(player, nil) -> Me, nil, nil, nil #1",
             "[vs] passthrough UnitName(target, nil) -> S, nil, nil, nil #1",
             "[vs] hybrid:model GetHaste(nil, nil) -> 0, nil, nil, nil #1",
-            "[vs] virtual UnitPower(target, 1) -> 0, nil, nil, nil #1",
+            "[vs] hybrid:model UnitPower(target, 1) -> 0, nil, nil, nil #1",
         }, lines) -- GetTime is quiet: counted, not written
         assert.are.equal(1, Facade.secrets.UnitName)
         assert.are.equal(1, Facade.counts.GetTime)

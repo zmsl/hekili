@@ -2587,6 +2587,8 @@ do
         end
     } )
 
+    local petPower = { mana = Enum.PowerType.Mana, rage = Enum.PowerType.Rage, focus = Enum.PowerType.Focus, energy = Enum.PowerType.Energy }
+
     mt_pets = {
         __index = function( t, k )
             local guid = UnitGUID( "pet" )
@@ -2668,6 +2670,10 @@ do
             elseif k == "health_pct" or k == "health_percent" then
                 if t.alive then return 100 * UnitHealth( "pet" ) / UnitHealthMax( "pet" ) end
                 return 100
+
+            elseif petPower[ k ] then
+                -- Forever: the pet's power (pet.mana; tools/wowsims/apl.lua's Pet resource reads); 0 for another type
+                return UnitPower( "pet", petPower[ k ] )
 
             end
 

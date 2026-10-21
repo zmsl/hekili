@@ -2,7 +2,8 @@
 -- The pets family (class-completion C1): the pet unit and the capped guardians.
 -- The pet unit: Sources/Pets.lua observes it (UnitExists / UnitIsDead of "pet", plain). Our summon's `now`
 -- (`summonPet`, Families/Now.lua) models it up (I.PetModel) until the first observation after the summon, or for
--- CAST_GRACE when none comes: a summon whose pet never appears is down after the cast window.
+-- CAST_GRACE when none comes: a summon whose pet never appears is down after the cast window. Our `dismissPet` models
+-- it down the same way. Its power: the last plain UnitPower("pet") the source logged (VS.PetPower).
 -- Guardians: a pet the content registers with a `cap` (RegisterPets) has its own guardians, one expiry per summon;
 -- at the cap the soonest to expire (the oldest) gives way. Nothing observes them; they are modelled only.
 -- Ported from Taco Dog Forever, the pet half of src/TacoDogForever/Model/Belief/Pets.lua (Applier Pet :36).
@@ -13,6 +14,7 @@ local Obs = VS.Obs
 
 -- The pet unit: the last observation's facts (kept across builds, as the unit is); its record.
 local exists, dead = false, false
+local power = 0 -- the pet's power as last read plain (0: no pet)
 local rec -- nil before the first build
 -- Guardians by key: the cap's expiry slots (0: free) and the duration the content registered (false: none).
 local slots, regDur = {}, {}
@@ -34,9 +36,12 @@ I.OnBuild(function(def, now)
     end
 end)
 
--- Pet (a: the unit exists 1/0; b: it is dead 1/0) at t.
+-- Pet (a: the unit exists 1/0; b: it is dead 1/0; c: its power, -1 a secret read) at t.
 I.On(Obs.Pet, function(o, t)
     exists, dead = o.a == 1, o.b == 1
+    if o.c >= 0 then
+        power = o.c
+    end
     I.Sample(rec, "observed", (exists and not dead) and 1 or 0, t, Obs.Pet)
 end)
 
@@ -61,15 +66,28 @@ function I.PetModel(key, dur, t, event)
     s[j] = t + dur
 end
 
---- (C1) The pet unit at `now`: exists, dead, whether that is our summon's model (no observation since it, inside
---- CAST_GRACE), and its record. Allocates nothing.
+--- Our dismissal of `key` at `t`: a guardian's slots free; any other key models the pet unit down. Allocates nothing.
+function I.PetDismiss(key, t, event)
+    local s = slots[key]
+    if not s then
+        I.Sample(rec, "modelled", 0, t, event)
+        return
+    end
+    for j = 1, #s do
+        s[j] = 0
+    end
+end
+
+--- (C1) The pet unit at `now`: exists, dead, whether that is our summon's or dismissal's model (no observation since
+--- it, inside CAST_GRACE), and its record. Allocates nothing.
 function VS.Pet(now)
     if not rec then
         return exists, dead, false, I.UNKNOWN
     end
     if rec.basis == "modelled" and now - rec.last.modelled.t <= I.CAST_GRACE then
-        rec.est = 1
-        return true, false, true, rec
+        local up = rec.last.modelled.v == 1
+        rec.est = up and 1 or 0
+        return up, false, true, rec
     end
     rec.est = (exists and not dead) and 1 or 0
     return exists, dead, false, rec
@@ -90,4 +108,11 @@ function VS.PetCount(key, now)
         end
     end
     return n, last
+end
+
+--- The pet's power as last read plain (its own power type, UnitPower("pet")), 0 with no pet or before a read.
+--- shortcut: no pet regen or spend model; UnitPower("pet") is unprobed with a pet out (SecretWhenUnitPowerRestricted
+--- in the API docs; plain 0 with none, probe W PR12): model it if the Warlock checkpoint finds it secret.
+function VS.PetPower()
+    return power
 end
