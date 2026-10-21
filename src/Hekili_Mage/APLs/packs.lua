@@ -7,9 +7,13 @@
 
 return {
     class = "MAGE",
-    packs = { "Arcane (wowsims.com)", "Fire (wowsims.com)" },
+    packs = { "Arcane (wowsims.com)", "Fire (wowsims.com)", "Frostfire (wowsims.com)" },
     specs = {
         ["Arcane (wowsims.com)"] = "arcane",
         ["Fire (wowsims.com)"] = "fire",
+        -- the FFB build (-2355000013011503-00550003310003002) is 29 Fire points to 22 Frost: our active spec is the
+        -- tree with the most points, so Fire; Fire keeps "Fire (wowsims.com)" as its default (wowsims's own default
+        -- build is Arcane's and says nothing on Fire)
+        ["Frostfire (wowsims.com)"] = "fire",
     },
 }

@@ -240,6 +240,50 @@ describe("Forever Mage", function()
         end
     end)
 
+    it("spends a Fingers of Frost charge on each damage spell's cast in the simulation, none in the belief", function()
+        -- wowsims talents_frost.go: every damage spell cast spends one, a channel aside; the belief's are the aura walk's
+        for _, key in ipairs({
+            "arcane_blast",
+            "arcane_wrath",
+            "frostbolt",
+            "fireball",
+            "scorch",
+            "pyroblast",
+            "fire_blast",
+            "frostfire_bolt",
+        }) do
+            local a = w.abilities[key]
+            local e = ld.env(w)
+            e.buff = buffs({ fingers_of_frost = 2 })
+            ld.run(a.handler, e)
+            assert.is_truthy(table.concat(e.removed, " "):find("fingers_of_frost", 1, true), key)
+            e = ld.env(w)
+            ld.run(a.handler, e) -- none up: none spent
+            assert.is_falsy(table.concat(e.removed, " "):find("fingers_of_frost", 1, true), key)
+            if a.now then
+                e = ld.env(w)
+                e.buff = buffs({ fingers_of_frost = 2 })
+                ld.run(a.now, e)
+                assert.is_falsy(table.concat(e.removed, " "):find("fingers_of_frost", 1, true), key)
+            end
+        end
+    end)
+
+    it(
+        "casts Frostfire Bolt 0.1 s faster a rank of Improved Fireball, and prices it and Frostbolt less Frost Channeling",
+        function()
+            local f = w.abilities.frostfire_bolt
+            local e = ld.env(w)
+            e.haste = 1
+            e.talent.improved_fireball = { rank = 5 }
+            assert.are.equal(2.5, ld.run(f.cast, e)) -- wowsims's FFB log: 2.5 s unhasted
+            w.game.known[1237313], w.game.known[10181] = true, true
+            e.talent.frost_channeling = { rank = 3 }
+            assert.are.same({ 314.5, 221 }, { ld.run(f.spend, e), ld.run(w.abilities.frostbolt.spend, e) }) -- 370, 260 x 0.85
+            w.game.known[1237313], w.game.known[10181] = false, false
+        end
+    )
+
     it("shortens Fire Blast's cooldown 1 s a rank of Wake of Fire, 2 s at most", function()
         local cd, e, out = w.abilities.fire_blast.cooldown, ld.env(w), {}
         for rank = 0, 3 do

@@ -19,7 +19,11 @@ end
 
 -- The replay's: Fireball's and Pyroblast's DoT parts are their own GCD-0 Casting lines {SpellID: 10151 / 18809,
 -- Tag: 1}: procs, neither decisions nor casts.
-local REPLAY = { fire = { procs = { ["10151:1"] = true, ["18809:1"] = true } } }
+-- Frostfire Bolt's DoT part likewise {1237313, Tag: 1}.
+local REPLAY = {
+    fire = { procs = { ["10151:1"] = true, ["18809:1"] = true } },
+    frostfire = { procs = { ["1237313:1"] = true, ["18809:1"] = true } },
+}
 
 -- recipe, world content, pack, the replay floor (the first clean run's, never lowered), LIVE60: the pack's own worst
 -- idle at 60, rounded up to 0.1 s (P8).
@@ -35,9 +39,12 @@ local REPLAY = { fire = { procs = { ["10151:1"] = true, ["18809:1"] = true } } }
 -- CD_PROBE each settle while the model's own end is nearer: central, mage_fire.lua's header) and 3 combustion > scorch;
 -- the 20-fight line's waits [scorch:unknown 148] are the Scorch line's `debuff.fire_vulnerability.remains<5` edge on
 -- the modelled (unreadable) target debuff, a candidate not yet measured as flicker.
+-- Frostfire (Task FFB): 0.891 (49 of 55), floor 0.89 (mage_frostfire.lua's header); LIVE60 10.8: as Fire's, its mana
+-- spent out by about 80 s, it waits on Frostfire Bolt's 314.5 and Fire Blast's 340 (Evocation on its cooldown).
 local PACKS = {
     { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.77, 0 },
     { "mage_fire", "Fire", "Fire (wowsims.com)", 0.84, 12.6 },
+    { "mage_frostfire", "Frostfire", "Frostfire (wowsims.com)", 0.89, 10.8 },
 }
 
 describe("the Mage wowsims.com packs #slow #wowsims", function()
@@ -46,7 +53,7 @@ describe("the Mage wowsims.com packs #slow #wowsims", function()
     for _, p in ipairs(PACKS) do
         local spec, world, pack, FLOOR, LIVE60 = p[1], W[p[2]], p[3], p[4], p[5]
         it(pack .. " follows wowsims's casts", function()
-            ws.gate(pack, content(spec, world, pack, 60), spec, FLOOR, REPLAY[world == W.Fire and "fire" or "arcane"])
+            ws.gate(pack, content(spec, world, pack, 60), spec, FLOOR, REPLAY[p[2]:lower()])
         end)
         for _, level in ipairs({ 10, 40, 60 }) do
             it(pack .. " stays live at level " .. level, function()

@@ -3,11 +3,13 @@
 -- Forever's spell data (ranks, costs, cooldowns, cast times and durations from the Forever DB2 at build 1.60.1.70338,
 -- wowdb), mana under the five-second rule (`fsr`), the casts and the two channels (Arcane Missiles and Evocation:
 -- `channeled`, `tick_time`), Arcane Blast's charges (each +175% to its own cost, a fraction of base mana), Missile
--- Barrage (Arcane Missiles free, in half the time), Heating Up's cheaper Pyroblast casts, Fire Vulnerability's stacks
--- from Scorch, Evocation's mana, Presence of Mind, Arcane Power's +30% cost, Clearcasting as a charged cost modifier,
--- Counterspell, and the school lockouts (each spell refuses while an interrupt has its school locked out:
--- Hekili_Shared's locked_out_<school>). The priorities are the wowsims.com packs (Arcane and Fire; the abilities and
--- auras below are what wowsims/forever's arcane.apl.json, deepFire.apl.json and ffb.apl.json cast or read).
+-- Barrage (Arcane Missiles free, in half the time), Heating Up's cheaper Pyroblast casts, Fingers of Frost's charges
+-- spent by each damage cast, Frost Channeling's cheaper Frost casts, Fire Vulnerability's stacks from Scorch,
+-- Evocation's mana, Presence of Mind, Arcane Power's +30% cost, Clearcasting as a charged cost modifier, Counterspell,
+-- and the school lockouts (each spell refuses while an interrupt has its school locked out: Hekili_Shared's
+-- locked_out_<school>). The priorities are the wowsims.com packs (Arcane, Fire, and Frostfire as Fire's second by its
+-- talents' points; the abilities and auras below are what wowsims/forever's arcane.apl.json, deepFire.apl.json and
+-- ffb.apl.json cast or read).
 -- Research: docs/research/2026-10-15-forever-mage/research.md.
 -- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (ruling P6; in-game checks): Arcane Wrath
 -- (1326079-1326082: ranks, levels, costs, 3.5 s cast, 6 s cooldown and its class mask), the talents' per-rank values
@@ -125,6 +127,14 @@ local function byRank(values, ids)
     end
 end
 
+-- The same, less Frost Channeling's -5% a rank (DB2 11160 effect 0, aura 108 misc 14 -15% at the top rank; its mask
+-- names Frostbolt and Frostfire Bolt; wowsims's FFB log: 314.5 = 370 x 0.85 at 3/3).
+local function frostChanneled(values, ids)
+    return function()
+        return (values[knownRank(ids)] or values[1]) * (1 - 0.05 * talent.frost_channeling.rank)
+    end
+end
+
 -- Each spell refuses while an interrupt has its school locked out (Hekili_Shared's locked_out_<school>, C10). A new
 -- closure per ability: each field function runs in the environment the engine gives it (in the belief's `now` context
 -- the names are absent: never locked).
@@ -150,9 +160,14 @@ end
 -- A hard cast's `now` or `handler`: spends Presence of Mind (DB2 12043 aura 108 misc 10 -100% cast time on every cast
 -- below, by the class mask; wowsims presence_of_mind.go: the first cast of its scope with a cast time takes it). Each
 -- cast time reads it: 0 while it is up.
-local function casts()
+-- With `spends` (a `handler`'s): a Fingers of Frost charge spent too (below; no `now` verb spends a stack: the belief's
+-- charges are the aura walk's).
+local function casts(spends)
     return function()
         removeBuff("presence_of_mind")
+        if spends and buff.fingers_of_frost.up then
+            removeStack("fingers_of_frost")
+        end
     end
 end
 
@@ -223,13 +238,31 @@ spec:RegisterAuras({
     fire_vulnerability = { id = 22959, duration = 30, max_stack = 5 },
 })
 
+-- Fingers of Frost (wowsims talents_frost.go registerFingersOfFrost): every damage spell cast, a channel aside, spends a
+-- charge (the cast that granted them none: the grant, a Chill's 15% roll on its hit, is unseen, so the sim spends on
+-- every cast). Each `handler` below with `spends` set.
+-- shortcut: Arcane Missiles spends one a landed missile; its channel spends none here, and no build that casts it takes
+-- Fingers of Frost; upgrade if a pack does.
+
+-- An instant's `handler` (Fire Blast): only the charge.
+local function fingered()
+    return function()
+        if buff.fingers_of_frost.up then
+            removeStack("fingers_of_frost")
+        end
+    end
+end
+
 -- A Scorch's `now` or `handler`: Fire Vulnerability's stack (wowsims scorch.go: on a landed Scorch, at Improved
 -- Scorch's chance), and Presence of Mind spent.
 -- shortcut: the roll is unseen, so ranks 1-2 (33% / 67%) add a stack on every Scorch as rank 3 (100%) does; upgrade
 -- if a pack reads the stack below 3/3.
-local function scorched()
+local function scorched(spends)
     return function()
         removeBuff("presence_of_mind")
+        if spends and buff.fingers_of_frost.up then
+            removeStack("fingers_of_frost")
+        end
         if talent.improved_scorch.rank > 0 then
             applyDebuff("target", "fire_vulnerability", nil, min(5, debuff.fire_vulnerability.stack + 1))
         end
@@ -237,8 +270,11 @@ local function scorched()
 end
 
 -- A Pyroblast's: every Heating Up stack spent unless Presence of Mind made it instant (wowsims talents_fire.go).
-local function pyroblasted()
+local function pyroblasted(spends)
     return function()
+        if spends and buff.fingers_of_frost.up then
+            removeStack("fingers_of_frost")
+        end
         if not buff.presence_of_mind.up then
             removeBuff("heating_up")
         end
@@ -248,9 +284,12 @@ end
 
 -- An Arcane Blast's: a charge (the run keeps the first charge's end: wowsims arcane_charge.go), and Presence of Mind
 -- spent.
-local function charged()
+local function charged(spends)
     return function()
         removeBuff("presence_of_mind")
+        if spends and buff.fingers_of_frost.up then
+            removeStack("fingers_of_frost")
+        end
         addStack("arcane_blast", buff.arcane_blast.up and buff.arcane_blast.remains or nil)
     end
 end
@@ -288,7 +327,7 @@ spec:RegisterAbilities({
         usable = unlocked("arcane"),
 
         now = charged(),
-        handler = charged(),
+        handler = charged(true),
     },
 
     -- A channel: a missile a second (3, 4, then 5 s); under Missile Barrage 2.5 s with a missile every 0.5 s, free (its
@@ -332,7 +371,7 @@ spec:RegisterAbilities({
         usable = unlocked("arcane"),
 
         now = casts(),
-        handler = casts(),
+        handler = casts(true),
     },
 
     frostbolt = {
@@ -345,7 +384,7 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        spend = byRank(FROSTBOLT_COST, FROSTBOLT),
+        spend = frostChanneled(FROSTBOLT_COST, FROSTBOLT),
         spendType = "mana",
 
         startsCombat = true,
@@ -353,7 +392,7 @@ spec:RegisterAbilities({
         usable = unlocked("frost"),
 
         now = casts(),
-        handler = casts(),
+        handler = casts(true),
     },
 
     fireball = {
@@ -374,7 +413,7 @@ spec:RegisterAbilities({
         usable = unlocked("fire"),
 
         now = casts(),
-        handler = casts(),
+        handler = casts(true),
     },
 
     scorch = {
@@ -394,7 +433,7 @@ spec:RegisterAbilities({
         usable = unlocked("fire"),
 
         now = scorched(),
-        handler = scorched(),
+        handler = scorched(true),
     },
 
     -- 6 s, -25% a Heating Up stack (DB2 400625 aura 108 misc 10): 1.5 s at three.
@@ -415,7 +454,7 @@ spec:RegisterAbilities({
         usable = unlocked("fire"),
 
         now = pyroblasted(),
-        handler = pyroblasted(),
+        handler = pyroblasted(true),
     },
 
     fire_blast = {
@@ -434,19 +473,22 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(FIRE_BLAST),
         usable = unlocked("fire"),
+
+        handler = fingered(),
     },
 
-    -- Frostfire: locked out by either school's lockout.
+    -- Frostfire: locked out by either school's lockout. Improved Fireball's -0.1 s a rank reaches it (DB2 11069's mask
+    -- word 1 0x1000, Frostfire Bolt's; wowsims's FFB log: 2.5 s unhasted at 5/5).
     frostfire_bolt = {
         id = 401502,
         copy = rest(FROSTFIRE_BOLT),
         cast = function()
-            return buff.presence_of_mind.up and 0 or 3 * haste
+            return buff.presence_of_mind.up and 0 or (3 - 0.1 * talent.improved_fireball.rank) * haste
         end,
         cooldown = 0,
         gcd = "spell",
 
-        spend = byRank(FROSTFIRE_BOLT_COST, FROSTFIRE_BOLT),
+        spend = frostChanneled(FROSTFIRE_BOLT_COST, FROSTFIRE_BOLT),
         spendType = "mana",
 
         startsCombat = true,
@@ -454,7 +496,7 @@ spec:RegisterAbilities({
         usable = unlocked("frostfire"),
 
         now = casts(),
-        handler = casts(),
+        handler = casts(true),
     },
 
     -- A channel of 8 s, its mana from the resource's evocation entry while its aura is up (a channel's `handler` never
@@ -635,4 +677,9 @@ spec:RegisterPack(
     "Fire (wowsims.com)",
     20261021338,
     [[Hekili:nsvxVTjmu0FolrlIpcTDTrLh60w3A1A1KOpBWyBcEfWiFnPkst8BFxdjegnPkVGmxoNZ9RJH4tEHeXPgb55LElVY3BPFqW1KiZ2AbjQMYELUgpurlXN3l1I2KzVPEdKLGdtvo3IzBHIYT6K2ilmpurspQKqTGrIE6UF89vzOqKOCjNl6rla2rLFvBIjhdUlMBMsl2i0TjCrgTPW0MC3V)vBcgUnzh9gPRntGBjw5U8AWLwxaUCHO2IWbFZ5pGQA(cuBnTckWsLJNv2CjH2ekNRQ(eE4vXwWPn5BudD1rQHzp9WlOi5gtnSY1DT0K3KAlB3jqNJAILkpi4MapU3fEbEo4GtRYKf4CGYmsvfeYOffX9VexibZc7upuSrXO2ylKzHL0kQtnZCBOVx7J7i(5qxGP0S8fzkwdeU0ICgxK2KL5yh1XBAkQeAAQSqA26agCTE7L)90i0IsQScU9Y5JtsdiILgrjSWEsLLfVMXd9hdbB(0gORApjgBpeVwuEAe1B1Q0ckob6BiFBd1vR5cCuuToUPUVlcdgZRRt6iookvZOvI4sja44gENM7(qCkvRrlJtt9untXfZqmNHfYOvZUbF7JKiCFdyOjMF7(e6UR1BCXJp3D3turtleCYxjrmnoD1skjA8AEV)a)(e)rVQX93nhQfIbt9jv(mSfNLV4qv1B9irDJaBQX8hmj)J2022EG7GJYs6IZK0bpML1LNjR9UolNRo545eMSdYmynhAyFRIFzII7HFWrArD9hN33Bepi0et8)N9B(GSB9UeB2h5qoI3BpLdGgVq74tBm5knj6NIxr3a(7V7393TUpt(3]]
+)
+spec:RegisterPack(
+    "Frostfire (wowsims.com)",
+    20261021000,
+    [[Hekili:nsvBVPnmq4Fod0q5fO0PHiFOtBDRvRvtk9ZoXXVq8WjoY2HkKMYV9DobcbePcHe6IZ98Cp3DpoOq0BOyk2YqVopy(9HbZddccqX29vmuCfMSfVbckXfW)pQvglxOznPtEx9Uruy8iQIPUe3lvyQJSSAH0(ujk7Q8AQyeu8lp8ZFSYrekoxqPSUSzgY41yvtQnho8Wz(CLMTJPBsPmoUwABsF4p)UjfoUjDih1cFxnn(fqJ4tRm(4kjaNN5bbE)1OkNod4wJlnsqVuiw5QLW0KIPuv5NGGTS9gVM0VJT4vxrdtE5P3asYT2kZkF)ncBEDMt2(xK6uGtqQ0fl(6IaAWDblc8GPNwXfsyyGjwHQ0erWszs3djsHXoZn)Jy7ueS7SzcEubUe7vrSRJcdAE(aWph5BiknjFgxrQnrZDzoHYYQ5Cp3ajzxTSKPXzcPWU3ZyHf86L)B8m0ScSO0SE50HfP2WsewwHzMlsX5jBi0OWHP40xYgwX4zuTxRYKyO76eBOtST6iNbTz5MK6QofgTyiUwvEDGCaftBG6LWDEGdn48ZGF0CKKPaBZX341pDhmNpmfBEgfdlpdC0f2z3YX0EfQZfcHV2ELIvIZKmk6BOyIggvAbgfpCNDCzdV)ILDhRjDx561cYcLEuMVHD8nTKpPQoFekUDe4knu)fxu)bRwxB3JT3E4aD3nc6OHXHz5On6i(Jt007Q6LEOJX7)yghZ4CI3tUUZj(lxqCF(NzZqUFdwMxXMCe4PKgo7BXJRT5knk(xSTWId(SZJh(Qs7Rr))p]]
 )

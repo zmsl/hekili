@@ -271,6 +271,7 @@ M.READY = {
     hunter_survival = { 0.14, 9 },
     mage_arcane = { 0.47, 21 }, -- 0.470, 21 (Mage lane, ruling M13; first clean run on 0ce5d1a4)
     mage_fire = { 0.37, 31 }, -- 0.370, 31
+    mage_frostfire = { 0.38, 31 }, -- 0.380, 31 (Task FFB, ruling M13; first clean run on 3e104ce9)
     paladin_protection = { 0.54, 12 },
     paladin_retribution = { 0.25, 1 },
     rogue_assassination = { 0.20, 30 },

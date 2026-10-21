@@ -370,24 +370,31 @@ research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`)
 - H21: Rapid Fire and Blood Fury recommended from 5 s into a fight, off the GCD (rule 13's automatic cooldowns).
 
 `tests/Forever/loop_mage_spec.lua` runs 3 fights of each Mage pack in `make check` (seeds 1-3, `#slow`) and 20 in
-`make test-mage` (`#mage`, `loop_mage_arcane_spec.lua`, `loop_mage_fire_spec.lua`), gated by `pack_gate.solo` and
+`make test-mage` (`#mage`, `loop_mage_arcane_spec.lua`, `loop_mage_fire_spec.lua`, `loop_mage_frostfire_spec.lua`), gated by `pack_gate.solo` and
 asserting that some focus line ran (Arcane: Missiles on Missile Barrage at tier 1, Evocation at tier 2; Fire also
-Pyroblast on Heating Up at tier 1 and Scorch at tier 2: ruling M5). The packs are Arcane and Fire (wowsims.com) (Task 12
-of the wowsims packs plan; Frost unsupported, Frostfire an open item), their replay and leveling gates
+Pyroblast on Heating Up at tier 1 and Scorch at tier 2: ruling M5; Frostfire Pyroblast and Fire Blast on the Fingers of
+Frost read at tier 1, Scorch and Evocation at tier 2). The packs are Arcane and Fire (wowsims.com) (Task 12 of the
+wowsims packs plan) and Frostfire (wowsims.com) (Task FFB: Fire's second pack, its talents 29 Fire points to 22 Frost;
+Frost unsupported), their replay and leveling gates
 `tests/Forever/wowsims_mage_spec.lua`. The worlds (`tests/Forever/helpers/mage_world.lua`) cast at 25 yd with cast bars
 and channels (Arcane Missiles, Evocation: any press at 99% mana clips it); the character is trainer-taught (no book
 ranks, as wowsims's), its pool and regen are the logs' (Arcane 6678, Fire 6168; 29.13 a second outside the five-second
-rule, all of it while casting for Arcane, half for Fire). Flicker floors (pack_gate `FLICKER`): Arcane 1.7 (1.66,
+rule, all of it while casting for Arcane, half for Fire and Frostfire). Flicker floors (pack_gate `FLICKER`): Arcane 1.7 (1.66,
 oracle 1.46; 1.5 since the lane review's Arcane Power fix measured 1.43, oracle 1.41), Fire 1.3 (1.21, oracle 0.40),
-retracted 0 each. Fire's excess over its oracle is Fire Blast's cooldown end (fire_blast > fireball > fire_blast, 7 of 10
+Frostfire 0.3 (0.30, oracle 0.38), retracted 0 each. Fire's excess over its oracle is Fire Blast's cooldown end (fire_blast > fireball > fire_blast, 7 of 10
 flickers in 3 fights: the not-ready flag's CD_PROBE push, central); the Scorch line's Fire Vulnerability edge is a
-candidate. The lines (on 0ce5d1a4 + Task 12 and its lane review fixes):
+candidate. Frostfire's 20-fight agreement (0.958) is lowest where its mana runs dry: pooling for Frostfire Bolt, the
+believed mana a few points under the truth (Master of Elements' refunds unseen) puts Frostfire Bolt's ready time past
+the Scorch line's Fire Vulnerability `remains<5` edge, so ours shows Scorch where the oracle shows Frostfire Bolt
+(API-forced). The lines (on 0ce5d1a4 + Task 12 and its lane review fixes; Frostfire's on 3e104ce9 + Task FFB):
 
 ```
 Arcane solo: fights=3 agreement 0.987 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 79.7 (oracle 78.3, unmatched 0.9), cost 2.2 (oracle 4.3, unmatched 0.2)], episodes 12.20/min; dps A/B 1.136; ... [seeds 1-3]
 Fire solo: fights=3 agreement 0.993 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 68.4 (oracle 68.8, unmatched 0.6), cost 9.8 (oracle 9.3, unmatched 1.9)], episodes 6.21/min; dps A/B 1.030; ... [seeds 1-3]
 Arcane solo: fights=20 agreement 0.994 (18040 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 77.2 (oracle 77.5, unmatched 0.7), cost 4.6 (oracle 4.8, unmatched 0.6)], episodes 10.83/min; dps A/B 1.025; ...
 Fire solo: fights=20 agreement 0.992 (18040 ticks); react median 0 p90 0 never 0.009; refused per 100 [casting 68.0 (oracle 66.8, unmatched 0.7), cost 10.3 (oracle 12.3, unmatched 1.3)], episodes 5.77/min; dps A/B 1.018; ...
+Frostfire solo: fights=3 agreement 0.992 (2706 ticks); react median 0 p90 0 never 0.022; refused per 100 [casting 74.8 (oracle 75.0, unmatched 1.6)], episodes 6.43/min; dps A/B 1.026; ... [seeds 1-3]
+Frostfire solo: fights=20 agreement 0.958 (18040 ticks); react median 0 p90 1 never 0.034; refused per 100 [casting 75.0 (oracle 73.5, unmatched 1.7), cost 0.3 (oracle 2.8, unmatched 0.1)], episodes 5.44/min; dps A/B 0.986; ...
 ```
 
 Core checkpoints (R1 measured: rage at the swing; G7, O1, O2, M1, PH1, E1 and the rest) are under "In game",
@@ -480,6 +487,7 @@ Retribution, Paladin Protection and Survival idles re-measured in the final revi
 | Survival (wowsims.com) | 0.97 | 0.976 (41) | 6 (0) | L10 4.6, L40 0.2, L60 0.2 | 0.000 / 0.360 | 0.140, 9 | 1 | 0.14, 9 |
 | Arcane (wowsims.com) | 0.77 | 0.780 (59) | 6 (0) | L10 0.0, L40 0.0, L60 0.0 | 0.100 / 0.970 | 0.470, 21 | 13 | 0.47, 21 |
 | Fire (wowsims.com) | 0.84 | 0.841 (63) | 12.6 (12.6) | L10 0.0, L40 0.2, L60 12.6 | 0.130 / 1.610 | 0.370, 31 | 10 | 0.37, 31 |
+| Frostfire (wowsims.com) | 0.89 | 0.891 (55) | 10.8 (10.8) | L10 5.6, L40 0.2, L60 10.8 | 0.300 / 1.010 | 0.380, 31 | 6 | 0.38, 31 |
 
 A LIVE60 constant above today's L60 measurement is an earlier measurement the spec keeps (Combat 4.8 vs 4.0,
 Retribution 8.4 vs 2.8 by ruling P6, Paladin Protection 17.8 vs 11.8 from the untanked fight); limits are not lowered
@@ -488,7 +496,8 @@ in this task. Fury's 8.6 s below 60, Arms's 11.2 and Guardian's 10.0 are levelin
 6 s are wowsims's own play: Arms pools rage for Heroic Strike, Guardian waits on rage, Retribution and
 Marksmanship spend themselves out of mana as wowsims's own fights do (ruling P6), Paladin Protection waits on mana
 (the old untanked fight's 17.8 s), Enhancement's spending runs the mana out from 90 s, Fire's by 85 s (then waits on
-Fire Blast's 340; Evocation on its 8-minute cooldown counts as usable).
+Fire Blast's 340; Evocation on its 8-minute cooldown counts as usable), Frostfire's by about 80 s (then waits on
+Frostfire Bolt's 314.5 and Fire Blast's 340).
 
 Recorded deviations (each one's reason in the named file):
 - Every pack (API-forced, `tools/wowsims/apl.lua` rules 10, 11, 13): `fight_remains` answers unknown (target health
@@ -514,7 +523,9 @@ Recorded deviations (each one's reason in the named file):
   Read Ley Line (a Skyborne racial) dropped (rule 12: no Skyborne race pack); Master of Elements' refunds unbelieved
   (crits unseen, mana secret); the worlds' Mage is trainer-taught (no book ranks), as wowsims's; wowsims clips
   Evocation at >= 99% mana (interruptIf), the translator drops channelSpell.interruptIf (shared gap, reported), the
-  world clips by wowsims's rule.
+  world clips by wowsims's rule. Frostfire: Fingers of Frost's grant (a Chill's 15% roll) is unseen, so the sim spends
+  a charge on every damage cast (wowsims: none on the cast that granted them); the worlds' crits ignore Shatter (the
+  harness's one crit rate); `includeReactionTime` on the Fingers of Frost read ignored (rule 5).
 
 CPU and memory, release to release (`r.cpuMean`/p99 of the 3- and 20-fight lines, process CPU ms per Update; `make
 bench`'s bytes per Update; both measured on this machine one run after the other, so compare the columns, not the

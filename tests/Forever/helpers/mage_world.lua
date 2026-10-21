@@ -1,13 +1,15 @@
 -- tests/Forever/helpers/mage_world.lua (class-completion plan, "The per-pack gate"): the Mage content of the
--- class-neutral headless loop, in hunter_world.lua's shape, one content per supported spec (M.Arcane, M.Fire): the
--- character the instance logs in as (wowsims/forever's preset builds' talents), each ability's press in the world's
+-- class-neutral headless loop, in hunter_world.lua's shape, one content per wowsims.com pack (M.Arcane, M.Fire,
+-- M.Frostfire): the character the instance logs in as (wowsims/forever's preset builds' talents), each ability's press in the world's
 -- generic verbs, the client's usability answers. IDs, costs, cooldowns and aura durations come from the class file
 -- (load_druid's recording load of Mage.lua for the character, the booted oracle's Hekili.Class for the rest). The
 -- world's own, restated from the DB2 and wowsims/forever (so the class file's belief is measured against them): Arcane
 -- Blast's 1.5 s cast, its charges (15 s from the first) and their cost (15% of base mana, +175% a charge), Missile
 -- Barrage's proc (its talent's 20% / 40% on Arcane Blast, half that on Fireball, Frostbolt, Frostfire Bolt and Arcane
 -- Wrath), Heating Up from the Fire casts' crits (Fire Blast one more on any hit) and Pyroblast's faster cast and spend,
--- Improved Scorch's Fire Vulnerability (33 / 67 / 100%), Clearcasting (Arcane Concentration's 2% a rank on a damage
+-- Improved Scorch's Fire Vulnerability (33 / 67 / 100%), Fingers of Frost (a Chill's landed hit, Frostbolt's or
+-- Frostfire Bolt's, grants its rank's charges at 15%; every other damage spell cast spends one, a landed missile one;
+-- wowsims talents_frost.go), Frost Channeling's -5% a rank and Improved Fireball's -0.1 s on Frostfire Bolt, Clearcasting (Arcane Concentration's 2% a rank on a damage
 -- spell's hit) and Arcane Power's costs, Presence of Mind's instant cast, mana under the five-second rule (the pools
 -- and the regen wowsims's logs'). Damage amounts are UNMEASURED.
 -- The hard casts are cast bars (a press with a cast time: UNIT_SPELLCAST_START and UnitCastingInfo at the press, the
@@ -90,6 +92,8 @@ local POWERED = CLEARCAST
 local BARRAGE = { arcane_blast = 1, fireball = 0.5, frostbolt = 0.5, frostfire_bolt = 0.5, arcane_wrath = 0.5 }
 local HEATING = { fireball = true, frostfire_bolt = true, fire_blast = true, scorch = true }
 local FIRE = { fireball = true, frostfire_bolt = true, fire_blast = true, scorch = true, pyroblast = true }
+local CHILL = { frostbolt = true, frostfire_bolt = true } -- Permafrost's mask's (wowsims's chillFlags) the kit casts
+local FROST_CHANNELING = { frostbolt = true, frostfire_bolt = true } -- DB2 11160 effect 0's mask
 
 -- The talents the world reads, by their DB2 (or wowsims's) rank-1 spells.
 local T = {
@@ -100,6 +104,8 @@ local T = {
     improved_fireball = 11069,
     improved_frostbolt = 11070,
     wake_of_fire = 11078,
+    fingers_of_frost = 400647,
+    frost_channeling = 11160,
 }
 
 local W0
@@ -197,6 +203,44 @@ local PACKS = {
         },
         uptime = { "fire_vulnerability" },
     },
+    -- presets.ts FFBTalents -2355000013011503-00550003310003002 (29 Fire, 22 Frost: the Fire spec); the log's pool and
+    -- regen are the Fire build's (6168; half the spirit part while casting, Mage Armor's).
+    Frostfire = {
+        pack = "Frostfire (wowsims.com)",
+        spec = 100082,
+        max = 6168,
+        casting = 0.5,
+        kit = {
+            "scorch",
+            "pyroblast",
+            "fire_blast",
+            "fireball",
+            "frostbolt",
+            "frostfire_bolt",
+            "evocation",
+            "counterspell",
+        },
+        talents = {
+            [11078] = 2, -- Wake of Fire (wowsims's Improved Fire Blast)
+            [18459] = 2, -- Incineration (wowsims 3; the DB2's 2)
+            [11069] = 5, -- Improved Fireball
+            [11119] = 5, -- Ignite
+            [11366] = 1, -- Pyroblast
+            [11095] = 3, -- Improved Scorch
+            [400624] = 1, -- Heating Up
+            [29074] = 1, -- Master of Elements
+            [11115] = 3, -- Critical Mass (wowsims 5; the DB2's 3)
+            [11124] = 3, -- Fire Power
+            [29438] = 3, -- Elemental Precision (wowsims 5; the DB2's 3)
+            [11207] = 5, -- Ice Shards
+            [11151] = 3, -- Piercing Ice
+            [11160] = 3, -- Frost Channeling
+            [1312002] = 1, -- Ice Lance
+            [11170] = 3, -- Shatter
+            [400647] = 2, -- Fingers of Frost
+        },
+        uptime = { "fire_vulnerability" },
+    },
 }
 
 -- The class data a press reads from a booted instance `H` (once per instance): each aura's ID, duration and stacks.
@@ -247,6 +291,22 @@ local function drop(W, e, X, key) -- aura `key` off `e`, if up
         W.emit({ kind = "aura", dst = e, aura = id, stacks = 0, expires = 0, duration = 0 })
     end
 end
+local function unstack(W, e, X, key) -- one stack of `key` off `e`, its expiry kept
+    local a = e.auras[X.aura[key].id]
+    if a and a.stacks > 1 then
+        a.stacks = a.stacks - 1
+        W.emit({
+            kind = "aura",
+            dst = e,
+            aura = X.aura[key].id,
+            stacks = a.stacks,
+            expires = a.expires,
+            duration = a.duration,
+        })
+    elseif a then
+        drop(W, e, X, key)
+    end
+end
 
 -- The cost of `key`'s highest rank instance `H`'s character knows (`ids`: its ranks, lowest first), with our auras read
 -- by `up` and `stacks`: Arcane Blast's from its charges, Clearcasting's free cast, Arcane Power's +30% (the truth the
@@ -267,6 +327,9 @@ local function costOf(key, ids, H, up, stacks)
             end
             c = c[rank]
         end
+        if FROST_CHANNELING[key] then
+            c = c * (1 - 0.05 * talentRank(H, T.frost_channeling))
+        end
     end
     if (CLEARCAST[key] and up("clearcasting")) or (key == "arcane_missiles" and up("missile_barrage")) then
         return 0
@@ -285,7 +348,7 @@ local function castOf(key, H, up, stacks)
     end
     if key == "pyroblast" then
         c = c * (1 - 0.25 * stacks("heating_up"))
-    elseif key == "fireball" then
+    elseif key == "fireball" or key == "frostfire_bolt" then -- Improved Fireball's mask names both (DB2 11069)
         c = c - 0.1 * talentRank(H, T.improved_fireball)
     elseif key == "frostbolt" then
         c = c - 0.1 * talentRank(H, T.improved_frostbolt)
@@ -307,8 +370,14 @@ local function spell(key, extra)
             if CAST[key] then
                 drop(W, e, X, "presence_of_mind")
             end
+            unstack(W, e, X, "fingers_of_frost") -- spent at the cast, before this cast's own grant
             local hit = W.hit(e, e.target, AMOUNT[key], FIRE[key] and 4 or 64)
             local landed, crit = hit.act == "WOUND", hit.flag == "CRITICAL"
+            local fof = CHILL[key] and talentRank(H, T.fingers_of_frost) or 0
+            if landed and fof > 0 and W.rng.chance(0.15) then -- the charges set to the rank's (1 / 2), refreshed
+                e.auras[X.aura.fingers_of_frost.id] = nil
+                aura(W, X, e, "fingers_of_frost", fof)
+            end
             if landed then
                 local mb = BARRAGE[key] and 0.2 * talentRank(H, T.missile_barrage) * BARRAGE[key] or 0
                 if mb > 0 and W.rng.chance(mb) then
@@ -402,12 +471,15 @@ M.MAP = {
                     break
                 end
             end
-            local half = up("missile_barrage") and 0.5 or 1
+            local half, X = up("missile_barrage") and 0.5 or 1, classData(H)
             return {
                 length = MISSILES_TIME[rank] * half,
                 tick = half,
                 effect = function(W, e)
-                    W.hit(e, e.target, AMOUNT.arcane_missiles, 64, "spell") -- each missile rolls its own hit
+                    -- each missile rolls its own hit; a landed one spends a Fingers of Frost charge
+                    if W.hit(e, e.target, AMOUNT.arcane_missiles, 64, "spell").act == "WOUND" then
+                        unstack(W, e, X, "fingers_of_frost")
+                    end
                 end,
             }
         end,
@@ -589,5 +661,6 @@ end
 
 M.Arcane = content("Arcane")
 M.Fire = content("Fire")
+M.Frostfire = content("Frostfire")
 
 return M

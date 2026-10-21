@@ -9,7 +9,7 @@ local pack_gate = require("Forever.helpers.pack_gate")
 local mw = require("Forever.helpers.mage_world")
 
 describe("the Mage loop worlds", function()
-    for _, name in ipairs({ "Arcane", "Fire" }) do
+    for _, name in ipairs({ "Arcane", "Fire", "Frostfire" }) do
         it(name .. ": boots on its spec, and maps every ability the character knows", function()
             local C = mw[name]
             local H = headless.new({ character = C.character() })
@@ -161,7 +161,7 @@ describe("the Mage loop worlds", function()
 end)
 
 describe("the headless Mage gates, 3 fights a pack #slow", function()
-    for _, name in ipairs({ "Arcane", "Fire" }) do
+    for _, name in ipairs({ "Arcane", "Fire", "Frostfire" }) do
         it(
             name .. " solo, level 60, one mob, 3 fights of up to 3 minutes: the first icon against the oracle's",
             function()
