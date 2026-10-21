@@ -14,18 +14,29 @@ local function flagged(path)
 end
 
 local ROGUE = { "garrote=1", "slice_and_dice=1", "rupture=1" } -- Slice and Dice and Rupture sort by soonest
-local HUNTER = { "raptor_strike=1", "hunters_mark=2", "mongoose_bite=1" }
+-- the melee-weave strikes (Strider Kick, Immolation Trap, Wing Clip): 1 in Survival, 2 in BM and MM (the user)
+local function hunter(weave)
+    local w = "=" .. weave
+    return {
+        "raptor_strike=1",
+        "hunters_mark=2",
+        "mongoose_bite=1",
+        "strider_kick" .. w,
+        "immolation_trap" .. w,
+        "wing_clip" .. w,
+        "serpent_sting=1",
+    }
+end
 
 local PACKS = {
     ["Rogue/APLs/Assassination"] = ROGUE,
     ["Rogue/APLs/Combat"] = ROGUE,
     ["Rogue/APLs/Subtlety"] = ROGUE,
-    -- Serpent Sting: arguable (a shot that is a DoT), BM and MM keep 2, Survival none
-    ["Hunter/APLs/Beast Mastery"] = { HUNTER[1], HUNTER[2], HUNTER[3], "serpent_sting=2" },
-    ["Hunter/APLs/Marksmanship"] = { HUNTER[1], HUNTER[2], HUNTER[3], "serpent_sting=2" },
-    ["Hunter/APLs/Survival"] = HUNTER,
+    ["Hunter/APLs/Beast Mastery"] = hunter(2),
+    ["Hunter/APLs/Marksmanship"] = hunter(2),
+    ["Hunter/APLs/Survival"] = hunter(1),
     ["Paladin/APLs/Protection"] = { "seal_of_fury=2", "holy_shield=2" },
-    -- the Twist of Light seals (1) and Consecration (2): arguable
+    -- the Twist of Light seals (1): open
     ["Paladin/APLs/Retribution"] = {
         "hammer_of_wrath=1",
         "seal_of_command=1",
@@ -36,7 +47,7 @@ local PACKS = {
     },
     -- the totems carry none (the user, 2026-10-21)
     ["Shaman/APLs/Enhancement"] = { "fire_nova=1", "lightning_shield=2", "lightning_bolt=1", "flame_shock=2" },
-    ["Druid/APLs/Balance"] = { "moonfire=2", "insect_swarm=2", "starfire=1" }, -- Starfire on Eclipse: arguable
+    ["Druid/APLs/Balance"] = { "moonfire=2", "insect_swarm=2", "starfire=1" },
     ["Druid/APLs/Feral"] = { "shred=1", "claw=1", "rake=2", "rip=2", "rake=2" },
     ["Druid/APLs/Guardian"] = { "maul=1", "maul=2", "lacerate=2", "demoralizing_roar=2", "lacerate=2" },
     ["Mage/APLs/Arcane"] = { "arcane_missiles=1" },

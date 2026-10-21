@@ -14,7 +14,7 @@
 - Guardian: with Demoralizing Roar off, Berserk no longer waits for it, and the leveling Roar filler is off too.
 - The now circle's highlights follow a line's role: procs and windows the player must catch, then upkeep; core strikes, cooldowns and pre-pull steps are no longer highlighted.
 - Druid: Rip is highlighted as upkeep like Rake; Shred and Claw only on Clearcasting; Innervate no longer. Guardian highlights Maul and Demoralizing Roar.
-- Hunter: Raptor Strike and Mongoose Bite are highlighted in every specialization, Hunter's Mark no longer before the pull.
+- Hunter: Raptor Strike, Mongoose Bite and Serpent Sting are highlighted first in every specialization, and the melee-weave strikes (Strider Kick, Immolation Trap, Wing Clip) too: first in Survival, second in Beast Mastery and Marksmanship. Hunter's Mark is no longer highlighted before the pull.
 - Mage: Evocation is no longer highlighted.
 - Paladin: Retribution no longer highlights Exorcism or the seal before the pull; the seal you keep up while leveling is highlighted as upkeep.
 - Rogue: Garrote, Slice and Dice and Rupture share the first highlight (whichever is due first) in every specialization; Ambush is no longer highlighted.

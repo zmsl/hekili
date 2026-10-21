@@ -41,7 +41,7 @@ return {
     },
     executePhase = "execute_phase",
     map = {},
-    focus = { moonfire = 2, insect_swarm = 2, starfire = 1 }, -- by role (docs/dev/wowsims-packs.md); Starfire arguable
+    focus = { moonfire = 2, insect_swarm = 2, starfire = 1 }, -- by role (docs/dev/wowsims-packs.md); Starfire on Eclipse 1
     -- wowsims's sim starts in Moonkin Form (its list never casts it): the form first, once known (a talent, 40)
     levelingFirst = { "moonkin_form,if=!buff.moonkin_form.up" },
 }

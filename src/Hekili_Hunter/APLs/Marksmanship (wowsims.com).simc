@@ -21,9 +21,9 @@ actions+=/rapid_fire,use_off_gcd=1,if=time>=5
 actions+=/raptor_strike,use_off_gcd=1,focus=1
 actions+=/hunters_mark,focus=2,if=!debuff.hunters_mark.up
 actions+=/mongoose_bite,focus=1,if=target.within5
-actions+=/strider_kick,if=target.within5
-actions+=/immolation_trap,if=target.within5
-actions+=/wing_clip,if=target.within5
-actions+=/serpent_sting,focus=2,if=!debuff.serpent_sting.up
+actions+=/strider_kick,focus=2,if=target.within5
+actions+=/immolation_trap,focus=2,if=target.within5
+actions+=/wing_clip,focus=2,if=target.within5
+actions+=/serpent_sting,focus=1,if=!debuff.serpent_sting.up
 actions+=/arcane_shot
 actions+=/multi_shot,if=(action.multi_shot.cast+(1*((11-5)/7)))<=mainhand_remains

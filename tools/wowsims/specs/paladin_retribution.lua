@@ -40,7 +40,7 @@ return {
         distanceFromTarget = 5,
     },
     map = { ["item:274759"] = "use_items" }, -- the Everlook Pathcarver (ItemSparse 274759: a trinket, InventoryType 12)
-    -- by role (docs/dev/wowsims-packs.md); the Twist of Light seals (1) and Consecration (2) arguable
+    -- by role (docs/dev/wowsims-packs.md); the Twist of Light seals (1) open
     focus = { hammer_of_wrath = 1, seal_of_command = 1, seal_of_righteousness = 1, consecration = 2 },
     -- The Twist of Light lines need the talent (wowsims's Auto rotation picks this APL by it): without it they swap the
     -- seals every GCD.
