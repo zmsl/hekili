@@ -862,6 +862,7 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows(VANISH),
+        toggle = "cooldowns",
 
         now = function()
             applyBuff("vanish")
