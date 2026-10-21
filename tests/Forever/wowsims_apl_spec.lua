@@ -352,7 +352,7 @@ describe("the wowsims APL translator", function()
             }, guardCtx())
             assert.are.equal(
                 table.concat({
-                    "actions.precombat=seal_a,if=!buff.seal_a.up&!buff.seal_b.up",
+                    "actions.precombat=seal_a,if=!buff.seal_a.up&(!action.seal_b.known|!buff.seal_b.up)",
                     "actions.precombat+=/seal_b,if=!buff.seal_b.up",
                 }, "\n"),
                 text

@@ -329,8 +329,9 @@ one guard derived from what its ability's handler does (run once in the kit's st
 `!buff.<key>.up` or `!debuff.<key>.up` for an aura of its own key (none when that aura is no longer than the
 cooldown, which already hides it: Bloodrage), `!totem.<element>.up` for a totem, and none otherwise (Charge and
 Intercept: their own usability and cooldown). Two lines whose handlers remove each other's aura (seals) form a group:
-its first line waits for no member to be up (`!buff.seal_of_command.up&!buff.seal_of_the_crusader.up`), later ones for
-their own, so the first is cast only when neither is up and the later one replaces it. `prepull_at` (the retired
+its first line waits for no member to be up
+(`!buff.seal_of_command.up&(!action.seal_of_the_crusader.known|!buff.seal_of_the_crusader.up)`), later ones for their
+own, so the first is cast only when neither is up and the later one replaces it. `prepull_at` (the retired
 once-per-episode schedule) is gone: `make_pack` refuses it and the in-game importer stores it inert.
 
 **In precombat.** Being in precombat is a property of the walk, not of a list's name: `GetPredictionFromAPL` sets

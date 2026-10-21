@@ -17,8 +17,8 @@
 --    - it summons a totem of its own key: `!totem.<element>.up` (the element's slot);
 --    - otherwise no guard (Charge: its own usability and cooldown).
 --    A mutually exclusive group (lines of one list whose handlers remove each other's aura: seals) guards its first
---    line by every member's aura (`!buff.a.up&!buff.b.up`), later lines by their own: the first is cast only when
---    none is up, the later replaces it. A handler that raises gives no guard and a header note.
+--    line by every member's aura (`!buff.a.up&(!action.b.known|!buff.b.up)`: rule 6's guard on another ability's
+--    read), later lines by their own: the first is cast only when none is up, the later replaces it. A handler that raises gives no guard and a header note.
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
 --    false; entries whose action or condition uses a node the fork lacks (`sequence`,
 --    `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `unitDistance` outside rule 11, `sequenceIsComplete`,
@@ -1277,7 +1277,8 @@ function guard(c, name, out, origin, omitted)
             for j = i + 1, later[i] and 0 or #out do
                 local y, s = keys[j], eff[j]
                 if y and y ~= x and s.unit == r.unit and (r.removes[y] or s.removes[x]) then
-                    terms[#terms + 1], later[j] = "!" .. s.unit .. "." .. y .. ".up", true
+                    local k = knownTest(c, y) -- rule 6: another ability's aura, read only once it is learned
+                    terms[#terms + 1], later[j] = "(!" .. k .. "|!" .. s.unit .. "." .. y .. ".up)", true
                 end
             end
             g = table.concat(terms, "&")
