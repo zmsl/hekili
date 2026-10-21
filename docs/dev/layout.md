@@ -123,7 +123,7 @@ repeats seeds 1-3 against its every-slot fixture). Each fight seeds its own worl
 boot carries nothing between fights, so the halves play the same fights as the old single run.
 The gate runs Arms (wowsims.com), the Arms default since the wowsims packs plan's Warrior swap (the hand-built Arms,
 Fury and Protection lists retired), on the world's wowsims build (Spearing Strike and Berserker Rage in the kit). Its
-lines (forever b0a5f8ee, central fix 22; 20 fights: agreement 0.966, flicker 1.57/min, oracle 1.10):
+lines (central fix 23, the pre-pull guards; 20 fights: agreement 0.966, flicker 1.51/min, oracle 1.07):
 
 ```
 Arms solo: fights=3 agreement 0.966 (2466 ticks); react median 0 p90 0 never 0.019; refused per 100 [cost 16.0 (oracle 21.9, unmatched 0.5)], episodes 3.65/min; dps A/B 1.022; ... [seeds 1-3]
@@ -211,7 +211,7 @@ wowsims packs plan, Task 9 (the hand-built lists retired). Retribution (wowsims.
 wowsims's own `mana.pct>=10`, judged on the secret-mana belief; each fight starts with the mana the last one left,
 regenerated through the 30 s gap (GAP X, closed: the 20-fight line was 0.911, never 0.226, while fights restarted at
 full mana). The holy_shock list is gone with the hand-built Retribution list; Hammer of Wrath's window is not
-exercised by the solo worlds. The runs (forever b0a5f8ee, central fixes 1-22):
+exercised by the solo worlds. The runs (central fixes 1-23):
 
 ```
 Retribution solo: fights=3 agreement 0.993 (2322 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.084; ... [seeds 1-3]
