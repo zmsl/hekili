@@ -42,7 +42,10 @@
 --    term that may be nil is written `(!<known>|<term>)` in an `and` and as the condition, `(<known>&<term>)` in an
 --    `or`, with `<known>` its known test, `(kA|kB)` (each key once) for an `and`/`or` whose every term may be nil,
 --    and one guard a test for a comparison of two reads. An empty value and another player's aura are nil always (dropped here). The
---    line's own action is never guarded (the engine skips an unknown action).
+--    line's own action is never guarded (the engine skips an unknown action). `min` / `max` (newValueMin/Max: a nil
+--    term dropped, nil when every term is) are the engine's `min(...)` / `max(...)` (Engine/Sim/Utils.lua safeMin /
+--    safeMax skip a false argument) over the terms not dropped here, each that may be nil as `(<known>&<term>)`, one
+--    term as itself; nil when every term is (the and-rule).
 -- 7. `focus` from the recipe (the tier by the line's role, docs/dev/wowsims-packs.md; none on a pre-pull line),
 --    `use_off_gcd=1` on an ability whose `gcd` is `"off"`; the recipe's `leveling` lines are appended to `actions`
 --    and its `levelingFirst` lines put before them (a form the sim starts in, which the APL's own lines would never let a trailing line reach):
@@ -614,6 +617,23 @@ local function value(c, n, pct)
             return nil, true
         end
         return "(" .. l .. op .. r .. ")", u
+    elseif k == "min" or k == "max" then -- wowsims's newValueMin/Max: a nil term dropped, nil when every term is
+        local parts, us = {}, {}
+        for _, x in ipairs(v.vals or {}) do
+            local s, u = value(c, x, pct)
+            if u ~= true then
+                parts[#parts + 1], us[#us + 1] = s, u
+            end
+        end
+        if #parts == 0 then
+            return nil, true
+        elseif #parts == 1 then
+            return parts[1], us[1]
+        end
+        for i, s in ipairs(parts) do
+            parts[i] = emit(us[i], s, false) -- `(<known>&<term>)`: false while unlearned, which min()/max() skip
+        end
+        return k .. "(" .. table.concat(parts, ",") .. ")", nilAnd(us)
     elseif k == "spellTimeToReady" or k == "spellCastTime" or k == "spellCurrentCost" then
         local x = readSpell(c, v.spellId)
         if not x then

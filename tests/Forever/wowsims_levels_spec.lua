@@ -161,6 +161,35 @@ describe("tools/check_pack_levels.lua", function()
         )
     end)
 
+    it("takes a min / max argument's (K&t) as its guard (false while unlearned, which min / max skip)", function()
+        local M2 = "min((action.big_hit.known&cooldown.big_hit.remains),(action.stance.known&buff.stance.remains))"
+        assert.are.same(
+            {},
+            levels.unguarded("(!(action.big_hit.known|action.stance.known)|" .. M2 .. "<3)", "s", isAbility)
+        )
+        assert.are.same(
+            {},
+            levels.unguarded("(max(x,(action.big_hit.known&cooldown.big_hit.remains),5)+1)>4", "s", isAbility)
+        )
+        -- an unguarded argument, a guard of the wrong polarity, and a (K&t) outside min / max still count
+        assert.are.same(
+            { "buff.stance.remains" },
+            levels.unguarded(
+                "max((action.big_hit.known&cooldown.big_hit.remains),buff.stance.remains)>4",
+                "s",
+                isAbility
+            )
+        )
+        assert.are.same(
+            { "cooldown.big_hit.remains" },
+            levels.unguarded("max((!action.big_hit.known|cooldown.big_hit.remains),5)>4", "s", isAbility)
+        )
+        assert.are.same(
+            { "cooldown.big_hit.remains" },
+            levels.unguarded("((action.big_hit.known&cooldown.big_hit.remains)+1)>4", "s", isAbility)
+        )
+    end)
+
     it("reads a ! inside arithmetic as part of its operand, and reports what it cannot parse", function()
         assert.are.same(
             { "cooldown.big_hit.ready" },

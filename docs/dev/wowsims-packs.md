@@ -129,7 +129,8 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 5. Keys from the character's ability set (kit, shared, every race): `map`, `auras`, then the set. Ignores
    `includeReactionTime`, `rank` and tags.
 6. The leveling guard: a read of an unlearned ability is wowsims's nil and drops its term, as wowsims's nil
-   propagation does; `tools/check_pack_levels.lua` checks every pack for it.
+   propagation does; `tools/check_pack_levels.lua` checks every pack for it. `min` / `max` values are the engine's
+   `min(...)` / `max(...)` with each term that may be nil as `(<known>&<term>)` (false, which they skip).
 7. `focus`, `use_off_gcd=1` for an off-GCD ability, `leveling` and `extra` lines, `requires`.
 8. Constants: Go durations in seconds; `"N%"` as N against a percent read (`mana.pct`, `health.pct` run 0-100), N/100
    anywhere else (in `math`, against any other read), as wowsims reads it.

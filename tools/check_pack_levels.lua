@@ -9,7 +9,8 @@
 -- none of `(action.A.known|action.B.known)`, whose terms are then plain terms. `(K&t)` may also be the condition K
 -- and a term t (an auraIsKnown read), so t passes read either way. A guard of the wrong polarity covers nothing; a
 -- misplaced group guard (`(kA|kB)` as its K) whose terms read one of its keys is an offence "guard <its tests>", and
--- text left over after the parse "unparsed <it>". A line's own action needs no guard (the engine skips an unknown
+-- text left over after the parse "unparsed <it>". A `min(`/`max(` argument `(K&t)` is a guard too (false while
+-- unlearned, which the engine's min and max skip: apl.lua's min / max values). A line's own action needs no guard (the engine skips an unknown
 -- action). Loaded with loadfile(...)() it returns { unguarded, file }; run directly: lua
 -- tools/check_pack_levels.lua <file.simc>... lists offences against every key (no class data), for a quick look.
 local M = {}
@@ -28,11 +29,13 @@ local function parse(c)
             pos = pos + 1
             return { op = "not", unary() }
         end
-        local s, items, last = pos, 0, nil
+        local s, items, last, kids = pos, 0, nil, {}
         while pos <= #c and not c:find("^[&|)]", pos) do -- a `!` here is the atom's (`x>(10*!y)`)
             if c:sub(pos, pos) == "(" then
+                local gs = pos
                 pos = pos + 1
                 last = orx()
+                kids[#kids + 1] = { node = last, gs = gs, ge = pos }
                 pos = pos + 1 -- its ")"
             else
                 last = nil
@@ -43,7 +46,7 @@ local function parse(c)
         if items == 1 and last then
             return last -- one parenthesised group: its logic
         end
-        return { op = "atom", s = s, e = pos - 1 }
+        return { op = "atom", s = s, e = pos - 1, kids = kids } -- kids: its parenthesised groups
     end
     local function chain(op, sym, sub)
         return function()
@@ -97,16 +100,40 @@ function M.unguarded(criteria, self, isAbility)
     -- `want`: what node `n` must read while an unlearned ability's reads in it are dropped (wowsims drops a nil term):
     -- true at the top and as a term of an `&`, false as a term of a `|`, flipped by a `!`; `covered`: the keys of the
     -- guards around `n`.
-    local function walk(n, want, covered, bad)
-        if n.op == "atom" then
-            for kind, x, field in criteria:sub(n.s, n.e):gmatch("(%a+)%.([%w_]+)%.([%w_]+)") do
-                if KINDS[kind] and x ~= self and isAbility(x) and not (kind == "action" and field == "known") then
-                    if not covered[x] then
-                        bad[#bad + 1] = kind .. "." .. x .. "." .. field
-                    end
+    local walk
+    local function plain(text, covered, bad)
+        for kind, x, field in text:gmatch("(%a+)%.([%w_]+)%.([%w_]+)") do
+            if KINDS[kind] and x ~= self and isAbility(x) and not (kind == "action" and field == "known") then
+                if not covered[x] then
+                    bad[#bad + 1] = kind .. "." .. x .. "." .. field
                 end
             end
-            return
+        end
+    end
+    -- An atom's reads, each of its groups that is a `min(`/`max(` argument `(K&t)` (false while K's keys are
+    -- unlearned, which the engine's min / max skip: apl.lua's min / max values) read as a guard in an `|`.
+    local function atom(n, covered, bad)
+        local from = n.s
+        for _, k in ipairs(n.kids) do
+            plain(criteria:sub(from, k.gs - 1), covered, bad)
+            from = k.ge + 1
+            local before = criteria:sub(1, k.gs - 1)
+            local arg = (before:match("%f[%w_]m[ai][nx]%($") or before:match(",$"))
+                and criteria:sub(k.ge + 1, k.ge + 1):match("^[,)]$")
+            local g = k.node
+            if arg and g.op == "and" and #g > 1 and knownKeys(criteria, g[1]) then
+                walk(g, false, covered, bad)
+            elseif g.op == "atom" then
+                atom(g, covered, bad)
+            else
+                plain(criteria:sub(k.gs, k.ge), covered, bad)
+            end
+        end
+        plain(criteria:sub(from, n.e), covered, bad)
+    end
+    function walk(n, want, covered, bad)
+        if n.op == "atom" then
+            return atom(n, covered, bad)
         elseif n.op == "not" then
             return walk(n[1], not want, covered, bad)
         end

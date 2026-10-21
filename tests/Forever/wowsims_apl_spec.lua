@@ -429,6 +429,42 @@ describe("the wowsims APL translator", function()
     end)
 
     it(
+        "writes min / max over the terms wowsims keeps: an unlearned term dropped at run time, nil when all are",
+        function()
+            local function MIN(...)
+                return { min = { vals = { ... } } }
+            end
+            local function MAX(...)
+                return { max = { vals = { ... } } }
+            end
+            local dot = { dotRemainingTime = { spellId = { spellId = 400 } } }
+            local hit = { spellTimeToReady = { spellId = { spellId = 200 } } }
+            local gone = { auraRemainingTime = { auraId = { spellId = 12345 } } } -- nothing maps it: nil (rule 12)
+            local text, omitted = apl.translate({
+                priorityList = {
+                    cast(100, cmp("OpLt", MIN(dot, hit), const("3"))), -- two terms, each may be nil
+                    cast(100, cmp("OpGt", MAX({ currentRage = {} }, dot, const("5")), const("4"))), -- three, one never nil
+                    cast(100, cmp("OpLt", MIN({ currentRage = {} }, gone), const("5"))), -- a dropped term
+                    cast(100, cmp("OpLt", MIN(gone, {}), const("5"))), -- all dropped: nil, so the line is unconditional
+                },
+            }, ctx({}))
+            assert.are.equal(
+                table.concat({
+                    "actions=strike,if=(!(action.dot.known|action.big_hit.known)|min((action.dot.known&debuff.dot.remains),(action.big_hit.known&cooldown.big_hit.remains))<3)",
+                    "actions+=/strike,if=max(rage.current,(action.dot.known&debuff.dot.remains),5)>4",
+                    "actions+=/strike,if=rage.current<5",
+                    "actions+=/strike",
+                }, "\n"),
+                text
+            )
+            assert.are.same({
+                "default #3: dropped the unresolved aura 12345 (its branch only)",
+                "default #4: dropped the unresolved aura 12345 (its branch only)",
+            }, omitted)
+        end
+    )
+
+    it(
         "guards a read so an unknown ability drops its term: true in an and, false in an or, flipped by a not",
         function()
             local rage = cmp("OpGt", { currentRage = {} }, const("10"))
