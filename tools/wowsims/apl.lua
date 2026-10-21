@@ -64,6 +64,8 @@
 --    ({ before = action, line = text }, content outside wowsims's model) goes just before the first `actions` line of
 --    `before` (an error when there is none). The recipe's `settings` ({ [key] = { default = bool, desc = text } }) are
 --    pack settings like an ON/OFF group's: a line reads one as `settings.<key>`, and the header lists each one read.
+--    The recipe's `prepullSkip` ({ action key, ... }: an owner ruling against a wowsims pre-pull cast) omits that
+--    action's precombat lines, listed (an error when there is none).
 --    The recipe's `requires` ({ [action key or group's snake name] = talent key }) puts `talent.<key>.enabled&` before
 --    the condition of each such entry, in every list: an APL written for a talent build (wowsims picks it by that
 --    talent, e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
@@ -330,6 +332,7 @@ function M.context(set, r, log, player)
         levelingFirst = r.levelingFirst or {},
         extra = r.extra or {},
         settings = r.settings or {},
+        prepullSkip = r.prepullSkip or {},
         exclusive = r.exclusive or {},
         requires = r.requires or {},
         maintenance = {}, -- rule 15: { { action key, setting key } }, by action key
@@ -1349,6 +1352,10 @@ function M.translate(rotation, c)
     end
     local omitted, lists, byName = {}, {}, {}
     local origin = {} -- [list name][line] = its APL entry's index (for rule 1's notes)
+    local skip, skipped = {}, {} -- rule 7: the recipe's prepullSkip actions, and those it omitted
+    for _, x in ipairs(c.prepullSkip) do
+        skip[x] = true
+    end
     local function run(name, entries, at)
         local out, order = {}, {}
         origin[name], c.listName = {}, name
@@ -1377,6 +1384,9 @@ function M.translate(rotation, c)
                         error(body, 0)
                     end
                     omitted[#omitted + 1] = ("%s #%d: %s"):format(name, i, body.unsupported)
+                elseif body and name == "precombat" and skip[body:match("^[%w_]+")] then
+                    skipped[body:match("^[%w_]+")] = true -- rule 7: the recipe's prepullSkip
+                    omitted[#omitted + 1] = ("%s #%d: prepullSkip (recipe)"):format(name, i)
                 elseif body then
                     for _, b in ipairs(type(body) == "table" and body or { body }) do
                         out[#out + 1] = b
@@ -1415,6 +1425,11 @@ function M.translate(rotation, c)
         end
     end
     run("precombat", prepull, at)
+    for _, x in ipairs(c.prepullSkip) do
+        if not skipped[x] then
+            error("prepullSkip: no " .. x .. " line in precombat", 0)
+        end
+    end
     run("default", rotation.priorityList or {})
     for _, line in ipairs(c.leveling) do
         table.insert(byName.default, line)

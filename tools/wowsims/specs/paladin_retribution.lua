@@ -46,6 +46,9 @@ return {
     -- The Twist of Light lines need the talent (wowsims's Auto rotation picks this APL by it): without it they swap the
     -- seals every GCD.
     requires = { seal_of_command = "twist_of_light", seal_of_righteousness = "twist_of_light" },
+    -- Owner ruling (2026-10-21): the pre-pull must not twist; one starter seal, Seal of the Crusader. wowsims's -3 s
+    -- Seal of Command (the twist's first half) is omitted.
+    prepullSkip = { "seal_of_command" },
     leveling = {
         "seal_of_command,focus=2,if=!talent.twist_of_light.enabled&!buff.seal_of_command.up",
         "seal_of_righteousness,focus=2,if=!action.seal_of_command.known&buff.seal_of_righteousness.remains<24",

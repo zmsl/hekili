@@ -106,6 +106,26 @@ describe("the wowsims APL translator", function()
         )
     end)
 
+    it(
+        "omits the recipe's prepullSkip actions from the precombat list only, listed, and refuses an unused one",
+        function()
+            local function at(id, v)
+                local e = cast(id)
+                e.doAtValue = const(v)
+                return e
+            end
+            local text, omitted = apl.translate(
+                { prepullActions = { at(200, "-3s"), at(100, "-1.5s") }, priorityList = { cast(200) } },
+                ctx({ prepullSkip = { "big_hit" } })
+            )
+            assert.are.equal(table.concat({ "actions.precombat=strike", "actions=big_hit" }, "\n"), text)
+            assert.are.same({ "precombat #1: prepullSkip (recipe)" }, omitted)
+            assert.has_error(function()
+                apl.translate({ prepullActions = { at(100, "-1s") } }, ctx({ prepullSkip = { "dot" } }))
+            end, "prepullSkip: no dot line in precombat")
+        end
+    )
+
     it("puts each recipe extra line before the first line of its anchor action, the rest in order", function()
         local text = apl.translate(
             { priorityList = { cast(300), cast(100), cast(200), cast(100) } },
