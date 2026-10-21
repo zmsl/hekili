@@ -311,6 +311,29 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         assert.are.equal("packs\001protection\001Aaa", ACD:GetStatusTable("Hekili").groups.selected)
     end)
 
+    it("hides Delete and locks Specialization on a built-in priority outside a Dev build (gap BA)", function()
+        local H = boot()
+        settle(H)
+        local packs = H.Hekili.DB.profile.packs
+        local aaa = {}
+        for k, v in pairs(packs["Arms (wowsims.com)"]) do
+            aaa[k] = v
+        end
+        aaa.builtIn = false
+        packs.Aaa = aaa
+        H.Hekili.Version = "v0.3.0"
+        local nodes = embed(H)
+        local pack = function(name)
+            return nodes.arms.plugins.packs[name].args.pack.args
+        end
+        assert.is_true(pack("Arms (wowsims.com)").deletePack.hidden())
+        assert.is_true(pack("Arms (wowsims.com)").spec.disabled)
+        assert.is_false(pack("Aaa").deletePack.hidden())
+        assert.is_falsy(pack("Aaa").spec.disabled)
+        H.Hekili.Version = "Dev-test"
+        assert.is_false(pack("Arms (wowsims.com)").deletePack.hidden())
+    end)
+
     it("deleting the active priority falls back to a default that still exists, else (none)", function()
         local H = boot()
         settle(H)

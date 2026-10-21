@@ -15,6 +15,7 @@
 
 ### Fixed
 - A priority regenerated on the same day no longer shows as reverted on login.
+- Built-in priorities no longer show a Delete button.
 
 ### Known issues
 

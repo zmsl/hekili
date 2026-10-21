@@ -4977,7 +4977,7 @@ found = true end
                                         -- Hekili:EmbedPackOptions()
                                         ACD:SelectGroup( "Hekili", "packs" )
                                     end,
-                                    hidden = function() return data.builtIn and not Hekili.Version:sub(1, 3) == "Dev" end
+                                    hidden = function() return data.builtIn and Hekili.Version:sub(1, 3) ~= "Dev" end
                                 },
 
                                 lb02 = {
@@ -4993,7 +4993,7 @@ found = true end
                                     order = 1,
                                     width = 3,
                                     values = specs,
-                                    disabled = data.builtIn and not Hekili.Version:sub(1, 3) == "Dev"
+                                    disabled = data.builtIn and Hekili.Version:sub(1, 3) ~= "Dev"
                                 },
 
                                 lb03 = {
