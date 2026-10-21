@@ -285,11 +285,8 @@ describe("shared content", function()
         assert.are.same({ { 7676 }, 300 }, { a.thistle_tea.items, a.thistle_tea.cooldown })
         assert.are.same({ { 8008, 8007, 5513, 5514 }, 120 }, { a.mana_gem.items, a.mana_gem.cooldown })
         for _, key in ipairs({ "major_mana_potion", "demonic_rune", "thistle_tea", "mana_gem" }) do
-            assert.are.same(
-                { "off", false, true, "cooldowns" },
-                { a[key].gcd, a[key].startsCombat, a[key].bagItem, a[key].toggle },
-                key
-            )
+            assert.are.same({ "off", false, true }, { a[key].gcd, a[key].startsCombat, a[key].bagItem }, key)
+            assert.is_nil(a[key].toggle, key) -- rotational in the wowsims priorities: not under Cooldowns
             assert.is_nil(a[key].now, key) -- an item action: no cast the belief sees
             assert.is_false((a[key].usable()), key)
         end

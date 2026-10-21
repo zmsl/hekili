@@ -123,7 +123,8 @@ shared:RegisterAbility("healthstone", {
 -- wowsims/forever's db.json (MIT, a reference only): the potion's own 2 min category, and the 2 min category the rune,
 -- the tea and the gems share (Thistle Tea's own 5 min); Mana Agate's row is absent there and is taken as its ranks'.
 -- Read in game (checkpoint). Offered while one is in the bags and the client calls it usable; none has a `now`.
--- Each under the Cooldowns toggle (Hekili's default for an item; the APL usability audit, D).
+-- No toggle: the wowsims priorities use them as energy and mana sources, not burst (a player gates one with the
+-- per-ability toggle override).
 local function consumable(key, items, cooldown, name)
     local function best()
         return inBags(items)
@@ -139,7 +140,6 @@ local function consumable(key, items, cooldown, name)
         bagItem = true,
 
         startsCombat = false,
-        toggle = "cooldowns",
 
         usable = function()
             local item, have = best()
