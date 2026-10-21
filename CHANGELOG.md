@@ -174,6 +174,9 @@
 - Shaman: the Enhancement priority's mana lines (mana potion, Demonic Rune, Fire Nova above 10%) are always on and read
   an estimated mana.
 - Shaman: Fire Nova is believed to cost 520 mana where wowsims.com uses 375.
+- The game does not tell an addon how long a fight has left, so every priority treats each fight as a long one: Feral's
+  end-of-fight Ferocious Bite and the Rogue priorities' end-of-fight lines never show, and Rip can be recommended on a
+  mob that dies before it ticks out.
 
 ### Upgrade notes
 - Rogue: a saved choice of the Assassination, Combat or Subtlety priority falls back to that specialization's

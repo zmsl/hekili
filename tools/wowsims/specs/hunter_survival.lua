@@ -1,5 +1,5 @@
 -- tools/wowsims/specs/hunter_survival.lua (wowsims packs plan, Task 11): Survival (wowsims.com)'s wowsims/forever request and translation.
--- Values from wowsims/forever (MIT) ui/specs/hunter/dps/presets.ts:68-89,128-134 at the pin (the SV Weave talents,
+-- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/hunter/dps/presets.ts:68-89,128-134 at the pin (the SV Weave talents,
 -- DefaultOptions = NoPetOptions, OtherDefaults; the default rotation Melee Weave, apls/default.apl.json; gear p1).
 -- Disagreements worked (P7, after central fixes 6 and 11), decisions on-GCD 0.878 (41) top [strider_kick -> wing_clip
 -- 3; immolation_trap -> wing_clip 1; multi_shot -> arcane_shot 1]:

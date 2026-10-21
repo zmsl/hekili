@@ -472,7 +472,7 @@ I.On(Obs.Avoided, function(o, t)
     end
     local r = A.slot[o.a]
     if r > 0 and paid > 0 and A.refund[o.a] > 0 then
-        I.Refund(r, paid * A.refund[o.a], t) -- dated at the cast (o.b): the answers since already saw it
+        I.Refund(r, paid * A.refund[o.a], t) -- at the fold; the answers since the cast's spend already saw it
     end
     I.avoidsRun = I.avoidsRun + 1
 end)

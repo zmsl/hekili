@@ -1,5 +1,5 @@
 -- tools/wowsims/specs/hunter_beast_mastery.lua (wowsims packs plan, Task 11): Beast Mastery (wowsims.com)'s wowsims/forever request and translation.
--- Values from wowsims/forever (MIT) ui/specs/hunter/dps/presets.ts:68-89,128-134 at the pin (the BM Weave talents,
+-- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/hunter/dps/presets.ts:68-89,128-134 at the pin (the BM Weave talents,
 -- DefaultOptions = NoPetOptions, OtherDefaults; the default rotation Melee Weave, apls/default.apl.json; gear p1).
 -- Disagreements worked (P7, after central fixes 6 and 11: the log's pools, casts priced when heard, division as `/`),
 -- decisions on-GCD 0.963 (27) top [multi_shot -> arcane_shot 1]:

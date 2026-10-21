@@ -557,6 +557,8 @@ Core (the premises in `docs/forever-facade-notes.md`, "Premises"):
 - PH1: the player's own health in combat: `/run VSCopy(issecretvalue(UnitHealth("player")))` in and out of combat.
 - E1: the energy tick against a press at the same instant: UNIT_POWER_FREQUENT "ENERGY" spacing in a `/vslog`.
 - AP: (probe first, ForeverProbe) are the target's nameplate aura frames' shown state and textures plain in combat?
+- PV1: `prev.1` from real casts (gaps.md "`prev.1` from real casts"): a Combat Rogue's pull shows Adrenaline Rush right
+  after Blood Fury, and a Feral's Rake or Shred right after Berserk; if not, a Snapshot after the first cast.
 - Flicker (the user's rule): in combat, does the first icon flicker (Arms: Mortal Strike dipping for a moment after a
   swing)?
 

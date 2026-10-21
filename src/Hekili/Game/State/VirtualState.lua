@@ -56,7 +56,7 @@ VS.Obs = {
     PlayerHit = 36, -- a: I.HitKind; b: the amount (0: none); c: the attacker's level (UNIT_COMBAT on the player, plain)
     TargetRange = 37, -- a: the target's least distance in yards; b: its greatest (math.huge: no bound), the range poll's
     Avoided = 38, -- a: ability index; b: its cast's time; c: I.HitKind (DODGE, PARRY, MISS): our cast's own outcome on
-    -- the target (Events/Rows.lua's pairing, its frame only); Families/Now.lua undoes the cast's debuffs and refunds
+    -- the target (Events/Rows.lua's pairing in its landing window, GAP AX); Families/Now.lua undoes and refunds it
     Crit = 39, -- a: ability index; b: its cast's time: our cast's own CRITICAL wound on the target (the same pairing);
     -- Families/Now.lua runs the ability's `onCrit` (GAP T)
 }

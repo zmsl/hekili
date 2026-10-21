@@ -10,7 +10,8 @@
 -- hand's crit) for VirtualState's resources (Families/Resources.lua). An avoid credited to a swing is provisional: a
 -- later wound that scores that swing higher takes it; otherwise the swing's window closes as SWING_MISSED. A swing
 -- still unpaired when its window closes is emitted as SWING_DAMAGE with amount 0 at its own time. A DODGE / PARRY / MISS
--- in the frame of exactly one cast of ours also stages `Avoided` for the belief (Families/Now.lua).
+-- while exactly one cast of ours is pending (its landing window, CAST_WINDOW once others avoid: GAP AX) also stages
+-- `Avoided` for the belief (Families/Now.lua).
 -- Measured: docs/research/2026-10-16-swing-outcome-pairing.md (P), docs/research/2026-10-16-group-pairing-captures.md
 -- (G, G5).
 -- Credits: secret-value handling after Catnip's (Durts) research; the signals are Taco Dog Forever's research
@@ -416,11 +417,11 @@ end
 -- no cast of ours claimed is another player's strike frame (background). A white outcome (school 1) is then scored
 -- against our pending swings; a wound no swing takes goes to our pending cast, else to the background.
 -- A white avoid that one of our pending swings explains (any candidate past the cast's frame; inside it, a swing due
--- in that frame) is not the cast's: before, our cast's 0.2 s claimed it as SPELL_MISSED, and an ability's `missable`
--- dropped its debuff. An avoid takes the cast in its frame before an older one still in its window.
--- shortcut: a startsCombat cast with no outcome of its own (a DoT, a debuff) takes an avoid inside its 0.2 s that no
--- pending swing of ours explains as SPELL_MISSED; rare, upgrade to the cast's frame if Phase D's compensating aura
--- removal relies on it.
+-- in that frame) is not the cast's: it would claim it as SPELL_MISSED, and an ability's `missable` would drop its
+-- debuff. An avoid takes the cast in its frame before an older one still in its window.
+-- shortcut: a startsCombat cast with no outcome of its own (a DoT, a debuff) takes an avoid inside its landing window
+-- (CAST_WINDOW once others avoid: GAP AX) that no pending swing of ours explains as SPELL_MISSED; rare, upgrade to the
+-- cast's frame if Phase D's compensating aura removal relies on it.
 -- shortcut: in group play another attacker's white wound inside our pending cast's 0.2 s that no swing of ours takes
 -- is credited to that cast as SPELL_DAMAGE; upgrade when a per-attacker attribution exists.
 S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)

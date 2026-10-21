@@ -25,6 +25,8 @@ replay and loop world), **tools**.
 | AQ | Aura regen is a fixed number (`Families/Resources.lua` :377-381, :429), so Improved Bloodrage's 1.5 rage/s at 2/2 cannot be modelled (forcing it left Arms agreement unchanged) | core belief | open | Warrior |
 | AR | A white crit and one of our casts in the same frame lose the crit's extra rage (Resources.lua ~:759, :1093-1146; belief 0.00 vs truth 4.88 for 1.6 s, Fury 69.51 s); suspected, not proven at line level | core belief | open | Warrior Fury |
 | AS | A missed Sunder Armor just after our own swing is not attributed to the cast (`Events/Rows.lua` :157, :478; stacks re-read only on an aura change): the belief counts 4 stacks, the client 3 (Fury 89.82 s) | core belief (outcomes) | open | Warrior |
+| AX | Our cast is held for the landing window (`Events/Rows.lua` `landWindow()`, 0.65-2.7 s) and claims an avoid no pending swing explains, so another attacker's dodge became our `Obs.Avoided` and `Families/Now.lua` refunded `refundOnAvoid` of the cost into lo (lo 8 over a truth of 0 in the test). Fixed for group play (final review fix 4): past CAST_WINDOW only a DODGE / PARRY / MISS, and only while the learned background avoid count `L.bg[7]` is below `L.FOREIGN_AVOIDS`. Residue: the first foreign avoid of a session (or after about 30 s of combat with none: `L.TAU` 10 s) still lands in that window as ours; solo, a white avoid of ours outside its swing's two spreads (the stacks-fix report's parry 0.65 s after a forced Sunder, one extra Sunder at a true 5 stacks); the 80% share is unmeasured (O2) | core belief (outcomes) | partly fixed; severity minor (one refund or stack, once) | in game: a group fight with `/vslog` (O1, O2) |
+| AY | The rest assumption: a slot that rests at its maximum (mana, energy) is believed full at a build (`Families/Resources.lua` :298-299 `assume`/`over`, :1432 lo = lo0 + over), and the facade's `UnitPower` returns that lo (`API/Facade.lua` :244-247). A build mid-combat or after a fight (`/reload`, a spec or talent swap, a login with partial mana) puts the floor at max until a short answer, an exact read or a pin's top below it ends it, so `mana.pct`, `energy.deficit`, time-to-X and "can I afford B after A" read full meanwhile. Deliberate (fix 6), unmeasured, and the one place lo may sit above the truth by design. Fix: assume only for an out-of-combat build whose PLAYER_REGEN_ENABLED is older than the pool's time to fill, else `assume = false` | core belief (resources) | open; severity medium (seconds of wrong recommendations after a mid-combat `/reload`; the floor rule broken) | none |
 
 Unnumbered, from the lane reports (give one an id when it is dispatched):
 
@@ -45,6 +47,11 @@ Unnumbered, from the lane reports (give one an id when it is dispatched):
 | ICD sentinel | An `icd` aura first seen already up gets `applied = now - icd`; one with no duration or tick_time would see the sentinel in State.lua's fallback: wants a `shortcut:` note | core sim | none |
 | Range filter default | wowsims never casts an out-of-range spell; the fork shows such lines unless the player enables the range filter. Default it on? | UX (user decision) | the user |
 | Explosives timing | Rule 13 does not model wowsims casting explosives just after a GCD | translator | none |
+| Items by list name | `Engine/Sim/Scripts.lua` :2020 registers a pack's items (`PackInfo.items`) by list name (`list ~= "precombat"`), so a use-item line in a list the precombat list calls counts as in-combat; display-harmless today | core sim | none |
+| `prev.1` from real casts | Rule 14's later sequence members and the recipes' cast-order lines (Rogue's Blood Fury -> Adrenaline Rush, Feral's Berserk -> Rake / Shred) read `prev.1.<key>`, which the replay and loop fill from the harness's casts; that the client's real casts fill it the same way is unverified (in-game checkpoint PV1, `docs/dev/layout.md`) | core sim / in game | the next in-game session |
+| Rule 14 deviation | A cast of ours between two members of a `strictSequence` replaces `prev.1`, so the next member never shows (safe: the sequence lapses, as wowsims's does when the GCD is ready and the member is not); not yet in rule 14's deviations (`tools/wowsims/apl.lua`) | translator | none |
+| Same-timestamp expiry | The replay judges a fade a removal when one of our Casting or Completed lines shares its 0.01 s timestamp (`tests/Game/harness/replay.lua` :397-407), so a natural expiry that coincides with a cast is shown with the declared duration, not its run | harness replay | none |
+| Stale recipe headers | The recipes' header numbers (`tools/wowsims/specs/*.lua`: replay agreements, floors, idle seconds) record the lane run that wrote them; the spec files hold the gates and moved since (Retribution's 0.57 corrected to the spec's 0.87 in the final fixes). Read a header's number as history, the spec's as the bar | tools (recipes) | none |
 
 ## Closed (for reference)
 
@@ -58,5 +65,7 @@ replay removals and restarts, `level` in the cost context, the usable bound, cas
 maxima, tank exports, the aura-only map); X (the loop's pools carried through the gap between fights); H (fix 14:
 percent of base mana); T, AJ, AK (fix 15: Primal Fury's `onCrit`, `shared = "target"`, swing rage at PLAYER_SWING);
 AC (the swing-scale window, `Families/Resources.lua` SWING_STEPS); AD (fix 16: precombat-called lists); Z (rule 14,
-`strictSequence`); fix 18 (the Arms/Fury leveling Sunder filler's stack guard).
+`strictSequence`); fix 18 (the Arms/Fury leveling Sunder filler's stack guard); the precombat-group `prepull_at` loss
+(final review fix 5: a group the prepull calls gives its casts the caller's `prepull_at`, rule 1; Arms's and Fury's
+Pre-pull: Move and Arms's Pre-pull: Stance no longer show on every out-of-combat refresh).
 Cancelled: fix 19 (a harness-vs-in-game default for Sunder; players use Hekili's own per-ability toggles).

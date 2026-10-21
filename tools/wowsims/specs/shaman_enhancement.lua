@@ -1,6 +1,6 @@
 -- tools/wowsims/specs/shaman_enhancement.lua (wowsims packs plan, Task 10): Enhancement (wowsims.com)'s
 -- wowsims/forever request and translation.
--- Values from wowsims/forever (MIT) ui/specs/shaman/enhancement/presets.ts:14-23 (DefaultGear: the Testing build's
+-- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/shaman/enhancement/presets.ts:14-23 (DefaultGear: the Testing build's
 -- gear; StandardTalents 053503102-053030031005112251, the build's own talentsString) and builds/testing.build.json at
 -- the pin; the rotation is apls/default.apl.json (the presets' default), which replaces the build's.
 -- Disagreements worked (P7, decisions on-GCD 0.807 of 88; first clean run 0.557):

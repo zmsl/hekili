@@ -10,7 +10,8 @@
 -- offers it again and the twist runs a seal behind (measured with the class duration shown instead: 0.772, both gone).
 -- seal_of_command -> holy_strike 2: replay limit (central GAP O, tests/Game/harness/observer.lua): wowsims casts Holy
 -- Strike the instant its cooldown ends; the old cooldown's end lands a microsecond after the new start and clears it
--- (with GAP N's experiment too: 0.789). The floor 0.57 is the one reachable without them.
+-- (with GAP N's experiment too: 0.789). The floor was 0.57 then; central fix 13 (removals shown as removals, the
+-- cooldown restart) took it to 0.87, the spec's gate (tests/Forever/wowsims_paladin_spec.lua).
 -- Under-belief of about 120 mana a Judgement: GAP H, an API-forced deviation: the class model prices its 6% on the
 -- maximum (3737), wowsims on base mana (81 = 6% of 1500 x 0.9), which the client does not expose.
 -- Idle at 60 (LIVE60 8.4 s, owner ruling): wowsims is the oracle; its own Retribution is out of mana from 60 s, and the
