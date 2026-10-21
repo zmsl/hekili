@@ -151,6 +151,7 @@ describe("Forever Mage", function()
             out[#out + 1] = near(ld.run(ab.spend, e))
         end
         assert.are.same({ 0.15, 0.4125, 0.675, 0.9375, 1.2 }, out)
+        assert.is_true(ab.spendBase) -- every one a fraction of base, the 1.2 too
         assert.are.same(
             { 400573, 8, 4 },
             { w.auras.arcane_blast.id, w.auras.arcane_blast.duration, w.auras.arcane_blast.max_stack }
@@ -349,9 +350,8 @@ describe("Forever Mage through the engine", function()
         end
     )
 
-    -- The belief's charges and their price at the cast. At 4 charges the declared 1.2 (120% of base) is read as 1.2
-    -- mana in both layers (a fraction cost must be below 1: Engine/Sim/State.lua ns.FractionCost, Families/Casts.lua
-    -- I.BaseCostOf): a shared gap, reported; this pins today's behaviour so its fix shows here.
+    -- The belief's charges and their price at the cast, in both layers: `spendBase` prices every declared fraction of
+    -- base, the 1.2 at 4 charges included (central fix 22, gap BB).
     it("counts Arcane Blast's charges in the belief and the simulation, four at most, each pricing the next", function()
         local H = headless.new({ character = character() })
         local I, VS, S = H.ns.VirtualStateInternal, H.ns.VirtualState, H.Hekili.State
@@ -366,9 +366,9 @@ describe("Forever Mage through the engine", function()
             S.reset("Primary", true)
             out[#out + 1] = { n, S.buff.arcane_blast.stack, I.CostOf(a), S.action.arcane_blast.cost }
         end
-        -- each the declared fraction x 1213, floored (0.4125, 0.675, 0.9375); at 4 charges 1.2 is read as 1.2 mana
+        -- each the declared fraction x 1213, floored (0.4125, 0.675, 0.9375, 1.2)
         assert.are.same(
-            { { 1, 1, 500, 500 }, { 2, 2, 818, 818 }, { 3, 3, 1137, 1137 }, { 4, 4, 1.2, 1.2 }, { 4, 4, 1.2, 1.2 } },
+            { { 1, 1, 500, 500 }, { 2, 2, 818, 818 }, { 3, 3, 1137, 1137 }, { 4, 4, 1455, 1455 }, { 4, 4, 1455, 1455 } },
             out
         )
         assert.are.same({}, H.errors)

@@ -241,7 +241,8 @@ local function shares(other, aura)
 end
 
 spec:RegisterAbilities({
-    -- 15% of base mana, +175% a charge (0.15, 0.4125, 0.675, 0.9375, 1.2 of base at 0-4 charges).
+    -- 15% of base mana, +175% a charge (0.15, 0.4125, 0.675, 0.9375, 1.2 of base at 0-4 charges): `spendBase` keeps
+    -- the 1.2 a fraction of base (Spec.lua), as the smaller ones.
     arcane_blast = {
         id = 400574,
         copy = rest(ARCANE_BLAST),
@@ -255,6 +256,7 @@ spec:RegisterAbilities({
             return 0.15 * (1 + 1.75 * buff.arcane_blast.stack)
         end,
         spendType = "mana",
+        spendBase = true,
 
         startsCombat = true,
         known = knows(ARCANE_BLAST),

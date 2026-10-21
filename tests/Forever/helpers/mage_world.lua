@@ -10,9 +10,12 @@
 -- (33 / 67 / 100%), Clearcasting (Arcane Concentration's 2% a rank on a damage spell's hit) and Arcane Power's costs,
 -- Presence of Mind's instant cast, mana under the five-second rule. Damage amounts, the regen parts and the mana pool
 -- are UNMEASURED.
--- The channels (Arcane Missiles, Evocation) are not pressable: the harness world and its client deliver no player
--- channel (no UNIT_SPELLCAST_CHANNEL_START, _UPDATE, _STOP or UnitChannelInfo; a press with a cast time succeeds only at
--- its end, tests/Game/harness/world.lua W.press), so C.resolve raises for them (a shared gap, never worked around here).
+-- The hard casts are cast bars (a press with a cast time: UNIT_SPELLCAST_START and UnitCastingInfo at the press, the
+-- success at the end) and the two channels are the world's channels (W.press `channel`): Arcane Missiles a missile a
+-- tick (its rank's 3-5 s, a tick a second; Missile Barrage's half the time, a tick each 0.5 s, free), Evocation 8 s,
+-- a tick a second, each tick's mana 16x the spirit part less the part the regen already pays (all of it continues
+-- while channelling: DB2 12051 auras 110 and 134). Any press while Evocation runs at 99% mana or more clips it
+-- (wowsims's interruptIf in both APLs' Evocation group).
 -- Credit: wowsims/forever (MIT) as the reference for the charge, proc and gem rules; no code copied.
 local ld = require("Forever.helpers.load_druid")
 local world = require("Game.harness.world")
@@ -58,6 +61,7 @@ local CAST = {
 
 -- UNMEASURED: the hits' amounts.
 local AMOUNT = {
+    arcane_missiles = 250, -- a missile
     arcane_blast = 700,
     arcane_wrath = 900,
     frostbolt = 700,
@@ -257,7 +261,7 @@ local function costOf(key, ids, H, up, stacks)
             c = c[rank]
         end
     end
-    if CLEARCAST[key] and up("clearcasting") then
+    if (CLEARCAST[key] and up("clearcasting")) or (key == "arcane_missiles" and up("missile_barrage")) then
         return 0
     end
     if POWERED[key] and up("arcane_power") then
@@ -322,8 +326,10 @@ end
 local IMPROVED_SCORCH = { 0.33, 0.67, 1 }
 local WAKE_OF_FIRE = { [0] = 0, 1, 2, 2 } -- Fire Blast's cooldown cut by rank (wowsims's; a third DB2 rank as the second)
 
--- Each recommendable ability: `effect(W, e, p, X, H)`, `requires(W, e, X)`, `channel` (unpressable: the gap above). A
--- key missing here fails the loop.
+local MISSILES_TIME = { 3, 4, 5, 5, 5, 5, 5, 5 } -- Arcane Missiles' channel by rank (DB2)
+
+-- Each recommendable ability: `effect(W, e, p, X, H)` (a channel's at its start), `requires(W, e, X)`, `channel(H, ids,
+-- up)` (a channel's { length, tick, effect }). A key missing here fails the loop.
 M.MAP = {
     arcane_blast = spell("arcane_blast", function(W, e, X)
         aura(W, X, e, "arcane_blast") -- a charge, refreshed (wowsims arcane_blast.go)
@@ -370,8 +376,45 @@ M.MAP = {
             return false, "the mob casts nothing"
         end,
     },
-    arcane_missiles = { channel = true },
-    evocation = { channel = true },
+    arcane_missiles = {
+        effect = function(W, e, _, X)
+            local up = onEntity(e, X)
+            for _, key in ipairs({ "missile_barrage", "clearcasting" }) do -- the cast's free charge, either
+                if up(key) then
+                    drop(W, e, X, key)
+                    break
+                end
+            end
+        end,
+        channel = function(H, ids, up)
+            local rank = #MISSILES_TIME
+            for i = #ids, 1, -1 do
+                if H.ctl.known[ids[i]] then
+                    rank = i
+                    break
+                end
+            end
+            local half = up("missile_barrage") and 0.5 or 1
+            return {
+                length = MISSILES_TIME[rank] * half,
+                tick = half,
+                effect = function(W, e)
+                    W.hit(e, e.target, AMOUNT.arcane_missiles, 64, "spell") -- each missile rolls its own hit
+                end,
+            }
+        end,
+    },
+    evocation = {
+        channel = function()
+            return {
+                length = 8,
+                tick = 1,
+                effect = function(W, e)
+                    W.emit({ kind = "gain", src = e, pt = MANA, rage = 16 * FSR[1] - W.regenRate(e, MANA) })
+                end,
+            }
+        end,
+    },
 }
 
 local function content(name)
@@ -430,13 +473,11 @@ local function content(name)
 
     --- The resolved press of `key` from instance `H` (the oracle's: its state is true): the highest known rank's ID
     --- and every known rank's, the cost, the cooldown, GCD and cast time on the true state, the mapping's effects. Raises
-    --- "unmapped key", and for a channel (the harness's shared gap).
+    --- "unmapped key".
     function C.resolve(key, H)
         local m = M.MAP[key]
         if not m then
             error("unmapped key " .. tostring(key), 2)
-        elseif m.channel then
-            error("channel " .. key .. ": the harness world has no player channel (shared gap)", 2)
         end
         local a = H.Hekili.Class.abilities[key]
         local X = classData(H)
@@ -465,6 +506,12 @@ local function content(name)
             refund = world.refundOf(H.Hekili.Class, key),
             outcomes = m.outcomes,
         }
+        if m.channel then
+            p.channel = m.channel(H, ids, up)
+        end
+        -- Evocation clipped at 99% mana (the oracle's true belief: its channel and its mana)
+        local I = H.ns.VirtualStateInternal
+        p.clip = I.channel and I.castAb == I.ab.bySpell[12051] and VS.Power(MANA, H.ctl.now).est >= 0.99 * MAX
         p.requires = function(W, e)
             if m.requires then
                 return m.requires(W, e, X)
@@ -485,7 +532,7 @@ local function content(name)
         local out = {}
         local X = classData(H)
         for key, m in pairs(M.MAP) do
-            if H.Hekili.Class.abilities[key] and C.IDS[key] and not m.channel then
+            if H.Hekili.Class.abilities[key] and C.IDS[key] then
                 local ids = C.IDS[key]
                 local function answer(W, e, power)
                     if m.requires and not m.requires(W, e, X) then
