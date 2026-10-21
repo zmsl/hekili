@@ -123,11 +123,13 @@ repeats seeds 1-3 against its every-slot fixture). Each fight seeds its own worl
 boot carries nothing between fights, so the halves play the same fights as the old single run.
 The gate runs Arms (wowsims.com), the Arms default since the wowsims packs plan's Warrior swap (the hand-built Arms,
 Fury and Protection lists retired), on the world's wowsims build (Spearing Strike and Berserker Rage in the kit). Its
-lines (the swap, on trunk 824901c4 plus the Warrior lane; 20 fights: agreement 0.964, flicker 1.38/min):
+lines (the forever gate on 51a0b1ac; 20 fights: agreement 0.964, flicker 1.38/min, oracle 0.94):
 
 ```
 Arms solo: fights=3 agreement 0.973 (2660 ticks); react median 0 p90 0 never 0.018; refused per 100 [casting 7.0 (oracle 0.5, unmatched 0.0), cost 17.0 (oracle 16.2, unmatched 0.0)], episodes 4.40/min; dps A/B 0.982; ... [seeds 1-3]
 Arms solo: fights=3 agreement 0.985 (2501 ticks); react median 0 p90 0 never 0.049; refused per 100 [cost 16.1 (oracle 15.8, unmatched 0.0)], episodes 3.60/min; dps A/B 0.998; ... [seeds 4-6]
+Arms solo: fights=20 agreement 0.964 (16910 ticks); react median 0 p90 0 never 0.035; refused per 100 [casting 2.8 (oracle 4.5, unmatched 0.0), cost 16.2 (oracle 15.1, unmatched 1.7)], episodes 3.60/min; dps A/B 0.982; ...
+Arms party: fights=10 agreement 0.970 (4371 ticks); react median 0 p90 1 never 0.010; refused per 100 [casting 5.9 (oracle 4.8, unmatched 0.0), cost 4.7 (oracle 10.3, unmatched 0.0), requires:no dodge 4.3 (oracle 0.0, unmatched 0.0)], episodes 1.51/min; dps A/B 1.027; ...
 ```
 
 Before the pull it shows Bloodrage and Battle Shout only (no positions headless, so no Charge). Seeds 1-3's casting
@@ -138,12 +140,15 @@ Slam, and the world's client sees only a cast's success (no cast start), so our 
 `make test-druid` (`#druid`), each asserting its flagged lines ran (`r.focus > 0`). Every Druid spec runs its
 wowsims.com default (wowsims packs plan, Tasks 7b and 7g; the hand-built lists retired); Feral and Balance are gated by
 `pack_gate.gate`, Guardian is reported (engine health and focus asserted, not the agreement): its first icon waits on
-rage the usability ladder cannot place. Current lines (Task 7g):
+rage the usability ladder cannot place. Current lines (the forever gate on 51a0b1ac):
 
 ```
 Feral solo: fights=3 agreement 0.932 (2367 ticks); react median 0 p90 0 never 0.018; refused per 100 [], episodes 0.00/min; dps A/B 1.037; ... [seeds 1-3]
-Guardian solo: fights=3 agreement 0.805 (2570 ticks); react median 0 p90 1 never 0.051; refused per 100 [cost 10.5 (oracle 6.3, unmatched 4.7)], episodes 2.33/min; dps A/B 1.010; ... [seeds 1-3] (reported)
+Guardian solo: fights=3 agreement 0.805 (2570 ticks); react median 0 p90 1 never 0.051; refused per 100 [cost 10.5 (oracle 6.3, unmatched 4.7)], episodes 2.33/min; dps A/B 1.010; ...
 Balance solo: fights=3 agreement 0.968 (2647 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 88.7 (oracle 87.8, unmatched 7.2), cost 0.3 (oracle 1.1, unmatched 0.1)], episodes 10.54/min; dps A/B 1.010; ... [seeds 1-3]
+Feral solo: fights=20 agreement 0.931 (16431 ticks); react median 0 p90 0 never 0.044; refused per 100 [cost 1.9 (oracle 2.6, unmatched 0.8)], episodes 0.13/min; dps A/B 1.015; ...
+Guardian solo: fights=20 agreement 0.781 (17805 ticks); react median 0 p90 3 never 0.040; refused per 100 [cost 20.4 (oracle 12.8, unmatched 10.2)], episodes 5.02/min; dps A/B 0.963; ...
+Balance solo: fights=20 agreement 0.985 (17875 ticks); react median 0 p90 1 never 0.001; refused per 100 [casting 88.6 (oracle 88.1, unmatched 4.8), cost 0.2 (oracle 1.2, unmatched 0.0)], episodes 10.77/min; dps A/B 0.957; ...
 ```
 
 The Feral and Balance worlds keep the wowsims logs' mana pools and five-second rule (22 a second outside it).
@@ -152,12 +157,15 @@ The Feral and Balance worlds keep the wowsims logs' mana pools and five-second r
 `make test-rogue` (`#rogue`), each on its "<Spec> (wowsims.com)" pack (wowsims packs plan, Task 8), gated by
 `pack_gate.gate` and asserting its flagged lines ran (`r.focus > 0`: Slice and Dice at tier 1 in every pack). The
 worlds carry the wowsims.com builds' abilities and talents (Subtlety Hemo has no Ghostly Strike); the replay and
-leveling gates are `tests/Forever/wowsims_rogue_spec.lua`. The lines since the swap:
+leveling gates are `tests/Forever/wowsims_rogue_spec.lua`. The lines (the forever gate on 51a0b1ac, central fixes 1-17):
 
 ```
-Combat solo: fights=3 agreement 0.999 (2226 ticks); react median 0 p90 0 never 0.000; refused per 100 [requires:in combat 0.7 (oracle 2.0)], episodes 0.13/min; dps A/B 1.037; ... [seeds 1-3]
-Assassination solo: fights=3 agreement 0.993 (2437 ticks); react median 0 p90 0 never 0.022; refused per 100 [requires:in combat 1.8 (oracle 1.8)], episodes 0.25/min; dps A/B 0.990; ... [seeds 1-3]
-Subtlety solo: fights=3 agreement 0.967 (2192 ticks); react median 0 p90 0 never 0.073; refused per 100 [requires:in combat 1.3 (oracle 0.6)], episodes 0.27/min; dps A/B 0.999; ... [seeds 1-3]
+Combat solo: fights=3 agreement 0.991 (2158 ticks); react median 0 p90 0 never 0.000; refused per 100 [requires:in combat 1.3 (oracle 1.3, unmatched 0.0)], episodes 0.28/min; dps A/B 1.023; ... [seeds 1-3]
+Assassination solo: fights=3 agreement 0.991 (2373 ticks); react median 0 p90 0 never 0.040; refused per 100 [requires:in combat 1.7 (oracle 2.5, unmatched 0.0)], episodes 0.25/min; dps A/B 0.973; ... [seeds 1-3]
+Subtlety solo: fights=3 agreement 0.974 (2041 ticks); react median 0 p90 0 never 0.063; refused per 100 [requires:in combat 1.9 (oracle 1.2, unmatched 0.0)], episodes 0.44/min; dps A/B 0.969; ... [seeds 1-3]
+Combat solo: fights=20 agreement 0.992 (14181 ticks); react median 0 p90 0 never 0.000; refused per 100 [requires:in combat 0.8 (oracle 1.3, unmatched 0.0)], episodes 0.17/min; dps A/B 0.999; ...
+Assassination solo: fights=20 agreement 0.996 (15402 ticks); react median 0 p90 0 never 0.007; refused per 100 [requires:in combat 1.7 (oracle 1.7, unmatched 0.0)], episodes 0.25/min; dps A/B 1.000; ...
+Subtlety solo: fights=20 agreement 0.973 (13157 ticks); react median 0 p90 0 never 0.037; refused per 100 [requires:in combat 1.5 (oracle 1.4, unmatched 0.0)], episodes 0.36/min; dps A/B 1.000; ...
 ```
 
 `tests/Forever/loop_paladin_spec.lua` runs 3 fights a Paladin pack in `make check` (seeds 1-3, `#slow`) and 20 in
@@ -166,19 +174,16 @@ Seal of Fury and Holy Shield at tier 2). The mob swings at us in both worlds: Ho
 each block spends a charge (the world's class-neutral `taking`/`took`); our landed swing spends an Echo (`landed`); mana
 runs under the five-second rule (`fsr`). Both packs are gated by `pack_gate.gate`; both are wowsims.com packs since the
 wowsims packs plan, Task 9 (the hand-built lists retired). Retribution (wowsims.com)'s swing-gap fillers carry
-wowsims's own `mana.pct>=10`, judged on the secret-mana belief: in the solo worlds' later fights (each starts at full
-mana 30 s after the last, which no regen fills) the belief rightly carries the drained pool, so the fillers wait where
-the oracle, reading the truth, casts them (the Retribution lines' consecration disagreements; GAP X: loop fights
-restart at full mana after a dry fight, so the Retribution 20-fight line's 0.911, never 0.226 is harness-caused and
-recovers after GAP X). The
-holy_shock list is gone with the hand-built Retribution list; Hammer of Wrath's window is not exercised by the solo
-worlds. The runs (the rebased base of the wowsims packs plan, Task 9 resume 3):
+wowsims's own `mana.pct>=10`, judged on the secret-mana belief; each fight starts with the mana the last one left,
+regenerated through the 30 s gap (GAP X, closed: the 20-fight line was 0.911, never 0.226, while fights restarted at
+full mana). The holy_shock list is gone with the hand-built Retribution list; Hammer of Wrath's window is not
+exercised by the solo worlds. The runs (the forever gate on 51a0b1ac, central fixes 1-17):
 
 ```
-Retribution solo: fights=3 agreement 0.924 (2572 ticks); react median 0 p90 0 never 0.188; refused per 100 [], episodes 0.00/min; dps A/B 0.865; ... [seeds 1-3]
-Protection solo: fights=3 agreement 0.988 (2431 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.011; ... [seeds 1-3]
-Retribution solo: fights=20 agreement 0.911 (17477 ticks); react median 0 p90 0 never 0.226; refused per 100 [], episodes 0.00/min; dps A/B 0.883; ...
-Protection solo: fights=20 agreement 0.989 (17185 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.985; ...
+Retribution solo: fights=3 agreement 0.998 (2387 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.976; ... [seeds 1-3]
+Protection solo: fights=3 agreement 0.977 (2434 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.8 (oracle 3.3, unmatched 0.9)], episodes 0.25/min; dps A/B 1.015; ... [seeds 1-3]
+Retribution solo: fights=20 agreement 0.995 (17219 ticks); react median 0 p90 0 never 0.010; refused per 100 [cost 0.2 (oracle 9.2, unmatched 0.0)], episodes 0.02/min; dps A/B 0.974; ...
+Protection solo: fights=20 agreement 0.972 (17595 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.0 (oracle 9.3, unmatched 0.3)], episodes 0.12/min; dps A/B 1.015; ...
 ```
 
 Paladin checkpoint (in game, a level 60 Paladin; provisional until answered):
@@ -224,12 +229,12 @@ pool and regen, no Mana Spring regen, Water Shield or potions), so most in-comba
 The imbues are not in the solo world's kit (it has no weapon enchant read). The world's costs are each rank's (DB2),
 with Shamanistic Focus when the build has it, Stormstrike's 121 (wowsims/forever's), and the shocks' cooldown and Flame
 Shock's duration from the booted talents. The lines below run Enhancement (wowsims.com) (wowsims packs plan, Task 10,
-state R2 on origin/forever 3aa63c96: Fire Nova at the DB2's 520). `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's own fight
-(floor 0.80) and runs the levels 10, 40 and 60 (40 pending: GAP W, the five-second window opened late):
+the forever gate on 51a0b1ac: Fire Nova at the DB2's 520). `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's
+own fight (floor 0.90) and runs the levels 10, 40 and 60 (40 pending: GAP AB, the secret-mana floor's last mana):
 
 ```
-Enhancement solo: fights=3 agreement 0.999 (1151 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.011; ... [seeds 1-3]
-Enhancement solo: fights=20 agreement 0.996 (7350 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.001; ...
+Enhancement solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.1 (oracle 12.1, unmatched 0.0)], episodes 0.11/min; dps A/B 0.991; ... [seeds 1-3]
+Enhancement solo: fights=20 agreement 1.000 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.3 (oracle 13.9, unmatched 0.0)], episodes 0.12/min; dps A/B 0.996; ...
 ```
 
 Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
@@ -277,17 +282,16 @@ pull (the character keeps a permanent buff between fights). Neither side dies (s
 missing kill). The kit's ranges are DB2's (`RANGE`: Hunter Range 8-35, Combat Range 0-5). "The Hunter at range, then
 in melee" runs Survival at 25 yd, then 5 yd: its four `target.within5` lines stay shut while the bracket reads [8, 35],
 open at [0, 5], and the bracket holds when every read goes secret. Mana is secret in combat, so the belief holds its
-lower bound and the worlds idle 0.730 (Beast Mastery, Marksmanship) and 0.562 (Survival) of the time. The lines
-(gate 11fix11, after central fixes 6 and 11) after the swap (wowsims packs plan, Task 11; the hand-built lists' were
-0.983/0.986/0.945 at 3 fights):
+lower bound and the worlds idle 0.820 (Beast Mastery, Marksmanship) and 0.711 (Survival) of the time at 3 fights. The
+lines (the forever gate on 51a0b1ac, central fixes 1-17; the hand-built lists' were 0.983/0.986/0.945 at 3 fights):
 
 ```
-Beast Mastery solo: fights=3 agreement 0.999 (1905 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.034; ... [seeds 1-3]
-Marksmanship solo: fights=3 agreement 0.999 (1905 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.034; ... [seeds 1-3]
-Survival solo: fights=3 agreement 0.976 (1393 ticks); react median 1 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.988; ... [seeds 1-3]
-Beast Mastery solo: fights=20 agreement 1.000 (12675 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.007; ...
-Marksmanship solo: fights=20 agreement 1.000 (12675 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.007; ...
-Survival solo: fights=20 agreement 0.976 (9328 ticks); react median 1 p90 2 never 0.008; refused per 100 [], episodes 0.00/min; dps A/B 1.018; ...
+Beast Mastery solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.991; ... [seeds 1-3]
+Marksmanship solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.991; ... [seeds 1-3]
+Survival solo: fights=3 agreement 0.996 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.009; ... [seeds 1-3]
+Beast Mastery solo: fights=20 agreement 1.000 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.012; ...
+Marksmanship solo: fights=20 agreement 1.000 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.012; ...
+Survival solo: fights=20 agreement 0.999 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 1.003; ...
 ```
 
 Hunter checkpoint (in game, a level 60 Hunter with a ranged weapon and a pet; provisional until answered): the Hunter
