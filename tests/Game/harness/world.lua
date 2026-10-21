@@ -38,7 +38,8 @@ M.OUTCOMES = {
 --- A new world. `seed` seeds its generator. Truth events: { t, kind, src, dst, hand, act, flag, amount, school, spell }
 --- with kind "swing" (a white swing, its outcome rolled; ours land later as "land"), "land", "strike" (an
 --- on-next-swing strike frame), "spell" (a spell's outcome), "tick", "proc", "cast", "castStart" and "channelStop" (our hard cast's
---- start, our channel's end: W.press), "prepull" (the cache and
+--- start, our channel's end: W.press), "item" (a bag count of ours: W.item), "pet" and "petPower" (our pet unit, its
+--- power: W.summonPet, W.petGain), "prepull" (the cache and
 --- target reads 0.5 s before the pull), "pull", "stop", "form", "buff", "target", "aura", "totem", "queue", "unqueue", "gain", "kill", "move",
 --- "regen" and "decay" (a resource's continuous regen and out-of-combat decay, W.startRegen / W.startDecay). A gain
 --- (`rage`) or spend (`cost`) of ours is of power type `pt` (default our `pt`, the swing-paid `power`; another type's
@@ -153,13 +154,15 @@ function M.new(seed)
     --- The player `e` pressed `key` now. `p` is the content's resolved press { spell, ids (every rank's: the client
     --- answers their cooldown and IsCurrentSpell together; default { spell }), cost, pt (the cost's power type; default
     --- the swing-paid one), cooldown, gcd (seconds; 0 or offGcd: off the GCD), offGcd, onNextSwing, amount ({ lo, hi } of
-    --- a queued strike), cast (a cast time in seconds), channel ({ length, tick, gain = { pt, amount }, effect = fn(W, e,
+    --- a queued strike), reagent ({ itemID, n [1] }: a bag count the press needs, paid when its cast lands; short:
+    --- "reagent"), cast (a cast time in seconds), channel ({ length, tick, gain = { pt, amount }, effect = fn(W, e,
     --- p, n) }: a channel of `length` s ticking every `tick` s, each tick's gain and effect; the cast, its cost and its
     --- effects at the start), clip (a press during our channel stops it first, the client's cancel; else refused
     --- "casting"), requires = fn(W, e) -> ok, why, effect = fn(W, e, p), and the
     --- generic effects run after `effect`: gain { pt, amount }, points { pt, 1 | "all" } (1: one more on a landed hit
     --- of `effect`'s; "all": spend them all, unless `effect`'s hit was avoided), drain (a power type: spend what is left of it), aura { id, duration,
-    --- tick = { pt, every, amount } } (named fields; on us), shift (W.shift's `sh`) }, refund (W.hit's share of the cost
+    --- tick = { pt, every, amount } } (named fields; on us), shift (W.shift's `sh`), item ({ itemID, n }: W.item), pet
+    --- ("summon" | "dismiss": W.summonPet, W.dismissPet) }, refund (W.hit's share of the cost
     --- an avoid gives back), outcomes (W.hit's avoid set, a M.OUTCOMES key; a queued strike's too). Checked against the true state in order: a
     --- cast in progress, the GCD, the cooldown, the range, the cost, a strike already queued, `requires`; a refusal
     --- returns false and its reason ("casting", "gcd", "cooldown", "range", "cost", "queued", "requires:<why>") and
@@ -183,6 +186,8 @@ function M.new(seed)
             return false, "range"
         elseif (p.cost or 0) > W.res(e, p.pt) then
             return false, "cost"
+        elseif p.reagent and W.items(e, p.reagent[1]) < (p.reagent[2] or 1) then
+            return false, "reagent"
         elseif p.onNextSwing and e.queued then
             return false, "queued"
         end
@@ -224,6 +229,9 @@ function M.new(seed)
                 chanEnds = chanEnds,
             })
             e.lastHit, e.pressing = nil, p
+            if p.reagent then -- paid when the cast lands
+                W.item(e, p.reagent[1], -(p.reagent[2] or 1))
+            end
             if p.effect then
                 p.effect(W, e, p)
             end
@@ -323,6 +331,67 @@ function M.new(seed)
         if p.shift then
             W.shift(e, p.shift)
         end
+        if p.item then
+            W.item(e, p.item[1], p.item[2])
+        end
+        if p.pet == "summon" then
+            W.summonPet(e)
+        elseif p.pet == "dismiss" then
+            W.dismissPet(e)
+        end
+    end
+
+    --- `e`'s count of item `id` in its bags (0: none).
+    function W.items(e, id)
+        return e.bags[id] or 0
+    end
+
+    --- `e` gains `n` of item `id` now (a negative `n` spends them; never below 0). Truth "item" { src, item, count }.
+    function W.item(e, id, n)
+        local count = math.max(0, W.items(e, id) + n)
+        e.bags[id] = count
+        W.emit({ kind = "item", src = e, item = id, count = count })
+    end
+
+    -- Our pet (entities.new's `pet`): shortcut: one pet, a summon of any kind brings it full and a dismissal takes it
+    -- away (no cast of its own, no health); upgrade when a content needs two kinds told apart.
+    local function petEvent(e, kind)
+        local p = e.pet
+        W.emit({ kind = kind, src = e, up = p.up, pt = p.pt, power = p.power })
+    end
+
+    --- `e`'s pet is summoned now, its power full. Truth "pet" { src, up, pt, power }.
+    function W.summonPet(e)
+        local p = e.pet
+        p.up, p.power = true, p.max
+        petEvent(e, "pet")
+    end
+
+    --- `e`'s pet is dismissed (or dies) now.
+    function W.dismissPet(e)
+        e.pet.up = false
+        petEvent(e, "pet")
+    end
+
+    --- `e`'s pet, while up, gains `amount` power now (a negative amount spends it; within 0 and its max). Truth
+    --- "petPower" { src, up, pt, power } on a change.
+    function W.petGain(e, amount)
+        local p = e.pet
+        local v = math.min(p.max, math.max(0, p.power + amount))
+        if p.up and v ~= p.power then
+            p.power = v
+            petEvent(e, "petPower")
+        end
+    end
+
+    --- `e`'s pet regenerates `regen` a second from now, `tick` s at a time (its own declared rate).
+    function W.startPetRegen(e)
+        local p = e.pet
+        local function step()
+            W.petGain(e, p.regen * p.tick)
+            W.at(W.t + p.tick, step)
+        end
+        W.at(W.t + p.tick, step)
     end
 
     --- `e` changes form (after the shift's own cast): `sh` { form, speed (the main hand's new period; default

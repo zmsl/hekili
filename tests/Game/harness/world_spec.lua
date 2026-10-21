@@ -347,3 +347,108 @@ describe("the world's position", function()
         end
     )
 end)
+
+-- Central fix 27: what a kit's resources read beyond the power types: bag counts (a reagent), the pet unit and its
+-- power, the character's stats. The world keeps the truth, the observer the client's answers (all plain on Forever:
+-- C_Item.GetItemCount [W PR13], UnitExists("pet") [W PR14], UnitPower("pet") plain 0 with no pet [W PR12], UnitStat
+-- read out of combat).
+describe("the character's bags, pet and stats", function()
+    local observer = require("Game.harness.observer")
+    local drive = require("Game.harness.drive")
+    local fake = require("Game.State.helpers.fake_api")
+    local ITEM, PT = 6000, 0 -- an item ID and the pet's power type, as bare numbers
+
+    local function setup()
+        local W = world.new(5)
+        local us = W.add(entities.new({
+            guid = "Player-1",
+            bags = { [ITEM] = 2 },
+            pet = { pt = PT, max = 400, power = 100, regen = 10, tick = 2 },
+            stats = { 20, 30, 40, 50, 60 },
+        }))
+        return W, us
+    end
+
+    it("spends a press's reagent when its cast lands, refuses a press short of it, and gains an item", function()
+        local W, us = setup()
+        W.t = 1
+        assert.is_true(W.press(us, "a", { spell = 1, gcd = 0, reagent = { ITEM, 1 } }))
+        assert.are.equal(1, W.items(us, ITEM))
+        assert.is_true(W.press(us, "b", { spell = 2, gcd = 0, cast = 1, reagent = { ITEM, 1 } }))
+        assert.are.equal(1, W.items(us, ITEM)) -- a hard cast pays at its end
+        W.run(2.5)
+        assert.are.equal(0, W.items(us, ITEM))
+        assert.are.same({ false, "reagent" }, { W.press(us, "a", { spell = 1, gcd = 0, reagent = { ITEM, 1 } }) })
+        assert.is_true(W.press(us, "c", { spell = 3, gcd = 0, item = { ITEM, 3 } }))
+        assert.are.same({ 3, 0 }, { W.items(us, ITEM), W.items(us, ITEM + 1) })
+    end)
+
+    it(
+        "regenerates the pet's power on its ticks while it is up; a summon brings a full pet, a dismissal none",
+        function()
+            local W, us = setup()
+            W.startPetRegen(us)
+            W.run(4.5) -- ticks at 2 and 4
+            assert.are.equal(140, us.pet.power)
+            W.petGain(us, -100) -- a spend
+            assert.are.equal(40, us.pet.power)
+            assert.is_true(W.press(us, "d", { spell = 4, gcd = 0, pet = "dismiss" }))
+            W.run(8.5)
+            assert.are.same({ false, 40 }, { us.pet.up, us.pet.power }) -- no regen while down
+            assert.is_true(W.press(us, "s", { spell = 5, gcd = 0, pet = "summon" }))
+            assert.are.same({ true, 400 }, { us.pet.up, us.pet.power })
+        end
+    )
+
+    it("answers the bag counts, the pet unit and its power and the stats as the client does", function()
+        local W, us = setup()
+        W.startPetRegen(us)
+        W.at(1, function()
+            W.press(us, "a", { spell = 1, gcd = 0, reagent = { ITEM, 1 } })
+        end)
+        W.at(3, function()
+            W.dismissPet(us)
+        end)
+        W.at(5, function()
+            W.summonPet(us)
+        end)
+        W.run(6)
+        local s = observer.observe(W, observer.DEFAULTS)
+        local got, stats = {}, nil
+        for i = 1, s.n do
+            local ev = s.ev[i]
+            if ev == "@itemCount" or ev == "@pet" or ev == "@petPower" or ev == "UNIT_PET" then
+                got[#got + 1] = { s.t[i], ev, s.a1[i], s.a2[i], s.a3[i] }
+            elseif ev == "@stats" then
+                stats = { s.t[i], s.a1[i] }
+            end
+        end
+        assert.are.same({
+            { 0, "@itemCount", ITEM, 2 },
+            { 0, "@pet", true, PT, 100 }, -- the client's state at login (no event)
+            { 1, "@itemCount", ITEM, 1 },
+            { 2, "@petPower", 120 },
+            { 3, "@pet", false, PT, 120 },
+            { 3, "UNIT_PET", "player" },
+            { 5, "@pet", true, PT, 400 },
+            { 5, "UNIT_PET", "player" },
+        }, got)
+        assert.are.same({ 0, us.stats }, stats)
+        local api, ctl = fake.new()
+        local c = {}
+        for i = 1, s.n do
+            if s.ev[i]:byte(1) == 64 then
+                ctl.now = s.t[i]
+                drive.op(c, ctl, s.ev[i], s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
+            end
+        end
+        assert.are.same({ 1, true, 400, 400, 0, 60 }, {
+            api.C_Item.GetItemCount(ITEM),
+            api.UnitExists("pet"),
+            api.UnitPower("pet"),
+            api.UnitPower("pet", PT),
+            api.UnitPower("pet", 3), -- not the pet's power type
+            (api.UnitStat("player", 5)),
+        })
+    end)
+end)

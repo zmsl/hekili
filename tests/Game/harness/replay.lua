@@ -503,7 +503,15 @@ function M.new(text, H, o)
             powerMax = wo.max,
             pt = wo.pt,
             res = wo.res,
+            -- shortcut: the content's bags, pet and stats as the world starts; the log's own (its pet's mana, its
+            -- reagents) are not read, and nothing spends them here; read them when a replay gate needs them
+            bags = wo.bags,
+            pet = wo.pet,
+            stats = wo.stats,
         }))
+        if us.pet then
+            W.startPetRegen(us)
+        end
         us.power = start0[us.pt] or wo.power or 0
         us.power0 = us.power
         for pt, r in pairs(us.res) do

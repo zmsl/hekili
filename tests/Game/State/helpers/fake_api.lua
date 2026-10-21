@@ -57,6 +57,8 @@ function M.new()
         power = {}, -- [powerType] = value (SECRET for a secret read)
         petPower = 0, -- UnitPower("pet") of the pet's power type `petPowerType` while exists.pet (SECRET: a secret read)
         petPowerType = 0,
+        itemCount = {}, -- [itemID] = C_Item.GetItemCount (default 0)
+        stats = {}, -- [index] = UnitStat's value (its first two returns; default 0)
         powerMax = {}, -- [powerType] = max
         regen = {}, -- [powerType] = { inactive, active }
         usable = {}, -- [spellID] = { ok, short }
@@ -243,7 +245,11 @@ function M.new()
     local function zeros()
         return stats[1], stats[2], stats[3], stats[4], stats[5], stats[6], stats[7]
     end
-    api.UnitStat, api.GetSpellBonusDamage, api.UnitAttackPower, api.UnitWeaponAttackPower = zeros, zeros, zeros, zeros
+    function api.UnitStat(_, index)
+        local v = ctl.stats[index] or 0
+        return v, v, 0, 0
+    end
+    api.GetSpellBonusDamage, api.UnitAttackPower, api.UnitWeaponAttackPower = zeros, zeros, zeros
     api.UnitArmor, api.GetMasteryEffect, api.GetCritChance = zeros, zeros, zeros
     function api.UnitDamage()
         local d = ctl.damage
@@ -497,7 +503,9 @@ function M.new()
     }
     api.C_ClassTalents.GetHeroTalentSpecsForClassSpec = none
     api.C_Item = {
-        GetItemCount = zero,
+        GetItemCount = function(id)
+            return ctl.itemCount[id] or 0
+        end,
         GetItemSpell = none,
         IsUsableItem = no,
         GetItemInfo = function(id)

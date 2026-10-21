@@ -160,6 +160,15 @@ The translator reads a wowsims resource value on the Pet (`currentMana`) as `pet
 `RegisterStateExpr` over `Hekili.Client.C_Item.GetItemCount(id)`) is read live, and the sim does not predict its
 spends. `UnitStat` and the other stat reads are the belief's out-of-combat cache (`stat(name, arg)`, `VS.Stat`).
 
+**In the harness** (central fix 27), a content declares them in `WORLD` (or `entities.new`): `bags = { [itemID] =
+count }`, `pet = { pt, max, power, regen, tick, up }` and `stats = { [index] = value }`. The world keeps the truth: a
+press's `reagent = { itemID, n }` is checked like a cost (refused `"reagent"`) and paid when its cast lands, the press
+effects `item = { itemID, n }` and `pet = "summon" | "dismiss"` (and `W.item`, `W.summonPet`, `W.dismissPet`,
+`W.petGain`) change it, and the pet regenerates `regen` a second in `tick`-second steps while up. The observer answers
+them plain (`@itemCount`, `@pet` with UNIT_PET, `@petPower`, `@stats` at login), so `C_Item.GetItemCount`,
+`UnitExists`/`UnitPower("pet")` and `UnitStat` read the world. A replay world starts from the content's values and
+reads none from the log.
+
 **Percent-of-base costs.** A `spend` between 0 and 1 is a fraction of its pool's base power (the resource meta's
 `base`, or the belief's learned one; without either, of the maximum, as Hekili), floored, in both layers: the sim's
 `ns.SpendPoints` (`Engine/Sim/State.lua`, every site that prices a spend) and the belief's `I.BaseCostOf`

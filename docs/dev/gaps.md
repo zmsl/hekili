@@ -45,6 +45,9 @@ Unnumbered, from the lane reports (give one an id when it is dispatched):
 | Mongoose window | `tests/Forever/helpers/hunter_world.lua` `dodged()` reads `W.t`/`W.truth`, which a batched answer sees at the finished world, so the loop's Mongoose Bite window never opens | harness world | Hunter Survival |
 | Base mana below 60 | Percent-of-base costs (GAP H, closed by central fix 14) use each class's level-60 base mana (`base` in the mana meta) at every level | kit | lower-level Paladin, Shaman, Hunter, Druid prices |
 | `mainhand_remains` | Copied into the Warrior, Hunter and Paladin kits; one generic core swing field | core | none |
+| Pet power model | `VS.PetPower` is the last plain `UnitPower("pet")`; no regen or spend model. UnitPower is `SecretWhenUnitPowerRestricted` and unprobed with a pet out (plain 0 with none, W PR12); if the Warlock checkpoint finds it secret, the pet's mana freezes at its last out-of-combat read | core belief (pets) | Warlock in-game Q3 |
+| Reagent prediction | A reagent count (Soul Shards) is read live through `C_Item.GetItemCount`; the sim does not predict a shard spend within one recommendation pass, so a second shard spender in the queue reads the count before the first | core sim | Warlock (pack) |
+| Replay pet and bags | The replay world starts from the content's bags and pet (`WORLD.bags`, `WORLD.pet`) and reads neither from the log (the pet's mana, wowsims's 32 shards) | harness replay | Warlock replay gate |
 
 ## In game (on the in-game ledger, not a register item)
 
@@ -111,4 +114,9 @@ min/max skip; the level checker takes it); T4, rule 16's candidate terms carry t
 pass `tools/check_pack_levels.lua` without an exception; T5, `multidot` as the single-target cast (rule 17; only the
 Elemental testing build uses it at the pin). T3, `currentMana` of the pet (rule 5's other source unit), closed by
 fix 27 (`pet.mana`).
+Fix 27 (Warlock K15's shared gaps): the exporter's `gear` for a build with none; the pet's power in belief, facade
+(`UnitPower("pet")` raw while plain) and sim (`pet.mana`), and the translator's Pet resource reads; `dismissPet` in the
+belief and the engine stub's `pet`/`dismissPet` (content API 9); the harness's bag counts (`reagent`, `item`), pet unit
+and its power, and stats (`WORLD.bags`, `WORLD.pet`, `WORLD.stats`). Open from it: the three rows above (pet power
+model, reagent prediction, replay pet and bags).
 Cancelled: fix 19 (a harness-vs-in-game default for Sunder; players use Hekili's own per-ability toggles).

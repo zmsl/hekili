@@ -267,3 +267,55 @@ describe("the headless loop's replay injection (o.replay)", function()
         assert.is_truthy(loop.line(t):find("; steady icons on$"))
     end)
 end)
+
+describe("the headless loop's bags, pet and stats (central fix 27)", function()
+    it("gives both instances the world's bag counts, pet power and stats through the facade", function()
+        local ITEM = 6000
+        local stub = {
+            character = function()
+                return { level = 60, power = { type = 1, token = "RAGE", max = 100 } }
+            end,
+            resolve = function()
+                return {}
+            end,
+            usable = function()
+                return {}
+            end,
+            uptime = function()
+                return {}
+            end,
+            gain = function()
+                return 0
+            end,
+            WORLD = {
+                level = 60,
+                max = 100,
+                mobHealth = 1e9,
+                bags = { [ITEM] = 4 },
+                pet = { pt = 0, max = 500, power = 200, regen = 5, tick = 2 },
+                stats = { 10, 20, 30, 40, 55 },
+            },
+        }
+        local L = loop.new(stub)
+        local seen = {}
+        loop.tally(L, 1, {
+            duration = 12,
+            on = function(run, steps)
+                for i, st in ipairs(steps) do
+                    local F, S = st.H.ns.Facade, st.H.Hekili.State
+                    seen[i] = {
+                        F.C_Item.GetItemCount(ITEM),
+                        F.UnitExists("pet"),
+                        S.pet.mana,
+                        (st.H.ns.VirtualState.Stat("UnitStat", 5)),
+                    }
+                end
+                seen.truth = run.us.pet.power
+            end,
+        })
+        -- the pet regenerated from 200 by 10 every 2 s up to the fight's end (the true value is the client's answer)
+        assert.is_true(seen.truth > 200)
+        assert.are.same({ 4, true, seen.truth, 55 }, seen[1])
+        assert.are.same(seen[1], seen[2])
+    end)
+end)

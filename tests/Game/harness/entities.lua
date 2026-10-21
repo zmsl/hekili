@@ -20,7 +20,9 @@ end
 --- power type of `power`, the swing-paid resource [1]), res ({ [powerType] = { cur, max } }: the other resources),
 --- formSpeed ({ [form] = the main hand's period in that form }), ranged ({ min, max, speed }: the ranged hand,
 --- W.startRanged), creatureType (UnitCreatureType's answer as `target.creature_type`'s key: "undead"; nil: the client
---- fake's default).
+--- fake's default), bags ({ [itemID] = count }: C_Item.GetItemCount's, W.item), pet ({ pt, max, power [max], regen
+--- (per second), tick [2], up [true] }: our pet unit and its power, W.summonPet) and stats ({ [index] = value }:
+--- UnitStat's, constant).
 function M.new(o)
     local e = {
         guid = o.guid,
@@ -52,6 +54,22 @@ function M.new(o)
     e.res0 = {} -- each other resource's value at the start (the observer's first view; the world changes `res`)
     for pt, r in pairs(o.res or {}) do
         e.res[pt], e.res0[pt] = { cur = r.cur, max = r.max }, r.cur
+    end
+    e.bags, e.bags0, e.stats = {}, {}, o.stats -- copies: a content's knobs serve every fight
+    for id, n in pairs(o.bags or {}) do
+        e.bags[id], e.bags0[id] = n, n
+    end
+    local p = o.pet
+    if p then
+        e.pet = {
+            up = p.up ~= false,
+            pt = p.pt or 0,
+            max = p.max or 0,
+            power = p.power or p.max or 0,
+            regen = p.regen or 0,
+            tick = p.tick or 2,
+        }
+        e.pet0 = { up = e.pet.up, power = e.pet.power } -- the observer's first view
     end
     return e
 end

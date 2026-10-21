@@ -291,6 +291,14 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         ctl.ranged[1] = a1
     elseif ev == "@distance" then -- unit, yards: the range checks' answers (fake_api's `distance`)
         ctl.distance[a1] = a2
+    elseif ev == "@itemCount" then -- itemID, count (C_Item.GetItemCount)
+        ctl.itemCount[a1] = a2
+    elseif ev == "@stats" then -- { [index] = value } (UnitStat's)
+        ctl.stats = a1
+    elseif ev == "@pet" then -- the pet unit: up, its power type, its power
+        ctl.exists.pet, ctl.dead.pet, ctl.petPowerType, ctl.petPower = a1 or nil, nil, a2, a3
+    elseif ev == "@petPower" then
+        ctl.petPower = a1
     elseif ev == "@casting" or ev == "@channel" then -- our cast bar's start and end in ms (nil: none), plain [W PR9]
         local key = ev == "@casting" and "casting" or "channel"
         local bar = c[key] or {} -- one per drive and kind, reused: fake_api answers its two fields

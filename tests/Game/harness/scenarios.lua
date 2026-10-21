@@ -53,7 +53,8 @@ M.ARCHETYPES = ARCHETYPES
 --- second rule), regenTick [0.1], regenAfter ({ s, k }), decay ({ pt, rate, interval, pausedBy }: from the stop), formSpeed ({ [form] = period }), payIn (the form whose swings pay), critRage
 --- ({ main, off }), gcdOrder (1, 2 or "mixed") and gcdLatency [0] (W.press), script (fn(W, us): our presses, started
 --- at the pull), after (seconds the world runs past the stop [3]), distance (yards from our target from the start
---- [none: no positions]; W.moveTo changes it).
+--- [none: no positions]; W.moveTo changes it), bags, pet and stats (ours: entities.new's; the pet regenerates from the
+--- start, W.startPetRegen).
 --- Returns the world with every behaviour scheduled, not run (`M.build` runs it).
 function M.world(o, seed)
     local W = world.new(seed)
@@ -67,7 +68,13 @@ function M.world(o, seed)
         res = o.res,
         formSpeed = o.formSpeed,
         ranged = o.ranged,
+        bags = o.bags,
+        pet = o.pet,
+        stats = o.stats,
     }))
+    if us.pet then
+        W.startPetRegen(us)
+    end
     us.form, us.power = o.form or 0, o.power or 0
     us.power0 = us.power -- the observer's first view (a batch stream reads the finished world)
     us.gcdOrder, us.gcdLatency = o.gcdOrder, o.gcdLatency

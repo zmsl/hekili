@@ -102,7 +102,8 @@ end
 --- (1 ours, 2 another source, 3 unexplained, 0 not an outcome), hand[] (our swing's hand; 0 a cast's), swingT[] (our
 --- swing's true time), actor[] (the entity index of a hit on us) }. An `ev` starting with "@" is a client-answer change
 --- for the drive (`@damage` UnitDamage, `@usable`, `@form`, `@guid`, `@unitIs`, `@speed`, `@combat`, `@auraError`,
---- `@current` IsCurrentSpell, `@aura` an aura list entry, `@stealthed` IsStealthed, `@dead`, `@cooldown`, `@power`, `@regen`, `@attackSpeed`,
+--- `@current` IsCurrentSpell, `@aura` an aura list entry, `@itemCount` C_Item.GetItemCount, `@pet` the pet unit and
+--- its power, `@petPower`, `@stats` UnitStat's values, `@stealthed` IsStealthed, `@dead`, `@cooldown`, `@power`, `@regen`, `@attackSpeed`,
 --- `@rangedSpeed`, `@forms`, `@distance` the range checks' yards), or `@truth` our true power after an event. It draws nothing from `W.rng` (the behaviours roll every
 --- random choice and record it on the truth event), so batch and incremental streams of one world are equal for
 --- power-only answers (in batch, a list answer that reads `W` sees the finished world at every time).
@@ -422,6 +423,14 @@ function M.new(W, k)
                 push(t, "@aura", unit, ev.aura, ev.stacks, ev.expires, ev.duration)
                 push(t, "UNIT_AURA", unit)
             end
+        elseif kind == "item" and ev.src == us then -- a bag count, plain [W PR13]; nothing reads its BAG_UPDATE
+            push(t, "@itemCount", ev.item, ev.count)
+        elseif kind == "pet" and ev.src == us then -- our pet unit, plain [W PR14], then the client's UNIT_PET
+            push(t, "@pet", ev.up, ev.pt, ev.power)
+            push(t, "UNIT_PET", "player")
+        elseif kind == "petPower" and ev.src == us then -- UnitPower("pet") (unprobed with a pet out: plain here; a
+            -- pet's UNIT_POWER_FREQUENT reaches no frame of ours, the belief's poll 13 reads it)
+            push(t, "@petPower", ev.power)
         elseif kind == "stealthed" then -- IsStealthed (plain: no SecretWhen* flag) and its event
             push(t, "@stealthed", ev.on)
             push(t, "UPDATE_STEALTH")
@@ -582,6 +591,21 @@ function M.new(W, k)
     end
     if k.plain then
         push(0, "@power", k.powerType, us.power)
+    end
+    -- the bags, the pet and the stats at login (no event)
+    local ids = {}
+    for id in pairs(us.bags0 or {}) do
+        ids[#ids + 1] = id
+    end
+    table.sort(ids)
+    for _, id in ipairs(ids) do
+        push(0, "@itemCount", id, us.bags0[id])
+    end
+    if us.pet0 then
+        push(0, "@pet", us.pet0.up, us.pet.pt, us.pet0.power)
+    end
+    if us.stats then
+        push(0, "@stats", us.stats)
     end
     if k.forms then
         push(0, "@forms", k.forms)
