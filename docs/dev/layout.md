@@ -337,11 +337,8 @@ research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`)
 - H20: a saved BeastMastery, Marksmanship or Survival choice falls back to the spec's wowsims.com pack.
 - H21: Rapid Fire and Blood Fury recommended from 5 s into a fight, off the GCD (rule 13's automatic cooldowns).
 
-Core checkpoint (in game, any rage user; provisional until answered):
-- R1 (the swing rung lift, `Families/Resources.lua` `owe`): when does a white swing's rage arrive, at PLAYER_SWING or with
-  its wound on the target about 0.47 s later? Log `UNIT_POWER_FREQUENT` "RAGE" (and `UnitPower("player", 1)` out of
-  combat) with PLAYER_SWING and the target's UNIT_COMBAT in one capture. The belief and the wowsims replay take it as in
-  at the swing; if it comes with the wound, the lift goes and the replay's rage lands with its wound.
+Core checkpoints (R1 measured: rage at the swing; G7, O1, O2, M1, PH1, E1 and the rest) are under "In game",
+"Checkpoints".
 
 A deliberate pack or APL change re-records the fixture in the same commit:
 `ARMS_RECS=record .lua/bin/busted tests/Forever/arms_recs_spec.lua`.
@@ -408,3 +405,74 @@ follows the tree with the most points: the spec activated for that tree, else it
 7. **Paladin and Shaman:** a Paladin with mostly Holy points, or a Shaman with mostly Elemental or Restoration points,
    lands on an idle unsupported spec (no displays) until you pick another with `/hekili spec` or the dropdown.
 8. Report the Snapshot's first lines (`VSCopy`) for each character if anything differs.
+
+### Checkpoints (in game; consolidated from the wowsims packs plan's lanes and fixes)
+
+Answer each with the Snapshot's first lines or a `/vslog` capture (`VSCopy`); an answer that differs from the model
+is a gap in `docs/dev/gaps.md`. The Paladin (P1-P13), Shaman (S1-S11) and Hunter (H1-H21) checkpoints are with their
+gate lines above.
+
+Every class (the plan's own):
+- A1: `/hekili` -> each spec shows one priority, "<Spec> (wowsims.com)", selected; the old lists are gone (a renamed
+  copy of your own stays); the names with parentheses and a dot display and select normally in the options tree.
+- A2: a saved choice of an old list falls back to the spec's "(wowsims.com)" default after `/reload`, and the login
+  notice says the old list was retired (not "updated").
+- A3: a low-level alt (any class, level 10-20): something is recommended every few seconds in combat with resources
+  up; no Lua errors.
+- A4: a spec that shows no priority: report the Snapshot's first lines.
+
+Core (the premises in `docs/forever-facade-notes.md`, "Premises"):
+- R1: rage at the swing. MEASURED (user, 2026-10-20); the refund at the cast's finish too.
+- G7: when the client's usability answers show a rage gain (assumed 0.1 s after it): one `/vslog` on an open-world mob
+  with UNIT_POWER_FREQUENT "RAGE", PLAYER_SWING, the target's UNIT_COMBAT, SPELL_UPDATE_USABLE and
+  `IsSpellUsable(Mortal Strike)` polled per frame, until a crit lands with rage 5-25 under 30.
+- O1: the cast-to-avoid time (OWN_FRAME): Sunder Armor / Rend on a mob with `/vslog`, cast success -> DODGE in ms.
+- O2: the avoid refund is 80% of the cost (wowsims's `MissRefund`): rage before and after a dodged Sunder Armor.
+- M1: does UNIT_POWER_FREQUENT fire for mana while UnitPower is secret, and at what spacing (the mana tick phase)?
+- PH1: the player's own health in combat: `/run VSCopy(issecretvalue(UnitHealth("player")))` in and out of combat.
+- E1: the energy tick against a press at the same instant: UNIT_POWER_FREQUENT "ENERGY" spacing in a `/vslog`.
+- AP: (probe first, ForeverProbe) are the target's nameplate aura frames' shown state and textures plain in combat?
+- Flicker (the user's rule): in combat, does the first icon flicker (Arms: Mortal Strike dipping for a moment after a
+  swing)?
+
+Warrior (a level 60 Warrior; `/reload` after the update):
+- W1: each spec page shows only its wowsims switches: Arms Recklessness and Stance Dance, Fury Recklessness and Rend
+  Weave, Protection none; none of the 15 deleted settings remain.
+- W2: Arms before the pull: Bloodrage, Battle Shout, then Charge at 8-25 yd. In combat: Mortal Strike, Overpower in
+  Battle Stance, Slam right after a swing, Spearing Strike; Heroic Strike only at high rage; no stance-dance icon
+  (Stance Dance is off by wowsims's default).
+- W3: Slam with Improved Slam at 1/2 and 2/2 (a 1.0 s cast, 15 s cooldown at 2/2); Anger Management gives 1.5 rage
+  every 5 s; Improved Bloodrage 2/2 gives 1.5 rage a second.
+- W4: Fury in Berserker Stance in combat: no Intercept icon. Dual-wield rage per landed off-hand swing; Unbridled
+  Wrath's proc rate at 5/5 (about 36% measured headless against wowsims's 60%).
+- W5: Fury and Arms below level 40: Sunder Armor as the filler stops at five stacks.
+- W6: Protection: Defensive State (5302, Revenge's window) readable as a player aura; Thunder Clap usable in
+  Defensive Stance; the target's Thunder Clap debuff reads up and the line stops repeating (another warrior's counts).
+- W7: tooltip costs: Shield Slam 19/17 and Demoralizing Shout 9/7 at Focused Rage 1/3 and 3/3; Death Wish lower with
+  Focused Rage; Execute 12 at Improved Execute 1/2; Battle Shout 9 at Booming Voice 2/5; does a fractional shout cost
+  round down or to nearest?
+- W8: the DB2 puts Improved Slam (12862) on Fury and Improved Thunder Clap (12287) on Arms: does the talent frame agree?
+
+Druid (a level 60 Druid):
+- D1: bear rage: 11.25 a white swing, 19.9 on a crit; Primal Fury's 5 rage on your crits (2/2).
+- D2: in caster form the Guardian default shows Bear Form; at levels 10-24 the bear is suggested Maul at 15 rage.
+- D3: Guardian (wowsims.com) loads without a warning, and a saved "Guardian" choice falls back to it.
+- D4: Q11: the "must be behind" error type on Shred; Q12: Lacerate's cost with Shredding Attacks (13 a rank, from
+  wowsims's log); costs at 60 (forms, Shifting Power 684, Innervate).
+- D5: the Howling Idol (1291059) and the Wolfshead Helm (17768) as player auras.
+- D6: combat mana regen outside the five-second rule (about 22 a second with pre-raid gear); the Feral and Balance
+  defaults load.
+
+Rogue (a level 60 Rogue):
+- Rg1: each spec defaults to its "(wowsims.com)" pack; a saved old choice falls back after `/reload`.
+- Rg2: Garrote 30 energy with Dirty Deeds 2/2; Sinister Strike 40 at Improved Sinister Strike 2/2 (42.5 at 1/2?);
+  Hemorrhage and Backstab 3 less a Thousand Cuts stack, the stack readable in combat.
+- Rg3: Vanish -> Garrote: is IsStealthed readable in combat (the harness fakes false)? Premeditation out of stealth
+  (Q14) and the precombat Premeditation/Stealth lines.
+- Rg4: the Venom, Cutthroat Ambush and Cold Blood lines fire; Combat opens with Blood Fury then Adrenaline Rush.
+
+Shaman (beyond S1-S11): Fire Nova's cost (375 or 520) and Flame Shock with Call of Flame (21 s?) are the two the
+next Shaman round needs first; the Fire Nova filler after a mana potion.
+
+Hunter: the Hunter pack needs its `mklink` (`Hekili_Hunter`) and a Hunter character; H15 (Multi-Shot's cast), H17
+(the swing timer at range) and Arcane Shot's cooldown under Improved Arcane Shot first.
