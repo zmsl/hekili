@@ -104,7 +104,14 @@ local function events(W, us, from, e)
         local ev = truth[i]
         local k = ev.kind
         if ev.src == us then
-            e.cast = e.cast or k == "cast" or k == "strike" or k == "queue" or k == "unqueue"
+            -- a hard cast's start and a channel's end are ours too (fix 22: the client sees them at the press)
+            e.cast = e.cast
+                or k == "cast"
+                or k == "castStart"
+                or k == "channelStop"
+                or k == "strike"
+                or k == "queue"
+                or k == "unqueue"
             e.spend = e.spend or ((k == "cast" or k == "strike" or k == "gain") and (ev.cost or 0) > 0)
             e.avoid = e.avoid or (ev.act ~= nil and ev.act ~= "WOUND" and k ~= "tick")
             e.swing = e.swing or k == "swing"

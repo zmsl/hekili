@@ -123,13 +123,13 @@ repeats seeds 1-3 against its every-slot fixture). Each fight seeds its own worl
 boot carries nothing between fights, so the halves play the same fights as the old single run.
 The gate runs Arms (wowsims.com), the Arms default since the wowsims packs plan's Warrior swap (the hand-built Arms,
 Fury and Protection lists retired), on the world's wowsims build (Spearing Strike and Berserker Rage in the kit). Its
-lines (the forever gate on 51a0b1ac; 20 fights: agreement 0.964, flicker 1.38/min, oracle 0.94):
+lines (forever b0a5f8ee, central fix 22; 20 fights: agreement 0.966, flicker 1.57/min, oracle 1.10):
 
 ```
-Arms solo: fights=3 agreement 0.973 (2660 ticks); react median 0 p90 0 never 0.018; refused per 100 [casting 7.0 (oracle 0.5, unmatched 0.0), cost 17.0 (oracle 16.2, unmatched 0.0)], episodes 4.40/min; dps A/B 0.982; ... [seeds 1-3]
-Arms solo: fights=3 agreement 0.985 (2501 ticks); react median 0 p90 0 never 0.049; refused per 100 [cost 16.1 (oracle 15.8, unmatched 0.0)], episodes 3.60/min; dps A/B 0.998; ... [seeds 4-6]
-Arms solo: fights=20 agreement 0.964 (16910 ticks); react median 0 p90 0 never 0.035; refused per 100 [casting 2.8 (oracle 4.5, unmatched 0.0), cost 16.2 (oracle 15.1, unmatched 1.7)], episodes 3.60/min; dps A/B 0.982; ...
-Arms party: fights=10 agreement 0.970 (4371 ticks); react median 0 p90 1 never 0.010; refused per 100 [casting 5.9 (oracle 4.8, unmatched 0.0), cost 4.7 (oracle 10.3, unmatched 0.0), requires:no dodge 4.3 (oracle 0.0, unmatched 0.0)], episodes 1.51/min; dps A/B 1.027; ...
+Arms solo: fights=3 agreement 0.966 (2466 ticks); react median 0 p90 0 never 0.019; refused per 100 [cost 16.0 (oracle 21.9, unmatched 0.5)], episodes 3.65/min; dps A/B 1.013; ... [seeds 1-3]
+Arms solo: fights=3 agreement 0.985 (2487 ticks); react median 0 p90 0 never 0.050; refused per 100 [cost 16.3 (oracle 16.0, unmatched 0.0)], episodes 3.62/min; dps A/B 1.000; ... [seeds 4-6]
+Arms solo: fights=20 agreement 0.966 (16585 ticks); react median 0 p90 0 never 0.038; refused per 100 [cost 18.4 (oracle 18.7, unmatched 1.7)], episodes 3.98/min; dps A/B 1.008; ...
+Arms party: fights=10 agreement 0.975 (4432 ticks); react median 0 p90 0 never 0.005; refused per 100 [cost 4.6 (oracle 12.5, unmatched 0.0)], episodes 0.88/min; dps A/B 1.008; ...
 ```
 
 `make test-loop` also runs Fury (wowsims.com) 20 fights at level 60 and 24 (`loop_warrior_fury_spec.lua`,
@@ -148,7 +148,7 @@ it) and `at cost lo-truth m/p90 est-truth m/p90 (n)` (the band's gap at cost-gat
 line's tail (forever-flicker):
 
 ```
-... dips 10.87 flashes 2.57; top [swing 388; unknown 178]; p90 length 3 ticks; retracted 0.59/min (oracle 0.55) [slam:unknown/condition 32; slam:swing/condition 1] justified 8.42; waits 17.22/min (oracle 8.42) [sunder_armor:swing 260; rend:swing 122]; floor jitter 0; at cost lo-truth -0.5/16.8 est-truth 1.0/14.9 (2534)
+... dips 11.28 flashes 2.59; top [swing 381; unknown 225]; p90 length 3 ticks; retracted 0.02/min (oracle 0.05) [sunder_armor:unknown/cost 1] justified 8.95; waits 15.97/min (oracle 7.00) [sunder_armor:swing 225; rend:swing 114]; floor jitter 0; at cost lo-truth -0.6/16.9 est-truth 1.1/15.1 (2426)
 ```
 
 `waits` counts any jump of the same icon's wait above its countdown by more than a poll, a wider definition than the
@@ -171,15 +171,15 @@ Slam, and the world's client sees only a cast's success (no cast start), so our 
 `make test-druid` (`#druid`), each asserting its flagged lines ran (`r.focus > 0`). Every Druid spec runs its
 wowsims.com default (wowsims packs plan, Tasks 7b and 7g; the hand-built lists retired); Feral and Balance are gated by
 `pack_gate.gate`, Guardian is reported (engine health and focus asserted, not the agreement): its first icon waits on
-rage the usability ladder cannot place. Current lines (the forever gate on 51a0b1ac):
+rage the usability ladder cannot place. Current lines (forever b0a5f8ee, central fix 22):
 
 ```
-Feral solo: fights=3 agreement 0.932 (2367 ticks); react median 0 p90 0 never 0.018; refused per 100 [], episodes 0.00/min; dps A/B 1.037; ... [seeds 1-3]
-Guardian solo: fights=3 agreement 0.805 (2570 ticks); react median 0 p90 1 never 0.051; refused per 100 [cost 10.5 (oracle 6.3, unmatched 4.7)], episodes 2.33/min; dps A/B 1.010; ...
-Balance solo: fights=3 agreement 0.968 (2647 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 88.7 (oracle 87.8, unmatched 7.2), cost 0.3 (oracle 1.1, unmatched 0.1)], episodes 10.54/min; dps A/B 1.010; ... [seeds 1-3]
-Feral solo: fights=20 agreement 0.931 (16431 ticks); react median 0 p90 0 never 0.044; refused per 100 [cost 1.9 (oracle 2.6, unmatched 0.8)], episodes 0.13/min; dps A/B 1.015; ...
-Guardian solo: fights=20 agreement 0.781 (17805 ticks); react median 0 p90 3 never 0.040; refused per 100 [cost 20.4 (oracle 12.8, unmatched 10.2)], episodes 5.02/min; dps A/B 0.963; ...
-Balance solo: fights=20 agreement 0.985 (17875 ticks); react median 0 p90 1 never 0.001; refused per 100 [casting 88.6 (oracle 88.1, unmatched 4.8), cost 0.2 (oracle 1.2, unmatched 0.0)], episodes 10.77/min; dps A/B 0.957; ...
+Feral solo: fights=3 agreement 0.924 (2336 ticks); react median 0 p90 0 never 0.031; refused per 100 [], episodes 0.00/min; dps A/B 1.049; ... [seeds 1-3]
+Guardian solo: fights=3 agreement 0.899 (2631 ticks); react median 0 p90 1 never 0.019; refused per 100 [cost 8.1 (oracle 8.8, unmatched 0.0)], episodes 1.71/min; dps A/B 1.003; ...
+Balance solo: fights=3 agreement 0.961 (2705 ticks); react median 0 p90 1 never 0.009; refused per 100 [casting 73.7 (oracle 70.7, unmatched 5.0), cost 0.6 (oracle 2.5, unmatched 0.0)], episodes 9.21/min; dps A/B 0.920; ... [seeds 1-3]
+Feral solo: fights=20 agreement 0.941 (16304 ticks); react median 0 p90 0 never 0.043; refused per 100 [cost 1.4 (oracle 2.3, unmatched 1.1)], episodes 0.05/min; dps A/B 1.024; ...
+Guardian solo: fights=20 agreement 0.850 (17957 ticks); react median 0 p90 1 never 0.018; refused per 100 [cost 25.1 (oracle 11.6, unmatched 15.2)], episodes 4.26/min; dps A/B 1.011; ...
+Balance solo: fights=20 agreement 0.980 (17833 ticks); react median 0 p90 1 never 0.019; refused per 100 [casting 72.3 (oracle 70.7, unmatched 8.5), cost 0.9 (oracle 2.9, unmatched 0.4)], episodes 9.76/min; dps A/B 0.980; ...
 ```
 
 The Feral and Balance worlds keep the wowsims logs' mana pools and five-second rule (22 a second outside it).
@@ -208,13 +208,13 @@ wowsims packs plan, Task 9 (the hand-built lists retired). Retribution (wowsims.
 wowsims's own `mana.pct>=10`, judged on the secret-mana belief; each fight starts with the mana the last one left,
 regenerated through the 30 s gap (GAP X, closed: the 20-fight line was 0.911, never 0.226, while fights restarted at
 full mana). The holy_shock list is gone with the hand-built Retribution list; Hammer of Wrath's window is not
-exercised by the solo worlds. The runs (the forever gate on 51a0b1ac, central fixes 1-17):
+exercised by the solo worlds. The runs (forever b0a5f8ee, central fixes 1-22):
 
 ```
 Retribution solo: fights=3 agreement 0.998 (2387 ticks); react median 0 p90 0 never 0.000; refused per 100 [], episodes 0.00/min; dps A/B 0.976; ... [seeds 1-3]
-Protection solo: fights=3 agreement 0.977 (2434 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.8 (oracle 3.3, unmatched 0.9)], episodes 0.25/min; dps A/B 1.015; ... [seeds 1-3]
+Protection solo: fights=3 agreement 0.997 (2387 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.0 (oracle 2.6, unmatched 0.0)], episodes 0.13/min; dps A/B 1.018; ... [seeds 1-3]
 Retribution solo: fights=20 agreement 0.995 (17219 ticks); react median 0 p90 0 never 0.010; refused per 100 [cost 0.2 (oracle 9.2, unmatched 0.0)], episodes 0.02/min; dps A/B 0.974; ...
-Protection solo: fights=20 agreement 0.972 (17595 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.0 (oracle 9.3, unmatched 0.3)], episodes 0.12/min; dps A/B 1.015; ...
+Protection solo: fights=20 agreement 0.994 (17526 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.4 (oracle 9.1, unmatched 0.3)], episodes 0.15/min; dps A/B 0.989; ...
 ```
 
 Paladin checkpoint (in game, a level 60 Paladin; provisional until answered):

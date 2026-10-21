@@ -10,16 +10,18 @@ local M = {}
 -- The most cost refusals per 100 attempts the oracle shadow would not have made (loop.unmatched), a plain bar.
 M.UNMATCHED = 3
 
--- The flicker floors at 20 fights (the flicker ledger's first clean run, 2026-10-21, forever-flicker): per label the
--- first-icon flicker/min and the unjustified retracted readies/min (tests/Game/harness/flicker.lua), each the measured
--- value (beside it) rounded up to the next 0.1, 0 where it measured 0 (the loops are deterministic). A floor only
--- moves down, except with a named cause recorded beside it. Guardian is reported, not floored.
+-- The flicker floors at 20 fights: per label the first-icon flicker/min and the unjustified retracted readies/min
+-- (tests/Game/harness/flicker.lua), each the measured value (beside it) rounded up to the next 0.1, 0 where it measured
+-- 0 (the loops are deterministic). A floor only moves down, except with a named cause recorded beside it. Guardian is
+-- reported, not floored. Re-measured on fix 22's truth resolve (forever b0a5f8ee: a press resolved from the truth
+-- instance, hard casts and channels in the world), which moved Arms 1.38 -> 1.57, Feral 2.07 -> 2.12, Balance
+-- 1.63 -> 2.51 and Protection 0.65 -> 0.31; the hard casts' starts now justify a retraction (Arms's Slam 0.59 -> 0.02).
 M.FLICKER = {
-    ["Arms"] = { flicker = 1.4, retracted = 0.6 }, -- 1.38, 0.59
+    ["Arms"] = { flicker = 1.6, retracted = 0.1 }, -- 1.57, 0.02 (re-measured on fix 22's truth resolve)
     ["Fury L60"] = { flicker = 1.8, retracted = 0.1 }, -- 1.71, 0.09
     ["Fury L24"] = { flicker = 3.4, retracted = 0.2 }, -- 3.31, 0.12
-    ["Feral"] = { flicker = 2.1, retracted = 0 }, -- 2.07, 0
-    ["Balance"] = { flicker = 1.7, retracted = 0 }, -- 1.63, 0
+    ["Feral"] = { flicker = 2.2, retracted = 0 }, -- 2.12, 0 (re-measured on fix 22's truth resolve)
+    ["Balance"] = { flicker = 2.6, retracted = 0 }, -- 2.51, 0 (re-measured on fix 22's truth resolve)
     ["Assassination"] = { flicker = 0.1, retracted = 0 }, -- 0.10, 0
     ["Combat"] = { flicker = 0.3, retracted = 0 }, -- 0.28, 0
     ["Subtlety"] = { flicker = 0.3, retracted = 0 }, -- 0.23, 0
@@ -27,13 +29,13 @@ M.FLICKER = {
     ["Marksmanship"] = { flicker = 0, retracted = 0 }, -- 0, 0
     ["Beast Mastery"] = { flicker = 0, retracted = 0 }, -- 0, 0
     ["Retribution"] = { flicker = 0.3, retracted = 0 }, -- 0.28, 0
-    ["Protection"] = { flicker = 0.7, retracted = 0 }, -- 0.65, 0
+    ["Protection"] = { flicker = 0.4, retracted = 0 }, -- 0.31, 0 (re-measured on fix 22's truth resolve)
     ["Enhancement"] = { flicker = 1.2, retracted = 0 }, -- 1.11, 0
 }
--- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap,
--- Balance's 1.36 (1.63 against 0.27), rounded up (owner's ruling: K stays). Redundant with the floors today; it
--- tightens the bar when a change lowers the oracle's own flicker.
-M.FLICKER_K = 1.5
+-- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
+-- up to the next 0.1. Redundant with the floors today; it tightens the bar when a change lowers the oracle's own
+-- flicker. 1.5 (Balance 1.63 vs 0.27) -> 1.6: re-measured on fix 22's truth resolve, Balance 2.51 vs 0.99 (1.52).
+M.FLICKER_K = 1.6
 
 --- The flicker floors of `label` (M.FLICKER) and flicker <= oracle + FLICKER_K, reported next to react p90 and the
 --- unmatched cost refusals (the line).
