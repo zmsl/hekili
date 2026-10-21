@@ -35,6 +35,43 @@ end
 local snapshots = ns.snapshots
 local hasScreenshotted = false
 
+-- Snapshot listeners: other addons' fn(index, record, isAuto), called after each record is stored. A listener may
+-- return a string, appended to the record's text under "## External" (each capped at EXTERNAL_MAX characters).
+local listeners = {}
+local EXTERNAL_MAX = 4000
+
+--- Registers `fn(index, record, isAuto)`, called inside pcall after each snapshot record is stored in
+--- `Hekili.Snapshots[index]` (`record.header`, `record.log`). A returned string is appended to `record.log` under
+--- "## External", truncated at 4000 characters. Registering the same `fn` twice is a no-op.
+---@param fn fun(index: integer, record: table, isAuto: boolean): string?
+function Hekili:RegisterSnapshotListener( fn )
+    assert( type( fn ) == "function", "RegisterSnapshotListener: fn must be a function" )
+    for i = 1, #listeners do
+        if listeners[ i ] == fn then return end
+    end
+    listeners[ #listeners + 1 ] = fn
+end
+
+--- Removes a listener added by RegisterSnapshotListener; unknown `fn` is a no-op.
+function Hekili:UnregisterSnapshotListener( fn )
+    for i = #listeners, 1, -1 do
+        if listeners[ i ] == fn then table.remove( listeners, i ) end
+    end
+end
+
+local function notifyListeners( index, snap, isAuto )
+    local parts
+    for i = 1, #listeners do
+        local ok, text = pcall( listeners[ i ], index, snap, isAuto )
+        if not ok then text = "snapshot listener " .. i .. " failed: " .. tostring( text ) end
+        if type( text ) == "string" and text ~= "" then
+            parts = parts or {}
+            parts[ #parts + 1 ] = text:sub( 1, EXTERNAL_MAX )
+        end
+    end
+    if parts then snap.log = snap.log .. "\n\n## External\n" .. concat( parts, "\n" ) end
+end
+
 function Hekili:SaveDebugSnapshot( dispName )
     local snapped = false
     local formatKey = ns.formatKey
@@ -422,6 +459,7 @@ function Hekili:SaveDebugSnapshot( dispName )
             }
 
             insert( snapshots, snap )
+            notifyListeners( #snapshots, snap, not Hekili.ManualSnapshot )
             snapped = true
 		end
     end

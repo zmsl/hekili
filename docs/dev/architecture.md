@@ -69,6 +69,12 @@ only when a non-passive subscriber exists. WeakAuras is passive, so it never mak
 engine's own call and runs only when `settings.autoSnapshot` is on. It also drops a suspended build thread, so the
 stale thread cannot write into the set it just published.
 
+**`Hekili:RegisterSnapshotListener(fn)`** / **`Hekili:UnregisterSnapshotListener(fn)`** (`Engine/Snapshot.lua`): other
+addons' hook on the snapshot. After each record is stored in `Hekili.Snapshots[index]`, the engine calls
+`fn(index, record, isAuto)` inside pcall, in registration order (a raising listener only adds a "failed" line). A
+returned string is appended to `record.log` under "## External" (capped at 4000 characters), so it shows in the
+snapshot panel. One engine registry, no AceEvent message; registering the same `fn` twice is a no-op.
+
 **`Engine.Evaluate(pack, list, action, mod, results)`** is the pack editor's preview: resets the state, then fills
 `results` with the values of the entry's conditions (`mod` nil) or of one modifier (`"value"`, `"value_else"`,
 `"strict_if"`). Returns `results, list, action`.

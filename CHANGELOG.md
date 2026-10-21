@@ -73,6 +73,13 @@
 - Developer: the default priorities are generated from wowsims/forever (pinned d33930d0) by `make wowsims-packs` from
   the recipes in `tools/wowsims/specs/`, each gated against wowsims's own fight (`make test-wowsims`, also in
   `make check`); the guide is `docs/dev/wowsims-packs.md`, the open gaps `docs/dev/gaps.md`.
+- The addon keeps a ranged Auto Shot timer next to the melee swing timers.
+- Developer: the mana estimate's at-rest lower bound is pinned by tests (no behaviour change).
+- Developer: other addons can listen to snapshots with `Hekili:RegisterSnapshotListener(fn)` (and
+  `UnregisterSnapshotListener`): `fn(index, record, isAuto)` runs after each snapshot is saved, and text it returns
+  shows in the snapshot under "## External".
+- Developer: the test harness answers the mana regen pair (`GetManaRegen`) as the client does, plain out of combat
+  and secret in combat, and its wowsims replays read the mana regen rates from the log.
 - Developer: a wowsims recipe may map aura IDs alone (`auras = { [id] = key }`) for an aura wowsims keys by an
   ability's own spell ID. At the pinned wowsims, Protection Warrior's APL reads two: 25288 (Revenge rank 6, its
   Revenge window: map it to `revenge_usable`) and 12975 (Last Stand, read as `buff.last_stand` as wanted).
