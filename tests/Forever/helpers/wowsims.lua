@@ -260,7 +260,8 @@ M.FIXTURES = "tests/Forever/fixtures/"
 
 -- The ready-time floors per spec (docs/superpowers/specs/2026-10-16-headless-recommendation-loop.md §12): { median |b|
 -- of the real (outside-tolerance) on-GCD decisions, rounded up to 0.01 s; their count }, from the first clean run
--- (forever-readytime, 2026-10-21), only ever lowered.
+-- (forever-readytime, 2026-10-21), only ever lowered. Balance's, Feral's, Warrior Protection's and Combat's medians rose
+-- in review round 1 from the metric alone (the cost class from the crossing; the on-GCD-only walk); behaviour unchanged.
 M.READY = {
     druid_balance = { 0.71, 17 },
     druid_feral = { 0.26, 4 },

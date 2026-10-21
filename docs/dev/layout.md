@@ -428,11 +428,16 @@ the author's guide, the user's binding rules and the translator's rules: `docs/d
 Every pack's current lines (the forever gate on 51a0b1ac; the replay's `agreement` counts ticks, the gate reads
 `decisions on-GCD`; Measured re-read on forever-readytime, where the replay's cooldown ends at its log timestamp:
 Retribution 0.877 -> 0.912, Guardian 0.782 -> 0.808, Enhancement 0.909 -> 0.989, Warrior Protection 0.904 -> 0.979,
-their floors ratcheted to 0.91, 0.80, 0.98 and 0.97). The Ready columns are each replay's `wowsims timing` line (the headless loop design §12): the shown
-offset |b| over the timed in-scope on-GCD decisions, the real ones outside every tolerance (the floored median and
-count, `ws.READY`), and the decisions whose key never showed first. "Limit" is what the spec file gates every bracket at, `max(6, LIVE60)`
-with the spec's LIVE60
-constant in brackets; "Worst idle" is the measurement at each level, in seconds (the Arms, Fury, Guardian,
+their floors ratcheted to 0.91, 0.80, 0.98 and 0.97). The Ready columns are each replay's `wowsims timing` line (the
+headless loop design §12): the shown offset |b| over the timed in-scope on-GCD decisions, the real ones outside every
+tolerance (the floored median and count, `ws.READY`), and the decisions whose key never showed first. Balance's,
+Feral's, Warrior Protection's and Combat's median floors rose in review round 1 (0.32 -> 0.71, 0.11 -> 0.26, 0.15 ->
+0.50, 0.20 -> 0.28) from the metric alone: the cost class now counts a crossing up to one tick before the cast, and an
+on-GCD decision's walk back is no longer cut by an off-GCD decision's poll; behaviour is unchanged. The Rogue
+decisions left real (0.26-0.30 s from the crossing: G7 + one tick + the tick phase) stay real by the specified window
+and are the harness's G7 measure until G7 is captured in game. "Limit" is what the spec file gates every bracket at,
+`max(6, LIVE60)` with the spec's LIVE60 constant in brackets; "Worst idle" is the measurement at each level, in seconds
+(the Arms, Fury, Guardian,
 Retribution, Paladin Protection and Survival idles re-measured in the final review fixes, on-GCD presses only):
 
 | Pack | Replay floor | Measured (decisions) | Limit (LIVE60 constant) | Worst idle (measured) | Ready \|b\| median / p90 | Ready real (median, count) | Never shown | Ready floor |

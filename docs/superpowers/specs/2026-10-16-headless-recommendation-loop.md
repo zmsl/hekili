@@ -397,6 +397,8 @@ replay gate (`tests/Forever/helpers/wowsims.lua` `ready`) prints the line, diffs
   verdict, lo - truth, est - truth }` at 0.001, diffed on every run; `TIMING=record` rewrites them.
 - **Floors** (`M.READY`): the median |b| of the real (outside-tolerance) on-GCD decisions, rounded up to 0.01 s, and
   their count; from the first clean run, only ever lowered.
+- **G7's measure.** The Rogue decisions left real (0.26-0.30 s from the crossing: G7 + one tick + the tick phase) stay
+  real by the specified window; they are the harness's G7 measure until G7 is captured in game.
 - **GAP AT** (fixed with it): the replay read the class's auras with `pairs` while a computed duration grew the table,
   so Arms's Rend never reached the replay's target; now a snapshot. No line moved; the oracle can now be a second
   reference (not wired).

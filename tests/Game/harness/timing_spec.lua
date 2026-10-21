@@ -171,6 +171,18 @@ describe("timing.rows: an off-GCD decision between two on-GCD ones", function()
     end)
 end)
 
+describe("timing.rows: the near-tie at the first and last on-GCD decisions", function()
+    it("reads the one neighbour there is (a missing one is no tie and no error)", function()
+        local ev = events({ cast(0.1, 1), cast(1.6, 2) }, 5) -- a then b; ours shows b, then a: swapped
+        local R, T = bind(ev, { a = 0, b = 0 }, 5)
+        poll(T, R.decisions[1].t, { { "b", 0 } })
+        poll(T, R.decisions[2].t, { { "a", 0 } })
+        local rows = timing.rows(T, timing.P)
+        assert.are.same({ "scope", "in:tie" }, { rows[1][7], rows[2][7] }) -- the first is out of scope; the last ties
+        assert.is_true(rows[1].tie)
+    end)
+end)
+
 describe("timing.verdict: the tolerance windows (design §3)", function()
     local P = { REACT = 0.05, EDGE = 1e-3, G7 = 0.1, HOLD = 0.1, TICK = 0.1, reaction = 0.1, queue = 0.25 }
     it("absorbs grain, the cost lag, wowsims's reaction and the queue; the rest is real", function()
