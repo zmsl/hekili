@@ -31,6 +31,18 @@ local ENH_REPLAY = {
     },
 }
 
+-- Elemental: the Searing Totem's attacks (Tag 1) and Lightning Overload's extra bolts (Tag 6) are not choices.
+local ELE_REPLAY = {
+    procs = { ["10438:1"] = true, ["10392:6"] = true, ["15208:6"] = true },
+    totems = {
+        searing_totem = { 1, 55 },
+        magma_totem = { 1, 20 },
+        strength_of_earth_totem = { 2, 300 },
+        mana_spring_totem = { 3, 300 },
+        windfury_totem = { 4, 300 },
+    },
+}
+
 describe("the Shaman wowsims.com packs #slow #wowsims", function()
     local PACK = "Enhancement (wowsims.com)"
     -- the replay floor, measured (0.602 first; 0.750 with Call of Flame and Stormstrike's cost; 0.784 once the replay
@@ -56,5 +68,20 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
                 ws.live(PACK, content("shaman_enhancement", sw.Enhancement, PACK, level), math.max(6, LIVE60))
             end)
         end
+    end
+
+    local ELE = "Elemental (wowsims.com)"
+    -- the replay floor, measured (0.853 before the translator's multidot, central fix 28; 0.937 of 95 first clean
+    -- run), never lowered; the misses are shared gaps (tools/wowsims/specs/shaman_elemental.lua's header)
+    it(ELE .. " follows wowsims's casts", function()
+        ws.gate(ELE, content("shaman_elemental", sw.Elemental, ELE, 60), "shaman_elemental", 0.93, ELE_REPLAY)
+    end)
+    -- the pack's own worst idle at 60, seconds rounded up to 0.1: wowsims runs its mana out (its log sits under 200 of
+    -- 5590 from ~110 s, Lightning Bolt 3-6.7 s apart), so the priority waits for mana
+    local ELE_LIVE60 = 5.0
+    for _, level in ipairs({ 10, 40, 60 }) do
+        it(ELE .. " stays live at level " .. level, function()
+            ws.live(ELE, content("shaman_elemental", sw.Elemental, ELE, level), math.max(6, ELE_LIVE60))
+        end)
     end
 end)

@@ -1,5 +1,5 @@
 -- Hekili_Shaman/Shaman.lua
--- The Forever Shaman (Enhancement, and Elemental and Restoration idle, one spec a talent tree: Hekili:NewClass): the
+-- The Forever Shaman (Elemental and Enhancement, Restoration idle, one spec a talent tree: Hekili:NewClass): the
 -- Shaman kit with Forever's spell data (ranks, costs, cooldowns, cast times and durations from the Forever DB2 at build
 -- 1.60.1.70338, wowdb), the totems on the sim side (C6: `RegisterTotems` with each one's element and duration; the
 -- summon's `now` writes the slot's modelled expiry, which Families/Totems.lua answers in combat), Lightning Shield's
@@ -11,7 +11,7 @@
 -- Unmodelled: Stormstrike's debuff (no priority reads it), the totems' effects, Flametongue and Windfury Weapon's
 -- procs, Windfury Totem (the party's: never prompted), Improved Lightning Shield's extra charges, Rage of the Farseer's
 -- +30% attack speed (nothing reads swing timing for mana).
--- The Elemental kit (class-completion Task 17; its priority comes with the wowsims packs plan): what wowsims/forever's
+-- The Elemental kit (class-completion Task 17; its priority Elemental (wowsims.com)): what wowsims/forever's
 -- Elemental list casts (ui/specs/shaman/elemental/builds/testing.build.json): Chain Lightning (its 6 s cooldown lifted
 -- by Elemental Mastery), Lava Burst, Elemental Mastery, Magma, Windfury and Mana Tide Totems (Windfury Totem only for a
 -- pack that casts it, as that list's pre-pull does), Water Shield (one shield at a time), Convection's and Elemental
@@ -37,9 +37,9 @@ end
 local state = Hekili.State
 local max = math.max
 
--- The class kit and one spec a talent tree (ids the core's: Elemental 100071 and Restoration 100073, unsupported;
--- Enhancement 100072; the client's one pseudo-spec, 1489, only keys the legacy profile the core migrates). Icons: the
--- DB2 talent tabs'. Elemental gets its priority with the wowsims packs plan (it drops `unsupported`).
+-- The class kit and one spec a talent tree (ids the core's: Elemental 100071, Enhancement 100072, Restoration 100073,
+-- unsupported; the client's one pseudo-spec, 1489, only keys the legacy profile the core migrates). Icons: the DB2
+-- talent tabs'.
 local spec = Hekili:NewClass("SHAMAN", {
     specs = {
         {
@@ -49,7 +49,7 @@ local spec = Hekili:NewClass("SHAMAN", {
             icon = 136048,
             role = "attack",
             ranged = true,
-            unsupported = true,
+            package = "Elemental (wowsims.com)",
         },
         {
             key = "enhancement",
@@ -640,6 +640,11 @@ spec:RegisterTalents({
 
 -- The priority, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and run
 -- it, never this block (tests/Forever/shaman_spec.lua checks it matches).
+spec:RegisterPack(
+    "Elemental (wowsims.com)",
+    20261021000,
+    [[Hekili:nA5BVnkoqy8pl3BURvxe)jPz72QnRupD3PDxDB1jX(Adg8qWBaBKTPrr6eF2VXKUGHaDJQufW4NFZ4bEMysi5BKig1aKNxhS(DHbRddccirMt1ajQMMDGUhVqqRW))xLqfim0Y2KBokpQ5vAVmz1T2fEQuszwyPn8sZNfK0z5QRHmsu0NE6Rp98JWp4rIk4mgCweOZwovp2MykG2KxFMFUubVaQ2egKtBknTjp9V)tBc(42exgnCFBQ1(6cAfv43NAFB9Y0(gqB4I9ED369DTuC7kmxkQqxIBdgET0MBUUnHYysXVHxCaoP9At(tQH(4m10nF9ZFdHuym16h993ZnfnP2TH)KLElYelD2MnpSjGfCxWMapSPQK58sSVtZmCPq7vRauCk1S7iwsQyDbhkzRWhx3uwgJpFR322VCXY)9D(AJce7nfXY8yGQWlmsdu5Q9U5vEKly5nQtxkyZ8cW2lnwxRWU5LAwVq5H10SRpCfpFNvXlqmiGkoO3fUuE3xrVkcFCGWUk63LQ4UAUwAF0QgnGDP849zSZITb9QZmF49b96W8XGkPGNfRAeWBi6(rIsbLguhW96yjURPRymCg86MXL22r0g32W1DZ0w1V2fYlNRapfur5c9h2fC740n03UeXhVge2yXc5l03SxJlmRaLhxY3xye2EWpz5L0xOXPnkTPRY(LZr8YlXXr4x)YSdEheYJI)JbPn55Jc0upUehcTkxM1O3T2YCgHd7rx9NnnU67En3P26HXHe2sRPEKOFmLb)atJo2tl)sVVNeNklnJENVoy5f2(fseoarJbNmPTKRn6UP7NNmIx(C30Eqqtlbg5pirovJn4RdAirxykirzkoUb4uBWE7aXGj9kz6AxMf39D42CL4gmswv3nr1WgzKvA28UTlVBxGWilMR(R1QzH)UflVER3BGErlOf99lGU3s6cEkxlG3VaGjw1FgMhwaZGfE0oCzR8cEzBocdMKKbGVPp2PRmehVXAJTFaBrp1AmG(sl(apNPc986AhHxRT4IreDQN6c67MJm)Z(586UpNdxYrmHG9VO(FfDUzed)ukAs82oqY9miZniWv4DogQ5pjYCEFxcBCs8OtKmN93v46jtdCpzYCgFxTHxXCGPJbMZVVaZfS)ZyV6EnrBmfsfj6tWbEjhpE5F)6Ph7ct()d]]
+)
 spec:RegisterPack(
     "Enhancement (wowsims.com)",
     20261021003,

@@ -249,7 +249,7 @@ Paladin checkpoint (in game, a level 60 Paladin; provisional until answered):
 - P13: Protection (wowsims.com)'s precombat order: Retribution Aura (10 s before the pull), then Seal of the Crusader
   at 1.5 s, then Seal of Fury in combat; and no Righteous Fury suggestion (ruling P11).
 
-`tests/Forever/loop_shaman_spec.lua` runs 3 Enhancement fights on Enhancement (wowsims.com), the default priority, in
+`tests/Forever/loop_shaman_spec.lua` runs 3 fights of each Shaman pack (Enhancement and Elemental (wowsims.com)) in
 `make check` (seeds 1-3, `#slow`) and 20 in
 `make test-shaman` (`#shaman`), gated by `pack_gate.gate` and asserting its flagged lines ran (Lightning Bolt at 5
 Maelstrom Weapon and Fire Nova on Clearcasting at tier 1; Strength of Earth, Lightning Shield and Flame Shock at tier
@@ -265,11 +265,16 @@ The imbues are not in the solo world's kit (it has no weapon enchant read). The 
 with Shamanistic Focus when the build has it, Stormstrike's 121 (wowsims/forever's), and the shocks' cooldown and Flame
 Shock's duration from the booted talents. The lines below run Enhancement (wowsims.com) (wowsims packs plan, Task 10,
 the forever gate on 51a0b1ac: Fire Nova at the DB2's 520). `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's
-own fight (floor 0.98; 0.989 of 88 with Rage of the Farseer, held) and runs the levels 10, 40 and 60 (40 pending: GAP AB, the secret-mana floor's last mana):
+own fight (floor 0.98; 0.989 of 88 with Rage of the Farseer, held) and runs the levels 10, 40 and 60 (40 pending: GAP AB, the secret-mana floor's last mana).
+Elemental (wowsims.com) (Task 14) runs the same gates on the Elemental world (20 yd, wowsims's 5590 mana and regen:
+29.75 a second casting, 42.5 more outside the five-second rule): replay floor 0.93 (0.937 of 95), live L10 0.0,
+L40 0.0, L60 5.0 s (LIVE60 5.0), flicker floor 0.6. The lines:
 
 ```
 Enhancement solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.1 (oracle 11.9, unmatched 0.0)], episodes 0.11/min; dps A/B 0.964; ... [seeds 1-3]
 Enhancement solo: fights=20 agreement 0.998 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.3 (oracle 14.6, unmatched 0.0)], episodes 0.12/min; dps A/B 1.014; ... flicker 1.13/min (oracle 1.10); ... top [stormstrike -> rage_of_the_farseer 44; rage_of_the_farseer -> stormstrike 1]; ...
+Elemental solo: fights=3 agreement 0.993 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 59.6 (oracle 56.5, unmatched 0.5)], episodes 10.86/min; dps A/B 1.025; ... [seeds 1-3]
+Elemental solo: fights=20 agreement 0.996 (18040 ticks); react median 0 p90 0 never 0.001; refused per 100 [casting 58.6 (oracle 54.8, unmatched 0.5), cost 0.0 (oracle 5.0, unmatched 0.0)], episodes 9.38/min; dps A/B 0.998; ... flicker 0.55/min (oracle 0.17); ...
 ```
 
 Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
@@ -537,6 +542,7 @@ Retribution, Paladin Protection and Survival idles re-measured in the final revi
 | Frostfire (wowsims.com) | 0.89 | 0.891 (55) | 10.8 (10.8) | L10 5.6, L40 0.2, L60 10.8 | 0.300 / 1.010 | 0.380, 31 | 6 | 0.38, 31 |
 | Shadow (wowsims.com) | 1.00 | 1.000 (85) | 6 (1.8) | L10 0.0, L40 0.0, L60 1.8 | 0.000 / 1.600 | 1.500, 36 | 0 | 1.50, 36 |
 | Smite (wowsims.com) | 0.93 | 0.932 (44) | 6 (0.2) | L10 0.0, L40 0.2, L60 0.2 | 0.400 / 3.100 | 0.500, 27 | 3 | 0.50, 27 |
+| Elemental (wowsims.com) | 0.93 | 0.937 (95) | 6 (5.0) | L10 0.0, L40 0.0, L60 5.0 | 0.380 / 0.980 | 0.480, 54 | 6 | 0.48, 54 |
 
 A LIVE60 constant above today's L60 measurement is an earlier measurement the spec keeps (Combat 4.8 vs 4.0,
 Retribution 8.4 vs 2.8 by ruling P6, Paladin Protection 17.8 vs 11.8 from the untanked fight); limits are not lowered
@@ -669,7 +675,7 @@ follows the tree with the most points: the spec activated for that tree, else it
    Recklessness, Fury's Rend Weave and Recklessness, Protection's none. The DB2
    puts Improved Slam (12862) on Fury and Improved Thunder Clap (12287) on Arms: does the client's talent frame agree?
    (They count toward those trees' points.)
-7. **Paladin and Shaman:** a Paladin with mostly Holy points, or a Shaman with mostly Elemental or Restoration points,
+7. **Paladin and Shaman:** a Paladin with mostly Holy points, or a Shaman with mostly Restoration points,
    lands on an idle unsupported spec (no displays) until you pick another with `/hekili spec` or the dropdown.
 8. Report the Snapshot's first lines (`VSCopy`) for each character if anything differs.
 

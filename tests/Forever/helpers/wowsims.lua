@@ -282,6 +282,7 @@ M.READY = {
     rogue_combat = { 0.28, 16 },
     rogue_subtlety = { 0.20, 45 },
     shaman_enhancement = { 0.96, 3 },
+    shaman_elemental = { 0.48, 54 }, -- 0.480, 54 (Elemental lane, Task 14; first clean run on a21329fc)
     warrior_arms = { 0.80, 6 },
     warrior_fury = { 0.48, 32 },
     warrior_protection = { 0.50, 5 },

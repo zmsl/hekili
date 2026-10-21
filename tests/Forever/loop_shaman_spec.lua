@@ -7,7 +7,7 @@ local headless = require("Game.harness.headless")
 local pack_gate = require("Forever.helpers.pack_gate")
 local sw = require("Forever.helpers.shaman_world")
 
-local PACKS = { "Enhancement" }
+local PACKS = { "Enhancement", "Elemental" }
 
 describe("the Shaman loop worlds", function()
     -- A shock's press sends both shocks' ranks (the shared category) but is priced by its own rank: at level 30 the
@@ -21,8 +21,7 @@ describe("the Shaman loop worlds", function()
         assert.are.equal(13, #p.ids) -- Earth Shock's 7 ranks and Flame Shock's 6
     end)
 
-    -- Elemental's world before its pack (the wowsims packs plan's Elemental task adds the pack and its gates): the build
-    -- boots on its spec, every ability the character knows is mapped, the casts priced on the true state.
+    -- Elemental's world without a pack (its pack's gates below): the build boots on its spec, every ability the character knows is mapped, the casts priced on the true state.
     it("Elemental: boots on its spec, and maps every ability the character knows", function()
         local C = sw.Elemental
         local H = headless.new({ character = C.character() })

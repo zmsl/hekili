@@ -40,6 +40,7 @@ M.FLICKER = {
     ["Frostfire"] = { flicker = 0.3, retracted = 0 }, -- 0.30, 0 (oracle 0.38; Task FFB, M13)
     ["Shadow"] = { flicker = 0.3, retracted = 0 }, -- 0.27, 0 (oracle 0.15; Priest lane, Task 14)
     ["Smite"] = { flicker = 0.5, retracted = 0.9 }, -- 0.45, 0.83 (oracle 0.12, 0.63): Shoot at mana.pct<=10; candidate GAP AB
+    ["Elemental"] = { flicker = 0.6, retracted = 0 }, -- 0.55, 0 (oracle 0.17; Elemental lane, Task 14)
 }
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
 -- up to the next 0.1. Redundant with the floors today; it tightens the bar when a change lowers the oracle's own
