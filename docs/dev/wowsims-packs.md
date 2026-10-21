@@ -24,8 +24,9 @@ step-by-step procedure the lanes ran is the plan's "per-spec procedure" (P1-P10,
   toggles (Custom 1/2, Boss Encounter Only, Disable). A pack carries wowsims's defaults, not a second in-game default:
   the harness-vs-in-game settings mechanism was designed and cancelled ("stick with wowsims").
   The kits put the abilities a player may not want under Hekili's native Cooldowns or Defensives toggle
-  (`toggle = ...` on the ability: Sweeping Strikes, Vanish, the consumables, Healthstone defensive); a toggle off
-  skips the line and the list falls through. The harness runs a fresh profile, every such toggle on.
+  (`toggle = ...` on the ability: Sweeping Strikes and Vanish under Cooldowns, Healthstone under Defensives); a
+  toggle off skips the line and the list falls through. The mana and energy consumables carry none: the priorities
+  use them as resources, not burst. The harness runs a fresh profile, every such toggle on.
 
 ## The recipe
 
