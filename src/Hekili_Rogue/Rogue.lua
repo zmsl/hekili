@@ -340,7 +340,8 @@ end
 
 -- A poison reminder (C4): the best of `items` in the bags, offered while one is there; its use enchants the weapon
 -- whose pseudo-aura `slot` names (the sim models it; the belief reads it out of combat, Sources/Enchants.lua). Only
--- precombat lines read it.
+-- precombat lines read it. Under the Potions toggle: a buff consumable (user ruling 2026-10-21, as the shared mana and
+-- energy ones); with Potions off the reminder is skipped.
 local function poison(name, items, slot)
     local function best()
         for i = 1, #items do
@@ -361,6 +362,7 @@ local function poison(name, items, slot)
         bagItem = true,
 
         startsCombat = false,
+        toggle = "potions",
 
         usable = function()
             local _, have = best()

@@ -621,7 +621,7 @@ Every class (the plan's own):
 - A4: a spec that shows no priority: report the Snapshot's first lines.
 - A5: the Potions toggle (user 2026-10-21; off in a fresh profile): with a Major Mana Potion, Demonic Rune, Thistle
   Tea or Mana Gem in the bags, their lines show only with Potions on (Enhancement, Fire, Arcane, the Rogue specs);
-  the Healthstone stays under Defensives.
+  the Rogue's Instant and Deadly Poison reminders likewise; the Healthstone stays under Defensives.
 
 Core (the premises in `docs/forever-facade-notes.md`, "Premises"):
 - R1: rage at the swing. MEASURED (user, 2026-10-20); the refund at the cast's finish too.

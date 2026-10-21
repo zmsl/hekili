@@ -233,6 +233,8 @@ describe("Forever Rogue", function()
 
     it("reminds of poisons from the bags only, the sim enchanting the weapon", function()
         local ip = w.abilities.instant_poison
+        -- buff consumables: under Potions, like the shared mana and energy ones (user, 2026-10-21)
+        assert.are.same({ "potions", "potions" }, { ip.toggle, w.abilities.deadly_poison.toggle })
         assert.is_false((ld.run(ip.usable, e)))
         w.game.bags[8927] = 3
         assert.are.same({ true, 8927 }, { (ld.run(ip.usable, e)), (ip.item()) })

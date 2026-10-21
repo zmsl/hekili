@@ -26,7 +26,7 @@ step-by-step procedure the lanes ran is the plan's "per-spec procedure" (P1-P10,
   The kits put the abilities a player may not want under Hekili's native Cooldowns or Defensives toggle
   (`toggle = ...` on the ability: Sweeping Strikes and Vanish under Cooldowns, Healthstone under Defensives); a
   toggle off skips the line and the list falls through. Buff and resource consumables (Major Mana Potion, Demonic
-  Rune, Thistle Tea, Mana Gem) go under the Potions toggle, health ones under Defensives (user, 2026-10-21). The
+  Rune, Thistle Tea, Mana Gem; Rogue's poisons) go under the Potions toggle, health ones under Defensives (user, 2026-10-21). The
   harness runs a fresh profile: Cooldowns and Defensives on, Potions off (Hekili's default); no harness world puts a
   consumable in the bags, so no gated line moves.
 
