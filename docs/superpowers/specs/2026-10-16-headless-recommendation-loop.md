@@ -186,28 +186,37 @@ Owns: `tests/Virtual/harness/observer.lua` (`k.plain`), `headless.lua` (`o.raw`)
   (in the character's power), beside the belief's band (lo, est, hi), the true power, a pending swing (GAP AK), the
   believed cooldowns of the shown abilities, and the world's events of ours between two polls. Kinds, per slot:
   - DIP: the slot's icon leaves and returns within 5 ticks (1 s); FLASH: an icon appears and leaves within 5 ticks,
-    the slot moving on to a third; the length is the episode's ticks.
+    the slot moving on to a third (or back to empty: an empty slot never dips); the length is the episode's ticks.
   - RETRACTED READY: the slot's icon shown ready (wait <= REACT) and, within 5 ticks, shown waiting again; recorded
     with its ready and retraction ticks, its length (ticks until ready again or gone), the engine's wait after it and
-    its reason (cooldown, cost: the floor under the record's cost, gcd, else condition). Justified when our cast, a
+    its reason (cooldown, cost: the floor under the record's cost, gcd, else condition) and the belief's delta between
+    the two polls (lo, est, the pending swing, the icon's believed cooldown, before and after). Justified when our cast, a
     spend, an avoid of ours or an aura/form change came between; the gate counts the unjustified ones.
   - WAIT: the same icon's wait jumping up by more than one poll above its countdown with no such event (the
-    snap-back; a wait that falls early is a gain arriving and is not counted).
+    snap-back; a wait that falls early is a gain arriving and is not counted). Wider than the Heroic Strike report's
+    snap-back (a countdown at most 0.3 s from done jumping up at least 0.4 s): not comparable (Fury L24's focus-slot
+    Heroic Strike: 0.97/min there, 5.7/min here).
   - Cause class of each, from the change's two polls, first match: press (our cast or spend: left out of the counts),
     avoid, credit (a provisional credit vetoed: est fell with no spend, or a pending swing ended uncredited), usability
     (an answer cut lo with est steady: G7 lag), cooldown (a believed cooldown of either icon moved off its countdown),
     aura (an aura or form edge), swing (a swing of ours, or one pending at either poll: the swing window), near-tie
-    (the two icons' waits within one poll at the earlier poll), unknown.
+    (the two icons' waits within one poll at the earlier poll; for a retracted ready, another shown icon's wait within
+    one poll of its ready: re-ranked), unknown.
   - Floor jitter: a change of a cost-gated slot where lo crossed the cost while est stayed above it. The decision gap:
     lo - truth and est - truth at every tick whose first icon's cost lies inside the band (lo < cost <= hi, the
     engine's own alternatives test) and at every change of a cost-gated slot (median, p90 of the magnitude).
   - Replay: the same ledger on ours, plus flips at wowsims's on-GCD decision points (our first on-GCD icon changed
-    between the tick's poll and the decision's poll, no cast between) and our unjustified retracted readies of an
-    ability wowsims cast within a tick of the retraction (confirmed wrong).
+    between the tick's poll and the decision's poll, with no cast, spend, avoid or aura change of ours between) and our
+    unjustified retracted readies of an ability wowsims cast within a tick of the retraction (confirmed wrong).
   - The hold experiment (`o.hold`, or `HEKILI_LOOP_HOLD=1` for a whole run; off by default, `; hold on` on the line):
     our instance's shown queue holds each slot's change one poll (flicker.hold): a new icon or a new ready shows once
     the raw queue has held it two polls; a retraction and any change after our own cast show at once. The oracle is
-    never held, so react measures the hold's cost.
+    never held, so react measures the hold's cost. With it on the Arms 20-fight gate goes red (agreement, unmatched cost
+    refusals) and so do the Fury gates and two leveling gates (react p90, idle), as expected: an experiment, not a mode.
+  - Gates (`tests/Forever/helpers/pack_gate.lua`): per gated 20-fight loop, first-icon flicker and unjustified
+    retracted readies at most their floors (measured, rounded up to the next 0.1; 0 where 0), and flicker <= the
+    oracle's + K (1.5, the widest measured gap rounded up): redundant with the floors today, K tightens the bar when a
+    change lowers the oracle's own flicker.
 - **Engine health:** `Hekili:Error` count, `Update` raises, `H.loadErrors` beyond the listed XML file, `Facade.secrets`
   (filled only while tracing: one fight per scenario runs with `Hekili.ActiveDebug = true` each tick, `Hekili.Debug`
   stubbed to a counter; Update's own 0.5 s snapshot guard traces about every third tick at 5 Hz), run misses beyond

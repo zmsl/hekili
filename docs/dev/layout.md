@@ -138,17 +138,30 @@ Arms party: fights=10 agreement 0.970 (4371 ticks); react median 0 p90 1 never 0
 flicker 1.71/min, oracle 0.56; L24 0.908, 3.31/min, oracle 2.16).
 
 The flicker columns (the flicker ledger, `tests/Game/harness/flicker.lua`; what counts and the cause classes: the
-headless loop design §5.1). After `flicker X/min (oracle Y)` (the first icon's A->B->A, unchanged) every line prints,
-for run A over every displayed slot (queue positions 1-3 and the focus entry): `dips` and `flashes` per minute (our
+headless loop design §5.1). `flicker X/min (oracle Y)` stays where it was (the first icon's A->B->A within 3 ticks,
+unchanged); the ledger's fields come last on every line (after a replay's decision fields, before `; hold on`), for
+run A over every displayed slot (queue positions 1-3 and the focus entry): `dips` and `flashes` per minute (our
 presses' left out), `top [cause n; cause n]` over them, `p90 length` (ticks), `retracted R/min (oracle R')` (ready, then
 waiting again within 1 s, no justifying event) with its top `ability:cause/reason`, `justified` (those with an event),
-`waits W/min (oracle W')` (the same icon's wait jumping up off its countdown: the snap-back) with its top
-`ability:cause`, `floor jitter` (lo crossing a slot's cost while est stays above it) and `at cost lo-truth m/p90
-est-truth m/p90 (n)` (the band's gap at cost-gated decisions). A replay line adds `decision flips N (per 100)` (our
-first on-GCD icon changed between the tick's poll and wowsims's decision, no cast between) and `retracted confirmed by
-wowsims` (a retraction of an ability wowsims cast within a tick). `pack_gate.FLICKER` floors each gated 20-fight loop's
-flicker and retracted readies (only ever down) and bars flicker <= oracle + `FLICKER_K`; `HEKILI_LOOP_HOLD=1 make
-test-<tag>` runs the display-side hold experiment (`; hold on`, floors not applied).
+`waits W/min (oracle W')` with its top `ability:cause`, `floor jitter` (lo crossing a slot's cost while est stays above
+it) and `at cost lo-truth m/p90 est-truth m/p90 (n)` (the band's gap at cost-gated decisions). The 20-fight Arms
+line's tail (forever-flicker):
+
+```
+... dips 10.87 flashes 2.57; top [swing 388; unknown 178]; p90 length 3 ticks; retracted 0.59/min (oracle 0.55) [slam:unknown/condition 32; slam:swing/condition 1] justified 8.42; waits 17.22/min (oracle 8.42) [sunder_armor:swing 260; rend:swing 122]; floor jitter 0; at cost lo-truth -0.5/16.8 est-truth 1.0/14.9 (2534)
+```
+
+`waits` counts any jump of the same icon's wait above its countdown by more than a poll, a wider definition than the
+Heroic Strike report's snap-back (a countdown at most 0.3 s from done jumping up at least 0.4 s): Fury L24's focus-slot
+Heroic Strike reads 5.7/min here against that report's 0.97/min; the two are not comparable. A replay line adds
+`decision flips N (per 100)` (our first on-GCD icon changed between the tick's poll and wowsims's decision, with no
+cast, spend, avoid or aura change of ours between) and `retracted confirmed by wowsims` (a retraction of an ability
+wowsims cast within a tick). `pack_gate.FLICKER` floors each gated 20-fight loop's flicker and retracted readies (the
+measured value rounded up to the next 0.1, 0 where it measured 0; only ever down) and bars flicker <= oracle +
+`FLICKER_K` (1.5): redundant with the floors today, it tightens the bar when a change lowers the oracle's own flicker.
+`HEKILI_LOOP_HOLD=1 make test-<tag>` runs the display-side hold experiment (`; hold on`, floors not applied); as
+expected it turns the Arms 20-fight gate red (agreement, unmatched cost refusals) and the Fury gates and two leveling
+gates red (react p90, idle).
 
 Before the pull it shows Bloodrage and Battle Shout only (no positions headless, so no Charge). Seeds 1-3's casting
 refusals (7.0 per 100, the oracle's 0.5) are presses during Slam's 1.5 s cast: the loop world's build has no Improved
