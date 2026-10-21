@@ -255,6 +255,13 @@ describe("the headless loop's replay injection (o.replay)", function()
         local r = loop.summary(m)
         assert.are.equal(0, r.decisions)
         assert.is_truthy(loop.line(m):find("; decisions on-GCD 0.000 (2)", 1, true))
-        assert.is_nil(loop.summary(loop.tally(L, 1, { duration = 6 })).decisions) -- the normal tally: unchanged
+        assert.is_truthy(
+            loop.line(m):find("; decision flips 0 (0.0 per 100), retracted confirmed by wowsims 0", 1, true)
+        )
+        local t = loop.tally(L, 1, { duration = 6, hold = true })
+        assert.is_nil(loop.summary(t).decisions) -- the normal tally: unchanged
+        -- every line carries the ledger's fields, and says when the hold experiment was on
+        assert.is_truthy(loop.line(t):find("(oracle 0.00) dips 0.00 flashes 0.00; top []", 1, true))
+        assert.is_truthy(loop.line(t):find("; hold on$"))
     end)
 end)

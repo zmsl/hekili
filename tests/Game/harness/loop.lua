@@ -9,6 +9,7 @@ local headless = require("Game.harness.headless")
 local observer = require("Game.harness.observer")
 local scenarios = require("Game.harness.scenarios")
 local drive = require("Game.harness.drive")
+local flicker = require("Game.harness.flicker")
 
 local M = {}
 
@@ -16,6 +17,8 @@ M.TICK = 0.2 -- 5 Hz, the in-game combat rate (D1); o.hz = 10 the option
 M.REACT = 0.05 -- a first icon whose wait is at most this is shown as ready: pressed
 M.PULL = 3 -- the world starts this long before the pull, the target selected (precombat presses)
 M.GAP = 30 -- out of combat between two fights on one boot (consecutive pulls)
+-- The display-side hold experiment (flicker.hold) on our instance's shown queue: o.hold, else this switch (off)
+M.HOLD = os.getenv("HEKILI_LOOP_HOLD") == "1"
 -- The oracle's facade rows answered by the client (§4's override): the target's health, and the debuff row Hekili's
 -- aura scan reads (raw since VirtualState counted a modelled stack on top of a plain read that arrived before the
 -- cast's drain, fixed in Auras.lua's I.AuraModel and pinned in loop_warrior_spec). The buff row stays VirtualState's: our
@@ -69,18 +72,56 @@ local function feed(H, obs, t, base, sink)
     end
 end
 
--- The first `n` entries of an instance's Primary queue into `q` (names, waits); returns how many.
-local function queue(H, q, n)
+-- The first `n` entries of an instance's Primary queue into `q` (names, waits, costs in power `res`, else 0) and its
+-- focus entry into slot flicker.FOCUS (the first record with a focus tier within the Timeline's 10 s horizon); returns
+-- how many.
+local function queue(H, q, n, res)
     local out = H.Hekili.Engine.Output.Primary
     local k = math.min(n, out.count)
     for i = 1, k do
         local r = out.recs[i]
-        q.name[i], q.time[i] = r.actionName, r.time or 0
+        q.name[i], q.time[i], q.cost[i] = r.actionName, r.time or 0, r.resource_type == res and r.cost or 0
     end
     for i = k + 1, n do
-        q.name[i], q.time[i] = false, 0
+        q.name[i], q.time[i], q.cost[i] = false, 0, 0
+    end
+    local F = flicker.FOCUS
+    q.name[F], q.time[F], q.cost[F] = false, 0, 0
+    for i = 1, out.count do
+        local r = out.recs[i]
+        if r.focus and (r.time or 0) <= 10 then
+            q.name[F], q.time[F], q.cost[F] = r.actionName, r.time or 0, r.resource_type == res and r.cost or 0
+            break
+        end
     end
     return k
+end
+
+-- Our events in the world's truth from index `from` into `e` (flicker.EVENTS flags, OR-ed in); the next index.
+local function events(W, us, from, e)
+    local truth = W.truth
+    for i = from, #truth do
+        local ev = truth[i]
+        local k = ev.kind
+        if ev.src == us then
+            e.cast = e.cast or k == "cast" or k == "strike" or k == "queue" or k == "unqueue"
+            e.spend = e.spend or ((k == "cast" or k == "strike" or k == "gain") and (ev.cost or 0) > 0)
+            e.avoid = e.avoid or (ev.act ~= nil and ev.act ~= "WOUND" and k ~= "tick")
+            e.swing = e.swing or k == "swing"
+            e.aura = e.aura or k == "cdreset"
+        end
+        e.aura = e.aura or k == "form" or (k == "aura" and (ev.dst == us or (us.target ~= nil and ev.dst == us.target)))
+    end
+    return #truth + 1
+end
+
+-- The believed cooldown remaining of ability `x` of instance `H` into `cd` (false: untracked), once a tick.
+local function cooldown(cd, H, x, now)
+    if x and cd[x] == nil then
+        local a = H.Hekili.Class.abilities[x]
+        local rec = a and type(a.id) == "number" and a.id > 0 and H.ns.VirtualState.Cooldown(a.id, now)
+        cd[x] = rec and math.max(0, rec.est - now) or false
+    end
 end
 
 --- Whether a refusal of `key` is the driver's own (§5.2 as built, the round-3 ruling): not when the shadow's queue `q`
@@ -171,7 +212,18 @@ function M.run(L, seed, o, drivers)
     -- the metrics' per-tick record (§5.1): in-combat ticks only, both queues' first icons, the truth
     run.combat, run.full, run.idle, run.attempts, run.episodes, run.up = 0, 0, 0, 0, 0, {}
     run.ours, run.theirs, run.gap, run.cpu, run.secrets, run.focus = {}, {}, {}, {}, {}, 0
-    run.dec = R and { ours = {}, theirs = {} } or nil
+    run.dec = R and { ours = {}, theirs = {}, flips = 0 } or nil
+    -- the flicker ledger's frames (flicker.frame), one an instance, over the run's events between two polls
+    run.ev, run.frames = flicker.events(), {}
+    for i = 1, #drivers do
+        run.frames[i] = flicker.frame(run.ev)
+    end
+    local hold = o.hold
+    if hold == nil then
+        hold = M.HOLD
+    end
+    local res = L.power.token and L.power.token:lower()
+    local pollEv, tickEv, nextEv = {}, {}, 1
     local sink = {}
     local steps = {}
     for i, d in ipairs(drivers) do
@@ -229,7 +281,14 @@ function M.run(L, seed, o, drivers)
         for slot = 1, 4 do
             d.H.Fire("PLAYER_TOTEM_UPDATE", slot)
         end
-        steps[i] = { H = d.H, obs = observer.new(W, k), base = base, q = { name = {}, time = {} }, plain = d.plain }
+        steps[i] = {
+            H = d.H,
+            obs = observer.new(W, k),
+            base = base,
+            q = { name = {}, time = {}, cost = {} },
+            plain = d.plain,
+            hold = (hold and not d.plain) and flicker.newHold() or nil,
+        }
     end
     local errors0 = {}
     for i, st in ipairs(steps) do
@@ -251,6 +310,13 @@ function M.run(L, seed, o, drivers)
     end
     local function step(tc) -- the world to `tc`, every instance fed and cycled
         W.run(tc)
+        for _, key in ipairs(flicker.EVENTS) do
+            pollEv[key] = false
+        end
+        nextEv = events(W, us, nextEv, pollEv)
+        for _, key in ipairs(flicker.EVENTS) do
+            tickEv[key] = tickEv[key] or pollEv[key]
+        end
         for i, st in ipairs(steps) do
             feed(st.H, st.obs, tc, st.base, sink)
             st.H.Hekili.ActiveDebug = o.trace or false
@@ -263,10 +329,14 @@ function M.run(L, seed, o, drivers)
             if not ok then
                 run.raises = run.raises + 1
             end
-            queue(st.H, st.q, 3)
+            queue(st.H, st.q, 3, res)
+            if st.hold then
+                flicker.hold(st.hold, st.q, o.react or M.REACT, pollEv.cast)
+            end
         end
     end
     local di = 1
+    local lastGcd, tickPolled = nil, false -- the replay's first on-GCD icon at the last poll, and that poll a tick's
     while t < stopAt and not W.killAt do
         -- wowsims's decisions before this tick (replay): a cycle just before each cast; the on-GCD ones scored
         -- against our first on-GCD icon (an off-GCD cast would agree with whatever shows during a GCD)
@@ -278,11 +348,19 @@ function M.run(L, seed, o, drivers)
                 if d.gcd then
                     local n = #run.dec.ours + 1
                     run.dec.ours[n], run.dec.theirs[n] = firstGcd(steps[1].H), d.key
+                    -- a flip at a decision point: the icon changed since the tick's poll, no cast between
+                    if tickPolled and lastGcd ~= nil and run.dec.ours[n] ~= lastGcd then
+                        run.dec.flips = run.dec.flips + 1
+                    end
                 end
+                tickPolled = false
             end
         end
         t = t + tick
         step(t)
+        if R then
+            lastGcd, tickPolled = firstGcd(steps[1].H), true
+        end
         run.ticks = run.ticks + 1
         local inCombat = t >= wo.pull
         local gcdFree = us.gcdUntil <= t
@@ -374,6 +452,24 @@ function M.run(L, seed, o, drivers)
             else
                 run.theirs[n] = steps[2] and steps[2].q.name[1] or false
             end
+            for k, st in ipairs(steps) do -- the ledger's frame (flicker.frame)
+                local f, sq = run.frames[k], st.q
+                local VS = st.H.ns.VirtualState
+                local now = st.base + t
+                local cd = {}
+                for s = 1, flicker.SLOTS do
+                    f.name[s][n], f.wait[s][n], f.cost[s][n] = sq.name[s], sq.time[s], sq.cost[s]
+                    cooldown(cd, st.H, sq.name[s], now)
+                    cooldown(cd, st.H, n > 1 and f.name[s][n - 1], now)
+                end
+                local p = VS.Power(L.power.type, now)
+                f.lo[n], f.est[n], f.hi[n], f.truth[n] = p.lo, p.est, p.hi, us.power
+                f.pend[n] = VS.SwingPending(1) > 0 or VS.SwingPending(2) > 0
+                f.cd[n], f.gcd[n], f.t[n], f.n = cd, math.max(0, us.gcdUntil - t), t, n
+            end
+            for _, key in ipairs(flicker.EVENTS) do
+                run.ev[key][n], tickEv[key] = tickEv[key], false
+            end
             if steps[2] and run.ours[n] ~= run.theirs[n] then -- the belief's power error where they disagree
                 local VS = steps[1].H.ns.VirtualState
                 run.gap[#run.gap + 1] = VS.Power(L.power.type, steps[1].base + t).est - us.power
@@ -431,7 +527,7 @@ function M.fight(L, seed, o)
 end
 
 -- A -> B -> A within 3 ticks in a first-icon sequence.
-local function flicker(seq, n)
+local function flips(seq, n)
     local f = 0
     for i = 1, n - 2 do
         if seq[i] ~= seq[i + 1] and seq[i + 2] == seq[i] then
@@ -470,6 +566,7 @@ local function blank()
     m.B = { combat = 0, full = 0, idle = 0, up = {}, damage = 0, time = 0, flicker = 0 }
     m.oracleFlicker, m.errors, m.raises, m.misses, m.secrets, m.selfCheck = 0, 0, 0, {}, {}, 0
     m.cpu, m.gap, m.focus = {}, {}, 0
+    m.led = { ours = flicker.merge(), oracle = flicker.merge() } -- run A's ledgers (flicker.ledger): ours, the shadow's
     return m
 end
 
@@ -479,6 +576,12 @@ end
 function M.tally(L, n, o)
     o = o or {}
     local m = blank()
+    local lo = { tick = 1 / (o.hz or 5), react = o.react or M.REACT }
+    if o.hold == nil then
+        m.hold = M.HOLD
+    else
+        m.hold = o.hold
+    end
     for f = 1, n do
         local seed = (o.seed0 or 0) + f
         local po = setmetatable({ trace = o.trace == nil and f == 1 or o.trace }, { __index = o })
@@ -509,12 +612,14 @@ function M.tally(L, n, o)
             m.refusedB[why] = (m.refusedB[why] or 0) + k
         end
         m.attemptsB = m.attemptsB + b.attempts
-        m.oracleFlicker = m.oracleFlicker + flicker(a.theirs, a.combat)
+        m.oracleFlicker = m.oracleFlicker + flips(a.theirs, a.combat)
+        m.led.ours = flicker.merge(m.led.ours, flicker.ledger(a.frames[1], lo))
+        m.led.oracle = flicker.merge(m.led.oracle, flicker.ledger(a.frames[2], lo))
         for side, r in pairs({ A = a, B = b }) do
             local s = m[side]
             s.combat, s.full, s.idle = s.combat + r.combat, s.full + r.full, s.idle + r.idle
             s.damage, s.time = s.damage + r.damage, s.time + r.combat / (o.hz or 5)
-            s.flicker = s.flicker + flicker(r.ours, r.combat)
+            s.flicker = s.flicker + flips(r.ours, r.combat)
             for key, k in pairs(r.up) do
                 s.up[key] = (s.up[key] or 0) + k
             end
@@ -565,13 +670,32 @@ function M.replay(L, R, o)
     reactions(a.ours, a.theirs, a.combat, m.react)
     local s = m.A
     s.combat, s.full, s.idle, s.damage, s.time = a.combat, a.full, a.idle, a.damage, a.combat / (o and o.hz or 5)
-    s.flicker = flicker(a.ours, a.combat)
+    s.flicker = flips(a.ours, a.combat)
     m.B = s -- one side: a replay has no oracle run (the line's A/B fields read 1)
     m.errors, m.raises, m.cpu = a.errors, a.raises, a.cpu
     for _, name in ipairs(a.misses) do
         m.misses[name] = true
     end
-    m.dec = { both = 0, agree = 0, conf = {} }
+    local tick = 1 / (o and o.hz or 5)
+    m.led.ours = flicker.ledger(a.frames[1], { tick = tick, react = o and o.react or M.REACT })
+    -- the decision points' flips (loop.run) and our unjustified retracted readies that wowsims's own cast of that
+    -- ability within a tick confirms as wrong
+    m.dec = { both = 0, agree = 0, conf = {}, flips = a.dec.flips, confirmed = 0 }
+    m.hold = M.HOLD
+    if o and o.hold ~= nil then
+        m.hold = o.hold
+    end
+    for _, e in ipairs(m.led.ours.entries) do
+        if e.kind == "retracted" and not e.justified then
+            local te = a.frames[1].t[e.tick]
+            for _, d in ipairs(R.decisions) do
+                if d.key == e.from and math.abs(d.t - te) <= tick + 1e-9 then
+                    m.dec.confirmed = m.dec.confirmed + 1
+                    break
+                end
+            end
+        end
+    end
     for i, y in ipairs(a.dec.theirs) do
         local x = a.dec.ours[i]
         m.dec.both = m.dec.both + 1
@@ -627,6 +751,8 @@ function M.summary(m)
         end
     end
     r.flicker, r.oracleFlicker = m.A.flicker / math.max(1e-9, minutes), m.oracleFlicker / math.max(1e-9, minutes)
+    r.led, r.ledO = flicker.summary(m.led.ours, minutes), flicker.summary(m.led.oracle, minutes)
+    r.retracted, r.retractedO = r.led.retracted, r.ledO.retracted
     local sum = 0
     for _, ms in ipairs(m.cpu) do
         sum = sum + ms
@@ -679,7 +805,7 @@ function M.line(m)
     end
     local line = (
         "fights=%d agreement %.3f (%d ticks); react median %d p90 %d never %.3f; refused per 100 [%s], episodes %.2f/min; "
-        .. "dps A/B %.3f; full %.3f/%.3f idle %.3f/%.3f; uptime [%s]; flicker %.2f/min (oracle %.2f); "
+        .. "dps A/B %.3f; full %.3f/%.3f idle %.3f/%.3f; uptime [%s]; flicker %.2f/min (oracle %.2f) %s; "
         .. "errors %d raises %d self-check %d; cpu mean %.2f p99 %.2f ms; top [%s]; power est-truth at disagreements %.1f"
     ):format(
         m.fights,
@@ -698,6 +824,7 @@ function M.line(m)
         table.concat(up, ", "),
         r.flicker,
         r.oracleFlicker,
+        flicker.line(r.led, r.ledO),
         m.errors,
         m.raises,
         m.selfCheck,
@@ -708,6 +835,15 @@ function M.line(m)
     )
     if m.dec then -- a replay's headline (loop.replay): every other line is unchanged
         line = line .. ("; decisions on-GCD %.3f (%d) top [%s]"):format(r.decisions, m.dec.both, top3(m.dec.conf))
+        line = line
+            .. ("; decision flips %d (%.1f per 100), retracted confirmed by wowsims %d"):format(
+                m.dec.flips,
+                100 * m.dec.flips / math.max(1, m.dec.both),
+                m.dec.confirmed
+            )
+    end
+    if m.hold then
+        line = line .. "; hold on"
     end
     return line
 end
