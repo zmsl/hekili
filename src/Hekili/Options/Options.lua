@@ -2705,7 +2705,8 @@ do
     local specNodes = {} -- [ spec key ] = its node, Priorities' `plugins.specializations` (spec tree)
 
     -- Where a priority's key sits in an option's path: { "packs", spec, pack, ... } under its spec's node, else
-    -- { "packs", pack, ... }.
+    -- { "packs", pack, ... }. shortcut: a priority stored directly under Priorities and named exactly like a spec key
+    -- would read at 3; AceConfig keys would clash there anyway, and on Forever every priority's spec has a node.
     local function PackAt( info ) return specIDByName[ info[ 2 ] ] and 3 or 2 end
 
     -- Selects a priority's node: under its spec's node, or under Priorities when its spec has none.
