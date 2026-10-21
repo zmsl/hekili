@@ -45,8 +45,8 @@
 --    line's own action is never guarded (the engine skips an unknown action).
 -- 7. `focus` from the recipe (the tiers the retired list carried, by action), `use_off_gcd=1` on an ability whose
 --    `gcd` is `"off"`; the recipe's `leveling` lines are appended to `actions` and its `levelingFirst` lines put
---    before them (a form the sim starts in, which the APL's own lines would never let a trailing line reach), each
---    silent at 60. The recipe's
+--    before them (a form the sim starts in, which the APL's own lines would never let a trailing line reach):
+--    `leveling` lines are silent at 60, `levelingFirst` lines whenever their form is up. The recipe's
 --    `requires` ({ [action key or group's snake name] = talent key }) puts `talent.<key>.enabled&` before the
 --    condition of each such entry, in every list: an APL written for a talent build (wowsims picks it by that talent,
 --    e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
