@@ -6,6 +6,21 @@ local headless = require("Game.harness.headless")
 local scenarios = require("Game.harness.scenarios")
 local ww = require("Forever.helpers.warlock_world")
 
+-- The pet's spends in the truth after event `n0`: each fall of its power between two pet events.
+local function petSpends(W, n0)
+    local out, last = {}, nil
+    for i = n0 + 1, #W.truth do
+        local ev = W.truth[i]
+        if ev.kind == "pet" or ev.kind == "petPower" then
+            if last and ev.power < last then
+                out[#out + 1] = math.floor(last - ev.power + 0.5)
+            end
+            last = ev.power
+        end
+    end
+    return out
+end
+
 describe("the Warlock loop worlds", function()
     for _, name in ipairs({ "Affliction", "Demonology", "Destruction" }) do
         it(name .. ": boots on its spec, and maps every ability the character knows", function()
@@ -81,5 +96,68 @@ describe("the Warlock loop worlds", function()
             stop = stop or ev.kind == "channelStop"
         end
         assert.are.same({ 6, true }, { ticks, stop })
+    end)
+
+    -- Fix 27's world: the Soul Shards in the bags (wowsims's 32), the demon and its mana, the Spirit Life Tap reads.
+    it(
+        "declares the shards, the demon and Spirit; the shard spells take a reagent, the summons and Sacrifice the pet",
+        function()
+            for _, name in ipairs({ "Affliction", "Demonology", "Destruction" }) do
+                local C = ww[name]
+                assert.are.same({ [6265] = 32 }, C.WORLD.bags, name)
+                assert.are.same({ [5] = 221 }, C.WORLD.stats, name)
+                local pet = C.WORLD.pet
+                -- wowsims's logs at 60: the Imp 2180 mana, 85.2 mp5; the Succubus 1871, 28.4 mp5
+                local want = name == "Demonology" and { 0, 2180, 2180, 17.04, 2, false }
+                    or { 0, 1871, 1871, 5.68, 2, false }
+                assert.are.same(want, { pet.pt, pet.max, pet.power, pet.regen, pet.tick, pet.up }, name)
+            end
+            local C = ww.Destruction
+            local H = headless.new({ character = C.character() })
+            for _, key in ipairs({ "shadowburn", "soul_fire", "summon_succubus", "summon_felhunter" }) do
+                assert.are.same({ 6265, 1 }, C.resolve(key, H).reagent, key)
+            end
+            local imp = C.resolve("summon_imp", H)
+            assert.are.same({ true, "summon" }, { imp.reagent == nil, imp.pet })
+            assert.are.equal("dismiss", C.resolve("demonic_sacrifice", H).pet)
+        end
+    )
+
+    it("Destruction: summons the Succubus for a shard; its Lash of Pain spends its mana", function()
+        local C = ww.Destruction
+        local H = headless.new({ character = C.character() })
+        local W = scenarios.world(setmetatable({ power = 5000 }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        W.run(1) -- the pull
+        local su = C.resolve("summon_succubus", H)
+        assert.is_true(W.press(us, "summon_succubus", su))
+        W.run(1 + su.cast + 0.05)
+        assert.are.same({ 31, true }, { us.bags[6265], us.pet.up })
+        local n0 = #W.truth
+        W.run(W.t + 25)
+        assert.are.same({ 160, 160 }, petSpends(W, n0)) -- Lash of Pain's 160, 12 s apart
+        assert.are.same({}, H.errors)
+    end)
+
+    it("Demonology: the Imp keeps the sacrificed Succubus's effect (Demonic Pact); Sacrifice takes the Imp", function()
+        local C = ww.Demonology
+        local H = headless.new({ character = C.character() })
+        local W = scenarios.world(setmetatable({ power = 5000 }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        W.run(1) -- the pull
+        assert.is_truthy(us.auras[18791]) -- the build's sacrificed Succubus: Touch of Fire from the pull
+        assert.is_false(W.press(us, "demonic_sacrifice", C.resolve("demonic_sacrifice", H))) -- no demon out
+        local imp = C.resolve("summon_imp", H)
+        assert.is_true(W.press(us, "summon_imp", imp))
+        W.run(1 + imp.cast + 0.05)
+        assert.are.same({ 32, true, true }, { us.bags[6265], us.pet.up, us.auras[18791] ~= nil })
+        local n0 = #W.truth
+        W.run(W.t + 5)
+        assert.are.same({ 115, 115 }, petSpends(W, n0)) -- Firebolt's 115 a 2 s cast
+        W.t = W.t + 1.5
+        assert.is_true(W.press(us, "demonic_sacrifice", C.resolve("demonic_sacrifice", H)))
+        W.run(W.t + 0.1)
+        assert.are.same({ false, true, false }, { us.pet.up, us.auras[18789] ~= nil, us.auras[18791] ~= nil })
+        assert.are.same({}, H.errors)
     end)
 end)

@@ -41,6 +41,8 @@ local KIT = {
     summon_succubus = { { 712 }, 1, 0, "spell" },
     summon_incubus = { { 713 }, 1, 0, "spell" },
     summon_felhunter = { { 691 }, 1, 0, "spell" },
+    -- no cost, cooldown or GCD row (DB2; wowsims: "no cast time, cost or cooldown")
+    demonic_sacrifice = { { 18788 }, 0, 0, "off" },
 }
 
 local function idsOf(a)
@@ -119,7 +121,7 @@ describe("Forever Warlock", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(27, n)
+        assert.are.equal(28, n)
         assert.are.equal("cooldowns", w.abilities.amplify_curse.toggle)
         for _, key in ipairs({
             "summon_imp",
@@ -158,19 +160,17 @@ describe("Forever Warlock", function()
             assert.are.equal(0, ld.run(w.exprs.soul_shards, e))
             w.game.bags[6265] = 3
             assert.are.equal(3, ld.run(w.exprs.soul_shards, e))
+            -- the bag count read in both layers: the belief's `now` context has no `soul_shards` (env() sets none)
             for _, key in ipairs({ "shadowburn", "soul_fire", "summon_voidwalker", "summon_felhunter" }) do
                 e = env()
-                e.soul_shards = 0
+                w.game.bags[6265] = 0
                 assert.are.same({ false, "no soul shard" }, { ld.run(w.abilities[key].usable, e) }, key)
-                e.soul_shards = 1
+                w.game.bags[6265] = 1
                 assert.is_true((ld.run(w.abilities[key].usable, e)), key)
             end
             e = env()
-            e.soul_shards, e.buff = 0, buffs({ decimation = 1 })
+            w.game.bags[6265], e.buff = 0, buffs({ decimation = 1 })
             assert.is_true((ld.run(w.abilities.soul_fire.usable, e)))
-            e.soul_shards = nil -- the belief's `now` context: no count, no refusal
-            e.buff = buffs({})
-            assert.is_true((ld.run(w.abilities.shadowburn.usable, e)))
             assert.is_true((ld.run(w.abilities.summon_imp.usable, env())))
         end
     )
@@ -388,18 +388,27 @@ describe("Forever Warlock", function()
                 function e.summonPet(key)
                     table.insert(e.summoned, key)
                 end
+                function e.dismissPet(key)
+                    table.insert(e.summoned, "-" .. key)
+                end
                 ld.run(w.abilities.summon_imp[field], e)
                 return e
             end
+            -- the simulation's handler dismisses the demon out first (wowsims summon.go: the same demon included);
+            -- the belief's `now` models the pet unit, which stays up
+            local SUMMONED = {
+                now = { "imp" },
+                handler = { "-imp", "-voidwalker", "-succubus", "-incubus", "-felhunter", "imp" },
+            }
             for _, field in ipairs({ "now", "handler" }) do
                 local e = run(field)
                 assert.are.same(
-                    { { "imp" }, { "burning_shadow", "fel_stamina", "touch_of_fire", "fel_energy" } },
+                    { SUMMONED[field], { "burning_shadow", "fel_stamina", "touch_of_fire", "fel_energy" } },
                     { e.summoned, e.removed },
                     field
                 )
                 e = run(field, { demonic_pact = 1 })
-                assert.are.same({ { "imp" }, { "burning_shadow" } }, { e.summoned, e.removed }, field)
+                assert.are.same({ SUMMONED[field], { "burning_shadow" } }, { e.summoned, e.removed }, field)
             end
             assert.are.same({ 18789, 18790, 18791, 18792 }, {
                 w.auras.burning_shadow.id,
@@ -413,6 +422,49 @@ describe("Forever Warlock", function()
             )
         end
     )
+
+    -- wowsims talents_demonology.go applyDemonicSacrifice: the demon out dismissed, the previous effect ended, the
+    -- sacrificed demon's effect up until a summon cancels it.
+    it("sacrifices the demon out for its effect, ending any other; refused with no demon", function()
+        local ds = w.abilities.demonic_sacrifice
+        assert.are.same({ 18788, 0, "off" }, { ds.id, ld.run(ds.cast, env()), ds.gcd })
+        assert.is_nil(ds.spend)
+        -- the simulation's `pet`: the demons by key, the Succubus out
+        local function sim(out)
+            local e = env()
+            e.pet = setmetatable({}, {
+                __index = function(_, k)
+                    return { up = k == out }
+                end,
+            })
+            e.dismissed = {}
+            function e.dismissPet(key)
+                table.insert(e.dismissed, key)
+            end
+            return e
+        end
+        assert.are.same({ false, "no demon" }, { ld.run(ds.usable, sim(nil)) })
+        assert.is_true((ld.run(ds.usable, sim("succubus"))))
+        assert.is_true((ld.run(ds.usable, env()))) -- the belief's `now` context: no `pet`, the client's usable decides
+        local e = sim("succubus")
+        ld.run(ds.handler, e)
+        assert.are.same({
+            { "succubus" },
+            { "burning_shadow", "fel_stamina", "touch_of_fire", "fel_energy" },
+            { "touch_of_fire" },
+        }, { e.dismissed, e.removed, e.applied })
+        -- the belief: the pet unit down, the effects ended; the new one is the aura walk's (no demon key here)
+        e = env()
+        e.dismissed = {}
+        function e.dismissPet(key)
+            table.insert(e.dismissed, key)
+        end
+        ld.run(ds.now, e)
+        assert.are.same(
+            { { "demon" }, { "burning_shadow", "fel_stamina", "touch_of_fire", "fel_energy" }, {} },
+            { e.dismissed, e.removed, e.applied }
+        )
+    end)
 
     it("refuses each spell while an interrupt has its school locked out", function()
         local SCHOOL = {
@@ -438,7 +490,7 @@ describe("Forever Warlock", function()
         end
         for key, school in pairs({ shadowburn = "shadow", soul_fire = "fire", conflagrate = "fire" }) do
             local e = env()
-            e.soul_shards, e.debuff = 1, buffs({ immolate = 1 })
+            w.game.bags[6265], e.debuff = 1, buffs({ immolate = 1 })
             assert.is_true((ld.run(w.abilities[key].usable, e)), key)
             e["locked_out_" .. school] = true
             assert.is_false((ld.run(w.abilities[key].usable, e)), key)

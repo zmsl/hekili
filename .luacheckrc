@@ -166,7 +166,7 @@ end
 files["src/Hekili_Priest/Priest.lua"] = { globals = priestEnv }
 -- The Warlock's further `state` names.
 local warlockEnv = {
-    "min", "max", "level", "summonPet", "soul_shards", "locked_out_shadow", "locked_out_fire",
+    "min", "max", "level", "pet", "summonPet", "dismissPet", "soul_shards", "locked_out_shadow", "locked_out_fire",
 }
 for _, k in ipairs(stateEnv) do
     warlockEnv[#warlockEnv + 1] = k

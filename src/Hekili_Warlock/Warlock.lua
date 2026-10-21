@@ -8,9 +8,10 @@
 -- amount, its level gain and Spirit, Improved Life Tap's +10% a rank), the demon (RegisterPets: the five summons;
 -- Demonic Sacrifice's effects, ended by a summon unless Demonic Pact keeps another demon's), Nightfall's Shadow
 -- Trance (an instant Shadow Bolt), Decimation (a faster Soul Fire with no shard; its talent's shorter cooldown),
--- Amplify Curse (spent by Bane of Agony and Curse of Weakness), Conflagrate on our Immolate (consumed unless Shadow and
--- Flame keeps it), Demonic Brand from Searing Pain, Wrack's debuff, the talents' cast and cost cuts (Bane, Improved
--- Corruption, Cataclysm, Master Summoner), and the school lockouts (Hekili_Shared's locked_out_<school>). No priority
+-- Demonic Sacrifice (the demon out for its effect), Amplify Curse (spent by Bane of Agony and Curse of Weakness),
+-- Conflagrate on our Immolate (consumed unless Shadow and Flame keeps it), Demonic Brand from Searing Pain, Wrack's
+-- debuff, the talents' cast and cost cuts (Bane, Improved Corruption, Cataclysm, Master Summoner), and the school
+-- lockouts (Hekili_Shared's locked_out_<school>). No priority
 -- yet: the wowsims.com packs (Affliction, Demonology, Destruction) come next; the abilities and auras below are what
 -- wowsims/forever's five Warlock builds (ui/specs/warlock/dps/builds/*.build.json) cast or read.
 -- Research: docs/research/2026-10-15-forever-warlock/research.md.
@@ -23,13 +24,13 @@
 -- wowsims, as the Succubus: the same Sayaad), the base mana (1373 at 60: base_stats_auto_gen.go) and the starting regen
 -- (the five builds' logs at 60, preraid gear).
 -- Not on Forever (the DB2 has no row): Backlash, Dark Pact, Curse of Shadow; Curse of Agony and Doom are Banes.
+-- The demon's mana is the client's (`pet.mana`: UnitPower("pet"), plain; central fix 27), read, not predicted.
 -- Unmodelled: the procs' rolls (Nightfall's Shadow Trance, Decimation below 35%: the player aura walk reads them where
 -- plain), Shadow and Flame's buffs and its shard refund, the shard a kill or Drain Soul returns, the sim's spent
--- shards (a list evaluation reads the bag count; two shard spells in one queue may outrun it), Life Tap's health,
--- the demon's mana (Demonic Energies' share; the pet's power is no read: Facade UnitPower answers 0 for a non-player
--- unit) and its spells (Firebolt 3110-11763, 10-115 mana; Lash of Pain 7814-11780, 65-160 mana: pet-bar, D6), Bane
--- of Havoc, Curse of Exhaustion and Tongues, the armors, Fel Domination, Soul Link, pushback, and the Demonic Sacrifice
--- cast (no build casts it: wowsims sacrifices before the pull, the `sacrificedDemon` option; its effect is an aura).
+-- shards (a list evaluation reads the bag count; two shard spells in one queue may outrun it: gaps.md's reagent
+-- prediction), Life Tap's health and Demonic Energies' share of it to the demon, the demon's spells (Firebolt
+-- 3110-11763, 10-115 mana; Lash of Pain 7814-11780, 65-160 mana: pet-bar, D6), Bane of Havoc, Curse of Exhaustion and
+-- Tongues, the armors, Fel Domination, Soul Link and pushback.
 -- Credits: Hekili (registration API and pack format). wowsims/forever (MIT) is the reference for the mechanics above;
 -- no code is copied.
 
@@ -167,13 +168,12 @@ local function unlocked(school)
     end
 end
 
--- A shard spell's `usable`: a Soul Shard in the bags (`soul_shards`), or `waived` up (Decimation's A_NO_REAGENT_USE on
--- Soul Fire), and its school unlocked (the lockout read here: a nested closure would not run in the engine's
--- environment). In the belief's `now` context (the cost ladder's precondition) the count is absent: no refusal.
+-- A shard spell's `usable`: a Soul Shard in the bags (the client's count, read here so the belief's `now` context, the
+-- cost ladder's precondition, has it too), or `waived` up (Decimation's A_NO_REAGENT_USE on Soul Fire), and its
+-- school unlocked (the lockout read here: a nested closure would not run in the engine's environment).
 local function sharded(fire, waived)
     return function()
-        local n = soul_shards
-        if n and n < 1 and not (waived and buff[waived].up) then
+        if GetItemCount(SOUL_SHARD) < 1 and not (waived and buff[waived].up) then
             return false, "no soul shard"
         end
         if fire then
@@ -192,8 +192,9 @@ spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
 })
 
 -- The Soul Shards in the bags (plain [W PR13]); read live each evaluation.
--- shortcut: a shard spell the simulation casts spends none (no bag write in the sim), so two in one queue may outrun
--- the count; upgrade with a sim-side spent counter if a pack queues two (wowsims's builds carry 32).
+-- shortcut: a shard spell the simulation casts spends none (no bag write in the sim; gaps.md's reagent prediction), so
+-- two in one queue may outrun the count; upgrade with a sim-side spent counter if a pack queues two (wowsims's builds
+-- carry 32).
 spec:RegisterStateExpr("soul_shards", function()
     return GetItemCount(SOUL_SHARD)
 end)
@@ -211,6 +212,16 @@ local SACRIFICE = {
     felhunter = "fel_stamina",
 }
 local SACRIFICES = { "burning_shadow", "fel_stamina", "touch_of_fire", "fel_energy" }
+local DEMONS = { "imp", "voidwalker", "succubus", "incubus", "felhunter" }
+
+-- The demon out in the simulation's `pet` (nil: none, or the belief's `now` context, which has no `pet`).
+local function demonOut(p)
+    for i = 1, p and #DEMONS or 0 do
+        if p[DEMONS[i]].up then
+            return DEMONS[i]
+        end
+    end
+end
 
 spec:RegisterPets({
     imp = { id = 416, spell = "summon_imp", duration = 3600 },
@@ -325,13 +336,14 @@ local function tapped()
     end
 end
 
--- A summon's: the demon (the belief models it up until the pet unit's first observation), and Demonic Sacrifice's
--- effect cancelled (any demon's without Demonic Pact, the sacrificed demon's own with it: wowsims summon.go).
--- shortcut: the simulation keeps the replaced demon's entry up for the rest of its lookahead (no dismissPet: the
--- engine's stub state, tests/Forever/helpers/engine.lua, has none); upgrade with the Demonic Sacrifice cast, when a
--- pack casts either.
-local function summons(key)
+-- A summon's: the demon (the belief models the pet unit up until its first observation; the simulation's `handler`,
+-- `replaces`, dismisses the demon out first, the same demon included: wowsims summon.go), and Demonic Sacrifice's
+-- effect cancelled (any demon's without Demonic Pact, the sacrificed demon's own with it).
+local function summons(key, replaces)
     return function()
+        for i = 1, replaces and #DEMONS or 0 do
+            dismissPet(DEMONS[i])
+        end
         summonPet(key)
         local pact = talent.demonic_pact.enabled
         for i = 1, #SACRIFICES do
@@ -364,8 +376,24 @@ local function summon(key, id, cost, shard)
         usable = shard and sharded() or unlocked("shadow"),
 
         now = summons(key),
-        handler = summons(key),
+        handler = summons(key, true),
     }
+end
+
+-- Demonic Sacrifice's: the demon out dismissed, every effect ended, the sacrificed demon's own up (wowsims
+-- talents_demonology.go). The belief's `now` has no demon key: its dismissal is of the pet unit (any key) and the new
+-- effect is the player aura walk's.
+local function sacrifices()
+    return function()
+        local key = demonOut(pet)
+        for i = 1, #SACRIFICES do
+            removeBuff(SACRIFICES[i])
+        end
+        if key then
+            applyBuff(SACRIFICE[key])
+        end
+        dismissPet(key or "demon")
+    end
 end
 
 spec:RegisterAbilities({
@@ -794,6 +822,27 @@ spec:RegisterAbilities({
     summon_succubus = summon("succubus", 712, 1, true),
     summon_incubus = summon("incubus", 713, 1, true),
     summon_felhunter = summon("felhunter", 691, 1, true),
+
+    -- The talent's (18788): no cast time, cost, cooldown or GCD row (DB2); needs a demon out.
+    demonic_sacrifice = {
+        id = 18788,
+        cast = 0,
+        cooldown = 0,
+        gcd = "off",
+
+        startsCombat = false,
+        known = knows({ 18788 }),
+        usable = function()
+            local p = pet -- the simulation's; the belief's `now` context has none (the client's answer decides)
+            if p and not demonOut(p) then
+                return false, "no demon"
+            end
+            return true
+        end,
+
+        now = sacrifices(),
+        handler = sacrifices(),
+    },
 })
 
 -- Talents: { talent tree (1 Affliction, 2 Demonology, 3 Destruction: the dominant tree picks the spec), rank 1's spell,

@@ -11,14 +11,16 @@
 -- by Bane of Agony and Curse of Weakness, Nightfall's Shadow Trance (2% a rank on a Corruption tick and a Drain Life,
 -- Drain Soul or Wrack tick), Conflagrate on our Immolate (consumed unless Shadow and Flame keeps it, 20% a rank),
 -- Demonic Brand's charges from Searing Pain, Life Tap's mana (its rank's points, the level gain and the build's Spirit,
--- x Improved Life Tap), mana under the five-second rule (the pools and the regen the five builds' logs show), and the
--- channels (Drain Life 5 s a tick a second, Drain Soul 15 s every 3 s, Wrack 6 s a tick a second with its debuff, Rain
--- of Fire 8 s every 2 s, Hellfire 15 s a tick a second). Damage amounts are UNMEASURED.
--- Not in the world, each a harness limit (the shared surface): the demon (the observer gives the player's pet no "pet"
--- token, so UnitExists("pet") stays false: no demon swings or spends a brand charge), the Soul Shards (fake_api's
--- C_Item.GetItemCount answers 0: Soul Fire only under Decimation, Shadowburn and the shard summons never), the Spirit
--- the class file's Life Tap reads (fake_api's UnitStat answers 0: the belief's tap is the points alone), and Decimation
--- (below 35% target health; the mob never gets there).
+-- x Improved Life Tap; Demonic Energies' share to the demon), mana under the five-second rule (the pools and the regen
+-- the five builds' logs show), and the channels (Drain Life 5 s a tick a second, Drain Soul 15 s every 3 s, Wrack 6 s a
+-- tick a second with its debuff, Rain of Fire 8 s every 2 s, Hellfire 15 s a tick a second). Central fix 27's harness:
+-- the Soul Shards in the bags (`WORLD.bags`, wowsims's 32; the shard spells' `reagent`, Shadow and Flame's refund), the
+-- demon (`WORLD.pet`: its mana and regen from wowsims's logs; the summons and Demonic Sacrifice's `pet`, the demon's
+-- own Firebolt or Lash of Pain spending its mana; Demonic Sacrifice's effects, the build's sacrificed demon's from the
+-- pull)
+-- and the Spirit Life Tap reads (`WORLD.stats`). Damage amounts are UNMEASURED.
+-- Not in the world: the demon's swings and the brand charges they spend, and Decimation (below 35% target health; the
+-- mob never gets there).
 -- Credit: wowsims/forever (MIT, https://github.com/wowsims/forever) as the reference for the mechanics; no code copied.
 local ld = require("Forever.helpers.load_druid")
 local world = require("Game.harness.world")
@@ -33,6 +35,19 @@ local GCD = { spell = 1.5, off = 0 }
 -- 1.04 a 0.1 s tick): the spirit part (paused inside it) and the mp5 part. UNMEASURED in game.
 local FSR = { 33.88, 10.4 }
 local SPIRIT = 221 -- the builds' Spirit at 60 (wowsims's logs: Life Tap 774 = (424 + 221) x 1.2)
+local SOUL_SHARD = 6265 -- the item (ItemSparse); wowsims's builds carry 32 (classOptions.soulShards)
+-- The demons the builds summon: their mana and regen a second at 60 (wowsims's logs, the preraid gear: "Pet stats"
+-- Mana, MP5 / 5), the spell each casts on its own (DB2: Firebolt 11763 115 mana, 2 s cast; Lash of Pain 11780 160
+-- mana, 12 s category cooldown) as { cost, every }, and the Demonic Sacrifice effect each leaves (DB2 18789-18792; the
+-- Incubus as the Succubus, the same Sayaad).
+local DEMON = {
+    imp = { max = 2180, regen = 17.04, spell = { 115, 2 }, sacrifice = 18789 },
+    succubus = { max = 1871, regen = 5.68, spell = { 160, 12 }, sacrifice = 18791 },
+    incubus = { sacrifice = 18791 },
+    voidwalker = { sacrifice = 18792 },
+    felhunter = { sacrifice = 18790 },
+}
+local SACRIFICES = { 18789, 18790, 18791, 18792 }
 
 -- Each rank's mana cost (DB2), lowest rank first, the world's truth the class file's are measured against (a level's
 -- highest known rank pays its own); a number less than 1 is a fraction of base mana.
@@ -82,6 +97,7 @@ local SUMMON = { summon_imp = true, summon_voidwalker = true, summon_succubus = 
 SUMMON.summon_felhunter = true
 local SHARD = { shadowburn = true, soul_fire = true, summon_voidwalker = true, summon_succubus = true }
 SHARD.summon_incubus, SHARD.summon_felhunter = true, true
+local REAGENT = { SOUL_SHARD, 1 }
 
 -- The cast times (DB2), top rank, unhasted, before the talents.
 local CAST = { shadow_bolt = 3, immolate = 2, corruption = 2, searing_pain = 1.5, incinerate = 2.5, soul_fire = 6 }
@@ -128,6 +144,8 @@ local T = {
     nightfall = 18094,
     shadow_and_flame = 426316,
     demonic_brand = 1293695,
+    demonic_energies = 1225214,
+    demonic_pact = 425464,
 }
 
 local W0
@@ -174,13 +192,15 @@ local BASELINE = {
 
 -- The packs' worlds: `pack` the wowsims.com pack it will run (the next task's), `spec` its spec id, `kit` the talent
 -- abilities the build adds to BASELINE, `talents` the build's ({ [rank-1 spell] = rank }, its talentsString through
--- wowsims's tree), `max` the pool (the build's log), `uptime` the debuffs reported.
+-- wowsims's tree), `max` the pool (the build's log), `demon` the build's summon (classOptions.summon: the pet's mana),
+-- `sacrificed` its sacrificed demon (classOptions.sacrificedDemon), `uptime` the debuffs reported.
 local PACKS = {
     -- aff_wrack.build.json 25300020135201351--0550005003 (33/0/18)
     Affliction = {
         pack = "Affliction (wowsims.com)",
         spec = 100091,
         max = 5353,
+        demon = "succubus",
         kit = { "siphon_life", "wrack", "amplify_curse" },
         talents = {
             [18182] = 2, -- Improved Life Tap
@@ -207,7 +227,9 @@ local PACKS = {
         pack = "Demonology (wowsims.com)",
         spec = 100092,
         max = 6156,
-        kit = {},
+        demon = "imp",
+        sacrificed = "succubus",
+        kit = { "demonic_sacrifice" },
         talents = {
             [18174] = 1, -- Suppression
             [17810] = 1, -- Improved Corruption
@@ -235,6 +257,7 @@ local PACKS = {
         pack = "Destruction (wowsims.com)",
         spec = 100093,
         max = 5353,
+        demon = "succubus",
         kit = { "conflagrate", "shadowburn", "incinerate", "amplify_curse" },
         talents = {
             [18182] = 2, -- Improved Life Tap
@@ -431,8 +454,49 @@ local function channel(key, length, every, school, procs, start)
     }
 end
 
-local SHARD_ONLY = function()
-    return false, "no soul shard" -- the harness's bags are empty (fake_api GetItemCount)
+-- Whether `key` needs a Soul Shard on `e` now: a shard spell, Soul Fire not under Decimation (A_NO_REAGENT_USE).
+local function needsShard(key, up)
+    return SHARD[key] and not (key == "soul_fire" and up("decimation"))
+end
+
+-- A Demonic Sacrifice effect's aura on `e` (DB2's duration, 2 h; wowsims: until a summon ends it), or off.
+local function sacrificeOn(W, e, id)
+    W.applyAura(e, id, 7200, 1, 1)
+end
+local function sacrificeOff(W, e, id)
+    if e.auras[id] then
+        e.auras[id] = nil
+        W.emit({ kind = "aura", dst = e, aura = id, stacks = 0, expires = 0, duration = 0 })
+    end
+end
+
+-- A summon's (the press's `pet = "summon"` brings it full): the demon `key` out, Demonic Sacrifice's effects ended
+-- (any without Demonic Pact, the summoned demon's own with it: wowsims summon.go).
+local function summon(key)
+    return {
+        effect = function(W, e, _, _, H)
+            e.demon = key
+            local pact = talentRank(H, T.demonic_pact) > 0
+            for _, id in ipairs(SACRIFICES) do
+                if not pact or id == DEMON[key].sacrifice then
+                    sacrificeOff(W, e, id)
+                end
+            end
+        end,
+    }
+end
+
+-- The demon's own spell while it is out (wowsims pets.go: cast once its mana covers the cost, else wait):
+-- shortcut: a retry each `every` s, not at the regen's exact refill; upgrade if a gate reads the pet's mana closely.
+local function demonCasts(W, e)
+    local function step()
+        local d = e.pet.up and e.demon and DEMON[e.demon].spell
+        if d and e.pet.power >= d[1] then
+            W.petGain(e, -d[1])
+        end
+        W.at(W.t + (d and d[2] or 1), step)
+    end
+    W.at(W.t, step)
 end
 
 -- Each recommendable ability: `effect(W, e, p, X, H)` (a channel's at its start), `requires(W, e, X, H)`,
@@ -477,12 +541,18 @@ M.MAP = {
             end
         end,
     },
-    shadowburn = { requires = SHARD_ONLY },
+    shadowburn = {
+        outcomes = "spell",
+        effect = function(W, e, _, _, H)
+            local hit = W.hit(e, e.target, AMOUNT.shadowburn, 32)
+            -- Shadow and Flame: a landed Shadowburn refunds its shard, 20% a rank (wowsims's curve)
+            if hit.act == "WOUND" and W.rng.chance(0.2 * talentRank(H, T.shadow_and_flame)) then
+                W.item(e, SOUL_SHARD, 1)
+            end
+        end,
+    },
     soul_fire = {
         outcomes = "spell",
-        requires = function(_, e, X)
-            return onEntity(e, X)("decimation"), "no soul shard"
-        end,
         effect = function(W, e)
             W.hit(e, e.target, AMOUNT.soul_fire, 4)
         end,
@@ -490,12 +560,10 @@ M.MAP = {
     life_tap = {
         effect = function(W, e, _, _, H)
             -- rank 6's 420 points + 4 (levels 56 to 60) + Spirit, x Improved Life Tap's 10% a rank
-            W.emit({
-                kind = "gain",
-                src = e,
-                pt = MANA,
-                rage = (424 + SPIRIT) * (1 + 0.1 * talentRank(H, T.improved_life_tap)),
-            })
+            local amount = (424 + SPIRIT) * (1 + 0.1 * talentRank(H, T.improved_life_tap))
+            W.emit({ kind = "gain", src = e, pt = MANA, rage = amount })
+            -- Demonic Energies: the demon out gains 50% of it a rank (wowsims's curve; its log: 645 to the Imp at 2/2)
+            W.petGain(e, amount * 0.5 * talentRank(H, T.demonic_energies))
         end,
     },
     amplify_curse = {
@@ -503,12 +571,27 @@ M.MAP = {
             aura(W, X, e, "amplify_curse")
         end,
     },
-    summon_imp = {},
-    summon_voidwalker = { requires = SHARD_ONLY },
-    summon_succubus = { requires = SHARD_ONLY },
-    summon_incubus = { requires = SHARD_ONLY },
-    summon_felhunter = { requires = SHARD_ONLY },
+    summon_imp = summon("imp"),
+    summon_voidwalker = summon("voidwalker"),
+    summon_succubus = summon("succubus"),
+    summon_incubus = summon("incubus"),
+    summon_felhunter = summon("felhunter"),
+    -- the demon out dismissed (the press's `pet`), its effect up, any other ended (wowsims talents_demonology.go)
+    demonic_sacrifice = {
+        requires = function(_, e)
+            return e.pet.up and e.demon ~= nil, "no demon"
+        end,
+        effect = function(W, e)
+            for _, id in ipairs(SACRIFICES) do
+                sacrificeOff(W, e, id)
+            end
+            sacrificeOn(W, e, DEMON[e.demon].sacrifice)
+            e.demon = nil
+        end,
+    },
 }
+local PET = { summon_imp = "summon", summon_voidwalker = "summon", summon_succubus = "summon" }
+PET.summon_incubus, PET.summon_felhunter, PET.demonic_sacrifice = "summon", "summon", "dismiss"
 
 local function content(name)
     local P = PACKS[name]
@@ -550,9 +633,15 @@ local function content(name)
 
     -- Level 60 against a level 60 mob in range, the pack's mana full and under the five-second rule. Neither side dies
     -- (hunter_world's reason: a kill ends the loop before the client sees it).
-    local function hooks(_, us)
+    -- The build's sacrificed demon's effect from the pull (wowsims sacrifices it before the fight).
+    local function hooks(W, us)
         us.health, us.healthMax = 1e9, 1e9
+        if P.sacrificed then
+            sacrificeOn(W, us, DEMON[P.sacrificed].sacrifice)
+        end
+        demonCasts(W, us)
     end
+    local D = DEMON[P.demon]
     C.WORLD = {
         level = 60,
         weapons = { { 40, 70, 2.0 } },
@@ -562,6 +651,10 @@ local function content(name)
         mobHealth = 1e9,
         distance = 25, -- a caster's range: no melee swings of ours
         script = hooks,
+        bags = { [SOUL_SHARD] = 32 },
+        -- the build's demon's mana; not out at the start: a summon brings it
+        pet = { pt = MANA, max = D.max, power = D.max, regen = D.regen, tick = 2, up = false },
+        stats = { [5] = SPIRIT }, -- UnitStat(5)'s Spirit, Life Tap's
     }
 
     -- No other power read (mana is secret in combat).
@@ -606,6 +699,8 @@ local function content(name)
             cast = castOf(key, H, up),
             refund = world.refundOf(H.Hekili.Class, key),
             outcomes = m.outcomes,
+            reagent = needsShard(key, up) and REAGENT or nil,
+            pet = PET[key],
         }
         if m.channel then
             p.channel = m.channel(H)
@@ -638,6 +733,9 @@ local function content(name)
                 local ids = C.IDS[key]
                 local function answer(W, e, power)
                     if m.requires and not m.requires(W, e, X, H) then
+                        return false, false
+                    end
+                    if needsShard(key, onEntity(e, X)) and W.items(e, SOUL_SHARD) < 1 then
                         return false, false
                     end
                     local cost = costOf(key, ids, H)
