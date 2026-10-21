@@ -1230,10 +1230,13 @@ end
 -- `last_tick` (an observed tick, else 0). Hekili's energy and focus padding, for every ticked pool: a pool whose
 -- continuous regen reaches an amount `dt` after the slice at `a` gets it the next tick after `a`, then `dt` on: late by
 -- at most one tick whatever the tick's phase (unknown for a secret pool: no tick seen). Allocates nothing.
+-- Central fix 29: a slice on a tick reads a phase of 0 or a hair under L through the clock's rounding; the latter
+-- padded about 1e-11 s, under the clock's own rounding, so the forecast at the answer read X a rounding error short and
+-- a `>=` recheck there failed. The pad is at least 1e-6 s (the tick after instead moved Feral and Balance's flicker up).
 local function tickReach( t, a, dt )
     local L = rawget( t, "tick_rate" )
     if not L or L <= 0 then return a + dt end
-    return a + ( L - ( ( a - ( rawget( t, "last_tick" ) or 0 ) ) % L ) ) + dt
+    return a + max( 1e-6, L - ( ( a - ( rawget( t, "last_tick" ) or 0 ) ) % L ) ) + dt
 end
 
 -- Resource Modeling!

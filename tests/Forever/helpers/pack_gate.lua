@@ -22,9 +22,9 @@ M.FLICKER = {
     ["Fury L24"] = { flicker = 3.4, retracted = 0.2 }, -- 3.31, 0.12
     ["Feral"] = { flicker = 2.2, retracted = 0 }, -- 2.12, 0 (re-measured on fix 22's truth resolve)
     ["Balance"] = { flicker = 2.6, retracted = 0 }, -- 2.51, 0 (re-measured on fix 22's truth resolve)
-    ["Assassination"] = { flicker = 0.1, retracted = 0 }, -- 0.10, 0
+    ["Assassination"] = { flicker = 0, retracted = 0 }, -- 0, 0 (fix 29: the threshold recheck reads the pool; was 0.10)
     ["Combat"] = { flicker = 0.3, retracted = 0 }, -- 0.28, 0
-    ["Subtlety"] = { flicker = 0.3, retracted = 0 }, -- 0.23, 0
+    ["Subtlety"] = { flicker = 0.2, retracted = 0 }, -- 0.18, 0 (fix 29; was 0.23)
     ["Survival"] = { flicker = 0.2, retracted = 0 }, -- 0.15, 0
     ["Marksmanship"] = { flicker = 0, retracted = 0 }, -- 0, 0
     ["Beast Mastery"] = { flicker = 0, retracted = 0 }, -- 0, 0

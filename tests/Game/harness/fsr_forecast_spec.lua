@@ -58,6 +58,26 @@ describe("the sim's five-second-rule forecast", function()
         assert.is_true(math.abs(S:TimeToResource(r, 23) - 23 / 22) < 1e-9)
     end)
 
+    -- Central fix 29: a recheck at time_to_X (a `>=` line's) read the pool a rounding error under X when the forecast's
+    -- slice sat on a tick: the tick phase, taken from GetTime's clock, came out a hair under a whole tick, so the reach
+    -- time padded nothing and the forecast at it read X minus the clock's rounding.
+    it("reads at least X at time_to_X for a ticked pool, whatever the clock's rounding", function()
+        r.fsr_until, r.active_regen, r.inactive_regen, r.tick_rate, r.last_tick = false, 10, 10, 0.1, 0
+        local X, under = 3 * 25, 0 -- a pooling line's `>=` threshold (a literal 75 is a spell ID to the boundary check)
+        for i = 1, 2000 do
+            -- the forecast starts on a tick (now a whole number of ticks after the last); a recheck as Core.lua runs
+            -- one: the time taken at a base delay, the pool read at base + step
+            S.now, S.offset, S.delay, r.actual = 0.1 * i, 0, 0.1 * (i % 7), 30 + 0.01 * (i % 97)
+            S.forecastResources("mana")
+            S.delay = S.delay + S:TimeToResource(r, X)
+            if r.current < X then
+                under = under + 1
+            end
+        end
+        S.delay = 0
+        assert.are.equal(0, under)
+    end)
+
     -- Central fix 26: the forecast's slices are reused between passes, so one past `fcount` is an older, longer pass's;
     -- reading it as the next slice answered an amount out of the horizon with that pass's time (in the past: ready).
     it("never reads a slice past the forecast's end as the next one", function()
