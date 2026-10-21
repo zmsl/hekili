@@ -85,6 +85,24 @@ describe("facts and polls", function()
         assert.are.same({ 5.5, nil }, { I.CostOf(3), VS.BasePower(fs.RAGE) })
     end)
 
+    it("prices a declared percent-of-base cost (spendBase) at any magnitude, scalar or function", function()
+        local h = fs.new(9)
+        local function charged() -- a cost that grows past the base with the stacks, read in the belief's context
+            return 0.4 * 3.5
+        end
+        local a, c = h.Class.abilities.spender_a, h.Class.abilities.spender_c
+        a.spend, a.declaredSpend, a.spendBase = charged, charged, true
+        c.spend, c.spendBase = 1.4, true
+        local def = fs.def(h)
+        def.resources[1].base = 200
+        I.Build(def, 1)
+        assert.are.same({ 280, 280 }, { I.CostOf(1), I.CostOf(3) }) -- floor(1.4 x 200), not 1.4 points
+        c.spend, c.spendBase = 0.5, nil
+        a.spend, a.declaredSpend, a.spendBase = 40, nil, nil
+        I.Build(def, 1)
+        assert.are.same({ 40, 100 }, { I.CostOf(1), I.CostOf(3) }) -- no flag: flat 40, and 0.5 of the base
+    end)
+
     it("learns the base after the talent walk, from the read with the largest fraction", function()
         local h = fs.new(9)
         local function scaled() -- a talent-scaled percent-of-base cost, read in the belief's context

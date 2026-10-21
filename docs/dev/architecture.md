@@ -140,6 +140,13 @@ harness sets the type on a world's mob (`entities.new{ creatureType }`, a conten
 request `mobType` through `tests/Forever/helpers/wowsims.lua` `creatureType`), and the client fake answers it
 (`ctl.creature[unit]`, default `"beast"`).
 
+**Percent-of-base costs.** A `spend` between 0 and 1 is a fraction of its pool's base power (the resource meta's
+`base`, or the belief's learned one; without either, of the maximum, as Hekili), floored, in both layers: the sim's
+`ns.SpendPoints` (`Engine/Sim/State.lua`, every site that prices a spend) and the belief's `I.BaseCostOf`
+(`Game/State/Families/Casts.lua`). Any other cost is points. An ability declaring `spendBase = true` has its `spend`,
+scalar or function, read as a fraction at any magnitude (a percent-of-base cost a stacking aura raises past 100% of
+base), priced `floor(c x base)` the same way; the base learning from out-of-combat cost reads counts its reads too.
+
 An ability's `known` must depend only on the spellbook, talents and gear, never on buffs or time, because the engine
 caches it for one prediction (`state:IsKnown`, wiped by `Hekili:ResetSpellCaches`). `state:IsDisabled` caches its
 prefix the same way: the ability and item options, the toggle assignment, `state.filter`, boss and the target counts

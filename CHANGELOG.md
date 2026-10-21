@@ -96,6 +96,8 @@
   energy) or decayed (rage) through the 30 s gap, instead of full, as the addon's estimate already carries them.
 
 ### Fixed
+- Costs: a class can declare a spell's mana cost as a share of base mana that a stacking effect raises past 100%
+  (`spendBase`); such a cost is priced from base mana, not read as a cost of one or two mana.
 - Rogue, Paladin and Shaman: the default priorities now load. They were registered under the wrong specialization ids
   for the WoW Forever client, so the addon showed nothing for these classes.
 - Rage: a white swing's rage is counted from the swing itself, as the game gives it (measured in game), not from the

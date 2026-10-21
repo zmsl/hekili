@@ -408,15 +408,21 @@ local function declaredCost(a)
     return type(c) == "number" and c or nil
 end
 
---- Ability a's declared cost, before any cost modifier (0 when it has none); a cost between 0 and 1 is that fraction
---- of its pool's base power, floored (I.basePow), else of its believed maximum, as Hekili's simulation prices it
---- (ns.FractionCost). Allocates nothing.
+-- Whether declared cost c of ability a is a fraction of base power: any c > 0 when the ability declares
+-- `spendBase = true`, else 0 < c < 1 (the simulation's ns.SpendPoints, Engine/Sim/State.lua). Allocates nothing.
+local function isFraction(a, c)
+    return c > 0 and (c < 1 or rawget(A.obj[a], "spendBase"))
+end
+
+--- Ability a's declared cost, before any cost modifier (0 when it has none); a fraction (isFraction: below 1, or any
+--- magnitude under `spendBase`) is of its pool's base power, floored (I.basePow), else of its believed maximum, as
+--- Hekili's simulation prices it (ns.SpendPoints). Allocates nothing.
 function I.BaseCostOf(a)
     local c, r = declaredCost(a), A.slot[a]
     if not c then
         return 0
     end
-    if c > 0 and c < 1 and r > 0 then
+    if r > 0 and isFraction(a, c) then
         local b = I.basePow[r] or 0
         c = b > 0 and floor(c * b + EPS) or c * I.res.max[r]
     end
@@ -449,7 +455,7 @@ function I.LearnBases()
                 local cost = A.readCost[a]
                 if A.slot[a] == r and cost > 0 then
                     local f = declaredCost(a)
-                    if f and f > bestF and f < 1 and I.CostOf(a) == I.BaseCostOf(a) then
+                    if f and f > bestF and isFraction(a, f) and I.CostOf(a) == I.BaseCostOf(a) then
                         bestF, bestCost = f, cost
                     end
                 end

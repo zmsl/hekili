@@ -137,8 +137,8 @@ local function inScope(m, a)
     return hit
 end
 
---- A declared cost of ability `a` after the modifiers in scope whose buff is up in the simulated state; a fraction of
---- the maximum (cost < 1) takes the same pct as the belief applies to it.
+--- A declared cost of ability `a` after the modifiers in scope whose buff is up in the simulated state; a fraction
+--- (ns.SpendPoints: below 1, or any magnitude under `spendBase`) takes the same pct as the belief applies to it.
 function M.Apply(cost, a)
     local list = mods.costMods
     if #list == 0 or type(cost) ~= "number" or cost <= 0 then

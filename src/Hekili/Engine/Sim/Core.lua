@@ -1995,7 +1995,7 @@ function Hekili.Update()
                     local cost = ability.spend
                     if type( cost ) == "function" then cost = cost() end
                     if type( cost ) ~= "number" then cost = 0 end
-                    if cost > 0 and cost < 1 and slot.resource_type then cost = ns.FractionCost( cost, state[ slot.resource_type ] ) end
+                    if slot.resource_type then cost = ns.SpendPoints( cost, state[ slot.resource_type ], ability ) end
                     slot.cost = cost
                     slot.busy = max( ability.gcd ~= "off" and gcdLength( action ) or 0, ability.cast or 0 )
 

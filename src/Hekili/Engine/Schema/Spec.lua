@@ -203,8 +203,9 @@ end
 --                                    `refundOnAvoid = true` (RegisterAbility below): the belief's only (Families/Now.lua,
 --                                    Obs.Avoided); the sim does not predict avoidance and never reads it.
 -- base = n (a number)               The pool's base power at the class's top level (wowsims's base stats): a cost
---                                    between 0 and 1 is that fraction of it, floored, as the client prices a
---                                    percent-of-base cost, in both layers (ns.FractionCost, Families/Casts.lua). The
+--                                    between 0 and 1 (or any cost of an ability declaring `spendBase = true`) is
+--                                    that fraction of it, floored, as the client prices a percent-of-base cost, in
+--                                    both layers (ns.SpendPoints, Families/Casts.lua). The
 --                                    belief learns the player's own from a plain out-of-combat cost read (login,
 --                                    level-up, spell changes); without `base` a fraction is of the maximum (Hekili's).
 local HekiliSpecMixin = {
@@ -796,14 +797,16 @@ local HekiliSpecMixin = {
         insert( self.hooks[ hook ], func )
     end,
 
-    -- Three content fields beside Hekili's own. `ladder = false`: the ability's usability answers are no rungs of the
+    -- Content fields beside Hekili's own. `ladder = false`: the ability's usability answers are no rungs of the
     -- belief's cost ladder (Game/State/Families/Resources.lua); without it a short answer is a rung only while its
     -- `usable` holds in the belief's `now` context (a finisher at 0 combo points pins no energy). `missable = true` or
     -- an aura key: a miss leaves that debuff off the target (trackMisses, above). `refundOnAvoid = true` (its resource
     -- meta's share) or a share 0-1: a dodged, parried or missed cast gives back that much of its cost (the belief's
     -- only, Game/State/Families/Now.lua; the sim does not predict avoidance). `onCrit = function() ... end`, beside
     -- `now`: what a critical hit of the cast gives, written with the same verbs when the target's row shows our cast's
-    -- own crit (Primal Fury's `gain( 5, "rage" )`); the belief's only, the sim does not predict crits.
+    -- own crit (Primal Fury's `gain( 5, "rage" )`); the belief's only, the sim does not predict crits. `spendBase = true`:
+    -- its `spend` (scalar or function) is a fraction of its pool's base power at any magnitude, floored, in both layers
+    -- (a percent-of-base cost a stacking aura raises past 100%); without it only a cost between 0 and 1 is a fraction.
     RegisterAbility = function( self, ability, data )
         -- A passive (a spell the spellbook knows, never cast): the belief tracks its known rank; the sim never sees it.
         if data.passive then

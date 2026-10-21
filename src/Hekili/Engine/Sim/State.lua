@@ -505,6 +505,14 @@ function ns.FractionCost( c, res )
     if b then return math.floor( c * b + 1e-6 ) end
     return c * res.modmax
 end
+
+--- The points declared cost `c` of resource state `res` costs `ability`: a fraction of base power (ns.FractionCost)
+--- at any magnitude when the ability declares `spendBase = true`, else when 0 < c < 1 (Hekili's reading), else `c`
+--- itself. The one rule in both layers (the belief's I.BaseCostOf, Game/State/Families/Casts.lua). Allocates nothing.
+function ns.SpendPoints( c, res, ability )
+    if c > 0 and ( c < 1 or ability and rawget( ability, "spendBase" ) ) then return ns.FractionCost( c, res ) end
+    return c
+end
 state.knownRank, state.swingBase, state.healthMax = VS.KnownRank, VS.SwingBase, VS.HealthMax
 
 -- Forever (gap 13): an on-next-swing strike's own range check answers in range at any distance (probe W PR7), so its
@@ -2207,9 +2215,7 @@ do
                 if c then return c end
 
                 c = ability.spend
-                if c and c > 0 and c < 1 then
-                    c = ns.FractionCost( c, t[ ability.spendType or class.primaryResource ] )
-                end
+                if c then c = ns.SpendPoints( c, t[ ability.spendType or class.primaryResource ], ability ) end
                 return c or 0
 
             elseif k == "crit_pct_current" or k == "crit_percent_current" then return ability and ability.critical or t.stat.crit
@@ -5122,9 +5128,7 @@ local mt_default_action = {
 
                 c = ability.spend
 
-                if c and c > 0 and c < 1 then
-                    c = ns.FractionCost( c, state[ ability.spendType or class.primaryResource ] )
-                end
+                if c then c = ns.SpendPoints( c, state[ ability.spendType or class.primaryResource ], ability ) end
 
                 return c or 0
             end
@@ -6644,9 +6648,7 @@ ns.spendResources = function( ability )
             resource = resource or "health"
         end
 
-        if cost > 0 and cost < 1 then
-            cost = ns.FractionCost( cost, state[ resource ] )
-        end
+        cost = ns.SpendPoints( cost, state[ resource ], action )
 
         -- a charged cost modifier's buff loses a stack when the declared cost is above 0, even at a discounted 0 (Engine/Schema/Races.lua)
         ns.costMods.Spend( action.baseSpend, ability )
@@ -7177,9 +7179,7 @@ ns.hasRequiredResources = function( ability )
             return true
         end
 
-        if spend > 0 and spend < 1 then
-            spend = ns.FractionCost( spend, state[ resource ] )
-        end
+        spend = ns.SpendPoints( spend, state[ resource ], action )
 
         if spend > 0 then
             return ( state[ resource ].current >= spend )
@@ -7243,9 +7243,7 @@ function state:TimeToReady( action, pool )
         spend = spend or 0
     end
 
-    if spend and resource and spend > 0 and spend < 1 then
-        spend = ns.FractionCost( spend, self[ resource ] )
-    end
+    if spend and resource then spend = ns.SpendPoints( spend, self[ resource ], ability ) end
 
     if not pool then
         z = ability.readyTime
@@ -7404,9 +7402,7 @@ function state:IsReadyNow( action )
             spend = a.ready
         end
 
-        if spend > 0 and spend < 1 then
-            spend = ns.FractionCost( spend, state[ resource ] )
-        end
+        spend = ns.SpendPoints( spend, state[ resource ], a )
 
         if spend > 0 then
             return state[ resource ].current >= spend
