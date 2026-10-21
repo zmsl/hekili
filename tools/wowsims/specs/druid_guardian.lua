@@ -43,6 +43,14 @@ return {
     map = {},
     focus = { lacerate = 2 }, -- the retired Guardian list's tier (P9.3)
     -- Before Primal Bite (25) Maul is the only rage sink: queued whenever affordable instead of at wowsims's 20, which
-    -- pools for the on-GCD strikes a level 10 bear lacks (ruling L18; silent at 60)
-    leveling = { "maul,use_off_gcd=1,if=!action.primal_bite.known", "bear_form,if=!buff.bear_form.up" },
+    -- pools for the on-GCD strikes a level 10 bear lacks (ruling L18; silent at 60). Before Lacerate (42), wowsims's
+    -- 13-rage filler between Primal Bites, the bear waits for Primal Bite (L40 9.6 s, L10 7.2 s on central fix 22):
+    -- Demoralizing Roar fills the GCD with 10 rage, Faerie Fire (Feral, free; learned at 30) below it, after a run of
+    -- avoided swings (both silent at 60: Lacerate is known).
+    leveling = {
+        "maul,use_off_gcd=1,if=!action.primal_bite.known",
+        "demoralizing_roar,if=!action.lacerate.known&(!action.primal_bite.known|cooldown.primal_bite.remains>gcd.max|rage.current<action.primal_bite.cost)",
+        "faerie_fire,if=!action.lacerate.known&(!action.primal_bite.known|cooldown.primal_bite.remains>gcd.max|rage.current<action.primal_bite.cost)",
+        "bear_form,if=!buff.bear_form.up",
+    },
 }
