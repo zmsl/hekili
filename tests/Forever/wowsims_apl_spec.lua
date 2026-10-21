@@ -610,6 +610,53 @@ describe("the wowsims APL translator", function()
         end
     )
 
+    it(
+        "rule 15's maintenance: the cast lines take the setting, the aura's other required reads read 'up or disabled'",
+        function()
+            local tgt = { type = "CurrentTarget" }
+            local on = { auraIsActive = { sourceUnit = tgt, auraId = { spellId = 400 } } }
+            local rem =
+                cmp("OpGt", { auraRemainingTime = { sourceUnit = tgt, auraId = { spellId = 400 } } }, const("2s"))
+            local rage = cmp("OpGt", { currentRage = {} }, const("10"))
+            local r = {
+                maintenance = { dot = "keep_dot" },
+                leveling = { "dot,if=!action.big_hit.known", "strike,if=rage.current>10&debuff.dot.up" },
+            }
+            local text, _, _, header = apl.translate({
+                priorityList = {
+                    cast(100, on),
+                    cast(200, AND(on, rage)),
+                    cast(200, NOT(on)), -- the aura's absence on another line: not a requirement, unchanged
+                    cast(100, rem),
+                    cast(400, NOT(on)), -- the cast line: the setting, not the rewrite
+                    cast(400, OR(rage, rem)),
+                    cast(400),
+                },
+            }, ctx(r))
+            assert.are.equal(
+                table.concat({
+                    "actions=strike,if=(!action.dot.known|debuff.dot.up|!settings.keep_dot)",
+                    "actions+=/big_hit,if=((!action.dot.known|debuff.dot.up|!settings.keep_dot)&rage.current>10)",
+                    "actions+=/big_hit,if=(!action.dot.known|!debuff.dot.up)",
+                    "actions+=/strike,if=(!action.dot.known|debuff.dot.remains>2|!settings.keep_dot)",
+                    "actions+=/dot,if=settings.keep_dot&!debuff.dot.up",
+                    "actions+=/dot,if=settings.keep_dot&(rage.current>10|debuff.dot.remains>2)",
+                    "actions+=/dot,if=settings.keep_dot",
+                    "actions+=/dot,if=settings.keep_dot&!action.big_hit.known",
+                    "actions+=/strike,if=rage.current>10&(debuff.dot.up|!settings.keep_dot)",
+                }, "\n"),
+                text
+            )
+            assert.are.same(
+                { "# Setting keep_dot (maintenance debuff: dot), default off in game, on in the harness." },
+                header
+            )
+            assert.has_error(function()
+                apl.translate({ priorityList = { cast(100) } }, ctx({ maintenance = { big_hit = "x" } }))
+            end, "maintenance: big_hit matched no line")
+        end
+    )
+
     it("takes the character's ability set: a shared racial is mapped and off the GCD", function()
         local set = require("Forever.helpers.engine").abilitySet("WARRIOR")
         local c = apl.context(set, {})

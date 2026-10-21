@@ -116,6 +116,14 @@
 --    one before it is cast (wowsims holds the rotation for it, so nothing else is recommended between); a later member
 --    re-reads its sequence's remaining terms, which wowsims reads once at the start, so a change between the casts can
 --    stop it; a cast of a member outside the sequence also opens its next; the members must be casts (else rule 2).
+-- 15. Maintenance debuffs: the recipe's `maintenance` ({ [action key] = setting key }) names a debuff (or self-buff)
+--    kept up for the raid, which open-world play skips. Every emitted line whose action is that key (any list, the
+--    recipe's leveling and extra lines included) is its cast line and gets `settings.<key>&` before its condition (the
+--    `requires` placement); every other line's required read of its aura (the aura key is the action key:
+--    `buff.`/`debuff.<key>.up`, `.remains>`/`>=`) reads "up or disabled", `(<term>|!settings.<key>)` (inside an `or`,
+--    `|!settings.<key>` joins it); an absence read (`!...up`, `.remains<`) is left as is. The class registers the
+--    setting with `default = false` (in game) and `sim = true` (the harness: wowsims's raid boss); the header lists it.
+--    A key no line casts is an error.
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
 -- The engine facts rule 6 rests on (tools/check_pack_levels.lua checks every pack for it):
@@ -256,7 +264,7 @@ end
 
 --- The translation context of an ability set (`abilities`, `auras`, `talents` as the engine registers them:
 --- tests/Forever/helpers/engine.lua abilitySet), recipe `r` (map, focus, executePhase, leveling, levelingFirst, extra,
---- settings, exclusive, requires, auras) and the spec's exported log text `log` (rule 13; nil: the automatic actions are unsupported).
+--- settings, exclusive, requires, maintenance, auras) and the spec's exported log text `log` (rule 13; nil: the automatic actions are unsupported).
 function M.context(set, r, log)
     local c = {
         autocast = log and M.autocasts(log),
@@ -280,7 +288,14 @@ function M.context(set, r, log)
         settings = r.settings or {},
         exclusive = r.exclusive or {},
         requires = r.requires or {},
+        maintenance = {}, -- rule 15: { { action key, setting key } }, by action key
     }
+    for key, setting in pairs(r.maintenance or {}) do
+        c.maintenance[#c.maintenance + 1] = { key, setting }
+    end
+    table.sort(c.maintenance, function(x, y)
+        return x[1] < y[1]
+    end)
     local keys = {}
     for key, a in pairs(set.abilities) do
         if type(key) == "string" and type(a) == "table" and a.key == key then
@@ -768,6 +783,48 @@ local function required(c, key, cond)
     return cond and (t .. "&" .. ((grouped(cond) or not cond:find("|", 1, true)) and cond or "(" .. cond .. ")")) or t
 end
 
+-- Rule 15's maintenance of line body `body` (an emitted line, its condition after `,if=`); marks each key cast in `cast`.
+local function maintained(c, body, cast)
+    local head, cond = body:match("^(.-),if=(.*)$")
+    head = head or body
+    local action = body:match("^[%w_]+")
+    for _, m in ipairs(c.maintenance) do
+        local key, s = m[1], "settings." .. m[2]
+        if action == key then
+            cast[key] = true
+            cond = cond
+                    and (s .. "&" .. ((grouped(cond) or not cond:find("|", 1, true)) and cond or "(" .. cond .. ")"))
+                or s
+        elseif cond then
+            local pat = "()(!?)%f[%w_](d?e?buff%." .. key .. "%.([%w_]+)([<>=]*)([%w_.]*))()"
+            cond = cond:gsub(pat, function(i, neg, term, field, op, rhs, j)
+                local kind = term:match("^%a+")
+                local wanted = neg == ""
+                    and (kind == "buff" or kind == "debuff")
+                    and (
+                        (field == "up" and op == "") or (field == "remains" and (op == ">" or op == ">=") and rhs ~= "")
+                    )
+                if not wanted then
+                    return nil
+                end
+                if cond:sub(j, j):find("[%+%-%*/%%]") then
+                    error(("maintenance: cannot rewrite %s before arithmetic"):format(term), 0)
+                end
+                local p, n = cond:sub(i - 1, i - 1), cond:sub(j, j)
+                if
+                    (p == "|" or p == "(" or p == "")
+                    and (n == "|" or n == ")" or n == "")
+                    and (p == "|" or n == "|")
+                then
+                    return term .. "|!" .. s
+                end
+                return "(" .. term .. "|!" .. s .. ")"
+            end)
+        end
+    end
+    return cond and (head .. ",if=" .. cond) or head
+end
+
 -- Rule 13: the keys of the cooldowns wowsims's automatic action `kind` cast in the log (`c.autocast`), in first-use
 -- order, each once; an ID nothing maps is noted.
 local function automatic(c, kind, v)
@@ -1122,7 +1179,7 @@ function M.translate(rotation, c)
             end
         end
     until not more
-    local text = {}
+    local text, cast = {}, {}
     for _, l in ipairs(lists) do
         local head = l[1] == "default" and "actions" or ("actions." .. l[1])
         local n = 0
@@ -1132,7 +1189,7 @@ function M.translate(rotation, c)
                 omitted[#omitted + 1] = ("%s: empty group %s"):format(l[1], called)
             else
                 n = n + 1
-                text[#text + 1] = head .. (n == 1 and "=" or "+=/") .. body
+                text[#text + 1] = head .. (n == 1 and "=" or "+=/") .. maintained(c, body, cast)
             end
         end
     end
@@ -1144,7 +1201,17 @@ function M.translate(rotation, c)
             read[#read + 1] = t
         end
     end
-    return text, omitted, read
+    local header = {} -- rule 15's settings
+    for _, m in ipairs(c.maintenance) do
+        if not cast[m[1]] then
+            error(("maintenance: %s matched no line"):format(m[1]), 0)
+        end
+        header[#header + 1] = ("# Setting %s (maintenance debuff: %s), default off in game, on in the harness."):format(
+            m[2],
+            m[1]
+        )
+    end
+    return text, omitted, read, header
 end
 
 --- Writes spec `spec`'s pack: src/Hekili_<Class>/APLs/<recipe.pack>.simc from the checked-in request (`ex`:
@@ -1161,7 +1228,7 @@ function M.write(spec, ex)
     if lf then
         lf:close()
     end
-    local text, omitted, toggles = M.translate(req.raid.parties[1].players[1].rotation, M.context(set, r, log))
+    local text, omitted, toggles, header = M.translate(req.raid.parties[1].players[1].rotation, M.context(set, r, log))
     local Class = r.class:sub(1, 1) .. r.class:sub(2):lower()
     local out = {
         ("# %s: the wowsims/forever default APL for %s (%s), translated to this addon's keys."):format(
@@ -1177,6 +1244,9 @@ function M.write(spec, ex)
     }
     for _, t in ipairs(toggles) do
         out[#out + 1] = ("# Setting %s (%s), default %s."):format(t[1], t[3], tostring(t[2]))
+    end
+    for _, h in ipairs(header) do
+        out[#out + 1] = h
     end
     for _, o in ipairs(omitted) do
         out[#out + 1] = "# Omitted: " .. o
