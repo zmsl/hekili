@@ -231,6 +231,23 @@ clock on it.
 **In game (user):** a Hunter with a pet. The Hunter brief §7.
 **Deps:** T1, T6, T10, T11 (Marksmanship can ship without T11 as "shots without weaving").
 
+## Days 6-7 after the wowsims packs plan (2026-10-20; supersedes the priority content below)
+
+Every new class pack's priorities are its wowsims.com packs, made as the wowsims packs plan's Tasks 12-14 make them
+(`docs/superpowers/plans/2026-10-19-wowsims-packs.md`, the per-spec procedure P1-P10; guide
+`docs/dev/wowsims-packs.md`): a recipe per spec, `"<Spec> (wowsims.com)"` as the spec's `package`, the replay floor
+and the level brackets as its gate, beside the loop world's solo line. The **Content:** lines of Tasks 14-17 below
+were written for hand-built lists; read them as the kit work (abilities, auras, procs, costs) the translated packs
+need, not as priority lines.
+- Mage (Task 14): wowsims/forever at the pin (d33930d0) has `ui/specs/mage/dps/apls/arcane.apl.json` (the Arcane
+  build), `deepFire.apl.json` (the Fire build) and `ffb.apl.json` (Frostfire Bolt, on a Fire-dominant build:
+  `-2355000013011503-00550003310003002`). So "Arcane (wowsims.com)" and "Fire (wowsims.com)" (FFB a second Fire pack
+  or a switch: decide at the task); Frost has no wowsims APL. This plan allowed a hand-built list only there; the
+  user's later rule ("all priorities are wowsims-built by the end", 2026-10-20) says none, so Frost stays
+  `unsupported` until the user decides.
+- Warlock (Task 15), Shadow Priest (Task 16) and Elemental Shaman (Task 17): no wowsims APL at the pin. They wait
+  for one (move the pin when wowsims/forever adds it) or a user decision; no hand-built lists.
+
 ## Day 6: channels, Mage
 
 ### Task 13: channels (C8) [S]
