@@ -331,6 +331,23 @@ describe("resources", function()
             assert.are.equal(0, VS.SwingPending(1))
         end)
 
+        it("keeps a swing pending past an above-floor answer that sets no rung (not usable, a second cost)", function()
+            local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
+            R.est0[1], R.lo0[1], R.hi0[1] = 6, 5, 30 -- spender_a's 10 is above the floor
+            obs(Obs.Swing, 10, 1, 2.6, 4)
+            obs(Obs.Usable, 10.1, A, 0, 0) -- not usable (another requirement): no rung
+            I.Fold(10.1, false)
+            assert.are.equal(10, VS.SwingPending(1))
+            I.ab.multiCost[A] = true -- a second power cost makes the answer ambiguous
+            obs(Obs.Usable, 10.2, A, 1, 0)
+            I.Fold(10.2, false)
+            assert.are.equal(10, VS.SwingPending(1))
+            I.ab.multiCost[A] = false
+            obs(Obs.Usable, 10.3, A, 1, 0)
+            I.Fold(10.3, false)
+            assert.are.equal(0, VS.SwingPending(1))
+        end)
+
         it("ends a swing pending one landing lag after it with no credit (an avoided swing)", function()
             local R, A = I.res, I.ab.bySpell[fs.SPENDER_A]
             R.est0[1], R.lo0[1], R.hi0[1] = 22, 20, 30
@@ -342,6 +359,20 @@ describe("resources", function()
             assert.are.equal(10, VS.SwingPending(1))
             I.Settle(10 + lag + 0.01)
             assert.are.equal(0, VS.SwingPending(1))
+        end)
+
+        it("caps the no-credit end at 1 s however wide the learned landing window grows", function()
+            local R, spr = I.res, I.Log.spr[1]
+            R.est0[1], R.lo0[1], R.hi0[1] = 22, 20, 30
+            I.Log.spr[1] = 0.4 -- learn()'s widest spread: a 1.67 s window
+            obs(Obs.Swing, 10, 1, 2.6, 4)
+            I.Fold(10, false)
+            I.Settle(10.99)
+            assert.are.equal(10, VS.SwingPending(1))
+            I.Settle(11.01)
+            local pending = VS.SwingPending(1)
+            I.Log.spr[1] = spr
+            assert.are.equal(0, pending)
         end)
 
         it("never believes more than the maximum, however many swings land", function()

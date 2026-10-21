@@ -191,7 +191,8 @@ local usable, ansT, shortCost, shortT, shortGain, shortEst = {}, {}, {}, {}, {},
 local swE, swL, swT, swTop, swSp = { 0, 0 }, { 0, 0 }, { -1, -1 }, { math.huge, math.huge }, { 0, 0 }
 -- Per hand: the latest PLAYER_SWING whose rage the floor does not hold yet (0: none; VS.SwingPending).
 local pendT = { 0, 0 }
-local heardT = 0 -- the latest usability answer's time whose cost was above its slot's floor
+local heardT = 0 -- the latest usability answer's time that set a rung above its slot's floor
+local LAND_CAP = 1.0 -- the longest a swing stays pending with no credit (s; VS.SwingPending)
 -- By ability index: its ladder precondition (C9): false for `ladder = false` (its answers are no rungs), its `usable`
 -- function (a short answer while it fails names another requirement, such as a finisher's combo points), or true.
 local pre = {}
@@ -1045,11 +1046,12 @@ I.On(Obs.Usable, function(o, t, lag)
     local was, wasT = usable[a], ansT[a]
     usable[a], ansT[a] = now, o.t
     local c = r ~= 0 and I.CostOf(a) or 0
-    if r ~= 0 and c > 0 and c > R.lo0[r] then
-        heardT = o.t -- only a cost above the floor can show a pending swing's gain (an answer below it proves nothing)
+    local rung = r ~= 0 and now ~= NOT and not R.readable[r] and not I.ab.multiCost[a] and pre[a]
+    if rung and c > 0 and c > R.lo0[r] then
+        heardT = o.t -- only a rung above the floor can show a pending swing's gain (an answer below it proves nothing)
     end
     local explained = I.CreditVerdict and judge(a, now, t, r, c, was, wasT)
-    if r == 0 or now == NOT or R.readable[r] or I.ab.multiCost[a] or not pre[a] then
+    if not rung then
         return -- a second power cost (Overpower's combo points) makes a short answer ambiguous: no rung
     end
     if c <= 0 then
@@ -1276,7 +1278,10 @@ end)
 --- a slot read plain. Allocates nothing.
 function VS.SwingPending(hand)
     local p = pendT[hand]
-    if p == 0 or heardT > p + I.Log.ORACLE_MIN - 1e-6 or I.clock > p + I.Log.LandWindow(hand) then
+    local w = I.Log.LandWindow(hand)
+    -- drift guard: Rows' learn() can widen the window to ~2.7 s main / 3.2 s off (median capped, 3 x 0.4 spread)
+    w = w < LAND_CAP and w or LAND_CAP
+    if p == 0 or heardT > p + I.Log.ORACLE_MIN - 1e-6 or I.clock > p + w then
         return 0 -- shown, or no credit one landing lag on: avoided
     end
     for r = 1, R.n do
