@@ -28,6 +28,8 @@ local Hekili = _G[addon]
 -- 7 (2026-10-2x): kit:RetirePacks (wowsims packs plan, Task 1).
 -- 8 (2026-10-20): the ability field `refundOnAvoid` and a resource meta's number `refundOnAvoid` (central fix 7): an
 -- older core's RegisterResource setfenv's every meta value, and a number raises there.
+--   Since then, without a bump: the ability field `spendBase` (central fix 22); an older core ignores the key and
+--   prices such a cost at or above 1 as points, silently.
 local CONTENT_API = 8
 
 local done, notice = false, nil
