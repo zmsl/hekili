@@ -522,8 +522,8 @@ Retribution, Paladin Protection and Survival idles re-measured in the final revi
 
 | Pack | Replay floor | Measured (decisions) | Limit (LIVE60 constant) | Worst idle (measured) | Ready \|b\| median / p90 | Ready real (median, count) | Never shown | Ready floor |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Arms (wowsims.com) | 0.91 | 0.910 (67) | 11.2 (11.2) | L10 9.0, L40 11.2, L60 9.2 | 0.000 / 0.200 | 0.800, 6 | 6 | 0.80, 6 |
-| Fury (wowsims.com) | 0.93 | 0.933 (60) | 6.8 (6.8); 8.6 below 60 (FURY_LIVE_LEVELING) | L10 7.4, L40 8.6, L60 6.8 | 0.190 / 1.490 | 0.480, 32 | 11 | 0.48, 32 |
+| Arms (wowsims.com) | 0.91 | 0.910 (67) | 9.2 (9.2) | L10 5.6, L40 5.6, L60 9.2 | 0.000 / 0.200 | 0.800, 6 | 6 | 0.80, 6 |
+| Fury (wowsims.com) | 0.93 | 0.933 (60) | 6.8 (6.8); 7.6 below 60 (FURY_LIVE_LEVELING) | L10 7.6, L40 2.4, L60 6.8 | 0.190 / 1.490 | 0.480, 32 | 11 | 0.48, 32 |
 | Protection (wowsims.com), Warrior | 0.97 | 0.979 (94) | 6 (5.4) | L10 5.6, L40 5.4, L60 5.4 | 0.000 / 0.030 | 0.500, 5 | 2 | 0.50, 5 |
 | Feral (wowsims.com) | 0.95 | 0.955 (88) | 6 (4.2) | L20 4.0, L40 3.8, L60 3.8 | 0.000 / 0.160 | 0.260, 4 | 4 | 0.26, 4 |
 | Guardian (wowsims.com) | 0.80 | 0.808 (78) | 10.0 (10.0) | L10 10.0, L40 9.6, L60 8.4 | 0.440 / 2.500 | 0.540, 40 | 12 | 0.54, 40 |
@@ -546,7 +546,7 @@ Retribution, Paladin Protection and Survival idles re-measured in the final revi
 
 A LIVE60 constant above today's L60 measurement is an earlier measurement the spec keeps (Combat 4.8 vs 4.0,
 Retribution 8.4 vs 2.8 by ruling P6, Paladin Protection 17.8 vs 11.8 from the untanked fight); limits are not lowered
-in this task. Fury's 8.6 s below 60, Arms's 11.2 and Guardian's 10.0 are leveling measurements above the L60 one
+in this task. Fury's 7.6 s below 60 and Guardian's 10.0 are leveling measurements above the L60 one
 (docs/dev/wowsims-packs.md's recorded exceptions). LIVE60s above
 6 s are wowsims's own play: Arms pools rage for Heroic Strike, Guardian waits on rage, Retribution and
 Marksmanship spend themselves out of mana as wowsims's own fights do (ruling P6), Paladin Protection waits on mana

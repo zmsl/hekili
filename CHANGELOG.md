@@ -35,6 +35,7 @@
 - Shaman: Fire Nova is highlighted only on Clearcasting, and the totems are no longer highlighted.
 - Pre-pull suggestions now guard against recasting: each shows whenever its purpose is unmet (its buff or debuff down, its totem down, its cooldown ready) and hides while it is met. The once-per-episode schedule and `prepull_at` are gone. Arms's Pre-pull: Stance and both Arms's and Fury's Pre-pull: Move no longer repeat between pulls; Charge still shows whenever it is usable, by design.
 - Paladin: Retribution's pre-pull suggests one starter seal, Seal of the Crusader, and no longer Seal of Command before it.
+- Warrior: Arms and Fury fill the rotation with Hamstring while leveling (at level 40, before Mortal Strike or Bloodthirst) instead of standing idle for up to 11 seconds.
 
 ### Fixed
 - A priority regenerated on the same day no longer shows as reverted on login.
