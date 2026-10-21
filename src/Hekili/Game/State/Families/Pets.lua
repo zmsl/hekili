@@ -36,12 +36,15 @@ I.OnBuild(function(def, now)
     end
 end)
 
--- Pet (a: the unit exists 1/0; b: it is dead 1/0; c: its power, -1 a secret read) at t.
+-- Pet (a: the unit exists 1/0, -1 a power-only change; b: it is dead 1/0; c: its power, -1 a secret read) at t.
 I.On(Obs.Pet, function(o, t)
-    exists, dead = o.a == 1, o.b == 1
     if o.c >= 0 then
         power = o.c
     end
+    if o.a < 0 then
+        return
+    end
+    exists, dead = o.a == 1, o.b == 1
     I.Sample(rec, "observed", (exists and not dead) and 1 or 0, t, Obs.Pet)
 end)
 
@@ -112,7 +115,7 @@ end
 
 --- The pet's power as last read plain (its own power type, UnitPower("pet")), 0 with no pet or before a read.
 --- shortcut: no pet regen or spend model; UnitPower("pet") is unprobed with a pet out (SecretWhenUnitPowerRestricted
---- in the API docs; plain 0 with none, probe W PR12): model it if the Warlock checkpoint finds it secret.
+--- in the API docs; plain 0 with none, probe W PR12): model it if an in-game check finds it secret.
 function VS.PetPower()
     return power
 end

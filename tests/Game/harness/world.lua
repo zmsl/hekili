@@ -229,6 +229,8 @@ function M.new(seed)
                 chanEnds = chanEnds,
             })
             e.lastHit, e.pressing = nil, p
+            -- shortcut: a queued strike (onNextSwing) is checked for its reagent but never pays it; pay it at its swing
+            -- (W.queueStrike) when a content queues one with a reagent
             if p.reagent then -- paid when the cast lands
                 W.item(e, p.reagent[1], -(p.reagent[2] or 1))
             end

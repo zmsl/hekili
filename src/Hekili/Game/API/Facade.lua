@@ -239,6 +239,10 @@ kept(
             local raw = realUnitPower and realUnitPower(unit, powerType) -- secret: tested next
             if issecretvalue(raw) or type(raw) ~= "number" then
                 modelled = true
+                local own = realUnitPowerType and realUnitPowerType("pet") -- secret: tested next
+                if powerType ~= nil and not issecretvalue(own) and type(own) == "number" and own ~= powerType then
+                    return 0 -- another type than the pet's, as the plain read answers
+                end
                 return VS.PetPower()
             end
             return raw

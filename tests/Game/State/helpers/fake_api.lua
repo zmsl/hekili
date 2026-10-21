@@ -142,11 +142,13 @@ function M.new()
         return ctl.inRange[unit] == true
     end
     function api.UnitPower(unit, pt)
-        if unit == "pet" then -- no pet, or another type than the pet's: plain 0 (probe W PR12, a Warrior with no pet)
-            if ctl.exists.pet ~= true or (pt ~= nil and pt ~= ctl.petPowerType) then
+        if unit == "pet" then -- no pet: plain 0 (probe W PR12, a character with no pet); a secret pet: every type secret
+            if ctl.exists.pet ~= true then
                 return 0
+            elseif ctl.petPower == SECRET then
+                return SECRET
             end
-            return ctl.petPower
+            return (pt == nil or pt == ctl.petPowerType) and ctl.petPower or 0 -- another type than the pet's: 0
         end
         local v = ctl.power[pt]
         if v == nil then
@@ -401,7 +403,10 @@ function M.new()
     function api.UnitEffectiveLevel(u)
         return api.UnitLevel(u)
     end
-    function api.UnitPowerType()
+    function api.UnitPowerType(unit)
+        if unit == "pet" then
+            return ctl.petPowerType
+        end
         return ctl.powerType[1], ctl.powerType[2]
     end
     function api.UnitAffectingCombat()

@@ -49,6 +49,7 @@ describe("the pets family", function()
             "UnitExists",
             "UnitIsDead",
             "UnitPower",
+            "UnitPowerType",
             "CreateFrame",
             "issecretvalue",
         }) do
@@ -57,6 +58,7 @@ describe("the pets family", function()
         _G.GetTime, _G.UnitGUID, _G.CreateFrame, _G.issecretvalue =
             api.GetTime, api.UnitGUID, api.CreateFrame, api.issecretvalue
         _G.UnitExists, _G.UnitIsDead, _G.UnitPower = api.UnitExists, api.UnitIsDead, api.UnitPower
+        _G.UnitPowerType = api.UnitPowerType
         saved.debugprofilestop = rawget(_G, "debugprofilestop") or false
         _G.debugprofilestop = function()
             return 0
@@ -166,6 +168,21 @@ describe("the pets family", function()
         assert.are.equal("observed", select(4, VS.Pet(20.3)).basis)
     end)
 
+    it("keeps our dismissal's model through a power-only change; an existence observation then answers", function()
+        ctl.exists.pet, ctl.petPower = true, 200
+        start()
+        cast(DISMISS, 20)
+        ctl.petPower = 180 -- a mana tick while the client still lists the pet
+        ctl.now = 20.2
+        VS.Drain(20.2) -- the poll logs the power change
+        assert.are.equal(180, VS.PetPower())
+        assert.are.same({ false, false, true }, pet(20.3)) -- still the dismissal's model
+        ctl.exists.pet = false
+        ctl.now = 20.4
+        VS.Drain(20.4) -- the poll logs the pet's departure
+        assert.are.same({ false, false, false }, pet(20.5))
+    end)
+
     it("frees a dismissed guardian's slots; the pet unit is untouched", function()
         start()
         cast(GUARD, 10)
@@ -194,6 +211,7 @@ describe("the pets family", function()
         local v = ns.Facade.UnitPower("pet", 0)
         assert.is_false(api.issecretvalue(v))
         assert.are.equal(300, v) -- the belief's, never the secret
+        assert.are.equal(0, ns.Facade.UnitPower("pet", 3)) -- not the pet's power type: 0, as the plain read
         assert.are.equal(0, ns.Facade.UnitPower("target", 0)) -- any other unit but the player: 0, as before
     end)
 

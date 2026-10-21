@@ -29,8 +29,10 @@ local function read(api, t, event)
     end
     if event then
         Stage(Obs.Pet, t, a, b, c)
-    elseif a ~= lastA or b ~= lastB or c ~= lastC then
+    elseif a ~= lastA or b ~= lastB then
         Direct(Obs.Pet, t, a, b, c)
+    elseif c ~= lastC then -- the power alone (a = -1): no news of the unit, so a summon's or dismissal's model stands
+        Direct(Obs.Pet, t, -1, b, c)
     else
         return
     end
