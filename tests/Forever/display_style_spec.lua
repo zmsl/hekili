@@ -875,10 +875,17 @@ describe("the timeline display style", function()
             collectgarbage("collect")
             collectgarbage("stop")
             local status = H.Hekili.Engine.Output.status
+            local function tiered(s) -- two tiered records and a focus=0 one: roles() runs inside the window
+                s[2].focus, s[4].focus, s[5].focus = 2, 1, 0
+            end
+            tlPublish(H, focus or nil, tiered) -- warm: the edit's first run
             local before = collectgarbage("count")
             for n = 1, 1000 do
                 if n % 250 == 0 then
                     status.combat = not status.combat -- the ruler's alpha switches on a flip
+                end
+                if n % 100 == 50 then
+                    tlPublish(H, focus or nil, tiered)
                 end
                 H.ctl.now = H.ctl.now + 0.01
                 f(d, 0.01)

@@ -534,6 +534,10 @@ end
 -- the now circle (else empty); one focus per display (user rule 2026-10-21): the next box takes the first record other
 -- than it, flagged or not, and the lane every other record in order. nowFallback "press" keeps the earlier rule:
 -- record 1 never counts, a focus record takes the now circle and record 1 the next box, else cell c draws record c.
+-- The one-focus reading (user rule 2026-10-21): true, the best tier wins (a tie: the soonest); false, the queue's first
+-- flagged record within the horizon, whatever its tier. Flip here only (tests/Game/harness/loop.lua mirrors it).
+local FOCUS_BEST_TIER = true
+
 local function flagged( r )
     local n = r.focus
     return type( n ) == "number" and n >= 1
@@ -545,7 +549,7 @@ local function roles( T, tl, recs, count, now )
         local h, best = mmin( tl.focusHorizon, tl.horizon ), 0
         for i = press and 2 or 1, count do
             local r = recs[ i ]
-            if flagged( r ) and ( best == 0 or r.focus < best ) then -- strict: a tie keeps the sooner record
+            if flagged( r ) and ( best == 0 or FOCUS_BEST_TIER and r.focus < best ) then -- strict: a tie keeps the sooner
                 local t = r.exact_time and r.exact_time - now
                 if T.pinned and t then t = r.time and r.time - T.pressTime end
                 if i == 1 or t and t <= h then -- record 1 is the press: always within the horizon
@@ -574,7 +578,9 @@ local function roles( T, tl, recs, count, now )
         return
     end
     local n = 0
-    if count > 0 then n = f == 1 and ( count > 1 and 2 or 0 ) or 1 end -- one focus: other flagged records keep their place
+    -- the next box: record 2 when record 1 is the focus (none if it is the only one), else record 1 (none if no records);
+    -- one focus, so other flagged records keep their place
+    if count > 0 then n = f == 1 and ( count > 1 and 2 or 0 ) or 1 end
     map[ 1 ], map[ 2 ] = f, n
     local c = 3
     for i = 1, SLOTS do

@@ -357,18 +357,18 @@ display whose profile already names the style binds it.
 | `Options(id, conf)` | building the options | the style's tabs, new tables each call; they land in one group keyed by `name`, so their options resolve to `displays[id].<name>.<option>` (keys flat and unique within the style) |
 
 **Timeline zones.** On each publish the press record is record 1. With `focusEnabled` (default on), a record is
-flagged when `focus` is a tier (N >= 1), and the focus record is, among the flagged records due within
-`focusHorizon` seconds (default 10, never past `horizon`; record 1 always counts), the lowest tier number and, within
-a tier, the soonest. One focus per display: it alone takes the now circle: record 1 with the press look, its countdown, extend sweep and
-the `focusPendingColor` ring while it still waits (the GCD, a cast, its cooldown) and the gold `focusColor` ring (or
-`focusReadyStyle`'s glow or full-colour Gold Ring) from the frame its `exact_time` arrives (within 0.05 s, with no
-publish needed), or a later record with a countdown, no keybind and the `focusPendingColor` ring;
-with no focus record the now circle is empty. The next box draws the first record other than the focus record, and
-the lane every other record at its time: a flagged record that is not the focus keeps its place and look.
-`nowFallback = "press"` keeps the earlier rule: record 1 never counts as focus, a focus record (by the same tier rule) takes the now circle and
-record 1 the next box, else now, next and lane draw records 1, 2 and 3... Every "key to press" affordance (keybind,
-glow, flash, range, cast highlight, targets, alternatives, pause overlay, extend sweep) sits on the cell drawing
-record 1. With `oocPinned`
+flagged when `focus` is a tier (N >= 1), and the focus record is, among the flagged records due within `focusHorizon`
+seconds (default 10, never past `horizon`; record 1 always counts), the lowest tier number and, within a tier, the
+soonest (`FOCUS_BEST_TIER` in Timeline.lua). One focus per display, and it alone takes the now circle: record 1 with
+the press look, its countdown, extend sweep and the `focusPendingColor` ring while it still waits (the GCD, a cast,
+its cooldown) and the gold `focusColor` ring (or `focusReadyStyle`'s glow or full-colour Gold Ring) from the frame its
+`exact_time` arrives (within 0.05 s, with no publish needed), or a later record with a countdown, no keybind and the
+`focusPendingColor` ring; with no focus record the now circle is empty. The next box draws the first record other than
+the focus record, and the lane every other record at its time: a flagged record that is not the focus keeps its place
+and look. `nowFallback = "press"` keeps the earlier rule: record 1 never counts as focus, a focus record (by the same
+tier rule) takes the now circle and record 1 the next box, else now, next and lane draw records 1, 2 and 3... Every
+"key to press" affordance (keybind, glow, flash, range, cast highlight, targets, alternatives, pause overlay, extend
+sweep) sits on the cell drawing record 1. With `oocPinned`
 (default on) and out of combat, lane positions, countdowns and the focus test use `rec.time - recs[1].time` instead
 of the clock, so the display holds still between updates; the lane never draws left of its first mark. With `oocTimers` off
 (the default) and out of combat, the now and next cells show no cooldown sweep and no zone shows an ETA.

@@ -81,6 +81,8 @@ reused record is cleared. Additive. Classic ignores it.
   (`focusPendingColor`, muted white), a countdown and no keybind. Next takes the first record that is
   neither the focus record nor flagged. The lane takes the rest, other flagged records included.
   `nowFallback = "press"` keeps the original rule.
+- *2026-10-21, user rule:* superseded by one focus per display (docs/dev/architecture.md, Timeline zones): the best
+  tier wins, then the soonest, and every other flagged record keeps its place, the Next box included.
 
 **Ruler styles.** `rulerStyle` ∈ { `ruler` (today: baseline + a tick a second, taller every
 `majorEvery`), `dots` (one small square per second, no baseline), `lines` (short vertical per second, no

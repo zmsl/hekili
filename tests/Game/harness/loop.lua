@@ -80,8 +80,8 @@ local function feed(H, obs, t, base, sink)
 end
 
 -- The first `n` entries of an instance's Primary queue into `q` (names, waits, costs in power `res`, else 0) and its
--- focus entry into slot flicker.FOCUS (the first record with a focus tier within the Timeline's 10 s horizon); returns
--- how many.
+-- focus entry into slot flicker.FOCUS (the display's focus: the best tier within the Timeline's 10 s horizon, then the
+-- soonest); returns how many.
 local function queue(H, q, n, res)
     local out = H.Hekili.Engine.Output.Primary
     local k = math.min(n, out.count)
@@ -94,11 +94,15 @@ local function queue(H, q, n, res)
     end
     local F = flicker.FOCUS
     q.name[F], q.time[F], q.cost[F] = false, 0, 0
+    local best -- the display's rule (Timeline.lua FOCUS_BEST_TIER): the best tier, then the soonest; focus=0 is no tier
     for i = 1, out.count do
         local r = out.recs[i]
-        if r.focus and (r.time or 0) <= 10 then
+        if type(r.focus) == "number" and r.focus >= 1 and (best == nil or r.focus < best) and (r.time or 0) <= 10 then
             q.name[F], q.time[F], q.cost[F] = r.actionName, r.time or 0, r.resource_type == res and r.cost or 0
-            break
+            best = r.focus
+            if best == 1 then
+                break
+            end
         end
     end
     return k
