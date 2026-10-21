@@ -70,7 +70,7 @@ AC (the swing-scale window, `Families/Resources.lua` SWING_STEPS); AD (fix 16: p
 `strictSequence`); fix 18 (the Arms/Fury leveling Sunder filler's stack guard); the precombat-group `prepull_at` loss
 (final review fix 5: a group the prepull calls gives its casts the caller's `prepull_at`, rule 1; Arms's and Fury's
 Pre-pull: Move and Arms's Pre-pull: Stance no longer show on every out-of-combat refresh).
-AK revisited (fix 21: a pending swing ends only on an answer above the floor, its credit or one landing lag; Fury L24
-agreement 0.893 -> 0.908, unmatched cost 1.8 -> 1.2 per 100, flicker 4.35 -> 3.31/min, Heroic Strike snap-backs 4.77
--> 0.97/min in the research probe; Arms and every replay unchanged).
+AK revisited (fix 21: a pending swing ends only on a rung above the floor, its credit or one landing lag, at most 1 s;
+Fury L24 agreement 0.893 -> 0.908, unmatched cost 1.8 -> 1.2 per 100, flicker 4.35 -> 3.31/min, Heroic Strike
+snap-backs 4.77 -> 0.84/min (oracle 1.44), lateness median 3 / p90 9 polls; Arms unchanged).
 Cancelled: fix 19 (a harness-vs-in-game default for Sunder; players use Hekili's own per-ability toggles).
