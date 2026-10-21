@@ -202,6 +202,33 @@ describe("the replay world", function()
         assert.is_true(math.abs(W.ents[1].cdUntil.strike - (R.pull + 0.1 + 6)) < 1e-9)
     end)
 
+    it("keeps an aura whose computed duration grows the aura table while it is read (GAP AT)", function()
+        local auras = {}
+        for k, a in pairs(H.Hekili.Class.auras) do
+            auras[k] = a
+        end
+        local n = 0
+        local grow = { -- the engine's computed field: its read caches entries in the aura table
+            __index = function(_, k)
+                if k == "duration" then
+                    for _ = 1, 4 do -- 3 such entries of 4 each: pairs skipped the stand-in's mark (Lua 5.1's order)
+                        n = n + 1
+                        auras["cached" .. n] = { id = 920000 + n }
+                    end
+                    return 1
+                end
+            end,
+        }
+        for i = 1, 3 do
+            auras["computed" .. i] = setmetatable({ id = 910000 + i }, grow)
+        end
+        local HG = { Hekili = { Class = { abilities = H.Hekili.Class.abilities, auras = auras } } }
+        local R = replay.new(text(), HG, O)
+        local W = at(R.world(setmetatable({ tag = "-g" }, { __index = WO }), 1), R.pull + 4.1)
+        local mob = W.ents[2]
+        assert.is_not_nil(mob.auras[900030]) -- read after the table grew: still kept
+    end)
+
     it("a proc aura's gain and refresh both reach the client: each re-application restarts its expiry", function()
         local R = replay.new(text(), H, O)
         local W = R.world(setmetatable({ tag = "-r" }, { __index = WO }), 1)

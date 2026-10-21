@@ -344,7 +344,13 @@ function M.new(text, H, o)
         end
     end
     local stealthy = {} -- the auras IsStealthed answers for (`isStealthed`), every rank
+    -- a snapshot: reading a computed field (a function `duration`) can add keys to class.auras, and a table that grows
+    -- under pairs skips entries (GAP AT: Rend's ranks were dropped)
+    local auras = {}
     for _, a in pairs(class.auras) do
+        auras[#auras + 1] = a
+    end
+    for _, a in ipairs(auras) do
         if type(a) == "table" and type(a.id) == "number" and a.isStealthed == true then
             stealthy[a.id] = true
             for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
