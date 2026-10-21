@@ -18,7 +18,7 @@
 - Mage: Evocation is no longer highlighted.
 - Paladin: Retribution no longer highlights Exorcism or the seal before the pull; the seal you keep up while leveling is highlighted as upkeep.
 - Rogue: Garrote, Slice and Dice and Rupture share the first highlight (whichever is due first) in every specialization; Ambush is no longer highlighted.
-- Shaman: Fire Nova is highlighted only on Clearcasting, the totems no longer before the pull.
+- Shaman: Fire Nova is highlighted only on Clearcasting, and the totems are no longer highlighted.
 
 ### Fixed
 - A priority regenerated on the same day no longer shows as reverted on login.

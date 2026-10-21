@@ -33,12 +33,9 @@ return {
     build = "ui/specs/shaman/enhancement/builds/testing.build.json",
     apl = "ui/specs/shaman/enhancement/apls/default.apl.json",
     map = { OtherActionResourcePotion = "major_mana_potion" }, -- the build's resourcePotId 13444, Major Mana Potion
-    focus = { -- by role (docs/dev/wowsims-packs.md)
-        grace_of_air_totem = 2,
-        strength_of_earth_totem = 2,
+    focus = { -- by role (docs/dev/wowsims-packs.md); the totems none (the user, 2026-10-21)
         fire_nova = { 1, false }, -- on Clearcasting; the mana filler none
         lightning_shield = 2,
-        searing_totem = 2,
         lightning_bolt = 1,
         flame_shock = 2,
     },

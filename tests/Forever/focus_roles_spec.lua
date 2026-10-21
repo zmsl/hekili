@@ -34,15 +34,8 @@ local PACKS = {
         "seal_of_righteousness=2",
         "consecration=2",
     },
-    ["Shaman/APLs/Enhancement"] = {
-        "grace_of_air_totem=2",
-        "strength_of_earth_totem=2",
-        "fire_nova=1",
-        "lightning_shield=2",
-        "searing_totem=2",
-        "lightning_bolt=1",
-        "flame_shock=2",
-    },
+    -- the totems carry none (the user, 2026-10-21)
+    ["Shaman/APLs/Enhancement"] = { "fire_nova=1", "lightning_shield=2", "lightning_bolt=1", "flame_shock=2" },
     ["Druid/APLs/Balance"] = { "moonfire=2", "insect_swarm=2", "starfire=1" }, -- Starfire on Eclipse: arguable
     ["Druid/APLs/Feral"] = { "shred=1", "claw=1", "rake=2", "rip=2", "rake=2" },
     ["Druid/APLs/Guardian"] = { "maul=1", "maul=2", "lacerate=2", "demoralizing_roar=2", "lacerate=2" },

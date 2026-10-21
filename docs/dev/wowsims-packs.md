@@ -62,7 +62,7 @@ Translation:
   carry none. Tier 1 is a reactive or windowed line the player must catch: proc-, position- or stance-gated
   (Overpower, Revenge, Mongoose Bite, Pyroblast on Heating Up, Arcane Missiles on Missile Barrage, Shred on
   Clearcasting), and an off-GCD queued strike, with a second line of a rage dump at 2 (`heroic_strike = { 1, 2 }`).
-  Tier 2 is upkeep: DoTs, debuffs, buffs, seals, totems and shields kept up (Rend, Rake, Rip, Moonfire,
+  Tier 2 is upkeep: DoTs, debuffs, buffs, seals and shields kept up (not totems) (Rend, Rake, Rip, Moonfire,
   Scorch for Fire Vulnerability, Hunter's Mark, Demoralizing Roar, Flame Shock). Cooldowns, consumables, defensives,
   movement and pre-pull lines carry none (the translator drops a tier on a `prepull_at` line). A line whose role is
   arguable (Serpent Sting, Consecration, Starfire on Eclipse) keeps its tier until the user rules; the recipe says

@@ -314,7 +314,7 @@ describe("Forever Shaman priorities", function()
     end)
 
     it(
-        "carries the retired list's tiers: Fire Nova on Clearcasting and the Maelstrom Lightning Bolt at 1, upkeep at 2",
+        "tiers by role: Fire Nova on Clearcasting and the Maelstrom Lightning Bolt at 1, the shield and Flame Shock at 2, totems none",
         function()
             local _, fn = line("default", "fire_nova", "buff.clearcasting.up")
             local _, lb = line("default", "lightning_bolt", "buff.maelstrom_weapon.stack>=5")
@@ -323,10 +323,8 @@ describe("Forever Shaman priorities", function()
             local _, st = line("default", "searing_totem", "totem.fire.remains<=0")
             local _, ls = line("default", "lightning_shield", "!buff.lightning_shield.up")
             local _, fs = line("default", "flame_shock", "!debuff.flame_shock.up")
-            assert.are.same(
-                { 1, 1, 2, 2, 2, 2, 2 },
-                { fn.focus, lb.focus, goa.focus, soe.focus, st.focus, ls.focus, fs.focus }
-            )
+            assert.are.same({ 1, 1, 2, 2 }, { fn.focus, lb.focus, ls.focus, fs.focus })
+            assert.are.same({}, { goa.focus, soe.focus, st.focus })
             for _, e in ipairs(packs[PACK].lists.default) do
                 assert.are_not.equal("windfury_totem", e.action)
             end
