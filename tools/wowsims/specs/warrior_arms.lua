@@ -63,6 +63,7 @@ return {
     notes = {
         "Cooldowns toggle hides: Death Wish, Recklessness (also behind its pack setting, off by default), Sweeping Strikes and the racials (Blood Fury, Berserking, Eureka, Elune's Light).",
         "No line here sits under the Potions or Defensives toggles.",
+        "Rend is used on every target, boss or not.",
     },
     executePhase = "execute_phase",
     -- the user's ruling (2026-10-21): Berserker Rage only "if talented for the rage gain", precombat and in combat

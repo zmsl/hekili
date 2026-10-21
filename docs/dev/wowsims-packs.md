@@ -192,6 +192,22 @@ Each is the user's ruling, recorded with its reason; the recipe header names the
   (`stance_rage_kept`: the kit's state expression for the rage a swap keeps; Tactical Mastery is a passive no priority
   reads).
 
+## Pack notes
+
+What players read in a pack's description (the recipe's `notes`), and why. Warrior (the user's rulings, 2026-10-21):
+- The kit's toggles: Cooldowns hides Death Wish, Sweeping Strikes and Recklessness (Arms and Fury; Recklessness also
+  behind its `wowsims_recklessness` pack setting, off by default) and the racials; Defensives hides Healthstone and
+  Disarm (no Warrior pack line casts Disarm) and, in Protection, Shield Wall, Last Stand, Stoneform and Shatter Curse;
+  Potions hides none in Warrior. Bloodrage, Intimidating Shout and Mocking Blow are under no toggle.
+- Protection's defensive lines (Last Stand, Shield Wall, Stoneform, Shatter Curse, Healthstone) wait on a health
+  threshold, and the client hides player health in combat, so they never fire there: API-forced, players press them
+  by hand.
+- Protection's Demoralizing Shout (off unless Maintain Demoralizing Shout is on, rule 15) and Thunder Clap: a player
+  keeps them for bosses with the per-ability Boss Encounter Only option or the Custom 1 toggle (no code change; the
+  user approved the audit's proposal).
+- Rend is used on every target, boss or not; Death Wish stays under Cooldowns; Sunder Armor is unchanged (the
+  in-game ledger, docs/dev/ingame-ledger.md, holds its Boss Encounter Only question).
+
 ## Classifying a disagreement (P7)
 
 Run the replay gate with the floor at 0 and read the `wowsims:` line's `decisions on-GCD X (n) top [...]`. Work the top

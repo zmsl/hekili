@@ -849,8 +849,11 @@ describe("Forever Warrior", function()
             ["Fury (wowsims.com) cleave"] = { 1 },
             ["Fury (wowsims.com) rend"] = { 2 },
             ["Fury (wowsims.com) battle_stance"] = { 1 },
-        }, focus) -- Protection (wowsims.com) casts none of the retired list's focus abilities; the user's tiers (2026-10-21):
-        -- the main strikes (Mortal Strike, Slam, Execute, Bloodthirst, Whirlwind) are rotational, untiered
+            ["Protection (wowsims.com) revenge"] = { 1 },
+            ["Protection (wowsims.com) heroic_strike"] = { 1 },
+            ["Protection (wowsims.com) cleave"] = { 1 },
+        }, focus) -- the user's tiers (2026-10-21): the main strikes (Mortal Strike, Slam, Execute, Bloodthirst, Whirlwind,
+        -- Shield Slam) are rotational, untiered, and so is Protection's Sunder Armor
     end)
 
     -- the user's ruling (2026-10-21): Berserker Rage only for Improved Berserker Rage's rage, precombat and in combat

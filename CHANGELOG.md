@@ -40,6 +40,8 @@
 - Warrior: Arms and Fury suggest Berserker Rage only once you have Improved Berserker Rage (for its rage), before the pull and in combat.
 - Warrior focus tiers: Arms's Slam is no longer a focus line (Mortal Strike, Slam and Execute are rotational); Fury marks Rend (2) and the Battle Stance swap for Overpower (1) as focus, and Cleave takes Heroic Strike's tiers.
 - Warrior Fury: the Battle Stance swap for Overpower waits until the swap keeps enough rage for Overpower (Tactical Mastery) and Overpower is off cooldown before its window closes.
+- Warrior Protection focus tiers: Revenge (1), Heroic Strike and Cleave (1); Shield Slam and the other strikes stay rotational.
+- Warrior Protection's description says its defensive lines never show in combat (the game hides your health from addons: press them by hand) and how to keep Demoralizing Shout and Thunder Clap for bosses.
 - Warrior: each priority's description lists the lines the Cooldowns and Defensives toggles hide.
 
 ### Fixed
