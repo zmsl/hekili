@@ -163,9 +163,10 @@ measured value rounded up to the next 0.1, 0 where it measured 0; only ever down
 expected it turns the Arms 20-fight gate red (agreement, unmatched cost refusals) and the Fury gates and two leveling
 gates red (react p90, idle).
 
-Before the pull it shows Bloodrage and Battle Shout only (no positions headless, so no Charge). Seeds 1-3's casting
-refusals (7.0 per 100, the oracle's 0.5) are presses during Slam's 1.5 s cast: the loop world's build has no Improved
-Slam, and the world's client sees only a cast's success (no cast start), so our first icon moves on mid-cast.
+Before the pull it shows Bloodrage and Battle Shout only (no positions headless, so no Charge). Seeds 1-3 used to show
+casting refusals (7.0 per 100, the oracle's 0.5): presses during Slam's 1.5 s cast while the world's client sent only
+a cast's success; since fix 22 the world sends the cast's start too, and the refusals are gone (gap BD records the
+cast-boundary flicker that replaced them).
 
 `tests/Forever/loop_druid_spec.lua` runs 3 fights a Druid pack in `make check` (seeds 1-3, the `#slow` tag) and 20 in
 `make test-druid` (`#druid`), each asserting its flagged lines ran (`r.focus > 0`). Every Druid spec runs its
