@@ -19,6 +19,9 @@
 -- Worked: the shaman world's Elemental distance 20 yd (the build's), its mana (5590) and regen (29.75 a second
 -- casting, 42.5 more outside the five-second rule: the log's), the Troll's Berserking in the world's MAP. Known
 -- deviations: wowsims's autocast trinket (item 272438) stays unmapped (no trinket registered), as in Enhancement.
+-- Levels (P8; learn_shaman.lua regenerated with the Elemental kit's ranks): L10 0.0, L40 0.0, L60 5.0 s, no leveling
+-- line needed. The spells the DB2 lacks (Lava Burst rank 4, 1326047; Elemental Mastery, 16166) still count as learned
+-- at level 1, so the lower brackets can press them early (the check's limit, docs/dev/wowsims-packs.md).
 return {
     class = "SHAMAN",
     pack = "Elemental (wowsims.com)",

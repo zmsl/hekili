@@ -542,7 +542,7 @@ Retribution, Paladin Protection and Survival idles re-measured in the final revi
 | Frostfire (wowsims.com) | 0.89 | 0.891 (55) | 10.8 (10.8) | L10 5.6, L40 0.2, L60 10.8 | 0.300 / 1.010 | 0.380, 31 | 6 | 0.38, 31 |
 | Shadow (wowsims.com) | 1.00 | 1.000 (85) | 6 (1.8) | L10 0.0, L40 0.0, L60 1.8 | 0.000 / 1.600 | 1.500, 36 | 0 | 1.50, 36 |
 | Smite (wowsims.com) | 0.93 | 0.932 (44) | 6 (0.2) | L10 0.0, L40 0.2, L60 0.2 | 0.400 / 3.100 | 0.500, 27 | 3 | 0.50, 27 |
-| Elemental (wowsims.com) | 0.93 | 0.937 (95) | 6 (5.0) | L10 0.0, L40 0.0, L60 5.0 | 0.380 / 0.980 | 0.480, 54 | 6 | 0.48, 54 |
+| Elemental (wowsims.com) | 0.93 | 0.937 (95) | 6 (5.0) | L10 0.0, L40 0.0, L60 5.0 (Lava Burst r4 and Elemental Mastery learned at 1: not in the DB2) | 0.380 / 0.980 | 0.480, 54 | 6 | 0.48, 54 |
 
 A LIVE60 constant above today's L60 measurement is an earlier measurement the spec keeps (Combat 4.8 vs 4.0,
 Retribution 8.4 vs 2.8 by ruling P6, Paladin Protection 17.8 vs 11.8 from the untanked fight); limits are not lowered

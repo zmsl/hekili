@@ -425,8 +425,8 @@ local function content(name)
         end
     end
 
-    -- Level 60 against a level 60 mob in melee range swinging at us, a two-hander, 5000 mana full and under the
-    -- five-second rule. Neither side dies (the mob's health here, ours in `hooks`): each fight ends at its stop, out of
+    -- Level 60 against a level 60 mob swinging at us, at the pack's distance (melee unless set), its weapon, its mana
+    -- (5000 unless set) full and under the five-second rule. Neither side dies (the mob's health here, ours in `hooks`): each fight ends at its stop, out of
     -- combat. A kill ends the loop before the client sees it, so the next fight's prepull would be believed in combat
     -- and its totem slots never read (a harness quirk every pack shares; the totems are the first to feel it).
     C.WORLD = {
