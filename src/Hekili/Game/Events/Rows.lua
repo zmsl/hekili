@@ -44,6 +44,7 @@ end
 -- GAP AX (docs/dev/gaps.md): the landing window holds for a refused avoid (DODGE / PARRY / MISS) only while the
 -- background avoid count (L.bg[7], decayed) stays below this; past it others avoid on the target too, so our cast
 -- claims an avoid only inside CAST_WINDOW (a late foreign dodge would refund into the floor, above the truth).
+-- UNMEASURED: a chosen constant (GAP AX residue in docs/dev/gaps.md).
 L.FOREIGN_AVOIDS = 0.05
 
 -- The score (harness design §1.2-§1.4, decision D1; PROTOTYPE values, the harness's gates hold them): THETA the
