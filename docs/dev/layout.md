@@ -369,24 +369,27 @@ research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`)
 - H20: a saved BeastMastery, Marksmanship or Survival choice falls back to the spec's wowsims.com pack.
 - H21: Rapid Fire and Blood Fury recommended from 5 s into a fight, off the GCD (rule 13's automatic cooldowns).
 
-`tests/Forever/loop_mage_spec.lua` runs 3 fights of each Mage pack in `make check` (seeds 1-3, `#slow`) and 20 in
-`make test-mage` (`#mage`, `loop_mage_arcane_spec.lua`, `loop_mage_fire_spec.lua`, `loop_mage_frostfire_spec.lua`), gated by `pack_gate.solo` and
-asserting that some focus line ran (Arcane: Missiles on Missile Barrage at tier 1, Evocation at tier 2; Fire also
-Pyroblast on Heating Up at tier 1 and Scorch at tier 2: ruling M5; Frostfire Pyroblast and Fire Blast on the Fingers of
-Frost read at tier 1, Scorch and Evocation at tier 2). The packs are Arcane and Fire (wowsims.com) (Task 12 of the
-wowsims packs plan) and Frostfire (wowsims.com) (Task FFB: Fire's second pack, its talents 29 Fire points to 22 Frost;
-Frost unsupported), their replay and leveling gates
-`tests/Forever/wowsims_mage_spec.lua`. The worlds (`tests/Forever/helpers/mage_world.lua`) cast at 25 yd with cast bars
-and channels (Arcane Missiles, Evocation: any press at 99% mana clips it); the character is trainer-taught (no book
-ranks, as wowsims's), its pool and regen are the logs' (Arcane 6678, Fire 6168; 29.13 a second outside the five-second
-rule, all of it while casting for Arcane, half for Fire and Frostfire). Flicker floors (pack_gate `FLICKER`): Arcane 1.7 (1.66,
-oracle 1.46; 1.5 since the lane review's Arcane Power fix measured 1.43, oracle 1.41), Fire 1.3 (1.21, oracle 0.40),
-Frostfire 0.3 (0.30, oracle 0.38), retracted 0 each. Fire's excess over its oracle is Fire Blast's cooldown end (fire_blast > fireball > fire_blast, 7 of 10
-flickers in 3 fights: the not-ready flag's CD_PROBE push, central); the Scorch line's Fire Vulnerability edge is a
-candidate. Frostfire's 20-fight agreement (0.958) is lowest where its mana runs dry: pooling for Frostfire Bolt, the
+`tests/Forever/loop_mage_spec.lua` runs 3 fights of each Mage pack in `make check` (seeds 1-3, `#slow`) and 20 in `make
+test-mage` (`#mage`, `loop_mage_arcane_spec.lua`, `loop_mage_fire_spec.lua`, `loop_mage_frostfire_spec.lua`), gated by
+`pack_gate.solo` and asserting that some focus line ran (Arcane: Missiles on Missile Barrage at tier 1, Evocation at
+tier 2; Fire also Pyroblast on Heating Up at tier 1 and Scorch at tier 2: ruling M5; Frostfire Pyroblast and Fire Blast
+(unless two Fingers of Frost charges are up) at tier 1, Scorch and Evocation at tier 2). The packs are Arcane and Fire
+(wowsims.com) (Task 12 of the wowsims packs plan) and Frostfire (wowsims.com) (Task FFB: Fire's second pack, its talents
+29 Fire points to 22 Frost; Frost unsupported), their replay and leveling gates `tests/Forever/wowsims_mage_spec.lua`.
+The worlds (`tests/Forever/helpers/mage_world.lua`) cast at 25 yd with cast bars and channels (Arcane Missiles,
+Evocation: any press at 99% mana clips it); the character is trainer-taught (no book ranks, as wowsims's), its pool and
+regen are the logs' (Arcane 6678, Fire 6168; 29.13 a second outside the five-second rule, all of it while casting for
+Arcane, half for Fire and Frostfire). Flicker floors (pack_gate `FLICKER`): Arcane 1.7 (1.66, oracle 1.46; 1.5 since the
+lane review's Arcane Power fix measured 1.43, oracle 1.41), Fire 1.3 (1.21, oracle 0.40), Frostfire 0.3 (0.30, oracle
+0.38), retracted 0 each. Fire's excess over its oracle is Fire Blast's cooldown end (fire_blast > fireball > fire_blast,
+7 of 10 flickers in 3 fights: the not-ready flag's CD_PROBE push, central); the Scorch line's Fire Vulnerability edge is
+a candidate. Frostfire's 20-fight agreement (0.958) is lowest where its mana runs dry: pooling for Frostfire Bolt, the
 believed mana a few points under the truth (Master of Elements' refunds unseen) puts Frostfire Bolt's ready time past
 the Scorch line's Fire Vulnerability `remains<5` edge, so ours shows Scorch where the oracle shows Frostfire Bolt
-(API-forced). The lines (on 0ce5d1a4 + Task 12 and its lane review fixes; Frostfire's on 3e104ce9 + Task FFB):
+(API-forced; the modelled Fire Vulnerability measured equal to the world's, no early end). Fire's and Frostfire's uptime
+0.96 (ours driving) against 0.99 (the oracle) is an Evocation at a carried fight's start: the believed mana's lower
+bound reads `mana.pct<=10` where the truth is 16-19%, and the 8 s channel delays the first Scorch (shared gap,
+reported). The lines (on 0ce5d1a4 + Task 12 and its lane review fixes; Frostfire's on 3e104ce9 + Task FFB):
 
 ```
 Arcane solo: fights=3 agreement 0.987 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 79.7 (oracle 78.3, unmatched 0.9), cost 2.2 (oracle 4.3, unmatched 0.2)], episodes 12.20/min; dps A/B 1.136; ... [seeds 1-3]
@@ -525,7 +528,9 @@ Recorded deviations (each one's reason in the named file):
   Evocation at >= 99% mana (interruptIf), the translator drops channelSpell.interruptIf (shared gap, reported), the
   world clips by wowsims's rule. Frostfire: Fingers of Frost's grant (a Chill's 15% roll) is unseen, so the sim spends
   a charge on every damage cast (wowsims: none on the cast that granted them); the worlds' crits ignore Shatter (the
-  harness's one crit rate); `includeReactionTime` on the Fingers of Frost read ignored (rule 5).
+  harness's one crit rate); the world grants Fingers of Frost at Frostfire Bolt's cast end, wowsims at its hit about
+  0.8 s later (the harness has no travel time: a shared limit); `includeReactionTime` on the Fingers of Frost read
+  ignored (rule 5).
 
 CPU and memory, release to release (`r.cpuMean`/p99 of the 3- and 20-fight lines, process CPU ms per Update; `make
 bench`'s bytes per Update; both measured on this machine one run after the other, so compare the columns, not the

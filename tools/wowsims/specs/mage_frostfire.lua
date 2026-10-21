@@ -23,7 +23,14 @@
 -- Line (mage_arcane.lua); Ignite (412538) is a proc no key maps; includeReactionTime on the Fingers of Frost read is
 -- ignored (rule 5), and no decision here turns on it. autocastOtherCooldowns (rule 13): the Mind Quickening Gem
 -- (`use_items`) and the mana gem, off the GCD (this build has no Combustion).
--- Focus (M5): Pyroblast on Hot Streak and Fire Blast on the Fingers of Frost read tier 1, Scorch and Evocation tier 2.
+-- Focus (M5): Pyroblast on Hot Streak and Fire Blast (unless two Fingers of Frost charges are up) tier 1, Scorch and
+-- Evocation tier 2.
+-- Loops (20 fights, 0.958; frostfire_bolt -> scorch 680): measured (Task FFB fix round 1) as the believed mana a few
+-- points under the truth while pooling for Frostfire Bolt (Master of Elements' refunds unseen, mana secret:
+-- API-forced), which puts its ready time past the Scorch line's Fire Vulnerability `remains<5` edge; the modelled Fire
+-- Vulnerability matched the world's to the tick (no early end). The uptime 0.96 (ours driving) against 0.99 (the
+-- oracle) is Evocation at a carried fight's start: the believed lower bound reads mana.pct<=10 where the truth is
+-- 16-19% (shared gap).
 return {
     class = "MAGE",
     pack = "Frostfire (wowsims.com)",

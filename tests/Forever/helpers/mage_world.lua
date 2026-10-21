@@ -1,17 +1,19 @@
 -- tests/Forever/helpers/mage_world.lua (class-completion plan, "The per-pack gate"): the Mage content of the
 -- class-neutral headless loop, in hunter_world.lua's shape, one content per wowsims.com pack (M.Arcane, M.Fire,
--- M.Frostfire): the character the instance logs in as (wowsims/forever's preset builds' talents), each ability's press in the world's
--- generic verbs, the client's usability answers. IDs, costs, cooldowns and aura durations come from the class file
--- (load_druid's recording load of Mage.lua for the character, the booted oracle's Hekili.Class for the rest). The
--- world's own, restated from the DB2 and wowsims/forever (so the class file's belief is measured against them): Arcane
--- Blast's 1.5 s cast, its charges (15 s from the first) and their cost (15% of base mana, +175% a charge), Missile
--- Barrage's proc (its talent's 20% / 40% on Arcane Blast, half that on Fireball, Frostbolt, Frostfire Bolt and Arcane
--- Wrath), Heating Up from the Fire casts' crits (Fire Blast one more on any hit) and Pyroblast's faster cast and spend,
--- Improved Scorch's Fire Vulnerability (33 / 67 / 100%), Fingers of Frost (a Chill's landed hit, Frostbolt's or
--- Frostfire Bolt's, grants its rank's charges at 15%; every other damage spell cast spends one, a landed missile one;
--- wowsims talents_frost.go), Frost Channeling's -5% a rank and Improved Fireball's -0.1 s on Frostfire Bolt, Clearcasting (Arcane Concentration's 2% a rank on a damage
--- spell's hit) and Arcane Power's costs, Presence of Mind's instant cast, mana under the five-second rule (the pools
--- and the regen wowsims's logs'). Damage amounts are UNMEASURED.
+-- M.Frostfire): the character the instance logs in as (wowsims/forever's preset builds' talents), each ability's press
+-- in the world's generic verbs, the client's usability answers. IDs, costs, cooldowns and aura durations come from the
+-- class file (load_druid's recording load of Mage.lua for the character, the booted oracle's Hekili.Class for the
+-- rest). The world's own, restated from the DB2 and wowsims/forever (so the class file's belief is measured against
+-- them): Arcane Blast's 1.5 s cast, its charges (15 s from the first) and their cost (15% of base mana, +175% a
+-- charge), Missile Barrage's proc (its talent's 20% / 40% on Arcane Blast, half that on Fireball, Frostbolt, Frostfire
+-- Bolt and Arcane Wrath), Heating Up from the Fire casts' crits (Fire Blast one more on any hit) and Pyroblast's faster
+-- cast and spend, Improved Scorch's Fire Vulnerability (33 / 67 / 100%), Fingers of Frost (a Chill's landed hit,
+-- Frostbolt's or Frostfire Bolt's, grants its rank's charges at 15%; every other damage spell cast spends one, a landed
+-- missile one; wowsims talents_frost.go; deviation: the grant lands at the cast's end, wowsims's at the bolt's hit
+-- about 0.8 s later (its FFB log 11.64 cast, 12.47 hit): the harness has no travel time, a shared limit), Frost
+-- Channeling's -5% a rank and Improved Fireball's -0.1 s on Frostfire Bolt, Clearcasting (Arcane Concentration's 2% a
+-- rank on a damage spell's hit) and Arcane Power's costs, Presence of Mind's instant cast, mana under the five-second
+-- rule (the pools and the regen wowsims's logs'). Damage amounts are UNMEASURED.
 -- The hard casts are cast bars (a press with a cast time: UNIT_SPELLCAST_START and UnitCastingInfo at the press, the
 -- success at the end) and the two channels are the world's channels (W.press `channel`): Arcane Missiles a missile a
 -- tick (its rank's 3-5 s, a tick a second; Missile Barrage's half the time, a tick each 0.5 s, free), Evocation 8 s,

@@ -4,9 +4,9 @@
 
 ### New
 - Warrior: Arms, Fury and Protection suggest Victory Rush after a kill, just above Bloodthirst (Mortal Strike for Arms).
-- Mage: "Frostfire (wowsims.com)", wowsims/forever's Frostfire priority (Frostfire Bolt, Fire Blast on the Fingers of
-  Frost charges, Pyroblast on three Heating Up, Scorch for Fire Vulnerability), a second Fire priority for the FFB
-  talents (more Fire points than Frost); Fire's default stays "Fire (wowsims.com)".
+- Mage: "Frostfire (wowsims.com)", wowsims/forever's Frostfire priority (Frostfire Bolt, Fire Blast unless two Fingers
+  of Frost charges are up, Pyroblast on three Heating Up, Scorch for Fire Vulnerability), a second Fire priority for the
+  FFB talents (more Fire points than Frost); Fire's default stays "Fire (wowsims.com)".
 
 ### Changed
 - Mana and energy consumables (Major Mana Potion, Demonic Rune, Thistle Tea, Mana Gem) and the Rogue's poison reminders (Instant and Deadly Poison) are now under the Potions toggle, which is off by default: turn Potions on to see them. The Healthstone stays under Defensives.

@@ -474,6 +474,7 @@ spec:RegisterAbilities({
         known = knows(FIRE_BLAST),
         usable = unlocked("fire"),
 
+        -- no `now`: removeStack is no `now` verb; the belief takes the charges from the aura walk
         handler = fingered(),
     },
 
