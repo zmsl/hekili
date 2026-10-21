@@ -61,7 +61,9 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
 
     -- the replay floor: 0.860 measured on central fix 13 (49/57: removals shown as removals, the cooldown restart); 0.877
     -- (50/57) on central fix 14 (Judgement's percent-of-base cost from base mana); 0.912 (52/57) once the replay ends a
-    -- cooldown at its log timestamp (the ready-time ruling)
+    -- cooldown at its log timestamp (the ready-time ruling); 0.895 (51/57) under the owner's ruling (2026-10-21) that the
+    -- pre-pull must not twist, one starter seal (the recipe's prepullSkip): wowsims's -3 s Seal of Command is now ours
+    -- Seal of the Crusader, one decision
     it("Retribution (wowsims.com) follows wowsims's casts", function()
         local C = content("paladin_retribution", RET, "Retribution (wowsims.com)", 60)
         -- 0.860 over central fix 12 too (floor 0.85). Before central fix 13: 0.56 (0.561), lowered from 0.57 (0.579) by
@@ -69,7 +71,7 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         -- seal comes one tick late, so one decision of 57 (Seal of Command on the tick that pays for it) shows Seal of
         -- Righteousness. Recover after the in-game UNIT_POWER_FREQUENT-for-mana
         -- checkpoint by rounding up to the observed tick; the belief's precision at near-ties is GAP AB.
-        ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.91, REPLAY)
+        ws.gate("Retribution (wowsims.com)", C, "paladin_retribution", 0.89, REPLAY)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Retribution is out of mana from 60 s
     -- of its log), so its longest wait is for mana. 4.4 before central fix 8, while

@@ -339,8 +339,10 @@ it is ready 0.05 s sooner. On a near tie between two waiting icons (a seal waiti
 at the end of a mana pool) the estimate's rounding crosses the two every refresh and the first icon trades places
 (the Paladin 20-fight loops: 34 and 33 flips, mostly Seal of Fury / Holy Strike and Seal of Righteousness / Holy
 Strike). `GetPredictionFromAPL` (`Engine/Sim/Core.lua`, `heldFirst`) remembers the first icon the display showed
-last refresh; while it is the chosen action of the first recommendation, the challenger needs a full poll (0.2 s)
-instead (`tests/Forever/first_icon_hold_spec.lua`). Owner rule: hold an icon a poll rather than flash it.
+last refresh; while it is the chosen action of the first recommendation, a challenger still waiting more than 0.1 s
+needs a 0.1 s lead instead (`tests/Forever/first_icon_hold_spec.lua`); one ready within 0.1 s keeps the 0.05 s pad,
+the decision at hand (a 0.2 s hold cost Protection's replay a decision). Owner rule: hold an icon rather than flash
+it.
 
 **In precombat.** Being in precombat is a property of the walk, not of a list's name: `GetPredictionFromAPL` sets
 `inPrecombat` while it walks the precombat list and every list that list calls or runs (at any depth; saved and
