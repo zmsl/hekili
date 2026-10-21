@@ -49,7 +49,7 @@ describe("timing.new: each decision's ready class from the log", function()
             cast(3.1, 3, { cost = 20 }),
             power(3.1, "rage", 25, 5, { id = 3 }), -- its spend: the pool
             cast(6.0, 2), -- b's cooldown (4.4) ends at 6.0; the GCD long over
-            { kind = "aura", t = 9, unit = "player", verb = "gained", id = 99 },
+            { kind = "aura", t = 9, unit = "player", verb = "gained", id = 900099 },
             cast(9.0, 4), -- an aura line in its timestamp
             cast(12.0, 4), -- nothing: wowsims waited
             power(13.9, "mana", 9, 10, { other = 2 }),
