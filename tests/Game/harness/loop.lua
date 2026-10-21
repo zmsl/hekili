@@ -119,7 +119,8 @@ local function firstGcd(H)
 end
 
 --- One run of fight `seed`: the instances in `drivers` (each { H, plain }) stepped on one world in lockstep, the
---- first one's first icon pressed. `o`: duration (combat seconds [180]), mobHealth, hz [5], react [REACT], reaction
+--- first one's first icon pressed, each press resolved from the run's truth instance (the oracle when it is driven,
+--- else the first driver). `o`: duration (combat seconds [180]), mobHealth, hz [5], react [REACT], reaction
 --- (seconds an icon shows ready before the press [0]), others (archetypes on our target), trace (the facade's trace
 --- each tick), on(run, steps, t) (a per-tick hook). Returns the run { W, us, ticks, presses, refused (by reason),
 --- attempts, episodes, errors, raises, misses (unexpected run names), secrets (Facade.secrets), selfCheck (ticks where
@@ -161,6 +162,12 @@ function M.run(L, seed, o, drivers)
     local W = R and R.world(wo, seed) or scenarios.world(wo, seed)
     local us = W.ents[1]
     local run = { W = W, us = us, ticks = 0, presses = 0, refused = {}, unmatched = {}, raises = 0, selfCheck = {} }
+    -- the instance whose state is the run's truth, a press resolving from it: the oracle when it is driven, else the
+    -- driver (a run of ours alone, ws.live, never steps the oracle, whose state then stays at its boot)
+    local truth = drivers[1].H
+    for _, d in ipairs(drivers) do
+        truth = d.H == L.oracle and d.H or truth
+    end
     -- the metrics' per-tick record (§5.1): in-combat ticks only, both queues' first icons, the truth
     run.combat, run.full, run.idle, run.attempts, run.episodes, run.up = 0, 0, 0, 0, 0, {}
     run.ours, run.theirs, run.gap, run.cpu, run.secrets, run.focus = {}, {}, {}, {}, {}, 0
@@ -325,7 +332,7 @@ function M.run(L, seed, o, drivers)
             end
         end
         if shown and t - readySince[key] >= (o.reaction or 0) - 1e-9 then -- one attempt a tick
-            local p = content.resolve(key, L.oracle)
+            local p = content.resolve(key, truth)
             local ok, why = W.press(us, key, p)
             if inCombat then
                 run.attempts = run.attempts + 1

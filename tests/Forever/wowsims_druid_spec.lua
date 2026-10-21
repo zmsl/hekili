@@ -36,7 +36,10 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     it("Feral (wowsims.com) follows wowsims's casts", function()
         ws.gate("Feral (wowsims.com)", content("druid_feral", W.Feral, "Feral (wowsims.com)", 60), "druid_feral", 0.95)
     end)
-    local FERAL60 = 4.2 -- the pack's own worst idle at 60 (wowsims's energy pooling), seconds
+    -- the pack's own worst idle at 60 (wowsims's energy pooling), seconds: 4.0 on central fix 22 round 1 (the live
+    -- world's presses resolve from the driving instance, not the never-stepped oracle; L20 4.0 -> 3.0, L40 3.8 -> 3.4,
+    -- L60 3.8 -> 4.0); 4.2 before
+    local FERAL60 = 4.0
     for _, level in ipairs({ 20, 40, 60 }) do
         it("Feral (wowsims.com) stays live at level " .. level, function()
             ws.live(
@@ -117,10 +120,11 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         assert.are.equal("moonkin_form", first(40))
         assert.are.equal("moonkin_form", first(60))
     end)
-    -- The pack's own worst idle at 60, seconds: 10.8 on central fix 22 (cast bars: the engine chains its casts, so the
-    -- pack runs out of mana at about 50 s, as wowsims's log does from 80 s, and waits on regen; L10 0.0, L40 0.0); 1.4
-    -- (L10 1.6, L40 1.4: Task 7g, after shared gap R's fix; 8.6 before it)
-    local BALANCE60 = 10.8
+    -- The pack's own worst idle at 60, seconds: 0.0 on central fix 22 (L10 0.0, L40 0.0: the cast bars chain the
+    -- casts; the live world's presses now resolve from the driving instance, so a Clearcasting free cast is free in the
+    -- world too: the 10.8 s measured before that was the world refusing Moonfire for cost under Clearcasting, read
+    -- from the never-stepped oracle); 1.4 (L10 1.6, L40 1.4: Task 7g, after shared gap R's fix; 8.6 before it)
+    local BALANCE60 = 0.0
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Balance (wowsims.com) stays live at level " .. level, function()
             ws.live(

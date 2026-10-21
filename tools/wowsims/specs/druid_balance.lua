@@ -17,7 +17,9 @@
 -- starfire -> insect_swarm 1], all the DoT-refresh replay limit (2. above); LIVE L10 1.6, L40 1.4, L60 1.4 s (8.6 at
 -- 60 before gap R's fix).
 -- Since central fix 22 (the replay's cast bars: limit 2. gone): 0.909 (n 55), top [wrath -> insect_swarm 3;
--- starfire -> insect_swarm 1; wrath -> starfire 1]; LIVE L10 0.0, L40 0.0, L60 10.8 s (out of mana from about 50 s).
+-- starfire -> insect_swarm 1; wrath -> starfire 1]; LIVE L10 0.0, L40 0.0, L60 0.0 s. Mana: wowsims dips to 133 at
+-- 41 s (Innervate at 41.18 s) and sits at the floor from ~73 s; ours dips to 57 at 48.4 s and from ~83 s, casting
+-- slower: our world's Starfire is 3.5 s against wowsims's 2.5 s (the kit's Eclipse charge, unmodelled: gaps.md BE).
 local object = { __jsontype = "object" } -- dkjson: an empty table as {} (UnitReference.create(), the default unit)
 return {
     class = "DRUID",

@@ -455,17 +455,16 @@ local function content(name)
     end
 
     -- The press's cost: the state's for the main power and any other the world keeps (Clearcasting's, from the
-    -- oracle's true belief), none for one it does not (mana in the Guardian world).
+    -- run's truth instance: loop.run's), none for one it does not (mana in the Guardian world).
     local function cost(key, a, H, X)
         local c = H.Hekili.State.action[key].cost or 0
         local spendPt = ({ mana = MANA, rage = RAGE, energy = ENERGY })[a.spendType]
         if spendPt ~= pt and not P.res[spendPt] then
             return 0, nil
-        elseif spendPt ~= pt then -- a kept pool's: the declared cost; a fraction is of the base, else of the maximum
+        elseif spendPt ~= pt then -- a kept pool's: the declared cost, priced as the engine prices it (ns.SpendPoints)
             local f = rawget(a, "declaredSpend") or a.spend
             c = type(f) == "function" and f() or f or 0
-            local b = H.ns.VirtualState.BasePower(spendPt) -- the kit's `base` (headless: no cost read teaches another)
-            return c < 1 and (b and math.floor(c * b + 1e-6) or c * P.res[spendPt].max) or c, spendPt
+            return H.ns.SpendPoints(c, H.Hekili.State[a.spendType], a), spendPt
         end
         if X.covered[a.id] and H.ns.VirtualState.Aura("player", X.aura.clearcasting.id, H.ctl.now) then
             return 0, spendPt, true
@@ -473,7 +472,7 @@ local function content(name)
         return c, spendPt
     end
 
-    --- The resolved press of `key` from instance `H` (the loop passes the oracle's: its state is true): the highest
+    --- The resolved press of `key` from instance `H` (the loop passes its run's truth instance): the highest
     --- known rank's ID and every known rank's, the cost, its cooldown, GCD and cast time as the state has them, the
     --- form fields and the mapping's effects; Omen of Clarity rolled on every press. Raises "unmapped key".
     function C.resolve(key, H)
@@ -548,9 +547,10 @@ local function content(name)
                     if not formOk(a, e) or (m.requires and not m.requires(W, e)) then
                         return false, false
                     end
-                    -- Clearcasting as the press's cost reads it (the oracle's: the truth in a stepped loop; ws.live
-                    -- steps none, so a free answer there would meet a full-cost press)
-                    if covered and H.ns.VirtualState.Aura("player", X.aura.clearcasting.id, H.ctl.now) then
+                    -- Clearcasting from the world's truth (an answer is the client's, and no instance's state is the
+                    -- truth in every run: ws.live and the replay step ours alone)
+                    local cc = covered and e.auras[X.aura.clearcasting.id]
+                    if cc and cc.stacks > 0 then
                         return true, false
                     end
                     -- mana where the world keeps none (the feral loop worlds; ws.live passes no view): never short
