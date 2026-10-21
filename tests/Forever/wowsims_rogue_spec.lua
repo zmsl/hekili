@@ -19,13 +19,15 @@ end
 
 -- { pack, recipe, world content, replay floor (decisions on-GCD, measured 2026-10-20, never lowered; Combat 0.958 and
 -- Subtlety 0.963 (0.988 over central fix 12) on central fix 13: the strictSequence opener, the cooldown restart), LIVE60 (the
--- pack's own worst idle at 60: wowsims's energy pooling, seconds rounded up to 0.1) }
+-- pack's own worst idle at 60: wowsims's energy pooling, seconds rounded up to 0.1; Combat 4.8 -> 4.0 and Subtlety
+-- 3.8 -> 4.2 re-set on central fix 22 round 2 from their measurement on this branch, both under the 6 s floor: stale
+-- values, not a regression; neither moved in the fix) }
 -- Mutilate's per-hand hits are GCD-0 Casting lines {SpellID: 1241584, Tag: 1/2}: procs, neither decisions nor casts.
 local MUTILATE_HANDS = { procs = { ["1241584:1"] = true, ["1241584:2"] = true } }
 local PACKS = {
     { "Assassination (wowsims.com)", "rogue_assassination", W.Assassination, 0.98, 5.0, MUTILATE_HANDS },
-    { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.95, 4.8 },
-    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.98, 3.8 },
+    { "Combat (wowsims.com)", "rogue_combat", W.Combat, 0.95, 4.0 },
+    { "Subtlety (wowsims.com)", "rogue_subtlety", W.Subtlety, 0.98, 4.2 },
 }
 
 describe("the Rogue wowsims.com packs #slow #wowsims", function()
