@@ -167,7 +167,8 @@ describe("the wowsims APL translator", function()
             { "default #1: hidden", "default #4: never", "default #6: wait", "default #7: spell 999" },
             omitted
         )
-        assert.are.same({ { "wowsims_big", false }, { "wowsims_weave", true } }, toggles)
+        -- Weave is a switch no emitted line reads: not listed (ruling L14)
+        assert.are.same({ { "wowsims_big", false } }, toggles)
     end)
 
     it("reads auraIsKnown as registered on Self or the target; another unit's or player's is false", function()

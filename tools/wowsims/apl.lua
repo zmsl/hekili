@@ -18,7 +18,8 @@
 --    dropped reads and rule 13's unmapped cooldowns, by entry.
 -- 3. Toggles: a group whose actions are all empty is a wowsims ON/OFF switch: `actionGroupUsed` of it reads
 --    `settings.wowsims_<snake of the name without " ON/OFF">`, its default on exactly when the APL's reference to it is
---    not hidden; the class registers that setting for the spec (named "<Group> (wowsims.com)").
+--    not hidden; the class registers that setting for the spec (named "<Group> (wowsims.com)"). The header lists a
+--    setting only when an emitted line reads it (ruling L14): a group whose readers were all omitted is no setting.
 -- 4. `auraIsKnown` (wowsims: the aura is registered on its source unit, Self by default): on Self or the target, an
 --    ID that resolves (rule 5, or a kit talent's spell) to a talent's key or aura is `talent.<key>.enabled`, to an
 --    ability's key `action.<key>.known`, to any other aura `true`; an ID nothing resolves, or another unit, is false.
@@ -959,7 +960,8 @@ function entry(c, e)
 end
 
 --- The SimC text of `rotation` (a wowsims APL table) under context `c`, the omitted entries
---- ({ "<list> #<n>: <why>" }) and the toggles ({ { setting key, default } } in the APL's group order).
+--- ({ "<list> #<n>: <why>" }) and the toggles an emitted line reads ({ { setting key, default } } in the APL's group
+--- order).
 function M.translate(rotation, c)
     c.vars, c.toggles, c.used, c.seen, c.named, c.namedKeys, c.notes, c.dropped = {}, {}, {}, {}, {}, {}, {}, {}
     -- the IDs the APL casts itself (wowsims takes them out of its automatic cooldowns: rule 13)
@@ -1092,7 +1094,15 @@ function M.translate(rotation, c)
             end
         end
     end
-    return table.concat(text, "\n"), omitted, toggles
+    text = table.concat(text, "\n")
+    -- only the settings an emitted line reads (ruling L14): a group whose every reader was omitted registers nothing
+    local read = {}
+    for _, t in ipairs(toggles) do
+        if text:find("settings." .. t[1], 1, true) then
+            read[#read + 1] = t
+        end
+    end
+    return text, omitted, read
 end
 
 --- Writes spec `spec`'s pack: src/Hekili_<Class>/APLs/<recipe.pack>.simc from the checked-in request (`ex`:
