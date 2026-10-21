@@ -115,7 +115,10 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         local simc = f:read("*a")
         f:close()
         assert.matches("\n# Setting demoralizing_roar_filler %(", simc)
-        assert.matches("\nactions%+=/demoralizing_roar,if=settings%.demoralizing_roar_filler&!action%.lacerate%.known", simc)
+        assert.matches(
+            "\nactions%+=/demoralizing_roar,if=settings%.demoralizing_roar_filler&!action%.lacerate%.known",
+            simc
+        )
         assert.matches("demoralizing_roar", first(true))
         assert.not_matches("demoralizing_roar", first(false))
     end)

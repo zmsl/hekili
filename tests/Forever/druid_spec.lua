@@ -889,13 +889,16 @@ describe("Forever Druid", function()
         end
     end)
 
-    it("declares its class once (NewClass), no options, and only the setting Shred reads", function()
+    it("declares its class once (NewClass), no options, the setting Shred reads and Guardian's Roar filler", function()
         assert.are.equal("DRUID", w.class)
         local n = 0
         for _ in pairs(w.settings) do
             n = n + 1
         end
-        assert.are.same({ 1, false }, { n, w.settings.behind.default })
+        assert.are.same(
+            { 2, false, true },
+            { n, w.settings.behind.default, w.settings.demoralizing_roar_filler.default }
+        )
         assert.is_nil(w.options)
     end)
 
