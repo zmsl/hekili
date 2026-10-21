@@ -1586,6 +1586,8 @@ function Hekili.Update()
         Output.Publish( "status", 1 )
     end
 
+    Output.steady = spec.steadyIcons == true -- the experimental steady icons, read once per update
+
     local snaps
 
     local dispName = "Interrupts"

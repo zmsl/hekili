@@ -67,6 +67,7 @@ local specTemplate = {
     custom2Name = "Custom 2",
     noFeignedCooldown = false,
     disable_items = false,
+    steadyIcons = false, -- experimental: hold a swap between two countdown icons one update (Engine/Output.lua)
 
     abilities = {
         ['**'] = {

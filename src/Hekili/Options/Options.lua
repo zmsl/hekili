@@ -4081,7 +4081,24 @@ found = true end
                                     fontSize = "medium",
                                     order = 12,
                                     width = "full",
-                                }
+                                },
+                                experimentalHeader = {
+                                    type = "header",
+                                    name = "Experimental",
+                                    order = 20,
+                                },
+                                -- stored in this spec's settings by the spec node's GetSpecOption / SetSpecOption
+                                steadyIcons = {
+                                    type = "toggle",
+                                    name = "Experimental: steady icons (hold a swap between two countdown icons for one update)",
+                                    desc = "When an icon that is still counting down would be replaced by another icon that is also counting down, "
+                                        .. "keep the shown icon for one more update (about 0.1 to 0.2 s) unless the new one is still there.\n\n"
+                                        .. "An icon that is ready to press, a ready icon that goes back to waiting, and anything after your own "
+                                        .. "cast always show at once, so what you can press and when never changes; the icons just flicker less.\n\n"
+                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested.",
+                                    order = 21,
+                                    width = "full",
+                                },
                             }
                         }
                     }

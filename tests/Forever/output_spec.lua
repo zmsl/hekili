@@ -262,6 +262,85 @@ describe("Engine.Output (pure)", function()
     end)
 end)
 
+-- One publish of `list` ({ name, time } per record) into Primary.
+local function pub(Out, list)
+    local s = Out.Begin("Primary")
+    for i = 1, #list do
+        s[i].actionName, s[i].time = list[i][1], list[i][2]
+    end
+    Out.Publish("Primary", #list)
+end
+
+-- Each publish's shown first name, for `lists` in turn.
+local function shown(Out, lists)
+    local q = {}
+    for i, list in ipairs(lists) do
+        pub(Out, list)
+        q[i] = Out.Primary.recs[1].actionName
+    end
+    return q
+end
+
+describe("Engine.Output steady icons (the experimental hold, pure)", function()
+    local Out
+    before_each(function()
+        Out = select(2, load())
+    end)
+
+    for _, on in ipairs({ true, false }) do
+        local function run(lists)
+            Out.steady = on
+            return shown(Out, lists)
+        end
+
+        it("holds a countdown icon replaced by another countdown one poll when on, swaps at once when off", function()
+            local q = run({ { { "a", 1.0 } }, { { "b", 0.8 } }, { { "b", 0.6 } } })
+            assert.are.same(on and { "a", "a", "b" } or { "a", "b", "b" }, q)
+            assert.are.equal(false, Out.Primary.held[1])
+        end)
+
+        it("keeps a countdown icon through a raw a/b/a/b alternation when on", function()
+            local q = run({ { { "a", 1 } }, { { "b", 1 } }, { { "a", 1 } }, { { "b", 1 } } })
+            assert.are.same(on and { "a", "a", "a", "a" } or { "a", "b", "a", "b" }, q)
+        end)
+
+        it(
+            "shows at once: a new ready icon, a ready icon going back to waiting, and anything after our own cast",
+            function()
+                assert.are.same({ "a", "b" }, run({ { { "a", 1.0 } }, { { "b", 0 } } }))
+                assert.are.same({ "c", "d" }, run({ { { "c", 0 } }, { { "d", 1.0 } } }))
+                pub(Out, { { "e", 1.0 } })
+                Out.Acted()
+                assert.are.same({ "f" }, run({ { { "f", 1.0 } } }))
+            end
+        )
+    end
+
+    it("marks only the held slot, and holds slot 2 independently of slot 1", function()
+        Out.steady = true
+        pub(Out, { { "a", 0 }, { "x", 1 } })
+        pub(Out, { { "a", 0 }, { "y", 1 } })
+        local o = Out.Primary
+        assert.are.equal("a", o.recs[1].actionName)
+        assert.are.equal("x", o.recs[2].actionName)
+        assert.are.same({ false, true }, { o.held[1], o.held[2] })
+    end)
+
+    it("allocates nothing on the held path over 1000 publishes", function()
+        Out.steady = true
+        local names = { "a", "b" }
+        pub(Out, { { "a", 1 }, { "x", 1 } })
+        local bytes = alloc.bytes(function(r)
+            local sc = Out.Begin("Primary")
+            sc[1].actionName, sc[1].time = names[r % 2 + 1], 1
+            sc[2].actionName, sc[2].time = names[(r + 1) % 2 + 1], 1
+            Out.Publish("Primary", 2)
+        end, 1000)
+        assert.are.equal(0, bytes)
+        assert.is_true(Out.Primary.held[1] or Out.Primary.held[2])
+    end)
+end)
+
 describe("Engine.Output (headless Arms)", function()
     local H, out, t
 
@@ -304,6 +383,19 @@ describe("Engine.Output (headless Arms)", function()
     end
 
     before_each(boot)
+
+    it("steady icons: off in a fresh profile, read per update from the active spec, our casts bridged", function()
+        local id = H.Hekili.State.spec.id
+        local info = { "packs", id, "performance", "steadyIcons" }
+        assert.is_false(H.Hekili:GetSpecOption(info))
+        assert.is_false(H.ns.Output.steady)
+        H.Hekili.DB.profile.specs[id].steadyIcons = true
+        t = t + 0.2
+        assert(headless.cycle(H, t))
+        assert.is_true(H.ns.Output.steady)
+        assert.are.equal(H.ns.Output.Acted, H.ns.VirtualStateInternal.acted)
+        assert.are.same({}, H.errors)
+    end)
 
     it("never shows a half-built set: recs and version hold until the swap, then every record is complete", function()
         assert.are.same({}, H.errors)

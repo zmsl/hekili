@@ -263,5 +263,7 @@ describe("the headless loop's replay injection (o.replay)", function()
         -- every line carries the ledger's fields, and says when the hold experiment was on
         assert.is_truthy(loop.line(t):find("; dips 0.00 flashes 0.00; top []", 1, true))
         assert.is_truthy(loop.line(t):find("; hold on$"))
+        t = loop.tally(L, 1, { duration = 6, steady = true }) -- the shipped steady icons on our instance
+        assert.is_truthy(loop.line(t):find("; steady icons on$"))
     end)
 end)

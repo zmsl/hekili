@@ -10,6 +10,7 @@ local Engine = Hekili.Engine
 local SLOTS = 10 -- recommendation records per display: a display has at most 10 buttons
 local SUBS = 4 -- subscriber slots per display, and annotator slots
 local ALTS = 2 -- alternatives per record: the picks at the low and the high bound of the gating resource
+local READY = 0.05 -- steady icons: a record due within this is shown as ready (the harness's press threshold)
 
 local function records()
     local t = {}
@@ -20,6 +21,15 @@ local function records()
         for j = 1, ALTS do
             t[i].alts[j] = {}
         end
+    end
+    return t
+end
+
+-- `SLOTS` copies of `v`: the per-slot state of steady icons, sized once.
+local function filled(v)
+    local t = {}
+    for i = 1, SLOTS do
+        t[i] = v
     end
     return t
 end
@@ -42,6 +52,12 @@ local function display()
         needAlts = 0, -- subscribers that declared needs.alts (passive or not): Core then fills recs[1..2].alts
         publishing = false,
         payload = nil, -- the WeakAuras event copy, set by Integrations/WeakAuras.lua only when WeakAuras is loaded
+        -- steady icons (Output.steady): per slot the raw (unheld) name and time last publish, and whether recs[i] is
+        -- held; `acts` the Output.Acted count this display last published at
+        rawName = filled(false),
+        rawTime = filled(0),
+        held = filled(false),
+        acts = 0,
     }
 end
 
@@ -76,6 +92,44 @@ local Output = setmetatable({}, { __index = Displays })
 ns.Output = Output
 
 local annotators = slots()
+
+-- Steady icons, an experimental option (the active spec's `steadyIcons`, off by default): Core sets `Output.steady`
+-- once per update. Our own casts, channel ends and swing queue changes since the start (Output.Acted).
+Output.steady = false
+local acts = 0
+
+--- Our own cast started or succeeded, our channel ended or a swing queue changed: the next publish of every display
+--- shows its new icons at once (Game/State/Sources/Casts.lua through Adapter.lua).
+function Output.Acted()
+    acts = acts + 1
+end
+
+-- Holds, per slot, a shown countdown icon that the new set would replace with another countdown icon, for this
+-- publish: the shown record moves into the new set and the new one into the old. Never held: a ready icon on either
+-- side, a slot the last set lacked, a new icon the raw set already had last publish (not ready then either), and
+-- every slot after Output.Acted. So a ready icon, a ready one going back to waiting, and anything after our own
+-- cast show at once, and an icon the engine keeps shows one publish late at most.
+local function steady(o, built, count)
+    local recs, rawName, rawTime, held = o.recs, o.rawName, o.rawTime, o.held
+    local acted, last = o.acts ~= acts, o.count
+    for i = 1, SLOTS do
+        local name, t, keep = false, 0, false
+        if i <= count then
+            local new, old = built[i], recs[i]
+            name, t = new.actionName or false, new.time or 0
+            keep = not acted
+                and i <= last
+                and t > READY
+                and (old.time or 0) > READY
+                and old.actionName ~= name
+                and not (rawName[i] == name and rawTime[i] > READY)
+            if keep then
+                built[i], recs[i] = old, new
+            end
+        end
+        held[i], rawName[i], rawTime[i] = keep, name, t
+    end
+end
 
 --- Clears `name`'s scratch set (every non-table field of every record, and each record's belief) and returns it.
 function Output.Begin(name)
@@ -130,6 +184,10 @@ function Output.Publish(name, count)
                 fn(name, built[i], i)
             end
         end
+        if Output.steady then
+            steady(o, built, count)
+        end
+        o.acts = acts
         o.scratch, o.recs, o.count = o.recs, built, count
     end
     o.version = o.version + 1

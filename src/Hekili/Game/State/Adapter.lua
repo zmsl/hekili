@@ -45,6 +45,9 @@ I.urgent = function(event)
     Hekili:ForceUpdate(event)
 end
 
+-- Our own actions reach the displays' steady icons (Engine/Output.lua; absent where a test loads the state alone).
+I.acted = ns.Output and ns.Output.Acted
+
 -- Start once, at PLAYER_LOGIN, on a frame of its own (a subscriber of the event facade like Hekili's frames).
 do
     local boot = CreateFrame("Frame")

@@ -457,7 +457,7 @@ function Hekili:SaveDebugSnapshot( dispName )
 
             for i = 1, out.count do
                 local rec = out.recs[ i ]
-                overview = format( "%s%s%s|cFFFFD100(%0.2f)|r", overview, ( i == 1 and " - " or ", " ), rec.actionName, rec.time or rec.exact_time or -1 )
+                overview = format( "%s%s%s|cFFFFD100(%0.2f)|r%s", overview, ( i == 1 and " - " or ", " ), rec.actionName, rec.time or rec.exact_time or -1, ns.Output.steady and out.held[ i ] and " (held)" or "" )
             end
 
             insert( v.log, 1, overview )

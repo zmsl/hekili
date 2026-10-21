@@ -10,7 +10,7 @@ local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local S = I.Sources
 local Obs = VS.Obs
-local Plain, Stage, Direct, Urgent = S.Plain, S.Stage, S.Direct, S.Urgent
+local Plain, Stage, Direct, Urgent, Acted = S.Plain, S.Stage, S.Direct, S.Urgent, S.Acted
 
 I.sentGUID = nil
 
@@ -46,6 +46,7 @@ S.On("UNIT_SPELLCAST_START", "player", function(api, t, unit, guid, spellID)
         Stage(Obs.CastStart, t, a, finish / 1000)
         I.Log.Cast("SPELL_CAST_START", t, spellID, I.sentGUID) -- "" when unknown: CLEU falls back to the target
     end
+    Acted()
     Urgent("UNIT_SPELLCAST_START")
 end)
 
@@ -59,6 +60,7 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     Stage(Obs.CastSuccess, t, a, I.CostOf(a), 1)
     I.Log.Cast("SPELL_CAST_SUCCESS", t, spellID, I.sentGUID or Plain(api, api.UnitGUID("target")))
     I.sentGUID = nil
+    Acted()
     Urgent("UNIT_SPELLCAST_SUCCEEDED")
 end)
 
@@ -132,6 +134,7 @@ S.On("UNIT_SPELLCAST_CHANNEL_STOP", "player", function(api, t, unit, guid, spell
     end
     Stage(Obs.ChannelStop, t, a)
     I.Log.Cast("SPELL_AURA_REMOVED", t, spellID, I.Log.player)
+    Acted()
     Urgent("UNIT_SPELLCAST_CHANNEL_STOP")
 end)
 
@@ -154,6 +157,7 @@ S.Poll(3, function(api, t)
                 if v ~= queued[a] then
                     queued[a] = v
                     Direct(Obs.Queued, t, a, v)
+                    Acted()
                 end
             end
         end

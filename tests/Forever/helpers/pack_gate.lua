@@ -84,7 +84,7 @@ function M.solo(label, world, n, seed0, tag, reported)
         M.health(m, r, line)
     else
         M.gate(m, r, line)
-        if n >= 20 and not m.hold then -- the floors are the unheld display's
+        if n >= 20 and not m.hold and not m.steady then -- the floors are the unheld display's
             M.flicker(label, r, line)
         end
     end

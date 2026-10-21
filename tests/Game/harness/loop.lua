@@ -20,6 +20,9 @@ M.PULL = 3 -- the world starts this long before the pull, the target selected (p
 M.GAP = 30 -- out of combat between two fights on one boot (consecutive pulls)
 -- The display-side hold experiment (flicker.hold) on our instance's shown queue: o.hold, else this switch (off)
 M.HOLD = os.getenv("HEKILI_LOOP_HOLD") == "1"
+-- The shipped steady icons (Engine/Output.lua, the spec's experimental steadyIcons) on our instance: o.steady, else
+-- this switch (off; the flicker design study's hold3)
+M.STEADY = os.getenv("HEKILI_LOOP_HOLD") == "3"
 -- The oracle's facade rows answered by the client (§4's override): the target's health, and the debuff row Hekili's
 -- aura scan reads (raw since VirtualState counted a modelled stack on top of a plain read that arrived before the
 -- cast's drain, fixed in Auras.lua's I.AuraModel and pinned in loop_warrior_spec). The buff row stays VirtualState's: our
@@ -235,11 +238,20 @@ function M.run(L, seed, o, drivers)
     if hold == nil then
         hold = M.HOLD
     end
+    local steady = o.steady
+    if steady == nil then
+        steady = M.STEADY
+    end
     local res = L.power.token and L.power.token:lower()
     local pollEv, tickEv, nextEv = {}, {}, 1
     local sink = {}
     local steps = {}
     for i, d in ipairs(drivers) do
+        local id = d.H.Hekili.State.spec.id
+        local sp = id and d.H.Hekili.DB.profile.specs[id]
+        if sp then
+            sp.steadyIcons = steady and not d.plain -- the oracle shadow never holds
+        end
         local ctl = d.H.ctl -- a fresh world: the client's answers about it start fresh too
         ctl.combat, ctl.form, ctl.stealthed = false, L.form, false
         local fresh = {
@@ -603,6 +615,10 @@ function M.tally(L, n, o)
     else
         m.hold = o.hold
     end
+    m.steady = o.steady
+    if m.steady == nil then
+        m.steady = M.STEADY
+    end
     for f = 1, n do
         local seed = (o.seed0 or 0) + f
         local po = setmetatable({ trace = o.trace == nil and f == 1 or o.trace }, { __index = o })
@@ -705,6 +721,10 @@ function M.replay(L, R, o)
     m.hold = M.HOLD
     if o and o.hold ~= nil then
         m.hold = o.hold
+    end
+    m.steady = M.STEADY
+    if o and o.steady ~= nil then
+        m.steady = o.steady
     end
     for _, e in ipairs(m.led.ours.entries) do
         if e.kind == "retracted" and not e.justified then
@@ -865,6 +885,9 @@ function M.line(m)
     line = line .. "; " .. flicker.line(r.led, r.ledO) -- the flicker ledger's fields, last (layout.md's columns)
     if m.hold then
         line = line .. "; hold on"
+    end
+    if m.steady then
+        line = line .. "; steady icons on"
     end
     return line
 end

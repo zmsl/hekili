@@ -147,6 +147,15 @@ function S.Urgent(event)
     end
 end
 
+--- Our own cast started or succeeded, our channel ended or a swing queue changed (the display's steady icons show
+--- the next set at once). Adapter.lua sets `I.acted`.
+function S.Acted()
+    local f = I.acted
+    if f then
+        f()
+    end
+end
+
 --- Runs the sources for one client event. The event facade has already passed every slot through Plain.
 function S.Run(api, event, a1, a2, a3, a4, a5)
     local list = HANDLERS[event]
