@@ -332,10 +332,10 @@ local function classData(H)
     return X
 end
 
--- Whether `e`'s true stance meets ability `a`'s buff / nobuff stance fields.
+-- Whether `e`'s true stance meets ability `a`'s form / nobuff stance fields.
 local function stanceOk(a, e)
-    if a.buff and M.FORM[a.buff] and e.form ~= M.FORM[a.buff] then
-        return false, a.buff
+    if a.form and M.FORM[a.form] and e.form ~= M.FORM[a.form] then
+        return false, a.form
     elseif a.nobuff and M.FORM[a.nobuff] and e.form == M.FORM[a.nobuff] then
         return false, "not " .. a.nobuff
     end

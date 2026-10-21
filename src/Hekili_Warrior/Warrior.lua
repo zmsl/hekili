@@ -843,7 +843,7 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows({ 18499 }),
-        buff = "berserker_stance",
+        form = "berserker_stance",
 
         -- what the cast did to the now-state, in the belief's context (spec §12a)
         now = function()
@@ -965,7 +965,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows(CHARGE),
         -- Vanguard: Charge also in Defensive Stance (Forever, 1310317)
-        buff = function()
+        form = function()
             if talent.vanguard.enabled and buff.defensive_stance.up then
                 return "defensive_stance"
             end
@@ -1135,7 +1135,7 @@ spec:RegisterAbilities({
         refundOnAvoid = true, -- wowsims disarm.go; DB2 Discount Power On Miss
         known = knows({ 676 }),
         toggle = "defensives",
-        buff = "defensive_stance",
+        form = "defensive_stance",
 
         now = function()
             applyDebuff("target", "disarm")
@@ -1246,7 +1246,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(INTERCEPT),
-        buff = "berserker_stance",
+        form = "berserker_stance",
 
         -- The spell's own range check: exact, where target.minR/maxR are only the coarse bracket (VS.TargetRange).
         usable = function()
@@ -1323,7 +1323,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         refundOnAvoid = true, -- wowsims mocking_blow.go; DB2 Discount Power On Miss
         known = knows(MOCKING_BLOW),
-        buff = "battle_stance",
+        form = "battle_stance",
 
         now = function()
             applyDebuff("target", "mocking_blow")
@@ -1375,7 +1375,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         refundOnAvoid = true, -- wowsims overpower.go; DB2 Discount Power On Miss
         known = knows(OVERPOWER),
-        buff = "battle_stance",
+        form = "battle_stance",
 
         usable = function()
             return buff.overpower_ready.up, "only usable after dodging"
@@ -1428,7 +1428,7 @@ spec:RegisterAbilities({
         startsCombat = true,
         refundOnAvoid = true, -- wowsims pummel.go; DB2 Discount Power On Miss
         known = knows(PUMMEL),
-        buff = "berserker_stance",
+        form = "berserker_stance",
         debuff = "casting",
         readyTime = state.timeToInterrupt,
 
@@ -1446,7 +1446,7 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows({ 1719 }),
         toggle = "cooldowns",
-        buff = "berserker_stance",
+        form = "berserker_stance",
 
         now = function()
             applyBuff("recklessness")
@@ -1493,7 +1493,7 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows({ 20230 }),
         toggle = "cooldowns",
-        buff = "battle_stance",
+        form = "battle_stance",
 
         now = function()
             applyBuff("retaliation")
@@ -1520,12 +1520,8 @@ spec:RegisterAbilities({
         refundOnAvoid = true, -- wowsims revenge.go; DB2 Discount Power On Miss
         known = knows(REVENGE),
 
-        buff = function()
-            if buff.revenge_usable.up then
-                return "defensive_stance"
-            end
-            return "revenge_usable"
-        end,
+        form = "defensive_stance",
+        buff = "revenge_usable",
 
         handler = function()
             removeBuff("revenge_usable")
@@ -1548,7 +1544,7 @@ spec:RegisterAbilities({
         refundOnAvoid = true, -- wowsims shield_bash.go; DB2 Discount Power On Miss
         known = knows(SHIELD_BASH),
         toggle = "interrupts",
-        buff = function()
+        form = function()
             return buff.battle_stance.up and "battle_stance" or "defensive_stance"
         end,
         equipped = "shield",
@@ -1580,7 +1576,7 @@ spec:RegisterAbilities({
 
         startsCombat = false,
         known = knows({ 2565 }),
-        buff = "defensive_stance",
+        form = "defensive_stance",
         equipped = "shield",
 
         now = function()
@@ -1619,7 +1615,7 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows({ 871 }),
         toggle = "defensives",
-        buff = "defensive_stance",
+        form = "defensive_stance",
         equipped = "shield",
 
         now = function()
@@ -1674,7 +1670,7 @@ spec:RegisterAbilities({
         refundOnAvoid = true, -- wowsims talents_arms.go; DB2 Discount Power On Miss
         talent = "spearing_strike",
         known = knows({ 1310222 }),
-        buff = "battle_stance",
+        form = "battle_stance",
     },
 
     sunder_armor = {
@@ -1715,7 +1711,7 @@ spec:RegisterAbilities({
         talent = "sweeping_strikes",
         startsCombat = false,
         known = knows({ 12292 }),
-        buff = "battle_stance",
+        form = "battle_stance",
         toggle = "cooldowns",
 
         now = function()
@@ -1735,7 +1731,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows({ 355 }),
-        buff = "defensive_stance",
+        form = "defensive_stance",
 
         now = function()
             applyDebuff("target", "taunt")
@@ -1810,7 +1806,7 @@ spec:RegisterAbilities({
 
         startsCombat = true,
         known = knows(WHIRLWIND),
-        buff = "berserker_stance",
+        form = "berserker_stance",
     },
 })
 

@@ -265,9 +265,9 @@ describe("Forever Warrior", function()
         local e = lw.env(w)
         assert.are.equal("spearing_strike", w.abilities.spearing_strike.talent)
         e.buff = setmetatable({ defensive_stance = { up = true } }, getmetatable(e.buff))
-        assert.are.equal("battle_stance", lw.run(w.abilities.charge.buff, e))
+        assert.are.equal("battle_stance", lw.run(w.abilities.charge.form, e))
         e.talent = rank(1)
-        assert.are.equal("defensive_stance", lw.run(w.abilities.charge.buff, e))
+        assert.are.equal("defensive_stance", lw.run(w.abilities.charge.form, e))
     end)
 
     it("gates Charge on being out of combat and outside melee range, not LibRangeCheck", function()
@@ -458,10 +458,10 @@ describe("Forever Warrior", function()
 
     it("gates Thunder Clap, Execute and Spearing Strike on the stances Forever's tooltips name", function()
         local a = w.abilities
-        assert.are.same({ nil, "berserker_stance" }, { a.thunder_clap.buff, a.thunder_clap.nobuff })
-        assert.are.same({ nil, "defensive_stance" }, { a.execute.buff, a.execute.nobuff })
+        assert.are.same({ nil, "berserker_stance" }, { a.thunder_clap.form, a.thunder_clap.nobuff })
+        assert.are.same({ nil, "defensive_stance" }, { a.execute.form, a.execute.nobuff })
         assert.are.equal(0.2, a.execute.healthGate) -- VirtualState's target health (Families/TargetHealth.lua)
-        assert.are.same({ "battle_stance", nil }, { a.spearing_strike.buff, a.spearing_strike.nobuff })
+        assert.are.same({ "battle_stance", nil }, { a.spearing_strike.form, a.spearing_strike.nobuff })
     end)
 
     it("uses the corrected Classic IDs and Forever's Overpower window", function()
@@ -487,7 +487,7 @@ describe("Forever Warrior", function()
         local e = lw.env(w)
         for key, a in pairs(w.abilities) do
             lw.run(a.handler, e)
-            for _, gate in ipairs({ lw.run(a.buff, e), a.nobuff }) do
+            for _, gate in pairs({ lw.run(a.form, e), lw.run(a.buff, e), a.nobuff }) do
                 table.insert(e.applied, gate)
             end
         end
