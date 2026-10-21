@@ -79,13 +79,7 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     it("Arms (wowsims.com)'s replay presses nothing", function()
         local C = content("warrior_arms", ARMS_CHAR, "Arms (wowsims.com)", 60, ARMS)
         local L = loop.new(C)
-        local ro = setmetatable({
-            forms = C.character().forms,
-            creatureType = ws.creatureType("warrior_arms"),
-            distance = ws.distance("warrior_arms"),
-            shared = C.SHARED,
-        }, { __index = ARMS_REPLAY }) -- ws.gate's knobs
-        local R = replay.new(ws.log("warrior_arms"), L.oracle, ro)
+        local R = replay.new(ws.log("warrior_arms"), L.oracle, ws.replayOptions(C, "warrior_arms", ARMS_REPLAY))
         local run = loop.run(L, 1, { replay = R, trace = false }, { { H = L.us } })
         assert.are.equal(0, run.presses)
         assert.is_true(#run.dec.ours > 40, "decisions scored")
