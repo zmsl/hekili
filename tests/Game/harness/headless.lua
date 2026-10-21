@@ -253,7 +253,7 @@ end
 --- forms = { spellID... }, form }; `o.pack` the
 --- priority to select; `o.now` the clock [1000]; `o.raw` facade rows answered by the raw client (names: the oracle's
 --- secret-free client, §4), replaced as Facade.lua loads; `o.saved` the HekiliDB saved variables (default nil: a fresh
---- profile).
+--- profile); `o.scenario` Hekili.Engine.scenario ("sim": the settings' harness defaults; default nil: in game).
 --- Returns `H = { env, api, ctl, ns, Hekili, frames, timers, misses, errors, loadErrors, prints }`.
 function M.new(o)
     o = o or {}
@@ -962,6 +962,9 @@ function M.new(o)
     end
     env.HekiliDB = o.saved -- saved variables, as the client sets them before the addon's ADDON_LOADED (nil: fresh)
     loadAddon(addons.CORE)
+    -- the scenario the settings' defaults are for (Engine.SettingDefault: "sim" for the harness's own, nil in game),
+    -- set before ADDON_LOADED fills the profile
+    rawget(env, "Hekili").Engine.scenario = o.scenario
 
     -- login: ADDON_LOADED (OnInitialize: Hekili_Shared, the class pack, then the AceDB profile), PLAYER_LOGIN
     -- (OnEnable, VS.Start, the content notice) and PLAYER_ENTERING_WORLD

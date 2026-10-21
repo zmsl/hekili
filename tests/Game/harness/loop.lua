@@ -29,7 +29,8 @@ M.RAW = { "UnitHealth", "UnitHealthMax", "C_UnitAuras.GetDebuffDataByIndex" }
 --- Boots the two instances for `content` (one boot per busted block, §1.3): { content, us, oracle }. `content`:
 --- character(), PACK, resolve(key, H), usable(H), gain(pt, hand, amount, flag) (what a landed wound of ours pays in
 --- power type `pt`, the character's), WORLD (scenario knobs), uptime(H); optional OBSERVE (observer knobs over the
---- loop's: another power's reads, the forms).
+--- loop's: another power's reads, the forms), SCENARIO (headless.new's `scenario`; default "sim": the settings'
+--- harness defaults, wowsims's scenario; "game" boots both instances with the in-game ones).
 function M.new(content)
     local L = { content = content }
     local character = content.character()
@@ -38,8 +39,10 @@ function M.new(content)
     L.gain = function(hand, amount, flag) -- the swing-paid power is the character's (scenarios.world's `pt`)
         return content.gain(pt, hand, amount, flag)
     end
-    L.us = headless.new({ character = character, pack = content.PACK })
-    L.oracle = headless.new({ character = character, pack = content.PACK, raw = M.RAW })
+    local scenario = content.SCENARIO or "sim"
+    scenario = scenario ~= "game" and scenario or nil
+    L.us = headless.new({ character = character, pack = content.PACK, scenario = scenario })
+    L.oracle = headless.new({ character = character, pack = content.PACK, raw = M.RAW, scenario = scenario })
     for _, H in ipairs({ L.us, L.oracle }) do
         H.ctl.inRange.target = true -- a world without positions (no W.distance): every target in range
     end
