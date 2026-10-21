@@ -111,13 +111,50 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     end)
     -- the pack's own worst idle at 60 (wowsims's pooling), after fix 16 (8.2 with GAP AD's Intercept)
     local FURY_LIVE60 = 6.8
+    -- below Bloodthirst: 7.4 s, the recipe's idle before its leveling Sunder, again since that Sunder stops at 5 stacks
+    -- (fix 18: it was 2.6 s, filled by Sunders at 5 stacks); the owner's call
+    local FURY_LIVE_LEVELING = 7.4
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Fury (wowsims.com) stays live at level " .. level, function()
             ws.live(
                 "Fury (wowsims.com)",
                 content("warrior_fury", ww.Fury, "Fury (wowsims.com)", level, FURY),
-                math.max(6, FURY_LIVE60)
+                math.max(6, level < 60 and FURY_LIVE_LEVELING or FURY_LIVE60)
             )
+        end)
+    end
+    -- Central fix 18 (in game, level 30 beta: no Mortal Strike or Bloodthirst before 40): the leveling filler Sunder
+    -- fired at 5 stacks. Below 40, with ours driving on the secret client (target auras raise in combat), the first
+    -- icon is never Sunder while the target's true 5 stacks have more than 15 s left (past any wait the queue shows)
+    -- and the fifth is older than one tick (the cast's frame, before its success folds in).
+    for _, case in ipairs({
+        { "warrior_arms", ww, "Arms (wowsims.com)", ARMS },
+        { "warrior_fury", ww.Fury, "Fury (wowsims.com)", FURY },
+    }) do
+        it(case[3] .. " stops Sunder Armor at 5 stacks at level 30", function()
+            local L = loop.new(content(case[1], case[2], case[3], 30, case[4]))
+            local H = L.us
+            local id = H.Hekili.Class.auras.sunder_armor.id
+            local at5, five, raised = {}, 0, 0
+            loop.run(L, 1, {
+                duration = 120,
+                on = function(run, steps, t)
+                    if H.ctl.auraError.target then
+                        raised = raised
+                            + (pcall(H.api.C_UnitAuras.GetAuraDataByIndex, "target", 1, "HARMFUL") and 0 or 1)
+                    end
+                    local a = run.us.target and run.us.target.auras[id]
+                    local left = a and a.stacks == 5 and a.expires - t or 0
+                    if left > 15 and left < 30 - loop.TICK then
+                        five = five + 1
+                        if steps[1].q.name[1] == "sunder_armor" then
+                            at5[#at5 + 1] = ("%.1f"):format(t)
+                        end
+                    end
+                end,
+            }, { { H = H } })
+            assert.is_true(raised > 0 and five > 0, raised .. " raised reads, " .. five .. " ticks at 5")
+            assert.are.same({}, at5)
         end)
     end
     it("Protection (wowsims.com) follows wowsims's casts", function()

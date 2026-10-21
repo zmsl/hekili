@@ -62,6 +62,6 @@ return {
     leveling = {
         "heroic_strike,use_off_gcd=1,if=!action.mortal_strike.known&rage.current>=30",
         "thunder_clap,if=!action.mortal_strike.known&!debuff.thunder_clap.up&rage.current>=40",
-        "sunder_armor,if=!action.mortal_strike.known",
+        "sunder_armor,if=!action.mortal_strike.known&debuff.sunder_armor.stack<5",
     },
 }

@@ -190,6 +190,39 @@ describe("the headless Arms loop", function()
         end
     )
 
+    it(
+        "believes Sunder Armor's true stacks on ours across seven presses: target auras raise in combat; 5 is the cap",
+        function()
+            local H = L.us
+            local id = H.Hekili.Class.auras.sunder_armor.id
+            local VS = H.ns.VirtualState
+            local wrong, presses = {}, 0
+            loop.run(L, 1, {
+                duration = 20,
+                react = -1, -- watch: only the forced presses below
+                on = function(run, steps, t)
+                    local us = run.us
+                    local a = us.target and us.target.auras[id]
+                    local truth = a and a.expires > t + 1e-6 and a.stacks or nil
+                    local belief = select(2, VS.Aura("target", id, steps[1].base + t))
+                    if truth ~= belief and presses > 0 then
+                        wrong[#wrong + 1] = ("t=%.1f truth %s belief %s"):format(t, tostring(truth), tostring(belief))
+                    end
+                    -- 5, 7, ... 17 s: a press at 4 s meets seed 1's parry of a 1.0 s late swing, which the belief gives the
+                    -- cast as its avoid (the attribution gap, central fix 18's report)
+                    if t > 4 and t < 18 and math.abs((t - 1) / 2 - math.floor((t - 1) / 2 + 0.5)) < 1e-6 then
+                        assert.is_false((pcall(H.api.C_UnitAuras.GetAuraDataByIndex, "target", 1, "HARMFUL")))
+                        us.power = math.max(us.power, 30)
+                        assert.is_true(run.W.press(us, "sunder_armor", ww.resolve("sunder_armor", H)))
+                        presses = presses + 1
+                    end
+                end,
+            }, { { H = H } })
+            assert.are.equal(7, presses)
+            assert.are.same({}, wrong)
+        end
+    )
+
     it("smoke: one 30 s fight, ours driving, the oracle shadowing and then driving (fast)", function()
         local a, b = loop.fight(L, 1, { duration = 30 })
         for _, r in ipairs({ a, b }) do

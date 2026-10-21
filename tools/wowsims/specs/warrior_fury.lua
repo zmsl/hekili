@@ -17,8 +17,8 @@
 -- death_wish -> sunder_armor (0.00): wowsims is 6 yd away after Intercept's travel and cannot Sunder yet; the engine
 -- does not gate Sunder on melee range (replay limit). Fix 16 cleared 57.09, 67.91, 76.16, 117.06 and 138.30; 62.81
 -- and 88.32 no longer disagree.
--- Leveling: Sunder Armor while Bloodthirst is unlearned (levels 10-40 idled 7.4 s and 8.2 s over the 60 bracket's 6.8 s
--- with only Rend's or Whirlwind's wait left); silent at 60.
+-- Leveling: Sunder Armor below 5 stacks while Bloodthirst is unlearned (levels 10-40 idled 7.4 s and 8.2 s over the
+-- 60 bracket's 6.8 s with only Rend's or Whirlwind's wait left); silent at 60. At 5 stacks it stays silent (fix 18).
 -- Replay knobs (tests/Forever/wowsims_warrior_spec.lua): Whirlwind's off-hand hit (1680 Tag 2) is a hit, not a cast;
 -- the Heroic Strike queue (25286 Tag 1) is an aura the client never shows; the main hand's 2.1 s period (the log's
 -- first two main-hand swings are 4.2 s apart: Heroic Strike replaced one).
@@ -55,5 +55,5 @@ return {
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
     -- the retired Fury list's tiers (P9.3) that a line carries: no line casts Victory Rush or Revenge, and one Cleave
     focus = { overpower = 1, heroic_strike = { 1, 2 }, cleave = 1 },
-    leveling = { "sunder_armor,if=!action.bloodthirst.known" },
+    leveling = { "sunder_armor,if=!action.bloodthirst.known&debuff.sunder_armor.stack<5" },
 }
