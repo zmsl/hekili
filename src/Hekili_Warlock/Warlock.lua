@@ -142,11 +142,15 @@ local function cataclysmic(values, ids)
 end
 
 -- A cast time less Bane's 0.1 s a rank (DB2 17788 effect 0: aura 107 misc 10 on Shadow Bolt, Immolate and Incinerate),
--- hasted. `base`: a number, or a table by rank of `ids`.
+-- hasted. `base`: a number, or a table by rank of `ids`. The reads are arguments: a field function's caller passes its
+-- own `talent` and `haste` (Hekili setfenv's only the field function itself, never a closure it calls).
+local function banedTime(base, ids, bane, h)
+    local b = ids and (base[knownRank(ids)] or base[1]) or base
+    return (b - 0.1 * bane) * h
+end
 local function baned(base, ids)
     return function()
-        local b = ids and (base[knownRank(ids)] or base[1]) or base
-        return (b - 0.1 * talent.bane.rank) * haste
+        return banedTime(base, ids, talent.bane.rank, haste)
     end
 end
 
@@ -372,7 +376,7 @@ spec:RegisterAbilities({
             if buff.shadow_trance.up then
                 return 0 -- DB2 17941: -100% cast time on Shadow Bolt
             end
-            return ((SHADOW_BOLT_CAST[knownRank(SHADOW_BOLT)] or SHADOW_BOLT_CAST[1]) - 0.1 * talent.bane.rank) * haste
+            return banedTime(SHADOW_BOLT_CAST, SHADOW_BOLT, talent.bane.rank, haste)
         end,
         cooldown = 0,
         gcd = "spell",

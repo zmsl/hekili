@@ -72,10 +72,10 @@ describe("Engine/Content.lua", function()
     end)
 
     it("Notifies once for a class with no pack installed, and loads only the shared content", function()
-        classToken = "PRIEST"
+        classToken = "NOPACK" -- a synthetic class with no content addon
         run()
-        assert.are.same({ "load Hekili_Shared", "meta Hekili_Priest X-Hekili-ContentAPI" }, calls)
-        assert.are.same({ "no Forever pack for Priest; install Hekili_Priest" }, notes)
+        assert.are.same({ "load Hekili_Shared", "meta Hekili_Nopack X-Hekili-ContentAPI" }, calls)
+        assert.are.same({ "no Forever pack for Nopack; install Hekili_Nopack" }, notes)
     end)
 
     it("Notifies a content API mismatch and does not load the pack", function()
@@ -121,10 +121,10 @@ describe("Engine/Content.lua", function()
     it("runs once per session: a second call loads nothing and repeats no notice", function()
         run(true)
         assert.are.same(WARRIOR, calls)
-        classToken = "PRIEST"
+        classToken = "NOPACK" -- a synthetic class with no content addon
         run(true)
-        assert.are.same({ "load Hekili_Shared", "meta Hekili_Priest X-Hekili-ContentAPI" }, calls)
-        assert.are.same({ "no Forever pack for Priest; install Hekili_Priest" }, notes)
+        assert.are.same({ "load Hekili_Shared", "meta Hekili_Nopack X-Hekili-ContentAPI" }, calls)
+        assert.are.same({ "no Forever pack for Nopack; install Hekili_Nopack" }, notes)
     end)
 
     it("declares one content API in every content TOC", function()
