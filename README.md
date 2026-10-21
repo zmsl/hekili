@@ -14,7 +14,7 @@ Hekili Forever is a fork of the Hekili priority helper, rebuilt for WoW Forever.
 Hekili Forever is a priority helper that can make recommendations several steps into the future. It collects information about the game's current state, uses a SimulationCraft-style action priority list to recommend the next ability, then advances the game state and makes the next prediction.
 
 ## Supported Classes
-Hekili Forever is currently in rapid development based on the level 30 beta. Druid (Feral, Guardian, Balance), Warrior (Arms, Fury, Protection), Rogue (Combat, Assassination, Subtlety), Paladin (Retribution, Protection), Shaman (Enhancement) and Hunter (Beast Mastery, Marksmanship, Survival) are the current focus and are tuned for level 60 content, but are subject to rapid change after launch.
+Hekili Forever is currently in rapid development based on the level 30 beta. Druid (Feral, Guardian, Balance), Warrior (Arms, Fury, Protection), Rogue (Combat, Assassination, Subtlety), Paladin (Retribution, Protection), Shaman (Enhancement), Hunter (Beast Mastery, Marksmanship, Survival) and Mage (Arcane, Fire) are the current focus and are tuned for level 60 content, but are subject to rapid change after launch.
 
 ## Action Packs
 Action Packs are shareable instructions that direct the addon how to make recommendations. They use action priority lists similar to SimulationCraft, with Forever-specific lines written for this ruleset. Action Packs only work for specializations the addon supports. View and edit them under /hekili > Priorities.
@@ -61,15 +61,14 @@ Open an issue at https://github.com/zmsl/hekili/issues.
   click the text box, press Ctrl+A and Ctrl+C, and paste it into the issue (or a paste site, with the link in the issue).
 
 ## Development
-Layout and conventions: `docs/dev/layout.md`. Run `make bootstrap` once, then `make check` before every commit.
-Packaging and releases: `docs/publishing/README.md`.
+See https://github.com/zmsl/hekili/blob/forever/DEVELOPMENT.md.
 
 ## Credits
 Based on the original work by Hekili: https://github.com/Hekili/hekili (Hekili and its maintainers). Hekili Forever is
 published with the original author's explicit permission. Author: [defzach](https://github.com/zmsl).
 Bundled libraries (Ace3, LibStub, LibSharedMedia-3.0, LibDBIcon-1.0, LibDataBroker-1.1 and others) belong to their
-authors under their own licences; see `src/Hekili/Libs/CREDITS.md`.
+authors under their own licences: https://github.com/zmsl/hekili/blob/forever/src/Hekili/Libs/CREDITS.md.
 
 ## Licence
-GNU General Public License version 3 or later (`LICENSE`): either version 3 of the License, or (at your option) any
+GNU General Public License version 3 or later (https://github.com/zmsl/hekili/blob/forever/LICENSE): either version 3 of the License, or (at your option) any
 later version. Modified for WoW Forever by defzach from October 2026.

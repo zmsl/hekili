@@ -24,6 +24,7 @@ manual-changelog:
 
 ignore:
     - README.md
+    - DEVELOPMENT.md
     - CHANGELOG.md
     - src/Hekili_Shared/README.md
     - tests
