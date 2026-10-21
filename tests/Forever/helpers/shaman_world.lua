@@ -243,6 +243,12 @@ M.MAP = {
             aura(W, X, e, "rage_of_the_farseer")
         end,
     },
+    -- The Troll racial (Elemental's build): its buff on us; its haste on the casts is not modelled.
+    berserking = {
+        effect = function(W, e, _, X)
+            aura(W, X, e, "berserking")
+        end,
+    },
     searing_totem = totem("searing_totem"),
     flametongue_totem = totem("flametongue_totem"),
     strength_of_earth_totem = totem("strength_of_earth_totem"),
@@ -254,8 +260,8 @@ M.MAP = {
 
 -- The packs' worlds: `pack` the priority, `spec` its spec id, `kit` the abilities the character knows (every rank),
 -- `talents` the build's ({ [rank-1 spell] = rank }; none: no points), `weapon` the main hand, `distance` ours from the
--- mob (nil: melee), `uptime` the debuffs reported. The imbues are left out of the kit: the world has no weapon enchant
--- read (shaman_spec covers the reminder).
+-- mob (nil: melee), `mana` and `fsr` the pool and regen parts (nil: 5000 and FSR), `uptime` the debuffs reported. The
+-- imbues are left out of the kit: the world has no weapon enchant read (shaman_spec covers the reminder).
 local PACKS = {
     -- Stormstrike, Maelstrom Weapon and Elemental Focus, a two-hander.
     Enhancement = {
@@ -318,7 +324,11 @@ local PACKS = {
             [1223033] = 3, -- Mindfulness (wowsims's tree; not in the DB2's Talent table)
         },
         weapon = { 40, 70, 3.0 },
-        distance = 25,
+        -- wowsims's log (shaman_elemental.log): 5590 mana, 29.75 a second while casting (OtherID 2 Tag 1, Mana Spring
+        -- Totem and Mindfulness's share included) and 42.5 more outside the five-second rule (Tag 2)
+        mana = 5590,
+        fsr = { 42.5, 29.75 },
+        distance = 20, -- the build's distanceFromTarget: the shocks reach 20 yd
         uptime = { "flame_shock" },
     },
 }
@@ -375,7 +385,7 @@ local function content(name)
             level = 60,
             known = known,
             talents = P.talents or {},
-            power = { type = MANA, token = "MANA", max = 5000 },
+            power = { type = MANA, token = "MANA", max = P.mana or 5000 },
             speed = { P.weapon[3] },
         }
     end
@@ -422,9 +432,9 @@ local function content(name)
     C.WORLD = {
         level = 60,
         weapons = { P.weapon },
-        max = 5000,
-        fsr = { [MANA] = FSR },
-        power = 5000,
+        max = P.mana or 5000,
+        fsr = { [MANA] = P.fsr or FSR },
+        power = P.mana or 5000,
         mobHealth = 1e9,
         distance = P.distance,
         script = hooks,
