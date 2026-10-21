@@ -4,18 +4,17 @@
 -- src/Hekili_<Class>/APLs/packs.lua ({ class, packs = { "<Pack>", ... } in block order,
 -- specs = { [<Pack>] = <spec key> } }) and one <Pack>.simc per pack beside it (dev-only: no TOC lists them): its
 -- leading `#` lines are the description, other `#` lines and blank lines are dropped, the rest is SimC-style text.
--- The class's pack date has one source, its class file's first block.
+-- A pack's version has one source, its class file's block.
 -- Run from the repository root (the class defaults to warrior):
 --   lua5.1 tools/make_pack.lua [class]          prints "<version> <string>" per pack, in order
 --   lua5.1 tools/make_pack.lua write [class]    rewrites the class file's RegisterPack blocks (`make packs` runs it)
 --   lua5.1 tools/make_pack.lua decode <string>  prints a share string's description and lists as SimC
 -- Loaded with loadfile(...)("lists"[, class]) it returns the class's pack records ({ name, desc, simc, lists,
 -- version, spec }); with ("lib") the functions { parse, unparse, encode, decode, sync, load, write }, for the specs.
--- The version is date * 1000 + a checksum of the pack's SimC text % 1000, so any text change reloads a saved profile
--- (Engine/Schema/Spec.lua RestoreDefaults reloads on `~=`; a lower number on a same-day edit still reloads but reports
--- the pack "reverted" rather than "updated"). `write` keeps the class file's date while the generated blocks are
--- unchanged and sets it to today (PACK_DATE, else os.date) when any of them changed, so an unchanged pack keeps its
--- version and a rebuild is a no-op.
+-- The version is date * 1000 + a same-day sequence: `write` keeps a pack's version while its block is unchanged, and
+-- when it changed sets it to today * 1000 (PACK_DATE, else os.date) on a later day than the old version's, else the old
+-- version + 1, so a version only ever rises (Engine/Schema/Spec.lua RestoreDefaults reloads on `~=` and reports
+-- "reverted" only for a lower one) and a rebuild is a no-op.
 
 local function Class(class)
     return class:sub(1, 1):upper() .. class:sub(2)
@@ -110,15 +109,6 @@ local function unparse(lists)
     return table.concat(out, "\n") .. "\n"
 end
 
--- A rotating byte checksum of the SimC text, 0-999.
-local function checksum(text)
-    local h = 0
-    for i = 1, #text do
-        h = (h * 31 + text:byte(i)) % 1000003
-    end
-    return h % 1000
-end
-
 local function slurp(path)
     local f, err = io.open(path, "rb")
     if not f then
@@ -129,21 +119,35 @@ local function slurp(path)
     return s
 end
 
--- The pack date of a class file: its first RegisterPack block's version without the checksum.
-local function current(src)
-    local version = src:match('spec:RegisterPack%(\n    "[^"\n]+",\n    (%d+),')
-    if not version then
-        error("no RegisterPack block", 0)
+-- The versions a class file's RegisterPack blocks carry, by pack name.
+local function versions(src)
+    local out = {}
+    for name, version in src:gmatch('spec:RegisterPack%(\n    "([^"\n]+)",\n    (%d+),') do
+        out[name] = tonumber(version)
     end
-    return math.floor(tonumber(version) / 1000)
+    return out
 end
 
--- The class's pack records, in the manifest's order, versioned with `date` (default: the class file's); a listed pack
+-- The next version of a changed pack: today * 1000 on a later day than `old`'s, else old + 1 (the sequence).
+local function bump(old, today)
+    if math.floor(old / 1000) < today then
+        return today * 1000
+    end
+    if old % 1000 == 999 then
+        error("pack version " .. old .. ": more than 999 same-day regenerations", 0)
+    end
+    return old + 1
+end
+
+-- The class's pack records, in the manifest's order, each keeping the version the class file (`from.src`, default the
+-- file on disk) gives it; a pack in `from.bump` (a set of names) gets the next one for `from.today`, a new one
+-- `from.today` * 1000. A listed pack
 -- without a file or a .simc file not listed is refused, and a line parse refuses is reported with its .simc file.
 -- `root` (default src/Hekili_<Class>/APLs/) is for the specs.
-local function load(class, root, date)
+local function load(class, root, from)
     root = root or aplRoot(class)
-    date = date or current(slurp(classFile(class)))
+    from = from or {}
+    local old = versions(from.src or slurp(classFile(class)))
     local def = dofile(root .. "packs.lua")
     local files = {}
     local pipe = assert(io.popen("ls " .. root .. " 2>/dev/null"))
@@ -176,7 +180,11 @@ local function load(class, root, date)
             error(path .. ": " .. lists, 0)
         end
         p.lists = lists
-        p.version = date * 1000 + checksum(p.simc)
+        local v = old[name]
+        if from.bump and from.bump[name] then
+            v = bump(v, from.today)
+        end
+        p.version = v or (from.today or 0) * 1000
         -- the manifest: { class = "WARRIOR", packs = {...}, specs = { Arms = "arms", ... } }
         if not def.class then
             error(root .. "packs.lua: no class", 0)
@@ -294,11 +302,20 @@ local function sync(src, packs)
     return src:sub(1, first - 1) .. table.concat(new) .. src:sub(last + 1), report
 end
 
--- sync with the class file's own date; if that changes any block, again with `today` (YYYYMMDD) as the class's date.
+-- sync with the class file's own versions; a pack that differs then gets its next version (see bump) for `today`
+-- (YYYYMMDD), so an unchanged pack keeps its version and a rewrite of an unchanged file is a no-op.
 local function write(src, class, today, root)
-    local out, report = sync(src, load(class, root, current(src)))
-    if out ~= src then
-        out, report = sync(src, load(class, root, today))
+    local from = { src = src, today = today }
+    local out, report = sync(src, load(class, root, from))
+    local changed = {}
+    for _, r in ipairs(report) do
+        if r[2] == "updated" then
+            changed[r[1]] = true
+        end
+    end
+    if next(changed) then
+        from.bump = changed
+        out, report = sync(src, load(class, root, from))
     end
     return out, report
 end

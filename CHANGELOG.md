@@ -7,6 +7,7 @@
 ### Changed
 
 ### Fixed
+- A priority regenerated on the same day no longer shows as reverted on login.
 
 ### Known issues
 

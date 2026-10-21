@@ -120,7 +120,7 @@ describe("tools/make_pack.lua", function()
             ["packs.lua"] = 'return { class = "ZZZ", packs = { "Bad" }, specs = { Bad = "bad" } }\n',
             ["Bad.simc"] = "# A bad pack\nnot an action line\n",
         })
-        local ok, err = pcall(mp.load, "zzz", root, 20261017)
+        local ok, err = pcall(mp.load, "zzz", root, { src = "" })
         os.execute("rm -r " .. root)
         assert.is_false(ok)
         assert.are.equal(root .. "Bad.simc: bad line: not an action line", err)
@@ -131,13 +131,13 @@ describe("tools/make_pack.lua", function()
             ["packs.lua"] = 'return { packs = { "Arms (wowsims.com)" } }\n',
             ["Arms (wowsims.com).simc"] = true,
         })
-        local ok, err = pcall(mp.load, "zzz", root, 20261017)
+        local ok, err = pcall(mp.load, "zzz", root, { src = "" })
         os.execute("rm -r " .. root)
         assert.is_false(ok)
         assert.are.equal(root .. "packs.lua: no class", err)
     end)
 
-    describe("write (the date changes only with the text)", function()
+    describe("write (the version changes only with the text)", function()
         local TODAY = 20991231
         local function date(src, name)
             return math.floor(tonumber(src:match('"' .. name:gsub("%p", "%%%0") .. '",\n    (%d+),')) / 1000)
@@ -150,9 +150,10 @@ describe("tools/make_pack.lua", function()
             end)
         end
 
-        it("re-dates only the class whose text changed, by one character, and is then a no-op", function()
+        -- writes the Warrior file with Fury's .simc text edited by `from` -> `to` (gsub patterns), from `src`, on `day`
+        local function edit(src, from, to, day)
             local apls = "src/Hekili_Warrior/APLs/"
-            local fury, n = slurp(apls .. "Fury (wowsims.com).simc"):gsub("rage.current>=40", "rage.current>40", 1) -- one character
+            local fury, n = slurp(apls .. "Fury (wowsims.com).simc"):gsub(from, to, 1)
             assert.are.equal(1, n)
             local root = scratch(apls, {
                 ["packs.lua"] = true,
@@ -162,19 +163,44 @@ describe("tools/make_pack.lua", function()
             local f = assert(io.open(root .. "Fury (wowsims.com).simc", "wb"))
             f:write(fury)
             f:close()
-            local src = slurp("src/Hekili_Warrior/Warrior.lua")
-            local out, report = mp.write(src, "warrior", TODAY, root)
-            local again = mp.write(out, "warrior", TODAY + 1, root)
+            local out, report = mp.write(src, "warrior", day, root)
+            local again = mp.write(out, "warrior", day, root)
             os.execute("rm -r " .. root)
-            assert.is_false(src == out, "the Fury change was not written")
-            assert.are.same({ "Fury (wowsims.com)", "updated" }, report[2])
-            for _, name in ipairs({ "Protection (wowsims.com)", "Fury (wowsims.com)", "Arms (wowsims.com)" }) do
-                assert.are.equal(TODAY, date(out, name), name)
-            end
             assert.is_true(out == again, "a second write changed the file")
+            return out, report
+        end
+        local function version(src, name)
+            return tonumber(src:match('"' .. name:gsub("%p", "%%%0") .. '",\n    (%d+),'))
+        end
+
+        it("versions only the pack whose text changed: unchanged keeps it, a later day gives today * 1000", function()
+            local src = slurp("src/Hekili_Warrior/Warrior.lua")
+            local out, report = edit(src, "rage.current>=40", "rage.current>40", TODAY) -- one character
+            assert.are.same({ "Fury (wowsims.com)", "updated" }, report[2])
+            assert.are.equal(TODAY * 1000, version(out, "Fury (wowsims.com)"))
+            for _, name in ipairs({ "Protection (wowsims.com)", "Arms (wowsims.com)" }) do
+                assert.are.equal(version(src, name), version(out, name), name)
+            end
             local druid = slurp("src/Hekili_Druid/Druid.lua")
             assert.is_true(druid == mp.write(druid, "druid", TODAY), "the Druid file changed")
-            assert.are_not.equal(TODAY, date(druid, "Feral (wowsims.com)"))
+        end)
+
+        it("counts up on the same day, once per change", function()
+            local src = slurp("src/Hekili_Warrior/Warrior.lua")
+            local one = edit(src, "rage.current>=40", "rage.current>40", TODAY)
+            local two = edit(one, "rage.current>=40", "rage.current>41", TODAY) -- Fury's text differs from `one`'s again
+            assert.are.equal(TODAY * 1000 + 1, version(two, "Fury (wowsims.com)"))
+            local three = edit(two, "rage.current>=40", "rage.current>42", TODAY)
+            assert.are.equal(TODAY * 1000 + 2, version(three, "Fury (wowsims.com)"))
+        end)
+
+        it("refuses a thousandth same-day change", function()
+            local src = slurp("src/Hekili_Warrior/Warrior.lua")
+            local one = edit(src, "rage.current>=40", "rage.current>40", TODAY)
+            local full = one:gsub('(Fury %(wowsims%.com%)",\n    )%d+', "%1" .. TODAY * 1000 + 999)
+            assert.has_error(function()
+                edit(full, "rage.current>=40", "rage.current>41", TODAY)
+            end)
         end)
     end)
 
