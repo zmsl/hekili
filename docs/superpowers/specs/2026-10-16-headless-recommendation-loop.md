@@ -371,20 +371,22 @@ How close a wowsims replay's recommendation shows an ability ready to when wowsi
 `loop.run`'s poll (our queue, and the belief's lo and est minus the truth for every pool a decision spends); the
 replay gate (`tests/Forever/helpers/wowsims.lua` `ready`) prints the line, diffs the fixture and asserts the floor.
 
-- **Cadence.** 5 Hz stays (ruling): the decision poll sits at the cast, so the late side is exact; the early side is a
-  lower bound, at most one tick short. Extra polls would perturb the belief they measure.
+- **Cadence.** 5 Hz stays (ruling): the decision poll sits at the cast, so the late side is read at the cast; the
+  early side is a lower bound, at most one tick short. Extra polls would perturb the belief they measure.
 - **Offsets** (signed, s; negative early). **b, shown (gated):** our first on-GCD icon (an off-GCD decision: its key
   anywhere in the queue) is the cast's key and ready (wait <= `REACT` 0.05) at the decision poll: the first of the
-  consecutive ready polls since the previous decision's minus the cast; shown waiting: its wait; otherwise not shown
-  (`never`, a decision disagreement). **a, predicted (diagnostic):** the last poll before the decision's, its time plus
+  consecutive ready polls since the previous on-GCD decision's minus the cast; shown waiting: the engine's wait at the
+  decision poll, a forecast rather than the instant the icon first shows (it overshoots where the client's usable
+  answer clamps the belief below the cost and the engine forecasts the next tick); otherwise not shown (`never`, a
+  decision disagreement). **a, predicted (diagnostic):** the last poll before the decision's, its time plus
   the key's wait minus the cast.
 - **Ready class** from the log: `prepull` (before 0), `first` (the first on-GCD cast), `cost` (a power line of the
-  cast's pool crossed its cost in its timestamp, at or after every other constraint; `swing` when a white swing paid
-  it), `cooldown` (the previous cast of the key plus its cooldown), `gcd` (the previous on-GCD cast's end), `aura` (an
+  cast's pool crossed its cost at the cast or within one TICK before it, at or after every other constraint; `swing`
+  when a white swing paid it), `cooldown` (the previous cast of the key plus its cooldown), `gcd` (the previous on-GCD cast's end), `aura` (an
   aura line in its timestamp), `slack` (wowsims waited past every constraint), `queue` / `landing` (an off-GCD queued
   strike's Tag 1 line and the strike it lands).
 - **Tolerances** (`timing.P`; `reaction` and `queue` from each request): grain `|b| <= REACT`; cost `0 < b <= G7 +
-  HOLD` (swing-paid) or `G7 + TICK` (ticked), 0.2 s, G7 the client's usability lag (UNMEASURED, a parameter) and HOLD
+  HOLD` (swing-paid) or `G7 + TICK` (ticked), 0.2 s, measured from the crossing (b plus the cast's lag behind it), G7 the client's usability lag (UNMEASURED, a parameter) and HOLD
   the belief's deliberate pending-swing hold (ruling: it stays inside the window); aura and slack `-(reaction + REACT)
   <= b < 0`; queue `0 <= b <= queueDelay`; a not-shown decision that swaps keys with its neighbour (`tie`); cooldown:
   grain only, since the replay ends a cooldown at its log timestamp (ruling; the 0.5 s CD_PROBE pin was a replay
