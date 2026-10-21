@@ -40,34 +40,19 @@ test-serial:
 test-fast:
 	$(BUSTED) --exclude-tags=slow,party,loop,druid,rogue,paladin,shaman,hunter,bench
 
-LOOPS = test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter
-
-# The merge gate: check, then every 20-fight loop target at once (one busted process each; 16 cores here).
+# The merge gate: check, then every 20-fight loop tag in one scripts/busted_parallel.sh run (one busted process per
+# spec file, nproc - 2 at a time for the whole gate). `make test-<tag>` runs one tag the same way, nproc at a time.
+comma := ,
+GATE_TAGS := loop,party,druid,rogue,paladin,shaman,hunter
+LOOPS = $(addprefix test-,$(subst $(comma), ,$(GATE_TAGS)))
 GATE_LOCK ?= /tmp/hekili-gate.lock
-# One gate at a time per machine (flock): the loops assert a CPU budget per update that parallel lanes would trip.
+# One gate at a time per machine (flock): the loops assert a CPU budget per update (process CPU time, os.clock) that
+# another gate's load would still inflate through shared cores.
 gate: check
-	flock $(GATE_LOCK) $(MAKE) -j$(words $(LOOPS)) -Otarget $(LOOPS)
+	flock $(GATE_LOCK) env BUSTED=$(BUSTED) BUSTED_JOBS=$$(($$(nproc) - 2)) scripts/busted_parallel.sh --tags=$(GATE_TAGS)
 
-test-loop:
-	$(BUSTED) --tags=loop
-
-test-party:
-	$(BUSTED) --tags=party
-
-test-druid:
-	$(BUSTED) --tags=druid
-
-test-rogue:
-	$(BUSTED) --tags=rogue
-
-test-paladin:
-	$(BUSTED) --tags=paladin
-
-test-shaman:
-	$(BUSTED) --tags=shaman
-
-test-hunter:
-	$(BUSTED) --tags=hunter
+$(LOOPS): test-%:
+	BUSTED=$(BUSTED) scripts/busted_parallel.sh --tags=$*
 
 # Per-Update time and allocation of headless Arms (tests/Forever/bench_spec.lua); not part of `check`.
 bench:
