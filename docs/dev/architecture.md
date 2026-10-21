@@ -229,8 +229,8 @@ neither, so WoW never loads them, and `.pkgmeta` leaves them out of the zip. `ma
 string `RegisterPack` takes, and rewrites the generated `RegisterPack` blocks in `src/Hekili_<Class>/<Class>.lua`.
 `lua5.1 tools/make_pack.lua decode <string>` prints a share string back as SimC. The pack version is the class's date
 times 1000 plus a checksum of the text, so any text change reloads a saved profile. `make packs` on a clean tree is a
-no-op (`tests/Forever/make_pack_spec.lua`), and encode then decode returns the normalized text. `make packs` is not
-part of `make check`.
+no-op (`tests/Forever/make_pack_spec.lua`), and encode then decode returns the normalized text. `make check`'s
+`packs-check` runs it and fails on any diff in `src/`.
 
 **The wowsims.com packs.** Every default priority is generated (the user's rule: no hand-built lists): one
 `<Spec> (wowsims.com)` pack per supported spec, wowsims/forever's own APL translated to the fork's keys. A recipe
