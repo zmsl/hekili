@@ -59,6 +59,10 @@ return {
     executePhase = "execute_phase",
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
     focus = { overpower = 1, rend = 2, slam = 2 }, -- the retired Arms list's tiers (P9.3)
+    -- Rule 15: Thunder Clap, a setting off in game and on in the harness (the user's ruling, 2026-10-21); its only
+    -- line is the leveling filler below. Fury casts no Thunder Clap, so its recipe names none (rule 15 errors on a key
+    -- with no cast line) and the setting is registered for Arms only.
+    maintenance = { thunder_clap = "maintain_thunder_clap" },
     leveling = {
         "heroic_strike,use_off_gcd=1,if=!action.mortal_strike.known&rage.current>=30",
         "thunder_clap,if=!action.mortal_strike.known&!debuff.thunder_clap.up&rage.current>=40",

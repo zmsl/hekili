@@ -58,8 +58,9 @@ Translation:
 - `focus` (`{ [action] = tier or { tiers in order } }`): the priority tiers the retired list carried (P9.3).
 - `requires` (`{ [action or group snake name] = talent key }`): entries written for a talent build run only once the
   talent is taken (Retribution's Twist of Light lines).
-- `maintenance` (`{ [action] = setting key }`, rule 15): a raid debuff kept up (Protection's Demoralizing Shout and
-  Thunder Clap, Guardian's Demoralizing Roar). The action's lines (its leveling lines too) take `settings.<key>&`;
+- `maintenance` (`{ [action] = setting key }`, rule 15): a raid debuff kept up (Protection's Demoralizing Shout, Arms's
+  Thunder Clap, Guardian's Demoralizing Roar; a key needs a cast line in that spec's pack, else the translator errors,
+  so a spec without one, Fury for Thunder Clap, neither names nor registers it). The action's lines (its leveling lines too) take `settings.<key>&`;
   every other line that waits on its aura (`debuff.<action>.up`, `.remains>`) reads it as "up or disabled"
   (`|!settings.<key>`). The class registers the key with `default = false` and `sim = true` (the option field
   `sim`: the harness's default, `Engine.SettingDefault`; loop.new boots in the "sim" scenario, a direct

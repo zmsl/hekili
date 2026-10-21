@@ -10,7 +10,7 @@
 
 ### Changed
 - Mana and energy consumables (Major Mana Potion, Demonic Rune, Thistle Tea, Mana Gem) and the Rogue's poison reminders (Instant and Deadly Poison) are now under the Potions toggle, which is off by default: turn Potions on to see them. The Healthstone stays under Defensives.
-- Warrior Protection: Demoralizing Shout and Thunder Clap are off by default, and Druid Guardian's Demoralizing Roar too (open-world mobs die before they pay off). Turn them on in the specialization's settings for raids ("Maintain Demoralizing Shout", "Maintain Thunder Clap", "Maintain Demoralizing Roar").
+- Warrior Protection's Demoralizing Shout, Arms's leveling Thunder Clap (before Mortal Strike) and Druid Guardian's Demoralizing Roar are off by default (open-world mobs die before they pay off). Turn them on in the specialization's settings for raids ("Maintain Demoralizing Shout", "Maintain Thunder Clap", "Maintain Demoralizing Roar"). Protection's Thunder Clap is unchanged.
 - Guardian: with Demoralizing Roar off, Berserk no longer waits for it, and the leveling Roar filler is off too.
 
 ### Fixed

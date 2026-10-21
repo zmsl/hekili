@@ -39,9 +39,24 @@ describe("the maintenance-debuff settings #slow", function()
         assert.are.same({ true, true }, { sim.demoralizing_roar == true, sim.berserk == true })
     end)
 
-    it("Protection: in game no Demoralizing Shout or Thunder Clap; the harness casts both", function()
+    it("Protection: in game no Demoralizing Shout, Thunder Clap as wowsims has it; the harness casts both", function()
         local game, sim = shown(PROT, "game"), shown(PROT, "sim")
-        assert.are.same({ false, false }, { game.demoralizing_shout == true, game.thunder_clap == true })
+        assert.are.same({ false, true }, { game.demoralizing_shout == true, game.thunder_clap == true })
         assert.are.same({ true, true }, { sim.demoralizing_shout == true, sim.thunder_clap == true })
+    end)
+
+    it("Arms at level 40: in game no Thunder Clap (its leveling filler); the harness casts it", function()
+        local arms = ws.content(ww, {
+            pack = "Arms (wowsims.com)",
+            level = 40,
+            talents = ws.header("warrior_arms").talents,
+            learn = ws.learn("WARRIOR"),
+            race = ws.race("warrior_arms"),
+            kit = { "spearing_strike", "berserker_rage" },
+        })
+        assert.are.same(
+            { false, true },
+            { shown(arms, "game").thunder_clap == true, shown(arms, "sim").thunder_clap == true }
+        )
     end)
 end)
