@@ -241,6 +241,33 @@ describe("a choice setting", function()
         )
     end)
 
+    -- Fix 31 G1: the debug printer skips quoted literals, so a snapshot renders the term with its value and never reads
+    -- the candidate as a state key ("Unknown key 'alpha'").
+    it("renders the term with its value in a snapshot, never reading the quoted candidate", function()
+        local H = boot(nil)
+        local hk = H.Hekili
+        hk.Engine.settings.screenshot = false -- the harness has no Screenshot()
+        local lists = hk.DB.profile.packs[ww.PACK].lists
+        table.insert(
+            lists.precombat,
+            1,
+            { action = "battle_shout", criteria = "settings.pick='alpha'", enabled = true }
+        )
+        table.insert(lists.precombat, 2, { action = "battle_shout", criteria = 'settings.pick="none"', enabled = true })
+        hk:LoadScripts()
+        assert.is_true(headless.cycle(H, H.ctl.now + 1))
+        local before = #H.ns.snapshots
+        hk:MakeSnapshot()
+        assert.is_true(#H.ns.snapshots > before)
+        assert.are.same({}, H.errors)
+        local log = H.ns.snapshots[before + 1].log
+        assert.is_truthy(log:find("settings.pick[beta]='alpha'", 1, true))
+        assert.is_truthy(log:find("settings.pick[beta]='none'", 1, true)) -- a double-quoted one prints single-quoted
+        hk.DB.profile.specs[hk.State.spec.id].settings.pick = "none" -- and the double-quoted one evaluates too
+        hk.State.reset()
+        assert.is_true(hk.Scripts:CheckScript(ww.PACK .. ":precombat:2"))
+    end)
+
     it("is a dropdown on the spec's settings page, and /hekili set spec picks a candidate", function()
         local H, settings = boot(nil)
         H.Hekili:EmbedSpecOptions()

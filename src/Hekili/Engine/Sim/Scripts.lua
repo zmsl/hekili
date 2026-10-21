@@ -275,8 +275,8 @@ end
 scripts.HandleDeprecatedOperators = HandleDeprecatedOperators
 
 
--- A quote is no boundary: a quoted string (a choice setting's candidate, `settings.x='none'`) stays literal.
-local invalid = "([^a-zA-Z0-9_.['])"
+-- A quote is no boundary: a quoted string (a choice setting's candidate, `settings.x='none'` or "none") stays literal.
+local invalid = "([^a-zA-Z0-9_.['\"])"
 
 
 local function extendExpression( str, expr, suffix )
@@ -1372,7 +1372,8 @@ local function generateDebugPrint( node, condition, header, isRecheck )
     local argn = 0
     local formatArgs, generateDebug, debugPrint = nil, "", nil
 
-    for token in cleanPrint:gmatch( "[a-zA-Z][A-Za-z0-9_%.]+" ) do
+    -- A quoted literal (a choice setting's candidate, `settings.x='none'`) holds no terms: tokenize without them.
+    for token in ( cleanPrint:gsub( "'[^']*'", "" ) ):gmatch( "[a-zA-Z][A-Za-z0-9_%.]+" ) do
         if not seen[ token ] then
             argn = argn + 1
             seen[ token ] = "arg" .. argn
