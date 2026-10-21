@@ -98,4 +98,6 @@ arcane_blast). BC (central fix 22: the harness's channel and cast bars; the star
 Pack version (central fix 24, f0ce3610: `make_pack`'s version is monotonic).
 BA (the Delete Priority and Specialization guards read `Hekili.Version:sub(1, 3) ~= "Dev"`: a built-in priority shows
 no Delete button outside a Dev build).
+Fix 25 (the Warlock lane's option-selected cast, `castWarlockAssignedCurse`: choice settings in the core, rule 16's
+`select`; the Warlock recipe entry and class setting are the lane's).
 Cancelled: fix 19 (a harness-vs-in-game default for Sunder; players use Hekili's own per-ability toggles).

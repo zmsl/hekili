@@ -129,6 +129,19 @@
 --    of its own, `!(debuff.X.up&rage.current>10)`, also reads as if X were up (`!(rage.current>10)` with it off). No
 --    pack at the pin has such a group. Not built: `.stack` reads are not rewritten, and the aura key is always the
 --    action key (a debuff under another key, Fire's Scorch and `fire_vulnerability` stacks, needs both).
+-- 16. An option-selected cast (a class option picks the spell, e.g. an assigned debuff): the recipe's `select`
+--    ({ [wowsims action] = { setting, option, candidates = { [option value] = action key | false }, active, is } })
+--    makes the option a choice setting, `settings.<setting>='<snake of the option value>'` (the script language
+--    passes a quoted string through: Engine/Sim/Scripts.lua). The action is one line a candidate with a key, in the
+--    option values' sorted order, each the candidate's cast line (rule 7) under the setting term and the entry's
+--    condition; a `false` candidate (none) has no line. The value `active` (the selected spell's aura is up on the
+--    target) is the OR over candidates of (setting term & `debuff.<key>.up`), a `false` candidate's term alone (by
+--    ruling: the lines guarded by it do not wait on a debuff that never comes; wowsims reads false there); an
+--    unlearned candidate's debuff reads down, as wowsims's missing spell does (no rule 6 guard). The value `is`
+--    (its one field names an option value) is that value's setting term; with no field (protojson's zero value) or an
+--    unknown value it is unsupported. The build's value (the request's `<spec>.options.classOptions.<option>` or
+--    `.options.<option>`) is the setting's default in game and in the harness (`sim`), which the class registers as an
+--    AceConfig `select`; the header lists it. An entry the APL never uses, or a build without the option, is an error.
 -- Any node not handled below is unsupported (rule 2), so a new wowsims node omits its entry rather than mistranslating.
 --
 -- The engine facts rule 6 rests on (tools/check_pack_levels.lua checks every pack for it):
@@ -269,8 +282,9 @@ end
 
 --- The translation context of an ability set (`abilities`, `auras`, `talents` as the engine registers them:
 --- tests/Forever/helpers/engine.lua abilitySet), recipe `r` (map, focus, executePhase, leveling, levelingFirst, extra,
---- settings, exclusive, requires, maintenance, auras) and the spec's exported log text `log` (rule 13; nil: the automatic actions are unsupported).
-function M.context(set, r, log)
+--- settings, exclusive, requires, maintenance, select, auras), the spec's exported log text `log` (rule 13; nil: the
+--- automatic actions are unsupported) and the request's player `player` (rule 16's option values).
+function M.context(set, r, log, player)
     local c = {
         autocast = log and M.autocasts(log),
         keyOf = {},
@@ -301,6 +315,35 @@ function M.context(set, r, log)
     table.sort(c.maintenance, function(x, y)
         return x[1] < y[1]
     end)
+    c.select, c.selectValue = {}, {} -- rule 16: by wowsims action; by value name -> { kind, select }
+    for action, x in pairs(r.select or {}) do
+        local choice
+        for _, v in pairs(player or {}) do
+            local o = type(v) == "table" and type(v.options) == "table" and v.options
+            if o then
+                choice = choice or (type(o.classOptions) == "table" and o.classOptions[x.option]) or o[x.option]
+            end
+        end
+        if choice == nil or x.candidates[choice] == nil then
+            error(("select: the build sets no %s"):format(x.option), 0)
+        end
+        local values = {}
+        for v in pairs(x.candidates) do
+            values[#values + 1] = v
+        end
+        table.sort(values)
+        local sel = { action = action, x = x, values = values, choice = choice, term = {} }
+        for _, v in ipairs(values) do
+            sel.term[v] = "settings." .. x.setting .. "='" .. M.snake(v) .. "'"
+        end
+        c.select[action] = sel
+        if x.active then
+            c.selectValue[x.active] = { "active", sel }
+        end
+        if x.is then
+            c.selectValue[x.is] = { "is", sel }
+        end
+    end
     local keys = {}
     for key, a in pairs(set.abilities) do
         if type(key) == "string" and type(a) == "table" and a.key == key then
@@ -771,6 +814,22 @@ local function bool(c, n)
         return "settings." .. (c.toggles[v.name] or unsupported("actionGroupUsed " .. tostring(v.name))), nil, false
     elseif k == "variableRef" then
         return bool(c, c.vars[v.name] or unsupported("variable " .. v.name))
+    elseif c.selectValue[k] then -- rule 16
+        local kind, sel = c.selectValue[k][1], c.selectValue[k][2]
+        sel.used = true
+        if kind == "is" then
+            local _, val = next(v)
+            if val == nil then
+                unsupported(k .. " of no candidate")
+            end
+            return sel.term[val] or unsupported(k .. " of " .. tostring(val)), nil, false
+        end
+        local parts = {}
+        for _, val in ipairs(sel.values) do
+            local key = sel.x.candidates[val]
+            parts[#parts + 1] = key and ("(" .. sel.term[val] .. "&debuff." .. key .. ".up)") or sel.term[val]
+        end
+        return "(" .. table.concat(parts, "|") .. ")", nil, false
     end
     unsupported(tostring(k))
 end
@@ -868,6 +927,19 @@ local function automatic(c, kind, v)
 end
 
 local entry
+
+-- Rule 7's cast line of key `x`, without its condition: off-GCD, focus and prepull flags.
+local function castBody(c, x)
+    local tier = c.focus[x]
+    if type(tier) == "table" then
+        c.seen[x] = (c.seen[x] or 0) + 1
+        tier = tier[c.seen[x]] or tier[#tier]
+    end
+    return x
+        .. (c.offGcd[x] and ",use_off_gcd=1" or "")
+        .. (tier and not c.prepullAt and (",focus=" .. tier) or "")
+        .. (c.prepullAt and (",prepull_at=" .. c.prepullAt) or "")
+end
 
 -- Condition node `n` as text: nil when always true (a nil condition is true: wowsims's apl_action.go), false never.
 local function condition(c, n)
@@ -976,15 +1048,25 @@ function entry(c, e)
     if kind == "castSpell" or kind == "channelSpell" then
         local x = spellKey(c, a[kind].spellId)
         c.self, key = x, x
-        local tier = c.focus[x]
-        if type(tier) == "table" then
-            c.seen[x] = (c.seen[x] or 0) + 1
-            tier = tier[c.seen[x]] or tier[#tier]
+        body = castBody(c, x)
+    elseif c.select[kind] then -- rule 16: one line a candidate, each under its setting term
+        local sel, out = c.select[kind], {}
+        sel.used = true
+        for _, val in ipairs(sel.values) do
+            local x = sel.x.candidates[val]
+            if x then
+                c.self = x
+                local cond = a.condition and condition(c, a.condition)
+                if cond ~= false then
+                    cond = required(c, x, cond and (sel.term[val] .. "&" .. paren(cond)) or sel.term[val])
+                    out[#out + 1] = castBody(c, x) .. ",if=" .. cond
+                end
+            end
         end
-        body = x
-            .. (c.offGcd[x] and ",use_off_gcd=1" or "")
-            .. (tier and not c.prepullAt and (",focus=" .. tier) or "")
-            .. (c.prepullAt and (",prepull_at=" .. c.prepullAt) or "")
+        if #out == 0 then
+            return nil, "never"
+        end
+        return out
     elseif kind == "groupReference" then
         local g = a.groupReference.groupName
         if c.toggles[g] then
@@ -1216,6 +1298,27 @@ function M.translate(rotation, c)
             m[1]
         )
     end
+    local actions = {}
+    for action in pairs(c.select) do
+        actions[#actions + 1] = action
+    end
+    table.sort(actions)
+    for _, action in ipairs(actions) do -- rule 16's settings
+        local sel = c.select[action]
+        if not sel.used then
+            error(("select: %s is not in the APL"):format(action), 0)
+        end
+        local names = {}
+        for i, v in ipairs(sel.values) do
+            names[i] = M.snake(v)
+        end
+        header[#header + 1] = ("# Setting %s (choice of %s: %s), default %s in game and in the harness."):format(
+            sel.x.setting,
+            sel.x.option,
+            table.concat(names, ", "),
+            M.snake(sel.choice)
+        )
+    end
     return text, omitted, read, header
 end
 
@@ -1233,7 +1336,8 @@ function M.write(spec, ex)
     if lf then
         lf:close()
     end
-    local text, omitted, toggles, header = M.translate(req.raid.parties[1].players[1].rotation, M.context(set, r, log))
+    local player = req.raid.parties[1].players[1]
+    local text, omitted, toggles, header = M.translate(player.rotation, M.context(set, r, log, player))
     local Class = r.class:sub(1, 1) .. r.class:sub(2):lower()
     local out = {
         ("# %s: the wowsims/forever default APL for %s (%s), translated to this addon's keys."):format(

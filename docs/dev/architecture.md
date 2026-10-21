@@ -117,6 +117,10 @@ What a content addon may use, and nothing else (`tests/boundary_spec.lua` enforc
   (`"enhancement"`; an unknown key errors). An option may carry `sim`, the setting's default under
   the harness (`Hekili.Engine.scenario == "sim"`; nil in game): `Engine.SettingDefault(entry)` fills an unset
   profile value at the spec load, the options build and `option.get`, and `sim` never reaches AceConfig.
+  A choice setting is an AceConfig `select` (`values`: candidate key -> display name, `sorting`: their order): its
+  default and `sim` must be candidates (else RegisterSetting errors), the spec's page shows it as a dropdown, `/hekili
+  set spec <key> <candidate>` sets it, and a priority reads it as `settings.<key>='<candidate>'` (a quoted string
+  passes through the script language as is: `Engine/Sim/Scripts.lua` never extends a resource name inside quotes).
 - `Hekili.State` (the simulation's `state`) and `Hekili.Class` (the registry the class file fills).
 - `Hekili.Client`: the game client as an addon may read it, the same table as `ns.Facade`. Content never names a WoW
   global (`tools/check_api_reads.sh`).
@@ -254,9 +258,9 @@ no-op (`tests/Forever/make_pack_spec.lua`), and encode then decode returns the n
 `healingModel` for a tank) and the translation data (`map`, `auras`, `focus`, `requires`, `exclusive`,
 `executePhase`, `leveling`); `make wowsims-export SPEC=<spec>` writes its request and wowsims's debug log under
 `tests/Forever/wowsims/`, both checked in; `make wowsims-packs` translates the request's APL
-(`tools/wowsims/apl.lua`, `M.translate`, 15 rules in its header: entries, omissions, ON/OFF switches as settings,
+(`tools/wowsims/apl.lua`, `M.translate`, 16 rules in its header: entries, omissions, ON/OFF switches as settings,
 keys, the leveling guard, constants, ICDs, exclusive refreshes, distance, unresolved reads, automatic cooldowns from
-the log, `strictSequence`, maintenance debuffs) into `src/Hekili_<Class>/APLs/<Pack>.simc`, its header listing the
+the log, `strictSequence`, maintenance debuffs, option-selected casts) into `src/Hekili_<Class>/APLs/<Pack>.simc`, its header listing the
 switches its lines read and every omitted entry; `make packs` then writes the RegisterPack blocks as for any pack. Each class file registers
 its switches (`spec:RegisterSetting("wowsims_<name>", ...)`, per spec) and names the pack as its spec's `package`.
 The author's guide is `docs/dev/wowsims-packs.md`; the gates and numbers are in `docs/dev/layout.md`.

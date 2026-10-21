@@ -2,7 +2,7 @@
 -- wowsims/forever's JSON shape (MIT) with a stand-in class context.
 local apl = require("tools.wowsims.apl")
 
-local function ctx(r)
+local function ctx(r, player)
     local kit = {
         abilities = {
             strike = { key = "strike", id = 100, copy = { 101 }, gcd = "spell" },
@@ -21,7 +21,7 @@ local function ctx(r)
         },
         talents = { furious = { 2, 900, 1 }, cuts = { 1, 950, 1 } },
     }
-    return apl.context(kit, r or { executePhase = "execute_phase", focus = { strike = 1 } })
+    return apl.context(kit, r or { executePhase = "execute_phase", focus = { strike = 1 } }, nil, player)
 end
 local function cast(id, cond)
     return { action = { castSpell = { spellId = { spellId = id } }, condition = cond } }
@@ -665,6 +665,62 @@ describe("the wowsims APL translator", function()
             end, "maintenance: big_hit matched no line")
         end
     )
+
+    it("rule 16's select: an option-selected cast is one line a candidate, its values read the setting", function()
+        local r = {
+            select = {
+                castAssigned = {
+                    setting = "pick",
+                    option = "pickOption",
+                    candidates = { One = "dot", Two = "big_hit", Off = false },
+                    active = "assignedIsActive",
+                    is = "isAssigned",
+                },
+            },
+        }
+        local player = { warrior = { options = { classOptions = { pickOption = "Two" } } } }
+        local isActive = { assignedIsActive = {} }
+        local rage = cmp("OpGt", { currentRage = {} }, const("10"))
+        local text, _, _, header = apl.translate({
+            priorityList = {
+                { action = { castAssigned = {}, condition = NOT(isActive) } },
+                cast(100, AND(isActive, rage)),
+                cast(100, { isAssigned = { pickType = "Off" } }),
+                { action = { castAssigned = {} } },
+            },
+        }, ctx(r, player))
+        local active =
+            "(settings.pick='off'|(settings.pick='one'&debuff.dot.up)|(settings.pick='two'&debuff.big_hit.up))"
+        assert.are.equal(
+            table.concat({
+                "actions=dot,if=settings.pick='one'&(!" .. active .. ")",
+                "actions+=/big_hit,if=settings.pick='two'&(!" .. active .. ")",
+                "actions+=/strike,if=(" .. active .. "&rage.current>10)",
+                "actions+=/strike,if=settings.pick='off'",
+                "actions+=/dot,if=settings.pick='one'",
+                "actions+=/big_hit,if=settings.pick='two'",
+            }, "\n"),
+            text
+        )
+        assert.are.same({
+            "# Setting pick (choice of pickOption: off, one, two), default two in game and in the harness.",
+        }, header)
+        -- the option's zero value (protojson omits it) and an unknown candidate are unsupported (rule 2)
+        local _, omitted = apl.translate({
+            priorityList = {
+                { action = { castAssigned = {} } },
+                cast(100, { isAssigned = {} }),
+                cast(100, { isAssigned = { pickType = "Three" } }),
+            },
+        }, ctx(r, player))
+        assert.are.same({ "default #2: isAssigned of no candidate", "default #3: isAssigned of Three" }, omitted)
+        assert.has_error(function()
+            apl.translate({ priorityList = { cast(100) } }, ctx(r, player))
+        end, "select: castAssigned is not in the APL")
+        assert.has_error(function()
+            ctx(r, { warrior = { options = {} } })
+        end, "select: the build sets no pickOption")
+    end)
 
     it("takes the character's ability set: a shared racial is mapped and off the GCD", function()
         local set = require("Forever.helpers.engine").abilitySet("WARRIOR")
