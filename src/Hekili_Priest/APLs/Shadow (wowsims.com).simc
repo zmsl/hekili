@@ -7,8 +7,8 @@
 # Omitted: default #11: hidden
 # Omitted: default #12: hidden
 
-actions.precombat=shadowguard,prepull_at=3,if=action.shadowguard.known
-actions.precombat+=/mind_blast,prepull_at=1.5
+actions.precombat=shadowguard,if=!buff.shadowguard.up&action.shadowguard.known
+actions.precombat+=/mind_blast
 actions=shadowform,if=!buff.shadowform.up
 actions+=/dark_sacrifice,if=mana.current<=2000
 actions+=/elunes_light,use_off_gcd=1,if=(time=3|time>=180|action.elunes_light.known)

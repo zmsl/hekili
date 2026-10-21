@@ -6,7 +6,7 @@
 # Omitted: default #7: hidden
 # Omitted: default #8: hidden
 
-actions.precombat=power_infusion,use_off_gcd=1,prepull_at=1
+actions.precombat=power_infusion,use_off_gcd=1
 actions=shoot,use_off_gcd=1,if=mana.pct<=10
 actions+=/holy_fire,focus=2,if=(!debuff.holy_fire.up&mana.pct<=20)
 actions+=/holy_fire,focus=2,if=(!debuff.holy_fire.up&mana.pct>=20)
