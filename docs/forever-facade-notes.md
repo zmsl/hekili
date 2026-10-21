@@ -296,6 +296,29 @@ Every stub site in the retained files that throws or yields a wrong value. Sites
 - Hekili's forecast counted aura-gated regen entries twice (2026-10-16, Warrior out of combat with Bloodrage up: rage forecast climbed ~2/s): once as tick events and again inside `regen_combined`, its continuous rate. Core edit E7 (`forecastResources`) uses plain `r.regen`, so those entries count through their events only; `regen_combined` itself is unchanged.
 - The forecast window (core edit E9, Core.lua `defaultMax` and State.lua's forecast `timeout`) is one global option, `Hekili.DB.profile.performance.forecastWindow` (default 15 s), under Options > Performance > Forecast; not a per-spec setting.
 
+## Premises (each MEASURED or UNMEASURED)
+
+Every timing or secrecy premise the belief, the sim, the loop world and the wowsims replay rest on. A MEASURED one
+names its source; an UNMEASURED one names the capture that settles it (the checkpoint ids are `docs/dev/layout.md`'s
+core checkpoints). When a capture comes back, world, forecast and belief are made to agree with it in one change.
+
+| Premise | Status | Where it is used | Capture |
+| --- | --- | --- | --- |
+| Rage is gained at the swing (PLAYER_SWING), not with the wound ~0.47 s later (R1) | MEASURED (user, 2026-10-20: "Rage is gained on swing, not on combat log entry") | belief `owe`, `VS.SwingPending`, loop world, replay | done. Beside it the no-jitter rule (below, "Swing rage") |
+| A refund for a dodged, parried or missed ability comes at the cast's finish (success), not at the avoid report | MEASURED (user, 2026-10-20: "Refunds happen at the time of the spell cast finish") | belief `I.Refund` (dated at the cast), loop world | done |
+| The swing-to-wound lag: main hand median 474 ms, off hand 703 ms | MEASURED (`/vslog` fixtures, `tests/Game/harness/fixtures/`) | observer defaults, replay `M.LAND` | done |
+| The client's usability answers show a rage gain about ORACLE_MIN (0.1 s) after it (G7) | UNMEASURED | `Events/Rows.lua` `L.ORACLE_MIN`, the swing-credit oracle, the engine's 0.1 s rage hold (ruled tolerance) | G7: one `/vslog` on an open-world mob with UNIT_POWER_FREQUENT "RAGE", PLAYER_SWING, the target's UNIT_COMBAT, SPELL_UPDATE_USABLE and `IsSpellUsable(Mortal Strike)` polled per frame, until a crit lands with rage 5-25 under 30 |
+| The avoid arrives within our cast's landing window (one pending cast; OWN_FRAME) | UNMEASURED (refund attribution 14/14 in the harness) | `Events/Rows.lua` avoid pairing | O1: Sunder Armor / Rend on a mob with `/vslog`: cast success -> DODGE ms |
+| The refund is 80% of the cost (wowsims `MissRefund`) | UNMEASURED | `refundOnAvoid` metas and abilities | O2: rage before and after a dodged Sunder Armor (out of combat reads plain) |
+| UNIT_POWER_FREQUENT fires for mana while UnitPower is secret (a tick-phase source for a secret pool) | UNMEASURED | mana's one-tick padding (`tick_rate` 0.1, phase unknown; GAP AB) | M1: `/vslog` a mana user in combat: UNIT_POWER_FREQUENT "MANA" rows and their spacing |
+| The mana tick phase (0.1 s ticks, wowsims's `manaTickDuration`) | UNMEASURED | `TimeToResource` pads one tick; the exact "last tick" rule was tried and rejected (one side lost regen) | M1 (same capture: round up to the observed tick instead of a whole tick) |
+| Mana is secret in combat and out | MEASURED on the Druid (gate spike, 2026-10-11); per class unprobed | the mana belief | P7, S10, H7 (per class) |
+| The player's own health is secret in combat | UNMEASURED ("player unprobed" in the inventory) | `Families/Player.lua`: plain when answered, full while secret | PH1: `/run VSCopy(issecretvalue(UnitHealth("player")), issecretvalue(UnitHealthMax("player")))` in and out of combat |
+| The target's health is secret always | MEASURED (W PR14) | TargetHealth belief; time to die unknown (API-forced) | done |
+| Combo points read plain in combat | MEASURED (2026-10-18) | combo point reads | done |
+| `C_Spell.IsSpellInRange` is plain in combat | MEASURED (probe W PR7) | the target range bracket | done |
+| The energy tick orders before a press at the same instant | UNMEASURED (the loop world ticks after the press; GAP Y) | loop world, `TimeToResource` | E1: `/vslog` UNIT_POWER_FREQUENT "ENERGY" spacing against our casts |
+
 ## Our abilities' outcomes
 
 - The client says plainly in combat when our ability is dodged, parried or missed: the target's `UNIT_COMBAT` (action `DODGE` / `PARRY` / `MISS`, victim-side, from any source; the combat log stays forbidden). The server resolves the hit and refunds at the cast's success; the avoid only reports it afterwards (MEASURED by the user, 2026-10-20). Events/Rows.lua holds our cast for a main-hand landing window (the learned median plus three spreads, about 0.65 s) and, when the avoid comes while exactly one cast of ours is pending, stages `Obs.Avoided` (a: the ability, b: its cast's time, c: the `HitKind`) and the `SPELL_MISSED` row; two casts pending, neither (no row either, so `missable` drops no debuff), and the avoid counts as background. A cast's own wound keeps its 0.2 s window.
