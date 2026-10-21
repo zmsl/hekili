@@ -181,6 +181,7 @@ describe("now handlers", function()
         raptor_strike = "as heroic_strike",
         revenge = "revenge_usable has no spell id: untracked",
         starfire = "removeStack is no `now` verb; the charges end with the 15 s aura",
+        fire_blast = "removeStack is no `now` verb; the belief reads Fingers of Frost charges from the aura walk",
         claw = "combo points are read plainly in combat (poll 1)",
         shred = "as claw",
         premeditation = "as claw",
