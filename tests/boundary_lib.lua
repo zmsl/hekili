@@ -135,9 +135,10 @@ local function tokens(src)
     return out
 end
 
--- The content's keys and IDs: { keys = { [key] = where }, ids = { [id] = where } }.
+-- The content's keys and IDs: { keys = { [key] = where }, ids = { [id] = where }, abilities = { { key, data, where } } }
+-- (`data` as registered, functions intact).
 local function content()
-    local keys, ids = {}, {}
+    local keys, ids, abilities = {}, {}, {}
     local function id(v, where)
         if type(v) == "number" then
             ids[v] = ids[v] or where
@@ -174,6 +175,9 @@ local function content()
             for kind in pairs({ abilities = true, auras = true }) do
                 for k, d in pairs(w[kind]) do
                     def(k, d, where)
+                    if kind == "abilities" then
+                        abilities[#abilities + 1] = { k, d, where }
+                    end
                 end
             end
             for k, t in pairs(w.talents or {}) do
@@ -191,6 +195,7 @@ local function content()
         function all:RegisterAbility(k, d)
             self.abilities[k] = d
             def(k, d, path)
+            abilities[#abilities + 1] = { k, d, path }
         end
         function all:RegisterAura(k, d)
             self.auras[k] = d
@@ -235,7 +240,7 @@ local function content()
         run(path, read(file):match('NewRace%("(%w+)"%)'))
     end
     _G.Hekili = saved or nil
-    return { keys = keys, ids = ids }
+    return { keys = keys, ids = ids, abilities = abilities }
 end
 
 -- The form and stance words content names (`cat` of cat_form, `battle` of battle_stance), class names first.
