@@ -151,5 +151,11 @@ for _, k in ipairs(stateEnv) do
     hunterEnv[#hunterEnv + 1] = k
 end
 files["src/Hekili_Hunter/Hunter.lua"] = { globals = hunterEnv }
+-- The Mage's further `state` names.
+local mageEnv = { "addStack", "interrupt", "min", "locked_out_arcane", "locked_out_fire", "locked_out_frost" }
+for _, k in ipairs(stateEnv) do
+    mageEnv[#mageEnv + 1] = k
+end
+files["src/Hekili_Mage/Mage.lua"] = { globals = mageEnv }
 files["src/Hekili_Shared/Races/"] = { globals = stateEnv }
 files["src/Hekili_Shared/Shared/"] = { globals = stateEnv }

@@ -5,7 +5,7 @@ zip=${1:?usage: check_package.sh <zip>}
 list=$(unzip -Z1 "$zip")
 fail=0
 need() { grep -qx "$1" <<<"$list" || { echo "missing: $1"; fail=1; }; }
-for a in Hekili Hekili_Shared Hekili_Druid Hekili_Warrior Hekili_Rogue Hekili_Paladin Hekili_Shaman Hekili_Hunter; do need "$a/$a.toc"; done
+for a in Hekili Hekili_Shared Hekili_Druid Hekili_Warrior Hekili_Rogue Hekili_Paladin Hekili_Shaman Hekili_Hunter Hekili_Mage; do need "$a/$a.toc"; done
 need Hekili/LICENSE
 need Hekili/embeds.xml
 for bad in '^Hekili/src/' '/tests/' '/tools/' '^Hekili/docs/' '/APLs/' '\.simc$' '^Hekili/Makefile$' '^Hekili/\.'; do
@@ -13,7 +13,7 @@ for bad in '^Hekili/src/' '/tests/' '/tools/' '^Hekili/docs/' '/APLs/' '\.simc$'
 done
 ver=$(basename "$zip" .zip); ver=${ver#Hekili-}
 ver=${ver%-forever}
-for a in Hekili Hekili_Shared Hekili_Druid Hekili_Warrior Hekili_Rogue Hekili_Paladin Hekili_Shaman Hekili_Hunter; do
+for a in Hekili Hekili_Shared Hekili_Druid Hekili_Warrior Hekili_Rogue Hekili_Paladin Hekili_Shaman Hekili_Hunter Hekili_Mage; do
     v=$(unzip -p "$zip" "$a/$a.toc" | tr -d '\r' | sed -n 's/^## Version: //p')
     [ "$v" = "$ver" ] || { echo "$a.toc Version '$v' != zip version '$ver'"; fail=1; }
 done

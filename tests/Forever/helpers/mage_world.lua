@@ -1,0 +1,523 @@
+-- tests/Forever/helpers/mage_world.lua (class-completion plan, "The per-pack gate"): the Mage content of the
+-- class-neutral headless loop, in hunter_world.lua's shape, one content per supported spec (M.Arcane, M.Fire): the
+-- character the instance logs in as (wowsims/forever's preset builds' talents), each ability's press in the world's
+-- generic verbs, the client's usability answers. IDs, costs, cooldowns and aura durations come from the class file
+-- (load_druid's recording load of Mage.lua for the character, the booted oracle's Hekili.Class for the rest). The
+-- world's own, restated from the DB2 and wowsims/forever (so the class file's belief is measured against them): Arcane
+-- Blast's charges and their cost (15% of base mana, +175% a charge), Missile Barrage's proc (its talent's 20% / 40% on
+-- Arcane Blast, half that on Fireball, Frostbolt, Frostfire Bolt and Arcane Wrath), Heating Up from the Fire casts'
+-- crits (Fire Blast one more on any hit) and Pyroblast's faster cast and spend, Improved Scorch's Fire Vulnerability
+-- (33 / 67 / 100%), Clearcasting (Arcane Concentration's 2% a rank on a damage spell's hit) and Arcane Power's costs,
+-- Presence of Mind's instant cast, mana under the five-second rule. Damage amounts, the regen parts and the mana pool
+-- are UNMEASURED.
+-- The channels (Arcane Missiles, Evocation) are not pressable: the harness world and its client deliver no player
+-- channel (no UNIT_SPELLCAST_CHANNEL_START, _UPDATE, _STOP or UnitChannelInfo; a press with a cast time succeeds only at
+-- its end, tests/Game/harness/world.lua W.press), so C.resolve raises for them (a shared gap, never worked around here).
+-- Credit: wowsims/forever (MIT) as the reference for the charge, proc and gem rules; no code copied.
+local ld = require("Forever.helpers.load_druid")
+local world = require("Game.harness.world")
+
+local M = {}
+
+M.CLIENT_SPEC, M.CLASS_ID = 1485, 8 -- the client's Mage pseudo-spec (assumed: the alphabetical 1483-1491 row)
+local MANA = 0 -- Enum.PowerType
+local MAX = 6000
+local BASE = 1213 -- base mana at 60 (wowsims's ExtraClassBaseStats): a percent-of-base cost's base
+local GCD = { spell = 1.5, off = 0 }
+-- UNMEASURED: the true regen parts (the class file declares 25 and 0: the out-of-combat read corrects them).
+local FSR = { 28, 0 }
+
+-- Each rank's mana cost (DB2; Arcane Wrath wowsims's), lowest rank first, the world's truth the class file's are
+-- measured against (a level's highest known rank pays its own).
+local COST = {
+    arcane_missiles = { 85, 140, 235, 320, 410, 500, 595, 655 },
+    arcane_wrath = { 140, 220, 305, 395 },
+    frostbolt = { 25, 35, 50, 65, 100, 130, 160, 195, 225, 260, 290 },
+    fireball = { 30, 45, 65, 95, 140, 185, 220, 260, 305, 350, 395, 410 },
+    scorch = { 50, 65, 80, 100, 115, 135, 150 },
+    pyroblast = { 125, 150, 195, 240, 285, 335, 385, 440 },
+    fire_blast = { 40, 75, 115, 165, 220, 280, 340 },
+    frostfire_bolt = { 205, 285, 370 },
+    counterspell = 100,
+    evocation = 0,
+    arcane_power = 0,
+    presence_of_mind = 0,
+    combustion = 0,
+}
+
+-- The cast times (DB2; Arcane Wrath wowsims's), top rank, unhasted.
+local CAST = {
+    arcane_blast = 2.5,
+    arcane_wrath = 3.5,
+    frostbolt = 3,
+    fireball = 3.5,
+    scorch = 1.5,
+    pyroblast = 6,
+    frostfire_bolt = 3,
+}
+
+-- UNMEASURED: the hits' amounts.
+local AMOUNT = {
+    arcane_blast = 700,
+    arcane_wrath = 900,
+    frostbolt = 700,
+    fireball = 800,
+    scorch = 400,
+    pyroblast = 1100,
+    fire_blast = 500,
+    frostfire_bolt = 750,
+}
+
+-- The schools' damage spells (Clearcasting's and Arcane Power's scope by the DB2 masks; Arcane Wrath outside Arcane
+-- Power's), Missile Barrage's proc casts, Heating Up's.
+local CLEARCAST = {
+    arcane_blast = true,
+    arcane_missiles = true,
+    arcane_wrath = true,
+    frostbolt = true,
+    fireball = true,
+    scorch = true,
+    pyroblast = true,
+    fire_blast = true,
+    frostfire_bolt = true,
+}
+local POWERED = setmetatable({ arcane_wrath = false }, { __index = CLEARCAST })
+local BARRAGE = { arcane_blast = 1, fireball = 0.5, frostbolt = 0.5, frostfire_bolt = 0.5, arcane_wrath = 0.5 }
+local HEATING = { fireball = true, frostfire_bolt = true, fire_blast = true, scorch = true }
+local FIRE = { fireball = true, frostfire_bolt = true, fire_blast = true, scorch = true, pyroblast = true }
+
+-- The talents the world reads, by their DB2 (or wowsims's) rank-1 spells.
+local T = {
+    missile_barrage = 400588,
+    arcane_concentration = 11213,
+    heating_up = 400624,
+    improved_scorch = 11095,
+    improved_fireball = 11069,
+    improved_frostbolt = 11070,
+    wake_of_fire = 11078,
+}
+
+local W0
+local function class()
+    W0 = W0 or ld.load(nil, "src/Hekili_Mage/Mage.lua", "MAGE")
+    return W0
+end
+
+-- The rank instance `H`'s character has in the talent whose spell is `spell` (0: untaken), from its traits.
+local function talentRank(H, spell)
+    local tr = H.ctl.traits
+    for i, d in ipairs(tr and tr.defs or {}) do
+        if d == spell then
+            return tr.nodes[i].activeRank
+        end
+    end
+    return 0
+end
+
+-- The packs' worlds: `pack` the wowsims.com pack it runs (the next task's), `spec` its spec id, `kit` the abilities the
+-- character knows (every rank), `talents` wowsims/forever's preset build's ({ [rank-1 spell] = rank }; presets.ts
+-- Arcane 0552205003100311531-03-0515, Fire 0502205-23550000130135031-005), `uptime` the debuffs reported.
+local PACKS = {
+    Arcane = {
+        pack = "Arcane (wowsims.com)",
+        spec = 100081,
+        kit = {
+            "arcane_missiles",
+            "arcane_wrath",
+            "arcane_blast",
+            "frostbolt",
+            "evocation",
+            "arcane_power",
+            "presence_of_mind",
+            "counterspell",
+        },
+        talents = {
+            [11222] = 5, -- Arcane Focus
+            [11237] = 5, -- Improved Channeling
+            [400588] = 2, -- Missile Barrage
+            [11210] = 2, -- Arcane Subtlety
+            [11213] = 5, -- Arcane Concentration
+            [11242] = 3, -- Arcane Impact
+            [400574] = 1, -- Arcane Blast
+            [18462] = 3, -- Arcane Meditation
+            [1326079] = 1, -- Arcane Wrath
+            [12043] = 1, -- Presence of Mind
+            [11232] = 5, -- Arcane Mind
+            [15058] = 3, -- Arcane Instability
+            [12042] = 1, -- Arcane Power
+            [18459] = 2, -- Incineration (wowsims 3; the DB2's 2)
+            [11070] = 5, -- Improved Frostbolt
+            [29438] = 1, -- Elemental Precision
+            [11207] = 5, -- Ice Shards
+        },
+        uptime = {},
+    },
+    Fire = {
+        pack = "Fire (wowsims.com)",
+        spec = 100082,
+        kit = {
+            "scorch",
+            "pyroblast",
+            "fire_blast",
+            "arcane_missiles",
+            "fireball",
+            "frostfire_bolt",
+            "evocation",
+            "combustion",
+            "counterspell",
+        },
+        talents = {
+            [11222] = 5, -- Arcane Focus
+            [400588] = 2, -- Missile Barrage
+            [11210] = 2, -- Arcane Subtlety
+            [11213] = 5, -- Arcane Concentration
+            [11078] = 2, -- Wake of Fire (wowsims's Improved Fire Blast)
+            [18459] = 2, -- Incineration (wowsims 3; the DB2's 2)
+            [11069] = 5, -- Improved Fireball
+            [11119] = 5, -- Ignite
+            [11366] = 1, -- Pyroblast
+            [11095] = 3, -- Improved Scorch
+            [400624] = 1, -- Heating Up
+            [29074] = 3, -- Master of Elements
+            [11115] = 3, -- Critical Mass (wowsims 5; the DB2's 3)
+            [11124] = 3, -- Fire Power
+            [11129] = 1, -- Combustion
+            [29438] = 3, -- Elemental Precision (wowsims 5; the DB2's 3)
+        },
+        uptime = { "fire_vulnerability" },
+    },
+}
+
+-- The class data a press reads from a booted instance `H` (once per instance): each aura's ID, duration and stacks.
+local cache = setmetatable({}, { __mode = "k" })
+local function classData(H)
+    if cache[H] then
+        return cache[H]
+    end
+    local X = { aura = {} }
+    cache[H] = X
+    for key, a in pairs(H.Hekili.Class.auras) do
+        if type(key) == "string" and type(a) == "table" and a.id then
+            local d = a.duration
+            X.aura[key] = { id = a.id, duration = type(d) == "function" and d() or d or 0, max_stack = a.max_stack }
+        end
+    end
+    return X
+end
+
+-- What a press reads of our auras: on the true entity `e` (a usability answer) or in the oracle's true belief (a
+-- resolve: hunter_world reads its haste so). Each returns up(key) and stacks(key).
+local function onEntity(e, X)
+    return function(key)
+        return e.auras[X.aura[key].id] ~= nil
+    end, function(key)
+        local a = e.auras[X.aura[key].id]
+        return a and a.stacks or 0
+    end
+end
+local function inBelief(H, X)
+    local VS, now = H.ns.VirtualState, H.ctl.now
+    return function(key)
+        return VS.Aura("player", X.aura[key].id, now) ~= nil
+    end, function(key)
+        local rec, n = VS.Aura("player", X.aura[key].id, now)
+        return rec and n or 0
+    end
+end
+
+local function aura(W, X, dst, key, n)
+    local a = X.aura[key]
+    W.applyAura(dst, a.id, a.duration, n or 1, a.max_stack)
+end
+local function drop(W, e, X, key) -- aura `key` off `e`, if up
+    local id = X.aura[key].id
+    if e.auras[id] then
+        e.auras[id] = nil
+        W.emit({ kind = "aura", dst = e, aura = id, stacks = 0, expires = 0, duration = 0 })
+    end
+end
+
+-- The cost of `key`'s highest rank instance `H`'s character knows (`ids`: its ranks, lowest first), with our auras read
+-- by `up` and `stacks`: Arcane Blast's from its charges, Clearcasting's free cast, Arcane Power's +30% (the truth the
+-- cost modifiers are measured against).
+local function costOf(key, ids, H, up, stacks)
+    local c
+    if key == "arcane_blast" then
+        c = math.floor(0.15 * BASE) * (1 + 1.75 * stacks("arcane_blast"))
+    else
+        c = COST[key] or 0
+        if type(c) == "table" then
+            local rank = #c
+            for i = #ids, 1, -1 do
+                if H.ctl.known[ids[i]] then
+                    rank = i
+                    break
+                end
+            end
+            c = c[rank]
+        end
+    end
+    if CLEARCAST[key] and up("clearcasting") then
+        return 0
+    end
+    if POWERED[key] and up("arcane_power") then
+        c = c * 1.3
+    end
+    return c
+end
+
+-- The cast time of `key`: Presence of Mind instant, Heating Up's -25% a stack on Pyroblast, the talents' cuts.
+local function castOf(key, H, up, stacks)
+    local c = CAST[key]
+    if not c or up("presence_of_mind") then
+        return 0
+    end
+    if key == "pyroblast" then
+        c = c * (1 - 0.25 * stacks("heating_up"))
+    elseif key == "fireball" then
+        c = c - 0.1 * talentRank(H, T.improved_fireball)
+    elseif key == "frostbolt" then
+        c = c - 0.1 * talentRank(H, T.improved_frostbolt)
+    end
+    return c
+end
+
+-- A damage spell's hit and its procs (Missile Barrage, Heating Up, Clearcasting); Clearcasting spent first, Presence of
+-- Mind by a spell with a cast time. `extra(W, e, X, H, landed, instant)` after.
+local function spell(key, extra)
+    return {
+        outcomes = "spell",
+        effect = function(W, e, p, X, H)
+            local up = onEntity(e, X)
+            if CLEARCAST[key] and up("clearcasting") then
+                drop(W, e, X, "clearcasting")
+            end
+            local instant = (p.cast or 0) == 0
+            if CAST[key] then
+                drop(W, e, X, "presence_of_mind")
+            end
+            local hit = W.hit(e, e.target, AMOUNT[key], FIRE[key] and 4 or 64)
+            local landed, crit = hit.act == "WOUND", hit.flag == "CRITICAL"
+            if landed then
+                local mb = BARRAGE[key] and 0.2 * talentRank(H, T.missile_barrage) * BARRAGE[key] or 0
+                if mb > 0 and W.rng.chance(mb) then
+                    aura(W, X, e, "missile_barrage")
+                end
+                local ac = talentRank(H, T.arcane_concentration)
+                if ac > 0 and W.rng.chance(0.02 * ac) then
+                    aura(W, X, e, "clearcasting")
+                end
+                local n = HEATING[key] and ((crit and 1 or 0) + (key == "fire_blast" and 1 or 0)) or 0
+                if n > 0 and talentRank(H, T.heating_up) > 0 then
+                    aura(W, X, e, "heating_up", n)
+                end
+            end
+            if extra then
+                extra(W, e, X, H, landed, instant)
+            end
+        end,
+    }
+end
+
+local IMPROVED_SCORCH = { 0.33, 0.67, 1 }
+local WAKE_OF_FIRE = { [0] = 0, 1, 2, 2 } -- Fire Blast's cooldown cut by rank (wowsims's; a third DB2 rank as the second)
+
+-- Each recommendable ability: `effect(W, e, p, X, H)`, `requires(W, e, X)`, `channel` (unpressable: the gap above). A
+-- key missing here fails the loop.
+M.MAP = {
+    arcane_blast = spell("arcane_blast", function(W, e, X)
+        aura(W, X, e, "arcane_blast") -- a charge, refreshed (wowsims arcane_blast.go)
+    end),
+    arcane_wrath = spell("arcane_wrath"),
+    frostbolt = spell("frostbolt"),
+    fireball = spell("fireball"),
+    frostfire_bolt = spell("frostfire_bolt"),
+    fire_blast = spell("fire_blast"),
+    scorch = spell("scorch", function(W, e, X, H, landed)
+        local r = talentRank(H, T.improved_scorch)
+        if landed and r > 0 and W.rng.chance(IMPROVED_SCORCH[r] or 1) then
+            aura(W, X, e.target, "fire_vulnerability")
+        end
+    end),
+    pyroblast = spell("pyroblast", function(W, e, X, _, _, instant)
+        if not instant then -- every stack spent, unless Presence of Mind made it instant (wowsims talents_fire.go)
+            drop(W, e, X, "heating_up")
+        end
+    end),
+    arcane_power = {
+        effect = function(W, e, _, X)
+            aura(W, X, e, "arcane_power")
+        end,
+    },
+    presence_of_mind = {
+        requires = function(_, e, X)
+            return not onEntity(e, X)("presence_of_mind"), "already up"
+        end,
+        effect = function(W, e, _, X)
+            aura(W, X, e, "presence_of_mind")
+        end,
+    },
+    combustion = {
+        requires = function(_, e, X)
+            return not onEntity(e, X)("combustion"), "already up"
+        end,
+        effect = function(W, e, _, X)
+            aura(W, X, e, "combustion")
+        end,
+    },
+    counterspell = {
+        requires = function()
+            return false, "the mob casts nothing"
+        end,
+    },
+    arcane_missiles = { channel = true },
+    evocation = { channel = true },
+}
+
+local function content(name)
+    local P = PACKS[name]
+    local C = { PACK = P.pack, SPEC = P.spec, IDS = {} }
+
+    function C.character()
+        local w = class()
+        local known = {}
+        for _, key in ipairs(P.kit) do
+            local a = assert(w.abilities[key], key)
+            local ids = { a.id }
+            for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
+                ids[#ids + 1] = id
+            end
+            C.IDS[key] = ids
+            for _, id in ipairs(ids) do
+                known[#known + 1] = id
+            end
+        end
+        return {
+            class = "MAGE",
+            classID = M.CLASS_ID,
+            specID = M.CLIENT_SPEC,
+            level = 60,
+            known = known,
+            talents = P.talents,
+            power = { type = MANA, token = "MANA", max = MAX },
+            speed = { 3.0 },
+        }
+    end
+
+    -- Level 60 against a level 60 mob in range, 6000 mana full and under the five-second rule. Neither side dies
+    -- (hunter_world's reason: a kill ends the loop before the client sees it).
+    local function hooks(_, us)
+        us.health, us.healthMax = 1e9, 1e9
+    end
+    C.WORLD = {
+        level = 60,
+        weapons = { { 40, 70, 3.0 } },
+        max = MAX,
+        fsr = { [MANA] = FSR },
+        power = MAX,
+        mobHealth = 1e9,
+        distance = 25, -- a caster's range: no melee swings of ours
+        script = hooks,
+    }
+
+    -- No other power read (mana is secret in combat).
+    C.OBSERVE = { powerTokens = { [MANA] = "MANA" } }
+
+    -- No power is swing-paid.
+    function C.gain()
+        return 0
+    end
+
+    --- The resolved press of `key` from instance `H` (the oracle's: its state is true): the highest known rank's ID
+    --- and every known rank's, the cost, the cooldown, GCD and cast time on the true state, the mapping's effects. Raises
+    --- "unmapped key", and for a channel (the harness's shared gap).
+    function C.resolve(key, H)
+        local m = M.MAP[key]
+        if not m then
+            error("unmapped key " .. tostring(key), 2)
+        elseif m.channel then
+            error("channel " .. key .. ": the harness world has no player channel (shared gap)", 2)
+        end
+        local a = H.Hekili.Class.abilities[key]
+        local X = classData(H)
+        local S = H.Hekili.State
+        local VS = H.ns.VirtualState
+        local ids = C.IDS[key]
+        if not ids then -- a key the world's kit lacks: every rank the class registers
+            ids = { a.id }
+            for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
+                ids[#ids + 1] = id
+            end
+        end
+        local up, stacks = inBelief(H, X)
+        local p = {
+            spell = VS.KnownID(a.id),
+            ids = ids,
+            cost = costOf(key, ids, H, up, stacks),
+            pt = MANA,
+            cooldown = key == "fire_blast" and 8 - WAKE_OF_FIRE[talentRank(H, T.wake_of_fire)]
+                or tonumber(a.cooldown)
+                or S.action[key].cooldown
+                or 0,
+            gcd = GCD[a.gcd or "spell"],
+            offGcd = a.gcd == "off",
+            cast = castOf(key, H, up, stacks),
+            refund = world.refundOf(H.Hekili.Class, key),
+            outcomes = m.outcomes,
+        }
+        p.requires = function(W, e)
+            if m.requires then
+                return m.requires(W, e, X)
+            end
+            return true
+        end
+        p.effect = function(W, e)
+            if m.effect then
+                m.effect(W, e, p, X, H)
+            end
+        end
+        return p
+    end
+
+    --- The client's usability answers for every known rank of every pressable kit ability: unusable (not for power)
+    --- when the mapping's requirement fails in the true world, else usable when mana covers the cost, short when not.
+    function C.usable(H)
+        local out = {}
+        local X = classData(H)
+        for key, m in pairs(M.MAP) do
+            if H.Hekili.Class.abilities[key] and C.IDS[key] and not m.channel then
+                local ids = C.IDS[key]
+                local function answer(W, e, power)
+                    if m.requires and not m.requires(W, e, X) then
+                        return false, false
+                    end
+                    local cost = costOf(key, ids, H, onEntity(e, X))
+                    return power >= cost, power < cost
+                end
+                for _, id in ipairs(ids) do
+                    out[#out + 1] = { id, answer }
+                end
+            end
+        end
+        table.sort(out, function(x, y)
+            return x[1] < y[1]
+        end)
+        return out
+    end
+
+    --- The debuffs whose uptime the loop reports and self-checks: { { key, auraID } } from instance `H`.
+    function C.uptime(H)
+        local out = {}
+        for _, key in ipairs(P.uptime) do
+            out[#out + 1] = { key, H.Hekili.Class.auras[key].id }
+        end
+        return out
+    end
+
+    return C
+end
+
+M.Arcane = content("Arcane")
+M.Fire = content("Fire")
+
+return M
