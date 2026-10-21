@@ -408,6 +408,13 @@ describe("Forever Druid", function()
         assert.are.equal(0, ld.run(w.abilities.primal_bite.cooldown, e))
     end)
 
+    it("puts Barkskin and Frenzied Regeneration under the defensives toggle", function()
+        assert.are.same(
+            { "defensives", "defensives" },
+            { w.abilities.barkskin.toggle, w.abilities.frenzied_regeneration.toggle }
+        )
+    end)
+
     it(
         "gates every ability on the form it needs, Ravage and Pounce on Prowl, Faerie Fire free only in Cat or Bear",
         function()

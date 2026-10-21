@@ -41,9 +41,9 @@ return {
     },
     executePhase = "execute_phase",
     map = {},
-    -- by role (docs/dev/wowsims-packs.md): Maul a rage dump (its leveling line at 2), upkeep at 2; the filler
-    -- Lacerate arguable
-    focus = { maul = 1, lacerate = 2, demoralizing_roar = 2 },
+    -- by role (docs/dev/wowsims-packs.md): Maul a rage dump as Heroic Strike ({ 1, 2 } by line; the leveling Maul,
+    -- a literal, the second at 2); Lacerate (both lines) and Demoralizing Roar at 2
+    focus = { maul = { 1, 2 }, lacerate = 2, demoralizing_roar = 2 },
     -- Before Primal Bite (25) Maul is the only rage sink: queued whenever affordable instead of at wowsims's 20, which
     -- pools for the on-GCD strikes a level 10 bear lacks (ruling L18; silent at 60). Before Lacerate (42), wowsims's
     -- 13-rage filler between Primal Bites, the bear waits for Primal Bite (L40 9.6 s, L10 7.2 s on central fix 22):

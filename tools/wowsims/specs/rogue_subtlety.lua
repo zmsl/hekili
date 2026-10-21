@@ -37,7 +37,7 @@ return {
         distanceFromTarget = 5,
     },
     map = {},
-    -- by role (docs/dev/wowsims-packs.md); Slice and Dice arguable
-    focus = { ambush = 1, slice_and_dice = 1, rupture = 2 },
+    -- by role (docs/dev/wowsims-packs.md): both at 1, so they sort by soonest (the user, 2026-10-21)
+    focus = { slice_and_dice = 1, rupture = 1 },
     leveling = {},
 }

@@ -13,13 +13,14 @@ local function flagged(path)
     return out
 end
 
-local ROGUE = { "ambush=1", "slice_and_dice=1", "rupture=2" } -- Slice and Dice: arguable (finisher / buff)
+-- Rupture in Assassination and Combat: open (a spender, none, or upkeep, 2)
+local ROGUE = { "slice_and_dice=1", "rupture=2" }
 local HUNTER = { "raptor_strike=1", "hunters_mark=2", "mongoose_bite=1" }
 
 local PACKS = {
     ["Rogue/APLs/Assassination"] = ROGUE,
     ["Rogue/APLs/Combat"] = ROGUE,
-    ["Rogue/APLs/Subtlety"] = ROGUE,
+    ["Rogue/APLs/Subtlety"] = { "slice_and_dice=1", "rupture=1" }, -- both 1: they sort by soonest
     -- Serpent Sting: arguable (a shot that is a DoT), BM and MM keep 2, Survival none
     ["Hunter/APLs/Beast Mastery"] = { HUNTER[1], HUNTER[2], HUNTER[3], "serpent_sting=2" },
     ["Hunter/APLs/Marksmanship"] = { HUNTER[1], HUNTER[2], HUNTER[3], "serpent_sting=2" },
@@ -45,7 +46,6 @@ local PACKS = {
     },
     ["Druid/APLs/Balance"] = { "moonfire=2", "insect_swarm=2", "starfire=1" }, -- Starfire on Eclipse: arguable
     ["Druid/APLs/Feral"] = { "shred=1", "claw=1", "rake=2", "rip=2", "rake=2" },
-    -- the damage group's Lacerate (the last): arguable (filler / debuff)
     ["Druid/APLs/Guardian"] = { "maul=1", "maul=2", "lacerate=2", "demoralizing_roar=2", "lacerate=2" },
     ["Mage/APLs/Arcane"] = { "arcane_missiles=1" },
     ["Mage/APLs/Fire"] = { "scorch=2", "pyroblast=1", "arcane_missiles=1" },

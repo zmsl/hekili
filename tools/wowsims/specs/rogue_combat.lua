@@ -37,7 +37,7 @@ return {
         distanceFromTarget = 5,
     },
     map = {},
-    -- by role (docs/dev/wowsims-packs.md); Slice and Dice arguable
-    focus = { ambush = 1, slice_and_dice = 1, rupture = 2 },
+    -- by role (docs/dev/wowsims-packs.md); Rupture open (a spender, none, or upkeep, 2)
+    focus = { slice_and_dice = 1, rupture = 2 },
     leveling = {},
 }

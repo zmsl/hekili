@@ -298,14 +298,14 @@ describe("Forever Rogue priorities", function()
         end
     end)
 
-    it("flags Slice and Dice at tier 1 in every pack; Subtlety's Ambush at 1 and Rupture at 2", function()
+    it("flags Slice and Dice at tier 1 in every pack; Subtlety's Rupture at 1, Ambush at none", function()
         for _, name in ipairs(PACKS) do
             local _, snd = line(name, "slice_and_dice")
             assert.are.equal(1, snd.focus, name)
         end
         local _, a = line("Subtlety (wowsims.com)", "ambush")
         local _, r = line("Subtlety (wowsims.com)", "rupture")
-        assert.are.same({ 1, 2 }, { a.focus, r.focus })
+        assert.are.same({ nil, 1 }, { a.focus, r.focus })
     end)
 end)
 
