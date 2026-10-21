@@ -1719,6 +1719,7 @@ spec:RegisterAbilities({
         startsCombat = false,
         known = knows({ 12292 }),
         buff = "battle_stance",
+        toggle = "cooldowns",
 
         now = function()
             applyBuff("sweeping_strikes", nil, 5)

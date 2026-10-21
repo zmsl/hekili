@@ -159,6 +159,8 @@ describe("Forever Warrior", function()
             assert.are.equal(41, n)
             assert.are.equal(1.5, lw.run(w.abilities.slam.cast, e))
             assert.is_true(w.abilities.heroic_strike.onNextSwing and w.abilities.cleave.onNextSwing)
+            -- Sweeping Strikes under the native Cooldowns toggle (APL usability audit A): off, the engine skips its line
+            assert.are.equal("cooldowns", w.abilities.sweeping_strikes.toggle)
         end
     )
 
