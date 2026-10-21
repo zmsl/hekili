@@ -256,7 +256,8 @@ Maelstrom Weapon and Fire Nova on Clearcasting at tier 1; Strength of Earth, Lig
 2). The world keeps the totem slots (`W.summonTotem`, class-neutral: a slot and an expiry), secret in combat; the summon's
 `now` (`summonTotem`, content API 4) writes the slot's modelled expiry, which the in-combat GetTotemInfo answers. The
 mob swings at us and each hit that lands spends a Lightning Shield charge; our landed melee stacks Maelstrom Weapon; an
-elemental spell rolls Clearcasting (10%); the shocks share a cooldown (6 s, 0.2 s less a rank of Reverberation). Neither side dies: a kill by our last press
+elemental spell rolls Clearcasting (10%); the shocks share a cooldown (6 s, 0.2 s less a rank of Reverberation); Rage
+of the Farseer (the build's talent, in the kit) gives its 25 s buff, its +30% attack speed not modelled. Neither side dies: a kill by our last press
 ends the loop before the client sees it, so the next fight's prepull would be believed in combat and its totem slots
 never read (a harness quirk every pack shares). The world runs out of mana about 35 s in (idle about 0.68: UNMEASURED
 pool and regen, no Mana Spring regen, Water Shield or potions), so most in-combat ticks show no icon on either side.
@@ -264,11 +265,11 @@ The imbues are not in the solo world's kit (it has no weapon enchant read). The 
 with Shamanistic Focus when the build has it, Stormstrike's 121 (wowsims/forever's), and the shocks' cooldown and Flame
 Shock's duration from the booted talents. The lines below run Enhancement (wowsims.com) (wowsims packs plan, Task 10,
 the forever gate on 51a0b1ac: Fire Nova at the DB2's 520). `tests/Forever/wowsims_shaman_spec.lua` replays wowsims's
-own fight (floor 0.90) and runs the levels 10, 40 and 60 (40 pending: GAP AB, the secret-mana floor's last mana):
+own fight (floor 0.98; 0.989 of 88 with Rage of the Farseer, held) and runs the levels 10, 40 and 60 (40 pending: GAP AB, the secret-mana floor's last mana):
 
 ```
-Enhancement solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.1 (oracle 12.1, unmatched 0.0)], episodes 0.11/min; dps A/B 0.991; ... [seeds 1-3]
-Enhancement solo: fights=20 agreement 1.000 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.3 (oracle 13.9, unmatched 0.0)], episodes 0.12/min; dps A/B 0.996; ...
+Enhancement solo: fights=3 agreement 1.000 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.1 (oracle 11.4, unmatched 0.0)], episodes 0.11/min; dps A/B 0.991; ... [seeds 1-3]
+Enhancement solo: fights=20 agreement 0.998 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [cost 1.3 (oracle 14.6, unmatched 0.0)], episodes 0.12/min; dps A/B 1.014; ... flicker 1.13/min (oracle 1.10); ... top [stormstrike -> rage_of_the_farseer 44; rage_of_the_farseer -> stormstrike 1]; ...
 ```
 
 Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
@@ -296,6 +297,8 @@ Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
 - S11: wowsims/forever's spell data against the client: Flame Shock lasts 21 s with Call of Flame 3/3? Stormstrike
   costs 121 (8% of base mana) or the DB2's 125? Fire Nova costs 375 (wowsims) or the DB2's 520 (the kit's)?
   Shamanistic Focus takes 45% off the shocks and Lightning Shield?
+- S12: Rage of the Farseer (425336, the talent): its buff readable in combat (25 s, +30% attack speed), its 180 s
+  cooldown read plain in combat, off the GCD; Enhancement shows it right after Blood Fury with Cooldowns on?
 
 `tests/Forever/loop_hunter_spec.lua` runs 3 fights of each Hunter pack in `make check` (seeds 1-3, `#slow`) and 20 in
 `make test-hunter` (`#hunter`), gated by `pack_gate.gate` and asserting that some focus line ran (`r.focus > 0`: Beast

@@ -20,9 +20,8 @@
 -- refill it cannot see, the secret-mana belief pins at the dearest usable cost (lo = hi), and at 375 that pin (450)
 -- sits under the Fire Nova filler's 10% (500 of the solo world's 5000 mana; 553 of the 5530 in wowsims's fight and
 -- the replay), so the solo loop gate falls to 0.886 (GAP V, reported). Also: of
--- wowsims's autocast cooldowns (rule 13) only Blood Fury translates; the trinket
--- 249469, Rage of the Farseer 425336 (not in the kit), the Goblin Sapper Charge 10646 and the EZ-Thro Dark Bomb 260817
--- stay unmapped; mana is secret in combat, so the potion (mana.pct<80), Demonic Rune (<70) and the Fire Nova filler
+-- wowsims's autocast cooldowns (rule 13) Blood Fury and Rage of the Farseer 425336 (the kit's, by its ID) translate;
+-- the trinket 249469, the Goblin Sapper Charge 10646 and the EZ-Thro Dark Bomb 260817 stay unmapped; mana is secret in combat, so the potion (mana.pct<80), Demonic Rune (<70) and the Fire Nova filler
 -- (>10) read the belief's estimate.
 return {
     class = "SHAMAN",
