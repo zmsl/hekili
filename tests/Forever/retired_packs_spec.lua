@@ -20,6 +20,15 @@ describe("retired built-in packs", function()
         assert.is_nil(rawget(p.packs, "Retired Test"))
         assert.is_not_nil(rawget(p.packs, "Mine Test")) -- not built in: the user's
         assert.are.equal(hk.Class.specs[id].options.package, p.specs[id].package)
+        local lines = {}
+        hk.Print = function(_, m)
+            lines[#lines + 1] = m
+        end
+        hk.Notify = function() end
+        H.RunTimers(H.ctl.now + 6) -- the login notice: retired, not "updated"
+        local said = table.concat(lines, "\n")
+        assert.is_truthy(said:find("Retired Test|r priority was retired", 1, true), said)
+        assert.is_falsy(said:find("Retired Test|r priority was updated", 1, true), said)
     end)
 
     it("is a kit method the content calls", function()

@@ -1389,6 +1389,7 @@ function Hekili:RestoreDefaults()
     local p = Hekili.Engine.settings
     local reverted = {}
     local changed = {}
+    local retired = {}
     local decoded = {} -- specID -> a built-in decoded for it this call
 
     -- A retired built-in pack (kit:RetirePacks) leaves the profile; a spec that chose it falls back to its default.
@@ -1401,7 +1402,7 @@ function Hekili:RestoreDefaults()
                     sp.package = ns.DefaultPackage( id )
                 end
             end
-            insert( changed, k )
+            insert( retired, k )
         end
     end
 
@@ -1446,8 +1447,24 @@ function Hekili:RestoreDefaults()
         end
     end
 
-    if #changed > 0 or #reverted > 0 then
+    if #changed > 0 or #reverted > 0 or #retired > 0 then
         self:LoadScripts()
+    end
+
+    -- A retired list is gone, not updated: say so, and where its specs went.
+    if #retired > 0 then
+        table.sort( retired )
+        local names = "|cFFFFD100" .. retired[1] .. "|r"
+        for i = 2, #retired do
+            names = names .. ( i == #retired and " and " or ", " ) .. "|cFFFFD100" .. retired[i] .. "|r"
+        end
+        local msg = #retired == 1
+            and ( "The " .. names .. " priority was retired; a spec that used it now runs its default priority." )
+            or ( "The " .. names .. " priorities were retired; a spec that used one now runs its default priority." )
+        C_Timer.After( 5, function()
+            if Hekili.Engine.settings.notifications.enabled then Hekili:Notify( msg, 6 ) end
+            Hekili:Print( msg )
+        end )
     end
 
     if #changed > 0 then
