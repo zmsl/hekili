@@ -5,8 +5,8 @@
 # Omitted: default #1: autocastOtherCooldowns: unmapped item 19024; autocastOtherCooldowns: unmapped item 272440; autocastOtherCooldowns: unmapped spell 1311015
 # Omitted: default #5: hidden
 
-actions.precombat=retribution_aura,prepull_at=10
-actions.precombat+=/seal_of_the_crusader,prepull_at=1.5
+actions.precombat=retribution_aura,if=!buff.retribution_aura.up
+actions.precombat+=/seal_of_the_crusader,if=!buff.seal_of_the_crusader.up
 actions=judgement,use_off_gcd=1
 actions+=/swift_judgement,use_off_gcd=1
 actions+=/seal_of_fury,focus=2,if=(buff.seal_of_fury.remains<mainhand_remains&!buff.seal_of_fury.up)

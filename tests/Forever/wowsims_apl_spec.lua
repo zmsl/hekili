@@ -80,7 +80,7 @@ describe("the wowsims APL translator", function()
         }, ctx())
         assert.are.equal(
             table.concat({
-                "actions.precombat=roar,use_off_gcd=1,prepull_at=1",
+                "actions.precombat=roar,use_off_gcd=1",
                 "actions=strike,focus=1,if=(!action.big_hit.known|cooldown.big_hit.remains>=1.5)",
                 "actions+=/big_hit,if=(!talent.furious.enabled|!buff.fury.up)",
                 "actions+=/dot,if=debuff.dot.remains<=0.3",
@@ -148,60 +148,242 @@ describe("the wowsims APL translator", function()
         }, toggles)
     end)
 
-    it(
-        "schedules the prepull: prepull_at from doAtValue, earliest first, 0 at the pull, no guard of its own",
-        function()
-            local function at(id, v, cond)
-                local e = cast(id, cond)
-                e.doAtValue = type(v) == "table" and v or (v and const(v))
-                return e
-            end
-            local text, omitted = apl.translate({
-                prepullActions = {
-                    at(100, "-1.5s"),
-                    at(300, "-10s"),
-                    at(200, "-1.5s", { ["not"] = { val = { auraIsActive = { auraId = { spellId = 900 } } } } }),
-                    at(400, "0s"),
-                    at(400),
-                    at(100, "2s"),
-                    at(200, { variableRef = { name = "x" } }),
-                },
-            }, ctx())
-            assert.are.equal(
-                table.concat({
-                    "actions.precombat=roar,use_off_gcd=1,prepull_at=10",
-                    "actions.precombat+=/strike,prepull_at=1.5", -- pre-pull lines carry no tier
-                    "actions.precombat+=/big_hit,prepull_at=1.5,if=(!talent.furious.enabled|!buff.fury.up)",
-                    "actions.precombat+=/dot,prepull_at=0",
-                }, "\n"),
-                text
-            )
-            assert.are.same({
-                "precombat #5: no doAtValue",
-                "precombat #6: doAtValue after the pull",
-                "precombat #7: doAtValue not a constant",
-            }, omitted)
+    it("orders the prepull by doAtValue, earliest first, ties in the APL's order, with no prepull_at", function()
+        local function at(id, v, cond)
+            local e = cast(id, cond)
+            e.doAtValue = type(v) == "table" and v or (v and const(v))
+            return e
         end
-    )
-
-    it("gives a group called from the prepull its caller's prepull_at (its own entries' order kept)", function()
-        local call = { action = { groupReference = { groupName = "Move" } }, doAtValue = const("-0.9s") }
         local text, omitted = apl.translate({
-            prepullActions = { call, { action = cast(300).action, doAtValue = const("-2s") } },
-            priorityList = { cast(400) },
-            groups = { { name = "Move", actions = { cast(200), cast(100) } } },
+            prepullActions = {
+                at(100, "-1.5s"),
+                at(300, "-10s"),
+                at(200, "-1.5s", { ["not"] = { val = { auraIsActive = { auraId = { spellId = 900 } } } } }),
+                at(400, "0s"),
+                at(400),
+                at(100, "2s"),
+                at(200, { variableRef = { name = "x" } }),
+            },
         }, ctx())
         assert.are.equal(
             table.concat({
-                "actions.precombat=roar,use_off_gcd=1,prepull_at=2",
-                "actions.precombat+=/call_action_list,name=move",
-                "actions=dot",
-                "actions.move=big_hit,prepull_at=0.9",
-                "actions.move+=/strike,prepull_at=0.9",
+                "actions.precombat=roar,use_off_gcd=1",
+                "actions.precombat+=/strike", -- pre-pull lines carry no tier
+                "actions.precombat+=/big_hit,if=(!talent.furious.enabled|!buff.fury.up)",
+                "actions.precombat+=/dot",
             }, "\n"),
             text
         )
-        assert.are.same({}, omitted)
+        assert.are.same({
+            "precombat #5: no doAtValue",
+            "precombat #6: doAtValue after the pull",
+            "precombat #7: doAtValue not a constant",
+        }, omitted)
+    end)
+
+    describe("the pre-pull guard (rule 1: from what each line's handler does)", function()
+        -- A kit whose handlers run in a stub environment, as the engine's (setfenv( f, state )): the translator
+        -- records the verbs each handler calls.
+        -- luacheck: read globals applyBuff applyDebuff removeBuff summonTotem buff
+        local function noop() end
+        local leaf = { up = false, down = true, remains = 0 }
+        local env = {
+            applyBuff = noop,
+            applyDebuff = noop,
+            removeBuff = noop,
+            summonTotem = noop,
+            error = error,
+            buff = setmetatable({}, {
+                __index = function()
+                    return leaf
+                end,
+            }),
+        }
+        local function h(f)
+            return setfenv(f, env)
+        end
+        local function guardCtx()
+            local kit = {
+                abilities = {
+                    shout = {
+                        key = "shout",
+                        id = 1001,
+                        gcd = "spell",
+                        cooldown = 0,
+                        handler = h(function()
+                            applyBuff("shout")
+                        end),
+                    },
+                    mark = {
+                        key = "mark",
+                        id = 1002,
+                        gcd = "spell",
+                        cooldown = 0,
+                        handler = h(function()
+                            applyDebuff("target", "mark")
+                        end),
+                    },
+                    rage = {
+                        key = "rage",
+                        id = 1003,
+                        gcd = "off",
+                        cooldown = 60,
+                        handler = h(function()
+                            applyBuff("rage")
+                        end),
+                    },
+                    move = {
+                        key = "move",
+                        id = 1004,
+                        gcd = "off",
+                        cooldown = 15,
+                        handler = h(function()
+                            applyDebuff("target", "move_stun")
+                        end),
+                    },
+                    totem = {
+                        key = "totem",
+                        id = 1005,
+                        gcd = "spell",
+                        cooldown = 0,
+                        handler = h(function()
+                            summonTotem("totem", "air", 300)
+                        end),
+                    },
+                    seal_a = {
+                        key = "seal_a",
+                        id = 1006,
+                        gcd = "spell",
+                        cooldown = 0,
+                        handler = h(function()
+                            if buff.seal_b.up then
+                                removeBuff("seal_b")
+                            end
+                            applyBuff("seal_a")
+                        end),
+                    },
+                    seal_b = {
+                        key = "seal_b",
+                        id = 1007,
+                        gcd = "spell",
+                        cooldown = 0,
+                        handler = h(function()
+                            if buff.seal_a.up then
+                                removeBuff("seal_a")
+                            end
+                            applyBuff("seal_b")
+                        end),
+                    },
+                    stance = {
+                        key = "stance",
+                        id = 1008,
+                        gcd = "off",
+                        cooldown = 1,
+                        handler = h(function()
+                            removeBuff("other_stance")
+                            applyBuff("stance")
+                        end),
+                    },
+                    boom = {
+                        key = "boom",
+                        id = 1009,
+                        gcd = "spell",
+                        cooldown = 0,
+                        handler = h(function()
+                            error("stub lacks x")
+                        end),
+                    },
+                    plain = { key = "plain", id = 1010, gcd = "spell", cooldown = 0 },
+                },
+                auras = {
+                    shout = { id = 2001, duration = 120 },
+                    mark = { id = 2002, duration = 60 },
+                    rage = { id = 2003, duration = 10 },
+                    move_stun = { id = 2004, duration = 1 },
+                    seal_a = { id = 2006, duration = 30 },
+                    seal_b = { id = 2007, duration = 30 },
+                    stance = { id = 2008, duration = 3600 },
+                    other_stance = { id = 2018, duration = 3600 },
+                    boom = { id = 2009, duration = 30 },
+                },
+                talents = {},
+            }
+            return apl.context(kit, { executePhase = "execute_phase" })
+        end
+        local function at(id, v, cond)
+            local e = cast(id, cond)
+            e.doAtValue = const(v)
+            return e
+        end
+
+        it("writes each kind: buff, debuff, totem; none when moot, of another key, or no handler", function()
+            local text, omitted = apl.translate({
+                prepullActions = {
+                    at(1001, "-5s"),
+                    at(1002, "-5s"),
+                    at(1003, "-4s"),
+                    at(1004, "-1s"),
+                    at(1005, "-4s"),
+                    at(1008, "-3s", { isExecutePhase = { threshold = "E20" } }),
+                    at(1009, "-2s"),
+                    at(1010, "-2s"),
+                },
+            }, guardCtx())
+            assert.are.equal(
+                table.concat({
+                    "actions.precombat=shout,if=!buff.shout.up",
+                    "actions.precombat+=/mark,if=!debuff.mark.up",
+                    "actions.precombat+=/rage,use_off_gcd=1",
+                    "actions.precombat+=/totem,if=!totem.air.up",
+                    "actions.precombat+=/stance,use_off_gcd=1,if=!buff.stance.up&execute_phase",
+                    "actions.precombat+=/boom",
+                    "actions.precombat+=/plain",
+                    "actions.precombat+=/move,use_off_gcd=1",
+                }, "\n"),
+                text
+            )
+            assert.are.equal(1, #omitted)
+            assert.matches("^precombat #7: no guard: boom's handler raised", omitted[1])
+        end)
+
+        it("guards a mutually exclusive group's first line by every member's aura, later ones by their own", function()
+            local text = apl.translate({
+                prepullActions = { at(1006, "-3s"), at(1007, "-1.5s") },
+            }, guardCtx())
+            assert.are.equal(
+                table.concat({
+                    "actions.precombat=seal_a,if=!buff.seal_a.up&!buff.seal_b.up",
+                    "actions.precombat+=/seal_b,if=!buff.seal_b.up",
+                }, "\n"),
+                text
+            )
+        end)
+
+        it("reaches a group only the prepull calls, never one the priority also calls, nor the priority", function()
+            local text = apl.translate({
+                prepullActions = {
+                    { action = { groupReference = { groupName = "Move" } }, doAtValue = const("-1s") },
+                    { action = { groupReference = { groupName = "Both" } }, doAtValue = const("-1s") },
+                },
+                priorityList = { cast(1001), { action = { groupReference = { groupName = "Both" } } } },
+                groups = {
+                    { name = "Move", actions = { cast(1001), cast(1004) } },
+                    { name = "Both", actions = { cast(1002) } },
+                },
+            }, guardCtx())
+            assert.are.equal(
+                table.concat({
+                    "actions.precombat=call_action_list,name=move",
+                    "actions.precombat+=/call_action_list,name=both",
+                    "actions=shout",
+                    "actions+=/call_action_list,name=both",
+                    "actions.move=shout,if=!buff.shout.up",
+                    "actions.move+=/move,use_off_gcd=1",
+                    "actions.both=mark",
+                }, "\n"),
+                text
+            )
+        end)
     end)
 
     it("folds constants, omits hidden and unsupported entries, inlines variables, makes toggles settings", function()
@@ -693,7 +875,7 @@ describe("the wowsims APL translator", function()
                 apl.translate(rotation, ctx({ requires = { strike = "furious", big_hit = "cuts", big = "cuts" } }))
             assert.are.equal(
                 table.concat({
-                    "actions.precombat=big_hit,prepull_at=1,if=talent.cuts.enabled",
+                    "actions.precombat=big_hit,if=talent.cuts.enabled",
                     "actions=strike,if=talent.furious.enabled&((action.big_hit.known&cooldown.big_hit.ready)|rage.current>10)",
                     "actions+=/big_hit,if=talent.cuts.enabled",
                     "actions+=/strike,if=talent.furious.enabled&((!action.big_hit.known|cooldown.big_hit.ready)&rage.current>10)",

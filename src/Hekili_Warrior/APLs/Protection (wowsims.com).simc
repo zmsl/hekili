@@ -27,8 +27,8 @@
 # Omitted: default: empty group cd_offensive_trinkets
 # Omitted: default: empty group cd_shield_wall_dual_wield
 
-actions.precombat=battle_shout,prepull_at=1.5
-actions.precombat+=/bloodrage,use_off_gcd=1,prepull_at=1.5
+actions.precombat=battle_shout,if=!buff.battle_shout.up
+actions.precombat+=/bloodrage,use_off_gcd=1
 actions=last_stand,use_off_gcd=1,if=(!(buff.last_stand.up|(action.shield_wall.known&buff.shield_wall.up))&health.pct<=40)
 actions+=/shield_wall,if=(health.pct<=35&!((action.last_stand.known&buff.last_stand.up)|buff.shield_wall.up))
 actions+=/stoneform,if=((!(action.last_stand.known|action.shield_wall.known)|!((action.last_stand.known&buff.last_stand.up)|(action.shield_wall.known&buff.shield_wall.up)))&health.pct<=50)

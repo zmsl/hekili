@@ -3,14 +3,22 @@
 -- Data: wowsims/forever (MIT, https://github.com/wowsims/forever); the APL JSON is translated as data, no code copied.
 --
 -- The translation rules (the plan's Task 4):
--- 1. One `.simc` line per APL entry, in order: `prepullActions` -> `actions.precombat` (wowsims's schedule: by a
---    constant `doAtValue`, earliest first, ties in the APL's order, each cast `prepull_at=<seconds before the pull>`,
---    0 at the pull, which the engine recommends once an out-of-combat episode; no guard is added; an entry with no
---    `doAtValue` or one after the pull is omitted, as wowsims ignores it, and one with a non-constant `doAtValue`
---    too), `priorityList` -> `actions`,
+-- 1. One `.simc` line per APL entry, in order: `prepullActions` -> `actions.precombat` (wowsims's order: by a
+--    constant `doAtValue`, earliest first, ties in the APL's order; an entry with no `doAtValue` or one after the pull
+--    is omitted, as wowsims ignores it, and one with a non-constant `doAtValue` too), `priorityList` -> `actions`,
 --    each group a list `actions.<snake of its name>` called with `call_action_list,name=<snake>`, groups in the APL's
---    order as first called (a group the prepull calls gives every cast its caller's `prepull_at`, the earliest
---    caller's when several); `valueVariables` are inlined where referenced.
+--    order as first called; `valueVariables` are inlined where referenced.
+--    The pre-pull guard (owner ruling 2026-10-21: a guard against recasting, the player decides when to press): each
+--    cast line of the precombat list, and of a list only pre-pull lists call, gets one term ahead of its condition,
+--    derived from what its ability's handler does (called once under pcall in the kit's stub state with the verbs
+--    recorded, and once more with every buff up for its removals):
+--    - it applies an aura of the ability's own key: `!buff.<key>.up` (applyBuff) or `!debuff.<key>.up` (applyDebuff),
+--      unless the aura's duration is at most the ability's cooldown (moot: the cooldown already hides it);
+--    - it summons a totem of its own key: `!totem.<element>.up` (the element's slot);
+--    - otherwise no guard (Charge: its own usability and cooldown).
+--    A mutually exclusive group (lines of one list whose handlers remove each other's aura: seals) guards its first
+--    line by every member's aura (`!buff.a.up&!buff.b.up`), later lines by their own: the first is cast only when
+--    none is up, the later replaces it. A handler that raises gives no guard and a header note.
 -- 2. Omitted, and listed in the file's second comment block: `hide: true` entries; entries whose condition folds to
 --    false; entries whose action or condition uses a node the fork lacks (`sequence`,
 --    `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `unitDistance` outside rule 11, `sequenceIsComplete`,
@@ -300,6 +308,8 @@ end
 --- automatic actions are unsupported) and the request's player `player` (rule 16's option values).
 function M.context(set, r, log, player)
     local c = {
+        set = set,
+        effects = {},
         autocast = log and M.autocasts(log),
         keyOf = {},
         auraOf = {},
@@ -987,9 +997,9 @@ local function automatic(c, kind, v)
     return keys
 end
 
-local entry
+local entry, guard
 
--- Rule 7's cast line of key `x`, without its condition: off-GCD, focus and prepull flags.
+-- Rule 7's cast line of key `x`, without its condition: off-GCD and focus flags.
 local function castBody(c, x)
     local tier = c.focus[x]
     if type(tier) == "table" then
@@ -998,8 +1008,7 @@ local function castBody(c, x)
     end
     return x
         .. (c.offGcd[x] and ",use_off_gcd=1" or "")
-        .. (tier and not c.prepullAt and (",focus=" .. tier) or "")
-        .. (c.prepullAt and (",prepull_at=" .. c.prepullAt) or "")
+        .. (tier and (",focus=" .. tier) or "") -- none on a pre-pull line: stripped with rule 1's guard pass
 end
 
 -- Condition node `n` as text: nil when always true (a nil condition is true: wowsims's apl_action.go), false never.
@@ -1148,7 +1157,8 @@ function entry(c, e)
             return nil, "toggle"
         end
         c.used[g], c.self = true, nil
-        c.calledAt[g] = c.calledAt[g] or tonumber(c.prepullAt) -- from the prepull: its casts take the caller's time
+        local by = c.callers[M.snake(g)] or {}
+        c.callers[M.snake(g)], by[c.listName] = by, true -- rule 1: a list only pre-pull lists call is pre-pull
         body = "call_action_list,name=" .. M.snake(g)
         key = M.snake(g)
     elseif kind == "cancelAura" then -- rule 10
@@ -1176,9 +1186,7 @@ function entry(c, e)
         for i, x in ipairs(auto) do
             -- rule 7's use_off_gcd for both (autocast: the documented deviation from wowsims's GCD wait)
             local off = c.offGcd[x]
-            local line = x
-                .. (off and ",use_off_gcd=1" or "")
-                .. (c.prepullAt and (",prepull_at=" .. c.prepullAt) or "")
+            local line = x .. (off and ",use_off_gcd=1" or "")
             local cx = required(c, x, cond)
             out[i] = cx and (line .. ",if=" .. cx) or line
         end
@@ -1188,12 +1196,107 @@ function entry(c, e)
     return cond and (body .. ",if=" .. cond) or body
 end
 
+-- Rule 1: what ability `key`'s handler does, recorded: { unit = "buff"|"debuff" (it applies an aura of its own key),
+-- element (it summons a totem of its own key), removes = { [aura key] = true } }, or nil and the handler's error.
+-- Run in the handler's own environment (the kit's stub state: Register* setfenv( f, state )) with the verbs rebound,
+-- once as the stub stands and once with every buff up (a removal conditional on the other aura being up: two seals).
+local VERBS = { "applyBuff", "applyDebuff", "summonTotem", "removeBuff" }
+local function effect(c, key)
+    local done = c.effects[key]
+    if done ~= nil then
+        return done[1], done[2]
+    end
+    local a = c.set.abilities[key]
+    local h = type(a) == "table" and a.handler
+    if type(h) ~= "function" then
+        c.effects[key] = { false }
+        return false
+    end
+    local env, saved = getfenv(h), {}
+    local r = { removes = {} }
+    for _, v in ipairs(VERBS) do
+        saved[v] = rawget(env, v)
+    end
+    env.applyBuff = function(k)
+        r.unit = k == key and "buff" or r.unit
+    end
+    env.applyDebuff = function(_, k)
+        r.unit = k == key and "debuff" or r.unit
+    end
+    env.summonTotem = function(k, element)
+        r.element = k == key and element or r.element
+    end
+    env.removeBuff = function(k)
+        r.removes[k] = k ~= key or nil
+    end
+    local ok, err = pcall(h)
+    local buff = rawget(env, "buff")
+    if ok and type(buff) == "table" then
+        local up = setmetatable({ up = true, down = false }, { __index = buff.__any })
+        env.buff = setmetatable({}, {
+            __index = function()
+                return up
+            end,
+        })
+        ok, err = pcall(h)
+        env.buff = buff
+    end
+    for _, v in ipairs(VERBS) do
+        env[v] = saved[v]
+    end
+    c.effects[key] = { ok and r or false, not ok and tostring(err) or nil }
+    return c.effects[key][1], c.effects[key][2]
+end
+
+-- Rule 1: the guard term of each cast line in pre-pull list `out` (`origin`: each line's APL entry, for the notes).
+function guard(c, name, out, origin, omitted)
+    local eff, keys = {}, {}
+    for i, b in ipairs(out) do
+        local x = b:match("^([%w_]+)")
+        if x ~= "call_action_list" and x ~= "run_action_list" and x ~= "cancel_buff" and c.ability[x] then
+            local r, err = effect(c, x)
+            if err then
+                omitted[#omitted + 1] = ("%s #%d: no guard: %s's handler raised: %s"):format(name, origin[i], x, err)
+            end
+            local a, aura = c.set.abilities[x], c.set.auras[x]
+            if r and r.unit and type(aura) == "table" then
+                local d, cd = aura.duration, a.cooldown
+                if not (type(d) == "number" and type(cd) == "number" and d <= cd) then
+                    eff[i], keys[i] = r, x
+                end
+            elseif r and r.element then
+                eff[i] = r
+            end
+        end
+    end
+    local later = {}
+    for i, b in ipairs(out) do
+        local r, x, g = eff[i], keys[i], nil
+        if r and x then
+            local terms = { "!" .. r.unit .. "." .. x .. ".up" }
+            for j = i + 1, later[i] and 0 or #out do
+                local y, s = keys[j], eff[j]
+                if y and y ~= x and s.unit == r.unit and (r.removes[y] or s.removes[x]) then
+                    terms[#terms + 1], later[j] = "!" .. s.unit .. "." .. y .. ".up", true
+                end
+            end
+            g = table.concat(terms, "&")
+        elseif r then
+            g = "!totem." .. r.element .. ".up"
+        end
+        if g then
+            local head, cond = b:match("^(.-),if=(.*)$")
+            out[i] = head and (head .. ",if=" .. g .. "&" .. paren(cond)) or (b .. ",if=" .. g)
+        end
+    end
+end
+
 --- The SimC text of `rotation` (a wowsims APL table) under context `c`, the omitted entries
 --- ({ "<list> #<n>: <why>" }) and the settings an emitted line reads ({ { setting key, default, source } }: the APL's
 --- ON/OFF groups in its order, then the recipe's `settings` by key).
 function M.translate(rotation, c)
     c.vars, c.toggles, c.used, c.seen, c.named, c.namedKeys, c.notes, c.dropped = {}, {}, {}, {}, {}, {}, {}, {}
-    c.calledAt, c.deviated, c.deviations = {}, {}, {}
+    c.callers, c.deviated, c.deviations = {}, {}, {}
     -- the IDs the APL casts itself (wowsims takes them out of its automatic cooldowns: rule 13)
     local lists = { rotation.prepullActions or {}, rotation.priorityList or {} }
     for _, g in ipairs(rotation.groups or {}) do
@@ -1241,8 +1344,10 @@ function M.translate(rotation, c)
         toggles[#toggles + 1] = { key, c.settings[key].default == true, c.settings[key].desc }
     end
     local omitted, lists, byName = {}, {}, {}
+    local origin = {} -- [list name][line] = its APL entry's index (for rule 1's notes)
     local function run(name, entries, at)
         local out, order = {}, {}
+        origin[name], c.listName = {}, name
         for i in ipairs(entries) do
             order[i] = i
         end
@@ -1256,7 +1361,6 @@ function M.translate(rotation, c)
         for _, i in ipairs(order) do
             local e = entries[i]
             local when = at and at[i] -- seconds before the pull (0: at it), or why wowsims ignores the entry
-            c.prepullAt = type(when) == "number" and ("%g"):format(when) or nil
             if e.hide then
                 omitted[#omitted + 1] = ("%s #%d: hidden"):format(name, i)
             elseif type(when) == "string" then
@@ -1272,6 +1376,7 @@ function M.translate(rotation, c)
                 elseif body then
                     for _, b in ipairs(type(body) == "table" and body or { body }) do
                         out[#out + 1] = b
+                        origin[name][#out] = i
                     end
                     for _, what in ipairs(c.dropped) do
                         c.notes[#c.notes + 1] = "dropped the unresolved " .. what .. " (its branch only)"
@@ -1306,7 +1411,6 @@ function M.translate(rotation, c)
         end
     end
     run("precombat", prepull, at)
-    c.prepullAt = nil
     run("default", rotation.priorityList or {})
     for _, line in ipairs(c.leveling) do
         table.insert(byName.default, line)
@@ -1333,17 +1437,37 @@ function M.translate(rotation, c)
         for _, g in ipairs(rotation.groups or {}) do
             if c.used[g.name] and not done[g.name] then
                 done[g.name], more = true, true
-                local at, when = nil, c.calledAt[g.name] -- the earliest caller's (the prepull runs earliest first)
-                if when then
-                    at = {}
-                    for i in ipairs(g.actions or {}) do
-                        at[i] = when
-                    end
-                end
-                run(M.snake(g.name), g.actions or {}, at)
+                run(M.snake(g.name), g.actions or {})
             end
         end
     until not more
+    local pre = { precombat = true } -- rule 1: the pre-pull lists, precombat and those only pre-pull lists call
+    local function isPre(name, seen)
+        if pre[name] ~= nil then
+            return pre[name]
+        end
+        if seen[name] or not c.callers[name] then
+            return false
+        end
+        seen[name] = true
+        for by in pairs(c.callers[name]) do
+            if not isPre(by, seen) then
+                return false
+            end
+        end
+        return true
+    end
+    for _, l in ipairs(lists) do
+        pre[l[1]] = isPre(l[1], {})
+    end
+    for _, l in ipairs(lists) do
+        if pre[l[1]] then
+            for i, body in ipairs(l[2]) do -- rule 7: no focus tier on a pre-pull line
+                l[2][i] = body:gsub(",focus=%d+", "", 1)
+            end
+            guard(c, l[1], l[2], origin[l[1]], omitted)
+        end
+    end
     local text, cast = {}, {}
     for _, l in ipairs(lists) do
         local head = l[1] == "default" and "actions" or ("actions." .. l[1])
