@@ -54,6 +54,7 @@ Unnumbered, from the lane reports (give one an id when it is dispatched):
 | Rule 14 deviation | A cast of ours between two members of a `strictSequence` replaces `prev.1`, so the next member never shows (safe: the sequence lapses, as wowsims's does when the GCD is ready and the member is not); not yet in rule 14's deviations (`tools/wowsims/apl.lua`) | translator | none |
 | Same-timestamp expiry | The replay judges a fade a removal when one of our Casting or Completed lines shares its 0.01 s timestamp (`tests/Game/harness/replay.lua` :397-407), so a natural expiry that coincides with a cast is shown with the declared duration, not its run | harness replay | none |
 | Stale recipe headers | The recipes' header numbers (`tools/wowsims/specs/*.lua`: replay agreements, floors, idle seconds) record the lane run that wrote them; the spec files hold the gates and moved since (Retribution's 0.57 corrected to the spec's 0.87 in the final fixes). Read a header's number as history, the spec's as the bar | tools (recipes) | none |
+| `use_items` toggle | `use_items` is an internal action (id -8: `IsSpellEnabled` and `IsDisabled` skip ids -1..-99), so a `toggle` on it is inert; as upstream, each equipped item's own ability carries the toggle, and Forever registers no trinket, so the line (Retribution's Everlook Pathcarver) expands to nothing in game | core sim / content | none |
 
 ## Closed (for reference)
 

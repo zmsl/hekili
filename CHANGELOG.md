@@ -38,6 +38,8 @@
 - The addon keeps a ranged Auto Shot timer next to the melee swing timers.
 
 ### Changed
+- Sweeping Strikes, Vanish and the mana and energy consumables follow the Cooldowns toggle and Healthstone the
+  Defensives toggle, so you can hide them; "Balance (wowsims.com)" shows Moonkin Form first when you are out of it.
 - Druid: the hand-built Feral, Guardian and Balance priorities are gone, with the settings only they read (Ferocious
   Bite finisher, out-of-combat buffs, Moonkin Form, Moonfire on trash, Starfire filler, Hurricane targets, Innervate
   and its mana thresholds, Swipe Rage Threshold, Use Enrage, Lacerate Refresh Window) and the unread "Rip Combo

@@ -23,6 +23,9 @@ step-by-step procedure the lanes ran is the plan's "per-spec procedure" (P1-P10,
 - Players gate optional lines (Sunder Armor, Demoralizing Shout, Thunder Clap, ...) with Hekili's own per-ability
   toggles (Custom 1/2, Boss Encounter Only, Disable). A pack carries wowsims's defaults, not a second in-game default:
   the harness-vs-in-game settings mechanism was designed and cancelled ("stick with wowsims").
+  The kits put the abilities a player may not want under Hekili's native Cooldowns or Defensives toggle
+  (`toggle = ...` on the ability: Sweeping Strikes, Vanish, the consumables, Healthstone defensive); a toggle off
+  skips the line and the list falls through. The harness runs a fresh profile, every such toggle on.
 
 ## The recipe
 
@@ -52,6 +55,8 @@ Translation:
   `auraShouldRefresh`); neither the DB2 nor the APL says which, so the recipe lists them from wowsims's class code.
 - `executePhase` (the key the kit's execute read answers, `"execute_phase"`): wowsims's `isExecutePhase` E20.
 - `leveling` (lines appended to `actions`): the fillers a lower level needs, each silent at 60 (below).
+- `levelingFirst` (lines put first in `actions`): a form the sim starts in and the APL never casts (Balance's Moonkin
+  Form), which a trailing line would never reach; silent once the form is up, and at 60 (`level<60`).
 
 The autocast context: rule 13 reads the spec's exported log (`tests/Forever/wowsims/<spec>.log`, its "Major cooldown
 used" lines), so `make wowsims-packs` needs the checked-in log; a re-export can move those lines.
