@@ -42,5 +42,7 @@ return {
     executePhase = "execute_phase",
     map = {},
     focus = { lacerate = 2 }, -- the retired Guardian list's tier (P9.3)
-    leveling = { "bear_form,if=!buff.bear_form.up" },
+    -- Before Primal Bite (25) Maul is the only rage sink: queued whenever affordable instead of at wowsims's 20, which
+    -- pools for the on-GCD strikes a level 10 bear lacks (ruling L18; silent at 60)
+    leveling = { "maul,use_off_gcd=1,if=!action.primal_bite.known", "bear_form,if=!buff.bear_form.up" },
 }

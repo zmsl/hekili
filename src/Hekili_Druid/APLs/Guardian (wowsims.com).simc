@@ -9,6 +9,7 @@ actions+=/frenzied_regeneration,if=health.pct<20
 actions+=/call_action_list,name=keep_up
 actions+=/call_action_list,name=damage
 actions+=/maul,use_off_gcd=1,if=rage.current>=20
+actions+=/maul,use_off_gcd=1,if=!action.primal_bite.known
 actions+=/bear_form,if=!buff.bear_form.up
 actions.cooldowns=berserk,use_off_gcd=1,if=(action.berserk.known&cooldown.berserk.ready&(!action.demoralizing_roar.known|debuff.demoralizing_roar.up)&(!action.primal_bite.known|cooldown.primal_bite.remains>=4))
 actions.cooldowns+=/elunes_light,use_off_gcd=1,if=((action.berserk.known&buff.berserk.up)|!action.berserk.known)

@@ -73,15 +73,15 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         local out = H.Hekili.Engine.Output.Primary
         assert.are.equal("bear_form", out.recs[1] and out.recs[1].actionName)
     end)
-    -- The pack's own worst idle per bracket, seconds: wowsims's list presses only Demoralizing Roar and Maul before
-    -- Primal Bite (25) and Lacerate (42) are learnt (L10), and waits on rage for them after (L40, L60).
-    local GUARDIAN_IDLE = { [10] = 11.8, [40] = 7.4, [60] = 8.4 }
+    -- The pack's own worst idle at 60 (L40 7.4: waits on rage for Primal Bite and Lacerate), seconds; L10 presses
+    -- the recipe's leveling Maul (wowsims's list has nothing else before Primal Bite at 25: 11.8 s idle without it)
+    local GUARDIAN60 = 8.4
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Guardian (wowsims.com) stays live at level " .. level, function()
             ws.live(
                 "Guardian (wowsims.com)",
                 content("druid_guardian", W.Guardian, "Guardian (wowsims.com)", level),
-                math.max(6, GUARDIAN_IDLE[level])
+                math.max(6, GUARDIAN60)
             )
         end)
     end
