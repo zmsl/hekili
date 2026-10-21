@@ -120,8 +120,13 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 
 `tools/wowsims/apl.lua`'s header is the authority; one line each here, with what each leaves out:
 
-1. One line per entry; `prepullActions` -> `actions.precombat`, ordered by `doAtValue` with `prepull_at`; groups ->
-   called lists; variables inlined. Omits a prepull entry with no constant `doAtValue` or one after the pull.
+1. One line per entry; `prepullActions` -> `actions.precombat`, in wowsims's `doAtValue` order (earliest first); groups
+   -> called lists; variables inlined. Omits a prepull entry with no constant `doAtValue` or one after the pull. Each
+   pre-pull cast (precombat and the lists only it calls) gets a guard against recasting, a mechanical derivation from
+   its ability's handler (recorded once): its own aura `!buff.<key>.up` / `!debuff.<key>.up` (none when the aura's
+   duration is at most the cooldown: Bloodrage), its totem `!totem.<element>.up`, else none (Charge); a mutually
+   exclusive group's first line (seals: each handler removes the other's aura) by every member's aura. A handler that
+   raises gives no guard and a header note.
 2. Omitted (and listed in the `# Omitted:` header): hidden entries, conditions folding to false, nodes the fork
    lacks (`sequence`, `resetSequence`, `schedule`, `itemSwap`, `move`, `wait`, `sequenceIsComplete`, ...), an entry
    whose own action is unmapped, a call of an empty group.

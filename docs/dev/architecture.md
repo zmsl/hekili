@@ -313,35 +313,29 @@ fires on an unknown and a `health.pct>50` gate always passes; no load warning. w
 **APL line options.** `make_pack.lua` and the in-game importer accept these on a line before `if=` (in the tool,
 an unknown option or a non-numeric value errors; `unparse` writes them in this order): `name=<list>` (for
 `call_action_list`/`run_action_list`), `use_off_gcd=1` (recommendable off the GCD) and `focus=N` (a priority tier, 1
-highest; the record carries `focus = N` and the timeline shows it in the now circle ahead of time, below) and
-`prepull_at=S` (a precombat line recommended once an out-of-combat episode, below). The tool
+highest; the record carries `focus = N` and the timeline shows it in the now circle ahead of time, below). The tool
 refuses 0, negatives and non-integers; the in-game importer drops `focus=0` (off) and warns on and drops anything that
 is not a whole number; the priority editor's Focus Tier slider sets it (0 is off). The tier is per line, not per
 ability. The Druid pack flags Feral's `rip` (tier 1); the Warrior pack's Fury tiers Heroic Strike and Cleave 1 near the
 rage cap and 2 otherwise.
 
-**Prepull schedule.** Upstream Hekili walks `precombat` before `default` on every refresh and skips its non-essential
-entries once `time > 0`; out of combat it is a plain priority, so an unguarded buff, or two exclusive ones (two seals:
-each guard `!buff.X.up` holds again once the other replaces it), is recommended over and over. A precombat line may
-carry `prepull_at=S` (seconds before the pull, never negative; the tool refuses a negative, the importer warns and
-drops it): `GetPredictionFromAPL` (`Engine/Sim/Core.lua`, `prepullDone`) recommends such an entry once per
-out-of-combat episode, the time since the last combat ended (`state.combat_ended`, set at `PLAYER_REGEN_ENABLED`; 0
-before the first fight). The entry is done once its ability's `lastCast` is in the episode (our casts and the
-simulation's, so the next slot shows the next entry) or the aura of the same key is seen up (auras are plain out of
-combat on Forever). With that aura down again, it stays done for the episode when the aura was replaced (gone before
-the expiry last seen up, or before its full duration from the cast: two seals), and is offered again once that expiry
-has passed (a buff that ran out between open-world fights). An entry with no aura of its key is done by its cast
-alone. Only the live state (the first record, no offset) is remembered, never a predicted slot's. The list's order is
-the schedule's: the wowsims translator (`tools/wowsims/apl.lua` rule 1) orders `prepullActions` by `doAtValue`,
-earliest first, and emits `prepull_at` from it (0 at the pull), adding no guard of its own; it omits, as wowsims does
-(`sim/core/apl.go`), an entry with no `doAtValue` or one after the pull. The engine does not know when the pull comes, so the
-seconds are the order's source and documentation, not a timer. Lines without it (every hand-written pack's precombat,
-Arms's `battle_shout` refresh among them) behave as before.
+**Pre-pull guards.** Upstream Hekili walks `precombat` before `default` on every refresh and skips its non-essential
+entries once `time > 0`; out of combat it is a plain priority. The fork keeps it so (owner ruling 2026-10-21: "a guard
+against recasting"; the player decides when to press): the engine holds no schedule and no per-episode state, and a
+pre-pull line shows whenever its purpose is unmet and its ability is ready (a guard that releases inside the
+forecast window shows the line ahead with its wait, as any line does). The purpose is written into the line: the
+wowsims translator (`tools/wowsims/apl.lua` rule 1) keeps wowsims's `doAtValue` order and gives each pre-pull cast
+one guard derived from what its ability's handler does (run once in the kit's stub state with the verbs recorded):
+`!buff.<key>.up` or `!debuff.<key>.up` for an aura of its own key (none when that aura is no longer than the
+cooldown, which already hides it: Bloodrage), `!totem.<element>.up` for a totem, and none otherwise (Charge and
+Intercept: their own usability and cooldown). Two lines whose handlers remove each other's aura (seals) form a group:
+its first line waits for no member to be up (`!buff.seal_of_command.up&!buff.seal_of_the_crusader.up`), later ones for
+their own, so the first is cast only when neither is up and the later one replaces it. `prepull_at` (the retired
+once-per-episode schedule) is gone: `make_pack` refuses it and the in-game importer stores it inert.
 
 **In precombat.** Being in precombat is a property of the walk, not of a list's name: `GetPredictionFromAPL` sets
 `inPrecombat` while it walks the precombat list and every list that list calls or runs (at any depth; saved and
-restored around each list, so the caller's value returns after), and both the in-combat filter and `prepull_at`
-read it. A list the precombat list calls (wowsims's "Pre-pull: Move" becomes `pre_pull_move`) is skipped in combat
+restored around each list, so the caller's value returns after), and the in-combat filter reads it. A list the precombat list calls (wowsims's "Pre-pull: Move" becomes `pre_pull_move`) is skipped in combat
 like precombat itself; the same list reached from `default` is not (`tests/Forever/precombat_calls_spec.lua`).
 Upstream Hekili checks the name alone, so a called list leaked into combat.
 
