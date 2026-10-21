@@ -4948,11 +4948,13 @@ found = true end
                                         local specId = data.spec
                                         local spec = specId and Hekili.DB.profile.specs[ specId ]
 
-                                        if spec and spec.package == pack then
-                                            spec.package = ns.DefaultPackage( specId )
-                                        end
-
                                         Hekili.DB.profile.packs[ pack ] = nil
+
+                                        if spec and spec.package == pack then
+                                            -- after the delete: deleting the default must not point back at it
+                                            local def = ns.DefaultPackage( specId )
+                                            spec.package = def and rawget( Hekili.DB.profile.packs, def ) and def or "(none)"
+                                        end
                                         Hekili.Options.args.packs.plugins.packages[ pack ] = nil
                                         for _, nodes in pairs( packNodes ) do nodes[ pack ] = nil end
 

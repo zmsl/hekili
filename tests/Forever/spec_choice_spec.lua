@@ -310,6 +310,28 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         assert.are.equal("protection\001Aaa", ACD:GetStatusTable("Hekili").groups.selected)
     end)
 
+    it("deleting the active priority falls back to a default that still exists, else (none)", function()
+        local H = boot()
+        settle(H)
+        local packs, specs = H.Hekili.DB.profile.packs, H.Hekili.DB.profile.specs
+        local aaa = {}
+        for k, v in pairs(packs["Arms (wowsims.com)"]) do
+            aaa[k] = v
+        end
+        aaa.builtIn = false
+        packs.Aaa = aaa
+        specs[ARMS].package = "Aaa"
+        local nodes = embed(H)
+        local delete = function(name)
+            nodes.arms.plugins.packs[name].args.pack.args.deletePack.func()
+        end
+        delete("Aaa") -- a custom one: back to the built-in default
+        assert.are.equal("Arms (wowsims.com)", specs[ARMS].package)
+        delete("Arms (wowsims.com)") -- the default itself: never left pointing at the deleted pack
+        assert.is_nil(rawget(packs, "Arms (wowsims.com)"))
+        assert.are.equal("(none)", specs[ARMS].package)
+    end)
+
     it("re-wraps a replaced FeedGroup, resets its depth after an error, and golds the name unwrapped", function()
         local H = boot()
         settle(H)
