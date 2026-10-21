@@ -126,6 +126,28 @@ describe("the wowsims APL translator", function()
         end, "extra: no big_hit line in actions")
     end)
 
+    it("lists a recipe setting a line reads after the APL's own toggles, with its description", function()
+        local r = {
+            leveling = { "roar,if=settings.roar_filler&!action.big_hit.known" },
+            settings = {
+                roar_filler = { default = true, desc = "Roar fills the GCD" },
+                unread = { default = false, desc = "no line reads it" },
+            },
+        }
+        local text, _, toggles = apl.translate({
+            priorityList = { cast(100, { actionGroupUsed = { name = "Big ON/OFF" } }) },
+            groups = { { name = "Big ON/OFF", actions = { { action = {} } } } },
+        }, ctx(r))
+        assert.are.equal(
+            "actions=strike,if=settings.wowsims_big\nactions+=/roar,if=settings.roar_filler&!action.big_hit.known",
+            text
+        )
+        assert.are.same({
+            { "wowsims_big", false, "wowsims ON/OFF group" },
+            { "roar_filler", true, "Roar fills the GCD" },
+        }, toggles)
+    end)
+
     it(
         "schedules the prepull: prepull_at from doAtValue, earliest first, 0 at the pull, no guard of its own",
         function()
@@ -222,7 +244,7 @@ describe("the wowsims APL translator", function()
             omitted
         )
         -- Weave is a switch no emitted line reads: not listed (ruling L14)
-        assert.are.same({ { "wowsims_big", false } }, toggles)
+        assert.are.same({ { "wowsims_big", false, "wowsims ON/OFF group" } }, toggles)
     end)
 
     it("reads auraIsKnown as registered on Self or the target; another unit's or player's is false", function()

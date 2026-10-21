@@ -48,10 +48,11 @@
 --    before them (a form the sim starts in, which the APL's own lines would never let a trailing line reach):
 --    `leveling` lines are silent at 60, `levelingFirst` lines whenever their form is up. Each recipe `extra`
 --    ({ before = action, line = text }, content outside wowsims's model) goes just before the first `actions` line of
---    `before` (an error when there is none). The recipe's `requires` ({ [action key or group's snake name] = talent
---    key }) puts `talent.<key>.enabled&` before the condition of each such entry, in every list: an APL written for a
---    talent build (wowsims picks it by that talent, e.g. an Auto rotation) runs those entries only once the talent
---    is taken, so a level without it skips them.
+--    `before` (an error when there is none). The recipe's `settings` ({ [key] = { default = bool, desc = text } }) are
+--    pack settings like an ON/OFF group's: a line reads one as `settings.<key>`, and the header lists each one read.
+--    The recipe's `requires` ({ [action key or group's snake name] = talent key }) puts `talent.<key>.enabled&` before
+--    the condition of each such entry, in every list: an APL written for a talent build (wowsims picks it by that
+--    talent, e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
 -- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N
 --    (wowsims's N/100 against its 0-1 percents; ours, `mana.pct` and `health.pct`, run 0-100).
 -- 9. `auraIcdIsReady` (wowsims: the proc aura's internal cooldown is ready): the aura declaring `icd` (RegisterAura,
@@ -255,7 +256,7 @@ end
 
 --- The translation context of an ability set (`abilities`, `auras`, `talents` as the engine registers them:
 --- tests/Forever/helpers/engine.lua abilitySet), recipe `r` (map, focus, executePhase, leveling, levelingFirst, extra,
---- exclusive, requires, auras) and the spec's exported log text `log` (rule 13; nil: the automatic actions are unsupported).
+--- settings, exclusive, requires, auras) and the spec's exported log text `log` (rule 13; nil: the automatic actions are unsupported).
 function M.context(set, r, log)
     local c = {
         autocast = log and M.autocasts(log),
@@ -276,6 +277,7 @@ function M.context(set, r, log)
         leveling = r.leveling or {},
         levelingFirst = r.levelingFirst or {},
         extra = r.extra or {},
+        settings = r.settings or {},
         exclusive = r.exclusive or {},
         requires = r.requires or {},
     }
@@ -968,8 +970,8 @@ function entry(c, e)
 end
 
 --- The SimC text of `rotation` (a wowsims APL table) under context `c`, the omitted entries
---- ({ "<list> #<n>: <why>" }) and the toggles an emitted line reads ({ { setting key, default } } in the APL's group
---- order).
+--- ({ "<list> #<n>: <why>" }) and the settings an emitted line reads ({ { setting key, default, source } }: the APL's
+--- ON/OFF groups in its order, then the recipe's `settings` by key).
 function M.translate(rotation, c)
     c.vars, c.toggles, c.used, c.seen, c.named, c.namedKeys, c.notes, c.dropped = {}, {}, {}, {}, {}, {}, {}, {}
     c.calledAt = {}
@@ -1008,8 +1010,16 @@ function M.translate(rotation, c)
         end
         if empty then
             c.toggles[g.name] = "wowsims_" .. M.snake((g.name:gsub(" ON/OFF$", "")))
-            toggles[#toggles + 1] = { c.toggles[g.name], shown[g.name] == true }
+            toggles[#toggles + 1] = { c.toggles[g.name], shown[g.name] == true, "wowsims ON/OFF group" }
         end
+    end
+    local own = {}
+    for key in pairs(c.settings) do
+        own[#own + 1] = key
+    end
+    table.sort(own)
+    for _, key in ipairs(own) do
+        toggles[#toggles + 1] = { key, c.settings[key].default == true, c.settings[key].desc }
     end
     local omitted, lists, byName = {}, {}, {}
     local function run(name, entries, at)
@@ -1166,7 +1176,7 @@ function M.write(spec, ex)
         ),
     }
     for _, t in ipairs(toggles) do
-        out[#out + 1] = ("# Setting %s (wowsims ON/OFF group), default %s."):format(t[1], tostring(t[2]))
+        out[#out + 1] = ("# Setting %s (%s), default %s."):format(t[1], t[3], tostring(t[2]))
     end
     for _, o in ipairs(omitted) do
         out[#out + 1] = "# Omitted: " .. o
