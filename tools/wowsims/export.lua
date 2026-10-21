@@ -107,7 +107,8 @@ function M.talents(str, trees)
     return out
 end
 
---- The RaidSimRequest of recipe `r`, its files read under the wowsims checkout `root` ("" : paths as given). A tank
+--- The RaidSimRequest of recipe `r`, its files read under the wowsims checkout `root` ("" : paths as given). A `build`
+--- recipe's `gear` (a gear-set JSON path) replaces the build's equipment; a build with none needs it. A tank
 --- recipe (`r.tank`) makes the player the raid's tank and `r.healingModel` its incoming healing, as wowsims's UI does
 --- for a tank spec (ui/features/settings/model/apply_defaults.ts:108-122: `setHealingModel` from the spec's
 --- OtherDefaults, `setTanks([player])`): without a tank the target swings at no one.
@@ -115,6 +116,11 @@ function M.request(r, root)
     local p
     if r.build then
         p = decode(slurp(join(root, r.build)), r.build).player
+        if r.gear then -- a build file may carry no gear (Warlock's): wowsimcli crashes on a player without equipment
+            p.equipment = decode(slurp(join(root, r.gear)), r.gear)
+        elseif not p.equipment then
+            error(r.build .. " has no equipment: set the recipe's `gear` (a gear-set JSON path)", 0)
+        end
     else
         local pl = r.player
         p = {

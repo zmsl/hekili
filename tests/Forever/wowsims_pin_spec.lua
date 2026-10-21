@@ -88,6 +88,24 @@ describe("check_wowsims_pin", function()
         assert.is_nil(p.healingModel)
     end)
 
+    it("gives a build without equipment the recipe's gear set, and refuses one with neither", function()
+        local bare = tmp('{"player":{"class":"ClassWarlock","talentsString":"1"}}')
+        local worn = tmp('{"player":{"class":"ClassWarlock","equipment":{"items":[{"id":7}]}}}')
+        local gear = tmp('{"items":[{"id":5},{"id":6}]}')
+        local p = ex.request({ name = "Bare", build = bare, gear = gear }, "").raid.parties[1].players[1]
+        assert.are.same({ 5, 6, "1" }, { p.equipment.items[1].id, p.equipment.items[2].id, p.talentsString })
+        p = ex.request({ name = "Worn", build = worn }, "").raid.parties[1].players[1]
+        assert.are.equal(7, p.equipment.items[1].id) -- the build's own, as before
+        p = ex.request({ name = "Worn", build = worn, gear = gear }, "").raid.parties[1].players[1]
+        assert.are.equal(5, p.equipment.items[1].id) -- the recipe's gear wins
+        local ok, err = pcall(ex.request, { name = "Bare", build = bare }, "")
+        os.remove(bare)
+        os.remove(worn)
+        os.remove(gear)
+        assert.is_false(ok)
+        assert.is_truthy(tostring(err):find("no equipment", 1, true))
+    end)
+
     it("makes a tank recipe's player the raid's tank, healed by its healing model (the UI's tank defaults)", function()
         local gear = tmp('{"items":[]}')
         local model = { hps = 2200, cadenceSeconds = 0.4 }

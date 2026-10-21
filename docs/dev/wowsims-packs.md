@@ -45,7 +45,9 @@ Request (export):
   name in the header), `talentTree` (the wowsims tree file), `apl` (the APL JSON path in the checkout).
 - `player`: `race`, `class`, `gear` (a gear-set JSON path), `talentsString`, `specKey`, `options` (the spec's
   `DefaultOptions` in protojson: enum values by name), `profession1`/`profession2`, `reactionTimeMs`,
-  `distanceFromTarget`. Or `build`: a preset build file whose `player` is taken whole (Feral).
+  `distanceFromTarget`. Or `build`: a preset build file whose `player` is taken whole (Feral), with `gear` (a gear-set
+  JSON path) replacing its equipment; a build file with no equipment (Warlock's) needs `gear`, or the export stops
+  (wowsimcli crashes on a player without equipment).
 - `tank = true` and `healingModel = { hps, cadenceSeconds, ... }` for a tank spec: the player becomes the raid's tank
   and gets the preset's incoming healing, as wowsims's UI does (apply_defaults.ts). Without them the target swings at
   no one (GAP AE: the first Protection and Guardian floors were set on fights with no incoming melee).
