@@ -724,7 +724,7 @@ describe("the wowsims APL translator", function()
                     "actions+=/strike,if=((!action.big_hit.known|!cooldown.big_hit.ready)&rage.current>10)",
                     "actions+=/strike,if=((!(action.big_hit.known|action.dot.known)|((action.big_hit.known&cooldown.big_hit.ready)|(action.dot.known&buff.dot.up)))&rage.current>10)",
                     "actions+=/strike,if=(((action.big_hit.known|action.dot.known)&((!action.big_hit.known|cooldown.big_hit.ready)&(!action.dot.known|buff.dot.up)))|rage.current>10)",
-                    "actions+=/strike,if=((!action.big_hit.known|((action.big_hit.known&cooldown.big_hit.ready)|(action.big_hit.known&cooldown.big_hit.ready)))&rage.current>10)",
+                    "actions+=/strike,if=((!action.big_hit.known|cooldown.big_hit.ready)&rage.current>10)", -- `A|A` is A
                 }, "\n"),
                 text
             )
@@ -1074,6 +1074,22 @@ describe("the wowsims APL translator", function()
             "# Deviation: default #2: " .. dev,
             "# Deviation: default #3: " .. dev,
         }, header)
+    end)
+
+    it("adds a required talent only once: not when the condition already has it as an & term", function()
+        local rage = cmp("OpGt", { currentRage = {} }, const("10"))
+        local known = { auraIsKnown = { auraId = { spellId = 900 } } } -- the talent furious's spell
+        local text = apl.translate({
+            priorityList = { cast(100, AND(rage, OR(known, known))), cast(100, known), cast(100, OR(rage, known)) },
+        }, ctx({ requires = { strike = "furious" } }))
+        assert.are.equal(
+            table.concat({
+                "actions=strike,if=(rage.current>10&talent.furious.enabled)",
+                "actions+=/strike,if=talent.furious.enabled",
+                "actions+=/strike,if=talent.furious.enabled&(rage.current>10|talent.furious.enabled)",
+            }, "\n"),
+            text
+        )
     end)
 
     it("takes the character's ability set: a shared racial is mapped and off the GCD", function()

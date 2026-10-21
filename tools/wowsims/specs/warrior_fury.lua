@@ -1,6 +1,9 @@
 -- tools/wowsims/specs/warrior_fury.lua (wowsims packs plan, Task 6): Fury (wowsims.com)'s wowsims/forever request and
 -- translation. Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/warrior/dps/presets.ts
 -- (FuryTalents :73, DefaultOptions :143-152, OtherDefaults :169-175) at the pin; gear p1_fury (a level 60 dual-wield set).
+-- Since the user's Berserker Rage ruling (2026-10-21; recipe `requires`): floor 0.91, on-GCD 0.917 (60): the build has no
+-- Improved Berserker Rage, so the pre-pull Berserker Rage wowsims casts at -4.5 is gated off (berserker_rage ->
+-- battle_shout at -4.50, a ruled deviation). Before it:
 -- Disagreements (P7; floor 0.93, final): decisions on-GCD 0.933 (60) top [sunder_armor -> bloodthirst 2; death_wish ->
 -- sunder_armor 1; overpower -> bloodthirst 1] after central fixes 7, 13 and 16 (0.817 before, with GAP AD: precombat's
 -- in-combat filter did not reach pre_pull_move, so Intercept showed all fight; fix 16 closed it). Each disagreement
@@ -61,6 +64,8 @@ return {
         "No line here sits under the Potions or Defensives toggles.",
     },
     executePhase = "execute_phase",
+    -- the user's ruling (2026-10-21): Berserker Rage only "if talented for the rage gain", precombat and in combat
+    requires = { berserker_rage = "improved_berserker_rage" },
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
     -- the retired Fury list's tiers (P9.3) that a line carries: no wowsims line casts Victory Rush (the extra below
     -- does, untiered) or Revenge, and one Cleave

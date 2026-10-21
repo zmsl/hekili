@@ -67,7 +67,8 @@
 --    The recipe's `prepullSkip` ({ action key, ... }: an owner ruling against a wowsims pre-pull cast) omits that
 --    action's precombat lines, listed (an error when there is none).
 --    The recipe's `requires` ({ [action key or group's snake name] = talent key }) puts `talent.<key>.enabled&` before
---    the condition of each such entry, in every list: an APL written for a talent build (wowsims picks it by that
+--    the condition of each such entry, in every list (not when the condition already has it as a top-level `&` term;
+--    an `and`/`or` writes a repeated term once): an APL written for a talent build (wowsims picks it by that
 --    talent, e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
 -- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N when
 --    it is a direct operand (a variable followed) of a comparison with a percent read (M.PERCENT: `mana.pct`,
@@ -750,9 +751,15 @@ local function bool(c, n)
         elseif #kids == 1 and not identity then
             return kids[1][1], nil, kids[1][2] -- wowsims's one-child and/or is the child
         end
-        local parts, us = {}, {}
-        for i, kid in ipairs(kids) do
-            parts[i], us[i] = emit(kid[2], kid[1], k == "and"), kid[2]
+        local parts, us, seen = {}, {}, {}
+        for _, kid in ipairs(kids) do
+            local part = emit(kid[2], kid[1], k == "and")
+            if not seen[part] then -- `A|A` and `A&A` are A (two ranks' auraIsKnown of one talent)
+                parts[#parts + 1], us[#us + 1], seen[part] = part, kid[2], true
+            end
+        end
+        if #parts == 1 and not identity then
+            return kids[1][1], nil, kids[1][2]
         end
         local s = #parts == 1 and parts[1] or ("(" .. table.concat(parts, k == "and" and "&" or "|") .. ")")
         return s, nil, (not identity) and nilAnd(us)
@@ -919,6 +926,22 @@ local function required(c, key, cond)
         error(("requires: %s is not a talent key"):format(tostring(talent)), 0)
     end
     local t = "talent." .. talent .. ".enabled"
+    if cond then -- already one of its top-level `&` terms: not twice
+        local top, depth, from, has = grouped(cond) and cond:sub(2, -2) or cond, 0, 1, false
+        for i = 1, #top + 1 do
+            local ch = top:sub(i, i)
+            depth = depth + (ch == "(" and 1 or ch == ")" and -1 or 0)
+            if depth == 0 and ch == "|" then
+                has = false -- an `|` at the top: not an `&` of terms
+                break
+            elseif depth == 0 and (ch == "&" or ch == "") then
+                has, from = has or top:sub(from, i - 1) == t, i + 1
+            end
+        end
+        if has then
+            return cond
+        end
+    end
     return cond and (t .. "&" .. ((grouped(cond) or not cond:find("|", 1, true)) and cond or "(" .. cond .. ")")) or t
 end
 

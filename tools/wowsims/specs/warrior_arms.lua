@@ -2,6 +2,9 @@
 -- translation. Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/warrior/dps/presets.ts
 -- (ArmsTalents :102, DefaultOptions :143-152, OtherDefaults :169-175) at the pin; gear p1_arms (the spike's, a level
 -- 60 set; the presets' default is the Fury build).
+-- Since the user's Berserker Rage ruling (2026-10-21; recipe `requires`): floor 0.89, on-GCD 0.896 (67): the build has no
+-- Improved Berserker Rage, so the pre-pull Berserker Rage wowsims casts at -4.5 is gated off (berserker_rage ->
+-- battle_shout at -4.50, a ruled deviation). Before it:
 -- Disagreements (P7; floor 0.91, final): decisions on-GCD 0.910 (67) top [execute -> overpower 1; execute ->
 -- sunder_armor 1; mortal_strike -> slam 1] after central fixes 7 (outcome belief), 13 and 16 (0.866 before them,
 -- 0.836 before fix 6), with Improved Slam (12862) and Anger Management's 1.5 rage per 5 s (12296, DB2 aura 85)
@@ -62,6 +65,8 @@ return {
         "No line here sits under the Potions or Defensives toggles.",
     },
     executePhase = "execute_phase",
+    -- the user's ruling (2026-10-21): Berserker Rage only "if talented for the rage gain", precombat and in combat
+    requires = { berserker_rage = "improved_berserker_rage" },
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
     focus = { overpower = 1, rend = 2, slam = 2 }, -- the retired Arms list's tiers (P9.3)
     -- Rule 15: Thunder Clap, a setting off in game and on in the harness (the user's ruling, 2026-10-21); its only

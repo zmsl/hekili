@@ -847,6 +847,25 @@ describe("Forever Warrior", function()
         }, focus) -- Protection (wowsims.com) casts none of the retired list's focus abilities
     end)
 
+    -- the user's ruling (2026-10-21): Berserker Rage only for Improved Berserker Rage's rage, precombat and in combat
+    it("gates every Arms and Fury Berserker Rage line on Improved Berserker Rage, once", function()
+        local n = 0
+        for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "warrior")) do
+            if p.name ~= "Protection (wowsims.com)" then
+                for list, entries in pairs(p.lists) do
+                    for i, e in ipairs(entries) do
+                        if e.action == "berserker_rage" then
+                            local _, times = (e.criteria or ""):gsub("talent%.improved_berserker_rage%.enabled", "")
+                            assert.are.equal(1, times, p.name .. " " .. list .. " " .. i)
+                            n = n + 1
+                        end
+                    end
+                end
+            end
+        end
+        assert.are.equal(3, n) -- Arms's precombat; Fury's precombat and combat
+    end)
+
     it("keeps its priorities in src/Hekili_Warrior/APLs/, tools/make_pack.lua's default class", function()
         local def = dofile("src/Hekili_Warrior/APLs/packs.lua")
         assert.are.same({

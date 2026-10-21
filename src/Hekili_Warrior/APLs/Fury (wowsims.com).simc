@@ -31,7 +31,7 @@
 # Omitted: default: empty group engineering
 # Omitted: default: empty group cd_trinkets
 
-actions.precombat=berserker_rage
+actions.precombat=berserker_rage,if=talent.improved_berserker_rage.enabled
 actions.precombat+=/bloodrage,use_off_gcd=1
 actions.precombat+=/battle_shout,if=!buff.battle_shout.up
 actions.precombat+=/call_action_list,name=pre_pull_move
@@ -51,7 +51,7 @@ actions+=/berserker_stance,use_off_gcd=1,if=(!buff.berserker_stance.up&(!(action
 actions+=/heroic_strike,use_off_gcd=1,focus=1,if=(active_enemies=1&!execute_phase&rage.current>=40)
 actions+=/heroic_strike,use_off_gcd=1,focus=2,if=((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&rage.current>60)
 actions+=/bloodrage,use_off_gcd=1,if=rage.current<90
-actions+=/berserker_rage,if=((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&(talent.improved_berserker_rage.enabled|talent.improved_berserker_rage.enabled))
+actions+=/berserker_rage,if=((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&talent.improved_berserker_rage.enabled)
 actions+=/battle_shout,if=((!(action.bloodthirst.known|action.whirlwind.known)|((!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)&(!action.whirlwind.known|cooldown.whirlwind.remains>=1.5)))&buff.battle_shout.remains<=10)
 actions+=/sunder_armor,if=!action.bloodthirst.known&debuff.sunder_armor.stack<5
 actions+=/hamstring,if=!action.bloodthirst.known&(!action.battle_stance.known|!buff.battle_stance.up)

@@ -71,7 +71,10 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             "Arms (wowsims.com)",
             content("warrior_arms", ARMS_CHAR, "Arms (wowsims.com)", 60, ARMS),
             "warrior_arms",
-            0.91, -- measured 0.910 after central fixes 7, 13 and 16 (was 0.86, provisional)
+            -- measured 0.896: 0.910 after central fixes 7, 13 and 16 (was 0.86, provisional), less the pre-pull Berserker
+            -- Rage wowsims casts at -4.5 without Improved Berserker Rage (the build has none), which the user's ruling
+            -- (2026-10-21) gates on that talent (berserker_rage -> battle_shout, 1 of 67)
+            0.89,
             ARMS_REPLAY
         )
     end)
@@ -101,7 +104,9 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             "Fury (wowsims.com)",
             content("warrior_fury", ww.Fury, "Fury (wowsims.com)", 60, FURY),
             "warrior_fury",
-            0.93, -- measured 0.933 after central fixes 7, 13 and 16 (was 0.81 with GAP AD)
+            -- measured 0.917: 0.933 after central fixes 7, 13 and 16 (was 0.81 with GAP AD), less the pre-pull Berserker
+            -- Rage the user's ruling (2026-10-21) gates on Improved Berserker Rage, which the build lacks (1 of 60)
+            0.91,
             FURY_REPLAY
         )
     end)

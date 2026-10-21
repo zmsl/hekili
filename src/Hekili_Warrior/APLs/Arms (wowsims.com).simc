@@ -30,7 +30,7 @@
 # Omitted: default: empty group engineering
 # Omitted: default: empty group cd_trinkets
 
-actions.precombat=berserker_rage
+actions.precombat=berserker_rage,if=talent.improved_berserker_rage.enabled
 actions.precombat+=/call_action_list,name=pre_pull_stance
 actions.precombat+=/bloodrage,use_off_gcd=1
 actions.precombat+=/battle_shout,if=!buff.battle_shout.up
