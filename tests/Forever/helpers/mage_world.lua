@@ -27,7 +27,7 @@ local MANA = 0 -- Enum.PowerType
 local BASE = 1213 -- base mana at 60 (wowsims's ExtraClassBaseStats): a percent-of-base cost's base
 local GCD = { spell = 1.5, off = 0 }
 -- The spirit regen a second outside the five-second rule (wowsims's logs at 60: 2.913 a 0.1 s tick, both builds; the
--- class file declares 25, which the out-of-combat read corrects); each pack's share of it that continues while casting
+-- class file declares the same 29.13, which the out-of-combat read corrects); each pack's share of it that continues while casting
 -- is its own (below). UNMEASURED in game.
 local SPIRIT = 29.13
 
@@ -73,8 +73,8 @@ local AMOUNT = {
     frostfire_bolt = 750,
 }
 
--- The schools' damage spells (Clearcasting's and Arcane Power's scope by the DB2 masks; Arcane Wrath outside Arcane
--- Power's), Missile Barrage's proc casts, Heating Up's.
+-- The schools' damage spells (Clearcasting's and Arcane Power's scope by the DB2 masks; Arcane Wrath's by wowsims's),
+-- Missile Barrage's proc casts, Heating Up's.
 local CLEARCAST = {
     arcane_blast = true,
     arcane_missiles = true,
@@ -86,7 +86,7 @@ local CLEARCAST = {
     fire_blast = true,
     frostfire_bolt = true,
 }
-local POWERED = setmetatable({ arcane_wrath = false }, { __index = CLEARCAST })
+local POWERED = CLEARCAST
 local BARRAGE = { arcane_blast = 1, fireball = 0.5, frostbolt = 0.5, frostfire_bolt = 0.5, arcane_wrath = 0.5 }
 local HEATING = { fireball = true, frostfire_bolt = true, fire_blast = true, scorch = true }
 local FIRE = { fireball = true, frostfire_bolt = true, fire_blast = true, scorch = true, pyroblast = true }
@@ -413,6 +413,9 @@ M.MAP = {
         end,
     },
     evocation = {
+        effect = function(W, e, _, X) -- its buff for the channel (the replay's from the log)
+            aura(W, X, e, "evocation")
+        end,
         channel = function()
             return {
                 length = 8,
@@ -528,10 +531,15 @@ local function content(name)
         local I = H.ns.VirtualStateInternal
         p.clip = I.channel and I.castAb == I.ab.bySpell[12051] and VS.Power(MANA, H.ctl.now).est >= 0.99 * MAX
         p.requires = function(W, e)
+            local ok, why = true, nil
             if m.requires then
-                return m.requires(W, e, X)
+                ok, why = m.requires(W, e, X)
             end
-            return true
+            -- a clip ends Evocation's buff with its channel: W.press reads `requires` last, just before the clip
+            if ok and p.clip and e.channel then
+                drop(W, e, X, "evocation")
+            end
+            return ok, why
         end
         p.effect = function(W, e)
             if m.effect then

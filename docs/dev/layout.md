@@ -378,7 +378,10 @@ of the wowsims packs plan; Frost unsupported, Frostfire an open item), their rep
 and channels (Arcane Missiles, Evocation: any press at 99% mana clips it); the character is trainer-taught (no book
 ranks, as wowsims's), its pool and regen are the logs' (Arcane 6678, Fire 6168; 29.13 a second outside the five-second
 rule, all of it while casting for Arcane, half for Fire). Flicker floors (pack_gate `FLICKER`): Arcane 1.7 (1.66,
-oracle 1.46), Fire 1.3 (1.21, oracle 0.40), retracted 0 each. The lines (on 0ce5d1a4 + Task 12):
+oracle 1.46; 1.5 since the lane review's Arcane Power fix measured 1.43, oracle 1.41), Fire 1.3 (1.21, oracle 0.40),
+retracted 0 each. Fire's excess over its oracle is Fire Blast's cooldown end (fire_blast > fireball > fire_blast, 7 of 10
+flickers in 3 fights: the not-ready flag's CD_PROBE push, central); the Scorch line's Fire Vulnerability edge is a
+candidate. The lines (on 0ce5d1a4 + Task 12):
 
 ```
 Arcane solo: fights=3 agreement 0.991 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 77.6 (oracle 76.6, unmatched 0.8), cost 3.9 (oracle 5.3, unmatched 1.6)], episodes 11.53/min; dps A/B 1.020; ... [seeds 1-3]
@@ -509,7 +512,9 @@ Recorded deviations (each one's reason in the named file):
 - Mage (`mage_*.lua`, `Mage.lua`, `mage_world.lua`): Arcane Blast's 1.5 s cast and 15 s charges from wowsims's data and
   log over the DB2's 2.5 s and 8 s (ruling M9; the charges' price floor(fraction x 1213), wowsims's 181 x (1 + 1.75 n));
   Read Ley Line (a Skyborne racial) dropped (rule 12: no Skyborne race pack); Master of Elements' refunds unbelieved
-  (crits unseen, mana secret); the worlds' Mage is trainer-taught (no book ranks), as wowsims's.
+  (crits unseen, mana secret); the worlds' Mage is trainer-taught (no book ranks), as wowsims's; wowsims clips
+  Evocation at >= 99% mana (interruptIf), the translator drops channelSpell.interruptIf (shared gap, reported), the
+  world clips by wowsims's rule.
 
 CPU and memory, release to release (`r.cpuMean`/p99 of the 3- and 20-fight lines, process CPU ms per Update; `make
 bench`'s bytes per Update; both measured on this machine one run after the other, so compare the columns, not the

@@ -29,6 +29,12 @@ local REPLAY = { fire = { procs = { ["10151:1"] = true, ["18809:1"] = true } } }
 -- LIVE60: Arcane never idles at 60; Fire spends its mana out by 85 s of the 120 s fight and then waits on Fire Blast's
 -- 340 (Scorch's line holds while the five stacks last), as wowsims's own fight runs dry (its Evocation then on its
 -- 8-minute cooldown, which the gate counts as a usable free ability).
+-- The loops' flicker (pack_gate FLICKER; 20 fights: Arcane 1.43/min, oracle 1.41; Fire 1.21/min, oracle 0.40). Fire's
+-- excess is measured, not fixed: in 3 fights (seeds 1-3), 7 of its 10 first-icon A-B-A flickers are fire_blast >
+-- fireball > fire_blast at Fire Blast's cooldown end (the not-ready flag pushes the believed ready time to now +
+-- CD_PROBE each settle while the model's own end is nearer: central, mage_fire.lua's header) and 3 combustion > scorch;
+-- the 20-fight line's waits [scorch:unknown 148] are the Scorch line's `debuff.fire_vulnerability.remains<5` edge on
+-- the modelled (unreadable) target debuff, a candidate not yet measured as flicker.
 local PACKS = {
     { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.77, 0 },
     { "mage_fire", "Fire", "Fire (wowsims.com)", 0.84, 12.6 },

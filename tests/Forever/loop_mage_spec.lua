@@ -97,10 +97,12 @@ describe("the Mage loop worlds", function()
         -- which continues (all of it: 29.13 a second)
         assert.is_true(math.abs(3 * 15 * 29.13 - gained) < 1e-6, tostring(gained))
         assert.is_true(W.res(us, 0) > p0)
+        assert.is_truthy(us.auras[12051]) -- Evocation's buff for the channel
         local b = C.resolve("arcane_blast", H)
         b.clip = true
         assert.is_true(W.press(us, "arcane_blast", b))
         assert.is_nil(us.channel)
+        assert.is_nil(us.auras[12051]) -- the clip ends it with the channel
         assert.are.same({ "cast 5", "channelStop 8", "castStart 8" }, kinds(n0 + 1))
         -- Arcane Missiles: a missile a second over its 5 s, each its own spell hit (or miss)
         W.run(12)

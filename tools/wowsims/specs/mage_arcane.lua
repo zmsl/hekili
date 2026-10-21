@@ -23,13 +23,17 @@
 --   frostbolt -> arcane_blast (93.87, 132.37): central: at about 250 mana with two charges 0.4-0.9 s from fading, the
 --   sim's `mana.time_to_N` reads 0 for N above its forecast's last slice (measured at 93.87: time_to_694, _818 and _819
 --   all 0, time_to_500 8.5 s), so Arcane Blast at 818 reads castable; wowsims casts Frostbolt once its 260 is there.
--- Worked (P6, world and kit): Arcane Blast's cast and charges (ruling M9); Evocation's tick from wowsims's spirit regen
+-- Worked (P6, world and kit): Arcane Blast's cast and charges (ruling M9); Arcane Power's +30% on Arcane Wrath too
+-- (the log's 513.5 = 395 x 1.3 at 0.00 and 9.64; replay unchanged at 0.780); Evocation's tick from wowsims's spirit regen
 -- (29.13 a second; 15x, the regen pays the 16th); the worlds' character trainer-taught (no book ranks: wowsims casts
 -- Frostbolt rank 10, Arcane Missiles rank 7); the world's pools and regen the logs' (6678; 29.13 a second, all of it
 -- while casting under Arcane Meditation 3/3). Evocation is never clipped in this fight (mana never reaches 99% inside
 -- the channel), so the belief keeping its aura after a clip does not show here.
 -- autocastOtherCooldowns (rule 13, from the log's "Major cooldown used"): the Mind Quickening Gem (19339, `use_items`),
 -- Presence of Mind, Arcane Power and the mana gem, off the GCD, at the top of the list.
+-- Deviation (Evocation's clip): wowsims clips Evocation at >= 99% mana (its channelSpell interruptIf); the translator
+-- drops channelSpell.interruptIf (tools/wowsims/apl.lua; a shared gap, reported), so the pack's line has no clip
+-- condition; the world clips by wowsims's rule (mage_world.lua: any press while the belief channels it at 99%).
 -- Rule 12 drops Read Ley Line (1259705, a Skyborne racial; its buff 1270842): no Skyborne race pack (the Human the UI
 -- defaults to never casts it). Innervate (29166, another player's) reads false (rule 4).
 return {

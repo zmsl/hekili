@@ -262,7 +262,8 @@ describe("Forever Mage", function()
         assert.are.same({
             clearcasting = { -1, 1, { 116, 133, 2136, 2948, 5143, 11366, 400574, 401502, 1326079 } },
             missile_barrage = { -1, 1, { 5143 } },
-            arcane_power = { 0.3, false, { 116, 133, 2136, 2948, 5143, 11366, 400574, 401502 } },
+            -- Arcane Wrath too: wowsims's mask (0x9000 of word 1 covers its 0x8000), its log's 513.5 = 395 x 1.3
+            arcane_power = { 0.3, false, { 116, 133, 2136, 2948, 5143, 11366, 400574, 401502, 1326079 } },
         }, by)
     end)
 

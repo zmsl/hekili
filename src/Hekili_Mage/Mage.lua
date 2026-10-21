@@ -6,7 +6,7 @@
 -- Barrage (Arcane Missiles free, in half the time), Heating Up's cheaper Pyroblast casts, Fire Vulnerability's stacks
 -- from Scorch, Evocation's mana, Presence of Mind, Arcane Power's +30% cost, Clearcasting as a charged cost modifier,
 -- Counterspell, and the school lockouts (each spell refuses while an interrupt has its school locked out:
--- Hekili_Shared's locked_out_<school>). No priority yet: the wowsims.com packs come with the next task (the abilities and
+-- Hekili_Shared's locked_out_<school>). The priorities are the wowsims.com packs (Arcane and Fire; the abilities and
 -- auras below are what wowsims/forever's arcane.apl.json, deepFire.apl.json and ffb.apl.json cast or read).
 -- Research: docs/research/2026-10-15-forever-mage/research.md.
 -- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (ruling P6; in-game checks): Arcane Wrath
@@ -183,6 +183,8 @@ spec:RegisterResource(
     },
     nil,
     {
+        -- the starting point: GetPowerRegenForPowerType's out-of-combat read calibrates both parts, the casting share
+        -- included (Game/State/Sources/Power.lua's regen read)
         fsr = { spirit = SPIRIT_REGEN, mp5 = 0 },
         base = 1213, -- a fraction cost is of base mana (wowsims's ExtraClassBaseStats, level 60; Spec.lua)
     }
@@ -190,14 +192,15 @@ spec:RegisterResource(
 
 -- The cost modifiers, each on the class mask's registered rank-1 IDs (DB2 SpellEffect masks against SpellClassSet 3;
 -- Arcane Wrath's mask is wowsims's): Clearcasting (12536: -100%, a charge), Missile Barrage (400589: Arcane Missiles
--- -100%, a charge), Arcane Power (12042: +30%; Arcane Wrath outside its mask).
+-- -100%, a charge), Arcane Power (12042: +30%; Arcane Wrath inside its mask: wowsims's data, word 1 0x9000 covering its
+-- 0x8000, and its log's 513.5 = 395 x 1.3 while Arcane Power is up).
 local CLEARCASTING_SCOPE = { 400574, 5143, 2136, 133, 116, 401502, 11366, 2948, 1326079 }
 spec:RegisterCostMod({ aura = "clearcasting", pct = -1, charges = 1, spells = CLEARCASTING_SCOPE })
 spec:RegisterCostMod({ aura = "missile_barrage", pct = -1, charges = 1, spells = { 5143 } })
 spec:RegisterCostMod({
     aura = "arcane_power",
     pct = 0.3,
-    spells = { 400574, 5143, 2136, 133, 116, 401502, 11366, 2948 },
+    spells = { 400574, 5143, 2136, 133, 116, 401502, 11366, 2948, 1326079 },
 })
 
 spec:RegisterAuras({

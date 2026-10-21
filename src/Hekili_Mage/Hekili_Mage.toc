@@ -3,7 +3,7 @@
 ## Title: Hekili Forever - Mage
 ## Author: defzach
 ## IconTexture: Interface\AddOns\Hekili\Textures\HekiliForever
-## Notes: Hekili Forever's Mage: the class kit (no default priority yet), loaded by Hekili Forever for a Mage. Based on the original work by Hekili.
+## Notes: Hekili Forever's Mage: the class kit and the Arcane and Fire wowsims.com priorities, loaded by Hekili Forever for a Mage. Based on the original work by Hekili.
 ## X-Website: https://github.com/zmsl/hekili
 ## Dependencies: Hekili, Hekili_Shared
 ## Group: Hekili

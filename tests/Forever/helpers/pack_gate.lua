@@ -31,7 +31,7 @@ M.FLICKER = {
     ["Retribution"] = { flicker = 0.3, retracted = 0 }, -- 0.28, 0
     ["Protection"] = { flicker = 0.4, retracted = 0 }, -- 0.31, 0 (re-measured on fix 22's truth resolve)
     ["Enhancement"] = { flicker = 1.2, retracted = 0 }, -- 1.11, 0
-    ["Arcane"] = { flicker = 1.7, retracted = 0 }, -- 1.66, 0 (Mage lane, ruling M13; on 0ce5d1a4)
+    ["Arcane"] = { flicker = 1.5, retracted = 0 }, -- 1.43, 0 (Mage lane, M13; 1.66 -> 1.43: Arcane Power on Wrath)
     ["Fire"] = { flicker = 1.3, retracted = 0 }, -- 1.21, 0
 }
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
