@@ -381,12 +381,12 @@ rule, all of it while casting for Arcane, half for Fire). Flicker floors (pack_g
 oracle 1.46; 1.5 since the lane review's Arcane Power fix measured 1.43, oracle 1.41), Fire 1.3 (1.21, oracle 0.40),
 retracted 0 each. Fire's excess over its oracle is Fire Blast's cooldown end (fire_blast > fireball > fire_blast, 7 of 10
 flickers in 3 fights: the not-ready flag's CD_PROBE push, central); the Scorch line's Fire Vulnerability edge is a
-candidate. The lines (on 0ce5d1a4 + Task 12):
+candidate. The lines (on 0ce5d1a4 + Task 12 and its lane review fixes):
 
 ```
-Arcane solo: fights=3 agreement 0.991 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 77.6 (oracle 76.6, unmatched 0.8), cost 3.9 (oracle 5.3, unmatched 1.6)], episodes 11.53/min; dps A/B 1.020; ... [seeds 1-3]
+Arcane solo: fights=3 agreement 0.987 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 79.7 (oracle 78.3, unmatched 0.9), cost 2.2 (oracle 4.3, unmatched 0.2)], episodes 12.20/min; dps A/B 1.136; ... [seeds 1-3]
 Fire solo: fights=3 agreement 0.993 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 68.4 (oracle 68.8, unmatched 0.6), cost 9.8 (oracle 9.3, unmatched 1.9)], episodes 6.21/min; dps A/B 1.030; ... [seeds 1-3]
-Arcane solo: fights=20 agreement 0.994 (18040 ticks); react median 0 p90 1 never 0.003; refused per 100 [casting 77.2 (oracle 76.3, unmatched 0.4), cost 3.5 (oracle 5.8, unmatched 0.6)], episodes 10.29/min; dps A/B 1.005; ...
+Arcane solo: fights=20 agreement 0.994 (18040 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 77.2 (oracle 77.5, unmatched 0.7), cost 4.6 (oracle 4.8, unmatched 0.6)], episodes 10.83/min; dps A/B 1.025; ...
 Fire solo: fights=20 agreement 0.992 (18040 ticks); react median 0 p90 0 never 0.009; refused per 100 [casting 68.0 (oracle 66.8, unmatched 0.7), cost 10.3 (oracle 12.3, unmatched 1.3)], episodes 5.77/min; dps A/B 1.018; ...
 ```
 
