@@ -17,8 +17,8 @@ local KIT = {
     shadow_word_pain = { { 589, 594, 970, 992, 2767, 10892, 10893, 10894 }, 470, 0, "spell" },
     mind_blast = { { 8092, 8102, 8103, 8104, 8105, 8106, 10945, 10946, 10947 }, 350, 8, "spell" },
     mind_flay = { { 15407, 17311, 17312, 17313, 17314, 18807 }, 205, 0, "spell" },
-    devouring_plague = { { 2944, 19276, 19277, 19278, 19279, 19280 }, 985, 60, "spell" },
-    shadow_word_death = { { 1309595, 1309633, 1309635, 1309636 }, 340, 15, "spell" },
+    devouring_plague = { { 2944, 19276, 19277, 19278, 19279, 19280 }, 985, 24, "spell" }, -- wowsims's 24 s (DB2 60)
+    shadow_word_death = { { 1309595, 1309633, 1309635, 1309636 }, 340, 18, "spell" }, -- wowsims's 18 s (DB2 15)
     vampiric_embrace = { { 15286 }, 40, 60, "spell" },
     shadowform = { { 15473 }, 0.4, 1.5, "spell" },
     shadowguard = { { 18137, 19308, 19309, 19310, 19311, 19312 }, 250, 0, "spell" },
@@ -54,18 +54,17 @@ describe("Forever Priest", function()
         w = ld.load(nil, FILE, "PRIEST")
     end)
 
-    it("declares Discipline and Shadow on trees 1 and 3, Holy unsupported, no priority yet", function()
+    it("declares Discipline and Shadow on trees 1 and 3 with their wowsims.com packs, Holy unsupported", function()
         assert.are.equal("PRIEST", w.class)
         local out = {}
         for _, s in ipairs(w.def.specs) do
             out[#out + 1] = { s.key, s.tree, s.role, s.ranged or false, s.unsupported or false, s.package or false }
         end
         assert.are.same({
-            { "discipline", 1, "attack", true, false, false },
+            { "discipline", 1, "attack", true, false, "Smite (wowsims.com)" },
             { "holy", 2, "healer", false, true, false },
-            { "shadow", 3, "attack", true, false, false },
+            { "shadow", 3, "attack", true, false, "Shadow (wowsims.com)" },
         }, out)
-        assert.are.same({}, w.packs)
         assert.is_nil(w.options)
     end)
 
@@ -146,6 +145,16 @@ describe("Forever Priest", function()
             { ld.run(A.shoot.cast, e), near(ld.run(A.mind_flay.cast, e)), ld.run(A.mind_flay.tick_time, e) }
         )
         assert.are.equal(3, w.auras.mind_flay.duration)
+        -- Shoot's target aura lasts its one shot, a wand speed (the world's), never the 3600 s of a lasting aura
+        assert.are.equal(1.2, w.auras.shoot.duration)
+        for _, r in ipairs({ 0, 1.5 }) do
+            ranged = r
+            for _, field in ipairs({ "now", "start" }) do
+                local f = ld.env(w)
+                ld.run(A.shoot[field], f)
+                assert.are.equal(r > 0 and r or 1.2, f.durations.shoot, field)
+            end
+        end
     end)
 
     it("times the hard casts: Mind Blast 1.5 s, Smite by rank, Holy Fire 3.5 s; Divine Fury -0.1 s a rank", function()
@@ -392,4 +401,42 @@ describe("Forever Priest through the engine", function()
             assert.are.same({}, H.errors)
         end
     )
+end)
+
+-- The priorities: the wowsims.com packs (generated from wowsims/forever's Priest builds by `make wowsims-packs`).
+describe("Forever Priest priorities", function()
+    it("keeps the class file's generated blocks in step with APLs/", function()
+        local mp = assert(loadfile("tools/make_pack.lua"))("lib")
+        local f = assert(io.open(FILE))
+        local src = f:read("*a")
+        f:close()
+        assert.are.equal(src, (mp.sync(src, mp.load("priest"))))
+    end)
+
+    it("names only registered abilities and auras", function()
+        local cls = ld.load(nil, FILE, "PRIEST")
+        local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, action = cls.abilities }
+        -- Hekili's `all` (Hekili_Shared): the trinket, the consumables, the race packs' Elune's Light and Eureka!
+        local shared = {
+            use_items = true,
+            demonic_rune = true,
+            major_mana_potion = true,
+            elunes_light = true,
+            eureka = true,
+            call_action_list = true,
+        }
+        for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "priest")) do
+            for list, entries in pairs(p.lists) do
+                for i, e in ipairs(entries) do
+                    local where = p.name .. " " .. list .. " " .. i
+                    assert.is_true(cls.abilities[e.action] ~= nil or shared[e.action], where)
+                    for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
+                        if kinds[kind] then
+                            assert.is_true(kinds[kind][key] ~= nil or shared[key] ~= nil, where .. ": " .. key)
+                        end
+                    end
+                end
+            end
+        end
+    end)
 end)

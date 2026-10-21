@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Checks a packager zip: the nine addon folders at the root, LICENSE in Hekili/, no dev paths, TOC versions stamped.
+# Checks a packager zip: the ten addon folders at the root, LICENSE in Hekili/, no dev paths, TOC versions stamped.
 set -euo pipefail
 zip=${1:?usage: check_package.sh <zip>}
 list=$(unzip -Z1 "$zip")

@@ -274,6 +274,10 @@ M.READY = {
     mage_frostfire = { 0.38, 31 }, -- 0.380, 31 (Task FFB, ruling M13; first clean run on 3e104ce9)
     paladin_protection = { 0.54, 12 },
     paladin_retribution = { 0.25, 1 },
+    -- 1.500, 36 (Priest lane, Task 14; first clean run on 30e92574+): Mind Flay's 3 s channel, the next icon ready at
+    -- the GCD's end inside it (Arcane's Missiles likewise, about 0.9 s)
+    priest_shadow = { 1.50, 36 },
+    priest_smite = { 0.50, 27 }, -- 0.500, 27
     rogue_assassination = { 0.20, 30 },
     rogue_combat = { 0.28, 16 },
     rogue_subtlety = { 0.20, 45 },

@@ -174,6 +174,7 @@ local PACKS = {
             "vampiric_embrace",
             "inner_focus",
             "inner_fire",
+            "smite", -- the pack's leveling filler before Mind Flay (silent at 60)
         },
         talents = { -- 00530320103--50052201251302051 (Human)
             [1225132] = 5, -- Twin Disciplines

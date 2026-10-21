@@ -1,9 +1,11 @@
 -- tests/Forever/loop_priest_spec.lua (class-completion plan, "The per-pack gate"): the Priest loop worlds
 -- (tests/Forever/helpers/priest_world.lua) boot as a level 60 Priest on their spec and map every ability the character
--- knows, its casts and channels resolved. The solo gates (`Shadow solo:`, `Smite solo:`) come with the wowsims.com packs
--- (the next task).
+-- knows, its casts and channels resolved; stock Hekili headless in each wowsims.com pack against the harness's world.
+-- `make check` runs 3 fights a pack (#slow); `make test-priest` the 20 (#priest), one pack a file
+-- (loop_priest_<pack>_spec.lua). Each gate also asserts its flagged (focus) lines ran.
 local headless = require("Game.harness.headless")
 local scenarios = require("Game.harness.scenarios")
+local pack_gate = require("Forever.helpers.pack_gate")
 local pw = require("Forever.helpers.priest_world")
 
 -- An instance `H` cycled once (its first polls: the form read, the talents) with the simulation reset on it.
@@ -57,8 +59,8 @@ describe("the Priest loop worlds", function()
         end
         assert.are.same({ 175, 1.5, 5.5, false }, resolve("mind_blast")) -- Improved Mind Blast 5/5
         assert.are.same({ 102.5, 0, 0, 3 }, resolve("mind_flay"))
-        assert.are.same({ 246.25, 0, 60, false }, resolve("devouring_plague"))
-        assert.are.same({ 170, 0, 15, false }, resolve("shadow_word_death"))
+        assert.are.same({ 246.25, 0, 24, false }, resolve("devouring_plague"))
+        assert.are.same({ 170, 0, 18, false }, resolve("shadow_word_death"))
         local W = scenarios.world(setmetatable({ fsr = C.WORLD.fsr }, { __index = C.WORLD }), 1)
         local us = W.ents[1]
         us.form = 1 -- in Shadowform (the character's login form)
@@ -134,4 +136,17 @@ describe("the Priest loop worlds", function()
         assert.are.same({ 1, nil }, { shots, us.channel })
         assert.are.same({}, H.errors)
     end)
+end)
+
+describe("the headless Priest gates, 3 fights a pack #slow", function()
+    for _, name in ipairs({ "Shadow", "Smite" }) do
+        it(
+            name .. " solo, level 60, one mob, 3 fights of up to 3 minutes: the first icon against the oracle's",
+            function()
+                local r, line = pack_gate.solo(name, pw[name], 3, nil, "seeds 1-3")
+                print(name .. " focus ticks: " .. r.focus)
+                assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
+            end
+        )
+    end
 end)

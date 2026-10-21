@@ -14,7 +14,7 @@ Hekili Forever is a fork of the Hekili priority helper, rebuilt for WoW Forever.
 Hekili Forever is a priority helper that can make recommendations several steps into the future. It collects information about the game's current state, uses a SimulationCraft-style action priority list to recommend the next ability, then advances the game state and makes the next prediction.
 
 ## Supported Classes
-Hekili Forever is currently in rapid development based on the level 30 beta. Druid (Feral, Guardian, Balance), Warrior (Arms, Fury, Protection), Rogue (Combat, Assassination, Subtlety), Paladin (Retribution, Protection), Shaman (Enhancement), Hunter (Beast Mastery, Marksmanship, Survival) and Mage (Arcane, Fire) are the current focus and are tuned for level 60 content, but are subject to rapid change after launch.
+Hekili Forever is currently in rapid development based on the level 30 beta. Druid (Feral, Guardian, Balance), Warrior (Arms, Fury, Protection), Rogue (Combat, Assassination, Subtlety), Paladin (Retribution, Protection), Shaman (Enhancement), Hunter (Beast Mastery, Marksmanship, Survival), Mage (Arcane, Fire) and Priest (Shadow, Discipline with Smite) are the current focus and are tuned for level 60 content, but are subject to rapid change after launch.
 
 ## Action Packs
 Action Packs are shareable instructions that direct the addon how to make recommendations. They use action priority lists similar to SimulationCraft, with Forever-specific lines written for this ruleset. Action Packs only work for specializations the addon supports. View and edit them under /hekili > Priorities.

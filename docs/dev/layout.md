@@ -13,7 +13,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `src/Hekili_Warrior/`, `src/Hekili_Druid/`, `src/Hekili_Rogue/`, `src/Hekili_Paladin/`, `src/Hekili_Shaman/`,
     `src/Hekili_Hunter/`, `src/Hekili_Mage/`, `src/Hekili_Priest/`: one class pack each (the class file, its RegisterPack
     blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's `Engine/Content.lua` for the
-    player's class. The Priest has no priority yet, so no `APLs/` (`make packs` refuses a manifest with no pack).
+    player's class.
     The default priorities' sources sit beside the class file in `APLs/`: one `<Pack>.simc` per priority and the
     manifest `packs.lua` (`{ class = "<TOKEN>", packs = { ... }, specs = { [<Pack>] = <spec key> } }`, no date). Edit those, then `make packs`. The date is per
     class and lives only in the class file's first RegisterPack block: `make packs` keeps it while the generated
@@ -405,6 +405,37 @@ Frostfire solo: fights=3 agreement 0.992 (2706 ticks); react median 0 p90 0 neve
 Frostfire solo: fights=20 agreement 0.958 (18040 ticks); react median 0 p90 1 never 0.034; refused per 100 [casting 75.0 (oracle 73.5, unmatched 1.7), cost 0.3 (oracle 2.8, unmatched 0.1)], episodes 5.44/min; dps A/B 0.986; ...
 ```
 
+`tests/Forever/loop_priest_spec.lua` runs 3 fights of each Priest pack in `make check` (seeds 1-3, `#slow`) and 20 in
+`make test-priest` (`#priest`, `loop_priest_shadow_spec.lua`, `loop_priest_smite_spec.lua`), gated by `pack_gate.solo`
+and asserting that some focus line ran (Shadow Word: Pain, Devouring Plague and Holy Fire upkeep at tier 2, Inner Focus
+at tier 1: ruling P5). The packs are Shadow (wowsims.com) on Shadow and Smite (wowsims.com) on Discipline (the Smite
+build's dominant tree; Holy unsupported), Task 14 of the wowsims packs plan, from wowsims/forever's two Priest builds
+(`ui/specs/priest/dps/builds/testing.build.json`, `smite_testing.build.json`); their replay and leveling gates
+`tests/Forever/wowsims_priest_spec.lua`. The worlds (`tests/Forever/helpers/priest_world.lua`) cast at 20 yd with cast
+bars and channels (Mind Flay, Penance, the wand's Shoot as one shot a wand speed long); Shadow starts in Shadowform; the
+pools and regen are the logs' (Shadow 4711, Smite 6151). Flicker floors (pack_gate `FLICKER`): Shadow 0.3 (0.27, oracle
+0.15), Smite 0.5 (0.45, oracle 0.12; retracted 0.9 from 0.83, oracle 0.63: the wand's Shoot at the 10% mana edge). The
+lines (on 30e92574 + Task 14):
+
+```
+Shadow solo: fights=3 agreement 0.996 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 59.5 (oracle 58.7, unmatched 2.0)], episodes 6.10/min; dps A/B 1.000; ... [seeds 1-3]
+Smite solo: fights=3 agreement 0.973 (2706 ticks); react median 0 p90 1 never 0.007; refused per 100 [casting 83.8 (oracle 83.9, unmatched 2.4)], episodes 43.90/min; dps A/B 1.065; ... [seeds 1-3]
+Shadow solo: fights=20 agreement 0.993 (18040 ticks); react median 0 p90 2 never 0.000; refused per 100 [casting 48.4 (oracle 46.4, unmatched 3.4)], episodes 3.39/min; dps A/B 1.001; ...
+Smite solo: fights=20 agreement 0.972 (18040 ticks); react median 0 p90 1 never 0.002; refused per 100 [casting 84.1 (oracle 84.2, unmatched 2.3)], episodes 44.28/min; dps A/B 0.988; ...
+```
+
+Priest checkpoints (a level 60 Priest; the `Hekili_Priest` mklink first):
+- Pr1: Devouring Plague's cooldown 24 s and Shadow Word: Death's 18 s (wowsims's newer data; the DB2 at 70338 says 60 s
+  and 15 s): the action bar's cooldown after a cast.
+- Pr2: the wand's Shoot: what the client shows for auto-repeat Shoot (a channel, UnitChannelInfo, a success per shot);
+  Smite's Shoot line at 10% mana and the next spell after it.
+- Pr3: Shadowform read plain in and out of combat (GetShapeshiftForm); Mind Blast 175 mana in form.
+- Pr4: Mind Flay's and Penance's channel info and tick timing; the next icon during a Mind Flay channel (ready at the
+  GCD's end inside the channel, as the replay shows, or at the channel's end?).
+- Pr5: Inner Focus then Mind Flay: does Mind Flay show right after Inner Focus (`prev.1.inner_focus`, PV1)?
+- Pr6: Holy Fire and Smite below 20% mana: wowsims casts rank 5 of each (shared gap "cast a specific rank"); the pack
+  shows the top rank.
+
 Core checkpoints (R1 measured: rage at the swing; G7, O1, O2, M1, PH1, E1 and the rest) are under "In game",
 "Checkpoints".
 
@@ -496,6 +527,8 @@ Retribution, Paladin Protection and Survival idles re-measured in the final revi
 | Arcane (wowsims.com) | 0.81 | 0.814 (59) | 6 (0) | L10 0.0, L40 0.0, L60 0.0 | 0.100 / 0.970 | 0.450, 21 | 11 | 0.47, 21 |
 | Fire (wowsims.com) | 0.82 | 0.825 (63) | 12.6 (12.6) | L10 0.0, L40 0.2, L60 12.6 | 0.130 / 1.610 | 0.370, 30 | 11 | 0.37, 31 |
 | Frostfire (wowsims.com) | 0.89 | 0.891 (55) | 10.8 (10.8) | L10 5.6, L40 0.2, L60 10.8 | 0.300 / 1.010 | 0.380, 31 | 6 | 0.38, 31 |
+| Shadow (wowsims.com) | 1.00 | 1.000 (85) | 6 (1.8) | L10 0.0, L40 0.0, L60 1.8 | 0.000 / 1.600 | 1.500, 36 | 0 | 1.50, 36 |
+| Smite (wowsims.com) | 0.93 | 0.932 (44) | 6 (0.2) | L10 0.0, L40 0.2, L60 0.2 | 0.400 / 3.100 | 0.500, 27 | 3 | 0.50, 27 |
 
 A LIVE60 constant above today's L60 measurement is an earlier measurement the spec keeps (Combat 4.8 vs 4.0,
 Retribution 8.4 vs 2.8 by ruling P6, Paladin Protection 17.8 vs 11.8 from the untanked fight); limits are not lowered
@@ -536,6 +569,11 @@ Recorded deviations (each one's reason in the named file):
   harness's one crit rate); the world grants Fingers of Frost at Frostfire Bolt's cast end, wowsims at its hit about
   0.8 s later (the harness has no travel time: a shared limit); `includeReactionTime` on the Fingers of Frost read
   ignored (rule 5).
+- Priest (`priest_*.lua`, `Priest.lua`, `priest_world.lua`): Devouring Plague 24 s and Shadow Word: Death 18 s from
+  wowsims's data and log over the DB2's 60 s and 15 s (ruling M9's precedent); Smite's down-ranked Holy Fire and Smite
+  (rank 5 below 20% mana) at the top rank (rule 5 ignores `rank`: shared gap, owner ruling); Mind Flay's interruptIf
+  dropped (its third tick is the channel's end); the wand's Shoot one shot a wand speed long; Shadow's ready times sit
+  1.5 s early after each Mind Flay (the next icon ready at the GCD's end inside the channel).
 
 CPU and memory, release to release (`r.cpuMean`/p99 of the 3- and 20-fight lines, process CPU ms per Update; `make
 bench`'s bytes per Update; both measured on this machine one run after the other, so compare the columns, not the

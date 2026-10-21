@@ -12,6 +12,13 @@
 - Shaman: Enhancement suggests Rage of the Farseer when it is ready, right after Blood Fury, if you have the talent. It is under the Cooldowns toggle.
 - Priest (new addon folder Hekili_Priest): the Priest's abilities and talents, with no default priority yet (Shadow and
   Discipline's Smite come next); Holy shows the "no priorities on Forever" notice.
+- Priest (new addon folder Hekili_Priest): the Priest's abilities and talents; Holy shows the "no priorities on Forever"
+  notice.
+- Priest: "Shadow (wowsims.com)" is Shadow's default priority, wowsims/forever's Shadow list (Shadowform, Shadow Word:
+  Pain and Devouring Plague kept up, Mind Blast, Shadow Word: Death, Inner Focus into Mind Flay); Smite fills while
+  leveling until Mind Flay.
+- Priest: "Smite (wowsims.com)" is Discipline's default priority, wowsims/forever's Smite list (Holy Fire and Shadow
+  Word: Pain kept up, Penance, Smite; the wand at 10% mana).
 
 ### Changed
 - Mana and energy consumables (Major Mana Potion, Demonic Rune, Thistle Tea, Mana Gem) and the Rogue's poison reminders (Instant and Deadly Poison) are now under the Potions toggle, which is off by default: turn Potions on to see them. The Healthstone stays under Defensives.

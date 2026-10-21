@@ -49,3 +49,4 @@ ignore:
     - src/Hekili_Shaman/APLs
     - src/Hekili_Hunter/APLs
     - src/Hekili_Mage/APLs
+    - src/Hekili_Priest/APLs

@@ -6,14 +6,17 @@
 -- and its -50% on the Shadow spells' costs, Inner Focus and Holy Purpose as charged cost modifiers, Mental Agility's and
 -- Devouring Contagion's cheaper spells, Divine Fury's faster Smite and Holy Fire, Improved Mind Blast's cooldown,
 -- Improved Shadow Word: Pain's duration, the DoTs on the target from our casts, Dark Sacrifice's mana, and the school
--- lockouts (Hekili_Shared's locked_out_<school>). No priority yet: the wowsims.com packs ("Shadow (wowsims.com)" on
--- Shadow, "Smite (wowsims.com)" on Discipline) come with the next task (the abilities and auras below are what
--- wowsims/forever's ui/specs/priest/dps/builds/testing.build.json and smite_testing.build.json cast or read).
+-- lockouts (Hekili_Shared's locked_out_<school>). The priorities are the wowsims.com packs ("Shadow (wowsims.com)" on
+-- Shadow, "Smite (wowsims.com)" on Discipline: wowsims/forever's ui/specs/priest/dps/builds/testing.build.json and
+-- smite_testing.build.json, translated; the generated blocks at the end).
 -- Research: docs/research/2026-10-15-forever-priest/research.md.
 -- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (ruling P6; in-game checks): the talents'
 -- per-rank values where the DB2 holds only the top rank's row (Mental Agility, Devouring Contagion, Divine Fury,
 -- Improved Mind Blast, Improved Shadow Word: Pain), the Forever-only talent nodes' trees and ranks (wowsims's
 -- ui/sim/talents/trees/priest.json), Dark Inspiration (talent 1326159, aura 1326168), Dark Sacrifice's Spirit share.
+-- Where the DB2 and wowsims's newer data (build 70450) disagree and wowsims's log casts its own (the Mage lane's ruling
+-- M9 precedent; wowsims packs Task 14; in-game checks): Devouring Plague's cooldown 24 s (DB2 60 s), Shadow Word:
+-- Death's 18 s (DB2 15 s).
 -- Unmodelled: the procs' rolls (Holy Purpose from Searing Light, Spirit Tap on a kill, Dark Inspiration, Shadow Weaving:
 -- unseen; the player aura walk reads the player's where plain), the DoTs' resists, Shadow Word: Death's backlash, Inner
 -- Focus's crit, pushback, the healing spells Shadowform forbids (no priority casts one).
@@ -33,12 +36,28 @@ local floor = math.floor
 
 -- The class kit and one spec a talent tree (ids the core's: Discipline 100051, Holy 100052, unsupported: a healing
 -- tree; Shadow 100053; the client's one pseudo-spec only keys the legacy profile the core migrates). Icons: the DB2
--- talent tabs'. The packages come with the wowsims.com packs (Smite's on Discipline: its build's dominant tree).
+-- talent tabs'. Each package is the spec's wowsims.com pack (Smite's on Discipline: its build's dominant tree).
 local spec = Hekili:NewClass("PRIEST", {
     specs = {
-        { key = "discipline", name = "Discipline", tree = 1, icon = 135987, role = "attack", ranged = true },
+        {
+            key = "discipline",
+            name = "Discipline",
+            tree = 1,
+            icon = 135987,
+            role = "attack",
+            ranged = true,
+            package = "Smite (wowsims.com)",
+        },
         { key = "holy", name = "Holy", tree = 2, icon = 237542, role = "healer", unsupported = true },
-        { key = "shadow", name = "Shadow", tree = 3, icon = 136207, role = "attack", ranged = true },
+        {
+            key = "shadow",
+            name = "Shadow",
+            tree = 3,
+            icon = 136207,
+            role = "attack",
+            ranged = true,
+            package = "Shadow (wowsims.com)",
+        },
     },
 })
 if not spec then
@@ -209,6 +228,24 @@ spec:RegisterCostMod({
 })
 spec:RegisterCostMod({ aura = "holy_purpose", pct = -1, charges = 1, spells = { 15237 } })
 
+-- The wand's speed: the ranged hand's (UnitRangedDamage's first return, the belief's out-of-combat stat read), else
+-- the Smite build's Brilliant Wand (ItemSparse 249385, ItemDelay 1200) before a plain read.
+local WAND_SPEED = 1.2
+local function wandSpeed()
+    return function()
+        local s = state.stat("UnitRangedDamage")
+        return s > 0 and s or WAND_SPEED
+    end
+end
+-- Shoot's target aura: its one shot, a wand speed after the press (the world's), as each channel's aura lasts its
+-- channel.
+local function shot()
+    return function()
+        local s = state.stat("UnitRangedDamage")
+        applyDebuff("target", "shoot", s > 0 and s or WAND_SPEED)
+    end
+end
+
 spec:RegisterAuras({
     -- A form (DB2 15473 effect 0: aura 36 misc 28): core's form reads keep it (Sources/Forms.lua); supersedes
     -- Hekili_Shared's id-less stub.
@@ -241,18 +278,8 @@ spec:RegisterAuras({
     mind_flay = { id = 15407, copy = rest(MIND_FLAY), duration = 3, tick_time = 1, max_stack = 1 },
     starshards = { id = 10797, copy = rest(STARSHARDS), duration = 6, tick_time = 1, max_stack = 1 },
     penance = { id = 402174, copy = rest(PENANCE), duration = 2, tick_time = 1, max_stack = 1 },
-    shoot = { id = 5019, duration = 3600, max_stack = 1 },
+    shoot = { id = 5019, duration = WAND_SPEED, max_stack = 1 },
 })
-
--- The wand's speed: the ranged hand's (UnitRangedDamage's first return, the belief's out-of-combat stat read), else
--- the Smite build's Brilliant Wand (ItemSparse 249385, ItemDelay 1200) before a plain read.
-local WAND_SPEED = 1.2
-local function wandSpeed()
-    return function()
-        local s = state.stat("UnitRangedDamage")
-        return s > 0 and s or WAND_SPEED
-    end
-end
 
 spec:RegisterAbilities({
     shadow_word_pain = {
@@ -319,13 +346,15 @@ spec:RegisterAbilities({
         start = dot("mind_flay"),
     },
 
-    -- 60 s (category 691); -25 / -50% a rank of Devouring Contagion (DB2 1309950 effect 0; wowsims's Shadow log: 246.25 =
-    -- 985 x 0.5 x 0.5 in Shadowform) after Mental Agility.
+    -- 24 s (wowsims's data, build 70450: CategoryCooldownMs 24000 on every rank; its log recasts it 24.5-26 s apart; the
+    -- DB2 at 70338 says 60 s, category 691: the Mage lane's ruling M9 precedent, an in-game check); -25 / -50% a rank of
+    -- Devouring Contagion (DB2 1309950 effect 0; wowsims's Shadow log: 246.25 = 985 x 0.5 x 0.5 in Shadowform) after
+    -- Mental Agility.
     devouring_plague = {
         id = 2944,
         copy = rest(DEVOURING_PLAGUE),
         cast = 0,
-        cooldown = 60,
+        cooldown = 24,
         gcd = "spell",
 
         spend = function()
@@ -343,12 +372,13 @@ spec:RegisterAbilities({
         handler = dot("devouring_plague"),
     },
 
-    -- 15 s (category 1169).
+    -- 18 s (wowsims's data, build 70450: CategoryCooldownMs 18000 on every rank; its log recasts it 18.3 s apart at the
+    -- least; the DB2 at 70338 says 15 s, category 1169: ruling M9's precedent, an in-game check).
     shadow_word_death = {
         id = 1309595,
         copy = rest(SHADOW_WORD_DEATH),
         cast = 0,
-        cooldown = 15,
+        cooldown = 18,
         gcd = "spell",
 
         spend = byRank(SHADOW_WORD_DEATH_COST, SHADOW_WORD_DEATH),
@@ -656,8 +686,8 @@ spec:RegisterAbilities({
         startsCombat = true,
         known = knows({ 5019 }),
 
-        now = dot("shoot"),
-        start = dot("shoot"),
+        now = shot(),
+        start = shot(),
     },
 })
 
@@ -737,3 +767,17 @@ spec:RegisterTalents({
     devouring_contagion = { 3, 1309950, 2 },
     early_demise = { 3, 1310076, 2 },
 })
+
+-- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
+-- run it, never this block (tests/Forever/priest_spec.lua checks it matches). Each pack's .simc is generated from its
+-- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/priest_*.lua).
+spec:RegisterPack(
+    "Shadow (wowsims.com)",
+    20261021001,
+    [[Hekili:vA17VTjmq0)w6x2s0I4hjTDTrJjTPTP1PTQQr)SbhSj4gWgzBAuKQ4V9zBsjgcKM9LeW(U378D37maFWJGqeuIb3p3B(1(EZ9988bHYDLyqyjmzdCT6bkSq9BygeX2whpzlBRGuiCsyft1wTlNbrAKwvrYL3rbRgeurjobe(WFV77HpUuyadeMrqiCJhyrYiKSSowMHRJ3VMBkJJFgZRJr4uyvUSo(lp876y1Y1XTaurC1mkCl5eSq6IkfU6aejCLQ3j01oMxDEsWOtNPOGdPICvCJupZ0use1XqeIrFV6Hn4DcN64VbLWLdekt(ZDpQajtklflDDxtKzvR0rVBptNQWufXOflUDHhY7sVfEoQSiNLsYvzzyIKWOcNsow58kOmOjvTUcYrZuRwwLNhPwEXmsAqJ1owM4SHY2sR)1r48Ha3ccffTkhkK2a57CvR57jtfQfA4VyvvAQZH1CQkBnvHhcY3ejGjCskjbRDOasHojvCoMk)uWCpppB7X5vuSikNSotoRsGJyPPrRtqb(AFNijf4GfVO)7Zb(349Y(tNTBnhVPDqTIJ3aFt8MFapJddGKgcIexi6cwNJmUGrjjrCvinUvfWNy8iDYiQKPxCCtBsUrBzCuujKqNLYsQebZnPFe2QaCWM(Lb8ZSkUQHoQmhUUcpee9TPheh6mgl2qyOmZEtcLI5rgQ6L7BO3)i8tZH7mfMj7lewq0unENQT8zhF7nM(YKlgZ8PthKJohHcvb1Ki2dsRvVkuaHkrPqTvVXv5eHuyMp2mKr949M5LykCvogb(6RIv1OTwfciuPgKyobcchq9aKkwgbKUQjBGowvPXzrpCSkc6iTfxB5JnQVQpSeCNqXPz8YZLrJa7uCn3IlB1OMLRotwAvRANU(mDYw)Q97JNPFhPO1oFtpNTk9JRC731CytqOP3w3HOa)23e8b002h0UB2fCFVrAcpmiWy2PB4TMmySUFN9yjtlHCBy5BqOFpDNWsRA70u9)nh5KdsmS3V)(y21w1V)SnNOh10Pon8ihGo1g2EV8qZvoC7SwM3lRBUM3MN90C0hbm0WgBKvx8psH3eHWkzgJdc)jEdjNO(cNFS)dymBd(3d]]
+)
+spec:RegisterPack(
+    "Smite (wowsims.com)",
+    20261021000,
+    [[Hekili:LsvuVTjpu0Fl7LTe9fbesx3(IgvAtBtRvBvvZ9zdgSj4vW2Y2KO8c)231eAcWivrBksrwxFUNZL794lEj(rmIsSm89HbHxVmiCzqqagz3RyyKIK9ezdCqqQG)rvClRjz2o5odVY4LjRM7aTVusOoIsR5L2Bf40j50Oyzy0d)82VGECnLBY4QsUa4TGtPSdzXmztRZ6MeBbeSlMFUuZ2Y0njuwoPU02K8Xh(EtceUj558R5(onn(knNzS(uLX3vIuJVXbj2cr5InETb9(LrkMVa0rteMsO(PWzPtxUPjHqPsXBGdpX2B8As(mXswpr9m7h3(iqsH1QmR993WTf1PUpb)rqNdCcLnD1Q)Fvan4QGvbEq3ulZ5LqtHKz5sHXtPzqYPeBKsUJPJ5I8AdCZIAdlwMNhVjJgTCbatvxwgd4w2CxxYrMcP0ocjppQIiiEQm7hIwgCe8)f5xil3hNZ1Sf5YSAtuOd8SxrzP155EhV1Rw96tuegm)FKJBMKdHClPn3tjQQ1kPPnxh4TSyMGvbZ2BIwnGatbHk3fVtQPXkcx0VwEUugJbyTpfkMGiYyUmoe0RlINMrO7hOMZmnSVgg8haAUdJGXUB2n6Hrj3ynTpep4LHJ33(WeemTKrXFcJ6ndDx2zpGhvUjmgLPbf0Ccg1F2ITGsJi6eYlyWEsNJyWO2EPJyG9v)LSFZfX(vJyFaCN)yGGxOpXr8BpBz)cUJ(n9HxoSQV(mvDN)PVAt5SCu8UZqrRrA6PDy70(9VyIw4h64cLJ2SXERt7sgy1gU)PVm2dmtQTfsng9n2t8soSk8RDB6AVg)7]]
+)
