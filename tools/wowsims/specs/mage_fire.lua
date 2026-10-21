@@ -10,7 +10,9 @@
 --   fire_blast -> fireball (log 13.50, 70.41, 76.41): central: the decision falls the instant Fire Blast's 6 s
 --   cooldown ends (wowsims queues it there); our belief knows that end from the cast, but the standing not-ready flag
 --   pushes the ready time to now + CD_PROBE (0.5 s; Game/State/Families/Casts.lua OnSettle), so Fireball shows. A
---   scratch edit pushing only a ready time already past measured 0.841 (not committed).
+--   scratch edit pushing only a ready time already past measured 0.841 (not committed). Since 0ce5d1a4 (the replay's
+--   cooldown end is the log's timestamp) these three agree: 0.841 (63), floor 0.84, top [fire_blast -> evocation 2;
+--   fireball -> arcane_missiles 2; fireball -> evocation 2], the classes below.
 --   fire_blast -> evocation (44.41, 53.41; with fireball / pyroblast / arcane_missiles -> evocation at 38.91-51.91: 6
 --   of 12): API-forced and a shared gap: the belief holds its lower bound (est = lo) about 1200-1800 under the truth and
 --   reads Evocation's 10%: Master of Elements refunds 30% of a crit's cost (25 refunds of 45-118 in the log; crits are

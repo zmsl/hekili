@@ -377,7 +377,8 @@ of the wowsims packs plan; Frost unsupported, Frostfire an open item), their rep
 `tests/Forever/wowsims_mage_spec.lua`. The worlds (`tests/Forever/helpers/mage_world.lua`) cast at 25 yd with cast bars
 and channels (Arcane Missiles, Evocation: any press at 99% mana clips it); the character is trainer-taught (no book
 ranks, as wowsims's), its pool and regen are the logs' (Arcane 6678, Fire 6168; 29.13 a second outside the five-second
-rule, all of it while casting for Arcane, half for Fire). The lines (on 2f05a406 + Task 12):
+rule, all of it while casting for Arcane, half for Fire). Flicker floors (pack_gate `FLICKER`): Arcane 1.7 (1.66,
+oracle 1.46), Fire 1.3 (1.21, oracle 0.40), retracted 0 each. The lines (on 0ce5d1a4 + Task 12):
 
 ```
 Arcane solo: fights=3 agreement 0.991 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 77.6 (oracle 76.6, unmatched 0.8), cost 3.9 (oracle 5.3, unmatched 1.6)], episodes 11.53/min; dps A/B 1.020; ... [seeds 1-3]
@@ -474,8 +475,8 @@ Retribution, Paladin Protection and Survival idles re-measured in the final revi
 | Beast Mastery (wowsims.com) | 1.00 | 1.000 (27) | 6 (5.4) | L10 4.6, L40 4.6, L60 5.4 | 0.000 / 0.320 | 0.320, 5 | 0 | 0.32, 5 |
 | Marksmanship (wowsims.com) | 0.92 | 0.929 (42) | 11.8 (11.8) | L10 4.6, L40 3.6, L60 11.8 | 0.000 / 0.180 | 0.150, 9 | 3 | 0.15, 9 |
 | Survival (wowsims.com) | 0.97 | 0.976 (41) | 6 (0) | L10 4.6, L40 0.2, L60 0.2 | 0.000 / 0.360 | 0.140, 9 | 1 | 0.14, 9 |
-| Arcane (wowsims.com) | 0.77 | 0.780 (59) | 6 (0) | L10 0.0, L40 0.0, L60 0.0 | pending | pending | pending | pending |
-| Fire (wowsims.com) | 0.79 | 0.794 (63) | 12.6 (12.6) | L10 0.0, L40 0.2, L60 12.6 | pending | pending | pending | pending |
+| Arcane (wowsims.com) | 0.77 | 0.780 (59) | 6 (0) | L10 0.0, L40 0.0, L60 0.0 | 0.100 / 0.970 | 0.470, 21 | 13 | 0.47, 21 |
+| Fire (wowsims.com) | 0.84 | 0.841 (63) | 12.6 (12.6) | L10 0.0, L40 0.2, L60 12.6 | 0.130 / 1.610 | 0.370, 31 | 10 | 0.37, 31 |
 
 A LIVE60 constant above today's L60 measurement is an earlier measurement the spec keeps (Combat 4.8 vs 4.0,
 Retribution 8.4 vs 2.8 by ruling P6, Paladin Protection 17.8 vs 11.8 from the untanked fight); limits are not lowered

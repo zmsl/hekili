@@ -24,12 +24,14 @@ local REPLAY = { fire = { procs = { ["10151:1"] = true, ["18809:1"] = true } } }
 -- recipe, world content, pack, the replay floor (the first clean run's, never lowered), LIVE60: the pack's own worst
 -- idle at 60, rounded up to 0.1 s (P8).
 -- Floors: Arcane 0.780 (46 of 59), Fire 0.794 (50 of 63), truncated; the classification in each recipe's header.
+-- Fire raised 0.79 -> 0.84 on 0ce5d1a4 (0.841, 53 of 63): the replay's cooldown end is the log's timestamp, so Fire
+-- Blast's three decisions at its cooldown's end agree (the CD_PROBE disagreement in mage_fire.lua's header).
 -- LIVE60: Arcane never idles at 60; Fire spends its mana out by 85 s of the 120 s fight and then waits on Fire Blast's
 -- 340 (Scorch's line holds while the five stacks last), as wowsims's own fight runs dry (its Evocation then on its
 -- 8-minute cooldown, which the gate counts as a usable free ability).
 local PACKS = {
     { "mage_arcane", "Arcane", "Arcane (wowsims.com)", 0.77, 0 },
-    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.79, 12.6 },
+    { "mage_fire", "Fire", "Fire (wowsims.com)", 0.84, 12.6 },
 }
 
 describe("the Mage wowsims.com packs #slow #wowsims", function()
