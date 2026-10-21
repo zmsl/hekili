@@ -5,6 +5,7 @@ https://github.com/wowsims/forever), translated to this addon's keys and gated a
 pipeline, the pin, the gates and every pack's current numbers are in `docs/dev/layout.md` ("wowsims packs"); the
 step-by-step procedure the lanes ran is the plan's "per-spec procedure" (P1-P10,
 `docs/superpowers/plans/2026-10-19-wowsims-packs.md`). This page is what a pack author needs to know beside them.
+What only the game can answer (the in-game checkpoints and the long-term items) is in `docs/dev/ingame-ledger.md`.
 
 ## The rules (the user's; binding)
 
