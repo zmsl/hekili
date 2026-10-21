@@ -47,3 +47,4 @@ ignore:
     - src/Hekili_Paladin/APLs
     - src/Hekili_Shaman/APLs
     - src/Hekili_Hunter/APLs
+    - src/Hekili_Mage/APLs
