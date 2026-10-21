@@ -405,6 +405,15 @@ values up to 0.25 s old. A style never reads `state.*`, `class.*`, `Hekili.State
 convention. Draw and Tick allocate nothing after the first publish, and `Clear` must leave none of the style's
 frames shown.
 
+**Steady icons (experimental, off by default).** With the active specialization's `steadyIcons` on (its Performance
+tab), `Output.Publish` holds a slot for one publish when its shown icon and the new one are both countdowns (due more
+than 0.05 s out) with different names and the raw set did not already have the new one last publish: the shown
+record table moves into the new set and the new one into the old, so the hold costs no copy and no allocation, and
+`out.held[i]` says which slots are held (the snapshot marks them `(held)`). A ready icon on either side and the first
+publish after our own cast start or success, channel end or swing queue change (`Output.Acted`, from
+`Game/State/Sources/Casts.lua`) show at once, so what is pressable and when never changes. Core reads the setting once
+per update into `Output.steady`; styles see only the held records and need nothing.
+
 ## 8. Follow-ups
 
 - **Belief annotator** (needs its own short design): `Game/Annotate.lua`, registered with `ns.Output.Annotate`. Per
