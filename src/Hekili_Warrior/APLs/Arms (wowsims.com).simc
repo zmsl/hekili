@@ -56,7 +56,7 @@ actions+=/heroic_strike,use_off_gcd=1,if=(!execute_phase&rage.current>=90)
 actions+=/bloodrage,use_off_gcd=1,if=rage.current<90
 actions+=/battle_shout,if=(((!action.mortal_strike.known|cooldown.mortal_strike.remains>=1.5)&(!settings.wowsims_stance_dance|(action.whirlwind.known&cooldown.whirlwind.remains>=1.5)))&buff.battle_shout.remains<=10)
 actions+=/heroic_strike,use_off_gcd=1,if=!action.mortal_strike.known&rage.current>=30
-actions+=/thunder_clap,if=settings.maintain_thunder_clap&!action.mortal_strike.known&!debuff.thunder_clap.up&rage.current>=40
+actions+=/thunder_clap,if=settings.maintain_thunder_clap&!action.mortal_strike.known&!debuff.thunder_clap.up
 actions+=/sunder_armor,if=!action.mortal_strike.known&debuff.sunder_armor.stack<5
 actions+=/hamstring,if=!action.mortal_strike.known
 actions.pre_pull_stance=battle_stance,use_off_gcd=1,if=!buff.battle_stance.up&!settings.wowsims_stance_dance

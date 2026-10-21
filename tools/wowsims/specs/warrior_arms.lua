@@ -67,9 +67,11 @@ return {
     -- strikes (Slam 18 s, Spearing Strike 20 s), Rend, Thunder Clap and five Sunders; the rest went to the off-GCD Heroic
     -- Strike and the GCD idled up to 11.2 s at L40 (9.0 at L10). Hamstring (10 rage, no cooldown) is the last-resort GCD
     -- press: L10 and L40 5.6 s; silent at 60 (wowsims's list has no Hamstring).
+    -- Thunder Clap drops its 40-rage hold: Hamstring would spend the rage it pools for, and the harness (rule 15's
+    -- setting on) never cast it (tests/Forever/maintenance_spec.lua); in game the setting is off and the line silent.
     leveling = {
         "heroic_strike,use_off_gcd=1,if=!action.mortal_strike.known&rage.current>=30",
-        "thunder_clap,if=!action.mortal_strike.known&!debuff.thunder_clap.up&rage.current>=40",
+        "thunder_clap,if=!action.mortal_strike.known&!debuff.thunder_clap.up",
         "sunder_armor,if=!action.mortal_strike.known&debuff.sunder_armor.stack<5",
         "hamstring,if=!action.mortal_strike.known",
     },
