@@ -72,6 +72,17 @@ return {
     -- (the rend weave); Battle Stance 1 (overpower_weaving's swap, Fury's only Battle Stance line). A tier is static:
     -- the weave's lines carry theirs whether Rend Weave is on or off.
     focus = { overpower = 1, heroic_strike = { 1, 2 }, cleave = { 1, 2 }, rend = 2, battle_stance = 1 },
+    -- the user's ruling (2026-10-21): "guard against recommending battle stance if there won't be enough time or rage
+    -- to cast overpower". wowsims's swap (overpower_weaving #2: Overpower: Can Cast, i.e. the Delay Check, not the
+    -- execute phase, the window up with 5 <= rage <= 100, and gcd 0) checks the rage before the swap only: below
+    -- Tactical Mastery (level 14; Overpower is 12) the swap keeps no rage, and it never reads Overpower's 5 s cooldown
+    -- against the 5 s window. The guard: the rage a swap keeps (the kit's stance_rage_kept: Tactical Mastery's 10, its
+    -- improvement's 15 a rank) pays for Overpower, and Overpower is ready before the window closes. A deviation
+    -- (docs/dev/wowsims-packs.md).
+    guard = {
+        battle_stance = "!action.overpower.known|(stance_rage_kept>=action.overpower.cost"
+            .. "&cooldown.overpower.remains<buff.overpower_ready.remains)",
+    },
     leveling = {
         "sunder_armor,if=!action.bloodthirst.known&debuff.sunder_armor.stack<5",
         "hamstring,if=!action.bloodthirst.known&(!action.battle_stance.known|!buff.battle_stance.up)",

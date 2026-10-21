@@ -70,6 +70,9 @@
 --    the condition of each such entry, in every list (not when the condition already has it as a top-level `&` term;
 --    an `and`/`or` writes a repeated term once): an APL written for a talent build (wowsims picks it by that
 --    talent, e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
+--    The recipe's `guard` ({ [action key or group's snake name] = SimC expression }) appends `&(<expression>)` to the
+--    condition of each such entry, in every list (after a required talent): a documented deviation from wowsims, each
+--    with its reason in the recipe and docs/dev/wowsims-packs.md.
 -- 8. Constants: `true`/`false`; a number; a Go duration ("1.5s", "300ms", "2m", "1m30s") in seconds; "N%" as N when
 --    it is a direct operand (a variable followed) of a comparison with a percent read (M.PERCENT: `mana.pct`,
 --    `health.pct`, which run 0-100 where wowsims's run 0-1), else N/100 as wowsims reads it (inside `math`, or
@@ -308,7 +311,7 @@ end
 
 --- The translation context of an ability set (`abilities`, `auras`, `talents` as the engine registers them:
 --- tests/Forever/helpers/engine.lua abilitySet), recipe `r` (map, focus, executePhase, leveling, levelingFirst, extra,
---- settings, exclusive, requires, maintenance, select, auras), the spec's exported log text `log` (rule 13; nil: the
+--- settings, exclusive, requires, guard, maintenance, select, auras), the spec's exported log text `log` (rule 13; nil: the
 --- automatic actions are unsupported) and the request's player `player` (rule 16's option values).
 function M.context(set, r, log, player)
     local c = {
@@ -336,6 +339,7 @@ function M.context(set, r, log, player)
         prepullSkip = r.prepullSkip or {},
         exclusive = r.exclusive or {},
         requires = r.requires or {},
+        guard = r.guard or {},
         maintenance = {}, -- rule 15: { { action key, setting key } }, by action key
     }
     for key, setting in pairs(r.maintenance or {}) do
@@ -1220,6 +1224,10 @@ function entry(c, e)
         return out
     end
     cond = required(c, key, cond)
+    local g = c.guard[key] -- rule 7's guard: one more `&` term
+    if g then
+        cond = cond and (cond .. "&" .. paren(g)) or g
+    end
     return cond and (body .. ",if=" .. cond) or body
 end
 

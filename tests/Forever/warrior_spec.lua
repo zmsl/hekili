@@ -768,6 +768,10 @@ describe("Forever Warrior", function()
         e.swap_stance("berserker_stance")
         assert.are.same({ 25 }, e.spent) -- 50 rage, 10 + 1 x 15 kept (DB2 12295: 15 a rank)
         assert.are.same({ "berserker_stance" }, e.applied)
+        assert.are.equal(25, lw.run(w.exprs.stance_rage_kept, e)) -- the same rule, for a priority to read
+        w.game.known[1310185] = nil
+        e.talent = rank(0)
+        assert.are.equal(0, lw.run(w.exprs.stance_rage_kept, e)) -- below level 14: a swap keeps nothing
     end)
 
     it("silences with Shield Bash from rank 1 of Improved Shield Bash", function()
@@ -868,6 +872,20 @@ describe("Forever Warrior", function()
         assert.are.equal(3, n) -- Arms's precombat; Fury's precombat and combat
     end)
 
+    -- the user's ruling (2026-10-21): no Battle Stance for an Overpower the swap's rage or the window cannot pay for
+    it("guards Fury's Battle Stance swap on the rage it keeps and Overpower's window", function()
+        local swap
+        for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "warrior")) do
+            if p.name == "Fury (wowsims.com)" then
+                swap = p.lists.overpower_weaving[1]
+            end
+        end
+        assert.are.equal("battle_stance", swap.action)
+        local guard = "&(!action.overpower.known|(stance_rage_kept>=action.overpower.cost"
+            .. "&cooldown.overpower.remains<buff.overpower_ready.remains))"
+        assert.are.equal(guard, swap.criteria:gsub("||", "|"):sub(-#guard)) -- stored as the importer stores a |
+    end)
+
     it("keeps its priorities in src/Hekili_Warrior/APLs/, tools/make_pack.lua's default class", function()
         local def = dofile("src/Hekili_Warrior/APLs/packs.lua")
         assert.are.same({
@@ -921,7 +939,7 @@ describe("Forever Warrior", function()
                 end
             end
         end
-        for _, name in ipairs({ "execute_phase", "mainhand_remains" }) do
+        for _, name in ipairs({ "execute_phase", "mainhand_remains", "stance_rage_kept" }) do
             assert.are.equal("function", type(w.exprs[name]), name)
         end
     end)

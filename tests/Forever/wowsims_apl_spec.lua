@@ -1092,6 +1092,23 @@ describe("the wowsims APL translator", function()
         )
     end)
 
+    it("appends a recipe's guard to each line of its action, in every list, after a required talent", function()
+        local rage = cmp("OpGt", { currentRage = {} }, const("10"))
+        local text = apl.translate({
+            prepullActions = { { action = cast(200).action, doAtValue = const("-1s") } },
+            priorityList = { cast(200, OR(rage, ready)), cast(100), cast(200, rage) },
+        }, ctx({ requires = { big_hit = "cuts" }, guard = { big_hit = "buff.fury.remains>1|rage.current>50" } }))
+        assert.are.equal(
+            table.concat({
+                "actions.precombat=big_hit,if=talent.cuts.enabled&(buff.fury.remains>1|rage.current>50)",
+                "actions=big_hit,if=talent.cuts.enabled&(rage.current>10|cooldown.big_hit.ready)&(buff.fury.remains>1|rage.current>50)",
+                "actions+=/strike",
+                "actions+=/big_hit,if=talent.cuts.enabled&rage.current>10&(buff.fury.remains>1|rage.current>50)",
+            }, "\n"),
+            text
+        )
+    end)
+
     it("takes the character's ability set: a shared racial is mapped and off the GCD", function()
         local set = require("Forever.helpers.engine").abilitySet("WARRIOR")
         local c = apl.context(set, {})

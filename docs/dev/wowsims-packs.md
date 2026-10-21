@@ -71,7 +71,13 @@ Translation:
   arguable (the Twist of Light seals) keeps its tier until the user rules; the recipe says
   so. `tests/Forever/focus_roles_spec.lua` holds every pack's tiers.
 - `requires` (`{ [action or group snake name] = talent key }`): entries written for a talent build run only once the
-  talent is taken (Retribution's Twist of Light lines).
+  talent is taken (Retribution's Twist of Light lines; Warrior's Berserker Rage, the user's ruling below). Not added
+  when the condition already has the talent test as a top-level `&` term.
+- `guard` (`{ [action or group snake name] = SimC expression }`): one `&(<expression>)` term appended to each such
+  entry's condition, in every list. A deviation from wowsims, so only on the user's ruling, named in the recipe and
+  under "Deviations by ruling" below.
+- `notes` (`{ "<sentence>", ... }`): player-facing lines added to the pack's in-game description (what the toggles
+  hide, what a player gates by hand).
 - `maintenance` (`{ [action] = setting key }`, rule 15): a raid debuff kept up (Protection's Demoralizing Shout, Arms's
   Thunder Clap, Guardian's Demoralizing Roar; a key needs a cast line in that spec's pack, else the translator errors,
   so a spec without one, Fury for Thunder Clap, neither names nor registers it). The action's lines (its leveling lines too) take `settings.<key>&`;
@@ -145,7 +151,8 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 8. Constants: Go durations in seconds; `"N%"` as N against a percent read (`mana.pct`, `health.pct` run 0-100), N/100
    anywhere else (in `math`, against any other read), as wowsims reads it; a percent read inside `math`, `min` or
    `max` is unsupported (its 0-100 scale would leak).
-7. `focus`, `use_off_gcd=1` for an off-GCD ability, `leveling` and `extra` lines, `prepullSkip`, `requires`.
+7. `focus`, `use_off_gcd=1` for an off-GCD ability, `leveling` and `extra` lines, `prepullSkip`, `requires`, `guard`;
+   an `and`/`or` writes a repeated term once.
 9. `auraIcdIsReady`: `buff.<key>.icd_ready` for an aura declaring `icd`; else unsupported.
 10. `auraShouldRefresh` only for `exclusive` auras; `cancelAura`; `autoSwingTime`; `remainingTime` as
     `fight_remains` (API-forced: unknown, 3600 s, on Forever).
@@ -169,6 +176,21 @@ only), `procs` (`{ [id or "id:tag"] = true }`: neither a decision nor a cast), `
 
 Any node the translator does not handle is unsupported (rule 2): a new wowsims node omits its entry rather than
 mistranslating it.
+
+## Deviations by ruling
+
+Each is the user's ruling, recorded with its reason; the recipe header names the replay decisions it moves.
+- Warrior Arms and Fury, Berserker Rage (2026-10-21): "should be guarded by a check on Improved Berserker Rage > 0
+  ... only use precombat / combat if talented for the rage gain": `requires = { berserker_rage =
+  "improved_berserker_rage" }`. The wowsims builds lack the talent, so wowsims's pre-pull Berserker Rage at -4.5 is a
+  disagreement (one decision each; floors 0.89 and 0.91).
+- Warrior Fury, the Battle Stance swap in overpower_weaving (2026-10-21): "guard against recommending battle stance if
+  there won't be enough time or rage to cast overpower". wowsims's condition (Overpower: Can Cast and `gcd = 0`)
+  checks only the rage before the swap (5 to 100); below Tactical Mastery (level 14, Overpower 12) the swap keeps no
+  rage, and nothing compares Overpower's 5 s cooldown with the 5 s window. `guard = { battle_stance =
+  "!action.overpower.known|(stance_rage_kept>=action.overpower.cost&cooldown.overpower.remains<buff.overpower_ready.remains)" }`
+  (`stance_rage_kept`: the kit's state expression for the rage a swap keeps; Tactical Mastery is a passive no priority
+  reads).
 
 ## Classifying a disagreement (P7)
 
