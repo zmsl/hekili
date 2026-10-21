@@ -1351,11 +1351,20 @@ local HekiliSpecMixin = {
 
         CommitKey( key )
 
-        table.insert( self.settings, {
+        -- `option.sim`: the harness's default (Engine.SettingDefault); taken out, AceConfig rejects unknown keys
+        local sim = option.sim
+        option.sim = nil
+        if sim ~= nil and type( option.desc ) == "string" then
+            option.desc = option.desc .. "\n\nThe wowsims gate runs this as " .. ( sim and "on" or "off" ) .. "."
+        end
+
+        local entry = {
             name = key,
             default = value,
+            sim = sim,
             info = option
-        } )
+        }
+        table.insert( self.settings, entry )
 
         option.order = 100 + #self.settings
 
@@ -1364,7 +1373,7 @@ local HekiliSpecMixin = {
             local val = Hekili.Engine.settings.specs[ self.id ].settings[ setting ]
 
             if val ~= nil then return val end
-            return value
+            return Hekili.Engine.SettingDefault( entry )
         end
 
         option.set = option.set or function( info, val )
@@ -2340,7 +2349,7 @@ function Hekili:SpecializationChanged()
 
                 if s then
                     for k, v in pairs( spec.settings ) do
-                        if s.settings[ v.name ] == nil then s.settings[ v.name ] = v.default end
+                        if s.settings[ v.name ] == nil then s.settings[ v.name ] = Hekili.Engine.SettingDefault( v ) end
                     end
                 end
             end

@@ -23,6 +23,18 @@ local settings = {
     screenshot = false,
 }
 Engine.settings = settings
+-- The scenario the settings' defaults are for: nil in game; "sim" under the test harness (the replay and the loops:
+-- wowsims's boss, one target, full buffs), where a setting registered with `sim` defaults to that value instead.
+Engine.scenario = nil
+
+--- The default a setting entry (Spec.lua RegisterSetting's { name, default, sim, info }) fills an unset profile value
+--- with: its `sim` under `Engine.scenario == "sim"` when it has one, else its `default`.
+function Engine.SettingDefault(entry)
+    if Engine.scenario == "sim" and entry.sim ~= nil then -- an `if`: `sim` may be false
+        return entry.sim
+    end
+    return entry.default
+end
 
 --- Point the engine at `profile`: its subtables by reference, its scalars copied; bumps `settings.version`.
 function Engine.Configure(profile)

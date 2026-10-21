@@ -108,3 +108,47 @@ describe("Engine.Configure (headless Arms boot)", function()
         assert.are.equal(p.iconStore, button.db)
     end)
 end)
+
+-- Engine.SettingDefault: a setting registered with `option.sim` fills an unset profile value with that value under the
+-- harness's scenario (Engine.scenario "sim") and with its `default` in game (nil).
+describe("a setting's harness default", function()
+    local function boot(scenario)
+        local H = headless.new({ character = ww.character(), pack = ww.PACK })
+        assert.are.same({}, H.loadErrors)
+        H.Hekili.Engine.scenario = scenario
+        local id = H.Hekili.State.spec.id
+        local spec = H.Hekili.Class.specs[id]
+        local option = { type = "toggle", name = "Probe", desc = "A probe.", sim = true }
+        spec:RegisterSetting("probe_sim", false, option)
+        spec:RegisterSetting("probe_plain", true, { type = "toggle", name = "Plain", desc = "No sim." })
+        H.Hekili:SpecializationChanged() -- the spec load's fill of unset profile values
+        return H.Hekili.DB.profile.specs[id].settings, option, spec
+    end
+
+    it("fills its sim value under the harness and its default in game; a setting without one, its default", function()
+        local sim = boot("sim")
+        assert.are.same({ true, true }, { sim.probe_sim, sim.probe_plain })
+        local game = boot(nil)
+        assert.are.same({ false, true }, { game.probe_sim, game.probe_plain })
+    end)
+
+    it("keeps `sim` out of the AceConfig option and notes it in the description", function()
+        local _, option, spec = boot(nil)
+        assert.is_nil(option.sim)
+        assert.are.equal("A probe.\n\nThe wowsims gate runs this as on.", option.desc)
+        local entry = spec.settings[#spec.settings - 1]
+        assert.are.same({ "probe_sim", false, true }, { entry.name, entry.default, entry.sim })
+    end)
+
+    it("a false sim value wins over a true default (an `if`, not `and/or`)", function()
+        local H = {}
+        local env = setmetatable({ Hekili = { Engine = H } }, { __index = _G })
+        local f = assert(loadfile("src/Hekili/Engine/Settings.lua"))
+        setfenv(f, env)
+        f("Hekili", {})
+        H.scenario = "sim"
+        assert.is_false(H.SettingDefault({ default = true, sim = false }))
+        H.scenario = nil
+        assert.is_true(H.SettingDefault({ default = true, sim = false }))
+    end)
+end)
