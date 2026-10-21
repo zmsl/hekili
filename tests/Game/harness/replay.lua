@@ -25,8 +25,8 @@ M.EPS = 1e-6 -- a line's place within its timestamp, as time: a decision falls j
 M.TAIL = 0.2 -- the exporter's execute proportion: the last 20% of the duration
 
 -- Our white swing's landing lag per hand: the main hand's median (P log 2, 474 ms) and the off hand's own-swing mode
--- (G5, 703 ms; log 2's off-hand median is 953 ms), no spread. The swing's rage stays at the swing, the log's line: when
--- the game credits it is UNMEASURED (Families/Resources.lua's owe, checkpoint R1).
+-- (G5, 703 ms; log 2's off-hand median is 953 ms), no spread. The swing's rage stays at the swing, the log's line, as
+-- the game credits it (checkpoint R1, MEASURED 2026-10-20; Families/Resources.lua's owe).
 -- shortcut: fixed lags, deterministic; draw from observer.lag when a gate needs the tail.
 M.LAND = { observer.DEFAULTS.main.med, observer.DEFAULTS.off.own }
 
