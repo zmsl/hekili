@@ -366,7 +366,7 @@ describe("Forever Mage through the engine", function()
             S.reset("Primary", true)
             out[#out + 1] = { n, S.buff.arcane_blast.stack, I.CostOf(a), S.action.arcane_blast.cost }
         end
-        -- floor(0.15 x 1213) = 181 a charge-free cast; x 2.75, 4.5, 6.25
+        -- each the declared fraction x 1213, floored (0.4125, 0.675, 0.9375); at 4 charges 1.2 is read as 1.2 mana
         assert.are.same(
             { { 1, 1, 500, 500 }, { 2, 2, 818, 818 }, { 3, 3, 1137, 1137 }, { 4, 4, 1.2, 1.2 }, { 4, 4, 1.2, 1.2 } },
             out
