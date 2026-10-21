@@ -426,11 +426,11 @@ function M.new(W, k)
         elseif kind == "item" and ev.src == us then -- a bag count, plain [W PR13]; nothing reads its BAG_UPDATE
             push(t, "@itemCount", ev.item, ev.count)
         elseif kind == "pet" and ev.src == us then -- our pet unit, plain [W PR14], then the client's UNIT_PET
-            push(t, "@pet", ev.up, ev.pt, ev.power)
+            push(t, "@pet", ev.up, ev.pt, ev.petPower)
             push(t, "UNIT_PET", "player")
         elseif kind == "petPower" and ev.src == us then -- UnitPower("pet") (unprobed with a pet out: plain here; a
             -- pet's UNIT_POWER_FREQUENT reaches no frame of ours, the belief's poll 13 reads it)
-            push(t, "@petPower", ev.power)
+            push(t, "@petPower", ev.petPower)
         elseif kind == "stealthed" then -- IsStealthed (plain: no SecretWhen* flag) and its event
             push(t, "@stealthed", ev.on)
             push(t, "UPDATE_STEALTH")

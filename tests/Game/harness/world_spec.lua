@@ -434,6 +434,12 @@ describe("the character's bags, pet and stats", function()
             { 5, "UNIT_PET", "player" },
         }, got)
         assert.are.same({ 0, us.stats }, stats)
+        -- Fix 31 G2: the pet's power is never ours, on a plain client too (our pool never moves after login here)
+        local plain = setmetatable({ plain = true }, { __index = observer.DEFAULTS })
+        local p = observer.observe(W, plain)
+        for i = 1, p.n do
+            assert.is_false(p.t[i] > 0 and (p.ev[i] == "@power" or p.ev[i] == "@truth"), p.ev[i] .. " at " .. p.t[i])
+        end
         local api, ctl = fake.new()
         local c = {}
         for i = 1, s.n do

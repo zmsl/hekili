@@ -356,13 +356,14 @@ function M.new(seed)
     end
 
     -- Our pet (entities.new's `pet`): shortcut: one pet, a summon of any kind brings it full and a dismissal takes it
-    -- away (no cast of its own, no health); upgrade when a content needs two kinds told apart.
+    -- away (no cast of its own, no health); upgrade when a content needs two kinds told apart. The pet's power rides as
+    -- `petPower`: an event's `power` is always ours (the observer's power answers and truth read it).
     local function petEvent(e, kind)
         local p = e.pet
-        W.emit({ kind = kind, src = e, up = p.up, pt = p.pt, power = p.power })
+        W.emit({ kind = kind, src = e, up = p.up, pt = p.pt, petPower = p.power })
     end
 
-    --- `e`'s pet is summoned now, its power full. Truth "pet" { src, up, pt, power }.
+    --- `e`'s pet is summoned now, its power full. Truth "pet" { src, up, pt, petPower }.
     function W.summonPet(e)
         local p = e.pet
         p.up, p.power = true, p.max
@@ -376,7 +377,7 @@ function M.new(seed)
     end
 
     --- `e`'s pet, while up, gains `amount` power now (a negative amount spends it; within 0 and its max). Truth
-    --- "petPower" { src, up, pt, power } on a change.
+    --- "petPower" { src, up, pt, petPower } on a change.
     function W.petGain(e, amount)
         local p = e.pet
         local v = math.min(p.max, math.max(0, p.power + amount))
