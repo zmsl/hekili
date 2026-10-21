@@ -1,5 +1,6 @@
 -- tests/Forever/helpers/shaman_world.lua (class-completion plan, "The per-pack gate"): the Shaman content of the
--- class-neutral headless loop, in paladin_world.lua's shape, one content per pack (M.Enhancement): the character the
+-- class-neutral headless loop, in paladin_world.lua's shape, one content per pack (M.Enhancement, M.Elemental: its
+-- pack and gate come with the wowsims packs plan's Elemental task): the character the
 -- instance logs in as, each ability's press in the world's generic verbs, the client's usability answers. IDs, costs,
 -- cooldowns and aura durations come from the class file (load_druid's recording load of Shaman.lua for the character,
 -- the booted oracle's Hekili.Class and Hekili.State for the rest). The world's own, restated from the DB2 and
@@ -7,8 +8,11 @@
 -- slot order fire, earth, water, air: checkpoint), the shocks' shared cooldown, Fire Nova needing a fire totem,
 -- Maelstrom Weapon stacked by our landed melee (10 a minute, wowsims's rate) and spent by Lightning Bolt, Elemental
 -- Focus's Clearcasting (10% after a Fire or Nature damage spell, spent by the next one), Lightning Shield's charges
--- spent by the mob's hits on us, mana under the five-second rule. Damage amounts, the weapon, the regen parts and the
--- mana pool are UNMEASURED.
+-- spent by the mob's hits on us, mana under the five-second rule; Elemental's casts (Lightning Bolt, Chain Lightning,
+-- Lava Burst) shortened by Elemental Alacrity and Elemental Mastery, Convection's cost cut, Chain Lightning's cooldown
+-- lifted by Elemental Mastery. Damage amounts, the weapon, the regen parts and the mana pool are UNMEASURED.
+-- shortcut: no Revelation proc (the weapon enchant's: its rate is the enchant's, by our crit), so Elemental's
+-- Revelation Earth Shock never runs here; add it with the Elemental gate if that gate needs the line.
 -- Credit: wowsims/forever (MIT) as the reference for the priorities and the totem, Fire Nova, Maelstrom Weapon and
 -- Clearcasting rules; no code copied.
 local ld = require("Forever.helpers.load_druid")
@@ -31,6 +35,8 @@ local TOTEM = {
     strength_of_earth_totem = { 2, 300 },
     mana_spring_totem = { 3, 300 },
     grace_of_air_totem = { 4, 300 },
+    magma_totem = { 1, 20 },
+    windfury_totem = { 4, 300 },
 }
 
 -- Each rank's mana cost (DB2, rank order; Stormstrike's wowsims/forever's), the world's truth the class file's costs are measured against; Shamanistic
@@ -47,11 +53,25 @@ local COST = {
     strength_of_earth_totem = { 25, 65, 125, 225, 275 },
     mana_spring_totem = { 40, 60, 80, 100 },
     grace_of_air_totem = { 155, 250, 310 },
+    chain_lightning = { 225, 305, 390, 485 },
+    lava_burst = { 165, 230, 265, 265 }, -- rank 4 (1326047) wowsims/forever's
+    magma_totem = { 230, 360, 500, 650 },
+    windfury_totem = { 115, 175, 250 },
 }
 local FOCUSED = { earth_shock = true, flame_shock = true, lightning_shield = true }
+-- Convection (16039, DB2 aura 108 misc 14): -2% a rank on these.
+local CONVECTION =
+    { lightning_bolt = true, chain_lightning = true, lava_burst = true, earth_shock = true, flame_shock = true }
 local SHAMANISTIC_FOCUS = 1223030
--- Lightning Bolt's cast time by rank (DB2).
-local LB_CAST = { 1.5, 2, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5 }
+-- The casts' times by rank (DB2; Lava Burst's rank 4 wowsims/forever's), Elemental Alacrity's cut by rank (Forever's
+-- trait curve, wowsims/forever's data) off all three, Elemental Mastery's 0.5 s off Lightning Bolt and Lava Burst.
+local CAST = {
+    lightning_bolt = { 1.5, 2, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5 },
+    chain_lightning = { 2, 2, 2, 2 },
+    lava_burst = { 2.5, 2.5, 2.5, 2.5 },
+}
+local ALACRITY = { 0.17, 0.33, 0.5 }
+local MASTERED = { lightning_bolt = true, lava_burst = true }
 
 -- UNMEASURED: the hits' amounts.
 local AMOUNT = {
@@ -60,10 +80,20 @@ local AMOUNT = {
     flame_shock = 250,
     lightning_bolt = 550,
     fire_nova = 350,
+    chain_lightning = 500,
+    lava_burst = 700,
 }
+local FIRE = { flame_shock = true, fire_nova = true, lava_burst = true } -- school 4; the rest Nature's 8
 
 -- The spells Clearcasting covers (the class file's cost modifier) and whose casts roll it (Fire, Nature damage).
-local ELEMENTAL = { lightning_bolt = true, earth_shock = true, flame_shock = true, fire_nova = true }
+local ELEMENTAL = {
+    lightning_bolt = true,
+    chain_lightning = true,
+    lava_burst = true,
+    earth_shock = true,
+    flame_shock = true,
+    fire_nova = true,
+}
 
 local W0
 local function class()
@@ -99,8 +129,8 @@ local function elemental(W, e, X)
 end
 
 -- The cost of `key`'s rank `rank` with Clearcasting (`cc`: up) making an elemental spell free, Shamanistic Focus
--- (`sf`: taken) and each of `mw` Maelstrom Weapon stacks taking 20% off Lightning Bolt's.
-local function costOf(key, rank, cc, mw, sf)
+-- (`sf`: taken), each of `mw` Maelstrom Weapon stacks taking 20% off Lightning Bolt's, and `conv` ranks of Convection.
+local function costOf(key, rank, cc, mw, sf, conv)
     if ELEMENTAL[key] and cc then
         return 0
     end
@@ -113,6 +143,9 @@ local function costOf(key, rank, cc, mw, sf)
         c = c * 0.55
     elseif key == "lightning_bolt" then
         c = c * math.max(0, 1 - 0.2 * mw)
+    end
+    if CONVECTION[key] then
+        c = c * (1 - 0.02 * conv)
     end
     return c
 end
@@ -130,7 +163,7 @@ end
 local function spell(key, extra)
     return {
         effect = function(W, e, p, X)
-            W.hit(e, e.target, AMOUNT[key], (key == "flame_shock" or key == "fire_nova") and 4 or 8)
+            W.hit(e, e.target, AMOUNT[key], FIRE[key] and 4 or 8)
             if extra then
                 extra(W, e, p, X)
             end
@@ -148,7 +181,14 @@ end
 
 -- The avoids each press rolls when not the special melee tables' (world.OUTCOMES, from wowsims/forever's shaman/*.go):
 -- the spells are magic hits (OutcomeMagicHitAndCrit); Stormstrike is a special melee hit.
-M.OUTCOMES = { lightning_bolt = "spell", earth_shock = "spell", flame_shock = "spell", fire_nova = "spell" }
+M.OUTCOMES = {
+    lightning_bolt = "spell",
+    chain_lightning = "spell",
+    lava_burst = "spell",
+    earth_shock = "spell",
+    flame_shock = "spell",
+    fire_nova = "spell",
+}
 
 -- Each recommendable ability: `effect(W, e, p, X)`, `requires(W, e, X)`. A key missing here fails the loop.
 M.MAP = {
@@ -183,6 +223,13 @@ M.MAP = {
             aura(W, X, e, "lightning_shield", nil, 3)
         end,
     },
+    chain_lightning = spell("chain_lightning"), -- one target: no chain
+    lava_burst = spell("lava_burst"),
+    elemental_mastery = {
+        effect = function(W, e, _, X)
+            aura(W, X, e, "elemental_mastery")
+        end,
+    },
     -- The Orc racial wowsims fires (its autocast cooldowns, rule 13): its buff on us, nothing else the world models.
     blood_fury = {
         effect = function(W, e, _, X)
@@ -201,10 +248,14 @@ M.MAP = {
     strength_of_earth_totem = totem("strength_of_earth_totem"),
     mana_spring_totem = totem("mana_spring_totem"),
     grace_of_air_totem = totem("grace_of_air_totem"),
+    magma_totem = totem("magma_totem"),
+    windfury_totem = totem("windfury_totem"),
 }
 
--- The packs' worlds: `pack` the priority, `kit` the abilities the character knows (every rank), `weapon` the main hand, `uptime` the debuffs
--- reported. The imbues are left out of the kit: the world has no weapon enchant read (shaman_spec covers the reminder).
+-- The packs' worlds: `pack` the priority, `spec` its spec id, `kit` the abilities the character knows (every rank),
+-- `talents` the build's ({ [rank-1 spell] = rank }; none: no points), `weapon` the main hand, `distance` ours from the
+-- mob (nil: melee), `uptime` the debuffs reported. The imbues are left out of the kit: the world has no weapon enchant
+-- read (shaman_spec covers the reminder).
 local PACKS = {
     -- Stormstrike, Maelstrom Weapon and Elemental Focus, a two-hander.
     Enhancement = {
@@ -223,7 +274,51 @@ local PACKS = {
             "grace_of_air_totem",
             "rage_of_the_farseer", -- the build's talent (wowsims's)
         },
+        spec = 100072,
         weapon = { 180, 260, 3.6 },
+        uptime = { "flame_shock" },
+    },
+    -- wowsims/forever's Elemental build (builds/testing.build.json, talents 5500331023001351-053002001-053): the casts,
+    -- the totems its pre-pull and list summon, at a caster's range. Mana Tide Totem and Water Shield are left out:
+    -- the build lacks their Restoration talents, so wowsims never casts them.
+    Elemental = {
+        pack = "Elemental (wowsims.com)",
+        spec = 100071,
+        kit = {
+            "lightning_bolt",
+            "chain_lightning",
+            "lava_burst",
+            "earth_shock",
+            "flame_shock",
+            "fire_nova",
+            "elemental_mastery",
+            "searing_totem",
+            "magma_totem",
+            "strength_of_earth_totem",
+            "windfury_totem",
+            "mana_spring_totem",
+        },
+        talents = {
+            [16039] = 5, -- Convection
+            [16035] = 5, -- Concussion
+            [16578] = 3, -- Elemental Alacrity
+            [16038] = 3, -- Call of Flame
+            [16164] = 1, -- Elemental Focus
+            [16086] = 2, -- Improved Fire Nova (wowsims's Trial by Fire)
+            [29062] = 3, -- Eye of the Storm
+            [408490] = 1, -- Lava Burst (wowsims's tree; not in the DB2's Talent table)
+            [408438] = 3, -- Lightning Overload (the same)
+            [16089] = 1, -- Elemental Fury (wowsims 5; the DB2's 1)
+            [16166] = 1, -- Elemental Mastery
+            [16255] = 5, -- Thundering Strikes
+            [17485] = 3, -- Ancestral Knowledge
+            [16262] = 2, -- Improved Ghost Wolf
+            [1223030] = 1, -- Shamanistic Focus
+            [16179] = 5, -- Tidal Focus
+            [1223033] = 3, -- Mindfulness (wowsims's tree; not in the DB2's Talent table)
+        },
+        weapon = { 40, 70, 3.0 },
+        distance = 25,
         uptime = { "flame_shock" },
     },
 }
@@ -248,6 +343,8 @@ local function classData(H, C)
     local T = H.Hekili.State.talent
     X.shockCd = 6 - 0.2 * T.reverberation.rank
     X.flameShock = 12 + 3 * T.call_of_flame.rank
+    X.convection = T.convection.rank
+    X.alacrity = ALACRITY[T.elemental_alacrity.rank] or 0
     return X
 end
 
@@ -255,7 +352,7 @@ local function content(name)
     local P = PACKS[name]
     local C = { PACK = P.pack, IDS = {} }
     local truth -- the current world's us (hooks): a press is priced by its true auras
-    C.SPEC = ({ Enhancement = 100072 })[name]
+    C.SPEC = P.spec
 
     function C.character()
         local w = class()
@@ -277,7 +374,7 @@ local function content(name)
             specID = M.CLIENT_SPEC,
             level = 60,
             known = known,
-            talents = {},
+            talents = P.talents or {},
             power = { type = MANA, token = "MANA", max = 5000 },
             speed = { P.weapon[3] },
         }
@@ -329,6 +426,7 @@ local function content(name)
         fsr = { [MANA] = FSR },
         power = 5000,
         mobHealth = 1e9,
+        distance = P.distance,
         script = hooks,
     }
 
@@ -373,18 +471,25 @@ local function content(name)
         local auras = truth and truth.auras or {}
         local cc = auras[X.aura.clearcasting.id]
         local mw = auras[X.aura.maelstrom_weapon.id] and auras[X.aura.maelstrom_weapon.id].stacks
+        local em = auras[X.aura.elemental_mastery.id] ~= nil
         local spellID = VS.KnownID(a.id)
         local rank = rankOf(own, spellID)
+        local cast = 0 -- every press is instant but the casts (CAST), Lightning Bolt's less 20% a Maelstrom stack
+        if CAST[key] then
+            cast = math.max(0, CAST[key][rank] - X.alacrity - ((em and MASTERED[key]) and 0.5 or 0))
+            if key == "lightning_bolt" then
+                cast = cast * math.max(0, 1 - 0.2 * (mw or 0))
+            end
+        end
         local p = {
             spell = spellID,
             ids = ids,
-            cost = costOf(key, rank, cc ~= nil, mw or 0, S.talent.shamanistic_focus.rank > 0),
+            cost = costOf(key, rank, cc ~= nil, mw or 0, S.talent.shamanistic_focus.rank > 0, X.convection),
             pt = MANA,
             cooldown = tonumber(a.cooldown) or S.action[key].cooldown or 0,
             gcd = GCD[a.gcd or "spell"],
             offGcd = a.gcd == "off",
-            -- every press is instant but Lightning Bolt, 2.5 s less 20% a Maelstrom Weapon stack (DB2 15208)
-            cast = key == "lightning_bolt" and LB_CAST[rank] * math.max(0, 1 - 0.2 * (mw or 0)) or 0,
+            cast = cast,
             refund = world.refundOf(H.Hekili.Class, key), -- an avoid gives back the kit's share (W.hit)
             outcomes = M.OUTCOMES[key], -- nil: the special melee tables
         }
@@ -419,7 +524,7 @@ local function content(name)
                             end
                             local mw = e.auras[X.aura.maelstrom_weapon.id]
                             local cc = e.auras[X.aura.clearcasting.id] ~= nil
-                            local c = costOf(key, rank, cc, mw and mw.stacks or 0, sf)
+                            local c = costOf(key, rank, cc, mw and mw.stacks or 0, sf, X.convection)
                             return power >= c, power < c
                         end,
                     }
@@ -445,5 +550,6 @@ local function content(name)
 end
 
 M.Enhancement = content("Enhancement")
+M.Elemental = content("Elemental")
 
 return M

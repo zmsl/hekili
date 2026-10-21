@@ -21,6 +21,46 @@ describe("the Shaman loop worlds", function()
         assert.are.equal(13, #p.ids) -- Earth Shock's 7 ranks and Flame Shock's 6
     end)
 
+    -- Elemental's world before its pack (the wowsims packs plan's Elemental task adds the pack and its gates): the build
+    -- boots on its spec, every ability the character knows is mapped, the casts priced on the true state.
+    it("Elemental: boots on its spec, and maps every ability the character knows", function()
+        local C = sw.Elemental
+        local H = headless.new({ character = C.character() })
+        assert.are.same({}, H.loadErrors)
+        local unmapped = {}
+        for key, a in pairs(H.Hekili.Class.abilities) do
+            if type(key) == "string" and a.key == key and a.id and H.ctl.known[a.id] and not sw.MAP[key] then
+                unmapped[#unmapped + 1] = key
+            end
+        end
+        table.sort(unmapped)
+        assert.are.same({}, unmapped)
+        -- the dominant tree picks the spec: settled in the event frame's own OnUpdate (loop_mage_spec.lua's reason)
+        for _, f in ipairs(H.frames) do
+            local u = f.__scripts.OnUpdate
+            if u and debug.getinfo(u, "S").source:find("Engine/Sim/Events.lua", 1, true) then
+                for _ = 1, 2 do
+                    u(f, 0.016)
+                end
+            end
+        end
+        assert.are.equal(C.SPEC, H.Hekili.State.spec.id)
+        assert.is_false(pcall(C.resolve, "not_an_ability", H))
+        -- the top ranks with Convection 5/5 and Elemental Alacrity 3/3
+        local got = {}
+        for _, key in ipairs({ "lightning_bolt", "chain_lightning", "lava_burst" }) do
+            local p = C.resolve(key, H)
+            got[#got + 1] = { p.spell, p.cost, p.cast, p.cooldown }
+        end
+        assert.are.same({
+            { 15208, 220 * 0.9, 2, 0 },
+            { 10605, 485 * 0.9, 1.5, 6 },
+            { 1326047, 265 * 0.9, 2, 10 },
+        }, got)
+        assert.is_true(#C.usable(H) > 0)
+        assert.are.same({}, H.errors)
+    end)
+
     for _, name in ipairs(PACKS) do
         it(name .. ": boots, and maps every ability the pack can recommend that the character knows", function()
             local C = sw[name]

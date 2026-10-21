@@ -11,8 +11,18 @@
 -- Unmodelled: Stormstrike's debuff (no priority reads it), the totems' effects, Flametongue and Windfury Weapon's
 -- procs, Windfury Totem (the party's: never prompted), Improved Lightning Shield's extra charges, Rage of the Farseer's
 -- +30% attack speed (nothing reads swing timing for mana).
+-- The Elemental kit (class-completion Task 17; its priority comes with the wowsims packs plan): what wowsims/forever's
+-- Elemental list casts (ui/specs/shaman/elemental/builds/testing.build.json): Chain Lightning (its 6 s cooldown lifted
+-- by Elemental Mastery), Lava Burst, Elemental Mastery, Magma, Windfury and Mana Tide Totems (Windfury Totem only for a
+-- pack that casts it, as that list's pre-pull does), Water Shield (one shield at a time), Convection's and Elemental
+-- Alacrity's cuts, Clearcasting on Chain Lightning and Lava Burst, Revelation's charge.
+-- Also unmodelled: Mana Tide's mana, Water Shield's mana, Revelation's proc (the weapon enchant's; the player aura read
+-- answers it), Lightning Overload, Mindfulness (mana regen while casting: the `fsr` meta has no casting share; the
+-- out-of-combat regen read's casting rate carries it).
 -- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (in-game checks): Call of Flame's +3 s a
--- rank on Flame Shock, Stormstrike's cost. Fire Nova's (375 there) is not modelled (FIRE_NOVA_COST says why).
+-- rank on Flame Shock, Stormstrike's cost, Lava Burst's and Mana Tide Totem's rank 4 (1326047, 1325256), Elemental
+-- Mastery, Revelation, Elemental Alacrity's Forever ranks. Fire Nova's (375 there) is not modelled (FIRE_NOVA_COST
+-- says why).
 -- Credits: Hekili (registration API, pack format and `summonTotem`'s signature, State.lua). wowsims/forever (MIT,
 -- ui/specs/shaman/enhancement/apls/default.apl.json and sim/shaman/) is the reference for the priorities and the totem,
 -- Fire Nova, Maelstrom Weapon and Clearcasting rules; no code is copied.
@@ -29,7 +39,7 @@ local max = math.max
 
 -- The class kit and one spec a talent tree (ids the core's: Elemental 100071 and Restoration 100073, unsupported;
 -- Enhancement 100072; the client's one pseudo-spec, 1489, only keys the legacy profile the core migrates). Icons: the
--- DB2 talent tabs'. Elemental gets its priority with the class-completion plan (it drops `unsupported`).
+-- DB2 talent tabs'. Elemental gets its priority with the wowsims packs plan (it drops `unsupported`).
 local spec = Hekili:NewClass("SHAMAN", {
     specs = {
         {
@@ -80,9 +90,18 @@ local WINDFURY_WEAPON = { 8232, 8235, 10486, 16362 }
 local WINDFURY_WEAPON_COST = { 90, 115, 140, 165 }
 local FROSTBRAND_WEAPON = { 8033, 8038, 10456, 16355, 16356 }
 local FROSTBRAND_WEAPON_COST = { 60, 85, 110, 135, 160 }
+local CHAIN_LIGHTNING = { 421, 930, 2860, 10605 }
+local CHAIN_LIGHTNING_COST = { 225, 305, 390, 485 }
+-- Rank 4 (1326047) is Forever's, absent from the DB2 at 70338: wowsims/forever's spell data (265 mana, 2.5 s, 10 s).
+local LAVA_BURST = { 408490, 1238299, 1238300, 1326047 }
+local LAVA_BURST_COST = { 165, 230, 265, 265 }
+-- Elemental Alacrity (16578, aura 107 misc 10 on Lightning Bolt, Chain Lightning and Lava Burst) by rank: Forever's
+-- trait curve, -170/-330/-500 ms (wowsims/forever's spell data; the DB2's Talent rows say -200 ms a rank of 5).
+-- IN-GAME CHECK: Lightning Bolt's cast at 3/3: 2.0 s?
+local ALACRITY = { 0.17, 0.33, 0.5 }
 
 -- The totems this file summons: element (the slot Hekili's `totem.<element>` reads), ranks, costs, and each rank's
--- duration in seconds (DB2). Windfury Totem is the party's (research §4): not registered, never prompted.
+-- duration in seconds (DB2), and a cooldown where it has one.
 local TOTEMS = {
     searing_totem = {
         element = "fire",
@@ -113,6 +132,27 @@ local TOTEMS = {
         ids = { 5675, 10495, 10496, 10497 },
         cost = { 40, 60, 80, 100 },
         duration = { 300, 300, 300, 300 },
+    },
+    magma_totem = {
+        element = "fire",
+        ids = { 8190, 10585, 10586, 10587 },
+        cost = { 230, 360, 500, 650 },
+        duration = { 20, 20, 20, 20 },
+    },
+    -- the party's melee: prompted only by a pack that casts it (wowsims's Elemental pre-pull)
+    windfury_totem = {
+        element = "air",
+        ids = { 8512, 10613, 10614 },
+        cost = { 115, 175, 250 },
+        duration = { 300, 300, 300 },
+    },
+    -- 5 minutes (category 591); rank 4 (1325256) is Forever's: wowsims/forever's spell data (60 mana, 13 s, 300 s).
+    mana_tide_totem = {
+        element = "water",
+        ids = { 16190, 17354, 17359, 1325256 },
+        cost = { 10, 30, 60, 60 },
+        duration = { 13, 13, 13, 13 },
+        cooldown = 300,
     },
 }
 
@@ -159,7 +199,7 @@ local function totemAbility(key)
         id = t.ids[1],
         copy = rest(t.ids),
         cast = 0,
-        cooldown = 0,
+        cooldown = t.cooldown or 0,
         gcd = "totem",
 
         spend = cost(t.cost, t.ids),
@@ -199,7 +239,7 @@ local function imbue(ids, costs)
 end
 
 -- The shocks' shared 6 s cooldown (DB2 category 19), Reverberation (16040, aura 107 misc 11: rank 1's -200 ms x the
--- rank) taking 1 s off at 5/5: each sets the other's; Flame Shock leaves its DoT.
+-- rank) taking 1 s off at 5/5: each sets the other's; Flame Shock leaves its DoT, Earth Shock spends Revelation.
 local function shockCooldown()
     return 6 - 0.2 * talent.reverberation.rank
 end
@@ -212,14 +252,40 @@ local function shockEffect(other, debuffKey)
         if debuffKey then
             -- the aura's duration, explicit for `now`
             applyDebuff("target", debuffKey, 12 + 3 * talent.call_of_flame.rank)
+        else
+            removeBuff("revelation") -- Earth Shock: Revelation's mask has it, not Flame Shock
         end
     end
 end
 
--- Shamanistic Focus (1223030, aura 108 misc 14: -45% on the shocks and Lightning Shield, mask 0x90100400).
-local function focused(costs, ids)
+-- A rank's cost with Convection (16039, aura 108 misc 14: -2% a rank on mask 0x90100003 and Lava Burst's: Lightning
+-- Bolt, Chain Lightning, the shocks, Lava Burst) when `convection`, and Shamanistic Focus (1223030, aura 108 misc 14:
+-- -45% on mask 0x90100400: the shocks and Lightning Shield) when `focus`, multiplied (wowsims's PowerCost_Pct rows).
+local function costed(costs, ids, convection, focus)
     return function()
-        return byRank(costs, ids) * (1 - 0.45 * talent.shamanistic_focus.rank)
+        local c = byRank(costs, ids)
+        if convection then
+            c = c * (1 - 0.02 * talent.convection.rank)
+        end
+        if focus then
+            c = c * (1 - 0.45 * talent.shamanistic_focus.rank)
+        end
+        return c
+    end
+end
+
+-- A `now` or `handler` that spends Revelation (one charge: the next Lightning Bolt, Chain Lightning or Lava Burst).
+local function revealed()
+    return function()
+        removeBuff("revelation")
+    end
+end
+
+-- A shield's `now` or `handler`: its 3 charges, the other shield gone (one shield at a time).
+local function shield(key, other)
+    return function()
+        removeBuff(other)
+        applyBuff(key, nil, 3)
     end
 end
 
@@ -231,7 +297,7 @@ local function shock(other, ids, costs, debuffKey)
         cooldown = shockCooldown,
         gcd = "spell",
 
-        spend = focused(costs, ids),
+        spend = costed(costs, ids, true, true),
         spendType = "mana",
 
         startsCombat = true,
@@ -265,6 +331,14 @@ spec:RegisterAuras({
         max_stack = 3,
         consumedBy = { WOUND = true, BLOCKED = true },
     },
+    -- Water Shield (408510, Forever's): 3 globes (wowsims's ProcCharges), each hit on us spending one (a spell crit's
+    -- too: not modelled); their mana not modelled.
+    water_shield = { id = 408510, duration = 600, max_stack = 3, consumedBy = { WOUND = true, BLOCKED = true } },
+    -- Elemental Mastery (16166; wowsims's data, absent from the DB2): 15 s, not spent by a cast (wowsims: the tooltip's
+    -- "Lasts"; its TODO: in game).
+    elemental_mastery = { id = 16166, duration = 15, max_stack = 1 },
+    -- Revelation (1323418; wowsims's data): the weapon enchant's (8217) Shaman buff, one charge, 15 s.
+    revelation = { id = 1323418, duration = 15, max_stack = 1 },
     -- Maelstrom Weapon (408498, a rune: D4, inert until learned): our melee hits stack it to 5, Lightning Bolt spends it.
     maelstrom_weapon = { id = 408505, duration = 30, max_stack = 5 },
     -- Elemental Focus's Clearcasting (16246): the next elemental damage spell costs nothing (1 charge, 15 s).
@@ -286,29 +360,37 @@ spec:RegisterAuras({
 })
 
 -- Clearcasting (16246): aura 108 misc 14 (cost) -100% on the spells its class mask names (-1743781885 / 4096 against
--- SpellClassSet 11); the registered ones: Lightning Bolt, Earth Shock, Flame Shock, Fire Nova (rank 1 IDs, the others
--- through each ability's `copy`). Covered but unregistered: Chain Lightning, Frost Shock, the rune shocks.
+-- SpellClassSet 11, and Lava Burst's 4096 in the second word); the registered ones: Lightning Bolt, Chain Lightning,
+-- Earth Shock, Flame Shock, Fire Nova, Lava Burst (rank 1 IDs, the others through each ability's `copy`). Covered but
+-- unregistered: Frost Shock, the rune shocks.
 spec:RegisterCostMod({
     aura = "clearcasting",
     pct = -1,
     charges = 1,
-    spells = { 403, 8042, 8050, 408341 },
+    spells = { 403, 421, 8042, 8050, 408341, 408490 },
 })
 
 spec:RegisterAbilities({
     -- Maelstrom Weapon (408505 aura 108 base -20, two effects on Lightning Bolt's class mask): each stack takes 20% off
-    -- its cast time and cost; five make it instant and free.
+    -- its cast time and cost; five make it instant and free. Elemental Alacrity and Elemental Mastery's flat cuts come
+    -- off the cast first; Convection's -2% a rank off the cost.
     lightning_bolt = {
         id = 403,
         copy = rest(LIGHTNING_BOLT),
         cast = function()
-            return byRank(LIGHTNING_BOLT_CAST, LIGHTNING_BOLT) * max(0, 1 - 0.2 * buff.maelstrom_weapon.stack)
+            local t = byRank(LIGHTNING_BOLT_CAST, LIGHTNING_BOLT) - (ALACRITY[talent.elemental_alacrity.rank] or 0)
+            if buff.elemental_mastery.up then
+                t = t - 0.5
+            end
+            return max(0, t) * max(0, 1 - 0.2 * buff.maelstrom_weapon.stack)
         end,
         cooldown = 0,
         gcd = "spell",
 
         spend = function()
-            return byRank(LIGHTNING_BOLT_COST, LIGHTNING_BOLT) * max(0, 1 - 0.2 * buff.maelstrom_weapon.stack)
+            return byRank(LIGHTNING_BOLT_COST, LIGHTNING_BOLT)
+                * max(0, 1 - 0.2 * buff.maelstrom_weapon.stack)
+                * (1 - 0.02 * talent.convection.rank)
         end,
         spendType = "mana",
 
@@ -317,9 +399,76 @@ spec:RegisterAbilities({
 
         now = function()
             removeBuff("maelstrom_weapon")
+            removeBuff("revelation")
         end,
         handler = function()
             removeBuff("maelstrom_weapon")
+            removeBuff("revelation")
+        end,
+    },
+
+    -- 2 s, 6 s apart (category 85), Elemental Mastery taking the whole cooldown off (16166 effect 1, -100%).
+    chain_lightning = {
+        id = 421,
+        copy = rest(CHAIN_LIGHTNING),
+        cast = function()
+            return 2 - (ALACRITY[talent.elemental_alacrity.rank] or 0)
+        end,
+        cooldown = function()
+            return buff.elemental_mastery.up and 0 or 6
+        end,
+        gcd = "spell",
+
+        spend = costed(CHAIN_LIGHTNING_COST, CHAIN_LIGHTNING, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(CHAIN_LIGHTNING),
+
+        now = revealed(),
+        handler = revealed(),
+    },
+
+    -- 2.5 s, 10 s apart (category 1224); Elemental Mastery takes 0.5 s off the cast (16166 effect 0, -500 ms).
+    lava_burst = {
+        id = 408490,
+        copy = rest(LAVA_BURST),
+        cast = function()
+            local t = 2.5 - (ALACRITY[talent.elemental_alacrity.rank] or 0)
+            if buff.elemental_mastery.up then
+                t = t - 0.5
+            end
+            return t
+        end,
+        cooldown = 10,
+        gcd = "spell",
+
+        spend = costed(LAVA_BURST_COST, LAVA_BURST, true),
+        spendType = "mana",
+
+        startsCombat = true,
+        known = knows(LAVA_BURST),
+
+        now = revealed(),
+        handler = revealed(),
+    },
+
+    -- 3 minutes, off the GCD (wowsims's data: no GCD), under the Cooldowns toggle.
+    elemental_mastery = {
+        id = 16166,
+        cast = 0,
+        cooldown = 180,
+        gcd = "off",
+
+        startsCombat = false,
+        toggle = "cooldowns",
+        known = knows({ 16166 }),
+
+        now = function()
+            applyBuff("elemental_mastery")
+        end,
+        handler = function()
+            applyBuff("elemental_mastery")
         end,
     },
 
@@ -330,18 +479,28 @@ spec:RegisterAbilities({
         cooldown = 0,
         gcd = "spell",
 
-        spend = focused(LIGHTNING_SHIELD_COST, LIGHTNING_SHIELD),
+        spend = costed(LIGHTNING_SHIELD_COST, LIGHTNING_SHIELD, false, true),
         spendType = "mana",
 
         startsCombat = false,
         known = knows(LIGHTNING_SHIELD),
 
-        now = function()
-            applyBuff("lightning_shield", nil, 3)
-        end,
-        handler = function()
-            applyBuff("lightning_shield", nil, 3)
-        end,
+        now = shield("lightning_shield", "water_shield"),
+        handler = shield("lightning_shield", "water_shield"),
+    },
+
+    -- No cost (DB2 408510: none).
+    water_shield = {
+        id = 408510,
+        cast = 0,
+        cooldown = 0,
+        gcd = "spell",
+
+        startsCombat = false,
+        known = knows({ 408510 }),
+
+        now = shield("water_shield", "lightning_shield"),
+        handler = shield("water_shield", "lightning_shield"),
     },
 
     stormstrike = {
@@ -391,6 +550,9 @@ spec:RegisterAbilities({
     strength_of_earth_totem = totemAbility("strength_of_earth_totem"),
     grace_of_air_totem = totemAbility("grace_of_air_totem"),
     mana_spring_totem = totemAbility("mana_spring_totem"),
+    magma_totem = totemAbility("magma_totem"),
+    windfury_totem = totemAbility("windfury_totem"),
+    mana_tide_totem = totemAbility("mana_tide_totem"),
 
     -- A Forever talent (DB2: no cost, off the GCD, 180 s); wowsims/forever casts it as a DPS major cooldown.
     rage_of_the_farseer = {

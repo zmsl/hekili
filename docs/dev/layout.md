@@ -299,6 +299,14 @@ Shaman checkpoint (in game, a level 60 Shaman; provisional until answered):
   Shamanistic Focus takes 45% off the shocks and Lightning Shield?
 - S12: Rage of the Farseer (425336, the talent): its buff readable in combat (25 s, +30% attack speed), its 180 s
   cooldown read plain in combat, off the GCD; Enhancement shows it right after Blood Fury with Cooldowns on?
+- S13 (Elemental kit, wowsims/forever's data absent from the DB2 at 70338): Lava Burst rank 4 (1326047: 265 mana,
+  2.5 s, 10 s) and Mana Tide Totem rank 4 (1325256: 60 mana, 13 s, 5 min) in the spellbook at 60? Elemental Mastery
+  (16166): off the GCD, 3 min, 15 s, lasts its 15 s (not spent by the next cast), takes 0.5 s off Lightning Bolt and
+  Lava Burst and lifts Chain Lightning's 6 s cooldown? Elemental Alacrity at 3/3: Lightning Bolt 2.0 s, Chain
+  Lightning 1.5 s (Forever's -170/-330/-500 ms, not the DB2's -200 a rank)? Convection 5/5: -10% on Lightning Bolt,
+  Chain Lightning, Lava Burst and the shocks? Clearcasting makes Chain Lightning and Lava Burst free? Revelation
+  (1323418): readable in combat, spent by the next Lightning Bolt, Chain Lightning, Lava Burst or Earth Shock? Water
+  Shield (408510) and Lightning Shield replace each other, 3 globes?
 
 `tests/Forever/loop_hunter_spec.lua` runs 3 fights of each Hunter pack in `make check` (seeds 1-3, `#slow`) and 20 in
 `make test-hunter` (`#hunter`), gated by `pack_gate.gate` and asserting that some focus line ran (`r.focus > 0`: Beast

@@ -10,8 +10,9 @@ local headless = require("Game.harness.headless")
 local FILE = "src/Hekili_Shaman/Shaman.lua"
 
 -- key = { spell IDs in rank order, the top rank's mana cost, cooldown, gcd }, from the DB2 (`wowdb spell <name>`;
--- Stormstrike's cost from wowsims/forever's spell data, absent from the DB2 at 70338): the
--- cooldown is the larger of RecoveryTime and CategoryRecoveryTime; gcd "spell" for 1.5 s, "totem" for 1.0 s.
+-- Stormstrike's cost and Lava Burst's and Mana Tide Totem's Forever-only rank 4 (1326047, 1325256) from wowsims/forever's
+-- spell data, absent from the DB2 at 70338): the cooldown is the larger of RecoveryTime and CategoryRecoveryTime; gcd
+-- "spell" for 1.5 s, "totem" for 1.0 s, "off" for none.
 local KIT = {
     lightning_bolt = { { 403, 529, 548, 915, 943, 6041, 10391, 10392, 15207, 15208 }, 220, 0, "spell" },
     lightning_shield = { { 324, 325, 905, 945, 8134, 10431, 10432 }, 370, 0, "spell" },
@@ -29,6 +30,13 @@ local KIT = {
     windfury_weapon = { { 8232, 8235, 10486, 16362 }, 165, 0, "spell" },
     frostbrand_weapon = { { 8033, 8038, 10456, 16355, 16356 }, 160, 0, "spell" },
     rage_of_the_farseer = { { 425336 }, 0, 180, "off" }, -- a Forever talent: no cost, off the GCD
+    chain_lightning = { { 421, 930, 2860, 10605 }, 485, 6, "spell" },
+    lava_burst = { { 408490, 1238299, 1238300, 1326047 }, 265, 10, "spell" },
+    elemental_mastery = { { 16166 }, 0, 180, "off" },
+    magma_totem = { { 8190, 10585, 10586, 10587 }, 650, 0, "totem" },
+    windfury_totem = { { 8512, 10613, 10614 }, 250, 0, "totem" },
+    mana_tide_totem = { { 16190, 17354, 17359, 1325256 }, 60, 300, "totem" },
+    water_shield = { { 408510 }, 0, 0, "spell" },
 }
 
 -- Each totem's element and its ranks' durations (DB2 duration_ms).
@@ -38,6 +46,9 @@ local TOTEMS = {
     strength_of_earth_totem = { "earth", { 300, 300, 300, 300, 300 } },
     grace_of_air_totem = { "air", { 300, 300, 300 } },
     mana_spring_totem = { "water", { 300, 300, 300, 300 } },
+    magma_totem = { "fire", { 20, 20, 20, 20 } },
+    windfury_totem = { "air", { 300, 300, 300 } },
+    mana_tide_totem = { "water", { 13, 13, 13, 13 } },
 }
 
 local function idsOf(a)
@@ -84,10 +95,10 @@ describe("Forever Shaman", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(16, n)
+        assert.are.equal(23, n)
         assert.are.equal("SHAMAN", w.class)
         assert.is_nil(w.options)
-        assert.is_nil(w.abilities.windfury_totem) -- the party's (research §4): never prompted
+        assert.are.equal("cooldowns", w.abilities.elemental_mastery.toggle)
     end)
 
     it("places every DB2 talent in a tree and keeps the Forever-only ones at tree 0", function()
@@ -141,19 +152,25 @@ describe("Forever Shaman", function()
         assert.is_nil(f.ladder)
     end)
 
-    it("gives Lightning Shield 3 charges, each hit that lands on us spending one", function()
-        local a = w.auras.lightning_shield
-        assert.are.same({ 3, 600, { WOUND = true, BLOCKED = true } }, { a.max_stack, a.duration, a.consumedBy })
-        for _, field in ipairs({ "now", "handler" }) do
-            local e = ld.env(w)
-            local got = {}
-            e.applyBuff = function(k, d, s)
-                got[#got + 1] = { k, d, s }
+    it(
+        "gives each shield 3 charges, each hit that lands on us spending one; a shield takes the other's place",
+        function()
+            for key, other in pairs({ lightning_shield = "water_shield", water_shield = "lightning_shield" }) do
+                local a = w.auras[key]
+                assert.are.same({ 3, 600, { WOUND = true, BLOCKED = true } }, { a.max_stack, a.duration, a.consumedBy })
+                for _, field in ipairs({ "now", "handler" }) do
+                    local e = ld.env(w)
+                    local got = {}
+                    e.applyBuff = function(k, d, s)
+                        got[#got + 1] = { k, d, s }
+                    end
+                    ld.run(w.abilities[key][field], e)
+                    assert.are.same({ { { key, nil, 3 } }, { other } }, { got, e.removed }, key .. " " .. field)
+                end
             end
-            ld.run(w.abilities.lightning_shield[field], e)
-            assert.are.same({ { "lightning_shield", nil, 3 } }, got, field)
+            assert.are.same({ 324, 408510 }, { w.auras.lightning_shield.id, w.auras.water_shield.id })
         end
-    end)
+    )
 
     it(
         "takes 20% of Lightning Bolt's cast and cost a Maelstrom Weapon stack, five making it free; the cast spends them",
@@ -170,7 +187,7 @@ describe("Forever Shaman", function()
             for _, field in ipairs({ "now", "handler" }) do
                 e = ld.env(w)
                 ld.run(lb[field], e)
-                assert.are.same({ "maelstrom_weapon" }, e.removed, field)
+                assert.are.same({ "maelstrom_weapon", "revelation" }, e.removed, field)
             end
             assert.are.same({ 408505, 30, 5 }, {
                 w.auras.maelstrom_weapon.id,
@@ -182,7 +199,7 @@ describe("Forever Shaman", function()
 
     it("makes Clearcasting a charged -100% on the elemental spells", function()
         assert.are.same({
-            { aura = "clearcasting", pct = -1, charges = 1, spells = { 403, 8042, 8050, 408341 } },
+            { aura = "clearcasting", pct = -1, charges = 1, spells = { 403, 421, 8042, 8050, 408341, 408490 } },
         }, w.costMods)
         assert.are.same({ 16246, 15 }, { w.auras.clearcasting.id, w.auras.clearcasting.duration })
     end)
@@ -270,6 +287,88 @@ describe("Forever Shaman", function()
             local e = ld.env(w)
             ld.run(a[field], e)
             assert.are.same({ "rage_of_the_farseer" }, e.applied, field)
+        end
+    end)
+
+    -- Convection (16039, aura 108 misc 14, -2% a rank on mask 0x90100003 and Lava Burst's: Lightning Bolt, Chain
+    -- Lightning, the shocks, Lava Burst; not Lightning Shield), multiplied with Shamanistic Focus (wowsims's
+    -- PowerCost_Pct rows multiply).
+    it("takes 2% a rank of Convection off the elemental spells' cost, not Lightning Shield's", function()
+        for _, key in ipairs({ "lightning_bolt", "chain_lightning", "lava_burst", "earth_shock", "lightning_shield" }) do
+            w.game.known[KIT[key][1][#KIT[key][1]]] = true
+        end
+        w.game.known[29228] = true
+        local e = ld.env(w)
+        e.talent.convection = { rank = 5, enabled = true }
+        e.talent.shamanistic_focus = { rank = 1, enabled = true }
+        assert.are.same({ 220 * 0.9, 485 * 0.9, 265 * 0.9, 450 * 0.9 * 0.55, 410 * 0.9 * 0.55, 370 * 0.55 }, {
+            ld.run(w.abilities.lightning_bolt.spend, e),
+            ld.run(w.abilities.chain_lightning.spend, e),
+            ld.run(w.abilities.lava_burst.spend, e),
+            ld.run(w.abilities.earth_shock.spend, e),
+            ld.run(w.abilities.flame_shock.spend, e),
+            ld.run(w.abilities.lightning_shield.spend, e),
+        })
+    end)
+
+    -- Elemental Alacrity (16578, aura 107 misc 10 on Lightning Bolt, Chain Lightning and Lava Burst): Forever's trait
+    -- curve, -170/-330/-500 ms (wowsims/forever's spell data; the DB2's Talent rows: -200 ms a rank of 5). Elemental
+    -- Mastery (16166, wowsims's data, absent from the DB2): -500 ms on Lightning Bolt and Lava Burst, -100% on Chain
+    -- Lightning's cooldown, 15 s, 3 min.
+    it(
+        "shortens the casts with Elemental Alacrity and Elemental Mastery, which also lifts Chain Lightning's cooldown",
+        function()
+            for _, key in ipairs({ "lightning_bolt", "chain_lightning", "lava_burst" }) do
+                w.game.known[KIT[key][1][#KIT[key][1]]] = true
+            end
+            local function casts(e)
+                local out = {}
+                for _, key in ipairs({ "lightning_bolt", "chain_lightning", "lava_burst" }) do
+                    out[#out + 1] = math.floor(ld.run(w.abilities[key].cast, e) * 1000 + 0.5) / 1000
+                end
+                out[#out + 1] = ld.run(w.abilities.chain_lightning.cooldown, e)
+                return out
+            end
+            local e = ld.env(w)
+            assert.are.same({ 2.5, 2, 2.5, 6 }, casts(e))
+            e.talent.elemental_alacrity = { rank = 3, enabled = true }
+            assert.are.same({ 2, 1.5, 2, 6 }, casts(e))
+            e.buff = buffs({ elemental_mastery = true })
+            assert.are.same({ 1.5, 1.5, 1.5, 0 }, casts(e))
+            for _, field in ipairs({ "now", "handler" }) do
+                e = ld.env(w)
+                ld.run(w.abilities.elemental_mastery[field], e)
+                assert.are.same({ "elemental_mastery" }, e.applied, field)
+            end
+            assert.are.same({ 16166, 15 }, { w.auras.elemental_mastery.id, w.auras.elemental_mastery.duration })
+        end
+    )
+
+    -- Revelation (1323418, the weapon enchant 8217's Shaman buff; wowsims's data): one charge, 15 s, spent by the next
+    -- spell its mask names (Lightning Bolt, Chain Lightning, Lava Burst, Earth Shock; not Flame Shock).
+    it("spends Revelation on Lightning Bolt, Chain Lightning, Lava Burst and Earth Shock", function()
+        assert.are.same({ 1323418, 15, 1 }, {
+            w.auras.revelation.id,
+            w.auras.revelation.duration,
+            w.auras.revelation.max_stack,
+        })
+        for key, want in pairs({
+            lightning_bolt = true,
+            chain_lightning = true,
+            lava_burst = true,
+            earth_shock = true,
+            flame_shock = false,
+        }) do
+            for _, field in ipairs({ "now", "handler" }) do
+                local e = ld.env(w)
+                e.setCooldown = function() end
+                ld.run(w.abilities[key][field], e)
+                local spent = false
+                for _, k in ipairs(e.removed) do
+                    spent = spent or k == "revelation"
+                end
+                assert.are.equal(want, spent, key .. " " .. field)
+            end
         end
     end)
 
