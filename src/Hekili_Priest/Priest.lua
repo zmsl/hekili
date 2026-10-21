@@ -231,18 +231,20 @@ spec:RegisterCostMod({ aura = "holy_purpose", pct = -1, charges = 1, spells = { 
 -- The wand's speed: the ranged hand's (UnitRangedDamage's first return, the belief's out-of-combat stat read), else
 -- the Smite build's Brilliant Wand (ItemSparse 249385, ItemDelay 1200) before a plain read.
 local WAND_SPEED = 1.2
+local function wand()
+    local s = state.stat("UnitRangedDamage")
+    return s > 0 and s or WAND_SPEED
+end
 local function wandSpeed()
     return function()
-        local s = state.stat("UnitRangedDamage")
-        return s > 0 and s or WAND_SPEED
+        return wand()
     end
 end
 -- Shoot's target aura: its one shot, a wand speed after the press (the world's), as each channel's aura lasts its
 -- channel.
 local function shot()
     return function()
-        local s = state.stat("UnitRangedDamage")
-        applyDebuff("target", "shoot", s > 0 and s or WAND_SPEED)
+        applyDebuff("target", "shoot", wand())
     end
 end
 

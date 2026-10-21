@@ -35,8 +35,7 @@ M.FLICKER = {
     ["Fire"] = { flicker = 1.3, retracted = 0 }, -- 1.21, 0
     ["Frostfire"] = { flicker = 0.3, retracted = 0 }, -- 0.30, 0 (oracle 0.38; Task FFB, M13)
     ["Shadow"] = { flicker = 0.3, retracted = 0 }, -- 0.27, 0 (oracle 0.15; Priest lane, Task 14)
-    -- 0.45, 0.83 (oracle 0.12, 0.63): the wand's Shoot at the 10% mana edge (retracted shoot:near-tie/condition 49)
-    ["Smite"] = { flicker = 0.5, retracted = 0.9 },
+    ["Smite"] = { flicker = 0.5, retracted = 0.9 }, -- 0.45, 0.83 (oracle 0.12, 0.63; the wand's Shoot at 10% mana)
 }
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
 -- up to the next 0.1. Redundant with the floors today; it tightens the bar when a change lowers the oracle's own
