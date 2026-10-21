@@ -10,6 +10,7 @@ local observer = require("Game.harness.observer")
 local scenarios = require("Game.harness.scenarios")
 local drive = require("Game.harness.drive")
 local flicker = require("Game.harness.flicker")
+local timing = require("Game.harness.timing")
 
 local M = {}
 
@@ -344,6 +345,9 @@ function M.run(L, seed, o, drivers)
             if st.hold then
                 flicker.hold(st.hold, st.q, o.react or M.REACT, pollEv.cast)
             end
+        end
+        if R and R.timing then -- the ready-time recorder (timing.lua): our queue and power band at this poll
+            timing.poll(R.timing, tc, steps[1].H, W)
         end
     end
     local di = 1

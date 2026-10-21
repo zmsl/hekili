@@ -17,6 +17,7 @@
 local world = require("Game.harness.world")
 local entities = require("Game.harness.entities")
 local observer = require("Game.harness.observer")
+local timing = require("Game.harness.timing")
 
 local M = {}
 
@@ -70,8 +71,9 @@ local function ours(rest)
     local b, cast, gcd = rest:match("^Casting {([^}]*)} %(.-Cast Time = (%S+), GCD = (%S+),")
     if b then
         local id, _, tag, item = ids(b)
+        local cost = tonumber(rest:match("Cost = ([%d.]+)"))
         return (id or item)
-            and { kind = "casting", id = id, item = item, tag = tag, cast = secs(cast), gcd = secs(gcd) }
+            and { kind = "casting", id = id, item = item, tag = tag, cast = secs(cast), gcd = secs(gcd), cost = cost }
     end
     b = rest:match("^Completed cast {([^}]*)}")
     if b then
@@ -149,7 +151,7 @@ local function theirs(rest)
 end
 
 --- The events of a log's text: { header = { pin, spec, seed, duration, targetLevel, talents = { { id, rank, tree } }
---- }, ev = { { t, kind, ... } } } in line order. Kinds: casting { id | item, tag, cast, gcd }, completed { id, other,
+--- }, ev = { { t, kind, ... } } } in line order. Kinds: casting { id | item, tag, cast, gcd, cost }, completed { id, other,
 --- tag, item },
 --- power { name, from, to, amount, total, id, other, tag }, aura { unit ("player" | "target"), verb ("gained" | "faded" | "refreshed"), id }, stacks
 --- { unit, id, to }, hit { what ("swing" | "spell" | "tick"), hand, id, act, flag, amount }, move { distance } (our
@@ -448,6 +450,7 @@ function M.new(text, H, o)
     table.sort(R.decisions, function(x, y)
         return x.t < y.t
     end)
+    R.timing = timing.new(R, p.ev, keyFor, cd, M.POWER) -- each decision's ready class (timing.lua)
     -- the main hand's period: the first two main-hand swings
     local last
     for _, e in ipairs(p.ev) do
