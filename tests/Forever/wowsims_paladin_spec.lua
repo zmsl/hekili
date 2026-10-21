@@ -96,9 +96,10 @@ describe("the Paladin wowsims.com packs #slow #wowsims", function()
         ws.gate("Protection (wowsims.com)", C, "paladin_protection", 0.62, REPLAY)
     end)
     -- the pack's own worst idle at 60: wowsims's priority spends itself dry (its own Protection is out of mana from 24 s),
-    -- so its longest wait is for mana. 8.2 on central fix 22 round 1 (the live world's presses resolve from the driving
-    -- instance; L40 6.8 -> 5.6, L60 8.4 -> 8.2); 17.8 before (the untanked fight's)
-    local PROT_LIVE60 = 8.2
+    -- so its longest wait is for mana. 10.4 on central fix 22 rebased (the live world's presses resolve from the driving
+    -- instance's current state: L60 11.8 -> 10.4, L40 11.0 -> 9.4, L10 8.6, measured with the gate counting only on-GCD
+    -- presses, final review fix 3); 17.8 before (the untanked fight's)
+    local PROT_LIVE60 = 10.4
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Protection (wowsims.com) stays live at level " .. level, function()
             local C = content("paladin_protection", PROT_LIVE, "Protection (wowsims.com)", level)
