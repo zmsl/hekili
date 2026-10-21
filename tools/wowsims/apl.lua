@@ -44,7 +44,9 @@
 --    and one guard a test for a comparison of two reads. An empty value and another player's aura are nil always (dropped here). The
 --    line's own action is never guarded (the engine skips an unknown action).
 -- 7. `focus` from the recipe (the tiers the retired list carried, by action), `use_off_gcd=1` on an ability whose
---    `gcd` is `"off"`; the recipe's `leveling` lines are appended to `actions`, each silent at 60. The recipe's
+--    `gcd` is `"off"`; the recipe's `leveling` lines are appended to `actions` and its `levelingFirst` lines put
+--    before them (a form the sim starts in, which the APL's own lines would never let a trailing line reach), each
+--    silent at 60. The recipe's
 --    `requires` ({ [action key or group's snake name] = talent key }) puts `talent.<key>.enabled&` before the
 --    condition of each such entry, in every list: an APL written for a talent build (wowsims picks it by that talent,
 --    e.g. an Auto rotation) runs those entries only once the talent is taken, so a level without it skips them.
@@ -250,7 +252,7 @@ function M.autocasts(text)
 end
 
 --- The translation context of an ability set (`abilities`, `auras`, `talents` as the engine registers them:
---- tests/Forever/helpers/engine.lua abilitySet), recipe `r` (map, focus, executePhase, leveling, exclusive,
+--- tests/Forever/helpers/engine.lua abilitySet), recipe `r` (map, focus, executePhase, leveling, levelingFirst, exclusive,
 --- requires, auras) and the spec's exported log text `log` (rule 13; nil: the automatic actions are unsupported).
 function M.context(set, r, log)
     local c = {
@@ -270,6 +272,7 @@ function M.context(set, r, log)
         focus = r.focus or {},
         executePhase = r.executePhase,
         leveling = r.leveling or {},
+        levelingFirst = r.levelingFirst or {},
         exclusive = r.exclusive or {},
         requires = r.requires or {},
     }
@@ -1072,6 +1075,9 @@ function M.translate(rotation, c)
     run("default", rotation.priorityList or {})
     for _, line in ipairs(c.leveling) do
         table.insert(byName.default, line)
+    end
+    for i, line in ipairs(c.levelingFirst) do
+        table.insert(byName.default, i, line)
     end
     local done = {}
     repeat

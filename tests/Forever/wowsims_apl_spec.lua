@@ -92,6 +92,20 @@ describe("the wowsims APL translator", function()
         assert.are.same({}, omitted)
     end)
 
+    it("puts the recipe's levelingFirst lines before the APL's own and its leveling lines after them", function()
+        local text = apl.translate(
+            { priorityList = { cast(100) } },
+            ctx({ leveling = { "roar,if=!action.big_hit.known" }, levelingFirst = { "dot,if=!buff.dot.up" } })
+        )
+        assert.are.equal(
+            table.concat(
+                { "actions=dot,if=!buff.dot.up", "actions+=/strike", "actions+=/roar,if=!action.big_hit.known" },
+                "\n"
+            ),
+            text
+        )
+    end)
+
     it(
         "schedules the prepull: prepull_at from doAtValue, earliest first, 0 at the pull, no guard of its own",
         function()

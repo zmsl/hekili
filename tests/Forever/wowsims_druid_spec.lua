@@ -98,6 +98,25 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
             0.85
         )
     end)
+    -- wowsims's sim starts in Moonkin Form (its list never casts it); the recipe's `moonkin_form` line does, once
+    -- the form is known and below 60 (a sim-setup difference: never fires in the replay)
+    it("Balance (wowsims.com) recommends Moonkin Form out of it below 60", function()
+        local function first(level)
+            local c = W.Balance.character()
+            c.form, c.level = 0, level -- caster form
+            local H = headless.new({ character = c, pack = "Balance (wowsims.com)" })
+            assert.are.same({}, H.loadErrors)
+            H.ctl.inRange.target, H.ctl.level.target = true, 60
+            H.Fire("PLAYER_TARGET_CHANGED")
+            assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+            assert.is_true(headless.cycle(H, H.ctl.now + 0.2))
+            assert.are.same({}, H.errors)
+            local out = H.Hekili.Engine.Output.Primary
+            return out.recs[1] and out.recs[1].actionName
+        end
+        assert.are.equal("moonkin_form", first(40))
+        assert.are_not.equal("moonkin_form", first(60))
+    end)
     -- The pack's own worst idle at 60, seconds (L10 1.6, L40 1.4: Task 7g, after shared gap R's fix; 8.6 before it)
     local BALANCE60 = 1.4
     for _, level in ipairs({ 10, 40, 60 }) do
