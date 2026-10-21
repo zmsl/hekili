@@ -364,3 +364,37 @@ D1 5 Hz (10 Hz optional). D2 Arms solo 20 x 3 min as a `#slow` gate; the 10-figh
 damage >= 0.97; no loosening before a miss is diagnosed. D4 the oracle sees a secret-free client. D5 mean CPU <= 10 ms
 per cycle gated, p99 reported. The class-name grep in headless_spec is unnecessary once tests/boundary_spec.lua
 (forever-boundary branch) is merged; use that.
+
+## 12. Ready time (as built, 2026-10-21; the Phase 1 design note and the owner's ruling)
+How close a wowsims replay's recommendation shows an ability ready to when wowsims casts it. Harness only:
+`tests/Game/harness/timing.lua`, fed by one hook in `replay.new` (each decision's ready class from the log) and one in
+`loop.run`'s poll (our queue, and the belief's lo and est minus the truth for every pool a decision spends); the
+replay gate (`tests/Forever/helpers/wowsims.lua` `ready`) prints the line, diffs the fixture and asserts the floor.
+
+- **Cadence.** 5 Hz stays (ruling): the decision poll sits at the cast, so the late side is exact; the early side is a
+  lower bound, at most one tick short. Extra polls would perturb the belief they measure.
+- **Offsets** (signed, s; negative early). **b, shown (gated):** our first on-GCD icon (an off-GCD decision: its key
+  anywhere in the queue) is the cast's key and ready (wait <= `REACT` 0.05) at the decision poll: the first of the
+  consecutive ready polls since the previous decision's minus the cast; shown waiting: its wait; otherwise not shown
+  (`never`, a decision disagreement). **a, predicted (diagnostic):** the last poll before the decision's, its time plus
+  the key's wait minus the cast.
+- **Ready class** from the log: `prepull` (before 0), `first` (the first on-GCD cast), `cost` (a power line of the
+  cast's pool crossed its cost in its timestamp, at or after every other constraint; `swing` when a white swing paid
+  it), `cooldown` (the previous cast of the key plus its cooldown), `gcd` (the previous on-GCD cast's end), `aura` (an
+  aura line in its timestamp), `slack` (wowsims waited past every constraint), `queue` / `landing` (an off-GCD queued
+  strike's Tag 1 line and the strike it lands).
+- **Tolerances** (`timing.P`; `reaction` and `queue` from each request): grain `|b| <= REACT`; cost `0 < b <= G7 +
+  HOLD` (swing-paid) or `G7 + TICK` (ticked), 0.2 s, G7 the client's usability lag (UNMEASURED, a parameter) and HOLD
+  the belief's deliberate pending-swing hold (ruling: it stays inside the window); aura and slack `-(reaction + REACT)
+  <= b < 0`; queue `0 <= b <= queueDelay`; a not-shown decision that swaps keys with its neighbour (`tie`); cooldown:
+  grain only, since the replay ends a cooldown at its log timestamp (ruling; the 0.5 s CD_PROBE pin was a replay
+  artefact). `prepull`, `first` and `landing` are out of scope (reported, not floored).
+- **The power band** (required column): at every cost-gated decision and every in-combat flip of our first on-GCD icon
+  to or from a costed key, lo - truth and est - truth (median, p90 of |x|): the evidence for "rank on est, refuse on lo".
+- **Fixtures** `tests/Forever/fixtures/timing_<spec>.lua`, one row per decision `{ t_cast, key, class, gcd, b, a,
+  verdict, lo - truth, est - truth }` at 0.001, diffed on every run; `TIMING=record` rewrites them.
+- **Floors** (`M.READY`): the median |b| of the real (outside-tolerance) on-GCD decisions, rounded up to 0.01 s, and
+  their count; from the first clean run, only ever lowered.
+- **GAP AT** (fixed with it): the replay read the class's auras with `pairs` while a computed duration grew the table,
+  so Arms's Rend never reached the replay's target; now a snapshot. No line moved; the oracle can now be a second
+  reference (not wired).

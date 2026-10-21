@@ -418,34 +418,40 @@ the author's guide, the user's binding rules and the translator's rules: `docs/d
   regen ticks (powers are the log's after-values), the target's swings not replayed (the tank exports log them since
   central fix 13; GAP AH), a white swing's outcome one landing lag after its swing (its rage at the swing), the execute
   phase by time (the last 20% of the fight), our own health not replayed (reads full), one weapon. Auras show their
-  real durations (the log's to a natural fade, the declared one to an early removal).
+  real durations (the log's to a natural fade, the declared one to an early removal). A cooldown ends at its cast's log
+  timestamp plus the cooldown (the ready-time ruling).
 - **CI.** `.github/workflows/check.yml` runs `make check`'s checks (not the type check), so the replay and leveling
   gates and the 3-fight loop lines run in CI; the 20-fight gates (`#loop`, `#party` and the class tags) do not.
   `make gate` (local only, under a machine-wide lock) is the merge gate: `make check` then every 20-fight loop; a change
   touching no `src/` file merges on `make check` alone (loop lines cannot move).
 
 Every pack's current lines (the forever gate on 51a0b1ac; the replay's `agreement` counts ticks, the gate reads
-`decisions on-GCD`). "Limit" is what the spec file gates every bracket at, `max(6, LIVE60)` with the spec's LIVE60
+`decisions on-GCD`; Measured re-read on forever-readytime, where the replay's cooldown ends at its log timestamp:
+Retribution 0.877 -> 0.912, Guardian 0.782 -> 0.808, Enhancement 0.909 -> 0.989, Warrior Protection 0.904 -> 0.979,
+floors unchanged). The Ready columns are each replay's `wowsims timing` line (the headless loop design §12): the shown
+offset |b| over the timed in-scope on-GCD decisions, the real ones outside every tolerance (the floored median and
+count, `ws.READY`), and the decisions whose key never showed first. "Limit" is what the spec file gates every bracket at, `max(6, LIVE60)`
+with the spec's LIVE60
 constant in brackets; "Worst idle" is the measurement at each level, in seconds (the Arms, Fury, Guardian,
 Retribution, Paladin Protection and Survival idles re-measured in the final review fixes, on-GCD presses only):
 
-| Pack | Replay floor | Measured (decisions) | Limit (LIVE60 constant) | Worst idle (measured) |
-| --- | --- | --- | --- | --- |
-| Arms (wowsims.com) | 0.91 | 0.910 (67) | 11.2 (11.2) | L10 9.0, L40 11.2, L60 9.2 |
-| Fury (wowsims.com) | 0.93 | 0.933 (60) | 6.8 (6.8); 8.6 below 60 (FURY_LIVE_LEVELING) | L10 7.4, L40 8.6, L60 6.8 |
-| Protection (wowsims.com), Warrior | 0.90 | 0.904 (94) | 6 (5.4) | L10 5.6, L40 5.4, L60 5.4 |
-| Feral (wowsims.com) | 0.95 | 0.955 (88) | 6 (4.2) | L20 4.0, L40 3.8, L60 3.8 |
-| Guardian (wowsims.com) | 0.78 | 0.782 (78) | 10.0 (10.0) | L10 10.0, L40 9.6, L60 8.4 |
-| Balance (wowsims.com) | 0.85 | 0.855 (55) | 6 (1.4) | L10 1.6, L40 1.4, L60 1.4 |
-| Assassination (wowsims.com) | 0.98 | 0.982 (57) | 6 (5.0) | L10 5.2, L40 5.0, L60 5.0 |
-| Combat (wowsims.com) | 0.95 | 0.972 (71) | 6 (4.8) | L10 5.6, L40 4.8, L60 4.0 |
-| Subtlety (wowsims.com) | 0.98 | 0.988 (82) | 6 (3.8) | L10 5.6, L40 4.6, L60 4.2 |
-| Retribution (wowsims.com) | 0.87 | 0.877 (57) | 8.4 (8.4) | L10 4.4, L40 7.0, L60 2.8 |
-| Protection (wowsims.com), Paladin | 0.62 | 0.625 (48) | 17.8 (17.8) | L10 8.6, L40 11.0, L60 11.8 |
-| Enhancement (wowsims.com) | 0.90 | 0.909 (88) | 8.0 (8.0) | L10 1.6, L40 pending (GAP AB), L60 8.0 |
-| Beast Mastery (wowsims.com) | 1.00 | 1.000 (27) | 6 (5.4) | L10 4.6, L40 4.6, L60 5.4 |
-| Marksmanship (wowsims.com) | 0.92 | 0.929 (42) | 11.8 (11.8) | L10 4.6, L40 3.6, L60 11.8 |
-| Survival (wowsims.com) | 0.97 | 0.976 (41) | 6 (0) | L10 4.6, L40 0.2, L60 0.2 |
+| Pack | Replay floor | Measured (decisions) | Limit (LIVE60 constant) | Worst idle (measured) | Ready \|b\| median / p90 | Ready real (median, count) | Never shown | Ready floor |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Arms (wowsims.com) | 0.91 | 0.910 (67) | 11.2 (11.2) | L10 9.0, L40 11.2, L60 9.2 | 0.000 / 0.200 | 0.800, 6 | 6 | 0.80, 6 |
+| Fury (wowsims.com) | 0.93 | 0.933 (60) | 6.8 (6.8); 8.6 below 60 (FURY_LIVE_LEVELING) | L10 7.4, L40 8.6, L60 6.8 | 0.190 / 1.490 | 0.480, 33 | 11 | 0.48, 33 |
+| Protection (wowsims.com), Warrior | 0.90 | 0.979 (94) | 6 (5.4) | L10 5.6, L40 5.4, L60 5.4 | 0.000 / 0.030 | 0.150, 2 | 2 | 0.15, 2 |
+| Feral (wowsims.com) | 0.95 | 0.955 (88) | 6 (4.2) | L20 4.0, L40 3.8, L60 3.8 | 0.000 / 0.160 | 0.110, 12 | 4 | 0.11, 12 |
+| Guardian (wowsims.com) | 0.78 | 0.808 (78) | 10.0 (10.0) | L10 10.0, L40 9.6, L60 8.4 | 0.440 / 2.500 | 0.540, 40 | 12 | 0.54, 40 |
+| Balance (wowsims.com) | 0.85 | 0.855 (55) | 6 (1.4) | L10 1.6, L40 1.4, L60 1.4 | 0.010 / 0.780 | 0.320, 22 | 5 | 0.32, 22 |
+| Assassination (wowsims.com) | 0.98 | 0.982 (57) | 6 (5.0) | L10 5.2, L40 5.0, L60 5.0 | 0.180 / 0.270 | 0.190, 47 | 1 | 0.19, 47 |
+| Combat (wowsims.com) | 0.95 | 0.972 (71) | 6 (4.8) | L10 5.6, L40 4.8, L60 4.0 | 0.150 / 0.280 | 0.200, 28 | 2 | 0.20, 28 |
+| Subtlety (wowsims.com) | 0.98 | 0.988 (82) | 6 (3.8) | L10 5.6, L40 4.6, L60 4.2 | 0.150 / 0.240 | 0.190, 60 | 1 | 0.19, 60 |
+| Retribution (wowsims.com) | 0.87 | 0.912 (57) | 8.4 (8.4) | L10 4.4, L40 7.0, L60 2.8 | 0.000 / 0.110 | 0.250, 1 | 5 | 0.25, 1 |
+| Protection (wowsims.com), Paladin | 0.62 | 0.625 (48) | 17.8 (17.8) | L10 8.6, L40 11.0, L60 11.8 | 0.000 / 1.040 | 0.540, 12 | 18 | 0.54, 12 |
+| Enhancement (wowsims.com) | 0.90 | 0.989 (88) | 8.0 (8.0) | L10 1.6, L40 pending (GAP AB), L60 8.0 | 0.000 / 0.000 | 0.960, 3 | 1 | 0.96, 3 |
+| Beast Mastery (wowsims.com) | 1.00 | 1.000 (27) | 6 (5.4) | L10 4.6, L40 4.6, L60 5.4 | 0.000 / 0.320 | 0.320, 5 | 0 | 0.32, 5 |
+| Marksmanship (wowsims.com) | 0.92 | 0.929 (42) | 11.8 (11.8) | L10 4.6, L40 3.6, L60 11.8 | 0.000 / 0.180 | 0.150, 9 | 3 | 0.15, 9 |
+| Survival (wowsims.com) | 0.97 | 0.976 (41) | 6 (0) | L10 4.6, L40 0.2, L60 0.2 | 0.000 / 0.360 | 0.140, 8 | 1 | 0.14, 8 |
 
 A LIVE60 constant above today's L60 measurement is an earlier measurement the spec keeps (Combat 4.8 vs 4.0,
 Retribution 8.4 vs 2.8 by ruling P6, Paladin Protection 17.8 vs 11.8 from the untanked fight); limits are not lowered
