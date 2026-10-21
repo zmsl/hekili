@@ -12,8 +12,10 @@
 -- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (ruling P6; in-game checks): Arcane Wrath
 -- (1326079-1326082: ranks, levels, costs, 3.5 s cast, 6 s cooldown and its class mask), the talents' per-rank values
 -- where the DB2 holds only the top rank's row (Improved Fireball, Improved Frostbolt, Wake of Fire, Improved Scorch).
--- The DB2 and wowsims's data disagree on Arcane Blast (DB2 2.5 s cast and 8 s charges; wowsims 1.5 s and 15 s): the
--- DB2's are kept (an in-game check).
+-- The DB2 and wowsims's data disagree on Arcane Blast (DB2 2.5 s cast and 8 s charges; wowsims 1.5 s and 15 s from the
+-- first charge, never refreshed). Ruling M9 (wowsims packs Task 12): wowsims's, which its exported log casts (1.5 s
+-- unhasted; each charge run 15 s from the first) and whose data is the newer build (1.60.1.70450, hotfix 112887, against
+-- the DB2's 70338); the in-game cast bar is the check.
 -- Unmodelled: the procs' rolls (Missile Barrage, Heating Up, Clearcasting, Fingers of Frost: crits and procs are
 -- unseen; the player aura walk reads them where plain), Combustion's crits, the DoTs and chills on the target (no
 -- priority reads them), Master of Elements' refunds, pushback.
@@ -32,11 +34,27 @@ local floor = math.floor
 
 -- The class kit and one spec a talent tree (ids the core's: Arcane 100081, Fire 100082, Frost 100083, unsupported:
 -- wowsims/forever has no Frost APL; the client's one pseudo-spec, assumed 1485, only keys the legacy profile the core
--- migrates). Icons: the DB2 talent tabs'. The packages come with the wowsims.com packs.
+-- migrates). Icons: the DB2 talent tabs'. Each package is the spec's wowsims.com pack.
 local spec = Hekili:NewClass("MAGE", {
     specs = {
-        { key = "arcane", name = "Arcane", tree = 1, icon = 135932, role = "attack", ranged = true },
-        { key = "fire", name = "Fire", tree = 2, icon = 135810, role = "attack", ranged = true },
+        {
+            key = "arcane",
+            name = "Arcane",
+            tree = 1,
+            icon = 135932,
+            role = "attack",
+            ranged = true,
+            package = "Arcane (wowsims.com)",
+        },
+        {
+            key = "fire",
+            name = "Fire",
+            tree = 2,
+            icon = 135810,
+            role = "attack",
+            ranged = true,
+            package = "Fire (wowsims.com)",
+        },
         {
             key = "frost",
             name = "Frost",
@@ -139,10 +157,12 @@ local function casts()
 end
 
 -- The five-second rule (C3): spirit and mp5 regen per second, the declared starting point the out-of-combat read and
--- the in-combat calibration replace. UNMEASURED: wowsims's 6.25 + Spirit / 8 a second at about 150 Spirit; no mp5.
-local SPIRIT_REGEN = 25
+-- the in-combat calibration replace: wowsims's logs at 60 (the P1 gear, both builds: 2.913 a 0.1 s tick outside the
+-- rule); no mp5. UNMEASURED in game.
+local SPIRIT_REGEN = 29.13
 -- Evocation (12051): spirit regen +1500% (aura 110) and all of it while casting (aura 134), 8 s; its periodic dummy
--- (aura 226) every second. A tick here is 15x the declared spirit rate.
+-- (aura 226) every second. A tick here is 15x the declared spirit rate (wowsims's logs: 46.6 a 0.1 s tick, 16x, the
+-- 1x the regen's).
 -- shortcut: fixed at build from SPIRIT_REGEN (the regen entries take a number), and the 1x spirit part the window
 -- withholds inside the five-second rule is not added; upgrade when a regen entry can scale the calibrated rate.
 local EVOCATION_TICK = 15 * SPIRIT_REGEN
@@ -181,9 +201,10 @@ spec:RegisterCostMod({
 })
 
 spec:RegisterAuras({
-    -- Arcane Blast's charges: +175% to its own cost a stack (DB2 400573 aura 108 misc 14), 4 at most, 8 s (the DB2's;
-    -- wowsims's data says 15 s, an in-game check). Nothing else spends them (wowsims arcane_charge.go).
-    arcane_blast = { id = 400573, duration = 8, max_stack = 4 },
+    -- Arcane Blast's charges: +175% to its own cost a stack (DB2 400573 aura 108 misc 14), 4 at most, 15 s from the
+    -- first (ruling M9: wowsims's data and log; the DB2's 8 s an in-game check). Nothing else spends them (wowsims
+    -- arcane_charge.go).
+    arcane_blast = { id = 400573, duration = 15, max_stack = 4 },
     -- The procs (unseen; the player aura walk reads them where plain): the next Arcane Missiles free in half the time;
     -- Pyroblast's cast -25% a stack; the next 2 spells as if the target were Frozen; the next spell free.
     missile_barrage = { id = 400589, duration = 15, max_stack = 1 },
@@ -222,11 +243,12 @@ local function pyroblasted()
     end
 end
 
--- An Arcane Blast's: a charge, and Presence of Mind spent.
+-- An Arcane Blast's: a charge (the run keeps the first charge's end: wowsims arcane_charge.go), and Presence of Mind
+-- spent.
 local function charged()
     return function()
         removeBuff("presence_of_mind")
-        addStack("arcane_blast")
+        addStack("arcane_blast", buff.arcane_blast.up and buff.arcane_blast.remains or nil)
     end
 end
 
@@ -247,7 +269,7 @@ spec:RegisterAbilities({
         id = 400574,
         copy = rest(ARCANE_BLAST),
         cast = function()
-            return buff.presence_of_mind.up and 0 or 2.5 * haste
+            return buff.presence_of_mind.up and 0 or 1.5 * haste -- ruling M9 (the DB2: 2.5)
         end,
         cooldown = 0,
         gcd = "spell",
@@ -597,3 +619,17 @@ spec:RegisterTalents({
     ice_lance = { 0, 1312002, 1 },
     fingers_of_frost = { 0, 400647, 2 },
 })
+
+-- The priorities, written by `make packs` (tools/make_pack.lua) from APLs/packs.lua and APLs/*.simc; edit those and
+-- run it, never this block (tests/Forever/mage_spec.lua checks it matches). Each pack's .simc is generated from its
+-- wowsims recipe (`make wowsims-packs`, tools/wowsims/specs/mage_*.lua).
+spec:RegisterPack(
+    "Arcane (wowsims.com)",
+    20261021945,
+    [[Hekili:Ds1FVTjmq0VnBnAra5hTBnQmPmTF1Q1Qjr)BdgBtIxbBKptJQ0eF23ziKXyHU0PizD5879UZNFgYmY9Kio1ki3npy(fZcMp7YLNtISpvkirLu2d0nyGIwGRRnmQsuNC2o9oqwaEmDXehQNY1uUtP0kzU9Afj9OIcLcgj621F5tROnsrI2k5CrlEbWgPeRQtSBXK7Z5NPnIhfM6eUiJwLBRtw)9VvNGPXOobQK(U6b(f4jWNxc(0YCCPzFpm27hGwnzkQTHQGCSD5yS2vljuNq5CT61yWdINaV6KpsT0vhPho72RVhfzR1wcR893iTBRsDTT)aOtqnXwLVyXLlc4bldwe4HdpJotMJtckZk1kiKrZZJB)tCUeStDZ(qXJAg1LBQmlSGQOELm7vHZcQVzpX3e6xbIyPvuatDr6SS4nmE4S(qkncqOyUDJlKk(4iBhuXL6DcZ4OCTs8grX)uNcja45eMMPzvq4m35iTklZB)gXPuJbVP8Qkpc7DgQD7rYNMtXjek1znA1pRNruqLk4Qws)5EmC5NhHdyrh)vlFvZeMvzmcL99HNheemzC4lgaFzd8XqpFs)ZrMrd2un6H7s6D4QU3LE7qBE9nKi0jbyQbpTCofO5TC7tcm8UM32cfnnxWjFGeXmO5WiPKO(gOoNhU)aNxRQXTV9p0lelw6bk37Y3v2dkEWq6iT4ejn0I64U8e523064D(jYRZg74CXOJTr8R)v5786KOM7nxLqDF7aDhqQXI7W9UNhxJxQFx9)y9FPE)xQ5)zC)UJ4LJCep8AG4(1ZZDe3ChNFdQBApNSNpTYUvBirFv8GmxIFQ(Z7)sCZ2KFn]]
+)
+spec:RegisterPack(
+    "Fire (wowsims.com)",
+    20261021338,
+    [[Hekili:nsvxVTjmu0FolrlIpcTDTrLh60w3A1A1KOpBWyBcEfWiFnPkst8BFxdjegnPkVGmxoNZ9RJH4tEHeXPgb55LElVY3BPFqW1KiZ2AbjQMYELUgpurlXN3l1I2KzVPEdKLGdtvo3IzBHIYT6K2ilmpurspQKqTGrIE6UF89vzOqKOCjNl6rla2rLFvBIjhdUlMBMsl2i0TjCrgTPW0MC3V)vBcgUnzh9gPRntGBjw5U8AWLwxaUCHO2IWbFZ5pGQA(cuBnTckWsLJNv2CjH2ekNRQ(eE4vXwWPn5BudD1rQHzp9WlOi5gtnSY1DT0K3KAlB3jqNJAILkpi4MapU3fEbEo4GtRYKf4CGYmsvfeYOffX9VexibZc7upuSrXO2ylKzHL0kQtnZCBOVx7J7i(5qxGP0S8fzkwdeU0ICgxK2KL5yh1XBAkQeAAQSqA26agCTE7L)90i0IsQScU9Y5JtsdiILgrjSWEsLLfVMXd9hdbB(0gORApjgBpeVwuEAe1B1Q0ckob6BiFBd1vR5cCuuToUPUVlcdgZRRt6iookvZOvI4sja44gENM7(qCkvRrlJtt9untXfZqmNHfYOvZUbF7JKiCFdyOjMF7(e6UR1BCXJp3D3turtleCYxjrmnoD1skjA8AEV)a)(e)rVQX93nhQfIbt9jv(mSfNLV4qv1B9irDJaBQX8hmj)J2022EG7GJYs6IZK0bpML1LNjR9UolNRo545eMSdYmynhAyFRIFzII7HFWrArD9hN33Bepi0et8)N9B(GSB9UeB2h5qoI3BpLdGgVq74tBm5knj6NIxr3a(7V7393TUpt(3]]
+)

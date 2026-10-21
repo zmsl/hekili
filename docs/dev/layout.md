@@ -13,7 +13,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `src/Hekili_Warrior/`, `src/Hekili_Druid/`, `src/Hekili_Rogue/`, `src/Hekili_Paladin/`, `src/Hekili_Shaman/`,
     `src/Hekili_Hunter/`, `src/Hekili_Mage/`: one class pack each (the class file, its RegisterPack
     blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's `Engine/Content.lua` for the
-    player's class. The Mage has no priority yet, so no `APLs/` (`make packs` refuses a manifest with no pack).
+    player's class.
     The default priorities' sources sit beside the class file in `APLs/`: one `<Pack>.simc` per priority and the
     manifest `packs.lua` (`{ class = "<TOKEN>", packs = { ... }, specs = { [<Pack>] = <spec key> } }`, no date). Edit those, then `make packs`. The date is per
     class and lives only in the class file's first RegisterPack block: `make packs` keeps it while the generated
@@ -369,6 +369,23 @@ research's §7 questions (`docs/research/2026-10-15-forever-hunter/research.md`)
 - H20: a saved BeastMastery, Marksmanship or Survival choice falls back to the spec's wowsims.com pack.
 - H21: Rapid Fire and Blood Fury recommended from 5 s into a fight, off the GCD (rule 13's automatic cooldowns).
 
+`tests/Forever/loop_mage_spec.lua` runs 3 fights of each Mage pack in `make check` (seeds 1-3, `#slow`) and 20 in
+`make test-mage` (`#mage`, `loop_mage_arcane_spec.lua`, `loop_mage_fire_spec.lua`), gated by `pack_gate.solo` and
+asserting that some focus line ran (Arcane: Missiles on Missile Barrage at tier 1, Evocation at tier 2; Fire also
+Pyroblast on Heating Up at tier 1 and Scorch at tier 2: ruling M5). The packs are Arcane and Fire (wowsims.com) (Task 12
+of the wowsims packs plan; Frost unsupported, Frostfire an open item), their replay and leveling gates
+`tests/Forever/wowsims_mage_spec.lua`. The worlds (`tests/Forever/helpers/mage_world.lua`) cast at 25 yd with cast bars
+and channels (Arcane Missiles, Evocation: any press at 99% mana clips it); the character is trainer-taught (no book
+ranks, as wowsims's), its pool and regen are the logs' (Arcane 6678, Fire 6168; 29.13 a second outside the five-second
+rule, all of it while casting for Arcane, half for Fire). The lines (on 2f05a406 + Task 12):
+
+```
+Arcane solo: fights=3 agreement 0.991 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 77.6 (oracle 76.6, unmatched 0.8), cost 3.9 (oracle 5.3, unmatched 1.6)], episodes 11.53/min; dps A/B 1.020; ... [seeds 1-3]
+Fire solo: fights=3 agreement 0.993 (2706 ticks); react median 0 p90 1 never 0.000; refused per 100 [casting 68.4 (oracle 68.8, unmatched 0.6), cost 9.8 (oracle 9.3, unmatched 1.9)], episodes 6.21/min; dps A/B 1.030; ... [seeds 1-3]
+Arcane solo: fights=20 agreement 0.994 (18040 ticks); react median 0 p90 1 never 0.003; refused per 100 [casting 77.2 (oracle 76.3, unmatched 0.4), cost 3.5 (oracle 5.8, unmatched 0.6)], episodes 10.29/min; dps A/B 1.005; ...
+Fire solo: fights=20 agreement 0.992 (18040 ticks); react median 0 p90 0 never 0.009; refused per 100 [casting 68.0 (oracle 66.8, unmatched 0.7), cost 10.3 (oracle 12.3, unmatched 1.3)], episodes 5.77/min; dps A/B 1.018; ...
+```
+
 Core checkpoints (R1 measured: rage at the swing; G7, O1, O2, M1, PH1, E1 and the rest) are under "In game",
 "Checkpoints".
 
@@ -457,6 +474,8 @@ Retribution, Paladin Protection and Survival idles re-measured in the final revi
 | Beast Mastery (wowsims.com) | 1.00 | 1.000 (27) | 6 (5.4) | L10 4.6, L40 4.6, L60 5.4 | 0.000 / 0.320 | 0.320, 5 | 0 | 0.32, 5 |
 | Marksmanship (wowsims.com) | 0.92 | 0.929 (42) | 11.8 (11.8) | L10 4.6, L40 3.6, L60 11.8 | 0.000 / 0.180 | 0.150, 9 | 3 | 0.15, 9 |
 | Survival (wowsims.com) | 0.97 | 0.976 (41) | 6 (0) | L10 4.6, L40 0.2, L60 0.2 | 0.000 / 0.360 | 0.140, 9 | 1 | 0.14, 9 |
+| Arcane (wowsims.com) | 0.77 | 0.780 (59) | 6 (0) | L10 0.0, L40 0.0, L60 0.0 | pending | pending | pending | pending |
+| Fire (wowsims.com) | 0.79 | 0.794 (63) | 12.6 (12.6) | L10 0.0, L40 0.2, L60 12.6 | pending | pending | pending | pending |
 
 A LIVE60 constant above today's L60 measurement is an earlier measurement the spec keeps (Combat 4.8 vs 4.0,
 Retribution 8.4 vs 2.8 by ruling P6, Paladin Protection 17.8 vs 11.8 from the untanked fight); limits are not lowered
@@ -464,7 +483,8 @@ in this task. Fury's 8.6 s below 60, Arms's 11.2 and Guardian's 10.0 are levelin
 (docs/dev/wowsims-packs.md's recorded exceptions). LIVE60s above
 6 s are wowsims's own play: Arms pools rage for Heroic Strike, Guardian waits on rage, Retribution and
 Marksmanship spend themselves out of mana as wowsims's own fights do (ruling P6), Paladin Protection waits on mana
-(the old untanked fight's 17.8 s), Enhancement's spending runs the mana out from 90 s.
+(the old untanked fight's 17.8 s), Enhancement's spending runs the mana out from 90 s, Fire's by 85 s (then waits on
+Fire Blast's 340; Evocation on its 8-minute cooldown counts as usable).
 
 Recorded deviations (each one's reason in the named file):
 - Every pack (API-forced, `tools/wowsims/apl.lua` rules 10, 11, 13): `fight_remains` answers unknown (target health
@@ -485,6 +505,10 @@ Recorded deviations (each one's reason in the named file):
 - Hunter (`hunter_*.lua`, `Hunter.lua`): Multi-Shot keeps the DB2's 0.5 s cast (wowsims: instant); Resourcefulness rank
   1 from wowsims's data (30%); percent-of-base costs on each class's level-60 base mana; Beast Mastery and Marksmanship
   run one wowsims APL, so their lines match.
+- Mage (`mage_*.lua`, `Mage.lua`, `mage_world.lua`): Arcane Blast's 1.5 s cast and 15 s charges from wowsims's data and
+  log over the DB2's 2.5 s and 8 s (ruling M9; the charges' price floor(fraction x 1213), wowsims's 181 x (1 + 1.75 n));
+  Read Ley Line (a Skyborne racial) dropped (rule 12: no Skyborne race pack); Master of Elements' refunds unbelieved
+  (crits unseen, mana secret); the worlds' Mage is trainer-taught (no book ranks), as wowsims's.
 
 CPU and memory, release to release (`r.cpuMean`/p99 of the 3- and 20-fight lines, process CPU ms per Update; `make
 bench`'s bytes per Update; both measured on this machine one run after the other, so compare the columns, not the

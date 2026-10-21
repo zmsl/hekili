@@ -4,12 +4,12 @@
 -- generic verbs, the client's usability answers. IDs, costs, cooldowns and aura durations come from the class file
 -- (load_druid's recording load of Mage.lua for the character, the booted oracle's Hekili.Class for the rest). The
 -- world's own, restated from the DB2 and wowsims/forever (so the class file's belief is measured against them): Arcane
--- Blast's charges and their cost (15% of base mana, +175% a charge), Missile Barrage's proc (its talent's 20% / 40% on
--- Arcane Blast, half that on Fireball, Frostbolt, Frostfire Bolt and Arcane Wrath), Heating Up from the Fire casts'
--- crits (Fire Blast one more on any hit) and Pyroblast's faster cast and spend, Improved Scorch's Fire Vulnerability
--- (33 / 67 / 100%), Clearcasting (Arcane Concentration's 2% a rank on a damage spell's hit) and Arcane Power's costs,
--- Presence of Mind's instant cast, mana under the five-second rule. Damage amounts, the regen parts and the mana pool
--- are UNMEASURED.
+-- Blast's 1.5 s cast, its charges (15 s from the first) and their cost (15% of base mana, +175% a charge), Missile
+-- Barrage's proc (its talent's 20% / 40% on Arcane Blast, half that on Fireball, Frostbolt, Frostfire Bolt and Arcane
+-- Wrath), Heating Up from the Fire casts' crits (Fire Blast one more on any hit) and Pyroblast's faster cast and spend,
+-- Improved Scorch's Fire Vulnerability (33 / 67 / 100%), Clearcasting (Arcane Concentration's 2% a rank on a damage
+-- spell's hit) and Arcane Power's costs, Presence of Mind's instant cast, mana under the five-second rule (the pools
+-- and the regen wowsims's logs'). Damage amounts are UNMEASURED.
 -- The hard casts are cast bars (a press with a cast time: UNIT_SPELLCAST_START and UnitCastingInfo at the press, the
 -- success at the end) and the two channels are the world's channels (W.press `channel`): Arcane Missiles a missile a
 -- tick (its rank's 3-5 s, a tick a second; Missile Barrage's half the time, a tick each 0.5 s, free), Evocation 8 s,
@@ -24,11 +24,12 @@ local M = {}
 
 M.CLIENT_SPEC, M.CLASS_ID = 1485, 8 -- the client's Mage pseudo-spec (assumed: the alphabetical 1483-1491 row)
 local MANA = 0 -- Enum.PowerType
-local MAX = 6000
 local BASE = 1213 -- base mana at 60 (wowsims's ExtraClassBaseStats): a percent-of-base cost's base
 local GCD = { spell = 1.5, off = 0 }
--- UNMEASURED: the true regen parts (the class file declares 25 and 0: the out-of-combat read corrects them).
-local FSR = { 28, 0 }
+-- The spirit regen a second outside the five-second rule (wowsims's logs at 60: 2.913 a 0.1 s tick, both builds; the
+-- class file declares 25, which the out-of-combat read corrects); each pack's share of it that continues while casting
+-- is its own (below). UNMEASURED in game.
+local SPIRIT = 29.13
 
 -- Each rank's mana cost (DB2; Arcane Wrath wowsims's), lowest rank first, the world's truth the class file's are
 -- measured against (a level's highest known rank pays its own).
@@ -50,7 +51,7 @@ local COST = {
 
 -- The cast times (DB2; Arcane Wrath wowsims's), top rank, unhasted.
 local CAST = {
-    arcane_blast = 2.5,
+    arcane_blast = 1.5, -- wowsims's (ruling M9; the DB2's 2.5)
     arcane_wrath = 3.5,
     frostbolt = 3,
     fireball = 3.5,
@@ -121,10 +122,14 @@ end
 -- The packs' worlds: `pack` the wowsims.com pack it runs (the next task's), `spec` its spec id, `kit` the abilities the
 -- character knows (every rank), `talents` wowsims/forever's preset build's ({ [rank-1 spell] = rank }; presets.ts
 -- Arcane 0552205003100311531-03-0515, Fire 0502205-23550000130135031-005), `uptime` the debuffs reported.
+-- `max` the mana pool and `casting` the share of SPIRIT that continues inside the five-second rule (wowsims's logs: the
+-- Arcane build's 2.913 a tick inside it too, Arcane Meditation 3/3 on Mage Armor; the Fire build's 1.456, Mage Armor's).
 local PACKS = {
     Arcane = {
         pack = "Arcane (wowsims.com)",
         spec = 100081,
+        max = 6678,
+        casting = 1,
         kit = {
             "arcane_missiles",
             "arcane_wrath",
@@ -159,6 +164,8 @@ local PACKS = {
     Fire = {
         pack = "Fire (wowsims.com)",
         spec = 100082,
+        max = 6168,
+        casting = 0.5,
         kit = {
             "scorch",
             "pyroblast",
@@ -247,7 +254,7 @@ end
 local function costOf(key, ids, H, up, stacks)
     local c
     if key == "arcane_blast" then
-        c = math.floor(0.15 * BASE) * (1 + 1.75 * stacks("arcane_blast"))
+        c = math.floor(0.15 * (1 + 1.75 * stacks("arcane_blast")) * BASE) -- as the kit's spendBase: floor(fraction x base)
     else
         c = COST[key] or 0
         if type(c) == "table" then
@@ -332,7 +339,9 @@ local MISSILES_TIME = { 3, 4, 5, 5, 5, 5, 5, 5 } -- Arcane Missiles' channel by 
 -- up)` (a channel's { length, tick, effect }). A key missing here fails the loop.
 M.MAP = {
     arcane_blast = spell("arcane_blast", function(W, e, X)
-        aura(W, X, e, "arcane_blast") -- a charge, refreshed (wowsims arcane_blast.go)
+        local a, c = X.aura.arcane_blast, e.auras[X.aura.arcane_blast.id]
+        -- a charge; the run ends 15 s after its first (wowsims arcane_charge.go)
+        W.applyAura(e, a.id, c and c.expires - W.t or a.duration, 1, a.max_stack)
     end),
     arcane_wrath = spell("arcane_wrath"),
     frostbolt = spell("frostbolt"),
@@ -379,10 +388,9 @@ M.MAP = {
     arcane_missiles = {
         effect = function(W, e, _, X)
             local up = onEntity(e, X)
-            for _, key in ipairs({ "missile_barrage", "clearcasting" }) do -- the cast's free charge, either
+            for _, key in ipairs({ "missile_barrage", "clearcasting" }) do -- the cast spends both (wowsims talents_arcane.go)
                 if up(key) then
                     drop(W, e, X, key)
-                    break
                 end
             end
         end,
@@ -410,16 +418,23 @@ M.MAP = {
                 length = 8,
                 tick = 1,
                 effect = function(W, e)
-                    W.emit({ kind = "gain", src = e, pt = MANA, rage = 16 * FSR[1] - W.regenRate(e, MANA) })
+                    W.emit({ kind = "gain", src = e, pt = MANA, rage = 16 * SPIRIT - W.regenRate(e, MANA) })
                 end,
             }
         end,
     },
 }
 
+-- The book ranks (Fireball 12, Frostbolt 11, Arcane Missiles 8, DB2 level 56-60) no trainer teaches: wowsims/forever's
+-- Mage registers the last trainer rank (sim/mage/fireball.go:11-12, frostbolt.go:11-12, arcane_missiles.go:11-12; its
+-- logs cast 10151, 10181 and 10212), so the worlds' character has not learned them.
+local BOOK = { [25306] = true, [25304] = true, [25345] = true }
+
 local function content(name)
     local P = PACKS[name]
     local C = { PACK = P.pack, SPEC = P.spec, IDS = {} }
+    local MAX = P.max
+    local FSR = { SPIRIT * (1 - P.casting), SPIRIT * P.casting } -- { spirit part, the part that continues }
 
     function C.character()
         local w = class()
@@ -428,7 +443,7 @@ local function content(name)
             local a = assert(w.abilities[key], key)
             local ids = { a.id }
             for _, id in ipairs(type(a.copy) == "table" and a.copy or { a.copy }) do
-                ids[#ids + 1] = id
+                ids[#ids + 1] = not BOOK[id] and id or nil
             end
             C.IDS[key] = ids
             for _, id in ipairs(ids) do
@@ -447,7 +462,7 @@ local function content(name)
         }
     end
 
-    -- Level 60 against a level 60 mob in range, 6000 mana full and under the five-second rule. Neither side dies
+    -- Level 60 against a level 60 mob in range, the pack's mana full and under the five-second rule. Neither side dies
     -- (hunter_world's reason: a kill ends the loop before the client sees it).
     local function hooks(_, us)
         us.health, us.healthMax = 1e9, 1e9

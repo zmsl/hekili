@@ -11,8 +11,13 @@
   (wowsims.com)" are each specialization's default, translated from wowsims/forever's Melee Weave: Wing Clip,
   Mongoose Bite, Strider Kick and Immolation Trap while you are in melee range, the shots between swings, Rapid Fire
   and Blood Fury from 5 seconds into a fight. Resourcefulness and Efficiency lower the mana costs the addon expects.
-- Mage (new addon folder Hekili_Mage): the Mage's abilities and talents, with no default priority yet (Arcane and Fire
-  come next); Frost shows the "no priorities on Forever" notice.
+- Mage (new addon folder Hekili_Mage): the Mage's abilities and talents; Frost shows the "no priorities on Forever"
+  notice.
+- Mage: "Arcane (wowsims.com)" is the Arcane default, translated from wowsims.com's own: Missiles on Missile Barrage,
+  Arcane Wrath, Arcane Blast to its charges while mana allows, Frostbolt between, Evocation at 10% mana.
+- Mage: "Fire (wowsims.com)" is the Fire default, translated from wowsims.com's own: Scorch to five Fire
+  Vulnerability stacks, Pyroblast on three Heating Up stacks, Fire Blast, Missiles on Missile Barrage, Fireball,
+  Evocation at 10% mana.
 - Paladin: "Protection (wowsims.com)" and "Retribution (wowsims.com)" (wowsims's Twist of Light, your on-use
   trinkets included) are the Protection and Retribution defaults.
 - Rogue: "Assassination (wowsims.com)", "Combat (wowsims.com)" and "Subtlety (wowsims.com)", translated from

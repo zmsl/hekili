@@ -58,18 +58,17 @@ describe("Forever Mage", function()
         w = ld.load(nil, FILE, "MAGE")
     end)
 
-    it("declares Arcane and Fire on trees 1 and 2, Frost unsupported, no priority yet", function()
+    it("declares Arcane and Fire on trees 1 and 2 with their wowsims.com packs, Frost unsupported", function()
         assert.are.equal("MAGE", w.class)
         local out = {}
         for _, s in ipairs(w.def.specs) do
             out[#out + 1] = { s.key, s.tree, s.role, s.ranged, s.unsupported or false, s.package or false }
         end
         assert.are.same({
-            { "arcane", 1, "attack", true, false, false },
-            { "fire", 2, "attack", true, false, false },
+            { "arcane", 1, "attack", true, false, "Arcane (wowsims.com)" },
+            { "fire", 2, "attack", true, false, "Fire (wowsims.com)" },
             { "frost", 3, "attack", true, true, false },
         }, out)
-        assert.are.same({}, w.packs)
         assert.is_nil(w.options)
     end)
 
@@ -111,10 +110,10 @@ describe("Forever Mage", function()
     it("declares mana under the five-second rule, base 1213, and Evocation's mana while its aura is up", function()
         assert.are.same({ 0 }, w.order)
         local r = w.resources[0]
-        assert.are.same({ spirit = 25, mp5 = 0 }, r.meta.fsr)
+        assert.are.same({ spirit = 29.13, mp5 = 0 }, r.meta.fsr) -- wowsims's logs at 60 (P1 gear)
         assert.are.equal(1213, r.meta.base)
         local evo = r.models.evocation
-        assert.are.same({ "evocation", 1, 375 }, { evo.aura, evo.interval, evo.value })
+        assert.are.same({ "evocation", 1, 15 * 29.13 }, { evo.aura, evo.interval, evo.value })
         w.state.query_time, w.state.buff.evocation = 13.4, { applied = 10.2 }
         assert.is_true(math.abs(evo.last() - 13.2) < 1e-9) -- the last whole tick since the aura's application
     end)
@@ -152,14 +151,25 @@ describe("Forever Mage", function()
         end
         assert.are.same({ 0.15, 0.4125, 0.675, 0.9375, 1.2 }, out)
         assert.is_true(ab.spendBase) -- every one a fraction of base, the 1.2 too
+        -- 15 s from the first charge, never refreshed (ruling M9: wowsims's data and log; the DB2 at 70338 says 8 s)
         assert.are.same(
-            { 400573, 8, 4 },
+            { 400573, 15, 4 },
             { w.auras.arcane_blast.id, w.auras.arcane_blast.duration, w.auras.arcane_blast.max_stack }
         )
         for _, field in ipairs({ "now", "handler" }) do
-            local e = ld.env(w)
-            ld.run(ab[field], e)
-            assert.are.same({ { { "arcane_blast" } }, { "presence_of_mind" } }, { e.added, e.removed }, field)
+            for _, n in ipairs({ 0, 2 }) do
+                local e = ld.env(w)
+                e.buff = buffs(n > 0 and { arcane_blast = n } or {}) -- a charge up has 10 s left
+                function e.addStack(key, duration)
+                    table.insert(e.added, { key, duration or "full" })
+                end
+                ld.run(ab[field], e)
+                assert.are.same(
+                    { { { "arcane_blast", n > 0 and 10 or "full" } }, { "presence_of_mind" } },
+                    { e.added, e.removed },
+                    field
+                )
+            end
         end
     end)
 
@@ -170,7 +180,7 @@ describe("Forever Mage", function()
             w.game.known[25306], w.game.known[25304] = true, true
             local e = ld.env(w)
             e.haste = 1
-            assert.are.same({ 2.5, 3.5, 3, 3.5, 1.5, 6, 3 }, {
+            assert.are.same({ 1.5, 3.5, 3, 3.5, 1.5, 6, 3 }, { -- Arcane Blast 1.5 s (ruling M9: wowsims's data)
                 ld.run(A.arcane_blast.cast, e),
                 ld.run(A.arcane_wrath.cast, e),
                 ld.run(A.frostbolt.cast, e),
@@ -372,5 +382,41 @@ describe("Forever Mage through the engine", function()
             out
         )
         assert.are.same({}, H.errors)
+    end)
+end)
+
+-- The priorities: the wowsims.com packs (generated from wowsims/forever's APLs by `make wowsims-packs`).
+describe("Forever Mage priorities", function()
+    it("keeps the class file's generated blocks in step with APLs/, each spec's package its pack", function()
+        local mp = assert(loadfile("tools/make_pack.lua"))("lib")
+        local f = assert(io.open(FILE))
+        local src = f:read("*a")
+        f:close()
+        assert.are.equal(src, (mp.sync(src, mp.load("mage"))))
+        local cls, names = ld.load(nil, FILE, "MAGE"), {}
+        for _, sp in ipairs(cls.def.specs) do
+            names[#names + 1] = sp.package or "none"
+        end
+        assert.are.same({ "Arcane (wowsims.com)", "Fire (wowsims.com)", "none" }, names)
+    end)
+
+    it("names only registered abilities and auras", function()
+        local cls = ld.load(nil, FILE, "MAGE")
+        local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, action = cls.abilities }
+        -- Hekili's `all`: Hekili_Shared/Shared/Items.lua's use_items and the mana gem
+        local shared = { use_items = true, mana_gem = true, call_action_list = true }
+        for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "mage")) do
+            for list, entries in pairs(p.lists) do
+                for i, e in ipairs(entries) do
+                    local where = p.name .. " " .. list .. " " .. i
+                    assert.is_true(cls.abilities[e.action] ~= nil or shared[e.action], where)
+                    for kind, key in (e.criteria or ""):gmatch("(%a+)%.([%w_]+)") do
+                        if kinds[kind] then
+                            assert.is_true(kinds[kind][key] ~= nil, where .. ": " .. key)
+                        end
+                    end
+                end
+            end
+        end
     end)
 end)
