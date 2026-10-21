@@ -38,6 +38,7 @@ actions+=/death_wish
 actions+=/recklessness,if=settings.wowsims_recklessness
 actions+=/sweeping_strikes,use_off_gcd=1,if=active_enemies>1
 actions+=/battle_stance,use_off_gcd=1,if=(!settings.wowsims_stance_dance&!buff.battle_stance.up)
+actions+=/victory_rush
 actions+=/mortal_strike,if=settings.wowsims_stance_dance
 actions+=/rend,focus=2,if=(!execute_phase&(!action.battle_stance.known|buff.battle_stance.up)&debuff.rend.remains<=1.5)
 actions+=/overpower,focus=1,if=(!action.battle_stance.known|buff.battle_stance.up)

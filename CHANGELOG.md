@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### New
+- Warrior: Arms, Fury and Protection suggest Victory Rush after a kill, just above Bloodthirst (Mortal Strike for Arms).
 
 ### Changed
 

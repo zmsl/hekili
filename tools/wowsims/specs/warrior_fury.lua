@@ -53,7 +53,12 @@ return {
     },
     executePhase = "execute_phase",
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
-    -- the retired Fury list's tiers (P9.3) that a line carries: no line casts Victory Rush or Revenge, and one Cleave
+    -- the retired Fury list's tiers (P9.3) that a line carries: no wowsims line casts Victory Rush (the extra below
+    -- does, untiered) or Revenge, and one Cleave
     focus = { overpower = 1, heroic_strike = { 1, 2 }, cleave = 1 },
     leveling = { "sunder_armor,if=!action.bloodthirst.known&debuff.sunder_armor.stack<5" },
+    -- extra (content outside wowsims's model): Victory Rush; wowsims never goes mob to mob, so its kill window never
+    -- opens there. The user's ruling (2026-10-21): "just above bloodthirst (since it's a mini bloodthirst)". The bare
+    -- line: the kit's usable already refuses it outside Victorious.
+    extra = { { before = "bloodthirst", line = "victory_rush" } },
 }

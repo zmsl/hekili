@@ -653,6 +653,9 @@ Warrior (a level 60 Warrior; `/reload` after the update):
   Focused Rage; Execute 12 at Improved Execute 1/2; Battle Shout 9 at Booming Voice 2/5; does a fractional shout cost
   round down or to nearest?
 - W8: the DB2 puts Improved Slam (12862) on Fury and Improved Thunder Clap (12287) on Arms: does the talent frame agree?
+- W9: Victory Rush (the recipes' `extra` line, user 2026-10-21): within 20 s of a kill that yields XP, each spec shows
+  Victory Rush just above Bloodthirst (Fury, Protection) or Mortal Strike (Arms), and never otherwise (no kill, a
+  kill without XP, past 20 s, or once cast).
 
 Druid (a level 60 Druid):
 - D1: bear rage: 11.25 a white swing, 19.9 on a crit; Primal Fury's 5 rage on your crits (2/2).

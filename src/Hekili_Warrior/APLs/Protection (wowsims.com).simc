@@ -39,6 +39,7 @@ actions+=/shield_block,use_off_gcd=1,if=(rage.current>=40|(!buff.revenge_usable.
 actions+=/sweeping_strikes,use_off_gcd=1,if=active_enemies>1
 actions+=/thunder_clap,if=active_enemies>2
 actions+=/shield_slam
+actions+=/victory_rush
 actions+=/bloodthirst
 actions+=/mortal_strike
 actions+=/revenge

@@ -64,4 +64,9 @@ return {
         "thunder_clap,if=!action.mortal_strike.known&!debuff.thunder_clap.up&rage.current>=40",
         "sunder_armor,if=!action.mortal_strike.known&debuff.sunder_armor.stack<5",
     },
+    -- extra (content outside wowsims's model): Victory Rush; wowsims never goes mob to mob, so its kill window never
+    -- opens there. The user's ruling (2026-10-21): "just above bloodthirst (since it's a mini bloodthirst)". The bare
+    -- line: the kit's usable already refuses it outside Victorious.
+    -- Arms has no Bloodthirst: above its main strike, Mortal Strike (the owner's placement; the user may move it).
+    extra = { { before = "mortal_strike", line = "victory_rush" } },
 }

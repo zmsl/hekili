@@ -64,4 +64,8 @@ return {
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
     -- no focus: the retired Protection list's tiers (Shield Bash, Mocking Blow, Taunt) are on none of wowsims's lines
     leveling = {},
+    -- extra (content outside wowsims's model): Victory Rush; wowsims never goes mob to mob, so its kill window never
+    -- opens there. The user's ruling (2026-10-21): "just above bloodthirst (since it's a mini bloodthirst)". The bare
+    -- line: the kit's usable already refuses it outside Victorious.
+    extra = { { before = "bloodthirst", line = "victory_rush" } },
 }

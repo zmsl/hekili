@@ -39,6 +39,7 @@ actions+=/death_wish
 actions+=/recklessness,if=settings.wowsims_recklessness
 actions+=/sweeping_strikes,use_off_gcd=1,if=active_enemies>1
 actions+=/whirlwind,if=active_enemies>1
+actions+=/victory_rush
 actions+=/bloodthirst
 actions+=/whirlwind,if=(!action.bloodthirst.known|cooldown.bloodthirst.remains>=1.5)
 actions+=/execute,if=execute_phase
