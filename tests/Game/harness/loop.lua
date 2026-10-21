@@ -332,6 +332,7 @@ function M.run(L, seed, o, drivers)
             end
         end
         if shown and t - readySince[key] >= (o.reaction or 0) - 1e-9 then -- one attempt a tick
+            truth.Hekili.State.reset("Primary", true) -- Update leaves its last prediction (a predicted buff, query_time ahead of now)
             local p = content.resolve(key, truth)
             local ok, why = W.press(us, key, p)
             if inCombat then

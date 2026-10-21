@@ -9,6 +9,8 @@ describe("the loop's truth instance", function()
     local C = setmetatable({
         resolve = function(key, H)
             seen.resolve[H] = true
+            local S = H.Hekili.State
+            seen.ahead = math.max(seen.ahead or 0, S.query_time - S.now, S.offset) -- a lookahead left by Update
             return ww.resolve(key, H)
         end,
     }, { __index = ww })
@@ -24,6 +26,12 @@ describe("the loop's truth instance", function()
         local run = loop.run(L, 1, { duration = 15 }, { { H = L.us } })
         assert.is_true(run.presses > 0)
         assert.are.same({ [L.us] = true }, seen.resolve)
+    end)
+
+    it("resolves from the current state, never a prediction Update left behind", function()
+        seen = { resolve = {} }
+        loop.run(L, 1, { duration = 15 }, { { H = L.us }, { H = L.oracle, plain = true } })
+        assert.are.equal(0, seen.ahead)
     end)
 
     it("resolves from the oracle when it is driven", function()
