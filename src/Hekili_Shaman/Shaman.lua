@@ -5,11 +5,12 @@
 -- summon's `now` writes the slot's modelled expiry, which Families/Totems.lua answers in combat), Lightning Shield's
 -- charges spent by hits on us (`consumedBy`), Maelstrom Weapon's stacks on Lightning Bolt, Clearcasting as a charged
 -- cost modifier, the shocks' shared cooldown, Reverberation, Improved Fire Nova and Shamanistic Focus, the weapon
--- imbues (C4's main_hand_enchant), mana under the five-second rule (`fsr`), and the default priority, Enhancement
--- (wowsims.com), translated from wowsims/forever's APL (tools/wowsims/specs/shaman_enhancement.lua). Research: the
--- class-completion research §4.
+-- imbues (C4's main_hand_enchant), Rage of the Farseer (a talent under the Cooldowns toggle: its 25 s buff), mana
+-- under the five-second rule (`fsr`), and the default priority, Enhancement (wowsims.com), translated from
+-- wowsims/forever's APL (tools/wowsims/specs/shaman_enhancement.lua). Research: the class-completion research §4.
 -- Unmodelled: Stormstrike's debuff (no priority reads it), the totems' effects, Flametongue and Windfury Weapon's
--- procs, Windfury Totem (the party's: never prompted), Improved Lightning Shield's extra charges.
+-- procs, Windfury Totem (the party's: never prompted), Improved Lightning Shield's extra charges, Rage of the Farseer's
+-- +30% attack speed (nothing reads swing timing for mana).
 -- From wowsims/forever's spell data, absent from the Forever DB2 at 70338 (in-game checks): Call of Flame's +3 s a
 -- rank on Flame Shock, Stormstrike's cost. Fire Nova's (375 there) is not modelled (FIRE_NOVA_COST says why).
 -- Credits: Hekili (registration API, pack format and `summonTotem`'s signature, State.lua). wowsims/forever (MIT,
@@ -280,6 +281,8 @@ spec:RegisterAuras({
         tick_time = 3,
         max_stack = 1,
     },
+    -- Rage of the Farseer (425336): +30% melee and ranged attack speed (DB2 aura 342) for 25 s; nothing reads it here.
+    rage_of_the_farseer = { id = 425336, duration = 25, max_stack = 1 },
 })
 
 -- Clearcasting (16246): aura 108 misc 14 (cost) -100% on the spells its class mask names (-1743781885 / 4096 against
@@ -389,6 +392,25 @@ spec:RegisterAbilities({
     grace_of_air_totem = totemAbility("grace_of_air_totem"),
     mana_spring_totem = totemAbility("mana_spring_totem"),
 
+    -- A Forever talent (DB2: no cost, off the GCD, 180 s); wowsims/forever casts it as a DPS major cooldown.
+    rage_of_the_farseer = {
+        id = 425336,
+        cast = 0,
+        cooldown = 180,
+        gcd = "off",
+
+        startsCombat = false,
+        toggle = "cooldowns",
+        known = knows({ 425336 }),
+
+        now = function()
+            applyBuff("rage_of_the_farseer")
+        end,
+        handler = function()
+            applyBuff("rage_of_the_farseer")
+        end,
+    },
+
     rockbiter_weapon = imbue(ROCKBITER_WEAPON, ROCKBITER_WEAPON_COST),
     flametongue_weapon = imbue(FLAMETONGUE_WEAPON, FLAMETONGUE_WEAPON_COST),
     windfury_weapon = imbue(WINDFURY_WEAPON, WINDFURY_WEAPON_COST),
@@ -435,6 +457,7 @@ spec:RegisterTalents({
     stormstrike = { 2, 17364, 1 },
     -- Forever-only (wowsims/forever's tree; not in the DB2's Talent table at 70338: checkpoint)
     shamanistic_focus = { 0, 1223030, 1 },
+    rage_of_the_farseer = { 0, 425336, 1 },
     -- Restoration (tree 3)
     improved_healing_wave = { 3, 16182, 5 },
     tidal_focus = { 3, 16179, 5 },
@@ -457,8 +480,8 @@ spec:RegisterTalents({
 -- it, never this block (tests/Forever/shaman_spec.lua checks it matches).
 spec:RegisterPack(
     "Enhancement (wowsims.com)",
-    20261021001,
-    [[Hekili:nAvxVTnoqWFl9P2GZqFyNeNyexGC4UI2IRbhGYZuMwKYIXuKcKuXWVOF73szhBAkkF9LagUCgU7ODwAuk6vugbBOOxMMm9(0KPPjjPOmZ(gkkRbxSfVbwiW1WF)BrfwuqRPct3QVStUtZQ1rfY6BShDpxIjw6w3Y4MFiqRdYSUHwGYY((Z)65xwqpZikRIri0dWO6IRDDl6wzQODRoUxCPurFNQ6wrOL4woC8N)3)PBfSD3QlzPLfBtaDSUcxJfXojqmUHRJpYqe8prVPLIBMa3Lcl0COuiWAP9Uz6Uvycrk(mSylDVoQB1FHn4fbYPV8RF8kqsLX0OxehVHzQAxBlJyVJEdWjKJKzZECwcj52KzjrGWQKLmoO(4cdtk0rnkkaEn2SCJcxqZLL5yMk3in06jqWMwophI(q3pha5pwgxYHVLgPytlDiM5HXOnkQyJPYExuScwma59HrcAmox3OyIndXC3jmlRXVjv59NUrA3AsR2wAL5BkiltNWkxAdg1uyE6HKt4GBGqRLcwrUQvqVcO5xaAnxkj5LTQ9xcX9mbuxGW(frWwrkAnMj0pT8cMhtQobTFZraxYu0CH8D8KszrR(qjSUTSmQGd4kWAdiKrTnUG4SnvgHvG1vmkNCe7ul2p1d2)eEeObQp)95uIAtMrlsPQgQu2wA4mzTKBgud1ykhajRZ3rXnsrK2aZx(QtBWhTNqEkl2ErHqO9C4e2Rkoi29rclPoDdFnn5k5T96oemYPqJ2kK7eD)eLbwvne0BUgNPn6(PPhMGalFPF6kvGxZPe0FIYC61SbpAPrzd6(rzfkMHQyyBWt99idCP)MC66lcs38E6M9Bs3zhJf1TEO(4ud9mUxDiVJLT7gHTr8sdP03tzj9EpspJjKH68LEQHbwA7)SQaq38rPBup2zo9dEI6PwQFySY31xoSO98NwMECuH8uBS9yPjxxBg1OgQISwMlLQu)2EhTkOn2r8pV)LAuQFB)hiCS99NZVFoWN1HEbyEqp4XAR9RwNcASbfaFg7J3hFkm00GZVeA7bUMhkGT3f8Cpb0919qECxS3))B3c43Dz4o35yEV23RcGoGBnvsfk770Tmod(nrF74p5Ppm6)(d]]
+    20261021002,
+    [[Hekili:nAvuVTTnq4Fl7P1GzijB3yNguxGmSv0wSgma1NPmT0jlwtrkqs1G8I(TVJYos0uuz5fdAE33hV749DIKLKFqslOgG84QKvBwMSAzsYksQ55gGK2qZprpIle0A83)wurf5qnimD7F3tYN0SADuUS(gRRpZL0clDhAzCZxfKdbzw3a5K00V8W3F4X7HrgjPvSIc4mmqN)Ah39D7nvq3(l7fxkvWVav3(cOK2Yr3F4F)NU942D7VMLwwSna0X6kAnve7eaX0gUo(cdr4FI(PwkUzbEwkQqZXuPaxlTNnt3TNwuif)oU4e8SoQB)Frn07detV77F9hijvgtJ((44Jmtv7bBAe756niNymwSE9hwNuK8(K1jryHvjlzCS6tZnmPqh1Oae8bQz3rfnhYKLzuMkZinq9c0ytlNNHwVR7BtG8h7Il54DPrko2ctXSnmgTrbIJMk7zbufUycYnHrI1yAMUrXehNI52bm7QP)uQY69UrA3ArR2MALzhZl2TCbRCN1yutU5J3LmGdpHcOwky5zQwb8kG2EfOdCPSiRSv981qC9rHD(2eg70YkPknaQ5DoWvbE69lIWTIuqnLj0FC3vHXC11bO9Bod4sMcYeYFrxukZB1NZ3dTLLr5CexovBWQEuBJlio7yLryVn0vmGxCb7kl2FRhSVhEeOrQhVmhcuBWmBskv1yMYobHJKdsUzsoutbocswN9eqBKIiTbhg9jNEMx6LX4uMF6QePa65WXSxwCUy3BjCj1P15tltEL42ECNng5KOrNeYNeDFJKI6AnA0BiiNPn6(rVNh3GlFSFumiOh4qb5pjPo9AwJx0)K0jsfsAUIzafJAnoisig8qFJC6kIcs32E6w)gPBuEzr9(3iQacol8B9G)I7tLCUrEiPNLTnZW2msXPu6ljTKU1J0rmH0JJh6q)gU02(AlhiD3nlDZkrh5034a1RSu)H5sFxz90K2tEBzAzYSvYbzqVF(91EfNzf6HsjRK76A1s)wCNIvWXaov)X9VUiT0Vp)feoJn69ZVZoW96uTeopPh8C91(zRtcn3GgKpJ9Lcx(UBOPjJF212F9AIOaJnCbV1Ra6(uIqZiCXU5)xVfyEHld36oh07Pf9vbSoqBnvsfj9lWjgNHpa7ZxEFvVzY)9d]]
 )
 
 -- The hand-built Enhancement list, replaced by Enhancement (wowsims.com): a saved choice of it falls back to the default.

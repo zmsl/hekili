@@ -28,6 +28,7 @@ local KIT = {
     flametongue_weapon = { { 8024, 8027, 8030, 16339, 16341, 16342 }, 155, 0, "spell" },
     windfury_weapon = { { 8232, 8235, 10486, 16362 }, 165, 0, "spell" },
     frostbrand_weapon = { { 8033, 8038, 10456, 16355, 16356 }, 160, 0, "spell" },
+    rage_of_the_farseer = { { 425336 }, 0, 180, "off" }, -- a Forever talent: no cost, off the GCD
 }
 
 -- Each totem's element and its ranks' durations (DB2 duration_ms).
@@ -83,7 +84,7 @@ describe("Forever Shaman", function()
             )
             assert.are.equal("function", type(a.known), key)
         end
-        assert.are.equal(15, n)
+        assert.are.equal(16, n)
         assert.are.equal("SHAMAN", w.class)
         assert.is_nil(w.options)
         assert.is_nil(w.abilities.windfury_totem) -- the party's (research §4): never prompted
@@ -94,8 +95,9 @@ describe("Forever Shaman", function()
         for _, t in pairs(w.talents) do
             n[t[1]] = n[t[1]] + 1
         end
-        assert.are.same({ [0] = 1, 15, 16, 15 }, n)
+        assert.are.same({ [0] = 2, 15, 16, 15 }, n)
         assert.are.same({ 0, 1223030, 1 }, w.talents.shamanistic_focus) -- wowsims's tree; not in the DB2's Talent table
+        assert.are.same({ 0, 425336, 1 }, w.talents.rage_of_the_farseer)
     end)
 
     it(
@@ -254,6 +256,23 @@ describe("Forever Shaman", function()
         })
     end)
 
+    -- Rage of the Farseer (425336, DB2): 25 s of +30% melee and ranged attack speed (aura 342), 180 s cooldown, a major
+    -- cooldown (wowsims/forever sim/shaman/talents_enhancement.go: CooldownTypeDPS).
+    it("puts Rage of the Farseer under Cooldowns, its cast giving its 25 s buff", function()
+        local a = w.abilities.rage_of_the_farseer
+        assert.are.same({ "cooldowns", false }, { a.toggle, a.startsCombat })
+        assert.are.same({ 425336, 25, 1 }, {
+            w.auras.rage_of_the_farseer.id,
+            w.auras.rage_of_the_farseer.duration,
+            w.auras.rage_of_the_farseer.max_stack,
+        })
+        for _, field in ipairs({ "now", "handler" }) do
+            local e = ld.env(w)
+            ld.run(a[field], e)
+            assert.are.same({ "rage_of_the_farseer" }, e.applied, field)
+        end
+    end)
+
     it("models each imbue on the main hand for its 60 minutes", function()
         for _, key in ipairs({ "rockbiter_weapon", "flametongue_weapon", "windfury_weapon", "frostbrand_weapon" }) do
             for _, field in ipairs({ "now", "handler" }) do
@@ -330,6 +349,14 @@ describe("Forever Shaman priorities", function()
             end
         end
     )
+
+    -- wowsims's autocast (rule 13) in the log's first-use order: Blood Fury, the trinket (unmapped), Rage of the Farseer.
+    it("casts Rage of the Farseer off the GCD right after Blood Fury, as wowsims's autocast does", function()
+        local bf = line("default", "blood_fury")
+        local i, e = line("default", "rage_of_the_farseer")
+        assert.are.same({ bf + 1, nil }, { i, e.criteria })
+        assert.is_truthy(e.use_off_gcd)
+    end)
 end)
 
 -- Through the real engine (headless.lua): a Shaman who knows the whole kit.
@@ -401,5 +428,24 @@ describe("Forever Shaman through the engine", function()
         assert.are.equal(t + 55, S.totem.fire.expires)
         assert.is_false(S.totem.air.up)
         assert.are.same({}, H.errors)
+    end)
+
+    it("recommends Rage of the Farseer in combat when ready, only with Cooldowns on", function()
+        H.ctl.inRange.target, H.ctl.level.target = true, 60
+        H.Fire("PLAYER_TARGET_CHANGED")
+        local t = H.ctl.now + 0.2
+        assert(headless.cycle(H, t))
+        local out = H.Hekili.Engine.Output.Primary
+        assert.is_true(H.Hekili.Engine.Subscribe("Primary", function() end))
+        local cds = H.Hekili.DB.profile.toggles.cooldowns
+        H.Fire("PLAYER_REGEN_DISABLED")
+        for _, on in ipairs({ true, false }) do
+            cds.value = on
+            t = t + 0.2
+            assert(headless.cycle(H, t))
+            assert.are.same({}, H.errors)
+            local first = out.recs[1] and out.recs[1].actionName
+            assert.are.equal(on, first == "rage_of_the_farseer", tostring(first))
+        end
     end)
 end)
