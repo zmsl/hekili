@@ -125,7 +125,7 @@ shared:RegisterAbility("healthstone", {
 -- Read in game (checkpoint). Offered while one is in the bags and the client calls it usable; none has a `now`.
 -- Under the Potions toggle (user ruling 2026-10-21: buff and resource consumables go under Potions, health ones under
 -- Defensives); with Potions off their lines are skipped and the list falls through to the next.
-local function consumable(key, items, cooldown, name)
+local function consume(key, items, cooldown, name)
     local function best()
         return inBags(items)
     end
@@ -152,7 +152,7 @@ local function consumable(key, items, cooldown, name)
     })
 end
 
-consumable("major_mana_potion", { 13444 }, 120)
-consumable("demonic_rune", { 12662 }, 120)
-consumable("thistle_tea", { 7676 }, 300)
-consumable("mana_gem", { 8008, 8007, 5513, 5514 }, 120, "Mana Gem") -- Ruby, Citrine, Jade, Agate
+consume("major_mana_potion", { 13444 }, 120)
+consume("demonic_rune", { 12662 }, 120)
+consume("thistle_tea", { 7676 }, 300)
+consume("mana_gem", { 8008, 8007, 5513, 5514 }, 120, "Mana Gem") -- Ruby, Citrine, Jade, Agate
