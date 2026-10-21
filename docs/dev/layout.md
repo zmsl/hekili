@@ -137,6 +137,19 @@ Arms party: fights=10 agreement 0.970 (4371 ticks); react median 0 p90 1 never 0
 (`rage.current>=40`), so its flicker/min is the on-next-swing strike's jitter gate (central fix 21: L60 agreement 0.934,
 flicker 1.71/min, oracle 0.56; L24 0.908, 3.31/min, oracle 2.16).
 
+The flicker columns (the flicker ledger, `tests/Game/harness/flicker.lua`; what counts and the cause classes: the
+headless loop design §5.1). After `flicker X/min (oracle Y)` (the first icon's A->B->A, unchanged) every line prints,
+for run A over every displayed slot (queue positions 1-3 and the focus entry): `dips` and `flashes` per minute (our
+presses' left out), `top [cause n; cause n]` over them, `p90 length` (ticks), `retracted R/min (oracle R')` (ready, then
+waiting again within 1 s, no justifying event) with its top `ability:cause/reason`, `justified` (those with an event),
+`waits W/min (oracle W')` (the same icon's wait jumping up off its countdown: the snap-back) with its top
+`ability:cause`, `floor jitter` (lo crossing a slot's cost while est stays above it) and `at cost lo-truth m/p90
+est-truth m/p90 (n)` (the band's gap at cost-gated decisions). A replay line adds `decision flips N (per 100)` (our
+first on-GCD icon changed between the tick's poll and wowsims's decision, no cast between) and `retracted confirmed by
+wowsims` (a retraction of an ability wowsims cast within a tick). `pack_gate.FLICKER` floors each gated 20-fight loop's
+flicker and retracted readies (only ever down) and bars flicker <= oracle + `FLICKER_K`; `HEKILI_LOOP_HOLD=1 make
+test-<tag>` runs the display-side hold experiment (`; hold on`, floors not applied).
+
 Before the pull it shows Bloodrage and Battle Shout only (no positions headless, so no Charge). Seeds 1-3's casting
 refusals (7.0 per 100, the oracle's 0.5) are presses during Slam's 1.5 s cast: the loop world's build has no Improved
 Slam, and the world's client sees only a cast's success (no cast start), so our first icon moves on mid-cast.

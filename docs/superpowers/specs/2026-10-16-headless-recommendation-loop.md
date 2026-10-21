@@ -180,6 +180,34 @@ Owns: `tests/Virtual/harness/observer.lua` (`k.plain`), `headless.lua` (`o.raw`)
 - **GCD idle:** share of combat time our GCD is free and no GCD press was accepted in it, A and B.
 - **Debuff uptime:** share of combat time each content-listed debuff is up on the target, A and B.
 - **First-icon flicker:** A->B->A patterns of our first icon within 3 ticks, per minute; the oracle's alongside.
+- **Flicker ledger (as built 2026-10-21, `tests/Game/harness/flicker.lua`):** every displayed slot each in-combat
+  tick of run A, ours and the oracle shadow's: the queue's positions 1-3 (Primary's `numIcons`) and the focus entry
+  (the first record with a `focus` tier within 10 s, the Timeline's focus cell), each with its ability, wait and cost
+  (in the character's power), beside the belief's band (lo, est, hi), the true power, a pending swing (GAP AK), the
+  believed cooldowns of the shown abilities, and the world's events of ours between two polls. Kinds, per slot:
+  - DIP: the slot's icon leaves and returns within 5 ticks (1 s); FLASH: an icon appears and leaves within 5 ticks,
+    the slot moving on to a third; the length is the episode's ticks.
+  - RETRACTED READY: the slot's icon shown ready (wait <= REACT) and, within 5 ticks, shown waiting again; recorded
+    with its ready and retraction ticks, its length (ticks until ready again or gone), the engine's wait after it and
+    its reason (cooldown, cost: the floor under the record's cost, gcd, else condition). Justified when our cast, a
+    spend, an avoid of ours or an aura/form change came between; the gate counts the unjustified ones.
+  - WAIT: the same icon's wait jumping up by more than one poll above its countdown with no such event (the
+    snap-back; a wait that falls early is a gain arriving and is not counted).
+  - Cause class of each, from the change's two polls, first match: press (our cast or spend: left out of the counts),
+    avoid, credit (a provisional credit vetoed: est fell with no spend, or a pending swing ended uncredited), usability
+    (an answer cut lo with est steady: G7 lag), cooldown (a believed cooldown of either icon moved off its countdown),
+    aura (an aura or form edge), swing (a swing of ours, or one pending at either poll: the swing window), near-tie
+    (the two icons' waits within one poll at the earlier poll), unknown.
+  - Floor jitter: a change of a cost-gated slot where lo crossed the cost while est stayed above it. The decision gap:
+    lo - truth and est - truth at every tick whose first icon's cost lies inside the band (lo < cost <= hi, the
+    engine's own alternatives test) and at every change of a cost-gated slot (median, p90 of the magnitude).
+  - Replay: the same ledger on ours, plus flips at wowsims's on-GCD decision points (our first on-GCD icon changed
+    between the tick's poll and the decision's poll, no cast between) and our unjustified retracted readies of an
+    ability wowsims cast within a tick of the retraction (confirmed wrong).
+  - The hold experiment (`o.hold`, or `HEKILI_LOOP_HOLD=1` for a whole run; off by default, `; hold on` on the line):
+    our instance's shown queue holds each slot's change one poll (flicker.hold): a new icon or a new ready shows once
+    the raw queue has held it two polls; a retraction and any change after our own cast show at once. The oracle is
+    never held, so react measures the hold's cost.
 - **Engine health:** `Hekili:Error` count, `Update` raises, `H.loadErrors` beyond the listed XML file, `Facade.secrets`
   (filled only while tracing: one fight per scenario runs with `Hekili.ActiveDebug = true` each tick, `Hekili.Debug`
   stubbed to a counter; Update's own 0.5 s snapshot guard traces about every third tick at 5 Hz), run misses beyond
