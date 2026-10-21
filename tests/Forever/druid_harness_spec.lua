@@ -73,11 +73,14 @@ local function bear(n)
             if ev.kind == "strike" and ev.src == W.ents[1] then
                 count(t, "strikes")
                 -- an avoided strike in the frame of another cast of ours can be nobody's (Rows.lua: an avoid with
-                -- another cast of ours pending pairs with neither), so it may have no row
-                for _, o in ipairs(W.truth) do
-                    if ev.act ~= "WOUND" and o.kind == "cast" and o.src == ev.src and math.abs(o.t - ev.t) < 0.01 then
-                        count(t, "strikesShared")
-                        break
+                -- another cast of ours pending pairs with neither), so it may have no row; back to exact (maulRows ==
+                -- strikes) when that central gap lands (such an avoid paired, its refund kept)
+                if ev.act ~= "WOUND" then
+                    for _, o in ipairs(W.truth) do
+                        if o.kind == "cast" and o.src == ev.src and math.abs(o.t - ev.t) < 0.01 then
+                            count(t, "strikesShared")
+                            break
+                        end
                     end
                 end
             end
@@ -219,7 +222,7 @@ local GATES = {
         print(msg)
         assert.is_true(metrics.rate(m, 1) >= 0.94 and m.wrong[1] == 0 and metrics.falsePer100(m) == 0, msg)
         assert.is_true(t.driftOver == 0 and t.danger == 0, msg)
-        local shared = t.strikesShared or 0
+        local shared = t.strikesShared or 0 -- the narrow tolerance above: exact again with the central Rows.lua fix
         assert.is_true(t.strikes > 0 and t.maulRows <= t.strikes and t.maulRows >= t.strikes - shared, msg)
         assert.is_true(t.maulPaid == t.strikes, msg)
         assert.is_true(t.staged >= 0.94 * t.crits and t.false3 == 0, msg)
