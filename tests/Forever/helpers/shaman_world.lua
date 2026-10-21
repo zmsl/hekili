@@ -106,7 +106,7 @@ local function costOf(key, rank, cc, mw, sf)
     end
     local list = COST[key]
     if not list then
-        return 0 -- a racial (Blood Fury): no cost
+        return 0 -- a racial (Blood Fury) or Rage of the Farseer: no cost
     end
     local c = #list == 1 and list[1] or assert(list[rank], key .. " has no rank " .. tostring(rank)) -- Stormstrike: one
     if FOCUSED[key] and sf then
@@ -189,6 +189,13 @@ M.MAP = {
             aura(W, X, e, "blood_fury")
         end,
     },
+    -- The talent wowsims fires (its autocast cooldowns, rule 13): its buff on us. shortcut: its +30% attack speed does
+    -- not speed our swings (more Maelstrom Weapon for 25 s a fight); upgrade if a gate measures it.
+    rage_of_the_farseer = {
+        effect = function(W, e, _, X)
+            aura(W, X, e, "rage_of_the_farseer")
+        end,
+    },
     searing_totem = totem("searing_totem"),
     flametongue_totem = totem("flametongue_totem"),
     strength_of_earth_totem = totem("strength_of_earth_totem"),
@@ -214,6 +221,7 @@ local PACKS = {
             "strength_of_earth_totem",
             "mana_spring_totem",
             "grace_of_air_totem",
+            "rage_of_the_farseer", -- the build's talent (wowsims's)
         },
         weapon = { 180, 260, 3.6 },
         uptime = { "flame_shock" },
