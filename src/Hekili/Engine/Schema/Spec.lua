@@ -1462,6 +1462,7 @@ function Hekili:RestoreDefaults()
             and ( "The " .. names .. " priority was retired; a spec that used it now runs its default priority." )
             or ( "The " .. names .. " priorities were retired; a spec that used one now runs its default priority." )
         C_Timer.After( 5, function()
+            Hekili:ReviewPacks() -- the active-list cache drops the retired pack's lists
             if Hekili.Engine.settings.notifications.enabled then Hekili:Notify( msg, 6 ) end
             Hekili:Print( msg )
         end )

@@ -126,6 +126,9 @@ combat, the GCD free, a known on-GCD ability the world would accept, nothing pre
 - The limit is `max(6 s, LIVE60)`, LIVE60 the pack's own worst idle at 60 rounded up to 0.1 s. wowsims is the oracle:
   its idle at 60 (pooling, running out of mana) is correct and never "fixed".
 - A lower bracket over the limit gets a recipe `leveling` filler, silent at 60 (`!action.<a level-60 ability>.known`),
-  never a higher limit; the 60 line and the floor must not move.
+  never a higher limit; the 60 line and the floor must not move. The recorded exception: Fury below Bloodthirst
+  (`FURY_LIVE_LEVELING = 7.4` in `tests/Forever/wowsims_warrior_spec.lua`, the owner's call): its leveling Sunder
+  Armor filler stops at five stacks since central fix 18, so the recipe's own idle before that filler (7.4 s)
+  returns; it was 2.6 s while Sunder at five stacks filled the gaps.
 - Limits of the check: one seed, no buffs; the talent order approximates how a player levels; an ID the DB2 lacks
   counts as learned at 1; levels between the brackets are not sampled (Guardian 25-41).

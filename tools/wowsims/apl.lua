@@ -1098,7 +1098,7 @@ function M.translate(rotation, c)
     -- only the settings an emitted line reads (ruling L14): a group whose every reader was omitted registers nothing
     local read = {}
     for _, t in ipairs(toggles) do
-        if text:find("settings." .. t[1], 1, true) then
+        if text:find("settings%." .. t[1] .. "%f[^%w_]") then
             read[#read + 1] = t
         end
     end
