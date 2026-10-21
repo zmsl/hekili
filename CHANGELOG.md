@@ -45,7 +45,8 @@
   finisher, out-of-combat buffs, Moonkin Form, Moonfire on trash, Starfire filler, Hurricane targets, Innervate and its
   mana thresholds).
 - Druid: the hand-built Guardian priority is gone, with its Swipe Rage Threshold, Use Enrage and Lacerate Refresh
-  Window settings.
+  Window settings. The wowsims.com default has no Swipe or multi-target branch, no Faerie Fire, no Enrage and no
+  trinket use, which the old list had.
 - Druid: the "Rip Combo Points" setting is gone; no priority read it.
 - Specializations follow your talents: a respec or dual-spec swap that moves your most-spent talent tree activates
   that tree's specialization, the one you last activated for it (for example Guardian on the Feral Combat tree) or
@@ -120,8 +121,9 @@
   waits for the walk in, as wowsims's does.
 - Druid: Primal Bite is ready again during Berserk; Lacerate's cost with Shredding Attacks and the Balance spells' mana
   costs with Moonglow and Improved Wrath now match the game's numbers as wowsims.com models them.
-- Druid: in Bear Form the rage estimate counts 11.25 rage a white swing (it counted 8.65) and Primal Fury's 5 rage on
-  each of your critical hits, white or Maul, Swipe, Lacerate and Primal Bite, as wowsims.com models them.
+- Druid: in Bear Form the rage estimate counts 11.25 rage a white swing (it counted 8.65) and Primal Fury's rage (5 at
+  2/2, 2.5 on average at 1/2) on each of your critical hits, white or Maul, Swipe, Lacerate and Primal Bite, as
+  wowsims.com models them.
 - Druid: Shifting Power's cooldown is 1 s shorter with the Howling Idol equipped.
 - Druid: with the Wolfshead Helm equipped, Shifting Power gives 45 energy and Enrage 15 instant rage.
 - Druid: Moonglow's first two points cut the Balance spells' mana by 8% and 17%, as in the game.
