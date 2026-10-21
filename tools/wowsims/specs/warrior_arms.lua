@@ -63,10 +63,15 @@ return {
     -- line is the leveling filler below. Fury casts no Thunder Clap, so its recipe names none (rule 15 errors on a key
     -- with no cast line) and the setting is registered for Arms only.
     maintenance = { thunder_clap = "maintain_thunder_clap" },
+    -- leveling: before Mortal Strike's talent (the brackets' L40 has 31 points, short of it) Arms has only cooldown
+    -- strikes (Slam 18 s, Spearing Strike 20 s), Rend, Thunder Clap and five Sunders; the rest went to the off-GCD Heroic
+    -- Strike and the GCD idled up to 11.2 s at L40 (9.0 at L10). Hamstring (10 rage, no cooldown) is the last-resort GCD
+    -- press: L10 and L40 5.6 s; silent at 60 (wowsims's list has no Hamstring).
     leveling = {
         "heroic_strike,use_off_gcd=1,if=!action.mortal_strike.known&rage.current>=30",
         "thunder_clap,if=!action.mortal_strike.known&!debuff.thunder_clap.up&rage.current>=40",
         "sunder_armor,if=!action.mortal_strike.known&debuff.sunder_armor.stack<5",
+        "hamstring,if=!action.mortal_strike.known",
     },
     -- extra (content outside wowsims's model): Victory Rush; wowsims never goes mob to mob, so its kill window never
     -- opens there. The user's ruling (2026-10-21): "just above bloodthirst (since it's a mini bloodthirst)". The bare

@@ -84,10 +84,9 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
         assert.are.equal(0, run.presses)
         assert.is_true(#run.dec.ours > 40, "decisions scored")
     end)
-    -- the pack's own worst idle (wowsims's pooling): 9.2 at 60 after fixes 7, 13 and 16; 11.2 (L40) since the leveling
-    -- gate counts only on-GCD presses (final review fix 3: a Heroic Strike or Bloodrage no longer resets the idle
-    -- streak; L10 9.0, L60 9.2 unchanged); the owner's call
-    local LIVE60 = 11.2
+    -- the pack's own worst idle at 60 (wowsims's pooling), after fixes 7, 13 and 16; L10 and L40 5.6 with the recipe's
+    -- leveling Hamstring (11.2 and 9.0 without it, on-GCD presses only)
+    local LIVE60 = 9.2
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Arms (wowsims.com) stays live at level " .. level, function()
             ws.live(
@@ -108,10 +107,10 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
     end)
     -- the pack's own worst idle at 60 (wowsims's pooling), after fix 16 (8.2 with GAP AD's Intercept)
     local FURY_LIVE60 = 6.8
-    -- below Bloodthirst: 7.4 s, the recipe's idle before its leveling Sunder, again since that Sunder stops at 5 stacks
-    -- (fix 18: it was 2.6 s, filled by Sunders at 5 stacks); 8.6 (L40) since the gate counts only on-GCD presses (final
-    -- review fix 3: off-GCD presses no longer reset the streak; L10 7.4 unchanged); the owner's call
-    local FURY_LIVE_LEVELING = 8.6
+    -- below Bloodthirst: 7.6 s (L10, in Battle Stance: pooling for Heroic Strike), the recipe's idle before its leveling
+    -- Sunder since that Sunder stops at 5 stacks (fix 18) and the gate counts on-GCD presses only (final review fix 3);
+    -- L40 2.4 with the leveling Hamstring in Berserker Stance (8.6 without it); the owner's call
+    local FURY_LIVE_LEVELING = 7.6
     for _, level in ipairs({ 10, 40, 60 }) do
         it("Fury (wowsims.com) stays live at level " .. level, function()
             ws.live(
@@ -153,6 +152,30 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             }, { { H = H } })
             assert.is_true(raised > 0 and five > 0, raised .. " raised reads, " .. five .. " ticks at 5")
             assert.are.same({}, at5)
+        end)
+    end
+    -- The leveling filler Hamstring (the user's rule: a recipe filler, never a higher limit): shown at level 40, before
+    -- the main strike's talent, and never at 60, where wowsims's lists have no Hamstring.
+    for _, case in ipairs({
+        { "warrior_arms", ww, "Arms (wowsims.com)", ARMS },
+        { "warrior_fury", ww.Fury, "Fury (wowsims.com)", FURY },
+    }) do
+        it(case[3] .. " fills with Hamstring at level 40 and never at 60", function()
+            local shown = {}
+            for _, level in ipairs({ 40, 60 }) do
+                local L = loop.new(content(case[1], case[2], case[3], level, case[4]))
+                shown[level] = 0
+                loop.run(L, 1, {
+                    duration = 120,
+                    on = function(_, steps)
+                        if steps[1].q.name[1] == "hamstring" then
+                            shown[level] = shown[level] + 1
+                        end
+                    end,
+                }, { { H = L.us } })
+            end
+            assert.is_true(shown[40] > 0, "no Hamstring at 40")
+            assert.are.equal(0, shown[60])
         end)
     end
     it("Protection (wowsims.com) follows wowsims's casts", function()

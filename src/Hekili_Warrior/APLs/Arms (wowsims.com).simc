@@ -58,6 +58,7 @@ actions+=/battle_shout,if=(((!action.mortal_strike.known|cooldown.mortal_strike.
 actions+=/heroic_strike,use_off_gcd=1,if=!action.mortal_strike.known&rage.current>=30
 actions+=/thunder_clap,if=settings.maintain_thunder_clap&!action.mortal_strike.known&!debuff.thunder_clap.up&rage.current>=40
 actions+=/sunder_armor,if=!action.mortal_strike.known&debuff.sunder_armor.stack<5
+actions+=/hamstring,if=!action.mortal_strike.known
 actions.pre_pull_stance=battle_stance,use_off_gcd=1,if=!buff.battle_stance.up&!settings.wowsims_stance_dance
 actions.pre_pull_move=charge,use_off_gcd=1,if=(!action.battle_stance.known|buff.battle_stance.up)
 actions.pre_pull_move+=/intercept,use_off_gcd=1,if=(!action.berserker_stance.known|buff.berserker_stance.up)

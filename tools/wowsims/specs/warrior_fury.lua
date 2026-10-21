@@ -19,6 +19,9 @@
 -- and 88.32 no longer disagree.
 -- Leveling: Sunder Armor below 5 stacks while Bloodthirst is unlearned (levels 10-40 idled 7.4 s and 8.2 s over the
 -- 60 bracket's 6.8 s with only Rend's or Whirlwind's wait left); silent at 60. At 5 stacks it stays silent (fix 18).
+-- Hamstring in Berserker Stance while Bloodthirst is unlearned: from 30 the list holds Berserker Stance, where Rend,
+-- Overpower and Thunder Clap cannot go, so the GCD idled pooling rage for Heroic Strike (L40 8.6 s, L30 over 20 s in
+-- scratch runs) -> L40 2.4 s. Below 30 (Battle Stance) it stays silent, so the level 24 loop does not move; at 60 too.
 -- Replay knobs (tests/Forever/wowsims_warrior_spec.lua): Whirlwind's off-hand hit (1680 Tag 2) is a hit, not a cast;
 -- the Heroic Strike queue (25286 Tag 1) is an aura the client never shows; the main hand's 2.1 s period (the log's
 -- first two main-hand swings are 4.2 s apart: Heroic Strike replaced one).
@@ -56,7 +59,10 @@ return {
     -- the retired Fury list's tiers (P9.3) that a line carries: no wowsims line casts Victory Rush (the extra below
     -- does, untiered) or Revenge, and one Cleave
     focus = { overpower = 1, heroic_strike = { 1, 2 }, cleave = 1 },
-    leveling = { "sunder_armor,if=!action.bloodthirst.known&debuff.sunder_armor.stack<5" },
+    leveling = {
+        "sunder_armor,if=!action.bloodthirst.known&debuff.sunder_armor.stack<5",
+        "hamstring,if=!action.bloodthirst.known&buff.berserker_stance.up",
+    },
     -- extra (content outside wowsims's model): Victory Rush; wowsims never goes mob to mob, so its kill window never
     -- opens there. The user's ruling (2026-10-21): "just above bloodthirst (since it's a mini bloodthirst)". The bare
     -- line: the kit's usable already refuses it outside Victorious.
