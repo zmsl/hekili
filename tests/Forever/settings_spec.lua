@@ -165,3 +165,96 @@ describe("the harness's scenario", function()
         assert.are.same({}, { L.us.Hekili.Engine.scenario, L.oracle.Hekili.Engine.scenario })
     end)
 end)
+
+-- A choice setting (central fix 25): RegisterSetting with an AceConfig `select` (`values`: candidate key -> display
+-- name, `sorting`: their order), a default and a harness default (`sim`) among them. A priority reads it as
+-- `settings.<key>='<candidate>'` (the script language passes the quoted string through: no parser rule).
+describe("a choice setting", function()
+    local alloc = require("Game.State.helpers.alloc")
+    local CHOICES = { alpha = "Alpha", beta = "Beta", none = "None" }
+    local ORDER = { "alpha", "beta", "none" }
+
+    local function boot(scenario)
+        local H = headless.new({ character = ww.character(), pack = ww.PACK, scenario = scenario })
+        assert.are.same({}, H.loadErrors)
+        local id = H.Hekili.State.spec.id
+        local spec = H.Hekili.Class.specs[id]
+        local option =
+            { type = "select", name = "Pick", desc = "A choice.", values = CHOICES, sorting = ORDER, sim = "none" }
+        spec:RegisterSetting("pick", "beta", option)
+        H.Hekili:SpecializationChanged()
+        return H, H.Hekili.DB.profile.specs[id].settings, option, spec
+    end
+
+    it("fills its default in game and its sim value under the harness; notes the sim choice by name", function()
+        local _, game, option = boot(nil)
+        assert.are.equal("beta", game.pick)
+        assert.are.equal("A choice.\n\nThe wowsims gate runs this as None.", option.desc)
+        assert.is_nil(option.sim)
+        local _, sim = boot("sim")
+        assert.are.equal("none", sim.pick)
+    end)
+
+    it("refuses a default or a sim value that is not a candidate", function()
+        local _, _, _, spec = boot(nil)
+        assert.error_matches(function()
+            spec:RegisterSetting("bad", "gamma", { type = "select", name = "B", values = CHOICES, sorting = ORDER })
+        end, "RegisterSetting bad: gamma is not one of its values", 1, true)
+        assert.error_matches(function()
+            spec:RegisterSetting("bad2", "alpha", { type = "select", name = "B", values = CHOICES, sim = "gamma" })
+        end, "RegisterSetting bad2: gamma is not one of its values", 1, true)
+    end)
+
+    it("answers each candidate's condition, allocation-free once warm", function()
+        local H, settings = boot(nil)
+        local lists = H.Hekili.DB.profile.packs[ww.PACK].lists
+        local list = next(lists)
+        for i, k in ipairs(ORDER) do
+            table.insert(
+                lists[list],
+                i,
+                { action = "battle_shout", criteria = "settings.pick='" .. k .. "'", enabled = true }
+            )
+        end
+        H.Hekili:LoadScripts()
+        local function fired()
+            assert.is_true(headless.cycle(H, H.ctl.now + 1))
+            H.Hekili.State.reset()
+            local out = {}
+            for i = 1, #ORDER do
+                out[i] = H.Hekili.Scripts:CheckScript(ww.PACK .. ":" .. list .. ":" .. i)
+            end
+            return out
+        end
+        assert.are.same({ false, true, false }, fired())
+        settings.pick = "alpha"
+        assert.are.same({ true, false, false }, fired())
+        settings.pick = "none"
+        assert.are.same({ false, false, true }, fired())
+        assert.are.same({}, H.errors)
+        local id = ww.PACK .. ":" .. list .. ":3"
+        assert.are.equal(
+            0,
+            alloc.bytes(function()
+                H.Hekili.Scripts:CheckScript(id)
+            end, 500)
+        )
+    end)
+
+    it("is a dropdown on the spec's settings page, and /hekili set spec picks a candidate", function()
+        local H, settings = boot(nil)
+        H.Hekili:EmbedSpecOptions()
+        H.Hekili:EmbedPackOptions()
+        local key = H.Hekili.State.spec.key
+        local o = H.Hekili.Options.args.packs.plugins.specializations[key].args.core.plugins.settings.pick
+        assert.are.same({ "select", CHOICES, ORDER }, { o.type, o.values, o.sorting })
+        local info = { "packs", key, "core", "pick" }
+        assert.are.equal("beta", o.get(info))
+        o.set(info, "alpha")
+        assert.are.equal("alpha", settings.pick)
+        H.Hekili:CmdLine("set spec pick none")
+        assert.are.equal("none", settings.pick)
+        H.Hekili:CmdLine("set spec pick gamma") -- not a candidate: unchanged
+        assert.are.equal("none", settings.pick)
+    end)
+end)

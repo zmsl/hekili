@@ -275,7 +275,8 @@ end
 scripts.HandleDeprecatedOperators = HandleDeprecatedOperators
 
 
-local invalid = "([^a-zA-Z0-9_.[])"
+-- A quote is no boundary: a quoted string (a choice setting's candidate, `settings.x='none'`) stays literal.
+local invalid = "([^a-zA-Z0-9_.['])"
 
 
 local function extendExpression( str, expr, suffix )

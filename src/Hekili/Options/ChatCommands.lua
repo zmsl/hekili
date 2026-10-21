@@ -367,6 +367,18 @@ function Hekili:HandleSpecSetting( specSetting, specValue )
                     self:Print( format( "Invalid value for %s. Must be between %.2f and %.2f.", setting.name, setting.info.min or 0, setting.info.max or 100 ) )
                 end
                 return true
+
+            elseif setting.info.type == "select" then
+                -- a choice: one of its candidates (the keys of `values`)
+                local values = setting.info.values
+                if type( values ) == "function" then values = values() end
+                if specValue and values and values[ specValue ] ~= nil then
+                    profile.specs[ Status.specID ].settings[ setting.name ] = specValue
+                    self:Print( format( "%s set to |cFF00B4FF%s|r.", setting.name, tostring( values[ specValue ] ) ) )
+                else
+                    self:Print( format( "Invalid value for %s. Use one of: %s.", setting.name, table.concat( setting.info.sorting or {}, ", " ) ) )
+                end
+                return true
             end
         end
     end
@@ -446,6 +458,13 @@ function Hekili:DisplayChatCommandList( list )
                     exMin = setting.info.min
                     exMax = setting.info.max
                     exStep = setting.info.step
+                elseif setting.info.type == "select" then
+                    output = output .. format(
+                        " - |cFFFFD100%s|r = |cFF00B4FF%s|r, one of: %s\n",
+                        setting.name,
+                        tostring( profile.specs[ Status.specID ].settings[ setting.name ] ),
+                        table.concat( setting.info.sorting or {}, ", " )
+                    )
                 end
             end
         end
