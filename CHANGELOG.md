@@ -3,74 +3,78 @@
 ## Unreleased
 
 ### New
-- Warrior: Arms, Fury and Protection suggest Victory Rush after a kill, just above Bloodthirst (Mortal Strike for Arms).
-- Mage: "Frostfire (wowsims.com)", wowsims/forever's Frostfire priority (Frostfire Bolt, Fire Blast unless two Fingers
-  of Frost charges are up, Pyroblast on three Heating Up, Scorch for Fire Vulnerability), a second Fire priority for the
-  FFB talents (more Fire points than Frost); Fire's default stays "Fire (wowsims.com)".
-- Experimental, off by default: "steady icons" on each specialization's Performance tab keeps a countdown icon for one
-  more update instead of swapping it for another countdown icon, so the icons flicker less; ready icons still show at once.
-- Shaman: Enhancement suggests Rage of the Farseer when it is ready, right after Blood Fury, if you have the talent. It is under the Cooldowns toggle.
-- Priest (new addon folder Hekili_Priest): the Priest's abilities and talents, with no default priority yet (Shadow and
-  Discipline's Smite come next); Holy shows the "no priorities on Forever" notice.
-- Priest (new addon folder Hekili_Priest): the Priest's abilities and talents; Holy shows the "no priorities on Forever"
-  notice.
-- Priest: "Shadow (wowsims.com)" is Shadow's default priority, wowsims/forever's Shadow list (Shadowform, Shadow Word:
-  Pain and Devouring Plague kept up, Mind Blast, Shadow Word: Death, Inner Focus into Mind Flay); Smite fills while
-  leveling until Mind Flay.
-- Priest: "Smite (wowsims.com)" is Discipline's default priority, wowsims/forever's Smite list (Holy Fire and Shadow
-  Word: Pain kept up, Penance, Smite; the wand at 10% mana).
-- Shaman: Elemental has a priority, "Elemental (wowsims.com)", wowsims/forever's Elemental list (Flame Shock, Lava Burst
-  while it is up, Earth Shock on Revelation, Elemental Mastery, Lightning Bolt, the fire totem). It is Elemental's default.
-- Warlock (new addon folder Hekili_Warlock): the Warlock's abilities and talents.
-- Warlock: "Affliction (wowsims.com)" is Affliction's default priority, wowsims/forever's Affliction list (Bane of
-  Agony, Corruption, Siphon Life, your curse and Immolate kept up, Shadow Bolt on Shadow Trance, Wrack while the DoTs
-  last, Shadow Bolt, Life Tap).
-- Warlock: "SM Ruin (wowsims.com)", wowsims/forever's SM/Ruin list (Bane of Doom, Corruption, Siphon Life, your curse
-  and Immolate kept up, Shadow Bolt), a second Affliction priority; Affliction's default stays "Affliction
-  (wowsims.com)".
-- Warlock: "Demonology (wowsims.com)" is Demonology's default priority, wowsims/forever's Fire Brand list (Bane of Doom,
-  Searing Pain for Demonic Brand, Immolate, your curse and Corruption kept up, Life Tap when the Imp runs low, Soul Fire
-  on Decimation, Searing Pain).
-- Warlock: "Shadow Brand (wowsims.com)", wowsims/forever's Shadow Brand list (the Fire Brand list with Shadow Bolt as
-  the filler and the Succubus), a second Demonology priority; Demonology's default stays "Demonology (wowsims.com)".
-- Warlock: "Destruction (wowsims.com)" is Destruction's default priority, wowsims/forever's Destruction list (Bane of
-  Doom, your curse, Immolate and Corruption kept up, Conflagrate, Shadowburn, Incinerate, Life Tap).
-- Warlock: an "Assigned Curse" setting (Curse of the Elements by default; Recklessness, Weakness or none) picks the
-  curse every Warlock priority keeps on the target.
 
 ### Changed
-- Mana and energy consumables (Major Mana Potion, Demonic Rune, Thistle Tea, Mana Gem) and the Rogue's poison reminders (Instant and Deadly Poison) are now under the Potions toggle, which is off by default: turn Potions on to see them. The Healthstone stays under Defensives.
-- Warrior Protection's Demoralizing Shout, Arms's leveling Thunder Clap (before Mortal Strike) and Druid Guardian's Demoralizing Roar are off by default (open-world mobs die before they pay off). Turn them on in the specialization's settings for raids ("Maintain Demoralizing Shout", "Maintain Thunder Clap", "Maintain Demoralizing Roar"). Protection's Thunder Clap is unchanged.
-- Guardian: with Demoralizing Roar off, Berserk no longer waits for it, and the leveling Roar filler is off too.
-- The now circle's highlights follow a line's role: procs and windows the player must catch, then upkeep; core strikes, cooldowns and pre-pull steps are no longer highlighted.
-- Druid: Rip is highlighted as upkeep like Rake; Shred and Claw only on Clearcasting; Innervate no longer. Guardian highlights Maul and Demoralizing Roar.
-- Hunter: Raptor Strike and Serpent Sting are highlighted first in every specialization; the melee-weave strikes (Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip) are not highlighted. Hunter's Mark is no longer highlighted before the pull.
-- Mage: Evocation is no longer highlighted.
-- Paladin: Retribution no longer highlights Exorcism or the seal before the pull; the seal you keep up while leveling is highlighted as upkeep.
-- Rogue: Garrote, Slice and Dice and Rupture share the first highlight (whichever is due first) in every specialization; Ambush is no longer highlighted.
-- Shaman: Fire Nova is highlighted only on Clearcasting, and the totems are no longer highlighted.
-- Pre-pull suggestions now guard against recasting: each shows whenever its purpose is unmet (its buff or debuff down, its totem down, its cooldown ready) and hides while it is met. The once-per-episode schedule and `prepull_at` are gone. Arms's Pre-pull: Stance and both Arms's and Fury's Pre-pull: Move no longer repeat between pulls; Charge still shows whenever it is usable, by design.
-- Paladin: Retribution's pre-pull suggests one starter seal, Seal of the Crusader, and no longer Seal of Command before it.
-- Warrior: Arms and Fury fill the rotation with Hamstring while leveling (at level 40, before Mortal Strike or Bloodthirst) instead of standing idle for up to 11 seconds.
-- Warrior: Bloodrage, Intimidating Shout and Mocking Blow are no longer under the Cooldowns toggle; Disarm is under Defensives.
-- Warrior: Arms and Fury suggest Berserker Rage only once you have Improved Berserker Rage (for its rage), before the pull and in combat.
-- Warrior focus tiers: Arms's Slam is no longer a focus line (Mortal Strike, Slam and Execute are rotational); Fury marks Rend (2) and the Battle Stance swap for Overpower (1) as focus, and Cleave takes Heroic Strike's tiers.
-- Warrior Fury: the Battle Stance swap for Overpower waits until the swap keeps enough rage for Overpower (Tactical Mastery) and Overpower is off cooldown before its window closes.
-- Warrior Protection focus tiers: Revenge (1), Heroic Strike and Cleave (1); Shield Slam and the other strikes stay rotational.
-- Warrior Protection's description says its defensive lines never show in combat (the game hides your health from addons: press them by hand) and how to keep Demoralizing Shout and Thunder Clap for bosses.
-- Warrior: each priority's description lists the lines the Cooldowns and Defensives toggles hide.
 
 ### Fixed
-- A priority regenerated on the same day no longer shows as reverted on login.
-- Built-in priorities no longer show a Delete button.
-- A spell you cannot afford no longer flashes ready for a moment while you are low on mana (a Fire mage's Pyroblast, an Arcane mage's Arcane Blast).
-- A pooled ability no longer blinks in and out of the queue at the moment the pool reaches its threshold (a Rogue's
-  Sinister Strike waiting for 75 energy).
 
 ### Known issues
 
 ### Upgrade notes
-- `prepull_at` in an imported or saved priority is now ignored, without a warning.
+
+## v0.3.0
+
+_Released 2026-10-22_
+
+v0.3.0 adds the Warlock and Priest with default priorities, an Elemental Shaman priority and a Frostfire option for Fire Mages, and makes the highlighted icon and the pre-pull suggestions more reliable.
+
+### Druid
+- Guardian: Demoralizing Roar is off by default because open-world mobs die before it pays off. Turn on "Maintain Demoralizing Roar" for raids. While it is off, Berserk no longer waits for it and the leveling Roar filler is off too.
+- Rip is now highlighted as upkeep, like Rake. Shred and Claw are highlighted only on Clearcasting, and Innervate is no longer highlighted. Guardian highlights Maul and Demoralizing Roar.
+
+### Hunter
+- All specializations: Raptor Strike and Serpent Sting get the highlight first. The melee-weave strikes (Mongoose Bite, Strider Kick, Immolation Trap, Wing Clip) and the pre-pull Hunter's Mark are no longer highlighted.
+
+### Mage
+- Fire: new optional priority "Frostfire (wowsims.com)" for Frostfire Bolt talents (more Fire points than Frost). It uses Frostfire Bolt, Fire Blast unless two Fingers of Frost charges are up, Pyroblast on three Heating Up, and Scorch for Fire Vulnerability. Fire's default stays "Fire (wowsims.com)".
+- Evocation is no longer highlighted.
+
+### Paladin
+- Retribution: the pre-pull suggests one starter seal, Seal of the Crusader, and no longer Seal of Command before it. Exorcism and the pre-pull seal are no longer highlighted, and the seal you keep up while leveling is highlighted as upkeep.
+
+### Priest
+- New: Priest support in a new addon folder, Hekili_Priest. Holy has no priority and shows the "no priorities on Forever" notice.
+- Shadow: the default priority is "Shadow (wowsims.com)". It keeps Shadowform, Shadow Word: Pain and Devouring Plague up and uses Mind Blast, Shadow Word: Death, then Inner Focus into Mind Flay. Smite fills while leveling until you learn Mind Flay.
+- Discipline: the default priority is "Smite (wowsims.com)". It keeps Holy Fire and Shadow Word: Pain up, then uses Penance and Smite, and your wand at 10% mana.
+
+### Rogue
+- The Instant and Deadly Poison reminders are now under the Potions toggle, which is off by default.
+- Garrote, Slice and Dice and Rupture share the top highlight in every specialization, whichever is due first. Ambush is no longer highlighted.
+
+### Shaman
+- Elemental: new default priority "Elemental (wowsims.com)". It uses Flame Shock, Lava Burst while Flame Shock is up, Earth Shock on Revelation, Elemental Mastery, Lightning Bolt and your fire totem.
+- Enhancement: Rage of the Farseer is suggested when ready, right after Blood Fury, if you have the talent. It is under the Cooldowns toggle.
+- Fire Nova is highlighted only on Clearcasting, and totems are no longer highlighted.
+
+### Warlock
+- New: Warlock support in a new addon folder, Hekili_Warlock, with default priorities for Affliction, Demonology and Destruction.
+- Affliction: the default "Affliction (wowsims.com)" keeps Bane of Agony, Corruption, Siphon Life, your curse and Immolate up. It uses Shadow Bolt on Shadow Trance, Wrack while the DoTs last, then Shadow Bolt and Life Tap. "SM Ruin (wowsims.com)" is an alternative built on Bane of Doom with a Shadow Bolt filler.
+- Demonology: the default "Demonology (wowsims.com)" (Fire Brand) keeps Bane of Doom, Immolate, your curse and Corruption up and uses Searing Pain for Demonic Brand. It also uses Life Tap when the Imp runs low on mana and Soul Fire on Decimation, with a Searing Pain filler. "Shadow Brand (wowsims.com)" is an alternative with a Shadow Bolt filler and the Succubus.
+- Destruction: the default "Destruction (wowsims.com)" keeps Bane of Doom, your curse, Immolate and Corruption up, then uses Conflagrate, Shadowburn, Incinerate and Life Tap.
+- New "Assigned Curse" setting: choose the curse every Warlock priority keeps on the target. The options are Curse of the Elements (default), Recklessness, Weakness or none.
+
+### Warrior
+- Arms, Fury and Protection suggest Victory Rush after a kill, just above Bloodthirst (Mortal Strike for Arms).
+- Protection's Demoralizing Shout and Arms's leveling Thunder Clap are off by default. Turn on "Maintain Demoralizing Shout" or "Maintain Thunder Clap" in the specialization's settings for raids. Protection's Thunder Clap is unchanged.
+- Arms and Fury: while leveling (around level 40, before Mortal Strike or Bloodthirst), Hamstring now fills the rotation. Previously you could stand idle for up to 11 seconds.
+- Arms and Fury: Berserker Rage is suggested, before the pull and in combat, only once you have Improved Berserker Rage.
+- Fury: the Battle Stance swap for Overpower now waits until the swap keeps enough rage for Overpower (Tactical Mastery) and Overpower will be off cooldown before its window closes.
+- Bloodrage, Intimidating Shout and Mocking Blow are no longer under the Cooldowns toggle, and Disarm is now under Defensives. Each priority's description lists what the Cooldowns and Defensives toggles hide.
+- Highlights: Arms no longer highlights Slam. Fury highlights Rend, the Battle Stance swap for Overpower, and Cleave the same way as Heroic Strike. Protection highlights Revenge, Heroic Strike and Cleave, but not Shield Slam or other strikes.
+- Protection's description explains that its defensive suggestions never show in combat, because the game hides your health from addons, so press them yourself. It also explains how to keep Demoralizing Shout and Thunder Clap for bosses.
+
+### Core and display
+- Mana and energy consumables (Major Mana Potion, Demonic Rune, Thistle Tea, Mana Gem) are now under the Potions toggle, which is off by default. Turn Potions on to see them. Healthstone stays under Defensives.
+- The highlighted icon follows each line's role: first procs and windows you must catch, then upkeep. Core strikes, cooldowns and pre-pull steps are no longer highlighted.
+- Pre-pull suggestions now show whenever they are needed (buff or debuff down, totem down, cooldown ready) and hide once they are not. For example, Arms's stance and Arms's and Fury's move suggestions no longer repeat between pulls; Charge still shows whenever it is usable.
+- Experimental, off by default: the "steady icons" option on each specialization's Performance tab reduces flicker. It keeps a countdown icon for one more update instead of swapping it for another countdown; ready icons still show at once.
+- A spell you cannot afford no longer flashes ready for a moment when you are low on mana, such as a Fire Mage's Pyroblast or an Arcane Mage's Arcane Blast.
+- A pooled ability no longer blinks in and out of the queue just as the resource reaches its threshold, such as a Rogue's Sinister Strike waiting for 75 energy.
+- A priority updated on the same day no longer shows as reverted when you log in.
+- Built-in priorities no longer show a Delete button.
+
+### Upgrade notes
+- Saved or imported priorities that set a pre-pull timing now ignore it without a warning. Their pre-pull lines follow the new show-while-needed rule.
 
 ## v0.2.0
 
