@@ -30,7 +30,7 @@ What the captures show, and what the code does with it:
 | 5 | Plates churn: the same mob's plate is removed and re-added within about 0.5 s while looking around; `NAME_PLATE_UNIT_REMOVED` still resolves name and GUID | Attackers clears its token on removal (`Game/Events/Attackers.lua:110-115`); no one keys by GUID across tokens | GUID is the identity; tokens are transient |
 | 6 | Every player cast event is echoed on `targettarget` while the mob targets us (same castGUID, another castBarID) | the cast sources register `player` only (`Game/Events/EventFacade.lua:56-96` registers per unit; `Game/State/Sources/Casts.lua:31-92` checks `unit == "player"`) | harmless today; the registry must not treat `targettarget` rows as a new victim |
 | 7 | A melee killing blow lands after the clear: Rogue capture, swing at 10283, `TARGET none` at 10384, `NAME_PLATE_UNIT_REMOVED` resolving the GUID at 10653, the CRITICAL row at 10754 on `softinteract` only (the corpse), with Action Targeting off | the same `target`-only reads as row 4 | a fixed 0.1 s grace after the clear would lose it (370 ms) |
-| 8 | A school-32 WOUND on the target in the same ms as a HEAL on the player (a life-steal proc, Rogue capture 8799), between our swing (8682) and its white hit (9154) | a school-1 gate already guards swings (`Rows.lua:481`) | the school check correctly leaves it foreign; this is why the gate exists for melee too |
+| 8 | A school-32 WOUND on the target in the same ms as a HEAL on the player (a life-steal proc, Rogue capture 8799), between our swing (8682) and its white hit (9154). The kill-events capture shows the order: the proc fires 1 ms after `PLAYER_SWING` (2764 to 2765), before the swing's own row; a swing-time proc row precedes the swing's own row | a school-1 gate already guards swings (`Rows.lua:481`) | the school check must and does leave it foreign, or it would pay the swing ticket before the white hit arrives; this is why the gate exists for melee too |
 | 9 | An instant strike's row comes in its frame: Sinister Strike's WOUND 8 arrived 2 ms after its SUCCEEDED (second Rogue capture: 2248 to 2250; the first strike's at 0 ms, 630) | FRAME's `SAME_FRAME` 0.05 s (`Rows.lua:37`) | the `"instant"` kind's frame window holds |
 | 10 | An instant kill clears after its row: Eviscerate's killing blow (WOUND 14) arrived 1 ms after its SUCCEEDED (3500), and `TARGET none` came 101 ms after the row (3602) | as row 4 | the opposite order to a white-swing kill (row 7), which clears before its row |
 
@@ -76,7 +76,7 @@ pool on open and close) and `uFree[u]` (the time its last pinned ticket closed).
 | LIVE | 1 | at least one token bound | yes |
 | GRACE | 2 | no token bound, and held (an open ticket pins it) or released less than `GRACE` ago | yes |
 | GONE | 3 | no token bound, not held, released `GRACE` or more ago | no |
-| DEAD | 4 | the kill tell or a plain `UnitIsDead` named it | yes, while held and for `GRACE` after release |
+| DEAD | 4 | a death event, the fallback kill tell or a plain `UnitIsDead` named it | yes, while held and for `GRACE` after release |
 
 Dedupe memory: the last `DUP_N` = 4 outcome groups (`dT`, `dUid`, `dAct`, `dFlag`, `dAmount`, `dSchool`), a ring.
 Each entry also records the tokens already seen in its group: a fixed boolean array `dTok[(e - 1) x 44 + i]` over the
@@ -96,8 +96,10 @@ them. No table, closure or string is made after load.
 | `NAME_PLATE_UNIT_REMOVED` | unbind the plate's index; if the live read still answers (soft-targeting log: it does), check it equals the bound GUID first | a mismatch rebinds to the read GUID, then unbinds |
 | `PLAYER_SOFT_ENEMY_CHANGED`, `PLAYER_SOFT_INTERACT_CHANGED` | rebind 43 / 44 | registered through `S.On`; a client that refuses them leaves them in `E.STUB` (`EventFacade.lua:93-95`) and nothing depends on them. `softinteract` rows exist with Action Targeting off (the corpse after a kill, Rogue capture 10754), so the token set keeps it; only the soft-enemy events depend on the setting |
 | `UNIT_COMBAT` | resolve, dedupe, dispatch (2.4) | the one non-player `UNIT_COMBAT` entry point |
-| `UNIT_SPELLCAST_FAILED` (`player`) | records `failT` for the kill tell (2.5) | any castGUID, including `Cast-2-0-0-0` key spam |
-| `UNIT_DIED`, `PLAYER_TARGET_DIED` | mark the plain GUID DEAD when delivered | opportunistic: the event-facade spec lists them as observed (`docs/superpowers/specs/2026-10-15-virtualstate-event-facade.md:289`, O6), the 2026-10-22 captures did not register them; probe U3 |
+| `UNIT_DIED` | marks the unit holding the plain victim GUID DEAD at once (the primary kill tell, 2.5) | measured (kill-events capture): fires 2 ms after the killing swing, plain GUID; also fires for nearby units killed by others, so any known unit can be marked |
+| `PARTY_KILL` | with killer equal to our GUID (`I.Log.player`, read once at load and on `PLAYER_ENTERING_WORLD`, `Casts.lua:17-21`), marks the victim's unit as our kill (`uOurs[u]`) | measured: fires in the same ms as the killing `PLAYER_SWING`, both GUIDs plain |
+| `PLAYER_TARGET_DIED` | marks the current target's unit DEAD when `UNIT_DIED` has not | measured: same ms as `UNIT_DIED` |
+| `UNIT_SPELLCAST_FAILED` (`player`) | records `failT` for the fallback kill tell (2.5) | any castGUID, including `Cast-2-0-0-0` key spam; used only when the client refused the death events |
 | `PLAYER_REGEN_ENABLED` | reset (2.5) | |
 
 Every payload slot reaches these handlers through `Plain` already (`EventFacade.lua:221-226`, `Game/State/Sources/Sources.lua:18-23`).
@@ -167,14 +169,23 @@ Listeners register at load. Rows (tickets) registers first, then Target (`Target
   released (no token, no open ticket) and `GRACE` has passed since the release, and calls each `I.Units.OnGone(fn)` listener: `fn(uid, guid, GONE, t)`. A GUID bound again
   later (plate churn, 0.5 s) takes LIVE again in the same slot if it was not evicted; nothing closed earlier reopens.
 - Dead: any of these marks the slot DEAD at `t` and calls the OnGone listeners with `DEAD`:
-  - the kill tell: `PLAYER_TARGET_CHANGED` to none within `KILL_TELL` = 0.010 s after any player
-    `UNIT_SPELLCAST_FAILED`; the previous target's slot dies. Seen in all four kills of captures b and c (FAILED to clear:
-    16019 to 16022, 42045 to 42048, 74794 to 74796, 219884 to 219886).
+  - the primary kill tell, the death events: `UNIT_DIED` with the unit's plain GUID, or `PLAYER_TARGET_DIED` for the
+    current target. Measured on a white-swing kill (kill-events capture): `PLAYER_SWING` and `PARTY_KILL` (killer our
+    GUID, victim the unit's, both plain) in the same ms (4364); `UNIT_DIED` and `PLAYER_TARGET_DIED` 2 ms later (4366);
+    `PLAYER_TARGET_CHANGED` to none 2 ms after that (4368); a new target auto-selected 20 ms later (4388); the
+    killing-blow WOUND 456 ms after the swing on `softinteract` only (4820). `UNIT_DIED` also fired for two nearby units
+    killed by others (9433, 11352). `PARTY_KILL` with killer equal to our GUID also sets `uOurs[u]`: our kill.
   - a plain `UnitIsDead(token) == true` on a bound token. The existing polls already read it: `Target.lua:84` (poll 4) and
     `Game/State/Sources/Nameplates.lua:36-40` (poll 5). They report to `I.Units.Dead(uid, t)`; the registry adds no read.
-  - `UNIT_DIED` or `PLAYER_TARGET_DIED` with a plain GUID, when the client delivers them.
-  A melee kill shows no FAILED (the Rogue capture clears the target with none), so the tell misses it; the unit then
-  ends through poll 5, the death events, or GONE.
+  - the fallback kill tell, only when the client refused the death events (they are in `E.STUB`,
+    `EventFacade.lua:93-95`): `PLAYER_TARGET_CHANGED` to none within `KILL_TELL` = 0.010 s after any player
+    `UNIT_SPELLCAST_FAILED`; the previous target's slot dies. Seen in all four kills of captures b and c (FAILED to clear:
+    16019 to 16022, 42045 to 42048, 74794 to 74796, 219884 to 219886). A melee kill shows no FAILED (the Rogue capture
+    clears the target with none), so the fallback misses it; the unit then ends through poll 5 or GONE.
+  A DEAD unit's tickets stay open until paid or their own window ends (decision 8). A ticket on a unit we killed
+  (`uOurs`) that is never paid closes as `closedDead`, never lost; it also counts `T.closedOurs`. The auto-selected new
+  target rebinds `target` 20 ms after the death, so the killing row resolves through the rebound-token rule (2.3) or,
+  as measured, arrives on `softinteract` alone.
   The clear and the killing row come in either order. A white-swing kill clears before its row (about 370 ms: the
   server's hit clears the target, the row arrives at the landing lag). An instant kill clears after its row (Eviscerate:
   row 1 ms after its success, clear 101 ms after the row). A projectile kill clears 11-36 ms before its row.
@@ -341,6 +352,10 @@ sample); the next landed at 452 ms, in line with the learned median (0.474 s, `R
 `PLAYER_SWING` marks auto-attack turning on rather than a swing, or the first swing lags longer. Until probe U10
 answers, the first MELEE ticket of a combat does not teach the learned lag (`learn()`, `Rows.lua:272-279`), and its
 Due band (pass a) is the whole LR window `[0, w]` instead of the core band.
+
+Landing lags also vary by session: 988, 837 and 456 ms in the Rogue kill-events session against the Warrior's 474 +-
+60 ms (`Rows.lua:67` seeds). Until probe U11 says whether combat-text settings delay the rows, the MELEE Due band uses
+the learned spread, which widens in such a session, and nothing in this design assumes 0.474 s beyond the seed.
 
 ### 3.4 Paying (the consumption order)
 
@@ -659,7 +674,7 @@ fails when:
 | 4 | castBarID payloads: 4th on START, STOP, SUCCEEDED, FAILED, DELAYED; 5th on INTERRUPTED; nil for instants (`Cast-4`) and key-spam FAILED (`Cast-2-0-0-0`) | none |
 | 5 | DELAYED on our hard cast when we are hit, about 0.37 s before the player's `UNIT_COMBAT`, with `@casting` moved | none |
 | 6 | Spell WOUNDs carry the spell's school; MISS carries school 1; a projectile lands at success + distance / velocity | `world.lua:601-618` and `replay.lua:696`, `:709`, `:721` emit school 1 at once |
-| 7 | Kill: `PLAYER_TARGET_CHANGED` to none 3 ms after the death's FAILED; the killing outcome 11-36 ms after the clear on the plate (and the soft token when on), `target` only sometimes | `observer.lua:437-453` keeps the dead target |
+| 7 | Kill: `PARTY_KILL` (killer our GUID) with the killing swing, `UNIT_DIED` and `PLAYER_TARGET_DIED` 2 ms later, `PLAYER_TARGET_CHANGED` to none 2 ms after that, optionally a new target 20 ms later; for a spell kill, `PLAYER_TARGET_CHANGED` to none 3 ms after the death's FAILED; the killing outcome 11-36 ms after the clear on the plate (and the soft token when on), `target` only sometimes | `observer.lua:437-453` keeps the dead target |
 | 8 | Plate churn: a knob removes and re-adds a mob's plate (same GUID, new index allowed) within 0.5 s at a rate | none |
 | 9 | Action Targeting knob, off by default: when on, `softenemy` binds to the target and its rows join the fan-out | `observer.lua:23` (`targetTokens`) |
 | 10 | Truth carries the outcome's own ticket: `castT` (the success it belongs to) beside `hand` and `swingT` | `observer.lua:97-106` stream fields |
@@ -757,7 +772,7 @@ Each becomes a row in `docs/dev/ingame-ledger.md` with the capture that closes i
 |---|---|---|
 | U1 (deferred, owner ruling 2026-10-22: not needed for the first build; the untested branches above stay as written and the engine takes the shapes on later) | RESIST, IMMUNE, ABSORB, EVADE row shapes: action, flag, amount, school; do they arrive as rows at all | `/vslog` with `UNIT_COMBAT` while casting a school the mob is immune to (an Elemental at a fire mob), and a mob that evades (leash) |
 | U2 (closed 2026-10-22, Rogue capture) | Auto-target on cast with Action Targeting off. Answer: a spell with no target does not auto-target (the cast never commits: no SENT with a target). A melee ability does: `TARGET` 68 ms before `SC_SENT` (6998 to 7066); `SC_SENT`, `PLAYER_SWING` and `PLAYER_ENTER_COMBAT` in the same ms; `SUCCEEDED` +1 ms; the strike's WOUND +2 ms on `nameplate2` and `target`. So the SENT pin always has a target | `rogue-ss-autotarget-2026-10-22.log` |
-| U3 | Does `UNIT_DIED` or `PLAYER_TARGET_DIED` fire for addons on Forever (O6), and is its GUID plain | `/vslog` with both registered, three kills |
+| U3 (closed 2026-10-22, kill-events capture; closes O6 and T8) | Do `UNIT_DIED`, `PLAYER_TARGET_DIED` and `PARTY_KILL` fire for addons on Forever, with plain GUIDs. Answer: yes, all three, GUIDs plain; order on a white-swing kill: `PLAYER_SWING` and `PARTY_KILL` same ms, `UNIT_DIED` and `PLAYER_TARGET_DIED` +2 ms, `TARGET none` +4 ms; `UNIT_DIED` also for units others kill | `rogue-kill-events-2026-10-22.log` |
 | U4 | DoT ticks and channels: does a periodic tick arrive as a WOUND on the victim's tokens, with which school; is a channel's tick distinguishable | `/vslog` of Moonfire's DoT and Arcane Missiles on a solo mob |
 | U5 | Nameplate GUID secrecy in combat beyond what Attackers relies on: `UnitGUID("nameplateN")` and `UnitIsDead("nameplateN")` plain for every plate in a five-man pull | `/run` loop over plates in combat with `VSCopy(issecretvalue(...))` |
 | U6 (deferred with U1) | Partial resists: a WOUND with a RESIST flag and a reduced amount, or two rows | `/vslog` of a Shadow Bolt series on a mob with shadow resistance |
@@ -765,6 +780,7 @@ Each becomes a row in `docs/dev/ingame-ledger.md` with the capture that closes i
 | U8 | The kill tell: is the target clear on a kill a client rule or a user setting; does it happen when no press is in flight | `/vslog` of a melee kill with no ability pressed, and the interface option in question |
 | U9 | DoT tick and channel row shapes: per tick, which tokens, action, flag, amount, school; the first tick's delay after the application; whether a channel's ticks and a DoT's are told apart; needed before TICKS and CHANNEL are trusted | `/vslog` of Moonfire, Corruption and Serpent Sting to full duration, and Arcane Missiles and Drain Life channels, on solo mobs |
 | U10 | The first white swing of a combat: does the first `PLAYER_SWING` after `PLAYER_ENTER_COMBAT` mark auto-attack turning on, or a swing with a longer lag (one sample: 989 ms against 452 ms for the next) | `/vslog` of ten pulls with auto-attack only, amounts on, `PLAYER_SWING`, `PLAYER_ENTER_COMBAT` and the target's `UNIT_COMBAT` |
+| U11 | Do the floating combat text settings, or the number of combat-text events queued, delay `UNIT_COMBAT` rows? White-hit lags in the Rogue session were 988, 837 and 456 ms against the Warrior's measured 474 +- 60 ms | the same fight with damage numbers off, `/vslog` of `PLAYER_SWING` and the target's `UNIT_COMBAT` |
 
 ## 9. Risks and what the gate must show
 
@@ -794,8 +810,8 @@ any downward move needs a named cause written beside the number and the owner's 
 | 3 | A rebound token's row that matches another token's payload within `DUP_WINDOW` is a duplicate, unless its token is already in that group | stops a stale `target` echo after a swap from paying the new mob |
 | 4 | `UNIT_CAP` = 64 slots, LIVE never evicted | 44 tokens can be LIVE at once; 20 spare slots for grace and dead units |
 | 5 | Token set: target, focus, nameplate1-40, softenemy, softinteract; `player` stays with Player and Attackers | the victim-side tokens of hostiles; `targettarget` rows are echoes; `softinteract` rows exist with Action Targeting off (the corpse), so it stays; only the soft-enemy events depend on the setting |
-| 6 | Kill tell = any player FAILED (any castGUID) within 0.010 s before a clear to none | all four kills in captures b and c show it, two of them with no cast in progress |
-| 7 | `UNIT_DIED` and `PLAYER_TARGET_DIED` registered opportunistically | an earlier probe saw them (O6); costs nothing if the client refuses them |
+| 6 | Primary kill tell: `UNIT_DIED` (plain victim GUID) marks the unit DEAD at once, `PLAYER_TARGET_DIED` the current target; `PARTY_KILL` with killer equal to our GUID marks it our kill. Fallback, only when the client refused the death events: any player FAILED within 0.010 s before a clear to none | measured: all three fire with plain GUIDs, 0-2 ms after the killing swing, and `UNIT_DIED` covers units others kill; FAILED misses melee kills |
+| 7 | An unpaid ticket on a unit we killed (`PARTY_KILL`) closes as `closedDead` and counts `T.closedOurs`, never lost | our kill is known exactly; LibTTD and the lost accounting read it |
 | 8 | A ticket on a dead unit stays open until paid or its own window ends; unpaid, it closes as `closedDead`, not lost | a melee killing blow arrives about 370 ms after the clear and must still pay |
 | 9 | `TICKETS` = 16 | flight windows of up to about 2.1 s plus two hands need more than today's 8 |
 | 10 | A ticket opens for every commit (every `PLAYER_SWING`, every player success mapped or not, a hard cast at SENT); the kind decides how it closes | one uniform record; no engine assumption about what a spell does |
