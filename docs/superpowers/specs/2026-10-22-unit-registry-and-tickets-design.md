@@ -848,7 +848,8 @@ Each becomes a row in `docs/dev/ingame-ledger.md` with the capture that closes i
 
 The gate for this central change is the full merge gate: `make gate` (which runs `make check`, including every
 class's wowsims replay floors in its slow tier, and every loop tag with `make test-loop`), the flicker floors
-(`tests/Game/harness/flicker_spec.lua`), the existing group gates (`group_spec.lua`), and the new detection suite.
+(`tests/Game/harness/flicker_spec.lua`), the existing group gates (`group_spec.lua`), the new detection suite, and
+the performance budgets of section 10 (the memory ceiling, the allocation checks and the `make bench-ta` floor).
 Floors only move up except with a named cause: upward moves are expected for casters (projectile outcomes now pay);
 any downward move needs a named cause written beside the number and the owner's ruling before merge.
 
@@ -862,6 +863,87 @@ any downward move needs a named cause written beside the number and the owner's 
 | Melee behaviour drifts | the ring becomes the ticket pool | melee replay floors, `make test-loop` and flicker floors unchanged; `group_spec.lua` numbers unchanged |
 | Allocation in a recurring path | new handlers on `UNIT_COMBAT` and the tick | `tests/Game/harness/alloc_spec.lua` and `make bench` show no new allocation |
 | Kill tell misses melee kills | no FAILED without a press | K6 without a press: the death events mark the unit; the clear-on-kill is a client rule (U8, owner ruling), so the unit also ends through poll 5 or GONE |
+
+## 10. Performance
+
+Performance is a design constraint of the registry and the tickets, gated like the floors.
+
+### 10.1 Memory
+
+Every structure is a fixed pool allocated once at load (or at build, for the per-ability arrays). Estimates assume
+Lua 5.1 on 64-bit: 16 bytes per array slot, about 56 bytes per table header, about 40 bytes per hash entry.
+
+| Structure | Size | Estimate |
+|---|---|---|
+| Unit slots: `uGUID`, `uState`, `uTokens`, `uSeen`, `uLeft`, `uHeld`, `uFree`, `uOurs` | 64 x 8 arrays | 8.6 KB |
+| GUID strings the slots keep alive after the client drops them | up to 64 x about 60 bytes | 3.9 KB |
+| Token tables: `tokUid`, `tokPrev`, `tokAt`, `TOKENS` (array), `INDEX` (hash), the 44 token name strings | 44 x 4 + 44 hash + 44 strings | 6.2 KB |
+| Tickets: `kind`, `ab`, `x`, `guid`, `uid`, `school`, `owed`, `period`, `at`, `lo`, `hi`, `ref`, `lr`, `avoid`, `state` | 16 x 15 arrays | 4.7 KB |
+| Learned flight lag: `lagGUID`, `lagSpeed`, `lagE`, `lagSpr`, `lagT`, `lagN` | 16 x 6 arrays | 1.9 KB |
+| Dedupe ring: 6 payload arrays x 4 groups, `dTok` 4 x 44 booleans | 24 + 176 slots | 3.5 KB |
+| Per-ability arrays: `expKind`, `expDeclared`, `velocity`, `school`, `tickPeriod`, `ticks`, `bandLo`, `bandHi`, `bandN` | 9 x up to 120 abilities | 17.8 KB |
+| `CTX`, the listener arrays (`OnRow`, `OnGone`: a few functions each), the counters | fixed | 1.5 KB |
+| Total | | about 48 KB |
+
+There are no per-unit token sets: a unit keeps only its token count (`uTokens`), and each token keeps its unit.
+`I.Units.Find(guid)` is a 64-step linear scan by string equality (interned strings compare by pointer). A GUID-keyed
+hash would allocate as it grows, so there is none.
+
+Hard ceiling: under 64 KB resident for the module. A headless spec measures `collectgarbage("count")` after a full
+collect before and after loading the module and building a spec, and asserts the difference.
+
+### 10.2 Allocation
+
+No table, closure or string is created per event, per row or per poll after load. Token names map to integer ids once,
+through the `INDEX` table built at load; nothing concatenates `"nameplate" .. i` at runtime. GUIDs are the client's own
+strings, stored by reference and compared, never built or sliced. The existing allocation check
+(`tests/Game/State/alloc_spec.lua`, with its helper `tests/Game/State/helpers/alloc.lua`, as
+`tests/Game/harness/alloc_spec.lua` uses it) runs over a full K16 run and a 300 s solo run and asserts 0 bytes after
+warm-up.
+
+### 10.3 Time
+
+| Path | Bound |
+|---|---|
+| Resolve | O(1): `INDEX[token]`, one `UnitGUID` read through `Plain`, the token's slot |
+| Dedupe | at most 4 groups, each a payload compare and one token-array read |
+| Match | at most `TICKETS` (16) candidates x 3 passes, each a scan for the least expected closure |
+| Lifecycle sweep (per frame) | a fixed loop over `UNIT_CAP` (64) slots, skipped when no slot is in GRACE or DEAD-releasing (a pending count). Chosen over an intrusive list: 64 compares are cheaper than keeping links right, and the count makes the common frame free |
+| Ticket expiry (per frame) | a fixed loop over 16 tickets (Rows loops 8 today, `Rows.lua:597-609`) |
+| `Find(guid)` | 64 string compares; only on death events and `PARTY_KILL` |
+
+Budgets: a row under 0.02 ms; a per-frame poll under 0.10 ms; the registry and tickets together under 2% of a frame at
+60 fps (0.33 ms per frame) at the raid-40 design point of about 50 rows a second (today's measured raid mix is about
+6 a second). Measured two ways:
+
+- in game, with `Hekili:ProfileCPU` hooks on the `UNIT_COMBAT` dispatch and the per-frame tick (`src/Hekili/Hekili.lua:48`
+  registers a function for the profiler; `Engine/Sim/Events.lua:179` already wraps handlers this way);
+- headless, with a microbenchmark `make bench-ta` (a new target beside `make bench`, `tools/bench_ta.lua`) that feeds
+  N synthetic rows over a K16-shaped population and reports rows per second and ms per row. Its number goes in the
+  plan's gate as a floor that only moves up, except with a named cause.
+
+### 10.4 Scaling
+
+| Grows with | What grows | What does not |
+|---|---|---|
+| Density (rows per second) | resolve, dedupe and match work, linearly | memory |
+| Plates (token churn) | rebinds and the lifecycle sweep's pending count | memory: at most 44 tokens |
+| Pack size | the per-ability arrays, once at build | per-row work: tickets carry an ability index |
+| Fight length | nothing: pools are fixed, paid and lost counters are integers | everything |
+
+At saturation nothing allocates or errors. Ticket overflow closes the oldest open ticket as `overflow` (counted).
+Unit overflow evicts the oldest released GONE or DEAD unit (2.6). Dedupe ring overflow drops the oldest group. K16
+asserts the counters and the allocation check.
+
+### 10.5 Snapshot cost
+
+The Snapshot lines for units and tickets (2.7, 3.6) are built only when a snapshot is taken, through `I.OnSnapshot`
+(as `Rows.lua:623-650` does today). String building is allowed there and nowhere else in this module.
+
+### 10.6 Review focus for the plan
+
+Each task review checks for a hot path that builds a string or a table: any concatenation, `string.format`, table
+constructor, closure or `{...}` inside an event handler, a row dispatch, a poll or the per-frame tick.
 
 ## Decisions made in this spec
 
@@ -904,3 +986,8 @@ any downward move needs a named cause written beside the number and the owner's 
 | 35 | `ticks` and `tickPeriod` may accompany `"instant"` or `"travel"`: one commit opens the direct ticket and a TICKS ticket pinned to the same GUID, anchored at the direct row (else the success); `"ticks"` alone opens only the TICKS ticket, and may declare `velocity`: its application's avoid then uses the FLIGHT window and bands, and its anchor is the success plus the learned flight lag (else plus `rMax / speed / 2`) | Moonfire and Immolate hit and then tick; Corruption and Shadow Word: Pain only tick; a long-range Serpent Sting miss must still pay |
 | 36 | TICKS matches by school, GUID and schedule only: tick `k` at application + `k x period`, band +- 0.1 s, widened by `rMax / speed / 2` for a `velocity` TICKS ticket with no learned lag until its first tick is paid (the anchor then snaps to that tick); no amount band; a tick outside every band is foreign | measured jitter +- 50 ms; ramping DoTs vary 3x in amount, so the schedule is the discriminator; an unknown flight lag shifts the whole schedule once |
 | 37 | A new application of the same ability on the same GUID closes the old TICKS ticket as `refreshed` (unpaid `owed` not lost) and opens a new one from the new application | measured: a recast resets the schedule and the old ticks never arrive |
+| 38 | Memory: every structure a fixed pool built at load or build, about 48 KB estimated; hard ceiling 64 KB resident, asserted with `collectgarbage("count")` in a headless spec | fixed pools make the cost known and constant |
+| 39 | Allocation: zero tables, closures or strings per event, row or poll after load; asserted over a K16 run and a 300 s solo run | the project's performance rule; recurring paths must not feed the collector |
+| 40 | Time budgets: a row under 0.02 ms, a per-frame poll under 0.10 ms, the module under 2% of a 60 fps frame at about 50 rows a second | a raid-40 design point with headroom over today's measured 6 rows a second |
+| 41 | The lifecycle sweep is a fixed 64-slot loop gated by a pending count, not an intrusive list | simpler and free on most frames |
+| 42 | `make bench-ta` (`tools/bench_ta.lua`) reports rows per second and ms per row; its number is a gate floor that only moves up | a regression shows as a number, not a feeling |
