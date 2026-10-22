@@ -286,7 +286,11 @@ Kinds compose with ticks. When `ticks` and `tickPeriod` accompany `"instant"` or
 direct ticket of the declared kind and a TICKS ticket owing `ticks` rows (decision 17's `owed`). The TICKS ticket is
 anchored at the application: the direct ticket's row when it is paid, else the success; if the direct ticket is paid
 by an avoid, the TICKS ticket closes with nothing owed (not lost). `expects = "ticks"` alone (Corruption, Shadow Word:
-Pain) opens only the TICKS ticket, anchored at the success. Kind NONE
+Pain) opens only the TICKS ticket, anchored at the success. A `"ticks"` ability may also declare `velocity` (Serpent
+Sting): its application's avoid is then taken in the FLIGHT hard window and learned-lag bands (3.3.1), not
+`LandWindow(1)`, so a long-range miss still pays; and its schedule is anchored at the success plus the learned flight
+lag for that GUID and speed when one exists, else at the success plus `rMax / speed / 2` with every tick band widened
+by `rMax / speed / 2` until the first tick is paid, after which the anchor snaps to that tick. Kind NONE
 resolves the ticket at commit (a buff, a seal, anything that owes no row): it closes at once, counts `T.none` and never
 matches a row.
 
@@ -307,7 +311,7 @@ never emitted anyway (`emit` drops a "" destination, `:283-286`).
 | FLIGHT(speed, school) | the hard window `[at, at + rMax / speed + TOL]`, scored by the learned lag (3.3.1) | a WOUND of `school`; any avoid (a spell miss is school 1, fact 2) | on its row, or expiry |
 | MELEE(hand) | the LR density's support `[0, w]` (`Rows.lua:252-269`) | the swing scoring (3.4 step 3) | on its row (an avoid provisionally), or expiry |
 | STRIKE | today's frame | the strike's row; it replaces the main hand's MELEE ticket within `STRIKE_WINDOW`, or waits for that swing (today `:329-332`, `:351-361`) | on its row, or expiry |
-| TICKS(period, ticks, school) | tick `k` at application + `k x period +- 0.1 s` | a WOUND of `school` on the pinned GUID inside a tick's band; no amount band (a ramping DoT such as Curse of Agony varies 3x across its ticks; the schedule is the discriminator); an alone-declared TICKS ticket takes the application's avoid inside `LandWindow(1)` and closes with nothing owed | on the last tick; on a refresh (a new application of the same ability on the same GUID: closed as `refreshed`, its unpaid `owed` not lost, and a new TICKS ticket opens from the new application); on the unit's death (`closedDead`, decisions 7 and 8); on the removal of the ability's debuff on that GUID (the aura row `L.Aura` emits, `Game/Events/CombatLog.lua:171`); or expiry |
+| TICKS(period, ticks, school) | tick `k` at application + `k x period +- 0.1 s` | a WOUND of `school` on the pinned GUID inside a tick's band; no amount band (a ramping DoT such as Curse of Agony varies 3x across its ticks; the schedule is the discriminator); an alone-declared TICKS ticket takes the application's avoid inside `LandWindow(1)` (inside the FLIGHT bands when the ability declares `velocity`, 3.2) and closes with nothing owed | on the last tick; on a refresh (a new application of the same ability on the same GUID: closed as `refreshed`, its unpaid `owed` not lost, and a new TICKS ticket opens from the new application); on the unit's death (`closedDead`, decisions 7 and 8); on the removal of the ability's debuff on that GUID (the aura row `L.Aura` emits, `Game/Events/CombatLog.lua:171`); or expiry |
 | CHANNEL(period, school) | tick `j` at `at + j x period +- TOL` | a WOUND of `school` | on `Obs.ChannelStop` for the ability (`Casts.lua:130-139`) |
 | UNMAPPED | `UNMAPPED_WINDOW` | an avoid or crit nobody took (3.4 step 5) | expiry, never lost |
 
@@ -660,7 +664,7 @@ From DB2 build 1.60.1.70338 (`SpellMisc`, every rank the pack lists agrees unles
 | Hunter | `arcane_shot` | `expects = "travel", velocity = 40, school = "arcane"` | |
 | Hunter | `multi_shot` | `expects = "travel", velocity = 30, school = "physical"` | the GUID match pays only the row on the pinned target; its other targets' rows stay foreign |
 | Hunter | `sniper_shot` | `expects = "travel", velocity = 60, school = "physical"` | |
-| Hunter | `serpent_sting` | `expects = "ticks", school = "nature", ticks = 5, tickPeriod = 3` | a DoT with no direct WOUND. Its miss is taken inside `LandWindow(1)`; a far miss later than that stays foreign until its flight window is wanted |
+| Hunter | `serpent_sting` | `expects = "ticks", school = "nature", velocity = 40, ticks = 5, tickPeriod = 3` | a DoT with no direct WOUND; `velocity` puts its miss in the FLIGHT window and anchors its ticks after the flight. Rank 1978's Speed is 40, the Forever 425728 family's is 0, so the check reads the pack's own ranks |
 | Druid | `moonfire` | `expects = "instant", school = "arcane", ticks = 4, tickPeriod = 3` | rank 1 measured; the pack checks each rank's tick count |
 | Hunter | `summon_hawk` | nothing (default type) | no outcome of ours known |
 
@@ -677,8 +681,9 @@ fails when:
 
 - a declared `velocity` differs from Speed on any listed rank;
 - a declared `school` name differs from the name of SchoolMask on any listed rank (the check maps the mask through `ns.SCHOOL`; a mask with no single name, such as 20, is reported for the pack to leave `school` nil);
-- an ability with Speed > 0 on its first rank and `startsCombat` declares no `velocity`, unless its type is `"ticks"`
-  (a DoT such as Serpent Sting, whose application owes no direct row).
+- an ability with Speed > 0 on its first rank and `startsCombat` declares no `velocity`; this rule covers abilities
+  whose type is not `"ticks"` (a `"ticks"` ability's `velocity` is optional, but once declared it must equal Speed by
+  the first rule).
 
 ## 6. Harness
 
@@ -860,6 +865,6 @@ any downward move needs a named cause written beside the number and the owner's 
 | 32 | Cascade bound: a lost ticket shifts its queue by at most one row, only while casts are closer than the narrow band or before the first record, until it expires at `H` or closes on the kill tell or GONE; shifts that change a belief count as `divergent` | a shift between two own same-school hits changes nothing; only divergent outcomes matter |
 | 33 | Pass (c), the hard window, is open only to tickets with no learned record | otherwise a far-off row (capture a's 517 ms MISS) would still be charged to a cast whose learned lag excludes it |
 | 34 | An open ticket's phase (Ahead, Due, Widened, Overdue) is computed from the row's time against its expected closure and bands at each evaluation, never stored; Due, Widened and Overdue are passes (a), (b) and (c) | no state to keep in step and no transition event to miss; one vocabulary for the passes and the phases |
-| 35 | `ticks` and `tickPeriod` may accompany `"instant"` or `"travel"`: one commit opens the direct ticket and a TICKS ticket pinned to the same GUID, anchored at the direct row (else the success); `"ticks"` alone opens only the TICKS ticket | Moonfire and Immolate hit and then tick; Corruption and Shadow Word: Pain only tick |
-| 36 | TICKS matches by school, GUID and schedule only: tick `k` at application + `k x period`, band +- 0.1 s, no amount band; a tick outside every band is foreign | measured jitter +- 50 ms; ramping DoTs vary 3x in amount, so the schedule is the discriminator |
+| 35 | `ticks` and `tickPeriod` may accompany `"instant"` or `"travel"`: one commit opens the direct ticket and a TICKS ticket pinned to the same GUID, anchored at the direct row (else the success); `"ticks"` alone opens only the TICKS ticket, and may declare `velocity`: its application's avoid then uses the FLIGHT window and bands, and its anchor is the success plus the learned flight lag (else plus `rMax / speed / 2`) | Moonfire and Immolate hit and then tick; Corruption and Shadow Word: Pain only tick; a long-range Serpent Sting miss must still pay |
+| 36 | TICKS matches by school, GUID and schedule only: tick `k` at application + `k x period`, band +- 0.1 s, widened by `rMax / speed / 2` for a `velocity` TICKS ticket with no learned lag until its first tick is paid (the anchor then snaps to that tick); no amount band; a tick outside every band is foreign | measured jitter +- 50 ms; ramping DoTs vary 3x in amount, so the schedule is the discriminator; an unknown flight lag shifts the whole schedule once |
 | 37 | A new application of the same ability on the same GUID closes the old TICKS ticket as `refreshed` (unpaid `owed` not lost) and opens a new one from the new application | measured: a recast resets the schedule and the old ticks never arrive |
