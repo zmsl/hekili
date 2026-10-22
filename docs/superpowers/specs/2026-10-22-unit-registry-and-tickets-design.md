@@ -390,6 +390,22 @@ Invariants, checked by the detection suite: a row pays at most one ticket; a tic
 except through the existing controlled re-opens (the provisional avoid overtaken by a higher-LR wound, `:522-529`; the
 firm retraction of `I.CreditVerdict`, `:577-586`; the strike replacement).
 
+#### 3.4.1 Phases of an open ticket
+
+An open ticket passes through four phases relative to its expected closure `E` (3.4 step 3). They are computed from
+the row's time at each row evaluation and never stored: no state field, no transition event.
+
+| Phase | Row time | Pass |
+|---|---|---|
+| Ahead | earlier than `E` minus the narrow band | none: an Ahead ticket cannot be paid ahead of a Due one |
+| Due | inside the narrow band | (a) |
+| Widened | inside the widened band (3.3.1), outside the narrow one | (b) |
+| Overdue | inside the hard window only | (c), reachable only by tickets with no learned record (decision 33) |
+
+A ticket with a learned record whose row falls outside its widened band but inside the hard window is in no phase
+for that row: it is not a candidate. MELEE uses the same phases with its learned global lag (`L.med`, `L.spr`): Due
+is the core band, Widened and Overdue are both the LR window, as the bands table above gives.
+
 ### 3.5 What a payment emits
 
 | Payment | Row (dst = the ticket's `guid`) | Staged |
@@ -770,3 +786,4 @@ any downward move needs a named cause written beside the number and the owner's 
 | 31 | FIFO per queue (kind, school, speed, GUID); never across queues | one queue's rows arrive in cast order unless the distance shrinks faster than the projectile (20 yd/s or more) between casts, which no run does |
 | 32 | Cascade bound: a lost ticket shifts its queue by at most one row, only while casts are closer than the narrow band or before the first record, until it expires at `H` or closes on the kill tell or GONE; shifts that change a belief count as `divergent` | a shift between two own same-school hits changes nothing; only divergent outcomes matter |
 | 33 | Pass (c), the hard window, is open only to tickets with no learned record | otherwise a far-off row (capture a's 517 ms MISS) would still be charged to a cast whose learned lag excludes it |
+| 34 | An open ticket's phase (Ahead, Due, Widened, Overdue) is computed from the row's time against its expected closure and bands at each evaluation, never stored; Due, Widened and Overdue are passes (a), (b) and (c) | no state to keep in step and no transition event to miss; one vocabulary for the passes and the phases |
