@@ -369,8 +369,9 @@ in pass (c) only.
 
 The first white swing after `PLAYER_ENTER_COMBAT` landed 989 ms after its `PLAYER_SWING` (second Rogue capture, one
 sample); the next landed at 452 ms, in line with the learned median (0.474 s, `Rows.lua:67`). Either the first
-`PLAYER_SWING` marks auto-attack turning on rather than a swing, or the first swing lags longer. Until probe U10
-answers, the first MELEE ticket of a combat does not teach the learned lag (`learn()`, `Rows.lua:272-279`), and its
+`PLAYER_SWING` marks auto-attack turning on rather than a swing, or the first swing lags longer. The owner's ruling
+(U10): auto-attack turns on at once when an ability is used or `/attack` is pressed, and the first `PLAYER_SWING` is
+that first swing. Its row's lag stays a one-sample observation (989 ms), so the first MELEE ticket of a combat does not teach the learned lag (`learn()`, `Rows.lua:272-279`), and its
 Due band (pass a) is the whole LR window `[0, w]` instead of the core band.
 
 Landing lags also vary by session: 988, 837 and 456 ms in the Rogue kill-events session against the Warrior's 474 +-
@@ -598,7 +599,7 @@ closing code.
 | `"melee"` | MELEE | the hand, from `PLAYER_SWING`'s swingType | measured logs (the P and G logs behind `Rows.lua:15-16`) |
 | `"strike"` | STRIKE | the existing `onNextSwing` | measured logs (today's on-next-swing replacement) |
 | `"ticks"` | TICKS | `tickPeriod`, `ticks`, `school`; `ticks` and `tickPeriod` may also accompany `"instant"` or `"travel"` (3.2) | measured: the druid-moonfire capture (3.3) |
-| `"channel"` | CHANNEL | `tickPeriod`, `school` | unprobed: implemented, marked untested until probe U9's channel half |
+| `"channel"` | CHANNEL | `tickPeriod`, `school` | unprobed: implemented, untested and unused by packs; U9's channel half deferred by owner ruling |
 
 `"melee"` is the engine's own type for `PLAYER_SWING`. No ability carries a hand field today, so an ability that
 declares `"melee"` fails validation and falls back to its default type (below).
@@ -613,8 +614,8 @@ shadow = 32, arcane = 64 }`, in `Engine/Schema/Spec.lua` where the Schema compil
 lockout names it builds (`locked_out_<name>`) are unchanged, and Mage and Priest already branch on these names
 (`src/Hekili_Mage/Mage.lua:142-150`, `src/Hekili_Priest/Priest.lua:148-152`). The engine maps the name to the client's
 mask once at build and stores the number on the ability's compiled record (`A.school`); `UNIT_COMBAT`'s school argument
-is compared with that number. A two-school spell (Frostfire Bolt) stays a probe (U7): until then a pack declares the
-school the client reports, or leaves it nil. Hekili's simulation already knows
+is compared with that number. A two-school spell (Frostfire Bolt) is deferred by owner ruling (U7): until then a pack
+declares the school the client reports, or leaves it nil; Frostfire Bolt keeps no `school`. Hekili's simulation already knows
 a `velocity` field, but its projectile branch needs `impact` too (`Engine/Schema/Spec.lua:908-909`), and no APL reads
 `in_flight`. No pack adds `impact`, so the simulation does not change.
 
@@ -656,10 +657,10 @@ From DB2 build 1.60.1.70338 (`SpellMisc`, every rank the pack lists agrees unles
 | Mage | `frostbolt` | `expects = "travel", velocity = 28, school = "frost"` | |
 | Mage | `fireball` | `expects = "travel", velocity = 24, school = "fire"` | |
 | Mage | `pyroblast` | `expects = "travel", velocity = 24, school = "fire"` | |
-| Mage | `frostfire_bolt` | `expects = "travel", velocity = 24` (no `school` until U7) | DB2 mask 20 (fire and frost) has no single name; the row's school is unmeasured (probe U7) |
+| Mage | `frostfire_bolt` | `expects = "travel", velocity = 24` (no `school`: U7 deferred) | DB2 mask 20 (fire and frost) has no single name; the row's school is unmeasured (U7, deferred by owner ruling) |
 | Shaman | `lightning_bolt` | `expects = "travel", velocity = 20, school = "nature"` | |
 | Shaman | `lava_burst` | `expects = "travel", velocity = 20, school = "fire"` | |
-| Priest | `shoot` | `expects = "travel", velocity = 20, school = "physical"` | the wand's own school may differ from the spell's mask (probe U7) |
+| Priest | `shoot` | `expects = "travel", velocity = 20, school = "physical"` | the wand's own school may differ from the spell's mask (U7, deferred by owner ruling) |
 | Paladin | `hammer_of_wrath` | `expects = "travel", velocity = 35, school = "holy"` | |
 | Hunter | `auto_shot` | `expects = "travel", velocity = 40, school = "physical"` | |
 | Hunter | `aimed_shot` | `expects = "travel", velocity = 40, school = "physical"` | |
@@ -754,7 +755,7 @@ ability with no `expects` so the default mapping keeps a test, and one with a ma
 fallback does. K3 and K4 press the `startsCombat` ones, so every band runs spell tickets. TICKS runs a
 Moonfire-shaped case (direct hit plus four ticks), including a refresh that resets the schedule (the old ticket closes
 `refreshed`, the new schedule pays). CHANNEL gets unit tests against the harness's own tick model only, marked
-untested until probe U9's channel half.
+untested (U9's channel half deferred by owner ruling).
 
 ### 6.3 Fixtures from the captures
 
@@ -804,10 +805,10 @@ Each becomes a row in `docs/dev/ingame-ledger.md` with the capture that closes i
 | U4 (closed 2026-10-22, druid-moonfire capture) | DoT ticks: does a periodic tick arrive as a WOUND on the victim's tokens, with which school. Answer: yes, a plain WOUND of the spell's school, no flag, every 3.0 s +- 50 ms from the application; a recast resets the schedule; the channel half moves to U9 | `druid-moonfire-2026-10-22.log` |
 | U5 (closed 2026-10-22, recorder `/vslog plates` in combat) | Nameplate secrecy in combat. Answer: `UnitGUID`, `UnitIsDead`, `UnitCanAttack("player", plate)`, `UnitName`, `UnitLevel`, `UnitClassification` and `UnitReaction` are plain on nameplate tokens; `UnitHealth` and `UnitHealthMax` are secret. Caveat: two plates (our target and a passing mob), not a five-man pull; the secrecy rule is per API, so it is expected to hold | `/vslog plates` in combat |
 | U6 (deferred with U1) | Partial resists: a WOUND with a RESIST flag and a reduced amount, or two rows | `/vslog` of a Shadow Bolt series on a mob with shadow resistance |
-| U7 | Two-school spells and wands: the school a Frostfire Bolt WOUND carries (20, 4 or 16); a wand's | `/vslog` of Frostfire Bolt and of Shoot with a non-physical wand |
-| U8 | The kill tell: is the target clear on a kill a client rule or a user setting; does it happen when no press is in flight | `/vslog` of a melee kill with no ability pressed, and the interface option in question |
-| U9 (DoT half closed 2026-10-22 by the druid-moonfire capture; channel half open) | Channel row shapes: per tick, which tokens, action, flag, amount, school; whether a channel's ticks and a DoT's are told apart; needed before CHANNEL is trusted | `/vslog` of Arcane Missiles and Drain Life channels on solo mobs |
-| U10 | The first white swing of a combat: does the first `PLAYER_SWING` after `PLAYER_ENTER_COMBAT` mark auto-attack turning on, or a swing with a longer lag (one sample: 989 ms against 452 ms for the next) | `/vslog` of ten pulls with auto-attack only, amounts on, `PLAYER_SWING`, `PLAYER_ENTER_COMBAT` and the target's `UNIT_COMBAT` |
+| U7 (deferred by owner ruling 2026-10-22, like U1 and U6; Frostfire Bolt keeps no `school`) | Two-school spells and wands: the school a Frostfire Bolt WOUND carries (20, 4 or 16); a wand's | `/vslog` of Frostfire Bolt and of Shoot with a non-physical wand |
+| U8 (closed by owner ruling 2026-10-22: the client clears the target when it is killed, as a rule, not a user setting, whether or not a press is in flight; the registry treats the clear-on-kill as reliable, and the death events remain the primary tell) | The kill tell: is the target clear on a kill a client rule or a user setting; does it happen when no press is in flight | `/vslog` of a melee kill with no ability pressed, and the interface option in question |
+| U9 (DoT half closed 2026-10-22 by the druid-moonfire capture; channel half deferred by owner ruling 2026-10-22; CHANNEL stays implemented, untested and unused by packs) | Channel row shapes: per tick, which tokens, action, flag, amount, school; whether a channel's ticks and a DoT's are told apart; needed before CHANNEL is trusted | `/vslog` of Arcane Missiles and Drain Life channels on solo mobs |
+| U10 (owner-explained 2026-10-22, lag unmeasured: auto-attack turns on at once when an ability is used or `/attack` is pressed, and the first `PLAYER_SWING` is that first swing; its row's lag is one sample, 989 ms, so the first swing of a combat still does not teach the MELEE lag and uses the LR window) | The first white swing of a combat: does the first `PLAYER_SWING` after `PLAYER_ENTER_COMBAT` mark auto-attack turning on, or a swing with a longer lag (one sample: 989 ms against 452 ms for the next) | `/vslog` of ten pulls with auto-attack only, amounts on, `PLAYER_SWING`, `PLAYER_ENTER_COMBAT` and the target's `UNIT_COMBAT` |
 | U11 | Do the floating combat text settings, or the number of combat-text events queued, delay `UNIT_COMBAT` rows? White-hit lags in the Rogue session were 988, 837 and 456 ms against the Warrior's measured 474 +- 60 ms | the same fight with damage numbers off, `/vslog` of `PLAYER_SWING` and the target's `UNIT_COMBAT` |
 
 ## 9. Risks and what the gate must show
@@ -827,7 +828,7 @@ any downward move needs a named cause written beside the number and the owner's 
 | Caster `active_enemies` rises | new `SPELL_DAMAGE` rows reach `ns.updateTarget` | wowsims replay floors of every caster class; a moved AoE decision gets its named cause |
 | Melee behaviour drifts | the ring becomes the ticket pool | melee replay floors, `make test-loop` and flicker floors unchanged; `group_spec.lua` numbers unchanged |
 | Allocation in a recurring path | new handlers on `UNIT_COMBAT` and the tick | `tests/Game/harness/alloc_spec.lua` and `make bench` show no new allocation |
-| Kill tell misses melee kills | no FAILED without a press | K6 without a press: the unit still closes through poll 5 or GONE; probe U8 |
+| Kill tell misses melee kills | no FAILED without a press | K6 without a press: the death events mark the unit; the clear-on-kill is a client rule (U8, owner ruling), so the unit also ends through poll 5 or GONE |
 
 ## Decisions made in this spec
 
@@ -851,9 +852,9 @@ any downward move needs a named cause written beside the number and the owner's 
 | 16 | Unmapped successes open an UNMAPPED ticket: `UNMAPPED_WINDOW`, no owed row, any GUID, absorbs an avoid or crit as nobody's | today's `another()` unmapped rule as a generic ticket; replaces `unmappedT` |
 | 17 | `owed`: rows still owed; each paid row decrements it, 0 closes the ticket; unpaid `owed` at expiry counts as lost | one counter covers one hit, N ticks and open-ended channels |
 | 18 | A `school` of nil means the hit makes no row of ours: only an avoid pays, expiry is not lost (a pure aura with no damage) | an aura-only cast needs no handler of its own |
-| 19 | Backed by captures or measured logs: NONE, FRAME, FLIGHT, MELEE, STRIKE, TICKS (druid-moonfire capture). Unprobed: CHANNEL, implemented but marked untested and unused by packs until probe U9's channel half | no channel row has been captured yet |
+| 19 | Backed by captures or measured logs: NONE, FRAME, FLIGHT, MELEE, STRIKE, TICKS (druid-moonfire capture). Unprobed: CHANNEL, implemented but untested and unused by packs (U9's channel half deferred by owner ruling) | no channel row has been captured yet |
 | 20 | FLIGHT hard window `[0, rMax / speed + TOL]` from the success, always; `TOL` = 0.15 s; `rMax` 0 means 40 yd; the plain bracket's `lo` may only raise the lower bound, less `CLOSE x age` | the engine cannot read an up-to-date range in combat; the five max-range samples fit [0, 1.65] s |
-| 21 | School check by equality with the declared school's compiled mask | no bit operations in core; two-school rows are probed (U7) |
+| 21 | School check by equality with the declared school's compiled mask | no bit operations in core; two-school rows are deferred (U7, owner ruling) |
 | 22 | Amount band [0.6 x lo, 1.6 x hi] after 3 clean wounds | spell damage varies more than weapon damage; procs and crits halved stay inside |
 | 23 | Consumption order: rows online in arrival order after dedupe; candidates of the row's queue in expected-closure order; passes (a) narrow, (b) widened, (c) hard window for tickets with no record; first match pays; MELEE's LR decides among MELEE candidates at a pass | the order decides correctness; FIFO per queue falls out of it |
 | 24 | A mapped ticket with no pin opens with `guid` "" and counts `unpinned`, not lost | it can match no row; today its rows are dropped anyway |
