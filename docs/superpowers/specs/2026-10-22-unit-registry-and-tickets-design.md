@@ -279,7 +279,14 @@ A ticket opens for every commit, unconditionally, as one uniform record:
 
 At opening the engine takes the ability's type (`A.expKind[ab]`) and reads the fields that type needs (5.1:
 `velocity`, `school`, `tickPeriod`, `ticks`), then fills `kind`, `owed`, `period`, `school`, `lo` and `hi` by that
-kind's rule (3.3). Kind NONE
+kind's rule (3.3).
+
+Kinds compose with ticks. When `ticks` and `tickPeriod` accompany `"instant"` or `"travel"` (Moonfire: `expects =
+"instant", school = "arcane", ticks = 4, tickPeriod = 3`), one commit opens two tickets pinned to the same GUID: the
+direct ticket of the declared kind and a TICKS ticket owing `ticks` rows (decision 17's `owed`). The TICKS ticket is
+anchored at the application: the direct ticket's row when it is paid, else the success; if the direct ticket is paid
+by an avoid, the TICKS ticket closes with nothing owed (not lost). `expects = "ticks"` alone (Corruption, Shadow Word:
+Pain) opens only the TICKS ticket, anchored at the success. Kind NONE
 resolves the ticket at commit (a buff, a seal, anything that owes no row): it closes at once, counts `T.none` and never
 matches a row.
 
@@ -300,12 +307,19 @@ never emitted anyway (`emit` drops a "" destination, `:283-286`).
 | FLIGHT(speed, school) | the hard window `[at, at + rMax / speed + TOL]`, scored by the learned lag (3.3.1) | a WOUND of `school`; any avoid (a spell miss is school 1, fact 2) | on its row, or expiry |
 | MELEE(hand) | the LR density's support `[0, w]` (`Rows.lua:252-269`) | the swing scoring (3.4 step 3) | on its row (an avoid provisionally), or expiry |
 | STRIKE | today's frame | the strike's row; it replaces the main hand's MELEE ticket within `STRIKE_WINDOW`, or waits for that swing (today `:329-332`, `:351-361`) | on its row, or expiry |
-| TICKS(period, ticks, school) | tick `j` at `at + j x period +- TOL` | a WOUND of `school`; the application's avoid inside `LandWindow(1)` closes it with nothing owed | on the last tick, on the removal of the ability's debuff on that GUID (the aura row `L.Aura` emits, `Game/Events/CombatLog.lua:171`), or expiry |
+| TICKS(period, ticks, school) | tick `k` at application + `k x period +- 0.1 s` | a WOUND of `school` on the pinned GUID inside a tick's band; no amount band (a ramping DoT such as Curse of Agony varies 3x across its ticks; the schedule is the discriminator); an alone-declared TICKS ticket takes the application's avoid inside `LandWindow(1)` and closes with nothing owed | on the last tick; on a refresh (a new application of the same ability on the same GUID: closed as `refreshed`, its unpaid `owed` not lost, and a new TICKS ticket opens from the new application); on the unit's death (`closedDead`, decisions 7 and 8); on the removal of the ability's debuff on that GUID (the aura row `L.Aura` emits, `Game/Events/CombatLog.lua:171`); or expiry |
 | CHANNEL(period, school) | tick `j` at `at + j x period +- TOL` | a WOUND of `school` | on `Obs.ChannelStop` for the ability (`Casts.lua:130-139`) |
 | UNMAPPED | `UNMAPPED_WINDOW` | an avoid or crit nobody took (3.4 step 5) | expiry, never lost |
 
+TICKS is measured (Moonfire rank 1, druid-moonfire capture): the direct hit is a WOUND of the spell's school (arcane,
+64) 2 ms after its success (amounts 9, 8, 8); the ticks are plain WOUND rows of the same school, amount 4, no flag,
+every 3.0 s +- 50 ms (3036, 2984, 3050, 2967, 2967, 3033 ms) counted from the application; three ticks fall in a 9.8 s
+window, so four over the 12 s duration. A recast resets the schedule: the next tick comes 3 s after the refresh and the
+old schedule's remaining ticks never arrive. A kill by the direct hit cleared the target 3 ms after the row, and the
+remaining ticks never came. A tick row outside every TICKS band is foreign.
+
 A school of nil on a declared type means the hit makes no row of ours: the kind then takes only an avoid in its
-window, and its expiry is not a lost resolution (Serpent Sting's application, 5.4). School ANY (a default type on an
+window, and its expiry is not a lost resolution (a pure aura with no damage). School ANY (a default type on an
 ability with no `school` field, 5.2) takes any WOUND or avoid in its window, as today, and is never lost.
 
 #### 3.3.1 FLIGHT: hard window and learned lag
@@ -389,7 +403,8 @@ Bands per kind:
 | FLIGHT | `lagE +- b` | `[lagE - down, lagE + up]` | `[0, H]` (no record only) |
 | MELEE | the core band, within 2 `spr` of the median (`Rows.lua:367-369`) | the LR window `[0, w]` (`:252-269`) | as (b) |
 | FRAME, STRIKE | `SAME_FRAME` | WOUND: `CAST_WINDOW`; avoid: `LandWindow(1)`, or `CAST_WINDOW` while `bg[7] >= FOREIGN_AVOIDS` (GAP AX) | as (b) |
-| TICKS, CHANNEL | tick time `+- TOL` | tick time `+- 2 x TOL` | as (b) |
+| TICKS | tick time `+- 0.1 s` | as (a): the schedule is the only discriminator | as (a) |
+| CHANNEL | tick time `+- TOL` | tick time `+- 2 x TOL` | as (b) |
 
 MELEE inside the frame: when the first match at a pass is a MELEE ticket, the existing likelihood ratio decides among
 all MELEE candidates that match at that pass (LR = q x f / lambda, the bar `THETA` for avoids and `theta[k]` for wounds,
@@ -480,6 +495,7 @@ A ticket closes on the first of:
 | resolved at commit | kind NONE (declared, or the default type of an ability Rows does not hold today) | nothing | `T.none` |
 | paid out | `owed` reached 0 (3.4) | 3.5 | `T.paid[kind]` |
 | signal | the kind's non-row close (3.3): TICKS on its debuff's removal, CHANNEL on its stop | nothing | `T.paid[kind]` |
+| refreshed | TICKS: a new application of the same ability on the same GUID | nothing | `T.refreshed`, unpaid `owed` not lost |
 | cast stopped | a committed hard cast's FAILED or INTERRUPTED | nothing | none |
 | window expiry | `now > hi` with `owed > 0`, in the per-frame tick (today `:597-609`) | MELEE: `SWING_MISSED` if provisional, else `SWING_DAMAGE` amount 0 (kept: the swing timer reads it); others: nothing | `T.lost[kind] += owed`; UNMAPPED, school ANY and a declared nil school count `T.expired` instead |
 | kill | its `uid` is DEAD and its own window ends unpaid (it stays open until then: a melee killing blow lands about 370 ms after the clear) | as expiry | `T.closedDead`, not lost |
@@ -488,7 +504,7 @@ A ticket closes on the first of:
 | pool full | the oldest open ticket gives way (today `:138`) | nothing | `T.overflow` |
 
 A lost resolution is an owed row that never came while its unit was alive. It is the recall signal in game: Snapshot
-shows `tickets open=%d none=%d paid=%d lost=%d expired=%d foreign=%d unpinned=%d dead=%d gone=%d bandRejected=%d
+shows `tickets open=%d none=%d paid=%d lost=%d expired=%d refreshed=%d foreign=%d unpinned=%d dead=%d gone=%d bandRejected=%d
 divergent=%d overflow=%d`.
 
 Belief effects stay where they are: `now` at the success, `onCrit` through `Obs.Crit`, the undo and refund through
@@ -575,8 +591,8 @@ closing code.
 | `"travel"` | FLIGHT | `velocity` (DB2 `SpellMisc.Speed`), `school` (DB2 `SchoolMask`) | captures a, b, c (Wrath 1483-1566 ms at max range) |
 | `"melee"` | MELEE | the hand, from `PLAYER_SWING`'s swingType | measured logs (the P and G logs behind `Rows.lua:15-16`) |
 | `"strike"` | STRIKE | the existing `onNextSwing` | measured logs (today's on-next-swing replacement) |
-| `"ticks"` | TICKS | `tickPeriod`, `ticks`, `school` | unprobed: implemented, marked untested until probe U9 |
-| `"channel"` | CHANNEL | `tickPeriod`, `school` | unprobed: implemented, marked untested until probe U9 |
+| `"ticks"` | TICKS | `tickPeriod`, `ticks`, `school`; `ticks` and `tickPeriod` may also accompany `"instant"` or `"travel"` (3.2) | measured: the druid-moonfire capture (3.3) |
+| `"channel"` | CHANNEL | `tickPeriod`, `school` | unprobed: implemented, marked untested until probe U9's channel half |
 
 `"melee"` is the engine's own type for `PLAYER_SWING`. No ability carries a hand field today, so an ability that
 declares `"melee"` fails validation and falls back to its default type (below).
@@ -644,7 +660,8 @@ From DB2 build 1.60.1.70338 (`SpellMisc`, every rank the pack lists agrees unles
 | Hunter | `arcane_shot` | `expects = "travel", velocity = 40, school = "arcane"` | |
 | Hunter | `multi_shot` | `expects = "travel", velocity = 30, school = "physical"` | the GUID match pays only the row on the pinned target; its other targets' rows stay foreign |
 | Hunter | `sniper_shot` | `expects = "travel", velocity = 60, school = "physical"` | |
-| Hunter | `serpent_sting` | `expects = "travel", velocity = 40` (no `school`) | an aura only, no direct WOUND: its miss is its only row. Rank 1978's Speed is 40, the Forever 425728 family's is 0, so the check reads the pack's own ranks. Its ticks move to `"ticks"` after U9 |
+| Hunter | `serpent_sting` | `expects = "ticks", school = "nature", ticks = 5, tickPeriod = 3` | a DoT with no direct WOUND. Its miss is taken inside `LandWindow(1)`; a far miss later than that stays foreign until its flight window is wanted |
+| Druid | `moonfire` | `expects = "instant", school = "arcane", ticks = 4, tickPeriod = 3` | rank 1 measured; the pack checks each rank's tick count |
 | Hunter | `summon_hawk` | nothing (default type) | no outcome of ours known |
 
 Instant abilities may declare `expects = "instant", school = "<name>"`; that turns on the school check and lost counting
@@ -660,7 +677,8 @@ fails when:
 
 - a declared `velocity` differs from Speed on any listed rank;
 - a declared `school` name differs from the name of SchoolMask on any listed rank (the check maps the mask through `ns.SCHOOL`; a mask with no single name, such as 20, is reported for the pack to leave `school` nil);
-- an ability with Speed > 0 on its first rank and `startsCombat` declares no `velocity`.
+- an ability with Speed > 0 on its first rank and `startsCombat` declares no `velocity`, unless its type is `"ticks"`
+  (a DoT such as Serpent Sting, whose application owes no direct row).
 
 ## 6. Harness
 
@@ -678,6 +696,7 @@ fails when:
 | 8 | Plate churn: a knob removes and re-adds a mob's plate (same GUID, new index allowed) within 0.5 s at a rate | none |
 | 9 | Action Targeting knob, off by default: when on, `softenemy` binds to the target and its rows join the fan-out | `observer.lua:23` (`targetTokens`) |
 | 10 | Truth carries the outcome's own ticket: `castT` (the success it belongs to) beside `hand` and `swingT` | `observer.lua:97-106` stream fields |
+| 11 | Ticks: `W.hit` and the observer emit a DoT's ticks as WOUND rows of the spell's school at multiples of its period from the application, with +-50 ms jitter; a recast resets the schedule; a kill stops it | `world.lua:570-575` emits ticks as school 1 |
 
 ### 6.2 The detection suite
 
@@ -725,8 +744,10 @@ The pending-cast gap: today's group runs never exercise a pending cast, because 
 abilities: `expects = "instant"` with a `school` for the instant spender, `expects = "travel", velocity = 20,
 school = "nature"` for a new `startsCombat` hard cast, `expects = "strike"` for the strike, `expects = "none"` for a buff, one
 ability with no `expects` so the default mapping keeps a test, and one with a malformed `expects` so the validation
-fallback does. K3 and K4 press the `startsCombat` ones, so every band runs spell tickets. TICKS and CHANNEL get unit tests
-against the harness's own tick model only, marked untested until probe U9.
+fallback does. K3 and K4 press the `startsCombat` ones, so every band runs spell tickets. TICKS runs a
+Moonfire-shaped case (direct hit plus four ticks), including a refresh that resets the schedule (the old ticket closes
+`refreshed`, the new schedule pays). CHANNEL gets unit tests against the harness's own tick model only, marked
+untested until probe U9's channel half.
 
 ### 6.3 Fixtures from the captures
 
@@ -773,12 +794,12 @@ Each becomes a row in `docs/dev/ingame-ledger.md` with the capture that closes i
 | U1 (deferred, owner ruling 2026-10-22: not needed for the first build; the untested branches above stay as written and the engine takes the shapes on later) | RESIST, IMMUNE, ABSORB, EVADE row shapes: action, flag, amount, school; do they arrive as rows at all | `/vslog` with `UNIT_COMBAT` while casting a school the mob is immune to (an Elemental at a fire mob), and a mob that evades (leash) |
 | U2 (closed 2026-10-22, Rogue capture) | Auto-target on cast with Action Targeting off. Answer: a spell with no target does not auto-target (the cast never commits: no SENT with a target). A melee ability does: `TARGET` 68 ms before `SC_SENT` (6998 to 7066); `SC_SENT`, `PLAYER_SWING` and `PLAYER_ENTER_COMBAT` in the same ms; `SUCCEEDED` +1 ms; the strike's WOUND +2 ms on `nameplate2` and `target`. So the SENT pin always has a target | `rogue-ss-autotarget-2026-10-22.log` |
 | U3 (closed 2026-10-22, kill-events capture; closes O6 and T8) | Do `UNIT_DIED`, `PLAYER_TARGET_DIED` and `PARTY_KILL` fire for addons on Forever, with plain GUIDs. Answer: yes, all three, GUIDs plain; order on a white-swing kill: `PLAYER_SWING` and `PARTY_KILL` same ms, `UNIT_DIED` and `PLAYER_TARGET_DIED` +2 ms, `TARGET none` +4 ms; `UNIT_DIED` also for units others kill | `rogue-kill-events-2026-10-22.log` |
-| U4 | DoT ticks and channels: does a periodic tick arrive as a WOUND on the victim's tokens, with which school; is a channel's tick distinguishable | `/vslog` of Moonfire's DoT and Arcane Missiles on a solo mob |
+| U4 (closed 2026-10-22, druid-moonfire capture) | DoT ticks: does a periodic tick arrive as a WOUND on the victim's tokens, with which school. Answer: yes, a plain WOUND of the spell's school, no flag, every 3.0 s +- 50 ms from the application; a recast resets the schedule; the channel half moves to U9 | `druid-moonfire-2026-10-22.log` |
 | U5 | Nameplate GUID secrecy in combat beyond what Attackers relies on: `UnitGUID("nameplateN")` and `UnitIsDead("nameplateN")` plain for every plate in a five-man pull | `/run` loop over plates in combat with `VSCopy(issecretvalue(...))` |
 | U6 (deferred with U1) | Partial resists: a WOUND with a RESIST flag and a reduced amount, or two rows | `/vslog` of a Shadow Bolt series on a mob with shadow resistance |
 | U7 | Two-school spells and wands: the school a Frostfire Bolt WOUND carries (20, 4 or 16); a wand's | `/vslog` of Frostfire Bolt and of Shoot with a non-physical wand |
 | U8 | The kill tell: is the target clear on a kill a client rule or a user setting; does it happen when no press is in flight | `/vslog` of a melee kill with no ability pressed, and the interface option in question |
-| U9 | DoT tick and channel row shapes: per tick, which tokens, action, flag, amount, school; the first tick's delay after the application; whether a channel's ticks and a DoT's are told apart; needed before TICKS and CHANNEL are trusted | `/vslog` of Moonfire, Corruption and Serpent Sting to full duration, and Arcane Missiles and Drain Life channels, on solo mobs |
+| U9 (DoT half closed 2026-10-22 by the druid-moonfire capture; channel half open) | Channel row shapes: per tick, which tokens, action, flag, amount, school; whether a channel's ticks and a DoT's are told apart; needed before CHANNEL is trusted | `/vslog` of Arcane Missiles and Drain Life channels on solo mobs |
 | U10 | The first white swing of a combat: does the first `PLAYER_SWING` after `PLAYER_ENTER_COMBAT` mark auto-attack turning on, or a swing with a longer lag (one sample: 989 ms against 452 ms for the next) | `/vslog` of ten pulls with auto-attack only, amounts on, `PLAYER_SWING`, `PLAYER_ENTER_COMBAT` and the target's `UNIT_COMBAT` |
 | U11 | Do the floating combat text settings, or the number of combat-text events queued, delay `UNIT_COMBAT` rows? White-hit lags in the Rogue session were 988, 837 and 456 ms against the Warrior's measured 474 +- 60 ms | the same fight with damage numbers off, `/vslog` of `PLAYER_SWING` and the target's `UNIT_COMBAT` |
 
@@ -822,8 +843,8 @@ any downward move needs a named cause written beside the number and the owner's 
 | 15 | A default-type ticket on an ability with no `school` field carries school ANY: any WOUND or avoid in its window pays, never lost; a declared type's nil school means only an avoid pays | keeps the default mapping exactly today's while letting a pack declare an aura-only cast |
 | 16 | Unmapped successes open an UNMAPPED ticket: `UNMAPPED_WINDOW`, no owed row, any GUID, absorbs an avoid or crit as nobody's | today's `another()` unmapped rule as a generic ticket; replaces `unmappedT` |
 | 17 | `owed`: rows still owed; each paid row decrements it, 0 closes the ticket; unpaid `owed` at expiry counts as lost | one counter covers one hit, N ticks and open-ended channels |
-| 18 | A `school` of nil means the hit makes no row of ours: only an avoid pays, expiry is not lost (Serpent Sting: `expects = "travel", velocity = 40`, no `school`) | an aura-only cast needs no handler of its own |
-| 19 | Backed by captures or measured logs: NONE, FRAME, FLIGHT, MELEE, STRIKE. Unprobed: TICKS and CHANNEL, implemented but marked untested and unused by packs until probe U9 | no tick row has been captured yet |
+| 18 | A `school` of nil means the hit makes no row of ours: only an avoid pays, expiry is not lost (a pure aura with no damage) | an aura-only cast needs no handler of its own |
+| 19 | Backed by captures or measured logs: NONE, FRAME, FLIGHT, MELEE, STRIKE, TICKS (druid-moonfire capture). Unprobed: CHANNEL, implemented but marked untested and unused by packs until probe U9's channel half | no channel row has been captured yet |
 | 20 | FLIGHT hard window `[0, rMax / speed + TOL]` from the success, always; `TOL` = 0.15 s; `rMax` 0 means 40 yd; the plain bracket's `lo` may only raise the lower bound, less `CLOSE x age` | the engine cannot read an up-to-date range in combat; the five max-range samples fit [0, 1.65] s |
 | 21 | School check by equality with the declared school's compiled mask | no bit operations in core; two-school rows are probed (U7) |
 | 22 | Amount band [0.6 x lo, 1.6 x hi] after 3 clean wounds | spell damage varies more than weapon damage; procs and crits halved stay inside |
@@ -839,3 +860,6 @@ any downward move needs a named cause written beside the number and the owner's 
 | 32 | Cascade bound: a lost ticket shifts its queue by at most one row, only while casts are closer than the narrow band or before the first record, until it expires at `H` or closes on the kill tell or GONE; shifts that change a belief count as `divergent` | a shift between two own same-school hits changes nothing; only divergent outcomes matter |
 | 33 | Pass (c), the hard window, is open only to tickets with no learned record | otherwise a far-off row (capture a's 517 ms MISS) would still be charged to a cast whose learned lag excludes it |
 | 34 | An open ticket's phase (Ahead, Due, Widened, Overdue) is computed from the row's time against its expected closure and bands at each evaluation, never stored; Due, Widened and Overdue are passes (a), (b) and (c) | no state to keep in step and no transition event to miss; one vocabulary for the passes and the phases |
+| 35 | `ticks` and `tickPeriod` may accompany `"instant"` or `"travel"`: one commit opens the direct ticket and a TICKS ticket pinned to the same GUID, anchored at the direct row (else the success); `"ticks"` alone opens only the TICKS ticket | Moonfire and Immolate hit and then tick; Corruption and Shadow Word: Pain only tick |
+| 36 | TICKS matches by school, GUID and schedule only: tick `k` at application + `k x period`, band +- 0.1 s, no amount band; a tick outside every band is foreign | measured jitter +- 50 ms; ramping DoTs vary 3x in amount, so the schedule is the discriminator |
+| 37 | A new application of the same ability on the same GUID closes the old TICKS ticket as `refreshed` (unpaid `owed` not lost) and opens a new one from the new application | measured: a recast resets the schedule and the old ticks never arrive |
