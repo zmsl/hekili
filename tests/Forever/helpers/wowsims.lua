@@ -287,10 +287,11 @@ M.READY = {
     -- at the GCD's end inside it (Shadow's Mind Flay likewise). Count 18 -> 21 on fix 31 (06eec227): G4 keeps
     -- Corruption believed, so 12 more decisions are shown (never 22 -> 10), 3 of them a Shadow Bolt's early 1.0 s
     warlock_affliction = { 1.00, 21 },
-    warlock_demonology = { 0.10, 3 }, -- 0.100, 3
+    warlock_demonology = { 0.10, 3 }, -- 0.100, 3: Searing Pain's 1.5 s cast equals the GCD, so nearly every decision is
+    -- absorbed at the grain; the three left are 0.1-0.2 s early
     warlock_destruction = { 0.40, 17 }, -- 0.400, 17: Incinerate's 2.0 s cast, likewise
     warlock_shadow_brand = { 0.90, 16 }, -- 0.900, 16: Shadow Bolt's, likewise
-    warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 14: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
+    warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
     warrior_arms = { 0.80, 6 },
     warrior_fury = { 0.48, 32 },
     warrior_protection = { 0.50, 5 },
