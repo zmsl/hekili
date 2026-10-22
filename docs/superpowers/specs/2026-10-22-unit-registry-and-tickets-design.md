@@ -520,12 +520,12 @@ Each becomes a row in `docs/dev/ingame-ledger.md` with the capture that closes i
 
 | ID | Question | Capture that closes it |
 |---|---|---|
-| U1 | RESIST, IMMUNE, ABSORB, EVADE row shapes: action, flag, amount, school; do they arrive as rows at all | `/vslog` with `UNIT_COMBAT` while casting a school the mob is immune to (an Elemental at a fire mob), and a mob that evades (leash) |
+| U1 (deferred, owner ruling 2026-10-22: not needed for the first build; the untested branches above stay as written and the engine takes the shapes on later) | RESIST, IMMUNE, ABSORB, EVADE row shapes: action, flag, amount, school; do they arrive as rows at all | `/vslog` with `UNIT_COMBAT` while casting a school the mob is immune to (an Elemental at a fire mob), and a mob that evades (leash) |
 | U2 | Auto-target on cast with Action Targeting off: does `PLAYER_TARGET_CHANGED` come before SENT, and does SENT name the new target | `/vslog` of SENT, START, SUCCEEDED, `PLAYER_TARGET_CHANGED` pressing Wrath with no target near a mob, Action Targeting off; plus the soft-targeting log saved in full |
 | U3 | Does `UNIT_DIED` or `PLAYER_TARGET_DIED` fire for addons on Forever (O6), and is its GUID plain | `/vslog` with both registered, three kills |
 | U4 | DoT ticks and channels: does a periodic tick arrive as a WOUND on the victim's tokens, with which school; is a channel's tick distinguishable | `/vslog` of Moonfire's DoT and Arcane Missiles on a solo mob |
 | U5 | Nameplate GUID secrecy in combat beyond what Attackers relies on: `UnitGUID("nameplateN")` and `UnitIsDead("nameplateN")` plain for every plate in a five-man pull | `/run` loop over plates in combat with `VSCopy(issecretvalue(...))` |
-| U6 | Partial resists: a WOUND with a RESIST flag and a reduced amount, or two rows | `/vslog` of a Shadow Bolt series on a mob with shadow resistance |
+| U6 (deferred with U1) | Partial resists: a WOUND with a RESIST flag and a reduced amount, or two rows | `/vslog` of a Shadow Bolt series on a mob with shadow resistance |
 | U7 | Two-school spells and wands: the school a Frostfire Bolt WOUND carries (20, 4 or 16); a wand's | `/vslog` of Frostfire Bolt and of Shoot with a non-physical wand |
 | U8 | The kill tell: is the target clear on a kill a client rule or a user setting; does it happen when no press is in flight | `/vslog` of a melee kill with no ability pressed, and the interface option in question |
 
