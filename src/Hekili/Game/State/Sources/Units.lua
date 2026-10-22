@@ -129,6 +129,11 @@ local function take(guid, t)
     end
     if bestRank > 1 then
         U.evicted = U.evicted + 1
+        for i = 1, NTOK do -- a token's previous unit is gone: never resolve its rows to the slot's next occupant
+            if tokPrev[i] == best then
+                tokPrev[i] = 0
+            end
+        end
     end
     uGUID[best], uState[best], uTokens[best], uSeen[best] = guid, GRACE_S, 0, t
     uLeft[best], uHeld[best], uFree[best], uOurs[best] = t, 0, 0, false
@@ -204,6 +209,10 @@ function U.Resolve(api, i, t, act, school)
         local u = tokUid[i]
         if u == 0 or uGUID[u] ~= g then
             u = bind(i, g, t)
+            if u == 0 then -- every slot is bound or held: no slot for this GUID
+                U.unresolved = U.unresolved + 1
+                return nil, 0, false
+            end
         end
         local p = tokPrev[i]
         local swapped = p > 0 and p ~= u and resolvable(p, t)

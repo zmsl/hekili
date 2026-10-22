@@ -7,7 +7,7 @@ local fs = require("Game.State.helpers.fake_spec")
 local alloc = require("Game.State.helpers.alloc")
 
 describe("the unit registry", function()
-    local api, ctl, ns, VS, I, U, saved, rows, gone, mute
+    local api, ctl, ns, VS, I, U, saved, rows, gone, mute, muted
 
     local function boot(unknown)
         api, ctl = fake.new()
@@ -27,9 +27,10 @@ describe("the unit registry", function()
         U = I.Units
         I.Build(fs.def(fs.new(9)), 1)
         VS.Start(api)
-        rows, gone, mute = {}, {}, false
+        rows, gone, mute, muted = {}, {}, false, 0
         U.OnRow(function(t, guid, uid, act, flag, amount, school)
             if mute then
+                muted = muted + 1
                 return -- the allocation case measures the registry, not this recorder
             end
             rows[#rows + 1] = { t = t, guid = guid, uid = uid, act = act, amount = amount, school = school }
@@ -231,5 +232,47 @@ describe("the unit registry", function()
             combat("target", "WOUND", 10 + i % 7, 1)
         end, 2000)
         assert.are.equal(0, bytes)
+        -- alloc.bytes runs 200 warm-up calls, 1 regrow call and the 2000 measured: one row and one target dup each
+        assert.are.same({ 2201, 2201 }, { muted, U.dup })
+    end)
+
+    it("drops a target row whose old slot was evicted and reused by another mob", function()
+        ctl.guid.target = nil
+        ctl.now = 30
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        ctl.Tick(30.2) -- Creature-1 is GONE and released: the oldest eviction candidate
+        for k = 1, U.UNIT_CAP do
+            ctl.guid.nameplate1 = "Creature-x" .. k
+            ctl.now = 100 + k
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+            if k < U.UNIT_CAP then
+                ctl.Fire("NAME_PLATE_UNIT_REMOVED", "nameplate1")
+                ctl.Tick(ctl.now + 0.2)
+            end
+        end
+        assert.are.equal(0, U.Find("Creature-1"))
+        local before = U.unresolved
+        combat("target", "WOUND", 16, 8) -- live read nil: no previous slot to fall back to
+        assert.are.equal(0, #rows)
+        assert.are.equal(before + 1, U.unresolved)
+        assert.is_false(U.IsTarget(U.Find("Creature-x" .. U.UNIT_CAP), ctl.now))
+    end)
+
+    it("leaves a row unresolved, allocating nothing, when every slot is bound or held", function()
+        for k = 1, U.UNIT_CAP - 1 do -- slot 1 is the bound target
+            ctl.guid.nameplate1 = "Creature-h" .. k
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+            U.Hold(U.Uid(U.INDEX.nameplate1))
+            ctl.Fire("NAME_PLATE_UNIT_REMOVED", "nameplate1")
+        end
+        ctl.guid.nameplate2 = "Creature-new"
+        mute = true
+        local before = U.unresolved
+        local bytes = alloc.bytes(function(i)
+            ctl.now = 300 + i * 0.01
+            combat("nameplate2", "WOUND", 10 + i % 7, 1)
+        end, 2000)
+        assert.are.equal(0, bytes)
+        assert.are.same({ 0, 2201 }, { muted, U.unresolved - before })
     end)
 end)
