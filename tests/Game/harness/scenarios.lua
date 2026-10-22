@@ -33,6 +33,24 @@ local ARCHETYPES = {
         local e = entities.new({ weapons = { { w[1], w[2], 2.0 + W.rng.next() } }, level = lvl })
         return e, behaviours.melee({ rates = { miss = 0.05, crit = 0.1 } })
     end,
+    -- K13: a caster in lockstep with our bolt (nature, our amount band), phase-shifted by `W.phase` s
+    lockstep = function(W, lvl)
+        local e = entities.new({ level = lvl })
+        return e,
+            behaviours.caster({
+                every = 1.5,
+                cast = 1.5 + (W.phase or 0),
+                amount = { 14, 18 },
+                school = 8,
+                resist = 0.05,
+            })
+    end,
+    -- K18: a melee whose swings also hit the mob beside our target (a splash)
+    splash = function(W, lvl)
+        local w = entities.weapons(lvl)[1]
+        local e = entities.new({ weapons = { { w[1], w[2], 2.4 } }, level = lvl })
+        return e, behaviours.melee({ rates = { miss = 0.05, crit = 0.1 }, splash = true })
+    end,
 }
 M.ARCHETYPES = ARCHETYPES
 
@@ -55,6 +73,10 @@ M.ARCHETYPES = ARCHETYPES
 --- at the pull), after (seconds the world runs past the stop [3]), distance (yards from our target from the start
 --- [none: no positions]; W.moveTo changes it), bags, pet and stats (ours: entities.new's; the pet regenerates from the
 --- start, W.startPetRegen).
+--- The detection suite's (unit-registry spec §6.2): noMelee (no white swings of ours), spells ({ t, kind }:
+--- behaviours.ours, from the pull, with distance and jitter), switchTo ({ t, mob index }: our target changes), churn
+--- ({ every, gap }: our target's plate leaves and comes back), extraMobs (mobs not on us, each with a plate), phase
+--- (the lockstep archetype's shift), actionTargeting and pushback (observer knobs, M.stream).
 --- Returns the world with every behaviour scheduled, not run (`M.build` runs it).
 function M.world(o, seed)
     local W = world.new(seed)
@@ -79,7 +101,8 @@ function M.world(o, seed)
     us.power0 = us.power -- the observer's first view (a batch stream reads the finished world)
     us.gcdOrder, us.gcdLatency = o.gcdOrder, o.gcdLatency
     local mobs = {}
-    for i = 1, math.max(1, o.attackers or 1) do
+    W.phase = o.phase
+    for i = 1, math.max(1, o.attackers or 1) + (o.extraMobs or 0) do
         local m = o.mobs and o.mobs[i] or {}
         local dmg = m.damage or o.mobDamage or { 10, 14 }
         local mob = W.add(entities.new({
@@ -93,6 +116,7 @@ function M.world(o, seed)
         }))
         mob.target = (i <= (o.attackers or 1) and not (o.joinAt and o.joinAt[i])) and us or nil
         mobs[i] = mob
+        mob.plate = i > 1 and o.extraMobs ~= nil or nil
     end
     us.target = mobs[1]
     local others = {}
@@ -130,6 +154,7 @@ function M.world(o, seed)
             strike = { 70, 90 },
             dot = { 3, 5, 13 },
             proc = o.proc,
+            noSwing = o.noMelee,
         })(W, us)
         for i = 1, #mobs do
             if i <= (o.attackers or 1) then
@@ -170,6 +195,27 @@ function M.world(o, seed)
             W.emit({ kind = "target" })
         end)
     end
+    if o.spells then -- our scripted spells (the detection suite)
+        W.at(pull, function()
+            behaviours.ours({ spells = o.spells, distance = o.distance, jitter = o.jitter })(W, us)
+        end)
+    end
+    for _, sw in ipairs(o.switchTo or {}) do -- { t, mob index }: our target changes (K5, K12, K19)
+        W.at(sw[1], function()
+            us.target = mobs[sw[2]]
+            W.emit({ kind = "target" })
+        end)
+    end
+    if o.churn then -- { every, gap }: our target's plate leaves and comes back (K7)
+        for t = pull + o.churn[1], stop, o.churn[1] do
+            W.at(t, function()
+                W.emit({ kind = "plateOff", mob = mobs[1] })
+            end)
+            W.at(t + o.churn[2], function()
+                W.emit({ kind = "plateOn", mob = mobs[1] })
+            end)
+        end
+    end
     W.at(stop, function()
         for _, e in ipairs(W.ents) do
             e.stopped = true
@@ -194,7 +240,8 @@ end
 --- `o.observe` over them).
 function M.stream(o, seed)
     local W = M.build(o, seed)
-    local k = { plainSpeed = o.plainSpeed, usable = o.usable }
+    local k =
+        { plainSpeed = o.plainSpeed, usable = o.usable, actionTargeting = o.actionTargeting, pushback = o.pushback }
     for key, v in pairs(o.observe or {}) do
         k[key] = v
     end

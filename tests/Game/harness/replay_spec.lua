@@ -497,7 +497,7 @@ describe("the replay's channels and hard casts (central fix 22, gap BC)", functi
             local head = ("%.2f %s"):format(s.t[i] - R.pull, ev)
             if ev == "@casting" or ev == "@channel" then
                 out[#out + 1] = head .. " " .. rel(s.a1[i]) .. " " .. rel(s.a2[i])
-            elseif ev:match("^UNIT_SPELLCAST") and s.a1[i] == "player" then
+            elseif ev:match("^UNIT_SPELLCAST") and ev ~= "UNIT_SPELLCAST_SENT" and s.a1[i] == "player" then
                 out[#out + 1] = head .. " " .. tostring(s.a3[i])
             end
         end

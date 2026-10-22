@@ -148,6 +148,24 @@ function M.melee(p)
                         sameMs = same,
                         rage = rage,
                     })
+                    if p.splash and not p.land then -- another player's splash: the same hit on a second mob
+                        for _, m in ipairs(W.ents) do
+                            if m.kind == "mob" and m ~= tgt and not m.dead then
+                                W.emit({
+                                    kind = "swing",
+                                    src = e,
+                                    dst = m,
+                                    hand = h,
+                                    act = act,
+                                    flag = flag,
+                                    amount = amt,
+                                    school = 1,
+                                    speed = w[3],
+                                })
+                                break
+                            end
+                        end
+                    end
                     if p.land then
                         local lag = p.land(W, e, h, W.t)
                         e.landAt[h] = W.t + lag
@@ -182,7 +200,9 @@ function M.melee(p)
                 e.lastSwing[h] = W.t
                 W.at(W.t + w[3] / (p.haste or 1), swing)
             end
-            W.at(W.t + (p.phase and p.phase[h] or W.rng.next() * e.weapons[h][3]), swing)
+            if not p.noSwing then
+                W.at(W.t + (p.phase and p.phase[h] or W.rng.next() * e.weapons[h][3]), swing)
+            end
         end
         for _, press in ipairs(p.presses or {}) do
             W.at(press[1], function()
@@ -207,6 +227,114 @@ function M.melee(p)
                             })
                         end)
                     end
+                end
+            end)
+        end
+    end
+end
+
+--- Our scripted spells (the detection suite, unit-registry spec §6.2), as the fake spec's expect abilities:
+--- `p.spells` { { t, kind } }: "instant" (fire 30-40 at once), "bolt" (a 1.5 s cast of nature 14-18 landing
+--- `p.distance` / 20 s after its success), "doti" (arcane 8-9 at once, then 4 ticks of 4 every 3 s), "ticks" (5 ticks of
+--- 6 every 3 s after a `p.distance` / 40 s flight; its miss arrives then), "none", "bogus" (an instant on its
+--- default type), "unmapped" (a success no ability maps), "refused" (SENT then FAILED: no success), "aoe" (an
+--- instant on our target and every other mob with a plate), "chan" (a 3 s channel ticking arcane 5 every 1 s).
+--- `p.distance` yards [20]; `p.jitter` the cast events' extra latency bound [0] (W.crng, on the truth).
+function M.ours(p)
+    local KEYS = {
+        instant = { "spender_f", "INSTANT" },
+        bolt = { "spender_p", "BOLT" },
+        doti = { "spender_m", "DOTI" },
+        ticks = { "spender_s", "TICKS" },
+        none = { "spender_n", "NONE" },
+        bogus = { "spender_q", "BOGUS" },
+        aoe = { "spender_f", "INSTANT" },
+        chan = { "spender_h", "CHAN" },
+    }
+    return function(W, e)
+        local d = p.distance or 20
+        local function effect(kind)
+            return function(W2, me)
+                local tgt, t0 = me.target, W2.t
+                if not tgt then
+                    return
+                end
+                if kind == "instant" or kind == "bogus" then
+                    W2.hit(me, tgt, W2.rng.int(30, 40), 4, "spell", t0)
+                elseif kind == "aoe" then
+                    for _, m in ipairs(W2.ents) do
+                        if m.kind == "mob" and not m.dead and (m == tgt or m.plate) then
+                            W2.hit(me, m, W2.rng.int(30, 40), 4, "spell", t0)
+                        end
+                    end
+                elseif kind == "bolt" then
+                    W2.hitAt(me, tgt, W2.rng.int(14, 18), 8, "spell", d / 20, t0)
+                elseif kind == "doti" then
+                    local ev = W2.hit(me, tgt, W2.rng.int(8, 9), 64, "spell", t0)
+                    if ev.act == "WOUND" then
+                        W2.dot(me, tgt, 3, 4, 4, 64, "doti", t0)
+                    end
+                elseif kind == "ticks" then
+                    W2.at(t0 + d / 40, function()
+                        local act = W2.rollOutcome(tgt, "spell")
+                        if act ~= "WOUND" then
+                            W2.emit({
+                                kind = "spell",
+                                src = me,
+                                dst = tgt,
+                                act = act,
+                                flag = "",
+                                amount = 0,
+                                school = 1,
+                                castT = t0,
+                            })
+                        else
+                            W2.dot(me, tgt, 3, 5, 6, 8, "ticks", t0)
+                        end
+                    end)
+                end
+            end
+        end
+        for _, sp in ipairs(p.spells or {}) do
+            W.at(sp[1], function()
+                local kind = sp[2]
+                if e.stopped then
+                    return
+                elseif kind == "unmapped" then
+                    W.emit({ kind = "cast", src = e, dst = e.target, spell = "POTION" })
+                    return
+                elseif kind == "refused" then
+                    W.emit({ kind = "refused", src = e, spell = "BOLT" })
+                    return
+                end
+                local key = KEYS[kind]
+                local press = { spell = key[2], gcd = 1.5, effect = effect(kind) }
+                if kind == "bolt" then
+                    press.cast = 1.5
+                elseif kind == "chan" then
+                    press.channel = {
+                        length = 3,
+                        tick = 1,
+                        effect = function(W2, me)
+                            if me.target then
+                                W2.hit(me, me.target, 5, 64, "spell", W2.t)
+                            end
+                        end,
+                    }
+                    press.effect = nil
+                end
+                local n0 = #W.truth
+                W.press(e, key[1], press)
+                if p.jitter then -- on the success (after its outcome, or a hard cast's end): the press's own cast
+                    W.at(W.t + (press.cast or 0), function()
+                        for i = n0 + 1, #W.truth do
+                            local ev = W.truth[i]
+                            if ev.kind == "cast" and ev.src == e then
+                                ev.jitter = W.crng.next() * p.jitter
+                                return
+                            end
+                        end
+                    end)
                 end
             end)
         end

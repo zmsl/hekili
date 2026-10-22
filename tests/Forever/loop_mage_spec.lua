@@ -113,7 +113,8 @@ describe("the Mage loop worlds", function()
         local missiles = 0
         for i = n1 + 1, #W.truth do
             local ev = W.truth[i]
-            missiles = missiles + ((ev.kind == "spell" and ev.src == us and ev.school == 64) and 1 or 0)
+            missiles = missiles
+                + ((ev.kind == "spell" and ev.src == us and (ev.school == 64 or ev.act ~= "WOUND")) and 1 or 0) -- a miss is school 1
         end
         assert.are.same({ 5, { "cast 12", "channelStop 17" } }, { missiles, kinds(n1 + 1) })
     end)

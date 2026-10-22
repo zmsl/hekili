@@ -69,17 +69,20 @@ describe("the world's press", function()
         }
         assert.is_true(W.press(us, "spender_c", p))
         assert.are.same({ 15, 4.5, 9, 1 }, { us.power, us.gcdUntil, us.cdUntil.spender_c, hit })
-        local got = seen() -- the cooldown's flag (its times secret); our target targets us: targettarget too
+        -- SENT then the success, each echoed on targettarget (our target targets us); the cooldown's flag (times secret)
+        local got = seen()
         assert.are.same({
+            "UNIT_SPELLCAST_SENT player Mob",
+            "UNIT_SPELLCAST_SENT targettarget Mob",
             "UNIT_SPELLCAST_SUCCEEDED player Cast-1",
+            "UNIT_SPELLCAST_SUCCEEDED targettarget Cast-1",
             "@cooldown " .. fs.SPENDER_C .. " SECRET",
             "SPELL_UPDATE_COOLDOWN nil nil",
-            "UNIT_SPELLCAST_SUCCEEDED targettarget Cast-1",
             "@truth 10 nil",
             "@truth 15 nil",
-        }, { got[1], got[2], got[3], got[4], got[5], got[6] })
+        }, { got[1], got[2], got[3], got[4], got[5], got[6], got[7], got[8] })
         local s = observer.observe(W)
-        assert.are.equal(fs.SPENDER_C, s.a3[1])
+        assert.are.same({ fs.SPENDER_C, fs.SPENDER_C }, { s.a4[1], s.a3[3] }) -- SENT's and the success's
     end)
 
     it("queues an on-next-swing press (IsCurrentSpell) and pays it at the swing; one queued at a time", function()
@@ -186,12 +189,15 @@ describe("the world's press", function()
         for i, line in ipairs(got) do
             at = line == "@dead target true" and i or at
         end
-        assert.are.same({
+        assert.are.same({ -- the clear (an instant kill's: 100 ms after its row), then out of combat 1 s on
+            "@guid target nil",
+            "@guid softinteract Creature-1",
+            "PLAYER_TARGET_CHANGED nil nil",
             "UNIT_HEALTH target nil",
             "@combat false nil",
             "@auraError target false",
             "PLAYER_REGEN_ENABLED nil nil",
-        }, { got[at + 1], got[at + 2], got[at + 3], got[at + 4] })
+        }, { got[at + 1], got[at + 2], got[at + 3], got[at + 4], got[at + 5], got[at + 6], got[at + 7] })
     end)
 
     it("an avoided press: the target's avoid, then its `refund` share of the cost back (a wound gives none)", function()
@@ -343,7 +349,11 @@ describe("the world's press", function()
         local s, out = observer.observe(W, setmetatable({ gcdSpell = 61304 }, { __index = observer.DEFAULTS })), {}
         for i = 1, s.n do
             local ev = s.ev[i]
-            if (ev:match("^UNIT_SPELLCAST") and s.a1[i] == "player") or ev == "@casting" or ev == "@channel" then
+            if
+                (ev:match("^UNIT_SPELLCAST") and ev ~= "UNIT_SPELLCAST_SENT" and s.a1[i] == "player")
+                or ev == "@casting"
+                or ev == "@channel"
+            then
                 out[#out + 1] = table.concat(
                     { ("%.2f"):format(s.t[i]), ev, tostring(s.a1[i]), tostring(s.a2[i]), tostring(s.a3[i]) },
                     " "
@@ -461,9 +471,12 @@ describe("the world's press", function()
             "1.00 @casting 1000 2500 nil",
             "1.00 UNIT_SPELLCAST_START player Cast-1 " .. a,
             "2.00 @casting nil nil nil",
-            "2.00 UNIT_SPELLCAST_INTERRUPTED player Cast-1 " .. a,
+            "2.00 UNIT_SPELLCAST_FAILED player Cast-1 " .. a,
             "2.00 UNIT_SPELLCAST_STOP player Cast-1 " .. a,
             "2.00 UNIT_SPELLCAST_SUCCEEDED player Cast-2 " .. tostring(fs.SPENDER_B),
+            "2.15 UNIT_SPELLCAST_INTERRUPTED player Cast-1 " .. a,
+            "2.15 UNIT_SPELLCAST_INTERRUPTED player Cast-1 " .. a,
+            "2.15 UNIT_SPELLCAST_INTERRUPTED player Cast-1 " .. a,
         }, casts())
     end)
 

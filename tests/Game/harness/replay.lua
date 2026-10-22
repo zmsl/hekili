@@ -390,6 +390,13 @@ function M.new(text, H, o)
         end
         return e.id and keyOf[e.id] or (e.item and itemOf[e.item])
     end
+    -- a spell outcome's school (unit-registry spec §6.1 row 6): the content's declared one; a miss is school 1 (fact 2)
+    local SCHOOL = H.Hekili.SCHOOL or {}
+    local function schoolOf(e)
+        local key = e.id and keyFor(e)
+        local a = key and class.abilities[key]
+        return e.act == "WOUND" and a and SCHOOL[a.school] or 1
+    end
     -- world times: log time + pull, each line after the earlier ones of its timestamp; the opening state at 0
     -- a tagged aura whose spell ID also logs untagged on that unit is another wowsims aura sharing the ID (a stacking
     -- counter beside a buff; the example in tools/wowsims/specs/paladin_protection.lua): not the client's aura of that
@@ -718,7 +725,7 @@ function M.new(text, H, o)
                         act = e.act,
                         flag = e.flag,
                         amount = amount,
-                        school = 1,
+                        school = schoolOf(e),
                     })
                 end
             end

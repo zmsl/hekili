@@ -16,7 +16,7 @@ local M = {}
 M.TICK = 0.1 -- seconds between OnUpdate + drain (in game every frame; poll 2 at 0.2 s in combat)
 M.WINDOW = 10 -- seconds per rage window (harness design §3.3)
 M.STEP = 9 -- one main-hand step: the overshoot bar
-local CAP = 4096
+local CAP = 32768
 
 local USABLE, SHORT, UNUSABLE = { true, false }, { false, true }, { false, false }
 local PLAIN_READY = { isActive = false, isOnGCD = false, startTime = 0, duration = 0 } -- a secret-free client's
@@ -66,6 +66,12 @@ function M.boot(o)
         c.missHand[i], c.missAt[i], c.avIdx[i], c.avHand[i], c.avAt[i] = 0, 0, 0, 0, 0
         c.loOver[i], c.estOver[i], c.danger[i] = 0, 0, 0
         c.verdict[i], c.onus[i] = 0, ""
+    end
+    -- by stream index: what a row staged (1 Crit, 2 Avoided; 0 none)
+    -- shortcut: no payAt / payKind (the paying ticket) until I.Tickets.onPay exists; the follow-up after the ticket lane
+    c.staged = {}
+    for i = 1, CAP do
+        c.staged[i] = 0
     end
     for k = 1, 8 do
         c.recIdx[k] = 0
@@ -141,6 +147,9 @@ function M.boot(o)
                     c.recIdx[b] = i
                 end
             end
+        end
+        if c.cur > 0 and (kind == c.VS.Obs.Crit or kind == c.VS.Obs.Avoided) then
+            c.staged[c.cur] = kind == c.VS.Obs.Crit and 1 or 2
         end
         return stage(kind, t, a, b, cc)
     end
@@ -379,6 +388,7 @@ function M.run(c, s, offset)
     for i = 1, s.n do
         c.crHand[i], c.crAt[i], c.verdict[i], c.onus[i], c.crit3[i], c.unk[i] = 0, 0, 0, "", 0, 0
         c.vetoHand[i], c.vetoAt[i] = 0, 0
+        c.staged[i] = 0
     end
     for _, r in pairs(c.trk) do
         r.n = 0

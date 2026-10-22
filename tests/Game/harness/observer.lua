@@ -39,12 +39,35 @@ M.DEFAULTS = {
     regenRead = true, -- GetPowerRegenForPowerType answers the true rate out of combat (probe W), secret in combat
     playerSpeed = false, -- UnitAttackSpeed("player") answers our weapons' periods with the damage cache (out of combat)
     forms = false, -- the client's forms (index to spell ID: the content's), answered once
+    -- 2026-10-22 captures (unit-registry spec §6.1): Action Targeting off by default (softenemy then never fires);
+    -- the DELAYED pushback row is opt-in (it moves the player's UNIT_COMBAT 0.37 s later).
+    actionTargeting = false,
+    pushback = false,
+    -- A kill's shape by kind (s, from the kill truth; spec §2.5): the death events after the blow; a white swing's
+    -- clear after its swing (its row comes at the landing lag, on the corpse); a projectile's clear after the death and
+    -- its row after the clear (11-36 ms measured); an instant's clear after its row.
+    killTiming = { died = 0.002, meleeClear = 0.100, flightClear = 0.002, flightRow = 0.020, strikeClear = 0.100 },
+    killTokens = { melee = { "softinteract" }, flight = { "plate", "target", "softinteract" } },
 }
 
+M.COMBAT_END = 1.0 -- s from a kill to PLAYER_REGEN_ENABLED when no attacker is left (Rogue kill-events capture)
 M.FRAME = 1e-4 -- seconds: one update's events (a replay's lines of one timestamp sit 1e-6 apart; a strike's 1 ms is the next)
 
 -- Our spells as the fake spec's (its costs: the usability answers).
-M.SPELLS = { STRIKE = fs.SPENDER_B, DOT = fs.SPENDER_C, CAST = fs.SPENDER_A, OTHER = 1 }
+M.SPELLS = {
+    STRIKE = fs.SPENDER_B,
+    DOT = fs.SPENDER_C,
+    CAST = fs.SPENDER_A,
+    OTHER = 1,
+    INSTANT = fs.SPENDER_F,
+    BOLT = fs.SPENDER_P,
+    DOTI = fs.SPENDER_M,
+    TICKS = fs.SPENDER_S,
+    NONE = fs.SPENDER_N,
+    BOGUS = fs.SPENDER_Q,
+    CHAN = fs.SPENDER_H,
+    POTION = 999999, -- no ability's: an unmapped success
+}
 M.COSTS = { { fs.SPENDER_A, 10 }, { fs.SPENDER_B, 15 }, { fs.SPENDER_C, 10 } }
 
 --- Our landing lag (the `land` of behaviours.melee) under knobs `k`: the time from a swing of `hand` at `t` to its
@@ -130,13 +153,19 @@ function M.new(W, k)
         end
     end
     local s = { n = 0, t = {}, ev = {}, a1 = {}, a2 = {}, a3 = {}, a4 = {}, a5 = {} }
-    s.src, s.hand, s.swingT, s.actor = {}, {}, {}, {}
+    s.src, s.hand, s.swingT, s.actor, s.castT = {}, {}, {}, {}, {}
     local obs = { s = s }
     local list, seq = {}, 0
-    local function push(t, ev, a1, a2, a3, a4, a5, src, hand, swingT, actor)
+    local function push(t, ev, a1, a2, a3, a4, a5, src, hand, swingT, actor, castT)
         seq = seq + 1
-        list[#list + 1] = { t, seq, ev, a1, a2, a3, a4, a5, src or 0, hand or 0, swingT or 0, actor or 0 }
+        list[#list + 1] = { t, seq, ev, a1, a2, a3, a4, a5, src or 0, hand or 0, swingT or 0, actor or 0, castT or 0 }
     end
+    local function spellID(name)
+        return M.SPELLS[name] or name -- a real ID (the content's) passes as is
+    end
+    -- our hard cast's and channel's castGUID numbers (their start's, carried to the success and the stop), and the
+    -- hard cast's spell
+    local hardN, chanN, castSpell = 0, 0, nil
     -- player then targettarget (P log 1 1297); another player's on partyN (G).
     local function tokensOf(v, ev)
         local out = {}
@@ -149,6 +178,9 @@ function M.new(W, k)
             for _, tok in ipairs(k.targetTokens) do
                 out[#out + 1] = tok == "plate" and plate[v] or tok
             end
+            if k.actionTargeting then
+                out[#out + 1] = "softenemy"
+            end
         elseif plate[v] then
             out[1] = plate[v]
         elseif party[v] then
@@ -159,8 +191,51 @@ function M.new(W, k)
         end)
         return out
     end
+    local castOpen = false -- our hard cast in progress (DELAYED, pushback)
+    -- One player cast event, echoed on targettarget (another castBarID) while our target targets us: every kind of
+    -- them (captures b and c: SENT, START, SUCCEEDED, STOP, FAILED, INTERRUPTED, DELAYED).
+    local function castEv(t, onUs, name, g, id, a4, a5)
+        push(t, name, "player", g, id, a4, a5)
+        if onUs then
+            push(t, name, "targettarget", g, id, a4 and (a4 .. "-tt") or nil, a5 and (a5 .. "-tt") or nil)
+        end
+    end
+    local function sent(t, onUs, g, id)
+        push(t, "UNIT_SPELLCAST_SENT", "player", "Mob", g, id)
+        if onUs then
+            push(t, "UNIT_SPELLCAST_SENT", "targettarget", "Mob", g, id)
+        end
+    end
+    -- The tokens and time of a killing outcome (killTiming, killTokens); nil: the usual ones (an instant's).
+    local function killShape(t, ev)
+        local sw = ev.swing
+        local kt = k.killTiming
+        local list
+        if ev.kind == "land" and sw and sw.killing then
+            list = k.killTokens.melee -- at the landing lag, after the clear: the corpse only
+        elseif ev.killing and ev.flight then
+            t, list = t + kt.died + kt.flightClear + kt.flightRow, k.killTokens.flight
+        end
+        if not list then
+            return nil
+        end
+        local toks = {}
+        for _, tok in ipairs(list) do
+            toks[#toks + 1] = tok == "plate" and plate[ev.dst] or tok
+        end
+        return t, toks
+    end
     local function outcome(t, ev, src, hand, swingT)
-        for _, tok in ipairs(tokensOf(ev.dst, ev)) do
+        local toks = tokensOf(ev.dst, ev)
+        local kt, ktoks = killShape(t, ev)
+        if kt then
+            t, toks = kt, ktoks
+        end
+        if ev.dst == us and castOpen and k.pushback and ev.act == "WOUND" then
+            castEv(t, ev.onUs, "UNIT_SPELLCAST_DELAYED", "Cast-" .. hardN, spellID(castSpell), "Bar-" .. hardN)
+            t = t + 0.37 -- the player's row comes about 0.37 s after DELAYED (capture b)
+        end
+        for _, tok in ipairs(toks) do
             push(
                 t,
                 "UNIT_COMBAT",
@@ -172,7 +247,8 @@ function M.new(W, k)
                 src,
                 hand,
                 swingT,
-                idx[ev.src]
+                idx[ev.src],
+                ev.castT
             )
         end
     end
@@ -195,6 +271,9 @@ function M.new(W, k)
         end
         local tgt = tt[us] or nil
         push(t, "@guid", "target", tgt and tgt.guid)
+        if k.actionTargeting then
+            push(t, "@guid", "softenemy", tgt and tgt.guid)
+        end
         push(t, "@unitIs", "targettarget", tgt and tt[tgt] == us and "player" or nil)
         if k.plainSpeed and tgt then
             push(t, "@speed", "target", tgt.weapons[1][3])
@@ -272,9 +351,6 @@ function M.new(W, k)
             end
         end
     end
-    local function spellID(name)
-        return M.SPELLS[name] or name -- a real ID (the content's) passes as is
-    end
     local castN = 0
     -- a cooldown's pending end (at or after `t`) whose start a restart or a reset supersedes: dropped, or it would end the
     -- new one (a restart on the old end's instant: that end's float sum lands a ulp after the new start)
@@ -314,8 +390,6 @@ function M.new(W, k)
             push(t + d, "SPELL_UPDATE_COOLDOWN")
         end
     end
-    -- our hard cast's and channel's castGUID numbers (their start's, carried to the success and the stop)
-    local hardN, chanN = 0, 0
     local deltas, dseq = {}, 0 -- our power's changes as the client's usability sees them: { answer time, delta, power type, true time, seq } (a
     -- form change: { t, form, "form", seq }; byTime orders by the last field)
     -- the answers' view of us: our form as of the answer's time (a form change is a delta), the rest live
@@ -434,71 +508,112 @@ function M.new(W, k)
         elseif kind == "stealthed" then -- IsStealthed (plain: no SecretWhen* flag) and its event
             push(t, "@stealthed", ev.on)
             push(t, "UPDATE_STEALTH")
-        elseif kind == "kill" then -- our target gone; out of combat when no living attacker is left
+        elseif kind == "kill" then -- 2026-10-22 kill-events capture: PARTY_KILL with the blow when ours; UNIT_DIED and
+            -- PLAYER_TARGET_DIED `died` later; the clear by kind (killTiming); the corpse answers softinteract
+            local kt, c = k.killTiming, ev.cause or {}
+            local clear = t + kt.strikeClear -- an instant's (its row came in its frame)
+            if c.kind == "swing" then
+                clear = t + kt.meleeClear
+            elseif c.flight then
+                clear = t + kt.died + kt.flightClear
+            end
+            if ev.src == us then
+                push(t, "PARTY_KILL", us.guid, ev.dst.guid)
+            end
+            push(t + kt.died, "UNIT_DIED", ev.dst.guid)
             if ev.dst == ev.ourTarget then
-                push(t, "@dead", "target", true)
-                push(t, "UNIT_HEALTH", "target")
+                push(t + kt.died, "PLAYER_TARGET_DIED")
+                push(t + kt.died, "@dead", "target", true)
+                push(clear, "@guid", "target", nil)
+                push(clear, "@guid", "softinteract", ev.dst.guid)
+                push(clear, "PLAYER_TARGET_CHANGED")
+                push(clear, "UNIT_HEALTH", "target")
             end
             local left = false
             for _, e in ipairs(mobs) do
                 left = left or (not e.dead and e.target == us)
             end
-            if not left then
-                push(t, "@combat", false)
-                combat(t, false)
+            if not left then -- after the killing row (Rogue capture: about 1 s after the kill)
+                local te = t + M.COMBAT_END
+                push(te, "@combat", false)
+                combat(te, false)
                 if not k.plain then
-                    push(t, "@auraError", "target", false)
+                    push(te, "@auraError", "target", false)
                 end
-                push(t, "PLAYER_REGEN_ENABLED")
+                push(te, "PLAYER_REGEN_ENABLED")
             end
         -- our cast IDs plain (docs/superpowers/specs/2026-10-16-forever-protection-design.md §1.1)
         elseif kind == "cast" and ev.src == us then -- others' secret (G 49873)
             castN = castN + 1
-            -- on cooldown and the GCD (cooldown, above); the GCD's rising edge after the success or before it
-            -- (`ev.order`, the world's roll: UNMEASURED until checkpoint G3)
             local gcdFirst = ev.gcd and k.gcdSpell and ev.order == 2
             if gcdFirst then
                 cooldown(t, k.gcdSpell, ev.gcd)
             end
-            local guid = "Cast-" .. castN
+            local guid, bar, id = "Cast-" .. castN, nil, spellID(ev.spell)
+            local tc = t + (ev.jitter or 0) -- cast-event latency (K10), recorded on the truth by the behaviour
             if ev.hard then -- the start's castGUID; UnitCastingInfo answers nothing from the success on
-                castN, guid = castN - 1, "Cast-" .. hardN
-                push(t, "@casting", nil)
-            elseif ev.chanEnds then -- UnitChannelInfo answers first, then CHANNEL_START, then the success (UNMEASURED:
-                -- the order the engine's SPELL_CAST_SUCCESS needs, Events.lua reading UnitChannelInfo; Mage checkpoint M4)
+                castN, guid, bar, castOpen = castN - 1, "Cast-" .. hardN, "Bar-" .. hardN, false
+                push(tc, "@casting", nil)
+            elseif ev.chanEnds then
                 chanN = castN
-                push(t, "@channel", t * 1000, ev.chanEnds * 1000)
-                push(t, "UNIT_SPELLCAST_CHANNEL_START", "player", guid, spellID(ev.spell))
+                sent(tc, ev.onUs, guid, id)
+                push(tc, "@channel", t * 1000, ev.chanEnds * 1000)
+                castEv(tc, ev.onUs, "UNIT_SPELLCAST_CHANNEL_START", guid, id)
+            else
+                sent(tc, ev.onUs, guid, id) -- an instant's SENT, the same ms
             end
-            push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", guid, spellID(ev.spell))
-            if (ev.cd or 0) > 0 then -- every rank answers the spell's cooldown (`ev.ids`, the content's)
-                for _, id in ipairs(ev.ids or { spellID(ev.spell) }) do
-                    cooldown(t, id, ev.cd)
+            castEv(tc, ev.onUs, "UNIT_SPELLCAST_SUCCEEDED", guid, id, bar)
+            if (ev.cd or 0) > 0 then
+                for _, rid in ipairs(ev.ids or { id }) do
+                    cooldown(t, rid, ev.cd)
                 end
             end
             if ev.gcd and k.gcdSpell and not gcdFirst then
                 cooldown(t, k.gcdSpell, ev.gcd)
             end
-            if ev.onUs then -- P log 1 1345, 4329-4330, 6532: also on targettarget while our target targets us
-                push(t, "UNIT_SPELLCAST_SUCCEEDED", "targettarget", guid, spellID(ev.spell))
+            if ev.hard then
+                castEv(tc, ev.onUs, "UNIT_SPELLCAST_STOP", guid, id, bar)
             end
-            if ev.hard then -- after the success, as the client ends a completed cast bar (UNMEASURED)
-                push(t, "UNIT_SPELLCAST_STOP", "player", guid, spellID(ev.spell))
-            end
-        elseif kind == "castStart" and ev.src == us then -- our hard cast: UnitCastingInfo (plain [W PR9]), START, the GCD
+        elseif kind == "castStart" and ev.src == us then -- our hard cast: SENT, UnitCastingInfo, START, the GCD
             castN = castN + 1
-            hardN = castN
+            hardN, castSpell, castOpen = castN, ev.spell, true
+            local g, id, bar = "Cast-" .. castN, spellID(ev.spell), "Bar-" .. castN
+            sent(t, ev.onUs, g, id)
             push(t, "@casting", t * 1000, ev.ends * 1000)
-            push(t, "UNIT_SPELLCAST_START", "player", "Cast-" .. castN, spellID(ev.spell))
+            castEv(t, ev.onUs, "UNIT_SPELLCAST_START", g, id, bar)
             if ev.gcd and k.gcdSpell then
                 cooldown(t, k.gcdSpell, ev.gcd)
             end
-        elseif kind == "castStop" and ev.src == us then -- our hard cast cut (a dead target, the fight's end): the
-            -- client's interrupt, UnitCastingInfo empty, then INTERRUPTED and STOP. UNMEASURED (ledger CS1): the
-            -- client may fire FAILED instead of INTERRUPTED when the target dies; Sources/Casts.lua takes either
+        elseif kind == "castStop" and ev.src == us then -- capture b: a death is FAILED then STOP in one ms, then three
+            -- INTERRUPTED with no castBarID 0.15 s later; a move is INTERRUPTED (castBarID 5th), STOP 1 ms later, then two;
+            -- each echoed on targettarget while our target targets us
+            local g, id, bar = "Cast-" .. hardN, spellID(ev.spell), "Bar-" .. hardN
+            castOpen = false
             push(t, "@casting", nil)
-            push(t, "UNIT_SPELLCAST_INTERRUPTED", "player", "Cast-" .. hardN, spellID(ev.spell))
-            push(t, "UNIT_SPELLCAST_STOP", "player", "Cast-" .. hardN, spellID(ev.spell))
+            if ev.cause == "move" then
+                castEv(t, ev.onUs, "UNIT_SPELLCAST_INTERRUPTED", g, id, nil, bar)
+                castEv(t + 0.001, ev.onUs, "UNIT_SPELLCAST_STOP", g, id, bar)
+                for _ = 1, 2 do
+                    castEv(t + 0.15, ev.onUs, "UNIT_SPELLCAST_INTERRUPTED", g, id, nil, nil)
+                end
+            else
+                castEv(t, ev.onUs, "UNIT_SPELLCAST_FAILED", g, id, bar)
+                castEv(t, ev.onUs, "UNIT_SPELLCAST_STOP", g, id, bar)
+                for _ = 1, 3 do
+                    castEv(t + 0.15, ev.onUs, "UNIT_SPELLCAST_INTERRUPTED", g, id, nil, nil)
+                end
+            end
+        elseif kind == "refused" and ev.src == us then -- a cast refused at its start (range, line of sight): K15
+            castN = castN + 1
+            local g, id = "Cast-" .. castN, spellID(ev.spell)
+            sent(t, ev.onUs, g, id)
+            castEv(t, ev.onUs, "UNIT_SPELLCAST_FAILED", g, id, nil)
+        elseif kind == "plateOff" then -- soft-targeting log: the removal still answers the GUID; the plate goes after
+            push(t, "NAME_PLATE_UNIT_REMOVED", plate[ev.mob])
+            push(t + 0.001, "@guid", plate[ev.mob], nil)
+        elseif kind == "plateOn" then
+            push(t, "@guid", plate[ev.mob], ev.mob.guid)
+            push(t, "NAME_PLATE_UNIT_ADDED", plate[ev.mob])
         elseif kind == "channelStop" and ev.src == us then -- its end or a clip: UnitChannelInfo empty, then the stop
             push(t, "@channel", nil)
             push(t, "UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-" .. chanN, spellID(ev.spell))
@@ -668,7 +783,7 @@ function M.new(W, k)
                 local i = s.n + 1
                 s.n = i
                 s.t[i], s.ev[i], s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i] = e[1], e[3], e[4], e[5], e[6], e[7], e[8]
-                s.src[i], s.hand[i], s.swingT[i], s.actor[i] = e[9], e[10], e[11], e[12]
+                s.src[i], s.hand[i], s.swingT[i], s.actor[i], s.castT[i] = e[9], e[10], e[11], e[12], e[13]
             else
                 keep[#keep + 1] = e
             end

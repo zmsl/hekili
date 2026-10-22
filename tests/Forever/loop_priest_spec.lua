@@ -122,7 +122,7 @@ describe("the Priest loop worlds", function()
         W.run(4)
         local bolts = 0
         for _, ev in ipairs(W.truth) do
-            bolts = bolts + ((ev.kind == "spell" and ev.src == us and ev.school == 2) and 1 or 0)
+            bolts = bolts + ((ev.kind == "spell" and ev.src == us and (ev.school == 2 or ev.act ~= "WOUND")) and 1 or 0) -- a miss is school 1
         end
         assert.are.equal(3, bolts)
         W.t = 4

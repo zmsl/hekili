@@ -122,8 +122,9 @@ describe("the observer", function()
         assert.are.same({ 2, "UNIT_SPELLCAST_SUCCEEDED", "party1", fake.SECRET, fake.SECRET }, { unpack(got[1], 1, 5) })
         assert.are.same({ "nameplate1", 37, 8, 2 }, { got[2][3], got[2][6], got[2][7], got[2][8] })
         assert.are.same({ "target", 37, 8, 2 }, { got[3][3], got[3][6], got[3][7], got[3][8] })
-        assert.are.same({ 3, "UNIT_SPELLCAST_SUCCEEDED", "player" }, { got[4][1], got[4][2], got[4][3] })
-        assert.is_number(got[4][5])
+        assert.are.same({ 3, "UNIT_SPELLCAST_SENT", "player" }, { got[4][1], got[4][2], got[4][3] }) -- SENT first
+        assert.are.same({ 3, "UNIT_SPELLCAST_SUCCEEDED", "player" }, { got[6][1], got[6][2], got[6][3] }) -- after tt's
+        assert.is_number(got[6][5])
     end)
 
     it(
@@ -242,6 +243,8 @@ describe("the observer", function()
             { 4.1, "@usable", cast, 1, nil, nil, nil, 0 },
             { 4.1, "@usable", dot, 1, nil, nil, nil, 0 },
             { 4.1, "SPELL_UPDATE_USABLE", nil, nil, nil, nil, nil, 0 },
+            { 5, "UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", observer.SPELLS.CAST, nil, 0 },
+            { 5, "UNIT_SPELLCAST_SENT", "targettarget", "Mob", "Cast-1", observer.SPELLS.CAST, nil, 0 },
             { 5, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", observer.SPELLS.CAST, nil, nil, 0 },
             { 5, "UNIT_SPELLCAST_SUCCEEDED", "targettarget", "Cast-1", observer.SPELLS.CAST, nil, nil, 0 },
             { 5, "@truth", 2, nil, nil, nil, nil, 0 },
@@ -369,6 +372,8 @@ describe("the observer", function()
             W.emit({ t = 1.5, kind = "prepull" })
             obs.step(1.6)
             W.emit({ t = 2, kind = "pull" })
+            -- our swing takes the health (the server's hit, 2026-10-22 kill-events capture); its row lands later
+            W.emit({ t = 3.5, kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", amount = 40, ours = true })
             local land = { t = 4, kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", flag = "", amount = 40 }
             land.school, land.swing, land.rage = 1, { t = 3.5 }, 12
             W.emit(land)
@@ -395,7 +400,7 @@ describe("the observer", function()
             assert.are.same({
                 { 0, "@power", 1, 0 },
                 { 1.6, "@health", "target", 1000, 1000 },
-                { 4, "@health", "target", 960, 1000 },
+                { 3.5, "@health", "target", 960, 1000 },
                 { 4, "@power", 1, 12 },
                 { 5, "@cooldown", 9077, 5, 6 },
                 { 5, "@cooldown", 9078, 5, 6 },
@@ -407,6 +412,277 @@ describe("the observer", function()
             }, got)
         end
     )
+    describe("the 2026-10-22 client shapes (unit-registry spec §6.1)", function()
+        local world = require("Game.harness.world")
+        local entities = require("Game.harness.entities")
+        local function fight(build, k)
+            local W = world.new(1)
+            local us = W.add(entities.new({ guid = "Player-1", weapons = entities.weapons(22) }))
+            local mob = W.add(entities.new({ guid = "Creature-1", kind = "mob", health = 1e9 }))
+            us.target, mob.target = mob, us
+            mob.avoid = { miss = 0, dodge = 0, parry = 0, block = 0 } -- every hit lands: the shapes, not the rolls
+            build(W, us, mob)
+            W.run(30)
+            local s = observer.observe(W, setmetatable(k or {}, { __index = observer.DEFAULTS }))
+            local out = {}
+            for i = 1, s.n do
+                if s.ev[i]:sub(1, 1) ~= "@" then
+                    out[#out + 1] = {
+                        t = s.t[i],
+                        ev = s.ev[i],
+                        a1 = s.a1[i],
+                        a2 = s.a2[i],
+                        a3 = s.a3[i],
+                        a4 = s.a4[i],
+                        a5 = s.a5[i],
+                        castT = s.castT[i],
+                    }
+                end
+            end
+            return out
+        end
+        local function find(out, ev, a1)
+            for _, e in ipairs(out) do
+                if e.ev == ev and (a1 == nil or e.a1 == a1) then
+                    return e
+                end
+            end
+        end
+
+        it("sends SENT before a hard cast's START, with castBarIDs, echoed on targettarget", function()
+            local out = fight(function(W, us)
+                W.at(1, function()
+                    W.press(us, "spender_p", { spell = "BOLT", cast = 1.5 })
+                end)
+            end)
+            local sent, start = find(out, "UNIT_SPELLCAST_SENT", "player"), find(out, "UNIT_SPELLCAST_START", "player")
+            assert.is_true(sent.t <= start.t and sent.a3 == start.a2)
+            assert.is_truthy(tostring(start.a4):match("^Bar%-"))
+            assert.is_truthy(find(out, "UNIT_SPELLCAST_START", "targettarget"))
+        end)
+
+        it("lands a projectile distance / velocity after its success, with its school and its castT", function()
+            local out = fight(function(W, us, mob)
+                W.at(1, function()
+                    W.hitAt(us, mob, 15, 8, "spell", 1.5, 1)
+                end)
+            end)
+            local row = find(out, "UNIT_COMBAT", "target")
+            assert.are.same({ 2.5, 8, 1 }, { row.t, row.a5, row.castT })
+        end)
+
+        it("ticks a DoT in its school at its period from the application; a recast resets the schedule", function()
+            local out = fight(function(W, us, mob)
+                W.at(1, function()
+                    W.dot(us, mob, 3, 4, 4, 64, "doti", 1)
+                end)
+                W.at(5, function()
+                    W.dot(us, mob, 3, 4, 4, 64, "doti", 5)
+                end)
+            end)
+            local ticks = {}
+            for _, e in ipairs(out) do
+                if e.ev == "UNIT_COMBAT" and e.a1 == "target" then
+                    ticks[#ticks + 1] = math.floor(e.t + 0.5)
+                    assert.are.equal(64, e.a5)
+                end
+            end
+            assert.are.same({ 4, 8, 11, 14, 17 }, ticks) -- the first schedule's 7 never comes
+        end)
+
+        local function kill(out)
+            return find(out, "PARTY_KILL"),
+                find(out, "UNIT_DIED"),
+                find(out, "PLAYER_TARGET_CHANGED"),
+                find(out, "UNIT_COMBAT")
+        end
+
+        it(
+            "kills by a white swing as measured: death at the swing, the clear 100 ms on, the row on the corpse later",
+            function()
+                local out = fight(function(W, us, mob)
+                    W.at(1, function()
+                        local sw = W.emit({
+                            kind = "swing",
+                            src = us,
+                            dst = mob,
+                            hand = 1,
+                            act = "WOUND",
+                            flag = "",
+                            amount = 2e9,
+                            school = 1,
+                            ours = true,
+                        })
+                        W.at(1.456, function()
+                            W.emit({
+                                kind = "land",
+                                src = us,
+                                dst = mob,
+                                hand = 1,
+                                act = "WOUND",
+                                flag = "",
+                                amount = 2e9,
+                                school = 1,
+                                swing = sw,
+                            })
+                        end)
+                    end)
+                end)
+                local pk, died, clear, row = kill(out)
+                assert.are.same({ "Player-1", "Creature-1", 1 }, { pk.a1, pk.a2, pk.t })
+                assert.is_true(math.abs(died.t - 1.002) < 1e-9 and math.abs(clear.t - 1.1) < 1e-9)
+                assert.are.same({ 1.456, "softinteract" }, { row.t, row.a1 }) -- 356 ms after the clear, the corpse only
+            end
+        )
+
+        it(
+            "kills by a projectile: the clear, then the row 20 ms later on the plate, target and softinteract",
+            function()
+                local out = fight(function(W, us, mob)
+                    W.at(1, function()
+                        W.hitAt(us, mob, 2e9, 8, "spell", 1.5, 1)
+                    end)
+                end)
+                local _, died, clear, row = kill(out)
+                assert.is_true(died.t < clear.t and clear.t < row.t and math.abs(row.t - clear.t - 0.02) < 1e-9)
+                assert.are.equal("nameplate1", row.a1)
+            end
+        )
+
+        it("kills by an instant: its row in its frame, the clear 100 ms after it", function()
+            local out = fight(function(W, us, mob)
+                W.at(1, function()
+                    W.emit({ kind = "spell", src = us, dst = mob, act = "WOUND", flag = "", amount = 2e9, school = 1 })
+                end)
+            end)
+            local _, _, clear, row = kill(out)
+            assert.is_true(row.t < clear.t and math.abs(clear.t - row.t - 0.1) < 1e-9)
+        end)
+
+        it("echoes every player cast event on targettarget while our target targets us", function()
+            local out = fight(function(W, us, mob)
+                W.at(1, function()
+                    W.press(us, "spender_p", { spell = "BOLT", cast = 1.5 })
+                end)
+                W.at(2, function()
+                    W.endCasts(us)
+                end)
+                W.at(3, function()
+                    W.emit({ kind = "refused", src = us, spell = "BOLT" })
+                end)
+            end)
+            for _, ev in ipairs({ "SENT", "START", "FAILED", "STOP", "INTERRUPTED" }) do
+                assert.is_truthy(find(out, "UNIT_SPELLCAST_" .. ev, "targettarget"), ev)
+            end
+        end)
+
+        it("stops a cast at a death with FAILED then STOP, then three INTERRUPTED with no castBarID", function()
+            local out = fight(function(W, us, mob)
+                W.at(1, function()
+                    W.press(us, "spender_p", { spell = "BOLT", cast = 1.5 })
+                end)
+                W.at(2, function()
+                    W.endCasts(us)
+                end)
+            end)
+            local f, st = find(out, "UNIT_SPELLCAST_FAILED", "player"), find(out, "UNIT_SPELLCAST_STOP", "player")
+            assert.are.equal(f.t, st.t)
+            local n = 0
+            for _, e in ipairs(out) do
+                if e.ev == "UNIT_SPELLCAST_INTERRUPTED" and e.a1 == "player" then
+                    n = n + 1
+                    assert.is_nil(e.a5)
+                end
+            end
+            assert.are.equal(3, n)
+        end)
+
+        it("churns a plate: removed while it still answers, re-added within the gap", function()
+            local out = fight(function(W, us, mob)
+                W.at(3, function()
+                    W.emit({ kind = "plateOff", mob = mob })
+                end)
+                W.at(3.4, function()
+                    W.emit({ kind = "plateOn", mob = mob })
+                end)
+            end)
+            local off, on = find(out, "NAME_PLATE_UNIT_REMOVED"), find(out, "NAME_PLATE_UNIT_ADDED", "nameplate1")
+            assert.are.same({ 3, "nameplate1" }, { off.t, off.a1 })
+            assert.is_truthy(on)
+        end)
+
+        it("fans an outcome out to softenemy with Action Targeting on", function()
+            local out = fight(function(W, us, mob)
+                W.at(1, function()
+                    W.hit(us, mob, 10, 1)
+                end)
+            end, { actionTargeting = true })
+            assert.is_truthy(find(out, "UNIT_COMBAT", "softenemy"))
+        end)
+
+        it("pushes back our cast on a hit with pushback on: DELAYED, then the player's row 0.37 s later", function()
+            local out = fight(function(W, us, mob)
+                W.at(1, function()
+                    W.press(us, "spender_p", { spell = "BOLT", cast = 1.5 })
+                end)
+                W.at(1.5, function()
+                    W.emit({ kind = "spell", src = mob, dst = us, act = "WOUND", flag = "", amount = 5, school = 1 })
+                end)
+            end, { pushback = true })
+            local d, row = find(out, "UNIT_SPELLCAST_DELAYED", "player"), find(out, "UNIT_COMBAT", "player")
+            assert.are.same({ 1.5, "Bar-1" }, { d.t, d.a4 })
+            assert.is_truthy(find(out, "UNIT_SPELLCAST_DELAYED", "targettarget"))
+            assert.is_true(math.abs(row.t - 1.87) < 1e-9)
+        end)
+
+        it(
+            "runs the detection suite's knobs: our scripted spells, no white swings, churn, extra mobs, a switch",
+            function()
+                local spells = {
+                    { 2, "instant" },
+                    { 4, "bolt" },
+                    { 7, "doti" },
+                    { 9, "ticks" },
+                    { 11, "none" },
+                    { 13, "bogus" },
+                    { 15, "unmapped" },
+                    { 15.5, "refused" },
+                    { 17, "aoe" },
+                    { 19, "chan" },
+                }
+                local s, W = scenarios.stream({
+                    duration = 25,
+                    noMelee = true,
+                    spells = spells,
+                    extraMobs = 1,
+                    jitter = 0.05,
+                    churn = { 5, 0.4 },
+                    switchTo = { { 23, 2 } },
+                    actionTargeting = true,
+                }, 3)
+                local seen = {}
+                for i = 1, s.n do
+                    local key = s.ev[i]
+                        .. (
+                            s.ev[i] == "UNIT_COMBAT" and (":" .. s.a5[i] .. ":" .. (s.castT[i] > 0 and "T" or "-"))
+                            or ""
+                        )
+                    seen[key] = true
+                end
+                assert.is_nil(seen.PLAYER_SWING)
+                assert.is_truthy(seen["UNIT_COMBAT:8:T"]) -- the bolt (or the ticks), in nature, with its success
+                assert.is_truthy(seen["UNIT_COMBAT:64:T"]) -- the DoT's ticks and the channel's, in arcane
+                assert.is_truthy(seen.NAME_PLATE_UNIT_REMOVED and seen.UNIT_SPELLCAST_FAILED)
+                assert.is_truthy(seen.UNIT_SPELLCAST_CHANNEL_START)
+                assert.are.equal(W.ents[3], W.ents[1].target) -- switched to the extra mob
+                local aoe = 0
+                for _, ev in ipairs(W.truth) do
+                    aoe = aoe + ((ev.kind == "spell" and ev.t == 17 and ev.src == W.ents[1]) and 1 or 0)
+                end
+                assert.are.equal(2, aoe) -- our target and the extra mob with a plate
+            end
+        )
+    end)
 end)
 
 -- The client facts several resources, the GCD and form shifts add (GCD kinds design §2.3), one rule per case.
@@ -695,17 +971,20 @@ describe("the observer's resources, GCD and forms", function()
 end)
 
 describe("the world", function()
-    it("takes health for every wound but our white swing's (ours at its land), and gives it for heals", function()
-        local W = world.new(7)
-        local us = W.add(entities.new({ guid = "Player-1", health = 500 }))
-        local mob = W.add(entities.new({ guid = "Creature-1", kind = "mob", health = 500 }))
-        W.emit({ kind = "swing", src = mob, dst = us, hand = 1, act = "WOUND", amount = 40 })
-        W.emit({ kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30, ours = true })
-        assert.are.equal(460, us.health)
-        assert.are.equal(500, mob.health)
-        W.emit({ kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30 })
-        W.emit({ kind = "spell", src = mob, dst = us, act = "HEAL", amount = 100 })
-        assert.are.equal(470, mob.health)
-        assert.are.equal(500, us.health)
-    end)
+    it(
+        "takes health for every wound but our swing's landing (ours at the swing: the server's hit), and heals",
+        function()
+            local W = world.new(7)
+            local us = W.add(entities.new({ guid = "Player-1", health = 500 }))
+            local mob = W.add(entities.new({ guid = "Creature-1", kind = "mob", health = 500 }))
+            W.emit({ kind = "swing", src = mob, dst = us, hand = 1, act = "WOUND", amount = 40 })
+            W.emit({ kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30, ours = true })
+            assert.are.equal(460, us.health)
+            assert.are.equal(470, mob.health)
+            W.emit({ kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30 })
+            W.emit({ kind = "spell", src = mob, dst = us, act = "HEAL", amount = 100 })
+            assert.are.equal(470, mob.health)
+            assert.are.equal(500, us.health)
+        end
+    )
 end)

@@ -103,13 +103,15 @@ function M.new(seed)
                 ev.regen[pt], ev.regenCasting[pt] = W.regenRate(me, pt, "idle"), W.regenRate(me, pt, "casting")
             end
         end
-        if ev.act == "WOUND" and ev.dst and (ev.kind ~= "swing" or not ev.ours) then -- ours take it at `land`
+        if ev.act == "WOUND" and ev.dst and ev.kind ~= "land" then -- ours take it at the swing: the server's hit
+            -- (a white-swing kill clears the target before its row arrives, the Rogue kill-events capture)
             local v = ev.dst
             v.health = math.max(0, v.health - (ev.amount or 0))
             ev.health = v.health -- after the wound (a secret-free client's UnitHealth)
             if v.health <= 0 and not v.dead then -- a kill (headless loop design §2.1.5): the fight's end
+                ev.killing = true -- the observer shapes this outcome by kind (unit-registry spec §6.1 row 7)
                 v.dead, W.killAt = true, W.t
-                W.emit({ kind = "kill", dst = v })
+                W.emit({ kind = "kill", dst = v, src = ev.src, cause = ev })
                 for _, e in ipairs(W.ents) do -- a cast at the dead stops (the client's INTERRUPTED and STOP)
                     if e.target == v then
                         W.endCasts(e)
@@ -303,9 +305,9 @@ function M.new(seed)
     --- loop leaving the world (loop.run, after its last tick: a stop by the clock is no client event, so the last tick
     --- still sees the cast). Truth "castStop" { src, spell } for a hard cast (no success, nothing paid), W.stopChannel's for a
     --- channel.
-    function W.endCasts(e)
+    function W.endCasts(e, cause)
         if e.hardSpell then
-            W.emit({ kind = "castStop", src = e, spell = e.hardSpell })
+            W.emit({ kind = "castStop", src = e, spell = e.hardSpell, cause = cause or "death" })
             e.hardSpell, e.castUntil = nil, W.t
         end
         W.stopChannel(e)
@@ -567,12 +569,28 @@ function M.new(seed)
         return e.totems[slot]
     end
 
-    --- `n` ticks of `amount` (school 1) from `e` on `dst`, every `every` s from now.
-    function W.dot(e, dst, every, n, amount)
+    --- `n` ticks of `amount` in `school` [1] from `e` on `dst`, every `every` s from now, each +-50 ms (W.crng; the
+    --- druid-moonfire capture); `key` names the schedule: a new one with the same key on `dst` ends the old (a recast
+    --- resets it); `castT` the success it belongs to (the detection suite's truth). A kill stops it.
+    function W.dot(e, dst, every, n, amount, school, key, castT)
+        local mark = {}
+        if key then
+            dst.dots = dst.dots or {}
+            dst.dots[key] = mark
+        end
         for k = 1, n do
-            W.at(W.t + k * every, function()
-                if not dst.dead then
-                    W.emit({ kind = "tick", src = e, dst = dst, act = "WOUND", flag = "", amount = amount, school = 1 })
+            W.at(W.t + k * every + (W.crng.next() - 0.5) * 0.1, function()
+                if not dst.dead and (not key or dst.dots[key] == mark) then
+                    W.emit({
+                        kind = "tick",
+                        src = e,
+                        dst = dst,
+                        act = "WOUND",
+                        flag = "",
+                        amount = amount,
+                        school = school or 1,
+                        castT = castT,
+                    })
                 end
             end)
         end
@@ -598,7 +616,7 @@ function M.new(seed)
     --- (only its avoid does). An avoid of the press in progress gives back its `refund` share (0-1; the kit's
     --- `refundOnAvoid`) of its cost, a gain before the outcome (the server refunds at the cast's success). Returns the truth event, or { act = "WOUND" } for a
     --- silent landed hit.
-    function W.hit(e, dst, amount, school, set)
+    function W.hit(e, dst, amount, school, set, castT, flight)
         local p = e.pressing
         local act, flag = W.rollOutcome(dst, set or p and p.outcomes)
         if act ~= "WOUND" then
@@ -613,9 +631,28 @@ function M.new(seed)
             e.pressing = nil -- once a press: a second hit of its effect is no second refund
             W.emit({ kind = "gain", src = e, pt = p.pt, rage = p.refund * p.cost })
         end
-        e.lastHit =
-            W.emit({ kind = "spell", src = e, dst = dst, act = act, flag = flag, amount = amt, school = school or 1 })
+        e.lastHit = W.emit({
+            kind = "spell",
+            src = e,
+            dst = dst,
+            act = act,
+            flag = flag,
+            amount = amt,
+            school = act == "WOUND" and school or 1,
+            castT = castT,
+            flight = flight,
+        }) -- a spell miss is school 1
         return e.lastHit
+    end
+
+    --- A projectile of `e`'s landing `delay` s from now (distance / velocity): W.hit's outcome then, carrying `castT`
+    --- (its success). A target dead by then takes nothing.
+    function W.hitAt(e, dst, amount, school, set, delay, castT)
+        W.at(W.t + delay, function()
+            if not dst.dead then
+                W.hit(e, dst, amount, school, set, castT, true)
+            end
+        end)
     end
 
     --- Starts `e`'s ranged hand (`e.ranged`): a shot now plus `o.delay` and then every ranged speed, while

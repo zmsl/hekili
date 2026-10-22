@@ -521,9 +521,10 @@ function M.run(L, seed, o, drivers)
     -- this tick's press, and the combat end it brings: else the next fight starts in combat for the instance); our cast
     -- still running ends there (fix 31 G3: its start would be the next fight's GCD anchor), after the last tick's metrics
     W.endCasts(us)
+    local tEnd = W.killAt and math.max(t, W.killAt + observer.COMBAT_END) or t -- a kill's combat end comes 1 s on
     for i, st in ipairs(steps) do
-        feed(st.H, st.obs, t, st.base, sink)
-        st.H.ctl.now = st.base + t
+        feed(st.H, st.obs, tEnd, st.base, sink)
+        st.H.ctl.now = st.base + tEnd
         if not headless.cycle(st.H, st.H.ctl.now) then
             run.raises = run.raises + 1
         end
