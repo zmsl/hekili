@@ -143,4 +143,14 @@ describe("the kinds", function()
             assert.are_not.equal(older, banded)
         end)
     end)
+
+    it("TICKS: tick k at the anchor + k x period +- 0.1 s, every pass alike", function()
+        local i = open(fs.SPENDER_M, 10) -- the direct ticket; its TICKS ticket is link[i]
+        local j = T.link[i]
+        for p = 1, 3 do
+            local lo, hi, e = K.Band(j, p, 13, false, "WOUND", 64)
+            assert.is_true(math.abs(lo - 12.9) < 1e-9 and math.abs(hi - 13.1) < 1e-9 and e == 13)
+        end
+        assert.is_nil(K.Band(j, 2, 10.1, true, "MISS", 1)) -- a composed schedule takes no avoid
+    end)
 end)

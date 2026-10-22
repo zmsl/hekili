@@ -156,6 +156,11 @@ local function stopped(api, t, unit, castGUID)
 end
 S.On("UNIT_SPELLCAST_FAILED", "player", stopped)
 S.On("UNIT_SPELLCAST_INTERRUPTED", "player", stopped)
+S.On("UNIT_SPELLCAST_CHANNEL_STOP", "player", function(api, t, unit, castGUID, spellID)
+    if unit == "player" and type(spellID) == "number" then
+        T.ChannelStop(spellID, t)
+    end
+end)
 
 -- A spell row paid to ticket p at pass `pass` with n candidates at that pass: staged unless another candidate implies
 -- a different state (divergent, T.Divergent: it stages nothing, spec §4.2), then emitted. A divergent avoid emits no

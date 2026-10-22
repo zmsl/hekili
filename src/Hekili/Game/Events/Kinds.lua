@@ -19,6 +19,7 @@ local REFUSED = { DODGE = true, PARRY = true, MISS = true }
 local FRAME, STRIKE, MELEE, UNMAPPED, NONE, ANY = X.FRAME, X.STRIKE, X.MELEE, X.UNMAPPED, X.NONE, X.ANY
 local FLIGHT, TICKS, CHANNEL = X.FLIGHT, X.TICKS, X.CHANNEL
 K.SPELL_BAND_LO, K.SPELL_BAND_HI, K.BAND_N = 0.6, 1.6, 3
+K.TICK_BAND_LO, K.TICK_BAND_HI = 0.5, 2
 
 -- Seconds after its anchor before which a flight to ticket i's GUID cannot land, from the target's plain range
 -- bracket (poll 14) when the GUID is the current target: (lo - CLOSE x age) / speed - TOL, never below 0. The
@@ -76,6 +77,17 @@ function K.Accepts(i, act, flag, amount, sch, isAvoid)
     if not (s == ANY or (s > 0 and s == sch)) then
         return false
     end
+    if k == TICKS then -- owner ruling 2026-10-22: no band before the first paid tick, then [0.5x, 2x] of the last one
+        local m = T.tickAmt[i]
+        if m <= 0 then
+            return true, false
+        end
+        local v = flag == "CRITICAL" and amount / 2 or amount
+        if v < K.TICK_BAND_LO * m or v > K.TICK_BAND_HI * m then
+            return false, true -- refused by the band (T.Pick counts T.bandRejected once per row)
+        end
+        return true, true
+    end
     local a = T.ab[i]
     if a > 0 and k ~= TICKS and k ~= CHANNEL and T.bandN[a] >= K.BAND_N then
         local B = I.Bands
@@ -104,6 +116,25 @@ function K.Band(i, p, t, isAvoid, act, sch)
             return nil -- a default type takes a non-white wound only in its frame (Rows.lua:458, :497 before)
         end
         return a0, a0 + CAST_WINDOW, a0
+    end
+    if k == TICKS then
+        if isAvoid then -- only an alone ticket's application, before its first tick (decision 35)
+            if T.link[i] == -1 or T.done[i] > 0 then
+                return nil
+            elseif T.speed[i] > 0 then
+                return K.Flight(i, p, t, T.speed[i], T.H[i], a0)
+            elseif p == 1 then
+                return nil
+            end
+            return a0, a0 + L.LandWindow(1), a0
+        end
+        local e = T.anchor[i] + (T.done[i] + 1) * T.period[i]
+        local half = T.TICK_BAND + T.wide[i] -- the schedule is the only discriminator: every pass alike
+        return e - half, e + half, e
+    elseif k == CHANNEL then
+        local e = a0 + (T.done[i] + 1) * T.period[i]
+        local half = p == 1 and T.TOL or 2 * T.TOL
+        return e - half, e + half, e
     end
     if k == FLIGHT then
         return K.Flight(i, p, t, T.speed[i], T.H[i], a0)

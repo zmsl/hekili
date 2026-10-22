@@ -67,6 +67,14 @@ T.speed, T.H = {}, {}
 for i = 1, CAP do
     T.speed[i], T.H[i] = 0, 0
 end
+-- TICKS and CHANNEL (spec §3.3): the period, the schedule's anchor (the application), a widening while a velocity
+-- TICKS ticket has no learned lag, the link between a direct ticket (j) and its composed TICKS ticket (-1), and the
+-- last paid tick's amount (0 before the first: Kinds' soft band).
+T.TICK_BAND = 0.1
+T.period, T.anchor, T.wide, T.link, T.tickAmt = {}, {}, {}, {}, {}
+for i = 1, CAP do
+    T.period[i], T.anchor[i], T.wide[i], T.link[i], T.tickAmt[i] = 0, 0, 0, 0, 0
+end
 -- The learned flight lag per (GUID, speed): the last observed lag, its spread, the time and count of observations.
 -- Survive combat end (a GUID does not return); reset at load.
 T.lagGUID, T.lagSpeed, T.lagE, T.lagSpr, T.lagT, T.lagN = {}, {}, {}, {}, {}, {}
@@ -156,8 +164,26 @@ local function fill(i, k, a, xx, g, t)
     state[i], kind[i], ab[i], x[i], guid[i], uid[i] = OPEN, k, a, xx, g, U.Find(g)
     school[i], owed[i], at[i], hi[i], w[i] = ANY, 1, t, t, 0
     ref[i], lr[i], avoid[i], cast[i], done[i], first[i], T.excused[i] = 0, 0, "", "", 0, false, false
+    T.period[i], T.anchor[i], T.wide[i], T.link[i], T.speed[i], T.H[i], T.tickAmt[i] = 0, t, 0, 0, 0, 0, 0
     U.Hold(uid[i])
     T.opened = T.opened + 1
+end
+
+-- TICKS ticket i of ability a: its aura's count of rows owed (read now, Families/Expect.lua's X.Tick), tick k at
+-- app + k x period +- (TICK_BAND + wide). The count at any time is done + owed.
+local function schedule(i, a, app, wide)
+    local period, count = X.Tick(a)
+    T.period[i], owed[i], T.anchor[i], T.wide[i] = period, count, app, wide
+    hi[i] = app + count * period + T.TICK_BAND + wide
+end
+
+-- A new application of a on g closes its open TICKS ticket as refreshed (unpaid rows not lost; decision 37).
+local function refresh(a, g, t, except)
+    for j = 1, CAP do
+        if j ~= except and state[j] >= OPEN and kind[j] == X.TICKS and ab[j] == a and guid[j] == g then
+            close(j, t, "refreshed")
+        end
+    end
 end
 
 -- Anchors spell ticket i at its success t and sets its window by its kind (spec §3.3).
@@ -174,9 +200,41 @@ local function arm(i, t)
         T.speed[i] = A.velocity[a]
         T.H[i] = r / T.speed[i] + T.TOL -- Expect requires a positive travel velocity
         hi[i] = t + T.H[i]
+    elseif k == X.TICKS then -- alone (Corruption-shaped): anchored at the success, after the flight with a velocity
+        local a = ab[i]
+        refresh(a, guid[i], t, i)
+        local v = A.velocity[a]
+        if v > 0 then
+            local rm = A.rMax[a] > 0 and A.rMax[a] or 40
+            T.speed[i], T.H[i] = v, rm / v + T.TOL
+            local r = T.LagOf(guid[i], v)
+            if r > 0 then
+                schedule(i, a, t + T.lagE[r], 0)
+            else
+                schedule(i, a, t + rm / v / 2, rm / v / 2) -- decision 36: widened until the first tick
+            end
+        else
+            schedule(i, a, t, 0)
+        end
+    elseif k == X.CHANNEL then -- U9 deferred: owes rows until its stop
+        T.period[i], owed[i], hi[i] = (X.Tick(ab[i])), math.huge, math.huge
     elseif k == UNMAPPED then
         owed[i], hi[i] = 0, t + I.Log.UNMAPPED_WINDOW
     end
+end
+
+-- A direct ticket whose aura is a debuff dot (A.ticking) opens its TICKS ticket on the same GUID (decision 35),
+-- anchored at the success (widened by the flight's hard window for a projectile) until the direct row re-anchors it.
+local function compose(i, t)
+    local a = ab[i]
+    if a == 0 or not A.ticking[a] or (kind[i] ~= X.FRAME and kind[i] ~= X.FLIGHT) then
+        return
+    end
+    refresh(a, guid[i], t, i)
+    local j = T.Slot(t)
+    fill(j, X.TICKS, a, x[i], guid[i], t)
+    school[j], T.link[j], T.link[i] = school[i], -1, j
+    schedule(j, a, t, kind[i] == X.FLIGHT and T.H[i] or 0)
 end
 
 --- A swing of `hand` at t pinned to `g` with window `win`; an off hand's main reference `mref`; `retry`: a
@@ -248,6 +306,7 @@ function T.OpenCast(t, a, spellID, g)
         school[i] = A.school[a]
     end
     arm(i, t)
+    compose(i, t)
     return i
 end
 
@@ -272,6 +331,7 @@ function T.Arm(castGUID, t)
     for i = 1, CAP do
         if state[i] == COMMITTED and cast[i] == castGUID then
             arm(i, t)
+            compose(i, t)
             T.latestT = t
             return i
         end
@@ -351,6 +411,25 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
         teach(a, amount, flag)
     end
     done[i], owed[i] = done[i] + 1, owed[i] - 1
+    if k == X.TICKS and not isAvoid then -- the owner's soft band: the last paid tick's amount (a crit halved)
+        T.tickAmt[i] = flag == "CRITICAL" and amount / 2 or amount
+    end
+    if k == X.TICKS and T.wide[i] > 0 then -- the first tick paid: the schedule snaps to it
+        T.anchor[i], T.wide[i] = t - done[i] * T.period[i], 0
+        hi[i] = T.anchor[i] + (done[i] + owed[i]) * T.period[i] + T.TICK_BAND
+    end
+    if isAvoid and k == X.TICKS then
+        owed[i] = 0 -- the application avoided: nothing owed, not lost
+    end
+    local j = T.link[i]
+    if j > 0 and state[j] >= OPEN and kind[j] == X.TICKS and T.link[j] == -1 then
+        if isAvoid then
+            close(j, t, "signal") -- the direct hit was avoided: no debuff, no ticks
+        else
+            T.anchor[j], T.wide[j] = t, 0 -- the application is the direct row
+            hi[j] = t + owed[j] * T.period[j] + T.TICK_BAND
+        end
+    end
     if owed[i] <= 0 then
         T.paid[kind[i]] = T.paid[kind[i]] + 1
         close(i, t, "paid")
@@ -431,20 +510,54 @@ function T.EndCombat(t)
     T.lastSwingT[1], T.lastSwingT[2] = 0, 0
 end
 
--- A unit gone (released and past GRACE, so normally no ticket pins it): any ticket still on it closes as at expiry.
+-- A unit gone (released and past GRACE: normally nothing pins it) or dead: a dead unit's schedules end at once
+-- (`dead`, ours when we killed it); its other tickets stay open until paid or their own window ends (decision 8).
 U.OnGone(function(u, g, why, t)
-    if why ~= U.GONE then
-        return
-    end
     for i = 1, CAP do
         if state[i] ~= 0 and uid[i] == u then
-            if state[i] ~= COMMITTED and T.onExpire then
-                T.onExpire(i, t)
+            if why == U.GONE then
+                if state[i] ~= COMMITTED and T.onExpire then
+                    T.onExpire(i, t)
+                end
+                close(i, t, "gone")
+            elseif why == U.DEAD and kind[i] == X.TICKS then
+                if U.Ours(u) then
+                    T.ours = T.ours + 1
+                end
+                close(i, t, "dead")
             end
-            close(i, t, "gone")
         end
     end
 end)
+
+--- Our debuff `spellID` left `g` at t (CombatLog's SPELL_AURA_REMOVED): its schedule closes (`signal`) when that is
+--- before its last tick's band. Allocates nothing.
+function T.AuraGone(spellID, g, t)
+    local a = A.bySpell[spellID]
+    if not a then
+        return
+    end
+    for i = 1, CAP do
+        if state[i] >= OPEN and kind[i] == X.TICKS and ab[i] == a and guid[i] == g then
+            local last = T.anchor[i] + (done[i] + owed[i]) * T.period[i]
+            if t < last - T.TICK_BAND - T.wide[i] then
+                T.paid[X.TICKS] = T.paid[X.TICKS] + 1
+                close(i, t, "signal")
+            end
+        end
+    end
+end
+I.Log.AuraGone = T.AuraGone
+
+--- Our channel `spellID` stopped at t: its CHANNEL ticket closes (`signal`). Allocates nothing.
+function T.ChannelStop(spellID, t)
+    for i = 1, CAP do
+        if state[i] >= OPEN and kind[i] == X.CHANNEL and x[i] == spellID then
+            T.paid[X.CHANNEL] = T.paid[X.CHANNEL] + 1
+            close(i, t, "signal")
+        end
+    end
+end
 
 --- Snapshot's line (allocates; debugging only).
 I.OnSnapshot(function(out)

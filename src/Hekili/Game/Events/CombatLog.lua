@@ -143,6 +143,7 @@ end
 
 -- The target's plain GUID (rows' destination for our debuffs), kept by Game/Events/Attackers.lua.
 L.target = ""
+L.AuraGone = nil -- Events/Tickets.lua: a removed target debuff of ours ends its schedule early
 
 -- Our auras' rows (decision 5: APPLIED and REFRESH at the cast's time, back-dated; REMOVED at the modelled expiry,
 -- stamped at delivery). Per tracked aura and unit (1 player, 2 target): the believed expiry, its spell, its target.
@@ -189,6 +190,9 @@ function L.Aura(u, j, spellID, before, after, t)
     elseif before > t and auraExp[u][j] > 0 then
         auraExp[u][j] = 0
         auraRow("SPELL_AURA_REMOVED", u, j, t, true, "inferred") -- the cast removed it (a handler's removeBuff)
+        if u == 2 and L.AuraGone then
+            L.AuraGone(auraId[u][j], auraDst[u][j], t)
+        end
     end
 end
 
@@ -199,6 +203,9 @@ L.OnTick(function(now)
             if exp[j] > 0 and now >= exp[j] then
                 exp[j] = 0
                 auraRow("SPELL_AURA_REMOVED", u, j, now, false, "modelled")
+                if u == 2 and L.AuraGone then
+                    L.AuraGone(auraId[u][j], auraDst[u][j], now)
+                end
             end
         end
     end

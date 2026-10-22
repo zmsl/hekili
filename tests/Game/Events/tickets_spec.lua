@@ -326,4 +326,131 @@ describe("the ticket pool", function()
         ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
         assert.are.same({ 0, 1 }, { T.absorbed, T.paid[X.FLIGHT] })
     end)
+
+    describe("TICKS", function()
+        local function wound(t, amount, sch)
+            ctl.now = t
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", amount, sch)
+        end
+
+        it("opens the direct ticket and the ticks of an instant with ticks; pays each tick on schedule", function()
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            wound(10.002, 9, 64) -- the direct hit re-anchors the schedule
+            for _, t in ipairs({ 13.038, 16.022, 19.072, 21.969 }) do
+                wound(t, 4, 64)
+            end
+            assert.are.same({ 1, 1 }, { T.paid[X.FRAME], T.paid[X.TICKS] })
+            assert.are.same({ "SPELL_PERIODIC_DAMAGE", 21.969 }, { got[#got][2], got[#got][1] })
+        end)
+
+        it("leaves a tick outside every band foreign", function()
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            wound(10.002, 9, 64)
+            wound(11.5, 4, 64)
+            assert.are.equal(1, T.foreign)
+        end)
+
+        it("closes the old schedule as refreshed on a recast; the new one pays", function()
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            wound(10.002, 9, 64)
+            wound(13.0, 4, 64)
+            ctl.now = 14
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_M)
+            wound(14.002, 8, 64)
+            assert.are.equal(1, T.closed.refreshed)
+            wound(17.01, 4, 64)
+            local paidTicks = 0
+            for i = 1, T.CAP do
+                if T.state[i] ~= T.FREE and T.kind[i] == X.TICKS then
+                    paidTicks = T.done[i]
+                end
+            end
+            assert.are.equal(1, paidTicks)
+            assert.are.equal(0, T.lost[X.TICKS])
+        end)
+
+        it("closes a dead unit's ticks as closedDead, ours when we killed it, never lost", function()
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            wound(10.002, 9, 64)
+            ctl.Fire("PARTY_KILL", "Player-1", "Creature-1")
+            ctl.Fire("UNIT_DIED", "Creature-1")
+            assert.are.same({ 1, 1, 0 }, { T.closed.dead, T.ours, T.lost[X.TICKS] })
+        end)
+
+        it(
+            "anchors a ticks-only flight at half the flight with a widened band, then snaps to the first tick",
+            function()
+                I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30 -- 30 / 40: a 0.75 s flight at most
+                ctl.now = 10
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_S)
+                wound(13.7, 6, 8) -- 3 s after a 0.7 s flight: inside 10.375 + 3 +- (0.1 + 0.375)
+                local i
+                for j = 1, T.CAP do
+                    if T.state[j] ~= T.FREE and T.kind[j] == X.TICKS then
+                        i = j
+                    end
+                end
+                assert.are.same({ 1, 0 }, { T.done[i], T.wide[i] })
+                assert.is_true(math.abs(T.anchor[i] - 10.7) < 1e-9)
+            end
+        )
+
+        it("closes a ticks-only ticket with nothing owed when its application is avoided at range", function()
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_S)
+            ctl.now = 10.7
+            ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+            assert.are.same({ 1, 0 }, { T.paid[X.TICKS], T.lost[X.TICKS] })
+        end)
+
+        it("closes a schedule on an early removal of its debuff, not at its modelled expiry", function()
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            wound(10.002, 9, 64)
+            T.AuraGone(fs.SPENDER_M, "Creature-1", 22.002) -- the duration: the last tick still owed
+            assert.are.equal(0, T.closed.signal)
+            T.AuraGone(fs.SPENDER_M, "Creature-1", 15) -- removed early (a handler's removeDebuff)
+            assert.are.equal(1, T.closed.signal)
+        end)
+    end)
+
+    it("pays a tick in a learned schedule's and a banded projectile's bands to the schedule (owner ruling)", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30
+        for _, v in ipairs({ 14, 16, 15 }) do -- the nature projectile's band: [0.6 x 14.1, 1.6 x 15.95]; its lag 1.5 s
+            T.Pay(T.OpenCast(1, I.ab.bySpell[fs.SPENDER_P], fs.SPENDER_P, "Creature-1"), 2.5, false, v, "", true, 3)
+        end
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_S) -- a nature schedule (3 s ticks)
+        ctl.now = 13.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 6, 8) -- its first tick: no tick band yet; snaps to 10.7
+        ctl.now = 15.2
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_P) -- due at 16.7 +- 0.15
+        ctl.now = 16.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 7, 8) -- the second tick, also in the projectile's narrow band
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 15, 8) -- the projectile's own landing, the same ms
+        local ticks
+        for j = 1, T.CAP do
+            if T.state[j] ~= T.FREE and T.kind[j] == X.TICKS then
+                ticks = j
+            end
+        end
+        assert.are.same({ 2, 7, 4 }, { T.done[ticks], T.tickAmt[ticks], T.paid[X.FLIGHT] })
+    end)
+
+    it("CHANNEL (untested in game, U9): pays a tick per period and closes on its stop", function()
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_H)
+        for _, t in ipairs({ 11.02, 11.98, 13.1 }) do
+            ctl.now = t
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 5, 64)
+        end
+        ctl.Fire("UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-1", fs.SPENDER_H)
+        assert.are.same({ 1, 0 }, { T.closed.signal, T.foreign })
+    end)
 end)
