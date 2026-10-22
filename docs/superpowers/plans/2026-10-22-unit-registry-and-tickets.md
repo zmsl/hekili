@@ -2158,7 +2158,7 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
   `T.onPay` (harness capture hook, nil in game: `fn(i, t, pass)`); counters `T.opened`, `T.closed[why]` (why:
   none, paid, signal, replaced, refreshed, stopped, expired, lost, dead, gone, ended, overflow, unpinned,
   provisional), `T.paid[kind]`, `T.lost[kind]` (rows), `T.ours`, `T.foreign`, `T.absorbed`, `T.divergent`,
-  `T.bandRejected`, `T.aoeOther`. (`I.Kinds`): `K.Accepts(i, act, flag, amount, school, isAvoid) -> bool`,
+  `T.bandRejected`, `T.aoeOther`. (`I.Kinds`): `K.Accepts(i, act, flag, amount, school, isAvoid) -> ok, banded` (banded: a learned amount band accepted the row; `T.Pick` ranks those candidates first within a pass, then expected closure, owner ruling 2026-10-22),
   `K.Band(i, pass, t, isAvoid, act, school) -> lo, hi, E | nil`, `L.UNMAPPED_WINDOW` 2.
 - Boundary: Tickets owns records, order and closes; Kinds owns acceptance and bands; Melee owns the swing LR; Rows
   owns the rows and staging and names no window.
@@ -2585,18 +2585,23 @@ function T.Stop(castGUID, t)
     end
 end
 
---- (spec §3.4 steps 2-4) The candidate for a row at t on `g` at pass `p`: among the open tickets on `g` that accept the
---- row and whose band at p holds t, the least expected closure; and how many matched. Allocates nothing.
+--- (spec §3.4 steps 2-4, owner ruling 2026-10-22) The candidate for a row at t on `g` at pass `p`: among the open
+--- tickets on `g` that accept the row and whose band at p holds t, those whose learned amount band accepts it first
+--- (K.Accepts' second answer), then those with no band or an unlearned one; within each group the least expected
+--- closure. Also how many matched. Allocates nothing.
 function T.Pick(t, g, p, act, flag, amount, sch, isAvoid)
     local K = I.Kinds
-    local best, bestE, n = 0, math.huge, 0
+    local best, bestE, bestBanded, n = 0, math.huge, false, 0
     for i = 1, CAP do
-        if state[i] >= OPEN and guid[i] == g and K.Accepts(i, act, flag, amount, sch, isAvoid) then
-            local lo, h, e = K.Band(i, p, t, isAvoid, act, sch)
-            if lo and t >= lo - 1e-9 and t <= h + 1e-9 then
-                n = n + 1
-                if e < bestE then
-                    best, bestE = i, e
+        if state[i] >= OPEN and guid[i] == g then
+            local ok, banded = K.Accepts(i, act, flag, amount, sch, isAvoid)
+            if ok then
+                local lo, h, e = K.Band(i, p, t, isAvoid, act, sch)
+                if lo and t >= lo - 1e-9 and t <= h + 1e-9 then
+                    n, banded = n + 1, banded == true
+                    if (banded and not bestBanded) or (banded == bestBanded and e < bestE) then
+                        best, bestE, bestBanded = i, e, banded
+                    end
                 end
             end
         end
@@ -2756,7 +2761,8 @@ local SAME_FRAME, CAST_WINDOW = M.SAME_FRAME, M.CAST_WINDOW
 local REFUSED = { DODGE = true, PARRY = true, MISS = true }
 local FRAME, STRIKE, MELEE, UNMAPPED, NONE, ANY = X.FRAME, X.STRIKE, X.MELEE, X.UNMAPPED, X.NONE, X.ANY
 
---- Whether open ticket i accepts a row of `act` (an avoid when `isAvoid`) and school `sch` (spec §3.4 step 2).
+--- Whether open ticket i accepts a row of `act` (an avoid when `isAvoid`) and school `sch` (spec §3.4 step 2), and
+--- whether a learned amount band accepted it (Tasks 7 and 8 add the bands; T.Pick ranks banded candidates first).
 function K.Accepts(i, act, flag, amount, sch, isAvoid)
     local k = T.kind[i]
     if T.owed[i] <= 0 or k == MELEE or k == UNMAPPED or k == NONE then
@@ -3320,6 +3326,17 @@ is reset at each build (ability indices change with the spec).
             assert.is_true(K.Accepts(i, "WOUND", "CRITICAL", 30, 8, false))
             assert.is_false(K.Accepts(i, "WOUND", "", 40, 8, false))
             assert.are.equal(1, T.bandRejected)
+            assert.are.same({ true, true }, { K.Accepts(i, "WOUND", "", 15, 8, false) }) -- banded: ranked first
+        end)
+
+        it("ranks a candidate whose learned band accepts the row before an older unbanded one", function()
+            for _, v in ipairs({ 30, 32, 31 }) do -- teach the fire instant's band
+                T.Pay(open(fs.SPENDER_F, 100), 100.01, false, v, "", true, 1)
+            end
+            local older = open(fs.SPENDER_C, 110.30) -- a default instant: school ANY, no band, the least closure
+            local banded = open(fs.SPENDER_F, 110.32)
+            assert.are.equal(banded, (T.Pick(110.33, "Creature-1", 1, "WOUND", "", 31, 4, false)))
+            assert.are_not.equal(older, banded)
         end)
     end)
 ```
@@ -3525,14 +3542,15 @@ Replace `K.Accepts`'s last two lines (`local s = T.school[i]` and `return s == A
             T.bandRejected = T.bandRejected + 1
             return false
         end
+        return true, true -- a learned band accepted it: ranked first (T.Pick)
     end
-    return true
+    return true, false
 ```
 
 - [ ] **Step 5: Run them**
 
 Run: `.lua/bin/busted tests/Game/Events/kinds_spec.lua tests/Game/Events/tickets_spec.lua`
-Expected: PASS (8 and 11 successes).
+Expected: PASS (9 and 11 successes).
 
 - [ ] **Step 6: Run every existing spec**
 
@@ -3567,7 +3585,8 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
   `A.velocity`, `A.rMax`; `T.LagOf`, `T.H`, `T.speed`, `K.Flight` (Task 7);
   `I.Units.OnGone` DEAD.
 - Produces: `T.period[i]`, `T.anchor[i]`, `T.wide[i]`, `T.link[i]` (j on a direct ticket, -1 on its composed TICKS
-  ticket, 0 none); `T.TICK_BAND` 0.1; `T.AuraGone(spellID, guid, t)` (installed as `L.AuraGone`);
+  ticket, 0 none), `T.tickAmt[i]` (the last paid tick's amount, 0 before the first: the soft band
+  `[K.TICK_BAND_LO, K.TICK_BAND_HI]` = `[0.5x, 2x]` of it, owner ruling 2026-10-22); `T.TICK_BAND` 0.1; `T.AuraGone(spellID, guid, t)` (installed as `L.AuraGone`);
   `T.ChannelStop(spellID, t)`.
 - Boundary: the schedule's state is the pool's; the tick band is the kind's; CombatLog only tells the pool a debuff
   row left, it decides nothing.
@@ -3670,6 +3689,30 @@ tested against the harness's own tick model only, used by no pack).
         end)
     end)
 
+    it("pays a tick in a learned schedule's and a banded projectile's bands to the schedule (owner ruling)", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30
+        for _, v in ipairs({ 14, 16, 15 }) do -- the nature projectile's band: [0.6 x 14.1, 1.6 x 15.95]; its lag 1.5 s
+            T.Pay(T.OpenCast(1, I.ab.bySpell[fs.SPENDER_P], fs.SPENDER_P, "Creature-1"), 2.5, false, v, "", true, 3)
+        end
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_S) -- a nature schedule (3 s ticks)
+        ctl.now = 13.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 6, 8) -- its first tick: no tick band yet; snaps to 10.7
+        ctl.now = 15.2
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_P) -- due at 16.7 +- 0.15
+        ctl.now = 16.7
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 7, 8) -- the second tick, also in the projectile's narrow band
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 15, 8) -- the projectile's own landing, the same ms
+        local ticks
+        for j = 1, T.CAP do
+            if T.state[j] ~= T.FREE and T.kind[j] == X.TICKS then
+                ticks = j
+            end
+        end
+        assert.are.same({ 2, 7, 4 }, { T.done[ticks], T.tickAmt[ticks], T.paid[X.FLIGHT] })
+    end)
+
     it("CHANNEL (untested in game, U9): pays a tick per period and closes on its stop", function()
         ctl.now = 10
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_H)
@@ -3707,16 +3750,16 @@ Expected: FAIL, `attempt to index field 'link' (a nil value)` and `attempt to ca
 -- TICKS and CHANNEL (spec §3.3): the period, the schedule's anchor (the application), a widening while a velocity
 -- TICKS ticket has no learned lag, and the link between a direct ticket (j) and its composed TICKS ticket (-1).
 T.TICK_BAND = 0.1
-T.period, T.anchor, T.wide, T.link = {}, {}, {}, {}
+T.period, T.anchor, T.wide, T.link, T.tickAmt = {}, {}, {}, {}, {}
 for i = 1, CAP do
-    T.period[i], T.anchor[i], T.wide[i], T.link[i] = 0, 0, 0, 0
+    T.period[i], T.anchor[i], T.wide[i], T.link[i], T.tickAmt[i] = 0, 0, 0, 0, 0
 end
 ```
 
 In `fill`, append the line:
 
 ```lua
-    T.period[i], T.anchor[i], T.wide[i], T.link[i], T.speed[i], T.H[i] = 0, t, 0, 0, 0, 0
+    T.period[i], T.anchor[i], T.wide[i], T.link[i], T.speed[i], T.H[i], T.tickAmt[i] = 0, t, 0, 0, 0, 0, 0
 ```
 
 Before `arm`, add:
@@ -3787,6 +3830,9 @@ In `T.OpenCast`, after `arm(i, t)`, add `compose(i, t)`. In `T.Arm`, replace `ar
 In `T.Pay`, before `if owed[i] <= 0 then`, add:
 
 ```lua
+    if k == X.TICKS and not isAvoid then -- the owner's soft band: the last paid tick's amount (a crit halved)
+        T.tickAmt[i] = flag == "CRITICAL" and amount / 2 or amount
+    end
     if k == X.TICKS and T.wide[i] > 0 then -- the first tick paid: the schedule snaps to it
         T.anchor[i], T.wide[i] = t - done[i] * T.period[i], 0
         hi[i] = T.anchor[i] + (done[i] + owed[i]) * T.period[i] + T.TICK_BAND
@@ -3858,7 +3904,26 @@ function T.ChannelStop(spellID, t)
 end
 ```
 
-- [ ] **Step 4: Implement Kinds.lua.** In `K.Band`, before the `if k == FLIGHT then` block, add:
+- [ ] **Step 4: Implement Kinds.lua.** In `K.Accepts`, after its school check (`if not (s == ANY or ...) then
+  return false end`), add the TICKS soft band:
+
+```lua
+    if k == TICKS then -- owner ruling 2026-10-22: no band before the first paid tick, then [0.5x, 2x] of the last one
+        local m = T.tickAmt[i]
+        if m <= 0 then
+            return true, false
+        end
+        local v = flag == "CRITICAL" and amount / 2 or amount
+        if v < K.TICK_BAND_LO * m or v > K.TICK_BAND_HI * m then
+            T.bandRejected = T.bandRejected + 1
+            return false
+        end
+        return true, true
+    end
+```
+
+  and beside `K.SPELL_BAND_LO, ...` add `K.TICK_BAND_LO, K.TICK_BAND_HI = 0.5, 2`. In `K.Band`, before the
+  `if k == FLIGHT then` block, add:
 
 ```lua
     if k == TICKS then
@@ -3914,7 +3979,7 @@ end)
 - [ ] **Step 7: Run them, then every existing spec**
 
 Run: `.lua/bin/busted tests/Game/Events/tickets_spec.lua tests/Game/Events/kinds_spec.lua && make test-fast`
-Expected: PASS (tickets 19, kinds 9 successes; test-fast 0 failures).
+Expected: PASS (tickets 20, kinds 10 successes; test-fast 0 failures).
 
 - [ ] **Step 8: Commit**
 
@@ -5895,7 +5960,7 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 - Modify: `tests/Game/harness/detect_floors.lua` (K10-K19 cells, written by the first clean run)
 
 **Interfaces:**
-- Consumes: Task 12's runner and floors.
+- Consumes: Task 12's runner and floors; Tasks 6-8's banded ranking (K21).
 - Produces: `T.DueElsewhere(t, g, sch) -> bool` (an open spell ticket of school `sch` on another GUID whose pass-1
   band holds t: spec 6.2's `aoeOther` diagnostic); `detect.KINDS.K10..K19`; `detect.reload(kind, band, seed) -> c1,
   c2` (K17's mid-fight /reload); `observer.DEFAULTS.enterCombat` (false), `.firstLag` (nil).
@@ -5917,7 +5982,7 @@ local drive = require("Game.harness.drive")
 local scenarios = require("Game.harness.scenarios")
 
 describe("detection suite K10-K19 #slow", function()
-    for _, kind in ipairs({ "K10", "K11", "K12", "K13", "K14", "K15", "K17", "K18", "K19" }) do
+    for _, kind in ipairs({ "K10", "K11", "K12", "K13", "K14", "K15", "K17", "K18", "K19", "K21" }) do
         for _, band in ipairs(detect.GATED) do
             it(kind .. " in " .. band, function()
                 local m = detect.run(kind, band, 20, 101)
@@ -5937,6 +6002,8 @@ describe("detection suite K10-K19 #slow", function()
                     assert.is_true(m.ended > 0 and m.afterReset == 0, metrics.ticketLine(m))
                 elseif kind == "K18" then
                     assert.is_true(m.aoeOther > 0 and m.wrong == 0, metrics.ticketLine(m))
+                elseif kind == "K21" then -- a projectile and a schedule of one school on one GUID: each pays its own
+                    assert.is_true(m.own > 0 and m.wrong == 0, metrics.ticketLine(m))
                 end
             end)
         end
@@ -6113,6 +6180,16 @@ M.KINDS.K15 = { duration = 60, noMelee = true, spells = mixSpells(58) }
 M.KINDS.K16 = { duration = 300, spells = every("bolt", 2, 298) }
 M.KINDS.K17 = { duration = 20, noMelee = true, spells = every("bolt", 1.5, 20) } -- bolts in flight at the stop
 M.KINDS.K18 = { duration = 60, noMelee = true, extraMobs = 2, spells = every("aoe", 2, 58), cleave = true }
+-- K21 (owner ruling 2026-10-22): a nature projectile (14-18) and a nature schedule (ticks of 6 every 3 s after a
+-- 0.5 s flight) on one GUID, their rows interleaved: the amount bands rank each row to its own ticket.
+local k21 = every("bolt", 3, 57)
+for _, t in ipairs({ 2.5, 17.5, 32.5, 47.5 }) do
+    k21[#k21 + 1] = { t, "ticks" }
+end
+table.sort(k21, function(x, y)
+    return x[1] < y[1]
+end)
+M.KINDS.K21 = { duration = 60, noMelee = true, spells = k21, distances = { 20 } }
 M.KINDS.K19 = {
     duration = 60,
     extraMobs = 1,
@@ -6196,7 +6273,8 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 -- tests/Game/harness/detect_sweep_spec.lua (unit-registry spec §6.2's invariant sweep, #slow): seeds over lag x
 -- jitter x density x partner phase, asserting on every run, whatever the score: a row pays at most one ticket; no
 -- ticket is paid past what it owed; every opened ticket is closed once or still open (conservation); no payment
--- crosses GUIDs; no outcome is dispatched twice. Prints the metric surface per run.
+-- crosses GUIDs; no outcome is dispatched twice; no TICKS payment shifts its schedule by more than one slot. Prints
+-- the metric surface per run.
 local detect = require("Game.harness.detect")
 local scenarios = require("Game.harness.scenarios")
 local drive = require("Game.harness.drive")
@@ -6252,6 +6330,7 @@ describe("the invariant sweep #slow", function()
                     end
                     assert.are.equal(T.opened, closed + open)
                     assert.are.equal(0, c.crossGUID)
+                    assert.is_true(c.tickShift <= 1, "a TICKS payment shifted its schedule " .. c.tickShift .. " slots")
                     local seen = {}
                     for i = 1, s.n do
                         if c.disp[i] == 1 then
@@ -6301,7 +6380,8 @@ Expected: FAIL, `attempt to index field 'payN' (a nil value)`.
     for i = 1, CAP do
         c.payN[i], c.disp[i] = 0, 0
     end
-    T.onPay = function(i)
+    c.tickShift = 0 -- the largest schedule shift a TICKS payment made (slots; must stay <= 1)
+    T.onPay = function(i, t)
         local k = c.cur
         if k > 0 then
             c.payAt[k], c.payKind[k], c.payN[k] = T.at[i], T.kind[i], c.payN[k] + 1
@@ -6310,11 +6390,18 @@ Expected: FAIL, `attempt to index field 'payN' (a nil value)`.
                 c.crossGUID = c.crossGUID + 1
             end
         end
+        if T.kind[i] == c.I.Expect.TICKS and T.period[i] > 0 then -- the slot the row's time names vs the one paid
+            local slot = math.floor((t - T.anchor[i]) / T.period[i] + 0.5)
+            local shift = math.abs(slot - (T.done[i] + 1))
+            if shift > c.tickShift then
+                c.tickShift = shift
+            end
+        end
     end
 ```
 
   extend the `OnRow` counter to `c.rowsOut = c.rowsOut + 1; if c.cur > 0 then c.disp[c.cur] = 1 end`, and reset
-  `c.payN[i], c.disp[i] = 0, 0` and `c.crossGUID = 0` in `M.run`.
+  `c.payN[i], c.disp[i] = 0, 0`, `c.crossGUID = 0` and `c.tickShift = 0` in `M.run`.
 
 - [ ] **Step 4: Run it**
 
