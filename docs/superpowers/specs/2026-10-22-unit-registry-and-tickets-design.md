@@ -614,7 +614,7 @@ closing code.
 | `"melee"` | MELEE | the hand, from `PLAYER_SWING`'s swingType | measured logs (the P and G logs behind `Rows.lua:15-16`) |
 | `"strike"` | STRIKE | the existing `onNextSwing` | measured logs (today's on-next-swing replacement) |
 | `"ticks"` | TICKS | `school`, optional `velocity`; the aura's `tick_time` and `duration` (3.2); `"instant"` or `"travel"` with `dot = true` also open one | measured: the druid-moonfire capture (3.3) |
-| `"channel"` | CHANNEL | `school`; the aura's `tick_time`; the existing `channeled` | unprobed: implemented, untested and unused by packs; U9's channel half deferred by owner ruling |
+| `"channel"` | CHANNEL | `school`; the aura's `tick_time`; opt-in only (never a default) | unprobed: implemented, untested and unused by packs; U9's channel half deferred by owner ruling |
 
 `"melee"` is the engine's own type for `PLAYER_SWING`. No ability carries a hand field today, so an ability that
 declares `"melee"` fails validation and falls back to its default type (below).
@@ -638,11 +638,11 @@ a `velocity` field, but its projectile branch needs `impact` too (`Engine/Schema
 
 ### 5.2 Default type
 
-When `expects` is absent the engine maps it: `"strike"` if the ability has `onNextSwing`; `"channel"` if it has
-upstream's existing `channeled = true` and its aura has a `tick_time` (`src/Hekili_Priest/Priest.lua:333` and others);
-`"instant"` if it has `startsCombat`; otherwise `"none"`. The channel rule is the owner's and departs from today for a
-channeled `startsCombat` ability (Mind Flay): today Rows holds it as a frame ticket, the default now opens an untested
-CHANNEL ticket that closes on the channel's stop. Apart from it this reproduces today's behaviour exactly: Rows holds only `startsCombat` and
+When `expects` is absent the engine maps it: `"strike"` if the ability has `onNextSwing`; `"instant"` if it has
+`startsCombat`; otherwise `"none"`. The CHANNEL kind is opt-in: an ability with upstream's `channeled = true`
+(`src/Hekili_Priest/Priest.lua:333` and others) and no `expects` follows this same rule, so Mind Flay and every other
+channel keep their floors; only an explicit `expects = "channel"` opens a CHANNEL ticket, which reads the aura's
+`tick_time` (3.2). This reproduces today's behaviour exactly: Rows holds only `startsCombat` and
 `onNextSwing` abilities today (`Rows.lua:347`) with exactly these windows, and holds nothing for the rest. Every pack's
 floors therefore hold until it declares data.
 
@@ -653,7 +653,7 @@ only when the pack declared `expects` itself. Unmapped successes keep their UNMA
 ### 5.3 Precompilation and validation
 
 At each build, beside `now` and `onCrit` (`Game/State/Families/Now.lua:318-333`), the engine reads `expects`,
-`velocity`, `school`, `dot`, `channeled`, `onNextSwing` and `aura` from each ability, and the resolved aura's
+`velocity`, `school`, `dot`, `onNextSwing` and `aura` from each ability, and the resolved aura's
 `tick_time` and `duration`, into per-ability arrays: `A.expKind`, `A.expDeclared`, `A.velocity`, `A.school`, `A.dot`,
 `A.tickAura` (the aura index), `A.tickTime` and `A.tickCount` (numbers, or false when the field is a function and is
 read at commit). A ticket refers to them by its integer `ab`.
@@ -977,8 +977,8 @@ constructor, closure or `{...}` inside an event handler, a row dispatch, a poll 
 | 8 | A ticket on a dead unit stays open until paid or its own window ends; unpaid, it closes as `closedDead`, not lost | a melee killing blow arrives about 370 ms after the clear and must still pay |
 | 9 | `TICKETS` = 16 | flight windows of up to about 2.1 s plus two hands need more than today's 8 |
 | 10 | A ticket opens for every commit (every `PLAYER_SWING`, every player success mapped or not, a hard cast at SENT); the kind decides how it closes | one uniform record; no engine assumption about what a spell does |
-| 11 | `expects` is a plain string from a fixed set, each mapped to one engine kind whose matching and closure rule lives in the engine; the engine reads the ability's other fields per type: `"none"` (none), `"instant"` (`school`), `"travel"` (`velocity`, `school`), `"melee"` (the hand from `PLAYER_SWING`; the engine's own, not declarable), `"strike"` (`onNextSwing`), `"ticks"` (`school`, optional `velocity`, and the aura's `tick_time` and `duration`), `"channel"` (`school`, `channeled`, the aura's `tick_time`); a plain string and nothing else; `school` is a name from the core enum `ns.SCHOOL` (`"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"`, `"arcane"`), compiled to its mask at build, never a number | packs declare data on the ability; each rule is written and tested once; the DB2 check reads the same fields |
-| 12 | Default when `expects` is absent: `"strike"` if `onNextSwing`, else `"channel"` if `channeled` and its aura has a `tick_time`, else `"instant"` if `startsCombat`, else `"none"` | reproduces today exactly except the owner's channel rule, which opens an untested CHANNEL ticket for channeled `startsCombat` abilities |
+| 11 | `expects` is a plain string from a fixed set, each mapped to one engine kind whose matching and closure rule lives in the engine; the engine reads the ability's other fields per type: `"none"` (none), `"instant"` (`school`), `"travel"` (`velocity`, `school`), `"melee"` (the hand from `PLAYER_SWING`; the engine's own, not declarable), `"strike"` (`onNextSwing`), `"ticks"` (`school`, optional `velocity`, and the aura's `tick_time` and `duration`), `"channel"` (`school`, the aura's `tick_time`; opt-in only); a plain string and nothing else; `school` is a name from the core enum `ns.SCHOOL` (`"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"`, `"arcane"`), compiled to its mask at build, never a number | packs declare data on the ability; each rule is written and tested once; the DB2 check reads the same fields |
+| 12 | Default when `expects` is absent: `"strike"` if `onNextSwing`, else `"instant"` if `startsCombat`, else `"none"`; `channeled` abilities follow the same rule, and CHANNEL is opened only by an explicit `expects = "channel"` | reproduces today exactly: Rows holds only `startsCombat` and `onNextSwing` abilities, with these windows; channels keep their floors until a pack opts in |
 | 13 | Validation at build: an unknown `expects`, a type missing a required field, an unknown `school` name, or a `"ticks"`, `dot = true` or `"channel"` whose aura is missing or has no `tick_time` is reported once through the build warning path (`Hekili:Error`, counted like `I.nowErrors`) and the ability falls back to its default type | a typo never silently changes attribution; floors hold |
 | 14 | `CTX` fields: `t`, `guid`, `hand`, `rMax`, `lagE`, `lagSpr`, `lagAge`, `rangeLo` (optional, 0 absent), `bandLo`, `bandHi`, `bandN` | what the engine knows at commit; no range is assumed readable |
 | 15 | A default-type ticket on an ability with no `school` field carries school ANY: any WOUND or avoid in its window pays, never lost; a declared type's nil school means only an avoid pays | keeps the default mapping exactly today's while letting a pack declare an aura-only cast |
