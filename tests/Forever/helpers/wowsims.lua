@@ -284,12 +284,13 @@ M.READY = {
     shaman_enhancement = { 0.96, 3 },
     shaman_elemental = { 0.48, 54 }, -- 0.480, 54 (Elemental lane, Task 14; first clean run on a21329fc)
     -- 1.000, 18 (Warlock lane, Task 13; first clean run on 5d62f44c+): Shadow Bolt's 2.5 s cast, the next icon ready
-    -- at the GCD's end inside it (Shadow's Mind Flay likewise)
-    warlock_affliction = { 1.00, 18 },
+    -- at the GCD's end inside it (Shadow's Mind Flay likewise). Count 18 -> 21 on fix 31 (06eec227): G4 keeps
+    -- Corruption believed, so 12 more decisions are shown (never 22 -> 10), 3 of them a Shadow Bolt's early 1.0 s
+    warlock_affliction = { 1.00, 21 },
     warlock_demonology = { 0.10, 3 }, -- 0.100, 3
     warlock_destruction = { 0.40, 17 }, -- 0.400, 17: Incinerate's 2.0 s cast, likewise
     warlock_shadow_brand = { 0.90, 16 }, -- 0.900, 16: Shadow Bolt's, likewise
-    warlock_sm_ruin = { 0.90, 14 }, -- 0.900, 14: Shadow Bolt's, likewise
+    warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 14: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
     warrior_arms = { 0.80, 6 },
     warrior_fury = { 0.48, 32 },
     warrior_protection = { 0.50, 5 },
