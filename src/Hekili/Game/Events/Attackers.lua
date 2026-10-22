@@ -198,7 +198,6 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     if unit ~= "player" or (act ~= "WOUND" and not MISSES[act]) then
         return
     end
-    flag, amount = Plain(api, flag), Plain(api, amount) -- a secret one is neither banded nor learned
     local melee = act ~= "WOUND" or school == 1
     local wound = act == "WOUND" and school == 1
     local a = wound and base(amount, flag) or nil

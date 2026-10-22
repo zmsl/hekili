@@ -164,4 +164,44 @@ describe("secret values in VirtualState's sources (spec §4.5)", function()
             assert.has_error(op)
         end
     end)
+
+    it("delivers a secret payload slot to the sources as nil, so no handler re-gates its arguments", function()
+        local load = require("Game.State.helpers.load")
+        local fake = require("Game.State.helpers.fake_api")
+        local fs = require("Game.State.helpers.fake_spec")
+        local api, ctl = fake.new()
+        local saved = {}
+        for k, v in pairs({ CreateFrame = api.CreateFrame, issecretvalue = api.issecretvalue, GetTime = api.GetTime }) do
+            saved[k] = rawget(_G, k) or false
+            _G[k] = v
+        end
+        local ns = load.module()
+        local I = ns.VirtualStateInternal
+        I.Build(fs.def(fs.new(9)), 1)
+        ns.VirtualState.Start(api)
+        local seen = "unset"
+        I.Sources.On("UNIT_COMBAT", nil, function(_, _, _, _, flag, amount)
+            seen = { flag, amount }
+        end)
+        ctl.Fire("UNIT_COMBAT", "player", "WOUND", fake.SECRET, fake.SECRET, 1)
+        assert.are.same({}, seen) -- both nil
+        for k, v in pairs(saved) do
+            _G[k] = v or nil
+        end
+        -- and no source re-gates a handler argument
+        local hits = {}
+        for _, f in ipairs({
+            "src/Hekili/Game/Events/Attackers.lua",
+            "src/Hekili/Game/State/Sources/Player.lua",
+            "src/Hekili/Game/State/Sources/Casts.lua",
+        }) do
+            local src = assert(io.open(f)):read("*a")
+            for m in src:gmatch("Plain%(api, (%a+)%)") do
+                if m == "flag" or m == "amount" or m == "act" or m == "guid" then
+                    hits[#hits + 1] = f .. ": Plain(api, " .. m .. ")"
+                end
+            end
+        end
+        assert.are.same({}, hits)
+    end)
 end)

@@ -25,7 +25,7 @@ S.On("UNIT_SPELLCAST_START", "player", function(api, t, unit, guid, spellID)
     if not a then
         return
     end
-    castGUID = Plain(api, guid)
+    castGUID = guid -- the facade made a secret slot nil (EventFacade.lua onEvent)
     local _, _, _, rawStart, rawEnd = api.UnitCastingInfo("player") -- secret: both through Plain next
     local start, finish = Plain(api, rawStart), Plain(api, rawEnd)
     if type(start) == "number" and type(finish) == "number" then
@@ -51,7 +51,7 @@ end)
 
 local function stopped(api, t, unit, guid, spellID)
     local a = unit == "player" and ability(spellID)
-    local g = Plain(api, guid)
+    local g = guid
     if not a or g == nil or g ~= castGUID then
         return
     end
@@ -65,7 +65,7 @@ S.On("UNIT_SPELLCAST_INTERRUPTED", "player", stopped)
 
 S.On("UNIT_SPELLCAST_DELAYED", "player", function(api, t, unit, guid, spellID)
     local a = unit == "player" and ability(spellID)
-    local g = Plain(api, guid)
+    local g = guid
     if not a or g == nil or g ~= castGUID then
         return
     end
@@ -81,7 +81,7 @@ S.On("UNIT_SPELLCAST_CHANNEL_START", "player", function(api, t, unit, guid, spel
     if not a then
         return
     end
-    chanGUID = Plain(api, guid)
+    chanGUID = guid
     local _, _, _, rawStart, rawEnd = api.UnitChannelInfo("player") -- secret: both through Plain next
     local start, finish = Plain(api, rawStart), Plain(api, rawEnd)
     if type(start) == "number" and type(finish) == "number" then
@@ -96,7 +96,7 @@ local function ownChannel(api, guid)
     if chanGUID == nil then
         return true
     end
-    local g = Plain(api, guid)
+    local g = guid
     return g ~= nil and g == chanGUID
 end
 
