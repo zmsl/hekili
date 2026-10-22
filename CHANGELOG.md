@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- No more "attempt to index field 'leftText' (a secret string value)" errors in combat: spell tooltips are secret in combat on Forever, and the check for spells disabled in this area now skips them until you leave combat.
+
 ### Known issues
 
 ### Upgrade notes

@@ -903,7 +903,7 @@ local PASSTHROUGH = {
     { "C_Texture.GetAtlasInfo", "plain [W sweep 2026-10-16]; table fields unverified" },
     { "C_TooltipInfo.GetInventoryItem", "plain [W sweep 2026-10-16]; table fields unverified" },
     { "C_TooltipInfo.GetItemByID", "plain [W sweep 2026-10-16]; table fields unverified" },
-    { "C_TooltipInfo.GetSpellByID", "plain [W sweep 2026-10-16]; table fields unverified" },
+    { "C_TooltipInfo.GetSpellByID", "plain [W sweep 2026-10-16]; lines[i].leftText secret in combat (fix 33)" },
     { "C_Traits.GetConfigInfo", "plain, walk identical in combat [W PR5]" },
     { "C_Traits.GetDefinitionInfo", "plain, walk identical in combat [W PR5]" },
     { "C_Traits.GetEntryInfo", "plain, walk identical in combat [W PR5]" },

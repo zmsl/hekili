@@ -55,7 +55,6 @@ M.KNOWN_LOAD_NILS = {
     BOOKTYPE_SPELL = "legacy spellbook constant",
     LEVEL_LINKED_NOT_USABLE = "a GlobalString nothing on the queue path reads",
     SPELL_FAILED_INCORRECT_AREA = "a GlobalString nothing on the queue path reads",
-    SPELL_FAILED_NOT_HERE = "a GlobalString nothing on the queue path reads",
     SPELL_FAILED_NOT_IN_MAGE_TOWER = "a GlobalString nothing on the queue path reads",
     TOOLTIP_NOT_IN_MAGE_TOWER = "a GlobalString nothing on the queue path reads",
     TALENT_SPEC_PRIMARY = "a GlobalString nothing on the queue path reads",
@@ -744,6 +743,7 @@ function M.new(o)
         return env.GameTooltip
     end
     env.STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF"
+    env.SPELL_FAILED_NOT_HERE = "You can't do that here." -- a disabling tooltip line (Utils.lua's IsSpellDisabled)
     function env.GetScreenWidth()
         return 1920
     end

@@ -9,6 +9,7 @@ local C_UnitAuras = Facade.C_UnitAuras
 local GetNumGroupMembers, GetNumSubgroupMembers, GetTime, IsInGroup = Facade.GetNumGroupMembers, Facade.GetNumSubgroupMembers, Facade.GetTime, Facade.IsInGroup
 local IsInRaid, UnitHealth, UnitHealthMax, UnitIsUnit = Facade.IsInRaid, Facade.UnitHealth, Facade.UnitHealthMax, Facade.UnitIsUnit
 local UnitName = Facade.UnitName
+local issecretvalue = Facade.issecretvalue
 local Hekili = _G[ addon ]
 
 local format, gsub, lower = string.format, string.gsub, string.lower
@@ -658,6 +659,21 @@ do
         _G.LEVEL_LINKED_NOT_USABLE
     }
 
+    -- A line's text against the sought string or list: hit, secret. A secret text (Forever's tooltips in combat) is
+    -- no match and is never indexed or compared.
+    local function lineHas( text, str, useMatch )
+        if issecretvalue( text ) then return false, true end
+        if type( str ) ~= "table" then
+            if useMatch then return text:match( str ) ~= nil, false end
+            return text == str, false
+        end
+        for _, seek in ipairs( str ) do
+            if ( useMatch and text:match( seek ) ) or ( not useMatch and text == seek ) then return true, false end
+        end
+        return false, false
+    end
+
+    -- Returns found, and whether any line read was secret (the answer is then provisional: callers must not cache it).
     local FindStringInTooltip = function( str, id, ttType, reverse, useMatch )
         local data
 
@@ -672,31 +688,23 @@ do
 
         if not data then return end
 
+        local secret, hit, s = false, false, false
         if reverse then
             for i = #data.lines, 1, -1 do
-                local line = data.lines[ i ]
-                if type( str ) == "table" then
-                    for _, seek in ipairs( str ) do
-                        if ( useMatch and line.leftText:match( seek ) ) or ( not useMatch and line.leftText == seek ) then return true end
-                    end
-                else
-                    if ( useMatch and line.leftText:match( str ) ) or ( not useMatch and line.leftText == str ) then return true end
-                end
+                hit, s = lineHas( data.lines[ i ].leftText, str, useMatch )
+                if hit then return true, secret end
+                secret = secret or s
             end
-            return false
+            return false, secret
         end
 
         for _, line in ipairs( data ) do
-            if type( str ) == "table" then
-                for _, seek in ipairs( str ) do
-                    if ( useMatch and line.leftText:match( seek ) ) or ( not useMatch and line.leftText == seek ) then return true end
-                end
-            else
-                if ( useMatch and line.leftText:match( str ) ) or ( not useMatch and line.leftText == str ) then return true end
-            end
+            hit, s = lineHas( line.leftText, str, useMatch )
+            if hit then return true, secret end
+            secret = secret or s
         end
 
-        return false
+        return false, secret
     end
     ns.FindStringInTooltip = FindStringInTooltip
 
@@ -721,8 +729,9 @@ do
     local IsSpellDisabled = function( spellID )
         if DisabledSpells[ spellID ] ~= nil then return DisabledSpells[ spellID ] end
 
-        local isDisabled = FindStringInSpellTooltip( DisableText, spellID, true, true ) or false
-        DisabledSpells[ spellID ] = isDisabled
+        local isDisabled, secret = FindStringInSpellTooltip( DisableText, spellID, true, true )
+        isDisabled = isDisabled or false
+        if not secret then DisabledSpells[ spellID ] = isDisabled end -- a secret line: ask again later
 
         return isDisabled
     end
@@ -733,8 +742,8 @@ do
     local IsItemDisabled = function( itemID )
         if DisabledItems[ itemID ] ~= nil then return DisabledItems[ itemID ] end
 
-        local isDisabled = FindStringInItemTooltip( DisableText, itemID, true, true )
-        DisabledItems[ itemID ] = isDisabled
+        local isDisabled, secret = FindStringInItemTooltip( DisableText, itemID, true, true )
+        if not secret then DisabledItems[ itemID ] = isDisabled end -- a secret line: ask again later
 
         return isDisabled
     end
@@ -745,8 +754,8 @@ do
     local IsInventoryItemDisabled = function( slot )
         if DisabledGear[ slot ] ~= nil then return DisabledGear[ slot ] end
 
-        local isDisabled = FindStringInInventoryItemTooltip( DisableText, slot, true, true )
-        DisabledGear[ slot ] = isDisabled
+        local isDisabled, secret = FindStringInInventoryItemTooltip( DisableText, slot, true, true )
+        if not secret then DisabledGear[ slot ] = isDisabled end -- a secret line: ask again later
 
         return isDisabled
     end

@@ -105,6 +105,7 @@ function M.new()
         role = "DAMAGER",
         inventory = {}, -- [slot] = itemID (GetInventoryItemID("player", slot))
         items = {}, -- [itemID] = { name, equipLoc } (C_Item.GetItemInfo's first and ninth returns)
+        tooltips = {}, -- [spellID] = C_TooltipInfo.GetSpellByID's data ({ lines = { { leftText }... } }; nil: none)
     }
     local api = { ctl = ctl }
 
@@ -549,7 +550,13 @@ function M.new()
     }
     api.C_SpellActivationOverlay = { IsSpellOverlayed = no }
     api.C_Texture = { GetAtlasInfo = none }
-    api.C_TooltipInfo = { GetInventoryItem = none, GetItemByID = none, GetSpellByID = none }
+    api.C_TooltipInfo = {
+        GetInventoryItem = none,
+        GetItemByID = none,
+        GetSpellByID = function(id)
+            return ctl.tooltips[id]
+        end,
+    }
     local window = { x = 1920, y = 1080 }
     api.C_VideoOptions = {
         GetCurrentGameWindowSize = function()
