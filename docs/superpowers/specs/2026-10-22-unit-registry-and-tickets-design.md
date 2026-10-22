@@ -29,6 +29,8 @@ What the captures show, and what the code does with it:
 | 4 | A kill: our in-progress cast gets FAILED then STOP in the same ms, the target clears to none about 3 ms later, and the killing blow's `UNIT_COMBAT` arrives 11-36 ms after the clear, sometimes on `nameplateN` + `softinteract` only (capture b 42067, 74805; capture c 219922) | no consumer reads a token other than `target`; poll 4's `UnitIsDead("target")` (`Game/State/Sources/Target.lua:80-89`) never sees the kill because the target is already gone | the killing blow is lost; `TargetGone` never fires on a kill |
 | 5 | Plates churn: the same mob's plate is removed and re-added within about 0.5 s while looking around; `NAME_PLATE_UNIT_REMOVED` still resolves name and GUID | Attackers clears its token on removal (`Game/Events/Attackers.lua:110-115`); no one keys by GUID across tokens | GUID is the identity; tokens are transient |
 | 6 | Every player cast event is echoed on `targettarget` while the mob targets us (same castGUID, another castBarID) | the cast sources register `player` only (`Game/Events/EventFacade.lua:56-96` registers per unit; `Game/State/Sources/Casts.lua:31-92` checks `unit == "player"`) | harmless today; the registry must not treat `targettarget` rows as a new victim |
+| 7 | A melee killing blow lands after the clear: Rogue capture, swing at 10283, `TARGET none` at 10384, `NAME_PLATE_UNIT_REMOVED` resolving the GUID at 10653, the CRITICAL row at 10754 on `softinteract` only (the corpse), with Action Targeting off | the same `target`-only reads as row 4 | a fixed 0.1 s grace after the clear would lose it (370 ms) |
+| 8 | A school-32 WOUND on the target in the same ms as a HEAL on the player (a life-steal proc, Rogue capture 8799), between our swing (8682) and its white hit (9154) | a school-1 gate already guards swings (`Rows.lua:481`) | the school check correctly leaves it foreign; this is why the gate exists for melee too |
 
 The replay shows the cost: every own Wrath outcome goes to `background()` (`Rows.lua:517-519`), every success emits
 only `SPELL_CAST_SUCCESS` and the aura rows, and a dead mob's modelled debuff expires 16 s after its death because no
@@ -62,15 +64,17 @@ bound before the last change), `tokAt[i]` (the time of the last change).
 
 Per unit slot `u` (`UNIT_CAP` = 64 entries, built at load): `uGUID[u]` (plain string, "" free), `uState[u]`, `uTokens[u]`
 (the number of table tokens bound to it), `uSeen[u]` (last time any token named it or a row resolved to it),
-`uLeft[u]` (the time its last token left).
+`uLeft[u]` (the time its last token left), `uHeld[u]` (the number of open tickets pinned to it, kept by the ticket
+pool on open and close) and `uFree[u]` (the time its last pinned ticket closed). The unit is released at the later of
+`uLeft` and `uFree` once `uTokens` and `uHeld` are both 0.
 
 | State | Value | Meaning | Rows resolve to it |
 |---|---|---|---|
 | FREE | 0 | slot unused | no |
 | LIVE | 1 | at least one token bound | yes |
-| GRACE | 2 | no token bound, left less than `GRACE` ago | yes |
-| GONE | 3 | no token bound for `GRACE` or more | no |
-| DEAD | 4 | the kill tell or a plain `UnitIsDead` named it | yes, for `GRACE` after the death |
+| GRACE | 2 | no token bound, and held (an open ticket pins it) or released less than `GRACE` ago | yes |
+| GONE | 3 | no token bound, not held, released `GRACE` or more ago | no |
+| DEAD | 4 | the kill tell or a plain `UnitIsDead` named it | yes, while held and for `GRACE` after release |
 
 Dedupe memory: the last `DUP_N` = 4 outcome groups (`dT`, `dUid`, `dAct`, `dFlag`, `dAmount`, `dSchool`), a ring.
 Each entry also records the tokens already seen in its group: a fixed boolean array `dTok[(e - 1) x 44 + i]` over the
@@ -88,7 +92,7 @@ them. No table, closure or string is made after load.
 | `PLAYER_FOCUS_CHANGED` | rebind token 2 | |
 | `NAME_PLATE_UNIT_ADDED` | rebind the plate's index from its live GUID | |
 | `NAME_PLATE_UNIT_REMOVED` | unbind the plate's index; if the live read still answers (soft-targeting log: it does), check it equals the bound GUID first | a mismatch rebinds to the read GUID, then unbinds |
-| `PLAYER_SOFT_ENEMY_CHANGED`, `PLAYER_SOFT_INTERACT_CHANGED` | rebind 43 / 44 | registered through `S.On`; a client that refuses them leaves them in `E.STUB` (`EventFacade.lua:93-95`) and nothing depends on them |
+| `PLAYER_SOFT_ENEMY_CHANGED`, `PLAYER_SOFT_INTERACT_CHANGED` | rebind 43 / 44 | registered through `S.On`; a client that refuses them leaves them in `E.STUB` (`EventFacade.lua:93-95`) and nothing depends on them. `softinteract` rows exist with Action Targeting off (the corpse after a kill, Rogue capture 10754), so the token set keeps it; only the soft-enemy events depend on the setting |
 | `UNIT_COMBAT` | resolve, dedupe, dispatch (2.4) | the one non-player `UNIT_COMBAT` entry point |
 | `UNIT_SPELLCAST_FAILED` (`player`) | records `failT` for the kill tell (2.5) | any castGUID, including `Cast-2-0-0-0` key spam |
 | `UNIT_DIED`, `PLAYER_TARGET_DIED` | mark the plain GUID DEAD when delivered | opportunistic: the event-facade spec lists them as observed (`docs/superpowers/specs/2026-10-15-virtualstate-event-facade.md:289`, O6), the 2026-10-22 captures did not register them; probe U3 |
@@ -104,17 +108,25 @@ answer", never a value.
 
 1. Live read: `g = Plain(api, api.UnitGUID(TOKENS[i]))`. A plain string is the answer. If it differs from the token's
    binding, the registry rebinds the token first (it heals a missed event).
-2. Registry fallback within grace: the live read is nil (no unit, or secret) and the token's previous slot left it less
-   than `GRACE` ago (`t - tokAt[i] < GRACE`) and that slot is not GONE: answer the previous slot. This is the post-clear
-   killing blow (capture b 42067 on `target` after `TARGET none` at 42048).
+2. Registry fallback while held: the live read is nil (no unit, or secret) and the token's previous slot is not GONE
+   (it is held by an open ticket, or released less than `GRACE` ago): answer the previous slot. This is the post-clear
+   killing blow (capture b 42067 on `target` after `TARGET none` at 42048; the Rogue capture's 10754 on
+   `softinteract`, 370 ms after the clear).
 3. Otherwise nil: the row is unresolved, counted (`U.unresolved`), and no consumer sees it.
 
-A token that was rebound to a different live GUID less than `GRACE` ago is the swap case. The live read wins (rule 1),
-with one exception handled by the dedupe (2.4): if the same payload already arrived on another token within
+A token rebound to a different live GUID while its previous slot is not GONE is the swap case. The live read wins
+(rule 1), with two exceptions. First, the row resolves to the old unit when its payload matches an open ticket's queue
+on the old unit (3.4 step 2: an avoid and any open ticket owing a row, or a WOUND whose school matches); otherwise it
+resolves to the new unit. Second, the dedupe (2.4): if the same payload already arrived on another token within
 `DUP_WINDOW`, the row is a duplicate of that one. This catches a stale `target` echo right after a swap, which the
 report flagged (risk: a stale `target` WOUND after a swap counts toward the new target).
 
-`GRACE` = 0.1 s: the slowest post-clear row seen is 36 ms (capture c 219886 to 219922); 0.1 s is about three times that.
+`GRACE` = 0.1 s is now a floor, not the whole grace: a unit's tokens stay resolvable for as long as any open ticket is
+pinned to it, plus `GRACE` after the last one closes. The kill kinds differ. A projectile kill clears the target 11-36
+ms before the row (the clear comes at impact; capture c 219886 to 219922). A melee kill clears it about 370 ms before
+the row: the server's hit clears the target, and the row arrives at the landing lag (Rogue capture: swing 10283, clear
+10384, row 10754, 471 ms after the swing). An open swing ticket (window 1.5 s, `Rows.lua:30`, `:333-338`) holds the unit
+across that gap.
 
 ### 2.4 Dedupe and dispatch
 
@@ -123,7 +135,7 @@ encodes the same order from the earlier logs; capture b 42067-42068 confirms it)
 
 A resolved row is a duplicate when a ring entry has the same slot, `act`, `flag`, `amount` and `school`,
 `|t - dT| <= DUP_WINDOW` (0.005 s), and the row's token is not yet in that entry's token set. A row whose token was
-rebound less than `GRACE` ago and whose payload matches a ring entry within `DUP_WINDOW` on any slot, under the same
+rebound while its previous slot is not GONE and whose payload matches a ring entry within `DUP_WINDOW` on any slot, under the same
 token condition, is also a duplicate (the swap exception of 2.3). A duplicate adds its token to the group's set.
 
 One outcome's fan-out never repeats a token: plate, target and soft each appear at most once per outcome (captures a,
@@ -148,8 +160,9 @@ Listeners register at load. Rows (tickets) registers first, then Target (`Target
 
 - Seen: a binding or a resolved row sets `uSeen = t`. A GUID not held takes a FREE slot, else an evicted one (2.6).
 - Unbound: when `uTokens` drops to 0 the slot goes to GRACE with `uLeft = t`.
-- Gone: the per-frame tick (`L.OnTick`, run from `EventFacade.lua:239-246`) moves a GRACE slot to GONE once
-  `t - uLeft >= GRACE`, and calls each `I.Units.OnGone(fn)` listener: `fn(uid, guid, GONE, t)`. A GUID bound again
+- Held: while `uHeld > 0` the slot stays GRACE (or DEAD) however long ago its last token left.
+- Gone: the per-frame tick (`L.OnTick`, run from `EventFacade.lua:239-246`) moves a GRACE slot to GONE once it is
+  released (no token, no open ticket) and `GRACE` has passed since the release, and calls each `I.Units.OnGone(fn)` listener: `fn(uid, guid, GONE, t)`. A GUID bound again
   later (plate churn, 0.5 s) takes LIVE again in the same slot if it was not evicted; nothing closed earlier reopens.
 - Dead: any of these marks the slot DEAD at `t` and calls the OnGone listeners with `DEAD`:
   - the kill tell: `PLAYER_TARGET_CHANGED` to none within `KILL_TELL` = 0.010 s after any player
@@ -158,15 +171,24 @@ Listeners register at load. Rows (tickets) registers first, then Target (`Target
   - a plain `UnitIsDead(token) == true` on a bound token. The existing polls already read it: `Target.lua:84` (poll 4) and
     `Game/State/Sources/Nameplates.lua:36-40` (poll 5). They report to `I.Units.Dead(uid, t)`; the registry adds no read.
   - `UNIT_DIED` or `PLAYER_TARGET_DIED` with a plain GUID, when the client delivers them.
-  A DEAD slot still resolves rows for `GRACE` after the death, so the killing blow pays its ticket.
+  A melee kill shows no FAILED (the Rogue capture clears the target with none), so the tell misses it; the unit then
+  ends through poll 5, the death events, or GONE.
+  A DEAD slot still resolves rows while held and for `GRACE` after its release, so the killing blow pays its ticket.
 - Reset: `PLAYER_REGEN_ENABLED` frees every slot with no bound token (OnGone with `RESET` first) and clears the dedupe
-  ring and `failT`. Bound units stay: the target is still the target after combat.
+  ring and `failT`. Bound units stay: the target is still the target after combat. The reset does not precede the last
+  row: in the Rogue capture `PLAYER_LEAVE_COMBAT` fired 100 ms after the clear (10483) and `PLAYER_REGEN_ENABLED` about
+  420 ms after it (10802), after the killing-blow row (10754).
+
+Other observations from the Rogue capture: `PLAYER_SWING`'s payload is (1.6, 0), the swing speed and the hand index,
+as Rows reads it (`Rows.lua:318`); `UNIT_TARGET` fires for `player`, `targettarget`, `nameplateN` and `target` when the
+mob turns to us (7166-7169), which Attackers' `recheck` already covers (`Attackers.lua:102-108`).
 
 ### 2.6 Capacity and eviction
 
-At most 44 tokens are bound, so at most 44 slots are LIVE; 64 slots always leave 20 that are GRACE, GONE, DEAD or FREE.
-A new GUID takes a FREE slot, else the GONE or DEAD slot with the oldest `uSeen`, else the GRACE slot with the oldest
-`uSeen`. A LIVE slot is never evicted. Evictions are counted (`U.evicted`). The search is a 64-step loop.
+At most 44 tokens are bound and at most `TICKETS` = 16 tickets are open, so at most 60 slots are LIVE or held; 64 slots
+always leave 4 that are released or FREE.
+A new GUID takes a FREE slot, else the GONE or released DEAD slot with the oldest `uSeen`, else a released GRACE slot with the oldest
+`uSeen`. A LIVE or held slot is never evicted. Evictions are counted (`U.evicted`). The search is a 64-step loop.
 
 ### 2.7 API
 
@@ -432,7 +454,7 @@ A ticket closes on the first of:
 | signal | the kind's non-row close (3.3): TICKS on its debuff's removal, CHANNEL on its stop | nothing | `T.paid[kind]` |
 | cast stopped | a committed hard cast's FAILED or INTERRUPTED | nothing | none |
 | window expiry | `now > hi` with `owed > 0`, in the per-frame tick (today `:597-609`) | MELEE: `SWING_MISSED` if provisional, else `SWING_DAMAGE` amount 0 (kept: the swing timer reads it); others: nothing | `T.lost[kind] += owed`; UNMAPPED, school ANY and a declared nil school count `T.expired` instead |
-| kill | OnGone with DEAD for its `uid`; at death + `GRACE` if still open, so the final row can pay first | as expiry | `T.closedDead` |
+| kill | its `uid` is DEAD and its own window ends unpaid (it stays open until then: a melee killing blow lands about 370 ms after the clear) | as expiry | `T.closedDead`, not lost |
 | gone | OnGone with GONE for its `uid` | as expiry | `T.closedGone` |
 | combat end | `PLAYER_REGEN_ENABLED` (today `:612-618`) | nothing | none |
 | pool full | the oldest open ticket gives way (today `:138`) | nothing | `T.overflow` |
@@ -721,7 +743,7 @@ Each becomes a row in `docs/dev/ingame-ledger.md` with the capture that closes i
 | ID | Question | Capture that closes it |
 |---|---|---|
 | U1 (deferred, owner ruling 2026-10-22: not needed for the first build; the untested branches above stay as written and the engine takes the shapes on later) | RESIST, IMMUNE, ABSORB, EVADE row shapes: action, flag, amount, school; do they arrive as rows at all | `/vslog` with `UNIT_COMBAT` while casting a school the mob is immune to (an Elemental at a fire mob), and a mob that evades (leash) |
-| U2 | Auto-target on cast with Action Targeting off: does `PLAYER_TARGET_CHANGED` come before SENT, and does SENT name the new target | `/vslog` of SENT, START, SUCCEEDED, `PLAYER_TARGET_CHANGED` pressing Wrath with no target near a mob, Action Targeting off; plus the soft-targeting log saved in full |
+| U2 (closed 2026-10-22, Rogue capture) | Auto-target on cast with Action Targeting off. Answer: a spell with no target does not auto-target (the cast never commits: no SENT with a target). A melee ability does: `TARGET` 68 ms before `SC_SENT` (6998 to 7066); `SC_SENT`, `PLAYER_SWING` and `PLAYER_ENTER_COMBAT` in the same ms; `SUCCEEDED` +1 ms; the strike's WOUND +2 ms on `nameplate2` and `target`. So the SENT pin always has a target | `rogue-ss-autotarget-2026-10-22.log` |
 | U3 | Does `UNIT_DIED` or `PLAYER_TARGET_DIED` fire for addons on Forever (O6), and is its GUID plain | `/vslog` with both registered, three kills |
 | U4 | DoT ticks and channels: does a periodic tick arrive as a WOUND on the victim's tokens, with which school; is a channel's tick distinguishable | `/vslog` of Moonfire's DoT and Arcane Missiles on a solo mob |
 | U5 | Nameplate GUID secrecy in combat beyond what Attackers relies on: `UnitGUID("nameplateN")` and `UnitIsDead("nameplateN")` plain for every plate in a five-man pull | `/run` loop over plates in combat with `VSCopy(issecretvalue(...))` |
@@ -753,14 +775,14 @@ any downward move needs a named cause written beside the number and the owner's 
 
 | # | Decision | Reason |
 |---|---|---|
-| 1 | `GRACE` = 0.1 s | about three times the slowest post-clear row seen (36 ms) |
+| 1 | A unit's tokens stay resolvable while any open ticket is pinned to it, plus `GRACE` = 0.1 s (a floor) after the last one closes; a token rebound to another unit resolves to the old unit only for rows that match an open ticket's queue on it | a melee killing blow lands 370 ms after the clear (Rogue capture); projectile kills land 11-36 ms after it |
 | 2 | `DUP_WINDOW` = 0.005 s, ring of 4 groups, each with a token set (a fixed boolean array over the 44 token indices); a row whose token is already in the matching group starts a new group and is dispatched | one outcome's fan-out spans up to 1 ms and never repeats a token (captures a, b, c), so equal twins on a shared token stay two |
 | 3 | A rebound token's row that matches another token's payload within `DUP_WINDOW` is a duplicate, unless its token is already in that group | stops a stale `target` echo after a swap from paying the new mob |
 | 4 | `UNIT_CAP` = 64 slots, LIVE never evicted | 44 tokens can be LIVE at once; 20 spare slots for grace and dead units |
-| 5 | Token set: target, focus, nameplate1-40, softenemy, softinteract; `player` stays with Player and Attackers | the victim-side tokens of hostiles; `targettarget` rows are echoes |
+| 5 | Token set: target, focus, nameplate1-40, softenemy, softinteract; `player` stays with Player and Attackers | the victim-side tokens of hostiles; `targettarget` rows are echoes; `softinteract` rows exist with Action Targeting off (the corpse), so it stays; only the soft-enemy events depend on the setting |
 | 6 | Kill tell = any player FAILED (any castGUID) within 0.010 s before a clear to none | all four kills in captures b and c show it, two of them with no cast in progress |
 | 7 | `UNIT_DIED` and `PLAYER_TARGET_DIED` registered opportunistically | an earlier probe saw them (O6); costs nothing if the client refuses them |
-| 8 | Tickets on a dead unit close at death + `GRACE` | the killing blow arrives up to 36 ms after the clear and must still pay |
+| 8 | A ticket on a dead unit stays open until paid or its own window ends; unpaid, it closes as `closedDead`, not lost | a melee killing blow arrives about 370 ms after the clear and must still pay |
 | 9 | `TICKETS` = 16 | flight windows of up to about 2.1 s plus two hands need more than today's 8 |
 | 10 | A ticket opens for every commit (every `PLAYER_SWING`, every player success mapped or not, a hard cast at SENT); the kind decides how it closes | one uniform record; no engine assumption about what a spell does |
 | 11 | `expects` is a plain string from a fixed set, each mapped to one engine kind whose matching and closure rule lives in the engine; the engine reads the ability's other fields per type: `"none"` (none), `"instant"` (`school`), `"travel"` (`velocity`, `school`), `"melee"` (the hand from `PLAYER_SWING`; the engine's own, not declarable), `"strike"` (`onNextSwing`), `"ticks"` (`tickPeriod`, `ticks`, `school`), `"channel"` (`tickPeriod`, `school`); a plain string and nothing else; `school` is a name from the core enum `ns.SCHOOL` (`"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"`, `"arcane"`), compiled to its mask at build, never a number | packs declare data on the ability; each rule is written and tested once; the DB2 check reads the same fields |
