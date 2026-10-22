@@ -500,7 +500,17 @@ closing code.
 declares `"melee"` fails validation and falls back to its default type (below).
 
 A `school` of nil on a declared type means the hit makes no row of ours: only an avoid pays, and expiry is not lost
-(3.3). `velocity`, `school`, `tickPeriod` and `ticks` are plain numbers on the ability. Hekili's simulation already knows
+(3.3). `velocity`, `tickPeriod` and `ticks` are plain numbers on the ability. `school` is declared by name, a plain lowercase
+string from a fixed enum: `"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"`, `"arcane"`; numbers are
+not accepted. The enum is one core table, `ns.SCHOOL = { physical = 1, holy = 2, fire = 4, nature = 8, frost = 16,
+shadow = 32, arcane = 64 }`, in `Engine/Schema/Spec.lua` where the Schema compiles abilities, published as
+`Hekili.SCHOOL` for the content addons. Schools are a game concept, not class content. Hekili_Shared's private copy
+(`src/Hekili_Shared/Shared/Auras.lua:23`, `local SCHOOLS = { ... }`) becomes `local SCHOOLS = Hekili.SCHOOL`; the
+lockout names it builds (`locked_out_<name>`) are unchanged, and Mage and Priest already branch on these names
+(`src/Hekili_Mage/Mage.lua:142-150`, `src/Hekili_Priest/Priest.lua:148-152`). The engine maps the name to the client's
+mask once at build and stores the number on the ability's compiled record (`A.school`); `UNIT_COMBAT`'s school argument
+is compared with that number. A two-school spell (Frostfire Bolt) stays a probe (U7): until then a pack declares the
+school the client reports, or leaves it nil. Hekili's simulation already knows
 a `velocity` field, but its projectile branch needs `impact` too (`Engine/Schema/Spec.lua:908-909`), and no APL reads
 `in_flight`. No pack adds `impact`, so the simulation does not change.
 
@@ -522,7 +532,7 @@ At each build, beside `now` and `onCrit` (`Game/State/Families/Now.lua:318-333`)
 `A.expDeclared`, `A.velocity`, `A.school`, `A.tickPeriod`, `A.ticks`. A ticket refers to them by its integer `ab`.
 
 Validation runs at the same build. An `expects` that is not one of the seven strings, or a type whose required fields
-are missing or not numbers (`"travel"` without `velocity`; `"ticks"` without `tickPeriod` or `ticks`; `"channel"`
+are missing or malformed (a `velocity`, `tickPeriod` or `ticks` that is not a number, a `school` that is not one of the seven names; `"travel"` without `velocity`; `"ticks"` without `tickPeriod` or `ticks`; `"channel"`
 without `tickPeriod`; `"strike"` without `onNextSwing`; any `"melee"`), is reported once through the existing build
 warning path. `Hekili:Error` already reports a malformed `RegisterAbility` (`Engine/Schema/Spec.lua:857`), and Now's
 build counts its errors into `I.nowErrors` for Snapshot (`Now.lua:327`). The ability then falls back to its default
@@ -534,28 +544,28 @@ From DB2 build 1.60.1.70338 (`SpellMisc`, every rank the pack lists agrees unles
 
 | Pack | Ability | Declares | Note |
 |---|---|---|---|
-| Druid | `wrath` | `expects = "travel", velocity = 20, school = 8` | |
-| Warlock | `shadow_bolt` | `expects = "travel", velocity = 20, school = 32` | |
-| Warlock | `incinerate` | `expects = "travel", velocity = 20, school = 4` | |
-| Warlock | `soul_fire` | `expects = "travel", velocity = 24, school = 4` | |
-| Warlock | `death_coil` | `expects = "travel", velocity = 24, school = 32` | |
-| Mage | `frostbolt` | `expects = "travel", velocity = 28, school = 16` | |
-| Mage | `fireball` | `expects = "travel", velocity = 24, school = 4` | |
-| Mage | `pyroblast` | `expects = "travel", velocity = 24, school = 4` | |
-| Mage | `frostfire_bolt` | `expects = "travel", velocity = 24, school = 20` | the row's school for a two-school spell is unmeasured (probe U7) |
-| Shaman | `lightning_bolt` | `expects = "travel", velocity = 20, school = 8` | |
-| Shaman | `lava_burst` | `expects = "travel", velocity = 20, school = 4` | |
-| Priest | `shoot` | `expects = "travel", velocity = 20, school = 1` | the wand's own school may differ from the spell's mask (probe U7) |
-| Paladin | `hammer_of_wrath` | `expects = "travel", velocity = 35, school = 2` | |
-| Hunter | `auto_shot` | `expects = "travel", velocity = 40, school = 1` | |
-| Hunter | `aimed_shot` | `expects = "travel", velocity = 40, school = 1` | |
-| Hunter | `arcane_shot` | `expects = "travel", velocity = 40, school = 64` | |
-| Hunter | `multi_shot` | `expects = "travel", velocity = 30, school = 1` | the GUID match pays only the row on the pinned target; its other targets' rows stay foreign |
-| Hunter | `sniper_shot` | `expects = "travel", velocity = 60, school = 1` | |
+| Druid | `wrath` | `expects = "travel", velocity = 20, school = "nature"` | |
+| Warlock | `shadow_bolt` | `expects = "travel", velocity = 20, school = "shadow"` | |
+| Warlock | `incinerate` | `expects = "travel", velocity = 20, school = "fire"` | |
+| Warlock | `soul_fire` | `expects = "travel", velocity = 24, school = "fire"` | |
+| Warlock | `death_coil` | `expects = "travel", velocity = 24, school = "shadow"` | |
+| Mage | `frostbolt` | `expects = "travel", velocity = 28, school = "frost"` | |
+| Mage | `fireball` | `expects = "travel", velocity = 24, school = "fire"` | |
+| Mage | `pyroblast` | `expects = "travel", velocity = 24, school = "fire"` | |
+| Mage | `frostfire_bolt` | `expects = "travel", velocity = 24` (no `school` until U7) | DB2 mask 20 (fire and frost) has no single name; the row's school is unmeasured (probe U7) |
+| Shaman | `lightning_bolt` | `expects = "travel", velocity = 20, school = "nature"` | |
+| Shaman | `lava_burst` | `expects = "travel", velocity = 20, school = "fire"` | |
+| Priest | `shoot` | `expects = "travel", velocity = 20, school = "physical"` | the wand's own school may differ from the spell's mask (probe U7) |
+| Paladin | `hammer_of_wrath` | `expects = "travel", velocity = 35, school = "holy"` | |
+| Hunter | `auto_shot` | `expects = "travel", velocity = 40, school = "physical"` | |
+| Hunter | `aimed_shot` | `expects = "travel", velocity = 40, school = "physical"` | |
+| Hunter | `arcane_shot` | `expects = "travel", velocity = 40, school = "arcane"` | |
+| Hunter | `multi_shot` | `expects = "travel", velocity = 30, school = "physical"` | the GUID match pays only the row on the pinned target; its other targets' rows stay foreign |
+| Hunter | `sniper_shot` | `expects = "travel", velocity = 60, school = "physical"` | |
 | Hunter | `serpent_sting` | `expects = "travel", velocity = 40` (no `school`) | an aura only, no direct WOUND: its miss is its only row. Rank 1978's Speed is 40, the Forever 425728 family's is 0, so the check reads the pack's own ranks. Its ticks move to `"ticks"` after U9 |
 | Hunter | `summon_hawk` | nothing (default type) | no outcome of ours known |
 
-Instant abilities may declare `expects = "instant", school = N`; that turns on the school check and lost counting
+Instant abilities may declare `expects = "instant", school = "<name>"`; that turns on the school check and lost counting
 inside today's frame windows. This spec does not require it, and the melee packs keep their default types.
 
 ### 5.5 The DB2 check
@@ -567,7 +577,7 @@ and `copy`) from `$WOW_DB2` (default `~/.local/share/wow-db2/forever/current.sql
 fails when:
 
 - a declared `velocity` differs from Speed on any listed rank;
-- a declared `school` differs from SchoolMask on any listed rank;
+- a declared `school` name differs from the name of SchoolMask on any listed rank (the check maps the mask through `ns.SCHOOL`; a mask with no single name, such as 20, is reported for the pack to leave `school` nil);
 - an ability with Speed > 0 on its first rank and `startsCombat` declares no `velocity`.
 
 ## 6. Harness
@@ -599,7 +609,7 @@ Kinds (each a scripted scenario through the existing `scenarios.world` knobs, `t
 | K1 melee | white swings, both hands | swing tickets, unchanged recall |
 | K2 strike | on-next-swing strike | replacement, WOUND 0 |
 | K3 instant | an instant spell declaring `expects = "instant"` with a `school` | frame window, school check |
-| K4 projectile | a cast declaring `expects = "travel", velocity = 20, school = 8` at 5, 20 and 30 yd | flight window, crit, miss at range |
+| K4 projectile | a cast declaring `expects = "travel", velocity = 20, school = "nature"` at 5, 20 and 30 yd | flight window, crit, miss at range |
 | K5 swap | K4 with a target swap mid-cast | SENT pin, plate-only landing |
 | K6 kill | K4 or K1 killing the target, with and without a press at the kill | kill tell, post-clear row, `TargetGone` |
 | K7 churn | K4 with plate churn on the pinned mob | resolution, gone and revive |
@@ -630,7 +640,7 @@ print their numbers and assert only that the run finished, as `group_spec.lua:45
 The pending-cast gap: today's group runs never exercise a pending cast, because the oracle press is not
 `startsCombat` (`scenarios.lua:207-213` presses "CAST"). The fake spec declares an expectation for each of its
 abilities: `expects = "instant"` with a `school` for the instant spender, `expects = "travel", velocity = 20,
-school = 8` for a new `startsCombat` hard cast, `expects = "strike"` for the strike, `expects = "none"` for a buff, one
+school = "nature"` for a new `startsCombat` hard cast, `expects = "strike"` for the strike, `expects = "none"` for a buff, one
 ability with no `expects` so the default mapping keeps a test, and one with a malformed `expects` so the validation
 fallback does. K3 and K4 press the `startsCombat` ones, so every band runs spell tickets. TICKS and CHANNEL get unit tests
 against the harness's own tick model only, marked untested until probe U9.
@@ -720,9 +730,9 @@ any downward move needs a named cause written beside the number and the owner's 
 | 8 | Tickets on a dead unit close at death + `GRACE` | the killing blow arrives up to 36 ms after the clear and must still pay |
 | 9 | `TICKETS` = 16 | flight windows of up to about 2.1 s plus two hands need more than today's 8 |
 | 10 | A ticket opens for every commit (every `PLAYER_SWING`, every player success mapped or not, a hard cast at SENT); the kind decides how it closes | one uniform record; no engine assumption about what a spell does |
-| 11 | `expects` is a plain string from a fixed set, each mapped to one engine kind whose matching and closure rule lives in the engine; the engine reads the ability's other fields per type: `"none"` (none), `"instant"` (`school`), `"travel"` (`velocity`, `school`), `"melee"` (the hand from `PLAYER_SWING`; the engine's own, not declarable), `"strike"` (`onNextSwing`), `"ticks"` (`tickPeriod`, `ticks`, `school`), `"channel"` (`tickPeriod`, `school`); a plain string and nothing else | packs declare data on the ability; each rule is written and tested once; the DB2 check reads the same fields |
+| 11 | `expects` is a plain string from a fixed set, each mapped to one engine kind whose matching and closure rule lives in the engine; the engine reads the ability's other fields per type: `"none"` (none), `"instant"` (`school`), `"travel"` (`velocity`, `school`), `"melee"` (the hand from `PLAYER_SWING`; the engine's own, not declarable), `"strike"` (`onNextSwing`), `"ticks"` (`tickPeriod`, `ticks`, `school`), `"channel"` (`tickPeriod`, `school`); a plain string and nothing else; `school` is a name from the core enum `ns.SCHOOL` (`"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"`, `"arcane"`), compiled to its mask at build, never a number | packs declare data on the ability; each rule is written and tested once; the DB2 check reads the same fields |
 | 12 | Default when `expects` is absent: `"strike"` if `onNextSwing`, else `"instant"` if `startsCombat`, else `"none"` | reproduces today exactly: Rows holds only `startsCombat` and `onNextSwing` abilities, with these windows |
-| 13 | Validation at build: an unknown `expects`, or a type missing a required field, is reported once through the build warning path (`Hekili:Error`, counted like `I.nowErrors`) and the ability falls back to its default type | a typo never silently changes attribution; floors hold |
+| 13 | Validation at build: an unknown `expects`, a type missing a required field, or an unknown `school` name is reported once through the build warning path (`Hekili:Error`, counted like `I.nowErrors`) and the ability falls back to its default type | a typo never silently changes attribution; floors hold |
 | 14 | `CTX` fields: `t`, `guid`, `hand`, `rMax`, `lagE`, `lagSpr`, `lagAge`, `rangeLo` (optional, 0 absent), `bandLo`, `bandHi`, `bandN` | what the engine knows at commit; no range is assumed readable |
 | 15 | A default-type ticket on an ability with no `school` field carries school ANY: any WOUND or avoid in its window pays, never lost; a declared type's nil school means only an avoid pays | keeps the default mapping exactly today's while letting a pack declare an aura-only cast |
 | 16 | Unmapped successes open an UNMAPPED ticket: `UNMAPPED_WINDOW`, no owed row, any GUID, absorbs an avoid or crit as nobody's | today's `another()` unmapped rule as a generic ticket; replaces `unmappedT` |
@@ -730,13 +740,13 @@ any downward move needs a named cause written beside the number and the owner's 
 | 18 | A `school` of nil means the hit makes no row of ours: only an avoid pays, expiry is not lost (Serpent Sting: `expects = "travel", velocity = 40`, no `school`) | an aura-only cast needs no handler of its own |
 | 19 | Backed by captures or measured logs: NONE, FRAME, FLIGHT, MELEE, STRIKE. Unprobed: TICKS and CHANNEL, implemented but marked untested and unused by packs until probe U9 | no tick row has been captured yet |
 | 20 | FLIGHT hard window `[0, rMax / speed + TOL]` from the success, always; `TOL` = 0.15 s; `rMax` 0 means 40 yd; the plain bracket's `lo` may only raise the lower bound, less `CLOSE x age` | the engine cannot read an up-to-date range in combat; the five max-range samples fit [0, 1.65] s |
-| 21 | School check by equality with the declared numeric school | no bit operations in core; two-school rows are probed (U7) |
+| 21 | School check by equality with the declared school's compiled mask | no bit operations in core; two-school rows are probed (U7) |
 | 22 | Amount band [0.6 x lo, 1.6 x hi] after 3 clean wounds | spell damage varies more than weapon damage; procs and crits halved stay inside |
 | 23 | Consumption order: rows online in arrival order after dedupe; candidates of the row's queue in expected-closure order; passes (a) narrow, (b) widened, (c) hard window for tickets with no record; first match pays; MELEE's LR decides among MELEE candidates at a pass | the order decides correctness; FIFO per queue falls out of it |
 | 24 | A mapped ticket with no pin opens with `guid` "" and counts `unpinned`, not lost | it can match no row; today its rows are dropped anyway |
 | 25 | Until 4.2 is built, a divergent row emits its row but stages nothing | stays on the floor's safe side, as today's two-casts rule |
 | 26 | Build trigger for 4.2: `divergent` over 1 per 100 paid tickets in a five-man run | a rate that would show as flicker; below it the union is not worth its cost |
-| 27 | DB2 check is a dev-only `make spell-data-check` over the declared `velocity` and `school` fields | CI has no DB2 file |
+| 27 | DB2 check is a dev-only `make spell-data-check` over the declared `velocity` and `school` fields; it maps SchoolMask to a name through `ns.SCHOOL` and compares names | CI has no DB2 file; the pack's declared name is what is checked |
 | 28 | Registry dispatches rows through `OnRow`; Rows registers before Target | one resolution and dedupe for every consumer; tickets see a row first |
 | 29 | Learned flight lag: `LAG_CAP` = 16 records per (GUID, speed): `lagE` (last observed lag), `lagSpr` (EMA spread, 0.25 rate, [0.02, 0.4]), `lagT`, `lagN`; taught by a clean pass (a) or (b) payment; oldest `lagT` evicted | the same mechanism as the global melee lag, keyed per unit because flight lag is distance; the last lag tracks a closing mob |
 | 30 | Widening: `b = max(TOL, 2 x lagSpr)`; `down = max(b, (CLOSE / speed) x d)`, `up = max(b, (CLOSE / 2 / speed) x d)`, `d` = time since the last landing, `CLOSE` = 7 yd/s, clipped to the hard window; no record: the whole hard window, uniform | the band grows as fast as a running mob can change the lag |
