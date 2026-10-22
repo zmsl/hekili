@@ -115,6 +115,19 @@ S.On("PLAYER_SWING", nil, function(api, t, duration, swingType)
     fresh = false
 end)
 
+-- U10 (owner ruling): auto-attack turns on at once, and the first PLAYER_SWING after entering combat is that first
+-- swing; its row's lag is one sample (989 ms in the second Rogue capture), so it teaches nothing and its Due band is
+-- its whole window. The client may send that swing first in the same ms (second Rogue capture: both at 628).
+S.On("PLAYER_ENTER_COMBAT", nil, function(api, t)
+    for i = 1, T.CAP do
+        if T.state[i] ~= 0 and T.kind[i] == MELEE and t - T.at[i] <= 0.01 then
+            T.first[i] = true
+            return
+        end
+    end
+    fresh = true
+end)
+
 S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spellID)
     if unit ~= "player" or type(spellID) ~= "number" then
         return
@@ -155,6 +168,7 @@ local function stopped(api, t, unit, castGUID)
     end
 end
 S.On("UNIT_SPELLCAST_FAILED", "player", stopped)
+S.On("UNIT_SPELLCAST_FAILED_QUIET", "player", stopped) -- a refused press (no cast): its SENT commit ends
 S.On("UNIT_SPELLCAST_INTERRUPTED", "player", stopped)
 S.On("UNIT_SPELLCAST_CHANNEL_STOP", "player", function(api, t, unit, castGUID, spellID)
     if unit == "player" and type(spellID) == "number" then
@@ -231,7 +245,7 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
     if p > 0 and white and (avoid or crit) then
         local sw, _, ref, lag = M.score(t, g, amount, flag, avoid, crit) -- a crit by its timing alone, as an avoid
         local h = ref == 3 and 2 or ref
-        if sw and (lag <= SAME_FRAME or math.abs(lag - L.med[h]) <= 2 * L.spr[h]) then
+        if sw and (T.first[sw] or lag <= SAME_FRAME or math.abs(lag - L.med[h]) <= 2 * L.spr[h]) then
             if avoid then
                 p = 0 -- the swing's (MELEE wins the tie): the LR below takes it, the spell keeps its effects
             else
