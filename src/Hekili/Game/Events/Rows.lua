@@ -24,29 +24,11 @@ local VS = ns.VirtualState
 local Obs = VS.Obs
 local Plain = S.Plain
 local L = I.Log
+local T, M, X = I.Tickets, I.Melee, I.Expect
+local SAME_FRAME, CAST_WINDOW, STRIKE_WINDOW = M.SAME_FRAME, M.CAST_WINDOW, M.STRIKE_WINDOW
+local AVOIDS, MELEE, FRAME = M.AVOIDS, X.MELEE, X.FRAME
+local lastW0, lastMain = -1, 0
 
--- Per hand (1 main, 2 off), the support of a swing's landing lag (ms), capped at the hand's swing period: measured
--- maximum lags 1287 / 1686 ms plus a margin (P log 2).
-L.PAIR_WINDOW_MS = { 1500, 2000 }
--- Seconds a cast waits for its own wound, and within which an on-next-swing strike's success and its swing are one
--- event pair (the same frame, log 1).
-local CAST_WINDOW, STRIKE_WINDOW = 0.2, 0.2
--- Seconds within which a cast's own wound comes (its frame): a yellow strike's damage can fit a weapon range, so a
--- cast this fresh takes a wound before any pending swing. Also the foreign strike frame: a wound this soon after a
--- WOUND 0 that no cast of ours claimed is someone else's on-next-swing strike (G 177249/177250).
-local SAME_FRAME = 0.05
--- The window our cast's own avoid may follow its success in: the server resolves the hit and refunds at the cast's
--- success (the user, 2026-10-20), and the target's DODGE / PARRY / MISS only reports it afterwards, as a white swing's
--- outcome follows its swing; so a main-hand landing lag's window (the learned median plus three spreads), not a frame.
--- Hand h's (1 main, 2 off from its own swing); also how long a swing's rage stays pending (VS.SwingPending).
-function L.LandWindow(h)
-    return L.med[h] + 3 * L.spr[h]
-end
--- GAP AX (docs/dev/gaps.md): the landing window holds for a refused avoid (DODGE / PARRY / MISS) only while the
--- background avoid count (L.bg[7], decayed) stays below this; past it others avoid on the target too, so our cast
--- claims an avoid only inside CAST_WINDOW (a late foreign dodge would refund into the floor, above the truth).
--- UNMEASURED: a chosen constant (GAP AX residue in docs/dev/gaps.md).
-L.FOREIGN_AVOIDS = 0.05
 -- Fix 31 G4: a target's outcome names no source, so after a cast of ours the kit does not map (an item's use: a thrown
 -- explosive whose outcome comes a travel later) an avoid or crit in this many seconds, past our cast's own frame, is
 -- nobody's, as with two casts of ours pending. UNMEASURED: a chosen bound over the wowsims log's thrown explosive (its
@@ -54,43 +36,6 @@ L.FOREIGN_AVOIDS = 0.05
 L.UNMAPPED_WINDOW = 2
 local unmappedT = -1e9 -- the latest success of an unmapped spell of ours
 
--- The score (harness design §1.2-§1.4, decision D1; PROTOTYPE values, the harness's gates hold them): THETA the
--- credit bar; q per amount class (exact, loose, above) and for an avoid; the lag density's tail weight per hand; the
--- background prior LAMBDA0 (outcomes per second) worth T0 seconds; TAU the decay of the background counts (s).
-L.THETA = 5
-L.Q = { 0.90, 0.08, 0.02 }
-L.Q_AVOID = 0.22
-L.EPS = { 0.12, 0.10 }
-L.LAMBDA0, L.T0, L.TAU = 0.01, 5, 10
--- The landing lag per reference (1 main from its swing; 2 off from its own swing; 3 off from the latest main swing at
--- or before it: G5's two sharp references), seeds (MEASURED: P log 2, G5) learned online from clean credits.
-L.med, L.spr = { 0.474, 0.703, 1.686 }, { 0.060, 0.020, 0.020 }
--- The background: per class, the white outcomes that arrived while nothing of ours was pending (1-3 main exact, loose,
--- above; 4-6 off; 7 avoid; 8 white, any amount), and the quiet time they came in; both decay with combat
--- time (decision D6: they persist across pulls).
-L.bg, L.quiet = { 0, 0, 0, 0, 0, 0, 0, 0 }, 0
-local lastT, lastW0, lastMain = 0, -1, 0
-L.credited, L.background, L.avoidsBack = { 0, 0, 0 }, 0, 0
--- the provisional avoids taken, and the latest one's swing (hand, time): what the harness scores avoid credits by
-L.avoids, L.avoidX, L.avoidT = 0, 0, 0
-
--- The usability oracle (harness design §2, decision D8): a credit's record is judged by a usability answer heard from
--- ORACLE_MIN after its swing (rage is gained at the swing, checkpoint R1 measured 2026-10-20; the client's answers
--- show it about ORACLE_MIN later, UNMEASURED until G7) to one landing lag after its wound; answers between the swing
--- and the wound are evidence about the swing's rage (Families/Resources.lua looks back at them when the credit comes),
--- the wound decides the credit's size and what a retraction takes back. Labels
--- move the credit bar of the record's class,
--- theta[k] for k = hand x amount class (exact, loose, above, unknown) x lag band (core: within 2 spr; tail), between
--- THETA_MIN and THETA_MAX (start THETA; kept across pulls, reset at load).
-L.ORACLE_MIN = 0.1
-L.THETA_MIN, L.THETA_MAX = 2, 16
-L.theta = {}
-for k = 1, 16 do
-    L.theta[k] = L.THETA
-end
-L.oracle = { judged = 0, confirmed = 0, retracted = 0, soft = 0, vetoed = 0 }
--- The latest veto's swing (hand, time): what the harness scores vetoes by (I.Missed below).
-L.vetoX, L.vetoAt = 0, 0
 -- Credit records (ids 1-8, a ring; `Swing` c = 1's b): the outcome's time, amount and flag, the swing's time, hand,
 -- destination, window and main reference, the class index, LR, and whether a verdict is still open.
 local RECORDS = 8
@@ -101,19 +46,10 @@ for k = 1, RECORDS do
     recK[k], recLR[k], recOpen[k] = 1, 0, false
 end
 local recNext = 0
-local N = 8
--- Pending own actions: kind 1 swing (hand in `x`), 2 cast (spell ID in `x`); `w` its window (s); `t` 0 is free.
--- `ref` an off-hand swing's main reference (the latest main swing at or before it; 0 none); `lr` and `avoid` the LR
--- and action of an avoid credited to it provisionally ("" none).
-local actT, actKind, actX, actDst, actW, actRef, actLR, actAvoid = {}, {}, {}, {}, {}, {}, {}, {}
-for i = 1, N do
-    actT[i], actKind[i], actX[i], actDst[i], actW[i], actRef[i], actLR[i], actAvoid[i] = 0, 0, 0, "", 0, 0, 0, ""
-end
 
 local strikeWait = 0 -- an on-next-swing strike's success still waiting for its main-hand swing
 
--- The avoids a swing can have (school 1) and the further ones a cast can (MISSES).
-local AVOIDS = { DODGE = true, PARRY = true, MISS = true, BLOCK = true, DEFLECT = true, EVADE = true }
+-- The avoids a cast can have (a swing's: M.AVOIDS).
 local MISSES = {
     DODGE = true,
     PARRY = true,
@@ -126,24 +62,12 @@ local MISSES = {
     ABSORB = true,
 }
 
-local function free()
-    local oldest = 1
-    for i = 1, N do
-        if actT[i] == 0 then
-            return i
-        elseif actT[i] < actT[oldest] then
-            oldest = i
-        end
-    end
-    return oldest -- full: the oldest gives way, unemitted (8 pending within 2 s cannot happen)
-end
-
--- Our pending cast still in its window at `t` (or within `age` s of it), the oldest first.
+-- Our open cast still in its window at `t` (or within `age` s of it), the oldest first.
 local function cast(t, age)
     local best
-    for i = 1, N do
-        local at = actT[i]
-        if at > 0 and actKind[i] == 2 and t - at <= (age or actW[i]) and (not best or at < actT[best]) then
+    for i = 1, T.CAP do
+        local a = T.at[i]
+        if T.state[i] ~= 0 and T.kind[i] == FRAME and t - a <= (age or T.w[i]) and (not best or a < T.at[best]) then
             best = i
         end
     end
@@ -161,11 +85,11 @@ local REFUSED = { DODGE = true, PARRY = true, MISS = true }
 -- and the outcome is past p's own frame (a thrown item's outcome travels; p's own in its frame stays p's): an avoid
 -- then is nobody's (no row, no Obs.Avoided).
 local function another(p, t)
-    if t - unmappedT <= L.UNMAPPED_WINDOW and t - actT[p] > SAME_FRAME then
+    if t - unmappedT <= L.UNMAPPED_WINDOW and t - T.at[p] > SAME_FRAME then
         return true
     end
-    for i = 1, N do
-        if i ~= p and actT[i] > 0 and actKind[i] == 2 and t - actT[i] <= actW[i] then
+    for i = 1, T.CAP do
+        if i ~= p and T.state[i] ~= 0 and T.kind[i] == FRAME and t - T.at[i] <= T.w[i] then
             return true
         end
     end
@@ -173,109 +97,14 @@ local function another(p, t)
 end
 
 local function avoided(p, t, act)
-    if not REFUSED[act] or t - actT[p] > actW[p] then
+    if not REFUSED[act] or t - T.at[p] > T.w[p] then
         return
     end
-    local a = I.ab.bySpell[actX[p]]
+    local a = I.ab.bySpell[T.x[p]]
     if a then
-        S.Stage(Obs.Avoided, t, a, actT[p], I.HitKind[act])
+        S.Stage(Obs.Avoided, t, a, T.at[p], I.HitKind[act])
         S.Urgent("VS_CAST_AVOIDED")
     end
-end
-
--- Whether an action of ours is pending at t for the background: a cast past its wound's window waits only for an
--- avoid (its landing window), which the background's wound rates do not see.
-local function pending(t)
-    for i = 1, N do
-        if actT[i] > 0 and (actKind[i] ~= 2 or t - actT[i] <= CAST_WINDOW) then
-            return true
-        end
-    end
-    return false
-end
-
--- The clock of the background: in combat, the counts and the quiet time decay by exp(-dt / TAU), and the quiet time
--- grows while nothing of ours is pending. Allocates nothing.
-local function advance(t)
-    if t <= lastT then
-        return
-    end
-    if I.inCombat then
-        local dt = t - lastT
-        local k = math.exp(-dt / L.TAU)
-        local bg = L.bg
-        for c = 1, 8 do
-            bg[c] = bg[c] * k
-        end
-        L.quiet = L.quiet * k + (pending(t) and 0 or dt)
-    end
-    lastT = t
-end
-
-local function lambda(c)
-    return (L.bg[c] + L.LAMBDA0 * L.T0) / (L.quiet + L.T0) -- nonzero: T0 > 0
-end
-
--- The amount class of a wound for hand h against the weapon damage (UnitDamage: min and max main, then min and max
--- off), on half the amount for a crit: 1 exact [min, max], 2 loose [0.6 x min, 1.1 x max], 3 above (1.1 x max,
--- 2 x max] (a damage buff since the read), else 0. A glancing or partly blocked hit opens the loose band down to 0
--- (G's glancing 1-5 are another player's; log 2's BLOCK_REDUCED 48 is exact). The ranges are before armour.
-local function classOf(h, amount, flag)
-    local minMain, maxMain, minOff, maxOff = VS.Stat("UnitDamage")
-    local lo, hi = minMain, maxMain
-    if h == 2 then
-        lo, hi = minOff, maxOff
-    end
-    if flag == "CRITICAL" then
-        amount = amount / 2
-    end
-    local looseLo = 0.6 * lo
-    if flag == "GLANCING" or flag == "BLOCK_REDUCED" then
-        looseLo = 0
-    end
-    if hi <= 0 or amount < looseLo or amount > 2 * hi then
-        return 0
-    elseif amount >= lo and amount <= hi then
-        return 1
-    end
-    return amount <= 1.1 * hi and 2 or 3
-end
-
-local function normal(d, m, s)
-    local z = (d - m) / s -- nonzero: spr clamped at 0.02 s
-    return math.exp(-0.5 * z * z) / (s * 2.5066283)
-end
-
--- The landing-lag density of pending swing i for an outcome at t (0 outside its window), and the reference that
--- scored: the main hand from its swing; the off hand the better of its own swing and its main reference, plus the
--- hand's tail over the window.
-local function density(i, t)
-    local d, w = t - actT[i], actW[i]
-    if d < 0 or d > w then
-        return 0, 0
-    end
-    local med, spr = L.med, L.spr
-    if actX[i] == 1 then
-        return (1 - L.EPS[1]) * normal(d, med[1], spr[1]) + L.EPS[1] / w, 1 -- nonzero: w > 0 (a window)
-    end
-    local f, ref = normal(d, med[2], spr[2]), 2
-    if actRef[i] > 0 then
-        local m = normal(t - actRef[i], med[3], spr[3])
-        if m > f then
-            f, ref = m, 3
-        end
-    end
-    return (1 - L.EPS[2]) * f + L.EPS[2] / w, ref -- nonzero: w > 0 (a window)
-end
-
--- A clean credit moves its reference's median and spread (a running median; mean absolute deviation to SD).
-local function learn(ref, d)
-    local med, spr = L.med, L.spr
-    med[ref] = med[ref] + 0.005 * (d > med[ref] and 1 or -1)
-    local s = spr[ref] + 0.05 * (1.2533 * math.abs(d - med[ref]) - spr[ref])
-    spr[ref] = s < 0.02 and 0.02 or (s > 0.4 and 0.4 or s)
-    local w = L.PAIR_WINDOW_MS[ref == 1 and 1 or 2] / 1000
-    med[ref] = med[ref] < 0 and 0 or (med[ref] > w and w or med[ref])
 end
 
 -- One row from an own action and its outcome, at the earlier time. None without a destination: Hekili's handler would
@@ -305,12 +134,9 @@ local function emit(kind, x, dst, action, flag, amount, t)
     end
 end
 
--- Holds an own action in a free slot (the oldest gives way) and returns the slot.
-local function hold(kind, x, dst, w, t)
-    local i = free()
-    actT[i], actKind[i], actX[i], actDst[i], actW[i] = t, kind, x, dst, w
-    actRef[i], actLR[i], actAvoid[i] = kind == 1 and x == 2 and lastMain or 0, 0, ""
-    return i
+-- Holds an own action in a ticket (the oldest gives way) and returns it.
+local function hold(kind, xx, dst, win, t)
+    return T.Hold(kind == 1 and MELEE or FRAME, xx, dst, win, t, kind == 1 and xx == 2 and lastMain or 0)
 end
 
 -- swingType 2, the ranged hand (C7), is no melee swing: its clock is Sources/Swing.lua's, and the shot's outcome pairs
@@ -319,7 +145,7 @@ S.On("PLAYER_SWING", nil, function(api, t, duration, swingType)
     if type(swingType) ~= "number" or swingType > 2 then
         return
     end
-    advance(t)
+    M.advance(t)
     if swingType == 2 then
         return
     end
@@ -347,12 +173,13 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     if not obj or not (obj.startsCombat or obj.onNextSwing) then
         return
     end
-    advance(t)
+    M.advance(t)
     if obj.onNextSwing then -- the strike replaces its swing, in the same frame before or after this success
         local found = false
-        for i = 1, N do
-            if actT[i] > 0 and actKind[i] == 1 and actX[i] == 1 and t - actT[i] <= STRIKE_WINDOW then
-                actT[i], found = 0, true
+        for i = 1, T.CAP do
+            if T.state[i] ~= 0 and T.kind[i] == MELEE and T.x[i] == 1 and t - T.at[i] <= STRIKE_WINDOW then
+                T.Close(i)
+                found = true
             end
         end
         if not found then
@@ -361,72 +188,6 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     end
     hold(2, spellID, I.Units.Sent(castGUID) or I.Units.Pin(api, t) or "", L.LandWindow(1), t)
 end)
-
--- The theta index of hand h's amount class `cls` (1-3, 4 unknown) at lag d from reference `ref`: core band (within 2
--- spr of the median) or tail.
-local function thetaIndex(h, cls, ref, d)
-    local band = math.abs(d - L.med[ref]) <= 2 * L.spr[ref] and 1 or 2
-    return (h - 1) * 8 + (cls - 1) * 2 + band
-end
-
--- The best pending swing for an outcome at t (amount class per hand from `classOf`, or q = 1 for every hand when
--- `unknown`; an avoid when `avoid`): its slot, LR, reference, lag, the runner-up's LR and its theta index (wounds).
--- Allocates nothing.
-local function score(t, amount, flag, avoid, unknown)
-    local best, bestLR, ref, lag, second, idx = nil, 0, 0, 0, 0, 1
-    for i = 1, N do
-        if actT[i] > 0 and actKind[i] == 1 and not (avoid and actAvoid[i] ~= "") then
-            local f, r = density(i, t)
-            local q, c, cls = L.Q_AVOID, 7, 4
-            if not avoid then
-                if unknown then
-                    q, c = 1, 8
-                else
-                    cls = classOf(actX[i], amount, flag)
-                    q, c = cls > 0 and L.Q[cls] or 0, (actX[i] - 1) * 3 + cls
-                end
-            end
-            local lr = f > 0 and q > 0 and q * f / lambda(c) or 0
-            if lr > actLR[i] or actAvoid[i] == "" then -- a wound takes a provisionally avoided swing only by beating it
-                if lr > bestLR then
-                    local d = r == 3 and t - actRef[i] or t - actT[i]
-                    best, bestLR, ref, lag, second = i, lr, r, t - actT[i], bestLR
-                    idx = thetaIndex(actX[i], cls, r, d)
-                elseif lr > second then
-                    second = lr
-                end
-            end
-        end
-    end
-    return best, bestLR, ref, lag, second, idx
-end
-
--- An outcome nobody of ours claimed: counted, and while in combat with nothing of ours pending (the quiet time it is a
--- rate over), it teaches the background rate of each white class it qualifies for: a white avoid the avoid class, a
--- white wound the any-amount class always (its rate is over the same quiet time) and every hand's class it fits while
--- the cache is usable. A non-physical outcome, or a RESIST / IMMUNE / ABSORB, counts in no class (§1.3, §1.4).
-local function background(act, amount, flag, white, avoid, unknown)
-    L.background = L.background + 1
-    if pending(lastT) or not I.inCombat or not white then
-        return
-    end
-    local bg = L.bg
-    if avoid then
-        if AVOIDS[act] then
-            bg[7] = bg[7] + 1
-        end
-        return
-    end
-    bg[8] = bg[8] + 1
-    if not unknown then
-        for h = 1, 2 do
-            local cls = classOf(h, amount, flag)
-            if cls > 0 then
-                bg[(h - 1) * 3 + cls] = bg[(h - 1) * 3 + cls] + 1
-            end
-        end
-    end
-end
 
 -- The target's outcome at `t`. Our pending cast claims first: an avoid within its window, a wound within its frame.
 -- A WOUND 0 is the white swing an on-next-swing strike replaced and pairs with nothing; a wound right after one that
@@ -447,10 +208,10 @@ I.Units.OnRow(function(t, g, uid, act, flag, amount, school)
         return
     end
     local api = I.api
-    advance(t)
+    M.advance(t)
     -- EventFacade's Plain made a secret slot nil: no candidate (not a WOUND 0), only counted (never seen in game)
     if type(amount) ~= "number" or type(flag) ~= "string" or type(school) ~= "number" then
-        background(act, 0, "", false, act ~= "WOUND", false)
+        M.background(act, 0, "", false, act ~= "WOUND", false)
         return
     end
     local white, avoid = school == 1, act ~= "WOUND"
@@ -469,7 +230,7 @@ I.Units.OnRow(function(t, g, uid, act, flag, amount, school)
         -- row, no Obs.Avoided), and so is a white crit's Obs.Crit: a swing due now, its landing lag within twice the
         -- hand's learned spread of the median, or one in that swing's own event frame (P log 2: an unexplained avoid
         -- in our swing's ms, 3 of 87 swings; never a cast's report)
-        local sw, _, ref, lag = score(t, amount, flag, avoid, crit) -- a crit by its timing alone, as an avoid
+        local sw, _, ref, lag = M.score(t, nil, amount, flag, avoid, crit) -- a crit by its timing alone, as an avoid
         local h = ref == 3 and 2 or ref
         if sw and (lag <= SAME_FRAME or math.abs(lag - L.med[h]) <= 2 * L.spr[h]) then
             if avoid then
@@ -487,13 +248,13 @@ I.Units.OnRow(function(t, g, uid, act, flag, amount, school)
             local form = Plain(api, api.GetShapeshiftForm()) -- secret: Plain; plain in combat (Facade.lua's stance row)
             unknown = maxMain <= 0 or form ~= I.damageForm
         end
-        credited, lr, ref, lag, second, k = score(t, amount, flag, avoid, unknown)
+        credited, lr, ref, lag, second, k = M.score(t, nil, amount, flag, avoid, unknown)
         if credited and lr < (avoid and L.THETA or L.theta[k]) then
             credited = nil
-        elseif credited and not avoid and I.Missed and I.Missed(actX[credited], actT[credited]) then
+        elseif credited and not avoid and I.Missed and I.Missed(T.x[credited], T.at[credited]) then
             -- the veto, on a credit the bar passed: that swing gave no rage (its usability answers since it showed),
             -- so this wound is another source's; a wound row that swing cannot have (rage is gained at the swing, R1)
-            L.oracle.vetoed, L.vetoX, L.vetoAt = L.oracle.vetoed + 1, actX[credited], actT[credited]
+            L.oracle.vetoed, L.vetoX, L.vetoAt = L.oracle.vetoed + 1, T.x[credited], T.at[credited]
             credited = nil
         end
     end
@@ -501,49 +262,49 @@ I.Units.OnRow(function(t, g, uid, act, flag, amount, school)
         p = cast(t, CAST_WINDOW)
     end
     if p and avoid and another(p, t) then
-        background(act, amount, flag, white, avoid, unknown) -- two casts pending: whose avoid is unknown
+        M.background(act, amount, flag, white, avoid, unknown) -- two casts pending: whose avoid is unknown
         return
     elseif p then
         if avoid then
             avoided(p, t, act)
-        elseif crit and t - actT[p] <= actW[p] and not another(p, t) then
-            local a = I.ab.bySpell[actX[p]] -- our cast's own crit (the target's row carries the flag plain): GAP T
+        elseif crit and t - T.at[p] <= T.w[p] and not another(p, t) then
+            local a = I.ab.bySpell[T.x[p]] -- our cast's own crit (the target's row carries the flag plain): GAP T
             if a then
-                S.Stage(Obs.Crit, t, a, actT[p], 0)
+                S.Stage(Obs.Crit, t, a, T.at[p], 0)
             end
         end
-        local x, at = actX[p], actT[p]
-        actT[p] = 0
+        local x, at = T.x[p], T.at[p]
+        T.Close(p)
         L.credited[3] = L.credited[3] + 1
-        emit(2, x, actDst[p], act, flag, amount, at)
+        emit(2, x, T.guid[p], act, flag, amount, at)
         return
     elseif not credited then
-        background(act, amount, flag, white, avoid, unknown)
+        M.background(act, amount, flag, white, avoid, unknown)
         return
     end
-    local x, at = actX[credited], actT[credited]
+    local x, at = T.x[credited], T.at[credited]
     if avoid then
-        actLR[credited], actAvoid[credited] = lr, act -- provisional: emitted when the window closes
+        T.lr[credited], T.avoid[credited] = lr, act -- provisional: emitted when the window closes
         L.avoids, L.avoidX, L.avoidT = L.avoids + 1, x, at
         return
     end
-    if actAvoid[credited] ~= "" then
+    if T.avoid[credited] ~= "" then
         L.avoidsBack = L.avoidsBack + 1 -- the avoid it held was someone else's after all
     end
-    if not unknown and classOf(x, amount, flag) == 1 and second < L.THETA then
-        local d = ref == 3 and t - actRef[credited] or lag
+    if not unknown and M.classOf(x, amount, flag) == 1 and second < L.THETA then
+        local d = ref == 3 and t - T.ref[credited] or lag
         if math.abs(d - L.med[ref]) < 3 * L.spr[ref] then
-            learn(ref, d)
+            M.learn(ref, d)
         end
     end
     recNext = recNext % RECORDS + 1
     local id = recNext
     recT[id], recAmount[id], recFlag[id], recAt[id], recHand[id] = t, amount, flag, at, x
     recDst[id], recW[id], recRef[id], recK[id], recLR[id], recOpen[id] =
-        actDst[credited], actW[credited], actRef[credited], k, lr, true
-    actT[credited], actAvoid[credited], actLR[credited] = 0, "", 0
+        T.guid[credited], T.w[credited], T.ref[credited], k, lr, true
+    T.Close(credited)
     L.credited[x] = L.credited[x] + 1
-    emit(1, x, actDst[credited], act, flag, amount, at)
+    emit(1, x, T.guid[credited], act, flag, amount, at)
     S.Stage(Obs.Swing, at, x, id, 1) -- landed, at the swing's time: the resources family pays its rage (record id)
     if flag == "CRITICAL" then
         S.Stage(Obs.Swing, t, x, id, 3) -- the same record: a retraction takes the crit back too
@@ -582,7 +343,8 @@ function I.CreditVerdict(id, ok, t, firm)
         th[k] = th[k] * 1.5 < L.THETA_MAX and th[k] * 1.5 or L.THETA_MAX
         local hand, at = recHand[id], recAt[id]
         if t - at <= recW[id] then
-            actRef[hold(1, hand, recDst[id], recW[id], at)] = recRef[id]
+            local i = hold(1, hand, recDst[id], recW[id], at)
+            T.ref[i] = recRef[id]
         else
             emit(1, hand, recDst[id], "MISS", "", 0, at)
         end
@@ -598,24 +360,23 @@ end
 -- with amount 0, each at its own time (and stages nothing: no rage); an unpaired cast is dropped. Every OnUpdate (the
 -- deferred lane, CombatLog.lua). Allocates nothing.
 L.OnTick(function(now)
-    advance(now)
-    for i = 1, N do
-        local t = actT[i]
-        if t > 0 and now - t > actW[i] then
-            actT[i] = 0
-            if actKind[i] == 1 then
-                emit(1, actX[i], actDst[i], actAvoid[i] ~= "" and actAvoid[i] or "WOUND", "", 0, t)
+    M.advance(now)
+    for i = 1, T.CAP do
+        local t = T.at[i]
+        if T.state[i] ~= 0 and now - t > T.w[i] then
+            if T.kind[i] == MELEE then
+                emit(1, T.x[i], T.guid[i], T.avoid[i] ~= "" and T.avoid[i] or "WOUND", "", 0, t)
             end
-            actAvoid[i], actLR[i] = "", 0
+            T.Close(i)
         end
     end
 end)
 
 -- Combat end: nothing pending survives into the next pull; the background and the lags are kept (decision D6).
 S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
-    advance(t)
-    for i = 1, N do
-        actT[i], actAvoid[i], actLR[i] = 0, "", 0
+    M.advance(t)
+    for i = 1, T.CAP do
+        T.Close(i)
     end
     strikeWait, unmappedT = 0, -1e9
 end)
@@ -638,9 +399,9 @@ I.OnSnapshot(function(out)
         spr[2] * 1000,
         med[3] * 1000,
         spr[3] * 1000,
-        lambda(1),
-        lambda(4),
-        lambda(7)
+        M.lambda(1),
+        M.lambda(4),
+        M.lambda(7)
     )
     out[#out + 1] = string.format(
         "rows oracle judged=%d confirmed=%d retracted=%d soft=%d vetoed=%d",
