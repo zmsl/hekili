@@ -123,6 +123,21 @@ describe("the unit registry", function()
         assert.are.equal(U.GONE, gone[1].why)
     end)
 
+    it("sweeps no slot and allocates nothing on frames where nothing can expire", function()
+        local bytes = alloc.bytes(function(i)
+            ctl.Tick(500 + i * 0.016) -- only the bound target: nothing pending
+        end, 2000)
+        assert.are.equal(0, bytes)
+        assert.are.equal(0, U.sweeps)
+        ctl.guid.target = nil
+        ctl.now = 600
+        ctl.Fire("PLAYER_TARGET_CHANGED")
+        ctl.Tick(600.05) -- pending, not yet due
+        assert.are.same({ 0, 0 }, { U.sweeps, #gone })
+        ctl.Tick(600.2)
+        assert.are.same({ 1, 1 }, { U.sweeps, #gone })
+    end)
+
     it("checks a removed plate's live GUID against its binding before unbinding", function()
         ctl.guid.nameplate2 = "Creature-7"
         ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")

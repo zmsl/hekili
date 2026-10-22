@@ -57,7 +57,7 @@ for k = 1, DUP_N * NTOK do
 end
 local dNext = 0
 
-U.unresolved, U.dup, U.evicted = 0, 0, 0
+U.unresolved, U.dup, U.evicted, U.sweeps = 0, 0, 0, 0 -- sweeps: Tick scans that ran (spec §10)
 U.deaths = { tell = 0, poll = 0, event = 0 }
 U.player, U.sentCast, U.sentGUID = "", nil, nil
 U.Claims = nil -- set by Events/Tickets.lua: whether an open ticket on a unit owes a row of this act and school
@@ -70,6 +70,18 @@ end
 
 local function releaseT(u)
     return uLeft[u] > uFree[u] and uLeft[u] or uFree[u]
+end
+
+-- The earliest time a released GRACE slot can turn GONE (math.huge: none pending); Tick does nothing before it.
+local nextDue = math.huge
+
+local function schedule(u)
+    if uState[u] == GRACE_S and released(u) then
+        local due = releaseT(u) + U.GRACE
+        if due < nextDue then
+            nextDue = due
+        end
+    end
 end
 
 -- Whether rows may resolve to slot u at t (spec §2.1's table).
@@ -152,6 +164,7 @@ local function unbind(i, t)
         if uState[u] == LIVE then
             uState[u] = GRACE_S
         end
+        schedule(u)
     end
 end
 
@@ -360,12 +373,22 @@ function U.Sent(castGUID)
     end
 end
 
---- Moves each released GRACE slot past GRACE to GONE (OnGone GONE). Every OnUpdate. Allocates nothing.
+--- Moves each released GRACE slot past GRACE to GONE (OnGone GONE). Every OnUpdate; returns at once until the
+--- earliest pending expiry (spec §10). Allocates nothing.
 function U.Tick(now)
+    if now < nextDue then
+        return
+    end
+    U.sweeps = U.sweeps + 1
+    nextDue = math.huge
     for u = 1, CAP do
-        if uState[u] == GRACE_S and released(u) and now - releaseT(u) >= U.GRACE then
-            uState[u] = GONE
-            notify(u, GONE, now)
+        if uState[u] == GRACE_S and released(u) then
+            if now - releaseT(u) >= U.GRACE then
+                uState[u] = GONE
+                notify(u, GONE, now)
+            else
+                schedule(u)
+            end
         end
     end
 end
@@ -452,6 +475,7 @@ function U.Release(u, t)
         uHeld[u] = uHeld[u] - 1
         if uHeld[u] == 0 then
             uFree[u] = t
+            schedule(u)
         end
     end
 end
