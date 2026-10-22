@@ -68,7 +68,8 @@ local AVOIDS = M.AVOIDS
 --- anchor (past it a spell waits only for an avoid, which the background's wound rates do not see).
 function M.pending(t)
     for i = 1, T.CAP do
-        if T.state[i] ~= 0 and (T.kind[i] == X.MELEE or t - T.at[i] <= CAST_WINDOW) then
+        local k = T.kind[i]
+        if T.state[i] >= T.OPEN and k ~= X.UNMAPPED and (k == X.MELEE or t - T.at[i] <= CAST_WINDOW) then
             return true
         end
     end

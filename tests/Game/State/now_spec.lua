@@ -776,7 +776,7 @@ describe("now handlers", function()
             assert.are.equal(0, VS.Power(fs.RAGE, 6.1).est)
         end)
 
-        it("a crit two pending casts could own, or a pending swing explains, runs no onCrit (GAP T)", function()
+        it("a crit a pending swing explains runs no onCrit; one in the newer cast's frame is its (GAP T)", function()
             local crits = 0
             h.Class.abilities.spender_c.funcs.onCrit = function()
                 crits = crits + 1
@@ -798,13 +798,15 @@ describe("now handlers", function()
             ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 100, 1)
             ctl.Tick(20.21)
             VS.Drain(20.22)
-            assert.are.equal(0, crits) -- the crit is nobody's to say
+            -- unit-registry spec §3.4: only the newer cast's frame holds it at pass (a), so it is that cast's (before
+            -- 2026-10-22 any other cast in its landing window made it nobody's)
+            assert.are.equal(1, crits)
             ctl.now = 30
             ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-4", fs.SPENDER_C)
             ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 100, 1) -- alone: the cast's
             ctl.Tick(30.01)
             VS.Drain(30.02)
-            assert.are.equal(1, crits)
+            assert.are.equal(2, crits)
         end)
 
         it("keeps an onCrit's target writes out of the cast's undo: an avoid after it leaves them (GAP T)", function()

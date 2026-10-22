@@ -50,6 +50,7 @@ Game\Events\EventFacade.lua
 Game\Events\CombatLog.lua
 Game\Events\Tickets.lua
 Game\Events\Melee.lua
+Game\Events\Kinds.lua
 Game\Events\Rows.lua
 Game\Events\Attackers.lua
 Game\API\Facade.lua
