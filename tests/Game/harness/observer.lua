@@ -493,6 +493,11 @@ function M.new(W, k)
             if ev.gcd and k.gcdSpell then
                 cooldown(t, k.gcdSpell, ev.gcd)
             end
+        elseif kind == "castStop" and ev.src == us then -- our hard cast cut (a dead target, the fight's end): the
+            -- client's interrupt, UnitCastingInfo empty, then INTERRUPTED and STOP
+            push(t, "@casting", nil)
+            push(t, "UNIT_SPELLCAST_INTERRUPTED", "player", "Cast-" .. hardN, spellID(ev.spell))
+            push(t, "UNIT_SPELLCAST_STOP", "player", "Cast-" .. hardN, spellID(ev.spell))
         elseif kind == "channelStop" and ev.src == us then -- its end or a clip: UnitChannelInfo empty, then the stop
             push(t, "@channel", nil)
             push(t, "UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-" .. chanN, spellID(ev.spell))

@@ -437,4 +437,52 @@ describe("the world's press", function()
         end
         assert.are.same({ 1 }, gcd) -- the GCD's flag rises at the cast's start
     end)
+
+    -- Fix 31 G3: a fight's end stops our cast in progress, as the client's interrupt on a dead target does, so no
+    -- stale cast start outlives the fight (a later instant cast of it would take that start as its GCD's).
+    it("interrupts a hard cast in progress when our target dies: no success, other presses free", function()
+        setup()
+        mob.avoid = { miss = 0, dodge = 0, parry = 0 }
+        local done = 0
+        local p = { spell = fs.SPENDER_A, cost = 10, cast = 1.5, gcd = 1.5 }
+        p.effect = function()
+            done = done + 1
+        end
+        W.t = 1
+        assert.is_true(W.press(us, "spender_a", p))
+        W.run(2)
+        W.hit(us, mob, 2e6)
+        assert.is_true(mob.dead)
+        assert.is_true(W.press(us, "spender_b", { spell = fs.SPENDER_B, offGcd = true }))
+        W.run(5)
+        assert.are.equal(0, done)
+        local a = tostring(fs.SPENDER_A)
+        assert.are.same({
+            "1.00 @casting 1000 2500 nil",
+            "1.00 UNIT_SPELLCAST_START player Cast-1 " .. a,
+            "2.00 @casting nil nil nil",
+            "2.00 UNIT_SPELLCAST_INTERRUPTED player Cast-1 " .. a,
+            "2.00 UNIT_SPELLCAST_STOP player Cast-1 " .. a,
+            "2.00 UNIT_SPELLCAST_SUCCEEDED player Cast-2 " .. tostring(fs.SPENDER_B),
+        }, casts())
+    end)
+
+    it("stops a channel in progress at the fight's stop", function()
+        setup()
+        W.t = 1
+        assert.is_true(
+            W.press(us, "spender_c", { spell = fs.SPENDER_C, gcd = 1.5, channel = { length = 3, tick = 1 } })
+        )
+        W.run(2)
+        W.emit({ kind = "stop" })
+        W.run(10)
+        local c = tostring(fs.SPENDER_C)
+        assert.are.same({
+            "1.00 @channel 1000 4000 nil",
+            "1.00 UNIT_SPELLCAST_CHANNEL_START player Cast-1 " .. c,
+            "1.00 UNIT_SPELLCAST_SUCCEEDED player Cast-1 " .. c,
+            "2.00 @channel nil nil nil",
+            "2.00 UNIT_SPELLCAST_CHANNEL_STOP player Cast-1 " .. c,
+        }, casts())
+    end)
 end)

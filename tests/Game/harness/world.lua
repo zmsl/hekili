@@ -37,8 +37,8 @@ M.OUTCOMES = {
 
 --- A new world. `seed` seeds its generator. Truth events: { t, kind, src, dst, hand, act, flag, amount, school, spell }
 --- with kind "swing" (a white swing, its outcome rolled; ours land later as "land"), "land", "strike" (an
---- on-next-swing strike frame), "spell" (a spell's outcome), "tick", "proc", "cast", "castStart" and "channelStop" (our hard cast's
---- start, our channel's end: W.press), "item" (a bag count of ours: W.item), "pet" and "petPower" (our pet unit, its
+--- on-next-swing strike frame), "spell" (a spell's outcome), "tick", "proc", "cast", "castStart", "castStop" and "channelStop" (our hard
+--- cast's start, its interrupt, our channel's end: W.press, W.endCasts), "item" (a bag count of ours: W.item), "pet" and "petPower" (our pet unit, its
 --- power: W.summonPet, W.petGain), "prepull" (the cache and
 --- target reads 0.5 s before the pull), "pull", "stop", "form", "buff", "target", "aura", "totem", "queue", "unqueue", "gain", "kill", "move",
 --- "regen" and "decay" (a resource's continuous regen and out-of-combat decay, W.startRegen / W.startDecay). A gain
@@ -91,6 +91,11 @@ function M.new(seed)
         if ev.kind == "pull" or ev.kind == "stop" then -- the world's combat runs pull to stop (a kill does not end it)
             W.combat = ev.kind == "pull"
         end
+        if ev.kind == "stop" then -- the fight's end: no cast outlives it (the next fight is a fresh world)
+            for _, e in ipairs(W.ents) do
+                W.endCasts(e)
+            end
+        end
         -- out of combat: the weapon damage UnitDamage reads now, the attack speeds and the regen rates
         if me and (ev.kind == "prepull" or ev.kind == "stop" or (ev.kind == "form" and not W.combat)) then
             local w, m = me.weapons, me.dmgMult
@@ -110,6 +115,11 @@ function M.new(seed)
             if v.health <= 0 and not v.dead then -- a kill (headless loop design §2.1.5): the fight's end
                 v.dead, W.killAt = true, W.t
                 W.emit({ kind = "kill", dst = v })
+                for _, e in ipairs(W.ents) do -- a cast at the dead stops (the client's INTERRUPTED and STOP)
+                    if e.target == v then
+                        W.endCasts(e)
+                    end
+                end
             end
         elseif ev.act == "HEAL" and ev.dst then
             ev.dst.health = math.min(ev.dst.healthMax, ev.dst.health + (ev.amount or 0))
@@ -248,9 +258,14 @@ function M.new(seed)
         elseif hard then
             -- shortcut: no swing-timer pause while casting; upgrade when a melee caster's swings need it.
             e.castUntil = t + p.cast
+            local n = (e.castSeq or 0) + 1
+            e.castSeq, e.hardSpell = n, p.spell -- W.endCasts stops it; a later cast is another `n`
             W.emit({ kind = "castStart", src = e, spell = p.spell, ends = e.castUntil, gcd = gcdLen })
             W.at(e.castUntil, function()
-                land()
+                if e.castSeq == n and e.hardSpell then
+                    e.hardSpell = nil
+                    land()
+                end
             end)
         elseif p.channel then
             local c = p.channel
@@ -287,6 +302,17 @@ function M.new(seed)
             e.channel, e.castUntil = nil, W.t
             W.emit({ kind = "channelStop", src = e, spell = ch.spell })
         end
+    end
+
+    --- `e`'s hard cast or channel in progress ends now, unfinished: the client's interrupt when the target dies, or the
+    --- fight's stop. Truth "castStop" { src, spell } for a hard cast (no success, nothing paid), W.stopChannel's for a
+    --- channel.
+    function W.endCasts(e)
+        if e.hardSpell then
+            W.emit({ kind = "castStop", src = e, spell = e.hardSpell })
+            e.hardSpell, e.castUntil = nil, W.t
+        end
+        W.stopChannel(e)
     end
 
     --- `e`'s cooldown of `key` (its ranks' spell IDs `ids`) finishes now: the world's and the client's answers.

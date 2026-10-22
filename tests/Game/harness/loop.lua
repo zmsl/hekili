@@ -119,6 +119,7 @@ local function events(W, us, from, e)
             e.cast = e.cast
                 or k == "cast"
                 or k == "castStart"
+                or k == "castStop"
                 or k == "channelStop"
                 or k == "strike"
                 or k == "queue"
