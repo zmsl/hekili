@@ -177,6 +177,10 @@ The ticket model replaces Rows' pending-action ring (`actT`, `actKind`, `actX`, 
 classes, the learned lags, the background rates, the provisional avoid, the usability oracle and the on-next-swing
 replacement.
 
+The engine makes no assumption about what a spell does. The ability declares an expectation (section 5): a value
+naming one of a small fixed set of kinds, with its numbers. The engine registers a ticket with it and handles the rest.
+Each kind's matching rule and closure rule are implemented once, in the engine; packs write no matching or closing code.
+
 ### 3.1 The record
 
 A pool of `TICKETS` = 16 records (Rows has 8 today, `Rows.lua:104`; flight windows of up to about 2.1 s for a 40 yd
@@ -184,99 +188,124 @@ Speed-20 cast need more room). Fields, each a preallocated array:
 
 | Field | Meaning |
 |---|---|
-| `kind` | 1 swing, 2 spell with a declared `school` (damage ticket), 3 spell without one (avoid-only ticket) |
-| `ab` | ability index (0 for a swing) |
-| `x` | hand (1 main, 2 off) for a swing; spell ID for a spell (the row's spell ID) |
-| `guid`, `uid` | the pinned victim and its registry slot |
-| `school` | the ability's numeric `school` (1 for a swing) |
-| `at` | the action time: the swing, or the success |
-| `lo`, `hi` | the window, absolute times |
+| `kind` | the expectation kind (5.1): NONE, FRAME, FLIGHT, MELEE, STRIKE, TICKS, CHANNEL, or the engine's own DEFAULT and UNMAPPED |
+| `ab` | the ability index (0 for a swing or an unmapped success): the integer reference to the ability's precompiled expectation (`A.expKind[ab]` and its numbers); no closure is stored |
+| `x` | hand (1 main, 2 off) for a swing; the spell ID for a spell (the row's spell ID) |
+| `guid`, `uid` | the pinned victim and its registry slot ("" and 0 when nothing was pinned) |
+| `school` | the school the expectation names (0: none; the kind then owes no WOUND, 5.1) |
+| `owed` | rows still owed: 0 resolves the ticket; 1 for FRAME and FLIGHT; N for TICKS; open-ended for CHANNEL; each paid row decrements it |
+| `period` | seconds between owed rows (TICKS, CHANNEL); 0 otherwise |
+| `at` | the anchor: the swing, or the success (a hard cast is anchored when its success arrives) |
+| `lo`, `hi` | the current window, absolute once the ticket is armed |
 | `ref` | an off-hand swing's main reference (as `actRef`) |
 | `lr`, `avoid` | a provisional avoid's LR and action (as `actLR`, `actAvoid`) |
-| `state` | 0 free, 1 open, 2 provisional (holds an avoid), 3 closed |
+| `state` | 0 free, 1 committed (hard cast between SENT and success), 2 open, 3 provisional (holds an avoid), 4 closed |
+
+The context the engine fills a ticket from is one preallocated table `CTX`, built at load: `t` (the commit time),
+`guid`, `rangeLo` and `rangeHi` (the range bracket in yards; `rangeHi` = `math.huge` when unknown), `hand`, and the
+ability's learned amount band (`bandLo`, `bandHi`, `bandN`, 3.4). Only the `expects` escape hatch (5.3) reads it from
+pack code. No table, closure or string is made per event.
 
 ### 3.2 Opening
 
-Exactly one ticket opens per action:
+A ticket opens for every commit, unconditionally, as one uniform record:
 
-- Every `PLAYER_SWING` with swingType 0 or 1 opens a swing ticket, pinned to `I.Units.Pin` at the swing, window
-  `[at, at + w]` with `w` as today (`Rows.lua:333-338`). The on-next-swing replacement stays as it is (`:329-332`,
-  `:351-361`): a strike's success removes its swing's ticket, or waits `STRIKE_WINDOW` for it.
-- Every player `UNIT_SPELLCAST_SUCCEEDED` of a mapped ability that `startsCombat` or is `onNextSwing` opens a spell
-  ticket (the same set Rows holds today, `:347`). It is pinned to the GUID captured at commit time: the SENT pin for a
-  hard cast (Casts stores `Pin` at `UNIT_SPELLCAST_SENT` together with the SENT's castGUID, and the success uses it when
-  the castGUIDs match), the success itself for an instant. An unmapped success still only sets `unmappedT` (`:344-346`).
-- A pin of nil (no target, Action Targeting off) opens no ticket. Today such a ticket's rows are never emitted anyway
-  (`emit` drops a "" destination, `:283-286`). Counted as `T.unpinned`.
+- Every `PLAYER_SWING` with swingType 0 or 1, at the swing: kind MELEE for that hand, window `[at, at + w]` with `w`
+  as today (`Rows.lua:333-338`). Swings are the engine's own commits; no pack declares them.
+- Every player `UNIT_SPELLCAST_SENT` of a mapped ability with a cast time (a hard cast): the ticket opens committed,
+  pinned at SENT (Casts stores `I.Units.Pin` with the SENT's castGUID). It is armed (anchored, state open) when the
+  matching success arrives, and closed without counting when the matching FAILED or INTERRUPTED stops the cast
+  (`Casts.lua:67-79`).
+- Every player `UNIT_SPELLCAST_SUCCEEDED` that no committed ticket claims, mapped or not, pinned at the success.
+- An unmapped success (a potion, an item, a racial: `I.ab.bySpell` has no entry) opens kind UNMAPPED. It owes no row,
+  its window is `L.UNMAPPED_WINDOW` (`Rows.lua:54`), and it matches any GUID. It absorbs an avoid or a crit inside its
+  window, past another ticket's own frame, as nobody's: no row, no `Obs.Avoided`, no `Obs.Crit`. This is today's
+  `another()` rule (`:163-173`) as a generic ticket, and it replaces `unmappedT` (`:55`, `:344-346`, `:617`).
 
-Kind 2 or 3 is chosen by the pack: an ability with a numeric `school` makes a damage ticket; one without makes an
-avoid-only ticket. An avoid-only ticket keeps today's windows and today's school-1 wound rule exactly (section 3.3),
-and its expiry is not a lost resolution, because nothing says it deals direct damage (a DoT such as Serpent Sting, a
-debuff such as Sunder Armor before a pack declares it).
+At opening the engine takes the ability's expectation (`A.expKind[ab]` and its numbers, or the value the escape hatch
+returns for `CTX`) and fills `kind`, `owed`, `period`, `school`, `lo` and `hi` by that kind's rule (3.3). Kind NONE
+resolves the ticket at commit (a buff, a seal, anything that owes no row): it closes at once, counts `T.none` and never
+matches a row.
 
-### 3.3 Windows
+An ability with no `expects` gets kind DEFAULT, which is today's behaviour exactly: for an ability that `startsCombat`
+or is `onNextSwing` (the set Rows holds today, `:347`), an open ticket with today's windows (3.3), any school, owed 1,
+and no lost count on expiry; for any other mapped ability, today holds nothing, so DEFAULT resolves at commit as NONE
+does. Every pack's floors therefore hold until it declares data.
 
-| Ticket | Window for a WOUND | Window for an avoid |
-|---|---|---|
-| swing | the LR density's support `[0, w]` (`Rows.lua:252-269`) | same |
-| spell, `velocity` > 0 | `[at + max(0, rLo / v - TOL), at + rHi / v + TOL]` | same |
-| spell, no `velocity` | `SAME_FRAME`, or `CAST_WINDOW` for a white wound no swing takes (today, `:458`, `:497-499`) | `LandWindow(1)`, or `CAST_WINDOW` while `bg[7] >= FOREIGN_AVOIDS` (today, GAP AX, `:459-461`) |
+A mapped ticket whose pin is nil (no target, Action Targeting off) still opens, with `guid` "". It matches no row (rows
+always resolve to a GUID), closes on expiry and counts as `T.unpinned`, not as lost. Today such a ticket's rows are
+never emitted anyway (`emit` drops a "" destination, `:283-286`).
 
-`v` is the ability's `velocity` (yd/s). `rLo, rHi` come from `VS.TargetRange()` (`Game/State/Families/Enemies.lua:71-73`)
-when the pinned GUID is the current target and the range record has an upper bound; otherwise `rLo = 0` and `rHi` is
-the ability's `rMax` (`Game/State/Sources/Spellbook.lua:43`), or 40 yd when that is 0. `TOL` = 0.15 s. For Wrath at an
-unknown range the window is `[0, 1.65]` s; the five max-range samples (1483-1566 ms) fit with 84 ms to spare.
+### 3.3 Kinds: windows, matching and closure
 
-Keeping today's windows for every ability without `velocity` is deliberate: melee packs see no change until they
-declare anything, which keeps the melee replay floors where they are.
+| Kind | Window | A row it accepts | Closes |
+|---|---|---|---|
+| NONE | none | none | at commit |
+| FRAME(school) | a WOUND within `SAME_FRAME`, or `CAST_WINDOW` for a white wound no swing takes (today, `:458`, `:497-499`); an avoid within `LandWindow(1)`, or `CAST_WINDOW` while `bg[7] >= FOREIGN_AVOIDS` (today, GAP AX, `:459-461`) | a WOUND of `school`; any avoid | on its row, or expiry |
+| FLIGHT(speed, school) | `[at + max(0, rLo / speed - TOL), at + rHi / speed + TOL]` | a WOUND of `school`; any avoid (a spell miss is school 1, fact 2) | on its row, or expiry |
+| MELEE(hand) | the LR density's support `[0, w]` (`Rows.lua:252-269`) | the swing scoring (3.4 step 3) | on its row (an avoid provisionally), or expiry |
+| STRIKE | today's frame | the strike's row; it replaces the main hand's MELEE ticket within `STRIKE_WINDOW`, or waits for that swing (today `:329-332`, `:351-361`) | on its row, or expiry |
+| TICKS(period, ticks, school) | tick `j` at `at + j x period +- TOL` | a WOUND of `school`; the application's avoid inside `LandWindow(1)` closes it with nothing owed | on the last tick, on the removal of the ability's debuff on that GUID (the aura row `L.Aura` emits, `Game/Events/CombatLog.lua:171`), or expiry |
+| CHANNEL(period, school) | tick `j` at `at + j x period +- TOL` | a WOUND of `school` | on `Obs.ChannelStop` for the ability (`Casts.lua:130-139`) |
+| DEFAULT | as FRAME | any WOUND or avoid, as today | on its row, or expiry, never lost |
+| UNMAPPED | `UNMAPPED_WINDOW` | an avoid or crit nobody took (3.4 step 5) | expiry, never lost |
+
+A school of nil means the hit makes no row of ours: the kind then takes only an avoid in its window, and its expiry is
+not a lost resolution (Serpent Sting's application, 5.4).
+
+`rLo, rHi` are `CTX.rangeLo` and `CTX.rangeHi`: `VS.TargetRange()` (`Game/State/Families/Enemies.lua:71-73`) when the
+pinned GUID is the current target and the record has an upper bound; otherwise 0 and the ability's `rMax`
+(`Game/State/Sources/Spellbook.lua:43`), or 40 yd when that is 0. `TOL` = 0.15 s. For Wrath at an unknown range the
+window is `[0, 1.65]` s; the five max-range samples (1483-1566 ms) fit with 84 ms to spare.
 
 ### 3.4 Paying (the match)
 
-A row is offered to tickets only after the registry resolved it to `guid`. A ticket is a candidate only if its `guid`
-equals the row's, its state is open or provisional, and `t` is inside its window. Then, in order:
+A row is offered to tickets only after the registry resolved it to `guid`. The generic match makes a ticket a
+candidate when its `guid` equals the row's (UNMAPPED: any), its state is open or provisional, `t` is inside its window,
+the row is one its kind accepts (3.3), and a WOUND fits the ability's amount band once learned. Then, in order:
 
 1. WOUND amount 0: marks `lastW0` and pays nothing (today, `Rows.lua:454-457`).
-2. Spell tickets, fresh frame first: a candidate spell ticket within `SAME_FRAME` of its `at` takes the row, as today
-   (`:458`), subject to the school gate below.
-3. White outcomes (school 1) and swings: the existing swing scoring (`score`, `:375-402`): LR = q x f / lambda,
-   the bar `THETA` for avoids and `theta[k]` for wounds (`:488`), the veto (`:490-495`), the white-avoid and white-crit
-   precedence over a pending cast (`:464-478`). Unchanged except that candidates are filtered by GUID.
-4. Spell tickets by flight window: a WOUND pays the oldest candidate spell ticket whose school gate passes; an avoid
-   (DODGE, PARRY, MISS, and the untested RESIST, IMMUNE, ABSORB, EVADE, BLOCK, DEFLECT) pays the oldest candidate spell
-   ticket of either spell kind.
-5. Nothing: the row is foreign. It goes to `background()` as today (`:408-429`), so the learned rates keep their meaning,
-   and is counted as `T.foreign`.
+2. Fresh frame first: a candidate ticket within `SAME_FRAME` of its `at` takes the row, as today (`:458`).
+3. White outcomes (school 1) and swings: the existing swing scoring (`score`, `:375-402`) is the MELEE kind's match:
+   LR = q x f / lambda, the bar `THETA` for avoids and `theta[k]` for wounds (`:488`), the veto (`:490-495`), the
+   white-avoid and white-crit precedence over a pending cast (`:464-478`). Unchanged except that candidates are
+   filtered by GUID.
+4. Other candidates by window: the oldest candidate pays.
+5. UNMAPPED: an avoid or crit no ticket took, inside an UNMAPPED ticket's window and past the pending tickets' own
+   frame, is absorbed as nobody's (today's `another()` unmapped half).
+6. Nothing: the row is foreign. It goes to `background()` as today (`:408-429`) and counts as `T.foreign`.
 
-The school gate: a WOUND pays a damage ticket only when the row's school equals the ability's `school`. An avoid row
-carries school 1 for every spell (fact 2), so avoids skip the gate. A school-1 WOUND may pay a school-1 damage ticket
-(Auto Shot, Multi-Shot) after step 3 has offered it to the swings.
+A paid row decrements `owed`; a ticket with rows still owed moves its window to the next one (`lo + period`,
+`hi + period`).
 
-The amount band (damage tickets only): per ability, `bandLo` and `bandHi` of its own non-crit WOUNDs (a crit halved),
-learned from tickets paid with exactly one candidate. On a new low, `bandLo` takes the amount; otherwise it creeps up by
+The amount band: per ability, `bandLo` and `bandHi` of its own non-crit WOUNDs (a crit halved), learned from tickets
+paid with exactly one candidate. On a new low, `bandLo` takes the amount; otherwise it creeps up by
 `0.05 x (amount - bandLo)`; `bandHi` mirrors it. Once 3 wounds taught it, a WOUND outside
-`[SPELL_BAND_LO x bandLo, SPELL_BAND_HI x bandHi]` = `[0.6 x, 1.6 x]` does not pay that ticket (counted
-`T.bandRejected`). The band survives combat end and resets at load, like the swing lags (decision D6 in the existing
-header comment, `Rows.lua:611`).
+`[SPELL_BAND_LO x bandLo, SPELL_BAND_HI x bandHi]` = `[0.6 x, 1.6 x]` is not a candidate (counted `T.bandRejected`).
+The band survives combat end and resets at load, like the swing lags (`Rows.lua:611`). MELEE keeps its own amount
+classes from `UnitDamage` (`classOf`, `:223-242`) instead.
 
 Ties: among spell candidates the oldest `at` wins (as `cast()` does today, `:146`); among swings the existing strict
 `>` keeps the lower slot (`:391`).
 
-Invariants, checked by the detection suite: a row pays at most one ticket; a ticket is paid at most once, except
-through the existing controlled re-opens (the provisional avoid overtaken by a higher-LR wound, `:522-529`; the firm
-retraction of `I.CreditVerdict`, `:577-586`; the strike replacement, `:351-361`).
+Invariants, checked by the detection suite: a row pays at most one ticket; a ticket is paid at most `owed` times,
+except through the existing controlled re-opens (the provisional avoid overtaken by a higher-LR wound, `:522-529`; the
+firm retraction of `I.CreditVerdict`, `:577-586`; the strike replacement).
 
 ### 3.5 What a payment emits
 
 | Payment | Row (dst = the ticket's `guid`) | Staged |
 |---|---|---|
-| swing, WOUND | `SWING_DAMAGE` (today, `:290-293`) | `Obs.Swing` c = 1, and c = 3 on CRITICAL (`:544-547`) |
-| swing, avoid | provisional (`:522-526`); `SWING_MISSED` at close | nothing |
-| spell, WOUND | `SPELL_DAMAGE` with the ability's school in slots 14 and 17 (today hard-coded 1, `:300`) | `Obs.Crit` on CRITICAL when no divergent pair (4.2) |
-| spell, DODGE / PARRY / MISS | `SPELL_MISSED` with the ability's school (today 1, `:304`) | `Obs.Avoided` (`:175-184`) when no divergent pair |
+| MELEE, WOUND | `SWING_DAMAGE` (today, `:290-293`) | `Obs.Swing` c = 1, and c = 3 on CRITICAL (`:544-547`) |
+| MELEE, avoid | provisional (`:522-526`); `SWING_MISSED` at close | nothing |
+| spell, WOUND | `SPELL_DAMAGE` with the ticket's `school` in slots 14 and 17 (the row's school when the kind names none; today hard-coded 1, `:300`) | `Obs.Crit` on CRITICAL when no divergent pair (4.2) |
+| spell, DODGE / PARRY / MISS | `SPELL_MISSED` with the same school rule (today 1, `:304`) | `Obs.Avoided` (`:175-184`) when no divergent pair |
 | spell, RESIST / IMMUNE / ABSORB / EVADE / BLOCK / DEFLECT | `SPELL_MISSED` with that miss type | nothing (as today: `REFUSED` covers DODGE, PARRY, MISS only) |
+| TICKS or CHANNEL, WOUND | `SPELL_PERIODIC_DAMAGE` at the row's own time | nothing |
+| UNMAPPED, absorbed | nothing | nothing |
 
-Rows are back-dated to `at`, as today. `another()` (`:163-173`) keeps its unmapped-success half; its two-casts half is
-replaced by the divergent-pair rule (4.2), because GUID pinning and flight windows decide most of what it guarded.
+Rows other than ticks are back-dated to `at`, as today. `another()`'s two-casts half is replaced by the divergent-pair
+rule (4.2); its unmapped half is the UNMAPPED ticket.
 
 ### 3.6 Closing
 
@@ -284,24 +313,29 @@ A ticket closes on the first of:
 
 | Close | When | Emitted | Counter |
 |---|---|---|---|
-| paid | 3.4 | 3.5 | `T.paid[kind]` |
-| window expiry | `now > hi` in the per-frame tick (today `:597-609`) | swing: `SWING_MISSED` if provisional, else `SWING_DAMAGE` amount 0 (kept: the swing timer reads it); spell: nothing | damage and swing tickets: `T.lost[kind]`; avoid-only: `T.expired` |
-| kill | OnGone with DEAD for its `uid`; the ticket closes at death + `GRACE` if still open, so the final row can pay it first | swing: `SWING_DAMAGE` 0 as on expiry; spell: nothing | `T.closedDead` |
-| gone | OnGone with GONE for its `uid` | as kill | `T.closedGone` |
+| resolved at commit | kind NONE, or DEFAULT for an ability Rows does not hold today | nothing | `T.none` |
+| paid out | `owed` reached 0 (3.4) | 3.5 | `T.paid[kind]` |
+| signal | the kind's non-row close (3.3): TICKS on its debuff's removal, CHANNEL on its stop | nothing | `T.paid[kind]` |
+| cast stopped | a committed hard cast's FAILED or INTERRUPTED | nothing | none |
+| window expiry | `now > hi` with `owed > 0`, in the per-frame tick (today `:597-609`) | MELEE: `SWING_MISSED` if provisional, else `SWING_DAMAGE` amount 0 (kept: the swing timer reads it); others: nothing | `T.lost[kind] += owed`; DEFAULT, UNMAPPED and a school-nil kind count `T.expired` instead |
+| kill | OnGone with DEAD for its `uid`; at death + `GRACE` if still open, so the final row can pay first | as expiry | `T.closedDead` |
+| gone | OnGone with GONE for its `uid` | as expiry | `T.closedGone` |
 | combat end | `PLAYER_REGEN_ENABLED` (today `:612-618`) | nothing | none |
 | pool full | the oldest open ticket gives way (today `:138`) | nothing | `T.overflow` |
 
-A lost resolution is a damage or swing ticket that closed by expiry unpaid while its unit was alive. It is the recall
-signal in game: Snapshot shows `tickets open=%d paid=%d/%d/%d lost=%d/%d foreign=%d unpinned=%d dead=%d gone=%d
-bandRejected=%d divergent=%d overflow=%d`.
+A lost resolution is an owed row that never came while its unit was alive. It is the recall signal in game: Snapshot
+shows `tickets open=%d none=%d paid=%d lost=%d expired=%d foreign=%d unpinned=%d dead=%d gone=%d bandRejected=%d
+divergent=%d overflow=%d`.
+
+Belief effects stay where they are: `now` at the success, `onCrit` through `Obs.Crit`, the undo and refund through
+`Obs.Avoided` (4.1). Tickets never write beliefs.
 
 ### 3.7 The existing paths, kept
 
 - Provisional avoid (`:522-526`): unchanged, now GUID-filtered.
 - `I.CreditVerdict` (`:558-592`): unchanged. Its re-open `hold(1, hand, recDst[id], ...)` (`:582`) becomes an open
-  swing ticket with `guid = recDst[id]` and `uid = I.Units.Find(recDst[id])`; a GUID no longer held reopens nothing and
+  MELEE ticket with `guid = recDst[id]` and `uid = I.Units.Find(recDst[id])`; a GUID no longer held reopens nothing and
   emits the `SWING_MISSED` branch (`:584`) instead.
-- On-next-swing replacement (`:329-332`, `:351-361`): unchanged.
 - WOUND 0 (`:454-457`) and the foreign strike frame after it (`:481`): unchanged.
 - `VS.SwingPending` (`Game/State/Families/Resources.lua:1279-1296`): unchanged; it reads `L.LandWindow`, which keeps its
   meaning for swings.
@@ -362,61 +396,108 @@ The gain is the kill itself: OnGone with DEAD calls `Direct(Obs.TargetGone, t, s
 (`Target.lua:29-47` keeps the GUID to slot map), so a dead target's modelled debuffs end at its death rather than 16 s
 later (the replay's 32.324 removal).
 
-## 5. Pack data
+## 5. Pack expectations
 
-### 5.1 Fields
+### 5.1 The kinds
 
-Two optional numeric fields on an ability, read once at build into `A.velocity[a]` and `A.school[a]` next to `rMin` and
-`rMax` (`Spellbook.lua:43`):
+A fixed set, each implemented once in the engine (3.3). A pack names a kind and its numbers; it never writes matching
+or closing code.
 
-- `velocity`: yd/s, DB2 `SpellMisc.Speed`. Absent or 0 means an instant hit. Hekili's simulation already knows the
-  field, but its projectile branch needs `impact` too (`Engine/Schema/Spec.lua:908-909`), and no APL reads `in_flight`,
-  so no pack adds `impact`; the sim does not change.
-- `school`: the DB2 `SpellMisc.SchoolMask` of an ability whose hit makes a direct WOUND row. Absent means an
-  avoid-only ticket (3.2).
+| Kind | Fields | Backed by |
+|---|---|---|
+| NONE | none | captures: every success that owes no row (Drink, capture b) |
+| FRAME | `school` | captures and measured logs: today's instant-cast windows (`Rows.lua:33-49`) |
+| FLIGHT | `speed`, `school` | captures a, b, c (Wrath 1483-1566 ms at max range) |
+| MELEE | `hand` | measured logs (the P and G logs behind `Rows.lua:15-16`) |
+| STRIKE | none | measured logs (today's on-next-swing replacement) |
+| TICKS | `period`, `ticks`, `school` | unprobed: implemented, marked untested until probe U9 |
+| CHANNEL | `period`, `school` | unprobed: implemented, marked untested until probe U9 |
 
-The core never names an ability: it reads the two numbers through the ability index (boundary rule, `CLAUDE.md`).
+A `school` of nil means the hit makes no row of ours (3.3). The engine's own DEFAULT and UNMAPPED kinds (3.2) are not
+offered to packs.
 
-### 5.2 Abilities
+### 5.2 The builders
+
+Constructors in `Hekili_Shared/Shared/Expect.lua`, exposed as `Hekili.Expect`, so packs stay declarative. Every class
+pack already depends on Hekili_Shared (`src/Hekili_Druid/Hekili_Druid.toc:8`). Each returns a small descriptor table
+(`kind` from the core's kind ids, plus its numbers), built once at file load.
+
+| Builder | Kind |
+|---|---|
+| `Expect.None()` | NONE |
+| `Expect.Frame(school)` | FRAME |
+| `Expect.Flight(speed, school)` | FLIGHT |
+| `Expect.Melee(hand)` | MELEE (the engine's own kind for `PLAYER_SWING`; no pack needs it) |
+| `Expect.Strike()` | STRIKE |
+| `Expect.Ticks(period, ticks, school)` | TICKS |
+| `Expect.Channel(period, school)` | CHANNEL |
+
+An ability declares it as a value: `expects = Expect.Flight(20, 8)`.
+
+### 5.3 The escape hatch and precompilation
+
+`expects` may instead be a function `function(ctx)` that returns one of the builders' descriptors, for an ability whose
+kind depends on context (a talent that turns a cast into a channel). It must return a descriptor built at file load
+(an upvalue), never build one per call; `tests/Game/harness/alloc_spec.lua` catches a violation. Closure stays the
+engine's whatever the function returns.
+
+Precompilation: at each build, beside `now` and `onCrit` (`Game/State/Families/Now.lua:318-333`), the engine reads
+`rawget(obj, "expects")` into per-ability arrays: a descriptor fills `A.expKind`, `A.expSpeed`, `A.expSchool`,
+`A.expPeriod`, `A.expTicks`; a function goes to `obj.funcs` (Hekili moves a function-valued unknown field there,
+`Engine/Schema/Spec.lua:897`) and from there into `A.expFn` (false otherwise). A ticket refers to them by its integer
+`ab`.
+
+Hekili's simulation already knows a `velocity` field, but its projectile branch needs `impact` too
+(`Engine/Schema/Spec.lua:908-909`), and no APL reads `in_flight`. The builders set neither on the ability, so the
+simulation does not change.
+
+Per-ability matching or closing handlers (`accept`, `resolve`, `lost`) are a possible later extension; this spec does
+not add them.
+
+### 5.4 Abilities
 
 From DB2 build 1.60.1.70338 (`SpellMisc`, every rank the pack lists agrees unless noted; LaunchDelay is 0 for all):
 
-| Pack | Ability | velocity | school | Note |
-|---|---|---|---|---|
-| Druid | `wrath` | 20 | 8 | |
-| Warlock | `shadow_bolt` | 20 | 32 | |
-| Warlock | `incinerate` | 20 | 4 | |
-| Warlock | `soul_fire` | 24 | 4 | |
-| Warlock | `death_coil` | 24 | 32 | |
-| Mage | `frostbolt` | 28 | 16 | |
-| Mage | `fireball` | 24 | 4 | |
-| Mage | `pyroblast` | 24 | 4 | |
-| Mage | `frostfire_bolt` | 24 | 20 | the row's school for a two-school spell is unmeasured (probe U7) |
-| Shaman | `lightning_bolt` | 20 | 8 | |
-| Shaman | `lava_burst` | 20 | 4 | |
-| Priest | `shoot` | 20 | 1 | the wand's own school may differ from the spell's mask (probe U7) |
-| Paladin | `hammer_of_wrath` | 35 | 2 | |
-| Hunter | `auto_shot` | 40 | 1 | |
-| Hunter | `aimed_shot` | 40 | 1 | |
-| Hunter | `arcane_shot` | 40 | 64 | |
-| Hunter | `serpent_sting` | 40 | none | a DoT: avoid-only; rank 1978's Speed is 40, the Forever 425728 family's is 0, so the check reads the pack's own ranks |
-| Hunter | `multi_shot` | 30 | 1 | |
-| Hunter | `sniper_shot` | 60 | 1 | |
-| Hunter | `summon_hawk` | 35 | none | no direct WOUND of ours known; avoid-only |
+| Pack | Ability | Declares | Note |
+|---|---|---|---|
+| Druid | `wrath` | `Expect.Flight(20, 8)` | |
+| Warlock | `shadow_bolt` | `Expect.Flight(20, 32)` | |
+| Warlock | `incinerate` | `Expect.Flight(20, 4)` | |
+| Warlock | `soul_fire` | `Expect.Flight(24, 4)` | |
+| Warlock | `death_coil` | `Expect.Flight(24, 32)` | |
+| Mage | `frostbolt` | `Expect.Flight(28, 16)` | |
+| Mage | `fireball` | `Expect.Flight(24, 4)` | |
+| Mage | `pyroblast` | `Expect.Flight(24, 4)` | |
+| Mage | `frostfire_bolt` | `Expect.Flight(24, 20)` | the row's school for a two-school spell is unmeasured (probe U7) |
+| Shaman | `lightning_bolt` | `Expect.Flight(20, 8)` | |
+| Shaman | `lava_burst` | `Expect.Flight(20, 4)` | |
+| Priest | `shoot` | `Expect.Flight(20, 1)` | the wand's own school may differ from the spell's mask (probe U7) |
+| Paladin | `hammer_of_wrath` | `Expect.Flight(35, 2)` | |
+| Hunter | `auto_shot` | `Expect.Flight(40, 1)` | |
+| Hunter | `aimed_shot` | `Expect.Flight(40, 1)` | |
+| Hunter | `arcane_shot` | `Expect.Flight(40, 64)` | |
+| Hunter | `multi_shot` | `Expect.Flight(30, 1)` | the GUID match pays only the row on the pinned target; its other targets' rows stay foreign |
+| Hunter | `sniper_shot` | `Expect.Flight(60, 1)` | |
+| Hunter | `serpent_sting` | `Expect.Flight(40, nil)` | an aura only, no direct WOUND: its miss is its only row. Rank 1978's Speed is 40, the Forever 425728 family's is 0, so the check reads the pack's own ranks. Its ticks move to TICKS after U9 |
+| Hunter | `summon_hawk` | nothing (DEFAULT) | no outcome of ours known |
 
-Instant abilities may declare `school` without `velocity`; that turns on the school gate and lost counting for them
-inside today's frame windows. This spec does not require it, and the melee packs are left as they are.
+Instant abilities may declare `Expect.Frame(school)`; that turns on the school check and lost counting inside today's
+frame windows. This spec does not require it, and the melee packs are left on DEFAULT.
 
-### 5.3 The DB2 check
+### 5.5 The DB2 check
 
 `tools/check_spell_data.lua`, run by a new dev-only target `make spell-data-check` (outside `make check`, like the
 wowsims targets, because CI has no DB2 file). It loads each pack through the existing test loader, and for every
-ability with an `id`, over the ranks it lists (`id` and `copy`), reads `SpellMisc.Speed` and `SchoolMask` from `$WOW_DB2`
-(default `~/.local/share/wow-db2/forever/current.sqlite`) through `wowdb`'s SQL mode. It fails when:
+ability with an `id` and a descriptor, over the ranks it lists (`id` and `copy`), reads `SpellMisc.Speed` and
+`SchoolMask` from `$WOW_DB2` (default `~/.local/share/wow-db2/forever/current.sqlite`) through `wowdb`'s SQL mode. It
+fails when:
 
-- a declared `velocity` differs from Speed on any listed rank;
-- a declared `school` differs from SchoolMask on any listed rank;
-- an ability with Speed > 0 on its first rank and `startsCombat` declares no `velocity`.
+- the speed handed to `Expect.Flight` differs from Speed on any listed rank;
+- a non-nil school handed to any builder differs from SchoolMask on any listed rank;
+- an ability with Speed > 0 on its first rank and `startsCombat` declares neither `Expect.Flight` nor a function.
+
+A function `expects` is checked by calling it with a context for each talent state the pack's test loader can build;
+each descriptor it returns is checked as above.
 
 ## 6. Harness
 
@@ -446,8 +527,8 @@ Kinds (each a scripted scenario through the existing `scenarios.world` knobs, `t
 |---|---|---|
 | K1 melee | white swings, both hands | swing tickets, unchanged recall |
 | K2 strike | on-next-swing strike | replacement, WOUND 0 |
-| K3 instant | an instant spell with `school` | frame window, school gate |
-| K4 projectile | a Speed-20 cast at 5, 20 and 30 yd | flight window, crit, miss at range |
+| K3 instant | an instant spell declaring `Expect.Frame(school)` | frame window, school check |
+| K4 projectile | a cast declaring `Expect.Flight(20, 8)` at 5, 20 and 30 yd | flight window, crit, miss at range |
 | K5 swap | K4 with a target swap mid-cast | SENT pin, plate-only landing |
 | K6 kill | K4 or K1 killing the target, with and without a press at the kill | kill tell, post-clear row, `TargetGone` |
 | K7 churn | K4 with plate churn on the pinned mob | resolution, gone and revive |
@@ -476,8 +557,11 @@ below). Floors only move up, except with a named cause written beside the number
 print their numbers and assert only that the run finished, as `group_spec.lua:45-53` does today.
 
 The pending-cast gap: today's group runs never exercise a pending cast, because the oracle press is not
-`startsCombat` (`scenarios.lua:207-213` presses "CAST"). K3 and K4 give the fake spec a `startsCombat` ability with
-`school` (and `velocity` for K4), so every band runs spell tickets.
+`startsCombat` (`scenarios.lua:207-213` presses "CAST"). The fake spec declares an expectation for each of its
+abilities: `Expect.Frame` for the instant spender, `Expect.Flight(20, 8)` for a new `startsCombat` hard cast,
+`Expect.Strike()` for the strike, `Expect.None()` for a buff, and one ability left on DEFAULT so the default path keeps
+a test. K3 and K4 press the `startsCombat` ones, so every band runs spell tickets. TICKS and CHANNEL get unit tests
+against the harness's own tick model only, marked untested until probe U9.
 
 ### 6.3 Fixtures from the captures
 
@@ -497,7 +581,7 @@ The soft-targeting log was not saved in full; its findings become the churn and 
 
 | Consumer | Stops doing | Does instead |
 |---|---|---|
-| Rows (`Game/Events/Rows.lua`) | its own `UNIT_COMBAT` handler and the `unit ~= "target"` filter (`:443-444`); `UnitGUID("target")` pins (`:338`, `:362`); the `act*` ring (`:108-111`); school 1 in spell rows (`:300`, `:304`); silent cast expiry (`:597-609`) | an `I.Units.OnRow` listener; pins from `I.Units.Pin` and the SENT pin; the ticket pool; the ability's school; lost counters |
+| Rows (`Game/Events/Rows.lua`) | its own `UNIT_COMBAT` handler and the `unit ~= "target"` filter (`:443-444`); `UnitGUID("target")` pins (`:338`, `:362`); the `act*` ring (`:108-111`); school 1 in spell rows (`:300`, `:304`); silent cast expiry (`:597-609`) | an `I.Units.OnRow` listener; pins from `I.Units.Pin` and the SENT pin; the ticket pool, one ticket per commit; the expectation's school; lost counters. Today's paths become kinds: the swing scoring (`:252-269`, `:375-402`, `:479-549`) is MELEE; the on-next-swing replacement (`:329-332`, `:351-361`) is STRIKE; the cast frame and avoid windows (`:458-461`, `:497-499`) are FRAME and DEFAULT; `unmappedT` and `another()`'s unmapped half (`:54-55`, `:163-166`, `:344-346`) are UNMAPPED |
 | Attackers (`Game/Events/Attackers.lua`) | `Plain(api, api.UnitGUID(tok))` in `recheck` (`:81`); clearing a plate's GUID itself (`:110-115`); `L.target` from its own read (`:116-121`) | `I.Units.Bound(i)` for the GUID; keeps its own `UnitIsUnit`, `UnitCanAttack`, `UnitAttackSpeed` reads and its clocks; still handles `unit == "player"` rows itself |
 | Target (`Game/State/Sources/Target.lua`) | `UnitGUID("target")` in `swap` (`:55`); `TargetDamage` from the `target` token only (`:139-143`) | `I.Units.Bound(1)`; `TargetDamage` from OnRow rows whose GUID is the current target's; `TargetGone` on OnGone DEAD for a GUID holding a memory slot; poll 4 reports `I.Units.Dead` |
 | Casts (`Game/State/Sources/Casts.lua`) | `I.sentGUID = UnitGUID("target")` (`:31-35`) | `I.sentGUID = I.Units.Pin(api, t)` with the SENT's castGUID kept beside it; `SPELL_CAST_START`/`SUCCESS` destination from that pin (`:47`, `:61`) |
@@ -528,6 +612,7 @@ Each becomes a row in `docs/dev/ingame-ledger.md` with the capture that closes i
 | U6 (deferred with U1) | Partial resists: a WOUND with a RESIST flag and a reduced amount, or two rows | `/vslog` of a Shadow Bolt series on a mob with shadow resistance |
 | U7 | Two-school spells and wands: the school a Frostfire Bolt WOUND carries (20, 4 or 16); a wand's | `/vslog` of Frostfire Bolt and of Shoot with a non-physical wand |
 | U8 | The kill tell: is the target clear on a kill a client rule or a user setting; does it happen when no press is in flight | `/vslog` of a melee kill with no ability pressed, and the interface option in question |
+| U9 | DoT tick and channel row shapes: per tick, which tokens, action, flag, amount, school; the first tick's delay after the application; whether a channel's ticks and a DoT's are told apart; needed before TICKS and CHANNEL are trusted | `/vslog` of Moonfire, Corruption and Serpent Sting to full duration, and Arcane Missiles and Drain Life channels, on solo mobs |
 
 ## 9. Risks and what the gate must show
 
@@ -542,7 +627,7 @@ any downward move needs a named cause written beside the number and the owner's 
 | Wrong GUID after a swap | the live read wins for `target`; a stale echo with no matching plate row resolves to the new mob | K5 precision at its floor; the c fixture's swap pays the old mob |
 | Over-merge in dedupe | two real identical rows on one GUID within 5 ms collapse into one | K8 recall at its floor in the busy band |
 | Plate churn closes a live ticket | a plate-only pinned unit whose plate leaves for over 0.1 s goes GONE | K7 lost count at its floor; Snapshot `gone` in game |
-| Wider spell windows take foreign rows | a [0, 1.65] s window for every Speed-20 cast at an unknown range | party-light and busy K4 foreign leak at their floors; the school gate and band hold it |
+| Wider spell windows take foreign rows | a [0, 1.65] s window for every Speed-20 cast at an unknown range | party-light and busy K4 foreign leak at their floors; the school check and band hold it |
 | Caster `active_enemies` rises | new `SPELL_DAMAGE` rows reach `ns.updateTarget` | wowsims replay floors of every caster class; a moved AoE decision gets its named cause |
 | Melee behaviour drifts | the ring becomes the ticket pool | melee replay floors, `make test-loop` and flicker floors unchanged; `group_spec.lua` numbers unchanged |
 | Allocation in a recurring path | new handlers on `UNIT_COMBAT` and the tick | `tests/Game/harness/alloc_spec.lua` and `make bench` show no new allocation |
@@ -561,14 +646,22 @@ any downward move needs a named cause written beside the number and the owner's 
 | 7 | `UNIT_DIED` and `PLAYER_TARGET_DIED` registered opportunistically | an earlier probe saw them (O6); costs nothing if the client refuses them |
 | 8 | Tickets on a dead unit close at death + `GRACE` | the killing blow arrives up to 36 ms after the clear and must still pay |
 | 9 | `TICKETS` = 16 | flight windows of up to about 2.1 s plus two hands need more than today's 8 |
-| 10 | An ability without `school` opens an avoid-only ticket with today's windows and no lost count | keeps every melee pack's behaviour and floors until it declares data |
-| 11 | Spell tickets without `velocity` keep today's frame and avoid windows exactly | the smallest change; instants are already measured |
-| 12 | `TOL` = 0.15 s; unknown range uses `rMax`, else 40 yd | the five max-range samples fit [0, 1.65] s with margin |
-| 13 | School gate by equality with the declared numeric `school` | no bit operations in core; two-school rows are probed (U7) |
-| 14 | Amount band [0.6 x lo, 1.6 x hi] after 3 clean wounds | spell damage varies more than weapon damage; procs and crits halved stay inside |
-| 15 | Oldest candidate wins among spell tickets | today's rule; projectiles of one speed land in order |
-| 16 | Until 4.2 is built, a divergent row emits its row but stages nothing | stays on the floor's safe side, as today's two-casts rule |
-| 17 | Build trigger for 4.2: `divergent` over 1 per 100 paid tickets in a five-man run | a rate that would show as flicker; below it the union is not worth its cost |
-| 18 | DB2 check is a dev-only `make spell-data-check` | CI has no DB2 file |
-| 19 | `serpent_sting` and `summon_hawk` declare `velocity` but no `school` | no direct WOUND of ours known for either |
-| 20 | Registry dispatches rows through `OnRow`; Rows registers before Target | one resolution and dedupe for every consumer; tickets see a row first |
+| 10 | A ticket opens for every commit (every `PLAYER_SWING`, every player success mapped or not, a hard cast at SENT); the kind decides how it closes | one uniform record; no engine assumption about what a spell does |
+| 11 | Fixed kind set: NONE; FRAME(`school`); FLIGHT(`speed`, `school`); MELEE(`hand`); STRIKE; TICKS(`period`, `ticks`, `school`); CHANNEL(`period`, `school`); each kind's matching and closure rule lives in the engine | packs declare, the engine handles the rest; each rule is written and tested once |
+| 12 | Builders `Expect.None()`, `Expect.Frame(school)`, `Expect.Flight(speed, school)`, `Expect.Melee(hand)`, `Expect.Strike()`, `Expect.Ticks(period, ticks, school)`, `Expect.Channel(period, school)` in Hekili_Shared, returning load-time descriptors | packs stay declarative; every class pack already depends on Hekili_Shared |
+| 13 | Escape hatch: `expects` may be a `function(ctx)` precompiled at spec load that returns a prebuilt descriptor; no per-ability `accept`, `resolve` or `lost` handlers (a possible later extension) | covers a talent that changes an ability's kind without letting packs write matching code |
+| 14 | `CTX` fields: `t`, `guid`, `rangeLo`, `rangeHi`, `hand`, `bandLo`, `bandHi`, `bandN` | what the engine knows at commit; enough for any context-dependent kind |
+| 15 | Default kind for an ability with no `expects`: DEFAULT, today's windows exactly (open for `startsCombat` or `onNextSwing` abilities, resolved at commit for the rest), never counted lost | every pack's floors hold until it declares data |
+| 16 | Unmapped successes open an UNMAPPED ticket: `UNMAPPED_WINDOW`, no owed row, any GUID, absorbs an avoid or crit as nobody's | today's `another()` unmapped rule as a generic ticket; replaces `unmappedT` |
+| 17 | `owed`: rows still owed; each paid row decrements it, 0 closes the ticket; unpaid `owed` at expiry counts as lost | one counter covers one hit, N ticks and open-ended channels |
+| 18 | A `school` of nil means the hit makes no row of ours: only an avoid pays, expiry is not lost (Serpent Sting: `Expect.Flight(40, nil)`) | an aura-only cast needs no handler of its own |
+| 19 | Backed by captures or measured logs: NONE, FRAME, FLIGHT, MELEE, STRIKE. Unprobed: TICKS and CHANNEL, implemented but marked untested and unused by packs until probe U9 | no tick row has been captured yet |
+| 20 | `TOL` = 0.15 s; unknown range uses `rMax`, else 40 yd | the five max-range samples fit [0, 1.65] s with margin |
+| 21 | School check by equality with the declared numeric school | no bit operations in core; two-school rows are probed (U7) |
+| 22 | Amount band [0.6 x lo, 1.6 x hi] after 3 clean wounds | spell damage varies more than weapon damage; procs and crits halved stay inside |
+| 23 | Oldest candidate wins among spell tickets | today's rule; projectiles of one speed land in order |
+| 24 | A mapped ticket with no pin opens with `guid` "" and counts `unpinned`, not lost | it can match no row; today its rows are dropped anyway |
+| 25 | Until 4.2 is built, a divergent row emits its row but stages nothing | stays on the floor's safe side, as today's two-casts rule |
+| 26 | Build trigger for 4.2: `divergent` over 1 per 100 paid tickets in a five-man run | a rate that would show as flicker; below it the union is not worth its cost |
+| 27 | DB2 check is a dev-only `make spell-data-check` over the builders' numbers | CI has no DB2 file |
+| 28 | Registry dispatches rows through `OnRow`; Rows registers before Target | one resolution and dedupe for every consumer; tickets see a row first |
