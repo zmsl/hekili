@@ -27,17 +27,16 @@ L.unattributed = 0
 L.BAND_LO, L.BAND_HI, L.BAND_N = 0.8, 1.2, 3
 L.onus = { credited = 0, byBand = 0 } -- byBand: the credits the bands chose among several hostiles on us
 
--- The tokens whose target is checked: target, focus, nameplate1-40; each with "<token>target" built once.
-local TOKENS, TT, INDEX = { "target", "focus" }, {}, {}
-for i = 1, 40 do
-    TOKENS[#TOKENS + 1] = "nameplate" .. i
+-- The tokens whose target is checked: the registry's 1-42 (target, focus, nameplate1-40); "<token>target" built once.
+local U = I.Units
+local TOKENS, INDEX, NT = U.TOKENS, U.INDEX, 42
+local TT = {}
+for i = 1, NT do
+    TT[i] = TOKENS[i] .. "target"
 end
-for i = 1, #TOKENS do
-    TT[i], INDEX[TOKENS[i]] = TOKENS[i] .. "target", i
-end
-local tokGUID, tokOnMe, tokSpeed, tokLoose = {}, {}, {}, {}
-for i = 1, #TOKENS do
-    tokGUID[i], tokOnMe[i], tokSpeed[i], tokLoose[i] = "", false, 0, false
+local tokOnMe, tokSpeed, tokLoose = {}, {}, {}
+for i = 1, NT do
+    tokOnMe[i], tokSpeed[i], tokLoose[i] = false, 0, false
 end
 
 -- Attacker clocks by GUID (8, the oldest anchor gives way), each with its amount band (min and max over the slot's
@@ -78,14 +77,14 @@ end
 
 local function recheck(api, i)
     local tok = TOKENS[i]
-    local guid = Plain(api, api.UnitGUID(tok)) or ""
+    local guid = U.Bound(i)
     local hostile = guid ~= "" and Plain(api, api.UnitCanAttack("player", tok)) == true
     local raw = api.UnitIsUnit(TT[i], "player") -- secret: tested with issecretvalue next, then read through Plain
     if guid ~= "" then -- an empty token's answer would overwrite a secret status
         Note("UnitIsUnit target-of", S.StatusOf(api, raw))
     end
     local onMe = Plain(api, raw)
-    tokGUID[i], tokOnMe[i] = guid, hostile and onMe == true
+    tokOnMe[i] = hostile and onMe == true
     -- attacking someone else: its target exists and is plainly not us (a secret answer counts as neither)
     tokLoose[i] = hostile and onMe == false and Plain(api, api.UnitExists(TT[i])) == true
     tokSpeed[i] = 0
@@ -101,7 +100,7 @@ end
 
 local function onUnit(api, t, unit)
     local i = unit and INDEX[unit]
-    if i then
+    if i and i <= NT then
         recheck(api, i)
     end
 end
@@ -109,13 +108,13 @@ S.On("UNIT_TARGET", nil, onUnit)
 S.On("NAME_PLATE_UNIT_ADDED", nil, onUnit)
 S.On("NAME_PLATE_UNIT_REMOVED", nil, function(_, _, unit)
     local i = unit and INDEX[unit]
-    if i then -- the token still answers during the event: clear it rather than recheck
-        tokGUID[i], tokOnMe[i], tokSpeed[i], tokLoose[i] = "", false, 0, false
+    if i and i <= NT then -- the registry unbound it; the plate's own answers clear here
+        tokOnMe[i], tokSpeed[i], tokLoose[i] = false, 0, false
     end
 end)
 local function readTarget(api)
     recheck(api, 1)
-    L.target = tokGUID[1]
+    L.target = U.Bound(1)
 end
 S.On("PLAYER_TARGET_CHANGED", nil, readTarget)
 S.OnStart(readTarget)
@@ -127,11 +126,11 @@ end)
 --- once, as of their last UNIT_TARGET, plate or target/focus change. Allocates nothing.
 function VS.LooseEnemies()
     local n = 0
-    for i = 1, #TOKENS do
+    for i = 1, NT do
         if tokLoose[i] then
             local seen = false
             for j = 1, i - 1 do
-                if tokLoose[j] and tokGUID[j] == tokGUID[i] then
+                if tokLoose[j] and U.Bound(j) == U.Bound(i) then
                     seen = true
                     break
                 end
@@ -206,11 +205,11 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     -- the candidates: each hostile targeting us once (a GUID can be the target and a plate); no clock is made here
     local best, bestErr, single, n, nTol, tolI, nFit, fitI = nil, L.ATTACK_TOLERANCE, nil, 0, 0, nil, 0, nil
     local nNew, newI = 0, nil -- candidates whose band is not usable yet
-    for i = 1, #TOKENS do
+    for i = 1, NT do
         if tokOnMe[i] then
-            local guid, seen = tokGUID[i], false
+            local guid, seen = U.Bound(i), false
             for j = 1, i - 1 do
-                seen = seen or (tokOnMe[j] and tokGUID[j] == guid)
+                seen = seen or (tokOnMe[j] and U.Bound(j) == guid)
             end
             if not seen then
                 n, single = n + 1, i
@@ -239,7 +238,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         best = nil
         if nTol == 1 then
             best = tolI
-            local k = find(tokGUID[tolI])
+            local k = find(U.Bound(tolI))
             if k and atkN[k] >= L.BAND_N and not fits(k, a) and nFit == 1 and nNew == 0 then
                 best, byBand = fitI, true
             end
@@ -259,7 +258,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         return
     end
     L.onus.credited = L.onus.credited + 1
-    local src, dst = tokGUID[best], L.player
+    local src, dst = U.Bound(best), L.player
     if melee then -- a spell does not follow the swing clock: no clock made or moved for it
         local k = clockOf(src)
         learn(k, t, tokSpeed[best]) -- a band credit moves the clock too (it keeps the phase); the band learns later

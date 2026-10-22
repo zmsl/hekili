@@ -39,12 +39,16 @@ local function live(api, unit)
         and Plain(api, api.UnitCanAttack("player", unit)) == true
 end
 
--- Poll 5: the enemy count.
+-- Poll 5: the enemy count; a plate whose plain UnitIsDead answers true is reported to the registry (one death).
 S.Poll(5, function(api, t)
     local n = 0
     for k = 1, PLATES do
-        if active[k] and live(api, token[k]) then
-            n = n + 1
+        if active[k] then
+            if live(api, token[k]) then
+                n = n + 1
+            elseif Plain(api, api.UnitIsDead(token[k])) == true then
+                I.Units.Dead(I.Units.Uid(k + 2), t) -- nameplateK is the registry's token K + 2
+            end
         end
     end
     Direct(Obs.Enemies, t, 0, n)

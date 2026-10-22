@@ -12,14 +12,6 @@ local S = I.Sources
 local Obs = VS.Obs
 local Plain, Stage, Direct, Urgent, Acted = S.Plain, S.Stage, S.Direct, S.Urgent, S.Acted
 
-I.sentGUID = nil
-
-local function readPlayer(api)
-    I.Log.player = Plain(api, api.UnitGUID("player")) or ""
-end
-S.OnStart(readPlayer)
-S.On("PLAYER_ENTERING_WORLD", nil, readPlayer)
-
 -- The castGUIDs of our cast and channel in progress (plain strings; nil none or secret). Only these stop, delay or
 -- update them: a second press that fails ("another action is in progress") has another castGUID.
 local castGUID, chanGUID = nil, nil
@@ -27,12 +19,6 @@ local castGUID, chanGUID = nil, nil
 local function ability(spellID)
     return spellID and I.ab.bySpell[spellID]
 end
-
-S.On("UNIT_SPELLCAST_SENT", "player", function(api, t, unit)
-    if unit == "player" then
-        I.sentGUID = Plain(api, api.UnitGUID("target"))
-    end
-end)
 
 S.On("UNIT_SPELLCAST_START", "player", function(api, t, unit, guid, spellID)
     local a = unit == "player" and ability(spellID)
@@ -44,7 +30,7 @@ S.On("UNIT_SPELLCAST_START", "player", function(api, t, unit, guid, spellID)
     local start, finish = Plain(api, rawStart), Plain(api, rawEnd)
     if type(start) == "number" and type(finish) == "number" then
         Stage(Obs.CastStart, t, a, finish / 1000)
-        I.Log.Cast("SPELL_CAST_START", t, spellID, I.sentGUID) -- "" when unknown: CLEU falls back to the target
+        I.Log.Cast("SPELL_CAST_START", t, spellID, I.Units.Sent(guid)) -- nil when unknown: CLEU falls back to the target
     end
     Acted()
     Urgent("UNIT_SPELLCAST_START")
@@ -58,8 +44,7 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     -- priced now, on the last fold's belief: a cost-cutting aura the cast consumes (its UNIT_AURA read, Direct, can
     -- reach the log before this staged success) still prices it (I.CastCost)
     Stage(Obs.CastSuccess, t, a, I.CostOf(a), 1)
-    I.Log.Cast("SPELL_CAST_SUCCESS", t, spellID, I.sentGUID or Plain(api, api.UnitGUID("target")))
-    I.sentGUID = nil
+    I.Log.Cast("SPELL_CAST_SUCCESS", t, spellID, I.Units.Sent(castGUID) or I.Units.Pin(api, t))
     Acted()
     Urgent("UNIT_SPELLCAST_SUCCEEDED")
 end)

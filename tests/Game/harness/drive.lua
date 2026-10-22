@@ -347,6 +347,27 @@ local function tick(c, t)
     end
 end
 
+--- The stream index the captures of row i key on: for a UNIT_COMBAT on a registry token other than the target, the
+--- same outcome's "target" row (same time and payload) when one follows. The unit registry dispatches a fan-out once,
+--- at its first token (the observer fires nameplateN before target), where Rows used to read the target row itself.
+--- Allocates nothing.
+function M.outcomeRow(c, s, i)
+    local a1 = s.a1[i]
+    if s.ev[i] ~= "UNIT_COMBAT" or a1 == "target" or not c.I.Units.INDEX[a1] then
+        return i
+    end
+    local j = i + 1
+    while j <= s.n and s.t[j] == s.t[i] do
+        if s.ev[j] == "UNIT_COMBAT" and s.a1[j] == "target" and s.a2[j] == s.a2[i] and s.a3[j] == s.a3[i] then
+            if s.a4[j] == s.a4[i] and s.a5[j] == s.a5[i] then
+                return j
+            end
+        end
+        j = j + 1
+    end
+    return i
+end
+
 --- Fires stream `s` (observer.lua) through the booted VirtualState, `offset` seconds later than its times (a replay
 --- on the same boot), ticking every TICK seconds, then 3 s past its end. The captures (crHand/crAt by stream index,
 --- crits, landed, rows, win) are reset first. Allocates nothing.
@@ -382,7 +403,7 @@ function M.run(c, s, offset)
         if ev:byte(1) == 64 then -- "@"
             op(c, ctl, ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
         else
-            c.cur = i
+            c.cur = M.outcomeRow(c, s, i)
             if ev == "UNIT_COMBAT" and s.src[i] == 1 and s.hand[i] > 0 and s.a1[i] == "target" and s.a4[i] > 0 then
                 local _, maxMain = c.VS.Stat("UnitDamage") -- Rows.lua's stale-form test, as it reads it now
                 c.unk[i] = (maxMain <= 0 or ctl.form ~= c.I.damageForm) and 1 or 0
@@ -391,11 +412,11 @@ function M.run(c, s, offset)
             local vetoed = c.L.oracle.vetoed
             ctl.Fire(ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
             if c.L.oracle.vetoed > vetoed then
-                c.vetoHand[i], c.vetoAt[i] = c.L.vetoX, c.L.vetoAt
+                c.vetoHand[c.cur], c.vetoAt[c.cur] = c.L.vetoX, c.L.vetoAt
             end
             if c.L.avoids > avoids and c.nAv < CAP then
                 c.nAv = c.nAv + 1
-                c.avIdx[c.nAv], c.avHand[c.nAv], c.avAt[c.nAv] = i, c.L.avoidX, c.L.avoidT
+                c.avIdx[c.nAv], c.avHand[c.nAv], c.avAt[c.nAv] = c.cur, c.L.avoidX, c.L.avoidT
             end
             c.cur = 0
         end

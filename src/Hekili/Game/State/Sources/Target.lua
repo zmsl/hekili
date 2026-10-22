@@ -52,9 +52,12 @@ end
 -- runs its hooks before it marks the set built; the slot map lives here, and a swap logged before a build is cleared
 -- by that build, which logs its own.
 local function swap(api, t)
-    local g = Plain(api, api.UnitGUID("target"))
+    -- the registry bound it first (its PLAYER_TARGET_CHANGED handler is registered earlier); the pin binds it for a
+    -- build before Start (headless), and its soft-enemy fallback never reaches token 1
+    I.Units.Pin(api, t)
+    local g = I.Units.Bound(1)
     local s, fresh = 0, false
-    if type(g) == "string" then
+    if g ~= "" then
         s, fresh = slotFor(g, t)
     end
     local attackable = s > 0 and Plain(api, api.UnitCanAttack("player", "target")) == true
@@ -76,14 +79,14 @@ I.OnBuild(function(def, now)
     end
 end)
 
--- Poll 4: the target's death (plain UnitIsDead) forgets what we believed about it.
+-- Poll 4: the target's plain death goes to the registry, which tells every listener once (OnGone DEAD, below).
 S.Poll(4, function(api, t)
     if I.curSlot == 0 then
         return
     end
     local d = Plain(api, api.UnitIsDead("target")) == true
     if d and not dead then
-        Direct(Obs.TargetGone, t, I.curSlot)
+        I.Units.Dead(I.Units.Uid(1), t)
     end
     dead = d
 end)
@@ -132,14 +135,28 @@ S.Poll(14, function(api, t)
     end
 end)
 
--- The target's damage taken (target-health design §2.3c): UNIT_COMBAT's WOUND amount, plain and victim-side (every
--- attacker's hits count: the health moves by everyone's damage). Registered for every unit, as Events/Rows.lua and
--- Attackers.lua register it: a "target" registration would narrow the client's to the target and starve Attackers.lua
--- of the player's.
-S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount)
-    if unit == "target" and act == "WOUND" and type(amount) == "number" and amount > 0 then
+-- The target's damage taken (target-health design §2.3c): the registry's rows about the current target's unit, any
+-- token (every attacker's hits count). A dead unit's memory slot forgets it at its death (unit-registry spec §4.3),
+-- from whichever tell came first. Registered at Start: Rows' listener (loaded later) must see each row first.
+local function damage(t, g, uid, act, flag, amount)
+    if act == "WOUND" and type(amount) == "number" and amount > 0 and uid == I.Units.Uid(1) then
         Direct(Obs.TargetDamage, t, 0, amount) -- logged straight, as the swap: a same-frame WOUND keeps its target
     end
+end
+local function died(uid, g, why, t)
+    if why ~= I.Units.DEAD then
+        return
+    end
+    for s = 1, I.TARGET_CAP do
+        if guid[s] == g then
+            Direct(Obs.TargetGone, t, s)
+            return
+        end
+    end
+end
+S.OnStart(function()
+    I.Units.OnRow(damage)
+    I.Units.OnGone(died)
 end)
 
 -- `fifth`: the event carries interruptedBy before its castBarID (INTERRUPTED, CHANNEL_STOP).

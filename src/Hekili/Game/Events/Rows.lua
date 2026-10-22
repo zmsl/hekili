@@ -335,7 +335,7 @@ S.On("PLAYER_SWING", nil, function(api, t, duration, swingType)
     if type(duration) == "number" and duration > 0 and duration < w then
         w = duration -- the hand's next swing comes first
     end
-    hold(1, hand, Plain(api, api.UnitGUID("target")) or "", w, t)
+    hold(1, hand, I.Units.Pin(api, t) or "", w, t)
 end)
 
 S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spellID)
@@ -359,7 +359,7 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
             strikeWait = t
         end
     end
-    hold(2, spellID, Plain(api, api.UnitGUID("target")) or "", L.LandWindow(1), t)
+    hold(2, spellID, I.Units.Sent(castGUID) or I.Units.Pin(api, t) or "", L.LandWindow(1), t)
 end)
 
 -- The theta index of hand h's amount class `cls` (1-3, 4 unknown) at lag d from reference `ref`: core band (within 2
@@ -440,10 +440,13 @@ end
 -- cast's frame if Phase D's compensating aura removal relies on it.
 -- shortcut: in group play another attacker's white wound inside our pending cast's 0.2 s that no swing of ours takes
 -- is credited to that cast as SPELL_DAMAGE; upgrade when a per-attacker attribution exists.
-S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
-    if unit ~= "target" or type(act) ~= "string" or (act ~= "WOUND" and not MISSES[act]) then
+I.Units.OnRow(function(t, g, uid, act, flag, amount, school)
+    -- the registry's equivalent of today's `unit == "target"`: the current target's unit, or the cleared one's while
+    -- it still resolves (Task 6 replaces this with the tickets' own GUID match)
+    if not I.Units.IsTarget(uid, t) or (act ~= "WOUND" and not MISSES[act]) then
         return
     end
+    local api = I.api
     advance(t)
     -- EventFacade's Plain made a secret slot nil: no candidate (not a WOUND 0), only counted (never seen in game)
     if type(amount) ~= "number" or type(flag) ~= "string" or type(school) ~= "number" then

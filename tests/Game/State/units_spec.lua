@@ -290,4 +290,30 @@ describe("the unit registry", function()
         assert.are.equal(0, bytes)
         assert.are.same({ 0, 2201 }, { muted, U.unresolved - before })
     end)
+
+    it("is the only file that reads UnitGUID", function()
+        local readers = {}
+        for _, path in ipairs(load.files()) do
+            local src = assert(io.open(path)):read("*a")
+            if src:find("UnitGUID%(") and not path:match("Units%.lua$") and not path:match("Facade%.lua$") then
+                readers[#readers + 1] = path
+            end
+        end
+        assert.are.same({}, readers)
+    end)
+
+    it("hands a dead target's death to TargetHealth's memory slot once", function()
+        local gone0 = 0
+        I.On(VS.Obs.TargetGone, function()
+            gone0 = gone0 + 1
+        end)
+        ctl.Fire("UNIT_DIED", "Creature-1")
+        I.Sources.Flush()
+        I.Fold(ctl.now)
+        assert.are.equal(1, gone0) -- at the death event, before any poll
+        ctl.dead.target = true
+        I.Sources.RunPolls(ctl.now) -- poll 4 sees it too: the registry already has it DEAD
+        I.Fold(ctl.now)
+        assert.are.equal(1, gone0)
+    end)
 end)
