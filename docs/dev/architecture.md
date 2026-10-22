@@ -166,8 +166,10 @@ press's `reagent = { itemID, n }` is checked like a cost (refused `"reagent"`) a
 effects `item = { itemID, n }` and `pet = "summon" | "dismiss"` (and `W.item`, `W.summonPet`, `W.dismissPet`,
 `W.petGain`) change it, and the pet regenerates `regen` a second in `tick`-second steps while up. The observer answers
 them plain (`@itemCount`, `@pet` with UNIT_PET, `@petPower`, `@stats` at login), so `C_Item.GetItemCount`,
-`UnitExists`/`UnitPower("pet")` and `UnitStat` read the world. A replay world starts from the content's values and
-reads none from the log.
+`UnitExists`/`UnitPower("pet")` and `UnitStat` read the world. The pet's events carry its power as `petPower`: an
+event's `power` is always ours (central fix 31). A replay world starts from the content's values; its pet's power then
+follows the log's pet power lines (their after-values, no modelled regen; fix 31), and its bags read nothing from the
+log.
 
 **Percent-of-base costs.** A `spend` between 0 and 1 is a fraction of its pool's base power (the resource meta's
 `base`, or the belief's learned one; without either, of the maximum, as Hekili), floored, in both layers: the sim's

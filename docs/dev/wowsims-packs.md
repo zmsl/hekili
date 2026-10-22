@@ -262,4 +262,8 @@ stops a running channel first (wowsims's `interruptIf`: the content sets it when
 channel). The replay feeds the same events from the log: a Casting line with a cast time opens the bar, and a completed
 cast of an ability the kit declares `channeled` runs until its aura's next fade (a clip, on either unit), else for the
 kit's `cast`. The client's order at a channel's start (UnitChannelInfo before the success, which the engine's queue
-reads) is UNMEASURED: in-game checkpoint on a class with a channel.
+reads) is UNMEASURED: in-game checkpoint on a class with a channel. A fight's end stops a cast in progress (central fix
+31, `W.endCasts`): when our target dies, and at the world's stop, a hard cast ends with UnitCastingInfo empty,
+UNIT_SPELLCAST_INTERRUPTED and UNIT_SPELLCAST_STOP (no success), and a channel with its CHANNEL_STOP, so no stale cast
+start outlives the fight. An unmapped item's use in a replay log is still our cast to the client: a success of spell
+`replay.UNMAPPED_SPELL` (0, no ability's), which `Events/Rows.lua` reads as "an outcome now may be that item's".

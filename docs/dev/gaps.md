@@ -50,8 +50,8 @@ Unnumbered, from the lane reports (give one an id when it is dispatched):
 | `mainhand_remains` | Copied into the Warrior, Hunter and Paladin kits; one generic core swing field | core | none |
 | Pet power model | `VS.PetPower` is the last plain `UnitPower("pet")`; no regen or spend model. UnitPower is `SecretWhenUnitPowerRestricted` and unprobed with a pet out (plain 0 with none, W PR12); if the Warlock checkpoint finds it secret, the pet's mana freezes at its last out-of-combat read | core belief (pets) | Warlock in-game Q3 |
 | Reagent prediction | A reagent count (Soul Shards) is read live through `C_Item.GetItemCount`; the sim does not predict a shard spend within one recommendation pass, so a second shard spender in the queue reads the count before the first | core sim | Warlock (pack) |
-| Replay pet and bags | The replay world starts from the content's bags and pet (`WORLD.bags`, `WORLD.pet`) and reads neither from the log (the pet's mana, wowsims's 32 shards) | harness replay | Warlock replay gate |
-| Travel time | An aura consumed when the hit lands, not at the end of the cast (Elemental's Revelation is spent on landing), so the belief spends it a travel time early; 2 Elemental replay decisions, and Mage has the same issue | core belief + harness replay | Elemental, Mage |
+| Replay bags | The replay world starts from the content's bags (`WORLD.bags`) and does not read the log's (wowsims's 32 shards); the pet's power is read since central fix 31 | harness replay | Warlock replay gate |
+| Travel time | An aura consumed when the hit lands, not at the end of the cast (Elemental's Revelation is spent on landing), so the belief spends it a travel time early; 2 Elemental replay decisions, and Mage has the same issue. Also (Warlock lane's G6): a projectile's crit lands past `CAST_WINDOW` (`Events/Rows.lua`'s no-`velocity` shortcut), so its `onCrit` never runs (Shadow Bolt's Shadow Vulnerability). Central fix 32, with a design | core belief + harness replay | Elemental, Mage, Warlock |
 | Potion mana refill | The mana belief does not believe a mana potion's or Demonic Rune's refill (lo up to 2286 under the truth in Elemental's replay); GAP AB/V family, 1 Elemental decision | core belief (mana) | Elemental, other mana users |
 
 ## In game (on the in-game ledger, not a register item)
@@ -124,4 +124,18 @@ Fix 27 (Warlock K15's shared gaps): the exporter's `gear` for a build with none;
 belief and the engine stub's `pet`/`dismissPet` (content API 9); the harness's bag counts (`reagent`, `item`), pet unit
 and its power, and stats (`WORLD.bags`, `WORLD.pet`, `WORLD.stats`). Open from it: the three rows above (pet power
 model, reagent prediction, replay pet and bags).
+Fix 31 (the Warlock lane's shared gaps G1-G5): G1, the debug printer (`Engine/Sim/Scripts.lua` generateDebugPrint)
+read words inside a quoted literal as terms, so `settings.<key>='<candidate>'` raised "Unknown key" on every debug
+evaluation (snapshots); it now skips quoted literals, and a double-quoted candidate stays literal in the resource
+rewrite too. G2, the observer took the pet events' `power` (the pet's mana) as ours on a plain client: the world's pet
+events carry `petPower`. G3, a fight ending mid-cast left the cast's start standing as the next instant cast's GCD
+anchor: the world ends our cast (INTERRUPTED, STOP) or channel at a kill of its target and at the stop. G4, a target's
+outcome names no source, so an unmapped item's miss (the Affliction log's Ez-Thro Dynamite II) was credited to our
+pending Corruption: an unmapped cast of ours makes an avoid or crit within `L.UNMAPPED_WINDOW` (2 s, unmeasured), past
+our cast's own frame, nobody's, as two pending casts do, and the replay emits an unmapped item's use as our cast (the
+frame clause keeps the Shadow replay's opener miss, items used in the same frame, our Shadow Word: Pain's). G5, the replay reads our
+pet's power lines into the world's pet (the Demonology and Shadow Brand `pet.mana<N` lines). G6 (projectile travel) is
+the Travel time row above. Gates on the tree (no Warlock pack yet): every replay line and `make test-loop` unchanged;
+five leveling lines gained one press (Arcane L10 41 -> 42, Fire L10 42 -> 43, Shadow L40 56 -> 57, Smite L10 62 -> 63,
+L60 77 -> 78), G3's: the press in the kill's tick is no longer refused "casting" by the dead target's cast.
 Cancelled: fix 19 (a harness-vs-in-game default for Sunder; players use Hekili's own per-ability toggles).
