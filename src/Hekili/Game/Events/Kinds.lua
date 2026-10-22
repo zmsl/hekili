@@ -86,10 +86,10 @@ function K.Accepts(i, act, flag, amount, sch, isAvoid)
         if v < K.TICK_BAND_LO * m or v > K.TICK_BAND_HI * m then
             return false, true -- refused by the band (T.Pick counts T.bandRejected once per row)
         end
-        return true, true
+        return true, false -- a tick's band filters but never ranks: a banded direct ticket takes the row first (K21)
     end
     local a = T.ab[i]
-    if a > 0 and k ~= TICKS and k ~= CHANNEL and T.bandN[a] >= K.BAND_N then
+    if a > 0 and k ~= CHANNEL and T.bandN[a] >= K.BAND_N then
         local B = I.Bands
         local v = B.Normalise(amount, flag, "ours")
         if not B.Fits(T.bandLo, T.bandHi, T.bandN, a, v, K.SPELL_BAND_LO, K.SPELL_BAND_HI, K.BAND_N) then

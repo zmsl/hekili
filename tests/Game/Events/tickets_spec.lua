@@ -417,6 +417,51 @@ describe("the ticket pool", function()
             T.AuraGone(fs.SPENDER_M, "Creature-1", 15) -- removed early (a handler's removeDebuff)
             assert.are.equal(1, T.closed.signal)
         end)
+
+        it("finds the schedule by its aura's spell ID, not its cast's", function()
+            T.tickAuraId[I.ab.bySpell[fs.SPENDER_M]] = 99001 -- an aura whose ID differs from its cast's
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            wound(10.002, 9, 64)
+            T.AuraGone(fs.SPENDER_M, "Creature-1", 15)
+            assert.are.equal(0, T.closed.signal)
+            T.AuraGone(99001, "Creature-1", 15)
+            assert.are.equal(1, T.closed.signal)
+        end)
+
+        it("leaves the old schedule open when a recast's direct row is an avoid", function()
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+            wound(10.002, 9, 64)
+            wound(13.0, 4, 64)
+            ctl.now = 14
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_M)
+            ctl.now = 14.002
+            ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+            assert.are.same({ 0, 1 }, { T.closed.refreshed, T.closed.signal })
+            wound(16.0, 4, 64) -- the old schedule's second tick
+            assert.are.equal(0, T.foreign)
+        end)
+
+        it("refreshes an alone schedule at the recast's first tick, and at its old expiry before that", function()
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_S)
+            wound(13.7, 6, 8)
+            ctl.now = 15
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_S)
+            assert.are.equal(0, T.closed.refreshed) -- not confirmed yet
+            wound(18.1, 6, 8) -- the recast's first tick (its old tick at 16.7 never came)
+            assert.are.same({ 1, 0 }, { T.closed.refreshed, T.lost[X.TICKS] })
+            for _, t in ipairs({ 21.1, 24.1 }) do
+                wound(t, 6, 8)
+            end
+            ctl.now = 25 -- recast near the end: the new first tick is due 28.4, the old last (30.1) never comes
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-3", fs.SPENDER_S)
+            wound(27.1, 6, 8) -- the old schedule's fourth tick
+            ctl.Tick(30.3)
+            assert.are.same({ 2, 0 }, { T.closed.refreshed, T.lost[X.TICKS] })
+        end)
     end)
 
     it("pays a tick in a learned schedule's and a banded projectile's bands to the schedule (owner ruling)", function()
@@ -442,6 +487,35 @@ describe("the ticket pool", function()
         end
         assert.are.same({ 2, 7, 4 }, { T.done[ticks], T.tickAmt[ticks], T.paid[X.FLIGHT] })
     end)
+
+    it(
+        "ranks a banded direct ticket before a nearer tick in both bands; a tick-only row pays the tick (K21)",
+        function()
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_S]] = 30
+            for _, v in ipairs({ 14, 16, 15 }) do -- the nature projectile's band: [0.6 x 14.1, 1.6 x 15.95]; its lag 1.5 s
+                T.Pay(T.OpenCast(1, I.ab.bySpell[fs.SPENDER_P], fs.SPENDER_P, "Creature-1"), 2.5, false, v, "", true, 3)
+            end
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_S) -- a nature schedule (3 s ticks)
+            ctl.now = 13.7
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 8) -- its first tick: the tick band [5, 20]; next at 16.7
+            ctl.now = 15.25
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_P) -- due at 16.75 +- 0.15
+            local ticks
+            for j = 1, T.CAP do
+                if T.state[j] ~= T.FREE and T.kind[j] == X.TICKS then
+                    ticks = j
+                end
+            end
+            ctl.now = 16.72
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 12, 8) -- in both bands, the tick's closure nearer
+            assert.are.same({ 4, 1 }, { T.paid[X.FLIGHT], T.done[ticks] })
+            ctl.now = 16.73
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 6, 8) -- in the tick's band only
+            assert.are.same({ 2, 6 }, { T.done[ticks], T.tickAmt[ticks] })
+        end
+    )
 
     it("CHANNEL (untested in game, U9): pays a tick per period and closes on its stop", function()
         ctl.now = 10

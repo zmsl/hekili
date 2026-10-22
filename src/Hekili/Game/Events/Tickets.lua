@@ -1,5 +1,5 @@
 -- Game/Events/Tickets.lua
--- The ticket pool (unit-registry spec §3): one record per commit of ours, preallocated (TICKETS = 16). A ticket opens
+-- The ticket pool (unit-registry spec §3): one record per commit of ours, preallocated (TICKETS = 32). A ticket opens
 -- for every commit: every PLAYER_SWING (MELEE), every hard cast at its START (committed, pinned at SENT, armed at its
 -- success), every other success, mapped (its ability's kind, Families/Expect.lua) or not (UNMAPPED); NONE closes at
 -- once. Rows are consumed online (Events/Rows.lua) by the order of spec §3.4: candidates on the row's GUID, by pass
@@ -14,7 +14,7 @@ local X, U = I.Expect, I.Units
 
 local T = {}
 I.Tickets = T
-T.CAP = 16
+T.CAP = 32 -- multi-dotting: 3 targets x 4 dots = 12 TICKS, plus swings, a bolt in flight, the next commit
 T.FREE, T.COMMITTED, T.OPEN, T.PROV = 0, 1, 2, 3
 local CAP, COMMITTED, OPEN, PROV = T.CAP, T.COMMITTED, T.OPEN, T.PROV
 local NONE, MELEE, UNMAPPED, ANY = X.NONE, X.MELEE, X.UNMAPPED, X.ANY
@@ -117,9 +117,13 @@ end
 -- Per ability: the amount band of its own clean wounds (a crit halved), declared abilities only (spec §3.4); reset at
 -- each build (ability indices change with the spec).
 T.bandLo, T.bandHi, T.bandN = {}, {}, {}
+-- Per ability: its ticking aura's spell ID (0 none), which CombatLog's removal rows name (T.AuraGone).
+T.tickAuraId = {}
 I.OnBuild(function()
     for a = 1, A.n do
         T.bandLo[a], T.bandHi[a], T.bandN[a] = 0, 0, 0
+        local au = A.tickAura[a]
+        T.tickAuraId[a] = au and tonumber(rawget(au, "id")) or 0
     end
 end)
 
@@ -177,7 +181,8 @@ local function schedule(i, a, app, wide)
     hi[i] = app + count * period + T.TICK_BAND + wide
 end
 
--- A new application of a on g closes its open TICKS ticket as refreshed (unpaid rows not lost; decision 37).
+-- A new application of a on g, confirmed by a row (the direct hit, or an alone schedule's first tick), closes its older
+-- TICKS ticket as refreshed (unpaid rows not lost; decision 37): a recast that is avoided leaves the old one open.
 local function refresh(a, g, t, except)
     for j = 1, CAP do
         if j ~= except and state[j] >= OPEN and kind[j] == X.TICKS and ab[j] == a and guid[j] == g then
@@ -200,9 +205,8 @@ local function arm(i, t)
         T.speed[i] = A.velocity[a]
         T.H[i] = r / T.speed[i] + T.TOL -- Expect requires a positive travel velocity
         hi[i] = t + T.H[i]
-    elseif k == X.TICKS then -- alone (Corruption-shaped): anchored at the success, after the flight with a velocity
+    elseif k == X.TICKS then -- alone (a pure DoT): anchored at the success, after the flight with a velocity
         local a = ab[i]
-        refresh(a, guid[i], t, i)
         local v = A.velocity[a]
         if v > 0 then
             local rm = A.rMax[a] > 0 and A.rMax[a] or 40
@@ -230,7 +234,6 @@ local function compose(i, t)
     if a == 0 or not A.ticking[a] or (kind[i] ~= X.FRAME and kind[i] ~= X.FLIGHT) then
         return
     end
-    refresh(a, guid[i], t, i)
     local j = T.Slot(t)
     fill(j, X.TICKS, a, x[i], guid[i], t)
     school[j], T.link[j], T.link[i] = school[i], -1, j
@@ -348,7 +351,7 @@ function T.Stop(castGUID, t)
     end
 end
 
---- (spec §3.4 steps 2-4, owner ruling 2026-10-22) The candidate for a row at t on `g` at pass `p`: among the open
+--- (spec §3.4 steps 2-4, owner ruling 2026-10-22; at most 3 passes x CAP 32 tickets per row) The candidate for a row at t on `g` at pass `p`: among the open
 --- tickets on `g` that accept the row and whose band at p holds t, those whose learned amount band accepts it first
 --- (K.Accepts' second answer), then those with no band or an unlearned one; within each group the least expected
 --- closure. Also how many matched. Allocates nothing.
@@ -413,6 +416,9 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
     done[i], owed[i] = done[i] + 1, owed[i] - 1
     if k == X.TICKS and not isAvoid then -- the owner's soft band: the last paid tick's amount (a crit halved)
         T.tickAmt[i] = flag == "CRITICAL" and amount / 2 or amount
+        if done[i] == 1 then -- the first tick confirms the application
+            refresh(a, guid[i], t, i)
+        end
     end
     if k == X.TICKS and T.wide[i] > 0 then -- the first tick paid: the schedule snaps to it
         T.anchor[i], T.wide[i] = t - done[i] * T.period[i], 0
@@ -422,12 +428,16 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
         owed[i] = 0 -- the application avoided: nothing owed, not lost
     end
     local j = T.link[i]
-    if j > 0 and state[j] >= OPEN and kind[j] == X.TICKS and T.link[j] == -1 then
+    -- at and ab equal: slot j is still the schedule composed with i (compose fills it at i's success)
+    if j > 0 and state[j] >= OPEN and kind[j] == X.TICKS and T.link[j] == -1 and at[j] == at[i] and ab[j] == a then
         if isAvoid then
             close(j, t, "signal") -- the direct hit was avoided: no debuff, no ticks
         else
-            T.anchor[j], T.wide[j] = t, 0 -- the application is the direct row
-            hi[j] = t + owed[j] * T.period[j] + T.TICK_BAND
+            refresh(a, guid[i], t, j) -- the direct row confirms the application
+            if done[j] == 0 then
+                T.anchor[j], T.wide[j] = t, 0 -- the application is the direct row
+            end
+            hi[j] = T.anchor[j] + (done[j] + owed[j]) * T.period[j] + T.TICK_BAND + T.wide[j]
         end
     end
     if owed[i] <= 0 then
@@ -484,6 +494,20 @@ local function expiry(i)
         return "dead"
     elseif T.excused[i] then
         return "expired"
+    elseif k == X.TICKS then -- a recast whose confirming row has not come yet: its old schedule ends refreshed
+        local g = guid[i]
+        for j = 1, CAP do
+            if
+                j ~= i
+                and state[j] >= OPEN
+                and kind[j] == X.TICKS
+                and ab[j] == ab[i]
+                and guid[j] == g
+                and at[j] > at[i]
+            then
+                return "refreshed"
+            end
+        end
     end
     T.lost[k] = T.lost[k] + owed[i]
     return "lost"
@@ -533,12 +557,8 @@ end)
 --- Our debuff `spellID` left `g` at t (CombatLog's SPELL_AURA_REMOVED): its schedule closes (`signal`) when that is
 --- before its last tick's band. Allocates nothing.
 function T.AuraGone(spellID, g, t)
-    local a = A.bySpell[spellID]
-    if not a then
-        return
-    end
     for i = 1, CAP do
-        if state[i] >= OPEN and kind[i] == X.TICKS and ab[i] == a and guid[i] == g then
+        if state[i] >= OPEN and kind[i] == X.TICKS and T.tickAuraId[ab[i]] == spellID and guid[i] == g then
             local last = T.anchor[i] + (done[i] + owed[i]) * T.period[i]
             if t < last - T.TICK_BAND - T.wide[i] then
                 T.paid[X.TICKS] = T.paid[X.TICKS] + 1
