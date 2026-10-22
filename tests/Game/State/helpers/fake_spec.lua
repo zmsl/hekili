@@ -13,10 +13,16 @@ M.RAGE = 1 -- Enum.PowerType.Rage
 -- spender_r follows: the ranged hand's auto attack (`rangedSwing`, Families/Swing.lua hand 3).
 M.SPENDER_A, M.SPENDER_B, M.SPENDER_C, M.SPENDER_C_R2 = 1001, 1002, 1003, 1004
 M.SPENDER_T, M.SPENDER_U, M.SPENDER_R = 1005, 1006, 1007
+-- With `expect` (M.new's fourth argument) the declared-outcome fixtures follow (unit-registry spec §6.2's fake spec):
+-- an instant (school fire), a hard-cast projectile (velocity 20, nature), an instant that also ticks (arcane, its aura
+-- 12 s / 3 s, dot = "debuff"), a ticks-only one with a flight (nature, velocity 40, its aura 15 s / 3 s, dot =
+-- "debuff"), one that owes nothing, one malformed, a channel (arcane, its aura 3 s / 1 s).
+M.SPENDER_F, M.SPENDER_P, M.SPENDER_M, M.SPENDER_S = 1008, 1009, 1010, 1012
+M.SPENDER_N, M.SPENDER_Q, M.SPENDER_H = 1013, 1014, 1015
 
 --- A fake Hekili: { State, Class, ForceUpdate, forced }, and `spendResources` for ns. `swingValue` is rage per swing;
---- `kinds` adds spender_t and spender_u; `ranged` adds spender_r.
-function M.new(swingValue, kinds, ranged)
+--- `kinds` adds spender_t and spender_u; `ranged` adds spender_r; `expect` adds the declared-outcome fixtures.
+function M.new(swingValue, kinds, ranged, expect)
     local state = {
         offset = 0,
         delay = 0,
@@ -116,6 +122,39 @@ function M.new(swingValue, kinds, ranged)
     if ranged then
         ability("spender_r", { id = M.SPENDER_R, gcd = "off", rangedSwing = true })
     end
+    if expect then
+        ability("spender_f", { id = M.SPENDER_F, startsCombat = true, expects = "instant", school = "fire" })
+        ability("spender_p", {
+            id = M.SPENDER_P,
+            cast = 1.5,
+            startsCombat = true,
+            expects = "travel",
+            velocity = 20,
+            school = "nature",
+        })
+        ability("spender_m", {
+            id = M.SPENDER_M,
+            startsCombat = true,
+            expects = "instant",
+            school = "arcane",
+        })
+        ability("spender_s", {
+            id = M.SPENDER_S,
+            startsCombat = true,
+            expects = "ticks",
+            school = "nature",
+            velocity = 40,
+        })
+        ability("spender_n", { id = M.SPENDER_N, expects = "none" })
+        ability("spender_q", { id = M.SPENDER_Q, startsCombat = true, expects = "bogus" })
+        ability(
+            "spender_h",
+            { id = M.SPENDER_H, startsCombat = true, channeled = true, expects = "channel", school = "arcane" }
+        )
+        class.auras.spender_m = { key = "spender_m", id = M.SPENDER_M, duration = 12, tick_time = 3, dot = "debuff" }
+        class.auras.spender_s = { key = "spender_s", id = M.SPENDER_S, duration = 15, tick_time = 3, dot = "debuff" }
+        class.auras.spender_h = { key = "spender_h", id = M.SPENDER_H, duration = 3, tick_time = 1 }
+    end
     class.auras.spender_c = { key = "spender_c", id = M.SPENDER_C, copy = { M.SPENDER_C_R2 }, duration = 15 }
     class.auras.spender_a = { key = "spender_a", id = M.SPENDER_A, duration = 120 }
     function state:RunHandler(key)
@@ -174,7 +213,15 @@ function M.def(hekili)
         talents = { { key = "talent_a", spell = 1011, max = 3 } },
         units = { "player", "target" },
     }
-    for _, k in ipairs({ "spender_t", "spender_u", "spender_r" }) do
+    local extra = { "spender_t", "spender_u", "spender_r", "spender_f", "spender_p", "spender_m", "spender_s" }
+    extra[#extra + 1], extra[#extra + 2], extra[#extra + 3] = "spender_n", "spender_q", "spender_h"
+    for _, k in ipairs({ "spender_m", "spender_s", "spender_h" }) do -- the ticking auras (with `expect`)
+        local au = class.auras[k]
+        if au then
+            def.auras[#def.auras + 1], def.auraIds[#def.auraIds + 1] = au, { au.id }
+        end
+    end
+    for _, k in ipairs(extra) do
         local a = class.abilities[k]
         if a then
             def.abilities[#def.abilities + 1], def.abilityIds[#def.abilityIds + 1] = a, { a.id }

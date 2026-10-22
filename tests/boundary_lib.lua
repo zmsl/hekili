@@ -70,6 +70,14 @@ local ALLOW_NAMES = {
     C_BattleNet = "a WoW API name",
     SPELL_FAILED_NOT_IN_MAGE_TOWER = "a WoW GlobalStrings name",
     TOOLTIP_NOT_IN_MAGE_TOWER = "a WoW GlobalStrings name",
+    -- the `expects` vocabulary (Families/Expect.lua): engine vocabulary, not class content (`travel` is not the form)
+    none = "an expects type",
+    instant = "an expects type",
+    travel = "an expects type",
+    melee = "an expects type",
+    strike = "an expects type",
+    ticks = "an expects type",
+    channel = "an expects type",
 }
 local ALLOW_IDS = {
     [29515] = "the client's GCD spell (Constants), not content",

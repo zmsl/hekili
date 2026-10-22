@@ -27,6 +27,7 @@ Game\State\Families\Totems.lua
 Game\State\Families\Pets.lua
 Game\State\Families\Enemies.lua
 Game\State\Families\Now.lua
+Game\State\Families\Expect.lua
 Game\State\Families\Modifiers.lua
 Game\State\Sources\Sources.lua
 Game\State\Sources\Units.lua
