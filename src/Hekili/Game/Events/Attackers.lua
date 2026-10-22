@@ -19,6 +19,7 @@ local S = I.Sources
 local Plain, Note = S.Plain, S.Note
 local L = I.Log
 local floor = math.floor
+local Stats = I.Stats
 
 L.ATTACK_TOLERANCE = 0.2 -- seconds between a clock's predicted swing and a hit credited to it
 L.unattributed = 0
@@ -167,7 +168,7 @@ local function learn(k, t, speed)
         else
             local n = floor(gap / period + 0.5)
             if n >= 1 and math.abs(gap - n * period) <= L.ATTACK_TOLERANCE then
-                atkPeriod[k] = period * 0.8 + gap / n * 0.2 -- shortcut: a plain EMA; a dual-wielding attacker blurs it
+                atkPeriod[k] = (Stats.Ema(period, 0, gap / n, 0.2, 0)) -- shortcut: a plain EMA; a dual-wielding attacker blurs it
             end
         end
     end

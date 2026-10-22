@@ -13,6 +13,7 @@ local _, ns = ...
 local VS, I = ns.VirtualState, ns.VirtualStateInternal
 local Obs, ReadOf = VS.Obs, I.ReadOf
 local abs, floor = math.abs, math.floor
+local Stats = I.Stats
 
 --- A flip pin measures regen only when the last short report was at most this long before it (TDF Belief.PIN_EXACT).
 I.PIN_EXACT = 0.15
@@ -634,10 +635,8 @@ local function ema(r, m, ref, E, L, H, D, bound)
             return false
         end
     end
-    local est = E[r] + I.ALPHA * (m - E[r])
-    local dev = D[r] + I.ALPHA * (abs(m - est) - D[r])
-    local floor = abs(scale) * I.REGEN_SPREAD_MIN
-    local spread = dev > floor and dev or floor
+    -- the spread floor is REGEN_SPREAD_MIN times the reference m is measured against (calibrate's ratio: x 1)
+    local est, dev, spread = Stats.Ema(E[r], D[r], m, I.ALPHA, abs(scale) * I.REGEN_SPREAD_MIN)
     D[r] = dev
     E[r], L[r], H[r] = est, est - spread, est + spread
     return true
@@ -677,10 +676,8 @@ local function calibrate(r, m, t)
     if ratio < 1 / I.REGEN_RATIO or ratio > I.REGEN_RATIO then
         return -- noise: a missed spend, a cap
     end
-    local scale = R.scale[r] + I.ALPHA * (ratio - R.scale[r])
-    local dev = R.dev[r] + I.ALPHA * (abs(ratio - scale) - R.dev[r])
-    R.scale[r], R.dev[r] = scale, dev
-    R.spread[r] = dev > I.REGEN_SPREAD_MIN and dev or I.REGEN_SPREAD_MIN
+    local scale, dev, spread = Stats.Ema(R.scale[r], R.dev[r], ratio, I.ALPHA, I.REGEN_SPREAD_MIN) -- floor x 1: a ratio
+    R.scale[r], R.dev[r], R.spread[r] = scale, dev, spread
     I.Sample(R.regen[r], "modelled", scale * ref, t, Obs.Usable)
 end
 
@@ -1158,7 +1155,7 @@ I.On(Obs.Swing, function(o, t)
     if hand ~= 1 and hand ~= 2 then
         return
     elseif c == 4 then
-        hitRate[hand] = hitRate[hand] * (1 - HIT_ALPHA)
+        hitRate[hand] = (Stats.Ema(hitRate[hand], 0, 0, HIT_ALPHA, 0)) -- a swing: the share decays toward 0
         for r = 1, R.n do -- the estimate a credit of this swing is judged from (predict)
             if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
                 swE[hand], swL[hand], swT[hand], swTop[hand], swSp[hand] =

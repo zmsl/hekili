@@ -148,12 +148,7 @@ end
 
 --- A clean credit moves its reference's median and spread (a running median; mean absolute deviation to SD).
 function M.learn(r, d)
-    local med, spr = L.med, L.spr
-    med[r] = med[r] + 0.005 * (d > med[r] and 1 or -1)
-    local s = spr[r] + 0.05 * (1.2533 * math.abs(d - med[r]) - spr[r])
-    spr[r] = s < 0.02 and 0.02 or (s > 0.4 and 0.4 or s)
-    local win = L.PAIR_WINDOW_MS[r == 1 and 1 or 2] / 1000
-    med[r] = med[r] < 0 and 0 or (med[r] > win and win or med[r])
+    L.med[r], L.spr[r] = I.Stats.Median(L.med[r], L.spr[r], d, 0.005, 0, L.PAIR_WINDOW_MS[r == 1 and 1 or 2] / 1000)
 end
 
 --- The theta index of hand h's amount class `cls` (1-3, 4 unknown) at lag d from reference `r`: core band or tail.

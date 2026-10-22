@@ -15,6 +15,7 @@ embeds.xml
 Game\State\VirtualState.lua
 Game\State\ObsLog.lua
 Game\State\Belief.lua
+Game\State\Stats.lua
 Game\State\Families\Player.lua
 Game\State\Families\Casts.lua
 Game\State\Families\Resources.lua
