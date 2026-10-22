@@ -375,8 +375,10 @@ that first swing. Its row's lag stays a one-sample observation (989 ms), so the 
 Due band (pass a) is the whole LR window `[0, w]` instead of the core band.
 
 Landing lags also vary by session: 988, 837 and 456 ms in the Rogue kill-events session against the Warrior's 474 +-
-60 ms (`Rows.lua:67` seeds). Until probe U11 says whether combat-text settings delay the rows, the MELEE Due band uses
-the learned spread, which widens in such a session, and nothing in this design assumes 0.474 s beyond the seed.
+60 ms (`Rows.lua:67` seeds). Floating combat text does not delay the rows (U11, closed by owner ruling), so these are
+real row lags, not a display artefact. The MELEE learned lag and spread must absorb that range per session: the
+Warrior's 474 +- 60 ms is one character's seed, not a constant, and nothing in this design assumes 0.474 s beyond the
+seed. The Due band uses the learned spread, which widens in such a session.
 
 ### 3.4 Paying (the consumption order)
 
@@ -809,7 +811,7 @@ Each becomes a row in `docs/dev/ingame-ledger.md` with the capture that closes i
 | U8 (closed by owner ruling 2026-10-22: the client clears the target when it is killed, as a rule, not a user setting, whether or not a press is in flight; the registry treats the clear-on-kill as reliable, and the death events remain the primary tell) | The kill tell: is the target clear on a kill a client rule or a user setting; does it happen when no press is in flight | `/vslog` of a melee kill with no ability pressed, and the interface option in question |
 | U9 (DoT half closed 2026-10-22 by the druid-moonfire capture; channel half deferred by owner ruling 2026-10-22; CHANNEL stays implemented, untested and unused by packs) | Channel row shapes: per tick, which tokens, action, flag, amount, school; whether a channel's ticks and a DoT's are told apart; needed before CHANNEL is trusted | `/vslog` of Arcane Missiles and Drain Life channels on solo mobs |
 | U10 (owner-explained 2026-10-22, lag unmeasured: auto-attack turns on at once when an ability is used or `/attack` is pressed, and the first `PLAYER_SWING` is that first swing; its row's lag is one sample, 989 ms, so the first swing of a combat still does not teach the MELEE lag and uses the LR window) | The first white swing of a combat: does the first `PLAYER_SWING` after `PLAYER_ENTER_COMBAT` mark auto-attack turning on, or a swing with a longer lag (one sample: 989 ms against 452 ms for the next) | `/vslog` of ten pulls with auto-attack only, amounts on, `PLAYER_SWING`, `PLAYER_ENTER_COMBAT` and the target's `UNIT_COMBAT` |
-| U11 | Do the floating combat text settings, or the number of combat-text events queued, delay `UNIT_COMBAT` rows? White-hit lags in the Rogue session were 988, 837 and 456 ms against the Warrior's measured 474 +- 60 ms | the same fight with damage numbers off, `/vslog` of `PLAYER_SWING` and the target's `UNIT_COMBAT` |
+| U11 (closed by owner ruling 2026-10-22) | Do the floating combat text settings delay `UNIT_COMBAT` rows? Answer: no. The Rogue session's white-hit lags (988, 837, 456 ms) are real row lags; the MELEE learned lag and spread absorb that range per session, and the Warrior's 474 +- 60 ms is a seed, not a constant | owner ruling |
 
 ## 9. Risks and what the gate must show
 
