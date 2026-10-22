@@ -37,7 +37,7 @@ local Glower = LibStub( "LibCustomGlow-1.0" )
 local exp, floor, ceil, abs = math.exp, math.floor, math.ceil, math.abs
 local mmax, mmin = math.max, math.min
 
-local SLOTS = 10 -- Output's records per display
+local SLOTS = 12 -- Output's records per display
 local MAX_TICKS = 31 -- the ruler's ticks for the horizon's maximum (30 s)
 local SWIPE_EPS = 0.1 -- TDF Render.SWIPE_EPS: the sweep is re-set when its end moves this much (seconds)
 local READY_EPS = 0.05 -- a wait this close to its time is due: its ETA hides and a flagged record 1 turns ready

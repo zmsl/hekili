@@ -34,6 +34,8 @@ end
 local format = string.format
 local floor = math.floor
 
+local NONE = {} -- the record of a button past numIcons: no action (never written)
+
 -- The delay countdown's texts, built once: a fresh string per tenth of a second would allocate on every change.
 -- shortcut: a tie (x.x5 exactly) rounds up here where %.1f rounds to even, and 10 s or more still formats each change.
 local DELAY_TEXT = {}
@@ -505,7 +507,7 @@ local function RefreshCooldowns( self, out )
     local now = GetTime()
     local conf = Hekili.DB.profile.displays[ self.id ]
 
-    for i = 1, out.count do
+    for i = 1, min( out.count, conf.numIcons ) do -- records past numIcons (Core's on-GCD extras) have no button
         local rec = out.recs[ i ]
         local button = self.Buttons[ i ]
 
@@ -751,9 +753,10 @@ function Classic.Draw( d, conf, out, status )
         else
             st.HasRecommendations = true
 
-            -- Records past out.count hold no action (Begin cleared them), so their buttons hide.
+            -- Records past out.count hold no action (Begin cleared them), so their buttons hide; so do the buttons past
+            -- numIcons (Core's on-GCD extras are for the Timeline).
             for i, b in ipairs( self.Buttons ) do
-                b.Recommendation = out.recs[ i ]
+                b.Recommendation = i <= conf.numIcons and out.recs[ i ] or NONE
 
                 local action = b.Recommendation.actionName
                 local caption = b.Recommendation.caption

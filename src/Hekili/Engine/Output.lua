@@ -7,7 +7,7 @@ local _, ns = ...
 
 local Engine = Hekili.Engine
 
-local SLOTS = 10 -- recommendation records per display: a display has at most 10 buttons
+local SLOTS = 12 -- recommendation records per display: at most 10 buttons, and 2 more records for the on-GCD plan (Core)
 local SUBS = 4 -- subscriber slots per display, and annotator slots
 local ALTS = 2 -- alternatives per record: the picks at the low and the high bound of the gating resource
 local READY = 0.05 -- steady icons: a record due within this is shown as ready (the harness's press threshold)

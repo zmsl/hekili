@@ -30,7 +30,7 @@ local LRC = LibStub( "LibRangeCheck-3.0" )
 local LSR = LibStub( "SpellRange-1.0" )
 local max, min = math.max, math.min
 
-local SLOTS = 10 -- Output's records per display
+local SLOTS = 12 -- Output's records per display
 
 --- Fills d.resolved[ 1 .. out.count ] (preallocated on the first call), per record: `inRange` (the ability's range),
 --- `inMelee` (the target within 7 yd, asked only while the bound style's range check is `melee`, true otherwise),

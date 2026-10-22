@@ -914,10 +914,34 @@ describe("the timeline display style", function()
         return list
     end
 
-    local TODAY =
-        { "mortal_strike", "overpower", "slam", "rend", "whirlwind", "sunder_armor", false, false, false, false }
-    local FOCUS3 =
-        { "slam", "mortal_strike", "overpower", "rend", "whirlwind", "sunder_armor", false, false, false, false }
+    local TODAY = {
+        "mortal_strike",
+        "overpower",
+        "slam",
+        "rend",
+        "whirlwind",
+        "sunder_armor",
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+    }
+    local FOCUS3 = {
+        "slam",
+        "mortal_strike",
+        "overpower",
+        "rend",
+        "whirlwind",
+        "sunder_armor",
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+    }
 
     it("draws a flagged record within the focus horizon in the now circle and the press in the next box", function()
         local H, d, T = tlBoot()
@@ -992,8 +1016,20 @@ describe("the timeline display style", function()
         assert.are.same({}, H.errors)
     end)
 
-    local EMPTY =
-        { false, "mortal_strike", "overpower", "slam", "rend", "whirlwind", "sunder_armor", false, false, false }
+    local EMPTY = {
+        false,
+        "mortal_strike",
+        "overpower",
+        "slam",
+        "rend",
+        "whirlwind",
+        "sunder_armor",
+        false,
+        false,
+        false,
+        false,
+        false,
+    }
 
     it("leaves the now circle empty without a focus record (nowFallback empty, the default)", function()
         local H, d, T = tlBoot(false, function(tl)
@@ -1129,6 +1165,8 @@ describe("the timeline display style", function()
                 false,
                 false,
                 false,
+                false,
+                false,
             }, actions(T))
             assert.is_true(c[1]:IsShown() and c[1].Ring:IsShown())
             assert.are.same(tl.focusColor, rawget(c[1].Ring, "__color"))
@@ -1154,6 +1192,8 @@ describe("the timeline display style", function()
                 "rend",
                 "whirlwind",
                 "sunder_armor",
+                false,
+                false,
                 false,
                 false,
                 false,
@@ -1510,6 +1550,8 @@ describe("the timeline display style", function()
             false,
             false,
             false,
+            false,
+            false,
         }, actions(T))
         assert.are.same(tl.focusPendingColor, rawget(c[1].Ring, "__color"))
         -- two tier-2 records: the soonest
@@ -1583,20 +1625,50 @@ describe("the timeline display style", function()
         assert.is_true(T.focused)
         assert.are.equal("K1", c[1].Keybinding:GetText())
         -- two tier-1 records later on (2 and 3): only record 2; record 3 on the lane after it
-        assert.are.same(
-            { "overpower", "mortal_strike", "slam", "rend", "whirlwind", "sunder_armor", false, false, false, false },
-            now(tiers({ [2] = 1, [3] = 1 }))
-        )
+        assert.are.same({
+            "overpower",
+            "mortal_strike",
+            "slam",
+            "rend",
+            "whirlwind",
+            "sunder_armor",
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+        }, now(tiers({ [2] = 1, [3] = 1 })))
         -- a tier-2 record before a tier-1 one: the tier-1 record; the tier-2 record 2 keeps the next box after record 1
-        assert.are.same(
-            { "slam", "mortal_strike", "overpower", "rend", "whirlwind", "sunder_armor", false, false, false, false },
-            now(tiers({ [2] = 2, [3] = 1 }))
-        )
+        assert.are.same({
+            "slam",
+            "mortal_strike",
+            "overpower",
+            "rend",
+            "whirlwind",
+            "sunder_armor",
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+        }, now(tiers({ [2] = 2, [3] = 1 })))
         -- a tier-2 record 1 before a tier-1 record 4: record 4 in the circle, record 1 the press in the next box
-        assert.are.same(
-            { "rend", "mortal_strike", "overpower", "slam", "whirlwind", "sunder_armor", false, false, false, false },
-            now(tiers({ [1] = 2, [4] = 1 }))
-        )
+        assert.are.same({
+            "rend",
+            "mortal_strike",
+            "overpower",
+            "slam",
+            "whirlwind",
+            "sunder_armor",
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+        }, now(tiers({ [1] = 2, [4] = 1 })))
         assert.are.equal("K1", c[2].Keybinding:GetText())
         -- a single tiered record: it
         assert.are.same(FOCUS3, now(tiers({ [3] = 3 })))

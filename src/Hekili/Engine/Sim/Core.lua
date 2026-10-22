@@ -1596,11 +1596,15 @@ function Hekili.Update()
             local actualStartTime = debugprofilestop()
 
             local numRecs = display.numIcons or 3
+            -- Fix 34: off-GCD picks at 0.00 can fill every icon and hide the on-GCD plan, so records continue past
+            -- numIcons (at most 2 more) until they hold two on-GCD picks (the one after an on-GCD record 1 too, as in
+            -- the owner's Fury snapshot); a one-icon display (Interrupts, Defensives, flash suppression) asks for one pick.
+            local maxRecs, onGcd = numRecs > 1 and numRecs + 2 or numRecs, 0
             local abilityOpts = Hekili:GetActiveSpecOption( "abilities" )
 
             local flash = Hekili.Engine.StyleGroup( display, "flash" )
             if flash.enabled and flash.suppress then
-                numRecs = 1
+                numRecs, maxRecs = 1, 1
             end
 
             if debug then Hekili:Debug( "Combat Timer: %.2f", state.time ) end
@@ -1614,7 +1618,7 @@ function Hekili.Update()
                 defaultMax = max( state.delayMax, 0.01 + state.energy.max / state.energy.regen_combined )
             end
 
-            for i = 1, numRecs do
+            for i = 1, maxRecs do
                 local chosen_depth = 0
 
                 local slot = Queue[ i ]
@@ -1964,7 +1968,10 @@ function Hekili.Update()
                         slot.resources[ k ] = state[ k ].current
                     end
 
-                    if i < display.numIcons then
+                    if not slot.offGCD then onGcd = onGcd + 1 end
+                    local more = i < numRecs or i < maxRecs and onGcd < 2
+
+                    if more or i < display.numIcons then
                         -- Advance through the wait time.
                         state.this_action = action
                         state.this_list = listName
@@ -2049,6 +2056,8 @@ function Hekili.Update()
                             end
                         end
                     end
+
+                    if not more then break end
 
                 else
                     for s = i, numRecs do
