@@ -1,25 +1,31 @@
 -- tools/wowsims/specs/warlock_affliction.lua (wowsims packs plan, Task 13): Affliction (wowsims.com)'s wowsims/forever
--- request and translation.
+-- request and translation; wowsims's preset build "Aff (Wrack)" (presets.ts Builds).
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever)
 -- ui/specs/warlock/dps/builds/aff_wrack.build.json (the build: race Orc, talents 25300020135201351--0550005003,
 -- Succubus out, Demon Armor, curse Elements, 32 Soul Shards, Engineering/Tailoring, 20 yd; its rotation) and
 -- presets.ts:8,22,31,93 (AFF_WRACK_APL, AffWrackTalents, the Builds list) at the pin. The build carries no gear:
 -- gear_sets/preraid.gear.json (central fix 27). Spec binding: 33 Affliction points to 18 Destruction (0 Demonology):
--- Affliction's default. Disagreements (P7; floor 0.72), decisions on-GCD 0.728 (81) top [shadow_bolt -> corruption 10;
--- immolate -> corruption 3; siphon_life -> corruption 3] (log times):
---   all three (1.5-20 s and 65-85 s): central (shared gap, reported): wowsims's Ez-Thro Dynamite II misses at 2.43 and
---   65.43 while our Corruption (0.8 s cast) is in its landing window; the replay emits the unmapped item's outcome with
---   no cast, and Events/Rows.lua credits the MISS to the one pending cast of ours (Obs.Avoided), which undoes
---   Corruption's debuff until wowsims recasts it 18 s later. Without the item's outcome: 0.901 (measured, not kept).
---   wrack -> shadow_bolt / life_tap: API-forced: the target's Shadow Vulnerability (17794) is unreadable in combat, so
---   `shadow_bolt,if=!debuff.shadow_vulnerability.up` passes; the kit's Shadow Bolt `onCrit` would model it, but the
---   bolt's crit lands about 1 s after its success (travel), past Rows's cast window (central: no `velocity`).
+-- Affliction's default.
+-- Disagreements (P7; floor 0.87 on fix 31, was 0.72), decisions on-GCD 0.877 (81) top [shadow_bolt -> corruption 2;
+-- shadow_bolt -> wrack 2; immolate -> corruption 1] (log times):
+--   shadow_bolt / immolate / siphon_life / wrack -> corruption (87.5-101 s): central (G6, deferred to central fix 32):
+--   the Shadow Bolt completed at 84.50 misses at 85.50 (its travel), inside our Corruption's landing window, and
+--   Events/Rows.lua credits the MISS to Corruption, undoing its debuff.
+--   shadow_bolt -> wrack (12.50, 15.00): central (G6): the Agony tick's crit at 10.00 shares a frame with a Shadow
+--   Bolt's success, so the bolt's `onCrit` puts Shadow Vulnerability up in the belief (the bolt's own outcome lands
+--   1 s later): Shadow Bolt's `onCrit` is a recorded known deviation until fix 32's travel time.
+--   wrack -> shadow_bolt / immolate (106.5, 112.5): the same (Shadow Vulnerability believed or not, API-forced: the
+--   target's aura is unreadable).
+-- Fix 31 (G4: an outcome past an unmapped cast's frame is nobody's) took the dynamite's two misses off Corruption:
+-- 0.728 -> 0.877.
 -- Worked (P6): Corruption's `now` passes its rank's duration (the belief wrote nothing for a function duration);
 -- Shadow Bolt's `onCrit` Shadow Vulnerability (kit and world).
 -- Deviations: the Boosts group's Major Spellblasting Potion (item 250937) has no key (no shared content): omitted
 -- (rule 2); the Ez-Thro Dynamite II (18588, rule 13) is unmapped (no shared key), listed; Berserking (Troll) and
 -- Eureka! are other races' racials, never known to the Orc. The Weakness Analyzer trinket (272438) is `use_items` (rule
--- 13). Leveling (P8): every bracket live without a recipe line (worst idle 0.2 s at 10, 40 and 60; LIVE60 0.2).
+-- 13).
+-- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in an unconditional Life Tap, so no bracket
+-- idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
 return {
     class = "WARLOCK",
     pack = "Affliction (wowsims.com)",

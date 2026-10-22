@@ -1,5 +1,5 @@
 -- tools/wowsims/specs/warlock_demonology.lua (wowsims packs plan, Task 13): Demonology (wowsims.com)'s wowsims/forever
--- request and translation.
+-- request and translation; wowsims's preset build "Demo (Fire Brand)" (presets.ts Builds).
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever)
 -- ui/specs/warlock/dps/builds/demo_fire_brand.build.json (the build: race Orc, talents
 -- 011-0305003201220301351-0050055003, the Imp out and the Succubus sacrificed (Touch of Fire), Demon Armor, curse
@@ -7,14 +7,13 @@
 -- spec.ts:125 autoRotation) and presets.ts:9,18,27,89 (DEMO_FIRE_BRAND_APL, DemoFireBrandTalents, the Builds list's
 -- first) at the pin. The build carries no gear: gear_sets/preraid.gear.json (central fix 27).
 -- Spec binding: 31 Demonology points to 18 Destruction and 2 Affliction: Demonology's default.
--- Disagreements (P7; floor 0.76), decisions on-GCD 0.767 (116) top [searing_pain -> bane_of_doom 8; soul_fire ->
--- bane_of_doom 6; corruption -> bane_of_doom 3] (log times):
---   * -> bane_of_doom (120-180 s, 23 of 27): API-forced: `fight_remains` 3600 s (rule 10): Bane of Doom whenever it is
+-- Disagreements (P7; floor 0.77 on fix 31, was 0.76), decisions on-GCD 0.776 (116) top [searing_pain -> bane_of_doom
+-- 8; soul_fire -> bane_of_doom 6; corruption -> bane_of_doom 3] (log times):
+--   * -> bane_of_doom (120-180 s, 23 of 26): API-forced: `fight_remains` 3600 s (rule 10): Bane of Doom whenever it is
 --   down; wowsims casts Bane of Agony in the last minute (and splits its Boosts on "Time to execute").
 --   corruption / immolate -> searing_pain (46.70, 72.40, 85.90): replay limit: the DoT's fade and wowsims's recast
 --   share a log timestamp; the decision sits just before the cast, where the modelled debuff still runs.
---   life_tap -> searing_pain (52.80): central (shared gap): `life_tap,if=pet.mana<115` (the Imp at 56 mana in the log);
---   the replay does not read the pet's mana from the log (replay.lua's shortcut), so ours reads it full.
+-- Fix 31 (G5: the replay reads the pet's mana from the log) took the `life_tap,if=pet.mana<115` decision at 52.80.
 -- Known API deviations: remainingTime (above); the demon's attacks spend Demonic Brand's charges, unseen (the kit keeps
 -- the brand its full 10 s); before the Demonic Brand talent the brand is never up, so `searing_pain,if=!debuff.
 -- demonic_brand.up` leads the list (as wowsims's own list at that level would).
@@ -22,7 +21,9 @@
 -- Deviations: the Boosts group's Major Spellblasting Potion (item 250937) has no key (no shared content): omitted
 -- (rule 2); the Ez-Thro Dynamite II (18588, rule 13) is unmapped (no shared key), listed; Berserking (Troll) and
 -- Eureka! are other races' racials, never known to the Orc. The Weakness Analyzer trinket (272438) is `use_items` (rule
--- 13). Leveling (P8): every bracket live without a recipe line (worst idle 0.2 s at 10, 40 and 60; LIVE60 0.2).
+-- 13).
+-- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in an unconditional Life Tap, so no bracket
+-- idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2). Below Searing Pain (18) it fills with Life Tap between its DoTs.
 return {
     class = "WARLOCK",
     pack = "Demonology (wowsims.com)",
@@ -57,6 +58,11 @@ return {
         curse_of_the_elements = 2,
         curse_of_recklessness = 2,
         curse_of_weakness = 2,
+    },
+    -- the low-level behaviour (owner ruling 2026-10-21: no low-level filler), in the pack's description
+    notes = {
+        "Below level 18 (before Searing Pain) this priority has no filler and shows Life Tap between its DoTs, as wowsims's own list would at that level.",
+        "Before the Demonic Brand talent, Searing Pain leads the list (its brand is never up), as wowsims's own list would.",
     },
     leveling = {},
 }

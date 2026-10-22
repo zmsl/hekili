@@ -1,5 +1,5 @@
 -- tools/wowsims/specs/warlock_sm_ruin.lua (wowsims packs plan, Task 13): SM Ruin (wowsims.com)'s wowsims/forever
--- request and translation.
+-- request and translation; wowsims's preset build "SM/Ruin" (presets.ts Builds).
 -- Values from wowsims/forever (MIT, https://github.com/wowsims/forever) ui/specs/warlock/dps/builds/sm_ruin.build.json
 -- (the build: race Orc, talents 2540002013520105--0550305003, Succubus out, Demon Armor, curse Elements, 32 Soul
 -- Shards, Engineering/Tailoring, 20 yd; its rotation) and presets.ts:12,21,30,92 (SM_RUIN_APL, SmRuinTalents, the
@@ -7,18 +7,21 @@
 -- Spec binding: 30 Affliction points to 21 Destruction (0 Demonology), so the pack is Affliction's second (the
 -- Fire/Frostfire shape: mage_frostfire.lua); Affliction's default stays "Affliction (wowsims.com)" (aff_wrack). The
 -- name is wowsims's "SM/Ruin" without the slash (a pack name is a file name: src/Hekili_Warlock/APLs/<pack>.simc).
--- Disagreements (P7; floor 0.60), decisions on-GCD 0.606 (94) top [shadow_bolt -> bane_of_doom 13; shadow_bolt ->
--- corruption 5; bane_of_agony -> bane_of_doom 3] (log times):
---   * -> bane_of_doom (120-180 s, 31 of 37): API-forced: remainingTime is `fight_remains` (rule 10: 3600 s on
+-- Disagreements (P7; floor 0.70 on fix 31, was 0.60), decisions on-GCD 0.702 (94) top [shadow_bolt -> bane_of_doom
+-- 13; bane_of_agony -> bane_of_doom 3; corruption -> bane_of_doom 3] (log times):
+--   * -> bane_of_doom (120-180 s, 27 of 28): API-forced: remainingTime is `fight_remains` (rule 10: 3600 s on
 --   Forever), so the variable "Agony time" (no Doom, no Agony, under 60 s left) never holds: ours keeps Bane of Doom
 --   whenever it is down where wowsims switches to Amplify Curse and Bane of Agony for the fight's last minute.
---   shadow_bolt -> corruption (3-20 s): central (shared gap): the dynamite's miss undoes Corruption
---   (warlock_affliction.lua).
+--   siphon_life -> shadow_bolt (36.00): central (G6, fix 32): Siphon Life's miss at 34.50 shares its frame with a
+--   Shadow Bolt's success, two of our casts pending, so the miss is nobody's and the belief keeps Siphon Life up.
+-- Fix 31 (G4) took the dynamite's miss off Corruption: 0.606 -> 0.702.
 -- Worked: as warlock_affliction.lua.
 -- Deviations: the Boosts group's Major Spellblasting Potion (item 250937) has no key (no shared content): omitted
 -- (rule 2); the Ez-Thro Dynamite II (18588, rule 13) is unmapped (no shared key), listed; Berserking (Troll) and
 -- Eureka! are other races' racials, never known to the Orc. The Weakness Analyzer trinket (272438) is `use_items` (rule
--- 13). Leveling (P8): every bracket live without a recipe line (worst idle 0.2 s at 10, 40 and 60; LIVE60 0.2).
+-- 13).
+-- Leveling (owner ruling 2026-10-21: no low-level filler): each list ends in an unconditional Life Tap, so no bracket
+-- idles (worst 0.2 s at 10, 40 and 60; LIVE60 0.2).
 return {
     class = "WARLOCK",
     pack = "SM Ruin (wowsims.com)",

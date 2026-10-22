@@ -17,18 +17,19 @@ local function content(spec, base, pack, level, extra)
     return ws.content(base, o)
 end
 
--- recipe, world content, pack, the replay floor (the first clean run's, on 5d62f44c + Task 13; never lowered), LIVE60:
--- the pack's own worst idle at 60, rounded up to 0.1 s (P8). The classification of each pack's disagreements is in its
--- recipe's header. Measured: Affliction 0.728 (81), SM Ruin 0.606 (94), Demonology 0.767 (116), Shadow Brand 0.735
--- (98), Destruction 0.743 (109), truncated. Most of the gap is API-forced (`fight_remains` 3600 s: wowsims's
--- last-minute Bane of Agony) and two shared gaps (reported): wowsims's dynamite miss credited to our pending Corruption
--- (Affliction 0.901 without it) and the replay's pet mana (Demonology's `pet.mana<115` Life Tap).
+-- recipe, world content, pack, the replay floor (the first clean run's; never lowered), LIVE60: the pack's own worst
+-- idle at 60, rounded up to 0.1 s (P8). The classification of each pack's disagreements is in its recipe's header.
+-- First runs on 5d62f44c + Task 13: Affliction 0.728 (81), SM Ruin 0.606 (94), Demonology 0.767 (116), Shadow Brand
+-- 0.735 (98), Destruction 0.743 (109). Raised on central fix 31 (06eec227): Affliction 0.72 -> 0.87 (0.877) and SM
+-- Ruin 0.60 -> 0.70 (0.702), G4 (wowsims's dynamite miss no longer undoes our Corruption); Demonology 0.76 -> 0.77
+-- (0.776), G5 (the replay's pet mana: the `pet.mana<115` Life Tap). The rest is mostly API-forced (`fight_remains`
+-- 3600 s: wowsims's last-minute Bane of Agony) and G6 (Shadow Bolt's travel, central fix 32).
 -- LIVE60 0.2 in every pack: each list ends in an unconditional Life Tap, so no bracket idles (worst 0.2 s at 10, 40
--- and 60); no recipe needs a leveling line.
+-- and 60); no low-level filler (owner ruling 2026-10-21).
 local PACKS = {
-    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 0.72, 0.2 },
-    { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.60, 0.2 },
-    { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.76, 0.2 },
+    { "warlock_affliction", "Affliction", "Affliction (wowsims.com)", 0.87, 0.2 },
+    { "warlock_sm_ruin", "SMRuin", "SM Ruin (wowsims.com)", 0.70, 0.2 },
+    { "warlock_demonology", "Demonology", "Demonology (wowsims.com)", 0.77, 0.2 },
     { "warlock_shadow_brand", "ShadowBrand", "Shadow Brand (wowsims.com)", 0.73, 0.2 },
     { "warlock_destruction", "Destruction", "Destruction (wowsims.com)", 0.74, 0.2 },
 }

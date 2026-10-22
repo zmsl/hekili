@@ -543,9 +543,9 @@ Retribution, Paladin Protection and Survival idles re-measured in the final revi
 | Shadow (wowsims.com) | 1.00 | 1.000 (85) | 6 (1.8) | L10 0.0, L40 0.0, L60 1.8 | 0.000 / 1.600 | 1.500, 36 | 0 | 1.50, 36 |
 | Smite (wowsims.com) | 0.93 | 0.932 (44) | 6 (0.2) | L10 0.0, L40 0.2, L60 0.2 | 0.400 / 3.100 | 0.500, 27 | 3 | 0.50, 27 |
 | Elemental (wowsims.com) | 0.93 | 0.937 (95) | 6 (5.0) | L10 0.0, L40 0.0, L60 5.0 (Lava Burst r4 and Elemental Mastery learned at 1: not in the DB2) | 0.380 / 0.980 | 0.480, 54 | 6 | 0.48, 54 |
-| Affliction (wowsims.com) | 0.72 | 0.728 (81) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 2.800 | 1.000, 18 | 22 | 1.00, 18 |
-| SM Ruin (wowsims.com) | 0.60 | 0.606 (94) | 6 (0.2) | L10 0.0, L40 0.0, L60 0.2 | 0.000 / 0.900 | 0.900, 14 | 37 | 0.90, 14 |
-| Demonology (wowsims.com) | 0.76 | 0.767 (116) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 0.000 | 0.100, 3 | 27 | 0.10, 3 |
+| Affliction (wowsims.com) | 0.87 | 0.877 (81) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 1.000 | 1.000, 21 | 10 | 1.00, 21 |
+| SM Ruin (wowsims.com) | 0.70 | 0.702 (94) | 6 (0.2) | L10 0.0, L40 0.0, L60 0.2 | 0.000 / 1.000 | 0.900, 18 | 28 | 0.90, 18 |
+| Demonology (wowsims.com) | 0.77 | 0.776 (116) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 0.000 | 0.100, 3 | 26 | 0.10, 3 |
 | Shadow Brand (wowsims.com) | 0.73 | 0.735 (98) | 6 (0.2) | L10 0.0, L40 0.0, L60 0.2 | 0.000 / 1.000 | 0.900, 16 | 26 | 0.90, 16 |
 | Destruction (wowsims.com) | 0.74 | 0.743 (109) | 6 (0.2) | L10 0.2, L40 0.2, L60 0.2 | 0.000 / 0.400 | 0.400, 17 | 28 | 0.40, 17 |
 
@@ -592,8 +592,9 @@ Recorded deviations (each one's reason in the named file):
   Bane of Agony and Amplify Curse lines never fire and Bane of Doom goes up whenever it is down (API-forced, rule 10;
   wowsims switches in a fight's last minute: most of SM Ruin's, Demonology's, Shadow Brand's and Destruction's replay
   disagreements); the target's Shadow Vulnerability and Demonic Brand charges are unreadable (the brand kept its full
-  10 s; Shadow Bolt's `onCrit` models Shadow Vulnerability, but the bolt's crit lands about 1 s after its success, past
-  Events/Rows.lua's cast window: shared gap); wowsims's pet-spell costs (115, 160) kept verbatim (ruling W7); before
+  10 s; Shadow Bolt's `onCrit` models Shadow Vulnerability, but the bolt's outcome lands about 1 s after its success,
+  past Events/Rows.lua's cast window, so a DoT tick's crit in its frame can set it: a known deviation until central fix
+  32's travel time); wowsims's pet-spell costs (115, 160) kept verbatim (ruling W7); before
   Incinerate (40) Destruction, and below Searing Pain (18) Demonology, fall through to Life Tap; before the Demonic
   Brand talent both Demonology packs lead with Searing Pain.
 - Priest (`priest_*.lua`, `Priest.lua`, `priest_world.lua`): Devouring Plague 24 s and Shadow Word: Death 18 s from
