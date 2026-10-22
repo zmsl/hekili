@@ -437,6 +437,9 @@ end
 spec:RegisterAbilities({
     shadow_bolt = {
         id = 686,
+        expects = "travel",
+        velocity = 20,
+        school = "shadow",
         copy = rest(SHADOW_BOLT),
         cast = function()
             if buff.shadow_trance.up then
@@ -707,6 +710,9 @@ spec:RegisterAbilities({
     -- 120 s category cooldown.
     death_coil = {
         id = 6789,
+        expects = "travel",
+        velocity = 24,
+        school = "shadow",
         copy = rest(DEATH_COIL),
         cast = 0,
         cooldown = 120,
@@ -783,6 +789,9 @@ spec:RegisterAbilities({
 
     incinerate = {
         id = 412758,
+        expects = "travel",
+        velocity = 20,
+        school = "fire",
         copy = rest(INCINERATE),
         cast = baned(2.5),
         cooldown = 0,
@@ -801,6 +810,9 @@ spec:RegisterAbilities({
     -- Soul Shard, none under Decimation.
     soul_fire = {
         id = 6353,
+        expects = "travel",
+        velocity = 24,
+        school = "fire",
         copy = rest(SOUL_FIRE),
         cast = function()
             local c = 6 - 0.4 * talent.bane.rank

@@ -376,6 +376,9 @@ spec:RegisterAbilities({
     -- off the cast first; Convection's -2% a rank off the cost.
     lightning_bolt = {
         id = 403,
+        expects = "travel",
+        velocity = 20,
+        school = "nature",
         copy = rest(LIGHTNING_BOLT),
         cast = function()
             local t = byRank(LIGHTNING_BOLT_CAST, LIGHTNING_BOLT) - (ALACRITY[talent.elemental_alacrity.rank] or 0)
@@ -432,6 +435,9 @@ spec:RegisterAbilities({
     -- 2.5 s, 10 s apart (category 1224); Elemental Mastery takes 0.5 s off the cast (16166 effect 0, -500 ms).
     lava_burst = {
         id = 408490,
+        expects = "travel",
+        velocity = 20,
+        school = "fire",
         copy = rest(LAVA_BURST),
         cast = function()
             local t = 2.5 - (ALACRITY[talent.elemental_alacrity.rank] or 0)

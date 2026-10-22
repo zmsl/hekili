@@ -487,6 +487,7 @@ spec:RegisterAuras({
             return 12 + 2 * talent.natures_splendor.rank
         end,
         tick_time = 2,
+        dot = "debuff", -- Insect Swarm's schedule
         max_stack = 1,
     },
     lacerate = {
@@ -516,6 +517,7 @@ spec:RegisterAuras({
             return (knownRank(MOONFIRE) > 1 and 12 or 9) + 3 * talent.natures_splendor.rank
         end,
         tick_time = 3,
+        dot = "debuff", -- upstream's aura field (Engine/Sim/State.lua:3302): Moonfire's schedule
         max_stack = 1,
     },
     moonkin_form = {
@@ -1214,6 +1216,8 @@ spec:RegisterAbilities({
 
     insect_swarm = {
         id = 5570,
+        expects = "ticks",
+        school = "nature", -- its debuff dot aura: 2 s ticks over 12 s
         copy = rest(INSECT_SWARM),
         cast = 0,
         cooldown = 0,
@@ -1323,6 +1327,8 @@ spec:RegisterAbilities({
 
     moonfire = {
         id = 8921,
+        expects = "instant",
+        school = "arcane", -- its debuff dot aura ticks every 3 s, 9 or 12 s by rank
         copy = rest(MOONFIRE),
         cast = 0,
         cooldown = 0,
@@ -1657,6 +1663,8 @@ spec:RegisterAbilities({
 
     starfire = {
         id = 2912,
+        expects = "instant",
+        school = "arcane",
         copy = rest(STARFIRE),
         cast = 3.5, -- shorter with an Eclipse charge (unmodelled)
         cooldown = 0,
@@ -1752,6 +1760,9 @@ spec:RegisterAbilities({
 
     wrath = {
         id = 5176,
+        expects = "travel",
+        velocity = 20,
+        school = "nature",
         copy = rest(WRATH),
         cast = function()
             return byRank(WRATH_CAST, WRATH) - 0.1 * talent.improved_wrath.rank

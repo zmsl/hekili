@@ -426,6 +426,9 @@ spec:RegisterAbilities({
     -- of Law (1311085 aura 107 base -1000): its cast 1 s shorter a rank.
     hammer_of_wrath = {
         id = 24275,
+        expects = "travel",
+        velocity = 35,
+        school = "holy",
         copy = rest(HAMMER_OF_WRATH),
         cast = function()
             return max(0, 1 - talent.instrument_of_law.rank)

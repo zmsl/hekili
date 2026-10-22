@@ -229,7 +229,14 @@ spec:RegisterAuras({
         max_stack = 1,
     },
     -- The target's debuffs, modelled from our casts (target auras are unreadable in combat).
-    serpent_sting = { id = 1978, copy = rest(SERPENT_STING), duration = 15, tick_time = 3, max_stack = 1 },
+    serpent_sting = {
+        id = 1978,
+        copy = rest(SERPENT_STING),
+        duration = 15,
+        tick_time = 3,
+        dot = "debuff",
+        max_stack = 1,
+    },
     hunters_mark = { id = 1130, copy = rest(HUNTERS_MARK), duration = 120, max_stack = 1 },
 })
 
@@ -293,6 +300,9 @@ spec:RegisterAbilities({
     -- checkpoint). Never recommended.
     auto_shot = {
         id = 75,
+        expects = "travel",
+        velocity = 40,
+        school = "physical",
         cast = 0,
         cooldown = 0,
         gcd = "off",
@@ -351,6 +361,9 @@ spec:RegisterAbilities({
 
     serpent_sting = {
         id = 1978,
+        expects = "ticks",
+        school = "nature",
+        velocity = 40, -- its debuff dot aura: 3 s over 15 s
         copy = rest(SERPENT_STING),
         cast = 0,
         cooldown = 0,
@@ -368,6 +381,9 @@ spec:RegisterAbilities({
 
     arcane_shot = {
         id = 3044,
+        expects = "travel",
+        velocity = 40,
+        school = "arcane",
         copy = rest(ARCANE_SHOT),
         cast = 0,
         -- Improved Arcane Shot (19454): -0.3 s a rank (wowsims's curve; DB2 has only rank 1's row)
@@ -406,6 +422,9 @@ spec:RegisterAbilities({
 
     aimed_shot = {
         id = 19434,
+        expects = "travel",
+        velocity = 40,
+        school = "physical",
         copy = rest(AIMED_SHOT),
         cast = rangedCast(2),
         cooldown = 6,
@@ -424,6 +443,9 @@ spec:RegisterAbilities({
     -- 13.9% of base mana (DB2 PowerCostPct): a fraction of the mana meta's `base`.
     multi_shot = {
         id = 2643,
+        expects = "travel",
+        velocity = 30,
+        school = "physical", -- pays the pinned target's row only
         cast = rangedCast(0.5),
         cooldown = 6,
         gcd = "spell",
@@ -440,6 +462,9 @@ spec:RegisterAbilities({
 
     sniper_shot = {
         id = 1310687,
+        expects = "travel",
+        velocity = 60,
+        school = "physical",
         copy = rest(SNIPER_SHOT),
         cast = rangedCast(4),
         cooldown = 15,

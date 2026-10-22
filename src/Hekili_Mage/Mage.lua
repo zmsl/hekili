@@ -376,6 +376,9 @@ spec:RegisterAbilities({
 
     frostbolt = {
         id = 116,
+        expects = "travel",
+        velocity = 28,
+        school = "frost",
         copy = rest(FROSTBOLT),
         cast = function()
             local base = FROSTBOLT_CAST[knownRank(FROSTBOLT)] or FROSTBOLT_CAST[1]
@@ -397,6 +400,9 @@ spec:RegisterAbilities({
 
     fireball = {
         id = 133,
+        expects = "travel",
+        velocity = 24,
+        school = "fire",
         copy = rest(FIREBALL),
         cast = function()
             local base = FIREBALL_CAST[knownRank(FIREBALL)] or FIREBALL_CAST[1]
@@ -439,6 +445,9 @@ spec:RegisterAbilities({
     -- 6 s, -25% a Heating Up stack (DB2 400625 aura 108 misc 10): 1.5 s at three.
     pyroblast = {
         id = 11366,
+        expects = "travel",
+        velocity = 24,
+        school = "fire",
         copy = rest(PYROBLAST),
         cast = function()
             return buff.presence_of_mind.up and 0 or 6 * (1 - 0.25 * buff.heating_up.stack) * haste
@@ -482,6 +491,8 @@ spec:RegisterAbilities({
     -- word 1 0x1000, Frostfire Bolt's; wowsims's FFB log: 2.5 s unhasted at 5/5).
     frostfire_bolt = {
         id = 401502,
+        expects = "travel",
+        velocity = 24, -- no school: DB2 mask 20 (fire and frost), U7 deferred
         copy = rest(FROSTFIRE_BOLT),
         cast = function()
             return buff.presence_of_mind.up and 0 or (3 - 0.1 * talent.improved_fireball.rank) * haste

@@ -679,6 +679,9 @@ spec:RegisterAbilities({
     -- the client shows for an auto-repeat Shoot (a channel, a success per shot).
     shoot = {
         id = 5019,
+        expects = "travel",
+        velocity = 20,
+        school = "physical", -- the wand's school: U7 deferred
         cast = wandSpeed(),
         channeled = true,
         tick_time = wandSpeed(),

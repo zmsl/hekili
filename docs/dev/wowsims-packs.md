@@ -211,6 +211,14 @@ What players read in a pack's description (the recipe's `notes`), and why. Warri
 - Rend is used on every target, boss or not; Death Wish stays under Cooldowns; Sunder Armor is unchanged (the
   in-game ledger, docs/dev/ingame-ledger.md, holds its Boss Encounter Only question).
 
+Casters and Hunter (unit-registry spec §5.4, 2026-10-22): each projectile, DoT and shot declares `expects` with its
+DB2 `velocity` and `school` (checked by `make spell-data-check`). Their outcomes now pay their own casts (a projectile's
+landing up to `rMax / velocity + 0.15` s after its success), so `SPELL_DAMAGE` rows reach Hekili's enemy tracker for
+the first time (`ns.updateTarget`, `Engine/Sim/Events.lua:1735-1743`). Expected: the replay floors of Balance,
+Affliction, Destruction, Demonology, Arcane, Fire, Frostfire, Elemental, Shadow, Smite and the three Hunter specs rise
+or hold (crits now run `onCrit`, misses refund); an AoE line's target count may read higher, each such move named in
+the gate's report. The melee packs keep their default types (unchanged).
+
 ## Classifying a disagreement (P7)
 
 Run the replay gate with the floor at 0 and read the `wowsims:` line's `decisions on-GCD X (n) top [...]`. Work the top
