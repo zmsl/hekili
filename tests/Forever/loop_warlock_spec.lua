@@ -1,11 +1,21 @@
 -- tests/Forever/loop_warlock_spec.lua (class-completion plan, "The per-pack gate"): the Warlock loop worlds
 -- (tests/Forever/helpers/warlock_world.lua) boot as a level 60 Warlock on their spec and map every ability the
--- character knows, its casts and channels resolved; a cast bar, a channel and a DoT's ticks in the world. The solo
--- gates (pack_gate.solo, 3 and 20 fights a pack) wait on three shared fixes (Task 13's report: the debug print's
--- quoted strings, the observer's pet power, a fight's end mid-cast).
+-- character knows, its casts and channels resolved; a cast bar, a channel and a DoT's ticks in the world; and the solo
+-- gates of the five wowsims.com packs: `make check` runs 3 fights a pack (#slow); `make test-warlock` the 20 (#warlock),
+-- one pack a file (loop_warlock_<pack>_spec.lua). Each gate also asserts its flagged (focus) lines ran.
 local headless = require("Game.harness.headless")
 local scenarios = require("Game.harness.scenarios")
+local pack_gate = require("Forever.helpers.pack_gate")
 local ww = require("Forever.helpers.warlock_world")
+
+-- The gates' labels (pack_gate.FLICKER's keys) and their world contents.
+local GATES = {
+    { "Affliction", "Affliction" },
+    { "SM Ruin", "SMRuin" },
+    { "Demonology", "Demonology" },
+    { "Shadow Brand", "ShadowBrand" },
+    { "Destruction", "Destruction" },
+}
 
 -- The pet's spends in the truth after event `n0`: each fall of its power between two pet events (from `start`, its
 -- power at `n0`).
@@ -14,10 +24,10 @@ local function petSpends(W, n0, start)
     for i = n0 + 1, #W.truth do
         local ev = W.truth[i]
         if ev.kind == "pet" or ev.kind == "petPower" then
-            if last and ev.power < last then
-                out[#out + 1] = math.floor(last - ev.power + 0.5)
+            if last and ev.petPower < last then
+                out[#out + 1] = math.floor(last - ev.petPower + 0.5)
             end
-            last = ev.power
+            last = ev.petPower
         end
     end
     return out
@@ -174,4 +184,17 @@ describe("the Warlock loop worlds", function()
             assert.are.same({}, H.errors)
         end
     )
+end)
+
+describe("the headless Warlock gates, 3 fights a pack #slow", function()
+    for _, g in ipairs(GATES) do
+        it(
+            g[1] .. " solo, level 60, one mob, 3 fights of up to 3 minutes: the first icon against the oracle's",
+            function()
+                local r, line = pack_gate.solo(g[1], ww[g[2]], 3, nil, "seeds 1-3")
+                print(g[1] .. " focus ticks: " .. r.focus)
+                assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
+            end
+        )
+    end
 end)
