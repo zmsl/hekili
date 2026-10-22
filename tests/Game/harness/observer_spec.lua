@@ -372,8 +372,6 @@ describe("the observer", function()
             W.emit({ t = 1.5, kind = "prepull" })
             obs.step(1.6)
             W.emit({ t = 2, kind = "pull" })
-            -- our swing takes the health (the server's hit, 2026-10-22 kill-events capture); its row lands later
-            W.emit({ t = 3.5, kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", amount = 40, ours = true })
             local land = { t = 4, kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", flag = "", amount = 40 }
             land.school, land.swing, land.rage = 1, { t = 3.5 }, 12
             W.emit(land)
@@ -400,7 +398,7 @@ describe("the observer", function()
             assert.are.same({
                 { 0, "@power", 1, 0 },
                 { 1.6, "@health", "target", 1000, 1000 },
-                { 3.5, "@health", "target", 960, 1000 },
+                { 4, "@health", "target", 960, 1000 },
                 { 4, "@power", 1, 12 },
                 { 5, "@cooldown", 9077, 5, 6 },
                 { 5, "@cooldown", 9078, 5, 6 },
@@ -417,6 +415,7 @@ describe("the observer", function()
         local entities = require("Game.harness.entities")
         local function fight(build, k)
             local W = world.new(1)
+            W.hitAtSwing = true -- the server's hit at our swing (the measured kill shape)
             local us = W.add(entities.new({ guid = "Player-1", weapons = entities.weapons(22) }))
             local mob = W.add(entities.new({ guid = "Creature-1", kind = "mob", health = 1e9 }))
             us.target, mob.target = mob, us
@@ -971,20 +970,28 @@ describe("the observer's resources, GCD and forms", function()
 end)
 
 describe("the world", function()
-    it(
-        "takes health for every wound but our swing's landing (ours at the swing: the server's hit), and heals",
-        function()
-            local W = world.new(7)
-            local us = W.add(entities.new({ guid = "Player-1", health = 500 }))
-            local mob = W.add(entities.new({ guid = "Creature-1", kind = "mob", health = 500 }))
-            W.emit({ kind = "swing", src = mob, dst = us, hand = 1, act = "WOUND", amount = 40 })
-            W.emit({ kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30, ours = true })
-            assert.are.equal(460, us.health)
-            assert.are.equal(470, mob.health)
-            W.emit({ kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30 })
-            W.emit({ kind = "spell", src = mob, dst = us, act = "HEAL", amount = 100 })
-            assert.are.equal(470, mob.health)
-            assert.are.equal(500, us.health)
-        end
-    )
+    it("takes health for every wound but our white swing's (ours at its land), and gives it for heals", function()
+        local W = world.new(7)
+        local us = W.add(entities.new({ guid = "Player-1", health = 500 }))
+        local mob = W.add(entities.new({ guid = "Creature-1", kind = "mob", health = 500 }))
+        W.emit({ kind = "swing", src = mob, dst = us, hand = 1, act = "WOUND", amount = 40 })
+        W.emit({ kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30, ours = true })
+        assert.are.equal(460, us.health)
+        assert.are.equal(500, mob.health)
+        W.emit({ kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30 })
+        W.emit({ kind = "spell", src = mob, dst = us, act = "HEAL", amount = 100 })
+        assert.are.equal(470, mob.health)
+        assert.are.equal(500, us.health)
+    end)
+
+    it("takes our white wound at the swing instead with W.hitAtSwing (the server's hit)", function()
+        local W = world.new(7)
+        W.hitAtSwing = true
+        local us = W.add(entities.new({ guid = "Player-1", health = 500 }))
+        local mob = W.add(entities.new({ guid = "Creature-1", kind = "mob", health = 500 }))
+        W.emit({ kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30, ours = true })
+        assert.are.equal(470, mob.health)
+        W.emit({ kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30 })
+        assert.are.same({ 470, 500 }, { mob.health, us.health })
+    end)
 end)

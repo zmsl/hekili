@@ -103,8 +103,13 @@ function M.new(seed)
                 ev.regen[pt], ev.regenCasting[pt] = W.regenRate(me, pt, "idle"), W.regenRate(me, pt, "casting")
             end
         end
-        if ev.act == "WOUND" and ev.dst and ev.kind ~= "land" then -- ours take it at the swing: the server's hit
-            -- (a white-swing kill clears the target before its row arrives, the Rogue kill-events capture)
+        -- our white wound: at the swing with W.hitAtSwing (the server's hit: a white-swing kill clears the target
+        -- before its row arrives, the Rogue kill-events capture), else at its `land`
+        -- shortcut: opt-in, off by default: on, the world enters execute range a landing lag before the client's rows
+        -- and the Warrior gates move down (Arms unmatched cost refusals 0.5 -> 5.3 per 100, Fury decisions 0.917 ->
+        -- 0.897); make it the default once the owner rules on those floors
+        local skip = W.hitAtSwing and "land" or (ev.ours and "swing") -- the one of our pair that takes nothing
+        if ev.act == "WOUND" and ev.dst and ev.kind ~= skip then
             local v = ev.dst
             v.health = math.max(0, v.health - (ev.amount or 0))
             ev.health = v.health -- after the wound (a secret-free client's UnitHealth)

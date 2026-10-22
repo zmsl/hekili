@@ -76,7 +76,8 @@ M.ARCHETYPES = ARCHETYPES
 --- The detection suite's (unit-registry spec §6.2): noMelee (no white swings of ours), spells ({ t, kind }:
 --- behaviours.ours, from the pull, with distance and jitter), switchTo ({ t, mob index }: our target changes), churn
 --- ({ every, gap }: our target's plate leaves and comes back), extraMobs (mobs not on us, each with a plate), phase
---- (the lockstep archetype's shift), actionTargeting and pushback (observer knobs, M.stream).
+--- (the lockstep archetype's shift), hitAtSwing (our white wound takes health at the swing: W.hitAtSwing),
+--- actionTargeting and pushback (observer knobs, M.stream).
 --- Returns the world with every behaviour scheduled, not run (`M.build` runs it).
 function M.world(o, seed)
     local W = world.new(seed)
@@ -101,7 +102,7 @@ function M.world(o, seed)
     us.power0 = us.power -- the observer's first view (a batch stream reads the finished world)
     us.gcdOrder, us.gcdLatency = o.gcdOrder, o.gcdLatency
     local mobs = {}
-    W.phase = o.phase
+    W.phase, W.hitAtSwing = o.phase, o.hitAtSwing
     for i = 1, math.max(1, o.attackers or 1) + (o.extraMobs or 0) do
         local m = o.mobs and o.mobs[i] or {}
         local dmg = m.damage or o.mobDamage or { 10, 14 }

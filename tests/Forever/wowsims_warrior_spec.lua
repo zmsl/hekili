@@ -145,7 +145,8 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
                         raised = raised
                             + (pcall(H.api.C_UnitAuras.GetAuraDataByIndex, "target", 1, "HARMFUL") and 0 or 1)
                     end
-                    local a = run.us.target and run.us.target.auras[id]
+                    -- a killed target's stacks are no client's: the kill clears `target` (2026-10-22 kill capture)
+                    local a = not run.W.killAt and run.us.target and run.us.target.auras[id]
                     local left = a and a.stacks == 5 and a.expires - t or 0
                     if left > 15 and left < 30 - loop.TICK then
                         five = five + 1
