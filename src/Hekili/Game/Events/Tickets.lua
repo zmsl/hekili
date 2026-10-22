@@ -172,7 +172,7 @@ local function arm(i, t)
         local a = ab[i]
         local r = A.rMax[a] > 0 and A.rMax[a] or 40 -- 0: no range read; 40 yd covers every spell range
         T.speed[i] = A.velocity[a]
-        T.H[i] = r / T.speed[i] + T.TOL -- Expect requires a travel velocity (a number; 0 would make H infinite)
+        T.H[i] = r / T.speed[i] + T.TOL -- Expect requires a positive travel velocity
         hi[i] = t + T.H[i]
     elseif k == UNMAPPED then
         owed[i], hi[i] = 0, t + I.Log.UNMAPPED_WINDOW
@@ -294,10 +294,11 @@ end
 --- closure. Also how many matched. Allocates nothing.
 function T.Pick(t, g, p, act, flag, amount, sch, isAvoid)
     local K = I.Kinds
-    local best, bestE, bestBanded, n = 0, math.huge, false, 0
+    local best, bestE, bestBanded, n, refused = 0, math.huge, false, 0, false
     for i = 1, CAP do
         if state[i] >= OPEN and guid[i] == g then
             local ok, banded = K.Accepts(i, act, flag, amount, sch, isAvoid)
+            refused = refused or (not ok and banded == true)
             if ok then
                 local lo, h, e = K.Band(i, p, t, isAvoid, act, sch)
                 if lo and t >= lo - 1e-9 and t <= h + 1e-9 then
@@ -308,6 +309,9 @@ function T.Pick(t, g, p, act, flag, amount, sch, isAvoid)
                 end
             end
         end
+    end
+    if refused and p == 1 then -- once per row: every row starts at pass 1
+        T.bandRejected = T.bandRejected + 1
     end
     return best, n
 end
@@ -392,13 +396,15 @@ local function expiry(i)
         return "expired"
     elseif guid[i] == "" then
         return "unpinned"
-    elseif school[i] == ANY or school[i] == 0 or T.excused[i] then
+    elseif school[i] == ANY or school[i] == 0 then
         return "expired"
     elseif U.IsDead(uid[i]) then
         if U.Ours(uid[i]) then
             T.ours = T.ours + 1
         end
         return "dead"
+    elseif T.excused[i] then
+        return "expired"
     end
     T.lost[k] = T.lost[k] + owed[i]
     return "lost"

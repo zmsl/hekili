@@ -97,8 +97,8 @@ local function malformed(obj, e, k, s, au)
         return "unknown expects " .. tostring(e)
     elseif k == X.MELEE then
         return "expects melee is the engine's own"
-    elseif v ~= nil and type(v) ~= "number" then
-        return "velocity is not a number"
+    elseif v ~= nil and (type(v) ~= "number" or not (v > 0)) then
+        return "velocity is not a positive number" -- 0, a negative or NaN would make the hard window meaningless
     elseif obj.school ~= nil and not s then
         return "unknown school " .. tostring(obj.school)
     elseif k == X.FLIGHT and not v then

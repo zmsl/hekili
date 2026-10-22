@@ -28,7 +28,8 @@ local function rangeLow(i, t, v)
         return 0
     end
     local r = ns.VirtualState.TargetRange()
-    if not (r.lo and r.lo > 0 and r.last) then
+    -- a bracket logged after the success can sit above the true lag (the mob closed meanwhile): unused
+    if not (r.lo and r.lo > 0 and r.last) or r.last.observed.t > T.at[i] then
         return 0
     end
     local lo = (r.lo - T.CLOSE * (t - r.last.observed.t)) / v - T.TOL
@@ -80,8 +81,7 @@ function K.Accepts(i, act, flag, amount, sch, isAvoid)
         local B = I.Bands
         local v = B.Normalise(amount, flag, "ours")
         if not B.Fits(T.bandLo, T.bandHi, T.bandN, a, v, K.SPELL_BAND_LO, K.SPELL_BAND_HI, K.BAND_N) then
-            T.bandRejected = T.bandRejected + 1
-            return false
+            return false, true -- a learned band refused it (T.Pick counts T.bandRejected once per row)
         end
         return true, true -- a learned band accepted it: ranked first (T.Pick)
     end

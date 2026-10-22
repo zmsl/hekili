@@ -159,7 +159,8 @@ describe("expectation compile", function()
         { { expects = "melee" }, nil, "expects melee is the engine's own" },
         { { expects = "instant", school = "fel" }, nil, "unknown school fel" },
         { { expects = "instant", school = 8 }, nil, "unknown school 8" },
-        { { expects = "travel", velocity = "fast" }, nil, "velocity is not a number" },
+        { { expects = "travel", velocity = "fast" }, nil, "velocity is not a positive number" },
+        { { expects = "travel", velocity = 0 }, nil, "velocity is not a positive number" },
     }) do
         it("rejects " .. case[3], function()
             local kind, school, errors, err = one(case[1], case[2])

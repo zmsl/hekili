@@ -88,6 +88,14 @@ describe("the kinds", function()
             assert.is_true(math.abs(lo - 100.5) < 1e-9)
         end)
 
+        it("ignores a range bracket logged after the success", function()
+            VS.TargetRange = function()
+                return { lo = 20, hi = 30, last = { observed = { t = 100.2 } } }
+            end
+            local i = open(fs.SPENDER_P, 100)
+            assert.are.equal(100, (K.Band(i, 3, 101, false, "WOUND", 8)))
+        end)
+
         it("with a record: the narrow band at pass 1, the widened one at pass 2, none at pass 3", function()
             T.Learn("Creature-1", 20, 1.5, 99)
             local i = open(fs.SPENDER_P, 100)
@@ -115,7 +123,12 @@ describe("the kinds", function()
             local i = open(fs.SPENDER_P, 110)
             assert.is_true(K.Accepts(i, "WOUND", "", 15, 8, false))
             assert.is_true(K.Accepts(i, "WOUND", "CRITICAL", 30, 8, false))
-            assert.is_false(K.Accepts(i, "WOUND", "", 40, 8, false))
+            assert.are.same({ false, true }, { K.Accepts(i, "WOUND", "", 40, 8, false) }) -- a band refused it
+            assert.are.equal(0, T.bandRejected) -- counted per row by T.Pick, not per Accepts
+            for p = 1, 3 do
+                assert.are.equal(0, (T.Pick(111.5, "Creature-1", p, "WOUND", "", 40, 8, false)))
+            end
+            assert.is_false(T.Divergent(i, 111.5, 1, "WOUND", "", 40, 8, false))
             assert.are.equal(1, T.bandRejected)
             assert.are.same({ true, true }, { K.Accepts(i, "WOUND", "", 15, 8, false) }) -- banded: ranked first
         end)

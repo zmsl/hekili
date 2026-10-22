@@ -304,6 +304,18 @@ describe("the ticket pool", function()
         assert.are.equal(T.opened, sum())
     end)
 
+    it("counts an excused cast on a dead unit as dead, not expired", function()
+        ctl.now = 4
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", 999999)
+        ctl.now = 5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)
+        ctl.now = 5.4
+        ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+        ctl.Fire("UNIT_DIED", "Creature-1")
+        ctl.Tick(8)
+        assert.are.same({ 0, 1, 1 }, { T.closed.lost, T.closed.dead, T.closed.expired })
+    end)
+
     it("leaves a projectile's own avoid in its hard window to it, an unmapped window open or not", function()
         I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
         ctl.now = 9.5
