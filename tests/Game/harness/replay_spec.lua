@@ -422,6 +422,41 @@ describe("the replay's unmapped item use", function()
     end)
 end)
 
+-- Fix 31 G5: our pet's power lines ("<Name> (#1) - <Pet>") are its pool's truth, as the log's after-values are ours:
+-- the world's pet follows them (no modelled regen), the client's UnitPower("pet") answers them, and they are never ours.
+describe("the replay's pet power", function()
+    local observer = require("Game.harness.observer")
+    local LOG = table.concat({
+        "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+        "[1.00] [Tester (#1) - Imp] Spent 115.000 mana from {SpellID: 900070} (2000.000 --> 1885.000) of 2000 total.",
+        "[1.10] [Tester (#1) - Imp] Gained 1.700 mana from {OtherID: 2, Tag: 2} (1885.000 --> 1886.700) of 2000 total.",
+        "[2.00] [Tester (#1) - Imp] Spent 115.000 mana from {SpellID: 900070} (1886.700 --> 1771.700) of 2000 total.",
+    }, "\n")
+
+    it("moves the world's pet to each logged after-value and answers it to the client", function()
+        local p = replay.parse(LOG)
+        assert.is_nil(replay.manaRegen(p.ev)) -- the pet's regen lines are not our mana's
+        local R = replay.new(LOG, H, O)
+        local wo = setmetatable({ pet = { pt = 0, max = 2000, regen = 50, tick = 2 } }, { __index = WO })
+        local W = R.world(wo, 1)
+        local us = W.ents[1]
+        local obs = observer.new(W, setmetatable({}, { __index = observer.DEFAULTS }))
+        W.run(R.pull + 1.5)
+        assert.is_true(math.abs(us.pet.power - 1886.7) < 1e-9)
+        W.run(R.pull + 5)
+        obs.step(R.pull + 5)
+        assert.is_true(math.abs(us.pet.power - 1771.7) < 1e-9) -- no modelled regen on top
+        local got = {}
+        for i = 1, obs.s.n do
+            if obs.s.ev[i] == "@petPower" then
+                got[#got + 1] = obs.s.a1[i]
+            end
+        end
+        assert.are.same({ 1885, 1886.7, 1771.7 }, got)
+        assert.are.equal(0, us.power0) -- our own pool untouched
+    end)
+end)
+
 describe("the replay's channels and hard casts (central fix 22, gap BC)", function()
     local LOG = table.concat({
         "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",

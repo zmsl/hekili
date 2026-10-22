@@ -3,7 +3,8 @@
 -- `new` binds it to a booted instance's class data (spell ID -> ability key, aura durations) and gives loop.run its one
 -- injection (`o.replay`): the world factory, wowsims's decisions and its next cast after a tick. The truth is the
 -- log's: casts at their completion, a hard cast's bar from its Casting line (UNIT_SPELLCAST_START), a `channeled`
--- ability's channel from its cast to its aura's fade (else its declared `cast`), powers as the logged after-values (no regen ticks; the client
+-- ability's channel from its cast to its aura's fade (else its declared `cast`), powers (ours and our pet's) as the
+-- logged after-values (no regen ticks; the client
 -- still reads the content's rate, mana's from the log's regen lines: M.manaRegen), our auras and the target's with
 -- the duration the client shows (the log's run to a natural fade, the declared one to a removal: a fade after one of
 -- our Casting or Completed cast lines in its timestamp), each fade a removal at its time, the content's hidden auras
@@ -160,8 +161,8 @@ end
 --- tag, item },
 --- power { name, from, to, amount, total, id, other, tag }, aura { unit ("player" | "target"), verb ("gained" | "faded" | "refreshed"), id }, stacks
 --- { unit, id, to }, hit { what ("swing" | "spell" | "tick"), hand, id, act, flag, amount }, move { distance } (our
---- Movement aura's stacks: wowsims's yards to the target, truncated, at least 1, while we move). Other lines are
---- skipped.
+--- Movement aura's stacks: wowsims's yards to the target, truncated, at least 1, while we move), petPower (our pet's
+--- power line: power's fields). Other lines are skipped.
 --- The leading aura and stack lines at 0 before any other event are the sim's opening state (`initial`).
 function M.parse(text)
     local h, ev = { talents = {} }, {}
@@ -183,6 +184,12 @@ function M.parse(text)
             local e
             if t and who:match(" %(#1%)$") then -- ours, not our pets' ("<Name> (#1) - <Pet>")
                 e = ours(rest)
+            elseif t and who:match(" %(#1%) %- ") then -- our pet's: only its power lines, as `petPower` (fix 31 G5)
+                e = ours(rest)
+                e = e and e.kind == "power" and e or nil
+                if e then
+                    e.kind = "petPower"
+                end
             elseif t and who == "Target 1" then
                 e = theirs(rest)
             end
@@ -508,15 +515,12 @@ function M.new(text, H, o)
             powerMax = wo.max,
             pt = wo.pt,
             res = wo.res,
-            -- shortcut: the content's bags, pet and stats as the world starts; the log's own (its pet's mana, its
-            -- reagents) are not read, and nothing spends them here; read them when a replay gate needs them
+            -- shortcut: the content's bags and stats as the world starts; the log's reagents are not read, and nothing
+            -- spends them here; read them when a replay gate needs them. The pet's power follows its log lines (apply).
             bags = wo.bags,
             pet = wo.pet,
             stats = wo.stats,
         }))
-        if us.pet then
-            W.startPetRegen(us)
-        end
         us.power = start0[us.pt] or wo.power or 0
         us.power0 = us.power
         for pt, r in pairs(us.res) do
@@ -638,6 +642,11 @@ function M.new(text, H, o)
                             cost = delta < 0 and -delta or nil,
                         })
                     end
+                end
+            elseif e.kind == "petPower" then -- our pet's logged after-value (no modelled regen: the log's is the truth)
+                local p = us.pet
+                if p and M.POWER[e.name] == p.pt then
+                    W.petGain(us, e.to - p.power)
                 end
             elseif e.kind == "aura" and form[e.id] and e.unit == "player" then
                 if e.verb ~= "faded" then
