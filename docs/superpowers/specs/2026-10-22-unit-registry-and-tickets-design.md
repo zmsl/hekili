@@ -404,6 +404,9 @@ The order in which rows are consumed by tickets decides correctness. The algorit
    least expected closure among the candidates that match at the pass: no sort, no allocation.
 5. A row that matches no candidate after pass (c) goes to the UNMAPPED ticket if it is an avoid or crit inside an
    UNMAPPED window (absorbed as nobody's), else it is foreign: `background()` as today (`:408-429`), counted `T.foreign`.
+   A foreign row of the same school as one of our tickets that is Due on another GUID at that moment also counts
+   `T.aoeOther` (our AoE or cleave on a unit we did not pin): a diagnostic only, routed as foreign, never a ticket and
+   never lost.
 
 Bands per kind:
 
@@ -726,6 +729,17 @@ Kinds (each a scripted scenario through the existing `scenarios.world` knobs, `t
 | K7 churn | K4 with plate churn on the pinned mob | resolution, gone and revive |
 | K8 identical | another source with our exact amount and school on the same mob | dedupe never merges two GUIDs; precision |
 | K9 same-ms twins | two equal-amount hits from two sources on one target in the same ms, each on plate and target; and one hit on plate, target and soft | the twins dispatch twice; the single hit dispatches once; the single-token residual's rate per band (MEASURED) |
+| K10 lag | melee row lag per session drawn from [0.4, 1.0] s (the Rogue session's 988, 837, 456 ms); cast events with +-50 ms latency jitter; DELAYED pushback on a hard cast; the first swing of a combat landing at 1.0 s | melee recall holds with the learned spread; the first swing does not teach the lag; no false credit from the jitter |
+| K11 death in flight | our projectile in flight when another source's blow kills the target (`UNIT_DIED` from a foreign kill, no `PARTY_KILL` for us); our melee swing pending when the target dies | tickets close `closedDead` (not lost, not paid by a stale row); `TargetGone` fires once |
+| K12 two live targets | tickets open on A and B (swap between them, a cast at each), rows from both; a DoT ticking on A after the swap to B | no cross-payment; A's ticks keep paying A's TICKS ticket; lost accounting per GUID |
+| K13 lockstep partner | a same-school caster partner on our target with our cast time and amount band, phase-shifted by 0, 0.1 and 0.5 s, with its own crit and miss rates | divergent pairs per 100 measured; non-divergent twins cost nothing (recall and precision unchanged against K4); asserts the claim that only divergent pairs matter (4.2) |
+| K14 our own twins | dual-wield hands landing in one ms with equal amounts; our Hunter pet hitting the target | both hands paid; the pet's rows foreign |
+| K15 refused casts | a cast that fails for range or line of sight (SENT then FAILED, no SUCCEEDED); an unmapped success (a potion) | no ticket armed for the failed cast (a committed one closes uncounted, 3.2); the UNMAPPED ticket absorbs an avoid as nobody's |
+| K16 stress | raid-40 density for 300 s | the 16-ticket pool never overflows, or each overflow is counted and the oldest closes lost; the 64-slot unit pool evicts only released GONE or DEAD units; the dedupe ring never drops a non-duplicate; no allocation over the run (the `tests/Game/harness/alloc_spec.lua` pattern) |
+| K17 combat end | `PLAYER_REGEN_ENABLED` with tickets open and units held; a `/reload` mid-fight (`I.Build` with an empty registry while rows keep arriving) | the reset is clean; no row after the reset pays a pre-reset ticket; nothing errors |
+| K18 cleave and AoE | an AoE of ours hitting the target and two plates (one row per unit); a partner's cleave | our AoE pays one ticket, on the target only; its rows on the other units are counted `aoeOther` (3.4 step 5) and never lost; the partner's cleave stays foreign |
+| K19 swap during ticks and a strike | swap away before a strike lands, then back; swap away while a DoT ticks on the old target | pins hold: the strike pays its pinned GUID; the ticks pay the old target's TICKS ticket |
+| K20 replay fixtures | every saved capture (wrath a, b and c-swap, rogue b, rogue kill-events, druid moonfire) replayed through the real sources (6.3) | the exact credits per capture (6.3), so the suite is anchored on the game, not only on the model |
 
 Bands (other sources on our target and nearby; foreign outcomes per second as measured today):
 
@@ -747,7 +761,21 @@ Metrics, per kind x band, all against tickets:
 
 Floors: the first clean run sets each gated cell's floor (recall, staged at or above; false credit, foreign leak at or
 below). Floors only move up, except with a named cause written beside the number and the owner's ruling. Raid cells
-print their numbers and assert only that the run finished, as `group_spec.lua:45-53` does today.
+print their numbers and assert only that the run finished, as `group_spec.lua:45-53` does today. K10-K20 get their own
+floors from their first clean run under the same rule; K13's divergent rate and K16's overflow count are reported
+beside their floors.
+
+The invariant sweep: `tests/Game/harness/detect_sweep_spec.lua` (#slow) runs seeds 1..N over lag x jitter x density x
+partner phase and asserts on every run, whatever the score:
+
+- a row pays at most one ticket;
+- per ticket, rows paid <= `owed` at opening;
+- conservation: opened = paid + provisional-closed + refreshed + closedDead + closedGone + lost + expired + none +
+  unpinned + cast-stopped + overflow + combat-end + still open (every close in 3.6 counted once);
+- no ticket is paid by a row whose resolved GUID differs from the ticket's;
+- no row is dispatched twice by the registry.
+
+It prints the metric surface (every counter of 3.6 and 2.7, per band) for each run.
 
 The pending-cast gap: today's group runs never exercise a pending cast, because the oracle press is not
 `startsCombat` (`scenarios.lua:207-213` presses "CAST"). The fake spec declares an expectation for each of its
@@ -769,9 +797,12 @@ untested (U9's channel half deferred by owner ruling).
 |---|---|---|
 | b | `tests/Game/harness/fixtures/wrath_b.lua` | every Wrath WOUND pays its ticket (14 of 14 against 0 today); the 783 ms MISS pays as `SPELL_MISSED` and stages `Obs.Avoided`; `bg[7]` does not rise; each kill fires the tell and `TargetGone`; the 74805 killing blow (plate and soft only) pays |
 | c | `tests/Game/harness/fixtures/wrath_swap.lua` | the 216184 plate-only landing pays the ticket pinned at SENT to the old mob; the `targettarget` echoes are ignored; the 219922 post-clear row pays |
-| a | `tests/Game/harness/fixtures/wrath_a.lua` | the 667 ms CRITICAL stages `Obs.Crit`; the 97891 MISS (517 ms after a 30 yd cast) is foreign once the range bracket is known, and pays the 97374 ticket only at an unknown range |
+| a | `tests/Game/harness/fixtures/wrath_a.lua` | the 667 ms CRITICAL stages `Obs.Crit`; the 97891 MISS (517 ms after a 30 yd cast) is foreign once the GUID has a learned lag (3.4's example), and pays the 97374 ticket only under the first-ticket rule |
+| rogue b | `tests/Game/harness/fixtures/rogue_b.lua` | each Sinister Strike WOUND pays its FRAME ticket within 2 ms; the life-steal school-32 row at 2250 is foreign; the white hits pay their swings (the first at 989 ms without teaching the lag); Eviscerate's killing row pays before the clear |
+| rogue kill-events | `tests/Game/harness/fixtures/rogue_kill.lua` | `PARTY_KILL`, `UNIT_DIED` and `PLAYER_TARGET_DIED` mark the unit DEAD and ours; the 4820 killing WOUND on `softinteract` pays the 4364 swing; the school-32 proc at 2765 is foreign; the two foreign `UNIT_DIED` mark their units if known |
+| druid moonfire | `tests/Game/harness/fixtures/moonfire.lua` | each direct hit pays its FRAME ticket; every tick pays the TICKS ticket on schedule; the refresh closes the old ticket `refreshed` and the new schedule pays; the kill closes the remaining ticks `closedDead` |
 
-The soft-targeting log was not saved in full; its findings become the churn and Action Targeting knobs (6.1 rows 8 and 9), and probe U2 recaptures it.
+The soft-targeting log was not saved in full; its findings become the churn and Action Targeting knobs (6.1 rows 8 and 9), and probe U2 was answered by the Rogue auto-target capture instead.
 
 ## 7. Migration
 
