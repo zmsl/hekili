@@ -92,6 +92,7 @@ Most likely to bite a player first (items 4-8 added by the owner):
    7b. One home for amount bands (`Events/Bands.lua`), the SENT pin
 8. The TICKS and CHANNEL kinds
 9. Closes on death, divergence, the first swing, Snapshot, `TargetGone` on a kill
+   9b. Expected rage for an uncredited swing (before the suites, so their floors are recorded against it)
 10. Harness corrections: observer, world and the scenario knobs for K1-K20
 11. Fixtures from the captures and their replay (K20)
 12. Detection suite K1-K9
@@ -5017,6 +5018,161 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 
 ---
 
+### Task 9b: Expected rage for an uncredited swing
+
+**Files:**
+- Modify: `src/Hekili/Game/Events/Rows.lua` (`T.onExpire` stages the uncredited swing)
+- Modify: `src/Hekili/Game/State/Families/Resources.lua:1159-1213` (`Obs.Swing` c = 5, and a later credit of the same
+  swing retracts the expectation)
+- Test: `tests/Game/State/resources_spec.lua` (cases added)
+
+**Interfaces:**
+- Consumes: the swing ticket's expiry (`T.onExpire`, Tasks 6 and 6b), `hitRate` (`Resources.lua:133`),
+  `I.SwingValue(r, hand, at)` and `R.scale[r]` (the credit's own step, `swingStep` `:856-885`).
+- Produces: `Obs.Swing` with c = 5 (b = 0) at the swing's time: "this swing's window closed with no row of its own"
+  (staged by Rows for a MELEE ticket that expires pinned, unpaid and with no provisional avoid). Resources adds that
+  swing's expected rage `hitRate[hand] x I.SwingValue(r, hand, at) x R.scale[r]` to `est` and `hi` of each slot the
+  hand pays; `lo` is unchanged (the floor stays a floor, so the simulation never over-spends). A credit (c = 1) of the
+  same swing (`o.t` equal to the expectation's swing time: the same `T.at` value, no float arithmetic between them)
+  first takes the expectation back out, then pays as before.
+- Boundary: the ticket says what happened to the swing; the belief alone decides what that is worth.
+
+Evidence (owner-confirmed, 2026-10-22): a level-25 Fury Warrior with two 1.5 s weapons and 20% haste had about 100
+rage in game while the belief read est 42.6 (lo 37, hi 51): about 23% of swings credited (41 main and 39 off of about
+350 swing rows, 664 rows to the background), the last usability pin 12.6 s earlier, and a Heroic Strike line at rage
+>= 40 flickering at its threshold. Uncredited swings added nothing to the estimate.
+
+Implementation choice: `hitRate` is the credited share of swings (it decays at each swing and rises at each credit),
+so with a low credit rate the expectation is that low share times the step: conservative against the truth, never
+above it; the gates measure what it recovers.
+
+- [ ] **Step 1: Write the failing test.** Append inside the top `describe` of `tests/Game/State/resources_spec.lua`
+  (its booted fake spec: a rage slot paid by the main hand's swings; `ctl`, `VS`, `I` as that file names them):
+
+```lua
+    it("adds an uncredited swing's expected rage to est and hi, never to lo", function()
+        local R, slot = I.res, nil
+        slot = R.slotOf[fs.RAGE]
+        local step = I.SwingValue(slot, 1, 0) * R.scale[slot]
+        local e0, lo0 = R.est0[slot], R.lo0[slot]
+        for k = 1, 10 do
+            ctl.now = 50 + 3 * k
+            ctl.Fire("PLAYER_SWING", 2.6, 0) -- no row ever comes for it
+            ctl.Tick(ctl.now + 2) -- its window closes uncredited
+            I.Sources.Flush()
+            I.Fold(ctl.now)
+        end
+        local rise = R.est0[slot] - e0
+        assert.is_true(rise >= 10 * 0.9 ^ 10 * step - 1e-9 and rise <= 10 * step + 1e-9, ("rise %.2f"):format(rise))
+        assert.are.equal(lo0, R.lo0[slot])
+    end)
+
+    it("takes the expectation back when the same swing is credited after all", function()
+        local R = I.res
+        local slot = R.slotOf[fs.RAGE]
+        ctl.now = 90
+        ctl.Fire("PLAYER_SWING", 2.6, 0)
+        ctl.Tick(92)
+        I.Sources.Flush()
+        I.Fold(92)
+        local withExpectation = R.est0[slot]
+        I.Sources.Stage(VS.Obs.Swing, 90, 1, 0, 1) -- its credit after all (a retraction's re-open, then its wound)
+        I.Sources.Flush()
+        I.Fold(92.1)
+        local credit = I.SwingValue(slot, 1, 90) * R.scale[slot]
+        assert.is_true(R.est0[slot] <= withExpectation + credit + 1e-9)
+        assert.is_true(R.est0[slot] >= withExpectation - 1e-9) -- the credit replaced the smaller expectation
+    end)
+```
+
+- [ ] **Step 2: Run it**
+
+Run: `.lua/bin/busted tests/Game/State/resources_spec.lua`
+Expected: FAIL on the first new case: `rise 0.00`.
+
+- [ ] **Step 3: Rows stages it.** In `src/Hekili/Game/Events/Rows.lua`, replace `T.onExpire` with:
+
+```lua
+-- A swing closing unpaid: SWING_MISSED for a provisional avoid, else SWING_DAMAGE 0 (the swing timer reads it) and,
+-- pinned to a unit, "no row of its own came" for the belief (Task 9b: its expected rage, Families/Resources.lua).
+T.onExpire = function(i)
+    if T.kind[i] ~= MELEE then
+        return
+    end
+    emit(MELEE, T.x[i], T.guid[i], T.avoid[i] ~= "" and T.avoid[i] or "WOUND", "", 0, T.at[i], 1)
+    if T.avoid[i] == "" and T.guid[i] ~= "" and T.owed[i] > 0 then
+        S.Stage(Obs.Swing, T.at[i], T.x[i], 0, 5)
+    end
+end
+```
+
+- [ ] **Step 4: Resources adds and retracts it.** In `src/Hekili/Game/State/Families/Resources.lua`, beside
+  `local hitRate, HIT_ALPHA = ...` (line 133) add:
+
+```lua
+-- Per hand: the latest uncredited swing's expected rage (Task 9b): its swing time, its amount and its slot (0 none).
+local expT, expV, expR = { 0, 0 }, { 0, 0 }, { 0, 0 }
+```
+
+  In the `Obs.Swing` handler, after the `elseif c == 4 then ... return` branch, add:
+
+```lua
+    elseif c == 5 then -- a swing's window closed with no row of its own: its expected rage, on est and hi only
+        for r = 1, R.n do
+            if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
+                local v = hitRate[hand] * I.SwingValue(r, hand, o.t) * R.scale[r]
+                if v > 0 then
+                    local max = R.max[r]
+                    R.est0[r], R.hi0[r] = clamp(R.est0[r] + v, max), clamp(R.hi0[r] + v, max)
+                    norm(r)
+                    expT[hand], expV[hand], expR[hand] = o.t, v, r
+                    I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Swing)
+                end
+                break
+            end
+        end
+        return
+```
+
+  and at the start of the `elseif c == 1 then` branch add:
+
+```lua
+        if expR[hand] > 0 and o.t == expT[hand] then -- credited after all: the expectation comes back out first
+            local r = expR[hand]
+            R.est0[r], R.hi0[r] = R.est0[r] - expV[hand], R.hi0[r] - expV[hand]
+            norm(r)
+            expR[hand] = 0
+        end
+```
+
+  and in the combat-end hook add `expR[1], expR[2] = 0, 0`.
+
+- [ ] **Step 5: Run it, then the rage gates**
+
+Run: `.lua/bin/busted tests/Game/State/resources_spec.lua && make test-fast`
+Expected: PASS, 0 failures.
+
+Run: `.lua/bin/busted --tags=slow tests/Game/harness/solo_spec.lua tests/Game/harness/group_spec.lua tests/Game/harness/onus_spec.lua tests/Game/harness/flicker_spec.lua && make test-loop`
+Expected: PASS; `over`, the drift (err mean and max) and `danger` at or better than Task 9's run. Report every
+number that moved, either way, in the commit message; a move down stops the task for the owner.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/Hekili/Game/Events/Rows.lua src/Hekili/Game/State/Families/Resources.lua \
+  tests/Game/State/resources_spec.lua
+git commit -m "feat(resources): an uncredited swing adds its expected rage to est and hi, never to lo
+
+<the rage metrics before -> after: over, err mean/max, danger, per gate>
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
+```
+
+(The angle-bracket line is the run's own numbers, one line per gate.)
+
+---
+
 ### Task 10: Harness corrections: observer, world and the scenario knobs for K1-K20
 
 **Files:**
@@ -6687,9 +6843,12 @@ local function cell(m)
     local up = function(x)
         return math.ceil(x * 10) / 10
     end
+    local mm = m.melee
     return {
         recall = down(metrics.recall(m)),
-        melee = down(metrics.rate(m.melee, 1)),
+        melee = down(metrics.rate(mm, 1)),
+        melee2 = down(metrics.rate(mm, 2)),
+        rageErr = up(mm.windows > 0 and mm.errSum / mm.windows or 0), -- the rage estimate's mean error (Task 9b)
         staged = down(metrics.staged(m)),
         false100 = up(metrics.false100(m)),
         leak100 = up(metrics.leak100(m)),
@@ -6720,8 +6879,8 @@ function M.record(kind, band, m)
             local v = all[k][b]
             if v then
                 out[#out + 1] = string.format(
-                    "        %s = { recall = %.2f, melee = %.2f, staged = %.2f, false100 = %.1f, leak100 = %.1f, lostDiff = %d, residual = %d },",
-                    b, v.recall, v.melee, v.staged, v.false100, v.leak100, v.lostDiff, v.residual)
+                    "        %s = { recall = %.2f, melee = %.2f, melee2 = %.2f, rageErr = %.1f, staged = %.2f, false100 = %.1f, leak100 = %.1f, lostDiff = %d, residual = %d },",
+                    b, v.recall, v.melee, v.melee2, v.rageErr, v.staged, v.false100, v.leak100, v.lostDiff, v.residual)
             end
         end
         out[#out + 1] = "    },"
@@ -6739,6 +6898,8 @@ function M.check(kind, band, m)
     local v, line = cell(m), metrics.ticketLine(m)
     assert(v.recall >= fl.recall, kind .. " " .. band .. " recall below its floor: " .. line)
     assert(v.melee >= fl.melee, kind .. " " .. band .. " melee recall below its floor: " .. line)
+    assert(v.melee2 >= fl.melee2, kind .. " " .. band .. " off-hand recall below its floor: " .. line)
+    assert(v.rageErr <= fl.rageErr, kind .. " " .. band .. " rage error above its ceiling: " .. line)
     assert(v.staged >= fl.staged, kind .. " " .. band .. " staged below its floor: " .. line)
     assert(v.false100 <= fl.false100, kind .. " " .. band .. " false credit above its ceiling: " .. line)
     assert(v.leak100 <= fl.leak100, kind .. " " .. band .. " foreign leak above its ceiling: " .. line)
@@ -6835,7 +6996,7 @@ local drive = require("Game.harness.drive")
 local scenarios = require("Game.harness.scenarios")
 
 describe("detection suite K10-K19 #slow", function()
-    for _, kind in ipairs({ "K10", "K11", "K12", "K13", "K14", "K15", "K17", "K18", "K19", "K21" }) do
+    for _, kind in ipairs({ "K10", "K11", "K12", "K13", "K14", "K14f", "K15", "K17", "K18", "K19", "K21" }) do
         for _, band in ipairs(detect.GATED) do
             it(kind .. " in " .. band, function()
                 local m = detect.run(kind, band, 20, 101)
@@ -6855,6 +7016,10 @@ describe("detection suite K10-K19 #slow", function()
                     assert.is_true(m.ended > 0 and m.afterReset == 0, metrics.ticketLine(m))
                 elseif kind == "K18" then
                     assert.is_true(m.aoeOther > 0 and m.wrong == 0, metrics.ticketLine(m))
+                elseif kind == "K14f" then -- the credit rate for the ledger (UR5), beside the floors
+                    local mm = m.melee
+                    print(("K14f %s credit rate main %.2f off %.2f, rage error mean %.2f"):format(band,
+                        metrics.rate(mm, 1), metrics.rate(mm, 2), mm.windows > 0 and mm.errSum / mm.windows or 0))
                 elseif kind == "K21" then -- a projectile and a schedule of one school on one GUID: each pays its own
                     assert.is_true(m.own > 0 and m.wrong == 0, metrics.ticketLine(m))
                 end
@@ -6957,7 +7122,9 @@ function M.lag(k)
         end
 ```
 
-  and pass `land = observer.lag(lag)` instead of `observer.lag(o.lag)`; when `o.twins`, set our weapons to two equal
+  and pass `land = observer.lag(lag)` instead of `observer.lag(o.lag)` and `haste = o.haste` (K14f) into
+  `behaviours.melee`, whose swing event's `speed` becomes `w[3] / (p.haste or 1)` (the client's hasted duration; no
+  current caller sets `haste`); when `o.twins`, set our weapons to two equal
   ones and the same phase: before `local us = W.add(...)` add
   `local weapons = o.twins and { { 30, 30, 2.0 }, { 30, 30, 2.0 } } or o.weapons` and use `weapons = weapons or
   entities.weapons(lvl)`; pass `phase = o.twins and { 0.5, 0.5 } or nil` to `behaviours.melee`. In `M.stream`, add
@@ -7029,6 +7196,9 @@ M.KINDS.K12 = {
 }
 M.KINDS.K13 = { duration = 60, noMelee = true, spells = every("bolt", 2, 58), lockstep = 0, distances = { 20 } }
 M.KINDS.K14 = { duration = 60, twins = true }
+-- K14f (owner-confirmed 2026-10-22, a level-25 Fury): FAST DUAL-WIELD, two 1.5 s hands at 1.2 haste (a swing every
+-- about 0.6 s on average across both hands); per-hand recall and the rage estimate's error against truth.
+M.KINDS.K14f = { duration = 60, weapons = { { 40, 54, 1.5 }, { 40, 54, 1.5 } }, haste = 1.2, sessionLag = true }
 M.KINDS.K15 = { duration = 60, noMelee = true, spells = mixSpells(58) }
 M.KINDS.K16 = { duration = 300, spells = every("bolt", 2, 298) }
 M.KINDS.K17 = { duration = 20, noMelee = true, spells = every("bolt", 1.5, 20) } -- bolts in flight at the stop
@@ -7163,6 +7333,9 @@ describe("the invariant sweep #slow", function()
                         switchTo = { { 21, 2 }, { 37, 1 } },
                         churn = { 7, 0.4 },
                     }
+                    if s0 % 2 == 0 then -- FAST DUAL-WIELD (K14f's shape) on every other seed
+                        o.weapons, o.haste = { { 40, 54, 1.5 }, { 40, 54, 1.5 } }, 1.2
+                    end
                     local s, W = scenarios.stream(o, s0)
                     local c = drive.boot({ boot = detect.boot })
                     drive.run(c, s)
@@ -8110,6 +8283,7 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 | U7 | Core | two-school spells and wands: the school a Frostfire Bolt WOUND carries (20, 4 or 16) and a non-physical wand's Shoot | Frostfire Bolt and Shoot keep no or a guessed `school` until then | open |
 | U9 | Core | channel rows: `/vslog` of Arcane Missiles and Drain Life on solo mobs: per tick, which tokens, action, flag, amount, school | CHANNEL stays unused by packs until its shape is measured | open |
 | UR4 | Druid | an unrefreshed rank-1 Moonfire (8921, level 4-9): does a fourth tick come at +12 s? DB2 gives 9 s (3 ticks); the pack's aura answers 9 s | the TICKS ticket owes the aura's count; a fourth tick would be foreign | open |
+| UR5 | Warrior | a fast dual-wield Fury (two 1.5 s weapons, about 20% haste): the Snapshot's `rows credited main/off` against the swings, and est against the real rage a few seconds after a usability pin | the harness's K14f credit rate (Task 13 prints it; copy the party-band number here) against the game's: the owner's level-25 session credited about 23% and read est 42.6 at about 100 real rage before Task 9b | open |
 | U10 | Core | ten pulls with auto-attack only: `PLAYER_SWING`, `PLAYER_ENTER_COMBAT` and the target's UNIT_COMBAT, amounts on | the first swing of a combat (one sample: 989 ms) does not teach the lag; this measures its lag distribution | open |
 ```
 
