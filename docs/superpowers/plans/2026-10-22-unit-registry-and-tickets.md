@@ -45,9 +45,12 @@ Layering kept: Sources read the client through the injected `api`; Events and Fa
 | `src/Hekili/Game/State/Sources/Units.lua` (new) | the unit registry: token to GUID, unit slots and lifetimes, `UNIT_COMBAT` resolve, dedupe, dispatch, death events and kill tell, the player's GUID, the SENT pin | `api.UnitGUID` (through `Plain`), `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `NAME_PLATE_UNIT_ADDED/REMOVED`, `PLAYER_SOFT_*_CHANGED`, `UNIT_COMBAT`, `UNIT_DIED`, `PARTY_KILL`, `PLAYER_TARGET_DIED`, `UNIT_SPELLCAST_SENT/FAILED`, `PLAYER_REGEN_ENABLED`, `PLAYER_ENTERING_WORLD` | `I.Units`: `TOKENS`, `INDEX`, `Resolve`, `Bound`, `Uid`, `GUID`, `Find`, `Pin`, `Sent`, `Alive`, `IsDead`, `Ours`, `IsTarget`, `Dead`, `Hold`, `Release`, `OnRow`, `OnGone`, `Tick`, `Claims` hook; `I.Log.player` | `tests/Game/State/units_spec.lua` |
 | `src/Hekili/Engine/Schema/Spec.lua` (edit) | the school enum | none | `ns.SCHOOL`, `Hekili.SCHOOL` | `tests/Game/State/expect_spec.lua`, `tests/boundary_spec.lua` |
 | `src/Hekili/Game/State/Families/Expect.lua` (new) | compiles each ability's `expects`, `school`, `velocity` and its ticking aura (`tick_time` with `dot = "debuff"`) at build; default type; validation | `I.ab` (`Families/Casts.lua`), `ns.SCHOOL`, the build's `def.abilities` and `def.auras` | `I.Expect` (kind and school constants, `X.Tick(a)`, `X.Malformed`), `A.expKind`, `A.expDeclared`, `A.velocity`, `A.school`, `A.tickAura`, `A.ticking`; `I.nowErrors` on a malformed one | `tests/Game/State/expect_spec.lua` |
-| `src/Hekili/Game/Events/Tickets.lua` (new) | the ticket pool and lifecycle: open (swing, commit, arm, unclaimed success), consumption order (`Pick`), pay, expiry, closes and their counters, FIFO by expected closure, learned flight lag records, per-ability amount bands, Snapshot line | `I.Units` (`Find`, `Hold`, `Release`, `IsDead`, `Ours`, `OnGone`), `I.Expect`, `I.Kinds` (at run time), `I.ab` | `I.Tickets`: pool arrays, `OpenSwing`, `OpenCast`, `Commit`, `Arm`, `Stop`, `Pick`, `Pay`, `Provisional`, `Expire`, `EndCombat`, `Unmapped`, `LagOf`, `Learn`, `closed`, `paid`, `lost` | `tests/Game/Events/tickets_spec.lua` |
+| `src/Hekili/Game/Events/Tickets.lua` (new) | the ticket pool and lifecycle: open (swing, commit, arm, unclaimed success), consumption order (`Pick`), pay, expiry, closes and their counters, FIFO by expected closure, learned flight lag records, per-ability amount bands, the single owner of a pending swing (`SwingPending`, Task 6b) and of a strike's swallowed swing, Snapshot line | `I.Units` (`Find`, `Hold`, `Release`, `IsDead`, `Ours`, `OnGone`), `I.Expect`, `I.Kinds` (at run time), `I.ab` | `I.Tickets`: pool arrays, `OpenSwing`, `OpenCast`, `Commit`, `Arm`, `Stop`, `Pick`, `Pay`, `Provisional`, `Expire`, `EndCombat`, `Unmapped`, `LagOf`, `Learn`, `closed`, `paid`, `lost` | `tests/Game/Events/tickets_spec.lua` |
 | `src/Hekili/Game/Events/Melee.lua` (new, moved) | the MELEE kind: the swing likelihood ratio, amount classes, landing-lag density and learning, background rates (moved from Rows unchanged) | `I.Tickets` arrays, `VS.Stat("UnitDamage")` | `I.Melee`: `score`, `advance`, `background`, `lambda`, `learn`, `classOf`, `AVOIDS`, `SAME_FRAME`, `CAST_WINDOW`, `STRIKE_WINDOW`; `L.LandWindow` and the `L.*` tuning | `tests/Game/Events/pairing_replay_spec.lua`, `tests/Game/Events/cleu_rows_spec.lua` (unchanged) |
 | `src/Hekili/Game/Events/Kinds.lua` (new) | every other kind's rule, once: which rows a ticket accepts (school, amount band, avoid) and its band per pass (FRAME, STRIKE, FLIGHT, TICKS, CHANNEL) | `I.Tickets` arrays, `I.Melee` constants, `L.LandWindow`, `VS.TargetRange`, `I.Units.Bound` | `I.Kinds`: `Accepts`, `Band` | `tests/Game/Events/kinds_spec.lua` |
+| `src/Hekili/Game/State/Stats.lua` (new, Task 7a) | the running statistics, once: `Ema`, `Median`, `Clamp` | nothing | `I.Stats` | `tests/Game/State/stats_spec.lua` |
+| `src/Hekili/Game/Events/Bands.lua` (new, Task 7b) | amount bands, once: `Normalise` (per-caller policy), `Learn`, `Fits`, `Class` | nothing | `I.Bands` | `tests/Game/Events/bands_spec.lua` |
+| `src/Hekili/Game/Events/CombatLog.lua` (edit, Task 5b) | the row builders `L.Swing`, `L.SpellHit`, `L.Miss` beside `L.Cast`, `auraRow`, `L.Energize`: every combat-log row shape in one file | `L.Emit` | the builders | `cleu_rows_spec.lua` |
 | `src/Hekili/Game/Events/Rows.lua` (shrunk) | before: its own pending ring, its own `target`-only `UNIT_COMBAT` handler, its own GUID reads, every scoring rule. After: opens a ticket for each commit (`PLAYER_SWING`, a hard cast's START, each success), feeds each `OnRow` row through the consumption order, and turns payments into `SWING_*` / `SPELL_*` / `SPELL_PERIODIC_DAMAGE` rows and `Obs.Swing` / `Obs.Crit` / `Obs.Avoided`; keeps the credit records, `I.CreditVerdict`, the provisional avoid, WOUND 0 and the strike replacement | `I.Units.OnRow`, `I.Tickets`, `I.Melee`, `I.Kinds`, `I.Expect` | combat-log rows, staged observations | `cleu_rows_spec.lua`, `pairing_replay_spec.lua`, harness specs |
 | `src/Hekili/Game/Events/Attackers.lua` (edit) | hits on us; its own token reads become `I.Units.Bound(i)` | `I.Units` | unchanged | `tests/Game/harness/onus_spec.lua` |
 | `src/Hekili/Game/State/Sources/Target.lua` (edit) | memory slots (TargetHealth's, keyed by GUID, outliving registry slots), range poll, `TargetDamage` from `OnRow`, `TargetGone` from `OnGone` DEAD | `I.Units` | unchanged observations | `tests/Game/State/target_health_spec.lua` |
@@ -56,7 +59,7 @@ Layering kept: Sources read the client through the injected `api`; Events and Fa
 
 ## Review Focus
 
-Most likely to bite a player first (items 4-6 added by the owner):
+Most likely to bite a player first (items 4-8 added by the owner):
 
 1. A post-clear killing blow or a swap landing that pays the wrong unit (or none): the registry's held-unit fallback and the swap exception. Exercised by Task 2 (`units_spec.lua` "resolves the killing blow after the clear", "keeps a swapped token's row on the old unit when its ticket owes it"), Task 11 (`capture_swap` and `capture_b` replays) and Task 13 (K5, K11, K12, K19).
 2. Melee drift from the ticket refactor (swing LR, provisional avoid, `CreditVerdict` re-open, strike replacement): Tasks 5 and 6 run `pairing_replay_spec.lua`, `cleu_rows_spec.lua`, `group_spec.lua`, `solo_spec.lua`, `onus_spec.lua` unchanged, and Task 17 compares every melee floor.
@@ -66,6 +69,12 @@ Most likely to bite a player first (items 4-6 added by the owner):
 6. A hot path that builds a string or a table (a `"nameplate" .. i` at run time, a closure per row, a Snapshot string
    built outside Snapshot): Task 15's alloc specs over a K16 raid-40 300 s run and a solo 300 s run, the memory ceiling
    spec and `make bench-ta`; Task 2's and Task 6's zero-allocation cases.
+7. Two layers each keeping a pending swing (or a strike's swing) with their own expiry: Task 6b makes the swing
+   ticket the single owner (`T.SwingPending`); its test asserts Resources holds no `pendT`, and the rage gates must
+   not move down.
+8. A hand-written combat-log row (school 1 in Rows, the real mask in Attackers before): Task 5b's builders and its
+   test that neither file calls `L.Emit` itself; Task 6's test that an own SPELL_DAMAGE row carries the ability's
+   compiled school.
 
 ## Task order
 
@@ -74,8 +83,13 @@ Most likely to bite a player first (items 4-6 added by the owner):
 3. Refactor: every consumer reads the registry (behaviour preserved)
 4. Expectation compile and validation (`Expect.lua`)
 5. Refactor: the ticket pool and the MELEE kind out of Rows (behaviour preserved)
+   5b. Combat-log row builders (`L.Swing`, `L.SpellHit`, `L.Miss`)
+   5c. Drop the redundant payload re-Plain calls
 6. Tickets: lifecycle, consumption order and the FRAME, STRIKE, UNMAPPED and NONE kinds
-7. The FLIGHT kind: hard window, range bracket, learned lag, amount band, the SENT pin
+   6b. The swing ticket owns the pending swing; the strike ticket owns the swallowed swing
+7. The FLIGHT kind: hard window, range bracket, learned lag, amount band
+   7a. One home for the running statistics (`State/Stats.lua`)
+   7b. One home for amount bands (`Events/Bands.lua`), the SENT pin
 8. The TICKS and CHANNEL kinds
 9. Closes on death, divergence, the first swing, Snapshot, `TargetGone` on a kill
 10. Harness corrections: observer, world and the scenario knobs for K1-K20
@@ -89,7 +103,7 @@ Most likely to bite a player first (items 4-6 added by the owner):
 18. The gate
 19. Docs and ledger
 
-Tasks 3 and 5 are the behaviour-preserving refactors: they change no decision, and every existing spec passes unchanged
+Tasks 7a and 7b come before Task 7 in the file (Task 7 uses them). Tasks 3 and 5 are the behaviour-preserving refactors: they change no decision, and every existing spec passes unchanged
 before Task 6 turns the new consumption order on. Fixtures are named `capture_*.lua`, not after the spells the
 captures cast: `tests/boundary_spec.lua` scans `tests/Game/harness/**` code for content keys, and a fixture's name is
 a string in the replay spec's code.
@@ -2135,6 +2149,234 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 
 ---
 
+### Task 5b: Combat-log row builders (part of the Rows shrink)
+
+**Files:**
+- Modify: `src/Hekili/Game/Events/CombatLog.lua` (after `L.Energize`, line 215: `L.Swing`, `L.SpellHit`, `L.Miss`)
+- Modify: `src/Hekili/Game/Events/Rows.lua` (`emit`, Rows.lua:281-306 before Task 5)
+- Modify: `src/Hekili/Game/Events/Attackers.lua:274-288` (the three hand-written rows)
+- Test: `tests/Game/Events/cleu_rows_spec.lua` (cases added)
+
+**Interfaces:**
+- Consumes: `L.Emit` (`CombatLog.lua:46`).
+- Produces: `L.Swing(t, family, src, srcFlags, dst, dstFlags, amount, flag, offhand)` (SWING_DAMAGE, 21 slots);
+  `L.SpellHit(sub, t, family, src, srcFlags, dst, dstFlags, spellID, school, amount, flag)` (SPELL_DAMAGE or
+  SPELL_PERIODIC_DAMAGE, 24 slots, `school` in slots 14 and 17); `L.Miss(t, family, src, srcFlags, dst, dstFlags,
+  spellID, school, action, offhand)` (SWING_MISSED when `spellID` is nil, else SPELL_MISSED with `school` in slot 14).
+  All back-dated, `inferred`, allocating nothing.
+- Boundary: CombatLog owns the row shapes beside `L.Cast` (:77), `auraRow` (:158) and `L.Energize` (:208); Rows and
+  Attackers only choose what to emit.
+
+Behaviour guarantee: Rows passes school 1 to its spell rows here, exactly as it writes today (`Rows.lua:300`, `:304`),
+and Attackers its real mask (`:280-281`); Task 6 then passes the ticket's school (its test asserts the own
+SPELL_DAMAGE row's school equals the ability's compiled school). The one difference between the two hand-written
+encodings becomes a parameter.
+
+- [ ] **Step 1: Write the failing test.** Append inside `describe("the synthesized combat log", ...)` of
+  `tests/Game/Events/cleu_rows_spec.lua`:
+
+```lua
+    it("builds the swing, spell and miss rows in one place, each with the school it is given", function()
+        ctl.now = 5
+        L.Swing(4.9, "swing", "Player-1", L.PLAYER_FLAGS, "Creature-1", L.HOSTILE_FLAGS, 30, "CRITICAL", true)
+        L.SpellHit("SPELL_DAMAGE", 4.8, "damage", "Player-1", L.PLAYER_FLAGS, "Creature-1", L.HOSTILE_FLAGS, 99, 8, 15, "")
+        L.Miss(4.7, "missed", "Player-1", L.PLAYER_FLAGS, "Creature-1", L.HOSTILE_FLAGS, 99, 1, "MISS")
+        L.Miss(4.6, "missed", "Player-1", L.PLAYER_FLAGS, "Creature-1", L.HOSTILE_FLAGS, nil, 1, "DODGE", true)
+        L.Deliver()
+        assert.are.same({ "SWING_DAMAGE", 21, 30, true, true }, { got[1].row[2], got[1].n, got[1].row[12],
+            got[1].row[18], got[1].row[21] })
+        assert.are.same({ "SPELL_DAMAGE", 24, 99, 8, 15, 8 }, { got[2].row[2], got[2].n, got[2].row[12],
+            got[2].row[14], got[2].row[15], got[2].row[17] })
+        assert.are.same({ "SPELL_MISSED", 18, 1, "MISS" }, { got[3].row[2], got[3].n, got[3].row[14], got[3].row[15] })
+        assert.are.same({ "SWING_MISSED", 15, "DODGE", true }, { got[4].row[2], got[4].n, got[4].row[12],
+            got[4].row[13] })
+    end)
+
+    it("leaves no hand-written combat-log row outside CombatLog.lua", function()
+        for _, f in ipairs({ "src/Hekili/Game/Events/Rows.lua", "src/Hekili/Game/Events/Attackers.lua" }) do
+            local src = assert(io.open(f)):read("*a")
+            assert.is_nil(src:find("L.Emit(", 1, true), f)
+        end
+    end)
+```
+
+- [ ] **Step 2: Run it**
+
+Run: `.lua/bin/busted tests/Game/Events/cleu_rows_spec.lua`
+Expected: FAIL, `attempt to call field 'Swing' (a nil value)` and the `L.Emit(` finds in both files.
+
+- [ ] **Step 3: The builders.** In `src/Hekili/Game/Events/CombatLog.lua`, after `L.Energize`'s `end` add:
+
+```lua
+--- (unit-registry spec §3.5) A white hit's row: SWING_DAMAGE at `t` (back-dated), from `src` to `dst`. Allocates
+--- nothing.
+function L.Swing(t, family, src, srcFlags, dst, dstFlags, amount, flag, offhand)
+    local r = L.Emit("SWING_DAMAGE", 21, t, true, family, "inferred", src, srcFlags, dst, dstFlags)
+    r[12], r[13], r[14], r[15], r[16], r[17] = amount, 0, 1, 0, 0, 0
+    r[18], r[19], r[20], r[21] = flag == "CRITICAL", flag == "GLANCING", flag == "CRUSHING", offhand == true
+end
+
+--- A spell's damage row (`sub`: SPELL_DAMAGE or SPELL_PERIODIC_DAMAGE) with `school` in slots 14 and 17.
+function L.SpellHit(sub, t, family, src, srcFlags, dst, dstFlags, spellID, school, amount, flag)
+    local r = L.Emit(sub, 24, t, true, family, "inferred", src, srcFlags, dst, dstFlags)
+    r[12], r[13], r[14], r[15], r[16], r[17], r[18] = spellID, "", school, amount, 0, school, 0
+    r[19], r[20], r[21], r[22], r[23], r[24] = 0, 0, flag == "CRITICAL", false, false, false
+end
+
+--- An avoid's row: SWING_MISSED for a swing (`spellID` nil), else SPELL_MISSED with `school` in slot 14.
+function L.Miss(t, family, src, srcFlags, dst, dstFlags, spellID, school, action, offhand)
+    if spellID == nil then
+        local r = L.Emit("SWING_MISSED", 15, t, true, family, "inferred", src, srcFlags, dst, dstFlags)
+        r[12], r[13], r[14], r[15] = action, offhand == true, 0, false
+        return
+    end
+    local r = L.Emit("SPELL_MISSED", 18, t, true, family, "inferred", src, srcFlags, dst, dstFlags)
+    r[12], r[13], r[14], r[15], r[16], r[17], r[18] = spellID, "", school, action, false, 0, false
+end
+```
+
+- [ ] **Step 4: Rows calls them.** Replace Rows.lua's `emit` body (Task 5's form) with:
+
+```lua
+local function emit(kind, x, dst, action, flag, amount, t)
+    if dst == "" then
+        return
+    end
+    local me, mf, hf = L.player, L.PLAYER_FLAGS, L.HOSTILE_FLAGS
+    if kind == 1 then
+        if action == "WOUND" then
+            L.Swing(t, "swing", me, mf, dst, hf, amount, flag, x == 2)
+        else
+            L.Miss(t, "missed", me, mf, dst, hf, nil, 1, action, x == 2)
+        end
+    elseif action == "WOUND" then
+        L.SpellHit("SPELL_DAMAGE", t, "damage", me, mf, dst, hf, x, 1, amount, flag) -- school 1 until Task 6
+    else
+        L.Miss(t, "missed", me, mf, dst, hf, x, 1, action)
+    end
+end
+```
+
+- [ ] **Step 5: Attackers calls them.** Replace Attackers.lua's three row blocks (lines 274-288) with:
+
+```lua
+    local amt = type(amount) == "number" and amount or 0
+    if act == "WOUND" and melee then
+        L.Swing(t, "onus", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS, amt, flag, false)
+    elseif act == "WOUND" then
+        L.SpellHit("SPELL_DAMAGE", t, "onus", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS, 0,
+            type(school) == "number" and school or 1, amt, flag)
+    else
+        L.Miss(t, "onus", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS, nil, 1, act, false)
+    end
+```
+
+- [ ] **Step 6: Run the row specs and everything that reads rows**
+
+Run: `.lua/bin/busted tests/Game/Events && make test-fast`
+Expected: PASS, 0 failures (the rows are slot for slot what they were).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/Hekili/Game/Events/CombatLog.lua src/Hekili/Game/Events/Rows.lua src/Hekili/Game/Events/Attackers.lua \
+  tests/Game/Events/cleu_rows_spec.lua
+git commit -m "refactor(log): SWING/SPELL/MISS row builders in CombatLog; Rows and Attackers call them
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
+```
+
+---
+
+### Task 5c: Drop the redundant payload re-Plain calls (part of the Rows shrink)
+
+**Files:**
+- Modify: `src/Hekili/Game/Events/Attackers.lua:202`, `src/Hekili/Game/State/Sources/Player.lua:170`,
+  `src/Hekili/Game/State/Sources/Casts.lua:42`, `:69`, `:83`, `:99`, `:114` (each a `Plain` on a handler argument)
+- Test: `tests/Game/State/secrets_spec.lua` (a case added)
+
+**Interfaces:**
+- Consumes: `EventFacade.lua:221-226` (every payload slot already through `Plain` before any source runs).
+- Produces: no new function. Every `Plain` on a direct API read stays (the grep below lists the payload ones only).
+- Boundary: the facade is the one gate for event payloads; sources gate their own API reads.
+
+- [ ] **Step 1: Write the failing test.** Append inside the top `describe` of `tests/Game/State/secrets_spec.lua`:
+
+```lua
+    it("delivers a secret payload slot to the sources as nil, so no handler re-gates its arguments", function()
+        local load = require("Game.State.helpers.load")
+        local fake = require("Game.State.helpers.fake_api")
+        local fs = require("Game.State.helpers.fake_spec")
+        local api, ctl = fake.new()
+        local saved = {}
+        for k, v in pairs({ CreateFrame = api.CreateFrame, issecretvalue = api.issecretvalue, GetTime = api.GetTime }) do
+            saved[k] = rawget(_G, k) or false
+            _G[k] = v
+        end
+        local ns = load.module()
+        local I = ns.VirtualStateInternal
+        I.Build(fs.def(fs.new(9)), 1)
+        ns.VirtualState.Start(api)
+        local seen = "unset"
+        I.Sources.On("UNIT_COMBAT", nil, function(_, _, _, _, flag, amount)
+            seen = { flag, amount }
+        end)
+        ctl.Fire("UNIT_COMBAT", "player", "WOUND", fake.SECRET, fake.SECRET, 1)
+        assert.are.same({}, seen) -- both nil
+        for k, v in pairs(saved) do
+            _G[k] = v or nil
+        end
+        -- and no source re-gates a handler argument
+        local hits = {}
+        for _, f in ipairs({ "src/Hekili/Game/Events/Attackers.lua", "src/Hekili/Game/State/Sources/Player.lua",
+            "src/Hekili/Game/State/Sources/Casts.lua" }) do
+            local src = assert(io.open(f)):read("*a")
+            for m in src:gmatch("Plain%(api, (%a+)%)") do
+                if m == "flag" or m == "amount" or m == "act" or m == "guid" then
+                    hits[#hits + 1] = f .. ": Plain(api, " .. m .. ")"
+                end
+            end
+        end
+        assert.are.same({}, hits)
+    end)
+```
+
+  (`S.On` registered after Start is not in the client registration, but `UNIT_COMBAT` is already registered by the
+  registry, so the fake delivers it to every handler in the list.)
+
+- [ ] **Step 2: Run it**
+
+Run: `.lua/bin/busted tests/Game/State/secrets_spec.lua`
+Expected: FAIL on the second assertion, listing `Attackers.lua: Plain(api, flag)`, `Player.lua: Plain(api, act)`
+and the `Plain(api, guid)` lines of `Casts.lua`.
+
+- [ ] **Step 3: Remove them.** `Attackers.lua:202`: delete the line
+  `flag, amount = Plain(api, flag), Plain(api, amount) -- a secret one is neither banded nor learned` (the facade
+  already made a secret slot nil). `Player.lua:170`: delete
+  `act, flag, amount = Plain(api, act), Plain(api, flag), Plain(api, amount) -- a secret number answers "number" to type`.
+  `Casts.lua`: `castGUID = Plain(api, guid)` (:42) becomes `castGUID = guid`; `local g = Plain(api, guid)` (:69, :83,
+  :114) becomes `local g = guid`; `chanGUID = Plain(api, guid)` (:99) becomes `chanGUID = guid`. Each comment above
+  them that names the re-gate is shortened to `-- the facade made a secret slot nil (EventFacade.lua:221-226)`.
+
+- [ ] **Step 4: Run it and every spec**
+
+Run: `.lua/bin/busted tests/Game/State/secrets_spec.lua && make test-fast`
+Expected: PASS, 0 failures.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/Hekili/Game/Events/Attackers.lua src/Hekili/Game/State/Sources/Player.lua \
+  src/Hekili/Game/State/Sources/Casts.lua tests/Game/State/secrets_spec.lua
+git commit -m "refactor(sources): the facade gates event payloads once; handlers drop their re-Plain
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
+```
+
+---
+
 ### Task 6: Tickets: lifecycle, consumption order and the FRAME, STRIKE, UNMAPPED and NONE kinds
 
 **Files:**
@@ -2860,31 +3102,25 @@ local MISSES = {
 }
 local REFUSED = { DODGE = true, PARRY = true, MISS = true } -- the avoids that refuse the whole ability (Obs.Avoided)
 
--- One row from an own action of kind `k` and its outcome at `t` (school mask `sch` for a spell). None without a
--- destination: Hekili's handler would count a "" GUID as an enemy (`ns.updateTarget`, Events.lua:1693-1701).
+-- One row from an own action of kind `k` and its outcome at `t` (school mask `sch` for a spell), through CombatLog's
+-- builders (Task 5b). None without a destination: Hekili's handler would count a "" GUID as an enemy
+-- (`ns.updateTarget`, Events.lua:1693-1701).
 local function emit(k, xx, dst, action, flag, amount, t, sch)
     if dst == "" then
         return
     end
-    local flags = L.HOSTILE_FLAGS
+    local me, mf, hf = L.player, L.PLAYER_FLAGS, L.HOSTILE_FLAGS
     if k == MELEE then
-        local offhand = xx == 2
         if action == "WOUND" then
-            local r = L.Emit("SWING_DAMAGE", 21, t, true, "swing", "inferred", L.player, L.PLAYER_FLAGS, dst, flags)
-            r[12], r[13], r[14], r[15], r[16], r[17] = amount, 0, 1, 0, 0, 0
-            r[18], r[19], r[20], r[21] = flag == "CRITICAL", flag == "GLANCING", flag == "CRUSHING", offhand
+            L.Swing(t, "swing", me, mf, dst, hf, amount, flag, xx == 2)
         else
-            local r = L.Emit("SWING_MISSED", 15, t, true, "missed", "inferred", L.player, L.PLAYER_FLAGS, dst, flags)
-            r[12], r[13], r[14], r[15] = action, offhand, 0, false
+            L.Miss(t, "missed", me, mf, dst, hf, nil, 1, action, xx == 2)
         end
     elseif action == "WOUND" then
         local sub = (k == TICKS or k == CHANNEL) and "SPELL_PERIODIC_DAMAGE" or "SPELL_DAMAGE"
-        local r = L.Emit(sub, 24, t, true, "damage", "inferred", L.player, L.PLAYER_FLAGS, dst, flags)
-        r[12], r[13], r[14], r[15], r[16], r[17], r[18] = xx, "", sch, amount, 0, sch, 0
-        r[19], r[20], r[21], r[22], r[23], r[24] = 0, 0, flag == "CRITICAL", false, false, false
+        L.SpellHit(sub, t, "damage", me, mf, dst, hf, xx, sch, amount, flag) -- the ticket's school, spec §3.5
     else
-        local r = L.Emit("SPELL_MISSED", 18, t, true, "missed", "inferred", L.player, L.PLAYER_FLAGS, dst, flags)
-        r[12], r[13], r[14], r[15], r[16], r[17], r[18] = xx, "", sch, action, false, 0, false
+        L.Miss(t, "missed", me, mf, dst, hf, xx, sch, action)
     end
 end
 
@@ -3244,6 +3480,628 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 
 ---
 
+### Task 6b: The swing ticket owns "a swing is pending"; the strike ticket owns the swallowed swing
+
+**Files:**
+- Modify: `src/Hekili/Game/Events/Tickets.lua` (`T.lastSwing`, `T.PEND_CAP`, `T.PendingWindow`, `T.SwingPending`,
+  `T.OpenStrikeWait`, `T.Swallows`; `T.OpenSwing` records the hand's latest swing)
+- Modify: `src/Hekili/Game/Events/Rows.lua` (`strikeWait` removed: the `PLAYER_SWING` and success handlers use the
+  strike ticket; `I.CreditVerdict`'s re-open passes `retry`)
+- Modify: `src/Hekili/Game/State/Families/Resources.lua:193-195` (`pendT`, `LAND_CAP` removed), `:1164-1177` (the
+  float-equality link removed), `:1279-1296` (`VS.SwingPending` reads the ticket), `:1326`
+- Test: `tests/Game/Events/tickets_spec.lua`, `tests/Game/State/resources_spec.lua` (cases added)
+
+**Interfaces:**
+- Consumes: the ticket pool (Task 6), `L.LandWindow`, `M.STRIKE_WINDOW`.
+- Produces: `T.SwingPending(hand, t) -> at|0` (the hand's latest swing, while its ticket is open, unpaid and within
+  `T.PendingWindow(hand)` of its swing); `T.PendingWindow(hand)` = `min(L.LandWindow(hand), T.PEND_CAP)`, `T.PEND_CAP`
+  1.0 (the one expiry; Resources' LAND_CAP drift guard moves here unchanged); `T.OpenSwing(..., retry)` (a retraction's
+  re-open does not become the hand's latest swing, as `pendT` stayed 0 after a credit before); `T.OpenStrikeWait(i)`
+  and `T.Swallows(t) -> bool` (a strike whose success came before its swing swallows the next main-hand swing within
+  `STRIKE_WINDOW`).
+- Boundary: the ticket layer is the single owner of a pending swing; Resources keeps only the belief's own
+  conditions (an answer above the floor heard since, a spend from the slot, a plain read) and asks the ticket for the
+  swing. `Families/Swing.lua`'s `anchorT` (:45-56) stays: it is the swing clock (when the next swing comes, read by
+  Hekili's forecast), not a pending swing. `A.queued` (`Families/Casts.lua:201`, `:231`) stays: it is the client's
+  `IsCurrentSpell` answer before the strike's success, a fact Rows never held.
+
+Behaviour: the pending window was `min(L.LandWindow(h), 1.0)` in Resources and is the same number here; credit closes
+the ticket as it cleared `pendT`; a retraction's re-open never made `pendT` pending again and does not here. One
+difference is named: a white swing an on-next-swing strike replaced (its ticket closed `replaced`) is no longer
+pending, because it pays no white rage; `pendT` held it pending until its window. Gate: `solo_spec.lua`,
+`group_spec.lua` and `onus_spec.lua` rage metrics and `over` must not move down; a move down stops the task for the
+owner.
+
+- [ ] **Step 1: Write the failing tests.** Append inside `describe("the ticket pool", ...)` of
+  `tests/Game/Events/tickets_spec.lua`:
+
+```lua
+    describe("the pending swing (single owner)", function()
+        it("is the hand's latest open swing within min(landing window, 1 s), until its credit", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            assert.are.equal(10, T.SwingPending(1, 10.3))
+            assert.are.equal(0, T.SwingPending(2, 10.3))
+            assert.are.equal(0, T.SwingPending(1, 10 + T.PendingWindow(1) + 0.01))
+            ctl.now = 10.47
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1) -- credited
+            assert.are.equal(0, T.SwingPending(1, 10.5))
+        end)
+
+        it("does not make a retraction's re-open the hand's latest swing", function()
+            local i = T.OpenSwing(20, 1, "Creature-1", 1.5, 0, false, true)
+            assert.are.equal(T.OPEN, T.state[i])
+            assert.are.equal(0, T.SwingPending(1, 20.1))
+        end)
+
+        it("swallows the main-hand swing after a strike whose success came first", function()
+            ctl.now = 30
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_B)
+            ctl.now = 30.1
+            ctl.Fire("PLAYER_SWING", 2.6, 0) -- the strike's own swing: no swing ticket
+            for j = 1, T.CAP do
+                assert.is_false(T.state[j] ~= T.FREE and T.kind[j] == X.MELEE, "a swing ticket for the strike's swing")
+            end
+            ctl.now = 32.8
+            ctl.Fire("PLAYER_SWING", 2.6, 0) -- the next one is a swing again
+            assert.are.equal(32.8, T.SwingPending(1, 32.9))
+        end)
+    end)
+```
+
+  Append inside the top `describe` of `tests/Game/State/resources_spec.lua` (its booted fake spec with a swing-paid
+  rage slot; `ctl`, `VS`, `I` as that file names them):
+
+```lua
+    it("asks the swing ticket whether a swing is pending (no private copy)", function()
+        local src = assert(io.open("src/Hekili/Game/State/Families/Resources.lua")):read("*a")
+        assert.is_nil(src:find("pendT", 1, true))
+        assert.is_nil(src:find("LAND_CAP", 1, true))
+        ctl.now = 40
+        ctl.Fire("PLAYER_SWING", 2.6, 0)
+        I.Sources.Flush()
+        I.Fold(40.05)
+        I.clock = 40.05
+        assert.are.equal(40, VS.SwingPending(1))
+    end)
+```
+
+- [ ] **Step 2: Run them**
+
+Run: `.lua/bin/busted tests/Game/Events/tickets_spec.lua tests/Game/State/resources_spec.lua`
+Expected: FAIL, `attempt to call field 'SwingPending' (a nil value)` and the `pendT` find.
+
+- [ ] **Step 3: Tickets.** In `src/Hekili/Game/Events/Tickets.lua`, after `T.onExpire, T.onPay = nil, nil` add:
+
+```lua
+-- The pending swing (owner ruling 2026-10-22: the ticket is its single owner): each hand's latest swing ticket and its
+-- time; a swing is pending while that ticket is open and within the hand's pending window. PEND_CAP: Resources'
+-- drift guard, moved here unchanged (Melee's learn can widen the landing window to about 2.7 s main, 3.2 s off).
+T.PEND_CAP = 1.0
+T.lastSwing, T.lastSwingT = { 0, 0 }, { 0, 0 }
+-- A strike whose success came before its swing: the open STRIKE ticket that swallows the next main-hand swing.
+local strikeWait = 0
+```
+
+  Change `T.OpenSwing`'s signature to `function T.OpenSwing(t, hand, g, win, mref, isFirst, retry)` and add before its
+  `return i`:
+
+```lua
+    if not retry then -- a retraction's re-open is not the hand's latest swing (pendT stayed 0 after a credit)
+        T.lastSwing[hand], T.lastSwingT[hand] = i, t
+    end
+```
+
+  and after `T.OpenSwing` add:
+
+```lua
+--- Hand's pending window: its landing window, capped at PEND_CAP. Allocates nothing.
+function T.PendingWindow(hand)
+    local w = I.Log.LandWindow(hand)
+    return w < T.PEND_CAP and w or T.PEND_CAP
+end
+
+--- The time of hand's latest swing while its ticket is open (not credited, retracted away or expired) and t is within
+--- its pending window; else 0 (VS.SwingPending's swing). Allocates nothing.
+function T.SwingPending(hand, t)
+    local i, at0 = T.lastSwing[hand], T.lastSwingT[hand]
+    if i == 0 or state[i] < OPEN or kind[i] ~= MELEE or at[i] ~= at0 or t > at0 + T.PendingWindow(hand) then
+        return 0
+    end
+    return at0
+end
+
+--- Strike ticket i's success came before its swing: it swallows the next main-hand swing within STRIKE_WINDOW.
+function T.OpenStrikeWait(i)
+    strikeWait = i
+end
+
+--- Whether a main-hand swing at t is a waiting strike's own (consumed when it is). Allocates nothing.
+function T.Swallows(t)
+    local i = strikeWait
+    if i > 0 and state[i] >= OPEN and kind[i] == X.STRIKE and t - at[i] <= I.Melee.STRIKE_WINDOW then
+        strikeWait = 0
+        return true
+    end
+    strikeWait = 0
+    return false
+end
+```
+
+  and in `T.EndCombat`, after its loop, add `strikeWait = 0`.
+
+- [ ] **Step 4: Rows.** In `src/Hekili/Game/Events/Rows.lua`: remove `strikeWait` from the `local strikeWait, lastMain,
+  lastW0, fresh = ...` line (it becomes `local lastMain, lastW0, fresh = 0, -1, false`); in the `PLAYER_SWING` handler
+  replace
+
+```lua
+    if swingType == 0 and strikeWait > 0 and t - strikeWait <= STRIKE_WINDOW then
+        strikeWait = 0 -- the on-next-swing strike whose success came first is this swing: its outcome is the ability's
+        return
+    end
+```
+
+  with
+
+```lua
+    if swingType == 0 and T.Swallows(t) then
+        return -- the on-next-swing strike whose success came first is this swing: its outcome is the ability's
+    end
+```
+
+  replace the `UNIT_SPELLCAST_SUCCEEDED` handler with:
+
+```lua
+S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spellID)
+    if unit ~= "player" or type(spellID) ~= "number" then
+        return
+    end
+    local a = A.bySpell[spellID] or 0
+    if a > 0 and A.expKind[a] ~= X.NONE then
+        M.advance(t)
+    end
+    local strike, found = a > 0 and A.expKind[a] == X.STRIKE, false
+    if strike then -- the strike replaces its swing, in the same frame before or after this success
+        for i = 1, T.CAP do
+            if T.state[i] ~= 0 and T.kind[i] == MELEE and T.x[i] == 1 and t - T.at[i] <= STRIKE_WINDOW then
+                T.Close(i, t, "replaced")
+                found = true
+            end
+        end
+    end
+    local i = T.Arm(castGUID, t)
+    if i == 0 then
+        i = T.OpenCast(t, a, spellID, U.Sent(castGUID) or U.Pin(api, t) or "")
+    end
+    if strike and not found and i > 0 then
+        T.OpenStrikeWait(i) -- its swing comes after: the strike ticket swallows it (T.Swallows)
+    end
+end)
+```
+
+  In the combat-end handler drop `strikeWait = 0`; in
+  `I.CreditVerdict` the re-open becomes `T.OpenSwing(at, hand, recDst[id], recW[id], recRef[id], false, true)`.
+
+- [ ] **Step 5: Resources.** In `src/Hekili/Game/State/Families/Resources.lua`: delete lines 193 (`local pendT`) and
+  195 (`local LAND_CAP`); in the `c == 4` branch delete `pendT[hand] = o.t`; in the `c == 1` branch delete the
+  `if abs(o.t - pendT[hand]) < 1e-6 then ... end` block; in the combat-end hook delete `pendT[1], pendT[2] = 0, 0`;
+  replace `VS.SwingPending` (lines 1279-1296) with:
+
+```lua
+function VS.SwingPending(hand)
+    local p = I.Tickets.SwingPending(hand, I.clock) -- the swing ticket owns it (open, uncredited, in its window)
+    if p == 0 or heardT > p + I.Log.ORACLE_MIN - 1e-6 then
+        return 0 -- shown, credited, or no credit one landing lag on: avoided
+    end
+    local paid = false
+    for r = 1, R.n do
+        if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
+            if R.readable[r] or R.spends[r] ~= swSp[hand] then
+                return 0
+            end
+            paid = true
+        end
+    end
+    return paid and p or 0 -- no swing-paid slot on that hand: nothing pends
+end
+```
+
+  and update its doc comment's last sentences to: `Not pending once an answer above the floor since that point was
+  heard, once its swing ticket closes (credited, or no credit within its pending window: Events/Tickets.lua's
+  T.SwingPending), after a spend from the slot, or for a slot read plain. Allocates nothing.`
+
+- [ ] **Step 6: Run the tests, then the rage gates**
+
+Run: `.lua/bin/busted tests/Game/Events/tickets_spec.lua tests/Game/State/resources_spec.lua && make test-fast`
+Expected: PASS, 0 failures.
+
+Run: `.lua/bin/busted --tags=slow tests/Game/harness/solo_spec.lua tests/Game/harness/group_spec.lua tests/Game/harness/onus_spec.lua tests/Game/harness/flicker_spec.lua`
+Expected: PASS; every printed rage metric and `over` count at or better than Task 6's run. A move down stops the task
+for the owner with the metric and the first window that moved.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add src/Hekili/Game/Events/Tickets.lua src/Hekili/Game/Events/Rows.lua \
+  src/Hekili/Game/State/Families/Resources.lua tests/Game/Events/tickets_spec.lua tests/Game/State/resources_spec.lua
+git commit -m "refactor(tickets): the swing ticket owns the pending swing; the strike ticket swallows its swing
+
+Resources' pendT, LAND_CAP and the float-equality link are gone.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
+```
+
+---
+
+### Task 7a: One home for the running statistics (`State/Stats.lua`)
+
+**Files:**
+- Create: `src/Hekili/Game/State/Stats.lua`
+- Modify: `src/Hekili/Hekili.toc:17` (add `Game\State\Stats.lua` after `Game\State\Belief.lua`)
+- Modify: `src/Hekili/Game/State/Families/Resources.lua:627-647` (`ema`), `:683-686` (`calibrate`'s inline copy),
+  `:1164` (the hit rate's decay)
+- Modify: `src/Hekili/Game/Events/Attackers.lua:171` (the learned attack period)
+- Modify: `src/Hekili/Game/Events/Melee.lua` (`M.learn`, Rows.lua:272-279 before Task 5)
+- Test: `tests/Game/State/stats_spec.lua` (new); the existing resources, onus and pairing specs unchanged
+
+**Interfaces:**
+- Consumes: nothing.
+- Produces: `I.Stats.Ema(est, dev, sample, alpha, floor) -> est, dev, spread` (the EMA, its mean absolute deviation
+  against the new estimate, and the deviation never below `floor`); `I.Stats.Median(med, spr, d, step, lo, hi) -> med,
+  spr` (a sign step of `step` toward `d`, clamped to [lo, hi]; the spread an EMA (`Stats.SPR_ALPHA` 0.05) of
+  1.2533 x |d - med| clamped to [`Stats.SPR_LO` 0.02, `Stats.SPR_HI` 0.4]); `I.Stats.Clamp(x, lo, hi)`. Pure, no
+  allocation.
+- Boundary: the belief layer's statistics live in one file; callers keep their constants.
+
+Implementation choices: the two Resources EMA copies differ only in how they write the spread floor (`ema` scales
+`REGEN_SPREAD_MIN` by the reference's magnitude, `calibrate` uses it bare because its sample is a ratio to the
+reference); the one rule kept is "the floor is `REGEN_SPREAD_MIN` times the reference the sample is measured
+against": `abs(scale)` in `ema`, 1 in `calibrate`, which is exactly what each computes today. The hit rate's landed
+step (`+ HIT_ALPHA`, capped at 1, `:1178`) is a count step, not an EMA, and stays inline; its decay (`x (1 -
+HIT_ALPHA)`) becomes `Stats.Ema` toward 0, equal up to the last bit of rounding (the step's run of the rage specs
+checks it). Rows' median keeps its behaviour exactly (the unit test replays the old code against the new over 500
+samples).
+
+- [ ] **Step 1: Write the failing test** `tests/Game/State/stats_spec.lua`:
+
+```lua
+-- tests/Game/State/stats_spec.lua (owner ruling 2026-10-22): the running statistics, written once.
+local load = require("Game.State.helpers.load")
+
+describe("the running statistics", function()
+    local Stats = load.module().VirtualStateInternal.Stats
+
+    it("moves an EMA and its deviation, the spread never below the floor", function()
+        local e, d, s = Stats.Ema(10, 1, 20, 0.1, 0.5)
+        assert.are.equal(11, e)
+        assert.is_true(math.abs(d - (1 + 0.1 * (9 - 1))) < 1e-12)
+        assert.are.equal(d, s)
+        assert.are.same({ 10, 0, 0.5 }, { Stats.Ema(10, 0, 10, 0.1, 0.5) })
+    end)
+
+    it("keeps the swing lag's sign-step median exactly as Rows learned it", function()
+        local function old(med, spr, d, w) -- Rows.lua:272-279 before Task 5, verbatim
+            med = med + 0.005 * (d > med and 1 or -1)
+            local s = spr + 0.05 * (1.2533 * math.abs(d - med) - spr)
+            spr = s < 0.02 and 0.02 or (s > 0.4 and 0.4 or s)
+            med = med < 0 and 0 or (med > w and w or med)
+            return med, spr
+        end
+        local m1, s1, m2, s2, x = 0.474, 0.06, 0.474, 0.06, 1
+        for _ = 1, 500 do
+            x = (x * 16807) % 2147483647
+            local d = 0.2 + (x % 1000) / 1000
+            m1, s1 = old(m1, s1, d, 1.5)
+            m2, s2 = Stats.Median(m2, s2, d, 0.005, 0, 1.5)
+            assert.are.same({ m1, s1 }, { m2, s2 })
+        end
+    end)
+
+    it("clamps", function()
+        assert.are.same({ 0.02, 0.4, 0.3 }, { Stats.Clamp(0.01, 0.02, 0.4), Stats.Clamp(9, 0.02, 0.4),
+            Stats.Clamp(0.3, 0.02, 0.4) })
+    end)
+end)
+```
+
+- [ ] **Step 2: Run it**
+
+Run: `.lua/bin/busted tests/Game/State/stats_spec.lua`
+Expected: FAIL, `attempt to index local 'Stats' (a nil value)`.
+
+- [ ] **Step 3: Implement** `src/Hekili/Game/State/Stats.lua`:
+
+```lua
+-- Game/State/Stats.lua
+-- The belief layer's running statistics, written once (owner ruling 2026-10-22, the belief-layer audit): an
+-- exponential moving average with a mean-absolute-deviation spread and a floor (Resources' regen calibration and hit
+-- rate, Attackers' learned period, the flight lag of Events/Tickets.lua), and a sign-step running median with a
+-- clamped spread (Melee's swing landing lag). Pure arithmetic: no table, no client read.
+
+local _, ns = ...
+local I = ns.VirtualStateInternal
+
+local Stats = {}
+I.Stats = Stats
+Stats.SPR_LO, Stats.SPR_HI, Stats.SPR_ALPHA = 0.02, 0.4, 0.05
+local abs = math.abs
+
+--- x clamped to [lo, hi]. Allocates nothing.
+function Stats.Clamp(x, lo, hi)
+    return x < lo and lo or (x > hi and hi or x)
+end
+
+--- One sample into an EMA: the new estimate, the new deviation (an EMA of |sample - the new estimate|) and the spread
+--- (that deviation, never below `floor`). Allocates nothing.
+function Stats.Ema(est, dev, sample, alpha, floor)
+    local e = est + alpha * (sample - est)
+    local d = dev + alpha * (abs(sample - e) - dev)
+    return e, d, d > floor and d or floor
+end
+
+--- One sample d into a sign-step running median `med` (a step of `step` toward d, then clamped to [lo, hi]) and its
+--- spread (mean absolute deviation to SD, 1.2533 x |d - med| against the stepped median, an EMA of SPR_ALPHA, clamped
+--- to [SPR_LO, SPR_HI]). Allocates nothing.
+function Stats.Median(med, spr, d, step, lo, hi)
+    med = med + step * (d > med and 1 or -1)
+    spr = Stats.Clamp(spr + Stats.SPR_ALPHA * (1.2533 * abs(d - med) - spr), Stats.SPR_LO, Stats.SPR_HI)
+    return Stats.Clamp(med, lo, hi), spr
+end
+```
+
+  Add `Game\State\Stats.lua` to `src/Hekili/Hekili.toc` after `Game\State\Belief.lua` (line 17).
+
+- [ ] **Step 4: Move the callers onto it.**
+
+  `Resources.lua`, at the top beside `local abs`: `local Stats = I.Stats`. In `ema` (lines 627-647) replace
+
+```lua
+    local est = E[r] + I.ALPHA * (m - E[r])
+    local dev = D[r] + I.ALPHA * (abs(m - est) - D[r])
+    local floor = abs(scale) * I.REGEN_SPREAD_MIN
+    local spread = dev > floor and dev or floor
+```
+
+  with
+
+```lua
+    local est, dev, spread = Stats.Ema(E[r], D[r], m, I.ALPHA, abs(scale) * I.REGEN_SPREAD_MIN)
+```
+
+  In `calibrate` replace
+
+```lua
+    local scale = R.scale[r] + I.ALPHA * (ratio - R.scale[r])
+    local dev = R.dev[r] + I.ALPHA * (abs(ratio - scale) - R.dev[r])
+    R.scale[r], R.dev[r] = scale, dev
+    R.spread[r] = dev > I.REGEN_SPREAD_MIN and dev or I.REGEN_SPREAD_MIN
+```
+
+  with
+
+```lua
+    local scale, dev, spread = Stats.Ema(R.scale[r], R.dev[r], ratio, I.ALPHA, I.REGEN_SPREAD_MIN) -- floor x 1: a ratio
+    R.scale[r], R.dev[r], R.spread[r] = scale, dev, spread
+```
+
+  At line 1164 replace `hitRate[hand] = hitRate[hand] * (1 - HIT_ALPHA)` with
+  `hitRate[hand] = (Stats.Ema(hitRate[hand], 0, 0, HIT_ALPHA, 0)) -- a swing: the share decays toward 0`.
+
+  `Attackers.lua`: add `local Stats = I.Stats` beside `local floor = math.floor`, and at line 171 replace
+  `atkPeriod[k] = period * 0.8 + gap / n * 0.2 -- shortcut: a plain EMA; a dual-wielding attacker blurs it` with
+  `atkPeriod[k] = (Stats.Ema(period, 0, gap / n, 0.2, 0)) -- shortcut: a plain EMA; a dual-wielding attacker blurs it`.
+
+  `Melee.lua`: replace `M.learn`'s body with
+
+```lua
+function M.learn(r, d)
+    L.med[r], L.spr[r] = I.Stats.Median(L.med[r], L.spr[r], d, 0.005, 0, L.PAIR_WINDOW_MS[r == 1 and 1 or 2] / 1000)
+end
+```
+
+- [ ] **Step 5: Run the unit test, then every spec that reads these numbers**
+
+Run: `.lua/bin/busted tests/Game/State/stats_spec.lua && make test-fast && .lua/bin/busted --tags=slow tests/Game/harness/solo_spec.lua tests/Game/harness/group_spec.lua tests/Game/harness/onus_spec.lua`
+Expected: PASS, 0 failures; the printed metrics equal Task 6b's run.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/Hekili/Game/State/Stats.lua src/Hekili/Hekili.toc src/Hekili/Game/State/Families/Resources.lua \
+  src/Hekili/Game/Events/Attackers.lua src/Hekili/Game/Events/Melee.lua tests/Game/State/stats_spec.lua
+git commit -m "refactor(stats): one EMA and one running median for the belief layer's statistics
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
+```
+
+---
+
+### Task 7b: One home for amount bands (`Events/Bands.lua`)
+
+**Files:**
+- Create: `src/Hekili/Game/Events/Bands.lua`
+- Modify: `src/Hekili/Hekili.toc` (add `Game\Events\Bands.lua` after `Game\Events\CombatLog.lua`, before
+  `Game\Events\Tickets.lua`)
+- Modify: `src/Hekili/Game/Events/Melee.lua` (`M.classOf`, Rows.lua:223-242 before Task 5)
+- Modify: `src/Hekili/Game/Events/Attackers.lua:182-198` (`base`, `fits`), `:269-271` (the band's learning)
+- Test: `tests/Game/Events/bands_spec.lua` (new); the existing onus and pairing specs unchanged
+
+**Interfaces:**
+- Consumes: nothing.
+- Produces: `I.Bands.Normalise(amount, flag, policy) -> v|nil` (a crit halved; policy `"ours"`: a partly blocked
+  hit kept as given, a crushing one unchanged, Rows' white classes; policy `"theirs"`: a crushing one / 1.5 and a
+  partly blocked one nil, Attackers' hits on us); `I.Bands.Learn(lo, hi, n, k, v, creep)` (band k in the caller's
+  arrays: the first value sets both ends, a new low or high takes it, otherwise each end creeps toward v by `creep`;
+  0 keeps min and max); `I.Bands.Fits(lo, hi, n, k, v, kLo, kHi, minN) -> bool`; `I.Bands.Class(v, lo, hi, looseLo) ->
+  0..3` (a fixed range's grades: 1 inside, 2 loose [looseLo, 1.1 hi], 3 above (1.1 hi, 2 hi], 0 none).
+- Boundary: the band arithmetic lives once; each caller keeps its own constants (Rows' 0.6/1.1/2 grades, Attackers'
+  0.8/1.2 after 3, the cast bands' 0.6/1.6 after 3) and its BLOCK_REDUCED policy.
+
+Implementation choice: BLOCK_REDUCED differs by caller today (Rows grades it in the loose class from 0; Attackers
+drops it, since the blocked part is not given); the difference is kept as the `policy` parameter, not resolved, so no
+caller's behaviour changes. A crushing blow is only ever dealt to the player, so `"ours"` leaving it unchanged is
+today's code too.
+
+- [ ] **Step 1: Write the failing test** `tests/Game/Events/bands_spec.lua`:
+
+```lua
+-- tests/Game/Events/bands_spec.lua (owner ruling 2026-10-22): amount bands, written once.
+local load = require("Game.State.helpers.load")
+
+describe("amount bands", function()
+    local B = load.module().VirtualStateInternal.Bands
+
+    it("normalises by policy: a crit halved; theirs divide a crush and drop a partial block", function()
+        assert.are.same({ 15, 30, 30 }, { B.Normalise(30, "CRITICAL", "ours"), B.Normalise(30, "CRUSHING", "ours"),
+            B.Normalise(30, "BLOCK_REDUCED", "ours") })
+        assert.are.same({ 15, 20 }, { B.Normalise(30, "CRITICAL", "theirs"), B.Normalise(30, "CRUSHING", "theirs") })
+        assert.is_nil(B.Normalise(30, "BLOCK_REDUCED", "theirs"))
+        assert.is_nil(B.Normalise(nil, "", "ours"))
+    end)
+
+    it("learns min and max with no creep, and creeps toward a sample inside", function()
+        local lo, hi, n = { 0 }, { 0 }, { 0 }
+        for _, v in ipairs({ 20, 24, 18 }) do
+            B.Learn(lo, hi, n, 1, v, 0)
+        end
+        assert.are.same({ 18, 24, 3 }, { lo[1], hi[1], n[1] })
+        B.Learn(lo, hi, n, 1, 22, 0.05)
+        assert.is_true(math.abs(lo[1] - 18.2) < 1e-12 and math.abs(hi[1] - 23.9) < 1e-12)
+    end)
+
+    it("fits once taught, and grades a fixed range", function()
+        local lo, hi, n = { 18 }, { 24 }, { 3 }
+        assert.is_true(B.Fits(lo, hi, n, 1, 28, 0.8, 1.2, 3))
+        assert.is_false(B.Fits(lo, hi, n, 1, 29, 0.8, 1.2, 3))
+        assert.is_false(B.Fits(lo, hi, { 2 }, 1, 20, 0.8, 1.2, 3))
+        assert.are.same({ 1, 2, 3, 0, 0 }, { B.Class(40, 36, 50, 21.6), B.Class(54, 36, 50, 21.6),
+            B.Class(90, 36, 50, 21.6), B.Class(101, 36, 50, 21.6), B.Class(10, 36, 50, 21.6) })
+    end)
+end)
+```
+
+- [ ] **Step 2: Run it**
+
+Run: `.lua/bin/busted tests/Game/Events/bands_spec.lua`
+Expected: FAIL, `attempt to index local 'B' (a nil value)`.
+
+- [ ] **Step 3: Implement** `src/Hekili/Game/Events/Bands.lua`:
+
+```lua
+-- Game/Events/Bands.lua
+-- Amount bands, written once (owner ruling 2026-10-22, the belief-layer audit): a hit's amount normalised to its
+-- unmodified size, and band records kept in the caller's arrays (lo, hi, n by index) with their learning, their fit
+-- and a fixed range's grades. Callers: Melee's white amount classes (a fixed UnitDamage range), Attackers' bands per
+-- attacker, the ticket pool's cast bands. Pure: no table, no client read.
+
+local _, ns = ...
+local I = ns.VirtualStateInternal
+
+local B = {}
+I.Bands = B
+
+--- A hit's amount as its unmodified size, or nil: a crit halved; `policy` "theirs" (hits on us) also divides a
+--- crushing blow by 1.5 and drops a partly blocked hit (its blocked part is not given); "ours" keeps both as given.
+function B.Normalise(amount, flag, policy)
+    if type(amount) ~= "number" then
+        return nil
+    elseif flag == "CRITICAL" then
+        return amount / 2
+    elseif policy == "theirs" and flag == "CRUSHING" then
+        return amount / 1.5
+    elseif policy == "theirs" and flag == "BLOCK_REDUCED" then
+        return nil
+    end
+    return amount
+end
+
+--- Band k learns v: the first value sets both ends; a new low or high takes it; otherwise each end creeps toward v by
+--- `creep` (0: plain min and max). Allocates nothing.
+function B.Learn(lo, hi, n, k, v, creep)
+    if n[k] == 0 then
+        lo[k], hi[k] = v, v
+    else
+        lo[k] = v < lo[k] and v or lo[k] + creep * (v - lo[k])
+        hi[k] = v > hi[k] and v or hi[k] + creep * (v - hi[k])
+    end
+    n[k] = n[k] + 1
+end
+
+--- Whether band k, taught at least minN values, holds v within [kLo x lo, kHi x hi].
+function B.Fits(lo, hi, n, k, v, kLo, kHi, minN)
+    return v ~= nil and n[k] >= minN and v >= kLo * lo[k] and v <= kHi * hi[k]
+end
+
+--- v's grade against a fixed range [lo, hi]: 1 inside, 2 loose [looseLo, 1.1 hi], 3 above (1.1 hi, 2 hi], 0 none.
+function B.Class(v, lo, hi, looseLo)
+    if hi <= 0 or v < looseLo or v > 2 * hi then
+        return 0
+    elseif v >= lo and v <= hi then
+        return 1
+    end
+    return v <= 1.1 * hi and 2 or 3
+end
+```
+
+  Add `Game\Events\Bands.lua` to `src/Hekili/Hekili.toc` after `Game\Events\CombatLog.lua`.
+
+- [ ] **Step 4: Move the callers onto it.** `Melee.lua`: replace `M.classOf`'s body with
+
+```lua
+function M.classOf(h, amount, flag)
+    local minMain, maxMain, minOff, maxOff = VS.Stat("UnitDamage")
+    local lo, hi = minMain, maxMain
+    if h == 2 then
+        lo, hi = minOff, maxOff
+    end
+    -- a glancing or partly blocked hit opens the loose band down to 0 (G's glancing 1-5 are another player's)
+    local looseLo = (flag == "GLANCING" or flag == "BLOCK_REDUCED") and 0 or 0.6 * lo
+    return I.Bands.Class(I.Bands.Normalise(amount, flag, "ours"), lo, hi, looseLo)
+end
+```
+
+  `Attackers.lua`: replace `base` and `fits` (lines 182-198) with
+
+```lua
+local Bands = I.Bands
+
+-- A wound's amount as its attacker's unmodified hit (Bands' "theirs": a crit halved, a crush / 1.5, a partly blocked
+-- one nil), or nil for a secret amount or flag.
+local function base(amount, flag)
+    if type(flag) ~= "string" then
+        return nil
+    end
+    return Bands.Normalise(amount, flag, "theirs")
+end
+
+-- Whether clock k's band is usable and holds `a`.
+local function fits(k, a)
+    return k ~= nil and Bands.Fits(atkLo, atkHi, atkN, k, a, L.BAND_LO, L.BAND_HI, L.BAND_N)
+end
+```
+
+  and its band learning (lines 269-271) with `Bands.Learn(atkLo, atkHi, atkN, k, a, 0)`.
+
+- [ ] **Step 5: Run the unit test, then the specs that use them**
+
+Run: `.lua/bin/busted tests/Game/Events/bands_spec.lua && make test-fast && .lua/bin/busted --tags=slow tests/Game/harness/group_spec.lua tests/Game/harness/onus_spec.lua`
+Expected: PASS, 0 failures; the printed metrics equal Task 7a's run.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add src/Hekili/Game/Events/Bands.lua src/Hekili/Hekili.toc src/Hekili/Game/Events/Melee.lua \
+  src/Hekili/Game/Events/Attackers.lua tests/Game/Events/bands_spec.lua
+git commit -m "refactor(bands): one amount-band module; Melee's classes and Attackers' bands use it
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
+```
+
+---
+
 ### Task 7: The FLIGHT kind: hard window, range bracket, learned lag, amount band
 
 **Files:**
@@ -3253,7 +4111,8 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 - Test: `tests/Game/Events/kinds_spec.lua`, `tests/Game/Events/tickets_spec.lua` (cases added)
 
 **Interfaces:**
-- Consumes: `A.velocity`, `A.rMax` (`Sources/Spellbook.lua:43`), `A.expDeclared`, `VS.TargetRange()`
+- Consumes: `I.Stats.Ema`, `I.Stats.Clamp` (Task 7a), `I.Bands.Learn`, `I.Bands.Fits`, `I.Bands.Normalise`
+  (Task 7b), `A.velocity`, `A.rMax` (`Sources/Spellbook.lua:43`), `A.expDeclared`, `VS.TargetRange()`
   (`Families/Enemies.lua:71-73`: `{ lo, hi, last.observed.t }`), `I.Units.Bound(1)`.
 - Produces: `T.speed[i]`, `T.H[i]`; `T.TOL` 0.15, `T.CLOSE` 7, `T.LAG_CAP` 16; `T.lagGUID/lagSpeed/lagE/lagSpr/lagT/
   lagN`; `T.LagOf(g, v) -> r|0`; `T.Learn(g, v, lag, t)`; `T.bandLo/bandHi/bandN` by ability;
@@ -3422,8 +4281,9 @@ function T.Learn(g, v, lag, t)
         end
         T.lagGUID[r], T.lagSpeed[r], T.lagE[r], T.lagSpr[r], T.lagN[r] = g, v, lag, T.TOL / 2, 0
     end
-    local s = T.lagSpr[r] + 0.25 * (1.2533 * math.abs(lag - T.lagE[r]) - T.lagSpr[r])
-    T.lagSpr[r] = s < 0.02 and 0.02 or (s > 0.4 and 0.4 or s)
+    local Stats = I.Stats -- Task 7a: the one EMA (spread 0.25 x 1.2533 |lag - last|, clamped [0.02, 0.4])
+    local s = Stats.Ema(T.lagSpr[r], 0, 1.2533 * math.abs(lag - T.lagE[r]), 0.25, 0)
+    T.lagSpr[r] = Stats.Clamp(s, Stats.SPR_LO, Stats.SPR_HI)
     T.lagE[r], T.lagT[r], T.lagN[r] = lag, t, T.lagN[r] + 1 -- the last lag: a closing mob makes it shrink
 end
 
@@ -3435,16 +4295,8 @@ I.OnBuild(function()
     end
 end)
 
-local function teach(a, amount, flag)
-    local v = flag == "CRITICAL" and amount / 2 or amount
-    local lo, hi = T.bandLo[a], T.bandHi[a]
-    if T.bandN[a] == 0 then
-        lo, hi = v, v
-    else
-        lo = v < lo and v or lo + 0.05 * (v - lo) -- a new low takes it; else it creeps up
-        hi = v > hi and v or hi + 0.05 * (v - hi)
-    end
-    T.bandLo[a], T.bandHi[a], T.bandN[a] = lo, hi, T.bandN[a] + 1
+local function teach(a, amount, flag) -- Task 7b's band: a new low or high takes it, else each end creeps by 0.05
+    I.Bands.Learn(T.bandLo, T.bandHi, T.bandN, a, I.Bands.Normalise(amount, flag, "ours"), 0.05)
 end
 ```
 
@@ -3537,8 +4389,9 @@ Replace `K.Accepts`'s last two lines (`local s = T.school[i]` and `return s == A
     end
     local a = T.ab[i]
     if a > 0 and k ~= TICKS and k ~= CHANNEL and T.bandN[a] >= K.BAND_N then
-        local v = flag == "CRITICAL" and amount / 2 or amount
-        if v < K.SPELL_BAND_LO * T.bandLo[a] or v > K.SPELL_BAND_HI * T.bandHi[a] then
+        local B = I.Bands
+        local v = B.Normalise(amount, flag, "ours")
+        if not B.Fits(T.bandLo, T.bandHi, T.bandN, a, v, K.SPELL_BAND_LO, K.SPELL_BAND_HI, K.BAND_N) then
             T.bandRejected = T.bandRejected + 1
             return false
         end
