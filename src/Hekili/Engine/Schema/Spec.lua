@@ -11,6 +11,11 @@ local UnitCanAttack, UnitCastingInfo, UnitChannelInfo, UnitClassBase = Facade.Un
 local UnitClass, UnitGUID = Facade.UnitClass, Facade.UnitGUID
 local Hekili = _G[ addon ]
 
+-- The client's spell schools by name (unit-registry spec §5.1): a game concept, not class content. Packs declare an
+-- ability's `school` by name; Game/State/Families/Expect.lua compiles it to this mask at build.
+ns.SCHOOL = { physical = 1, holy = 2, fire = 4, nature = 8, frost = 16, shadow = 32, arcane = 64 }
+Hekili.SCHOOL = ns.SCHOOL
+
 local class = Hekili.Class
 local state = Hekili.State
 

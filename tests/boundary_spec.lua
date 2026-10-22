@@ -27,6 +27,7 @@ local PUBLIC = {
     State = true,
     Class = true,
     Client = true,
+    SCHOOL = true,
 }
 local PRIVATE = { "%f[%w_]ns%.", "ns%s*=%s*%.%.%.", "VirtualState", "Hekili%.Virtual", "Hekili%.Engine" }
 

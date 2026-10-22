@@ -20,7 +20,7 @@ local shared = Hekili:NewShared()
 
 -- Per school, whether an interrupt has it locked out at the query time (C10): `locked_out_fire` and so on, from
 -- C_LossOfControl (plain); a lockout's `lockoutSchool` is the mask of the schools it locks (0: no school).
-local SCHOOLS = { physical = 1, holy = 2, fire = 4, nature = 8, frost = 16, shadow = 32, arcane = 64 }
+local SCHOOLS = Hekili.SCHOOL
 local floor = math.floor
 for school, mask in pairs(SCHOOLS) do
     -- shortcut: allocates a table per active lockout per read (C_LossOfControl.GetActiveLossOfControlData); upgrade before a caster APL reads locked_out_* in combat

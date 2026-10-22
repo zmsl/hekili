@@ -221,6 +221,7 @@ local function content()
         })
         local ns = { Facade = any }
         _G.Hekili.Client = any
+        _G.Hekili.SCHOOL = require("Game.State.helpers.load").school() -- Auras.lua reads it at load
         assert(loadfile("src/Hekili/Engine/Schema/Races.lua"))("Hekili", ns)
         assert(loadfile("src/Hekili/Engine/Schema/Shared.lua"))("Hekili", ns)
         -- a global the file reads at load (INVTYPE_*) answers `any`; Hekili and the Lua library stay real

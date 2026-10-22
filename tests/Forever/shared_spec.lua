@@ -135,6 +135,7 @@ describe("shared content", function()
             },
         }
         _G.Hekili.Client = ns.Facade
+        _G.Hekili.SCHOOL = require("Game.State.helpers.load").school() -- Auras.lua reads it at load
         assert(loadfile("src/Hekili/Engine/Schema/Races.lua"))("Hekili", ns)
         assert(loadfile("src/Hekili/Engine/Schema/Shared.lua"))("Hekili", ns)
         for _, f in ipairs(files or SHARED) do

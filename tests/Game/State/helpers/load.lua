@@ -17,9 +17,16 @@ function M.files()
     return out
 end
 
---- A fresh ns with every VirtualState file but Adapter.lua loaded. `before(ns)` runs first (e.g. to set fakes).
+--- Spec.lua's school enum (Engine/Schema loads after Game in Hekili.toc and needs Hekili, so a headless ns, or a fake
+--- Hekili, takes the table from Spec.lua's own line: one source of truth).
+function M.school()
+    local src = assert(io.open(M.ROOT .. "Engine/Schema/Spec.lua")):read("*a")
+    return assert(loadstring("return " .. assert(src:match("ns%.SCHOOL = (%b{})"))))()
+end
+
+--- A fresh ns with every VirtualState file but Adapter.lua loaded, `ns.SCHOOL` seeded as Spec.lua sets it.
 function M.module()
-    local ns = {}
+    local ns = { SCHOOL = M.school() }
     for _, path in ipairs(M.files()) do
         if not path:match("Adapter%.lua$") then
             assert(loadfile(path))("Hekili", ns)
