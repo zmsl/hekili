@@ -49,6 +49,7 @@ Game\State\Snapshot.lua
 Game\State\AplWarnings.lua
 Game\Events\EventFacade.lua
 Game\Events\CombatLog.lua
+Game\Events\Bands.lua
 Game\Events\Tickets.lua
 Game\Events\Melee.lua
 Game\Events\Kinds.lua

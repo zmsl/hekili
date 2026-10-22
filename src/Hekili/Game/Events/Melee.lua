@@ -106,19 +106,9 @@ function M.classOf(h, amount, flag)
     if h == 2 then
         lo, hi = minOff, maxOff
     end
-    if flag == "CRITICAL" then
-        amount = amount / 2
-    end
-    local looseLo = 0.6 * lo
-    if flag == "GLANCING" or flag == "BLOCK_REDUCED" then
-        looseLo = 0
-    end
-    if hi <= 0 or amount < looseLo or amount > 2 * hi then
-        return 0
-    elseif amount >= lo and amount <= hi then
-        return 1
-    end
-    return amount <= 1.1 * hi and 2 or 3
+    -- a glancing or partly blocked hit opens the loose band down to 0 (G's glancing 1-5 are another player's)
+    local looseLo = (flag == "GLANCING" or flag == "BLOCK_REDUCED") and 0 or 0.6 * lo
+    return I.Bands.Class(I.Bands.Normalise(amount, flag, "ours"), lo, hi, looseLo)
 end
 
 local function normal(d, m, s)

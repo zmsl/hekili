@@ -177,22 +177,20 @@ end
 
 local MISSES = { DODGE = true, PARRY = true, BLOCK = true, MISS = true }
 
--- A wound's amount as its attacker's unmodified hit: a crit halved, a crushing blow / 1.5; nil for a partly blocked one
--- (the blocked part is not given), or for a secret amount or flag (read through Plain: nil).
+local Bands = I.Bands
+
+-- A wound's amount as its attacker's unmodified hit (Bands' "theirs": a crit halved, a crush / 1.5, a partly blocked
+-- one nil), or nil for a secret amount or flag (read through Plain: nil).
 local function base(amount, flag)
-    if type(amount) ~= "number" or type(flag) ~= "string" or flag == "BLOCK_REDUCED" then
+    if type(flag) ~= "string" then
         return nil
-    elseif flag == "CRITICAL" then
-        return amount / 2
-    elseif flag == "CRUSHING" then
-        return amount / 1.5
     end
-    return amount
+    return Bands.Normalise(amount, flag, "theirs")
 end
 
 -- Whether clock k's band is usable and holds `a`.
 local function fits(k, a)
-    return k ~= nil and a ~= nil and atkN[k] >= L.BAND_N and a >= L.BAND_LO * atkLo[k] and a <= L.BAND_HI * atkHi[k]
+    return k ~= nil and Bands.Fits(atkLo, atkHi, atkN, k, a, L.BAND_LO, L.BAND_HI, L.BAND_N)
 end
 
 S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
@@ -265,9 +263,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         if byBand then
             L.onus.byBand = L.onus.byBand + 1
         elseif a then -- a band learns from the clock's, the lone hostile's and the elimination's credits, never its own
-            atkLo[k] = (atkN[k] == 0 or a < atkLo[k]) and a or atkLo[k]
-            atkHi[k] = a > atkHi[k] and a or atkHi[k]
-            atkN[k] = atkN[k] + 1
+            Bands.Learn(atkLo, atkHi, atkN, k, a, 0)
         end
     end
     local amt = type(amount) == "number" and amount or 0
