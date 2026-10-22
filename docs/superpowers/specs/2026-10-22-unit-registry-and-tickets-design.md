@@ -72,7 +72,10 @@ Per unit slot `u` (`UNIT_CAP` = 64 entries, built at load): `uGUID[u]` (plain st
 | GONE | 3 | no token bound for `GRACE` or more | no |
 | DEAD | 4 | the kill tell or a plain `UnitIsDead` named it | yes, for `GRACE` after the death |
 
-Dedupe memory: the last `DUP_N` = 4 resolved rows (`dT`, `dUid`, `dAct`, `dFlag`, `dAmount`, `dSchool`), a ring.
+Dedupe memory: the last `DUP_N` = 4 outcome groups (`dT`, `dUid`, `dAct`, `dFlag`, `dAmount`, `dSchool`), a ring.
+Each entry also records the tokens already seen in its group: a fixed boolean array `dTok[(e - 1) x 44 + i]` over the
+44 token indices (176 booleans, built at load; a new group clears its 44). `targettarget` needs no bit: the registry
+never dispatches its rows (2.1).
 
 All arrays are filled at load. Event handlers write numbers, booleans and the plain GUID strings the client handed
 them. No table, closure or string is made after load.
@@ -118,9 +121,22 @@ report flagged (risk: a stale `target` WOUND after a swap counts toward the new 
 One outcome arrives once per token naming the victim, in the order plate, target, soft (`tests/Game/harness/observer.lua:81-95`
 encodes the same order from the earlier logs; capture b 42067-42068 confirms it). The fan-out can span 1 ms.
 
-A resolved row is a duplicate when a ring entry has the same slot, `act`, `flag`, `amount` and `school`, and
-`|t - dT| <= DUP_WINDOW` (0.005 s). A row whose token was rebound less than `GRACE` ago and whose payload matches a ring
-entry within `DUP_WINDOW` on any slot is also a duplicate (the swap exception of 2.3). Duplicates are counted
+A resolved row is a duplicate when a ring entry has the same slot, `act`, `flag`, `amount` and `school`,
+`|t - dT| <= DUP_WINDOW` (0.005 s), and the row's token is not yet in that entry's token set. A row whose token was
+rebound less than `GRACE` ago and whose payload matches a ring entry within `DUP_WINDOW` on any slot, under the same
+token condition, is also a duplicate (the swap exception of 2.3). A duplicate adds its token to the group's set.
+
+One outcome's fan-out never repeats a token: plate, target and soft each appear at most once per outcome (captures a,
+b and c). So a row whose token is already in the matching group's set is a second outcome, even with the same payload
+inside `DUP_WINDOW`: it starts a new group (a new ring entry) and is dispatched. Two partners' equal hits, or our two
+hands landing together with equal damage, therefore stay two rows whenever they share a token.
+
+Known limit: two genuine outcomes that each arrive on only one token, different tokens, with the same payload in the
+same `DUP_WINDOW`, are indistinguishable and merge. That needs a victim with no shared token, which a visible plate
+makes rare (a hit on our target arrives on its plate and `target`). An upper bound before that condition: in
+party-light, about `1.8^2 x 0.005` = 0.016 same-window pairs a second, times about 0.07 for an equal amount over a
+15-value damage range, is about 4 an hour. The detection suite measures the real rate per band (6.2, K9); in game a
+merge looks exactly like one outcome on two tokens, so no counter can see it. Duplicates are counted
 (`U.dup`) and dropped. A row that is not a duplicate goes into the ring, refreshes `uSeen`, and is dispatched once to
 each listener registered with `I.Units.OnRow(fn)`, in registration order:
 `fn(t, guid, uid, act, flag, amount, school)`.
@@ -614,6 +630,7 @@ Kinds (each a scripted scenario through the existing `scenarios.world` knobs, `t
 | K6 kill | K4 or K1 killing the target, with and without a press at the kill | kill tell, post-clear row, `TargetGone` |
 | K7 churn | K4 with plate churn on the pinned mob | resolution, gone and revive |
 | K8 identical | another source with our exact amount and school on the same mob | dedupe never merges two GUIDs; precision |
+| K9 same-ms twins | two equal-amount hits from two sources on one target in the same ms, each on plate and target; and one hit on plate, target and soft | the twins dispatch twice; the single hit dispatches once; the single-token residual's rate per band (MEASURED) |
 
 Bands (other sources on our target and nearby; foreign outcomes per second as measured today):
 
@@ -721,8 +738,8 @@ any downward move needs a named cause written beside the number and the owner's 
 | # | Decision | Reason |
 |---|---|---|
 | 1 | `GRACE` = 0.1 s | about three times the slowest post-clear row seen (36 ms) |
-| 2 | `DUP_WINDOW` = 0.005 s, ring of 4 | one outcome's token fan-out spans up to 1 ms in the captures |
-| 3 | A rebound token's row that matches another token's payload within `DUP_WINDOW` is a duplicate | stops a stale `target` echo after a swap from paying the new mob |
+| 2 | `DUP_WINDOW` = 0.005 s, ring of 4 groups, each with a token set (a fixed boolean array over the 44 token indices); a row whose token is already in the matching group starts a new group and is dispatched | one outcome's fan-out spans up to 1 ms and never repeats a token (captures a, b, c), so equal twins on a shared token stay two |
+| 3 | A rebound token's row that matches another token's payload within `DUP_WINDOW` is a duplicate, unless its token is already in that group | stops a stale `target` echo after a swap from paying the new mob |
 | 4 | `UNIT_CAP` = 64 slots, LIVE never evicted | 44 tokens can be LIVE at once; 20 spare slots for grace and dead units |
 | 5 | Token set: target, focus, nameplate1-40, softenemy, softinteract; `player` stays with Player and Attackers | the victim-side tokens of hostiles; `targettarget` rows are echoes |
 | 6 | Kill tell = any player FAILED (any castGUID) within 0.010 s before a clear to none | all four kills in captures b and c show it, two of them with no cast in progress |
