@@ -69,10 +69,10 @@ return {
     requires = { berserker_rage = "improved_berserker_rage" },
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
     -- the user's tiers (2026-10-21): Bloodthirst and Whirlwind rotational (untiered); Overpower 1; Heroic Strike and
-    -- Cleave alike, { 1, 2 } ("those abilities are kind of the same"; Fury has one Cleave line, so it takes 1); Rend 2
+    -- Cleave always 2 (the owner's ruling, 2026-10-22, superseding { 1, 2 }); Victory Rush 1 on its extra line; Rend 2
     -- (the rend weave); Battle Stance 1 (overpower_weaving's swap, Fury's only Battle Stance line). A tier is static:
     -- the weave's lines carry theirs whether Rend Weave is on or off.
-    focus = { overpower = 1, heroic_strike = { 1, 2 }, cleave = { 1, 2 }, rend = 2, battle_stance = 1 },
+    focus = { overpower = 1, heroic_strike = 2, cleave = 2, rend = 2, battle_stance = 1 },
     -- the user's ruling (2026-10-21): "guard against recommending battle stance if there won't be enough time or rage
     -- to cast overpower". wowsims's swap (overpower_weaving #2: Overpower: Can Cast, i.e. the Delay Check, not the
     -- execute phase, the window up with 5 <= rage <= 100, and gcd 0) checks the rage before the swap only: below
@@ -91,5 +91,5 @@ return {
     -- extra (content outside wowsims's model): Victory Rush; wowsims never goes mob to mob, so its kill window never
     -- opens there. The user's ruling (2026-10-21): "just above bloodthirst (since it's a mini bloodthirst)". The bare
     -- line: the kit's usable already refuses it outside Victorious.
-    extra = { { before = "bloodthirst", line = "victory_rush" } },
+    extra = { { before = "bloodthirst", line = "victory_rush,focus=1" } },
 }

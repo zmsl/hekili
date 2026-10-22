@@ -42,7 +42,7 @@ actions+=/death_wish
 actions+=/recklessness,if=settings.wowsims_recklessness
 actions+=/sweeping_strikes,use_off_gcd=1,if=active_enemies>1
 actions+=/battle_stance,use_off_gcd=1,if=(!settings.wowsims_stance_dance&!buff.battle_stance.up)
-actions+=/victory_rush
+actions+=/victory_rush,focus=1
 actions+=/mortal_strike,if=settings.wowsims_stance_dance
 actions+=/rend,focus=2,if=(!execute_phase&(!action.battle_stance.known|buff.battle_stance.up)&debuff.rend.remains<=1.5)
 actions+=/overpower,focus=1,if=(!action.battle_stance.known|buff.battle_stance.up)
@@ -54,11 +54,11 @@ actions+=/slam,if=(!execute_phase&action.slam.cast>=1.5&(mainhand_speed-mainhand
 actions+=/whirlwind,if=settings.wowsims_stance_dance
 actions+=/execute,if=execute_phase
 actions+=/battle_stance,use_off_gcd=1,if=(settings.wowsims_stance_dance&!execute_phase&(!action.berserker_stance.known|buff.berserker_stance.up)&(buff.overpower_ready.up|(action.rend.known&debuff.rend.remains<=1.5)))
-actions+=/cleave,use_off_gcd=1,if=(active_enemies>1&rage.current>=40)
-actions+=/heroic_strike,use_off_gcd=1,if=(!execute_phase&rage.current>=90)
+actions+=/cleave,use_off_gcd=1,focus=2,if=(active_enemies>1&rage.current>=40)
+actions+=/heroic_strike,use_off_gcd=1,focus=2,if=(!execute_phase&rage.current>=90)
 actions+=/bloodrage,use_off_gcd=1,if=rage.current<90
 actions+=/battle_shout,if=(((!action.mortal_strike.known|cooldown.mortal_strike.remains>=1.5)&(!settings.wowsims_stance_dance|(action.whirlwind.known&cooldown.whirlwind.remains>=1.5)))&buff.battle_shout.remains<=10)
-actions+=/heroic_strike,use_off_gcd=1,if=!action.mortal_strike.known&rage.current>=30
+actions+=/heroic_strike,use_off_gcd=1,focus=2,if=!action.mortal_strike.known&rage.current>=30
 actions+=/thunder_clap,if=settings.maintain_thunder_clap&!action.mortal_strike.known&!debuff.thunder_clap.up
 actions+=/sunder_armor,if=!action.mortal_strike.known&debuff.sunder_armor.stack<5
 actions+=/hamstring,if=!action.mortal_strike.known

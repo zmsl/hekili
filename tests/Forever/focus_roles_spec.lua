@@ -1,6 +1,6 @@
 -- tests/Forever/focus_roles_spec.lua: the focus tiers by a line's role (user ruling 2026-10-21,
--- docs/dev/wowsims-packs.md `focus`): rotational strikes, cooldowns and pre-pull lines untiered, reactive or windowed lines at 1 (off-GCD rage
--- dumps at 1 then 2), upkeep at 2. Every generated pack but the Warrior's (their own audit): its flagged lines in file
+-- docs/dev/wowsims-packs.md `focus`): rotational strikes, cooldowns and pre-pull lines untiered, reactive or windowed lines at 1 (the Warrior
+-- rage dumps always 2, owner ruling 2026-10-22), upkeep at 2. Every generated pack but the Warrior's (their own audit): its flagged lines in file
 -- order. Arguable lines keep their earlier tier until the user rules (named in the comments).
 local function flagged(path)
     local out = {}

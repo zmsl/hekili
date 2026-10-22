@@ -45,7 +45,7 @@ actions+=/shield_block,use_off_gcd=1,if=(rage.current>=40|(!buff.revenge_usable.
 actions+=/sweeping_strikes,use_off_gcd=1,if=active_enemies>1
 actions+=/thunder_clap,if=active_enemies>2
 actions+=/shield_slam
-actions+=/victory_rush
+actions+=/victory_rush,focus=1
 actions+=/bloodthirst
 actions+=/mortal_strike
 actions+=/revenge,focus=1
@@ -55,8 +55,8 @@ actions+=/thunder_clap,if=debuff.thunder_clap.remains<=6
 actions+=/battle_shout,if=buff.battle_shout.remains<=10
 actions+=/rend,if=(!debuff.rend.up&(!(offhand_speed=0)|(offhand_speed=0&(!action.shield_slam.known|cooldown.shield_slam.remains>=1.5))))
 actions+=/sunder_armor,if=(debuff.sunder_armor.stack<5|((!action.shield_slam.known|cooldown.shield_slam.remains>=1.5)&debuff.sunder_armor.remains<=10))
-actions+=/cleave,use_off_gcd=1,focus=1,if=(active_enemies>1&rage.current>=40)
-actions+=/heroic_strike,use_off_gcd=1,focus=1,if=(active_enemies=1&rage.current>=40)
+actions+=/cleave,use_off_gcd=1,focus=2,if=(active_enemies>1&rage.current>=40)
+actions+=/heroic_strike,use_off_gcd=1,focus=2,if=(active_enemies=1&rage.current>=40)
 actions+=/bloodrage,use_off_gcd=1,if=rage.current<90
 actions.cd_racials=blood_fury,use_off_gcd=1
 actions.cd_racials+=/berserking,use_off_gcd=1

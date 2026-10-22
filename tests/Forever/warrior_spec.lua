@@ -832,7 +832,7 @@ describe("Forever Warrior", function()
         assert.are.same({ "Arms", "Fury", "Protection" }, w.retired)
     end)
 
-    it("carries the focus tiers the user ruled on (2026-10-21) on the lines that cast them", function()
+    it("carries the focus tiers the user ruled on (2026-10-21, 2026-10-22) on the lines that cast them", function()
         local focus = {}
         for _, p in ipairs(assert(loadfile("tools/make_pack.lua"))("lists", "warrior")) do
             for _, list in pairs(p.lists) do
@@ -848,15 +848,20 @@ describe("Forever Warrior", function()
         assert.are.same({
             ["Arms (wowsims.com) rend"] = { 2 },
             ["Arms (wowsims.com) overpower"] = { 1 },
+            ["Arms (wowsims.com) heroic_strike"] = { 2, 2 },
+            ["Arms (wowsims.com) cleave"] = { 2 },
+            ["Arms (wowsims.com) victory_rush"] = { 1 },
             ["Fury (wowsims.com) overpower"] = { 1 },
-            ["Fury (wowsims.com) heroic_strike"] = { 1, 2 },
-            ["Fury (wowsims.com) cleave"] = { 1 },
+            ["Fury (wowsims.com) heroic_strike"] = { 2, 2 },
+            ["Fury (wowsims.com) cleave"] = { 2 },
             ["Fury (wowsims.com) rend"] = { 2 },
             ["Fury (wowsims.com) battle_stance"] = { 1 },
+            ["Fury (wowsims.com) victory_rush"] = { 1 },
             ["Protection (wowsims.com) revenge"] = { 1 },
-            ["Protection (wowsims.com) heroic_strike"] = { 1 },
-            ["Protection (wowsims.com) cleave"] = { 1 },
-        }, focus) -- the user's tiers (2026-10-21): the main strikes (Mortal Strike, Slam, Execute, Bloodthirst, Whirlwind,
+            ["Protection (wowsims.com) heroic_strike"] = { 2 },
+            ["Protection (wowsims.com) cleave"] = { 2 },
+            ["Protection (wowsims.com) victory_rush"] = { 1 },
+        }, focus) -- the user's tiers (2026-10-21; Heroic Strike and Cleave always 2, Victory Rush 1: 2026-10-22): the main strikes (Mortal Strike, Slam, Execute, Bloodthirst, Whirlwind,
         -- Shield Slam) are rotational, untiered, and so is Protection's Sunder Armor
     end)
 

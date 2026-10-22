@@ -70,8 +70,9 @@ return {
     requires = { berserker_rage = "improved_berserker_rage" },
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
     -- the user's tiers (2026-10-21): Rend's uptime and Overpower are focus; Mortal Strike, Slam and Execute rotational
-    -- (untiered); Arms casts no Revenge
-    focus = { overpower = 1, rend = 2 },
+    -- (untiered); Arms casts no Revenge. Heroic Strike and Cleave always 2, Victory Rush 1 on its extra line (the owner's
+    -- ruling, 2026-10-22)
+    focus = { overpower = 1, heroic_strike = 2, cleave = 2, rend = 2 },
     -- Rule 15: Thunder Clap, a setting off in game and on in the harness (the user's ruling, 2026-10-21); its only
     -- line is the leveling filler below. Fury casts no Thunder Clap, so its recipe names none (rule 15 errors on a key
     -- with no cast line) and the setting is registered for Arms only.
@@ -83,7 +84,7 @@ return {
     -- Thunder Clap drops its 40-rage hold: Hamstring would spend the rage it pools for, and the harness (rule 15's
     -- setting on) never cast it (tests/Forever/maintenance_spec.lua); in game the setting is off and the line silent.
     leveling = {
-        "heroic_strike,use_off_gcd=1,if=!action.mortal_strike.known&rage.current>=30",
+        "heroic_strike,use_off_gcd=1,focus=2,if=!action.mortal_strike.known&rage.current>=30",
         "thunder_clap,if=!action.mortal_strike.known&!debuff.thunder_clap.up",
         "sunder_armor,if=!action.mortal_strike.known&debuff.sunder_armor.stack<5",
         "hamstring,if=!action.mortal_strike.known",
@@ -92,5 +93,5 @@ return {
     -- opens there. The user's ruling (2026-10-21): "just above bloodthirst (since it's a mini bloodthirst)". The bare
     -- line: the kit's usable already refuses it outside Victorious.
     -- Arms has no Bloodthirst: above its main strike, Mortal Strike (the owner's placement; the user may move it).
-    extra = { { before = "mortal_strike", line = "victory_rush" } },
+    extra = { { before = "mortal_strike", line = "victory_rush,focus=1" } },
 }

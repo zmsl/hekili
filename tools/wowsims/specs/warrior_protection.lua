@@ -70,9 +70,9 @@ return {
     auras = { [25288] = "revenge_usable" },
     exclusive = { [11556] = true }, -- Demoralizing Shout bids in wowsims's "Demoralizing" category (an exclusive effect)
     map = { [12723] = "sweeping_strikes" }, -- Sweeping Strikes's effect id (wowdb); the kit's ability is 12292
-    -- the user's tiers (2026-10-21): Revenge 1 (its reactive window); Heroic Strike and Cleave { 1, 2 } as Arms's and
-    -- Fury's (one line each here, so 1); Shield Slam, Bloodthirst, Mortal Strike and Sunder Armor rotational (untiered)
-    focus = { revenge = 1, heroic_strike = { 1, 2 }, cleave = { 1, 2 } },
+    -- the user's tiers (2026-10-21): Revenge 1 (its reactive window); Heroic Strike and Cleave always 2 (the owner's
+    -- ruling, 2026-10-22); Victory Rush 1 on its extra line; Shield Slam, Bloodthirst, Mortal Strike and Sunder Armor rotational (untiered)
+    focus = { revenge = 1, heroic_strike = 2, cleave = 2 },
     -- Rule 15: the raid debuff, a setting off in game and on in the harness (the user's ruling, 2026-10-21); Thunder
     -- Clap stays always on here, as wowsims has it (the user's ruling: not a Protection option)
     maintenance = { demoralizing_shout = "maintain_demoralizing_shout" },
@@ -80,5 +80,5 @@ return {
     -- extra (content outside wowsims's model): Victory Rush; wowsims never goes mob to mob, so its kill window never
     -- opens there. The user's ruling (2026-10-21): "just above bloodthirst (since it's a mini bloodthirst)". The bare
     -- line: the kit's usable already refuses it outside Victorious.
-    extra = { { before = "bloodthirst", line = "victory_rush" } },
+    extra = { { before = "bloodthirst", line = "victory_rush,focus=1" } },
 }
