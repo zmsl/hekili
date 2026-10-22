@@ -43,11 +43,16 @@ M.FLICKER = {
     ["Shadow"] = { flicker = 0.3, retracted = 0 }, -- 0.27, 0 (oracle 0.15; Priest lane, Task 14)
     ["Smite"] = { flicker = 0.5, retracted = 0.9 }, -- 0.45, 0.83 (oracle 0.12, 0.63): Shoot at mana.pct<=10; candidate GAP AB
     ["Elemental"] = { flicker = 0.6, retracted = 0 }, -- 0.55, 0 (oracle 0.17; Elemental lane, Task 14)
-    ["Affliction"] = { flicker = 1.6, retracted = 0 }, -- 1.60, 0 (oracle 1.60; Warlock lane, Task 13, on 06eec227)
+    -- 1.60, 0 (oracle 1.60; Warlock lane, Task 13, on 06eec227): no headroom, the floor is the measurement rounded up
+    -- to 0.1 and 1.60 is on it (Frostfire's 0.30 precedent)
+    ["Affliction"] = { flicker = 1.6, retracted = 0 },
     ["SM Ruin"] = { flicker = 4.9, retracted = 0 }, -- 4.81, 0 (oracle 4.66)
     ["Demonology"] = { flicker = 3.4, retracted = 0 }, -- 3.36, 0 (oracle 3.38)
     ["Shadow Brand"] = { flicker = 2.9, retracted = 0 }, -- 2.81, 0 (oracle 2.69)
-    ["Destruction"] = { flicker = 4.6, retracted = 0 }, -- 4.51, 0 (oracle 3.38)
+    -- 4.51, 0 (oracle 3.38): the excess is at Conflagrate's and Shadowburn's cooldown ends (the loop's top pairs
+    -- conflagrate -> incinerate 102, conflagrate -> shadowburn 27; dips by class cooldown 134), as Fire's Fire Blast
+    -- (the not-ready flag's CD_PROBE, central); not measured flicker by flicker
+    ["Destruction"] = { flicker = 4.6, retracted = 0 },
 }
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
 -- up to the next 0.1. Redundant with the floors today; it tightens the bar when a change lowers the oracle's own
