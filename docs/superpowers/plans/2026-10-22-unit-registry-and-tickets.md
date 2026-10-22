@@ -27,7 +27,8 @@ cited as "spec §N".
 - Pools: `UNIT_CAP` = 64 unit slots; 44 token indices (target, focus, nameplate1-40, softenemy, softinteract); `TICKETS` = 16; `LAG_CAP` = 16 (GUID, speed) lag records; a dedupe ring of `DUP_N` = 4 groups with a 4 x 44 token bitset.
 - Times: `DUP_WINDOW` = 0.005 s; `GRACE` = 0.1 s (a floor while held); `KILL_TELL` = 0.010 s; `TOL` = 0.15 s; `CLOSE` = 7 yd/s; `SAME_FRAME` 0.05 s, `CAST_WINDOW` 0.2 s, `STRIKE_WINDOW` 0.2 s, `L.UNMAPPED_WINDOW` 2 s (unchanged); TICKS band +-0.1 s; amount band `[0.6 x lo, 1.6 x hi]` after 3 clean wounds.
 - School enum (core, `ns.SCHOOL`): `physical = 1, holy = 2, fire = 4, nature = 8, frost = 16, shadow = 32, arcane = 64`; a pack declares the name, never a number; ANY = -1 (default type, no `school` field); 0 = a declared type with no school (only an avoid pays).
-- Expectation types and kinds: `"none"` NONE 0, `"instant"` FRAME 1, `"travel"` FLIGHT 2, `"melee"` MELEE 3 (engine-only, never declarable), `"strike"` STRIKE 4, `"ticks"` TICKS 5, `"channel"` CHANNEL 6 (implemented, untested in game, unused by packs); UNMAPPED 7 is the engine's own for a success no ability maps.
+- Expectation types and kinds: `"none"` NONE 0, `"instant"` FRAME 1, `"travel"` FLIGHT 2, `"melee"` MELEE 3 (engine-only, never declarable), `"strike"` STRIKE 4, `"ticks"` TICKS 5, `"channel"` CHANNEL 6 (opt-in by `expects` only; implemented, untested in game, unused by packs); UNMAPPED 7 is the engine's own for a success no ability maps.
+- No `ticks` or `tickPeriod` ability fields (owner ruling 2026-10-22): a ticking kind reads its aura (`ability.cycle or ability.aura or ability.key`, as the simulation does): period `tick_time`, count `floor(duration / tick_time)`, function fields called at the commit in Hekili's own state; a declared `"instant"` or `"travel"` ability also ticks when that aura has a `tick_time` and upstream's aura field `dot = "debuff"` (`Engine/Sim/State.lua:3302-3312`), and `"ticks"` requires both; no ability-level flag; `velocity` stays, `impact` is never added.
 - Default type when `expects` is absent: `"strike"` if `onNextSwing`, else `"instant"` if `startsCombat`, else `"none"`; a malformed declaration counts one `I.nowErrors` and takes the default.
 - Floors only move up. A downward move stops the branch for the owner's ruling, with a named cause written beside the number; the expected upward moves for casters are recorded in the pack notes.
 - Hekili has no `tools/apiref_surface.lua` or `make apiref` (those are Taco Dog Forever's); the equivalent gate here is `make api-check` (`tools/check_api_reads.sh`, `tools/api_inventory.txt`) plus `make check`; every new `I.*` function carries a `---` doc comment.
@@ -43,7 +44,7 @@ Layering kept: Sources read the client through the injected `api`; Events and Fa
 |---|---|---|---|---|
 | `src/Hekili/Game/State/Sources/Units.lua` (new) | the unit registry: token to GUID, unit slots and lifetimes, `UNIT_COMBAT` resolve, dedupe, dispatch, death events and kill tell, the player's GUID, the SENT pin | `api.UnitGUID` (through `Plain`), `PLAYER_TARGET_CHANGED`, `PLAYER_FOCUS_CHANGED`, `NAME_PLATE_UNIT_ADDED/REMOVED`, `PLAYER_SOFT_*_CHANGED`, `UNIT_COMBAT`, `UNIT_DIED`, `PARTY_KILL`, `PLAYER_TARGET_DIED`, `UNIT_SPELLCAST_SENT/FAILED`, `PLAYER_REGEN_ENABLED`, `PLAYER_ENTERING_WORLD` | `I.Units`: `TOKENS`, `INDEX`, `Resolve`, `Bound`, `Uid`, `GUID`, `Find`, `Pin`, `Sent`, `Alive`, `IsDead`, `Ours`, `IsTarget`, `Dead`, `Hold`, `Release`, `OnRow`, `OnGone`, `Tick`, `Claims` hook; `I.Log.player` | `tests/Game/State/units_spec.lua` |
 | `src/Hekili/Engine/Schema/Spec.lua` (edit) | the school enum | none | `ns.SCHOOL`, `Hekili.SCHOOL` | `tests/Game/State/expect_spec.lua`, `tests/boundary_spec.lua` |
-| `src/Hekili/Game/State/Families/Expect.lua` (new) | compiles each ability's `expects` and its fields at build; default type; validation | `I.ab` (`Families/Casts.lua`), `ns.SCHOOL`, the build's `def.abilities` | `I.Expect` (kind and school constants), `A.expKind`, `A.expDeclared`, `A.velocity`, `A.school`, `A.tickPeriod`, `A.ticks`; `I.nowErrors` on a malformed one | `tests/Game/State/expect_spec.lua` |
+| `src/Hekili/Game/State/Families/Expect.lua` (new) | compiles each ability's `expects`, `school`, `velocity` and its ticking aura (`tick_time` with `dot = "debuff"`) at build; default type; validation | `I.ab` (`Families/Casts.lua`), `ns.SCHOOL`, the build's `def.abilities` and `def.auras` | `I.Expect` (kind and school constants, `X.Tick(a)`, `X.Malformed`), `A.expKind`, `A.expDeclared`, `A.velocity`, `A.school`, `A.tickAura`, `A.ticking`; `I.nowErrors` on a malformed one | `tests/Game/State/expect_spec.lua` |
 | `src/Hekili/Game/Events/Tickets.lua` (new) | the ticket pool and lifecycle: open (swing, commit, arm, unclaimed success), consumption order (`Pick`), pay, expiry, closes and their counters, FIFO by expected closure, learned flight lag records, per-ability amount bands, Snapshot line | `I.Units` (`Find`, `Hold`, `Release`, `IsDead`, `Ours`, `OnGone`), `I.Expect`, `I.Kinds` (at run time), `I.ab` | `I.Tickets`: pool arrays, `OpenSwing`, `OpenCast`, `Commit`, `Arm`, `Stop`, `Pick`, `Pay`, `Provisional`, `Expire`, `EndCombat`, `Unmapped`, `LagOf`, `Learn`, `closed`, `paid`, `lost` | `tests/Game/Events/tickets_spec.lua` |
 | `src/Hekili/Game/Events/Melee.lua` (new, moved) | the MELEE kind: the swing likelihood ratio, amount classes, landing-lag density and learning, background rates (moved from Rows unchanged) | `I.Tickets` arrays, `VS.Stat("UnitDamage")` | `I.Melee`: `score`, `advance`, `background`, `lambda`, `learn`, `classOf`, `AVOIDS`, `SAME_FRAME`, `CAST_WINDOW`, `STRIKE_WINDOW`; `L.LandWindow` and the `L.*` tuning | `tests/Game/Events/pairing_replay_spec.lua`, `tests/Game/Events/cleu_rows_spec.lua` (unchanged) |
 | `src/Hekili/Game/Events/Kinds.lua` (new) | every other kind's rule, once: which rows a ticket accepts (school, amount band, avoid) and its band per pass (FRAME, STRIKE, FLIGHT, TICKS, CHANNEL) | `I.Tickets` arrays, `I.Melee` constants, `L.LandWindow`, `VS.TargetRange`, `I.Units.Bound` | `I.Kinds`: `Accepts`, `Band` | `tests/Game/Events/kinds_spec.lua` |
@@ -1247,28 +1248,54 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 - Create: `src/Hekili/Game/State/Families/Expect.lua`
 - Modify: `src/Hekili/Hekili.toc:29` (add `Game\State\Families\Expect.lua` right after `Game\State\Families\Now.lua`)
 - Modify: `tests/Game/State/helpers/fake_spec.lua:12-13` (new IDs), `:17` (`M.new`'s fourth argument), `:105-117`
-  (the abilities), `:154-180` (`M.def`)
+  (the abilities and their auras), `:154-180` (`M.def`)
 - Test: `tests/Game/State/expect_spec.lua` (new)
 
 **Interfaces:**
-- Consumes: `I.ab` (`A.n`, `A.key`), the build's `def.abilities` (Hekili ability tables: non-function fields are
-  copied onto them by `RegisterAbility`, `Engine/Schema/Spec.lua:893-902`), `ns.SCHOOL`, `I.nowErrors`/`I.nowError`.
+- Consumes: `I.ab` (`A.n`, `A.key`), the build's `def.abilities` and `def.auras` (Hekili ability and aura tables:
+  non-function fields are copied onto them by `RegisterAbility`, `Engine/Schema/Spec.lua:893-902`), `ns.SCHOOL`,
+  `I.nowErrors`/`I.nowError`.
 - Produces: `I.Expect` = `{ NONE = 0, FRAME = 1, FLIGHT = 2, MELEE = 3, STRIKE = 4, TICKS = 5, CHANNEL = 6,
   UNMAPPED = 7, ANY = -1, KIND = { none = 0, instant = 1, travel = 2, melee = 3, strike = 4, ticks = 5,
   channel = 6 } }`; per ability index `a`: `A.expKind[a]`, `A.expDeclared[a]` (bool), `A.velocity[a]`,
-  `A.school[a]` (mask, `ANY` -1, or 0 none), `A.tickPeriod[a]`, `A.ticks[a]` (0 when not declared).
+  `A.school[a]` (mask, `ANY` -1, or 0 none), `A.tickAura[a]` (the aura it applies when that aura declares a
+  `tick_time`, else false), `A.ticking[a]` (bool: its kind is TICKS or CHANNEL, or it is a declared FRAME or FLIGHT
+  whose aura also has `dot = "debuff"`);
+  `X.Tick(a) -> period, count` (the aura's `tick_time` and `floor(duration / tick_time)` now, each called in Hekili's
+  own state when the pack wrote a function; `0, 0` when it does not tick). The ticket pool (Task 8) calls `X.Tick` at
+  a commit.
   Fake spec: `fs.SPENDER_F` 1008 (instant fire), `SPENDER_P` 1009 (travel, 1.5 s, velocity 20, nature),
-  `SPENDER_M` 1010 (instant arcane, 4 ticks of 3 s), `SPENDER_S` 1012 (ticks, nature, velocity 40, 5 ticks of 3 s),
-  `SPENDER_N` 1013 (none), `SPENDER_Q` 1014 (malformed `expects = "bogus"`, starts combat), `SPENDER_H` 1015
-  (channel, 1 s ticks, arcane); `fs.new(swing, kinds, ranged, expect)` adds them with `expect`.
-- Boundary: pure Family code; no client read; the pack writes data only, the engine maps it once.
+  `SPENDER_M` 1010 (instant arcane, its aura 12 s / 3 s with `dot = "debuff"`), `SPENDER_S` 1012 (ticks, nature,
+  velocity 40, its aura 15 s / 3 s with `dot = "debuff"`), `SPENDER_N` 1013 (none), `SPENDER_Q` 1014 (malformed `expects = "bogus"`, starts combat),
+  `SPENDER_H` 1015 (`expects = "channel"`, arcane, its aura 3 s / 1 s);
+  `fs.new(swing, kinds, ranged, expect)` adds them with `expect`.
+- Boundary: pure Family code; no client read; the pack writes data only (on the ability: `expects`, `velocity`,
+  `school`; on the aura: `tick_time`, `duration`, `dot = "debuff"`, upstream's own fields), the engine maps it once.
+
+The owner's ruling (2026-10-22, spec amended alike): there are no `ticks` or `tickPeriod` ability fields. A ticking
+kind reads the aura the ability applies, resolved as the simulation resolves it, `ability.cycle or ability.aura or
+ability.key` (`Engine/Sim/State.lua:676`, `Engine/Sim/Events.lua:1609`): its `tick_time` is the period and
+`floor(duration / tick_time)` the count, the fields packs already declare on auras (`src/Hekili_Priest/Priest.lua:265-280`,
+`src/Hekili_Druid/Druid.lua:512-519`) and the simulation already reads (`Engine/Sim/State.lua:2283-2285`). A function
+`duration` or `tick_time` (Moonfire's duration is one) is called at the commit in Hekili's own state, as the
+simulation calls it (the pack's function is already bound to `state` by `RegisterAura`), never rebound into the
+belief context (spec row 44). There is no ability-level flag: a declared `"instant"` or `"travel"` ability also opens a
+TICKS ticket when its resolved aura has a `tick_time` and upstream's aura field `dot = "debuff"` (the field the
+simulation's `mt_dot` reads, `Engine/Sim/State.lua:3302-3312`); `expects = "ticks"` alone means a hit that only ticks
+and requires the same two aura fields. Implementation choice: the inference applies to declared types only, so an
+ability on its default type keeps today's behaviour exactly (a default FRAME with school ANY opening a schedule would
+take white rows in its tick bands). CHANNEL is opt-in only: a `channeled = true` ability with no
+`expects` keeps today's default (strike, instant or none); only `expects = "channel"` opens a CHANNEL ticket.
+`velocity` stays; `impact` is never added. Validation needs only that the aura exists and declares a `tick_time`
+(a number above 0 or a function); its value is read at the commit.
 
 - [ ] **Step 1: Extend the fake spec.** In `tests/Game/State/helpers/fake_spec.lua`, after line 13 add:
 
 ```lua
 -- With `expect` (M.new's fourth argument) the declared-outcome fixtures follow (unit-registry spec §6.2's fake spec):
--- an instant (school fire), a hard-cast projectile (velocity 20, nature), an instant with ticks (arcane, 4 of 3 s), a
--- ticks-only one with a flight (nature, velocity 40, 5 of 3 s), one that owes nothing, one malformed, a channel.
+-- an instant (school fire), a hard-cast projectile (velocity 20, nature), an instant that also ticks (arcane, its aura
+-- 12 s / 3 s, dot = "debuff"), a ticks-only one with a flight (nature, velocity 40, its aura 15 s / 3 s, dot =
+-- "debuff"), one that owes nothing, one malformed, a channel (arcane, its aura 3 s / 1 s).
 M.SPENDER_F, M.SPENDER_P, M.SPENDER_M, M.SPENDER_S = 1008, 1009, 1010, 1012
 M.SPENDER_N, M.SPENDER_Q, M.SPENDER_H = 1013, 1014, 1015
 ```
@@ -1292,8 +1319,6 @@ Change line 17 to `function M.new(swingValue, kinds, ranged, expect)`. After the
             startsCombat = true,
             expects = "instant",
             school = "arcane",
-            ticks = 4,
-            tickPeriod = 3,
         })
         ability("spender_s", {
             id = M.SPENDER_S,
@@ -1301,18 +1326,14 @@ Change line 17 to `function M.new(swingValue, kinds, ranged, expect)`. After the
             expects = "ticks",
             school = "nature",
             velocity = 40,
-            ticks = 5,
-            tickPeriod = 3,
         })
         ability("spender_n", { id = M.SPENDER_N, expects = "none" })
         ability("spender_q", { id = M.SPENDER_Q, startsCombat = true, expects = "bogus" })
-        ability("spender_h", {
-            id = M.SPENDER_H,
-            startsCombat = true,
-            expects = "channel",
-            tickPeriod = 1,
-            school = "arcane",
-        })
+        ability("spender_h", { id = M.SPENDER_H, startsCombat = true, channeled = true, expects = "channel",
+            school = "arcane" })
+        class.auras.spender_m = { key = "spender_m", id = M.SPENDER_M, duration = 12, tick_time = 3, dot = "debuff" }
+        class.auras.spender_s = { key = "spender_s", id = M.SPENDER_S, duration = 15, tick_time = 3, dot = "debuff" }
+        class.auras.spender_h = { key = "spender_h", id = M.SPENDER_H, duration = 3, tick_time = 1 }
     end
 ```
 
@@ -1321,6 +1342,12 @@ In `M.def`, replace the loop `for _, k in ipairs({ "spender_t", "spender_u", "sp
 ```lua
     local extra = { "spender_t", "spender_u", "spender_r", "spender_f", "spender_p", "spender_m", "spender_s" }
     extra[#extra + 1], extra[#extra + 2], extra[#extra + 3] = "spender_n", "spender_q", "spender_h"
+    for _, k in ipairs({ "spender_m", "spender_s", "spender_h" }) do -- the ticking auras (with `expect`)
+        local au = class.auras[k]
+        if au then
+            def.auras[#def.auras + 1], def.auraIds[#def.auraIds + 1] = au, { au.id }
+        end
+    end
     for _, k in ipairs(extra) do
 ```
 
@@ -1328,8 +1355,9 @@ In `M.def`, replace the loop `for _, k in ipairs({ "spender_t", "spender_u", "sp
 
 ```lua
 -- tests/Game/State/expect_spec.lua (unit-registry spec §5): each ability's declared outcome compiled at build: the
--- type's kind and the fields it reads, the default type when absent, and a malformed declaration reported once and
--- falling back to the default.
+-- type's kind, its school and velocity, a ticking kind's aura (resolved as the simulation does: cycle, aura, key)
+-- whose period and count are read at the commit, the default type when absent, and a malformed declaration reported
+-- once and falling back to the default.
 local load = require("Game.State.helpers.load")
 local fs = require("Game.State.helpers.fake_spec")
 
@@ -1343,38 +1371,84 @@ describe("expectation compile", function()
         I.Build(fs.def(h or fs.new(9, false, false, true)), 1)
     end
 
+    -- kind, school, declared, velocity, tick count, period
     local function of(id)
         local a = A.bySpell[id]
-        return A.expKind[a], A.school[a], A.expDeclared[a], A.velocity[a], A.ticks[a], A.tickPeriod[a]
+        local period, count = X.Tick(a)
+        return A.expKind[a], A.school[a], A.expDeclared[a], A.velocity[a], count, period
     end
 
-    -- spender_a (def.abilities[1]) with `fields` set: its kind, school and the errors counted
-    local function one(fields)
+    -- spender_a (def.abilities[1]) with `fields` set; `auras` { [aura key] = { field = value } } set on the fake
+    -- spec's auras: kind, school, errors counted, the last error
+    local function one(fields, auras)
         local h = fs.new(9)
         for k, v in pairs(fields) do
             h.Class.abilities.spender_a[k] = v
+        end
+        for key, f in pairs(auras or {}) do
+            for k, v in pairs(f) do
+                h.Class.auras[key][k] = v
+            end
         end
         build(h)
         return A.expKind[1], A.school[1], I.nowErrors, I.nowError
     end
 
-    it("compiles each declared type with its fields", function()
+    it("compiles each declared type with its fields; a ticking one from its aura at the commit", function()
         build()
         assert.are.same({ X.FLIGHT, 8, true, 20, 0, 0 }, { of(fs.SPENDER_P) })
         assert.are.same({ X.FRAME, 4, true, 0, 0, 0 }, { of(fs.SPENDER_F) })
-        assert.are.same({ X.FRAME, 64, true, 0, 4, 3 }, { of(fs.SPENDER_M) })
-        assert.are.same({ X.TICKS, 8, true, 40, 5, 3 }, { of(fs.SPENDER_S) })
+        assert.are.same({ X.FRAME, 64, true, 0, 4, 3 }, { of(fs.SPENDER_M) }) -- its aura: 12 s / 3 s, a debuff dot
+        assert.are.same({ X.TICKS, 8, true, 40, 5, 3 }, { of(fs.SPENDER_S) }) -- 15 s / 3 s
+        assert.are.same({ X.CHANNEL, 64, true, 0, 3, 1 }, { of(fs.SPENDER_H) }) -- 3 s / 1 s
         assert.are.same({ X.NONE, 0, true, 0, 0, 0 }, { of(fs.SPENDER_N) })
-        assert.are.same({ X.CHANNEL, 64, true, 0, 0, 1 }, { of(fs.SPENDER_H) })
+        assert.is_true(A.ticking[A.bySpell[fs.SPENDER_M]])
+        assert.is_false(A.ticking[A.bySpell[fs.SPENDER_F]])
     end)
 
-    it("maps an absent expects to today's behaviour: strike, instant with school ANY, none", function()
+    it("maps an absent expects to today's behaviour; a channeled ability stays on it", function()
         build()
         local k, sc, d = of(fs.SPENDER_B)
         assert.are.same({ X.STRIKE, X.ANY, false }, { k, sc, d })
         assert.are.equal(X.FRAME, (of(fs.SPENDER_C)))
         assert.are.equal(X.ANY, select(2, of(fs.SPENDER_C)))
         assert.are.equal(X.NONE, (of(fs.SPENDER_A)))
+        local kind = one({ startsCombat = true, channeled = true }, { spender_a = { tick_time = 1 } })
+        assert.are.equal(X.FRAME, kind) -- CHANNEL is opt-in
+    end)
+
+    it("resolves the aura as the simulation does: cycle, else aura, else the ability's key", function()
+        one({ expects = "ticks", school = "shadow", aura = "spender_c", cycle = "spender_a" }, {
+            spender_a = { tick_time = 4, duration = 20, dot = "debuff" },
+            spender_c = { tick_time = 3, dot = "debuff" },
+        })
+        assert.are.same({ 4, 5 }, { X.Tick(1) }) -- the cycle aura's 20 s / 4 s
+        one({ expects = "ticks", school = "shadow", aura = "spender_c" }, { spender_c = { tick_time = 5, dot = "debuff" } })
+        assert.are.same({ 5, 3 }, { X.Tick(1) }) -- the aura field's 15 s / 5 s
+    end)
+
+    it("infers an instant's ticks from its aura's tick_time and dot = \"debuff\", never from either alone", function()
+        one({ expects = "instant", school = "fire" }, { spender_a = { tick_time = 3, duration = 9 } })
+        assert.is_false(A.ticking[1])
+        one({ expects = "instant", school = "fire" }, { spender_a = { tick_time = 3, duration = 9, dot = "debuff" } })
+        assert.is_true(A.ticking[1])
+        assert.are.same({ 3, 3 }, { X.Tick(1) })
+        one({ startsCombat = true }, { spender_a = { tick_time = 3, duration = 9, dot = "debuff" } })
+        assert.is_false(A.ticking[1]) -- a default type keeps today's behaviour
+    end)
+
+    it("calls a function duration in Hekili's own state at the commit, not at the build", function()
+        local n, rank = 0, 1
+        local h = fs.new(9, false, false, true)
+        h.Class.auras.spender_m.duration = function()
+            n = n + 1
+            return rank > 1 and 12 or 9
+        end
+        build(h)
+        assert.are.equal(0, n)
+        assert.are.same({ 3, 3 }, { X.Tick(A.bySpell[fs.SPENDER_M]) })
+        rank = 2
+        assert.are.same({ 3, 4 }, { X.Tick(A.bySpell[fs.SPENDER_M]) })
     end)
 
     it("reports a malformed declaration once and falls back to the default type", function()
@@ -1386,19 +1460,20 @@ describe("expectation compile", function()
     end)
 
     for _, case in ipairs({
-        { { expects = "travel", school = "nature" }, "travel needs velocity" },
-        { { expects = "ticks", ticks = 4 }, "ticks needs tickPeriod and ticks" },
-        { { expects = "channel" }, "channel needs tickPeriod" },
-        { { expects = "strike" }, "strike needs onNextSwing" },
-        { { expects = "melee" }, "expects melee is the engine's own" },
-        { { expects = "instant", school = "fel" }, "unknown school fel" },
-        { { expects = "instant", school = 8 }, "unknown school 8" },
-        { { expects = "travel", velocity = "fast" }, "velocity is not a number" },
+        { { expects = "travel", school = "nature" }, nil, "travel needs velocity" },
+        { { expects = "ticks" }, nil, "ticks needs an aura with tick_time and dot" },
+        { { expects = "ticks" }, { spender_a = { tick_time = 3 } }, "ticks needs an aura with tick_time and dot" },
+        { { expects = "channel" }, nil, "channel needs an aura with tick_time" },
+        { { expects = "strike" }, nil, "strike needs onNextSwing" },
+        { { expects = "melee" }, nil, "expects melee is the engine's own" },
+        { { expects = "instant", school = "fel" }, nil, "unknown school fel" },
+        { { expects = "instant", school = 8 }, nil, "unknown school 8" },
+        { { expects = "travel", velocity = "fast" }, nil, "velocity is not a number" },
     }) do
-        it("rejects " .. case[2], function()
-            local kind, school, errors, err = one(case[1])
+        it("rejects " .. case[3], function()
+            local kind, school, errors, err = one(case[1], case[2])
             assert.are.same({ X.NONE, X.ANY, 1 }, { kind, school, errors })
-            assert.is_truthy(err:find(case[2], 1, true))
+            assert.is_truthy(err:find(case[3], 1, true))
         end)
     end
 
@@ -1419,11 +1494,16 @@ Expected: FAIL, `attempt to index local 'X' (a nil value)` / `attempt to index f
 ```lua
 -- Game/State/Families/Expect.lua
 -- Each ability's declared outcome (unit-registry spec §5): `expects`, a plain string from a fixed set, each mapped to
--- one engine kind whose matching and closing rule lives once in Game/Events/Kinds.lua and Melee.lua; and the fields
--- that kind reads (`velocity`, `school` by name, `ticks`, `tickPeriod`), compiled at each build into per-ability
--- arrays the ticket pool reads by ability index. An absent `expects` takes today's behaviour: "strike" with
--- `onNextSwing`, "instant" with `startsCombat`, else "none", with school ANY unless the ability names one. A malformed
--- declaration is counted once in I.nowErrors (Snapshot's error line) and takes the default. Pure: no client read.
+-- one engine kind whose matching and closing rule lives once in Game/Events/Kinds.lua and Melee.lua; the fields that
+-- kind reads (`velocity`, `school` by name), compiled at each build into per-ability
+-- arrays the ticket pool reads by ability index. A ticking kind's period and count are its aura's: the aura resolved as
+-- the simulation resolves it (`cycle`, else `aura`, else the ability's key: Engine/Sim/State.lua:676), its
+-- `tick_time` and floor(`duration` / `tick_time`), read at the commit (X.Tick) in Hekili's own state when the pack
+-- wrote a function, as Engine/Sim/State.lua:2283-2285 reads them. A declared instant or travel ability also ticks when
+-- that aura is upstream's debuff dot (`dot = "debuff"`, the field mt_dot reads). An absent `expects` takes today's behaviour:
+-- "strike" with `onNextSwing`, "instant" with `startsCombat`, else "none", with school ANY unless the ability names
+-- one (CHANNEL is opt-in). A malformed declaration is counted once in I.nowErrors (Snapshot's error line) and takes
+-- the default. Pure: no client read.
 
 local _, ns = ...
 local I = ns.VirtualStateInternal
@@ -1435,7 +1515,42 @@ X.NONE, X.FRAME, X.FLIGHT, X.MELEE, X.STRIKE, X.TICKS, X.CHANNEL, X.UNMAPPED = 0
 X.ANY = -1 -- school: any WOUND or avoid pays, never lost (a default type on an ability with no `school`)
 X.KIND = { none = 0, instant = 1, travel = 2, melee = 3, strike = 4, ticks = 5, channel = 6 }
 
-A.expKind, A.expDeclared, A.velocity, A.school, A.tickPeriod, A.ticks = {}, {}, {}, {}, {}, {}
+A.expKind, A.expDeclared, A.velocity, A.school, A.tickAura, A.ticking = {}, {}, {}, {}, {}, {}
+
+-- The aura ability `obj` (key `key`) applies, resolved as the simulation does, when it declares a tick_time (a number
+-- above 0 or a function); else nil.
+local function tickAura(obj, key, byKey)
+    local name = rawget(obj, "cycle") or rawget(obj, "aura") or key
+    local au = type(name) == "string" and byKey[name] or nil
+    local tt = au and au.tick_time
+    if type(tt) == "function" or (type(tt) == "number" and tt > 0) then
+        return au
+    end
+end
+
+-- A number field of an aura now: the pack's function called as the simulation calls it (bound to Hekili's `state`
+-- by RegisterAura; a raising one answers nil).
+local function num(v)
+    if type(v) == "function" then
+        local ok, r = pcall(v)
+        v = ok and r or nil
+    end
+    return type(v) == "number" and v > 0 and v or nil
+end
+
+--- Ticking ability a's period and tick count now (its aura's tick_time and floor(duration / tick_time)); 0, 0 when
+--- it does not tick or the aura cannot answer. Called at a commit; allocates nothing of its own.
+function X.Tick(a)
+    local au = A.tickAura[a]
+    if not au then
+        return 0, 0
+    end
+    local tt, d = num(au.tick_time), num(au.duration)
+    if not (tt and d) then
+        return 0, 0
+    end
+    return tt, math.floor(d / tt + 1e-6)
+end
 
 local function default(obj)
     if obj.onNextSwing then
@@ -1446,41 +1561,46 @@ local function default(obj)
     return X.NONE
 end
 
--- Why `obj`'s declaration of kind `k` (nil: an unknown string) with school mask `s` (nil: none or unknown) is
--- malformed, or nil (spec §5.3).
-local function malformed(obj, e, k, s)
-    local v, tp, n = obj.velocity, obj.tickPeriod, obj.ticks
+-- Why `obj`'s declaration of kind `k` (nil: an unknown string) with school mask `s` (nil: none or unknown) and a
+-- ticking aura `au` (nil: none) is malformed, or nil (spec §5.3).
+local function malformed(obj, e, k, s, au)
+    local v = obj.velocity
     if k == nil then
         return "unknown expects " .. tostring(e)
     elseif k == X.MELEE then
         return "expects melee is the engine's own"
     elseif v ~= nil and type(v) ~= "number" then
         return "velocity is not a number"
-    elseif tp ~= nil and type(tp) ~= "number" then
-        return "tickPeriod is not a number"
-    elseif n ~= nil and type(n) ~= "number" then
-        return "ticks is not a number"
     elseif obj.school ~= nil and not s then
         return "unknown school " .. tostring(obj.school)
     elseif k == X.FLIGHT and not v then
         return "travel needs velocity"
-    elseif k == X.TICKS and not (tp and n) then
-        return "ticks needs tickPeriod and ticks"
-    elseif k == X.CHANNEL and not tp then
-        return "channel needs tickPeriod"
+    elseif k == X.TICKS and not (au and au.dot == "debuff") then
+        return "ticks needs an aura with tick_time and dot = \"debuff\""
+    elseif k == X.CHANNEL and not au then
+        return "channel needs an aura with tick_time"
     elseif k == X.STRIKE and not obj.onNextSwing then
         return "strike needs onNextSwing"
     end
 end
+X.Malformed = malformed -- the pack check (tests/Forever/expects_spec.lua) runs the build's own rule
 
 I.OnBuild(function(def)
     local SCHOOL = ns.SCHOOL
+    local byKey = {} -- once a build
+    for j = 1, #(def.auras or {}) do
+        local au = def.auras[j]
+        if type(au) == "table" and au.key then
+            byKey[au.key] = au
+        end
+    end
     for a = 1, A.n do
         local obj = def.abilities[a]
-        local e = obj.expects
+        local e = rawget(obj, "expects")
         local s = type(obj.school) == "string" and SCHOOL[obj.school] or nil
-        local kind, school = default(obj), X.ANY
-        A.expDeclared[a], A.velocity[a], A.tickPeriod[a], A.ticks[a] = false, 0, 0, 0
+        local au = tickAura(obj, A.key[a], byKey)
+        local kind, school, declared = default(obj), X.ANY, false
+        A.velocity[a] = 0
         if e == nil then
             if s then
                 school = s -- a default type whose ability names its school checks it
@@ -1489,15 +1609,18 @@ I.OnBuild(function(def)
             end
         else
             local k = type(e) == "string" and X.KIND[e] or nil
-            local why = malformed(obj, e, k, s)
+            local why = malformed(obj, e, k, s, au)
             if why then
                 I.nowErrors, I.nowError = I.nowErrors + 1, "expects: " .. tostring(A.key[a]) .. " " .. why
             else
-                kind, school, A.expDeclared[a] = k, s or 0, true
-                A.velocity[a], A.tickPeriod[a], A.ticks[a] = obj.velocity or 0, obj.tickPeriod or 0, obj.ticks or 0
+                kind, school, declared = k, s or 0, true
+                A.velocity[a] = obj.velocity or 0
             end
         end
-        A.expKind[a], A.school[a] = kind, school
+        local direct = declared and (kind == X.FRAME or kind == X.FLIGHT) and au and au.dot == "debuff"
+        local ticks = kind == X.TICKS or kind == X.CHANNEL or direct == true
+        A.expKind[a], A.school[a], A.expDeclared[a] = kind, school, declared
+        A.tickAura[a], A.ticking[a] = ticks and au or false, ticks
     end
 end)
 ```
@@ -1511,14 +1634,14 @@ Game\State\Families\Expect.lua
 - [ ] **Step 5: Run it and the specs that use the fake spec**
 
 Run: `.lua/bin/busted tests/Game/State/expect_spec.lua && make test-fast`
-Expected: PASS (expect_spec 12 successes; test-fast 0 failures: the old fake spec gains nothing without `expect`).
+Expected: PASS (expect_spec 16 successes; test-fast 0 failures: the old fake spec gains nothing without `expect`).
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add src/Hekili/Game/State/Families/Expect.lua src/Hekili/Hekili.toc tests/Game/State/helpers/fake_spec.lua \
   tests/Game/State/expect_spec.lua
-git commit -m "feat(expect): compile each ability's expects, school, velocity and ticks at build; validate
+git commit -m "feat(expect): compile expects, school, velocity, dot; ticking kinds read their aura; validate
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
@@ -3440,7 +3563,8 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 - Test: `tests/Game/Events/tickets_spec.lua`, `tests/Game/Events/kinds_spec.lua` (cases added)
 
 **Interfaces:**
-- Consumes: `A.ticks`, `A.tickPeriod`, `A.velocity`, `A.rMax`; `T.LagOf`, `T.H`, `T.speed`, `K.Flight` (Task 7);
+- Consumes: `I.Expect.Tick(a)` and `A.ticking` (Task 4: the aura's period and count, read at the commit),
+  `A.velocity`, `A.rMax`; `T.LagOf`, `T.H`, `T.speed`, `K.Flight` (Task 7);
   `I.Units.OnGone` DEAD.
 - Produces: `T.period[i]`, `T.anchor[i]`, `T.wide[i]`, `T.link[i]` (j on a direct ticket, -1 on its composed TICKS
   ticket, 0 none); `T.TICK_BAND` 0.1; `T.AuraGone(spellID, guid, t)` (installed as `L.AuraGone`);
@@ -3598,10 +3722,12 @@ In `fill`, append the line:
 Before `arm`, add:
 
 ```lua
--- TICKS ticket i of ability a: `ticks` rows owed, tick k at app + k x period +- (TICK_BAND + wide).
+-- TICKS ticket i of ability a: its aura's count of rows owed (read now, Families/Expect.lua's X.Tick), tick k at
+-- app + k x period +- (TICK_BAND + wide). The count at any time is done + owed.
 local function schedule(i, a, app, wide)
-    T.period[i], owed[i], T.anchor[i], T.wide[i] = A.tickPeriod[a], A.ticks[a], app, wide
-    hi[i] = app + owed[i] * T.period[i] + T.TICK_BAND + wide
+    local period, count = X.Tick(a)
+    T.period[i], owed[i], T.anchor[i], T.wide[i] = period, count, app, wide
+    hi[i] = app + count * period + T.TICK_BAND + wide
 end
 
 -- A new application of a on g closes its open TICKS ticket as refreshed (unpaid rows not lost; decision 37).
@@ -3634,17 +3760,17 @@ In `arm`, before `elseif k == UNMAPPED then`, add:
             schedule(i, a, t, 0)
         end
     elseif k == X.CHANNEL then -- U9 deferred: owes rows until its stop
-        T.period[i], owed[i], hi[i] = A.tickPeriod[ab[i]], math.huge, math.huge
+        T.period[i], owed[i], hi[i] = (X.Tick(ab[i])), math.huge, math.huge
 ```
 
 After `arm`, add:
 
 ```lua
--- A direct ticket whose ability declares ticks opens its TICKS ticket on the same GUID (decision 35), anchored at
+-- A direct ticket whose aura is a debuff dot (A.ticking) opens its TICKS ticket on the same GUID (decision 35), anchored at
 -- the success (widened by the flight's hard window for a projectile) until the direct row re-anchors it.
 local function compose(i, t)
     local a = ab[i]
-    if a == 0 or A.ticks[a] <= 0 or (kind[i] ~= X.FRAME and kind[i] ~= X.FLIGHT) then
+    if a == 0 or not A.ticking[a] or (kind[i] ~= X.FRAME and kind[i] ~= X.FLIGHT) then
         return
     end
     refresh(a, guid[i], t, i)
@@ -3663,7 +3789,7 @@ In `T.Pay`, before `if owed[i] <= 0 then`, add:
 ```lua
     if k == X.TICKS and T.wide[i] > 0 then -- the first tick paid: the schedule snaps to it
         T.anchor[i], T.wide[i] = t - done[i] * T.period[i], 0
-        hi[i] = T.anchor[i] + A.ticks[a] * T.period[i] + T.TICK_BAND
+        hi[i] = T.anchor[i] + (done[i] + owed[i]) * T.period[i] + T.TICK_BAND
     end
     if isAvoid and k == X.TICKS then
         owed[i] = 0 -- the application avoided: nothing owed, not lost
@@ -3711,7 +3837,7 @@ function T.AuraGone(spellID, g, t)
     end
     for i = 1, CAP do
         if state[i] >= OPEN and kind[i] == X.TICKS and ab[i] == a and guid[i] == g then
-            local last = T.anchor[i] + A.ticks[a] * T.period[i]
+            local last = T.anchor[i] + (done[i] + owed[i]) * T.period[i]
             if t < last - T.TICK_BAND - T.wide[i] then
                 T.paid[X.TICKS] = T.paid[X.TICKS] + 1
                 close(i, t, "signal")
@@ -6496,8 +6622,8 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 ### Task 16: Pack data pass (casters and Hunter)
 
 **Files:**
-- Modify: `src/Hekili/Game/State/Families/Expect.lua` (expose `X.Malformed` for the pack check)
-- Modify: `src/Hekili_Druid/Druid.lua:1754`, `:1659`, `:1325`, `:1216`; `src/Hekili_Warlock/Warlock.lua:803`, `:785`,
+- Modify: `src/Hekili_Druid/Druid.lua:1754`, `:1659`, `:1325`, `:1216` (abilities), `:518`, `:489` (the Moonfire
+  and Insect Swarm auras gain `dot = "debuff"`); `src/Hekili_Hunter/Hunter.lua:232` (the Serpent Sting aura, likewise); `src/Hekili_Warlock/Warlock.lua:803`, `:785`,
   `:709`, `:439`; `src/Hekili_Mage/Mage.lua:484`, `:441`, `:399`, `:378`; `src/Hekili_Shaman/Shaman.lua:434`, `:378`;
   `src/Hekili_Priest/Priest.lua:681`; `src/Hekili_Paladin/Paladin.lua:428`; `src/Hekili_Hunter/Hunter.lua:442`,
   `:426`, `:408`, `:370`, `:353`, `:295` (one line inserted after each ability's `id = ...,` line)
@@ -6505,18 +6631,26 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 - Test: `tests/Forever/expects_spec.lua` (new)
 
 **Interfaces:**
-- Consumes: `I.Expect.Malformed(obj, e, k, s)`, `I.Expect.KIND`, `ns.SCHOOL`; the recording pack loader
+- Consumes: `I.Expect.Malformed(obj, e, k, s, au)` (Task 4), `I.Expect.KIND`, `ns.SCHOOL`; the recording pack loader
   (`tests/Forever/helpers/load_druid.lua:18`, as `tests/boundary_lib.lua:6-48` uses it).
-- Produces: the declarations of spec §5.4 (and Starfire and Insect Swarm, named by the owner's scope: DB2
-  `SpellMisc.Speed` 0 and `SchoolMask` 64 on all seven Starfire ranks; Insect Swarm `SchoolMask` 8, a 2 s
-  `EffectAuraPeriod` over a 12 s `SpellDuration` on all five ranks, no direct hit); melee packs untouched (default
-  types).
+- Produces: the declarations of spec §5.4 as amended (no `ticks`/`tickPeriod`: a ticking ability reads its aura's
+  `tick_time` and `duration`, which the packs already declare, plus upstream's aura field `dot = "debuff"` on each
+  DoT aura: a declared instant or projectile whose aura has both also ticks; the abilities carry only `expects`,
+  `school` and `velocity`), and Starfire
+  and Insect Swarm, named by the owner's scope (DB2 `SpellMisc.Speed` 0 and `SchoolMask` 64 on all seven Starfire
+  ranks; Insect Swarm `SchoolMask` 8, a 2 s `EffectAuraPeriod` over a 12 s `SpellDuration` on all five ranks, no
+  direct hit, its aura already `tick_time = 2`, `Druid.lua:489`); melee packs untouched (default types).
 - Boundary: packs declare data only; no matching code.
 
-Implementation choice: Moonfire declares `ticks = 4` (its top rank's 12 s over 3 s); rank 1 lasts 9 s (3 ticks), so a
-rank-1 application owes one row that never comes and closes `refreshed` on the next cast or `lost` at its window
-(levels 4-9 only; the DB2 check reports it, Task 17). Starfire and Insect Swarm are declared because the owner's scope
-names them; spec §5.4 does not, and spec §5.4's note allows any instant to declare its school.
+The Moonfire aura's duration per rank, checked against DB2 (`SpellDuration` through `SpellMisc.DurationIndex`): rank 1
+(8921) lasts 9000 ms and every later rank (8924-9835) 12000 ms, each with a 3000 ms `EffectAuraPeriod`. The pack's
+aura (`Druid.lua:512-519`) already answers `(knownRank(MOONFIRE) > 1 and 12 or 9) + 3 x Nature's Splendor`, so rank 1
+owes 3 ticks (+3, +6, +9 s), as the druid-moonfire capture shows before its 9.8 s recast; the step below re-reads DB2
+and changes the aura only if a rank disagrees. Whether an unrefreshed rank-1 Moonfire ever ticks a fourth time at +12 s
+is an in-game check (Task 19's UR4), not assumed. Starfire and Insect Swarm are declared because the owner's scope
+names them; spec §5.4 does not, and its note allows any instant to declare its school. Each ticking ability's aura is
+resolved as the simulation does (`cycle`, else `aura`, else its key), and the spec asserts that aura declares a
+`tick_time`.
 
 - [ ] **Step 1: Write the failing test** `tests/Forever/expects_spec.lua`:
 
@@ -6526,12 +6660,15 @@ names them; spec §5.4 does not, and spec §5.4's note allows any instant to dec
 local load = require("Game.State.helpers.load")
 local loader = require("Forever.helpers.load_druid")
 
+-- { expects, velocity, school } as each pack registers them; TICKING: the abilities whose aura (cycle, aura or key)
+-- must declare a tick_time and dot = "debuff"
+local TICKING = { moonfire = true, insect_swarm = true, serpent_sting = true }
 local DECLARED = {
     Druid = {
         wrath = { "travel", 20, "nature" },
         starfire = { "instant", nil, "arcane" },
-        moonfire = { "instant", nil, "arcane", 4, 3 },
-        insect_swarm = { "ticks", nil, "nature", 6, 2 },
+        moonfire = { "instant", nil, "arcane" },
+        insect_swarm = { "ticks", nil, "nature" },
     },
     Warlock = {
         shadow_bolt = { "travel", 20, "shadow" },
@@ -6554,7 +6691,7 @@ local DECLARED = {
         arcane_shot = { "travel", 40, "arcane" },
         multi_shot = { "travel", 30, "physical" },
         sniper_shot = { "travel", 60, "physical" },
-        serpent_sting = { "ticks", 40, "nature", 5, 3 },
+        serpent_sting = { "ticks", 40, "nature" },
     },
 }
 
@@ -6567,9 +6704,13 @@ describe("the packs' declared outcomes", function()
             local w = loader.load(nil, "src/Hekili_" .. class .. "/" .. class .. ".lua", class:upper())
             for key, want in pairs(list) do
                 local d = assert(w.abilities[key], key)
-                assert.are.same(want, { d.expects, d.velocity, d.school, d.ticks, d.tickPeriod }, key)
+                assert.are.same(want, { d.expects, d.velocity, d.school }, key)
                 local s = d.school and ns.SCHOOL[d.school] or nil
-                assert.is_nil(X.Malformed(d, d.expects, X.KIND[d.expects], s), key)
+                local au = w.auras[d.cycle or d.aura or key] -- resolved as the simulation does
+                if TICKING[key] then
+                    assert.is_truthy(au and au.tick_time and au.dot == "debuff", key .. ": its aura is no debuff dot")
+                end
+                assert.is_nil(X.Malformed(d, d.expects, X.KIND[d.expects], s, au and au.tick_time and au or nil), key)
             end
         end)
     end
@@ -6590,14 +6731,12 @@ end)
 Run: `.lua/bin/busted tests/Forever/expects_spec.lua`
 Expected: FAIL, `attempt to call field 'Malformed' (a nil value)`, then the declarations missing.
 
-- [ ] **Step 3: Expose the rule.** In `src/Hekili/Game/State/Families/Expect.lua`, after `local function malformed`'s
-  `end`, add:
+- [ ] **Step 3: Check Moonfire's aura against DB2.**
 
-```lua
---- (spec §5.3) Why a declaration is malformed, or nil: the build's own rule, for the pack check
---- (tests/Forever/expects_spec.lua) and tools/check_spell_data.lua.
-X.Malformed = malformed
-```
+Run: `python3 -c "import sqlite3,os; c=sqlite3.connect(os.path.expanduser('~/.local/share/wow-db2/forever/current.sqlite')); print([(i, c.execute('select d.Duration from SpellMisc m join SpellDuration d on d.ID = m.DurationIndex where m.SpellID = ?', (i,)).fetchone()[0], c.execute('select EffectAuraPeriod from SpellEffect where SpellID = ? and EffectAura = 3', (i,)).fetchone()[0]) for i in (8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835)])"`
+Expected: `[(8921, 9000, 3000), (8924, 12000, 3000), ..., (9835, 12000, 3000)]`, which the aura's duration function
+already answers (`Druid.lua:515-517`): leave it. If a rank differs, set the aura's duration function to DB2's value
+for that rank (one `knownRank` branch per distinct duration) and note it in the commit.
 
 - [ ] **Step 4: Declare the data.** Each command inserts one line after the ability's `id = ...,` line; within a file
   they run bottom-up so the line numbers hold:
@@ -6606,8 +6745,10 @@ X.Malformed = malformed
 D='        '
 sed -i -e "1754a\\${D}expects = \"travel\", velocity = 20, school = \"nature\"," \
   -e "1659a\\${D}expects = \"instant\", school = \"arcane\"," \
-  -e "1325a\\${D}expects = \"instant\", school = \"arcane\", ticks = 4, tickPeriod = 3," \
-  -e "1216a\\${D}expects = \"ticks\", school = \"nature\", ticks = 6, tickPeriod = 2," src/Hekili_Druid/Druid.lua
+  -e "1325a\\${D}expects = \"instant\", school = \"arcane\", -- its debuff dot aura ticks every 3 s, 9 or 12 s by rank" \
+  -e "1216a\\${D}expects = \"ticks\", school = \"nature\", -- its debuff dot aura: 2 s ticks over 12 s" \
+  -e "518a\\${D}dot = \"debuff\", -- upstream's aura field (Engine/Sim/State.lua:3302): Moonfire's schedule" \
+  -e "489a\\${D}dot = \"debuff\", -- Insect Swarm's schedule" src/Hekili_Druid/Druid.lua
 sed -i -e "803a\\${D}expects = \"travel\", velocity = 24, school = \"fire\"," \
   -e "785a\\${D}expects = \"travel\", velocity = 20, school = \"fire\"," \
   -e "709a\\${D}expects = \"travel\", velocity = 24, school = \"shadow\"," \
@@ -6625,8 +6766,9 @@ sed -i -e "442a\\${D}expects = \"travel\", velocity = 60, school = \"physical\",
   -e "426a\\${D}expects = \"travel\", velocity = 30, school = \"physical\", -- pays the pinned target's row only" \
   -e "408a\\${D}expects = \"travel\", velocity = 40, school = \"physical\"," \
   -e "370a\\${D}expects = \"travel\", velocity = 40, school = \"arcane\"," \
-  -e "353a\\${D}expects = \"ticks\", school = \"nature\", velocity = 40, ticks = 5, tickPeriod = 3," \
-  -e "295a\\${D}expects = \"travel\", velocity = 40, school = \"physical\"," src/Hekili_Hunter/Hunter.lua
+  -e "353a\\${D}expects = \"ticks\", school = \"nature\", velocity = 40, -- its debuff dot aura: 3 s over 15 s" \
+  -e "295a\\${D}expects = \"travel\", velocity = 40, school = \"physical\"," \
+  -e '232s/tick_time = 3, max_stack = 1 }/tick_time = 3, dot = "debuff", max_stack = 1 }/' src/Hekili_Hunter/Hunter.lua
 ```
 
   (`sed` applies every `-e` to the original numbering in one pass, so the order within a command does not matter.)
@@ -6652,7 +6794,7 @@ generated RegisterPack blocks).
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/Hekili/Game/State/Families/Expect.lua src/Hekili_Druid/Druid.lua src/Hekili_Warlock/Warlock.lua \
+git add src/Hekili_Druid/Druid.lua src/Hekili_Warlock/Warlock.lua \
   src/Hekili_Mage/Mage.lua src/Hekili_Shaman/Shaman.lua src/Hekili_Priest/Priest.lua src/Hekili_Paladin/Paladin.lua \
   src/Hekili_Hunter/Hunter.lua docs/dev/wowsims-packs.md tests/Forever/expects_spec.lua
 git commit -m "feat(packs): casters and Hunter declare expects, velocity and school from DB2
@@ -6672,17 +6814,19 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 - Modify: `Makefile:9-10` (`.PHONY`), after the `bench-ta` target (target `spell-data-check`)
 
 **Interfaces:**
-- Consumes: the recording pack loader; DB2 tables `SpellMisc` (`SpellID`, `Speed`, `SchoolMask`, `DurationIndex`),
-  `SpellDuration` (`ID`, `Duration` ms), `SpellEffect` (`SpellID`, `EffectAura` 3 = periodic damage,
-  `EffectAuraPeriod` ms), from `$WOW_DB2` (default `~/.local/share/wow-db2/forever/current.sqlite`).
+- Consumes: the recording pack loader; DB2 tables `SpellMisc` (`SpellID`, `Speed`, `SchoolMask`) and `SpellEffect`
+  (`SpellID`, `EffectAura` 3 = periodic damage, `EffectAuraPeriod` ms), from `$WOW_DB2` (default
+  `~/.local/share/wow-db2/forever/current.sqlite`).
 - Produces: `make spell-data-check` (dev-only, outside `make check`: CI has no DB2 file); `check(rows, db) -> errors,
   notes` in the Python module.
 - Boundary: tools only.
 
 Implementation choice: the Lua side loads the packs (the only code that can run them) and prints
-`class key ids velocity school ticks tickPeriod startsCombat expects` per ability; the Python side owns every DB2
-read, as the spec's SQL mode does. A `ticks` count is checked on the pack's last listed rank (the rank at the level
-cap); a lower rank whose duration gives another count is a note, not a failure (Moonfire rank 1, Task 16).
+`class key ids velocity school tick_time startsCombat expects` per ability (`tick_time`: the ticking aura's, resolved
+`cycle or aura or key`, a number or `fn`; empty when the ability does not tick); the Python side owns every DB2 read,
+as the spec's SQL mode does. A ticking aura's `tick_time` is compared with each listed rank's periodic damage
+`EffectAuraPeriod` and a difference is a note, never a failure (owner ruling: an aura may be rank-generic); a
+function `tick_time` is not compared.
 
 - [ ] **Step 1: Write the failing test** `tests/tools/test_check_spell_data.py`:
 
@@ -6713,8 +6857,8 @@ def db():
     return c
 
 
-def row(key, ids, velocity="", school="", ticks="", period="", starts="1", expects="travel"):
-    return ["C", key, ",".join(map(str, ids)), velocity, school, ticks, period, starts, expects]
+def row(key, ids, velocity="", school="", tick="", starts="1", expects="travel"):
+    return ["C", key, ",".join(map(str, ids)), velocity, school, tick, starts, expects]
 
 
 class CheckTest(unittest.TestCase):
@@ -6735,10 +6879,13 @@ class CheckTest(unittest.TestCase):
         errors, _ = csd.check([row("shot", [40], expects="")], db())
         self.assertEqual(1, len(errors))
 
-    def test_ticks_checked_on_the_last_rank_lower_ranks_noted(self):
-        errors, notes = csd.check([row("dot", [30, 31], "", "arcane", "4", "3", expects="instant")], db())
-        self.assertEqual([], errors)
-        self.assertEqual(1, len(notes))
+    def test_an_aura_tick_time_off_the_period_is_a_note_never_a_failure(self):
+        errors, notes = csd.check([row("dot", [30, 31], "", "arcane", "3", expects="instant")], db())
+        self.assertEqual(([], []), (errors, notes))
+        errors, notes = csd.check([row("dot", [30, 31], "", "arcane", "2", expects="instant")], db())
+        self.assertEqual(([], 2), (errors, len(notes)))
+        errors, notes = csd.check([row("dot", [30, 31], "", "arcane", "fn", expects="instant")], db())
+        self.assertEqual(([], []), (errors, notes))
 
 
 if __name__ == "__main__":
@@ -6756,13 +6903,12 @@ Expected: FAIL, `ModuleNotFoundError: No module named 'check_spell_data'`.
 #!/usr/bin/env python3
 """The DB2 check of the packs' declared outcomes (unit-registry spec §5.5). Dev-only: `make spell-data-check`.
 
-Reads tools/check_spell_data.lua's tab-separated lines on stdin (class, key, ids, velocity, school, ticks, tickPeriod,
+Reads tools/check_spell_data.lua's tab-separated lines on stdin (class, key, ids, velocity, school, tick_time,
 startsCombat, expects) and $WOW_DB2 (default ~/.local/share/wow-db2/forever/current.sqlite). Fails when a declared
 velocity differs from SpellMisc.Speed on any listed rank; when a declared school's name differs from SchoolMask's on
 any listed rank (a mask with no single name: the pack leaves `school` nil); when an ability that starts combat has
-Speed > 0 on its first rank and declares no velocity (a "ticks" ability's velocity is optional); when tickPeriod
-differs from the periodic damage effect's EffectAuraPeriod, or ticks from Duration / period on the last listed rank
-(lower ranks: notes).
+Speed > 0 on its first rank and declares no velocity (a "ticks" ability's velocity is optional). A ticking aura's
+tick_time that differs from a rank's periodic damage EffectAuraPeriod is a note (an aura may be rank-generic).
 """
 import os
 import sqlite3
@@ -6773,7 +6919,7 @@ NAME = {v: k for k, v in SCHOOL.items()}
 
 
 def misc(db, sid):
-    return db.execute("select Speed, SchoolMask, DurationIndex from SpellMisc where SpellID = ?", (sid,)).fetchone()
+    return db.execute("select Speed, SchoolMask from SpellMisc where SpellID = ?", (sid,)).fetchone()
 
 
 def periodic(db, sid):
@@ -6781,21 +6927,16 @@ def periodic(db, sid):
     return r[0] if r else 0
 
 
-def duration(db, index):
-    r = db.execute("select Duration from SpellDuration where ID = ?", (index,)).fetchone()
-    return r[0] if r else 0
-
-
 def check(rows, db):
     errors, notes = [], []
-    for cls, key, ids, velocity, school, ticks, period, starts, expects in rows:
+    for cls, key, ids, velocity, school, tick, starts, expects in rows:
         ranks = [int(i) for i in ids.split(",") if i]
         where = f"{cls} {key}"
         data = [(sid, misc(db, sid)) for sid in ranks]
         data = [(sid, m) for sid, m in data if m]
         if not data:
             continue
-        for sid, (speed, mask, _) in data:
+        for sid, (speed, mask) in data:
             if velocity and float(velocity) != speed:
                 errors.append(f"{where}: velocity {velocity} but SpellMisc {sid} Speed {speed:g}")
             if school:
@@ -6807,17 +6948,11 @@ def check(rows, db):
         first_speed = data[0][1][0]
         if starts == "1" and first_speed > 0 and not velocity and expects != "ticks":
             errors.append(f"{where}: Speed {first_speed:g} on {data[0][0]} but no velocity declared")
-        if ticks and period:
-            last_sid, (_, _, dur_index) = data[-1]
-            p = periodic(db, last_sid)
-            if p and float(period) * 1000 != p:
-                errors.append(f"{where}: tickPeriod {period} but {last_sid} EffectAuraPeriod {p} ms")
-            if p and int(ticks) != duration(db, dur_index) // p:
-                errors.append(f"{where}: ticks {ticks} but {last_sid} lasts {duration(db, dur_index)} ms")
-            for sid, (_, _, di) in data[:-1]:
-                q = periodic(db, sid)
-                if q and duration(db, di) // q != int(ticks):
-                    notes.append(f"{where}: rank {sid} ticks {duration(db, di) // q} (declared {ticks})")
+        if tick and tick != "fn":
+            for sid, _ in data:
+                p = periodic(db, sid)
+                if p and float(tick) * 1000 != p:
+                    notes.append(f"{where}: aura tick_time {tick} s but {sid} EffectAuraPeriod {p} ms")
     return errors, notes
 
 
@@ -6842,8 +6977,10 @@ if __name__ == "__main__":
 
 ```lua
 -- tools/check_spell_data.lua (unit-registry spec §5.5): prints every class pack's abilities that start combat or
--- declare `expects`, one tab-separated line each (class, key, ids, velocity, school, ticks, tickPeriod, startsCombat,
--- expects), for tools/check_spell_data.py. Loads each pack through the recording loader the specs use.
+-- declare `expects`, one tab-separated line each (class, key, ids, velocity, school, tick_time, startsCombat,
+-- expects), for tools/check_spell_data.py; tick_time is the ticking aura's (resolved `cycle or aura or key`, as the
+-- simulation does; `fn` for a function; empty when the ability does not tick). Loads each pack through the recording
+-- loader the specs use.
 package.path = "./src/Hekili/?.lua;./tests/?.lua;./?.lua;" .. package.path
 local loader = require("Forever.helpers.load_druid")
 
@@ -6868,14 +7005,18 @@ for _, class in ipairs(CLASSES) do
         local function s(v)
             return v == nil and "" or tostring(v)
         end
+        local au = w.auras[d.cycle or d.aura or key]
+        local tick = ""
+        if type(au) == "table" and (d.expects == "ticks" or d.expects == "channel" or au.dot == "debuff") then
+            tick = type(au.tick_time) == "function" and "fn" or s(au.tick_time)
+        end
         print(table.concat({
             class,
             key,
             table.concat(ids, ","),
             s(d.velocity),
             s(d.school),
-            s(d.ticks),
-            s(d.tickPeriod),
+            tick,
             d.startsCombat and "1" or "0",
             s(d.expects),
         }, "\t"))
@@ -6895,9 +7036,9 @@ spell-data-check:
 - [ ] **Step 4: Run the unit test, then the real check**
 
 Run: `python3 -m unittest discover -s tests/tools -t tests/tools && make spell-data-check`
-Expected: the unit tests pass (5); the check prints `note: Druid moonfire: rank 8921 ticks 3 (declared 4)` (and the
-other low Moonfire ranks if their durations differ) and ends `spell-data-check: <n> abilities, 0 failures, <m>
-notes`, exit 0. A failure on a melee pack's ability (rule 3: Speed > 0 with no velocity, for example a thrown weapon)
+Expected: the unit tests pass (5); the check ends `spell-data-check: <n> abilities, 0 failures, <m> notes`, exit 0
+(each note names an aura whose `tick_time` differs from a rank's `EffectAuraPeriod`; none is expected for Moonfire,
+Insect Swarm or Serpent Sting, whose auras match DB2). A failure on a melee pack's ability (rule 3: Speed > 0 with no velocity, for example a thrown weapon)
 stops the task for the owner's ruling: spec §5.4 keeps melee packs on their default type while §5.5's third rule
 covers every pack.
 
@@ -7012,7 +7153,7 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 | Two-school spells and wands | Frostfire Bolt (DB2 mask 20) declares no `school`, and a wand's school may differ from Shoot's mask (U7, deferred by owner ruling): their WOUNDs pay only by an avoid until measured | kit + core | in-game U7 |
 | Resist, immune, absorb shapes | `SPELL_MISSED` with RESIST, IMMUNE, ABSORB, EVADE are emitted from rows never captured (U1, U6, deferred); partial resists unmodelled | core belief | in-game U1, U6 |
 | Channel ticks | The CHANNEL kind is implemented and tested against the harness's own tick model only; no pack declares it (U9's channel half, deferred) | core belief | in-game U9 |
-| Low-rank tick counts | A pack declares one `ticks` per ability (the top rank's); Moonfire rank 1 lasts 9 s (3 ticks against 4), so a rank-1 application closes with one row owed (levels 4-9); `make spell-data-check` notes it | kit | Druid levels 4-9 |
+| Rank-generic aura periods | A ticking kind reads its aura's `tick_time` and `duration` at the commit (owner ruling 2026-10-22); an aura whose `tick_time` is one number for every rank while DB2's `EffectAuraPeriod` differs by rank pays its ticks on the wrong schedule for those ranks; `make spell-data-check` notes each such rank | kit | none known |
 | FLIGHT's first record | Spec §3.3.1 lets only passes (a) and (b) teach a lag record, which no first ticket reaches; the build teaches from any clean payment, pass (c) included (a recorded deviation) | core belief | none |
 | `closedGone` | A unit with an open ticket is held, so it never goes GONE while a ticket pins it; the `gone` close is reachable only through a registry reset and stays at 0 in every run | core belief | none |
 | Harness pushback | The DELAYED pushback row is opt-in in the harness (`pushback`), off in the class loops (it would move the player's rows 0.37 s and the onus floors); the kill shapes follow the captures (`killTiming`) | harness | none |
@@ -7028,6 +7169,7 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 | U6 | Core | partial resists: a `/vslog` of a Shadow Bolt series on a mob with shadow resistance (a WOUND with a RESIST flag and a reduced amount, or two rows) | the amount band and the school check assume one row per hit | open |
 | U7 | Core | two-school spells and wands: the school a Frostfire Bolt WOUND carries (20, 4 or 16) and a non-physical wand's Shoot | Frostfire Bolt and Shoot keep no or a guessed `school` until then | open |
 | U9 | Core | channel rows: `/vslog` of Arcane Missiles and Drain Life on solo mobs: per tick, which tokens, action, flag, amount, school | CHANNEL stays unused by packs until its shape is measured | open |
+| UR4 | Druid | an unrefreshed rank-1 Moonfire (8921, level 4-9): does a fourth tick come at +12 s? DB2 gives 9 s (3 ticks); the pack's aura answers 9 s | the TICKS ticket owes the aura's count; a fourth tick would be foreign | open |
 | U10 | Core | ten pulls with auto-attack only: `PLAYER_SWING`, `PLAYER_ENTER_COMBAT` and the target's UNIT_COMBAT, amounts on | the first swing of a combat (one sample: 989 ms) does not teach the lag; this measures its lag distribution | open |
 ```
 
@@ -7042,11 +7184,14 @@ ability, never code:
 
 - `expects`: one of `"none"` (owes no row: a buff), `"instant"` (its row comes in the same frame), `"travel"` (a
   projectile: `velocity` in yards a second, DB2 `SpellMisc.Speed`), `"strike"` (on the next swing), `"ticks"` (a
-  DoT: `ticks` rows every `tickPeriod` seconds), `"channel"` (untested in game; no pack uses it). `"melee"` is the
-  core's own.
+  DoT with no direct hit), `"channel"` (opt-in, untested in game; no pack uses it). `"melee"` is the core's own.
+- A ticking kind reads the aura the ability applies (`cycle`, else `aura`, else the ability's key, as the simulation
+  does): its `tick_time` is the period and `floor(duration / tick_time)` the count, read at each cast (a function
+  is called in Hekili's state). There are no `ticks`, `tickPeriod` or `dot` fields on the ability.
 - `school`: the client's school by name, `"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"` or
   `"arcane"` (`Hekili.SCHOOL`); leave it out when the spell's mask has no single name.
-- `ticks` and `tickPeriod` may join `"instant"` or `"travel"` (a hit that then ticks); `velocity` may join `"ticks"`
+- A declared `"instant"` or `"travel"` ability whose aura has a `tick_time` and upstream's `dot = "debuff"` also
+  ticks (a hit that then ticks); `"ticks"` needs the same two aura fields; `velocity` may join `"ticks"`
   (a DoT that flies).
 
 An ability with no `expects` keeps the default: `"strike"` with `onNextSwing`, `"instant"` with `startsCombat`, else
