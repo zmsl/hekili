@@ -41,7 +41,7 @@ M.FLICKER = {
     -- (experimental) is the player's remedy; the oracle reads 0.03 and 0.12
     -- (Protection; Retribution measured 0.57 with its pre-pull Seal of Command, 0.19 since prepullSkip drops it)
     -- 0.21, 0 (was 0.19): harness corrected to the measured swing timing (2026-10-22); 0.19 at fix 23 with prepullSkip
-    ["Retribution"] = { flicker = 0.3, retracted = 0 },
+    ["Retribution"] = { flicker = 0.22, retracted = 0 }, -- the old 0.01 margin
     ["Protection"] = { flicker = 0.6, retracted = 0 }, -- 0.58, 0 (was 0.31: fix 23, above)
     ["Enhancement"] = { flicker = 1.2, retracted = 0 }, -- 1.11, 0
     ["Arcane"] = { flicker = 1.5, retracted = 0 }, -- 1.43, 0 (Mage lane, M13; 1.66 -> 1.43: Arcane Power on Wrath)

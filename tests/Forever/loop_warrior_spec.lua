@@ -252,7 +252,7 @@ describe("the headless Arms gates, 20 fights #loop", function()
         local r, line = gate.solo(20)
         assert.is_true(r.never <= 0.08, line)
         -- 0.969 (was 0.975): harness corrected to the measured swing timing (2026-10-22)
-        assert.is_true(r.dps >= 0.96, line)
+        assert.is_true(r.dps >= 0.965, line) -- the old 0.005 margin
         assert.is_true(r.idleA <= r.idleB + 0.03, line)
         for key, up in pairs(r.upB) do
             if not gate.REPORTED[key] then
