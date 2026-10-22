@@ -11,9 +11,9 @@
 -- Demonic Sacrifice (the demon out for its effect), Amplify Curse (spent by Bane of Agony and Curse of Weakness),
 -- Conflagrate on our Immolate (consumed unless Shadow and Flame keeps it), Demonic Brand from Searing Pain, Wrack's
 -- debuff, the talents' cast and cost cuts (Bane, Improved Corruption, Cataclysm, Master Summoner), and the school
--- lockouts (Hekili_Shared's locked_out_<school>). No priority yet: the wowsims.com packs (Affliction, Demonology,
--- Destruction) come next; the abilities and auras below are what wowsims/forever's five Warlock builds
--- (ui/specs/warlock/dps/builds/*.build.json) cast or read.
+-- lockouts (Hekili_Shared's locked_out_<school>). The priorities are the five wowsims.com packs in APLs/packs.lua
+-- (Affliction, SM Ruin, Demonology, Shadow Brand, Destruction); the abilities and auras below are what wowsims/forever's
+-- five Warlock builds (ui/specs/warlock/dps/builds/*.build.json) cast or read.
 -- Research: docs/research/2026-10-15-forever-warlock/research.md.
 -- From wowsims/forever's data (MIT, https://github.com/wowsims/forever; sim/warlock/ and sim/core/spelldata), where the
 -- Forever DB2 at 70338 lacks it: the live talent tree (ui/sim/talents/trees/warlock.json: its 52 nodes, their trees and

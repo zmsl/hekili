@@ -447,9 +447,14 @@ Warlock builds; their replay and leveling gates `tests/Forever/wowsims_warlock_s
 pull (its mana and regen from the logs), the Soul Shards in the bags; the pools are the logs' (5353, Demonology's 6156).
 Flicker floors (pack_gate `FLICKER`, 20 fights, K 1.6): Affliction 1.6 (1.60, oracle 1.60), SM Ruin 4.9 (4.81, oracle
 4.66), Demonology 3.4 (3.36, oracle 3.38), Shadow Brand 2.9 (2.81, oracle 2.69), Destruction 4.6 (4.51, oracle 3.38),
-retracted 0 each. The lines (on 06eec227 + Task 13):
+retracted 0 each. The lines (the end-of-lane gate, on 06eec227 + Task 13):
 
 ```
+Affliction solo: fights=3 agreement 0.997 (2706 ticks); react median 0 p90 0 never 0.005; refused per 100 [casting 76.9 (oracle 76.3, unmatched 0.2)], episodes 9.76/min; dps A/B 0.996; ... [seeds 1-3]
+SM Ruin solo: fights=3 agreement 0.995 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 66.7 (oracle 66.5, unmatched 0.4)], episodes 12.97/min; dps A/B 0.999; ... [seeds 1-3]
+Demonology solo: fights=3 agreement 0.998 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 3.4 (oracle 3.4, unmatched 0.0)], episodes 1.33/min; dps A/B 1.000; ... [seeds 1-3]
+Shadow Brand solo: fights=3 agreement 0.999 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 60.0 (oracle 60.0, unmatched 0.1)], episodes 11.86/min; dps A/B 1.000; ... [seeds 1-3]
+Destruction solo: fights=3 agreement 0.989 (2706 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 41.7 (oracle 41.5, unmatched 0.2)], episodes 10.31/min; dps A/B 0.992; ... [seeds 1-3]
 Affliction solo: fights=20 agreement 0.995 (18040 ticks); react median 0 p90 0 never 0.001; refused per 100 [casting 77.4 (oracle 77.5, unmatched 0.3)], episodes 9.84/min; dps A/B 1.012; ...
 SM Ruin solo: fights=20 agreement 0.996 (18040 ticks); react median 0 p90 0 never 0.000; refused per 100 [casting 65.9 (oracle 65.8, unmatched 0.3)], episodes 12.46/min; dps A/B 0.998; ...
 Demonology solo: fights=20 agreement 0.998 (18040 ticks); react median 0 p90 0 never 0.001; refused per 100 [casting 3.2 (oracle 3.3, unmatched 0.0)], episodes 1.23/min; dps A/B 1.001; ...
