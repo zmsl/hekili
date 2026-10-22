@@ -113,24 +113,17 @@ local function emit(kind, x, dst, action, flag, amount, t)
     if dst == "" then
         return
     end
-    local flags = L.HOSTILE_FLAGS
+    local me, mf, hf = L.player, L.PLAYER_FLAGS, L.HOSTILE_FLAGS
     if kind == 1 then
-        local offhand = x == 2
         if action == "WOUND" then
-            local r = L.Emit("SWING_DAMAGE", 21, t, true, "swing", "inferred", L.player, L.PLAYER_FLAGS, dst, flags)
-            r[12], r[13], r[14], r[15], r[16], r[17] = amount, 0, 1, 0, 0, 0
-            r[18], r[19], r[20], r[21] = flag == "CRITICAL", flag == "GLANCING", flag == "CRUSHING", offhand
+            L.Swing(t, "swing", me, mf, dst, hf, amount, flag, x == 2)
         else
-            local r = L.Emit("SWING_MISSED", 15, t, true, "missed", "inferred", L.player, L.PLAYER_FLAGS, dst, flags)
-            r[12], r[13], r[14], r[15] = action, offhand, 0, false
+            L.Miss(t, "missed", me, mf, dst, hf, nil, 1, action, x == 2)
         end
     elseif action == "WOUND" then
-        local r = L.Emit("SPELL_DAMAGE", 24, t, true, "damage", "inferred", L.player, L.PLAYER_FLAGS, dst, flags)
-        r[12], r[13], r[14], r[15], r[16], r[17], r[18] = x, "", 1, amount, 0, 1, 0
-        r[19], r[20], r[21], r[22], r[23], r[24] = 0, 0, flag == "CRITICAL", false, false, false
+        L.SpellHit("SPELL_DAMAGE", t, "damage", me, mf, dst, hf, x, 1, amount, flag) -- school 1 until Task 6
     else
-        local r = L.Emit("SPELL_MISSED", 18, t, true, "missed", "inferred", L.player, L.PLAYER_FLAGS, dst, flags)
-        r[12], r[13], r[14], r[15], r[16], r[17], r[18] = x, "", 1, action, false, 0, false
+        L.Miss(t, "missed", me, mf, dst, hf, x, 1, action)
     end
 end
 

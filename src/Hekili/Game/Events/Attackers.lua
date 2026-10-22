@@ -270,19 +270,14 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
             atkN[k] = atkN[k] + 1
         end
     end
+    local amt = type(amount) == "number" and amount or 0
     if act == "WOUND" and melee then
-        local r = L.Emit("SWING_DAMAGE", 21, t, true, "onus", "inferred", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS)
-        r[12], r[13], r[14], r[15], r[16], r[17] = type(amount) == "number" and amount or 0, 0, 1, 0, 0, 0
-        r[18], r[19], r[20], r[21] = flag == "CRITICAL", flag == "GLANCING", flag == "CRUSHING", false
+        L.Swing(t, "onus", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS, amt, flag, false)
     elseif act == "WOUND" then
-        local r = L.Emit("SPELL_DAMAGE", 24, t, true, "onus", "inferred", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS)
         local mask = type(school) == "number" and school or 1
-        r[12], r[13], r[14], r[16], r[17], r[18] = 0, "", mask, 0, mask, 0
-        r[15] = type(amount) == "number" and amount or 0
-        r[19], r[20], r[21], r[22], r[23], r[24] = 0, 0, flag == "CRITICAL", false, false, false
+        L.SpellHit("SPELL_DAMAGE", t, "onus", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS, 0, mask, amt, flag)
     else
-        local r = L.Emit("SWING_MISSED", 15, t, true, "onus", "inferred", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS)
-        r[12], r[13], r[14], r[15] = act, false, 0, false
+        L.Miss(t, "onus", src, L.HOSTILE_FLAGS, dst, L.PLAYER_FLAGS, nil, 1, act, false)
     end
 end)
 

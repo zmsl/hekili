@@ -686,4 +686,45 @@ describe("the synthesized combat log", function()
             assert.are.equal(0, bytes)
         end)
     end)
+
+    it("builds the swing, spell and miss rows in one place, each with the school it is given", function()
+        ctl.now = 5
+        L.Swing(4.9, "swing", "Player-1", L.PLAYER_FLAGS, "Creature-1", L.HOSTILE_FLAGS, 30, "CRITICAL", true)
+        L.SpellHit(
+            "SPELL_DAMAGE",
+            4.8,
+            "damage",
+            "Player-1",
+            L.PLAYER_FLAGS,
+            "Creature-1",
+            L.HOSTILE_FLAGS,
+            99,
+            8,
+            15,
+            ""
+        )
+        L.Miss(4.7, "missed", "Player-1", L.PLAYER_FLAGS, "Creature-1", L.HOSTILE_FLAGS, 99, 1, "MISS")
+        L.Miss(4.6, "missed", "Player-1", L.PLAYER_FLAGS, "Creature-1", L.HOSTILE_FLAGS, nil, 1, "DODGE", true)
+        L.Deliver()
+        assert.are.same(
+            { "SWING_DAMAGE", 21, 30, true, true },
+            { got[1].row[2], got[1].n, got[1].row[12], got[1].row[18], got[1].row[21] }
+        )
+        assert.are.same(
+            { "SPELL_DAMAGE", 24, 99, 8, 15, 8 },
+            { got[2].row[2], got[2].n, got[2].row[12], got[2].row[14], got[2].row[15], got[2].row[17] }
+        )
+        assert.are.same({ "SPELL_MISSED", 18, 1, "MISS" }, { got[3].row[2], got[3].n, got[3].row[14], got[3].row[15] })
+        assert.are.same(
+            { "SWING_MISSED", 15, "DODGE", true },
+            { got[4].row[2], got[4].n, got[4].row[12], got[4].row[13] }
+        )
+    end)
+
+    it("leaves no hand-written combat-log row outside CombatLog.lua", function()
+        for _, f in ipairs({ "src/Hekili/Game/Events/Rows.lua", "src/Hekili/Game/Events/Attackers.lua" }) do
+            local src = assert(io.open(f)):read("*a")
+            assert.is_nil(src:find("L.Emit(", 1, true), f)
+        end
+    end)
 end)

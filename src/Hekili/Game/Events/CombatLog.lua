@@ -214,6 +214,32 @@ function L.Energize(spellID, amount, powerType, maxPower, t)
     r[12], r[13], r[14], r[15], r[16], r[17], r[18] = spellID, "", 1, amount, 0, powerType, maxPower
 end
 
+--- (unit-registry spec §3.5) A white hit's row: SWING_DAMAGE at `t` (back-dated), from `src` to `dst`. Allocates
+--- nothing.
+function L.Swing(t, family, src, srcFlags, dst, dstFlags, amount, flag, offhand)
+    local r = L.Emit("SWING_DAMAGE", 21, t, true, family, "inferred", src, srcFlags, dst, dstFlags)
+    r[12], r[13], r[14], r[15], r[16], r[17] = amount, 0, 1, 0, 0, 0
+    r[18], r[19], r[20], r[21] = flag == "CRITICAL", flag == "GLANCING", flag == "CRUSHING", offhand == true
+end
+
+--- A spell's damage row (`sub`: SPELL_DAMAGE or SPELL_PERIODIC_DAMAGE) with `school` in slots 14 and 17.
+function L.SpellHit(sub, t, family, src, srcFlags, dst, dstFlags, spellID, school, amount, flag)
+    local r = L.Emit(sub, 24, t, true, family, "inferred", src, srcFlags, dst, dstFlags)
+    r[12], r[13], r[14], r[15], r[16], r[17], r[18] = spellID, "", school, amount, 0, school, 0
+    r[19], r[20], r[21], r[22], r[23], r[24] = 0, 0, flag == "CRITICAL", false, false, false
+end
+
+--- An avoid's row: SWING_MISSED for a swing (`spellID` nil), else SPELL_MISSED with `school` in slot 14.
+function L.Miss(t, family, src, srcFlags, dst, dstFlags, spellID, school, action, offhand)
+    if spellID == nil then
+        local r = L.Emit("SWING_MISSED", 15, t, true, family, "inferred", src, srcFlags, dst, dstFlags)
+        r[12], r[13], r[14], r[15] = action, offhand == true, 0, false
+        return
+    end
+    local r = L.Emit("SPELL_MISSED", 18, t, true, family, "inferred", src, srcFlags, dst, dstFlags)
+    r[12], r[13], r[14], r[15], r[16], r[17], r[18] = spellID, "", school, action, false, 0, false
+end
+
 --- Snapshot's line: the rows (allocates; debugging only).
 I.OnSnapshot(function(out)
     local c = L.counts
