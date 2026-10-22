@@ -280,12 +280,22 @@ A ticket opens for every commit, unconditionally, as one uniform record:
   `another()` rule (`:163-173`) as a generic ticket, and it replaces `unmappedT` (`:55`, `:344-346`, `:617`).
 
 At opening the engine takes the ability's type (`A.expKind[ab]`) and reads the fields that type needs (5.1:
-`velocity`, `school`, `tickPeriod`, `ticks`), then fills `kind`, `owed`, `period`, `school`, `lo` and `hi` by that
-kind's rule (3.3).
+`velocity`, `school`, and for TICKS and CHANNEL the aura's `tick_time` and `duration`), then fills `kind`, `owed`,
+`period`, `school`, `lo` and `hi` by that kind's rule (3.3).
 
-Kinds compose with ticks. When `ticks` and `tickPeriod` accompany `"instant"` or `"travel"` (Moonfire: `expects =
-"instant", school = "arcane", ticks = 4, tickPeriod = 3`), one commit opens two tickets pinned to the same GUID: the
-direct ticket of the declared kind and a TICKS ticket owing `ticks` rows (decision 17's `owed`). The TICKS ticket is
+Ticks come from the aura the packs already declare, not from new ability fields. The aura is the one named by the
+ability's existing `aura` field, else the aura with the ability's own key: the sim resolves it the same way
+(`Engine/Sim/State.lua:676`: `ability.cycle or ability.aura or ability.key`; `Engine/Sim/Events.lua:1609` reads
+`ability.tick_time or class.auras[ability.aura].tick_time`). The period is the aura's `tick_time` and the count is
+`floor(duration / tick_time)`, the same fields the sim reads (`Engine/Sim/State.lua:2283-2285`). Packs already declare
+them, for example `src/Hekili_Priest/Priest.lua:265-280` (Devouring Plague 24 / 3, Holy Fire 10 / 2, Mind Flay 3 / 1)
+and `src/Hekili_Mage/Mage.lua:235` (Evocation 8 / 1). A numeric field compiles at build. A function-valued field
+(Moonfire's rank-dependent duration, `src/Hekili_Druid/Druid.lua:512-520`) is called at commit in its own environment,
+Hekili's state, exactly as the sim calls it; it must return a number and allocate nothing.
+
+Kinds compose with ticks. An `"instant"` or `"travel"` ability that declares `dot = true` (Moonfire: `expects =
+"instant", school = "arcane", dot = true`) opens two tickets pinned to the same GUID at one commit: the direct ticket of
+the declared kind and a TICKS ticket owing the aura's tick count (decision 17's `owed`). The TICKS ticket is
 anchored at the application: the direct ticket's row when it is paid, else the success; if the direct ticket is paid
 by an avoid, the TICKS ticket closes with nothing owed (not lost). `expects = "ticks"` alone (Corruption, Shadow Word:
 Pain) opens only the TICKS ticket, anchored at the success. A `"ticks"` ability may also declare `velocity` (Serpent
@@ -603,14 +613,16 @@ closing code.
 | `"travel"` | FLIGHT | `velocity` (DB2 `SpellMisc.Speed`), `school` (DB2 `SchoolMask`) | captures a, b, c (Wrath 1483-1566 ms at max range) |
 | `"melee"` | MELEE | the hand, from `PLAYER_SWING`'s swingType | measured logs (the P and G logs behind `Rows.lua:15-16`) |
 | `"strike"` | STRIKE | the existing `onNextSwing` | measured logs (today's on-next-swing replacement) |
-| `"ticks"` | TICKS | `tickPeriod`, `ticks`, `school`; `ticks` and `tickPeriod` may also accompany `"instant"` or `"travel"` (3.2) | measured: the druid-moonfire capture (3.3) |
-| `"channel"` | CHANNEL | `tickPeriod`, `school` | unprobed: implemented, untested and unused by packs; U9's channel half deferred by owner ruling |
+| `"ticks"` | TICKS | `school`, optional `velocity`; the aura's `tick_time` and `duration` (3.2); `"instant"` or `"travel"` with `dot = true` also open one | measured: the druid-moonfire capture (3.3) |
+| `"channel"` | CHANNEL | `school`; the aura's `tick_time`; the existing `channeled` | unprobed: implemented, untested and unused by packs; U9's channel half deferred by owner ruling |
 
 `"melee"` is the engine's own type for `PLAYER_SWING`. No ability carries a hand field today, so an ability that
 declares `"melee"` fails validation and falls back to its default type (below).
 
 A `school` of nil on a declared type means the hit makes no row of ours: only an avoid pays, and expiry is not lost
-(3.3). `velocity`, `tickPeriod` and `ticks` are plain numbers on the ability. `school` is declared by name, a plain lowercase
+(3.3). `velocity` is a plain number on the ability and `dot` a boolean; the tick period and count live on the aura (3.2).
+Upstream has no ability-level `dot` flag; its `dot` is an aura field naming buff, debuff or both
+(`Engine/Sim/State.lua:3305`), a separate table, so the ability's `dot = true` does not collide with it. `school` is declared by name, a plain lowercase
 string from a fixed enum: `"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"`, `"arcane"`; numbers are
 not accepted. The enum is one core table, `ns.SCHOOL = { physical = 1, holy = 2, fire = 4, nature = 8, frost = 16,
 shadow = 32, arcane = 64 }`, in `Engine/Schema/Spec.lua` where the Schema compiles abilities, published as
@@ -626,8 +638,11 @@ a `velocity` field, but its projectile branch needs `impact` too (`Engine/Schema
 
 ### 5.2 Default type
 
-When `expects` is absent the engine maps it: `"strike"` if the ability has `onNextSwing`; `"instant"` if it has
-`startsCombat`; otherwise `"none"`. This reproduces today's behaviour exactly: Rows holds only `startsCombat` and
+When `expects` is absent the engine maps it: `"strike"` if the ability has `onNextSwing`; `"channel"` if it has
+upstream's existing `channeled = true` and its aura has a `tick_time` (`src/Hekili_Priest/Priest.lua:333` and others);
+`"instant"` if it has `startsCombat`; otherwise `"none"`. The channel rule is the owner's and departs from today for a
+channeled `startsCombat` ability (Mind Flay): today Rows holds it as a frame ticket, the default now opens an untested
+CHANNEL ticket that closes on the channel's stop. Apart from it this reproduces today's behaviour exactly: Rows holds only `startsCombat` and
 `onNextSwing` abilities today (`Rows.lua:347`) with exactly these windows, and holds nothing for the rest. Every pack's
 floors therefore hold until it declares data.
 
@@ -638,12 +653,15 @@ only when the pack declared `expects` itself. Unmapped successes keep their UNMA
 ### 5.3 Precompilation and validation
 
 At each build, beside `now` and `onCrit` (`Game/State/Families/Now.lua:318-333`), the engine reads `expects`,
-`velocity`, `school`, `tickPeriod`, `ticks` and `onNextSwing` from each ability into per-ability arrays: `A.expKind`,
-`A.expDeclared`, `A.velocity`, `A.school`, `A.tickPeriod`, `A.ticks`. A ticket refers to them by its integer `ab`.
+`velocity`, `school`, `dot`, `channeled`, `onNextSwing` and `aura` from each ability, and the resolved aura's
+`tick_time` and `duration`, into per-ability arrays: `A.expKind`, `A.expDeclared`, `A.velocity`, `A.school`, `A.dot`,
+`A.tickAura` (the aura index), `A.tickTime` and `A.tickCount` (numbers, or false when the field is a function and is
+read at commit). A ticket refers to them by its integer `ab`.
 
 Validation runs at the same build. An `expects` that is not one of the seven strings, or a type whose required fields
-are missing or malformed (a `velocity`, `tickPeriod` or `ticks` that is not a number, a `school` that is not one of the seven names; `"travel"` without `velocity`; `"ticks"` without `tickPeriod` or `ticks`; `"channel"`
-without `tickPeriod`; `"strike"` without `onNextSwing`; any `"melee"`), is reported once through the existing build
+are missing or malformed (a `velocity` that is not a number, a `school` that is not one of the seven names;
+`"travel"` without `velocity`; `"ticks"`, `dot = true` or `"channel"` whose aura is missing or has no `tick_time`;
+`"strike"` without `onNextSwing`; any `"melee"`), is reported once through the existing build
 warning path. `Hekili:Error` already reports a malformed `RegisterAbility` (`Engine/Schema/Spec.lua:857`), and Now's
 build counts its errors into `I.nowErrors` for Snapshot (`Now.lua:327`). The ability then falls back to its default
 type (5.2).
@@ -672,8 +690,8 @@ From DB2 build 1.60.1.70338 (`SpellMisc`, every rank the pack lists agrees unles
 | Hunter | `arcane_shot` | `expects = "travel", velocity = 40, school = "arcane"` | |
 | Hunter | `multi_shot` | `expects = "travel", velocity = 30, school = "physical"` | the GUID match pays only the row on the pinned target; its other targets' rows stay foreign |
 | Hunter | `sniper_shot` | `expects = "travel", velocity = 60, school = "physical"` | |
-| Hunter | `serpent_sting` | `expects = "ticks", school = "nature", velocity = 40, ticks = 5, tickPeriod = 3` | a DoT with no direct WOUND; `velocity` puts its miss in the FLIGHT window and anchors its ticks after the flight. Rank 1978's Speed is 40, the Forever 425728 family's is 0, so the check reads the pack's own ranks |
-| Druid | `moonfire` | `expects = "instant", school = "arcane", ticks = 4, tickPeriod = 3` | rank 1 measured; the pack checks each rank's tick count |
+| Hunter | `serpent_sting` | `expects = "ticks", school = "nature", velocity = 40` | a DoT with no direct WOUND; its aura (`src/Hekili_Hunter/Hunter.lua:232`: duration 15, tick_time 3) gives 5 ticks; `velocity` puts its miss in the FLIGHT window and anchors its ticks after the flight. Rank 1978's Speed is 40, the Forever 425728 family's is 0, so the check reads the pack's own ranks |
+| Druid | `moonfire` | `expects = "instant", school = "arcane", dot = true` | its aura (`src/Hekili_Druid/Druid.lua:512-520`: tick_time 3, duration 9 at rank 1 or 12 above, plus Nature's Splendor) decides the count; checking each rank's aura duration against DB2 and the capture (whose rank 1 showed ticks to 12 s) is a pack data task |
 | Hunter | `summon_hawk` | nothing (default type) | no outcome of ours known |
 
 Instant abilities may declare `expects = "instant", school = "<name>"`; that turns on the school check and lost counting
@@ -813,7 +831,7 @@ The soft-targeting log was not saved in full; its findings become the churn and 
 | Target (`Game/State/Sources/Target.lua`) | `UnitGUID("target")` in `swap` (`:55`); `TargetDamage` from the `target` token only (`:139-143`) | `I.Units.Bound(1)`; `TargetDamage` from OnRow rows whose GUID is the current target's; `TargetGone` on OnGone DEAD for a GUID holding a memory slot; poll 4 reports `I.Units.Dead` |
 | Casts (`Game/State/Sources/Casts.lua`) | `I.sentGUID = UnitGUID("target")` (`:31-35`) | `I.sentGUID = I.Units.Pin(api, t)` with the SENT's castGUID kept beside it; `SPELL_CAST_START`/`SUCCESS` destination from that pin (`:47`, `:61`) |
 | Nameplates (`Game/State/Sources/Nameplates.lua`) | nothing removed | poll 5's plain `UnitIsDead` (`:36-40`) also reports `I.Units.Dead` for a bound plate |
-| Now (`Game/State/Families/Now.lua`) | nothing | its build (`:318-333`) also precompiles `expects`, `velocity`, `school`, `tickPeriod`, `ticks` per ability, applies the default type and validates (5.3) |
+| Now (`Game/State/Families/Now.lua`) | nothing | its build (`:318-333`) also precompiles `expects`, `velocity`, `school`, `dot` and the resolved aura's `tick_time` and `duration` per ability, applies the default type and validates (5.3) |
 | TargetHealth (`Game/State/Families/TargetHealth.lua`) | nothing | receives `TargetGone` on kills; its header's stale secrecy note (`:10-11`) is corrected |
 | LibTTD (later) | its target-only feed | an OnRow listener keyed by GUID, deduplicated per ms |
 
@@ -881,9 +899,9 @@ Lua 5.1 on 64-bit: 16 bytes per array slot, about 56 bytes per table header, abo
 | Tickets: `kind`, `ab`, `x`, `guid`, `uid`, `school`, `owed`, `period`, `at`, `lo`, `hi`, `ref`, `lr`, `avoid`, `state` | 16 x 15 arrays | 4.7 KB |
 | Learned flight lag: `lagGUID`, `lagSpeed`, `lagE`, `lagSpr`, `lagT`, `lagN` | 16 x 6 arrays | 1.9 KB |
 | Dedupe ring: 6 payload arrays x 4 groups, `dTok` 4 x 44 booleans | 24 + 176 slots | 3.5 KB |
-| Per-ability arrays: `expKind`, `expDeclared`, `velocity`, `school`, `tickPeriod`, `ticks`, `bandLo`, `bandHi`, `bandN` | 9 x up to 120 abilities | 17.8 KB |
+| Per-ability arrays: `expKind`, `expDeclared`, `velocity`, `school`, `dot`, `tickAura`, `tickTime`, `tickCount`, `bandLo`, `bandHi`, `bandN` | 11 x up to 120 abilities | 21.6 KB |
 | `CTX`, the listener arrays (`OnRow`, `OnGone`: a few functions each), the counters | fixed | 1.5 KB |
-| Total | | about 48 KB |
+| Total | | about 52 KB |
 
 There are no per-unit token sets: a unit keeps only its token count (`uTokens`), and each token keeps its unit.
 `I.Units.Find(guid)` is a 64-step linear scan by string equality (interned strings compare by pointer). A GUID-keyed
@@ -959,9 +977,9 @@ constructor, closure or `{...}` inside an event handler, a row dispatch, a poll 
 | 8 | A ticket on a dead unit stays open until paid or its own window ends; unpaid, it closes as `closedDead`, not lost | a melee killing blow arrives about 370 ms after the clear and must still pay |
 | 9 | `TICKETS` = 16 | flight windows of up to about 2.1 s plus two hands need more than today's 8 |
 | 10 | A ticket opens for every commit (every `PLAYER_SWING`, every player success mapped or not, a hard cast at SENT); the kind decides how it closes | one uniform record; no engine assumption about what a spell does |
-| 11 | `expects` is a plain string from a fixed set, each mapped to one engine kind whose matching and closure rule lives in the engine; the engine reads the ability's other fields per type: `"none"` (none), `"instant"` (`school`), `"travel"` (`velocity`, `school`), `"melee"` (the hand from `PLAYER_SWING`; the engine's own, not declarable), `"strike"` (`onNextSwing`), `"ticks"` (`tickPeriod`, `ticks`, `school`), `"channel"` (`tickPeriod`, `school`); a plain string and nothing else; `school` is a name from the core enum `ns.SCHOOL` (`"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"`, `"arcane"`), compiled to its mask at build, never a number | packs declare data on the ability; each rule is written and tested once; the DB2 check reads the same fields |
-| 12 | Default when `expects` is absent: `"strike"` if `onNextSwing`, else `"instant"` if `startsCombat`, else `"none"` | reproduces today exactly: Rows holds only `startsCombat` and `onNextSwing` abilities, with these windows |
-| 13 | Validation at build: an unknown `expects`, a type missing a required field, or an unknown `school` name is reported once through the build warning path (`Hekili:Error`, counted like `I.nowErrors`) and the ability falls back to its default type | a typo never silently changes attribution; floors hold |
+| 11 | `expects` is a plain string from a fixed set, each mapped to one engine kind whose matching and closure rule lives in the engine; the engine reads the ability's other fields per type: `"none"` (none), `"instant"` (`school`), `"travel"` (`velocity`, `school`), `"melee"` (the hand from `PLAYER_SWING`; the engine's own, not declarable), `"strike"` (`onNextSwing`), `"ticks"` (`school`, optional `velocity`, and the aura's `tick_time` and `duration`), `"channel"` (`school`, `channeled`, the aura's `tick_time`); a plain string and nothing else; `school` is a name from the core enum `ns.SCHOOL` (`"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"`, `"arcane"`), compiled to its mask at build, never a number | packs declare data on the ability; each rule is written and tested once; the DB2 check reads the same fields |
+| 12 | Default when `expects` is absent: `"strike"` if `onNextSwing`, else `"channel"` if `channeled` and its aura has a `tick_time`, else `"instant"` if `startsCombat`, else `"none"` | reproduces today exactly except the owner's channel rule, which opens an untested CHANNEL ticket for channeled `startsCombat` abilities |
+| 13 | Validation at build: an unknown `expects`, a type missing a required field, an unknown `school` name, or a `"ticks"`, `dot = true` or `"channel"` whose aura is missing or has no `tick_time` is reported once through the build warning path (`Hekili:Error`, counted like `I.nowErrors`) and the ability falls back to its default type | a typo never silently changes attribution; floors hold |
 | 14 | `CTX` fields: `t`, `guid`, `hand`, `rMax`, `lagE`, `lagSpr`, `lagAge`, `rangeLo` (optional, 0 absent), `bandLo`, `bandHi`, `bandN` | what the engine knows at commit; no range is assumed readable |
 | 15 | A default-type ticket on an ability with no `school` field carries school ANY: any WOUND or avoid in its window pays, never lost; a declared type's nil school means only an avoid pays | keeps the default mapping exactly today's while letting a pack declare an aura-only cast |
 | 16 | Unmapped successes open an UNMAPPED ticket: `UNMAPPED_WINDOW`, no owed row, any GUID, absorbs an avoid or crit as nobody's | today's `another()` unmapped rule as a generic ticket; replaces `unmappedT` |
@@ -983,11 +1001,13 @@ constructor, closure or `{...}` inside an event handler, a row dispatch, a poll 
 | 32 | Cascade bound: a lost ticket shifts its queue by at most one row, only while casts are closer than the narrow band or before the first record, until it expires at `H` or closes on the kill tell or GONE; shifts that change a belief count as `divergent` | a shift between two own same-school hits changes nothing; only divergent outcomes matter |
 | 33 | Pass (c), the hard window, is open only to tickets with no learned record | otherwise a far-off row (capture a's 517 ms MISS) would still be charged to a cast whose learned lag excludes it |
 | 34 | An open ticket's phase (Ahead, Due, Widened, Overdue) is computed from the row's time against its expected closure and bands at each evaluation, never stored; Due, Widened and Overdue are passes (a), (b) and (c) | no state to keep in step and no transition event to miss; one vocabulary for the passes and the phases |
-| 35 | `ticks` and `tickPeriod` may accompany `"instant"` or `"travel"`: one commit opens the direct ticket and a TICKS ticket pinned to the same GUID, anchored at the direct row (else the success); `"ticks"` alone opens only the TICKS ticket, and may declare `velocity`: its application's avoid then uses the FLIGHT window and bands, and its anchor is the success plus the learned flight lag (else plus `rMax / speed / 2`) | Moonfire and Immolate hit and then tick; Corruption and Shadow Word: Pain only tick; a long-range Serpent Sting miss must still pay |
-| 36 | TICKS matches by school, GUID and schedule only: tick `k` at application + `k x period`, band +- 0.1 s, widened by `rMax / speed / 2` for a `velocity` TICKS ticket with no learned lag until its first tick is paid (the anchor then snaps to that tick); no amount band; a tick outside every band is foreign | measured jitter +- 50 ms; ramping DoTs vary 3x in amount, so the schedule is the discriminator; an unknown flight lag shifts the whole schedule once |
+| 35 | `dot = true` on an `"instant"` or `"travel"` ability opens the direct ticket and a TICKS ticket pinned to the same GUID, anchored at the direct row (else the success); `"ticks"` alone opens only the TICKS ticket and may declare `velocity` (its avoid then uses the FLIGHT window and bands, its anchor the success plus the learned flight lag, else plus `rMax / speed / 2`) | Moonfire and Immolate hit and then tick; Corruption, Shadow Word: Pain and Serpent Sting only tick; one boolean instead of new numbers |
+| 36 | TICKS matches by school, GUID and schedule only: period = the aura's `tick_time`, count = `floor(duration / tick_time)`, tick `k` at application + `k x period`, band +- 0.1 s, widened by `rMax / speed / 2` for a `velocity` TICKS ticket with no learned lag until its first tick is paid (the anchor then snaps to that tick); no amount band; a tick outside every band is foreign | measured jitter +- 50 ms; ramping DoTs vary 3x in amount, so the schedule is the discriminator; an unknown flight lag shifts the whole schedule once |
 | 37 | A new application of the same ability on the same GUID closes the old TICKS ticket as `refreshed` (unpaid `owed` not lost) and opens a new one from the new application | measured: a recast resets the schedule and the old ticks never arrive |
-| 38 | Memory: every structure a fixed pool built at load or build, about 48 KB estimated; hard ceiling 64 KB resident, asserted with `collectgarbage("count")` in a headless spec | fixed pools make the cost known and constant |
+| 38 | Memory: every structure a fixed pool built at load or build, about 52 KB estimated; hard ceiling 64 KB resident, asserted with `collectgarbage("count")` in a headless spec | fixed pools make the cost known and constant |
 | 39 | Allocation: zero tables, closures or strings per event, row or poll after load; asserted over a K16 run and a 300 s solo run | the project's performance rule; recurring paths must not feed the collector |
 | 40 | Time budgets: a row under 0.02 ms, a per-frame poll under 0.10 ms, the module under 2% of a 60 fps frame at about 50 rows a second | a raid-40 design point with headroom over today's measured 6 rows a second |
 | 41 | The lifecycle sweep is a fixed 64-slot loop gated by a pending count, not an intrusive list | simpler and free on most frames |
 | 42 | `make bench-ta` (`tools/bench_ta.lua`) reports rows per second and ms per row; its number is a gate floor that only moves up | a regression shows as a number, not a feeling |
+| 43 | Ticks read the aura the packs already declare: the ability's `aura` field, else the aura with the ability's key; period `tick_time`, count `floor(duration / tick_time)`; no `tickPeriod` or `ticks` ability fields | DRY with upstream: the sim resolves and reads the same fields (`State.lua:676`, `:2283-2285`; `Events.lua:1609`) |
+| 44 | A function-valued `duration` or `tick_time` is called at commit in its own environment (Hekili's state), as the sim calls it; numbers compile at build | rank-dependent durations (Moonfire) are functions today; rebinding their environment would move the sim's |
