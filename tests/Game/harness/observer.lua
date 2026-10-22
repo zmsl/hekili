@@ -494,7 +494,8 @@ function M.new(W, k)
                 cooldown(t, k.gcdSpell, ev.gcd)
             end
         elseif kind == "castStop" and ev.src == us then -- our hard cast cut (a dead target, the fight's end): the
-            -- client's interrupt, UnitCastingInfo empty, then INTERRUPTED and STOP
+            -- client's interrupt, UnitCastingInfo empty, then INTERRUPTED and STOP. UNMEASURED (ledger CS1): the
+            -- client may fire FAILED instead of INTERRUPTED when the target dies; Sources/Casts.lua takes either
             push(t, "@casting", nil)
             push(t, "UNIT_SPELLCAST_INTERRUPTED", "player", "Cast-" .. hardN, spellID(ev.spell))
             push(t, "UNIT_SPELLCAST_STOP", "player", "Cast-" .. hardN, spellID(ev.spell))

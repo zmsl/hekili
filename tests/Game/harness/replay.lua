@@ -195,6 +195,7 @@ function M.parse(text)
             end
             if e then
                 e.t = t
+                -- a pet power line at [0.00] ends `opening`: opening aura lines after one lose `initial` (none today)
                 opening = opening and t == 0 and (e.kind == "aura" or e.kind == "stacks")
                 e.initial = opening or nil
                 ev[#ev + 1] = e
