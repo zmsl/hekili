@@ -214,4 +214,49 @@ describe("the ticket pool", function()
         assert.are.equal(2, T.closed.ended)
         assert.are.equal(T.opened, sum())
     end)
+
+    describe("the pending swing (single owner)", function()
+        it("is the hand's latest open swing within min(landing window, 1 s), until its credit", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            assert.are.equal(10, T.SwingPending(1, 10.3))
+            assert.are.equal(0, T.SwingPending(2, 10.3))
+            assert.are.equal(0, T.SwingPending(1, 10 + T.PendingWindow(1) + 0.01))
+            ctl.now = 10.47
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1) -- credited
+            assert.are.equal(0, T.SwingPending(1, 10.5))
+        end)
+
+        it("does not make a retraction's re-open the hand's latest swing", function()
+            local i = T.OpenSwing(20, 1, "Creature-1", 1.5, 0, false, true)
+            assert.are.equal(T.OPEN, T.state[i])
+            assert.are.equal(0, T.SwingPending(1, 20.1))
+        end)
+
+        it("swallows the main-hand swing after a strike whose success came first", function()
+            ctl.now = 30
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_B)
+            ctl.now = 30.1
+            ctl.Fire("PLAYER_SWING", 2.6, 0) -- the strike's own swing: no swing ticket
+            for j = 1, T.CAP do
+                assert.is_false(T.state[j] ~= T.FREE and T.kind[j] == X.MELEE, "a swing ticket for the strike's swing")
+            end
+            assert.are.equal(30.1, T.SwingPending(1, 30.2)) -- pending through its window, as pendT held it
+            assert.are.equal(0, T.SwingPending(1, 30.1 + T.PendingWindow(1) + 0.01))
+            ctl.now = 32.8
+            ctl.Fire("PLAYER_SWING", 2.6, 0) -- the next one is a swing again
+            assert.are.equal(32.8, T.SwingPending(1, 32.9))
+        end)
+
+        it("swallows it even when the strike's own row came first in that frame", function()
+            ctl.now = 30
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_B)
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 40, 1) -- the strike's row: its ticket paid
+            ctl.now = 30.01
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            for j = 1, T.CAP do
+                assert.is_false(T.state[j] ~= T.FREE and T.kind[j] == X.MELEE, "a swing ticket for the strike's swing")
+            end
+        end)
+    end)
 end)

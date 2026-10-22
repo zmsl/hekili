@@ -56,6 +56,13 @@ end
 T.ours, T.foreign, T.absorbed, T.divergent, T.bandRejected, T.aoeOther = 0, 0, 0, 0, 0, 0
 T.onExpire, T.onPay = nil, nil
 T.latestT = -1 -- the latest success of a mapped ability (Families/Now.lua's latest cast, whose avoid undoes it)
+-- The pending swing (owner ruling 2026-10-22: the ticket is its single owner): each hand's latest swing ticket and its
+-- time; a swing is pending while that ticket is open and within the hand's pending window. PEND_CAP: Resources'
+-- drift guard, moved here unchanged (Melee's learn can widen the landing window to about 2.7 s main, 3.2 s off).
+T.PEND_CAP = 1.0
+T.lastSwing, T.lastSwingT = { 0, 0 }, { 0, 0 }
+-- A strike whose success came before its swing: the open STRIKE ticket that swallows the next main-hand swing.
+local strikeWait, strikeWaitT = 0, 0
 
 --- Closes ticket i at t for `why` (a T.closed key) and releases its unit. Allocates nothing.
 function T.Close(i, t, why)
@@ -103,12 +110,55 @@ local function arm(i, t)
     end
 end
 
---- A swing of `hand` at t pinned to `g` with window `win`; an off hand's main reference `mref`. Allocates nothing.
-function T.OpenSwing(t, hand, g, win, mref, isFirst)
+--- A swing of `hand` at t pinned to `g` with window `win`; an off hand's main reference `mref`; `retry`: a
+--- retraction's re-open (I.CreditVerdict), which is not the hand's latest swing. Allocates nothing.
+function T.OpenSwing(t, hand, g, win, mref, isFirst, retry)
     local i = T.Slot(t)
     fill(i, MELEE, 0, hand, g, t)
     school[i], w[i], hi[i], ref[i], first[i] = 1, win, t + win, mref or 0, isFirst == true
+    if not retry then -- a retraction's re-open is not the hand's latest swing (pendT stayed 0 after a credit)
+        T.lastSwing[hand], T.lastSwingT[hand] = i, t
+    end
     return i
+end
+
+--- Hand's pending window: its landing window, capped at PEND_CAP. Allocates nothing.
+function T.PendingWindow(hand)
+    local lw = I.Log.LandWindow(hand)
+    return lw < T.PEND_CAP and lw or T.PEND_CAP
+end
+
+--- The time of hand's latest swing while its ticket is open (not credited, retracted away or expired) and t is within
+--- its pending window; else 0 (VS.SwingPending's swing). A strike's own swing (T.Swallows: lastSwing 0) has no ticket
+--- and stays pending through its window, as pendT held it (Fury L24 agreement 0.960 with it, 0.953 without). Allocates
+--- nothing.
+function T.SwingPending(hand, t)
+    local i, at0 = T.lastSwing[hand], T.lastSwingT[hand]
+    if at0 == 0 or t > at0 + T.PendingWindow(hand) then
+        return 0
+    elseif i == 0 then
+        return at0
+    elseif state[i] < OPEN or kind[i] ~= MELEE or at[i] ~= at0 then
+        return 0
+    end
+    return at0
+end
+
+--- Strike ticket i's success came before its swing: it swallows the next main-hand swing within STRIKE_WINDOW.
+function T.OpenStrikeWait(i)
+    strikeWait, strikeWaitT = i, at[i]
+end
+
+--- Whether a main-hand swing at t is a waiting strike's own (consumed either way). Its ticket may be paid already (its
+--- row can come before its swing in that frame); `at` unchanged says the slot is still that strike's. Allocates nothing.
+function T.Swallows(t)
+    local i = strikeWait
+    strikeWait = 0
+    if i > 0 and kind[i] == X.STRIKE and at[i] == strikeWaitT and t - strikeWaitT <= I.Melee.STRIKE_WINDOW then
+        T.lastSwing[1], T.lastSwingT[1] = 0, t -- the main hand's latest swing, the strike's own (T.SwingPending)
+        return true
+    end
+    return false
 end
 
 --- A success at t of ability `a` (0: unmapped) pinned to `g`: its ticket, armed; 0 for NONE (counted). Allocates
@@ -293,6 +343,8 @@ function T.EndCombat(t)
     for i = 1, CAP do
         close(i, t, "ended")
     end
+    strikeWait = 0
+    T.lastSwingT[1], T.lastSwingT[2] = 0, 0
 end
 
 -- A unit gone (released and past GRACE, so normally no ticket pins it): any ticket still on it closes as at expiry.

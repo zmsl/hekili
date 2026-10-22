@@ -189,10 +189,7 @@ local usable, ansT, shortCost, shortT, shortGain, shortEst = {}, {}, {}, {}, {},
 -- Per hand (1 main, 2 off): the swing-paid slot's estimate and floor at its latest PLAYER_SWING, that swing's time,
 -- the lowest top a short answer set from ORACLE_MIN after it (math.huge: none) and the slot's spend count then (I.Missed).
 local swE, swL, swT, swTop, swSp = { 0, 0 }, { 0, 0 }, { -1, -1 }, { math.huge, math.huge }, { 0, 0 }
--- Per hand: the latest PLAYER_SWING whose rage the floor does not hold yet (0: none; VS.SwingPending).
-local pendT = { 0, 0 }
 local heardT = 0 -- the latest usability answer's time that set a rung above its slot's floor
-local LAND_CAP = 1.0 -- the longest a swing stays pending with no credit (s; VS.SwingPending)
 -- By ability index: its ladder precondition (C9): false for `ladder = false` (its answers are no rungs), its `usable`
 -- function (a short answer while it fails names another requirement, such as a finisher's combo points), or true.
 local pre = {}
@@ -1166,15 +1163,11 @@ I.On(Obs.Swing, function(o, t)
             if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
                 swE[hand], swL[hand], swT[hand], swTop[hand], swSp[hand] =
                     R.est0[r], R.lo0[r], o.t, math.huge, R.spends[r]
-                pendT[hand] = o.t
                 break
             end
         end
         return
     elseif c == 1 then
-        if abs(o.t - pendT[hand]) < 1e-6 then
-            pendT[hand] = 0 -- credited: the floor holds it
-        end
         local h = hitRate[hand] + HIT_ALPHA
         h = h < 1 and h or 1
         hit, hitRate[hand] = h - hitRate[hand], h
@@ -1273,26 +1266,24 @@ end)
 --- Hekili's swing forecast counts that swing as past meanwhile, so for a poll every rage-gated line ranked as
 --- unaffordable (Arms flicker 4.1/min); Engine/Sim/State.lua forecasts its gain instead, one poll after the answers can
 --- show it (no press before). Not pending once an answer above the floor since that point was heard (it showed the
---- gain, or the swing gave none; one under it proves nothing), one landing lag after it with no credit (Rows'
---- L.LandWindow: avoided), once credited, after a spend from the slot (its cast's rung holds what the game had), or for
---- a slot read plain. Allocates nothing.
+--- gain, or the swing gave none; one under it proves nothing), once its swing ticket closes (credited, or no credit
+--- within its pending window: Events/Tickets.lua's T.SwingPending), after a spend from the slot (its cast's rung holds
+--- what the game had), or for a slot read plain. Allocates nothing.
 function VS.SwingPending(hand)
-    local p = pendT[hand]
-    local w = I.Log.LandWindow(hand)
-    -- drift guard: Rows' learn() can widen the window to ~2.7 s main / 3.2 s off (median capped, 3 x 0.4 spread)
-    w = w < LAND_CAP and w or LAND_CAP
-    if p == 0 or heardT > p + I.Log.ORACLE_MIN - 1e-6 or I.clock > p + w then
-        return 0 -- shown, or no credit one landing lag on: avoided
+    local p = I.Tickets.SwingPending(hand, I.clock) -- the swing ticket owns it (open, uncredited, in its window)
+    if p == 0 or heardT > p + I.Log.ORACLE_MIN - 1e-6 then
+        return 0 -- shown, credited, or no credit one landing lag on: avoided
     end
+    local paid = false
     for r = 1, R.n do
-        if
-            (R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0))
-            and (R.readable[r] or R.spends[r] ~= swSp[hand])
-        then
-            return 0
+        if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
+            if R.readable[r] or R.spends[r] ~= swSp[hand] then
+                return 0
+            end
+            paid = true
         end
     end
-    return p
+    return paid and p or 0 -- no swing-paid slot on that hand: nothing pends
 end
 
 --- (tank design §1.2.4) A power type's learned gain per second from hits on the player: its `taken` gains of
@@ -1323,7 +1314,6 @@ end)
 -- a decaying slot's rate is re-read; a stepped one loses its first quantum at once (front-loaded).
 I.On(Obs.CombatEnd, function(o, t)
     fighting = false
-    pendT[1], pendT[2] = 0, 0
     for r = 1, R.n do
         for i = 1, I.TAKEN_WINDOW do
             R.takenSec[r][i] = -1

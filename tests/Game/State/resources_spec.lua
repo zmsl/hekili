@@ -26,7 +26,55 @@ describe("resources", function()
 
     local function obs(kind, t, a, b, c)
         S.Direct(kind, t, a, b, c)
+        -- a swing's ticket, as Events/Rows.lua opens it at PLAYER_SWING and pays it at its credit (the pending swing's
+        -- single owner: Events/Tickets.lua's T.SwingPending)
+        local T = I.Tickets
+        if kind == Obs.Swing and c == 4 then
+            T.OpenSwing(t, a, "", I.Log.PAIR_WINDOW_MS[a] / 1000, 0, false)
+        elseif kind == Obs.Swing and c == 1 and T.lastSwingT[a] == t then
+            T.Close(T.lastSwing[a], t, "paid")
+        end
     end
+
+    describe("the pending swing's owner (unit-registry plan, Task 6b)", function()
+        local saved, ctl
+
+        before_each(function()
+            local api
+            api, ctl = fake.new()
+            saved = {}
+            for k, v in pairs({
+                CreateFrame = api.CreateFrame,
+                issecretvalue = api.issecretvalue,
+                GetTime = api.GetTime,
+            }) do
+                saved[k] = rawget(_G, k) or false
+                _G[k] = v
+            end
+            ns = load.module()
+            VS, I = ns.VirtualState, ns.VirtualStateInternal
+            I.Build(fs.def(fs.new(9)), 1)
+            VS.Start(api)
+        end)
+
+        after_each(function()
+            for k, v in pairs(saved) do
+                _G[k] = v or nil
+            end
+        end)
+
+        it("asks the swing ticket whether a swing is pending (no private copy)", function()
+            local src = assert(io.open("src/Hekili/Game/State/Families/Resources.lua")):read("*a")
+            assert.is_nil(src:find("pendT", 1, true))
+            assert.is_nil(src:find("LAND_CAP", 1, true))
+            ctl.now = 40
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            I.Sources.Flush()
+            I.Fold(40.05)
+            I.clock = 40.05
+            assert.are.equal(40, VS.SwingPending(1))
+        end)
+    end)
 
     describe("a continuous resource (energy, 10/s declared)", function()
         local FINISHER, BUILDER = 1, 2

@@ -36,7 +36,7 @@ for k = 1, RECORDS do
 end
 local recNext = 0
 
-local strikeWait, lastMain, lastW0, fresh = 0, 0, -1, false
+local lastMain, lastW0, fresh = 0, -1, false
 
 local MISSES = {
     DODGE = true,
@@ -103,9 +103,8 @@ S.On("PLAYER_SWING", nil, function(api, t, duration, swingType)
     if swingType == 0 then
         lastMain = t
     end
-    if swingType == 0 and strikeWait > 0 and t - strikeWait <= STRIKE_WINDOW then
-        strikeWait = 0 -- the on-next-swing strike whose success came first is this swing: its outcome is the ability's
-        return
+    if swingType == 0 and T.Swallows(t) then
+        return -- the on-next-swing strike whose success came first is this swing: its outcome is the ability's
     end
     local hand = swingType + 1
     local win = L.PAIR_WINDOW_MS[hand] / 1000
@@ -124,20 +123,21 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     if a > 0 and A.expKind[a] ~= X.NONE then
         M.advance(t)
     end
-    if a > 0 and A.expKind[a] == X.STRIKE then -- the strike replaces its swing, in the same frame before or after
-        local found = false
+    local strike, found = a > 0 and A.expKind[a] == X.STRIKE, false
+    if strike then -- the strike replaces its swing, in the same frame before or after this success
         for i = 1, T.CAP do
             if T.state[i] ~= 0 and T.kind[i] == MELEE and T.x[i] == 1 and t - T.at[i] <= STRIKE_WINDOW then
                 T.Close(i, t, "replaced")
                 found = true
             end
         end
-        if not found then
-            strikeWait = t
-        end
     end
-    if T.Arm(castGUID, t) == 0 then
-        T.OpenCast(t, a, spellID, U.Sent(castGUID) or U.Pin(api, t) or "")
+    local i = T.Arm(castGUID, t)
+    if i == 0 then
+        i = T.OpenCast(t, a, spellID, U.Sent(castGUID) or U.Pin(api, t) or "")
+    end
+    if strike and not found and i > 0 then
+        T.OpenStrikeWait(i) -- its swing comes after: the strike ticket swallows it (T.Swallows)
     end
 end)
 
@@ -332,7 +332,7 @@ function I.CreditVerdict(id, ok, t, firm)
         th[k] = th[k] * 1.5 < L.THETA_MAX and th[k] * 1.5 or L.THETA_MAX
         local hand, at = recHand[id], recAt[id]
         if t - at <= recW[id] and U.Find(recDst[id]) > 0 then
-            T.OpenSwing(at, hand, recDst[id], recW[id], recRef[id], false)
+            T.OpenSwing(at, hand, recDst[id], recW[id], recRef[id], false, true)
         else
             emit(MELEE, hand, recDst[id], "MISS", "", 0, at, 1)
         end
@@ -354,7 +354,6 @@ end)
 S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
     M.advance(t)
     T.EndCombat(t)
-    strikeWait = 0
 end)
 
 --- Snapshot's lines (allocates; debugging only): the credits and the background, the learned lags (ms) and the
