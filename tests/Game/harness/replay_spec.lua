@@ -396,6 +396,32 @@ describe("the replay's casts: tags, items, pets, totems", function()
     end)
 end)
 
+-- Fix 31 G4: an item use the kit does not map is still our cast to the client (its UNIT_SPELLCAST_SUCCEEDED, of a
+-- spell no ability has), so its outcome a travel later is not our pending cast's to claim (Rows.lua's another()).
+describe("the replay's unmapped item use", function()
+    local LOG = table.concat({
+        "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",
+        "[0.00] [Tester (#1)] Casting {ItemID: 800009} (Cost = 0.000, Cast Time = 1s, GCD = 0s, Effective Time = 1s)",
+        "[1.00] [Tester (#1)] Completed cast {ItemID: 800009}",
+        "[1.00] [Tester (#1)] Casting {SpellID: 900001} (Cost = 0.000, Cast Time = 0s, GCD = 1.5s, Effective Time = 1.5s)",
+        "[1.00] [Tester (#1)] Completed cast {SpellID: 900001}",
+        "[2.43] [Tester (#1)] [Target 1] {ItemID: 800009} Miss (SpellSchool: 4). (Threat: 0.000)",
+    }, "\n")
+
+    it("emits its success as a cast of no ability's spell, then ours, then its outcome", function()
+        local R = replay.new(LOG, H, O)
+        local W = at(R.world(WO, 1), R.pull + 3)
+        local got = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "cast" or ev.kind == "castStart" or ev.kind == "spell" then
+                got[#got + 1] = ev.kind .. ":" .. tostring(ev.spell or ev.act)
+            end
+        end
+        assert.are.same({ "cast:" .. replay.UNMAPPED_SPELL, "cast:900001", "spell:MISS" }, got)
+        assert.is_nil(H.Hekili.Class.abilities[replay.UNMAPPED_SPELL])
+    end)
+end)
+
 describe("the replay's channels and hard casts (central fix 22, gap BC)", function()
     local LOG = table.concat({
         "# wowsims 0123456789abcdef0123456789abcdef01234567 test_spec seed 101 10 s target 63",

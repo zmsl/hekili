@@ -47,6 +47,12 @@ end
 -- claims an avoid only inside CAST_WINDOW (a late foreign dodge would refund into the floor, above the truth).
 -- UNMEASURED: a chosen constant (GAP AX residue in docs/dev/gaps.md).
 L.FOREIGN_AVOIDS = 0.05
+-- Fix 31 G4: a target's outcome names no source, so after a cast of ours the kit does not map (an item's use: a thrown
+-- explosive whose outcome comes a travel later) an avoid or crit in this many seconds, past our cast's own frame, is
+-- nobody's, as with two casts of ours pending. UNMEASURED: a chosen bound over the wowsims log's thrown explosive (its
+-- miss 1.43 s after its success, 0.13 s after our Corruption's).
+L.UNMAPPED_WINDOW = 2
+local unmappedT = -1e9 -- the latest success of an unmapped spell of ours
 
 -- The score (harness design §1.2-§1.4, decision D1; PROTOTYPE values, the harness's gates hold them): THETA the
 -- credit bar; q per amount class (exact, loose, above) and for an avoid; the lag density's tail weight per hand; the
@@ -151,8 +157,13 @@ end
 -- shortcut: a projectile's later outcome is not attributed (no Forever ability declares a `velocity`), upgrade with a
 -- travel time when a kit declares one.
 local REFUSED = { DODGE = true, PARRY = true, MISS = true }
--- Whether a cast of ours other than p is pending at t: an avoid then is nobody's (no row, no Obs.Avoided).
+-- Whether a cast of ours other than p is pending at t, or an unmapped one of ours is in its window (L.UNMAPPED_WINDOW)
+-- and the outcome is past p's own frame (a thrown item's outcome travels; p's own in its frame stays p's): an avoid
+-- then is nobody's (no row, no Obs.Avoided).
 local function another(p, t)
+    if t - unmappedT <= L.UNMAPPED_WINDOW and t - actT[p] > SAME_FRAME then
+        return true
+    end
     for i = 1, N do
         if i ~= p and actT[i] > 0 and actKind[i] == 2 and t - actT[i] <= actW[i] then
             return true
@@ -330,6 +341,9 @@ end)
 S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spellID)
     local a = unit == "player" and spellID and I.ab.bySpell[spellID]
     local obj = a and I.ab.obj[a]
+    if unit == "player" and type(spellID) == "number" and not a then -- an unmapped cast of ours (another())
+        unmappedT = t
+    end
     if not obj or not (obj.startsCombat or obj.onNextSwing) then
         return
     end
@@ -600,7 +614,7 @@ S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
     for i = 1, N do
         actT[i], actAvoid[i], actLR[i] = 0, "", 0
     end
-    strikeWait = 0
+    strikeWait, unmappedT = 0, -1e9
 end)
 
 --- Snapshot's lines (allocates; debugging only): the credits and the background, the learned lags (ms: median/spread

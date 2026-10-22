@@ -36,6 +36,11 @@ M.LAND = { observer.DEFAULTS.main.med, observer.DEFAULTS.off.own }
 -- rate (inside the five-second rule), Tag 2 the not-casting rate.
 M.MANA_TICK, M.MANA_REGEN = 0.1, 2
 
+-- Fix 31 G4: the spell ID of an unmapped item's use (the log names the item, not its use spell): the client's
+-- UNIT_SPELLCAST_SUCCEEDED of a spell no ability has (no kit's ID is 0; Engine/Schema/Spec.lua's items are -101 on).
+-- shortcut: its success only, no cast bar for a cast-time item; add the START when a gate needs it.
+M.UNMAPPED_SPELL = 0
+
 M.MOVE = 20 -- wowsims's OtherActionMove: the Movement aura (sim/core/movement.go), its stacks the distance in yards
 -- (max(int(d), 1): truncated, so the replay's position can be up to 1 yd short of wowsims's)
 
@@ -579,6 +584,8 @@ function M.new(text, H, o)
                 if cd[key] > 0 then
                     us.cdUntil[key] = T + cdk
                 end
+            elseif not key and e.kind == "completed" and e.item then -- an unmapped item's use: still our cast
+                W.emit({ kind = "cast", src = us, dst = mob, spell = M.UNMAPPED_SPELL })
             elseif key and e.kind == "casting" then -- a hard cast's start: its cast bar, the GCD from now
                 W.emit({
                     kind = "castStart",

@@ -1020,6 +1020,33 @@ describe("now handlers", function()
             end
         end)
 
+        -- Fix 31 G4: an outcome names no source, so a cast of ours the kit does not map (a thrown item, its outcome a
+        -- travel later) leaves an avoid in its window, past our cast's own frame, nobody's, as a second pending cast
+        -- does; past the window, or in our cast's frame, ours.
+        it("an unmapped cast of ours in its window: an avoid past our cast's frame is attributed to neither", function()
+            begin()
+            ctl.now = 4
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", 999999) -- no ability's: an item's use
+            ctl.now = 5
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_C)
+            ctl.now = 5.4 -- 1.4 s after the item's success, in our cast's landing window
+            ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+            ctl.Tick(5.41)
+            VS.Drain(5.42)
+            ctl.Tick(5.43)
+            assert.is_not_nil(VS.Aura("target", fs.SPENDER_C, 5.5))
+            assert.are.equal(0, I.avoidsRun)
+            for _, r in ipairs(rows) do
+                assert.is_false(r[1] == "SPELL_MISSED", "a miss row for our cast")
+            end
+            castOutcome(fs.SPENDER_C, 9, "DODGE") -- the item's window over: the cast's own
+            assert.are.equal(1, I.avoidsRun)
+            ctl.now = 20
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-10", 999999)
+            castOutcome(fs.SPENDER_C, 20, "MISS") -- in our cast's own frame (an opener's item use): the cast's
+            assert.are.equal(2, I.avoidsRun)
+        end)
+
         it("no `refundOnAvoid`: the debuff is undone, the cost stays spent", function()
             start()
             ctl.usable[fs.SPENDER_C] = { true, false }
