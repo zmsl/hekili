@@ -3132,8 +3132,8 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 - Boundary: the lag records and bands are the pool's state (Tickets); the band arithmetic is the kind's rule (Kinds).
 
 Implementation choices: a clean payment at any pass teaches its (GUID, speed) record, pass (c) included: spec §3.3.1
-says only (a) or (b), but with no record a ticket is a candidate in (c) only, so no record would ever be made (spec
-gap, reported). A new record's spread starts at `TOL / 2` (so the first narrow band is `TOL` wide each side). The
+says only (a) or (b), but with no record a ticket is a candidate in (c) only, so no record would ever be made. Task 19
+copies this into spec §3.3.1 so the spec and the plan agree. A new record's spread starts at `TOL / 2` (so the first narrow band is `TOL` wide each side). The
 amount band learns only for abilities that declared `expects` (a default type keeps today's acceptance exactly) and
 is reset at each build (ability indices change with the spec).
 
@@ -3993,20 +3993,29 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 **Interfaces:**
 - Consumes: the fake spec's expect abilities (Task 4), `I.Tickets.onPay` (Task 6).
 - Produces: stream field `s.castT[i]` (the success an own spell outcome belongs to; 0 otherwise);
-  `observer.DEFAULTS.actionTargeting` (false), `.pushback` (false), `.killTokens` (`{ "plate", "softinteract" }`);
-  `observer.SPELLS.INSTANT/BOLT/DOTI/TICKS/NONE/BOGUS/CHAN/POTION`; `W.hitAt(e, dst, amount, school, set, delay,
-  castT)`; `W.dot(e, dst, every, n, amount, school, key, castT)`; `W.endCasts(e, cause)` (`"death"` default,
+  `observer.DEFAULTS.actionTargeting` (false), `.pushback` (false), `.killTiming` (`{ died = 0.002,
+  meleeClear = 0.100, flightClear = 0.002, flightRow = 0.020, strikeClear = 0.100 }`, the measured kill shapes),
+  `.killTokens` (`{ melee = { "softinteract" }, flight = { "plate", "target", "softinteract" } }`);
+  `observer.SPELLS.INSTANT/BOLT/DOTI/TICKS/NONE/BOGUS/CHAN/POTION`; `W.hit(e, dst, amount, school, set, castT,
+  flight)`; `W.hitAt(e, dst, amount, school, set, delay, castT)`; a kill truth event carries `cause` (the event that
+  killed); `W.dot(e, dst, every, n, amount, school, key, castT)`; `W.endCasts(e, cause)` (`"death"` default,
   `"move"`); `behaviours.ours(p)` with `p.spells = { { t, kind } }`, kinds `instant`, `bolt`, `doti`, `ticks`, `none`,
   `bogus`, `unmapped`, `refused`, `aoe`, `chan`; scenario knobs above; drive captures `c.payAt[i]`, `c.payKind[i]`,
   `c.staged[i]` (1 Crit, 2 Avoided).
 - Boundary: harness only; no content name (the boundary scans `tests/Game/harness/**`).
 
 Implementation choices: the DELAYED pushback row (spec §6.1 row 5) is opt-in (`pushback`), because it moves the
-player's `UNIT_COMBAT` 0.37 s later and would shift the existing onus floors; the detection suite turns it on. The
-killing outcome is emitted after the clear at the world's landing time (the clear 4 ms after the death events, the row
-15 ms after the clear, on `killTokens`): a white-swing kill's 370 ms clear-before-row gap is not modelled because the
-world applies our swing's damage at its landing (`world.lua:96`), and the post-clear resolution is exercised either way.
-Cast-event jitter is a non-negative delay (0-50 ms), because an incremental observer cannot push before a released step.
+player's `UNIT_COMBAT` 0.37 s later and would shift the existing onus floors; the detection suite turns it on. Kills
+follow the measured shape per kind, each number a knob defaulting to the captures (spec §2.5, §6.1 row 7): a
+white-swing kill is the server's at the swing, so the world now applies our swing's damage at the swing (it applied it
+at the landing, `world.lua:94`; rage was already at the swing), `PARTY_KILL` at the swing, `UNIT_DIED` and
+`PLAYER_TARGET_DIED` 2 ms later, the clear 100 ms after the swing, and the killing row at the landing lag (about 450 ms,
+up to 990 ms in K10's sessions) on `softinteract` only, so about 370 ms after the clear; a projectile kill clears 2 ms
+after the death and its row comes 20 ms after the clear (11-36 ms measured) on the plate, `target` and
+`softinteract`; an instant kill's row comes in its frame on the usual tokens and the clear 100 ms after it. Our white
+kills therefore end each loop fight a landing lag earlier than before: the named cause for any loop number it moves
+(Task 18). Every player cast event (SENT, START, SUCCEEDED, STOP, FAILED, INTERRUPTED, DELAYED, CHANNEL_START) is
+echoed on `targettarget` while our target targets us (captures b and c). Cast-event jitter is a non-negative delay (0-50 ms), because an incremental observer cannot push before a released step.
 
 - [ ] **Step 1: Write the failing observer tests.** Append inside the top `describe` of
   `tests/Game/harness/observer_spec.lua`:
@@ -4082,17 +4091,64 @@ Cast-event jitter is a non-negative delay (0-50 ms), because an incremental obse
             assert.are.same({ 4, 8, 11, 14, 17 }, ticks) -- the first schedule's 7 never comes
         end)
 
-        it("kills with the measured shape: PARTY_KILL, UNIT_DIED and TARGET_DIED, the clear, then the row", function()
+        local function kill(out)
+            return find(out, "PARTY_KILL"), find(out, "UNIT_DIED"), find(out, "PLAYER_TARGET_CHANGED"),
+                find(out, "UNIT_COMBAT")
+        end
+
+        it("kills by a white swing as measured: death at the swing, the clear 100 ms on, the row on the corpse later", function()
+            local out = fight(function(W, us, mob)
+                W.at(1, function()
+                    local sw = W.emit({ kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", flag = "",
+                        amount = 2e9, school = 1, ours = true })
+                    W.at(1.456, function()
+                        W.emit({ kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", flag = "",
+                            amount = 2e9, school = 1, swing = sw })
+                    end)
+                end)
+            end)
+            local pk, died, clear, row = kill(out)
+            assert.are.same({ "Player-1", "Creature-1", 1 }, { pk.a1, pk.a2, pk.t })
+            assert.is_true(math.abs(died.t - 1.002) < 1e-9 and math.abs(clear.t - 1.1) < 1e-9)
+            assert.are.same({ 1.456, "softinteract" }, { row.t, row.a1 }) -- 356 ms after the clear, the corpse only
+        end)
+
+        it("kills by a projectile: the clear, then the row 20 ms later on the plate, target and softinteract", function()
+            local out = fight(function(W, us, mob)
+                W.at(1, function()
+                    W.hitAt(us, mob, 2e9, 8, "spell", 1.5, 1)
+                end)
+            end)
+            local _, died, clear, row = kill(out)
+            assert.is_true(died.t < clear.t and clear.t < row.t and math.abs(row.t - clear.t - 0.02) < 1e-9)
+            assert.are.equal("nameplate1", row.a1)
+        end)
+
+        it("kills by an instant: its row in its frame, the clear 100 ms after it", function()
             local out = fight(function(W, us, mob)
                 W.at(1, function()
                     W.emit({ kind = "spell", src = us, dst = mob, act = "WOUND", flag = "", amount = 2e9, school = 1 })
                 end)
             end)
-            local pk, died, clear = find(out, "PARTY_KILL"), find(out, "UNIT_DIED"), find(out, "PLAYER_TARGET_CHANGED")
-            local row = find(out, "UNIT_COMBAT")
-            assert.are.same({ "Player-1", "Creature-1" }, { pk.a1, pk.a2 })
-            assert.is_true(pk.t < died.t and died.t < clear.t and clear.t < row.t)
-            assert.are.equal("nameplate1", row.a1)
+            local _, _, clear, row = kill(out)
+            assert.is_true(row.t < clear.t and math.abs(clear.t - row.t - 0.1) < 1e-9)
+        end)
+
+        it("echoes every player cast event on targettarget while our target targets us", function()
+            local out = fight(function(W, us, mob)
+                W.at(1, function()
+                    W.press(us, "spender_p", { spell = "BOLT", cast = 1.5 })
+                end)
+                W.at(2, function()
+                    W.endCasts(us)
+                end)
+                W.at(3, function()
+                    W.emit({ kind = "refused", src = us, spell = "BOLT" })
+                end)
+            end)
+            for _, ev in ipairs({ "SENT", "START", "FAILED", "STOP", "INTERRUPTED" }) do
+                assert.is_truthy(find(out, "UNIT_SPELLCAST_" .. ev, "targettarget"), ev)
+            end
         end)
 
         it("stops a cast at a death with FAILED then STOP, then three INTERRUPTED with no castBarID", function()
@@ -4149,9 +4205,18 @@ the missing SENT / PARTY_KILL / FAILED rows.
 
 - [ ] **Step 3: World.** In `tests/Game/harness/world.lua`:
 
-In `W.emit`, inside `if v.health <= 0 and not v.dead then` (line 98), before `v.dead, W.killAt = true, W.t`, add
-`ev.killing = true -- the observer emits this wound after the clear (unit-registry spec §6.1 row 7)`, and change
-`W.emit({ kind = "kill", dst = v })` to `W.emit({ kind = "kill", dst = v, src = ev.src })`.
+In `W.emit`, change the health condition (line 94) from
+`if ev.act == "WOUND" and ev.dst and (ev.kind ~= "swing" or not ev.ours) then -- ours take it at \`land\``
+to
+
+```lua
+        if ev.act == "WOUND" and ev.dst and ev.kind ~= "land" then -- ours take it at the swing: the server's hit
+            -- (a white-swing kill clears the target before its row arrives, the Rogue kill-events capture)
+```
+
+inside `if v.health <= 0 and not v.dead then` (line 98), before `v.dead, W.killAt = true, W.t`, add
+`ev.killing = true -- the observer shapes this outcome by kind (unit-registry spec §6.1 row 7)`, and change
+`W.emit({ kind = "kill", dst = v })` to `W.emit({ kind = "kill", dst = v, src = ev.src, cause = ev })`.
 
 Replace `W.endCasts` (lines 306-312) with:
 
@@ -4188,8 +4253,16 @@ Replace `W.dot` (lines 571-581) with:
     end
 ```
 
-In `W.hit`, the emitted event's school becomes `school = act == "WOUND" and school or 1` (a spell miss is school 1,
-capture b). After `W.hit` (line 619) add:
+`W.hit` takes two more arguments, `castT` (the success the outcome belongs to) and `flight` (a projectile's landing),
+set on the event before it is emitted so a kill's `cause` carries them: its signature becomes
+`function W.hit(e, dst, amount, school, set, castT, flight)` and its emit (line 615) becomes
+
+```lua
+        e.lastHit = W.emit({ kind = "spell", src = e, dst = dst, act = act, flag = flag, amount = amt,
+            school = act == "WOUND" and school or 1, castT = castT, flight = flight }) -- a spell miss is school 1
+```
+
+  After `W.hit` (line 619) add:
 
 ```lua
     --- A projectile of `e`'s landing `delay` s from now (distance / velocity): W.hit's outcome then, carrying `castT`
@@ -4197,8 +4270,7 @@ capture b). After `W.hit` (line 619) add:
     function W.hitAt(e, dst, amount, school, set, delay, castT)
         W.at(W.t + delay, function()
             if not dst.dead then
-                local ev = W.hit(e, dst, amount, school, set)
-                ev.castT = castT
+                W.hit(e, dst, amount, school, set, castT, true)
             end
         end)
     end
@@ -4210,10 +4282,14 @@ Add to `M.DEFAULTS` (before its closing brace):
 
 ```lua
     -- 2026-10-22 captures (unit-registry spec §6.1): Action Targeting off by default (softenemy then never fires);
-    -- the DELAYED pushback row is opt-in (it moves the player's UNIT_COMBAT 0.37 s later); a kill's row tokens.
+    -- the DELAYED pushback row is opt-in (it moves the player's UNIT_COMBAT 0.37 s later).
     actionTargeting = false,
     pushback = false,
-    killTokens = { "plate", "softinteract" },
+    -- A kill's shape by kind (s, from the kill truth; spec §2.5): the death events after the blow; a white swing's
+    -- clear after its swing (its row comes at the landing lag, on the corpse); a projectile's clear after the death and
+    -- its row after the clear (11-36 ms measured); an instant's clear after its row.
+    killTiming = { died = 0.002, meleeClear = 0.100, flightClear = 0.002, flightRow = 0.020, strikeClear = 0.100 },
+    killTokens = { melee = { "softinteract" }, flight = { "plate", "target", "softinteract" } },
 ```
 
 Replace `M.SPELLS` (line 46) with:
@@ -4258,16 +4334,47 @@ Replace `outcome` with:
 
 ```lua
     local castOpen = false -- our hard cast in progress (DELAYED, pushback)
+    -- One player cast event, echoed on targettarget (another castBarID) while our target targets us: every kind of
+    -- them (captures b and c: SENT, START, SUCCEEDED, STOP, FAILED, INTERRUPTED, DELAYED).
+    local function castEv(t, onUs, name, g, id, a4, a5)
+        push(t, name, "player", g, id, a4, a5)
+        if onUs then
+            push(t, name, "targettarget", g, id, a4 and (a4 .. "-tt") or nil, a5 and (a5 .. "-tt") or nil)
+        end
+    end
+    local function sent(t, onUs, g, id)
+        push(t, "UNIT_SPELLCAST_SENT", "player", "Mob", g, id)
+        if onUs then
+            push(t, "UNIT_SPELLCAST_SENT", "targettarget", "Mob", g, id)
+        end
+    end
+    -- The tokens and time of a killing outcome (killTiming, killTokens); nil: the usual ones (an instant's).
+    local function killShape(t, ev)
+        local sw = ev.swing
+        local kt = k.killTiming
+        local list
+        if ev.kind == "land" and sw and sw.killing then
+            list = k.killTokens.melee -- at the landing lag, after the clear: the corpse only
+        elseif ev.killing and ev.flight then
+            t, list = t + kt.died + kt.flightClear + kt.flightRow, k.killTokens.flight
+        end
+        if not list then
+            return nil
+        end
+        local toks = {}
+        for _, tok in ipairs(list) do
+            toks[#toks + 1] = tok == "plate" and plate[ev.dst] or tok
+        end
+        return t, toks
+    end
     local function outcome(t, ev, src, hand, swingT)
         local toks = tokensOf(ev.dst, ev)
-        if ev.killing and plate[ev.dst] then -- after the death events and the clear (row 7): plate and soft only
-            t, toks = t + 0.019, {}
-            for _, tok in ipairs(k.killTokens) do
-                toks[#toks + 1] = tok == "plate" and plate[ev.dst] or tok
-            end
+        local kt, ktoks = killShape(t, ev)
+        if kt then
+            t, toks = kt, ktoks
         end
         if ev.dst == us and castOpen and k.pushback and ev.act == "WOUND" then
-            push(t, "UNIT_SPELLCAST_DELAYED", "player", "Cast-" .. hardN, spellID(castSpell), "Bar-" .. hardN)
+            castEv(t, ev.onUs, "UNIT_SPELLCAST_DELAYED", "Cast-" .. hardN, spellID(castSpell), "Bar-" .. hardN)
             t = t + 0.37 -- the player's row comes about 0.37 s after DELAYED (capture b)
         end
         for _, tok in ipairs(toks) do
@@ -4291,30 +4398,37 @@ Replace the `kind == "kill"` branch with:
 
 ```lua
         elseif kind == "kill" then -- 2026-10-22 kill-events capture: PARTY_KILL with the blow when ours; UNIT_DIED and
-            -- PLAYER_TARGET_DIED 2 ms later; the clear 2 ms after that; the corpse answers softinteract
+            -- PLAYER_TARGET_DIED `died` later; the clear by kind (killTiming); the corpse answers softinteract
+            local kt, c = k.killTiming, ev.cause or {}
+            local clear = t + kt.strikeClear -- an instant's (its row came in its frame)
+            if c.kind == "swing" then
+                clear = t + kt.meleeClear
+            elseif c.flight then
+                clear = t + kt.died + kt.flightClear
+            end
             if ev.src == us then
                 push(t, "PARTY_KILL", us.guid, ev.dst.guid)
             end
-            push(t + 0.002, "UNIT_DIED", ev.dst.guid)
+            push(t + kt.died, "UNIT_DIED", ev.dst.guid)
             if ev.dst == ev.ourTarget then
-                push(t + 0.002, "PLAYER_TARGET_DIED")
-                push(t + 0.002, "@dead", "target", true)
-                push(t + 0.004, "@guid", "target", nil)
-                push(t + 0.004, "@guid", "softinteract", ev.dst.guid)
-                push(t + 0.004, "PLAYER_TARGET_CHANGED")
-                push(t + 0.004, "UNIT_HEALTH", "target")
+                push(t + kt.died, "PLAYER_TARGET_DIED")
+                push(t + kt.died, "@dead", "target", true)
+                push(clear, "@guid", "target", nil)
+                push(clear, "@guid", "softinteract", ev.dst.guid)
+                push(clear, "PLAYER_TARGET_CHANGED")
+                push(clear, "UNIT_HEALTH", "target")
             end
             local left = false
             for _, e in ipairs(mobs) do
                 left = left or (not e.dead and e.target == us)
             end
-            if not left then
-                push(t + 0.5, "@combat", false)
-                combat(t + 0.5, false)
+            if not left then -- after the killing row (Rogue capture: about 1 s after the kill)
+                push(t + 1.0, "@combat", false)
+                combat(t + 1.0, false)
                 if not k.plain then
-                    push(t + 0.5, "@auraError", "target", false)
+                    push(t + 1.0, "@auraError", "target", false)
                 end
-                push(t + 0.5, "PLAYER_REGEN_ENABLED") -- after the killing row (Rogue capture: about 1 s)
+                push(t + 1.0, "PLAYER_REGEN_ENABLED")
             end
 ```
 
@@ -4334,16 +4448,13 @@ Replace the `cast` (ours), `castStart` and `castStop` branches with:
                 push(tc, "@casting", nil)
             elseif ev.chanEnds then
                 chanN = castN
-                push(tc, "UNIT_SPELLCAST_SENT", "player", "Mob", guid, id)
+                sent(tc, ev.onUs, guid, id)
                 push(tc, "@channel", t * 1000, ev.chanEnds * 1000)
-                push(tc, "UNIT_SPELLCAST_CHANNEL_START", "player", guid, id)
+                castEv(tc, ev.onUs, "UNIT_SPELLCAST_CHANNEL_START", guid, id)
             else
-                push(tc, "UNIT_SPELLCAST_SENT", "player", "Mob", guid, id) -- an instant's SENT, the same ms
-                if ev.onUs then
-                    push(tc, "UNIT_SPELLCAST_SENT", "targettarget", "Mob", guid, id)
-                end
+                sent(tc, ev.onUs, guid, id) -- an instant's SENT, the same ms
             end
-            push(tc, "UNIT_SPELLCAST_SUCCEEDED", "player", guid, id, bar)
+            castEv(tc, ev.onUs, "UNIT_SPELLCAST_SUCCEEDED", guid, id, bar)
             if (ev.cd or 0) > 0 then
                 for _, rid in ipairs(ev.ids or { id }) do
                     cooldown(t, rid, ev.cd)
@@ -4352,52 +4463,43 @@ Replace the `cast` (ours), `castStart` and `castStop` branches with:
             if ev.gcd and k.gcdSpell and not gcdFirst then
                 cooldown(t, k.gcdSpell, ev.gcd)
             end
-            if ev.onUs then -- every player cast event is echoed while the mob targets us (another castBarID)
-                push(tc, "UNIT_SPELLCAST_SUCCEEDED", "targettarget", guid, id, bar and (bar .. "-tt"))
-            end
             if ev.hard then
-                push(tc, "UNIT_SPELLCAST_STOP", "player", guid, id, bar)
-                if ev.onUs then
-                    push(tc, "UNIT_SPELLCAST_STOP", "targettarget", guid, id, bar .. "-tt")
-                end
+                castEv(tc, ev.onUs, "UNIT_SPELLCAST_STOP", guid, id, bar)
             end
         elseif kind == "castStart" and ev.src == us then -- our hard cast: SENT, UnitCastingInfo, START, the GCD
             castN = castN + 1
             hardN, castSpell, castOpen = castN, ev.spell, true
             local g, id, bar = "Cast-" .. castN, spellID(ev.spell), "Bar-" .. castN
-            push(t, "UNIT_SPELLCAST_SENT", "player", "Mob", g, id)
+            sent(t, ev.onUs, g, id)
             push(t, "@casting", t * 1000, ev.ends * 1000)
-            push(t, "UNIT_SPELLCAST_START", "player", g, id, bar)
-            if ev.onUs then
-                push(t, "UNIT_SPELLCAST_SENT", "targettarget", "Mob", g, id)
-                push(t, "UNIT_SPELLCAST_START", "targettarget", g, id, bar .. "-tt")
-            end
+            castEv(t, ev.onUs, "UNIT_SPELLCAST_START", g, id, bar)
             if ev.gcd and k.gcdSpell then
                 cooldown(t, k.gcdSpell, ev.gcd)
             end
         elseif kind == "castStop" and ev.src == us then -- capture b: a death is FAILED then STOP in one ms, then three
-            -- INTERRUPTED with no castBarID 0.15 s later; a move is INTERRUPTED (castBarID 5th), STOP 1 ms later, then two
+            -- INTERRUPTED with no castBarID 0.15 s later; a move is INTERRUPTED (castBarID 5th), STOP 1 ms later, then two;
+            -- each echoed on targettarget while our target targets us
             local g, id, bar = "Cast-" .. hardN, spellID(ev.spell), "Bar-" .. hardN
             castOpen = false
             push(t, "@casting", nil)
             if ev.cause == "move" then
-                push(t, "UNIT_SPELLCAST_INTERRUPTED", "player", g, id, nil, bar)
-                push(t + 0.001, "UNIT_SPELLCAST_STOP", "player", g, id, bar)
+                castEv(t, ev.onUs, "UNIT_SPELLCAST_INTERRUPTED", g, id, nil, bar)
+                castEv(t + 0.001, ev.onUs, "UNIT_SPELLCAST_STOP", g, id, bar)
                 for _ = 1, 2 do
-                    push(t + 0.15, "UNIT_SPELLCAST_INTERRUPTED", "player", g, id, nil, nil)
+                    castEv(t + 0.15, ev.onUs, "UNIT_SPELLCAST_INTERRUPTED", g, id, nil, nil)
                 end
             else
-                push(t, "UNIT_SPELLCAST_FAILED", "player", g, id, bar)
-                push(t, "UNIT_SPELLCAST_STOP", "player", g, id, bar)
+                castEv(t, ev.onUs, "UNIT_SPELLCAST_FAILED", g, id, bar)
+                castEv(t, ev.onUs, "UNIT_SPELLCAST_STOP", g, id, bar)
                 for _ = 1, 3 do
-                    push(t + 0.15, "UNIT_SPELLCAST_INTERRUPTED", "player", g, id, nil, nil)
+                    castEv(t + 0.15, ev.onUs, "UNIT_SPELLCAST_INTERRUPTED", g, id, nil, nil)
                 end
             end
         elseif kind == "refused" and ev.src == us then -- a cast refused at its start (range, line of sight): K15
             castN = castN + 1
             local g, id = "Cast-" .. castN, spellID(ev.spell)
-            push(t, "UNIT_SPELLCAST_SENT", "player", "Mob", g, id)
-            push(t, "UNIT_SPELLCAST_FAILED", "player", g, id, nil)
+            sent(t, ev.onUs, g, id)
+            castEv(t, ev.onUs, "UNIT_SPELLCAST_FAILED", g, id, nil)
         elseif kind == "plateOff" then -- soft-targeting log: the removal still answers the GUID; the plate goes after
             push(t, "NAME_PLATE_UNIT_REMOVED", plate[ev.mob])
             push(t + 0.001, "@guid", plate[ev.mob], nil)
@@ -4449,18 +4551,17 @@ function M.ours(p)
                     return
                 end
                 if kind == "instant" or kind == "bogus" then
-                    W2.hit(me, tgt, W2.rng.int(30, 40), 4, "spell").castT = t0
+                    W2.hit(me, tgt, W2.rng.int(30, 40), 4, "spell", t0)
                 elseif kind == "aoe" then
                     for _, m in ipairs(W2.ents) do
                         if m.kind == "mob" and not m.dead and (m == tgt or m.plate) then
-                            W2.hit(me, m, W2.rng.int(30, 40), 4, "spell").castT = t0
+                            W2.hit(me, m, W2.rng.int(30, 40), 4, "spell", t0)
                         end
                     end
                 elseif kind == "bolt" then
                     W2.hitAt(me, tgt, W2.rng.int(14, 18), 8, "spell", d / 20, t0)
                 elseif kind == "doti" then
-                    local ev = W2.hit(me, tgt, W2.rng.int(8, 9), 64, "spell")
-                    ev.castT = t0
+                    local ev = W2.hit(me, tgt, W2.rng.int(8, 9), 64, "spell", t0)
                     if ev.act == "WOUND" then
                         W2.dot(me, tgt, 3, 4, 4, 64, "doti", t0)
                     end
@@ -4496,7 +4597,7 @@ function M.ours(p)
                 elseif kind == "chan" then
                     press.channel = { length = 3, tick = 1, effect = function(W2, me)
                         if me.target then
-                            W2.hit(me, me.target, 5, 64, "spell").castT = W2.t
+                            W2.hit(me, me.target, 5, 64, "spell", W2.t)
                         end
                     end }
                     press.effect = nil
@@ -4822,6 +4923,7 @@ describe("the 2026-10-22 captures (K20)", function()
         assert.are.same({ BASE + 3500 / 1000, X.FRAME }, pk(3501)) -- before the clear at 3602
     end)
 
+    -- the post-clear white killing row (452 ms after the clear, on softinteract only) pays its swing
     it("rogue kill-events: the death events mark the unit ours; the corpse's row pays the killing swing", function()
         local c, s = replay("capture_kill")
         local X, U = c.I.Expect, c.I.Units
@@ -5201,6 +5303,9 @@ describe("detection suite K1-K9 #slow", function()
                 print(("\n%s %s: %s"):format(kind, band, metrics.ticketLine(m)))
                 detect.record(kind, band, m)
                 detect.check(kind, band, m)
+                if kind == "K6" then -- a white kill's row lands on the corpse after the clear: its swing pays it
+                    assert.is_true(m.postClear > 0 and m.postClearPaid == m.postClear, metrics.ticketLine(m))
+                end
             end)
         end
         for _, band in ipairs(detect.MEASURED) do
@@ -5247,6 +5352,8 @@ function M.newTickets()
         outcomes = 0, -- distinct outcomes on registry tokens (any source)
         dispatched = 0, -- rows the registry dispatched
         overflow = 0,
+        postClear = 0, -- own white outcomes landing after their target's kill clear (the measured kill shape)
+        postClearPaid = 0, -- of those, paid by a swing ticket
     }
 end
 
@@ -5319,6 +5426,33 @@ function M.tickets(m, c, s, W)
     m.divergent = m.divergent + T.divergent
     m.lostEngine = m.lostEngine + T.lost[X.FRAME] + T.lost[X.FLIGHT]
     m.overflow = m.overflow + T.closed.overflow
+    if W then -- own white outcomes landing 0.1-2 s after their target's kill (after the clear): paid by their swing
+        local seen = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "kill" and ev.dst == ev.ourTarget then
+                for i = 1, s.n do
+                    if
+                        s.ev[i] == "UNIT_COMBAT"
+                        and s.src[i] == 1
+                        and s.hand[i] > 0
+                        and s.swingT[i] <= ev.t
+                        and s.t[i] > ev.t + 0.1
+                        and s.t[i] <= ev.t + 2
+                    then
+                        local key = s.t[i] .. "/" .. s.swingT[i]
+                        if not seen[key] then
+                            seen[key] = 0
+                            m.postClear = m.postClear + 1
+                        end
+                        if c.payKind[i] == X.MELEE and seen[key] == 0 then
+                            seen[key] = 1
+                            m.postClearPaid = m.postClearPaid + 1
+                        end
+                    end
+                end
+            end
+        end
+    end
     if W then -- our instant and projectile successes no row of the truth answers
         local rowAt = {}
         for i = 1, s.n do
@@ -5359,7 +5493,7 @@ end
 function M.ticketLine(m)
     return string.format(
         "fights=%d own=%d recall=%.3f (wrong %d, missed %d) false/100=%.2f leak/100=%.2f staged=%.3f divergent/100=%.2f "
-            .. "lost engine=%d truth=%d outcomes=%d dispatched=%d residual=%d overflow=%d",
+            .. "lost engine=%d truth=%d outcomes=%d dispatched=%d residual=%d overflow=%d postClear=%d/%d",
         m.fights,
         m.own,
         M.recall(m),
@@ -5374,7 +5508,9 @@ function M.ticketLine(m)
         m.outcomes,
         m.dispatched,
         m.outcomes - m.dispatched,
-        m.overflow
+        m.overflow,
+        m.postClearPaid,
+        m.postClear
     )
 end
 ```
@@ -5664,6 +5800,7 @@ describe("detection suite K10-K19 #slow", function()
                 detect.check(kind, band, m)
                 if kind == "K11" then
                     assert.is_true(m.dead > 0 and m.lostEngine == m.lostTruth, metrics.ticketLine(m))
+                    assert.are.equal(m.postClear, m.postClearPaid) -- our pending swing's row after the clear pays
                     assert.are.equal(m.kills, m.gone) -- TargetGone once per kill of our target
                 elseif kind == "K13" then
                     local k4 = detect.floors().K4[band]
@@ -6878,7 +7015,7 @@ Claude-Session: https://claude.ai/code/session_01PSygyDGe77y6FKXJAcabWw"
 | Low-rank tick counts | A pack declares one `ticks` per ability (the top rank's); Moonfire rank 1 lasts 9 s (3 ticks against 4), so a rank-1 application closes with one row owed (levels 4-9); `make spell-data-check` notes it | kit | Druid levels 4-9 |
 | FLIGHT's first record | Spec §3.3.1 lets only passes (a) and (b) teach a lag record, which no first ticket reaches; the build teaches from any clean payment, pass (c) included (a recorded deviation) | core belief | none |
 | `closedGone` | A unit with an open ticket is held, so it never goes GONE while a ticket pins it; the `gone` close is reachable only through a registry reset and stays at 0 in every run | core belief | none |
-| Harness kill and pushback | The harness's white-swing kill clears the target 4 ms before the killing row (the game: about 370 ms, Rogue capture), and the DELAYED pushback row is opt-in (`pushback`), off in the class loops | harness | none |
+| Harness pushback | The DELAYED pushback row is opt-in in the harness (`pushback`), off in the class loops (it would move the player's rows 0.37 s and the onus floors); the kill shapes follow the captures (`killTiming`) | harness | none |
 ```
 
 - [ ] **Step 2: ingame-ledger.md.** After the PV1 row (line 30) add:
@@ -6918,8 +7055,13 @@ against DB2 with `make spell-data-check` (it needs `$WOW_DB2`). The design is
 [docs/superpowers/specs/2026-10-22-unit-registry-and-tickets-design.md](docs/superpowers/specs/2026-10-22-unit-registry-and-tickets-design.md).
 ```
 
-- [ ] **Step 4: The spec's status.** In the spec's status line (line 3), replace `Status: DESIGNED.` with
+- [ ] **Step 4: The spec's status and §3.3.1.** In the spec's status line (line 3), replace `Status: DESIGNED.` with
   `Status: BUILT (docs/superpowers/plans/2026-10-22-unit-registry-and-tickets.md); §4.2's union belief designed, not built.`
+  In §3.3.1 (line 349), replace `A FLIGHT ticket paid in pass (a) or (b) (3.4) with no other candidate in that pass
+  teaches its record:` with `A FLIGHT ticket paid in any pass (3.4) with no other candidate in that pass teaches its
+  record (a pass (c) payment makes the first record: with none, a ticket is a candidate in pass (c) only, so no record
+  would ever exist):`, and in the gaps row "FLIGHT's first record" (Step 1) replace `(a recorded deviation)` with
+  `(spec §3.3.1 amended to match)`.
 
 - [ ] **Step 5: Check and commit**
 
