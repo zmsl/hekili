@@ -112,7 +112,8 @@ answer", never a value.
 
 1. Live read: `g = Plain(api, api.UnitGUID(TOKENS[i]))`. A plain string is the answer. If it differs from the token's
    binding, the registry rebinds the token first (it heals a missed event).
-2. Registry fallback while held: the live read is nil (no unit, or secret) and the token's previous slot is not GONE
+2. Registry fallback while held: the live read is nil (no unit; `UnitGUID` on plate, target and soft tokens is plain in
+   combat, probe U5, so nil means the token names no unit, and the `Plain` gate stays only as the secret-safety rule) and the token's previous slot is not GONE
    (it is held by an open ticket, or released less than `GRACE` ago): answer the previous slot. This is the post-clear
    killing blow (capture b 42067 on `target` after `TARGET none` at 42048; the Rogue capture's 10754 on
    `softinteract`, 370 ms after the clear).
@@ -177,6 +178,7 @@ Listeners register at load. Rows (tickets) registers first, then Target (`Target
     killed by others (9433, 11352). `PARTY_KILL` with killer equal to our GUID also sets `uOurs[u]`: our kill.
   - a plain `UnitIsDead(token) == true` on a bound token. The existing polls already read it: `Target.lua:84` (poll 4) and
     `Game/State/Sources/Nameplates.lua:36-40` (poll 5). They report to `I.Units.Dead(uid, t)`; the registry adds no read.
+    `UnitIsDead` on plates is plain in combat (probe U5), so this path needs no fallback.
   - the fallback kill tell, only when the client refused the death events (they are in `E.STUB`,
     `EventFacade.lua:93-95`): `PLAYER_TARGET_CHANGED` to none within `KILL_TELL` = 0.010 s after any player
     `UNIT_SPELLCAST_FAILED`; the previous target's slot dies. Seen in all four kills of captures b and c (FAILED to clear:
@@ -800,7 +802,7 @@ Each becomes a row in `docs/dev/ingame-ledger.md` with the capture that closes i
 | U2 (closed 2026-10-22, Rogue capture) | Auto-target on cast with Action Targeting off. Answer: a spell with no target does not auto-target (the cast never commits: no SENT with a target). A melee ability does: `TARGET` 68 ms before `SC_SENT` (6998 to 7066); `SC_SENT`, `PLAYER_SWING` and `PLAYER_ENTER_COMBAT` in the same ms; `SUCCEEDED` +1 ms; the strike's WOUND +2 ms on `nameplate2` and `target`. So the SENT pin always has a target | `rogue-ss-autotarget-2026-10-22.log` |
 | U3 (closed 2026-10-22, kill-events capture; closes O6 and T8) | Do `UNIT_DIED`, `PLAYER_TARGET_DIED` and `PARTY_KILL` fire for addons on Forever, with plain GUIDs. Answer: yes, all three, GUIDs plain; order on a white-swing kill: `PLAYER_SWING` and `PARTY_KILL` same ms, `UNIT_DIED` and `PLAYER_TARGET_DIED` +2 ms, `TARGET none` +4 ms; `UNIT_DIED` also for units others kill | `rogue-kill-events-2026-10-22.log` |
 | U4 (closed 2026-10-22, druid-moonfire capture) | DoT ticks: does a periodic tick arrive as a WOUND on the victim's tokens, with which school. Answer: yes, a plain WOUND of the spell's school, no flag, every 3.0 s +- 50 ms from the application; a recast resets the schedule; the channel half moves to U9 | `druid-moonfire-2026-10-22.log` |
-| U5 | Nameplate GUID secrecy in combat beyond what Attackers relies on: `UnitGUID("nameplateN")` and `UnitIsDead("nameplateN")` plain for every plate in a five-man pull | `/run` loop over plates in combat with `VSCopy(issecretvalue(...))` |
+| U5 (closed 2026-10-22, recorder `/vslog plates` in combat) | Nameplate secrecy in combat. Answer: `UnitGUID`, `UnitIsDead`, `UnitCanAttack("player", plate)`, `UnitName`, `UnitLevel`, `UnitClassification` and `UnitReaction` are plain on nameplate tokens; `UnitHealth` and `UnitHealthMax` are secret. Caveat: two plates (our target and a passing mob), not a five-man pull; the secrecy rule is per API, so it is expected to hold | `/vslog plates` in combat |
 | U6 (deferred with U1) | Partial resists: a WOUND with a RESIST flag and a reduced amount, or two rows | `/vslog` of a Shadow Bolt series on a mob with shadow resistance |
 | U7 | Two-school spells and wands: the school a Frostfire Bolt WOUND carries (20, 4 or 16); a wand's | `/vslog` of Frostfire Bolt and of Shoot with a non-physical wand |
 | U8 | The kill tell: is the target clear on a kill a client rule or a user setting; does it happen when no press is in flight | `/vslog` of a melee kill with no ability pressed, and the interface option in question |
