@@ -202,7 +202,8 @@ Speed-20 cast need more room). Fields, each a preallocated array:
 | `state` | 0 free, 1 committed (hard cast between SENT and success), 2 open, 3 provisional (holds an avoid), 4 closed |
 
 The context the engine fills a ticket from is one preallocated table `CTX`, built at load: `t` (the commit time),
-`guid`, `rangeLo` and `rangeHi` (the range bracket in yards; `rangeHi` = `math.huge` when unknown), `hand`, and the
+`guid`, `hand`, `rMax` (the ability's maximum range), the (GUID, speed) learned lag when one exists (`lagE`,
+`lagSpr`, `lagAge`), the optional plain range bracket's lower bound `rangeLo` (0 when absent, 3.3.1), and the
 ability's learned amount band (`bandLo`, `bandHi`, `bandN`, 3.4). Only the `expects` escape hatch (5.3) reads it from
 pack code. No table, closure or string is made per event.
 
@@ -242,7 +243,7 @@ never emitted anyway (`emit` drops a "" destination, `:283-286`).
 |---|---|---|---|
 | NONE | none | none | at commit |
 | FRAME(school) | a WOUND within `SAME_FRAME`, or `CAST_WINDOW` for a white wound no swing takes (today, `:458`, `:497-499`); an avoid within `LandWindow(1)`, or `CAST_WINDOW` while `bg[7] >= FOREIGN_AVOIDS` (today, GAP AX, `:459-461`) | a WOUND of `school`; any avoid | on its row, or expiry |
-| FLIGHT(speed, school) | `[at + max(0, rLo / speed - TOL), at + rHi / speed + TOL]` | a WOUND of `school`; any avoid (a spell miss is school 1, fact 2) | on its row, or expiry |
+| FLIGHT(speed, school) | the hard window `[at, at + rMax / speed + TOL]`, scored by the learned lag (3.3.1) | a WOUND of `school`; any avoid (a spell miss is school 1, fact 2) | on its row, or expiry |
 | MELEE(hand) | the LR density's support `[0, w]` (`Rows.lua:252-269`) | the swing scoring (3.4 step 3) | on its row (an avoid provisionally), or expiry |
 | STRIKE | today's frame | the strike's row; it replaces the main hand's MELEE ticket within `STRIKE_WINDOW`, or waits for that swing (today `:329-332`, `:351-361`) | on its row, or expiry |
 | TICKS(period, ticks, school) | tick `j` at `at + j x period +- TOL` | a WOUND of `school`; the application's avoid inside `LandWindow(1)` closes it with nothing owed | on the last tick, on the removal of the ability's debuff on that GUID (the aura row `L.Aura` emits, `Game/Events/CombatLog.lua:171`), or expiry |
@@ -253,30 +254,111 @@ never emitted anyway (`emit` drops a "" destination, `:283-286`).
 A school of nil means the hit makes no row of ours: the kind then takes only an avoid in its window, and its expiry is
 not a lost resolution (Serpent Sting's application, 5.4).
 
-`rLo, rHi` are `CTX.rangeLo` and `CTX.rangeHi`: `VS.TargetRange()` (`Game/State/Families/Enemies.lua:71-73`) when the
-pinned GUID is the current target and the record has an upper bound; otherwise 0 and the ability's `rMax`
-(`Game/State/Sources/Spellbook.lua:43`), or 40 yd when that is 0. `TOL` = 0.15 s. For Wrath at an unknown range the
-window is `[0, 1.65]` s; the five max-range samples (1483-1566 ms) fit with 84 ms to spare.
+#### 3.3.1 FLIGHT: hard window and learned lag
 
-### 3.4 Paying (the match)
+The engine cannot read an up-to-date range to a unit in combat, so a FLIGHT window is not built from a range bracket.
 
-A row is offered to tickets only after the registry resolved it to `guid`. The generic match makes a ticket a
-candidate when its `guid` equals the row's (UNMAPPED: any), its state is open or provisional, `t` is inside its window,
-the row is one its kind accepts (3.3), and a WOUND fits the ability's amount band once learned. Then, in order:
+Hard window: `[at, at + H]` with `H = rMax / speed + TOL`, always. `rMax` is the ability's maximum range
+(`Game/State/Sources/Spellbook.lua:43`), or 40 yd when that is 0; `TOL` = 0.15 s. For Wrath, `H` = 1.65 s; the five
+max-range samples (1483-1566 ms) fit with 84 ms to spare.
 
-1. WOUND amount 0: marks `lastW0` and pays nothing (today, `Rows.lua:454-457`).
-2. Fresh frame first: a candidate ticket within `SAME_FRAME` of its `at` takes the row, as today (`:458`).
-3. White outcomes (school 1) and swings: the existing swing scoring (`score`, `:375-402`) is the MELEE kind's match:
-   LR = q x f / lambda, the bar `THETA` for avoids and `theta[k]` for wounds (`:488`), the veto (`:490-495`), the
-   white-avoid and white-crit precedence over a pending cast (`:464-478`). Unchanged except that candidates are
-   filtered by GUID.
-4. Other candidates by window: the oldest candidate pays.
-5. UNMAPPED: an avoid or crit no ticket took, inside an UNMAPPED ticket's window and past the pending tickets' own
-   frame, is absorbed as nobody's (today's `another()` unmapped half).
-6. Nothing: the row is foreign. It goes to `background()` as today (`:408-429`) and counts as `T.foreign`.
+One optional plain read may narrow its lower bound. `VS.TargetRange()` (`Game/State/Families/Enemies.lua:71-73`) is
+plain in combat: poll 14 builds it from `C_Spell.IsSpellInRange`, which answers plainly (`Game/State/Sources/Target.lua:8-9`,
+probe W PR7). It covers the current target only, as a bracket between the tracked abilities' ranges, as of its last
+change. When the pinned GUID is the current target and the bracket has `lo > 0`, the hard window's lower bound becomes
+`max(0, (lo - CLOSE x age) / speed - TOL)`, where `age` is the time since the bracket was logged and `CLOSE` = 7 yd/s
+(a running mob). The bracket's upper bound is never used: a closing mob makes it stale on the wrong side.
 
-A paid row decrements `owed`; a ticket with rows still owed moves its window to the next one (`lo + period`,
-`hi + period`).
+Learned lag. A pool of `LAG_CAP` = 16 records, keyed by (GUID, speed), preallocated: `lagGUID`, `lagSpeed`, `lagE` (the
+last observed lag, s), `lagSpr` (spread), `lagT` (time of the last observation), `lagN` (observations). It is the
+same mechanism as Rows' global melee lag (`learn()`, `Rows.lua:272-279`), keyed per unit and speed because a
+projectile's lag depends on the distance to that unit. A FLIGHT ticket paid in pass (a) or (b) (3.4) with no other
+candidate in that pass teaches its record: `lagE` takes the observed lag (the expected lag for the next ticket is the
+last one: a closing mob makes it shrink); `lagSpr` moves by `0.25 x (1.2533 x |lag - old lagE| - lagSpr)`, clamped to
+[0.02, 0.4]; `lagT` is the row's time. The first landing on a GUID also gives its distance, `lag x speed` (Snapshot
+only). A full pool evicts the record with the oldest `lagT`. Records survive combat end (a GUID does not return) and
+reset at load.
+
+Widening schedule, for a ticket whose (GUID, speed) has a record, with `d` = the row's time minus `lagT`:
+
+- base half-width `b = max(TOL, 2 x lagSpr)`;
+- downward (the mob closed) `down = max(b, (CLOSE / speed) x d)`; upward (the mob backed off) `up = max(b, (CLOSE / 2 / speed) x d)`;
+- narrow band (pass a): `[at + lagE - b, at + lagE + b]`;
+- widened band (pass b): `[at + lagE - down, at + lagE + up]`, clipped to the hard window.
+
+For Wrath, `CLOSE / speed` = 0.35: two seconds after the last landing the band reaches 0.7 s below the last lag.
+
+First-ticket rule: no record for (GUID, speed) yet means the whole hard window, uniform, and the ticket is a candidate
+in pass (c) only.
+
+### 3.4 Paying (the consumption order)
+
+The order in which rows are consumed by tickets decides correctness. The algorithm, exactly:
+
+1. Rows are consumed online, one at a time, in arrival order, after the registry's dedupe (GUID + ms, 2.4). Several
+   distinct rows at the same ms are processed in token order. A WOUND 0 is processed before the damage row of the same
+   strike frame: it marks `lastW0` and pays nothing (today, `Rows.lua:454-457`), which arms the foreign strike frame
+   rule (`:481`) for the row after it.
+2. Candidates for a row are the open or provisional tickets of its queue: `guid` equal to the row's, and a kind
+   compatible with the row. An avoid can pay any kind that still owes a row. A WOUND can pay only a kind whose school
+   equals the row's (MELEE, STRIKE and DEFAULT: as today, school 1 for MELEE and STRIKE, any for DEFAULT), and only
+   once it fits the ability's amount band (below). A nil-school ticket is paid only by an avoid.
+3. Each candidate has an expected closure time: `at + lagE` for FLIGHT (`at + H / 2` before its first record),
+   `at + L.med[hand]` for MELEE (the learned landing lag, `Rows.lua:67`), `at` for FRAME, STRIKE and DEFAULT,
+   `at + j x period` for the next owed tick of TICKS and CHANNEL. Candidates are taken in expected-closure order, not
+   commit order. FIFO per queue falls out of it when expected lags are equal.
+4. Passes, in order: (a) the narrow band around each candidate's expected closure; (b) the widened band (3.3.1 for
+   FLIGHT); (c) the hard window, open only to tickets with no learned record (the first-ticket rule). The first
+   candidate in expected-closure order that matches at the current pass pays. A later pass runs only if no candidate
+   matched at the earlier one. So a ticket whose expected closure is still ahead of the row by more than its band
+   cannot be paid ahead of a ticket whose expected closure has arrived. "First in order" is a single scan for the
+   least expected closure among the candidates that match at the pass: no sort, no allocation.
+5. A row that matches no candidate after pass (c) goes to the UNMAPPED ticket if it is an avoid or crit inside an
+   UNMAPPED window (absorbed as nobody's), else it is foreign: `background()` as today (`:408-429`), counted `T.foreign`.
+
+Bands per kind:
+
+| Kind | (a) narrow | (b) widened | (c) hard |
+|---|---|---|---|
+| FLIGHT | `lagE +- b` | `[lagE - down, lagE + up]` | `[0, H]` (no record only) |
+| MELEE | the core band, within 2 `spr` of the median (`Rows.lua:367-369`) | the LR window `[0, w]` (`:252-269`) | as (b) |
+| FRAME, STRIKE, DEFAULT | `SAME_FRAME` | WOUND: `CAST_WINDOW`; avoid: `LandWindow(1)`, or `CAST_WINDOW` while `bg[7] >= FOREIGN_AVOIDS` (GAP AX) | as (b) |
+| TICKS, CHANNEL | tick time `+- TOL` | tick time `+- 2 x TOL` | as (b) |
+
+MELEE inside the frame: when the first match at a pass is a MELEE ticket, the existing likelihood ratio decides among
+all MELEE candidates that match at that pass (LR = q x f / lambda, the bar `THETA` for avoids and `theta[k]` for wounds,
+the veto, `:487-495`). Below the bar, MELEE does not match at that pass. At a tie in pass (a) between a FRAME ticket
+and a MELEE ticket for a white avoid or crit, MELEE wins, keeping today's precedence (`:464-478`).
+
+Where this differs from today: Rows tries a fresh cast's frame first and then any avoid within the cast window
+(`:458-461`), then the swing LR (`:487-495`), then a white wound within `CAST_WINDOW` for the cast (`:497-499`), always
+the oldest cast first (`:146`). The new order replaces commit order with expected closure and adds the passes; for
+abilities on DEFAULT and for swings the bands are today's windows, so the outcome is the same.
+
+Why this bounds a lost resolution to one shift. A ticket whose row never comes (a resist not seen as a row, a row on
+a token we do not see) stays open. A later row of its queue could pay it instead of its true owner only if the row
+falls in the lost ticket's band at the earliest pass where the owner also matches. Two tickets of one queue committed
+`s` seconds apart have expected closures `s` apart; once `s` exceeds the narrow band (`2b`, 0.3 s for Wrath), each
+row matches its own ticket at pass (a) and the lost ticket simply expires at its hard window. Only when casts come
+closer than the band, or while no record exists, does a row shift by one ticket, and the shift ends when the lost
+ticket expires (at most `H` after its commit) or closes on the kill tell or GONE. A shift between two of our own hits
+of the same school and kind changes no belief. Only a divergent outcome (hit vs miss, hit vs crit, amount for rage)
+is affected; those count as `divergent` toward the 4.2 trigger.
+
+Example from capture a: the 97374 Wrath's own row landed at 98890 (1516 ms), and a MISS arrived at 97891, 517 ms after
+that success and 2067 ms after the 95824 success. Today Rows charges the MISS to the 97374 cast, because it is inside
+the cast's avoid window (`:459-461`). With a learned `lagE` of about 1.5 s for that GUID and a last landing about 1.5 s
+earlier, the 97374 ticket's narrow band is [1.35, 1.65] s and its widened band reaches down to about 1.5 - 0.53 =
+0.97 s: 0.517 s is in neither. The 95824 ticket has expired (its hard window ended at 1.65 s). The MISS is therefore
+foreign. Had an older ticket of that queue still been open with the MISS in its band, that ticket would have paid it.
+
+FIFO per queue, proof. Take one GUID and one speed `v`, casts A then B with successes `tA < tB` and distances `dA`,
+`dB`. A lands at `tA + dA / v`, B at `tB + dB / v`. B lands first only if `dA - dB > v x (tB - tA)`: the distance
+must shrink faster than `v` between the two successes. The slowest projectile is 20 yd/s (5.4); a running mob is about
+7 yd/s and a running player about the same, so closing never reaches `v`. Resolutions of one queue therefore arrive in
+cast order, and expected-closure order equals commit order within a queue. The exceptions are a charge, a blink or a
+knockback between two casts. They swap two same-school hits, which changes no belief (the cascade bound above).
+Different speeds, schools or GUIDs are separate queues and never FIFO across one another.
 
 The amount band: per ability, `bandLo` and `bandHi` of its own non-crit WOUNDs (a crit halved), learned from tickets
 paid with exactly one candidate. On a new low, `bandLo` takes the amount; otherwise it creeps up by
@@ -285,8 +367,8 @@ paid with exactly one candidate. On a new low, `bandLo` takes the amount; otherw
 The band survives combat end and resets at load, like the swing lags (`Rows.lua:611`). MELEE keeps its own amount
 classes from `UnitDamage` (`classOf`, `:223-242`) instead.
 
-Ties: among spell candidates the oldest `at` wins (as `cast()` does today, `:146`); among swings the existing strict
-`>` keeps the lower slot (`:391`).
+A paid row decrements `owed`; a ticket with rows still owed moves its window to the next one (`lo + period`,
+`hi + period`).
 
 Invariants, checked by the detection suite: a row pays at most one ticket; a ticket is paid at most `owed` times,
 except through the existing controlled re-opens (the provisional avoid overtaken by a higher-LR wound, `:522-529`; the
@@ -627,7 +709,7 @@ any downward move needs a named cause written beside the number and the owner's 
 | Wrong GUID after a swap | the live read wins for `target`; a stale echo with no matching plate row resolves to the new mob | K5 precision at its floor; the c fixture's swap pays the old mob |
 | Over-merge in dedupe | two real identical rows on one GUID within 5 ms collapse into one | K8 recall at its floor in the busy band |
 | Plate churn closes a live ticket | a plate-only pinned unit whose plate leaves for over 0.1 s goes GONE | K7 lost count at its floor; Snapshot `gone` in game |
-| Wider spell windows take foreign rows | a [0, 1.65] s window for every Speed-20 cast at an unknown range | party-light and busy K4 foreign leak at their floors; the school check and band hold it |
+| Wider spell windows take foreign rows | the [0, 1.65] s hard window for a first ticket on a GUID, and widened bands long after the last landing | party-light and busy K4 foreign leak at their floors; the school check and band hold it |
 | Caster `active_enemies` rises | new `SPELL_DAMAGE` rows reach `ns.updateTarget` | wowsims replay floors of every caster class; a moved AoE decision gets its named cause |
 | Melee behaviour drifts | the ring becomes the ticket pool | melee replay floors, `make test-loop` and flicker floors unchanged; `group_spec.lua` numbers unchanged |
 | Allocation in a recurring path | new handlers on `UNIT_COMBAT` and the tick | `tests/Game/harness/alloc_spec.lua` and `make bench` show no new allocation |
@@ -650,18 +732,23 @@ any downward move needs a named cause written beside the number and the owner's 
 | 11 | Fixed kind set: NONE; FRAME(`school`); FLIGHT(`speed`, `school`); MELEE(`hand`); STRIKE; TICKS(`period`, `ticks`, `school`); CHANNEL(`period`, `school`); each kind's matching and closure rule lives in the engine | packs declare, the engine handles the rest; each rule is written and tested once |
 | 12 | Builders `Expect.None()`, `Expect.Frame(school)`, `Expect.Flight(speed, school)`, `Expect.Melee(hand)`, `Expect.Strike()`, `Expect.Ticks(period, ticks, school)`, `Expect.Channel(period, school)` in Hekili_Shared, returning load-time descriptors | packs stay declarative; every class pack already depends on Hekili_Shared |
 | 13 | Escape hatch: `expects` may be a `function(ctx)` precompiled at spec load that returns a prebuilt descriptor; no per-ability `accept`, `resolve` or `lost` handlers (a possible later extension) | covers a talent that changes an ability's kind without letting packs write matching code |
-| 14 | `CTX` fields: `t`, `guid`, `rangeLo`, `rangeHi`, `hand`, `bandLo`, `bandHi`, `bandN` | what the engine knows at commit; enough for any context-dependent kind |
+| 14 | `CTX` fields: `t`, `guid`, `hand`, `rMax`, `lagE`, `lagSpr`, `lagAge`, `rangeLo` (optional, 0 absent), `bandLo`, `bandHi`, `bandN` | what the engine knows at commit; no range is assumed readable |
 | 15 | Default kind for an ability with no `expects`: DEFAULT, today's windows exactly (open for `startsCombat` or `onNextSwing` abilities, resolved at commit for the rest), never counted lost | every pack's floors hold until it declares data |
 | 16 | Unmapped successes open an UNMAPPED ticket: `UNMAPPED_WINDOW`, no owed row, any GUID, absorbs an avoid or crit as nobody's | today's `another()` unmapped rule as a generic ticket; replaces `unmappedT` |
 | 17 | `owed`: rows still owed; each paid row decrements it, 0 closes the ticket; unpaid `owed` at expiry counts as lost | one counter covers one hit, N ticks and open-ended channels |
 | 18 | A `school` of nil means the hit makes no row of ours: only an avoid pays, expiry is not lost (Serpent Sting: `Expect.Flight(40, nil)`) | an aura-only cast needs no handler of its own |
 | 19 | Backed by captures or measured logs: NONE, FRAME, FLIGHT, MELEE, STRIKE. Unprobed: TICKS and CHANNEL, implemented but marked untested and unused by packs until probe U9 | no tick row has been captured yet |
-| 20 | `TOL` = 0.15 s; unknown range uses `rMax`, else 40 yd | the five max-range samples fit [0, 1.65] s with margin |
+| 20 | FLIGHT hard window `[0, rMax / speed + TOL]` from the success, always; `TOL` = 0.15 s; `rMax` 0 means 40 yd; the plain bracket's `lo` may only raise the lower bound, less `CLOSE x age` | the engine cannot read an up-to-date range in combat; the five max-range samples fit [0, 1.65] s |
 | 21 | School check by equality with the declared numeric school | no bit operations in core; two-school rows are probed (U7) |
 | 22 | Amount band [0.6 x lo, 1.6 x hi] after 3 clean wounds | spell damage varies more than weapon damage; procs and crits halved stay inside |
-| 23 | Oldest candidate wins among spell tickets | today's rule; projectiles of one speed land in order |
+| 23 | Consumption order: rows online in arrival order after dedupe; candidates of the row's queue in expected-closure order; passes (a) narrow, (b) widened, (c) hard window for tickets with no record; first match pays; MELEE's LR decides among MELEE candidates at a pass | the order decides correctness; FIFO per queue falls out of it |
 | 24 | A mapped ticket with no pin opens with `guid` "" and counts `unpinned`, not lost | it can match no row; today its rows are dropped anyway |
 | 25 | Until 4.2 is built, a divergent row emits its row but stages nothing | stays on the floor's safe side, as today's two-casts rule |
 | 26 | Build trigger for 4.2: `divergent` over 1 per 100 paid tickets in a five-man run | a rate that would show as flicker; below it the union is not worth its cost |
 | 27 | DB2 check is a dev-only `make spell-data-check` over the builders' numbers | CI has no DB2 file |
 | 28 | Registry dispatches rows through `OnRow`; Rows registers before Target | one resolution and dedupe for every consumer; tickets see a row first |
+| 29 | Learned flight lag: `LAG_CAP` = 16 records per (GUID, speed): `lagE` (last observed lag), `lagSpr` (EMA spread, 0.25 rate, [0.02, 0.4]), `lagT`, `lagN`; taught by a clean pass (a) or (b) payment; oldest `lagT` evicted | the same mechanism as the global melee lag, keyed per unit because flight lag is distance; the last lag tracks a closing mob |
+| 30 | Widening: `b = max(TOL, 2 x lagSpr)`; `down = max(b, (CLOSE / speed) x d)`, `up = max(b, (CLOSE / 2 / speed) x d)`, `d` = time since the last landing, `CLOSE` = 7 yd/s, clipped to the hard window; no record: the whole hard window, uniform | the band grows as fast as a running mob can change the lag |
+| 31 | FIFO per queue (kind, school, speed, GUID); never across queues | one queue's rows arrive in cast order unless the distance shrinks faster than the projectile (20 yd/s or more) between casts, which no run does |
+| 32 | Cascade bound: a lost ticket shifts its queue by at most one row, only while casts are closer than the narrow band or before the first record, until it expires at `H` or closes on the kill tell or GONE; shifts that change a belief count as `divergent` | a shift between two own same-school hits changes nothing; only divergent outcomes matter |
+| 33 | Pass (c), the hard window, is open only to tickets with no learned record | otherwise a far-off row (capture a's 517 ms MISS) would still be charged to a cast whose learned lag excludes it |
