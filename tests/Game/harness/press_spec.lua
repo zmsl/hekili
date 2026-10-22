@@ -467,14 +467,14 @@ describe("the world's press", function()
         }, casts())
     end)
 
-    it("stops a channel in progress at the fight's stop", function()
+    it("stops a channel in progress when the loop leaves the world (W.endCasts)", function()
         setup()
         W.t = 1
         assert.is_true(
             W.press(us, "spender_c", { spell = fs.SPENDER_C, gcd = 1.5, channel = { length = 3, tick = 1 } })
         )
         W.run(2)
-        W.emit({ kind = "stop" })
+        W.endCasts(us)
         W.run(10)
         local c = tostring(fs.SPENDER_C)
         assert.are.same({

@@ -263,7 +263,7 @@ channel). The replay feeds the same events from the log: a Casting line with a c
 cast of an ability the kit declares `channeled` runs until its aura's next fade (a clip, on either unit), else for the
 kit's `cast`. The client's order at a channel's start (UnitChannelInfo before the success, which the engine's queue
 reads) is UNMEASURED: in-game checkpoint on a class with a channel. A fight's end stops a cast in progress (central fix
-31, `W.endCasts`): when our target dies, and at the world's stop, a hard cast ends with UnitCastingInfo empty,
+31, `W.endCasts`): when our target dies, and when the loop leaves the world after its last tick, a hard cast ends with UnitCastingInfo empty,
 UNIT_SPELLCAST_INTERRUPTED and UNIT_SPELLCAST_STOP (no success), and a channel with its CHANNEL_STOP, so no stale cast
 start outlives the fight. That order is UNMEASURED (in-game ledger CS1): the client may fire FAILED instead of
 INTERRUPTED when the target dies; the belief handles either. An unmapped item's use in a replay log is still our cast

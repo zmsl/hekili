@@ -91,11 +91,6 @@ function M.new(seed)
         if ev.kind == "pull" or ev.kind == "stop" then -- the world's combat runs pull to stop (a kill does not end it)
             W.combat = ev.kind == "pull"
         end
-        if ev.kind == "stop" then -- the fight's end: no cast outlives it (the next fight is a fresh world)
-            for _, e in ipairs(W.ents) do
-                W.endCasts(e)
-            end
-        end
         -- out of combat: the weapon damage UnitDamage reads now, the attack speeds and the regen rates
         if me and (ev.kind == "prepull" or ev.kind == "stop" or (ev.kind == "form" and not W.combat)) then
             local w, m = me.weapons, me.dmgMult
@@ -305,7 +300,8 @@ function M.new(seed)
     end
 
     --- `e`'s hard cast or channel in progress ends now, unfinished: the client's interrupt when the target dies, or the
-    --- fight's stop. Truth "castStop" { src, spell } for a hard cast (no success, nothing paid), W.stopChannel's for a
+    --- loop leaving the world (loop.run, after its last tick: a stop by the clock is no client event, so the last tick
+    --- still sees the cast). Truth "castStop" { src, spell } for a hard cast (no success, nothing paid), W.stopChannel's for a
     --- channel.
     function W.endCasts(e)
         if e.hardSpell then

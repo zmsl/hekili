@@ -518,7 +518,9 @@ function M.run(L, seed, o, drivers)
         end
     end
     -- the out-of-combat gap: each instance's clock moves past the fight, after the last tick's own events (a kill by
-    -- this tick's press, and the combat end it brings: else the next fight starts in combat for the instance)
+    -- this tick's press, and the combat end it brings: else the next fight starts in combat for the instance); our cast
+    -- still running ends there (fix 31 G3: its start would be the next fight's GCD anchor), after the last tick's metrics
+    W.endCasts(us)
     for i, st in ipairs(steps) do
         feed(st.H, st.obs, t, st.base, sink)
         st.H.ctl.now = st.base + t

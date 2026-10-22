@@ -130,13 +130,13 @@ read words inside a quoted literal as terms, so `settings.<key>='<candidate>'` r
 evaluation (snapshots); it now skips quoted literals, and a double-quoted candidate stays literal in the resource
 rewrite too. G2, the observer took the pet events' `power` (the pet's mana) as ours on a plain client: the world's pet
 events carry `petPower`. G3, a fight ending mid-cast left the cast's start standing as the next instant cast's GCD
-anchor: the world ends our cast (INTERRUPTED, STOP) or channel at a kill of its target and at the stop. G4, a target's
+anchor: the world ends our cast (INTERRUPTED, STOP) or channel at a kill of its target, and the loop ends it when it leaves the world after the last tick (ending it at
+the clock's stop event moved Smite's 20-fight flicker 0.45 -> 0.58/min: the last tick saw the cut). G4, a target's
 outcome names no source, so an unmapped item's miss (the Affliction log's Ez-Thro Dynamite II) was credited to our
 pending Corruption: an unmapped cast of ours makes an avoid or crit within `L.UNMAPPED_WINDOW` (2 s, unmeasured), past
 our cast's own frame, nobody's, as two pending casts do, and the replay emits an unmapped item's use as our cast (the
 frame clause keeps the Shadow replay's opener miss, items used in the same frame, our Shadow Word: Pain's). G5, the replay reads our
 pet's power lines into the world's pet (the Demonology and Shadow Brand `pet.mana<N` lines). G6 (projectile travel) is
-the Travel time row above. Gates on the tree (no Warlock pack yet): every replay line and `make test-loop` unchanged;
-five leveling lines gained one press (Arcane L10 41 -> 42, Fire L10 42 -> 43, Shadow L40 56 -> 57, Smite L10 62 -> 63,
-L60 77 -> 78), G3's: the press in the kill's tick is no longer refused "casting" by the dead target's cast.
+the Travel time row above. Gates on the tree (no Warlock pack yet): every `make test-wowsims` line, `make test-loop` and the Priest 20-fight
+loops unchanged.
 Cancelled: fix 19 (a harness-vs-in-game default for Sunder; players use Hekili's own per-ability toggles).
