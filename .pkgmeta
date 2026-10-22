@@ -51,3 +51,4 @@ ignore:
     - src/Hekili_Hunter/APLs
     - src/Hekili_Mage/APLs
     - src/Hekili_Priest/APLs
+    - src/Hekili_Warlock/APLs
