@@ -31,6 +31,12 @@ for i = 1, CAP do
     state[i], kind[i], ab[i], x[i], guid[i], uid[i], school[i], owed[i] = 0, 0, 0, 0, "", 0, ANY, 0
     at[i], hi[i], w[i], ref[i], lr[i], avoid[i], cast[i], done[i], first[i] = 0, 0, 0, 0, 0, "", "", 0, false
 end
+-- Per ticket: a row it matched past its own frame was absorbed as nobody's (Rows: an UNMAPPED window), so its
+-- missing row may have been that one: its expiry counts `expired`, not `lost`.
+T.excused = {}
+for i = 1, CAP do
+    T.excused[i] = false
+end
 
 T.opened = 0
 T.closed = {
@@ -55,6 +61,63 @@ for k = 0, 7 do
 end
 T.ours, T.foreign, T.absorbed, T.divergent, T.bandRejected, T.aoeOther = 0, 0, 0, 0, 0, 0
 T.onExpire, T.onPay = nil, nil
+-- FLIGHT (spec §3.3.1): per ticket its speed (yd/s) and hard window length H = rMax / speed + TOL.
+T.TOL, T.CLOSE, T.LAG_CAP = 0.15, 7, 16
+T.speed, T.H = {}, {}
+for i = 1, CAP do
+    T.speed[i], T.H[i] = 0, 0
+end
+-- The learned flight lag per (GUID, speed): the last observed lag, its spread, the time and count of observations.
+-- Survive combat end (a GUID does not return); reset at load.
+T.lagGUID, T.lagSpeed, T.lagE, T.lagSpr, T.lagT, T.lagN = {}, {}, {}, {}, {}, {}
+for r = 1, T.LAG_CAP do
+    T.lagGUID[r], T.lagSpeed[r], T.lagE[r], T.lagSpr[r], T.lagT[r], T.lagN[r] = "", 0, 0, 0, 0, 0
+end
+
+--- The lag record of (g, v), or 0.
+function T.LagOf(g, v)
+    for r = 1, T.LAG_CAP do
+        if T.lagGUID[r] == g and T.lagSpeed[r] == v then
+            return r
+        end
+    end
+    return 0
+end
+
+--- A clean flight payment's lag teaches (g, v)'s record (a full pool gives the oldest way). A new record's spread
+--- starts at TOL / 2, so its first narrow band is TOL each side. Allocates nothing.
+function T.Learn(g, v, lag, t)
+    local r = T.LagOf(g, v)
+    if r == 0 then
+        r = 1
+        for q = 1, T.LAG_CAP do
+            if T.lagGUID[q] == "" then
+                r = q
+                break
+            elseif T.lagT[q] < T.lagT[r] then
+                r = q
+            end
+        end
+        T.lagGUID[r], T.lagSpeed[r], T.lagE[r], T.lagSpr[r], T.lagN[r] = g, v, lag, T.TOL / 2, 0
+    end
+    local Stats = I.Stats -- the one EMA: the spread moves by 0.25 x (1.2533 |lag - last| - spread), [0.02, 0.4]
+    local s = Stats.Ema(T.lagSpr[r], 0, 1.2533 * math.abs(lag - T.lagE[r]), 0.25, 0)
+    T.lagSpr[r] = Stats.Clamp(s, Stats.SPR_LO, Stats.SPR_HI)
+    T.lagE[r], T.lagT[r], T.lagN[r] = lag, t, T.lagN[r] + 1 -- the last lag: a closing mob makes it shrink
+end
+
+-- Per ability: the amount band of its own clean wounds (a crit halved), declared abilities only (spec §3.4); reset at
+-- each build (ability indices change with the spec).
+T.bandLo, T.bandHi, T.bandN = {}, {}, {}
+I.OnBuild(function()
+    for a = 1, A.n do
+        T.bandLo[a], T.bandHi[a], T.bandN[a] = 0, 0, 0
+    end
+end)
+
+local function teach(a, amount, flag) -- a new low or high takes it, else each end creeps toward it by 0.05
+    I.Bands.Learn(T.bandLo, T.bandHi, T.bandN, a, I.Bands.Normalise(amount, flag, "ours"), 0.05)
+end
 T.latestT = -1 -- the latest success of a mapped ability (Families/Now.lua's latest cast, whose avoid undoes it)
 -- The pending swing (owner ruling 2026-10-22: the ticket is its single owner): each hand's latest swing ticket and its
 -- time; a swing is pending while that ticket is open and within the hand's pending window. PEND_CAP: Resources'
@@ -92,7 +155,7 @@ end
 local function fill(i, k, a, xx, g, t)
     state[i], kind[i], ab[i], x[i], guid[i], uid[i] = OPEN, k, a, xx, g, U.Find(g)
     school[i], owed[i], at[i], hi[i], w[i] = ANY, 1, t, t, 0
-    ref[i], lr[i], avoid[i], cast[i], done[i], first[i] = 0, 0, "", "", 0, false
+    ref[i], lr[i], avoid[i], cast[i], done[i], first[i], T.excused[i] = 0, 0, "", "", 0, false, false
     U.Hold(uid[i])
     T.opened = T.opened + 1
 end
@@ -105,6 +168,12 @@ local function arm(i, t)
         local cw = I.Melee.CAST_WINDOW
         w[i] = I.Log.LandWindow(1)
         hi[i] = t + (w[i] > cw and w[i] or cw)
+    elseif k == X.FLIGHT then
+        local a = ab[i]
+        local r = A.rMax[a] > 0 and A.rMax[a] or 40 -- 0: no range read; 40 yd covers every spell range
+        T.speed[i] = A.velocity[a]
+        T.H[i] = r / T.speed[i] + T.TOL -- Expect requires a travel velocity (a number; 0 would make H infinite)
+        hi[i] = t + T.H[i]
     elseif k == UNMAPPED then
         owed[i], hi[i] = 0, t + I.Log.UNMAPPED_WINDOW
     end
@@ -268,6 +337,15 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
     if T.onPay then
         T.onPay(i, t, pass)
     end
+    local k, a = kind[i], ab[i]
+    -- Any clean pass teaches the lag, pass 3 included (spec §3.3.1 says a or b only, but with no record a ticket is a
+    -- candidate at pass 3 alone, so no record would ever be made: controller ruling, Task 19 amends the spec).
+    if clean and k == X.FLIGHT then
+        T.Learn(guid[i], T.speed[i], t - at[i], t)
+    end
+    if clean and not isAvoid and a > 0 and A.expDeclared[a] and (k == X.FRAME or k == X.FLIGHT or k == X.STRIKE) then
+        teach(a, amount, flag)
+    end
     done[i], owed[i] = done[i] + 1, owed[i] - 1
     if owed[i] <= 0 then
         T.paid[kind[i]] = T.paid[kind[i]] + 1
@@ -314,7 +392,7 @@ local function expiry(i)
         return "expired"
     elseif guid[i] == "" then
         return "unpinned"
-    elseif school[i] == ANY or school[i] == 0 then
+    elseif school[i] == ANY or school[i] == 0 or T.excused[i] then
         return "expired"
     elseif U.IsDead(uid[i]) then
         if U.Ours(uid[i]) then

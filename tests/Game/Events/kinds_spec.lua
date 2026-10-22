@@ -60,4 +60,74 @@ describe("the kinds", function()
         assert.is_false(K.Accepts(f, "WOUND", "", 30, 4, false))
         assert.is_true(K.Accepts(f, "PARRY", "", 0, 1, true))
     end)
+
+    describe("FLIGHT", function()
+        local a
+
+        before_each(function()
+            a = I.ab.bySpell[fs.SPENDER_P]
+            I.ab.rMax[a] = 30 -- a 30 yd spell: H = 30 / 20 + 0.15 = 1.65
+        end)
+
+        it("with no record: only the hard window [0, rMax / speed + TOL], at pass 3", function()
+            local i = open(fs.SPENDER_P, 100)
+            assert.is_nil(K.Band(i, 1, 101.5, false, "WOUND", 8))
+            assert.is_nil(K.Band(i, 2, 101.5, false, "WOUND", 8))
+            local lo, hi, e = K.Band(i, 3, 101.5, false, "WOUND", 8)
+            assert.is_true(lo == 100 and math.abs(hi - 101.65) < 1e-9)
+            assert.is_true(math.abs(e - 100.825) < 1e-9)
+        end)
+
+        it("raises the lower bound from the target's plain range bracket, less a running mob's closing", function()
+            VS.TargetRange = function()
+                return { lo = 20, hi = 30, last = { observed = { t = 100 } } }
+            end
+            local i = open(fs.SPENDER_P, 100)
+            local lo = K.Band(i, 3, 101, false, "WOUND", 8)
+            -- (20 - 7 x 1) / 20 - 0.15 = 0.5 s after the success
+            assert.is_true(math.abs(lo - 100.5) < 1e-9)
+        end)
+
+        it("with a record: the narrow band at pass 1, the widened one at pass 2, none at pass 3", function()
+            T.Learn("Creature-1", 20, 1.5, 99)
+            local i = open(fs.SPENDER_P, 100)
+            local lo, hi, e = K.Band(i, 1, 101.5, false, "WOUND", 8)
+            assert.is_true(math.abs(lo - 101.35) < 1e-9 and math.abs(hi - 101.65) < 1e-9 and e == 101.5)
+            lo, hi = K.Band(i, 2, 101.5, false, "WOUND", 8) -- d = 2.5 s: down 0.35 x 2.5, up 0.175 x 2.5
+            assert.is_true(math.abs(lo - (101.5 - 0.875)) < 1e-9 and math.abs(hi - 101.65) < 1e-9)
+            assert.is_nil(K.Band(i, 3, 101.5, false, "WOUND", 8))
+        end)
+
+        it("leaves capture a's late MISS foreign once the GUID has a learned lag (spec §3.4's example)", function()
+            T.Learn("Creature-1", 20, 1.5, 96.4)
+            local i = open(fs.SPENDER_P, 97.374)
+            for p = 1, 3 do
+                local lo, hi = K.Band(i, p, 97.891, true, "MISS", 1)
+                assert.is_false(lo ~= nil and 97.891 >= lo and 97.891 <= hi, "pass " .. p)
+            end
+        end)
+
+        it("refuses a WOUND outside [0.6 lo, 1.6 hi] once three clean wounds taught the band", function()
+            for _, v in ipairs({ 14, 16, 15 }) do
+                local i = open(fs.SPENDER_P, 100)
+                T.Pay(i, 101.5, false, v, "", true, 3)
+            end
+            local i = open(fs.SPENDER_P, 110)
+            assert.is_true(K.Accepts(i, "WOUND", "", 15, 8, false))
+            assert.is_true(K.Accepts(i, "WOUND", "CRITICAL", 30, 8, false))
+            assert.is_false(K.Accepts(i, "WOUND", "", 40, 8, false))
+            assert.are.equal(1, T.bandRejected)
+            assert.are.same({ true, true }, { K.Accepts(i, "WOUND", "", 15, 8, false) }) -- banded: ranked first
+        end)
+
+        it("ranks a candidate whose learned band accepts the row before an older unbanded one", function()
+            for _, v in ipairs({ 30, 32, 31 }) do -- teach the fire instant's band
+                T.Pay(open(fs.SPENDER_F, 100), 100.01, false, v, "", true, 1)
+            end
+            local older = open(fs.SPENDER_C, 110.30) -- a default instant: school ANY, no band, the least closure
+            local banded = open(fs.SPENDER_F, 110.32)
+            assert.are.equal(banded, (T.Pick(110.33, "Creature-1", 1, "WOUND", "", 31, 4, false)))
+            assert.are_not.equal(older, banded)
+        end)
+    end)
 end)

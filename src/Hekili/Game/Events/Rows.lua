@@ -260,8 +260,10 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
         end
     end
     if p > 0 then
-        if (avoid or crit) and pass > 1 and T.Unmapped(t) then
-            T.absorbed = T.absorbed + 1 -- past p's own frame, inside an unmapped success's window: nobody's
+        -- past p's own frame, inside an unmapped success's window: nobody's, and p's expiry is not a lost row (it
+        -- may have been this one). A FLIGHT's widened and hard bands are its own landing, not past it (spec §3.4 5).
+        if (avoid or crit) and pass > 1 and T.kind[p] ~= X.FLIGHT and T.Unmapped(t) then
+            T.absorbed, T.excused[p] = T.absorbed + 1, true
             return
         end
         paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)

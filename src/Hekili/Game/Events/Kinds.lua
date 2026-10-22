@@ -17,6 +17,50 @@ L.UNMAPPED_WINDOW = 2
 local SAME_FRAME, CAST_WINDOW = M.SAME_FRAME, M.CAST_WINDOW
 local REFUSED = { DODGE = true, PARRY = true, MISS = true }
 local FRAME, STRIKE, MELEE, UNMAPPED, NONE, ANY = X.FRAME, X.STRIKE, X.MELEE, X.UNMAPPED, X.NONE, X.ANY
+local FLIGHT, TICKS, CHANNEL = X.FLIGHT, X.TICKS, X.CHANNEL
+K.SPELL_BAND_LO, K.SPELL_BAND_HI, K.BAND_N = 0.6, 1.6, 3
+
+-- Seconds after its anchor before which a flight to ticket i's GUID cannot land, from the target's plain range
+-- bracket (poll 14) when the GUID is the current target: (lo - CLOSE x age) / speed - TOL, never below 0. The
+-- bracket's upper bound is never used (a closing mob makes it stale on the wrong side).
+local function rangeLow(i, t, v)
+    if T.guid[i] ~= I.Units.Bound(1) then
+        return 0
+    end
+    local r = ns.VirtualState.TargetRange()
+    if not (r.lo and r.lo > 0 and r.last) then
+        return 0
+    end
+    local lo = (r.lo - T.CLOSE * (t - r.last.observed.t)) / v - T.TOL
+    return lo > 0 and lo or 0
+end
+
+--- (spec §3.3.1) A flight's band for ticket i at pass p (speed v, hard window H from anchor a0): with no (GUID, v)
+--- record, only the whole hard window at pass 3 (E its middle; Overdue, decision 33); with one, the narrow band
+--- lagE +- b at pass 1 and the widened band at pass 2 (down by CLOSE / v per second since the last landing, up by half
+--- that), clipped to the hard window, and nothing at pass 3.
+function K.Flight(i, p, t, v, H, a0)
+    local lo0, hiH = a0 + rangeLow(i, t, v), a0 + H
+    local r = T.LagOf(T.guid[i], v)
+    if r == 0 then
+        if p < 3 then
+            return nil
+        end
+        return lo0, hiH, a0 + H / 2
+    elseif p == 3 then
+        return nil
+    end
+    local e = a0 + T.lagE[r]
+    local b = 2 * T.lagSpr[r] > T.TOL and 2 * T.lagSpr[r] or T.TOL
+    local down, up = b, b
+    if p == 2 then
+        local d = t - T.lagT[r]
+        down = T.CLOSE / v * d > b and T.CLOSE / v * d or b
+        up = T.CLOSE / 2 / v * d > b and T.CLOSE / 2 / v * d or b
+    end
+    local lo, h = e - down, e + up
+    return lo > lo0 and lo or lo0, h < hiH and h or hiH, e
+end
 
 --- Whether open ticket i accepts a row of `act` (an avoid when `isAvoid`) and school `sch` (spec §3.4 step 2), and
 --- whether a learned amount band accepted it (Tasks 7 and 8 add the bands; T.Pick ranks banded candidates first).
@@ -28,7 +72,20 @@ function K.Accepts(i, act, flag, amount, sch, isAvoid)
         return true
     end
     local s = T.school[i]
-    return s == ANY or (s > 0 and s == sch)
+    if not (s == ANY or (s > 0 and s == sch)) then
+        return false
+    end
+    local a = T.ab[i]
+    if a > 0 and k ~= TICKS and k ~= CHANNEL and T.bandN[a] >= K.BAND_N then
+        local B = I.Bands
+        local v = B.Normalise(amount, flag, "ours")
+        if not B.Fits(T.bandLo, T.bandHi, T.bandN, a, v, K.SPELL_BAND_LO, K.SPELL_BAND_HI, K.BAND_N) then
+            T.bandRejected = T.bandRejected + 1
+            return false
+        end
+        return true, true -- a learned band accepted it: ranked first (T.Pick)
+    end
+    return true, false
 end
 
 --- Ticket i's band at pass p for a row at t: lo, hi (absolute) and its expected closure E; nil when it has none.
@@ -47,5 +104,8 @@ function K.Band(i, p, t, isAvoid, act, sch)
             return nil -- a default type takes a non-white wound only in its frame (Rows.lua:458, :497 before)
         end
         return a0, a0 + CAST_WINDOW, a0
+    end
+    if k == FLIGHT then
+        return K.Flight(i, p, t, T.speed[i], T.H[i], a0)
     end
 end

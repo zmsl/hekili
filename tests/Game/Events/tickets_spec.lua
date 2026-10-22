@@ -259,4 +259,59 @@ describe("the ticket pool", function()
             end
         end)
     end)
+
+    it("pays a projectile's landing in its hard window and learns the GUID's lag from it", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+        ctl.casting = { 10000, 11500 }
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", "Cast-1", fs.SPENDER_P)
+        ctl.Fire("UNIT_SPELLCAST_START", "player", "Cast-1", fs.SPENDER_P)
+        ctl.now = 11.5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+        ctl.now = 13.0
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 30, 8)
+        assert.are.equal(1, T.paid[X.FLIGHT])
+        local r = T.LagOf("Creature-1", 20)
+        assert.is_true(r > 0 and math.abs(T.lagE[r] - 1.5) < 1e-9)
+        assert.are.same({ "SPELL_DAMAGE", 11.5, 8, true }, { got[#got][2], got[#got][1], got[#got][14], got[#got][21] })
+    end)
+
+    it("pays two projectiles of one queue in cast order (FIFO by expected closure)", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+        T.Learn("Creature-1", 20, 1.5, 9)
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+        ctl.now = 10.6
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-2", fs.SPENDER_P)
+        ctl.now = 11.5
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 15, 8)
+        ctl.now = 12.1
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 16, 8)
+        local t1, t2 = got[#got - 1][1], got[#got][1]
+        assert.are.same({ 10, 10.6 }, { t1, t2 })
+    end)
+
+    it("counts a cast whose avoid an unmapped window absorbed past its frame as expired, never lost", function()
+        ctl.now = 4
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", 999999)
+        ctl.now = 5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)
+        ctl.now = 5.4
+        ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+        assert.are.equal(1, T.absorbed)
+        ctl.Tick(8)
+        assert.are.same({ 0, 0, 2 }, { T.closed.lost, T.lost[X.FRAME], T.closed.expired })
+        assert.are.equal(T.opened, sum())
+    end)
+
+    it("leaves a projectile's own avoid in its hard window to it, an unmapped window open or not", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+        ctl.now = 9.5
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", 999999)
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+        ctl.now = 11.4
+        ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+        assert.are.same({ 0, 1 }, { T.absorbed, T.paid[X.FLIGHT] })
+    end)
 end)
