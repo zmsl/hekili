@@ -34,7 +34,7 @@ local function record()
     local m = loop.tally(L, 3)
     local line = loop.line(m)
     print("\nArms solo: " .. line .. " [seeds 1-3" .. (os.getenv("ARMS_RECS") == "record" and ", recorded]" or "]"))
-    gate.gate(m, loop.summary(m), line)
+    gate.gate(m, loop.summary(m), line, "Arms")
     return out
 end
 

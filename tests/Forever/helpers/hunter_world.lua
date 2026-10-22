@@ -133,7 +133,7 @@ local function shot(key, extra)
                 e.cdUntil[other] = W.t + 6
             end
             if AMOUNT[key] then
-                W.hit(e, e.target, AMOUNT[key])
+                W.hit(e, e.target, AMOUNT[key], key == "arcane_shot" and 64 or 1) -- the rest physical (DB2)
             end
             if extra then
                 extra(W, e, p, X)
@@ -180,9 +180,9 @@ M.MAP = {
     },
     serpent_sting = {
         effect = function(W, e, _, X)
-            if W.hit(e, e.target, nil).act == "WOUND" then
+            if W.hit(e, e.target, nil, 8).act == "WOUND" then
                 aura(W, X, e.target, "serpent_sting")
-                W.dot(e, e.target, 3, 5, 60)
+                W.dot(e, e.target, 3, 5, 60, 8) -- nature
             end
         end,
     },
@@ -207,7 +207,7 @@ M.MAP = {
         end,
         effect = function(W, e)
             e.bitAt = W.t
-            W.hit(e, e.target, AMOUNT.mongoose_bite)
+            W.hit(e, e.target, AMOUNT.mongoose_bite, 1)
         end,
     },
 }

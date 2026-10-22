@@ -166,7 +166,7 @@ end
 local function strike(amount, key) -- a hit on the target for `amount` (nil: none), and debuff `key` when it lands
     return {
         effect = function(W, e, _, X)
-            if W.hit(e, e.target, amount).act == "WOUND" and key then
+            if W.hit(e, e.target, amount, 1).act == "WOUND" and key then
                 aura(W, X, e.target, key)
             end
         end,
@@ -207,10 +207,10 @@ M.MAP = {
     hamstring = strike(45, "hamstring"),
     rend = { -- rank 7: 147 over the aura's duration, a tick every 3 s
         effect = function(W, e, _, X)
-            if W.hit(e, e.target, nil).act == "WOUND" then
+            if W.hit(e, e.target, nil, 1).act == "WOUND" then
                 local d = X.aura.rend.duration
                 aura(W, X, e.target, "rend")
-                W.dot(e, e.target, 3, math.floor(d / 3), math.floor(147 * 3 / d))
+                W.dot(e, e.target, 3, math.floor(d / 3), math.floor(147 * 3 / d), 1)
             end
         end,
     },
@@ -224,7 +224,7 @@ M.MAP = {
     shield_wall = selfAura("shield_wall"),
     spearing_strike = { -- UNMEASURED amount: a plain weapon hit
         effect = function(W, e)
-            W.hit(e, e.target, weapon(W, e, 0))
+            W.hit(e, e.target, weapon(W, e, 0), 1)
         end,
     },
     bloodthirst = strike(450), -- 45% of attack power, at about 1000
@@ -253,27 +253,27 @@ M.MAP = {
             return false, "no avoid"
         end,
         effect = function(W, e)
-            W.hit(e, e.target, 80)
+            W.hit(e, e.target, 80, 1)
         end,
     },
     mortal_strike = {
         effect = function(W, e)
-            W.hit(e, e.target, weapon(W, e, 160))
+            W.hit(e, e.target, weapon(W, e, 160), 1)
         end,
     },
     whirlwind = {
         effect = function(W, e)
-            W.hit(e, e.target, weapon(W, e, 0))
+            W.hit(e, e.target, weapon(W, e, 0), 1)
         end,
     },
     slam = {
         effect = function(W, e)
-            W.hit(e, e.target, weapon(W, e, 87))
+            W.hit(e, e.target, weapon(W, e, 87), 1)
         end,
     },
     intercept = {
         effect = function(W, e)
-            W.hit(e, e.target, 65)
+            W.hit(e, e.target, 65, 1)
         end,
     },
     -- shortcut: `avoidAt` and `W.killAt` are not per target or source (any dodge of ours opens Overpower, any death
@@ -284,7 +284,7 @@ M.MAP = {
         end,
         effect = function(W, e)
             e.avoidAt.DODGE = nil
-            W.hit(e, e.target, weapon(W, e, 35))
+            W.hit(e, e.target, weapon(W, e, 35), 1)
         end,
     },
     execute = { -- the target's true health under 20%; rank 5: 600, and 15 a point of the rage it spends past its cost
@@ -295,7 +295,7 @@ M.MAP = {
         effect = function(W, e)
             local extra = e.power
             W.gain(e, -extra)
-            W.hit(e, e.target, 600 + 15 * extra)
+            W.hit(e, e.target, 600 + 15 * extra, 1)
         end,
     },
     victory_rush = { -- a kill of ours within 20 s
@@ -303,7 +303,7 @@ M.MAP = {
             return W.killAt ~= nil and W.t - W.killAt <= 20, "no kill"
         end,
         effect = function(W, e)
-            W.hit(e, e.target, 200)
+            W.hit(e, e.target, 200, 1)
         end,
     },
 }

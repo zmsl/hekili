@@ -9,6 +9,12 @@ local M = {}
 
 -- The most cost refusals per 100 attempts the oracle shadow would not have made (loop.unmatched), a plain bar.
 M.UNMATCHED = 3
+-- Per label where a named cause re-based it (measured, rounded up to the next 0.1; floors only move up from here).
+M.UNMATCHED_BY = {
+    -- 5.8 at seeds 1-3 (was 0.5): harness corrected to the measured swing timing (2026-10-22); the world enters
+    -- execute range at our swing, a landing lag before the client's rows show it
+    ["Arms"] = 5.9,
+}
 
 -- The flicker floors at 20 fights: per label the first-icon flicker/min and the unjustified retracted readies/min
 -- (tests/Game/harness/flicker.lua), each the measured value (beside it) rounded up to the next 0.1, 0 where it measured
@@ -34,7 +40,8 @@ M.FLICKER = {
     -- our rounded waits trade places with Holy Strike (near-tie wobble of the mana belief, gap AB); steady icons
     -- (experimental) is the player's remedy; the oracle reads 0.03 and 0.12
     -- (Protection; Retribution measured 0.57 with its pre-pull Seal of Command, 0.19 since prepullSkip drops it)
-    ["Retribution"] = { flicker = 0.2, retracted = 0 }, -- 0.19, 0 (fix 23 with prepullSkip; was 0.28)
+    -- 0.21, 0 (was 0.19): harness corrected to the measured swing timing (2026-10-22); 0.19 at fix 23 with prepullSkip
+    ["Retribution"] = { flicker = 0.3, retracted = 0 },
     ["Protection"] = { flicker = 0.6, retracted = 0 }, -- 0.58, 0 (was 0.31: fix 23, above)
     ["Enhancement"] = { flicker = 1.2, retracted = 0 }, -- 1.11, 0
     ["Arcane"] = { flicker = 1.5, retracted = 0 }, -- 1.43, 0 (Mage lane, M13; 1.66 -> 1.43: Arcane Power on Wrath)
@@ -78,14 +85,14 @@ function M.health(m, r, line)
     assert.is_true(r.cpuMean <= 10, line) -- D5: about 4x the measured Arms mean; p99 reported
 end
 
---- The engine and the first icon, gated at any fight count.
-function M.gate(m, r, line)
+--- The engine and the first icon, gated at any fight count; `label` picks a re-based unmatched bar (M.UNMATCHED_BY).
+function M.gate(m, r, line, label)
     assert.is_true(r.agreement >= 0.85, line)
     assert.is_true(r.reactMedian <= 1 and r.reactP90 <= 3, line)
     assert.is_true((r.per100.gcd or 0) == 0 and (r.per100.cooldown or 0) == 0, line)
     -- our cost refusals the oracle shadow would not have made at that tick (loop.unmatched: the round-3 ruling); a
     -- refusal both make is the press protocol meeting the world's rage timing, kept visible in the raw rate
-    assert.is_true((r.per100U.cost or 0) <= M.UNMATCHED, line)
+    assert.is_true((r.per100U.cost or 0) <= (M.UNMATCHED_BY[label] or M.UNMATCHED), line)
     M.health(m, r, line)
 end
 
@@ -102,7 +109,7 @@ function M.solo(label, world, n, seed0, tag, reported)
     if reported then
         M.health(m, r, line)
     else
-        M.gate(m, r, line)
+        M.gate(m, r, line, label)
         if n >= 20 and not m.hold and not m.steady then -- the floors are the unheld display's
             M.flicker(label, r, line)
         end

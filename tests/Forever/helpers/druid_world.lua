@@ -32,6 +32,8 @@ M.ENERGY_REGEN = 10 -- energy a second (probe W's out-of-combat read: 10.001)
 -- GCD seconds by kind, at haste 1 (Hekili's kinds; the DB2's StartRecoveryTime; checkpoints G1-G3).
 M.GCD = { totem = 1.0, spell = 1.5, off = 0 }
 -- UNMEASURED amounts of the instant strikes (a hit on the target: Rows.lua credits it to the cast).
+-- the generic hits' non-physical schools (DB2); the rest physical (1)
+local SCHOOL = { faerie_fire = 8 }
 local AMOUNT = {
     claw = 90,
     shred = 160,
@@ -106,14 +108,14 @@ end
 -- Each pressed ability's effect beyond its cost (the world's generic verbs); `R` the rules above.
 local function hit(key)
     return function(W, e)
-        W.hit(e, e.target, AMOUNT[key])
+        W.hit(e, e.target, AMOUNT[key], SCHOOL[key] or 1)
     end
 end
 local function debuff(key, alsoHit) -- the debuff when its hit (for `key`'s amount, or none) lands
     return function(W, e)
         local w = class()
         local a = w.auras[key]
-        if W.hit(e, e.target, alsoHit and AMOUNT[key] or nil).act == "WOUND" then
+        if W.hit(e, e.target, alsoHit and AMOUNT[key] or nil, SCHOOL[key] or 1).act == "WOUND" then
             W.applyAura(e.target, a.id, a.duration, 1, a.max_stack)
         end
     end

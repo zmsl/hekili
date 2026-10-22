@@ -52,6 +52,7 @@ function M.new(seed)
     W.rates = {} -- [powerType] = regen per second (W.startRegen)
     W.fsr = {} -- [powerType] = { spirit, mp5 } per second: the five-second rule's two parts (W.startRegen)
     W.distance = nil -- yards from our character to its target (W.moveTo; nil: no positions, every check in range)
+    W.hitAtSwing = true -- our white wound takes health at the swing, its row a landing lag later (owner, 2026-10-22)
 
     --- Runs `fn(W)` at time `t` (after everything already queued for `t`).
     function W.at(t, fn)
@@ -103,11 +104,8 @@ function M.new(seed)
                 ev.regen[pt], ev.regenCasting[pt] = W.regenRate(me, pt, "idle"), W.regenRate(me, pt, "casting")
             end
         end
-        -- our white wound: at the swing with W.hitAtSwing (the server's hit: a white-swing kill clears the target
-        -- before its row arrives, the Rogue kill-events capture), else at its `land`
-        -- shortcut: opt-in, off by default: on, the world enters execute range a landing lag before the client's rows
-        -- and the Warrior gates move down (Arms unmatched cost refusals 0.5 -> 5.3 per 100, Fury decisions 0.917 ->
-        -- 0.897); make it the default once the owner rules on those floors
+        -- our white wound: at the swing (W.hitAtSwing, the default: the server's hit; a white-swing kill clears the
+        -- target before its row arrives, the Rogue kill-events capture), else (false) at its `land`
         local skip = W.hitAtSwing and "land" or (ev.ours and "swing") -- the one of our pair that takes nothing
         if ev.act == "WOUND" and ev.dst and ev.kind ~= skip then
             local v = ev.dst
@@ -574,10 +572,11 @@ function M.new(seed)
         return e.totems[slot]
     end
 
-    --- `n` ticks of `amount` in `school` [1] from `e` on `dst`, every `every` s from now, each +-50 ms (W.crng; the
-    --- druid-moonfire capture); `key` names the schedule: a new one with the same key on `dst` ends the old (a recast
+    --- `n` ticks of `amount` in `school` (required: 1 physical) from `e` on `dst`, every `every` s from now, each
+    --- +-50 ms (W.crng; the druid-moonfire capture); `key` names the schedule: a new one with the same key on `dst` ends the old (a recast
     --- resets it); `castT` the success it belongs to (the detection suite's truth). A kill stops it.
     function W.dot(e, dst, every, n, amount, school, key, castT)
+        assert(school, "W.dot: the ticks' school (1 physical)")
         local mark = {}
         if key then
             dst.dots = dst.dots or {}
@@ -593,7 +592,7 @@ function M.new(seed)
                         act = "WOUND",
                         flag = "",
                         amount = amount,
-                        school = school or 1,
+                        school = school,
                         castT = castT,
                     })
                 end
@@ -615,13 +614,15 @@ function M.new(seed)
         return roll(W.rng, r)
     end
 
-    --- An instant outcome of `amount` (school [1]) from `e` on `dst`, rolled on `set` or the press in progress's
+    --- An instant outcome of `amount` (in `school`, required: 1 physical) from `e` on `dst`, rolled on `set` or the
+    --- press in progress's
     --- `outcomes` (a M.OUTCOMES key; default "melee") against the victim's avoid table and our crit rate (a crit doubles it; an avoid
     --- is recorded in `e.avoidAt[act]`). A nil `amount`: an ability with no damage, whose landed hit shows no outcome
     --- (only its avoid does). An avoid of the press in progress gives back its `refund` share (0-1; the kit's
     --- `refundOnAvoid`) of its cost, a gain before the outcome (the server refunds at the cast's success). Returns the truth event, or { act = "WOUND" } for a
     --- silent landed hit.
     function W.hit(e, dst, amount, school, set, castT, flight)
+        assert(school, "W.hit: the outcome's school (1 physical)")
         local p = e.pressing
         local act, flag = W.rollOutcome(dst, set or p and p.outcomes)
         if act ~= "WOUND" then

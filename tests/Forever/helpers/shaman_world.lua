@@ -202,7 +202,7 @@ M.MAP = {
         e.cdUntil.earth_shock = W.t + X.shockCd
         if e.lastHit.act == "WOUND" then -- the DoT only when the shock lands
             aura(W, X, e.target, "flame_shock", X.flameShock)
-            W.dot(e, e.target, 3, X.flameShock / 3, 80)
+            W.dot(e, e.target, 3, X.flameShock / 3, 80, 4) -- fire
         end
     end),
     fire_nova = { -- around the fire totem up
@@ -213,7 +213,7 @@ M.MAP = {
     },
     stormstrike = {
         effect = function(W, e, _, X)
-            if W.hit(e, e.target, AMOUNT.stormstrike).act == "WOUND" then
+            if W.hit(e, e.target, AMOUNT.stormstrike, 1).act == "WOUND" then
                 maelstrom(W, e, X)
             end
         end,

@@ -105,8 +105,10 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             content("warrior_fury", ww.Fury, "Fury (wowsims.com)", 60, FURY),
             "warrior_fury",
             -- measured 0.917: 0.933 after central fixes 7, 13 and 16 (was 0.81 with GAP AD), less the pre-pull Berserker
-            -- Rage the user's ruling (2026-10-21) gates on Improved Berserker Rage, which the build lacks (1 of 60)
-            0.91,
+            -- Rage the user's ruling (2026-10-21) gates on Improved Berserker Rage, which the build lacks (1 of 60);
+            -- 0.897 (61 of 68) after the harness corrected to the measured swing timing (2026-10-22): the log's swings
+            -- take health at the swing, so the execute phase opens a landing lag earlier than the rows show it
+            0.89,
             FURY_REPLAY
         )
     end)

@@ -293,7 +293,8 @@ M.READY = {
     warlock_shadow_brand = { 0.90, 16 }, -- 0.900, 16: Shadow Bolt's, likewise
     warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
     warrior_arms = { 0.80, 6 },
-    warrior_fury = { 0.48, 32 },
+    -- 0.51, 35 (was 0.48, 32): harness corrected to the measured swing timing (2026-10-22)
+    warrior_fury = { 0.51, 35 },
     warrior_protection = { 0.50, 5 },
 }
 

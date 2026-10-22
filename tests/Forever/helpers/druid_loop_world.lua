@@ -31,6 +31,8 @@ local GROUP = { feral_form = { [FORM.cat_form] = true, [FORM.bear_form] = true }
 -- second over its 20 s (the worlds that keep mana: Balance's and Feral's), and the hits' amounts.
 local OMEN = 0.1
 local INNERVATE_MANA = 100
+-- the generic hits' non-physical schools (DB2); the rest physical (1)
+local SCHOOL = { faerie_fire = 8, moonfire = 64 }
 local AMOUNT = {
     claw = 90,
     shred = 160,
@@ -77,7 +79,7 @@ local function setStacks(W, dst, id, n)
 end
 local function hit(key)
     return function(W, e)
-        W.hit(e, e.target, AMOUNT[key])
+        W.hit(e, e.target, AMOUNT[key], SCHOOL[key] or 1)
     end
 end
 -- A bear strike's hit (`key`'s amount; with `debuffKey`, the debuff when it lands): Primal Fury's rage on its crit in
@@ -85,7 +87,7 @@ end
 -- world (behaviours.lua's strike frame), so it pays none.
 local function bearHit(key, debuffKey)
     return function(W, e, _, X)
-        local r = W.hit(e, e.target, AMOUNT[key])
+        local r = W.hit(e, e.target, AMOUNT[key], SCHOOL[key] or 1)
         if r.act == "WOUND" and debuffKey then
             aura(W, X, e.target, debuffKey)
         end
@@ -101,7 +103,7 @@ local function selfAura(key)
 end
 local function debuff(key, alsoHit) -- the debuff when its hit (for `key`'s amount, or none) lands
     return function(W, e, _, X)
-        if W.hit(e, e.target, alsoHit and AMOUNT[key] or nil).act == "WOUND" then
+        if W.hit(e, e.target, alsoHit and AMOUNT[key] or nil, SCHOOL[key] or 1).act == "WOUND" then
             aura(W, X, e.target, key)
         end
     end
@@ -142,7 +144,7 @@ M.MAP = {
     shred = { effect = hit("shred"), points = 1 },
     rake = { -- the debuff only on a landed hit (the class file removes a missed one from the combat log)
         effect = function(W, e, _, X)
-            if W.hit(e, e.target, AMOUNT.rake).act == "WOUND" then
+            if W.hit(e, e.target, AMOUNT.rake, 1).act == "WOUND" then
                 aura(W, X, e.target, "rake")
             end
         end,
@@ -198,7 +200,7 @@ M.MAP = {
     frenzied_regeneration = { effect = selfAura("frenzied_regeneration") }, -- its rage-to-health unmodelled
     wrath = { -- Eclipse's charges with the talent, the class file's rule (2 a Wrath, at most the aura's stacks)
         effect = function(W, e, _, X)
-            W.hit(e, e.target, AMOUNT.wrath)
+            W.hit(e, e.target, AMOUNT.wrath, 8)
             if X.eclipse then
                 aura(W, X, e, "eclipse", 2)
             end
@@ -206,7 +208,7 @@ M.MAP = {
     },
     starfire = { -- spends a charge
         effect = function(W, e, _, X)
-            W.hit(e, e.target, AMOUNT.starfire)
+            W.hit(e, e.target, AMOUNT.starfire, 64)
             local a = e.auras[X.aura.eclipse.id]
             if a then
                 setStacks(W, e, X.aura.eclipse.id, a.stacks - 1)
@@ -216,18 +218,18 @@ M.MAP = {
     moonfire = {
         effect = function(W, e, _, X)
             local d = X.aura.moonfire.duration
-            if W.hit(e, e.target, AMOUNT.moonfire).act == "WOUND" then
+            if W.hit(e, e.target, AMOUNT.moonfire, 64).act == "WOUND" then
                 aura(W, X, e.target, "moonfire")
-                W.dot(e, e.target, 3, math.floor(d / 3), 40)
+                W.dot(e, e.target, 3, math.floor(d / 3), 40, 64)
             end
         end,
     },
     insect_swarm = {
         effect = function(W, e, _, X)
             local d = X.aura.insect_swarm.duration
-            if W.hit(e, e.target, nil).act == "WOUND" then
+            if W.hit(e, e.target, nil, 8).act == "WOUND" then
                 aura(W, X, e.target, "insect_swarm")
-                W.dot(e, e.target, 2, math.floor(d / 2), 30)
+                W.dot(e, e.target, 2, math.floor(d / 2), 30, 8)
             end
         end,
     },

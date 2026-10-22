@@ -155,9 +155,11 @@ describe("the observer", function()
                 orders[order] = table.concat(o, " ")
                 assert.are.same({ 6.001, "target", 80, 1 }, { got[#got][1], got[#got][3], got[#got][6], got[#got][8] })
             end
-            assert.are.same({
-                "UNIT_SPELLCAST_SUCCEEDED nameplate10 target0 PLAYER_SWING @current nameplate180 target80",
-                "PLAYER_SWING nameplate10 target0 UNIT_SPELLCAST_SUCCEEDED @current nameplate180 target80",
+            local sent, ok =
+                "UNIT_SPELLCAST_SENT UNIT_SPELLCAST_SENT ", "UNIT_SPELLCAST_SUCCEEDED UNIT_SPELLCAST_SUCCEEDED"
+            assert.are.same({ -- SENT and the success each echoed on targettarget (our target targets us)
+                sent .. ok .. " nameplate10 target0 PLAYER_SWING @current nameplate180 target80",
+                sent .. "PLAYER_SWING nameplate10 target0 " .. ok .. " @current nameplate180 target80",
             }, orders)
         end
     )
@@ -372,6 +374,8 @@ describe("the observer", function()
             W.emit({ t = 1.5, kind = "prepull" })
             obs.step(1.6)
             W.emit({ t = 2, kind = "pull" })
+            -- our swing takes the health (the server's hit, 2026-10-22 kill-events capture); its row lands later
+            W.emit({ t = 3.5, kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", amount = 40, ours = true })
             local land = { t = 4, kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", flag = "", amount = 40 }
             land.school, land.swing, land.rage = 1, { t = 3.5 }, 12
             W.emit(land)
@@ -398,7 +402,7 @@ describe("the observer", function()
             assert.are.same({
                 { 0, "@power", 1, 0 },
                 { 1.6, "@health", "target", 1000, 1000 },
-                { 4, "@health", "target", 960, 1000 },
+                { 3.5, "@health", "target", 960, 1000 },
                 { 4, "@power", 1, 12 },
                 { 5, "@cooldown", 9077, 5, 6 },
                 { 5, "@cooldown", 9078, 5, 6 },
@@ -415,7 +419,6 @@ describe("the observer", function()
         local entities = require("Game.harness.entities")
         local function fight(build, k)
             local W = world.new(1)
-            W.hitAtSwing = true -- the server's hit at our swing (the measured kill shape)
             local us = W.add(entities.new({ guid = "Player-1", weapons = entities.weapons(22) }))
             local mob = W.add(entities.new({ guid = "Creature-1", kind = "mob", health = 1e9 }))
             us.target, mob.target = mob, us
@@ -425,7 +428,7 @@ describe("the observer", function()
             local s = observer.observe(W, setmetatable(k or {}, { __index = observer.DEFAULTS }))
             local out = {}
             for i = 1, s.n do
-                if s.ev[i]:sub(1, 1) ~= "@" then
+                if s.ev[i]:sub(1, 1) ~= "@" or s.ev[i] == "@casting" or s.ev[i] == "@health" then
                     out[#out + 1] = {
                         t = s.t[i],
                         ev = s.ev[i],
@@ -497,7 +500,7 @@ describe("the observer", function()
         end
 
         it(
-            "kills by a white swing as measured: death at the swing, the clear 100 ms on, the row on the corpse later",
+            "kills by a white swing as measured: death at the swing, the clear 4 ms on, the row on the corpse later",
             function()
                 local out = fight(function(W, us, mob)
                     W.at(1, function()
@@ -529,8 +532,8 @@ describe("the observer", function()
                 end)
                 local pk, died, clear, row = kill(out)
                 assert.are.same({ "Player-1", "Creature-1", 1 }, { pk.a1, pk.a2, pk.t })
-                assert.is_true(math.abs(died.t - 1.002) < 1e-9 and math.abs(clear.t - 1.1) < 1e-9)
-                assert.are.same({ 1.456, "softinteract" }, { row.t, row.a1 }) -- 356 ms after the clear, the corpse only
+                assert.is_true(math.abs(died.t - 1.002) < 1e-9 and math.abs(clear.t - 1.004) < 1e-9)
+                assert.are.same({ 1.456, "softinteract" }, { row.t, row.a1 }) -- 452 ms after the clear, the corpse only
             end
         )
 
@@ -632,6 +635,59 @@ describe("the observer", function()
             assert.are.same({ 1.5, "Bar-1" }, { d.t, d.a4 })
             assert.is_truthy(find(out, "UNIT_SPELLCAST_DELAYED", "targettarget"))
             assert.is_true(math.abs(row.t - 1.87) < 1e-9)
+            local bars = {}
+            for _, e in ipairs(out) do
+                if e.ev == "@casting" and e.a1 then
+                    bars[#bars + 1] = { e.t, e.a1, e.a2 }
+                end
+            end
+            assert.are.same({ { 1, 1000, 2500 }, { 1.5, 1000, 3000 } }, bars) -- the bar moved by the pushback
+        end)
+
+        it("echoes our channel's stop on targettarget", function()
+            local out = fight(function(W, us)
+                W.at(1, function()
+                    W.press(us, "spender_h", { spell = "CHAN", channel = { length = 2, tick = 1 } })
+                end)
+            end)
+            assert.are.equal(3, find(out, "UNIT_SPELLCAST_CHANNEL_STOP", "targettarget").t)
+        end)
+
+        it("reads a secret-free client's target health at our swing, or at its row with healthAtSwing off", function()
+            local function at(k)
+                local out = fight(function(W, us, mob)
+                    W.at(1, function()
+                        local sw = W.emit({
+                            kind = "swing",
+                            src = us,
+                            dst = mob,
+                            hand = 1,
+                            act = "WOUND",
+                            flag = "",
+                            amount = 10,
+                            school = 1,
+                            ours = true,
+                        })
+                        W.at(1.4, function()
+                            W.emit({
+                                kind = "land",
+                                src = us,
+                                dst = mob,
+                                hand = 1,
+                                act = "WOUND",
+                                flag = "",
+                                amount = 10,
+                                school = 1,
+                                swing = sw,
+                            })
+                        end)
+                    end)
+                end, k)
+                local h = find(out, "@health")
+                return { h.t, h.a2 }
+            end
+            assert.are.same({ 1, 1e9 - 10 }, at({ plain = true }))
+            assert.are.same({ 1.4, 1e9 - 10 }, at({ plain = true, healthAtSwing = false }))
         end)
 
         it(
@@ -669,6 +725,21 @@ describe("the observer", function()
                     seen[key] = true
                 end
                 assert.is_nil(seen.PLAYER_SWING)
+                -- the cast events' latency (jitter 0.05): each success at or after its truth, by at most the bound
+                local truthT, j = {}, 0
+                for _, ev in ipairs(W.truth) do
+                    if ev.kind == "cast" and ev.src == W.ents[1] then
+                        truthT[#truthT + 1] = ev.t
+                    end
+                end
+                for i = 1, s.n do
+                    if s.ev[i] == "UNIT_SPELLCAST_SUCCEEDED" and s.a1[i] == "player" then
+                        j = j + 1
+                        local d = s.t[i] - truthT[j]
+                        assert.is_true(d >= 0 and d <= 0.05, "success " .. j .. " late by " .. d)
+                    end
+                end
+                assert.are.equal(#truthT, j)
                 assert.is_truthy(seen["UNIT_COMBAT:8:T"]) -- the bolt (or the ticks), in nature, with its success
                 assert.is_truthy(seen["UNIT_COMBAT:64:T"]) -- the DoT's ticks and the channel's, in arcane
                 assert.is_truthy(seen.NAME_PLATE_UNIT_REMOVED and seen.UNIT_SPELLCAST_FAILED)
@@ -970,23 +1041,26 @@ describe("the observer's resources, GCD and forms", function()
 end)
 
 describe("the world", function()
-    it("takes health for every wound but our white swing's (ours at its land), and gives it for heals", function()
-        local W = world.new(7)
-        local us = W.add(entities.new({ guid = "Player-1", health = 500 }))
-        local mob = W.add(entities.new({ guid = "Creature-1", kind = "mob", health = 500 }))
-        W.emit({ kind = "swing", src = mob, dst = us, hand = 1, act = "WOUND", amount = 40 })
-        W.emit({ kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30, ours = true })
-        assert.are.equal(460, us.health)
-        assert.are.equal(500, mob.health)
-        W.emit({ kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30 })
-        W.emit({ kind = "spell", src = mob, dst = us, act = "HEAL", amount = 100 })
-        assert.are.equal(470, mob.health)
-        assert.are.equal(500, us.health)
-    end)
+    it(
+        "takes health for every wound but our white swing's with W.hitAtSwing off (ours at its land), and heals",
+        function()
+            local W = world.new(7)
+            W.hitAtSwing = false
+            local us = W.add(entities.new({ guid = "Player-1", health = 500 }))
+            local mob = W.add(entities.new({ guid = "Creature-1", kind = "mob", health = 500 }))
+            W.emit({ kind = "swing", src = mob, dst = us, hand = 1, act = "WOUND", amount = 40 })
+            W.emit({ kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30, ours = true })
+            assert.are.equal(460, us.health)
+            assert.are.equal(500, mob.health)
+            W.emit({ kind = "land", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30 })
+            W.emit({ kind = "spell", src = mob, dst = us, act = "HEAL", amount = 100 })
+            assert.are.equal(470, mob.health)
+            assert.are.equal(500, us.health)
+        end
+    )
 
-    it("takes our white wound at the swing instead with W.hitAtSwing (the server's hit)", function()
+    it("takes our white wound at the swing by default (W.hitAtSwing: the server's hit)", function()
         local W = world.new(7)
-        W.hitAtSwing = true
         local us = W.add(entities.new({ guid = "Player-1", health = 500 }))
         local mob = W.add(entities.new({ guid = "Creature-1", kind = "mob", health = 500 }))
         W.emit({ kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", amount = 30, ours = true })

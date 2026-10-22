@@ -46,11 +46,19 @@ M.DEFAULTS = {
     -- A kill's shape by kind (s, from the kill truth; spec §2.5): the death events after the blow; a white swing's
     -- clear after its swing (its row comes at the landing lag, on the corpse); a projectile's clear after the death and
     -- its row after the clear (11-36 ms measured); an instant's clear after its row.
-    killTiming = { died = 0.002, meleeClear = 0.100, flightClear = 0.002, flightRow = 0.020, strikeClear = 0.100 },
+    -- A white-swing kill (the kill-events capture): PARTY_KILL at the swing, the death +2 ms, the target none +4 ms; the
+    -- 100 ms clear is an instant strike's, after its row (Rogue capture b).
+    killTiming = { died = 0.002, meleeClear = 0.004, flightClear = 0.002, flightRow = 0.020, strikeClear = 0.100 },
     killTokens = { melee = { "softinteract" }, flight = { "plate", "target", "softinteract" } },
+    -- A secret-free client's target health after our white swing: at the swing (true, the measured model's default)
+    -- or at its landing row (false). UNMEASURED: probe U12 (does the execute usability flag flip at the swing or at
+    -- the row). shortcut: the usability answers (k.usable) read the world's true health at the swing either way;
+    -- upgrade them to the client's view if U12 measures the row.
+    healthAtSwing = true,
 }
 
 M.COMBAT_END = 1.0 -- s from a kill to PLAYER_REGEN_ENABLED when no attacker is left (Rogue kill-events capture)
+M.PUSHBACK = 0.5 -- s a hit on us adds to our hard cast's bar (DELAYED's moved @casting; UNMEASURED)
 M.FRAME = 1e-4 -- seconds: one update's events (a replay's lines of one timestamp sit 1e-6 apart; a strike's 1 ms is the next)
 
 -- Our spells as the fake spec's (its costs: the usability answers).
@@ -191,7 +199,7 @@ function M.new(W, k)
         end)
         return out
     end
-    local castOpen = false -- our hard cast in progress (DELAYED, pushback)
+    local castOpen, castFrom, castTo = false, 0, 0 -- our hard cast in progress and its bar (DELAYED, pushback)
     -- One player cast event, echoed on targettarget (another castBarID) while our target targets us: every kind of
     -- them (captures b and c: SENT, START, SUCCEEDED, STOP, FAILED, INTERRUPTED, DELAYED).
     local function castEv(t, onUs, name, g, id, a4, a5)
@@ -232,6 +240,10 @@ function M.new(W, k)
             t, toks = kt, ktoks
         end
         if ev.dst == us and castOpen and k.pushback and ev.act == "WOUND" then
+            -- shortcut: the bar moves on the client only (the world's cast still ends at its press's end); move the
+            -- world's too when a suite reads the success's time under pushback
+            castTo = castTo + M.PUSHBACK
+            push(t, "@casting", castFrom * 1000, castTo * 1000)
             castEv(t, ev.onUs, "UNIT_SPELLCAST_DELAYED", "Cast-" .. hardN, spellID(castSpell), "Bar-" .. hardN)
             t = t + 0.37 -- the player's row comes about 0.37 s after DELAYED (capture b)
         end
@@ -457,14 +469,18 @@ function M.new(W, k)
         elseif kind == "strike" then
             castN = castN + 1
             local frame = { dst = ev.dst, ourTarget = ev.ourTarget, act = "WOUND", amount = 0, school = 1 }
+            local g, sid = "Cast-" .. castN, spellID(ev.spell)
+            -- shortcut: the strike's SENT in its frame (the client's comes at the queueing press); move it to the
+            -- "queue" event when a suite reads the gap
+            sent(t, ev.onUs, g, sid)
             if ev.order == 1 then -- P log 1's order, then the brief's: swing and success either way round
-                push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. castN, spellID(ev.spell))
+                castEv(t, ev.onUs, "UNIT_SPELLCAST_SUCCEEDED", g, sid)
                 outcome(t, frame, 1)
                 push(t, "PLAYER_SWING", ev.speed, 0)
             else
                 push(t, "PLAYER_SWING", ev.speed, 0)
                 outcome(t, frame, 1)
-                push(t, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. castN, spellID(ev.spell))
+                castEv(t, ev.onUs, "UNIT_SPELLCAST_SUCCEEDED", g, sid)
             end
             outcome(t + 0.001, ev, 1)
             for _, id in ipairs(ev.ids or { spellID(ev.spell) }) do
@@ -576,7 +592,7 @@ function M.new(W, k)
             end
         elseif kind == "castStart" and ev.src == us then -- our hard cast: SENT, UnitCastingInfo, START, the GCD
             castN = castN + 1
-            hardN, castSpell, castOpen = castN, ev.spell, true
+            hardN, castSpell, castOpen, castFrom, castTo = castN, ev.spell, true, t, ev.ends
             local g, id, bar = "Cast-" .. castN, spellID(ev.spell), "Bar-" .. castN
             sent(t, ev.onUs, g, id)
             push(t, "@casting", t * 1000, ev.ends * 1000)
@@ -616,7 +632,7 @@ function M.new(W, k)
             push(t, "NAME_PLATE_UNIT_ADDED", plate[ev.mob])
         elseif kind == "channelStop" and ev.src == us then -- its end or a clip: UnitChannelInfo empty, then the stop
             push(t, "@channel", nil)
-            push(t, "UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-" .. chanN, spellID(ev.spell))
+            castEv(t, ev.onUs, "UNIT_SPELLCAST_CHANNEL_STOP", "Cast-" .. chanN, spellID(ev.spell))
         elseif kind == "cdreset" and ev.src == us then -- a cooldown finished early (W.resetCooldown): every rank ready
             for _, id in ipairs(ev.ids) do
                 dropEnds(t, id)
@@ -631,8 +647,14 @@ function M.new(W, k)
         elseif ev.act and ev.dst then -- another source's outcome, our DoT's tick, a hit on us or on someone else
             outcome(t, ev, (ev.src == us) and 1 or 2)
         end
-        if k.plain and ev.health and ev.dst == ev.ourTarget then -- a secret-free client's target health
-            push(t, "@health", "target", ev.health, ev.dst.healthMax)
+        local hv = ev -- whose health a secret-free client reads now: our white swing's at its row (healthAtSwing off)
+        if not k.healthAtSwing and ev.ours then
+            hv = nil
+        elseif not k.healthAtSwing and kind == "land" and ev.swing and ev.swing.health then
+            hv = ev.swing
+        end
+        if k.plain and hv and hv.health and ev.dst == ev.ourTarget then -- a secret-free client's target health
+            push(t, "@health", "target", hv.health, ev.dst.healthMax)
         end
         if ev.power or ev.resCur then
             local pt = ev.resCur and ev.pt or us.pt

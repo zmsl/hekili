@@ -64,7 +64,7 @@ local function strike(key, debuffKey)
     return {
         effect = function(W, e, _, X)
             drop(W, e, X, "cold_blood")
-            if W.hit(e, e.target, AMOUNT[key]).act == "WOUND" and debuffKey then
+            if W.hit(e, e.target, AMOUNT[key], 1).act == "WOUND" and debuffKey then
                 aura(W, X, e.target, debuffKey)
             end
         end,
@@ -109,7 +109,7 @@ M.MAP = {
     hemorrhage = strike("hemorrhage", "hemorrhage"),
     ghostly_strike = {
         effect = function(W, e, _, X)
-            W.hit(e, e.target, AMOUNT.ghostly_strike)
+            W.hit(e, e.target, AMOUNT.ghostly_strike, 1)
             aura(W, X, e, "ghostly_strike")
         end,
         points = 1,
@@ -118,7 +118,7 @@ M.MAP = {
         effect = function(W, e, _, X)
             drop(W, e, X, "cold_blood")
             drop(W, e, X, "cutthroat")
-            W.hit(e, e.target, AMOUNT.ambush)
+            W.hit(e, e.target, AMOUNT.ambush, 1)
         end,
         points = 1,
         requires = function(_, e, X)
@@ -127,9 +127,9 @@ M.MAP = {
     },
     garrote = {
         effect = function(W, e, _, X)
-            if W.hit(e, e.target, nil).act == "WOUND" then
+            if W.hit(e, e.target, nil, 1).act == "WOUND" then
                 aura(W, X, e.target, "garrote")
-                W.dot(e, e.target, 3, 6, 50)
+                W.dot(e, e.target, 3, 6, 50, 1)
             end
         end,
         points = 1,
@@ -139,7 +139,7 @@ M.MAP = {
     },
     eviscerate = finisher(function(W, e, _, X)
         drop(W, e, X, "cold_blood")
-        W.hit(e, e.target, AMOUNT.eviscerate)
+        W.hit(e, e.target, AMOUNT.eviscerate, 1)
     end),
     slice_and_dice = finisher(function(W, e, cp, X)
         aura(W, X, e, "slice_and_dice", (6 + 3 * cp) * (1 + 0.15 * X.isnd))
@@ -148,13 +148,13 @@ M.MAP = {
         aura(W, X, e, "venom", 6 + 3 * cp)
     end),
     rupture = finisher(function(W, e, cp, X)
-        if W.hit(e, e.target, nil).act == "WOUND" then
+        if W.hit(e, e.target, nil, 1).act == "WOUND" then
             aura(W, X, e.target, "rupture", 6 + 2 * cp)
-            W.dot(e, e.target, 2, 3 + cp, 60)
+            W.dot(e, e.target, 2, 3 + cp, 60, 1)
         end
     end),
     expose_armor = finisher(function(W, e, _, X)
-        if W.hit(e, e.target, nil).act == "WOUND" then
+        if W.hit(e, e.target, nil, 1).act == "WOUND" then
             aura(W, X, e.target, "expose_armor")
         end
     end),

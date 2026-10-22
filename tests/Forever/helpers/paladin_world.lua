@@ -83,7 +83,7 @@ end
 local function strike(key)
     return {
         effect = function(W, e)
-            W.hit(e, e.target, AMOUNT[key])
+            W.hit(e, e.target, AMOUNT[key], 2) -- holy: Hammer of Wrath, Holy Strike, Exorcism (DB2)
         end,
     }
 end
@@ -112,7 +112,7 @@ M.MAP = {
     judgement = {
         effect = function(W, e, _, X)
             drop(W, e, X, "swift_judgement")
-            W.hit(e, e.target, AMOUNT.judgement, 1, up(e, X, "seal_of_the_crusader") and "none" or nil)
+            W.hit(e, e.target, AMOUNT.judgement, 2, up(e, X, "seal_of_the_crusader") and "none" or nil)
             -- shortcut: the world refunds only at 3/3 (the belief's rule) and has no proc chance below it; model the
             -- 33/66% chance if a world build takes 1-2 ranks.
             if X.sanctified then -- Sanctified Judgement 3/3: 60% of the seal's base cost x (2 - its multiplier)
@@ -151,13 +151,13 @@ M.MAP = {
     holy_shock = {
         effect = function(W, e, _, X)
             drop(W, e, X, "divine_favor")
-            W.hit(e, e.target, AMOUNT.holy_shock)
+            W.hit(e, e.target, AMOUNT.holy_shock, 2)
         end,
     },
     consecration = {
         effect = function(W, e, _, X)
             aura(W, X, e.target, "consecrated_ground")
-            W.dot(e, e.target, 1, 8, 60)
+            W.dot(e, e.target, 1, 8, 60, 2) -- holy
         end,
     },
     divine_favor = selfAura("divine_favor"),

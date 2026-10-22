@@ -182,7 +182,7 @@ describe("the world's press", function()
         W.t = 2
         W.emit({ kind = "pull" })
         mob.avoid = { miss = 0, dodge = 0, parry = 0 }
-        W.hit(us, mob, 50)
+        W.hit(us, mob, 50, 1)
         assert.is_true(mob.dead)
         assert.are.equal(2, W.killAt)
         local got, at = seen(), nil
@@ -209,8 +209,8 @@ describe("the world's press", function()
             cost = 10,
             refund = 0.8,
             effect = function(w, e)
-                w.hit(e, e.target, 40)
-                w.hit(e, e.target, 40) -- a second outcome of one press: one refund
+                w.hit(e, e.target, 40, 1)
+                w.hit(e, e.target, 40, 1) -- a second outcome of one press: one refund
             end,
         }
         assert.is_true(W.press(us, "spender_c", p))
@@ -257,10 +257,10 @@ describe("the world's press", function()
         setup()
         mob.avoid = { miss = 0, dodge = 0, parry = 0 }
         local n = #W.truth
-        assert.are.equal("WOUND", W.hit(us, mob, nil).act)
+        assert.are.equal("WOUND", W.hit(us, mob, nil, 1).act)
         assert.are.equal(n, #W.truth)
         mob.avoid = { miss = 1, dodge = 0, parry = 0 }
-        assert.are.equal("MISS", W.hit(us, mob, nil).act)
+        assert.are.equal("MISS", W.hit(us, mob, nil, 1).act)
         assert.are.equal("MISS", W.truth[#W.truth].act)
     end)
 
@@ -272,7 +272,7 @@ describe("the world's press", function()
             spell = fs.SPENDER_C,
             points = { 4, "all" },
             effect = function(w, e)
-                w.hit(e, e.target, 40)
+                w.hit(e, e.target, 40, 1)
             end,
         }
         W.t = 3
@@ -314,7 +314,7 @@ describe("the world's press", function()
         mob.avoid = { miss = 0, dodge = 0, parry = 0 }
         local crits = 0
         for _ = 1, 400 do
-            W.hit(us, mob, 100)
+            W.hit(us, mob, 100, 1)
             local ev = W.truth[#W.truth]
             crits = crits + (ev.flag == "CRITICAL" and 1 or 0)
             assert.are.equal(ev.flag == "CRITICAL" and 200 or 100, ev.amount)
@@ -461,7 +461,7 @@ describe("the world's press", function()
         W.t = 1
         assert.is_true(W.press(us, "spender_a", p))
         W.run(2)
-        W.hit(us, mob, 2e6)
+        W.hit(us, mob, 2e6, 1)
         assert.is_true(mob.dead)
         assert.is_true(W.press(us, "spender_b", { spell = fs.SPENDER_B, offGcd = true }))
         W.run(5)

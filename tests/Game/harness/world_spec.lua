@@ -84,7 +84,7 @@ describe("the world's resources", function()
             setup()
             W.t = 1
             local hit = function(w, e)
-                w.hit(e, e.target, 30)
+                w.hit(e, e.target, 30, 1)
             end
             W.press(us, "build", { spell = 1, gcd = 0, effect = hit, points = { POINTS, 1 } })
             W.press(us, "build", { spell = 1, gcd = 0, effect = hit, points = { POINTS, 1 } })
