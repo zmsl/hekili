@@ -31,6 +31,8 @@ What the captures show, and what the code does with it:
 | 6 | Every player cast event is echoed on `targettarget` while the mob targets us (same castGUID, another castBarID) | the cast sources register `player` only (`Game/Events/EventFacade.lua:56-96` registers per unit; `Game/State/Sources/Casts.lua:31-92` checks `unit == "player"`) | harmless today; the registry must not treat `targettarget` rows as a new victim |
 | 7 | A melee killing blow lands after the clear: Rogue capture, swing at 10283, `TARGET none` at 10384, `NAME_PLATE_UNIT_REMOVED` resolving the GUID at 10653, the CRITICAL row at 10754 on `softinteract` only (the corpse), with Action Targeting off | the same `target`-only reads as row 4 | a fixed 0.1 s grace after the clear would lose it (370 ms) |
 | 8 | A school-32 WOUND on the target in the same ms as a HEAL on the player (a life-steal proc, Rogue capture 8799), between our swing (8682) and its white hit (9154) | a school-1 gate already guards swings (`Rows.lua:481`) | the school check correctly leaves it foreign; this is why the gate exists for melee too |
+| 9 | An instant strike's row comes in its frame: Sinister Strike's WOUND 8 arrived 2 ms after its SUCCEEDED (second Rogue capture: 2248 to 2250; the first strike's at 0 ms, 630) | FRAME's `SAME_FRAME` 0.05 s (`Rows.lua:37`) | the `"instant"` kind's frame window holds |
+| 10 | An instant kill clears after its row: Eviscerate's killing blow (WOUND 14) arrived 1 ms after its SUCCEEDED (3500), and `TARGET none` came 101 ms after the row (3602) | as row 4 | the opposite order to a white-swing kill (row 7), which clears before its row |
 
 The replay shows the cost: every own Wrath outcome goes to `background()` (`Rows.lua:517-519`), every success emits
 only `SPELL_CAST_SUCCESS` and the aura rows, and a dead mob's modelled debuff expires 16 s after its death because no
@@ -173,6 +175,9 @@ Listeners register at load. Rows (tickets) registers first, then Target (`Target
   - `UNIT_DIED` or `PLAYER_TARGET_DIED` with a plain GUID, when the client delivers them.
   A melee kill shows no FAILED (the Rogue capture clears the target with none), so the tell misses it; the unit then
   ends through poll 5, the death events, or GONE.
+  The clear and the killing row come in either order. A white-swing kill clears before its row (about 370 ms: the
+  server's hit clears the target, the row arrives at the landing lag). An instant kill clears after its row (Eviscerate:
+  row 1 ms after its success, clear 101 ms after the row). A projectile kill clears 11-36 ms before its row.
   A DEAD slot still resolves rows while held and for `GRACE` after its release, so the killing blow pays its ticket.
 - Reset: `PLAYER_REGEN_ENABLED` frees every slot with no bound token (OnGone with `RESET` first) and clears the dedupe
   ring and `failT`. Bound units stay: the target is still the target after combat. The reset does not precede the last
@@ -328,6 +333,14 @@ For Wrath, `CLOSE / speed` = 0.35: two seconds after the last landing the band r
 
 First-ticket rule: no record for (GUID, speed) yet means the whole hard window, uniform, and the ticket is a candidate
 in pass (c) only.
+
+#### 3.3.2 MELEE: the first swing of a combat
+
+The first white swing after `PLAYER_ENTER_COMBAT` landed 989 ms after its `PLAYER_SWING` (second Rogue capture, one
+sample); the next landed at 452 ms, in line with the learned median (0.474 s, `Rows.lua:67`). Either the first
+`PLAYER_SWING` marks auto-attack turning on rather than a swing, or the first swing lags longer. Until probe U10
+answers, the first MELEE ticket of a combat does not teach the learned lag (`learn()`, `Rows.lua:272-279`), and its
+Due band (pass a) is the whole LR window `[0, w]` instead of the core band.
 
 ### 3.4 Paying (the consumption order)
 
@@ -751,6 +764,7 @@ Each becomes a row in `docs/dev/ingame-ledger.md` with the capture that closes i
 | U7 | Two-school spells and wands: the school a Frostfire Bolt WOUND carries (20, 4 or 16); a wand's | `/vslog` of Frostfire Bolt and of Shoot with a non-physical wand |
 | U8 | The kill tell: is the target clear on a kill a client rule or a user setting; does it happen when no press is in flight | `/vslog` of a melee kill with no ability pressed, and the interface option in question |
 | U9 | DoT tick and channel row shapes: per tick, which tokens, action, flag, amount, school; the first tick's delay after the application; whether a channel's ticks and a DoT's are told apart; needed before TICKS and CHANNEL are trusted | `/vslog` of Moonfire, Corruption and Serpent Sting to full duration, and Arcane Missiles and Drain Life channels, on solo mobs |
+| U10 | The first white swing of a combat: does the first `PLAYER_SWING` after `PLAYER_ENTER_COMBAT` mark auto-attack turning on, or a swing with a longer lag (one sample: 989 ms against 452 ms for the next) | `/vslog` of ten pulls with auto-attack only, amounts on, `PLAYER_SWING`, `PLAYER_ENTER_COMBAT` and the target's `UNIT_COMBAT` |
 
 ## 9. Risks and what the gate must show
 
