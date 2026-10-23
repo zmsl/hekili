@@ -154,7 +154,7 @@ describe("the kinds", function()
         assert.is_nil(K.Band(j, 2, 10.1, true, "MISS", 1)) -- a composed schedule takes no avoid
     end)
 
-    -- The Balance replay's Insect Swarm (Task 16): a ticks-only DoT with no velocity missed in its own frame inside an
+    -- Found by a replay (Task 16): a ticks-only DoT with no velocity missed in its own frame inside an
     -- unmapped success's window; with no pass-1 band it was picked only at pass 2, where Rows absorbs it (past its frame).
     it(
         "TICKS alone without a velocity: its application's avoid in its own frame at pass 1, its landing window after",
