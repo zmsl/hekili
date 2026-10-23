@@ -19,6 +19,17 @@ describe("the ticket pool", function()
         return n
     end
 
+    -- T.nTent and T.nAssumed against a brute-force count of the pool (the Replaceable and Overdue scans' guards)
+    local function counted()
+        local tent, assumed = 0, 0
+        for i = 1, T.CAP do
+            tent = tent + (T.state[i] == T.TENT and 1 or 0)
+            assumed = assumed + (T.state[i] == T.ASSUMED and 1 or 0)
+        end
+        assert.are.same({ tent, assumed }, { T.nTent, T.nAssumed })
+        return tent, assumed
+    end
+
     before_each(function()
         api, ctl = fake.new()
         saved = {}
@@ -504,24 +515,6 @@ describe("the ticket pool", function()
             assert.are.equal(T.opened, sum())
         end)
 
-        it(
-            "EARLY variant (off by default): an early row pays provisionally; the narrow-band row replaces it",
-            function()
-                I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
-                T.Learn("Creature-1", 20, 1.5, 9) -- narrow band [11.35, 11.65], widened from 10.313
-                T.EARLY = true
-                ctl.now = 10
-                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
-                ctl.now = 10.2 -- before the widened band: pass 5
-                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 15, 8)
-                local early = T.foreign
-                ctl.now = 11.5
-                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 16, 8)
-                T.EARLY = false
-                assert.are.same({ 0, 1, 1, 1 }, { early, T.replaced, T.foreign, T.paid[X.FLIGHT] })
-            end
-        )
-
         local function swingsOf(hand, c)
             local n = 0
             for _, s in ipairs(staged) do
@@ -581,6 +574,41 @@ describe("the ticket pool", function()
             ctl.now = 9.686 -- the main reference's core band only
             ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 31, 1)
             assert.are.same({ 1, 0 }, { T.replaced, T.state[off] }) -- final: closed paid, not TENT again
+        end)
+
+        it("counts TENT tickets through pay-tentative, replace, final, close and combat end", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.2
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1) -- pay-tentative
+            assert.are.equal(1, (counted()))
+            ctl.now = 10.47
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- replaced: PROV
+            assert.are.equal(0, (counted()))
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+            T.Learn("Creature-1", 20, 1.5, 9)
+            ctl.now = 20
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+            ctl.now = 20.6
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 8) -- pay-tentative
+            assert.are.equal(1, (counted()))
+            ctl.Tick(21.7) -- final
+            assert.are.equal(0, (counted()))
+            ctl.now = 30
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            ctl.now = 30.2
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.equal(1, (counted()))
+            T.Close(i, 30.3, "gone") -- a close path
+            assert.are.equal(0, (counted()))
+            ctl.now = 40
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 40.2
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.equal(1, (counted()))
+            T.EndCombat(40.3)
+            assert.are.equal(0, (counted()))
         end)
 
         it("pays a pass (a) row final at once: no TENT", function()
@@ -676,6 +704,34 @@ describe("the ticket pool", function()
             assert.are.equal(1, count(6))
             ctl.Tick(11.6)
             assert.are.equal(1, T.closed.refunded)
+        end)
+
+        it("counts ASSUMED tickets through assume, confirm, refund, expiry and combat end", function()
+            assumedSwing()
+            assert.are.same({ 0, 1 }, { counted() })
+            ctl.now = 11.2
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1) -- confirmed
+            assert.are.same({ 0, 0 }, { counted() })
+            ctl.now = 20
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            T.Assume(T.lastSwing[1], 20.7)
+            assert.are.same({ 0, 1 }, { counted() })
+            ctl.now = 21.2
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- refunded: PROV
+            assert.are.same({ 0, 0 }, { counted() })
+            ctl.now = 30
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            T.Assume(T.lastSwing[1], 30.7)
+            assert.are.same({ 0, 1 }, { counted() })
+            ctl.Tick(31.6) -- the assumption stands: closed assumed
+            assert.are.same({ 0, 0 }, { counted() })
+            assert.are.equal(1, T.closed.assumed)
+            ctl.now = 40
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            T.Assume(T.lastSwing[1], 40.7)
+            assert.are.same({ 0, 1 }, { counted() })
+            T.EndCombat(40.8)
+            assert.are.same({ 0, 0 }, { counted() })
         end)
 
         it("lets an assumption stand when no row comes: closed assumed, never lost", function()

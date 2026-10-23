@@ -11,7 +11,7 @@ end
 
 describe("solo attribution (harness gates) #slow", function()
     it(
-        "credits >= 94% of each hand's hits to the right swing, <= 2% to the wrong one, no overshoot; the oracle retracts "
+        "credits >= 94% of each hand's hits to the right swing, <= 2% to the wrong one, overshoot <= 2; the oracle retracts "
             .. "<= 0.5% of our own credits (200 fights)",
         function()
             local m = metrics.fights(scenarios.oracle({}), 200)

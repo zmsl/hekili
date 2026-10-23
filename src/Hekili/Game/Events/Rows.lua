@@ -497,10 +497,6 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
     if p == 0 and not credited and not tied then
         p, n = T.Pick(t, g, 4, act, flag, amount, school, avoid)
         pass = 4
-        if p == 0 and T.EARLY then -- the EARLY variant: a row before a learned flight's narrow band, provisional
-            p, n = T.Pick(t, g, 5, act, flag, amount, school, avoid)
-            pass = 5
-        end
         if p == 0 and white and (AVOIDS[act] or not avoid) and not (not avoid and t - lastW0 <= SAME_FRAME) then
             credited = M.Overdue(t, g, amount, flag, avoid, unknown)
             if credited then

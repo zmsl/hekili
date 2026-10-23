@@ -189,6 +189,9 @@ end
 --- Allocates nothing.
 function M.Replaceable(t, g, amount, flag, avoid, unknown)
     local best = nil
+    if T.nTent == 0 then
+        return nil
+    end
     for i = 1, T.CAP do
         if T.state[i] == T.TENT and T.kind[i] == X.MELEE and T.guid[i] == g and t <= T.fin[i] then
             local h, rf = T.x[i], T.ref[i]
@@ -208,11 +211,14 @@ function M.Replaceable(t, g, amount, flag, avoid, unknown)
 end
 
 --- (attribution-recovery spec §1.1, decision 46; §3.1, decision 51) Overdue: the oldest ASSUMED swing ticket on `g`
---- (past its lag tolerance; an open swing never: other players' white rows would take it) whose window holds a white
+--- (ASSUMED swings only; an open swing never: other players' white rows would take it) whose window holds a white
 --- row at t that no band and no LR credit took: no provisional avoid on it, a wound only in an amount class of its hand
 --- (or of unknown class) and never to a vetoed swing (I.Missed). Nil when none. Allocates nothing.
 function M.Overdue(t, g, amount, flag, avoid, unknown)
     local best = nil
+    if T.nAssumed == 0 then
+        return nil
+    end
     for i = 1, T.CAP do
         if T.state[i] == T.ASSUMED and T.kind[i] == X.MELEE and T.guid[i] == g and T.avoid[i] == "" then
             local d = t - T.at[i]

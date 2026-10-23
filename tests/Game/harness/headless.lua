@@ -856,9 +856,6 @@ function M.new(o)
         if not ok then
             H.loadErrors[#H.loadErrors + 1] = path .. ": " .. tostring(e)
         end
-        if path:match("Game/Events/Tickets%.lua$") then -- the EARLY variant's measurement (attribution-recovery Task 2)
-            ns.VirtualStateInternal.Tickets.EARLY = os.getenv("TA_EARLY") == "1"
-        end
         if path:match("Game/API/Facade%.lua$") then -- o.raw: the client's raw answer for these rows (§4)
             for _, name in ipairs(o.raw or {}) do
                 local space, key = name:match("^([%w_]+)%.([%w_]+)$")

@@ -53,10 +53,6 @@ for i = 1, CAP do
     T.fin[i], T.rowT[i], T.rowAct[i], T.rowFlag[i], T.rowAmt[i], T.rowSch[i] = 0, 0, "", "", 0, 0
     T.rowClean[i], T.held[i], T.rec[i] = false, 0, 0
 end
--- The EARLY variant (measured, Task 2; off): a learned flight also takes a row before its narrow band, anywhere in its
--- hard window, at pass 5 (after pass (d)), always provisional (TENT). A load-time constant; the test loaders set it from
--- TA_EARLY=1.
-T.EARLY = false
 -- Per ticket (attribution-recovery decision 51, owner ruling 2026-10-23: the expectation at expiry): a firm
 -- retraction's re-open (no expectation at its lost close) and whether it was assumed (T.Assume: a provider's HIT).
 -- Also: a white avoid nobody took (foreign or absorbed) fell in its window, maybe its own: no expectation at its lost
@@ -68,6 +64,9 @@ end
 T.onAssume, T.onLost = nil, nil
 T.replaced = 0 -- every replacement of a provisional payment by a narrow-band row, re-offered or not (not a close)
 T.onFinal, T.onReplace = nil, nil -- Rows' hooks: a TENT ticket final, a TENT ticket's row replaced
+-- How many tickets are TENT and ASSUMED now: the Replaceable and Overdue scans skip at 0 (every state change of a
+-- ticket into or out of either goes through `move`).
+T.nTent, T.nAssumed = 0, 0
 
 T.opened = 0
 T.closed = {
@@ -218,12 +217,29 @@ T.lastSwing, T.lastSwingT = { 0, 0 }, { 0, 0 }
 -- A strike whose success came before its swing: the open STRIKE ticket that swallows the next main-hand swing.
 local strikeWait, strikeWaitT = 0, 0
 
+-- Ticket i's state becomes s, keeping T.nTent and T.nAssumed. Allocates nothing.
+local function move(i, s)
+    local o = state[i]
+    if o == T.TENT then
+        T.nTent = T.nTent - 1
+    elseif o == T.ASSUMED then
+        T.nAssumed = T.nAssumed - 1
+    end
+    if s == T.TENT then
+        T.nTent = T.nTent + 1
+    elseif s == T.ASSUMED then
+        T.nAssumed = T.nAssumed + 1
+    end
+    state[i] = s
+end
+
 --- Closes ticket i at t for `why` (a T.closed key) and releases its unit. Allocates nothing.
 function T.Close(i, t, why)
     if state[i] == 0 then
         return
     end
-    state[i], lr[i], avoid[i] = 0, 0, ""
+    move(i, 0)
+    lr[i], avoid[i] = 0, ""
     paidAt[i] = 0
     if why == "paid" then
         paidAt[i] = t
@@ -445,7 +461,9 @@ function T.Pick(t, g, p, act, flag, amount, sch, isAvoid)
     local K = I.Kinds
     local best, bestE, bestBanded, n, refused = 0, math.huge, false, 0, false
     for i = 1, CAP do
-        if state[i] >= OPEN and guid[i] == g then
+        local k = kind[i]
+        -- pass 4: K.Band is nil for MELEE, TICKS and CHANNEL (Kinds.lua K.Band), so they never match there
+        if state[i] >= OPEN and guid[i] == g and not (p == 4 and (k == MELEE or k == X.TICKS or k == X.CHANNEL)) then
             local ok, banded = K.Accepts(i, act, flag, amount, sch, isAvoid)
             refused = refused or (not ok and banded == true)
             if ok then
@@ -578,10 +596,11 @@ function T.PayTentative(i, t, isAvoid, amount, flag, clean, pass, act, sch)
     if T.onPay then
         T.onPay(i, t, pass)
     end
-    state[i], owed[i], done[i] = T.TENT, owed[i] - 1, done[i] + 1
+    move(i, T.TENT)
+    owed[i], done[i] = owed[i] - 1, done[i] + 1
     T.fin[i] = n < hi[i] and n or hi[i]
     T.rowT[i], T.rowAct[i], T.rowFlag[i], T.rowAmt[i], T.rowSch[i] = t, act, flag, amount, sch
-    T.rowClean[i] = clean and pass < 4 -- no teaching at pass (d) (decision 46 as amended) or the early pass 5
+    T.rowClean[i] = clean and pass < 4 -- no teaching at pass (d) (decision 46 as amended)
     return true
 end
 
@@ -599,6 +618,9 @@ end
 --- owed; 0 when none. Allocates nothing.
 function T.Replaceable(t, g, act, flag, amount, sch, isAvoid)
     local K, best = I.Kinds, 0
+    if T.nTent == 0 then
+        return 0
+    end
     for i = 1, CAP do
         if state[i] == T.TENT and kind[i] ~= MELEE and guid[i] == g and t <= T.fin[i] then
             owed[i] = 1 -- K.Accepts reads `owed`: asked as if the row were still owed
@@ -622,12 +644,14 @@ function T.Replace(i, t)
         T.foreign = T.foreign + 1
         T.Foreign(uid[i], T.rowSch[i], T.rowT[i])
     end
-    state[i], owed[i], done[i], T.held[i] = OPEN, owed[i] + 1, done[i] - 1, 0
+    move(i, OPEN)
+    owed[i], done[i], T.held[i] = owed[i] + 1, done[i] - 1, 0
 end
 
 --- A swing ticket holds an avoid provisionally (spec §3.7): it is emitted at its close unless a wound overtakes it.
 function T.Provisional(i, lri, act)
-    state[i], lr[i], avoid[i] = PROV, lri, act
+    move(i, PROV)
+    lr[i], avoid[i] = lri, act
 end
 
 --- Whether an UNMAPPED ticket's window holds t.
@@ -726,7 +750,8 @@ function T.Assume(i, t)
     if state[i] ~= OPEN then
         return
     end
-    state[i], T.assumed[i] = T.ASSUMED, true
+    move(i, T.ASSUMED)
+    T.assumed[i] = true
     if T.onAssume then
         T.onAssume(i, t)
     end
