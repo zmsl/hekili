@@ -460,8 +460,8 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
         T.onPay(i, t, pass)
     end
     local k, a = kind[i], ab[i]
-    -- an Overdue payment (pass 4) teaches neither the lag nor the band: it teaches once final (attribution-recovery
-    -- spec §1.1; Task 2 makes finality explicit)
+    -- an Overdue payment (pass 4) teaches neither the lag nor the band (attribution-recovery spec §1.1): its row is
+    -- past the narrow band, so it is final at once (§2.1) and never teaches
     clean = clean and pass ~= 4
     -- Any clean pass teaches the lag, pass 3 included (spec §3.3.1 says a or b only, but with no record a ticket is a
     -- candidate at pass 3 alone, so no record would ever be made: controller ruling, Task 19 amends the spec).

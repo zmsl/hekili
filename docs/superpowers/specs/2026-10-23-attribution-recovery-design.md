@@ -60,7 +60,7 @@ The hard window per kind (the ticket's `hi`, set at opening, `Game/Events/Ticket
 | Kind | Hard window | Pass (d) accepts |
 |---|---|---|
 | FLIGHT | `[at, at + H]`, `H = rMax / speed + TOL` (`Tickets.lua:257-262`) | as pass (b): a WOUND of its school inside its amount band, any avoid |
-| FRAME, STRIKE | `[at, at + max(LandWindow(1), CAST_WINDOW)]` (`Tickets.lua:253-256`) | as pass (b), and a school-ANY ticket takes only a white wound past its frame (`Game/Events/Kinds.lua:126-128`) |
+| FRAME, STRIKE | `[at, at + max(LandWindow(1), CAST_WINDOW)]` (`Tickets.lua:253-256`) | a WOUND as pass (b) accepts it, after `at + CAST_WINDOW` only (late), a school-ANY ticket a white one only (`Game/Events/Kinds.lua:130-131`); no avoid (its pass-(b) window is its whole phase, GAP AX) |
 | MELEE (ASSUMED only, amendment above) | the LR window `[at, at + w]` (`Game/Events/Melee.lua:120-124`) | a white row, the swing not vetoed (`I.Missed`, `Rows.lua:279-282`); a wound only when its amount class for the hand is not 0 (`Melee.lua:103-112`); an avoid only on a swing not already holding one |
 | TICKS, CHANNEL | none (decision 47) | nothing |
 | NONE, UNMAPPED | none | nothing |

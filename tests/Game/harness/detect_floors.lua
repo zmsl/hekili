@@ -1,6 +1,6 @@
 -- tests/Game/harness/detect_floors.lua: the detection suite's floors (unit-registry spec §6.2),
 -- written by the first clean run (DETECT_WRITE=1). Floors only move up; a lower one needs a named cause.
--- 2026-10-23 (attribution-recovery spec decision 54): regenerated under the owner's ruling (recall over precision): recall up; false credit, leak, lostDiff and pet rows may rise.
+-- 2026-10-23 (attribution-recovery spec decision 46): regenerated under the owner's ruling (recall over precision): recall up; false credit, leak, lostDiff and pet rows may rise.
 -- stylua: ignore
 return {
     K1 = {

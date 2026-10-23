@@ -330,6 +330,21 @@ describe("the ticket pool", function()
         assert.are.equal(1, T.foreign)
     end)
 
+    it("never hands a cast at pass (d) an avoid the MELEE tie took for a swing the LR then rejects", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 40 -- H = 2.15
+        T.Learn("Creature-1", 20, 1.5, 9) -- narrow band [11.35, 11.65], widened [10.313, 11.9375]
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+        ctl.now = 11.326
+        ctl.Fire("PLAYER_SWING", 2.6, 0)
+        for c = 1, 8 do
+            I.Log.bg[c] = 50 -- a crowd: the LR stays below its bar
+        end
+        ctl.now = 11.8 -- the flight's pass (b) and pass (d) both hold it; the swing's core band too (lag 0.474)
+        ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+        assert.are.same({ 1, 0 }, { T.foreign, T.paid[X.FLIGHT] })
+    end)
+
     it(
         "leaves a white wound the swing LR rejects foreign: an open swing has no Overdue (decision 46 amended)",
         function()
