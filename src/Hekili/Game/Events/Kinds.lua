@@ -123,8 +123,8 @@ function K.Band(i, p, t, isAvoid, act, sch)
                 return nil
             elseif T.speed[i] > 0 then
                 return K.Flight(i, p, t, T.speed[i], T.H[i], a0)
-            elseif p == 1 then
-                return nil
+            elseif p == 1 then -- its own frame, as FRAME's: Rows absorbs an avoid past it in an UNMAPPED window
+                return a0, a0 + SAME_FRAME, a0
             end
             return a0, a0 + L.LandWindow(1), a0
         end

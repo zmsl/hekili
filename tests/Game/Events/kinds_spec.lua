@@ -153,4 +153,17 @@ describe("the kinds", function()
         end
         assert.is_nil(K.Band(j, 2, 10.1, true, "MISS", 1)) -- a composed schedule takes no avoid
     end)
+
+    -- The Balance replay's Insect Swarm (Task 16): a ticks-only DoT with no velocity missed in its own frame inside an
+    -- unmapped success's window; with no pass-1 band it was picked only at pass 2, where Rows absorbs it (past its frame).
+    it(
+        "TICKS alone without a velocity: its application's avoid in its own frame at pass 1, its landing window after",
+        function()
+            local i = open(fs.SPENDER_S, 10)
+            T.speed[i] = 0 -- the ticks-only fixture without its flight
+            assert.are.same({ 10, 10 + 0.05, 10 }, { K.Band(i, 1, 10, true, "MISS", 1) })
+            assert.are.equal(i, (T.Pick(10, "Creature-1", 1, "MISS", "", 0, 1, true)))
+            assert.are.same({ 10, 10 + L.LandWindow(1), 10 }, { K.Band(i, 2, 10.3, true, "MISS", 1) })
+        end
+    )
 end)
