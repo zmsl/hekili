@@ -248,7 +248,9 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
         local d, h = lag, ref == 3 and 2 or ref
         -- pass order (spec §3.4 step 4): against a ticket matched only past pass 1, an off hand landing at the main
         -- swing's lag (reference 3) runs from the main swing against L.med[3]. At pass 1 the tie keeps its old test:
-        -- the corrected one there moves the Fury L24 loop gate (Task 12; owner ruling pending)
+        -- the corrected one there moves the Fury L24 loop gate (Task 12). probe U15: the pass-1 melee-wins tie
+        -- compares the main swing's lag for an off-hand row; the full fix takes instants' own avoids at pass 1 (Fury L24
+        -- refused 3.0 -> 5.1); needs an owner ruling or a tie that scores both lags
         if sw and ref == 3 and pass > 1 then
             d, h = t - T.ref[sw], 3
         end
