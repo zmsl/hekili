@@ -309,8 +309,8 @@ local function reroute(i, now)
     return p > 0 or credited ~= nil
 end
 
--- A swing past its lag tolerance (attribution-recovery decision 51): assumed a hit at once, as a credit record the
--- oracle can judge and a late avoid can take back (Obs.Swing c = 5); a retry is never assumed (T.tol).
+-- A swing assumed a hit (T.Assume, attribution-recovery decision 51: a provider's HIT): staged at once as a credit
+-- record the oracle can judge and a late avoid can take back (Obs.Swing c = 5).
 T.onAssume = function(i, now)
     if T.kind[i] ~= MELEE then
         return -- a spell: nothing to believe; the ticket only waits as a shadow
@@ -323,7 +323,7 @@ T.onAssume = function(i, now)
     S.Stage(Obs.Swing, T.at[i], T.x[i], id, 5)
 end
 
--- The measured alternative (decision 51's comparison, the parked 9b): the expectation at a swing's lost close.
+-- The expectation at a swing's lost close (decision 51 as ruled 2026-10-23: expiry EV, the parked 9b; a retry none).
 T.onLost = function(i)
     if T.kind[i] == MELEE and not T.retry[i] then
         S.Stage(Obs.Swing, T.at[i], T.x[i], 0, 5)

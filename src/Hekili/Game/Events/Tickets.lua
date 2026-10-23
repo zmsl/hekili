@@ -57,14 +57,11 @@ end
 -- hard window, at pass 5 (after pass (d)), always provisional (TENT). A load-time constant; the test loaders set it from
 -- TA_EARLY=1.
 T.EARLY = false
--- Per ticket (attribution-recovery decision 51): its lag tolerance (math.huge: none), a firm retraction's re-open
--- (never assumed), and whether it was assumed. T.ASSUME_AT: "off" (default: no assumption, the behaviour before Task 3;
--- the owner chooses), "tolerance" (the shadow ticket) or "expiry" (the
--- expectation at the lost close, the measured alternative); Task 3 keeps one.
-T.ASSUME_AT = "off"
-T.tol, T.retry, T.assumed = {}, {}, {}
+-- Per ticket (attribution-recovery decision 51, owner ruling 2026-10-23: the expectation at expiry): a firm
+-- retraction's re-open (no expectation at its lost close) and whether it was assumed (T.Assume: a provider's HIT).
+T.retry, T.assumed = {}, {}
 for i = 1, CAP do
-    T.tol[i], T.retry[i], T.assumed[i] = math.huge, false, false
+    T.retry[i], T.assumed[i] = false, false
 end
 T.onAssume, T.onLost = nil, nil
 T.replaced = 0 -- every replacement of a provisional payment by a narrow-band row, re-offered or not (not a close)
@@ -252,7 +249,7 @@ local function fill(i, k, a, xx, g, t)
     school[i], owed[i], at[i], hi[i], w[i] = ANY, 1, t, t, 0
     ref[i], lr[i], avoid[i], cast[i], done[i], first[i], T.excused[i] = 0, 0, "", "", 0, false, false
     T.held[i], T.rec[i] = 0, 0
-    T.tol[i], T.retry[i], T.assumed[i] = math.huge, false, false
+    T.retry[i], T.assumed[i] = false, false
     T.period[i], T.anchor[i], T.wide[i], T.link[i], T.speed[i], T.H[i], T.tickAmt[i] = 0, t, 0, 0, 0, 0, 0
     U.Hold(uid[i])
     T.opened = T.opened + 1
@@ -290,10 +287,6 @@ local function arm(i, t)
         T.speed[i] = A.velocity[a]
         T.H[i] = r / T.speed[i] + T.TOL -- Expect requires a positive travel velocity
         hi[i] = t + T.H[i]
-        if T.LagOf(guid[i], T.speed[i]) > 0 then -- a learned lag: tolerance at the widened band's end
-            local _, h = I.Kinds.Band(i, 2, t, false, "WOUND", school[i])
-            T.tol[i] = h or math.huge
-        end
     elseif k == X.TICKS then -- alone (a pure DoT): anchored at the success, after the flight with a velocity
         local a = ab[i]
         local v = A.velocity[a]
@@ -336,7 +329,6 @@ function T.OpenSwing(t, hand, g, win, mref, isFirst, retry)
     fill(i, MELEE, 0, hand, g, t)
     school[i], w[i], hi[i], ref[i], first[i] = 1, win, t + win, mref or 0, isFirst == true
     T.retry[i] = retry == true
-    T.tol[i] = retry and math.huge or t + T.PendingWindow(hand)
     if not retry then -- a retraction's re-open is not the hand's latest swing (pendT stayed 0 after a credit)
         T.lastSwing[hand], T.lastSwingT[hand] = i, t
     end
@@ -718,7 +710,7 @@ local function expiry(i)
             end
         end
     end
-    if T.ASSUME_AT == "expiry" and T.onLost then
+    if T.onLost then -- the expectation at the lost close (decision 51 as ruled)
         T.onLost(i)
     end
     T.lost[k] = T.lost[k] + owed[i]
@@ -742,16 +734,6 @@ function T.Expire(now)
     for i = 1, CAP do
         if state[i] == T.TENT and now > T.fin[i] then
             T.Final(i, now)
-        end
-        if
-            state[i] == OPEN
-            and now > T.tol[i]
-            and now <= hi[i]
-            and T.ASSUME_AT == "tolerance"
-            and guid[i] ~= ""
-            and not U.IsDead(uid[i])
-        then
-            T.Assume(i, now) -- past its lag tolerance, unpaid: the shadow
         end
         if state[i] ~= 0 and now > hi[i] then
             if state[i] ~= COMMITTED and T.onExpire then

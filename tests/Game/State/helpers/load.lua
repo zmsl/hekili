@@ -35,8 +35,6 @@ function M.module()
     local I = ns.VirtualStateInternal
     if I and I.Tickets then
         I.Tickets.EARLY = os.getenv("TA_EARLY") == "1" -- the EARLY variant's measurement (attribution-recovery Task 2)
-        I.Tickets.ASSUME_AT = os.getenv("ASSUME_AT") or "off" -- Task 3 variants (owner to choose)
-        I.ASSUME_VALUE = os.getenv("ASSUME_VALUE") or "full" -- Task 3 variants (owner to choose)
     end
     return ns
 end

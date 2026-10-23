@@ -88,7 +88,5 @@ the game's numbers.
 - **K16, the raid-40 cold-start trap.** Raid-40 recall of our bolts is 0 (measured only): others' same-school wounds
   and white avoids pay our flight tickets before landing, so no amount band is ever learned (it needs 3 clean wounds).
   Suggested follow-up: a pack-declared amount range that seeds the band.
-- **Task 9b, parked.** Crediting the expected rage of an uncredited swing (even only at its `lost` close) cannot keep
-  the solo overshoot gate at 0 while solo swing recall is 94.5%: a wrong credit pays the other hand's ticket, so the
-  true ticket's expectation counts twice. It is decision 33's territory (Overdue payment only for tickets with no lag
-  record); the options (melee recall first, drop it, or accept a named overshoot) are the owner's.
+- **Task 9b, decided.** The expectation at a swing's `lost` close is built (expiry EV, owner ruling 2026-10-23);
+  its measured cost and the four variants are the "Assumed outcomes (decision 51)" row in `docs/dev/gaps.md`.

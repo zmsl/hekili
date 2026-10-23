@@ -132,7 +132,6 @@ R.slotOf, R.slotOfToken = {}, {}
 -- The share of each hand's swings that land: an EMA over swings (a swing, c = 4, decays it; a landed one, c = 1, adds
 -- HIT_ALPHA). It scales the model's swing rate, so the step scale calibrates the value of a landed swing.
 local hitRate, HIT_ALPHA = { 1, 1 }, 0.1
-I.ASSUME_VALUE = "full" -- attribution-recovery decision 52: "full" (the step) or "ev" (hitRate x the step)
 local G = { n = 0, slot = {}, aura = {}, value = {}, interval = {}, talent = {}, pause = {} }
 -- `taken[r]`: the paying entry's `taken(kind, amount, level)` bound to the `now` context (Families/Now.lua), or false.
 -- Its gains in one-second bins: `takenBin[r][i]` the gain of the second `takenSec[r][i]` (-1: empty), i = sec % 10 + 1.
@@ -1239,7 +1238,7 @@ I.On(Obs.Swing, function(o, t)
                 -- a rung that lifted the slot while this swing was out already holds its rage (owe): net it first
                 local owes = o.t <= R.liftT[r] and t - R.liftT[r] <= I.LIFT_WINDOW
                 if c == 5 then -- est and hi only: affordability never rests on an assumption
-                    local f = I.ASSUME_VALUE == "ev" and hitRate[hand] or 1
+                    local f = hitRate[hand] -- EV (decision 52 as ruled): the expected share of a step
                     local de = v * sc * f
                     local dh = de
                     if owes then

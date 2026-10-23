@@ -561,11 +561,10 @@ describe("the ticket pool", function()
         end)
     end)
 
-    describe("assumed outcomes (attribution-recovery decision 51)", function()
+    describe("assumed outcomes, expiry EV (attribution-recovery decision 51 as ruled 2026-10-23)", function()
         local staged, stage
 
         before_each(function()
-            T.ASSUME_AT = "tolerance"
             staged, stage = {}, I.Sources.Stage
             I.Sources.Stage = function(kind, t, a, b, c)
                 staged[#staged + 1] = { kind, b, c }
@@ -588,29 +587,47 @@ describe("the ticket pool", function()
             return n
         end
 
-        local function swingPastTolerance()
+        local function assumedSwing() -- a provider's HIT (T.Assume) before its row
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            T.Assume(i, 10.7)
+            return i
+        end
+
+        it("stages the expectation at a swing's lost close; no shadow before it", function()
             ctl.now = 10
             ctl.Fire("PLAYER_SWING", 2.6, 0)
             local i = T.lastSwing[1]
             ctl.Tick(10 + T.PendingWindow(1) + 0.01)
-            return i
-        end
+            assert.are.same({ T.OPEN, 0 }, { T.state[i], count(5) })
+            ctl.Tick(11.6)
+            assert.are.same({ 1, 1 }, { T.closed.lost, count(5) })
+        end)
 
-        it("assumes a swing past its tolerance: rage staged at once, the ticket a shadow", function()
-            local i = swingPastTolerance()
+        it("stages nothing at a retraction's re-open's lost close", function()
+            ctl.now = 10
+            T.OpenSwing(10, 1, "Creature-1", 1.5, 0, false, true)
+            ctl.Tick(11.6)
+            assert.are.same({ 1, 0 }, { T.closed.lost, count(5) })
+        end)
+
+        it("assumes an open swing at once through T.Assume (a provider's HIT), once", function()
+            local i = assumedSwing()
+            T.Assume(i, 10.8)
             assert.are.same({ T.ASSUMED, 1 }, { T.state[i], count(5) })
         end)
 
-        it("confirms a late hit: the assumption's record becomes the credit", function()
-            local i = swingPastTolerance()
+        it("confirms a late hit on an assumed swing: the assumption's record becomes the credit", function()
+            local i = assumedSwing()
             ctl.now = 11.2
             ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
             assert.are.same({ 1, 0, 1 }, { count(7), count(6), T.closed.confirmed })
             assert.are.equal(0, T.state[i])
         end)
 
-        it("refunds a late dodge: the assumed rage taken back, closed refunded at the window's end", function()
-            swingPastTolerance()
+        it("refunds a late dodge on an assumed swing: closed refunded at the window's end", function()
+            assumedSwing()
             ctl.now = 11.2
             ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
             assert.are.equal(1, count(6))
@@ -618,35 +635,11 @@ describe("the ticket pool", function()
             assert.are.equal(1, T.closed.refunded)
         end)
 
-        it("lets the assumption stand when no row comes: closed assumed, never lost", function()
-            swingPastTolerance()
+        it("lets an assumption stand when no row comes: closed assumed, never lost", function()
+            assumedSwing()
             ctl.Tick(11.6)
-            assert.are.same({ 1, 0 }, { T.closed.assumed, T.lost[X.MELEE] })
+            assert.are.same({ 1, 0, 1 }, { T.closed.assumed, T.lost[X.MELEE], count(5) })
             assert.are.equal(T.opened, sum())
-        end)
-
-        it("never assumes a retraction's re-open", function()
-            ctl.now = 10
-            local i = T.OpenSwing(10, 1, "Creature-1", 1.5, 0, false, true)
-            ctl.Tick(10 + T.PendingWindow(1) + 0.01)
-            assert.are.same({ T.OPEN, 0 }, { T.state[i], count(5) })
-        end)
-
-        it("assumes an open swing at once through T.Assume (a provider's HIT), once", function()
-            ctl.now = 10
-            ctl.Fire("PLAYER_SWING", 2.6, 0)
-            local i = T.lastSwing[1]
-            T.Assume(i, 10.1)
-            T.Assume(i, 10.2)
-            assert.are.same({ T.ASSUMED, 1 }, { T.state[i], count(5) })
-        end)
-
-        it("the expiry variant: no shadow; the expectation at the lost close", function()
-            T.ASSUME_AT = "expiry"
-            local i = swingPastTolerance()
-            assert.are.same({ T.OPEN, 0 }, { T.state[i], count(5) })
-            ctl.Tick(11.6)
-            assert.are.same({ 1, 1 }, { T.closed.lost, count(5) })
         end)
     end)
 

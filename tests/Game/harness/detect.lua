@@ -257,6 +257,8 @@ function M.record(kind, band, m)
         "-- written by the first clean run (DETECT_WRITE=1). Floors only move up; a lower one needs a named cause.",
         "-- 2026-10-23 (attribution-recovery spec decisions 46, 48-50): regenerated under the owner's ruling (recall over"
             .. " precision): recall up; false credit, leak, lostDiff and pet rows may rise.",
+        "-- 2026-10-23 (decisions 51-52, owner ruling: expiry EV): regenerated with the expectation at a swing's lost"
+            .. " close; rageErr down.",
         "-- stylua: ignore",
         "return {",
     }
