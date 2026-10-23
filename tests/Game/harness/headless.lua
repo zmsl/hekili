@@ -858,6 +858,10 @@ function M.new(o)
         end
         if path:match("Game/Events/Tickets%.lua$") then -- the EARLY variant's measurement (attribution-recovery Task 2)
             ns.VirtualStateInternal.Tickets.EARLY = os.getenv("TA_EARLY") == "1"
+            ns.VirtualStateInternal.Tickets.ASSUME_AT = os.getenv("ASSUME_AT") or "off" -- Task 3 variants (owner to choose)
+        end
+        if path:match("Families/Resources%.lua$") then -- Task 3 variants (owner to choose)
+            ns.VirtualStateInternal.ASSUME_VALUE = os.getenv("ASSUME_VALUE") or "full"
         end
         if path:match("Game/API/Facade%.lua$") then -- o.raw: the client's raw answer for these rows (§4)
             for _, name in ipairs(o.raw or {}) do

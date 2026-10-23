@@ -132,6 +132,7 @@ R.slotOf, R.slotOfToken = {}, {}
 -- The share of each hand's swings that land: an EMA over swings (a swing, c = 4, decays it; a landed one, c = 1, adds
 -- HIT_ALPHA). It scales the model's swing rate, so the step scale calibrates the value of a landed swing.
 local hitRate, HIT_ALPHA = { 1, 1 }, 0.1
+I.ASSUME_VALUE = "full" -- attribution-recovery decision 52: "full" (the step) or "ev" (hitRate x the step)
 local G = { n = 0, slot = {}, aura = {}, value = {}, interval = {}, talent = {}, pause = {} }
 -- `taken[r]`: the paying entry's `taken(kind, amount, level)` bound to the `now` context (Families/Now.lua), or false.
 -- Its gains in one-second bins: `takenBin[r][i]` the gain of the second `takenSec[r][i]` (-1: empty), i = sec % 10 + 1.
@@ -207,8 +208,11 @@ local recE0, recLo0, recHi0 = {}, {}, {}
 -- for that swing's rage; else recE0), the swing's time (`recSw`) and whether it still awaits the look-back at the
 -- answers heard since its swing (`recLook`, done at the fold's end, after its crit).
 local recX0, recSw, recLook = {}, {}, {}
+-- Per record: the share of a step its assumption added (attribution-recovery decision 52; Obs.Swing c = 5), so its
+-- confirmation (c = 7) adds the rest.
+local recAsm = {}
 for k = 1, RECORDS do
-    recX0[k], recSw[k], recLook[k] = 0, 0, false
+    recX0[k], recSw[k], recLook[k], recAsm[k] = 0, 0, false, 1
     recR[k], recHand[k], recEst[k], recLo[k], recHi[k], recHit[k], recA[k] = 0, 0, 0, 0, 0, 0, 0
     recFirm[k], recSpends[k], recE0[k], recLo0[k], recHi0[k] = false, 0, 0, 0, 0
 end
@@ -1221,6 +1225,51 @@ I.On(Obs.Swing, function(o, t)
         local k = o.b >= 1 and o.b <= RECORDS and o.b or 0
         if k > 0 then
             retract(k, t)
+        end
+        return
+    elseif c == 5 or c == 7 then -- assumed (5) or its confirmation (7), attribution-recovery spec §3.2
+        local k = o.b >= 1 and o.b <= RECORDS and o.b or 0
+        if k > 0 and c == 5 then
+            recA[k], recR[k], recGone[k], recSw[k], recLook[k] = 0, 0, false, o.t, false -- a fresh record
+        end
+        for r = 1, R.n do
+            if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then
+                local v, sc, sp, max = I.SwingValue(r, hand, o.t), R.scale[r], R.spread[r], R.max[r]
+                local e, lo, hi = R.est0[r], R.lo0[r], R.hi0[r]
+                -- a rung that lifted the slot while this swing was out already holds its rage (owe): net it first
+                local owes = o.t <= R.liftT[r] and t - R.liftT[r] <= I.LIFT_WINDOW
+                if c == 5 then -- est and hi only: affordability never rests on an assumption
+                    local f = I.ASSUME_VALUE == "ev" and hitRate[hand] or 1
+                    local de = v * sc * f
+                    local dh = de
+                    if owes then
+                        de, R.liftE[r] = net(de, R.liftE[r])
+                        dh, R.liftH[r] = net(dh, R.liftH[r])
+                    end
+                    R.est0[r], R.hi0[r] = clamp(e + de, max), clamp(hi + dh, max)
+                    if k > 0 then
+                        recAsm[k] = f
+                        predict(k, r, hand, e, lo, hi, 0, e, math.huge)
+                    end
+                elseif k > 0 and recR[k] == r then -- confirmed: the rest of a landed step, and its floor
+                    local de, dh, dl = v * sc * (1 - recAsm[k]), v * (sc + sp) - v * sc * recAsm[k], v * (sc - sp)
+                    if owes then
+                        de, R.liftE[r] = net(de, R.liftE[r])
+                        dh, R.liftH[r] = net(dh > 0 and dh or 0, R.liftH[r])
+                        dl, R.liftL[r] = net(dl, R.liftL[r])
+                    end
+                    R.est0[r] = clamp(e + de, max)
+                    R.hi0[r] = clamp(hi + (dh > 0 and dh or 0), max)
+                    R.lo0[r] = clamp(lo + dl, max)
+                    local h = hitRate[hand] + HIT_ALPHA
+                    h = h < 1 and h or 1
+                    predict(k, r, hand, recE0[k], recLo0[k], recHi0[k], h - hitRate[hand], recX0[k], math.huge)
+                    hitRate[hand] = h
+                end
+                norm(r)
+                I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.Swing)
+                break
+            end
         end
         return
     elseif c ~= 3 then

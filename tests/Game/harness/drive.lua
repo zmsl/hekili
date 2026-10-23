@@ -182,9 +182,10 @@ function M.boot(o)
     for kind = 1, 38 do
         c.I.On(kind, function(o, t)
             local e = est()
-            if kind == SWING and (o.c == 1 or o.c == 3) and c.nCd < CAP then
+            -- c = 5 an assumed hit, c = 7 its confirmation (attribution-recovery decision 51): rage at the swing too
+            if kind == SWING and (o.c == 1 or o.c == 3 or o.c == 5 or o.c == 7) and c.nCd < CAP then
                 local id = o.b >= 1 and o.b <= 8 and o.b or 0
-                if o.c == 1 and id > 0 then
+                if o.c ~= 3 and id > 0 then
                     recSw[id] = o.t
                 end
                 local n = c.nCd + 1
@@ -223,7 +224,7 @@ function M.boot(o)
         c.hits = c.hits + 1
     end)
     S.Stage = function(kind, t, a, b, cc)
-        if kind == Swing and (cc == 1 or cc == 3) then
+        if kind == Swing and (cc == 1 or cc == 3 or cc == 7) then -- c = 7: an assumption confirmed, the row's credit
             local i = c.cur
             if cc == 3 then
                 c.crits[a] = c.crits[a] + 1

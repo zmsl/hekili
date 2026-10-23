@@ -561,6 +561,95 @@ describe("the ticket pool", function()
         end)
     end)
 
+    describe("assumed outcomes (attribution-recovery decision 51)", function()
+        local staged, stage
+
+        before_each(function()
+            T.ASSUME_AT = "tolerance"
+            staged, stage = {}, I.Sources.Stage
+            I.Sources.Stage = function(kind, t, a, b, c)
+                staged[#staged + 1] = { kind, b, c }
+                return stage(kind, t, a, b, c)
+            end
+            for c = 1, 8 do
+                I.Log.bg[c] = 50 -- a crowd: late rows stay below the LR bar and reach the shadow through Overdue
+            end
+        end)
+
+        after_each(function()
+            I.Sources.Stage = stage
+        end)
+
+        local function count(c)
+            local n = 0
+            for _, s in ipairs(staged) do
+                n = n + ((s[1] == VS.Obs.Swing and s[3] == c) and 1 or 0)
+            end
+            return n
+        end
+
+        local function swingPastTolerance()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            ctl.Tick(10 + T.PendingWindow(1) + 0.01)
+            return i
+        end
+
+        it("assumes a swing past its tolerance: rage staged at once, the ticket a shadow", function()
+            local i = swingPastTolerance()
+            assert.are.same({ T.ASSUMED, 1 }, { T.state[i], count(5) })
+        end)
+
+        it("confirms a late hit: the assumption's record becomes the credit", function()
+            local i = swingPastTolerance()
+            ctl.now = 11.2
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.same({ 1, 0, 1 }, { count(7), count(6), T.closed.confirmed })
+            assert.are.equal(0, T.state[i])
+        end)
+
+        it("refunds a late dodge: the assumed rage taken back, closed refunded at the window's end", function()
+            swingPastTolerance()
+            ctl.now = 11.2
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            assert.are.equal(1, count(6))
+            ctl.Tick(11.6)
+            assert.are.equal(1, T.closed.refunded)
+        end)
+
+        it("lets the assumption stand when no row comes: closed assumed, never lost", function()
+            swingPastTolerance()
+            ctl.Tick(11.6)
+            assert.are.same({ 1, 0 }, { T.closed.assumed, T.lost[X.MELEE] })
+            assert.are.equal(T.opened, sum())
+        end)
+
+        it("never assumes a retraction's re-open", function()
+            ctl.now = 10
+            local i = T.OpenSwing(10, 1, "Creature-1", 1.5, 0, false, true)
+            ctl.Tick(10 + T.PendingWindow(1) + 0.01)
+            assert.are.same({ T.OPEN, 0 }, { T.state[i], count(5) })
+        end)
+
+        it("assumes an open swing at once through T.Assume (a provider's HIT), once", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            T.Assume(i, 10.1)
+            T.Assume(i, 10.2)
+            assert.are.same({ T.ASSUMED, 1 }, { T.state[i], count(5) })
+        end)
+
+        it("the expiry variant: no shadow; the expectation at the lost close", function()
+            T.ASSUME_AT = "expiry"
+            local i = swingPastTolerance()
+            assert.are.same({ T.OPEN, 0 }, { T.state[i], count(5) })
+            ctl.Tick(11.6)
+            assert.are.same({ 1, 1 }, { T.closed.lost, count(5) })
+        end)
+    end)
+
     describe("TICKS", function()
         local function wound(t, amount, sch)
             ctl.now = t

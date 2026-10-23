@@ -37,7 +37,7 @@ describe("swing/outcome pairing", function()
         S.Stage = function(kind, t, a, b, c)
             if kind == Swing and c == 3 then
                 crits[a] = crits[a] + 1
-            elseif kind == Swing and c == 1 then
+            elseif kind == Swing and (c == 1 or c == 7) then -- c = 7: an assumed swing's hit confirmed
                 landed[a] = landed[a] + 1
             end
             return stage(kind, t, a, b, c)

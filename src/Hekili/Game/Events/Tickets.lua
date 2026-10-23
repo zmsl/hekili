@@ -15,7 +15,7 @@ local X, U = I.Expect, I.Units
 local T = {}
 I.Tickets = T
 T.CAP = 32 -- multi-dotting: 3 targets x 4 dots = 12 TICKS, plus swings, a bolt in flight, the next commit
-T.FREE, T.COMMITTED, T.OPEN, T.PROV, T.TENT = 0, 1, 2, 3, 4
+T.FREE, T.COMMITTED, T.OPEN, T.PROV, T.TENT, T.ASSUMED = 0, 1, 2, 3, 4, 5
 local CAP, COMMITTED, OPEN, PROV = T.CAP, T.COMMITTED, T.OPEN, T.PROV
 local NONE, MELEE, UNMAPPED, ANY = X.NONE, X.MELEE, X.UNMAPPED, X.ANY
 T.COMMIT_HOLD = 60 -- s: a committed cast with no stop event closes as stopped (a lost STOP must not pin a unit)
@@ -57,6 +57,16 @@ end
 -- hard window, at pass 5 (after pass (d)), always provisional (TENT). A load-time constant; the test loaders set it from
 -- TA_EARLY=1.
 T.EARLY = false
+-- Per ticket (attribution-recovery decision 51): its lag tolerance (math.huge: none), a firm retraction's re-open
+-- (never assumed), and whether it was assumed. T.ASSUME_AT: "off" (default: no assumption, the behaviour before Task 3;
+-- the owner chooses), "tolerance" (the shadow ticket) or "expiry" (the
+-- expectation at the lost close, the measured alternative); Task 3 keeps one.
+T.ASSUME_AT = "off"
+T.tol, T.retry, T.assumed = {}, {}, {}
+for i = 1, CAP do
+    T.tol[i], T.retry[i], T.assumed[i] = math.huge, false, false
+end
+T.onAssume, T.onLost = nil, nil
 T.replaced = 0 -- every replacement of a provisional payment by a narrow-band row, re-offered or not (not a close)
 T.onFinal, T.onReplace = nil, nil -- Rows' hooks: a TENT ticket final, a TENT ticket's row replaced
 
@@ -76,6 +86,9 @@ T.closed = {
     overflow = 0,
     unpinned = 0,
     provisional = 0,
+    confirmed = 0,
+    refunded = 0,
+    assumed = 0,
 }
 T.paid, T.lost = {}, {} -- by kind: tickets paid out, rows lost
 for k = 0, 7 do
@@ -239,6 +252,7 @@ local function fill(i, k, a, xx, g, t)
     school[i], owed[i], at[i], hi[i], w[i] = ANY, 1, t, t, 0
     ref[i], lr[i], avoid[i], cast[i], done[i], first[i], T.excused[i] = 0, 0, "", "", 0, false, false
     T.held[i], T.rec[i] = 0, 0
+    T.tol[i], T.retry[i], T.assumed[i] = math.huge, false, false
     T.period[i], T.anchor[i], T.wide[i], T.link[i], T.speed[i], T.H[i], T.tickAmt[i] = 0, t, 0, 0, 0, 0, 0
     U.Hold(uid[i])
     T.opened = T.opened + 1
@@ -276,6 +290,10 @@ local function arm(i, t)
         T.speed[i] = A.velocity[a]
         T.H[i] = r / T.speed[i] + T.TOL -- Expect requires a positive travel velocity
         hi[i] = t + T.H[i]
+        if T.LagOf(guid[i], T.speed[i]) > 0 then -- a learned lag: tolerance at the widened band's end
+            local _, h = I.Kinds.Band(i, 2, t, false, "WOUND", school[i])
+            T.tol[i] = h or math.huge
+        end
     elseif k == X.TICKS then -- alone (a pure DoT): anchored at the success, after the flight with a velocity
         local a = ab[i]
         local v = A.velocity[a]
@@ -317,6 +335,8 @@ function T.OpenSwing(t, hand, g, win, mref, isFirst, retry)
     local i = T.Slot(t)
     fill(i, MELEE, 0, hand, g, t)
     school[i], w[i], hi[i], ref[i], first[i] = 1, win, t + win, mref or 0, isFirst == true
+    T.retry[i] = retry == true
+    T.tol[i] = retry and math.huge or t + T.PendingWindow(hand)
     if not retry then -- a retraction's re-open is not the hand's latest swing (pendT stayed 0 after a credit)
         T.lastSwing[hand], T.lastSwingT[hand] = i, t
     end
@@ -482,6 +502,16 @@ local function teachFrom(i, t, isAvoid, amount, flag, clean)
     end
 end
 
+-- A paid ticket's close: an assumed one closes confirmed (a hit) or refunded (an avoid), else paid (counted by kind).
+local function closePaid(i, t, isAvoid)
+    if T.assumed[i] then
+        close(i, t, isAvoid and "refunded" or "confirmed")
+    else
+        T.paid[kind[i]] = T.paid[kind[i]] + 1
+        close(i, t, "paid")
+    end
+end
+
 --- Ticket i paid by a row at t (`clean`: the only candidate at its pass): one row fewer owed; closed when none is.
 function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
     if T.onPay then
@@ -522,8 +552,7 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
         end
     end
     if owed[i] <= 0 then
-        T.paid[kind[i]] = T.paid[kind[i]] + 1
-        close(i, t, "paid")
+        closePaid(i, t, isAvoid)
     end
 end
 
@@ -568,8 +597,7 @@ function T.Final(i, now)
     end
     teachFrom(i, T.rowT[i], T.rowAct[i] ~= "WOUND", T.rowAmt[i], T.rowFlag[i], T.rowClean[i])
     T.held[i] = 0
-    T.paid[kind[i]] = T.paid[kind[i]] + 1
-    close(i, now, "paid")
+    closePaid(i, now, T.rowAct[i] ~= "WOUND")
 end
 
 --- The oldest TENT spell ticket on `g` whose narrow band holds a row at t that it would accept with its row still
@@ -659,7 +687,9 @@ local function expiry(i)
     if st == COMMITTED then
         return "stopped"
     elseif st == PROV then
-        return "provisional"
+        return T.assumed[i] and "refunded" or "provisional"
+    elseif st == T.ASSUMED and not U.IsDead(uid[i]) then
+        return "assumed" -- the assumption stands (a dead unit's closes dead below)
     elseif k == UNMAPPED or owed[i] <= 0 then
         return "expired"
     elseif guid[i] == "" then
@@ -688,8 +718,23 @@ local function expiry(i)
             end
         end
     end
+    if T.ASSUME_AT == "expiry" and T.onLost then
+        T.onLost(i)
+    end
     T.lost[k] = T.lost[k] + owed[i]
     return "lost"
+end
+
+--- (attribution-recovery decision 51) Open ticket i assumed at t: a shadow (ASSUMED) to its hard window's end, Rows
+--- stages the assumed outcome (T.onAssume). Also the providers' entry (a meter tick that says HIT). Allocates nothing.
+function T.Assume(i, t)
+    if state[i] ~= OPEN then
+        return
+    end
+    state[i], T.assumed[i] = T.ASSUMED, true
+    if T.onAssume then
+        T.onAssume(i, t)
+    end
 end
 
 --- Closes every ticket whose window ended by `now`, after Rows' T.onExpire (a swing's row). Every OnUpdate.
@@ -697,6 +742,16 @@ function T.Expire(now)
     for i = 1, CAP do
         if state[i] == T.TENT and now > T.fin[i] then
             T.Final(i, now)
+        end
+        if
+            state[i] == OPEN
+            and now > T.tol[i]
+            and now <= hi[i]
+            and T.ASSUME_AT == "tolerance"
+            and guid[i] ~= ""
+            and not U.IsDead(uid[i])
+        then
+            T.Assume(i, now) -- past its lag tolerance, unpaid: the shadow
         end
         if state[i] ~= 0 and now > hi[i] then
             if state[i] ~= COMMITTED and T.onExpire then
@@ -781,7 +836,7 @@ I.OnSnapshot(function(out)
         lost = lost + T.lost[k]
     end
     out[#out + 1] = string.format(
-        "tickets open=%d none=%d paid=%d lost=%d expired=%d refreshed=%d foreign=%d unpinned=%d dead=%d gone=%d bandRejected=%d divergent=%d overflow=%d absorbed=%d ours=%d aoeOther=%d overpaid=%d",
+        "tickets open=%d none=%d paid=%d lost=%d expired=%d refreshed=%d foreign=%d unpinned=%d dead=%d gone=%d bandRejected=%d divergent=%d overflow=%d absorbed=%d ours=%d aoeOther=%d overpaid=%d assumed=%d confirmed=%d refunded=%d",
         open,
         c.none,
         c.paid,
@@ -798,6 +853,9 @@ I.OnSnapshot(function(out)
         T.absorbed,
         T.ours,
         T.aoeOther,
-        T.overpaid
+        T.overpaid,
+        c.assumed,
+        c.confirmed,
+        c.refunded
     )
 end)

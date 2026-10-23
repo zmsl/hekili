@@ -212,6 +212,10 @@ end
 local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, ref, lag, second, k)
     local xx, at0 = T.x[credited], T.at[credited]
     if avoid then
+        if T.state[credited] == T.ASSUMED and T.rec[credited] > 0 then -- refunded: the assumed rage comes back out
+            recOpen[T.rec[credited]] = false
+            S.Stage(Obs.Swing, t, xx, T.rec[credited], 6)
+        end
         T.Provisional(credited, lr, act) -- emitted when the window closes
         L.avoids, L.avoidX, L.avoidT = L.avoids + 1, xx, at0
         return
@@ -235,8 +239,12 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
             M.learn(ref, d)
         end
     end
-    recNext = recNext % RECORDS + 1
-    local id = recNext
+    local confirm = T.state[credited] == T.ASSUMED and T.rec[credited] > 0 -- the assumption's record becomes the credit
+    local id = T.rec[credited]
+    if not confirm then
+        recNext = recNext % RECORDS + 1
+        id = recNext
+    end
     recT[id], recAmount[id], recFlag[id], recAt[id], recHand[id] = t, amount, flag, at0, xx
     recDst[id], recW[id], recRef[id], recK[id], recLR[id], recOpen[id] =
         T.guid[credited], T.w[credited], T.ref[credited], k, lr, true
@@ -245,7 +253,7 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
     T.PayTentative(credited, t, false, amount, flag, second < L.THETA, (core and not rerouting) and 1 or 2, act, 1)
     L.credited[xx] = L.credited[xx] + 1
     emit(MELEE, xx, dst, act, flag, amount, at0, 1)
-    S.Stage(Obs.Swing, at0, xx, id, 1) -- landed, at the swing's time: the resources family pays its rage (record id)
+    S.Stage(Obs.Swing, at0, xx, id, confirm and 7 or 1) -- landed (or confirmed), at the swing's time: its rage
     if flag == "CRITICAL" then
         S.Stage(Obs.Swing, t, xx, id, 3) -- the same record: a retraction takes the crit back too
     end
@@ -299,6 +307,27 @@ local function reroute(i, now)
     end
     rerouting = false
     return p > 0 or credited ~= nil
+end
+
+-- A swing past its lag tolerance (attribution-recovery decision 51): assumed a hit at once, as a credit record the
+-- oracle can judge and a late avoid can take back (Obs.Swing c = 5); a retry is never assumed (T.tol).
+T.onAssume = function(i, now)
+    if T.kind[i] ~= MELEE then
+        return -- a spell: nothing to believe; the ticket only waits as a shadow
+    end
+    recNext = recNext % RECORDS + 1
+    local id = recNext
+    recT[id], recAmount[id], recFlag[id], recAt[id], recHand[id] = now, 0, "", T.at[i], T.x[i]
+    recDst[id], recW[id], recRef[id], recK[id], recLR[id], recOpen[id] = T.guid[i], T.w[i], T.ref[i], 1, 0, true
+    T.rec[i] = id
+    S.Stage(Obs.Swing, T.at[i], T.x[i], id, 5)
+end
+
+-- The measured alternative (decision 51's comparison, the parked 9b): the expectation at a swing's lost close.
+T.onLost = function(i)
+    if T.kind[i] == MELEE and not T.retry[i] then
+        S.Stage(Obs.Swing, T.at[i], T.x[i], 0, 5)
+    end
 end
 
 -- A TENT ticket final: what it held is staged now (attribution-recovery decision 48).
@@ -444,14 +473,23 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
         end
     end
     -- pass (d), Overdue (attribution-recovery decision 46 as amended): after every band and the melee scoring, the
-    -- oldest spell ticket of the queue past its expected tolerance whose hard window holds the row (late, never early);
-    -- a swing reaches pass (d) only once ASSUMED (Task 3)
+    -- oldest spell ticket of the queue past its expected tolerance whose hard window holds the row (late, never early),
+    -- then the oldest ASSUMED swing (decision 51: an open swing never)
     if p == 0 and not credited and not tied then
         p, n = T.Pick(t, g, 4, act, flag, amount, school, avoid)
         pass = 4
         if p == 0 and T.EARLY then -- the EARLY variant: a row before a learned flight's narrow band, provisional
             p, n = T.Pick(t, g, 5, act, flag, amount, school, avoid)
             pass = 5
+        end
+        if p == 0 and white and (AVOIDS[act] or not avoid) and not (not avoid and t - lastW0 <= SAME_FRAME) then
+            credited = M.Overdue(t, g, amount, flag, avoid, unknown)
+            if credited then
+                local h = T.x[credited]
+                lag = t - T.at[credited]
+                lr, ref, second = 0, h, math.huge -- no LR: it teaches nothing and is never clean
+                k = M.thetaIndex(h, (avoid or unknown) and 4 or M.classOf(h, amount, flag), h, lag)
+            end
         end
     end
     if p > 0 then
