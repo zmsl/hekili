@@ -155,7 +155,6 @@ end
 function M.run(kind, band, fights, seed0)
     local m = metrics.newTickets()
     m.melee = metrics.new()
-    m.swaps = M.KINDS[kind].twin ~= nil -- K13: a swapped equal pair is right (metrics.tickets, spec §4.2)
     for f = 0, fights - 1 do
         local o = {}
         for k, v in pairs(M.KINDS[kind]) do

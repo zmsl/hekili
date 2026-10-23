@@ -542,8 +542,7 @@ function M.tickets(m, c, s, W)
     -- A swapped pair (spec §4.2, K13): our outcome unpaid and another source's on its unit within SAME_FRAME (0.05 s)
     -- paid our cast's ticket. An equal class (act, crit) is the same state either way: ours counts right, theirs is
     -- neither false credit nor leak. A different class is a divergent pair: ours stays missed, theirs false credit.
-    -- Only when the tally asks (m.swaps: K13's kinds); on K1-K9 it would raise K2, K4, K5, K7 and K8's crowd cells.
-    for _, g in ipairs(m.swaps and list or {}) do
+    for _, g in ipairs(list) do
         if g.own and g.at == 0 then
             for _, f in ipairs(list) do
                 if
