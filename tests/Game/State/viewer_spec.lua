@@ -11,12 +11,13 @@ describe("the CooldownViewer presence leaf", function()
         local api
         api, ctl = fake.new()
         ctl.now = 1
-        -- aura 1 (SPENDER_A) by its spell ID, a BuffIcon item on the player; aura 2 by a linked ID, an item on the target
+        -- aura 1 (SPENDER_A) by its spell ID, a BuffIcon item on the player; aura 2 by a linked ID, an item on the target.
+        -- Both hidden: a down item reads no auraDataUnit (CDV_FRAME 5609); `unit` is what ViewerShow gives it when up.
         ctl.viewer.sets[2] = { 501, 502 }
         ctl.viewer.infos[501] = { spellID = fs.SPENDER_A }
         ctl.viewer.infos[502] = { spellID = 9999, linkedSpellIDs = { fs.SPENDER_C_R2 } }
-        ctl.ViewerItem("BuffIconCooldownViewer", 1, 501).auraDataUnit = "player"
-        ctl.ViewerItem("BuffIconCooldownViewer", 2, 502).auraDataUnit = "target"
+        ctl.ViewerItem("BuffIconCooldownViewer", 1, 501).unit = "player"
+        ctl.ViewerItem("BuffIconCooldownViewer", 2, 502).unit = "target"
         local ns = load.module()
         local VS = ns.VirtualState
         I = ns.VirtualStateInternal
@@ -60,6 +61,37 @@ describe("the CooldownViewer presence leaf", function()
         assert.are.equal(I.UP, I.presence.Presence(1, 1))
     end)
 
+    it("maps by override ID too", function()
+        ctl.viewer.infos[501] = { spellID = 9998, overrideSpellID = fs.SPENDER_A }
+        I.Build(d, 1)
+        assert.are.equal(2, I.presence.covered)
+        ctl.ViewerShow(ctl.viewer.items.BuffIconCooldownViewer[1], true)
+        assert.are.equal(I.UP, I.presence.Presence(1, 1))
+    end)
+
+    it("a down item reads no unit: the edge goes to the unit remembered from the up read", function()
+        local item = ctl.viewer.items.BuffIconCooldownViewer[2]
+        local edges = {}
+        I.presence.onEdge = function(j, u, up)
+            edges[#edges + 1] = { j, u, up }
+        end
+        ctl.ViewerShow(item, true)
+        ctl.ViewerShow(item, false)
+        assert.is_nil(item.auraDataUnit)
+        assert.are.same({ { 2, 2, true }, { 2, 2, false } }, edges)
+        assert.are.equal(I.DOWN, I.presence.Presence(2, 2))
+    end)
+
+    it("an Essential or Utility item is no presence source (always shown, CV §2): its aura is undecided", function()
+        local items = ctl.viewer.items
+        items.BuffIconCooldownViewer[2] = nil -- aura 2 now has only an Essential item
+        local essential = ctl.ViewerItem("EssentialCooldownViewer", 1, 502)
+        I.Build(d, 1)
+        assert.are.equal(1, I.presence.covered)
+        assert.is_nil(essential.hooks.OnShow)
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2))
+    end)
+
     it("a hide with the aura still up is no edge (layout refresh, CDM-S)", function()
         local item = ctl.viewer.items.BuffIconCooldownViewer[1]
         ctl.ViewerShow(item, true)
@@ -74,16 +106,24 @@ describe("the CooldownViewer presence leaf", function()
 
     it("reads nothing and hooks nothing with the Cooldown Manager unavailable", function()
         ctl.viewer.available = false
+        local fresh = ctl.ViewerItem("BuffIconCooldownViewer", 3, 501)
         I.Build(d, 1) -- re-activate
         assert.are.equal(0, I.presence.covered)
+        assert.is_nil(fresh.hooks.OnShow)
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1))
     end)
 
     it("deactivated, its hooks return at once", function()
+        local Q = I.presence
+        local n = 0
+        Q.onEdge = function()
+            n = n + 1
+        end
         local d2 = fs.def(fs.new(9))
         I.Build(d2, 1) -- default presence
-        local item = ctl.viewer.items.BuffIconCooldownViewer[1]
-        assert.has_no.errors(function()
-            ctl.ViewerShow(item, true)
-        end)
+        ctl.ViewerShow(ctl.viewer.items.BuffIconCooldownViewer[1], true)
+        assert.are.equal(0, n)
+        assert.are.equal(0, Q.covered)
+        assert.are.equal(I.UNDECIDED, Q.Presence(1, 1))
     end)
 end)

@@ -15,13 +15,15 @@ local Plain = S.Plain
 I.UNDECIDED, I.UP, I.DOWN = 0, 1, 2
 I.PRESENCE = I.PRESENCE or {}
 
-local VIEWERS =
-    { "EssentialCooldownViewer", "UtilityCooldownViewer", "BuffIconCooldownViewer", "BuffBarCooldownViewer" }
+-- Only the aura viewers: Essential and Utility items are always shown (CV §2), so their auras get no edges and answer
+-- I.UNDECIDED (the router falls through to the default source).
+local VIEWERS = { "BuffIconCooldownViewer", "BuffBarCooldownViewer" }
 local UNIT = { player = 1, target = 2 }
 
 local Q = { name = "viewer", scope = "self", covered = 0, onEdge = nil }
 local active, api0 = false, nil
 local cdvToJ = {} -- cooldownID -> aura index (built out of combat)
+local unitOf = {} -- cooldownID -> its last known unit (0: none yet); a down item reads no unit (CDV_FRAME 5609)
 local st = {} -- (u - 1) * AURA_UNIT + j -> 0 undecided, 1 up, 2 down
 local items = {} -- the hooked item frames, for the target re-read (built out of combat)
 local hooked = setmetatable({}, { __mode = "k" })
@@ -34,22 +36,22 @@ local function hook(self)
     local api = api0
     local id = Plain(api, rawget(self, "cooldownID"))
     local j = id and cdvToJ[id]
-    local u = UNIT[Plain(api, rawget(self, "auraDataUnit")) or ""]
-    if not j or not u then
-        return -- a cooldown item, or an unmapped aura
+    if not j then
+        return -- an unmapped aura
     end
     local aid = rawget(self, "auraInstanceID")
     local up = api.issecretvalue(aid) or aid ~= nil -- secret: only tested, never compared
-    local k = (u - 1) * I.AURA_UNIT + j
+    local u = UNIT[Plain(api, rawget(self, "auraDataUnit")) or ""] or unitOf[id]
+    if not u or u == 0 then
+        return -- no unit ever seen: nothing to move (every pair is down from the build)
+    end
     local v = I.DOWN
     if up then
         v = I.UP
+        unitOf[id] = u
     end
-    local was = st[k]
-    if was ~= v then
-        if was == nil or was == 0 then
-            Q.covered = Q.covered + 1 -- a unit known only now (auraDataUnit nil at build)
-        end
+    local k = (u - 1) * I.AURA_UNIT + j
+    if st[k] ~= v then
         st[k] = v
         if Q.onEdge then
             Q.onEdge(j, u, up, api.GetTime())
@@ -60,7 +62,7 @@ end
 -- The map and the hooks, out of combat (allocates: the getters' tables, GetChildren's list).
 local function build(api, def)
     for k in pairs(cdvToJ) do
-        cdvToJ[k] = nil
+        cdvToJ[k], unitOf[k] = nil, nil
     end
     for k in pairs(st) do
         st[k] = 0
@@ -99,7 +101,8 @@ local function build(api, def)
                         end
                     end
                     if j and not cdvToJ[id] then
-                        cdvToJ[id] = j
+                        cdvToJ[id], unitOf[id] = j, 0
+                        st[j], st[I.AURA_UNIT + j] = 0, 0 -- preallocated: the hook inserts nothing
                     end
                 end
             end
@@ -120,9 +123,12 @@ local function build(api, def)
                     local id = Plain(api, rawget(item, "cooldownID"))
                     local j = id and cdvToJ[id]
                     local u = UNIT[Plain(api, rawget(item, "auraDataUnit")) or ""]
-                    if j and u and not seen[(u - 1) * I.AURA_UNIT + j] then
-                        seen[(u - 1) * I.AURA_UNIT + j] = true
-                        st[(u - 1) * I.AURA_UNIT + j] = I.DOWN
+                    if j and u then
+                        unitOf[id] = u
+                    end
+                    if j and not seen[j] then -- covered: down on both units until a read says up
+                        seen[j] = true
+                        st[j], st[I.AURA_UNIT + j] = I.DOWN, I.DOWN
                         Q.covered = Q.covered + 1
                     end
                 end

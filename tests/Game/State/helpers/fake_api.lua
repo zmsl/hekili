@@ -589,7 +589,9 @@ function M.new()
     }
     -- The Cooldown Manager (providers spec §4.2; CV research §2): `sets[category]` its cooldown IDs, `infos[id]` their
     -- info ({ spellID, ... }), `items[viewer]` each viewer frame's children (ctl.ViewerItem); ctl.ViewerShow(item, up)
-    -- is the client's show or hide 3-4 ms after the aura edge: auraInstanceID secret or nil, then the item's hooks.
+    -- is the client's show or hide 3-4 ms after the aura edge: auraInstanceID secret or nil, then the item's hooks. A
+    -- shown item reads its `auraDataUnit` (set by the caller, else the item's `unit`); a hidden one reads no unit
+    -- either (CDV_FRAME 5609).
     ctl.viewer = { available = true, sets = { [0] = {}, [1] = {}, [2] = {}, [3] = {} }, infos = {}, items = {} }
     api.C_CooldownViewer = {
         IsCooldownViewerAvailable = function()
@@ -626,9 +628,9 @@ function M.new()
     function ctl.ViewerShow(item, up)
         item.shown = up
         if up then
-            item.auraInstanceID = SECRET
+            item.auraInstanceID, item.auraDataUnit = SECRET, item.auraDataUnit or item.unit
         else
-            item.auraInstanceID = nil
+            item.auraInstanceID, item.auraDataUnit = nil, nil
         end
         for _, fn in ipairs(item.hooks[up and "OnShow" or "OnHide"] or NO_HOOKS) do
             fn(item)

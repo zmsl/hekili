@@ -268,7 +268,7 @@ describe("zero allocation", function()
         ctl.viewer.sets[2] = { 501 }
         ctl.viewer.infos[501] = { spellID = fs.SPENDER_A }
         local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 501)
-        item.auraDataUnit = "player"
+        item.unit = "player"
         local ns = load.module()
         local I = ns.VirtualStateInternal
         local def = fs.def(fs.new(9))
