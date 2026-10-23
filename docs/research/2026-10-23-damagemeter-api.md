@@ -2,32 +2,27 @@
 
 Date 2026-10-23. Branch `forever-damagemeter-research` from `forever` 093313ae. Docs only; no addon code changes.
 Question (owner): can `C_DamageMeter` help attribution of our own outcomes, resource estimates or enemy counting?
-Revised the same day with three in-game captures (section 3); the first version's verdict (no in-combat use) is
+Revised the same day with four in-game captures (section 3); the first version's verdict (no in-combat use) is
 withdrawn.
 
 Sources: the Forever generated docs `Blizzard_APIDocumentationGenerated/DamageMeterDocumentation.lua` [DM:line] and
 `DamageMeterConstantsDocumentation.lua`; Blizzard's `Blizzard_DamageMeter` addon (Forever UI source); ForeverMeter
 (`dldvlpr-addons-wow/threatMeter`, `ForeverMeter.lua`, read 2026-10-23) [FM:line]; the ForeverProbe O capture of
 2026-10-14 (row N49 of `docs/research/tdf/2026-10-14-virtual-combat-log-events.md`) [MEAS O7]; and the `/vslog meter`
-captures of 2026-10-23 [CAP A/B/C] (ForeverProbe b7922ea, `Log.lua`; owner pastes, solo Fury Warrior L25 (Forsaken)
-at Bael'dun; condensed copy `damagemeter-solo-2026-10-23.log` in the session's captures folder). Times are ms.
+captures of 2026-10-23 [CAP A-D] (ForeverProbe b7922ea, `Log.lua`; owner pastes, Fury Warrior L25 (Forsaken), solo in
+A-C at Bael'dun; condensed copy `damagemeter-solo-2026-10-23.log` in the session's captures folder). Times are ms.
 
 ## 0. Verdict
 
-`DAMAGE_METER_COMBAT_SESSION_UPDATED` is a plain, per-event announcement of **our own** damage, healing and damage
-taken, at the server's resolution time, in any crowd. Every getter is still secret in combat, but the event needs no
-getter: its `(type, sessionID)` arguments are plain, and the session is per player. A type-0 (DamageDone) group fires
-0-11 ms after each `PLAYER_SWING` that hits and never for one that misses, dodges or is parried (99 swings, 0
-exceptions), while the white swing's own `UNIT_COMBAT` row typically comes 0.1-1.45 s later; instants and DoT ticks fire
-a group in the frame of their row. Other players', pets' and NPCs' damage on our target, and others' heals, fire nothing
-(capture B session 167: seven foreign rows on our Rifleman, no group; capture A: a foreign fire row, no group). Type 7
-(DamageTaken) fires for each hit on us, 0.39-0.57 s before a mob's melee row, and never for our dodge, parry or a miss.
-So the event gives the ticket model three things it cannot get elsewhere: a swing's hit-or-avoid at the swing (Task 9b:
-rage credited at the swing, amount corrected by the row), a count of our own damage events against which a surplus row
-is foreign (crowd precision), and the mobs' hit times on us early (Attackers). After combat the getters read plain on
-the first try and the totals equal the sum of our rows exactly in four fights (923, 3739, 873, 973), a free ground truth
-for amount bands and recall audits. The API works with the Damage Meter disabled in the game options. Build it as a
-`Sources/` event consumer feeding a preallocated tick ring (section 7); read the getters only out of combat.
+`DAMAGE_METER_COMBAT_SESSION_UPDATED` is a plain, per-event announcement of **our group's** damage, healing and damage
+taken (us and party members; strangers and NPCs never), at the server's resolution time. Every getter is secret in
+combat, but the event needs none: its `(type, sessionID)` arguments are plain. Solo, a type-0 group fires 0-11 ms after
+each `PLAYER_SWING` that hits and never for an avoid (99 swings, 0 exceptions), 0.1-1.45 s before the white row;
+instants and DoT ticks fire in their row's frame. Party members' hits also fire groups (capture D), so in a group a
+swing's hit-or-avoid at the swing carries a collision caveat and a group means "ours or a partner's"; a row with no
+group is certainly a stranger's. Type 7 announces group damage taken, ~0.4 s before a melee row. After combat the totals
+read plain on the first try and equal our rows exactly (four fights), with the Damage Meter option on or off. Build it
+as a `Sources/` event consumer feeding a preallocated tick ring (section 7); read getters only out of combat.
 
 ## 1. Captures
 
@@ -36,6 +31,7 @@ for amount bands and recall audits. The API works with the Damage Meter disabled
 | A (691 rows) | 163, 164 | meter on | fight 1: one Bael'dun Soldier, 6.8 s; fight 2: Soldiers and Riflemen, 50 s; in-combat reads (types 0, 7, duration), REGEN watch, out-of-combat reads (types 0, 10) |
 | B (1228 rows incl. A) | 165, 166, 167 | meter **disabled** in options | 165 solo; 166 others fighting other mobs nearby; 167 other players and a pet hitting our target; in-combat type 10, out-of-combat type 10 |
 | C (154 rows) | 168 | meter on | clean solo fight, REGEN watch |
+| D (255 rows) | 170, 171 | meter on | PARTY: us (Warrior), a Paladin and a Warlock; in-combat type 0 |
 
 Each damage group is several events in one or two ms: types 0, 10 (EnemyDamageTaken) and usually 1 (Dps; missing from
 some groups in B and C) for the session id, and again for session id 0. Heals give types 2
@@ -93,7 +89,19 @@ The meter's out-of-combat type-10 read gives our Rifleman damage as 64: the one 
 301065, 388 ms after the group) and the other seven, including the school-1 11 at 300978, are foreign. Our Soldier
 damage (809) equals the sum of our rows on its plate (nameplate6). Session 166: groups only at our swings while others
 fought nearby. Capture A fight 2: a foreign 8 school 4 on nameplate3 (83405) fired no group, and the meter total 3739
-equals our rows (3747) minus that row. Others' heals (277137, 296404, 310210) fired no type 2.
+equals our rows (3747) minus that row. Strangers' heals (277137, 296404, 310210) fired no type 2.
+
+**Party (capture D).** Party members' damage fires type-0/1/10 groups in the row's frame: Warlock school 32 rows on our
+target at 251095 (34), 253141 (34), 253363 (58), Paladin school 2 66 at 253254, each with a group within 1 ms; after we
+left combat (`TARGET none` 255465, no more swings) the partners' hits on the next mob kept ticking (258714 to 258715,
+260008, 260712, 262749 to 262750, 262946 to 262947, 264691 to 264692). Groups with no visible row (party hits on units
+we hold no token for): 251635, 254696, 256688, 257034. A school-1 41 on our target at 253701 had its group 23 ms later
+(253724), source unknown (a pet or the Paladin's melee). A party heal (254032 party1 HEAL 75) came with a 0/1/10 group,
+not 2/3: unexplained, maybe a damage event in the same frame. Type 7 fires for party members' damage taken: 254794 to
+party1 WOUND 33 at 255120 (326 ms), ours 253822 to player WOUND 22 at 254221 (399 ms). A new session (171) began at
+261021 while only the partners fought: sessions follow the group's combat. In combat `#combatSources` was 3 with plain
+classes (WARRIOR `isLocalPlayer`, PALADIN, WARLOCK), all else secret. The session is the group's; captures A-C saw only
+strangers, which never tick.
 
 **Getters in combat** (A and B): session `totalAmount`, `maxAmount`, `durationSeconds`, every source's GUID, name,
 totals, `sourceDisplayType`, death time, every spell's `spellID`, amounts and name: secret. Plain: `#combatSources`
@@ -184,13 +192,13 @@ The open gaps: K16's raid cold start (unit-registry spec §6), crowd precision (
 
 | Belief / gap | What the meter gives | What it does not |
 |---|---|---|
-| Swing outcome (MELEE tickets, 9b) | Hit or avoid at the swing: a type-0 group within 15 ms of `PLAYER_SWING`, 0.1-1.45 s before the row. Rage for a hit can be credited at the swing (an estimate from the learned band), the row corrects the amount; no group means no rage and an avoid row is owed | Crit, block or glance (only the row says), the amount, which hand when both swing in one frame |
+| Swing outcome (MELEE tickets, 9b) | Hit or avoid at the swing: a type-0 group within 15 ms of `PLAYER_SWING`, 0.1-1.45 s before the row. Rage for a hit can be credited at the swing (an estimate from the learned band), the row corrects the amount; no group means no rage and an avoid row is owed. In a party a partner's hit inside the window reads as ours (a few percent of swings at party hit rates); the row corrects it through a replaceable payment | Crit, block or glance (only the row says), the amount, which hand when both swing in one frame |
 | Spell outcome (FRAME, STRIKE tickets) | Hit or avoid for an instant: a group 3-14 ms after the row; none for a dodge | Nothing earlier than the row for instants |
 | Projectiles (FLIGHT) | Expected: a group at the landing, a second timing anchor for the learned lag | Unmeasured (no caster capture) |
-| DoT ticks (TICKS) | A group per tick of ours, in the row's frame | Early timing |
-| Foreign rows (crowd precision, K16) | Each group owes at least one own row; a row in a group's frame is ours; a delayed school-1 row is ours only while a hit swing is owed; every other row on our victims is foreign. Holds solo and in a crowd (section 3) | Which of two candidate rows is ours when both fit (300978 vs 301065): the amount band decides |
-| Attackers (mob swing clock), parry-haste | Type-7 groups: the mobs' hits on us 0.39-0.57 s before the melee row, plus self-damage | The source mob; avoids on us (no group); which hits are melee |
-| Healing on us | Types 2 and 3 for our own heals and procs only | Others' heals |
+| DoT ticks (TICKS) | A group per tick of ours, in the row's frame. A partner's periodic tick on our target also shows as a group in its row's frame: a plain sign that a partner's effect is on the target (their auras are unreadable), for TICKS' foreign labelling | Early timing; whose tick it is |
+| Foreign rows (crowd precision, K16) | Groups count the group's hits: a row with no group in its frame and no owed hit swing is certainly foreign (a stranger's); a row with a group is ours or a partner's. Solo with strangers around, that is exact (section 3) | Ours vs a partner's: the tickets and amount bands decide; which of two candidates is ours (300978 vs 301065) |
+| Attackers (mob swing clock), parry-haste | Type-7 groups: hits on the group 0.33-0.57 s before a melee row, plus self-damage. Ours only when a row on `player` follows, so the clock is fixed retroactively | The source mob; the victim; avoids (no group); which hits are melee |
+| Healing | Types 2 and 3 for our heals and procs; strangers' heals fire nothing | Party heals (one came with a 0/1/10 group, capture D) |
 | Amount bands, recall audit, taken rate | After combat, plain on the first try: our total per damage spell ID, per creature type (type 10), damage taken (type 7) per spell; exact against our rows | The first fight's bands; per-target or per-GUID splits |
 | Enemy counting | In combat `#combatSources` of type 10 = creature types we have damaged (plain, cumulative) | A live count of engaged enemies or GUIDs |
 | Threat, resources | Nothing | Everything |
@@ -204,14 +212,15 @@ The open gaps: K16's raid cold start (unit-registry spec §6), crowd precision (
 - **Swings.** A MELEE ticket whose `PLAYER_SWING` has a type-0 group in `[swing, swing + 15 ms]` is marked hit at once
   (rage estimate from the band: `Obs.Swing` "assumed" becomes evidence-driven rather than lag-timeout-driven); with no
   group by 15 ms it is marked avoid and pays the next MISS/DODGE/PARRY row. The decision waits one frame, since the
-  group trails the swing by up to 11 ms. A missed swing in the same frame as a DoT tick or proc of ours would read as a
-  hit; the row still settles it.
+  group trails the swing by up to 11 ms. A missed swing in the same frame as any group member's hit, DoT tick or proc
+  reads as a hit; the payment stays replaceable and the row settles it.
 - **Spells.** An instant's FRAME ticket is confirmed by a group in its frame. A FLIGHT ticket's group at the landing (if
   the caster probe confirms it) pins the lag sample.
-- **Foreign rows.** In each window, rows on our victims beyond what the open groups and owed swing tickets cover are
-  foreign; Rows sends them to `background()` without spending a ticket.
-- **Attackers.** A type-7 group opens a "hit on us due" mark 0.4-0.6 s ahead of the melee row; a group with a row in
-  its frame is a ranged or spell hit. Avoids on us stay row-only.
+- **Foreign rows.** A row on our victims with no group in its frame (±15 ms) and no owed hit swing is a stranger's;
+  Rows sends it to `background()` without spending a ticket. A row with a group is ours or a partner's and goes
+  through the normal ticket match.
+- **Attackers.** A type-7 group is a hit on someone in the group: keep its time, and use it for our swing clock only
+  when a row on `player` follows (in its frame, or 0.3-0.6 s later for melee). Avoids on us stay row-only.
 - **After combat.** At `PLAYER_REGEN_ENABLED`, one read per type (0, 7, 10) in Sources, each value checked with
   `issecretvalue()` and the read dropped if any is secret, feeding band seeds and a debug recall audit.
 
@@ -225,36 +234,12 @@ one O session [MEAS O7]); the handler must return after one integer compare for 
 
 1. **Projectiles.** Caster capture (Druid Wrath at max range): is the group at the landing (server resolution) or the
    cast? Same `/vslog` sequence as below.
-2. **Party and raid members.** Answered for strangers and their pets (no groups; capture B). Expected the same for party
-   members (the session is per player); confirm once with the sequence below. Our own pet: does it fold in
-   (`RedirectSourceToOwner`)? Needs a pet class.
+2. **Pets and raids.** Answered for strangers and their pets (no groups; capture B) and for party members (groups;
+   capture D). Our own pet (`RedirectSourceToOwner`), party pets (253701 is a candidate) and raid members: unmeasured.
 3. **Instances and encounters.** Repeat capture C inside an instance; log `ADDON_RESTRICTION_STATE_CHANGED`.
 4. **Type 10 session total** (2050 vs 3739 in fight 2): which number is it?
 5. **Dual-wield frames.** Both hands in one frame (63189/63191, 64656/64657) gave one group each; a frame with one hit
    and one avoid has not been seen.
 
-### Party probe (`/vslog`, ForeverProbe b7922ea)
-
-Partner in your party, then repeat with the partner not grouped. Open-world mob, no target dummies.
-
-```
-/vslog clear
-/vslog meter events
-/vslog meter watch
-/vslog on
-/vslog note phase1 me alone
-  (pull, swing ~5 s)
-/vslog note phase2 partner joins
-  (partner hits the same target; partner's pet too if any; ~5 s)
-/vslog meter
-/vslog meter 10
-/vslog note phase3 partner alone
-  (stop attacking, /stopattack; partner keeps hitting ~5 s)
-  (finish the mob; wait for REGEN)
-/vslog meter
-/vslog meter 10
-/vslog dump
-```
-
-Read: groups only at our swings in all phases (party is per player) or also during phase 3 (group-wide);
-`#combatSources` in the in-combat `/vslog meter` (1 or 2).
+The party probe (capture D) is done; its sequence (`/vslog clear`, `meter events`, `meter watch`, `on`, notes per phase,
+one `/vslog meter` in combat, `meter` and `meter 10` after, `dump`) serves for the pet and caster probes too.
