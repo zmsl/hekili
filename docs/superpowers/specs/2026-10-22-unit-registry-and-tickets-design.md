@@ -1,6 +1,8 @@
 # Unit registry and attribution tickets (design, 2026-10-22)
 
-Status: DESIGNED. Binding authority for the implementation plan. Base: `origin/forever` 760c0b55.
+Status: BUILT (docs/superpowers/plans/2026-10-22-unit-registry-and-tickets.md); §4.2's union belief designed, not built.
+Built 2026-10-23: the text below is amended to what was built and ruled (marked "as built" where it departs from the
+first design). Base: `origin/forever` 760c0b55.
 Paths are under `src/Hekili/` unless they start with `src/Hekili_`, `tests/`, `tools/` or `docs/`.
 Evidence: the Wrath captures of 2026-10-22 (capture a `wrath-5176-2026-10-22.log`, capture b
 `wrath-5176-2026-10-22-b.log`, capture c `wrath-5176-2026-10-22-c-swap.log`, and the soft-targeting log, pasted and not
@@ -203,8 +205,11 @@ mob turns to us (7166-7169), which Attackers' `recheck` already covers (`Attacke
 
 ### 2.6 Capacity and eviction
 
-At most 44 tokens are bound and at most `TICKETS` = 16 tickets are open, so at most 60 slots are LIVE or held; 64 slots
-always leave 4 that are released or FREE.
+At most 44 tokens are bound and at most `TICKETS` = 32 tickets are open (16 in the first design, which left 4 of 64
+slots released or FREE; decision 9). A ticket pins the unit it was committed against, which a token usually still
+binds, so the held set stays well under 64 in practice. As built, the worst case (44 tokens on 44 units plus 32 tickets
+each on another unit, 76) exceeds the pool: a new GUID then finds no slot, its token stays unbound and its rows count
+`unresolved`; nothing LIVE or held is evicted. K16's raid-40 run never reached it.
 A new GUID takes a FREE slot, else the GONE or released DEAD slot with the oldest `uSeen`, else a released GRACE slot with the oldest
 `uSeen`. A LIVE or held slot is never evicted. Evictions are counted (`U.evicted`). The search is a 64-step loop.
 
@@ -239,8 +244,9 @@ Each kind's matching rule and closure rule are implemented once, in the engine; 
 
 ### 3.1 The record
 
-A pool of `TICKETS` = 16 records (Rows has 8 today, `Rows.lua:104`; flight windows of up to about 2.1 s for a 40 yd
-Speed-20 cast need more room). Fields, each a preallocated array:
+A pool of `TICKETS` = 32 records (Rows had 8, `Rows.lua:104`; flight windows of up to about 2.1 s for a 40 yd
+Speed-20 cast need more room, and multi-dotting three targets needs about 17: 16 in the first design, raised by owner
+ruling 2026-10-22). Fields, each a preallocated array:
 
 | Field | Meaning |
 |---|---|
@@ -325,7 +331,7 @@ never emitted anyway (`emit` drops a "" destination, `:283-286`).
 | FLIGHT(speed, school) | the hard window `[at, at + rMax / speed + TOL]`, scored by the learned lag (3.3.1) | a WOUND of `school`; any avoid (a spell miss is school 1, fact 2) | on its row, or expiry |
 | MELEE(hand) | the LR density's support `[0, w]` (`Rows.lua:252-269`) | the swing scoring (3.4 step 3) | on its row (an avoid provisionally), or expiry |
 | STRIKE | today's frame | the strike's row; it replaces the main hand's MELEE ticket within `STRIKE_WINDOW`, or waits for that swing (today `:329-332`, `:351-361`) | on its row, or expiry |
-| TICKS(period, ticks, school) | tick `k` at application + `k x period +- 0.1 s` | a WOUND of `school` on the pinned GUID inside a tick's band; no amount band before the first paid tick, then a soft band of [0.5 x, 2 x] the last paid tick (3.4, banded ranking); an alone-declared TICKS ticket takes the application's avoid inside `LandWindow(1)` (inside the FLIGHT bands when the ability declares `velocity`, 3.2) and closes with nothing owed | on the last tick; on a refresh (a new application of the same ability on the same GUID: closed as `refreshed`, its unpaid `owed` not lost, and a new TICKS ticket opens from the new application); on the unit's death (`closedDead`, decisions 7 and 8); on the removal of the ability's debuff on that GUID (the aura row `L.Aura` emits, `Game/Events/CombatLog.lua:171`); or expiry |
+| TICKS(period, ticks, school) | tick `k` at application + `k x period +- 0.1 s` | a WOUND of `school` on the pinned GUID inside a tick's band; no amount band before the first paid tick, then a soft band of [0.5 x, 2 x] the last paid tick (3.4, banded ranking); an alone-declared TICKS ticket takes the application's avoid in its own frame (`SAME_FRAME`) at pass (a) and inside `LandWindow(1)` at passes (b) and (c), as FRAME does (as built: with no pass (a) band a missed application went unpaid and its DoT stayed believed up), or inside the FLIGHT bands when the ability declares `velocity` (3.2), and closes with nothing owed | on the last tick; on a refresh (a new application of the same ability on the same GUID: closed as `refreshed`, its unpaid `owed` not lost, and a new TICKS ticket opens from the new application); on the unit's death (`closedDead`, decisions 7 and 8); on the removal of the ability's debuff on that GUID (the aura row `L.Aura` emits, `Game/Events/CombatLog.lua:171`); or expiry |
 | CHANNEL(period, school) | tick `j` at `at + j x period +- TOL` | a WOUND of `school` | on `Obs.ChannelStop` for the ability (`Casts.lua:130-139`) |
 | UNMAPPED | `UNMAPPED_WINDOW` | an avoid or crit nobody took (3.4 step 5) | expiry, never lost |
 
@@ -356,14 +362,15 @@ change. When the pinned GUID is the current target and the bracket has `lo > 0`,
 (its success) and `CLOSE` = 7 yd/s (a running mob, which also meets the projectile in flight). The bracket's upper bound is never used: a closing mob makes it stale on the wrong side.
 
 Learned lag. A pool of `LAG_CAP` = 16 records, keyed by (GUID, speed), preallocated: `lagGUID`, `lagSpeed`, `lagE` (the
-last observed lag, s), `lagSpr` (spread), `lagT` (time of the last observation), `lagN` (observations). It is the
-same mechanism as Rows' global melee lag (`learn()`, `Rows.lua:272-279`), keyed per unit and speed because a
-projectile's lag depends on the distance to that unit. A FLIGHT ticket paid in pass (a) or (b) (3.4) with no other
-candidate in that pass teaches its record: `lagE` takes the observed lag (the expected lag for the next ticket is the
-last one: a closing mob makes it shrink); `lagSpr` moves by `0.25 x (1.2533 x |lag - old lagE| - lagSpr)`, clamped to
-[0.02, 0.4]; `lagT` is the row's time. The first landing on a GUID also gives its distance, `lag x speed` (Snapshot
-only). A full pool evicts the record with the oldest `lagT`. Records survive combat end (a GUID does not return) and
-reset at load.
+last observed lag, s), `lagSpr` (spread), `lagT` (time of the last observation), `lagN` (observations). It is the same
+mechanism as Rows' global melee lag (`learn()`, `Rows.lua:272-279`), keyed per unit and speed because a projectile's lag
+depends on the distance to that unit. A FLIGHT ticket paid in any pass (3.4) with no other candidate in that pass
+teaches its record (a pass (c) payment makes the first record: with none, a ticket is a candidate in pass (c) only, so
+no record would ever exist): `lagE` takes the observed lag (the expected lag for the next ticket is the last one: a
+closing mob makes it shrink); `lagSpr` moves by `0.25 x (1.2533 x |lag - old lagE| - lagSpr)`, clamped to [0.02, 0.4];
+`lagT` is the row's time. The first landing on a GUID also gives its distance, `distance = lag x speed`, meant for the
+Snapshot only (not built: docs/dev/gaps.md "Snapshot flight distance"). A full pool evicts the record with the oldest
+`lagT`. Records survive combat end (a GUID does not return) and reset at load.
 
 Widening schedule, for a ticket whose (GUID, speed) has a record, with `d` = the ticket's anchor minus the record's
 last paid anchor (`at - (lagT - lagE)`): a lag measures the distance at its ticket's anchor, so the closing time runs
@@ -374,7 +381,15 @@ anchor to anchor (the row's time minus `lagT` would miss the lag the mob already
   this anchor flown at `speed + CLOSE` (a mob running in at `CLOSE` meets the projectile); upward (the mob backed off)
   `up = max(b, (CLOSE / 2 / speed) x d)`;
 - narrow band (pass a): `[at + lagE - b, at + lagE + b]`;
-- widened band (pass b): `[max(at, at + bound - b), at + lagE + up]`, clipped to the hard window.
+- widened band (pass b): `[max(at, at + bound - b), at + lagE + up]`, clipped to the hard window;
+- the crowd gate (as built, owner ruling 2026-10-22): the bound's lower edge applies only while no foreign row of the
+  ticket's school reached its unit in the last `CROWD` = 5 s; with one, the lower edge is the older
+  `at + lagE - max(b, (CLOSE / speed) x d)`. A row arms the gate when no ticket of ours took it (counted foreign). The
+  times are kept per unit slot and school (64 x 7, preallocated), cleared at combat end and when an evicted slot takes
+  another GUID (`U.Reused`). Named cause: under the bound alone the detection suite's party and busy cells doubled
+  false credit (K4 party 13.2 to 28.9 per 100), while capture b's running-mob landings need the bound in solo. Arming
+  also on rows paid past pass (a) was tried and rejected: capture b's 39145 then went unpaid and no detection cell
+  moved. `CROWD` is unmeasured (probe U16).
 
 For a 20 yd/s projectile, a mob 30 yd out (lag 1.5 s) that runs in for 2 s between anchors leaves
 `(30 - 14) / 27` = 0.59 s, so the band reaches 0.91 s below the last lag (less `b`). Capture b's six closing rows
@@ -429,12 +444,15 @@ The order in which rows are consumed by tickets decides correctness. The algorit
    open TICKS ticket's narrow schedule band and its learned tick band, and that every banded direct ticket rejects,
    pays the TICKS ticket. A row that fits no band anywhere falls through the passes as before. Accurate tick
    attribution feeds debuff liveness (3.6, 4.1), so a stolen tick is worse than an unattributed row; this order
-   encodes that priority.
+   encodes that priority. A TICKS ticket's learned tick band filters but never ranks (owner ruling 2026-10-22): the
+   TICKS ticket always ranks with the unbanded group, so a banded direct ticket takes the row first (a stolen bolt
+   would lose its `onCrit`), and the tick pays only a row every banded direct ticket rejected.
 5. A row that matches no candidate after pass (c) goes to the UNMAPPED ticket if it is an avoid or crit inside an
-   UNMAPPED window (absorbed as nobody's), else it is foreign: `background()` as today (`:408-429`), counted `T.foreign`.
-   A foreign row of the same school as one of our tickets that is Due on another GUID at that moment also counts
-   `T.aoeOther` (our AoE or cleave on a unit we did not pin): a diagnostic only, routed as foreign, never a ticket and
-   never lost.
+   UNMAPPED window (absorbed as nobody's), else it is foreign: `background()` as today (`:408-429`), counted
+   `T.foreign`. A foreign WOUND of the same school as one of our spell tickets (any kind but MELEE and UNMAPPED, STRIKE
+   included) that is Due on another GUID at that moment, open or paid within `SAME_FRAME` before the row (our target's
+   row usually pays the frame first; as built), also counts `T.aoeOther` (our AoE or cleave on a unit we did not pin): a
+   diagnostic only, routed as foreign, never a ticket and never lost.
 
 Bands per kind:
 
@@ -443,13 +461,16 @@ Bands per kind:
 | FLIGHT | `lagE +- b` | `[lagE - down, lagE + up]` | `[0, H]` (no record only) |
 | MELEE | the core band, within 2 `spr` of the median (`Rows.lua:367-369`) | the LR window `[0, w]` (`:252-269`) | as (b) |
 | FRAME, STRIKE | `SAME_FRAME` | WOUND: `CAST_WINDOW`; avoid: `LandWindow(1)`, or `CAST_WINDOW` while `bg[7] >= FOREIGN_AVOIDS` (GAP AX) | as (b) |
-| TICKS | tick time `+- 0.1 s` | as (a): the schedule is the only discriminator | as (a) |
+| TICKS | tick time `+- 0.1 s`; an alone ticket's application avoid: `SAME_FRAME` | as (a): the schedule is the only discriminator; the avoid: `LandWindow(1)` | as (b) |
 | CHANNEL | tick time `+- TOL` | tick time `+- 2 x TOL` | as (b) |
 
 MELEE inside the frame: when the first match at a pass is a MELEE ticket, the existing likelihood ratio decides among
 all MELEE candidates that match at that pass (LR = q x f / lambda, the bar `THETA` for avoids and `theta[k]` for wounds,
 the veto, `:487-495`). Below the bar, MELEE does not match at that pass. At a tie in pass (a) between a FRAME ticket
-and a MELEE ticket for a white avoid or crit, MELEE wins, keeping today's precedence (`:464-478`).
+and a MELEE ticket for a white avoid or crit, MELEE wins, keeping today's precedence (`:464-478`). As built (probe
+U15): past pass (a), an off-hand row scored against the main swing (reference 3) is tested against reference 3's lag
+and median; at pass (a) the tie keeps its per-hand test, because the full fix broke the Fury L24 loop gate (refused
+per 100 for cost 3.0 to 5.1).
 
 Where this differs from today: Rows tries a fresh cast's frame first and then any avoid within the cast window
 (`:458-461`), then the swing LR (`:487-495`), then a white wound within `CAST_WINDOW` for the cast (`:497-499`), always
@@ -473,7 +494,9 @@ the cast's avoid window (`:459-461`). With a learned `lagE` of 1.5 s for that GU
 `(30 - 7 x 2.474) / 27 - 0.15` = 0.32 s: 0.517 s is inside it, because a mob that ran in can land that early. The
 widened band pays the MISS to the 97374 ticket. The capture itself lacks the 95824 landing and pools its four mobs
 under one inferred GUID (it records no plate GUIDs), so its replay meets a stale, pooled record instead
-(`tests/Game/harness/captures_spec.lua`); probe U13 asks what the 95824 cast's outcome was.
+(`tests/Game/harness/captures_spec.lua`); probe U13 asks what the 95824 cast's outcome was. Had another source's
+nature row reached that mob within `CROWD` (3.3.1), the crowd gate would put the lower edge at `1.5 - 7 / 20 x 2.474`
+= 0.63 s, and the MISS would be foreign.
 
 FIFO per queue, proof. Take one GUID and one speed `v`, casts A then B with successes `tA < tB` and distances `dA`,
 `dB`. A lands at `tA + dA / v`, B at `tB + dB / v`. B lands first only if `dA - dB > v x (tB - tA)`: the distance
@@ -484,11 +507,11 @@ knockback between two casts. They swap two same-school hits, which changes no be
 Different speeds, schools or GUIDs are separate queues and never FIFO across one another.
 
 The amount band: per ability, `bandLo` and `bandHi` of its own non-crit WOUNDs (a crit halved), learned from tickets
-paid with exactly one candidate. On a new low, `bandLo` takes the amount; otherwise it creeps up by
-`0.05 x (amount - bandLo)`; `bandHi` mirrors it. Once 3 wounds taught it, a WOUND outside
-`[SPELL_BAND_LO x bandLo, SPELL_BAND_HI x bandHi]` = `[0.6 x, 1.6 x]` is not a candidate (counted `T.bandRejected`).
-The band survives combat end and resets at load, like the swing lags (`Rows.lua:611`). MELEE keeps its own amount
-classes from `UnitDamage` (`classOf`, `:223-242`) instead.
+paid with exactly one candidate. On a new low, `bandLo` takes the amount; otherwise it creeps up by `0.05 x (amount -
+bandLo)`; `bandHi` mirrors it. Once 3 wounds taught it, a WOUND outside `[SPELL_BAND_LO x bandLo, SPELL_BAND_HI x
+bandHi]` = `[0.6 x, 1.6 x]` is not a candidate (counted `T.bandRejected` once per row, at pass (a), however many bands
+refused it). The band survives combat end and resets at load, like the swing lags (`Rows.lua:611`). MELEE keeps its own
+amount classes from `UnitDamage` (`classOf`, `:223-242`) instead.
 
 A paid row decrements `owed`; a ticket with rows still owed moves its window to the next one (`lo + period`,
 `hi + period`).
@@ -518,7 +541,7 @@ is the core band, Widened and Overdue are both the LR window, as the bands table
 | Payment | Row (dst = the ticket's `guid`) | Staged |
 |---|---|---|
 | MELEE, WOUND | `SWING_DAMAGE` (today, `:290-293`) | `Obs.Swing` c = 1, and c = 3 on CRITICAL (`:544-547`) |
-| MELEE, avoid | provisional (`:522-526`); `SWING_MISSED` at close | nothing |
+| MELEE, avoid | provisional (`:522-526`); `SWING_MISSED` at its window's expiry; at combat end it closes `ended` and emits nothing (3.6) | nothing |
 | spell, WOUND | `SPELL_DAMAGE` with the ticket's `school` in slots 14 and 17 (the row's school when the kind names none; today hard-coded 1, `:300`) | `Obs.Crit` on CRITICAL when no divergent pair (4.2) |
 | spell, DODGE / PARRY / MISS | `SPELL_MISSED` with the same school rule (today 1, `:304`) | `Obs.Avoided` (`:175-184`) when no divergent pair |
 | spell, RESIST / IMMUNE / ABSORB / EVADE / BLOCK / DEFLECT | `SPELL_MISSED` with that miss type | nothing (as today: `REFUSED` covers DODGE, PARRY, MISS only) |
@@ -540,14 +563,14 @@ A ticket closes on the first of:
 | refreshed | TICKS: a new application of the same ability on the same GUID | nothing | `T.refreshed`, unpaid `owed` not lost |
 | cast stopped | a committed hard cast's FAILED or INTERRUPTED | nothing | none |
 | window expiry | `now > hi` with `owed > 0`, in the per-frame tick (today `:597-609`) | MELEE: `SWING_MISSED` if provisional, else `SWING_DAMAGE` amount 0 (kept: the swing timer reads it); others: nothing | `T.lost[kind] += owed`; UNMAPPED, school ANY and a declared nil school count `T.expired` instead |
-| kill | its `uid` is DEAD and its own window ends unpaid (it stays open until then: a melee killing blow lands about 370 ms after the clear) | as expiry | `T.closedDead`, not lost |
+| kill | its `uid` is DEAD and its own window ends unpaid (it stays open until then: a melee killing blow lands about 370 ms after the clear); combat end may come first (`PLAYER_REGEN_ENABLED` 0.5-1.1 s after the kill, probe U14), and the ticket then closes `ended` | as expiry | `T.closedDead`, or `ended`; never lost |
 | gone | OnGone with GONE for its `uid` | as expiry | `T.closedGone` |
-| combat end | `PLAYER_REGEN_ENABLED` (today `:612-618`) | nothing | none |
+| combat end | `PLAYER_REGEN_ENABLED` (today `:612-618`): every open ticket, a provisional avoid and a dead unit's ticket included (the rule the build follows: `Events/Tickets.lua` `T.EndCombat`) | nothing | `ended` (not on the Snapshot line); never lost |
 | pool full | the oldest open ticket gives way (today `:138`) | nothing | `T.overflow` |
 
 A lost resolution is an owed row that never came while its unit was alive. It is the recall signal in game: Snapshot
 shows `tickets open=%d none=%d paid=%d lost=%d expired=%d refreshed=%d foreign=%d unpinned=%d dead=%d gone=%d bandRejected=%d
-divergent=%d overflow=%d`.
+divergent=%d overflow=%d absorbed=%d ours=%d aoeOther=%d overpaid=%d` (as built).
 
 Belief effects stay where they are: `now` at the success, `onCrit` through `Obs.Crit`, the undo and refund through
 `Obs.Avoided` (4.1). Tickets never write beliefs.
@@ -561,6 +584,9 @@ Belief effects stay where they are: `now` at the success, `onCrit` through `Obs.
 - WOUND 0 (`:454-457`) and the foreign strike frame after it (`:481`): unchanged.
 - `VS.SwingPending` (`Game/State/Families/Resources.lua:1279-1296`): unchanged; it reads `L.LandWindow`, which keeps its
   meaning for swings.
+- As built, the swing ticket owns "a swing is pending" and the strike ticket owns the main-hand swing it swallows; a
+  swallowed swing stays pending through its window, as Rows' `pendT` did (dropping it lowered the Fury L24 loop:
+  agreement 0.960 to 0.953).
 - Learning: lags learn from clean swing credits as today (`:530-535`); the amount band (3.4) learns from clean spell
   credits.
 
@@ -602,12 +628,16 @@ Under the no-jitter rule a wide belief never flips the icon by itself: recommend
 pre-ambiguity value until a collapse.
 
 Until it is built, a divergent row stages nothing (no `Obs.Crit`, no `Obs.Avoided`, no rage), pays the oldest candidate
-for the row only (so the combat-log row is still emitted), and counts `T.divergent`. This matches today's behaviour for
+for the row only (so the combat-log row is still emitted), and counts `T.divergent`. As built, a divergent avoid
+emits no `SPELL_MISSED` (a deliberate deviation: Hekili's `missable` would drop the other cast's debuff on it); a
+divergent crit still emits its row. This matches today's behaviour for
 two pending casts (`another()`, `Rows.lua:500-502`) and stays on the floor's safe side.
 
 Trigger for building it: the in-game Snapshot shows `divergent` above 1 per 100 paid tickets over a five-man dungeon
 run, or the detection suite's busy 5-man band shows a divergent pair rate above that with a measured flicker cost.
-Neither has been measured; this spec does not build it.
+Neither has been measured in game (probe U16); the detection suite's synthetic worst case, K13's lockstep twin at
+phase 0, shows 17.8 divergent pairs per 100 in solo at a cost of at most one missed ticket per pair. This spec does not
+build it.
 
 ### 4.3 Target health and the killing blow
 
@@ -766,13 +796,13 @@ Kinds (each a scripted scenario through the existing `scenarios.world` knobs, `t
 | K7 churn | K4 with plate churn on the pinned mob | resolution, gone and revive |
 | K8 identical | another source with our exact amount and school on the same mob | dedupe never merges two GUIDs; precision |
 | K9 same-ms twins | two equal-amount hits from two sources on one target in the same ms, each on plate and target; and one hit on plate, target and soft | the twins dispatch twice; the single hit dispatches once; the single-token residual's rate per band (MEASURED) |
-| K10 lag | melee row lag per session drawn from [0.4, 1.0] s (the Rogue session's 988, 837, 456 ms); cast events with +-50 ms latency jitter; DELAYED pushback on a hard cast; the first swing of a combat landing at 1.0 s | melee recall holds with the learned spread; the first swing does not teach the lag; no false credit from the jitter |
-| K11 death in flight | our projectile in flight when another source's blow kills the target (`UNIT_DIED` from a foreign kill, no `PARTY_KILL` for us); our melee swing pending when the target dies | tickets close `closedDead` (not lost, not paid by a stale row); `TargetGone` fires once |
+| K10 lag | melee row lag per session drawn from [0.4, 1.0] s (the Rogue session's 988, 837, 456 ms); cast events with +-50 ms latency jitter; DELAYED pushback on a hard cast; the first swing of a combat landing at 1.0 s | melee recall holds with the learned spread; the first swing does not teach the lag; no false credit from the jitter. As built (an owner finding): with a session landing lag, melee recall falls to 0.36 in party and 0.18 busy (0.86 and 0.73 without it); floored |
+| K11 death in flight | our projectile in flight when another source's blow kills the target (`UNIT_DIED` from a foreign kill, no `PARTY_KILL` for us); our melee swing pending when the target dies | tickets close `closedDead`, or combat-end `ended` when `PLAYER_REGEN_ENABLED` comes first; never lost, not paid by a stale row; `TargetGone` fires once |
 | K12 two live targets | tickets open on A and B (swap between them, a cast at each), rows from both; a DoT ticking on A after the swap to B | no cross-payment; A's ticks keep paying A's TICKS ticket; lost accounting per GUID |
-| K13 lockstep partner | a same-school caster partner on our target with our cast time and amount band, phase-shifted by 0, 0.1 and 0.5 s, with its own crit and miss rates | divergent pairs per 100 measured; non-divergent twins cost nothing (recall and precision unchanged against K4); asserts the claim that only divergent pairs matter (4.2) |
-| K14 our own twins | dual-wield hands landing in one ms with equal amounts; our Hunter pet hitting the target | both hands paid; the pet's rows foreign |
+| K13 lockstep partner | a same-school caster partner on our target with our cast time and amount band, phase-shifted by 0, 0.1 and 0.5 s, with its own crit and miss rates | divergent pairs per 100 measured; non-divergent twins cost nothing (recall and precision unchanged against K4); asserts the claim that only divergent pairs matter (4.2). As built: asserted in solo as own missed per divergent pair <= 1 and false credit <= K4's + the divergent rate; party and busy are floors (crowd cost dominates) |
+| K14 our own twins | dual-wield hands landing in one ms with equal amounts; our Hunter pet hitting the target | both hands paid; the pet's rows foreign. As built (K14p, an owner finding): our swing tickets take 8.8 / 6.6 / 3.2 per 100 of the pet's rows (solo / party / busy), printed and floored; the melee likelihood cannot tell a pet's white hit from ours |
 | K15 refused casts | a cast that fails for range or line of sight (SENT then FAILED, no SUCCEEDED); an unmapped success (a potion) | no ticket armed for the failed cast (a committed one closes uncounted, 3.2); the UNMAPPED ticket absorbs an avoid as nobody's |
-| K16 stress | raid-40 density for 300 s | the 16-ticket pool never overflows, or each overflow is counted and the oldest closes lost; the 64-slot unit pool evicts only released GONE or DEAD units; the dedupe ring never drops a non-duplicate; no allocation over the run (the `tests/Game/harness/alloc_spec.lua` pattern) |
+| K16 stress | raid-40 density for 300 s | the 32-ticket pool never overflows, or each overflow is counted and the oldest closes lost; the 64-slot unit pool evicts only released GONE or DEAD units; the dedupe ring never drops a non-duplicate; no allocation over the run (the `tests/Game/harness/alloc_spec.lua` pattern). As built: raid-40 recall is 0 (measured only), a cold-start trap: others' same-school rows pay our bolt tickets before any amount band is learned (3 clean wounds) |
 | K17 combat end | `PLAYER_REGEN_ENABLED` with tickets open and units held; a `/reload` mid-fight (`I.Build` with an empty registry while rows keep arriving) | the reset is clean; no row after the reset pays a pre-reset ticket; nothing errors |
 | K18 cleave and AoE | an AoE of ours hitting the target and two plates (one row per unit); a partner's cleave | our AoE pays one ticket, on the target only; its rows on the other units are counted `aoeOther` (3.4 step 5) and never lost; the partner's cleave stays foreign |
 | K19 swap during ticks and a strike | swap away before a strike lands, then back; swap away while a DoT ticks on the old target | pins hold: the strike pays its pinned GUID; the ticks pay the old target's TICKS ticket |
@@ -881,6 +911,11 @@ Each becomes a row in `docs/dev/ingame-ledger.md` with the capture that closes i
 | U9 (DoT half closed 2026-10-22 by the druid-moonfire capture; channel half deferred by owner ruling 2026-10-22; CHANNEL stays implemented, untested and unused by packs) | Channel row shapes: per tick, which tokens, action, flag, amount, school; whether a channel's ticks and a DoT's are told apart; needed before CHANNEL is trusted | `/vslog` of Arcane Missiles and Drain Life channels on solo mobs |
 | U10 (owner-explained 2026-10-22, lag unmeasured: auto-attack turns on at once when an ability is used or `/attack` is pressed, and the first `PLAYER_SWING` is that first swing; its row's lag is one sample, 989 ms, so the first swing of a combat still does not teach the MELEE lag and uses the LR window) | The first white swing of a combat: does the first `PLAYER_SWING` after `PLAYER_ENTER_COMBAT` mark auto-attack turning on, or a swing with a longer lag (one sample: 989 ms against 452 ms for the next) | `/vslog` of ten pulls with auto-attack only, amounts on, `PLAYER_SWING`, `PLAYER_ENTER_COMBAT` and the target's `UNIT_COMBAT` |
 | U11 (closed by owner ruling 2026-10-22) | Do the floating combat text settings delay `UNIT_COMBAT` rows? Answer: no. The Rogue session's white-hit lags (988, 837, 456 ms) are real row lags; the MELEE learned lag and spread absorb that range per session, and the Warrior's 474 +- 60 ms is a seed, not a constant | owner ruling |
+| U12 (open; the harness's measured swing shape, owner ruling 2026-10-22) | Execute usability: does the client's usability answer on an execute-gated ability flip at the swing that takes the target into range, or at that swing's landing row? The harness moves the oracle's plain health read to the swing (`healthAtSwing`); a flip at the row would mean a second re-base of the Warrior floors | a probe polling `IsSpellUsable` every frame across a white swing that takes the target under 20% |
+| U13 (open, Task 11) | Capture a's MISS at 97891: what was the 95824 Wrath's outcome (the capture has no landing for it), and Wrath's `rMax` with Nature's Reach (36 yd) | `/vslog` of a Wrath series at maximum range on one mob, plate GUIDs on; the range read with the talent |
+| U14 (open, Task 12) | Combat end after a kill: the time from the last kill to `PLAYER_REGEN_ENABLED`. Measured 0.52 s (§2.5's Rogue capture) and 1.07 s (the strike capture); the harness uses 1 s. It decides how many in-flight tickets close `ended` rather than `closedDead` (3.6) | `/vslog` of ten solo kills, melee and caster, with `PLAYER_REGEN_ENABLED` |
+| U15 (open, Task 12) | The pass-(a) melee tie for an off-hand row scored at reference 3 (3.4): the build keeps the per-hand test at pass (a), because the full fix broke the Fury L24 loop gate (refused per 100 for cost 3.0 to 5.1); the pet rows our swing tickets take (K14p) are the same family | a dual-wield `/vslog`, `PLAYER_SWING` per hand and the target's rows with amounts, then the same with a hunter pet on the mob |
+| U16 (open, Task 13) | The in-game divergent-pair rate (4.2's trigger: over 1 per 100 paid) and how often another source's same-school row lands on our target within `CROWD` (the crowd gate, 3.3.1) | a five-man `/vslog` and Snapshot with a same-school caster on our target |
 
 ## 9. Risks and what the gate must show
 
@@ -902,6 +937,10 @@ any downward move needs a named cause written beside the number and the owner's 
 | Allocation in a recurring path | new handlers on `UNIT_COMBAT` and the tick | `tests/Game/harness/alloc_spec.lua` and `make bench` show no new allocation |
 | Kill tell misses melee kills | no FAILED without a press | K6 without a press: the death events mark the unit; the clear-on-kill is a client rule (U8, owner ruling), so the unit also ends through poll 5 or GONE |
 
+Gate result (as built; Task 18). `make gate` on 9ed2fcd6 (Tasks 1-12, 16, 17): exit 0, `make check` 2061 successes,
+0 failures, 1 pending; gate tags 35 / 0. `make bench-ta` on 0a1e1ea5: 96948 rows/s (floor 97000 at 0.8x), 0.0103
+ms/row, 0.0013 ms/tick, 0.0420 ms/tick-expiry. Detection floors: `tests/Game/harness/detect_floors.lua`.
+
 ## 10. Performance
 
 Performance is a design constraint of the registry and the tickets, gated like the floors.
@@ -916,12 +955,12 @@ Lua 5.1 on 64-bit: 16 bytes per array slot, about 56 bytes per table header, abo
 | Unit slots: `uGUID`, `uState`, `uTokens`, `uSeen`, `uLeft`, `uHeld`, `uFree`, `uOurs` | 64 x 8 arrays | 8.6 KB |
 | GUID strings the slots keep alive after the client drops them | up to 64 x about 60 bytes | 3.9 KB |
 | Token tables: `tokUid`, `tokPrev`, `tokAt`, `TOKENS` (array), `INDEX` (hash), the 44 token name strings | 44 x 4 + 44 hash + 44 strings | 6.2 KB |
-| Tickets: `kind`, `ab`, `x`, `guid`, `uid`, `school`, `owed`, `period`, `at`, `lo`, `hi`, `ref`, `lr`, `avoid`, `state` | 16 x 15 arrays | 4.7 KB |
+| Tickets: `kind`, `ab`, `x`, `guid`, `uid`, `school`, `owed`, `period`, `at`, `lo`, `hi`, `ref`, `lr`, `avoid`, `state` | 32 x 15 arrays | 9.4 KB |
 | Learned flight lag: `lagGUID`, `lagSpeed`, `lagE`, `lagSpr`, `lagT`, `lagN` | 16 x 6 arrays | 1.9 KB |
 | Dedupe ring: 6 payload arrays x 4 groups, `dTok` 4 x 44 booleans | 24 + 176 slots | 3.5 KB |
 | Per-ability arrays: `expKind`, `expDeclared`, `velocity`, `school`, `dot`, `tickAura`, `tickTime`, `tickCount`, `bandLo`, `bandHi`, `bandN` | 11 x up to 120 abilities | 21.6 KB |
 | `CTX`, the listener arrays (`OnRow`, `OnGone`: a few functions each), the counters | fixed | 1.5 KB |
-| Total | | about 52 KB |
+| Total | | about 57 KB |
 
 There are no per-unit token sets: a unit keeps only its token count (`uTokens`), and each token keeps its unit.
 `I.Units.Find(guid)` is a 64-step linear scan by string equality (interned strings compare by pointer). A GUID-keyed
@@ -929,6 +968,10 @@ hash would allocate as it grows, so there is none.
 
 Hard ceiling: under 64 KB resident for the module. A headless spec measures `collectgarbage("count")` after a full
 collect before and after loading the module and building a spec, and asserts the difference.
+
+As built: `tests/Game/State/memory_spec.lua` measures each of the four files (Units, Tickets, Melee, Kinds) at its
+first load in TOC order, code and all, not the pools alone: 149.1 KB (Units 55.7, Tickets 70.9, Melee 14.5, Kinds 8.3).
+It asserts under 160 KB; measured + 25% would be 192 KB, an owner call (kept at 160).
 
 ### 10.2 Allocation
 
@@ -945,9 +988,9 @@ warm-up.
 |---|---|
 | Resolve | O(1): `INDEX[token]`, one `UnitGUID` read through `Plain`, the token's slot |
 | Dedupe | at most 4 groups, each a payload compare and one token-array read |
-| Match | at most `TICKETS` (16) candidates x 3 passes, each a scan for the least expected closure |
+| Match | at most `TICKETS` (32) candidates x 3 passes, each a scan for the least expected closure |
 | Lifecycle sweep (per frame) | a fixed loop over `UNIT_CAP` (64) slots, skipped when no slot is in GRACE or DEAD-releasing (a pending count). Chosen over an intrusive list: 64 compares are cheaper than keeping links right, and the count makes the common frame free |
-| Ticket expiry (per frame) | a fixed loop over 16 tickets (Rows loops 8 today, `Rows.lua:597-609`) |
+| Ticket expiry (per frame) | a fixed loop over 32 tickets (Rows looped 8, `Rows.lua:597-609`) |
 | `Find(guid)` | 64 string compares; only on death events and `PARTY_KILL` |
 
 Budgets: a row under 0.02 ms; a per-frame poll under 0.10 ms; the registry and tickets together under 2% of a frame at
@@ -995,7 +1038,7 @@ constructor, closure or `{...}` inside an event handler, a row dispatch, a poll 
 | 6 | Primary kill tell: `UNIT_DIED` (plain victim GUID) marks the unit DEAD at once, `PLAYER_TARGET_DIED` the current target; `PARTY_KILL` with killer equal to our GUID marks it our kill. Fallback, only when the client refused the death events: any player FAILED within 0.010 s before a clear to none | measured: all three fire with plain GUIDs, 0-2 ms after the killing swing, and `UNIT_DIED` covers units others kill; FAILED misses melee kills |
 | 7 | An unpaid ticket on a unit we killed (`PARTY_KILL`) closes as `closedDead` and counts `T.closedOurs`, never lost | our kill is known exactly; LibTTD and the lost accounting read it |
 | 8 | A ticket on a dead unit stays open until paid or its own window ends; unpaid, it closes as `closedDead`, not lost | a melee killing blow arrives about 370 ms after the clear and must still pay |
-| 9 | `TICKETS` = 16 | flight windows of up to about 2.1 s plus two hands need more than today's 8 |
+| 9 | `TICKETS` = 32 (16 in the first design; owner ruling 2026-10-22) | flight windows of up to about 2.1 s plus two hands need more than today's 8, and multi-dotting three targets needs about 17 |
 | 10 | A ticket opens for every commit (every `PLAYER_SWING`, every player success mapped or not, a hard cast at SENT); the kind decides how it closes | one uniform record; no engine assumption about what a spell does |
 | 11 | `expects` is a plain string from a fixed set, each mapped to one engine kind whose matching and closure rule lives in the engine; the engine reads the ability's other fields per type: `"none"` (none), `"instant"` (`school`), `"travel"` (`velocity`, `school`), `"melee"` (the hand from `PLAYER_SWING`; the engine's own, not declarable), `"strike"` (`onNextSwing`), `"ticks"` (`school`, optional `velocity`, and the aura's `tick_time`, `duration` and `dot = "debuff"`), `"channel"` (`school`, the aura's `tick_time`; opt-in only); a plain string and nothing else; `school` is a name from the core enum `ns.SCHOOL` (`"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"`, `"arcane"`), compiled to its mask at build, never a number | packs declare data on the ability; each rule is written and tested once; the DB2 check reads the same fields |
 | 12 | Default when `expects` is absent: `"strike"` if `onNextSwing`, else `"instant"` if `startsCombat`, else `"none"`; a default-mapped ability never opens a TICKS ticket; `channeled` abilities follow the same rule, and CHANNEL is opened only by an explicit `expects = "channel"` | reproduces today exactly: Rows holds only `startsCombat` and `onNextSwing` abilities, with these windows; channels keep their floors until a pack opts in |
@@ -1011,12 +1054,12 @@ constructor, closure or `{...}` inside an event handler, a row dispatch, a poll 
 | 22 | Amount band [0.6 x lo, 1.6 x hi] after 3 clean wounds | spell damage varies more than weapon damage; procs and crits halved stay inside |
 | 23 | Consumption order: rows online in arrival order after dedupe; candidates of the row's queue in expected-closure order; passes (a) narrow, (b) widened, (c) hard window for tickets with no record; first match pays; MELEE's LR decides among MELEE candidates at a pass | the order decides correctness; FIFO per queue falls out of it |
 | 24 | A mapped ticket with no pin opens with `guid` "" and counts `unpinned`, not lost | it can match no row; today its rows are dropped anyway |
-| 25 | Until 4.2 is built, a divergent row emits its row but stages nothing | stays on the floor's safe side, as today's two-casts rule |
+| 25 | Until 4.2 is built, a divergent row emits its row but stages nothing; as built, a divergent avoid emits no row (Hekili's `missable` would drop the other cast's debuff) | stays on the floor's safe side, as today's two-casts rule |
 | 26 | Build trigger for 4.2: `divergent` over 1 per 100 paid tickets in a five-man run | a rate that would show as flicker; below it the union is not worth its cost |
 | 27 | DB2 check is a dev-only `make spell-data-check` over the declared `velocity` and `school` fields; it maps SchoolMask to a name through `ns.SCHOOL` and compares names | CI has no DB2 file; the pack's declared name is what is checked |
 | 28 | Registry dispatches rows through `OnRow`; Rows registers before Target | one resolution and dedupe for every consumer; tickets see a row first |
-| 29 | Learned flight lag: `LAG_CAP` = 16 records per (GUID, speed): `lagE` (last observed lag), `lagSpr` (EMA spread, 0.25 rate, [0.02, 0.4]), `lagT`, `lagN`; taught by a clean pass (a) or (b) payment; oldest `lagT` evicted | the same mechanism as the global melee lag, keyed per unit because flight lag is distance; the last lag tracks a closing mob |
-| 30 | Widening: `b = max(TOL, 2 x lagSpr)`; lower edge `max(at, at + bound - b)` with `bound = max(0, (lagE x speed - CLOSE x d) / (speed + CLOSE))`, `up = max(b, (CLOSE / 2 / speed) x d)`, `d` = anchor to anchor (`at - (lagT - lagE)`), `CLOSE` = 7 yd/s, clipped to the hard window; no record: the whole hard window, uniform | the band grows as fast as a running mob can change the lag: it closes between anchors and again in flight (capture b, 2026-10-22) |
+| 29 | Learned flight lag: `LAG_CAP` = 16 records per (GUID, speed): `lagE` (last observed lag), `lagSpr` (EMA spread, 0.25 rate, [0.02, 0.4]), `lagT`, `lagN`; taught by a clean payment at any pass (the first record comes from pass (c)); oldest `lagT` evicted | the same mechanism as the global melee lag, keyed per unit because flight lag is distance; the last lag tracks a closing mob |
+| 30 | Widening: `b = max(TOL, 2 x lagSpr)`; lower edge `max(at, at + bound - b)` with `bound = max(0, (lagE x speed - CLOSE x d) / (speed + CLOSE))`, `up = max(b, (CLOSE / 2 / speed) x d)`, `d` = anchor to anchor (`at - (lagT - lagE)`), `CLOSE` = 7 yd/s, clipped to the hard window; the crowd gate: while a foreign row of the ticket's school reached its unit within `CROWD` = 5 s, the lower edge is `at + lagE - max(b, (CLOSE / speed) x d)` (3.3.1); no record: the whole hard window, uniform | the band grows as fast as a running mob can change the lag: it closes between anchors and again in flight (capture b, 2026-10-22) |
 | 31 | FIFO per queue (kind, school, speed, GUID); never across queues | one queue's rows arrive in cast order unless the distance shrinks faster than the projectile (20 yd/s or more) between casts, which no run does |
 | 32 | Cascade bound: a lost ticket shifts its queue by at most one row, only while casts are closer than the narrow band or before the first record, until it expires at `H` or closes on the kill tell or GONE; shifts that change a belief count as `divergent` | a shift between two own same-school hits changes nothing; only divergent outcomes matter |
 | 33 | Pass (c), the hard window, is open only to tickets with no learned record | otherwise a far-off row (capture a's 517 ms MISS) would still be charged to a cast whose learned lag excludes it |
@@ -1024,11 +1067,11 @@ constructor, closure or `{...}` inside an event handler, a row dispatch, a poll 
 | 35 | A declared `"instant"` or `"travel"` ability whose resolved aura has a `tick_time` and `dot = "debuff"` opens the direct ticket and a TICKS ticket pinned to the same GUID, anchored at the direct row (else the success); `"ticks"` alone opens only the TICKS ticket (same aura requirement) and may declare `velocity` (its avoid then uses the FLIGHT window and bands, its anchor the success plus the learned flight lag, else plus `rMax / speed / 2`); no ability-level flag | the DoT marker already exists upstream on the aura; a heal-over-time or a self buff with a `tick_time` never opens a ticket |
 | 36 | TICKS matches by school, GUID and schedule only: period = the aura's `tick_time`, count = `floor(duration / tick_time)`, tick `k` at application + `k x period`, band +- 0.1 s, widened by `rMax / speed / 2` for a `velocity` TICKS ticket with no learned lag until its first tick is paid (the anchor then snaps to that tick); no amount band until the first paid tick, then a soft band of [0.5 x, 2 x] the last paid tick (decision 45); a tick outside every band is foreign | measured jitter +- 50 ms; ramping DoTs vary 3x in amount, so the schedule is the discriminator; an unknown flight lag shifts the whole schedule once |
 | 37 | A new application of the same ability on the same GUID closes the old TICKS ticket as `refreshed` (unpaid `owed` not lost) and opens a new one from the new application | measured: a recast resets the schedule and the old ticks never arrive |
-| 38 | Memory: every structure a fixed pool built at load or build, about 52 KB estimated; hard ceiling 64 KB resident, asserted with `collectgarbage("count")` in a headless spec | fixed pools make the cost known and constant |
+| 38 | Memory: every structure a fixed pool built at load or build, about 57 KB estimated; hard ceiling 64 KB resident, asserted with `collectgarbage("count")` in a headless spec. As built: the four files measure 149.1 KB at first load, code included, under an asserted 160 KB (10.1) | fixed pools make the cost known and constant |
 | 39 | Allocation: zero tables, closures or strings per event, row or poll after load; asserted over a K16 run and a 300 s solo run | the project's performance rule; recurring paths must not feed the collector |
 | 40 | Time budgets: a row under 0.02 ms, a per-frame poll under 0.10 ms, the module under 2% of a 60 fps frame at about 50 rows a second | a raid-40 design point with headroom over today's measured 6 rows a second |
 | 41 | The lifecycle sweep is a fixed 64-slot loop gated by a pending count, not an intrusive list | simpler and free on most frames |
-| 42 | `make bench-ta` (`tools/bench_ta.lua`) reports rows per second and ms per row; its number is a gate floor that only moves up | a regression shows as a number, not a feeling |
+| 42 | `make bench-ta` (`tools/bench_ta.lua`) reports rows per second, ms per row and ms per tick (idle, and with a full pool expiring); its number is a gate floor that only moves up | a regression shows as a number, not a feeling |
 | 43 | Ticks read the aura the packs already declare, resolved as `ability.cycle or ability.aura or ability.key`: period `tick_time`, count `floor(duration / tick_time)`, and upstream's `dot = "debuff"` marks a DoT; no `tickPeriod`, `ticks` or `dot` ability fields | DRY with upstream: the sim resolves and reads the same fields (`State.lua:676`, `:2283-2285`, `:3302-3312`; `Events.lua:1609`) |
 | 44 | A function-valued `duration` or `tick_time` is called at commit in its own environment (Hekili's state), as the sim calls it; numbers compile at build | rank-dependent durations (Moonfire) are functions today; rebinding their environment would move the sim's |
-| 45 | Within a pass, candidates whose amount band accepts the row rank before unbanded ones, expected closure inside each group; a TICKS ticket learns a soft band of [0.5 x, 2 x] its last paid tick after the first tick and has no band before it | a direct hit inside both bands must not be taken by a tick and shift its schedule; accurate ticks feed debuff liveness, so a stolen tick is worse than an unattributed row |
+| 45 | Within a pass, candidates whose amount band accepts the row rank before unbanded ones, expected closure inside each group; a TICKS ticket learns a soft band of [0.5 x, 2 x] its last paid tick after the first tick and has no band before it; the TICKS band filters but never ranks: a TICKS ticket ranks with the unbanded group, so it pays only a row every banded direct ticket rejected (owner ruling 2026-10-22) | a direct hit inside both bands must not be taken by a tick and shift its schedule; accurate ticks feed debuff liveness, so a stolen tick is worse than an unattributed row |

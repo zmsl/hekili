@@ -28,6 +28,21 @@ ends 2026-10-22). Each row: what to look for, why it matters, its status. Answer
 | E1 | Core | the energy tick against a press at the same instant: UNIT_POWER_FREQUENT "ENERGY" spacing in a `/vslog`. | the energy belief's tick phase against a press decides Rogue and Feral timing | open |
 | AP | Core | (probe first, ForeverProbe) are the target's nameplate aura frames' shown state and textures plain in combat? | target aura durations are unreadable otherwise; nameplates are the only candidate source | open |
 | PV1 | Core | `prev.1` from real casts (gaps.md "`prev.1` from real casts"): a Combat Rogue's pull shows Adrenaline Rush right after Blood Fury, and a Feral's Rake or Shred right after Berserk; if not, a Snapshot after the first cast. | strictSequence lines (rule 14) and Rogue/Feral openers chain on `prev.1` | open |
+| UR1 | Core | the unit registry in a five-man pull: the Snapshot's `units` line (`unresolved`, `dup`, `evicted`, deaths by `tell`/`poll`/`event`) after a pull of three or more mobs | the registry's resolution and dedupe were measured solo and on two plates (U5); a high `unresolved` or any `evicted` while fighting means the token set or the pool size is wrong | open |
+| UR2 | Core | the tickets in a five-man run: the Snapshot's `tickets` line (`paid`, `lost`, `divergent`, `bandRejected`, `aoeOther`) | `divergent` above 1 per 100 paid is the build trigger of the union belief (unit-registry spec §4.2); `lost` on a caster means a projectile row is not seen | open |
+| UR3 | Core | a caster's kill: the target's modelled debuffs end at the death (no `SPELL_AURA_REMOVED` 16 s later in a `/vslog`); `deaths event=` counts it | the death events are the primary kill tell (U3); this confirms TargetGone reaches the belief | open |
+| U1 | Core | RESIST, IMMUNE, ABSORB, EVADE rows: `/vslog` with UNIT_COMBAT while casting a school the mob is immune to (an Elemental at a fire mob) and a mob that evades (leash) | the untested `SPELL_MISSED` branches (deferred by owner ruling 2026-10-22) | open |
+| U6 | Core | partial resists: a `/vslog` of a Shadow Bolt series on a mob with shadow resistance (a WOUND with a RESIST flag and a reduced amount, or two rows) | the amount band and the school check assume one row per hit | open |
+| U7 | Core | two-school spells and wands: the school a Frostfire Bolt WOUND carries (20, 4 or 16) and a non-physical wand's Shoot | Frostfire Bolt and Shoot keep no or a guessed `school` until then | open |
+| U9 | Core | channel rows: `/vslog` of Arcane Missiles and Drain Life on solo mobs: per tick, which tokens, action, flag, amount, school | CHANNEL stays unused by packs until its shape is measured | open |
+| UR4 | Druid | an unrefreshed rank-1 Moonfire (8921, level 4-9): does a fourth tick come at +12 s? DB2 gives 9 s (3 ticks); the pack's aura answers 9 s | the TICKS ticket owes the aura's count; a fourth tick would be foreign | open |
+| UR5 | Warrior | a fast dual-wield Fury (two 1.5 s weapons, about 20% haste): the Snapshot's `rows credited main/off` against the swings, and est against the real rage a few seconds after a usability pin | the harness's K14f credit rate (party band: main 0.30 and off 0.68 of swings credited, mean rage error 52.5; `tests/Game/harness/detect_floors.lua`) against the game's: the owner's level-25 session credited about 23% and read est 42.6 at about 100 real rage (Task 9b, expected rage for uncredited swings, is parked: Findings below) | open |
+| U10 | Core | ten pulls with auto-attack only: `PLAYER_SWING`, `PLAYER_ENTER_COMBAT` and the target's UNIT_COMBAT, amounts on | the first swing of a combat (one sample: 989 ms) does not teach the lag; this measures its lag distribution | open |
+| U12 | Warrior | execute usability: a probe polling `IsSpellUsable(Execute)` every frame across a white swing that takes the target under 20%: does it flip at the swing or at the swing's landing row? | the harness moves the plain health read to the swing (`healthAtSwing`, owner ruling 2026-10-22); a flip at the row means a second re-base of the Warrior floors | open |
+| U13 | Druid | a Wrath series at maximum range on one mob, plate GUIDs on: every cast's outcome (capture a's 95824 cast has no landing), and Wrath's range with Nature's Reach (36 yd) | the spec's worked example (unit-registry spec §3.4) rests on that cast; `rMax` sets the flight's hard window | open |
+| U14 | Core | ten solo kills, melee and caster, `/vslog` with PLAYER_REGEN_ENABLED: the time from the last kill to combat end | measured 0.52 s (a Rogue capture) and 1.07 s (a strike capture); the harness uses 1 s. It decides how many in-flight tickets close `ended` at combat end rather than `closedDead` | open |
+| U15 | Warrior | a dual-wield `/vslog` with PLAYER_SWING per hand and the target's rows with amounts, then the same with a hunter pet on the mob: off-hand rows that land at the main swing's lag, and the pet's white rows | the build keeps the per-hand test at pass (a) for an off-hand row scored at the main swing (the full fix broke the Fury L24 loop gate: refused for cost 3.0 to 5.1 per 100); our swing tickets take the pet's white rows in the harness (K14p) | open |
+| U16 | Core | a five-man run with a same-school caster on our target: the Snapshot's `tickets` line (`divergent` per 100 `paid`) and a `/vslog` of the other caster's rows on our target | the in-game divergent-pair rate (the union belief's trigger) and how often another source's same-school row lands within `CROWD` (5 s, the crowd gate, unmeasured) | open |
 | Flicker | Core | in combat, does the first icon flicker (Arms: Mortal Strike dipping for a moment after a swing)? | the user's acceptance rule: no jittery recommendations | open |
 | W1 | Warrior | each spec page shows only its wowsims switches: Arms Recklessness and Stance Dance, Fury Recklessness and Rend Weave, Protection none; none of the 15 deleted settings remain. | the spec pages must show only the wowsims switches the packs read | open |
 | W2 | Warrior | Arms before the pull: Bloodrage, Battle Shout, then Charge at 8-25 yd. In combat: Mortal Strike, Overpower in Battle Stance, Slam right after a swing, Spearing Strike; Heroic Strike only at high rage; no stance-dance icon (Stance Dance is off by wowsims's default). | the Arms opener and core loop as wowsims casts them | open |
@@ -58,3 +73,21 @@ ends 2026-10-22). Each row: what to look for, why it matters, its status. Answer
 | Wl4 | Warlock | UnitPower("pet") of the Imp and the Succubus in combat (plain?) | Demonology's `life_tap,if=pet.mana<115` and Shadow Brand's `<160` | open |
 | Wl5 | Warlock | Demonic Brand: its charges on the target (readable?) and how fast the Imp's Firebolt or the Succubus's swings spend them | the kit keeps the brand its full 10 s (shortcut) | open |
 | Wl6 | Warlock | leveling: a Destruction Warlock below 40 and a Demonology Warlock below 18 see Life Tap as the filler; a Demonology Warlock before Demonic Brand sees Searing Pain first | no low-level filler by the owner's ruling (2026-10-21); confirm it is acceptable in play | open |
+
+## Findings (unit registry and tickets, 2026-10-22)
+
+Measured in the harness's detection suite and left for the owner; the in-game rows above (UR2, UR5, U15, U16) give
+the game's numbers.
+
+- **K10, melee recall with a session landing lag.** A session landing median drawn from [0.4, 1.0] s drops melee
+  recall to 0.36 in party and 0.18 busy (0.86 and 0.73 without it; K1's floors 0.83 and 0.70). The first swing's lag
+  costs party 0.06; jitter, pushback and `PLAYER_ENTER_COMBAT` cost nothing. Floored as measured, not a target.
+- **K14p, the pet's white rows paid by our swing tickets.** 8.8, 6.6 and 3.2 per 100 of the pet's rows (solo, party,
+  busy): the melee likelihood cannot tell a pet's white hit on our target from ours (U15's family). Floored.
+- **K16, the raid-40 cold-start trap.** Raid-40 recall of our bolts is 0 (measured only): others' same-school wounds
+  and white avoids pay our flight tickets before landing, so no amount band is ever learned (it needs 3 clean wounds).
+  Suggested follow-up: a pack-declared amount range that seeds the band.
+- **Task 9b, parked.** Crediting the expected rage of an uncredited swing (even only at its `lost` close) cannot keep
+  the solo overshoot gate at 0 while solo swing recall is 94.5%: a wrong credit pays the other hand's ticket, so the
+  true ticket's expectation counts twice. It is decision 33's territory (Overdue payment only for tickets with no lag
+  record); the options (melee recall first, drop it, or accept a named overshoot) are the owner's.

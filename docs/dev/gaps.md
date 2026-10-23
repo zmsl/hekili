@@ -51,9 +51,68 @@ Unnumbered, from the lane reports (give one an id when it is dispatched):
 | Pet power model | `VS.PetPower` is the last plain `UnitPower("pet")`; no regen or spend model. UnitPower is `SecretWhenUnitPowerRestricted` and unprobed with a pet out (plain 0 with none, W PR12); if the Warlock checkpoint finds it secret, the pet's mana freezes at its last out-of-combat read | core belief (pets) | Warlock in-game Q3 |
 | Reagent prediction | A reagent count (Soul Shards) is read live through `C_Item.GetItemCount`; the sim does not predict a shard spend within one recommendation pass, so a second shard spender in the queue reads the count before the first | core sim | Warlock (pack) |
 | Replay bags | The replay world starts from the content's bags (`WORLD.bags`) and does not read the log's (wowsims's 32 shards); the pet's power is read since central fix 31 | harness replay | Warlock replay gate |
-| Travel time | An aura consumed when the hit lands, not at the end of the cast (Elemental's Revelation is spent on landing), so the belief spends it a travel time early; 2 Elemental replay decisions, and Mage has the same issue. Also (Warlock lane's G6): a projectile's crit lands past `CAST_WINDOW` (`Events/Rows.lua`'s no-`velocity` shortcut), so its `onCrit` never runs (Shadow Bolt's Shadow Vulnerability). Central fix 32, with a design | core belief + harness replay | Elemental, Mage, Warlock |
+| Travel time | An aura consumed when the hit lands, not at the end of the cast (Elemental's Revelation is spent on landing), so the belief spends it a travel time early; 2 Elemental replay decisions, and Mage has the same issue. The other half (Warlock lane's G6: a projectile's crit and miss past `CAST_WINDOW`) is fixed by central fix 32: a projectile's ticket pays its landing (`Events/Kinds.lua` FLIGHT), so `onCrit` and the avoid refund run at the landing | core belief | Elemental, Mage |
 | Potion mana refill | The mana belief does not believe a mana potion's or Demonic Rune's refill (lo up to 2286 under the truth in Elemental's replay); GAP AB/V family, 1 Elemental decision | core belief (mana) | Elemental, other mana users |
-| Unmapped-success window | Fix 31 G4's rule (`Events/Rows.lua` `another()`): an avoid or crit within `L.UNMAPPED_WINDOW` of a success of ours the kit does not map, past our pending cast's own frame, is nobody's. Unmeasured: `L.UNMAPPED_WINDOW` 2 s (over the Affliction log's thrown explosive, 1.43 s). In game it fires on any success the kit does not map: potions, healthstones, bandages, unmapped racials, wand Shoot on classes whose kit lacks 5019. A lost avoid refund runs pessimistic (safe), a kept missed-debuff stack runs optimistic, an `onCrit` does not run | core belief (`Events/Rows.lua`) | in-game UM1 |
+| Unmapped-success window | Fix 31 G4's rule (the UNMAPPED ticket, `Events/Kinds.lua` and `Events/Tickets.lua`): an avoid or crit within `L.UNMAPPED_WINDOW` of a success of ours the kit does not map, past our pending cast's own frame, is nobody's. Unmeasured: `L.UNMAPPED_WINDOW` 2 s (over the Affliction log's thrown explosive, 1.43 s). In game it fires on any success the kit does not map: potions, healthstones, bandages, unmapped racials, wand Shoot on classes whose kit lacks 5019. A lost avoid refund runs pessimistic (safe), a kept missed-debuff stack runs optimistic, an `onCrit` does not run | core belief (`Events/Tickets.lua`) | in-game UM1 |
+| Divergent ambiguity | Two candidate tickets whose choice changes a belief (hit vs miss, hit vs crit, swing rage: unit-registry spec §4.2) stage nothing and count `divergent`; the union belief that would keep both is designed, not built. Build trigger: Snapshot's `divergent` above 1 per 100 paid in a five-man run, or the detection suite's busy band (K13) above that with a flicker cost | core belief | in-game UR2 |
+| Two-school spells and wands | Frostfire Bolt (DB2 mask 20) declares no `school`, and a wand's school may differ from Shoot's mask (U7, deferred by owner ruling): their WOUNDs pay only by an avoid until measured | kit + core | in-game U7 |
+| Resist, immune, absorb shapes | `SPELL_MISSED` with RESIST, IMMUNE, ABSORB, EVADE are emitted from rows never captured (U1, U6, deferred); partial resists unmodelled | core belief | in-game U1, U6 |
+| Channel ticks | The CHANNEL kind is implemented and tested against the harness's own tick model only; no pack declares it (U9's channel half, deferred) | core belief | in-game U9 |
+| Rank-generic aura periods | A ticking kind reads its aura's `tick_time` and `duration` at the commit (owner ruling 2026-10-22); an aura whose `tick_time` is one number for every rank while DB2's `EffectAuraPeriod` differs by rank pays its ticks on the wrong schedule for those ranks; `make spell-data-check` notes each such rank | kit | none known |
+| FLIGHT's first record | Spec §3.3.1 lets only passes (a) and (b) teach a lag record, which no first ticket reaches; the build teaches from any clean payment, pass (c) included (spec §3.3.1 amended to match) | core belief | none |
+| `closedGone` | A unit with an open ticket is held, so it never goes GONE while a ticket pins it; the `gone` close is reachable only through a registry reset and stays at 0 in every run | core belief | none |
+| Harness pushback | The DELAYED pushback row is opt-in in the harness (`pushback`), off in the class loops (it would move the player's rows 0.37 s and the onus floors); the kill shapes follow the captures (`killTiming`) | harness | none |
+| Running-mob widening in crowds | The FLIGHT widened band reaches down to the running-mob bound (unit-registry spec §3.3.1; capture b's 14 closing landings all pay), and the crowd gate (`CROWD` = 5 s) falls back to the older edge where another source of the school hits the unit. The gate recovers about half of the crowd cost. Detection, recall / false credit per 100, bound + gate against before the bound (Task 12's table, before Task 13's scoring correction): K4 party 0.771 / 19.8 vs 0.850 / 13.2, K4 busy 0.403 / 54.8 vs 0.472 / 48.2, K5 party 0.821 vs 0.862, K5 busy 0.502 vs 0.541, K6 party 0.775 vs 0.850, K7 party 0.736 vs 0.821, K7 busy 0.267 vs 0.343, K8 solo / party / busy 0.219 / 0.150 / 0.083 vs 0.298 / 0.250 / 0.100; K6 solo rose 0.894 to 0.968. Kept on the controller's and reviewer's recommendation (the bound is the only game-anchored part; the crowd cells are synthetic worst cases); the owner's keep-or-revert call is open. Reverting recovers those cells and loses the running-mob landings | core belief (`Events/Kinds.lua` `K.Flight`) | in-game UR2, U16 |
+| Snapshot flight distance | Spec §3.3.1's `distance = lag x speed` per (GUID, speed) record, for the Snapshot only, is not printed | core (Snapshot) | none |
+| Unit pool at 32 tickets | `UNIT_CAP` = 64 was sized for 44 tokens + 16 tickets; at 32 tickets the theoretical worst case is 76 held slots. A new GUID then binds no token and its rows count `unresolved`; K16's raid-40 run never reached it (the `take()` comment at `Units.lua:120-121` still says 16) | core (`Game/State/Sources/Units.lua`) | in-game UR1 |
+
+## Deferred minors (unit registry and tickets, 2026-10-22)
+
+Review findings parked during the build; each is small and none moves a gate. Line numbers are as of the task's
+commit.
+
+- `Game/State/Sources/Units.lua:453`: OnGone's doc comment should say RESET may follow GONE or DEAD for the same uid.
+- `Game/State/Sources/Units.lua:348`: `U.Sent` keeps only the latest SENT (overlapping casts).
+- `Game/State/Sources/Units.lua:120-121`: `take()`'s comment says 16 tickets (now 32).
+- `tests/Forever/helpers/priest_world.lua:72`: a partial SCHOOL table; switch to `Hekili.SCHOOL` when next edited.
+- `tests/Game/State/school_spec.lua:15-18`: checks the publication by source-text search; `load.lua` `M.school()` needs
+  the table on one line (asserts loudly).
+- `Game/State/Families/Expect.lua:127`: a function-valued `expects` lands in `obj.funcs` and silently takes the default;
+  check `funcs.expects` and report it.
+- `Game/State/Families/Expect.lua:76`: `declared(au, "duration", "duration")` looks the same key up twice.
+- An aura with no declared duration gets RegisterAura's 30 s default and its ticks count from it (as the sim does).
+- `Game/State/Sources/Target.lua:4`: the header still says poll 4 logs TargetGone (now `I.Units.Dead` / OnGone DEAD).
+- `Game/State/Sources/Target.lua:85-91`: re-targeting a DEAD corpse emits no second TargetGone, and no free slot emits
+  none (spec §4.3's design); comment it.
+- `tests/Game/harness/drive.lua:353-373` (`M.outcomeRow`) was edited outside its task's Files list.
+- `Game/Events/Melee.lua` lost the why-comments of `Rows.lua@6027835f:26-73`, `:219-222`, `:404-407`; restore them.
+- `tests/Game/State/secrets_spec.lua:180-189` restores `_G` after the first assert (leaks on a failure).
+- `Game/State/Sources/Player.lua:157` re-gates a payload argument; `Game/State/Sources/Casts.lua:54/68/99` alias locals.
+- `Game/Events/Tickets.lua:169/:206`: `T.latestT` advances on `A.extra` abilities and is never reset at combat end;
+  `tickets_spec` lacks "a replaced swing is no longer pending".
+- `T.onPay` is assigned unconditionally (one consumer today); if one row paid two tickets, the last write wins.
+- The cascade bound (spec §3.4) has no single test; `bandRejected`'s once-per-row rests on the `p == 1` guard (no
+  multi-row assertion).
+- Unmeasured: whether a projectile's MISS row arrives at launch or at landing (the lag learns from avoids).
+- A composed ticket's refresh may run twice (harmless); a travel recast in flight that later misses can label the old
+  DoT ticket `refreshed` (errs toward not counting lost).
+- Druid worlds pass `SCHOOL[key] or 1` (correct values, still a default); the Sunder L30 assertion is narrowed to
+  pre-kill ticks; the strike's SENT fires in the swing frame; DELAYED pushback's 0.5 s is unmeasured.
+- Task 9's first-swing path (no lag teach) has no gate coverage: the in-game checkpoint only.
+- `Game/Events/Kinds.lua`: `rangeLow`'s anchor-against-row case is untested; `K.Flight`'s `t` argument is unused.
+- Capture decoder: the INTERRUPTED-follows check matches nil/nil lines; `targettarget` echoes decode one step early
+  (harmless); the old fixtures are no longer regenerable (the dead "C" branch); a phantom target in `capture_strike`.
+- Detection: the K6 busy floor rests on own = 4 tickets (more fights or mob health later, with a named cause);
+  `anchored()`'s +0.05 widening applies to every kind, not only K10; `c.lostAt` over-marks every FLIGHT ticket expiring
+  in a tick with a loss (conservative); our strike swing's `speed` is unhasted; one miss per fight in solo K12, K15 and
+  K19; K10 busy residual -1.
+- `tests/Game/harness/metrics.lua:514` groups by source, so same-ms source-less twins may undercount (a possible cause
+  of the small negative residuals); the sweep's key omits `swingT`; the `tickShift` bound is tight (1 in 26 of 36 mixed
+  runs).
+- `make bench-ta`: the expiry phase relies on success-event arming; the rows/s floor 97000 has no headroom beyond the
+  0.8x allowance. The `Hekili:ProfileCPU` registration in `Adapter.lua` is inert (nothing reads `ns.cpuProfile`; use
+  `Hekili.Virtual.Prof`); loading the Adapter twice wraps `S.RunPolls` twice.
+- `make spell-data-check`: a `"ticks"` ability with a DB2 Speed above 0 and no `velocity` gets no note.
 
 ## In game (on the in-game ledger, not a register item)
 

@@ -279,6 +279,40 @@ A new class needs its own addon folder, kit, harness world, learn table, recipes
 in the packager's lists. [docs/dev/wowsims-packs.md](docs/dev/wowsims-packs.md) links the per-spec procedure that
 walks through each step.
 
+### Declaring what an ability's hit looks like (`expects`)
+
+The client gives addons no combat log. The core pays each outcome it sees on a unit (a hit, a miss, a tick) to the
+cast that made it by a ticket, and a pack tells the core what to expect from each ability with plain data on the
+ability, never code:
+
+- `expects`: one of `"none"` (owes no row: a buff), `"instant"` (its row comes in the same frame), `"travel"` (a
+  projectile: `velocity` in yards a second, DB2 `SpellMisc.Speed`), `"strike"` (on the next swing), `"ticks"` (a
+  DoT with no direct hit), `"channel"` (opt-in, untested in game; no pack uses it). `"melee"` is the core's own.
+- A ticking kind reads the aura the ability applies (`cycle`, else `aura`, else the ability's key, as the simulation
+  does): its `tick_time` is the period and `floor(duration / tick_time)` the count, read at each cast (a function
+  is called in Hekili's state). There are no `ticks`, `tickPeriod` or `dot` fields on the ability.
+- `school`: the client's school by name, `"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"` or
+  `"arcane"` (`Hekili.SCHOOL`); leave it out when the spell's mask has no single name.
+- A declared `"instant"` or `"travel"` ability whose aura has a `tick_time` and upstream's `dot = "debuff"` also
+  ticks (a hit that then ticks); `"ticks"` needs the same two aura fields; `velocity` may join `"ticks"`
+  (a DoT that flies).
+
+An ability with no `expects` keeps the default: `"strike"` with `onNextSwing`, `"instant"` with `startsCombat`, else
+`"none"`. A malformed declaration shows in the Snapshot's error count and falls back to the default. Check the numbers
+against DB2 with `make spell-data-check` (it needs `$WOW_DB2`). The design is
+[docs/superpowers/specs/2026-10-22-unit-registry-and-tickets-design.md](docs/superpowers/specs/2026-10-22-unit-registry-and-tickets-design.md).
+
+Two dev-only targets check this layer outside `make check`:
+
+- `make spell-data-check` reads every pack's `expects`, `velocity`, `school` and aura `tick_time` against DB2
+  (`SpellMisc`, `SpellEffect`). A rank with no DB2 row is printed as a note and passes; a mismatch fails. A declared
+  `velocity` must match the rank's Speed, and an ability with a Speed above 0 must declare it unless it is
+  `expects = "none"` (summon_hawk) or `"ticks"`.
+- `make bench-ta` times the registry and the tickets on synthetic rows and prints
+  `bench-ta rows=N rows/s=R ms/row=X ms/tick=Y ms/tick-expiry=Z (floor rows/s F)`. It fails above 0.02 ms a row, above
+  0.10 ms an idle tick or a tick with a full pool expiring, or below 0.8 x the rows/s floor in
+  `tools/bench_ta_floor.lua` (97000, the first clean run's; it only moves up).
+
 ## 6. Checking in the game client
 
 The headless harness models the client, but it cannot see everything. It does not know which values the real client

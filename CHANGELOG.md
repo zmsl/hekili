@@ -4,9 +4,15 @@
 
 ### New
 
+- Your own hits, misses and DoT ticks are now matched to the cast that made them, even when they come late: a projectile's landing (Wrath, Shadow Bolt, Frostbolt), the killing blow that arrives after your target clears, a cast you switched targets during, and a crowded pull with other players hitting the same mob. A projectile's crit and miss now count when the bolt lands, so crit-triggered effects and miss refunds follow. The class priorities now declare each projectile's travel speed and each spell's school for this.
+- Snapshots gain two lines, `units` and `tickets`, that show how many of your outcomes were matched, lost or ambiguous. Please include them when you report a wrong recommendation.
+
 ### Changed
 
 ### Fixed
+
+- A DoT whose application missed (Insect Swarm, for example) is no longer believed to be ticking on the target.
+- A mob running at you while you cast no longer makes the addon lose your spell's landing.
 
 - No more "attempt to index field 'leftText' (a secret string value)" errors in combat: spell tooltips are secret in combat on Forever, and the check for spells disabled in this area now skips them until you leave combat.
 - The next on-GCD ability no longer disappears behind off-GCD suggestions (Bloodrage, Heroic Strike and the like). When those fill every icon, the queue now looks up to two steps further so the Timeline still shows your next GCD; the classic icon row still shows your set number of icons.
