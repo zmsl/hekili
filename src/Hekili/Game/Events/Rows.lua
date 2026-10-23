@@ -198,12 +198,13 @@ end
 
 -- A row of ours no ticket took (spec §3.4 step 5): an avoid or crit inside an UNMAPPED window is nobody's; else
 -- foreign, teaching the background only when it is about the target (as the target-only reading did).
-local function foreign(uid, t, act, flag, amount, white, avoid, unknown)
+local function foreign(uid, t, act, flag, amount, white, avoid, unknown, school)
     if (avoid or flag == "CRITICAL") and T.Unmapped(t) then
         T.absorbed = T.absorbed + 1
         return
     end
     T.foreign = T.foreign + 1
+    T.Foreign(uid, school, t) -- the crowd gate (Kinds.Flight)
     if U.IsTarget(uid, t) then
         M.background(act, amount, flag, white, avoid, unknown)
     end
@@ -244,8 +245,9 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
     end
     if p > 0 and white and (avoid or crit) then
         local sw, _, ref, lag = M.score(t, g, amount, flag, avoid, crit) -- a crit by its timing alone, as an avoid
-        local h = ref == 3 and 2 or ref
-        if sw and (T.first[sw] or lag <= SAME_FRAME or math.abs(lag - L.med[h]) <= 2 * L.spr[h]) then
+        -- reference 3 (an off hand landing at the main swing's lag) runs from the main swing, against L.med[3]
+        local d = sw and ref == 3 and t - T.ref[sw] or lag
+        if sw and (T.first[sw] or lag <= SAME_FRAME or math.abs(d - L.med[ref]) <= 2 * L.spr[ref]) then
             if avoid then
                 p = 0 -- the swing's (MELEE wins the tie): the LR below takes it, the spell keeps its effects
             else
@@ -288,7 +290,7 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
         paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
         return
     elseif not credited then
-        foreign(uid, t, act, flag, amount, white, avoid, unknown)
+        foreign(uid, t, act, flag, amount, white, avoid, unknown, school)
         return
     end
     local xx, at0 = T.x[credited], T.at[credited]

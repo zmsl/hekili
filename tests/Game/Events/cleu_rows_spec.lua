@@ -399,6 +399,37 @@ describe("the synthesized combat log", function()
             assert.are.same({ "SPELL_MISSED", fs.SPENDER_B, "DODGE" }, { row(2)[2], row(2)[12], row(2)[15] })
         end)
 
+        it("gives an off-hand avoid at the main swing's lag (ref 3) to its swing, not a bolt's widened band", function()
+            ctl.ranges[fs.SPENDER_P] = { 0, 30 }
+            I.Build(fs.def(fs.new(9, nil, nil, true)), 1)
+            local T = I.Tickets
+            local function bolt(t0, id) -- a 1.5 s hard cast from t0
+                ctl.now = t0
+                ctl.Fire("UNIT_SPELLCAST_SENT", "player", "Mob", id, fs.SPENDER_P)
+                ctl.Fire("UNIT_SPELLCAST_START", "player", id, fs.SPENDER_P, "Bar")
+                ctl.now = t0 + 1.5
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", id, fs.SPENDER_P)
+            end
+            bolt(2, "Cast-20") -- success 3.5, lands 4.5: the record's lag 1.0 s
+            ctl.now = 3.986
+            ctl.Fire("PLAYER_SWING", 2.5, 0)
+            ctl.now = 4.104
+            ctl.Fire("PLAYER_SWING", 2.2, 1)
+            ctl.now = 4.46
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 40, 1) -- the main hand's
+            ctl.now = 4.5
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 16, 8)
+            bolt(4, "Cast-21") -- success 5.5: 2 s on, the widened band reaches down to 5.57
+            ctl.now = 3.986 + 1.686 -- the off hand's landing at the main swing's lag (its own lag 1.57 s)
+            ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+            local r = T.LagOf("Creature-1", 20)
+            assert.are.equal(1, T.lagE[r]) -- the bolt's record was not taught by the avoid
+            ctl.Tick(5.9)
+            for _, g in ipairs(got) do
+                assert.are_not.equal("SPELL_MISSED", g.row[2])
+            end
+        end)
+
         it("makes no row without a target", function()
             ctl.guid.target = nil
             ctl.now = 80
