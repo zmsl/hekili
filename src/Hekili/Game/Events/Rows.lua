@@ -119,13 +119,13 @@ end)
 -- swing; its row's lag is one sample (989 ms in the second Rogue capture), so it teaches nothing and its Due band is
 -- its whole window. The client may send that swing first in the same ms (second Rogue capture: both at 628).
 S.On("PLAYER_ENTER_COMBAT", nil, function(api, t)
-    for i = 1, T.CAP do
+    local marked = false
+    for i = 1, T.CAP do -- every hand: dual wield can open both swings in that ms
         if T.state[i] ~= 0 and T.kind[i] == MELEE and t - T.at[i] <= 0.01 then
-            T.first[i] = true
-            return
+            T.first[i], marked = true, true
         end
     end
-    fresh = true
+    fresh = not marked
 end)
 
 S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spellID)
@@ -375,6 +375,7 @@ end)
 S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
     M.advance(t)
     T.EndCombat(t)
+    fresh = false
 end)
 
 --- Snapshot's lines (allocates; debugging only): the credits and the background, the learned lags (ms) and the

@@ -67,6 +67,7 @@ describe("kills and the first swing", function()
     end)
 
     it("marks the first swing after PLAYER_ENTER_COMBAT, which explains an avoid anywhere in its window", function()
+        ctl.now = 9.5
         ctl.Fire("PLAYER_ENTER_COMBAT")
         ctl.now = 10
         ctl.Fire("PLAYER_SWING", 2.6, 0)
@@ -88,6 +89,41 @@ describe("kills and the first swing", function()
         ctl.Fire("PLAYER_SWING", 2.6, 0)
         for j = 1, T.CAP do
             if T.state[j] ~= T.FREE and T.kind[j] == X.MELEE and T.at[j] == 13 then
+                assert.is_false(T.first[j])
+            end
+        end
+        -- a credited first swing teaches no lag (its one-sample lag is no measurement, spec §3.3.2)
+        local L = I.Log
+        ctl.now = 20
+        ctl.damage = { 4, 6, 2, 3 } -- read at the combat end: the wound's amount class is known (exact main)
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        ctl.Fire("PLAYER_ENTER_COMBAT")
+        ctl.Fire("PLAYER_SWING", 2.6, 0)
+        local med, spr, credited = L.med[1], L.spr[1], L.credited[1]
+        ctl.now = 20 + med + spr / 2 -- inside the learning gate: any other clean credit would move the median
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 5, 1)
+        assert.are.equal(credited + 1, L.credited[1])
+        assert.are.same({ med, spr }, { L.med[1], L.spr[1] })
+    end)
+
+    it("marks both hands' swings the client sent in the same ms before PLAYER_ENTER_COMBAT, and only those", function()
+        ctl.now = 30
+        ctl.Fire("PLAYER_SWING", 2.6, 0)
+        ctl.Fire("PLAYER_SWING", 2.6, 1)
+        ctl.now = 30.005
+        ctl.Fire("PLAYER_ENTER_COMBAT")
+        local n = 0
+        for j = 1, T.CAP do
+            if T.state[j] ~= T.FREE and T.kind[j] == X.MELEE then
+                assert.is_true(T.first[j])
+                n = n + 1
+            end
+        end
+        assert.are.equal(2, n)
+        ctl.now = 32.6
+        ctl.Fire("PLAYER_SWING", 2.6, 0) -- marked already: the next swing is no first swing
+        for j = 1, T.CAP do
+            if T.state[j] ~= T.FREE and T.kind[j] == X.MELEE and T.at[j] == 32.6 then
                 assert.is_false(T.first[j])
             end
         end
