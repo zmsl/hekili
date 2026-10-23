@@ -186,6 +186,14 @@ describe("the headless loop's paired refusals (loop.unmatched)", function()
 
     it("bars the unmatched cost refusals at a plain 3 per 100 (pack_gate), whatever the oracle's own rate", function()
         local gate = require("Forever.helpers.pack_gate")
+        local ab = require("Game.harness.ab")
+        local arm = ab.arm
+        ab.arm = function() -- the bar itself, in every arm (make gate-ab's provider arms record bars, providers §4.1)
+            return "default"
+        end
+        finally(function()
+            ab.arm = arm
+        end)
         local h = { errors = 0, raises = 0, selfCheck = 0, misses = {}, secrets = {} }
         local function r(u, b)
             return {
