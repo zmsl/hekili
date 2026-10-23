@@ -245,9 +245,14 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
     end
     if p > 0 and white and (avoid or crit) then
         local sw, _, ref, lag = M.score(t, g, amount, flag, avoid, crit) -- a crit by its timing alone, as an avoid
-        -- reference 3 (an off hand landing at the main swing's lag) runs from the main swing, against L.med[3]
-        local d = sw and ref == 3 and t - T.ref[sw] or lag
-        if sw and (T.first[sw] or lag <= SAME_FRAME or math.abs(d - L.med[ref]) <= 2 * L.spr[ref]) then
+        local d, h = lag, ref == 3 and 2 or ref
+        -- pass order (spec §3.4 step 4): against a ticket matched only past pass 1, an off hand landing at the main
+        -- swing's lag (reference 3) runs from the main swing against L.med[3]. At pass 1 the tie keeps its old test:
+        -- the corrected one there moves the Fury L24 loop gate (Task 12; owner ruling pending)
+        if sw and ref == 3 and pass > 1 then
+            d, h = t - T.ref[sw], 3
+        end
+        if sw and (T.first[sw] or lag <= SAME_FRAME or math.abs(d - L.med[h]) <= 2 * L.spr[h]) then
             if avoid then
                 p = 0 -- the swing's (MELEE wins the tie): the LR below takes it, the spell keeps its effects
             else
