@@ -427,4 +427,82 @@ describe("auras", function()
             )
         end)
     end)
+
+    describe("presence from the router and the viewer leaf (providers decision 80, 90)", function()
+        local item
+
+        before_each(function()
+            ctl.viewer.sets[2] = { 501 }
+            ctl.viewer.infos[501] = { spellID = fs.SPENDER_A }
+            item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 501)
+            item.unit = "player"
+            -- shortcut: stands in for Task 1's provider resolution in I.Build; Task 1 replaces it with `d.providers` alone
+            local P = I.PRESENCE.router
+            P.Activate(api, 1, fs.def(fs.new(9)), { viewer = true })
+            I.presence = P
+            I.OnPresence(P)
+            ctl.now = 10
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.auras.player.HELPFUL[1] = fake.SECRET -- the walk is secret: presence may stage
+            ctl.Fire("UNIT_AURA", "player")
+            I.ObsLog.Clear(I.log)
+        end)
+
+        local function poll(t)
+            ctl.Tick(t)
+            S.RunPolls(t)
+            I.Fold(t, false)
+            I.Settle(t)
+        end
+
+        it("a viewer UP for an aura believed down stages one Read up and counts one disagreement", function()
+            ctl.ViewerShow(item, true)
+            assert.are.equal(1, I.log.n)
+            poll(10)
+            local rec = VS.Aura("player", fs.SPENDER_A, 10)
+            assert.are.same({ math.huge, "observed" }, { rec.est, rec.basis }) -- a Read with no expiry
+            assert.are.same({ 1, 1 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
+            poll(11) -- the poll agrees with the belief now: no fact
+            assert.are.same({ 1, 1 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
+        end)
+
+        it("an UP for an aura already believed up counts a fact, no disagreement", function()
+            I.AuraModel(1, SHOUT, 10, 20, 1, 10, Obs.CastSuccess, false)
+            ctl.ViewerShow(item, true)
+            poll(11)
+            assert.are.equal(20, VS.Aura("player", fs.SPENDER_A, 11).est)
+            assert.are.same({ 1, 0 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
+        end)
+
+        it("the poll takes a believed-up aura down when the viewer says down", function()
+            I.AuraModel(1, SHOUT, 10, 20, 1, 10, Obs.CastSuccess, false)
+            poll(11)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11))
+            assert.are.same({ 1, 1 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
+        end)
+
+        it("a plain walk wins: presence stages nothing", function()
+            ctl.auras.player.HELPFUL[1] = nil
+            ctl.Fire("UNIT_AURA", "player")
+            I.ObsLog.Clear(I.log)
+            ctl.ViewerShow(item, true)
+            poll(11)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11))
+            assert.are.same({ 0, 0 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
+        end)
+
+        it("allocates nothing over 1000 polls and edges", function()
+            local alloc = require("Game.State.helpers.alloc")
+            local t = 10
+            assert.are.equal(
+                0,
+                alloc.bytes(function()
+                    t = t + 0.01
+                    ctl.ViewerShow(item, not item.shown)
+                    S.RunPolls(t)
+                    I.Fold(t, false)
+                end, 1000)
+            )
+        end)
+    end)
 end)

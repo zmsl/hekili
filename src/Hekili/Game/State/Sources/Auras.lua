@@ -34,12 +34,14 @@ local pending = false
 -- Whether the last player walk completed (plain): then it wins over the overlay reads, except that a permanent aura with
 -- `overlay` still goes down while its glow is off.
 local playerPlain = true
+local targetPlain = true -- its twin for the target's walk (presence, providers decision 80)
 -- The player auras with a numeric `overlay`: their aura indices and overlay spell IDs (built at OnBuild).
 local OVL_J, OVL_ID, OVL_N = {}, {}, 0
 -- The per-aura presence audit (providers spec §4.3, decision 90), keyed (u - 1) * AURA_UNIT + j for the player and the
 -- target: the provider's facts the consumer took and those that contradicted the belief. Preallocated at OnBuild,
 -- zeroed at each fight's start.
 local facts, disagree = {}, {}
+local staged = {} -- by the same key: 1 up or 2 down staged and not yet folded into the belief, else 0
 I.presenceFacts, I.presenceDisagree = facts, disagree
 local KEY = {} -- aura index -> its key, for the Snapshot lines
 
@@ -61,11 +63,11 @@ I.OnBuild(function(def)
             OVL_J[OVL_N], OVL_ID[OVL_N] = j, id
         end
     end
-    playerPlain = true
+    playerPlain, targetPlain = true, true
     for j = 1, U.nAura do
         KEY[j] = tostring(def.auras[j].key)
-        facts[j], disagree[j] = 0, 0
-        facts[I.AURA_UNIT + j], disagree[I.AURA_UNIT + j] = 0, 0
+        facts[j], disagree[j], staged[j] = 0, 0, 0
+        facts[I.AURA_UNIT + j], disagree[I.AURA_UNIT + j], staged[I.AURA_UNIT + j] = 0, 0, 0
     end
 end)
 
@@ -142,6 +144,8 @@ local function walk(api, u, unit, t)
     end
     if u == 1 then
         playerPlain = complete
+    elseif u == 2 then
+        targetPlain = complete
     end
     return complete
 end
@@ -203,6 +207,58 @@ S.Poll(11, function(api, t)
         elseif on == false and e[j] > t and (not playerPlain or e[j] == HUGE) then
             -- shortcut: a glow not yet lit in the frame of the cast that procs it drops the proc; upgrade by skipping reads within I.SAME_FRAME of our cast
             Direct(Obs.Read, t, j, 0, ReadOf.Aura)
+        end
+    end
+end)
+
+-- (providers decision 80) Presence from the injected provider, with the overlay's rule: a plain walk wins; UP while
+-- believed down stages up with no expiry, DOWN while believed up stages down. An edge is a fact; a poll answer is one
+-- only when it contradicts the belief (spec §4.3). Returns whether it staged. Allocates nothing.
+local function apply(j, u, up, t, edge)
+    local U = I.auras
+    if u > U.n or (u == 1 and playerPlain) or (u == 2 and targetPlain) then
+        return false
+    end
+    local k = (u - 1) * I.AURA_UNIT + j
+    local differs = (U.exp0[u][j] > t) ~= up
+    local v = up and 1 or 2
+    if not differs then
+        staged[k] = 0
+    elseif staged[k] == v then
+        return false -- staged already (an edge earlier this frame): the fold has not taken it yet
+    end
+    if edge or differs then
+        facts[k] = facts[k] + 1
+    end
+    if differs then
+        disagree[k], staged[k] = disagree[k] + 1, v
+        Direct(Obs.Read, t, k, up and -1 or 0, ReadOf.Aura)
+    end
+    return differs
+end
+local function onEdge(j, u, up, t)
+    if apply(j, u, up, t, true) then
+        S.Urgent("VS_PRESENCE")
+    end
+end
+--- Called by whoever activates a presence provider: its edges come here.
+function I.OnPresence(P)
+    P.onEdge = onEdge
+end
+
+-- Poll 15: every pair the provider answers, each poll (an edge the hook missed, a target swap). Allocates nothing.
+S.Poll(15, function(_, t)
+    local P = I.presence
+    if not P or P.covered == 0 or not I.built then
+        return
+    end
+    local U = I.auras
+    for u = 1, (U.n < 2 and U.n or 2) do
+        for j = 1, U.nAura do
+            local a = P.Presence(j, u)
+            if a ~= I.UNDECIDED then
+                apply(j, u, a == I.UP, t, false)
+            end
         end
     end
 end)
