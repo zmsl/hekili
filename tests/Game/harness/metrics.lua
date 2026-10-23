@@ -426,4 +426,227 @@ function M.line(m)
     )
 end
 
+--- A fresh spell-ticket tally (unit-registry spec §6.2).
+function M.newTickets()
+    return {
+        fights = 0,
+        own = 0, -- own spell outcomes in the truth (castT > 0) on a registry token
+        right = 0, -- paid by their own ticket
+        wrong = 0, -- paid by another ticket of ours
+        missed = 0, -- paid by nothing
+        paid = 0, -- rows that paid a spell ticket
+        falsePaid = 0, -- of those, rows that were not that ticket's
+        foreignRows = 0,
+        foreignPaid = 0,
+        staged = 0, -- Crit or Avoided staged for the right cast
+        stagedTruth = 0, -- own crits and refused avoids in the truth
+        divergent = 0,
+        lostEngine = 0, -- FRAME and FLIGHT rows the engine counted lost
+        lostTruth = 0, -- own instant and projectile successes with no row in the truth
+        outcomes = 0, -- distinct outcomes on registry tokens (any source)
+        dispatched = 0, -- rows the registry dispatched
+        overflow = 0,
+        postClear = 0, -- own white outcomes landing after their target's kill clear (the measured kill shape)
+        postClearPaid = 0, -- of those, paid by a swing ticket
+    }
+end
+
+local REG = { target = true, focus = true, softenemy = true, softinteract = true }
+local function registry(tok)
+    return REG[tok] or tok:match("^nameplate") ~= nil
+end
+
+-- Whether hand h's swing at swingT took an avoid provisionally (Rows' T.Provisional, the drive's c.avIdx) and kept it:
+-- no wound was credited to that swing after (its SWING_MISSED comes at the window's end, or nothing at combat end,
+-- spec §3.6, but the row paid its swing ticket either way).
+local function provisional(c, s, h, swingT)
+    for j = 1, c.nAv do
+        if c.avHand[j] == h and math.abs(c.avAt[j] - swingT) < 1e-6 then
+            for i = 1, s.n do
+                if c.crHand[i] == h and math.abs(c.crAt[i] - swingT) < 1e-6 then
+                    return false
+                end
+            end
+            return true
+        end
+    end
+    return false
+end
+
+--- Adds one fight (drive captures `c`, stream `s`, world `W`) to tally `m`: outcomes grouped across their tokens, each
+--- group's paying ticket from the drive's captures (spell tickets only: MELEE's are metrics.score's).
+function M.tickets(m, c, s, W)
+    local X = c.I.Expect
+    m.fights = m.fights + 1
+    local groups, list = {}, {}
+    for i = 1, s.n do
+        if s.ev[i] == "UNIT_COMBAT" and registry(s.a1[i]) then
+            local key = string.format(
+                "%.4f/%s/%s/%s/%s/%s/%s",
+                s.t[i],
+                s.a2[i],
+                tostring(s.a4[i]),
+                tostring(s.a5[i]),
+                tostring(s.castT and s.castT[i] or 0),
+                tostring(s.actor and s.actor[i] or 0),
+                tostring(s.swingT[i])
+            )
+            local g = groups[key]
+            if not g then
+                g = { own = (s.castT and s.castT[i] or 0) > 0, castT = s.castT and s.castT[i] or 0, at = 0, kind = 0 }
+                g.crit, g.avoid = s.a3[i] == "CRITICAL", s.a2[i] == "DODGE" or s.a2[i] == "PARRY" or s.a2[i] == "MISS"
+                groups[key], list[#list + 1] = g, g
+            end
+            if c.payAt[i] > 0 and c.payKind[i] ~= X.MELEE then
+                g.at, g.kind, g.staged = c.payAt[i], c.payKind[i], c.staged[i]
+            end
+        end
+    end
+    m.outcomes = m.outcomes + #list
+    m.dispatched = m.dispatched + c.rowsOut
+    for _, g in ipairs(list) do
+        if g.own then
+            m.own = m.own + 1
+            if g.at > 0 and math.abs(g.at - g.castT) < 1e-6 then
+                m.right = m.right + 1
+                if (g.crit or g.avoid) and (g.staged or 0) > 0 then
+                    m.staged = m.staged + 1
+                end
+            elseif g.at > 0 then
+                m.wrong = m.wrong + 1
+            else
+                m.missed = m.missed + 1
+            end
+            if g.crit or g.avoid then
+                m.stagedTruth = m.stagedTruth + 1
+            end
+        else
+            m.foreignRows = m.foreignRows + 1
+            if g.at > 0 then
+                m.foreignPaid = m.foreignPaid + 1
+            end
+        end
+        if g.at > 0 then
+            m.paid = m.paid + 1
+            if not (g.own and math.abs(g.at - g.castT) < 1e-6) then
+                m.falsePaid = m.falsePaid + 1
+            end
+        end
+    end
+    local T = c.I.Tickets
+    m.divergent = m.divergent + T.divergent
+    m.lostEngine = m.lostEngine + T.lost[X.FRAME] + T.lost[X.FLIGHT]
+    m.overflow = m.overflow + T.closed.overflow
+    if W then -- own white outcomes landing 0.1-2 s after their target's kill (after the clear): paid by their swing
+        -- Scope (K6 ruling): rows before the next PLAYER_REGEN_ENABLED (the reset at combat end closes every ticket,
+        -- spec §2.5 and K17), and not an avoid a spell ticket paid (a white MISS carries school 1, which no school gate
+        -- can refuse: it counts under false credit and leak, spec §3.4, not here).
+        local seen, spell = {}, {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "kill" and ev.dst == ev.ourTarget then
+                local reset = math.huge
+                for i = 1, s.n do
+                    if s.ev[i] == "PLAYER_REGEN_ENABLED" and s.t[i] > ev.t then
+                        reset = s.t[i]
+                        break
+                    end
+                end
+                for i = 1, s.n do
+                    if
+                        s.ev[i] == "UNIT_COMBAT"
+                        and s.src[i] == 1
+                        and s.hand[i] > 0
+                        and s.swingT[i] <= ev.t
+                        and s.t[i] > ev.t + 0.1
+                        and s.t[i] <= ev.t + 2
+                        and s.t[i] < reset
+                    then
+                        local key = s.t[i] .. "/" .. s.swingT[i]
+                        seen[key] = seen[key] or false
+                        if
+                            c.payKind[i] == X.MELEE
+                            or (s.a2[i] ~= "WOUND" and provisional(c, s, s.hand[i], s.swingT[i]))
+                        then
+                            seen[key] = true
+                        elseif c.payKind[i] > 0 then
+                            spell[key] = true
+                        end
+                    end
+                end
+            end
+        end
+        for key, paid in pairs(seen) do
+            if not spell[key] then
+                m.postClear = m.postClear + 1
+                m.postClearPaid = m.postClearPaid + (paid and 1 or 0)
+            end
+        end
+    end
+    if W then -- our instant and projectile successes no row of the truth answers
+        local rowAt = {}
+        for i = 1, s.n do
+            if s.castT and s.castT[i] > 0 then
+                rowAt[s.castT[i]] = true
+            end
+        end
+        local us, killAt = W.ents[1], {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "kill" then
+                killAt[ev.dst] = ev.t
+            end
+        end
+        for _, ev in ipairs(W.truth) do
+            local sp = ev.spell
+            if ev.kind == "cast" and ev.src == us and (sp == "INSTANT" or sp == "BOLT" or sp == "BOGUS") then
+                -- a cast whose target died before its landing (2 s covers a 30 yd flight) closes dead, not lost (K6)
+                if not rowAt[ev.t] and not (killAt[ev.dst] and killAt[ev.dst] <= ev.t + 2) then
+                    m.lostTruth = m.lostTruth + 1
+                end
+            end
+        end
+    end
+    return m
+end
+
+function M.recall(m)
+    return m.own > 0 and m.right / m.own or 1
+end
+function M.false100(m)
+    return m.paid > 0 and 100 * m.falsePaid / m.paid or 0
+end
+function M.leak100(m)
+    return m.foreignRows > 0 and 100 * m.foreignPaid / m.foreignRows or 0
+end
+function M.staged(m)
+    return m.stagedTruth > 0 and m.staged / m.stagedTruth or 1
+end
+function M.divergent100(m)
+    return m.own > 0 and 100 * m.divergent / m.own or 0
+end
+
+--- One line for a detection cell.
+function M.ticketLine(m)
+    return string.format(
+        "fights=%d own=%d recall=%.3f (wrong %d, missed %d) false/100=%.2f leak/100=%.2f staged=%.3f divergent/100=%.2f "
+            .. "lost engine=%d truth=%d outcomes=%d dispatched=%d residual=%d overflow=%d postClear=%d/%d",
+        m.fights,
+        m.own,
+        M.recall(m),
+        m.wrong,
+        m.missed,
+        M.false100(m),
+        M.leak100(m),
+        M.staged(m),
+        M.divergent100(m),
+        m.lostEngine,
+        m.lostTruth,
+        m.outcomes,
+        m.dispatched,
+        m.outcomes - m.dispatched,
+        m.overflow,
+        m.postClearPaid,
+        m.postClear
+    )
+end
+
 return M

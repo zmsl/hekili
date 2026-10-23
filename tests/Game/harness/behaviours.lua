@@ -253,9 +253,9 @@ function M.ours(p)
     }
     return function(W, e)
         local d = p.distance or 20
-        local function effect(kind)
+        local function effect(kind, pinned)
             return function(W2, me)
-                local tgt, t0 = me.target, W2.t
+                local tgt, t0 = pinned or me.target, W2.t
                 if not tgt then
                     return
                 end
@@ -308,7 +308,8 @@ function M.ours(p)
                     return
                 end
                 local key = KEYS[kind]
-                local press = { spell = key[2], gcd = 1.5, effect = effect(kind) }
+                -- the target at the press: a hard cast lands on it after a swap mid-cast (K5's SENT pin)
+                local press = { spell = key[2], gcd = 1.5, effect = effect(kind, e.target) }
                 if kind == "bolt" then
                     press.cast = 1.5
                 elseif kind == "chan" then

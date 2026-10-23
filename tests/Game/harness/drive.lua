@@ -80,6 +80,10 @@ function M.boot(o)
             c.payAt[k], c.payKind[k], c.payPass[k] = T.at[i], T.kind[i], pass
         end
     end
+    c.rowsOut = 0 -- rows the registry dispatched (K9's residual)
+    c.I.Units.OnRow(function()
+        c.rowsOut = c.rowsOut + 1
+    end)
     for k = 1, 8 do
         c.recIdx[k] = 0
     end
@@ -402,6 +406,7 @@ function M.run(c, s, offset)
     end
     c.gcdN = 0
     c.hits = 0
+    c.rowsOut = 0
     c.crits[1], c.crits[2], c.landed[1], c.landed[2], c.nWin, c.truth, c.nAv = 0, 0, 0, 0, 0, 0, 0
     c.nCd = 0
     local rows = c.rows

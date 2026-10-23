@@ -233,11 +233,14 @@ function M.new(W, k)
         end
         return t, toks
     end
+    local cleared = {} -- [mob] = the time our target's kill cleared it: the corpse answers softinteract from then
     local function outcome(t, ev, src, hand, swingT)
         local toks = tokensOf(ev.dst, ev)
         local kt, ktoks = killShape(t, ev)
         if kt then
             t, toks = kt, ktoks
+        elseif cleared[ev.dst] and t >= cleared[ev.dst] then -- after the clear "target" names nobody: the corpse's
+            toks = { "softinteract" } -- rows come on softinteract alone (kill-events capture 4820; spec §2.2)
         end
         if ev.dst == us and castOpen and k.pushback and ev.act == "WOUND" then
             -- shortcut: the bar moves on the client only (the world's cast still ends at its press's end); move the
@@ -469,6 +472,7 @@ function M.new(W, k)
         elseif kind == "strike" then
             castN = castN + 1
             local frame = { dst = ev.dst, ourTarget = ev.ourTarget, act = "WOUND", amount = 0, school = 1 }
+            ev.castT = t -- the strike's outcome row is our cast's (the detection suite's truth, K2); its WOUND 0 frame is not
             local g, sid = "Cast-" .. castN, spellID(ev.spell)
             -- shortcut: the strike's SENT in its frame (the client's comes at the queueing press); move it to the
             -- "queue" event when a suite reads the gap
@@ -542,6 +546,7 @@ function M.new(W, k)
                 push(t + kt.died, "@dead", "target", true)
                 push(clear, "@guid", "target", nil)
                 push(clear, "@guid", "softinteract", ev.dst.guid)
+                cleared[ev.dst] = clear
                 push(clear, "PLAYER_TARGET_CHANGED")
                 push(clear, "UNIT_HEALTH", "target")
             end
