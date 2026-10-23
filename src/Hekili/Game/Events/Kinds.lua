@@ -43,7 +43,8 @@ end
 --- lagE +- b at pass 1 and the widened band at pass 2 (from the bound a mob running in at CLOSE since the record's
 --- last anchor allows, less b, up to lagE + CLOSE / 2 / v per second of it), clipped to the hard window, and
 --- nothing at pass 3. While a foreign row of the ticket's school reached its unit within T.CROWD s (T.Crowded), the
---- widened band's lower edge is lagE less CLOSE / v per second of it (at least b) instead of the bound.
+--- widened band's lower edge is lagE less CLOSE / v per second of it (at least b) instead of the bound; a row between
+--- the two is refused (pass (d) is late only: attribution-recovery decision 53 as amended 2026-10-23).
 function K.Flight(i, p, t, v, H, a0)
     local lo0, hiH = a0 + rangeLow(i, v), a0 + H
     local r = T.LagOf(T.guid[i], v)

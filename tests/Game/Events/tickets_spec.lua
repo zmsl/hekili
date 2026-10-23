@@ -345,6 +345,37 @@ describe("the ticket pool", function()
         assert.are.same({ 1, 0 }, { T.foreign, T.paid[X.FLIGHT] })
     end)
 
+    -- Decision 53 as amended 2026-10-23 (Task 4): the crowd gate refuses; a refused flight closes lost at its hard
+    -- window's end, with no expectation (the expiry EV is a swing's only)
+    for _, row in ipairs({ { "WOUND", 15, 8 }, { "DODGE", 0, 1 } }) do
+        it(
+            "the crowd gate refuses an early " .. row[1] .. ": foreign, the flight closes lost (decision 53 amended)",
+            function()
+                I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30 -- H = 1.65: hard window to 11.65
+                T.Learn("Creature-1", 20, 1.5, 9) -- bound edge 10.313; crowded edge 11.5 - 0.875 = 10.625
+                ctl.now = 10
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+                local i = 0
+                for j = 1, T.CAP do
+                    i = (T.state[j] == T.OPEN and T.kind[j] == X.FLIGHT) and j or i
+                end
+                T.Foreign(T.uid[i], 8, 9.5) -- another nature source on the unit within CROWD
+                ctl.now = 10.45 -- inside the bound, under the crowded edge: refused
+                ctl.Fire("UNIT_COMBAT", "target", row[1], "", row[2], row[3])
+                assert.are.same({ 1, T.OPEN }, { T.foreign, T.state[i] })
+                ctl.Tick(11.7)
+                assert.are.same({ 0, 1, 0 }, { T.state[i], T.closed.lost, T.closed.assumed })
+                assert.are.same({ 1, 0 }, { T.lost[X.FLIGHT], T.paid[X.FLIGHT] })
+                assert.are.equal(T.opened, sum())
+            end
+        )
+    end
+
+    it("prints the recovery counters on the Snapshot line", function()
+        local line = VS.Snapshot() -- Game/State/Snapshot.lua: every OnSnapshot line, joined
+        assert.is_truthy(line:find("tentative=%d+ replaced=%d+ assumed=%d+ confirmed=%d+ refunded=%d+"))
+    end)
+
     it(
         "leaves a white wound the swing LR rejects foreign: an open swing has no Overdue (decision 46 amended)",
         function()

@@ -127,23 +127,24 @@ describe("resources", function()
             assert.are.equal(lo0, R.lo0[slot])
         end)
 
-        it(
-            "a confirmed assumption (EV) lifts lo by the landed step and leaves est where the assumption put it",
-            function()
-                local R = I.res
-                local slot = R.slotOf[fs.RAGE]
-                ctl.now = 180
-                I.Sources.Stage(VS.Obs.Swing, 180, 1, 4, 5)
-                I.Sources.Flush()
-                I.Fold(180)
-                local e1, lo1 = R.est0[slot], R.lo0[slot]
-                I.Sources.Stage(VS.Obs.Swing, 180, 1, 4, 7)
-                I.Sources.Flush()
-                I.Fold(180.8)
-                assert.is_true(math.abs(R.est0[slot] - e1) < 1e-6)
-                assert.is_true(R.lo0[slot] > lo1)
-            end
-        )
+        it("a confirmed assumption (EV) lifts lo by the landed step and est by the step's (1 - f) remainder", function()
+            local R = I.res
+            local slot = R.slotOf[fs.RAGE]
+            local step = I.SwingValue(slot, 1, 180) * R.scale[slot]
+            ctl.now = 180
+            I.Sources.Stage(VS.Obs.Swing, 180, 1, 4, 4) -- a swing: the hit rate f decays below 1
+            local e0 = R.est0[slot]
+            I.Sources.Stage(VS.Obs.Swing, 180, 1, 4, 5)
+            I.Sources.Flush()
+            I.Fold(180)
+            local e1, lo1 = R.est0[slot], R.lo0[slot]
+            assert.is_true(e1 - e0 < step - 1e-6) -- the assumption: f x the step
+            I.Sources.Stage(VS.Obs.Swing, 180, 1, 4, 7)
+            I.Sources.Flush()
+            I.Fold(180.8)
+            assert.is_true(math.abs(R.est0[slot] - e0 - step) < 1e-6) -- f x the step + (1 - f) x the step
+            assert.is_true(R.lo0[slot] > lo1)
+        end)
 
         it(
             "holds est through an assume-then-refund pair (EV): the icon moves only at the next answer or spend",

@@ -104,7 +104,8 @@ T.TOL, T.CLOSE, T.LAG_CAP = 0.15, 7, 16
 -- The crowd gate (owner ruling 2026-10-22, Task 12): a flight's widened band takes the running-mob bound's early edge
 -- only while no foreign row of its school reached its unit in the last CROWD s (named cause: the detection suite's
 -- party and busy cells doubled false credit under the bound, K4 party 13.2 -> 28.9 per 100, while capture b's
--- running-mob rows need it in solo). Per unit slot x school (7): the last foreign row's time.
+-- running-mob rows need it in solo). A row between the two edges is refused (pass (d) is late only:
+-- attribution-recovery decision 53 as amended 2026-10-23). Per unit slot x school (7): the last foreign row's time.
 T.CROWD = 5
 local NSCH = 7
 T.SCHOOL_IX = { [1] = 1, [2] = 2, [4] = 3, [8] = 4, [16] = 5, [32] = 6, [64] = 7 }
@@ -811,16 +812,17 @@ end
 
 --- Snapshot's line (allocates; debugging only).
 I.OnSnapshot(function(out)
-    local c, open = T.closed, 0
+    local c, open, tentative = T.closed, 0, 0
     for i = 1, CAP do
         open = open + (state[i] ~= 0 and 1 or 0)
+        tentative = tentative + (state[i] == T.TENT and 1 or 0)
     end
     local lost = 0
     for k = 0, 7 do
         lost = lost + T.lost[k]
     end
     out[#out + 1] = string.format(
-        "tickets open=%d none=%d paid=%d lost=%d expired=%d refreshed=%d foreign=%d unpinned=%d dead=%d gone=%d bandRejected=%d divergent=%d overflow=%d absorbed=%d ours=%d aoeOther=%d overpaid=%d assumed=%d confirmed=%d refunded=%d",
+        "tickets open=%d none=%d paid=%d lost=%d expired=%d refreshed=%d foreign=%d unpinned=%d dead=%d gone=%d bandRejected=%d divergent=%d overflow=%d absorbed=%d ours=%d aoeOther=%d overpaid=%d tentative=%d replaced=%d assumed=%d confirmed=%d refunded=%d",
         open,
         c.none,
         c.paid,
@@ -838,6 +840,8 @@ I.OnSnapshot(function(out)
         T.ours,
         T.aoeOther,
         T.overpaid,
+        tentative,
+        T.replaced,
         c.assumed,
         c.confirmed,
         c.refunded
