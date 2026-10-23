@@ -33,4 +33,22 @@ describe("the harness drive", function()
             )
         )
     end)
+
+    it("allocates nothing in VirtualState replaying a solo 300 s fight of every spell kind", function()
+        local detect = require("Game.harness.detect")
+        local spells = {}
+        for t = 2, 298, 2 do
+            spells[#spells + 1] = { t, ({ "instant", "bolt", "doti", "ticks", "unmapped" })[(t / 2) % 5 + 1] }
+        end
+        local s = scenarios.stream({ duration = 300, spells = spells, distance = 25 }, 11)
+        local c = drive.boot({ boot = detect.boot })
+        local ok, bytes = pcall(alloc.bytes, function(i)
+            drive.run(c, s, i * 400)
+        end, 2)
+        local opened = c.I.Tickets.opened
+        drive.restore(c)
+        assert.is_true(ok, tostring(bytes))
+        assert.are.equal(0, bytes)
+        assert.is_true(opened > 0, "the fight opened no ticket")
+    end)
 end)

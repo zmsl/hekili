@@ -29,6 +29,39 @@ Hekili.Virtual = { State = VS, Events = I.Events }
 -- The trace (event-facade spec §5): facade reads and events write into Hekili's snapshot while it debugs, and each
 -- display's snapshot log opens with VirtualState's own Snapshot().
 ns.Facade.Attach(Hekili)
+
+-- In-game CPU profiling (unit-registry spec §10): the registry's row path and the polls, by name for Hekili's
+-- profiler, and as debugprofilestop totals (ms, calls) in Hekili.Virtual.Prof while its `on` is set (off by default:
+-- /run Hekili.Virtual.Prof.on = true). Plain numbers into preallocated fields; allocates nothing.
+if Hekili.ProfileCPU then
+    Hekili:ProfileCPU("VirtualState.UnitsRow", I.Units.OnCombat)
+    Hekili:ProfileCPU("VirtualState.Polls", S.RunPolls)
+end
+do
+    local prof = { on = false, rowMs = 0, rows = 0, pollMs = 0, polls = 0 }
+    Hekili.Virtual.Prof = prof
+    local onCombat, runPolls, list = I.Units.OnCombat, S.RunPolls, S.HANDLERS.UNIT_COMBAT
+    for k = 1, #list do
+        if list[k] == onCombat then
+            list[k] = function(api, t, unit, act, flag, amount, school)
+                if not prof.on then
+                    return onCombat(api, t, unit, act, flag, amount, school)
+                end
+                local t0 = debugprofilestop()
+                onCombat(api, t, unit, act, flag, amount, school)
+                prof.rowMs, prof.rows = prof.rowMs + debugprofilestop() - t0, prof.rows + 1
+            end
+        end
+    end
+    function S.RunPolls(t)
+        if not prof.on then
+            return runPolls(t)
+        end
+        local t0 = debugprofilestop()
+        runPolls(t)
+        prof.pollMs, prof.polls = prof.pollMs + debugprofilestop() - t0, prof.polls + 1
+    end
+end
 do
     local setupDebug = Hekili.SetupDebug
     function Hekili:SetupDebug(display)

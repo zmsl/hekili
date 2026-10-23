@@ -6,7 +6,7 @@ LUACHECK := $(LUA_ENV)/bin/luacheck
 LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
-.PHONY: gate bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench spell-data-check syntax api-check \
+.PHONY: gate bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench bench-ta spell-data-check syntax api-check \
 	packs-check tools-test check packs package package-check wowsims-cli wowsims-export wowsims-learn wowsims-packs test-wowsims
 
 bootstrap:
@@ -58,6 +58,11 @@ $(LOOPS): test-%:
 # Per-Update time and allocation of headless Arms (tests/Forever/bench_spec.lua); not part of `check`.
 bench:
 	$(BUSTED) --tags=bench tests/Forever/bench_spec.lua
+
+# The unit registry and ticket pool microbenchmark (unit-registry spec §10): rows/s, ms/row and ms per frame tick
+# against hard budgets and a rows/s floor (tools/bench_ta_floor.lua); not part of `check`.
+bench-ta:
+	$(LUA) tools/bench_ta.lua
 
 # The packs' declared expects/velocity/school/ticks against DB2 (unit-registry spec 5.5): SpellMisc, SpellEffect from
 # $WOW_DB2; dev-only, outside `make check` (CI has no DB2 file). A rank with no DB2 row is a note; a mismatch fails.

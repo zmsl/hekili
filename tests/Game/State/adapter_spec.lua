@@ -326,4 +326,17 @@ describe("Adapter", function()
         assert.is_true(state.target.updated) -- spender_c's `now` moved the target's set
         assert.are.equal(1, I.drainCasts)
     end)
+
+    it("profiles the registry's rows and the polls only while Prof.on is set", function()
+        local prof = h.Virtual.Prof
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 1)
+        VS.Drain(ctl.now)
+        assert.are.same({ 0, 0 }, { prof.rows, prof.polls })
+        prof.on = true
+        ctl.now = 2
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 11, 1)
+        VS.Drain(ctl.now)
+        assert.are.same({ 1, 1 }, { prof.rows, prof.polls })
+        assert.is_true(prof.rowMs >= 0 and prof.pollMs >= 0)
+    end)
 end)

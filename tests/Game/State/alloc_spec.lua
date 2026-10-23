@@ -54,6 +54,7 @@ describe("zero allocation", function()
             return false
         end
         load.adapter(ns, h)
+        h.Virtual.Prof.on = true -- the in-game CPU profiling path allocates nothing either
         local sink = I.Events.CreateFrame("Frame") -- a combat-log subscriber: the rows ride along
         local GetInfo = Facade.CombatLogGetCurrentEventInfo
         sink:SetScript("OnEvent", function()

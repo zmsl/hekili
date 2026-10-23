@@ -269,7 +269,8 @@ local function dupOf(i, t, u, act, fk, ak, sk, swapped)
     return false
 end
 
-S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
+--- The registry's UNIT_COMBAT handler (by reference, for in-game CPU profiling). Allocates nothing.
+function U.OnCombat(api, t, unit, act, flag, amount, school)
     local i = unit and INDEX[unit]
     if not i or type(act) ~= "string" then
         return -- player rows stay with Attackers and Player; targettarget, partyN, raidN, mouseover are echoes
@@ -296,7 +297,8 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         ROW[k](t, g, u, act, flag, amount, school)
     end
     U.lastGUID = ""
-end)
+end
+S.On("UNIT_COMBAT", nil, U.OnCombat)
 
 S.On("PLAYER_TARGET_CHANGED", nil, function(api, t)
     local before = tokUid[1]
