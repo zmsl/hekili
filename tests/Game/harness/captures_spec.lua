@@ -99,8 +99,8 @@ describe("the 2026-10-22 captures (K20)", function()
     -- meets a record last refreshed at 34986 (spec §3.4's example assumed a fresh one) whose pooled spread (0.355 s) makes
     -- even the narrow band wide: it pays the 97374 ticket at pass 1, and that cast's real landing (98890, 1.516 s)
     -- finds no ticket.
-    -- probe U13: what was the 95824 cast's outcome? A 2.07 s landing on a fleeing mob exceeds the hard window; Wrath's
-    -- range with Nature's Reach is 36 yd: check whether the pack's rMax includes it.
+    -- probe U13: what was the 95824 cast's outcome? A 2.07 s landing on a fleeing mob exceeds the hard window; the
+    -- projectile's range with its range talent is 36 yd: check whether the pack's rMax includes it.
     it(
         "a: the crit stages Crit; the late MISS pays on the stale pooled record; the real landing stages nothing",
         function()

@@ -486,7 +486,8 @@ function M.fixtureStream(fix, base, dedupe, extra)
         end
         for _, r in ipairs(extra) do
             local k = #rows + 1
-            while k > 1 and rows[k - 1][1] > r[1] do
+            -- before the capture's rows of its ms: a measured UNIT_DIED (+2 ms) precedes the clear (+4 ms)
+            while k > 1 and rows[k - 1][1] >= r[1] do
                 k = k - 1
             end
             table.insert(rows, k, r)
