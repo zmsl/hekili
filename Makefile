@@ -6,7 +6,7 @@ LUACHECK := $(LUA_ENV)/bin/luacheck
 LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
-.PHONY: gate bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench syntax api-check \
+.PHONY: gate bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench spell-data-check syntax api-check \
 	packs-check tools-test check packs package package-check wowsims-cli wowsims-export wowsims-learn wowsims-packs test-wowsims
 
 bootstrap:
@@ -58,6 +58,11 @@ $(LOOPS): test-%:
 # Per-Update time and allocation of headless Arms (tests/Forever/bench_spec.lua); not part of `check`.
 bench:
 	$(BUSTED) --tags=bench tests/Forever/bench_spec.lua
+
+# The packs' declared expects/velocity/school/ticks against DB2 (unit-registry spec 5.5): SpellMisc, SpellEffect from
+# $WOW_DB2; dev-only, outside `make check` (CI has no DB2 file). A rank with no DB2 row is a note; a mismatch fails.
+spell-data-check:
+	$(LUA) tools/check_spell_data.lua | python3 -I tools/check_spell_data.py
 
 # The wowsims/forever packs (docs/superpowers/plans/2026-10-19-wowsims-packs.md). Dev-only, outside `make check`:
 # wowsims-cli builds the CLI in the checkout (Go, protoc and protoc-gen-go on PATH), wowsims-export SPEC=<spec>
