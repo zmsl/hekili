@@ -28,6 +28,7 @@ local PUBLIC = {
     Class = true,
     Client = true,
     SCHOOL = true,
+    L = true, -- the translations (Locales/Locales.lua): the packs' setting names and descriptions
 }
 local PRIVATE = { "%f[%w_]ns%.", "ns%s*=%s*%.%.%.", "VirtualState", "Hekili%.Virtual", "Hekili%.Engine" }
 
@@ -105,7 +106,7 @@ describe("core/content boundary", function()
             assert.are.same({}, found)
         end
     )
-    it("keeps the content on the public surface: the registration API, State, Class and Client", function()
+    it("keeps the content on the public surface: the registration API, State, Class, Client and L", function()
         local found = {}
         local files = B.coreFiles(CONTENT, {})
         assert.is_true(#files >= 13)

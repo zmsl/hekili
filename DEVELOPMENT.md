@@ -7,7 +7,7 @@ gate are defined in the [glossary](#8-glossary) at the end.
 
 | Reference | What it holds |
 | --- | --- |
-| [architecture.md](docs/dev/architecture.md) | The layers, the engine's interface, the content surface, the packs |
+| [architecture.md](docs/dev/architecture.md) | The layers, the engine's interface, the content surface, the packs, localization |
 | [layout.md](docs/dev/layout.md) | Every folder, the checks in detail, each pack's gate lines, in-game checkpoints |
 | [wowsims-packs.md](docs/dev/wowsims-packs.md) | The rules for priority packs, the recipe, the translator, floors |
 | [gaps.md](docs/dev/gaps.md) | Known differences from wowsims and where each must be fixed |
@@ -338,6 +338,8 @@ An in-game answer that differs from the model is a gap. Record it in [docs/dev/g
 
 - **Changelog.** Every change a player can see adds a line under "Unreleased" in [CHANGELOG.md](CHANGELOG.md), in the
   same commit. Write it for players, not developers.
+- **Text a player sees.** Write it as `L["English text"]` and run `python3 tools/locales.py` after changing any, so
+  the translation files pick it up ([docs/dev/architecture.md](docs/dev/architecture.md), section 9).
 - **Floors and flicker.** Floors only move up, unless a named cause is recorded beside the change. A change that
   raises flicker says why.
 - **Versioning.** Releases are tagged `vMAJOR.MINOR.PATCH`. A pre-release adds a suffix such as `-rc.1` and ships as

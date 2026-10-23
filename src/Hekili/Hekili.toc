@@ -61,6 +61,8 @@ Game\Events\Kinds.lua
 Game\Events\Rows.lua
 Game\Events\Attackers.lua
 Game\API\Facade.lua
+Locales\Locales.lua
+Locales\zhCN.lua
 
 Hekili.lua
 Engine\Settings.lua
