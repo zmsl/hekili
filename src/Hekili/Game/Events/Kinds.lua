@@ -22,9 +22,10 @@ K.SPELL_BAND_LO, K.SPELL_BAND_HI, K.BAND_N = 0.6, 1.6, 3
 K.TICK_BAND_LO, K.TICK_BAND_HI = 0.5, 2
 
 -- Seconds after its anchor before which a flight to ticket i's GUID cannot land, from the target's plain range
--- bracket (poll 14) when the GUID is the current target: (lo - CLOSE x age) / speed - TOL, never below 0. The
--- bracket's upper bound is never used (a closing mob makes it stale on the wrong side).
-local function rangeLow(i, t, v)
+-- bracket (poll 14) when the GUID is the current target: the bracket's distance less CLOSE x (anchor - bracket),
+-- flown at v + CLOSE (a mob running in meets the projectile), less TOL, never below 0. The bracket's upper bound is
+-- never used (a closing mob makes it stale on the wrong side).
+local function rangeLow(i, v)
     if T.guid[i] ~= I.Units.Bound(1) then
         return 0
     end
@@ -33,16 +34,17 @@ local function rangeLow(i, t, v)
     if not (r.lo and r.lo > 0 and r.last) or r.last.observed.t > T.at[i] then
         return 0
     end
-    local lo = (r.lo - T.CLOSE * (t - r.last.observed.t)) / v - T.TOL
+    local lo = (r.lo - T.CLOSE * (T.at[i] - r.last.observed.t)) / (v + T.CLOSE) - T.TOL
     return lo > 0 and lo or 0
 end
 
 --- (spec §3.3.1) A flight's band for ticket i at pass p (speed v, hard window H from anchor a0): with no (GUID, v)
 --- record, only the whole hard window at pass 3 (E its middle; Overdue, decision 33); with one, the narrow band
---- lagE +- b at pass 1 and the widened band at pass 2 (down by CLOSE / v per second from the record's last anchor to
---- this ticket's, up by half that), clipped to the hard window, and nothing at pass 3.
+--- lagE +- b at pass 1 and the widened band at pass 2 (from the bound a mob running in at CLOSE since the record's
+--- last anchor allows, less b, up to lagE + CLOSE / 2 / v per second of it), clipped to the hard window, and
+--- nothing at pass 3.
 function K.Flight(i, p, t, v, H, a0)
-    local lo0, hiH = a0 + rangeLow(i, t, v), a0 + H
+    local lo0, hiH = a0 + rangeLow(i, v), a0 + H
     local r = T.LagOf(T.guid[i], v)
     if r == 0 then
         if p < 3 then
@@ -54,15 +56,17 @@ function K.Flight(i, p, t, v, H, a0)
     end
     local e = a0 + T.lagE[r]
     local b = 2 * T.lagSpr[r] > T.TOL and 2 * T.lagSpr[r] or T.TOL
-    local down, up = b, b
+    local lo, h = e - b, e + b
     if p == 2 then
         -- a lag measures the distance at its ticket's anchor: the closing time runs anchor to anchor (lagT - lagE is
         -- the record's last paid anchor); landing to row would miss the lag the mob already removed
         local d = a0 - (T.lagT[r] - T.lagE[r])
-        down = T.CLOSE / v * d > b and T.CLOSE / v * d or b
-        up = T.CLOSE / 2 / v * d > b and T.CLOSE / 2 / v * d or b
+        -- the distance left at this anchor, flown at v + CLOSE: a mob running in meets the projectile
+        local bound = (T.lagE[r] * v - T.CLOSE * d) / (v + T.CLOSE)
+        lo = a0 + (bound > 0 and bound or 0) - b
+        local up = T.CLOSE / 2 / v * d
+        h = e + (up > b and up or b)
     end
-    local lo, h = e - down, e + up
     return lo > lo0 and lo or lo0, h < hiH and h or hiH, e
 end
 

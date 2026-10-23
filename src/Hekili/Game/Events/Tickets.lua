@@ -61,10 +61,11 @@ for k = 0, 7 do
 end
 T.ours, T.foreign, T.absorbed, T.divergent, T.bandRejected, T.aoeOther = 0, 0, 0, 0, 0, 0
 T.onExpire, T.onPay = nil, nil
--- FLIGHT (spec §3.3.1): per ticket its speed (yd/s) and hard window length H = rMax / speed + TOL. CLOSE: 10 yd/s,
--- a margin over a mob's run speed (about 7) for both sides closing: capture b's (2026-10-22) closing rows need 3.1 to
--- 7.7 yd/s, anchor to anchor (Kinds.Flight).
-T.TOL, T.CLOSE, T.LAG_CAP = 0.15, 10, 16
+-- FLIGHT (spec §3.3.1): per ticket its speed (yd/s) and hard window length H = rMax / speed + TOL. CLOSE: 7 yd/s, a
+-- mob's run speed (a hard cast cannot move). The lag falls because the mob closes between anchors and again during
+-- the flight (it meets the projectile at speed + CLOSE: Kinds.Flight's bound); capture b's (2026-10-22) six closing
+-- rows (16017, 38127, 39145, 40413, 69926, 72780) and capture a's 5367 crit land inside that bound.
+T.TOL, T.CLOSE, T.LAG_CAP = 0.15, 7, 16
 T.speed, T.H = {}, {}
 for i = 1, CAP do
     T.speed[i], T.H[i] = 0, 0

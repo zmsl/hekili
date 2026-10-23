@@ -84,8 +84,8 @@ describe("the kinds", function()
             end
             local i = open(fs.SPENDER_P, 100)
             local lo = K.Band(i, 3, 101, false, "WOUND", 8)
-            -- (20 - CLOSE 10 x 1) / 20 - 0.15 = 0.35 s after the success
-            assert.is_true(math.abs(lo - 100.35) < 1e-9)
+            -- (20 - CLOSE 7 x (anchor 100 - bracket 100)) / (20 + 7) - 0.15 = 20 / 27 - 0.15 = 0.5907 s after the success
+            assert.is_true(math.abs(lo - (100 + 20 / 27 - 0.15)) < 1e-9)
         end)
 
         it("ignores a range bracket logged after the success", function()
@@ -101,15 +101,15 @@ describe("the kinds", function()
             local i = open(fs.SPENDER_P, 100)
             local lo, hi, e = K.Band(i, 1, 101.5, false, "WOUND", 8)
             assert.is_true(math.abs(lo - 101.35) < 1e-9 and math.abs(hi - 101.65) < 1e-9 and e == 101.5)
-            -- d runs anchor to anchor, 100 - (99 - 1.5) = 2.5 s (not row - lagT = 2.2): down 10 / 20 x 2.5 = 1.25,
-            -- up 5 / 20 x 2.5 = 0.625, clipped to the hard window 100 + 1.65
+            -- d runs anchor to anchor, 100 - (99 - 1.5) = 2.5 s (not row - lagT = 2.2): bound (1.5 x 20 - 7 x 2.5) /
+            -- (20 + 7) = 12.5 / 27 = 0.463 s, lo = 100 + 0.463 - 0.15; up 3.5 / 20 x 2.5 = 0.4375, clipped to 100 + 1.65
             lo, hi = K.Band(i, 2, 101.2, false, "WOUND", 8)
-            assert.is_true(math.abs(lo - (101.5 - 1.25)) < 1e-9 and math.abs(hi - 101.65) < 1e-9)
+            assert.is_true(math.abs(lo - (100 + 12.5 / 27 - 0.15)) < 1e-9 and math.abs(hi - 101.65) < 1e-9)
             assert.is_nil(K.Band(i, 3, 101.5, false, "WOUND", 8))
         end)
 
         it(
-            "spec §3.4's example, recomputed: a fresh record keeps the late MISS out of the narrow band only",
+            "spec §3.4's example: a mob that ran in can land the late MISS inside the widened band, not the narrow one",
             function()
                 T.Learn("Creature-1", 20, 1.5, 96.4) -- a synthetic landing of the 94.9 cast (capture a has none)
                 local i = open(fs.SPENDER_P, 97.374)
@@ -118,9 +118,12 @@ describe("the kinds", function()
                 assert.is_true(
                     math.abs(lo - 98.724) < 1e-9 and math.abs(hi - 99.024) < 1e-9 and math.abs(e - 98.874) < 1e-9
                 )
-                -- pass 2: d = 97.374 - (96.4 - 1.5) = 2.474 s, down 10 / 20 x 2.474 = 1.237: the MISS at 97.891 is inside
+                -- pass 2: d = 97.374 - (96.4 - 1.5) = 2.474 s, bound (1.5 x 20 - 7 x 2.474) / 27 = 12.682 / 27 = 0.470 s
+                -- below the MISS's 0.517: lo = 97.374 + 0.470 - 0.15 = 97.694, inside; up 3.5 / 20 x 2.474 = 0.433,
+                -- clipped to 99.024
                 lo, hi = K.Band(i, 2, 97.891, true, "MISS", 1)
-                assert.is_true(math.abs(lo - (98.874 - 1.237)) < 1e-9 and math.abs(hi - 99.024) < 1e-9)
+                assert.is_true(math.abs(lo - (97.374 + 12.682 / 27 - 0.15)) < 1e-9 and math.abs(hi - 99.024) < 1e-9)
+                assert.is_true(lo <= 97.891 and 97.891 <= hi)
                 assert.is_nil(K.Band(i, 3, 97.891, true, "MISS", 1))
             end
         )
