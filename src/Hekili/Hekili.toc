@@ -32,6 +32,8 @@ Game\State\Families\Expect.lua
 Game\State\Families\Modifiers.lua
 Game\State\Sources\Sources.lua
 Game\State\Sources\Units.lua
+Game\State\Sources\Outcomes\Default.lua
+Game\State\Sources\Presence\Default.lua
 Game\State\Sources\Player.lua
 Game\State\Sources\Spellbook.lua
 Game\State\Sources\Casts.lua

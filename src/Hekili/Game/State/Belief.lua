@@ -93,6 +93,37 @@ function I.Dt(now)
     return dt > 0 and dt or 0
 end
 
+-- The provider contracts (providers spec §1): answers (UNDECIDED: no answer, the consumer's own path), and the
+-- registries each provider file fills at load. I.UNKNOWN is the unknown entity record (VirtualState.lua), not an answer.
+I.UNDECIDED, I.HIT, I.AVOID, I.OURS, I.FOREIGN, I.UP, I.DOWN = 0, 1, 2, 1, 2, 1, 2
+I.OUTCOMES, I.PRESENCE = {}, {}
+I.outcomes, I.presence, I.presenceViewer = nil, nil, nil
+local wantO, wantP, wantV -- a swap asked for in combat (VS.SetProviders): applied at combat end
+
+-- Activates the named providers (spec §3.1): unknown names are "default"; only a changed choice is swapped, except
+-- that a build (`def`) re-activates the presence provider (its map names the new set's auras).
+local function provide(oName, pName, viewer, now, def)
+    local O = I.OUTCOMES[oName or "default"] or I.OUTCOMES.default
+    local P = I.PRESENCE[pName or "default"] or I.PRESENCE.default
+    if O ~= I.outcomes then
+        if I.outcomes then
+            I.outcomes.Deactivate(now)
+        end
+        I.outcomes = O
+        O.Activate(I.api, now)
+    end
+    if P ~= I.presence or viewer ~= I.presenceViewer or def then
+        if I.presence then
+            I.presence.Deactivate(now)
+        end
+        I.presence, I.presenceViewer = P, viewer
+        P.Activate(I.api, now, def or I.def, { viewer = viewer == true })
+        if I.OnPresence then
+            I.OnPresence(P) -- Sources/Auras.lua: the provider's edges go there
+        end
+    end
+end
+
 --- Rebuilds the tracked set from `def` (spec §3.6): every family allocates its arrays and records. `def` holds
 --- `abilities` (Hekili ability tables), `resources`, `auras`, `talents` and `units` (see Adapter.lua). Allocates;
 --- SpecChanged only.
@@ -104,8 +135,39 @@ function I.Build(def, now)
     end
     I.started = false
     I.clock = now
+    I.def = def
     for k = 1, #I.BUILD do
         I.BUILD[k](def, now)
     end
+    local pv = def.providers or {}
+    provide(pv.outcomes, pv.presence, pv.viewer, now, def)
     I.built = true
+end
+
+--- (spec §3.1) Swaps the providers without a rebuild: out of combat at once, in combat at PLAYER_REGEN_ENABLED.
+function VS.SetProviders(outcomes, presence, viewer)
+    if I.inCombat then
+        wantO, wantP, wantV = outcomes or "default", presence or "default", viewer
+        return
+    end
+    provide(outcomes, presence, viewer, I.clock)
+end
+
+--- Applies a swap asked for in combat. Rows calls it at PLAYER_REGEN_ENABLED, after T.EndCombat.
+function I.ApplyProviders(now)
+    if wantO then
+        local o, p, v = wantO, wantP, wantV
+        wantO, wantP, wantV = nil, nil, nil
+        provide(o, p, v, now)
+    end
+end
+
+--- (spec §3.4) The active presence provider's scope ("self", "any") for aura `key` on `unit`, nil when uncovered.
+function VS.PresenceScope(unit, key)
+    local P, U = I.presence, I.auras
+    local u, j = U and U.index[unit], U and U.byKey[key]
+    if P and u and j and P.Presence(j, u) ~= I.UNDECIDED then
+        return P.scope
+    end
+    return nil
 end

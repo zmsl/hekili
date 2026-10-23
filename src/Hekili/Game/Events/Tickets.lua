@@ -61,6 +61,12 @@ T.retry, T.assumed, T.avoidSeen = {}, {}, {}
 for i = 1, CAP do
     T.retry[i], T.assumed[i], T.avoidSeen[i] = false, false, false
 end
+-- Per swing ticket (providers decision 70): the Outcomes provider's answer, 0 not asked, 1 HIT, 2 AVOID, 3 asked and
+-- unanswered (never asked again).
+T.told = {}
+for i = 1, CAP do
+    T.told[i] = 0
+end
 T.onAssume, T.onLost = nil, nil
 T.replaced = 0 -- every replacement of a provisional payment by a narrow-band row, re-offered or not (not a close)
 T.onFinal, T.onReplace = nil, nil -- Rows' hooks: a TENT ticket final, a TENT ticket's row replaced
@@ -268,7 +274,7 @@ local function fill(i, k, a, xx, g, t)
     school[i], owed[i], at[i], hi[i], w[i] = ANY, 1, t, t, 0
     ref[i], lr[i], avoid[i], cast[i], done[i], first[i], T.excused[i] = 0, 0, "", "", 0, false, false
     T.held[i], T.rec[i] = 0, 0
-    T.retry[i], T.assumed[i], T.avoidSeen[i] = false, false, false
+    T.retry[i], T.assumed[i], T.avoidSeen[i], T.told[i] = false, false, false, 0
     T.period[i], T.anchor[i], T.wide[i], T.link[i], T.speed[i], T.H[i], T.tickAmt[i] = 0, t, 0, 0, 0, 0, 0
     U.Hold(uid[i])
     T.opened = T.opened + 1
@@ -372,6 +378,8 @@ function T.SwingPending(hand, t)
         return at0
     elseif state[i] < OPEN or state[i] == T.TENT or kind[i] ~= MELEE or at[i] ~= at0 then
         return 0 -- a TENT swing is credited, provisionally (attribution-recovery decision 48)
+    elseif T.told[i] == 2 then
+        return 0 -- the provider said AVOID: no rage pends (providers decision 70)
     end
     return at0
 end
@@ -754,6 +762,32 @@ function T.Assume(i, t)
     T.assumed[i] = true
     if T.onAssume then
         T.onAssume(i, t)
+    end
+end
+
+--- (providers decision 70) Asks the Outcomes provider once about each OPEN swing ticket SWING_DELAY after its swing:
+--- HIT is assumed at once (T.Assume), AVOID marked. Allocates nothing; with the Default provider (SWING_DELAY 0)
+--- returns at once.
+function T.Decide(now)
+    local P = I.outcomes
+    local d = P.SWING_DELAY
+    if d <= 0 then
+        return
+    end
+    for i = 1, CAP do
+        if state[i] == OPEN and kind[i] == MELEE and T.told[i] == 0 and now >= at[i] + d then
+            local a = P.SwingOutcome(i, now)
+            if a == I.HIT then
+                T.told[i] = 1
+                if guid[i] ~= "" and not T.retry[i] then
+                    T.Assume(i, now)
+                end
+            elseif a == I.AVOID then
+                T.told[i] = 2
+            else
+                T.told[i] = 3
+            end
+        end
     end
 end
 

@@ -103,8 +103,19 @@ local function activate(t)
     R.covered, R.scope = leaf.covered, leaf.scope
 end
 
+-- The viewer's events reach the client only while the router has the leaf: switch off is the Default to the digit
+-- (decision 88), so it registers nothing new.
+local VIEWER_EVENTS = { "COOLDOWN_VIEWER_DATA_LOADED", "COOLDOWN_VIEWER_TABLE_HOTFIXED" }
+local function listen(on)
+    for n = 1, #VIEWER_EVENTS do
+        S.Dormant(VIEWER_EVENTS[n], not on)
+        I.Events.Sync(VIEWER_EVENTS[n])
+    end
+end
+
 --- Takes the leaf when cfg.viewer; builds the map and activates the leaf out of combat (else at combat end).
 function R.Activate(api, t, def, cfg)
+    listen(cfg and cfg.viewer)
     api0, def0, want = api, def, nil
     if cfg and cfg.viewer then
         want = I.PRESENCE.viewer
@@ -114,6 +125,7 @@ end
 
 --- Answers I.UNDECIDED from now on.
 function R.Deactivate(t)
+    listen(false)
     if leaf then
         leaf.Deactivate(t)
     end
@@ -137,8 +149,10 @@ local function changed(_, t)
         activate(t)
     end
 end
-S.On("COOLDOWN_VIEWER_DATA_LOADED", nil, changed)
-S.On("COOLDOWN_VIEWER_TABLE_HOTFIXED", nil, changed)
+for n = 1, #VIEWER_EVENTS do
+    S.On(VIEWER_EVENTS[n], nil, changed)
+    S.Dormant(VIEWER_EVENTS[n], true)
+end
 -- Player.lua's handler runs first (TOC order) and clears I.inCombat.
 S.On("PLAYER_REGEN_ENABLED", nil, function(_, t)
     if pending and I.presence == R then

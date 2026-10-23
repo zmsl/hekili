@@ -133,6 +133,14 @@ function S.On(event, unit, fn)
     end
 end
 
+-- Events a provider owns while it is inactive: the facade does not register them with the client (spec §3.2).
+S.DORMANT = {}
+--- Marks `event` dormant (on) or awake; the caller then asks the facade to sync it (I.Events.Sync). Load time and
+--- activation only.
+function S.Dormant(event, on)
+    S.DORMANT[event] = on or nil
+end
+
 -- Start hooks: `fn(api, t)` once at VirtualState.Start, in registration order.
 local STARTS = {}
 function S.OnStart(fn)
@@ -175,6 +183,10 @@ function VS.Start(api)
     I.api = api
     I.Events.Attach(api)
     local t = api.GetTime()
+    if I.outcomes then -- a build before Start activated its providers without an api
+        I.outcomes.Activate(api, t)
+        I.presence.Activate(api, t, I.def, { viewer = I.presenceViewer == true })
+    end
     for k = 1, #STARTS do
         -- one raising hook (a client without some API) must not stop the hooks after it
         local ok, err = pcall(STARTS[k], api, t)

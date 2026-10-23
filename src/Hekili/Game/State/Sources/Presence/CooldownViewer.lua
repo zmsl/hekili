@@ -11,10 +11,6 @@ local I = ns.VirtualStateInternal
 local S = I.Sources
 local Plain = S.Plain
 
--- contract constants; Task 1 moves them to the contract table
-I.UNDECIDED, I.UP, I.DOWN = 0, 1, 2
-I.PRESENCE = I.PRESENCE or {}
-
 -- Only the aura viewers: Essential and Utility items are always shown (CV §2), so their auras get no edges and answer
 -- I.UNDECIDED (the router falls through to the default source).
 local VIEWERS = { "BuffIconCooldownViewer", "BuffBarCooldownViewer" }

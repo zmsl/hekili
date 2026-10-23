@@ -942,4 +942,50 @@ describe("the ticket pool", function()
         ctl.Fire("UNIT_SPELLCAST_CHANNEL_STOP", "player", "Cast-1", fs.SPENDER_H)
         assert.are.same({ 1, 0 }, { T.closed.signal, T.foreign })
     end)
+    describe("with a stub Outcomes provider", function()
+        local answer
+        before_each(function()
+            answer = I.UNDECIDED
+            I.OUTCOMES.stub = setmetatable({
+                name = "stub",
+                SWING_DELAY = 0.015,
+                SwingOutcome = function()
+                    return answer
+                end,
+            }, { __index = I.OUTCOMES.default })
+            local d = fs.def(fs.new(9, false, false, true))
+            d.providers = { outcomes = "stub" }
+            I.Build(d, 1)
+        end)
+
+        it("AVOID: the swing takes no wound and pends no rage", function()
+            answer = I.AVOID
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.Tick(10.02)
+            local i = T.lastSwing[1]
+            assert.are.equal(2, T.told[i])
+            assert.are.equal(0, T.SwingPending(1, 10.02))
+            ctl.now = 10.47
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.equal(1, T.foreign)
+        end)
+
+        it("HIT: the swing is assumed at once (the recovery shadow)", function()
+            answer = I.HIT
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.Tick(10.02)
+            local i = T.lastSwing[1]
+            assert.are.same({ 1, T.ASSUMED }, { T.told[i], T.state[i] })
+        end)
+
+        it("UNDECIDED: today's path (asked once, never again)", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.Tick(10.02)
+            local i = T.lastSwing[1]
+            assert.are.same({ 3, T.OPEN }, { T.told[i], T.state[i] })
+        end)
+    end)
 end)

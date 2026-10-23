@@ -197,6 +197,8 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     if unit ~= "player" or (act ~= "WOUND" and not MISSES[act]) then
         return
     end
+    -- the hit's resolved time from the Outcomes provider (its own clock, plain), else the row's; the row keeps t
+    local te = act == "WOUND" and I.outcomes.EnemyHitAt(t) or t
     local melee = act ~= "WOUND" or school == 1
     local wound = act == "WOUND" and school == 1
     local a = wound and base(amount, flag) or nil
@@ -216,7 +218,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
                 if period <= 0 and k then
                     period = atkPeriod[k]
                 end
-                local err = clockError(k, period, t)
+                local err = clockError(k, period, te)
                 if melee and err <= L.ATTACK_TOLERANCE then
                     nTol, tolI = nTol + 1, i
                     if err <= bestErr then
@@ -259,7 +261,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     local src, dst = U.Bound(best), L.player
     if melee then -- a spell does not follow the swing clock: no clock made or moved for it
         local k = clockOf(src)
-        learn(k, t, tokSpeed[best]) -- a band credit moves the clock too (it keeps the phase); the band learns later
+        learn(k, te, tokSpeed[best]) -- a band credit moves the clock too (it keeps the phase); the band learns later
         if byBand then
             L.onus.byBand = L.onus.byBand + 1
         elseif a then -- a band learns from the clock's, the lone hostile's and the elimination's credits, never its own

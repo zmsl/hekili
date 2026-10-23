@@ -24,6 +24,7 @@ local U = {
     id = {},
     obj = {},
     bySpell = {},
+    byKey = {}, -- aura key -> index (VS.PresenceScope)
     exp0 = {},
     applied = {},
     stacks = {},
@@ -55,6 +56,9 @@ I.OnBuild(function(def, now)
     for k in pairs(U.index) do
         U.index[k] = nil
     end
+    for k in pairs(U.byKey) do
+        U.byKey[k] = nil
+    end
     local auras, units = def.auras, def.units
     U.nAura, U.n = #auras, #units
     for j = 1, U.nAura do
@@ -62,6 +66,9 @@ I.OnBuild(function(def, now)
         U.id[j], U.obj[j] = ids[1], auras[j]
         local icd = rawget(auras[j], "icd")
         U.icd[j] = type(icd) == "number" and icd > 0 and icd or 0
+        if auras[j].key ~= nil then
+            U.byKey[auras[j].key] = j
+        end
         for k = 1, #ids do
             U.bySpell[ids[k]] = j
         end

@@ -21,19 +21,6 @@ describe("the CooldownViewer presence leaf", function()
         local ns = load.module()
         local VS = ns.VirtualState
         I = ns.VirtualStateInternal
-        -- shortcut: stands in for Task 1's provider resolution in I.Build; Task 1 replaces it with `d.providers` alone
-        local build = I.Build
-        I.Build = function(def, ...)
-            build(def, ...)
-            if I.presence then
-                I.presence.Deactivate()
-            end
-            I.presence = nil
-            if def.providers and def.providers.presence == "viewer" then
-                I.presence = I.PRESENCE.viewer
-                I.presence.Activate(api, ctl.now, def)
-            end
-        end
         d = fs.def(fs.new(9))
         d.providers = { presence = "viewer" }
         I.Build(d, 1)

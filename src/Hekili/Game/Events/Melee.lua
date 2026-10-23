@@ -158,6 +158,7 @@ function M.score(t, g, amount, flag, avoid, unknown)
             and T.kind[i] == X.MELEE
             and (g == nil or T.guid[i] == g)
             and not (avoid and T.avoid[i] ~= "")
+            and not (not avoid and T.told[i] == 2) -- the provider said AVOID: no wound is its (providers decision 70)
         then
             local f, r = M.density(i, t)
             local q, c, cls = L.Q_AVOID, 7, 4

@@ -18,20 +18,6 @@ describe("the Presence router", function()
         local ns = load.module()
         VS = ns.VirtualState
         I = ns.VirtualStateInternal
-        -- shortcut: stands in for Task 1's provider resolution in I.Build; Task 1 replaces it with `d.providers` alone
-        local build = I.Build
-        I.Build = function(def, ...)
-            build(def, ...)
-            if I.presence then
-                I.presence.Deactivate()
-            end
-            I.presence = nil
-            local pv = def.providers
-            if pv and (pv.presence == "viewer" or pv.presence == "router") then
-                I.presence = I.PRESENCE[pv.presence]
-                I.presence.Activate(api, ctl.now, def, { viewer = pv.viewer == true })
-            end
-        end
         d = fs.def(fs.new(9))
         d.auras[3], d.auraIds[3] = { key = "spender_m", id = fs.SPENDER_M }, { fs.SPENDER_M } -- aura 3: not in a set
         d.providers = { presence = "router", viewer = true }
@@ -44,6 +30,7 @@ describe("the Presence router", function()
         assert.are.equal("router", R.name)
         ctl.ViewerShow(ctl.viewer.items.BuffIconCooldownViewer[1], true)
         assert.are.equal(I.UP, R.Presence(1, 1))
+        assert.are.equal("self", VS.PresenceScope("player", I.auras.obj[1].key)) -- the pack-facing read (decision 77)
     end)
 
     it("an untracked aura answers UNDECIDED (the modelled timer)", function()

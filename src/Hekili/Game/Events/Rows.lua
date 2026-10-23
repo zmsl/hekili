@@ -323,9 +323,10 @@ T.onAssume = function(i, now)
     S.Stage(Obs.Swing, T.at[i], T.x[i], id, 5)
 end
 
--- The expectation at a swing's lost close (decision 51 as ruled 2026-10-23: expiry EV, the parked 9b; a retry none).
+-- The expectation at a swing's lost close (decision 51 as ruled 2026-10-23: expiry EV, the parked 9b; a retry none; a
+-- swing the Outcomes provider called AVOID none, providers decision 70).
 T.onLost = function(i)
-    if T.kind[i] == MELEE and not T.retry[i] and not T.avoidSeen[i] then
+    if T.kind[i] == MELEE and not T.retry[i] and not T.avoidSeen[i] and T.told[i] ~= 2 then
         S.Stage(Obs.Swing, T.at[i], T.x[i], 0, 5)
     end
 end
@@ -398,7 +399,7 @@ end
 -- band; else nobody's. A WOUND 0 is the white
 -- swing an on-next-swing strike replaced and pays nothing; a wound right after one that no ticket took is another
 -- player's strike frame.
-U.OnRow(function(t, g, uid, act, flag, amount, school)
+local function route(t, g, uid, act, flag, amount, school)
     if act ~= "WOUND" and not MISSES[act] then
         return
     end
@@ -527,6 +528,52 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
         return
     end
     creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, ref, lag, second, k)
+end
+
+-- (providers decision 73, count-only per the owner 2026-10-23) A row is routed at once; RowOwner is asked ROW_DELAY
+-- later for the audit only: FOREIGN counts `foreignByMeter` (and `disagree` when a ticket took the row), OURS on a row
+-- no ticket took counts `ownUnclaimed`. With ROW_DELAY 0 (Default) nothing is queued or asked. Preallocated.
+local ASK = 32
+local aT, aU, aS, aM, aA, aOurs = {}, {}, {}, {}, {}, {}
+for k = 1, ASK do
+    aT[k], aU[k], aS[k], aM[k], aA[k], aOurs[k] = 0, 0, 0, 0, "", false
+end
+local aHead, aN = 0, 0
+L.fight = { ownUnclaimed = 0, foreignByMeter = 0, disagree = 0, overflow = 0 }
+
+local function ask(now)
+    local P, f = I.outcomes, L.fight
+    while aN > 0 do
+        local k = (aHead - aN) % ASK + 1
+        if now < aT[k] + P.ROW_DELAY then
+            return
+        end
+        aN = aN - 1
+        local owner = P.RowOwner(aT[k], aU[k], aS[k], aM[k], aA[k], now)
+        if owner == I.FOREIGN then
+            f.foreignByMeter = f.foreignByMeter + 1
+            if aOurs[k] then
+                f.disagree = f.disagree + 1
+            end
+        elseif owner == I.OURS and not aOurs[k] then
+            f.ownUnclaimed = f.ownUnclaimed + 1
+        end
+    end
+end
+
+U.OnRow(function(t, g, uid, act, flag, amount, school)
+    local f0, a0 = T.foreign, T.absorbed
+    route(t, g, uid, act, flag, amount, school)
+    if I.outcomes.ROW_DELAY > 0 and (act == "WOUND" or MISSES[act]) and type(amount) == "number" then
+        if type(school) == "number" and (amount > 0 or act ~= "WOUND") then
+            if aN >= ASK then -- full: the oldest goes unasked (counted)
+                aN, L.fight.overflow = aN - 1, L.fight.overflow + 1
+            end
+            aHead, aN = aHead % ASK + 1, aN + 1
+            aT[aHead], aU[aHead], aS[aHead], aM[aHead], aA[aHead] = t, uid, school, amount, act
+            aOurs[aHead] = T.foreign == f0 and T.absorbed == a0
+        end
+    end
 end)
 
 --- (harness design §2.2) The verdict on credit record `id` from a usability answer at t (`ok`: usable, false: short,
@@ -575,14 +622,29 @@ end
 -- Closes the windows at `now` (each swing's row at its own time). Every OnUpdate. Allocates nothing.
 L.OnTick(function(now)
     M.advance(now)
+    T.Decide(now) -- the Outcomes provider's swing answers (providers decision 70)
     T.Expire(now)
+    if aN > 0 then
+        ask(now)
+    end
 end)
 
--- Combat end: nothing open survives into the next pull; the background and the lags are kept (decision D6).
+-- Combat end: nothing open survives into the next pull; the background and the lags are kept (decision D6). A
+-- provider swap asked for in combat applies now (VS.SetProviders).
 S.On("PLAYER_REGEN_ENABLED", nil, function(api, t)
     M.advance(t)
+    if aN > 0 then
+        ask(math.huge)
+    end
     T.EndCombat(t)
     fresh = false
+    I.ApplyProviders(t)
+end)
+
+-- A pull: the providers audit's counters start again.
+S.On("PLAYER_REGEN_DISABLED", nil, function()
+    local f = L.fight
+    f.ownUnclaimed, f.foreignByMeter, f.disagree, f.overflow, aN = 0, 0, 0, 0, 0
 end)
 
 --- Snapshot's lines (allocates; debugging only): the credits and the background, the learned lags (ms) and the

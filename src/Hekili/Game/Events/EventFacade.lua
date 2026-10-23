@@ -59,7 +59,7 @@ local function sync(e)
         return
     end
     any, general, un1, un2 = false, false, nil, nil
-    if I.api and S.HANDLERS[e] then
+    if I.api and S.HANDLERS[e] and not S.DORMANT[e] then
         local su = S.UNITS[e]
         if su then
             for k = 1, #su do
@@ -94,6 +94,8 @@ local function sync(e)
         E.STUB[e] = true
     end
 end
+
+E.Sync = sync
 
 --- Subscribes `frame` to `e` (for one or two units, or every unit). Load time and rare runtime registrations only.
 function E.Subscribe(frame, e, u1, u2)
