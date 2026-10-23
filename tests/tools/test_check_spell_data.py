@@ -46,6 +46,11 @@ class CheckTest(unittest.TestCase):
         errors, _ = csd.check([row("shot", [40], expects="")], db())
         self.assertEqual(1, len(errors))
 
+    def test_an_ability_declared_none_needs_no_velocity_but_a_wrong_one_still_fails(self):
+        self.assertEqual(([], []), csd.check([row("summon", [40], expects="none")], db()))
+        errors, _ = csd.check([row("summon", [40], "20", expects="none")], db())
+        self.assertEqual(1, len(errors))
+
     def test_an_aura_tick_time_off_the_period_is_a_note_never_a_failure(self):
         errors, notes = csd.check([row("dot", [30, 31], "", "arcane", "3", expects="instant")], db())
         self.assertEqual(([], []), (errors, notes))

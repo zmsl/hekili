@@ -405,6 +405,7 @@ spec:RegisterAbilities({
     -- The dive, then a hawk for 18 s (wowsims summon_hawk.go).
     summon_hawk = {
         id = 1293241,
+        expects = "none", -- a summon has no damage row: a velocity would open a flight ticket that never pays
         copy = rest(SUMMON_HAWK),
         cast = 0,
         cooldown = 6,
