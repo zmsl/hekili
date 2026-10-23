@@ -47,18 +47,18 @@ return {
     K14 = {
         solo = { recall = 1.00, melee = 0.98, melee2 = 0.96, rageErr = 18.9, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
         party = { recall = 1.00, melee = 0.96, melee2 = 0.93, rageErr = 19.4, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
-        busy = { recall = 1.00, melee = 0.84, melee2 = 0.87, rageErr = 22.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        busy = { recall = 1.00, melee = 0.84, melee2 = 0.87, rageErr = 21.9, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
     K14f = {
         solo = { recall = 1.00, melee = 0.70, melee2 = 0.75, rageErr = 34.4, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
-        party = { recall = 1.00, melee = 0.39, melee2 = 0.69, rageErr = 46.4, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
-        busy = { recall = 1.00, melee = 0.17, melee2 = 0.66, rageErr = 56.2, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        party = { recall = 1.00, melee = 0.39, melee2 = 0.69, rageErr = 46.3, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        busy = { recall = 1.00, melee = 0.18, melee2 = 0.66, rageErr = 55.9, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
     -- K14p: owner finding. The spec has our pet's rows stay foreign; our swing tickets take 8.8 / 6.6 / 3.2 per 100 of them (solo / party / busy) through the melee scoring, which cannot tell a pet's white hit on our target from ours (probe U15's family). Floored by the first clean run, not a target.
     K14p = {
         solo = { recall = 1.00, melee = 0.90, melee2 = 0.91, rageErr = 19.5, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
         party = { recall = 1.00, melee = 0.88, melee2 = 0.88, rageErr = 21.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
-        busy = { recall = 1.00, melee = 0.85, melee2 = 0.87, rageErr = 21.5, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        busy = { recall = 1.00, melee = 0.84, melee2 = 0.87, rageErr = 21.8, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
     K15 = {
         solo = { recall = 0.97, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
