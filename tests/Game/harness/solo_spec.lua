@@ -18,10 +18,11 @@ describe("solo attribution (harness gates) #slow", function()
             check(metrics.rate(m, 1) >= 0.94 and metrics.rate(m, 2) >= 0.94, m)
             check(m.wrong[1] <= 0.02 * m.own[1] and m.wrong[2] <= 0.02 * m.own[2], m)
             check(metrics.falsePer100(m, m.falseNet) == 0 and metrics.falsePer100(m) == 0, m)
-            -- the model's drift, no answers. Re-based 0 -> 18 (measured 17 + 1; owner ruling 2026-10-23), decision 51,
+            -- the model's drift, no answers. Re-based 0 -> 2 (measured 1 + 1; owner rulings 2026-10-23), decision 51,
             -- assumed outcomes at expiry: a refunded assumption is a believed step the truth never had; EV sizes it
-            -- below a step; lo/danger stay 0
-            check(metrics.fights({}, 200).over <= 18, m)
+            -- below a step, and no expectation once a white avoid nobody took fell in the window (avoidSeen);
+            -- lo/danger stay 0
+            check(metrics.fights({}, 200).over <= 2, m)
             -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
             check(metrics.falsePer100(m, m.falseAvoids) <= 0.6, m) -- measured 0.08
             check(m.noDst == 0 and m.order == 0 and m.nonTarget == 0, m)

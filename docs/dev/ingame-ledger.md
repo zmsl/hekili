@@ -89,5 +89,6 @@ the game's numbers.
 - **K16, the raid-40 cold-start trap.** Raid-40 recall of our bolts is 0 (measured only): others' same-school wounds
   and white avoids pay our flight tickets before landing, so no amount band is ever learned (it needs 3 clean wounds).
   Suggested follow-up: a pack-declared amount range that seeds the band.
-- **Task 9b, decided.** The expectation at a swing's `lost` close is built (expiry EV, owner ruling 2026-10-23);
-  its measured cost and the four variants are the "Assumed outcomes (decision 51)" row in `docs/dev/gaps.md`.
+- **Task 9b, decided.** The expectation at a swing's `lost` close is built (expiry EV, owner ruling 2026-10-23),
+  none when a white avoid nobody took fell in its window (avoidSeen); solo over 1, bar 2. Its measured cost and the
+  four variants are the "Assumed outcomes (decision 51)" row in `docs/dev/gaps.md`.
