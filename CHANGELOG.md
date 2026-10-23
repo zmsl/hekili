@@ -20,6 +20,10 @@
 
 ### Known issues
 
+- In a crowded pull with a laggy connection, white swings are credited less often (the harness measures about a third of them in a five-man), so rage can read low until a known cost pins it.
+- In a raid-sized crowd on one target, projectile landings are not credited at all yet: other casters' hits of the same school take the ticket first, so the amount band never learns (measured, not yet addressed).
+- Fast dual-wield rage can still read low when many swings go uncredited; the expected-rage fix is parked pending a swing-recall change.
+
 ### Upgrade notes
 
 ## v0.3.0
