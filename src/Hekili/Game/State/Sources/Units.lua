@@ -60,6 +60,7 @@ local dNext = 0
 U.unresolved, U.dup, U.evicted, U.sweeps = 0, 0, 0, 0 -- sweeps: Tick scans that ran (spec §10)
 U.deaths = { tell = 0, poll = 0, event = 0 }
 U.player, U.sentCast, U.sentGUID = "", nil, nil
+U.lastGUID = "" -- the GUID of the row being dispatched, "" between rows (read by the invariant sweep only)
 U.Claims = nil -- set by Events/Tickets.lua: whether an open ticket on a unit owes a row of this act and school
 U.Reused = nil -- set by Events/Tickets.lua: slot u takes another GUID (eviction): forget its per-slot state
 local failT = -1e9
@@ -290,9 +291,11 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
     end
     dTok[base + i] = true
     uSeen[u] = t
+    U.lastGUID = g
     for k = 1, #ROW do
         ROW[k](t, g, u, act, flag, amount, school)
     end
+    U.lastGUID = ""
 end)
 
 S.On("PLAYER_TARGET_CHANGED", nil, function(api, t)

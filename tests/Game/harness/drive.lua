@@ -73,16 +73,35 @@ function M.boot(o)
     for i = 1, CAP do
         c.payAt[i], c.payKind[i], c.payPass[i], c.staged[i] = 0, 0, 0, 0
     end
-    local T = c.I.Tickets
-    T.onPay = function(i, _, pass)
+    -- the invariant sweep's: payments and dispatches by stream index, payments whose ticket's GUID is not the row's
+    c.payN, c.disp, c.crossGUID = {}, {}, 0
+    for i = 1, CAP do
+        c.payN[i], c.disp[i] = 0, 0
+    end
+    c.tickShift = 0 -- the largest schedule shift a TICKS payment made (slots; must stay <= 1)
+    local T, U, TICKS = c.I.Tickets, c.I.Units, c.I.Expect.TICKS
+    T.onPay = function(i, t, pass)
         local k = c.cur
         if k > 0 then
-            c.payAt[k], c.payKind[k], c.payPass[k] = T.at[i], T.kind[i], pass
+            c.payAt[k], c.payKind[k], c.payPass[k], c.payN[k] = T.at[i], T.kind[i], pass, c.payN[k] + 1
+            local g = U.lastGUID
+            if g ~= "" and T.guid[i] ~= g then
+                c.crossGUID = c.crossGUID + 1
+            end
+        end
+        if T.kind[i] == TICKS and T.period[i] > 0 then -- the slot the row's time names vs the one paid
+            local shift = math.abs(math.floor((t - T.anchor[i]) / T.period[i] + 0.5) - (T.done[i] + 1))
+            if shift > c.tickShift then
+                c.tickShift = shift
+            end
         end
     end
     c.rowsOut = 0 -- rows the registry dispatched (K9's residual)
-    c.I.Units.OnRow(function()
+    U.OnRow(function()
         c.rowsOut = c.rowsOut + 1
+        if c.cur > 0 then
+            c.disp[c.cur] = c.disp[c.cur] + 1
+        end
     end)
     c.gone = 0 -- TargetGone observations (K11: once per kill of our target)
     c.I.On(c.VS.Obs.TargetGone, function()
@@ -428,7 +447,9 @@ function M.run(c, s, offset)
         c.crHand[i], c.crAt[i], c.verdict[i], c.onus[i], c.crit3[i], c.unk[i] = 0, 0, 0, "", 0, 0
         c.vetoHand[i], c.vetoAt[i] = 0, 0
         c.payAt[i], c.payKind[i], c.payPass[i], c.staged[i] = 0, 0, 0, 0
+        c.payN[i], c.disp[i] = 0, 0
     end
+    c.crossGUID, c.tickShift = 0, 0
     for _, r in pairs(c.trk) do
         r.n = 0
     end

@@ -151,8 +151,9 @@ function M.boot(c)
     c.VS.Start(c.api)
 end
 
---- `fights` fights of `kind` in `band` from seed `seed0`, each on a fresh VirtualState: their tally.
-function M.run(kind, band, fights, seed0)
+--- `fights` fights of `kind` in `band` from seed `seed0`, each on a fresh VirtualState: their tally. `check(c, s)`, if
+--- given, sees each fight's captures before they are restored (the invariant sweep).
+function M.run(kind, band, fights, seed0, check)
     local m = metrics.newTickets()
     m.melee = metrics.new()
     for f = 0, fights - 1 do
@@ -181,6 +182,9 @@ function M.run(kind, band, fights, seed0)
         drive.run(c, s)
         metrics.tickets(m, c, s, W)
         metrics.score(m.melee, c, s, W)
+        if check then
+            check(c, s)
+        end
         drive.restore(c)
     end
     return m
@@ -306,7 +310,7 @@ function M.check(kind, band, m)
 end
 
 --- K17's /reload: the first half of a fight on one VirtualState, the rest on a fresh one (an empty registry while
---- rows keep arriving).
+--- rows keep arriving). Returns both drives and their streams.
 function M.reload(kind, band, seed)
     local o = setmetatable({ others = M.BANDS[band].others }, { __index = M.KINDS[kind] })
     local s = scenarios.stream(o, seed)
@@ -331,7 +335,7 @@ function M.reload(kind, band, seed)
     local c2 = drive.boot({ boot = M.boot })
     drive.run(c2, rest)
     drive.restore(c2)
-    return c1, c2
+    return c1, c2, half, rest
 end
 
 --- K9's direct case: twins from two sources (equal payload, one ms, each on plate and target) and one hit on plate,

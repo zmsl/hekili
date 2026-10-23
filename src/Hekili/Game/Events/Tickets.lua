@@ -67,6 +67,7 @@ for k = 0, 7 do
     T.paid[k], T.lost[k] = 0, 0
 end
 T.ours, T.foreign, T.absorbed, T.divergent, T.bandRejected, T.aoeOther = 0, 0, 0, 0, 0, 0
+T.overpaid = 0 -- payments past `owed` (never: the invariant sweep asserts 0)
 T.onExpire, T.onPay = nil, nil
 -- FLIGHT (spec §3.3.1): per ticket its speed (yd/s) and hard window length H = rMax / speed + TOL. CLOSE: 7 yd/s, a
 -- mob's run speed (a hard cast cannot move). The lag falls because the mob closes between anchors and again during
@@ -468,6 +469,9 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
         teach(a, amount, flag)
     end
     done[i], owed[i] = done[i] + 1, owed[i] - 1
+    if owed[i] < 0 then
+        T.overpaid = T.overpaid + 1 -- never: a ticket is paid at most `owed` times (the sweep asserts it)
+    end
     if k == X.TICKS and not isAvoid then -- the owner's soft band: the last paid tick's amount (a crit halved)
         T.tickAmt[i] = flag == "CRITICAL" and amount / 2 or amount
         if done[i] == 1 then -- the first tick confirms the application
@@ -673,7 +677,7 @@ I.OnSnapshot(function(out)
         lost = lost + T.lost[k]
     end
     out[#out + 1] = string.format(
-        "tickets open=%d none=%d paid=%d lost=%d expired=%d refreshed=%d foreign=%d unpinned=%d dead=%d gone=%d bandRejected=%d divergent=%d overflow=%d absorbed=%d ours=%d aoeOther=%d",
+        "tickets open=%d none=%d paid=%d lost=%d expired=%d refreshed=%d foreign=%d unpinned=%d dead=%d gone=%d bandRejected=%d divergent=%d overflow=%d absorbed=%d ours=%d aoeOther=%d overpaid=%d",
         open,
         c.none,
         c.paid,
@@ -689,6 +693,7 @@ I.OnSnapshot(function(out)
         c.overflow,
         T.absorbed,
         T.ours,
-        T.aoeOther
+        T.aoeOther,
+        T.overpaid
     )
 end)
