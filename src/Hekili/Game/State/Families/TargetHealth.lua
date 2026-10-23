@@ -140,8 +140,7 @@ I.On(Obs.Usable, function(o, t, lag)
             local slack = H.M > 0 and (H.dmg - H.notDmg[k]) / H.M or 0 -- nonzero: M > 0 checked
             H.lo0, H.hi0 = g - slack > 0 and g - slack or 0, g
             H.est0 = (H.lo0 + H.hi0) / 2
-            -- Hook (design §2.3b, deferred to §7 line 2): a plain UnitHealthMax("target") read would set M here,
-            -- observed, winning over a learned one (as Resources.lua's maxRead). Until then M is learned or unknown.
+            -- M is learned here only: UnitHealthMax is secret on the target and on plates (header), never read.
             if H.fresh and H.dmg > 0 and H.M == 0 then
                 H.M = H.dmg / (1 - g) -- nonzero: g < 1 (checked at the build)
             end
