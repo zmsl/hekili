@@ -199,6 +199,7 @@ function M.run(kind, band, fights, seed0, check)
         end
         local s, W = scenarios.stream(o, seed0 + f)
         local c = drive.boot({ boot = M.boot })
+        c.ctl.inGroup = o.group and #o.others > 0 -- IsInGroup: partners are our group; strangers and solo are not
         drive.run(c, s)
         if ab.arm() ~= "default" then -- the providers audit (Rows' L.fight), summed over the cell's fights
             local a, f = m.audit or {}, c.I.Log.fight
