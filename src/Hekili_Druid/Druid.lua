@@ -18,6 +18,7 @@
 local Facade = Hekili.Client
 local C_Spell, UnitClassBase = Facade.C_Spell, Facade.UnitClassBase
 local GetTime = Facade.GetTime
+local L = Hekili.L
 
 if UnitClassBase("player") ~= "DRUID" then
     return
@@ -33,23 +34,23 @@ local spec = Hekili:NewClass("DRUID", {
     specs = {
         {
             key = "balance",
-            name = "Balance",
+            name = L["Balance"],
             tree = 1,
             icon = 136096,
             role = "attack",
             ranged = true,
             package = "Balance (wowsims.com)",
         },
-        { key = "feral", name = "Feral", tree = 2, icon = 132115, role = "attack", package = "Feral (wowsims.com)" },
+        { key = "feral", name = L["Feral"], tree = 2, icon = 132115, role = "attack", package = "Feral (wowsims.com)" },
         {
             key = "guardian",
-            name = "Guardian",
+            name = L["Guardian"],
             tree = 2,
             icon = 132276,
             role = "tank",
             package = "Guardian (wowsims.com)",
         },
-        { key = "restoration", name = "Restoration", tree = 3, icon = 136041, role = "healer", unsupported = true },
+        { key = "restoration", name = L["Restoration"], tree = 3, icon = 136041, role = "healer", unsupported = true },
     },
 })
 if not spec then
@@ -1788,8 +1789,8 @@ spec:RegisterAbilities({
 -- The setting Shred's `usable` reads (TDF's name and default).
 spec:RegisterSetting("behind", false, {
     type = "toggle",
-    name = "Always Behind",
-    desc = "When enabled, Shred is recommended over Claw as if you always stand behind the target.",
+    name = L["Always Behind"],
+    desc = L["When enabled, Shred is recommended over Claw as if you always stand behind the target."],
     width = "full",
 })
 
@@ -1797,9 +1798,8 @@ spec:RegisterSetting("behind", false, {
 -- (open-world mobs die before it pays off), on under the harness (`sim`: wowsims's raid boss).
 spec:RegisterSetting("maintain_demoralizing_roar", false, {
     type = "toggle",
-    name = "Maintain Demoralizing Roar",
-    desc = "Keep Demoralizing Roar on the target, as a raid tank does (and use it as the leveling filler before "
-        .. "Lacerate). Off: the priority never shows it, and Berserk no longer waits for it.",
+    name = L["Maintain Demoralizing Roar"],
+    desc = L["Keep Demoralizing Roar on the target, as a raid tank does (and use it as the leveling filler before " .. "Lacerate). Off: the priority never shows it, and Berserk no longer waits for it."],
     width = "full",
     sim = true,
 }, "guardian")

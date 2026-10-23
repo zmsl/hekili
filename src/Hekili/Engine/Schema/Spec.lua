@@ -4,6 +4,7 @@
 -- (registered through Engine/Schema/Shared.lua) and the race packs.
 
 local addon, ns = ...
+local L = ns.L
 local Facade = ns.Facade
 local C_Item, C_SpecializationInfo, C_Spell = Facade.C_Item, Facade.C_SpecializationInfo, Facade.C_Spell
 local GetSpecializationInfoByID, GetTime, InCombatLockdown, UnitAttackSpeed = Facade.GetSpecializationInfoByID, Facade.GetTime, Facade.InCombatLockdown, Facade.UnitAttackSpeed
@@ -1482,11 +1483,11 @@ function Hekili:RestoreDefaults()
         table.sort( retired )
         local names = "|cFFFFD100" .. retired[1] .. "|r"
         for i = 2, #retired do
-            names = names .. ( i == #retired and " and " or ", " ) .. "|cFFFFD100" .. retired[i] .. "|r"
+            names = names .. ( i == #retired and L[" and "] or ", " ) .. "|cFFFFD100" .. retired[i] .. "|r"
         end
         local msg = #retired == 1
-            and ( "The " .. names .. " priority was retired; a spec that used it now runs its default priority." )
-            or ( "The " .. names .. " priorities were retired; a spec that used one now runs its default priority." )
+            and string.format( L["The %s priority was retired; a spec that used it now runs its default priority."], names )
+            or string.format( L["The %s priorities were retired; a spec that used one now runs its default priority."], names )
         C_Timer.After( 5, function()
             Hekili:ReviewPacks() -- the active-list cache drops the retired pack's lists
             if Hekili.Engine.settings.notifications.enabled then Hekili:Notify( msg, 6 ) end
@@ -1498,9 +1499,9 @@ function Hekili:RestoreDefaults()
         local msg
 
         if #changed == 1 then
-            msg = "The |cFFFFD100" .. changed[1] .. "|r priority was updated."
+            msg = string.format( L["The |cFFFFD100%s|r priority was updated."], changed[1] )
         elseif #changed == 2 then
-            msg = "The |cFFFFD100" .. changed[1] .. "|r and |cFFFFD100" .. changed[2] .. "|r priorities were updated."
+            msg = string.format( L["The |cFFFFD100%s|r and |cFFFFD100%s|r priorities were updated."], changed[1], changed[2] )
         else
             msg = "|cFFFFD100" .. changed[1] .. "|r"
 
@@ -1508,7 +1509,7 @@ function Hekili:RestoreDefaults()
                 msg = msg .. ", |cFFFFD100" .. changed[i] .. "|r"
             end
 
-            msg = "The " .. msg .. ", and |cFFFFD100" .. changed[ #changed ] .. "|r priorities were updated."
+            msg = string.format( L["The %s, and |cFFFFD100%s|r priorities were updated."], msg, changed[ #changed ] )
         end
 
         if msg then
@@ -1524,9 +1525,9 @@ function Hekili:RestoreDefaults()
         local msg
 
         if #reverted == 1 then
-            msg = "The |cFFFFD100" .. reverted[1] .. "|r priority was reverted."
+            msg = string.format( L["The |cFFFFD100%s|r priority was reverted."], reverted[1] )
         elseif #reverted == 2 then
-            msg = "The |cFFFFD100" .. reverted[1] .. "|r and |cFFFFD100" .. reverted[2] .. "|r priorities were reverted."
+            msg = string.format( L["The |cFFFFD100%s|r and |cFFFFD100%s|r priorities were reverted."], reverted[1], reverted[2] )
         else
             msg = "|cFFFFD100" .. reverted[1] .. "|r"
 
@@ -1534,7 +1535,7 @@ function Hekili:RestoreDefaults()
                 msg = msg .. ", |cFFFFD100" .. reverted[i] .. "|r"
             end
 
-            msg = "The " .. msg .. ", and |cFFFFD100" .. reverted[ #reverted ] .. "|r priorities were reverted."
+            msg = string.format( L["The %s, and |cFFFFD100%s|r priorities were reverted."], msg, reverted[ #reverted ] )
         end
 
         if msg then

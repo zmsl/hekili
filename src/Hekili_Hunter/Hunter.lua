@@ -21,6 +21,7 @@
 local Facade = Hekili.Client
 local UnitClassBase, GetTime = Facade.UnitClassBase, Facade.GetTime
 local IsSpellUsable, IsCurrentSpell = Facade.C_Spell.IsSpellUsable, Facade.C_Spell.IsCurrentSpell
+local L = Hekili.L
 
 if UnitClassBase("player") ~= "HUNTER" then
     return
@@ -34,7 +35,7 @@ local spec = Hekili:NewClass("HUNTER", {
     specs = {
         {
             key = "beast_mastery",
-            name = "Beast Mastery",
+            name = L["Beast Mastery"],
             tree = 1,
             icon = 132164,
             role = "attack",
@@ -43,7 +44,7 @@ local spec = Hekili:NewClass("HUNTER", {
         },
         {
             key = "marksmanship",
-            name = "Marksmanship",
+            name = L["Marksmanship"],
             tree = 2,
             icon = 132222,
             role = "attack",
@@ -52,7 +53,7 @@ local spec = Hekili:NewClass("HUNTER", {
         },
         {
             key = "survival",
-            name = "Survival",
+            name = L["Survival"],
             tree = 3,
             icon = 132215,
             role = "attack",

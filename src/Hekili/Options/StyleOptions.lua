@@ -1,4 +1,5 @@
 local _, ns = ...
+local L = ns.L
 -- Options/StyleOptions.lua: the option tabs every display style can offer for its own config subtable (display
 -- styles plan, Task 3d). They are classic's tabs (written by Hekili's authors and maintainers, moved here out of
 -- UI/Styles/Classic.lua), turned into builders: `SO.<group>( styleKey, zones, order, id, conf )` returns the tab for
@@ -19,6 +20,22 @@ local max = math.max
 
 local function title( zone )
     return zone:sub( 1, 1 ):upper() .. zone:sub( 2 )
+end
+
+-- The zone names shown in option labels (zone names are config keys; an unknown zone shows as written).
+local ZONE_TITLES = { primary = L["Primary"], queued = L["Queued"], now = L["Now"], next = L["Next"], lane = L["Lane"] }
+local ZONE_WORDS = { primary = L["primary"], queued = L["queued"], now = L["now"], next = L["next"], lane = L["lane"] }
+-- The built-in displays' names as shown (the ids stay English: frame names, profile keys).
+local DISPLAY_NAMES = {
+    Primary = L["Primary"],
+    AOE = L["AOE"],
+    Cooldowns = L["Cooldowns"],
+    Interrupts = L["Interrupts"],
+    Defensives = L["Defensives"],
+}
+
+local function shownTitle( zone )
+    return ZONE_TITLES[ zone ] or title( zone )
 end
 
 -- The config field `field` for zone `i`: zone 1 is the plain field, later zones prefix it (queued -> queuedFont).
@@ -52,7 +69,7 @@ end
 
 local function classColorName()
     local ClassColor = ns.UI.DisplayOptionParts.ClassColor
-    return format( "Class |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s", ClassColor.r * 255, ClassColor.g * 255, ClassColor.b * 255, ClassColor:GenerateHexColor():sub( 3, 8 ) )
+    return format( L["Class |A:WhiteCircle-RaidBlips:16:16:0:0:%d:%d:%d|a #%s"], ClassColor.r * 255, ClassColor.g * 255, ClassColor.b * 255, ClassColor:GenerateHexColor():sub( 3, 8 ) )
 end
 
 -- Per-zone fields of each group, copied for a later zone in SO.defaults.
@@ -202,14 +219,14 @@ end
 function SO.icon( zone, order, id )
     return {
         type = "group",
-        name = title( zone ) .. " Icon",
+        name = format( L["%s Icon"], shownTitle( zone ) ),
         inline = true,
         order = order,
         args = {
             [ zone .. "Width" ] = {
                 type = "range",
-                name = "Width",
-                desc = "Specify the width of the " .. zone .. " icon for " .. ( id == "Multi" and "each display." or ( "your " .. id .. " Display." ) ),
+                name = L["Width"],
+                desc = id == "Multi" and format( L["Specify the width of the %s icon for each display."], ZONE_WORDS[ zone ] or zone ) or format( L["Specify the width of the %s icon for your %s Display."], ZONE_WORDS[ zone ] or zone, DISPLAY_NAMES[ id ] or id ),
                 min = 10,
                 max = 500,
                 step = 1,
@@ -220,8 +237,8 @@ function SO.icon( zone, order, id )
 
             [ zone .. "Height" ] = {
                 type = "range",
-                name = "Height",
-                desc = "Specify the height of the " .. zone .. " icon for " .. ( id == "Multi" and "each display." or ( "your " .. id .. " Display." ) ),
+                name = L["Height"],
+                desc = id == "Multi" and format( L["Specify the height of the %s icon for each display."], ZONE_WORDS[ zone ] or zone ) or format( L["Specify the height of the %s icon for your %s Display."], ZONE_WORDS[ zone ] or zone, DISPLAY_NAMES[ id ] or id ),
                 min = 10,
                 max = 500,
                 step = 1,
@@ -239,8 +256,8 @@ function SO.icon( zone, order, id )
 
             zoom = {
                 type = "range",
-                name = "Icon Zoom",
-                desc = "Select the zoom percentage for the icon textures in this display. (Roughly 30% will trim off the default Blizzard borders.)",
+                name = L["Icon Zoom"],
+                desc = L["Select the zoom percentage for the icon textures in this display. (Roughly 30% will trim off the default Blizzard borders.)"],
                 min = 0,
                 softMax = 100,
                 max = 200,
@@ -259,7 +276,7 @@ function SO.keybindings( styleKey, zones, order, id, conf )
     local args = {
         enabled = {
             type = "toggle",
-            name = "Enabled",
+            name = L["Enabled"],
             order = 1,
             width = 1.49,
         },
@@ -268,12 +285,12 @@ function SO.keybindings( styleKey, zones, order, id, conf )
             type = "group",
             inline = true,
             name = function( info ) P.rangeIcon( info )
-return "Position" end,
+return L["Position"] end,
             order = 3,
             args = {
                 anchor = {
                     type = "select",
-                    name = 'Anchor Point',
+                    name = L['Anchor Point'],
                     order = 2,
                     width = 1,
                     values = P.realAnchorPositions
@@ -281,7 +298,7 @@ return "Position" end,
 
                 x = {
                     type = "range",
-                    name = "X Offset",
+                    name = L["X Offset"],
                     order = 3,
                     width = 0.99,
                     min = -spanW( s ),
@@ -294,7 +311,7 @@ return "Position" end,
 
                 y = {
                     type = "range",
-                    name = "Y Offset",
+                    name = L["Y Offset"],
                     order = 4,
                     width = 0.99,
                     min = -spanH( s ),
@@ -307,14 +324,14 @@ return "Position" end,
         textStyle = {
             type = "group",
             inline = true,
-            name = "Font and Style",
+            name = L["Font and Style"],
             order = 5,
             args = fontBlock( 1, zones[ 1 ] ),
         },
 
         lowercase = {
             type = "toggle",
-            name = "Use Lowercase",
+            name = L["Use Lowercase"],
             order = 5.1,
             width = "full",
         },
@@ -327,16 +344,16 @@ return "Position" end,
             args = {
                 cPortOverride = {
                     type = "toggle",
-                    name = "Use ConsolePort Buttons",
+                    name = L["Use ConsolePort Buttons"],
                     order = 6,
                     width = 1.49,
                 },
 
                 cPortZoom = {
                     type = "range",
-                    name = "ConsolePort Button Zoom",
-                    desc = "The ConsolePort button textures generally have a significant amount of blank padding around them. " ..
-                        "Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r.",
+                    name = L["ConsolePort Button Zoom"],
+                    desc = L["The ConsolePort button textures generally have a significant amount of blank padding around them. " ..
+                        "Zooming in removes some of this padding to help the buttons fit on the icon.  The default is |cFFFFD1000.6|r."],
                     order = 7,
                     min = 0,
                     max = 1,
@@ -351,7 +368,7 @@ return "Position" end,
     if #zones > 1 then
         args.queued = {
             type = "toggle",
-            name = "Enabled for Queued Icons",
+            name = L["Enabled for Queued Icons"],
             order = 2,
             width = 1.49,
             disabled = function () return conf[ styleKey ].keybindings.enabled == false end,
@@ -365,7 +382,7 @@ return "Position" end,
             hidden = function () return not conf[ styleKey ].keybindings.separateQueueStyle end
             args.separateQueueStyle = {
                 type = "toggle",
-                name = "Use Different Settings for Queue",
+                name = L["Use Different Settings for Queue"],
                 order = 6,
                 width = "full",
             }
@@ -374,7 +391,7 @@ return "Position" end,
         args[ key( i, zone, "textStyle" ) ] = {
             type = "group",
             inline = true,
-            name = title( zone ) .. " Font and Style",
+            name = format( L["%s Font and Style"], shownTitle( zone ) ),
             order = 5 + i,
             hidden = hidden,
             args = fontBlock( i, zone ),
@@ -383,7 +400,7 @@ return "Position" end,
         if not own( zones ) then
             args[ key( i, zone, "lowercase" ) ] = {
                 type = "toggle",
-                name = "Use Lowercase in Queue",
+                name = L["Use Lowercase in Queue"],
                 order = 5 + i + 0.1,
                 width = 1.49,
                 hidden = hidden,
@@ -393,8 +410,8 @@ return "Position" end,
 
     return {
         type = "group",
-        name = "Keybinds",
-        desc = "Options for keybinding text on displayed icons.",
+        name = L["Keybinds"],
+        desc = L["Options for keybinding text on displayed icons."],
         order = order,
         args = args,
     }
@@ -403,24 +420,24 @@ end
 function SO.border( styleKey, zones, order, id, conf )
     return {
         type = "group",
-        name = "Border",
-        desc = "Enable/disable or set the color for icon borders.\n\n" ..
-            "You may want to disable this if you use Masque or other tools to skin your Hekili icons.",
+        name = L["Border"],
+        desc = L["Enable/disable or set the color for icon borders.\n\n" ..
+            "You may want to disable this if you use Masque or other tools to skin your Hekili icons."],
         order = order,
 
         args = {
             enabled = {
                 type = "toggle",
-                name = "Enabled",
-                desc = "If enabled, each icon in this display will have a thin border.",
+                name = L["Enabled"],
+                desc = L["If enabled, each icon in this display will have a thin border."],
                 order = 1,
                 width = "full",
             },
 
             thickness = {
                 type = "range",
-                name = "Border Thickness",
-                desc = "Determines the thickness (width) of the border.  Default is 1.",
+                name = L["Border Thickness"],
+                desc = L["Determines the thickness (width) of the border.  Default is 1."],
                 softMin = 1,
                 softMax = 20,
                 step = 1,
@@ -437,21 +454,21 @@ function SO.border( styleKey, zones, order, id, conf )
 
             coloring = {
                 type = "select",
-                name = "Coloring Mode",
-                desc = "Specify whether to use Class or Custom color borders.\n\nClass-colored borders will automatically change to match the class you are playing.",
+                name = L["Coloring Mode"],
+                desc = L["Specify whether to use Class or Custom color borders.\n\nClass-colored borders will automatically change to match the class you are playing."],
                 width = 1.49,
                 order = 3,
                 values = {
                     class = classColorName(),
-                    custom = "Specify a Custom Color"
+                    custom = L["Specify a Custom Color"]
                 },
                 disabled = function() return conf[ styleKey ].border.enabled == false end,
             },
 
             color = {
                 type = "color",
-                name = "Custom Color",
-                desc = "When borders are enabled and the Coloring Mode is set to |cFFFFD100Custom Color|r, the border will use this color.",
+                name = L["Custom Color"],
+                desc = L["When borders are enabled and the Coloring Mode is set to |cFFFFD100Custom Color|r, the border will use this color."],
                 order = 4,
                 width = 1.49,
                 disabled = function () return conf[ styleKey ].border.enabled == false or conf[ styleKey ].border.coloring ~= "custom" end,
@@ -463,29 +480,29 @@ end
 function SO.range( styleKey, zones, order, id, conf )
     return {
         type = "group",
-        name = "Range",
-        desc = "Preferences for range-check warnings, if desired.",
+        name = L["Range"],
+        desc = L["Preferences for range-check warnings, if desired."],
         order = order,
         args = {
             enabled = {
                 type = "toggle",
-                name = "Enabled",
-                desc = "If enabled, the addon will provide a red warning highlight when you are not in range of your enemy.",
+                name = L["Enabled"],
+                desc = L["If enabled, the addon will provide a red warning highlight when you are not in range of your enemy."],
                 width = 1.49,
                 order = 1,
             },
 
             type = {
                 type = "select",
-                name = 'Range Checking',
-                desc = "Select the kind of range checking and range coloring to be used by this display.\n\n" ..
+                name = L['Range Checking'],
+                desc = L["Select the kind of range checking and range coloring to be used by this display.\n\n" ..
                     "|cFFFFD100Ability|r - Each ability is highlighted in red if that ability is out of range.\n\n" ..
                     "|cFFFFD100Melee|r - All abilities are highlighted in red if you are out of melee range.\n\n" ..
-                    "|cFFFFD100Exclude|r - If an ability is not in-range, it will not be recommended.",
+                    "|cFFFFD100Exclude|r - If an ability is not in-range, it will not be recommended."],
                 values = {
-                    ability = "Per Ability",
-                    melee = "Melee Range",
-                    xclude = "Exclude Out-of-Range"
+                    ability = L["Per Ability"],
+                    melee = L["Melee Range"],
+                    xclude = L["Exclude Out-of-Range"]
                 },
                 width = 1.49,
                 order = 2,
@@ -499,8 +516,8 @@ function SO.glow( styleKey, zones, order, id, conf )
     local args = {
         enabled = {
             type = "toggle",
-            name = "Enable Overlay Glow",
-            desc = "If enabled, when the ability for the first icon has an active glow (or overlay), it will also glow in this display.",
+            name = L["Enable Overlay Glow"],
+            desc = L["If enabled, when the ability for the first icon has an active glow (or overlay), it will also glow in this display."],
             width = 1.49,
             order = 1,
         },
@@ -514,36 +531,36 @@ function SO.glow( styleKey, zones, order, id, conf )
 
         mode = {
             type = "select",
-            name = "Glow Style",
-            desc = "Select the glow style for your display.",
+            name = L["Glow Style"],
+            desc = L["Select the glow style for your display."],
             width = 1,
             order = 3,
             values = {
-                default = "Default Button Glow",
-                autocast = "AutoCast Shine",
-                pixel = "Pixel Glow",
+                default = L["Default Button Glow"],
+                autocast = L["AutoCast Shine"],
+                pixel = L["Pixel Glow"],
             },
             disabled = function() return conf[ styleKey ].glow.enabled == false end,
         },
 
         coloring = {
             type = "select",
-            name = "Coloring Mode",
-            desc = "Select the coloring mode for this glow effect.\n\nClass-colored borders will automatically change to match the class you are playing.",
+            name = L["Coloring Mode"],
+            desc = L["Select the coloring mode for this glow effect.\n\nClass-colored borders will automatically change to match the class you are playing."],
             width = 0.99,
             order = 4,
             values = {
-                default = "Use Default Color",
+                default = L["Use Default Color"],
                 class = classColorName(),
-                custom = "Specify a Custom Color"
+                custom = L["Specify a Custom Color"]
             },
             disabled = function() return conf[ styleKey ].glow.enabled == false end,
         },
 
         color = {
             type = "color",
-            name = "Glow Color",
-            desc = "Select the custom glow color for your display.",
+            name = L["Glow Color"],
+            desc = L["Select the custom glow color for your display."],
             width = 0.99,
             order = 5,
             disabled = function() return conf[ styleKey ].glow.coloring ~= "custom" end,
@@ -558,8 +575,8 @@ function SO.glow( styleKey, zones, order, id, conf )
 
         highlight = {
             type = "toggle",
-            name = "Enable Action Highlight",
-            desc = "If enabled, the addon will apply the default highlight when the first recommended item/ability is currently queued.",
+            name = L["Enable Action Highlight"],
+            desc = L["If enabled, the addon will apply the default highlight when the first recommended item/ability is currently queued."],
             width = "full",
             order = 11
         },
@@ -568,9 +585,9 @@ function SO.glow( styleKey, zones, order, id, conf )
     if #zones > 1 then
         args.queued = {
             type = "toggle",
-            name = "Enabled for Queued Icons",
-            desc = "If enabled, abilities that have active glows (or overlays) will also glow in your queue.\n\n" ..
-                "This may not be ideal, the glow may no longer be correct by that point in the future.",
+            name = L["Enabled for Queued Icons"],
+            desc = L["If enabled, abilities that have active glows (or overlays) will also glow in your queue.\n\n" ..
+                "This may not be ideal, the glow may no longer be correct by that point in the future."],
             width = 1.49,
             order = 2,
             disabled = function() return conf[ styleKey ].glow.enabled == false end,
@@ -579,8 +596,8 @@ function SO.glow( styleKey, zones, order, id, conf )
 
     return {
         type = "group",
-        name = "Glows",
-        desc = "Preferences for Blizzard action button glows (not SpellFlash).",
+        name = L["Glows"],
+        desc = L["Preferences for Blizzard action button glows (not SpellFlash)."],
         order = order,
         args = args,
     }
@@ -593,15 +610,15 @@ function SO.flash( styleKey, zones, order, id, conf )
         name = "SpellFlash",
         desc = function ()
             if SF then
-                return "If enabled, the addon can highlight abilities on your action bars when they are recommended for use."
+                return L["If enabled, the addon can highlight abilities on your action bars when they are recommended for use."]
             end
-            return "This feature requires the SpellFlashCore addon or library to function properly."
+            return L["This feature requires the SpellFlashCore addon or library to function properly."]
         end,
         order = order,
         args = {
             warning = {
                 type = "description",
-                name = "These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled.",
+                name = L["These settings are unavailable because the SpellFlashCore addon / library is not installed or is disabled."],
                 order = 0,
                 fontSize = "medium",
                 width = "full",
@@ -610,8 +627,8 @@ function SO.flash( styleKey, zones, order, id, conf )
 
             enabled = {
                 type = "toggle",
-                name = "Enabled",
-                desc = "If enabled, the addon will place a colorful glow on the first recommended ability for this display.",
+                name = L["Enabled"],
+                desc = L["If enabled, the addon will place a colorful glow on the first recommended ability for this display."],
 
                 width = 1.49,
                 order = 1,
@@ -620,8 +637,8 @@ function SO.flash( styleKey, zones, order, id, conf )
 
             color = {
                 type = "color",
-                name = "Color",
-                desc = "Specify a glow color for the SpellFlash highlight.",
+                name = L["Color"],
+                desc = L["Specify a glow color for the SpellFlash highlight."],
                 order = 2,
                 width = 1.49,
                 hidden = function () return SF == nil end,
@@ -646,22 +663,22 @@ function SO.flash( styleKey, zones, order, id, conf )
 
             flashTexture = {
                 type = "select",
-                name = "Texture",
+                name = L["Texture"],
                 icon =  function() return conf[ styleKey ].flash.texture or "Interface\\Cooldown\\star4" end,
-                desc = "Your selection will override the SpellFlash texture for all displays' flashes.",
+                desc = L["Your selection will override the SpellFlash texture for all displays' flashes."],
                 order = 3.1,
                 width = 1.19,
                 values = {
-                    ["Interface\\AddOns\\Hekili\\Textures\\MonoCircle2"] = "Monochrome Circle Thin",
-                    ["Interface\\AddOns\\Hekili\\Textures\\MonoCircle5"] = "Monochrome Circle Thick",
-                    ["Interface\\Cooldown\\ping4"] = "Circle",
-                    ["Interface\\Cooldown\\star4"] = "Star (Default)",
-                    ["Interface\\Cooldown\\starburst"] = "Starburst",
-                    ["Interface\\Masks\\CircleMaskScalable"] = "Filled Circle",
-                    ["Interface\\Masks\\SquareMask"] = "Filled Square",
-                    ["Interface\\Soulbinds\\SoulbindsConduitCollectionsIconMask"] = "Filled Octagon",
-                    ["Interface\\Soulbinds\\SoulbindsConduitPendingAnimationMask"] = "Octagon Outline",
-                    ["Interface\\Soulbinds\\SoulbindsEnhancedConduitMask"] = "Octagon Thick",
+                    ["Interface\\AddOns\\Hekili\\Textures\\MonoCircle2"] = L["Monochrome Circle Thin"],
+                    ["Interface\\AddOns\\Hekili\\Textures\\MonoCircle5"] = L["Monochrome Circle Thick"],
+                    ["Interface\\Cooldown\\ping4"] = L["Circle"],
+                    ["Interface\\Cooldown\\star4"] = L["Star (Default)"],
+                    ["Interface\\Cooldown\\starburst"] = L["Starburst"],
+                    ["Interface\\Masks\\CircleMaskScalable"] = L["Filled Circle"],
+                    ["Interface\\Masks\\SquareMask"] = L["Filled Square"],
+                    ["Interface\\Soulbinds\\SoulbindsConduitCollectionsIconMask"] = L["Filled Octagon"],
+                    ["Interface\\Soulbinds\\SoulbindsConduitPendingAnimationMask"] = L["Octagon Outline"],
+                    ["Interface\\Soulbinds\\SoulbindsEnhancedConduitMask"] = L["Octagon Thick"],
                 },
                 get = function()
                     return Hekili.DB.profile.flashTexture
@@ -674,8 +691,8 @@ function SO.flash( styleKey, zones, order, id, conf )
 
             speed = {
                 type = "range",
-                name = "Speed",
-                desc = "Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r.",
+                name = L["Speed"],
+                desc = L["Specify how frequently the flash should restart.  The default is |cFFFFD1000.4s|r."],
                 min = 0.1,
                 max = 2,
                 step = 0.1,
@@ -694,8 +711,8 @@ function SO.flash( styleKey, zones, order, id, conf )
 
             size = {
                 type = "range",
-                name = "Flash Size",
-                desc = "Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r.",
+                name = L["Flash Size"],
+                desc = L["Specify the size of the SpellFlash glow.  The default size is |cFFFFD100240|r."],
                 order = 5,
                 min = 0,
                 max = 240 * 8,
@@ -706,8 +723,8 @@ function SO.flash( styleKey, zones, order, id, conf )
 
             fixedSize = {
                 type = "toggle",
-                name = "Fixed Size",
-                desc = "If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed.",
+                name = L["Fixed Size"],
+                desc = L["If checked, the SpellFlash pulse (grow and shrink) animation will be suppressed."],
                 order = 6,
                 width = 1.49,
                 hidden = function () return SF == nil end,
@@ -723,8 +740,8 @@ function SO.flash( styleKey, zones, order, id, conf )
 
             brightness = {
                 type = "range",
-                name = "Flash Brightness",
-                desc = "Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r.",
+                name = L["Flash Brightness"],
+                desc = L["Specify the brightness of the SpellFlash glow.  The default brightness is |cFFFFD100100|r."],
                 order = 8,
                 min = 0,
                 max = 100,
@@ -735,8 +752,8 @@ function SO.flash( styleKey, zones, order, id, conf )
 
             fixedBrightness = {
                 type = "toggle",
-                name = "Fixed Brightness",
-                desc = "If checked, the SpellFlash glow will not dim/brighten.",
+                name = L["Fixed Brightness"],
+                desc = L["If checked, the SpellFlash glow will not dim/brighten."],
                 order = 9,
                 width = 1.49,
                 hidden = function () return SF == nil end,
@@ -752,8 +769,8 @@ function SO.flash( styleKey, zones, order, id, conf )
 
             combat = {
                 type = "toggle",
-                name = "Combat Only",
-                desc = "If checked, the addon will only create flashes when you are in combat.",
+                name = L["Combat Only"],
+                desc = L["If checked, the addon will only create flashes when you are in combat."],
                 order = 11,
                 width = "full",
                 hidden = function () return SF == nil end,
@@ -761,8 +778,8 @@ function SO.flash( styleKey, zones, order, id, conf )
 
             suppress = {
                 type = "toggle",
-                name = "Hide Display",
-                desc = "If checked, the addon will not show this display and will make recommendations via SpellFlash only.",
+                name = L["Hide Display"],
+                desc = L["If checked, the addon will not show this display and will make recommendations via SpellFlash only."],
                 order = 12,
                 width = "full",
                 hidden = function () return SF == nil end,
@@ -770,8 +787,8 @@ function SO.flash( styleKey, zones, order, id, conf )
 
             blink = {
                 type = "toggle",
-                name = "Button Blink",
-                desc = "If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r.",
+                name = L["Button Blink"],
+                desc = L["If enabled, the whole action button will fade in and out.  The default is |cFFFF0000disabled|r."],
                 order = 13,
                 width = "full",
                 hidden = function () return SF == nil end,
@@ -786,8 +803,8 @@ function SO.captions( styleKey, zones, order, id, conf )
     local args = {
         enabled = {
             type = "toggle",
-            name = "Enabled",
-            desc = "If enabled, when the first ability shown has a descriptive caption, the caption will be shown.",
+            name = L["Enabled"],
+            desc = L["If enabled, when the first ability shown has a descriptive caption, the caption will be shown."],
             order = 1,
             width = 1.49,
         },
@@ -795,7 +812,7 @@ function SO.captions( styleKey, zones, order, id, conf )
         textStyle = {
             type = "group",
             inline = true,
-            name = "Text",
+            name = L["Text"],
             order = 4,
             args = fontBlock( 1, zones[ 1 ] ),
         },
@@ -804,8 +821,8 @@ function SO.captions( styleKey, zones, order, id, conf )
     if #zones > 1 then
         args.queued = {
             type = "toggle",
-            name = "Enabled for Queued Icons",
-            desc = "If enabled, descriptive captions will be shown for queued abilities, if appropriate.",
+            name = L["Enabled for Queued Icons"],
+            desc = L["If enabled, descriptive captions will be shown for queued abilities, if appropriate."],
             order = 2,
             width = 1.49,
             disabled = function () return conf[ styleKey ].captions.enabled == false end,
@@ -817,14 +834,14 @@ function SO.captions( styleKey, zones, order, id, conf )
         if i == 1 or own( zones ) then
             local x = {
                 type = "range",
-                name = "X Offset",
+                name = L["X Offset"],
                 order = 2,
                 width = 0.99,
                 step = 1,
             }
             local y = {
                 type = "range",
-                name = "Y Offset",
+                name = L["Y Offset"],
                 order = 3,
                 width = 0.99,
                 step = 1,
@@ -835,17 +852,17 @@ function SO.captions( styleKey, zones, order, id, conf )
             args[ key( i, zone, "position" ) ] = {
                 type = "group",
                 inline = true,
-                name = i == 1 and function( info ) P.rangeIcon( info ); return "Position" end or ( title( zone ) .. " Position" ),
+                name = i == 1 and function( info ) P.rangeIcon( info ); return L["Position"] end or format( L["%s Position"], shownTitle( zone ) ),
                 order = 3 + ( i - 1 ) * 0.1,
                 args = {
                     [ key( i, zone, "anchor" ) ] = {
                         type = "select",
-                        name = 'Anchor Point',
+                        name = L['Anchor Point'],
                         order = 1,
                         width = 1,
                         values = {
-                            TOP = 'Top',
-                            BOTTOM = 'Bottom',
+                            TOP = L['Top'],
+                            BOTTOM = L['Bottom'],
                         }
                     },
 
@@ -862,13 +879,13 @@ function SO.captions( styleKey, zones, order, id, conf )
 
                     [ key( i, zone, "align" ) ] = {
                         type = "select",
-                        name = "Alignment",
+                        name = L["Alignment"],
                         order = 4,
                         width = 1.49,
                         values = {
-                            LEFT = "Left",
-                            RIGHT = "Right",
-                            CENTER = "Center"
+                            LEFT = L["Left"],
+                            RIGHT = L["Right"],
+                            CENTER = L["Center"]
                         },
                     },
                 }
@@ -878,8 +895,8 @@ function SO.captions( styleKey, zones, order, id, conf )
 
     return {
         type = "group",
-        name = "Captions",
-        desc = "Captions are brief descriptions sometimes (rarely) used in action lists to describe why the action is shown.",
+        name = L["Captions"],
+        desc = L["Captions are brief descriptions sometimes (rarely) used in action lists to describe why the action is shown."],
         order = order,
         args = args,
     }
@@ -890,14 +907,14 @@ function SO.targets( styleKey, zones, order, id, conf )
     local s = conf[ styleKey ]
     return {
         type = "group",
-        name = "Targets",
-        desc = "A target count indicator can be shown on the display's first recommendation.",
+        name = L["Targets"],
+        desc = L["A target count indicator can be shown on the display's first recommendation."],
         order = order,
         args = {
             enabled = {
                 type = "toggle",
-                name = "Enabled",
-                desc = "If enabled, the addon will show the number of active (or virtual) targets for this display.",
+                name = L["Enabled"],
+                desc = L["If enabled, the addon will show the number of active (or virtual) targets for this display."],
                 order = 1,
                 width = "full",
             },
@@ -906,12 +923,12 @@ function SO.targets( styleKey, zones, order, id, conf )
                 type = "group",
                 inline = true,
                 name = function( info ) P.rangeIcon( info )
-return "Position" end,
+return L["Position"] end,
                 order = 2,
                 args = {
                     anchor = {
                         type = "select",
-                        name = "Anchor To",
+                        name = L["Anchor To"],
                         values = P.realAnchorPositions,
                         order = 1,
                         width = 1,
@@ -919,7 +936,7 @@ return "Position" end,
 
                     x = {
                         type = "range",
-                        name = "X Offset",
+                        name = L["X Offset"],
                         min = -spanW( s ),
                         max = spanW( s ),
                         step = 1,
@@ -929,7 +946,7 @@ return "Position" end,
 
                     y = {
                         type = "range",
-                        name = "Y Offset",
+                        name = L["Y Offset"],
                         min = -spanH( s ),
                         max = spanH( s ),
                         step = 1,
@@ -942,7 +959,7 @@ return "Position" end,
             textStyle = {
                 type = "group",
                 inline = true,
-                name = "Text",
+                name = L["Text"],
                 order = 3,
                 args = fontBlock( 1, zones[ 1 ] ),
             },
@@ -954,23 +971,23 @@ end
 function SO.delays( styleKey, zones, order, id, conf )
     return {
         type = "group",
-        name = "Delays",
-        desc = "When an ability is recommended some time in the future, a colored indicator or countdown timer can " ..
-            "communicate that there is a delay.",
+        name = L["Delays"],
+        desc = L["When an ability is recommended some time in the future, a colored indicator or countdown timer can " ..
+            "communicate that there is a delay."],
         order = order,
         args = {
             fade = {
                 type = "toggle",
-                name = "Fade as Unusable",
-                desc = "Fade the primary icon when you should wait before using the ability, similar to when an ability is lacking required resources.",
+                name = L["Fade as Unusable"],
+                desc = L["Fade the primary icon when you should wait before using the ability, similar to when an ability is lacking required resources."],
                 width = 1.49,
                 order = 1.1
             },
 
             desaturate = {
                 type = "toggle",
-                name = format( "%s Desaturate", ns.UI.DisplayOptionParts.NewFeature ),
-                desc = "Desaturate the primary icon when you should wait before using the ability.",
+                name = format( L["%s Desaturate"], ns.UI.DisplayOptionParts.NewFeature ),
+                desc = L["Desaturate the primary icon when you should wait before using the ability."],
                 width = 1.49,
                 order = 1.15
             },
@@ -984,8 +1001,8 @@ function SO.indicators( styleKey, zones, order, id, conf )
     local args = {
         enabled = {
             type = "toggle",
-            name = "Enabled",
-            desc = "If enabled, small indicators for target-swapping, aura-cancellation, etc. may appear on your primary icon.",
+            name = L["Enabled"],
+            desc = L["If enabled, small indicators for target-swapping, aura-cancellation, etc. may appear on your primary icon."],
             order = 1,
             width = 1.49,
         },
@@ -994,12 +1011,12 @@ function SO.indicators( styleKey, zones, order, id, conf )
             type = "group",
             inline = true,
             name = function( info ) P.rangeIcon( info )
-return "Position" end,
+return L["Position"] end,
             order = 2,
             args = {
                 anchor = {
                     type = "select",
-                    name = "Anchor To",
+                    name = L["Anchor To"],
                     values = P.realAnchorPositions,
                     order = 1,
                     width = 1,
@@ -1007,7 +1024,7 @@ return "Position" end,
 
                 x = {
                     type = "range",
-                    name = "X Offset",
+                    name = L["X Offset"],
                     min = -spanW( s ),
                     max = spanW( s ),
                     step = 1,
@@ -1017,7 +1034,7 @@ return "Position" end,
 
                 y = {
                     type = "range",
-                    name = "Y Offset",
+                    name = L["Y Offset"],
                     min = -spanH( s ),
                     max = spanH( s ),
                     step = 1,
@@ -1031,8 +1048,8 @@ return "Position" end,
     if #zones > 1 then
         args.queued = {
             type = "toggle",
-            name = "Enabled for Queued Icons",
-            desc = "If enabled, these indicators will appear on queued icons as well as the primary icon, when appropriate.",
+            name = L["Enabled for Queued Icons"],
+            desc = L["If enabled, these indicators will appear on queued icons as well as the primary icon, when appropriate."],
             order = 2,
             width = 1.49,
             disabled = function () return conf[ styleKey ].indicators.enabled == false end,
@@ -1045,13 +1062,13 @@ return "Position" end,
             args[ key( i, zone, "size" ) ] = {
                 type = "group",
                 inline = true,
-                name = i == 1 and "Appearance" or ( title( zone ) .. " Appearance" ),
+                name = i == 1 and L["Appearance"] or format( L["%s Appearance"], shownTitle( zone ) ),
                 order = 1.5 + ( i - 1 ) * 0.01,
                 args = {
                     [ key( i, zone, "width" ) ] = {
                         type = "range",
-                        name = "Width",
-                        desc = "Specify the width of indicator icons.",
+                        name = L["Width"],
+                        desc = L["Specify the width of indicator icons."],
                         min = 8,
                         max = 100,
                         step = 1,
@@ -1061,8 +1078,8 @@ return "Position" end,
 
                     [ key( i, zone, "height" ) ] = {
                         type = "range",
-                        name = "Height",
-                        desc = "Specify the height of indicator icons.",
+                        name = L["Height"],
+                        desc = L["Specify the height of indicator icons."],
                         min = 8,
                         max = 100,
                         step = 1,
@@ -1079,8 +1096,8 @@ return "Position" end,
 
                     [ key( i, zone, "zoom" ) ] = {
                         type = "range",
-                        name = "Icon Zoom",
-                        desc = "Select the zoom percentage for indicator icon textures. (Roughly 30% will trim off the default Blizzard borders.)",
+                        name = L["Icon Zoom"],
+                        desc = L["Select the zoom percentage for indicator icon textures. (Roughly 30% will trim off the default Blizzard borders.)"],
                         min = 0,
                         softMax = 100,
                         max = 200,
@@ -1091,8 +1108,8 @@ return "Position" end,
 
                     [ key( i, zone, "keepAspectRatio" ) ] = {
                         type = "toggle",
-                        name = "Keep Aspect Ratio",
-                        desc = "When enabled, indicator icons will maintain their original aspect ratio when resized.",
+                        name = L["Keep Aspect Ratio"],
+                        desc = L["When enabled, indicator icons will maintain their original aspect ratio when resized."],
                         width = 1.49,
                         order = 5,
                     },
@@ -1103,8 +1120,8 @@ return "Position" end,
 
     return {
         type = "group",
-        name = "Indicators",
-        desc = "Indicators are small icons that can indicate target-swapping or (rarely) cancelling auras.",
+        name = L["Indicators"],
+        desc = L["Indicators are small icons that can indicate target-swapping or (rarely) cancelling auras."],
         order = order,
         args = args,
     }

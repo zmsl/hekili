@@ -15,6 +15,8 @@ local addon, ns = ...
 local Facade = ns.Facade
 local C_AddOns, UnitClass = Facade.C_AddOns, Facade.UnitClass
 local Hekili = _G[addon]
+local L = ns.L
+local format = string.format
 
 -- 2 (2026-10-18): the ability fields `ladder` and `missable`, Shared:RegisterStateExpr, the aura fields `overlay`,
 -- `isStealthed` and `weaponEnchant`, and Hekili_Shared's main_hand_enchant and off_hand_enchant pseudo-auras.
@@ -42,7 +44,7 @@ local function load(name)
         reason = loaded
     end
     if not ok or not loaded then
-        return "could not load " .. name .. " (" .. tostring(reason) .. ")"
+        return format(L["could not load %s (%s)"], name, tostring(reason))
     end
 end
 
@@ -61,7 +63,7 @@ function ns.LoadContent()
     end
     local token = select(2, UnitClass("player"))
     if type(token) ~= "string" or token == "" then
-        notice = "could not read your class at load; /reload" -- OnInitialize runs once, so nothing retries
+        notice = L["could not read your class at load; /reload"] -- OnInitialize runs once, so nothing retries
         return
     end
     local class = token:sub(1, 1) .. token:sub(2):lower() -- WARRIOR -> Warrior
@@ -70,16 +72,16 @@ function ns.LoadContent()
     -- an addon that is not installed answers nil, or raises on some clients
     local ok, api = pcall(C_AddOns.GetAddOnMetadata, name, "X-Hekili-ContentAPI")
     if not ok or api == nil then
-        notice = "no Forever pack for " .. class .. "; install " .. name
+        notice = format(L["no Forever pack for %s; install %s"], class, name)
         return
     end
     if tonumber(api) ~= CONTENT_API then
-        notice = name
-            .. " is for content API "
-            .. tostring(api)
-            .. ", this Hekili Forever for "
-            .. CONTENT_API
-            .. "; update the older one"
+        notice = format(
+            L["%s is for content API %s, this Hekili Forever for %s; update the older one"],
+            name,
+            tostring(api),
+            CONTENT_API
+        )
         return
     end
 

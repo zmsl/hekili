@@ -1,4 +1,5 @@
 local _, ns = ...
+local L = ns.L
 -- UI/Styles/Classic.lua: the classic display style, Hekili's stock renderer (one icon button per recommendation:
 -- texture, caption, keybind, indicator, glow, flash, target count, delay, range/usable/desaturate, cooldown spiral),
 -- moved verbatim out of UI/UI.lua's CreateDisplay and CreateButton behind the style interface (display styles plan,
@@ -72,7 +73,7 @@ local ZONES = { "primary", "queued", legacy = true }
 local SHARED = { "border", "range", "glow", "flash", "captions", "indicators", "targets", "delays", "keybindings" }
 
 local Classic = {
-    label = "Classic",
+    label = L["Classic"],
     defaults = ns.StyleOptions.defaults( SHARED, ZONES ),
 }
 
@@ -1272,9 +1273,9 @@ function Classic.Options( id, conf )
     local primaryIcon = SO.icon( "primary", 15, id )
     primaryIcon.args.keepAspectRatio = {
         type = "toggle",
-        name = "Keep Aspect Ratio",
-        desc = "If your primary or queued icons are not square, checking this option will prevent the icon textures from being " ..
-            "stretched and distorted, trimming some of the texture instead.",
+        name = L["Keep Aspect Ratio"],
+        desc = L["If your primary or queued icons are not square, checking this option will prevent the icon textures from being " ..
+            "stretched and distorted, trimming some of the texture instead."],
         disabled = function( info, val )
             return not ( data.classic.primaryHeight ~= data.classic.primaryWidth or ( data.numIcons > 1 and data.classic.queue.height ~= data.classic.queue.width ) )
         end,
@@ -1285,8 +1286,8 @@ function Classic.Options( id, conf )
     local border = SO.border( "classic", ZONES, 4, id, conf )
     border.args.fit = {
         type = "toggle",
-        name = "Border Inside",
-        desc = "If enabled, when borders are enabled, the button's border will fit inside the button (instead of around it).",
+        name = L["Border Inside"],
+        desc = L["If enabled, when borders are enabled, the button's border will fit inside the button (instead of around it)."],
         order = 2.5,
         width = 1.49
     }
@@ -1297,8 +1298,8 @@ function Classic.Options( id, conf )
     for k, v in pairs( {
         extend = {
             type = "toggle",
-            name = "Extend Spiral",
-            desc = "If checked, the primary icon's cooldown spiral will continue until the ability should be used.",
+            name = L["Extend Spiral"],
+            desc = L["If checked, the primary icon's cooldown spiral will continue until the ability should be used."],
             width = 1.49,
             order = 1,
         },
@@ -1312,12 +1313,12 @@ function Classic.Options( id, conf )
 
         type = {
             type = "select",
-            name = "Indicator",
-            desc = "Specify the type of indicator to use when you should wait before casting the ability.",
+            name = L["Indicator"],
+            desc = L["Specify the type of indicator to use when you should wait before casting the ability."],
             values = {
-                __NA = "No Indicator",
-                ICON = "Show Icon (Color)",
-                TEXT = "Show Text (Countdown)",
+                __NA = L["No Indicator"],
+                ICON = L["Show Icon (Color)"],
+                TEXT = L["Show Text (Countdown)"],
             },
             width = 1.49,
             order = 2,
@@ -1327,12 +1328,12 @@ function Classic.Options( id, conf )
             type = "group",
             inline = true,
             name = function( info ) rangeIcon( info )
-return "Position" end,
+return L["Position"] end,
             order = 3,
             args = {
                 anchor = {
                     type = "select",
-                    name = 'Anchor Point',
+                    name = L['Anchor Point'],
                     order = 2,
                     width = 1,
                     values = realAnchorPositions
@@ -1340,7 +1341,7 @@ return "Position" end,
 
                 x = {
                     type = "range",
-                    name = "X Offset",
+                    name = L["X Offset"],
                     order = 3,
                     width = 0.99,
                     min = -max( data.classic.primaryWidth, data.classic.queue.width ),
@@ -1350,7 +1351,7 @@ return "Position" end,
 
                 y = {
                     type = "range",
-                    name = "Y Offset",
+                    name = L["Y Offset"],
                     order = 4,
                     width = 0.99,
                     min = -max( data.classic.primaryHeight, data.classic.queue.height ),
@@ -1364,7 +1365,7 @@ return "Position" end,
         textStyle = {
             type = "group",
             inline = true,
-            name = "Text",
+            name = L["Text"],
             order = 4,
             args = tableCopy( fontElements ),
             disabled = function () return data.classic.delays.type ~= "TEXT" end,
@@ -1374,8 +1375,8 @@ return "Position" end,
     return {
         layout = {
             type = "group",
-            name = "Icons",
-            desc = "Icon size, shape and the queue's layout.",
+            name = L["Icons"],
+            desc = L["Icon size, shape and the queue's layout."],
             order = 1,
 
             args = {
@@ -1383,8 +1384,8 @@ return "Position" end,
 
                 queuedElvuiCooldown = {
                     type = "toggle",
-                    name = "Apply ElvUI Cooldown Style to Queued Icons",
-                    desc = "If ElvUI is installed, you can apply the ElvUI cooldown style to your queued icons.\n\nDisabling this setting requires you to reload your UI (|cFFFFD100/reload|r).",
+                    name = L["Apply ElvUI Cooldown Style to Queued Icons"],
+                    desc = L["If ElvUI is installed, you can apply the ElvUI cooldown style to your queued icons.\n\nDisabling this setting requires you to reload your UI (|cFFFFD100/reload|r)."],
                     width = "full",
                     order = 23,
                     get = function( info )
@@ -1399,13 +1400,13 @@ return "Position" end,
                 iconSizeGroup = {
                     type = "group",
                     inline = true,
-                    name = "Queued Icon Size",
+                    name = L["Queued Icon Size"],
                     order = 21,
                     args = {
                         width = {
                             type = 'range',
-                            name = 'Width',
-                            desc = "Select the width of the queued icons.",
+                            name = L['Width'],
+                            desc = L["Select the width of the queued icons."],
                             min = 10,
                             max = 500,
                             step = 1,
@@ -1422,8 +1423,8 @@ return "Position" end,
 
                         height = {
                             type = 'range',
-                            name = 'Height',
-                            desc = "Select the height of the queued icons.",
+                            name = L['Height'],
+                            desc = L["Select the height of the queued icons."],
                             min = 10,
                             max = 500,
                             step = 1,
@@ -1443,13 +1444,13 @@ return "Position" end,
                 anchorGroup = {
                     type = "group",
                     inline = true,
-                    name = "Queued Icon Positioning",
+                    name = L["Queued Icon Positioning"],
                     order = 22,
                     args = {
                         anchor = {
                             type = 'select',
-                            name = 'Anchor To',
-                            desc = "Select the point on the primary icon to which the queued icons will attach.",
+                            name = L['Anchor To'],
+                            desc = L["Select the point on the primary icon to which the queued icons will attach."],
                             values = anchorPositions,
                             width = 1.49,
                             order = 1,
@@ -1464,14 +1465,14 @@ return "Position" end,
 
                         direction = {
                             type = 'select',
-                            name = 'Grow Direction',
-                            desc = "Select the direction for the icon queue.\n\n"
-                                .. "This option generally matches Anchor To selection, but you can specify another direction to make a creative layout.",
+                            name = L['Grow Direction'],
+                            desc = L["Select the direction for the icon queue.\n\n"
+                                .. "This option generally matches Anchor To selection, but you can specify another direction to make a creative layout."],
                             values = {
-                                TOP = 'Up',
-                                BOTTOM = 'Down',
-                                LEFT = 'Left',
-                                RIGHT = 'Right'
+                                TOP = L['Up'],
+                                BOTTOM = L['Down'],
+                                LEFT = L['Left'],
+                                RIGHT = L['Right']
                             },
                             width = 1.49,
                             order = 1.1,
@@ -1493,9 +1494,9 @@ return "Position" end,
 
                         offsetX = {
                             type = 'range',
-                            name = 'X Offset',
-                            desc = "Specify the horizontal offset (in pixels) for the queue, in relation to the anchor point on the primary icon for this display.\n\n"
-                                .. "Positive numbers move the queue to the right, negative numbers move it to the left.",
+                            name = L['X Offset'],
+                            desc = L["Specify the horizontal offset (in pixels) for the queue, in relation to the anchor point on the primary icon for this display.\n\n"
+                                .. "Positive numbers move the queue to the right, negative numbers move it to the left."],
                             min = -100,
                             max = 500,
                             step = 1,
@@ -1512,9 +1513,9 @@ return "Position" end,
 
                         offsetY = {
                             type = 'range',
-                            name = 'Y Offset',
-                            desc = "Specify the vertical offset (in pixels) for the queue, in relation to the anchor point on the primary icon for this display.\n\n"
-                                .. "Positive numbers move the queue up, negative numbers move it down.",
+                            name = L['Y Offset'],
+                            desc = L["Specify the vertical offset (in pixels) for the queue, in relation to the anchor point on the primary icon for this display.\n\n"
+                                .. "Positive numbers move the queue up, negative numbers move it down."],
                             min = -100,
                             max = 500,
                             step = 1,
@@ -1538,8 +1539,8 @@ return "Position" end,
 
                         spacing = {
                             type = 'range',
-                            name = 'Icon Spacing',
-                            desc = "Select the number of pixels between icons in the queue.",
+                            name = L['Icon Spacing'],
+                            desc = L["Select the number of pixels between icons in the queue."],
                             softMin = ( data.classic.queue.direction == "LEFT" or data.classic.queue.direction == "RIGHT" ) and -data.classic.queue.width or -data.classic.queue.height,
                             softMax = ( data.classic.queue.direction == "LEFT" or data.classic.queue.direction == "RIGHT" ) and data.classic.queue.width or data.classic.queue.height,
                             min = -500,
