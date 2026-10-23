@@ -9,7 +9,7 @@ local alloc = require("Game.State.helpers.alloc")
 describe("the unit registry", function()
     local api, ctl, ns, VS, I, U, saved, rows, gone, mute, muted
 
-    local function boot(unknown)
+    local function boot(unknown, expect)
         api, ctl = fake.new()
         for _, e in ipairs(unknown or {}) do
             ctl.unknownEvents[e] = true
@@ -25,7 +25,7 @@ describe("the unit registry", function()
         ns = load.module()
         VS, I = ns.VirtualState, ns.VirtualStateInternal
         U = I.Units
-        I.Build(fs.def(fs.new(9)), 1)
+        I.Build(fs.def(fs.new(9, false, false, expect)), 1)
         VS.Start(api)
         rows, gone, mute, muted = {}, {}, false, 0
         U.OnRow(function(t, guid, uid, act, flag, amount, school)
@@ -93,6 +93,22 @@ describe("the unit registry", function()
         ctl.now = 20.04
         combat("target", "WOUND", 16, 8)
         assert.are.same({ "Creature-1", uid }, { rows[1].guid, rows[1].uid })
+    end)
+
+    it("keeps a swapped token's row on the old unit when its ticket owes it", function()
+        boot(nil, true)
+        ctl.now = 10
+        ctl.Fire("PLAYER_TARGET_CHANGED") -- target is Creature-1
+        local old = U.Uid(1)
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F) -- a ticket on the old unit
+        ctl.guid.target = "Creature-2"
+        ctl.now = 10.05
+        ctl.Fire("PLAYER_TARGET_CHANGED") -- swap inside the window
+        ctl.now = 10.1
+        combat("target", "WOUND", 16, 4) -- the fire hit the ticket owes
+        assert.are.same({ "Creature-1", old }, { rows[1].guid, rows[1].uid })
+        combat("target", "WOUND", 16, 8) -- a school it does not owe belongs to the new unit
+        assert.are.equal("Creature-2", rows[2].guid)
     end)
 
     it("ends a released unit GRACE after its last token left: GONE, unresolvable", function()

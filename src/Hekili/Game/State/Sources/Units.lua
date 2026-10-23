@@ -117,8 +117,8 @@ function U.Find(guid)
 end
 
 -- A slot for guid (spec §2.6): its own, else a FREE one, else the released GONE or DEAD one seen longest ago, else a
--- released GRACE one seen longest ago. A LIVE or held slot is never taken. 0 only if all 64 are LIVE or held, which
--- 44 tokens and 16 tickets cannot reach.
+-- released GRACE one seen longest ago. A LIVE or held slot is never taken. 0 only if all 64 are LIVE or held; the worst
+-- case (44 tokens + 32 tickets) can reach it, and then the row counts unresolved, Pin still returns the GUID, no hold.
 local function take(guid, t)
     local u = U.Find(guid)
     if u > 0 then
