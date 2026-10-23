@@ -8,7 +8,7 @@ describe("the A/B harness", function()
             ab.check(false, "x", "line", "default")
         end)
         assert.has_no.errors(function()
-            ab.check(false, "x", "line", "meter")
+            ab.check(false, "x", "line", "abspec") -- its own file: the gate arms' .ab/meter.tsv stays clean
         end)
     end)
 

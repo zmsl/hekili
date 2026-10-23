@@ -200,17 +200,27 @@ function M.new(W, k)
         return e == us or (k.group and party[e] ~= nil)
     end
     -- The meter's events for truth event `ev` (k.meter): added events only, so the stream without them is today's.
+    -- A row while a group is still pending (its time at or after the row's) joins that batch: same-frame rows share
+    -- one group (DM §2: a proc 2 ms after its swing, in the swing's group); otherwise a new group `lo`-`hi` ms on.
+    local pending = -1
+    local function groupFor(t, lo, hi)
+        if pending >= t then
+            return
+        end
+        pending = t + W.mrng.int(lo, hi) / 1000
+        group(pending)
+    end
     local function meter(t, ev)
         if ev.act ~= "WOUND" then
             return
         end
         local kind = ev.kind
         if kind == "swing" and inGroup(ev.src) then -- ours or a partner's, any hand; an avoid never (DM §2)
-            group(t + W.mrng.int(0, 11) / 1000)
+            groupFor(t, 0, 11)
         elseif (kind == "spell" or kind == "proc" or kind == "strike") and inGroup(ev.src) then
-            group(t + W.mrng.int(3, 14) / 1000)
+            groupFor(t, 3, 14)
         elseif kind == "tick" and inGroup(ev.src) then
-            group(t + W.mrng.int(1, 2) / 1000)
+            groupFor(t, 1, 2)
         end
         if (kind == "swing" or kind == "spell") and ev.dst and inGroup(ev.dst) and not inGroup(ev.src) then
             push(t, "DAMAGE_METER_COMBAT_SESSION_UPDATED", 7, session) -- a hit on the group, at its truth time

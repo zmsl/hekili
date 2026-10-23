@@ -298,6 +298,20 @@ describe("the observer", function()
         assert.is_true(rawequal(fake.SECRET, unitIs))
     end)
 
+    it("shares one meter group between our hit swing and its proc in the same frame (DM §2)", function()
+        setup()
+        W.emit({ t = 5, kind = "swing", src = us, dst = mob, hand = 1, act = "WOUND", flag = "", amount = 30 })
+        W.emit({ t = 5, kind = "proc", src = us, dst = mob, act = "WOUND", amount = 9, school = 32 })
+        local s = observer.observe(W, setmetatable({ meter = true }, { __index = observer.DEFAULTS }))
+        local n = 0
+        for i = 1, s.n do
+            if s.ev[i] == "DAMAGE_METER_COMBAT_SESSION_UPDATED" and s.a1[i] == 0 and s.a2[i] == 200 then
+                n = n + 1
+            end
+        end
+        assert.are.equal(1, n)
+    end)
+
     it(
         "fires a @viewer edge 3-5 ms after an aura of ours under k.viewer (providers spec §4.2); a partner's none",
         function()
