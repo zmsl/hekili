@@ -74,6 +74,43 @@ describe("resources", function()
             I.clock = 40.05
             assert.are.equal(40, VS.SwingPending(1))
         end)
+
+        it("takes a replaced credit back: lo at once, hi down to est at most, est only when settled", function()
+            local R = I.res
+            local slot = R.slotOf[fs.RAGE]
+            ctl.now = 150 -- after the fake client's start (100): the fold is in order
+            I.Sources.Stage(VS.Obs.Swing, 150, 1, 1, 1) -- record 1: a landed main-hand swing
+            I.Sources.Flush()
+            I.Fold(150)
+            local e1, lo1 = R.est0[slot], R.lo0[slot]
+            assert.is_false(I.CreditFixed(1)) -- live: replaceable
+            I.Sources.Stage(VS.Obs.Swing, 150.5, 1, 1, 6) -- record 1 replaced
+            I.Sources.Flush()
+            I.Fold(150.5)
+            assert.is_true(R.lo0[slot] < lo1 - 1e-9)
+            assert.are.equal(e1, R.est0[slot]) -- the hold: est waits for an answer or a spend
+            assert.is_true(R.hi0[slot] >= R.est0[slot])
+            I.SettleDebt(slot)
+            assert.is_true(R.est0[slot] < e1 - 1e-9 and R.est0[slot] >= R.lo0[slot])
+            I.SettleDebt(slot) -- settled once
+            assert.is_true(R.est0[slot] >= R.lo0[slot])
+        end)
+
+        it("takes nothing back once a spend of ours from the slot measured the pool", function()
+            local R = I.res
+            local slot = R.slotOf[fs.RAGE]
+            ctl.now = 160
+            I.Sources.Stage(VS.Obs.Swing, 160, 1, 2, 1) -- record 2
+            I.Sources.Flush()
+            I.Fold(160)
+            R.spends[slot] = R.spends[slot] + 1
+            assert.is_true(I.CreditFixed(2)) -- the spend measured the pool: Rows makes its swing final
+            local lo1 = R.lo0[slot]
+            I.Sources.Stage(VS.Obs.Swing, 160.5, 1, 2, 6)
+            I.Sources.Flush()
+            I.Fold(160.5)
+            assert.are.equal(lo1, R.lo0[slot])
+        end)
     end)
 
     describe("a continuous resource (energy, 10/s declared)", function()

@@ -32,6 +32,10 @@ function M.module()
             assert(loadfile(path))("Hekili", ns)
         end
     end
+    local I = ns.VirtualStateInternal
+    if I and I.Tickets then
+        I.Tickets.EARLY = os.getenv("TA_EARLY") == "1" -- the EARLY variant's measurement (attribution-recovery Task 2)
+    end
     return ns
 end
 

@@ -118,7 +118,14 @@ end
 --- whole phase; GAP AX) or a ticking kind (decision 47: a paid tick moves its schedule).
 function K.Band(i, p, t, isAvoid, act, sch)
     local k, a0 = T.kind[i], T.at[i]
-    if p == 4 then
+    if p == 5 then -- the EARLY variant (T.EARLY): a learned flight's hard window before its narrow band
+        local r = k == FLIGHT and T.EARLY and T.LagOf(T.guid[i], T.speed[i]) or 0
+        if r == 0 then
+            return nil
+        end
+        local s2 = 2 * T.lagSpr[r]
+        return a0 + rangeLow(i, T.speed[i]), a0 + T.lagE[r] - (s2 > T.TOL and s2 or T.TOL), a0
+    elseif p == 4 then
         if k == FLIGHT then
             local v = T.speed[i]
             local r, lo, lo0 = T.LagOf(T.guid[i], v), a0 + T.H[i] / 2, a0 + rangeLow(i, v)

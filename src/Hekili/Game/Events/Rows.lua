@@ -139,7 +139,13 @@ S.On("UNIT_SPELLCAST_SUCCEEDED", "player", function(api, t, unit, castGUID, spel
     local strike, found = a > 0 and A.expKind[a] == X.STRIKE, false
     if strike then -- the strike replaces its swing, in the same frame before or after this success
         for i = 1, T.CAP do
-            if T.state[i] ~= 0 and T.kind[i] == MELEE and T.x[i] == 1 and t - T.at[i] <= STRIKE_WINDOW then
+            if
+                T.state[i] ~= 0
+                and T.state[i] ~= T.TENT -- its white row came (a provisional credit): not the strike's swing
+                and T.kind[i] == MELEE
+                and T.x[i] == 1
+                and t - T.at[i] <= STRIKE_WINDOW
+            then
                 T.Close(i, t, "replaced")
                 found = true
             end
@@ -178,22 +184,147 @@ end)
 
 -- A spell row paid to ticket p at pass `pass` with n candidates at that pass: staged unless another candidate implies
 -- a different state (divergent, T.Divergent: it stages nothing, spec §4.2), then emitted. A divergent avoid emits no
--- SPELL_MISSED (Hekili's `missable` would drop the other cast's debuff on it).
+-- SPELL_MISSED (Hekili's `missable` would drop the other cast's debuff on it). A provisional payment (TENT,
+-- attribution-recovery decision 48) holds its Crit or Avoided until it is final (T.onFinal) or replaced.
+local rerouting = false -- a displaced row re-offered (decision 48 as amended): it never teaches
 local function paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
     local divergent = (avoid or crit) and n > 1 and T.Divergent(p, t, pass, act, flag, amount, school, avoid)
+    local kk, xx, dst, at0, sch = T.kind[p], T.x[p], T.guid[p], T.at[p], T.school[p]
+    local held = T.PayTentative(p, t, avoid, amount, flag, n == 1 and not rerouting, pass, act, school)
     if divergent then
         T.divergent = T.divergent + 1
+    elseif held then
+        T.held[p] = avoid and 2 or (crit and T.ab[p] > 0 and 1 or 0)
     elseif avoid then
         avoided(p, t, act)
     elseif crit and T.ab[p] > 0 then
-        S.Stage(Obs.Crit, t, T.ab[p], T.at[p], 0) -- our cast's own crit (the target's row carries the flag plain): GAP T
+        S.Stage(Obs.Crit, t, T.ab[p], at0, 0) -- our cast's own crit (the target's row carries the flag plain): GAP T
     end
-    local kk, xx, dst, at0, sch = T.kind[p], T.x[p], T.guid[p], T.at[p], T.school[p]
-    T.Pay(p, t, avoid, amount, flag, n == 1, pass)
     L.credited[3] = L.credited[3] + 1
     if not (divergent and avoid) then
         emit(kk, xx, dst, act, flag, amount, (kk == TICKS or kk == CHANNEL) and t or at0, sch > 0 and sch or school)
     end
+end
+
+-- Swing ticket `credited` takes the row at t (LR lr, scoring reference ref, lag, runner-up `second`, theta index k): an
+-- avoid held provisionally; a wound credited through a record (rage at the swing's time), provisional outside the core
+-- band or when re-offered (decision 48: neither teaches the median). Allocates nothing.
+local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, ref, lag, second, k)
+    local xx, at0 = T.x[credited], T.at[credited]
+    if avoid then
+        T.Provisional(credited, lr, act) -- emitted when the window closes
+        L.avoids, L.avoidX, L.avoidT = L.avoids + 1, xx, at0
+        return
+    end
+    if T.avoid[credited] ~= "" then
+        L.avoidsBack = L.avoidsBack + 1 -- the avoid it held was someone else's after all
+    end
+    -- a credit outside the hand's core band is provisional and never teaches the median (decision 48)
+    local dc = ref == 3 and t - T.ref[credited] or lag -- the scoring reference's lag (an off hand's main reference)
+    local core = T.first[credited] or lag <= SAME_FRAME or math.abs(dc - L.med[ref]) <= 2 * L.spr[ref]
+    if
+        core
+        and not rerouting
+        and not unknown
+        and M.classOf(xx, amount, flag) == 1
+        and second < L.THETA
+        and not T.first[credited]
+    then
+        local d = ref == 3 and t - T.ref[credited] or lag
+        if math.abs(d - L.med[ref]) < 3 * L.spr[ref] then
+            M.learn(ref, d)
+        end
+    end
+    recNext = recNext % RECORDS + 1
+    local id = recNext
+    recT[id], recAmount[id], recFlag[id], recAt[id], recHand[id] = t, amount, flag, at0, xx
+    recDst[id], recW[id], recRef[id], recK[id], recLR[id], recOpen[id] =
+        T.guid[credited], T.w[credited], T.ref[credited], k, lr, true
+    local dst = T.guid[credited]
+    T.rec[credited] = id
+    T.PayTentative(credited, t, false, amount, flag, second < L.THETA, (core and not rerouting) and 1 or 2, act, 1)
+    L.credited[xx] = L.credited[xx] + 1
+    emit(MELEE, xx, dst, act, flag, amount, at0, 1)
+    S.Stage(Obs.Swing, at0, xx, id, 1) -- landed, at the swing's time: the resources family pays its rage (record id)
+    if flag == "CRITICAL" then
+        S.Stage(Obs.Swing, t, xx, id, 3) -- the same record: a retraction takes the crit back too
+    end
+    S.Urgent("VS_SWING_LANDED")
+end
+
+-- The row TENT ticket i was paid by, displaced at `now` by a narrow-band row (attribution-recovery decision 48 as
+-- amended: our own row, so swaps between our tickets net to nothing), re-offered to our other open tickets on its GUID
+-- through the normal passes: a spell's bands (1, then 2 and 3, the swing scoring, then 4), the swing LR, and for a wound
+-- an overdue swing on timing alone (its amount class may reject it). Provisional and untaught. True when one took it.
+local function reroute(i, now)
+    local g, t, act, flag, amount, sch = T.guid[i], T.rowT[i], T.rowAct[i], T.rowFlag[i], T.rowAmt[i], T.rowSch[i]
+    local avoid, white = act ~= "WOUND", sch == 1
+    rerouting = true
+    local p, n, pass = T.Pick(t, g, 1, act, flag, amount, sch, avoid)
+    pass = 1
+    for q = 2, 3 do
+        if p == 0 and avoid then
+            p, n = T.Pick(t, g, q, act, flag, amount, sch, true)
+            pass = q
+        end
+    end
+    local credited, lr, ref, lag, second, k = nil, 0, 0, 0, 0, 1
+    local unknown = false
+    if p == 0 and white and (AVOIDS[act] or not avoid) then
+        credited, lr, ref, lag, second, k = M.score(t, g, amount, flag, avoid, false)
+        if credited and lr < (avoid and L.THETA or L.theta[k]) then
+            credited = nil
+        end
+        if not credited and not avoid then -- timing alone, for a swing already past its core band
+            unknown = true
+            credited, lr, ref, lag, second, k = M.score(t, g, amount, flag, false, true)
+            if credited and (lr < L.theta[k] or now <= T.NarrowEnd(credited)) then
+                credited = nil
+            end
+        end
+        if credited and not avoid and I.Missed and I.Missed(T.x[credited], T.at[credited]) then
+            credited = nil
+        end
+    end
+    for q = 2, 4 do
+        if p == 0 and not credited and (q == 4 or not avoid) then
+            p, n = T.Pick(t, g, q, act, flag, amount, sch, avoid)
+            pass = q
+        end
+    end
+    if p > 0 then
+        paySpell(p, n, pass, t, act, flag, amount, sch, avoid, not avoid and flag == "CRITICAL")
+    elseif credited then
+        creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, ref, lag, second, k)
+    end
+    rerouting = false
+    return p > 0 or credited ~= nil
+end
+
+-- A TENT ticket final: what it held is staged now (attribution-recovery decision 48).
+T.onFinal = function(i, now)
+    if T.held[i] == 2 then
+        avoided(i, now, T.rowAct[i])
+    elseif T.held[i] == 1 then
+        S.Stage(Obs.Crit, now, T.ab[i], T.at[i], 0)
+    end
+end
+
+-- A TENT ticket's first row displaced: its swing credit taken back (the record's verdict closed, Resources retracts
+-- with its hold), a spell's held observation dropped (Tickets clears T.held); its emitted row stays. The row is then
+-- re-offered (reroute); true when one of our tickets took it (else Tickets labels it foreign).
+T.onReplace = function(i, t)
+    if T.kind[i] == MELEE then
+        if T.rec[i] > 0 then
+            recOpen[T.rec[i]] = false
+            S.Stage(Obs.Swing, t, T.x[i], T.rec[i], 6)
+        end
+        L.credited[T.x[i]] = L.credited[T.x[i]] - 1
+    else
+        L.credited[3] = L.credited[3] - 1
+    end
+    L.background = L.background + 1
+    return reroute(i, t)
 end
 
 -- A row of ours no ticket took (spec §3.4 step 5): an avoid or crit inside an UNMAPPED window is nobody's; else
@@ -239,6 +370,11 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
     local tied = false -- the MELEE tie took the row from a spell: pass (d) never hands it back
     local p, n = T.Pick(t, g, 1, act, flag, amount, school, avoid)
     local pass = 1
+    local replacing = 0
+    if p == 0 then -- a narrow-band row for a provisionally paid ticket (attribution-recovery decision 48)
+        replacing = T.Replaceable(t, g, act, flag, amount, school, avoid)
+        p, n = replacing, 1
+    end
     if p == 0 and avoid then
         p, n = T.Pick(t, g, 2, act, flag, amount, school, true)
         pass = 2
@@ -283,6 +419,19 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
             credited = nil
         end
     end
+    if p == 0 and not credited and white and (AVOIDS[act] or not avoid) then
+        local r = M.Replaceable(t, g, amount, flag, avoid, unknown)
+        if r and T.rec[r] > 0 and I.CreditFixed and I.CreditFixed(T.rec[r]) then
+            T.Final(r, t) -- a verdict or a spend measured its rage: no longer replaceable (spec §2.3)
+            r = nil
+        end
+        if r then -- the swing's own row in its core band replaces a provisional credit (decision 48)
+            T.Replace(r, t)
+            local h = T.x[r]
+            credited, lr, ref, lag, second = r, math.huge, h, t - T.at[r], 0
+            k = M.thetaIndex(h, (avoid or unknown) and 4 or M.classOf(h, amount, flag), h, lag)
+        end
+    end
     if p == 0 and not credited and not avoid then
         p, n = T.Pick(t, g, 2, act, flag, amount, school, false)
         pass = 2
@@ -297,6 +446,10 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
     if p == 0 and not credited and not tied then
         p, n = T.Pick(t, g, 4, act, flag, amount, school, avoid)
         pass = 4
+        if p == 0 and T.EARLY then -- the EARLY variant: a row before a learned flight's narrow band, provisional
+            p, n = T.Pick(t, g, 5, act, flag, amount, school, avoid)
+            pass = 5
+        end
     end
     if p > 0 then
         -- past p's own frame, inside an unmapped success's window: nobody's, and p's expiry is not a lost row (it
@@ -305,41 +458,16 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
             T.absorbed, T.excused[p] = T.absorbed + 1, true
             return
         end
+        if replacing > 0 and p == replacing then
+            T.Replace(p, t)
+        end
         paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
         return
     elseif not credited then
         foreign(uid, t, act, flag, amount, white, avoid, unknown, school)
         return
     end
-    local xx, at0 = T.x[credited], T.at[credited]
-    if avoid then
-        T.Provisional(credited, lr, act) -- emitted when the window closes
-        L.avoids, L.avoidX, L.avoidT = L.avoids + 1, xx, at0
-        return
-    end
-    if T.avoid[credited] ~= "" then
-        L.avoidsBack = L.avoidsBack + 1 -- the avoid it held was someone else's after all
-    end
-    if not unknown and M.classOf(xx, amount, flag) == 1 and second < L.THETA and not T.first[credited] then
-        local d = ref == 3 and t - T.ref[credited] or lag
-        if math.abs(d - L.med[ref]) < 3 * L.spr[ref] then
-            M.learn(ref, d)
-        end
-    end
-    recNext = recNext % RECORDS + 1
-    local id = recNext
-    recT[id], recAmount[id], recFlag[id], recAt[id], recHand[id] = t, amount, flag, at0, xx
-    recDst[id], recW[id], recRef[id], recK[id], recLR[id], recOpen[id] =
-        T.guid[credited], T.w[credited], T.ref[credited], k, lr, true
-    local dst = T.guid[credited]
-    T.Pay(credited, t, false, amount, flag, second < L.THETA, 2)
-    L.credited[xx] = L.credited[xx] + 1
-    emit(MELEE, xx, dst, act, flag, amount, at0, 1)
-    S.Stage(Obs.Swing, at0, xx, id, 1) -- landed, at the swing's time: the resources family pays its rage (record id)
-    if flag == "CRITICAL" then
-        S.Stage(Obs.Swing, t, xx, id, 3) -- the same record: a retraction takes the crit back too
-    end
-    S.Urgent("VS_SWING_LANDED")
+    creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, ref, lag, second, k)
 end)
 
 --- (harness design §2.2) The verdict on credit record `id` from a usability answer at t (`ok`: usable, false: short,

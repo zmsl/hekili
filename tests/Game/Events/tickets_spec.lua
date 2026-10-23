@@ -405,6 +405,101 @@ describe("the ticket pool", function()
         assert.are.same({ 0, 1 }, { T.absorbed, T.paid[X.FLIGHT] })
     end)
 
+    describe("replaceable payments (attribution-recovery decision 48)", function()
+        local staged, stage
+
+        before_each(function()
+            staged, stage = {}, I.Sources.Stage
+            I.Sources.Stage = function(kind, t, a, b, c)
+                staged[#staged + 1] = { kind, b, c }
+                return stage(kind, t, a, b, c)
+            end
+        end)
+
+        after_each(function()
+            I.Sources.Stage = stage
+        end)
+
+        local function count(kind, c)
+            local n = 0
+            for _, s in ipairs(staged) do
+                n = n + ((s[1] == kind and (c == nil or s[3] == c)) and 1 or 0)
+            end
+            return n
+        end
+
+        it("a dodge in the swing's core band replaces a wound credited before it; the rage is taken back", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            ctl.now = 10.2 -- before the core band (0.474 +- 0.12): credited by the LR, provisionally
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.equal(T.TENT, T.state[i])
+            assert.are.equal(1, count(VS.Obs.Swing, 1))
+            ctl.now = 10.47 -- our own DODGE, in the core band
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            assert.are.same({ 1, 1 }, { T.replaced, T.foreign })
+            assert.are.equal(1, count(VS.Obs.Swing, 6))
+            assert.are.same({ T.PROV, "DODGE" }, { T.state[i], T.avoid[i] })
+        end)
+
+        it("holds a provisional spell payment's crit and drops it on replacement by the cast's own avoid", function()
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+            T.Learn("Creature-1", 20, 1.5, 9) -- narrow band [11.35, 11.65] for the 10 s cast
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+            ctl.now = 10.6 -- the widened band, before the narrow one: provisional
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 30, 8)
+            assert.are.equal(0, count(VS.Obs.Crit))
+            ctl.now = 11.5
+            ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+            assert.are.same({ 1, 1 }, { T.replaced, T.foreign })
+            assert.are.same({ 0, 1 }, { count(VS.Obs.Crit), count(VS.Obs.Avoided) })
+            assert.are.equal(1, T.paid[X.FLIGHT])
+        end)
+
+        it("stages a held crit once the narrow band passes with no replacement, and teaches then", function()
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+            T.Learn("Creature-1", 20, 1.5, 9)
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+            ctl.now = 10.6
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 30, 8)
+            local r = T.LagOf("Creature-1", 20)
+            assert.is_true(math.abs(T.lagE[r] - 1.5) < 1e-9) -- not taught while provisional
+            ctl.Tick(11.7) -- past the narrow band's end (11.65): final
+            assert.are.same({ 1, 1 }, { count(VS.Obs.Crit), T.paid[X.FLIGHT] })
+            assert.is_true(math.abs(T.lagE[r] - 0.6) < 1e-9)
+            assert.are.equal(T.opened, sum())
+        end)
+
+        it(
+            "EARLY variant (off by default): an early row pays provisionally; the narrow-band row replaces it",
+            function()
+                I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+                T.Learn("Creature-1", 20, 1.5, 9) -- narrow band [11.35, 11.65], widened from 10.313
+                T.EARLY = true
+                ctl.now = 10
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+                ctl.now = 10.2 -- before the widened band: pass 5
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 15, 8)
+                local early = T.foreign
+                ctl.now = 11.5
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 16, 8)
+                T.EARLY = false
+                assert.are.same({ 0, 1, 1, 1 }, { early, T.replaced, T.foreign, T.paid[X.FLIGHT] })
+            end
+        )
+
+        it("pays a pass (a) row final at once: no TENT", function()
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)
+            ctl.now = 10.01
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 30, 4)
+            assert.are.same({ 1, 1 }, { T.paid[X.FRAME], count(VS.Obs.Crit) })
+        end)
+    end)
+
     describe("TICKS", function()
         local function wound(t, amount, sch)
             ctl.now = t

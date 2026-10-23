@@ -212,6 +212,22 @@ for k = 1, RECORDS do
     recR[k], recHand[k], recEst[k], recLo[k], recHi[k], recHit[k], recA[k] = 0, 0, 0, 0, 0, 0, 0
     recFirm[k], recSpends[k], recE0[k], recLo0[k], recHi0[k] = false, 0, 0, 0, 0
 end
+-- Per slot: est still owed back by a retraction (attribution-recovery spec §2.4, the hold): applied at the slot's next
+-- usability answer or spend (I.SettleDebt), dropped at combat end. Filled at build.
+local estDebt = {}
+-- Per record: its credit is measured (a verdict consumed it, or a spend of ours from its slot voided it): no
+-- retraction can take it back, so its provisional swing is final (I.CreditFixed).
+local recGone = {}
+for k = 1, RECORDS do
+    recGone[k] = false
+end
+
+--- Whether credit record k can no longer be taken back (attribution-recovery spec §2.3: a verdict or a spend of ours
+--- from its slot measured the pool). Allocates nothing.
+function I.CreditFixed(k)
+    local s = recR[k]
+    return recGone[k] or (s ~= nil and s > 0 and R.spends[s] ~= recSpends[k])
+end
 
 local function clamp(v, max)
     if v < 0 then
@@ -295,6 +311,7 @@ I.OnBuild(function(def, now)
         R.swingOff[r] = d.swingOff or 0
         R.swingCrit[r], R.swingOffCrit[r] = d.swingCrit or 0, d.swingOffCrit or 0
         R.est0[r], R.lo0[r], R.hi0[r] = R.rest[r], 0, R.max[r]
+        estDebt[r] = 0
         R.assume[r] = R.restMax[r] and R.swing[r] == 0
         R.over[r] = R.assume[r] and R.rest[r] or 0 -- the floor at rest too (over)
         local fsr = type(d.fsr) == "table" and d.fsr or false
@@ -389,7 +406,7 @@ I.OnBuild(function(def, now)
         pre[a] = rawget(obj, "ladder") ~= false and (type(f) ~= "function" or f)
     end
     for k = 1, RECORDS do
-        recA[k], recR[k] = 0, 0
+        recA[k], recR[k], recGone[k] = 0, 0, false
     end
 end)
 
@@ -928,7 +945,7 @@ end
 -- true or false; a firm credit answered short is retracted here.
 local function verdict(k, now, t)
     if R.spends[recR[k]] ~= recSpends[k] then
-        recA[k], recR[k] = 0, 0
+        recA[k], recR[k], recGone[k] = 0, 0, true
         return false
     end
     local ok = nil -- a NOT answer is no rung: it leaves the record open (CreditVerdict)
@@ -949,8 +966,39 @@ local function verdict(k, now, t)
         hitRate[recHand[k]] = h > 0 and h or 0
         I.Sample(R.power[s], "modelled", R.est0[s], t, Obs.Usable)
     end
-    recA[k], recR[k] = 0, 0 -- consumed: a reused id is not this slot's credit
+    recA[k], recR[k], recGone[k] = 0, 0, true -- consumed: a reused id is not this slot's credit
     return v
+end
+
+-- Record k's credit taken back at t (a replacement, a refund): lo at once (it must never stand above the truth), hi
+-- down to est at most, est into the slot's debt; the hit rate loses its step. Nothing once a spend of ours from the
+-- slot measured the pool. The verdict's own retraction (verdict) is unchanged: an answer is a measurement. Allocates
+-- nothing.
+local function retract(k, t)
+    local s = recR[k]
+    if s == 0 or R.spends[s] ~= recSpends[k] then
+        recA[k], recR[k] = 0, 0
+        return
+    end
+    local max = R.max[s]
+    R.lo0[s] = back(R.lo0[s], recLo[k], recLo0[k], max)
+    local h = back(R.hi0[s], recHi[k], recHi0[k], max)
+    R.hi0[s] = h > R.est0[s] and h or R.est0[s]
+    estDebt[s] = estDebt[s] + recEst[k]
+    local hr = hitRate[recHand[k]] - recHit[k]
+    hitRate[recHand[k]] = hr > 0 and hr or 0
+    recA[k], recR[k] = 0, 0
+    I.Sample(R.power[s], "modelled", R.est0[s], t, Obs.Swing)
+end
+
+--- Slot r's held est debt applied (its next usability answer or spend): est loses it, never below lo. Allocates nothing.
+function I.SettleDebt(r)
+    local d = estDebt[r]
+    if r > 0 and d and d > 0 then
+        estDebt[r] = 0
+        local e = R.est0[r] - d
+        R.est0[r] = e > R.lo0[r] and e or R.lo0[r]
+    end
 end
 
 -- `was` / `wasT`: a's answer before this one and its time: a new credit is judged by it first when it was heard since
@@ -1034,6 +1082,7 @@ I.On(Obs.Usable, function(o, t, lag)
     local a = o.a
     local now = o.b == 1 and YES or (o.c == 1 and SHORT or NOT)
     local r = I.ab.slot[a]
+    I.SettleDebt(r)
     if now == SHORT and r ~= 0 and not R.readable[r] and pre[a] and not holds(a, t) then
         now = NOT -- short for another requirement: no rung, and no flip from it later
     end
@@ -1168,12 +1217,18 @@ I.On(Obs.Swing, function(o, t)
         local h = hitRate[hand] + HIT_ALPHA
         h = h < 1 and h or 1
         hit, hitRate[hand] = h - hitRate[hand], h
+    elseif c == 6 then -- a credit taken back (attribution-recovery spec §2.3): its record's deltas, with the hold
+        local k = o.b >= 1 and o.b <= RECORDS and o.b or 0
+        if k > 0 then
+            retract(k, t)
+        end
+        return
     elseif c ~= 3 then
         return
     end
     local k = o.b >= 1 and o.b <= RECORDS and o.b or 0
     if k > 0 and c == 1 then
-        recA[k], recR[k] = 0, 0 -- a fresh record: no stale prediction when its hand pays no slot
+        recA[k], recR[k], recGone[k] = 0, 0, false -- a fresh record: no stale prediction when its hand pays no slot
     end
     -- the swing's own time (rage is gained at the swing: its form or aura then decides): c = 1 is stamped at it, its
     -- crit (stamped at the wound) takes its record's
@@ -1208,6 +1263,7 @@ end)
 I.On(Obs.CastSuccess, function(o, t, lag)
     local a = o.a
     local r = I.ab.slot[a]
+    I.SettleDebt(r)
     if r == 0 or I.ab.obj[a].onNextSwing then
         return
     end
@@ -1312,6 +1368,7 @@ end)
 I.On(Obs.CombatEnd, function(o, t)
     fighting = false
     for r = 1, R.n do
+        estDebt[r] = 0
         for i = 1, I.TAKEN_WINDOW do
             R.takenSec[r][i] = -1
         end

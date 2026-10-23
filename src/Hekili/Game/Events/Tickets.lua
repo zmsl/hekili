@@ -15,7 +15,7 @@ local X, U = I.Expect, I.Units
 local T = {}
 I.Tickets = T
 T.CAP = 32 -- multi-dotting: 3 targets x 4 dots = 12 TICKS, plus swings, a bolt in flight, the next commit
-T.FREE, T.COMMITTED, T.OPEN, T.PROV = 0, 1, 2, 3
+T.FREE, T.COMMITTED, T.OPEN, T.PROV, T.TENT = 0, 1, 2, 3, 4
 local CAP, COMMITTED, OPEN, PROV = T.CAP, T.COMMITTED, T.OPEN, T.PROV
 local NONE, MELEE, UNMAPPED, ANY = X.NONE, X.MELEE, X.UNMAPPED, X.ANY
 T.COMMIT_HOLD = 60 -- s: a committed cast with no stop event closes as stopped (a lost STOP must not pin a unit)
@@ -44,6 +44,21 @@ local paidAt = T.paidAt
 for i = 1, CAP do
     paidAt[i] = 0
 end
+-- Per ticket (attribution-recovery decision 48): a payment outside the narrow band, before it passed, is provisional:
+-- the ticket stays TENT (owed 0, its unit held) until `fin`; the row that paid it (time, action, flag, amount, school,
+-- clean) to teach from at `fin` or to re-label foreign; a held observation (1 Obs.Crit, 2 Obs.Avoided); the swing's
+-- credit record (0 none).
+T.fin, T.rowT, T.rowAct, T.rowFlag, T.rowAmt, T.rowSch, T.rowClean, T.held, T.rec = {}, {}, {}, {}, {}, {}, {}, {}, {}
+for i = 1, CAP do
+    T.fin[i], T.rowT[i], T.rowAct[i], T.rowFlag[i], T.rowAmt[i], T.rowSch[i] = 0, 0, "", "", 0, 0
+    T.rowClean[i], T.held[i], T.rec[i] = false, 0, 0
+end
+-- The EARLY variant (measured, Task 2; off): a learned flight also takes a row before its narrow band, anywhere in its
+-- hard window, at pass 5 (after pass (d)), always provisional (TENT). A load-time constant; the test loaders set it from
+-- TA_EARLY=1.
+T.EARLY = false
+T.replaced = 0 -- first rows re-labelled foreign by a narrow-band row (not a close)
+T.onFinal, T.onReplace = nil, nil -- Rows' hooks: a TENT ticket final, a TENT ticket's row replaced
 
 T.opened = 0
 T.closed = {
@@ -223,6 +238,7 @@ local function fill(i, k, a, xx, g, t)
     state[i], kind[i], ab[i], x[i], guid[i], uid[i] = OPEN, k, a, xx, g, U.Find(g)
     school[i], owed[i], at[i], hi[i], w[i] = ANY, 1, t, t, 0
     ref[i], lr[i], avoid[i], cast[i], done[i], first[i], T.excused[i] = 0, 0, "", "", 0, false, false
+    T.held[i], T.rec[i] = 0, 0
     T.period[i], T.anchor[i], T.wide[i], T.link[i], T.speed[i], T.H[i], T.tickAmt[i] = 0, t, 0, 0, 0, 0, 0
     U.Hold(uid[i])
     T.opened = T.opened + 1
@@ -323,8 +339,8 @@ function T.SwingPending(hand, t)
         return 0
     elseif i == 0 then
         return at0
-    elseif state[i] < OPEN or kind[i] ~= MELEE or at[i] ~= at0 then
-        return 0
+    elseif state[i] < OPEN or state[i] == T.TENT or kind[i] ~= MELEE or at[i] ~= at0 then
+        return 0 -- a TENT swing is credited, provisionally (attribution-recovery decision 48)
     end
     return at0
 end
@@ -454,6 +470,18 @@ function T.Divergent(p, t, pass, act, flag, amount, sch, isAvoid)
     return false
 end
 
+-- What a clean payment teaches: a flight's lag (any pass, pass 3 included: with no record a ticket is a candidate at
+-- pass 3 alone, so no record would ever be made) and a declared direct ability's amount band.
+local function teachFrom(i, t, isAvoid, amount, flag, clean)
+    local k, a = kind[i], ab[i]
+    if clean and k == X.FLIGHT then
+        T.Learn(guid[i], T.speed[i], t - at[i], t)
+    end
+    if clean and not isAvoid and a > 0 and A.expDeclared[a] and (k == X.FRAME or k == X.FLIGHT or k == X.STRIKE) then
+        teach(a, amount, flag)
+    end
+end
+
 --- Ticket i paid by a row at t (`clean`: the only candidate at its pass): one row fewer owed; closed when none is.
 function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
     if T.onPay then
@@ -462,15 +490,7 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
     local k, a = kind[i], ab[i]
     -- an Overdue payment (pass 4) teaches neither the lag nor the band (attribution-recovery spec §1.1): its row is
     -- past the narrow band, so it is final at once (§2.1) and never teaches
-    clean = clean and pass ~= 4
-    -- Any clean pass teaches the lag, pass 3 included (spec §3.3.1 says a or b only, but with no record a ticket is a
-    -- candidate at pass 3 alone, so no record would ever be made: controller ruling, Task 19 amends the spec).
-    if clean and k == X.FLIGHT then
-        T.Learn(guid[i], T.speed[i], t - at[i], t)
-    end
-    if clean and not isAvoid and a > 0 and A.expDeclared[a] and (k == X.FRAME or k == X.FLIGHT or k == X.STRIKE) then
-        teach(a, amount, flag)
-    end
+    teachFrom(i, t, isAvoid, amount, flag, clean and pass ~= 4)
     done[i], owed[i] = done[i] + 1, owed[i] - 1
     if owed[i] < 0 then
         T.overpaid = T.overpaid + 1 -- never: a ticket is paid at most `owed` times (the sweep asserts it)
@@ -505,6 +525,81 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
         T.paid[kind[i]] = T.paid[kind[i]] + 1
         close(i, t, "paid")
     end
+end
+
+--- The end of ticket i's narrow band (MELEE: the hand's core band), or nil when it has none (a flight with no lag
+--- record). Allocates nothing.
+function T.NarrowEnd(i)
+    if kind[i] == MELEE then
+        local L, h = I.Log, x[i]
+        local e = at[i] + L.med[h] + 2 * L.spr[h]
+        local e3 = ref[i] > 0 and ref[i] + L.med[3] + 2 * L.spr[3] or 0 -- an off hand's main reference
+        return e > e3 and e or e3
+    end
+    local _, h = I.Kinds.Band(i, 1, at[i], false, "WOUND", school[i])
+    return h
+end
+
+--- (attribution-recovery decision 48) Ticket i paid at pass `pass` by a row at t: final (T.Pay, false) at pass 1 or
+--- 3, once its narrow band passed, for a ticking kind or a direct ticket with a live schedule (its refresh cannot be
+--- undone); else TENT until fin = min(narrow band end, hi), its row kept to teach from or re-label (true).
+--- Allocates nothing.
+function T.PayTentative(i, t, isAvoid, amount, flag, clean, pass, act, sch)
+    local k = kind[i]
+    local n = (pass == 2 or pass >= 4) and k ~= X.TICKS and k ~= X.CHANNEL and T.link[i] <= 0 and T.NarrowEnd(i)
+    if not n or t >= n then
+        T.Pay(i, t, isAvoid, amount, flag, clean, pass)
+        return false
+    end
+    if T.onPay then
+        T.onPay(i, t, pass)
+    end
+    state[i], owed[i], done[i] = T.TENT, owed[i] - 1, done[i] + 1
+    T.fin[i] = n < hi[i] and n or hi[i]
+    T.rowT[i], T.rowAct[i], T.rowFlag[i], T.rowAmt[i], T.rowSch[i] = t, act, flag, amount, sch
+    T.rowClean[i] = clean and pass < 4 -- no teaching at pass (d) (decision 46 as amended) or the early pass 5
+    return true
+end
+
+--- TENT ticket i is final at `now`: Rows stages what it held (T.onFinal), it teaches from its row, and it closes paid.
+function T.Final(i, now)
+    if T.onFinal then
+        T.onFinal(i, now)
+    end
+    teachFrom(i, T.rowT[i], T.rowAct[i] ~= "WOUND", T.rowAmt[i], T.rowFlag[i], T.rowClean[i])
+    T.held[i] = 0
+    T.paid[kind[i]] = T.paid[kind[i]] + 1
+    close(i, now, "paid")
+end
+
+--- The oldest TENT spell ticket on `g` whose narrow band holds a row at t that it would accept with its row still
+--- owed; 0 when none. Allocates nothing.
+function T.Replaceable(t, g, act, flag, amount, sch, isAvoid)
+    local K, best = I.Kinds, 0
+    for i = 1, CAP do
+        if state[i] == T.TENT and kind[i] ~= MELEE and guid[i] == g and t <= T.fin[i] then
+            owed[i] = 1 -- K.Accepts reads `owed`: asked as if the row were still owed
+            local ok = K.Accepts(i, act, flag, amount, sch, isAvoid)
+            owed[i] = 0
+            local lo, h = K.Band(i, 1, t, isAvoid, act, sch)
+            if ok and lo and t >= lo - 1e-9 and t <= h + 1e-9 and (best == 0 or at[i] < at[best]) then
+                best = i
+            end
+        end
+    end
+    return best
+end
+
+--- TENT ticket i's row is replaced at t by a narrow-band row: Rows undoes its effects and re-offers it to our other
+--- open tickets (T.onReplace, true when one took it); else it becomes foreign (arming the crowd gate at its own time).
+--- The ticket owes its row again. Allocates nothing.
+function T.Replace(i, t)
+    T.replaced = T.replaced + 1
+    if not (T.onReplace and T.onReplace(i, t)) then -- re-offered to our other tickets first (decision 48 as amended)
+        T.foreign = T.foreign + 1
+        T.Foreign(uid[i], T.rowSch[i], T.rowT[i])
+    end
+    state[i], owed[i], done[i], T.held[i] = OPEN, owed[i] + 1, done[i] - 1, 0
 end
 
 --- A swing ticket holds an avoid provisionally (spec §3.7): it is emitted at its close unless a wound overtakes it.
@@ -600,6 +695,9 @@ end
 --- Closes every ticket whose window ended by `now`, after Rows' T.onExpire (a swing's row). Every OnUpdate.
 function T.Expire(now)
     for i = 1, CAP do
+        if state[i] == T.TENT and now > T.fin[i] then
+            T.Final(i, now)
+        end
         if state[i] ~= 0 and now > hi[i] then
             if state[i] ~= COMMITTED and T.onExpire then
                 T.onExpire(i, now)
@@ -613,6 +711,7 @@ end
 function T.EndCombat(t)
     for i = 1, CAP do
         close(i, t, "ended")
+        T.held[i] = 0 -- a provisional payment's held observation is dropped (decision 48)
     end
     strikeWait = 0
     T.lastSwingT[1], T.lastSwingT[2] = 0, 0
@@ -628,7 +727,9 @@ U.OnGone(function(u, g, why, t)
         clearForeign(u)
     end
     for i = 1, CAP do
-        if state[i] ~= 0 and uid[i] == u then
+        if state[i] == T.TENT and uid[i] == u and why == U.GONE then
+            T.Final(i, t) -- nothing can replace it now: final as paid
+        elseif state[i] ~= 0 and uid[i] == u then
             if why == U.GONE then
                 if state[i] ~= COMMITTED and T.onExpire then
                     T.onExpire(i, t)

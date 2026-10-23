@@ -80,8 +80,18 @@ function M.boot(o)
     end
     c.tickShift = 0 -- the largest schedule shift a TICKS payment made (slots; must stay <= 1)
     local T, U, TICKS = c.I.Tickets, c.I.Units, c.I.Expect.TICKS
+    -- attribution-recovery decision 48: ticket -> the stream row that paid it; a finalisation's staging goes to that
+    -- row; a replaced row is un-paid (its time of replacement kept)
+    c.tIdx, c.finIdx, c.replacedAt = {}, 0, {}
+    for i = 1, T.CAP do
+        c.tIdx[i] = 0
+    end
+    for i = 1, CAP do
+        c.replacedAt[i] = 0
+    end
     T.onPay = function(i, t, pass)
         local k = c.cur
+        c.tIdx[i] = k
         if k > 0 then
             c.payAt[k], c.payKind[k], c.payPass[k], c.payN[k] = T.at[i], T.kind[i], pass, c.payN[k] + 1
             local g = U.lastGUID
@@ -95,6 +105,28 @@ function M.boot(o)
                 c.tickShift = shift
             end
         end
+    end
+    local onFinal, onReplace = T.onFinal, T.onReplace
+    T.onFinal = function(i, now)
+        c.finIdx = c.tIdx[i]
+        onFinal(i, now)
+        c.finIdx = 0
+    end
+    T.onReplace = function(i, t)
+        local k, cur = c.tIdx[i], c.cur
+        if k > 0 then
+            c.payAt[k], c.payKind[k], c.staged[k], c.replacedAt[k] = 0, 0, 0, t
+            c.payN[k] = c.payN[k] - 1 -- un-paid: a re-offer may pay it once more (decision 48 as amended)
+            if c.crHand[k] > 0 then -- a swing credit taken back: no longer credited (its crit with it)
+                c.landed[c.crHand[k]] = c.landed[c.crHand[k]] - 1
+                c.crits[c.crHand[k]] = c.crits[c.crHand[k]] - c.crit3[k]
+                c.crHand[k], c.crAt[k], c.crit3[k] = 0, 0, 0
+            end
+        end
+        c.cur = k -- a re-offered row's new payment belongs to that row (decision 48 as amended)
+        local taken = onReplace(i, t)
+        c.cur = cur
+        return taken
     end
     c.rowsOut = 0 -- rows the registry dispatched (K9's residual)
     U.OnRow(function()
@@ -206,8 +238,9 @@ function M.boot(o)
                 end
             end
         end
-        if c.cur > 0 and (kind == c.VS.Obs.Crit or kind == c.VS.Obs.Avoided) then
-            c.staged[c.cur] = kind == c.VS.Obs.Crit and 1 or 2
+        local idx = c.finIdx > 0 and c.finIdx or c.cur -- a TENT ticket's held staging belongs to its paying row
+        if idx > 0 and (kind == c.VS.Obs.Crit or kind == c.VS.Obs.Avoided) then
+            c.staged[idx] = kind == c.VS.Obs.Crit and 1 or 2
         end
         return stage(kind, t, a, b, cc)
     end
@@ -447,7 +480,7 @@ function M.run(c, s, offset)
         c.crHand[i], c.crAt[i], c.verdict[i], c.onus[i], c.crit3[i], c.unk[i] = 0, 0, 0, "", 0, 0
         c.vetoHand[i], c.vetoAt[i] = 0, 0
         c.payAt[i], c.payKind[i], c.payPass[i], c.staged[i] = 0, 0, 0, 0
-        c.payN[i], c.disp[i] = 0, 0
+        c.payN[i], c.disp[i], c.replacedAt[i] = 0, 0, 0
     end
     c.crossGUID, c.tickShift = 0, 0
     for _, r in pairs(c.trk) do

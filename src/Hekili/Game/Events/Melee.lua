@@ -154,6 +154,7 @@ function M.score(t, g, amount, flag, avoid, unknown)
     for i = 1, T.CAP do
         if
             T.state[i] ~= 0
+            and T.state[i] ~= T.TENT -- credited provisionally: replaced only by M.Replaceable (decision 48)
             and T.kind[i] == X.MELEE
             and (g == nil or T.guid[i] == g)
             and not (avoid and T.avoid[i] ~= "")
@@ -181,6 +182,29 @@ function M.score(t, g, amount, flag, avoid, unknown)
         end
     end
     return best, bestLR, r0, lag, second, idx
+end
+
+--- (attribution-recovery decision 48) The oldest TENT swing ticket on `g` (credited outside its core band) whose
+--- core band holds a white row at t: a wound in an amount class of its hand (or unknown), or an avoid. Nil when none.
+--- Allocates nothing.
+function M.Replaceable(t, g, amount, flag, avoid, unknown)
+    local best = nil
+    for i = 1, T.CAP do
+        if T.state[i] == T.TENT and T.kind[i] == X.MELEE and T.guid[i] == g and t <= T.fin[i] then
+            local h, rf = T.x[i], T.ref[i]
+            if
+                (
+                    math.abs(t - T.at[i] - L.med[h]) <= 2 * L.spr[h]
+                    or (rf > 0 and math.abs(t - rf - L.med[3]) <= 2 * L.spr[3])
+                )
+                and (avoid or unknown or M.classOf(h, amount, flag) > 0)
+                and (best == nil or T.at[i] < T.at[best])
+            then
+                best = i
+            end
+        end
+    end
+    return best
 end
 
 --- An outcome nobody of ours claimed: counted, and while in combat with nothing of ours pending it teaches the

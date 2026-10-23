@@ -83,6 +83,25 @@ A pass (d) payment is provisional when the ticket's narrow band is still ahead o
 shadow ticket when the ticket is already past its lag tolerance (section 3). It teaches a lag or a band only once it
 is final, and a provisional swing credit never teaches the melee median (decision 48).
 
+Measured answer to "late or early?" (Task 2, 2026-10-23): an EARLY variant (`T.EARLY`, `TA_EARLY=1` in the test
+loaders; off) lets a learned flight take a row before its narrow band, anywhere in its hard window, at a pass after
+(d), always provisional and replaceable by a narrow-band row. Detection cells, off -> on (gates and gate tags
+identical):
+
+| Cell | recall | staged | false100 | leak100 | other |
+|---|---|---|---|---|---|
+| K8 party | 0.66 -> 0.69 | 0.71 -> 0.75 | 33.7 -> 30.9 | 10.2 -> 9.3 | |
+| K6 solo | = | = | 2.2 -> 3.2 | 1.0 -> 1.4 | |
+| K6 party | = | = | = | = | postClear 0.90 -> 0.81 |
+| K4 party | = | = | 2.5 -> 2.7 | 1.3 -> 1.4 | |
+| K4 busy | 0.85 -> 0.77 | 0.79 -> 0.74 | 13.6 -> 21.8 | 1.9 -> 3.0 | lostDiff 0 -> 2 |
+| K11 party | = | = | 4.6 -> 6.0 | 1.9 -> 2.6 | |
+| K11 busy | 0.44 -> 0.40 | = | 61.3 -> 71.8 | 4.9 -> 7.2 | |
+| K13, K13p1, K13p5, K7 busy | = | = | +0.1 to +0.3 | +0.1 | lostDiff -1 |
+
+Early loses K4 busy and K11 busy recall and adds false credit (K6 solo included); only K8 party gains. Pass (d) stays
+late only; the variant stays off.
+
 ### 1.2 Why TICKS and CHANNEL are excluded (decision 47)
 
 A tick's schedule is its only discriminator (base §3.3, decision 36): a paid tick advances `done`
@@ -145,11 +164,18 @@ owed (school, amount band, `Kinds.lua:80-112`), and that no open ticket took at 
 (for MELEE: inside the hand's core band, the LR crediting no open swing, the amount class not 0 for a wound). The
 oldest TENT ticket that qualifies is replaced. Then:
 
-1. The first row is re-labelled foreign: `T.foreign + 1`, `T.Foreign(uid, its school, its time)` (it arms the crowd gate
-   at the time it arrived), `T.replaced + 1` (a new counter; the existing `closed.replaced` stays the strike's swing).
-2. Its staged effects are undone where the machinery can (2.3) and dropped where they were held.
-3. The new row pays the ticket as a pass (a) payment: final at once, staged at once, the ticket closes `paid`.
-4. Nothing re-routes the first row to another ticket (no cascade from a replacement).
+1. `T.replaced + 1` (a new counter; the existing `closed.replaced` stays the strike's swing).
+2. The first row's staged effects are undone where the machinery can (2.3) and dropped where they were held.
+3. The first row is re-offered to our remaining open tickets on its GUID through the normal passes (a spell's bands,
+   the swing LR, and for a wound an overdue swing on timing alone: an amount band that rejects it does not); a payment
+   it makes is provisional and teaches neither the lag, the amount band nor the median. It is foreign only if none
+   takes it: `T.foreign + 1`, `T.Foreign(uid, its school, its time)` (it arms the crowd gate at the time it arrived).
+4. The new row pays the ticket as a pass (a) payment: final at once, staged at once, the ticket closes `paid`.
+
+Amendment (coordinator ruling 2026-10-23, Task 2): step 3 was "the first row becomes foreign; nothing re-routes it".
+Cause: the wowsims Fury replay (`tests/Forever/fixtures/timing_warrior_fury.lua` decision 14), where the displaced row
+was our own off-hand wound (it lands at the off hand's median lag; its amount class for the off hand is 0): a swap
+between our own tickets must net to nothing (the wash principle).
 
 The answer to the owner's question, "what happens if we misattribute but then we see a dodge": a foreign WOUND paid our
 swing ticket in its Widened phase (provisional: TENT, `Obs.Swing` c = 1 staged with record `id`); our own DODGE arrives
@@ -439,7 +465,7 @@ at most +2/94 and +1/46 there; the harness world gains it in both directions wit
 |---|---|---|
 | 46 | Supersedes decision 33. A new last pass (d), Overdue, for every ticket: a row that no pass (a)-(c) and no LR credit took pays the oldest open ticket of its queue whose hard window holds it (amount-banded first, decision 45); spells by `K.Band(i, 4)`, swings by `M.Overdue` (white, not vetoed, amount class not 0, an avoid only on a swing holding none). AMENDED 2026-10-23: phase-gated, late never early: a spell ticket is a candidate only once its expected tolerance has ended (a learned flight past its narrow band, an unlearned flight past `at + H / 2`, a FRAME or STRIKE wound past `CAST_WINDOW`; no FRAME or STRIKE avoid) and its hard window holds the row; after the melee scoring, never a row the MELEE tie took from the cast; a swing ticket only ASSUMED (Task 3); a pass (d) payment teaches neither the lag nor the amount band | the owner's ruling: always expect some result outside the lag tolerance; FIFO per queue keeps own swaps a wash (1.3). The amendment: the wash holds for own-ticket swaps, not for other players' rows on the same mob, which an early or open-swing grab takes (party-with-pet `over` 49 -> 474 of 1200, raid false wounds 10 -> 65 per 100, three loop floors; K6 solo recall 0.96 -> 0.87 with early spell payments) |
 | 47 | TICKS and CHANNEL have no Overdue pass and are never assumed | a paid tick moves the schedule (`done`), so an off-schedule row would make every later tick foreign; a stolen tick is worse than an unattributed row (decision 45) |
-| 48 | A payment at pass (b) or (d), or a MELEE credit outside its core band, made before the ticket's narrow band has passed, is provisional: the ticket goes TENT (state 4, `owed` 0, unit held) until `fin` = min(narrow band end, `hi`); a later row inside that narrow band (no open ticket taking it at pass (a); for MELEE, the LR crediting no open swing) replaces it: the first row becomes foreign, the new row pays final; a provisional payment teaches the lag and the band only at `fin`; a provisional swing credit never teaches the median | "recoverable": the narrow band is the strongest evidence of ownership; teaching late keeps undo trivial |
+| 48 | A payment at pass (b) or (d), or a MELEE credit outside its core band, made before the ticket's narrow band has passed, is provisional: the ticket goes TENT (state 4, `owed` 0, unit held) until `fin` = min(narrow band end, `hi`); a later row inside that narrow band (no open ticket taking it at pass (a); for MELEE, the LR crediting no open swing) replaces it: the first row is re-offered to our remaining open tickets (provisional, untaught); foreign only if none takes it (AMENDED 2026-10-23: the Fury replay fixture, decision 14), the new row pays final; a provisional payment teaches the lag and the band only at `fin`; a provisional swing credit never teaches the median | "recoverable": the narrow band is the strongest evidence of ownership; teaching late keeps undo trivial |
 | 49 | Undoable: swing rage (c = 1, c = 3) through the credit record's deltas and `back()` (`retract(k, t)`, called by `Obs.Swing` c = 6; the verdict's own retraction unchanged), while no spend of ours from the slot since; spell `Obs.Crit` and `Obs.Avoided` are held while TENT. Final, and so never TENT: a direct ticket with a live TICKS link; the emitted combat-log row stays (the replacing row is emitted too, as the firm retraction's two rows) | each undo uses machinery that exists; what has no undo is either held or not made provisional |
 | 50 | The hold: a retraction (replacement or refund) takes `lo` at once, `hi` down to `est` at most, and `est` only at the slot's next usability answer, its next spend's rung, or never (combat end) | no-jitter: a correction never flips an icon by itself; `lo` stays a floor |
 | 51 | Primary: past its lag tolerance (MELEE: the pending window; FLIGHT with a record: the widened band's end) an unpaid ticket goes ASSUMED (state 5, a shadow in the same slot) until `hi`; a swing stages its assumed rage at once as a credit record (`Obs.Swing` c = 5, `est` and `hi` only); a late hit closes `confirmed` (`Obs.Swing` c = 7 turns the assumption's record into the credit: a wash), a late avoid `refunded` (c = 6 retracts it with the hold, `Obs.Avoided` for a spell), no row `assumed`; a retry ticket is never assumed; comparison variant: the expectation at the `lost` close (9b) | the owner's refinement: assume success past the tolerance, then a refund ticket; continuity with `VS.SwingPending` |
