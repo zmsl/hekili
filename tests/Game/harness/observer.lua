@@ -57,6 +57,15 @@ M.DEFAULTS = {
     -- the row). shortcut: the usability answers (k.usable) read the world's true health at the swing either way;
     -- upgrade them to the client's view if U12 measures the row.
     healthAtSwing = true,
+    -- The providers' measured shapes (providers spec §4.2), events only, from W.mrng: `meter` the damage meter's
+    -- DAMAGE_METER_COMBAT_SESSION_UPDATED groups (DM research §2: a hit swing of the group 0-11 ms after it, none for an
+    -- avoid; spells and procs in their row's frame, ticks 1-2 ms; type 7 at a hit on the group), `viewer` the Cooldown
+    -- Manager's item edges 3-5 ms after an aura of ours (CV research §2), `takenLag` moves the hit row on us (s; type 7
+    -- leads it by 0.39-0.57 s in game), `group` false: the other sources are strangers (their hits never tick).
+    meter = false,
+    viewer = false,
+    takenLag = 0,
+    group = true,
 }
 
 M.COMBAT_END = 1.0 -- s from a kill to PLAYER_REGEN_ENABLED when no attacker is left (Rogue kill-events capture)
@@ -177,6 +186,35 @@ function M.new(W, k)
     end
     local function spellID(name)
         return M.SPELLS[name] or name -- a real ID (the content's) passes as is
+    end
+    -- (providers spec §4.2) a damage group: types 0, 1, 10 for the session, then the same for session 0 (DM §1)
+    local session = 200
+    local function group(t)
+        for _, sid in ipairs({ session, 0 }) do
+            for _, ty in ipairs({ 0, 1, 10 }) do
+                push(t, "DAMAGE_METER_COMBAT_SESSION_UPDATED", ty, sid)
+            end
+        end
+    end
+    local function inGroup(e)
+        return e == us or (k.group and party[e] ~= nil)
+    end
+    -- The meter's events for truth event `ev` (k.meter): added events only, so the stream without them is today's.
+    local function meter(t, ev)
+        if ev.act ~= "WOUND" then
+            return
+        end
+        local kind = ev.kind
+        if kind == "swing" and inGroup(ev.src) then -- ours or a partner's, any hand; an avoid never (DM §2)
+            group(t + W.mrng.int(0, 11) / 1000)
+        elseif (kind == "spell" or kind == "proc" or kind == "strike") and inGroup(ev.src) then
+            group(t + W.mrng.int(3, 14) / 1000)
+        elseif kind == "tick" and inGroup(ev.src) then
+            group(t + W.mrng.int(1, 2) / 1000)
+        end
+        if (kind == "swing" or kind == "spell") and ev.dst and inGroup(ev.dst) and not inGroup(ev.src) then
+            push(t, "DAMAGE_METER_COMBAT_SESSION_UPDATED", 7, session) -- a hit on the group, at its truth time
+        end
     end
     -- our hard cast's and channel's castGUID numbers (their start's, carried to the success and the stop), and the
     -- hard cast's spell
@@ -528,6 +566,9 @@ function M.new(W, k)
             if unit then
                 push(t, "@aura", unit, ev.aura, ev.stacks, ev.expires, ev.duration)
                 push(t, "UNIT_AURA", unit)
+                if k.viewer then -- the Cooldown Manager's item shows or hides 3-5 ms later (CV §2)
+                    push(t + W.mrng.int(3, 5) / 1000, "@viewer", unit, ev.aura, ev.stacks > 0)
+                end
             end
         elseif kind == "item" and ev.src == us then -- a bag count, plain [W PR13]; nothing reads its BAG_UPDATE
             push(t, "@itemCount", ev.item, ev.count)
@@ -662,7 +703,14 @@ function M.new(W, k)
             outcome(t, ev, 1)
             outcome(t, { dst = us, onUs = ev.onUs, act = "HEAL", amount = ev.amount, school = 1 }, 0)
         elseif ev.act and ev.dst then -- another source's outcome, our DoT's tick, a hit on us or on someone else
-            outcome(t, ev, (ev.src == us) and 1 or 2)
+            local tr = t
+            if (k.takenLag or 0) > 0 and ev.dst == us and ev.act == "WOUND" then -- the hit row on us, later (DM §2)
+                tr = t + k.takenLag + W.mrng.next() * 0.24 - 0.12
+            end
+            outcome(tr, ev, (ev.src == us) and 1 or 2)
+        end
+        if k.meter then
+            meter(t, ev)
         end
         local hv = ev -- whose health a secret-free client reads now: our white swing's at its row (healthAtSwing off)
         if not k.healthAtSwing and ev.ours then

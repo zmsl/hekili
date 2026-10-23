@@ -47,6 +47,8 @@ for id, key in ipairs({
     CREATURE_IDS[key] = id
 end
 local NO_ENCHANTS = {} -- an unenchanted weapon slot's list (shared: the fake allocates nothing per call)
+-- The Cooldown Manager's four viewer frames (providers spec §4.2; CV research §2), in category order 0-3.
+M.VIEWERS = { "EssentialCooldownViewer", "UtilityCooldownViewer", "BuffIconCooldownViewer", "BuffBarCooldownViewer" }
 
 --- A new fake client and its control table.
 function M.new()
@@ -563,6 +565,75 @@ function M.new()
             return window
         end,
     }
+    -- The damage meter (providers spec §4.2; DM research): our session's totals, plain out of combat, every number
+    -- secret in combat. `ctl.meter.done[1]` / `taken[1]`: our damage done (type 0) and taken (type 7).
+    ctl.meter = { available = true, done = {}, taken = {} }
+    local dmSecret = { combatSources = { { isLocalPlayer = true, totalAmount = SECRET } } }
+    local dmDone = { combatSources = { { isLocalPlayer = true, totalAmount = 0 } } }
+    local dmTaken = { combatSources = { { isLocalPlayer = true, totalAmount = 0 } } }
+    local dmNone = { combatSources = {} }
+    api.C_DamageMeter = {
+        IsDamageMeterAvailable = function()
+            return ctl.meter.available
+        end,
+        GetCombatSessionFromType = function(_, ty)
+            if ty ~= 0 and ty ~= 7 then
+                return dmNone
+            elseif ctl.combat then
+                return dmSecret
+            end
+            local r = ty == 0 and dmDone or dmTaken
+            r.combatSources[1].totalAmount = (ty == 0 and ctl.meter.done or ctl.meter.taken)[1] or 0
+            return r
+        end,
+    }
+    -- The Cooldown Manager (providers spec §4.2; CV research §2): `sets[category]` its cooldown IDs, `infos[id]` their
+    -- info ({ spellID, ... }), `items[viewer]` each viewer frame's children (ctl.ViewerItem); ctl.ViewerShow(item, up)
+    -- is the client's show or hide 3-4 ms after the aura edge: auraInstanceID secret or nil, then the item's hooks.
+    ctl.viewer = { available = true, sets = { [0] = {}, [1] = {}, [2] = {}, [3] = {} }, infos = {}, items = {} }
+    api.C_CooldownViewer = {
+        IsCooldownViewerAvailable = function()
+            return ctl.viewer.available
+        end,
+        GetCooldownViewerCategorySet = function(category)
+            return ctl.viewer.sets[category]
+        end,
+        GetCooldownViewerCooldownInfo = function(id)
+            return ctl.viewer.infos[id]
+        end,
+    }
+    for _, name in ipairs(M.VIEWERS) do
+        ctl.viewer.items[name] = {}
+        api[name] = {
+            GetChildren = function()
+                return unpack(ctl.viewer.items[name])
+            end,
+        }
+    end
+    local NO_HOOKS = {}
+    local function hookScript(item, script, fn)
+        local h = item.hooks[script] or {}
+        item.hooks[script] = h
+        h[#h + 1] = fn
+    end
+    --- A child of viewer `name` tracking cooldown `id` at `layoutIndex`, hidden.
+    function ctl.ViewerItem(name, layoutIndex, id)
+        local list = ctl.viewer.items[name]
+        local item = { layoutIndex = layoutIndex, cooldownID = id, hooks = {}, HookScript = hookScript }
+        list[#list + 1] = item
+        return item
+    end
+    function ctl.ViewerShow(item, up)
+        item.shown = up
+        if up then
+            item.auraInstanceID = SECRET
+        else
+            item.auraInstanceID = nil
+        end
+        for _, fn in ipairs(item.hooks[up and "OnShow" or "OnHide"] or NO_HOOKS) do
+            fn(item)
+        end
+    end
     local C = api.C_Spell
     local info = {} -- [spellID] = GetSpellInfo's table, built once
     function C.GetSpellInfo(id)

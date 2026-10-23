@@ -11,8 +11,10 @@
 local metrics = require("Game.harness.metrics")
 local scenarios = require("Game.harness.scenarios")
 
-local function check(ok, m)
-    assert.is_true(ok, metrics.line(m))
+local ab = require("Game.harness.ab")
+
+local function check(ok, m) -- a bar: asserted in the default arm, recorded in a provider arm (providers spec §4.1)
+    ab.check(ok, "group", metrics.line(m))
 end
 
 describe("group attribution (harness gates) #slow", function()

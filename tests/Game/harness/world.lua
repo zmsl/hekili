@@ -48,6 +48,7 @@ function M.new(seed)
     -- crng: the client-detail draws (the same-ms avoid, a strike frame's order) apart from the fight's own
     local W = { t = 0, q = {}, seq = 0, truth = {}, rng = rng.new(seed), crng = rng.new(seed + 7919), ents = {} }
     W.grng = rng.new(seed + 15485863) -- the GCD flag's order against its cast (W.press), apart from both
+    W.mrng = rng.new(seed + 32452843) -- the meter and viewer shapes, apart from every other draw
     W.combat = false
     W.rates = {} -- [powerType] = regen per second (W.startRegen)
     W.fsr = {} -- [powerType] = { spirit, mp5 } per second: the five-second rule's two parts (W.startRegen)

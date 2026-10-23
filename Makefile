@@ -6,7 +6,7 @@ LUACHECK := $(LUA_ENV)/bin/luacheck
 LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
-.PHONY: gate bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench bench-ta spell-data-check syntax api-check \
+.PHONY: gate gate-ab bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench bench-ta spell-data-check syntax api-check \
 	packs-check tools-test check packs package package-check wowsims-cli wowsims-export wowsims-learn wowsims-packs test-wowsims
 
 bootstrap:
@@ -51,6 +51,14 @@ GATE_LOCK ?= /tmp/hekili-gate.lock
 # another gate's load would still inflate through shared cores.
 gate: check
 	flock $(GATE_LOCK) env BUSTED=$(BUSTED) BUSTED_JOBS=$$(($$(nproc) > 3 ? $$(nproc) - 2 : 1)) scripts/busted_parallel.sh --tags=$(GATE_TAGS)
+
+# The A/B (providers spec §4.1): the gate once per arm on the same seeds; the provider arms record in .ab/<arm>.tsv.
+gate-ab:
+	rm -rf .ab
+	$(MAKE) gate
+	HEKILI_AB=meter $(MAKE) gate
+	HEKILI_AB=viewer $(MAKE) gate
+	@wc -l .ab/*.tsv
 
 $(LOOPS): test-%:
 	BUSTED=$(BUSTED) scripts/busted_parallel.sh --tags=$*

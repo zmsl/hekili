@@ -10,6 +10,7 @@ local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
 local COSTS = require("Game.harness.observer").COSTS
+local ab = require("Game.harness.ab")
 
 local M = {}
 
@@ -52,6 +53,7 @@ function M.boot(o)
         local def = fs.def(fs.new((o.rage or { 9, 5 })[1]))
         def.resources[1].swingOff = (o.rage or { 9, 5 })[2]
         def.resources[1].max = o.max or 1e6
+        def.providers = ab.providers()
         c.I.Build(def, 0.1)
         c.VS.Start(api)
     end
@@ -401,6 +403,17 @@ local function op(c, ctl, ev, a1, a2, a3, a4, a5)
         ctl.exists.pet, ctl.dead.pet, ctl.petPowerType, ctl.petPower = a1 or nil, nil, a2, a3
     elseif ev == "@petPower" then
         ctl.petPower = a1
+    elseif ev == "@viewer" then -- unit, spellID, up: the viewer item tracking that spell shows or hides (providers §4.2)
+        local V = ctl.viewer
+        for _, name in ipairs(fake.VIEWERS) do
+            for _, item in ipairs(V.items[name]) do
+                local info = V.infos[item.cooldownID]
+                if info and info.spellID == a2 then
+                    item.auraDataUnit = a1
+                    ctl.ViewerShow(item, a3)
+                end
+            end
+        end
     elseif ev == "@casting" or ev == "@channel" then -- our cast bar's start and end in ms (nil: none), plain [W PR9]
         local key = ev == "@casting" and "casting" or "channel"
         local bar = c[key] or {} -- one per drive and kind, reused: fake_api answers its two fields
@@ -496,6 +509,11 @@ function M.run(c, s, offset)
     local rows = c.rows
     rows.swing, rows.missed, rows.spell, rows.noDst, rows.order = 0, 0, 0, 0, 0
     c.lastRow[1], c.lastRow[2] = 0, 0
+    -- the damage meter's true total of ours (fake_api's C_DamageMeter answers it out of combat): each own WOUND row
+    -- once, its fan-out's other tokens skipped. shortcut: two own outcomes of one amount in one ms count once; key
+    -- on the outcome when a meter suite reads the total that finely
+    local meter, lastT, lastA = ctl.meter, -1, -1
+    meter.done[1] = 0
     local nextTick = M.TICK * math.floor((s.t[1] + offset) / M.TICK) + M.TICK
     c.nextWin = nextTick
     for i = 1, s.n do
@@ -513,6 +531,11 @@ function M.run(c, s, offset)
             if ev == "UNIT_COMBAT" and s.src[i] == 1 and s.hand[i] > 0 and s.a1[i] == "target" and s.a4[i] > 0 then
                 local _, maxMain = c.VS.Stat("UnitDamage") -- Rows.lua's stale-form test, as it reads it now
                 c.unk[i] = (maxMain <= 0 or ctl.form ~= c.I.damageForm) and 1 or 0
+            end
+            if ev == "UNIT_COMBAT" and s.src[i] == 1 and s.a2[i] == "WOUND" and s.a1[i] ~= "player" then
+                if s.t[i] ~= lastT or s.a4[i] ~= lastA then
+                    meter.done[1], lastT, lastA = meter.done[1] + s.a4[i], s.t[i], s.a4[i]
+                end
             end
             local avoids = c.L.avoids
             local vetoed = c.L.oracle.vetoed

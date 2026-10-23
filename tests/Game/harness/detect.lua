@@ -3,6 +3,7 @@ local scenarios = require("Game.harness.scenarios")
 local drive = require("Game.harness.drive")
 local metrics = require("Game.harness.metrics")
 local fs = require("Game.State.helpers.fake_spec")
+local ab = require("Game.harness.ab")
 
 local M = {}
 
@@ -14,14 +15,17 @@ local function mix(n)
     return others
 end
 
--- Other sources on our target (foreign outcomes per second as measured, spec §6.2).
+-- Other sources on our target (foreign outcomes per second as measured, spec §6.2). `group` (providers spec §4.2,
+-- passed as the observer's knob): true where the others are our group members, whose hits tick the damage meter
+-- (party, the raids); false where they are strangers, whose hits never tick it (busy: an open-world crowd). The DM
+-- captures measured both: a party member's hits tick, a stranger's never (DM research §2).
 M.BANDS = {
-    solo = { others = {} },
-    party = { others = { "melee", "caster" } },
-    busy = { others = { "melee", "melee", "melee", "caster", "caster", "pet", "pet" } },
-    raid12 = { others = mix(11) },
-    raid25 = { others = mix(24) },
-    raid40 = { others = mix(39) },
+    solo = { others = {}, group = true },
+    party = { others = { "melee", "caster" }, group = true },
+    busy = { others = { "melee", "melee", "melee", "caster", "caster", "pet", "pet" }, group = false },
+    raid12 = { others = mix(11), group = true },
+    raid25 = { others = mix(24), group = true },
+    raid40 = { others = mix(39), group = true },
 }
 M.GATED = { "solo", "party", "busy" }
 M.MEASURED = { "raid12", "raid25", "raid40" }
@@ -147,7 +151,9 @@ M.KINDS.K19 = {
 -- The boot every detection fight uses: the expect abilities, 30 yd projectiles (fake_api's default range is 5 yd).
 function M.boot(c)
     c.ctl.ranges[fs.SPENDER_P], c.ctl.ranges[fs.SPENDER_S] = { 0, 30 }, { 0, 30 }
-    c.I.Build(fs.def(fs.new(9, false, false, true)), 0.1)
+    local def = fs.def(fs.new(9, false, false, true))
+    def.providers = ab.providers()
+    c.I.Build(def, 0.1)
     c.VS.Start(c.api)
 end
 
@@ -162,7 +168,7 @@ function M.run(kind, band, fights, seed0, check)
         for k, v in pairs(M.KINDS[kind]) do
             o[k] = v
         end
-        o.others = {}
+        o.others, o.group = {}, M.BANDS[band].group
         for i, x in ipairs(M.BANDS[band].others) do
             o.others[i] = x
         end
@@ -308,21 +314,21 @@ end
 function M.check(kind, band, m)
     local fl = (M.floors()[kind] or {})[band]
     assert(fl, kind .. " " .. band .. ": no floor; run once with DETECT_WRITE=1")
-    local v, line = cell(m), metrics.ticketLine(m)
-    assert(v.recall >= fl.recall, kind .. " " .. band .. " recall below its floor: " .. line)
-    assert(v.melee >= fl.melee, kind .. " " .. band .. " melee recall below its floor: " .. line)
-    assert(v.melee2 >= fl.melee2, kind .. " " .. band .. " off-hand recall below its floor: " .. line)
+    local v, line, at = cell(m), metrics.ticketLine(m), kind .. " " .. band -- ab.check prefixes "<at>: "
+    ab.check(v.recall >= fl.recall, at, "recall below its floor: " .. line)
+    ab.check(v.melee >= fl.melee, at, "melee recall below its floor: " .. line)
+    ab.check(v.melee2 >= fl.melee2, at, "off-hand recall below its floor: " .. line)
     local mm = m.melee
     local signed = mm.windows > 0 and mm.errSum / mm.windows or 0
-    assert(v.rageErr <= fl.rageErr, ("%s %s rage error %.1f above its ceiling: %s"):format(kind, band, signed, line))
-    assert(v.staged >= fl.staged, kind .. " " .. band .. " staged below its floor: " .. line)
-    assert(v.false100 <= fl.false100, kind .. " " .. band .. " false credit above its ceiling: " .. line)
-    assert(v.leak100 <= fl.leak100, kind .. " " .. band .. " foreign leak above its ceiling: " .. line)
-    assert(v.lostDiff <= fl.lostDiff, kind .. " " .. band .. " lost reported off the truth: " .. line)
-    assert(v.residual <= fl.residual, kind .. " " .. band .. " dedupe residual above its ceiling: " .. line)
-    assert(v.postClear >= fl.postClear, kind .. " " .. band .. " post-clear rows below their floor: " .. line)
-    assert(v.recovered >= (fl.recovered or 0), kind .. " " .. band .. " recovery below its floor: " .. line)
-    assert(v.wash <= (fl.wash or math.huge), kind .. " " .. band .. " net wash above its ceiling: " .. line)
+    ab.check(v.rageErr <= fl.rageErr, at, ("rage error %.1f above its ceiling: %s"):format(signed, line))
+    ab.check(v.staged >= fl.staged, at, "staged below its floor: " .. line)
+    ab.check(v.false100 <= fl.false100, at, "false credit above its ceiling: " .. line)
+    ab.check(v.leak100 <= fl.leak100, at, "foreign leak above its ceiling: " .. line)
+    ab.check(v.lostDiff <= fl.lostDiff, at, "lost reported off the truth: " .. line)
+    ab.check(v.residual <= fl.residual, at, "dedupe residual above its ceiling: " .. line)
+    ab.check(v.postClear >= fl.postClear, at, "post-clear rows below their floor: " .. line)
+    ab.check(v.recovered >= (fl.recovered or 0), at, "recovery below its floor: " .. line)
+    ab.check(v.wash <= (fl.wash or math.huge), at, "net wash above its ceiling: " .. line)
 end
 
 --- K17's /reload: the first half of a fight on one VirtualState, the rest on a fresh one (an empty registry while

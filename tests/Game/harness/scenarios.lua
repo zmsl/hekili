@@ -308,6 +308,10 @@ function M.stream(o, seed)
         actionTargeting = o.actionTargeting,
         pushback = o.pushback,
         enterCombat = o.enterCombat,
+        meter = o.meter,
+        viewer = o.viewer,
+        takenLag = o.takenLag,
+        group = o.group,
     }
     for key, v in pairs(o.observe or {}) do
         k[key] = v

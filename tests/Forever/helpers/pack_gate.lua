@@ -4,6 +4,7 @@
 -- Deviations 7-8, 14-15); the Arms values they were set on: helpers/arms_gate.lua.
 local assert = require("luassert")
 local loop = require("Game.harness.loop")
+local ab = require("Game.harness.ab")
 
 local M = {}
 
@@ -71,10 +72,10 @@ M.FLICKER_K = 1.6
 function M.flicker(label, r, line)
     local fl = M.FLICKER[label]
     if fl then
-        assert.is_true(r.flicker <= fl.flicker, label .. " flicker floor: " .. line)
-        assert.is_true(r.retracted <= fl.retracted, label .. " retracted-ready floor: " .. line)
+        ab.check(r.flicker <= fl.flicker, label, "flicker floor: " .. line)
+        ab.check(r.retracted <= fl.retracted, label, "retracted-ready floor: " .. line)
     end
-    assert.is_true(r.flicker <= r.oracleFlicker + M.FLICKER_K, label .. " flicker over the oracle's + K: " .. line)
+    ab.check(r.flicker <= r.oracleFlicker + M.FLICKER_K, label, "flicker over the oracle's + K: " .. line)
 end
 
 --- The engine's health, gated at any fight count: no error, raise, self-check miss, unlisted read or secret, CPU.
@@ -87,12 +88,13 @@ end
 
 --- The engine and the first icon, gated at any fight count; `label` picks a re-based unmatched bar (M.UNMATCHED_BY).
 function M.gate(m, r, line, label)
-    assert.is_true(r.agreement >= 0.85, line)
-    assert.is_true(r.reactMedian <= 1 and r.reactP90 <= 3, line)
-    assert.is_true((r.per100.gcd or 0) == 0 and (r.per100.cooldown or 0) == 0, line)
+    local at = label or "gate" -- loop_spec's bar checks pass no label
+    ab.check(r.agreement >= 0.85, at, line)
+    ab.check(r.reactMedian <= 1 and r.reactP90 <= 3, at, line)
+    ab.check((r.per100.gcd or 0) == 0 and (r.per100.cooldown or 0) == 0, at, line)
     -- our cost refusals the oracle shadow would not have made at that tick (loop.unmatched: the round-3 ruling); a
     -- refusal both make is the press protocol meeting the world's rage timing, kept visible in the raw rate
-    assert.is_true((r.per100U.cost or 0) <= (M.UNMATCHED_BY[label] or M.UNMATCHED), line)
+    ab.check((r.per100U.cost or 0) <= (M.UNMATCHED_BY[label] or M.UNMATCHED), at, line)
     M.health(m, r, line)
 end
 

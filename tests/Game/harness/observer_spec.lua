@@ -298,6 +298,26 @@ describe("the observer", function()
         assert.is_true(rawequal(fake.SECRET, unitIs))
     end)
 
+    it(
+        "fires a @viewer edge 3-5 ms after an aura of ours under k.viewer (providers spec §4.2); a partner's none",
+        function()
+            setup(1)
+            local partner = W.ents[3]
+            W.emit({ t = 3, kind = "aura", dst = us, aura = 77, stacks = 1, expires = 13, duration = 10 })
+            W.emit({ t = 4, kind = "aura", dst = partner, aura = 77, stacks = 1, expires = 14, duration = 10 })
+            local s = observer.observe(W, setmetatable({ viewer = true }, { __index = observer.DEFAULTS }))
+            local got = {}
+            for i = 1, s.n do
+                if s.ev[i] == "@viewer" then
+                    got[#got + 1] = { s.t[i], s.a1[i], s.a2[i], s.a3[i] }
+                end
+            end
+            assert.are.equal(1, #got)
+            assert.is_true(got[1][1] >= 3.003 - 1e-9 and got[1][1] <= 3.005 + 1e-9)
+            assert.are.same({ "player", 77, true }, { got[1][2], got[1][3], got[1][4] })
+        end
+    )
+
     it("steps to the batch's stream in 0.2 s steps, and draws nothing from the world's generator", function()
         local o = scenarios.oracle({ duration = 40, others = { "melee", "caster" } })
         local k = setmetatable({ usable = true }, { __index = observer.DEFAULTS })
