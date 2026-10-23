@@ -121,12 +121,13 @@ local function cell(m)
         recall = down(metrics.recall(m)),
         melee = down(metrics.rate(mm, 1)),
         melee2 = down(metrics.rate(mm, 2)),
-        rageErr = up(mm.windows > 0 and mm.errSum / mm.windows or 0), -- the rage estimate's mean error (Task 9b)
+        -- the rage estimate's mean error (Task 9b), its size: an improvement toward 0 must never fail its ceiling
+        rageErr = up(math.abs(mm.windows > 0 and mm.errSum / mm.windows or 0)),
         staged = down(metrics.staged(m)),
         false100 = up(metrics.false100(m)),
         leak100 = up(metrics.leak100(m)),
         lostDiff = math.abs(m.lostEngine - m.lostTruth),
-        residual = m.outcomes - m.dispatched,
+        residual = math.abs(m.outcomes - m.dispatched), -- negative: a double dispatch, as bad as a merge
         -- K6: own white rows after the kill's clear paid by their swing (before REGEN_ENABLED; metrics.tickets)
         postClear = down(m.postClear > 0 and m.postClearPaid / m.postClear or 1),
     }
@@ -188,7 +189,9 @@ function M.check(kind, band, m)
     assert(v.recall >= fl.recall, kind .. " " .. band .. " recall below its floor: " .. line)
     assert(v.melee >= fl.melee, kind .. " " .. band .. " melee recall below its floor: " .. line)
     assert(v.melee2 >= fl.melee2, kind .. " " .. band .. " off-hand recall below its floor: " .. line)
-    assert(v.rageErr <= fl.rageErr, kind .. " " .. band .. " rage error above its ceiling: " .. line)
+    local mm = m.melee
+    local signed = mm.windows > 0 and mm.errSum / mm.windows or 0
+    assert(v.rageErr <= fl.rageErr, ("%s %s rage error %.1f above its ceiling: %s"):format(kind, band, signed, line))
     assert(v.staged >= fl.staged, kind .. " " .. band .. " staged below its floor: " .. line)
     assert(v.false100 <= fl.false100, kind .. " " .. band .. " false credit above its ceiling: " .. line)
     assert(v.leak100 <= fl.leak100, kind .. " " .. band .. " foreign leak above its ceiling: " .. line)

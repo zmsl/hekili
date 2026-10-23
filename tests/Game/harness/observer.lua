@@ -240,7 +240,9 @@ function M.new(W, k)
         if kt then
             t, toks = kt, ktoks
         elseif cleared[ev.dst] and t >= cleared[ev.dst] then -- after the clear "target" names nobody: the corpse's
-            toks = { "softinteract" } -- rows come on softinteract alone (kill-events capture 4820; spec §2.2)
+            -- rows come on softinteract alone (kill-events capture 4820; spec §2.2). For a non-killing post-clear row
+            -- this is a choice stronger than the measurement: capture b's 74805 came on the plate and soft
+            toks = { "softinteract" }
         end
         if ev.dst == us and castOpen and k.pushback and ev.act == "WOUND" then
             -- shortcut: the bar moves on the client only (the world's cast still ends at its press's end); move the

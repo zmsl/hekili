@@ -539,8 +539,8 @@ function M.tickets(m, c, s, W)
     m.overflow = m.overflow + T.closed.overflow
     if W then -- own white outcomes landing 0.1-2 s after their target's kill (after the clear): paid by their swing
         -- Scope (K6 ruling): rows before the next PLAYER_REGEN_ENABLED (the reset at combat end closes every ticket,
-        -- spec §2.5 and K17), and not an avoid a spell ticket paid (a white MISS carries school 1, which no school gate
-        -- can refuse: it counts under false credit and leak, spec §3.4, not here).
+        -- spec §2.5 and K17), and not a school-1 MISS a FLIGHT ticket paid (no school gate can refuse it: it counts
+        -- under false credit and leak, spec §3.4, not here).
         local seen, spell = {}, {}
         for _, ev in ipairs(W.truth) do
             if ev.kind == "kill" and ev.dst == ev.ourTarget then
@@ -568,7 +568,7 @@ function M.tickets(m, c, s, W)
                             or (s.a2[i] ~= "WOUND" and provisional(c, s, s.hand[i], s.swingT[i]))
                         then
                             seen[key] = true
-                        elseif c.payKind[i] > 0 then
+                        elseif s.a2[i] == "MISS" and s.a5[i] == 1 and c.payKind[i] == X.FLIGHT then
                             spell[key] = true
                         end
                     end
@@ -598,8 +598,12 @@ function M.tickets(m, c, s, W)
         for _, ev in ipairs(W.truth) do
             local sp = ev.spell
             if ev.kind == "cast" and ev.src == us and (sp == "INSTANT" or sp == "BOLT" or sp == "BOGUS") then
-                -- a cast whose target died before its landing (2 s covers a 30 yd flight) closes dead, not lost (K6)
-                if not rowAt[ev.t] and not (killAt[ev.dst] and killAt[ev.dst] <= ev.t + 2) then
+                -- not lost but closed dead (K6): a cast whose target died between its success and the end of its hard
+                -- window, H = 30 / 20 + TOL 0.15 (detect.boot's projectile; an instant lands at once, inside it too),
+                -- and a cast at a target already dead (the harness keeps pressing at the corpse; no row can come, and
+                -- the engine closes its ticket dead: counting it lost made lostDiff 164-249 in K6)
+                local k = killAt[ev.dst]
+                if not rowAt[ev.t] and not (k and k <= ev.t + 1.65) then
                     m.lostTruth = m.lostTruth + 1
                 end
             end
