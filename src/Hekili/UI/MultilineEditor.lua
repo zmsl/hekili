@@ -3,6 +3,7 @@
 
 local addon, ns = ...
 local Facade = ns.Facade
+local L = ns.L
 local GetCursorInfo = Facade.GetCursorInfo
 local Hekili = _G[ addon ]
 
@@ -289,7 +290,7 @@ local function GenerateDiagnosticTooltip( widget, event )
 
     if has_args then
         if needs_space then Tooltip:AddLine( " " ) end
-        Tooltip:AddLine( "Values" )
+        Tooltip:AddLine( L["Values"] )
 
         for k, v in orderedPairs( arg ) do
             if not key_cache[k]:find( "safebool" ) and not key_cache[k]:find( "safenum" ) and not key_cache[k]:find("floor") and not key_cache[k]:find( "ceil" ) and ( type(v) ~= "string" or not v:find( "function" ) ) then
@@ -302,7 +303,7 @@ local function GenerateDiagnosticTooltip( widget, event )
 
     if type( usage ) == "string" then
         if needs_space then Tooltip:AddLine( " " ) end
-        Tooltip:AddLine( "Usage: "..usage, NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1 )
+        Tooltip:AddLine( string.format( L["Usage: %s"], usage ), NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 1 )
     end
 
     Tooltip:Show()

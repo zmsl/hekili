@@ -26,6 +26,7 @@
 
 local Facade = Hekili.Client
 local UnitClassBase = Facade.UnitClassBase
+local L = Hekili.L
 
 if UnitClassBase("player") ~= "PRIEST" then
     return
@@ -41,17 +42,17 @@ local spec = Hekili:NewClass("PRIEST", {
     specs = {
         {
             key = "discipline",
-            name = "Discipline",
+            name = L["Discipline"],
             tree = 1,
             icon = 135987,
             role = "attack",
             ranged = true,
             package = "Smite (wowsims.com)",
         },
-        { key = "holy", name = "Holy", tree = 2, icon = 237542, role = "healer", unsupported = true },
+        { key = "holy", name = L["Holy"], tree = 2, icon = 237542, role = "healer", unsupported = true },
         {
             key = "shadow",
-            name = "Shadow",
+            name = L["Shadow"],
             tree = 3,
             icon = 136207,
             role = "attack",

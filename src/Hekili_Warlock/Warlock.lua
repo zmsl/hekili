@@ -37,6 +37,7 @@
 local Facade = Hekili.Client
 local UnitClassBase = Facade.UnitClassBase
 local GetItemCount = Facade.C_Item.GetItemCount
+local L = Hekili.L
 
 if UnitClassBase("player") ~= "WARLOCK" then
     return
@@ -51,7 +52,7 @@ local spec = Hekili:NewClass("WARLOCK", {
     specs = {
         {
             key = "affliction",
-            name = "Affliction",
+            name = L["Affliction"],
             tree = 1,
             icon = 136145,
             role = "attack",
@@ -60,7 +61,7 @@ local spec = Hekili:NewClass("WARLOCK", {
         },
         {
             key = "demonology",
-            name = "Demonology",
+            name = L["Demonology"],
             tree = 2,
             icon = 136172,
             role = "attack",
@@ -69,7 +70,7 @@ local spec = Hekili:NewClass("WARLOCK", {
         },
         {
             key = "destruction",
-            name = "Destruction",
+            name = L["Destruction"],
             tree = 3,
             icon = 136186,
             role = "attack",
@@ -949,13 +950,13 @@ spec:RegisterTalents({
 -- the packs' curse lines read as `settings.assigned_curse='<key>'`; every build's (and so the harness's) is Elements.
 spec:RegisterSetting("assigned_curse", "elements", {
     type = "select",
-    name = "Assigned Curse",
-    desc = "The curse the wowsims.com priority keeps on the target (wowsims's Curses option). No Curse: none.",
+    name = L["Assigned Curse"],
+    desc = L["The curse the wowsims.com priority keeps on the target (wowsims's Curses option). No Curse: none."],
     values = {
-        elements = "Curse of the Elements",
-        recklessness = "Curse of Recklessness",
-        weakness = "Curse of Weakness",
-        nocurse = "No Curse",
+        elements = L["Curse of the Elements"],
+        recklessness = L["Curse of Recklessness"],
+        weakness = L["Curse of Weakness"],
+        nocurse = L["No Curse"],
     },
     width = "full",
     sim = "elements",

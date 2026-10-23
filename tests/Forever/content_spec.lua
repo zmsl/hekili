@@ -14,6 +14,11 @@ describe("Engine/Content.lua", function()
     local function run(again)
         calls, notes = {}, {}
         local ns = {
+            L = setmetatable({}, { -- the English an English client shows (Locales/Locales.lua)
+                __index = function(_, key)
+                    return key
+                end,
+            }),
             Facade = {
                 UnitClass = function(unit)
                     assert.are.equal("player", unit)

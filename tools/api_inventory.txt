@@ -84,6 +84,7 @@ GetInstanceInfo	passthrough
 GetInventoryItemID	passthrough
 GetItemGem	virtual
 GetItemInfo	virtual
+GetLocale	passthrough
 GetManaRegen	hybrid
 GetMasteryEffect	hybrid
 GetMeleeHaste	hybrid

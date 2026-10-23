@@ -193,7 +193,16 @@ function M.load(classToken, race)
     local state = newState(class, race)
     local client = { SECRET = {}, isUnit = {}, exists = {} }
     local env = { errors = {}, loadErrors = {}, class = class, state = state, client = client }
-    local hekili = { Class = class, State = state }
+    -- L: the English an English client shows (Locales/Locales.lua)
+    local hekili = {
+        Class = class,
+        State = state,
+        L = setmetatable({}, {
+            __index = function(_, key)
+                return key
+            end,
+        }),
+    }
     function hekili.IsForever()
         return false
     end
@@ -236,6 +245,7 @@ function M.load(classToken, race)
 
     local ns = vload.module() -- the real VirtualState (KnownRank, I.GCD_SPELL); Facade replaced below
     env.ns = ns
+    ns.L = hekili.L -- Spec.lua's pack notices (RestoreDefaults)
     local function spellInfo(id)
         return { name = "Spell " .. tostring(id), iconID = 0 }
     end

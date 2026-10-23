@@ -1,4 +1,5 @@
 local _, ns = ...
+local L = ns.L
 -- UI/Styles/Timeline.lua: the timeline display style (display styles plan, Task 4). Record 1 in a "now" circle, record 2
 -- in a "next" box, records 3.. on a lane (or a focus record in the circle, record 1 in the box and the rest on the lane:
 -- `roles`, timeline focus plan Task 2) at laneX0 + max( 0, exact_time - GetTime() ) * pxPerSec (out of combat with
@@ -76,7 +77,7 @@ local function zkey( z, field )
 end
 
 local Timeline = {
-    label = "Timeline",
+    label = L["Timeline"],
     defaults = SO.defaults( SHARED, ZONES ),
     needs = { alts = true },
 }
@@ -994,8 +995,8 @@ function Timeline.Options( id, conf )
     local P = ns.UI.DisplayOptionParts
     local fe = P.fontElements
     local etaFont = {
-        enabled = optToggle( "Show ETA", "Show the seconds until the now and next picks should be used.", 1 ),
-        format = optSelect( "Format", "Tenths of a second, or whole seconds.", { [ "0.1" ] = "0.1 s", int = "Whole seconds" }, 2 ),
+        enabled = optToggle( L["Show ETA"], L["Show the seconds until the now and next picks should be used."], 1 ),
+        format = optSelect( L["Format"], L["Tenths of a second, or whole seconds."], { [ "0.1" ] = L["0.1 s"], int = L["Whole seconds"] }, 2 ),
         font = ns.tableCopy( fe.font ),
         style = ns.tableCopy( fe.fontStyle ),
         size = ns.tableCopy( fe.fontSize ),
@@ -1004,82 +1005,82 @@ function Timeline.Options( id, conf )
     etaFont.font.order, etaFont.style.order, etaFont.size.order, etaFont.color.order = 3, 4, 5, 6
 
     local now = zoneGroups( {
-        nowSize = optRange( "Size", "The diameter of the now circle (a focus ability coming up).", 16, 200, 1, 1 ),
-        nowFallback = optSelect( "Without Focus", "Empty: the now circle holds only focus abilities (gold once ready to press) and the next box what to press. First Recommendation: the earlier layout, what to press in the now circle unless a focus ability is coming up.",
-            { empty = "Empty", press = "First Recommendation" }, 4 ),
-        focusPendingColor = { type = "color", name = "Pending Ring Color", desc = "The now circle's ring while a focus ability counts down (the Timeline tab's Ring Color once it is ready).", hasAlpha = true, order = 5, width = 1.49 },
-        focusReadyStyle = optSelect( "Ready Look", "How the now circle shows a focus ability that is ready to press: the ring in the Timeline tab's Ring Color, or a glow in it, or the Gold Ring art (full colour when ready, grey and half faded while pending; fixed-colour art, so the ring colours do not apply to it).",
-            { ring = "Ring", glow = "Glow", gold = "Gold Ring" }, 6 ),
-        eta = section( "ETA", 2, etaFont ),
-        sweep = section( "Sweep", 3, {
-            mode = optSelect( "Cooldown Sweep", "Extend: the sweep runs until the pick should be used. Cooldown: the ability's own cooldown. Off: none.",
-                { extend = "Extend", gcd = "Cooldown", off = "Off" }, 1 ),
+        nowSize = optRange( L["Size"], L["The diameter of the now circle (a focus ability coming up)."], 16, 200, 1, 1 ),
+        nowFallback = optSelect( L["Without Focus"], L["Empty: the now circle holds only focus abilities (gold once ready to press) and the next box what to press. First Recommendation: the earlier layout, what to press in the now circle unless a focus ability is coming up."],
+            { empty = L["Empty"], press = L["First Recommendation"] }, 4 ),
+        focusPendingColor = { type = "color", name = L["Pending Ring Color"], desc = L["The now circle's ring while a focus ability counts down (the Timeline tab's Ring Color once it is ready)."], hasAlpha = true, order = 5, width = 1.49 },
+        focusReadyStyle = optSelect( L["Ready Look"], L["How the now circle shows a focus ability that is ready to press: the ring in the Timeline tab's Ring Color, or a glow in it, or the Gold Ring art (full colour when ready, grey and half faded while pending; fixed-colour art, so the ring colours do not apply to it)."],
+            { ring = L["Ring"], glow = L["Glow"], gold = L["Gold Ring"] }, 6 ),
+        eta = section( L["ETA"], 2, etaFont ),
+        sweep = section( L["Sweep"], 3, {
+            mode = optSelect( L["Cooldown Sweep"], L["Extend: the sweep runs until the pick should be used. Cooldown: the ability's own cooldown. Off: none."],
+                { extend = L["Extend"], gcd = L["Cooldown"], off = L["Off"] }, 1 ),
         } ),
     }, 1, id, conf )
 
     local nextBox = zoneGroups( {
-        nextSize = optRange( "Size", "The size of the next box (what to press now).", 16, 200, 1, 1 ),
-        nextFrame = optSelect( "Frame", "None: the colour border (the Border options). Gold Frame: the gold frame art over the icon, in place of the border.",
-            { none = "None", gold = "Gold Frame" }, 2.5 ),
-        gap = optRange( "Gap", "The space between the now circle and the next box, and between the next box and the lane.", 0, 100, 1, 2 ),
-        alts = section( "Alternatives", 3, {
-            enabled = optToggle( "Show Alternatives", "Show what the rotation would pick instead if the gating resource came in lower or higher than expected.", 1 ),
-            zones = optSelect( "Show On", "Which cells show their alternatives: the now circle (a focus ability, or the first recommendation when Without Focus is that), the next box, or both.", { now = "Now", next = "Next", both = "Both" }, 2 ),
-            max = optRange( "Count", "How many alternatives each cell shows.", 1, 2, 1, 3 ),
-            size = optRange( "Size", "The alternatives' icon size.", 8, 48, 1, 4 ),
-            spacing = optRange( "Spacing", "The gap between the cell and its alternatives, and between them.", 0, 20, 1, 5 ),
+        nextSize = optRange( L["Size"], L["The size of the next box (what to press now)."], 16, 200, 1, 1 ),
+        nextFrame = optSelect( L["Frame"], L["None: the colour border (the Border options). Gold Frame: the gold frame art over the icon, in place of the border."],
+            { none = L["None"], gold = L["Gold Frame"] }, 2.5 ),
+        gap = optRange( L["Gap"], L["The space between the now circle and the next box, and between the next box and the lane."], 0, 100, 1, 2 ),
+        alts = section( L["Alternatives"], 3, {
+            enabled = optToggle( L["Show Alternatives"], L["Show what the rotation would pick instead if the gating resource came in lower or higher than expected."], 1 ),
+            zones = optSelect( L["Show On"], L["Which cells show their alternatives: the now circle (a focus ability, or the first recommendation when Without Focus is that), the next box, or both."], { now = L["Now"], next = L["Next"], both = L["Both"] }, 2 ),
+            max = optRange( L["Count"], L["How many alternatives each cell shows."], 1, 2, 1, 3 ),
+            size = optRange( L["Size"], L["The alternatives' icon size."], 8, 48, 1, 4 ),
+            spacing = optRange( L["Spacing"], L["The gap between the cell and its alternatives, and between them."], 0, 20, 1, 5 ),
         } ),
     }, 2, id, conf )
 
     local lane = zoneGroups( {
-        laneIconSize = optRange( "Icon Size", "The size of the picks on the lane.", 8, 64, 1, 1 ),
-        laneEta = section( "ETA", 2, {
-            enabled = optToggle( "Show ETA", "Show the seconds under each pick on the lane.", 1 ),
-            fontSize = optRange( "Size", "The lane ETA's font size.", 6, 32, 1, 2 ),
+        laneIconSize = optRange( L["Icon Size"], L["The size of the picks on the lane."], 8, 64, 1, 1 ),
+        laneEta = section( L["ETA"], 2, {
+            enabled = optToggle( L["Show ETA"], L["Show the seconds under each pick on the lane."], 1 ),
+            fontSize = optRange( L["Size"], L["The lane ETA's font size."], 6, 32, 1, 2 ),
         } ),
-        gate = section( "Resource Gate", 3, {
-            style = optSelect( "Mark", "How a pick short of its resource is marked.", { veil = "Veil", alpha = "Fade", marker = "Corner Mark" }, 1 ),
-            color = { type = "color", name = "Color", hasAlpha = true, order = 2, width = 1.49 },
+        gate = section( L["Resource Gate"], 3, {
+            style = optSelect( L["Mark"], L["How a pick short of its resource is marked."], { veil = L["Veil"], alpha = L["Fade"], marker = L["Corner Mark"] }, 1 ),
+            color = { type = "color", name = L["Color"], hasAlpha = true, order = 2, width = 1.49 },
         } ),
     }, 3, id, conf )
 
     local timeline = {
-        sec_lane = section( "Lane", 1, {
-            horizon = optRange( "Horizon", "Seconds the lane shows; later picks are hidden.", 2, 30, 1, 1 ),
-            pxPerSec = optRange( "Pixels per Second", "How far apart picks one second apart sit.", 4, 100, 1, 2 ),
-            direction = optSelect( "Direction", "Which way time runs.", { RIGHT = "Left to Right", LEFT = "Right to Left" }, 3 ),
-            rows = optRange( "Rows", "With two rows, a pick close to the one before it hangs on the second row.", 1, 2, 1, 4 ),
-            rowGap = optRange( "Row Gap", "Picks closer than this many pixels to the one before them take the second row.", 0, 100, 1, 5 ),
-            laneHeight = optRange( "Height", "The lane's height.", 20, 200, 1, 6 ),
-            laneAlpha = optRange( "Opacity", "The opacity of the picks on the lane.", 0, 1, 0.05, 7 ),
-            laneDim = optRange( "Dimmed Opacity", "The opacity of the picks after one short of its resource (they may slip).", 0, 1, 0.05, 8 ),
-            glide = optRange( "Glide", "Seconds a lane pick takes to settle on a new predicted time (0: jump).", 0, 1, 0.01, 9 ),
-            oocPinned = optToggle( "Pin out of Combat", "Out of combat the lane and the countdowns hold still between updates, timed from the first recommendation; in combat they follow the clock.", 10 ),
-            oocTimers = optToggle( "Timers Out of Combat", "Show the cooldown sweeps and the countdown numbers out of combat. Off: the now circle, the next box and the lane show no sweep and no numbers until combat starts.", 11 ),
+        sec_lane = section( L["Lane"], 1, {
+            horizon = optRange( L["Horizon"], L["Seconds the lane shows; later picks are hidden."], 2, 30, 1, 1 ),
+            pxPerSec = optRange( L["Pixels per Second"], L["How far apart picks one second apart sit."], 4, 100, 1, 2 ),
+            direction = optSelect( L["Direction"], L["Which way time runs."], { RIGHT = L["Left to Right"], LEFT = L["Right to Left"] }, 3 ),
+            rows = optRange( L["Rows"], L["With two rows, a pick close to the one before it hangs on the second row."], 1, 2, 1, 4 ),
+            rowGap = optRange( L["Row Gap"], L["Picks closer than this many pixels to the one before them take the second row."], 0, 100, 1, 5 ),
+            laneHeight = optRange( L["Height"], L["The lane's height."], 20, 200, 1, 6 ),
+            laneAlpha = optRange( L["Opacity"], L["The opacity of the picks on the lane."], 0, 1, 0.05, 7 ),
+            laneDim = optRange( L["Dimmed Opacity"], L["The opacity of the picks after one short of its resource (they may slip)."], 0, 1, 0.05, 8 ),
+            glide = optRange( L["Glide"], L["Seconds a lane pick takes to settle on a new predicted time (0: jump)."], 0, 1, 0.01, 9 ),
+            oocPinned = optToggle( L["Pin out of Combat"], L["Out of combat the lane and the countdowns hold still between updates, timed from the first recommendation; in combat they follow the clock."], 10 ),
+            oocTimers = optToggle( L["Timers Out of Combat"], L["Show the cooldown sweeps and the countdown numbers out of combat. Off: the now circle, the next box and the lane show no sweep and no numbers until combat starts."], 11 ),
         } ),
-        sec_ruler = section( "Ruler", 2, {
-            rulerStyle = optSelect( "Style", "Ruler: a baseline and a tick each second. Dots or Lines: a dot or a short line each second. Center: one line through the lane.",
-                { ruler = "Ruler", dots = "Dots", lines = "Lines", center = "Center" }, 1 ),
-            rulerColor = { type = "color", name = "Color", desc = "The ruler's color.", order = 2, width = 1.49 },
-            rulerAlphaCombat = optRange( "Opacity in Combat", "The ruler's opacity in combat.", 0, 1, 0.05, 3 ),
-            rulerAlphaOOC = optRange( "Opacity out of Combat", "The ruler's opacity out of combat.", 0, 1, 0.05, 4 ),
-            ruler = section( "Ticks", 5, {
-                ticks = optToggle( "Ticks", "A mark each second along the lane (not with the Center style).", 1 ),
-                majorEvery = optRange( "Major Tick Every", "Seconds between the taller ticks (the Ruler style).", 1, 10, 1, 2 ),
+        sec_ruler = section( L["Ruler"], 2, {
+            rulerStyle = optSelect( L["Style"], L["Ruler: a baseline and a tick each second. Dots or Lines: a dot or a short line each second. Center: one line through the lane."],
+                { ruler = L["Ruler"], dots = L["Dots"], lines = L["Lines"], center = L["Center"] }, 1 ),
+            rulerColor = { type = "color", name = L["Color"], desc = L["The ruler's color."], order = 2, width = 1.49 },
+            rulerAlphaCombat = optRange( L["Opacity in Combat"], L["The ruler's opacity in combat."], 0, 1, 0.05, 3 ),
+            rulerAlphaOOC = optRange( L["Opacity out of Combat"], L["The ruler's opacity out of combat."], 0, 1, 0.05, 4 ),
+            ruler = section( L["Ticks"], 5, {
+                ticks = optToggle( L["Ticks"], L["A mark each second along the lane (not with the Center style)."], 1 ),
+                majorEvery = optRange( L["Major Tick Every"], L["Seconds between the taller ticks (the Ruler style)."], 1, 10, 1, 2 ),
             } ),
         } ),
-        sec_focus = section( "Focus", 3, {
-            focusEnabled = optToggle( "Focus Abilities", "An ability marked focus=N in the priority (a tier, 1 highest) takes the now circle with a countdown when it comes up within the focus horizon; the lowest tier wins, then the soonest.", 1 ),
-            focusHorizon = optRange( "Focus Horizon", "Seconds ahead a focus ability takes the now circle (never past the lane's horizon).", 1, 30, 1, 2 ),
-            focusColor = { type = "color", name = "Ring Color", desc = "The now circle's ring when the focus ability is ready to press.", hasAlpha = true, order = 3, width = 1.49 },
+        sec_focus = section( L["Focus"], 3, {
+            focusEnabled = optToggle( L["Focus Abilities"], L["An ability marked focus=N in the priority (a tier, 1 highest) takes the now circle with a countdown when it comes up within the focus horizon; the lowest tier wins, then the soonest."], 1 ),
+            focusHorizon = optRange( L["Focus Horizon"], L["Seconds ahead a focus ability takes the now circle (never past the lane's horizon)."], 1, 30, 1, 2 ),
+            focusColor = { type = "color", name = L["Ring Color"], desc = L["The now circle's ring when the focus ability is ready to press."], hasAlpha = true, order = 3, width = 1.49 },
         } ),
     }
 
     return {
-        tab_now = tab( "Now", "The now circle: a focus ability coming up.", 1, now ),
-        tab_next = tab( "Next", "The next box and the alternatives.", 2, nextBox ),
-        tab_lane = tab( "Lane", "The picks on the lane.", 3, lane ),
-        tab_timeline = tab( "Timeline", "The lane's time axis, the ruler and the focus zone.", 4, timeline ),
+        tab_now = tab( L["Now"], L["The now circle: a focus ability coming up."], 1, now ),
+        tab_next = tab( L["Next"], L["The next box and the alternatives."], 2, nextBox ),
+        tab_lane = tab( L["Lane"], L["The picks on the lane."], 3, lane ),
+        tab_timeline = tab( L["Timeline"], L["The lane's time axis, the ruler and the focus zone."], 4, timeline ),
     }
 end
 

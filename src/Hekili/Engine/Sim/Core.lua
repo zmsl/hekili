@@ -2,6 +2,7 @@
 -- April 2014
 
 local addon, ns = ...
+local L = ns.L
 local Facade = ns.Facade
 local CreateFrame = Facade.CreateFrame
 local GetFrameCPUUsage, GetTime, InCombatLockdown = Facade.GetFrameCPUUsage, Facade.GetTime, Facade.InCombatLockdown
@@ -40,7 +41,7 @@ local function EmbedBlizOptions()
     open:SetPoint( "CENTER", panel, "CENTER", 0, 0 )
     open:SetWidth( 250 )
     open:SetHeight( 25 )
-    open:SetText( "Open Hekili Forever Options" )
+    open:SetText( L["Open Hekili Forever Options"] )
 
     open:SetScript( "OnClick", function ()
         ns.StartConfiguration()
@@ -89,7 +90,7 @@ function Hekili:OnEnable()
     self:ForceUpdate( "ADDON_ENABLED" )
 
     if self.BuiltFor > self.CurrentBuild then
-        self:Notify( "|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for " .. self.GameBuild .. "." )
+        self:Notify( string.format( L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."], self.GameBuild ) )
     end
 end
 
@@ -2091,7 +2092,7 @@ function Hekili.Update()
                         end
                     else
                         if i <= numRecs and not hasSnapped and settings.autoSnapshot and InCombatLockdown() and state.level >= 70 and ( dispName == "Primary" or dispName == "AOE" ) then
-                            Hekili:Print( "Unable to make recommendation for " .. dispName .. " #" .. i .. "; triggering auto-snapshot..." )
+                            Hekili:Print( string.format( L["Unable to make recommendation for %s #%s; triggering auto-snapshot..."], dispName, i ) )
                             hasSnapped = dispName
                             -- Not published (stock did not either): the synchronous snapshot run that follows publishes.
                             return "AutoSnapshot"
@@ -2143,7 +2144,7 @@ function Hekili.Update()
     end
 
     if snaps then
-        Hekili:Print( "Snapshots saved:  " .. snaps .. "." )
+        Hekili:Print( string.format( L["Snapshots saved:  %s."], snaps ) )
     end
 end
 Hekili:ProfileCPU( "ThreadedUpdate", Hekili.Update )
