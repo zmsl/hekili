@@ -61,6 +61,28 @@ describe("the kinds", function()
         assert.is_true(K.Accepts(f, "PARRY", "", 0, 1, true))
     end)
 
+    it("Overdue (pass 4): late in the hard window, oldest first, after every band; none for a ticking kind", function()
+        local a = open(fs.SPENDER_F, 10) -- hard window [10, 10 + max(LandWindow(1), 0.2)] = [10, 10.654]
+        local b = open(fs.SPENDER_F, 10.1)
+        for p = 1, 3 do -- 10.35: past both frames and both CAST_WINDOWs (10.2, 10.3)
+            assert.are.equal(0, (T.Pick(10.35, "Creature-1", p, "WOUND", "", 30, 4, false)))
+        end
+        assert.are.equal(a, (T.Pick(10.35, "Creature-1", 4, "WOUND", "", 30, 4, false)))
+        assert.are_not.equal(a, b)
+        assert.are.same({ 10 + 0.2, T.hi[a], 10 }, { K.Band(a, 4, 10.35, false, "WOUND", 4) })
+        assert.are.equal(0, (T.Pick(10.15, "Creature-1", 4, "WOUND", "", 30, 4, false))) -- early: never Overdue
+        local m = open(fs.SPENDER_M, 20) -- an instant with ticks: its composed schedule has no Overdue band
+        assert.is_true(T.link[m] > 0)
+        assert.is_nil(K.Band(T.link[m], 4, 23, false, "WOUND", T.school[m]))
+    end)
+
+    it("Overdue: a default type (school ANY) takes only a white wound past its frame", function()
+        local c = open(fs.SPENDER_C, 10)
+        assert.is_nil(K.Band(c, 4, 10.4, false, "WOUND", 8))
+        assert.is_truthy(K.Band(c, 4, 10.4, false, "WOUND", 1))
+        assert.is_nil(K.Band(c, 4, 10.4, true, "DODGE", 1)) -- an avoid's pass-2 window is its whole phase (GAP AX)
+    end)
+
     describe("FLIGHT", function()
         local a
 

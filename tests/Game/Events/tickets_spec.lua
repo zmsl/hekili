@@ -305,6 +305,55 @@ describe("the ticket pool", function()
         assert.are.same({ 10, 10.6 }, { t1, t2 })
     end)
 
+    it("pays a row past a learned ticket's widened band inside its hard window: Overdue (decision 46)", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 40 -- H = 2.15
+        T.Learn("Creature-1", 20, 1.5, 9) -- d = 2.5 s at the 10 s anchor: widened band [10.313, 11.9375]
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+        local a, r = I.ab.bySpell[fs.SPENDER_P], T.LagOf("Creature-1", 20)
+        local bandN, lagN = T.bandN[a], T.lagN[r]
+        ctl.now = 12.0 -- past the widened band, inside the hard window (12.15)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 15, 8)
+        assert.are.equal(0, T.foreign)
+        assert.are.same({ "SPELL_DAMAGE", 10 }, { got[#got][2], got[#got][1] })
+        -- an Overdue payment teaches neither the lag nor the amount band (spec §1.1: only once final)
+        assert.are.same({ 1.5, lagN, bandN }, { T.lagE[r], T.lagN[r], T.bandN[a] })
+    end)
+
+    it("never pays an early row at pass (d): under a learned ticket's widened band stays foreign", function()
+        I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30 -- H = 1.65
+        T.Learn("Creature-1", 20, 1.5, 9) -- widened band [10.313, 11.65]
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+        ctl.now = 10.2 -- early: before the expected tolerance, inside the hard window
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 15, 8)
+        assert.are.equal(1, T.foreign)
+    end)
+
+    it(
+        "leaves a white wound the swing LR rejects foreign: an open swing has no Overdue (decision 46 amended)",
+        function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            for c = 1, 8 do
+                I.Log.bg[c] = 50 -- a crowd: every background rate high, so the LR stays below its bar
+            end
+            ctl.now = 11.2 -- 1.2 s: past the core band, inside the 1.5 s window
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.equal(1, T.foreign) -- another player's white hit on our mob: the swing reaches pass (d) only ASSUMED
+        end
+    )
+
+    it("leaves a tick outside every schedule band foreign: no Overdue for ticks (decision 47)", function()
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_M)
+        ctl.now = 10.01
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 9, 64) -- the direct hit
+        ctl.now = 11.5 -- between the application and the first tick (13 +- 0.1)
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 4, 64)
+        assert.are.equal(1, T.foreign)
+    end)
+
     it("counts a cast whose avoid an unmapped window absorbed past its frame as expired, never lost", function()
         ctl.now = 4
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", 999999)

@@ -236,6 +236,7 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
         return
     end
     local crit = not avoid and flag == "CRITICAL"
+    local tied = false -- the MELEE tie took the row from a spell: pass (d) never hands it back
     local p, n = T.Pick(t, g, 1, act, flag, amount, school, avoid)
     local pass = 1
     if p == 0 and avoid then
@@ -259,7 +260,7 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
         end
         if sw and (T.first[sw] or lag <= SAME_FRAME or math.abs(d - L.med[h]) <= 2 * L.spr[h]) then
             if avoid then
-                p = 0 -- the swing's (MELEE wins the tie): the LR below takes it, the spell keeps its effects
+                p, tied = 0, true -- the swing's (MELEE wins the tie): the LR below takes it, the spell keeps its effects
             else
                 crit = false
             end
@@ -289,6 +290,13 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
             p, n = T.Pick(t, g, 3, act, flag, amount, school, false)
             pass = 3
         end
+    end
+    -- pass (d), Overdue (attribution-recovery decision 46 as amended): after every band and the melee scoring, the
+    -- oldest spell ticket of the queue past its expected tolerance whose hard window holds the row (late, never early);
+    -- a swing reaches pass (d) only once ASSUMED (Task 3)
+    if p == 0 and not credited and not tied then
+        p, n = T.Pick(t, g, 4, act, flag, amount, school, avoid)
+        pass = 4
     end
     if p > 0 then
         -- past p's own frame, inside an unmapped success's window: nobody's, and p's expiry is not a lost row (it

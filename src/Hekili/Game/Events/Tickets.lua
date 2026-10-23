@@ -406,7 +406,7 @@ function T.Stop(castGUID, t)
     end
 end
 
---- (spec §3.4 steps 2-4, owner ruling 2026-10-22; at most 3 passes x CAP 32 tickets per row) The candidate for a row at t on `g` at pass `p`: among the open
+--- (spec §3.4 steps 2-4, owner ruling 2026-10-22; at most 4 passes (pass 4: Overdue, attribution-recovery decision 46) x CAP 32 tickets per row) The candidate for a row at t on `g` at pass `p`: among the open
 --- tickets on `g` that accept the row and whose band at p holds t, those whose learned amount band accepts it first
 --- (K.Accepts' second answer), then those with no band or an unlearned one; within each group the least expected
 --- closure. Also how many matched. Allocates nothing.
@@ -460,6 +460,9 @@ function T.Pay(i, t, isAvoid, amount, flag, clean, pass)
         T.onPay(i, t, pass)
     end
     local k, a = kind[i], ab[i]
+    -- an Overdue payment (pass 4) teaches neither the lag nor the band: it teaches once final (attribution-recovery
+    -- spec §1.1; Task 2 makes finality explicit)
+    clean = clean and pass ~= 4
     -- Any clean pass teaches the lag, pass 3 included (spec §3.3.1 says a or b only, but with no record a ticket is a
     -- candidate at pass 3 alone, so no record would ever be made: controller ruling, Task 19 amends the spec).
     if clean and k == X.FLIGHT then

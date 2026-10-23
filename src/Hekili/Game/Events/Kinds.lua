@@ -111,9 +111,27 @@ function K.Accepts(i, act, flag, amount, sch, isAvoid)
     return true, false
 end
 
---- Ticket i's band at pass p for a row at t: lo, hi (absolute) and its expected closure E; nil when it has none.
+--- Ticket i's band at pass p for a row at t: lo, hi (absolute) and its expected closure E; nil when it has none. Pass
+--- 4, Overdue (attribution-recovery spec decision 46 as amended): late, never early: from the end of the ticket's
+--- expected tolerance (a learned flight's narrow band, an unlearned flight's expected landing, a wound's cast window)
+--- to the hard window's end, E the anchor (oldest first). None for a FRAME or STRIKE avoid (its pass-2 window is its
+--- whole phase; GAP AX) or a ticking kind (decision 47: a paid tick moves its schedule).
 function K.Band(i, p, t, isAvoid, act, sch)
     local k, a0 = T.kind[i], T.at[i]
+    if p == 4 then
+        if k == FLIGHT then
+            local v = T.speed[i]
+            local r, lo, lo0 = T.LagOf(T.guid[i], v), a0 + T.H[i] / 2, a0 + rangeLow(i, v)
+            if r > 0 then
+                local s2 = 2 * T.lagSpr[r]
+                lo = a0 + T.lagE[r] + (s2 > T.TOL and s2 or T.TOL)
+            end
+            return lo > lo0 and lo or lo0, T.hi[i], a0
+        elseif (k == FRAME or k == STRIKE) and not isAvoid and (T.school[i] ~= ANY or sch == 1) then
+            return a0 + CAST_WINDOW, T.hi[i], a0
+        end
+        return nil
+    end
     if k == FRAME or k == STRIKE then
         if p == 1 then
             return a0, a0 + SAME_FRAME, a0
