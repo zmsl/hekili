@@ -216,10 +216,14 @@ end)
 -- only when it contradicts the belief (spec §4.3). Returns whether it staged. Allocates nothing.
 local function apply(j, u, up, t, edge)
     local U = I.auras
-    if u > U.n or (u == 1 and playerPlain) or (u == 2 and targetPlain) then
+    if u > U.n then
         return false
     end
     local k = (u - 1) * I.AURA_UNIT + j
+    if (u == 1 and playerPlain) or (u == 2 and targetPlain) then
+        staged[k] = 0 -- the walk answers now; a read staged before it turned plain must not block a later edge
+        return false
+    end
     local differs = (U.exp0[u][j] > t) ~= up
     local v = up and 1 or 2
     if not differs then
@@ -265,22 +269,23 @@ end)
 
 S.On("PLAYER_REGEN_DISABLED", nil, function()
     for k in pairs(facts) do
-        facts[k], disagree[k] = 0, 0
+        facts[k], disagree[k], staged[k] = 0, 0, 0
     end
 end)
 
--- One line per aura the router answers by the viewer or the consumer took a fact for this fight (debugging only: it
+-- Per aura and unit with a fact this fight, one line; a tracked aura with none, one `unit=-` line (debugging only: it
 -- allocates). Nothing without a presence provider or for the Default one.
 I.OnSnapshot(function(out)
     local P, U = I.presence, I.auras
     if not U or not P or P.name == "default" then
         return
     end
-    for u = 1, (U.n < 2 and U.n or 2) do
-        for j = 1, U.nAura do
+    for j = 1, U.nAura do
+        local path = (P.tracked and P.tracked[j]) and "viewer" or "model"
+        local lines = #out
+        for u = 1, (U.n < 2 and U.n or 2) do
             local k = (u - 1) * I.AURA_UNIT + j
-            local path = (P.tracked and P.tracked[j]) and "viewer" or "model"
-            if facts[k] > 0 or path == "viewer" then
+            if facts[k] > 0 then
                 out[#out + 1] = string.format(
                     "presence %s unit=%s path=%s facts=%d disagree=%d",
                     KEY[j],
@@ -290,6 +295,9 @@ I.OnSnapshot(function(out)
                     disagree[k]
                 )
             end
+        end
+        if path == "viewer" and #out == lines then -- tracked, no fact yet: one line for the aura
+            out[#out + 1] = string.format("presence %s unit=- path=viewer facts=0 disagree=0", KEY[j])
         end
     end
 end)

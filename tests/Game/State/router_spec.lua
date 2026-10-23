@@ -99,6 +99,7 @@ describe("the Presence router", function()
         I.Build(d, 1)
         assert.are.same({ 0, 0 }, { I.presence.covered, calls })
         assert.are.equal(I.UNDECIDED, I.presence.Presence(1, 1))
+        assert.is_true(I.presence.tracked[1]) -- the map stands until the deferred build (no mid-fight path change)
         I.inCombat = false
         ctl.Fire("PLAYER_REGEN_ENABLED")
         assert.are.equal(2, I.presence.covered)
@@ -112,9 +113,15 @@ describe("the Presence router", function()
 
     it("prints one audit line per tracked aura and unit; none with the switch off", function()
         local snap = VS.Snapshot()
-        assert.is_truthy(snap:find("presence spender_a unit=player path=viewer facts=0 disagree=0", 1, true))
-        assert.is_truthy(snap:find("presence spender_c unit=target path=viewer facts=0 disagree=0", 1, true))
+        assert.is_truthy(snap:find("presence spender_a unit=- path=viewer facts=0 disagree=0", 1, true))
+        assert.is_truthy(snap:find("presence spender_c unit=- path=viewer facts=0 disagree=0", 1, true))
+        assert.is_falsy(snap:find("unit=target path=viewer facts=0", 1, true)) -- one line per aura without facts
         assert.is_falsy(snap:find("presence spender_m", 1, true)) -- untracked and no fact: no line
+        I.presenceFacts[1] = 2 -- a fact on the player: that unit's line replaces the aura's line
+        snap = VS.Snapshot()
+        assert.is_truthy(snap:find("presence spender_a unit=player path=viewer facts=2 disagree=0", 1, true))
+        assert.is_falsy(snap:find("presence spender_a unit=-", 1, true))
+        assert.is_falsy(snap:find("presence spender_a unit=target", 1, true))
         local d2 = fs.def(fs.new(9))
         d2.providers = { presence = "router", viewer = false }
         I.Build(d2, 1)
@@ -126,5 +133,21 @@ describe("the Presence router", function()
         I.presenceFacts[1] = 3
         ctl.Fire("PLAYER_REGEN_DISABLED")
         assert.are.same({ 0, 0, 0 }, { I.presenceEdges.up, I.presenceEdges.down, I.presenceFacts[1] })
+    end)
+
+    it("a self-scoped DOWN on the target is no answer and no edge (others' debuffs may be up)", function()
+        local item = ctl.viewer.items.BuffIconCooldownViewer[2]
+        local n = 0
+        I.presence.onEdge = function(_, _, up)
+            n = n + 1
+            assert.is_true(up)
+        end
+        assert.are.equal("self", I.presence.scope)
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2))
+        ctl.ViewerShow(item, true)
+        assert.are.equal(I.UP, I.presence.Presence(2, 2))
+        ctl.ViewerShow(item, false)
+        assert.are.equal(I.UNDECIDED, I.presence.Presence(2, 2))
+        assert.are.same({ 1, 1, 0 }, { n, I.presenceEdges.up, I.presenceEdges.down })
     end)
 end)

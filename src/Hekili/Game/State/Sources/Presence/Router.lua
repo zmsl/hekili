@@ -13,13 +13,21 @@ local Plain = S.Plain
 
 local R = { name = "router", scope = nil, covered = 0, onEdge = nil, tracked = {} }
 local tracked = R.tracked
-local leaf, api0, def0, pending = nil, nil, nil, false
+local leaf, want, api0, def0, pending = nil, nil, nil, nil, false
 local edges = { up = 0, down = 0 } -- the edges passed on this fight (Snapshot)
 I.presenceEdges = edges
 
--- The leaf's onEdge: a tracked aura's edge only, counted. Allocates nothing.
+-- A "self" provider's DOWN on the target says only that our debuff is gone; another caster's may be up (the target
+-- walk reads anyone's), so it is no answer.
+local function selfDownOnTarget(u, up)
+    return u == 2 and not up and R.scope == "self"
+end
+
+-- The leaf's onEdge: a tracked aura's edge only, counted. Allocates nothing. An item released to its pool keeps its
+-- hook harmlessly: the pool hides it before ResetCooldownData clears its aura fields (CooldownViewer.lua:1646-1650,
+-- CooldownViewerItemData.lua:383-391), so the hide reads its true presence and the reacquired item's show re-reads.
 local function forward(j, u, up, t)
-    if tracked[j] then
+    if tracked[j] and not selfDownOnTarget(u, up) then
         if up then
             edges.up = edges.up + 1
         else
@@ -71,9 +79,14 @@ local function mark(api, def)
     end
 end
 
--- Clears the map (preallocated to the def's auras), then, out of combat, marks it and activates the leaf; in combat
--- it waits for PLAYER_REGEN_ENABLED.
+-- Out of combat: takes the wanted leaf, clears the map (preallocated to the def's auras), marks it and activates the
+-- leaf. In combat it changes nothing and waits for PLAYER_REGEN_ENABLED (decision 89: no path change mid-fight).
 local function activate(t)
+    if I.inCombat then
+        pending = true
+        return
+    end
+    leaf = want
     for j = 1, #tracked do
         tracked[j] = false
     end
@@ -84,10 +97,6 @@ local function activate(t)
     if not leaf then
         return
     end
-    if I.inCombat then
-        pending = true
-        return
-    end
     mark(api0, def0)
     leaf.onEdge = forward
     leaf.Activate(api0, t, def0, nil)
@@ -96,10 +105,9 @@ end
 
 --- Takes the leaf when cfg.viewer; builds the map and activates the leaf out of combat (else at combat end).
 function R.Activate(api, t, def, cfg)
-    api0, def0 = api, def
-    leaf = nil
+    api0, def0, want = api, def, nil
     if cfg and cfg.viewer then
-        leaf = I.PRESENCE.viewer
+        want = I.PRESENCE.viewer
     end
     activate(t)
 end
@@ -109,25 +117,23 @@ function R.Deactivate(t)
     if leaf then
         leaf.Deactivate(t)
     end
-    leaf, pending, R.covered, R.scope = nil, false, 0, nil
+    leaf, want, pending, R.covered, R.scope = nil, nil, false, 0, nil
 end
 
 --- The leaf's answer for a tracked aura, else I.UNDECIDED. Allocates nothing.
 function R.Presence(j, u)
     if leaf and tracked[j] then
-        return leaf.Presence(j, u)
+        local a = leaf.Presence(j, u)
+        if not selfDownOnTarget(u, a ~= I.DOWN) then
+            return a
+        end
     end
     return I.UNDECIDED
 end
 
 -- The viewer's sets changed (CV §3): rebuild out of combat, else at combat end (decision 89: no change mid-fight).
 local function changed(_, t)
-    if not leaf or I.presence ~= R then
-        return
-    end
-    if I.inCombat then
-        pending = true
-    else
+    if want and I.presence == R then
         activate(t)
     end
 end

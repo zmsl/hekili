@@ -491,6 +491,27 @@ describe("auras", function()
             assert.are.same({ 0, 0 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
         end)
 
+        it("a staged read cut short by a plain walk does not suppress the next fight's edge", function()
+            ctl.ViewerShow(item, true) -- staged up
+            ctl.Fire("PLAYER_REGEN_ENABLED") -- same frame: combat ends, the walk turns plain and shows it gone
+            ctl.auras.player.HELPFUL[1] = nil
+            ctl.Fire("UNIT_AURA", "player")
+            poll(10)
+            ctl.Fire("UNIT_AURA", "player")
+            ctl.ViewerShow(item, false)
+            poll(11)
+            assert.is_nil(VS.Aura("player", fs.SPENDER_A, 11))
+            ctl.now = 20 -- the next fight: the walk is secret, the viewer shows the aura before any poll
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            ctl.auras.player.HELPFUL[1] = fake.SECRET
+            ctl.Fire("UNIT_AURA", "player")
+            ctl.ViewerShow(item, true)
+            poll(21)
+            poll(22)
+            assert.are.equal(math.huge, VS.Aura("player", fs.SPENDER_A, 22).est)
+            assert.are.same({ 1, 1 }, { I.presenceFacts[SHOUT], I.presenceDisagree[SHOUT] })
+        end)
+
         it("allocates nothing over 1000 polls and edges", function()
             local alloc = require("Game.State.helpers.alloc")
             local t = 10
