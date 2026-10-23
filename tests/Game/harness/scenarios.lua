@@ -45,8 +45,10 @@ local ARCHETYPES = {
                 resist = 0.05,
             })
     end,
-    -- K13: our twin, anchored to our presses (W.spells): its cast at our success, its nature 14-18 row when our bolt
-    -- lands (W.distance / 20 s later), resisted at 0.05 on its own roll
+    -- K13 (spec §6.2): our twin, anchored to our presses (W.spells): its cast at our success, its nature 14-18 row
+    -- when our bolt lands (W.distance / 20 s later) plus W.phase, on its own outcome roll (resist 0.05, crit 0.1: a
+    -- crit doubles, a miss is school 1, as W.hit). Each pair's order in one ms on W.rng: the twin's row first, or
+    -- re-queued at its own time behind ours (the world's queue is FIFO within a time).
     twin = function(W, lvl)
         local e = entities.new({ level = lvl })
         return e,
@@ -59,20 +61,30 @@ local ARCHETYPES = {
                         end
                         local tgt = me.target
                         W2.emit({ kind = "cast", src = me, dst = tgt, spell = "SECRET" })
-                        W2.at(done + (W2.distance or 20) / 20, function()
+                        local function land()
                             if tgt.health <= 0 then
                                 return
                             end
-                            local resisted = W2.rng.chance(0.05)
+                            local r = W2.rng
+                            local act = r.chance(0.05) and "MISS" or "WOUND"
+                            local crit = act == "WOUND" and r.chance(0.1)
+                            local amt = act == "WOUND" and r.int(14, 18) * (crit and 2 or 1) or 0
                             W2.emit({
                                 kind = "spell",
                                 src = me,
                                 dst = tgt,
-                                act = resisted and "MISS" or "WOUND",
-                                flag = "",
-                                amount = resisted and 0 or W2.rng.int(14, 18),
-                                school = 8,
+                                act = act,
+                                flag = crit and "CRITICAL" or "",
+                                amount = amt,
+                                school = act == "WOUND" and 8 or 1,
                             })
+                        end
+                        W2.at(done + (W2.distance or 20) / 20 + (W2.phase or 0), function()
+                            if W2.rng.chance(0.5) then
+                                land()
+                            else
+                                W2.at(W2.t, land) -- behind our row of this ms
+                            end
                         end)
                     end)
                 end
@@ -161,6 +173,11 @@ function M.world(o, seed)
         e.guid = "Other-" .. i
         e.target = mobs[1]
         others[i] = { e = W.add(e), b = b }
+    end
+    if o.ourPet then -- K14: our pet on our target (the `pet` archetype's swings): its rows are not ours to pay
+        local e, b = ARCHETYPES.pet(W, lvl)
+        e.guid, e.target, e.ourPet = "Pet-1", mobs[1], true
+        others[#others + 1] = { e = W.add(e), b = b }
     end
     local pull = o.pull or 1
     local stop = (o.duration or 120) + pull

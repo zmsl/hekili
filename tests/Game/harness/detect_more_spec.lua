@@ -7,7 +7,23 @@ local drive = require("Game.harness.drive")
 local scenarios = require("Game.harness.scenarios")
 
 describe("detection suite K10-K19 #slow", function()
-    for _, kind in ipairs({ "K10", "K11", "K12", "K13", "K14", "K14f", "K15", "K17", "K18", "K19", "K21" }) do
+    for _, kind in ipairs({
+        "K10",
+        "K11",
+        "K11m",
+        "K12",
+        "K13",
+        "K13p1",
+        "K13p5",
+        "K14",
+        "K14p",
+        "K14f",
+        "K15",
+        "K17",
+        "K18",
+        "K19",
+        "K21",
+    }) do
         for _, band in ipairs(detect.GATED) do
             it(kind .. " in " .. band, function()
                 local na = (detect.KINDS[kind].na or {})[band]
@@ -26,21 +42,52 @@ describe("detection suite K10-K19 #slow", function()
                     assert.is_true(m.dead > 0 and m.inFlightLost == 0, metrics.ticketLine(m))
                     assert.are.equal(m.postClear, m.postClearPaid) -- our pending swing's row after the clear pays
                     assert.are.equal(m.kills, m.gone) -- TargetGone once per kill of our target
-                elseif kind == "K13" then
-                    -- spec §4.2's claim (only divergent pairs cost) against K4's floor: UNMET, left so by the Task 13
-                    -- ruling and printed, not asserted. Cause: the twin's row lands in our row's ms and pays our ticket
-                    -- first (same school, time and amount band); our row then finds none and goes foreign. The state
-                    -- is the same either way, but the metric scores rows by identity. The floors still hold the cell.
-                    local k4 = detect.floors().K4[band]
-                    local met = metrics.recall(m) >= k4.recall
-                        and metrics.false100(m) <= k4.false100 + metrics.divergent100(m)
+                elseif kind == "K11m" then -- our swing pending at a kill: its row after the clear (a floor, as K6)
+                    assert.is_true(m.own > 0 and m.postClear > 0, metrics.ticketLine(m))
                     print(
-                        ("K13 %s divergent per 100 own: %.2f; claim vs K4 (recall >= %.2f, false <= %.1f): %s"):format(
+                        ("K11m %s post-clear rows paid by their swing: %d of %d"):format(
                             band,
+                            m.postClearPaid,
+                            m.postClear
+                        )
+                    )
+                elseif kind == "K14p" then
+                    -- spec §6.2 K14: our pet's rows stay foreign (leak ceiling 0). UNMET on the first run: our swing
+                    -- tickets take some pet white rows inside their landing window (the melee likelihood, probe U15's
+                    -- territory, unchanged here). Printed, not asserted, for the owner's ruling (Task 13 fix round 1).
+                    assert.is_true(m.petRows > 0, "no pet rows")
+                    print(
+                        ("K14p %s pet rows paid by our tickets: %d of %d (%.2f per 100): %s"):format(
+                            band,
+                            m.petPaid,
+                            m.petRows,
+                            100 * m.petPaid / m.petRows,
+                            m.petPaid == 0 and "met" or "UNMET"
+                        )
+                    )
+                elseif kind:match("^K13") then
+                    -- spec §4.2's claim (only divergent pairs cost) against K4's floor. Divergent pairs are the
+                    -- harness's (metrics.tickets: a swapped pair of a different class); the engine's T.divergent
+                    -- counts only an avoid two of our own tickets could own, so it never sees a foreign twin. Printed
+                    -- met or UNMET with the cost per divergent pair (the Task 13 rulings), never loosened.
+                    local k4 = detect.floors().K4[band]
+                    local div = metrics.twinDivergent100(m)
+                    local met = metrics.recall(m) >= k4.recall and metrics.false100(m) <= k4.false100 + div + 1e-9
+                    local cost = m.twinDivergent > 0 and (k4.recall - metrics.recall(m)) * m.own / m.twinDivergent or 0
+                    print(
+                        (
+                            "%s %s divergent pairs per 100 own: %.2f (harness; engine T.divergent %.2f sees own pairs only);"
+                            .. " claim vs K4 (recall >= %.2f, false <= %.2f): %s; own missed per divergent pair "
+                            .. "beyond K4's: %.2f"
+                        ):format(
+                            kind,
+                            band,
+                            div,
                             metrics.divergent100(m),
                             k4.recall,
-                            k4.false100 + metrics.divergent100(m),
-                            met and "met" or "UNMET"
+                            k4.false100 + div,
+                            met and "met" or "UNMET",
+                            cost
                         )
                     )
                 elseif kind == "K17" then

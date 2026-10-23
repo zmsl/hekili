@@ -461,6 +461,9 @@ function M.newTickets()
         afterReset = 0, -- rows after the combat end that paid a ticket opened before it (K17: must be 0)
         aoeOther = 0, -- foreign rows the engine marked as our spell's on another GUID (K18)
         errors = 0, -- the engine's event errors
+        petRows = 0, -- our pet's outcomes on our target (K14)
+        petPaid = 0, -- of those, paid by any ticket of ours (a swing credit or a spell ticket: must stay 0)
+        twinDivergent = 0, -- swapped pairs of a different class (K13; the engine's T.divergent sees own pairs only)
         inFlight = 0, -- fights where another source killed our target while a bolt of ours flew (K11)
         inFlightLost = 0, -- of those bolts, the ones closed lost or paid by a row after the death (K11: must be 0)
     }
@@ -514,7 +517,7 @@ function M.tickets(m, c, s, W)
             local g = groups[key]
             if not g then
                 g = { own = (s.castT and s.castT[i] or 0) > 0, castT = s.castT and s.castT[i] or 0, at = 0, kind = 0 }
-                g.t = s.t[i]
+                g.t, g.act, g.unit = s.t[i], s.a2[i], unit[s.a1[i]]
                 g.crit, g.avoid = s.a3[i] == "CRITICAL", s.a2[i] == "DODGE" or s.a2[i] == "PARRY" or s.a2[i] == "MISS"
                 groups[key], list[#list + 1] = g, g
             end
@@ -536,11 +539,36 @@ function M.tickets(m, c, s, W)
             onTarget[g.t .. "/" .. g.castT] = true
         end
     end
+    -- A swapped pair (spec §4.2, K13): our outcome unpaid and another source's on its unit within SAME_FRAME (0.05 s)
+    -- paid our cast's ticket. An equal class (act, crit) is the same state either way: ours counts right, theirs is
+    -- neither false credit nor leak. A different class is a divergent pair: ours stays missed, theirs false credit.
+    -- Only when the tally asks (m.swaps: K13's kinds); on K1-K9 it would raise K2, K4, K5, K7 and K8's crowd cells.
+    for _, g in ipairs(m.swaps and list or {}) do
+        if g.own and g.at == 0 then
+            for _, f in ipairs(list) do
+                if
+                    not f.own
+                    and not f.swapped
+                    and f.at > 0
+                    and f.unit == g.unit
+                    and math.abs(f.t - g.t) <= 0.05
+                    and anchored({ at = f.at, castT = g.castT })
+                then
+                    if f.act == g.act and f.crit == g.crit then
+                        f.swapped, g.swapRight, g.staged = true, true, f.staged
+                    else
+                        m.twinDivergent = m.twinDivergent + 1
+                    end
+                    break
+                end
+            end
+        end
+    end
     for _, g in ipairs(list) do
         local aoe = g.own and not g.onTarget and onTarget[g.t .. "/" .. g.castT]
         if g.own and not aoe then
             m.own = m.own + 1
-            if g.at > 0 and anchored(g) then
+            if g.swapRight or (g.at > 0 and anchored(g)) then
                 m.right = m.right + 1
                 if (g.crit or g.avoid) and (g.staged or 0) > 0 then
                     m.staged = m.staged + 1
@@ -553,7 +581,7 @@ function M.tickets(m, c, s, W)
             if g.crit or g.avoid then
                 m.stagedTruth = m.stagedTruth + 1
             end
-        elseif not aoe then
+        elseif not aoe and not g.swapped then
             m.foreignRows = m.foreignRows + 1
             if g.at > 0 then
                 m.foreignPaid = m.foreignPaid + 1
@@ -561,7 +589,7 @@ function M.tickets(m, c, s, W)
         end
         if g.at > 0 then
             m.paid = m.paid + 1
-            if not (g.own and anchored(g)) then
+            if not (g.own and anchored(g)) and not g.swapped then
                 m.falsePaid = m.falsePaid + 1
             end
         end
@@ -676,6 +704,16 @@ function M.tickets(m, c, s, W)
             end
         end
         m.inFlight = m.inFlight + (flew and 1 or 0)
+        local pet = 0
+        for j, e in ipairs(W.ents) do
+            pet = e.ourPet and j or pet
+        end
+        for i = 1, s.n do -- K14: our pet's rows stay foreign (counted once, on the target token)
+            if pet > 0 and s.ev[i] == "UNIT_COMBAT" and s.actor[i] == pet and registry(s.a1[i]) then
+                m.petRows = m.petRows + (s.a1[i] == "target" and 1 or 0)
+                m.petPaid = m.petPaid + ((c.payAt[i] > 0 or c.crHand[i] > 0) and 1 or 0)
+            end
+        end
         for i = 1, s.n do -- K17: nothing after the combat end pays a ticket opened before it
             if s.t[i] > regen and c.payAt[i] > 0 and c.payAt[i] < regen then
                 m.afterReset = m.afterReset + 1
@@ -699,6 +737,10 @@ function M.staged(m)
 end
 function M.divergent100(m)
     return m.own > 0 and 100 * m.divergent / m.own or 0
+end
+--- Swapped pairs of a different class per 100 own outcomes (the harness's count, spec §4.2).
+function M.twinDivergent100(m)
+    return m.own > 0 and 100 * m.twinDivergent / m.own or 0
 end
 
 --- One line for a detection cell.

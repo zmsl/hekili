@@ -42,6 +42,17 @@ local function strikes(step, last)
     return out
 end
 
+local function with(base, extra) -- a kind's knobs over another's (M.run copies a kind with pairs)
+    local o = {}
+    for k, v in pairs(base) do
+        o[k] = v
+    end
+    for k, v in pairs(extra) do
+        o[k] = v
+    end
+    return o
+end
+
 -- Each kind's knobs (spec §6.2's table; K10-K19 in Task 13).
 M.KINDS = {
     K1 = { duration = 60 },
@@ -85,6 +96,9 @@ M.KINDS.K11 = {
     distances = { 30 },
     na = { solo = "no foreign source to kill the target" },
 }
+-- K11m: the melee case of K11, in reach and swinging: a partner kills while our swing is pending (its row after the
+-- clear must pay its swing); bolts keep own > 0. Solo na as K11.
+M.KINDS.K11m = with(M.KINDS.K11, { distances = { 5 } })
 M.KINDS.K12 = {
     duration = 60,
     noMelee = true,
@@ -92,9 +106,14 @@ M.KINDS.K12 = {
     spells = every("doti", 4, 56),
     switchTo = { { 9, 2 }, { 17, 1 }, { 25, 2 }, { 33, 1 }, { 41, 2 }, { 49, 1 } },
 }
--- K13: a partner anchored to our presses (the `twin` archetype: our cadence, zero shift, its own outcome roll)
-M.KINDS.K13 = { duration = 60, noMelee = true, spells = every("bolt", 2, 58), twin = true, distances = { 20 } }
+-- K13 (spec §6.2): a partner anchored to our presses (the `twin` archetype: our cadence, its own outcome roll),
+-- shifted 0 (K13), 0.1 (K13p1) and 0.5 s (K13p5)
+M.KINDS.K13 = { duration = 60, noMelee = true, spells = every("bolt", 2, 58), twin = 0, distances = { 20 } }
+M.KINDS.K13p1 = with(M.KINDS.K13, { twin = 0.1 })
+M.KINDS.K13p5 = with(M.KINDS.K13, { twin = 0.5 })
 M.KINDS.K14 = { duration = 60, twins = true }
+-- K14p (spec §6.2 K14's second case): our pet hitting the target beside our twin hands; its rows stay foreign
+M.KINDS.K14p = { duration = 60, twins = true, ourPet = true }
 -- K14f (owner-confirmed 2026-10-22, a level-25 fast dual-wielder): two 1.5 s hands at 1.2 haste (a swing every
 -- about 0.6 s on average across both hands); per-hand recall and the rage estimate's error against truth.
 M.KINDS.K14f = { duration = 60, weapons = { { 40, 54, 1.5 }, { 40, 54, 1.5 } }, haste = 1.2, sessionLag = true }
@@ -136,6 +155,7 @@ end
 function M.run(kind, band, fights, seed0)
     local m = metrics.newTickets()
     m.melee = metrics.new()
+    m.swaps = M.KINDS[kind].twin ~= nil -- K13: a swapped equal pair is right (metrics.tickets, spec §4.2)
     for f = 0, fights - 1 do
         local o = {}
         for k, v in pairs(M.KINDS[kind]) do
@@ -149,7 +169,7 @@ function M.run(kind, band, fights, seed0)
             o.others[#o.others + 1], o.phase = "lockstep", o.lockstep
         end
         if o.twin then
-            o.others[#o.others + 1] = "twin"
+            o.others[#o.others + 1], o.phase = "twin", o.twin
         end
         if o.splash then -- K18's partner: a melee whose swings also hit the mob beside our target
             o.others[#o.others + 1] = "splash"
@@ -199,6 +219,14 @@ local function cell(m)
     }
 end
 
+-- A note written above a kind's floors (detect_floors.lua): why a cell sits where it does.
+M.NOTES = {
+    K10 = "K10: melee recall does not hold under a session lag (spec §6.2's check; party 0.36, busy 0.18 against K1's"
+        .. " 0.83 / 0.70). The session's landing median from [0.4, 1.0] s drives it (without it 0.86 / 0.73); the"
+        .. " first-swing lag costs party 0.06; jitter, pushback and PLAYER_ENTER_COMBAT cost nothing. Measured, not"
+        .. " a target (Task 13 finding; the melee scoring is probe U15's).",
+}
+
 --- With DETECT_WRITE=1, writes the cell's floor into detect_floors.lua (the first clean run).
 function M.record(kind, band, m)
     if os.getenv("DETECT_WRITE") ~= "1" then
@@ -219,6 +247,9 @@ function M.record(kind, band, m)
         "return {",
     }
     for _, k in ipairs(kinds) do
+        if M.NOTES[k] then
+            out[#out + 1] = "    -- " .. M.NOTES[k]
+        end
         out[#out + 1] = "    " .. k .. " = {"
         for _, b in ipairs({ "solo", "party", "busy" }) do
             local v = all[k][b]
