@@ -67,6 +67,9 @@ def main():
     for e in errors:
         print("FAIL: " + e)
     print(f"spell-data-check: {len(rows)} abilities, {len(errors)} failures, {len(notes)} notes")
+    if not rows:
+        print("spell-data-check: no abilities read (the Lua dump failed?)")
+        return 1
     return 1 if errors else 0
 
 
