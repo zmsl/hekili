@@ -313,4 +313,65 @@ describe("zero allocation", function()
         assert.are.equal(0, bytes)
         assert.is_true(n > 100, "every call an edge")
     end)
+
+    it(
+        "allocates nothing over 1000 meter events, 100 swings and their ticks with the Meter (providers spec §2.2)",
+        function()
+            local api, ctl = fake.new()
+            local saved = {}
+            for k, v in pairs({
+                CreateFrame = api.CreateFrame,
+                issecretvalue = api.issecretvalue,
+                GetTime = api.GetTime,
+            }) do
+                saved[k] = rawget(_G, k) or false
+                _G[k] = v
+            end
+            ctl.now = 1
+            local ns = load.module()
+            local VS, I = ns.VirtualState, ns.VirtualStateInternal
+            local d = fs.def(fs.new(9))
+            d.providers = { outcomes = "meter" }
+            I.Build(d, 1)
+            VS.Start(api)
+            ctl.guid.target = "Creature-2"
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.combat = true
+            ctl.Fire("PLAYER_REGEN_DISABLED")
+            local asked = 0
+            local P = I.outcomes
+            local own = P.RowOwner
+            P.RowOwner = function(...) -- counts the audit's asks (one shared function: no closure per call)
+                asked = asked + 1
+                return own(...)
+            end
+            -- per step: 10 meter events (a damage group, its duplicate set, taken groups), one swing with its rows
+            local TY, SID = { 0, 1, 10, 0, 1, 10, 7, 7, 2, 7 }, { 200, 200, 200, 0, 0, 0, 200, 0, 200, 200 }
+            local function step(i)
+                ctl.now = ctl.now + 0.26
+                local t = ctl.now
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                for k = 1, 10 do
+                    ctl.Fire("DAMAGE_METER_COMBAT_SESSION_UPDATED", TY[k], SID[k])
+                end
+                ctl.now = t + 0.008
+                ctl.Tick()
+                ctl.now = t + 0.02
+                ctl.Tick()
+                ctl.Fire("UNIT_COMBAT", "target", i % 7 == 3 and "DODGE" or "WOUND", "", i % 7 == 3 and 0 or 10, 1)
+                ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 12, 1)
+                ctl.now = t + 0.04
+                ctl.Tick()
+            end
+            local ok, bytes = pcall(alloc.bytes, step, 100)
+            for k, v in pairs(saved) do
+                _G[k] = v or nil
+            end
+            P.RowOwner = own
+            assert.is_true(ok, tostring(bytes))
+            assert.are.equal(0, bytes)
+            assert.is_true(asked > 100, "the audit asked RowOwner")
+            assert.is_true(I.Log.fight.swingsTick + I.Log.fight.swingsAvoid > 100, "the swings were told")
+        end
+    )
 end)

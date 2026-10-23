@@ -47,6 +47,7 @@ Game\State\Sources\Nameplates.lua
 Game\State\Sources\Totems.lua
 Game\State\Sources\Pets.lua
 Game\State\Sources\Enchants.lua
+Game\State\Sources\Outcomes\Meter.lua
 Game\State\Sources\Presence\CooldownViewer.lua
 Game\State\Sources\Presence\Router.lua
 Game\State\Snapshot.lua

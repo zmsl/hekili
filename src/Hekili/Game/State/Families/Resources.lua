@@ -119,6 +119,8 @@ local R = {
     sinceSnap = {},
     over = {},
     assume = {},
+    pinN = {}, -- the fight's flips at an unchanged cost (the providers audit, I.PinError)
+    pinErr = {}, -- and the sum of |estimate before the flip - cost| over them
 }
 I.res = R
 R.slotOf, R.slotOfToken = {}, {}
@@ -332,6 +334,7 @@ I.OnBuild(function(def, now)
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
         R.pinOwn[r], R.pinSkip[r], R.swFrom[r], R.skipFrom[r], R.skipTo[r] = false, false, 0, 0, 0
         R.swAccG[r], R.swAccT[r] = 0, 0
+        R.pinN[r], R.pinErr[r] = 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
         R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
         R.snapT[r], R.readT[r], R.readable[r] = -1e9, -1e9, false
@@ -1106,6 +1109,7 @@ I.On(Obs.Usable, function(o, t, lag)
     local lo1, e1 = R.lo0[r], R.est0[r]
     if was == SHORT and now == YES and lag <= 0 and abs(c - shortCost[a]) <= I.EPS then
         -- It just became affordable at an unchanged cost: it crossed the cost since the last short report.
+        R.pinN[r], R.pinErr[r] = R.pinN[r] + 1, R.pinErr[r] + abs(e1 - c)
         if R.gain[r] - shortGain[a] >= c - shortEst[a] then
             -- our own gain since then explains the crossing: a bound (crossed)
             crossed(r, c, t)
@@ -1408,8 +1412,19 @@ I.On(Obs.CombatStart, function(o, t)
     fighting, fightT = true, t
     for r = 1, R.n do
         R.decayNext[r] = 0
+        R.pinN[r], R.pinErr[r] = 0, 0
     end
 end)
+
+--- (providers spec §4.3) The fight's usability flips at an unchanged cost and the summed |estimate - cost| at them,
+--- over every slot: the rage error an Outcomes provider should move. Allocates nothing.
+function I.PinError()
+    local n, e = 0, 0
+    for r = 1, R.n do
+        n, e = n + R.pinN[r], e + R.pinErr[r]
+    end
+    return n, e
+end
 
 -- Out of combat a resource falls toward its rest value: the interval opens down to it (lo never over-promises), and
 -- a decaying slot's rate is re-read; a stepped one loses its first quantum at once (front-loaded).

@@ -201,6 +201,7 @@ local function paySpell(p, n, pass, t, act, flag, amount, school, avoid, crit)
         S.Stage(Obs.Crit, t, T.ab[p], at0, 0) -- our cast's own crit (the target's row carries the flag plain): GAP T
     end
     L.credited[3] = L.credited[3] + 1
+    L.fight.paid = L.fight.paid + amount
     if not (divergent and avoid) then
         emit(kk, xx, dst, act, flag, amount, (kk == TICKS or kk == CHANNEL) and t or at0, sch > 0 and sch or school)
     end
@@ -211,7 +212,14 @@ end
 -- band or when re-offered (decision 48: neither teaches the median). Allocates nothing.
 local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, ref, lag, second, k)
     local xx, at0 = T.x[credited], T.at[credited]
+    local f = L.fight
+    if T.told[credited] == 0 then
+        f.swingsRow = f.swingsRow + 1 -- decided by its row, not by the Outcomes provider
+    end
     if avoid then
+        if T.told[credited] == 1 then
+            f.collide = f.collide + 1 -- told HIT, avoided after all: another group member's group in its 15 ms
+        end
         if T.state[credited] == T.ASSUMED and T.rec[credited] > 0 then -- refunded: the assumed rage comes back out
             recOpen[T.rec[credited]] = false
             S.Stage(Obs.Swing, t, xx, T.rec[credited], 6)
@@ -252,6 +260,7 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
     T.rec[credited] = id
     T.PayTentative(credited, t, false, amount, flag, second < L.THETA, (core and not rerouting) and 1 or 2, act, 1)
     L.credited[xx] = L.credited[xx] + 1
+    f.paid = f.paid + amount
     emit(MELEE, xx, dst, act, flag, amount, at0, 1)
     S.Stage(Obs.Swing, at0, xx, id, confirm and 7 or 1) -- landed (or confirmed), at the swing's time: its rage
     if flag == "CRITICAL" then
@@ -353,6 +362,7 @@ T.onReplace = function(i, t)
     else
         L.credited[3] = L.credited[3] - 1
     end
+    L.fight.paid = L.fight.paid - T.rowAmt[i] -- re-paid if reroute places it
     L.background = L.background + 1
     return reroute(i, t)
 end
@@ -533,13 +543,28 @@ end
 -- (providers decision 73, count-only per the owner 2026-10-23) A row is routed at once; RowOwner is asked ROW_DELAY
 -- later for the audit only: FOREIGN counts `foreignByMeter` (and `disagree` when a ticket took the row), OURS on a row
 -- no ticket took counts `ownUnclaimed`. With ROW_DELAY 0 (Default) nothing is queued or asked. Preallocated.
+-- shortcut: "a ticket took the row" is read as T.foreign and T.absorbed unchanged by its routing (a reroute can bump
+-- T.foreign from another path), so `disagree` and `ownUnclaimed` are approximate; exact needs route() to return it.
 local ASK = 32
 local aT, aU, aS, aM, aA, aOurs = {}, {}, {}, {}, {}, {}
 for k = 1, ASK do
     aT[k], aU[k], aS[k], aM[k], aA[k], aOurs[k] = 0, 0, 0, 0, "", false
 end
 local aHead, aN = 0, 0
-L.fight = { ownUnclaimed = 0, foreignByMeter = 0, disagree = 0, overflow = 0 }
+-- The fight's providers audit (Snapshot's `providers` lines): the swings the provider told (HIT/AVOID/unanswered) or a
+-- row decided, a told HIT a row then showed avoided (`collide`), the amounts our tickets were paid.
+L.fight = {
+    ownUnclaimed = 0,
+    foreignByMeter = 0,
+    disagree = 0,
+    overflow = 0,
+    swingsTick = 0,
+    swingsAvoid = 0,
+    swingsRow = 0,
+    swingsUnknown = 0,
+    collide = 0,
+    paid = 0,
+}
 
 local function ask(now)
     local P, f = I.outcomes, L.fight
@@ -645,6 +670,7 @@ end)
 S.On("PLAYER_REGEN_DISABLED", nil, function()
     local f = L.fight
     f.ownUnclaimed, f.foreignByMeter, f.disagree, f.overflow, aN = 0, 0, 0, 0, 0
+    f.swingsTick, f.swingsAvoid, f.swingsRow, f.swingsUnknown, f.collide, f.paid = 0, 0, 0, 0, 0, 0
 end)
 
 --- Snapshot's lines (allocates; debugging only): the credits and the background, the learned lags (ms) and the
@@ -675,5 +701,32 @@ I.OnSnapshot(function(out)
         o.retracted,
         o.soft,
         o.vetoed
+    )
+    -- the providers audit (providers spec §4.3), two lines so each stays under 255 characters for VSCopy
+    local f, a = L.fight, I.outcomes.Audit()
+    local pn, pe = I.PinError()
+    local e = I.presenceEdges
+    out[#out + 1] = string.format(
+        "providers outcomes=%s presence=%s swings tick=%d/%d row=%d unknown=%d muted=%d ownUnclaimed=%d foreignByMeter=%d",
+        I.outcomes.name,
+        I.presence and I.presence.name or "-",
+        f.swingsTick,
+        f.swingsAvoid,
+        f.swingsRow,
+        f.swingsUnknown,
+        I.outcomes.muted or 0,
+        f.ownUnclaimed,
+        f.foreignByMeter
+    )
+    out[#out + 1] = string.format(
+        "providers paid=%d meter=%s pins=%d pinErr=%.1f edges up=%d down=%d collide=%d disagree=%d",
+        f.paid,
+        a and tostring(a.done) or "-",
+        pn,
+        pn > 0 and pe / pn or 0,
+        e and e.up or 0,
+        e and e.down or 0,
+        f.collide,
+        f.disagree
     )
 end)

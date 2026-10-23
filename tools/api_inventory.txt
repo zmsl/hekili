@@ -10,6 +10,8 @@ C_ClassTalents.GetHeroTalentSpecsForClassSpec	passthrough
 C_CooldownViewer.GetCooldownViewerCategorySet	passthrough
 C_CooldownViewer.GetCooldownViewerCooldownInfo	passthrough
 C_CooldownViewer.IsCooldownViewerAvailable	passthrough
+C_DamageMeter.GetCombatSessionFromType	passthrough
+C_DamageMeter.IsDamageMeterAvailable	passthrough
 C_Item.GetDetailedItemLevelInfo	passthrough
 C_Item.GetItemCooldown	passthrough
 C_Item.GetItemCount	passthrough

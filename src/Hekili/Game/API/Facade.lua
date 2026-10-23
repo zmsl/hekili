@@ -874,6 +874,11 @@ local PASSTHROUGH = {
         "out of combat only; Plain-gated (Presence/CooldownViewer.lua)",
     },
     { "C_CooldownViewer.IsCooldownViewerAvailable", "Plain-gated (Presence/CooldownViewer.lua)" },
+    {
+        "C_DamageMeter.GetCombatSessionFromType",
+        "out of combat only; every field issecretvalue-gated (Outcomes/Meter.lua)",
+    },
+    { "C_DamageMeter.IsDamageMeterAvailable", "Plain-gated (Outcomes/Meter.lua)" },
     { "C_Item.GetDetailedItemLevelInfo", "plain [W PR13]" },
     { "C_Item.GetItemCooldown", "plain [W PR13]" },
     { "C_Item.GetItemCount", "plain [W PR13]" },

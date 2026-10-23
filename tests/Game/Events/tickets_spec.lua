@@ -980,6 +980,33 @@ describe("the ticket pool", function()
             assert.are.same({ 1, T.ASSUMED }, { T.told[i], T.state[i] })
         end)
 
+        it("HIT for an unpinned swing or a retraction's re-open: told, not assumed", function()
+            answer = I.HIT
+            ctl.guid.target = nil
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            assert.are.equal("", T.guid[i])
+            local j = T.OpenSwing(10, 1, "Creature-0-1", 2.6, 0, false, true)
+            ctl.Tick(10.02)
+            assert.are.same({ 1, T.OPEN }, { T.told[i], T.state[i] })
+            assert.are.same({ 1, T.OPEN }, { T.told[j], T.state[j] })
+        end)
+
+        it("AVOID: the swing's lost close stages no expectation", function()
+            answer = I.AVOID
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.Tick(10.02)
+            local i = T.lastSwing[1]
+            local n = I.Sources.stN
+            T.onLost(i)
+            assert.are.equal(n, I.Sources.stN)
+            T.told[i] = 3 -- the same swing unanswered: the expectation is staged
+            T.onLost(i)
+            assert.are.equal(n + 1, I.Sources.stN)
+        end)
+
         it("UNDECIDED: today's path (asked once, never again)", function()
             ctl.now = 10
             ctl.Fire("PLAYER_SWING", 2.6, 0)
