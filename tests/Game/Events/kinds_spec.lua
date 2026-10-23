@@ -84,8 +84,8 @@ describe("the kinds", function()
             end
             local i = open(fs.SPENDER_P, 100)
             local lo = K.Band(i, 3, 101, false, "WOUND", 8)
-            -- (20 - 7 x 1) / 20 - 0.15 = 0.5 s after the success
-            assert.is_true(math.abs(lo - 100.5) < 1e-9)
+            -- (20 - CLOSE 10 x 1) / 20 - 0.15 = 0.35 s after the success
+            assert.is_true(math.abs(lo - 100.35) < 1e-9)
         end)
 
         it("ignores a range bracket logged after the success", function()
@@ -101,19 +101,29 @@ describe("the kinds", function()
             local i = open(fs.SPENDER_P, 100)
             local lo, hi, e = K.Band(i, 1, 101.5, false, "WOUND", 8)
             assert.is_true(math.abs(lo - 101.35) < 1e-9 and math.abs(hi - 101.65) < 1e-9 and e == 101.5)
-            lo, hi = K.Band(i, 2, 101.5, false, "WOUND", 8) -- d = 2.5 s: down 0.35 x 2.5, up 0.175 x 2.5
-            assert.is_true(math.abs(lo - (101.5 - 0.875)) < 1e-9 and math.abs(hi - 101.65) < 1e-9)
+            -- d runs anchor to anchor, 100 - (99 - 1.5) = 2.5 s (not row - lagT = 2.2): down 10 / 20 x 2.5 = 1.25,
+            -- up 5 / 20 x 2.5 = 0.625, clipped to the hard window 100 + 1.65
+            lo, hi = K.Band(i, 2, 101.2, false, "WOUND", 8)
+            assert.is_true(math.abs(lo - (101.5 - 1.25)) < 1e-9 and math.abs(hi - 101.65) < 1e-9)
             assert.is_nil(K.Band(i, 3, 101.5, false, "WOUND", 8))
         end)
 
-        it("leaves capture a's late MISS foreign once the GUID has a learned lag (spec §3.4's example)", function()
-            T.Learn("Creature-1", 20, 1.5, 96.4)
-            local i = open(fs.SPENDER_P, 97.374)
-            for p = 1, 3 do
-                local lo, hi = K.Band(i, p, 97.891, true, "MISS", 1)
-                assert.is_false(lo ~= nil and 97.891 >= lo and 97.891 <= hi, "pass " .. p)
+        it(
+            "spec §3.4's example, recomputed: a fresh record keeps the late MISS out of the narrow band only",
+            function()
+                T.Learn("Creature-1", 20, 1.5, 96.4) -- a synthetic landing of the 94.9 cast (capture a has none)
+                local i = open(fs.SPENDER_P, 97.374)
+                -- pass 1: E = 97.374 + 1.5 = 98.874 +- 0.15 (TOL: the spread is below it), clipped to 97.374 + 1.65
+                local lo, hi, e = K.Band(i, 1, 97.891, true, "MISS", 1)
+                assert.is_true(
+                    math.abs(lo - 98.724) < 1e-9 and math.abs(hi - 99.024) < 1e-9 and math.abs(e - 98.874) < 1e-9
+                )
+                -- pass 2: d = 97.374 - (96.4 - 1.5) = 2.474 s, down 10 / 20 x 2.474 = 1.237: the MISS at 97.891 is inside
+                lo, hi = K.Band(i, 2, 97.891, true, "MISS", 1)
+                assert.is_true(math.abs(lo - (98.874 - 1.237)) < 1e-9 and math.abs(hi - 99.024) < 1e-9)
+                assert.is_nil(K.Band(i, 3, 97.891, true, "MISS", 1))
             end
-        end)
+        )
 
         it("refuses a WOUND outside [0.6 lo, 1.6 hi] once three clean wounds taught the band", function()
             for _, v in ipairs({ 14, 16, 15 }) do

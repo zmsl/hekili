@@ -39,8 +39,8 @@ end
 
 --- (spec §3.3.1) A flight's band for ticket i at pass p (speed v, hard window H from anchor a0): with no (GUID, v)
 --- record, only the whole hard window at pass 3 (E its middle; Overdue, decision 33); with one, the narrow band
---- lagE +- b at pass 1 and the widened band at pass 2 (down by CLOSE / v per second since the last landing, up by half
---- that), clipped to the hard window, and nothing at pass 3.
+--- lagE +- b at pass 1 and the widened band at pass 2 (down by CLOSE / v per second from the record's last anchor to
+--- this ticket's, up by half that), clipped to the hard window, and nothing at pass 3.
 function K.Flight(i, p, t, v, H, a0)
     local lo0, hiH = a0 + rangeLow(i, t, v), a0 + H
     local r = T.LagOf(T.guid[i], v)
@@ -56,7 +56,9 @@ function K.Flight(i, p, t, v, H, a0)
     local b = 2 * T.lagSpr[r] > T.TOL and 2 * T.lagSpr[r] or T.TOL
     local down, up = b, b
     if p == 2 then
-        local d = t - T.lagT[r]
+        -- a lag measures the distance at its ticket's anchor: the closing time runs anchor to anchor (lagT - lagE is
+        -- the record's last paid anchor); landing to row would miss the lag the mob already removed
+        local d = a0 - (T.lagT[r] - T.lagE[r])
         down = T.CLOSE / v * d > b and T.CLOSE / v * d or b
         up = T.CLOSE / 2 / v * d > b and T.CLOSE / 2 / v * d or b
     end

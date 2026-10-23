@@ -61,8 +61,10 @@ for k = 0, 7 do
 end
 T.ours, T.foreign, T.absorbed, T.divergent, T.bandRejected, T.aoeOther = 0, 0, 0, 0, 0, 0
 T.onExpire, T.onPay = nil, nil
--- FLIGHT (spec §3.3.1): per ticket its speed (yd/s) and hard window length H = rMax / speed + TOL.
-T.TOL, T.CLOSE, T.LAG_CAP = 0.15, 7, 16
+-- FLIGHT (spec §3.3.1): per ticket its speed (yd/s) and hard window length H = rMax / speed + TOL. CLOSE: 10 yd/s,
+-- a margin over a mob's run speed (about 7) for both sides closing: capture b's (2026-10-22) closing rows need 3.1 to
+-- 7.7 yd/s, anchor to anchor (Kinds.Flight).
+T.TOL, T.CLOSE, T.LAG_CAP = 0.15, 10, 16
 T.speed, T.H = {}, {}
 for i = 1, CAP do
     T.speed[i], T.H[i] = 0, 0
