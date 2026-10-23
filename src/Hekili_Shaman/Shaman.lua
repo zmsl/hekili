@@ -29,6 +29,7 @@
 
 local Facade = Hekili.Client
 local UnitClassBase = Facade.UnitClassBase
+local L = Hekili.L
 
 if UnitClassBase("player") ~= "SHAMAN" then
     return
@@ -44,7 +45,7 @@ local spec = Hekili:NewClass("SHAMAN", {
     specs = {
         {
             key = "elemental",
-            name = "Elemental",
+            name = L["Elemental"],
             tree = 1,
             icon = 136048,
             role = "attack",
@@ -53,13 +54,13 @@ local spec = Hekili:NewClass("SHAMAN", {
         },
         {
             key = "enhancement",
-            name = "Enhancement",
+            name = L["Enhancement"],
             tree = 2,
             icon = 136051,
             role = "attack",
             package = "Enhancement (wowsims.com)",
         },
-        { key = "restoration", name = "Restoration", tree = 3, icon = 136052, role = "healer", unsupported = true },
+        { key = "restoration", name = L["Restoration"], tree = 3, icon = 136052, role = "healer", unsupported = true },
     },
 })
 if not spec then

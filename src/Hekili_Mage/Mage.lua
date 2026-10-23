@@ -26,6 +26,7 @@
 
 local Facade = Hekili.Client
 local UnitClassBase = Facade.UnitClassBase
+local L = Hekili.L
 
 if UnitClassBase("player") ~= "MAGE" then
     return
@@ -41,7 +42,7 @@ local spec = Hekili:NewClass("MAGE", {
     specs = {
         {
             key = "arcane",
-            name = "Arcane",
+            name = L["Arcane"],
             tree = 1,
             icon = 135932,
             role = "attack",
@@ -50,7 +51,7 @@ local spec = Hekili:NewClass("MAGE", {
         },
         {
             key = "fire",
-            name = "Fire",
+            name = L["Fire"],
             tree = 2,
             icon = 135810,
             role = "attack",
@@ -59,7 +60,7 @@ local spec = Hekili:NewClass("MAGE", {
         },
         {
             key = "frost",
-            name = "Frost",
+            name = L["Frost"],
             tree = 3,
             icon = 135846,
             role = "attack",

@@ -20,6 +20,7 @@
 local Facade = Hekili.Client
 local C_SpellBook, C_Spell, UnitClassBase = Facade.C_SpellBook, Facade.C_Spell, Facade.UnitClassBase
 local CombatLogGetCurrentEventInfo, GetTime = Facade.CombatLogGetCurrentEventInfo, Facade.GetTime
+local L = Hekili.L
 
 if UnitClassBase("player") ~= "WARRIOR" then
     return
@@ -35,11 +36,11 @@ local floor, max, min = math.floor, math.max, math.min
 -- TalentTab.SpellIconID), numeric: Options formats them with %d.
 local spec = Hekili:NewClass("WARRIOR", {
     specs = {
-        { key = "arms", name = "Arms", tree = 1, icon = 132292, role = "attack", package = "Arms (wowsims.com)" },
-        { key = "fury", name = "Fury", tree = 2, icon = 132347, role = "attack", package = "Fury (wowsims.com)" },
+        { key = "arms", name = L["Arms"], tree = 1, icon = 132292, role = "attack", package = "Arms (wowsims.com)" },
+        { key = "fury", name = L["Fury"], tree = 2, icon = 132347, role = "attack", package = "Fury (wowsims.com)" },
         {
             key = "protection",
-            name = "Protection",
+            name = L["Protection"],
             tree = 3,
             icon = 134952,
             role = "tank",
@@ -1861,29 +1862,29 @@ end)
 -- The wowsims.com priorities' switches (each .simc header's Setting lines), on the specs whose priority reads them.
 spec:RegisterSetting("wowsims_recklessness", false, {
     type = "toggle",
-    name = "Recklessness (wowsims.com)",
-    desc = "The wowsims.com priority's Recklessness ON/OFF switch (its default in wowsims's own APL).",
+    name = L["Recklessness (wowsims.com)"],
+    desc = L["The wowsims.com priority's Recklessness ON/OFF switch (its default in wowsims's own APL)."],
     width = "full",
 }, "arms")
 
 spec:RegisterSetting("wowsims_stance_dance", false, {
     type = "toggle",
-    name = "Stance Dance (wowsims.com)",
-    desc = "The wowsims.com priority's Stance Dance ON/OFF switch (its default in wowsims's own APL).",
+    name = L["Stance Dance (wowsims.com)"],
+    desc = L["The wowsims.com priority's Stance Dance ON/OFF switch (its default in wowsims's own APL)."],
     width = "full",
 }, "arms")
 
 spec:RegisterSetting("wowsims_recklessness", false, {
     type = "toggle",
-    name = "Recklessness (wowsims.com)",
-    desc = "The wowsims.com priority's Recklessness ON/OFF switch (its default in wowsims's own APL).",
+    name = L["Recklessness (wowsims.com)"],
+    desc = L["The wowsims.com priority's Recklessness ON/OFF switch (its default in wowsims's own APL)."],
     width = "full",
 }, "fury")
 
 spec:RegisterSetting("wowsims_rend_weave", true, {
     type = "toggle",
-    name = "Rend Weave (wowsims.com)",
-    desc = "The wowsims.com priority's Rend Weave ON/OFF switch (its default in wowsims's own APL).",
+    name = L["Rend Weave (wowsims.com)"],
+    desc = L["The wowsims.com priority's Rend Weave ON/OFF switch (its default in wowsims's own APL)."],
     width = "full",
 }, "fury")
 
@@ -1891,17 +1892,16 @@ spec:RegisterSetting("wowsims_rend_weave", true, {
 -- (open-world mobs die before they pay off), on under the harness (`sim`: wowsims's raid boss).
 spec:RegisterSetting("maintain_demoralizing_shout", false, {
     type = "toggle",
-    name = "Maintain Demoralizing Shout",
-    desc = "Keep Demoralizing Shout on the target, as a raid tank does. Off: the priority never shows it.",
+    name = L["Maintain Demoralizing Shout"],
+    desc = L["Keep Demoralizing Shout on the target, as a raid tank does. Off: the priority never shows it."],
     width = "full",
     sim = true,
 }, "protection")
 
 spec:RegisterSetting("maintain_thunder_clap", false, {
     type = "toggle",
-    name = "Maintain Thunder Clap",
-    desc = "Keep Thunder Clap's slow on the target (the leveling filler before Mortal Strike). Off: the priority never "
-        .. "shows Thunder Clap.",
+    name = L["Maintain Thunder Clap"],
+    desc = L["Keep Thunder Clap's slow on the target (the leveling filler before Mortal Strike). Off: the priority never " .. "shows Thunder Clap."],
     width = "full",
     sim = true,
 }, "arms")

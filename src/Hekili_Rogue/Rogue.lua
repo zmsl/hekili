@@ -19,6 +19,7 @@
 local Facade = Hekili.Client
 local UnitClassBase, GetTime = Facade.UnitClassBase, Facade.GetTime
 local IsSpellUsable, GetItemCount = Facade.C_Spell.IsSpellUsable, Facade.C_Item.GetItemCount
+local L = Hekili.L
 
 if UnitClassBase("player") ~= "ROGUE" then
     return
@@ -33,16 +34,23 @@ local spec = Hekili:NewClass("ROGUE", {
     specs = {
         {
             key = "assassination",
-            name = "Assassination",
+            name = L["Assassination"],
             tree = 1,
             icon = 132292,
             role = "attack",
             package = "Assassination (wowsims.com)",
         },
-        { key = "combat", name = "Combat", tree = 2, icon = 132090, role = "attack", package = "Combat (wowsims.com)" },
+        {
+            key = "combat",
+            name = L["Combat"],
+            tree = 2,
+            icon = 132090,
+            role = "attack",
+            package = "Combat (wowsims.com)",
+        },
         {
             key = "subtlety",
-            name = "Subtlety",
+            name = L["Subtlety"],
             tree = 3,
             icon = 132320,
             role = "attack",

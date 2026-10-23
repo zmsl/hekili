@@ -3,6 +3,7 @@
 
 local addon, ns = ...
 local Facade = ns.Facade
+local L = ns.L
 local InCombatLockdown = Facade.InCombatLockdown
 local Hekili = _G[ addon ]
 
@@ -103,7 +104,7 @@ function Hekili:CmdLine( input )
     elseif command == "help" then
         self:DisplayChatCommandList( "all" )
     else
-        self:Print( "Invalid command. Type '/hekili help' to see the available commands." )
+        self:Print( L["Invalid command. Type '/hekili help' to see the available commands."] )
         return true
     end
 end
@@ -127,21 +128,21 @@ function Hekili:HandleSetCommand( args )
         local cycleValue = tonumber( subToggleOrState )
         if cycleValue and cycleValue >= 0 and cycleValue <= 20 and floor( cycleValue ) == cycleValue then
             profile.specs[ Status.specID ].cycle_min = cycleValue
-            self:Print( format( "Target Swap minimum time to die set to %d seconds.", cycleValue ) )
+            self:Print( format( L["Target Swap minimum time to die set to %d seconds."], cycleValue ) )
         elseif subToggleOrState == nil then
             -- Toggle cycle if no state is provided
             profile.specs[ Status.specID ].cycle = not profile.specs[ Status.specID ].cycle
-            local toggleStateText = profile.specs[ Status.specID ].cycle and "|cFF00FF00ON|r" or "|cFFFF0000OFF|r"
-            self:Print( format( "Target Swap toggle set to %s.", toggleStateText ) )
+            local toggleStateText = profile.specs[ Status.specID ].cycle and L["|cFF00FF00ON|r"] or L["|cFFFF0000OFF|r"]
+            self:Print( format( L["Target Swap toggle set to %s."], toggleStateText ) )
         elseif subToggleOrState == "on" or subToggleOrState == "off" then
             -- Explicitly set cycle to on or off
             local toggleState = ( subToggleOrState == "on" )
             profile.specs[ Status.specID ].cycle = toggleState
-            local toggleStateText = toggleState and "|cFF00FF00ON|r" or "|cFFFF0000OFF|r"
-            self:Print( format( "Target Swap toggle set to %s.", toggleStateText ) )
+            local toggleStateText = toggleState and L["|cFF00FF00ON|r"] or L["|cFFFF0000OFF|r"]
+            self:Print( format( L["Target Swap toggle set to %s."], toggleStateText ) )
         else
             -- Invalid parameter handling
-            self:Print( "Invalid input for 'cycle'. Use 'on', 'off', leave blank to toggle, or provide a whole number from 0 to 20 to set the minimum time to die." )
+            self:Print( L["Invalid input for 'cycle'. Use 'on', 'off', leave blank to toggle, or provide a whole number from 0 to 20 to set the minimum time to die."] )
         end
         self:ForceUpdate( "CLI_TOGGLE" )
         return true
@@ -165,7 +166,7 @@ function Hekili:HandleSetCommand( args )
         if self:HandleSpecSetting( subToggleOrState, explicitState) then
             return true
         else
-            self:Print( "Invalid spec setting specified." )
+            self:Print( L["Invalid spec setting specified."] )
             return true
         end
     end
@@ -176,8 +177,8 @@ function Hekili:HandleSetCommand( args )
     if toggleCategory then
         if subToggleOrState == "on" or subToggleOrState == "off" then
             toggleCategory.value = ( subToggleOrState == "on" )
-            local stateText = toggleCategory.value and "|cFF00FF00ON|r" or "|cFFFF0000OFF|r"
-            self:Print( format( "|cFFFFD100%s|r is now %s.", mainToggle, stateText ) )
+            local stateText = toggleCategory.value and L["|cFF00FF00ON|r"] or L["|cFFFF0000OFF|r"]
+            self:Print( format( L["|cFFFFD100%s|r is now %s."], mainToggle, stateText ) )
             self:ForceUpdate( "CLI_TOGGLE" )
             return true
         end
@@ -197,30 +198,30 @@ function Hekili:HandleSetCommand( args )
                 elseif explicitState == nil then
                     lowerToggleCategory[ subToggleOrState ] = not lowerToggleCategory[ subToggleOrState ]
                 else
-                    self:Print( "Invalid explicit state; use 'on' or 'off'." )
+                    self:Print( L["Invalid explicit state; use 'on' or 'off'."] )
                     return true
                 end
 
                 toggleCategory[ subToggleOrState ] = lowerToggleCategory[ subToggleOrState ]  -- Update the original case-sensitive table
-                local stateText = lowerToggleCategory[ subToggleOrState ] and "|cFF00FF00ON|r" or "|cFFFF0000OFF|r"
-                self:Print( format( "|cFFFFD100%s_%s|r is now %s.", mainToggle, subToggleOrState, stateText ) )
+                local stateText = lowerToggleCategory[ subToggleOrState ] and L["|cFF00FF00ON|r"] or L["|cFFFF0000OFF|r"]
+                self:Print( format( L["|cFFFFD100%s_%s|r is now %s."], mainToggle, subToggleOrState, stateText ) )
                 self:ForceUpdate("CLI_TOGGLE" )
                 return true
             else
-                self:Print("Invalid sub-toggle specified." )
+                self:Print(L["Invalid sub-toggle specified."] )
                 return true
             end
         end
 
         -- Default Toggle Behavior for Main Toggle (Toggle)
         self:FireToggle( mainToggle, explicitState )
-        local mainToggleState = profile.toggles[ mainToggle ].value and "|cFF00FF00ON|r" or "|cFFFF0000OFF|r"
-        self:Print( format( "|cFFFFD100%s|r is now %s.", mainToggle, mainToggleState ) )
+        local mainToggleState = profile.toggles[ mainToggle ].value and L["|cFF00FF00ON|r"] or L["|cFFFF0000OFF|r"]
+        self:Print( format( L["|cFFFFD100%s|r is now %s."], mainToggle, mainToggleState ) )
         self:ForceUpdate( "CLI_TOGGLE" )
         return true
     end
     -- Invalid Toggle or Setting
-    self:Print( "Invalid toggle or setting specified." )
+    self:Print( L["Invalid toggle or setting specified."] )
     return true
 end
 
@@ -248,7 +249,7 @@ function Hekili:HandleFixCommand( args )
         Hekili:LoadScripts()
         Hekili:SelectPack( packName )
         if profile.notifications.enabled then
-            Hekili:Notify( "Your pack has been reset to default", 6 )
+            Hekili:Notify( L["Your pack has been reset to default"], 6 )
         end
 
         return true
@@ -285,7 +286,7 @@ function Hekili:HandleFixCommand( args )
         -- Reset display mode to automatic.
         self:SetMode( "automatic" )
 
-        self:Print( "Your UI displays have been restored to default positions and visibility." )
+        self:Print( L["Your UI displays have been restored to default positions and visibility."] )
         self:BuildUI()
         self:UpdateDisplayVisibility()
         self:ForceUpdate( "CLI_TOGGLE" )
@@ -303,7 +304,7 @@ function Hekili:HandleFixCommand( args )
             end
         end
 
-        self:Print( "All standard toggles have been fixed (enabled), except 'mode' (unchanged)." )
+        self:Print( L["All standard toggles have been fixed (enabled), except 'mode' (unchanged)."] )
         return true
     end
 
@@ -317,7 +318,7 @@ function Hekili:HandleFixCommand( args )
 
         interrupts.castRemainingThreshold = defaults.profile.castRemainingThreshold
 
-        self:Print( "Interrupt display has been restored, set to separate mode, and interrupt tuning values reset." )
+        self:Print( L["Interrupt display has been restored, set to separate mode, and interrupt tuning values reset."] )
         self:BuildUI()
         self:UpdateDisplayVisibility()
         self:ForceUpdate( "CLI_TOGGLE" )
@@ -344,16 +345,16 @@ function Hekili:HandleSpecSetting( specSetting, specValue )
                 if specValue == nil or specValue == "toggle" then
                     local newValue = not profile.specs[ Status.specID ].settings[ setting.name ]
                     profile.specs[ Status.specID ].settings[ setting.name ] = newValue
-                    local stateText = newValue and "|cFF00FF00ON|r" or "|cFFFF0000OFF|r"
-                    self:Print( format( "%s set to %s.", setting.name, stateText ) )
+                    local stateText = newValue and L["|cFF00FF00ON|r"] or L["|cFFFF0000OFF|r"]
+                    self:Print( format( L["%s set to %s."], setting.name, stateText ) )
                 elseif specValue == "on" then
                     profile.specs[Status.specID].settings[setting.name] = true
-                    self:Print( format( "%s set to |cFF00FF00ON|r.", setting.name ) )
+                    self:Print( format( L["%s set to |cFF00FF00ON|r."], setting.name ) )
                 elseif specValue == "off" then
                     profile.specs[Status.specID].settings[setting.name] = false
-                    self:Print( format( "%s set to |cFFFF0000OFF|r.", setting.name ) )
+                    self:Print( format( L["%s set to |cFFFF0000OFF|r."], setting.name ) )
                 else
-                    self:Print( "Invalid input. Use 'on', 'off', or leave blank to toggle for toggle settings." )
+                    self:Print( L["Invalid input. Use 'on', 'off', or leave blank to toggle for toggle settings."] )
                 end
                 return true
 
@@ -362,9 +363,9 @@ function Hekili:HandleSpecSetting( specSetting, specValue )
                 local newValue = tonumber( specValue )
                 if newValue and newValue >= ( setting.info.min or -math.huge ) and newValue <= ( setting.info.max or math.huge ) then
                     profile.specs[ Status.specID ].settings[ setting.name ] = newValue
-                    self:Print( format( "%s set to |cFF00B4FF%.2f|r.", setting.name, newValue ) )
+                    self:Print( format( L["%s set to |cFF00B4FF%.2f|r."], setting.name, newValue ) )
                 else
-                    self:Print( format( "Invalid value for %s. Must be between %.2f and %.2f.", setting.name, setting.info.min or 0, setting.info.max or 100 ) )
+                    self:Print( format( L["Invalid value for %s. Must be between %.2f and %.2f."], setting.name, setting.info.min or 0, setting.info.max or 100 ) )
                 end
                 return true
 
@@ -374,16 +375,16 @@ function Hekili:HandleSpecSetting( specSetting, specValue )
                 if type( values ) == "function" then values = values() end
                 if specValue and values and values[ specValue ] ~= nil then
                     profile.specs[ Status.specID ].settings[ setting.name ] = specValue
-                    self:Print( format( "%s set to |cFF00B4FF%s|r.", setting.name, tostring( values[ specValue ] ) ) )
+                    self:Print( format( L["%s set to |cFF00B4FF%s|r."], setting.name, tostring( values[ specValue ] ) ) )
                 else
-                    self:Print( format( "Invalid value for %s. Use one of: %s.", setting.name, table.concat( setting.info.sorting or {}, ", " ) ) )
+                    self:Print( format( L["Invalid value for %s. Use one of: %s."], setting.name, table.concat( setting.info.sorting or {}, ", " ) ) )
                 end
                 return true
             end
         end
     end
 
-    self:Print( "Invalid spec setting specified." )
+    self:Print( L["Invalid spec setting specified."] )
     return false
 end
 
@@ -392,43 +393,43 @@ function Hekili:DisplayChatCommandList( list )
 
     -- Generate and print the "all" overview message.
     if list == "all" then
-        self:Print( "Use |cFFFFD100/hekili set|r to adjust toggles, display modes, and specialization settings via chat commands or macros.\n\n" )
+        self:Print( L["Use |cFFFFD100/hekili set|r to adjust toggles, display modes, and specialization settings via chat commands or macros.\n\n"] )
     end
 
     -- Toggle Options Section
     local function getTogglesChunk()
-        return "Toggle Options:\n" ..
+        return L["Toggle Options:\n" ..
             " - |cFFFFD100cooldowns|r, |cFFFFD100potions|r, |cFFFFD100interrupts|r, etc.\n" ..
             " - Example commands:\n" ..
             "   - Enable Cooldowns: |cFFFFD100/hek set cooldowns on|r\n" ..
             "   - Disable Interrupts: |cFFFFD100/hek set interrupts off|r\n" ..
-            "   - Toggle Defensives: |cFFFFD100/hek set defensives|r\n\n"
+            "   - Toggle Defensives: |cFFFFD100/hek set defensives|r\n\n"]
     end
 
     -- Display Mode Control Section
     local function getModesChunk()
-        return format( "Display Mode Control (currently |cFFFFD100%s|r):\n", profile.toggles.mode.value or "unknown" ) ..
-            " - Toggle Mode: |cFFFFD100/hek set mode|r\n" ..
+        return format( L["Display Mode Control (currently |cFFFFD100%s|r):\n"], profile.toggles.mode.value or L["unknown"] ) ..
+            L[" - Toggle Mode: |cFFFFD100/hek set mode|r\n" ..
             " - Set specific mode:\n" ..
             "   - |cFFFFD100/hek set mode automatic|r\n" ..
             "   - |cFFFFD100/hek set mode single|r\n" ..
             "   - |cFFFFD100/hek set mode aoe|r\n" ..
             "   - |cFFFFD100/hek set mode dual|r\n" ..
-            "   - |cFFFFD100/hek set mode reactive|r\n\n"
+            "   - |cFFFFD100/hek set mode reactive|r\n\n"]
     end
 
     -- Target Swap (Cycle) Setting Section
     local function getCycleChunk()
-        return "Target Swap Setting:\n" ..
+        return L["Target Swap Setting:\n" ..
             " - Toggle Target Swap: |cFFFFD100/hek set cycle|r\n" ..
             " - Set minimum time to die for target swaps: |cFFFFD100/hek set cycle #|r (0-20)\n" ..
             " - Enable: |cFFFFD100/hek set cycle on|r\n" ..
-            " - Disable: |cFFFFD100/hek set cycle off|r\n\n"
+            " - Disable: |cFFFFD100/hek set cycle off|r\n\n"]
     end
 
     -- Specialization Settings Section
     local function getSpecializationChunk()
-        local output = "Specialization Settings for " .. ( Status.specName or "your specialization" ) .. ":\n"
+        local output = format( L["Specialization Settings for %s:\n"], Status.specName or L["your specialization"] )
         local hasToggle, hasNumber = false, false
         local exToggle, exNumber, exMin, exMax, exStep
 
@@ -440,18 +441,18 @@ function Hekili:DisplayChatCommandList( list )
                     output = output .. format(
                         " - |cFFFFD100%s|r = %s|r (%s)\n",
                         setting.name,
-                        profile.specs[ Status.specID ].settings[ setting.name ] and "|cFF00FF00ON" or "|cFFFF0000OFF",
+                        profile.specs[ Status.specID ].settings[ setting.name ] and L["|cFF00FF00ON"] or L["|cFFFF0000OFF"],
                         type( setting.info.name ) == "function" and setting.info.name() or setting.info.name
                     )
                     hasToggle = true
                     exToggle = setting.name
                 elseif setting.info.type == "range" then
                     output = output .. format(
-                        " - |cFFFFD100%s|r = |cFF00FF00%.2f|r, min: %.2f, max: %.2f\n",
+                        L[" - |cFFFFD100%s|r = |cFF00FF00%.2f|r, min: %.2f, max: %.2f\n"],
                         setting.name,
                         profile.specs[ Status.specID ].settings[ setting.name ],
-                        setting.info.min and format( "%.2f", setting.info.min ) or "N/A",
-                        setting.info.max and format( "%.2f", setting.info.max ) or "N/A"
+                        setting.info.min and format( "%.2f", setting.info.min ) or L["N/A"],
+                        setting.info.max and format( "%.2f", setting.info.max ) or L["N/A"]
                     )
                     hasNumber = true
                     exNumber = setting.name
@@ -460,7 +461,7 @@ function Hekili:DisplayChatCommandList( list )
                     exStep = setting.info.step
                 elseif setting.info.type == "select" then
                     output = output .. format(
-                        " - |cFFFFD100%s|r = |cFF00B4FF%s|r, one of: %s\n",
+                        L[" - |cFFFFD100%s|r = |cFF00B4FF%s|r, one of: %s\n"],
                         setting.name,
                         tostring( profile.specs[ Status.specID ].settings[ setting.name ] ),
                         table.concat( setting.info.sorting or {}, ", " )
@@ -472,20 +473,23 @@ function Hekili:DisplayChatCommandList( list )
         -- Example Commands for Specialization Settings
         if hasToggle then
             output = output .. format(
-                "\nExample commands for toggling specialization settings:\n" ..
+                L["\nExample commands for toggling specialization settings:\n" ..
                 " - Toggle On/Off: |cFFFFD100/hek set spec %s|r\n" ..
                 " - Enable: |cFFFFD100/hek set spec %s on|r\n" ..
-                " - Disable: |cFFFFD100/hek set spec %s off|r\n",
+                " - Disable: |cFFFFD100/hek set spec %s off|r\n"],
                 exToggle, exToggle, exToggle
             )
         end
 
         if hasNumber then
             -- Adjust range display based on step size
-            local rangeFormat = exStep and exStep >= 1 and "%d-%d" or "%.1f-%.1f"
+            local numericExample = exStep and exStep >= 1
+                and L["\nExample command for setting numeric values:\n" ..
+                    " - Set to a value within range: |cFFFFD100/hek set spec %s #|r ( %d-%d)\n"]
+                or L["\nExample command for setting numeric values:\n" ..
+                    " - Set to a value within range: |cFFFFD100/hek set spec %s #|r ( %.1f-%.1f)\n"]
             output = output .. format(
-                "\nExample command for setting numeric values:\n" ..
-                " - Set to a value within range: |cFFFFD100/hek set spec %s #|r ( " .. rangeFormat .. ")\n",
+                numericExample,
                 exNumber, exMin or 0, exMax or 100
             )
         end
@@ -495,11 +499,11 @@ function Hekili:DisplayChatCommandList( list )
 
     -- Other Commands Section (only included with "all")
     local function getOtherCommandsChunk()
-        return "Other available commands:\n" ..
+        return L["Other available commands:\n" ..
             " - |cFFFFD100/hekili priority|r - View or change priority settings\n" ..
             " - |cFFFFD100/hekili profile|r - View or change profiles\n" ..
             " - |cFFFFD100/hekili move|r - Unlock or lock the UI for positioning\n" ..
-            " - |cFFFFD100/hekili enable|r or |cFFFFD100/hekili disable|r - Enable or disable the addon\n"
+            " - |cFFFFD100/hekili enable|r or |cFFFFD100/hekili disable|r - Enable or disable the addon\n"]
     end
 
     -- Determine which sections to print based on the input
@@ -525,15 +529,15 @@ function Hekili:HandleSkeletonCommand( input )
         self.Skeleton = ""  -- must happen BEFORE NotifyChange!
         LibStub("AceConfigRegistry-3.0"):NotifyChange("Hekili")
         self:StartSkeletonListener()
-        self:Print( "Addon will now gather specialization information. Select all talents and use all abilities for best results." )
+        self:Print( L["Addon will now gather specialization information. Select all talents and use all abilities for best results."] )
     end
 end
 
 function Hekili:HandleProfileCommand( args )
     if not args[2] then
-        local output = "Use |cFFFFD100/hekili profile name|r to swap profiles. Valid profile names are:"
+        local output = L["Use |cFFFFD100/hekili profile name|r to swap profiles. Valid profile names are:"]
         for name, prof in ns.orderedPairs( Hekili.DB.profiles ) do
-            output = output .. format( "\n - |cFFFFD100%s|r %s", name, Hekili.DB.profile == prof and "|cFF00FF00(current)|r" or "" )
+            output = output .. format( "\n - |cFFFFD100%s|r %s", name, Hekili.DB.profile == prof and L["|cFF00FF00(current)|r"] or "" )
         end
         self:Print( output )
         return
@@ -541,11 +545,11 @@ function Hekili:HandleProfileCommand( args )
 
     local profileName = args[2]
     if not rawget( Hekili.DB.profiles, profileName ) then
-        self:Print( "Invalid profile name. Please choose a valid profile." )
+        self:Print( L["Invalid profile name. Please choose a valid profile."] )
         return
     end
 
-    self:Print( format( "Set profile to |cFF00FF00%s|r.", profileName ) )
+    self:Print( format( L["Set profile to |cFF00FF00%s|r."], profileName ) )
     self.DB:SetProfile( profileName )
     return
 end
@@ -562,10 +566,10 @@ function Hekili:HandleEnableDisableCommand( args )
     end
 
     if enable then
-        self:Print( "Addon enabled." )
+        self:Print( L["Addon enabled."] )
         self:Enable()
     else
-        self:Print( "Addon disabled." )
+        self:Print( L["Addon disabled."] )
         self:Disable()
     end
     return
@@ -573,16 +577,16 @@ end
 
 function Hekili:HandleMoveCommand( args )
     if InCombatLockdown() then
-        self:Print( "Cannot unlock UI elements in combat." )
+        self:Print( L["Cannot unlock UI elements in combat."] )
         return
     end
 
     if args[1] == "lock" then
         ns.StopConfiguration()
-        self:Print( "UI locked." )
+        self:Print( L["UI locked."] )
     else
         ns.StartConfiguration()
-        self:Print( "UI unlocked for movement." )
+        self:Print( L["UI unlocked for movement."] )
     end
     return
 end
@@ -606,7 +610,7 @@ function Hekili:HandleRecoverCommand()
     self:RestoreDefaults()
     self:RefreshOptions()
     self:BuildUI()
-    self:Print( "Default displays and action lists restored." )
+    self:Print( L["Default displays and action lists restored."] )
     return
 end
 
@@ -622,31 +626,31 @@ function Hekili:HandlePriorityCommand( args )
         -- Set the default priority if found
         if defaultPriority then
             Hekili.DB.profile.specs[ spec ].package = defaultPriority
-            local output = format("Switched to the built-in default priority for your specialization: %s%s|r.", Hekili.DB.profile.packs[ defaultPriority ].builtIn and BlizzBlue or "|cFFFFD100", defaultPriority )
+            local output = format(L["Switched to the built-in default priority for your specialization: %s%s|r."], Hekili.DB.profile.packs[ defaultPriority ].builtIn and BlizzBlue or "|cFFFFD100", defaultPriority )
             self:Print( output )
             self:ForceUpdate( "CLI_TOGGLE" )
         else
             -- If no built-in default is found, display an error message
-            self:Print( "No built-in default priority available for this specialization." )
+            self:Print( L["No built-in default priority available for this specialization."] )
         end
         return true
     end
 
     -- No additional argument provided, show available priorities
     if not args[2] then
-        local output = "Use |cFFFFD100/hekili priority name|r to change your current specialization's priority via command-line or macro."
+        local output = L["Use |cFFFFD100/hekili priority name|r to change your current specialization's priority via command-line or macro."]
 
         if #priorities < 2 then
-            output = output .. "\n\n|cFFFF0000You must have multiple priorities for your specialization to use this feature.|r"
+            output = output .. L["\n\n|cFFFF0000You must have multiple priorities for your specialization to use this feature.|r"]
         else
-            output = output .. "\nValid priority |cFFFFD100name|rs are:"
+            output = output .. L["\nValid priority |cFFFFD100name|rs are:"]
             for _, priority in ipairs( priorities ) do
                 local isCurrent = Hekili.DB.profile.specs[ spec ].package == priority
-                output = format( "%s\n - %s%s|r %s", output, Hekili.DB.profile.packs[ priority ].builtIn and BlizzBlue or "|cFFFFD100", priority, isCurrent and "|cFF00FF00(current)|r" or "" )
+                output = format( "%s\n - %s%s|r %s", output, Hekili.DB.profile.packs[ priority ].builtIn and BlizzBlue or "|cFFFFD100", priority, isCurrent and L["|cFF00FF00(current)|r"] or "" )
             end
         end
 
-        output = format( "%s\n\nTo create a new priority, see |cFFFFD100/hekili|r > |cFFFFD100Priorities|r.", output )
+        output = format( L["%s\n\nTo create a new priority, see |cFFFFD100/hekili|r > |cFFFFD100Priorities|r."], output )
         self:Print( output )
         return true
     end
@@ -658,7 +662,7 @@ function Hekili:HandlePriorityCommand( args )
     for _, priority in ipairs( priorities ) do
         if priority:lower():match( pattern ) then
             Hekili.DB.profile.specs[ spec ].package = priority
-            local output = format( "Priority set to %s%s|r.", Hekili.DB.profile.packs[ priority ].builtIn and BlizzBlue or "|cFFFFD100", priority )
+            local output = format( L["Priority set to %s%s|r."], Hekili.DB.profile.packs[ priority ].builtIn and BlizzBlue or "|cFFFFD100", priority )
             self:Print( output )
             self:ForceUpdate( "CLI_TOGGLE" )
             return true
@@ -666,7 +670,7 @@ function Hekili:HandlePriorityCommand( args )
     end
 
     -- If no matching priority found, display valid options
-    local output = format( "No match found for priority '%s'.\nValid options are:", rawName )
+    local output = format( L["No match found for priority '%s'.\nValid options are:"], rawName )
     for i, priority in ipairs( priorities ) do
         output = output .. format( " %s%s|r%s", Hekili.DB.profile.packs[ priority ].builtIn and BlizzBlue or "|cFFFFD100", priority, i == #priorities and "." or "," )
     end
@@ -679,7 +683,7 @@ end
 function Hekili:HandleSpecCommand( args )
     local kit = Registry.Kit()
     if not kit then
-        self:Print( "No specializations: your class has no Hekili Forever pack." )
+        self:Print( L["No specializations: your class has no Hekili Forever pack."] )
         return true
     end
 
@@ -687,16 +691,16 @@ function Hekili:HandleSpecCommand( args )
         local name = table.concat( args, " ", 2 )
         local s = self:SetSpecChoice( name )
         if s then
-            self:Print( format( "Specialization set to |cFFFFD100%s|r.", s.name ) )
+            self:Print( format( L["Specialization set to |cFFFFD100%s|r."], s.name ) )
             return true
         end
-        self:Print( format( "No single specialization matches '%s'.", name ) )
+        self:Print( format( L["No single specialization matches '%s'."], name ) )
     end
 
-    local out = "Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:"
+    local out = L["Use |cFFFFD100/hekili spec name|r to choose your specialization. They are:"]
     for _, s in ipairs( kit.trees ) do
-        out = format( "%s\n - |cFFFFD100%s|r%s%s", out, s.key, s.id == Status.specID and " |cFF00FF00(current)|r" or "",
-            s.unsupported and " (no priorities on Forever)" or "" )
+        out = format( "%s\n - |cFFFFD100%s|r%s%s", out, s.key, s.id == Status.specID and L[" |cFF00FF00(current)|r"] or "",
+            s.unsupported and L[" (no priorities on Forever)"] or "" )
     end
     self:Print( out )
     return true

@@ -19,6 +19,7 @@
 
 local Facade = Hekili.Client
 local UnitClassBase, IsSpellUsable = Facade.UnitClassBase, Facade.C_Spell.IsSpellUsable
+local L = Hekili.L
 
 if UnitClassBase("player") ~= "PALADIN" then
     return
@@ -31,10 +32,10 @@ local max = math.max
 -- 100023; the client's one pseudo-spec, 1486, only keys the legacy profile the core migrates). Icons: the DB2 tabs'.
 local spec = Hekili:NewClass("PALADIN", {
     specs = {
-        { key = "holy", name = "Holy", tree = 1, icon = 135920, role = "healer", unsupported = true },
+        { key = "holy", name = L["Holy"], tree = 1, icon = 135920, role = "healer", unsupported = true },
         {
             key = "protection",
-            name = "Protection",
+            name = L["Protection"],
             tree = 2,
             icon = 135893,
             role = "tank",
@@ -42,7 +43,7 @@ local spec = Hekili:NewClass("PALADIN", {
         },
         {
             key = "retribution",
-            name = "Retribution",
+            name = L["Retribution"],
             tree = 3,
             icon = 135873,
             role = "attack",

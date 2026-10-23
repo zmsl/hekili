@@ -2,6 +2,7 @@
 -- January 2025
 
 local addon, ns = ...
+local L = ns.L
 local Facade = ns.Facade
 local C_Item, C_LossOfControl, C_Spell = Facade.C_Item, Facade.C_LossOfControl, Facade.C_Spell
 local C_SpellBook, C_UnitAuras = Facade.C_SpellBook, Facade.C_UnitAuras
@@ -6707,7 +6708,7 @@ do
 
         if ability then
             state.holds[ ability.key ] = combat and HOLD_COMBAT or HOLD_PERMANENT
-            if verbose then Hekili:Print( class.abilities[ ability.key ].name .. " placed on hold" .. ( combat and " until end of combat." or "." ) ) end
+            if verbose then Hekili:Print( format( combat and L["%s placed on hold until end of combat."] or L["%s placed on hold."], class.abilities[ ability.key ].name ) ) end
             Hekili:ForceUpdate( "HEKILI_HOLD_APPLIED" )
         end
     end
@@ -6732,7 +6733,7 @@ do
 
         if ability and state.holds[ ability.key ] then
             state.holds[ ability.key ] = nil
-            if verbose then Hekili:Print( class.abilities[ ability.key ].name .. " hold removed." ) end
+            if verbose then Hekili:Print( format( L["%s hold removed."], class.abilities[ ability.key ].name ) ) end
             Hekili:ForceUpdate( "HEKILI_HOLD_REMOVED" )
         end
     end

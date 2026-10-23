@@ -2,6 +2,7 @@
 -- June 2024
 
 local addon, ns = ...
+local L = ns.L
 local Facade = ns.Facade
 local CreateFrame = Facade.CreateFrame
 local AuraUtil, C_AddOns = Facade.AuraUtil, Facade.C_AddOns
@@ -995,10 +996,10 @@ local minimumLevel = 60
 -- Need to make caching system.
 RegisterUnitEvent( "UNIT_SPELLCAST_SUCCEEDED", "player", "target", function( event, unit, _, spellID )
     if not noClassWarned and not class.initialized then
-        Hekili:Notify( UnitClass( "player" ) .. " does not have any Hekili Forever modules loaded (yet).\nWatch for updates.", 10 )
+        Hekili:Notify( string.format( L["%s does not have any Hekili Forever modules loaded (yet).\nWatch for updates."], ( UnitClass( "player" ) ) ), 10 )
         noClassWarned = true
     elseif not lowLevelWarned and UnitLevel( "player" ) < minimumLevel then
-        Hekili:Notify( "Hekili Forever is designed for level " .. minimumLevel .. " content.\nIt may not work as expected below level " .. minimumLevel .. ".", 10 )
+        Hekili:Notify( string.format( L["Hekili Forever is designed for level %s content.\nIt may not work as expected below level %s."], minimumLevel, minimumLevel ), 10 )
         lowLevelWarned = true
     end
 

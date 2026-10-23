@@ -36,7 +36,15 @@ function M.load()
     }
     local w = { game = game, abilities = {}, auras = {}, hooks = {}, funcs = {}, exprs = {} }
     w.state = { main_hand = { size = 2 }, equipped = {}, timeToInterrupt = function() end }
-    local hekili = { State = w.state }
+    -- L: the English an English client shows (Locales/Locales.lua)
+    local hekili = {
+        State = w.state,
+        L = setmetatable({}, {
+            __index = function(_, key)
+                return key
+            end,
+        }),
+    }
     function hekili:NewClass(token, def)
         w.class, w.def = token, def
         return spec
