@@ -285,8 +285,10 @@ M.READY = {
     shaman_elemental = { 0.48, 54 }, -- 0.480, 54 (Elemental lane, Task 14; first clean run on a21329fc)
     -- 1.000, 18 (Warlock lane, Task 13; first clean run on 5d62f44c+): Shadow Bolt's 2.5 s cast, the next icon ready
     -- at the GCD's end inside it (Shadow's Mind Flay likewise). Count 18 -> 21 on fix 31 (06eec227): G4 keeps
-    -- Corruption believed, so 12 more decisions are shown (never 22 -> 10), 3 of them a Shadow Bolt's early 1.0 s
-    warlock_affliction = { 1.00, 21 },
+    -- Corruption believed, so 12 more decisions are shown (never 22 -> 10), 3 of them a Shadow Bolt's early 1.0 s.
+    -- Count 21 -> 23 on Task 16 (pack expects): decisions 12 and 15 (Shadow Bolt) moved from never to early (~1.0 s);
+    -- never 10 -> 8; median 1.00 unchanged
+    warlock_affliction = { 1.00, 23 },
     warlock_demonology = { 0.10, 3 }, -- 0.100, 3: Searing Pain's 1.5 s cast equals the GCD, so nearly every decision is
     -- absorbed at the grain; the three left are 0.1-0.2 s early
     warlock_destruction = { 0.40, 17 }, -- 0.400, 17: Incinerate's 2.0 s cast, likewise
