@@ -15,8 +15,10 @@ describe("Adapter", function()
             saved[k] = rawget(_G, k) or false
         end
         _G.GetTime, _G.UnitGUID, _G.CreateFrame = api.GetTime, api.UnitGUID, api.CreateFrame
+        local clockMs = 0 -- one ms per read: a timed span of two reads measures exactly 1
         _G.debugprofilestop = function()
-            return os.clock() * 1000
+            clockMs = clockMs + 1
+            return clockMs
         end
         ns = load.module()
         VS, I = ns.VirtualState, ns.VirtualStateInternal
@@ -331,12 +333,11 @@ describe("Adapter", function()
         local prof = h.Virtual.Prof
         ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 10, 1)
         VS.Drain(ctl.now)
-        assert.are.same({ 0, 0 }, { prof.rows, prof.polls })
+        assert.are.same({ 0, 0, 0, 0 }, { prof.rows, prof.polls, prof.rowMs, prof.pollMs })
         prof.on = true
         ctl.now = 2
         ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 11, 1)
         VS.Drain(ctl.now)
-        assert.are.same({ 1, 1 }, { prof.rows, prof.polls })
-        assert.is_true(prof.rowMs >= 0 and prof.pollMs >= 0)
+        assert.are.same({ 1, 1, 1, 1 }, { prof.rows, prof.polls, prof.rowMs, prof.pollMs })
     end)
 end)

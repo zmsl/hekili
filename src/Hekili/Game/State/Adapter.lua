@@ -38,6 +38,7 @@ if Hekili.ProfileCPU then
     Hekili:ProfileCPU("VirtualState.Polls", S.RunPolls)
 end
 do
+    -- Assumes one load per session (in game; a spec that loads the Adapter twice wraps S.RunPolls twice).
     local prof = { on = false, rowMs = 0, rows = 0, pollMs = 0, polls = 0 }
     Hekili.Virtual.Prof = prof
     local onCombat, runPolls, list = I.Units.OnCombat, S.RunPolls, S.HANDLERS.UNIT_COMBAT

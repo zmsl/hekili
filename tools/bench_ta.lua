@@ -1,7 +1,8 @@
 -- tools/bench_ta.lua (unit-registry spec §10): a headless microbenchmark of the unit registry and the ticket pool.
 -- Feeds N synthetic rows (plate, target and soft tokens of one outcome, our successes and swings among them) through
 -- the event facade into a booted VirtualState and times them, then times the per-frame tick. Prints rows/s, ms/row and
--- ms/tick; fails above 0.02 ms a row or 0.10 ms a tick, or below 0.8 x tools/bench_ta_floor.lua's rows/s.
+-- ms/tick (idle, and with a full pool expiring); fails above 0.02 ms a row or 0.10 ms either tick, or below 0.8 x
+-- tools/bench_ta_floor.lua's rows/s.
 -- Run: make bench-ta (or lua5.1 tools/bench_ta.lua [N]).
 package.path = "./src/Hekili/?.lua;./tests/?.lua;./?.lua;" .. package.path
 local load = require("Game.State.helpers.load")
@@ -50,17 +51,38 @@ for _ = 1, M do
 end
 local tick = (os.clock() - t1) / M
 
+-- The worst frame tick: a full pool (T.CAP open tickets, swings and commits) all past their `hi` at once.
+local R, expiry = 2000, 0
+for _ = 1, R do
+    for k = 1, I.Tickets.CAP do
+        now = now + 0.001
+        ctl.now = now
+        if k % 2 == 0 then
+            ctl.Fire("PLAYER_SWING", 2.0, 0)
+        else
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)
+        end
+    end
+    now = now + 5
+    ctl.now = now
+    local t2 = os.clock()
+    ctl.Tick(now)
+    expiry = expiry + os.clock() - t2
+end
+expiry = expiry / R
+
 local floor = dofile("tools/bench_ta_floor.lua").rowsPerSec
 print(
-    ("bench-ta rows=%d rows/s=%.0f ms/row=%.4f ms/tick=%.4f (floor rows/s %d)"):format(
+    ("bench-ta rows=%d rows/s=%.0f ms/row=%.4f ms/tick=%.4f ms/tick-expiry=%.4f (floor rows/s %d)"):format(
         N,
         1 / row,
         row * 1000,
         tick * 1000,
+        expiry * 1000,
         floor
     )
 )
-if row * 1000 >= 0.02 or tick * 1000 >= 0.10 or 1 / row < 0.8 * floor then
+if row * 1000 >= 0.02 or tick * 1000 >= 0.10 or expiry * 1000 >= 0.10 or 1 / row < 0.8 * floor then
     print("bench-ta: over budget or under the floor")
     os.exit(1)
 end

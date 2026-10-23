@@ -12,7 +12,7 @@ describe("the registry's and tickets' resident memory", function()
         local ns, kb = { SCHOOL = load.school() }, 0
         for _, path in ipairs(load.files()) do
             if not path:match("Adapter%.lua$") then
-                local mine = FOUR[path:match("[^/]+$")]
+                local mine = FOUR[path:match("[^/]+$")] and path:match("([^/]+)%.lua$")
                 collectgarbage("collect")
                 collectgarbage("collect")
                 local before = collectgarbage("count")
@@ -20,7 +20,9 @@ describe("the registry's and tickets' resident memory", function()
                 if mine then
                     collectgarbage("collect")
                     collectgarbage("collect")
-                    kb = kb + collectgarbage("count") - before
+                    local d = collectgarbage("count") - before
+                    print(("\n%s resident: %.1f KB"):format(mine, d))
+                    kb = kb + d
                 end
             end
         end
