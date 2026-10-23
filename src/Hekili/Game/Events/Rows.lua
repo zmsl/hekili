@@ -427,9 +427,12 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
         end
         if r then -- the swing's own row in its core band replaces a provisional credit (decision 48)
             T.Replace(r, t)
-            local h = T.x[r]
-            credited, lr, ref, lag, second = r, math.huge, h, t - T.at[r], 0
-            k = M.thetaIndex(h, (avoid or unknown) and 4 or M.classOf(h, amount, flag), h, lag)
+            local h, rf = T.x[r], T.ref[r]
+            lag = t - T.at[r]
+            -- the band that matched: the hand's own, else an off hand's main reference (creditSwing's core: final)
+            local rr = (rf > 0 and math.abs(lag - L.med[h]) > 2 * L.spr[h]) and 3 or h
+            credited, lr, ref, second = r, math.huge, rr, 0
+            k = M.thetaIndex(h, (avoid or unknown) and 4 or M.classOf(h, amount, flag), rr, rr == 3 and t - rf or lag)
         end
     end
     if p == 0 and not credited and not avoid then

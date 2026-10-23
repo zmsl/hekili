@@ -57,7 +57,7 @@ end
 -- hard window, at pass 5 (after pass (d)), always provisional (TENT). A load-time constant; the test loaders set it from
 -- TA_EARLY=1.
 T.EARLY = false
-T.replaced = 0 -- first rows re-labelled foreign by a narrow-band row (not a close)
+T.replaced = 0 -- every replacement of a provisional payment by a narrow-band row, re-offered or not (not a close)
 T.onFinal, T.onReplace = nil, nil -- Rows' hooks: a TENT ticket final, a TENT ticket's row replaced
 
 T.opened = 0

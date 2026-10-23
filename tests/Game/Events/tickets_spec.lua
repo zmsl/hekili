@@ -411,7 +411,7 @@ describe("the ticket pool", function()
         before_each(function()
             staged, stage = {}, I.Sources.Stage
             I.Sources.Stage = function(kind, t, a, b, c)
-                staged[#staged + 1] = { kind, b, c }
+                staged[#staged + 1] = { kind, b, c, a }
                 return stage(kind, t, a, b, c)
             end
         end)
@@ -490,6 +490,67 @@ describe("the ticket pool", function()
                 assert.are.same({ 0, 1, 1, 1 }, { early, T.replaced, T.foreign, T.paid[X.FLIGHT] })
             end
         )
+
+        local function swingsOf(hand, c)
+            local n = 0
+            for _, s in ipairs(staged) do
+                n = n + ((s[1] == VS.Obs.Swing and s[3] == c and s[4] == hand) and 1 or 0)
+            end
+            return n
+        end
+
+        it("re-offers the displaced wound to the open off-hand swing: our own swap is no foreign row (Fury)", function()
+            ctl.now = 9
+            ctl.damage = { 28, 32, 10, 12 } -- read at the combat end: 30 is the main hand's, never the off hand's
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            ctl.now = 9.3
+            ctl.Fire("PLAYER_SWING", 2.6, 1)
+            ctl.now = 9.88
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local main = T.lastSwing[1]
+            ctl.now = 10.003 -- the off hand's median lag; 0.123 s after the main swing: the LR credits the main, early
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.same({ T.TENT, 0 }, { T.state[main], swingsOf(2, 1) })
+            ctl.now = 10.354 -- the main swing's own MISS, in its core band
+            ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+            assert.are.same({ 0, 1, 1 }, { T.foreign, T.replaced, swingsOf(2, 1) })
+            assert.are.same({ T.PROV, "MISS" }, { T.state[main], T.avoid[main] })
+        end)
+
+        it("makes a swing credit a spend already measured final instead of replacing it (spec 2.3)", function()
+            local R = I.res
+            local slot = R.slotOf[fs.RAGE]
+            ctl.now = 150 -- after the fake client's start (100): the fold is in order
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local i = T.lastSwing[1]
+            ctl.now = 150.2
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            I.Sources.Flush()
+            I.Fold(150.2)
+            assert.is_false(I.CreditFixed(T.rec[i]))
+            R.spends[slot] = R.spends[slot] + 1 -- a spend of ours from the slot: the pool is measured
+            ctl.now = 150.47
+            ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
+            assert.are.same({ 0, 0, 1 }, { T.replaced, T.state[i], T.paid[X.MELEE] })
+            assert.are.equal(0, count(VS.Obs.Swing, 6))
+        end)
+
+        it("pays an off-hand replacement in the main reference's core band final at once", function()
+            ctl.now = 7
+            ctl.damage = { 28, 32, 28, 32 }
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            ctl.now = 8
+            ctl.Fire("PLAYER_SWING", 1.2, 0) -- its window closes before the rows (1.2 s)
+            ctl.now = 9.2
+            ctl.Fire("PLAYER_SWING", 1.5, 1) -- main reference 8: core band 9.686 +- 0.04; its own 9.903 +- 0.04
+            local off = T.lastSwing[2]
+            ctl.now = 9.4 -- early: credited provisionally
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.equal(T.TENT, T.state[off])
+            ctl.now = 9.686 -- the main reference's core band only
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 31, 1)
+            assert.are.same({ 1, 0 }, { T.replaced, T.state[off] }) -- final: closed paid, not TENT again
+        end)
 
         it("pays a pass (a) row final at once: no TENT", function()
             ctl.now = 10
