@@ -28,7 +28,7 @@ return {
         busy = { recall = 0.50, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.48, false100 = 45.0, leak100 = 5.6, lostDiff = 48, residual = 0, postClear = 1.00 },
     },
     K6 = {
-        solo = { recall = 0.98, melee = 1.00, melee2 = 0.98, rageErr = -6.0, staged = 1.00, false100 = 1.1, leak100 = 0.5, lostDiff = 0, residual = 0, postClear = 1.00 },
+        solo = { recall = 0.96, melee = 1.00, melee2 = 0.98, rageErr = -6.0, staged = 1.00, false100 = 3.2, leak100 = 1.4, lostDiff = 0, residual = 0, postClear = 1.00 },
         party = { recall = 0.77, melee = 0.88, melee2 = 0.97, rageErr = -3.5, staged = 0.57, false100 = 28.0, leak100 = 4.9, lostDiff = 1, residual = 0, postClear = 0.90 },
         busy = { recall = 0.75, melee = 0.66, melee2 = 0.75, rageErr = -2.2, staged = 1.00, false100 = 50.0, leak100 = 1.1, lostDiff = 0, residual = 0, postClear = 0.84 },
     },
@@ -43,8 +43,8 @@ return {
         busy = { recall = 0.08, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.09, false100 = 90.4, leak100 = 8.8, lostDiff = 81, residual = 0, postClear = 1.00 },
     },
     K9 = {
-        solo = { recall = 0.99, melee = 0.98, melee2 = 0.98, rageErr = -15.7, staged = 0.95, false100 = 0.0, leak100 = 0.0, lostDiff = 5, residual = 0, postClear = 1.00 },
-        party = { recall = 0.99, melee = 0.83, melee2 = 0.97, rageErr = -18.7, staged = 0.96, false100 = 0.0, leak100 = 0.0, lostDiff = 3, residual = 0, postClear = 1.00 },
+        solo = { recall = 0.99, melee = 0.98, melee2 = 0.98, rageErr = -15.7, staged = 0.96, false100 = 0.0, leak100 = 0.0, lostDiff = 4, residual = 0, postClear = 1.00 },
+        party = { recall = 0.99, melee = 0.83, melee2 = 0.97, rageErr = -18.7, staged = 0.97, false100 = 0.0, leak100 = 0.0, lostDiff = 2, residual = 0, postClear = 1.00 },
         busy = { recall = 1.00, melee = 0.73, melee2 = 0.89, rageErr = -19.6, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
 }
