@@ -2090,7 +2090,7 @@ function Hekili.Update()
                             Hekili:Debug( resInfo )
                         end
                     else
-                        if i < 5 and not hasSnapped and settings.autoSnapshot and InCombatLockdown() and state.level >= 70 and ( dispName == "Primary" or dispName == "AOE" ) then
+                        if i <= numRecs and not hasSnapped and settings.autoSnapshot and InCombatLockdown() and state.level >= 70 and ( dispName == "Primary" or dispName == "AOE" ) then
                             Hekili:Print( "Unable to make recommendation for " .. dispName .. " #" .. i .. "; triggering auto-snapshot..." )
                             hasSnapped = dispName
                             -- Not published (stock did not either): the synchronous snapshot run that follows publishes.

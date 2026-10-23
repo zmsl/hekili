@@ -663,6 +663,7 @@ do
     -- no match and is never indexed or compared.
     local function lineHas( text, str, useMatch )
         if issecretvalue( text ) then return false, true end
+        if type( text ) ~= "string" then return false, false end
         if type( str ) ~= "table" then
             if useMatch then return text:match( str ) ~= nil, false end
             return text == str, false
@@ -698,7 +699,7 @@ do
             return false, secret
         end
 
-        for _, line in ipairs( data ) do
+        for _, line in ipairs( data.lines ) do
             hit, s = lineHas( line.leftText, str, useMatch )
             if hit then return true, secret end
             secret = secret or s
@@ -725,17 +726,26 @@ do
     ns.FindStringInInventoryItemTooltip = FindStringInInventoryItemTooltip
 
     local DisabledSpells = {}
+    -- Spells whose tooltip had a secret line this combat: answered false without another tooltip read (each read
+    -- allocates on the client); wiped on PLAYER_REGEN_ENABLED so the next plain read fills DisabledSpells.
+    local secretSeen = {}
 
     local IsSpellDisabled = function( spellID )
         if DisabledSpells[ spellID ] ~= nil then return DisabledSpells[ spellID ] end
+        if secretSeen[ spellID ] then return false end
 
         local isDisabled, secret = FindStringInSpellTooltip( DisableText, spellID, true, true )
         isDisabled = isDisabled or false
-        if not secret then DisabledSpells[ spellID ] = isDisabled end -- a secret line: ask again later
+        -- a hit on a plain line is definitive; a miss over a secret line waits for the combat to end
+        if isDisabled or not secret then DisabledSpells[ spellID ] = isDisabled else secretSeen[ spellID ] = true end
 
         return isDisabled
     end
     ns.IsSpellDisabled = IsSpellDisabled
+
+    function ns.ClearSecretTooltipMemo()
+        wipe( secretSeen )
+    end
 
     local DisabledItems = {}
 

@@ -628,6 +628,7 @@ do
                 state.trinket.t1.cooldown = state.cooldown.null_cooldown
             end
 
+            -- In combat the tooltip lines are secret (fix 33), so these __proc reads come back false then.
             if not isUsable then state.trinket.t1.__proc = FindStringInInventoryItemTooltip( "^" .. ITEM_SPELL_TRIGGER_ONEQUIP, 13, true, true ) end
         end
 
@@ -858,6 +859,7 @@ RegisterEvent( "PLAYER_REGEN_ENABLED", function ()
     combat_ended = GetTime()
 
     state.combat = 0
+    ns.ClearSecretTooltipMemo() -- spell tooltips are plain again: re-read the ones that were secret
 
     state.swings.mh_actual = 0
     state.swings.oh_actual = 0

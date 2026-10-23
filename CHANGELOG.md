@@ -10,6 +10,7 @@
 
 - No more "attempt to index field 'leftText' (a secret string value)" errors in combat: spell tooltips are secret in combat on Forever, and the check for spells disabled in this area now skips them until you leave combat.
 - The next on-GCD ability no longer disappears behind off-GCD suggestions (Bloodrage, Heroic Strike and the like). When those fill every icon, the queue now looks up to two steps further so the Timeline still shows your next GCD; the classic icon row still shows your set number of icons.
+- WeakAuras: the Hekili recommendation payload can now carry up to two records beyond your icon count (the off-GCD look-ahead above).
 
 ### Known issues
 
