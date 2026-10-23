@@ -5,6 +5,7 @@ local world = require("Game.harness.world")
 local entities = require("Game.harness.entities")
 local behaviours = require("Game.harness.behaviours")
 local observer = require("Game.harness.observer")
+local ab = require("Game.harness.ab")
 
 local M = {}
 
@@ -313,6 +314,7 @@ function M.stream(o, seed)
         takenLag = o.takenLag,
         group = o.group,
     }
+    ab.observe(k) -- a provider arm's shapes (make gate-ab)
     for key, v in pairs(o.observe or {}) do
         k[key] = v
     end

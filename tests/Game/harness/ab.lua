@@ -4,7 +4,8 @@ local M = {}
 
 M.ARMS = {
     default = { outcomes = "default", presence = "router", viewer = false },
-    meter = { outcomes = "meter", presence = "router", viewer = false },
+    -- `observe`: the observer knobs the arm turns on (the meter's events; added events only, providers spec §4.2)
+    meter = { outcomes = "meter", presence = "router", viewer = false, observe = { meter = true } },
     viewer = { outcomes = "default", presence = "router", viewer = true },
 }
 
@@ -17,6 +18,13 @@ end
 function M.providers(arm)
     local p = M.ARMS[arm or M.arm()]
     return { outcomes = p.outcomes, presence = p.presence, viewer = p.viewer }
+end
+
+--- Sets the current arm's observer knobs on `k` (none in the default arm: its stream is today's).
+function M.observe(k)
+    for key, v in pairs(M.ARMS[M.arm()].observe or {}) do
+        k[key] = v
+    end
 end
 
 function M.check(ok, label, line, arm)

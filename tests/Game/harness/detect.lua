@@ -157,6 +157,19 @@ function M.boot(c)
     c.VS.Start(c.api)
 end
 
+-- The providers audit's fight counters a provider arm records per cell (Rows' L.fight, providers spec §4.3).
+M.AUDIT = {
+    "swingsTick",
+    "swingsAvoid",
+    "swingsRow",
+    "swingsUnknown",
+    "collide",
+    "ownUnclaimed",
+    "foreignByMeter",
+    "disagree",
+    "overflow",
+}
+
 --- `fights` fights of `kind` in `band` from seed `seed0`, each on a fresh VirtualState: their tally. `check(c, s)`, if
 --- given, sees each fight's captures before they are restored (the invariant sweep).
 function M.run(kind, band, fights, seed0, check)
@@ -187,6 +200,16 @@ function M.run(kind, band, fights, seed0, check)
         local s, W = scenarios.stream(o, seed0 + f)
         local c = drive.boot({ boot = M.boot })
         drive.run(c, s)
+        if ab.arm() ~= "default" then -- the providers audit (Rows' L.fight), summed over the cell's fights
+            local a, f = m.audit or {}, c.I.Log.fight
+            m.audit = a
+            for _, key in ipairs(M.AUDIT) do
+                a[key] = (a[key] or 0) + (f[key] or 0)
+            end
+            local pn, pe = c.I.PinError()
+            a.muted = (a.muted or 0) + (c.I.outcomes.muted or 0)
+            a.pins, a.pinErr = (a.pins or 0) + pn, (a.pinErr or 0) + pe
+        end
         metrics.tickets(m, c, s, W)
         metrics.score(m.melee, c, s, W)
         if check then
@@ -231,6 +254,25 @@ local function cell(m)
         recovered = down(metrics.recovered100(m) / 100),
         wash = up(metrics.wash(m)),
     }
+end
+
+--- The cell's gated values as one line (the A/B's comparison; the rage error signed).
+function M.cellLine(m)
+    local v, mm = cell(m), m.melee
+    return ("cell recall=%.2f melee=%.2f melee2=%.2f rageErr=%.1f staged=%.2f false100=%.1f leak100=%.1f lostDiff=%d residual=%d postClear=%.2f recovered=%.2f wash=%.1f"):format(
+        v.recall,
+        v.melee,
+        v.melee2,
+        mm.windows > 0 and mm.errSum / mm.windows or 0,
+        v.staged,
+        v.false100,
+        v.leak100,
+        v.lostDiff,
+        v.residual,
+        v.postClear,
+        v.recovered,
+        v.wash
+    )
 end
 
 -- A note written above a kind's floors (detect_floors.lua): why a cell sits where it does.
@@ -329,6 +371,28 @@ function M.check(kind, band, m)
     ab.check(v.postClear >= fl.postClear, at, "post-clear rows below their floor: " .. line)
     ab.check(v.recovered >= (fl.recovered or 0), at, "recovery below its floor: " .. line)
     ab.check(v.wash <= (fl.wash or math.huge), at, "net wash above its ceiling: " .. line)
+    local a = m.audit
+    if a then -- a provider arm: its audit beside the cell
+        ab.check(true, at, M.cellLine(m))
+        ab.check(
+            true,
+            at,
+            ("audit tick=%d/%d row=%d unknown=%d muted=%d collide=%d ownUnclaimed=%d foreignByMeter=%d disagree=%d overflow=%d pins=%d pinErr=%.1f"):format(
+                a.swingsTick,
+                a.swingsAvoid,
+                a.swingsRow,
+                a.swingsUnknown,
+                a.muted,
+                a.collide,
+                a.ownUnclaimed,
+                a.foreignByMeter,
+                a.disagree,
+                a.overflow,
+                a.pins,
+                a.pins > 0 and a.pinErr / a.pins or 0
+            )
+        )
+    end
 end
 
 --- K17's /reload: the first half of a fight on one VirtualState, the rest on a fresh one (an empty registry while

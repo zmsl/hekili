@@ -60,8 +60,9 @@ M.DEFAULTS = {
     -- The providers' measured shapes (providers spec §4.2), events only, from W.mrng: `meter` the damage meter's
     -- DAMAGE_METER_COMBAT_SESSION_UPDATED groups (DM research §2: a hit swing of the group 0-11 ms after it, none for an
     -- avoid; spells and procs in their row's frame, ticks 1-2 ms; type 7 at a hit on the group), `viewer` the Cooldown
-    -- Manager's item edges 3-5 ms after an aura of ours (CV research §2), `takenLag` moves the hit row on us (s; type 7
-    -- leads it by 0.39-0.57 s in game), `group` false: the other sources are strangers (their hits never tick).
+    -- Manager's item edges 3-5 ms after an aura of ours (CV research §2), `takenLag` moves the hit row on us by it
+    -- +-0.09 s (s; type 7 leads it by 0.39-0.57 s in game: 0.48 is the measured shape; it moves rows, so no floor run
+    -- turns it on), `group` false: the other sources are strangers (their hits never tick).
     meter = false,
     viewer = false,
     takenLag = 0,
@@ -715,7 +716,7 @@ function M.new(W, k)
         elseif ev.act and ev.dst then -- another source's outcome, our DoT's tick, a hit on us or on someone else
             local tr = t
             if (k.takenLag or 0) > 0 and ev.dst == us and ev.act == "WOUND" then -- the hit row on us, later (DM §2)
-                tr = t + k.takenLag + W.mrng.next() * 0.24 - 0.12
+                tr = t + k.takenLag + W.mrng.next() * 0.18 - 0.09
             end
             outcome(tr, ev, (ev.src == us) and 1 or 2)
         end
