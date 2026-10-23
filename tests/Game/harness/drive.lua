@@ -84,6 +84,34 @@ function M.boot(o)
     c.I.Units.OnRow(function()
         c.rowsOut = c.rowsOut + 1
     end)
+    c.gone = 0 -- TargetGone observations (K11: once per kill of our target)
+    c.I.On(c.VS.Obs.TargetGone, function()
+        c.gone = c.gone + 1
+    end)
+    -- the anchors of FLIGHT tickets that closed lost (K11: never one whose unit died in its flight). shortcut: a tick
+    -- whose expiries include a lost one marks every FLIGHT ticket expiring in it; exact while at most one expires per
+    -- tick (the detection kinds' 2 s presses); record per-ticket close reasons if a kind needs more.
+    c.lostAt, c.nLost = {}, 0
+    for i = 1, 64 do
+        c.lostAt[i] = 0
+    end
+    local expire, FLIGHT = T.Expire, c.I.Expect.FLIGHT
+    local due = {} -- by slot: its anchor when it expires this tick (0: not)
+    T.Expire = function(now)
+        for i = 1, T.CAP do
+            due[i] = (T.state[i] ~= 0 and T.kind[i] == FLIGHT and now > T.hi[i]) and T.at[i] or 0
+        end
+        local lost0 = T.lost[FLIGHT]
+        expire(now)
+        if T.lost[FLIGHT] > lost0 then
+            for i = 1, T.CAP do
+                if due[i] > 0 and c.nLost < 64 then
+                    c.nLost = c.nLost + 1
+                    c.lostAt[c.nLost] = due[i]
+                end
+            end
+        end
+    end
     for k = 1, 8 do
         c.recIdx[k] = 0
     end
@@ -406,7 +434,7 @@ function M.run(c, s, offset)
     end
     c.gcdN = 0
     c.hits = 0
-    c.rowsOut = 0
+    c.rowsOut, c.gone, c.nLost = 0, 0, 0
     c.crits[1], c.crits[2], c.landed[1], c.landed[2], c.nWin, c.truth, c.nAv = 0, 0, 0, 0, 0, 0, 0
     c.nCd = 0
     local rows = c.rows

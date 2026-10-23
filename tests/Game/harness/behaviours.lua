@@ -143,7 +143,7 @@ function M.melee(p)
                         flag = flag,
                         amount = amt,
                         school = 1,
-                        speed = w[3],
+                        speed = w[3] / (p.haste or 1), -- the client's hasted duration
                         ours = p.land ~= nil,
                         sameMs = same,
                         rage = rage,

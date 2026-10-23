@@ -60,6 +60,66 @@ M.KINDS = {
     K8 = { duration = 60, noMelee = true, spells = every("bolt", 2, 58), lockstep = 0.3 },
 }
 M.KINDS.K9 = { duration = 60, spells = every("instant", 2, 58), actionTargeting = true }
+local function mixSpells(last)
+    local out = {}
+    for t = 2, last, 2 do
+        out[#out + 1] = { t, ({ "instant", "bolt", "doti", "refused", "unmapped" })[(t / 2) % 5 + 1] }
+    end
+    return out
+end
+M.KINDS.K10 = {
+    duration = 60,
+    spells = every("bolt", 3, 57),
+    sessionLag = true,
+    firstLag = 1.0,
+    enterCombat = true,
+    jitter = 0.05,
+    pushback = true,
+}
+-- K11 (death in flight, spec §6.2): a FOREIGN kill while our bolt flies; solo has no foreign source, so it is na there.
+-- At 30 yd (no swings of ours) mobHealth 600 dies to the partners in 15-19 s (party) and 5-8 s (busy).
+M.KINDS.K11 = {
+    duration = 30,
+    spells = every("bolt", 2, 28),
+    mobHealth = 600,
+    distances = { 30 },
+    na = { solo = "no foreign source to kill the target" },
+}
+M.KINDS.K12 = {
+    duration = 60,
+    noMelee = true,
+    extraMobs = 1,
+    spells = every("doti", 4, 56),
+    switchTo = { { 9, 2 }, { 17, 1 }, { 25, 2 }, { 33, 1 }, { 41, 2 }, { 49, 1 } },
+}
+-- K13: a partner anchored to our presses (the `twin` archetype: our cadence, zero shift, its own outcome roll)
+M.KINDS.K13 = { duration = 60, noMelee = true, spells = every("bolt", 2, 58), twin = true, distances = { 20 } }
+M.KINDS.K14 = { duration = 60, twins = true }
+-- K14f (owner-confirmed 2026-10-22, a level-25 fast dual-wielder): two 1.5 s hands at 1.2 haste (a swing every
+-- about 0.6 s on average across both hands); per-hand recall and the rage estimate's error against truth.
+M.KINDS.K14f = { duration = 60, weapons = { { 40, 54, 1.5 }, { 40, 54, 1.5 } }, haste = 1.2, sessionLag = true }
+M.KINDS.K15 = { duration = 60, noMelee = true, spells = mixSpells(58) }
+M.KINDS.K16 = { duration = 300, spells = every("bolt", 2, 298) }
+-- bolts in flight at the stop; every 2 s: a press every 1.5 s (the cast time) restarted the cast before its success
+M.KINDS.K17 = { duration = 20, noMelee = true, spells = every("bolt", 2, 20) }
+M.KINDS.K18 = { duration = 60, noMelee = true, extraMobs = 2, spells = every("aoe", 2, 58), splash = true }
+-- K21 (owner ruling 2026-10-22): a nature projectile (14-18) and a nature schedule (ticks of 6 every 3 s after a
+-- 0.5 s flight) on one GUID, their rows interleaved: the amount bands rank each row to its own ticket.
+local k21 = every("bolt", 3, 57)
+for _, t in ipairs({ 2.5, 17.5, 32.5, 47.5 }) do
+    k21[#k21 + 1] = { t, "ticks" }
+end
+table.sort(k21, function(x, y)
+    return x[1] < y[1]
+end)
+M.KINDS.K21 = { duration = 60, noMelee = true, spells = k21, distances = { 20 } }
+M.KINDS.K19 = {
+    duration = 60,
+    extraMobs = 1,
+    spells = every("doti", 6, 54),
+    presses = strikes(6, 57),
+    switchTo = { { 7.2, 2 }, { 9.5, 1 }, { 19.2, 2 }, { 21.5, 1 }, { 31.2, 2 }, { 33.5, 1 } },
+}
 
 -- K6's scope ends at PLAYER_REGEN_ENABLED (metrics.tickets), which the observer fires observer.COMBAT_END = 1 s after
 -- the last kill. probe U14: time from the last kill to PLAYER_REGEN_ENABLED (spec §2.5's Rogue capture: about 0.52 s
@@ -87,6 +147,12 @@ function M.run(kind, band, fights, seed0)
         end
         if o.lockstep then
             o.others[#o.others + 1], o.phase = "lockstep", o.lockstep
+        end
+        if o.twin then
+            o.others[#o.others + 1] = "twin"
+        end
+        if o.splash then -- K18's partner: a melee whose swings also hit the mob beside our target
+            o.others[#o.others + 1] = "splash"
         end
         if o.distances then
             o.distance = o.distances[f % #o.distances + 1]
@@ -198,6 +264,35 @@ function M.check(kind, band, m)
     assert(v.lostDiff <= fl.lostDiff, kind .. " " .. band .. " lost reported off the truth: " .. line)
     assert(v.residual <= fl.residual, kind .. " " .. band .. " dedupe residual above its ceiling: " .. line)
     assert(v.postClear >= fl.postClear, kind .. " " .. band .. " post-clear rows below their floor: " .. line)
+end
+
+--- K17's /reload: the first half of a fight on one VirtualState, the rest on a fresh one (an empty registry while
+--- rows keep arriving).
+function M.reload(kind, band, seed)
+    local o = setmetatable({ others = M.BANDS[band].others }, { __index = M.KINDS[kind] })
+    local s = scenarios.stream(o, seed)
+    local half = { n = 0 }
+    local rest = { n = 0 }
+    for _, f in ipairs({ "t", "ev", "a1", "a2", "a3", "a4", "a5", "src", "hand", "swingT", "actor", "castT" }) do
+        half[f], rest[f] = {}, {}
+    end
+    local mid = s.t[s.n] / 2
+    for i = 1, s.n do
+        local d = s.t[i] <= mid and half or rest
+        d.n = d.n + 1
+        for f in pairs(d) do
+            if f ~= "n" then
+                d[f][d.n] = s[f][i]
+            end
+        end
+    end
+    local c1 = drive.boot({ boot = M.boot })
+    drive.run(c1, half)
+    drive.restore(c1)
+    local c2 = drive.boot({ boot = M.boot })
+    drive.run(c2, rest)
+    drive.restore(c2)
+    return c1, c2
 end
 
 --- K9's direct case: twins from two sources (equal payload, one ms, each on plate and target) and one hit on plate,

@@ -37,6 +37,13 @@ T.excused = {}
 for i = 1, CAP do
     T.excused[i] = false
 end
+-- Per ticket: when it closed paid (0: open, or closed for another reason); its other fields stay until the slot is
+-- reused, so DueElsewhere still sees a frame ticket our target's row paid first (K18).
+T.paidAt = {}
+local paidAt = T.paidAt
+for i = 1, CAP do
+    paidAt[i] = 0
+end
 
 T.opened = 0
 T.closed = {
@@ -188,6 +195,10 @@ function T.Close(i, t, why)
         return
     end
     state[i], lr[i], avoid[i] = 0, 0, ""
+    paidAt[i] = 0
+    if why == "paid" then
+        paidAt[i] = t
+    end
     T.closed[why] = T.closed[why] + 1
     U.Release(uid[i], t)
 end
@@ -499,6 +510,29 @@ function T.Unmapped(t)
     for i = 1, CAP do
         if state[i] >= OPEN and kind[i] == UNMAPPED and t <= hi[i] then
             return true
+        end
+    end
+    return false
+end
+
+--- (spec §6.2 K18) Whether a spell ticket of school `sch` on a GUID other than `g`, open or paid within SAME_FRAME
+--- before t (our target's row pays the frame first), is Due at t (its pass-1 band holds t): a foreign row then is
+--- likely our AoE or cleave on a unit we did not pin. A diagnostic only. Allocates nothing.
+function T.DueElsewhere(t, g, sch)
+    local K, frame = I.Kinds, I.Melee.SAME_FRAME
+    for i = 1, CAP do
+        local st = state[i]
+        if
+            (st >= OPEN or (st == 0 and paidAt[i] > 0 and t - paidAt[i] <= frame))
+            and guid[i] ~= g
+            and kind[i] ~= MELEE
+            and kind[i] ~= UNMAPPED
+            and school[i] == sch
+        then
+            local lo, h = K.Band(i, 1, t, false, "WOUND", sch)
+            if lo and t >= lo and t <= h then
+                return true
+            end
         end
     end
     return false

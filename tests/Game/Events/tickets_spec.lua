@@ -75,6 +75,20 @@ describe("the ticket pool", function()
         })
     end)
 
+    it("counts our AoE's side hits in one frame as aoeOther after the target's row paid the frame (K18)", function()
+        ctl.now = 10
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)
+        ctl.guid.nameplate2, ctl.guid.nameplate3 = "Creature-2", "Creature-3"
+        ctl.now = 10.01
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 4)
+        ctl.Fire("UNIT_COMBAT", "nameplate2", "WOUND", "", 33, 4)
+        ctl.Fire("UNIT_COMBAT", "nameplate3", "WOUND", "", 35, 4)
+        assert.are.same({ 1, 2, 2 }, { T.paid[X.FRAME], T.foreign, T.aoeOther })
+        ctl.now = 10.2 -- past the frame: a side hit is plain foreign
+        ctl.Fire("UNIT_COMBAT", "nameplate2", "WOUND", "", 31, 4)
+        assert.are.same({ 3, 2 }, { T.foreign, T.aoeOther })
+    end)
+
     it("pays the least expected closure first: the older of two frames", function()
         ctl.now = 10
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_F)

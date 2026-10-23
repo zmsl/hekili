@@ -69,6 +69,12 @@ local function truthAt(W, t)
 end
 M.truthAt = truthAt
 
+-- Whether group g's paying ticket is its own cast's: the anchor is the observed success, up to K10's cast-event jitter
+-- (0.05 s, behaviours.ours) after the truth's (our presses are 1.5 s or more apart)
+local function anchored(g)
+    return g.at >= g.castT - 1e-6 and g.at <= g.castT + 0.05 + 1e-6
+end
+
 --- Adds one fight (drive captures `c`, stream `s`, world `W`) to tally `m`: the outcomes from `after` seconds on (default
 --- all), and only at times `keep(t)` accepts when given (a section of the fight). `step`: one main-hand step (the
 --- overshoot bar, default 9). Returns `m`.
@@ -448,6 +454,15 @@ function M.newTickets()
         overflow = 0,
         postClear = 0, -- own white outcomes landing after their target's kill clear (the measured kill shape)
         postClearPaid = 0, -- of those, paid by a swing ticket
+        dead = 0, -- tickets the engine closed dead (K11)
+        kills = 0, -- kills of our target in the truth (K11)
+        gone = 0, -- TargetGone observations (K11)
+        ended = 0, -- tickets closed at combat end (K17)
+        afterReset = 0, -- rows after the combat end that paid a ticket opened before it (K17: must be 0)
+        aoeOther = 0, -- foreign rows the engine marked as our spell's on another GUID (K18)
+        errors = 0, -- the engine's event errors
+        inFlight = 0, -- fights where another source killed our target while a bolt of ours flew (K11)
+        inFlightLost = 0, -- of those bolts, the ones closed lost or paid by a row after the death (K11: must be 0)
     }
 end
 
@@ -478,11 +493,16 @@ end
 function M.tickets(m, c, s, W)
     local X = c.I.Expect
     m.fights = m.fights + 1
-    local groups, list = {}, {}
+    -- unit: each token's last GUID (one outcome is one unit's; a cleared token's late rows are still that unit's)
+    local groups, list, unit = {}, {}, {}
     for i = 1, s.n do
-        if s.ev[i] == "UNIT_COMBAT" and registry(s.a1[i]) then
+        if s.ev[i] == "@guid" and s.a2[i] then
+            unit[s.a1[i]] = s.a2[i]
+        elseif s.ev[i] == "UNIT_COMBAT" and registry(s.a1[i]) then
             local key = string.format(
-                "%.4f/%s/%s/%s/%s/%s/%s",
+                "%s/%s/%.4f/%s/%s/%s/%s/%s/%s",
+                tostring(unit[s.a1[i]]),
+                tostring(s.hand[i]), -- our twin hands in one ms with one amount (K14) are two outcomes
                 s.t[i],
                 s.a2[i],
                 tostring(s.a4[i]),
@@ -494,8 +514,12 @@ function M.tickets(m, c, s, W)
             local g = groups[key]
             if not g then
                 g = { own = (s.castT and s.castT[i] or 0) > 0, castT = s.castT and s.castT[i] or 0, at = 0, kind = 0 }
+                g.t = s.t[i]
                 g.crit, g.avoid = s.a3[i] == "CRITICAL", s.a2[i] == "DODGE" or s.a2[i] == "PARRY" or s.a2[i] == "MISS"
                 groups[key], list[#list + 1] = g, g
+            end
+            if s.a1[i] == "target" then
+                g.onTarget = true
             end
             if c.payAt[i] > 0 and c.payKind[i] ~= X.MELEE then
                 g.at, g.kind, g.staged = c.payAt[i], c.payKind[i], c.staged[i]
@@ -504,10 +528,19 @@ function M.tickets(m, c, s, W)
     end
     m.outcomes = m.outcomes + #list
     m.dispatched = m.dispatched + c.rowsOut
+    -- An own outcome off our target in the same frame as that cast's outcome on it is our AoE's (the engine's aoeOther,
+    -- K18): neither own nor foreign, never missed. A pinned cast landing alone after a swap (K5) stays own.
+    local onTarget = {}
     for _, g in ipairs(list) do
-        if g.own then
+        if g.own and g.onTarget then
+            onTarget[g.t .. "/" .. g.castT] = true
+        end
+    end
+    for _, g in ipairs(list) do
+        local aoe = g.own and not g.onTarget and onTarget[g.t .. "/" .. g.castT]
+        if g.own and not aoe then
             m.own = m.own + 1
-            if g.at > 0 and math.abs(g.at - g.castT) < 1e-6 then
+            if g.at > 0 and anchored(g) then
                 m.right = m.right + 1
                 if (g.crit or g.avoid) and (g.staged or 0) > 0 then
                     m.staged = m.staged + 1
@@ -520,7 +553,7 @@ function M.tickets(m, c, s, W)
             if g.crit or g.avoid then
                 m.stagedTruth = m.stagedTruth + 1
             end
-        else
+        elseif not aoe then
             m.foreignRows = m.foreignRows + 1
             if g.at > 0 then
                 m.foreignPaid = m.foreignPaid + 1
@@ -528,7 +561,7 @@ function M.tickets(m, c, s, W)
         end
         if g.at > 0 then
             m.paid = m.paid + 1
-            if not (g.own and math.abs(g.at - g.castT) < 1e-6) then
+            if not (g.own and anchored(g)) then
                 m.falsePaid = m.falsePaid + 1
             end
         end
@@ -606,6 +639,46 @@ function M.tickets(m, c, s, W)
                 if not rowAt[ev.t] and not (k and k <= ev.t + 1.65) then
                     m.lostTruth = m.lostTruth + 1
                 end
+            end
+        end
+    end
+    m.dead, m.ended, m.aoeOther = m.dead + T.closed.dead, m.ended + T.closed.ended, m.aoeOther + T.aoeOther
+    m.gone, m.errors = m.gone + c.gone, m.errors + c.I.Events.errors
+    if W then
+        local regen, us, flew = math.huge, W.ents[1], false
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "kill" and ev.dst == ev.ourTarget then
+                m.kills = m.kills + 1
+                for _, cv in ipairs(W.truth) do -- detect.boot's projectile: W.distance yd at 20 yd/s
+                    local d = (W.distance or 20) / 20
+                    if
+                        cv.kind == "cast"
+                        and cv.src == us
+                        and cv.spell == "BOLT"
+                        and ev.src ~= us
+                        and cv.dst == ev.dst
+                        and cv.t < ev.t
+                        and ev.t <= cv.t + d
+                    then
+                        flew = true
+                        local bad = false
+                        for j = 1, c.nLost do
+                            bad = bad or math.abs(c.lostAt[j] - cv.t) < 1e-6
+                        end
+                        for i = 1, s.n do -- a stale row: after the death (a crowd row before it is K4's false credit)
+                            bad = bad or (s.t[i] > ev.t and c.payAt[i] > 0 and math.abs(c.payAt[i] - cv.t) < 1e-6)
+                        end
+                        m.inFlightLost = m.inFlightLost + (bad and 1 or 0)
+                    end
+                end
+            elseif ev.kind == "stop" then
+                regen = math.min(regen, ev.t)
+            end
+        end
+        m.inFlight = m.inFlight + (flew and 1 or 0)
+        for i = 1, s.n do -- K17: nothing after the combat end pays a ticket opened before it
+            if s.t[i] > regen and c.payAt[i] > 0 and c.payAt[i] < regen then
+                m.afterReset = m.afterReset + 1
             end
         end
     end

@@ -205,6 +205,9 @@ local function foreign(uid, t, act, flag, amount, white, avoid, unknown, school)
     end
     T.foreign = T.foreign + 1
     T.Foreign(uid, school, t) -- the crowd gate (Kinds.Flight)
+    if act == "WOUND" and T.DueElsewhere(t, U.GUID(uid), school) then
+        T.aoeOther = T.aoeOther + 1 -- a diagnostic only: routed as foreign, never a ticket, never lost
+    end
     if U.IsTarget(uid, t) then
         M.background(act, amount, flag, white, avoid, unknown)
     end

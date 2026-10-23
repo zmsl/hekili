@@ -45,6 +45,39 @@ local ARCHETYPES = {
                 resist = 0.05,
             })
     end,
+    -- K13: our twin, anchored to our presses (W.spells): its cast at our success, its nature 14-18 row when our bolt
+    -- lands (W.distance / 20 s later), resisted at 0.05 on its own roll
+    twin = function(W, lvl)
+        local e = entities.new({ level = lvl })
+        return e,
+            function(W2, me)
+                for _, sp in ipairs(W2.spells or {}) do
+                    local done = sp[1] + 1.5
+                    W2.at(done, function()
+                        if me.stopped or not me.target or me.target.health <= 0 then
+                            return
+                        end
+                        local tgt = me.target
+                        W2.emit({ kind = "cast", src = me, dst = tgt, spell = "SECRET" })
+                        W2.at(done + (W2.distance or 20) / 20, function()
+                            if tgt.health <= 0 then
+                                return
+                            end
+                            local resisted = W2.rng.chance(0.05)
+                            W2.emit({
+                                kind = "spell",
+                                src = me,
+                                dst = tgt,
+                                act = resisted and "MISS" or "WOUND",
+                                flag = "",
+                                amount = resisted and 0 or W2.rng.int(14, 18),
+                                school = 8,
+                            })
+                        end)
+                    end)
+                end
+            end
+    end,
     -- K18: a melee whose swings also hit the mob beside our target (a splash)
     splash = function(W, lvl)
         local w = entities.weapons(lvl)[1]
@@ -82,10 +115,11 @@ M.ARCHETYPES = ARCHETYPES
 function M.world(o, seed)
     local W = world.new(seed)
     local lvl = o.level or 22
+    local weapons = o.twins and { { 30, 30, 2.0 }, { 30, 30, 2.0 } } or o.weapons
     local us = W.add(entities.new({
         guid = "Player-1",
         level = lvl,
-        weapons = o.weapons or entities.weapons(lvl),
+        weapons = weapons or entities.weapons(lvl),
         powerMax = o.max or 1e6,
         pt = o.pt,
         res = o.res,
@@ -103,6 +137,7 @@ function M.world(o, seed)
     us.gcdOrder, us.gcdLatency = o.gcdOrder, o.gcdLatency
     local mobs = {}
     W.phase, W.hitAtSwing = o.phase, o.hitAtSwing ~= false
+    W.spells = o.spells -- the twin archetype's anchors (K13; its flight from W.distance, the world's own)
     for i = 1, math.max(1, o.attackers or 1) + (o.extraMobs or 0) do
         local m = o.mobs and o.mobs[i] or {}
         local dmg = m.damage or o.mobDamage or { 10, 14 }
@@ -144,9 +179,18 @@ function M.world(o, seed)
     end)
     W.at(pull, function()
         W.emit({ kind = "pull" })
+        local lag = o.lag or observer.DEFAULTS
+        if o.sessionLag then -- K10: this session's landing lag, from [0.4, 1.0] s (one session's 988-456 ms)
+            local med = 0.4 + 0.6 * W.crng.next()
+            lag = setmetatable({ main = { med = med, sd = 0.04, tail = 0.15 }, firstLag = o.firstLag }, {
+                __index = observer.DEFAULTS,
+            })
+        end
         behaviours.melee({
             rates = o.rates,
-            land = observer.lag(o.lag),
+            land = observer.lag(lag),
+            haste = o.haste,
+            phase = o.twins and { 0.5, 0.5 } or nil,
             sameMs = (o.lag or observer.DEFAULTS).sameMs,
             rage = o.rage or { 9, 5 },
             critRage = o.critRage,
@@ -241,8 +285,13 @@ end
 --- `o.observe` over them).
 function M.stream(o, seed)
     local W = M.build(o, seed)
-    local k =
-        { plainSpeed = o.plainSpeed, usable = o.usable, actionTargeting = o.actionTargeting, pushback = o.pushback }
+    local k = {
+        plainSpeed = o.plainSpeed,
+        usable = o.usable,
+        actionTargeting = o.actionTargeting,
+        pushback = o.pushback,
+        enterCombat = o.enterCombat,
+    }
     for key, v in pairs(o.observe or {}) do
         k[key] = v
     end

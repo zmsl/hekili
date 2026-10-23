@@ -43,6 +43,8 @@ M.DEFAULTS = {
     -- the DELAYED pushback row is opt-in (it moves the player's UNIT_COMBAT 0.37 s later).
     actionTargeting = false,
     pushback = false,
+    enterCombat = false, -- PLAYER_ENTER_COMBAT at the pull (K10: the first swing's mark, Task 9's T.first)
+    firstLag = nil, -- the first main-hand swing's landing lag (K10; probe U10's one sample: 989 ms)
     -- A kill's shape by kind (s, from the kill truth; spec §2.5): the death events after the blow; a white swing's
     -- clear after its swing (its row comes at the landing lag, on the corpse); a projectile's clear after the death and
     -- its row after the clear (11-36 ms measured); an instant's clear after its row.
@@ -82,8 +84,13 @@ M.COSTS = { { fs.SPENDER_A, 10 }, { fs.SPENDER_B, 15 }, { fs.SPENDER_C, 10 } }
 --- outcome.
 function M.lag(k)
     k = k or M.DEFAULTS
+    local firstDone = false
     return function(W, e, hand, t)
         local r = W.rng
+        if hand == 1 and k.firstLag and not firstDone then
+            firstDone = true
+            return k.firstLag -- U10: the first swing of a combat (one sample: 989 ms)
+        end
         local function tail()
             return k.tail[1] + r.next() * (k.tail[2] - k.tail[1])
         end
@@ -442,6 +449,9 @@ function M.new(W, k)
                 push(t, "@auraError", "target", true) -- spec §3.1: the target's auras raise in combat
             end
             push(t, "PLAYER_REGEN_DISABLED")
+            if k.enterCombat then
+                push(t, "PLAYER_ENTER_COMBAT")
+            end
         elseif kind == "stop" then
             push(t, "@combat", false)
             combat(t, false)
