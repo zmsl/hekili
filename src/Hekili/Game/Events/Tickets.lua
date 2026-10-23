@@ -59,9 +59,11 @@ end
 T.EARLY = false
 -- Per ticket (attribution-recovery decision 51, owner ruling 2026-10-23: the expectation at expiry): a firm
 -- retraction's re-open (no expectation at its lost close) and whether it was assumed (T.Assume: a provider's HIT).
-T.retry, T.assumed = {}, {}
+-- Also: a white avoid nobody took (foreign or absorbed) fell in its window, maybe its own: no expectation at its lost
+-- close (fix round 2: the bear and decay gates; their lost swings were avoided in truth).
+T.retry, T.assumed, T.avoidSeen = {}, {}, {}
 for i = 1, CAP do
-    T.retry[i], T.assumed[i] = false, false
+    T.retry[i], T.assumed[i], T.avoidSeen[i] = false, false, false
 end
 T.onAssume, T.onLost = nil, nil
 T.replaced = 0 -- every replacement of a provisional payment by a narrow-band row, re-offered or not (not a close)
@@ -249,7 +251,7 @@ local function fill(i, k, a, xx, g, t)
     school[i], owed[i], at[i], hi[i], w[i] = ANY, 1, t, t, 0
     ref[i], lr[i], avoid[i], cast[i], done[i], first[i], T.excused[i] = 0, 0, "", "", 0, false, false
     T.held[i], T.rec[i] = 0, 0
-    T.retry[i], T.assumed[i] = false, false
+    T.retry[i], T.assumed[i], T.avoidSeen[i] = false, false, false
     T.period[i], T.anchor[i], T.wide[i], T.link[i], T.speed[i], T.H[i], T.tickAmt[i] = 0, t, 0, 0, 0, 0, 0
     U.Hold(uid[i])
     T.opened = T.opened + 1

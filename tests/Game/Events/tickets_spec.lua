@@ -605,6 +605,18 @@ describe("the ticket pool", function()
             assert.are.same({ 1, 1 }, { T.closed.lost, count(5) })
         end)
 
+        it(
+            "stages nothing at a lost close when a white avoid nobody took fell in the window (maybe its own)",
+            function()
+                ctl.now = 10
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                ctl.now = 11.2
+                ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- below the LR bar in the crowd: foreign
+                ctl.Tick(11.6)
+                assert.are.same({ 1, 1, 0 }, { T.foreign, T.closed.lost, count(5) })
+            end
+        )
+
         it("stages nothing at a retraction's re-open's lost close", function()
             ctl.now = 10
             T.OpenSwing(10, 1, "Creature-1", 1.5, 0, false, true)

@@ -325,7 +325,7 @@ end
 
 -- The expectation at a swing's lost close (decision 51 as ruled 2026-10-23: expiry EV, the parked 9b; a retry none).
 T.onLost = function(i)
-    if T.kind[i] == MELEE and not T.retry[i] then
+    if T.kind[i] == MELEE and not T.retry[i] and not T.avoidSeen[i] then
         S.Stage(Obs.Swing, T.at[i], T.x[i], 0, 5)
     end
 end
@@ -356,9 +356,28 @@ T.onReplace = function(i, t)
     return reroute(i, t)
 end
 
+-- A white avoid nobody took at t on `g`: each open swing whose window holds it may have been avoided (T.onLost then
+-- expects nothing). Allocates nothing.
+local function avoidSeen(g, t)
+    for i = 1, T.CAP do
+        if
+            T.state[i] == T.OPEN
+            and T.kind[i] == MELEE
+            and T.guid[i] == g
+            and t >= T.at[i]
+            and t - T.at[i] <= T.w[i]
+        then
+            T.avoidSeen[i] = true
+        end
+    end
+end
+
 -- A row of ours no ticket took (spec §3.4 step 5): an avoid or crit inside an UNMAPPED window is nobody's; else
 -- foreign, teaching the background only when it is about the target (as the target-only reading did).
 local function foreign(uid, t, act, flag, amount, white, avoid, unknown, school)
+    if white and AVOIDS[act] then
+        avoidSeen(U.GUID(uid), t)
+    end
     if (avoid or flag == "CRITICAL") and T.Unmapped(t) then
         T.absorbed = T.absorbed + 1
         return
@@ -497,6 +516,9 @@ U.OnRow(function(t, g, uid, act, flag, amount, school)
         -- may have been this one). A FLIGHT's widened and hard bands are its own landing, not past it (spec §3.4 5).
         if (avoid or crit) and pass > 1 and T.kind[p] ~= X.FLIGHT and T.Unmapped(t) then
             T.absorbed, T.excused[p] = T.absorbed + 1, true
+            if white and AVOIDS[act] then
+                avoidSeen(g, t)
+            end
             return
         end
         if replacing > 0 and p == replacing then
