@@ -67,11 +67,17 @@ function M.boot(o)
         c.loOver[i], c.estOver[i], c.danger[i] = 0, 0, 0
         c.verdict[i], c.onus[i] = 0, ""
     end
-    -- by stream index: what a row staged (1 Crit, 2 Avoided; 0 none)
-    -- shortcut: no payAt / payKind (the paying ticket) until I.Tickets.onPay exists; the follow-up after the ticket lane
-    c.staged = {}
+    -- by stream index: the anchor and kind of the ticket a row paid (0 none), and what it staged (1 Crit, 2 Avoided)
+    c.payAt, c.payKind, c.staged = {}, {}, {}
     for i = 1, CAP do
-        c.staged[i] = 0
+        c.payAt[i], c.payKind[i], c.staged[i] = 0, 0, 0
+    end
+    local T = c.I.Tickets
+    T.onPay = function(i)
+        local k = c.cur
+        if k > 0 then
+            c.payAt[k], c.payKind[k] = T.at[i], T.kind[i]
+        end
     end
     for k = 1, 8 do
         c.recIdx[k] = 0
@@ -388,7 +394,7 @@ function M.run(c, s, offset)
     for i = 1, s.n do
         c.crHand[i], c.crAt[i], c.verdict[i], c.onus[i], c.crit3[i], c.unk[i] = 0, 0, 0, "", 0, 0
         c.vetoHand[i], c.vetoAt[i] = 0, 0
-        c.staged[i] = 0
+        c.payAt[i], c.payKind[i], c.staged[i] = 0, 0, 0
     end
     for _, r in pairs(c.trk) do
         r.n = 0
