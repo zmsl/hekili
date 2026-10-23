@@ -6,7 +6,7 @@ LUACHECK := $(LUA_ENV)/bin/luacheck
 LUAC := $(LUA_ENV)/bin/luac
 LUA := $(if $(wildcard $(LUA_ENV)/bin/lua),$(LUA_ENV)/bin/lua,lua5.1)
 
-.PHONY: gate gate-ab bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench bench-ta spell-data-check syntax api-check \
+.PHONY: gate gate-ab bootstrap lint fmt fmt-check typecheck test test-serial test-fast test-loop test-party test-druid test-rogue test-paladin test-shaman test-hunter test-mage test-priest test-warlock bench bench-ta spell-data-check cdv-coverage syntax api-check \
 	packs-check tools-test check packs package package-check wowsims-cli wowsims-export wowsims-learn wowsims-packs test-wowsims
 
 bootstrap:
@@ -76,6 +76,11 @@ bench-ta:
 # $WOW_DB2; dev-only, outside `make check` (CI has no DB2 file). A rank with no DB2 row is a note; a mismatch fails.
 spell-data-check:
 	$(LUA) tools/check_spell_data.lua | python3 -I tools/check_spell_data.py
+
+# The packs' auras the Cooldown Manager tracks vs the ones modelled, per tools/data/cooldownviewer/<CLASS>.lua: a
+# dev-only coverage report (providers spec decision 81); not part of check, never fails.
+cdv-coverage:
+	$(LUA) tools/check_cooldown_viewer.lua
 
 # The wowsims/forever packs (docs/superpowers/plans/2026-10-19-wowsims-packs.md). Dev-only, outside `make check`:
 # wowsims-cli builds the CLI in the checkout (Go, protoc and protoc-gen-go on PATH), wowsims-export SPEC=<spec>

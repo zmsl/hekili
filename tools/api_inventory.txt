@@ -7,6 +7,9 @@ C_AddOns.LoadAddOn	passthrough
 C_ClassColor.GetClassColor	passthrough
 C_ClassTalents.GetActiveConfigID	passthrough
 C_ClassTalents.GetHeroTalentSpecsForClassSpec	passthrough
+C_CooldownViewer.GetCooldownViewerCategorySet	passthrough
+C_CooldownViewer.GetCooldownViewerCooldownInfo	passthrough
+C_CooldownViewer.IsCooldownViewerAvailable	passthrough
 C_Item.GetDetailedItemLevelInfo	passthrough
 C_Item.GetItemCooldown	passthrough
 C_Item.GetItemCount	passthrough

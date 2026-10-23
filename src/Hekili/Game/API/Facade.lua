@@ -865,6 +865,15 @@ local PASSTHROUGH = {
     { "C_ClassColor.GetClassColor", "plain [W sweep 2026-10-16]; table fields unverified" },
     { "C_ClassTalents.GetActiveConfigID", "plain [W sweep 2026-10-16]" },
     { "C_ClassTalents.GetHeroTalentSpecsForClassSpec", "plain [W sweep 2026-10-16]" },
+    {
+        "C_CooldownViewer.GetCooldownViewerCategorySet",
+        "out of combat only; Plain-gated (Presence/CooldownViewer.lua)",
+    },
+    {
+        "C_CooldownViewer.GetCooldownViewerCooldownInfo",
+        "out of combat only; Plain-gated (Presence/CooldownViewer.lua)",
+    },
+    { "C_CooldownViewer.IsCooldownViewerAvailable", "Plain-gated (Presence/CooldownViewer.lua)" },
     { "C_Item.GetDetailedItemLevelInfo", "plain [W PR13]" },
     { "C_Item.GetItemCooldown", "plain [W PR13]" },
     { "C_Item.GetItemCount", "plain [W PR13]" },

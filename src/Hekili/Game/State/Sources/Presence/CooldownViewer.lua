@@ -1,0 +1,168 @@
+-- Game/State/Sources/Presence/CooldownViewer.lua
+-- The Cooldown Manager AuraPresence leaf (providers spec §2.4): the viewer's item frames carry a plain presence bit in
+-- combat (auraInstanceID secret while up, nil while down); HookScript OnShow/OnHide read it 3-5 ms after the edge.
+-- Scope "self": the viewer tracks player-cast auras only (probe CDM-S); presence only, never stacks or durations.
+-- Read, never call: rawget on items, GetChildren out of combat, HookScript once per item; nothing written to the
+-- viewer. Measured: docs/research/2026-10-23-cooldown-manager-api.md (CV §2, §5, §6). Shares no code with any other
+-- provider.
+
+local _, ns = ...
+local I = ns.VirtualStateInternal
+local S = I.Sources
+local Plain = S.Plain
+
+-- contract constants; Task 1 moves them to the contract table
+I.UNDECIDED, I.UP, I.DOWN = 0, 1, 2
+I.PRESENCE = I.PRESENCE or {}
+
+local VIEWERS =
+    { "EssentialCooldownViewer", "UtilityCooldownViewer", "BuffIconCooldownViewer", "BuffBarCooldownViewer" }
+local UNIT = { player = 1, target = 2 }
+
+local Q = { name = "viewer", scope = "self", covered = 0, onEdge = nil }
+local active, api0 = false, nil
+local cdvToJ = {} -- cooldownID -> aura index (built out of combat)
+local st = {} -- (u - 1) * AURA_UNIT + j -> 0 undecided, 1 up, 2 down
+local items = {} -- the hooked item frames, for the target re-read (built out of combat)
+local hooked = setmetatable({}, { __mode = "k" })
+
+-- The hook (one function for every item): presence at fire time, a change only. Allocates nothing.
+local function hook(self)
+    if not active then
+        return
+    end
+    local api = api0
+    local id = Plain(api, rawget(self, "cooldownID"))
+    local j = id and cdvToJ[id]
+    local u = UNIT[Plain(api, rawget(self, "auraDataUnit")) or ""]
+    if not j or not u then
+        return -- a cooldown item, or an unmapped aura
+    end
+    local aid = rawget(self, "auraInstanceID")
+    local up = api.issecretvalue(aid) or aid ~= nil -- secret: only tested, never compared
+    local k = (u - 1) * I.AURA_UNIT + j
+    local v = I.DOWN
+    if up then
+        v = I.UP
+    end
+    local was = st[k]
+    if was ~= v then
+        if was == nil or was == 0 then
+            Q.covered = Q.covered + 1 -- a unit known only now (auraDataUnit nil at build)
+        end
+        st[k] = v
+        if Q.onEdge then
+            Q.onEdge(j, u, up, api.GetTime())
+        end
+    end
+end
+
+-- The map and the hooks, out of combat (allocates: the getters' tables, GetChildren's list).
+local function build(api, def)
+    for k in pairs(cdvToJ) do
+        cdvToJ[k] = nil
+    end
+    for k in pairs(st) do
+        st[k] = 0
+    end
+    for n = 1, #items do
+        items[n] = nil
+    end
+    Q.covered = 0
+    local CV = api.C_CooldownViewer
+    if not CV or not def then
+        return
+    end
+    local ok, avail = pcall(CV.IsCooldownViewerAvailable) -- secret: Plain next
+    if not ok or Plain(api, avail) ~= true then
+        return
+    end
+    local byId = {}
+    for j = 1, #def.auraIds do
+        for _, sid in ipairs(def.auraIds[j]) do
+            byId[sid] = j
+        end
+    end
+    for c = 0, 8 do
+        local okS, set = pcall(CV.GetCooldownViewerCategorySet, c) -- secret: Plain next
+        set = Plain(api, set)
+        if okS and type(set) == "table" then
+            for _, id in ipairs(set) do
+                local okI, info = pcall(CV.GetCooldownViewerCooldownInfo, id) -- secret: Plain next
+                info = Plain(api, info)
+                if okI and type(info) == "table" then
+                    local j = byId[Plain(api, info.spellID) or 0] or byId[Plain(api, info.overrideSpellID) or 0]
+                    local links = Plain(api, info.linkedSpellIDs)
+                    if type(links) == "table" then
+                        for _, l in ipairs(links) do
+                            j = j or byId[Plain(api, l) or 0]
+                        end
+                    end
+                    if j and not cdvToJ[id] then
+                        cdvToJ[id] = j
+                    end
+                end
+            end
+        end
+    end
+    local seen = {}
+    for _, name in ipairs(VIEWERS) do
+        local v = api[name]
+        if v and v.GetChildren then
+            for _, item in ipairs({ v:GetChildren() }) do
+                if rawget(item, "layoutIndex") ~= nil then
+                    if not hooked[item] then
+                        item:HookScript("OnShow", hook)
+                        item:HookScript("OnHide", hook)
+                        hooked[item] = true
+                    end
+                    items[#items + 1] = item
+                    local id = Plain(api, rawget(item, "cooldownID"))
+                    local j = id and cdvToJ[id]
+                    local u = UNIT[Plain(api, rawget(item, "auraDataUnit")) or ""]
+                    if j and u and not seen[(u - 1) * I.AURA_UNIT + j] then
+                        seen[(u - 1) * I.AURA_UNIT + j] = true
+                        st[(u - 1) * I.AURA_UNIT + j] = I.DOWN
+                        Q.covered = Q.covered + 1
+                    end
+                end
+            end
+        end
+    end
+end
+
+--- Builds the map and hooks the items (out of combat), then reads every item's presence now.
+function Q.Activate(api, t, def)
+    api0, active = api, api ~= nil
+    if api then
+        build(api, def)
+        for n = 1, #items do
+            hook(items[n]) -- the state now
+        end
+    end
+end
+
+--- Stops answering; the hooks stay installed and return at once.
+function Q.Deactivate()
+    active, Q.covered = false, 0
+end
+
+--- I.UP, I.DOWN or I.UNDECIDED for aura `j` on unit `u` (1 player, 2 target). Allocates nothing.
+function Q.Presence(j, u)
+    local v = active and st[(u - 1) * I.AURA_UNIT + j] or 0
+    if v == I.UP or v == I.DOWN then
+        return v
+    end
+    return I.UNDECIDED
+end
+
+-- The target's items may change without a show edge ("hide when inactive" off, CV §7): re-read them.
+S.On("PLAYER_TARGET_CHANGED", nil, function()
+    if active then
+        for n = 1, #items do
+            hook(items[n])
+        end
+    end
+end)
+
+I.PRESENCE.viewer = Q

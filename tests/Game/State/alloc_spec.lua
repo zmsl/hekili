@@ -261,4 +261,29 @@ describe("zero allocation", function()
             assert.is_true(I.gcdLearned[1] > 0 and I.gcdLearned[2] > 0, "both kinds learned")
         end
     )
+
+    it("allocates nothing over 100 Cooldown Manager hook calls (providers spec §2.4)", function()
+        local api, ctl = fake.new()
+        ctl.now = 1
+        ctl.viewer.sets[2] = { 501 }
+        ctl.viewer.infos[501] = { spellID = fs.SPENDER_A }
+        local item = ctl.ViewerItem("BuffIconCooldownViewer", 1, 501)
+        item.auraDataUnit = "player"
+        local ns = load.module()
+        local I = ns.VirtualStateInternal
+        local def = fs.def(fs.new(9))
+        I.Build(def, 1)
+        local Q = I.PRESENCE.viewer
+        Q.Activate(api, 1, def)
+        local n = 0
+        Q.onEdge = function()
+            n = n + 1
+        end
+        local ok, bytes = pcall(alloc.bytes, function(i)
+            ctl.ViewerShow(item, i % 2 == 1)
+        end, 100)
+        assert.is_true(ok, tostring(bytes))
+        assert.are.equal(0, bytes)
+        assert.is_true(n > 100, "every call an edge")
+    end)
 end)
