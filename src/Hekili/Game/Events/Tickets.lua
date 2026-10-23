@@ -66,6 +66,45 @@ T.onExpire, T.onPay = nil, nil
 -- the flight (it meets the projectile at speed + CLOSE: Kinds.Flight's bound); capture b's (2026-10-22) six closing
 -- rows (16017, 38127, 39145, 40413, 69926, 72780) and capture a's 5367 crit land inside that bound.
 T.TOL, T.CLOSE, T.LAG_CAP = 0.15, 7, 16
+-- The crowd gate (owner ruling 2026-10-22, Task 12): a flight's widened band takes the running-mob bound's early edge
+-- only while no foreign row of its school reached its unit in the last CROWD s (named cause: the detection suite's
+-- party and busy cells doubled false credit under the bound, K4 party 13.2 -> 28.9 per 100, while capture b's
+-- running-mob rows need it in solo). Per unit slot x school (7): the last foreign row's time.
+T.CROWD = 5
+local NSCH = 7
+T.SCHOOL_IX = { [1] = 1, [2] = 2, [4] = 3, [8] = 4, [16] = 5, [32] = 6, [64] = 7 }
+local foreignT = {}
+for k = 1, U.UNIT_CAP * NSCH do
+    foreignT[k] = -1e9
+end
+
+--- A row nobody of ours took (Rows' foreign) on slot u with school `sch` at t. Allocates nothing.
+function T.Foreign(u, sch, t)
+    local x = T.SCHOOL_IX[sch]
+    if u > 0 and x then
+        foreignT[(u - 1) * NSCH + x] = t
+    end
+end
+
+--- Whether a foreign row of school mask `s` (ANY: any school; 0: none) reached slot u within CROWD before t.
+function T.Crowded(u, s, t)
+    if u <= 0 or s == 0 then
+        return false
+    end
+    local base = (u - 1) * NSCH
+    for x = 1, NSCH do
+        if (s == X.ANY or T.SCHOOL_IX[s] == x) and t - foreignT[base + x] <= T.CROWD then
+            return true
+        end
+    end
+    return false
+end
+
+local function clearForeign(u)
+    for x = 1, NSCH do
+        foreignT[(u - 1) * NSCH + x] = -1e9
+    end
+end
 T.speed, T.H = {}, {}
 for i = 1, CAP do
     T.speed[i], T.H[i] = 0, 0
@@ -535,11 +574,17 @@ function T.EndCombat(t)
     end
     strikeWait = 0
     T.lastSwingT[1], T.lastSwingT[2] = 0, 0
+    for u = 1, U.UNIT_CAP do
+        clearForeign(u)
+    end
 end
 
 -- A unit gone (released and past GRACE: normally nothing pins it) or dead: a dead unit's schedules end at once
 -- (`dead`, ours when we killed it); its other tickets stay open until paid or their own window ends (decision 8).
 U.OnGone(function(u, g, why, t)
+    if why ~= U.DEAD then -- a slot gone or reset may take another GUID next
+        clearForeign(u)
+    end
     for i = 1, CAP do
         if state[i] ~= 0 and uid[i] == u then
             if why == U.GONE then

@@ -42,7 +42,8 @@ end
 --- record, only the whole hard window at pass 3 (E its middle; Overdue, decision 33); with one, the narrow band
 --- lagE +- b at pass 1 and the widened band at pass 2 (from the bound a mob running in at CLOSE since the record's
 --- last anchor allows, less b, up to lagE + CLOSE / 2 / v per second of it), clipped to the hard window, and
---- nothing at pass 3.
+--- nothing at pass 3. While a foreign row of the ticket's school reached its unit within T.CROWD s (T.Crowded), the
+--- widened band's lower edge is lagE less CLOSE / v per second of it (at least b) instead of the bound.
 function K.Flight(i, p, t, v, H, a0)
     local lo0, hiH = a0 + rangeLow(i, v), a0 + H
     local r = T.LagOf(T.guid[i], v)
@@ -61,9 +62,13 @@ function K.Flight(i, p, t, v, H, a0)
         -- a lag measures the distance at its ticket's anchor: the closing time runs anchor to anchor (lagT - lagE is
         -- the record's last paid anchor); landing to row would miss the lag the mob already removed
         local d = a0 - (T.lagT[r] - T.lagE[r])
-        -- the distance left at this anchor, flown at v + CLOSE: a mob running in meets the projectile
-        local bound = (T.lagE[r] * v - T.CLOSE * d) / (v + T.CLOSE)
-        lo = a0 + (bound > 0 and bound or 0) - b
+        if T.Crowded(T.uid[i], T.school[i], t) then -- the crowd gate: another source of this school on the unit
+            local down = T.CLOSE / v * d
+            lo = e - (down > b and down or b)
+        else -- the distance left at this anchor, flown at v + CLOSE: a mob running in meets the projectile
+            local bound = (T.lagE[r] * v - T.CLOSE * d) / (v + T.CLOSE)
+            lo = a0 + (bound > 0 and bound or 0) - b
+        end
         local up = T.CLOSE / 2 / v * d
         h = e + (up > b and up or b)
     end

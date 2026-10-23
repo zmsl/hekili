@@ -108,6 +108,22 @@ describe("the kinds", function()
             assert.is_nil(K.Band(i, 3, 101.5, false, "WOUND", 8))
         end)
 
+        it("crowd gate: a foreign row of its school on its unit within 5 s drops the bound's early edge", function()
+            T.Learn("Creature-1", 20, 1.5, 99)
+            local i = open(fs.SPENDER_P, 100)
+            local u, bound = T.uid[i], 100 + 12.5 / 27 - 0.15 -- the bound's lower edge (the test above)
+            assert.is_true(u > 0)
+            T.Foreign(u, 8, 96) -- nature, 5.2 s before the row: past CROWD
+            assert.is_true(math.abs(K.Band(i, 2, 101.2, false, "WOUND", 8) - bound) < 1e-9)
+            T.Foreign(u, 1, 100.5) -- physical: another school
+            assert.is_true(math.abs(K.Band(i, 2, 101.2, false, "WOUND", 8) - bound) < 1e-9)
+            T.Foreign(u, 8, 100.5) -- nature within 5 s: lagE less max(b, CLOSE / v x d) = 101.5 - 7 / 20 x 2.5
+            assert.is_true(math.abs(K.Band(i, 2, 101.2, false, "WOUND", 8) - (101.5 - 0.875)) < 1e-9)
+            T.EndCombat(102) -- combat end forgets the crowd
+            local j = open(fs.SPENDER_P, 100)
+            assert.is_true(math.abs(K.Band(j, 2, 101.2, false, "WOUND", 8) - bound) < 1e-9)
+        end)
+
         it(
             "spec §3.4's example: a mob that ran in can land the late MISS inside the widened band, not the narrow one",
             function()
