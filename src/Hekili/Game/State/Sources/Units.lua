@@ -61,6 +61,7 @@ U.unresolved, U.dup, U.evicted, U.sweeps = 0, 0, 0, 0 -- sweeps: Tick scans that
 U.deaths = { tell = 0, poll = 0, event = 0 }
 U.player, U.sentCast, U.sentGUID = "", nil, nil
 U.Claims = nil -- set by Events/Tickets.lua: whether an open ticket on a unit owes a row of this act and school
+U.Reused = nil -- set by Events/Tickets.lua: slot u takes another GUID (eviction): forget its per-slot state
 local failT = -1e9
 local ROW, GONE_FN = {}, {}
 
@@ -141,6 +142,9 @@ local function take(guid, t)
     end
     if bestRank > 1 then
         U.evicted = U.evicted + 1
+        if U.Reused then -- a DEAD or GRACE slot evicted without OnGone: its per-slot state must not carry over
+            U.Reused(best)
+        end
         for i = 1, NTOK do -- a token's previous unit is gone: never resolve its rows to the slot's next occupant
             if tokPrev[i] == best then
                 tokPrev[i] = 0

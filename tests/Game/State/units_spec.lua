@@ -212,6 +212,28 @@ describe("the unit registry", function()
         assert.are.equal(0, U.Find("Creature-x1")) -- the oldest released one gave way
     end)
 
+    it("forgets an evicted DEAD slot's crowd times when another GUID takes it", function()
+        local T = I.Tickets
+        ctl.now = 100
+        ctl.guid.nameplate2 = "Creature-d"
+        ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
+        local u = U.Uid(U.INDEX.nameplate2)
+        T.Foreign(u, 8, 100) -- a foreign nature row on it
+        U.Dead(u, 100)
+        ctl.Fire("NAME_PLATE_UNIT_REMOVED", "nameplate2") -- released DEAD: no OnGone GONE or RESET follows
+        for k = 1, U.UNIT_CAP do
+            if U.GUID(u) ~= "Creature-d" then
+                break
+            end
+            ctl.guid.nameplate1 = "Creature-r" .. k
+            ctl.now = 100 + k * 0.01
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+            ctl.Fire("NAME_PLATE_UNIT_REMOVED", "nameplate1")
+        end
+        assert.are_not.equal("Creature-d", U.GUID(u)) -- evicted and taken by another mob
+        assert.is_false(T.Crowded(u, 8, ctl.now)) -- within CROWD of the mark: only the reuse cleared it
+    end)
+
     it("pins the target, else the soft enemy, and keeps the SENT pin by castGUID", function()
         assert.are.equal("Creature-1", U.Pin(api, 1))
         ctl.guid.target, ctl.guid.softenemy = nil, "Creature-5"

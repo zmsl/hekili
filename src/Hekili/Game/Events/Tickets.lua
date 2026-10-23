@@ -105,6 +105,7 @@ local function clearForeign(u)
         foreignT[(u - 1) * NSCH + x] = -1e9
     end
 end
+U.Reused = clearForeign -- an evicted slot's next GUID starts with no crowd
 T.speed, T.H = {}, {}
 for i = 1, CAP do
     T.speed[i], T.H[i] = 0, 0
