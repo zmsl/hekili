@@ -209,7 +209,10 @@ which already turns a plain on / off signal into `Obs.Read` with `ReadOf.Aura` (
 ## 7. Open questions and probes
 
 - **Taint.** Do the hooks taint the viewer? The owner is being asked whether the Cooldown Manager kept working through
-  the session and whether `/console taintLog 1` shows anything. Until confirmed clean, no code.
+  the session and whether `/console taintLog 1` shows anything. Checked 2026-10-23: `Logs/taint.log` (32,783 lines)
+  names neither ForeverProbe nor Hekili, only another addon's secret compares; but its last entry predates the probe
+  fights, so the log was not recording them. No BugSack error, no addon-action-blocked message seen by the owner.
+  Status: no evidence of harm, not proven; next probe fight with `taintLog 1` on settles it. Until then, no code.
 - **Hide when inactive.** With that setting off an item stays shown while its aura is down, so `shown` is not
   presence; use `isActive` and the aura fields, and verify `isActive` follows the aura (only `shown` / `auraInstanceID`
   were watched here).
