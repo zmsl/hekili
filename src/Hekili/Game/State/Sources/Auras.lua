@@ -36,6 +36,12 @@ local pending = false
 local playerPlain = true
 -- The player auras with a numeric `overlay`: their aura indices and overlay spell IDs (built at OnBuild).
 local OVL_J, OVL_ID, OVL_N = {}, {}, 0
+-- The per-aura presence audit (providers spec §4.3, decision 90), keyed (u - 1) * AURA_UNIT + j for the player and the
+-- target: the provider's facts the consumer took and those that contradicted the belief. Preallocated at OnBuild,
+-- zeroed at each fight's start.
+local facts, disagree = {}, {}
+I.presenceFacts, I.presenceDisagree = facts, disagree
+local KEY = {} -- aura index -> its key, for the Snapshot lines
 
 I.OnBuild(function(def)
     local U = I.auras
@@ -56,6 +62,11 @@ I.OnBuild(function(def)
         end
     end
     playerPlain = true
+    for j = 1, U.nAura do
+        KEY[j] = tostring(def.auras[j].key)
+        facts[j], disagree[j] = 0, 0
+        facts[I.AURA_UNIT + j], disagree[I.AURA_UNIT + j] = 0, 0
+    end
 end)
 
 -- One unit's walk at t; returns whether it completed. Allocates nothing (the client allocates its aura tables).
@@ -192,6 +203,37 @@ S.Poll(11, function(api, t)
         elseif on == false and e[j] > t and (not playerPlain or e[j] == HUGE) then
             -- shortcut: a glow not yet lit in the frame of the cast that procs it drops the proc; upgrade by skipping reads within I.SAME_FRAME of our cast
             Direct(Obs.Read, t, j, 0, ReadOf.Aura)
+        end
+    end
+end)
+
+S.On("PLAYER_REGEN_DISABLED", nil, function()
+    for k in pairs(facts) do
+        facts[k], disagree[k] = 0, 0
+    end
+end)
+
+-- One line per aura the router answers by the viewer or the consumer took a fact for this fight (debugging only: it
+-- allocates). Nothing without a presence provider or for the Default one.
+I.OnSnapshot(function(out)
+    local P, U = I.presence, I.auras
+    if not U or not P or P.name == "default" then
+        return
+    end
+    for u = 1, (U.n < 2 and U.n or 2) do
+        for j = 1, U.nAura do
+            local k = (u - 1) * I.AURA_UNIT + j
+            local path = (P.tracked and P.tracked[j]) and "viewer" or "model"
+            if facts[k] > 0 or path == "viewer" then
+                out[#out + 1] = string.format(
+                    "presence %s unit=%s path=%s facts=%d disagree=%d",
+                    KEY[j],
+                    u == 1 and "player" or "target",
+                    path,
+                    facts[k],
+                    disagree[k]
+                )
+            end
         end
     end
 end)
