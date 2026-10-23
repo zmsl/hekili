@@ -5,6 +5,7 @@
 ### New
 
 - Your own hits, misses and DoT ticks are now matched to the cast that made them, even when they come late: a projectile's landing (Wrath, Shadow Bolt, Frostbolt), the killing blow that arrives after your target clears, a cast you switched targets during, and a crowded pull with other players hitting the same mob. A projectile's crit and miss now count when the bolt lands, so crit-triggered effects and miss refunds follow. The class priorities now declare each projectile's travel speed and each spell's school for this.
+- Late or out-of-order hits now still count: a result that arrives after its expected time is matched to its cast or swing instead of being dropped, and a swing whose result never shows is counted at its expected rage.
 - Snapshots gain two lines, `units` and `tickets`, that show how many of your outcomes were matched, lost or ambiguous. Please include them when you report a wrong recommendation.
 
 ### Changed
@@ -20,9 +21,10 @@
 
 ### Known issues
 
-- In a crowded pull with a laggy connection, white swings are credited less often (the harness measures about a third of them in a five-man), so rage can read low until a known cost pins it.
+- In a crowded pull with a laggy connection, white swings are still credited less often (the harness measures about a third of them in a five-man). Swings whose result never shows now count at their expected rage, so rage reads closer (the harness's mean error there fell from 32 to under 25 rage) but can still be off until a known cost pins it.
 - In a raid-sized crowd on one target, projectile landings are not credited at all yet: other casters' hits of the same school take the ticket first, so the amount band never learns (measured, not yet addressed).
-- Fast dual-wield rage can still read low when many swings go uncredited; the expected-rage fix is parked pending a swing-recall change.
+- Fast dual-wield rage can still read off: in a five-man the harness credits about 4 in 10 main-hand and 7 in 10 off-hand swings to the right hand, and swings swapped between the hands only partly cancel out.
+- Solo, the expected rage of a swing whose result never shows makes rage read one swing high in about 1 of 2400 ten-second windows.
 
 ### Upgrade notes
 

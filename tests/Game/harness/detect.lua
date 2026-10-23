@@ -156,6 +156,7 @@ end
 function M.run(kind, band, fights, seed0, check)
     local m = metrics.newTickets()
     m.melee = metrics.new()
+    m.melee.tk = m -- the melee tally's recovery and wash go to the cell's tally
     for f = 0, fights - 1 do
         local o = {}
         for k, v in pairs(M.KINDS[kind]) do
@@ -215,10 +216,14 @@ local function cell(m)
         staged = down(metrics.staged(m)),
         false100 = up(metrics.false100(m)),
         leak100 = up(metrics.leak100(m)),
-        lostDiff = math.abs(m.lostEngine - m.lostTruth),
+        lostDiff = math.abs(m.lostEngine + m.assumedEngine - m.lostTruth),
         residual = math.abs(m.outcomes - m.dispatched), -- negative: a double dispatch, as bad as a merge
         -- K6: own white rows after the kill's clear paid by their swing (before REGEN_ENABLED; metrics.tickets)
         postClear = down(m.postClear > 0 and m.postClearPaid / m.postClear or 1),
+        -- attribution-recovery spec §5.2: the share of false credits recovered; own swaps' mean net rage error a fight
+        -- a share like recall (a percent's integers read as spell IDs to tests/boundary_spec.lua)
+        recovered = down(metrics.recovered100(m) / 100),
+        wash = up(metrics.wash(m)),
     }
 end
 
@@ -261,6 +266,7 @@ function M.record(kind, band, m)
             .. " close; rageErr down.",
         "-- Fix round 2 (avoidSeen): 9fd58600's floors were never merged; part of their drop rested on believed rage for"
             .. " swings avoided in truth (an error cancelling the under-count), which the avoidSeen fix removes.",
+        "-- Task 5 (attribution-recovery decisions 54-56): recovered (floor, a share) and wash (ceiling) first set by this run.",
         "-- stylua: ignore",
         "return {",
     }
@@ -273,7 +279,7 @@ function M.record(kind, band, m)
             local v = all[k][b]
             if v then
                 out[#out + 1] = string.format(
-                    "        %s = { recall = %.2f, melee = %.2f, melee2 = %.2f, rageErr = %.1f, staged = %.2f, false100 = %.1f, leak100 = %.1f, lostDiff = %d, residual = %d, postClear = %.2f },",
+                    "        %s = { recall = %.2f, melee = %.2f, melee2 = %.2f, rageErr = %.1f, staged = %.2f, false100 = %.1f, leak100 = %.1f, lostDiff = %d, residual = %d, postClear = %.2f, recovered = %.2f, wash = %.1f },",
                     b,
                     v.recall,
                     v.melee,
@@ -284,7 +290,9 @@ function M.record(kind, band, m)
                     v.leak100,
                     v.lostDiff,
                     v.residual,
-                    v.postClear
+                    v.postClear,
+                    v.recovered or 0, -- a floor written before Task 5's cells: rewritten by its own kind's run
+                    v.wash or 0
                 )
             end
         end
@@ -313,6 +321,8 @@ function M.check(kind, band, m)
     assert(v.lostDiff <= fl.lostDiff, kind .. " " .. band .. " lost reported off the truth: " .. line)
     assert(v.residual <= fl.residual, kind .. " " .. band .. " dedupe residual above its ceiling: " .. line)
     assert(v.postClear >= fl.postClear, kind .. " " .. band .. " post-clear rows below their floor: " .. line)
+    assert(v.recovered >= (fl.recovered or 0), kind .. " " .. band .. " recovery below its floor: " .. line)
+    assert(v.wash <= (fl.wash or math.huge), kind .. " " .. band .. " net wash above its ceiling: " .. line)
 end
 
 --- K17's /reload: the first half of a fight on one VirtualState, the rest on a fresh one (an empty registry while

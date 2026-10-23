@@ -69,4 +69,19 @@ describe("the harness metrics", function()
         })
         assert.are.same({ 1, 1, 0 }, { metrics.crits(c, s) })
     end)
+
+    it("recovery: a false credit replaced, re-pinned, neutral or unrecovered; wash: own swaps' net error", function()
+        local m = metrics.newTickets()
+        metrics.recoverRow(m, 10.0, 10.3, 0, false) -- replaced 300 ms later
+        metrics.recoverRow(m, 11.0, 0, 11.5, false) -- re-pinned by a verdict 500 ms later
+        metrics.recoverRow(m, 12.0, 0, 0, true) -- neutral: it staged nothing
+        metrics.recoverRow(m, 13.0, 0, 0, false) -- unrecovered
+        assert.are.equal(0.75, metrics.recovered100(m) / 100) -- 3 of 4 (a share: integers here read as spell IDs)
+        assert.are.same({ 300, 500 }, { math.floor(m.recoverMs[1] + 0.5), math.floor(m.recoverMs[2] + 0.5) })
+        assert.are.equal(300, math.floor(metrics.recoverMedian(m) + 0.5)) -- the lower middle of an even count
+        metrics.washFight(m, { 9, -9, 4 }) -- signed per-swap rage errors of one fight
+        metrics.washFight(m, {})
+        assert.are.equal(2, metrics.wash(m)) -- mean absolute net per fight: (|4| + 0) / 2
+        assert.are.equal(11, m.washGross / m.washFights) -- 9 + 9 + 4 over 2 fights
+    end)
 end)

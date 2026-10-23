@@ -1,6 +1,7 @@
 # Attribution recovery: Overdue for every ticket, replaceable payments, assumed outcomes (design, 2026-10-23)
 
-Status: DESIGNED (plan: `docs/superpowers/plans/2026-10-23-attribution-recovery.md`). Amends the built unit-registry
+Status: BUILT (plan: `docs/superpowers/plans/2026-10-23-attribution-recovery.md`, Tasks 1-5 on
+`forever-attribution-2`; Task 6 on `forever-parry-haste`); Task 3 kept expiry EV (swings only; decision 51). Amends the built unit-registry
 spec, `docs/superpowers/specs/2026-10-22-unit-registry-and-tickets-design.md` (called "the base spec" below; its
 decisions 1-45 stand except where this one names them). Base: `forever` 093313ae.
 Paths are under `src/Hekili/` unless they start with `tests/`, `tools/` or `docs/`. Line numbers are as of 093313ae.
@@ -23,7 +24,7 @@ Overturned:
 | Decision 33 | pass (c), the hard window, is open only to tickets with no learned record | every ticket has an Overdue pass, ranked after every banded candidate (decision 46) |
 | §3.4.1 | a ticket with a record whose row falls outside its widened band is in no phase for that row | it is Overdue (decision 46) |
 | §6.2 floors, read precision-first | false credit and foreign leak are ceilings that "only move down"; recall falls rather than precision | floors regenerate once with this ruling as the named cause; recall must rise, false credit may rise (decision 54) |
-| §3.3.1 crowd gate | while crowded, the bound's early edge is refused | it is ranked: the early region becomes Overdue, never refused (decision 53) |
+| §3.3.1 crowd gate | while crowded, the bound's early edge is refused | it is ranked: the early region becomes Overdue, never refused (decision 53). Amended 2026-10-23 (Task 4): the crowd gate keeps refusing; the early crowded region never pays (section 4) |
 | Task 9b parking (`docs/dev/ingame-ledger.md:90-93`) | crediting an uncredited swing's rage cannot keep the solo `over` gate at 0 | Overdue removes the wrong-credit/lost pairs that double-counted (section 3.4); the assumed outcome is measured against that gate |
 
 Stands: the no-jitter rule (`no-jittery-recommendations`, owner 2026-10-20): a later correction never flips an icon
@@ -348,7 +349,7 @@ over precision; false credit may rise". The expected directions:
 |---|---|---|---|
 | K1 party, busy (melee) | up | up | white rows past the LR bar pay the oldest swing (pass (d)) |
 | K10 party, busy | up (the largest move: tail lags of a slow session now pay) | up | `docs/dev/ingame-ledger.md:82-84` |
-| K4, K5, K7, K8 party, busy | up | up | the running-mob region and the crowd region are Overdue, not refused |
+| K4, K5, K7, K8 party, busy | up | up | the running-mob region and the crowd region are Overdue, not refused. Amended 2026-10-23 (Task 5): only rows past the narrow band are Overdue; the crowd region stays refused (decision 53 as amended) |
 | K6 party, busy; K11, K11m | up | up | late rows pay their tickets |
 | K13 (all phases) | up | up | the twin's displaced row pays at pass (d) |
 | K14p | n/a | pet rows paid up | pass (d) MELEE cannot tell a pet's white hit from ours (U15 family) |
@@ -375,6 +376,17 @@ Per kind x band, printed by `metrics.ticketLine` and floored like the others:
   minus true. Cells: `wash` = mean over fights of the absolute net rage error of swaps (a ceiling) and the gross
   (mean of the absolute per-swap errors, printed): a wash shows as `wash` well under the gross.
 - `lostDiff` compares the engine's `lost + assumed` with the truth's lost.
+
+Amended 2026-10-23 (Task 5), as built (`tests/Game/harness/metrics.lua`): a false credit is a spell row still paid
+by a ticket not its own at the fight's end, or a swing credit of another source's or an unexplained wound (a replaced
+row is un-paid by the drive, so it counts only when re-offered and paid again); `re-pinned` is the oracle's
+retraction (`c.verdict` 2, timed by the drive's `c.verdictT`) only, not the `pinned` samples; `neutral` applies to
+spell rows (nothing staged), never to a swing credit. `wash` sums swing rage only (each own white row credited to
+another swing of ours: the credited hand's value minus the true hand's, 0 for an avoid, the crit extra for a crit);
+the per-ability crit and avoid counts are not built. The gross is printed as the mean per fight of the summed absolute
+per-swap errors. `assumed` is 0 in every detection run (no provider calls `T.Assume`). The cell is floored as the share
+`recovered` (0.xx, like `recall`: a percent's integers read as spell IDs to `tests/boundary_spec.lua`); the floors'
+first values are in `tests/Game/harness/detect_floors.lua`.
 
 The solo `over` gate and `lo`/`danger` (`solo_spec.lua:21-25`) stay exactly as they are and are not re-floored.
 
@@ -405,7 +417,7 @@ The gate is the full merge gate (`make gate`), as base §9.
 |---|---|---|
 | U17 | How often a late row (past `tol`) reconciles an assumed swing in game, and how often it is an avoid (`refunded`) | Snapshot's `assumed`, `confirmed`, `refunded` after a five-man dungeon run as Fury, plus a `/vslog` of the same pull |
 | U18 | The in-game replacement rate: a provisional payment replaced by a narrow-band row | Snapshot's `replaced` and `tentative` over the same run |
-| U16 (kept) | the crowd rate; now it decides how often the crowd region pays at pass (d) | as base §8 |
+| U16 (kept) | the crowd rate; it decides how often the crowd gate refuses an early row (the crowd region never pays: decision 53 as amended, Task 4) and so whether that refusal costs recall in game | as base §8 |
 
 No new capture is needed to build: every rule here reads rows the registry already dispatches.
 
@@ -477,7 +489,7 @@ at most +2/94 and +1/46 there; the harness world gains it in both directions wit
 | 48 | A payment at pass (b) or (d), or a MELEE credit outside its core band, made before the ticket's narrow band has passed, is provisional: the ticket goes TENT (state 4, `owed` 0, unit held) until `fin` = min(narrow band end, `hi`); a later row inside that narrow band (no open ticket taking it at pass (a); for MELEE, the LR crediting no open swing) replaces it: the first row is re-offered to our remaining open tickets (provisional, untaught); foreign only if none takes it (AMENDED 2026-10-23: the Fury replay fixture, decision 14), the new row pays final; a provisional payment teaches the lag and the band only at `fin`; a provisional swing credit never teaches the median | "recoverable": the narrow band is the strongest evidence of ownership; teaching late keeps undo trivial |
 | 49 | Undoable: swing rage (c = 1, c = 3) through the credit record's deltas and `back()` (`retract(k, t)`, called by `Obs.Swing` c = 6; the verdict's own retraction unchanged), while no spend of ours from the slot since; spell `Obs.Crit` and `Obs.Avoided` are held while TENT. Final, and so never TENT: a direct ticket with a live TICKS link; the emitted combat-log row stays (the replacing row is emitted too, as the firm retraction's two rows) | each undo uses machinery that exists; what has no undo is either held or not made provisional |
 | 50 | The hold: a retraction (replacement or refund) takes `lo` at once, `hi` down to `est` at most, and `est` only at the slot's next usability answer, its next spend's rung, or never (combat end). NOTE (Task 2 review): `I.SettleDebt` runs on any usability answer, a NOT answer or a rung-less ability included; narrowing it to informative answers is a follow-up (Task 19 style) | no-jitter: a correction never flips an icon by itself; `lo` stays a floor |
-| 51 | Primary: past its lag tolerance (MELEE: the pending window; FLIGHT with a record: the widened band's end) an unpaid ticket goes ASSUMED (state 5, a shadow in the same slot) until `hi`; a swing stages its assumed rage at once as a credit record (`Obs.Swing` c = 5, `est` and `hi` only); a late hit closes `confirmed` (`Obs.Swing` c = 7 turns the assumption's record into the credit: a wash), a late avoid `refunded` (c = 6 retracts it with the hold, `Obs.Avoided` for a spell), no row `assumed`; a retry ticket is never assumed; comparison variant: the expectation at the `lost` close (9b) | the owner's refinement: assume success past the tolerance, then a refund ticket; continuity with `VS.SwingPending` MEASURED AND RULED 2026-10-23 (Task 3): no variant kept the solo `over` gate at 0 (tolerance FULL 124, EV 7; expiry FULL 278, EV 17 of 2400; lo/danger 0); the owner kept expiry EV and re-based the gate to 18 (a refunded assumption is a believed step the truth never had; EV sizes it below a step); fix round 2: no expectation for a swing whose window held a white avoid nobody took (`T.avoidSeen`; the druid bear and decay gates), solo over 17 -> 1, the bar 18 -> 2; `T.Assume` (the shadow, its closes) stays as the providers' entry; tables in `docs/dev/gaps.md` |
+| 51 | Primary: past its lag tolerance (MELEE: the pending window; FLIGHT with a record: the widened band's end) an unpaid ticket goes ASSUMED (state 5, a shadow in the same slot) until `hi`; a swing stages its assumed rage at once as a credit record (`Obs.Swing` c = 5, `est` and `hi` only); a late hit closes `confirmed` (`Obs.Swing` c = 7 turns the assumption's record into the credit: a wash), a late avoid `refunded` (c = 6 retracts it with the hold, `Obs.Avoided` for a spell), no row `assumed`; a retry ticket is never assumed; comparison variant: the expectation at the `lost` close (9b) | the owner's refinement: assume success past the tolerance, then a refund ticket; continuity with `VS.SwingPending` MEASURED AND RULED 2026-10-23 (Task 3): no variant kept the solo `over` gate at 0 (tolerance FULL 124, EV 7; expiry FULL 278, EV 17 of 2400; lo/danger 0); the owner kept expiry EV and re-based the gate to 18 (a refunded assumption is a believed step the truth never had; EV sizes it below a step); fix round 2: no expectation for a swing whose window held a white avoid nobody took (`T.avoidSeen`; the druid bear and decay gates), solo over 17 -> 1, the bar 18 -> 2; `T.Assume` (the shadow, its closes) stays as the providers' entry; tables in `docs/dev/gaps.md`. Amended 2026-10-23 (Task 5), as built: swings only. Only a provider calls `T.Assume`; `T.Expire` stages the expectation (f x the step, f the learned hit rate) at an open swing's `lost` close unless `T.avoidSeen`; a FLIGHT with a record never goes ASSUMED: unpaid past its hard window it closes `lost` with nothing staged |
 | 52 | Two values measured for the assumption: FULL (the step) and EV (`hitRate` x the step); the four variants run on the same seeds behind load-time constants; Task 3 keeps the best (solo `over` and `lo`/`danger` first, then flicker, agreement, mean error) as the only code path and records all four | the owner asked to test it; the gates choose |
 | 53 | The crowd gate orders, never refuses: its region falls to pass (d) and pays provisionally. Amended 2026-10-23 (Task 4): the crowd gate keeps refusing; a row in the crowd region (before the narrow band) goes foreign and its flight closes `lost` with no expectation (section 4) | the ruling; no code change in `K.Flight`. Amendment's cause: pass (d) is late only, and the measured early pass (Task 2) cost recall and added false credit (K4 busy recall 0.85 -> 0.77, K11 busy 0.44 -> 0.40, K6 solo false 2.2 -> 3.2) |
 | 54 | The detection floors regenerate once with this ruling as the named cause (recall up, false credit and leak may rise; the expected cells in 5.1); the group gates' `falseNet` bars (`group_spec.lua:25`, `:38`) may re-base the same way; the solo `over`, `lo` and `danger` gates do not move | precision-first was the overturned reading; the safety gates are not about precision |

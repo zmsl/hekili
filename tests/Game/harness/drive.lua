@@ -57,6 +57,7 @@ function M.boot(o)
     end
     -- captures, by stream index: the hand credited and the swing time it was credited at (0: none)
     c.crHand, c.crAt, c.crTok, c.verdict, c.recIdx, c.onus = {}, {}, {}, {}, {}, {}
+    c.verdictT = {} -- by stream index: the verdict's time (attribution-recovery spec §5.2's re-pin)
     c.vetoHand, c.vetoAt = {}, {} -- by stream index: the swing a veto denied that wound (Rows' L.vetoX / vetoAt; 0 none)
     c.missHand, c.missAt = {}, {} -- the SWING_MISSED rows (hand, swing time): avoids credited to our swings
     c.avIdx, c.avHand, c.avAt = {}, {}, {} -- each provisional avoid taken: its stream index and the swing's hand, time
@@ -65,7 +66,7 @@ function M.boot(o)
         c.crHand[i], c.crAt[i], c.crTok[i], c.vetoHand[i], c.vetoAt[i], c.win[i], c.winT[i] = 0, 0, false, 0, 0, 0, 0
         c.missHand[i], c.missAt[i], c.avIdx[i], c.avHand[i], c.avAt[i] = 0, 0, 0, 0, 0
         c.loOver[i], c.estOver[i], c.danger[i] = 0, 0, 0
-        c.verdict[i], c.onus[i] = 0, ""
+        c.verdict[i], c.verdictT[i], c.onus[i] = 0, 0, ""
     end
     -- by stream index: the anchor, kind and pass of the ticket a row paid (0 none), and what it staged (1 Crit,
     -- 2 Avoided)
@@ -254,7 +255,7 @@ function M.boot(o)
             local v = verdict(id, ok, t, firm)
             local i = c.recIdx[id]
             if v and i > 0 then
-                c.verdict[i] = ok and 1 or (firm and 2 or 3)
+                c.verdict[i], c.verdictT[i] = ok and 1 or (firm and 2 or 3), t
             end
             return v
         end
@@ -481,7 +482,7 @@ function M.run(c, s, offset)
         c.crHand[i], c.crAt[i], c.verdict[i], c.onus[i], c.crit3[i], c.unk[i] = 0, 0, 0, "", 0, 0
         c.vetoHand[i], c.vetoAt[i] = 0, 0
         c.payAt[i], c.payKind[i], c.payPass[i], c.staged[i] = 0, 0, 0, 0
-        c.payN[i], c.disp[i], c.replacedAt[i] = 0, 0, 0
+        c.payN[i], c.disp[i], c.replacedAt[i], c.verdictT[i] = 0, 0, 0, 0
     end
     c.crossGUID, c.tickShift = 0, 0
     for _, r in pairs(c.trk) do

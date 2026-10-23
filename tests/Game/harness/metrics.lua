@@ -3,6 +3,7 @@
 -- source, our tick or proc credited to a swing of ours pays rage; an avoid of another source or an unexplained one
 -- only mislabels a SWING_MISSED row), the rage error per 10 s window (believed est minus truth, each
 -- window as if pinned at its start) and the row checks.
+local fs = require("Game.State.helpers.fake_spec")
 local M = {}
 
 --- A fresh tally (summed over fights by `score`).
@@ -39,6 +40,12 @@ function M.new()
         hitsStaged = 0,
         avoidRight = 0,
         avoidWrong = 0,
+        falseRows = 0,
+        recovered = 0,
+        recoverMs = {},
+        washNet = 0,
+        washGross = 0,
+        washFights = 0,
     }
 end
 
@@ -103,6 +110,17 @@ function M.score(m, c, s, W, step, after, keep)
     local function inside(t)
         return t >= after and (keep == nil or keep(t))
     end
+    -- the wash (attribution-recovery spec §5.2): a row's rage as credited to hand h (0 an avoid; a crit adds its extra)
+    local rec, I = m.tk or m, c.I
+    local slot = I.res and I.res.slotOf[fs.RAGE]
+    local function val(h, i)
+        local a = s.a2[i]
+        if not slot or a == "DODGE" or a == "PARRY" or a == "MISS" then
+            return 0
+        end
+        return I.SwingValue(slot, h, 0) * I.res.scale[slot] + (s.a3[i] == "CRITICAL" and I.SwingCrit(slot, h, 0) or 0)
+    end
+    local errs = {}
     m.fights = m.fights + 1
     for i = 1, s.n do
         local ev = s.ev[i]
@@ -124,6 +142,10 @@ function M.score(m, c, s, W, step, after, keep)
                 if c.verdict[i] ~= 2 then
                     m.falseNet[cr] = m.falseNet[cr] + 1
                 end
+                M.recoverRow(rec, s.t[i], c.replacedAt[i], c.verdict[i] == 2 and c.verdictT[i] or 0, false)
+            end
+            if s.src[i] == 1 and h > 0 and cr > 0 and c.crAt[i] ~= s.swingT[i] then -- an own swap
+                errs[#errs + 1] = val(cr, i) - val(h, i)
             end
             local vh = c.vetoHand[i]
             if vh > 0 then -- a veto: the usability check judged this wound's swing before it was credited
@@ -204,6 +226,7 @@ function M.score(m, c, s, W, step, after, keep)
             m.estOver, m.danger = m.estOver + c.estOver[w], m.danger + c.danger[w]
         end
     end
+    M.washFight(rec, errs)
     m.noDst, m.order = m.noDst + c.rows.noDst, m.order + c.rows.order
     return m
 end
@@ -448,6 +471,7 @@ function M.newTickets()
         stagedTruth = 0, -- own crits and refused avoids in the truth
         divergent = 0,
         lostEngine = 0, -- FRAME and FLIGHT rows the engine counted lost
+        assumedEngine = 0, -- tickets the engine closed assumed (attribution-recovery decision 51; providers only)
         lostTruth = 0, -- own instant and projectile successes with no row in the truth
         outcomes = 0, -- distinct outcomes on registry tokens (any source)
         dispatched = 0, -- rows the registry dispatched
@@ -466,7 +490,49 @@ function M.newTickets()
         twinDivergent = 0, -- swapped pairs of a different class (K13; the engine's T.divergent sees own pairs only)
         inFlight = 0, -- fights where another source killed our target while a bolt of ours flew (K11)
         inFlightLost = 0, -- of those bolts, the ones closed lost or paid by a row after the death (K11: must be 0)
+        -- attribution-recovery spec §5.2: false credits (spell rows here, swing credits from metrics.score's m.tk) and
+        -- how many recovered, with the ms to recovery; own swaps' net and gross rage error per fight
+        falseRows = 0,
+        recovered = 0,
+        recoverMs = {},
+        washNet = 0,
+        washGross = 0,
+        washFights = 0,
     }
+end
+
+--- One false credit at `t`: replaced at `replacedT` (0 none), re-pinned at `pinT` (0 none), or `neutral` (it staged
+--- nothing). Records the ms to the earlier recovery (attribution-recovery spec §5.2).
+function M.recoverRow(m, t, replacedT, pinT, neutral)
+    m.falseRows = m.falseRows + 1
+    local at = 0
+    if replacedT > 0 and (pinT == 0 or replacedT < pinT) then
+        at = replacedT
+    elseif pinT > 0 then
+        at = pinT
+    end
+    if at > 0 then
+        m.recovered = m.recovered + 1
+        m.recoverMs[#m.recoverMs + 1] = 1000 * (at - t)
+    elseif neutral then
+        m.recovered = m.recovered + 1
+    end
+end
+
+--- One fight's own swaps: their signed rage errors (believed - true). Adds |net| and the gross.
+function M.washFight(m, errs)
+    local net = 0
+    for _, e in ipairs(errs) do
+        net, m.washGross = net + e, m.washGross + math.abs(e)
+    end
+    m.washNet, m.washFights = m.washNet + math.abs(net), m.washFights + 1
+end
+
+function M.recovered100(m)
+    return m.falseRows > 0 and 100 * m.recovered / m.falseRows or 100
+end
+function M.wash(m)
+    return m.washFights > 0 and m.washNet / m.washFights or 0
 end
 
 local REG = { target = true, focus = true, softenemy = true, softinteract = true }
@@ -525,7 +591,7 @@ function M.tickets(m, c, s, W)
                 g.onTarget = true
             end
             if c.payAt[i] > 0 and c.payKind[i] ~= X.MELEE then
-                g.at, g.kind, g.staged = c.payAt[i], c.payKind[i], c.staged[i]
+                g.at, g.kind, g.staged, g.idx = c.payAt[i], c.payKind[i], c.staged[i], i
             end
         end
     end
@@ -590,12 +656,14 @@ function M.tickets(m, c, s, W)
             m.paid = m.paid + 1
             if not (g.own and anchored(g)) and not g.swapped then
                 m.falsePaid = m.falsePaid + 1
+                M.recoverRow(m, g.t, c.replacedAt[g.idx] or 0, 0, (c.staged[g.idx] or 0) == 0)
             end
         end
     end
     local T = c.I.Tickets
     m.divergent = m.divergent + T.divergent
     m.lostEngine = m.lostEngine + T.lost[X.FRAME] + T.lost[X.FLIGHT]
+    m.assumedEngine = m.assumedEngine + T.closed.assumed
     m.overflow = m.overflow + T.closed.overflow
     if W then -- own white outcomes landing 0.1-2 s after their target's kill (after the clear): paid by their swing
         -- Scope (K6 ruling): rows before the next PLAYER_REGEN_ENABLED (the reset at combat end closes every ticket,
@@ -742,11 +810,22 @@ function M.twinDivergent100(m)
     return m.own > 0 and 100 * m.twinDivergent / m.own or 0
 end
 
+--- The median ms from a false credit to its recovery (0 none; attribution-recovery spec §5.2, printed only).
+function M.recoverMedian(m)
+    local ms = {}
+    for k, v in ipairs(m.recoverMs) do
+        ms[k] = v
+    end
+    table.sort(ms)
+    return #ms > 0 and ms[math.floor((#ms + 1) / 2)] or 0
+end
+
 --- One line for a detection cell.
 function M.ticketLine(m)
     return string.format(
         "fights=%d own=%d recall=%.3f (wrong %d, missed %d) false/100=%.2f leak/100=%.2f staged=%.3f divergent/100=%.2f "
-            .. "lost engine=%d truth=%d outcomes=%d dispatched=%d residual=%d overflow=%d postClear=%d/%d",
+            .. "lost engine=%d truth=%d outcomes=%d dispatched=%d residual=%d overflow=%d postClear=%d/%d"
+            .. " recovered/100=%.1f (median %.0f ms) wash=%.2f (gross %.1f)",
         m.fights,
         m.own,
         M.recall(m),
@@ -763,7 +842,11 @@ function M.ticketLine(m)
         m.outcomes - m.dispatched,
         m.overflow,
         m.postClearPaid,
-        m.postClear
+        m.postClear,
+        M.recovered100(m),
+        M.recoverMedian(m),
+        M.wash(m),
+        m.washFights > 0 and m.washGross / m.washFights or 0
     )
 end
 
