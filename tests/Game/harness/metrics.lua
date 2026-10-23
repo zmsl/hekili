@@ -388,6 +388,7 @@ function M.fights(o, n, after)
     for seed = 1, n do
         local s, W = scenarios.stream(o, seed)
         local c = drive.boot({ max = o.max, oracle = o.oracle })
+        c.ctl.inGroup = o.group ~= false and o.others ~= nil and #o.others > 0 -- IsInGroup (only the Meter reads it)
         drive.run(c, s)
         M.score(m, c, s, W, 9, after)
         drive.restore(c)
