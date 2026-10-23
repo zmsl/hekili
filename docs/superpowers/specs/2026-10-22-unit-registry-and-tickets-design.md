@@ -352,8 +352,8 @@ One optional plain read may narrow its lower bound. `VS.TargetRange()` (`Game/St
 plain in combat: poll 14 builds it from `C_Spell.IsSpellInRange`, which answers plainly (`Game/State/Sources/Target.lua:8-9`,
 probe W PR7). It covers the current target only, as a bracket between the tracked abilities' ranges, as of its last
 change. When the pinned GUID is the current target and the bracket has `lo > 0`, the hard window's lower bound becomes
-`max(0, (lo - CLOSE x age) / speed - TOL)`, where `age` is the time since the bracket was logged and `CLOSE` = 7 yd/s
-(a running mob). The bracket's upper bound is never used: a closing mob makes it stale on the wrong side.
+`max(0, (lo - CLOSE x age) / (speed + CLOSE) - TOL)`, where `age` runs from the bracket's log to the ticket's anchor
+(its success) and `CLOSE` = 7 yd/s (a running mob, which also meets the projectile in flight). The bracket's upper bound is never used: a closing mob makes it stale on the wrong side.
 
 Learned lag. A pool of `LAG_CAP` = 16 records, keyed by (GUID, speed), preallocated: `lagGUID`, `lagSpeed`, `lagE` (the
 last observed lag, s), `lagSpr` (spread), `lagT` (time of the last observation), `lagN` (observations). It is the
@@ -365,14 +365,20 @@ last one: a closing mob makes it shrink); `lagSpr` moves by `0.25 x (1.2533 x |l
 only). A full pool evicts the record with the oldest `lagT`. Records survive combat end (a GUID does not return) and
 reset at load.
 
-Widening schedule, for a ticket whose (GUID, speed) has a record, with `d` = the row's time minus `lagT`:
+Widening schedule, for a ticket whose (GUID, speed) has a record, with `d` = the ticket's anchor minus the record's
+last paid anchor (`at - (lagT - lagE)`): a lag measures the distance at its ticket's anchor, so the closing time runs
+anchor to anchor (the row's time minus `lagT` would miss the lag the mob already removed):
 
 - base half-width `b = max(TOL, 2 x lagSpr)`;
-- downward (the mob closed) `down = max(b, (CLOSE / speed) x d)`; upward (the mob backed off) `up = max(b, (CLOSE / 2 / speed) x d)`;
+- downward (the mob closed): `bound = max(0, (lagE x speed - CLOSE x d) / (speed + CLOSE))`, the distance left at
+  this anchor flown at `speed + CLOSE` (a mob running in at `CLOSE` meets the projectile); upward (the mob backed off)
+  `up = max(b, (CLOSE / 2 / speed) x d)`;
 - narrow band (pass a): `[at + lagE - b, at + lagE + b]`;
-- widened band (pass b): `[at + lagE - down, at + lagE + up]`, clipped to the hard window.
+- widened band (pass b): `[max(at, at + bound - b), at + lagE + up]`, clipped to the hard window.
 
-For Wrath, `CLOSE / speed` = 0.35: two seconds after the last landing the band reaches 0.7 s below the last lag.
+For a 20 yd/s projectile, a mob 30 yd out (lag 1.5 s) that runs in for 2 s between anchors leaves
+`(30 - 14) / 27` = 0.59 s, so the band reaches 0.91 s below the last lag (less `b`). Capture b's six closing rows
+(16017, 38127, 39145, 40413, 69926, 72780) and capture a's 5367 crit land inside it.
 
 First-ticket rule: no record for (GUID, speed) yet means the whole hard window, uniform, and the ticket is a candidate
 in pass (c) only.
@@ -462,10 +468,12 @@ is affected; those count as `divergent` toward the 4.2 trigger.
 
 Example from capture a: the 97374 Wrath's own row landed at 98890 (1516 ms), and a MISS arrived at 97891, 517 ms after
 that success and 2067 ms after the 95824 success. Today Rows charges the MISS to the 97374 cast, because it is inside
-the cast's avoid window (`:459-461`). With a learned `lagE` of about 1.5 s for that GUID and a last landing about 1.5 s
-earlier, the 97374 ticket's narrow band is [1.35, 1.65] s and its widened band reaches down to about 1.5 - 0.53 =
-0.97 s: 0.517 s is in neither. The 95824 ticket has expired (its hard window ended at 1.65 s). The MISS is therefore
-foreign. Had an older ticket of that queue still been open with the MISS in its band, that ticket would have paid it.
+the cast's avoid window (`:459-461`). With a learned `lagE` of 1.5 s for that GUID taught by the 95824 cast (anchor
+2.474 s earlier), the 97374 ticket's narrow band is [1.35, 1.65] s, but its widened band reaches down to
+`(30 - 7 x 2.474) / 27 - 0.15` = 0.32 s: 0.517 s is inside it, because a mob that ran in can land that early. The
+widened band pays the MISS to the 97374 ticket. The capture itself lacks the 95824 landing and pools its four mobs
+under one inferred GUID (it records no plate GUIDs), so its replay meets a stale, pooled record instead
+(`tests/Game/harness/captures_spec.lua`); probe U13 asks what the 95824 cast's outcome was.
 
 FIFO per queue, proof. Take one GUID and one speed `v`, casts A then B with successes `tA < tB` and distances `dA`,
 `dB`. A lands at `tA + dA / v`, B at `tB + dB / v`. B lands first only if `dA - dB > v x (tB - tA)`: the distance
@@ -998,7 +1006,7 @@ constructor, closure or `{...}` inside an event handler, a row dispatch, a poll 
 | 17 | `owed`: rows still owed; each paid row decrements it, 0 closes the ticket; unpaid `owed` at expiry counts as lost | one counter covers one hit, N ticks and open-ended channels |
 | 18 | A `school` of nil means the hit makes no row of ours: only an avoid pays, expiry is not lost (a pure aura with no damage) | an aura-only cast needs no handler of its own |
 | 19 | Backed by captures or measured logs: NONE, FRAME, FLIGHT, MELEE, STRIKE, TICKS (druid-moonfire capture). Unprobed: CHANNEL, implemented but untested and unused by packs (U9's channel half deferred by owner ruling) | no channel row has been captured yet |
-| 20 | FLIGHT hard window `[0, rMax / speed + TOL]` from the success, always; `TOL` = 0.15 s; `rMax` 0 means 40 yd; the plain bracket's `lo` may only raise the lower bound, less `CLOSE x age` | the engine cannot read an up-to-date range in combat; the five max-range samples fit [0, 1.65] s |
+| 20 | FLIGHT hard window `[0, rMax / speed + TOL]` from the success, always; `TOL` = 0.15 s; `rMax` 0 means 40 yd; the plain bracket's `lo` may only raise the lower bound, less `CLOSE x age` (bracket to anchor) and flown at `speed + CLOSE` | the engine cannot read an up-to-date range in combat; the five max-range samples fit [0, 1.65] s |
 | 21 | School check by equality with the declared school's compiled mask | no bit operations in core; two-school rows are deferred (U7, owner ruling) |
 | 22 | Amount band [0.6 x lo, 1.6 x hi] after 3 clean wounds | spell damage varies more than weapon damage; procs and crits halved stay inside |
 | 23 | Consumption order: rows online in arrival order after dedupe; candidates of the row's queue in expected-closure order; passes (a) narrow, (b) widened, (c) hard window for tickets with no record; first match pays; MELEE's LR decides among MELEE candidates at a pass | the order decides correctness; FIFO per queue falls out of it |
@@ -1008,7 +1016,7 @@ constructor, closure or `{...}` inside an event handler, a row dispatch, a poll 
 | 27 | DB2 check is a dev-only `make spell-data-check` over the declared `velocity` and `school` fields; it maps SchoolMask to a name through `ns.SCHOOL` and compares names | CI has no DB2 file; the pack's declared name is what is checked |
 | 28 | Registry dispatches rows through `OnRow`; Rows registers before Target | one resolution and dedupe for every consumer; tickets see a row first |
 | 29 | Learned flight lag: `LAG_CAP` = 16 records per (GUID, speed): `lagE` (last observed lag), `lagSpr` (EMA spread, 0.25 rate, [0.02, 0.4]), `lagT`, `lagN`; taught by a clean pass (a) or (b) payment; oldest `lagT` evicted | the same mechanism as the global melee lag, keyed per unit because flight lag is distance; the last lag tracks a closing mob |
-| 30 | Widening: `b = max(TOL, 2 x lagSpr)`; `down = max(b, (CLOSE / speed) x d)`, `up = max(b, (CLOSE / 2 / speed) x d)`, `d` = time since the last landing, `CLOSE` = 7 yd/s, clipped to the hard window; no record: the whole hard window, uniform | the band grows as fast as a running mob can change the lag |
+| 30 | Widening: `b = max(TOL, 2 x lagSpr)`; lower edge `max(at, at + bound - b)` with `bound = max(0, (lagE x speed - CLOSE x d) / (speed + CLOSE))`, `up = max(b, (CLOSE / 2 / speed) x d)`, `d` = anchor to anchor (`at - (lagT - lagE)`), `CLOSE` = 7 yd/s, clipped to the hard window; no record: the whole hard window, uniform | the band grows as fast as a running mob can change the lag: it closes between anchors and again in flight (capture b, 2026-10-22) |
 | 31 | FIFO per queue (kind, school, speed, GUID); never across queues | one queue's rows arrive in cast order unless the distance shrinks faster than the projectile (20 yd/s or more) between casts, which no run does |
 | 32 | Cascade bound: a lost ticket shifts its queue by at most one row, only while casts are closer than the narrow band or before the first record, until it expires at `H` or closes on the kill tell or GONE; shifts that change a belief count as `divergent` | a shift between two own same-school hits changes nothing; only divergent outcomes matter |
 | 33 | Pass (c), the hard window, is open only to tickets with no learned record | otherwise a far-off row (capture a's 517 ms MISS) would still be charged to a cast whose learned lag excludes it |
