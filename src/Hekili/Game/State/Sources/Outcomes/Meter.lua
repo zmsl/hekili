@@ -114,22 +114,28 @@ function P.RowOwner(t, uid, school, amount, act, now)
     return I.OURS
 end
 
---- (decision 75) The unused taken group 0.3-0.6 s before a hit row on us at t (DM §3: 389-565 ms), or within 5 ms of
---- it (a spell's); marked used. nil in a group (partners' hits taken fire type 7 too) or while not live.
-function P.EnemyHitAt(t)
+--- (decision 75) The latest unused taken group 0.3-0.6 s before a white hit row on us at t (DM §3: 389-565 ms), or
+--- within 5 ms of a spell row (`school` not 1); marked used. nil in a group (partners' hits taken fire type 7 too) or
+--- while not live. Allocates nothing.
+function P.EnemyHitAt(t, school)
     if not live() or grouped then
         return nil
     end
+    local lo, hi = t - TAKEN_FAR, t - TAKEN_NEAR
+    if school ~= 1 then
+        lo, hi = t - SPELL_TAKEN, t + SPELL_TAKEN
+    end
+    local best = 0
     for k = 1, RING do
-        if gKind[k] == 7 and not gUsed[k] then
-            local d = t - gT[k]
-            if (d >= TAKEN_NEAR and d <= TAKEN_FAR) or (d >= -SPELL_TAKEN and d <= SPELL_TAKEN) then
-                gUsed[k] = true
-                return gT[k]
-            end
+        if gKind[k] == 7 and not gUsed[k] and gT[k] >= lo and gT[k] <= hi and (best == 0 or gT[k] > gT[best]) then
+            best = k
         end
     end
-    return nil
+    if best == 0 then
+        return nil
+    end
+    gUsed[best] = true
+    return gT[best]
 end
 
 --- The last fight's totals, read out of combat: { valid, done, taken, at }, or nil until read.

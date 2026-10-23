@@ -90,13 +90,23 @@ describe("the damage-meter Outcomes provider", function()
         assert.are.equal(I.FOREIGN, I.outcomes.RowOwner(7.2, 1, 1, 40, "WOUND", 7.22))
     end)
 
-    it("EnemyHitAt: a taken group 0.3-0.6 s before a white row on us, once", function()
-        group(5)
-        ctl.now = 9.6
-        ctl.Fire("DAMAGE_METER_COMBAT_SESSION_UPDATED", 7, 200)
-        assert.are.equal(9.6, I.outcomes.EnemyHitAt(10))
-        assert.is_nil(I.outcomes.EnemyHitAt(10.01))
-    end)
+    it(
+        "EnemyHitAt: the latest taken group 0.3-0.6 s before a white row on us, once; a spell row's within 5 ms",
+        function()
+            group(5)
+            ctl.now = 9.45
+            ctl.Fire("DAMAGE_METER_COMBAT_SESSION_UPDATED", 7, 200)
+            ctl.now = 9.6
+            ctl.Fire("DAMAGE_METER_COMBAT_SESSION_UPDATED", 7, 200)
+            ctl.now = 10.002
+            ctl.Fire("DAMAGE_METER_COMBAT_SESSION_UPDATED", 7, 200)
+            assert.are.equal(9.6, I.outcomes.EnemyHitAt(10, 1))
+            assert.are.equal(9.45, I.outcomes.EnemyHitAt(10.01, 1))
+            assert.is_nil(I.outcomes.EnemyHitAt(10.02, 1))
+            assert.are.equal(10.002, I.outcomes.EnemyHitAt(10, 4))
+            assert.is_nil(I.outcomes.EnemyHitAt(10, 4))
+        end
+    )
 
     it("Audit: out of combat, plain, the local player's totals; nil while secret", function()
         ctl.meter.done[1], ctl.meter.taken[1] = 923, 51

@@ -21,9 +21,9 @@ describe("the A/B harness", function()
     end
 
     it("meter shapes only add events: the rest of the stream is today's", function()
-        local o = { duration = 30 }
+        local o = { duration = 30, observe = { meter = false, takenLag = 0 } } -- explicit: a provider arm sets them
         local base = scenarios.stream(o, 7)
-        o.meter = true
+        o.observe = { meter = true, takenLag = 0 }
         local with = scenarios.stream(o, 7)
         assert.is_true(count(with, "DAMAGE_METER_COMBAT_SESSION_UPDATED") > 0)
         local j = 0

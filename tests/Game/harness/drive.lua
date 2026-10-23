@@ -17,7 +17,7 @@ local M = {}
 M.TICK = 0.1 -- seconds between OnUpdate + drain (in game every frame; poll 2 at 0.2 s in combat)
 M.WINDOW = 10 -- seconds per rage window (harness design §3.3)
 M.STEP = 9 -- one main-hand step: the overshoot bar
-local CAP = 32768
+local CAP = 65536 -- stream events: a raid-40 meter arm fight of 300 s is about 44k (providers spec §4.2)
 
 local USABLE, SHORT, UNUSABLE = { true, false }, { false, true }, { false, false }
 local PLAIN_READY = { isActive = false, isOnGCD = false, startTime = 0, duration = 0 } -- a secret-free client's

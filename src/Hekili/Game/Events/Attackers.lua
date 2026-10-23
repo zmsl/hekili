@@ -198,7 +198,7 @@ S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
         return
     end
     -- the hit's resolved time from the Outcomes provider (its own clock, plain), else the row's; the row keeps t
-    local te = act == "WOUND" and I.outcomes.EnemyHitAt(t) or t
+    local te = act == "WOUND" and I.outcomes.EnemyHitAt(t, school) or t
     local melee = act ~= "WOUND" or school == 1
     local wound = act == "WOUND" and school == 1
     local a = wound and base(amount, flag) or nil

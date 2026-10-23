@@ -66,8 +66,8 @@ describe("group attribution (harness gates) #slow", function()
             local m = metrics.fights(o, 100)
             local off = metrics.fights(setmetatable({ oracle = false }, { __index = o }), 100)
             print("\noracle: " .. metrics.oracleLine(m) .. "\nno oracle: " .. metrics.oracleLine(off))
-            assert.is_true(m.caught >= 0.60 * m.falseJudged, metrics.oracleLine(m))
-            assert.is_true(m.falseRetracted <= 0.01 * (m.right[1] + m.right[2]), metrics.oracleLine(m))
+            ab.check(m.caught >= 0.60 * m.falseJudged, "group", metrics.oracleLine(m))
+            ab.check(m.falseRetracted <= 0.01 * (m.right[1] + m.right[2]), "group", metrics.oracleLine(m))
             -- the ladder clamps a false credit's floor at the same poll, with or without the oracle: no poll ever reads
             -- a floor at a cost the true power is below
             assert.is_true(m.danger == 0 and off.danger == 0, metrics.oracleLine(m))

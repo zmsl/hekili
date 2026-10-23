@@ -24,8 +24,10 @@ describe("the harness drive", function()
         assert.is_true(ok, tostring(bytes))
         assert.are.equal(0, bytes)
         local L = c.I.Log
-        assert.is_true(
+        -- the paths the default arm's fight takes (a provider arm's answers take others: recorded, providers §4.1)
+        require("Game.harness.ab").check(
             L.oracle.retracted > 0 and L.oracle.vetoed > 0 and L.onus.byBand > 0,
+            "harness alloc",
             ("every path exercised: retracted %d vetoed %d byBand %d"):format(
                 L.oracle.retracted,
                 L.oracle.vetoed,

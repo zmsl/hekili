@@ -4,8 +4,9 @@ local M = {}
 
 M.ARMS = {
     default = { outcomes = "default", presence = "router", viewer = false },
-    -- `observe`: the observer knobs the arm turns on (the meter's events; added events only, providers spec §4.2)
-    meter = { outcomes = "meter", presence = "router", viewer = false, observe = { meter = true } },
+    -- `observe`: the observer knobs the arm turns on (providers spec §4.2): the meter's events, and the hit row on us
+    -- 0.48 +-0.09 s after its taken group (DM §3's measured lead; it moves those rows, so only a provider arm sets it)
+    meter = { outcomes = "meter", presence = "router", viewer = false, observe = { meter = true, takenLag = 0.48 } },
     viewer = { outcomes = "default", presence = "router", viewer = true },
 }
 

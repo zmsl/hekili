@@ -28,8 +28,8 @@ describe("solo attribution (harness gates) #slow", function()
             -- row-only: an avoid of another source or an unexplained one credited pays no rage; bound at measured + 0.5
             check(metrics.falsePer100(m, m.falseAvoids) <= 0.6, m) -- measured 0.08
             check(m.noDst == 0 and m.order == 0 and m.nonTarget == 0, m)
-            assert.is_true(m.falseRetracted <= 0.005 * (m.right[1] + m.right[2]), metrics.oracleLine(m))
-            assert.is_true(m.judged > 0 and m.danger == 0, metrics.oracleLine(m))
+            ab.check(m.falseRetracted <= 0.005 * (m.right[1] + m.right[2]), "solo", metrics.oracleLine(m))
+            ab.check(m.judged > 0 and m.danger == 0, "solo", metrics.oracleLine(m))
         end
     )
 
