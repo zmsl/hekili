@@ -22,7 +22,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
     `## Group: Hekili` nests each content addon under Hekili in the in-game addon list.
 
   Content reaches the engine only through the public `Hekili` object (the registration API, `State`, `Class`,
-  `Client`; `tests/boundary_spec.lua`). Every TOC's `## Version` is `@project-version@`; the packager stamps the release tag into all four (one zip, one version); the core's ContentAPI
+  `Client`, and `L` for its text; `tests/boundary_spec.lua`). Every TOC's `## Version` is `@project-version@`; the packager stamps the release tag into all four (one zip, one version); the core's ContentAPI
   (`CONTENT_API` in `Engine/Content.lua`, matched against each content TOC's `## X-Hekili-ContentAPI`) bumps only when
   the Schema or the content surface changes. The core's modules:
   - root: `Hekili.toc`, `Hekili.lua` (the addon object), `Bindings.xml`, `embeds.xml`;
@@ -33,6 +33,8 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
     style registry (`Styles`), the shared "what to show" (`Resolve`) and the styles themselves (`Styles/Classic`,
     `Styles/Timeline`); architecture §7;
   - `Integrations/`: bridges to other addons that subscribe to the engine like the UI does (`WeakAuras`);
+  - `Locales/`: the translation table (`Locales`) and one file per language (`zhCN`), kept in step with the code by
+    `tools/locales.py`; architecture §9;
   - `Options/` (the options panel, chat commands and the styles' shared option builders, `StyleOptions`), `Game/` (the game as the addon knows it: `API/` the facade,
     `Events/`, `State/` the belief, VirtualState), `Libs/` (embedded, untouched) and `Textures/`.
 
