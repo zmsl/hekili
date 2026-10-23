@@ -782,6 +782,7 @@ do
         wipe( DisabledSpells )
         wipe( DisabledItems )
         wipe( DisabledGear )
+        wipe( secretSeen )
     end
     ns.ResetDisabledGearAndSpells = ResetDisabledGearAndSpells
 
