@@ -974,7 +974,7 @@ collect before and after loading the module and building a spec, and asserts the
 
 As built: `tests/Game/State/memory_spec.lua` measures each of the four files (Units, Tickets, Melee, Kinds) at its
 first load in TOC order, code and all, not the pools alone: 149.1 KB (Units 55.7, Tickets 70.9, Melee 14.5, Kinds 8.3).
-It asserts under 160 KB; measured + 25% would be 192 KB, an owner call (kept at 160).
+It asserts under 192 KB (measured + 25%, rounded up to 8 KB; owner ruling 2026-10-23).
 
 ### 10.2 Allocation
 
@@ -1070,7 +1070,7 @@ constructor, closure or `{...}` inside an event handler, a row dispatch, a poll 
 | 35 | A declared `"instant"` or `"travel"` ability whose resolved aura has a `tick_time` and `dot = "debuff"` opens the direct ticket and a TICKS ticket pinned to the same GUID, anchored at the direct row (else the success); `"ticks"` alone opens only the TICKS ticket (same aura requirement) and may declare `velocity` (its avoid then uses the FLIGHT window and bands, its anchor the success plus the learned flight lag, else plus `rMax / speed / 2`); no ability-level flag | the DoT marker already exists upstream on the aura; a heal-over-time or a self buff with a `tick_time` never opens a ticket |
 | 36 | TICKS matches by school, GUID and schedule only: period = the aura's `tick_time`, count = `floor(duration / tick_time)`, tick `k` at application + `k x period`, band +- 0.1 s, widened by `rMax / speed / 2` for a `velocity` TICKS ticket with no learned lag until its first tick is paid (the anchor then snaps to that tick); no amount band until the first paid tick, then a soft band of [0.5 x, 2 x] the last paid tick (decision 45); a tick outside every band is foreign | measured jitter +- 50 ms; ramping DoTs vary 3x in amount, so the schedule is the discriminator; an unknown flight lag shifts the whole schedule once |
 | 37 | A new application of the same ability on the same GUID closes the old TICKS ticket as `refreshed` (unpaid `owed` not lost) and opens a new one from the new application | measured: a recast resets the schedule and the old ticks never arrive |
-| 38 | Memory: every structure a fixed pool built at load or build, about 57 KB estimated; hard ceiling 64 KB resident, asserted with `collectgarbage("count")` in a headless spec. As built: the four files measure 149.1 KB at first load, code included, under an asserted 160 KB (10.1) | fixed pools make the cost known and constant |
+| 38 | Memory: every structure a fixed pool built at load or build, about 57 KB estimated; hard ceiling 64 KB resident, asserted with `collectgarbage("count")` in a headless spec. As built: the four files measure 149.1 KB at first load, code included, under an asserted 192 KB (10.1) | fixed pools make the cost known and constant |
 | 39 | Allocation: zero tables, closures or strings per event, row or poll after load; asserted over a K16 run and a 300 s solo run | the project's performance rule; recurring paths must not feed the collector |
 | 40 | Time budgets: a row under 0.02 ms, a per-frame poll under 0.10 ms, the module under 2% of a 60 fps frame at about 50 rows a second | a raid-40 design point with headroom over today's measured 6 rows a second |
 | 41 | The lifecycle sweep is a fixed 64-slot loop gated by a pending count, not an intrusive list | simpler and free on most frames |
