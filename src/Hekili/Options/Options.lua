@@ -75,6 +75,11 @@ local function AbilityList()
     return shown
 end
 
+-- One entry of AbilityList(), without copying the whole list (the options look entries up once per ability).
+local function AbilityLabel( key )
+    return actionLabel( Registry.AbilityList()[ key ] )
+end
+
 local GetSpecialization = C_SpecializationInfo.GetSpecialization
 local GetSpecializationInfo = C_SpecializationInfo.GetSpecializationInfo
 
@@ -2896,12 +2901,12 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
 
         local toggles = {}
 
-        local k = AbilityList()[ ability.key ]
+        local k = AbilityLabel( ability.key )
         local v = ability.key
 
         if not k or not v then return end
 
-        local useName = AbilityList()[ v ] and AbilityList()[v]:match("|t (.+)$") or ability.name
+        local useName = AbilityLabel( v ) and AbilityLabel( v ):match("|t (.+)$") or ability.name
 
         if not useName then
             Hekili:Error( "No name available for %s (id:%d) in EmbedAbilityOption.", ability.key or "no_id", ability.id or 0 )
@@ -3059,7 +3064,7 @@ self:ForceUpdate( "SPEC_PACKAGE_CHANGED" )
 
         for k, v in orderedPairs( abilities ) do
             local ability = Registry.Abilities()[ v ]
-            local useName = AbilityList()[ v ] and AbilityList()[v]:match("|t (.+)$") or ability.name
+            local useName = AbilityLabel( v ) and AbilityLabel( v ):match("|t (.+)$") or ability.name
 
             if not useName then
                 Hekili:Error( "No name available for %s (id:%d) in EmbedAbilityOptions.", ability.key or "no_id", ability.id or 0 )
@@ -5388,10 +5393,10 @@ break end
                                                         if action == "trinket1" or action == "trinket2" or action == "main_hand" then
                                                             local passthru = "actual_" .. action
                                                             if Registry.IsDisabled( passthru, true ) then warning = true end
-                                                            action = AbilityList()[ passthru ] and AbilityList()[ passthru ] or Registry.Abilities()[ passthru ] and Registry.Abilities()[ passthru ].name or action
+                                                            action = AbilityLabel( passthru ) or Registry.Abilities()[ passthru ] and Registry.Abilities()[ passthru ].name or action
                                                         else
                                                             if Registry.IsDisabled( action, true ) then warning = true end
-                                                            action = AbilityList()[ action ] and AbilityList()[ action ]:match( "|t (.+)$" ) or Registry.Abilities()[ action ] and Registry.Abilities()[ action ].name or action
+                                                            action = AbilityLabel( action ) and AbilityLabel( action ):match( "|t (.+)$" ) or Registry.Abilities()[ action ] and Registry.Abilities()[ action ].name or action
                                                         end
                                                     end
                                                 end
@@ -8680,7 +8685,7 @@ do
                 return
             end
 
-            if toggle.name then toggles[ name ] = toggle.name end
+            if toggle.name then toggles[ name ] = customDefaults[ toggle.name ] or toggle.name end
 
             if self.DB.profile.notifications.enabled then
                 self:Notify( toggles[ name ] .. ": " .. ( toggle.value and L["ON"] or L["OFF"] ) )
