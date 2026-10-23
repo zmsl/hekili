@@ -196,15 +196,17 @@ describe("tools/vslog_fixture.lua", function()
             "vslog n=6 dropped=0",
         }, "\n")
         local rows = assert(loadfile("tools/vslog_fixture.lua"))("rows", dump, { ["4242"] = "STRIKE" })
+        -- the payload decoder (unit-registry spec §6.3): castBar nil nil decodes as FAILED; a cast with no castGUID
+        -- (another unit's secret cast) is not ours and is skipped
+        local cast = "Cast-3-4615-1-2-100-7FFD244B25"
         assert.are.same({
-            { 0, "C", "player", "OTHER" },
+            { 0, "SC", "FAILED", "player", cast, "OTHER", false, false },
             { 771, "S", 2.2, 0 },
             { 1297, "U", "player", "PARRY", "", 0, 1 },
             { 2463, "U", "target", "WOUND", "CRITICAL", 90, 1 },
-            { 4330, "C", "player", "STRIKE" },
-            { 49873, "C", "party1", "SECRET" },
+            { 4330, "SC", "FAILED", "player", "Cast-3-4615-1-2-4242-4C4F5AEFDD", "STRIKE", false, false },
         }, rows)
-        local log1 = require("Game.harness.fixtures.log1").rows
-        assert.are.same({ log1[1], log1[2], log1[5] }, { rows[1], rows[2], rows[3] })
+        local log1 = require("Game.harness.fixtures.log1").rows -- its swing and outcome rows parse as before
+        assert.are.same({ log1[2], log1[5] }, { rows[2], rows[3] })
     end)
 end)

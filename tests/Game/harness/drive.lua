@@ -67,16 +67,17 @@ function M.boot(o)
         c.loOver[i], c.estOver[i], c.danger[i] = 0, 0, 0
         c.verdict[i], c.onus[i] = 0, ""
     end
-    -- by stream index: the anchor and kind of the ticket a row paid (0 none), and what it staged (1 Crit, 2 Avoided)
-    c.payAt, c.payKind, c.staged = {}, {}, {}
+    -- by stream index: the anchor, kind and pass of the ticket a row paid (0 none), and what it staged (1 Crit,
+    -- 2 Avoided)
+    c.payAt, c.payKind, c.payPass, c.staged = {}, {}, {}, {}
     for i = 1, CAP do
-        c.payAt[i], c.payKind[i], c.staged[i] = 0, 0, 0
+        c.payAt[i], c.payKind[i], c.payPass[i], c.staged[i] = 0, 0, 0, 0
     end
     local T = c.I.Tickets
-    T.onPay = function(i)
+    T.onPay = function(i, _, pass)
         local k = c.cur
         if k > 0 then
-            c.payAt[k], c.payKind[k] = T.at[i], T.kind[i]
+            c.payAt[k], c.payKind[k], c.payPass[k] = T.at[i], T.kind[i], pass
         end
     end
     for k = 1, 8 do
@@ -394,7 +395,7 @@ function M.run(c, s, offset)
     for i = 1, s.n do
         c.crHand[i], c.crAt[i], c.verdict[i], c.onus[i], c.crit3[i], c.unk[i] = 0, 0, 0, "", 0, 0
         c.vetoHand[i], c.vetoAt[i] = 0, 0
-        c.payAt[i], c.payKind[i], c.staged[i] = 0, 0, 0
+        c.payAt[i], c.payKind[i], c.payPass[i], c.staged[i] = 0, 0, 0, 0
     end
     for _, r in pairs(c.trk) do
         r.n = 0
@@ -451,30 +452,85 @@ function M.run(c, s, offset)
     end
 end
 
---- A fixture (fixtures/logN.lua) as a stream: its rows from `base` seconds, the cache read out of combat first.
---- `dedupe`: one row per outcome on the target, fed as "target" (the research doc's table: the target-side tokens of
---- one outcome within 1 ms collapse; an outcome only seen on a nameplate or soft token counts). Our casts as the fake
---- spec's (STRIKE, DOT), other spell IDs as 1; a secret ID as fake_api's SECRET.
-function M.fixtureStream(fix, base, dedupe)
+--- A fixture (fixtures/*.lua) as a stream: its rows from `base` seconds, the cache read out of combat first.
+--- `dedupe`: one row per outcome on the target, fed as "target" (the old fixtures' research table). `extra`: fixture
+--- rows merged in by ms (a measured event a capture did not record). Our casts as the fake spec's (STRIKE, DOT, BOLT,
+--- DOTI, HIT), other spell IDs as 1; a secret ID as fake_api's SECRET; our GUID (`ME`) as the fake player's.
+function M.fixtureStream(fix, base, dedupe, extra)
     local s = { n = 0, t = {}, ev = {}, a1 = {}, a2 = {}, a3 = {}, a4 = {}, a5 = {}, src = {}, hand = {}, swingT = {} }
+    s.castT = {}
     local function push(t, ev, a1, a2, a3, a4, a5)
         local n = s.n + 1
         s.n = n
         s.t[n], s.ev[n], s.a1[n], s.a2[n], s.a3[n], s.a4[n], s.a5[n] = t, ev, a1, a2, a3, a4, a5
-        s.src[n], s.hand[n], s.swingT[n] = 0, 0, 0
+        s.src[n], s.hand[n], s.swingT[n], s.castT[n] = 0, 0, 0, 0
     end
     local d = fix.damage
     push(base - 1, "@damage", d[1], d[2], d[3], d[4])
     push(base - 1, "PLAYER_EQUIPMENT_CHANGED")
-    local IDS = { STRIKE = fs.SPENDER_B, DOT = fs.SPENDER_C, OTHER = 1, SECRET = fake.SECRET }
+    local IDS = {
+        STRIKE = fs.SPENDER_B,
+        DOT = fs.SPENDER_C,
+        HIT = fs.SPENDER_C,
+        BOLT = fs.SPENDER_P,
+        DOTI = fs.SPENDER_M,
+        OTHER = 1,
+        SECRET = fake.SECRET,
+    }
     local TARGET_SIDE = { target = true, softenemy = true, softinteract = true }
+    local rows = fix.rows
+    if extra then
+        rows = {}
+        for _, r in ipairs(fix.rows) do
+            rows[#rows + 1] = r
+        end
+        for _, r in ipairs(extra) do
+            local k = #rows + 1
+            while k > 1 and rows[k - 1][1] > r[1] do
+                k = k - 1
+            end
+            table.insert(rows, k, r)
+        end
+    end
     local last = {}
-    for _, r in ipairs(fix.rows) do
-        local t = base + r[1] / 1000
-        if r[2] == "S" then
+    for _, r in ipairs(rows) do
+        local t, kind = base + r[1] / 1000, r[2]
+        if kind == "S" then
             push(t, "PLAYER_SWING", r[3], r[4])
-        elseif r[2] == "C" then
+        elseif kind == "C" then
             push(t, "UNIT_SPELLCAST_SUCCEEDED", r[3], r[4] == "SECRET" and fake.SECRET or "Cast", IDS[r[4]])
+        elseif kind == "SC" then
+            local sub, unit, g, id = r[3], r[4], r[5], IDS[r[6]]
+            if sub == "SENT" then
+                push(t, "UNIT_SPELLCAST_SENT", unit, r[7] or "Mob", g, id)
+            else
+                if unit == "player" and sub == "START" then
+                    push(t, "@casting", t * 1000, t * 1000 + 1500)
+                elseif unit == "player" and (sub == "SUCCEEDED" or sub == "STOP" or sub == "FAILED") then
+                    push(t, "@casting", nil)
+                end
+                local bar, a5 = r[7] or nil, r[8] or nil
+                push(t, "UNIT_SPELLCAST_" .. sub, unit, g, id, bar, a5)
+            end
+        elseif kind == "T" then
+            push(t, "@guid", "target", r[3] ~= "" and r[3] or nil)
+            push(t, "PLAYER_TARGET_CHANGED")
+        elseif kind == "B" then
+            push(t, "@guid", r[3], r[4])
+        elseif kind == "P+" then
+            push(t, "@guid", r[3], r[4])
+            push(t, "NAME_PLATE_UNIT_ADDED", r[3])
+        elseif kind == "P-" then
+            push(t, "NAME_PLATE_UNIT_REMOVED", r[3])
+            push(t, "@guid", r[3], nil)
+        elseif kind == "D" then
+            push(t, "UNIT_DIED", r[3])
+        elseif kind == "K" then
+            push(t, "PARTY_KILL", r[3] == "ME" and "Player-1" or r[3], r[4])
+        elseif kind == "TD" then
+            push(t, "PLAYER_TARGET_DIED")
+        elseif kind == "E" then
+            push(t, r[3])
         else
             local unit = r[3]
             if dedupe and (TARGET_SIDE[unit] or unit:match("^nameplate")) then
