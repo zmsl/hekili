@@ -2,18 +2,19 @@
 -- written by the first clean run (DETECT_WRITE=1). Floors only move up; a lower one needs a named cause.
 -- 2026-10-23 (attribution-recovery spec decisions 46, 48-50): regenerated under the owner's ruling (recall over precision): recall up; false credit, leak, lostDiff and pet rows may rise.
 -- 2026-10-23 (decisions 51-52, owner ruling: expiry EV): regenerated with the expectation at a swing's lost close; rageErr down.
+-- Fix round 2 (avoidSeen): 9fd58600's floors were never merged; part of their drop rested on believed rage for swings avoided in truth (an error cancelling the under-count), which the avoidSeen fix removes.
 -- stylua: ignore
 return {
     K1 = {
-        solo = { recall = 1.00, melee = 0.98, melee2 = 0.97, rageErr = 15.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
-        party = { recall = 1.00, melee = 0.84, melee2 = 0.97, rageErr = 15.8, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
-        busy = { recall = 1.00, melee = 0.70, melee2 = 0.85, rageErr = 17.6, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        solo = { recall = 1.00, melee = 0.98, melee2 = 0.97, rageErr = 15.7, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        party = { recall = 1.00, melee = 0.84, melee2 = 0.97, rageErr = 16.6, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        busy = { recall = 1.00, melee = 0.70, melee2 = 0.85, rageErr = 19.9, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
     -- K10: melee recall does not hold under a session lag (spec §6.2's check; party 0.36, busy 0.18 against K1's 0.83 / 0.70). The session's landing median from [0.4, 1.0] s drives it (without it 0.86 / 0.73); the first-swing lag costs party 0.06; jitter, pushback and PLAYER_ENTER_COMBAT cost nothing. Measured, not a target (Task 13 finding; the melee scoring is probe U15's).
     K10 = {
-        solo = { recall = 0.94, melee = 0.97, melee2 = 0.97, rageErr = 10.6, staged = 0.86, false100 = 4.0, leak100 = 1.5, lostDiff = 5, residual = 0, postClear = 1.00 },
-        party = { recall = 0.92, melee = 0.34, melee2 = 0.96, rageErr = 21.8, staged = 0.90, false100 = 7.5, leak100 = 1.3, lostDiff = 2, residual = 0, postClear = 1.00 },
-        busy = { recall = 0.67, melee = 0.18, melee2 = 0.83, rageErr = 24.8, staged = 0.64, false100 = 31.1, leak100 = 2.2, lostDiff = 6, residual = 1, postClear = 1.00 },
+        solo = { recall = 0.94, melee = 0.97, melee2 = 0.97, rageErr = 13.9, staged = 0.86, false100 = 4.0, leak100 = 1.5, lostDiff = 5, residual = 0, postClear = 1.00 },
+        party = { recall = 0.92, melee = 0.34, melee2 = 0.96, rageErr = 24.8, staged = 0.90, false100 = 7.5, leak100 = 1.3, lostDiff = 2, residual = 0, postClear = 1.00 },
+        busy = { recall = 0.67, melee = 0.18, melee2 = 0.83, rageErr = 29.5, staged = 0.64, false100 = 31.1, leak100 = 2.2, lostDiff = 6, residual = 1, postClear = 1.00 },
     },
     K11 = {
         party = { recall = 0.95, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.96, false100 = 4.6, leak100 = 1.9, lostDiff = 0, residual = 0, postClear = 1.00 },
@@ -21,8 +22,8 @@ return {
     },
     -- K11m: post-clear rows paid by their swing are a floor, not every row: busy 6 of 7 (a 0.769 s tail lag scores below theta, K6's mechanism).
     K11m = {
-        party = { recall = 0.87, melee = 0.88, melee2 = 1.00, rageErr = 5.1, staged = 0.80, false100 = 12.2, leak100 = 2.7, lostDiff = 0, residual = 0, postClear = 1.00 },
-        busy = { recall = 0.77, melee = 0.84, melee2 = 1.00, rageErr = 2.3, staged = 0.66, false100 = 27.6, leak100 = 2.0, lostDiff = 0, residual = 0, postClear = 0.85 },
+        party = { recall = 0.87, melee = 0.88, melee2 = 1.00, rageErr = 5.3, staged = 0.80, false100 = 12.2, leak100 = 2.7, lostDiff = 0, residual = 0, postClear = 1.00 },
+        busy = { recall = 0.77, melee = 0.84, melee2 = 1.00, rageErr = 2.4, staged = 0.66, false100 = 27.6, leak100 = 2.0, lostDiff = 0, residual = 0, postClear = 0.85 },
     },
     K12 = {
         solo = { recall = 0.97, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
@@ -46,20 +47,20 @@ return {
         busy = { recall = 0.71, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.70, false100 = 27.5, leak100 = 3.3, lostDiff = 5, residual = 0, postClear = 1.00 },
     },
     K14 = {
-        solo = { recall = 1.00, melee = 0.98, melee2 = 0.96, rageErr = 17.7, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
-        party = { recall = 1.00, melee = 0.96, melee2 = 0.93, rageErr = 18.2, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
-        busy = { recall = 1.00, melee = 0.84, melee2 = 0.87, rageErr = 19.1, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        solo = { recall = 1.00, melee = 0.98, melee2 = 0.96, rageErr = 18.6, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        party = { recall = 1.00, melee = 0.96, melee2 = 0.93, rageErr = 19.1, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        busy = { recall = 1.00, melee = 0.84, melee2 = 0.87, rageErr = 20.9, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
     K14f = {
-        solo = { recall = 1.00, melee = 0.70, melee2 = 0.75, rageErr = 26.6, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
-        party = { recall = 1.00, melee = 0.39, melee2 = 0.69, rageErr = 37.2, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
-        busy = { recall = 1.00, melee = 0.18, melee2 = 0.66, rageErr = 43.7, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        solo = { recall = 1.00, melee = 0.70, melee2 = 0.75, rageErr = 32.5, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        party = { recall = 1.00, melee = 0.39, melee2 = 0.69, rageErr = 41.4, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        busy = { recall = 1.00, melee = 0.18, melee2 = 0.66, rageErr = 50.1, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
     -- K14p: owner finding. The spec has our pet's rows stay foreign; our swing tickets take 8.8 / 6.6 / 3.2 per 100 of them (solo / party / busy) through the melee scoring, which cannot tell a pet's white hit on our target from ours (probe U15's family). Floored by the first clean run, not a target.
     K14p = {
-        solo = { recall = 1.00, melee = 0.90, melee2 = 0.91, rageErr = 17.4, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
-        party = { recall = 1.00, melee = 0.88, melee2 = 0.88, rageErr = 18.8, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
-        busy = { recall = 1.00, melee = 0.84, melee2 = 0.87, rageErr = 18.1, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        solo = { recall = 1.00, melee = 0.90, melee2 = 0.91, rageErr = 18.7, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        party = { recall = 1.00, melee = 0.88, melee2 = 0.88, rageErr = 20.2, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        busy = { recall = 1.00, melee = 0.84, melee2 = 0.87, rageErr = 20.7, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
     K15 = {
         solo = { recall = 0.97, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
@@ -77,12 +78,12 @@ return {
         busy = { recall = 1.00, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
     K19 = {
-        solo = { recall = 0.97, melee = 0.98, melee2 = 0.97, rageErr = 32.4, staged = 0.98, false100 = 0.2, leak100 = 0.0, lostDiff = 1, residual = 0, postClear = 1.00 },
-        party = { recall = 0.97, melee = 0.83, melee2 = 0.95, rageErr = 34.7, staged = 0.98, false100 = 0.3, leak100 = 0.1, lostDiff = 1, residual = 0, postClear = 1.00 },
+        solo = { recall = 0.97, melee = 0.98, melee2 = 0.97, rageErr = 32.5, staged = 0.98, false100 = 0.2, leak100 = 0.0, lostDiff = 1, residual = 0, postClear = 1.00 },
+        party = { recall = 0.97, melee = 0.83, melee2 = 0.95, rageErr = 34.8, staged = 0.98, false100 = 0.3, leak100 = 0.1, lostDiff = 1, residual = 0, postClear = 1.00 },
         busy = { recall = 0.97, melee = 0.77, melee2 = 0.86, rageErr = 33.7, staged = 0.96, false100 = 0.5, leak100 = 0.0, lostDiff = 3, residual = 0, postClear = 1.00 },
     },
     K2 = {
-        solo = { recall = 1.00, melee = 0.98, melee2 = 0.97, rageErr = 34.2, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        solo = { recall = 1.00, melee = 0.98, melee2 = 0.97, rageErr = 34.3, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
         party = { recall = 0.99, melee = 0.84, melee2 = 0.96, rageErr = 35.1, staged = 0.96, false100 = 0.5, leak100 = 0.1, lostDiff = 0, residual = 0, postClear = 1.00 },
         busy = { recall = 0.99, melee = 0.74, melee2 = 0.83, rageErr = 34.9, staged = 0.93, false100 = 1.0, leak100 = 0.1, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
@@ -107,9 +108,9 @@ return {
         busy = { recall = 0.91, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.91, false100 = 9.0, leak100 = 1.3, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
     K6 = {
-        solo = { recall = 0.97, melee = 1.00, melee2 = 0.98, rageErr = 5.8, staged = 1.00, false100 = 2.2, leak100 = 1.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        solo = { recall = 0.97, melee = 1.00, melee2 = 0.98, rageErr = 6.0, staged = 1.00, false100 = 2.2, leak100 = 1.0, lostDiff = 0, residual = 0, postClear = 1.00 },
         party = { recall = 0.97, melee = 0.92, melee2 = 0.97, rageErr = 3.3, staged = 1.00, false100 = 11.4, leak100 = 2.1, lostDiff = 0, residual = 0, postClear = 0.90 },
-        busy = { recall = 0.75, melee = 0.83, melee2 = 0.81, rageErr = 2.1, staged = 1.00, false100 = 50.0, leak100 = 1.1, lostDiff = 0, residual = 0, postClear = 0.84 },
+        busy = { recall = 0.75, melee = 0.83, melee2 = 0.81, rageErr = 2.2, staged = 1.00, false100 = 50.0, leak100 = 1.1, lostDiff = 0, residual = 0, postClear = 0.84 },
     },
     K7 = {
         solo = { recall = 1.00, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
@@ -122,8 +123,8 @@ return {
         busy = { recall = 0.51, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.52, false100 = 48.7, leak100 = 5.6, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
     K9 = {
-        solo = { recall = 0.99, melee = 0.98, melee2 = 0.98, rageErr = 14.7, staged = 0.96, false100 = 0.0, leak100 = 0.0, lostDiff = 4, residual = 0, postClear = 1.00 },
-        party = { recall = 0.99, melee = 0.85, melee2 = 0.97, rageErr = 16.0, staged = 0.97, false100 = 0.0, leak100 = 0.0, lostDiff = 2, residual = 0, postClear = 1.00 },
-        busy = { recall = 1.00, melee = 0.74, melee2 = 0.89, rageErr = 14.7, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
+        solo = { recall = 0.99, melee = 0.98, melee2 = 0.98, rageErr = 15.7, staged = 0.96, false100 = 0.0, leak100 = 0.0, lostDiff = 4, residual = 0, postClear = 1.00 },
+        party = { recall = 0.99, melee = 0.85, melee2 = 0.97, rageErr = 16.9, staged = 0.97, false100 = 0.0, leak100 = 0.0, lostDiff = 2, residual = 0, postClear = 1.00 },
+        busy = { recall = 1.00, melee = 0.74, melee2 = 0.89, rageErr = 17.6, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
 }

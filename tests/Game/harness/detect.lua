@@ -259,6 +259,8 @@ function M.record(kind, band, m)
             .. " precision): recall up; false credit, leak, lostDiff and pet rows may rise.",
         "-- 2026-10-23 (decisions 51-52, owner ruling: expiry EV): regenerated with the expectation at a swing's lost"
             .. " close; rageErr down.",
+        "-- Fix round 2 (avoidSeen): 9fd58600's floors were never merged; part of their drop rested on believed rage for"
+            .. " swings avoided in truth (an error cancelling the under-count), which the avoidSeen fix removes.",
         "-- stylua: ignore",
         "return {",
     }
