@@ -17,6 +17,7 @@ return {
         party = { recall = 0.80, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.80, false100 = 15.1, leak100 = 6.0, lostDiff = 7, residual = 0, postClear = 1.00 },
         busy = { recall = 0.37, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.60, false100 = 65.6, leak100 = 4.9, lostDiff = 1, residual = 0, postClear = 1.00 },
     },
+    -- K11m: post-clear rows paid by their swing are a floor, not every row: busy 6 of 7 (a 0.769 s tail lag scores below theta, K6's mechanism).
     K11m = {
         party = { recall = 0.79, melee = 0.85, melee2 = 1.00, rageErr = 5.9, staged = 0.60, false100 = 20.3, leak100 = 4.5, lostDiff = 0, residual = 0, postClear = 1.00 },
         busy = { recall = 0.74, melee = 0.80, melee2 = 0.87, rageErr = 2.5, staged = 0.66, false100 = 31.1, leak100 = 2.3, lostDiff = 0, residual = 0, postClear = 0.85 },
@@ -26,6 +27,7 @@ return {
         party = { recall = 0.97, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
         busy = { recall = 0.97, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
+    -- K13: phase 0 solo's 17.8 divergent pairs per 100 own is the synthetic worst case (a twin in our very ms on every press), not an in-game rate; spec §4's union-belief trigger (> 1 per 100 paid) needs an in-game rate: probe U16, a party capture with a same-school caster on our target. Party and busy are floors (crowd cost dominates the per-pair cost).
     K13 = {
         solo = { recall = 0.82, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.50, false100 = 17.8, leak100 = 26.5, lostDiff = 0, residual = 0, postClear = 1.00 },
         party = { recall = 0.70, melee = 1.00, melee2 = 1.00, rageErr = 0.0, staged = 0.51, false100 = 27.9, leak100 = 10.0, lostDiff = 17, residual = 0, postClear = 1.00 },
@@ -51,6 +53,7 @@ return {
         party = { recall = 1.00, melee = 0.30, melee2 = 0.68, rageErr = 52.5, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
         busy = { recall = 1.00, melee = 0.17, melee2 = 0.66, rageErr = 58.0, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
     },
+    -- K14p: owner finding. The spec has our pet's rows stay foreign; our swing tickets take 8.8 / 6.6 / 3.2 per 100 of them (solo / party / busy) through the melee scoring, which cannot tell a pet's white hit on our target from ours (probe U15's family). Floored by the first clean run, not a target.
     K14p = {
         solo = { recall = 1.00, melee = 0.89, melee2 = 0.89, rageErr = 19.7, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },
         party = { recall = 1.00, melee = 0.87, melee2 = 0.86, rageErr = 21.7, staged = 1.00, false100 = 0.0, leak100 = 0.0, lostDiff = 0, residual = 0, postClear = 1.00 },

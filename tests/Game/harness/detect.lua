@@ -225,6 +225,15 @@ M.NOTES = {
         .. " 0.83 / 0.70). The session's landing median from [0.4, 1.0] s drives it (without it 0.86 / 0.73); the"
         .. " first-swing lag costs party 0.06; jitter, pushback and PLAYER_ENTER_COMBAT cost nothing. Measured, not"
         .. " a target (Task 13 finding; the melee scoring is probe U15's).",
+    K13 = "K13: phase 0 solo's 17.8 divergent pairs per 100 own is the synthetic worst case (a twin in our very ms on"
+        .. " every press), not an in-game rate; spec §4's union-belief trigger (> 1 per 100 paid) needs an in-game"
+        .. " rate: probe U16, a party capture with a same-school caster on our target. Party and busy are floors (crowd"
+        .. " cost dominates the per-pair cost).",
+    K14p = "K14p: owner finding. The spec has our pet's rows stay foreign; our swing tickets take 8.8 / 6.6 / 3.2 per"
+        .. " 100 of them (solo / party / busy) through the melee scoring, which cannot tell a pet's white hit on our"
+        .. " target from ours (probe U15's family). Floored by the first clean run, not a target.",
+    K11m = "K11m: post-clear rows paid by their swing are a floor, not every row: busy 6 of 7 (a 0.769 s tail lag scores"
+        .. " below theta, K6's mechanism).",
 }
 
 --- With DETECT_WRITE=1, writes the cell's floor into detect_floors.lua (the first clean run).

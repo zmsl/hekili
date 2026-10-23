@@ -52,9 +52,9 @@ describe("detection suite K10-K19 #slow", function()
                         )
                     )
                 elseif kind == "K14p" then
-                    -- spec §6.2 K14: our pet's rows stay foreign (leak ceiling 0). UNMET on the first run: our swing
-                    -- tickets take some pet white rows inside their landing window (the melee likelihood, probe U15's
-                    -- territory, unchanged here). Printed, not asserted, for the owner's ruling (Task 13 fix round 1).
+                    -- spec §6.2 K14: our pet's rows stay foreign. Our swing tickets take some pet white rows inside
+                    -- their landing window (the melee likelihood, probe U15's family): an owner finding, floored by
+                    -- its first clean run (detect.NOTES.K14p), printed here.
                     assert.is_true(m.petRows > 0, "no pet rows")
                     print(
                         ("K14p %s pet rows paid by our tickets: %d of %d (%.2f per 100): %s"):format(
@@ -66,30 +66,32 @@ describe("detection suite K10-K19 #slow", function()
                         )
                     )
                 elseif kind:match("^K13") then
-                    -- spec §4.2's claim (only divergent pairs cost) against K4's floor. Divergent pairs are the
-                    -- harness's (metrics.tickets: a swapped pair of a different class); the engine's T.divergent
-                    -- counts only an avoid two of our own tickets could own, so it never sees a foreign twin. Printed
-                    -- met or UNMET with the cost per divergent pair (the Task 13 rulings), never loosened.
+                    -- spec §4.2's claim: each divergent pair costs at most one own outcome, and false credit stays
+                    -- within K4's plus the divergent rate. Asserted in solo only; in party and busy the crowd's cost
+                    -- dominates (the twin is one more same-school source, K8's mechanism), so those cells are floors.
+                    -- Divergent pairs are the harness's (metrics.tickets: a swapped pair of a different class); the
+                    -- engine's T.divergent counts only an avoid two of our own tickets could own.
                     local k4 = detect.floors().K4[band]
                     local div = metrics.twinDivergent100(m)
-                    local met = metrics.recall(m) >= k4.recall and metrics.false100(m) <= k4.false100 + div + 1e-9
-                    local cost = m.twinDivergent > 0 and (k4.recall - metrics.recall(m)) * m.own / m.twinDivergent or 0
+                    local perPair = m.twinDivergent > 0 and m.missed / m.twinDivergent or m.missed
                     print(
                         (
                             "%s %s divergent pairs per 100 own: %.2f (harness; engine T.divergent %.2f sees own pairs only);"
-                            .. " claim vs K4 (recall >= %.2f, false <= %.2f): %s; own missed per divergent pair "
-                            .. "beyond K4's: %.2f"
+                            .. " own missed per divergent pair %.2f; false %.2f against K4's %.2f + divergent"
                         ):format(
                             kind,
                             band,
                             div,
                             metrics.divergent100(m),
-                            k4.recall,
-                            k4.false100 + div,
-                            met and "met" or "UNMET",
-                            cost
+                            perPair,
+                            metrics.false100(m),
+                            k4.false100
                         )
                     )
+                    if band == "solo" then
+                        assert.is_true(perPair <= 1.0, metrics.ticketLine(m))
+                        assert.is_true(metrics.false100(m) <= k4.false100 + div + 1e-9, metrics.ticketLine(m))
+                    end
                 elseif kind == "K17" then
                     assert.is_true(m.ended > 0 and m.afterReset == 0, metrics.ticketLine(m))
                 elseif kind == "K18" then
