@@ -41,13 +41,27 @@ hand for MELEE, GUID) whose hard window holds the row. Ranked after every banded
 runs only when passes (a)-(c) and the LR found nobody. Inside pass (d), decision 45's rule still ranks a candidate whose
 learned amount band accepts the row before an unbanded one; inside each group the oldest anchor (`T.at`) pays first.
 
+Amendment (owner ruling 2026-10-23, after Task 1's gates): pass (d) is the Overdue phase of the base spec's §3.4
+phase table, not "anywhere in the hard window": late, never early ("if it falls out of the expected lag tolerance").
+A spell ticket is a pass (d) candidate for a row at t only once its expected tolerance has ended before t and its hard
+window still holds t: a learned flight after `at + lagE + b` (its narrow band), an unlearned flight after its expected
+landing `at + H / 2`, a FRAME or STRIKE wound after `at + CAST_WINDOW`. A FRAME or STRIKE avoid has no pass (d): its
+pass-(b) window is its whole phase (GAP AX). Pass (d) runs after the melee scoring, so a row the swing path accepts
+never reaches it, and a row the MELEE tie gave a swing that the scoring then rejected is never offered back to the cast
+that lost the tie (it stays foreign). A swing ticket reaches pass (d) only in the ASSUMED state (past its tolerance,
+Task 3), where a late hit is a wash and only an avoid changes the belief. A pass (d) payment teaches neither the lag
+nor the amount band. Cause: the wash argument (1.3) holds for own-ticket swaps, not for other players' rows on the
+same mob, which an early or open-swing grab takes (measured with an open-swing pass (d): party-with-pet drift `over`
+49 -> 474 of 1200, raid false wounds 10 -> 65 per 100, three loop floors failed; with an early spell pass (d): K6 solo
+recall 0.96 -> 0.87, K11 party 0.81 -> 0.46). The MELEE row below applies from Task 3.
+
 The hard window per kind (the ticket's `hi`, set at opening, `Game/Events/Tickets.lua:250-283` and `:300-308`):
 
 | Kind | Hard window | Pass (d) accepts |
 |---|---|---|
 | FLIGHT | `[at, at + H]`, `H = rMax / speed + TOL` (`Tickets.lua:257-262`) | as pass (b): a WOUND of its school inside its amount band, any avoid |
 | FRAME, STRIKE | `[at, at + max(LandWindow(1), CAST_WINDOW)]` (`Tickets.lua:253-256`) | as pass (b), and a school-ANY ticket takes only a white wound past its frame (`Game/Events/Kinds.lua:126-128`) |
-| MELEE | the LR window `[at, at + w]` (`Game/Events/Melee.lua:120-124`) | a white row, the swing not vetoed (`I.Missed`, `Rows.lua:279-282`); a wound only when its amount class for the hand is not 0 (`Melee.lua:103-112`); an avoid only on a swing not already holding one |
+| MELEE (ASSUMED only, amendment above) | the LR window `[at, at + w]` (`Game/Events/Melee.lua:120-124`) | a white row, the swing not vetoed (`I.Missed`, `Rows.lua:279-282`); a wound only when its amount class for the hand is not 0 (`Melee.lua:103-112`); an avoid only on a swing not already holding one |
 | TICKS, CHANNEL | none (decision 47) | nothing |
 | NONE, UNMAPPED | none | nothing |
 
@@ -413,7 +427,7 @@ The task must:
 
 | # | Decision | Reason |
 |---|---|---|
-| 46 | Supersedes decision 33. A new last pass (d), Overdue, for every ticket: a row that no pass (a)-(c) and no LR credit took pays the oldest open ticket of its queue whose hard window holds it (amount-banded first, decision 45); spells by `K.Band(i, 4)`, swings by `M.Overdue` (white, not vetoed, amount class not 0, an avoid only on a swing holding none) | the owner's ruling: always expect some result outside the lag tolerance; FIFO per queue keeps own swaps a wash (1.3) |
+| 46 | Supersedes decision 33. A new last pass (d), Overdue, for every ticket: a row that no pass (a)-(c) and no LR credit took pays the oldest open ticket of its queue whose hard window holds it (amount-banded first, decision 45); spells by `K.Band(i, 4)`, swings by `M.Overdue` (white, not vetoed, amount class not 0, an avoid only on a swing holding none). AMENDED 2026-10-23: phase-gated, late never early: a spell ticket is a candidate only once its expected tolerance has ended (a learned flight past its narrow band, an unlearned flight past `at + H / 2`, a FRAME or STRIKE wound past `CAST_WINDOW`; no FRAME or STRIKE avoid) and its hard window holds the row; after the melee scoring, never a row the MELEE tie took from the cast; a swing ticket only ASSUMED (Task 3); a pass (d) payment teaches neither the lag nor the amount band | the owner's ruling: always expect some result outside the lag tolerance; FIFO per queue keeps own swaps a wash (1.3). The amendment: the wash holds for own-ticket swaps, not for other players' rows on the same mob, which an early or open-swing grab takes (party-with-pet `over` 49 -> 474 of 1200, raid false wounds 10 -> 65 per 100, three loop floors; K6 solo recall 0.96 -> 0.87 with early spell payments) |
 | 47 | TICKS and CHANNEL have no Overdue pass and are never assumed | a paid tick moves the schedule (`done`), so an off-schedule row would make every later tick foreign; a stolen tick is worse than an unattributed row (decision 45) |
 | 48 | A payment at pass (b) or (d), or a MELEE credit outside its core band, made before the ticket's narrow band has passed, is provisional: the ticket goes TENT (state 4, `owed` 0, unit held) until `fin` = min(narrow band end, `hi`); a later row inside that narrow band (no open ticket taking it at pass (a); for MELEE, the LR crediting no open swing) replaces it: the first row becomes foreign, the new row pays final; a provisional payment teaches the lag and the band only at `fin`; a provisional swing credit never teaches the median | "recoverable": the narrow band is the strongest evidence of ownership; teaching late keeps undo trivial |
 | 49 | Undoable: swing rage (c = 1, c = 3) through the credit record's deltas and `back()` (`retract(k, t)`, called by `Obs.Swing` c = 6; the verdict's own retraction unchanged), while no spend of ours from the slot since; spell `Obs.Crit` and `Obs.Avoided` are held while TENT. Final, and so never TENT: a direct ticket with a live TICKS link; the emitted combat-log row stays (the replacing row is emitted too, as the firm retraction's two rows) | each undo uses machinery that exists; what has no undo is either held or not made provisional |
