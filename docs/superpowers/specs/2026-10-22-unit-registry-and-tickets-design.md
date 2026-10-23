@@ -937,9 +937,12 @@ any downward move needs a named cause written beside the number and the owner's 
 | Allocation in a recurring path | new handlers on `UNIT_COMBAT` and the tick | `tests/Game/harness/alloc_spec.lua` and `make bench` show no new allocation |
 | Kill tell misses melee kills | no FAILED without a press | K6 without a press: the death events mark the unit; the clear-on-kill is a client rule (U8, owner ruling), so the unit also ends through poll 5 or GONE |
 
-Gate result (as built; Task 18). `make gate` on 9ed2fcd6 (Tasks 1-12, 16, 17): exit 0, `make check` 2061 successes,
-0 failures, 1 pending; gate tags 35 / 0. `make bench-ta` on 0a1e1ea5: 96948 rows/s (floor 97000 at 0.8x), 0.0103
-ms/row, 0.0013 ms/tick, 0.0420 ms/tick-expiry. Detection floors: `tests/Game/harness/detect_floors.lua`.
+Gate result (as built; Task 18). `make gate` on 0a1e1ea5 (every task but the parked 9b): exit 0, `make check` 2302
+successes, 0 failures, 1 pending; all 35 gate tags pass. Every wowsims replay and loop line is identical to the gate
+on 9ed2fcd6 (cpu figures stripped), so no replay or loop floor moved since the rebase onto forever. Floors added by
+the plan: the detection kinds K1-K21 (`tests/Game/harness/detect_floors.lua`, first clean runs) and `make bench-ta`'s
+rows/s floor 97000 (`tools/bench_ta_floor.lua`). The gate's bench line: `bench-ta rows=200000 rows/s=96164
+ms/row=0.0104 ms/tick=0.0011 ms/tick-expiry=0.0441 (floor rows/s 97000)`.
 
 ## 10. Performance
 
