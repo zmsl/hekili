@@ -10,3 +10,5 @@ src/Hekili/Engine/Snapshot.lua
 archive/
 .claude/
 .lua/
+# The language files are written by tools/locales.py (one L[...] line per key, however long); Locales.lua is ours.
+src/Hekili/Locales/[a-z][a-z][A-Z][A-Z].lua
