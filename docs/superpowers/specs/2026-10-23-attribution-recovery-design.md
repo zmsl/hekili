@@ -423,6 +423,16 @@ The task must:
 4. End with a spec section: the observation(s), the belief changes, the harness change, the floors expected to move
    and in which direction, and the probes left open.
 
+### 8.x Parry haste: design
+
+Done 2026-10-23 (Task 6). Research: `docs/research/2026-10-23-parry-haste.md`; design, ready for a plan:
+`docs/superpowers/specs/2026-10-23-parry-haste-design.md` (decisions 57-64). In short: wowsims's rule confirmed from
+source (the parrier's main hand only, any parried attack, pulled by `min(0.4 d, r - 0.2 d)` when `r > 0.2 d`); our parry
+is the existing `Obs.PlayerHit` PARRY and shifts the swing family's main-hand anchor (and Hekili's `nextMH` and rage
+forecast through `VS.SwingPull`); a mob's PARRY row shifts its Attackers.lua clock; `VS.SwingPending` and the ticket
+anchor are unchanged. Only the Warrior and Paladin Protection replays have parries (ours: 6 and 7 hastened swings), so
+at most +2/94 and +1/46 there; the harness world gains it in both directions with the belief. Probe PHS1.
+
 ## Decisions made in this spec
 
 | # | Decision | Reason |
