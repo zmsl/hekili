@@ -1,6 +1,7 @@
 # Can the client's Cooldown Manager (`C_CooldownViewer`) help our beliefs?
 
-Date 2026-10-23. Branch `forever-cooldownviewer-research` from `forever` 093313ae. Docs only; no addon code changes.
+Date 2026-10-23, revised the same day with in-game captures. Branch `forever-cooldownviewer-research` from `forever`
+093313ae. Docs only; no addon code changes.
 Question (owner): can the built-in Cooldown Manager (the "Cooldown Viewer": `C_CooldownViewer.*`, the
 `EssentialCooldownViewer` / `UtilityCooldownViewer` / `BuffIconCooldownViewer` / `BuffBarCooldownViewer` frames, the
 `COOLDOWN_VIEWER_*` events and the `C_Spell` / `C_UnitAuras` fields it reads) give us anything in combat that addons
@@ -13,25 +14,85 @@ Sources: the Forever generated docs `Blizzard_APIDocumentationGenerated/Cooldown
 `LuaDurationObjectAPIDocumentation.lua` [DO:line]; Blizzard's `Blizzard_CooldownViewer` addon (Forever UI source):
 `CooldownViewer.lua` [V:line], `CooldownViewerItemData.lua` [VD:line], `CooldownViewer.xml` [VX:line]; our earlier
 measurements in `docs/research/tdf/2026-10-13-probe-session-W-results.md` (PR4, PR11, PR28) [W] and the gate spike
-(`memory/gate-spike-results.md`) [GS]. The `wow` MCP listing omits most secrecy flags; every quote below is from the raw
-documentation files.
+(`memory/gate-spike-results.md`) [GS]; and the `/vslog cdv` captures of 2026-10-23 [CAP:ms], ForeverProbe 215c0eb
+(`Log.lua`: `cdvStatus`, `cdvIds`, `itemFrame`, `itemAura`, `itemWatch`). Every in-game value below is read the way
+`Log.lua` reads it: item frames from the viewer's `GetChildren()` (those with a `layoutIndex`), item fields by `rawget`,
+`item:IsShown()`, `item.Cooldown:GetCooldownTimes()`, the Applications / ChargeCount `GetText()`, each pcall'd and
+each value tested with `issecretvalue` before it is printed (S = secret, nil, else the value); edges by
+`item:HookScript("OnShow" / "OnHide")`, recording the time and the item's `cooldownID`, `spellID`, `auraInstanceID`.
 
 ## 0. Verdict
 
-No new numbers. `C_CooldownViewer` itself is static metadata (which cooldown IDs exist per category, and per ID its spell,
-override, linked aura spells, and whether it has charges or an aura); it carries no time, charge count or aura state.
-The viewer frames are an ordinary Blizzard consumer of the same getters we already call (`C_Spell.GetSpellCooldown`,
-`GetSpellCharges`, `GetSpellCastCount`, `C_UnitAuras.GetUnitAuras(unit, "HARMFUL|PLAYER")`, `GetUnitAuraBySpellID`,
-`GetRefreshCarryOverDuration`, `GetTotemInfo`), and they work in combat only because Blizzard's code is untainted:
-the secret values flow through it into `CooldownFrame_Set`, `StatusBar:SetValue` and `FontString:SetText`, and every
-read-back getter on those widgets is documented `SecretReturnsForAspect` (Cooldown, BarValue, Text, Shown). The one
-untested door is **presence**: a viewer item frame's Lua fields (`auraInstanceID`, `isActive`) and its shown state
-under "hide when inactive" may tell a tainted reader *that* a tracked buff or our debuff on the target is up, even when
-nothing about it is readable. If that reads plain in combat it closes part of AO/AP (our DoT up on the target) and the
-player-buff up/down that the aura walk loses in combat, at the cost of requiring the user to enable the viewer and
-track those spells. One `/vslog cdv` session (section 5) settles it; until then, plan nothing on it.
+Yes, for **presence**. With no user setup the Forever client already fills the viewer with each class's default
+category sets, and its item frames carry plain state in combat that the aura walk loses: for every tracked self-buff
+and every debuff of ours on the target, `auraInstanceID` is a secret value while the aura is up and nil when it is not,
+so `issecretvalue(x) or x ~= nil` is a plain up/down boolean, and `HookScript` OnShow/OnHide on the buff icons deliver
+those edges to our code 3-4 ms after the game event. That closes the AO/AP gap for our own DoTs and debuffs on the
+target, gives Victory Rush its Victorious window, and gives self-buff up/down edges in combat. It also gives a plain
+GCD flag per item, a plain "on a real cooldown" boolean (the secrecy of `cooldownIsActive`), and full plain durations
+for auras applied before the pull. It gives no remaining time, stacks or charges for anything applied in combat.
 
-## 1. API inventory
+## 1. Captures
+
+| Capture | Character | Content |
+|---|---|---|
+| `/vslog cdv` status + `ids` | Fury Warrior L25, Razormane, out of combat | category counts, every `CDV_ID` field and `C_Secrets` secrecy |
+| `/vslog cdv frames` | same, out of combat (10089) and in combat (33218, 61255, 93207) | every item of the four viewers |
+| `/vslog cdv aura` | in combat (36966) | `GetAuraDataByAuraInstanceID` / `GetAuraDuration` on the item's aura instance |
+| `/vslog cdv watch` | open-world fights 52499-138832 | `CDV_SHOW` / `CDV_HIDE` against our casts, kills and `PLAYER_TARGET_CHANGED` |
+
+No Cooldown Manager setup was done: the sets below are the client's defaults. The full 758-line dump is in the chat
+transcript; the decisive rows are condensed in `cooldownviewer-2026-10-23.log` (job captures).
+
+## 2. Measured
+
+**Setup, out of combat.** `GetCooldownViewerCategorySet(c, learned / all)` for the Warrior: Essential (0) 10 / 16,
+Utility (1) 12 / 20, TrackedBuff (2) 20 / 36, SpecAgnosticEssential (5) 3, EquipSlotEssential (7) 0 / 2. Every
+`CDV_ID` field (spellID, override, linked spells, `selfAura`, `hasAura`, `charges`, `isKnown`, flags, category) read
+plain; `C_Secrets.GetSpellCooldownSecrecy` and `GetSpellAuraSecrecy` read 2 (contextual) for every spell
+[CAP: status, ids]. Item frames at 10089: `shown` and `isActive` plain true for the cooldown viewers,
+`cooldownIsActive` false and `isOnGCD` false plain, `cd` 0 plain; the BuffIcon items plain `shown=false` (hidden while
+their aura is down); the BuffBar viewer's items unconfigured (`cooldownID` nil).
+
+**Cooldown flags in combat.** At 33218, during the GCD after the pull: every item's `shown` and `isActive` plain;
+`cooldownIsActive` true and `isOnGCD` true, plain, for the on-GCD spells; Heroic Strike (1608, off the GCD) plain false
+and false; Charge (100, its real cooldown running) `cooldownIsActive` **secret** and `cd` secret. So `isOnGCD` is a
+plain GCD flag, `cooldownIsActive` is plain while the item is ready or only on the GCD, and
+`issecretvalue(cooldownIsActive)` is a plain "a real cooldown runs" boolean. `Sources/Spellbook.lua` already reads the
+equivalent (`GetSpellCooldown().isActive` / `isOnGCD`, `NeverSecret` [SS:25-30]), so this is a cross-check, not news.
+
+**Presence.** Rend (6547) on the target at 61255: `auraInstanceID` and `auraSpellID` secret, `auraDataUnit` plain
+"target", `cdShown` true; at 93207, after Rend fell off: `auraInstanceID` nil. Demoralizing Shout (6190) on the
+target and Victorious (402975) on the player behave the same (secret while up, nil while down). `issecretvalue()` on a
+secret is allowed for tainted code, so `issecretvalue(id) or id ~= nil` is a plain presence boolean with no comparison
+on a secret. `auraDataUnit` ("player" / "target") is plain.
+
+**Edges.** The OnShow/OnHide hooks fire into addon code (unlike the AuraContainer hooks of the gate spike [GS]):
+
+| Edge | Game event | Hook | Lag |
+|---|---|---|---|
+| Victorious shows | kill (`TARGET none` 52495) | `CDV_SHOW` BuffIcon i=2 402975 at 52499 | 4 ms |
+| Victorious hides | 20 s timeout | `CDV_HIDE` 87499 | |
+| Victorious shows | Execute kill | `CDV_SHOW` 98977 | |
+| Victorious hides | 20 s timeout | `CDV_HIDE` 118995 | |
+| Victorious shows | kill | `CDV_SHOW` 128758 | |
+| Victorious hides | Victory Rush cast 402927 at 130776 (consumed) | `CDV_HIDE` 130779 | 3 ms |
+| Demoralizing Shout shows | its cast | `CDV_SHOW` i=3 6190 at 135085, `auraDataUnit` target | 3 ms |
+| Demoralizing Shout hides | target died (`TARGET none` 138832) | `CDV_HIDE` 138830 | -2 ms |
+
+**Pre-pull auras stay plain.** Bloodrage (2687), applied at 30975 out of combat: at 33218, in combat, its item read
+`auraInstanceID` 319, `auraSpellID` 29131, `auraDataUnit` player, and `cd` start 453384280, duration 10000 ms, all
+plain. Auras applied in combat read secret. A pre-pull buff's full timing is therefore readable in combat from the
+item's Cooldown widget until it falls off.
+
+**Direct reads refused.** At 36966 `C_UnitAuras.GetAuraDataByAuraInstanceID` and `GetAuraDuration` on an item's aura
+instance failed: "Auras cannot be accessed when secret while tainted by 'ForeverProbe'". Presence only: no duration and
+no stacks for an in-combat aura. The Applications and ChargeCount texts read nil / none (no stacking aura or charge
+spell was tracked), so stack and charge text secrecy is untested.
+
+**BuffBar.** The BuffBar viewer had no configured items (`cooldownID` nil): its bars need user setup.
+
+## 3. API inventory
 
 | Function / field | Args | Returns | Secrecy (raw doc) | Blizzard usage |
 |---|---|---|---|---|
@@ -56,9 +117,9 @@ What the viewer frames read (all on the untainted side):
 | `C_UnitAuras.GetUnitAuras(unit, filter)` | `RequiresUnitAuraAccess = true`, `SecretArguments = "AllowedWhenUntainted"`, returns `ConditionalSecretContents = true` [UA:493-513] | `"HARMFUL\|PLAYER"` on `target` (or `"HELPFUL\|PLAYER\|INCLUDE_NAME_PLATE_ONLY"` on a friend) for tracked debuffs [VD:716-743] | target auras error in combat for tainted code ("Auras cannot be accessed when secret while tainted") [GS] |
 | `C_UnitAuras.GetUnitAuraBySpellID` | `SecretWhenUnitAuraRestricted = true`, `RequiresNonSecretAura = true` [UA:454-458] | linked-spell scan of player and target [VD:23-31] | |
 | `C_UnitAuras.GetPlayerAuraBySpellID` | `SecretWhenUnitAuraRestricted = true`, `RequiresNonSecretAura = true` [UA:395-399] | not used by the viewer | nil in combat (Catnip) [W, player-auras row] |
-| `C_UnitAuras.GetAuraDataByAuraInstanceID` | `RequiresUnitAuraAccess = true`, `SecretWhenUnitAuraRestricted = true` [UA:190-194] | | |
+| `C_UnitAuras.GetAuraDataByAuraInstanceID` | `RequiresUnitAuraAccess = true`, `SecretWhenUnitAuraRestricted = true` [UA:190-194] | | refused in combat for tainted code on a viewer item's aura [CAP:36966] |
 | `C_UnitAuras.GetRefreshCarryOverDuration` | `SecretWhenUnitAuraRestricted = true` [UA:412-417] | pandemic alert time [V:535] | |
-| `C_UnitAuras.GetAuraDuration(unit, auraInstanceID)` | `RequiresUnitAuraAccess = true`, `RequiresValidUnitAuraInstance = true`, no `SecretWhen*` [UA:286-300]; returns a `LuaDurationObject` | not used by the viewer | unprobed; duration objects from secret sources return S getters [W PR11] |
+| `C_UnitAuras.GetAuraDuration(unit, auraInstanceID)` | `RequiresUnitAuraAccess = true`, `RequiresValidUnitAuraInstance = true`, no `SecretWhen*` [UA:286-300]; returns a `LuaDurationObject` | not used by the viewer | refused in combat for tainted code [CAP:36966] |
 | `UNIT_AURA` | `SecretWhenAurasRestricted = true` [UA:644] | viewer registers `player`, `target` [V:1736] | fires in combat, unit plain, `addedAuras` secret [W] |
 
 The predicate text, the same for both restriction kinds [PR:80-92]: "Guarded APIs and events produce secret values when
@@ -79,94 +140,82 @@ Widget read-back on the viewer's own frames:
 | `LuaDurationObject:GetRemainingDuration()` etc. | `SecretArguments = "AllowedWhenUntainted"`, no return flag [DO:271-333]; `EvaluateRemaining*(curve)`: `SecretWhenCurveSecret = true` [DO:73-95]; `HasSecretValues()`: `ReturnsNeverSecret = true` [DO:351-354]; measured S 125/125 in combat [W PR11] |
 
 `SecretReturnsForAspect` means the value is secret once a secret was written into that aspect of that widget. The
-viewer writes secret start/duration, bar values and texts in combat, so these read back secret. Whether it writes the
-**Shown** aspect from a secret is the open question: Forever's viewer code has no `issecretvalue` anywhere and branches
-on secret data directly (`aura.expirationTime > timeNow` [VD:749-751], `auraInfo.sourceUnit ~= "player"` [V:395-397],
+viewer writes secret start/duration, bar values and texts in combat, so these read back secret; the viewer's code has no
+`issecretvalue` and branches on secret data directly (`aura.expirationTime > timeNow` [VD:749-751],
 `auraData.applications > 1` [V:1375]), then calls `self:SetShown(shouldBeShown)` [V:314-317] from `self.isActive`
-[V:347-358]. Untainted code may do this; whether the resulting boolean, and so the shown state and the Lua fields, are
-secret is not documented.
+[V:347-358]. The captures (section 2) settle what the documentation left open: the **Shown** aspect and `isActive` stay
+plain in combat, and the Cooldown aspect is plain for a cooldown or aura whose values were set before combat.
 
-## 2. Belief and gap mapping
+## 4. Mapping to beliefs
 
-| Belief / gap | What the viewer could give | Documented secrecy | Worth it? |
+| Belief / gap | What the viewer gives in combat | Measured | Worth it? |
 |---|---|---|---|
-| Cooldown ready / not ready | nothing new: `isActive` and `isOnGCD` are already plain from `GetSpellCooldown` (`Sources/Spellbook.lua`) | `NeverSecret` [SS:25-30] | no |
-| Cooldown remaining | Cooldown swipe on the viewer icon | S (Cooldown aspect); the source is S [W PR11] | no; our own icon already gets the game's sweep from `SetCooldownFromDurationObject` [W PR28] |
-| GCD | nothing new: the GCD spell 29515's `isActive` is plain, length S [W PR4] | | no |
-| Charges | the viewer shows the count; we can read `maxCharges` and `isActive` (recharging) plain without it | `currentCharges` unflagged, under `SecretWhenCooldownsRestricted` | no viewer value. By-product: `GetSpellCharges().isActive` + `maxCharges` (NeverSecret) + `SPELL_UPDATE_CHARGES` give "full / recharging" edges plain, if a Forever pack ever has a charge spell |
-| Player buff up / down in combat | item frame present + shown, `auraInstanceID ~= nil` | undocumented (section 1's open question) | **probe**: the aura walk stops at the first secret in combat (`Sources/Auras.lua`), so up/down edges are tracked from casts today |
-| Player buff remaining / stacks | Cooldown swipe, bar value, applications text | S (Cooldown, BarValue, Text) | no |
-| Our debuff on the target (AO / AP) | tracked-debuff item (`HARMFUL\|PLAYER` on `target`) present + shown | undocumented; addons cannot read target auras in combat at all [GS] | **probe**: the only presence signal besides nameplate aura frames (AP) |
-| Target debuff remaining, partner debuffs | | S; the viewer filters `PLAYER` only, so partners' debuffs never appear | no |
-| Static data: a spell's linked aura spells, `hasAura`, `charges`, `selfAura` | `GetCooldownViewerCooldownInfo` | unflagged, metadata | marginal: a cross-check of the kits' spell-to-aura links against DB2 (`wowdb`), not a belief |
+| Our debuff / DoT on the target (AO / AP) | item present: `auraInstanceID` secret = up, nil = down; OnShow / OnHide edges for BuffIcon items | Rend 61255 up, 93207 down; Demoralizing Shout 135085-138830 | **yes**: the only plain presence of our debuff on the target besides nameplate aura frames |
+| Proc windows (Victorious for Victory Rush) | OnShow 4 ms after the kill, OnHide at the 20 s timeout or 3 ms after the consuming cast | 52499, 98977, 128758; 118995, 130779 | **yes**: a plain proc edge, today inferred from the kill |
+| Player buff up / down | same presence rule, `auraDataUnit` player | Victorious; Bloodrage | **yes**: the aura walk stops at the first secret in combat (`Sources/Auras.lua`) |
+| Pre-pull buff timing | `auraInstanceID`, `auraSpellID` and the Cooldown start / duration, all plain | Bloodrage 33218 | yes, cheap: exact expiry for buffs and potions taken before the pull |
+| GCD | `isOnGCD` per item, plain | 33218 | cross-check only; Spellbook reads `isOnGCD` already |
+| Real cooldown running | `issecretvalue(cooldownIsActive)` | Charge 33218 | cross-check for the usability gate |
+| Remaining time, stacks, charges of in-combat auras | nothing: Cooldown aspect secret, direct reads refused | 33218, 36966 | no |
+| Partners' debuffs | nothing: the viewer filters `HARMFUL\|PLAYER` [VD:716-743] | | no |
+| Static spell-to-aura links | `GetCooldownViewerCooldownInfo` (`linkedSpellIDs`, `selfAura`, `hasAura`) | plain ooc | a tools-time cross-check of pack aura links |
 
-## 3. Secret-safety and taint constraints for any use
+Dependencies: the user's Cooldown Manager must be enabled (`cooldownViewerEnabled` and `IsCooldownViewerAvailable()`
+[V:1905-1911]), and only tracked spells have presence. The default sets are game data, filled per class without setup,
+so most pack auras are probably covered; a tools check could compare each pack's aura spell IDs against the class's
+category sets (and `linkedSpellIDs`) and list the gaps. A missing or disabled viewer must leave the belief exactly as
+it is today: the viewer is an optional, degrade-gracefully input, never a requirement.
 
-- **Read, never call.** Read item-frame fields with `rawget` (`cooldownID`, `auraInstanceID`, `auraSpellID`,
-  `auraDataUnit`, `isActive`) and the frame's `IsShown()`. Never call the viewer's refresh or data methods
-  (`GetAuraData`, `RefreshData`, `RefreshAuraInstance`, `CacheCooldownValues`): they write `self.auraDataCached`,
-  `self.cooldownStartTime` and similar [VD:774-781, V:976-1011], and a write from our tainted stack taints the viewer's
-  table, after which its own combat refresh would fail on secrets and the user's Cooldown Manager breaks.
-- **Hooks only by `HookScript` / `hooksecurefunc`** on the item frames (OnShow/OnHide, `OnActiveStateChanged`), never by
-  replacing a method. The gate spike found AuraContainer's OnShow/OnHide did not fire to Lua [GS]; the viewer's may not
-  either.
-- **Every value through `issecretvalue()` first**, in `Sources/` only; a secret `auraInstanceID` still proves presence
-  (`issecretvalue(x)` is true only for a value), so presence is `x ~= nil` tested as `issecretvalue(x) or x ~= nil`,
-  never `a and b or c`. Never pass a viewer value back into an API (`GetAuraDuration(unit, id)` with a secret id is
-  `AllowedWhenUntainted` only: an error for us).
-- **The data is the user's configuration.** The viewer shows only what the user tracks, only when
-  `cooldownViewerEnabled` is on and `IsCooldownViewerAvailable()` is true [V:1905-1911]; the item frames are pooled
-  and reassigned on layout changes, so a source must map by `cooldownID` -> `spellID` at each `RefreshLayout`, not by
-  frame. A presence signal from it is an optional, degraded-gracefully input, never a requirement.
-- **Allocation.** `GetCooldownViewerCooldownInfo` builds a table: call it out of combat at build. Field reads and
-  `IsShown` allocate nothing.
+## 5. Secret-safety and taint constraints
 
-## 4. Update events
+- **Read, never call.** Item fields by `rawget` (`cooldownID`, `auraInstanceID`, `auraSpellID`, `auraDataUnit`,
+  `isActive`, `isOnGCD`, `cooldownIsActive`) and frame / widget getters (`IsShown`, `Cooldown:GetCooldownTimes`).
+  Never call the viewer's own methods (`GetAuraData`, `RefreshData`, `RefreshAuraInstance`, `CacheCooldownValues`) and
+  never write its tables: they write `self.auraDataCached`, `self.cooldownStartTime` [VD:774-781, V:976-1011], and a
+  write from our tainted stack taints the viewer, after which its own combat refresh fails on secrets.
+- **Hooks only by `HookScript`** (or `hooksecurefunc`), never by replacing a script or method.
+- **Every value through `issecretvalue()` first**, in `Sources/` only. Presence is `issecretvalue(id) or id ~= nil`,
+  never `a and b or c`, never a comparison on the id. Never pass a viewer value into an API: the aura-instance getters
+  refuse tainted callers (measured).
+- **Pooled frames.** Items are pooled and reassigned on layout changes, so map by the item's plain `cooldownID` at
+  each layout refresh, out of combat, not by frame identity.
 
-The viewer has no state event of its own: `COOLDOWN_VIEWER_SPELL_OVERRIDE_UPDATED(baseSpellID, overrideSpellID?)` is
-the only one with a payload [CV:106-114]. Its frames listen to `SPELL_UPDATE_COOLDOWN`, `SPELL_UPDATE_USES`,
-`SPELL_UPDATE_USABLE`, `SPELL_RANGE_CHECK_UPDATE`, `SPELL_ACTIVATION_OVERLAY_GLOW_SHOW/HIDE` [V:2159-2164],
-`UNIT_AURA` for `player` and `target`, `PLAYER_TARGET_CHANGED`, `PLAYER_TOTEM_UPDATE`, `BAG_UPDATE_COOLDOWN`
-[V:1734-1739], `PLAYER_IN_COMBAT_CHANGED` [V:1669]: the same events we already have. A presence source would read the
-item fields after `UNIT_AURA` / `PLAYER_TARGET_CHANGED` (the viewer's handler is registered first, so ours sees the
-updated fields if it runs after; check the order in the probe) or from OnShow/OnHide hooks if those fire.
+## 6. How a Source would consume it
 
-## 5. Probe list: `/vslog cdv` (ForeverProbe `Log.lua`)
+A `src/Hekili/Game/State/Sources/CooldownViewer.lua`, in the shape of `Sources/Auras.lua`'s overlay path (poll 11),
+which already turns a plain on / off signal into `Obs.Read` with `ReadOf.Aura` (remaining -1 = up with no expiry,
+0 = down):
 
-Setup: enable the Cooldown Manager (Options, `cooldownViewerEnabled`), track one cooldown spell (Bloodrage or Berserker
-Rage), any charge spell the class has, one self-buff with a duration (Battle Shout, or Enrage), and one target debuff
-of ours (Rend; Druid: Rip or Moonfire) in the Tracked Buffs and Tracked Bars groups, with "hide when inactive" on.
+1. **Build, out of combat** (load, spec change, `COOLDOWN_VIEWER_DATA_LOADED`, the viewer's layout refresh): read
+   `GetCooldownViewerCategorySet` for each category and `GetCooldownViewerCooldownInfo` per id (both allocate; never in
+   combat), and map `cooldownID` → the pack's aura index (unit × aura key, as `(u - 1) * I.AURA_UNIT + j`) through the
+   spell ID, `overrideSpellID` and `linkedSpellIDs`. Walk the four viewers' item frames and, for each item whose
+   `cooldownID` maps to a tracked aura, install `HookScript("OnShow")` and `HookScript("OnHide")` once (a plain
+   per-frame flag stops double hooks; frames are reused, so the hook reads the item's `cooldownID` at fire time and looks
+   it up in a preallocated id → aura-index array). Nothing is called on the viewer and nothing written to its frames.
+2. **Edges.** On each hook: read `auraInstanceID` by `rawget`, presence = `issecretvalue(id) or id ~= nil`; stage
+   `Obs.Read` up (-1) on OnShow with presence, down (0) on OnHide or no presence, keyed by the pack's aura index and
+   the unit from the plain `auraDataUnit`. OnShow without presence (a cooldown item, or "hide when inactive" off) is
+   ignored. If the id is plain (a pre-pull aura) and the item's `GetCooldownTimes()` is plain, stage the real expiry
+   instead of -1.
+3. **Per poll.** A rawget of `isOnGCD` and `issecretvalue(cooldownIsActive)` on the mapped cooldown items, as a
+   cross-check of the usability gate (`Sources/Spellbook.lua`), plus a presence re-read on `PLAYER_TARGET_CHANGED`
+   (the target's debuff items change without a show edge when "hide when inactive" is off).
+4. **Allocation.** No tables or closures per edge: the two hook closures are created at build, one per item frame;
+   the lookup arrays are preallocated; `Stage` writes into the preallocated stage ring.
+5. **Taint rule.** Our hooks run after Blizzard's script on the same frame; they only read. If the open question below
+   shows any viewer breakage, the source must drop the hooks and fall back to a per-poll presence read.
 
-`/vslog cdv` writes one copy-box line per item, out of combat and in combat (S = secret, n = nil, else the value):
+## 7. Open questions and probes
 
-1. `CDV avail=<isAvailable> reason=<failureReason> cvar=<cooldownViewerEnabled> combat=<0|1>`.
-2. Per category 0-8: `CDV_CAT c=<n> ids=<#GetCooldownViewerCategorySet(c, true)> learned=<#...(c, false)>`, each count's
-   `issecretvalue`. (Are there Forever entries at all for this class?)
-3. Per tracked `cooldownID` (out of combat only, it allocates): `CDV_INFO id spellID override linked=<list> selfAura
-   hasAura charges isKnown flags category`, each field P/S; plus `C_Secrets.GetSpellCooldownSecrecy` and
-   `GetSpellAuraSecrecy` of `spellID` and each linked ID.
-4. Per viewer (`EssentialCooldownViewer`, `UtilityCooldownViewer`, `BuffIconCooldownViewer`, `BuffBarCooldownViewer`)
-   and each `GetItemFrames()` child, by `rawget` only: `CDV_ITEM <viewer> <cooldownID> shown=<IsShown> active=<isActive>
-   aiid=<auraInstanceID> aspell=<auraSpellID> aunit=<auraDataUnit> cdActive=<cooldownIsActive> gcd=<isOnGCD>
-   actual=<isOnActualCooldown> start=<cooldownStartTime> dur=<cooldownDuration> charges=<cooldownChargesCount>`, then
-   `cd=<Cooldown:GetCooldownTimes()>`, `cdShown=<Cooldown:IsShown()>`, BuffBar items `bar=<Bar:GetValue()>
-   max=<select(2, Bar:GetMinMaxValues())>`, and the Applications / ChargeCount `GetText()`.
-5. If `aiid` is plain: `CDV_DUR <unit> <aiid> hasSecret=<GetAuraDuration(...):HasSecretValues()> rem=<GetRemainingDuration()>`
-   (pcall'd), and `GetAuraDataByAuraInstanceID` pcall'd (ok / error text / S).
-6. `/vslog cdv watch`: `HookScript("OnShow"/"OnHide")` on every item frame, recording `CDV_SHOW` / `CDV_HIDE <cooldownID>`
-   in the ring, to line up against `UNIT_AURA`, our casts and `PLAYER_TARGET_CHANGED` (do the scripts fire; at which ms
-   relative to `UNIT_AURA`?).
-
-Sequence, each step with `/vslog note`: out of combat with nothing up; the self-buff up; then pull and in combat:
-the cooldown spell cast (on cooldown), a charge spent, the self-buff up then expired, Rend applied, Rend expired,
-re-target to a mob without Rend and back. Run `cdv` at each step, `dump` at the end. After the fight, check
-`/console taintLog 1` output (or the error frame) for any viewer error: our reads must not break it.
-
-Questions it answers: (Q1) is `IsShown()` of a hide-when-inactive item plain in combat, and does it follow the buff and
-the target debuff? (Q2) is `auraInstanceID` / `isActive` nil-vs-set readable in combat? (Q3) do OnShow/OnHide fire to
-Lua? (Q4) does any Forever spell have a NeverSecret cooldown or aura flag (`C_Secrets`)? (Q5) does the viewer have
-entries for Forever's classes at all (category sets non-empty)?
-
-If Q1 or Q2 is yes: a `Sources/` reader turns it into `Read` up/down observations with no expiry for tracked auras
-(the overlay path in `Sources/Auras.lua` is the model), opt-in, with the setup documented for users. If both are no:
-close this line of inquiry; the Cooldown Manager adds nothing the belief can use.
+- **Taint.** Do the hooks taint the viewer? The owner is being asked whether the Cooldown Manager kept working through
+  the session and whether `/console taintLog 1` shows anything. Until confirmed clean, no code.
+- **Hide when inactive.** With that setting off an item stays shown while its aura is down, so `shown` is not
+  presence; use `isActive` and the aura fields, and verify `isActive` follows the aura (only `shown` / `auraInstanceID`
+  were watched here).
+- **Coverage.** Spells not in the default sets: can the user (or we, never) add them; which pack auras the Warrior and
+  Druid sets miss (the tools check above). Stacking auras and charge spells: are Applications / ChargeCount texts secret?
+- **Re-target.** Does the target's debuff item hide and re-show on `PLAYER_TARGET_CHANGED`, and in which order against
+  the event?
+- **Instances.** Encounter and challenge restrictions may make more of these fields secret; re-run `/vslog cdv` in a
+  dungeon.
