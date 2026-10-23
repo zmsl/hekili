@@ -4,6 +4,8 @@
 
 ### New
 
+- Simplified Chinese (简体中文): on a Chinese client, the options, chat messages, notifications, the minimap menu and the class settings are now in Chinese. Text that is not translated yet still shows in English. Translators for other languages are welcome; see "Localization" in docs/dev/architecture.md.
+
 ### Changed
 
 ### Fixed
