@@ -430,6 +430,14 @@ describe("the synthesized combat log", function()
             end
         end)
 
+        it("marks a foreign row's school on its unit for the crowd gate", function()
+            local u = I.Units.Find("Creature-1")
+            ctl.now = 90
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 8) -- nothing of ours open: foreign
+            assert.is_true(I.Tickets.Crowded(u, 8, 91))
+            assert.is_false(I.Tickets.Crowded(u, 1, 91))
+        end)
+
         it("makes no row without a target", function()
             ctl.guid.target = nil
             ctl.now = 80
