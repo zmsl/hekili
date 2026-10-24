@@ -407,7 +407,7 @@ meter and viewer, on the same seeds; both provider files are kept.
 Amended 2026-10-24 (Task 8), as built: the meter arm turns on the observer's meter events and a 0.48 ±0.09 s taken
 lead (`ab.ARMS.meter.observe`); the lead moves rows on us, so the meter arm's stream is not the default's. The
 confound-free baseline is the `lagged` arm (the Default providers with the same lead), run by hand
-(`HEKILI_AB=lagged make gate`), not by `make gate-ab`; every detection cell and fights gate is byte-identical between
+(`make gate AB_ARM=lagged`), not by `make gate-ab`; every detection cell and fights gate is byte-identical between
 `default` and `lagged`, so the lead moves only the loops. The loops follow the arm through the profile toggles
 (`Hekili:ProvidersChanged`), the oracle shadow included. **Seed noise**: a 20-fight Fury flicker figure moves about
 ±0.3/min between seed sets (the lagged arm itself reads 1.74, 2.03, 1.97, 1.34 and 1.80 on five 20-fight seed sets), so a

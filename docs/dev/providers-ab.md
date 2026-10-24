@@ -4,7 +4,7 @@ Measured, not gated (providers spec decision 86). The owner decides whether a pr
 
 The design is `docs/superpowers/specs/2026-10-23-providers-design.md` (BUILT; its "Amended 2026-10-24 (Task 8)" notes
 record what differs from the design). Every number here comes from the harness on branch `forever-providers`
-(`make gate-ab` at 8599f0437, plus `HEKILI_AB=lagged make gate`), not from the game: the in-game checks are the
+(`make gate-ab` at 8599f0437, plus `make gate AB_ARM=lagged`), not from the game: the in-game checks are the
 launch-day probes in `docs/dev/ingame-ledger.md` (DM-P, DM-M, CDM-T, CDM-E, CDM-R, CDM-O, CDM-P and the spec's §6 rows).
 
 ## The arms
