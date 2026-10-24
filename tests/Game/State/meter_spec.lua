@@ -71,6 +71,31 @@ describe("the damage-meter Outcomes provider", function()
         assert.are.equal(1, I.outcomes.muted)
     end)
 
+    for _, case in ipairs({ { "Creature-1", 0 }, { false, 1 } }) do
+        it("the mute counts an avoid row only on the unit we swung at (" .. tostring(case[1]) .. ")", function()
+            local function target(g)
+                ctl.guid.target = g or nil
+                ctl.Fire("PLAYER_TARGET_CHANGED")
+            end
+            target(case[1]) -- the swings' unit (false: unpinned swings)
+            group(5)
+            for n = 0, 3 do
+                ctl.now = 10 + 2.6 * n
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                ctl.Tick(ctl.now + 0.02)
+                if n == 0 then
+                    ctl.now = 10.2
+                    target("Creature-1")
+                    ctl.now = 10.4
+                    ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- an avoid on Creature-1
+                    ctl.now = 10.6
+                    target(case[1])
+                end
+            end
+            assert.are.equal(case[2], I.outcomes.muted)
+        end)
+    end
+
     it("RowOwner: a spell row with no group in its frame is FOREIGN; with one, UNDECIDED in a group", function()
         local P = I.outcomes
         group(5)
@@ -102,7 +127,7 @@ describe("the damage-meter Outcomes provider", function()
             ctl.Fire("DAMAGE_METER_COMBAT_SESSION_UPDATED", 7, 200)
             assert.are.equal(9.6, I.outcomes.EnemyHitAt(10, 1))
             assert.are.equal(9.45, I.outcomes.EnemyHitAt(10.01, 1))
-            assert.is_nil(I.outcomes.EnemyHitAt(10.02, 1))
+            assert.are.same({ nil, true }, { I.outcomes.EnemyHitAt(10.02, 1) }) -- dates hits, none for this row
             assert.are.equal(10.002, I.outcomes.EnemyHitAt(10, 4))
             assert.is_nil(I.outcomes.EnemyHitAt(10, 4))
         end

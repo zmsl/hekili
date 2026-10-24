@@ -8,6 +8,9 @@ M.ARMS = {
     -- 0.48 +-0.09 s after its taken group (DM §3's measured lead; it moves those rows, so only a provider arm sets it)
     meter = { outcomes = "meter", presence = "router", viewer = false, observe = { meter = true, takenLag = 0.48 } },
     viewer = { outcomes = "default", presence = "router", viewer = true },
+    -- the meter arm's baseline (measured by hand, not by make gate-ab): the Default with the meter arm's taken lead, so
+    -- the two differ only by the leaf and its assumptions
+    lagged = { outcomes = "default", presence = "router", viewer = false, observe = { takenLag = 0.48 } },
 }
 
 function M.arm()

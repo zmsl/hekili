@@ -116,7 +116,8 @@ end
 
 --- (decision 75) The latest unused taken group 0.3-0.6 s before a white hit row on us at t (DM §3: 389-565 ms), or
 --- within 5 ms of a spell row (`school` not 1); marked used. nil in a group (partners' hits taken fire type 7 too) or
---- while not live. Allocates nothing.
+--- while not live. The second result is true when the provider dates hits now but found none for this row (its row
+--- time is then late by the taken lead: no clock anchor). Allocates nothing.
 function P.EnemyHitAt(t, school)
     if not live() or grouped then
         return nil
@@ -132,7 +133,7 @@ function P.EnemyHitAt(t, school)
         end
     end
     if best == 0 then
-        return nil
+        return nil, true
     end
     gUsed[best] = true
     return gT[best]
@@ -143,10 +144,15 @@ function P.Audit()
     return audit.valid and audit or nil
 end
 
--- the white avoid rows the mute compares against (any unit: an avoid of ours is on the unit we swung at)
+-- the white avoid rows the mute compares against: on the unit our latest swing of either hand was pinned to (an avoid
+-- of ours is on the unit we swung at; partners' and strangers' on other mobs would hide a silent meter)
 I.Units.OnRow(function(t, g, uid, act, flag, amount, school)
     if active and school == 1 and (act == "MISS" or act == "DODGE" or act == "PARRY") then
-        avoidRows = avoidRows + 1
+        local T = I.Tickets
+        local i1, i2 = T.lastSwing[1], T.lastSwing[2]
+        if (i1 > 0 and T.guid[i1] == g) or (i2 > 0 and T.guid[i2] == g) then
+            avoidRows = avoidRows + 1
+        end
     end
 end)
 

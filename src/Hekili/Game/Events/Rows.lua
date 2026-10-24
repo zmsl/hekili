@@ -218,7 +218,7 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
     end
     if avoid then
         if T.told[credited] == 1 then
-            f.collide = f.collide + 1 -- told HIT, avoided after all: another group member's group in its 15 ms
+            f.collide = f.collide + 1 -- an avoid row credited to a told-HIT swing: a true collision or a foreign avoid
         end
         if T.state[credited] == T.ASSUMED and T.rec[credited] > 0 then -- refunded: the assumed rage comes back out
             recOpen[T.rec[credited]] = false
@@ -544,7 +544,8 @@ for k = 1, ASK do
 end
 local aHead, aN = 0, 0
 -- The fight's providers audit (Snapshot's `providers` lines): the swings the provider told (HIT/AVOID/unanswered) or a
--- row decided, a told HIT a row then showed avoided (`collide`), the amounts our tickets were paid.
+-- row decided, avoid rows credited to a told-HIT swing (`collide`: the meter's collisions plus other players' avoids
+-- the scoring gave to our swing), the amounts our tickets were paid.
 L.fight = {
     ownUnclaimed = 0,
     foreignByMeter = 0,
