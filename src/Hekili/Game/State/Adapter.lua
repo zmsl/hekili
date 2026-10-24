@@ -105,6 +105,7 @@ local def = {
     talents = {},
     units = {},
     pets = {}, -- the guardians: { key, cap, duration } of each pet registered with a `cap` (Families/Pets.lua)
+    providers = {}, -- outcomes, presence, viewer: the experimental toggles (providersOf)
 }
 
 local HANDS = { mainhand = 1, offhand = 2 }
@@ -208,10 +209,21 @@ local function sortedKeys(t)
     return keys
 end
 
+-- (providers spec §3.4, decision 82) The experimental toggles as the build config's providers. The router is always
+-- injected; without the viewer leaf it covers nothing (the Default path). No engine where a test loads the state alone.
+local NO_PERF = {}
+local function providersOf()
+    local e = Hekili.Engine
+    local p = e and e.settings.performance or NO_PERF
+    return p.damageMeter == true and "meter" or "default", "router", p.cooldownViewer == true
+end
+
 local function buildDef()
     for _, list in pairs(def) do
         wipe(list)
     end
+    local pv = def.providers
+    pv.outcomes, pv.presence, pv.viewer = providersOf()
     local slotByKey = {}
     for _, k in ipairs(sortedKeys(class.resources)) do
         local r = class.resources[k]
@@ -344,6 +356,11 @@ end
 function VS.SpecChanged()
     buildDef()
     I.Build(def, GetTime())
+end
+
+--- Re-reads the experimental toggles: applied at once out of combat, else at combat end (VS.SetProviders).
+function Hekili:ProvidersChanged()
+    VS.SetProviders(providersOf())
 end
 
 ----------------------------------------------------------------------------------------------------------------------

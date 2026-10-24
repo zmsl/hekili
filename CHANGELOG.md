@@ -7,6 +7,7 @@
 - Your own hits, misses and DoT ticks are now matched to the cast that made them, even when they come late: a projectile's landing (Wrath, Shadow Bolt, Frostbolt), the killing blow that arrives after your target clears, a cast you switched targets during, and a crowded pull with other players hitting the same mob. A projectile's crit and miss now count when the bolt lands, so crit-triggered effects and miss refunds follow. The class priorities now declare each projectile's travel speed and each spell's school for this.
 - Late or out-of-order hits now still count: a result that arrives after its expected time is matched to its cast instead of being dropped, and a swing whose result never shows is counted at its expected rage.
 - Snapshots gain two lines, `units` and `tickets`, that show how many of your outcomes were matched, lost or ambiguous. Please include them when you report a wrong recommendation.
+- Experimental option, off by default (Options > Performance > Experimental): use the game's damage meter events (read even with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours. In our simulated fights it credits fewer of other players' hits to you in groups and keeps the rage estimate closer when the game gives no other answer; it has not been measured in game yet and will be play-tested after launch.
 
 ### Changed
 

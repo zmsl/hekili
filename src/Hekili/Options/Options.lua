@@ -298,6 +298,8 @@ do
                 performance = {
                     frameBudget = 0.7,
                     forecastWindow = 15, -- Forever E9
+                    damageMeter = false, -- experimental (providers spec decision 82): the meter as the Outcomes provider
+                    cooldownViewer = false, -- experimental: the Cooldown Manager as the presence leaf (providers Task 7)
                 },
                 toggles = {
                     pause = {
@@ -4097,6 +4099,21 @@ found = true end
                                         .. "cast always show at once, so what you can press and when never changes; the icons just flicker less.\n\n"
                                         .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested.",
                                     order = 21,
+                                    width = "full",
+                                },
+                                damageMeter = {
+                                    type = "toggle",
+                                    name = "Experimental: use the damage meter for swing outcomes",
+                                    desc = "Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know "
+                                        .. "at once whether your white swing hit, and that another player's hit was not yours.\n\n"
+                                        .. "Changes apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n"
+                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested.",
+                                    get = function() return Hekili.DB.profile.performance.damageMeter == true end,
+                                    set = function( _, v )
+                                        Hekili.DB.profile.performance.damageMeter = v
+                                        Hekili:ProvidersChanged()
+                                    end,
+                                    order = 22,
                                     width = "full",
                                 },
                             }

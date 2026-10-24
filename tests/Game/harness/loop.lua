@@ -5,6 +5,7 @@
 -- Class-neutral (the boundary rule): the content passes the character, the pack, the press resolution, the usability
 -- answers, the true power gain per hit (content.gain, for the content's power type), the world's knobs and the debuff
 -- list.
+local ab = require("Game.harness.ab")
 local headless = require("Game.harness.headless")
 local observer = require("Game.harness.observer")
 local scenarios = require("Game.harness.scenarios")
@@ -251,12 +252,17 @@ function M.run(L, seed, o, drivers)
     local pollEv, tickEv, nextEv = {}, {}, 1
     local sink = {}
     local steps = {}
+    local arm = ab.ARMS[ab.arm()]
     for i, d in ipairs(drivers) do
         local id = d.H.Hekili.State.spec.id
         local sp = id and d.H.Hekili.DB.profile.specs[id]
         if sp then
             sp.steadyIcons = steady and not d.plain -- the oracle shadow never holds
         end
+        -- the A/B arm's experimental toggles (providers decision 82), applied out of combat as the option does
+        local perf = d.H.Hekili.DB.profile.performance
+        perf.damageMeter, perf.cooldownViewer = arm.outcomes == "meter", arm.viewer
+        d.H.Hekili:ProvidersChanged()
         local ctl = d.H.ctl -- a fresh world: the client's answers about it start fresh too
         ctl.combat, ctl.form, ctl.stealthed = false, L.form, false
         local fresh = {
@@ -290,6 +296,8 @@ function M.run(L, seed, o, drivers)
         }, {
             __index = observer.DEFAULTS,
         })
+        k.meter, k.viewer = arm.outcomes == "meter", arm.viewer -- the arm's shapes (none in the default arm)
+        ab.observe(k) -- and its other knobs (the meter arm's taken lead, as the gates' streams)
         for key, v in pairs(content.OBSERVE or {}) do -- the content's client knobs (other powers' reads, forms)
             k[key] = v
         end
