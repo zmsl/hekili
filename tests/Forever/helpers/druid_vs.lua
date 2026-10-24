@@ -37,6 +37,9 @@ function M.boot(ns, api, edit)
             onNextSwing = a.onNextSwing,
             startsCombat = ld.run(a.startsCombat, e), -- Rows.lua credits a strike's hit to its cast
             refundOnAvoid = a.refundOnAvoid, -- an avoid's refund (Families/Now.lua)
+            expects = a.expects, -- the declared outcome (Families/Expect.lua): which rows its ticket takes
+            velocity = a.velocity,
+            school = a.school,
             cast = 0,
             charges = 1,
             recharge = 0,
@@ -44,7 +47,15 @@ function M.boot(ns, api, edit)
         }
     end
     for key, a in pairs(w.auras) do
-        class.auras[key] = { key = key, id = a.id, copy = a.copy, duration = a.duration, max_stack = a.max_stack }
+        class.auras[key] = {
+            key = key,
+            id = a.id,
+            copy = a.copy,
+            duration = a.duration,
+            max_stack = a.max_stack,
+            tick_time = a.tick_time, -- a declared ticking outcome's schedule (Families/Expect.lua)
+            dot = a.dot,
+        }
     end
     if edit then
         edit(class, w)

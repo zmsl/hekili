@@ -1073,6 +1073,19 @@ describe("Forever Druid in VirtualState's now context", function()
         assert.are.same({ 0, 9 }, { I.nowErrors, I.nowRuns })
     end)
 
+    it("builds each ability's declared outcome as the class file registers it (Families/Expect.lua)", function()
+        local A, X, n = I.ab, I.Expect, 0
+        for a = 1, A.n do
+            local d = w.abilities[A.key[a]]
+            if d and d.expects then
+                n = n + 1
+                local want = d.school and ns.SCHOOL[d.school] or 0 -- no school: avoids only (Kinds.lua K.Accepts)
+                assert.are.same({ X.KIND[d.expects], want }, { A.expKind[a], A.school[a] }, A.key[a])
+            end
+        end
+        assert.are.same({ 5, 0 }, { n, I.nowErrors }) -- wrath, starfire, moonfire, insect_swarm, demoralizing_roar
+    end)
+
     it("gives Primal Fury's 5 rage at a bear strike's own crit with the talent at 2/2, none at 0/2 (GAP T)", function()
         I.Sources.Direct(VS.Obs.CombatStart, 1.5) -- in combat: no rage decay
         cast(5487, 2) -- Bear Form
