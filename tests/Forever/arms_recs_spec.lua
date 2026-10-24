@@ -3,7 +3,9 @@
 -- upstream performance edits (State.lua's memo, query_time first). Record with ARMS_RECS=record (rewrites the fixture).
 -- The fixture is run-length: an entry { instance, update index, "name1 name2 ..." } only where an instance's queue
 -- changed from its previous Update, and the Update counts at the end, so equal fixtures mean equal full sequences.
+local ab = require("Game.harness.ab")
 local loop = require("Game.harness.loop")
+local util = require("luassert.util")
 local ww = require("Forever.helpers.warrior_world")
 local gate = require("Forever.helpers.arms_gate")
 
@@ -59,6 +61,11 @@ describe("the seeds 1-3 Arms gate's recommendations #slow", function()
             write(rec)
         end
         local want = dofile(PATH)
+        if ab.arm() ~= "default" then -- the fixture is the default arm's: a provider arm records the drift (providers §4.1)
+            local same = util.deepcompare(want, rec)
+            ab.check(same, "arms recs", ("changes %d (fixture %d)"):format(#rec.changes, #want.changes))
+            return
+        end
         assert.are.same(want.updates, rec.updates)
         assert.are.equal(#want.changes, #rec.changes)
         for i, c in ipairs(want.changes) do

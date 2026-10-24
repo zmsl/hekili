@@ -6,6 +6,8 @@
 -- health); `live`: the leveling gate (the pack driving the loop's own world never idles `n` GCDs while a known on-GCD
 -- ability is usable, no error). Data: wowsims/forever (MIT, https://github.com/wowsims/forever).
 local assert = require("luassert")
+local ab = require("Game.harness.ab")
+local util = require("luassert.util")
 local loop = require("Game.harness.loop")
 local replay = require("Game.harness.replay")
 local pack_gate = require("Forever.helpers.pack_gate")
@@ -330,12 +332,23 @@ function M.ready(label, spec, R)
         )
     end
     local want = dofile(path)
+    local floor = assert(M.READY[spec], "no ready-time floor for " .. spec)
+    if ab.arm() ~= "default" then -- a provider arm records how many decisions moved off the fixture (providers §4.1)
+        local moved = math.abs(#want - #rows)
+        for i = 1, math.min(#want, #rows) do
+            local r = rows[i]
+            moved = moved
+                + (util.deepcompare(want[i], { r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9] }) and 0 or 1)
+        end
+        ab.check(moved == 0, label .. " timing", ("%d of %d decisions off the fixture; %s"):format(moved, #want, line))
+        ab.check(s.realMedian <= floor[1] + 1e-9 and s.real <= floor[2], label .. " timing floor", line)
+        return s, line
+    end
     assert.are.equal(#want, #rows, "decisions in " .. path)
     for i, r in ipairs(rows) do
         assert.are.same(want[i], { r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9] }, path .. " decision " .. i)
     end
     -- the fixture comparison is the gate (any decision's change fails it); the count floor documents the real set
-    local floor = assert(M.READY[spec], "no ready-time floor for " .. spec)
     assert.is_true(s.realMedian <= floor[1] + 1e-9 and s.real <= floor[2], line)
     return s, line
 end
@@ -353,7 +366,7 @@ function M.gate(label, C, spec, floor, o)
     local r, line = loop.summary(m), loop.line(m)
     print("\n" .. label .. " wowsims: " .. line)
     pack_gate.health(m, r, line)
-    assert.is_true(r.decisions >= floor, line)
+    ab.check(r.decisions >= floor, label, line) -- a bar: recorded in a provider arm (providers spec §4.1)
     M.ready(label, spec, R)
     return r, line
 end
@@ -409,7 +422,7 @@ function M.live(label, C, limit, fights)
     print("\n" .. label .. " live L" .. c.level .. ": " .. line)
     assert.are.equal(0, errors, line)
     assert.is_true(presses > 0, line)
-    assert.is_true(seconds <= limit + 1e-9, line)
+    ab.check(seconds <= limit + 1e-9, label .. " live", line) -- a bar: recorded in a provider arm (providers §4.1)
     return seconds, line
 end
 
