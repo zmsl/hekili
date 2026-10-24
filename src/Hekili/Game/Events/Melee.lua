@@ -36,6 +36,21 @@ end
 -- UNMEASURED: a chosen constant (GAP AX residue in docs/dev/gaps.md).
 L.FOREIGN_AVOIDS = 0.05
 
+-- Parry haste (parry-haste spec decision 57; wowsims's attack.go applyParryHaste, taken as Forever's rule by the
+-- owner's ruling of 2026-10-23): a unit that parries pulls its main-hand swing, due in r s of duration d, by
+-- min(PULL x d, r - FLOOR x d) when r > FLOOR x d. A game rule: no pack field. PHS1 confirms it on launch day.
+L.PARRY_PULL, L.PARRY_FLOOR = 0.4, 0.2
+
+--- The pull (seconds) of a parrier's main-hand swing due in `r` s with duration `d`; 0 when none. Allocates nothing.
+function L.ParryPull(r, d)
+    local least = L.PARRY_FLOOR * d
+    if d <= 0 or r <= least then
+        return 0
+    end
+    local cap = L.PARRY_PULL * d
+    return r - least < cap and r - least or cap
+end
+
 -- The score (harness design §1.2-§1.4, decision D1; PROTOTYPE values, the harness's gates hold them).
 L.THETA = 5
 L.Q = { 0.90, 0.08, 0.02 }

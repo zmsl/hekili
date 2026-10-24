@@ -6,6 +6,7 @@
 local load = require("Game.State.helpers.load")
 local fake = require("Game.State.helpers.fake_api")
 local fs = require("Game.State.helpers.fake_spec")
+local alloc = require("Game.State.helpers.alloc")
 
 describe("swings", function()
     local VS, I, S, Obs
@@ -90,6 +91,99 @@ describe("swings", function()
         I.Fold(101, false)
         assert.are.same({ 0, 0 }, { VS.Swing(1, 102).est, VS.Swing(1, 102).conf })
         assert.are.equal(2.6, VS.SwingSpeed(1, 102).est)
+    end)
+
+    describe("parry haste (parry-haste spec decisions 57-59, the owner's ruling 2026-10-23)", function()
+        -- in combat: the main hand (2.0 s) swung at 100, next at 102; the off hand (2.0 s) at 100.1
+        local function swung()
+            I.inCombat = true
+            S.Direct(Obs.Swing, 100, 1, 2.0, 4)
+            S.Direct(Obs.Swing, 100.1, 2, 2.0, 4)
+            I.Fold(100.1, false)
+        end
+        local function parry(t)
+            S.Direct(Obs.PlayerHit, t, I.HitKind.PARRY, 0, 60)
+            I.Fold(t, false)
+        end
+        local function near(want, got)
+            assert.is_true(math.abs(want - got) < 1e-9, ("%.6f vs %.6f"):format(got, want))
+        end
+
+        it("L.ParryPull: the replay's pulls; nothing at or under 20% of the swing left", function()
+            local P = I.Log.ParryPull
+            near(0.2264, P(0.697, 2.353)) -- the 20% branch: 0.697 - 0.4706
+            near(0.9412, P(2.0, 2.353)) -- the 40% branch
+            near(0.6, P(1.2, 1.5))
+            near(0.2, P(0.5, 1.5))
+            near(0.068, P(0.368, 1.5))
+            assert.are.same({ 0, 0, 0 }, { P(0.3, 1.5), P(0.2, 1.5), P(1, 0) })
+        end)
+
+        it("pulls the next main-hand swing by 40% of its duration when more than 60% is left", function()
+            swung()
+            parry(100.5) -- r = 1.5 > 1.2: 0.8
+            near(101.2, VS.Swing(1, 100.5).est)
+            local x, from = VS.SwingPull(1)
+            near(0.8, x)
+            assert.are.equal(100, from)
+            near(103.2, VS.Swing(1, 101.3).est) -- the swings after it move with it until the next PLAYER_SWING
+        end)
+
+        it("pulls it down to 20% of its duration when 20-60% is left", function()
+            swung()
+            parry(101.3) -- r = 0.7: 0.7 - 0.4
+            near(101.7, VS.Swing(1, 101.3).est)
+            near(0.3, (VS.SwingPull(1)))
+        end)
+
+        it("pulls nothing at or under 20% left", function()
+            swung()
+            parry(101.7) -- r = 0.3 <= 0.4
+            near(102, VS.Swing(1, 101.7).est)
+            assert.are.same({ 0, 0 }, { VS.SwingPull(1) })
+        end)
+
+        it("never pulls the off hand; a second parry pulls again from the pulled time", function()
+            swung()
+            parry(100.2) -- r = 1.8: 0.8, next 101.2
+            parry(100.3) -- r = 0.9: min(0.8, 0.5), next 100.7
+            near(100.7, VS.Swing(1, 100.3).est)
+            near(1.3, (VS.SwingPull(1)))
+            near(102.1, VS.Swing(2, 100.3).est)
+            assert.are.same({ 0, 0 }, { VS.SwingPull(2) })
+        end)
+
+        it("keys the pull to its swing: a later swing is never pulled by it; combat end clears it", function()
+            swung()
+            parry(100.5) -- 0.8, taken from the swing at 100
+            S.Direct(Obs.Swing, 101.2, 1, 2.0, 4) -- the hastened swing
+            I.Fold(101.2, false)
+            near(103.2, VS.Swing(1, 101.2).est) -- the real swing's anchor: the pull is not applied again
+            local x, from = VS.SwingPull(1)
+            near(0.8, x)
+            assert.are.equal(100, from) -- still the swing at 100: a reader whose last swing is 101.2 ignores it
+            parry(101.5) -- r = 1.7: 0.8 from the swing at 101.2, a new pull, not added to the old one
+            x, from = VS.SwingPull(1)
+            near(0.8, x)
+            assert.are.equal(101.2, from)
+            S.Direct(Obs.CombatEnd, 102)
+            I.Fold(102, false)
+            assert.are.same({ 0, 0 }, { VS.SwingPull(1) })
+        end)
+
+        it("allocates nothing per parry", function()
+            swung()
+            local n = 0
+            local bytes = alloc.bytes(function()
+                n = n + 1
+                local t = 100 + 2 * n
+                S.Direct(Obs.Swing, t, 1, 2.0, 4)
+                S.Direct(Obs.PlayerHit, t + 0.5, I.HitKind.PARRY, 0, 60)
+                I.Fold(t + 0.5, false)
+                VS.SwingPull(1)
+            end, 2000)
+            assert.are.equal(0, bytes)
+        end)
     end)
 
     describe("the ranged hand (C7)", function()

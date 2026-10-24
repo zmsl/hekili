@@ -22,6 +22,8 @@ local anchorT, speed, base, last, w0, confAt =
 local prevTick = { 0, 0, 0 }
 local HAND = { "main", "off", "ranged" }
 local swingRec, speedRec, haste = {}, {}, nil
+-- Parry haste (parry-haste spec decision 59): the main hand's pull and the swing it was taken from (VS.SwingPull)
+local pull, pullFrom = 0, 0
 I.haste0 = 1
 
 I.OnBuild(function(def, now)
@@ -35,6 +37,7 @@ I.OnBuild(function(def, now)
         end
     end
     haste = I.NewBelief("haste melee")
+    pull, pullFrom = 0, 0
     I.Sample(haste, "default", 1, now, 0)
 end)
 
@@ -101,6 +104,25 @@ local function after(h, t)
     return p
 end
 
+-- Our parry (Obs.PlayerHit a = PARRY): the main hand's pending swing comes early by L.ParryPull; the anchor moves, so
+-- every later predicted swing does until the next PLAYER_SWING re-anchors. The pull is kept with the swing it was taken
+-- from (VS.SwingPull), and restarts when a parry comes after a newer swing. Off hand never. Allocates nothing.
+I.On(Obs.PlayerHit, function(o, t)
+    if o.a ~= I.HitKind.PARRY or not I.inCombat or anchorT[1] <= 0 or speed[1] <= 0 then
+        return
+    end
+    -- I.Log at call time: Events/CombatLog.lua loads after the families
+    local x = I.Log.ParryPull(after(1, o.t) - o.t, speed[1])
+    if x <= 0 then
+        return
+    end
+    if pullFrom ~= last[1] then
+        pull, pullFrom = 0, last[1]
+    end
+    anchorT[1], pull = anchorT[1] - x, pull + x
+    I.Sample(swingRec[1], "modelled", after(1, o.t), t, Obs.PlayerHit)
+end)
+
 -- A paired rage step (spec §6.4): a PowerTick of a swing-paid resource that no PLAYER_SWING and no own cast
 -- explains is a landed swing when it falls one swing after the previous such tick (a pair: anchor at weight 0.5 when
 -- the clock is weaker) or on a predicted swing (a confirmation: the clock re-anchors there).
@@ -153,6 +175,7 @@ I.On(Obs.CombatEnd, function()
     for h = 1, 3 do
         anchorT[h], w0[h], prevTick[h] = 0, 0, 0
     end
+    pull, pullFrom = 0, 0
 end)
 
 --- (spec §3.2) The next swing of hand 1 (main), 2 (off) or 3 (ranged) after now.
@@ -188,6 +211,16 @@ end
 --- (spec §3.1) The absolute time of the last observed swing of a hand, 0 when none.
 function VS.LastSwing(hand)
     return last[hand] or 0
+end
+
+--- (parry-haste spec decision 59) The parry-haste pull of the main hand's next swing (seconds) and the time of the swing
+--- it was taken from (VS.LastSwing(1) at the parry): a reader applies it only to that swing. 0, 0 for hands 2 and 3,
+--- before a parry and after combat end. Allocates nothing.
+function VS.SwingPull(hand)
+    if hand ~= 1 then
+        return 0, 0
+    end
+    return pull, pullFrom
 end
 
 --- (spec §3.1) The unhasted base speed of a hand (seconds) from the last plain out-of-combat read, 0 before one.
