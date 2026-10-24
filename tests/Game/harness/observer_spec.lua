@@ -1072,6 +1072,23 @@ describe("the observer's resources, GCD and forms", function()
         local s = observer.observe(W, knobs({ usable = { { 21, pool } }, usableDelay = 0 }))
         assert.are.same({ "3 @usable 21 2" }, lines(s, { ["@usable"] = true }))
     end)
+
+    it("answers a shift whose frame a later gain joins with the form, the entry rule and the gain as one", function()
+        setup()
+        local function pool(_, now, _, view) -- needs form 1: short below 60 there, not usable elsewhere
+            return now.form == 1 and view[POOL] >= 60, now.form == 1 and view[POOL] < 60
+        end
+        W.t = 0.5
+        W.emit({ kind = "prepull" })
+        W.t = 1
+        W.emit({ kind = "gain", src = us, pt = POOL, cost = 30 }) -- 70 in form 0: not usable
+        W.t = 3 - 1e-12 -- the shift and a swing in one frame, a float apart (druid shift, fight 419 of seeds 401-600)
+        W.press(us, "shift", { spell = 12, gcd = 1.5, shift = { form = 1, onEnter = { [POOL] = "zero" } } })
+        W.t = 3
+        W.emit({ kind = "gain", src = us, pt = POOL, rage = 20 })
+        local s = observer.observe(W, knobs({ usable = { { 21, pool } }, usableDelay = 0.1 }))
+        assert.are.same({ "3 @usable 21 2" }, lines(s, { ["@usable"] = true })) -- no transient yes at the old 70
+    end)
 end)
 
 describe("the world", function()

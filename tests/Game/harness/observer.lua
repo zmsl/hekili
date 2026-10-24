@@ -754,10 +754,11 @@ function M.new(W, k)
                 end
             elseif t - spentT < M.FRAME then
                 -- the frame's answers wait for this gain: the spend's (and what moved to it) at this gain's time, so
-                -- no answer shows a gain before it happened
+                -- no answer shows a gain before it happened; a shift's form in the frame moves with its entry rule
+                -- (a form delta is { t, form, "form", seq }: x[1] >= spentT already puts it in the frame)
                 when = t
                 for _, x in ipairs(deltas) do
-                    if x[3] ~= "form" and x[1] >= spentT and x[1] < t and t - x[4] < M.FRAME then
+                    if x[1] >= spentT and x[1] < t and (x[3] == "form" or t - x[4] < M.FRAME) then
                         x[1] = t
                     end
                 end
