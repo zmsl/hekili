@@ -49,15 +49,18 @@ LOOPS = $(addprefix test-,$(subst $(comma), ,$(GATE_TAGS)))
 GATE_LOCK ?= /tmp/hekili-gate.lock
 # One gate at a time per machine (flock): the loops assert a CPU budget per update (process CPU time, os.clock) that
 # another gate's load would still inflate through shared cores.
+# HEKILI_AB is never passed through from the shell (tests/Game/harness/ab.lua reads it per call, so a leaked one would
+# turn a plain gate or check into a record-only provider arm): only gate-ab sets it, per arm, through AB_ARM.
+unexport HEKILI_AB
 gate: check
-	flock $(GATE_LOCK) env BUSTED=$(BUSTED) BUSTED_JOBS=$$(($$(nproc) > 3 ? $$(nproc) - 2 : 1)) scripts/busted_parallel.sh --tags=$(GATE_TAGS)
+	flock $(GATE_LOCK) env $(if $(AB_ARM),HEKILI_AB=$(AB_ARM)) BUSTED=$(BUSTED) BUSTED_JOBS=$$(($$(nproc) > 3 ? $$(nproc) - 2 : 1)) scripts/busted_parallel.sh --tags=$(GATE_TAGS)
 
 # The A/B (providers spec §4.1): the gate once per arm on the same seeds; the provider arms record in .ab/<arm>.tsv.
 gate-ab:
 	rm -rf .ab
 	$(MAKE) gate
-	HEKILI_AB=meter $(MAKE) gate
-	HEKILI_AB=viewer $(MAKE) gate
+	$(MAKE) gate AB_ARM=meter
+	$(MAKE) gate AB_ARM=viewer
 	@wc -l .ab/*.tsv
 
 $(LOOPS): test-%:

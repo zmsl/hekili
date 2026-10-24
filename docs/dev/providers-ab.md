@@ -279,7 +279,7 @@ own state: how wrong the modelled timer was.
 
 ```bash
 make gate-ab                          # make gate three times: HEKILI_AB unset (default), meter, viewer
-HEKILI_AB=lagged make gate            # the meter arm's baseline, by hand
+make gate AB_ARM=lagged               # the meter arm's baseline, by hand
 ```
 
 `tests/Game/harness/ab.lua` chooses the arm. The default arm asserts every floor as `make gate` does. A provider arm
