@@ -683,6 +683,19 @@ describe("the ticket pool", function()
             assert.are.same({ 1, 0 }, { T.closed.lost, count(5) })
         end)
 
+        it("stages the expectation of a swing combat end closes inside its land window; none past it", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 10.15 -- combat ends before the swing's row (it lands after PLAYER_REGEN_ENABLED)
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            assert.are.same({ 1, 1 }, { T.closed.ended, count(5) })
+            ctl.now = 20
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 20 + T.PendingWindow(1) + 0.05 -- past its land window: no row of it can still come
+            ctl.Fire("PLAYER_REGEN_ENABLED")
+            assert.are.same({ 2, 1 }, { T.closed.ended, count(5) })
+        end)
+
         it("assumes an open swing at once through T.Assume (a provider's HIT), once", function()
             local i = assumedSwing()
             T.Assume(i, 10.8)
