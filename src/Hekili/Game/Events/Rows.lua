@@ -54,12 +54,19 @@ local REFUSED = { DODGE = true, PARRY = true, MISS = true } -- the avoids that r
 -- One row from an own action of kind `k` and its outcome at `t` (school mask `sch` for a spell), through CombatLog's
 -- builders (Task 5b). None without a destination: Hekili's handler would count a "" GUID as an enemy
 -- (`ns.updateTarget`, Events.lua:1693-1701).
+local lastRowT = { 0, 0 } -- per hand: the latest stamp of a swing row emitted
 local function emit(k, xx, dst, action, flag, amount, t, sch)
     if dst == "" then
         return
     end
     local me, mf, hf = L.player, L.PLAYER_FLAGS, L.HOSTILE_FLAGS
     if k == MELEE then
+        -- a hand's rows stay in time order: a swing's row emitted after a newer one of its hand (its window closing
+        -- after a parry-hastened next swing's row) takes that row's stamp
+        if t < lastRowT[xx] then
+            t = lastRowT[xx]
+        end
+        lastRowT[xx] = t
         if action == "WOUND" then
             L.Swing(t, "swing", me, mf, dst, hf, amount, flag, xx == 2)
         else

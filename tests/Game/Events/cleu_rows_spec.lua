@@ -286,6 +286,22 @@ describe("the synthesized combat log", function()
             end
         )
 
+        it("never emits a swing's expiry row before a newer row of the same hand (a pulled next swing)", function()
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0) -- its row never comes; its window closes at 11.5
+            ctl.now = 10.9 -- the next swing, pulled by a parry (parry haste): inside the old window
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 11.37
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 40, 1) -- the 10.9 swing's row, at its lag
+            ctl.Tick(11.6) -- the 10.0 swing's window closes: its SWING_DAMAGE 0
+            local stamps = {}
+            for _, g in ipairs(got) do
+                if g.row[2] == "SWING_DAMAGE" or g.row[2] == "SWING_MISSED" then
+                    stamps[#stamps + 1] = g.row[1]
+                end
+            end
+            assert.are.same({ 10.9, 10.9 }, stamps) -- emission order is timestamp order
+        end)
         it("pairs a swing only with a wound that follows it: SWING_DAMAGE at the swing's time", function()
             ctl.now = 20
             ctl.Fire("UNIT_COMBAT", "target", "WOUND", "CRITICAL", 120, 1) -- before any swing: nobody's
