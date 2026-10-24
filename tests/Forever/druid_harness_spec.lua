@@ -145,7 +145,10 @@ local function shift(n, v)
         end
         metrics.score(mBear, c, s, W, f.R.swing, 0, inBear)
         metrics.score(mCat, c, s, W, f.R.swing, 0, inCat)
-        local nb, ub = metrics.unknown(c, s, inBear)
+        -- in combat only: after the stop the client re-reads UnitDamage in Bear, so a late row is not stale
+        local nb, ub = metrics.unknown(c, s, function(x)
+            return inBear(x) and x < W.stopAt
+        end)
         local nc, uc = metrics.unknown(c, s, inCat)
         count(t, "bearWounds", nb)
         count(t, "bearUnknown", ub)

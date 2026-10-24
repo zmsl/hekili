@@ -636,6 +636,39 @@ describe("the synthesized combat log", function()
             assert.are.equal(0, L.unattributed)
         end)
 
+        it("dates the pull at our swing when the parry row is our swing's, a landing lag later", function()
+            local function hit(t)
+                ctl.now = t
+                ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
+            end
+            local function onUsRows()
+                local out = {}
+                for _, g in ipairs(got) do
+                    if g.row[8] == L.player then
+                        out[#out + 1] = g.row[4]
+                    end
+                end
+                return out
+            end
+            onUs("nameplate2", "Creature-B", 3.0) -- B alone on us: its clock at 9.5 (period 3.0: 12.5, 15.5)
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
+            hit(9.5)
+            ctl.unitIs.nameplate2target = nil
+            ctl.Fire("UNIT_TARGET", "nameplate2")
+            onUs("target", "Creature-A", 2.0) -- A alone: its clock at 10 (period 2.0: 12, 14)
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            hit(10)
+            ctl.unitIs.nameplate2target = "player" -- both on us now: only the clocks name a hit
+            ctl.Fire("UNIT_TARGET", "nameplate2")
+            ctl.now = 10.6
+            ctl.Fire("PLAYER_SWING", 2.6, 0) -- our swing, parried: the server pulls A here (r 1.4: 0.8, next 11.2)
+            ctl.now = 11.07 -- its row, the main hand's lag later: dated at the row, r 0.93 would pull 0.53 (11.47)
+            ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1)
+            hit(11.2) -- A's pulled swing: on its clock dated at the swing (0.27 off the row-dated one; B's 12.5)
+            assert.are.same({ "Creature-B", "Creature-A", "Creature-A" }, onUsRows())
+            assert.are.equal(0, L.unattributed)
+        end)
+
         it(
             "pulls a provider-dated clock at its dated anchor; a later dated hit re-learns it without doubling",
             function()

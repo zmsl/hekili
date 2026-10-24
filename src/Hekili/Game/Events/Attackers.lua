@@ -195,7 +195,8 @@ end
 
 -- Parry haste on a hostile (parry-haste spec decision 62): a PARRY row on its token pulls its clock's next swing by
 -- L.ParryPull, whoever's attack it parried (the rule is the parrier's). One row comes on several tokens (target, plate,
--- soft target): applied once per GUID and row time. No row, no clock made. Allocates nothing.
+-- soft target): applied once per GUID and row time. No row, no clock made. Allocates nothing. A row Rows.lua just
+-- credited to our swing (L.avoidRowT) is dated at that swing: the server pulled the clock a landing lag before the row.
 local parriedGUID, parriedT = "", -1
 local function parried(t, unit)
     local i = INDEX[unit]
@@ -215,9 +216,10 @@ local function parried(t, unit)
     if period <= 0 then
         return
     end
+    local at = L.avoidRowT == t and L.avoidT or t
     local a = atkAnchor[k]
-    local p = a + (floor((t - a) / period) + 1) * period -- its next predicted swing after t
-    atkAnchor[k] = a - L.ParryPull(p - t, period)
+    local p = a + (floor((at - a) / period) + 1) * period -- its next predicted swing after the parry
+    atkAnchor[k] = a - L.ParryPull(p - at, period)
 end
 
 S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)

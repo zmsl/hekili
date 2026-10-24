@@ -225,7 +225,7 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
             S.Stage(Obs.Swing, t, xx, T.rec[credited], 6)
         end
         T.Provisional(credited, lr, act) -- emitted when the window closes
-        L.avoids, L.avoidX, L.avoidT = L.avoids + 1, xx, at0
+        L.avoids, L.avoidX, L.avoidT, L.avoidRowT = L.avoids + 1, xx, at0, t
         return
     end
     if T.avoid[credited] ~= "" then

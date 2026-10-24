@@ -64,7 +64,8 @@ L.med, L.spr = { 0.474, 0.703, 1.686 }, { 0.060, 0.020, 0.020 }
 L.bg, L.quiet = { 0, 0, 0, 0, 0, 0, 0, 0 }, 0
 local lastT = 0
 L.credited, L.background, L.avoidsBack = { 0, 0, 0 }, 0, 0
-L.avoids, L.avoidX, L.avoidT = 0, 0, 0
+-- the last avoid credited to our swing: its count, swing hand, swing time and row time (Attackers dates a parry by it)
+L.avoids, L.avoidX, L.avoidT, L.avoidRowT = 0, 0, 0, -1
 -- The usability oracle (harness design §2, decision D8).
 L.ORACLE_MIN = 0.1
 L.THETA_MIN, L.THETA_MAX = 2, 16
