@@ -4116,6 +4116,22 @@ found = true end
                                     order = 22,
                                     width = "full",
                                 },
+                                cooldownViewer = {
+                                    type = "toggle",
+                                    name = "Experimental: use the Cooldown Manager for aura presence",
+                                    desc = "Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, "
+                                        .. "for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. "
+                                        .. "Shows presence only (no durations or stacks), and only auras you applied.\n\n"
+                                        .. "Changes apply at once out of combat, otherwise when the fight ends.\n\n"
+                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested.",
+                                    get = function() return Hekili.DB.profile.performance.cooldownViewer == true end,
+                                    set = function( _, v )
+                                        Hekili.DB.profile.performance.cooldownViewer = v
+                                        Hekili:ProvidersChanged()
+                                    end,
+                                    order = 23,
+                                    width = "full",
+                                },
                             }
                         }
                     }
