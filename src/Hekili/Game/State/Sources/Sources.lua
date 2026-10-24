@@ -183,9 +183,15 @@ function VS.Start(api)
     I.api = api
     I.Events.Attach(api)
     local t = api.GetTime()
+    -- read before the re-activation (Player.lua's hook reads it too late): a /reload in combat defers it to combat end
+    I.inCombat = Plain(api, api.InCombatLockdown()) == true
     if I.outcomes then -- a build before Start activated its providers without an api
-        I.outcomes.Activate(api, t)
-        I.presence.Activate(api, t, I.def, { viewer = I.presenceViewer == true })
+        if I.inCombat then
+            I.restartProviders = true -- I.ApplyProviders at PLAYER_REGEN_ENABLED (decision 89: no path change mid-fight)
+        else
+            I.outcomes.Activate(api, t)
+            I.presence.Activate(api, t, I.def, { viewer = I.presenceViewer == true })
+        end
     end
     for k = 1, #STARTS do
         -- one raising hook (a client without some API) must not stop the hooks after it

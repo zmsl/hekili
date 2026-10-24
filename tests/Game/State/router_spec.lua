@@ -138,3 +138,44 @@ describe("the Presence router", function()
         assert.are.same({ 1, 1, 0 }, { n, I.presenceEdges.up, I.presenceEdges.down })
     end)
 end)
+
+describe("the Presence router at VS.Start (a /reload in combat)", function()
+    local VS, I, ctl, api, d
+
+    before_each(function()
+        api, ctl = fake.new()
+        ctl.now = 1
+        ctl.viewer.sets[2] = { 501 }
+        ctl.viewer.infos[501] = { spellID = fs.SPENDER_A }
+        ctl.ViewerItem("BuffIconCooldownViewer", 1, 501).unit = "player"
+        local ns = load.module()
+        VS = ns.VirtualState
+        I = ns.VirtualStateInternal
+        d = fs.def(fs.new(9))
+        d.providers = { presence = "router", viewer = true }
+    end)
+
+    it("in combat, builds nothing until PLAYER_REGEN_ENABLED", function()
+        ctl.combat = true
+        I.Build(d, 1)
+        VS.Start(api)
+        local item = ctl.viewer.items.BuffIconCooldownViewer[1]
+        assert.is_nil(item.hooks.OnShow)
+        assert.are.equal(0, I.presence.covered)
+        for j = 1, I.auras.nAura do
+            assert.is_false(I.presence.tracked[j])
+        end
+        ctl.combat = false
+        ctl.Fire("PLAYER_REGEN_ENABLED")
+        assert.is_true(I.presence.tracked[1])
+        assert.is_not_nil(item.hooks.OnShow)
+    end)
+
+    it("out of combat, builds at Start", function()
+        ctl.combat = false
+        I.Build(d, 1)
+        VS.Start(api)
+        assert.is_true(I.presence.tracked[1])
+        assert.is_not_nil(ctl.viewer.items.BuffIconCooldownViewer[1].hooks.OnShow)
+    end)
+end)

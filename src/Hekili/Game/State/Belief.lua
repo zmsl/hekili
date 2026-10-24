@@ -97,7 +97,7 @@ end
 -- registries each provider file fills at load. I.UNKNOWN is the unknown entity record (VirtualState.lua), not an answer.
 I.UNDECIDED, I.HIT, I.AVOID, I.OURS, I.FOREIGN, I.UP, I.DOWN = 0, 1, 2, 1, 2, 1, 2
 I.OUTCOMES, I.PRESENCE = {}, {}
-I.outcomes, I.presence, I.presenceViewer = nil, nil, nil
+I.outcomes, I.presence, I.presenceViewer, I.restartProviders = nil, nil, nil, false
 local wantO, wantP, wantV -- a swap asked for in combat (VS.SetProviders): applied at combat end
 
 -- Activates the named providers (spec §3.1): unknown names are "default"; only a changed choice is swapped, except
@@ -153,8 +153,14 @@ function VS.SetProviders(outcomes, presence, viewer)
     provide(outcomes, presence, viewer, I.clock)
 end
 
---- Applies a swap asked for in combat. Rows calls it at PLAYER_REGEN_ENABLED, after T.EndCombat.
+--- Applies a swap asked for in combat, and a re-activation VS.Start deferred. Rows calls it at PLAYER_REGEN_ENABLED,
+--- after T.EndCombat.
 function I.ApplyProviders(now)
+    if I.restartProviders then -- VS.Start in combat (a /reload mid-fight) left the re-activation for now
+        I.restartProviders = false
+        I.outcomes.Activate(I.api, now)
+        I.presence.Activate(I.api, now, I.def, { viewer = I.presenceViewer == true })
+    end
     if wantO then
         local o, p, v = wantO, wantP, wantV
         wantO, wantP, wantV = nil, nil, nil
