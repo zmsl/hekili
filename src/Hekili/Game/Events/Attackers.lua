@@ -44,8 +44,10 @@ end
 -- life, of `atkN` wounds).
 local N = 8
 local atkGUID, atkAnchor, atkPeriod, atkLo, atkHi, atkN = {}, {}, {}, {}, {}, {}
+local atkHitT = {} -- the latest learned hit (the anchor before any parry pull moved it)
 for k = 1, N do
     atkGUID[k], atkAnchor[k], atkPeriod[k], atkLo[k], atkHi[k], atkN[k] = "", 0, 0, 0, 0, 0
+    atkHitT[k] = 0
 end
 
 -- The clock of `guid`, or nil. Allocates nothing.
@@ -73,6 +75,7 @@ local function clockOf(guid)
         end
     end
     atkGUID[slot], atkAnchor[slot], atkPeriod[slot], atkLo[slot], atkHi[slot], atkN[slot] = guid, 0, 0, 0, 0, 0
+    atkHitT[slot] = 0
     return slot
 end
 
@@ -172,7 +175,7 @@ local function learn(k, t, speed)
             end
         end
     end
-    atkAnchor[k] = t
+    atkAnchor[k], atkHitT[k] = t, t
 end
 
 local MISSES = { DODGE = true, PARRY = true, BLOCK = true, MISS = true }
@@ -197,6 +200,7 @@ end
 -- L.ParryPull, whoever's attack it parried (the rule is the parrier's). One row comes on several tokens (target, plate,
 -- soft target): applied once per GUID and row time. No row, no clock made. Allocates nothing. A row Rows.lua just
 -- credited to our swing (L.avoidRowT) is dated at that swing: the server pulled the clock a landing lag before the row.
+-- A parry dated before the hostile's latest learned hit changes nothing: its pulled swing landed before our row.
 local parriedGUID, parriedT = "", -1
 local function parried(t, unit)
     local i = INDEX[unit]
@@ -217,6 +221,9 @@ local function parried(t, unit)
         return
     end
     local at = L.avoidRowT == t and L.avoidT or t
+    if at < atkHitT[k] then -- the swing it pulled already landed (before our row): the learned hit holds its pull
+        return
+    end
     local a = atkAnchor[k]
     local p = a + (floor((at - a) / period) + 1) * period -- its next predicted swing after the parry
     atkAnchor[k] = a - L.ParryPull(p - at, period)

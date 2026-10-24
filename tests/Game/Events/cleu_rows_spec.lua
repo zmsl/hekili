@@ -669,6 +669,39 @@ describe("the synthesized combat log", function()
             assert.are.equal(0, L.unattributed)
         end)
 
+        it("ignores a parry dated before the hostile's latest learned hit: its pulled swing already landed", function()
+            local function hit(t)
+                ctl.now = t
+                ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
+            end
+            local function onUsRows()
+                local out = {}
+                for _, g in ipairs(got) do
+                    if g.row[8] == L.player then
+                        out[#out + 1] = g.row[4]
+                    end
+                end
+                return out
+            end
+            onUs("nameplate2", "Creature-B", 3.0) -- B alone on us: its clock at 9.5 (period 3.0: 12.5)
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
+            hit(9.5)
+            ctl.unitIs.nameplate2target = nil
+            ctl.Fire("UNIT_TARGET", "nameplate2")
+            onUs("target", "Creature-A", 1.0) -- A alone: its clock at 10 (period 1.0: 11)
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            hit(10)
+            ctl.now = 10.15
+            ctl.Fire("PLAYER_SWING", 2.6, 0) -- parried: the server pulls A's 11.0 by 0.4 (r 0.85) to 10.6
+            hit(10.6) -- A's pulled swing lands before our parry row: A alone, learned at 10.6
+            ctl.now = 10.624 -- the row, a landing lag after our swing: dated at 10.15, before the 10.6 hit, so no pull
+            ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1) -- (pulled again: r 0.45, 0.25 more, next at 11.35)
+            ctl.unitIs.nameplate2target = "player" -- both on us now: only the clocks name a hit
+            ctl.Fire("UNIT_TARGET", "nameplate2")
+            hit(11.6) -- A's next on its learned clock (0.25 off a double-pulled one; B's 12.5)
+            assert.are.same({ "Creature-B", "Creature-A", "Creature-A", "Creature-A" }, onUsRows())
+            assert.are.equal(0, L.unattributed)
+        end)
         it(
             "pulls a provider-dated clock at its dated anchor; a later dated hit re-learns it without doubling",
             function()
