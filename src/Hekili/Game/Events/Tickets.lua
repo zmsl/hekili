@@ -57,9 +57,9 @@ end
 -- retraction's re-open (no expectation at its lost close) and whether it was assumed (T.Assume: a provider's HIT).
 -- Also: a white avoid nobody took (foreign or absorbed) fell in its window, maybe its own: no expectation at its lost
 -- close (fix round 2: the bear and decay gates; their lost swings were avoided in truth).
-T.retry, T.assumed, T.avoidSeen, T.woundSeen = {}, {}, {}, {}
+T.retry, T.assumed, T.avoidSeen = {}, {}, {}
 for i = 1, CAP do
-    T.retry[i], T.assumed[i], T.avoidSeen[i], T.woundSeen[i] = false, false, false, false
+    T.retry[i], T.assumed[i], T.avoidSeen[i] = false, false, false
 end
 -- Per swing ticket (providers decision 70): the Outcomes provider's answer, 0 not asked, 1 HIT, 2 AVOID, 3 asked and
 -- unanswered (never asked again).
@@ -274,7 +274,7 @@ local function fill(i, k, a, xx, g, t)
     school[i], owed[i], at[i], hi[i], w[i] = ANY, 1, t, t, 0
     ref[i], lr[i], avoid[i], cast[i], done[i], first[i], T.excused[i] = 0, 0, "", "", 0, false, false
     T.held[i], T.rec[i] = 0, 0
-    T.retry[i], T.assumed[i], T.avoidSeen[i], T.told[i], T.woundSeen[i] = false, false, false, 0, false
+    T.retry[i], T.assumed[i], T.avoidSeen[i], T.told[i] = false, false, false, 0
     T.period[i], T.anchor[i], T.wide[i], T.link[i], T.speed[i], T.H[i], T.tickAmt[i] = 0, t, 0, 0, 0, 0, 0
     U.Hold(uid[i])
     T.opened = T.opened + 1

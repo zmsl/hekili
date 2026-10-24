@@ -342,7 +342,7 @@ end
 -- The expectation at a swing's lost close (decision 51 as ruled 2026-10-23: expiry EV, the parked 9b; a retry none; a
 -- swing the Outcomes provider called AVOID none, providers decision 70).
 T.onLost = function(i)
-    if T.kind[i] == MELEE and not T.retry[i] and not T.avoidSeen[i] and not T.woundSeen[i] and T.told[i] ~= 2 then
+    if T.kind[i] == MELEE and not T.retry[i] and not T.avoidSeen[i] and T.told[i] ~= 2 then
         S.Stage(Obs.Swing, T.at[i], T.x[i], 0, 5)
     end
 end
@@ -374,9 +374,9 @@ T.onReplace = function(i, t)
     return reroute(i, t)
 end
 
--- A white avoid or wound nobody took at t on `g`: each open swing whose window holds it may have had that outcome (its
--- late row), so T.onLost expects nothing; `seen` is T.avoidSeen or T.woundSeen. Allocates nothing.
-local function rowSeen(seen, g, t)
+-- A white avoid nobody took at t on `g`: each open swing whose window holds it may have been avoided (T.onLost then
+-- expects nothing). Allocates nothing.
+local function avoidSeen(g, t)
     for i = 1, T.CAP do
         if
             T.state[i] == T.OPEN
@@ -385,12 +385,9 @@ local function rowSeen(seen, g, t)
             and t >= T.at[i]
             and t - T.at[i] <= T.w[i]
         then
-            seen[i] = true
+            T.avoidSeen[i] = true
         end
     end
-end
-local function avoidSeen(g, t)
-    rowSeen(T.avoidSeen, g, t)
 end
 
 -- A row of ours no ticket took (spec §3.4 step 5): an avoid or crit inside an UNMAPPED window is nobody's; else
@@ -398,8 +395,6 @@ end
 local function foreign(uid, t, act, flag, amount, white, avoid, unknown, school)
     if white and AVOIDS[act] then
         avoidSeen(U.GUID(uid), t)
-    elseif white and act == "WOUND" and amount > 0 then
-        rowSeen(T.woundSeen, U.GUID(uid), t)
     end
     if (avoid or flag == "CRITICAL") and T.Unmapped(t) then
         T.absorbed = T.absorbed + 1
