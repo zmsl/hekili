@@ -663,6 +663,24 @@ describe("resources", function()
                 assert.are.equal(100, VS.Power(fs.RAGE, 30).est)
             end)
 
+            it("nets a confirmed assumption's crit against a rung's lift as it nets a landed swing's", function()
+                local function lifted(cs)
+                    crits(7)
+                    local R = I.res
+                    R.liftE[1], R.liftL[1], R.liftH[1], R.liftT[1] = 20, 20, 20, 7.6 -- a rung held this swing's rage
+                    for _, c in ipairs(cs) do
+                        obs(Obs.Swing, 7.6, 1, 3, c) -- record 3
+                    end
+                    I.Fold(7.6, false)
+                    return { R.est0[1], R.lo0[1] }
+                end
+                local landed = lifted({ 1, 3 }) -- the row alone: landed, its crit
+                assert.are.same({ 0, 0 }, landed) -- the lift covered the step and the crit
+                local confirmed = lifted({ 5, 7, 3 }) -- a provider's HIT: assumed, confirmed, its crit
+                within(landed[1], confirmed[1])
+                within(landed[2], confirmed[2])
+            end)
+
             it("changes nothing for a swing entry without `crit`", function()
                 crits(nil)
                 obs(Obs.Swing, 5, 1, 2.6, 1)

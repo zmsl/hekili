@@ -1260,6 +1260,7 @@ I.On(Obs.Swing, function(o, t)
                         recA[k] = 0
                     end
                 elseif k > 0 and recR[k] == r then -- confirmed: the rest of a landed step, and its floor
+                    R.liftRec[r] = owes and o.b or 0 -- as a landed swing's (c = 1): its crit pays the rest it owed
                     local de, dh, dl = v * sc * (1 - recAsm[k]), v * (sc + sp) - v * sc * recAsm[k], v * (sc - sp)
                     if owes then
                         de, R.liftE[r] = net(de, R.liftE[r])
