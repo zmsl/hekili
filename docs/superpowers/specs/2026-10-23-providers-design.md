@@ -456,7 +456,7 @@ Amended 2026-10-24 (Task 8), as built: the second line ends `collide=%d disagree
 credited to a told-HIT swing (true collisions plus other players' avoids the scoring gave to our swing), `disagree`
 FOREIGN answers on a row a ticket took. `ownUnclaimed` and `disagree` approximate "a ticket took the row" by
 `T.foreign`/`T.absorbed` being unchanged. In a busy crowd `ownUnclaimed` is mostly noise (the 2 s white-row rule cannot
-tell strangers' white rows from ours while we swing: 50923 in the harness busy band); nothing routes on it. The
+tell strangers' white rows from ours while we swing: 50923 (Task 3 fix-round run; the Task 8 run in docs/dev/providers-ab.md reads 52294) in the harness busy band); nothing routes on it. The
 per-aura line prints once per unit with facts, or one `unit=-` line for a tracked aura with none.
 
 Per aura, one line for each aura the router saw this fight (the owner's "which path answered, and how often the fact
@@ -550,3 +550,5 @@ from the assumption and from the wound scoring. The plan's Task 1 needs recovery
 | 89 | The router marks `tracked` out of combat only, at activation and on the viewer's set-change events (`COOLDOWN_VIEWER_DATA_LOADED`, `..._TABLE_HOTFIXED`), deferred to combat end when they come in combat | no-jitter: the path of an aura never changes mid-fight |
 | 90 | The audit is per aura: path (viewer or model), facts, and facts that disagreed with the belief | the measure of how wrong the modelled timers were |
 | 91 | Outcomes has no router: the switch picks the leaf | its questions are not keyed by a coverage set |
+
+Table note (Task 8, 2026-10-24): decision 73 is superseded (RowOwner is count-only: rows route at once, no hold, no `T.Expire(now - ROW_DELAY)`); decisions 71 (the mute counts avoids on our swing's unit) and 75 (EnemyHitAt takes the latest unused taken group) are refined by the §2.2 amendments.
