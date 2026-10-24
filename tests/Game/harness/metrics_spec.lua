@@ -84,4 +84,14 @@ describe("the harness metrics", function()
         assert.are.equal(2, metrics.wash(m)) -- mean absolute net per fight: (|4| + 0) / 2
         assert.are.equal(11, m.washGross / m.washFights) -- 9 + 9 + 4 over 2 fights
     end)
+
+    it("lostDiff: lost spell rows plus spell tickets closed assumed, off the truth's lost rows", function()
+        local m = metrics.newTickets()
+        m.lostEngine, m.lostTruth = 3, 4
+        assert.are.equal(1, metrics.lostDiff(m)) -- nothing assumed: the default providers' case
+        m.assumedEngine = 2 -- two FRAME or FLIGHT tickets closed assumed stand in for lost rows
+        assert.are.equal(1, metrics.lostDiff(m)) -- |3 + 2 - 4|
+        m.lostTruth = 5
+        assert.are.equal(0, metrics.lostDiff(m))
+    end)
 end)

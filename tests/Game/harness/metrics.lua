@@ -472,7 +472,7 @@ function M.newTickets()
         stagedTruth = 0, -- own crits and refused avoids in the truth
         divergent = 0,
         lostEngine = 0, -- FRAME and FLIGHT rows the engine counted lost
-        assumedEngine = 0, -- tickets the engine closed assumed (attribution-recovery decision 51; providers only)
+        assumedEngine = 0, -- FRAME and FLIGHT tickets the engine closed assumed (recovery decision 51; providers)
         lostTruth = 0, -- own instant and projectile successes with no row in the truth
         outcomes = 0, -- distinct outcomes on registry tokens (any source)
         dispatched = 0, -- rows the registry dispatched
@@ -664,7 +664,7 @@ function M.tickets(m, c, s, W)
     local T = c.I.Tickets
     m.divergent = m.divergent + T.divergent
     m.lostEngine = m.lostEngine + T.lost[X.FRAME] + T.lost[X.FLIGHT]
-    m.assumedEngine = m.assumedEngine + T.closed.assumed
+    m.assumedEngine = m.assumedEngine + c.assumedBy[X.FRAME] + c.assumedBy[X.FLIGHT]
     m.overflow = m.overflow + T.closed.overflow
     if W then -- own white outcomes landing 0.1-2 s after their target's kill (after the clear): paid by their swing
         -- Scope (K6 ruling): rows before the next PLAYER_REGEN_ENABLED (the reset at combat end closes every ticket,
@@ -789,6 +789,12 @@ function M.tickets(m, c, s, W)
         end
     end
     return m
+end
+
+--- Lost spell rows off the truth (attribution-recovery spec §5.2 as amended by providers Task 8): a FRAME or FLIGHT
+--- ticket closed assumed stands in for a lost row; a swing closed assumed is a melee-recall miss, not a lost row.
+function M.lostDiff(m)
+    return math.abs(m.lostEngine + m.assumedEngine - m.lostTruth)
 end
 
 function M.recall(m)

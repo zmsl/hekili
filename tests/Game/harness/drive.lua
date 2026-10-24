@@ -149,14 +149,26 @@ function M.boot(o)
     for i = 1, 64 do
         c.lostAt[i] = 0
     end
+    -- by kind: tickets closed assumed (providers Task 8: lostDiff counts the kinds lostEngine counts). shortcut: a
+    -- tick's assumed closes go to the kind of its last due ASSUMED ticket; exact while one kind is ever assumed
+    -- (T.Decide assumes swing tickets only); record per-ticket close reasons if a provider assumes spells.
+    c.assumedBy = {}
+    for k = 0, 7 do
+        c.assumedBy[k] = 0
+    end
     local expire, FLIGHT = T.Expire, c.I.Expect.FLIGHT
     local due = {} -- by slot: its anchor when it expires this tick (0: not)
     T.Expire = function(now)
+        local aKind = 0
         for i = 1, T.CAP do
             due[i] = (T.state[i] ~= 0 and T.kind[i] == FLIGHT and now > T.hi[i]) and T.at[i] or 0
+            if T.state[i] == T.ASSUMED and now > T.hi[i] then
+                aKind = T.kind[i]
+            end
         end
-        local lost0 = T.lost[FLIGHT]
+        local lost0, assumed0 = T.lost[FLIGHT], T.closed.assumed
         expire(now)
+        c.assumedBy[aKind] = c.assumedBy[aKind] + T.closed.assumed - assumed0
         if T.lost[FLIGHT] > lost0 then
             for i = 1, T.CAP do
                 if due[i] > 0 and c.nLost < 64 then
@@ -504,6 +516,9 @@ function M.run(c, s, offset)
     c.gcdN = 0
     c.hits = 0
     c.rowsOut, c.gone, c.nLost = 0, 0, 0
+    for k = 0, 7 do
+        c.assumedBy[k] = 0
+    end
     c.crits[1], c.crits[2], c.landed[1], c.landed[2], c.nWin, c.truth, c.nAv = 0, 0, 0, 0, 0, 0, 0
     c.nCd = 0
     local rows = c.rows

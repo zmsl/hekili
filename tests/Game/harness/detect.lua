@@ -246,7 +246,7 @@ local function cell(m)
         staged = down(metrics.staged(m)),
         false100 = up(metrics.false100(m)),
         leak100 = up(metrics.leak100(m)),
-        lostDiff = math.abs(m.lostEngine + m.assumedEngine - m.lostTruth),
+        lostDiff = metrics.lostDiff(m),
         residual = math.abs(m.outcomes - m.dispatched), -- negative: a double dispatch, as bad as a merge
         -- K6: own white rows after the kill's clear paid by their swing (before REGEN_ENABLED; metrics.tickets)
         postClear = down(m.postClear > 0 and m.postClearPaid / m.postClear or 1),
