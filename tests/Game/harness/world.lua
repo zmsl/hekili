@@ -54,6 +54,7 @@ function M.new(seed)
     W.fsr = {} -- [powerType] = { spirit, mp5 } per second: the five-second rule's two parts (W.startRegen)
     W.distance = nil -- yards from our character to its target (W.moveTo; nil: no positions, every check in range)
     W.hitAtSwing = true -- our white wound takes health at the swing, its row a landing lag later (owner, 2026-10-22)
+    W.parryHaste = true -- a parried attack pulls the parrier's next main-hand swing (parry-haste spec decision 63)
 
     --- Runs `fn(W)` at time `t` (after everything already queued for `t`).
     function W.at(t, fn)
@@ -124,6 +125,12 @@ function M.new(seed)
             end
         elseif ev.act == "HEAL" and ev.dst then
             ev.dst.health = math.min(ev.dst.healthMax, ev.dst.health + (ev.amount or 0))
+        end
+        -- parry haste: a parried attack, white or special, pulls the parrier's pending main-hand swing at the server's
+        -- moment (its outcome row comes later); `land` is a row, not an attack
+        local struck = ev.kind == "swing" or ev.kind == "strike" or ev.kind == "spell"
+        if W.parryHaste and struck and ev.act == "PARRY" and ev.dst and ev.dst.hasten then
+            ev.dst.hasten()
         end
         local us = W.ents[1]
         if ev.kind == "cast" and ev.src == us and (ev.cost or 0) > 0 then -- the five-second rule's window opens

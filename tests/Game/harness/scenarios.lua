@@ -101,7 +101,7 @@ local ARCHETYPES = {
 M.ARCHETYPES = ARCHETYPES
 
 -- shortcut: only the other sources on our target are simulated (the rest fire rows on tokens nothing reads), with no
--- heals on party members and no parry haste on our swing timer; add them when a customer reads them.
+-- heals on party members; add them when a customer reads them.
 
 --- The world of one fight. Knobs `o` (defaults in brackets): duration [120], level [22], dr [0], rates (ours),
 --- lag (observer knobs), others { archetype, ... } on our target [none], attackers [1] (mobs on us; the first is our

@@ -10,8 +10,8 @@
 -- our Casting or Completed cast lines in its timestamp), each fade a removal at its time, the content's hidden auras
 -- in the truth only, spells landing at once, a white swing's outcome one landing lag after its swing (M.LAND; wowsims
 -- logs both at once, with the swing's rage), the mob's health at 20% from the execute phase's start (wowsims's is the
--- last 20% of the duration) and never dead, our distance to it (the request's, then the log's Movement stacks). Not
--- replayed: the target's swings.
+-- last 20% of the duration) and never dead, our distance to it (the request's, then the log's Movement stacks), and
+-- the target's Parry of its swings on us (parry-haste spec §4; its other outcomes on us are not replayed: gap AH).
 -- Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map through the booted
 -- instance's own ability set (Hekili.Class, booted as the log's race). Credit: the log format is wowsims/forever's
 -- (MIT, https://github.com/wowsims/forever); no code copied.
@@ -153,6 +153,9 @@ local function theirs(rest)
     if b then
         local id, _, tag = ids(b)
         return id and { kind = "stacks", unit = "target", id = id, to = tonumber(n), tag = tag }
+    end
+    if rest:match("^%[[^%]]+ %(#1%)%] {[^}]*} Parry") then -- its swing on us, parried (parry-haste spec §4)
+        return { kind = "taken", act = "PARRY" }
     end
 end
 
@@ -685,6 +688,8 @@ function M.new(text, H, o)
                     a.stacks = e.to
                     show(dst, e.id, a)
                 end
+            elseif e.kind == "taken" then -- the target's swing on us (UNIT_COMBAT player); the log's swings carry the haste
+                W.emit({ kind = "swing", src = mob, dst = us, hand = 1, act = e.act, flag = "", amount = 0, school = 1 })
             elseif e.kind == "hit" then
                 local amount = math.min(e.amount, math.max(0, mob.health - 1)) -- the mob never dies
                 if e.act ~= "WOUND" then

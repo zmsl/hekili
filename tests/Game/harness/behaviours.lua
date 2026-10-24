@@ -10,6 +10,16 @@ M.RATES = { miss = 0.14, dodge = 0.04, parry = 0.04, glancing = 0, crit = 0.12 }
 M.MOB_CRIT = 0.05
 local SAME_MS = { "MISS", "DODGE", "PARRY" }
 
+--- Parry haste (parry-haste spec decision 57; wowsims's attack.go applyParryHaste, the owner's ruling 2026-10-23):
+--- the pull of a parrier's main-hand swing due in `r` s of duration `d`. The world's own copy of the belief's
+--- L.ParryPull (world_spec pins them equal): the truth runs no addon code.
+function M.parryPull(r, d)
+    if d <= 0 or r <= 0.2 * d then
+        return 0
+    end
+    return math.min(0.4 * d, r - 0.2 * d)
+end
+
 -- One outcome from `rates` (miss, dodge, parry, block, glancing, crit): the action and its flag.
 local function roll(r, rates)
     local x = r.next()
@@ -60,8 +70,28 @@ function M.melee(p)
     return function(W, e)
         local rates = p.rates or M.RATES
         e.lastSwing, e.landAt = { 0, 0 }, { 0, 0 }
+        e.swingAt, e.swingGen = { 0, 0 }, { 0, 0 } -- per hand: the pending swing's due time, its schedule's generation
         for h = 1, #e.weapons do
-            local function swing()
+            local swing
+            -- (re)schedules this hand's swing at t; an earlier schedule goes stale (parry haste moves it)
+            local function due(t)
+                local g = e.swingGen[h] + 1
+                e.swingGen[h], e.swingAt[h] = g, t
+                W.at(t, function()
+                    if e.swingGen[h] == g then
+                        swing()
+                    end
+                end)
+            end
+            if h == 1 then -- parry haste (decision 63): our parry pulls the main hand's pending swing
+                e.hasten = function()
+                    local x = M.parryPull(e.swingAt[1] - W.t, e.weapons[1][3] / (p.haste or 1))
+                    if x > 0 and not e.stopped then
+                        due(e.swingAt[1] - x)
+                    end
+                end
+            end
+            function swing() -- the local above
                 local tgt = e.target
                 if e.stopped or not tgt or tgt.health <= 0 then
                     return
@@ -69,7 +99,7 @@ function M.melee(p)
                 local w = e.weapons[h]
                 -- shortcut: out of reach only for us (the world's one position); the timer runs on, not reset at reach
                 if e == W.ents[1] and not W.inMelee() then
-                    W.at(W.t + w[3] / (p.haste or 1), swing)
+                    due(W.t + w[3] / (p.haste or 1))
                     return
                 end
                 local foreign = h == 1 and p.strikes and W.rng.chance(p.strikes)
@@ -198,10 +228,10 @@ function M.melee(p)
                     end
                 end
                 e.lastSwing[h] = W.t
-                W.at(W.t + w[3] / (p.haste or 1), swing)
+                due(W.t + w[3] / (p.haste or 1))
             end
             if not p.noSwing then
-                W.at(W.t + (p.phase and p.phase[h] or W.rng.next() * e.weapons[h][3]), swing)
+                due(W.t + (p.phase and p.phase[h] or W.rng.next() * e.weapons[h][3]))
             end
         end
         for _, press in ipairs(p.presses or {}) do
@@ -373,12 +403,30 @@ end
 function M.mob(p)
     p = p or {}
     return function(W, e)
-        local function swing()
+        local swing
+        local gen, at = 0, 0
+        local function due(t) -- (re)schedules the swing at t; an earlier schedule goes stale (parry haste moves it)
+            gen, at = gen + 1, t
+            local g = gen
+            W.at(t, function()
+                if gen == g then
+                    swing()
+                end
+            end)
+        end
+        -- parry haste (decision 63): this mob's parry pulls its pending swing while it attacks
+        e.hasten = function()
+            local x = M.parryPull(at - W.t, e.weapons[1][3])
+            if x > 0 and e.target and not e.stopped then
+                due(at - x)
+            end
+        end
+        function swing() -- the local above
             local v = e.target
             if e.stopped or e.health <= 0 then
                 return
             elseif not v then -- not attacking anyone yet (a later `targetSwitch`): look again a swing later
-                W.at(W.t + e.weapons[1][3], swing)
+                due(W.t + e.weapons[1][3])
                 return
             end
             local rates = { miss = v.avoid.miss, dodge = v.avoid.dodge, parry = v.avoid.parry, block = v.avoid.block }
@@ -392,9 +440,9 @@ function M.mob(p)
             if v.took then -- the victim's content sees the outcome (a charge a block spends)
                 v.took(W, e, act, flag)
             end
-            W.at(W.t + e.weapons[1][3], swing)
+            due(W.t + e.weapons[1][3])
         end
-        W.at(W.t + (p.phase or W.rng.next() * e.weapons[1][3]), swing)
+        due(W.t + (p.phase or W.rng.next() * e.weapons[1][3]))
         if p.spell then
             local s = p.spell
             local function spell()

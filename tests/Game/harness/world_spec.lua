@@ -171,6 +171,64 @@ describe("the world's resources", function()
         assert.are.same({ { "land", true, 1 }, { "land", true, 1 } }, seen)
     end)
 
+    describe("parry haste (parry-haste spec decision 63, the owner's ruling 2026-10-23)", function()
+        local function ms(t)
+            return math.floor(t * 1000 + 0.5) / 1000
+        end
+        local function swingsOf(e, hand)
+            local out = {}
+            for _, ev in ipairs(W.truth) do
+                if ev.kind == "swing" and ev.src == e and (hand == nil or ev.hand == hand) then
+                    out[#out + 1] = ms(ev.t)
+                end
+            end
+            return out
+        end
+
+        it("its rule is the belief's L.ParryPull on a grid", function()
+            local L = require("Game.State.helpers.load").module().VirtualStateInternal.Log
+            for _, d in ipairs({ 1.5, 2.0, 2.353, 3.6 }) do
+                for k = 0, 80 do
+                    local r = d * k / 80
+                    assert.are.equal(L.ParryPull(r, d), behaviours.parryPull(r, d))
+                end
+            end
+        end)
+
+        it("pulls the mob's next swing when it parries ours, down to 20% of its swing left", function()
+            setup()
+            us.avoid = { miss = 0, dodge = 0, parry = 0 }
+            behaviours.melee({ rates = { miss = 0, dodge = 0, parry = 1, crit = 0 }, phase = { 1 } })(W, us)
+            behaviours.mob({ phase = 0.5 })(W, mob)
+            W.run(3.5)
+            -- the mob at 0.5; our parried swing at 1 (its 2.5 due, r 1.5): 0.8 -> 1.7; ours at 3 (its 3.7 due, r 0.7):
+            -- 0.3 -> 3.4
+            assert.are.same({ 0.5, 1.7, 3.4 }, swingsOf(mob))
+            assert.are.same({ 1, 3 }, swingsOf(us)) -- the attacker's own timer untouched
+        end)
+
+        it("pulls our main hand when we parry, never the off hand; nothing with the world's knob off", function()
+            setup()
+            us.weapons[2] = { 10, 10, 2.0 }
+            us.avoid = { miss = 0, dodge = 0, parry = 1 }
+            mob.weapons[1][3] = 3
+            behaviours.melee({ rates = { miss = 0, dodge = 0, parry = 0, crit = 0 }, phase = { 1, 1.1 } })(W, us)
+            behaviours.mob({ phase = 0.2 })(W, mob)
+            W.run(4.0)
+            -- parried at 0.2 (our 1 due, r 0.8): 0.4 -> 0.6; at 3.2 (our 4.6 due, r 1.4): 0.8 -> 3.8
+            assert.are.same({ 0.6, 2.6, 3.8 }, swingsOf(us, 1))
+            assert.are.same({ 1.1, 3.1 }, swingsOf(us, 2))
+            setup()
+            W.parryHaste = false
+            us.avoid = { miss = 0, dodge = 0, parry = 1 }
+            mob.weapons[1][3] = 3
+            behaviours.melee({ rates = { miss = 0, dodge = 0, parry = 0, crit = 0 }, phase = { 1 } })(W, us)
+            behaviours.mob({ phase = 0.2 })(W, mob)
+            W.run(4.0)
+            assert.are.same({ 1, 3 }, swingsOf(us, 1))
+        end)
+    end)
+
     it(
         "decays out of combat stepped and front-loaded; an aura that pauses it moves the next quantum to its expiry",
         function()

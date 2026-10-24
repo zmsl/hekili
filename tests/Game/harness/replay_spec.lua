@@ -73,6 +73,15 @@ describe("the wowsims log parser", function()
         end
         assert.are.same({ 900030, 20 }, { tick.id, tick.amount })
     end)
+
+    it("reads the target's Parry on us as `taken`; its other outcomes on us stay unread (gap AH)", function()
+        local q = replay.parse(table.concat({
+            "[4.03] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 1} Parry (SpellSchool: 1). (Threat: 0.000)",
+            "[6.34] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 1} Block for 15.9 damage (SpellSchool: 1). (Threat: 15.9)",
+        }, "\n"))
+        assert.are.equal(1, #q.ev)
+        assert.are.same({ 4.03, "taken", "PARRY" }, { q.ev[1].t, q.ev[1].kind, q.ev[1].act })
+    end)
 end)
 
 describe("the replay world", function()
@@ -347,6 +356,20 @@ describe("the replay world", function()
         at(W, R.pull + R.duration)
         assert.is_true(mob.health > 0 and not mob.dead)
         assert.are.equal(R.pull + R.duration, W.stopAt)
+    end)
+
+    it("replays the target's Parry on us as its swing at us, at the line's time", function()
+        local line = "[0.10] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 1} Parry (SpellSchool: 1). (Threat: 0.000)"
+        local log = text():gsub("(\n%[0%.10%][^\n]*)", "%1\n" .. line, 1) -- in time order, after the first 0.10 line
+        local R = replay.new(log, H, O)
+        local W = at(R.world(setmetatable({ tag = "-y" }, { __index = WO }), 1), R.pull + 0.2)
+        local got = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "swing" and ev.dst == W.ents[1] then
+                got[#got + 1] = { math.floor((ev.t - R.pull) * 1000 + 0.5), ev.act, ev.src == W.ents[2] }
+            end
+        end
+        assert.are.same({ { 100, "PARRY", true } }, got)
     end)
 end)
 
