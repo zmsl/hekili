@@ -427,6 +427,7 @@ local function route(t, g, uid, act, flag, amount, school)
     end
     local crit = not avoid and flag == "CRITICAL"
     local tied = false -- the MELEE tie took the row from a spell: pass (d) never hands it back
+    local tiedP, tiedN = 0, 0 -- the spell ticket the tie took it from in its own frame (re-offered if the swing refuses)
     local p, n = T.Pick(t, g, 1, act, flag, amount, school, avoid)
     local pass = 1
     local replacing = 0
@@ -455,6 +456,11 @@ local function route(t, g, uid, act, flag, amount, school)
         end
         if sw and (T.first[sw] or lag <= SAME_FRAME or math.abs(d - L.med[h]) <= 2 * L.spr[h]) then
             if avoid then
+                -- a row in the spell's own frame (pass 1) tied only by the swing's frame (not its first swing's window,
+                -- not its core band): the spell's again if the swing refuses it
+                if pass == 1 and not T.first[sw] and lag <= SAME_FRAME then
+                    tiedP, tiedN = p, n
+                end
                 p, tied = 0, true -- the swing's (MELEE wins the tie): the LR below takes it, the spell keeps its effects
             else
                 crit = false
@@ -501,6 +507,11 @@ local function route(t, g, uid, act, flag, amount, school)
             p, n = T.Pick(t, g, 3, act, flag, amount, school, false)
             pass = 3
         end
+    end
+    -- the swing had first claim and refused a same-frame tie: the row is the spell's again, at once (its refund and
+    -- undo fire through Obs.Avoided); pass (d) below still never hands a tied avoid back (owner ruling 2026-10-24)
+    if tied and not credited and tiedP > 0 then
+        p, n, pass = tiedP, tiedN, 1
     end
     -- pass (d), Overdue (attribution-recovery decision 46 as amended): after every band and the melee scoring, the
     -- oldest spell ticket of the queue past its expected tolerance whose hard window holds the row (late, never early).

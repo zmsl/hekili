@@ -906,6 +906,18 @@ describe("now handlers", function()
             assert.are.equal(0, I.avoidsRun)
         end)
 
+        it("a dodge in the cast's own frame 20 ms after our swing: the swing refuses it, the cast refunds", function()
+            begin()
+            ctl.now = 4.98
+            ctl.Fire("PLAYER_SWING", 3.6, 0) -- the tie's SAME_FRAME (0.05 s) holds the row; the swing's LR refuses it
+            castOutcome(fs.SPENDER_C, 5, "DODGE", 0) -- the instant special's own avoid, in its frame
+            ctl.Tick(5.4)
+            VS.Drain(5.4)
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.4))
+            assert.are.equal(8, VS.Power(fs.RAGE, 5.4).est) -- 10 paid, 8 back (the 0.8 share)
+            assert.are.equal(1, I.avoidsRun)
+        end)
+
         it("an avoid 0.3 s after the cast is still the cast's: the hit and the refund come at the cast", function()
             begin()
             castOutcome(fs.SPENDER_C, 5, "DODGE", 0.3)
