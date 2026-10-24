@@ -388,6 +388,13 @@ per-swap errors. `assumed` is 0 in every detection run (no provider calls `T.Ass
 `recovered` (0.xx, like `recall`: a percent's integers read as spell IDs to `tests/boundary_spec.lua`); the floors'
 first values are in `tests/Game/harness/detect_floors.lua`.
 
+Amended 2026-10-24 (providers plan Task 8): `lostDiff` counts only the assumed closes of the kinds `lostEngine` and
+`lostTruth` count: `|lostEngine + assumed closes of FRAME and FLIGHT - lostTruth|` (`metrics.lostDiff`; the drive
+tallies assumed closes by kind). A swing closed `assumed` (a provider's HIT whose row the engine never paid) is a
+melee-recall miss that the default closes `lost` (MELEE) and leaves out of the metric; counting it moved 29 meter-arm
+cells against floors set with nothing assumed. A spell assumed in place of a lost row still owes the truth, as this
+section intended. No floor changed: nothing is assumed in the default arm.
+
 The solo `over` gate and `lo`/`danger` (`solo_spec.lua:21-25`) stay exactly as they are and are not re-floored.
 
 ## 6. Risks and gate

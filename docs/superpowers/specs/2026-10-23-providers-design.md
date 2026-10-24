@@ -1,6 +1,7 @@
 # Providers: the damage meter and the Cooldown Manager as injected, switchable sources (design, 2026-10-23)
 
-Status: DESIGNED (plan: `docs/superpowers/plans/2026-10-23-providers.md`). Builds on the unit-registry spec
+Status: BUILT (plan done); A/B in docs/dev/providers-ab.md. Plan: `docs/superpowers/plans/2026-10-23-providers.md`;
+the "Amended 2026-10-24 (Task 8)" notes below record what was built where it differs from the design. Builds on the unit-registry spec
 (`docs/superpowers/specs/2026-10-22-unit-registry-and-tickets-design.md`, "the base spec", decisions 1-45) and the
 attribution-recovery spec (`docs/superpowers/specs/2026-10-23-attribution-recovery-design.md`, "the recovery spec",
 decisions 46-56; the parry-haste spec holds 57-64). Decisions here are numbered from 65.
@@ -71,6 +72,12 @@ P.Audit()                  -- out of combat only: the audit table (1.3) once rea
   UNKNOWN otherwise.
 - **EnemyHitAt** answers "when did the hit I see now really land?" for the attackers' swing clocks.
 - **Audit** answers "what did the server count for the fight?" after combat.
+
+Amended 2026-10-24 (Task 8): the "no answer" constant is `I.UNDECIDED = 0`, not `I.UNKNOWN`: `I.UNKNOWN` is already
+VirtualState's unknown-entity record (`VirtualState.lua:186`). Built in `Belief.lua` as `I.UNDECIDED, I.HIT, I.AVOID,
+I.OURS, I.FOREIGN, I.UP, I.DOWN = 0, 1, 2, 1, 2, 1, 2`; every UNKNOWN below reads UNDECIDED. `EnemyHitAt(t, school)`
+takes the row's school (the white or spell window, 2.2) and may return `nil, true`: "I date hits, but found no group
+for this row" (Attackers then attributes the wound but moves no clock).
 
 ### 1.2 AuraPresence
 
@@ -168,6 +175,13 @@ partner's" and the answer is UNKNOWN, leaving the tickets to decide as today.
 ms before a melee row) for a white row, or in `[t - 0.005, t + 0.005]` for a spell row; marked used; nil when we are in a
 group (type 7 fires for partners' damage taken too, DM §3 capture D) or not live.
 
+Amended 2026-10-24 (Task 8), as built: EnemyHitAt takes the **latest** unused taken group in the window (the first in
+ring order dated a hit from an earlier hit's group); a white hit on us with no group in its window is undatable and
+moves no clock (`nil, true`: the wound is attributed, `learn` is skipped; the old fallback anchored the clock at the
+row, about 0.48 s late). The mute counts white avoid rows only on the unit of our latest swing (either hand): mobs
+missing us and partners' misses no longer raise the bar. The audit polls at order 16 (12-15 are Enchants, Pets, Target
+and presence).
+
 **Audit.** At `PLAYER_REGEN_ENABLED` the provider sets `pending`; its poll (order 12, after the overlay's 11) retries
 while out of combat for up to 3 s (ForeverMeter's observed settling, DM §5): `pcall(C_DamageMeter.GetCombatSessionFromType,
 1, 0)` (Current, DamageDone) and `(1, 7)` (DamageTaken); each returned value is tested with `issecretvalue` before any
@@ -219,6 +233,30 @@ handler re-reads every mapped target item by rawget (the target's items may chan
 inactive" is off, CV §7) and reports changes the same way. Presence never reads `shown`, so the "hide when inactive"
 setting does not matter.
 
+Amended 2026-10-24 (Task 8), as built:
+
+- **The remembered unit.** The leaf remembers each item's unit (`unitOf[cooldownID]`, set at the build and at every
+  UP read). A hide with nil `auraInstanceID` **and** nil `auraDataUnit` is DOWN for the remembered unit; this replaces
+  "else ignored" above. The client clears both together when an aura ends: `ClearAuraInstanceInfo`
+  (`CooldownViewerItemData.lua:383-391`) clears `auraInstanceID`, `auraSpellID`, `auraDataCached` and `auraDataUnit`
+  with no event, and the capture CDV_FRAME 5609 shows down BuffIcon items with both nil. A hide whose
+  `auraInstanceID` is still secret reads UP: no change, no edge.
+- **Only BuffIcon and BuffBar items are presence sources.** Essential and Utility items are always shown (CV §2), so
+  they never edge; the map still reads every category, but only the two aura viewers' items are hooked, `covered`
+  counts aura indices with a hooked item, and an aura found only in Essential or Utility answers UNDECIDED (its
+  modelled timer stands). Whether such an item's `auraInstanceID` updates live in combat is probe CDM-E (6).
+- **A recycled item is hidden before its fields clear.** The pool's reset callback runs `Pool_HideAndClearAnchors`
+  (the Hide that fires our OnHide) before `itemFrame:ResetCooldownData()` (`CooldownViewer.lua:1646-1650`). A released
+  item's hide therefore sees its aura fields intact (aura up: a layout refresh, no edge; aura gone: nil and nil, DOWN),
+  the fields clear silently afterwards, and the reacquired frame's show re-reads UP. Hooks left on a frame that leaves
+  the aura viewers are harmless: they read `cooldownID` and the fields at fire time, and the router forwards only
+  tracked edges.
+- The per-pair state `st` is preallocated for both units at the build (no first-sighting insert in combat).
+- Warrior coverage (`make cdv-coverage`): 4 of 42 pack auras have a BuffIcon or BuffBar item (demoralizing_shout,
+  sunder_armor, sweeping_strikes, victorious; two of them rest on inferred fixture entries). A lower bound: the probe
+  capped its dump at 40 ids and 4 linked IDs per id, dumped 4 of the 20 learned category-2 ids and none of categories
+  3, 5 or 7 (launch-day re-capture, 6).
+
 **Taint rule.** Read, never call: item fields by `rawget`, frame getters only `GetChildren` (out of combat); never a
 viewer method, never a write to a viewer table or frame (CV §5). Hooks only by `HookScript`. Hooks cannot be removed:
 `Deactivate` sets `active = false` and `h` returns after that one test. If the next probe fight's taint log (6) shows any
@@ -250,6 +288,13 @@ table or nil), `tracked[j]` (a boolean per aura index, preallocated at build), a
   `PLAYER_REGEN_ENABLED`. The tracked set never changes mid-fight (no-jitter).
 - **Switch off** (`cfg.viewer` false): no leaf, every answer UNKNOWN, `covered` 0, no hook installed, no getter read:
   identical to the Default provider to the digit (the first gate covers both).
+
+Amended 2026-10-24 (Task 8), as built: the router owns the combat gate (`I.inCombat`): `Activate` in combat reads
+nothing and holds the request until `PLAYER_REGEN_ENABLED`; the `COOLDOWN_VIEWER_*` events are dormant unless the
+viewer leaf is requested (the default arm registers nothing new). Scope "self" is honoured on the target: a DOWN for
+the target answers UNDECIDED and its edge is not passed on (our debuff gone says nothing about another caster's). It is
+not applied to the player: a partner-cast buff on us under scope "self" is an open question (probe, 6), and applying
+the same rule there would drop every player DOWN fact.
 
 ## 3. Injection
 
@@ -291,6 +336,35 @@ byte-for-byte today's.
 The swing ticket gains `T.told[i]` (0 unknown, 1 hit, 2 avoid; reset in `fill`). `T.Assume(i, now)` is the recovery
 plan Task 3's inline transition in `T.Expire`, extracted unchanged so both callers share it.
 
+Amended 2026-10-24 (Task 8), as built:
+
+- **RowOwner is count-only** (owner, 2026-10-23): no row hold, no 15 ms ring, no routing on its answer, `T.Expire(now)`
+  (not `now - ROW_DELAY`). Every row routes at once as today. With `ROW_DELAY > 0` a preallocated 32-slot queue keeps
+  the row and whether a ticket took it, and the tick asks `RowOwner` once `now >= t + ROW_DELAY` only to count
+  `foreignByMeter`, `disagree` (FOREIGN on a row a ticket took), `ownUnclaimed` and `overflow`. Decision 73 is
+  superseded. `told` is 3 for an asked, unanswered swing (asked once, decision 70). An AVOID swing stages no
+  expectation at its `lost` close (`T.onLost`); recovery's merged `T.Expire` assumes nothing, so the T.Expire clause
+  of the table does not exist.
+- **A provider's assumed swing is judged by its row, not by the next usability answer.** `Obs.Swing` c = 5 for a
+  provider-assumed swing sets `recA[k] = 0` after `predict` (`Families/Resources.lua`). Without it the next usability
+  answer (100-200 ms after the swing, before the row) judged the assumption and its verdict consumed the record, so the
+  row's c = 7 confirmation was dropped (3138 times in the solo 200-fight run); the lost hit-rate steps inflated the
+  rage calibration (scale 1.011 -> 1.146), `lo` rose above the truth and `I.Missed` vetoed our own wounds (own
+  retractions 12 -> 151 of about 15.7k). Only a provider HIT stages a numbered record (the lost-close expectation
+  stages record 0), so the default path never reaches the line. Root cause: the providers plan's assume-probe report.
+- **`M.Overdue` is deleted.** It offered an ASSUMED swing every white row nobody took in its window; under the Default
+  nothing is ASSUMED, and under a provider every ASSUMED swing is a told HIT 15 ms old, so it handed other players'
+  white rows to our swings (party false credit 1.45 -> 4.98 per 100, with the pet 5.64 -> 21.49). No swing is Overdue
+  under any provider; `T.nAssumed` is kept with no reader.
+- **c = 7 records its lift credit.** The confirmation branch now records `R.liftRec[r]` as the landed path (c = 1)
+  does, so the crit that follows (c = 3) nets against a usability rung's lift instead of adding its extra to `est`,
+  `lo` and `hi` again. Without it Fury's `lo` sat above the truth and rage-gated near-ties (Execute 10 against Sunder
+  Armor 15, Bloodthirst against Heroic Strike) tipped early and back: Fury L60 flicker 1.74 -> 2.31/min, 1.84 after the
+  fix (the Fury probe report).
+- The presence consumer polls at order 15 (11 is the overlay's, 13-14 taken); a poll counts as a fact only when it
+  contradicts the belief (4.3). `VS.SetProviders` swaps the active tables; `I.def.providers` keeps the build's names
+  until the next build.
+
 **The first gate.** With `def.providers` absent or "default", every detection floor (`tests/Game/harness/detect_floors.lua`),
 the solo and group rage gates (`tests/Game/harness/solo_spec.lua:21-25`, `group_spec.lua`), the flicker floors, every
 `make gate` loop line, `make bench-ta`, the memory ceiling and the allocation specs are identical to the digit, and so is
@@ -329,6 +403,15 @@ provider arm it appends `label TAB ok TAB line` to `.ab/<arm>.tsv` and never fai
 `solo_spec.lua:21-25` and `group_spec.lua`'s bars route their floor assertions through it; health assertions (errors,
 secrets, allocation) stay plain asserts in every arm. `make gate-ab` runs `make gate` three times, `HEKILI_AB` default,
 meter and viewer, on the same seeds; both provider files are kept.
+
+Amended 2026-10-24 (Task 8), as built: the meter arm turns on the observer's meter events and a 0.48 ±0.09 s taken
+lead (`ab.ARMS.meter.observe`); the lead moves rows on us, so the meter arm's stream is not the default's. The
+confound-free baseline is the `lagged` arm (the Default providers with the same lead), run by hand
+(`HEKILI_AB=lagged make gate`), not by `make gate-ab`; every detection cell and fights gate is byte-identical between
+`default` and `lagged`, so the lead moves only the loops. The loops follow the arm through the profile toggles
+(`Hekili:ProvidersChanged`), the oracle shadow included. **Seed noise**: a 20-fight Fury flicker figure moves about
+±0.3/min between seed sets (the lagged arm itself reads 1.74, 2.03, 1.97, 1.34 and 1.80 on five 20-fight seed sets), so a
+meter-versus-default verdict needs several seed sets, not the gate's one.
 
 ### 4.2 The observer learns the measured shapes
 
@@ -369,6 +452,13 @@ paid=%d meter=%s pins=%d pinErr=%.1f edges up=%d down=%d
   absolute difference between the estimate before the flip and the cost: the rage error the switch should move.
 - `edges`: presence edges the router passed on.
 
+Amended 2026-10-24 (Task 8), as built: the second line ends `collide=%d disagree=%d`: `collide` counts avoid rows
+credited to a told-HIT swing (true collisions plus other players' avoids the scoring gave to our swing), `disagree`
+FOREIGN answers on a row a ticket took. `ownUnclaimed` and `disagree` approximate "a ticket took the row" by
+`T.foreign`/`T.absorbed` being unchanged. In a busy crowd `ownUnclaimed` is mostly noise (the 2 s white-row rule cannot
+tell strangers' white rows from ours while we swing: 50923 in the harness busy band); nothing routes on it. The
+per-aura line prints once per unit with facts, or one `unit=-` line for a tracked aura with none.
+
 Per aura, one line for each aura the router saw this fight (the owner's "which path answered, and how often the fact
 disagreed with the model's guess"):
 
@@ -392,6 +482,17 @@ the line is split in two if needed).
 | Meter | rage for a hit at the swing instead of at the row or the assumption (a rage-gated line lights 0.1-1.4 s sooner); an avoided swing stops forecasting rage one frame after it; strangers' rows never taken as ours (solo crowd precision); tighter attacker clocks solo; a recall audit after each fight | amounts, crits, blocks, glances or the spell (groups carry no payload, DM §4); which hand when both swing in one frame (DM §8.5); ours vs a partner's in a party (the collision bound); anything when the client stops sending groups (the mute) |
 | CooldownViewer | our debuffs on the target and our buffs up or down in combat, 3-5 ms after the change (a DoT refresh line, a proc window like Victorious) | durations, stacks or charges of anything applied in combat (stack text secret, CDM-S 5609); partners' debuffs (scope self, CDM-S); anything not in the class's viewer sets; anything with the Cooldown Manager disabled (`IsCooldownViewerAvailable` false: the provider covers nothing and answers UNKNOWN) |
 
+Amended 2026-10-24 (Task 8), measured (`docs/dev/providers-ab.md`): in the simulated fights the meter keeps the rage
+estimate closer and credits other players' hits to us less often (party false credit 1.45 -> 1.36 per 100, with a pet
+5.64 -> 4.67; busy rage error 9.64 -> 9.44), while Fury's suggestions flicker slightly more (L60 1.84 against 1.74 per
+minute on the gate's seeds; agreement within noise over 100 fights). The viewer arm changes no gate line: the harness
+loops build no Cooldown Manager items, so its facts are measured only by the unit specs. The detection metric
+`lostDiff` is redefined as `|lostEngine + assumed closes of FRAME and FLIGHT - lostTruth|`
+(`tests/Game/harness/metrics.lua` `M.lostDiff`): a swing closed assumed is a meter-HIT swing whose row the engine never
+paid, a melee-recall miss the default arm closes `lost` (MELEE) and leaves out of `lostEngine`; counting it charged the
+meter arm 2221 swings against floors set with nothing assumed (29 cells). The default arm's values are unchanged
+(nothing is assumed under the Default providers); the meter arm's now equal them in every cell but K10 busy (7 vs 6).
+
 ## 6. Risks and probes
 
 | # | Risk | Probe | Until measured |
@@ -403,6 +504,11 @@ the line is split in two if needed).
 | DM-I, CDM-I | instances and encounters make events or fields secret or silent | `/vslog meter` and `/vslog cdv` in a dungeon (DM §8.3, CV §7) | the mute (meter); `IsCooldownViewerAvailable` and nil ids (viewer: DOWN is reported only on a read, never assumed) |
 | CDM-C | coverage per class | `/vslog cdv ids` per class into `tools/data/cooldownviewer/` | `make cdv-coverage` lists "no fixture" |
 | CDM-S | partners' shared debuffs | DONE 2026-10-23: not visible; scope self (2.4) | |
+
+Amended 2026-10-24 (Task 8): the launch-day (2026-11-04) probes, each with the capture that closes it, are in
+`docs/dev/ingame-ledger.md`: DM-P, DM-M (the meter checkpoint), CDM-T, CDM-E (Essential/Utility items live in
+combat), CDM-R (the uncapped Warrior re-capture with categories 5 and 7), CDM-O (`PLAYER_TARGET_CHANGED` against the
+viewer's refresh), CDM-P (a partner-cast buff on us under scope "self"), DM-PET, DM-FL, DM-I, CDM-I and CDM-C.
 
 ## 7. Relation to the recovery plan
 

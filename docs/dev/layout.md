@@ -113,6 +113,9 @@ the class's `loop_<class>_spec.lua` keeps the boot checks and the 3-fight `#slow
 its slowest file: `druid_harness_spec.lua`'s seven `#druid` scenarios (345 s under the gate's load), then
 `loop_warrior_spec.lua` (#loop and #party, 292 s) and Feral (303 s); `make gate` 694 s, `make check` 263 s here. One
 spec file at one tag: `.lua/bin/busted --tags=druid tests/Forever/loop_druid_feral_spec.lua`.
+`make gate-ab` (the gate once per providers arm, provider arms recorded in `.ab/`, never failed) and `make cdv-coverage`
+(the Cooldown Manager coverage report, dev-only) are described in `docs/dev/providers-ab.md`, with the two
+experimental options and their Snapshot audit lines.
 The CPU budget (`pack_gate.health`, `r.cpuMean <= 10` ms, p99 reported) is process CPU time (`os.clock` around each
 Update in `tests/Game/harness/loop.lua`), so other processes waiting for a core do not count; shared cores (SMT,
 cache) still raise it: Arms reads 4.1 ms alone, wall clock the same, and 6.1-6.7 ms in `make check`'s 16-wide run.
