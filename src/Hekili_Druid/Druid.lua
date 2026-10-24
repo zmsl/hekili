@@ -913,6 +913,8 @@ spec:RegisterAbilities({
 
     demoralizing_roar = {
         id = 99,
+        -- no school: it deals no damage, so its ticket pays its own avoid only, never a Maul's wound in its frame
+        expects = "instant",
         copy = rest(DEMORALIZING_ROAR),
         cast = 0,
         cooldown = 0,

@@ -415,6 +415,33 @@ describe("the synthesized combat log", function()
             assert.are.same({ "SPELL_MISSED", fs.SPENDER_B, "DODGE" }, { row(2)[2], row(2)[12], row(2)[15] })
         end)
 
+        it(
+            "never gives a wound to a cast that deals no damage (declared, no school); its avoid still pays it",
+            function()
+                local c = fs.new(9, nil, nil, true)
+                c.Class.abilities.spender_c.expects = "instant" -- no school: debuff-only (K.Accepts: avoids only)
+                I.Build(fs.def(c), 1)
+                ctl.now = 80
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-20", fs.SPENDER_C) -- the debuff-only instant
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-21", fs.SPENDER_B) -- the strike, on the next swing
+                ctl.now = 80.02
+                ctl.Fire("PLAYER_SWING", 2.6, 0)
+                ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 250, 1) -- the strike's wound, 20 ms after the instant
+                ctl.now = 90
+                ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-22", fs.SPENDER_C)
+                ctl.now = 90.01
+                ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1) -- the instant's own miss
+                ctl.Tick(92)
+                local out = {}
+                for _, g in ipairs(got) do
+                    if g.row[2] == "SPELL_DAMAGE" or g.row[2] == "SPELL_MISSED" then
+                        out[#out + 1] = { g.row[2], g.row[12] }
+                    end
+                end
+                assert.are.same({ { "SPELL_DAMAGE", fs.SPENDER_B }, { "SPELL_MISSED", fs.SPENDER_C } }, out)
+            end
+        )
+
         it("gives an off-hand avoid at the main swing's lag (ref 3) to its swing, not a bolt's widened band", function()
             ctl.ranges[fs.SPENDER_P] = { 0, 30 }
             I.Build(fs.def(fs.new(9, nil, nil, true)), 1)

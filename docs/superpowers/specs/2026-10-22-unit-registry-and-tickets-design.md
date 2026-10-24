@@ -742,9 +742,12 @@ From DB2 build 1.60.1.70338 (`SpellMisc`, every rank the pack lists agrees unles
 | Hunter | `serpent_sting` | ability `expects = "ticks", school = "nature", velocity = 40`; aura adds `dot = "debuff"` | a DoT with no direct WOUND; its aura (`src/Hekili_Hunter/Hunter.lua:232`: duration 15, tick_time 3) gives 5 ticks; `velocity` puts its miss in the FLIGHT window and anchors its ticks after the flight. Rank 1978's Speed is 40, the Forever 425728 family's is 0, so the check reads the pack's own ranks |
 | Druid | `moonfire` | ability `expects = "instant", school = "arcane"`; aura `duration = 12, tick_time = 3, dot = "debuff"` | today's aura duration is a rank function (`src/Hekili_Druid/Druid.lua:512-520`: 9 at rank 1, 12 above); setting each rank's duration from DB2 and the capture is a pack data task |
 | Hunter | `summon_hawk` | nothing (default type) | no outcome of ours known |
+| Druid | `demoralizing_roar` | `expects = "instant"` (no `school`) | deals no damage: school 0 pays its own avoid only, so a Maul's wound landing in its frame pays the Maul (parry-haste Task 4, round 6; it had taken the Maul's wound as its own SPELL_DAMAGE) |
 
 Instant abilities may declare `expects = "instant", school = "<name>"`; that turns on the school check and lost counting
-inside today's frame windows. This spec does not require it, and the melee packs keep their default types.
+inside today's frame windows. This spec does not require it, and the melee packs keep their default types; a
+non-damaging instant that shares a frame with a queued strike declares `"instant"` without a `school` (Druid's
+`demoralizing_roar` above), so it never takes the strike's wound.
 
 ### 5.5 The DB2 check
 

@@ -12,6 +12,7 @@ local DECLARED = {
         starfire = { "instant", nil, "arcane" },
         moonfire = { "instant", nil, "arcane" },
         insect_swarm = { "ticks", nil, "nature" },
+        demoralizing_roar = { "instant", nil, nil }, -- no damage: avoids only (Kinds.lua K.Accepts, school 0)
     },
     Warlock = {
         shadow_bolt = { "travel", 20, "shadow" },
