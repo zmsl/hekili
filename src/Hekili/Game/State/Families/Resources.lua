@@ -1253,6 +1253,11 @@ I.On(Obs.Swing, function(o, t)
                     if k > 0 then
                         recAsm[k] = f
                         predict(k, r, hand, e, lo, hi, 0, e, math.huge)
+                        -- judged by no answer: its answer would come before its row, a verdict would consume the record
+                        -- and the row's confirmation (c = 7: the floor, the rest of the step, the hit rate) would be
+                        -- dropped, starving SwingPerSecond and inflating the scale. Only a provider's HIT has a record
+                        -- here (T.onAssume); the expectation at a lost close stages record 0.
+                        recA[k] = 0
                     end
                 elseif k > 0 and recR[k] == r then -- confirmed: the rest of a landed step, and its floor
                     local de, dh, dl = v * sc * (1 - recAsm[k]), v * (sc + sp) - v * sc * recAsm[k], v * (sc - sp)

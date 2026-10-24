@@ -19,7 +19,7 @@ describe("the ticket pool", function()
         return n
     end
 
-    -- T.nTent and T.nAssumed against a brute-force count of the pool (the Replaceable and Overdue scans' guards)
+    -- T.nTent and T.nAssumed against a brute-force count of the pool (the Replaceable scans' guard; nAssumed kept unread)
     local function counted()
         local tent, assumed = 0, 0
         for i = 1, T.CAP do
@@ -629,9 +629,6 @@ describe("the ticket pool", function()
                 staged[#staged + 1] = { kind, b, c }
                 return stage(kind, t, a, b, c)
             end
-            for c = 1, 8 do
-                I.Log.bg[c] = 50 -- a crowd: late rows stay below the LR bar and reach the shadow through Overdue
-            end
         end)
 
         after_each(function()
@@ -667,6 +664,9 @@ describe("the ticket pool", function()
         it(
             "stages nothing at a lost close when a white avoid nobody took fell in the window (maybe its own)",
             function()
+                for c = 1, 8 do
+                    I.Log.bg[c] = 50 -- a crowd: a late avoid stays below the LR bar
+                end
                 ctl.now = 10
                 ctl.Fire("PLAYER_SWING", 2.6, 0)
                 ctl.now = 11.2
@@ -689,17 +689,27 @@ describe("the ticket pool", function()
             assert.are.same({ T.ASSUMED, 1 }, { T.state[i], count(5) })
         end)
 
-        it("confirms a late hit on an assumed swing: the assumption's record becomes the credit", function()
+        it("confirms an assumed swing's own hit: the assumption's record becomes the credit", function()
             local i = assumedSwing()
-            ctl.now = 11.2
+            ctl.now = 10.47
             ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
             assert.are.same({ 1, 0, 1 }, { count(7), count(6), T.closed.confirmed })
             assert.are.equal(0, T.state[i])
         end)
 
-        it("refunds a late dodge on an assumed swing: closed refunded at the window's end", function()
-            assumedSwing()
+        it("leaves a late white row the LR rejects foreign: an assumed swing is never Overdue", function()
+            for c = 1, 8 do
+                I.Log.bg[c] = 50 -- a crowd: the late row stays below the LR bar
+            end
+            local i = assumedSwing()
             ctl.now = 11.2
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1)
+            assert.are.same({ 1, 0, T.ASSUMED }, { T.foreign, count(7), T.state[i] })
+        end)
+
+        it("refunds an assumed swing's own dodge: closed refunded at the window's end", function()
+            assumedSwing()
+            ctl.now = 10.47
             ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1)
             assert.are.equal(1, count(6))
             ctl.Tick(11.6)
@@ -709,14 +719,14 @@ describe("the ticket pool", function()
         it("counts ASSUMED tickets through assume, confirm, refund, expiry and combat end", function()
             assumedSwing()
             assert.are.same({ 0, 1 }, { counted() })
-            ctl.now = 11.2
+            ctl.now = 10.47
             ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1) -- confirmed
             assert.are.same({ 0, 0 }, { counted() })
             ctl.now = 20
             ctl.Fire("PLAYER_SWING", 2.6, 0)
             T.Assume(T.lastSwing[1], 20.7)
             assert.are.same({ 0, 1 }, { counted() })
-            ctl.now = 21.2
+            ctl.now = 20.47
             ctl.Fire("UNIT_COMBAT", "target", "DODGE", "", 0, 1) -- refunded: PROV
             assert.are.same({ 0, 0 }, { counted() })
             ctl.now = 30

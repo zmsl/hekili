@@ -211,30 +211,6 @@ function M.Replaceable(t, g, amount, flag, avoid, unknown)
     return best
 end
 
---- (attribution-recovery spec §1.1, decision 46; §3.1, decision 51) Overdue: the oldest ASSUMED swing ticket on `g`
---- (ASSUMED swings only; an open swing never: other players' white rows would take it) whose window holds a white
---- row at t that no band and no LR credit took: no provisional avoid on it, a wound only in an amount class of its hand
---- (or of unknown class) and never to a vetoed swing (I.Missed). Nil when none. Allocates nothing.
-function M.Overdue(t, g, amount, flag, avoid, unknown)
-    local best = nil
-    if T.nAssumed == 0 then
-        return nil
-    end
-    for i = 1, T.CAP do
-        if T.state[i] == T.ASSUMED and T.kind[i] == X.MELEE and T.guid[i] == g and T.avoid[i] == "" then
-            local d = t - T.at[i]
-            if d >= 0 and d <= T.w[i] and (best == nil or T.at[i] < T.at[best]) then
-                local h = T.x[i]
-                local fits = avoid or unknown or M.classOf(h, amount, flag) > 0
-                if fits and (avoid or not (I.Missed and I.Missed(h, T.at[i]))) then
-                    best = i
-                end
-            end
-        end
-    end
-    return best
-end
-
 --- An outcome nobody of ours claimed: counted, and while in combat with nothing of ours pending it teaches the
 --- background rate of each white class it qualifies for (§1.3, §1.4).
 function M.background(act, amount, flag, white, avoid, unknown)

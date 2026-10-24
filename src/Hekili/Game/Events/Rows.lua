@@ -503,20 +503,12 @@ local function route(t, g, uid, act, flag, amount, school)
         end
     end
     -- pass (d), Overdue (attribution-recovery decision 46 as amended): after every band and the melee scoring, the
-    -- oldest spell ticket of the queue past its expected tolerance whose hard window holds the row (late, never early),
-    -- then the oldest ASSUMED swing (decision 51: an open swing never)
+    -- oldest spell ticket of the queue past its expected tolerance whose hard window holds the row (late, never early).
+    -- No swing is Overdue: only a provider's HIT is ASSUMED, from its swing on, so it would take every other player's
+    -- white row in its window (providers fix round 1); its own row reaches it through the LR.
     if p == 0 and not credited and not tied then
         p, n = T.Pick(t, g, 4, act, flag, amount, school, avoid)
         pass = 4
-        if p == 0 and white and (AVOIDS[act] or not avoid) and not (not avoid and t - lastW0 <= SAME_FRAME) then
-            credited = M.Overdue(t, g, amount, flag, avoid, unknown)
-            if credited then
-                local h = T.x[credited]
-                lag = t - T.at[credited]
-                lr, ref, second = 0, h, math.huge -- no LR: it teaches nothing and is never clean
-                k = M.thetaIndex(h, (avoid or unknown) and 4 or M.classOf(h, amount, flag), h, lag)
-            end
-        end
     end
     if p > 0 then
         -- past p's own frame, inside an unmapped success's window: nobody's, and p's expiry is not a lost row (it

@@ -146,6 +146,32 @@ describe("resources", function()
             assert.is_true(R.lo0[slot] > lo1)
         end)
 
+        it("an answer between an assumption and its row judges nothing: the row's confirmation still lands", function()
+            local R = I.res
+            local slot = R.slotOf[fs.RAGE]
+            ctl.now = 200
+            R.est0[slot], R.lo0[slot], R.hi0[slot] = 5, 5, 5 -- the step crosses a spender's cost: that spender judges
+            I.Sources.Stage(VS.Obs.Swing, 200, 1, 6, 5) -- a provider's HIT: record 6
+            I.Sources.Flush()
+            I.Fold(200)
+            local a, cost = 0, math.huge -- the judge predict picks: the cheapest cost the step crosses
+            for j = 1, I.ab.n do
+                local c = I.ab.slot[j] == slot and I.CostOf(j) or 0
+                if c > 5 and c <= R.est0[slot] and c < cost then
+                    a, cost = j, c
+                end
+            end
+            assert.is_true(a > 0)
+            I.Sources.Stage(VS.Obs.Usable, 200.2, a, 0, 1) -- the assumption's spender answers short before the row
+            I.Sources.Flush()
+            I.Fold(200.3)
+            local lo1 = R.lo0[slot]
+            I.Sources.Stage(VS.Obs.Swing, 200, 1, 6, 7) -- its row
+            I.Sources.Flush()
+            I.Fold(200.5)
+            assert.is_true(R.lo0[slot] > lo1)
+        end)
+
         it(
             "holds est through an assume-then-refund pair (EV): the icon moves only at the next answer or spend",
             function()

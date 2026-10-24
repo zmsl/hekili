@@ -70,8 +70,8 @@ end
 T.onAssume, T.onLost = nil, nil
 T.replaced = 0 -- every replacement of a provisional payment by a narrow-band row, re-offered or not (not a close)
 T.onFinal, T.onReplace = nil, nil -- Rows' hooks: a TENT ticket final, a TENT ticket's row replaced
--- How many tickets are TENT and ASSUMED now: the Replaceable and Overdue scans skip at 0 (every state change of a
--- ticket into or out of either goes through `move`).
+-- How many tickets are TENT and ASSUMED now (every state change of a ticket into or out of either goes through
+-- `move`): the Replaceable scans skip at nTent 0; nAssumed has no reader since the swing Overdue went (providers).
 T.nTent, T.nAssumed = 0, 0
 
 T.opened = 0
