@@ -1,5 +1,6 @@
 -- tests/Forever/loop_warrior_spec.lua (headless loop design §5, §7, §9): stock Hekili headless as a level 60 Arms
 -- Warrior (tests/Forever/helpers/warrior_world.lua) against the harness's world.
+local ab = require("Game.harness.ab")
 local headless = require("Game.harness.headless")
 local loop = require("Game.harness.loop")
 local ww = require("Forever.helpers.warrior_world")
@@ -249,17 +250,17 @@ end)
 -- `make test-loop` runs the full 20 (#loop), outside `make check` for its time: the outcome gates too.
 describe("the headless Arms gates, 20 fights #loop", function()
     it("Arms solo, level 60, one mob, 20 fights of up to 3 minutes: the first icon against the oracle's", function()
-        local r, line = gate.solo(20)
-        assert.is_true(r.never <= 0.08, line)
+        local r, line = gate.solo(20) -- the bars: recorded in a provider arm (providers spec §4.1)
+        ab.check(r.never <= 0.08, "Arms", line)
         -- 0.969 (was 0.975): harness corrected to the measured swing timing (2026-10-22)
-        assert.is_true(r.dps >= 0.965, line) -- the old 0.005 margin
-        assert.is_true(r.idleA <= r.idleB + 0.03, line)
+        ab.check(r.dps >= 0.965, "Arms", line) -- the old 0.005 margin
+        ab.check(r.idleA <= r.idleB + 0.03, "Arms", line)
         for key, up in pairs(r.upB) do
             if not gate.REPORTED[key] then
-                assert.is_true((r.upA[key] or 0) >= up - 0.03, key .. ": " .. line)
+                ab.check((r.upA[key] or 0) >= up - 0.03, "Arms", key .. ": " .. line)
             end
         end
-        assert.is_true(r.flicker <= 2, line)
+        ab.check(r.flicker <= 2, "Arms", line)
         assert.is_true(r.focus > 0, "no flagged line ran: " .. line)
     end)
 end)
