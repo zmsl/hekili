@@ -676,6 +676,18 @@ describe("the ticket pool", function()
             end
         )
 
+        it("stages nothing at a lost close when a white wound nobody took fell in the window (its late row)", function()
+            for c = 1, 8 do
+                I.Log.bg[c] = 50 -- a crowd: the late wound stays below the LR bar
+            end
+            ctl.now = 10
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            ctl.now = 11.2 -- in the lag tail: refused, foreign
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 40, 1)
+            ctl.Tick(11.6)
+            assert.are.same({ 1, 1, 0 }, { T.foreign, T.closed.lost, count(5) })
+        end)
+
         it("stages nothing at a retraction's re-open's lost close", function()
             ctl.now = 10
             T.OpenSwing(10, 1, "Creature-1", 1.5, 0, false, true)
