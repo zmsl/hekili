@@ -193,8 +193,40 @@ local function fits(k, a)
     return k ~= nil and Bands.Fits(atkLo, atkHi, atkN, k, a, L.BAND_LO, L.BAND_HI, L.BAND_N)
 end
 
+-- Parry haste on a hostile (parry-haste spec decision 62): a PARRY row on its token pulls its clock's next swing by
+-- L.ParryPull, whoever's attack it parried (the rule is the parrier's). One row comes on several tokens (target, plate,
+-- soft target): applied once per GUID and row time. No row, no clock made. Allocates nothing.
+local parriedGUID, parriedT = "", -1
+local function parried(t, unit)
+    local i = INDEX[unit]
+    local guid = i and U.Bound(i) or ""
+    if guid == "" or (guid == parriedGUID and t == parriedT) then
+        return
+    end
+    parriedGUID, parriedT = guid, t
+    local k = find(guid)
+    if not k or atkAnchor[k] <= 0 then
+        return
+    end
+    local period = i <= NT and tokSpeed[i] or 0
+    if period <= 0 then
+        period = atkPeriod[k]
+    end
+    if period <= 0 then
+        return
+    end
+    local a = atkAnchor[k]
+    local p = a + (floor((t - a) / period) + 1) * period -- its next predicted swing after t
+    atkAnchor[k] = a - L.ParryPull(p - t, period)
+end
+
 S.On("UNIT_COMBAT", nil, function(api, t, unit, act, flag, amount, school)
-    if unit ~= "player" or (act ~= "WOUND" and not MISSES[act]) then
+    if unit ~= "player" then
+        if act == "PARRY" then
+            parried(t, unit)
+        end
+        return
+    elseif act ~= "WOUND" and not MISSES[act] then
         return
     end
     -- the hit's resolved time from the Outcomes provider (its own clock, plain), else the row's; the row keeps t. A

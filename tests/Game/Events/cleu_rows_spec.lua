@@ -599,6 +599,87 @@ describe("the synthesized combat log", function()
             assert.are.equal("Creature-1", got[6].row[4])
         end)
 
+        it("pulls a hostile's clock when it parries (parry haste), once per row on several tokens", function()
+            local function hit(t)
+                ctl.now = t
+                ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
+            end
+            local function onUsRows()
+                local out = {}
+                for _, g in ipairs(got) do
+                    if g.row[8] == L.player then
+                        out[#out + 1] = g.row[4]
+                    end
+                end
+                return out
+            end
+            onUs("nameplate2", "Creature-B", 3.0) -- B alone on us: its clock at 9.5 (period 3.0: 12.5, 15.5)
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
+            hit(9.5)
+            ctl.unitIs.nameplate2target = nil
+            ctl.Fire("UNIT_TARGET", "nameplate2")
+            onUs("target", "Creature-A", 2.0) -- A alone: its clock at 10 (period 2.0: 12, 14)
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            hit(10)
+            onUs("nameplate1", "Creature-A", 2.0) -- A's plate too: its rows come on target and nameplate1
+            ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+            ctl.unitIs.nameplate2target = "player" -- both on us now: only the clocks name a hit
+            ctl.Fire("UNIT_TARGET", "nameplate2")
+            ctl.now = 10.1 -- A parries our swing: r = 1.9 > 1.2, pulled 0.8 (once: twice would be 0.8 + 0.7)
+            ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1)
+            ctl.Fire("UNIT_COMBAT", "nameplate1", "PARRY", "", 0, 1)
+            hit(11.2) -- A's pulled swing: on its clock (unpulled 12.0, twice-pulled 10.5; B's 12.5)
+            ctl.now = 12.9 -- r = 0.3 <= 0.4: no pull
+            ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1)
+            hit(13.2) -- A's next on its period (B's 12.5 and 15.5 are off it)
+            assert.are.same({ "Creature-B", "Creature-A", "Creature-A", "Creature-A" }, onUsRows())
+            assert.are.equal(0, L.unattributed)
+        end)
+
+        it(
+            "pulls a provider-dated clock at its dated anchor; a later dated hit re-learns it without doubling",
+            function()
+                local base = I.outcomes
+                I.outcomes = setmetatable({
+                    EnemyHitAt = function(t)
+                        return t - 0.3, true -- every hit on us dated 0.3 s before its row
+                    end,
+                }, { __index = base })
+                local function hit(row)
+                    ctl.now = row
+                    ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
+                end
+                local function onUsRows()
+                    local out = {}
+                    for _, g in ipairs(got) do
+                        if g.row[8] == L.player then
+                            out[#out + 1] = g.row[4]
+                        end
+                    end
+                    return out
+                end
+                onUs("nameplate2", "Creature-B", 3.0) -- B alone: dated 9.5 (period 3.0: 12.5, 15.5)
+                ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
+                hit(9.8)
+                ctl.unitIs.nameplate2target = nil
+                ctl.Fire("UNIT_TARGET", "nameplate2")
+                onUs("target", "Creature-A", 2.0) -- A alone: dated 10.0 (period 2.0: 12, 14)
+                ctl.Fire("PLAYER_TARGET_CHANGED")
+                hit(10.3)
+                onUs("nameplate1", "Creature-A", 2.0)
+                ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate1")
+                ctl.unitIs.nameplate2target = "player"
+                ctl.Fire("UNIT_TARGET", "nameplate2")
+                ctl.now = 10.4 -- A parries against its dated anchor 10.0: r = 1.6 > 1.2, pulled 0.8 (next 11.2), once
+                ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1)
+                ctl.Fire("UNIT_COMBAT", "nameplate1", "PARRY", "", 0, 1)
+                hit(11.5) -- dated 11.2: A's pulled swing (unpulled 12.0, twice-pulled 10.8; B's 12.5); re-learns 11.2
+                hit(13.5) -- dated 13.2: A's next from the re-learned anchor, the pull not applied again
+                assert.are.same({ "Creature-B", "Creature-A", "Creature-A", "Creature-A" }, onUsRows())
+                assert.are.equal(0, L.unattributed)
+            end
+        )
+
         describe("per-attacker amount bands (combat harness design §4)", function()
             local function hit(t, amount, flag)
                 ctl.now = t
