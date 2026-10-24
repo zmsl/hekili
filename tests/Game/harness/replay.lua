@@ -11,7 +11,7 @@
 -- in the truth only, spells landing at once, a white swing's outcome one landing lag after its swing (M.LAND; wowsims
 -- logs both at once, with the swing's rage), the mob's health at 20% from the execute phase's start (wowsims's is the
 -- last 20% of the duration) and never dead, our distance to it (the request's, then the log's Movement stacks), and
--- the target's Parry of its swings on us (parry-haste spec §4; its other outcomes on us are not replayed: gap AH).
+-- the target's Parry, Dodge and Block of its swings on us (parry-haste spec §4, gap AH; its hits on us are not).
 -- Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map through the booted
 -- instance's own ability set (Hekili.Class, booted as the log's race). Credit: the log format is wowsims/forever's
 -- (MIT, https://github.com/wowsims/forever); no code copied.
@@ -154,8 +154,9 @@ local function theirs(rest)
         local id, _, tag = ids(b)
         return id and { kind = "stacks", unit = "target", id = id, to = tonumber(n), tag = tag }
     end
-    if rest:match("^%[[^%]]+ %(#1%)%] {[^}]*} Parry") then -- its swing on us, parried (parry-haste spec §4)
-        return { kind = "taken", act = "PARRY" }
+    local avoid = rest:match("^%[[^%]]+ %(#1%)%] {[^}]*} (%a+)") -- its swing on us: a parry, dodge or block (gap AH)
+    if avoid == "Parry" or avoid == "Dodge" or avoid == "Block" then
+        return { kind = "taken", act = avoid:upper() }
     end
 end
 

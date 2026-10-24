@@ -74,13 +74,14 @@ describe("the wowsims log parser", function()
         assert.are.same({ 900030, 20 }, { tick.id, tick.amount })
     end)
 
-    it("reads the target's Parry on us as `taken`; its other outcomes on us stay unread (gap AH)", function()
+    it("reads the target's Parry, Dodge and Block on us as `taken` (gap AH)", function()
         local q = replay.parse(table.concat({
             "[4.03] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 1} Parry (SpellSchool: 1). (Threat: 0.000)",
             "[6.34] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 1} Block for 15.9 damage (SpellSchool: 1). (Threat: 15.9)",
         }, "\n"))
-        assert.are.equal(1, #q.ev)
+        assert.are.equal(2, #q.ev)
         assert.are.same({ 4.03, "taken", "PARRY" }, { q.ev[1].t, q.ev[1].kind, q.ev[1].act })
+        assert.are.same({ 6.34, "taken", "BLOCK" }, { q.ev[2].t, q.ev[2].kind, q.ev[2].act })
     end)
 end)
 
