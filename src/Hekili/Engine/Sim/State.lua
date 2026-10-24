@@ -6399,9 +6399,22 @@ do
         state.nextMH = ( state.combat > 0 and state.swings.mh_actual > state.combat and state.swings.mh_actual + state.mainhand_speed ) or 0
         state.nextOH = ( state.combat > 0 and state.swings.oh_actual > state.combat and state.swings.oh_actual + state.offhand_speed ) or 0
 
+        -- Forever parry haste (parry-haste spec decision 59): after our parry the next main-hand swing comes early. The
+        -- pull holds only while mh_actual is the swing it was taken from: that swing's row lands after its PLAYER_SWING,
+        -- so a pull never shifts a later swing, nor an earlier one.
+        local pull, pullFrom = VS.SwingPull( 1 )
+        if pull > 0 and state.nextMH > 0 and math.abs( state.swings.mh_actual - pullFrom ) < 0.001 then
+            state.swings.mh_pseudo = state.swings.mh_actual - pull
+            state.nextMH = state.nextMH - pull
+            state:ForecastSwingbasedResources()
+        end
+
         -- Forever E8: until the fight's first swing lands, anchor the swings at the combat start as StartCombat does.
         if state.combat > 0 and state.swings.mh_actual == 0 then
             state.swings.mh_pseudo = state.combat
+            -- a pull taken before this fight's first swing (from: 0 or an older fight's swing; CombatEnd clears it)
+            -- moves the combat-start anchor; nextMH stays 0 as E8 has it
+            if pull > 0 and pullFrom < state.combat then state.swings.mh_pseudo = state.combat - pull end
             if state.offhand_speed > 0 then state.swings.oh_pseudo = state.combat + state.offhand_speed / 2 end
             state:ForecastSwingbasedResources()
         end
