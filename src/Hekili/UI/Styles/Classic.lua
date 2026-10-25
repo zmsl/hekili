@@ -523,7 +523,10 @@ local function RefreshCooldowns( self, out )
                 start, duration, enabled, modRate = GetSpellCooldown( ability.actionID )
             end
 
-            if i == 1 and conf.classic.delays.extend and rec.exact_time > max( now, start + duration ) then
+            -- an on-next-swing strike ignores the GCD: its own cooldown reads idle while it waits, so it always stretches
+            local swing = Registry.Abilities()[ button.Action ]
+            swing = swing and swing.onNextSwing
+            if ( i == 1 and conf.classic.delays.extend or swing ) and rec.exact_time > max( now, start + duration ) then
                 start = ( start > 0 and start ) or ( cStart > 0 and cStart ) or ( gStart > 0 and gStart ) or max( lastGcdStart, Status.combatStart )
                 duration = rec.exact_time - start
 

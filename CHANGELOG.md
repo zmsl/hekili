@@ -15,6 +15,7 @@
 
 ### Fixed
 
+- A queued strike (Heroic Strike, Cleave, Maul, Raptor Strike) that is not ready yet now shows its cooldown sweep up to when to press it, on every icon of the classic row and in the timeline, instead of looking ready.
 - Protection Warrior: a partly blocked hit on you now opens Revenge's window, as a full block, dodge or parry does.
 - Rage from Bloodrage (and Berserker Rage with Improved Berserker Rage) now counts at once: an ability you can afford with it is no longer shown as unaffordable right after the press.
 - A Maul that lands just after Demoralizing Roar is no longer credited to the Roar.
