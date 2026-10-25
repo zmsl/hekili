@@ -12,7 +12,9 @@
 -- logs both at once, with the swing's rage), the mob's health at 20% from the execute phase's start (wowsims's is the
 -- last 20% of the duration) and never dead, our distance to it (the request's, then the log's Movement stacks), and
 -- the target's Parry, Dodge and Block of its swings on us (parry-haste spec §4, gap AH; its hits on us are not), a
--- partial "Block for N" as the client's WOUND flagged BLOCK_REDUCED (amount N), a "Block for 0" as a full BLOCK.
+-- partial "Block for N" as the client's WOUND flagged BLOCK_REDUCED (amount N), a "Block for 0" as a full BLOCK, and
+-- an on-next-swing strike's Tag 1 cast as its queueing press (IsCurrentSpell; no cast event), its untagged cast as its
+-- swing's landing (the cast, and no press for R.next's agreement).
 -- Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map through the booted
 -- instance's own ability set (Hekili.Class, booted as the log's race). Credit: the log format is wowsims/forever's
 -- (MIT, https://github.com/wowsims/forever); no code copied.
@@ -434,6 +436,16 @@ function M.new(text, H, o)
         e.wt = e.initial and 0 or R.pull + e.t + n * M.EPS
         assert(e.initial or e.t > 0.1 - R.pull, "the log starts before the replay's prepull read: raise o.pull")
     end
+    -- each completed cast's logged cost (its Casting line's, same spell and tag): an on-next-swing strike's free cast
+    -- queues it, its paid one lands
+    local castCost = {}
+    for _, e in ipairs(p.ev) do
+        if e.kind == "casting" and e.id then
+            castCost[e.id .. ":" .. (e.tag or 0)] = e.cost or 0
+        elseif e.kind == "completed" and e.id then
+            e.paid = castCost[e.id .. ":" .. (e.tag or 0)]
+        end
+    end
     -- the duration the client is shown at each application (UNIT_AURA's): its run when its next line is a natural
     -- fade (the real duration: combo-point or talent scaled), the declared duration when a fade is a removal (one of
     -- our Casting or Completed cast lines earlier in the fade's timestamp, a white swing's "Completed cast {OtherID: 3}"
@@ -478,10 +490,16 @@ function M.new(text, H, o)
     end
     -- wowsims's casts (procs out): the decisions just before their Casting lines, sorted
     R.decisions, R.casts = {}, {}
+    local presses = {} -- R.casts less the strikes' landings (R.next)
     for _, e in ipairs(p.ev) do
         if e.kind == "casting" and keyFor(e) then
             local d = { t = e.wt - M.EPS / 2, key = keyFor(e), gcd = e.cast > 0 or e.gcd > 0 }
             R.decisions[#R.decisions + 1], R.casts[#R.casts + 1] = d, d
+            -- an on-next-swing strike's paid cast is its swing's landing, not a press (its free cast queued it): not a
+            -- next cast for the agreement
+            if not (class.abilities[d.key].onNextSwing and (e.cost or 0) > 0) then
+                presses[#presses + 1] = d
+            end
         end
     end
     table.sort(R.decisions, function(x, y)
@@ -516,10 +534,10 @@ function M.new(text, H, o)
     local ci = 1
     --- wowsims's next cast strictly after world time `t` (its key), or false; `t` only grows within a world.
     function R.next(t)
-        while R.casts[ci] and R.casts[ci].t <= t do
+        while presses[ci] and presses[ci].t <= t do
             ci = ci + 1
         end
-        return R.casts[ci] and R.casts[ci].key or false
+        return presses[ci] and presses[ci].key or false
     end
 
     --- The world of the log (loop.run's factory: `wo` the loop's knobs, `seed` the world's generator).
@@ -617,7 +635,14 @@ function M.new(text, H, o)
                     ends = T + e.cast,
                     gcd = e.gcd > 0 and e.gcd or nil,
                 })
+            elseif key and e.kind == "completed" and class.abilities[key].onNextSwing and e.paid == 0 then
+                -- wowsims's free cast of an on-next-swing strike is its queueing press (the Tag varies by spell: Heroic
+                -- Strike's is Tag 1, Maul's untagged): IsCurrentSpell, no cast event
+                W.emit({ kind = "queue", src = us, spell = e.id, ids = rankIDs[key] })
             elseif key then
+                if class.abilities[key].onNextSwing then -- its paid cast is its swing's strike: no longer queued
+                    W.emit({ kind = "unqueue", src = us, spell = e.id, ids = rankIDs[key] })
+                end
                 local sh = shared[key]
                 W.emit({
                     kind = "cast",

@@ -21,6 +21,7 @@ local H = {
                 echo = { key = "echo", id = 900004, gcd = "off" },
                 stance_a = { key = "stance_a", id = 900010, gcd = "off" },
                 stance_b = { key = "stance_b", id = 900011, gcd = "off" },
+                lunge = { key = "lunge", id = 900060, gcd = "off", onNextSwing = true },
             },
             auras = {
                 shout = { id = 900002, duration = 120 },
@@ -374,6 +375,30 @@ describe("the replay world", function()
             end
         end
         assert.are.same({ { 100, "PARRY", true } }, got)
+    end)
+
+    it("replays an on-next-swing strike's free cast as its queueing press and its paid cast as its landing", function()
+        local function line(t, tag, cost)
+            local b = "{SpellID: 900060" .. (tag and ", Tag: 1}" or "}")
+            local c = "(Cost = " .. cost .. ".000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)"
+            return ("\n[%s] [Tester (#1)] Casting %s %s"):format(t, b, c)
+                .. ("\n[%s] [Tester (#1)] Completed cast %s"):format(t, b)
+        end
+        -- Heroic Strike's tags (Tag 1 the free queueing cast) and Maul's (the paid landing tagged)
+        for _, tags in ipairs({ { true, false }, { false, true } }) do
+            local log = text():gsub("(\n%[2%.00%][^\n]*)", "%1" .. line("2.00", tags[1], 0), 1)
+            log = log:gsub("(\n%[3%.90%][^\n]*Dodge)", "%1" .. line("3.90", tags[2], 9), 1)
+            local R = replay.new(log, H, O)
+            local W = at(R.world(setmetatable({ tag = "-q" }, { __index = WO }), 1), R.pull + 4)
+            local got = {}
+            for _, ev in ipairs(W.truth) do
+                if ev.spell == 900060 then
+                    got[#got + 1] = { ev.kind, math.floor((ev.t - R.pull) * 100 + 0.5) }
+                end
+            end
+            assert.are.same({ { "queue", 200 }, { "unqueue", 390 }, { "cast", 390 } }, got)
+            assert.are.equal("strike", R.next(R.pull + 2.5)) -- the landing is no press: the next is 8.10's strike
+        end
     end)
 
     it("replays a partial block on us as the client's BLOCK_REDUCED wound, our health untouched", function()
