@@ -19,3 +19,6 @@ L["Maintain Demoralizing Shout"] = true
 L["Keep Demoralizing Shout on the target, as a raid tank does. Off: the priority never shows it."] = true
 L["Maintain Thunder Clap"] = true
 L["Keep Thunder Clap's slow on the target (the leveling filler before Mortal Strike). Off: the priority never shows Thunder Clap."] = true
+L["Protection (wowsims.com)"] = true
+L["Fury (wowsims.com)"] = true
+L["Arms (wowsims.com)"] = true

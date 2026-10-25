@@ -9,3 +9,6 @@ local L = LibStub("AceLocale-3.0"):NewLocale("Hekili_Hunter", "enUS", true, true
 L["Beast Mastery"] = true
 L["Marksmanship"] = true
 L["Survival"] = true
+L["Beast Mastery (wowsims.com)"] = true
+L["Marksmanship (wowsims.com)"] = true
+L["Survival (wowsims.com)"] = true

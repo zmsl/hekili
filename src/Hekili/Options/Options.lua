@@ -3664,7 +3664,8 @@ found = true end
                                         wipe( packs )
 
                                         for key, pkg in pairs( self.DB.profile.packs ) do
-                                            local pname = pkg.builtIn and "|cFF00B4FF" .. key .. "|r" or key
+                                            local label = Registry.PackLabel( key )
+                                            local pname = pkg.builtIn and "|cFF00B4FF" .. label .. "|r" or label
                                             if pkg.spec == id then
                                                 packs[ key ] = Hekili:ZoomedTextureWithText( texture or ( Registry.Specs()[ id ] and Registry.Specs()[ id ].texture ), pname )
                                             end
@@ -4813,7 +4814,7 @@ found = true end
 
                                         for k, pack in pairs( Hekili.DB.profile.packs ) do
                                             if pack.spec and Registry.Specs()[ pack.spec ] then
-                                                v[ k ] = k
+                                                v[ k ] = Registry.PackLabel( k )
                                             end
                                         end
 
@@ -4880,7 +4881,7 @@ found = true end
                     hidden = under and SpecPackHidden or nil,
                     name = function ()
                         local p = rawget( Hekili.DB.profile.packs, pack )
-                        if p.builtIn then return '|cFF00B4FF' .. pack .. '|r' end
+                        if p.builtIn then return '|cFF00B4FF' .. Registry.PackLabel( pack ) .. '|r' end
                         return pack
                     end,
                     icon = function()

@@ -3,8 +3,9 @@
 Every piece of text a player sees is written L["English text"] in the addons' .lua files. Each addon is its own
 AceLocale-3.0 app named after its folder: the core's `L` is ns.L (src/Hekili/Locales/Locales.lua), a pack's is
 `local L = Hekili:GetLocale("Hekili_<Class>")`. The key is a string literal, or literals joined with `..`
-(L["first part " .. "second part"]); never a variable, so this script can read every key. For each addon with text it
-writes src/<addon>/Locales/enUS.lua (the string table: every key, `L[key] = true`) and rewrites each
+(L["first part " .. "second part"]); never a variable, so this script can read every key. A pack's RegisterPack
+names are its keys too: the options show a built-in priority through its label (Registry.PackLabel). For each addon
+with text it writes src/<addon>/Locales/enUS.lua (the string table: every key, `L[key] = true`) and rewrites each
 src/<addon>/Locales/<locale>.lua:
 
   - translated keys stay as they are:          L["Reset"] = "重置"
@@ -18,7 +19,8 @@ repository root after changing any text:
     python3 tools/locales.py            write every addon's Locales/enUS.lua and update its Locales/<locale>.lua
     python3 tools/locales.py --check    change nothing; exit 1 if a file is out of date, a key is not a literal, a
                                         translation drops a format code (%s, %d...), a colour (|c...|r) or a line
-                                        break, or a pack's key is translated in a core language file
+                                        break, a pack's key is translated in a core language file, or a priority's translated
+                                        label reads as another priority
 
 A pack language file with no translations yet starts from the core file of that language: every translation it holds
 for one of the pack's keys (how the packs' strings moved out of the core's zhCN.lua); an existing one takes a line of
@@ -196,6 +198,17 @@ def keys_in(src, path):
     return keys, problems
 
 
+def pack_names_in(src):
+    """[(name, line)] of every RegisterPack( "<name>", ... ) first argument: a built-in priority's label key."""
+    out = []
+    for m in re.finditer(r"[:.]RegisterPack\s*\(", src):
+        k = skip_space(src, m.end())
+        lit = scan_literal(src, k)
+        if lit:
+            out.append((lit[0], src.count("\n", 0, k) + 1))
+    return out
+
+
 # ---------------------------------------------------------------------------------------------------------------------
 # The addons
 
@@ -238,20 +251,26 @@ USES_L = re.compile(r"""^local L = (?:ns\.L\b|Hekili:GetLocale\(\s*"\w+"\s*\))""
 
 
 def collect(toc):
-    """({file: [keys first used there]} in load order, [problems]) of one addon."""
-    seen, grouped, problems = set(), {}, []
+    """({file: [keys first used there]} in load order, [problems], [pack names]) of one addon."""
+    seen, grouped, problems, packs = set(), {}, [], []
+    core = os.path.basename(os.path.dirname(toc)) == CORE
     for rel in toc_files(toc):
         with open(os.path.join(ROOT, rel), encoding="utf-8") as f:
             src = f.read()
-        if not USES_L.search(src):
-            continue
-        keys, bad = keys_in(src, rel)
-        problems += ["%s:%d: %s" % (rel, line, why) for line, why in bad]
-        for key, _ in keys:
+        found = []
+        if USES_L.search(src):
+            keys, bad = keys_in(src, rel)
+            problems += ["%s:%d: %s" % (rel, line, why) for line, why in bad]
+            found = [k for k, _ in keys]
+        if not core:
+            names = [k for k, _ in pack_names_in(src)]
+            packs += names
+            found += names
+        for key in found:
             if key not in seen:
                 seen.add(key)
                 grouped.setdefault(rel, []).append(key)
-    return grouped, problems
+    return grouped, problems, packs
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -362,6 +381,19 @@ def adopt(keys, own, core, pack_only):
     return out
 
 
+def label_problems(name, packs, translations, locale):
+    """A translated priority label that reads as another priority of the addon (its key or its label)."""
+    out = []
+    for pack in packs:
+        label = translations.get(pack, pack)
+        for other in packs:
+            if other != pack and label in (other, translations.get(other, other)):
+                out.append(
+                    "%s/Locales/%s.lua: %r is labelled %r, which reads as %r: reword it" % (name, locale, pack, label, other)
+                )
+    return out
+
+
 def main(argv):
     check = "--check" in argv
     problems, stale, found = [], [], {}
@@ -373,7 +405,7 @@ def main(argv):
     # read before any file is rewritten: the packs adopt from them, and the core drops what a pack now holds
     core_tr = {loc: read_translations(os.path.join(locales_dir(CORE), loc + ".lua")) for loc in languages(CORE)}
     held = {}  # [locale] = the keys some pack's file of that language holds
-    for name, (grouped, _) in sorted(found.items(), key=lambda f: f[0] == CORE):  # the packs first, then the core
+    for name, (grouped, _, packs) in sorted(found.items(), key=lambda f: f[0] == CORE):  # the packs first, then the core
         if not grouped:
             continue  # an addon with no text (Hekili_Shared) has no Locales/
         keys = [k for ks in grouped.values() for k in ks]
@@ -394,6 +426,7 @@ def main(argv):
                 held.setdefault(locale, set()).update(translations)
             for key, value in translations.items():
                 problems += ["%s/Locales/%s.lua: %s" % (name, locale, p) for p in code_problems(key, value)]
+            problems += label_problems(name, packs, translations, locale)
             sync(path, render(name, locale, grouped, translations), check, stale)
             done = sum(1 for k in keys if k in translations)
             print("%s %s: %d of %d translated" % (name, locale, done, len(keys)))

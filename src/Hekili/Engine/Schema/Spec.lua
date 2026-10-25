@@ -1486,9 +1486,10 @@ function Hekili:RestoreDefaults()
     -- A retired list is gone, not updated: say so, and where its specs went.
     if #retired > 0 then
         table.sort( retired )
-        local names = "|cFFFFD100" .. retired[1] .. "|r"
+        local label = Hekili.Engine.Registry.PackLabel
+        local names = "|cFFFFD100" .. label( retired[1] ) .. "|r"
         for i = 2, #retired do
-            names = names .. ( i == #retired and L[" and "] or ", " ) .. "|cFFFFD100" .. retired[i] .. "|r"
+            names = names .. ( i == #retired and L[" and "] or ", " ) .. "|cFFFFD100" .. label( retired[i] ) .. "|r"
         end
         local msg = #retired == 1
             and string.format( L["The %s priority was retired; a spec that used it now runs its default priority."], names )
@@ -1502,6 +1503,8 @@ function Hekili:RestoreDefaults()
 
     if #changed > 0 then
         local msg
+        local label = Hekili.Engine.Registry.PackLabel
+        for i = 1, #changed do changed[ i ] = label( changed[ i ] ) end
 
         if #changed == 1 then
             msg = string.format( L["The |cFFFFD100%s|r priority was updated."], changed[1] )
@@ -1528,6 +1531,8 @@ function Hekili:RestoreDefaults()
 
     if #reverted > 0 then
         local msg
+        local label = Hekili.Engine.Registry.PackLabel
+        for i = 1, #reverted do reverted[ i ] = label( reverted[ i ] ) end
 
         if #reverted == 1 then
             msg = string.format( L["The |cFFFFD100%s|r priority was reverted."], reverted[1] )

@@ -18,3 +18,6 @@ end
 L["Assassination"] = "刺杀"
 L["Combat"] = "战斗"
 L["Subtlety"] = "敏锐"
+-- L["Combat (wowsims.com)"] = ""
+-- L["Assassination (wowsims.com)"] = ""
+-- L["Subtlety (wowsims.com)"] = ""

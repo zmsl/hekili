@@ -87,6 +87,9 @@ function ns.LoadContent()
     end
 
     notice = load(name)
+    if not notice then
+        ns.PackAddon = name -- its string table labels its built-in priorities (Registry.PackLabel)
+    end
 end
 
 --- Shows LoadContent's notice, once (OnEnable: the profile and the notice frame exist by then).

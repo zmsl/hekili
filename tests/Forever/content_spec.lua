@@ -7,13 +7,13 @@ local addons = require("helpers.addons")
 
 describe("Engine/Content.lua", function()
     local WARRIOR = { "load Hekili_Shared", "meta Hekili_Warrior X-Hekili-ContentAPI", "load Hekili_Warrior" }
-    local calls, notes, meta, loadResult, classToken, saved
+    local calls, notes, meta, loadResult, classToken, saved, ns
 
     -- a fresh load of Content.lua (its once-per-session flag reset), LoadContent, then ContentNotice; `again` repeats
     -- both calls on the same load, as OnInitialize and a disable/enable's OnEnable would
     local function run(again)
         calls, notes = {}, {}
-        local ns = {
+        ns = {
             L = require("helpers.english"),
             Facade = {
                 UnitClass = function(unit)
@@ -117,6 +117,14 @@ describe("Engine/Content.lua", function()
         end
         run()
         assert.are.same({ "could not load Hekili_Shared (boom)" }, notes)
+    end)
+
+    it("records the loaded pack's addon (its string table labels the built-in priorities)", function()
+        run()
+        assert.are.equal("Hekili_Warrior", ns.PackAddon)
+        classToken = "NOPACK"
+        run()
+        assert.is_nil(ns.PackAddon)
     end)
 
     it("runs once per session: a second call loads nothing and repeats no notice", function()

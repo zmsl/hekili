@@ -9,3 +9,5 @@ local L = LibStub("AceLocale-3.0"):NewLocale("Hekili_Paladin", "enUS", true, tru
 L["Holy"] = true
 L["Protection"] = true
 L["Retribution"] = true
+L["Retribution (wowsims.com)"] = true
+L["Protection (wowsims.com)"] = true

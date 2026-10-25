@@ -85,6 +85,18 @@ class Adopt(unittest.TestCase):
         self.assertEqual(locales.adopt(["Arms"], {"Arms": "臂"}, core, {"Arms"}), {"Arms": "臂"})  # its own wins
 
 
+class PackNames(unittest.TestCase):
+    def test_register_pack_first_arguments(self):
+        src = 'spec:RegisterPack(\n    "Arms (wowsims.com)",\n    1,\n    [[x]]\n)\nspec:RegisterPack( name, 1, "" )'
+        self.assertEqual(locales.pack_names_in(src), [("Arms (wowsims.com)", 2)])
+
+    def test_a_label_that_reads_as_another_priority_is_a_problem(self):
+        packs = ["Arms (wowsims.com)", "Fury (wowsims.com)"]
+        self.assertEqual(locales.label_problems("Hekili_Warrior", packs, {"Arms (wowsims.com)": "武器"}, "zhCN"), [])
+        self.assertTrue(locales.label_problems("Hekili_Warrior", packs, {"Arms (wowsims.com)": "Fury (wowsims.com)"}, "zhCN"))
+        self.assertTrue(locales.label_problems("Hekili_Warrior", packs, {"Arms (wowsims.com)": "X", "Fury (wowsims.com)": "X"}, "zhCN"))
+
+
 class Codes(unittest.TestCase):
     def test_format_codes_colours_and_breaks_must_survive(self):
         self.assertEqual(locales.code_problems("%s is %d\n|cFFFFD100x|r", "%s 为 %d\n|cFFFFD100x|r"), [])

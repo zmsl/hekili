@@ -9,3 +9,5 @@ local L = LibStub("AceLocale-3.0"):NewLocale("Hekili_Priest", "enUS", true, true
 L["Discipline"] = true
 L["Holy"] = true
 L["Shadow"] = true
+L["Shadow (wowsims.com)"] = true
+L["Smite (wowsims.com)"] = true

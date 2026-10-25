@@ -18,3 +18,6 @@ end
 L["Arcane"] = "奥术"
 L["Fire"] = "火焰"
 L["Frost"] = "冰霜"
+-- L["Arcane (wowsims.com)"] = ""
+-- L["Fire (wowsims.com)"] = ""
+-- L["Frostfire (wowsims.com)"] = ""

@@ -18,3 +18,5 @@ end
 L["Discipline"] = "戒律"
 L["Holy"] = "神圣"
 L["Shadow"] = "暗影"
+-- L["Shadow (wowsims.com)"] = ""
+-- L["Smite (wowsims.com)"] = ""

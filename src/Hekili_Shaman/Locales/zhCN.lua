@@ -18,3 +18,5 @@ end
 L["Elemental"] = "元素"
 L["Enhancement"] = "增强"
 L["Restoration"] = "恢复"
+-- L["Elemental (wowsims.com)"] = ""
+-- L["Enhancement (wowsims.com)"] = ""
