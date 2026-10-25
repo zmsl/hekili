@@ -4151,11 +4151,11 @@ found = true end
                                 },
                                 damageMeter = {
                                     type = "toggle",
-                                    name = "Experimental: use the damage meter for swing outcomes",
-                                    desc = "Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know "
+                                    name = L["Experimental: use the damage meter for swing outcomes"],
+                                    desc = L["Reads the game's damage meter events (they work with the Damage Meter window hidden or disabled) to know "
                                         .. "at once whether your white swing hit, and that another player's hit was not yours.\n\n"
                                         .. "Changes apply at once out of combat, otherwise when the fight ends. Applies to every specialization.\n\n"
-                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested.",
+                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested."],
                                     get = function() return Hekili.DB.profile.performance.damageMeter == true end,
                                     set = function( _, v )
                                         Hekili.DB.profile.performance.damageMeter = v
@@ -4166,12 +4166,12 @@ found = true end
                                 },
                                 cooldownViewer = {
                                     type = "toggle",
-                                    name = "Experimental: use the Cooldown Manager for aura presence",
-                                    desc = "Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, "
+                                    name = L["Experimental: use the Cooldown Manager for aura presence"],
+                                    desc = L["Reads whether your own buffs and your debuffs on the target are up from the game's Cooldown Manager, "
                                         .. "for the auras it tracks; the others keep their timers. Needs the Cooldown Manager enabled in the game options. "
                                         .. "Shows presence only (no durations or stacks), and only auras you applied.\n\n"
                                         .. "Changes apply at once out of combat, otherwise when the fight ends.\n\n"
-                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested.",
+                                        .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested."],
                                     get = function() return Hekili.DB.profile.performance.cooldownViewer == true end,
                                     set = function( _, v )
                                         Hekili.DB.profile.performance.cooldownViewer = v
