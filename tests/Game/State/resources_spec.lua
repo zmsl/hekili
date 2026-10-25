@@ -272,6 +272,19 @@ describe("resources", function()
             assert.is_false(I.res.assume[1])
         end)
 
+        it("drops the modelled floor on an exact read after a short answer that was no rung", function()
+            I.Fold(10, false)
+            I.ResourceShift(1, -80, 10, Obs.CastSuccess) -- from rest: 20, its floor moving with the spend
+            I.ab.multiCost[FINISHER] = true -- an ambiguous answer: no rung, so its kept floor must not outlive it
+            obs(Obs.Usable, 10.58, FINISHER, 0, 1) -- short at the regen crossing's tick, as above
+            I.Fold(10.58, false)
+            I.ab.multiCost[FINISHER] = false
+            assert.is_true(I.res.assume[1])
+            obs(Obs.Read, 10.6, 1, 15, I.ReadOf.Resource) -- an exact read under the floor: the floor was wrong
+            I.Fold(10.6, false)
+            assert.is_false(I.res.assume[1])
+        end)
+
         it("rests at its maximum of 100, as before rest became a flag", function()
             assert.are.same({ 100, 100 }, { VS.Power(ENERGY, 1).est, I.res.rest[1] })
         end)
@@ -461,6 +474,16 @@ describe("resources", function()
             I.Refund(1, 8, 5.3)
             local r = VS.Power(fs.RAGE, 5.3)
             assert.are.same({ 10, 10 }, { r.lo, r.est }) -- not 18: the answer's bound already holds the refund
+        end)
+
+        it("lets a short answer right after a refund cap it: a refund is no declared gain (I.GAIN_SHOWS)", function()
+            local R = I.res
+            R.est0[1], R.lo0[1], R.hi0[1] = 12, 10, 20
+            I.ResourceShift(1, -10, 5, Obs.CastSuccess) -- 2 [0, 10]
+            I.Refund(1, 8, 5.3) -- the avoid's 8 back: 10
+            obs(Obs.Usable, 5.35, I.ab.bySpell[fs.SPENDER_A], 0, 1) -- short of 10 within I.GAIN_SHOWS: still caps
+            I.Fold(5.35, false)
+            within(10 - I.EPS, VS.Power(fs.RAGE, 5.35).est)
         end)
 
         it("names a swing pending until an answer that can show its rage, its credit or a spend (GAP AK)", function()

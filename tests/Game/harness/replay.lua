@@ -446,6 +446,23 @@ function M.new(text, H, o)
             e.paid = castCost[e.id .. ":" .. (e.tag or 0)]
         end
     end
+    -- a free cast of an on-next-swing strike is read as its queueing press only if its queue aura (our aura gained on
+    -- its ID) comes before its next cast: a free landing fails here instead of lowering the agreement
+    for i, e in ipairs(p.ev) do
+        local key = e.kind == "completed" and e.paid == 0 and keyFor(e)
+        if key and class.abilities[key].onNextSwing then
+            for j = i + 1, #p.ev do
+                local f = p.ev[j]
+                if f.id == e.id and f.kind == "aura" and f.unit == "player" and f.verb ~= "faded" then
+                    break
+                end
+                assert(
+                    not (f.id == e.id and f.kind == "completed"),
+                    ("the free %s at %s queues no aura"):format(key, e.t)
+                )
+            end
+        end
+    end
     -- the duration the client is shown at each application (UNIT_AURA's): its run when its next line is a natural
     -- fade (the real duration: combo-point or talent scaled), the declared duration when a fade is a removal (one of
     -- our Casting or Completed cast lines earlier in the fade's timestamp, a white swing's "Completed cast {OtherID: 3}"

@@ -349,7 +349,7 @@ describe("Forever Warrior", function()
     )
 
     -- wowsims sim/warrior/bloodrage.go:18,30 (10 at once x Improved Bloodrage's multiplier; its 10 s of ticks are the
-    -- resource's bloodrage entry) and berserker_rage.go:59,83-85 (10 a rank of Improved Berserker Rage, none without)
+    -- resource's bloodrage entry) and berserker_rage.go:16,40-42 (10 a rank of Improved Berserker Rage, none without)
     it("gains Bloodrage's rage and Berserker Rage's talented rage at the press", function()
         local e = lw.env(w)
         e.talent.improved_bloodrage = { rank = 2, enabled = true }

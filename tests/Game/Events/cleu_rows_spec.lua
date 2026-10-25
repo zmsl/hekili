@@ -729,6 +729,45 @@ describe("the synthesized combat log", function()
             assert.are.equal(0, L.unattributed)
         end)
 
+        it(
+            "dates only the mob whose parry our swing credited: another mob's parry row at that time is its own",
+            function()
+                local function hit(t)
+                    ctl.now = t
+                    ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 50, 1)
+                end
+                local function onUsRows()
+                    local out = {}
+                    for _, g in ipairs(got) do
+                        if g.row[8] == L.player then
+                            out[#out + 1] = g.row[4]
+                        end
+                    end
+                    return out
+                end
+                onUs("nameplate2", "Creature-B", 3.0) -- B alone on us: its clock at 9.5 (period 3.0: 12.5, 15.5)
+                ctl.Fire("NAME_PLATE_UNIT_ADDED", "nameplate2")
+                hit(9.5)
+                ctl.unitIs.nameplate2target = nil
+                ctl.Fire("UNIT_TARGET", "nameplate2")
+                onUs("target", "Creature-A", 2.0) -- A alone: its clock at 10 (period 2.0: 12, 14)
+                ctl.Fire("PLAYER_TARGET_CHANGED")
+                hit(10)
+                ctl.unitIs.nameplate2target = "player" -- both on us now: only the clocks name a hit
+                ctl.Fire("UNIT_TARGET", "nameplate2")
+                ctl.now = 10.6
+                ctl.Fire("PLAYER_SWING", 2.6, 0) -- our swing on A, parried: A pulled at 10.6 (next 11.2)
+                ctl.now = 11.07
+                ctl.Fire("UNIT_COMBAT", "target", "PARRY", "", 0, 1) -- A's row, credited to our swing
+                ctl.Fire("UNIT_COMBAT", "nameplate2", "PARRY", "", 0, 1) -- B parries someone else at the same time
+                -- B dated at its row: r 1.43, pulled 0.83 (next 11.67); dated at our swing it would be r 1.9, 1.2 (11.3)
+                hit(11.2) -- A's pulled swing
+                hit(11.67) -- B's pulled swing: on B's row-dated clock only (A's next 13.2)
+                assert.are.same({ "Creature-B", "Creature-A", "Creature-A", "Creature-B" }, onUsRows())
+                assert.are.equal(0, L.unattributed)
+            end
+        )
+
         it("ignores a parry dated before the hostile's latest learned hit: its pulled swing already landed", function()
             local function hit(t)
                 ctl.now = t

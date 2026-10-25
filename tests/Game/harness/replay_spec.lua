@@ -384,9 +384,10 @@ describe("the replay world", function()
             return ("\n[%s] [Tester (#1)] Casting %s %s"):format(t, b, c)
                 .. ("\n[%s] [Tester (#1)] Completed cast %s"):format(t, b)
         end
+        local queued = "\n[2.05] [Tester (#1)] Aura gained: {SpellID: 900060, Tag: 1}" -- its queue aura
         -- Heroic Strike's tags (Tag 1 the free queueing cast) and Maul's (the paid landing tagged)
         for _, tags in ipairs({ { true, false }, { false, true } }) do
-            local log = text():gsub("(\n%[2%.00%][^\n]*)", "%1" .. line("2.00", tags[1], 0), 1)
+            local log = text():gsub("(\n%[2%.00%][^\n]*)", "%1" .. line("2.00", tags[1], 0) .. queued, 1)
             log = log:gsub("(\n%[3%.90%][^\n]*Dodge)", "%1" .. line("3.90", tags[2], 9), 1)
             local R = replay.new(log, H, O)
             local W = at(R.world(setmetatable({ tag = "-q" }, { __index = WO }), 1), R.pull + 4)
@@ -399,6 +400,20 @@ describe("the replay world", function()
             assert.are.same({ { "queue", 200 }, { "unqueue", 390 }, { "cast", 390 } }, got)
             assert.are.equal("strike", R.next(R.pull + 2.5)) -- the landing is no press: the next is 8.10's strike
         end
+    end)
+
+    it("fails an on-next-swing strike's free cast that queues no aura before its next cast (a free landing)", function()
+        local function line(t, cost)
+            local b, c =
+                "{SpellID: 900060}", "(Cost = " .. cost .. ".000, Cast Time = 0s, GCD = 0s, Effective Time = 0s)"
+            return ("\n[%s] [Tester (#1)] Casting %s %s"):format(t, b, c)
+                .. ("\n[%s] [Tester (#1)] Completed cast %s"):format(t, b)
+        end
+        local log = text():gsub("(\n%[2%.00%][^\n]*)", "%1" .. line("2.00", 0), 1)
+        log = log:gsub("(\n%[3%.90%][^\n]*Dodge)", "%1" .. line("3.90", 9), 1)
+        assert.has_error(function()
+            replay.new(log, H, O)
+        end, "the free lunge at 2 queues no aura")
     end)
 
     it("replays a partial block on us as the client's BLOCK_REDUCED wound, our health untouched", function()
