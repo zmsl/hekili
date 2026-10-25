@@ -17,9 +17,9 @@ local Stats = I.Stats
 
 --- A flip pin measures regen only when the last short report was at most this long before it (TDF Belief.PIN_EXACT).
 I.PIN_EXACT = 0.15
---- Seconds our own modelled gain (a `now`'s `gain`, a refund) takes to reach the client's usability answers (the
---- harness's usableDelay, UNMEASURED until G7): a short answer read sooner that the gain lifts past the cost predates
---- it (a same-frame press after Bloodrage), so it is no rung.
+--- Seconds a gain the belief modelled (a `now`'s `gain`, a refund, a hit's `taken` rage) takes to reach the client's
+--- usability answers (the harness's usableDelay, UNMEASURED until G7): a short answer read sooner that the gain lifts
+--- past the cost predates it (a same-frame press after Bloodrage, a block's rage), so it is no rung.
 I.GAIN_SHOWS = 0.1
 --- A swing-paid slot's scale is measured over at least this many model steps of its paying hand (GAP AC).
 I.SWING_STEPS = 5
@@ -89,7 +89,7 @@ local R = {
     pinDelta = {},
     pinValid = {},
     pinOwn = {},
-    ownT = {}, -- our own latest gain's time (I.ResourceShift), and what we gained within I.GAIN_SHOWS of it
+    ownT = {}, -- our latest modelled gain's time (ownGain), and what we gained within I.GAIN_SHOWS of it
     ownV = {},
     swFrom = {},
     skipFrom = {},
@@ -259,11 +259,18 @@ end
 
 -- After a measurement moved lo0, slot r's modelled floor (`was`, lo0 + over before it), if any, stays where it was
 -- unless the measurement's top `top` falls under it (then it is lo0). Allocates nothing.
+-- A gain the belief modelled into slot r at t (I.GAIN_SHOWS). Allocates nothing.
+local function ownGain(r, delta, t)
+    R.ownV[r] = t - R.ownT[r] < I.GAIN_SHOWS and R.ownV[r] + delta or delta
+    R.ownT[r] = t
+end
+
+local keepFloor = false -- the Usable apply's: this short answer leaves the modelled floor (I.GAIN_SHOWS)
 local function remeasure(r, was, top)
     if not R.assume[r] then
         return -- no modelled floor: a measurement moves lo0 alone, as before
     end
-    if top < was - I.EPS then
+    if top < was - I.EPS and not keepFloor then
         R.assume[r], R.over[r] = false, 0
         return
     end
@@ -1101,8 +1108,16 @@ I.On(Obs.Usable, function(o, t, lag)
     elseif now == SHORT and r ~= 0 and o.t >= R.ownT[r] and o.t - R.ownT[r] < I.GAIN_SHOWS then
         local c = I.CostOf(a)
         if R.est0[r] >= c and R.est0[r] - R.ownV[r] < c then
-            now = NOT -- read before our own gain showed (I.GAIN_SHOWS): no rung; a later answer still counts
+            now = NOT -- read before our gain showed (I.GAIN_SHOWS): no rung; a later answer still counts
         end
+    end
+    -- a short answer read before the regen's crossing of the cost could show (I.GAIN_SHOWS) still caps, but leaves the
+    -- modelled floor: a pin a tick of regen contradicts is no proof the rest assumption was wrong (remeasure)
+    keepFloor = false
+    if now == SHORT and r ~= 0 and R.swing[r] == 0 and lag <= 0 then
+        local c = I.CostOf(a)
+        local ga, gb = spans(r, o.t - I.GAIN_SHOWS, I.GAIN_SHOWS)
+        keepFloor = c - I.EPS >= R.est0[r] - R.regE[r] * ga - R.spE[r] * gb and R.lo0[r] + R.over[r] >= c - I.EPS
     end
     local was, wasT = usable[a], ansT[a]
     usable[a], ansT[a] = now, o.t
@@ -1370,6 +1385,7 @@ I.On(Obs.PlayerHit, function(o, t)
                 norm(r)
                 -- the full gain even when capped, as I.ResourceShift does (review minor 3: skipped for both)
                 R.pinDelta[r], R.gain[r], R.pinOwn[r] = R.pinDelta[r] + gain, R.gain[r] + gain, true
+                ownGain(r, gain, t)
                 I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.PlayerHit)
                 local sec = floor(t) -- out of combat too: the pull's own hits count once combat starts
                 local i = sec % I.TAKEN_WINDOW + 1
@@ -1485,8 +1501,7 @@ function I.ResourceShift(r, delta, t, event)
     if delta > 0 then
         R.gain[r] = R.gain[r] + delta -- explains a flip (the Usable apply)
         R.pinOwn[r] = true
-        R.ownV[r] = t - R.ownT[r] < I.GAIN_SHOWS and R.ownV[r] + delta or delta
-        R.ownT[r] = t
+        ownGain(r, delta, t)
     elseif delta < 0 then
         R.spends[r] = R.spends[r] + 1 -- a spend between a credit and its verdict voids the verdict (the oracle)
         R.sinceShort[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, false, false

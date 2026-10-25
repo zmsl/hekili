@@ -258,6 +258,20 @@ describe("resources", function()
             assert.is_true(I.res.lo0[1] <= 40.5, tostring(I.res.lo0[1]))
         end)
 
+        it("keeps the modelled floor past a short answer read before the regen's crossing could show", function()
+            I.Fold(10, false)
+            I.ResourceShift(1, -80, 10, Obs.CastSuccess) -- from rest: 20, its floor moving with the spend
+            assert.is_true(I.res.assume[1])
+            obs(Obs.Usable, 10.58, FINISHER, 0, 1) -- 25.8 believed, 24.8 a tenth of a second ago: the crossing's tick
+            I.Fold(10.58, false)
+            local e = VS.Power(ENERGY, 10.58)
+            within(25 - I.EPS, e.est, 1e-6) -- still a rung
+            assert.is_true(I.res.assume[1]) -- the floor stays
+            obs(Obs.Usable, 10.9, FINISHER, 0, 1) -- short again well past the crossing: the floor was wrong
+            I.Fold(10.9, false)
+            assert.is_false(I.res.assume[1])
+        end)
+
         it("rests at its maximum of 100, as before rest became a flag", function()
             assert.are.same({ 100, 100 }, { VS.Power(ENERGY, 1).est, I.res.rest[1] })
         end)
@@ -2004,6 +2018,22 @@ describe("resources", function()
             assert.are.same({ 12, 9, 100, "modelled" }, { r.est, r.lo, r.hi, r.basis }) -- lo += 1.5 a hit; hi was 100
             assert.are.equal(12, I.res.gain[1]) -- our own gain: a flip it explains pins exactly
         end)
+
+        it(
+            "keeps a hit's rage over a short answer read before it can show (I.GAIN_SHOWS), and caps on one after",
+            function()
+                taken(function()
+                    return 20, 0
+                end)
+                hit(11, BLOCKED, 30) -- 20 rage: spender_b (15) affordable
+                obs(Obs.Usable, 11.05, 2, 0, 1) -- short: the client's answer from before the hit's rage
+                I.Fold(11.05, false)
+                within(20, VS.Power(fs.RAGE, 11.05).est)
+                obs(Obs.Usable, 11.5, 2, 0, 1) -- still short once it would show: the answer wins
+                I.Fold(11.5, false)
+                within(15 - I.EPS, VS.Power(fs.RAGE, 11.5).est)
+            end
+        )
 
         it("moves lo by gain - width (never below 0) and hi by gain + width, clamped to the maximum", function()
             taken(function()
