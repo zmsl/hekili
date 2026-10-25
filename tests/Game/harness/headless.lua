@@ -28,6 +28,7 @@ M.KNOWN_LOAD_NILS = {
     ["LibDualSpec-1.0-35 test"] = "LibStub probes a minor version",
     LibStub = "LibStub.lua's own `_G.LibStub` probe before it defines it",
     HekiliDB = "no saved variables (a fresh profile)",
+    GAME_LOCALE = "AceLocale-3.0's translator override (unset on a player's client)",
     HekiliCustomEditorInsertLink = "Hekili's own probe of an optional hook",
     AceGUIEditBoxInsertLink = "AceGUI's own probe",
     AceGUIMultiLineEditBoxInsertLink = "AceGUI's own probe",

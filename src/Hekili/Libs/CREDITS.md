@@ -8,7 +8,7 @@ Forever = WoW Forever client 1.60.1.70338, `## Interface: 16001`.
 A library's own `.toc` is not loaded (Hekili loads the files through `embeds.xml`), so its `## Interface` line is
 evidence only. "Load gate" is any early return or branch keyed on build, interface or project ID.
 
-The twelve Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Development Team) copied into each folder.
+The thirteen Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Development Team) copied into each folder.
 
 | Library | Upstream | Pin | Licence | Author credit | Forever support upstream | Load gate |
 |---|---|---|---|---|---|---|
@@ -17,6 +17,7 @@ The twelve Ace3 folders carry Ace3's `LICENSE.txt` (BSD-style, Ace3 Development 
 | AceAddon-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
 | AceGUI-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None at load; `widgets/AceGUIWidget-ColorPicker.lua:16` inverts alpha when `WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE` |
 | AceConsole-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
+| AceLocale-3.0 | Ace3 (`AceLocale-3.0/`) | Ace3 `Release-r1403`, d295b12 (MINOR 6; fetched 2026-10-25 from raw.githubusercontent.com/WoWUIDev/Ace3/d295b12f8b889a30e86e0e901c5494df4b149c49) | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None (reads the client's `GetLocale()` once at load, and `GAME_LOCALE`, a translator's override, when set; enGB maps to enUS) |
 | AceConfig-3.0 (Registry, Cmd, Dialog) | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
 | AceTimer-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |
 | AceSerializer-3.0 | Ace3 | Ace3 `Release-r1403`, d295b12 | Ace3 BSD-style, `LICENSE.txt` | Ace3 Development Team | No (as Ace3) | None |

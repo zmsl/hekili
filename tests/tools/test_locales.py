@@ -17,13 +17,13 @@ class Repository(unittest.TestCase):
             rc = locales.main(["--check"])
         self.assertEqual(rc, 0, out.getvalue())
 
-    def test_every_language_file_is_loaded_by_the_toc(self):
+    def test_the_string_table_loads_first_and_locales_lua_last_before_the_code(self):
         with open(os.path.join(locales.SRC, "Hekili", "Hekili.toc"), encoding="utf-8") as f:
-            toc = f.read()
-        self.assertIn("Locales\\Locales.lua", toc)
-        for locale in locales.languages():
-            self.assertIn("Locales\\%s.lua" % locale, toc)
-        self.assertLess(toc.index("Locales\\Locales.lua"), toc.index("Hekili.lua"))
+            lines = [l.strip() for l in f if l.strip() and not l.startswith("#")]
+        block = ["Locales\\enUS.lua"] + ["Locales\\%s.lua" % loc for loc in locales.languages()] + ["Locales\\Locales.lua"]
+        start = lines.index(block[0])
+        self.assertEqual(lines[start : start + len(block)], block)
+        self.assertLess(start + len(block) - 1, lines.index("Hekili.lua"))
 
 
 class Keys(unittest.TestCase):
@@ -49,6 +49,18 @@ class Keys(unittest.TestCase):
         keys, problems = self.keys('-- L["no"]\ns = "L[\\"no\\"]" t.L["no"] XL["no"] L2["no"]')
         self.assertEqual(keys, [])
         self.assertEqual(problems, [])
+
+
+class Render(unittest.TestCase):
+    def test_enus_is_every_key_as_true_under_a_silent_default_locale(self):
+        text = locales.render_enus("Hekili_Warrior", {"src/Hekili_Warrior/Warrior.lua": ["Arms", 'say "hi"']})
+        self.assertIn('local L = LibStub("AceLocale-3.0"):NewLocale("Hekili_Warrior", "enUS", true, true)\n', text)
+        self.assertIn('-- Hekili_Warrior/Warrior.lua\nL["Arms"] = true\nL[\'say "hi"\'] = true\n', text)
+
+    def test_a_language_file_registers_its_own_locale_and_returns_elsewhere(self):
+        text = locales.render("Hekili_Warrior", "zhCN", {"src/Hekili_Warrior/Warrior.lua": ["Arms", "Fury"]}, {"Arms": "武器"})
+        self.assertIn('local L = LibStub("AceLocale-3.0"):NewLocale("Hekili_Warrior", "zhCN")\nif not L then\n    return\nend\n', text)
+        self.assertIn('L["Arms"] = "武器"\n-- L["Fury"] = ""\n', text)
 
 
 class Codes(unittest.TestCase):

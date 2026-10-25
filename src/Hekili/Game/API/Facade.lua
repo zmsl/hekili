@@ -937,7 +937,6 @@ local PASSTHROUGH = {
     { "GetFramerate", "plain [W sweep 2026-10-16]" },
     { "GetInstanceInfo", "plain [W sweep 2026-10-16]" },
     { "GetInventoryItemID", "plain [W PR13]" },
-    { "GetLocale", "plain (the client language, fixed for the session; Locales/Locales.lua)" },
     { "GetNetStats", "plain [W sweep 2026-10-16]" },
     { "GetNumClasses", "plain [W sweep 2026-10-16]" },
     { "GetNumGroupMembers", "plain [W sweep 2026-10-16]" },

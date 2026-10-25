@@ -13,7 +13,8 @@ src/Hekili/Locales/<locale>.lua for each language:
 Keys are grouped by the file that first uses them, so a translator can see where each one shows. Run from the
 repository root after changing any text:
 
-    python3 tools/locales.py            update every src/Hekili/Locales/<locale>.lua
+    python3 tools/locales.py            write src/Hekili/Locales/enUS.lua and update every
+                                        src/Hekili/Locales/<locale>.lua
     python3 tools/locales.py --check    change nothing; exit 1 if a file is out of date, a key is not a literal, or a
                                         translation drops a format code (%s, %d...), a colour (|c...|r) or a line break
 
@@ -27,7 +28,8 @@ import sys
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 SRC = os.path.join(ROOT, "src")
 LOCALES = os.path.join(SRC, "Hekili", "Locales")
-SKIP = ("Locales.lua",)  # files in Locales/ that are not a language
+CORE = "Hekili"
+SKIP = ("Locales.lua", "enUS.lua")  # files in Locales/ that are not a translation
 UNUSED_MARK = "-- No longer used"
 
 NAMES = {
@@ -45,7 +47,7 @@ NAMES = {
 
 HEADER = """\
 -- Locales/{locale}.lua
--- {name} ({locale}) translation of Hekili Forever. Written by tools/locales.py, which keeps the translations and adds
+-- {name} ({locale}) translation of Hekili Forever ({app}). Written by tools/locales.py, which keeps the translations and adds
 -- new text as it appears: only edit the L[...] lines, other changes here are lost.
 --
 -- To translate a line, remove the "-- " in front and type the translation between the empty quotes:
@@ -55,11 +57,19 @@ HEADER = """\
 -- The key in L["..."] is the English text: leave it exactly as it is. Untranslated lines show in English. Keep every
 -- format code (%s, %d, %.1f...), colour (|cFFFFD100...|r), texture (|T...|t) and line break (\\n) of the English text.
 
-local _, ns = ...
-if ns.Locale ~= "{locale}" then
+local L = LibStub("AceLocale-3.0"):NewLocale("{app}", "{locale}")
+if not L then
     return
 end
-local L = ns.L
+"""
+
+ENUS_HEADER = """\
+-- Locales/enUS.lua
+-- The English string table of {app} (AceLocale-3.0, silent): every L[...] key its code uses, each its own text.
+-- Written by tools/locales.py: do not edit. It loads first, so its NewLocale is the app's first (the one whose
+-- `silent` counts): a key no table holds answers itself.
+
+local L = LibStub("AceLocale-3.0"):NewLocale("{app}", "enUS", true, true)
 """
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -262,8 +272,18 @@ def read_translations(path):
     return out
 
 
-def render(locale, grouped, translations):
-    lines = [HEADER.format(locale=locale, name=NAMES.get(locale, locale)).rstrip("\n")]
+def render_enus(app, grouped):
+    lines = [ENUS_HEADER.format(app=app).rstrip("\n")]
+    for rel, keys in grouped.items():
+        lines.append("")
+        lines.append("-- " + rel[len("src/") :])
+        for key in keys:
+            lines.append("L[%s] = true" % lua_quote(key))
+    return "\n".join(lines) + "\n"
+
+
+def render(app, locale, grouped, translations):
+    lines = [HEADER.format(app=app, locale=locale, name=NAMES.get(locale, locale)).rstrip("\n")]
     used = set()
     for rel, keys in grouped.items():
         lines.append("")
@@ -306,31 +326,39 @@ def languages():
     return sorted(f[:-4] for f in os.listdir(LOCALES) if f.endswith(".lua") and f not in SKIP)
 
 
+def sync(path, text, check, stale):
+    """Writes `text` to `path` unless --check; a difference is stale."""
+    current = None
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            current = f.read()
+    if current != text:
+        if check:
+            stale.append(os.path.relpath(path, ROOT).replace(os.sep, "/"))
+        else:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8", newline="\n") as f:
+                f.write(text)
+
+
 def main(argv):
     check = "--check" in argv
     grouped, problems = collect()
     stale = []
     total = sum(len(k) for k in grouped.values())
+    sync(os.path.join(LOCALES, "enUS.lua"), render_enus(CORE, grouped), check, stale)
     for locale in languages():
         path = os.path.join(LOCALES, locale + ".lua")
         translations = read_translations(path)
         for key, value in translations.items():
             problems += ["%s.lua: %s" % (locale, p) for p in code_problems(key, value)]
-        text = render(locale, grouped, translations)
-        with open(path, encoding="utf-8") as f:
-            current = f.read()
+        sync(path, render(CORE, locale, grouped, translations), check, stale)
         done = sum(1 for keys in grouped.values() for k in keys if k in translations)
-        if current != text:
-            if check:
-                stale.append(locale)
-            else:
-                with open(path, "w", encoding="utf-8", newline="\n") as f:
-                    f.write(text)
         print("%s: %d of %d translated" % (locale, done, total))
     for p in problems:
         print(p)
-    for locale in stale:
-        print("%s.lua is out of date: run python3 tools/locales.py and commit the result" % locale)
+    for rel in stale:
+        print("%s is out of date: run python3 tools/locales.py and commit the result" % rel)
     return 1 if problems or stale else 0
 
 
