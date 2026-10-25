@@ -24,7 +24,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `src/ForeverProbe/`: the dev-only in-game probe addon (its own conventions; outside `tests/helpers/addons.lua`, lint, format, typecheck and the boundary checks), never packaged (`.pkgmeta` ignores it, `tools/check_package.sh` and `tests/Forever/publication_spec.lua` fail on it); delete it when the addon is stable. In game it is linked like the others (`mklink /D ForeverProbe \\wsl.localhost\personal\home\zack\src\hekili\src\ForeverProbe`), its saved variables live at `_forever_/WTF/.../SavedVariables/ForeverProbe.lua`, and its launch-day kit `src/ForeverProbe/docs/launch-day.md` travels with it.
 
   Content reaches the engine only through the public `Hekili` object (the registration API, `State`, `Class`,
-  `Client`, and `Hekili:GetLocale` for its text; `tests/boundary_spec.lua`). Every TOC's `## Version` is `@project-version@`; the packager stamps the release tag into all four (one zip, one version); the core's ContentAPI
+  `Client`, and `Hekili:GetLocale` for its text; `tests/boundary_spec.lua`). Every TOC's `## Version` is `@project-version@`; the packager stamps the release tag into every one (one zip, one version); the core's ContentAPI
   (`CONTENT_API` in `Engine/Content.lua`, matched against each content TOC's `## X-Hekili-ContentAPI`) bumps only when
   the Schema or the content surface changes. The core's modules:
   - root: `Hekili.toc`, `Hekili.lua` (the addon object), `Bindings.xml`, `embeds.xml`;
