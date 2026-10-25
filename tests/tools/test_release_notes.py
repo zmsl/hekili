@@ -58,7 +58,7 @@ def fake_git(answers):
 def repo(ref="v0.3.0", prev="v0.2.0", log="--- feat(hunter): pack\nbody line\nCo-Authored-By: X <x@y>\n"):
     describe = ("describe", "--tags", "--abbrev=0", "--match", "v[0-9]*", "--exclude", "*-*", ref + "^")
     answers = {
-        ("log", "--no-merges", "--format=--- %s%n%b", prev + ".." + ref if prev else ref, "--", "src"): log,
+        ("log", "--no-merges", "--format=--- %s%n%b", prev + ".." + ref if prev else ref, "--", "src", ":!src/ForeverProbe"): log,
         ("show", ref + ":CHANGELOG.md"): CHANGELOG,
         ("show", ref + ":docs/superpowers/plans/p.md"): PLAN,
     }

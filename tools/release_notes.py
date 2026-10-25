@@ -75,7 +75,7 @@ def open_after(text):
 def gather(ref, run=git):
     prev = previous_tag(ref, run)
     span = prev + ".." + ref if prev else ref
-    commits = run("log", "--no-merges", "--format=--- %s%n%b", span, "--", "src")
+    commits = run("log", "--no-merges", "--format=--- %s%n%b", span, "--", "src", ":!src/ForeverProbe")
     commits = re.sub(r"^(Co-Authored-By|Claude-Session):.*\n?", "", commits, flags=re.M | re.I).strip()
     changelog = run("show", ref + ":CHANGELOG.md")
     # a final's "## <tag>" is written by publish.yml after the notes, so Unreleased leads; the tag's own section is the
