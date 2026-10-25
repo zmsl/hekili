@@ -130,8 +130,10 @@ swings at us) have our parries:
 | log | our parries | hastened (r > 0.2 d) | pulls (ms) | window parry -> swing (s) | our casts in the windows (on-GCD / all on-GCD) |
 |---|---|---|---|---|---|
 | warrior_protection | 14 | 6 | 226, 941 x3, 470, 743 (d 2.35 s) | 5.1 | 2 / 94 (Shield Slam 57.15, Rend 156.17; Heroic Strike queued at 4.50 and 96.26, Shield Block at 57.04 and 95.54 are off the GCD) |
-| paladin_protection | 18 | 7 | 600 x5, 68, 200 (d 1.5 s) | 3.5 | 1 / 46 (126.04) |
+| paladin_protection | 11 | 7 | 600 x5, 68, 200 (d 1.5 s) | 3.5 | 1 / 46 (126.04) |
 | every other log (25) | 0 | 0 | | | |
+
+(Corrected 2026-10-23 by the plan: the log has 11 Parry lines; the 7 hastened ones are unchanged.)
 
 The replay world parses only our lines and the target's auras (`tests/Game/harness/replay.lua:145-157`, "Not replayed:
 the target's swings", `:13-14`): the target's swing lines, its Parry by us included, are dropped, while our swings are

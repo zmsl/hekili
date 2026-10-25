@@ -24,8 +24,8 @@ M.UNMATCHED_BY = {
 -- instance, hard casts and channels in the world), which moved Arms 1.38 -> 1.57, Feral 2.07 -> 2.12, Balance
 -- 1.63 -> 2.51 and Protection 0.65 -> 0.31; the hard casts' starts now justify a retraction (Arms's Slam 0.59 -> 0.02).
 -- Parry-haste spec decision 63: the world models parry haste; its swing reschedule reorders every seeded fight, so a
--- floor that failed, or improved, in all three seed sets (1-20 / 21-40 / 41-60) is the worst of the three rounded up
--- to the next 0.1 (the "1 / 2 / 3" beside it). Fury L60 retracted 0.4: the pre-existing swing-forecast class (a
+-- floor that failed in any seed set (1-20 / 21-40 / 41-60), or improved in all three, is the worst of the three rounded
+-- up to the next 0.1 (the "1 / 2 / 3" beside it). Fury L60 retracted 0.4: the pre-existing swing-forecast class (a
 -- cost-gated ability shown ready on a swing's forecast rage; oracle 0.09/min over the 60 fights).
 M.FLICKER = {
     ["Arms"] = { flicker = 1.5, retracted = 0.1 }, -- 1.43 / 1.21 / 1.43, 0 / 0.02 / 0 (decision 63)

@@ -1,6 +1,13 @@
 # Parry haste: design
 
-Status: **spec, ready for a plan.** Parent: `2026-10-23-attribution-recovery-design.md` §8 (which links here).
+Status: **BUILT** (plan `docs/superpowers/plans/2026-10-23-parry-haste.md`). The owner's ruling of 2026-10-23 ("let's
+assume that the increase in swing speed for the next swing is a consistent rule for us and enemies") makes wowsims's
+rule Forever's; PHS1 is a launch-day (2026-11-04) confirmation, not a prerequisite. Amended by the plan: the pull is
+keyed to the swing it was taken from (`VS.SwingPull` returns `pull, from`; Hekili applies it only while `mh_actual` is
+that swing) instead of cleared at `Obs.Swing` c = 4; the world hastens by default (`W.parryHaste`, off only in
+world_spec's own case for the knob); the replay feeds the tank logs' Parry, Dodge and Block lines on us (open 3). The
+build's further amendments, the one-time re-floor and the belief bugs found while gating are in §7. Parent:
+`2026-10-23-attribution-recovery-design.md` §8 (which links here).
 Research: `docs/research/2026-10-23-parry-haste.md` (the rule from wowsims's source, the code today, the replay counts).
 Decisions continue the parent's numbering (its last is 56).
 
@@ -27,7 +34,9 @@ Belief, `Game/State/Families/Swing.lua`:
   + x` (a second parry before the swing stacks, as in wowsims: each parry reads the already-pulled `swingAt`). The
   weight and `confAt` are kept (the anchor's evidence is the same `PLAYER_SWING`). `last[1]` is untouched (it is the
   real last swing).
-- `Obs.Swing` c = 4 on hand 1 (`:50-72`) resets `pull[1] = 0` (the real swing re-anchors). `Obs.CombatEnd` likewise.
+- The pull is kept with the swing it was taken from (`from` = `VS.LastSwing(1)` at the parry) and restarts at a
+  parry after a newer swing; `Obs.Swing` c = 4 re-anchors the hand without touching it (the plan's amendment 1).
+  `Obs.CombatEnd` clears it.
 - Shifting the anchor moves every later predicted swing too, which is right until the next `PLAYER_SWING` and then
   overwritten.
 - `VS.SwingPull(hand)` (new, `docs/api` entry): `pull[hand]`, 0 for hands 2 and 3. Allocates nothing.
@@ -92,13 +101,16 @@ The plan's first task measures the windows' disagreements in both Protection rep
 ## 6. Probes and open questions
 
 - **PHS1** (`docs/dev/ingame-ledger.md`): ten parries each way, our `PLAYER_SWING` and the mob's hits around them;
-  confirms the clamp, that the off hand is not pulled, and the row's lag residual.
+  confirms the clamp, that the off hand is not pulled, and the row's lag residual. Launch-day confirmation (2026-11-04)
+  under the owner's ruling.
 - Open 1: whether Forever applies it to specials as wowsims does (PHS1 (a) with a parried Sunder Armor or Mortal
   Strike; the design assumes yes, as the source).
 - Open 2: the swing ticket's pending window is capped at the payload duration (`Rows.lua:110-114`); after our parry the
   next swing can come at `0.6 d`, inside the previous ticket's window. Proposed: no change (LR by lag separates them);
   revisit if the world A/B shows main-hand credit errors after parries.
-- Open 3: replay scope: only the Parry lines (enough for this spec), or every target swing on us.
+- Open 3: replay scope: only the Parry lines (enough for this spec), or every target swing on us. Resolved by the plan:
+  the Parry lines only; the rest stays gap AH. Amended 2026-10-24 (Task 5): the build emits the Dodge and Block lines
+  too (§7.4).
 - Open 4: a parry by us while the main hand is not swinging (out of auto-attack, a cast in progress): wowsims requires
   `AutoSwingMelee`; the belief requires an anchor in combat. PHS1 (b) with a mid-cast parry would show the game's.
 
@@ -114,3 +126,113 @@ The plan's first task measures the windows' disagreements in both Protection rep
 | 62 | A PARRY row on a hostile with an attacker clock shifts that clock's anchor by the pull, once per GUID per row time, whoever was parried | the rule is the parrier's; keeps onus credit in a crowd |
 | 63 | The harness world hastens both directions behind a `parryHaste` knob (default on); the replay emits the log's Parry lines on us | the replay's truth has it; the world must too, or its floors measure nothing |
 | 64 | The floors move with this spec as the named cause; the plan measures each move first (replay windows, world A/B) | no floor moves unexplained |
+
+## 7. Amended 2026-10-24 (Task 5): what was built and measured
+
+These notes amend the sections above, which keep the text as designed.
+
+### 7.1 Decision 59: the pull is keyed to its swing
+
+Decision 59's reason says "the next `PLAYER_SWING` clears it"; the build does not clear it there. `VS.SwingPull(1)`
+returns `pull, from`, `from` being the swing the pull was taken against (`VS.LastSwing(1)` at the parry); a parry after
+a newer swing restarts the pull at that swing (`Game/State/Families/Swing.lua:119-120`), and `Obs.CombatEnd` clears it. Hekili's
+reset applies it only while `mh_actual` is `from` (within 1 ms, `Engine/Sim/State.lua:6405-6409`): before the pulled
+swing and between its `PLAYER_SWING` and its row, never after that row and never to another swing. A missed
+`PLAYER_SWING` lets a later parry add to the old pull under one `from`; the next swing row corrects it. A queued
+strike's swing emits a spell row and never moves `mh_actual`, so a pull taken after it is not applied (the safe side;
+the plan's open question 1).
+
+### 7.2 E8: a parry before the fight's first swing
+
+§2 said the E8 branch (`mh_actual == 0`) is unchanged. It gains one line: a pull taken before this fight's first swing
+(`from` 0 or an older fight's swing, so `from < state.combat`) anchors `mh_pseudo` at `state.combat - pull`
+(`State.lua:6417`); `nextMH` stays 0 as E8 has it. A first swing that has landed but whose row has not come yet
+(`mh_actual` 0, `from >= state.combat`) waits for the row, at most a landing lag (about 0.47 s; the safe side). The
+belief's combat start and Hekili's `state.combat` can differ slightly (bounded).
+
+### 7.3 The mob's clock: the pull dated at our swing, and the latest-hit guard
+
+§3 computed the pull at the PARRY row's time. The server (and the world) pulls at our swing, a landing lag (about
+0.474 s, more than the 0.2 d floor) before our row, so a row-time pull came short or landed on the wrong swing. Built
+(d6a094e68): when the PARRY row is the avoid Rows just credited to our swing (`L.avoidRowT == t`, `Rows.lua:235`),
+Attackers dates the parry at that swing (`L.avoidT`, `Attackers.lua:223`); the rule is unchanged. And (9c3e77e9f) a
+parry dated before the hostile's latest learned hit pulls nothing: the swing it pulled has landed and re-anchored the
+clock already. Onus with two attackers (seeds 1-100): joining precision 0.939 -> 0.948 and coverage 0.735 -> 0.811
+with the dating; the guard moved nothing measurable. The residual (the pulled hit can land before our parry row) is
+re-floored (§7.5). The dated parry has no GUID or act check (`docs/dev/gaps.md`).
+
+### 7.4 The world both ways; the replay's Parry, Dodge and Block lines
+
+The world hastens both ways by default (06d527b97): our parry pulls our main hand, a mob's parry of us pulls its swing
+on us, never an off hand. The replay emits the target's Parry, Dodge and Block of its swings on us as
+`UNIT_COMBAT player` rows (06d527b97, 808a242cf), not its hits on us (gap AH). With the Parry lines alone the Warrior
+Protection replay fell 0.979 -> 0.968: Revenge's window opened at a Parry, and the sim refreshed it with Blocks the
+replay did not emit. With the Dodge and Block lines it is back at 0.979 (94); two Protection timing fixtures moved by
+1 ms. wowsims's partial "Block for N" is emitted as a full BLOCK avoid, a stand-in: in game a partial block is a WOUND
+flagged BLOCK_REDUCED, which the Warrior pack's Revenge trigger does not read (gap AH).
+
+### 7.5 The one-time re-floor (the owner's Option A, 2026-10-24)
+
+Cause: decision 63, the world models parry haste. Its swing reschedule reorders the draws of every seeded fight, so
+world off against world on is not an A/B of the belief (world off already spans K2 solo recall 0.99-1.00 and staged
+0.92-1.00 over five seed sets), and our own pull moves nothing (`L.PARRY_PULL = 0` gives bit-identical solo cells).
+Rule: a floor that failed in any seed set (worst of three), or improved in all three, is set to the worst of three
+seed sets with the floors file's own rounding and margin. The seed sets: the 200-fight gates 1-200 / 201-400 /
+401-600; detection 1-20 / 21-40 / 41-60; onus 1-100 / 101-200 / 201-300; the loops 1-20 / 21-40 / 41-60 (the floors
+commit e85d26eb1's message names the detection and onus ranges wrongly; these are the ones measured).
+
+Measured at dafe8312a; the full table is archived in `.superpowers/sdd/2026-10-23-parry-haste/refloor-24679ce0-dafe8312.txt`
+(gitignored, so its counts are here):
+
+- Detection: 210 cell-metrics down (53 cells: 47 by draw reordering, 6 by twins drift in K14/K14p, where the world
+  pulls one hand of a lockstep pair), 51 up, 579 unchanged.
+- Loops (`pack_gate.FLICKER`): 11 down, 5 up (Arms, Fury L24, Feral, Balance, Arcane); `FLICKER_K` 1.6 -> 1.7
+  (Balance's flicker against the oracle).
+- Named exceptions: Fury L60 retracted 0.1 -> 0.4 (a pre-existing class: a cost-gated ability shown ready on a swing's
+  forecast rage; ours 0.16 against the oracle's 0.09 per minute over the 60 fights); Fury L60 flicker 1.8 -> 1.9 (set 3
+  1.88); onus 2x joining precision 0.95 -> 0.94 and coverage 0.80 -> 0.77; the Arms replay 0.89 -> 0.88 (the same-frame
+  Bloodrage gap, fix 40, which the tie hand-back's correct dodge refund exposed); the Fury replay 0.89 -> 0.92 (up);
+  ready-time floors Arms {0.80, 6} -> {0.88, 5} and Guardian {0.54, 40} -> {0.54, 41}; live Paladin Protection L40
+  10.4 -> 11.0 s and Enhancement L60 8.0 -> 8.2 s; the Fury (decisions 55, 70), Guardian (52-53, 79-81) and Arms (68,
+  74: 177.88 Sunder Armor late -> never) timing fixtures and arms_recs re-recorded (e3f39a083).
+- Unmoved: the solo safety gates (3/0 on all three 200-fight sets, `order` 0 after §7.6's restamp), the Warrior
+  Protection replay (0.979) and the Paladin Protection replay (0.625).
+
+### 7.6 Belief and harness bugs found while gating
+
+Each fails its test when reverted.
+
+- Tie hand-back narrowed (f8ebe1545): a white-school avoid in a swing's frame (`SAME_FRAME` 0.05 s) that the swing's LR
+  refused went foreign, so an instant special pressed 20 ms after a white swing lost its refund (Druid decay errMax
+  9.75). The row now goes back to the ticket it tied with, only for a pass-1 match tied by the swing's frame alone (not
+  the first swing's window, not the core band; pass (d) never). A `T.Replaceable` match keeps pass 1, so it is handed
+  back too and replaces there (tickets_spec).
+- Expiry-row restamp (3293c5a18): a swing whose row fell in the lag tail stayed open, the pulled next swing's row came
+  first, and the old ticket's expiry row was stamped before it (solo `order` 0 / 1 / 1). A late expiry row is stamped
+  at the hand's latest emitted row (K10 cells bit-identical; expiring the stale ticket instead worsened K10 party
+  rageErr).
+- Combat-end expectation (e7e63ec33): `T.EndCombat` closed a swing opened inside its land window with no expectation,
+  so its rage was never believed (decay errMax 3.15); it now stages the expectation (c = 5).
+- Demoralizing Roar declared non-damaging (aed652a11): `expects = "instant"` without a school gives school 0, which
+  takes avoids only; a Maul landing 0-25 ms after an instant Roar had been paid to the Roar's older ticket. Other
+  non-damaging instants still on the default school are a gap.
+- The harness's `druid_vs` copy (503ff11f6): `M.boot` copied no `expects`, `velocity` or `school` of an ability and no
+  `tick_time` or `dot` of an aura, so no Druid declaration reached the harness belief (bear maulRows 2470 -> 2473).
+- The observer's form-change frame (24679ce0f): a form delta in a frame that a later gain joined was answered alone, with
+  the pre-shift rage (Maul usable in Bear); it now moves with the frame's spend (Bear-entry overshoot 3.74 -> 0).
+- Reverted, `woundSeen` (52ed18355, reverted by dafe8312a): no expectation at a lost close when an untaken white wound
+  fell in the swing's window. Its target was the observer bug above, and it cost 23 detection rageErr cells (a
+  partner's white wound suppressed a valid expectation: K10 party 24.2 -> 30.2, K10 busy 29.5 -> 36.6, K14f busy
+  48.0 -> 53.6); after the revert all 23 are byte-identical to before it.
+
+### 7.7 Accepted edges (D1-D3, ruled 2026-10-24)
+
+- D1, decision 61 amended: only WOUND rows on us were measured late (0.48 s, the providers plan's DM §3); our PARRY
+  row's lag is unmeasured. If it lags as much, a parry whose hastened swing fires inside the lag reaches the belief
+  after that swing's `PLAYER_SWING`, restarts under the new `from` and pulls the following swing: one early `nextMH`,
+  at most 0.4 d, corrected by the next swing row. Accepted with no guard; PHS1 measures it.
+- D2: in the `lagged` arm the mob clocks anchor at the lagged row time, so `r` reads late there. Accepted (a
+  measurement arm; in game our ~0.47 s landing lag roughly cancels the taken lead). Record only: lagged Fury L60
+  flicker 2.05 against 1.9, meter Fury L24 flicker 2.95 against 2.9.
+- D3: in the `meter` arm a dated mob hit whose row comes after the PARRY row re-anchors the clock and drops the pull.
+  Accepted (an opt-in arm; it misses a pull and never doubles one).

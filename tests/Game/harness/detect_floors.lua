@@ -4,7 +4,7 @@
 -- 2026-10-23 (decisions 51-52, owner ruling: expiry EV): regenerated with the expectation at a swing's lost close; rageErr down.
 -- Fix round 2 (avoidSeen): 9fd58600's floors were never merged; part of their drop rested on believed rage for swings avoided in truth (an error cancelling the under-count), which the avoidSeen fix removes.
 -- Task 5 (attribution-recovery decisions 54-56): recovered (floor, a share) and wash (ceiling) first set by this run.
--- Parry-haste spec decision 63: the world models parry haste; its swing reschedule reorders every seeded fight, so every floor that failed or improved in all three seed sets (1-20 / 21-40 / 41-60) is re-set to the worst of the three. Twins-drift cells K14/K14p: one hand pulled.
+-- Parry-haste spec decision 63: the world models parry haste; its swing reschedule reorders every seeded fight, so every floor that failed in any seed set (1-20 / 21-40 / 41-60), or improved in all three, is re-set to the worst of the three. Twins-drift cells K14/K14p: one hand pulled.
 -- stylua: ignore
 return {
     K1 = {

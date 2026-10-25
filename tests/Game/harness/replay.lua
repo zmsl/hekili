@@ -12,6 +12,7 @@
 -- logs both at once, with the swing's rage), the mob's health at 20% from the execute phase's start (wowsims's is the
 -- last 20% of the duration) and never dead, our distance to it (the request's, then the log's Movement stacks), and
 -- the target's Parry, Dodge and Block of its swings on us (parry-haste spec §4, gap AH; its hits on us are not).
+-- A partial "Block for N" is emitted as a full BLOCK avoid: a stand-in (in game a WOUND flagged BLOCK_REDUCED, gap AH).
 -- Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map through the booted
 -- instance's own ability set (Hekili.Class, booted as the log's race). Credit: the log format is wowsims/forever's
 -- (MIT, https://github.com/wowsims/forever); no code copied.
