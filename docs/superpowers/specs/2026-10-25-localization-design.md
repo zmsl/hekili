@@ -109,7 +109,31 @@ Core pseudo-ability labels (`Potion`, `Trinket #1`, `Wait`, `Variable`…) are U
 can only drift from it. Read at build, the name is a plain string, never secret, with no per-frame cost.
 
 **Cost.** Three Warlock values; the enUS client's DB2 names must equal today's literals (§8 pins it). Headless fakes
-answer `"Spell <id>"`, so the §8 golden test gives the fake those three ids' DB2 names.
+answer `"Spell <id>"`, so the §8 golden test gives the fake those three ids' DB2 names. A spell the client does not
+return (no row on Forever, or not yet cached) falls back to the pack's `L[...]` string for it, so a nil name never
+reaches the options tree: `info and info.name or L["Curse of Weakness"]` (owner, 2026-10-25). The client's official
+zhCN name may word a curse differently from the description text the contributor matched to wowsimscn-forever; the
+client's wording wins.
+
+## 5b. Pack names: an identifier, shown through a label
+
+**Decision** (owner, 2026-10-25). A pack's registered name stays its identifier everywhere it is stored or typed:
+`class.packs[name]` (`RegisterPack`, `Spec.lua:1164`), the profile's `packs[k]` and `spec.package`, `RetirePacks`,
+`/hekili priority <name>`, and import/export strings. Only display goes through one core helper, `PackLabel(name)`:
+- a built-in pack (the name is in `class.packs`, registered by its pack) shows `L[name]` from that pack's own locale
+  app (§2). Silent mode returns the English key when a language has no entry, so enUS is unchanged;
+- any other pack (made or imported by the player) shows its name verbatim.
+
+Packs keep calling `RegisterPack("Arms (wowsims.com)", …)`; their locale files carry the label like any other string,
+and `tools/locales.py` extracts `RegisterPack`'s first argument. Every place a pack name is shown (at least the options
+priority dropdown and the display's pack label; the plan lists them all) calls `PackLabel`. The slash command keeps
+taking the key; also accepting the label is out of scope.
+
+**Why.** Translating the name itself would orphan a player's saved pack and selection when they switch client
+language, and imports between players on different languages would miss. A label keeps the storage stable.
+
+**Cost.** One helper and its call sites; no Content API change beyond §3's. `tools/locales.py --check` flags a
+translated label equal to another pack's key or label in the same spec (it would read as a duplicate).
 
 ## 6. docs/dev/architecture.md §3
 
