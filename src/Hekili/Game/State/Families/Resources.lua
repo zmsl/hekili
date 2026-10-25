@@ -17,6 +17,10 @@ local Stats = I.Stats
 
 --- A flip pin measures regen only when the last short report was at most this long before it (TDF Belief.PIN_EXACT).
 I.PIN_EXACT = 0.15
+--- Seconds our own modelled gain (a `now`'s `gain`, a refund) takes to reach the client's usability answers (the
+--- harness's usableDelay, UNMEASURED until G7): a short answer read sooner that the gain lifts past the cost predates
+--- it (a same-frame press after Bloodrage), so it is no rung.
+I.GAIN_SHOWS = 0.1
 --- A swing-paid slot's scale is measured over at least this many model steps of its paying hand (GAP AC).
 I.SWING_STEPS = 5
 
@@ -85,6 +89,8 @@ local R = {
     pinDelta = {},
     pinValid = {},
     pinOwn = {},
+    ownT = {}, -- our own latest gain's time (I.ResourceShift), and what we gained within I.GAIN_SHOWS of it
+    ownV = {},
     swFrom = {},
     skipFrom = {},
     skipTo = {},
@@ -334,6 +340,7 @@ I.OnBuild(function(def, now)
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
         R.pinOwn[r], R.pinSkip[r], R.swFrom[r], R.skipFrom[r], R.skipTo[r] = false, false, 0, 0, 0
         R.swAccG[r], R.swAccT[r] = 0, 0
+        R.ownT[r], R.ownV[r] = -1e9, 0
         R.pinN[r], R.pinErr[r] = 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
         R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
@@ -1091,6 +1098,11 @@ I.On(Obs.Usable, function(o, t, lag)
     I.SettleDebt(r)
     if now == SHORT and r ~= 0 and not R.readable[r] and pre[a] and not holds(a, t) then
         now = NOT -- short for another requirement: no rung, and no flip from it later
+    elseif now == SHORT and r ~= 0 and o.t >= R.ownT[r] and o.t - R.ownT[r] < I.GAIN_SHOWS then
+        local c = I.CostOf(a)
+        if R.est0[r] >= c and R.est0[r] - R.ownV[r] < c then
+            now = NOT -- read before our own gain showed (I.GAIN_SHOWS): no rung; a later answer still counts
+        end
     end
     local was, wasT = usable[a], ansT[a]
     usable[a], ansT[a] = now, o.t
@@ -1473,6 +1485,8 @@ function I.ResourceShift(r, delta, t, event)
     if delta > 0 then
         R.gain[r] = R.gain[r] + delta -- explains a flip (the Usable apply)
         R.pinOwn[r] = true
+        R.ownV[r] = t - R.ownT[r] < I.GAIN_SHOWS and R.ownV[r] + delta or delta
+        R.ownT[r] = t
     elseif delta < 0 then
         R.spends[r] = R.spends[r] + 1 -- a spend between a credit and its verdict voids the verdict (the oracle)
         R.sinceShort[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, false, false

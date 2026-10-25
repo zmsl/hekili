@@ -280,7 +280,7 @@ M.READY = {
     -- the GCD's end inside it (Arcane's Missiles likewise, about 0.9 s)
     priest_shadow = { 1.50, 36 },
     priest_smite = { 0.50, 27 }, -- 0.500, 27
-    rogue_assassination = { 0.20, 30 },
+    rogue_assassination = { 0.20, 25 }, -- 30 -> 25 (fix 40): a short answer before our own energy gain shows is no rung
     rogue_combat = { 0.28, 16 },
     rogue_subtlety = { 0.20, 45 },
     shaman_enhancement = { 0.96, 3 },
@@ -297,9 +297,11 @@ M.READY = {
     warlock_shadow_brand = { 0.90, 16 }, -- 0.900, 16: Shadow Bolt's, likewise
     warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
     -- 0.880, 5 (was 0.80, 6): the world's parry haste (decision 63); the tie hand-back moves 177.88 sunder late -> never
-    warrior_arms = { 0.88, 5 },
-    -- 0.51, 35 (was 0.48, 32): harness corrected to the measured swing timing (2026-10-22)
-    warrior_fury = { 0.51, 35 },
+    -- 0.680, 6 (fix 40): a short answer read before our own gain shows is no rung, so 177.88 sunder never -> early 0.68
+    warrior_arms = { 0.68, 6 },
+    -- 0.51, 35 (was 0.48, 32): harness corrected to the measured swing timing (2026-10-22); 0.44 (fix 40): Whirlwind at
+    -- 57.09 and 117.06 late -> early 0.09 and 0.06
+    warrior_fury = { 0.44, 35 },
     warrior_protection = { 0.50, 5 },
 }
 

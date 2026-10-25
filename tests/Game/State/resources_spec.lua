@@ -1942,8 +1942,8 @@ describe("resources", function()
                 def.auraIds[REGEN_AURA_A] = { 1021 }
                 def.resources[1].auraRegen = { { aura = "regen_aura_a", interval = 1, value = 10 } }
                 boot(def)
-                I.Fold(10, false)
-                I.ResourceShift(1, 20, 10, Obs.CastSuccess)
+                I.Fold(9.5, false)
+                I.ResourceShift(1, 20, 9.5, Obs.CastSuccess) -- shown by 10 (I.GAIN_SHOWS)
                 obs(Obs.Usable, 10, 2, 0, 1) -- spender_b (15) short: est 14.99
                 I.Fold(10, false)
                 within(15 - I.EPS, VS.Power(fs.RAGE, 10).est)

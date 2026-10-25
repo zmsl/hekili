@@ -348,6 +348,22 @@ describe("Forever Warrior", function()
         end
     )
 
+    -- wowsims sim/warrior/bloodrage.go:18,30 (10 at once x Improved Bloodrage's multiplier; its 10 s of ticks are the
+    -- resource's bloodrage entry) and berserker_rage.go:59,83-85 (10 a rank of Improved Berserker Rage, none without)
+    it("gains Bloodrage's rage and Berserker Rage's talented rage at the press", function()
+        local e = lw.env(w)
+        e.talent.improved_bloodrage = { rank = 2, enabled = true }
+        lw.run(w.abilities.bloodrage.now, e)
+        assert.are.same({ 15 }, e.gained) -- the Arms log's "Gained 15.000 rage from {SpellID: 2687}" at 2/2
+        e = lw.env(w)
+        lw.run(w.abilities.berserker_rage.now, e)
+        assert.are.same({}, e.gained)
+        e = lw.env(w)
+        e.talent.improved_berserker_rage = { rank = 2, enabled = true }
+        lw.run(w.abilities.berserker_rage.now, e)
+        assert.are.same({ 20 }, e.gained)
+    end)
+
     describe("the reactive windows from the combat log (event-facade spec §6)", function()
         local ME, MOB = "Player-1", "Creature-1"
 

@@ -109,6 +109,26 @@ describe("now handlers", function()
         assert.is_true(VS.Cooldown(2687, 9.1).est > 60) -- the declared cooldown
     end)
 
+    it("keeps a `now` gain over a short answer read before the gain can show, and caps on one after", function()
+        register("rage_test", {
+            id = 2687,
+            cooldown = 60,
+            now = function()
+                gain(15, "rage")
+            end,
+        })
+        start()
+        assert.are.equal(0, VS.Power(fs.RAGE, 9).est)
+        cast(2687, 9)
+        ctl.usable[fs.SPENDER_C] = { false, true } -- short of its 10 rage: the client's answer before the gain shows
+        ctl.now = 9.05
+        VS.Drain(9.05)
+        assert.are.equal(15, VS.Power(fs.RAGE, 9.05).est)
+        ctl.now = 9.5 -- still short once the gain would show: the answer wins
+        VS.Drain(9.5)
+        assert.is_true(VS.Power(fs.RAGE, 9.5).est < 10)
+    end)
+
     it("emits our casts' aura rows: APPLIED, REFRESH back-dated, REMOVED at the modelled expiry", function()
         start()
         ctl.Fire("PLAYER_TARGET_CHANGED")
