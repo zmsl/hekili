@@ -314,7 +314,8 @@ Two dev-only targets check this layer outside `make check`:
 - `make bench-ta` times the registry and the tickets on synthetic rows and prints
   `bench-ta rows=N rows/s=R ms/row=X ms/tick=Y ms/tick-expiry=Z (floor rows/s F)`. It fails above 0.02 ms a row, above
   0.10 ms an idle tick or a tick with a full pool expiring, or below 0.8 x the rows/s floor in
-  `tools/bench_ta_floor.lua` (97000, the first clean run's; it only moves up).
+  `tools/bench_ta_floor.lua` (73000, the dev machine's median of five runs on 2026-10-25; it only moves up, except with a
+  named cause).
 
 ## 6. Checking in the game client
 
