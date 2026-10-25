@@ -108,7 +108,7 @@ end
 
 describe("upstream links", function()
     it("has none in shipped files (src/: no github.com/Hekili at all)", function()
-        local files = tracked("'src/*.lua'", "'src/*.toc'", "'src/*.xml'")
+        local files = tracked("'src/*.lua'", "'src/*.toc'", "'src/*.xml'", "':!src/ForeverProbe'") -- dev-only, never shipped
         assert.is_true(#files > 50)
         assert.are.same({}, scan(files, "github%.com/hekili"))
     end)
@@ -208,7 +208,17 @@ describe("pkgmeta", function()
         }) do
             assert.truthy(s:find("\n    Hekili/src/" .. a .. ": " .. a .. "\n", 1, true), a)
         end
-        for _, p in ipairs({ "tests", "tools", "docs", "scripts", "archive", ".superpowers", ".github" }) do
+        -- src/ForeverProbe is the dev-only probe addon: not moved, so without the ignore it would ship as Hekili/src/
+        for _, p in ipairs({
+            "tests",
+            "tools",
+            "docs",
+            "scripts",
+            "archive",
+            ".superpowers",
+            ".github",
+            "src/ForeverProbe",
+        }) do
             assert.truthy(s:find("\n    - " .. p .. "\n", 1, true), p)
         end
         assert.falsy(s:find("LICENSE", 1, true)) -- never ignored

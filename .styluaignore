@@ -2,6 +2,7 @@
 src/Hekili/Hekili.lua
 src/Hekili/Engine/Sim/
 src/Hekili/Libs/
+src/ForeverProbe/
 src/Hekili/Options/
 src/Hekili/UI/
 src/Hekili/Engine/Schema/Spec.lua

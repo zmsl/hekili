@@ -7,6 +7,7 @@ codes = true
 
 exclude_files = {
     "src/Hekili/Libs/",
+    "src/ForeverProbe/", -- the dev-only probe addon, its own conventions (docs/dev/layout.md)
     "archive/",
     ".claude/",
     ".lua/",

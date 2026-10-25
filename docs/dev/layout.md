@@ -20,6 +20,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
     blocks are unchanged and sets it to today (`PACK_DATE=YYYYMMDD`, else the system date) when any of that class's
     packs changed, so a clean tree is a no-op and one class's edit re-dates only that class.
     `## Group: Hekili` nests each content addon under Hekili in the in-game addon list.
+  - `src/ForeverProbe/`: the dev-only in-game probe addon (its own conventions; outside `tests/helpers/addons.lua`, lint, format, typecheck and the boundary checks), never packaged (`.pkgmeta` ignores it, `tools/check_package.sh` and `tests/Forever/publication_spec.lua` fail on it); delete it when the addon is stable. In game it is linked like the others (`mklink /D ForeverProbe \\wsl.localhost\personal\home\zack\src\hekili\src\ForeverProbe`), its saved variables live at `_forever_/WTF/.../SavedVariables/ForeverProbe.lua`, and its launch-day kit `src/ForeverProbe/docs/launch-day.md` travels with it.
 
   Content reaches the engine only through the public `Hekili` object (the registration API, `State`, `Class`,
   `Client`; `tests/boundary_spec.lua`). Every TOC's `## Version` is `@project-version@`; the packager stamps the release tag into all four (one zip, one version); the core's ContentAPI

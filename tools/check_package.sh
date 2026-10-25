@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Checks a packager zip: the ten addon folders at the root, LICENSE in Hekili/, no dev paths, TOC versions stamped.
+# Checks a packager zip: the ten addon folders at the root, LICENSE in Hekili/, no dev paths (src/ForeverProbe among them), TOC versions stamped.
 set -euo pipefail
 zip=${1:?usage: check_package.sh <zip>}
 list=$(unzip -Z1 "$zip")
@@ -8,7 +8,7 @@ need() { grep -qx "$1" <<<"$list" || { echo "missing: $1"; fail=1; }; }
 for a in Hekili Hekili_Shared Hekili_Druid Hekili_Warrior Hekili_Rogue Hekili_Paladin Hekili_Shaman Hekili_Hunter Hekili_Mage Hekili_Priest Hekili_Warlock; do need "$a/$a.toc"; done
 need Hekili/LICENSE
 need Hekili/embeds.xml
-for bad in '^Hekili/src/' '/tests/' '/tools/' '^Hekili/docs/' '/APLs/' '\.simc$' '^Hekili/Makefile$' '^Hekili/\.'; do
+for bad in '^Hekili/src/' '/tests/' '/tools/' '^Hekili/docs/' '/APLs/' '\.simc$' '^Hekili/Makefile$' '^Hekili/\.' 'ForeverProbe'; do
     if grep -qE "$bad" <<<"$list"; then echo "unexpected: $(grep -E "$bad" <<<"$list" | head -3)"; fail=1; fi
 done
 ver=$(basename "$zip" .zip); ver=${ver#Hekili-}
