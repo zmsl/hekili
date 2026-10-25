@@ -33,12 +33,12 @@ local IsHelpfulSpell = C_Spell.IsSpellHelpful or Facade.IsHelpfulSpell
 local GetSpellBookItemInfo = function( index, bookType )
     local spellBank = ( bookType == "spell" or bookType == Enum.SpellBookItemType.Spell ) and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet
     local info = C_SpellBook.GetSpellBookItemInfo(index, spellBank)
-    if info then return info.name, info.iconID, info.spellID end
+    if info then return format( "spell %d", info.spellID ), info.iconID, info.spellID end
 end
 local GetSpellBookItemName = function( index, bookType )
     local spellBank = ( bookType == "spell" or bookType == Enum.SpellBookItemType.Spell ) and Enum.SpellBookSpellBank.Player or Enum.SpellBookSpellBank.Pet
     local info = C_SpellBook.GetSpellBookItemInfo(index, spellBank)
-    return info and info.name
+    return info and format( "spell %d", info.spellID )
 end
 
 local GetNumSpellTabs = C_SpellBook.GetNumSpellBookSkillLines
@@ -46,7 +46,7 @@ local GetNumSpellTabs = C_SpellBook.GetNumSpellBookSkillLines
 local GetSpellTabInfo = function( index )
     local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo( index )
     if skillLineInfo then
-        return	skillLineInfo.name,
+        return	format( "skill line %d", index ),
                 skillLineInfo.iconID,
                 skillLineInfo.itemIndexOffset,
                 skillLineInfo.numSpellBookItems,
@@ -91,7 +91,7 @@ function Hekili:RunStressTest()
 
     for i, specID in ipairs( specs ) do
         local spec = Registry.Specs()[ specID ]
-        results = format( "%sSpecialization: %s\n", results, spec.name )
+        results = format( "%sSpecialization: %s\n", results, spec.key )
 
         for key, aura in ipairs( spec.auras ) do
             local keyNamed = false
@@ -518,7 +518,7 @@ function SkeletonGen:PrepareSpecData()
                                 isSpec, treeName, validNode = true, specName, true
                             elseif validHeroTrees[ nodeInfo.subTreeID ] then
                                 isHero, validNode = true, true
-                                treeName = subTreeInfo.name
+                                treeName = format( "subtree %d", nodeInfo.subTreeID )
                             end
                         end
                     end

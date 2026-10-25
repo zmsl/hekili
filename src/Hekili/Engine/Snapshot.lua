@@ -85,7 +85,6 @@ end
 
 function Hekili:SaveDebugSnapshot( dispName )
     local snapped = false
-    local formatKey = ns.formatKey
     local state = Hekili.State
 
 	for k, v in pairs( debug ) do
@@ -122,12 +121,12 @@ function Hekili:SaveDebugSnapshot( dispName )
             local playerBuffs = {}
             local pbOrder = {}
 
-            local longestKey, longestName = 0, 0
+            local longestKey = 0
 
             Facade.AuraUtil.ForEachAura( "player", "HELPFUL", nil, function( aura )
                 if aura.isFromPlayerOrPlayerPet then
                     local model = class.auras[ aura.spellId ]
-                    local key = model and model.key or formatKey( aura.name )
+                    local key = model and model.key or format( "spell %d", aura.spellId )
 
                     local offset = 0
                     local newKey = key
@@ -141,14 +140,12 @@ function Hekili:SaveDebugSnapshot( dispName )
 
                     pbOrder[ #pbOrder + 1 ] = key
                     longestKey = max( longestKey, key:len() )
-                    longestName = max( longestName, aura.name:len() )
 
                     playerBuffs[ key ] = {}
                     local elem = playerBuffs[ key ]
 
                     elem.spellId = aura.spellId
                     elem.key = key
-                    elem.name = aura.name
 
                     elem.count = aura.applications > 0 and aura.applications or 1
                     elem.remains = aura.expirationTime > 0 and ( aura.expirationTime - now ) or 3600
@@ -166,7 +163,6 @@ function Hekili:SaveDebugSnapshot( dispName )
                     playerBuffs[ token ] = {
                         spellId = caught.id,
                         key = caught.key,
-                        name = "",
 
                         count = 0,
                         remains = 0,
@@ -188,7 +184,7 @@ function Hekili:SaveDebugSnapshot( dispName )
 
             Facade.AuraUtil.ForEachAura( "player", "HARMFUL", nil, function( aura )
                 local model = class.auras[ aura.spellId ]
-                local key = model and model.key or formatKey( aura.name )
+                local key = model and model.key or format( "spell %d", aura.spellId )
 
                 local offset = 0
                 local newKey = key
@@ -201,14 +197,12 @@ function Hekili:SaveDebugSnapshot( dispName )
 
                 pdOrder[ #pdOrder + 1 ] = key
                 longestKey = max( longestKey, key:len() )
-                longestName = max( longestName, aura.name:len() )
 
                 playerDebuffs[ key ] = {}
                 local elem = playerDebuffs[ key ]
 
                 elem.spellId = aura.spellId
                 elem.key = key
-                elem.name = aura.name
 
                 elem.count = aura.applications > 0 and aura.applications or 1
                 elem.remains = aura.expirationTime > 0 and ( aura.expirationTime - now ) or 3600
@@ -225,7 +219,6 @@ function Hekili:SaveDebugSnapshot( dispName )
                     playerDebuffs[ token ] = {
                         spellId = caught.id,
                         key = caught.key,
-                        name = "",
 
                         count = 0,
                         remains = 0,
@@ -247,7 +240,7 @@ function Hekili:SaveDebugSnapshot( dispName )
 
             Facade.AuraUtil.ForEachAura( "target", "HELPFUL", nil, function( aura )
                 local model = class.auras[ aura.spellId ]
-                local key = model and model.key or formatKey( aura.name )
+                local key = model and model.key or format( "spell %d", aura.spellId )
 
                 local offset = 0
                 local newKey = key
@@ -260,14 +253,12 @@ function Hekili:SaveDebugSnapshot( dispName )
 
                 tbOrder[ #tbOrder + 1 ] = key
                 longestKey = max( longestKey, key:len() )
-                longestName = max( longestName, aura.name:len() )
 
                 targetBuffs[ key ] = {}
                 local elem = targetBuffs[ key ]
 
                 elem.spellId = aura.spellId
                 elem.key = key
-                elem.name = aura.name
 
                 elem.count = aura.applications > 0 and aura.applications or 1
                 elem.remains = aura.expirationTime > 0 and ( aura.expirationTime - now ) or 3600
@@ -284,7 +275,6 @@ function Hekili:SaveDebugSnapshot( dispName )
                     targetBuffs[ token ] = {
                         spellId = caught.id,
                         key = caught.key,
-                        name = "",
 
                         count = 0,
                         remains = 0,
@@ -307,7 +297,7 @@ function Hekili:SaveDebugSnapshot( dispName )
             Facade.AuraUtil.ForEachAura( "target", "HARMFUL", nil, function( aura )
                 if aura.isFromPlayerOrPlayerPet then
                     local model = class.auras[ aura.spellId ]
-                    local key = model and model.key or formatKey( aura.name )
+                    local key = model and model.key or format( "spell %d", aura.spellId )
 
                     local offset = 0
                     local newKey = key
@@ -320,14 +310,12 @@ function Hekili:SaveDebugSnapshot( dispName )
 
                     tdOrder[ #tdOrder + 1 ] = key
                     longestKey = max( longestKey, key:len() )
-                    longestName = max( longestName, aura.name:len() )
 
                     targetDebuffs[ key ] = {}
                     local elem = targetDebuffs[ key ]
 
                     elem.spellId = aura.spellId
                     elem.key = key
-                    elem.name = aura.name
 
                     elem.count = aura.applications > 0 and aura.applications or 1
                     elem.remains = aura.expirationTime > 0 and ( aura.expirationTime - now ) or 3600
@@ -345,7 +333,6 @@ function Hekili:SaveDebugSnapshot( dispName )
                     targetDebuffs[ token ] = {
                         spellId = caught.id,
                         key = caught.key,
-                        name = "",
 
                         count = 0,
                         remains = 0,
@@ -361,8 +348,8 @@ function Hekili:SaveDebugSnapshot( dispName )
 
             sort( tdOrder )
 
-            local header = "     n  | ID      | Token" .. string.rep( " ", longestKey - 4 ) .. " | Name" .. string.rep( " ", longestName - 4 ) .. " | A. Count | A. Remains | S. Count | S. Remains\n"
-                .. "    --- | ------- | " .. string.rep( "-", longestKey + 1 ) .. " | " .. string.rep( "-", longestName ) .. " | -------- | ---------- | -------- | ----------"
+            local header = "     n  | ID      | Token" .. string.rep( " ", longestKey - 4 ) .. " | A. Count | A. Remains | S. Count | S. Remains\n"
+                .. "    --- | ------- | " .. string.rep( "-", longestKey + 1 ) .. " | -------- | ---------- | -------- | ----------"
 
 
             if #pbOrder > 0 then
@@ -371,8 +358,8 @@ function Hekili:SaveDebugSnapshot( dispName )
                 for i, token in ipairs( pbOrder ) do
                     local aura = playerBuffs[ token ]
 
-                    auraString = format( "%s\n     %-2d | %7d | %s%-" .. longestKey .. "s | %-" .. longestName .. "s | %8d | %10.2f | %8d | %10.2f",
-                        auraString, i, class.auras[ token ] and class.auras[ token ].id or -1, ( class.auras[ token ] and " " or "*" ), token, aura.name, aura.count, aura.remains, aura.sCount or -1, aura.sRemains or - 1 )
+                    auraString = format( "%s\n     %-2d | %7d | %s%-" .. longestKey .. "s | %8d | %10.2f | %8d | %10.2f",
+                        auraString, i, class.auras[ token ] and class.auras[ token ].id or -1, ( class.auras[ token ] and " " or "*" ), token, aura.count, aura.remains, aura.sCount or -1, aura.sRemains or - 1 )
                 end
 
             else
@@ -385,8 +372,8 @@ function Hekili:SaveDebugSnapshot( dispName )
                 for i, token in ipairs( pdOrder ) do
                     local aura = playerDebuffs[ token ]
 
-                    auraString = format( "%s\n     %-2d | %7d | %s%-" .. longestKey .. "s | %-" .. longestName .. "s | %8d | %10.2f | %8d | %10.2f",
-                        auraString, i, class.auras[ token ] and class.auras[ token ].id or -1, ( class.auras[ token ] and " " or "*" ), token, aura.name, aura.count, aura.remains, aura.sCount or -1, aura.sRemains or - 1 )
+                    auraString = format( "%s\n     %-2d | %7d | %s%-" .. longestKey .. "s | %8d | %10.2f | %8d | %10.2f",
+                        auraString, i, class.auras[ token ] and class.auras[ token ].id or -1, ( class.auras[ token ] and " " or "*" ), token, aura.count, aura.remains, aura.sCount or -1, aura.sRemains or - 1 )
                 end
             else
                 auraString = auraString .. "\n\nplayer_debuffs: none"
@@ -399,8 +386,8 @@ function Hekili:SaveDebugSnapshot( dispName )
                     local aura = targetBuffs[ token ]
                     local model = class.auras[ token ]
 
-                    auraString = format( "%s\n     %-2d | %7d | %s%-" .. longestKey .. "s | %-" .. longestName .. "s | %8d | %10.2f | %8d | %10.2f",
-                        auraString, i, model and model.id or -1, model and " " or "*", token, aura.name, aura.count, aura.remains, aura.sCount or -1, aura.sRemains or - 1 )
+                    auraString = format( "%s\n     %-2d | %7d | %s%-" .. longestKey .. "s | %8d | %10.2f | %8d | %10.2f",
+                        auraString, i, model and model.id or -1, model and " " or "*", token, aura.count, aura.remains, aura.sCount or -1, aura.sRemains or - 1 )
                 end
 
             else
@@ -413,8 +400,8 @@ function Hekili:SaveDebugSnapshot( dispName )
                 for i, token in ipairs( tdOrder ) do
                     local aura = targetDebuffs[ token ]
 
-                    auraString = format( "%s\n     %-2d | %7d | %s%-" .. longestKey .. "s | %-" .. longestName .. "s | %8d | %10.2f | %8d | %10.2f",
-                        auraString, i, class.auras[ token ] and class.auras[ token ].id or -1, ( class.auras[ token ] and " " or "*" ), token, aura.name, aura.count, aura.remains, aura.sCount or -1, aura.sRemains or - 1 )
+                    auraString = format( "%s\n     %-2d | %7d | %s%-" .. longestKey .. "s | %8d | %10.2f | %8d | %10.2f",
+                        auraString, i, class.auras[ token ] and class.auras[ token ].id or -1, ( class.auras[ token ] and " " or "*" ), token, aura.count, aura.remains, aura.sCount or -1, aura.sRemains or - 1 )
                 end
 
             else
@@ -445,7 +432,7 @@ function Hekili:SaveDebugSnapshot( dispName )
 
             local pack = Hekili.Engine.settings.packs[ state.system.packName ]
             if not pack.builtIn then
-                custom = format( " |cFFFFA700(*%s[%d])|r", state.spec.name, state.spec.id )
+                custom = format( " |cFFFFA700(*%s[%d])|r", state.spec.key, state.spec.id )
             end
 
             local overview = format( "%s%s; %s|r", state.system.packName, custom, dispName or state.display )

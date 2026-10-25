@@ -2092,7 +2092,7 @@ function Hekili.Update()
                         end
                     else
                         if i <= numRecs and not hasSnapped and settings.autoSnapshot and InCombatLockdown() and state.level >= 70 and ( dispName == "Primary" or dispName == "AOE" ) then
-                            Hekili:Print( string.format( L["Unable to make recommendation for %s #%s; triggering auto-snapshot..."], dispName, i ) )
+                            Hekili:Print( "Unable to make recommendation for " .. dispName .. " #" .. i .. "; triggering auto-snapshot..." ) -- l10n: verbatim
                             hasSnapped = dispName
                             -- Not published (stock did not either): the synchronous snapshot run that follows publishes.
                             return "AutoSnapshot"
@@ -2144,7 +2144,7 @@ function Hekili.Update()
     end
 
     if snaps then
-        Hekili:Print( string.format( L["Snapshots saved:  %s."], snaps ) )
+        Hekili:Print( "Snapshots saved:  " .. snaps .. "." ) -- l10n: verbatim
     end
 end
 Hekili:ProfileCPU( "ThreadedUpdate", Hekili.Update )

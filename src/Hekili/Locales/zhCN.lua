@@ -1007,5 +1007,3 @@ L["The lane's time axis, the ruler and the focus zone."] = "轨道的时间轴�
 -- Hekili/Engine/Sim/Core.lua
 L["Open Hekili Forever Options"] = "打开 Hekili Forever 选项"
 L["|cFFFF0000WARNING|r: This version of Hekili Forever is for a newer WoW Forever client; you should reinstall for %s."] = "|cFFFF0000警告|r：此版本的 Hekili Forever 适用于更新的 WoW Forever 客户端；你应重新安装适用于 %s 的版本。"
-L["Unable to make recommendation for %s #%s; triggering auto-snapshot..."] = "无法为%s #%s生成推荐；正在触发自动快照……"
-L["Snapshots saved:  %s."] = "已保存快照：%s。"

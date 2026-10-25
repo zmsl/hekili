@@ -2343,7 +2343,7 @@ function Hekili:SpecializationChanged()
             for name, func in pairs( spec.stateFuncs ) do
                 if not class.stateFuncs[ name ] then
                     if rawget( state, name ) then
-                        Hekili:Error( "Cannot RegisterStateFunc for an existing expression ( " .. spec.name .. " - " .. name .. " )." )
+                        Hekili:Error( "Cannot RegisterStateFunc for an existing expression ( " .. spec.key .. " - " .. name .. " )." )
                     else
                         class.stateFuncs[ name ] = func
                         rawset( state, name, func )
@@ -2355,7 +2355,7 @@ function Hekili:SpecializationChanged()
             for name, t in pairs( spec.stateTables ) do
                 if not class.stateTables[ name ] then
                     if rawget( state, name ) then
-                        Hekili:Error( "Cannot RegisterStateTable for an existing expression ( " .. spec.name .. " - " .. name .. " )." )
+                        Hekili:Error( "Cannot RegisterStateTable for an existing expression ( " .. spec.key .. " - " .. name .. " )." )
                     else
                         class.stateTables[ name ] = t
                         rawset( state, name, t )
