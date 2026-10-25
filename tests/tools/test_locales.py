@@ -107,6 +107,12 @@ class Codes(unittest.TestCase):
     def test_reordered_arguments_count_as_the_same_codes(self):
         self.assertEqual(locales.code_problems("%s at %d", "%2$d 处的 %1$s"), [])
 
+    def test_format_codes_keep_their_order(self):
+        self.assertTrue(locales.code_problems("%s has %d", "%d 有 %s"))
+        self.assertEqual(locales.code_problems("%s has %d", "%2$d 有 %1$s"), [])
+        self.assertEqual(locales.code_problems("%s has %d", "%s 有 %d"), [])
+        self.assertTrue(locales.code_problems("%s has %d", "%1$s 有 %1$d"))
+
 
 class Sinks(unittest.TestCase):
     def hits(self, src):

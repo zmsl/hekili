@@ -337,8 +337,17 @@ CODES = [
 def code_problems(key, value):
     out = []
     for what, rx in CODES:
-        want = sorted(re.sub(r"%\d+\$", "%", m) for m in rx.findall(key))
-        got = sorted(re.sub(r"%\d+\$", "%", m) for m in rx.findall(value))
+        want = [re.sub(r"%\d+\$", "%", m) for m in rx.findall(key)]
+        got = [re.sub(r"%\d+\$", "%", m) for m in rx.findall(value)]
+        if what == "format code":
+            # Without positional %n$ codes the arguments bind in order, so a reorder is a bug; with them it is legal.
+            pos = [int(n) for n in re.findall(r"%(\d+)\$", value)]
+            if pos:
+                want, got = sorted(want), sorted(got)
+                if sorted(pos) != list(range(1, len(pos) + 1)):
+                    got = got + ["(positions %s are not 1..%d once each)" % (pos, len(pos))]
+        else:
+            want, got = sorted(want), sorted(got)
         if want != got:
             out.append("%s %s: %r has %s, translation has %s" % (what, "differs", key[:60], want, got))
     return out
