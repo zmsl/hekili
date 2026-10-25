@@ -19,7 +19,7 @@
 
 local Facade = Hekili.Client
 local UnitClassBase, IsSpellUsable = Facade.UnitClassBase, Facade.C_Spell.IsSpellUsable
-local L = Hekili.L
+local L = Hekili:GetLocale("Hekili_Paladin")
 
 if UnitClassBase("player") ~= "PALADIN" then
     return

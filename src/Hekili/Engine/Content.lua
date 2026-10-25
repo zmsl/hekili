@@ -33,7 +33,8 @@ local format = string.format
 --   Since then, without a bump: the ability field `spendBase` (central fix 22); an older core ignores the key and
 --   prices such a cost at or above 1 as points, silently.
 -- 9 (2026-10-21): the `now` verb `dismissPet` (central fix 27) and the simulation's `pet.<resource>` (the pet's power).
-local CONTENT_API = 9
+-- 10 (2026-10-25): Hekili:GetLocale(addon); packs ship Locales/ (Hekili.L is gone; localization plan, Task 3).
+local CONTENT_API = 10
 
 local done, notice = false, nil
 

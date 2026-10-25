@@ -21,7 +21,7 @@
 local Facade = Hekili.Client
 local UnitClassBase, GetTime = Facade.UnitClassBase, Facade.GetTime
 local IsSpellUsable, IsCurrentSpell = Facade.C_Spell.IsSpellUsable, Facade.C_Spell.IsCurrentSpell
-local L = Hekili.L
+local L = Hekili:GetLocale("Hekili_Hunter")
 
 if UnitClassBase("player") ~= "HUNTER" then
     return

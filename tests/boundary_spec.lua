@@ -28,7 +28,7 @@ local PUBLIC = {
     Class = true,
     Client = true,
     SCHOOL = true,
-    L = true, -- the translations (Locales/Locales.lua): the packs' setting names and descriptions
+    GetLocale = true, -- the pack's string table (Hekili.lua): its setting names and descriptions
 }
 local PRIVATE = { "%f[%w_]ns%.", "ns%s*=%s*%.%.%.", "VirtualState", "Hekili%.Virtual", "Hekili%.Engine" }
 
@@ -106,9 +106,9 @@ describe("core/content boundary", function()
             assert.are.same({}, found)
         end
     )
-    it("keeps the content on the public surface: the registration API, State, Class, Client and L", function()
+    it("keeps the content on the public surface: the registration API, State, Class, Client and GetLocale", function()
         local found = {}
-        local files = B.coreFiles(CONTENT, {})
+        local files = B.coreFiles(CONTENT, { "/Locales/" }) -- the string tables are data
         assert.is_true(#files >= 13)
         for _, path in ipairs(files) do
             local src = B.read(path):gsub("%[(=*)%[.-%]%1%]", "") -- a pack's share string is data

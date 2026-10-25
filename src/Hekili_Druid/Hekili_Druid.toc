@@ -8,6 +8,9 @@
 ## Dependencies: Hekili, Hekili_Shared
 ## Group: Hekili
 ## LoadOnDemand: 1
-## X-Hekili-ContentAPI: 9
+## X-Hekili-ContentAPI: 10
+
+Locales\enUS.lua
+Locales\zhCN.lua
 
 Druid.lua

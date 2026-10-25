@@ -8,7 +8,7 @@
 ## Dependencies: Hekili
 ## Group: Hekili
 ## LoadOnDemand: 1
-## X-Hekili-ContentAPI: 9
+## X-Hekili-ContentAPI: 10
 
 Shared\Auras.lua
 Shared\Consumables.lua

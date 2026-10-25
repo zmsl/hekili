@@ -37,7 +37,7 @@
 local Facade = Hekili.Client
 local UnitClassBase = Facade.UnitClassBase
 local GetItemCount = Facade.C_Item.GetItemCount
-local L = Hekili.L
+local L = Hekili:GetLocale("Hekili_Warlock")
 
 if UnitClassBase("player") ~= "WARLOCK" then
     return

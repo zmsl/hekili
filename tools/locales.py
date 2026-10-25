@@ -1,9 +1,11 @@
-"""Keep Hekili's translation files in step with the code (docs/dev/architecture.md, "Localization").
+"""Keep Hekili's string tables and translation files in step with the code (docs/dev/architecture.md, "Localization").
 
-Every piece of text a player sees is written L["English text"] in the addons' .lua files (src/Hekili/Locales/
-Locales.lua). The key is a string literal, or literals joined with `..` (L["first part " .. "second part"]); never a
-variable, so this script can read every key. It collects them from every addon TOC, in load order, and rewrites
-src/Hekili/Locales/<locale>.lua for each language:
+Every piece of text a player sees is written L["English text"] in the addons' .lua files. Each addon is its own
+AceLocale-3.0 app named after its folder: the core's `L` is ns.L (src/Hekili/Locales/Locales.lua), a pack's is
+`local L = Hekili:GetLocale("Hekili_<Class>")`. The key is a string literal, or literals joined with `..`
+(L["first part " .. "second part"]); never a variable, so this script can read every key. For each addon with text it
+writes src/<addon>/Locales/enUS.lua (the string table: every key, `L[key] = true`) and rewrites each
+src/<addon>/Locales/<locale>.lua:
 
   - translated keys stay as they are:          L["Reset"] = "重置"
   - keys still to translate become comments:   -- L["Reset"] = ""
@@ -13,10 +15,14 @@ src/Hekili/Locales/<locale>.lua for each language:
 Keys are grouped by the file that first uses them, so a translator can see where each one shows. Run from the
 repository root after changing any text:
 
-    python3 tools/locales.py            write src/Hekili/Locales/enUS.lua and update every
-                                        src/Hekili/Locales/<locale>.lua
-    python3 tools/locales.py --check    change nothing; exit 1 if a file is out of date, a key is not a literal, or a
-                                        translation drops a format code (%s, %d...), a colour (|c...|r) or a line break
+    python3 tools/locales.py            write every addon's Locales/enUS.lua and update its Locales/<locale>.lua
+    python3 tools/locales.py --check    change nothing; exit 1 if a file is out of date, a key is not a literal, a
+                                        translation drops a format code (%s, %d...), a colour (|c...|r) or a line
+                                        break, or a pack's key is translated in a core language file
+
+A pack language file with no translations yet starts from the core file of that language: every translation it holds
+for one of the pack's keys (how the packs' strings moved out of the core's zhCN.lua); an existing one takes a line of
+its own keys a translator left in the core's file.
 
 tests/tools/test_locales.py runs the check in `make tools-test`.
 """
@@ -27,7 +33,6 @@ import sys
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 SRC = os.path.join(ROOT, "src")
-LOCALES = os.path.join(SRC, "Hekili", "Locales")
 CORE = "Hekili"
 SKIP = ("Locales.lua", "enUS.lua")  # files in Locales/ that are not a translation
 UNUSED_MARK = "-- No longer used"
@@ -222,23 +227,20 @@ def addon_tocs():
     return sorted(tocs, key=lambda t: (order.get(os.path.basename(os.path.dirname(t)), 2), t))
 
 
-def lua_files():
-    files = []
-    for toc in addon_tocs():
-        for f in toc_files(toc):
-            if f not in files:
-                files.append(f)
-    return files
+def addons():
+    """[(addon name, its TOC)]: Hekili first, then Hekili_Shared, then the class packs alphabetically."""
+    return [(os.path.basename(os.path.dirname(t)), t) for t in addon_tocs()]
 
 
-# A file takes part once it names the table: `local L = ns.L` (core) or `local L = Hekili.L` (the class packs).
-USES_L = re.compile(r"^local L = (?:ns|Hekili)\.L\b", re.M)
+# A file takes part once it names its addon's table: `local L = ns.L` (core) or
+# `local L = Hekili:GetLocale("Hekili_<Class>")` (a pack).
+USES_L = re.compile(r"""^local L = (?:ns\.L\b|Hekili:GetLocale\(\s*"\w+"\s*\))""", re.M)
 
 
-def collect():
-    """({file: [keys first used there]} in load order, [problems])."""
+def collect(toc):
+    """({file: [keys first used there]} in load order, [problems]) of one addon."""
     seen, grouped, problems = set(), {}, []
-    for rel in lua_files():
+    for rel in toc_files(toc):
         with open(os.path.join(ROOT, rel), encoding="utf-8") as f:
             src = f.read()
         if not USES_L.search(src):
@@ -322,8 +324,16 @@ def code_problems(key, value):
     return out
 
 
-def languages():
-    return sorted(f[:-4] for f in os.listdir(LOCALES) if f.endswith(".lua") and f not in SKIP)
+def locales_dir(name):
+    return os.path.join(SRC, name, "Locales")
+
+
+def languages(name):
+    """The addon's translation languages: its Locales/<locale>.lua files, enUS and Locales.lua aside."""
+    d = locales_dir(name)
+    if not os.path.isdir(d):
+        return []
+    return sorted(f[:-4] for f in os.listdir(d) if re.match(r"^[a-z]{2}[A-Z]{2}\.lua$", f) and f not in SKIP)
 
 
 def sync(path, text, check, stale):
@@ -341,20 +351,52 @@ def sync(path, text, check, stale):
                 f.write(text)
 
 
+def adopt(keys, own, core, pack_only):
+    """A pack language file's translations: its own, plus the core file's for its keys when the file is new (every
+    one the core translates) or the key is the pack's alone (a line a translator put in the core's file)."""
+    new = not own
+    out = dict(own)
+    for k in keys:
+        if k not in out and k in core and (new or k in pack_only):
+            out[k] = core[k]
+    return out
+
+
 def main(argv):
     check = "--check" in argv
-    grouped, problems = collect()
-    stale = []
-    total = sum(len(k) for k in grouped.values())
-    sync(os.path.join(LOCALES, "enUS.lua"), render_enus(CORE, grouped), check, stale)
-    for locale in languages():
-        path = os.path.join(LOCALES, locale + ".lua")
-        translations = read_translations(path)
-        for key, value in translations.items():
-            problems += ["%s.lua: %s" % (locale, p) for p in code_problems(key, value)]
-        sync(path, render(CORE, locale, grouped, translations), check, stale)
-        done = sum(1 for keys in grouped.values() for k in keys if k in translations)
-        print("%s: %d of %d translated" % (locale, done, total))
+    problems, stale, found = [], [], {}
+    for name, toc in addons():
+        found[name] = collect(toc)
+        problems += found[name][1]
+    core_keys = {k for keys in found[CORE][0].values() for k in keys}
+    pack_only = {k for n, f in found.items() if n != CORE for keys in f[0].values() for k in keys} - core_keys
+    # read before any file is rewritten: the packs adopt from them, and the core drops what a pack now holds
+    core_tr = {loc: read_translations(os.path.join(locales_dir(CORE), loc + ".lua")) for loc in languages(CORE)}
+    held = {}  # [locale] = the keys some pack's file of that language holds
+    for name, (grouped, _) in sorted(found.items(), key=lambda f: f[0] == CORE):  # the packs first, then the core
+        if not grouped:
+            continue  # an addon with no text (Hekili_Shared) has no Locales/
+        keys = [k for ks in grouped.values() for k in ks]
+        sync(os.path.join(locales_dir(name), "enUS.lua"), render_enus(name, grouped), check, stale)
+        for locale in languages(name):
+            path = os.path.join(locales_dir(name), locale + ".lua")
+            translations = read_translations(path)
+            if name == CORE:
+                for k in sorted(k for k in translations if k in pack_only):
+                    if check:
+                        problems.append(
+                            "Hekili/Locales/%s.lua: %r is a pack's key: run python3 tools/locales.py to move it" % (locale, k)
+                        )
+                    if k in held.get(locale, ()):
+                        del translations[k]  # the pack's file holds it now
+            else:
+                translations = adopt(keys, translations, core_tr.get(locale, {}), pack_only)
+                held.setdefault(locale, set()).update(translations)
+            for key, value in translations.items():
+                problems += ["%s/Locales/%s.lua: %s" % (name, locale, p) for p in code_problems(key, value)]
+            sync(path, render(name, locale, grouped, translations), check, stale)
+            done = sum(1 for k in keys if k in translations)
+            print("%s %s: %d of %d translated" % (name, locale, done, len(keys)))
     for p in problems:
         print(p)
     for rel in stale:

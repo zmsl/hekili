@@ -29,7 +29,7 @@
 
 local Facade = Hekili.Client
 local UnitClassBase = Facade.UnitClassBase
-local L = Hekili.L
+local L = Hekili:GetLocale("Hekili_Shaman")
 
 if UnitClassBase("player") ~= "SHAMAN" then
     return

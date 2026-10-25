@@ -30,6 +30,7 @@ local function every(value)
 end
 
 local function noop() end
+local english = require("helpers.english")
 
 -- The files the engine loads after Constants.lua: the core's Engine/Schema/ files, then the content addons'.
 function M.files()
@@ -40,7 +41,9 @@ function M.files()
         end
     end
     for _, path in ipairs(addons.lua(addons.CONTENT)) do
-        out[#out + 1] = path
+        if not path:match("/Locales/") then -- the string tables: GetLocale below answers every key with itself
+            out[#out + 1] = path
+        end
     end
     return out
 end
@@ -193,16 +196,10 @@ function M.load(classToken, race)
     local state = newState(class, race)
     local client = { SECRET = {}, isUnit = {}, exists = {} }
     local env = { errors = {}, loadErrors = {}, class = class, state = state, client = client }
-    -- L: the English an English client shows (Locales/Locales.lua)
-    local hekili = {
-        Class = class,
-        State = state,
-        L = setmetatable({}, {
-            __index = function(_, key)
-                return key
-            end,
-        }),
-    }
+    local hekili = { Class = class, State = state }
+    function hekili:GetLocale()
+        return english
+    end
     function hekili.IsForever()
         return false
     end
@@ -245,7 +242,7 @@ function M.load(classToken, race)
 
     local ns = vload.module() -- the real VirtualState (KnownRank, I.GCD_SPELL); Facade replaced below
     env.ns = ns
-    ns.L = hekili.L -- Spec.lua's pack notices (RestoreDefaults)
+    ns.L = english -- Spec.lua's pack notices (RestoreDefaults)
     local function spellInfo(id)
         return { name = "Spell " .. tostring(id), iconID = 0 }
     end

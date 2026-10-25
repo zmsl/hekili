@@ -18,7 +18,7 @@
 local Facade = Hekili.Client
 local C_Spell, UnitClassBase = Facade.C_Spell, Facade.UnitClassBase
 local GetTime = Facade.GetTime
-local L = Hekili.L
+local L = Hekili:GetLocale("Hekili_Druid")
 
 if UnitClassBase("player") ~= "DRUID" then
     return

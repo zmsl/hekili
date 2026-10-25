@@ -17,13 +17,24 @@ class Repository(unittest.TestCase):
             rc = locales.main(["--check"])
         self.assertEqual(rc, 0, out.getvalue())
 
-    def test_the_string_table_loads_first_and_locales_lua_last_before_the_code(self):
-        with open(os.path.join(locales.SRC, "Hekili", "Hekili.toc"), encoding="utf-8") as f:
-            lines = [l.strip() for l in f if l.strip() and not l.startswith("#")]
-        block = ["Locales\\enUS.lua"] + ["Locales\\%s.lua" % loc for loc in locales.languages()] + ["Locales\\Locales.lua"]
-        start = lines.index(block[0])
-        self.assertEqual(lines[start : start + len(block)], block)
-        self.assertLess(start + len(block) - 1, lines.index("Hekili.lua"))
+    def test_every_string_table_loads_first_and_before_the_code(self):
+        for name, toc in locales.addons():
+            if not os.path.isdir(locales.locales_dir(name)):
+                continue
+            with open(toc, encoding="utf-8") as f:
+                lines = [l.strip() for l in f if l.strip() and not l.startswith("#")]
+            block = ["Locales\\enUS.lua"] + ["Locales\\%s.lua" % loc for loc in locales.languages(name)]
+            if name == locales.CORE:
+                block.append("Locales\\Locales.lua")
+            start = lines.index(block[0])
+            self.assertEqual(lines[start : start + len(block)], block, name)
+            first_code = next(i for i, l in enumerate(lines) if l.endswith(".lua") and not l.startswith("Locales\\"))
+            if name == locales.CORE:  # after the facade, before Hekili.lua
+                first_code = lines.index("Hekili.lua")
+            self.assertLess(start + len(block) - 1, first_code, name)
+
+    def test_the_shared_content_has_no_text(self):
+        self.assertFalse(os.path.isdir(locales.locales_dir("Hekili_Shared")))
 
 
 class Keys(unittest.TestCase):
@@ -61,6 +72,17 @@ class Render(unittest.TestCase):
         text = locales.render("Hekili_Warrior", "zhCN", {"src/Hekili_Warrior/Warrior.lua": ["Arms", "Fury"]}, {"Arms": "武器"})
         self.assertIn('local L = LibStub("AceLocale-3.0"):NewLocale("Hekili_Warrior", "zhCN")\nif not L then\n    return\nend\n', text)
         self.assertIn('L["Arms"] = "武器"\n-- L["Fury"] = ""\n', text)
+
+
+class Adopt(unittest.TestCase):
+    def test_a_new_pack_file_takes_every_key_the_core_translates(self):
+        core = {"Arms": "武器", "Combat": "战斗", "Other": "x"}
+        self.assertEqual(locales.adopt(["Arms", "Combat"], {}, core, {"Arms"}), {"Arms": "武器", "Combat": "战斗"})
+
+    def test_an_existing_file_takes_only_the_pack_s_own_keys_from_the_core(self):
+        core = {"Arms": "武器", "Combat": "战斗"}
+        self.assertEqual(locales.adopt(["Arms", "Combat"], {"Fury": "狂怒"}, core, {"Arms"}), {"Fury": "狂怒", "Arms": "武器"})
+        self.assertEqual(locales.adopt(["Arms"], {"Arms": "臂"}, core, {"Arms"}), {"Arms": "臂"})  # its own wins
 
 
 class Codes(unittest.TestCase):

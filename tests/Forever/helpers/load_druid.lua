@@ -42,15 +42,10 @@ function M.load(vs, file, class)
             return { rank = 0, enabled = false }
         end,
     })
-    -- L: the English an English client shows (Locales/Locales.lua)
-    local hekili = {
-        State = w.state,
-        L = setmetatable({}, {
-            __index = function(_, key)
-                return key
-            end,
-        }),
-    }
+    local hekili = { State = w.state }
+    function hekili:GetLocale()
+        return require("helpers.english")
+    end
     w.spec = spec
     function hekili:NewClass(token, def)
         w.class, w.def = token, def

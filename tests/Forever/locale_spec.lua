@@ -18,4 +18,13 @@ describe("the string tables (headless Arms, an enUS client)", function()
         assert.is_nil(H.ns.Locale)
         assert.are.same({}, headless.unexpected(H, "load")) -- GAME_LOCALE, AceLocale's probe, is a known nil
     end)
+
+    it("give each pack its own app, read through Hekili:GetLocale, holding none of the core's keys", function()
+        local pack = AceLocale:GetLocale("Hekili_Warrior")
+        assert.are.equal(pack, H.Hekili:GetLocale("Hekili_Warrior"))
+        assert.are.equal("Arms", rawget(pack, "Arms"))
+        assert.is_nil(rawget(H.ns.L, "Arms")) -- the core holds no pack string
+        assert.is_nil(rawget(pack, "Forecast window (s)"))
+        assert.is_nil(H.Hekili.L)
+    end)
 end)

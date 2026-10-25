@@ -14,11 +14,7 @@ describe("Engine/Content.lua", function()
     local function run(again)
         calls, notes = {}, {}
         local ns = {
-            L = setmetatable({}, { -- the English an English client shows (Locales/Locales.lua)
-                __index = function(_, key)
-                    return key
-                end,
-            }),
+            L = require("helpers.english"),
             Facade = {
                 UnitClass = function(unit)
                     assert.are.equal("player", unit)
@@ -134,10 +130,10 @@ describe("Engine/Content.lua", function()
 
     it("declares one content API in every content TOC", function()
         for _, name in ipairs(addons.CONTENT) do
-            assert.are.equal("9", addons.meta(name)["X-Hekili-ContentAPI"], name)
+            assert.are.equal("10", addons.meta(name)["X-Hekili-ContentAPI"], name)
         end
         local src = assert(io.open("src/Hekili/Engine/Content.lua")):read("*a")
-        assert.is_truthy(src:find("\nlocal CONTENT_API = 9\n", 1, true))
+        assert.is_truthy(src:find("\nlocal CONTENT_API = 10\n", 1, true))
     end)
 
     it("without a class token, loads the shared content only and Notifies once to /reload (nothing retries)", function()

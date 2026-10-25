@@ -15,7 +15,14 @@ local GetBuildInfo, GetFramerate, GetTime = Facade.GetBuildInfo, Facade.GetFrame
 Hekili = LibStub("AceAddon-3.0"):NewAddon( "Hekili", "AceConsole-3.0", "AceSerializer-3.0" )
 Hekili.Version = C_AddOns.GetAddOnMetadata( "Hekili", "Version" )
 Hekili.Flavor = C_AddOns.GetAddOnMetadata( "Hekili", "X-Flavor" ) or "Forever"
-Hekili.L = ns.L -- the translations (Locales/Locales.lua), for the class packs
+
+--- The string table of content addon `app` (its folder name, "Hekili_Druid"): the AceLocale-3.0 app its
+--- Locales/enUS.lua registers (silent: a key no table holds answers itself). Content calls it once, at load.
+---@param app string
+---@return table
+function Hekili:GetLocale( app )
+    return LibStub( "AceLocale-3.0" ):GetLocale( app )
+end
 
 local format = string.format
 local insert, concat = table.insert, table.concat
