@@ -527,13 +527,19 @@ local function RefreshCooldowns( self, out )
             local swing = Registry.Abilities()[ button.Action ]
             swing = swing and swing.onNextSwing
             if ( i == 1 and conf.classic.delays.extend or swing ) and rec.exact_time > max( now, start + duration ) then
-                start = ( start > 0 and start ) or ( cStart > 0 and cStart ) or ( gStart > 0 and gStart ) or max( lastGcdStart, Status.combatStart )
+                -- hold the start while the same ability waits for the same time, so a new GCD does not jump the swipe
+                local held = button.holdAction == button.Action and button.holdEnd == rec.exact_time
+                start = ( start > 0 and start ) or ( held and button.holdStart ) or ( cStart > 0 and cStart ) or ( gStart > 0 and gStart ) or max( lastGcdStart, Status.combatStart )
                 duration = rec.exact_time - start
+                button.holdAction, button.holdEnd, button.holdStart = button.Action, rec.exact_time, start
 
-            elseif enabled and enabled == 0 then
-                start = 0
-                duration = 0
-                modRate = 1
+            else
+                button.holdAction = nil
+                if enabled and enabled == 0 then
+                    start = 0
+                    duration = 0
+                    modRate = 1
+                end
             end
 
             if cd.lastStart ~= start or cd.lastDuration ~= duration then

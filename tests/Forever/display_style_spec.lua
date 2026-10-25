@@ -291,7 +291,7 @@ describe("the classic display style", function()
         local H, d = boot()
         local abilities = H.Hekili.Engine.Registry.Abilities()
         assert.is_true(abilities.heroic_strike.onNextSwing)
-        local function strike(at)
+        local function strike(at, exact)
             local now = H.ctl.now
             local s = H.ns.Output.Begin("Primary")
             for i, e in ipairs(SET) do
@@ -300,7 +300,7 @@ describe("the classic display style", function()
                 r.actionName, r.actionID, r.texture = a, abilities[a].id, "tex" .. i
                 r.time, r.exact_time = e[2], now + e[2]
             end
-            s[2].time, s[2].exact_time = at, now + at
+            s[2].time, s[2].exact_time = at, exact or now + at
             H.ns.Output.Publish("Primary", #SET)
             H.ctl.now = H.ctl.now + 0.2
             d.__scripts.OnUpdate(d, 0.2)
@@ -311,6 +311,28 @@ describe("the classic display style", function()
         assert.are.equal("heroic_strike", b.Action)
         assert.is_true(rawget(cd, "__cdDuration") > 0)
         assert.are.equal(b.ExactTime, rawget(cd, "__cdStart") + rawget(cd, "__cdDuration"))
+        -- a new GCD while it waits does not move the sweep's start (no per-GCD jump), and nothing is re-set
+        local cs = H.ns.Facade.C_Spell
+        local getCd = cs.GetSpellCooldown
+        local gcd = H.Hekili.Engine.Registry.GCD_SPELL
+        local start0, exact, sets = rawget(cd, "__cdStart"), b.ExactTime, 0
+        local set = cd.SetCooldown
+        cd.SetCooldown = function(...)
+            sets = sets + 1
+            return set(...)
+        end
+        local gStart = H.ctl.now + 0.1
+        cs.GetSpellCooldown = function(id)
+            if id == gcd then
+                return { startTime = gStart, duration = 1.5, isEnabled = true, modRate = 1 }
+            end
+            return getCd(id)
+        end
+        strike(0, exact)
+        cs.GetSpellCooldown = getCd
+        cd.SetCooldown = set
+        assert.are.equal(start0, rawget(cd, "__cdStart"))
+        assert.are.equal(0, sets)
         cd = strike(0).Cooldown -- due: ready, no sweep
         assert.are.equal(0, rawget(cd, "__cdDuration"))
         assert.are.same({}, H.errors)
