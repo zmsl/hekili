@@ -27,6 +27,7 @@ local CLASSES = {
 
 -- One line per text: backslash, line breaks and tabs escaped, and trailing spaces (an editor would trim them).
 local function esc(s)
+    s = s:gsub("Dev%-[%w%.]+ %(%d+%)", "Dev-<BUILD> (<DATE>)") -- Hekili.lua's dated dev version
     s = s:gsub("\\", "\\\\"):gsub("\n", "\\n"):gsub("\t", "\\t")
     return (s:gsub(" +$", function(sp)
         return ("\\032"):rep(#sp)
