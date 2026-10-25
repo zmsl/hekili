@@ -90,7 +90,7 @@ the four places that print the name today:
 the moment the packs wrap it.
 
 **Cost.** Four one-word edits. The snapshot of a custom pack on enUS changes from `(*Arms[100011])` to
-`(*arms[100011])`. That is debug text, not player output, so §8 exempts it and the owner accepts the change here.
+`(*arms[100011])`. That is debug text, not player output, so §8 exempts it (owner, 2026-10-25).
 
 ## 5. Spell names from the client
 
@@ -150,7 +150,7 @@ rewritten for AceLocale (apps per addon, silent, generated enUS, the never-local
 
 **Decision.** Part of `tools/locales.py --check`, not luacheck or busted. luacheck has no custom-rule hook, and the
 Python tool already has the Lua literal/comment scanner the rule needs. It runs in `make check` through
-`tools-test` (§9).
+`tools-test` (§9). A busted spec would need a second Lua literal scanner that could disagree with the one that extracts the strings; one scanner keeps "what counts as a string" defined once (owner left the choice to us, 2026-10-25).
 
 A **violation** is a string literal (or `..` chain of literals) containing an ASCII letter, not inside `L[...]`, in
 one of these sinks:
