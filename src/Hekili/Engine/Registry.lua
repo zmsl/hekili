@@ -26,7 +26,6 @@ function Registry.ClassFile() return class.file end
 function Registry.Kit() return class.kit or nil end
 -- stylua: ignore end
 
---- A pack payload's `spec` (a share key "WARRIOR:arms", a legacy pseudo-spec id or an id) as this session's spec id.
 --- The name priority `name` shows as (localization spec §5b): a built-in one's (`class.packs`) label from its pack's
 --- string table (ns.PackAddon, the class pack Engine/Content.lua loaded; silent, so an untranslated label is the name),
 --- any other (the player's own, imported or retired) the name itself. The name stays the key wherever it is stored or
@@ -36,6 +35,7 @@ function Registry.PackLabel(name)
     return L and L[name] or name
 end
 
+--- A pack payload's `spec` (a share key "WARRIOR:arms", a legacy pseudo-spec id or an id) as this session's spec id.
 function Registry.SpecFromShare(v)
     local kit = class.kit or nil
     return ns.SpecFromShare(v, class.specByShare, state.spec.clientID, kit, kit and kit.specs[state.spec.key])
