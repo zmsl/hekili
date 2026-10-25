@@ -86,6 +86,15 @@ the four places that print the name today:
 
 `status.specName` (`Engine/Sim/Core.lua:1545`, `Spec.lua:2418`) stays the name: displays show it to the player.
 
+**All debug output is English only** (owner, 2026-10-25). Snapshot, `Hekili:Error`, `Hekili:Debug`, DevTools and the
+snapshot chat lines never pass through `L` and never print a name the client returns in its own language:
+- the two snapshot chat lines the contributor wrapped go back to English literals: `Core.lua:2095` ("Unable to make
+  recommendation for %s #%s; triggering auto-snapshot...") and `:2147` ("Snapshots saved:  %s.");
+- the snapshot's aura rows (`Engine/Snapshot.lua:130-330`) print the aura's key, and `spell <id>` when the aura has no
+  model (today `formatKey(aura.name)`, which is the client's language on a non-English client);
+- DevTools' spell, skill-line and talent-tree names (`Options/DevTools.lua:36-49`, `:521`) print key or id the same way.
+On enUS those rows change only where an unmodelled aura's name became its key; the §8 golden exempts debug text.
+
 **Why.** A zhCN user's snapshot must still read and diff as English in a bug report. `spec.name` turns localized
 the moment the packs wrap it.
 
@@ -242,8 +251,8 @@ recurring code, hoist them to file-scope upvalues. The contributor's wraps on or
 
 | file:line | path | ruling |
 |---|---|---|
-| `Engine/Sim/Core.lua:2095` | inside `Hekili.Update`, the no-recommendation auto-snapshot branch (once per snapshot) | hoist the `L[...]` to a file-scope local |
-| `Engine/Sim/Core.lua:2147` | end of `Hekili.Update`, only when snapshots were saved | hoist |
+| `Engine/Sim/Core.lua:2095` | inside `Hekili.Update`, the no-recommendation auto-snapshot branch (once per snapshot) | none: unwrapped to English (§4) |
+| `Engine/Sim/Core.lua:2147` | end of `Hekili.Update`, only when snapshots were saved | none: unwrapped to English (§4) |
 | `Engine/Sim/Events.lua:999`, `:1002` | `UNIT_SPELLCAST_SUCCEEDED` handler, behind once-only flags | fine (evaluated once) |
 | `Engine/Sim/State.lua:6711`, `:6736` | hold/unhold from a command, `verbose` only | fine |
 | `UI/UI.lua:845-853` | `GetDataText`, on toggle change and launcher tooltip | fine (event-driven) |
