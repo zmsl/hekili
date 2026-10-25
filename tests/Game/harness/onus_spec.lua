@@ -1,6 +1,7 @@
 -- tests/Game/harness/onus_spec.lua (harness design §4.3): hits on us from two attackers through the real
 -- Attackers.lua (their speeds secret: clocks from the gaps), and every hit reaching the belief as a PlayerHit,
--- attributed or not (§4.4).
+-- attributed or not (§4.4). Parry-haste spec decision 63: the 2x bars are the worst of seed sets 1-100 / 101-200 /
+-- 201-300 (precision 0.948 / 0.943 / pass, coverage 0.807 / 0.774 / pass): a pulled hit can land before its parry row.
 local metrics = require("Game.harness.metrics")
 local ab = require("Game.harness.ab") -- the bars: asserted in the default arm, recorded in a provider arm (§4.1)
 
@@ -10,11 +11,11 @@ end
 
 describe("hits on us (harness gates) #slow", function()
     it(
-        "two attackers of 2x different strength, the second joining at 15 s: precision >= 0.95, coverage >= 0.80",
+        "two attackers of 2x different strength, the second joining at 15 s: precision >= 0.94, coverage >= 0.77",
         function()
             local m = metrics.fights({ attackers = 2, joinAt = { [2] = 15 }, mobs = mobs({ 10, 14 }, { 20, 28 }) }, 100)
             local line = metrics.onusLine(m)
-            ab.check(m.onusRight >= 0.95 * m.onusCredited and m.onusCredited >= 0.80 * m.onusAll, "onus", line)
+            ab.check(m.onusRight >= 0.94 * m.onusCredited and m.onusCredited >= 0.77 * m.onusAll, "onus", line)
             assert.are.equal(m.hitsFed, m.hitsStaged)
         end
     )

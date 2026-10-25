@@ -73,8 +73,9 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             "warrior_arms",
             -- measured 0.896: 0.910 after central fixes 7, 13 and 16 (was 0.86, provisional), less the pre-pull Berserker
             -- Rage wowsims casts at -4.5 without Improved Berserker Rage (the build has none), which the user's ruling
-            -- (2026-10-21) gates on that talent (berserker_rage -> battle_shout, 1 of 67)
-            0.89,
+            -- (2026-10-21) gates on that talent (berserker_rage -> battle_shout, 1 of 67); 0.881 (59 of 67) with the world's
+            -- parry haste (decision 63): the same-frame Bloodrage gap (gaps.md, fix 40)
+            0.88,
             ARMS_REPLAY
         )
     end)
@@ -107,8 +108,9 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             -- measured 0.917: 0.933 after central fixes 7, 13 and 16 (was 0.81 with GAP AD), less the pre-pull Berserker
             -- Rage the user's ruling (2026-10-21) gates on Improved Berserker Rage, which the build lacks (1 of 60);
             -- 0.897 (61 of 68) after the harness corrected to the measured swing timing (2026-10-22): the log's swings
-            -- take health at the swing, so the execute phase opens a landing lag earlier than the rows show it
-            0.89,
+            -- take health at the swing, so the execute phase opens a landing lag earlier than the rows show it; 0.926 (68)
+            -- with the world's parry haste (decision 63)
+            0.92,
             FURY_REPLAY
         )
     end)

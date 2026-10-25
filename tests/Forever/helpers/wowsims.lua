@@ -267,7 +267,7 @@ M.FIXTURES = "tests/Forever/fixtures/"
 M.READY = {
     druid_balance = { 0.71, 17 },
     druid_feral = { 0.26, 4 },
-    druid_guardian = { 0.54, 40 },
+    druid_guardian = { 0.54, 41 }, -- 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     hunter_beast_mastery = { 0.32, 5 },
     hunter_marksmanship = { 0.15, 9 },
     hunter_survival = { 0.14, 9 },
@@ -296,7 +296,8 @@ M.READY = {
     warlock_destruction = { 0.40, 17 }, -- 0.400, 17: Incinerate's 2.0 s cast, likewise
     warlock_shadow_brand = { 0.90, 16 }, -- 0.900, 16: Shadow Bolt's, likewise
     warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
-    warrior_arms = { 0.80, 6 },
+    -- 0.880, 5 (was 0.80, 6): the world's parry haste (decision 63); the tie hand-back moves 177.88 sunder late -> never
+    warrior_arms = { 0.88, 5 },
     -- 0.51, 35 (was 0.48, 32): harness corrected to the measured swing timing (2026-10-22)
     warrior_fury = { 0.51, 35 },
     warrior_protection = { 0.50, 5 },

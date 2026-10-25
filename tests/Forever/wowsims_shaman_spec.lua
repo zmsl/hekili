@@ -58,7 +58,7 @@ describe("the Shaman wowsims.com packs #slow #wowsims", function()
     end)
     -- the pack's own worst idle at 60, seconds rounded up to 0.1: wowsims's spending runs the mana out (its own log
     -- sits near 170 of 5530 mana from 90 s), so the priority waits for mana with only cheaper ranks usable
-    local LIVE60 = 8.0
+    local LIVE60 = 8.2 -- 8.0 before the world's parry haste (decision 63: every seeded fight reordered)
     for _, level in ipairs({ 10, 40, 60 }) do
         if level == 40 then -- 8.2 s, one tick over: Lightning Shield's 132 believed 0.4 mana short (lo 131.6, truth
             -- 132.0 at 69.2 s) one tick before the truth, the window itself on time since GAP W (both at 74.4 s)
