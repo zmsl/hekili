@@ -589,7 +589,7 @@ local HekiliSpecMixin = {
 
                     phase.virtual[ d ] = phase.real[ d ]
 
-                    if Hekili.ActiveDebug then Hekili:Debug( "[ %s ] Phase '%s' set to '%s' (%s).", self.name or "Unspecified", key, tostring( phase.virtual[ d ] ), hook ) end
+                    if Hekili.ActiveDebug then Hekili:Debug( "[ %s ] Phase '%s' set to '%s' (%s).", self.key or "Unspecified", key, tostring( phase.virtual[ d ] ), hook ) end
                 end )
             else
                 self:RegisterHook( hook, function()
@@ -604,7 +604,7 @@ local HekiliSpecMixin = {
                         phase.virtual[ d ] = false
                     end
 
-                    if Hekili.ActiveDebug and phase.virtual[ d ] ~= previous then Hekili:Debug( "[ %s ] Phase '%s' set to '%s' (%s) - virtual.", self.name or "Unspecified", key, tostring( phase.virtual[ d ] ), hook ) end
+                    if Hekili.ActiveDebug and phase.virtual[ d ] ~= previous then Hekili:Debug( "[ %s ] Phase '%s' set to '%s' (%s) - virtual.", self.key or "Unspecified", key, tostring( phase.virtual[ d ] ), hook ) end
                 end )
             end
         end
@@ -649,7 +649,7 @@ local HekiliSpecMixin = {
                     phase.virtual[ d ] = phase.real[ d ]
 
                     if Hekili.ActiveDebug then
-                        Hekili:Debug( "[ %s ] Phased variable '%s' set to '%s' (%s) - was '%s'.", self.name or "Unspecified", key, tostring( phase.virtual[ display or "Primary" ] ), hook, tostring( original ) )
+                        Hekili:Debug( "[ %s ] Phased variable '%s' set to '%s' (%s) - was '%s'.", self.key or "Unspecified", key, tostring( phase.virtual[ display or "Primary" ] ), hook, tostring( original ) )
                     end
                 end )
             else
@@ -659,7 +659,7 @@ local HekiliSpecMixin = {
 
                     phase.virtual[ d ] = phase.update( phase.virtual[ d ], phase.default() )
 
-                    if Hekili.ActiveDebug and phase.virtual[ d ] ~= previous then Hekili:Debug( "[ %s ] Phased variable '%s' set to '%s' (%s) - virtual.", self.name or "Unspecified", key, tostring( phase.virtual[ display or "Primary" ] ), hook ) end
+                    if Hekili.ActiveDebug and phase.virtual[ d ] ~= previous then Hekili:Debug( "[ %s ] Phased variable '%s' set to '%s' (%s) - virtual.", self.key or "Unspecified", key, tostring( phase.virtual[ display or "Primary" ] ), hook ) end
                 end )
             end
         end

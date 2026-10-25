@@ -742,7 +742,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                     if debug then
                         local d = ""
-                        if entryReplaced then d = format( "\nSubstituting %s for %s action; it is otherwise not included in the priority.", action, class.abilities[ entry.action ].name ) end
+                        if entryReplaced then d = format( "\nSubstituting %s for %s action; it is otherwise not included in the priority.", action, entry.action ) end
 
                         if action == "call_action_list" or action == "run_action_list" then
                             d = d .. format( "\n%-4s %s ( %s - %d )", rDepth .. ".", ( action .. ":" .. ( state.args.list_name or "unknown" ) ), listName, actID )

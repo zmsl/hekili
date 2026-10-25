@@ -28,6 +28,11 @@ describe("the snapshot on a non-English client (headless Arms)", function()
         assert.is_nil(log:find("武器", 1, true))
     end)
 
+    it("prints no phase/variable line under a client-language spec name", function()
+        hk.Engine.Registry.Specs()[ww.SPEC].name = "武器"
+        assert.is_nil(snapshot():find("武器", 1, true))
+    end)
+
     it("prints each aura by its key, with no client name column", function()
         local auras = assert(snapshot():match("player_buffs:(.-)previous_spells"))
         assert.is_truthy(auras:find("battle_stance", 1, true))
