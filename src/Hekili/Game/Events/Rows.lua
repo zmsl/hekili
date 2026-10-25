@@ -233,6 +233,7 @@ local function creditSwing(credited, t, act, flag, amount, avoid, unknown, lr, r
         end
         T.Provisional(credited, lr, act) -- emitted when the window closes
         L.avoids, L.avoidX, L.avoidT, L.avoidRowT = L.avoids + 1, xx, at0, t
+        L.avoidRowG = act == "PARRY" and T.guid[credited] or ""
         return
     end
     if T.avoid[credited] ~= "" then

@@ -199,7 +199,8 @@ end
 -- Parry haste on a hostile (parry-haste spec decision 62): a PARRY row on its token pulls its clock's next swing by
 -- L.ParryPull, whoever's attack it parried (the rule is the parrier's). One row comes on several tokens (target, plate,
 -- soft target): applied once per GUID and row time. No row, no clock made. Allocates nothing. A row Rows.lua just
--- credited to our swing (L.avoidRowT) is dated at that swing: the server pulled the clock a landing lag before the row.
+-- credited to our swing as this mob's parry (L.avoidRowT, L.avoidRowG) is dated at that swing: the server pulled the
+-- clock a landing lag before the row.
 -- A parry dated before the hostile's latest learned hit changes nothing: its pulled swing landed before our row.
 local parriedGUID, parriedT = "", -1
 local function parried(t, unit)
@@ -220,7 +221,7 @@ local function parried(t, unit)
     if period <= 0 then
         return
     end
-    local at = L.avoidRowT == t and L.avoidT or t
+    local at = L.avoidRowT == t and L.avoidRowG == guid and L.avoidT or t
     if at < atkHitT[k] then -- the swing it pulled already landed (before our row): the learned hit holds its pull
         return
     end

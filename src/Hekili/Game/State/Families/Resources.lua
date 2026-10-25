@@ -258,8 +258,6 @@ local function norm(r)
     end
 end
 
--- After a measurement moved lo0, slot r's modelled floor (`was`, lo0 + over before it), if any, stays where it was
--- unless the measurement's top `top` falls under it (then it is lo0). Allocates nothing.
 -- A cast's declared gain into slot r at t (I.GAIN_SHOWS). Allocates nothing.
 local function ownGain(r, delta, t)
     R.ownV[r] = t - R.ownT[r] < I.GAIN_SHOWS and R.ownV[r] + delta or delta
@@ -267,6 +265,8 @@ local function ownGain(r, delta, t)
 end
 
 local keepFloor = false -- the Usable apply's: this short answer leaves the modelled floor (I.GAIN_SHOWS)
+-- After a measurement moved lo0, slot r's modelled floor (`was`, lo0 + over before it), if any, stays where it was
+-- unless the measurement's top `top` falls under it (then it is lo0). Allocates nothing.
 local function remeasure(r, was, top)
     if not R.assume[r] then
         return -- no modelled floor: a measurement moves lo0 alone, as before
@@ -1128,6 +1128,7 @@ I.On(Obs.Usable, function(o, t, lag)
         heardT = o.t -- only a rung above the floor can show a pending swing's gain (an answer below it proves nothing)
     end
     local explained = I.CreditVerdict and judge(a, now, t, r, c, was, wasT)
+    keepFloor = keepFloor and rung and c > 0 -- no rung, no kept floor: a later read must not inherit it
     if not rung then
         return -- a second power cost (Overpower's combo points) makes a short answer ambiguous: no rung
     end
@@ -1189,6 +1190,7 @@ I.On(Obs.Usable, function(o, t, lag)
         R.sinceYes[r] = R.sinceYes[r] or R.lo0[r] > lo1
         R.sinceSnap[r] = R.sinceSnap[r] or R.est0[r] > e1
     end
+    keepFloor = false -- this apply's only (remeasure)
 end)
 
 I.On(Obs.Read, function(o, t, lag)
