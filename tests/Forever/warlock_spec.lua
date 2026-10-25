@@ -657,6 +657,22 @@ describe("Forever Warlock priorities", function()
         assert.is_nil(s.specs)
     end)
 
+    it("shows the assigned curses by the client's names, the pack's string when the client has none", function()
+        ld.SPELL_NAMES[704] = "Fluch der Tollkühnheit" -- the client's name, in its language
+        local ok, s = pcall(function()
+            return ld.load(nil, FILE, "WARLOCK").settings.assigned_curse
+        end)
+        ld.SPELL_NAMES[704] = nil
+        assert(ok, s)
+        assert.are.same({ -- 440892 and 702 not cached: the pack's L string, English here
+            elements = "Curse of the Elements",
+            recklessness = "Fluch der Tollkühnheit",
+            weakness = "Curse of Weakness",
+            nocurse = "No Curse",
+        }, s.option.values)
+        assert.are.equal("elements", s.default) -- the saved choice is the key, whatever the names
+    end)
+
     it("names only registered abilities and auras", function()
         local cls = ld.load(nil, FILE, "WARLOCK")
         local kinds = { buff = cls.auras, debuff = cls.auras, cooldown = cls.abilities, action = cls.abilities }

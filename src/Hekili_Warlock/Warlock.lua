@@ -961,6 +961,13 @@ spec:RegisterTalents({
     incinerate = { 3, 412758, 1 },
 })
 
+-- A curse's name as the client shows it (localization spec §5): the client's, already in the player's language and as
+-- its tooltip words it, read once here (a plain string); `english` when the client has no name for it (not cached).
+local function curseName(id, english)
+    local info = Facade.C_Spell.GetSpellInfo(id)
+    return info and info.name or english
+end
+
 -- The assigned curse (tools/wowsims/apl.lua rule 16; the recipes' `select`): wowsims's Curses class option, a choice
 -- the packs' curse lines read as `settings.assigned_curse='<key>'`; every build's (and so the harness's) is Elements.
 spec:RegisterSetting("assigned_curse", "elements", {
@@ -968,9 +975,9 @@ spec:RegisterSetting("assigned_curse", "elements", {
     name = L["Assigned Curse"],
     desc = L["The curse the wowsims.com priority keeps on the target (wowsims's Curses option). No Curse: none."],
     values = {
-        elements = L["Curse of the Elements"],
-        recklessness = L["Curse of Recklessness"],
-        weakness = L["Curse of Weakness"],
+        elements = curseName(440892, L["Curse of the Elements"]),
+        recklessness = curseName(704, L["Curse of Recklessness"]),
+        weakness = curseName(702, L["Curse of Weakness"]),
         nocurse = L["No Curse"],
     },
     width = "full",

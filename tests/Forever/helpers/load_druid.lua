@@ -6,6 +6,10 @@
 -- (Hekili runs them with setfenv( f, state )).
 local M = {}
 
+--- [spellID] = the name the fake client's C_Spell.GetSpellInfo answers (unset: no info, as for a spell the client has
+--- not cached); a spec fills it before M.load and empties it after.
+M.SPELL_NAMES = {}
+
 --- Loads the class file (`file`, default the Druid's, as class token `class`, default "DRUID": the Rogue's helpers
 --- load theirs through it). `vs` (optional) is the VirtualState whose KnownRank the file's knownRank reads through
 --- `state.knownRank` (a real one, for the strict-context specs); by default a fake answering from `game.known`. Returns `w`: `w.abilities`,
@@ -63,6 +67,9 @@ function M.load(vs, file, class)
             IsSpellUsable = function(id)
                 local u = game.usable[id] or {}
                 return u[1] == true, u[2] == true
+            end,
+            GetSpellInfo = function(id)
+                return M.SPELL_NAMES[id] and { name = M.SPELL_NAMES[id], spellID = id } or nil
             end,
         },
         C_Item = {
