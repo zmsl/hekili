@@ -941,6 +941,7 @@ spec:RegisterAbilities({
 
     challenging_shout = {
         id = 1161,
+        expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         cast = 0,
         cooldown = 600,
         gcd = "spell",
@@ -1104,6 +1105,7 @@ spec:RegisterAbilities({
 
     demoralizing_shout = {
         id = 1160,
+        expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         copy = rest(DEMORALIZING_SHOUT),
         cast = 0,
         cooldown = 0,
@@ -1130,6 +1132,7 @@ spec:RegisterAbilities({
 
     disarm = {
         id = 676,
+        expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         cast = 0,
         cooldown = 60,
         gcd = "spell",
@@ -1274,6 +1277,7 @@ spec:RegisterAbilities({
 
     intimidating_shout = {
         id = 5246,
+        expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         cast = 0,
         cooldown = 180,
         gcd = "spell",
@@ -1683,6 +1687,7 @@ spec:RegisterAbilities({
 
     sunder_armor = {
         id = 7386,
+        expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         copy = rest(SUNDER_ARMOR),
         cast = 0,
         cooldown = 0,
@@ -1733,6 +1738,7 @@ spec:RegisterAbilities({
 
     taunt = {
         id = 355,
+        expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         cast = 0,
         cooldown = 8,
         gcd = "off",

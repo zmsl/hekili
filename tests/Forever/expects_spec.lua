@@ -1,5 +1,5 @@
--- tests/Forever/expects_spec.lua (unit-registry spec §5.4): the casters' and Hunter's declared outcomes, as each pack
--- registers them, are well formed by Families/Expect.lua's own rule and match the spec's table.
+-- tests/Forever/expects_spec.lua (unit-registry spec §5.4): the packs' declared outcomes, as each pack registers them,
+-- are well formed by Families/Expect.lua's own rule and match the spec's table; the melee packs declare only debuffs.
 local load = require("Game.State.helpers.load")
 local loader = require("Forever.helpers.load_druid")
 
@@ -12,13 +12,29 @@ local DECLARED = {
         starfire = { "instant", nil, "arcane" },
         moonfire = { "instant", nil, "arcane" },
         insect_swarm = { "ticks", nil, "nature" },
-        demoralizing_roar = { "instant", nil, nil }, -- no damage: avoids only (Kinds.lua K.Accepts, school 0)
+        -- no damage (DB2 effects, wowsims): avoids only (Kinds.lua K.Accepts, school 0)
+        demoralizing_roar = { "debuff", nil, nil },
+        faerie_fire = { "debuff", nil, nil },
+        growl = { "debuff", nil, nil },
+        challenging_roar = { "debuff", nil, nil },
     },
+    Warrior = {
+        sunder_armor = { "debuff", nil, nil },
+        demoralizing_shout = { "debuff", nil, nil },
+        challenging_shout = { "debuff", nil, nil },
+        taunt = { "debuff", nil, nil },
+        disarm = { "debuff", nil, nil },
+        intimidating_shout = { "debuff", nil, nil },
+    },
+    Rogue = { expose_armor = { "debuff", nil, nil } },
     Warlock = {
         shadow_bolt = { "travel", 20, "shadow" },
         incinerate = { "travel", 20, "fire" },
         soul_fire = { "travel", 24, "fire" },
         death_coil = { "travel", 24, "shadow" },
+        curse_of_the_elements = { "debuff", nil, nil },
+        curse_of_recklessness = { "debuff", nil, nil },
+        curse_of_weakness = { "debuff", nil, nil },
     },
     Mage = {
         frostbolt = { "travel", 28, "frost" },
@@ -45,7 +61,8 @@ describe("the packs' declared outcomes", function()
 
     for class, list in pairs(DECLARED) do
         it(class .. ": each declaration is the spec's and well formed", function()
-            local w = loader.load(nil, "src/Hekili_" .. class .. "/" .. class .. ".lua", class:upper())
+            local w = class == "Warrior" and require("Forever.helpers.load_warrior").load()
+                or loader.load(nil, "src/Hekili_" .. class .. "/" .. class .. ".lua", class:upper())
             for key, want in pairs(list) do
                 local d = assert(w.abilities[key], key)
                 assert.are.same(want, { d.expects, d.velocity, d.school }, key)
@@ -59,14 +76,15 @@ describe("the packs' declared outcomes", function()
         end)
     end
 
-    it("leaves the melee packs on their default types", function()
+    it("leaves the melee packs on their default types but for the declared debuffs", function()
         local packs = { -- the Warrior's own recording loader; the Rogue's through the Druid's
             Warrior = require("Forever.helpers.load_warrior").load(),
             Rogue = loader.load(nil, "src/Hekili_Rogue/Rogue.lua", "ROGUE"),
         }
         for class, w in pairs(packs) do
             for key, d in pairs(w.abilities) do
-                assert.is_nil(d.expects, class .. " " .. tostring(key))
+                local want = DECLARED[class][key]
+                assert.are.equal(want and want[1], d.expects, class .. " " .. tostring(key))
             end
         end
     end)

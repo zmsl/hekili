@@ -833,6 +833,7 @@ spec:RegisterAbilities({
 
     challenging_roar = {
         id = 5209,
+        expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         cast = 0,
         cooldown = 600,
         gcd = "spell",
@@ -913,8 +914,8 @@ spec:RegisterAbilities({
 
     demoralizing_roar = {
         id = 99,
-        -- no school: it deals no damage, so its ticket pays its own avoid only, never a Maul's wound in its frame
-        expects = "instant",
+        -- it deals no damage, so its ticket pays its own avoid only, never a Maul's wound in its frame
+        expects = "debuff",
         copy = rest(DEMORALIZING_ROAR),
         cast = 0,
         cooldown = 0,
@@ -985,6 +986,7 @@ spec:RegisterAbilities({
 
     faerie_fire = {
         id = 770,
+        expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         copy = rest(FAERIE_FIRE),
         cast = 0,
         -- Free with a 6 s cooldown in Cat or Bear Form (TDF Bear.lua; checkpoint Q7 confirms).
@@ -1113,6 +1115,7 @@ spec:RegisterAbilities({
 
     growl = {
         id = 6795,
+        expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         cast = 0,
         cooldown = 8,
         gcd = "off",

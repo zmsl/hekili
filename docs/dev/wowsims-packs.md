@@ -217,7 +217,8 @@ landing up to `rMax / velocity + 0.15` s after its success), so `SPELL_DAMAGE` r
 the first time (`ns.updateTarget`, `Engine/Sim/Events.lua:1735-1743`). Expected: the replay floors of Balance,
 Affliction, Destruction, Demonology, Arcane, Fire, Frostfire, Elemental, Shadow, Smite and the three Hunter specs rise
 or hold (crits now run `onCrit`, misses refund); an AoE line's target count may read higher, each such move named in
-the gate's report. The melee packs keep their default types (unchanged).
+the gate's report. The melee packs keep their default types but for their non-damaging instants (2026-10-25): each
+declares `expects = "debuff"` (avoids only; unit-registry spec §5.4's table).
 
 ## Classifying a disagreement (P7)
 

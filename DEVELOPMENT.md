@@ -285,7 +285,9 @@ The client gives addons no combat log. The core pays each outcome it sees on a u
 cast that made it by a ticket, and a pack tells the core what to expect from each ability with plain data on the
 ability, never code:
 
-- `expects`: one of `"none"` (owes no row: a buff), `"instant"` (its row comes in the same frame), `"travel"` (a
+- `expects`: one of `"none"` (owes no row: a buff), `"instant"` (its row comes in the same frame; needs
+  `school`), `"debuff"` (an effect that deals no damage, such as an armor debuff or a taunt: only its own miss, dodge
+  or parry pays it, and its success makes no row), `"travel"` (a
   projectile: `velocity` in yards a second, DB2 `SpellMisc.Speed`), `"strike"` (on the next swing), `"ticks"` (a
   DoT with no direct hit), `"channel"` (opt-in, untested in game; no pack uses it). `"melee"` is the core's own.
 - A ticking kind reads the aura the ability applies (`cycle`, else `aura`, else the ability's key, as the simulation
@@ -307,7 +309,8 @@ Two dev-only targets check this layer outside `make check`:
 - `make spell-data-check` reads every pack's `expects`, `velocity`, `school` and aura `tick_time` against DB2
   (`SpellMisc`, `SpellEffect`). A rank with no DB2 row is printed as a note and passes; a mismatch fails. A declared
   `velocity` must match the rank's Speed, and an ability that starts combat with a first-rank Speed above 0 must
-  declare it unless it is `expects = "none"` (for example a summon) or `"ticks"`.
+  declare it unless it is `expects = "none"` (for example a summon) or `"ticks"`. A `"debuff"` fails when any rank
+  has a damaging effect.
 - `make bench-ta` times the registry and the tickets on synthetic rows and prints
   `bench-ta rows=N rows/s=R ms/row=X ms/tick=Y ms/tick-expiry=Z (floor rows/s F)`. It fails above 0.02 ms a row, above
   0.10 ms an idle tick or a tick with a full pool expiring, or below 0.8 x the rows/s floor in

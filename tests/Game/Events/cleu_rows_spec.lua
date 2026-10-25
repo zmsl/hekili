@@ -419,7 +419,7 @@ describe("the synthesized combat log", function()
             "never gives a wound to a cast that deals no damage (declared, no school); its avoid still pays it",
             function()
                 local c = fs.new(9, nil, nil, true)
-                c.Class.abilities.spender_c.expects = "instant" -- no school: debuff-only (K.Accepts: avoids only)
+                c.Class.abilities.spender_c.expects = "debuff" -- no damage: avoids only (K.Accepts, school 0)
                 I.Build(fs.def(c), 1)
                 ctl.now = 80
                 ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-20", fs.SPENDER_C) -- the debuff-only instant

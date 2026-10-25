@@ -856,6 +856,15 @@ describe("now handlers", function()
             assert.are.equal(1, I.avoidsRun)
         end)
 
+        it('a declared "debuff": its dodge refunds the same 80% (Obs.Avoided)', function()
+            h.Class.abilities.spender_c.expects = "debuff"
+            begin()
+            castOutcome(fs.SPENDER_C, 5, "DODGE")
+            assert.is_nil(VS.Aura("target", fs.SPENDER_C, 5.1))
+            assert.are.equal(8, VS.Power(fs.RAGE, 5.1).est)
+            assert.are.equal(1, I.avoidsRun)
+        end)
+
         it("a wound: the debuff stays and nothing comes back", function()
             begin()
             castOutcome(fs.SPENDER_C, 5, "WOUND", 0, 40)

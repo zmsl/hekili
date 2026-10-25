@@ -14,11 +14,13 @@ def db():
         """
         create table SpellMisc (SpellID int, Speed real, SchoolMask int, DurationIndex int);
         create table SpellDuration (ID int, Duration int);
-        create table SpellEffect (SpellID int, EffectAura int, EffectAuraPeriod int);
+        create table SpellEffect (SpellID int, EffectAura int, EffectAuraPeriod int, Effect int default 6);
         insert into SpellMisc values (10, 20, 8, 0), (11, 20, 8, 0), (20, 24, 20, 0), (30, 0, 64, 1), (31, 0, 64, 2);
         insert into SpellMisc values (40, 35, 1, 0), (12, 24, 8, 0);
         insert into SpellDuration values (1, 9000), (2, 12000);
-        insert into SpellEffect values (30, 3, 3000), (31, 3, 3000);
+        insert into SpellEffect values (30, 3, 3000, 6), (31, 3, 3000, 6);
+        insert into SpellMisc values (50, 0, 1, 0), (51, 0, 1, 0);
+        insert into SpellEffect values (50, 99, 0, 6), (51, 0, 0, 2);
         """
     )
     return c
@@ -45,6 +47,12 @@ class CheckTest(unittest.TestCase):
     def test_a_projectile_that_starts_combat_must_declare_its_velocity(self):
         errors, _ = csd.check([row("shot", [40], expects="")], db())
         self.assertEqual(1, len(errors))
+
+    def test_a_debuff_with_a_damaging_effect_on_any_rank_fails(self):
+        self.assertEqual(([], []), csd.check([row("shout", [50], expects="debuff")], db()))
+        errors, _ = csd.check([row("blow", [50, 51], expects="debuff"), row("dot", [30], expects="debuff")], db())
+        self.assertEqual(2, len(errors))
+        self.assertIn("51 has a damaging", errors[0])
 
     def test_an_ability_declared_none_needs_no_velocity_but_a_wrong_one_still_fails(self):
         self.assertEqual(([], []), csd.check([row("summon", [40], expects="none")], db()))

@@ -659,7 +659,8 @@ closing code.
 | `expects` | Kind | Fields the engine reads | Backed by |
 |---|---|---|---|
 | `"none"` | NONE | none | captures: every success that owes no row (Drink, capture b) |
-| `"instant"` | FRAME | `school` | captures and measured logs: today's instant-cast windows (`Rows.lua:33-49`) |
+| `"instant"` | FRAME | `school` (required) | captures and measured logs: today's instant-cast windows (`Rows.lua:33-49`) |
+| `"debuff"` | FRAME, school 0 | none (`school` and a ticking aura are rejected) | an effect that deals no damage (amended 2026-10-25, owner ruling: intent, not implicit reuse): its success makes no row, only its own MISS, DODGE or PARRY pays, and its expiry closes `expired`, never `lost`; an avoid refunds through `Obs.Avoided` as any cast's |
 | `"travel"` | FLIGHT | `velocity` (DB2 `SpellMisc.Speed`), `school` (DB2 `SchoolMask`) | captures a, b, c (Wrath 1483-1566 ms at max range) |
 | `"melee"` | MELEE | the hand, from `PLAYER_SWING`'s swingType | measured logs (the P and G logs behind `Rows.lua:15-16`) |
 | `"strike"` | STRIKE | the existing `onNextSwing` | measured logs (today's on-next-swing replacement) |
@@ -670,7 +671,8 @@ closing code.
 declares `"melee"` fails validation and falls back to its default type (below).
 
 A `school` of nil on a declared type means the hit makes no row of ours: only an avoid pays, and expiry is not lost
-(3.3). `velocity` is a plain number on the ability; the tick period, count and the `dot = "debuff"` marker live on the
+(3.3). An `"instant"` must name its school (amended 2026-10-25): an instant that deals no damage declares `"debuff"`,
+and an `"instant"` with no `school` is malformed (`Families/Expect.lua`), counted and given its default type. `velocity` is a plain number on the ability; the tick period, count and the `dot = "debuff"` marker live on the
 aura (3.2). A heal-over-time or a self buff with a `tick_time` and no `dot = "debuff"` never opens a ticket. `school` is declared by name, a plain lowercase
 string from a fixed enum: `"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"`, `"arcane"`; numbers are
 not accepted. The enum is one core table, `ns.SCHOOL = { physical = 1, holy = 2, fire = 4, nature = 8, frost = 16,
@@ -742,12 +744,19 @@ From DB2 build 1.60.1.70338 (`SpellMisc`, every rank the pack lists agrees unles
 | Hunter | `serpent_sting` | ability `expects = "ticks", school = "nature", velocity = 40`; aura adds `dot = "debuff"` | a DoT with no direct WOUND; its aura (`src/Hekili_Hunter/Hunter.lua:232`: duration 15, tick_time 3) gives 5 ticks; `velocity` puts its miss in the FLIGHT window and anchors its ticks after the flight. Rank 1978's Speed is 40, the Forever 425728 family's is 0, so the check reads the pack's own ranks |
 | Druid | `moonfire` | ability `expects = "instant", school = "arcane"`; aura `duration = 12, tick_time = 3, dot = "debuff"` | today's aura duration is a rank function (`src/Hekili_Druid/Druid.lua:512-520`: 9 at rank 1, 12 above); setting each rank's duration from DB2 and the capture is a pack data task |
 | Hunter | `summon_hawk` | nothing (default type) | no outcome of ours known |
-| Druid | `demoralizing_roar` | `expects = "instant"` (no `school`) | deals no damage: school 0 pays its own avoid only, so a Maul's wound landing in its frame pays the Maul (parry-haste Task 4, round 6; it had taken the Maul's wound as its own SPELL_DAMAGE) |
+| Druid | `demoralizing_roar` | `expects = "debuff"` | deals no damage: school 0 pays its own avoid only, so a Maul's wound landing in its frame pays the Maul (parry-haste Task 4, round 6; it had taken the Maul's wound as its own SPELL_DAMAGE; `"instant"` with no `school` until 2026-10-25) |
+| Druid | `faerie_fire`, `growl`, `challenging_roar` | `expects = "debuff"` | no damaging effect on any rank (DB2 SpellEffect); wowsims: Faerie Fire rolls a magic hit, Growl and Challenging Roar apply nothing it models. Faerie Fire (Feral) has no row in Forever's DB2: `faerie_fire` is the one ability, free on a cooldown in Cat or Bear Form |
+| Warrior | `sunder_armor`, `demoralizing_shout`, `challenging_shout`, `taunt`, `disarm`, `intimidating_shout` | `expects = "debuff"` | no damaging effect on any rank (DB2); wowsims: Sunder Armor and Disarm roll a special hit, Demoralizing Shout a magic hit, Taunt, Challenging Shout and Intimidating Shout always hit |
+| Rogue | `expose_armor` | `expects = "debuff"` | no damaging effect (DB2: a dummy on the rogue and the armor aura); wowsims rolls a special hit |
+| Warlock | `curse_of_the_elements`, `curse_of_recklessness`, `curse_of_weakness` | `expects = "debuff"` | no damaging effect on any rank (DB2); wowsims rolls a magic hit |
+| not declared | Warrior `mocking_blow`, `thunder_clap` | default type | DB2 SchoolDamage on every rank (wowsims deals damage): not debuffs |
+| not declared | Warrior `battle_shout`, Hunter `hunters_mark` | `"none"` (no `startsCombat`) | open no ticket: a party buff, and a mark wowsims applies with no outcome roll; Forever's pack has no Commanding Shout |
+| not declared | Warlock `bane_of_agony`, `bane_of_doom` | default type | periodic damage (DB2 aura 3): not debuffs; a DoT declaration is its own task |
 
 Instant abilities may declare `expects = "instant", school = "<name>"`; that turns on the school check and lost counting
-inside today's frame windows. This spec does not require it, and the melee packs keep their default types; a
-non-damaging instant that shares a frame with a queued strike declares `"instant"` without a `school` (Druid's
-`demoralizing_roar` above), so it never takes the strike's wound.
+inside today's frame windows. This spec does not require it, and the melee packs keep their default types but for their
+non-damaging instants: each declares `"debuff"` (the table above), so it never takes a strike's or a swing's wound in its
+frame (`tests/Forever/expects_spec.lua` pins each).
 
 ### 5.5 The DB2 check
 
@@ -761,7 +770,9 @@ fails when:
 - a declared `school` name differs from the name of SchoolMask on any listed rank (the check maps the mask through `ns.SCHOOL`; a mask with no single name, such as 20, is reported for the pack to leave `school` nil);
 - an ability with Speed > 0 on its first rank and `startsCombat` declares no `velocity`; this rule covers abilities
   whose type is not `"ticks"` (a `"ticks"` ability's `velocity` is optional, but once declared it must equal Speed by
-  the first rule).
+  the first rule);
+- an ability that declares `"debuff"` has a damaging effect on any listed rank (SpellEffect `Effect` school damage,
+  health leech or a weapon-damage kind, or `EffectAura` 3, periodic damage; amended 2026-10-25).
 
 ## 6. Harness
 
@@ -1046,7 +1057,7 @@ constructor, closure or `{...}` inside an event handler, a row dispatch, a poll 
 | 8 | A ticket on a dead unit stays open until paid or its own window ends; unpaid, it closes as `closedDead`, not lost | a melee killing blow arrives about 370 ms after the clear and must still pay |
 | 9 | `TICKETS` = 32 (16 in the first design; owner ruling 2026-10-22) | flight windows of up to about 2.1 s plus two hands need more than today's 8, and multi-dotting three targets needs about 17 |
 | 10 | A ticket opens for every commit (every `PLAYER_SWING`, every player success mapped or not, a hard cast at SENT); the kind decides how it closes | one uniform record; no engine assumption about what a spell does |
-| 11 | `expects` is a plain string from a fixed set, each mapped to one engine kind whose matching and closure rule lives in the engine; the engine reads the ability's other fields per type: `"none"` (none), `"instant"` (`school`), `"travel"` (`velocity`, `school`), `"melee"` (the hand from `PLAYER_SWING`; the engine's own, not declarable), `"strike"` (`onNextSwing`), `"ticks"` (`school`, optional `velocity`, and the aura's `tick_time`, `duration` and `dot = "debuff"`), `"channel"` (`school`, the aura's `tick_time`; opt-in only); a plain string and nothing else; `school` is a name from the core enum `ns.SCHOOL` (`"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"`, `"arcane"`), compiled to its mask at build, never a number | packs declare data on the ability; each rule is written and tested once; the DB2 check reads the same fields |
+| 11 | `expects` is a plain string from a fixed set, each mapped to one engine kind whose matching and closure rule lives in the engine; the engine reads the ability's other fields per type: `"none"` (none), `"instant"` (`school`), `"debuff"` (none: the instant kind, avoids only; added 2026-10-25), `"travel"` (`velocity`, `school`), `"melee"` (the hand from `PLAYER_SWING`; the engine's own, not declarable), `"strike"` (`onNextSwing`), `"ticks"` (`school`, optional `velocity`, and the aura's `tick_time`, `duration` and `dot = "debuff"`), `"channel"` (`school`, the aura's `tick_time`; opt-in only); a plain string and nothing else; `school` is a name from the core enum `ns.SCHOOL` (`"physical"`, `"holy"`, `"fire"`, `"nature"`, `"frost"`, `"shadow"`, `"arcane"`), compiled to its mask at build, never a number | packs declare data on the ability; each rule is written and tested once; the DB2 check reads the same fields |
 | 12 | Default when `expects` is absent: `"strike"` if `onNextSwing`, else `"instant"` if `startsCombat`, else `"none"`; a default-mapped ability never opens a TICKS ticket; `channeled` abilities follow the same rule, and CHANNEL is opened only by an explicit `expects = "channel"` | reproduces today exactly: Rows holds only `startsCombat` and `onNextSwing` abilities, with these windows; channels keep their floors until a pack opts in |
 | 13 | Validation at build: an unknown `expects`, a type missing a required field, an unknown `school` name, or a `"ticks"` or `"channel"` whose aura is missing or has no `tick_time` (and for `"ticks"`, no `dot = "debuff"`) is reported once through the build warning path (`Hekili:Error`, counted like `I.nowErrors`) and the ability falls back to its default type | a typo never silently changes attribution; floors hold |
 | 14 | `CTX` fields: `t`, `guid`, `hand`, `rMax`, `lagE`, `lagSpr`, `lagAge`, `rangeLo` (optional, 0 absent), `bandLo`, `bandHi`, `bandN` | what the engine knows at commit; no range is assumed readable |

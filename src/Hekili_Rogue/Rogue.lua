@@ -531,6 +531,7 @@ spec:RegisterAbilities({
 
     expose_armor = {
         id = 8647,
+        expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         copy = rest(EXPOSE_ARMOR),
         cast = 0,
         cooldown = 0,

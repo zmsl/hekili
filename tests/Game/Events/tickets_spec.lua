@@ -411,6 +411,26 @@ describe("the ticket pool", function()
         assert.are.equal(1, T.foreign)
     end)
 
+    it('pays a "debuff" ticket a MISS, DODGE or PARRY, never a WOUND; it closes expired, never lost', function()
+        local h = fs.new(9, false, false, true)
+        h.Class.abilities.spender_c.expects = "debuff"
+        I.Build(fs.def(h), 1)
+        for n, act in ipairs({ "MISS", "DODGE", "PARRY" }) do
+            ctl.now = 10 * n
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-" .. n, fs.SPENDER_C)
+            ctl.now = 10 * n + 0.01
+            ctl.Fire("UNIT_COMBAT", "target", act, "", 0, 1)
+        end
+        assert.are.equal(3, T.paid[X.FRAME])
+        ctl.now = 40
+        ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-4", fs.SPENDER_C)
+        ctl.now = 40.01
+        ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 1) -- in its frame: not its
+        ctl.Tick(45)
+        assert.are.same({ 3, 0, 1, 0 }, { T.paid[X.FRAME], T.closed.lost, T.closed.expired, T.lost[X.FRAME] })
+        assert.are.equal(T.opened, sum())
+    end)
+
     it("counts a cast whose avoid an unmapped window absorbed past its frame as expired, never lost", function()
         ctl.now = 4
         ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-9", 999999)

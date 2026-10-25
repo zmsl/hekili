@@ -544,6 +544,7 @@ spec:RegisterAbilities({
 
     curse_of_the_elements = {
         id = 440892,
+        expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         copy = rest(CURSE_OF_THE_ELEMENTS),
         cast = 0,
         cooldown = 0,
@@ -563,6 +564,7 @@ spec:RegisterAbilities({
 
     curse_of_recklessness = {
         id = 704,
+        expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         copy = rest(CURSE_OF_RECKLESSNESS),
         cast = 0,
         cooldown = 0,
@@ -582,6 +584,7 @@ spec:RegisterAbilities({
 
     curse_of_weakness = {
         id = 702,
+        expects = "debuff", -- no damage (DB2, wowsims): its ticket takes its own avoid only
         copy = rest(CURSE_OF_WEAKNESS),
         cast = 0,
         cooldown = 0,

@@ -5,7 +5,8 @@ Reads tools/check_spell_data.lua's tab-separated lines on stdin (class, key, ids
 startsCombat, expects) and $WOW_DB2 (default ~/.local/share/wow-db2/forever/current.sqlite). Fails when a declared
 velocity differs from SpellMisc.Speed on any listed rank; when a declared school's name differs from SchoolMask's on
 any listed rank (a mask with no single name: the pack leaves `school` nil); when an ability that starts combat has
-Speed > 0 on its first rank and declares no velocity (a "ticks" or "none" ability's velocity is optional). A rank with no SpellMisc row is a note. A ticking aura's
+Speed > 0 on its first rank and declares no velocity (a "ticks" or "none" ability's velocity is optional); when a
+"debuff" (no damage) has a damaging effect on any listed rank. A rank with no SpellMisc row is a note. A ticking aura's
 tick_time that differs from a rank's periodic damage EffectAuraPeriod is a note (an aura may be rank-generic).
 """
 import os
@@ -23,6 +24,16 @@ def misc(db, sid):
 def periodic(db, sid):
     r = db.execute("select EffectAuraPeriod from SpellEffect where SpellID = ? and EffectAura = 3", (sid,)).fetchone()
     return r[0] if r else 0
+
+
+# SpellEffect.Effect values that deal damage (school damage, health leech, the weapon-damage kinds) and EffectAura 3
+# (periodic damage): what a "debuff" must have on none of its ranks
+DAMAGE = (2, 9, 17, 31, 58, 121)
+
+
+def damages(db, sid):
+    q = "select 1 from SpellEffect where SpellID = ? and (Effect in (%s) or EffectAura = 3)" % ",".join("?" * len(DAMAGE))
+    return db.execute(q, (sid, *DAMAGE)).fetchone() is not None
 
 
 def check(rows, db):
@@ -46,6 +57,10 @@ def check(rows, db):
                     errors.append(f"{where}: SchoolMask {mask} of {sid} has no single name: leave school nil")
                 elif name != school:
                     errors.append(f"{where}: school {school} but SpellMisc {sid} SchoolMask {mask} ({name})")
+        if expects == "debuff":
+            for sid, _ in data:
+                if damages(db, sid):
+                    errors.append(f"{where}: declared debuff but {sid} has a damaging SpellEffect")
         first_speed = data[0][1][0]
         if starts == "1" and first_speed > 0 and not velocity and expects not in ("ticks", "none"):
             errors.append(f"{where}: Speed {first_speed:g} on {data[0][0]} but no velocity declared")

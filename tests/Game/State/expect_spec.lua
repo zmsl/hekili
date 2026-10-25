@@ -161,6 +161,9 @@ describe("expectation compile", function()
         { { expects = "instant", school = 8 }, nil, "unknown school 8" },
         { { expects = "travel", velocity = "fast" }, nil, "velocity is not a positive number" },
         { { expects = "travel", velocity = 0 }, nil, "velocity is not a positive number" },
+        { { expects = "instant" }, nil, 'instant needs a school (no damage: expects "debuff")' },
+        { { expects = "debuff", school = "nature" }, nil, "debuff deals no damage: no school, no ticking aura" },
+        { { expects = "debuff" }, { spender_a = { tick_time = 3 } }, "debuff deals no damage: no school, no ticking" },
     }) do
         it("rejects " .. case[3], function()
             local kind, school, errors, err = one(case[1], case[2])
@@ -168,6 +171,12 @@ describe("expectation compile", function()
             assert.is_truthy(err:find(case[3], 1, true))
         end)
     end
+
+    it('compiles "debuff" to the instant kind with school 0: its ticket takes avoids only', function()
+        local kind, school, errors = one({ startsCombat = true, expects = "debuff" })
+        assert.are.same({ X.FRAME, 0, 0 }, { kind, school, errors })
+        assert.is_true(A.expDeclared[1])
+    end)
 
     it("keeps a declared school on a default type", function()
         local kind, school, errors = one({ startsCombat = true, school = "frost" })

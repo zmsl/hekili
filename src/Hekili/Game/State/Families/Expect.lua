@@ -7,7 +7,9 @@
 -- `tick_time` and floor(`duration` / `tick_time`), read at the commit (X.Tick) in Hekili's own state when the pack
 -- wrote a function. Declared: the pack's own value, before the haste wrapper RegisterAura installs (Engine/Schema/
 -- Spec.lua keeps it as `base_tick_time`), as Families/Casts.lua reads `declaredSpend`. A declared instant or travel
--- ability also ticks when that aura is upstream's debuff dot (`dot = "debuff"`, the field mt_dot reads). An absent
+-- ability also ticks when that aura is upstream's debuff dot (`dot = "debuff"`, the field mt_dot reads). "debuff" is
+-- an effect that deals no damage: the instant kind with school 0, so its ticket takes only its own MISS, DODGE or PARRY
+-- (Kinds.lua K.Accepts) and closes `expired`, never `lost` (Tickets.lua); an "instant" must name its school. An absent
 -- `expects` takes today's behaviour: "strike" with `onNextSwing`, "instant" with `startsCombat`, else "none", with
 -- school ANY unless the ability names one (CHANNEL is opt-in). A malformed declaration is counted once in
 -- I.nowErrors (Snapshot's error line) and takes the default. Pure: no client read.
@@ -20,7 +22,7 @@ local X = {}
 I.Expect = X
 X.NONE, X.FRAME, X.FLIGHT, X.MELEE, X.STRIKE, X.TICKS, X.CHANNEL, X.UNMAPPED = 0, 1, 2, 3, 4, 5, 6, 7
 X.ANY = -1 -- school: any WOUND or avoid pays, never lost (a default type on an ability with no `school`)
-X.KIND = { none = 0, instant = 1, travel = 2, melee = 3, strike = 4, ticks = 5, channel = 6 }
+X.KIND = { none = 0, instant = 1, debuff = 1, travel = 2, melee = 3, strike = 4, ticks = 5, channel = 6 }
 
 A.expKind, A.expDeclared, A.velocity, A.school, A.tickAura, A.ticking = {}, {}, {}, {}, {}, {}
 
@@ -101,6 +103,10 @@ local function malformed(obj, e, k, s, au)
         return "velocity is not a positive number" -- 0, a negative or NaN would make the hard window meaningless
     elseif obj.school ~= nil and not s then
         return "unknown school " .. tostring(obj.school)
+    elseif e == "debuff" and (obj.school ~= nil or au) then
+        return "debuff deals no damage: no school, no ticking aura"
+    elseif e == "instant" and not s then
+        return 'instant needs a school (no damage: expects "debuff")'
     elseif k == X.FLIGHT and not v then
         return "travel needs velocity"
     elseif k == X.TICKS and not (au and rawget(au, "dot") == "debuff") then
@@ -142,7 +148,7 @@ I.OnBuild(function(def)
             if why then
                 I.nowErrors, I.nowError = I.nowErrors + 1, "expects: " .. tostring(A.key[a]) .. " " .. why
             else
-                kind, school, isDeclared = k, s or 0, true
+                kind, school, isDeclared = k, e ~= "debuff" and s or 0, true -- debuff: 0, avoids only
                 A.velocity[a] = obj.velocity or 0
             end
         end
