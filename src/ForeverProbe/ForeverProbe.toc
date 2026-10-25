@@ -1,0 +1,25 @@
+## Interface: 16001
+## Title: ForeverProbe
+## Notes: Records which combat inputs are readable or secret on WoW Forever (/fprobe start W|D, /fprobe o).
+## Author: zmsl
+## Version: 0.3.0
+## SavedVariables: ForeverProbeDB
+
+Core.lua
+Legacy.lua
+Probes.lua
+Display.lua
+Spike.lua
+SessionO.lua
+Copy.lua
+Export.lua
+Calib.lua
+Sweep.lua
+Grave.lua
+Gate.lua
+Log.lua
+CPSecrecy.lua
+AtlasView.lua
+APSecrecy.lua
+VsBars.lua
+TLCells.lua
