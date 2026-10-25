@@ -124,6 +124,11 @@ What a content addon may use, and nothing else (`tests/boundary_spec.lua` enforc
 - `Hekili.State` (the simulation's `state`) and `Hekili.Class` (the registry the class file fills).
 - `Hekili.Client`: the game client as an addon may read it, the same table as `ns.Facade`. Content never names a WoW
   global (`tools/check_api_reads.sh`).
+- `Hekili:GetLocale(addonName)`: the pack's string table (its AceLocale-3.0 app, named after its folder,
+  `"Hekili_Druid"`), read once at load as `local L = Hekili:GetLocale("Hekili_Druid")`. Text a player sees is
+  `L["English text"]`; the pack ships `Locales/enUS.lua` (generated) and one `Locales/<locale>.lua` per language,
+  listed in its TOC before the class file (§9). A `RegisterPack` name is a key too: the options show a built-in
+  priority through its label (`Registry.PackLabel`), while the name stays what is saved and typed.
 
 The belief's plain reads, names in every content function's environment: `knownRank`, `stat`, `swingBase`, `healthMax`.
 Two environments have them:
@@ -211,7 +216,7 @@ class token, a missing pack, a mismatch or a failed pack load keeps one notice, 
 
 **What bumps what.** A class release bumps `## Version` in its pack's TOC. `CONTENT_API` and every content TOC's
 `## X-Hekili-ContentAPI` change together, only when the content surface changes: the Register* API, `Hekili.Client`,
-or the environment names above. `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
+or the environment names above (10: `Hekili:GetLocale`, the packs' `Locales/`). `tests/Forever/content_spec.lua` checks the TOCs and the constant agree.
 
 **Active spec.** The client reports one pseudo-spec per class, so the core picks the spec (`ns.PickSpec`) from the
 talent tree with the most points: the spec the character activated for that tree
@@ -243,8 +248,13 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
   - Sim baseline: each `Engine/Sim/` file may hold no more of each content name than `tests/boundary_baseline.lua`
     (a per-token ceiling; regenerate with `tools/boundary_baseline.lua` only to remove a leak);
   - content allowlist: files of the content addons may use only `Hekili:NewClass/NewShared/NewRace` and
-    `Hekili.State/Class/Client/L`, and contain none of `ns.`, `ns = ...`, `VirtualState`, `Hekili.Virtual`,
-    `Hekili.Engine`. Pack share strings are data and skipped.
+    `Hekili.State/Class/Client` and `Hekili:GetLocale`, and contain none of `ns.`, `ns = ...`, `VirtualState`, `Hekili.Virtual`,
+    `Hekili.Engine`. Pack share strings and the packs' `Locales/` are data and skipped.
+- `tools/locales.py --check` (in `make tools-test`, so in `make check`): every addon's `Locales/enUS.lua` matches the
+  keys its code uses, every language file is current, no key is a variable, a translation keeps its English's format
+  codes, colours, textures and line breaks, no pack key is translated in a core file, no priority label reads as
+  another, and no player-visible literal sits outside `L[...]` (the lint, §9). `tests/Forever/enus_text_spec.lua`
+  compares the English text with the golden written at the merge base.
 - `tools/check_engine_reads.sh` (in `make api-check`), both directions: the engine files (`Sim/{Core,State,Targets,
   Scripts}`, `Output`, `Registry`, `Snapshot`, `Driver`) name no `HekiliDisplay*`, `ns.UI.` or
   `DisplayPool`, and nothing in `Engine/` names `Hekili.DB` or `.profile` (exempt: `Settings.lua`, comments). UI,
@@ -455,24 +465,44 @@ can show in two slots when a held slot's icon is the next slot's new icon.
 
 ## 9. Localization
 
-Every piece of text a player sees goes through `L` (`Locales/Locales.lua`): `local L = ns.L` in the core,
-`local L = Hekili.L` in the content addons (the one name the boundary test allows them beside the registration API,
-`State`, `Class` and `Client`). The key is the English text itself, `L["Forecast window (s)"]`; `ns.L` answers a
-missing key with the key, so English needs no table and a line a language has not translated shows in English. Each
-language is one file next to it (`Locales/zhCN.lua`), listed in `Hekili.toc` after `Locales.lua`, which fills the
-table only when `Facade.GetLocale()` names that language.
+Every piece of text a player sees is `L["English text"]`. The key is the English itself. Each addon with text is its
+own AceLocale-3.0 app (`Libs/AceLocale-3.0`, Ace3 Release-r1403), named after its folder: the core's table is `ns.L`
+(`local L = ns.L`), a pack's `local L = Hekili:GetLocale("Hekili_<Class>")`. Separate apps keep a pack's strings out
+of the core (core-is-generic) and stop one key meaning two things (the core's "Combat" and Rogue's spec).
 
-- **After changing any text, run `python3 tools/locales.py`.** It reads every `L[...]` key of every addon TOC and
-  rewrites each language file: translations kept, new keys added as commented placeholders grouped by the file that
-  first uses them, translations whose English is gone moved to a "No longer used" section. `make tools-test`
-  (`tests/tools/test_locales.py`) runs its `--check`, which also fails when a key is not a literal or a translation
-  drops a format code, colour, texture or line break of its English. An untranslated line is not a failure.
-- A key is a string literal, or literals joined with `..` for a long text; never a variable. A table of names that are
-  both data and display text stays English and is looked up at the display through a table of literal keys.
-- Text built from parts is a format string, so a translation can reorder it: `format( L["Reset %s?"], name )`, not
-  `"Reset " .. name .. "?"`.
-- Translated: the options, notifications, chat output, the displays' labels and the packs' settings. Not translated:
-  debug and snapshot text, `Hekili:Error` warnings and `/hekili` command words (bug reports and the slash syntax stay
-  English), names the game already translates (spells, items, specializations), and DevTools (development only).
-- **Adding a language:** create an empty `Locales/<locale>.lua` (e.g. `deDE.lua`), add it to `Hekili.toc` after
-  `zhCN.lua` and run `python3 tools/locales.py`, which writes the file with every key as a placeholder.
+- **The locale block.** `Locales/enUS.lua` loads first: written by `tools/locales.py`, every key `L[key] = true`
+  under `NewLocale(app, "enUS", true, true)` (default, silent; `silent` counts only on an app's first `NewLocale`, so
+  people never write that line). Then one file per language (`Locales/zhCN.lua`: `NewLocale(app, "zhCN")`, `if not L
+  then return end`), which fills the table only on its own client. The core's `Locales/Locales.lua` loads last and sets
+  `ns.L`. Silent means a key no table holds answers itself, so a line a language has not translated shows in English
+  and no error fires; missing keys are caught statically instead. AceLocale reads the client's `GetLocale` (enGB is
+  enUS); headless, `fake_api` answers `enUS`.
+- **After changing any text, run `python3 tools/locales.py`.** It rewrites every addon's `enUS.lua` and language
+  files: translations kept, new keys added as commented placeholders grouped by the file that first uses them,
+  translations whose English is gone moved to a "No longer used" section. A pack's language file created empty starts
+  from the core's translations of its keys. `--check` (`make tools-test`) fails on any difference and on the problems
+  §5 lists; each failure names the fix.
+- A key is a string literal, or literals joined with `..`; never a variable. Text built from parts is a format string,
+  so a translation can reorder it: `format( L["Reset %s?"], name )`. A table of names that are both data and display
+  text stays English and is looked up at the display through a table of literal keys (`actionWords`, `customDefaults`,
+  `DISPLAY_NAMES`).
+- **Names the client already translates** come from the client at registration, not from `L`: the Warlock's curses
+  (`C_Spell.GetSpellInfo(id).name`, the pack's `L` string when the client has none yet). Sentences that mention a spell
+  and spec names stay `L` (there is no client source for talent-tree names on Forever).
+- **Priority labels.** A built-in priority's name (`RegisterPack`'s first argument) is its key in the profile,
+  `/hekili priority` and import strings; the options and notices show `Registry.PackLabel(name)`: the pack's `L[name]`,
+  or the name itself for a player's own, imported or retired priority.
+- **Never localized:** option and setting keys (AceConfig `args` keys, `RegisterSetting` keys, `values` keys, select
+  candidates); spec, ability, aura, talent, pet, resource and toggle keys, `spec.key`, display ids and style names;
+  priority names (shown through the label); SavedVariables names, profile paths and saved custom-toggle names;
+  `/hekili` command words and arguments; APL text and import/export strings; `Hekili:Error`, `Hekili:Debug`, snapshot
+  and DevTools output (all debug output is English: it names specs and auras by key, and the snapshot chat lines print
+  verbatim); font-flag and anchor keys; TOC metadata. One exception: the facade's `[vs]` raw API trace prints the
+  client's exact returns, which the client gives only in its own language.
+- **The lint** (part of `--check`): a literal with a letter in an option field (`name`, `desc`, `text`, `label`,
+  `tooltipTitle`, `tooltipText`, `confirmText`), in a `values = { ... }` constructor, or as the text of `:SetText`,
+  `:SetFormattedText`, `:AddLine`, `:Notify`, `:Print` or `:AddDoubleLine` (its first two), format strings included, is
+  a violation unless its line ends `-- l10n: verbatim` (for the never-localized list). `Libs/`, `Locales/`, DevTools and
+  the snapshot files are skipped. It is token-level: a literal returned from a function in a sink is not seen.
+- **Adding a language:** create an empty `Locales/<locale>.lua` in each addon with text, list it in that addon's TOC
+  after `enUS.lua`, and run `python3 tools/locales.py`.

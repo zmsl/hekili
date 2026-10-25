@@ -12,7 +12,8 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
     at login, first (before the class pack, and for a class with no pack too);
   - `src/Hekili_Warrior/`, `src/Hekili_Druid/`, `src/Hekili_Rogue/`, `src/Hekili_Paladin/`, `src/Hekili_Shaman/`,
     `src/Hekili_Hunter/`, `src/Hekili_Mage/`, `src/Hekili_Priest/`, `src/Hekili_Warlock/`: one class pack each (the
-    class file, its RegisterPack blocks written by `make packs`); `## LoadOnDemand: 1`, loaded at login by the core's
+    class file, its RegisterPack blocks written by `make packs`) and `Locales/` (its string table, AceLocale-3.0 app
+    `Hekili_<Class>`: `enUS.lua`, generated, and one file per language, listed in its TOC before the class file); `## LoadOnDemand: 1`, loaded at login by the core's
     `Engine/Content.lua` for the player's class.
     The default priorities' sources sit beside the class file in `APLs/`: one `<Pack>.simc` per priority and the
     manifest `packs.lua` (`{ class = "<TOKEN>", packs = { ... }, specs = { [<Pack>] = <spec key> } }`, no date). Edit those, then `make packs`. The date is per
@@ -23,7 +24,7 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
   - `src/ForeverProbe/`: the dev-only in-game probe addon (its own conventions; outside `tests/helpers/addons.lua`, lint, format, typecheck and the boundary checks), never packaged (`.pkgmeta` ignores it, `tools/check_package.sh` and `tests/Forever/publication_spec.lua` fail on it); delete it when the addon is stable. In game it is linked like the others (`mklink /D ForeverProbe \\wsl.localhost\personal\home\zack\src\hekili\src\ForeverProbe`), its saved variables live at `_forever_/WTF/.../SavedVariables/ForeverProbe.lua`, and its launch-day kit `src/ForeverProbe/docs/launch-day.md` travels with it.
 
   Content reaches the engine only through the public `Hekili` object (the registration API, `State`, `Class`,
-  `Client`, and `L` for its text; `tests/boundary_spec.lua`). Every TOC's `## Version` is `@project-version@`; the packager stamps the release tag into all four (one zip, one version); the core's ContentAPI
+  `Client`, and `Hekili:GetLocale` for its text; `tests/boundary_spec.lua`). Every TOC's `## Version` is `@project-version@`; the packager stamps the release tag into all four (one zip, one version); the core's ContentAPI
   (`CONTENT_API` in `Engine/Content.lua`, matched against each content TOC's `## X-Hekili-ContentAPI`) bumps only when
   the Schema or the content surface changes. The core's modules:
   - root: `Hekili.toc`, `Hekili.lua` (the addon object), `Bindings.xml`, `embeds.xml`;
@@ -34,10 +35,11 @@ How the layers and the engine port fit together: `docs/dev/architecture.md`.
     style registry (`Styles`), the shared "what to show" (`Resolve`) and the styles themselves (`Styles/Classic`,
     `Styles/Timeline`); architecture §7;
   - `Integrations/`: bridges to other addons that subscribe to the engine like the UI does (`WeakAuras`);
-  - `Locales/`: the translation table (`Locales`) and one file per language (`zhCN`), kept in step with the code by
-    `tools/locales.py`; architecture §9;
+  - `Locales/`: the core's string table, AceLocale-3.0 app `Hekili`: `enUS.lua` (generated), one file per language
+    (`zhCN`), then `Locales.lua` (`ns.L`); kept in step with the code by `tools/locales.py`; architecture §9;
   - `Options/` (the options panel, chat commands and the styles' shared option builders, `StyleOptions`), `Game/` (the game as the addon knows it: `API/` the facade,
-    `Events/`, `State/` the belief, VirtualState), `Libs/` (embedded, untouched) and `Textures/`.
+    `Events/`, `State/` the belief, VirtualState), `Libs/` (embedded, untouched; `CREDITS.md` pins each, AceLocale-3.0
+    among them) and `Textures/`.
 
   An upstream merge lands new root files at the root; re-home them by hand.
   The profile port (restructure Task 6) edited ~70 upstream lines in `Engine/` (each `Hekili.DB.profile` read became
