@@ -15,6 +15,7 @@
 
 ### Fixed
 
+- Protection Warrior: a partly blocked hit on you now opens Revenge's window, as a full block, dodge or parry does.
 - A Maul that lands just after Demoralizing Roar is no longer credited to the Roar.
 - Rage no longer drifts when a fight ends: a white swing just before combat ends still counts its rage.
 - A DoT whose application missed (Insect Swarm, for example) is no longer believed to be ticking on the target.

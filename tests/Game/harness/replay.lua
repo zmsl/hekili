@@ -11,8 +11,8 @@
 -- in the truth only, spells landing at once, a white swing's outcome one landing lag after its swing (M.LAND; wowsims
 -- logs both at once, with the swing's rage), the mob's health at 20% from the execute phase's start (wowsims's is the
 -- last 20% of the duration) and never dead, our distance to it (the request's, then the log's Movement stacks), and
--- the target's Parry, Dodge and Block of its swings on us (parry-haste spec §4, gap AH; its hits on us are not).
--- A partial "Block for N" is emitted as a full BLOCK avoid: a stand-in (in game a WOUND flagged BLOCK_REDUCED, gap AH).
+-- the target's Parry, Dodge and Block of its swings on us (parry-haste spec §4, gap AH; its hits on us are not), a
+-- partial "Block for N" as the client's WOUND flagged BLOCK_REDUCED (amount N), a "Block for 0" as a full BLOCK.
 -- Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map through the booted
 -- instance's own ability set (Hekili.Class, booted as the log's race). Credit: the log format is wowsims/forever's
 -- (MIT, https://github.com/wowsims/forever); no code copied.
@@ -156,8 +156,14 @@ local function theirs(rest)
         return id and { kind = "stacks", unit = "target", id = id, to = tonumber(n), tag = tag }
     end
     local avoid = rest:match("^%[[^%]]+ %(#1%)%] {[^}]*} (%a+)") -- its swing on us: a parry, dodge or block (gap AH)
-    if avoid == "Parry" or avoid == "Dodge" or avoid == "Block" then
-        return { kind = "taken", act = avoid:upper() }
+    if avoid == "Parry" or avoid == "Dodge" then
+        return { kind = "taken", act = avoid:upper(), flag = "", amount = 0 }
+    elseif avoid == "Block" then
+        local n = tonumber(rest:match("} Block for ([%d.]+) damage") or 0)
+        if n > 0 then
+            return { kind = "taken", act = "WOUND", flag = "BLOCK_REDUCED", amount = n }
+        end
+        return { kind = "taken", act = "BLOCK", flag = "", amount = 0 }
     end
 end
 
@@ -691,7 +697,10 @@ function M.new(text, H, o)
                     show(dst, e.id, a)
                 end
             elseif e.kind == "taken" then -- the target's swing on us (UNIT_COMBAT player); the log's swings carry the haste
-                W.emit({ kind = "swing", src = mob, dst = us, hand = 1, act = e.act, flag = "", amount = 0, school = 1 })
+                us.health = us.health + e.amount -- our health stays as it was: the world's wound takes it back off
+                local ev = { kind = "swing", src = mob, dst = us, hand = 1, act = e.act, flag = e.flag, school = 1 }
+                ev.amount = e.amount
+                W.emit(ev)
             elseif e.kind == "hit" then
                 local amount = math.min(e.amount, math.max(0, mob.health - 1)) -- the mob never dies
                 if e.act ~= "WOUND" then

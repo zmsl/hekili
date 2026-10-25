@@ -193,7 +193,9 @@ describe("the Warrior wowsims.com packs #slow #wowsims", function()
             "Protection (wowsims.com)",
             content("warrior_protection", ww.Protection, "Protection (wowsims.com)", 60, PROT),
             "warrior_protection",
-            0.97, -- measured 0.904 (94); 0.979 once the replay ends a cooldown at its log timestamp (ready-time ruling)
+            -- measured 0.904 (94); 0.979 once the replay ends a cooldown at its log timestamp (ready-time ruling), held with
+            -- partial blocks replayed as BLOCK_REDUCED wounds (gap AH)
+            0.97,
             PROT_REPLAY
         )
     end)

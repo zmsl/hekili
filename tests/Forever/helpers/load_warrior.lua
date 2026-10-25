@@ -69,7 +69,7 @@ function M.load()
             return game.now
         end,
         CombatLogGetCurrentEventInfo = function()
-            return unpack(game.row, 1, 15)
+            return unpack(game.row, 1, 24)
         end,
         Enum = { PowerType = { Rage = 1 } },
     }

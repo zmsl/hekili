@@ -221,11 +221,11 @@ function L.Energize(spellID, amount, powerType, maxPower, t)
     r[12], r[13], r[14], r[15], r[16], r[17], r[18] = spellID, "", 1, amount, 0, powerType, maxPower
 end
 
---- (unit-registry spec §3.5) A white hit's row: SWING_DAMAGE at `t` (back-dated), from `src` to `dst`. Allocates
---- nothing.
+--- (unit-registry spec §3.5) A white hit's row: SWING_DAMAGE at `t` (back-dated), from `src` to `dst`. A BLOCK_REDUCED
+--- wound's blocked slot (16) is 1: UNIT_COMBAT gives no blocked amount, only that part was blocked. Allocates nothing.
 function L.Swing(t, family, src, srcFlags, dst, dstFlags, amount, flag, offhand)
     local r = L.Emit("SWING_DAMAGE", 21, t, true, family, "inferred", src, srcFlags, dst, dstFlags)
-    r[12], r[13], r[14], r[15], r[16], r[17] = amount, 0, 1, 0, 0, 0
+    r[12], r[13], r[14], r[15], r[16], r[17] = amount, 0, 1, 0, flag == "BLOCK_REDUCED" and 1 or 0, 0
     r[18], r[19], r[20], r[21] = flag == "CRITICAL", flag == "GLANCING", flag == "CRUSHING", offhand == true
 end
 

@@ -74,14 +74,17 @@ describe("the wowsims log parser", function()
         assert.are.same({ 900030, 20 }, { tick.id, tick.amount })
     end)
 
-    it("reads the target's Parry, Dodge and Block on us as `taken` (gap AH)", function()
+    it("reads the target's Parry, Dodge and Block on us as `taken`, a partial block a BLOCK_REDUCED wound", function()
         local q = replay.parse(table.concat({
             "[4.03] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 1} Parry (SpellSchool: 1). (Threat: 0.000)",
             "[6.34] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 1} Block for 15.9 damage (SpellSchool: 1). (Threat: 15.9)",
+            "[7.00] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 1} Block for 0.000 damage (SpellSchool: 1). (Threat: 0.000)",
         }, "\n"))
-        assert.are.equal(2, #q.ev)
+        assert.are.equal(3, #q.ev)
         assert.are.same({ 4.03, "taken", "PARRY" }, { q.ev[1].t, q.ev[1].kind, q.ev[1].act })
-        assert.are.same({ 6.34, "taken", "BLOCK" }, { q.ev[2].t, q.ev[2].kind, q.ev[2].act })
+        local e = q.ev[2]
+        assert.are.same({ 6.34, "taken", "WOUND", "BLOCK_REDUCED", 15.9 }, { e.t, e.kind, e.act, e.flag, e.amount })
+        assert.are.same({ 7, "taken", "BLOCK", 0 }, { q.ev[3].t, q.ev[3].kind, q.ev[3].act, q.ev[3].amount })
     end)
 end)
 
@@ -371,6 +374,23 @@ describe("the replay world", function()
             end
         end
         assert.are.same({ { 100, "PARRY", true } }, got)
+    end)
+
+    it("replays a partial block on us as the client's BLOCK_REDUCED wound, our health untouched", function()
+        local line =
+            "[0.10] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 1} Block for 40 damage (SpellSchool: 1). (Threat: 40)"
+        local R = replay.new(text():gsub("(\n%[0%.10%][^\n]*)", "%1\n" .. line, 1), H, O)
+        local W = R.world(setmetatable({ tag = "-b" }, { __index = WO }), 1)
+        local h = W.ents[1].health
+        at(W, R.pull + 0.2)
+        local got = {}
+        for _, ev in ipairs(W.truth) do
+            if ev.kind == "swing" and ev.dst == W.ents[1] then
+                got[#got + 1] = { ev.act, ev.flag, ev.amount }
+            end
+        end
+        assert.are.same({ { "WOUND", "BLOCK_REDUCED", 40 } }, got)
+        assert.are.equal(h, W.ents[1].health)
     end)
 end)
 

@@ -415,6 +415,19 @@ describe("Forever Warrior", function()
             end
         end)
 
+        it("opens Revenge's window on a partly blocked swing on us, not on an ordinary one", function()
+            w.game.noMana[6572] = true
+            local function swing(t, blocked)
+                w.game.now = t
+                w.game.row = { t, "SWING_DAMAGE", false, MOB, "", 0, 0, ME, "", 0, 0, 300, 0, 1, 0, blocked }
+                w.events.COMBAT_LOG_EVENT_UNFILTERED()
+            end
+            swing(20, 0)
+            assert.is_nil(reset(21).durations.revenge_usable)
+            swing(22, 1)
+            assert.are.equal(4, reset(23).durations.revenge_usable)
+        end)
+
         -- Windfury Totem's party aura on the warrior (DB2 8515/10609/10612, effect 35 area aura party), not the
         -- Shaman's totem casts (8512/10613/10614).
         it("tracks Windfury as the party aura the totem grants, every rank", function()

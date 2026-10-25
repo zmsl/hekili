@@ -699,8 +699,10 @@ end
 local IMPROVED_EXECUTE = { [0] = 0, 3, 5 }
 
 -- The reactive windows from the combat log, as Classic models them (origin/classic:Classic/Warrior.lua:400-456): our
--- dodged swing or ability opens Overpower's, a dodge, parry or block on us opens Revenge's. On Forever the rows come
--- from the belief's event facade (docs/superpowers/specs/2026-10-15-virtualstate-event-facade.md §6).
+-- dodged swing or ability opens Overpower's, a dodge, parry or block on us opens Revenge's. A partly blocked swing on
+-- us (SWING_DAMAGE, blocked slot 16 > 0) opens it too, as in game and in wowsims (sim/warrior/revenge.go:31, any
+-- OutcomeBlock; sim/core/spell_outcome.go:745 flags a block whatever damage is left). On Forever the rows come from
+-- the belief's event facade (docs/superpowers/specs/2026-10-15-virtualstate-event-facade.md §6).
 local enemy_revenge_trigger, enemy_dodged, enemy_dodged_target = 0, 0, nil
 local last_overpower = 0
 local misses = { DODGE = true, PARRY = true, BLOCK = true }
@@ -710,7 +712,7 @@ for _, id in ipairs(OVERPOWER) do
 end
 
 spec:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function()
-    local _, subtype, _, sourceGUID, _, _, _, destGUID, _, _, _, actionType, _, _, spellMissType =
+    local _, subtype, _, sourceGUID, _, _, _, destGUID, _, _, _, actionType, _, _, spellMissType, blocked =
         CombatLogGetCurrentEventInfo()
 
     if
@@ -720,7 +722,13 @@ spec:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED", function()
     then
         enemy_dodged = GetTime()
         enemy_dodged_target = destGUID
-    elseif destGUID == state.GUID and subtype:match("_MISSED$") and misses[actionType] then
+    elseif
+        destGUID == state.GUID
+        and (
+            (subtype:match("_MISSED$") and misses[actionType])
+            or (subtype == "SWING_DAMAGE" and type(blocked) == "number" and blocked > 0)
+        )
+    then
         enemy_revenge_trigger = GetTime()
     elseif sourceGUID == state.GUID and subtype == "SPELL_CAST_SUCCESS" and overpower_ids[actionType] then
         last_overpower = GetTime()

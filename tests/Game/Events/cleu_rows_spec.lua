@@ -542,6 +542,23 @@ describe("the synthesized combat log", function()
             assert.are.equal("secret", I.Sources.status["UnitAttackSpeed hostile"])
         end)
 
+        it("marks a partly blocked wound on us in SWING_DAMAGE's blocked slot, an ordinary one not", function()
+            onUs("target", "Creature-1", nil)
+            ctl.Fire("PLAYER_TARGET_CHANGED")
+            ctl.now = 5
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "BLOCK_REDUCED", 300, 1)
+            ctl.now = 7
+            ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 300, 1)
+            assert.are.same({ "SWING_DAMAGE", 300, 1, "SWING_DAMAGE", 300, 0 }, {
+                got[1].row[2],
+                got[1].row[12],
+                got[1].row[16],
+                got[2].row[2],
+                got[2].row[12],
+                got[2].row[16],
+            })
+        end)
+
         it("emits no row when nobody is known to target us, or the answer is secret", function()
             ctl.Fire("UNIT_COMBAT", "player", "WOUND", "", 300, 1)
             ctl.guid.target = "Creature-1"
