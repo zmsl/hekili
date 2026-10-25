@@ -2020,18 +2020,15 @@ describe("resources", function()
         end)
 
         it(
-            "keeps a hit's rage over a short answer read before it can show (I.GAIN_SHOWS), and caps on one after",
+            "lets a short answer right after a hit's rage cap it: an estimate, not a declared gain (I.GAIN_SHOWS)",
             function()
                 taken(function()
                     return 20, 0
                 end)
-                hit(11, BLOCKED, 30) -- 20 rage: spender_b (15) affordable
-                obs(Obs.Usable, 11.05, 2, 0, 1) -- short: the client's answer from before the hit's rage
+                hit(11, BLOCKED, 30)
+                obs(Obs.Usable, 11.05, 2, 0, 1) -- spender_b (15) short within I.GAIN_SHOWS: the answer wins
                 I.Fold(11.05, false)
-                within(20, VS.Power(fs.RAGE, 11.05).est)
-                obs(Obs.Usable, 11.5, 2, 0, 1) -- still short once it would show: the answer wins
-                I.Fold(11.5, false)
-                within(15 - I.EPS, VS.Power(fs.RAGE, 11.5).est)
+                within(15 - I.EPS, VS.Power(fs.RAGE, 11.05).est)
             end
         )
 

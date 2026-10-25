@@ -17,9 +17,10 @@ local Stats = I.Stats
 
 --- A flip pin measures regen only when the last short report was at most this long before it (TDF Belief.PIN_EXACT).
 I.PIN_EXACT = 0.15
---- Seconds a gain the belief modelled (a `now`'s `gain`, a refund, a hit's `taken` rage) takes to reach the client's
---- usability answers (the harness's usableDelay, UNMEASURED until G7): a short answer read sooner that the gain lifts
---- past the cost predates it (a same-frame press after Bloodrage, a block's rage), so it is no rung.
+--- Seconds a cast's declared gain (its `now`'s `gain`) takes to reach the client's usability answers (the harness's
+--- usableDelay, UNMEASURED until G7): a short answer read sooner that the gain lifts past the cost predates it (a
+--- same-frame press after Bloodrage), so it is no rung. A refund and a hit's `taken` rage are estimates the answer may
+--- correct, so they do not count (both raised the loops' flicker: Guardian 3.35 -> 3.52, Fury 1.77 -> 1.96).
 I.GAIN_SHOWS = 0.1
 --- A swing-paid slot's scale is measured over at least this many model steps of its paying hand (GAP AC).
 I.SWING_STEPS = 5
@@ -89,7 +90,7 @@ local R = {
     pinDelta = {},
     pinValid = {},
     pinOwn = {},
-    ownT = {}, -- our latest modelled gain's time (ownGain), and what we gained within I.GAIN_SHOWS of it
+    ownT = {}, -- our latest cast gain's time (ownGain), and what we gained within I.GAIN_SHOWS of it
     ownV = {},
     swFrom = {},
     skipFrom = {},
@@ -259,7 +260,7 @@ end
 
 -- After a measurement moved lo0, slot r's modelled floor (`was`, lo0 + over before it), if any, stays where it was
 -- unless the measurement's top `top` falls under it (then it is lo0). Allocates nothing.
--- A gain the belief modelled into slot r at t (I.GAIN_SHOWS). Allocates nothing.
+-- A cast's declared gain into slot r at t (I.GAIN_SHOWS). Allocates nothing.
 local function ownGain(r, delta, t)
     R.ownV[r] = t - R.ownT[r] < I.GAIN_SHOWS and R.ownV[r] + delta or delta
     R.ownT[r] = t
@@ -1385,7 +1386,6 @@ I.On(Obs.PlayerHit, function(o, t)
                 norm(r)
                 -- the full gain even when capped, as I.ResourceShift does (review minor 3: skipped for both)
                 R.pinDelta[r], R.gain[r], R.pinOwn[r] = R.pinDelta[r] + gain, R.gain[r] + gain, true
-                ownGain(r, gain, t)
                 I.Sample(R.power[r], "modelled", R.est0[r], t, Obs.PlayerHit)
                 local sec = floor(t) -- out of combat too: the pull's own hits count once combat starts
                 local i = sec % I.TAKEN_WINDOW + 1
@@ -1501,7 +1501,9 @@ function I.ResourceShift(r, delta, t, event)
     if delta > 0 then
         R.gain[r] = R.gain[r] + delta -- explains a flip (the Usable apply)
         R.pinOwn[r] = true
-        ownGain(r, delta, t)
+        if event == Obs.CastSuccess then -- a cast's declared gain, not a refund (I.GAIN_SHOWS)
+            ownGain(r, delta, t)
+        end
     elseif delta < 0 then
         R.spends[r] = R.spends[r] + 1 -- a spend between a credit and its verdict voids the verdict (the oracle)
         R.sinceShort[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, false, false
