@@ -500,6 +500,27 @@ describe("the ticket pool", function()
             assert.are.equal(1, T.paid[X.FLIGHT])
         end)
 
+        -- Rows' tie hand-back (f8ebe1545) keeps pass 1 for a T.Replaceable match: the refused row replaces there
+        it("hands a same-frame avoid the swing refuses back to a provisionally paid cast: it replaces", function()
+            I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
+            T.Learn("Creature-1", 20, 1.5, 9) -- narrow band [11.35, 11.65] for the 10 s cast
+            ctl.now = 10
+            ctl.Fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", fs.SPENDER_P)
+            ctl.now = 10.6 -- the widened band, before the narrow one: provisional
+            ctl.Fire("UNIT_COMBAT", "target", "WOUND", "", 30, 8)
+            ctl.now = 11.48
+            ctl.Fire("PLAYER_SWING", 2.6, 0)
+            local sw = T.lastSwing[1]
+            for c = 1, 8 do
+                I.Log.bg[c] = 50 -- a crowd: the LR stays below its bar
+            end
+            ctl.now = 11.5 -- 20 ms after the swing (SAME_FRAME): the tie takes it, the swing refuses it
+            ctl.Fire("UNIT_COMBAT", "target", "MISS", "", 0, 1)
+            assert.are.same({ 1, 1 }, { T.replaced, T.foreign }) -- the displaced wound is the foreign one
+            assert.are.same({ 1, 1 }, { count(VS.Obs.Avoided), T.paid[X.FLIGHT] })
+            assert.are.equal(T.OPEN, T.state[sw])
+        end)
+
         it("stages a held crit once the narrow band passes with no replacement, and teaches then", function()
             I.ab.rMax[I.ab.bySpell[fs.SPENDER_P]] = 30
             T.Learn("Creature-1", 20, 1.5, 9)
