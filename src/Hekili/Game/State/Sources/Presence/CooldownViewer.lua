@@ -16,7 +16,7 @@ local Plain = S.Plain
 local VIEWERS = { "BuffIconCooldownViewer", "BuffBarCooldownViewer" }
 local UNIT = { player = 1, target = 2 }
 
-local Q = { name = "viewer", scope = "self", covered = 0, onEdge = nil }
+local Q = { name = "viewer", scope = "self", covered = 0, onEdge = nil } -- l10n: verbatim
 local active, api0 = false, nil
 local cdvToJ = {} -- cooldownID -> aura index (built out of combat)
 local unitOf = {} -- cooldownID -> its last known unit (0: none yet); a down item reads no unit (CDV_FRAME 5609)

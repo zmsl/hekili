@@ -1373,9 +1373,9 @@ local HekiliSpecMixin = {
         end
         -- the gate's note only on a string `desc`; a function `desc` is the caller's to word
         if sim ~= nil and type( option.desc ) == "string" then
-            local shown = sim and "on" or "off"
+            local shown = sim and L["on"] or L["off"]
             if values then shown = tostring( values[ sim ] ) end
-            option.desc = option.desc .. "\n\nThe wowsims gate runs this as " .. shown .. "."
+            option.desc = string.format( L["%s\n\nThe wowsims gate runs this as %s."], option.desc, shown )
         end
 
         local entry = {
@@ -1749,7 +1749,7 @@ local all = Hekili:NewSpecialization( 0, "All", "Interface\\AddOns\\Hekili\\Text
 all:RegisterAuras( {
 
     casting = {
-        name = "Casting",
+        name = "Casting", -- l10n: verbatim
         generate = function( t, auraType )
             local unit = auraType == "debuff" and "target" or "player"
 
@@ -1867,7 +1867,7 @@ all:RegisterAbilities( {
 all:RegisterAbilities( {
     -- INTERNAL HANDLERS
     call_action_list = {
-        name = "|cff00ccff[Call Action List]|r",
+        name = "|cff00ccff[Call Action List]|r", -- l10n: verbatim
         listName = '|T136243:0|t |cff00ccff[Call Action List]|r',
         cast = 0,
         cooldown = 0,
@@ -1876,7 +1876,7 @@ all:RegisterAbilities( {
     },
 
     run_action_list = {
-        name = "|cff00ccff[Run Action List]|r",
+        name = "|cff00ccff[Run Action List]|r", -- l10n: verbatim
         listName = '|T136243:0|t |cff00ccff[Run Action List]|r',
         cast = 0,
         cooldown = 0,
@@ -1885,7 +1885,7 @@ all:RegisterAbilities( {
     },
 
     wait = {
-        name = "|cff00ccff[Wait]|r",
+        name = "|cff00ccff[Wait]|r", -- l10n: verbatim
         listName = '|T136243:0|t |cff00ccff[Wait]|r',
         cast = 0,
         cooldown = 0,
@@ -1894,7 +1894,7 @@ all:RegisterAbilities( {
     },
 
     pool_resource = {
-        name = "|cff00ccff[Pool Resource]|r",
+        name = "|cff00ccff[Pool Resource]|r", -- l10n: verbatim
         listName = "|T136243:0|t |cff00ccff[Pool Resource]|r",
         cast = 0,
         cooldown = 0,
@@ -1902,7 +1902,7 @@ all:RegisterAbilities( {
     },
 
     cancel_action = {
-        name = "|cff00ccff[Cancel Action]|r",
+        name = "|cff00ccff[Cancel Action]|r", -- l10n: verbatim
         listName = "|T136243:0|t |cff00ccff[Cancel Action]|r",
         cast = 0,
         cooldown = 0,
@@ -1920,7 +1920,7 @@ all:RegisterAbilities( {
     },
 
     variable = {
-        name = "|cff00ccff[Variable]|r",
+        name = "|cff00ccff[Variable]|r", -- l10n: verbatim
         listName = '|T136243:0|t |cff00ccff[Variable]|r',
         cast = 0,
         cooldown = 0,
@@ -1929,7 +1929,7 @@ all:RegisterAbilities( {
     },
 
     cancel_buff = {
-        name = "|cff00ccff[Cancel Buff]|r",
+        name = "|cff00ccff[Cancel Buff]|r", -- l10n: verbatim
         listName = '|T136243:0|t |cff00ccff[Cancel Buff]|r',
         cast = 0,
         gcd = "off",

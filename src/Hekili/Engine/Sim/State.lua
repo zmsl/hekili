@@ -149,7 +149,7 @@ state.holds = {}
 state.items = {}
 state.pet = {
     fake_pet = {
-        name = "Mary-Kate Olsen",
+        name = "Mary-Kate Olsen", -- l10n: verbatim
         expires = 0,
         permanent = false,
     }
@@ -3664,7 +3664,7 @@ ns.metatables.mt_resource = mt_resource
 
 
 local default_buff_values = {
-    name = "no_name",
+    name = "no_name", -- l10n: verbatim
     count = 0,
     lastCount = 0,
     lastApplied = 0,
@@ -4022,7 +4022,7 @@ do
 
     unknown_buff = setmetatable( {
         key = "unknown_buff",
-        name = "No Name",
+        name = "No Name", -- l10n: verbatim
         count = 0,
         lastCount = 0,
         lastApplied = 0,
@@ -4656,7 +4656,7 @@ end
 
 
 local default_debuff_values = {
-    name = "no_name",
+    name = "no_name", -- l10n: verbatim
     count = 0,
     lastCount = 0,
     lastApplied = 0,
@@ -4673,7 +4673,7 @@ local default_debuff_values = {
 
 
 local cycle_debuff = {
-    name = "cycle",
+    name = "cycle", -- l10n: verbatim
     count = 0,
     lastCount = 0,
     lastApplied = 0,
@@ -4905,7 +4905,7 @@ do
 
     unknown_debuff = setmetatable( {
         key = "unknown_debuff",
-        name = "No Name",
+        name = "No Name", -- l10n: verbatim
         count = 0,
         lastCount = 0,
         lastApplied = 0,

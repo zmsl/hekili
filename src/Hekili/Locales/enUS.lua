@@ -19,6 +19,9 @@ L["%s does not have any Hekili Forever modules loaded (yet).\nWatch for updates.
 L["Hekili Forever is designed for level %s content.\nIt may not work as expected below level %s."] = true
 
 -- Hekili/Engine/Schema/Spec.lua
+L["on"] = true
+L["off"] = true
+L["%s\n\nThe wowsims gate runs this as %s."] = true
 L[" and "] = true
 L["The %s priority was retired; a spec that used it now runs its default priority."] = true
 L["The %s priorities were retired; a spec that used one now runs its default priority."] = true

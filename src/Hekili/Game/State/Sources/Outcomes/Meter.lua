@@ -13,7 +13,7 @@ local EVENT = "DAMAGE_METER_COMBAT_SESSION_UPDATED"
 local RING, MERGE, SWING_WIN, WHITE_BACK = 64, 0.003, 0.015, 2.0
 local TAKEN_FAR, TAKEN_NEAR, SPELL_TAKEN, MUTE_AT, AUDIT_FOR = 0.6, 0.3, 0.005, 3, 3
 
-local P = { name = "meter", SWING_DELAY = SWING_WIN, ROW_DELAY = SWING_WIN, muted = 0 }
+local P = { name = "meter", SWING_DELAY = SWING_WIN, ROW_DELAY = SWING_WIN, muted = 0 } -- l10n: verbatim
 local gT, gKind, gUsed = {}, {}, {}
 for k = 1, RING do
     gT[k], gKind[k], gUsed[k] = -1e9, -1, false

@@ -292,7 +292,7 @@ local packTemplate = {
     builtIn = false,
 
     author = UnitName("player"),
-    desc = "This is a package of action lists for Hekili Forever.",
+    desc = "This is a package of action lists for Hekili Forever.", -- l10n: verbatim
     source = "",
     date = tonumber( date("%Y%M%D.%H%M") ),
     warnings = "",
@@ -396,13 +396,13 @@ do
                     custom1 = {
                         key = "",
                         value = false,
-                        name = "Custom #1"
+                        name = "Custom #1" -- l10n: verbatim
                     },
 
                     custom2 = {
                         key = "",
                         value = false,
-                        name = "Custom #2"
+                        name = "Custom #2" -- l10n: verbatim
                     }
                 },
 
@@ -436,7 +436,7 @@ do
                         enabled = true,
                         builtIn = true,
 
-                        name = "Primary",
+                        name = "Primary", -- l10n: verbatim
 
                         relativeTo = "SCREEN",
                         displayPoint = "TOP",
@@ -464,7 +464,7 @@ do
                         enabled = true,
                         builtIn = true,
 
-                        name = "AOE",
+                        name = "AOE", -- l10n: verbatim
 
                         x = 0,
                         y = -170,
@@ -488,7 +488,7 @@ do
                         enabled = true,
                         builtIn = true,
 
-                        name = "Cooldowns",
+                        name = "Cooldowns", -- l10n: verbatim
                         filter = 'cooldowns',
 
                         x = 0,
@@ -513,7 +513,7 @@ do
                         enabled = true,
                         builtIn = true,
 
-                        name = "Defensives",
+                        name = "Defensives", -- l10n: verbatim
                         filter = 'defensives',
 
                         x = -110,
@@ -538,7 +538,7 @@ do
                         enabled = true,
                         builtIn = true,
 
-                        name = "Interrupts",
+                        name = "Interrupts", -- l10n: verbatim
                         filter = 'interrupts',
 
                         x = -55,
@@ -1505,14 +1505,14 @@ return L["Position"] end,
                                         desc =  L["Frame Strata determines which graphical layer that this display is drawn on.\n\n" ..
                                                 "The default layer is |cFFFFD100MEDIUM|r."],
                                         values = {
-                                            "BACKGROUND",
-                                            "LOW",
-                                            "MEDIUM",
-                                            "HIGH",
-                                            "DIALOG",
-                                            "FULLSCREEN",
-                                            "FULLSCREEN_DIALOG",
-                                            "TOOLTIP"
+                                            "BACKGROUND", -- l10n: verbatim
+                                            "LOW", -- l10n: verbatim
+                                            "MEDIUM", -- l10n: verbatim
+                                            "HIGH", -- l10n: verbatim
+                                            "DIALOG", -- l10n: verbatim
+                                            "FULLSCREEN", -- l10n: verbatim
+                                            "FULLSCREEN_DIALOG", -- l10n: verbatim
+                                            "TOOLTIP" -- l10n: verbatim
                                         },
                                         width = "full",
                                         order = 1,
@@ -7218,7 +7218,7 @@ end
 
 do
     local Options = {
-        name = "Hekili Forever " .. Hekili.Version,
+        name = "Hekili Forever " .. Hekili.Version, -- l10n: verbatim
         type = "group",
         handler = Hekili,
         get = 'GetOption',
@@ -7282,7 +7282,7 @@ do
 
                     github = {
                         type = "input",
-                        name = "GitHub",
+                        name = "GitHub", -- l10n: verbatim
                         desc = L["Find Hekili Forever updates on GitHub."],
                         order = 10,
                         get = function () return "https://github.com/zmsl/hekili/releases" end,
@@ -7292,7 +7292,7 @@ do
                     },
                     curse = {
                         type = "input",
-                        name = "CurseForge",
+                        name = "CurseForge", -- l10n: verbatim
                         desc = L["Find Hekili Forever updates on CurseForge."],
                         order = 11,
                         get = function () return "https://www.curseforge.com/wow/addons/hekili-forever" end,
@@ -7593,7 +7593,7 @@ do
                             },
                             issueReporting_snapshot_next_info_2 = {
                                 type = "input",
-                                name = "Pastebin",
+                                name = "Pastebin", -- l10n: verbatim
                                 dialogControl = "SFX-Info-URL",
                                 get = function() return "https://pastebin.org/" end,
                                 set = function() end,

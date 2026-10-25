@@ -10,7 +10,7 @@ ns.UI.Styles = ns.UI.Styles or {}
 -- asks the engine to compute beyond the records: `needs.alts` fills recs[1..2].alts, the picks at the gating
 -- resource's belief bounds; or `NeedsFor( id, conf )`, which core then asks instead, returning such a table per display).
 local MEMBERS = {
-    label = "string",
+    label = "string", -- l10n: verbatim
     Build = "function", -- ( d, conf ): creates or reuses its frames on d, returns the button list (may be empty)
     Draw = "function", -- ( d, conf, out, status ): on a publish (d.NewRecommendations) or the 0.25 s pulse
     Tick = "function", -- ( d, conf, out, now, elapsed ): every frame, before Draw

@@ -28,6 +28,9 @@ L["%s does not have any Hekili Forever modules loaded (yet).\nWatch for updates.
 L["Hekili Forever is designed for level %s content.\nIt may not work as expected below level %s."] = "Hekili Forever 专为 %s 级内容设计。\n低于 %s 级时可能无法正常工作。"
 
 -- Hekili/Engine/Schema/Spec.lua
+-- L["on"] = ""
+-- L["off"] = ""
+-- L["%s\n\nThe wowsims gate runs this as %s."] = ""
 L[" and "] = " 和 "
 L["The %s priority was retired; a spec that used it now runs its default priority."] = "%s优先级已停用；使用它的专精现在将运行其默认优先级。"
 L["The %s priorities were retired; a spec that used one now runs its default priority."] = "%s优先级已停用；使用其中之一的专精现在将运行其默认优先级。"

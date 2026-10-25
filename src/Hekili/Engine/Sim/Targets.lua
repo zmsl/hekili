@@ -695,7 +695,7 @@ end
 
 ns.reportTargets = function()
     for k, v in pairs(targets) do
-        Hekili:Print("Saw " .. k .. " exactly " .. GetTime() - v .. " seconds ago.")
+        Hekili:Print("Saw " .. k .. " exactly " .. GetTime() - v .. " seconds ago.") -- l10n: verbatim
     end
 end
 
@@ -1082,7 +1082,7 @@ function Hekili:DumpDotInfo( aura )
 
     aura = aura and class.auras[ aura ] and class.auras[ aura ].id or aura
 
-    Hekili:Print( "Current DoT Information at " .. GetTime() .. ( aura and ( " for " .. aura ) or "" ) .. ":" )
+    Hekili:Print( "Current DoT Information at " .. GetTime() .. ( aura and ( " for " .. aura ) or "" ) .. ":" ) -- l10n: verbatim
     DevTools_Dump( aura and debuffs[ aura ] or debuffs )
 end
 

@@ -20,7 +20,8 @@ repository root after changing any text:
     python3 tools/locales.py --check    change nothing; exit 1 if a file is out of date, a key is not a literal, a
                                         translation drops a format code (%s, %d...), a colour (|c...|r) or a line
                                         break, a pack's key is translated in a core language file, or a priority's translated
-                                        label reads as another priority
+                                        label reads as another priority, or a player-visible literal is not
+                                        wrapped (lint())
 
 A pack language file with no translations yet starts from the core file of that language: every translation it holds
 for one of the pack's keys (how the packs' strings moved out of the core's zhCN.lua); an existing one takes a line of
@@ -343,6 +344,154 @@ def code_problems(key, value):
     return out
 
 
+# ---------------------------------------------------------------------------------------------------------------------
+# The lint: a player-visible literal not inside L[...] (docs/dev/architecture.md, "Localization"; spec §7). Token-level,
+# not a parser. Shortcut: a literal returned from a function in a sink (`name = function() return "x" end`) is not
+# seen; add a rule only if such lines recur (review catches them).
+
+SINK_FIELDS = {"name", "desc", "text", "label", "tooltipTitle", "tooltipText", "confirmText"}
+SINK_CALLS = {"SetText": 1, "SetFormattedText": 1, "AddLine": 1, "Notify": 1, "Print": 1, "AddDoubleLine": 2}
+LINT_SKIP = re.compile(
+    r"/Libs/|/Locales/|^src/ForeverProbe/|^src/Hekili/Options/DevTools\.lua$|"
+    r"^src/Hekili/Engine/Snapshot\.lua$|^src/Hekili/Game/State/Snapshot\.lua$"
+)
+VERBATIM = "-- l10n: verbatim"
+NOT_TEXT = re.compile(r"\|c[0-9A-Fa-f]{8}|\|r|\|T[^|]*\|t|\|A[^|]*\|a|%(?:\d+\$)?[-+ #0]*\d*(?:\.\d+)?[sdifgxXcq%]")
+
+
+def lua_files():
+    """Every .lua file under src/, as repo-relative paths with forward slashes."""
+    out = []
+    for dirpath, _, files in os.walk(SRC):
+        out += [os.path.relpath(os.path.join(dirpath, f), ROOT).replace(os.sep, "/") for f in files if f.endswith(".lua")]
+    return sorted(out)
+
+
+def tokens(src):
+    """[(kind, value, line)] of a Lua source: 'str' (decoded), 'name', 'op'; comments and numbers dropped."""
+    out, i, n, line, at = [], 0, len(src), 1, 0
+    while i < n:
+        j = skip_space(src, i)
+        if j != i:
+            i = j
+            continue
+        c = src[i]
+        line, at = line + src.count("\n", at, i), i
+        lit = scan_literal(src, i) if (c in "\"'" or re.match(r"\[=*\[", src[i : i + 64])) else None
+        if lit:
+            out.append(("str", lit[0], line))
+            i = lit[1]
+            continue
+        m = re.match(r"[A-Za-z_]\w*|\d[\w.]*|\.\.\.?|[=~<>]=|::|.", src[i:])
+        tok = m.group(0)
+        if tok[0].isdigit():
+            pass
+        elif tok[0].isalpha() or tok[0] == "_":
+            out.append(("name", tok, line))
+        else:
+            out.append(("op", tok, line))
+        i += len(tok)
+    return out
+
+
+def is_text(s):
+    return re.search(r"[A-Za-z]", NOT_TEXT.sub("", s)) is not None
+
+
+def literal_at(toks, k):
+    """(text, line, next index) of the literal or `..` chain of literals at toks[k], else None. Also takes a
+    format string: format("...", ...), string.format("...", ...), ("..."):format(...)."""
+    t = toks[k] if k < len(toks) else None
+    if not t:
+        return None
+    if t[0] == "str":
+        parts, line, k = [t[1]], t[2], k + 1
+        while k + 1 < len(toks) and toks[k][1] == ".." and toks[k + 1][0] == "str":
+            parts.append(toks[k + 1][1])
+            k += 2
+        return "".join(parts), line, k
+    if t == ("name", "string", t[2]) and k + 2 < len(toks) and toks[k + 1][1] == "." and toks[k + 2][1] == "format":
+        k += 2
+        t = toks[k]
+    if t[1] == "format" and k + 2 < len(toks) and toks[k + 1][1] == "(" and toks[k + 2][0] == "str":
+        return toks[k + 2][1], toks[k + 2][2], k + 3
+    if (
+        t[1] == "("
+        and k + 4 < len(toks)
+        and toks[k + 1][0] == "str"
+        and toks[k + 2][1] == ")"
+        and toks[k + 3][1] == ":"
+        and toks[k + 4][1] == "format"
+    ):
+        return toks[k + 1][1], toks[k + 1][2], k + 5
+    return None
+
+
+def args_start(toks, k):
+    """Indexes of the first tokens of the arguments of the call whose '(' is toks[k]."""
+    starts, depth, j = [k + 1], 0, k + 1
+    while j < len(toks):
+        v = toks[j][1] if toks[j][0] == "op" else None
+        if v in ("(", "{", "["):
+            depth += 1
+        elif v in (")", "}", "]"):
+            if depth == 0:
+                break
+            depth -= 1
+        elif v == "," and depth == 0:
+            starts.append(j + 1)
+        j += 1
+    return starts
+
+
+def violations(src, rel):
+    """[(line, why)] of unwrapped player-visible literals in sinks (spec §7)."""
+    toks, out = tokens(src), []
+    lines = src.split("\n")
+
+    def flag(hit, why):
+        if hit and is_text(hit[0]) and not lines[hit[1] - 1].rstrip().endswith(VERBATIM):
+            out.append((hit[1], "%s: %r is not wrapped in L[...]" % (why, hit[0][:60])))
+
+    for k, t in enumerate(toks):
+        prev = toks[k - 1][1] if k else ""
+        if t[0] == "name" and t[1] in SINK_FIELDS and prev in ("{", ",", ";") and k + 1 < len(toks) and toks[k + 1][1] == "=":
+            flag(literal_at(toks, k + 2), "field " + t[1])
+        elif (
+            t[0] == "name"
+            and t[1] == "values"
+            and prev in ("{", ",", ";")
+            and k + 2 < len(toks)
+            and toks[k + 1][1] == "="
+            and toks[k + 2][1] == "{"
+        ):
+            for s in args_start(toks, k + 2):
+                j = s + 2 if s + 1 < len(toks) and toks[s][0] == "name" and toks[s + 1][1] == "=" else s
+                if j < len(toks) and toks[j][1] == "[":  # ["key"] = value
+                    while j < len(toks) and toks[j][1] != "=":
+                        j += 1
+                    j += 1
+                flag(literal_at(toks, j), "values")
+        elif t[0] == "name" and t[1] in SINK_CALLS and prev == ":" and k + 1 < len(toks) and toks[k + 1][1] == "(":
+            for s in args_start(toks, k + 1)[: SINK_CALLS[t[1]]]:
+                flag(literal_at(toks, s), ":" + t[1])
+    return out
+
+
+def lint():
+    """Every unwrapped player-visible literal of every addon file (spec §7), as "file:line: why"."""
+    problems = []
+    for rel in lua_files():
+        if LINT_SKIP.search(rel):
+            continue
+        with open(os.path.join(ROOT, rel), encoding="utf-8") as f:
+            src = f.read()
+        problems += ["%s:%d: %s" % (rel, line, why) for line, why in violations(src, rel)]
+    if problems:
+        problems.append("wrap each in L[...], or end its line with %s when it is on the never-localized list" % VERBATIM)
+    return problems
+
+
 def locales_dir(name):
     return os.path.join(SRC, name, "Locales")
 
@@ -430,6 +579,7 @@ def main(argv):
             sync(path, render(name, locale, grouped, translations), check, stale)
             done = sum(1 for k in keys if k in translations)
             print("%s %s: %d of %d translated" % (name, locale, done, len(keys)))
+    problems += lint()
     for p in problems:
         print(p)
     for rel in stale:

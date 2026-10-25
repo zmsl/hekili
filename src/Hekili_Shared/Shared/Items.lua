@@ -14,7 +14,7 @@ local shared = Hekili:NewShared()
 -- 2.  Respect item preferences registered in spec options.
 
 shared:RegisterAbility("use_items", {
-    name = "Use Items",
+    name = "Use Items", -- l10n: verbatim
     listName = "|T136243:0|t |cff00ccff[Use Items]|r",
     cast = 0,
     cooldown = 120,
@@ -23,7 +23,7 @@ shared:RegisterAbility("use_items", {
 
 local items = {
     null_cooldown = {
-        name = "|cff00ccff[Null Cooldown]|r",
+        name = "|cff00ccff[Null Cooldown]|r", -- l10n: verbatim
         listName = "|T136243:0|t |cff00ccff[Null Cooldown]|r",
         cast = 0,
         cooldown = 0.001,
@@ -35,7 +35,7 @@ local items = {
     },
 
     trinket1 = {
-        name = "|cff00ccff[Trinket #1]|r",
+        name = "|cff00ccff[Trinket #1]|r", -- l10n: verbatim
         listName = "|T136243:0|t |cff00ccff[Trinket #1]|r",
         cast = 0,
         cooldown = 600,
@@ -47,7 +47,7 @@ local items = {
     },
 
     trinket2 = {
-        name = "|cff00ccff[Trinket #2]|r",
+        name = "|cff00ccff[Trinket #2]|r", -- l10n: verbatim
         listName = "|T136243:0|t |cff00ccff[Trinket #2]|r",
         cast = 0,
         cooldown = 600,

@@ -11,7 +11,7 @@ local I = ns.VirtualStateInternal
 local S = I.Sources
 local Plain = S.Plain
 
-local R = { name = "router", scope = nil, covered = 0, onEdge = nil, tracked = {} }
+local R = { name = "router", scope = nil, covered = 0, onEdge = nil, tracked = {} } -- l10n: verbatim
 local tracked = R.tracked
 local leaf, want, api0, def0, pending = nil, nil, nil, nil, false
 local edges = { up = 0, down = 0 } -- the edges passed on this fight (Snapshot)

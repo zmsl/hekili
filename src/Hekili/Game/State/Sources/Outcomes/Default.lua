@@ -5,7 +5,7 @@
 local _, ns = ...
 local I = ns.VirtualStateInternal
 
-local P = { name = "default", SWING_DELAY = 0, ROW_DELAY = 0 }
+local P = { name = "default", SWING_DELAY = 0, ROW_DELAY = 0 } -- l10n: verbatim
 function P.Activate() end
 function P.Deactivate() end
 function P.SwingOutcome()

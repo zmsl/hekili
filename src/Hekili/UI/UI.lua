@@ -422,7 +422,7 @@ do
     local menuData = {
         {
             isTitle = 1,
-            text = "Hekili Forever",
+            text = "Hekili Forever", -- l10n: verbatim
             notCheckable = 1,
         },
 
@@ -859,7 +859,7 @@ function Hekili:CreateLaunchers()
 
     Hekili_OnAddonCompartmentEnter = function( addonName, button )
         GameTooltip:SetOwner( AddonCompartmentFrame )
-        GameTooltip:AddDoubleLine( "Hekili Forever", GetDataText() )
+        GameTooltip:AddDoubleLine( "Hekili Forever", GetDataText() ) -- l10n: verbatim
         GameTooltip:AddLine( L["|cFFFFFFFFLeft-click to make quick adjustments.|r"] )
         GameTooltip:AddLine( L["|cFFFFFFFFRight-click to open the options interface.|r"] )
         GameTooltip:Show()
@@ -870,7 +870,7 @@ function Hekili:CreateLaunchers()
     end
 
     AddonCompartmentFrame:RegisterAddon({
-        text = "Hekili Forever",
+        text = "Hekili Forever", -- l10n: verbatim
         icon = "Interface\\AddOns\\Hekili\\Textures\\HekiliForever",
         registerForAnyClick = true,
         notCheckable = true,
@@ -882,12 +882,12 @@ function Hekili:CreateLaunchers()
     if LDB then
         ns.UI.Minimap = ns.UI.Minimap or LDB:NewDataObject( "Hekili", {
             type = "data source",
-            text = "Hekili Forever",
+            text = "Hekili Forever", -- l10n: verbatim
             icon = "Interface\\ICONS\\spell_nature_bloodlust",
             OnClick = Hekili_OnAddonCompartmentClick,
             OnEnter = function( self )
                 GameTooltip:SetOwner( self )
-                GameTooltip:AddDoubleLine( "Hekili Forever", ns.UI.Minimap.text )
+                GameTooltip:AddDoubleLine( "Hekili Forever", ns.UI.Minimap.text ) -- l10n: verbatim
                 GameTooltip:AddLine( L["|cFFFFFFFFLeft-click to make quick adjustments.|r"] )
                 GameTooltip:AddLine( L["|cFFFFFFFFRight-click to open the options interface.|r"] )
                 GameTooltip:Show()

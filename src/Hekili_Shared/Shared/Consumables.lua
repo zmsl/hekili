@@ -30,7 +30,7 @@ shared:RegisterAura("potion", {
 
 -- The APL verb `potion` (Core.lua resolves it to the chosen potion's action): an item only once a potion is chosen.
 shared:RegisterAbility("potion", {
-    name = "Potion",
+    name = "Potion", -- l10n: verbatim
     listName = "|T136243:0|t |cff00ccff[Potion]|r",
     cast = 0,
     cooldown = 300,
@@ -89,7 +89,7 @@ local function healthstone()
 end
 
 shared:RegisterAbility("healthstone", {
-    name = "Healthstone",
+    name = "Healthstone", -- l10n: verbatim
     listName = "|T538745:0|t |cff00ccff[Healthstone]|r",
     cast = 0,
     cooldown = 120, -- Classic's shared Healthstone cooldown; the item's own is read in game (spec §7 Q5)

@@ -4,7 +4,7 @@
 local _, ns = ...
 local I = ns.VirtualStateInternal
 
-local Q = { name = "default", scope = nil, covered = 0, onEdge = nil }
+local Q = { name = "default", scope = nil, covered = 0, onEdge = nil } -- l10n: verbatim
 function Q.Activate() end
 function Q.Deactivate() end
 function Q.Presence()

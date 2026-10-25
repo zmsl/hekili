@@ -108,6 +108,44 @@ class Codes(unittest.TestCase):
         self.assertEqual(locales.code_problems("%s at %d", "%2$d 处的 %1$s"), [])
 
 
+class Sinks(unittest.TestCase):
+    def hits(self, src):
+        return [why.split(": ")[0] for _, why in locales.violations(src, "t.lua")]
+
+    def test_option_fields_with_a_literal(self):
+        self.assertEqual(self.hits('x = { name = "Reset", desc = "A " .. "b", width = "full" }'), ["field name", "field desc"])
+        self.assertEqual(
+            self.hits('t = { text = "Pause", label = "Classic", tooltipTitle = "T", tooltipText = "U", confirmText = "Sure?" }'),
+            ["field text", "field label", "field tooltipTitle", "field tooltipText", "field confirmText"],
+        )
+
+    def test_wrapped_built_or_assigned_values_are_fine(self):
+        self.assertEqual(self.hits('x = { name = L["Reset"], desc = function() return "x" end, order = 1 }'), [])
+        self.assertEqual(self.hits('local name = "Reset"\nself.name = "Reset"\nx = { key = "Reset" }'), [])
+
+    def test_values_constructors(self):
+        self.assertEqual(self.hits('v = { values = { a = "Alpha", ["b c"] = "Beta", "Gamma", d = L["Delta"] } }'),
+                         ["values", "values", "values"])
+
+    def test_call_sinks_and_format_strings(self):
+        src = ('f:SetText( "Hi" ) t:AddLine( format( "%s left", x ) ) self:Print( ("Set %s."):format( v ) )\n'
+               't:AddDoubleLine( L["a"], "Right" ) self:Notify( string.format( "No %d", n ) ) f:SetFormattedText( "%d s", n )')
+        self.assertEqual(self.hits(src), [":SetText", ":AddLine", ":Print", ":AddDoubleLine", ":Notify", ":SetFormattedText"])
+        self.assertEqual(self.hits('Hekili:Error( "Boom" ) Hekili:Debug( "x %s", y ) t:AddLine( L["Ok"] ) f:SetText( name )'), [])
+
+    def test_no_letters_codes_only_and_verbatim(self):
+        self.assertEqual(self.hits('t:AddLine( " " ) x = { name = "|cFFFFD100%s|r: %d" } y = { name = "|T136243:0|t" }'), [])
+        self.assertEqual(self.hits('x = { name = "Hekili Forever" } -- l10n: verbatim'), [])
+        self.assertEqual(self.hits('-- x = { name = "Commented" }\ns = [[ t:AddLine( "in a string" ) ]]'), [])
+
+    def test_skipped_files(self):
+        for rel in ["src/Hekili/Libs/AceGUI-3.0/x.lua", "src/Hekili/Locales/zhCN.lua", "src/Hekili_Druid/Locales/enUS.lua",
+                    "src/ForeverProbe/Probe.lua", "src/Hekili/Options/DevTools.lua", "src/Hekili/Engine/Snapshot.lua",
+                    "src/Hekili/Game/State/Snapshot.lua"]:
+            self.assertTrue(locales.LINT_SKIP.search(rel), rel)
+        self.assertFalse(locales.LINT_SKIP.search("src/Hekili/Options/Options.lua"))
+
+
 class Quoting(unittest.TestCase):
     def test_quotes_as_stylua_does(self):
         self.assertEqual(locales.lua_quote("plain"), '"plain"')

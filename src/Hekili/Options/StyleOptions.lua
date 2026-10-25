@@ -337,7 +337,7 @@ return L["Position"] end,
         },
 
         cPort = {
-            name = "ConsolePort",
+            name = "ConsolePort", -- l10n: verbatim
             type = "group",
             inline = true,
             order = 4,
@@ -607,7 +607,7 @@ function SO.flash( styleKey, zones, order, id, conf )
     local SF = SpellFlashCore
     return {
         type = "group",
-        name = "SpellFlash",
+        name = "SpellFlash", -- l10n: verbatim
         desc = function ()
             if SF then
                 return L["If enabled, the addon can highlight abilities on your action bars when they are recommended for use."]
