@@ -225,7 +225,7 @@ marks them `-- l10n: verbatim`:
   `settings.<key>='<candidate>'`);
 - spec, ability, aura, talent, pet, resource and toggle keys; `spec.key`; display ids (`Primary`, `AOE`, …: frame
   names and profile keys; shown through `DISPLAY_NAMES`); style registry names;
-- priority pack names (`"Feral (wowsims.com)"`, `package = ...`; saved in the profile);
+- priority pack names (`"Feral (wowsims.com)"`, `package = ...`; saved in the profile; built-in ones shown through `PackLabel`, §5b);
 - SavedVariables names (`HekiliDB`), profile paths, saved custom-toggle names (only the defaults
   `Custom #1/#2` are translated, at display, as `customDefaults` does);
 - `/hekili` command words and arguments (`set`, `toggle`, `cycle`, `on`, `off`, …) and slash command names;
