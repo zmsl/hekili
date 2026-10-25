@@ -284,6 +284,59 @@ describe("the classic display style", function()
         assert.are.same({}, H.errors)
         assert.are.equal(0, bytes)
     end)
+
+    -- Fix 36: an on-next-swing strike ignores the GCD, so its own cooldown reads idle while it waits; past icon 1 the
+    -- sweep showed only that and drew the strike ready. It sweeps to its record's time, and none once that has come.
+    it("sweeps an on-next-swing strike to its time on any icon, none once it is due", function()
+        local H, d = boot()
+        local abilities = H.Hekili.Engine.Registry.Abilities()
+        assert.is_true(abilities.heroic_strike.onNextSwing)
+        local function strike(at, exact)
+            local now = H.ctl.now
+            local s = H.ns.Output.Begin("Primary")
+            for i, e in ipairs(SET) do
+                local r = s[i]
+                local a = i == 2 and "heroic_strike" or e[1]
+                r.actionName, r.actionID, r.texture = a, abilities[a].id, "tex" .. i
+                r.time, r.exact_time = e[2], now + e[2]
+            end
+            s[2].time, s[2].exact_time = at, exact or now + at
+            H.ns.Output.Publish("Primary", #SET)
+            H.ctl.now = H.ctl.now + 0.2
+            d.__scripts.OnUpdate(d, 0.2)
+            return d.Buttons[2]
+        end
+        local b = strike(1.5)
+        local cd = b.Cooldown
+        assert.are.equal("heroic_strike", b.Action)
+        assert.is_true(rawget(cd, "__cdDuration") > 0)
+        assert.are.equal(b.ExactTime, rawget(cd, "__cdStart") + rawget(cd, "__cdDuration"))
+        -- a new GCD while it waits does not move the sweep's start (no per-GCD jump), and nothing is re-set
+        local cs = H.ns.Facade.C_Spell
+        local getCd = cs.GetSpellCooldown
+        local gcd = H.Hekili.Engine.Registry.GCD_SPELL
+        local start0, exact, sets = rawget(cd, "__cdStart"), b.ExactTime, 0
+        local set = cd.SetCooldown
+        cd.SetCooldown = function(...)
+            sets = sets + 1
+            return set(...)
+        end
+        local gStart = H.ctl.now + 0.1
+        cs.GetSpellCooldown = function(id)
+            if id == gcd then
+                return { startTime = gStart, duration = 1.5, isEnabled = true, modRate = 1 }
+            end
+            return getCd(id)
+        end
+        strike(0, exact)
+        cs.GetSpellCooldown = getCd
+        cd.SetCooldown = set
+        assert.are.equal(start0, rawget(cd, "__cdStart"))
+        assert.are.equal(0, sets)
+        cd = strike(0).Cooldown -- due: ready, no sweep
+        assert.are.equal(0, rawget(cd, "__cdDuration"))
+        assert.are.same({}, H.errors)
+    end)
 end)
 
 -- Task 2: per-display style selection. A stub style (no buttons, its own `defaults`) registered after boot.
@@ -1219,6 +1272,29 @@ describe("the timeline display style", function()
             assert.are.same({}, H.errors)
         end
     )
+
+    -- Fix 36: an on-next-swing strike's own cooldown reads idle while it waits (it ignores the GCD), so the next box
+    -- off the extend (nowFallback press) drew it ready. It sweeps to its record's time, and none once that has come.
+    it("sweeps an on-next-swing strike in the next box to its time, none once it is due", function()
+        local H, d, T = tlBoot()
+        local abilities = H.Hekili.Engine.Registry.Abilities()
+        local function strike(at)
+            tlPublish(H, nil, function(s)
+                s[2].actionName, s[2].actionID = "heroic_strike", abilities.heroic_strike.id
+                s[2].time, s[2].exact_time = at, H.ctl.now + at
+            end)
+            tlFrame(H, d)
+            return T.cells[2]
+        end
+        local b = strike(1.5)
+        local cd = b.Cooldown
+        assert.are.equal("heroic_strike", b.Action)
+        assert.is_true(rawget(cd, "__cdDuration") > 0)
+        assert.are.equal(b.ExactTime, rawget(cd, "__cdStart") + rawget(cd, "__cdDuration"))
+        cd = strike(0).Cooldown -- due: ready, no sweep
+        assert.are.equal(0, rawget(cd, "__cdDuration"))
+        assert.are.same({}, H.errors)
+    end)
 
     -- The now circle's round ring and its sweep (user screenshots, 2026-10-18): the ring is a white disc tinted under
     -- the round icon (a colour texture ignores masks and drew square); the extend sweep counts down from when the wait

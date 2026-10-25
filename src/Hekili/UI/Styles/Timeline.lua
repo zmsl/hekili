@@ -760,7 +760,10 @@ local function sweep( b, extend, tl, now )
         else
             start, duration, enabled, modRate = GetSpellCooldown( ability.actionID )
         end
-        if extend and mode == "extend" and b.ExactTime > mmax( now, start + duration ) then
+        -- an on-next-swing strike ignores the GCD: its own cooldown reads idle while it waits, so it always stretches
+        local swing = Registry.Abilities()[ b.Action ]
+        swing = swing and swing.onNextSwing
+        if ( extend and mode == "extend" or swing ) and b.ExactTime > mmax( now, start + duration ) then
             local gStart = GetSpellCooldown( Registry.GCD_SPELL )
             local cStart = ( select( 4, UnitCastingInfo( "player" ) ) or select( 4, UnitChannelInfo( "player" ) ) or 0 ) / 1000
             start = ( start > 0 and start ) or ( held and b.cdStart ) or ( cStart > 0 and cStart ) or ( gStart > 0 and gStart ) or now
