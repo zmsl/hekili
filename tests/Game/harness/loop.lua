@@ -188,7 +188,8 @@ end
 --- each tick), on(run, steps, t) (a per-tick hook). Returns the run { W, us, ticks, presses, refused (by reason),
 --- attempts, episodes, errors, raises, misses (unexpected run names), secrets (Facade.secrets), selfCheck (ticks where
 --- the oracle's belief missed the truth, by field), combat, full, idle, up (by debuff key: in-combat ticks), ours and
---- theirs (first icons by in-combat tick), focus (in-combat ticks whose first record of ours has `focus` set), gap (believed minus true power where they differ), cpu (ms per tick of
+--- theirs (first icons by in-combat tick), pressed and shadowPress (the driver's press, the shadow's would-be press, by
+--- in-combat tick: loop.flips), focus (in-combat ticks whose first record of ours has `focus` set), gap (believed minus true power where they differ), cpu (ms per tick of
 --- the first instance, timed around headless.cycle: VirtualState's flush and the timers as well as Update, so it errs
 --- high), damage, t }. `o.replay` (replay.lua's R: its world, no presses, wowsims's next cast as `theirs`, a cycle
 --- just before each decision; `run.dec` { ours, theirs }: our first on-GCD icon and wowsims's on-GCD cast).
@@ -234,6 +235,7 @@ function M.run(L, seed, o, drivers)
     -- the metrics' per-tick record (§5.1): in-combat ticks only, both queues' first icons, the truth
     run.combat, run.full, run.idle, run.attempts, run.episodes, run.up = 0, 0, 0, 0, 0, {}
     run.ours, run.theirs, run.gap, run.cpu, run.secrets, run.focus = {}, {}, {}, {}, {}, 0
+    run.pressed, run.shadowPress = {}, {}
     run.dec = R and { ours = {}, theirs = {}, flips = 0 } or nil
     -- the flicker ledger's frames (flicker.frame), one an instance, over the run's events between two polls: run A
     -- and a replay only (run B, the oracle driving alone, is never read)
@@ -446,7 +448,7 @@ function M.run(L, seed, o, drivers)
         -- the press policy (§2.2 step 6): the driver's first icon, once it has shown as ready for `o.reaction` s
         local q = steps[1].q
         local key = q.name[1]
-        local gcdPress, refusedKey = false, false
+        local gcdPress, refusedKey, pressedKey = false, false, false
         local shown = not R and key and q.time[1] <= (o.react or M.REACT)
         if shown then
             readySince[key] = readySince[key] or t
@@ -465,7 +467,7 @@ function M.run(L, seed, o, drivers)
             end
             if ok then
                 run.presses = run.presses + 1
-                gcdPress = not p.offGcd
+                gcdPress, pressedKey = not p.offGcd, key
             else
                 if inCombat then -- over the in-combat attempts (per100)
                     run.refused[why] = (run.refused[why] or 0) + 1
@@ -494,10 +496,14 @@ function M.run(L, seed, o, drivers)
             if out.count > 0 and out.recs[1].focus then
                 run.focus = run.focus + 1
             end
+            run.pressed[n] = pressedKey -- the driver's own press this tick (loop.flips)
             if R then
                 run.theirs[n] = R.next(t)
             else
                 run.theirs[n] = steps[2] and steps[2].q.name[1] or false
+                -- the shadow presses nothing: the press its policy would make, its first icon shown ready
+                local sq = steps[2] and steps[2].q
+                run.shadowPress[n] = sq and sq.name[1] and sq.time[1] <= (o.react or M.REACT) and sq.name[1] or false
             end
             for k = 1, #run.frames do -- the ledger's frame (flicker.frame)
                 local st = steps[k]
@@ -582,11 +588,14 @@ function M.fight(L, seed, o)
     return a, b
 end
 
--- A -> B -> A within 3 ticks in a first-icon sequence.
-local function flips(seq, n)
+-- Flicker: A -> B -> A within 3 ticks in a first-icon sequence, unless the instance pressed B at the tick it showed or
+-- the next (`press[i]`: the key it pressed at in-combat tick i, false none; nil, a replay: no presses). Owner rule
+-- 2026-10-26: a show-then-press within one tick is not jitter (a proc at a hard cast's landing, pressed at once).
+local function flips(seq, n, press)
     local f = 0
     for i = 1, n - 2 do
-        if seq[i] ~= seq[i + 1] and seq[i + 2] == seq[i] then
+        local b = seq[i + 1]
+        if seq[i] ~= b and seq[i + 2] == seq[i] and not (press and (press[i + 1] == b or press[i + 2] == b)) then
             f = f + 1
         end
     end
@@ -672,14 +681,14 @@ function M.tally(L, n, o)
             m.refusedB[why] = (m.refusedB[why] or 0) + k
         end
         m.attemptsB = m.attemptsB + b.attempts
-        m.oracleFlicker = m.oracleFlicker + flips(a.theirs, a.combat)
+        m.oracleFlicker = m.oracleFlicker + flips(a.theirs, a.combat, a.shadowPress)
         m.led.ours = flicker.merge(m.led.ours, flicker.ledger(a.frames[1], lo))
         m.led.oracle = flicker.merge(m.led.oracle, flicker.ledger(a.frames[2], lo))
         for side, r in pairs({ A = a, B = b }) do
             local s = m[side]
             s.combat, s.full, s.idle = s.combat + r.combat, s.full + r.full, s.idle + r.idle
             s.damage, s.time = s.damage + r.damage, s.time + r.combat / (o.hz or 5)
-            s.flicker = s.flicker + flips(r.ours, r.combat)
+            s.flicker = s.flicker + flips(r.ours, r.combat, r.pressed)
             for key, k in pairs(r.up) do
                 s.up[key] = (s.up[key] or 0) + k
             end
@@ -707,6 +716,7 @@ function M.tally(L, n, o)
 end
 
 M.blank = blank
+M.flips = flips
 
 --- One replay of wowsims log `R` (replay.lua) on `L`'s boot: ours alone on the log's world, no presses, wowsims's
 --- next cast as `theirs` each tick. A tally for summary and line: the per-tick agreement with wowsims's next cast

@@ -373,3 +373,20 @@ describe("the headless loop's bags, pet and stats (central fix 27)", function()
         assert.are.same(seen[1], seen[2])
     end)
 end)
+
+describe("the headless loop's flicker counter (loop.flips)", function()
+    -- the owner's rule (2026-10-26): a blip the instance pressed (show-then-press within one tick) is not jitter
+    local seq = { "a", "b", "a", "a" }
+    it("does not count an A -> B -> A whose B the instance pressed at the tick it showed", function()
+        assert.are.equal(0, loop.flips(seq, 4, { false, "b", false, false }))
+    end)
+
+    it("still counts an A -> B -> A whose B was not pressed", function()
+        assert.are.equal(1, loop.flips(seq, 4, { false, false, false, false }))
+        assert.are.equal(1, loop.flips(seq, 4)) -- no press data (a replay): every flip counts
+    end)
+
+    it("does not excuse the blip for a press of a different ability", function()
+        assert.are.equal(1, loop.flips(seq, 4, { "a", "c", "a", false }))
+    end)
+end)
