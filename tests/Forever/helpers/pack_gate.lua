@@ -73,7 +73,9 @@ M.FLICKER = {
 -- Our first-icon flicker at most the oracle shadow's plus K, every gated 20-fight loop: the widest measured gap rounded
 -- up to the next 0.1. Redundant with the floors today; it tightens the bar when a change lowers the oracle's own
 -- flicker. 1.5 (Balance 1.63 vs 0.27) -> 1.6: re-measured on fix 22's truth resolve, Balance 2.51 vs 0.99 (1.52).
-M.FLICKER_K = 1.7 -- decision 63: Balance 2.32 vs 0.69 (1.63) on seeds 1-20
+-- 1.7 (decision 63: Balance 2.32 vs 0.69, 1.63) -> 1.8, owner ruling 2026-10-26: Innervate's wowsims rule (70cf486a4)
+-- reshuffles Balance's seeds 1-20 to 2.36 vs 0.65 (1.71; seeds 1-60 flat, 2.32 -> 2.30); the flips are gap BD's.
+M.FLICKER_K = 1.8
 
 --- The flicker floors of `label` (M.FLICKER) and flicker <= oracle + FLICKER_K, reported next to react p90 and the
 --- unmatched cost refusals (the line).
