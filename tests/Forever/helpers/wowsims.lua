@@ -378,8 +378,10 @@ end
 --- one instance): prints "<label> live L<level>: ..." and asserts no error, raise or unlisted read, at least one press,
 --- and never idle longer than `limit` seconds [6: four GCDs] in a row with a known on-GCD ability the world would
 --- accept. Idle: in combat, our GCD free, no cast in progress, no on-GCD press this tick (an off-GCD press is idle). Returns the worst idle and the line.
-function M.live(label, C, limit, fights)
+--- `stat` "median": each fight a fresh boot (its own first fight), and the bar is the median of the per-fight worsts.
+function M.live(label, C, limit, fights, stat)
     limit = limit or 6
+    local median = stat == "median"
     local L = loop.new(C)
     local c = C.character()
     local known = {}
@@ -388,8 +390,13 @@ function M.live(label, C, limit, fights)
     end
     local abilities = L.oracle.Hekili.Class.abilities
     local worst, presses, errors = 0, 0, 0
+    local worsts = {} -- per fight (median)
     for seed = 1, fights or 1 do
-        local streak, last = 0, 0
+        if median and seed > 1 then
+            L = loop.new(C)
+            abilities = L.oracle.Hekili.Class.abilities
+        end
+        local streak, last, fightWorst = 0, 0, 0
         local run = loop.run(L, seed, {
             duration = 120,
             on = function(run, _, t)
@@ -409,9 +416,11 @@ function M.live(label, C, limit, fights)
                     end
                 end
                 streak = (idle and usable) and streak + 1 or 0
-                worst = math.max(worst, streak)
+                fightWorst = math.max(fightWorst, streak)
             end,
         }, { { H = L.us } })
+        worst = math.max(worst, fightWorst)
+        worsts[seed] = fightWorst
         presses = presses + run.presses
         errors = errors + run.errors + run.raises + #run.misses
     end
@@ -422,6 +431,19 @@ function M.live(label, C, limit, fights)
         presses,
         errors
     )
+    if median then
+        table.sort(worsts)
+        local n = #worsts
+        seconds = (worsts[math.floor((n + 1) / 2)] + worsts[math.floor(n / 2) + 1]) / 2 * loop.TICK
+        line = ("median worst idle %.1f s over %d fresh fights (limit %.1f), worst %.1f s, presses %d, errors %d"):format(
+            seconds,
+            n,
+            limit,
+            worst * loop.TICK,
+            presses,
+            errors
+        )
+    end
     print("\n" .. label .. " live L" .. c.level .. ": " .. line)
     assert.are.equal(0, errors, line)
     assert.is_true(presses > 0, line)

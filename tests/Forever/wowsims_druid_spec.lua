@@ -130,6 +130,11 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- a GCD at 10 rage and Faerie Fire (Feral) below it, at most every 6 s (the kit's cooldown in a form): Demoralizing
     -- Roar took L10 to 0.2 s and L40 to 8.4 s, Faerie Fire L40 from 8.4 to 2.6 s (0.4 and 2.8 rebased)
     local GUARDIAN60 = 5.8
+    -- L60's bar (owner ruling 2026-10-25): the MEDIAN of the per-seed worst idle over seeds 1-30, each a fresh boot
+    -- (its own first fight), limit 6.0 s. One seed's worst is noise: with the parry fix the single seed 1 measured 8.4
+    -- (rage below Primal Bite's 15 from two white misses in a row), and over 30 seeds the worst runs 3.4-11.0. The
+    -- investigation's tables measured median 5.2, worst 8.6, 7 of 30 seeds over 6.0; these tables median 5.8, worst
+    -- 11.0, 12 of 30 over 6.0 (rage 343.6 a minute against wowsims's 349.9).
     -- L60's outcome tables, wowsims's for its export (druid_guardian.log, seed 101: 65 white swings, 79 yellow strikes;
     -- owner approved 2026-10-25). From its code: no parry (the export has no inFrontOfTarget, so the bear attacks from
     -- behind: spell_outcome.go), and the level 63 table at skill 300 (attack_table_test.go: miss 8%, dodge 6.5%,
@@ -150,7 +155,11 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
                     C.WORLD[k] = v
                 end
             end
-            ws.live("Guardian (wowsims.com)", C, math.max(6, GUARDIAN60))
+            if level == 60 then
+                ws.live("Guardian (wowsims.com)", C, 6.0, 30, "median")
+            else
+                ws.live("Guardian (wowsims.com)", C, math.max(6, GUARDIAN60))
+            end
         end)
     end
 
