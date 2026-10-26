@@ -1755,7 +1755,7 @@ describe("resources", function()
             assert.are.equal(0, VS.Regen(MANA, 31, VS.CASTING).est)
         end)
 
-        -- wowsims's Innervate multiplies the spirit part alone (SpiritRegenMultiplier): a `casting` mult leaves mp5 at x 1.
+        -- a regen-while-casting aura multiplies the spirit part alone (SpiritRegenMultiplier): a `casting` mult leaves mp5 at x 1.
         it("multiplies only the spirit part by a `casting` mult aura, mp5 at x 1", function()
             boot({
                 abilities = {},
@@ -1784,6 +1784,36 @@ describe("resources", function()
             assert.are.equal(104, VS.Regen(MANA, 12).est) -- 4 + 5 x 20 inside the window, not (4 + 20) x 5
             within(400 + 104 * 2, VS.Power(MANA, 12).est)
             assert.are.equal(24, VS.Regen(MANA, 31).est) -- the aura gone
+        end)
+
+        it("keeps the stored regen split when an out-of-combat read lands under a `casting` mult aura", function()
+            boot({
+                abilities = {},
+                abilityIds = {},
+                abilitySlot = {},
+                resources = {
+                    {
+                        key = "mana",
+                        type = MANA,
+                        token = "MANA",
+                        max = 1000,
+                        rest = true,
+                        fsr = { spirit = 20, mp5 = 4 },
+                        mult = { { aura = "surge", mult = 5, casting = true } },
+                    },
+                },
+                auras = { { key = "surge", id = 1021 } },
+                auraIds = { { 1021 } },
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.Settle(10)
+            I.AuraModel(1, 1, 10, 30, 1, 10, 0) -- up 10 to 30
+            local before = { I.res.regE[1], I.res.spE[1], I.res.decl[1], I.res.spDecl[1] }
+            obs(Obs.Read, 12, 1, 104, I.ReadOf.Regen) -- a regen-while-casting aura: the game's total is mixed
+            obs(Obs.Read, 12, 1, 0, I.ReadOf.RegenSpirit)
+            I.Fold(12, false)
+            assert.are.same(before, { I.res.regE[1], I.res.spE[1], I.res.decl[1], I.res.spDecl[1] })
         end)
 
         it("allocates nothing over 1000 spends, advances and projections", function()

@@ -1240,12 +1240,12 @@ I.On(Obs.Read, function(o, t, lag)
             setMax(r, o.b)
             R.maxRead[r] = true -- a plain read wins over the declared maximum from now on
         end
-    elseif c == ReadOf.Regen and R.swing[r] == 0 then
+    elseif c == ReadOf.Regen and R.swing[r] == 0 and not (R.fsr[r] and castingAt(r, t)) then
         local v = o.b / multAt(r, t, false) -- the game's rate includes any `mult` aura up now: store it unscaled
         R.decl[r], R.readT[r] = v, t
         R.regE[r], R.regL[r], R.regH[r] = v, v, v
         I.Sample(R.regen[r], "observed", v + R.spE[r], t, Obs.Read)
-    elseif c == ReadOf.RegenSpirit and R.fsr[r] then -- after its slot's Regen read in the same poll (Power.lua)
+    elseif c == ReadOf.RegenSpirit and R.fsr[r] and not castingAt(r, t) then -- after its slot's Regen read in the same poll (Power.lua)
         local v = o.b / multAt(r, t, true)
         R.spDecl[r], R.readT[r] = v, t
         R.spE[r], R.spL[r], R.spH[r] = v, v, v
