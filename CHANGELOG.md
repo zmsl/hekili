@@ -14,8 +14,15 @@
 
 ### Changed
 
+- Steady icons (experimental, off by default): turning it on now shows an "updates to hold" slider (1 to 3, default 1; each update is about 0.1 to 0.2 s). A countdown icon is only held when the next one is not about to become ready, so holding never turns a change into a brief flash. Ready icons and anything after your own cast still show at once.
+
 ### Fixed
 
+- Druid: Innervate's mana is now expected as the game gives it (five times your Spirit-based regeneration, all of it while casting), and a mana reading taken while Innervate is up no longer skews the estimate afterwards. Balance and Feral no longer show a mana-costing ability such as Shifting Power before you can afford it.
+- A spell that gives you mana or energy (Life Tap, for example) no longer leaves the estimate too low afterwards: Warlocks no longer see Shadow Bolt priced as unaffordable right after a Life Tap.
+- Warriors: rage from being hit now follows the game's rage formula, counting armor buffs such as Inspiration.
+- Orc Blood Fury's cooldown is now 3 minutes, as on Forever.
+- An ability due exactly 0.2 s away (a DoT falling off just as a channel such as Mind Flay ends, for example) is now judged the same way on every update, so it no longer flickers in and out of the first icon at that moment.
 - A queued strike (Heroic Strike, Cleave, Maul, Raptor Strike) that is not ready yet now shows its cooldown sweep up to when to press it, on every icon of the classic row and in the timeline, instead of looking ready.
 - Protection Warrior: a partly blocked hit on you now opens Revenge's window, as a full block, dodge or parry does.
 - Rage from Bloodrage (and Berserker Rage with Improved Berserker Rage) now counts at once: an ability you can afford with it is no longer shown as unaffordable right after the press.
@@ -92,7 +99,7 @@ v0.3.0 adds the Warlock and Priest with default priorities, an Elemental Shaman 
 - Mana and energy consumables (Major Mana Potion, Demonic Rune, Thistle Tea, Mana Gem) are now under the Potions toggle, which is off by default. Turn Potions on to see them. Healthstone stays under Defensives.
 - The highlighted icon follows each line's role: first procs and windows you must catch, then upkeep. Core strikes, cooldowns and pre-pull steps are no longer highlighted.
 - Pre-pull suggestions now show whenever they are needed (buff or debuff down, totem down, cooldown ready) and hide once they are not. For example, Arms's stance and Arms's and Fury's move suggestions no longer repeat between pulls; Charge still shows whenever it is usable.
-- Experimental, off by default: the "steady icons" option on each specialization's Performance tab reduces flicker. It keeps a countdown icon instead of swapping it for another countdown, for 1 to 3 updates (the "updates to hold" slider under the toggle, default 1; each update is about 0.1 to 0.2 s); ready icons and anything after your own cast still show at once.
+- Experimental, off by default: the "steady icons" option on each specialization's Performance tab reduces flicker. It keeps a countdown icon for one more update instead of swapping it for another countdown; ready icons still show at once.
 - A spell you cannot afford no longer flashes ready for a moment when you are low on mana, such as a Fire Mage's Pyroblast or an Arcane Mage's Arcane Blast.
 - A pooled ability no longer blinks in and out of the queue just as the resource reaches its threshold, such as a Rogue's Sinister Strike waiting for 75 energy.
 - A priority updated on the same day no longer shows as reverted when you log in.
