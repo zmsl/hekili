@@ -241,6 +241,29 @@ describe("the world's resources", function()
                 assert.are.equal(can, parried > 0, tostring(can))
             end
         end)
+
+        it(
+            "rolls our instant hits on scenarios' mobAvoid and crit; the defaults are entities' and world.CRIT",
+            function()
+                local scenarios = require("Game.harness.scenarios")
+                local function tally(o)
+                    local Wx = scenarios.world(o, 1)
+                    local n = { WOUND = 0, MISS = 0, DODGE = 0, PARRY = 0, crit = 0 }
+                    for _ = 1, 4000 do
+                        local act, flag = Wx.rollOutcome(Wx.ents[2])
+                        n[act] = n[act] + 1
+                        n.crit = n.crit + (flag == "CRITICAL" and 1 or 0)
+                    end
+                    return n
+                end
+                local d = tally({})
+                assert.is_true(d.PARRY > 100 and math.abs(d.crit / 4000 - world.CRIT) < 0.02, tostring(d.crit))
+                local n = tally({ mobAvoid = { miss = 0.02, dodge = 0.03, parry = 0, block = 0 }, crit = 0.3 })
+                assert.are.equal(0, n.PARRY)
+                assert.is_true(math.abs(n.MISS / 4000 - 0.02) < 0.01 and math.abs(n.DODGE / 4000 - 0.03) < 0.01)
+                assert.is_true(math.abs(n.crit / 4000 - 0.3) < 0.03, tostring(n.crit))
+            end
+        )
     end)
 
     it(

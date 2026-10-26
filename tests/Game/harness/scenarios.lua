@@ -119,7 +119,8 @@ M.ARCHETYPES = ARCHETYPES
 --- at the pull), after (seconds the world runs past the stop [3]), distance (yards from our target from the start
 --- [none: no positions]; W.moveTo changes it), bags, pet and stats (ours: entities.new's; the pet regenerates from the
 --- start, W.startPetRegen), canParry (false: we never parry a swing at us, so no parry haste of ours; wowsims's
---- PseudoStats.CanParry, true only for some classes [true]).
+--- PseudoStats.CanParry, true only for some classes [true]), mobAvoid (the mobs' avoid table of our hits, entities.new's
+--- `avoid` [its 5/5/5]) and crit (our crit rate on an instant hit or strike, W.crit [world.CRIT]).
 --- The detection suite's (unit-registry spec §6.2): noMelee (no white swings of ours), spells ({ t, kind }:
 --- behaviours.ours, from the pull, with distance and jitter), switchTo ({ t, mob index }: our target changes), churn
 --- ({ every, gap }: our target's plate leaves and comes back), extraMobs (mobs not on us, each with a plate), phase
@@ -146,6 +147,7 @@ function M.world(o, seed)
     if o.canParry == false then
         us.avoid.parry = 0
     end
+    W.crit = o.crit or W.crit
     if us.pet then
         W.startPetRegen(us)
     end
@@ -166,6 +168,7 @@ function M.world(o, seed)
             weapons = { { dmg[1], dmg[2], m.period or o.mobPeriod or 2.0 } },
             health = i == 1 and o.mobHealth or 1e9,
             creatureType = m.creatureType or o.creatureType,
+            avoid = o.mobAvoid,
         }))
         mob.target = (i <= (o.attackers or 1) and not (o.joinAt and o.joinAt[i])) and us or nil
         mobs[i] = mob

@@ -55,6 +55,7 @@ function M.new(seed)
     W.distance = nil -- yards from our character to its target (W.moveTo; nil: no positions, every check in range)
     W.hitAtSwing = true -- our white wound takes health at the swing, its row a landing lag later (owner, 2026-10-22)
     W.parryHaste = true -- a parried attack pulls the parrier's next main-hand swing (parry-haste spec decision 63)
+    W.crit = M.CRIT -- our crit rate on an instant hit or strike (W.rollOutcome; scenarios' `crit`)
 
     --- Runs `fn(W)` at time `t` (after everything already queued for `t`).
     function W.at(t, fn)
@@ -610,10 +611,10 @@ function M.new(seed)
         end
     end
 
-    --- The avoid `set` (a M.OUTCOMES key; default "melee") rolls for a hit of ours on `dst`, with our crit rate: the
+    --- The avoid `set` (a M.OUTCOMES key; default "melee") rolls for a hit of ours on `dst`, with W.crit: the
     --- act ("WOUND", "MISS", "DODGE", "PARRY") and flag.
     function W.rollOutcome(dst, set)
-        local av, r = dst.avoid, { crit = M.CRIT }
+        local av, r = dst.avoid, { crit = W.crit }
         for _, k in ipairs(M.OUTCOMES[set or "melee"]) do
             if k == "spellMiss" then
                 r.miss = av.spellMiss or av.miss
