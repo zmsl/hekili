@@ -60,7 +60,8 @@ function M.new()
         petPower = 0, -- UnitPower("pet") of the pet's power type `petPowerType` while exists.pet (SECRET: a secret read)
         petPowerType = 0,
         itemCount = {}, -- [itemID] = C_Item.GetItemCount (default 0)
-        stats = {}, -- [index] = UnitStat's value (its first two returns; default 0)
+        -- [index] = UnitStat's value (its first two returns; default 0); .armor UnitArmor's, .block GetShieldBlock's
+        stats = {},
         powerMax = {}, -- [powerType] = max
         regen = {}, -- [powerType] = { inactive, active }
         usable = {}, -- [spellID] = { ok, short }
@@ -255,12 +256,18 @@ function M.new()
         return v, v, 0, 0
     end
     api.GetSpellBonusDamage, api.UnitAttackPower, api.UnitWeaponAttackPower = zeros, zeros, zeros
-    api.UnitArmor, api.GetMasteryEffect, api.GetCritChance = zeros, zeros, zeros
+    api.GetMasteryEffect, api.GetCritChance = zeros, zeros
+    function api.UnitArmor() -- base, effective, armor, positive, negative buffs: ctl.stats.armor (default 0)
+        local a = ctl.stats.armor or 0
+        return a, a, a, 0, 0
+    end
     function api.UnitDamage()
         local d = ctl.damage
         return d[1], d[2], d[3], d[4], 0, 0, 1
     end
-    api.GetShieldBlock = zeros
+    function api.GetShieldBlock() -- ctl.stats.block (default 0)
+        return ctl.stats.block or 0
+    end
     api.GetSpellCritChance, api.GetRangedCritChance, api.GetCombatRating, api.GetCombatRatingBonus =
         zeros, zeros, zeros, zeros
     api.CR_CRIT_MELEE, api.CR_HASTE_MELEE, api.CR_CRIT_TAKEN_SPELL, api.CR_MASTERY = 10, 18, 11, 26

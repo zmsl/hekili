@@ -587,19 +587,38 @@ describe("Forever Warrior", function()
             ctx({}, {})
         end)
 
-        it(
-            "gives magey's log 01: 110 pre-armor from a level-5 attacker at 593 armor and 203 health is 5.4 rage",
-            function()
-                local sum, band = 0, 0
-                for _ = 1, 20 do
-                    local g, wd = run("WOUND", 3.2, 5) -- 64 post-armor over 20 hits: 64 / (1 - 593 / 1418) = 110
-                    sum, band = sum + g, band + wd
-                end
-                assert.is_true(math.abs(sum - 110 * 10 / 203) < 1e-3, tostring(sum)) -- 5.419
-                assert.is_true(math.abs(band - 0.15 * sum) < 1e-9)
-                assert.is_true(math.abs(sum - 5.4) <= band)
-            end
-        )
+        -- wowsims's rage per pre-mitigation point (sim/core/rage.go:91-103): 2.5 x (1 - A) / c at the attacker's level
+        local function perPoint(a, c)
+            return 2.5 * (1 - a) / c
+        end
+        local function near(want, got)
+            assert.is_true(math.abs(got - want) < 1e-9, ("want %.6f, got %.6f"):format(want, got))
+        end
+
+        it("gives wowsims's rage: the pre-armor hit x 2.5 x (1 - A) / c, by the attacker's level only", function()
+            local g, wd = run("WOUND", 1000, 63) -- 1000 / (1 - 593 / 6348) before armor; A(63) 0.40, c(63) 243.64
+            near(1000 / (1 - 593 / 6348) * perPoint(0.4, 243.6386735874), g) -- 6.791
+            near(0.15 * g, wd)
+            w.game.healthMax = 5000 -- our health plays no part
+            near(g, (run("WOUND", 1000, 63)))
+            w.game.stat.UnitArmor = { 0, 0 }
+            near(1000 * perPoint(0.38 + 0.02 * 10 / 13, 230.60000004), (run("WOUND", 1000, 60))) -- A between 50 and 63
+            near(1000 * perPoint(0.37, 180.0852468984), (run("WOUND", 1000, 48))) -- between 46 (0.36) and 50 (0.38)
+            near(1000 * perPoint(0.2, 37.43235079), (run("WOUND", 1000, 10))) -- 0.20 up to 42
+            near(1000 * perPoint(0.4, 274.70000005), (run("WOUND", 1000, 70))) -- 0.40 from 63
+        end)
+
+        it("rebuilds the pre-armor hit with Inspiration's 25% more armor while it is up", function()
+            local open = run("WOUND", 1000, 63)
+            ctx({ inspiration = true }, {})
+            near(open * (1 - 593 / 6348) / (1 - 741.25 / 6496.25), (run("WOUND", 1000, 63)))
+        end)
+
+        it("doubles it under Berserker Rage (wowsims's damage-taken rage multiplier)", function()
+            local open = run("WOUND", 1000, 63)
+            ctx({ berserker_rage = true }, {})
+            near(2 * open, (run("WOUND", 1000, 63)))
+        end)
 
         it(
             "adds the cached block value to a partial block, and estimates a full block from the unblocked amounts",
@@ -607,10 +626,12 @@ describe("Forever Warrior", function()
                 w.game.stat.UnitArmor = { 0, 0 }
                 w.game.healthMax = 100
                 w.game.stat.GetShieldBlock = { 20 }
-                assert.are.same({ 3, 0.15 * 3 }, { run("BLOCKED", 10, 5) }) -- (10 + 20) x 10 / 100
-                local full = run("BLOCK", 0, 5)
-                -- min(block value 20, the average unblocked amount 0.2 x 30) x 10 / 100
-                assert.is_true(math.abs(full - 0.6) < 1e-9, tostring(full))
+                local k = perPoint(0.2, 20.621051355) -- a level-5 attacker's
+                local g, wd = run("BLOCKED", 10, 5) -- 10 + 20 unblocked
+                near(30 * k, g)
+                near(0.15 * g, wd)
+                -- min(block value 20, the average unblocked amount 0.2 x 30)
+                near(6 * k, (run("BLOCK", 0, 5)))
                 local g, wd = run("BLOCK", 0, 5)
                 assert.are.equal(g, wd) -- a full block's band is its whole estimate
                 w.events.PLAYER_REGEN_ENABLED() -- the fight ends: the next fight learns its own unblocked amounts
@@ -633,9 +654,12 @@ describe("Forever Warrior", function()
             ctx({}, { shield_specialization = 5 })
             assert.are.same({ 5, 0 }, { run("BLOCK", 0, 20) }) -- p = 1: a certain proc has no width
             assert.are.same({ 0, 0 }, { run("DODGE", 0, 20) })
-            w.game.stat.UnitArmor, w.game.healthMax = { 0, 0 }, 100
+            w.game.stat.UnitArmor = { 0, 0 }
             ctx({}, { shield_specialization = 1 })
-            assert.are.same({ 3 + 1, 0.15 * 3 + 4 }, { run("BLOCKED", 30, 20) }) -- a partial block: the hit's, plus the proc
+            local hit = 30 * perPoint(0.2, 72.4215672) -- a level-20 attacker's
+            local g, wd = run("BLOCKED", 30, 20) -- a partial block: the hit's, plus the proc
+            near(hit + 1, g)
+            near(0.15 * hit + 4, wd)
         end)
 
         it("allocates nothing over every kind", function()
@@ -643,7 +667,12 @@ describe("Forever Warrior", function()
             w.state.equipped.shield = true
             e = { -- plain tables: the belief's proxies are preallocated, so only `taken` itself is measured
                 stat = w.state.stat,
-                buff = { defensive_stance = { up = true }, shield_wall = { up = false } },
+                buff = {
+                    defensive_stance = { up = true },
+                    shield_wall = { up = false },
+                    berserker_rage = { up = true },
+                    inspiration = { up = true },
+                },
                 talent = { shield_specialization = { rank = 1 }, master_of_defense = { rank = 1 } },
             }
             local f = setfenv(taken, e)

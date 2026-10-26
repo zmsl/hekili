@@ -156,18 +156,28 @@ local function rageOf(hand)
     return (twoHand and 4.5 or 3.46) * speed + wrath
 end
 
--- Rage from damage taken (Protection design §1.3; magey/forever-warrior issue 3, level 8-9): the hit before every
--- reduction x 10 / maximum health; a blocked hit gives the rage of its unblocked amount; attacker level made no
--- difference. The pre-armor amount is the post-armor one / (1 - armor / (armor + 400 + 85 x attacker level)), with the
--- armor and block value from the belief's out-of-combat stat cache. Defensive Stance's 10% and Shield Wall's
--- reduction come off before the rage too (user ruling 2026-10-16: rage is from the unreduced hit): their factors divide
--- the amount back. Shield Specialization (a 20% chance a rank to gain 5 on a block) and Master of Defense (50% a rank on
--- a dodge or parry with a shield) as their expected values, the band carrying the spread (tooltips read in game
--- 2026-10-16). Not modelled: Berserker Rage's extra rage taken.
--- shortcut: below about 130-170 armor magey's rate was exactly double (checkpoint Q6, design D2); a tank wears more by
--- level 10, so it is not modelled. Upgrade if Q6 reproduces it at the tank's level.
-local RAGE_TAKEN_FACTOR = 10
-local TAKEN_SPREAD = 0.15 -- the fit's scatter (9.6-11 around 10) and a stale cached armor
+-- Rage from damage taken: wowsims/forever's rule (MIT, sim/core/rage.go:11-49 and 91-103; owner ruling 2026-10-25,
+-- "stick with wowsims": armor does not change it): 2.5 x (1 - A) x the hit before every mitigation / c, A and c by the
+-- attacker's level only (our health, level and armor play no part), x 2 under Berserker Rage
+-- (sim/warrior/berserker_rage.go). A blocked hit lands, so it gives the rage of its unblocked amount. The client
+-- reports the hit after armor, so the pre-armor amount is rebuilt as post / (1 - armor / (armor + 400 + 85 x attacker
+-- level)), the armor the belief's out-of-combat cached armor times the armor buffs it sees on us (ARMOR_BUFFS), the
+-- block value the cached one. Defensive Stance's 10% and Shield Wall's reduction come off before the rage too (user
+-- ruling 2026-10-16: rage is from the unreduced hit): their factors divide the amount back. Shield Specialization (a
+-- 20% chance a rank to gain 5 on a block) and Master of Defense (50% a rank on a dodge or parry with a shield) as their
+-- expected values, the band carrying the spread (tooltips read in game 2026-10-16).
+local TAKEN_RAGE_FACTOR = 2.5
+-- A by the attacker's level: wowsims's measured rows (20% up to 42, 40% from 63), interpolated between two rows.
+local ASSUMED_LEVEL = { 42, 44, 46, 50, 63 }
+local ASSUMED_REDUCTION = { 0.20, 0.30, 0.36, 0.38, 0.40 }
+local BERSERKER_RAGE_TAKEN = 2
+local TAKEN_SPREAD = 0.15 -- a stale cached armor or block value, and an unseen armor buff or debuff
+-- The armor buffs on us the rebuild multiplies the cached armor by (aura key, multiplier): Inspiration (14893, the
+-- priest's talent 14892: 8% a rank, DB2 base points 8; 25% at 3/3, as wowsims's healing model applies it).
+-- shortcut: the belief cannot see the priest's rank, so it is taken as 3/3; read the aura's points if a lower rank
+-- shows in game.
+local ARMOR_BUFFS = { "inspiration" }
+local ARMOR_BUFF_MULTIPLIER = { 1.25 }
 local DEFENSIVE_STANCE_TAKEN, SHIELD_WALL_TAKEN = 0.9, 0.4
 local PROC_RAGE = 5
 local SHIELD_SPECIALIZATION_CHANCE, MASTER_OF_DEFENSE_CHANCE = 0.2, 0.5 -- a rank
@@ -177,12 +187,28 @@ spec:RegisterEvent("PLAYER_REGEN_ENABLED", function()
     unblockedAvg = 0
 end)
 
+-- wowsims's A at an attacker's level (damageTakenRageArmorReduction).
+local function assumedReduction(level)
+    local n = #ASSUMED_LEVEL
+    for i = 1, n do
+        if level <= ASSUMED_LEVEL[i] then
+            if i == 1 then
+                return ASSUMED_REDUCTION[1]
+            end
+            local lo, a = ASSUMED_LEVEL[i - 1], ASSUMED_REDUCTION[i - 1]
+            return a + (ASSUMED_REDUCTION[i] - a) * (level - lo) / (ASSUMED_LEVEL[i] - lo)
+        end
+    end
+    return ASSUMED_REDUCTION[n]
+end
+
 -- The rage of a post-armor amount `post` from an attacker of `level`, divided back by `reduced` (the percentage
--- reductions' product). Allocates nothing.
-local function rageTaken(post, level, reduced)
-    local armor = select(2, state.stat("UnitArmor"))
-    local mitigated = armor / (armor + 400 + 85 * level) -- nonzero: 400 + 85 x level > 0
-    return post / (1 - mitigated) / reduced * RAGE_TAKEN_FACTOR / state.healthMax("player") -- nonzero: max > 0 (100)
+-- reductions' product), with `armorScale` x the cached armor. Allocates nothing.
+local function rageTaken(post, level, reduced, armorScale)
+    local armor = select(2, state.stat("UnitArmor")) * armorScale
+    local mitigated = armor / (armor + 400 + 85 * level) -- below 1: 400 + 85 x level > 0
+    local conversion = 0.0091107836 * level * level + 3.225598133 * level + 4.2652911 -- wowsims's rageConversion: > 4
+    return post / (1 - mitigated) / reduced * TAKEN_RAGE_FACTOR * (1 - assumedReduction(level)) / conversion
 end
 
 -- A proc's expected rage at chance p and its half-width (none for a certain proc).
@@ -230,6 +256,15 @@ spec:RegisterResource(
                 if buff.shield_wall.up then
                     reduced = reduced * SHIELD_WALL_TAKEN
                 end
+                if buff.berserker_rage.up then
+                    reduced = reduced / BERSERKER_RAGE_TAKEN -- divides the rage back up: x 2
+                end
+                local armorScale = 1
+                for i = 1, #ARMOR_BUFFS do
+                    if buff[ARMOR_BUFFS[i]].up then
+                        armorScale = armorScale * ARMOR_BUFF_MULTIPLIER[i]
+                    end
+                end
                 local gain, width = 0, 0
                 if kind == "WOUND" or kind == "BLOCKED" then
                     local post = amount
@@ -237,10 +272,10 @@ spec:RegisterResource(
                         post = post + stat("GetShieldBlock") -- the unblocked amount
                     end
                     unblockedAvg = unblockedAvg + UNBLOCKED_WEIGHT * (post - unblockedAvg)
-                    gain = rageTaken(post, level, reduced)
+                    gain = rageTaken(post, level, reduced, armorScale)
                     width = TAKEN_SPREAD * gain
                 elseif kind == "BLOCK" then
-                    gain = rageTaken(min(stat("GetShieldBlock"), unblockedAvg), level, reduced)
+                    gain = rageTaken(min(stat("GetShieldBlock"), unblockedAvg), level, reduced, armorScale)
                     width = gain
                 end
                 local rank = talent.shield_specialization.rank
@@ -532,6 +567,12 @@ spec:RegisterAuras({
     improved_hamstring = {
         id = 23694,
         duration = 5,
+        max_stack = 1,
+    },
+    -- a priest's armor buff on us (rage from damage taken: ARMOR_BUFFS); the one Forever ID (DB2), 15 s
+    inspiration = {
+        id = 14893,
+        duration = 15,
         max_stack = 1,
     },
     intercept_stun = {

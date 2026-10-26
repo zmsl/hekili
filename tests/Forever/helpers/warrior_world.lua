@@ -450,10 +450,15 @@ M.Fury = setmetatable({
 -- wowsims/forever's prebis Protection gear (MIT, https://github.com/wowsims/forever): a one-hander (10271) at the 2.35 s
 -- period of the first Tag 1 swing pairs of tests/Forever/wowsims/warrior_protection.log and a shield (15289); damage
 -- UNMEASURED. Defensive Stance up (wowsims's defaultStance); Mortal Strike is an Arms talent, so the character does
--- not know it.
+-- not know it. The client's armor and block value (UnitArmor, GetShieldBlock) are the log's: Inspiration's "Armor *=
+-- 1.25" line adds 1259, so 5036 armor; each damage-taken rage line then gives the hit before mitigation (wowsims's
+-- rage.go) and the block value 0.9 x (1 - armor share) x that - the "Block for N" amount: 52-63 over the 41 blocks, 57.
 local PROT_SPEED = 2.35
 M.Protection = setmetatable({
-    WORLD = setmetatable({ weapons = { { 60, 120, PROT_SPEED } } }, { __index = M.WORLD }),
+    WORLD = setmetatable(
+        { weapons = { { 60, 120, PROT_SPEED } }, stats = { armor = 5036, block = 57 } },
+        { __index = M.WORLD }
+    ),
     character = function()
         local c = M.Fury.character()
         c.speed, c.form = { PROT_SPEED }, M.FORM.defensive_stance
