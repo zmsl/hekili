@@ -4,45 +4,76 @@
 
 ### New
 
-- Your own hits, misses and DoT ticks are now matched to the cast that made them, even when they come late: a projectile's landing (Wrath, Shadow Bolt, Frostbolt), the killing blow that arrives after your target clears, a cast you switched targets during, and a crowded pull with other players hitting the same mob. A projectile's crit and miss now count when the bolt lands, so crit-triggered effects and miss refunds follow. The class priorities now declare each projectile's travel speed and each spell's school for this.
-- Late or out-of-order hits now still count: a result that arrives after its expected time is matched to its cast instead of being dropped, and a swing whose result never shows is counted at its expected rage.
-- Snapshots gain two lines, `units` and `tickets`, that show how many of your outcomes were matched, lost or ambiguous. Please include them when you report a wrong recommendation.
-- Experimental option, off by default (Options > Performance > Experimental): use the game's damage meter events (read even with the Damage Meter window hidden or disabled) to know at once whether your white swing hit, and that another player's hit was not yours. In our simulated fights the rage estimate is closer in crowds and other players' hits are credited to you less often, while Fury's suggestions changed slightly more often than without it (flicker 1.84 against 1.74 per minute at level 60) and agreement with the true best choice was the same within noise; it has not been measured in game yet and will be play-tested after launch.
-- Experimental option, off by default (Options > Performance > Experimental): read aura presence from the game's Cooldown Manager for the auras it tracks. It reads the Cooldown Manager's buff icon and buff bar items, and only auras you applied (presence only, no durations or stacks); the others keep their timers. For Warriors it covers 4 of 42 auras so far (a lower bound until the auras are re-captured on launch day). The Cooldown Manager must be enabled in the game options. A change made in combat waits until the fight ends. It is not yet measured in our simulated fights, which build no Cooldown Manager items; it will be play-tested after launch.
-- Parry haste, both ways: when you parry, your next main-hand swing comes sooner, and the addon now expects it then (the swing timer, the rage that swing brings and anything timed to it, such as a Slam between swings or a queued strike, follow). A mob that parries you swings at you sooner too, and its hit on you is still matched to it when several mobs are on you.
-- Simplified Chinese (简体中文): on a Chinese client, the options, chat messages, notifications, the minimap menu and the class settings are now in Chinese. Text that is not translated yet still shows in English. Translation by dodoels. Translators for other languages are welcome; see "Localization" in docs/dev/architecture.md.
-
 ### Changed
-
-- Steady icons (experimental, off by default): turning it on now shows an "updates to hold" slider (1 to 3, default 1; each update is about 0.1 to 0.2 s). A countdown icon is only held when the next one is not about to become ready, so holding never turns a change into a brief flash. Ready icons and anything after your own cast still show at once.
 
 ### Fixed
 
-- Druid: Innervate's mana is now expected as the game gives it (five times your Spirit-based regeneration, all of it while casting), and a mana reading taken while Innervate is up no longer skews the estimate afterwards. Balance and Feral no longer show a mana-costing ability such as Shifting Power before you can afford it.
-- A spell that gives you mana or energy (Life Tap, for example) no longer leaves the estimate too low afterwards: Warlocks no longer see Shadow Bolt priced as unaffordable right after a Life Tap.
-- Warriors: rage from being hit now follows the game's rage formula, counting armor buffs such as Inspiration.
-- Orc Blood Fury's cooldown is now 3 minutes, as on Forever.
-- An ability due exactly 0.2 s away (a DoT falling off just as a channel such as Mind Flay ends, for example) is now judged the same way on every update, so it no longer flickers in and out of the first icon at that moment.
-- A queued strike (Heroic Strike, Cleave, Maul, Raptor Strike) that is not ready yet now shows its cooldown sweep up to when to press it, on every icon of the classic row and in the timeline, instead of looking ready.
-- Protection Warrior: a partly blocked hit on you now opens Revenge's window, as a full block, dodge or parry does.
-- Rage from Bloodrage (and Berserker Rage with Improved Berserker Rage) now counts at once: an ability you can afford with it is no longer shown as unaffordable right after the press.
-- A Maul that lands just after Demoralizing Roar is no longer credited to the Roar.
-- Rage no longer drifts when a fight ends: a white swing just before combat ends still counts its rage.
-- A DoT whose application missed (Insect Swarm, for example) is no longer believed to be ticking on the target.
-- A mob running at you while you cast no longer makes the addon lose your spell's landing.
-
-- No more "attempt to index field 'leftText' (a secret string value)" errors in combat: spell tooltips are secret in combat on Forever, and the check for spells disabled in this area now skips them until you leave combat.
-- The next on-GCD ability no longer disappears behind off-GCD suggestions (Bloodrage, Heroic Strike and the like). When those fill every icon, the queue now looks up to two steps further so the Timeline still shows your next GCD; the classic icon row still shows your set number of icons.
-- WeakAuras: the Hekili recommendation payload can now carry up to two records beyond your icon count (the off-GCD look-ahead above).
-
 ### Known issues
 
-- In a crowded pull with a laggy connection, white swings are still credited less often (the harness measures about a third of them in a five-man). Swings whose result never shows now count at their expected rage, so rage reads closer (the harness's mean error there fell from 32 to under 25 rage) but can still be off until a known cost pins it.
-- In a raid-sized crowd on one target, projectile landings are not credited at all yet: other casters' hits of the same school take the ticket first, so the amount band never learns (measured, not yet addressed).
-- Fast dual-wield rage can still read off: in a five-man the harness credits about 4 in 10 main-hand and 7 in 10 off-hand swings to the right hand, and swings swapped between the hands only partly cancel out.
-- Solo, the expected rage of a swing whose result never shows makes rage read one swing high in about 1 of 2400 ten-second windows.
-
 ### Upgrade notes
+
+## v0.4.0
+
+_Released 2026-10-26_
+
+This release matches your hits, misses and DoT ticks to the right cast more reliably, adds parry haste, Simplified Chinese and two experimental options, and fixes many resource and display issues.
+
+### Druid
+- Innervate's mana is now expected as the game gives it: five times your Spirit-based regeneration, all of it while casting. A mana reading taken while Innervate is up no longer skews the estimate afterwards.
+- Balance and Feral no longer show a mana-costing ability such as Shifting Power before you can afford it.
+- A Maul that lands just after Demoralizing Roar is no longer mistaken for the Roar's result.
+
+### Warlock
+- After Life Tap, or any spell that gives you mana or energy, the resource estimate no longer stays too low. Shadow Bolt is no longer shown as unaffordable right after a Life Tap.
+
+### Warrior
+- Rage from being hit now follows the game's rage formula, counting armor buffs such as Inspiration.
+- Rage from Bloodrage, and from Berserker Rage with Improved Berserker Rage, now counts at once. An ability you can afford with it is no longer shown as unaffordable right after the press.
+- Protection: a partly blocked hit on you now opens Revenge's window, as a full block, dodge or parry does.
+- Protection: rage from Shield Specialization (5/5) and Master of Defense (2/2) is now counted in full on every block, dodge or parry.
+
+### Core and display
+- Your hits, misses and DoT ticks are now matched to the cast that made them, even when they arrive late. This covers:
+  - a projectile landing (Wrath, Shadow Bolt, Frostbolt)
+  - a killing blow after your target clears
+  - a cast where you switched targets midway
+  - a crowded pull where other players hit the same mob
+- A projectile's crit or miss now counts when the bolt lands, so crit-triggered effects and miss refunds follow it.
+- Hits that arrive late or out of order are now matched to their cast instead of dropped. A white swing whose result never shows now counts at its expected rage.
+- If a mob runs at you while you cast, the addon no longer loses track of your spell's landing.
+- A DoT whose application missed (Insect Swarm, for example) is no longer treated as ticking on the target.
+- Parry haste, both ways:
+  - When you parry, the swing timer expects your next main-hand swing sooner. Its rage, a Slam between swings and queued strikes follow.
+  - A mob that parries you swings sooner too, and its hits on you are still told apart when several mobs are on you.
+- Rage no longer drifts when a fight ends: a white swing just before combat ends still counts its rage.
+- Orc Blood Fury's cooldown is now 3 minutes, as on Forever.
+- The next on-GCD ability no longer disappears behind off-GCD suggestions such as Bloodrage or Heroic Strike. The Timeline now looks up to two steps further, while the classic icon row still shows your set number of icons.
+- A queued strike that is not ready yet (Heroic Strike, Cleave, Maul, Raptor Strike) now shows its cooldown sweep until it is time to press it. This applies to every icon of the classic row and to the Timeline.
+- An ability due exactly 0.2 s away no longer flickers in and out of the first icon. An example is a DoT falling off just as Mind Flay ends.
+- The "attempt to index field 'leftText' (a secret string value)" error in combat is fixed.
+- WeakAuras: the recommendation data can now carry up to two extra entries beyond your icon count, for the off-GCD look-ahead.
+- Steady icons (experimental, off by default): turning it on now shows an "updates to hold" slider.
+  - The range is 1 to 3 (default 1); each update is about 0.1 to 0.2 s.
+  - A countdown icon is no longer held when the next one is about to become ready, so holding never turns a change into a brief flash.
+- New experimental option, off by default (Options > Performance > Experimental): use the game's damage meter events to know at once whether your white swing hit.
+  - It works even with the Damage Meter window hidden or disabled.
+  - It should credit other players' hits to you less often and keep rage closer in crowds, but Fury suggestions may change slightly more often.
+  - It has not been tested in game yet.
+- New experimental option, off by default (Options > Performance > Experimental): read whether an aura is up from the game's Cooldown Manager.
+  - It only covers auras you applied that the Cooldown Manager tracks; so far that is a few Warrior auras.
+  - The Cooldown Manager must be enabled in the game options.
+  - Changing the option in combat takes effect when the fight ends.
+- Snapshots now include two extra lines showing how many of your hits and misses were matched, lost or unclear. Please include them when you report a wrong recommendation.
+- Simplified Chinese (简体中文): on a Chinese client, the following are now in Chinese. Untranslated text still shows in English. Translation by dodoels.
+  - options and class settings
+  - chat messages and notifications
+  - the minimap menu
+
+### Known issues
+- In a crowded pull on a laggy connection, many white swings are still not recognized, so rage can read off until your next ability press corrects it.
+- In a raid-sized group all hitting one target, your projectile landings are not recognized yet, so their crit and miss effects are not followed.
+- Fast dual-wield rage can still read off in groups, because swings are sometimes credited to the wrong hand.
+- Solo, rage very rarely reads one swing too high.
 
 ## v0.3.0
 
