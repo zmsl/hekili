@@ -199,7 +199,9 @@ end
 --                                    its lower bound (`mana.current`, `mana.pct`) is the build's rest (full), moved by
 --                                    our spends and the regen, until a short answer below it drops it to the ladder's.
 -- A regen entry with `mult` (C3b), `{ aura = key, mult = n }` (n > 0; the belief ignores any other): the resource's
--- calibrated continuous rate x n while the player's aura `key` is up (an energy or mana surge). It is a rate
+-- calibrated continuous rate x n while the player's aura `key` is up (an energy or mana surge); with `casting = true`
+-- (an `fsr` resource's regen while casting) x n multiplies the spirit part alone (mp5 stays x 1) and runs inside the
+-- five-second window too. It is a rate
 -- multiplier, not a forecast event: it moves out of the regen model into `state.regenMult` here (Hekili's forecast
 -- would call its missing `last`).
 -- shortcut: the sim's forecast takes the belief's regen rate at `now` as a constant (Game/API/Facade.lua's

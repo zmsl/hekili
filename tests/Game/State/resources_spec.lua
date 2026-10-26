@@ -1719,6 +1719,73 @@ describe("resources", function()
             within(I.ALPHA * 2, I.res.regE[1])
         end)
 
+        -- A `mult` entry with `casting = true` (a regen-while-casting aura): its multiple of the rate runs inside the
+        -- window too while the aura is up, and its seconds weigh the spirit part's calibration.
+        it("runs a `casting` mult aura's spirit part inside the window, and calibrates it there", function()
+            boot({
+                abilities = {},
+                abilityIds = {},
+                abilitySlot = {},
+                resources = {
+                    {
+                        key = "mana",
+                        type = MANA,
+                        token = "MANA",
+                        max = 1000,
+                        rest = true,
+                        fsr = { spirit = 10, mp5 = 0 },
+                        mult = { { aura = "surge", mult = 5, casting = true } },
+                    },
+                },
+                auras = { { key = "surge", id = 1021 } },
+                auraIds = { { 1021 } },
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.Settle(10)
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            I.AuraModel(1, 1, 10, 30, 1, 10, 0) -- up 10 to 30
+            within(400 + 50 * 2, VS.Power(MANA, 12).est) -- 5 x 10 inside the window
+            assert.are.same({ 50, 50 }, { VS.Regen(MANA, 12).est, VS.Regen(MANA, 12, VS.CASTING).est })
+            read(14, 400 + 55 * 4) -- 11 a second of spirit, x 5
+            within(10 + I.ALPHA * 1, I.res.spE[1])
+            assert.are.equal(0, I.res.regE[1])
+            within(10 + I.ALPHA * 1, VS.Regen(MANA, 31).est) -- the aura gone: the spirit part alone
+            assert.are.equal(0, VS.Regen(MANA, 31, VS.CASTING).est)
+        end)
+
+        -- wowsims's Innervate multiplies the spirit part alone (SpiritRegenMultiplier): a `casting` mult leaves mp5 at x 1.
+        it("multiplies only the spirit part by a `casting` mult aura, mp5 at x 1", function()
+            boot({
+                abilities = {},
+                abilityIds = {},
+                abilitySlot = {},
+                resources = {
+                    {
+                        key = "mana",
+                        type = MANA,
+                        token = "MANA",
+                        max = 1000,
+                        rest = true,
+                        fsr = { spirit = 20, mp5 = 4 },
+                        mult = { { aura = "surge", mult = 5, casting = true } },
+                    },
+                },
+                auras = { { key = "surge", id = 1021 } },
+                auraIds = { { 1021 } },
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.Settle(10)
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            I.AuraModel(1, 1, 10, 30, 1, 10, 0) -- up 10 to 30
+            assert.are.equal(104, VS.Regen(MANA, 12).est) -- 4 + 5 x 20 inside the window, not (4 + 20) x 5
+            within(400 + 104 * 2, VS.Power(MANA, 12).est)
+            assert.are.equal(24, VS.Regen(MANA, 31).est) -- the aura gone
+        end)
+
         it("allocates nothing over 1000 spends, advances and projections", function()
             local t = 10
             local bytes = alloc.bytes(function()

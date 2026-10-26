@@ -259,10 +259,21 @@ spec:RegisterResource(
 -- 684 = 55%, Innervate 62 = 5%, whole mana rounded down) until the client's cost read teaches the player's own. The
 -- five-second rule (C3): spirit regen a second outside it, none inside it, the declared start the out-of-combat read
 -- replaces (wowsims/forever's Feral and Balance logs: 2.175 and 2.2 mana a 0.1 s tick outside it, pre-raid gear).
-spec:RegisterResource(Enum.PowerType.Mana, nil, nil, {
-    fsr = { spirit = 22, mp5 = 0 },
-    base = 1244, -- wowsims's ExtraClassBaseStats, level 60
-})
+spec:RegisterResource(
+    Enum.PowerType.Mana,
+    {
+        -- Innervate (DB2 29166), as wowsims/forever applies its two effects (sim/core/spelldata/parse_effects_table.go):
+        -- A_MOD_POWER_REGEN_PERCENT +400% (spirit regen x 5) and A_MOD_MANA_REGEN_INTERRUPT 100% (all of it while
+        -- casting), so 5 x the full spirit regen inside the five-second rule too (its Feral log: 108.75 = 5 x 21.75 a
+        -- second over 22-41 s). A rate multiplier of the belief's calibrated rate, its seconds weighed in the calibration.
+        innervate = { aura = "innervate", mult = 5, casting = true },
+    },
+    nil,
+    {
+        fsr = { spirit = 22, mp5 = 0 },
+        base = 1244, -- wowsims's ExtraClassBaseStats, level 60
+    }
+)
 
 -- Talents: { talent tree (1 Balance, 2 Feral Combat, 3 Restoration: the dominant tree picks the spec), rank 1's spell,
 -- max rank }: the DB2's 47 Classic nodes (16 Balance, 16 Feral Combat, 15 Restoration; the tree is the DB2's

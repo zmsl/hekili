@@ -51,7 +51,7 @@ function M.new(seed)
     W.mrng = rng.new(seed + 32452843) -- the meter and viewer shapes, apart from every other draw
     W.combat = false
     W.rates = {} -- [powerType] = regen per second (W.startRegen)
-    W.fsr = {} -- [powerType] = { spirit, mp5 } per second: the five-second rule's two parts (W.startRegen)
+    W.fsr = {} -- [powerType] = { spirit, mp5, aura?, mult? } per second: the five-second rule's two parts (W.startRegen)
     W.distance = nil -- yards from our character to its target (W.moveTo; nil: no positions, every check in range)
     W.hitAtSwing = true -- our white wound takes health at the swing, its row a landing lag later (owner, 2026-10-22)
     W.parryHaste = true -- a parried attack pulls the parrier's next main-hand swing (parry-haste spec decision 63)
@@ -465,10 +465,14 @@ function M.new(seed)
 
     --- `e`'s regen per second of `pt` now: the rate, times `W.regenAfter.k` after `W.regenAfter.s` seconds in one form.
     --- An `fsr` type's is its mp5 part, plus its spirit part from 5 s after our last cast that spent it; `mode` "idle"
-    --- or "casting" (the out-of-combat read's two returns) asks for both parts or the mp5 part alone.
+    --- or "casting" (the out-of-combat read's two returns) asks for both parts or the mp5 part alone. While the entry's
+    --- `aura` is up on `e`, the spirit part x its `mult` runs in every mode, the window's seconds too (regen while casting).
     function W.regenRate(e, pt, mode)
         local f = W.fsr[pt]
-        if f then
+        local up = f and f.aura and e.auras[f.aura]
+        if up and up.expires > W.t then
+            return f[2] + f[1] * f.mult
+        elseif f then
             local open = mode == "idle" or (mode ~= "casting" and W.t - (e.spentAt[pt] or -1e9) >= 5)
             return f[2] + (open and f[1] or 0)
         end

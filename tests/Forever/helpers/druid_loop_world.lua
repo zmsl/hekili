@@ -27,10 +27,14 @@ end
 -- A form field that names a group: the class file's `feral_form` alias.
 local GROUP = { feral_form = { [FORM.cat_form] = true, [FORM.bear_form] = true } }
 
--- UNMEASURED: Omen of Clarity's chance per press of ours (about one Clearcasting every 10 presses), Innervate's mana a
--- second over its 20 s (the worlds that keep mana: Balance's and Feral's), and the hits' amounts.
+-- UNMEASURED: Omen of Clarity's chance per press of ours (about one Clearcasting every 10 presses) and the hits'
+-- amounts.
 local OMEN = 0.1
-local INNERVATE_MANA = 100
+-- Innervate (29166) as wowsims/forever applies it: the spirit regen x 5, inside the five-second rule too (its Feral
+-- log: 108.75 = 5 x 21.75 a second over 22-41 s); W.regenRate's `fsr` aura, in the worlds that keep mana
+local function manaFsr(spirit)
+    return { [MANA] = { spirit, 0, aura = 29166, mult = 5 } }
+end
 -- the generic hits' non-physical schools (DB2); the rest physical (1)
 local SCHOOL = { faerie_fire = 8, moonfire = 64 }
 local AMOUNT = {
@@ -169,19 +173,13 @@ M.MAP = {
     elunes_light = { effect = selfAura("elunes_light") }, -- the Night Elf racial (Hekili_Shared): its buff only
     thorns = { effect = selfAura("thorns") },
     -- leaves the form (the client unshifts to cast it) but Moonkin (wowsims/forever: castable in Moonkin Form; UNMEASURED
-    -- on Forever, the class file's rule); mana only where the world keeps it
+    -- on Forever, the class file's rule); its mana is the world's regen (manaFsr)
     innervate = {
         effect = function(W, e, p, X)
             if e.form ~= 0 and e.form ~= FORM.moonkin_form then
                 W.setForm(e, 0)
             end
             aura(W, X, e, "innervate")
-        end,
-        extra = function(p, pt, res)
-            if pt == MANA or res[MANA] then
-                local a = class().auras.innervate
-                p.aura = { id = a.id, duration = a.duration, tick = { pt = MANA, every = 1, amount = INNERVATE_MANA } }
-            end
         end,
     },
     primal_bite = { effect = bearHit("primal_bite") }, -- its cooldown the state's (none while Berserk is up)
@@ -271,7 +269,7 @@ local PACKS = {
         res = { [POINTS] = { cur = 0, max = 5 }, [MANA] = { cur = 2674, max = 2674 } },
         form = "cat_form",
         weapon = { 55, 75, 1.0 },
-        world = { regen = { [ENERGY] = dw.ENERGY_REGEN }, fsr = { [MANA] = { 22, 0 } }, power = 100 },
+        world = { regen = { [ENERGY] = dw.ENERGY_REGEN }, fsr = manaFsr(22), power = 100 },
         uptime = { "rip", "rake" },
     },
     Guardian = {
@@ -327,7 +325,7 @@ local PACKS = {
         weapon = { 40, 60, 2.0 },
         -- the five-second rule's { spirit, mp5 } parts a second: wowsims/forever's Balance log (2.2 mana a 0.1 s tick
         -- outside the rule, none inside it but Innervate's; prebis gear)
-        world = { power = 4000, fsr = { [MANA] = { 22, 0 } } },
+        world = { power = 4000, fsr = manaFsr(22) },
         uptime = { "moonfire", "insect_swarm" },
     },
 }

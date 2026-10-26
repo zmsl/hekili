@@ -266,7 +266,10 @@ M.FIXTURES = "tests/Forever/fixtures/"
 -- in review round 1 from the metric alone (the cost class from the crossing; the on-GCD-only walk); behaviour unchanged.
 M.READY = {
     druid_balance = { 0.71, 17 },
-    druid_feral = { 0.26, 4 },
+    -- 0.26 -> 0.43: 0.26 rested on the Innervate miscalibration that ran the mana belief ~31 high before the 107.74 s
+    -- Shifting Power; with regen correct the floor (lo) reaches the cost ~0.4 s after the truth (gap BQ); owner ruling
+    -- 2026-10-26
+    druid_feral = { 0.43, 4 },
     druid_guardian = { 0.54, 41 }, -- 0.540, 41 (was 40): the world's parry haste (decision 63) and the tie hand-back
     hunter_beast_mastery = { 0.32, 5 },
     hunter_marksmanship = { 0.15, 10 }, -- 9 -> 10: the replay shows the Raptor Strike queue, so 168.28 strider_kick never -> late 0.15
