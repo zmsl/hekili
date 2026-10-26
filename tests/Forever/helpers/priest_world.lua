@@ -493,6 +493,7 @@ local function content(name)
     end
     C.WORLD = {
         level = 60,
+        canParry = false, -- priests never parry (wowsims's CanParry)
         weapons = { { 40, 70, 3.0 } },
         ranged = P.ranged,
         max = MAX,

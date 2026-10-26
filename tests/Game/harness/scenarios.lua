@@ -118,7 +118,8 @@ M.ARCHETYPES = ARCHETYPES
 --- ({ main, off }), gcdOrder (1, 2 or "mixed") and gcdLatency [0] (W.press), script (fn(W, us): our presses, started
 --- at the pull), after (seconds the world runs past the stop [3]), distance (yards from our target from the start
 --- [none: no positions]; W.moveTo changes it), bags, pet and stats (ours: entities.new's; the pet regenerates from the
---- start, W.startPetRegen).
+--- start, W.startPetRegen), canParry (false: we never parry a swing at us, so no parry haste of ours; wowsims's
+--- PseudoStats.CanParry, true only for some classes [true]).
 --- The detection suite's (unit-registry spec §6.2): noMelee (no white swings of ours), spells ({ t, kind }:
 --- behaviours.ours, from the pull, with distance and jitter), switchTo ({ t, mob index }: our target changes), churn
 --- ({ every, gap }: our target's plate leaves and comes back), extraMobs (mobs not on us, each with a plate), phase
@@ -142,6 +143,9 @@ function M.world(o, seed)
         pet = o.pet,
         stats = o.stats,
     }))
+    if o.canParry == false then
+        us.avoid.parry = 0
+    end
     if us.pet then
         W.startPetRegen(us)
     end

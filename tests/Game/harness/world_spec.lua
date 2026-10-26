@@ -227,6 +227,20 @@ describe("the world's resources", function()
             W.run(4.0)
             assert.are.same({ 1, 3 }, swingsOf(us, 1))
         end)
+
+        it("never has us parry with scenarios' canParry off (wowsims's CanParry); we do by default", function()
+            local scenarios = require("Game.harness.scenarios")
+            for _, can in ipairs({ true, false }) do
+                local Wx = scenarios.build({ canParry = can, duration = 120, mobPeriod = 0.5 }, 1)
+                local parried = 0
+                for _, ev in ipairs(Wx.truth) do
+                    if ev.kind == "swing" and ev.dst == Wx.ents[1] and ev.act == "PARRY" then
+                        parried = parried + 1
+                    end
+                end
+                assert.are.equal(can, parried > 0, tostring(can))
+            end
+        end)
     end)
 
     it(

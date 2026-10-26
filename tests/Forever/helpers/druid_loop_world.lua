@@ -436,6 +436,7 @@ local function content(name)
         res = P.res,
         formSpeed = { [FORM.bear_form] = dw.SPEED[dw.BEAR], [FORM.cat_form] = dw.SPEED[dw.CAT] },
         mobHealth = 15000,
+        canParry = false, -- druids never parry (wowsims's CanParry: no parry haste of ours)
     }, { __index = P.world })
 
     -- The client's other power reads: combo points plain (research addendum), the rest never. UnitPowerMax answers the

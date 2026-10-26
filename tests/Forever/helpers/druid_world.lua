@@ -393,6 +393,7 @@ function M.knobs(o, R, gcdSpell)
         decay = { pt = M.RAGE, rate = R.decay.rate, interval = R.decay.interval, pausedBy = o.pausedBy or false },
         formSpeed = M.SPEED,
         payIn = R.payIn,
+        canParry = false, -- druids never parry (wowsims's CanParry: no parry haste of ours)
         rage = { R.swing, 0 },
         critRage = { R.crit, 0 },
         gcdOrder = "mixed",

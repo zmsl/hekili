@@ -260,7 +260,7 @@ M.MAP = {
 
 -- The packs' worlds: `pack` the priority, `spec` its spec id, `kit` the abilities the character knows (every rank),
 -- `talents` the build's ({ [rank-1 spell] = rank }; none: no points), `weapon` the main hand, `distance` ours from the
--- mob (nil: melee), `mana` and `fsr` the pool and regen parts (nil: 5000 and FSR), `uptime` the debuffs reported. The
+-- mob (nil: melee), `parry` (true: the build parries, Spirit Weapons), `mana` and `fsr` the pool and regen parts (nil: 5000 and FSR), `uptime` the debuffs reported. The
 -- imbues are left out of the kit: the world has no weapon enchant read (shaman_spec covers the reminder).
 local PACKS = {
     -- Stormstrike, Maelstrom Weapon and Elemental Focus, a two-hander.
@@ -282,6 +282,7 @@ local PACKS = {
         },
         spec = 100072,
         weapon = { 180, 260, 3.6 },
+        parry = true, -- the build's Spirit Weapons (wowsims's applySpiritWeapons: CanParry)
         uptime = { "flame_shock" },
     },
     -- wowsims/forever's Elemental build (builds/testing.build.json, talents 5500331023001351-053002001-053): the casts,
@@ -437,6 +438,7 @@ local function content(name)
         power = P.mana or 5000,
         mobHealth = 1e9,
         distance = P.distance,
+        canParry = P.parry == true, -- only with Spirit Weapons (wowsims's talents_enhancement.go)
         script = hooks,
     }
 

@@ -546,6 +546,7 @@ local function content(name)
     end
     C.WORLD = {
         level = 60,
+        canParry = false, -- mages never parry (wowsims's CanParry)
         weapons = { { 40, 70, 3.0 } },
         max = MAX,
         fsr = { [MANA] = FSR },

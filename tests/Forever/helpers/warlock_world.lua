@@ -718,6 +718,7 @@ local function content(name)
     local D = DEMON[P.demon]
     C.WORLD = {
         level = 60,
+        canParry = false, -- warlocks never parry (wowsims's CanParry)
         weapons = { { 40, 70, 2.0 } },
         max = MAX,
         fsr = { [MANA] = FSR },
