@@ -205,6 +205,9 @@ end
 -- The rage of a post-armor amount `post` from an attacker of `level`, divided back by `reduced` (the percentage
 -- reductions' product), with `armorScale` x the cached armor. Allocates nothing.
 local function rageTaken(post, level, reduced, armorScale)
+    if level <= 0 then -- the source's 0: an unreadable attacker level; ours keeps the rage near right
+        level = state.level
+    end
     local armor = select(2, state.stat("UnitArmor")) * armorScale
     local mitigated = armor / (armor + 400 + 85 * level) -- below 1: 400 + 85 x level > 0
     local conversion = 0.0091107836 * level * level + 3.225598133 * level + 4.2652911 -- wowsims's rageConversion: > 4

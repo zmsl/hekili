@@ -608,6 +608,11 @@ describe("Forever Warrior", function()
             near(1000 * perPoint(0.4, 274.70000005), (run("WOUND", 1000, 70))) -- 0.40 from 63
         end)
 
+        it("takes our own level for an attacker's unreadable one (the source's 0)", function()
+            w.state.level = 60
+            near(run("WOUND", 1000, 60), (run("WOUND", 1000, 0)))
+        end)
+
         it("rebuilds the pre-armor hit with Inspiration's 25% more armor while it is up", function()
             local open = run("WOUND", 1000, 63)
             ctx({ inspiration = true }, {})
