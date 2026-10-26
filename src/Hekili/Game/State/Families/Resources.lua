@@ -1264,6 +1264,12 @@ I.On(Obs.Swing, function(o, t)
         local k = o.b >= 1 and o.b <= RECORDS and o.b or 0
         if k > 0 and c == 5 then
             recA[k], recR[k], recGone[k], recSw[k], recLook[k] = 0, 0, false, o.t, false -- a fresh record
+        elseif c == 5 then
+            -- a lost close (no record, so no c = 7 follows): the hit rate takes the expected share it credits, else
+            -- every lost row counts as an avoid, the scale inflates to make up the rate and each landed step (lo
+            -- with it) overpays
+            local h = hitRate[hand] + HIT_ALPHA * hitRate[hand]
+            hitRate[hand] = h < 1 and h or 1
         end
         for r = 1, R.n do
             if R.swing[r] == hand or (hand == 2 and R.swing[r] == 1 and R.swingOff[r] ~= 0) then

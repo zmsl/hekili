@@ -742,6 +742,20 @@ describe("resources", function()
             within(9 / 2.6 * 0.75, I.SwingPerSecond(1), 9 / 2.6 * 0.1)
         end)
 
+        it("counts a lost close (c = 5, no record) in the hit rate at its expected share, not as an avoid", function()
+            for k = 1, 40 do -- half land credited, a quarter close lost (each a landed swing), a quarter avoided
+                obs(Obs.Swing, 5 + 2.6 * k, 1, 2.6, 4)
+                if k % 4 == 1 then
+                    obs(Obs.Swing, 6.4 + 2.6 * k, 1, 0, 5)
+                elseif k % 4 ~= 0 then
+                    obs(Obs.Swing, 5.4 + 2.6 * k, 1, 0, 1)
+                end
+            end
+            I.Fold(120, false)
+            -- the EV's fixed point h = 0.5 + 0.25 h; as avoids the lost ones would hold it at 0.5 and inflate the scale
+            within(9 / 2.6 * 2 / 3, I.SwingPerSecond(1), 9 / 2.6 * 0.1)
+        end)
+
         it(
             "alternates pinned (the ladder) and modelled (a swing, a cast) and keeps lo at or above what was seen",
             function()
