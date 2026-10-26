@@ -128,19 +128,22 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
     -- in a form): Demoralizing Roar took L10 to 0.2 s and L40 to 8.4 s, Faerie Fire L40 from 8.4 to 2.6 s.
     -- L60's bar (owner ruling 2026-10-25): the MEDIAN of the per-seed worst idle over seeds 1-30, each a fresh boot
     -- (its own first fight), limit 6.0 s. One seed's worst is noise: with the parry fix the single seed 1 measured 8.4
-    -- (rage below Primal Bite's 15 from two white misses in a row). On these tables: median 5.2, worst 11.0, 5 of 30
-    -- seeds over 6.0 (rage 354.7 a minute against wowsims's 349.9).
+    -- (rage below Primal Bite's 15 from two white misses in a row). On these tables: median 4.4, worst 11.0, 4 of 30
+    -- seeds over 6.0 (rage 357.2 a minute against wowsims's 349.9).
     -- L60's outcome tables, wowsims's for its export (druid_guardian.log, seed 101: 65 white swings, 79 yellow strikes;
     -- owner approved 2026-10-25). From its code: no parry (the export has no inFrontOfTarget, so the bear attacks from
     -- behind: spell_outcome.go), the white dodge the level 63 table's 6.5% less expertise (spell_outcome.go's white
     -- outcome: BaseDodgeChance - DodgeParrySuppression; attack_table_test.go: 6.5% at skill 300; the export has no
     -- consumable and no druid source of expertise) and glancing fixed at BaseGlanceChance 40% (attack_table_test.go).
     -- From the log (the export's gear is item IDs only): the white miss 1.5% (the table's 8% less about 6.5% gear hit),
-    -- crit about 28% (19 of 65: 29.2%); the yellows' crit 26.6% (21 of 79) and avoids 5% (1 miss, 3 dodges of 79).
+    -- crit about 28% (19 of 65: 29.2%), the yellows' crit 26.6% (21 of 79). The yellows' avoids from its code, the
+    -- same table from behind (spell_outcome.go outcomeMeleeSpecialHitAndCrit: applyAttackTableMissNoDWPenalty, the
+    -- table's 8% less the same gear hit, 1.5%; applyAttackTableDodge, unit.go GetTotalDodgeChanceAsDefender: 6.5%,
+    -- the target has no dodge rating and the bear no expertise), not the log's 1 miss and 3 dodges of 79.
     -- The generic tables gave the bear 274.5 rage a minute (guardian-rage-cmp).
     local GUARDIAN_TABLES = {
         rates = { miss = 0.015, dodge = 0.065, parry = 0, glancing = 0.40, crit = 0.28 },
-        mobAvoid = { miss = 0.013, dodge = 0.038, parry = 0, block = 0 },
+        mobAvoid = { miss = 0.015, dodge = 0.065, parry = 0, block = 0 },
         crit = 0.266,
     }
     for _, level in ipairs({ 10, 40, 60 }) do
