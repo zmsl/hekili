@@ -122,28 +122,24 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
         assert.matches("demoralizing_roar", first(true))
         assert.not_matches("demoralizing_roar", first(false))
     end)
-    -- The pack's own worst idle at 60, seconds: 5.8 on central fix 22 round 2 (presses resolve from the current state,
-    -- not Update's leftover prediction: a predicted Berserk had dropped Primal Bite's cooldown in the world, 9.2);
-    -- 10.0 before (L10 10.0, L40 9.6, L60 8.4 with the gate counting only on-GCD presses, final review fix 3: Maul, off
-    -- the GCD, no longer resets the idle streak). L10 presses the recipe's leveling Maul (wowsims's list has nothing
-    -- else before Primal Bite at 25: 11.8 s idle without it); before Lacerate (42) its leveling Demoralizing Roar fills
-    -- a GCD at 10 rage and Faerie Fire (Feral) below it, at most every 6 s (the kit's cooldown in a form): Demoralizing
-    -- Roar took L10 to 0.2 s and L40 to 8.4 s, Faerie Fire L40 from 8.4 to 2.6 s (0.4 and 2.8 rebased)
-    local GUARDIAN60 = 5.8
+    -- The pack's own worst idle at L10 and L40, seconds, limit 6.0: L10 presses the recipe's leveling Maul (wowsims's
+    -- list has nothing else before Primal Bite at 25: 11.8 s idle without it); before Lacerate (42) its leveling
+    -- Demoralizing Roar fills a GCD at 10 rage and Faerie Fire (Feral) below it, at most every 6 s (the kit's cooldown
+    -- in a form): Demoralizing Roar took L10 to 0.2 s and L40 to 8.4 s, Faerie Fire L40 from 8.4 to 2.6 s.
     -- L60's bar (owner ruling 2026-10-25): the MEDIAN of the per-seed worst idle over seeds 1-30, each a fresh boot
     -- (its own first fight), limit 6.0 s. One seed's worst is noise: with the parry fix the single seed 1 measured 8.4
-    -- (rage below Primal Bite's 15 from two white misses in a row), and over 30 seeds the worst runs 3.4-11.0. The
-    -- investigation's tables measured median 5.2, worst 8.6, 7 of 30 seeds over 6.0; these tables median 5.8, worst
-    -- 11.0, 12 of 30 over 6.0 (rage 343.6 a minute against wowsims's 349.9).
+    -- (rage below Primal Bite's 15 from two white misses in a row). On these tables: median 5.2, worst 11.0, 5 of 30
+    -- seeds over 6.0 (rage 354.7 a minute against wowsims's 349.9).
     -- L60's outcome tables, wowsims's for its export (druid_guardian.log, seed 101: 65 white swings, 79 yellow strikes;
     -- owner approved 2026-10-25). From its code: no parry (the export has no inFrontOfTarget, so the bear attacks from
-    -- behind: spell_outcome.go), and the level 63 table at skill 300 (attack_table_test.go: miss 8%, dodge 6.5%,
-    -- glance 40%, crit suppression 3% + 1.8%). From the log (the export's gear hit and crit are not derived here): the
-    -- white miss 1.5% (so about 6.5% gear hit), dodge 9.2% and glancing 43% as observed, crit about 28% (19 of 65:
-    -- 29.2%); the yellows' crit 26.6% (21 of 79) and avoids 5% (1 miss, 3 dodges of 79). The generic tables gave the
-    -- bear 274.5 rage a minute against wowsims's 349.9 (guardian-rage-cmp).
+    -- behind: spell_outcome.go), the white dodge the level 63 table's 6.5% less expertise (spell_outcome.go's white
+    -- outcome: BaseDodgeChance - DodgeParrySuppression; attack_table_test.go: 6.5% at skill 300; the export has no
+    -- consumable and no druid source of expertise) and glancing fixed at BaseGlanceChance 40% (attack_table_test.go).
+    -- From the log (the export's gear is item IDs only): the white miss 1.5% (the table's 8% less about 6.5% gear hit),
+    -- crit about 28% (19 of 65: 29.2%); the yellows' crit 26.6% (21 of 79) and avoids 5% (1 miss, 3 dodges of 79).
+    -- The generic tables gave the bear 274.5 rage a minute (guardian-rage-cmp).
     local GUARDIAN_TABLES = {
-        rates = { miss = 0.015, dodge = 0.092, parry = 0, glancing = 0.43, crit = 0.28 },
+        rates = { miss = 0.015, dodge = 0.065, parry = 0, glancing = 0.40, crit = 0.28 },
         mobAvoid = { miss = 0.013, dodge = 0.038, parry = 0, block = 0 },
         crit = 0.266,
     }
@@ -154,11 +150,9 @@ describe("the Druid wowsims.com packs #slow #wowsims", function()
                 for k, v in pairs(GUARDIAN_TABLES) do
                     C.WORLD[k] = v
                 end
-            end
-            if level == 60 then
                 ws.live("Guardian (wowsims.com)", C, 6.0, 30, "median")
             else
-                ws.live("Guardian (wowsims.com)", C, math.max(6, GUARDIAN60))
+                ws.live("Guardian (wowsims.com)", C, 6.0)
             end
         end)
     end

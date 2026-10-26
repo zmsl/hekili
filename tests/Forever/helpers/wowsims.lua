@@ -435,14 +435,8 @@ function M.live(label, C, limit, fights, stat)
         table.sort(worsts)
         local n = #worsts
         seconds = (worsts[math.floor((n + 1) / 2)] + worsts[math.floor(n / 2) + 1]) / 2 * loop.TICK
-        line = ("median worst idle %.1f s over %d fresh fights (limit %.1f), worst %.1f s, presses %d, errors %d"):format(
-            seconds,
-            n,
-            limit,
-            worst * loop.TICK,
-            presses,
-            errors
-        )
+        local fmt = "median worst idle %.1f s over %d fresh fights (limit %.1f), worst %.1f s, presses %d, errors %d"
+        line = fmt:format(seconds, n, limit, worst * loop.TICK, presses, errors)
     end
     print("\n" .. label .. " live L" .. c.level .. ": " .. line)
     assert.are.equal(0, errors, line)
