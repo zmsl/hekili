@@ -457,6 +457,15 @@ local function content(name)
         return R.swing + (flag == "CRITICAL" and R.crit + pfRage or 0)
     end
 
+    -- An ability's declared spend, scalar or function (nil: 0).
+    local function declared(a)
+        local f = rawget(a, "declaredSpend") or a.spend
+        if type(f) == "function" then
+            f = f()
+        end
+        return f or 0
+    end
+
     -- The press's cost: the state's for the main power and any other the world keeps (Clearcasting's, from the
     -- run's truth instance: loop.run's), none for one it does not (mana in the Guardian world).
     local function cost(key, a, H, X)
@@ -465,9 +474,7 @@ local function content(name)
         if spendPt ~= pt and not P.res[spendPt] then
             return 0, nil
         elseif spendPt ~= pt then -- a kept pool's: the declared cost, priced as the engine prices it (ns.SpendPoints)
-            local f = rawget(a, "declaredSpend") or a.spend
-            c = type(f) == "function" and f() or f or 0
-            return H.ns.SpendPoints(c, H.Hekili.State[a.spendType], a), spendPt
+            return H.ns.SpendPoints(declared(a), H.Hekili.State[a.spendType], a), spendPt
         end
         if X.covered[a.id] and H.ns.VirtualState.Aura("player", X.aura.clearcasting.id, H.ctl.now) then
             return 0, spendPt, true
@@ -489,10 +496,10 @@ local function content(name)
         local c, cpt, free = cost(key, a, H, X)
         local price
         if a.onNextSwing and cpt then
-            -- priced at its swing, as the game (and the belief) does: Clearcasting then, not at the queue
-            local f = rawget(a, "declaredSpend") or a.spend
-            local base = free and (type(f) == "function" and f() or f or 0) or c
-            c, free = base, false
+            -- priced at its swing, as the game (and the belief) does: Clearcasting then, not at the queue. The press
+            -- is still checked at `c` (0 when free, as the client answers); nothing is consumed at the queue.
+            local base = free and declared(a) or c
+            free = false
             price = function(W, e)
                 local cc = X.covered[a.id] and e.auras[X.aura.clearcasting.id]
                 if cc and cc.stacks > 0 then

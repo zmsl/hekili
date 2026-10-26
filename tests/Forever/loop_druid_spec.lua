@@ -5,6 +5,7 @@
 -- The 20-fight gates live one pack a file (loop_druid_<pack>_spec.lua), so `make test-druid` runs them in parallel.
 local headless = require("Game.harness.headless")
 local pack_gate = require("Forever.helpers.pack_gate")
+local scenarios = require("Game.harness.scenarios")
 local dlw = require("Forever.helpers.druid_loop_world")
 
 local PACKS = { "Feral", "Guardian", "Balance" }
@@ -38,6 +39,27 @@ describe("the Druid loop worlds", function()
             assert.is_false(pcall(C.resolve, "not_an_ability", H))
         end)
     end
+end)
+
+describe("the Guardian loop world's press", function()
+    -- review fix: the press is checked at the cost the client sees (0 under Clearcasting); the swing prices it
+    it("accepts a Maul pressed under Clearcasting with rage below its cost, and takes nothing at the queue", function()
+        local C = dlw.Guardian
+        local H = headless.new({ character = C.character(), pack = C.PACK })
+        local VS = H.ns.VirtualState
+        local Aura = VS.Aura
+        VS.Aura = function() -- Clearcasting up on the truth instance
+            return true
+        end
+        local p = C.resolve("maul", H)
+        VS.Aura = Aura
+        local W = scenarios.world(setmetatable({ power = 5, form = C.character().form }, { __index = C.WORLD }), 1)
+        local us = W.ents[1]
+        W.t = 1
+        local ok, why = W.press(us, "maul", p)
+        assert.is_true(ok, tostring(why))
+        assert.are.equal(5, us.power)
+    end)
 end)
 
 describe("the headless Druid gates, 3 fights a pack #slow", function()

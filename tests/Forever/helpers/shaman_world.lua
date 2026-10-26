@@ -260,8 +260,9 @@ M.MAP = {
 
 -- The packs' worlds: `pack` the priority, `spec` its spec id, `kit` the abilities the character knows (every rank),
 -- `talents` the build's ({ [rank-1 spell] = rank }; none: no points), `weapon` the main hand, `distance` ours from the
--- mob (nil: melee), `parry` (true: the build parries, Spirit Weapons), `mana` and `fsr` the pool and regen parts (nil: 5000 and FSR), `uptime` the debuffs reported. The
--- imbues are left out of the kit: the world has no weapon enchant read (shaman_spec covers the reminder).
+-- mob (nil: melee), `parry` (true: the build parries, Spirit Weapons), `mana` and `fsr` the pool and regen parts (nil:
+-- 5000 and FSR), `uptime` the debuffs reported. The imbues are left out of the kit: the world has no weapon enchant
+-- read (shaman_spec covers the reminder).
 local PACKS = {
     -- Stormstrike, Maelstrom Weapon and Elemental Focus, a two-hander.
     Enhancement = {

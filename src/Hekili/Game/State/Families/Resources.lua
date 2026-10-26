@@ -1278,7 +1278,9 @@ I.On(Obs.Swing, function(o, t)
                 -- a rung that lifted the slot while this swing was out already holds its rage (owe): net it first
                 local owes = o.t <= R.liftT[r] and t - R.liftT[r] <= I.LIFT_WINDOW
                 if c == 5 then -- est and hi only: affordability never rests on an assumption
-                    local f = hitRate[hand] -- EV (decision 52 as ruled): the expected share of a step
+                    -- EV (decision 52 as ruled): the expected share of a step, read after the update above (a lost
+                    -- close's: h0 x (1 - alpha^2), the swing's decay and the share's credit)
+                    local f = hitRate[hand]
                     local de = v * sc * f
                     local dh = de
                     if owes then

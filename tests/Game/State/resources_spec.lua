@@ -752,8 +752,10 @@ describe("resources", function()
                 end
             end
             I.Fold(120, false)
-            -- the EV's fixed point h = 0.5 + 0.25 h; as avoids the lost ones would hold it at 0.5 and inflate the scale
-            within(9 / 2.6 * 2 / 3, I.SwingPerSecond(1), 9 / 2.6 * 0.1)
+            -- each swing decays h by alpha, a land adds alpha and a lost close alpha x the decayed h: over 4 swings
+            -- h = 0.5 + 0.25 x 0.9 h, so about 0.645 (0.63 here, mid-cycle); as avoids the lost ones would hold it at
+            -- 0.5 and inflate the scale
+            within(9 / 2.6 * 0.645, I.SwingPerSecond(1), 9 / 2.6 * 0.04)
         end)
 
         it(
