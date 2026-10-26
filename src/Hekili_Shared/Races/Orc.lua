@@ -1,7 +1,7 @@
 -- Hekili_Shared/Races/Orc.lua
 -- `all` (Engine/Schema/Spec.lua) no longer registers this racial: the stock entry named below is what it used to register.
 -- The Orc's Forever racials (DB2 1.60.1.70338), for every class: Blood Fury (20572: +10% attack power and spell power
--- for 15 s; 120 s, off the GCD), one ID for every class, which replaces `all`'s stock entry (its per-class IDs 33702
+-- for 15 s; 180 s, off the GCD), one ID for every class, which replaces `all`'s stock entry (its per-class IDs 33702
 -- and 33697 are absent on Forever; its aura, 20572 for 15 s, is right but registered here too, so the race owns it),
 -- and Shatter Curse (1299026: removes curses, -15% magic damage taken and immunity to curses for 8 s; 180 s, on the
 -- GCD). Hardiness (-20% stun duration) and Axe Specialization (+1% crit with an axe) are passives. No resource or cost
@@ -12,7 +12,7 @@ local race = Hekili:NewRace("Orc")
 race:RegisterAbility("blood_fury", {
     id = 20572,
     cast = 0,
-    cooldown = 120,
+    cooldown = 180, -- owner ruling 2026-10-25: 3 min live on Forever (wowsims racials.go:102); DB2 20572 says 120 s
     gcd = "off",
     startsCombat = false,
     toggle = "cooldowns",

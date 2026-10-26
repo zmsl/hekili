@@ -296,7 +296,7 @@ describe("race packs", function()
         for _, class in ipairs({ "WARRIOR", "MAGE", "SHAMAN", "DRUID" }) do
             load("Orc", { blood_fury = fury, [33702] = fury, [20572] = fury, [33697] = fury }, class)
             local b = all.abilities.blood_fury
-            assert.are.same({ 20572, 120, "off", "cooldowns" }, { b.id, b.cooldown, b.gcd, b.toggle }, class)
+            assert.are.same({ 20572, 180, "off", "cooldowns" }, { b.id, b.cooldown, b.gcd, b.toggle }, class)
             assert.are.equal(b, all.abilities[20572])
         end
         assert.are.same({ 20572, 15 }, { all.auras.blood_fury.id, all.auras.blood_fury.duration })
