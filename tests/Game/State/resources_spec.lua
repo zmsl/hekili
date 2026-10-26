@@ -248,6 +248,35 @@ describe("resources", function()
             within(before, VS.Power(ENERGY, 10.7).lo) -- not the last flip's cost (40), nor the first's (25)
         end)
 
+        it("gives up an estimated gain once for every flip of one instant (gap BD fix round 1)", function()
+            obs(Obs.Usable, 10, FINISHER, 0, 1)
+            obs(Obs.Usable, 10, BUILDER, 0, 1)
+            I.Fold(10, false)
+            I.Settle(10.5)
+            I.ResourceShift(1, 50, 10.5, Obs.CastSuccess) -- trusted
+            I.ResourceShift(1, 5, 10.5, Obs.PlayerHit) -- estimated: lo may be 5 over the truth
+            I.Fold(10.7, false)
+            local before = VS.Power(ENERGY, 10.7).lo
+            obs(Obs.Usable, 10.7, FINISHER, 1, 0)
+            obs(Obs.Usable, 10.7, BUILDER, 1, 0)
+            I.Fold(10.7, false)
+            within(before - 5, VS.Power(ENERGY, 10.7).lo) -- not before - 10
+        end)
+
+        it("bounds a flip an estimated gain explains at max(cost, floor - that gain)", function()
+            obs(Obs.Usable, 10, FINISHER, 0, 1)
+            I.Fold(10, false)
+            I.Settle(10.5)
+            I.ResourceShift(1, 50, 10.5, Obs.CastSuccess)
+            I.ResourceShift(1, 20, 10.5, Obs.PlayerHit)
+            I.Fold(10.7, false)
+            local before = VS.Power(ENERGY, 10.7).lo
+            obs(Obs.Usable, 10.7, FINISHER, 1, 0)
+            I.Fold(10.7, false)
+            within(math.max(25, before - 20), VS.Power(ENERGY, 10.7).lo)
+            assert.is_true(before - 20 > 25) -- the subtraction, not the cost, set it
+        end)
+
         it("measures regen between two pins, net of our own spends", function()
             local function pinAt(t)
                 obs(Obs.Usable, t, BUILDER, 0, 1)
@@ -466,6 +495,20 @@ describe("resources", function()
             I.Refund(1, 8, 5.3) -- the avoid's report: 8 back, dated at the cast
             local r = VS.Power(fs.RAGE, 5.3)
             assert.are.same({ 8, 9.99, 9.99 }, { r.lo, r.est, r.hi }) -- not hi 10 + 8: the answer already saw it
+        end)
+
+        it("bounds a flip our cast's gain explains at the cost: the floor holds swing steps (gaps.md BD)", function()
+            local R = I.res
+            local A = I.ab.bySpell[fs.SPENDER_A]
+            R.est0[1], R.lo0[1], R.hi0[1] = 2, 0, 5
+            obs(Obs.Usable, 5, A, 0, 1) -- short of 10
+            I.Fold(5, false)
+            I.ResourceShift(1, 30, 5.2, Obs.CastSuccess) -- a declared gain: lo 30
+            I.Fold(5.4, false)
+            assert.is_true(R.lo0[1] > 10)
+            obs(Obs.Usable, 5.4, A, 1, 0)
+            I.Fold(5.4, false)
+            assert.are.equal(10, VS.Power(fs.RAGE, 5.4).lo)
         end)
 
         it("moves a short answer's cap on a refund by what the slot gained since that answer", function()

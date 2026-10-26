@@ -32,6 +32,11 @@ local trim = string.trim
 local tcopy = ns.tableCopy
 local tinsert, tremove, twipe = table.insert, table.remove, table.wipe
 
+-- Forever (gap BD round 2): the walk's early exit, a hair over 0.2 s (gap BJ's 1e-6 pad) so float noise on a wait of
+-- exactly 0.2 (a DoT falling 0.2 s after a channel's end, a harness tick-grid case) gives the same pick at every poll
+local EARLY_EXIT = 0.2 + 1e-6
+ns.EARLY_EXIT = EARLY_EXIT -- shared with tests/Forever/loop_priest_spec.lua
+
 
 local function EmbedBlizOptions()
     local panel = CreateFrame( "Frame", "HekiliDummyPanel", UIParent )
@@ -624,9 +629,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                 break
 
             else ]]
-            -- Forever (gap BD round 2): a hair over 0.2 s so float noise on a wait of exactly 0.2 (a DoT falling 0.2 s
-            -- after a channel's end) gives the same pick at every poll
-            if rWait <= 0.200001 then
+            if rWait <= EARLY_EXIT then -- Forever: 0.2 s and a hair (EARLY_EXIT)
                 if debug then self:Debug( "The recommended action (%s) is ready in less than 0.2s; exiting list (%s).", rAction, listName ) end
                 break
 

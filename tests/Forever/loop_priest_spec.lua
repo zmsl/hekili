@@ -153,8 +153,8 @@ end)
 
 -- Gap BD round 2: with the channel visible, the simulation waits a Mind Flay out (row BM: no pick shown ready before
 -- the channel's end), and a DoT falling exactly 0.2 s after that end (the harness's tick grid) put the walk's early
--- exit (`rWait <= 0.2`, Engine/Sim/Core.lua) on float noise: shadow_word_pain at +0.2 one poll, mind_blast at +0 the
--- next. Seeds 1-2, ours driving.
+-- exit (`rWait <= 0.2`, now EARLY_EXIT in Engine/Sim/Core.lua) on float noise: shadow_word_pain at +0.2 one poll,
+-- mind_blast at +0 the next. Seeds 1-2, ours driving.
 describe("the Shadow loop at a channel's end (gap BD round 2) #slow", function()
     it("shows nothing before the channel ends and flips nothing across its end", function()
         local loop = require("Game.harness.loop")
@@ -182,7 +182,7 @@ describe("the Shadow loop at a channel's end (gap BD round 2) #slow", function()
                         c
                     )
                 end
-                if c > 0 and c <= 0.2 + 1e-6 then
+                if c > 0 and c <= L.us.ns.EARLY_EXIT then
                     ends = ends + 1
                     if s[i - 1] ~= s[i] and s[i + 1] == s[i - 1] or s[i] ~= s[i + 1] and s[i + 2] == s[i] then
                         flips[#flips + 1] = ("seed %d tick %d %s -> %s"):format(

@@ -112,6 +112,8 @@ local R = {
     maxRead = {},
     gain = {},
     castGain = {}, -- the part of `gain` that is our casts' declared gains (trusted, unlike a refund or a hit's estimate)
+    crossT = {}, -- the instant of the latest crossed() and lo before its first flip there (estimated gain given up once)
+    crossLo = {},
     taken = {},
     takenBin = {},
     takenSec = {},
@@ -351,6 +353,7 @@ I.OnBuild(function(def, now)
         R.pinOwn[r], R.pinSkip[r], R.swFrom[r], R.skipFrom[r], R.skipTo[r] = false, false, 0, 0, 0
         R.swAccG[r], R.swAccT[r] = 0, 0
         R.ownT[r], R.ownV[r], R.castGain[r] = -1e9, 0, 0
+        R.crossT[r], R.crossLo[r] = -1e9, 0
         R.pinN[r], R.pinErr[r] = 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
         R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
@@ -1119,17 +1122,21 @@ end
 -- A flip to usable that a gain we modelled explains (our own): it proves only "at least c" now,
 -- so slot r is bound to [c, the believed top] around the estimate, not pinned exactly at it (a mis-sized gain would
 -- put lo above the truth: rage the game lacks); no regen measurement. `est` (gain - cast gain since the short answer)
--- is the estimated part of that gain (a refund, a hit's `taken`): lo gives up only that much, never below c; a cast's
--- declared gain stays in it (gap BD round 2: each flip after a mana gain dropped lo to its cost, ~200 under the truth).
--- A swing-paid slot's floor also holds estimated swing steps, so there lo is still the cost (Arms seeds 1-3: unmatched
--- cost refusals 3.6 -> 7.0 per 100 when it kept the floor). Allocates nothing.
+-- is the estimated part of that gain (a refund, a hit's `taken`): lo gives up only that much, once an instant (from lo
+-- before the instant's first flip), never below c; a cast's declared gain stays in it (gap BD round 2: each flip after
+-- a mana gain dropped lo to its cost, ~200 under the truth). Allocates nothing.
 local function crossed(r, c, t, est)
     local e, hi = R.est0[r], R.hi0[r]
     local top = e > hi and e or hi
     if top < c then
         top = c
     end
-    local v = R.swing[r] > 0 and c or R.lo0[r] - (est > 0 and est or 0)
+    if R.crossT[r] ~= t then
+        R.crossT[r], R.crossLo[r] = t, R.lo0[r]
+    end
+    -- shortcut: a swing-paid floor holds estimated swing steps `est` does not count, so lo is the cost there (gaps.md
+    -- row BR); count those steps as estimated gain to keep the floor.
+    local v = R.swing[r] > 0 and c or R.crossLo[r] - (est > 0 and est or 0)
     if v < c then
         v = c
     elseif v > top then
