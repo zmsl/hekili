@@ -49,18 +49,22 @@ M.FLICKER = {
     ["Retribution"] = { flicker = 0.5, retracted = 0 }, -- 0.46 / 0.29 / 0.23, 0 (decision 63; oracle 0.35 / 0.29 / 0.20)
     ["Protection"] = { flicker = 0.6, retracted = 0 }, -- 0.58, 0 (was 0.31: fix 23, above)
     ["Enhancement"] = { flicker = 1.3, retracted = 0 }, -- 1.21 / 1.03 / 1.03, 0 (decision 63)
-    ["Arcane"] = { flicker = 1.4, retracted = 0 }, -- 1.33 / 1.18 / 1.26, 0 (decision 63)
+    -- flicker 1.4 -> 1.5: parry off for casters (3cfdb4cec) reshuffles the dice (oracle too); owner ruling 2026-10-26
+    ["Arcane"] = { flicker = 1.5, retracted = 0 }, -- 1.33 / 1.18 / 1.26, 0 (decision 63)
     ["Fire"] = { flicker = 1.3, retracted = 0 }, -- 1.21, 0
     ["Frostfire"] = { flicker = 0.3, retracted = 0 }, -- 0.30, 0 (oracle 0.38; Task FFB, M13)
     ["Shadow"] = { flicker = 0.3, retracted = 0 }, -- 0.27, 0 (oracle 0.15; Priest lane, Task 14)
     ["Smite"] = { flicker = 0.5, retracted = 0.9 }, -- 0.45, 0.83 (oracle 0.12, 0.63): Shoot at mana.pct<=10; candidate GAP AB
-    ["Elemental"] = { flicker = 0.6, retracted = 0.1 }, -- 0.53 / 0.37 / 0.52, 0 / 0 / 0.02 (decision 63)
+    -- flicker 0.6 -> 0.7: parry off for casters (3cfdb4cec) reshuffles the dice (oracle too); owner ruling 2026-10-26
+    ["Elemental"] = { flicker = 0.7, retracted = 0.1 }, -- 0.53 / 0.37 / 0.52, 0 / 0 / 0.02 (decision 63)
     -- 1.60, 0 (oracle 1.60; Warlock lane, Task 13, on 06eec227): no headroom, the floor is the measurement rounded up
     -- to 0.1 and 1.60 is on it (Frostfire's 0.30 precedent)
-    ["Affliction"] = { flicker = 1.8, retracted = 0 }, -- 1.60 / 1.71 / 1.45, 0 (decision 63)
+    -- retracted 0 -> 0.1: parry off for casters (3cfdb4cec) reshuffles the dice (oracle too); owner ruling 2026-10-26
+    ["Affliction"] = { flicker = 1.8, retracted = 0.1 }, -- 1.60 / 1.71 / 1.45, 0 (decision 63)
     ["SM Ruin"] = { flicker = 5.1, retracted = 0 }, -- 4.81 / 5.02 / 4.61, 0 (decision 63)
     ["Demonology"] = { flicker = 3.4, retracted = 0 }, -- 3.36, 0 (oracle 3.38)
-    ["Shadow Brand"] = { flicker = 3.0, retracted = 0 }, -- 2.81 / 2.89 / 2.98, 0 (decision 63)
+    -- flicker 3.0 -> 3.4: parry off for casters (3cfdb4cec) reshuffles the dice (oracle too); owner ruling 2026-10-26
+    ["Shadow Brand"] = { flicker = 3.4, retracted = 0 }, -- 2.81 / 2.89 / 2.98, 0 (decision 63)
     -- 4.51, 0 (oracle 3.38): the excess is at Conflagrate's and Shadowburn's cooldown ends (the loop's top pairs
     -- conflagrate -> incinerate 102, conflagrate -> shadowburn 27; dips by class cooldown 134), as Fire's Fire Blast
     -- (the not-ready flag's CD_PROBE, central); not measured flicker by flicker
