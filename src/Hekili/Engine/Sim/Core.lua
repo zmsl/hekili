@@ -624,7 +624,9 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                 break
 
             else ]]
-            if rWait <= 0.2 then
+            -- Forever (gap BD round 2): a hair over 0.2 s so float noise on a wait of exactly 0.2 (a DoT falling 0.2 s
+            -- after a channel's end) gives the same pick at every poll
+            if rWait <= 0.200001 then
                 if debug then self:Debug( "The recommended action (%s) is ready in less than 0.2s; exiting list (%s).", rAction, listName ) end
                 break
 

@@ -422,7 +422,8 @@ I.OnBuild(function(def, now)
         end
     end
     for a = 1, #def.abilities do
-        usable[a], ansT[a], shortCost[a], shortT[a], shortGain[a], shortCast[a], shortEst[a] = UNKNOWN, -1, 0, 0, 0, 0, 0
+        usable[a], ansT[a], shortCost[a], shortT[a], shortGain[a], shortCast[a], shortEst[a] =
+            UNKNOWN, -1, 0, 0, 0, 0, 0
         local obj = def.abilities[a]
         local funcs = rawget(obj, "funcs") -- Hekili keeps an ability's functions there
         local f = type(funcs) == "table" and rawget(funcs, "usable") or rawget(obj, "usable")
@@ -1215,7 +1216,8 @@ I.On(Obs.Usable, function(o, t, lag)
         owe(r, e, lo, hi, o.t)
     end
     if now == SHORT then
-        shortCost[a], shortT[a], shortGain[a], shortCast[a], shortEst[a] = c, t - lag, R.gain[r], R.castGain[r], R.est0[r]
+        shortCost[a], shortT[a], shortGain[a], shortCast[a], shortEst[a] =
+            c, t - lag, R.gain[r], R.castGain[r], R.est0[r]
         local top = c - I.EPS
         if top < R.sinceShort[r] then
             R.sinceShort[r], R.sinceShortEst[r] = top, R.est0[r]

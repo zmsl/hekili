@@ -150,3 +150,53 @@ describe("the headless Priest gates, 3 fights a pack #slow", function()
         )
     end
 end)
+
+-- Gap BD round 2: with the channel visible, the simulation waits a Mind Flay out (row BM: no pick shown ready before
+-- the channel's end), and a DoT falling exactly 0.2 s after that end (the harness's tick grid) put the walk's early
+-- exit (`rWait <= 0.2`, Engine/Sim/Core.lua) on float noise: shadow_word_pain at +0.2 one poll, mind_blast at +0 the
+-- next. Seeds 1-2, ours driving.
+describe("the Shadow loop at a channel's end (gap BD round 2) #slow", function()
+    it("shows nothing before the channel ends and flips nothing across its end", function()
+        local loop = require("Game.harness.loop")
+        local L = loop.new(pw.Shadow)
+        local early, flips, ends = {}, {}, 0
+        for seed = 1, 2 do
+            local chan = {}
+            local a = loop.fight(L, seed, {
+                on = function(run, steps, t)
+                    local ch = steps[1].H.ctl.channel
+                    if run.combat > 0 and steps[1].H == L.us then -- not the oracle's lone run B
+                        chan[run.combat] = ch and ch[2] / 1000 - steps[1].base - t or -1
+                    end
+                end,
+            })
+            local f, s = a.frames[1], a.ours
+            for i = 2, a.combat - 1 do
+                local c = chan[i - 1] or -1
+                if c > 0.05 and f.wait[1][i - 1] < c - 0.05 then
+                    early[#early + 1] = ("seed %d tick %d %s %.2f < %.2f"):format(
+                        seed,
+                        i - 1,
+                        s[i - 1],
+                        f.wait[1][i - 1],
+                        c
+                    )
+                end
+                if c > 0 and c <= 0.2 + 1e-6 then
+                    ends = ends + 1
+                    if s[i - 1] ~= s[i] and s[i + 1] == s[i - 1] or s[i] ~= s[i + 1] and s[i + 2] == s[i] then
+                        flips[#flips + 1] = ("seed %d tick %d %s -> %s"):format(
+                            seed,
+                            i,
+                            tostring(s[i - 1]),
+                            tostring(s[i])
+                        )
+                    end
+                end
+            end
+        end
+        assert.is_true(ends > 10)
+        assert.are.same({}, early)
+        assert.are.same({}, flips)
+    end)
+end)
