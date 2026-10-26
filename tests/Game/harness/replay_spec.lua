@@ -87,6 +87,15 @@ describe("the wowsims log parser", function()
         assert.are.same({ 6.34, "taken", "WOUND", "BLOCK_REDUCED", 15.9 }, { e.t, e.kind, e.act, e.flag, e.amount })
         assert.are.same({ 7, "taken", "BLOCK", 0 }, { q.ev[3].t, q.ev[3].kind, q.ev[3].act, q.ev[3].amount })
     end)
+
+    it("reads the target's plain Hit on us as a `taken` wound of its amount", function()
+        local q = replay.parse(
+            "[51.94] [Target 1] [Tester (#1)] {OtherID: 3, Tag: 1} Hit for 1880.168 damage (SpellSchool: 1). (Threat: 1880.168)"
+        )
+        assert.are.equal(1, #q.ev)
+        local e = q.ev[1]
+        assert.are.same({ 51.94, "taken", "WOUND", "", 1880.168 }, { e.t, e.kind, e.act, e.flag, e.amount })
+    end)
 end)
 
 describe("the replay world", function()

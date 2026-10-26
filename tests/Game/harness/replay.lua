@@ -11,8 +11,8 @@
 -- in the truth only, spells landing at once, a white swing's outcome one landing lag after its swing (M.LAND; wowsims
 -- logs both at once, with the swing's rage), the mob's health at 20% from the execute phase's start (wowsims's is the
 -- last 20% of the duration) and never dead, our distance to it (the request's, then the log's Movement stacks), and
--- the target's Parry, Dodge and Block of its swings on us (parry-haste spec §4, gap AH; its hits on us are not), a
--- partial "Block for N" as the client's WOUND flagged BLOCK_REDUCED (amount N), a "Block for 0" as a full BLOCK, and
+-- the target's Hit, Parry, Dodge and Block of its swings on us (parry-haste spec §4, gap AH; a crit or crush is not), a
+-- plain "Hit for N" as a WOUND (amount N), a partial "Block for N" as the client's WOUND flagged BLOCK_REDUCED (amount N), a "Block for 0" as a full BLOCK, and
 -- an on-next-swing strike's Tag 1 cast as its queueing press (IsCurrentSpell; no cast event), its untagged cast as its
 -- swing's landing (the cast, and no press for R.next's agreement).
 -- Class-neutral: the content passes its forms, hidden auras, procs and totems; the casts map through the booted
@@ -157,9 +157,12 @@ local function theirs(rest)
         local id, _, tag = ids(b)
         return id and { kind = "stacks", unit = "target", id = id, to = tonumber(n), tag = tag }
     end
-    local avoid = rest:match("^%[[^%]]+ %(#1%)%] {[^}]*} (%a+)") -- its swing on us: a parry, dodge or block (gap AH)
+    local avoid = rest:match("^%[[^%]]+ %(#1%)%] {[^}]*} (%a+)") -- its swing on us: a hit, parry, dodge or block (gap AH)
     if avoid == "Parry" or avoid == "Dodge" then
         return { kind = "taken", act = avoid:upper(), flag = "", amount = 0 }
+    elseif avoid == "Hit" then
+        local n = tonumber(rest:match("} Hit for ([%d.]+) damage") or 0)
+        return { kind = "taken", act = "WOUND", flag = "", amount = n }
     elseif avoid == "Block" then
         local n = tonumber(rest:match("} Block for ([%d.]+) damage") or 0)
         if n > 0 then
