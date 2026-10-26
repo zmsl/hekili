@@ -316,6 +316,74 @@ describe("Engine.Output steady icons (the experimental hold, pure)", function()
         )
     end
 
+    -- Raw a, then b every publish: b shows once it has been the raw choice for N+1 publishes.
+    for n, want in pairs({
+        [1] = { "a", "a", "b", "b" },
+        [2] = { "a", "a", "a", "b", "b" },
+        [3] = { "a", "a", "a", "a", "b" },
+    }) do
+        it("updates to hold " .. n .. ": a new countdown icon shows on its " .. n + 1 .. "th publish", function()
+            Out.steady, Out.hold = true, n
+            local lists = { { { "a", 1 } } }
+            for i = 2, #want do
+                lists[i] = { { "b", 1 } }
+            end
+            assert.are.same(want, shown(Out, lists))
+        end)
+    end
+
+    it(
+        "a hold of 3 still shows a ready icon, a ready one going back to waiting and anything after our cast at once",
+        function()
+            Out.steady, Out.hold = true, 3
+            assert.are.same({ "a", "b" }, shown(Out, { { { "a", 1 } }, { { "b", 0 } } }))
+            assert.are.same({ "c", "d" }, shown(Out, { { { "c", 0 } }, { { "d", 1 } } }))
+            Out.Acted()
+            pub(Out, { { "e", 1 } })
+            pub(Out, { { "f", 1 } }) -- held, one of three
+            assert.are.equal("e", Out.Primary.recs[1].actionName)
+            Out.Acted()
+            pub(Out, { { "f", 1 } })
+            assert.are.equal("f", Out.Primary.recs[1].actionName)
+        end
+    )
+
+    it("does not start a hold when the new icon is due within the hold window", function()
+        Out.steady, Out.hold = true, 1
+        -- window = 0.05 + 1 * 0.2: b at 0.20 is the next press and shows at once, b at 0.30 is held
+        assert.are.same({ "a", "b" }, shown(Out, { { { "a", 1 } }, { { "b", 0.2 } } }))
+        Out = select(2, load())
+        Out.steady, Out.hold = true, 1
+        assert.are.same({ "a", "a" }, shown(Out, { { { "a", 1 } }, { { "b", 0.3 } } }))
+        Out = select(2, load())
+        Out.steady, Out.hold = true, 2 -- window 0.45
+        assert.are.same({ "a", "b" }, shown(Out, { { { "a", 1 } }, { { "b", 0.4 } } }))
+    end)
+
+    it("N=2 hides a two-publish countdown blip", function()
+        Out.steady, Out.hold = true, 2
+        assert.are.same(
+            { "a", "a", "a", "a" },
+            shown(Out, { { { "a", 1 } }, { { "b", 1 } }, { { "b", 1 } }, { { "a", 1 } } })
+        )
+    end)
+
+    it("a raw icon that changes again restarts the count", function()
+        Out.steady, Out.hold = true, 2
+        assert.are.same(
+            { "a", "a", "a", "a", "a", "a", "c" },
+            shown(Out, {
+                { { "a", 1 } },
+                { { "b", 1 } },
+                { { "c", 1 } },
+                { { "b", 1 } },
+                { { "c", 1 } },
+                { { "c", 1 } },
+                { { "c", 1 } },
+            })
+        )
+    end)
+
     it("marks only the held slot, and holds slot 2 independently of slot 1", function()
         Out.steady = true
         pub(Out, { { "a", 0 }, { "x", 1 } })
@@ -393,6 +461,11 @@ describe("Engine.Output (headless Arms)", function()
         t = t + 0.2
         assert(headless.cycle(H, t))
         assert.is_true(H.ns.Output.steady)
+        assert.are.equal(1, H.ns.Output.hold) -- the default: today's one update
+        H.Hekili.DB.profile.specs[id].steadyHold = 3
+        t = t + 0.2
+        assert(headless.cycle(H, t))
+        assert.are.equal(3, H.ns.Output.hold)
         assert.are.equal(H.ns.Output.Acted, H.ns.VirtualStateInternal.acted)
         assert.are.same({}, H.errors)
     end)

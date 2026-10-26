@@ -319,6 +319,8 @@ describe("the headless loop's replay injection (o.replay)", function()
         assert.is_truthy(loop.line(t):find("; hold on$"))
         t = loop.tally(L, 1, { duration = 6, steady = true }) -- the shipped steady icons on our instance
         assert.is_truthy(loop.line(t):find("; steady icons on$"))
+        t = loop.tally(L, 1, { duration = 6, steady = 3 })
+        assert.is_truthy(loop.line(t):find("; steady icons on %(hold 3%)$"))
     end)
 end)
 

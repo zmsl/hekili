@@ -171,7 +171,8 @@ measured value rounded up to the next 0.1, 0 where it measured 0; only ever down
 expected it turns the Arms 20-fight gate red (agreement, unmatched cost refusals) and the Fury gates and two leveling
 gates red (react p90, idle). `HEKILI_LOOP_HOLD=3` (or `o.steady`) turns on the shipped steady icons instead (the
 spec's experimental `steadyIcons`, off by default, measured as hold3 in the flicker design study; `; steady icons on`,
-floors not applied): the loop then reads the held output itself, not a harness copy.
+floors not applied): the loop then reads the held output itself, not a harness copy. `HEKILI_LOOP_STEADY=N` (or
+`o.steady = N`) sets the updates to hold (1 to 3; `; steady icons on (hold N)` for N above 1).
 
 Before the pull it shows Bloodrage and Battle Shout only (no positions headless, so no Charge). Seeds 1-3 used to show
 casting refusals (7.0 per 100, the oracle's 0.5): presses during Slam's 1.5 s cast while the world's client sent only

@@ -4141,13 +4141,27 @@ found = true end
                                 -- stored in this spec's settings by the spec node's GetSpecOption / SetSpecOption
                                 steadyIcons = {
                                     type = "toggle",
-                                    name = L["Experimental: steady icons (hold a swap between two countdown icons for one update)"],
+                                    name = L["Experimental: steady icons (hold a swap between two countdown icons)"],
                                     desc = L["When an icon that is still counting down would be replaced by another icon that is also counting down, "
-                                        .. "keep the shown icon for one more update (about 0.1 to 0.2 s) and shows the new one if it is still there on the next update.\n\n"
+                                        .. "keep the shown icon for a few more updates (set below) and show the new one if it is still there after that.\n\n"
                                         .. "An icon that is ready to press, a ready icon that goes back to waiting, and anything after your own "
                                         .. "cast always show at once, so what you can press and when never changes; the icons just flicker less.\n\n"
                                         .. "|cFFFF7F00Experimental|r: off by default while it is being play-tested."],
                                     order = 21,
+                                    width = "full",
+                                },
+                                steadyHold = {
+                                    type = "range",
+                                    name = L["Steady icons: updates to hold"],
+                                    desc = L["How many updates a swap between two countdown icons is held. Each update is about 0.1 to 0.2 s, so 1 holds a swap "
+                                        .. "for about 0.1 to 0.2 s and 3 for about 0.3 to 0.6 s; more updates flicker less but show a changed countdown icon later.\n\n"
+                                        .. "An icon that is ready to press, a ready icon that goes back to waiting, and anything after your own "
+                                        .. "cast are never held.\n\nTurn on steady icons above first."],
+                                    min = 1,
+                                    max = 3,
+                                    step = 1,
+                                    disabled = function( info ) return Hekili:GetSpecOption( { info[1], info[2], info[3], "steadyIcons" } ) ~= true end,
+                                    order = 21.5,
                                     width = "full",
                                 },
                                 damageMeter = {
