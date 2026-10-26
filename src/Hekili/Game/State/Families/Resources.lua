@@ -1121,14 +1121,15 @@ end
 -- put lo above the truth: rage the game lacks); no regen measurement. `est` (gain - cast gain since the short answer)
 -- is the estimated part of that gain (a refund, a hit's `taken`): lo gives up only that much, never below c; a cast's
 -- declared gain stays in it (gap BD round 2: each flip after a mana gain dropped lo to its cost, ~200 under the truth).
--- Allocates nothing.
+-- A swing-paid slot's floor also holds estimated swing steps, so there lo is still the cost (Arms seeds 1-3: unmatched
+-- cost refusals 3.6 -> 7.0 per 100 when it kept the floor). Allocates nothing.
 local function crossed(r, c, t, est)
     local e, hi = R.est0[r], R.hi0[r]
     local top = e > hi and e or hi
     if top < c then
         top = c
     end
-    local v = R.lo0[r] - (est > 0 and est or 0)
+    local v = R.swing[r] > 0 and c or R.lo0[r] - (est > 0 and est or 0)
     if v < c then
         v = c
     elseif v > top then
