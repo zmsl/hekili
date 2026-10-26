@@ -233,6 +233,21 @@ describe("resources", function()
             end
         )
 
+        it("keeps the floor our cast's declared gain lifted past the flips it explains (gap BD round 2)", function()
+            obs(Obs.Usable, 10, FINISHER, 0, 1) -- short of 25
+            obs(Obs.Usable, 10, BUILDER, 0, 1) -- short of 40
+            I.Fold(10, false)
+            I.Settle(10.5)
+            I.ResourceShift(1, 50, 10.5, Obs.CastSuccess) -- our cast's declared gain: lo moves by it
+            I.Fold(10.7, false)
+            local before = VS.Power(ENERGY, 10.7).lo
+            assert.is_true(before > 50)
+            obs(Obs.Usable, 10.7, FINISHER, 1, 0) -- both flip at once: each proves only "at least its cost"
+            obs(Obs.Usable, 10.7, BUILDER, 1, 0)
+            I.Fold(10.7, false)
+            within(before, VS.Power(ENERGY, 10.7).lo) -- not the last flip's cost (40), nor the first's (25)
+        end)
+
         it("measures regen between two pins, net of our own spends", function()
             local function pinAt(t)
                 obs(Obs.Usable, t, BUILDER, 0, 1)

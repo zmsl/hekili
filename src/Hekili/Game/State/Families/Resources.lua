@@ -111,6 +111,7 @@ local R = {
     maxMods = {},
     maxRead = {},
     gain = {},
+    castGain = {}, -- the part of `gain` that is our casts' declared gains (trusted, unlike a refund or a hit's estimate)
     taken = {},
     takenBin = {},
     takenSec = {},
@@ -195,8 +196,8 @@ local function maxOf(r)
 end
 
 -- By ability index a: the last usability answer and its time (`ansT`), and the last short report (cost, time, the slot's
--- own gains so far and its estimate then).
-local usable, ansT, shortCost, shortT, shortGain, shortEst = {}, {}, {}, {}, {}, {}
+-- own gains so far, the cast-declared part of them, and its estimate then).
+local usable, ansT, shortCost, shortT, shortGain, shortCast, shortEst = {}, {}, {}, {}, {}, {}, {}
 -- Per hand (1 main, 2 off): the swing-paid slot's estimate and floor at its latest PLAYER_SWING, that swing's time,
 -- the lowest top a short answer set from ORACLE_MIN after it (math.huge: none) and the slot's spend count then (I.Missed).
 local swE, swL, swT, swTop, swSp = { 0, 0 }, { 0, 0 }, { -1, -1 }, { math.huge, math.huge }, { 0, 0 }
@@ -349,7 +350,7 @@ I.OnBuild(function(def, now)
         R.pinT[r], R.pinV[r], R.pinDelta[r], R.pinValid[r], R.gain[r], R.spends[r] = 0, 0, 0, false, 0, 0
         R.pinOwn[r], R.pinSkip[r], R.swFrom[r], R.skipFrom[r], R.skipTo[r] = false, false, 0, 0, 0
         R.swAccG[r], R.swAccT[r] = 0, 0
-        R.ownT[r], R.ownV[r] = -1e9, 0
+        R.ownT[r], R.ownV[r], R.castGain[r] = -1e9, 0, 0
         R.pinN[r], R.pinErr[r] = 0, 0
         R.liftE[r], R.liftL[r], R.liftH[r], R.liftT[r], R.liftRec[r] = 0, 0, 0, -1e9, 0
         R.sinceShort[r], R.sinceShortEst[r], R.sinceYes[r], R.sinceSnap[r] = math.huge, 0, false, false
@@ -421,7 +422,7 @@ I.OnBuild(function(def, now)
         end
     end
     for a = 1, #def.abilities do
-        usable[a], ansT[a], shortCost[a], shortT[a], shortGain[a], shortEst[a] = UNKNOWN, -1, 0, 0, 0, 0
+        usable[a], ansT[a], shortCost[a], shortT[a], shortGain[a], shortCast[a], shortEst[a] = UNKNOWN, -1, 0, 0, 0, 0, 0
         local obj = def.abilities[a]
         local funcs = rawget(obj, "funcs") -- Hekili keeps an ability's functions there
         local f = type(funcs) == "table" and rawget(funcs, "usable") or rawget(obj, "usable")
@@ -1116,15 +1117,24 @@ end
 
 -- A flip to usable that a gain we modelled explains (our own): it proves only "at least c" now,
 -- so slot r is bound to [c, the believed top] around the estimate, not pinned exactly at it (a mis-sized gain would
--- put lo above the truth: rage the game lacks); no regen measurement. Allocates nothing.
-local function crossed(r, c, t)
+-- put lo above the truth: rage the game lacks); no regen measurement. `est` (gain - cast gain since the short answer)
+-- is the estimated part of that gain (a refund, a hit's `taken`): lo gives up only that much, never below c; a cast's
+-- declared gain stays in it (gap BD round 2: each flip after a mana gain dropped lo to its cost, ~200 under the truth).
+-- Allocates nothing.
+local function crossed(r, c, t, est)
     local e, hi = R.est0[r], R.hi0[r]
     local top = e > hi and e or hi
     if top < c then
         top = c
     end
+    local v = R.lo0[r] - (est > 0 and est or 0)
+    if v < c then
+        v = c
+    elseif v > top then
+        v = top
+    end
     R.pinValid[r] = false
-    pin(r, c, top - c, t, "pinned", Obs.Usable)
+    pin(r, v, top - v, t, "pinned", Obs.Usable)
     R.pinValid[r] = false
 end
 
@@ -1170,7 +1180,7 @@ I.On(Obs.Usable, function(o, t, lag)
         R.pinN[r], R.pinErr[r] = R.pinN[r] + 1, R.pinErr[r] + abs(e1 - c)
         if R.gain[r] - shortGain[a] >= c - shortEst[a] then
             -- our own gain since then explains the crossing: a bound (crossed)
-            crossed(r, c, t)
+            crossed(r, c, t, R.gain[r] - shortGain[a] - (R.castGain[r] - shortCast[a]))
         elseif R.swing[r] > 0 then
             -- below the cost by every gain we modelled: a swing crossed it (rage is gained at the swing, so its wound,
             -- if ours, is still to come: the lift owe() records is its, netted when that wound is credited; a wound
@@ -1205,7 +1215,7 @@ I.On(Obs.Usable, function(o, t, lag)
         owe(r, e, lo, hi, o.t)
     end
     if now == SHORT then
-        shortCost[a], shortT[a], shortGain[a], shortEst[a] = c, t - lag, R.gain[r], R.est0[r]
+        shortCost[a], shortT[a], shortGain[a], shortCast[a], shortEst[a] = c, t - lag, R.gain[r], R.castGain[r], R.est0[r]
         local top = c - I.EPS
         if top < R.sinceShort[r] then
             R.sinceShort[r], R.sinceShortEst[r] = top, R.est0[r]
@@ -1542,6 +1552,7 @@ function I.ResourceShift(r, delta, t, event)
         R.pinOwn[r] = true
         if event == Obs.CastSuccess then -- a cast's declared gain, not a refund (I.GAIN_SHOWS)
             ownGain(r, delta, t)
+            R.castGain[r] = R.castGain[r] + delta
         end
     elseif delta < 0 then
         R.spends[r] = R.spends[r] + 1 -- a spend between a credit and its verdict voids the verdict (the oracle)
