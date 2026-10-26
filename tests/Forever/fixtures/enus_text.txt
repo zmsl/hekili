@@ -14301,6 +14301,7 @@ options.packs.arms.Arms (wowsims.com).lists.buff_name	values.defensive_stance	|T
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.demoralizing_shout	|T136000:0|t Spell 1160
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.disarm	|T136000:0|t Spell 676
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.improved_hamstring	|T136000:0|t Spell 23694
+options.packs.arms.Arms (wowsims.com).lists.buff_name	values.inspiration	|T136000:0|t Spell 14893
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.last_stand	|T136000:0|t Spell 12976
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.overpower_ready	|T136000:0|t Spell 1282733
 options.packs.arms.Arms (wowsims.com).lists.buff_name	values.piercing_howl	|T136000:0|t Spell 12323
@@ -18502,6 +18503,7 @@ options.packs.fury.Fury (wowsims.com).lists.buff_name	values.defensive_stance	|T
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.demoralizing_shout	|T136000:0|t Spell 1160
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.disarm	|T136000:0|t Spell 676
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.improved_hamstring	|T136000:0|t Spell 23694
+options.packs.fury.Fury (wowsims.com).lists.buff_name	values.inspiration	|T136000:0|t Spell 14893
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.last_stand	|T136000:0|t Spell 12976
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.overpower_ready	|T136000:0|t Spell 1282733
 options.packs.fury.Fury (wowsims.com).lists.buff_name	values.piercing_howl	|T136000:0|t Spell 12323
@@ -19583,6 +19585,7 @@ options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_fury	|T136000:0|t Spell 1311701
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.echo_of_righteousness	|T136000:0|t Spell 1311704
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.improved_hamstring	|T136000:0|t Spell 23694
+options.packs.protection.Protection (wowsims.com).lists.buff_name	values.inspiration	|T136000:0|t Spell 14893
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.last_stand	|T136000:0|t Spell 12976
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.overpower_ready	|T136000:0|t Spell 1282733
 options.packs.protection.Protection (wowsims.com).lists.buff_name	values.piercing_howl	|T136000:0|t Spell 12323
