@@ -52,10 +52,10 @@ local function display()
         needAlts = 0, -- subscribers that declared needs.alts (passive or not): Core then fills recs[1..2].alts
         publishing = false,
         payload = nil, -- the WeakAuras event copy, set by Integrations/WeakAuras.lua only when WeakAuras is loaded
-        -- steady icons (Output.steady): per slot the raw (unheld) name and time last publish, and whether recs[i] is
+        -- steady icons (Output.steady): per slot the raw (unheld) name last publish, its countdown streak, and whether recs[i] is
         -- held; `acts` the Output.Acted count this display last published at
         rawName = filled(false),
-        rawTime = filled(0),
+        streak = filled(0),
         held = filled(false),
         acts = 0,
     }
@@ -94,8 +94,10 @@ ns.Output = Output
 local annotators = slots()
 
 -- Steady icons, an experimental option (the active spec's `steadyIcons`, off by default): Core sets `Output.steady`
--- once per update. Our own casts, channel ends and swing queue changes since the start (Output.Acted).
+-- once per update, with `Output.hold`, the updates to hold (1 to 3). Our own casts, channel ends and swing queue
+-- changes since the start (Output.Acted).
 Output.steady = false
+Output.hold = 1
 local acts = 0
 
 --- Our own cast started or succeeded, our channel ended or a swing queue changed: the next publish of every display
@@ -104,30 +106,35 @@ function Output.Acted()
     acts = acts + 1
 end
 
--- Holds, per slot, a shown countdown icon that the new set would replace with another countdown icon, for this
--- publish: the shown record moves into the new set and the new one into the old. Never held: a ready icon on either
--- side, a slot the last set lacked, a new icon the raw set already had last publish (not ready then either), and
--- every slot after Output.Acted. So a ready icon, a ready one going back to waiting, and anything after our own
--- cast show at once, and an icon the engine keeps shows one publish late at most.
+-- Holds, per slot, a shown countdown icon that the new set would replace with another countdown icon: the shown
+-- record moves into the new set and the new one into the old. `streak[i]` counts the consecutive publishes the raw
+-- set had the same countdown icon in slot i (0 after a ready icon or a different one); the swap is held while the
+-- streak before this publish is below Output.hold, so an icon the engine keeps shows at most `hold` publishes late
+-- (the N+1th publish it is the raw choice). Hold 1 is the original one-publish hold. Never held: a ready icon on
+-- either side, a slot the last set lacked, and every slot after Output.Acted. So a ready icon, a ready one going
+-- back to waiting, and anything after our own cast show at once.
 local function steady(o, built, count)
-    local recs, rawName, rawTime, held = o.recs, o.rawName, o.rawTime, o.held
-    local acted, last = o.acts ~= acts, o.count
+    local recs, rawName, held, streak = o.recs, o.rawName, o.held, o.streak
+    local acted, last, hold = o.acts ~= acts, o.count, Output.hold
     for i = 1, SLOTS do
-        local name, t, keep = false, 0, false
+        local name, t, keep, run = false, 0, false, 0
         if i <= count then
             local new, old = built[i], recs[i]
             name, t = new.actionName or false, new.time or 0
+            if t > READY then
+                run = rawName[i] == name and streak[i] + 1 or 1
+            end
             keep = not acted
                 and i <= last
                 and t > READY
                 and (old.time or 0) > READY
                 and old.actionName ~= name
-                and not (rawName[i] == name and rawTime[i] > READY)
+                and run <= hold
             if keep then
                 built[i], recs[i] = old, new
             end
         end
-        held[i], rawName[i], rawTime[i] = keep, name, t
+        held[i], rawName[i], streak[i] = keep, name, run
     end
 end
 

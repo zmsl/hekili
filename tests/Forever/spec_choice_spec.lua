@@ -175,6 +175,22 @@ describe("the spec options and /hekili spec (headless Warrior)", function()
         return H.Hekili.Options.args.packs.plugins.specializations
     end
 
+    it("the steady icons slider: per spec, 1 to 3, default 1, disabled while the toggle is off", function()
+        local H = boot()
+        settle(H)
+        local node = embed(H).arms
+        local perf = node.args.performance.args
+        local slider, id = perf.steadyHold, H.Hekili.State.spec.id
+        assert.are.same({ "range", 1, 3, 1 }, { slider.type, slider.min, slider.max, slider.step })
+        local info = { "packs", "arms", "performance", "steadyHold" }
+        assert.are.equal(1, H.Hekili:GetSpecOption(info))
+        H.Hekili:SetSpecOption(info, 2)
+        assert.are.equal(2, H.Hekili.DB.profile.specs[id].steadyHold)
+        assert.is_true(slider.disabled(info))
+        H.Hekili.DB.profile.specs[id].steadyIcons = true
+        assert.is_false(slider.disabled(info))
+    end)
+
     it("shows one node per spec with its own preferences, and the Activate button and the command set it", function()
         local H = boot()
         settle(H)

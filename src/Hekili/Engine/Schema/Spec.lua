@@ -74,6 +74,7 @@ local specTemplate = {
     noFeignedCooldown = false,
     disable_items = false,
     steadyIcons = false, -- experimental: hold a swap between two countdown icons one update (Engine/Output.lua)
+    steadyHold = 1, -- experimental: how many updates (1 to 3) the steady icons hold a swap
 
     abilities = {
         ['**'] = {

@@ -1547,6 +1547,7 @@ function Hekili.Update()
     end
 
     Output.steady = spec.steadyIcons == true -- the experimental steady icons, read once per update
+    Output.hold = spec.steadyHold or 1
 
     local snaps
 

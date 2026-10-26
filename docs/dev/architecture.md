@@ -436,15 +436,17 @@ convention. Draw and Tick allocate nothing after the first publish, and `Clear` 
 frames shown.
 
 **Steady icons (experimental, off by default).** With the active specialization's `steadyIcons` on (its Performance
-tab), `Output.Publish` holds a slot for one publish when its shown icon and the new one are both countdowns (due more
-than 0.05 s out) with different names and the raw set did not already have the new one last publish: the shown
-record table moves into the new set and the new one into the old, so the hold costs no copy and no allocation, and
-`out.held[i]` says which slots are held (the snapshot marks them `(held)`). A ready icon on either side and the first
-publish after our own cast start or success, channel end or swing queue change (`Output.Acted`, from
-`Game/State/Sources/Casts.lua`) show at once, so what is pressable and when never changes. Core reads the setting once
-per update into `Output.steady`; styles see only the held records and need nothing. Known limits: a held cell keeps
-the previous publish's `time` (one poll off in Timeline's out-of-combat pinned mode), and for one publish the same icon
-can show in two slots when a held slot's icon is the next slot's new icon.
+tab), `Output.Publish` holds a slot when its shown icon and the new one are both countdowns (due more than 0.05 s
+out) with different names and the raw set has had the new one in that slot for no more than `hold` publishes (the
+`steadyHold` slider, 1 to 3 updates, default 1; each update is about 0.1 to 0.2 s): an icon the engine keeps shows
+at most `hold` publishes late. The shown record table moves into the new set and the new one into the old, so the
+hold costs no copy and no allocation (`streak[i]` is a preallocated counter), and `out.held[i]` says which slots are
+held (the snapshot marks them `(held)`). A ready icon on either side and the first publish after our own cast start
+or success, channel end or swing queue change (`Output.Acted`, from `Game/State/Sources/Casts.lua`) show at once, so
+what is pressable and when never changes. Core reads both settings once per update into `Output.steady` and
+`Output.hold`; styles see only the held records and need nothing. Known limits: a held cell keeps the previous
+publish's `time` (one poll off in Timeline's out-of-combat pinned mode), and for some publishes the same icon can
+show in two slots when a held slot's icon is the next slot's new icon.
 
 ## 8. Follow-ups
 
