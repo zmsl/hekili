@@ -67,3 +67,5 @@ luacov.report.out
 .superpowers/
 __pycache__/
 .ab/
+
+debug/
