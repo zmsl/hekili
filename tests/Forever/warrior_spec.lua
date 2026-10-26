@@ -631,7 +631,7 @@ describe("Forever Warrior", function()
             ctx({}, { shield_specialization = 1 })
             assert.are.same({ 1, 4 }, { run("BLOCK", 0, 20) }) -- p = 0.2: 1 expected, half-width max(p, 1 - p) x 5
             ctx({}, { shield_specialization = 5 })
-            assert.are.same({ 5, 5 }, { run("BLOCK", 0, 20) })
+            assert.are.same({ 5, 0 }, { run("BLOCK", 0, 20) }) -- p = 1: a certain proc has no width
             assert.are.same({ 0, 0 }, { run("DODGE", 0, 20) })
             w.game.stat.UnitArmor, w.game.healthMax = { 0, 0 }, 100
             ctx({}, { shield_specialization = 1 })
@@ -662,7 +662,7 @@ describe("Forever Warrior", function()
             w.state.equipped.shield = true
             assert.are.same({ 2.5, 2.5 }, { run("DODGE", 0, 20) })
             ctx({}, { master_of_defense = 2 })
-            assert.are.same({ 5, 5 }, { run("PARRY", 0, 20) })
+            assert.are.same({ 5, 0 }, { run("PARRY", 0, 20) }) -- p = 1: certain
             assert.are.same({ 0, 0 }, { run("MISS", 0, 20) })
         end)
     end)

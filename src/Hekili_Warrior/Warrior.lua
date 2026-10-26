@@ -185,9 +185,11 @@ local function rageTaken(post, level, reduced)
     return post / (1 - mitigated) / reduced * RAGE_TAKEN_FACTOR / state.healthMax("player") -- nonzero: max > 0 (100)
 end
 
--- A proc's expected rage at chance p and its half-width.
+-- A proc's expected rage at chance p and its half-width (none for a certain proc).
 local function proc(p)
-    p = min(p, 1)
+    if p >= 1 then
+        return PROC_RAGE, 0
+    end
     return p * PROC_RAGE, max(p, 1 - p) * PROC_RAGE
 end
 
