@@ -73,3 +73,42 @@ describe("the headless Druid gates, 3 fights a pack #slow", function()
         )
     end
 end)
+
+-- Gap BD: the cast bar the loop's client answered was on the world's clock (and shared by both instances), so the
+-- engine never saw a hard cast in progress. Two fights on one boot (the second on clocks the oracle's lone run B
+-- moved apart), ours driving.
+describe("the Balance loop at a hard cast's end (gap BD) #slow", function()
+    it("prices the cast in progress and flips nothing between two polls where nothing happened", function()
+        local loop = require("Game.harness.loop")
+        local L = loop.new(dlw.Balance)
+        local jumps, flips, casts = {}, {}, 0
+        for seed = 1, 2 do
+            local a = loop.fight(L, seed, { trace = false })
+            local f, s = a.frames[1], a.ours
+            local ev = f.ev
+            for i = 2, a.combat do
+                casts = casts + (ev.spend[i] and 1 or 0)
+                -- (1) shown ready just before the cast lands, then its wait jumps past the GCD at the landing: the
+                -- forecast missed the cast's cost (and the five-second rule from its success)
+                if ev.spend[i] and f.wait[1][i - 1] <= 0.2 and f.wait[1][i] > f.gcd[i] + 1 then
+                    jumps[#jumps + 1] = ("seed %d tick %d %s %.2f -> %.2f"):format(
+                        seed,
+                        i,
+                        s[i],
+                        f.wait[1][i - 1],
+                        f.wait[1][i]
+                    )
+                end
+                -- (2) A -> B -> A with no cast, spend, avoid or aura between the first two polls: a pick computed
+                -- from the cast's end that flips back at the end tick
+                local q = ev.cast[i] or ev.spend[i] or ev.avoid[i] or ev.aura[i]
+                if i < a.combat and s[i - 1] ~= s[i] and s[i + 1] == s[i - 1] and not q then
+                    flips[#flips + 1] = ("seed %d tick %d %s -> %s"):format(seed, i, tostring(s[i - 1]), tostring(s[i]))
+                end
+            end
+        end
+        assert.is_true(casts > 20)
+        assert.are.same({}, jumps)
+        assert.are.same({}, flips)
+    end)
+end)

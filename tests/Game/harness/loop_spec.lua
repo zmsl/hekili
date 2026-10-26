@@ -112,6 +112,52 @@ describe("the headless loop between two fights on one boot", function()
     end)
 end)
 
+describe("the headless loop's cast bar (gap BD)", function()
+    it("answers UnitCastingInfo on each instance's own clock, as GetTime", function()
+        local stub = {
+            character = function()
+                return { level = 60, power = { type = 0, token = "MANA", max = 1000 } }
+            end,
+            resolve = function()
+                return {}
+            end,
+            usable = function()
+                return {}
+            end,
+            uptime = function()
+                return {}
+            end,
+            gain = function()
+                return 0
+            end,
+            WORLD = { level = 60, max = 1000, mobHealth = 1e9 },
+        }
+        local L = loop.new(stub)
+        local seen = {}
+        -- two fights as loop.fight runs them: the oracle's lone run B moves its clock past ours, and every instance's
+        -- clock is far from the world's (base = its last clock + loop.GAP)
+        for seed = 1, 2 do
+            local pressed = false
+            loop.run(L, seed, {
+                duration = 6,
+                on = function(run, steps, t)
+                    if t >= 2 and not pressed then
+                        pressed = run.W.press(run.us, "hard", { cast = 2, gcd = 1.5, spell = "hard" })
+                    elseif pressed and t >= 3 and t < 3.1 then
+                        for i, st in ipairs(steps) do
+                            local ctl = st.H.ctl
+                            local bar = ctl.casting
+                            seen[#seen + 1] = bar and bar[1] <= ctl.now * 1000 and ctl.now * 1000 < bar[2] or i
+                        end
+                    end
+                end,
+            }, { { H = L.us }, { H = L.oracle, plain = true } })
+            loop.run(L, seed, { duration = 20 }, { { H = L.oracle, plain = true } })
+        end
+        assert.are.same({ true, true, true, true }, seen)
+    end)
+end)
+
 describe("the headless loop's pools between two fights (loop.rest)", function()
     local function stub(pt, world)
         return {

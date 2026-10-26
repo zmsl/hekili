@@ -56,7 +56,7 @@ function M.new(content)
 end
 
 -- Fires the client events `obs` releases up to world time `t` into instance `H`, each at its own time (base + t);
--- a cooldown's start, an aura's expiry and a totem's start move to the instance's clock.
+-- a cooldown's start, an aura's expiry, a totem's start and our cast bar (ms) move to the instance's clock.
 local function feed(H, obs, t, base, sink)
     local s = obs.s
     local first, last = obs.step(t)
@@ -65,15 +65,17 @@ local function feed(H, obs, t, base, sink)
         ctl.now = base + s.t[i]
         local ev = s.ev[i]
         if ev:byte(1) == 64 then -- "@"
-            local a2, a3, a4 = s.a2[i], s.a3[i], s.a4[i]
-            if ev == "@cooldown" and type(a2) == "number" and a2 > 0 then
+            local a1, a2, a3, a4 = s.a1[i], s.a2[i], s.a3[i], s.a4[i]
+            if (ev == "@casting" or ev == "@channel") and a1 then -- gap BD: the bar was on the world's clock
+                a1, a2 = a1 + base * 1000, a2 + base * 1000
+            elseif ev == "@cooldown" and type(a2) == "number" and a2 > 0 then
                 a2 = base + a2
             elseif ev == "@aura" and a4 > 0 then
                 a4 = base + a4
             elseif ev == "@totem" and type(a3) == "number" and a3 > 0 then
                 a3 = base + a3
             end
-            drive.op(sink, ctl, ev, s.a1[i], a2, a3, a4, s.a5[i])
+            drive.op(sink, ctl, ev, a1, a2, a3, a4, s.a5[i])
         else
             H.Fire(ev, s.a1[i], s.a2[i], s.a3[i], s.a4[i], s.a5[i])
         end
@@ -250,7 +252,6 @@ function M.run(L, seed, o, drivers)
     end
     local res = L.power.token and L.power.token:lower()
     local pollEv, tickEv, nextEv = {}, {}, 1
-    local sink = {}
     local steps = {}
     local arm = ab.ARMS[ab.arm()]
     for i, d in ipairs(drivers) do
@@ -323,6 +324,7 @@ function M.run(L, seed, o, drivers)
             H = d.H,
             obs = observer.new(W, k),
             base = base,
+            sink = {}, -- drive.op's reused records (the cast bar): one an instance, each on its own clock (gap BD)
             q = { name = {}, time = {}, cost = {} },
             plain = d.plain,
             hold = (hold and not d.plain) and flicker.newHold() or nil,
@@ -358,7 +360,7 @@ function M.run(L, seed, o, drivers)
             end
         end
         for i, st in ipairs(steps) do
-            feed(st.H, st.obs, tc, st.base, sink)
+            feed(st.H, st.obs, tc, st.base, st.sink)
             st.H.Hekili.ActiveDebug = o.trace or false
             local c0 = os.clock()
             local ok = headless.cycle(st.H, st.base + tc)
@@ -536,7 +538,7 @@ function M.run(L, seed, o, drivers)
         tEnd = tEnd + tick
     end
     for i, st in ipairs(steps) do
-        feed(st.H, st.obs, tEnd, st.base, sink)
+        feed(st.H, st.obs, tEnd, st.base, st.sink)
         st.H.ctl.now = st.base + tEnd
         if not headless.cycle(st.H, st.H.ctl.now) then
             run.raises = run.raises + 1
