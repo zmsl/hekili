@@ -487,6 +487,21 @@ local function content(name)
         local X = classData(H)
         local S = H.Hekili.State
         local c, cpt, free = cost(key, a, H, X)
+        local price
+        if a.onNextSwing and cpt then
+            -- priced at its swing, as the game (and the belief) does: Clearcasting then, not at the queue
+            local f = rawget(a, "declaredSpend") or a.spend
+            local base = free and (type(f) == "function" and f() or f or 0) or c
+            c, free = base, false
+            price = function(W, e)
+                local cc = X.covered[a.id] and e.auras[X.aura.clearcasting.id]
+                if cc and cc.stacks > 0 then
+                    setStacks(W, e, X.aura.clearcasting.id, 0)
+                    return 0
+                end
+                return base
+            end
+        end
         local p = {
             spell = H.ns.VirtualState.KnownID(a.id),
             ids = C.IDS[key],
@@ -497,6 +512,7 @@ local function content(name)
             offGcd = a.gcd == "off",
             cast = S.action[key].cast_time or tonumber(a.cast) or 0,
             onNextSwing = a.onNextSwing,
+            price = price,
             amount = m.amount,
             drain = m.drain,
             refund = world.refundOf(H.Hekili.Class, key), -- an avoid gives back the kit's share (W.hit)

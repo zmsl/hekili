@@ -527,7 +527,8 @@ function M.new(seed)
     end
 
     --- Queues `p` (ability `key`) as `e`'s next main-hand swing (the melee behaviour turns it into a strike frame, paid
-    --- then; its cooldown `p.cooldown` starts then).
+    --- then; its cooldown `p.cooldown` starts then). `p.price(W, e)`: its cost priced at that swing instead of the
+    --- press's `p.cost` (a free-cast aura counts then, as in game).
     function W.queueStrike(e, p, key)
         e.queued = {
             spell = p.spell,
@@ -539,6 +540,7 @@ function M.new(seed)
             outcomes = p.outcomes,
             refund = p.refund,
             pt = p.pt,
+            price = p.price,
         }
         W.emit({ kind = "queue", src = e, spell = p.spell, ids = p.ids })
     end

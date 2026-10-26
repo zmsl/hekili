@@ -107,6 +107,24 @@ describe("the world's press", function()
     end)
 
     it(
+        "prices a queued strike at its swing when the press has a `price` (a free-cast aura then, not at the queue)",
+        function()
+            setup()
+            behaviours.melee({ land = observer.lag(), phase = { 2, 9 } })(W, us)
+            W.run(1)
+            local free = false
+            local p = { spell = fs.SPENDER_B, cost = 15, offGcd = true, onNextSwing = true }
+            p.price = function()
+                return free and 0 or 15
+            end
+            assert.is_true(W.press(us, "spender_b", p))
+            free = true -- the aura comes up while the strike waits for its swing
+            W.run(2.5)
+            assert.are.equal(20, us.power)
+        end
+    )
+
+    it(
         "drops a queued strike the power no longer covers at the swing: unqueued, a white swing, nothing paid",
         function()
             setup()

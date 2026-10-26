@@ -103,6 +103,9 @@ function M.melee(p)
                     return
                 end
                 local foreign = h == 1 and p.strikes and W.rng.chance(p.strikes)
+                if h == 1 and e.queued and e.queued.price then -- priced at its swing (W.queueStrike)
+                    e.queued.cost = e.queued.price(W, e)
+                end
                 if h == 1 and e.queued and e.power < (e.queued.cost or 0) then -- short at the swing: a white one
                     W.emit({ kind = "unqueue", src = e, spell = e.queued.spell, ids = e.queued.ids })
                     e.queued = nil
