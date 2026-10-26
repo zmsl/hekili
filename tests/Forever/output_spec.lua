@@ -348,6 +348,26 @@ describe("Engine.Output steady icons (the experimental hold, pure)", function()
         end
     )
 
+    it("does not start a hold when the new icon is due within the hold window", function()
+        Out.steady, Out.hold = true, 1
+        -- window = 0.05 + 1 * 0.2: b at 0.20 is the next press and shows at once, b at 0.30 is held
+        assert.are.same({ "a", "b" }, shown(Out, { { { "a", 1 } }, { { "b", 0.2 } } }))
+        Out = select(2, load())
+        Out.steady, Out.hold = true, 1
+        assert.are.same({ "a", "a" }, shown(Out, { { { "a", 1 } }, { { "b", 0.3 } } }))
+        Out = select(2, load())
+        Out.steady, Out.hold = true, 2 -- window 0.45
+        assert.are.same({ "a", "b" }, shown(Out, { { { "a", 1 } }, { { "b", 0.4 } } }))
+    end)
+
+    it("N=2 hides a two-publish countdown blip", function()
+        Out.steady, Out.hold = true, 2
+        assert.are.same(
+            { "a", "a", "a", "a" },
+            shown(Out, { { { "a", 1 } }, { { "b", 1 } }, { { "b", 1 } }, { { "a", 1 } } })
+        )
+    end)
+
     it("a raw icon that changes again restarts the count", function()
         Out.steady, Out.hold = true, 2
         assert.are.same(

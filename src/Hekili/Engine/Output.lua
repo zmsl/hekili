@@ -98,6 +98,7 @@ local annotators = slots()
 -- changes since the start (Output.Acted).
 Output.steady = false
 Output.hold = 1
+Output.interval = 0.2 -- seconds between updates in combat (Core sets it from the driver's combatRate)
 local acts = 0
 
 --- Our own cast started or succeeded, our channel ended or a swing queue changed: the next publish of every display
@@ -112,10 +113,14 @@ end
 -- streak before this publish is below Output.hold, so an icon the engine keeps shows at most `hold` publishes late
 -- (the N+1th publish it is the raw choice). Hold 1 is the original one-publish hold. Never held: a ready icon on
 -- either side, a slot the last set lacked, and every slot after Output.Acted. So a ready icon, a ready one going
--- back to waiting, and anything after our own cast show at once.
+-- back to waiting, and anything after our own cast show at once. A swap is not started when the new icon is due
+-- within the hold window (READY + hold * Output.interval, the driver's combat update rate): it turns ready before
+-- the hold could end, the ready exemption would cut the hold short, and a 2-update raw change would show as a
+-- 1-update blip. That swap is the next press, not flicker.
 local function steady(o, built, count)
     local recs, rawName, held, streak = o.recs, o.rawName, o.held, o.streak
     local acted, last, hold = o.acts ~= acts, o.count, Output.hold
+    local window = READY + hold * Output.interval
     for i = 1, SLOTS do
         local name, t, keep, run = false, 0, false, 0
         if i <= count then
@@ -126,7 +131,7 @@ local function steady(o, built, count)
             end
             keep = not acted
                 and i <= last
-                and t > READY
+                and t > window
                 and (old.time or 0) > READY
                 and old.actionName ~= name
                 and run <= hold

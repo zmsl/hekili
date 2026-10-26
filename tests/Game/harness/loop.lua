@@ -24,7 +24,8 @@ M.HOLD = os.getenv("HEKILI_LOOP_HOLD") == "1"
 -- The shipped steady icons (Engine/Output.lua, the spec's experimental steadyIcons) on our instance: o.steady, else
 -- this switch (off; the flicker design study's hold3). o.steady is true (hold 1) or the updates to hold (1 to 3);
 -- HEKILI_LOOP_STEADY=N sets the switch to N.
-M.STEADY = tonumber(os.getenv("HEKILI_LOOP_STEADY")) or os.getenv("HEKILI_LOOP_HOLD") == "3"
+M.STEADY = tonumber(os.getenv("HEKILI_LOOP_STEADY")) -- 0 is off
+    or os.getenv("HEKILI_LOOP_HOLD") == "3"
 -- The oracle's facade rows answered by the client (§4's override): the target's health, and the debuff row Hekili's
 -- aura scan reads (raw since VirtualState counted a modelled stack on top of a plain read that arrived before the
 -- cast's drain, fixed in Auras.lua's I.AuraModel and pinned in loop_warrior_spec). The buff row stays VirtualState's: our
@@ -248,6 +249,9 @@ function M.run(L, seed, o, drivers)
     local steady = o.steady
     if steady == nil then
         steady = M.STEADY
+    end
+    if steady == 0 then
+        steady = false -- 0 updates to hold is off
     end
     local res = L.power.token and L.power.token:lower()
     local pollEv, tickEv, nextEv = {}, {}, 1
@@ -642,6 +646,9 @@ function M.tally(L, n, o)
     if m.steady == nil then
         m.steady = M.STEADY
     end
+    if m.steady == 0 then
+        m.steady = false
+    end
     for f = 1, n do
         local seed = (o.seed0 or 0) + f
         local po = setmetatable({ trace = o.trace == nil and f == 1 or o.trace }, { __index = o })
@@ -748,6 +755,9 @@ function M.replay(L, R, o)
     m.steady = M.STEADY
     if o and o.steady ~= nil then
         m.steady = o.steady
+    end
+    if m.steady == 0 then
+        m.steady = false
     end
     for _, e in ipairs(m.led.ours.entries) do
         if e.kind == "retracted" and not e.justified then

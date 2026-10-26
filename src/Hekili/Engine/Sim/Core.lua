@@ -1547,7 +1547,9 @@ function Hekili.Update()
     end
 
     Output.steady = spec.steadyIcons == true -- the experimental steady icons, read once per update
-    Output.hold = spec.steadyHold or 1
+    local hold = spec.steadyHold
+    Output.hold = type( hold ) == "number" and hold >= 1 and hold <= 3 and hold - hold % 1 or 1 -- a profile can hold anything
+    Output.interval = Hekili.combatRate or 0.2
 
     local snaps
 
