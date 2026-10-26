@@ -282,7 +282,9 @@ M.READY = {
     -- 1.500, 36 (Priest lane, Task 14; first clean run on 30e92574+): Mind Flay's 3 s channel, the next icon ready at
     -- the GCD's end inside it (Arcane's Missiles likewise, about 0.9 s)
     priest_shadow = { 1.50, 36 },
-    priest_smite = { 0.50, 27 }, -- 0.500, 27
+    -- 0.50, 27 -> 0.70, 10, owner ruling 2026-10-26: gap BD's cast-bar fix removed the small misses; decision by
+    -- decision none worse and none new; the median of the rest rose
+    priest_smite = { 0.70, 10 },
     rogue_assassination = { 0.20, 25 }, -- 30 -> 25 (fix 40): a short answer before our own energy gain shows is no rung
     rogue_combat = { 0.28, 16 },
     rogue_subtlety = { 0.20, 45 },
@@ -294,8 +296,10 @@ M.READY = {
     -- Count 21 -> 23 on Task 16 (pack expects): decisions 12 and 15 (Shadow Bolt) moved from never to early (~1.0 s);
     -- never 10 -> 8; median 1.00 unchanged
     warlock_affliction = { 1.00, 23 },
-    warlock_demonology = { 0.10, 3 }, -- 0.100, 3: Searing Pain's 1.5 s cast equals the GCD, so nearly every decision is
-    -- absorbed at the grain; the three left are 0.1-0.2 s early
+    -- Searing Pain's 1.5 s cast equals the GCD, so nearly every decision is absorbed at the grain. 0.10, 3 -> 0.20, 1,
+    -- owner ruling 2026-10-26: gap BD's cast-bar fix removed the small misses; decision by decision none worse and
+    -- none new; the median of the rest rose (the one left: life_tap 0.2 s early)
+    warlock_demonology = { 0.20, 1 },
     warlock_destruction = { 0.40, 17 }, -- 0.400, 17: Incinerate's 2.0 s cast, likewise
     warlock_shadow_brand = { 0.90, 16 }, -- 0.900, 16: Shadow Bolt's, likewise
     warlock_sm_ruin = { 0.90, 18 }, -- 0.900, 18: Shadow Bolt's, likewise; 14 -> 18 on fix 31 (never 37 -> 28)
