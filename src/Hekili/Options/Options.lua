@@ -218,6 +218,8 @@ local displayTemplate = {
             hideMounted = false,
         },
     },
+
+    truth = { enabled = false, swipes = true, edge = true, confirm = true }, -- the Modern layer (UI/Truth.lua): core's, on every style (Modern display spec §5.1, §7)
 }
 
 -- A style's defaults subtable and option tab are keyed by its name, so a style may not take a core display field
@@ -1213,6 +1215,11 @@ return end
         end
         local notClassic = notStyle( "classic" )
 
+        -- The Modern tab's sub-options while its toggle is off (on Multi: Primary's, as the Multi getters read).
+        local function truthOff()
+            return not Hekili.DB.profile.displays[ name == "Multi" and "Primary" or name ].truth.enabled
+        end
+
         local fancyName
 
         if name == "Multi" then fancyName = AtlasToString( "auctionhouse-icon-favorite" ) .. " " .. L["Multiple"]
@@ -1518,6 +1525,50 @@ return L["Position"] end,
                                         order = 1,
                                     },
                                 },
+                            },
+                        },
+                    },
+
+                    truth = {
+                        type = "group",
+                        name = L["Modern"],
+                        desc = L["The game's own truth painted over this display's icons, whatever its style."],
+                        order = 2.5,
+
+                        args = {
+                            info = {
+                                type = "description",
+                                name = L["Experimental. Keeps this display's style and settings, and adds the game's own cooldown swipes, an immediate grey when the game says an ability cannot be used yet, and a gold glow on the next ability when the game lights its proc. Hekili still decides what to show."],
+                                fontSize = "medium",
+                                order = 0,
+                            },
+                            enabled = {
+                                type = "toggle",
+                                name = L["Modern (game truth)"],
+                                desc = L["Turn the Modern overlays on for this display. Turn it off to go back to the plain style."],
+                                width = "full",
+                                order = 1,
+                            },
+                            swipes = {
+                                type = "toggle",
+                                name = L["Real Cooldown Swipes"],
+                                desc = L["Show the game's own cooldown on an icon while it runs, instead of Hekili's estimate."],
+                                disabled = truthOff,
+                                order = 2,
+                            },
+                            edge = {
+                                type = "toggle",
+                                name = L["Grey When Not Usable"],
+                                desc = L["Grey an icon as soon as the game says the ability cannot be used yet (short of resource, or its proc or condition is not up)."],
+                                disabled = truthOff,
+                                order = 3,
+                            },
+                            confirm = {
+                                type = "toggle",
+                                name = L["Proc Glow"],
+                                desc = L["Glow the next ability (and the focus ability) when the game lights its proc. Never on a greyed icon."],
+                                disabled = truthOff,
+                                order = 4,
                             },
                         },
                     },

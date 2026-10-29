@@ -160,34 +160,37 @@ local function nextButton(d)
 end
 
 describe("the button contract (spec §5.1)", function()
-    it("Classic: each button's record while it draws one, 0 past the records, on a blank publish and after Clear", function()
-        local H, d = boot("classic")
-        usableAll(H)
-        publish(H, SET)
-        frame(H, d, 0.2)
-        local n = H.Hekili.DB.profile.displays.Primary.numIcons
-        for c, b in ipairs(d.Buttons) do
-            assert.are.equal(c <= n and c <= #SET and c or 0, b.recIndex, "button " .. c)
-            assert.is_falsy(b.isFocus)
-            assert.is_falsy(b.round)
+    it(
+        "Classic: each button's record while it draws one, 0 past the records, on a blank publish and after Clear",
+        function()
+            local H, d = boot("classic")
+            usableAll(H)
+            publish(H, SET)
+            frame(H, d, 0.2)
+            local n = H.Hekili.DB.profile.displays.Primary.numIcons
+            for c, b in ipairs(d.Buttons) do
+                assert.are.equal(c <= n and c <= #SET and c or 0, b.recIndex, "button " .. c)
+                assert.is_falsy(b.isFocus)
+                assert.is_falsy(b.round)
+            end
+            assert.are.equal(1, nextButton(d))
+            publish(H, SET_ONE)
+            frame(H, d, 0.2)
+            assert.are.same({ 1, 0 }, { d.Buttons[1].recIndex, d.Buttons[2].recIndex })
+            blank(H)
+            frame(H, d, 0.2)
+            for c, b in ipairs(d.Buttons) do
+                assert.are.equal(0, b.recIndex, "button " .. c)
+            end
+            publish(H, SET)
+            frame(H, d, 0.2)
+            d.style.Clear(d)
+            for c, b in ipairs(d.Buttons) do
+                assert.are.equal(0, b.recIndex, "button " .. c)
+            end
+            assert.are.same({}, H.errors)
         end
-        assert.are.equal(1, nextButton(d))
-        publish(H, SET_ONE)
-        frame(H, d, 0.2)
-        assert.are.same({ 1, 0 }, { d.Buttons[1].recIndex, d.Buttons[2].recIndex })
-        blank(H)
-        frame(H, d, 0.2)
-        for c, b in ipairs(d.Buttons) do
-            assert.are.equal(0, b.recIndex, "button " .. c)
-        end
-        publish(H, SET)
-        frame(H, d, 0.2)
-        d.style.Clear(d)
-        for c, b in ipairs(d.Buttons) do
-            assert.are.equal(0, b.recIndex, "button " .. c)
-        end
-        assert.are.same({}, H.errors)
-    end)
+    )
 
     it("Timeline: each cell's record and the focus cell; cell 1 is round", function()
         local H, d = boot("timeline")
@@ -274,5 +277,167 @@ describe("the button contract (spec §5.1)", function()
         all(false, "back out of combat, option on")
         H.Hekili.Engine.Output.status.combat = false
         assert.are.same({}, H.errors)
+    end)
+end)
+
+describe("the Modern toggle (spec §5.1, §7)", function()
+    for _, style in ipairs({ "classic", "timeline" }) do
+        it("leaves " .. style .. "'s picks and contract unchanged with the toggle on (R1 parity)", function()
+            for _, set in ipairs({ SET, SET_FOCUS, SET_ONE }) do
+                local H, d = boot(style)
+                usableAll(H)
+                publish(H, set)
+                frame(H, d, 0.2)
+                local want = picks(d)
+                local H2, d2 = boot(style, true)
+                usableAll(H2)
+                publish(H2, set)
+                frame(H2, d2, 0.2)
+                assert.are.same(want, picks(d2))
+                assert.are.equal(H2.ns.UI.Styles[style], d2.style)
+                assert.is_true(d2.truthOn)
+                assert.are.same({}, H2.errors)
+            end
+        end)
+
+        it("allocates nothing over 1,000 display frames with the toggle on, on " .. style, function()
+            local H, d = boot(style, true)
+            usableAll(H)
+            publish(H, SET)
+            for _ = 1, 3 do
+                frame(H, d, 0.2)
+            end
+            collectgarbage("collect")
+            collectgarbage("stop")
+            local before = collectgarbage("count")
+            for _ = 1, 1000 do
+                d.__scripts.OnUpdate(d, 0.01)
+            end
+            local bytes = (collectgarbage("count") - before) * 1024
+            collectgarbage("restart")
+            assert.are.same({}, H.errors)
+            assert.are.equal(0, bytes)
+        end)
+    end
+
+    it("defaults off, in its own core field and one Modern tab on every style", function()
+        local H = boot("classic")
+        local conf = H.Hekili.DB.profile.displays.Primary
+        -- AceDB serves defaults through metatables: read each field
+        local t = conf.truth
+        assert.are.same({ false, true, true, true }, { t.enabled, t.swipes, t.edge, t.confirm })
+        assert.is_true(H.ns.UI.StyleNameTaken("truth"))
+        assert.is_nil(H.ns.UI.Styles.modern)
+        H.Hekili:EmbedDisplayOptions()
+        local args = H.Hekili.Options.args.displays.plugins.Primary.Primary.args
+        assert.is_table(args.truth)
+        assert.is_nil(args.truth.hidden)
+        assert.is_nil(args.classic.args.tab_modern)
+        local path = { "displays", "Primary", "truth", "enabled" }
+        assert.is_false(H.Hekili:GetDisplayOption(path))
+        assert.is_true(args.truth.args.swipes.disabled())
+        H.Hekili:SetDisplayOption(path, true)
+        assert.is_true(conf.truth.enabled)
+        assert.is_false(args.truth.args.swipes.disabled())
+        for _, k in ipairs({ "swipes", "edge", "confirm" }) do
+            assert.is_true(H.Hekili:GetDisplayOption({ "displays", "Primary", "truth", k }), k)
+        end
+        assert.is_nil(args.truth.args.execute)
+        assert.is_nil(args.truth.args.ride)
+        conf.style = "timeline"
+        assert.is_nil(args.truth.hidden) -- core's tab, whatever the style
+        assert.are.same({}, H.errors)
+    end)
+
+    it("registers its events only while on, again after a Clear on the next draw, across a style switch", function()
+        local H, d = boot("classic", true)
+        local function registered()
+            local n = 0
+            for _, e in ipairs(H.ns.UI.Truth.EVENTS) do
+                n = n + (d:IsEventRegistered(e) and 1 or 0)
+            end
+            return n
+        end
+        assert.are.equal(3, registered())
+        d.style.Clear(d) -- what core's unsubscribe does, then Truth's
+        H.ns.UI.Truth.Clear(d)
+        assert.are.equal(0, registered())
+        publish(H, SET)
+        frame(H, d, 0.2)
+        assert.are.equal(3, registered())
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "main", "style" }, "timeline")
+        H.Hekili:BuildUI()
+        assert.are.equal(3, registered())
+        assert.are.equal(d.styleFrames.timeline.cells, d.truthState.buttons)
+        H.Hekili:SetDisplayOption({ "displays", "Primary", "truth", "enabled" }, false)
+        H.Hekili:BuildUI()
+        assert.are.equal(0, registered())
+        assert.is_false(d.truthOn)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("runs nothing with the toggle off", function()
+        local H, d = boot("classic")
+        local T, calls = H.ns.UI.Truth, 0
+        for _, k in ipairs({ "Build", "Tick", "Draw", "OnGameEvent", "Clear" }) do
+            local f = T[k]
+            T[k] = function(...)
+                calls = calls + 1
+                return f(...)
+            end
+        end
+        H.Hekili:BuildUI()
+        usableAll(H)
+        publish(H, SET)
+        frame(H, d, 0.2)
+        H.Fire("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", 1)
+        d.style.Clear(d)
+        assert.are.equal(0, calls)
+        assert.is_false(d.truthOn)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("paints nothing on a style without the button contract", function()
+        local H = boot("classic")
+        assert.is_true(H.Hekili:RegisterDisplayStyle("bare", {
+            api = H.Hekili.DisplayStyleAPI,
+            label = "Bare",
+            Build = function(d)
+                local b = rawget(d, "bareButton") or H.env.CreateFrame("Button", nil, d)
+                rawset(d, "bareButton", b)
+                return { b }
+            end,
+            Draw = function() end,
+            Tick = function() end,
+            OnGameEvent = function() end,
+            Clear = function() end,
+            Perimeter = function() end,
+            UpdateKeybindings = function() end,
+            Options = function()
+                return nil
+            end,
+        }))
+        local conf = H.Hekili.DB.profile.displays.Primary
+        conf.style, conf.truth.enabled = "bare", true
+        H.Hekili:BuildUI()
+        local d = rawget(H.env, "HekiliDisplayPrimary")
+        local A = ids(H)
+        usableAll(H)
+        H.ctl.cooldown[A.mortal_strike] = { isActive = true, isOnGCD = false }
+        durations[A.mortal_strike] = fake.SECRET
+        publish(H, SET)
+        frame(H, d, 0.2)
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        H.Fire("SPELL_UPDATE_USABLE")
+        assert.is_true(d.truthOn)
+        assert.are.equal(0, d.truthState.ov[1].spell)
+        assert.is_nil(d.truthState.ov[1].cd)
+        assert.are.equal(0, fx.n)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("keeps every probe-gated overlay off in code (M1)", function()
+        local H = boot("classic", true)
+        assert.are.same({ strip = false, execute = false, ride = false, cdm = false }, H.ns.UI.Truth.VERIFIED)
     end)
 end)

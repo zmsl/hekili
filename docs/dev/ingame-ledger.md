@@ -93,6 +93,7 @@ ends 2026-10-22). Each row: what to look for, why it matters, its status. Answer
 | Wl4 | Warlock | UnitPower("pet") of the Imp and the Succubus in combat (plain?) | Demonology's `life_tap,if=pet.mana<115` and Shadow Brand's `<160` | open |
 | Wl5 | Warlock | Demonic Brand: its charges on the target (readable?) and how fast the Imp's Firebolt or the Succubus's swings spend them | the kit keeps the brand its full 10 s (shortcut) | open |
 | Wl6 | Warlock | leveling: a Destruction Warlock below 40 and a Demonology Warlock below 18 see Life Tap as the filler; a Demonology Warlock before Demonic Brand sees Searing Pain first | no low-level filler by the owner's ruling (2026-10-21); confirm it is acceptable in play | open |
+| MD-TAINT | Core | /console taintLog 1, Hekili with Modern on for one display (Primary, Classic style), two pulls on an open-world mob, then a dungeon pull, /reload; then the same on Timeline: Logs/taint.log names no Hekili frame; no "blocked" popup; action bars and Cooldown Manager keep working | research §3: a Modern overlay calls protected widget methods (SetCooldownFromDurationObject) from addon code; a fail keeps Modern developer-only until the culprit is found | open: launch day 2026-11-04 |
 
 ## Findings (unit registry and tickets, 2026-10-22)
 

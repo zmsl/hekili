@@ -422,7 +422,7 @@ and the display reset in `ChatCommands.lua` name `classic` directly.
 **What a style may read.** `conf` is the whole display table: core fields and its own subtable `conf[name]`.
 `d.styleState` is per-display scratch shared by every style the display has bound; state of the style's own goes on
 `d.styleFrames[name]`. `out` is
-`Hekili.Engine.Output[id]`: `out.count`, `out.version` and `out.recs[1..count]`, each record with `actionName`,
+`Hekili.Engine.Output[id]`: `out.count`, `out.version`, `out.acts` (the `Output.Acted` count at the last publish) and `out.recs[1..count]`, each record with `actionName`,
 `actionID`, `texture`, `caption`, `indicator`, `focus`, `keybind`, `offGCD`, `time`, `exact_time`, `delay`, `since`, `wait`,
 `resource_type`, `resources`, `cost` (the amount of `resource_type` the pick spends; a fractional spend is multiplied by the resource's maximum),
 `busy` (seconds the pick keeps the player busy: its GCD, or its cast when longer), `script`, `list`, `action`, `pack`,
@@ -436,6 +436,30 @@ values up to 0.25 s old. A style never reads `state.*`, `class.*`, `Hekili.State
 `HekiliEngine`: `tools/check_engine_reads.sh` enforces it inside Hekili, and an external style must keep it by
 convention. Draw and Tick allocate nothing after the first publish, and `Clear` must leave none of the style's
 frames shown.
+
+**The Modern layer.** A core per-display toggle, `displays[id].truth` (`enabled`, off by default, and `swipes`,
+`edge`, `confirm`), with its own core tab ("Modern", key `truth`) on every style. While `truth.enabled` is on,
+`bindStyle` sets `d.truthOn` and attaches `UI/Truth.lua` to the bound style's buttons, and core calls `ns.UI.Truth`'s
+`Build`, `Tick`, `Draw`, `OnGameEvent` and `Clear` right after the style's own member (and `Clear` before a rebuild);
+with it off nothing of Truth runs (decision M2, the owner's 2026-10-29 layer design). No style wraps another, so "No
+style reads another style's subtable" holds with no exception: Truth reads only `conf.truth`, the buttons, the
+records and `d.resolved`. It reads the optional **button contract** (`UI/Styles.lua`): `b.recIndex` (the record the
+button draws, 0 for none), `b.isFocus`, `b.Cooldown`, `b.round` (and `b.timersHidden`); it is optional so
+`DisplayStyleAPI` stays 1 (M12), and a style without it gets no overlays. Truth is the only reader of
+`Facade.Display`. This plan's rulings (Modern display phase 1):
+
+1. Proc confirmation from usability: Truth asks `C_Spell.IsSpellUsable` itself (Resolve keeps only
+   `insufficientPower`); the edge dims on `not isUsable`, and the confirm mark is the overlay glow (`r.glow`) on the
+   next and focus icons only, never on a dimmed icon (dim, never promote).
+2. `Output.Acted` has no getter: Truth reads `out.acts` and `out.version` from the published table; no engine change.
+3. Display rows are untraced: a `Facade.Display` row is the raw function, so no secret sits in the trace;
+   `Facade.QUIET` is unchanged.
+4. The GCD rule and the swipe source together: the real cooldown shows only while `isActive and not isOnGCD`; the
+   fetch passes `ignoreGCD = not press` (the press button is the one with `recIndex` 1).
+5. Names: `displays[id].truth.enabled`, the tab key `truth` (label "Modern"), `d.truthState`, `d.truthOn`; the
+   contract names `recIndex`, `isFocus`, `round` and the existing `Cooldown`.
+6. Core calls Truth through `ns.UI.Truth.<member>` at each call (no local cached at load), so the TOC order does not
+   matter and a test can count the calls.
 
 **Steady icons (experimental, off by default).** With the active specialization's `steadyIcons` on (its Performance
 tab), `Output.Publish` holds a slot when its shown icon and the new one are both countdowns (due more than 0.05 s
