@@ -73,9 +73,10 @@ whose probe fails stays off in code (a constant per overlay, §6), not hidden be
     predicted, never sooner.
 - **R3. Confirm marks are additive and subordinate.** The execute border and the proc glow appear only on a record
   Hekili published, and never on an icon that is dimmed by a plain overlay (the dim is plain, so the border's texture is
-  hidden by our own `Hide()` while dimmed; the secret alpha is only ever set on a shown texture). A mark never reaches a
-  record that is not first in its display unless the option says so (`confirmQueue`, default off), so the eye stays on
-  the press.
+  hidden by our own `Hide()` while dimmed; the secret alpha is only ever set on a shown texture). A mark appears only on
+  the next icon (record 1 of its display) and the focus icon, never on any other queued icon, with no option to
+  change it (owner ruling 2026-10-29: "The execute/proc border should be turned off for all non-next/focus icons"), so
+  the eye stays on the press.
 
 ### 3.2 No jitter
 
@@ -234,7 +235,7 @@ One "Modern" tab, built through `Hekili.StyleOptions` helpers where they exist. 
 | `base` | `classic` | `classic` or `timeline` |
 | `swipes` | on | real cooldown swipes |
 | `edge` | on | redraw on the usability edge |
-| `confirm` | on | proc glow from usability and overlay; `confirmQueue` off |
+| `confirm` | on | proc glow from usability and overlay; next and focus icons only (R3, no queue option) |
 | `execute` | on, shown only while `VERIFIED.execute` | the border colour (gold) and width |
 | `ride` | off, shown only while `VERIFIED.ride` and `base == timeline` | |
 
@@ -328,3 +329,4 @@ in `L[...]` (the lint requires it).
 | M8 | Execute and proc facts come from pack fields (`healthGate`, existing; `confirmAura`, proposed) | core generic rule |
 | M9 | The press icon's swipe includes the GCD; queued icons ignore it | matches the action bars without the queue sweeping in unison |
 | M10 | Truth bars (real and belief, per type) exist only in a dev build (`Hekili.IsDev`), each off by default, built only there | owner ruling 2026-10-29: no cluttered player UI; the bars are a testing tool |
+| M11 | Execute border and proc glow on the next icon and the focus icon only, no option for the rest of the queue | owner ruling 2026-10-29: marks stay on what to press |
