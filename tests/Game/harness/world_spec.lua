@@ -123,6 +123,27 @@ describe("the world's resources", function()
         assert.are.same({ "regen", POOL }, { last.kind, last.pt })
     end)
 
+    it("runs wowsims's spirit multiplier and capped casting share while an fsr aura is up", function()
+        setup()
+        W.startRegen(
+            us,
+            {},
+            0.1,
+            nil,
+            { [POOL] = { 10, 12, share = 0.5, auras = { [77] = { spirit = 16, share = 1 } } } }
+        )
+        assert.are.same({ 22, 12 }, { W.regenRate(us, POOL, "idle"), W.regenRate(us, POOL, "casting") })
+        W.applyAura(us, 77, 10)
+        assert.are.same({ 322, 322 }, { W.regenRate(us, POOL, "idle"), W.regenRate(us, POOL, "casting") })
+    end)
+
+    it("adds an fsr aura's mp5 in both windows and in the read", function()
+        setup()
+        W.startRegen(us, {}, 0.1, nil, { [POOL] = { 10, 2, auras = { [7801] = { mp5 = 5 } } } })
+        W.applyAura(us, 7801, 10)
+        assert.are.same({ 17, 7 }, { W.regenRate(us, POOL, "idle"), W.regenRate(us, POOL, "casting") })
+    end)
+
     it("regenerates an `fsr` pool's spirit part only 5 s after our last cast's spend, the read naming both", function()
         setup()
         W.startRegen(us, {}, 0.1, nil, { [POOL] = { 10, 2 } }) -- spirit 10/s, mp5 2/s

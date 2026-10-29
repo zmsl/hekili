@@ -113,7 +113,7 @@ M.ARCHETYPES = ARCHETYPES
 --- the fight), pull (its time [1]), prepull (the cache and target reads [pull - 0.5]), form (ours at the start [0]),
 --- power (ours at the start [0]), tag (appended to the mobs' GUIDs: a fresh target per fight on one boot).
 --- Several resources (GCD kinds design §2): pt (the swing-paid power type [1]), res ({ [pt] = { cur, max } }: the
---- others), regen ({ [pt] = per second }, from the prepull), fsr ({ [pt] = { spirit, mp5 } }: W.startRegen's five-
+--- others), regen ({ [pt] = per second }, from the prepull), fsr ({ [pt] = { spirit, mp5, share?, auras? } }: W.startRegen's five-
 --- second rule), regenTick [0.1], regenAfter ({ s, k }), decay ({ pt, rate, interval, pausedBy }: from the stop), formSpeed ({ [form] = period }), payIn (the form whose swings pay), critRage
 --- ({ main, off }), gcdOrder (1, 2 or "mixed") and gcdLatency [0] (W.press), script (fn(W, us): our presses, started
 --- at the pull), after (seconds the world runs past the stop [3]), distance (yards from our target from the start

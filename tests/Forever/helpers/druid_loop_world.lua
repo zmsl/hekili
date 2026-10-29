@@ -31,9 +31,9 @@ local GROUP = { feral_form = { [FORM.cat_form] = true, [FORM.bear_form] = true }
 -- amounts.
 local OMEN = 0.1
 -- Innervate (29166) as wowsims/forever applies it: the spirit regen x 5, inside the five-second rule too (its Feral
--- log: 108.75 = 5 x 21.75 a second over 22-41 s); W.regenRate's `fsr` aura, in the worlds that keep mana
+-- log: 108.75 = 5 x 21.75 a second over 22-41 s); W.regenRate's `fsr` auras, in the worlds that keep mana
 local function manaFsr(spirit)
-    return { [MANA] = { spirit, 0, aura = 29166, mult = 5 } }
+    return { [MANA] = { spirit, 0, auras = { [29166] = { spirit = 5, share = 1 } } } }
 end
 -- the generic hits' non-physical schools (DB2); the rest physical (1)
 local SCHOOL = { faerie_fire = 8, moonfire = 64 }

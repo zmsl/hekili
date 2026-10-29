@@ -51,7 +51,7 @@ function M.new(seed)
     W.mrng = rng.new(seed + 32452843) -- the meter and viewer shapes, apart from every other draw
     W.combat = false
     W.rates = {} -- [powerType] = regen per second (W.startRegen)
-    W.fsr = {} -- [powerType] = { spirit, mp5, aura?, mult? } per second: the five-second rule's two parts (W.startRegen)
+    W.fsr = {} -- [powerType] = { spirit, mp5, share?, mp5?, auras? } per second: the five-second rule's two parts (W.startRegen)
     W.distance = nil -- yards from our character to its target (W.moveTo; nil: no positions, every check in range)
     W.hitAtSwing = true -- our white wound takes health at the swing, its row a landing lag later (owner, 2026-10-22)
     W.parryHaste = true -- a parried attack pulls the parrier's next main-hand swing (parry-haste spec decision 63)
@@ -464,16 +464,27 @@ function M.new(seed)
     end
 
     --- `e`'s regen per second of `pt` now: the rate, times `W.regenAfter.k` after `W.regenAfter.s` seconds in one form.
-    --- An `fsr` type's is its mp5 part, plus its spirit part from 5 s after our last cast that spent it; `mode` "idle"
-    --- or "casting" (the out-of-combat read's two returns) asks for both parts or the mp5 part alone. While the entry's
-    --- `aura` is up on `e`, the spirit part x its `mult` runs in every mode, the window's seconds too (regen while casting).
+    --- An `fsr` type's is its mp5 part A (wowsims's casting rate), plus its spirit part B from 5 s after our last cast
+    --- that spent it; `mode` "idle" or "casting" (the out-of-combat read's two returns) asks for both parts or A alone.
+    --- While an entry's `auras` are up on `e`, wowsims's PseudoStats rule runs (mana.go:186-206): S = B / (1 - c) (c the
+    --- entry's `share`; A - `mp5` when c >= 1), M = A - c x S (or `mp5`); inside the window M + sum(mp5) + S x prod(spirit)
+    --- x min(c + sum(share), 1), outside it M + sum(mp5) + S x prod(spirit); "idle" reads the outside rate.
     function W.regenRate(e, pt, mode)
         local f = W.fsr[pt]
-        local up = f and f.aura and e.auras[f.aura]
-        if up and up.expires > W.t then
-            return f[2] + f[1] * f.mult
+        local open = f and (mode == "idle" or (mode ~= "casting" and W.t - (e.spentAt[pt] or -1e9) >= 5))
+        local m, x, s, any = 1, 0, 0, false
+        for id, a in pairs(f and f.auras or {}) do
+            local up = e.auras[id]
+            if up and up.expires > W.t then
+                any, m, x, s = true, m * (a.spirit or 1), x + (a.mp5 or 0), s + (a.share or 0)
+            end
+        end
+        if any then
+            local c = f.share or 0
+            local S = c < 1 and f[1] / (1 - c) or f[2] - (f.mp5 or 0)
+            local M = c < 1 and f[2] - c * S or (f.mp5 or 0)
+            return M + x + S * m * (open and 1 or math.min(c + s, 1))
         elseif f then
-            local open = mode == "idle" or (mode ~= "casting" and W.t - (e.spentAt[pt] or -1e9) >= 5)
             return f[2] + (open and f[1] or 0)
         end
         local r, ra = W.rates[pt] or 0, W.regenAfter
@@ -485,7 +496,7 @@ function M.new(seed)
 
     --- Continuous regen of `e`'s resources at `rates` ({ [pt] = per second }) from now, applied every `every` s (0.1)
     --- as a "regen" gain, capped at the maximum (no event at it); `after` { s, k }: the rate x k after s seconds in one
-    --- form (an unmeasured in-form ramp's knob); `fsr` ({ [pt] = { spirit, mp5 } }): those types by W.regenRate's
+    --- form (an unmeasured in-form ramp's knob); `fsr` ({ [pt] = { spirit, mp5, share?, auras? } }): those types by W.regenRate's
     --- five-second rule instead.
     function W.startRegen(e, rates, every, after, fsr)
         every, W.regenAfter = every or 0.1, after
