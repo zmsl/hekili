@@ -560,8 +560,8 @@ end
 
 -- Slot r's regen weights over (from, from + dt]: the integrals of coefAt's fa, fb and k, split at the window's end and
 -- at every entry's aura edge inside it (each piece read at its start: no edge lies inside it, and a midpoint of a
--- sub-ulp piece rounds onto its end); dt, 0 and 0 for a plain slot. The window is
--- the latest one: a bound over a past interval that held an earlier window is approximate. Allocates nothing.
+-- sub-ulp piece rounds onto its end); dt, 0 and 0 for a plain slot. The window is the latest one: a bound over a past
+-- interval that held an earlier window is approximate. Allocates nothing.
 local function spans(r, from, dt)
     if not R.shaped[r] then
         return dt, 0, 0
@@ -633,14 +633,17 @@ end
 I.OnAdvance(function(from, to)
     local dt = to - from
     for r = 1, R.n do
-        if R.swing[r] == 0 and (R.regH[r] ~= 0 or R.spH[r] ~= 0) then
+        local learned = R.regH[r] ~= 0 or R.spH[r] ~= 0
+        if R.swing[r] == 0 and (learned or R.shaped[r]) then
             local max, a, b, k = R.max[r], spans(r, from, dt)
-            R.est0[r] = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b + k, max)
-            R.lo0[r] = clamp(R.lo0[r] + R.regL[r] * a + R.spL[r] * b + k, max)
-            R.hi0[r] = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b + k, max)
-            R.pinA[r], R.pinB[r] = R.pinA[r] + a, R.pinB[r] + b
-            R.pinDelta[r] = R.pinDelta[r] + k -- an `mp5` entry's known gain, kept out of the measurement
-            norm(r)
+            if learned or k ~= 0 then -- a slot with no learned regen still gains an `mp5` entry's k (as VS.Power does)
+                R.est0[r] = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b + k, max)
+                R.lo0[r] = clamp(R.lo0[r] + R.regL[r] * a + R.spL[r] * b + k, max)
+                R.hi0[r] = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b + k, max)
+                R.pinA[r], R.pinB[r] = R.pinA[r] + a, R.pinB[r] + b
+                R.pinDelta[r] = R.pinDelta[r] + k -- an `mp5` entry's known gain, kept out of the measurement
+                norm(r)
+            end
         end
     end
     for g = 1, G.n do
@@ -1281,6 +1284,7 @@ I.On(Obs.Read, function(o, t, lag)
         local f, k, mixed = readAt(r, t)
         if c == ReadOf.Regen and R.swing[r] == 0 and not (R.fsr[r] and mixed) then
             local v = o.b / f - k -- nonzero: every entry's mult > 0 (the build)
+            v = v > 0 and v or 0 -- an `mp5` aura believed up that the game dropped: never a draining rate
             R.decl[r], R.readT[r] = v, t
             R.regE[r], R.regL[r], R.regH[r] = v, v, v
             I.Sample(R.regen[r], "observed", v + R.spE[r], t, Obs.Read)

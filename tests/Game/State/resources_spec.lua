@@ -1984,6 +1984,28 @@ describe("resources", function()
             assert.are.same({ 3, 10 }, { I.res.regE[1], I.res.spE[1] })
         end)
 
+        it("clamps an out-of-combat read at 0 when a believed-up `mp5` aura exceeds the game's rate", function()
+            shaped({ spirit = 10, mp5 = 2 }, { { aura = "spring", mp5 = 5 } })
+            local api = fake.new()
+            I.api = api
+            VS.Start(api)
+            I.AuraModel(1, 3, 100, 300, 1, 100, 0) -- believed up; the game dropped it
+            api.ctl.regen[MANA] = { 13, 3 } -- mp5 3, spirit 10: 3 - 5 would store -2
+            api.ctl.Tick(105)
+            S.RunPolls(105)
+            I.Fold(105, false)
+            assert.are.same({ 0, 0, 0 }, { I.res.regE[1], I.res.regL[1], I.res.regH[1] })
+        end)
+
+        it("advances an `mp5` aura's gain on a slot whose learned parts are both 0, as VS.Power projects it", function()
+            shaped({ spirit = 0, mp5 = 0 }, { { aura = "spring", mp5 = 5 } })
+            I.AuraModel(1, 3, 10, 300, 1, 10, 0)
+            I.ResourceShift(1, -500, 10, Obs.CastSuccess)
+            local projected = VS.Power(MANA, 12).est
+            I.Settle(12)
+            assert.are.same({ 510, 510 }, { projected, VS.Power(MANA, 12).est })
+        end)
+
         it("takes no out-of-combat read while a `spirit` or `share` aura is up", function()
             shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "surge", spirit = 16, share = 1 } })
             local api = fake.new()
