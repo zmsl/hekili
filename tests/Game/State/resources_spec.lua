@@ -1777,9 +1777,9 @@ describe("resources", function()
             within(I.ALPHA * 2, I.res.regE[1])
         end)
 
-        -- A `mult` entry with `casting = true` (a regen-while-casting aura): its multiple of the rate runs inside the
+        -- A `spirit` entry with `share = 1` (a regen-while-casting aura): its multiple of the spirit regen runs inside the
         -- window too while the aura is up, and its seconds weigh the spirit part's calibration.
-        it("runs a `casting` mult aura's spirit part inside the window, and calibrates it there", function()
+        it("runs a `spirit` and `share` aura's spirit part inside the window, and calibrates it there", function()
             boot({
                 abilities = {},
                 abilityIds = {},
@@ -1792,7 +1792,7 @@ describe("resources", function()
                         max = 1000,
                         rest = true,
                         fsr = { spirit = 10, mp5 = 0 },
-                        mult = { { aura = "surge", mult = 5, casting = true } },
+                        mult = { { aura = "surge", spirit = 5, share = 1 } },
                     },
                 },
                 auras = { { key = "surge", id = 1021 } },
@@ -1813,8 +1813,8 @@ describe("resources", function()
             assert.are.equal(0, VS.Regen(MANA, 31, VS.CASTING).est)
         end)
 
-        -- a regen-while-casting aura multiplies the spirit part alone (SpiritRegenMultiplier): a `casting` mult leaves mp5 at x 1.
-        it("multiplies only the spirit part by a `casting` mult aura, mp5 at x 1", function()
+        -- a regen-while-casting aura multiplies the spirit part alone (SpiritRegenMultiplier): mp5 stays at x 1.
+        it("multiplies only the spirit part by a `spirit` aura, mp5 at x 1", function()
             boot({
                 abilities = {},
                 abilityIds = {},
@@ -1827,7 +1827,7 @@ describe("resources", function()
                         max = 1000,
                         rest = true,
                         fsr = { spirit = 20, mp5 = 4 },
-                        mult = { { aura = "surge", mult = 5, casting = true } },
+                        mult = { { aura = "surge", spirit = 5, share = 1 } },
                     },
                 },
                 auras = { { key = "surge", id = 1021 } },
@@ -1844,7 +1844,7 @@ describe("resources", function()
             assert.are.equal(24, VS.Regen(MANA, 31).est) -- the aura gone
         end)
 
-        it("keeps the stored regen split when an out-of-combat read lands under a `casting` mult aura", function()
+        it("keeps the stored regen split when an out-of-combat read lands under a `spirit` and `share` aura", function()
             boot({
                 abilities = {},
                 abilityIds = {},
@@ -1857,7 +1857,7 @@ describe("resources", function()
                         max = 1000,
                         rest = true,
                         fsr = { spirit = 20, mp5 = 4 },
-                        mult = { { aura = "surge", mult = 5, casting = true } },
+                        mult = { { aura = "surge", spirit = 5, share = 1 } },
                     },
                 },
                 auras = { { key = "surge", id = 1021 } },
@@ -1875,6 +1875,137 @@ describe("resources", function()
         end)
 
         it("allocates nothing over 1000 spends, advances and projections", function()
+            local t = 10
+            local bytes = alloc.bytes(function()
+                t = t + 1
+                I.ResourceShift(1, -1, t, Obs.CastSuccess)
+                I.Settle(t + 0.5)
+                VS.Power(MANA, t + 6)
+                VS.Regen(MANA, t + 6)
+            end, 1000)
+            assert.are.equal(0, bytes)
+        end)
+
+        -- Regen entries as wowsims's mana PseudoStats (A = 12, B = 10, c = 0.5: S = 20, M = 2).
+        local function shaped(fsr, mult)
+            boot({
+                abilities = {},
+                abilityIds = {},
+                abilitySlot = {},
+                resources = {
+                    { key = "mana", type = MANA, token = "MANA", max = 1000, rest = true, fsr = fsr, mult = mult },
+                },
+                auras = { { key = "surge", id = 1021 }, { key = "focus", id = 1022 }, { key = "spring", id = 1023 } },
+                auraIds = { { 1021 }, { 1022 }, { 1023 } },
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.Settle(10)
+        end
+
+        it("caps a `share` aura's casting share at all of the spirit regen with the slot's static share", function()
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "focus", share = 0.75 } })
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            I.AuraModel(1, 2, 10, 30, 1, 10, 0) -- focus up 10 to 30
+            -- inside: M + S x min(0.5 + 0.75, 1) = 2 + 20, not 12 + 0.75 / 0.5 x 10 = 27
+            assert.are.same({ 22, 22, 22 }, {
+                VS.Regen(MANA, 12).est,
+                VS.Regen(MANA, 12, VS.CASTING).est,
+                VS.Regen(MANA, 16).est,
+            })
+            within(400 + 22 * 2, VS.Power(MANA, 12).est)
+        end)
+
+        it("runs a `spirit` and `share` aura at M + m x S in and out of the window", function()
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "surge", spirit = 16, share = 1 } })
+            I.AuraModel(1, 1, 10, 30, 1, 10, 0)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess)
+            assert.are.same({ 322, 322, 22, 12 }, {
+                VS.Regen(MANA, 12).est,
+                VS.Regen(MANA, 16).est,
+                VS.Regen(MANA, 31).est,
+                VS.Regen(MANA, 31, VS.CASTING).est,
+            })
+        end)
+
+        it("takes the spirit regen from the mp5 part when the static share is all of it (shortcut: no mp5)", function()
+            shaped({ spirit = 0, mp5 = 20, share = 1 }, { { aura = "surge", spirit = 16, share = 1 } })
+            I.AuraModel(1, 1, 10, 30, 1, 10, 0)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess)
+            assert.are.same({ 320, 320 }, { VS.Regen(MANA, 12).est, VS.Regen(MANA, 16).est })
+        end)
+
+        it("multiplies overlapping `spirit` auras and adds their shares", function()
+            shaped(
+                { spirit = 10, mp5 = 2 },
+                { { aura = "surge", spirit = 2 }, { aura = "focus", spirit = 3, share = 0.5 } }
+            )
+            I.AuraModel(1, 1, 10, 30, 1, 10, 0)
+            I.AuraModel(1, 2, 10, 30, 1, 10, 0)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess)
+            assert.are.same({ 32, 62 }, { VS.Regen(MANA, 12).est, VS.Regen(MANA, 16).est })
+        end)
+
+        it("integrates a regen aura applied mid-interval and the window's end inside it", function()
+            shaped({ spirit = 10, mp5 = 2 }, { { aura = "focus", share = 0.5 } })
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess) -- the window to 15
+            I.AuraModel(1, 2, 12, 30, 1, 12, 0) -- focus from 12
+            within(400 + 2 * 2 + 7 * 3 + 12 * 1, VS.Power(MANA, 16).est) -- 10-12 mp5, 12-15 + half the spirit, 15-16 all
+        end)
+
+        it("keeps a `share` aura's gain out of the calibration, its seconds weighing the spirit part", function()
+            shaped({ spirit = 10, mp5 = 0 }, { { aura = "focus", share = 0.5 } })
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess)
+            I.AuraModel(1, 2, 10, 30, 1, 10, 0)
+            read(14, 400 + 5.5 * 4) -- 11 a second of spirit, half of it in the window
+            within(10 + I.ALPHA * 1, I.res.spE[1])
+            assert.are.equal(0, I.res.regE[1])
+        end)
+
+        it("adds an `mp5` aura's rate in both windows, out of the calibration and out of the read", function()
+            shaped({ spirit = 10, mp5 = 2 }, { { aura = "spring", mp5 = 5 } })
+            I.AuraModel(1, 3, 10, 300, 1, 10, 0)
+            read(10, 500)
+            I.ResourceShift(1, -100, 10, Obs.CastSuccess)
+            assert.are.same({ 7, 17 }, { VS.Regen(MANA, 12).est, VS.Regen(MANA, 16).est })
+            read(14, 400 + 7 * 4)
+            assert.are.same({ 2, 10 }, { I.res.regE[1], I.res.spE[1] })
+            local api = fake.new()
+            I.api = api
+            VS.Start(api)
+            api.ctl.auras.player.HELPFUL[1] = { spellId = 1023, expirationTime = 300, applications = 0 }
+            api.ctl.regen[MANA] = { 18, 8 } -- the client's pair with the aura's 5 inside both: mp5 3, spirit 10
+            api.ctl.Tick(105)
+            S.RunPolls(105)
+            I.Fold(105, false)
+            assert.are.same({ 3, 10 }, { I.res.regE[1], I.res.spE[1] })
+        end)
+
+        it("takes no out-of-combat read while a `spirit` or `share` aura is up", function()
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "surge", spirit = 16, share = 1 } })
+            local api = fake.new()
+            I.api = api
+            VS.Start(api)
+            I.AuraModel(1, 1, 100, 130, 1, 100, 0)
+            api.ctl.auras.player.HELPFUL[1] = { spellId = 1021, expirationTime = 130, applications = 0 }
+            api.ctl.regen[MANA] = { 322, 322 }
+            api.ctl.Tick(105)
+            S.RunPolls(105)
+            I.Fold(105, false)
+            assert.are.same({ 12, 10 }, { I.res.regE[1], I.res.spE[1] })
+        end)
+
+        it("allocates nothing with regen auras up over 1000 spends, advances and projections", function()
+            shaped({ spirit = 10, mp5 = 12, share = 0.5 }, {
+                { aura = "surge", spirit = 16, share = 1 },
+                { aura = "spring", mp5 = 5 },
+                { aura = "focus", mult = 2 },
+            })
+            I.AuraModel(1, 1, 10, 1e6, 1, 10, 0)
+            I.AuraModel(1, 3, 10, 1e6, 1, 10, 0)
             local t = 10
             local bytes = alloc.bytes(function()
                 t = t + 1

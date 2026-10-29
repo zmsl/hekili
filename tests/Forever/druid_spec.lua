@@ -764,7 +764,7 @@ describe("Forever Druid", function()
     )
 
     it("declares Innervate as wowsims applies it: the spirit regen x 5, inside the five-second rule too", function()
-        assert.are.same({ innervate = { aura = "innervate", mult = 5, casting = true } }, w.resources[0].models)
+        assert.are.same({ innervate = { aura = "innervate", spirit = 5, share = 1 } }, w.resources[0].models)
     end)
 
     it("refunds 80% of an avoided ability's energy or rage where wowsims does, per ability", function()

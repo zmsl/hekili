@@ -191,23 +191,25 @@ end
 -- RegisterResource( resourceID, regen, model, meta ): `regen` is Hekili's regen model (named entries); `meta` holds
 -- state-bound functions (each setfenv'd to `state`): `max`, `decay`, `decayInterval`, and two fields the belief reads
 -- (Game/State/Families/Resources.lua):
---   fsr = { spirit = fn, mp5 = fn }  The five-second rule (C3): continuous regen in two parts, each a rate per second
---                                    (a number or a function, read at the build) and calibrated on its own; after our
+--   fsr = { spirit = fn, mp5 = fn,   The five-second rule (C3): continuous regen in two parts, each a rate per second
+--           share = c }              (a number or a function, read at the build) and calibrated on its own; after our
 --                                    own spend of the resource the spirit part pauses for 5 s, the mp5 part never does.
 --                                    The belief's only: no APL field (`mana.fsr` would call the table and raise). Out
 --                                    of combat GetPowerRegenForPowerType's two returns (not casting, casting) are read
 --                                    as spirit + mp5 and mp5 (Sources/Power.lua). Mana is secret even out of combat:
 --                                    its lower bound (`mana.current`, `mana.pct`) is the build's rest (full), moved by
 --                                    our spends and the regen, until a short answer below it drops it to the ladder's.
--- A regen entry with `mult` (C3b), `{ aura = key, mult = n }` (n > 0; the belief ignores any other): the resource's
--- calibrated continuous rate x n while the player's aura `key` is up (an energy or mana surge); with `casting = true`
--- (an `fsr` resource's regen while casting) x n multiplies the spirit part alone (mp5 stays x 1) and runs inside the
--- five-second window too. It is a rate
--- multiplier, not a forecast event: it moves out of the regen model into `state.regenMult` here (Hekili's forecast
--- would call its missing `last`).
+-- A regen entry of rate fields (C3b), `{ aura = key, mult = n, spirit = m, share = s, mp5 = x }`, any of the four,
+-- each one of wowsims's mana PseudoStats while the player's aura `key` is up (sim/core/mana.go:186-211): `mult` the
+-- whole rate x n (MultiplyManaRegenSpeed; an energy surge); `spirit` the spirit regen x m (DB2 aura 110,
+-- SpiritRegenMultiplier); `share` + s of the spirit regen while casting (aura 134, SpiritRegenRateCasting), the total
+-- with the `fsr` meta's `share` capped at all of it; `mp5` + x a second in and out of the window (an MP5 aura). On an
+-- `fsr` resource the four combine as wowsims does: inside the window (MP5 + S x m x min(c + s, 1)) x f, outside
+-- (MP5 + S x m) x f. Rate fields are no forecast event: they move out of the regen model into `state.regenMult` here.
+-- `fsr`'s `share` (c, 0-1) is the static casting share the learned split already holds (talents, a pre-buffed armor).
 -- shortcut: the sim's forecast takes the belief's regen rate at `now` as a constant (Game/API/Facade.lua's
--- GetPowerRegenForPowerType), so it sees neither a `mult` aura expire mid-forecast nor a simulated cast apply one;
--- upgrade with a per-forecast multiplier when a pack's pooling misjudges across a `mult` aura's edge.
+-- GetPowerRegenForPowerType), so it sees neither a rate aura expire mid-forecast nor a simulated cast apply one;
+-- upgrade with a per-forecast multiplier when a pack's pooling misjudges across a rate aura's edge.
 -- refundOnAvoid = n (a number, 0-1)  The class's default share of an ability's cost of this resource given back when
 --                                    the target dodges, parries or misses it, for an ability declaring
 --                                    `refundOnAvoid = true` (RegisterAbility below): the belief's only (Families/Now.lua,
@@ -274,7 +276,7 @@ local HekiliSpecMixin = {
 
         if r.state.regenModel then
             for k, v in pairs( r.state.regenModel ) do
-                if v.mult then
+                if v.mult or v.spirit or v.share or v.mp5 then
                     r.state.regenMult = r.state.regenMult or {}
                     insert( r.state.regenMult, v )
                     r.state.regenModel[ k ] = nil -- clearing a field mid-traversal is allowed

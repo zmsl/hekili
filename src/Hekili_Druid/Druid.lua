@@ -266,8 +266,8 @@ spec:RegisterResource(
         -- A_MOD_POWER_REGEN_PERCENT +400% (spirit regen x 5) and A_MOD_MANA_REGEN_INTERRUPT 100% (all of it while
         -- casting), so 5 x the full spirit regen inside the five-second rule too (its Feral log: 108.75 = 5 x 21.75 a
         -- second over 22-41 s). wowsims's rule (owner: matches the game), not yet measured on Forever.
-        -- A rate multiplier of the belief's calibrated rate, its seconds weighed in the calibration.
-        innervate = { aura = "innervate", mult = 5, casting = true },
+        -- DB2 29166: aura 110 +400% (`spirit` x 5), aura 134 100% (`share` 1). Its seconds weigh the calibration.
+        innervate = { aura = "innervate", spirit = 5, share = 1 },
     },
     nil,
     {

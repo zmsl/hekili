@@ -37,8 +37,10 @@ local UNKNOWN, NOT, YES, SHORT = -1, 0, 1, 2
 -- The five-second rule (C3): a slot with an `fsr` meta splits its continuous regen in two parts, each with its own
 -- calibrated state: the `mp5` part (regE/regL/regH, decl, dev) always, the `spirit` part (spE/spL/spH, spDecl, spDev;
 -- 0 for every other slot) only outside the window our own spend opens (`fsrUntil[r]`: its end, I.FSR after the
--- spend). `shaped[r]`: the slot has an `fsr` or a `mult` entry (else its regen is the plain rate x dt). `pinA[r]` /
--- `pinB[r]`: the mult-weighted seconds since the last pin, in all and outside the window (the calibration's weights).
+-- spend); `share[r]` (c, 0-1): the static casting share the learned split already holds (the `fsr` meta's `share`), so
+-- the mp5 part is wowsims's casting rate M + cS and the spirit part (1 - c)S. `shaped[r]`: the slot has an `fsr` or a
+-- regen entry (else its regen is the plain rate x dt). `pinA[r]` / `pinB[r]`: the integrals of each part's weight
+-- (coefAt's fa and fb) since the last pin (the calibration's weights).
 -- `liftE/L/H[r]` and `liftT[r]`: how far a rung lifted a swing-paid slot's est, lo and hi (our cast's success, a usable
 -- answer, a flip's pin: the game held more than we believed) and the latest lifting rung's time; a landed swing at or
 -- before it pays that much less (owe, I.On(Obs.Swing)). `liftRec[r]`: the credit record that paid from it (its crit
@@ -75,6 +77,7 @@ local R = {
     dev = {},
     fsr = {},
     fsrUntil = {},
+    share = {},
     spE = {},
     spL = {},
     spH = {},
@@ -151,10 +154,11 @@ I.TAKEN_WINDOW = 10
 -- In combat (fold order, for the entries without an aura: aura index 0) and since when.
 local fighting, fightT = false, 0
 R.auraRegen = G
--- Rate multipliers (C3b, built from each resource's `mult` entries): slot r's continuous regen x `mult` while the
--- player's aura j is believed up; a `casting` one (spirit regen while casting) runs its multiple of the spirit part
--- inside the five-second window too.
-local M = { n = 0, slot = {}, aura = {}, mult = {}, casting = {} }
+-- Regen entries (C3b, built from each resource's `mult` list), wowsims's mana PseudoStats while the player's aura j is
+-- believed up: `mult` the whole rate x n (default 1), `spirit` the spirit regen x m (default 1), `share` + s of the
+-- spirit regen while casting (default 0; capped with the slot's static share at all of it), `mp5` + x a second in and
+-- out of the window (default 0). See coefAt.
+local M = { n = 0, slot = {}, aura = {}, mult = {}, spirit = {}, share = {}, mp5 = {} }
 R.regenMult = M
 --- The five-second rule's window after our own spend of an `fsr` slot, in seconds.
 I.FSR = 5
@@ -344,6 +348,8 @@ I.OnBuild(function(def, now)
             rate, spirit = type(rate) == "number" and rate or 0, type(spirit) == "number" and spirit or 0
         end
         R.fsr[r], R.fsrUntil[r], R.shaped[r], R.pinA[r], R.pinB[r] = fsr ~= false, 0, fsr ~= false, 0, 0
+        local c = fsr and eval(fsr.share)
+        R.share[r] = type(c) == "number" and (c < 0 and 0 or c > 1 and 1 or c) or 0
         R.decl[r] = rate
         R.regE[r], R.regL[r], R.regH[r] = rate, rate * (1 - I.REGEN_SPREAD), rate * (1 + I.REGEN_SPREAD)
         R.spDecl[r], R.spDev[r] = spirit, 0
@@ -388,11 +394,18 @@ I.OnBuild(function(def, now)
         local entries = list[r].mult
         for k = 1, entries and #entries or 0 do
             local e = entries[k]
-            for i = 1, #def.auras do
-                -- a mult of 0 or less is no rate multiplier (the out-of-combat read divides by it)
-                if def.auras[i].key == e.aura and type(e.mult) == "number" and e.mult > 0 then
+            -- each field valid or its default (a mult or spirit of 0 or less: the out-of-combat read divides by it); a
+            -- function spirit or mp5 is read here once
+            local f, m, sh, x = e.mult, eval(e.spirit), e.share, eval(e.mp5)
+            f = type(f) == "number" and f > 0 and f or nil
+            m = type(m) == "number" and m > 0 and m or nil
+            sh = type(sh) == "number" and sh > 0 and sh <= 1 and sh or nil
+            x = type(x) == "number" and x > 0 and x or nil
+            for i = 1, (f or m or sh or x) and #def.auras or 0 do
+                if def.auras[i].key == e.aura then
                     M.n = M.n + 1
-                    M.slot[M.n], M.aura[M.n], M.mult[M.n], M.casting[M.n] = r, i, e.mult, e.casting == true
+                    M.slot[M.n], M.aura[M.n] = r, i
+                    M.mult[M.n], M.spirit[M.n], M.share[M.n], M.mp5[M.n] = f or 1, m or 1, sh or 0, x or 0
                     R.shaped[r] = true
                 end
             end
@@ -498,80 +511,82 @@ local function auraGain(g, from, to)
     return (floor((to - ap) / iv) - floor((from - ap) / iv)) * G.value[g] -- nonzero: interval > 0 (checked at build)
 end
 
--- Slot r's regen seconds in (from, to], each weighted by its multiplier: a `mult` entry's believed-up aura adds
--- (mult - 1) x its overlap; an `fsr` slot's `casting` entry weighs only its spirit part (`spirit` true). shortcut: two
--- overlapping mult auras add, not multiply; exact for one at a time. Upgrade if a spec ever stacks two. Allocates
--- nothing.
-local function scaled(r, from, to, spirit)
-    local s = to - from
-    for k = 1, M.n do
-        if M.slot[k] == r and (spirit or not (M.casting[k] and R.fsr[r])) then
-            local j = M.aura[k]
-            local e, ap = I.auras.exp0[1][j], I.auras.applied[1][j] -- unit 1 is always "player"
-            local hi, lo = e < to and e or to, ap > from and ap or from
-            if hi > lo then
-                s = s + (M.mult[k] - 1) * (hi - lo)
+-- Slot r's rate at t as multiples of its two learned parts plus a known rate (fa x regE + fb x spE + k): wowsims's
+-- (MP5/5 + S x m x min(c + s, 1)) x f inside the window and (MP5/5 + S x m) x f outside (sim/core/mana.go:186-206),
+-- from the entries up at t: f and m multiply, s and mp5 add. The spirit regen S is spE / (1 - c), or the mp5 part
+-- when the static share c is all of it (shortcut: exact while the slot has no mp5; upgrade if a full-share spec has
+-- mp5). A plain slot's fb is 0. Allocates nothing.
+local function coefAt(r, t, inside)
+    local f, m, s, k = 1, 1, 0, 0
+    for i = 1, M.n do
+        if M.slot[i] == r then
+            local j = M.aura[i]
+            if I.auras.applied[1][j] <= t and I.auras.exp0[1][j] > t then -- unit 1 is always "player"
+                f, m, s, k = f * M.mult[i], m * M.spirit[i], s + M.share[i], k + M.mp5[i]
             end
         end
     end
-    return s
+    if not R.fsr[r] then
+        return f, 0, f * k
+    end
+    local c = R.share[r]
+    local fa, fb, e = 1, 1, m - 1
+    if inside then
+        fb, e = 0, m * (c + s < 1 and c + s or 1) - c
+    end
+    if c < 1 then
+        fb = fb + e / (1 - c) -- nonzero: c < 1
+    else
+        fa = fa + e
+    end
+    return f * fa, f * fb, f * k
 end
 
--- Slot r's regen weights over dt from `from`: the mult-weighted seconds in all (the mp5 part, or the whole rate) and
--- outside the five-second window (the spirit part), plus a `casting` mult aura's mult x its overlap inside the window;
--- dt and 0 for a plain slot. The window is the latest one: a bound over a past interval that held an earlier window
--- is approximate. Allocates nothing.
+-- The entries of slot r up at t as the out-of-combat read sees them: their whole-rate multiple f, their summed mp5, and
+-- whether a `spirit` or `share` one is up (the game's pair then mixes the parts: no news). Allocates nothing.
+local function readAt(r, t)
+    local f, k, mixed = 1, 0, false
+    for i = 1, M.n do
+        if M.slot[i] == r then
+            local j = M.aura[i]
+            if I.auras.applied[1][j] <= t and I.auras.exp0[1][j] > t then
+                f, k = f * M.mult[i], k + M.mp5[i]
+                mixed = mixed or M.spirit[i] ~= 1 or M.share[i] > 0
+            end
+        end
+    end
+    return f, k, mixed
+end
+
+-- Slot r's regen weights over (from, from + dt]: the integrals of coefAt's fa, fb and k, split at the window's end and
+-- at every entry's aura edge inside it (each piece read at its start: no edge lies inside it, and a midpoint of a
+-- sub-ulp piece rounds onto its end); dt, 0 and 0 for a plain slot. The window is
+-- the latest one: a bound over a past interval that held an earlier window is approximate. Allocates nothing.
 local function spans(r, from, dt)
     if not R.shaped[r] then
-        return dt, 0
+        return dt, 0, 0
     end
-    local to = from + dt
-    local b, s = 0, R.fsrUntil[r]
-    if R.fsr[r] then
-        s = s > from and s or from
-        b = to > s and scaled(r, s, to, true) or 0
-        local w = s < to and s or to -- the window's part of (from, to]
-        for k = 1, w > from and M.n or 0 do
-            if M.slot[k] == r and M.casting[k] then
-                local j = M.aura[k]
-                local e, ap = I.auras.exp0[1][j], I.auras.applied[1][j] -- unit 1 is always "player"
-                local hi, lo = e < w and e or w, ap > from and ap or from
-                if hi > lo then
-                    b = b + M.mult[k] * (hi - lo)
+    local to, a, b, k, t = from + dt, 0, 0, 0, from
+    local u = R.fsr[r] and R.fsrUntil[r] or -1
+    while t < to do
+        local nxt = u > t and u < to and u or to
+        for i = 1, M.n do
+            if M.slot[i] == r then
+                local j = M.aura[i]
+                local ap, e = I.auras.applied[1][j], I.auras.exp0[1][j]
+                if ap > t and ap < nxt then
+                    nxt = ap
+                end
+                if e > t and e < nxt then
+                    nxt = e
                 end
             end
         end
+        local fa, fb, kk = coefAt(r, t, t < u)
+        local w = nxt - t
+        a, b, k, t = a + fa * w, b + fb * w, k + kk * w, nxt
     end
-    return scaled(r, from, to, false), b
-end
-
--- Whether a `casting` mult aura of slot r is believed up at t (its spirit part runs inside the window). Allocates
--- nothing.
-local function castingAt(r, t)
-    for k = 1, M.n do
-        if M.slot[k] == r and M.casting[k] then
-            local j = M.aura[k]
-            if I.auras.applied[1][j] <= t and I.auras.exp0[1][j] > t then
-                return true
-            end
-        end
-    end
-    return false
-end
-
--- Slot r's regen multiplier at t: 1 plus each believed-up `mult` aura's (mult - 1); an `fsr` slot's `casting` entry
--- counts only for its spirit part (`spirit` true). Allocates nothing.
-local function multAt(r, t, spirit)
-    local f = 1
-    for k = 1, M.n do
-        if M.slot[k] == r and (spirit or not (M.casting[k] and R.fsr[r])) then
-            local j = M.aura[k]
-            if I.auras.applied[1][j] <= t and I.auras.exp0[1][j] > t then
-                f = f + M.mult[k] - 1
-            end
-        end
-    end
-    return f
+    return a, b, k
 end
 
 -- No decay while a `pausesDecay` entry's player aura of slot r is up (Bloodrage: +1/s and no decay for 10 s, in game):
@@ -619,11 +634,12 @@ I.OnAdvance(function(from, to)
     local dt = to - from
     for r = 1, R.n do
         if R.swing[r] == 0 and (R.regH[r] ~= 0 or R.spH[r] ~= 0) then
-            local max, a, b = R.max[r], spans(r, from, dt)
-            R.est0[r] = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b, max)
-            R.lo0[r] = clamp(R.lo0[r] + R.regL[r] * a + R.spL[r] * b, max)
-            R.hi0[r] = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b, max)
+            local max, a, b, k = R.max[r], spans(r, from, dt)
+            R.est0[r] = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b + k, max)
+            R.lo0[r] = clamp(R.lo0[r] + R.regL[r] * a + R.spL[r] * b + k, max)
+            R.hi0[r] = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b + k, max)
             R.pinA[r], R.pinB[r] = R.pinA[r] + a, R.pinB[r] + b
+            R.pinDelta[r] = R.pinDelta[r] + k -- an `mp5` entry's known gain, kept out of the measurement
             norm(r)
         end
     end
@@ -819,12 +835,12 @@ end
 -- (a snap: the estimate now stands on this rung, so the caller writes a `pinned` sample).
 local function ladder(r, c, affordable, t, lag)
     if lag > 0 and R.swing[r] == 0 then
-        local a, b = spans(r, t - lag, lag)
+        local a, b, k = spans(r, t - lag, lag)
         if affordable then
-            c = c + R.regL[r] * a + R.spL[r] * b
+            c = c + R.regL[r] * a + R.spL[r] * b + k
             c = c < R.max[r] and c or R.max[r] -- the pool caps the regen since the answer
         else
-            c = c + R.regH[r] * a + R.spH[r] * b
+            c = c + R.regH[r] * a + R.spH[r] * b + k
             if c - I.EPS < R.lo0[r] then
                 return false
             end
@@ -1165,8 +1181,8 @@ I.On(Obs.Usable, function(o, t, lag)
     keepFloor = false
     if now == SHORT and r ~= 0 and R.swing[r] == 0 and lag <= 0 then
         local c = I.CostOf(a)
-        local ga, gb = spans(r, o.t - I.GAIN_SHOWS, I.GAIN_SHOWS)
-        keepFloor = c - I.EPS >= R.est0[r] - R.regE[r] * ga - R.spE[r] * gb and R.lo0[r] + R.over[r] >= c - I.EPS
+        local ga, gb, gk = spans(r, o.t - I.GAIN_SHOWS, I.GAIN_SHOWS)
+        keepFloor = c - I.EPS >= R.est0[r] - R.regE[r] * ga - R.spE[r] * gb - gk and R.lo0[r] + R.over[r] >= c - I.EPS
     end
     local was, wasT = usable[a], ansT[a]
     usable[a], ansT[a] = now, o.t
@@ -1212,8 +1228,8 @@ I.On(Obs.Usable, function(o, t, lag)
                 owe(r, e, lo, hi, o.t) -- that swing's wound, if still in flight, must not pay it again
             end
         else
-            local wa, wb = spans(r, shortT[a], t - shortT[a])
-            local width = R.regH[r] * wa + R.spH[r] * wb
+            local wa, wb, wk = spans(r, shortT[a], t - shortT[a])
+            local width = R.regH[r] * wa + R.spH[r] * wb + wk
             pin(r, c, t - shortT[a] <= I.PIN_EXACT and 0 or width, t, "pinned", Obs.Usable)
         end
     else
@@ -1249,9 +1265,9 @@ I.On(Obs.Read, function(o, t, lag)
             R.readable[r] = true -- plain in combat: its exact reads keep it, its spenders' answers are no rungs
         end
         if lag > 0 and R.swing[r] == 0 then
-            local a, b = spans(r, t - lag, lag)
+            local a, b, k = spans(r, t - lag, lag)
             local width = (R.regH[r] - R.regL[r]) * a + (R.spH[r] - R.spL[r]) * b
-            pin(r, o.b + R.regL[r] * a + R.spL[r] * b, width, t, "observed", Obs.Read)
+            pin(r, o.b + R.regL[r] * a + R.spL[r] * b + k, width, t, "observed", Obs.Read)
         else
             pin(r, o.b, 0, t, "observed", Obs.Read)
         end
@@ -1260,16 +1276,20 @@ I.On(Obs.Read, function(o, t, lag)
             setMax(r, o.b)
             R.maxRead[r] = true -- a plain read wins over the declared maximum from now on
         end
-    elseif c == ReadOf.Regen and R.swing[r] == 0 and not (R.fsr[r] and castingAt(r, t)) then
-        local v = o.b / multAt(r, t, false) -- the game's rate includes any `mult` aura up now: store it unscaled
-        R.decl[r], R.readT[r] = v, t
-        R.regE[r], R.regL[r], R.regH[r] = v, v, v
-        I.Sample(R.regen[r], "observed", v + R.spE[r], t, Obs.Read)
-    elseif c == ReadOf.RegenSpirit and R.fsr[r] and not castingAt(r, t) then -- after its slot's Regen read in the same poll (Power.lua)
-        local v = o.b / multAt(r, t, true)
-        R.spDecl[r], R.readT[r] = v, t
-        R.spE[r], R.spL[r], R.spH[r] = v, v, v
-        I.Sample(R.regen[r], "observed", R.regE[r] + v, t, Obs.Read)
+    elseif c == ReadOf.Regen or c == ReadOf.RegenSpirit then
+        -- the game's rate includes the entries up now: store it unscaled and net of their mp5 (none of a mixed pair)
+        local f, k, mixed = readAt(r, t)
+        if c == ReadOf.Regen and R.swing[r] == 0 and not (R.fsr[r] and mixed) then
+            local v = o.b / f - k -- nonzero: every entry's mult > 0 (the build)
+            R.decl[r], R.readT[r] = v, t
+            R.regE[r], R.regL[r], R.regH[r] = v, v, v
+            I.Sample(R.regen[r], "observed", v + R.spE[r], t, Obs.Read)
+        elseif c == ReadOf.RegenSpirit and R.fsr[r] and not mixed then -- after its slot's Regen read (Power.lua)
+            local v = o.b / f -- nonzero: every entry's mult > 0 (the build)
+            R.spDecl[r], R.readT[r] = v, t
+            R.spE[r], R.spL[r], R.spH[r] = v, v, v
+            I.Sample(R.regen[r], "observed", R.regE[r] + v, t, Obs.Read)
+        end
     end
 end)
 
@@ -1640,7 +1660,8 @@ function VS.Power(powerType, now)
             end
         end
     end
-    local a, b = spans(r, I.clock, dt)
+    local a, b, k = spans(r, I.clock, dt)
+    gain = gain + k
     local est = clamp(R.est0[r] + R.regE[r] * a + R.spE[r] * b + gain, max)
     local lo = clamp(R.lo0[r] + R.over[r] + R.regL[r] * a + R.spL[r] * b + gain, max)
     local hi = clamp(R.hi0[r] + R.regH[r] * a + R.spH[r] * b + gain, max)
@@ -1671,9 +1692,9 @@ end
 VS.CASTING, VS.NOT_CASTING = true, "not casting"
 
 --- (spec §3.2) The believed regen per second of a power type. A swing-paid resource's is its calibrated step per
---- second of swinging. A continuous one's is x its `mult` auras up at `now`; with an `fsr`, the mp5 part alone while
---- `mode` is VS.CASTING (the in-cast rate), both parts while it is VS.NOT_CASTING (the not-casting rate, the
---- client's first return), and with it nil the rate at `now`: the mp5 part alone inside the five-second window.
+--- second of swinging. A continuous one's is the rate its regen entries up at `now` give (coefAt); with an `fsr`, the
+--- casting rate while `mode` is VS.CASTING (the in-cast rate), the not-casting rate while it is VS.NOT_CASTING (the
+--- client's first return), and with it nil the rate at `now`: the casting rate inside the five-second window.
 --- Allocates nothing.
 function VS.Regen(powerType, now, mode)
     local r = R.slotOf[powerType]
@@ -1687,12 +1708,9 @@ function VS.Regen(powerType, now, mode)
         rec.est, rec.lo, rec.hi = per * s, per * (s - sp), per * (s + sp)
         rec.conf = s > 0 and 1 - sp / s or 0 -- nonzero: s > 0 checked
     else
-        local f, sp =
-            multAt(r, now, false),
-            R.fsr[r] and (castingAt(r, now) or mode ~= VS.CASTING and (mode == VS.NOT_CASTING or now >= R.fsrUntil[r]))
-        local fs = sp and multAt(r, now, true) or 0 -- the spirit part's multiple (0: the part is off)
-        local est = R.regE[r] * f + R.spE[r] * fs
-        rec.est, rec.lo, rec.hi = est, R.regL[r] * f + R.spL[r] * fs, R.regH[r] * f + R.spH[r] * fs
+        local fa, fb, k = coefAt(r, now, R.fsr[r] and (mode == VS.CASTING or mode == nil and now < R.fsrUntil[r]))
+        local est = R.regE[r] * fa + R.spE[r] * fb + k
+        rec.est, rec.lo, rec.hi = est, R.regL[r] * fa + R.spL[r] * fb + k, R.regH[r] * fa + R.spH[r] * fb + k
         local conf = est ~= 0 and 1 - (rec.hi - est) / abs(est) or 0 -- nonzero: est ~= 0 checked
         rec.conf = conf < 0 and 0 or conf
     end
