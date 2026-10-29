@@ -734,6 +734,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                     local wait_time = state.delayMax or 15
                     local clash = 0
+                    local near = false -- TimeToReady's near-cost mark for this entry (mana-regen plan, Task 4a)
 
                     local enabled, enReason = self:IsSpellEnabled( action )
                     local known, reason
@@ -771,6 +772,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                         local script = scripts:GetScript( scriptID )
 
                         wait_time = state:TimeToReady()
+                        near = state.nearCost
                         clash = state.ClashOffset()
 
                         state.delay = wait_time
@@ -781,6 +783,12 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
                             if debug then self:Debug( "The conditions for this entry contain an error.  Skipping." ) end
                         elseif wait_time > state.delayMax then
                             if debug then self:Debug( "The action is not ready ( %.2f ) before our maximum delay window ( %.2f ) for this query.", wait_time, state.delayMax ) end
+                        elseif rAction and state.nearAction == rAction then
+                            -- Forever (mana-regen plan, Task 4a): the pick waits on its resource alone, and the belief's estimate
+                            -- reaches its cost within EARLY_EXIT (State.lua TimeToReady, nearCost); a later entry does not displace
+                            -- it for being ready sooner (the pick's wait stays the floor's: a countdown, never ready early). The
+                            -- APL's order wins inside the belief's error.
+                            if debug then self:Debug( "The current pick (%s at %.2f) is near its cost (the estimate reaches it within %.2f s); not displaced by %s at %.2f.", rAction, rWait, EARLY_EXIT, action, wait_time ) end
                         elseif rAction and ( rWait - state.ClashOffset( rAction ) ) - ( wait_time - clash ) <= 0.05 then
                             if debug then self:Debug( "The action is not ready in time ( %.2f vs. %.2f [%s] ) [ Clash: %.2f vs. %.2f ] - padded by 0.05s.", wait_time, rWait, rAction or "NONE", clash, state.ClashOffset( rAction ) ) end
                         else
@@ -1088,6 +1096,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                                                         rAction = state.this_action
                                                         rWait = state.delay
+                                                        state.nearAction = ( near and state.delay <= wait_time ) and rAction or false -- a recheck that delayed it past its resource wait: not near
 
                                                         if debug then
                                                             -- scripts:ImplantDebugData( slot )
@@ -1138,6 +1147,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                                                             rAction = state.this_action
                                                             rWait = state.delay
+                                                            state.nearAction = ( near and state.delay <= wait_time ) and rAction or false -- a recheck that delayed it past its resource wait: not near
 
                                                             state.selection_time = state.delay
                                                             state.selected_action = rAction
@@ -1256,6 +1266,7 @@ function Hekili:GetPredictionFromAPL( dispName, packName, listName, slot, action
 
                                                         rAction = state.this_action
                                                         rWait = state.delay
+                                                        state.nearAction = ( near and state.delay <= wait_time ) and rAction or false -- a recheck that delayed it past its resource wait: not near
 
                                                         state.selection_time = state.delay
                                                         state.selected_action = rAction
@@ -1324,6 +1335,7 @@ Hekili:ProfileCPU( "GetPredictionFromAPL", Hekili.GetPredictionFromAPL )
 
 function Hekili:GetNextPrediction( dispName, packName, slot )
     local debug = self.ActiveDebug
+    state.nearAction = false -- no pick yet (mana-regen plan, Task 4a)
 
     -- This is the entry point for the prediction engine.
     -- Any cache-wiping should happen here.

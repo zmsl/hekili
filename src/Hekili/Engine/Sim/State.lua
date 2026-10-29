@@ -86,6 +86,12 @@ state.aggro = false
 state.tanking = false
 
 state.delay = 0
+-- Forever (mana-regen plan, Task 4a): TimeToReady's near-cost mark for its last call (its resource alone holds it, and
+-- the belief's estimate reaches the cost within EARLY_EXIT while the floor reaches it within one more update), and the
+-- current pick's name while it was chosen near its cost (Engine/Sim/Core.lua keeps it over a later entry that is
+-- merely ready sooner).
+state.nearCost = false
+state.nearAction = false
 state.delayMin = 0
 state.delayMax = 15
 
@@ -6329,6 +6335,8 @@ do
             if res then
                 res.actual = UnitPower( "player", power.type )
                 res.max = UnitPowerMax( "player", power.type )
+                -- the belief's estimate above the floor it answered (TimeToReady's near-cost mark, mana-regen plan Task 4a)
+                res.estGap = VS.Power( power.type, state.now ).est - res.actual
 
                 if res.max > 0 then foundResource = true end
 
@@ -7223,6 +7231,8 @@ local power_tick_rate = 0.115
 function state:TimeToReady( action, pool )
     local now = self.now + self.offset
     action = action or self.this_action
+    self.nearCost = false
+    local nearRes, waitRes = false, 0 -- the resource wait's near-cost mark, confirmed at the end if nothing else holds it
     local ability = class.abilities[ action ]
     if not ability then return 3600, "not modeled" end
 
@@ -7285,6 +7295,15 @@ function state:TimeToReady( action, pool )
     z = z and z[ "time_to_" .. spend ]
     if spend and z and z > wait then
         wait = max( wait, ceil( z * 100 ) / 100 )
+        -- Forever (mana-regen plan, Task 4a): near its cost when the belief's estimate (the floor plus estGap) reaches
+        -- the cost within EARLY_EXIT (at the estimate the pick would end the scan) while the floor reaches it within
+        -- one more update (the usability poll that settles it; the client answers a gain late, so the floor runs a few
+        -- mana under the truth there). Core keeps such a pick over a later entry that is merely ready sooner; the wait
+        -- stays the floor's (a countdown, never ready early). Confirmed below: nothing but the resource may hold it.
+        z = self[ resource ]
+        nearRes = wait <= ns.EARLY_EXIT + ( Hekili.combatRate or 0.2 )
+            and self:TimeToResource( z, spend - ( z.estGap or 0 ) ) <= ns.EARLY_EXIT
+        waitRes = wait
     end
 
     z = ability.nobuff
@@ -7350,6 +7369,7 @@ function state:TimeToReady( action, pool )
 
     wait = ns.callHook( "TimeToReady", wait, action )
 
+    self.nearCost = nearRes and wait <= waitRes
     state.delay = delay
     return max( wait, self.delayMin )
 end
