@@ -13,6 +13,9 @@ local Display = ns.Facade.Display
 local Registry = Hekili.Engine.Registry
 
 local CIRCLE = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
+local WHITE = "Interface\\Buttons\\WHITE8X8"
+local VEIL_ALPHA = 0.5
+local SETTLE = 0.1 -- spec §3.2: how long a "back to ready" must hold
 
 local Truth = {}
 
@@ -23,6 +26,29 @@ Truth.EVENTS = { "SPELL_UPDATE_COOLDOWN", "SPELL_UPDATE_CHARGES", "SPELL_UPDATE_
 
 local function register( d )
     for _, e in ipairs( Truth.EVENTS ) do d:RegisterEvent( e ) end
+end
+
+-- Less ready shows at once; back to ready once the wanted state held SETTLE seconds or Output.hold publishes, or at
+-- once after our own cast (out.acts moved) (spec §3.2). `g.ready` is the shown state.
+local function settle( g, want, now, ver, acts )
+    if want ~= g.want then g.want, g.since, g.ver, g.acts = want, now, ver, acts end
+    if not want then g.ready = false
+    elseif not g.ready and ( now - g.since >= SETTLE or ver - g.ver >= ns.Output.hold or acts ~= g.acts ) then g.ready = true end
+    return g.ready
+end
+
+-- A spell change: the new state is shown with no debounce.
+local function reset( g, want, now, ver, acts )
+    g.want, g.ready, g.since, g.ver, g.acts = want, want, now, ver, acts
+end
+
+-- Shows or hides the veil when the dim changed.
+local function applyDim( ov, conf )
+    local dim = conf.truth.edge and ov.spell > 0 and not ov.dim.ready or false
+    if dim ~= ov.dimShown then
+        ov.dimShown = dim
+        ov.veil:SetShown( dim )
+    end
 end
 
 -- Puts the swipe the button should show on screen, when it changed: the real one while it runs and the style shows
@@ -64,7 +90,10 @@ local function charged( def )
     return ( rawget( def, "charges" ) or 1 ) ~= 1 or ( funcs ~= nil and funcs.charges ~= nil )
 end
 
-local function reset( ov )
+local function clearOv( ov )
+    if ov.veil then ov.veil:Hide() end
+    ov.dimShown, ov.usable = false, true
+    reset( ov.dim, true, 0, 0, 0 )
     if ov.cd then ov.cd:Hide() end
     if ov.cdShown then ov.b.Cooldown:Show() end
     ov.spell, ov.press, ov.charged = 0, false, false
@@ -113,8 +142,19 @@ function Truth.Build( d, conf, buttons )
             set[ c ] = ov
         end
         ov.b = b
+        if not ov.top then
+            ov.dim = { ready = true, want = true, since = 0, ver = 0, acts = 0 }
+            ov.top = CreateFrame( "Frame", nil, b )
+            ov.top:SetAllPoints( b )
+            ov.top:SetFrameLevel( b:GetFrameLevel() + 3 )
+            ov.veil = ov.top:CreateTexture( nil, "OVERLAY" )
+            ov.veil:SetAllPoints( ov.top )
+            ov.veil:SetTexture( b.round and CIRCLE or WHITE )
+            ov.veil:SetVertexColor( 0, 0, 0, VEIL_ALPHA )
+            ov.veil:Hide()
+        end
         if b.Cooldown and not ov.cd then makeSwipe( ov, b ) end
-        reset( ov )
+        clearOv( ov )
     end
     S.ov = set
     register( d )
@@ -122,6 +162,14 @@ function Truth.Build( d, conf, buttons )
 end
 
 function Truth.Tick( d, conf, out, now )
+    local S = d.truthState
+    S.out = out -- for OnGameEvent, which is handed none
+    local set, ver, acts = S.ov, out.version, out.acts
+    for c = 1, #set do
+        local ov = set[ c ]
+        settle( ov.dim, ov.usable, now, ver, acts )
+        applyDim( ov, conf )
+    end
 end
 
 -- Runs after the style's Draw. After a Clear (an unsubscribe), the next draw brings the events back.
@@ -145,6 +193,9 @@ function Truth.Draw( d, conf, out )
             ov.spell, ov.press = spell, press
             ov.charged = spell > 0 and charged( abilities[ rec.actionName ] )
             swipe( ov, conf )
+            ov.usable = spell == 0 or ( C_Spell.IsSpellUsable( spell ) ) and true or false
+            reset( ov.dim, ov.usable, Facade.GetTime(), out.version, out.acts )
+            applyDim( ov, conf )
         end
         local hid = b.timersHidden == true
         if hid ~= ov.hid then ov.hid, ov.dirty = hid, true end
@@ -154,13 +205,25 @@ function Truth.Draw( d, conf, out )
 end
 
 function Truth.OnGameEvent( d, conf, event, ... )
-    if event ~= "SPELL_UPDATE_COOLDOWN" and event ~= "SPELL_UPDATE_CHARGES" then return end
-    local set = d.truthState.ov
-    for c = 1, #set do
-        local ov = set[ c ]
-        if ov.spell > 0 then
-            swipe( ov, conf )
-            apply( ov )
+    local S = d.truthState
+    local set, out, now = S.ov, S.out, Facade.GetTime()
+    if event == "SPELL_UPDATE_USABLE" then
+        if not out then return end
+        for c = 1, #set do
+            local ov = set[ c ]
+            if ov.spell > 0 then
+                ov.usable = ( C_Spell.IsSpellUsable( ov.spell ) ) and true or false
+                settle( ov.dim, ov.usable, now, out.version, out.acts )
+                applyDim( ov, conf )
+            end
+        end
+    elseif event == "SPELL_UPDATE_COOLDOWN" or event == "SPELL_UPDATE_CHARGES" then
+        for c = 1, #set do
+            local ov = set[ c ]
+            if ov.spell > 0 then
+                swipe( ov, conf )
+                apply( ov )
+            end
         end
     end
 end
@@ -169,7 +232,7 @@ function Truth.Clear( d )
     local S = d.truthState
     if not S then return end
     for _, e in ipairs( Truth.EVENTS ) do d:UnregisterEvent( e ) end
-    for c = 1, #S.ov do reset( S.ov[ c ] ) end
+    for c = 1, #S.ov do clearOv( S.ov[ c ] ) end
     S.cleared = true
 end
 

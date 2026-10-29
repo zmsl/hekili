@@ -806,3 +806,125 @@ describe("Modern's real cooldown swipe (R2, §3.4)", function()
         end
     end)
 end)
+
+describe("Modern's usability edge (§3.2)", function()
+    local function setup(style)
+        local H, d = boot(style or "classic", true)
+        usableAll(H)
+        publish(H, SET)
+        frame(H, d, 0.2)
+        return H, d, ids(H), d.truthState.ov[1]
+    end
+
+    it("dims at once on SPELL_UPDATE_USABLE when the game says not usable, between pulses", function()
+        local H, d, A, ov = setup()
+        assert.is_false(ov.dimShown)
+        H.ctl.usable[A.mortal_strike] = { false, true }
+        H.Fire("SPELL_UPDATE_USABLE")
+        assert.is_true(ov.dimShown)
+        assert.is_true(ov.veil.__shown)
+        H.ctl.usable[A.mortal_strike] = { false, false } -- an unmet proc or condition dims too (plan ruling 1)
+        H.Fire("SPELL_UPDATE_USABLE")
+        assert.is_true(ov.dimShown)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("undims only after 0.1 s with no publish and no cast of ours", function()
+        local H, d, A, ov = setup()
+        H.ns.Output.hold = 3
+        H.ctl.usable[A.mortal_strike] = { false, true }
+        H.Fire("SPELL_UPDATE_USABLE")
+        H.ctl.usable[A.mortal_strike] = { true, false }
+        H.Fire("SPELL_UPDATE_USABLE")
+        assert.is_true(ov.dimShown)
+        frame(H, d, 0.05)
+        assert.is_true(ov.dimShown)
+        frame(H, d, 0.06)
+        assert.is_false(ov.dimShown)
+        assert.is_false(ov.veil.__shown)
+    end)
+
+    it("never blinks: a flip back and forth restarts the wait", function()
+        local H, d, A, ov = setup()
+        H.ns.Output.hold = 3
+        H.ctl.usable[A.mortal_strike] = { false, true }
+        H.Fire("SPELL_UPDATE_USABLE")
+        H.ctl.usable[A.mortal_strike] = { true, false }
+        H.Fire("SPELL_UPDATE_USABLE")
+        frame(H, d, 0.05)
+        H.ctl.usable[A.mortal_strike] = { false, true }
+        H.Fire("SPELL_UPDATE_USABLE")
+        H.ctl.usable[A.mortal_strike] = { true, false }
+        H.Fire("SPELL_UPDATE_USABLE")
+        frame(H, d, 0.06)
+        assert.is_true(ov.dimShown)
+        frame(H, d, 0.05)
+        assert.is_false(ov.dimShown)
+    end)
+
+    it("undims after Output.hold publishes, or at the first publish after our own cast", function()
+        local H, d, A, ov = setup()
+        H.ns.Output.hold = 2
+        H.ctl.usable[A.mortal_strike] = { false, true }
+        H.Fire("SPELL_UPDATE_USABLE")
+        H.ctl.usable[A.mortal_strike] = { true, false }
+        H.Fire("SPELL_UPDATE_USABLE")
+        publish(H, SET)
+        frame(H, d, 0.01)
+        assert.is_true(ov.dimShown)
+        publish(H, SET)
+        frame(H, d, 0.01)
+        assert.is_false(ov.dimShown)
+        H.ns.Output.hold = 3
+        H.ctl.usable[A.mortal_strike] = { false, true }
+        H.Fire("SPELL_UPDATE_USABLE")
+        H.ctl.usable[A.mortal_strike] = { true, false }
+        H.Fire("SPELL_UPDATE_USABLE")
+        H.ns.Output.Acted()
+        publish(H, SET)
+        frame(H, d, 0.01)
+        assert.is_false(ov.dimShown)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("dims a lane icon too, and nothing with the edge off", function()
+        local H, d, A = setup("timeline")
+        local T = d.styleFrames.timeline
+        local lane = 3
+        local spell = A[T.cells[lane].Action]
+        H.ctl.usable[spell] = { false, true }
+        H.Fire("SPELL_UPDATE_USABLE")
+        assert.is_true(d.truthState.ov[lane].dimShown)
+        H.Hekili.DB.profile.displays.Primary.truth.edge = false
+        H.Hekili:BuildUI()
+        publish(H, SET)
+        frame(H, d, 0.2)
+        H.Fire("SPELL_UPDATE_USABLE")
+        for c, ov in ipairs(d.truthState.ov) do
+            assert.is_false(ov.dimShown, "button " .. c)
+        end
+        assert.are.same({}, H.errors)
+    end)
+
+    it("leaves nothing on a slot whose record went away", function()
+        local H, d, A = setup()
+        for _, id in pairs(A) do
+            H.ctl.usable[id] = { false, true }
+        end
+        H.Fire("SPELL_UPDATE_USABLE")
+        assert.is_true(d.truthState.ov[3].dimShown)
+        publish(H, SET_ONE)
+        frame(H, d, 0.2)
+        for c = 2, #d.Buttons do
+            assert.is_false(d.truthState.ov[c].dimShown, "button " .. c)
+        end
+        H.ns.Output.Begin("Primary")
+        H.ns.Output.Publish("Primary", 0)
+        frame(H, d, 0.2)
+        for c, ov in ipairs(d.truthState.ov) do
+            assert.is_false(ov.dimShown, "button " .. c)
+            assert.is_false(ov.real or false, "button " .. c)
+        end
+        assert.are.same({}, H.errors)
+    end)
+end)

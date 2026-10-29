@@ -116,3 +116,4 @@ the game's numbers.
 - **Task 9b, decided.** The expectation at a swing's `lost` close is built (expiry EV, owner ruling 2026-10-23),
   none when a white avoid nobody took fell in its window (avoidSeen); solo over 1, bar 2. Its measured cost and the
   four variants are the "Assumed outcomes (decision 51)" row in `docs/dev/gaps.md`.
+| MD-USE | Warrior, Druid | none (auto, research §3): record SPELL_UPDATE_USABLE's time against the poll's insufficientPower flip for the spenders (Sources/Power.lua's ladder) on open-world mobs | the event comes no later than the next poll in at least 95% of flips. Fail: Modern's grey keeps the 0.2 s pulse (no loss against Classic) | open: launch day 2026-11-04 |
