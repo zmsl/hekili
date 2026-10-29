@@ -45,7 +45,7 @@ estimate drift per class) can move the middle rows.
 | 1 | True cooldown swipes (3) | CONFIRMED | high: every icon with a cooldown; the swipe players already trust from their bars | measured route, cheaper than today's swipe read (56 B per cooldown event against 520 B per `GetSpellCooldown` call on every drawing frame [GS Q5]) |
 | 1 | Usability edge (1) | CONFIRMED | low to medium: the grey arrives within a frame instead of up to 0.2 s | plain signal, no secret at all |
 | 1 | Proc confirmation from usability and overlay glow (6, routes 2-3) | CONFIRMED | medium: proc windows are where players doubt the addon | plain, already resolved per record (`r.usable`, `r.glow`) |
-| 2 | Truth strip (4) | CONFIRMED by docs; tainted call on GC-T | high for testers (live estimate drift), medium for players | needs GC-T's bar row before it is on by default |
+| 2 | Truth bars (4), dev build only (§7.1) | CONFIRMED by docs; tainted call on GC-T | high for testers (live estimate drift); none shown to players (owner, 2026-10-29) | needs GC-T's bar row; never on by default |
 | 2 | Execute border (2) | LIKELY | low to medium (§1) | needs GC-T's health row |
 | 3 | Proc confirmation from the Cooldown Manager (6, route 1) | CONFIRMED route, coverage unknown | medium, for buff procs that gate nothing | needs a record field (§5.3) and CDM-T's taint verdict |
 | 3 | Timeline riding real cooldowns (5) | PROBE | medium: the near end of the lane becomes exact | needs GC-T and MD-TL, and a Timeline hook (§5.4) |
@@ -165,7 +165,9 @@ The only file that calls `Facade.Display`. Per display, preallocated at `Build` 
 - `ov[i].dur`: the held duration object (nil when none), `ov[i].spell`: the spell it was fetched for;
 - `ov[i].border`: the execute border texture; `ov[i].glow`: uses the base's glow helpers (LibCustomGlow, as Classic);
 - `ov[i].dim`, `ov[i].since`: the debounce state (§3.2);
-- the strip (one StatusBar, its tick textures `ticks[1..SLOTS]`, the estimate marker) per display;
+- the truth bars (§7.1, developer mode only): per enabled type, one real StatusBar (fed from `Facade.Display`) and one
+  belief StatusBar (fed the plain published estimate), with the cost tick textures `ticks[1..SLOTS]` on the real bar;
+  built only in a dev build (`Hekili.IsDev`), so a player's display allocates and draws none of it;
 - the ride bars (`ride[i]`, one StatusBar per lane slot) for a `timeline` base.
 
 What it reads: `out.recs[i]` (`actionName`, `actionID`, `exact_time`, `cost`, `resource_type`, `resources`),
@@ -234,10 +236,36 @@ One "Modern" tab, built through `Hekili.StyleOptions` helpers where they exist. 
 | `edge` | on | redraw on the usability edge |
 | `confirm` | on | proc glow from usability and overlay; `confirmQueue` off |
 | `execute` | on, shown only while `VERIFIED.execute` | the border colour (gold) and width |
-| `strip` | off, shown only while `VERIFIED.strip` | position (below / above), height; `stripEstimate` (the blue marker) on |
 | `ride` | off, shown only while `VERIFIED.ride` and `base == timeline` | |
 
 The style dropdown's label is "Modern (game truth)"; switching back to Classic is the existing dropdown (requirement 5).
+
+### 7.1 Truth bars: dev build only (owner ruling, 2026-10-29)
+
+Owner: "The truth strip is a really interesting idea but should be designed carefully so that the UI isn't messy. It
+should be off by default ... both the real bar(s) and belief bars should be dev-mode only so that the addon isn't
+trying to show too much to the player."
+
+- **Developer mode is the dev build** (owner, 2026-10-29: "the title itself changes on the addon when it's a dev
+  build"): `Hekili.IsDev` (`Hekili.lua:35-38`), true when the packager left `@project-version@` unreplaced (a git
+  checkout; the version reads `Dev-<build> (<date>)`), never in a released zip. No new flag. In a release build the
+  truth-bar options do not exist, nothing is built, and Truth's `Tick` skips the bars (one plain boolean check). In a
+  dev build the options appear under a "Developer" header on the Modern tab, every toggle still off by default.
+- **Two families of bars, each off by default, each switchable by type** (`displays[id].modern.truthBars`):
+  - **Real bars** (`real[type]`): the game's value through `Facade.Display` (secret, §3.3), one bar per type: the
+    player's power types the active pack declares (rage, mana, energy, focus) and target health. Each needs
+    `VERIFIED.strip` (GC-T) before its toggle appears.
+  - **Belief bars** (`belief[type]`): Hekili's own estimate for the same types, from the published plain record
+    (`out.recs[1].resources`, the belief's est; no `state.*` read), drawn in a distinct colour, optionally with its
+    lo-hi band as a lighter span. Plain values only, so they need no probe.
+  - A type shows a real bar and a belief bar stacked as a pair when both are on, so drift reads at a glance; either
+    alone is allowed.
+- **Layout restraint.** Bars sit in one compact block below (or above) the icons, `height` 4-10 px each (default 6),
+  at most one row per enabled type, width = the display's icon row; no text by default (`showValues` off; when on, the
+  belief bar may print its number, the real bar never can: a secret cannot be formatted). Cost ticks (the queue's
+  costs) only on a real bar of the matching type.
+- **Never player-facing:** no bar appears outside a dev build; a released zip has no path to them. The
+  options, the snapshot and WeakAuras do not expose real values (§3.3).
 
 ## 8. What is testable where
 
@@ -271,7 +299,8 @@ target frame's 20 %, a lane icon arrives with the action bar's swipe end.
    (c) Modern copies Classic's layout options (no exception, duplicated settings).
 4. **Cooldown Manager confirmation.** Worth a record field (`DisplayStyleAPI` 1 → 2) and a pack field
    (`confirmAura`)? Without it, proc confirmation covers usability-gated procs and overlay glows only.
-5. **The strip's estimate marker.** Player-facing, or a developer option for play tests?
+5. ~~**The strip's estimate marker.**~~ Answered (owner, 2026-10-29): real and belief bars are both dev-build
+   only, off by default, switchable by type (§7.1, M10).
 6. **The ride's max rule.** A lane icon may arrive later than Hekili predicted but never sooner. Acceptable, or
    should the lane show the real time only when it is later, and nothing otherwise (the same thing, said as a rule)?
 7. **Allocation.** Accept 56 B per cooldown event per shown spell (client userdata), against Classic's 520 B per
@@ -298,3 +327,4 @@ in `L[...]` (the lint requires it).
 | M7 | Curves are built per distinct pack parameter out of combat and shared; nothing per frame; the curve input is a 0-1 fraction | performance rule; API §0 |
 | M8 | Execute and proc facts come from pack fields (`healthGate`, existing; `confirmAura`, proposed) | core generic rule |
 | M9 | The press icon's swipe includes the GCD; queued icons ignore it | matches the action bars without the queue sweeping in unison |
+| M10 | Truth bars (real and belief, per type) exist only in a dev build (`Hekili.IsDev`), each off by default, built only there | owner ruling 2026-10-29: no cluttered player UI; the bars are a testing tool |
