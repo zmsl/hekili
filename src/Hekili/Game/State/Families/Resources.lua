@@ -78,6 +78,7 @@ local R = {
     fsr = {},
     fsrUntil = {},
     share = {},
+    shareDef = {}, -- the fsr share as declared (a number or a function)
     spE = {},
     spL = {},
     spH = {},
@@ -147,7 +148,7 @@ R.slotOf, R.slotOfToken = {}, {}
 -- The share of each hand's swings that land: an EMA over swings (a swing, c = 4, decays it; a landed one, c = 1, adds
 -- HIT_ALPHA). It scales the model's swing rate, so the step scale calibrates the value of a landed swing.
 local hitRate, HIT_ALPHA = { 1, 1 }, 0.1
-local G = { n = 0, slot = {}, aura = {}, value = {}, interval = {}, talent = {}, pause = {} }
+local G = { n = 0, slot = {}, aura = {}, value = {}, interval = {}, talent = {}, pause = {}, def = {} }
 -- `taken[r]`: the paying entry's `taken(kind, amount, level)` bound to the `now` context (Families/Now.lua), or false.
 -- Its gains in one-second bins: `takenBin[r][i]` the gain of the second `takenSec[r][i]` (-1: empty), i = sec % 10 + 1.
 I.TAKEN_WINDOW = 10
@@ -158,7 +159,7 @@ R.auraRegen = G
 -- believed up: `mult` the whole rate x n (default 1), `spirit` the spirit regen x m (default 1), `share` + s of the
 -- spirit regen while casting (default 0; capped with the slot's static share at all of it), `mp5` + x a second in and
 -- out of the window (default 0). See coefAt.
-local M = { n = 0, slot = {}, aura = {}, mult = {}, spirit = {}, share = {}, mp5 = {} }
+local M = { n = 0, slot = {}, aura = {}, mult = {}, spirit = {}, share = {}, mp5 = {}, spiritDef = {}, mp5Def = {} }
 R.regenMult = M
 --- The five-second rule's window after our own spend of an `fsr` slot, in seconds.
 I.FSR = 5
@@ -315,6 +316,25 @@ local function setMax(r, m)
     end
 end
 
+-- Re-reads every function-valued regen field (a number is read as it stands) into the number arrays; a result that is
+-- not a valid number makes the field inert. Called at the build and at each combat start only: the functions read
+-- state (a pack's Spirit, max mana), which does not move mid-fight.
+local function refresh()
+    for r = 1, R.n do
+        local c = eval(R.shareDef[r])
+        R.share[r] = type(c) == "number" and (c < 0 and 0 or c > 1 and 1 or c) or 0
+    end
+    for i = 1, M.n do
+        local m, x = eval(M.spiritDef[i]), eval(M.mp5Def[i])
+        M.spirit[i] = type(m) == "number" and m > 0 and m or 1
+        M.mp5[i] = type(x) == "number" and x > 0 and x or 0
+    end
+    for g = 1, G.n do
+        local v = eval(G.def[g])
+        G.value[g] = type(v) == "number" and v == v and v or 0
+    end
+end
+
 I.OnBuild(function(def, now)
     for k in pairs(R.slotOf) do
         R.slotOf[k] = nil
@@ -348,8 +368,7 @@ I.OnBuild(function(def, now)
             rate, spirit = type(rate) == "number" and rate or 0, type(spirit) == "number" and spirit or 0
         end
         R.fsr[r], R.fsrUntil[r], R.shaped[r], R.pinA[r], R.pinB[r] = fsr ~= false, 0, fsr ~= false, 0, 0
-        local c = fsr and eval(fsr.share)
-        R.share[r] = type(c) == "number" and (c < 0 and 0 or c > 1 and 1 or c) or 0
+        R.shareDef[r] = fsr and fsr.share
         R.decl[r] = rate
         R.regE[r], R.regL[r], R.regH[r] = rate, rate * (1 - I.REGEN_SPREAD), rate * (1 + I.REGEN_SPREAD)
         R.spDecl[r], R.spDev[r] = spirit, 0
@@ -396,16 +415,20 @@ I.OnBuild(function(def, now)
             local e = entries[k]
             -- each field valid or its default (a mult or spirit of 0 or less: the out-of-combat read divides by it); a
             -- function spirit or mp5 is read here once
-            local f, m, sh, x = e.mult, eval(e.spirit), e.share, eval(e.mp5)
+            local f, sh, m, x = e.mult, e.share, e.spirit, e.mp5
             f = type(f) == "number" and f > 0 and f or nil
-            m = type(m) == "number" and m > 0 and m or nil
             sh = type(sh) == "number" and sh > 0 and sh <= 1 and sh or nil
-            x = type(x) == "number" and x > 0 and x or nil
-            for i = 1, (f or m or sh or x) and #def.auras or 0 do
+            local live = f
+                or sh
+                or type(m) == "function"
+                or type(m) == "number" and m > 0
+                or type(x) == "function"
+                or type(x) == "number" and x > 0 -- a function may become valid at a pull
+            for i = 1, live and #def.auras or 0 do
                 if def.auras[i].key == e.aura then
                     M.n = M.n + 1
                     M.slot[M.n], M.aura[M.n] = r, i
-                    M.mult[M.n], M.spirit[M.n], M.share[M.n], M.mp5[M.n] = f or 1, m or 1, sh or 0, x or 0
+                    M.mult[M.n], M.share[M.n], M.spiritDef[M.n], M.mp5Def[M.n] = f or 1, sh or 0, m, x
                     R.shaped[r] = true
                 end
             end
@@ -429,14 +452,17 @@ I.OnBuild(function(def, now)
                     tid = def.talents[i].spell
                 end
             end
-            local ok = type(e.value) == "number" and type(e.interval) == "number" and e.interval > 0
+            local ok = (type(e.value) == "number" or type(e.value) == "function")
+                and type(e.interval) == "number"
+                and e.interval > 0
             if ok and j >= 0 and tid >= 0 then
                 G.n = G.n + 1
-                G.slot[G.n], G.aura[G.n], G.value[G.n], G.interval[G.n] = r, j, e.value, e.interval
+                G.slot[G.n], G.aura[G.n], G.def[G.n], G.interval[G.n] = r, j, e.value, e.interval
                 G.talent[G.n], G.pause[G.n] = tid, e.pausesDecay == true
             end
         end
     end
+    refresh()
     for a = 1, #def.abilities do
         usable[a], ansT[a], shortCost[a], shortT[a], shortGain[a], shortCast[a], shortEst[a] =
             UNKNOWN, -1, 0, 0, 0, 0, 0
@@ -1527,6 +1553,7 @@ end
 
 I.On(Obs.CombatStart, function(o, t)
     fighting, fightT = true, t
+    refresh()
     for r = 1, R.n do
         R.decayNext[r] = 0
         R.pinN[r], R.pinErr[r] = 0, 0

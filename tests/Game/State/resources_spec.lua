@@ -1903,6 +1903,76 @@ describe("resources", function()
             I.Settle(10)
         end
 
+        it("re-reads function `spirit`, `mp5` and `share` values at each combat start", function()
+            local m, x, c = 2, 5, 0.5
+            shaped({
+                spirit = 10,
+                mp5 = 12,
+                share = function()
+                    return c
+                end,
+            }, {
+                {
+                    aura = "surge",
+                    spirit = function()
+                        return m
+                    end,
+                },
+                {
+                    aura = "spring",
+                    mp5 = function()
+                        return x
+                    end,
+                },
+            })
+            I.AuraModel(1, 1, 10, 1e6, 1, 10, 0)
+            I.AuraModel(1, 3, 10, 1e6, 1, 10, 0)
+            assert.are.equal(22 + 20 + 5, VS.Regen(MANA, 12).est) -- outside: 12 + 10 + (2 - 1) x 20 + 5
+            m, x, c = 3, "bad", 0
+            obs(Obs.CombatStart, 20, 0, 0, 0)
+            I.Fold(20, false)
+            assert.are.equal(12 + 10 + 2 * 10, VS.Regen(MANA, 21).est) -- c 0: S = 10; mp5 inert
+        end)
+
+        it("credits a function auraRegen `value`, read at the build and at each combat start", function()
+            local v = 7
+            boot({
+                abilities = {},
+                abilityIds = {},
+                abilitySlot = {},
+                resources = {
+                    {
+                        key = "mana",
+                        type = MANA,
+                        token = "MANA",
+                        max = 1000,
+                        rest = true,
+                        auraRegen = {
+                            {
+                                aura = "spring",
+                                interval = 2,
+                                value = function()
+                                    return v
+                                end,
+                            },
+                        },
+                    },
+                },
+                auras = { { key = "spring", id = 1023 } },
+                auraIds = { { 1023 } },
+                talents = {},
+                units = { "player", "target" },
+            })
+            I.Settle(10)
+            read(10, 500)
+            I.AuraModel(1, 1, 10, 100, 1, 10, 0)
+            within(500 + 7, VS.Power(MANA, 12).est)
+            v = 9
+            obs(Obs.CombatStart, 12, 0, 0, 0)
+            I.Fold(12, false)
+            within(500 + 7 + 9, VS.Power(MANA, 14).est)
+        end)
+
         it("caps a `share` aura's casting share at all of the spirit regen with the slot's static share", function()
             shaped({ spirit = 10, mp5 = 12, share = 0.5 }, { { aura = "focus", share = 0.75 } })
             read(10, 500)
