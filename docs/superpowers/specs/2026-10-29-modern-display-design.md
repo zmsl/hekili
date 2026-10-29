@@ -1,7 +1,9 @@
 # Modern display: the game's truth painted over Hekili's picks (design, 2026-10-29)
 
-Status: APPROVED by the owner 2026-10-29 ("3=a, the rest go with your rec"), with the answers in §9. Architectural (a
-new style, a new facade class): the phase 1 build plan comes next and is reviewed before any code. Branch `forever-modern-research` from `forever` 21ad62d12. Paths are under `src/Hekili/` unless they start with
+Status: APPROVED by the owner 2026-10-29 ("3=a, the rest go with your rec"), with the answers in §9. Revised the same
+day to the owner's layer design (§5.1, M2): Modern is a per-display toggle over Classic or Timeline, not a style.
+Architectural (a core display layer, an optional button contract, a new facade class): the phase 1 build plan comes
+next and is reviewed before any code. Branch `forever-modern-research` from `forever` 21ad62d12. Paths are under `src/Hekili/` unless they start with
 `tests/`, `tools/` or `docs/`; line numbers as of 21ad62d12.
 
 Research this rests on: "API", `docs/research/2026-10-29-modern-display-api.md` (the client route, secrecy and
@@ -13,11 +15,15 @@ confidence per overlay, and the launch-day probes GC-T and MD-*). The proposal i
 From the proposal the owner asked for a research track on (2026-10-29: "do a modern display research track"):
 
 1. Modern is a new, opt-in renderer per display: Classic's layout plus overlays painted from the game's hidden truth.
+   (Revised 2026-10-29, owner: an option on both Classic and Timeline, "A/B switching which display handler is used",
+   so a layer over whichever style the display uses, §5.1.)
 2. Hekili still decides. Overlays dim, glow or redraw what Hekili suggested; they never swap in another ability.
 3. Dim, never promote. When the truth and the estimate disagree, an overlay may say "not yet", never "press
    something else".
 4. No jitter. The flicker rule (no-jittery-recommendations, 2026-10-20) applies to overlays too.
-5. Classic stays untouched. Switching back is one click.
+5. Classic stays untouched. Switching back is one click. Restated for the layer (2026-10-29): Classic and Timeline
+   gain only the optional button contract fields (§5.1, a few lines each, no behaviour change); with the toggle off
+   their drawing is unchanged and nothing of Modern runs, which a headless parity test checks (R1, §8).
 6. Display only. Nothing presses a button, and no secret enters Hekili's logic (architecture §1: secrets travel from
    one client call into one frame property).
 7. Core generic: nothing named after a class or spell in core; pack facts (execute threshold, proc aura) come from packs.
@@ -57,16 +63,16 @@ whose probe fails stays off in code (a constant per overlay, §6), not hidden be
 
 ### 3.1 Hekili decides; dim, never promote
 
-- **R1. Same picks.** Modern draws exactly the records the base style draws, in the same slots, with the same texture,
-  caption, keybind, focus ring and indicators. It never writes a record field, never reorders, never hides a record and
-  never shows an ability Hekili did not publish. A headless test compares Modern's slot assignment with the base
-  style's for the same published sets (§7).
+- **R1. Same picks.** With Modern on, the bound style draws exactly the records it draws with Modern off, in the same
+  slots, with the same texture, caption, keybind, focus ring and indicators. Modern never writes a record field, never
+  reorders, never hides a record and never shows an ability Hekili did not publish. A headless test compares the bound
+  style's slot assignment with the toggle on and off for the same published sets (§8).
 - **R2. Pressable only when both agree.** An icon looks pressable (full colour, no swipe, no dim) only when Hekili's own
   time has come (`exact_time` within 0.05 s, as `Output.lua:12` `READY`) and every truth overlay agrees. Each overlay may
   only take "pressable" away:
-  - dim: alpha or vertex colour at or below the base style's;
+  - dim: alpha or vertex colour at or below the bound style's;
   - swipe: the real cooldown is shown while it runs (plain `isActive and not isOnGCD`, API §2.3); once it has ended, a
-    record Hekili still holds back keeps the base style's delay look (Classic's `delays.fade` / `desaturate` from
+    record Hekili still holds back keeps the bound style's delay look (Classic's `delays.fade` / `desaturate` from
     `r.desaturate`, Timeline's countdown), so a real cooldown that ends early never makes the icon look ready before
     Hekili says so;
   - ride: a lane icon's position is `max(Hekili's x, the real cooldown's x)` (§5.4), so it can arrive later than
@@ -134,46 +140,74 @@ whose answer may be secret and is meant for a widget only.
 
 ## 5. Where it plugs in
 
-### 5.1 A style that wraps the base style
+### 5.1 A layer core attaches to the bound style (owner, 2026-10-29)
 
-`UI/Styles/Modern.lua`, registered as `modern` through `ns.UI.RegisterStyle` (`UI/Styles.lua:48`), `api = 1`. Its
-`displays[id].modern.base` names the layout, `classic` or `timeline` (default `classic`). Every member delegates to the
-base style's table (`ns.UI.Styles[base]`) with the same `d` and `conf`, then calls the truth layer:
+Owner: "Could we have the 'modern' display be an option on both timeline and classic such that we're effectively A/B
+switching which display handler is used so that we don't need to worry about shadowing or copying at all?" Modern is
+a per-display toggle, owned by core and shown whichever style the display is bound to (classic, timeline, or a
+third-party style). When it is on, core attaches the truth layer (`UI/Truth.lua`, §5.2) to the bound style's buttons;
+when it is off, nothing of it runs. The display keeps its style and every setting at its own path: there is no
+`modern` style, no `base` field, no layout accessor, no style reading another style's subtable and no setting copied.
 
-| Member | Modern does |
+**The toggle.** A core display field, `displays[id].truth`, in `displayTemplate` beside `visibility`:
+`truth.enabled` (default `false`, marked experimental) plus the per-overlay options of §7 (and, in a dev build, the
+truth bars of §7.1), all stored at `displays[id].truth.*`. Core shows them as one display tab, "Modern", beside
+"Icons" and "Visibility" (`Options/Options.lua`, a core tab: `optionConf` already resolves a core tab's options to
+`displays[id].<tab>.*`), on every style, never from Classic's or Timeline's code. `truth` is a core display key, so
+`ns.UI.StyleNameTaken("truth")` refuses a style of that name (it is in `displayTemplate`).
+
+**The lifecycle** (`UI/UI.lua`, the display's own code, beside each call it already makes to the style):
+
+| Core call | With `d.truthOn` |
 |---|---|
-| `Build(d, conf)` | `base.Build`, then `Truth.Build(d, conf, buttons)`: one overlay set per button, out of combat |
-| `Tick(d, conf, out, now, elapsed)` | `base.Tick`, then `Truth.Tick` (strip value, ride values, debounce timers) |
-| `Draw(d, conf, out, status)` | `base.Draw`, then `Truth.Draw` (per record: spell, swipe source, dim, marks) |
-| `OnGameEvent(d, conf, event, ...)` | `base.OnGameEvent`, then `Truth.OnGameEvent` (`SPELL_UPDATE_COOLDOWN`, `SPELL_UPDATE_CHARGES`, `SPELL_UPDATE_USABLE`, `UNIT_MAXPOWER`, `PLAYER_TARGET_CHANGED`) |
-| `Clear`, `Perimeter`, `UpdateKeybindings` | base, plus `Truth.Clear` |
-| `Options(id, conf)` | the base's tabs plus one "Modern" tab |
-| `needs` / `NeedsFor` | the base's |
+| `bindStyle` (`UI/UI.lua:1081`) | `Truth.Clear(d)` before the style's `Build` when it was on; after `d.Buttons = style.Build(d, conf)`, `d.truthOn = conf.truth.enabled == true` and, when on, `Truth.Build(d, conf, d.Buttons)`: one overlay set per button, out of combat |
+| `OnUpdate` (`:1157`, `:1161`) | `Truth.Tick(d, conf, out, now)` right after `style.Tick`; `Truth.Draw(d, conf, out)` right after `style.Draw` |
+| `OnEvent` (`:1224`) | `Truth.OnGameEvent(d, conf, event, ...)` right after `style.OnGameEvent` (`SPELL_UPDATE_COOLDOWN`, `SPELL_UPDATE_CHARGES`, `SPELL_UPDATE_USABLE`; phase 2 adds `UNIT_MAXPOWER`, `PLAYER_TARGET_CHANGED`) |
+| every `style.Clear(d)` (`unsubscribe` :934, a style switch :1090, `Deactivate` :1307) | `Truth.Clear(d)` right after |
 
-So Classic's file is not edited, and the player's existing Classic or Timeline layout carries over: Modern reads the
-base's subtable (`conf.classic`, `conf.timeline`) through the base's own code. That is an exception to "no style reads
-another style's subtable" (architecture §7), recorded as decision M2; the alternative is open question Q3.
+Switching the style or flipping the toggle goes through `SetDisplayOption` → `QueueRebuildUI` → `bindStyle`, as any
+style change does; nothing else rebuilds. The display registers the three usability and cooldown events (today
+commented out, `UI/UI.lua:1267-1270`) only while the layer is on, from `Truth.Build`, and unregisters them in
+`Truth.Clear`.
 
-The display must register the three usability and cooldown events (today commented out, `UI/UI.lua:1267-1270`):
-registered only while a display is bound to `modern`, from `Truth.Build`.
+**The button contract** (`UI/Styles.lua`, documented beside `MEMBERS`; every field optional). A style's `Build`
+returns its buttons; for Truth to paint one, the button exposes:
+
+| Field | Meaning | Classic | Timeline |
+|---|---|---|---|
+| `b.recIndex` | the record the button draws now (`out.recs[b.recIndex]`), 0 for none; set on every publish | `i` for `i <= numIcons`, else 0; 0 when blank and in `Clear` | `T.rec[c]` in `assign`; 0 when blank and in `Clear` |
+| `b.isFocus` | the button draws the display's focus record (M11's "focus icon") | never set | `c == 1 and T.focused` in `assign`; false when blank and in `Clear` |
+| `b.Cooldown` | the button's own `Cooldown` frame, which Truth hides while it shows the real one (R2) | already there (every button) | already there (cells 1-2) |
+| `b.round` | the icon is round (Truth's swipe and veil use the circle) | never set | `true` on cell 1, at creation |
+
+The "next" icon is the button whose `recIndex` is 1. Truth copies the count-number look from the style's frame
+(`b.Cooldown:GetHideCountdownNumbers()`, a plain read of our own widget, never of a fed one). A button without
+`recIndex` gets no overlays, and one without `Cooldown` gets no real swipe (Timeline's lane cells), so a third-party
+style that sets none of these draws exactly as before with the toggle on. `Hekili.DisplayStyleAPI` stays 1: the fields
+are optional, no member or record field changes, and a style written for 1 still registers and draws (ruling M12).
+
+So Classic and Timeline gain only the contract assignments (requirement 5), and the player's layout carries over
+because it is never moved: Truth reads no style's subtable, only the buttons the style returned and the contract.
 
 ### 5.2 The truth layer: `UI/Truth.lua`
 
-The only file that calls `Facade.Display`. Per display, preallocated at `Build` for `SLOTS` (12) buttons:
+The only file that calls `Facade.Display`. Per display (`d.truthState`), preallocated at `Truth.Build` for each
+button the bound style returned (one set per button list, so a style switch back reuses it):
 
-- `ov[i].cd`: a second `Cooldown` frame over the base button's own (`CooldownFrameTemplate`, same draw settings); the
-  base's `b.Cooldown` is hidden while `ov[i].cd` shows a real cooldown, and shown again otherwise (R2);
+- `ov[i].cd`: a second `Cooldown` frame over the button's own `b.Cooldown` (contract, §5.1; `CooldownFrameTemplate`,
+  same draw settings); the style's `b.Cooldown` is hidden while `ov[i].cd` shows a real cooldown, and shown again
+  otherwise (R2);
 - `ov[i].dur`: the held duration object (nil when none), `ov[i].spell`: the spell it was fetched for;
-- `ov[i].border`: the execute border texture; `ov[i].glow`: uses the base's glow helpers (LibCustomGlow, as Classic);
+- `ov[i].border`: the execute border texture; `ov[i].glow`: LibCustomGlow under its own key (as Classic uses it);
 - `ov[i].dim`, `ov[i].since`: the debounce state (§3.2);
 - the truth bars (§7.1, developer mode only): per enabled type, one real StatusBar (fed from `Facade.Display`) and one
   belief StatusBar (fed the plain published estimate), with the cost tick textures `ticks[1..SLOTS]` on the real bar;
   built only in a dev build (`Hekili.IsDev`), so a player's display allocates and draws none of it;
-- the ride bars (`ride[i]`, one StatusBar per lane slot) for a `timeline` base.
+- the ride bars (`ride[i]`, one StatusBar per lane slot) on a Timeline display (phase 3, §5.4).
 
-What it reads: `out.recs[i]` (`actionName`, `actionID`, `exact_time`, `cost`, `resource_type`, `resources`),
+What it reads: the buttons and their contract fields (§5.1), `out.recs[i]` (`actionName`, `actionID`, `exact_time`, `cost`, `resource_type`, `resources`),
 `d.resolved[i]` (`usable`, `glow`, `desaturate`), `Hekili.Engine.Registry.Abilities()[name]` for pack facts
-(`healthGate`; `item` to skip items), `Output.hold`, `Output.Acted` through a getter. Nothing of `state.*`, `class.*`
+(`healthGate`; `item` to skip items), `Output.hold`, `Output.Acted` through a getter, its own `conf.truth`; no style's subtable. Nothing of `state.*`, `class.*`
 or VirtualState (`tools/check_engine_reads.sh` already enforces it for `UI/`).
 
 When it fetches a duration object: when a button's record changes spell, and on `SPELL_UPDATE_COOLDOWN` /
@@ -182,8 +216,8 @@ existing `C_Spell.GetSpellCooldown` row, which already reads the plain flags (`F
 
 ### 5.3 The subscription channel
 
-No engine change for phases 1-2: Modern subscribes through core's display binding as any style does
-(`Engine.Subscribe`, `Engine/Output.lua:237`; `bindStyle`, `UI/UI.lua:1081`). Every field it reads is already on the
+No engine change for phases 1-2: Truth rides the bound style's subscription (`Engine.Subscribe`,
+`Engine/Output.lua:237`; `bindStyle`, `UI/UI.lua:1081`) and draws from the same `out` core hands the style. Every field it reads is already on the
 record (architecture §7 "What a style may read").
 
 Phase 3's Cooldown Manager confirmation needs the presence bit on the record, because a style may not read the belief.
@@ -205,7 +239,9 @@ Timeline today places lane cells itself every frame (`moveLane`, `Timeline.lua:4
 needs one hook in Timeline: skip `place` for a cell whose `b.rideAnchored` is set (one line in `moveLane`, plus the flag
 cleared in `assign`). That touches Timeline, not Classic; requirement 5 holds. When the real cooldown ends (plain
 event), the cell goes back to `place` at Hekili's x, which by R2 is at or after the ride's last x, so no backward jump
-beyond the glide.
+beyond the glide. Under the layer design (§5.1) Truth reads no style's subtable, so the lane's geometry (`laneX0`,
+`pxPerSec`, `H`) and the `rideAnchored` hook become optional contract fields that Timeline sets; their names are
+designed with phase 3, and they stay optional (no `DisplayStyleAPI` bump for them).
 
 ## 6. The curve set, built at spec load
 
@@ -226,20 +262,21 @@ Overlay switches that depend on a probe are constants in `Truth.lua`, set from t
 `VERIFIED = { strip = false, execute = false, ride = false, cdm = false }`, flipped by a commit that cites the
 probe's result, not by a player option.
 
-## 7. Options per display (`displays[id].modern`)
+## 7. Options per display (`displays[id].truth`)
 
-One "Modern" tab, built through `Hekili.StyleOptions` helpers where they exist. Defaults:
+One core "Modern" tab on every display, whatever its style (§5.1), its options stored at `displays[id].truth.*`. The
+overlay toggles are disabled while `enabled` is off. Defaults:
 
 | Option | Default | Notes |
 |---|---|---|
-| `base` | `classic` | `classic` or `timeline` |
+| `enabled` | off | "Modern (game truth)", marked experimental: attach the truth layer to this display's style |
 | `swipes` | on | real cooldown swipes |
 | `edge` | on | redraw on the usability edge |
 | `confirm` | on | proc glow from usability and overlay; next and focus icons only (R3, no queue option) |
 | `execute` | on, shown only while `VERIFIED.execute` | the border colour (gold) and width |
-| `ride` | off, shown only while `VERIFIED.ride` and `base == timeline` | |
+| `ride` | off, shown only while `VERIFIED.ride` and the display's style is `timeline` | |
 
-The style dropdown's label is "Modern (game truth)"; switching back to Classic is the existing dropdown (requirement 5).
+Switching back is one click: the `enabled` toggle (requirement 5). The style dropdown is unchanged.
 
 ### 7.1 Truth bars: dev build only (owner ruling, 2026-10-29)
 
@@ -252,7 +289,7 @@ trying to show too much to the player."
   checkout; the version reads `Dev-<build> (<date>)`), never in a released zip. No new flag. In a release build the
   truth-bar options do not exist, nothing is built, and Truth's `Tick` skips the bars (one plain boolean check). In a
   dev build the options appear under a "Developer" header on the Modern tab, every toggle still off by default.
-- **Two families of bars, each off by default, each switchable by type** (`displays[id].modern.truthBars`):
+- **Two families of bars, each off by default, each switchable by type** (`displays[id].truth.bars`):
   - **Real bars** (`real[type]`): the game's value through `Facade.Display` (secret, §3.3), one bar per type: the
     player's power types the active pack declares (rage, mana, energy, focus) and target health. Each needs
     `VERIFIED.strip` (GC-T) before its toggle appears.
@@ -272,8 +309,10 @@ trying to show too much to the player."
 
 **Headless (busted, beside `tests/Forever/display_style_spec.lua` and `display_resolve_spec.lua`, with the fake API's widgets recording calls):**
 
-- R1: for recorded published sets (the harness fights), Modern's per-slot action and texture equal the base style's.
-- R2: given fake plain flags, the swipe source per button (real when `isActive and not isOnGCD`, base otherwise), the
+- R1 (parity): for recorded published sets (the harness fights), Classic's and Timeline's per-slot shown state, action
+  and texture are the same with the toggle on and off; a style without the contract fields draws and errors nothing
+  with the toggle on.
+- R2: given fake plain flags, the swipe source per button (real when `isActive and not isOnGCD`, the style's own otherwise), the
   dim state, and that no "pressable" look appears before `exact_time - READY`.
 - Debounce: a usability flip back within the hold window does not undim; a flip after `Output.Acted` does at once.
 - Requests: which spell each button fetches a duration for, with which `ignoreGCD`; that fetches happen only on the
@@ -297,7 +336,12 @@ All answered: question 3 "a", the rest "go with your rec", plus two earlier ruli
 
 1. **Overlay 1 already ships:** keep it in the pitch, worded "faster and clearer" (the usability edge, not the 0.2 s pulse).
 2. **Execute border:** deferred to phase 2, low priority (it mostly repeats the usability answer, §1).
-3. **Layout:** (a), one `modern` style wrapping `classic` or `timeline` through a read-only layout accessor (M2).
+3. **Layout:** (a), one `modern` style wrapping `classic` or `timeline` through a read-only layout accessor.
+   **Superseded** by the owner's layer design (2026-10-29, §5.1, M2): Modern is a per-display toggle on whichever style
+   is bound, with no `modern` style, `base` field or accessor. **Open for the owner:** Timeline's "Timers Out of
+   Combat" (`oocTimers`) off hides its sweeps out of combat, while Truth's real swipe would still show a running
+   cooldown there. Recommended: the real swipe follows the bound style's setting (it would need one more optional
+   contract field, since Truth reads no style's subtable); phase 1 ships without it and the question stays open.
 4. **Cooldown Manager confirmation:** yes, in phase 3, after launch shows the Cooldown Manager's proc coverage
    (`DisplayStyleAPI` 1 -> 2, pack field `confirmAura`).
 5. **Truth bars:** real and belief bars both dev-build only (`Hekili.IsDev`), off by default, per type (§7.1, M10).
@@ -310,7 +354,7 @@ All answered: question 3 "a", the rest "go with your rec", plus two earlier ruli
 
 ## Out of scope
 
-Engine changes for phases 1-2; any change to Classic; reading a secret back from a widget; secret-driven gates on
+Engine changes for phases 1-2; any change to how Classic or Timeline draw (they gain only the contract fields); reading a secret back from a widget; secret-driven gates on
 power against a cost; WeakAuras export of truth values; localisation of the new option strings beyond wrapping them
 in `L[...]` (the lint requires it).
 
@@ -319,7 +363,7 @@ in `L[...]` (the lint requires it).
 | # | Decision | Why |
 |---|---|---|
 | M1 | Overlays ship in three phases ranked by value × confidence; a probe-dependent overlay is a code constant, flipped by a commit citing the probe | no option for something the client may refuse |
-| M2 | One `modern` style wraps `classic` or `timeline` by delegation and reads the base's subtable through the base's code | Classic untouched; the player's layout carries over |
+| M2 | Modern is a core per-display layer (`displays[id].truth.enabled`, a core "Modern" tab), attached to the bound style's buttons after its `Build` and called right after each of its members, only while on; styles expose an optional button contract (`recIndex`, `isFocus`, `Cooldown`, `round`). Supersedes the wrapping `modern` style (owner, 2026-10-29) | owner: "A/B switching which display handler is used" with no shadowing or copying: no style reads another's subtable, the layout never moves, and the toggle off runs nothing |
 | M3 | A fourth facade class, `display`, as `Facade.Display.*`, readable only from `UI/Truth.lua` | the check stays total; the engine's rows keep answering the belief |
 | M4 | A secret goes from one call into one widget method in one expression; nothing reads a fed aspect or the geometry of a secret-filled bar | secret safety without trusting undocumented read-backs |
 | M5 | Pressable only when Hekili's time has come and every truth overlay agrees; swipes switch source on the plain `isActive`; the ride shows `max(pred, real)` by the StatusBar's minimum clamp | dim, never promote, with plain branches only |
@@ -329,3 +373,4 @@ in `L[...]` (the lint requires it).
 | M9 | The press icon's swipe includes the GCD; queued icons ignore it | matches the action bars without the queue sweeping in unison |
 | M10 | Truth bars (real and belief, per type) exist only in a dev build (`Hekili.IsDev`), each off by default, built only there | owner ruling 2026-10-29: no cluttered player UI; the bars are a testing tool |
 | M11 | Execute border and proc glow on the next icon and the focus icon only, no option for the rest of the queue | owner ruling 2026-10-29: marks stay on what to press |
+| M12 | The button contract's fields are optional, so `Hekili.DisplayStyleAPI` stays 1; a style without them gets no overlays | no member or record field changes; a third-party style written for 1 keeps registering and drawing unchanged |
