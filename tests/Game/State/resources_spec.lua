@@ -1934,6 +1934,68 @@ describe("resources", function()
             assert.are.equal(12 + 10 + 2 * 10, VS.Regen(MANA, 21).est) -- c 0: S = 10; mp5 inert
         end)
 
+        it(
+            "makes a regen function that returns NaN, infinity or nil, or errors, inert and keeps the estimates finite",
+            function()
+                local bad = { 0 / 0, math.huge, -math.huge, false, "x" }
+                local mode = 0
+                local function val()
+                    if mode == 6 then
+                        error("TacoDog: no stat yet")
+                    end
+                    return bad[mode] or nil
+                end
+                for k = 1, 6 do
+                    mode = k
+                    shaped({ spirit = 10, mp5 = 12, share = val }, {
+                        { aura = "surge", spirit = val },
+                        { aura = "spring", mp5 = val },
+                    })
+                    I.AuraModel(1, 1, 10, 1e6, 1, 10, 0)
+                    I.AuraModel(1, 3, 10, 1e6, 1, 10, 0)
+                    local e = VS.Regen(MANA, 12).est
+                    assert.is_true(e == e and e < math.huge and e > -math.huge, "regen mode " .. k)
+                    assert.are.equal(22, e) -- all three inert: A 12 + B 10 (share 0: S = 10, spirit 1)
+                end
+                mode = 1
+                boot({
+                    abilities = {},
+                    abilityIds = {},
+                    abilitySlot = {},
+                    resources = {
+                        {
+                            key = "mana",
+                            type = MANA,
+                            token = "MANA",
+                            max = 1000,
+                            rest = true,
+                            auraRegen = {
+                                {
+                                    aura = "spring",
+                                    interval = 2,
+                                    value = function()
+                                        return mode == 1 and 0 / 0 or math.huge
+                                    end,
+                                },
+                            },
+                        },
+                    },
+                    auras = { { key = "spring", id = 1023 } },
+                    auraIds = { { 1023 } },
+                    talents = {},
+                    units = { "player", "target" },
+                })
+                I.Settle(10)
+                read(10, 500)
+                I.AuraModel(1, 1, 10, 100, 1, 10, 0)
+                within(500, VS.Power(MANA, 12).est)
+                mode = 2
+                obs(Obs.CombatStart, 12, 0, 0, 0)
+                I.Fold(12, false)
+                within(500, VS.Power(MANA, 14).est)
+            end
+        )
+
         it("credits a function auraRegen `value`, read at the build and at each combat start", function()
             local v = 7
             boot({

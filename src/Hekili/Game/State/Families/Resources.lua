@@ -319,19 +319,27 @@ end
 -- Re-reads every function-valued regen field (a number is read as it stands) into the number arrays; a result that is
 -- not a valid number makes the field inert. Called at the build and at each combat start only: the functions read
 -- state (a pack's Spirit, max mana), which does not move mid-fight.
+local function finite(v)
+    if type(v) == "function" then
+        local ok, r = pcall(v) -- a pack function may error before the first stat read: inert
+        v = ok and r or nil
+    end
+    return type(v) == "number" and v == v and v > -math.huge and v < math.huge and v or nil
+end
+
 local function refresh()
     for r = 1, R.n do
-        local c = eval(R.shareDef[r])
-        R.share[r] = type(c) == "number" and (c < 0 and 0 or c > 1 and 1 or c) or 0
+        local c = finite(R.shareDef[r]) or 0
+        R.share[r] = c < 0 and 0 or c > 1 and 1 or c
     end
     for i = 1, M.n do
-        local m, x = eval(M.spiritDef[i]), eval(M.mp5Def[i])
-        M.spirit[i] = type(m) == "number" and m > 0 and m or 1
-        M.mp5[i] = type(x) == "number" and x > 0 and x or 0
+        local m, x = finite(M.spiritDef[i]), finite(M.mp5Def[i])
+        M.spirit[i] = m and m > 0 and m or 1
+        M.mp5[i] = x and x > 0 and x or 0
     end
     for g = 1, G.n do
-        local v = eval(G.def[g])
-        G.value[g] = type(v) == "number" and v == v and v or 0
+        local v = finite(G.def[g])
+        G.value[g] = v and v >= 0 and v or 0
     end
 end
 
