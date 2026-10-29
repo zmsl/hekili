@@ -24,6 +24,17 @@ local MEMBERS = {
 -- The version of the style interface below. A style declares the one it was written for as `api`.
 Hekili.DisplayStyleAPI = 1
 
+-- The button contract (Modern display spec §5.1, decision M2; every field optional, so DisplayStyleAPI stays 1, M12).
+-- Core's truth layer (UI/Truth.lua, the display's Modern toggle) paints over a button only through these; a style
+-- that sets none of them draws exactly as before with the toggle on, and gets no overlays.
+--   b.recIndex  the record the button draws now (out.recs[ b.recIndex ]), 0 for none; set on every publish, a blank
+--               publish and Clear (the "next" icon is the button whose recIndex is 1)
+--   b.isFocus   true while the button draws the display's focus record
+--   b.Cooldown  the button's own Cooldown frame (Truth hides it while it shows the game's)
+--   b.round     true for a round icon (Truth's swipe and veil use the circle)
+--   b.timersHidden  true while the style hides its own cooldown timers (nil/false: they may show), so Truth
+--               hides its real swipe too
+
 --- Public: registers display style `impl` as `name` for any addon (built-in styles use it too). Refused with one
 --- Notify (returns false) when `impl.api` is not Hekili.DisplayStyleAPI or `name` is a core display field or tab;
 --- raises when a member is missing. Registered after Hekili's DB exists, its defaults reach every display; after

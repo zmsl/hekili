@@ -757,6 +757,7 @@ function Classic.Draw( d, conf, out, status )
             for i, b in ipairs( self.Buttons ) do
                 b:Hide()
                 b.Action = nil
+                b.recIndex = 0
             end
             st.HasRecommendations = false
 
@@ -767,6 +768,7 @@ function Classic.Draw( d, conf, out, status )
             -- numIcons (Core's on-GCD extras are for the Timeline).
             for i, b in ipairs( self.Buttons ) do
                 b.Recommendation = i <= conf.numIcons and out.recs[ i ] or NONE
+                b.recIndex = ( i <= conf.numIcons and i <= out.count ) and i or 0
 
                 local action = b.Recommendation.actionName
                 local caption = b.Recommendation.caption
@@ -1218,6 +1220,7 @@ function Classic.Clear( d )
     for _, b in ipairs( d.styleFrames.classic ) do
         b:Hide()
         b.Action = nil
+        b.recIndex = 0
     end
     d.styleState.HasRecommendations = false
 end
