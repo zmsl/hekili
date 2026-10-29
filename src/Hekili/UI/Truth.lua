@@ -32,10 +32,11 @@ local function apply( ov )
     ov.dirty = false
     local b = ov.b
     if ov.real and not b.timersHidden then
-        ov.cd:SetCooldownFromDurationObject( ov.dur ) -- the held duration object goes only here (spec §3.3)
+        ov.cdShown = true
         ov.cd:Show()
         b.Cooldown:Hide()
-        ov.cdShown = true
+        -- last: an already-ended duration fires ov.done inside this call, which hands back to the style's swipe
+        ov.cd:SetCooldownFromDurationObject( ov.dur ) -- the held duration object goes only here (spec §3.3)
     elseif ov.cdShown then
         ov.cd:Hide()
         b.Cooldown:Show()
@@ -51,7 +52,7 @@ local function swipe( ov, conf )
     local info = C_Spell.GetSpellCooldown( ov.spell ) -- the hybrid: isActive and isOnGCD are plain
     if info and info.isActive and not info.isOnGCD then
         ov.dur = Display.C_Spell.GetSpellCooldownDuration( ov.spell, not ov.press )
-        ov.real = ov.dur ~= nil
+        ov.real = ov.dur ~= nil -- a duration object is userdata, not a secret value (spec §3.3): nil-testing it is safe
     end
 end
 

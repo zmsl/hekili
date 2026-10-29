@@ -713,6 +713,72 @@ describe("Modern's real cooldown swipe (R2, §3.4)", function()
         )
     end
 
+    it("leaves the style's swipe in charge when the widget ends inside SetCooldownFromDurationObject", function()
+        local H, d = boot("classic", true)
+        local A = ids(H)
+        usableAll(H)
+        local ov = d.truthState.ov[1]
+        rawset(ov.cd, "SetCooldownFromDurationObject", function(self, dur) -- an already-expired duration object
+            rawset(self, "__dur", dur)
+            self.__scripts.OnCooldownDone(self)
+        end)
+        H.ctl.cooldown[A.mortal_strike] = ACTIVE
+        durations[A.mortal_strike] = fake.SECRET
+        publish(H, SET)
+        frame(H, d, 0.2)
+        assert.is_true(rawequal(fake.SECRET, ov.cd.__dur))
+        assert.is_false(ov.real)
+        assert.is_false(ov.cdShown)
+        assert.is_false(ov.cd.__shown)
+        assert.is_true(d.Buttons[1].Cooldown.__shown)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("hands back to the style's look when the duration ends early while isActive is still set", function()
+        local H, d = boot("classic", true)
+        local A = ids(H)
+        usableAll(H)
+        H.ctl.cooldown[A.mortal_strike] = ACTIVE
+        durations[A.mortal_strike] = fake.SECRET
+        publish(H, SET)
+        frame(H, d, 0.2)
+        local ov, b = d.truthState.ov[1], d.Buttons[1]
+        assert.is_true(ov.cd.__shown)
+        ov.cd.__scripts.OnCooldownDone(ov.cd) -- the plain flag still says active
+        for _ = 1, 5 do
+            frame(H, d, 0.2)
+        end
+        assert.is_false(ov.real)
+        assert.is_false(ov.cd.__shown)
+        assert.is_true(b.Cooldown.__shown)
+        local exact = H.Hekili.Engine.Output.Primary.recs[1].exact_time
+        assert.is_true(math.abs(b.Cooldown.__cdStart + b.Cooldown.__cdDuration - exact) < 1e-6)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("fetches for a default charges = 1 ability and skips a function-valued charges", function()
+        local H, d = boot("classic", true)
+        local A = ids(H)
+        usableAll(H)
+        local abilities = H.Hekili.Engine.Registry.Abilities()
+        assert.are.equal(1, rawget(abilities.mortal_strike, "charges"))
+        rawset(abilities.overpower, "charges", nil)
+        abilities.overpower.funcs.charges = function()
+            return 2
+        end
+        H.ctl.cooldown[A.mortal_strike], H.ctl.cooldown[A.overpower] = ACTIVE, ACTIVE
+        durations[A.mortal_strike], durations[A.overpower] = fake.SECRET, fake.SECRET
+        publish(H, SET)
+        frame(H, d, 0.2)
+        assert.are.equal(1, fx.n)
+        assert.is_false(fx.ignore[A.mortal_strike])
+        assert.is_nil(fx.ignore[A.overpower])
+        assert.is_true(d.truthState.ov[1].real)
+        assert.is_true(d.truthState.ov[2].charged)
+        assert.is_false(d.truthState.ov[2].real)
+        assert.are.same({}, H.errors)
+    end)
+
     it("clears on core's own paths: an unsubscribe (alpha 0) and Deactivate", function()
         for _, path in ipairs({ "unsubscribe", "deactivate" }) do
             local H, d = boot("classic", true)

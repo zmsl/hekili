@@ -31,6 +31,7 @@ Hekili.DisplayStyleAPI = 1
 --               publish and Clear (the "next" icon is the button whose recIndex is 1)
 --   b.isFocus   true while the button draws the display's focus record
 --   b.Cooldown  the button's own Cooldown frame (Truth hides it while it shows the game's)
+--               never hidden by the style (clear it with SetCooldown( 0, 0 )): Truth restores it with Show()
 --   b.round     true for a round icon (Truth's swipe and veil use the circle)
 --   b.timersHidden  true while the style hides its own cooldown timers (nil/false: they may show), so Truth
 --               hides its real swipe too
