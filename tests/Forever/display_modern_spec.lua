@@ -928,3 +928,125 @@ describe("Modern's usability edge (§3.2)", function()
         assert.are.same({}, H.errors)
     end)
 end)
+describe("Modern's proc mark (R3, M11)", function()
+    it("marks the next icon when the game lights its overlay, never a queued one", function()
+        local H, d = boot("classic", true)
+        local A = ids(H)
+        usableAll(H)
+        overlayed[A.mortal_strike], overlayed[A.overpower] = true, true
+        publish(H, SET)
+        frame(H, d, 0.2)
+        local ov = d.truthState.ov
+        assert.is_true(ov[1].markShown)
+        assert.is_false(ov[2].markShown)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("marks the focus cell and the next box on timeline, never a lane icon", function()
+        local H, d = boot("timeline", true)
+        local A = ids(H)
+        usableAll(H)
+        for _, e in ipairs(SET_FOCUS) do
+            overlayed[A[e[1]]] = true
+        end
+        publish(H, SET_FOCUS)
+        frame(H, d, 0.2)
+        local T, ov = d.styleFrames.timeline, d.truthState.ov
+        assert.is_true(T.focused)
+        assert.are.equal(3, T.rec[1]) -- the flagged record in the now circle
+        assert.are.equal(1, T.rec[T.press])
+        assert.is_true(ov[1].markShown)
+        assert.is_true(ov[T.press].markShown)
+        for c = 3, #ov do
+            assert.is_false(ov[c].markShown, "lane cell " .. c)
+        end
+        assert.are.same({}, H.errors)
+    end)
+
+    it("never marks a dimmed icon; the mark comes back with the dim's hold", function()
+        local H, d = boot("classic", true)
+        local A = ids(H)
+        usableAll(H)
+        H.ns.Output.hold = 3
+        overlayed[A.mortal_strike] = true
+        publish(H, SET)
+        frame(H, d, 0.2)
+        local ov = d.truthState.ov[1]
+        assert.is_true(ov.markShown)
+        H.ctl.usable[A.mortal_strike] = { false, false }
+        H.Fire("SPELL_UPDATE_USABLE")
+        assert.is_true(ov.dimShown)
+        assert.is_false(ov.markShown)
+        H.ctl.usable[A.mortal_strike] = { true, false }
+        H.Fire("SPELL_UPDATE_USABLE")
+        frame(H, d, 0.05)
+        assert.is_false(ov.markShown)
+        frame(H, d, 0.06)
+        assert.is_false(ov.dimShown)
+        assert.is_true(ov.markShown)
+        H.Hekili.DB.profile.displays.Primary.truth.confirm = false
+        H.Hekili:BuildUI()
+        publish(H, SET)
+        frame(H, d, 0.2)
+        assert.is_false(d.truthState.ov[1].markShown)
+        assert.are.same({}, H.errors)
+    end)
+
+    for _, style in ipairs({ "classic", "timeline" }) do
+        it("allocates nothing over 1,000 frames with a real swipe, a dim and a mark showing on " .. style, function()
+            local H, d = boot(style, true)
+            local A = ids(H)
+            usableAll(H)
+            H.ctl.cooldown[A.mortal_strike] = ACTIVE
+            durations[A.mortal_strike] = fake.SECRET
+            overlayed[A.mortal_strike] = true
+            H.ctl.usable[A.slam] = { false, true }
+            publish(H, SET)
+            for _ = 1, 3 do
+                frame(H, d, 0.2)
+            end
+            local ov = d.truthState.ov
+            local press = nextButton(d)
+            assert.is_true(ov[press].real)
+            assert.is_true(ov[press].markShown)
+            collectgarbage("collect")
+            collectgarbage("stop")
+            local before = collectgarbage("count")
+            for _ = 1, 1000 do
+                d.__scripts.OnUpdate(d, 0.01)
+            end
+            local bytes = (collectgarbage("count") - before) * 1024
+            collectgarbage("restart")
+            assert.are.same({}, H.errors)
+            assert.are.equal(0, bytes)
+        end)
+    end
+end)
+
+describe("Modern's usability edge on a press-only change (Task 5 review)", function()
+    it("keeps the settle when only the press flag flips: a dim never clears early", function()
+        local H, d = boot("timeline", true)
+        local A = ids(H)
+        usableAll(H)
+        H.ns.Output.hold = 3
+        publish(H, SET_FOCUS)
+        frame(H, d, 0.2)
+        local T, ov = d.styleFrames.timeline, d.truthState.ov[1]
+        assert.are.equal(3, T.rec[1])
+        assert.is_false(ov.press)
+        H.ctl.usable[A.overpower] = { false, true }
+        H.Fire("SPELL_UPDATE_USABLE")
+        assert.is_true(ov.dimShown)
+        H.ctl.usable[A.overpower] = { true, false }
+        H.Fire("SPELL_UPDATE_USABLE")
+        -- the same spell in the now circle, now record 1: the press flag flips, the spell does not
+        publish(H, { { "overpower", 0.5, 1 }, { "mortal_strike", 1.0 }, { "slam", 2.0 }, { "rend", 3.0 } })
+        frame(H, d, 0.01)
+        assert.are.equal(1, T.rec[1])
+        assert.is_true(ov.press)
+        assert.is_true(ov.dimShown)
+        frame(H, d, 0.1)
+        assert.is_false(ov.dimShown)
+        assert.are.same({}, H.errors)
+    end)
+end)

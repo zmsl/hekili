@@ -5,17 +5,20 @@ local _, ns = ...
 -- (tools/check_api_reads.sh). It reads the optional button contract (recIndex, isFocus, round, timersHidden, Cooldown;
 -- UI/Styles.lua), the published records, d.resolved, plain facade rows and conf.truth; never a style's subtable.
 -- Its glow helper use follows Classic's (UI/Styles/Classic.lua): Hekili code by Hekili's authors and maintainers.
--- Phase 1: lifecycle, overlays and events (Task 3), the real cooldown swipe (Task 4); Tasks 5-6 add the edge and mark.
+-- Phase 1: lifecycle, overlays and events (Task 3), the real cooldown swipe (Task 4), the usability edge (Task 5) and
+-- the proc mark (Task 6).
 
 local Facade = ns.Facade
 local CreateFrame, C_Spell = Facade.CreateFrame, Facade.C_Spell
 local Display = ns.Facade.Display
 local Registry = Hekili.Engine.Registry
+local Glower = LibStub( "LibCustomGlow-1.0" )
 
 local CIRCLE = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
 local WHITE = "Interface\\Buttons\\WHITE8X8"
 local VEIL_ALPHA = 0.5
 local SETTLE = 0.1 -- spec §3.2: how long a "back to ready" must hold
+local MARK, KEY = { 1, 0.8, 0.1, 1 }, "truth" -- Timeline's gold; keyed apart from the style's glow and "focus"
 
 local Truth = {}
 
@@ -48,6 +51,16 @@ local function applyDim( ov, conf )
     if dim ~= ov.dimShown then
         ov.dimShown = dim
         ov.veil:SetShown( dim )
+    end
+end
+
+-- Starts or stops the proc mark when it changed: never on a dimmed icon (R3).
+local function applyMark( ov )
+    local mark = ov.mark.ready and not ov.dimShown
+    if mark ~= ov.markShown then
+        ov.markShown = mark
+        if mark then Glower.AutoCastGlow_Start( ov.b, MARK, nil, nil, nil, nil, nil, KEY )
+        else Glower.AutoCastGlow_Stop( ov.b, KEY ) end
     end
 end
 
@@ -94,6 +107,9 @@ local function clearOv( ov )
     if ov.veil then ov.veil:Hide() end
     ov.dimShown, ov.usable = false, true
     reset( ov.dim, true, 0, 0, 0 )
+    if ov.markShown then Glower.AutoCastGlow_Stop( ov.b, KEY ) end
+    ov.markShown, ov.glow = false, false
+    reset( ov.mark, false, 0, 0, 0 )
     if ov.cd then ov.cd:Hide() end
     if ov.cdShown then ov.b.Cooldown:Show() end
     ov.spell, ov.press, ov.charged = 0, false, false
@@ -144,6 +160,7 @@ function Truth.Build( d, conf, buttons )
         ov.b = b
         if not ov.top then
             ov.dim = { ready = true, want = true, since = 0, ver = 0, acts = 0 }
+            ov.mark = { ready = false, want = false, since = 0, ver = 0, acts = 0 }
             ov.top = CreateFrame( "Frame", nil, b )
             ov.top:SetAllPoints( b )
             ov.top:SetFrameLevel( b:GetFrameLevel() + 3 )
@@ -168,7 +185,9 @@ function Truth.Tick( d, conf, out, now )
     for c = 1, #set do
         local ov = set[ c ]
         settle( ov.dim, ov.usable, now, ver, acts )
+        settle( ov.mark, ov.glow and ov.usable, now, ver, acts )
         applyDim( ov, conf )
+        applyMark( ov )
     end
 end
 
@@ -189,13 +208,22 @@ function Truth.Draw( d, conf, out )
         local rec = i >= 1 and i <= out.count and out.recs[ i ] or nil
         local spell = 0
         if rec and rec.actionName and rec.exact_time and not rec.item and ( rec.actionID or 0 ) > 0 then spell = rec.actionID end
-        if spell ~= ov.spell or press ~= ov.press then
-            ov.spell, ov.press = spell, press
+        ov.glow = conf.truth.confirm and ( press or b.isFocus == true ) and i >= 1 and d.resolved[ i ].glow or false
+        if spell ~= ov.spell then
+            -- only a spell change shows its state undebounced; a press-only change keeps the settle (no blink)
+            ov.spell = spell
             ov.charged = spell > 0 and charged( abilities[ rec.actionName ] )
-            swipe( ov, conf )
             ov.usable = spell == 0 or ( C_Spell.IsSpellUsable( spell ) ) and true or false
-            reset( ov.dim, ov.usable, Facade.GetTime(), out.version, out.acts )
+            local now = Facade.GetTime()
+            reset( ov.dim, ov.usable, now, out.version, out.acts )
+            reset( ov.mark, ov.glow and ov.usable, now, out.version, out.acts )
             applyDim( ov, conf )
+            applyMark( ov )
+            ov.press = press
+            swipe( ov, conf )
+        elseif press ~= ov.press then
+            ov.press = press
+            swipe( ov, conf ) -- the press icon's fetch includes the GCD (ruling 4)
         end
         local hid = b.timersHidden == true
         if hid ~= ov.hid then ov.hid, ov.dirty = hid, true end
@@ -214,7 +242,9 @@ function Truth.OnGameEvent( d, conf, event, ... )
             if ov.spell > 0 then
                 ov.usable = ( C_Spell.IsSpellUsable( ov.spell ) ) and true or false
                 settle( ov.dim, ov.usable, now, out.version, out.acts )
+                settle( ov.mark, ov.glow and ov.usable, now, out.version, out.acts )
                 applyDim( ov, conf )
+                applyMark( ov )
             end
         end
     elseif event == "SPELL_UPDATE_COOLDOWN" or event == "SPELL_UPDATE_CHARGES" then
