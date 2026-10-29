@@ -1,7 +1,7 @@
 # Modern display: the game's truth painted over Hekili's picks (design, 2026-10-29)
 
-Status: DRAFT, awaiting owner review. Architectural (a new style, a new facade class): the owner approves it before any
-plan. Branch `forever-modern-research` from `forever` 21ad62d12. Paths are under `src/Hekili/` unless they start with
+Status: APPROVED by the owner 2026-10-29 ("3=a, the rest go with your rec"), with the answers in §9. Architectural (a
+new style, a new facade class): the phase 1 build plan comes next and is reviewed before any code. Branch `forever-modern-research` from `forever` 21ad62d12. Paths are under `src/Hekili/` unless they start with
 `tests/`, `tools/` or `docs/`; line numbers as of 21ad62d12.
 
 Research this rests on: "API", `docs/research/2026-10-29-modern-display-api.md` (the client route, secrecy and
@@ -291,23 +291,22 @@ MD-EASE), taint (MD-TAINT), the usability edge timing (MD-USE), PvP (MD-PVP), an
 owner: swipe ends with the action bar's, the strip matches the player frame's power bar, the border lights at the
 target frame's 20 %, a lane icon arrives with the action bar's swipe end.
 
-## 9. Open questions for the owner
+## 9. Owner answers (2026-10-29)
 
-1. **Overlay 1 already ships.** Keep "true-cost dimming" in the pitch as "faster and clearer", or drop it?
-2. **Execute border.** Its value over the usability answer is small (§1). Build it in phase 2, or drop it?
-3. **How Modern holds the layout.** (a) one `modern` style wrapping the base and borrowing its subtable (proposed,
-   decision M2); (b) a "truth overlays" option group inside Classic and Timeline (no new style, but edits Classic);
-   (c) Modern copies Classic's layout options (no exception, duplicated settings).
-4. **Cooldown Manager confirmation.** Worth a record field (`DisplayStyleAPI` 1 → 2) and a pack field
-   (`confirmAura`)? Without it, proc confirmation covers usability-gated procs and overlay glows only.
-5. ~~**The strip's estimate marker.**~~ Answered (owner, 2026-10-29): real and belief bars are both dev-build
-   only, off by default, switchable by type (§7.1, M10).
-6. **The ride's max rule.** A lane icon may arrive later than Hekili predicted but never sooner. Acceptable, or
-   should the lane show the real time only when it is later, and nothing otherwise (the same thing, said as a rule)?
-7. **Allocation.** Accept 56 B per cooldown event per shown spell (client userdata), against Classic's 520 B per
-   swipe read on every drawing frame?
-8. **When to build.** Phase 1 before launch (all CONFIRMED, opt-in), or wait for the launch data as the proposal said?
-9. **PvP.** Overlays 2 and 4 off against player targets unless MD-PVP passes?
+All answered: question 3 "a", the rest "go with your rec", plus two earlier rulings (5, and R3's marks).
+
+1. **Overlay 1 already ships:** keep it in the pitch, worded "faster and clearer" (the usability edge, not the 0.2 s pulse).
+2. **Execute border:** deferred to phase 2, low priority (it mostly repeats the usability answer, §1).
+3. **Layout:** (a), one `modern` style wrapping `classic` or `timeline` through a read-only layout accessor (M2).
+4. **Cooldown Manager confirmation:** yes, in phase 3, after launch shows the Cooldown Manager's proc coverage
+   (`DisplayStyleAPI` 1 -> 2, pack field `confirmAura`).
+5. **Truth bars:** real and belief bars both dev-build only (`Hekili.IsDev`), off by default, per type (§7.1, M10).
+6. **The ride's max rule:** accepted: a lane icon may arrive later than Hekili predicted, never sooner (M5).
+7. **Allocation:** accepted: 56 B per cooldown event per shown spell, fetched on events only.
+8. **When to build:** phase 1 now (true swipes, the usability edge, proc glow from usability and overlay), opt-in and
+   marked experimental; the probe-gated parts after their 2026-11-04 probes pass (M1).
+9. **PvP:** the execute border and the truth bars off against player targets unless MD-PVP passes.
+10. **Confirm marks** (owner ruling): next and focus icons only, no queue option (R3, M11).
 
 ## Out of scope
 
