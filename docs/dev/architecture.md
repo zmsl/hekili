@@ -262,7 +262,9 @@ facade and the environment names. The boundary scan rejects `Hekili.Virtual` and
   `HekiliEngine`, `ns.EngineFrame`. The exemptions are anchored to the whole line: `Hekili.lua`'s two definitions, DevTools' generated-text
   line, and UI.lua's own `Hekili.DisplayPool`.
 - `tools/check_api_reads.sh`: no file of any addon TOC reads a game API from `tools/api_inventory.txt` except through
-  `ns.Facade`. It uses luacheck for bare reads and grep for `_G.Name`; `git diff` guards `api_inventory.txt`.
+  `ns.Facade`. It uses luacheck for bare reads and grep for `_G.Name`; `git diff` guards `api_inventory.txt`. Only `UI/Truth.lua`
+  reads `Facade.Display`, the display class (raw, possibly secret answers for a widget; Modern display spec §4); given
+  file arguments it checks only those.
 - Headless gates: `make test` (everything except the tagged gates), `make test-fast` (skips `#slow`), `make test-loop`
   (the 20-fight Arms loop and its `Arms solo:` line), `make test-party`, `make test-druid` (about 190 s), `make test-rogue` (the
   20-fight Rogue gates, about 320 s), `make test-paladin` (the 20-fight Paladin gates, about 150 s), `make test-shaman` (the 20-fight
