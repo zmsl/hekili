@@ -29,7 +29,7 @@ local function register( d )
 end
 
 -- Less ready shows at once; back to ready once the wanted state held SETTLE seconds or Output.hold publishes, or at
--- once after our own cast (out.acts moved) (spec §3.2). `g.ready` is the shown state.
+-- once after our own cast (out.acts moved) (spec §3.2). `g.ready` is what shows.
 local function settle( g, want, now, ver, acts )
     if want ~= g.want then g.want, g.since, g.ver, g.acts = want, now, ver, acts end
     if not want then g.ready = false
