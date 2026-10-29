@@ -33,6 +33,18 @@ end
 function rec.SetCooldownFromDurationObject(self, dur)
     rawset(self, "__dur", dur)
 end
+function rec.SetDesaturated(self, v)
+    rawset(self, "__desat", v and true or false)
+end
+function rec.SetVertexColor(self, r, g, b, a) -- four fields, no table: a style may tint every frame
+    rawset(self, "__vr", r)
+    rawset(self, "__vg", g)
+    rawset(self, "__vb", b)
+    rawset(self, "__va", a)
+end
+function rec.SetAlpha(self, a)
+    rawset(self, "__alpha", a)
+end
 local function instrument(f)
     if f then
         for k, fn in pairs(rec) do
@@ -117,6 +129,9 @@ local SET = { { "mortal_strike", 1.0 }, { "overpower", 1.5 }, { "slam", 2.0 }, {
 local SET_FOCUS = { { "mortal_strike", 0.5 }, { "slam", 1.0 }, { "overpower", 2.0, 1 }, { "rend", 3.0 } }
 local SET_ONE = { { "slam", 0.3 } }
 
+local ACTIVE = { isActive = true, isOnGCD = false, startTime = fake.SECRET, duration = fake.SECRET }
+local ON_GCD = { isActive = true, isOnGCD = true, startTime = fake.SECRET, duration = fake.SECRET }
+
 local function publish(H, set)
     local abilities = H.Hekili.Engine.Registry.Abilities()
     local now = H.ctl.now
@@ -140,11 +155,29 @@ local function frame(H, d, dt)
     d.__scripts.OnUpdate(d, dt)
 end
 
--- What each button shows, with its contract fields (the R1 parity key).
+-- What each button shows, with its contract fields and the style's own surfaces: its cooldown as set, desaturation,
+-- vertex colour, alpha and glow (the R1 parity key). b.Cooldown's shown state is left out: Truth swaps it for its real
+-- swipe (R2), asserted on its own.
 local function picks(d)
     local t = {}
     for c, b in ipairs(d.Buttons) do
-        t[c] = { b:IsShown(), b.Action or false, rawget(b.Texture, "__tex") or false, b.recIndex, b.isFocus or false }
+        local cd, tex = rawget(b, "Cooldown"), b.Texture
+        t[c] = {
+            b:IsShown(),
+            b.Action or false,
+            rawget(tex, "__tex") or false,
+            b.recIndex,
+            b.isFocus or false,
+            cd and rawget(cd, "__cdStart") or false,
+            cd and rawget(cd, "__cdDuration") or false,
+            rawget(tex, "__desat") or false,
+            rawget(tex, "__vr") or false,
+            rawget(tex, "__vg") or false,
+            rawget(tex, "__vb") or false,
+            rawget(tex, "__va") or false,
+            rawget(b, "__alpha") or false,
+            b.glowing or false,
+        }
     end
     return t
 end
@@ -349,6 +382,23 @@ describe("the Modern toggle (spec §5.1, §7)", function()
         assert.are.same({}, H.errors)
     end)
 
+    it("disables the Modern tab's sub-toggles exactly while its toggle is off (on Multi: Primary's)", function()
+        local H = boot("classic")
+        H.Hekili:EmbedDisplayOptions()
+        local plugins = H.Hekili.Options.args.displays.plugins
+        local truth = H.Hekili.DB.profile.displays.Primary.truth
+        for _, on in ipairs({ false, true, false }) do
+            truth.enabled = on
+            for _, args in ipairs({ plugins.Primary.Primary.args, plugins.Multi.Multi.args }) do
+                assert.is_nil(args.truth.args.enabled.disabled)
+                for _, k in ipairs({ "swipes", "edge", "confirm" }) do
+                    assert.are.equal(not on, args.truth.args[k].disabled(), k)
+                end
+            end
+        end
+        assert.are.same({}, H.errors)
+    end)
+
     it("registers its events only while on, again after a Clear on the next draw, across a style switch", function()
         local H, d = boot("classic", true)
         local function registered()
@@ -439,5 +489,254 @@ describe("the Modern toggle (spec §5.1, §7)", function()
     it("keeps every probe-gated overlay off in code (M1)", function()
         local H = boot("classic", true)
         assert.are.same({ strip = false, execute = false, ride = false, cdm = false }, H.ns.UI.Truth.VERIFIED)
+    end)
+end)
+
+describe("Modern's real cooldown swipe (R2, §3.4)", function()
+    it("shows the game's cooldown while it runs and hands the style its own swipe back when it ends", function()
+        local H, d = boot("classic", true)
+        local A = ids(H)
+        usableAll(H)
+        H.ctl.cooldown[A.mortal_strike] = ACTIVE
+        H.ctl.cooldown[A.overpower] = ON_GCD
+        durations[A.mortal_strike], durations[A.overpower] = fake.SECRET, fake.SECRET
+        publish(H, SET)
+        frame(H, d, 0.2)
+        local ov, b = d.truthState.ov, d.Buttons
+        assert.is_true(ov[1].real)
+        assert.is_true(rawequal(fake.SECRET, ov[1].cd.__dur))
+        assert.is_true(ov[1].cd.__shown)
+        assert.is_false(b[1].Cooldown.__shown)
+        assert.is_false(fx.ignore[A.mortal_strike]) -- the press icon's swipe includes the GCD
+        assert.is_false(ov[2].real) -- the GCD alone: the style's swipe
+        assert.is_nil(fx.ignore[A.overpower])
+        H.ctl.cooldown[A.mortal_strike] = nil
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert.is_false(ov[1].real)
+        assert.is_false(ov[1].cd.__shown)
+        assert.is_true(b[1].Cooldown.__shown)
+        -- R2: the style's own delay look (classic's extend) still runs to Hekili's time
+        local exact = H.Hekili.Engine.Output.Primary.recs[1].exact_time
+        assert.is_true(math.abs(b[1].Cooldown.__cdStart + b[1].Cooldown.__cdDuration - exact) < 1e-6)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("fetches a queued icon's cooldown without the GCD; ends on the widget's own OnCooldownDone", function()
+        local H, d = boot("classic", true)
+        local A = ids(H)
+        usableAll(H)
+        H.ctl.cooldown[A.overpower] = ACTIVE
+        durations[A.overpower] = fake.SECRET
+        publish(H, SET)
+        frame(H, d, 0.2)
+        local ov = d.truthState.ov[2]
+        assert.is_true(fx.ignore[A.overpower])
+        assert.is_true(ov.real)
+        ov.cd.__scripts.OnCooldownDone(ov.cd)
+        assert.is_false(ov.real)
+        assert.is_true(d.Buttons[2].Cooldown.__shown)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("fetches only on a spell change and the cooldown events, never per frame", function()
+        local H, d = boot("classic", true)
+        local A = ids(H)
+        usableAll(H)
+        H.ctl.cooldown[A.mortal_strike], H.ctl.cooldown[A.overpower] = ACTIVE, ACTIVE
+        durations[A.mortal_strike], durations[A.overpower] = fake.SECRET, fake.SECRET
+        publish(H, SET)
+        frame(H, d, 0.2)
+        assert.are.equal(2, fx.n)
+        for _ = 1, 50 do
+            frame(H, d, 0.01)
+        end
+        assert.are.equal(2, fx.n)
+        publish(H, SET) -- the same spells in the same slots
+        frame(H, d, 0.01)
+        assert.are.equal(2, fx.n)
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert.are.equal(4, fx.n)
+        H.Fire("SPELL_UPDATE_CHARGES")
+        assert.are.equal(6, fx.n)
+        publish(H, { { "overpower", 1.0 }, { "mortal_strike", 1.5 } }) -- both slots change spell
+        frame(H, d, 0.01)
+        assert.are.equal(8, fx.n)
+        assert.is_false(fx.ignore[A.overpower]) -- now the press icon
+        assert.is_true(fx.ignore[A.mortal_strike])
+        assert.are.same({}, H.errors)
+    end)
+
+    it("never fetches for an item or a charge spell, and not with swipes off", function()
+        local H, d = boot("classic", true)
+        local A = ids(H)
+        usableAll(H)
+        H.ctl.cooldown[A.mortal_strike], H.ctl.cooldown[A.overpower] = ACTIVE, ACTIVE
+        durations[A.mortal_strike], durations[A.overpower] = fake.SECRET, fake.SECRET
+        rawset(H.Hekili.Engine.Registry.Abilities().overpower, "charges", 2)
+        local s = H.ns.Output.Begin("Primary")
+        s[1].actionName, s[1].actionID, s[1].item = "mortal_strike", A.mortal_strike, 1234 -- an item record
+        s[1].texture, s[1].time, s[1].exact_time = "t1", 1, H.ctl.now + 1
+        s[2].actionName, s[2].actionID = "overpower", A.overpower
+        s[2].texture, s[2].time, s[2].exact_time = "t2", 1.5, H.ctl.now + 1.5
+        H.ns.Output.Publish("Primary", 2)
+        frame(H, d, 0.2)
+        assert.are.equal(0, fx.n)
+        H.Hekili.DB.profile.displays.Primary.truth.swipes = false
+        H.Hekili:BuildUI()
+        publish(H, SET)
+        frame(H, d, 0.2)
+        H.Fire("SPELL_UPDATE_COOLDOWN")
+        assert.are.equal(0, fx.n)
+        assert.are.same({}, H.errors)
+    end)
+
+    it("shows the real swipe again on the first publish after a Clear", function()
+        local H, d = boot("timeline", true)
+        local A = ids(H)
+        usableAll(H)
+        H.Hekili.DB.profile.displays.Primary.timeline.oocTimers = true -- RM1: Timeline's timers show out of combat
+        H.ctl.cooldown[A.mortal_strike] = ACTIVE
+        durations[A.mortal_strike] = fake.SECRET
+        publish(H, SET)
+        frame(H, d, 0.2)
+        local T = d.styleFrames.timeline
+        local c = T.press
+        local ov = d.truthState.ov[c]
+        assert.is_true(ov.real)
+        d.style.Clear(d) -- what core's unsubscribe does, then Truth's
+        H.ns.UI.Truth.Clear(d)
+        assert.is_false(ov.cd.__shown)
+        publish(H, SET)
+        frame(H, d, 0.2)
+        assert.is_true(ov.real)
+        assert.is_true(ov.cd.__shown)
+        assert.is_false(T.cells[c].Cooldown.__shown)
+        assert.is_nil(d.truthState.ov[3].cd) -- a lane cell has no swipe
+        assert.are.same({}, H.errors)
+    end)
+
+    it("passes the duration object only to the swipe: one read site, no error on the secret sentinel", function()
+        local reads = {}
+        for l in io.lines("src/Hekili/UI/Truth.lua") do
+            local code = l:gsub("%-%-.*$", "")
+            if code:find("Display%.") or code:find("Facade%.Display") then
+                reads[#reads + 1] = code:match("^%s*(.-)%s*$")
+            end
+        end
+        assert.are.equal(2, #reads)
+        assert.is_truthy(reads[1]:match("^local Display = ns%.Facade%.Display$"), reads[1])
+        assert.is_truthy(reads[2]:match("^ov%.dur = Display%.C_Spell%.GetSpellCooldownDuration%(.*%)$"), reads[2])
+        local H, d = boot("classic", true)
+        local A = ids(H)
+        usableAll(H)
+        for _, id in pairs(A) do
+            H.ctl.cooldown[id], durations[id] = ACTIVE, fake.SECRET -- raises on compare, arithmetic, concat, index
+        end
+        publish(H, SET)
+        for _ = 1, 5 do
+            frame(H, d, 0.2)
+            H.Fire("SPELL_UPDATE_COOLDOWN")
+            H.Fire("SPELL_UPDATE_USABLE")
+        end
+        assert.are.same({}, H.errors)
+    end)
+    it(
+        "hides the real swipe while the style hides its own timers, and brings it back when they return (RM1)",
+        function()
+            local H, d = boot("timeline", true)
+            local A = ids(H)
+            usableAll(H)
+            local tl = H.Hekili.DB.profile.displays.Primary.timeline
+            tl.oocTimers = false -- out of combat: Timeline hides its sweeps
+            H.ctl.cooldown[A.mortal_strike] = ACTIVE
+            durations[A.mortal_strike] = fake.SECRET
+            publish(H, SET)
+            frame(H, d, 0.2)
+            local T = d.styleFrames.timeline
+            local c = T.press
+            local ov, b = d.truthState.ov[c], T.cells[c]
+            assert.is_true(b.timersHidden)
+            assert.is_true(ov.real)
+            assert.is_falsy(ov.cd.__shown)
+            tl.oocTimers = true
+            publish(H, SET)
+            frame(H, d, 0.2)
+            assert.is_false(b.timersHidden)
+            assert.is_true(ov.cd.__shown)
+            assert.is_false(b.Cooldown.__shown)
+            tl.oocTimers = false
+            publish(H, SET)
+            frame(H, d, 0.2)
+            assert.is_true(b.timersHidden)
+            assert.is_false(ov.cd.__shown)
+            assert.is_true(b.Cooldown.__shown)
+            H.Fire("SPELL_UPDATE_COOLDOWN") -- a refetch while hidden keeps it hidden
+            assert.is_true(ov.real)
+            assert.is_false(ov.cd.__shown)
+            assert.are.same({}, H.errors)
+        end
+    )
+
+    for _, style in ipairs({ "classic", "timeline" }) do
+        it(
+            "keeps " .. style .. "'s own surfaces with a real swipe running; only its Cooldown swaps (R1, R2)",
+            function()
+                local function run(on)
+                    local H, d = boot(style, on)
+                    local A = ids(H)
+                    usableAll(H)
+                    H.Hekili.DB.profile.displays.Primary.timeline.oocTimers = true
+                    H.ctl.cooldown[A.mortal_strike] = ACTIVE
+                    durations[A.mortal_strike] = fake.SECRET
+                    publish(H, SET)
+                    frame(H, d, 0.2)
+                    frame(H, d, 0.2)
+                    assert.are.same({}, H.errors)
+                    return d
+                end
+                local off, on = run(false), run(true)
+                assert.are.same(picks(off), picks(on))
+                local swaps = 0
+                for c, b in ipairs(on.Buttons) do
+                    local cd, ov = rawget(b, "Cooldown"), on.truthState.ov[c]
+                    if ov.cdShown then
+                        swaps = swaps + 1
+                        assert.are.equal(1, b.recIndex, "button " .. c)
+                        assert.is_true(ov.cd.__shown, "button " .. c)
+                        assert.is_false(cd.__shown, "button " .. c)
+                    elseif cd then
+                        assert.are.equal(rawget(off.Buttons[c].Cooldown, "__shown"), cd.__shown, "button " .. c)
+                    end
+                end
+                assert.are.equal(1, swaps)
+            end
+        )
+    end
+
+    it("clears on core's own paths: an unsubscribe (alpha 0) and Deactivate", function()
+        for _, path in ipairs({ "unsubscribe", "deactivate" }) do
+            local H, d = boot("classic", true)
+            local A = ids(H)
+            usableAll(H)
+            H.ctl.cooldown[A.mortal_strike] = ACTIVE
+            durations[A.mortal_strike] = fake.SECRET
+            publish(H, SET)
+            frame(H, d, 0.2)
+            local ov = d.truthState.ov[1]
+            assert.is_true(ov.cd.__shown, path)
+            if path == "unsubscribe" then
+                d.Active = false
+                d:UpdateAlpha()
+            else
+                d:Deactivate()
+            end
+            assert.is_false(ov.cd.__shown, path)
+            assert.is_false(ov.real, path)
+            assert.is_true(d.Buttons[1].Cooldown.__shown, path)
+            for _, e in ipairs(H.ns.UI.Truth.EVENTS) do
+                assert.is_false(d:IsEventRegistered(e), path .. " " .. e)
+            end
+            assert.are.same({}, H.errors)
+        end
     end)
 end)

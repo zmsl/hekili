@@ -34,6 +34,7 @@ Hekili.DisplayStyleAPI = 1
 --   b.round     true for a round icon (Truth's swipe and veil use the circle)
 --   b.timersHidden  true while the style hides its own cooldown timers (nil/false: they may show), so Truth
 --               hides its real swipe too
+-- Build should return the same button table on every rebuild: Truth keys its overlays by that table.
 
 --- Public: registers display style `impl` as `name` for any addon (built-in styles use it too). Refused with one
 --- Notify (returns false) when `impl.api` is not Hekili.DisplayStyleAPI or `name` is a core display field or tab;
